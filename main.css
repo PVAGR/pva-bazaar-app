@@ -1,11 +1,12 @@
-/* Main CSS styles */
+/* Improved CSS styles for the UI/UX upgrade */
 body {
-    background-color: #1a1a1a;
-    color: #e0e0e0;
+    background-color: #2c3e50;
+    color: #ecf0f1;
+    font-family: Arial, sans-serif;
 }
-.header {
-    background-color: #003300;
-    padding: 10px;
+header {
+    background-color: #27ae60;
+    padding: 20px;
     text-align: center;
 }
 /* Additional styles */
