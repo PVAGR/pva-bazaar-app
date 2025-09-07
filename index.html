@@ -5,14 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PVA Bazaar - Artisan Marketplace & Digital Provenance</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
         :root {
             --primary-dark: #0f3b2d;
             --primary: #1c5a45;
@@ -23,6 +17,14 @@
             --text-muted: #a8b0b9;
             --card-bg: rgba(255, 255, 255, 0.1);
             --card-border: rgba(78, 248, 163, 0.3);
+            --gold: #d4af37;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', Tahoma, Geneva, Verdana, sans-serif;
         }
         
         body {
@@ -44,6 +46,7 @@
             align-items: center;
             padding: 20px 0;
             margin-bottom: 30px;
+            flex-wrap: wrap;
         }
         
         .logo {
@@ -61,6 +64,7 @@
             font-size: 28px;
             font-weight: 700;
             color: var(--text-light);
+            font-family: 'Playfair Display', serif;
         }
         
         nav ul {
@@ -112,6 +116,7 @@
             margin-bottom: 20px;
             color: var(--accent);
             text-shadow: 0 0 10px rgba(78, 248, 163, 0.5);
+            font-family: 'Playfair Display', serif;
         }
         
         .hero p {
@@ -144,6 +149,7 @@
             font-size: 2.2rem;
             margin-bottom: 40px;
             color: var(--accent);
+            font-family: 'Playfair Display', serif;
         }
         
         .features-grid {
@@ -183,14 +189,14 @@
             color: var(--text-muted);
         }
         
-        .tools-grid {
+        .marketplace-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 25px;
             margin-bottom: 60px;
         }
         
-        .tool-card {
+        .product-card {
             background: var(--card-bg);
             border-radius: 15px;
             overflow: hidden;
@@ -199,39 +205,192 @@
             transition: transform 0.3s ease;
         }
         
-        .tool-card:hover {
+        .product-card:hover {
             transform: translateY(-5px);
         }
         
-        .tool-image {
-            height: 180px;
+        .product-image {
+            height: 200px;
             overflow: hidden;
+            position: relative;
         }
         
-        .tool-image img {
+        .product-image img {
             width: 100%;
             height: 100%;
             object-fit: cover;
             transition: transform 0.5s ease;
         }
         
-        .tool-card:hover .tool-image img {
+        .product-card:hover .product-image img {
             transform: scale(1.1);
         }
         
-        .tool-content {
+        .product-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: var(--gold);
+            color: var(--primary-dark);
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .product-content {
             padding: 20px;
         }
         
-        .tool-content h3 {
+        .product-content h3 {
             font-size: 1.4rem;
             margin-bottom: 10px;
             color: var(--accent);
         }
         
-        .tool-content p {
+        .product-content p {
             color: var(--text-muted);
-            margin-bottom: 20px;
+            margin-bottom: 15px;
+            font-size: 0.95rem;
+        }
+        
+        .product-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+        }
+        
+        .product-price {
+            font-weight: 700;
+            color: var(--accent);
+            font-size: 1.2rem;
+        }
+        
+        .product-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn-sm {
+            padding: 8px 15px;
+            font-size: 0.9rem;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--accent);
+            color: var(--accent);
+        }
+        
+        .btn-outline:hover {
+            background: var(--accent);
+            color: var(--primary-dark);
+        }
+        
+        .artisan-section {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 40px;
+            margin-bottom: 60px;
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--card-border);
+        }
+        
+        .artisan-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+        
+        .artisan-card {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .artisan-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            border: 3px solid var(--accent);
+            overflow: hidden;
+        }
+        
+        .artisan-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .artisan-card h3 {
+            color: var(--accent);
+            margin-bottom: 5px;
+        }
+        
+        .artisan-card p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+        
+        .artisan-stats {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .stat {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-weight: 700;
+            color: var(--accent);
+            font-size: 1.2rem;
+        }
+        
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+        
+        .nft-section {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 40px;
+            margin-bottom: 60px;
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--card-border);
+        }
+        
+        .nft-features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+        
+        .nft-feature {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .nft-icon {
+            font-size: 2.5rem;
+            color: var(--accent);
+            margin-bottom: 15px;
+        }
+        
+        .nft-feature h3 {
+            color: var(--accent);
+            margin-bottom: 10px;
+        }
+        
+        .nft-feature p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
         }
         
         .cta-section {
@@ -248,6 +407,7 @@
             font-size: 2.5rem;
             margin-bottom: 20px;
             color: var(--accent);
+            font-family: 'Playfair Display', serif;
         }
         
         .cta-section p {
@@ -268,6 +428,7 @@
             font-weight: 700;
             margin-bottom: 20px;
             color: var(--accent);
+            font-family: 'Playfair Display', serif;
         }
         
         .footer-links {
@@ -275,6 +436,7 @@
             justify-content: center;
             gap: 20px;
             margin-bottom: 20px;
+            flex-wrap: wrap;
         }
         
         .footer-links a {
@@ -334,8 +496,18 @@
             }
             
             .features-grid,
-            .tools-grid {
+            .marketplace-grid {
                 grid-template-columns: 1fr;
+            }
+            
+            .footer-links {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .artisan-section,
+            .nft-section {
+                padding: 25px 15px;
             }
         }
     </style>
@@ -349,11 +521,11 @@
             </div>
             <nav>
                 <ul>
-                    <li><a href="#">Home</a></li>
-                    <li><a href="#">Marketplace</a></li>
-                    <li><a href="#">Artisans</a></li>
-                    <li><a href="#">About</a></li>
-                    <li><a href="#">Contact</a></li>
+                    <li><a href="#marketplace">Marketplace</a></li>
+                    <li><a href="#artisans">Artisans</a></li>
+                    <li><a href="#nft">NFTs</a></li>
+                    <li><a href="#about">About</a></li>
+                    <li><a href="#contact">Contact</a></li>
                 </ul>
             </nav>
         </header>
@@ -361,7 +533,7 @@
         <section class="hero">
             <h1>Where Artistry Meets Blockchain</h1>
             <p>PVA Bazaar is a decentralized marketplace connecting artisans with collectors, using blockchain technology to ensure provenance, authenticity, and fair compensation.</p>
-            <a href="#" class="btn">Explore Marketplace</a>
+            <a href="#marketplace" class="btn">Explore Marketplace</a>
         </section>
         
         <h2 class="section-title">Our Ecosystem</h2>
@@ -383,49 +555,176 @@
             </div>
         </div>
         
-        <h2 class="section-title">Our Tools</h2>
-        <div class="tools-grid">
-            <div class="tool-card">
-                <div class="tool-image">
-                    <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="Marketplace">
+        <h2 class="section-title" id="marketplace">Featured Products</h2>
+        <div class="marketplace-grid">
+            <div class="product-card">
+                <div class="product-image">
+                    <img src="https://images.unsplash.com/photo-1515562141207-7a88fb7ad5e5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80" alt="Emerald Pendant">
+                    <div class="product-badge">NFT Available</div>
                 </div>
-                <div class="tool-content">
-                    <h3>Digital Marketplace</h3>
-                    <p>Browse and purchase unique artisan creations with blockchain verification.</p>
-                    <a href="deepseekv1.html" class="btn">Explore</a>
-                </div>
-            </div>
-            <div class="tool-card">
-                <div class="tool-image">
-                    <img src="https://images.unsplash.com/photo-1643282579325-e217ea213ab3?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="Appraisal">
-                </div>
-                <div class="tool-content">
-                    <h3>Appraisal Cards</h3>
-                    <p>Generate physical QR cards that link to digital provenance records.</p>
-                    <a href="card.html" class="btn">Create</a>
+                <div class="product-content">
+                    <h3>Emerald Pendant</h3>
+                    <p>Handcrafted pendant featuring a natural Panjshir emerald set in 18k yellow gold.</p>
+                    <div class="product-meta">
+                        <div class="product-price">$249</div>
+                        <div class="product-actions">
+                            <a href="#" class="btn btn-sm">Details</a>
+                            <a href="#" class="btn btn-sm btn-outline">NFT</a>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="tool-card">
-                <div class="tool-image">
-                    <img src="https://images.unsplash.com/photo-1635070041078-e363dbe005cb?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="Design">
+            
+            <div class="product-card">
+                <div class="product-image">
+                    <img src="https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80" alt="Silver Bracelet">
+                    <div class="product-badge">Limited Edition</div>
                 </div>
-                <div class="tool-content">
-                    <h3>Sacred Geometry</h3>
-                    <p>Use divine proportions to create harmonious jewelry designs.</p>
-                    <a href="claudesacredgeom.html" class="btn">Design</a>
+                <div class="product-content">
+                    <h3>Artisan Silver Bracelet</h3>
+                    <p>Hand-forged sterling silver bracelet with intricate traditional patterns.</p>
+                    <div class="product-meta">
+                        <div class="product-price">$189</div>
+                        <div class="product-actions">
+                            <a href="#" class="btn btn-sm">Details</a>
+                            <a href="#" class="btn btn-sm btn-outline">NFT</a>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="tool-card">
-                <div class="tool-image">
-                    <img src="https://images.unsplash.com/photo-1626627018560-69e1a6d81aae?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="NFT">
+            
+            <div class="product-card">
+                <div class="product-image">
+                    <img src="https://images.unsplash.com/photo-1611591437281-460bfbe1220a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80" alt="Handcrafted Ring">
+                    <div class="product-badge">One of a Kind</div>
                 </div>
-                <div class="tool-content">
-                    <h3>NFT Management</h3>
-                    <p>View and manage your digital assets with our NFT interface.</p>
-                    <a href="ddd.html" class="btn">Manage</a>
+                <div class="product-content">
+                    <h3>Sacred Geometry Ring</h3>
+                    <p>Gold ring featuring sacred geometric patterns with a central diamond.</p>
+                    <div class="product-meta">
+                        <div class="product-price">$420</div>
+                        <div class="product-actions">
+                            <a href="#" class="btn btn-sm">Details</a>
+                            <a href="#" class="btn btn-sm btn-outline">NFT</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="product-card">
+                <div class="product-image">
+                    <img src="https://images.unsplash.com/photo-1605100804763-247f67b3557e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80" alt="Handmade Necklace">
+                    <div class="product-badge">New</div>
+                </div>
+                <div class="product-content">
+                    <h3>Gemstone Necklace</h3>
+                    <p>Vibrant gemstone necklace handcrafted by skilled artisans using traditional techniques.</p>
+                    <div class="product-meta">
+                        <div class="product-price">$275</div>
+                        <div class="product-actions">
+                            <a href="#" class="btn btn-sm">Details</a>
+                            <a href="#" class="btn btn-sm btn-outline">NFT</a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
+        
+        <section class="artisan-section" id="artisans">
+            <h2 class="section-title">Featured Artisans</h2>
+            <div class="artisan-grid">
+                <div class="artisan-card">
+                    <div class="artisan-avatar">
+                        <img src="https://images.unsplash.com/photo-1567532939604-b6b5b0db1604?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80" alt="Maria Lopez">
+                    </div>
+                    <h3>Maria Lopez</h3>
+                    <p>Oaxaca, Mexico</p>
+                    <div class="artisan-stats">
+                        <div class="stat">
+                            <div class="stat-value">42</div>
+                            <div class="stat-label">Items</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value">4.9</div>
+                            <div class="stat-label">Rating</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="artisan-card">
+                    <div class="artisan-avatar">
+                        <img src="https://images.unsplash.com/photo-1575936123452-b67c3203c357?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80" alt="James Chen">
+                    </div>
+                    <h3>James Chen</h3>
+                    <p>Bali, Indonesia</p>
+                    <div class="artisan-stats">
+                        <div class="stat">
+                            <div class="stat-value">28</div>
+                            <div class="stat-label">Items</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value">4.8</div>
+                            <div class="stat-label">Rating</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="artisan-card">
+                    <div class="artisan-avatar">
+                        <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80" alt="Aisha Patel">
+                    </div>
+                    <h3>Aisha Patel</h3>
+                    <p>Jaipur, India</p>
+                    <div class="artisan-stats">
+                        <div class="stat">
+                            <div class="stat-value">37</div>
+                            <div class="stat-label">Items</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value">5.0</div>
+                            <div class="stat-label">Rating</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section class="nft-section" id="nft">
+            <h2 class="section-title">Digital Provenance with NFTs</h2>
+            <div class="nft-features">
+                <div class="nft-feature">
+                    <div class="nft-icon">
+                        <i class="fas fa-certificate"></i>
+                    </div>
+                    <h3>Authenticity Guaranteed</h3>
+                    <p>Each physical item is paired with an NFT that verifies its authenticity and origin.</p>
+                </div>
+                
+                <div class="nft-feature">
+                    <div class="nft-icon">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <h3>Complete History</h3>
+                    <p>Track the entire history of ownership and provenance on the blockchain.</p>
+                </div>
+                
+                <div class="nft-feature">
+                    <div class="nft-icon">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <h3>Secure Ownership</h3>
+                    <p>Your ownership is securely recorded on the blockchain and cannot be forged.</p>
+                </div>
+                
+                <div class="nft-feature">
+                    <div class="nft-icon">
+                        <i class="fas fa-sync-alt"></i>
+                    </div>
+                    <h3>Resale Royalties</h3>
+                    <p>Artisans earn royalties automatically from secondary market sales.</p>
+                </div>
+            </div>
+        </section>
         
         <section class="cta-section">
             <h2>Join the PVA Bazaar Revolution</h2>
@@ -451,5 +750,36 @@
         </div>
         <div class="copyright">© 2023 PVA Bazaar. All rights reserved.</div>
     </footer>
+
+    <script>
+        // Simple animation for buttons
+        document.querySelectorAll('.btn').forEach(button => {
+            button.addEventListener('mouseover', function() {
+                this.style.boxShadow = '0 0 15px rgba(78, 248, 163, 0.7)';
+            });
+            
+            button.addEventListener('mouseout', function() {
+                this.style.boxShadow = 'none';
+            });
+        });
+        
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('nav a').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                const targetId = this.getAttribute('href');
+                if(targetId.startsWith('#')) {
+                    const targetElement = document.querySelector(targetId);
+                    if(targetElement) {
+                        window.scrollTo({
+                            top: targetElement.offsetTop - 100,
+                            behavior: 'smooth'
+                        });
+                    }
+                }
+            });
+        });
+    </script>
 </body>
 </html>

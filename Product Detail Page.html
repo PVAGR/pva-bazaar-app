@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eternal Echo Pendant - The Digital Artisan's Bazaar</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Example of linking an external CSS for custom styles -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .provenance-verified { color: #10B981; }
+        .animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .7; }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
+
+    <!-- Product Section -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="flex flex-col md:flex-row -mx-4">
+            <!-- Image Gallery Column -->
+            <div class="px-4 md:w-1/2 mb-8">
+                <div class="bg-white rounded-2xl shadow-lg p-4 mb-4">
+                    <img id="mainImage" src="https://raw.githubusercontent.com/queryforge/queryforge-assets/main/emerald-pendant-1.jpg" alt="Eternal Echo Pendant" class="rounded-xl w-full h-auto object-cover">
+                </div>
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="bg-white rounded-xl shadow-sm p-2 cursor-pointer hover:shadow-md transition-shadow" onclick="changeImage('https://raw.githubusercontent.com/queryforge/queryforge-assets/main/emerald-pendant-1.jpg')">
+                        <img src="https://raw.githubusercontent.com/queryforge/queryforge-assets/main/emerald-pendant-1.jpg" alt="Pendant Front View" class="rounded-lg w-full h-20 object-cover">
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm p-2 cursor-pointer hover:shadow-md transition-shadow" onclick="changeImage('https://raw.githubusercontent.com/queryforge/queryforge-assets/main/emerald-pendant-2.jpg')">
+                        <img src="https://raw.githubusercontent.com/queryforge/queryforge-assets/main/emerald-pendant-2.jpg" alt="Pendant Side View" class="rounded-lg w-full h-20 object-cover">
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm p-2 cursor-pointer hover:shadow-md transition-shadow" onclick="changeImage('https://raw.githubusercontent.com/queryforge/queryforge-assets/main/emerald-pendant-3.jpg')">
+                        <img src="https://raw.githubusercontent.com/queryforge/queryforge-assets/main/emerald-pendant-3.jpg" alt="Pendant on Display" class="rounded-lg w-full h-20 object-cover">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Info Column -->
+            <div class="px-4 md:w-1/2">
+                <h1 class="text-4xl font-bold text-gray-900 mb-2">Eternal Echo Pendant</h1>
+                <p class="text-2xl font-semibold text-emerald-700 mb-4">$2,450.00</p>
+
+                <!-- Description -->
+                <div class="mb-6">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-2">Crafted Story</h2>
+                    <p class="text-gray-600">This exquisite pendant features a masterfully cut 1.5-carat Colombian emerald, cradled in responsibly sourced 18k white gold. Each facet is cut to capture not just light, but a moment in time, echoing the artisan's digital and physical journey. The companion NFT immortalizes this process.</p>
+                </div>
+
+                <hr class="my-6">
+
+                <!-- On-Chain Provenance -->
+                <div class="mb-6">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-2">On-Chain Provenance <i class="fas fa-link provenance-verified"></i></h2>
+                    <ul class="text-sm text-gray-600 space-y-2">
+                        <li><strong>Token Standard:</strong> ERC-721</li>
+                        <li><strong>Blockchain:</strong> Ethereum</li>
+                        <li><strong>Contract Address:</strong> <span class="font-mono text-xs bg-gray-200 p-1 rounded">0x4d6d6...1a2b3c</span></li>
+                        <li><strong>Token ID:</strong> #0420</li>
+                        <li><strong>Artisan Wallet:</strong> <span class="font-mono text-xs bg-gray-200 p-1 rounded">0xArt1...5an4aDdr3s5</span></li>
+                        <li><strong>Mint Date:</strong> 2024-03-15</li>
+                        <li><strong>Provenance Hash:</strong> <span class="font-mono text-xs bg-gray-200 p-1 rounded">QmZvWn...8hJkLmN</span></li>
+                    </ul>
+                </div>
+
+                <hr class="my-6">
+
+                <!-- Purchase Options -->
+                <div class="mb-8">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4">Ownership Options</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <!-- Physical Only Option -->
+                        <div class="border-2 border-gray-300 rounded-xl p-4 text-center hover:border-emerald-500 transition-colors cursor-pointer">
+                            <div class="text-emerald-700 mb-2"><i class="fas fa-gem text-2xl"></i></div>
+                            <h3 class="font-medium">Physical Only</h3>
+                            <p class="text-2xl font-bold my-2">$2,450</p>
+                            <p class="text-xs text-gray-500">Includes shipping & authentication certificate.</p>
+                        </div>
+                        <!-- NFT Only Option -->
+                        <div class="border-2 border-gray-300 rounded-xl p-4 text-center hover:border-emerald-500 transition-colors cursor-pointer">
+                            <div class="text-emerald-700 mb-2"><i class="fas fa-cube text-2xl"></i></div>
+                            <h3 class="font-medium">NFT Only</h3>
+                            <p class="text-2xl font-bold my-2">1.25 ETH</p>
+                            <p class="text-xs text-gray-500">Digital twin with full provenance rights.</p>
+                        </div>
+                        <!-- Bundle Option -->
+                        <div class="border-2 border-emerald-500 bg-emerald-50 rounded-xl p-4 text-center animate-pulse">
+                            <div class="text-emerald-700 mb-2"><i class="fas fa-star text-2xl"></i></div>
+                            <h3 class="font-medium">Unlock Both</h3>
+                            <p class="text-2xl font-bold my-2">$2,800</p>
+                            <p class="text-xs text-gray-500">Best value. Own the physical and its digital soul.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex space-x-4 mb-8">
+                    <button onclick="connectWallet()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 px-6 rounded-xl transition-colors flex items-center justify-center">
+                        <i class="fas fa-wallet mr-2"></i> Connect Wallet to Purchase
+                    </button>
+                    <button class="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-bold py-4 px-6 rounded-xl transition-colors">
+                        <i class="fas fa-qrcode"></i>
+                    </button>
+                </div>
+
+                <!-- QR Code Section (Initially Hidden) -->
+                <div id="qrCodeSection" class="bg-white p-4 rounded-xl shadow-lg text-center hidden">
+                    <p class="text-sm text-gray-600 mb-2">Scan to view provenance or connect wallet</p>
+                    <!-- Placeholder for a QR code generator would go here. For now, an image -->
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://bazaar.digital-artisan.com/product/eternal-echo-pendant" alt="QR Code" class="mx-auto mb-2">
+                    <p class="text-xs text-gray-500">Product ID: EE-0420</p>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function changeImage(src) {
+            document.getElementById('mainImage').src = src;
+        }
+        function connectWallet() {
+            alert("Wallet connect modal would open here. This would then lead to the mint/checkout page (mintauthjewlfrontendforpvacoinandattachedtopva.html).");
+            // In a real implementation, this would trigger a Web3 modal like Web3Modal or WalletConnect.
+        }
+        // Simple toggle for the QR code
+        document.querySelector('button:nth-child(2)').addEventListener('click', function() {
+            document.getElementById('qrCodeSection').classList.toggle('hidden');
+        });
+    </script>
+
+</body>
+</html>
