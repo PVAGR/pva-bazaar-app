@@ -1,96 +1,87 @@
+// backend/server.js
+
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const path = require('path');
-// Temporarily comment out vector search
-// const searchRoutes = require('./routes/search');
 
-// Load environment variables
 dotenv.config();
 
-// Initialize Express app
+// ---- Hard fail if required env is missing ----
+if (!process.env.MONGODB_URI) {
+  console.error('❌ Missing MONGODB_URI in .env');
+  process.exit(1);
+}
+
+// ---- App ----
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
-app.use(cors());
+// ---- Middleware ----
+const allowedOrigin = process.env.ALLOWED_ORIGIN || '*';
+app.use(cors({ origin: allowedOrigin, credentials: true }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.static('public'));
-// Temporarily comment out vector search routes
-// app.use('/api/search', searchRoutes);
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI, {
-  dbName: 'pvabazaar'
-})
-.then(() => console.log('✅ MongoDB Connected successfully'))
-.catch(err => {
-  console.error('❌ MongoDB Connection Error:', err);
-  process.exit(1);
-});
+// ---- MongoDB ----
+mongoose
+  .connect(process.env.MONGODB_URI, { dbName: 'pvabazaar' })
+  .then(() => console.log('✅ MongoDB connected'))
+  .catch((err) => {
+    console.error('❌ MongoDB connection error:', err);
+    process.exit(1);
+  });
 
-// Import routes
+// ---- Routes (NO vector/search routes) ----
 const artifactsRoutes = require('./routes/artifacts');
 const usersRoutes = require('./routes/users');
 
-// Use routes
 app.use('/api/artifacts', artifactsRoutes);
 app.use('/api/users', usersRoutes);
 
-// Health endpoint
+// ---- Health ----
 app.get('/api/health', (_req, res) => {
   res.json({
     ok: true,
     message: 'PVABazaar API is running',
     mongo: mongoose.connection.readyState === 1,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 
-// Temporarily comment out reindex endpoint
-/*
-app.post('/api/admin/reindex', async (req, res) => {
-  try {
-    const vectorDB = new VectorDB();
-    await vectorDB.initialize();
-    await vectorDB.indexArtifacts();
-    res.json({ message: 'Artifacts reindexed successfully' });
-  } catch (error) {
-    console.error('Reindexing error:', error);
-    res.status(500).json({ error: 'Failed to reindex artifacts' });
-  }
-});
-*/
+// ---- (Vector reindex endpoint disabled on purpose) ----
+// app.post('/api/admin/reindex', ...)
 
-// Serve frontend in production
+// ---- Serve frontend in production ----
 if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../frontend')));
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend', 'index.html'));
+  const frontendDir = path.join(__dirname, '../frontend');
+  app.use(express.static(frontendDir));
+  app.get('*', (_req, res) => {
+    res.sendFile(path.join(frontendDir, 'index.html'));
   });
 }
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error('🚨 Error:', err.stack);
+// ---- Error handler ----
+app.use((err, _req, res, _next) => {
+  console.error('🚨 Error:', err.stack || err);
   res.status(500).json({
     ok: false,
     message: 'Something went wrong!',
-    error: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
+    error:
+      process.env.NODE_ENV === 'development'
+        ? (err && err.message) || 'Internal server error'
+        : 'Internal server error',
   });
 });
 
-// 404 handler - must be the last route
-app.use((req, res) => {
-  res.status(404).json({
-    ok: false,
-    message: 'API endpoint not found'
-  });
+// ---- 404 ----
+app.use((_req, res) => {
+  res.status(404).json({ ok: false, message: 'API endpoint not found' });
 });
 
-// Start server
+// ---- Start ----
 app.listen(PORT, () => {
   console.log(`🚀 PVABazaar server running on port ${PORT}`);
   console.log(`🌐 Health check: http://localhost:${PORT}/api/health`);
