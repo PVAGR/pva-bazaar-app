@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amradjet Emerald Pendant | PVA Bazaar</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-dark: #0f3b2d;
+            --primary: #1c5a45;
+            --primary-light: #2d7d5a;
+            --accent: #4ef8a3;
+            --accent-dark: #2bb673;
+            --gold: #d4af37;
+            --text-light: #e8f4f0;
+            --text-muted: #a8b0b9;
+            --card-bg: rgba(18, 18, 18, 0.95);
+            --card-border: rgba(42, 75, 42, 0.6);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: #0a0a0a;
+            color: var(--text-light);
+            min-height: 100vh;
+            padding: 20px;
+            background-image: 
+                radial-gradient(circle at 25% 25%, rgba(28, 90, 69, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 75% 75%, rgba(28, 90, 69, 0.15) 0%, transparent 40%);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        /* Header Styles */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            border-bottom: 1px solid var(--primary);
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            text-decoration: none;
+        }
+        
+        .logo-icon {
+            font-size: 32px;
+            color: var(--accent);
+        }
+        
+        .logo-text {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-light);
+            font-family: 'Playfair Display', serif;
+        }
+        
+        nav {
+            display: flex;
+            gap: 30px;
+        }
+        
+        nav a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        
+        nav a:hover {
+            color: var(--accent);
+        }
+        
+        /* Product Showcase */
+        .product-showcase {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 50px;
+        }
+        
+        .product-image {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+            height: 500px;
+            background: var(--card-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--card-border);
+        }
+        
+        .product-image img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+        
+        .product-details {
+            padding: 20px;
+        }
+        
+        .product-title {
+            color: var(--gold);
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            font-family: 'Playfair Display', serif;
+        }
+        
+        .product-description {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+        
+        .product-price {
+            font-size: 2rem;
+            color: var(--accent);
+            margin-bottom: 25px;
+        }
+        
+        .purchase-options {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .btn {
+            padding: 15px 25px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(90deg, var(--accent), var(--accent-dark));
+            color: var(--primary-dark);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(78, 248, 163, 0.3);
+        }
+        
+        .btn-secondary {
+            background: rgba(28, 90, 69, 0.3);
+            color: var(--text-light);
+            border: 1px solid var(--primary-light);
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(28, 90, 69, 0.5);
+            color: var(--accent);
+        }
+        
+        /* Product Specifications */
+        .product-specs {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 40px;
+        }
+        
+        .specs-title {
+            color: var(--gold);
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--primary);
+            font-family: 'Playfair Display', serif;
+        }
+        
+        .specs-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .spec-item {
+            margin-bottom: 15px;
+        }
+        
+        .spec-label {
+            color: var(--accent);
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+        
+        .spec-value {
+            color: var(--text-light);
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+        
+        /* Blockchain Information */
+        .blockchain-info {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 40px;
+        }
+        
+        .info-title {
+            color: var(--gold);
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: 'Playfair Display', serif;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .info-item {
+            margin-bottom: 15px;
+        }
+        
+        .info-label {
+            color: var(--accent);
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+        
+        .info-value {
+            color: var(--text-light);
+            font-size: 1rem;
+            font-weight: 500;
+            word-break: break-all;
+        }
+        
+        .mono {
+            font-family: monospace;
+            background: rgba(28, 90, 69, 0.2);
+            padding: 5px 8px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        
+        /* QR Code Section */
+        .qr-section {
+            display: flex;
+            justify-content: space-around;
+            margin: 30px 0;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .qr-card {
+            text-align: center;
+            background: rgba(15, 59, 45, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            width: 180px;
+            border: 1px solid var(--primary-light);
+        }
+        
+        .qr-card img {
+            width: 140px;
+            height: 140px;
+            margin-bottom: 15px;
+            border: 1px solid var(--accent);
+        }
+        
+        .qr-card p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+        
+        /* Footer */
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 40px 20px;
+            border-top: 1px solid var(--primary-dark);
+        }
+        
+        .footer-logo {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--accent);
+            font-family: 'Playfair Display', serif;
+        }
+        
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .social-links a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(28, 90, 69, 0.2);
+            color: var(--text-light);
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .social-links a:hover {
+            background: var(--accent);
+            color: var(--primary-dark);
+            transform: translateY(-3px);
+        }
+        
+        .copyright {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 900px) {
+            .product-showcase {
+                grid-template-columns: 1fr;
+            }
+            
+            .specs-grid, .info-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .purchase-options {
+                flex-direction: column;
+            }
+            
+            header {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            nav {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <a href="#" class="logo">
+                <i class="fas fa-gem logo-icon"></i>
+                <div class="logo-text">PVA Bazaar</div>
+            </a>
+            <nav>
+                <a href="#">Marketplace</a>
+                <a href="#">Collections</a>
+                <a href="#">Provenance</a>
+                <a href="#">About</a>
+            </nav>
+        </header>
+        
+        <div class="product-showcase">
+            <div class="product-image">
+                <img src="https://i.imgur.com/HLKaW01.jpeg" alt="Amradjet Emerald Pendant">
+            </div>
+            
+            <div class="product-details">
+                <h1 class="product-title">Amradjet Emerald Pendant</h1>
+                <p class="product-description">
+                    This exquisite pendant features a masterfully cut 1.5-carat Panjshir emerald, cradled in responsibly sourced 18k white gold. Each facet is cut to capture not just light, but a moment in time, echoing the artisan's digital and physical journey.
+                </p>
+                
+                <div class="product-price">$2,450.00</div>
+                
+                <div class="purchase-options">
+                    <button class="btn btn-primary">
+                        <i class="fas fa-shopping-cart"></i>
+                        Purchase Now
+                    </button>
+                    <button class="btn btn-secondary">
+                        <i class="fas fa-cube"></i>
+                        Mint NFT
+                    </button>
+                </div>
+                
+                <div class="product-specs">
+                    <h3 class="specs-title">Specifications</h3>
+                    <div class="specs-grid">
+                        <div class="spec-item">
+                            <div class="spec-label">Primary Gemstone</div>
+                            <div class="spec-value">Panjshir Emerald</div>
+                        </div>
+                        <div class="spec-item">
+                            <div class="spec-label">Carat Weight</div>
+                            <div class="spec-value">1.5 carats</div>
+                        </div>
+                        <div class="spec-item">
+                            <div class="spec-label">Metal</div>
+                            <div class="spec-value">18k White Gold</div>
+                        </div>
+                        <div class="spec-item">
+                            <div class="spec-label">Dimensions</div>
+                            <div class="spec-value">12mm x 8mm</div>
+                        </div>
+                        <div class="spec-item">
+                            <div class="spec-label">Chain Length</div>
+                            <div class="spec-value">18 inches</div>
+                        </div>
+                        <div class="spec-item">
+                            <div class="spec-label">Artisan</div>
+                            <div class="spec-value">Luciana Moreau</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="blockchain-info">
+                    <h3 class="info-title">
+                        <i class="fas fa-link"></i>
+                        Blockchain Details
+                    </h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">Token Standard</div>
+                            <div class="info-value">ERC-721</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Blockchain</div>
+                            <div class="info-value">Base (Ethereum L2)</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Contract Address</div>
+                            <div class="info-value mono">0x3b3af296e521a0932041cc5599ea47ec2d4ef8a5</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Token ID</div>
+                            <div class="info-value mono">0</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="qr-section">
+                    <div class="qr-card">
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://opensea.io/item/base/0x3b3af296e521a0932041cc5599ea47ec2d4ef8a5/0" alt="NFT QR Code">
+                        <p>Scan to verify NFT on OpenSea</p>
+                    </div>
+                    
+                    <div class="qr-card">
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://www.pvabazaar.com/products/p/amradjet" alt="Product QR Code">
+                        <p>Scan for complete product details</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <div class="footer-logo">PVA Bazaar</div>
+            <div class="social-links">
+                <a href="#"><i class="fab fa-twitter"></i></a>
+                <a href="#"><i class="fab fa-instagram"></i></a>
+                <a href="#"><i class="fab fa-discord"></i></a>
+                <a href="#"><i class="fab fa-github"></i></a>
+            </div>
+            <div class="copyright">© 2025 PVA Bazaar. All rights reserved.</div>
+        </footer>
+    </div>
+
+    <script>
+        // Simple animation for buttons
+        document.querySelectorAll('.btn').forEach(button => {
+            button.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-3px)';
+                if (this.classList.contains('btn-primary')) {
+                    this.style.boxShadow = '0 7px 20px rgba(78, 248, 163, 0.4)';
+                }
+            });
+            
+            button.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+                this.style.boxShadow = 'none';
+            });
+        });
+        
+        // Purchase button functionality
+        document.querySelector('.btn-primary').addEventListener('click', function() {
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Redirecting...';
+            setTimeout(() => {
+                alert('Redirecting to checkout page...');
+                this.innerHTML = '<i class="fas fa-shopping-cart"></i> Purchase Now';
+            }, 1500);
+        });
+        
+        // Mint button functionality
+        document.querySelector('.btn-secondary').addEventListener('click', function() {
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connecting...';
+            setTimeout(() => {
+                alert('Connecting wallet for NFT minting...');
+                this.innerHTML = '<i class="fas fa-cube"></i> Mint NFT';
+            }, 1500);
+        });
+    </script>
+</body>
+</html>
