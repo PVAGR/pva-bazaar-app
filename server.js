@@ -9,7 +9,6 @@ dotenv.config();
 
 // Initialize Express app
 const app = express();
-const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors({
@@ -29,7 +28,9 @@ async function connectToDatabase() {
   
   try {
     const client = await mongoose.connect(process.env.MONGODB_URI, {
-      dbName: 'pvabazaar'
+      dbName: 'pvabazaar',
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
     });
     
     cachedDb = client;
@@ -41,10 +42,12 @@ async function connectToDatabase() {
   }
 }
 
-// Connect on startup
-connectToDatabase().catch(console.error);
+// Connect on startup for non-serverless environments
+if (process.env.NODE_ENV !== 'production') {
+  connectToDatabase().catch(console.error);
+}
 
-// Import routes - fix paths based on your actual file structure
+// Import routes - use relative paths from server.js
 const artifactsRoutes = require('./backend/routes/artifacts');
 const usersRoutes = require('./backend/routes/users');
 const healthRoutes = require('./backend/routes/health');
@@ -73,13 +76,14 @@ app.get('/api/healthcheck', async (_req, res) => {
   }
 });
 
-// Serve static assets in production
+// Serve static frontend files in production
 if (process.env.NODE_ENV === 'production') {
-  // Use correct case for Frontend folder name
-  app.use(express.static(path.join(__dirname, 'Frontend')));
+  // Serve static files from frontend directory
+  app.use(express.static(path.join(__dirname, 'frontend')));
   
+  // Any route not caught by API routes should serve the frontend
   app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'Frontend', 'index.html'));
+    res.sendFile(path.join(__dirname, 'frontend', 'index.html'));
   });
 }
 
@@ -101,12 +105,14 @@ app.use((req, res) => {
   });
 });
 
-// Start server
+// Start server for local development
 if (process.env.NODE_ENV !== 'production') {
+  const PORT = process.env.PORT || 5000;
   app.listen(PORT, () => {
     console.log(`🚀 PVABazaar server running on port ${PORT}`);
     console.log(`🌐 Health check: http://localhost:${PORT}/api/health`);
   });
 }
 
+// Export for Vercel serverless
 module.exports = app;
