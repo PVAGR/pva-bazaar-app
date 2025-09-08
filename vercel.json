@@ -6,7 +6,7 @@
       "use": "@vercel/node"
     },
     {
-      "src": "Frontend/**",
+      "src": "Frontend/**/*",
       "use": "@vercel/static"
     }
   ],
@@ -16,8 +16,7 @@
       "dest": "/server.js"
     },
     {
-      "src": "/(.*\\.(js|css|png|jpg|jpeg|svg|ico|json))",
-      "dest": "/Frontend/$1"
+      "handle": "filesystem"
     },
     {
       "src": "/(.*)",

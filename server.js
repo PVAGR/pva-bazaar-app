@@ -44,7 +44,7 @@ async function connectToDatabase() {
 // Connect on startup
 connectToDatabase().catch(console.error);
 
-// Import routes - FIX: Use correct path to routes
+// Import routes - fix paths based on your actual file structure
 const artifactsRoutes = require('./backend/routes/artifacts');
 const usersRoutes = require('./backend/routes/users');
 const healthRoutes = require('./backend/routes/health');
@@ -75,10 +75,9 @@ app.get('/api/healthcheck', async (_req, res) => {
 
 // Serve static assets in production
 if (process.env.NODE_ENV === 'production') {
-  // Serve any static files from the Frontend directory
+  // Use correct case for Frontend folder name
   app.use(express.static(path.join(__dirname, 'Frontend')));
   
-  // Handle React routing, return all requests to React app
   app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'Frontend', 'index.html'));
   });
