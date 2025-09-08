@@ -1,142 +1,96 @@
 const express = require('express');
 const router = express.Router();
-const Artifact = require('../models/Artifact');
+const Artifact = require('../models/artifact');
 const auth = require('../middleware/auth');
 
-// GET /api/artifacts - Get all artifacts
+// Get all artifacts
 router.get('/', async (req, res) => {
   try {
-    const artifacts = await Artifact.find().sort({ createdAt: -1 });
-    res.json({
-      ok: true,
-      data: artifacts,
-      count: artifacts.length
-    });
-  } catch (error) {
-    console.error('Error fetching artifacts:', error);
-    res.status(500).json({
-      ok: false,
-      message: 'Failed to fetch artifacts'
-    });
+    const artifacts = await Artifact.find().populate('creator', 'name email');
+    res.json({ ok: true, artifacts });
+  } catch (err) {
+    res.status(500).json({ ok: false, message: err.message });
   }
 });
 
-// GET /api/artifacts/:id - Get single artifact
+// Get artifact by ID
 router.get('/:id', async (req, res) => {
+  try {
+    const artifact = await Artifact.findById(req.params.id).populate('creator', 'name email');
+    if (!artifact) {
+      return res.status(404).json({ ok: false, message: 'Artifact not found' });
+    }
+    res.json({ ok: true, artifact });
+  } catch (err) {
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// Create new artifact (requires authentication)
+router.post('/', auth, async (req, res) => {
+  try {
+    const { title, description, imageUrl, price, category } = req.body;
+    const artifact = new Artifact({
+      title,
+      description,
+      imageUrl,
+      price,
+      category,
+      creator: req.user.id
+    });
+    await artifact.save();
+    res.status(201).json({ ok: true, artifact });
+  } catch (err) {
+    res.status(400).json({ ok: false, message: err.message });
+  }
+});
+
+// Update artifact (requires authentication)
+router.put('/:id', auth, async (req, res) => {
   try {
     const artifact = await Artifact.findById(req.params.id);
     if (!artifact) {
-      return res.status(404).json({
-        ok: false,
-        message: 'Artifact not found'
-      });
+      return res.status(404).json({ ok: false, message: 'Artifact not found' });
     }
-    res.json({
-      ok: true,
-      data: artifact
-    });
-  } catch (error) {
-    console.error('Error fetching artifact:', error);
-    res.status(500).json({
-      ok: false,
-      message: 'Failed to fetch artifact'
-    });
-  }
-});
-
-// POST /api/artifacts - Create new artifact (admin only)
-router.post('/', auth, async (req, res) => {
-  try {
-    // Check if user is admin
-    if (!req.user.isAdmin) {
-      return res.status(403).json({
-        ok: false,
-        message: 'Admin access required'
-      });
-    }
-
-    const artifact = new Artifact(req.body);
-    await artifact.save();
     
-    res.status(201).json({
-      ok: true,
-      message: 'Artifact created successfully',
-      data: artifact
-    });
-  } catch (error) {
-    console.error('Error creating artifact:', error);
-    res.status(500).json({
-      ok: false,
-      message: 'Failed to create artifact'
-    });
+    // Check if user is the creator
+    if (artifact.creator.toString() !== req.user.id) {
+      return res.status(403).json({ ok: false, message: 'Not authorized' });
+    }
+    
+    const { title, description, imageUrl, price, category } = req.body;
+    artifact.title = title || artifact.title;
+    artifact.description = description || artifact.description;
+    artifact.imageUrl = imageUrl || artifact.imageUrl;
+    artifact.price = price || artifact.price;
+    artifact.category = category || artifact.category;
+    artifact.updatedAt = Date.now();
+    
+    await artifact.save();
+    res.json({ ok: true, artifact });
+  } catch (err) {
+    res.status(400).json({ ok: false, message: err.message });
   }
 });
 
-// PUT /api/artifacts/:id - Update artifact (admin only)
-router.put('/:id', auth, async (req, res) => {
-  try {
-    if (!req.user.isAdmin) {
-      return res.status(403).json({
-        ok: false,
-        message: 'Admin access required'
-      });
-    }
-
-    const artifact = await Artifact.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true, runValidators: true }
-    );
-
-    if (!artifact) {
-      return res.status(404).json({
-        ok: false,
-        message: 'Artifact not found'
-      });
-    }
-
-    res.json({
-      ok: true,
-      message: 'Artifact updated successfully',
-      data: artifact
-    });
-  } catch (error) {
-    console.error('Error updating artifact:', error);
-    res.status(500).json({
-      ok: false,
-      message: 'Failed to update artifact'
-    });
-  }
-});
-
-// DELETE /api/artifacts/:id - Delete artifact (admin only)
+// Delete artifact (requires authentication)
 router.delete('/:id', auth, async (req, res) => {
   try {
-    if (!req.user.isAdmin) {
-      return res.status(403).json({
-        ok: false,
-        message: 'Admin access required'
-      });
-    }
-
-    const artifact = await Artifact.findByIdAndDelete(req.params.id);
+    const artifact = await Artifact.findById(req.params.id);
     if (!artifact) {
-      return res.status(404).json({
-        ok: false,
-        message: 'Artifact not found'
-      });
+      return res.status(404).json({ ok: false, message: 'Artifact not found' });
     }
-
-    res.json({
-      ok: true,
-      message: 'Artifact deleted successfully'
-    });
-  } catch (error) {
-    console.error('Error deleting artifact:', error);
-    res.status(500).json({
-      ok: false,
-      message: 'Failed to delete artifact'
-    });
+    
+    // Check if user is the creator
+    if (artifact.creator.toString() !== req.user.id) {
+      return res.status(403).json({ ok: false, message: 'Not authorized' });
+    }
+    
+    // FIX: Use deleteOne() instead of the deprecated remove() method
+    await Artifact.deleteOne({ _id: req.params.id });
+    res.json({ ok: true, message: 'Artifact deleted' });
+  } catch (err) {
+    res.status(500).json({ ok: false, message: err.message });
   }
 });
 
