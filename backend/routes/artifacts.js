@@ -86,7 +86,7 @@ router.delete('/:id', auth, async (req, res) => {
       return res.status(403).json({ ok: false, message: 'Not authorized' });
     }
     
-    // FIX: Use deleteOne() instead of the deprecated remove() method
+    // Fixed: .remove() is deprecated, use deleteOne() instead
     await Artifact.deleteOne({ _id: req.params.id });
     res.json({ ok: true, message: 'Artifact deleted' });
   } catch (err) {
