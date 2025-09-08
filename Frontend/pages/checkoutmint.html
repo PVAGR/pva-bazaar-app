@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shopping Cart | PVA Bazaar</title>
+    <title>Checkout - PVA Bazaar</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -87,74 +87,50 @@
             color: var(--accent);
         }
         
-        .cart-icon {
-            position: relative;
-        }
-        
-        .cart-count {
-            position: absolute;
-            top: -8px;
-            right: -8px;
-            background: var(--accent);
-            color: var(--primary-dark);
-            font-size: 12px;
-            font-weight: bold;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        /* Page Title */
-        .page-title {
-            color: var(--gold);
-            font-size: 2.2rem;
-            margin-bottom: 30px;
-            font-family: 'Playfair Display', serif;
-            text-align: center;
-        }
-        
-        /* Cart Layout */
-        .cart-container {
+        /* Checkout Layout */
+        .checkout-container {
             display: grid;
-            grid-template-columns: 2fr 1fr;
+            grid-template-columns: 1.5fr 1fr;
             gap: 30px;
             margin-bottom: 50px;
         }
         
-        @media (max-width: 900px) {
-            .cart-container {
-                grid-template-columns: 1fr;
-            }
-        }
-        
-        /* Cart Items */
-        .cart-items {
+        /* Order Summary */
+        .order-summary {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
             border-radius: 12px;
             padding: 25px;
+            margin-bottom: 25px;
         }
         
-        .cart-item {
+        .summary-title {
+            color: var(--gold);
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--primary);
+            font-family: 'Playfair Display', serif;
+        }
+        
+        .order-item {
             display: flex;
-            gap: 20px;
-            padding: 20px 0;
-            border-bottom: 1px solid var(--primary-dark);
+            gap: 15px;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--primary);
         }
         
-        .cart-item:last-child {
+        .order-item:last-child {
             border-bottom: none;
         }
         
         .item-image {
-            width: 120px;
-            height: 120px;
-            border-radius: 10px;
+            width: 100px;
+            height: 100px;
+            border-radius: 8px;
             overflow: hidden;
-            border: 1px solid var(--primary-light);
+            border: 1px solid var(--primary);
         }
         
         .item-image img {
@@ -168,139 +144,183 @@
         }
         
         .item-name {
-            color: var(--gold);
-            font-size: 1.4rem;
-            margin-bottom: 10px;
-            font-family: 'Playfair Display', serif;
+            color: var(--accent);
+            font-size: 1.2rem;
+            margin-bottom: 5px;
         }
         
-        .item-description {
+        .item-sku {
             color: var(--text-muted);
             font-size: 0.9rem;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
         }
         
         .item-price {
-            color: var(--accent);
-            font-size: 1.2rem;
+            color: var(--gold);
+            font-size: 1.1rem;
             font-weight: 600;
-            margin-bottom: 15px;
         }
         
-        .item-actions {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-        }
-        
-        .quantity-selector {
+        .item-quantity {
             display: flex;
             align-items: center;
             gap: 10px;
+            margin-top: 10px;
         }
         
         .quantity-btn {
-            background: var(--primary);
-            color: var(--text-light);
-            border: none;
             width: 30px;
             height: 30px;
             border-radius: 50%;
+            background: var(--primary);
+            color: var(--text-light);
+            border: none;
+            cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
-            transition: background 0.3s;
         }
         
-        .quantity-btn:hover {
-            background: var(--primary-light);
-        }
-        
-        .quantity {
-            font-size: 1.1rem;
-            font-weight: 500;
-            min-width: 30px;
+        .quantity-input {
+            width: 40px;
             text-align: center;
+            background: transparent;
+            border: 1px solid var(--primary);
+            border-radius: 4px;
+            color: var(--text-light);
+            padding: 5px;
         }
         
-        .remove-btn {
-            background: none;
-            border: none;
-            color: #e74c3c;
-            cursor: pointer;
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            transition: color 0.3s;
-        }
-        
-        .remove-btn:hover {
-            color: #ff6b6b;
-        }
-        
-        /* Order Summary */
-        .order-summary {
+        /* Checkout Form */
+        .checkout-form {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
             border-radius: 12px;
             padding: 25px;
-            height: fit-content;
         }
         
-        .summary-title {
+        .form-section {
+            margin-bottom: 25px;
+        }
+        
+        .form-title {
             color: var(--gold);
-            font-size: 1.5rem;
-            margin-bottom: 20px;
+            font-size: 1.2rem;
+            margin-bottom: 15px;
             font-family: 'Playfair Display', serif;
         }
         
-        .summary-item {
-            display: flex;
-            justify-content: space-between;
+        .form-group {
             margin-bottom: 15px;
         }
         
-        .summary-label {
+        .form-label {
+            display: block;
+            color: var(--accent);
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 12px 15px;
+            border-radius: 8px;
+            background: rgba(28, 90, 69, 0.1);
+            border: 1px solid var(--primary);
+            color: var(--text-light);
+            font-size: 1rem;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        /* Payment Options */
+        .payment-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .payment-option {
+            background: rgba(28, 90, 69, 0.1);
+            border: 1px solid var(--primary);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .payment-option:hover {
+            border-color: var(--accent);
+        }
+        
+        .payment-option.selected {
+            background: rgba(78, 248, 163, 0.1);
+            border-color: var(--accent);
+        }
+        
+        .payment-icon {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            color: var(--accent);
+        }
+        
+        /* Order Total */
+        .order-total {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 25px;
+        }
+        
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        
+        .total-label {
             color: var(--text-muted);
         }
         
-        .summary-value {
+        .total-value {
             color: var(--text-light);
-            font-weight: 500;
         }
         
-        .summary-total {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 20px;
-            padding-top: 20px;
+        .total-final {
             border-top: 1px solid var(--primary);
+            margin-top: 15px;
+            padding-top: 15px;
             font-size: 1.2rem;
             font-weight: 600;
         }
         
-        .total-label {
+        .total-final .total-value {
             color: var(--gold);
-        }
-        
-        .total-value {
-            color: var(--accent);
         }
         
         .checkout-btn {
             width: 100%;
-            padding: 16px;
+            padding: 15px;
+            border-radius: 8px;
             background: linear-gradient(90deg, var(--accent), var(--accent-dark));
             color: var(--primary-dark);
             border: none;
-            border-radius: 8px;
-            font-weight: 600;
             font-size: 1.1rem;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s;
-            margin-top: 25px;
+            transition: all 0.3s ease;
+            margin-top: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -312,17 +332,11 @@
             box-shadow: 0 5px 15px rgba(78, 248, 163, 0.3);
         }
         
-        .continue-shopping {
-            display: block;
-            text-align: center;
-            color: var(--accent);
-            margin-top: 15px;
-            text-decoration: none;
-            font-size: 0.9rem;
-        }
-        
-        .continue-shopping:hover {
-            text-decoration: underline;
+        .checkout-btn:disabled {
+            background: var(--text-muted);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
         
         /* Footer */
@@ -372,40 +386,40 @@
             font-size: 0.9rem;
         }
         
-        /* Empty Cart State */
-        .empty-cart {
-            text-align: center;
-            padding: 60px 20px;
+        /* Responsive Design */
+        @media (max-width: 900px) {
+            .checkout-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .payment-options {
+                grid-template-columns: 1fr;
+            }
+            
+            header {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            nav {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
         }
         
-        .empty-cart-icon {
-            font-size: 4rem;
-            color: var(--primary-light);
-            margin-bottom: 20px;
+        /* Animations */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
         }
         
-        .empty-cart-message {
-            color: var(--text-muted);
-            font-size: 1.2rem;
-            margin-bottom: 30px;
-        }
-        
-        .shop-btn {
-            padding: 12px 25px;
-            background: linear-gradient(90deg, var(--accent), var(--accent-dark));
-            color: var(--primary-dark);
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-decoration: none;
-            display: inline-block;
-        }
-        
-        .shop-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(78, 248, 163, 0.3);
+        .pulse {
+            animation: pulse 2s infinite;
         }
     </style>
 </head>
@@ -421,74 +435,152 @@
                 <a href="#">Collections</a>
                 <a href="#">Provenance</a>
                 <a href="#">About</a>
-                <a href="#" class="cart-icon">
-                    <i class="fas fa-shopping-cart"></i>
-                    <span class="cart-count">1</span>
-                </a>
             </nav>
         </header>
         
-        <h1 class="page-title">Your Shopping Cart</h1>
-        
-        <div class="cart-container">
-            <div class="cart-items">
-                <div class="cart-item">
-                    <div class="item-image">
-                        <img src="https://i.imgur.com/HLKaW01.jpeg" alt="Amradjet Emerald Pendant">
-                    </div>
-                    <div class="item-details">
-                        <h3 class="item-name">Amradjet Emerald Pendant</h3>
-                        <p class="item-description">Panjshir Emerald set in 18k White Gold with NFT authentication</p>
-                        <div class="item-price">$2,450.00</div>
-                        <div class="item-actions">
-                            <div class="quantity-selector">
+        <div class="checkout-container">
+            <div class="checkout-details">
+                <div class="order-summary">
+                    <h2 class="summary-title">Order Summary</h2>
+                    
+                    <div class="order-item">
+                        <div class="item-image">
+                            <img src="https://i.imgur.com/HLKaW01.jpeg" alt="Amradjet Emerald Pendant">
+                        </div>
+                        <div class="item-details">
+                            <h3 class="item-name">Amradjet Emerald Pendant</h3>
+                            <div class="item-sku">SKU: PVA-EMER-001</div>
+                            <div class="item-price">$2,450.00</div>
+                            <div class="item-quantity">
                                 <button class="quantity-btn" id="decrease-qty">-</button>
-                                <span class="quantity" id="item-quantity">1</span>
+                                <input type="number" class="quantity-input" id="item-quantity" value="1" min="1">
                                 <button class="quantity-btn" id="increase-qty">+</button>
                             </div>
-                            <button class="remove-btn">
-                                <i class="fas fa-trash"></i> Remove
-                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="checkout-form">
+                    <div class="form-section">
+                        <h3 class="form-title">Shipping Information</h3>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">First Name</label>
+                                <input type="text" class="form-input" id="first-name" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Last Name</label>
+                                <input type="text" class="form-input" id="last-name" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Email Address</label>
+                            <input type="email" class="form-input" id="email" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Shipping Address</label>
+                            <input type="text" class="form-input" id="address" required>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">City</label>
+                                <input type="text" class="form-input" id="city" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Postal Code</label>
+                                <input type="text" class="form-input" id="postal-code" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Country</label>
+                            <select class="form-input" id="country" required>
+                                <option value="">Select Country</option>
+                                <option value="us">United States</option>
+                                <option value="uk">United Kingdom</option>
+                                <option value="ca">Canada</option>
+                                <option value="au">Australia</option>
+                                <option value="de">Germany</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h3 class="form-title">Payment Method</h3>
+                        
+                        <div class="payment-options">
+                            <div class="payment-option" id="option-crypto">
+                                <div class="payment-icon">
+                                    <i class="fab fa-ethereum"></i>
+                                </div>
+                                <div>Crypto Payment</div>
+                            </div>
+                            
+                            <div class="payment-option" id="option-card">
+                                <div class="payment-icon">
+                                    <i class="far fa-credit-card"></i>
+                                </div>
+                                <div>Credit Card</div>
+                            </div>
+                            
+                            <div class="payment-option" id="option-wallet">
+                                <div class="payment-icon">
+                                    <i class="fas fa-wallet"></i>
+                                </div>
+                                <div>Digital Wallet</div>
+                            </div>
+                            
+                            <div class="payment-option" id="option-bank">
+                                <div class="payment-icon">
+                                    <i class="fas fa-university"></i>
+                                </div>
+                                <div>Bank Transfer</div>
+                            </div>
+                        </div>
+                        
+                        <div id="payment-details">
+                            <!-- Payment details will be shown here based on selection -->
                         </div>
                     </div>
                 </div>
             </div>
             
-            <div class="order-summary">
-                <h2 class="summary-title">Order Summary</h2>
+            <div class="order-total">
+                <h2 class="summary-title">Order Total</h2>
                 
-                <div class="summary-item">
-                    <span class="summary-label">Subtotal</span>
-                    <span class="summary-value" id="subtotal">$2,450.00</span>
+                <div class="total-row">
+                    <div class="total-label">Subtotal</div>
+                    <div class="total-value" id="subtotal">$2,450.00</div>
                 </div>
                 
-                <div class="summary-item">
-                    <span class="summary-label">Shipping</span>
-                    <span class="summary-value">$25.00</span>
+                <div class="total-row">
+                    <div class="total-label">Shipping</div>
+                    <div class="total-value" id="shipping">$25.00</div>
                 </div>
                 
-                <div class="summary-item">
-                    <span class="summary-label">Tax</span>
-                    <span class="summary-value" id="tax-amount">$171.50</span>
+                <div class="total-row">
+                    <div class="total-label">Tax</div>
+                    <div class="total-value" id="tax">$171.50</div>
                 </div>
                 
-                <div class="summary-item">
-                    <span class="summary-label">NFT Minting Fee</span>
-                    <span class="summary-value">$10.00</span>
+                <div class="total-row total-final">
+                    <div class="total-label">Total</div>
+                    <div class="total-value" id="total">$2,646.50</div>
                 </div>
                 
-                <div class="summary-total">
-                    <span class="total-label">Total</span>
-                    <span class="total-value" id="total-price">$2,656.50</span>
-                </div>
-                
-                <button class="checkout-btn">
-                    <i class="fas fa-lock"></i> Proceed to Checkout
+                <button class="checkout-btn" id="place-order-btn">
+                    <i class="fas fa-lock"></i>
+                    Place Order
                 </button>
                 
-                <a href="#" class="continue-shopping">
-                    <i class="fas fa-arrow-left"></i> Continue Shopping
-                </a>
+                <div style="text-align: center; margin-top: 15px;">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=PVA-Bazaar-Checkout-Secure" alt="Secure Checkout" style="margin-top: 10px;">
+                    <p style="color: var(--accent); font-size: 0.8rem; margin-top: 5px;">Secure Checkout</p>
+                </div>
             </div>
         </div>
         
@@ -505,72 +597,174 @@
     </div>
 
     <script>
-        // Quantity adjustment functionality
-        const quantityElement = document.getElementById('item-quantity');
+        // Quantity controls
+        const quantityInput = document.getElementById('item-quantity');
+        const decreaseBtn = document.getElementById('decrease-qty');
+        const increaseBtn = document.getElementById('increase-qty');
         const subtotalElement = document.getElementById('subtotal');
-        const taxElement = document.getElementById('tax-amount');
-        const totalElement = document.getElementById('total-price');
+        const totalElement = document.getElementById('total');
         
-        const basePrice = 2450.00;
-        const shipping = 25.00;
-        const nftFee = 10.00;
+        const itemPrice = 2450.00;
+        const shippingCost = 25.00;
         const taxRate = 0.07; // 7%
         
         function updateTotals() {
-            const quantity = parseInt(quantityElement.textContent);
-            const subtotal = basePrice * quantity;
+            const quantity = parseInt(quantityInput.value);
+            const subtotal = itemPrice * quantity;
             const tax = subtotal * taxRate;
-            const total = subtotal + tax + shipping + nftFee;
+            const total = subtotal + shippingCost + tax;
             
             subtotalElement.textContent = `$${subtotal.toFixed(2)}`;
-            taxElement.textContent = `$${tax.toFixed(2)}`;
             totalElement.textContent = `$${total.toFixed(2)}`;
         }
         
-        document.getElementById('increase-qty').addEventListener('click', function() {
-            let quantity = parseInt(quantityElement.textContent);
-            quantityElement.textContent = quantity + 1;
-            updateTotals();
-        });
-        
-        document.getElementById('decrease-qty').addEventListener('click', function() {
-            let quantity = parseInt(quantityElement.textContent);
-            if (quantity > 1) {
-                quantityElement.textContent = quantity - 1;
+        decreaseBtn.addEventListener('click', () => {
+            if (parseInt(quantityInput.value) > 1) {
+                quantityInput.value = parseInt(quantityInput.value) - 1;
                 updateTotals();
             }
         });
         
-        // Remove item functionality
-        document.querySelector('.remove-btn').addEventListener('click', function() {
-            if (confirm('Are you sure you want to remove this item from your cart?')) {
-                document.querySelector('.cart-items').innerHTML = `
-                    <div class="empty-cart">
-                        <div class="empty-cart-icon">
-                            <i class="fas fa-shopping-cart"></i>
-                        </div>
-                        <p class="empty-cart-message">Your cart is empty</p>
-                        <a href="#" class="shop-btn">
-                            <i class="fas fa-gem"></i> Continue Shopping
-                        </a>
-                    </div>
-                `;
-                
-                document.querySelector('.cart-count').textContent = '0';
-                document.querySelector('.order-summary').style.opacity = '0.5';
-                document.querySelector('.checkout-btn').disabled = true;
-            }
+        increaseBtn.addEventListener('click', () => {
+            quantityInput.value = parseInt(quantityInput.value) + 1;
+            updateTotals();
         });
         
-        // Checkout button functionality
-        document.querySelector('.checkout-btn').addEventListener('click', function() {
-            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-            
-            setTimeout(() => {
-                alert('Redirecting to secure checkout...');
-                this.innerHTML = '<i class="fas fa-lock"></i> Proceed to Checkout';
-            }, 1500);
+        quantityInput.addEventListener('change', () => {
+            if (parseInt(quantityInput.value) < 1) quantityInput.value = 1;
+            updateTotals();
         });
+        
+        // Payment option selection
+        const paymentOptions = document.querySelectorAll('.payment-option');
+        
+        paymentOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                paymentOptions.forEach(opt => opt.classList.remove('selected'));
+                option.classList.add('selected');
+                
+                // Show appropriate payment details
+                const paymentDetails = document.getElementById('payment-details');
+                const optionId = option.id;
+                
+                if (optionId === 'option-crypto') {
+                    paymentDetails.innerHTML = `
+                        <div class="form-group">
+                            <label class="form-label">Select Cryptocurrency</label>
+                            <select class="form-input" required>
+                                <option value="">Choose currency</option>
+                                <option value="eth">Ethereum (ETH)</option>
+                                <option value="btc">Bitcoin (BTC)</option>
+                                <option value="usdc">USD Coin (USDC)</option>
+                                <option value="pva">PVA Coin</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Wallet Address</label>
+                            <input type="text" class="form-input" placeholder="Enter your wallet address" required>
+                        </div>
+                    `;
+                } else if (optionId === 'option-card') {
+                    paymentDetails.innerHTML = `
+                        <div class="form-group">
+                            <label class="form-label">Card Number</label>
+                            <input type="text" class="form-input" placeholder="1234 5678 9012 3456" required>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Expiration Date</label>
+                                <input type="text" class="form-input" placeholder="MM/YY" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">CVV</label>
+                                <input type="text" class="form-input" placeholder="123" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Cardholder Name</label>
+                            <input type="text" class="form-input" placeholder="John Doe" required>
+                        </div>
+                    `;
+                } else if (optionId === 'option-wallet') {
+                    paymentDetails.innerHTML = `
+                        <div class="form-group">
+                            <label class="form-label">Select Wallet</label>
+                            <select class="form-input" required>
+                                <option value="">Choose wallet</option>
+                                <option value="metamask">MetaMask</option>
+                                <option value="coinbase">Coinbase Wallet</option>
+                                <option value="walletconnect">WalletConnect</option>
+                                <option value="phantom">Phantom</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <button class="checkout-btn" style="margin-top: 10px;">
+                                <i class="fas fa-wallet"></i>
+                                Connect Wallet
+                            </button>
+                        </div>
+                    `;
+                } else if (optionId === 'option-bank') {
+                    paymentDetails.innerHTML = `
+                        <div class="form-group">
+                            <label class="form-label">Account Holder Name</label>
+                            <input type="text" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">IBAN</label>
+                            <input type="text" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">BIC/SWIFT</label>
+                            <input type="text" class="form-input" required>
+                        </div>
+                    `;
+                }
+            });
+        });
+        
+        // Place order button
+        const placeOrderBtn = document.getElementById('place-order-btn');
+        
+        placeOrderBtn.addEventListener('click', () => {
+            // Simple form validation
+            const requiredFields = document.querySelectorAll('[required]');
+            let valid = true;
+            
+            requiredFields.forEach(field => {
+                if (!field.value) {
+                    field.style.borderColor = 'red';
+                    valid = false;
+                } else {
+                    field.style.borderColor = '';
+                }
+            });
+            
+            if (!valid) {
+                alert('Please fill in all required fields');
+                return;
+            }
+            
+            // Check if payment method is selected
+            const selectedPayment = document.querySelector('.payment-option.selected');
+            if (!selectedPayment) {
+                alert('Please select a payment method');
+                return;
+            }
+            
+            // Show loading state
+            placeOrderBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            placeOrderBtn.disabled = true;
+            
+            // Simulate payment processing
+            setTimeout(() => {
+                alert('Order placed successfully! Redirecting to confirmation page...');
+                // In a real application, would redirect to order confirmation page
+            }, 2000);
+        });
+        
+        // Initialize totals
+        updateTotals();
     </script>
 </body>
 </html>
