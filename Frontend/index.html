@@ -5,20 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PVA Bazaar - Artisan Marketplace & Digital Provenance</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary-dark: #0f3b2d;
-            --primary: #1c5a45;
-            --primary-light: #2d7d5a;
-            --accent: #4ef8a3;
-            --accent-dark: #2bb673;
+            --primary-dark: #0a2c21;
+            --primary: #143d2e;
+            --primary-light: #1e4e3c;
+            --accent: #3ac389;
+            --accent-dark: #2a9c6f;
             --text-light: #e8f4f0;
             --text-muted: #a8b0b9;
-            --card-bg: rgba(255, 255, 255, 0.1);
-            --card-border: rgba(78, 248, 163, 0.3);
-            --gold: #d4af37;
-            --shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --card-border: rgba(58, 195, 137, 0.2);
+            --gold: #c8a971;
+            --shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
             --transition: all 0.3s ease;
         }
 
@@ -51,12 +51,6 @@
             padding: 20px 0;
             margin-bottom: 30px;
             flex-wrap: wrap;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            background: rgba(15, 59, 45, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 0 0 15px 15px;
         }
         
         .logo {
@@ -67,19 +61,12 @@
         }
         
         .logo:hover {
-            transform: scale(1.05);
+            transform: scale(1.03);
         }
         
         .logo-icon {
             font-size: 32px;
             color: var(--accent);
-            animation: pulse 2s infinite;
-        }
-        
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
         }
         
         .logo-text {
@@ -87,6 +74,7 @@
             font-weight: 700;
             color: var(--text-light);
             font-family: 'Playfair Display', serif;
+            letter-spacing: 0.5px;
         }
         
         nav ul {
@@ -102,6 +90,8 @@
             transition: var(--transition);
             position: relative;
             padding: 5px 0;
+            font-size: 15px;
+            letter-spacing: 0.5px;
         }
         
         nav a:hover {
@@ -123,22 +113,13 @@
             width: 100%;
         }
         
-        .mobile-menu-btn {
-            display: none;
-            background: none;
-            border: none;
-            color: var(--text-light);
-            font-size: 24px;
-            cursor: pointer;
-        }
-        
         /* Hero Section */
         .hero {
             text-align: center;
             padding: 80px 20px;
             margin-bottom: 40px;
             background: var(--card-bg);
-            border-radius: 20px;
+            border-radius: 16px;
             backdrop-filter: blur(10px);
             border: 1px solid var(--card-border);
             box-shadow: var(--shadow);
@@ -153,65 +134,62 @@
             left: -50%;
             width: 200%;
             height: 200%;
-            background: radial-gradient(circle, rgba(78, 248, 163, 0.1) 0%, transparent 70%);
-            animation: rotate 15s linear infinite;
+            background: radial-gradient(circle, rgba(58, 195, 137, 0.08) 0%, transparent 70%);
             pointer-events: none;
         }
         
-        @keyframes rotate {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-        
         .hero h1 {
-            font-size: 3.5rem;
+            font-size: 3.2rem;
             margin-bottom: 20px;
-            color: var(--accent);
-            text-shadow: 0 0 20px rgba(78, 248, 163, 0.5);
+            color: var(--text-light);
+            text-shadow: 0 0 15px rgba(58, 195, 137, 0.4);
             font-family: 'Playfair Display', serif;
             position: relative;
-            z-index: 2;
+            letter-spacing: 0.5px;
         }
         
         .hero p {
-            font-size: 1.3rem;
+            font-size: 1.2rem;
             max-width: 800px;
             margin: 0 auto 30px;
             color: var(--text-light);
-            position: relative;
-            z-index: 2;
+            line-height: 1.8;
+            font-weight: 300;
+            letter-spacing: 0.3px;
         }
         
         .btn {
             display: inline-block;
             background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
             color: var(--primary-dark);
-            padding: 15px 35px;
+            padding: 14px 32px;
             border-radius: 50px;
             text-decoration: none;
             font-weight: 600;
             transition: var(--transition);
             border: none;
             cursor: pointer;
-            position: relative;
-            z-index: 2;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            letter-spacing: 0.5px;
+            position: relative;
+            z-index: 1;
         }
         
         .btn:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 25px rgba(0, 0, 0, 0.3);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
         }
         
         /* Section Titles */
         .section-title {
             text-align: center;
-            font-size: 2.5rem;
+            font-size: 2.3rem;
             margin-bottom: 50px;
-            color: var(--accent);
+            color: var(--text-light);
             font-family: 'Playfair Display', serif;
             position: relative;
             padding-bottom: 15px;
+            letter-spacing: 0.5px;
         }
         
         .section-title::after {
@@ -220,7 +198,7 @@
             bottom: 0;
             left: 50%;
             transform: translateX(-50%);
-            width: 100px;
+            width: 80px;
             height: 3px;
             background: var(--accent);
             border-radius: 3px;
@@ -236,7 +214,7 @@
         
         .feature-card {
             background: var(--card-bg);
-            border-radius: 15px;
+            border-radius: 16px;
             padding: 30px;
             text-align: center;
             backdrop-filter: blur(10px);
@@ -246,48 +224,33 @@
             overflow: hidden;
         }
         
-        .feature-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 5px;
-            background: linear-gradient(90deg, var(--accent), var(--accent-dark));
-            transform: scaleX(0);
-            transform-origin: left;
-            transition: transform 0.5s ease;
-        }
-        
         .feature-card:hover {
-            transform: translateY(-10px);
+            transform: translateY(-8px);
             box-shadow: var(--shadow);
         }
         
-        .feature-card:hover::before {
-            transform: scaleX(1);
-        }
-        
         .feature-icon {
-            font-size: 48px;
+            font-size: 42px;
             color: var(--accent);
             margin-bottom: 25px;
             transition: var(--transition);
         }
         
         .feature-card:hover .feature-icon {
-            transform: scale(1.2);
+            transform: scale(1.1);
         }
         
         .feature-card h3 {
-            font-size: 1.6rem;
+            font-size: 1.5rem;
             margin-bottom: 15px;
             color: var(--text-light);
+            font-weight: 600;
         }
         
         .feature-card p {
             color: var(--text-muted);
             line-height: 1.7;
+            font-weight: 300;
         }
         
         /* Marketplace Grid */
@@ -300,7 +263,7 @@
         
         .product-card {
             background: var(--card-bg);
-            border-radius: 15px;
+            border-radius: 16px;
             overflow: hidden;
             backdrop-filter: blur(10px);
             border: 1px solid var(--card-border);
@@ -317,17 +280,12 @@
             height: 220px;
             overflow: hidden;
             position: relative;
-        }
-        
-        .product-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.5s ease;
-        }
-        
-        .product-card:hover .product-image img {
-            transform: scale(1.1);
+            background: linear-gradient(45deg, #1e4e3c 0%, #2a9c6f 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
         }
         
         .product-badge {
@@ -348,9 +306,10 @@
         }
         
         .product-content h3 {
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             margin-bottom: 12px;
             color: var(--accent);
+            font-weight: 600;
         }
         
         .product-content p {
@@ -358,6 +317,7 @@
             margin-bottom: 20px;
             font-size: 0.95rem;
             line-height: 1.6;
+            font-weight: 300;
         }
         
         .product-meta {
@@ -379,8 +339,8 @@
         }
         
         .btn-sm {
-            padding: 10px 18px;
-            font-size: 0.9rem;
+            padding: 9px 16px;
+            font-size: 0.85rem;
         }
         
         .btn-outline {
@@ -397,24 +357,11 @@
         /* Artisan Section */
         .artisan-section {
             background: var(--card-bg);
-            border-radius: 20px;
+            border-radius: 16px;
             padding: 50px 40px;
             margin-bottom: 80px;
             backdrop-filter: blur(10px);
             border: 1px solid var(--card-border);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .artisan-section::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 200px;
-            height: 200px;
-            background: radial-gradient(circle, rgba(78, 248, 163, 0.1) 0%, transparent 70%);
-            border-radius: 50%;
         }
         
         .artisan-grid {
@@ -427,14 +374,14 @@
         .artisan-card {
             text-align: center;
             padding: 25px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
             transition: var(--transition);
         }
         
         .artisan-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            box-shadow: var(--shadow);
         }
         
         .artisan-avatar {
@@ -444,44 +391,26 @@
             margin: 0 auto 20px;
             border: 3px solid var(--accent);
             overflow: hidden;
-            position: relative;
-        }
-        
-        .artisan-avatar::before {
-            content: '';
-            position: absolute;
-            top: -3px;
-            left: -3px;
-            right: -3px;
-            bottom: -3px;
-            border-radius: 50%;
-            background: linear-gradient(45deg, var(--accent), var(--accent-dark));
-            z-index: -1;
-            animation: rotateBorder 3s linear infinite;
-        }
-        
-        @keyframes rotateBorder {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        .artisan-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 50%;
+            background: linear-gradient(45deg, #1e4e3c 0%, #2a9c6f 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 40px;
         }
         
         .artisan-card h3 {
             color: var(--accent);
             margin-bottom: 8px;
-            font-size: 1.4rem;
+            font-size: 1.3rem;
+            font-weight: 600;
         }
         
         .artisan-card p {
             color: var(--text-muted);
             font-size: 0.95rem;
             margin-bottom: 15px;
+            font-weight: 300;
         }
         
         .artisan-stats {
@@ -498,34 +427,23 @@
         .stat-value {
             font-weight: 700;
             color: var(--accent);
-            font-size: 1.4rem;
+            font-size: 1.3rem;
         }
         
         .stat-label {
             font-size: 0.85rem;
             color: var(--text-muted);
+            font-weight: 300;
         }
         
         /* NFT Section */
         .nft-section {
             background: var(--card-bg);
-            border-radius: 20px;
+            border-radius: 16px;
             padding: 50px 40px;
             margin-bottom: 80px;
             backdrop-filter: blur(10px);
             border: 1px solid var(--card-border);
-            position: relative;
-        }
-        
-        .nft-section::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 200px;
-            height: 200px;
-            background: radial-gradient(circle, rgba(78, 248, 163, 0.1) 0%, transparent 70%);
-            border-radius: 50%;
         }
         
         .nft-features {
@@ -538,37 +456,34 @@
         .nft-feature {
             text-align: center;
             padding: 30px 25px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
             transition: var(--transition);
         }
         
         .nft-feature:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            box-shadow: var(--shadow);
         }
         
         .nft-icon {
-            font-size: 3rem;
+            font-size: 2.8rem;
             color: var(--accent);
             margin-bottom: 20px;
-            transition: var(--transition);
-        }
-        
-        .nft-feature:hover .nft-icon {
-            transform: scale(1.2);
         }
         
         .nft-feature h3 {
             color: var(--accent);
             margin-bottom: 15px;
-            font-size: 1.4rem;
+            font-size: 1.3rem;
+            font-weight: 600;
         }
         
         .nft-feature p {
             color: var(--text-muted);
             font-size: 0.95rem;
             line-height: 1.6;
+            font-weight: 300;
         }
         
         /* CTA Section */
@@ -577,40 +492,24 @@
             padding: 80px 20px;
             margin-bottom: 60px;
             background: var(--card-bg);
-            border-radius: 20px;
+            border-radius: 16px;
             backdrop-filter: blur(10px);
             border: 1px solid var(--card-border);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .cta-section::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(78, 248, 163, 0.1) 0%, transparent 70%);
-            animation: rotate 20s linear infinite;
-            pointer-events: none;
         }
         
         .cta-section h2 {
-            font-size: 2.8rem;
+            font-size: 2.5rem;
             margin-bottom: 25px;
-            color: var(--accent);
+            color: var(--text-light);
             font-family: 'Playfair Display', serif;
-            position: relative;
-            z-index: 2;
         }
         
         .cta-section p {
             max-width: 700px;
             margin: 0 auto 40px;
-            font-size: 1.2rem;
-            position: relative;
-            z-index: 2;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            font-weight: 300;
         }
         
         /* Footer */
@@ -619,21 +518,10 @@
             padding: 60px 20px 40px;
             margin-top: 60px;
             border-top: 1px solid var(--card-border);
-            position: relative;
-        }
-        
-        footer::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, var(--accent), transparent);
         }
         
         .footer-logo {
-            font-size: 2.2rem;
+            font-size: 2rem;
             font-weight: 700;
             margin-bottom: 25px;
             color: var(--accent);
@@ -652,7 +540,8 @@
             color: var(--text-light);
             text-decoration: none;
             transition: var(--transition);
-            font-weight: 500;
+            font-weight: 400;
+            font-size: 15px;
         }
         
         .footer-links a:hover {
@@ -670,8 +559,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 50px;
-            height: 50px;
+            width: 45px;
+            height: 45px;
             border-radius: 50%;
             background: var(--card-bg);
             color: var(--text-light);
@@ -683,55 +572,24 @@
         .social-links a:hover {
             background: var(--accent);
             color: var(--primary-dark);
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
         }
         
         .copyright {
             color: var(--text-muted);
             font-size: 0.9rem;
-        }
-        
-        /* Back to Top Button */
-        .back-to-top {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 50px;
-            height: 50px;
-            background: var(--accent);
-            color: var(--primary-dark);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-            font-size: 20px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-            transition: var(--transition);
-            z-index: 99;
-            opacity: 0;
-            visibility: hidden;
-        }
-        
-        .back-to-top.visible {
-            opacity: 1;
-            visibility: visible;
-        }
-        
-        .back-to-top:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+            font-weight: 300;
         }
         
         /* Responsive Design */
         @media (max-width: 1024px) {
             .hero h1 {
-                font-size: 3rem;
+                font-size: 2.8rem;
             }
             
             .section-title {
-                font-size: 2.2rem;
+                font-size: 2rem;
             }
         }
         
@@ -753,7 +611,7 @@
             }
             
             .hero h1 {
-                font-size: 2.5rem;
+                font-size: 2.3rem;
             }
             
             .hero p {
@@ -761,7 +619,7 @@
             }
             
             .section-title {
-                font-size: 2rem;
+                font-size: 1.8rem;
                 margin-bottom: 40px;
             }
             
@@ -787,29 +645,13 @@
             }
             
             .cta-section h2 {
-                font-size: 2.2rem;
+                font-size: 2rem;
             }
             
             .footer-links {
                 flex-direction: column;
                 align-items: center;
                 gap: 15px;
-            }
-            
-            .mobile-menu-btn {
-                display: block;
-            }
-            
-            nav ul {
-                display: none;
-                flex-direction: column;
-                width: 100%;
-                text-align: center;
-                margin-top: 20px;
-            }
-            
-            nav ul.show {
-                display: flex;
             }
         }
         
@@ -823,7 +665,7 @@
             }
             
             .section-title {
-                font-size: 1.8rem;
+                font-size: 1.6rem;
             }
             
             .product-actions {
@@ -841,64 +683,17 @@
                 flex-wrap: wrap;
             }
         }
-        
-        /* Loading Animation */
-        .loading {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: var(--primary-dark);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-            transition: opacity 0.5s ease, visibility 0.5s ease;
-        }
-        
-        .loading.hidden {
-            opacity: 0;
-            visibility: hidden;
-        }
-        
-        .spinner {
-            width: 50px;
-            height: 50px;
-            border: 5px solid rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-            border-top: 5px solid var(--accent);
-            animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
     </style>
 </head>
 <body>
-    <!-- Loading Screen -->
-    <div class="loading">
-        <div class="spinner"></div>
-    </div>
-
-    <!-- Back to Top Button -->
-    <a href="#" class="back-to-top">
-        <i class="fas fa-arrow-up"></i>
-    </a>
-
     <div class="container">
         <header>
             <div class="logo">
                 <i class="fas fa-gem logo-icon"></i>
                 <div class="logo-text">PVA Bazaar</div>
             </div>
-            <button class="mobile-menu-btn" id="mobileMenuBtn">
-                <i class="fas fa-bars"></i>
-            </button>
             <nav>
-                <ul id="navMenu">
+                <ul>
                     <li><a href="#marketplace">Marketplace</a></li>
                     <li><a href="#artisans">Artisans</a></li>
                     <li><a href="#nft">NFTs</a></li>
@@ -937,8 +732,8 @@
         <div class="marketplace-grid">
             <div class="product-card">
                 <div class="product-image">
-                    <img src="https://images.unsplash.com/photo-1515562141207-7a88fb7ad5e5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80" alt="Emerald Pendant">
                     <div class="product-badge">NFT Available</div>
+                    <i class="fas fa-gem" style="font-size: 48px;"></i>
                 </div>
                 <div class="product-content">
                     <h3>Emerald Pendant</h3>
@@ -946,8 +741,8 @@
                     <div class="product-meta">
                         <div class="product-price">$249</div>
                         <div class="product-actions">
-                            <a href="#" class="btn btn-sm">Details</a>
-                            <a href="#" class="btn btn-sm btn-outline">View NFT</a>
+                            <button class="btn btn-sm">Details</button>
+                            <button class="btn btn-sm btn-outline">View NFT</button>
                         </div>
                     </div>
                 </div>
@@ -955,8 +750,8 @@
             
             <div class="product-card">
                 <div class="product-image">
-                    <img src="https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80" alt="Silver Bracelet">
                     <div class="product-badge">Limited Edition</div>
+                    <i class="fas fa-ring" style="font-size: 48px;"></i>
                 </div>
                 <div class="product-content">
                     <h3>Artisan Silver Bracelet</h3>
@@ -964,8 +759,8 @@
                     <div class="product-meta">
                         <div class="product-price">$189</div>
                         <div class="product-actions">
-                            <a href="#" class="btn btn-sm">Details</a>
-                            <a href="#" class="btn btn-sm btn-outline">View NFT</a>
+                            <button class="btn btn-sm">Details</button>
+                            <button class="btn btn-sm btn-outline">View NFT</button>
                         </div>
                     </div>
                 </div>
@@ -973,8 +768,8 @@
             
             <div class="product-card">
                 <div class="product-image">
-                    <img src="https://images.unsplash.com/photo-1611591437281-460bfbe1220a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80" alt="Handcrafted Ring">
                     <div class="product-badge">One of a Kind</div>
+                    <i class="fas fa-crown" style="font-size: 48px;"></i>
                 </div>
                 <div class="product-content">
                     <h3>Sacred Geometry Ring</h3>
@@ -982,8 +777,8 @@
                     <div class="product-meta">
                         <div class="product-price">$420</div>
                         <div class="product-actions">
-                            <a href="#" class="btn btn-sm">Details</a>
-                            <a href="#" class="btn btn-sm btn-outline">View NFT</a>
+                            <button class="btn btn-sm">Details</button>
+                            <button class="btn btn-sm btn-outline">View NFT</button>
                         </div>
                     </div>
                 </div>
@@ -991,8 +786,8 @@
             
             <div class="product-card">
                 <div class="product-image">
-                    <img src="https://images.unsplash.com/photo-1605100804763-247f67b3557e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80" alt="Handmade Necklace">
                     <div class="product-badge">New</div>
+                    <i class="fas fa-necklace" style="font-size: 48px;"></i>
                 </div>
                 <div class="product-content">
                     <h3>Gemstone Necklace</h3>
@@ -1000,8 +795,8 @@
                     <div class="product-meta">
                         <div class="product-price">$275</div>
                         <div class="product-actions">
-                            <a href="#" class="btn btn-sm">Details</a>
-                            <a href="#" class="btn btn-sm btn-outline">View NFT</a>
+                            <button class="btn btn-sm">Details</button>
+                            <button class="btn btn-sm btn-outline">View NFT</button>
                         </div>
                     </div>
                 </div>
@@ -1013,7 +808,7 @@
             <div class="artisan-grid">
                 <div class="artisan-card">
                     <div class="artisan-avatar">
-                        <img src="https://images.unsplash.com/photo-1567532939604-b6b5b0db1604?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80" alt="Maria Lopez">
+                        <i class="fas fa-user"></i>
                     </div>
                     <h3>Maria Lopez</h3>
                     <p>Oaxaca, Mexico | Silver Smithing</p>
@@ -1035,7 +830,7 @@
                 
                 <div class="artisan-card">
                     <div class="artisan-avatar">
-                        <img src="https://images.unsplash.com/photo-1575936123452-b67c3203c357?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80" alt="James Chen">
+                        <i class="fas fa-user"></i>
                     </div>
                     <h3>James Chen</h3>
                     <p>Bali, Indonesia | Wood Carving</p>
@@ -1057,7 +852,7 @@
                 
                 <div class="artisan-card">
                     <div class="artisan-avatar">
-                        <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80" alt="Aisha Patel">
+                        <i class="fas fa-user"></i>
                     </div>
                     <h3>Aisha Patel</h3>
                     <p>Jaipur, India | Textile Arts</p>
@@ -1080,4 +875,109 @@
         </section>
         
         <section class="nft-section" id="nft">
-            <h2 class="section-title">Digital
+            <h2 class="section-title">Digital Provenance with NFTs</h2>
+            <div class="nft-features">
+                <div class="nft-feature">
+                    <div class="nft-icon">
+                        <i class="fas fa-certificate"></i>
+                    </div>
+                    <h3>Authenticity Guaranteed</h3>
+                    <p>Each physical item is paired with an NFT that verifies its authenticity and origin on the blockchain.</p>
+                </div>
+                
+                <div class="nft-feature">
+                    <div class="nft-icon">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <h3>Complete History</h3>
+                    <p>Track the entire history of ownership and provenance on the blockchain from creation to current owner.</p>
+                </div>
+                
+                <div class="nft-feature">
+                    <div class="nft-icon">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <h3>Secure Ownership</h3>
+                    <p>Your ownership is securely recorded on the blockchain and cannot be forged or tampered with.</p>
+                </div>
+                
+                <div class="nft-feature">
+                    <div class="nft-icon">
+                        <i class="fas fa-sync-alt"></i>
+                    </div>
+                    <h3>Resale Royalties</h3>
+                    <p>Artisans earn royalties automatically from secondary market sales through smart contracts.</p>
+                </div>
+            </div>
+        </section>
+        
+        <section class="cta-section">
+            <h2>Join the PVA Bazaar Revolution</h2>
+            <p>Whether you're an artisan looking to reach a global audience or a collector seeking unique pieces with verified provenance, PVA Bazaar offers a new paradigm for artisan commerce.</p>
+            <a href="#" class="btn">Get Started</a>
+        </section>
+    </div>
+    
+    <footer>
+        <div class="footer-logo">PVA Bazaar</div>
+        <div class="footer-links">
+            <a href="#">About</a>
+            <a href="#">FAQ</a>
+            <a href="#">Privacy</a>
+            <a href="#">Terms</a>
+            <a href="#">Contact</a>
+        </div>
+        <div class="social-links">
+            <a href="#"><i class="fab fa-twitter"></i></a>
+            <a href="#"><i class="fab fa-instagram"></i></a>
+            <a href="#"><i class="fab fa-discord"></i></a>
+            <a href="#"><i class="fab fa-github"></i></a>
+        </div>
+        <div class="copyright">© 2023 PVA Bazaar. All rights reserved.</div>
+    </footer>
+
+    <script>
+        // Wait for the DOM to be fully loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('PVA Bazaar - Where Artistry Meets Blockchain');
+            
+            // Simple animation for buttons
+            document.querySelectorAll('.btn').forEach(button => {
+                button.addEventListener('mouseover', function() {
+                    this.style.boxShadow = '0 0 15px rgba(58, 195, 137, 0.5)';
+                });
+                
+                button.addEventListener('mouseout', function() {
+                    this.style.boxShadow = '0 5px 15px rgba(0, 0, 0, 0.2)';
+                });
+            });
+            
+            // Smooth scrolling for navigation links
+            document.querySelectorAll('nav a').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    const targetId = this.getAttribute('href');
+                    if(targetId.startsWith('#')) {
+                        const targetElement = document.querySelector(targetId);
+                        if(targetElement) {
+                            window.scrollTo({
+                                top: targetElement.offsetTop - 100,
+                                behavior: 'smooth'
+                            });
+                        }
+                    }
+                });
+            });
+            
+            // Add click handlers for product buttons
+            document.querySelectorAll('.product-actions .btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const productName = this.closest('.product-card').querySelector('h3').textContent;
+                    alert(`You clicked on ${productName} - ${this.textContent}`);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
