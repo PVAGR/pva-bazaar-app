@@ -29,9 +29,7 @@ async function connectToDatabase() {
   
   try {
     const client = await mongoose.connect(process.env.MONGODB_URI, {
-      dbName: 'pvabazaar',
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
+      dbName: 'pvabazaar'
     });
     
     cachedDb = client;
@@ -46,10 +44,10 @@ async function connectToDatabase() {
 // Connect on startup
 connectToDatabase().catch(console.error);
 
-// Import routes
-const artifactsRoutes = require('./routes/artifacts');
-const usersRoutes = require('./routes/users');
-const healthRoutes = require('./routes/health');
+// Import routes - FIX: Use correct path to routes
+const artifactsRoutes = require('./backend/routes/artifacts');
+const usersRoutes = require('./backend/routes/users');
+const healthRoutes = require('./backend/routes/health');
 
 // Use routes
 app.use('/api/artifacts', artifactsRoutes);
@@ -77,10 +75,12 @@ app.get('/api/healthcheck', async (_req, res) => {
 
 // Serve static assets in production
 if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, 'frontend')));
+  // Serve any static files from the Frontend directory
+  app.use(express.static(path.join(__dirname, 'Frontend')));
   
+  // Handle React routing, return all requests to React app
   app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'frontend', 'index.html'));
+    res.sendFile(path.join(__dirname, 'Frontend', 'index.html'));
   });
 }
 
