@@ -29,7 +29,9 @@ async function connectToDatabase() {
   
   try {
     const client = await mongoose.connect(process.env.MONGODB_URI, {
-      dbName: 'pvabazaar'
+      dbName: 'pvabazaar',
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
     });
     
     cachedDb = client;
@@ -42,7 +44,7 @@ async function connectToDatabase() {
 }
 
 // Connect on startup
-connectToDatabase();
+connectToDatabase().catch(console.error);
 
 // Import routes
 const artifactsRoutes = require('./routes/artifacts');
@@ -75,10 +77,8 @@ app.get('/api/healthcheck', async (_req, res) => {
 
 // Serve static assets in production
 if (process.env.NODE_ENV === 'production') {
-  // Serve any static files
   app.use(express.static(path.join(__dirname, 'frontend')));
   
-  // Handle React routing, return all requests to React app
   app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend', 'index.html'));
   });

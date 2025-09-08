@@ -36,8 +36,8 @@ async function connectToDatabase() {
 }
 
 // Import routes
-const artifactsRoutes = require('../routes/artifacts');
-const usersRoutes = require('../routes/users');
+const artifactsRoutes = require('../../routes/artifacts');
+const usersRoutes = require('../../routes/users');
 
 // Use routes
 app.use('/api/artifacts', artifactsRoutes);

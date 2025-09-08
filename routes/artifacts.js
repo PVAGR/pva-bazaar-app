@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const Artifact = require('../models/artifact');
-const auth = require('../middleware/auth');
+const Artifact = require('../backend/models/artifact');
+const auth = require('../backend/middleware/auth');
 
 // Get all artifacts
 router.get('/', async (req, res) => {
@@ -86,7 +86,8 @@ router.delete('/:id', auth, async (req, res) => {
       return res.status(403).json({ ok: false, message: 'Not authorized' });
     }
     
-    await artifact.remove();
+    // Fix: replace deprecated remove() with deleteOne()
+    await artifact.deleteOne();
     res.json({ ok: true, message: 'Artifact deleted' });
   } catch (err) {
     res.status(500).json({ ok: false, message: err.message });

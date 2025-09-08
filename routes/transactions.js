@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const Artifact = require('../models/Artifact');
-const auth = require('../middleware/auth');
+const Artifact = require('../backend/models/Artifact');
+const auth = require('../backend/middleware/auth');
 
 // POST /api/transactions/shares/buy - Buy shares
 router.post('/shares/buy', auth, async (req, res) => {
