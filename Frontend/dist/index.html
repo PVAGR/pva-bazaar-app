@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PVA Bazaar - Artisan Marketplace & Digital Provenance</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-dark: #0a2c21;
+            --primary: #143d2e;
+            --primary-light: #1e4e3c;
+            --accent: #3ac389;
+            --accent-dark: #2a9c6f;
+            --text-light: #e8f4f0;
+            --text-muted: #a8b0b9;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --card-border: rgba(58, 195, 137, 0.2);
+            --gold: #c8a971;
+            --shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+            color: var(--text-light);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* Header & Navigation */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: var(--transition);
+        }
+        
+        .logo:hover {
+            transform: scale(1.03);
+        }
+        
+        .logo-icon {
+            font-size: 32px;
+            color: var(--accent);
+        }
+        
+        .logo-text {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-light);
+            font-family: 'Playfair Display', serif;
+            letter-spacing: 0.5px;
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 25px;
+        }
+        
+        nav a {
+            color: var(--text-light);
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+            position: relative;
+            padding: 5px 0;
+            font-size: 15px;
+            letter-spacing: 0.5px;
+        }
+        
+        nav a:hover {
+            color: var(--accent);
+        }
+        
+        nav a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--accent);
+            transition: width 0.3s ease;
+        }
+        
+        nav a:hover::after {
+            width: 100%;
+        }
+        
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            padding: 80px 20px;
+            margin-bottom: 40px;
+            background: var(--card-bg);
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--card-border);
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(58, 195, 137, 0.08) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        
+        .hero h1 {
+            font-size: 3.2rem;
+            margin-bottom: 20px;
+            color: var(--text-light);
+            text-shadow: 0 0 15px rgba(58, 195, 137, 0.4);
+            font-family: 'Playfair Display', serif;
+            position: relative;
+            letter-spacing: 0.5px;
+        }
+        
+        .hero p {
+            font-size: 1.2rem;
+            max-width: 800px;
+            margin: 0 auto 30px;
+            color: var(--text-light);
+            line-height: 1.8;
+            font-weight: 300;
+            letter-spacing: 0.3px;
+        }
+        
+        .btn {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+            color: var(--primary-dark);
+            padding: 14px 32px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: var(--transition);
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            letter-spacing: 0.5px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* Section Titles */
+        .section-title {
+            text-align: center;
+            font-size: 2.3rem;
+            margin-bottom: 50px;
+            color: var(--text-light);
+            font-family: 'Playfair Display', serif;
+            position: relative;
+            padding-bottom: 15px;
+            letter-spacing: 0.5px;
+        }
+        
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 3px;
+            background: var(--accent);
+            border-radius: 3px;
+        }
+        
+        /* Features Grid */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 80px;
+        }
+        
+        .feature-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--card-border);
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow);
+        }
+        
+        .feature-icon {
+            font-size: 42px;
+            color: var(--accent);
+            margin-bottom: 25px;
+            transition: var(--transition);
+        }
+        
+        .feature-card:hover .feature-icon {
+            transform: scale(1.1);
+        }
+        
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: var(--text-light);
+            font-weight: 600;
+        }
+        
+        .feature-card p {
+            color: var(--text-muted);
+            line-height: 1.7;
+            font-weight: 300;
+        }
+        
+        /* Marketplace Grid */
+        .marketplace-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 80px;
+        }
+        
+        .product-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--card-border);
+            transition: var(--transition);
+            position: relative;
+        }
+        
+        .product-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow);
+        }
+        
+        .product-image {
+            height: 220px;
+            overflow: hidden;
+            position: relative;
+            background: linear-gradient(45deg, #1e4e3c 0%, #2a9c6f 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+        }
+        
+        .product-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: var(--gold);
+            color: var(--primary-dark);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            z-index: 2;
+        }
+        
+        .product-content {
+            padding: 25px;
+        }
+        
+        .product-content h3 {
+            font-size: 1.4rem;
+            margin-bottom: 12px;
+            color: var(--accent);
+            font-weight: 600;
+        }
+        
+        .product-content p {
+            color: var(--text-muted);
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            font-weight: 300;
+        }
+        
+        .product-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+        }
+        
+        .product-price {
+            font-weight: 700;
+            color: var(--accent);
+            font-size: 1.3rem;
+        }
+        
+        .product-actions {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .btn-sm {
+            padding: 9px 16px;
+            font-size: 0.85rem;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--accent);
+            color: var(--accent);
+        }
+        
+        .btn-outline:hover {
+            background: var(--accent);
+            color: var(--primary-dark);
+        }
+        
+        /* Artisan Section */
+        .artisan-section {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 50px 40px;
+            margin-bottom: 80px;
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--card-border);
+        }
+        
+        .artisan-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+        
+        .artisan-card {
+            text-align: center;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            transition: var(--transition);
+        }
+        
+        .artisan-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow);
+        }
+        
+        .artisan-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            border: 3px solid var(--accent);
+            overflow: hidden;
+            background: linear-gradient(45deg, #1e4e3c 0%, #2a9c6f 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 40px;
+        }
+        
+        .artisan-card h3 {
+            color: var(--accent);
+            margin-bottom: 8px;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+        
+        .artisan-card p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 15px;
+            font-weight: 300;
+        }
+        
+        .artisan-stats {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 15px;
+        }
+        
+        .stat {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-weight: 700;
+            color: var(--accent);
+            font-size: 1.3rem;
+        }
+        
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 300;
+        }
+        
+        /* NFT Section */
+        .nft-section {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 50px 40px;
+            margin-bottom: 80px;
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--card-border);
+        }
+        
+        .nft-features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+        
+        .nft-feature {
+            text-align: center;
+            padding: 30px 25px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            transition: var(--transition);
+        }
+        
+        .nft-feature:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow);
+        }
+        
+        .nft-icon {
+            font-size: 2.8rem;
+            color: var(--accent);
+            margin-bottom: 20px;
+        }
+        
+        .nft-feature h3 {
+            color: var(--accent);
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+        
+        .nft-feature p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            font-weight: 300;
+        }
+        
+        /* CTA Section */
+        .cta-section {
+            text-align: center;
+            padding: 80px 20px;
+            margin-bottom: 60px;
+            background: var(--card-bg);
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--card-border);
+        }
+        
+        .cta-section h2 {
+            font-size: 2.5rem;
+            margin-bottom: 25px;
+            color: var(--text-light);
+            font-family: 'Playfair Display', serif;
+        }
+        
+        .cta-section p {
+            max-width: 700px;
+            margin: 0 auto 40px;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            font-weight: 300;
+        }
+        
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 60px 20px 40px;
+            margin-top: 60px;
+            border-top: 1px solid var(--card-border);
+        }
+        
+        .footer-logo {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 25px;
+            color: var(--accent);
+            font-family: 'Playfair Display', serif;
+        }
+        
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .footer-links a {
+            color: var(--text-light);
+            text-decoration: none;
+            transition: var(--transition);
+            font-weight: 400;
+            font-size: 15px;
+        }
+        
+        .footer-links a:hover {
+            color: var(--accent);
+        }
+        
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .social-links a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: var(--card-bg);
+            color: var(--text-light);
+            text-decoration: none;
+            transition: var(--transition);
+            border: 1px solid var(--card-border);
+        }
+        
+        .social-links a:hover {
+            background: var(--accent);
+            color: var(--primary-dark);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .copyright {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-weight: 300;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .hero h1 {
+                font-size: 2.8rem;
+            }
+            
+            .section-title {
+                font-size: 2rem;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                gap: 20px;
+                padding: 15px 0;
+            }
+            
+            nav ul {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 15px;
+            }
+            
+            .hero {
+                padding: 60px 20px;
+            }
+            
+            .hero h1 {
+                font-size: 2.3rem;
+            }
+            
+            .hero p {
+                font-size: 1.1rem;
+            }
+            
+            .section-title {
+                font-size: 1.8rem;
+                margin-bottom: 40px;
+            }
+            
+            .features-grid,
+            .marketplace-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .artisan-section,
+            .nft-section {
+                padding: 30px 20px;
+            }
+            
+            .artisan-grid,
+            .nft-features {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .cta-section {
+                padding: 60px 20px;
+            }
+            
+            .cta-section h2 {
+                font-size: 2rem;
+            }
+            
+            .footer-links {
+                flex-direction: column;
+                align-items: center;
+                gap: 15px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+            
+            .btn {
+                padding: 12px 25px;
+            }
+            
+            .section-title {
+                font-size: 1.6rem;
+            }
+            
+            .product-actions {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .product-meta {
+                flex-direction: column;
+                gap: 15px;
+                align-items: flex-start;
+            }
+            
+            .artisan-stats {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-gem logo-icon"></i>
+                <div class="logo-text">PVA Bazaar</div>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="#marketplace">Marketplace</a></li>
+                    <li><a href="#artisans">Artisans</a></li>
+                    <li><a href="#nft">NFTs</a></li>
+                    <li><a href="#about">About</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+            </nav>
+        </header>
+        
+        <section class="hero">
+            <h1>Where Artistry Meets Blockchain</h1>
+            <p>PVA Bazaar is a decentralized marketplace connecting artisans with collectors, using blockchain technology to ensure provenance, authenticity, and fair compensation.</p>
+            <a href="#marketplace" class="btn">Explore Marketplace</a>
+        </section>
+        
+        <h2 class="section-title">Our Ecosystem</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <i class="fas fa-fingerprint feature-icon"></i>
+                <h3>Digital Provenance</h3>
+                <p>Every physical item has a digital twin on the blockchain, ensuring authenticity and tracking its complete history from creation to current owner.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-hand-holding-usd feature-icon"></i>
+                <h3>Fair Compensation</h3>
+                <p>Artisans receive 50% of all sales directly to their wallets with transparent revenue sharing and automatic royalties from secondary market sales.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-globe feature-icon"></i>
+                <h3>Global Marketplace</h3>
+                <p>Connect with artisans and collectors from around the world in a decentralized ecosystem that transcends borders and traditional limitations.</p>
+            </div>
+        </div>
+        
+        <h2 class="section-title" id="marketplace">Featured Products</h2>
+        <div class="marketplace-grid">
+            <div class="product-card">
+                <div class="product-image">
+                    <div class="product-badge">NFT Available</div>
+                    <i class="fas fa-gem" style="font-size: 48px;"></i>
+                </div>
+                <div class="product-content">
+                    <h3>Emerald Pendant</h3>
+                    <p>Handcrafted pendant featuring a natural Panjshir emerald set in 18k yellow gold. Each piece comes with a digital certificate of authenticity.</p>
+                    <div class="product-meta">
+                        <div class="product-price">$249</div>
+                        <div class="product-actions">
+                            <button class="btn btn-sm">Details</button>
+                            <button class="btn btn-sm btn-outline">View NFT</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="product-card">
+                <div class="product-image">
+                    <div class="product-badge">Limited Edition</div>
+                    <i class="fas fa-ring" style="font-size: 48px;"></i>
+                </div>
+                <div class="product-content">
+                    <h3>Artisan Silver Bracelet</h3>
+                    <p>Hand-forged sterling silver bracelet with intricate traditional patterns. Only 50 pieces will ever be made.</p>
+                    <div class="product-meta">
+                        <div class="product-price">$189</div>
+                        <div class="product-actions">
+                            <button class="btn btn-sm">Details</button>
+                            <button class="btn btn-sm btn-outline">View NFT</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="product-card">
+                <div class="product-image">
+                    <div class="product-badge">One of a Kind</div>
+                    <i class="fas fa-crown" style="font-size: 48px;"></i>
+                </div>
+                <div class="product-content">
+                    <h3>Sacred Geometry Ring</h3>
+                    <p>Gold ring featuring sacred geometric patterns with a central diamond. This unique piece will never be replicated.</p>
+                    <div class="product-meta">
+                        <div class="product-price">$420</div>
+                        <div class="product-actions">
+                            <button class="btn btn-sm">Details</button>
+                            <button class="btn btn-sm btn-outline">View NFT</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="product-card">
+                <div class="product-image">
+                    <div class="product-badge">New</div>
+                    <i class="fas fa-necklace" style="font-size: 48px;"></i>
+                </div>
+                <div class="product-content">
+                    <h3>Gemstone Necklace</h3>
+                    <p>Vibrant gemstone necklace handcrafted by skilled artisans using traditional techniques passed down through generations.</p>
+                    <div class="product-meta">
+                        <div class="product-price">$275</div>
+                        <div class="product-actions">
+                            <button class="btn btn-sm">Details</button>
+                            <button class="btn btn-sm btn-outline">View NFT</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <section class="artisan-section" id="artisans">
+            <h2 class="section-title">Featured Artisans</h2>
+            <div class="artisan-grid">
+                <div class="artisan-card">
+                    <div class="artisan-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <h3>Maria Lopez</h3>
+                    <p>Oaxaca, Mexico | Silver Smithing</p>
+                    <div class="artisan-stats">
+                        <div class="stat">
+                            <div class="stat-value">42</div>
+                            <div class="stat-label">Items</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value">4.9</div>
+                            <div class="stat-label">Rating</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value">8</div>
+                            <div class="stat-label">Years</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="artisan-card">
+                    <div class="artisan-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <h3>James Chen</h3>
+                    <p>Bali, Indonesia | Wood Carving</p>
+                    <div class="artisan-stats">
+                        <div class="stat">
+                            <div class="stat-value">28</div>
+                            <div class="stat-label">Items</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value">4.8</div>
+                            <div class="stat-label">Rating</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value">12</div>
+                            <div class="stat-label">Years</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="artisan-card">
+                    <div class="artisan-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <h3>Aisha Patel</h3>
+                    <p>Jaipur, India | Textile Arts</p>
+                    <div class="artisan-stats">
+                        <div class="stat">
+                            <div class="stat-value">37</div>
+                            <div class="stat-label">Items</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value">5.0</div>
+                            <div class="stat-label">Rating</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value">15</div>
+                            <div class="stat-label">Years</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section class="nft-section" id="nft">
+            <h2 class="section-title">Digital Provenance with NFTs</h2>
+            <div class="nft-features">
+                <div class="nft-feature">
+                    <div class="nft-icon">
+                        <i class="fas fa-certificate"></i>
+                    </div>
+                    <h3>Authenticity Guaranteed</h3>
+                    <p>Each physical item is paired with an NFT that verifies its authenticity and origin on the blockchain.</p>
+                </div>
+                
+                <div class="nft-feature">
+                    <div class="nft-icon">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <h3>Complete History</h3>
+                    <p>Track the entire history of ownership and provenance on the blockchain from creation to current owner.</p>
+                </div>
+                
+                <div class="nft-feature">
+                    <div class="nft-icon">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <h3>Secure Ownership</h3>
+                    <p>Your ownership is securely recorded on the blockchain and cannot be forged or tampered with.</p>
+                </div>
+                
+                <div class="nft-feature">
+                    <div class="nft-icon">
+                        <i class="fas fa-sync-alt"></i>
+                    </div>
+                    <h3>Resale Royalties</h3>
+                    <p>Artisans earn royalties automatically from secondary market sales through smart contracts.</p>
+                </div>
+            </div>
+        </section>
+        
+        <section class="cta-section">
+            <h2>Join the PVA Bazaar Revolution</h2>
+            <p>Whether you're an artisan looking to reach a global audience or a collector seeking unique pieces with verified provenance, PVA Bazaar offers a new paradigm for artisan commerce.</p>
+            <a href="#" class="btn">Get Started</a>
+        </section>
+    </div>
+    
+    <footer>
+        <div class="footer-logo">PVA Bazaar</div>
+        <div class="footer-links">
+            <a href="#">About</a>
+            <a href="#">FAQ</a>
+            <a href="#">Privacy</a>
+            <a href="#">Terms</a>
+            <a href="#">Contact</a>
+        </div>
+        <div class="social-links">
+            <a href="#"><i class="fab fa-twitter"></i></a>
+            <a href="#"><i class="fab fa-instagram"></i></a>
+            <a href="#"><i class="fab fa-discord"></i></a>
+            <a href="#"><i class="fab fa-github"></i></a>
+        </div>
+        <div class="copyright">© 2023 PVA Bazaar. All rights reserved.</div>
+    </footer>
+
+    <script>
+        // Wait for the DOM to be fully loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('PVA Bazaar - Where Artistry Meets Blockchain');
+            
+            // Simple animation for buttons
+            document.querySelectorAll('.btn').forEach(button => {
+                button.addEventListener('mouseover', function() {
+                    this.style.boxShadow = '0 0 15px rgba(58, 195, 137, 0.5)';
+                });
+                
+                button.addEventListener('mouseout', function() {
+                    this.style.boxShadow = '0 5px 15px rgba(0, 0, 0, 0.2)';
+                });
+            });
+            
+            // Smooth scrolling for navigation links
+            document.querySelectorAll('nav a').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    const targetId = this.getAttribute('href');
+                    if(targetId.startsWith('#')) {
+                        const targetElement = document.querySelector(targetId);
+                        if(targetElement) {
+                            window.scrollTo({
+                                top: targetElement.offsetTop - 100,
+                                behavior: 'smooth'
+                            });
+                        }
+                    }
+                });
+            });
+            
+            // Add click handlers for product buttons
+            document.querySelectorAll('.product-actions .btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const productName = this.closest('.product-card').querySelector('h3').textContent;
+                    alert(`You clicked on ${productName} - ${this.textContent}`);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
