@@ -27,6 +27,11 @@ document.querySelectorAll('nav a').forEach(anchor => {
             }
         }
     });
+});// Hide loading screen when the page finishes loading
+window.addEventListener('load', () => {
+  const loader = document.querySelector('.loading');
+  if (loader) loader.classList.add('hidden');
 });
+
 
 console.log('PVA Bazaar - Where Artistry Meets Blockchain');
