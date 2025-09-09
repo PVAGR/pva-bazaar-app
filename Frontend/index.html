@@ -6,6 +6,46 @@
     <title>PVA Bazaar - Artisan Marketplace & Digital Provenance</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Google Analytics / Analytics Tracking -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'GA_MEASUREMENT_ID');
+        
+        // Track page view
+        gtag('event', 'page_view', {
+            page_title: 'PVA Bazaar Home',
+            page_location: window.location.href
+        });
+    </script>
+    
+    <!-- Visitor Tracking -->
+    <script>
+        // Simple visitor tracking without external dependencies
+        function trackVisitor() {
+            const visitor = {
+                timestamp: new Date().toISOString(),
+                page: window.location.pathname,
+                userAgent: navigator.userAgent,
+                referrer: document.referrer,
+                screenSize: `${screen.width}x${screen.height}`,
+                language: navigator.language
+            };
+            
+            // Send to our analytics endpoint
+            fetch('/api/analytics/track', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(visitor)
+            }).catch(console.error);
+        }
+        
+        // Track visitor when page loads
+        window.addEventListener('load', trackVisitor);
+    </script>
     <style>
         :root {
             --primary-dark: #0a2c21;
@@ -937,9 +977,35 @@
     </footer>
 
     <script>
+        // Enhanced analytics tracking functions
+        function trackEvent(eventName, eventData = {}) {
+            // Google Analytics tracking
+            if (typeof gtag !== 'undefined') {
+                gtag('event', eventName, eventData);
+            }
+            
+            // Send to our custom analytics
+            fetch('/api/analytics/event', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    event: eventName,
+                    data: eventData,
+                    timestamp: new Date().toISOString(),
+                    page: window.location.pathname
+                })
+            }).catch(console.error);
+        }
+        
         // Wait for the DOM to be fully loaded
         document.addEventListener('DOMContentLoaded', function() {
             console.log('PVA Bazaar - Where Artistry Meets Blockchain');
+            
+            // Track page load
+            trackEvent('page_loaded', { 
+                title: document.title,
+                loadTime: Date.now() 
+            });
             
             // Simple animation for buttons
             document.querySelectorAll('.btn').forEach(button => {
@@ -950,14 +1016,27 @@
                 button.addEventListener('mouseout', function() {
                     this.style.boxShadow = '0 5px 15px rgba(0, 0, 0, 0.2)';
                 });
+                
+                // Track button clicks
+                button.addEventListener('click', function() {
+                    trackEvent('button_click', {
+                        buttonText: this.textContent,
+                        buttonClass: this.className
+                    });
+                });
             });
             
-            // Smooth scrolling for navigation links
+            // Smooth scrolling for navigation links with tracking
             document.querySelectorAll('nav a').forEach(anchor => {
                 anchor.addEventListener('click', function(e) {
                     e.preventDefault();
                     
                     const targetId = this.getAttribute('href');
+                    trackEvent('navigation_click', { 
+                        target: targetId,
+                        text: this.textContent 
+                    });
+                    
                     if(targetId.startsWith('#')) {
                         const targetElement = document.querySelector(targetId);
                         if(targetElement) {
@@ -970,11 +1049,43 @@
                 });
             });
             
-            // Add click handlers for product buttons
+            // Enhanced product interaction tracking
             document.querySelectorAll('.product-actions .btn').forEach(button => {
                 button.addEventListener('click', function() {
-                    const productName = this.closest('.product-card').querySelector('h3').textContent;
-                    alert(`You clicked on ${productName} - ${this.textContent}`);
+                    const productCard = this.closest('.product-card');
+                    const productName = productCard.querySelector('h3').textContent;
+                    const productPrice = productCard.querySelector('.product-price').textContent;
+                    const buttonAction = this.textContent;
+                    
+                    trackEvent('product_interaction', {
+                        productName: productName,
+                        productPrice: productPrice,
+                        action: buttonAction
+                    });
+                    
+                    alert(`You clicked on ${productName} - ${buttonAction}`);
+                });
+            });
+            
+            // Track scroll depth
+            let maxScroll = 0;
+            window.addEventListener('scroll', function() {
+                const scrollPercent = Math.round((window.scrollY + window.innerHeight) / document.body.scrollHeight * 100);
+                if (scrollPercent > maxScroll) {
+                    maxScroll = scrollPercent;
+                    if (scrollPercent >= 25 && scrollPercent % 25 === 0) {
+                        trackEvent('scroll_depth', { depth: scrollPercent });
+                    }
+                }
+            });
+            
+            // Track time on page
+            const startTime = Date.now();
+            window.addEventListener('beforeunload', function() {
+                const timeOnPage = Date.now() - startTime;
+                trackEvent('time_on_page', { 
+                    duration: Math.round(timeOnPage / 1000),
+                    maxScroll: maxScroll 
                 });
             });
         });
