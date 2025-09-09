@@ -322,15 +322,20 @@
             <div class="logo">
                 <h2>PVA Bazaar Admin</h2>
             </div>
-            <ul class="nav-links">
-                <li><a href="#"><span>📊</span> Dashboard</a></li>
-                <li><a href="#"><span>🛍️</span> Artifacts</a></li>
-                <li><a href="#"><span>👥</span> Users</a></li>
-                <script type="module" src="/src/pages/artifact.js"></script>
-                <script type="module" src="/src/nav/inject-nav.js"></script>
-                <li><a href="#"><span>🏷️</span> Certificates</a></li>
-                <li><a href="#"><span>⚙️</span> Settings</a></li>
-            </ul>
+            
+
+<nav class="site-nav" aria-label="Site navigation">
+  <ul class="nav-links">
+    <li><a href="pvadashboard.html">📊 Dashboard</a></li>
+    <li><a href="productshowcase.html">🛍️ Marketplace</a></li>
+    <li><a href="portfolio.html">💼 Portfolio</a></li>
+    <li><a href="checkoutmint.html">💳 Checkout</a></li>
+    <li><a href="provenance.html">🏷️ Provenance</a></li>
+    <li><a href="artifact.html">🔍 Artifact</a></li>
+  </ul>
+</nav>
+
+
         </div>
 
         <!-- Main Content -->
@@ -599,6 +604,8 @@
             // fetchStats();
         });
     </script>
+    <script type="module" src="/src/pages/artifact.js"></script>
+  <script type="module" src="/src/nav/inject-nav.js"></script>
 </body>
 </html>
 <script type="module" src="/src/pages/artifact-admin.js"></script>
