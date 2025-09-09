@@ -1,0 +1,131 @@
+.search-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.search-form {
+  margin-bottom: 30px;
+}
+
+.search-input-group {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.search-input {
+  flex: 1;
+  min-width: 250px;
+  padding: 12px 15px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+.search-type-select {
+  padding: 12px 15px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: white;
+  font-size: 16px;
+}
+
+.search-button {
+  padding: 12px 25px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.2s;
+}
+
+.search-button:hover:not(:disabled) {
+  background-color: #0056b3;
+}
+
+.search-button:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+}
+
+.search-results {
+  min-height: 300px;
+}
+
+.artifact-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.artifact-card {
+  border: 1px solid #e1e1e1;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.artifact-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+.artifact-image {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+}
+
+.artifact-info {
+  padding: 15px;
+}
+
+.artifact-info h3 {
+  margin: 0 0 10px 0;
+  color: #333;
+}
+
+.artifact-artisan {
+  color: #666;
+  font-style: italic;
+  margin: 0 0 10px 0;
+}
+
+.artifact-materials {
+  color: #888;
+  font-size: 0.9em;
+  margin: 0 0 10px 0;
+}
+
+.artifact-description {
+  color: #555;
+  line-height: 1.4;
+}
+
+.no-results {
+  text-align: center;
+  color: #666;
+  font-size: 18px;
+  margin-top: 50px;
+}
+
+@media (max-width: 768px) {
+  .search-input-group {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .search-input,
+  .search-type-select,
+  .search-button {
+    width: 100%;
+  }
+  
+  .artifact-grid {
+    grid-template-columns: 1fr;
+  }
+}
