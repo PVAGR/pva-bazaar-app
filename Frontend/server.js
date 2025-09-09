@@ -116,3 +116,12 @@ if (process.env.NODE_ENV !== 'production') {
 
 // Export for Vercel serverless
 module.exports = app;
+
+// Add to server.js
+const authRoutes = require('./backend/routes/auth');
+const transactionsRoutes = require('./backend/routes/transactions');
+const certificatesRoutes = require('./backend/routes/certificates');
+
+app.use('/api/auth', authRoutes);
+app.use('/api/transactions', transactionsRoutes);
+app.use('/api/certificates', certificatesRoutes);
