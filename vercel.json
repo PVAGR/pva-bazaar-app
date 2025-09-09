@@ -2,7 +2,7 @@
   "version": 2,
   "framework": "vite",
   "buildCommand": "node ./scripts/vercel-build-wrapper.cjs",
-  "outputDirectory": "Frontend/dist",
+  "outputDirectory": "dist",
   "functions": {
     "backend/server.js": {
       "runtime": "@vercel/node"
@@ -15,7 +15,7 @@
     },
     {
       "src": "/(.*)",
-      "dest": "/Frontend/dist/$1"
+      "dest": "/dist/$1"
     }
   ],
   "env": {
