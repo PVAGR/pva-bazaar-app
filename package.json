@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "lint": "eslint api/ backend/ routes/ --ext .js",
+    "lint:fix": "eslint api/ backend/ routes/ --ext .js --fix"
   },
   "dependencies": {
     "@pinata/sdk": "^2.1.0",
@@ -15,12 +17,17 @@
     "cors": "^2.8.5",
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
+    "express-rate-limit": "^8.1.0",
+    "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.18.0",
     "morgan": "^1.10.1",
+    "serverless-http": "^4.0.0",
     "web3": "^4.16.0"
   },
   "devDependencies": {
+    "eslint": "^9.35.0",
+    "globals": "^16.3.0",
     "nodemon": "^3.1.10",
     "vite": "^5.0.0"
   },

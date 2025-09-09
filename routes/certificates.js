@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const Artifact = require('../models/Artifact');
+const Artifact = require('./backend/models/Artifact');
 
 // GET /api/certificates/:id - Get certificate data
 router.get('/:id', async (req, res) => {
