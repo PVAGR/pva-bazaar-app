@@ -47,11 +47,97 @@
         }
         
         header {
-            text-align: center;
             margin-bottom: 30px;
-            padding: 20px;
+            padding: 20px 0;
             border-bottom: 1px solid var(--primary);
             position: relative;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .header-nav {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .header-nav a {
+            color: var(--text-light);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+            padding: 8px 0;
+        }
+        
+        .header-nav a:hover, .header-nav a.active {
+            color: var(--accent);
+        }
+        
+        .header-nav a::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--accent);
+            transition: width 0.3s ease;
+        }
+        
+        .header-nav a:hover::after, .header-nav a.active::after {
+            width: 100%;
+        }
+        
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .icon-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-light);
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+        
+        .icon-btn:hover {
+            background: rgba(255,255,255,0.1);
+            color: var(--accent);
+        }
+        
+        .btn-outline {
+            background: transparent;
+            color: var(--accent);
+            border: 2px solid var(--accent);
+            padding: 10px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-outline:hover {
+            background: var(--accent);
+            color: var(--primary-dark);
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 1.1rem;
         }
         
         .logo {
@@ -622,26 +708,27 @@
 <body>
     <div class="container">
         <header>
-            <a href="/" class="logo">
-                <i class="fas fa-gem logo-icon"></i>
-                <div class="logo-text">PVA Bazaar</div>
-            </a>
-            <div class="user-nav">
-                <nav class="pva-nav" aria-label="Primary">
-                    <ul>
-                        <li><a href="/pages/pvadashboard.html">Dashboard</a></li>
-                        <li><a href="/pages/productshowcase.html">Marketplace</a></li>
-                        <li><a href="/pages/portfolio.html">Portfolio</a></li>
-                        <li><a href="/pages/checkoutmint.html">Checkout</a></li>
-                        <li><a href="/pages/provenance.html">Provenance</a></li>
-                        <li><a href="/pages/artifact.html">Artifact</a></li>
-                    </ul>
-                    <script type="module" src="/src/pages/provenance.js"></script>
-                    <script type="module" src="/src/nav/inject-nav.js"></script>
+            <div class="header-content">
+                <a href="/" class="logo">
+                    <i class="fas fa-gem logo-icon"></i>
+                    <div class="logo-text">PVA Bazaar</div>
+                </a>
+                
+                <nav class="header-nav">
+                    <a href="/">Home</a>
+                    <a href="/pages/pvadashboard.html">Dashboard</a>
+                    <a href="/pages/market.html">Marketplace</a>
+                    <a href="/pages/portfolio.html">Portfolio</a>
+                    <a href="/pages/checkoutmint.html">Checkout</a>
+                    <a href="/pages/provenance.html" class="active">Provenance</a>
+                    <a href="/pages/artifact.html">Artifact</a>
                 </nav>
-                <div class="user-profile">
-                    <div class="user-avatar">U</div>
-                    <div class="user-name">User</div>
+                
+                <div class="header-actions">
+                    <button class="icon-btn" title="Notifications">
+                        <i class="fas fa-bell"></i>
+                    </button>
+                    <button class="btn-outline">Connect Wallet</button>
                 </div>
             </div>
             <p class="subtitle">Digital Ownership Record & Blockchain Authentication</p>
