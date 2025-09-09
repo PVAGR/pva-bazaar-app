@@ -23,3 +23,20 @@ const destDir = path.join(projectRoot, 'dist', 'src');
 console.log('Copying', srcDir, '->', destDir);
 copyRecursive(srcDir, destDir);
 console.log('Copy complete');
+
+// Also copy static pages and top-level static files so they exist in dist for deployment
+const pagesSrc = path.join(projectRoot, 'pages');
+const pagesDest = path.join(projectRoot, 'dist', 'pages');
+console.log('Copying', pagesSrc, '->', pagesDest);
+copyRecursive(pagesSrc, pagesDest);
+console.log('Pages copy complete');
+
+// Copy a few common top-level static files (if present)
+['index.html','main.css','i'].forEach(name => {
+  const s = path.join(projectRoot, name);
+  const d = path.join(projectRoot, 'dist', name);
+  if (fs.existsSync(s)) {
+    copyRecursive(s, d);
+    console.log('Copied', s, '->', d);
+  }
+});
