@@ -41,3 +41,29 @@ function run(cmd, args, options={}){
 // install then build
 run('npm', ['install', '--no-audit', '--no-fund']);
 run('npm', ['run', 'build']);
+
+// After build, copy frontend dist to repository root 'dist' when frontend lives in ./Frontend
+try {
+  const builtDist = path.join(frontendDir, 'dist');
+  if (fs.existsSync(builtDist)) {
+    // if frontendDir is a 'Frontend' subfolder, place dist at repo root (/path/to/.. /dist)
+    const isFrontendSubdir = path.basename(frontendDir).toLowerCase() === 'frontend';
+    const repoRoot = isFrontendSubdir ? path.resolve(frontendDir, '..') : frontendDir;
+    const dest = path.join(repoRoot, 'dist');
+    if (builtDist !== dest) {
+      console.log(`ℹ️ Copying built dist from ${builtDist} -> ${dest}`);
+      // Node 16+ has fs.cpSync
+      if (fs.cpSync) {
+        fs.rmSync(dest, { recursive: true, force: true });
+        fs.cpSync(builtDist, dest, { recursive: true });
+      } else {
+        // fallback copy
+        const { spawnSync } = require('child_process');
+        spawnSync('rm', ['-rf', dest]);
+        spawnSync('cp', ['-r', builtDist, dest]);
+      }
+    }
+  }
+} catch (e) {
+  console.error('Warning: failed to copy built dist to repo root', e);
+}
