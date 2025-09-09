@@ -1,7 +1,7 @@
 {
   "version": 2,
   "framework": "vite",
-  "buildCommand": "npm --prefix Frontend install --no-audit --no-fund && npm --prefix Frontend run build",
+  "buildCommand": "node ./scripts/vercel-build-wrapper.cjs",
   "outputDirectory": "Frontend/dist",
   "functions": {
     "backend/server.js": {
