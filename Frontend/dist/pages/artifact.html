@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PVA Bazaar - Admin Dashboard</title>
+    <link rel="stylesheet" href="/public/css/pva-nav.css">
     <style>
         :root {
             --primary: #3a86ff;
@@ -317,48 +318,42 @@
 </head>
 <body>
     <div class="container">
+        <header>
+            <a href="/" class="logo">
+                <i class="fas fa-gem logo-icon"></i>
+                <div class="logo-text">PVA Bazaar</div>
+            </a>
+            <div class="user-nav">
+                <nav class="pva-nav" aria-label="Primary">
+                    <ul>
+                        <li><a href="/pages/pvadashboard.html">Dashboard</a></li>
+                        <li><a href="/pages/productshowcase.html">Marketplace</a></li>
+                        <li><a href="/pages/portfolio.html">Portfolio</a></li>
+                        <li><a href="/pages/checkoutmint.html">Checkout</a></li>
+                        <li><a href="/pages/provenance.html">Provenance</a></li>
+                        <li><a href="/pages/artifact.html">Artifact</a></li>
+                    </ul>
+                    <script type="module" src="/src/nav/inject-nav.js"></script>
+                </nav>
+                <div class="user-profile">
+                    <div class="user-avatar">AD</div>
+                    <div class="user-name">Admin</div>
+                </div>
+            </div>
+        </header>
         <!-- Sidebar Navigation -->
         <div class="sidebar">
             <div class="logo">
                 <h2>PVA Bazaar Admin</h2>
             </div>
-            <ul class="nav-links">
-                <li><a href="#"><span>📊</span> Dashboard</a></li>
-                <li><a href="#"><span>🛍️</span> Artifacts</a></li>
-                <li><a href="#"><span>👥</span> Users</a></li>
-                <script type="module" src="/src/pages/artifact.js"></script>
-                <script type="module" src="/src/nav/inject-nav.js"></script>
-                <li><a href="#"><span>🏷️</span> Certificates</a></li>
-                <li><a href="#"><span>⚙️</span> Settings</a></li>
-            </ul>
+            <!-- Sidebar menu intentionally left as admin-only links; header nav is canonical and appears in main content -->
         </div>
 
         <!-- Main Content -->
         <div class="main-content">
             <div class="header">
                 <h1>Admin Dashboard</h1>
-                <div class="user-info">
-                    <div class="user-avatar">AD</div>
-                    <div>Admin User</div>
-                </div>
-            </div>
-
-            <!-- Dashboard Stats -->
-            <div class="dashboard-cards">
-                <div class="card stat-card">
-                    <div class="stat-label">Total Artifacts</div>
-                    <div class="stat-value">24</div>
-                    <div class="stat-change">+5 from last week</div>
-                </div>
-                <div class="card stat-card">
-                    <div class="stat-label">Registered Users</div>
-                    <div class="stat-value">153</div>
-                    <div class="stat-change">+12 from last week</div>
-                </div>
-                <div class="card stat-card">
-                    <div class="stat-label">Transactions</div>
-                    <div class="stat-value">42</div>
-                    <div class="stat-change">+8 from last week</div>
+                <!-- canonical header is used at the top of pages; admin sidebar remains for admin tasks -->
                 </div>
                 <div class="card stat-card">
                     <div class="stat-label">Revenue</div>
@@ -599,7 +594,9 @@
             // fetchStats();
         });
     </script>
+    <script type="module" src="/src/pages/artifact.js"></script>
+    <script type="module" src="/src/nav/inject-nav.js"></script>
+    <script src="/public/js/pva-nav.js" defer></script>
+    <script type="module" src="/src/pages/artifact-admin.js"></script>
 </body>
-</html>
-<script type="module" src="/src/pages/artifact-admin.js"></script>
 </html>

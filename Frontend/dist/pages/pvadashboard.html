@@ -6,6 +6,7 @@
     <title>PVA Bazaar - Premium Market Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/public/css/pva-nav.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
@@ -33,29 +34,7 @@
             font-family: 'Poppins', sans-serif;
         }
         
-        body {
-            background: #0a0a0a;
-            color: var(--text-light);
-            min-height: 100vh;
-            background-image: 
-                radial-gradient(circle at 25% 25%, rgba(28, 90, 69, 0.15) 0%, transparent 40%),
-                radial-gradient(circle at 75% 75%, rgba(28, 90, 69, 0.15) 0%, transparent 40%);
-            overflow-x: hidden;
-        }
-        
-        /* Custom scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        
-        ::-webkit-scrollbar-track {
-            background: rgba(18, 18, 18, 0.5);
-        }
-        
-        ::-webkit-scrollbar-thumb {
-            background: var(--accent);
-            border-radius: 4px;
-        }
+    /* header moved to body; canonical header preserved later in file */
         
         .container {
             max-width: 1600px;
@@ -2031,6 +2010,8 @@
             });
         });
     </script>
-<script type="module" src="/src/pages/pvadashboard.js"></script>
+</script>
+    <script type="module" src="/src/pages/pvadashboard.js"></script>
+    <script src="/public/js/pva-nav.js" defer></script>
 </body>
 </html>

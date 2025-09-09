@@ -6,6 +6,7 @@
     <title>Maradjet Emerald Pendant | PVA Bazaar</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/public/css/pva-nav.css">
     <style>
         :root {
             /* PVA Brand Colors - Dark Emerald Theme */
@@ -1001,39 +1002,29 @@
     </style>
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="nav-container">
-            <a href="#" class="logo">
-                <i class="fas fa-gem"></i>
-                PVA Bazaar
-            </a>
-            <ul class="nav-links">
-                <li><a href="#">Marketplace</a></li>
-                <li><a href="#">Collections</a></li>
-                <li><a href="#">Artisans</a></li>
-  
-                <script type="module" src="/src/pages/productshowcase.js"></script>
+    <header>
+        <a href="/" class="logo">
+            <i class="fas fa-gem logo-icon"></i>
+            <div class="logo-text">PVA Bazaar</div>
+        </a>
+        <div class="user-nav">
+            <nav class="pva-nav" aria-label="Primary">
+                <ul>
+                    <li><a href="/pages/pvadashboard.html">Dashboard</a></li>
+                    <li><a href="/pages/productshowcase.html">Marketplace</a></li>
+                    <li><a href="/pages/portfolio.html">Portfolio</a></li>
+                    <li><a href="/pages/checkoutmint.html">Checkout</a></li>
+                    <li><a href="/pages/provenance.html">Provenance</a></li>
+                    <li><a href="/pages/artifact.html">Artifact</a></li>
+                </ul>
                 <script type="module" src="/src/nav/inject-nav.js"></script>
-            </ul>
-            <div class="nav-actions">
-                <div class="crypto-ticker">
-                    <div class="crypto-item">
-                        <i class="fab fa-bitcoin" style="color: var(--bitcoin);"></i>
-                        <span id="btcPrice" class="crypto-price">$--,---</span>
-                    </div>
-                    <div class="crypto-item">
-                        <i class="fab fa-ethereum" style="color: var(--ethereum);"></i>
-                        <span id="ethPrice" class="crypto-price">$-,---</span>
-                    </div>
-                </div>
-                <div class="cart-icon" onclick="toggleCart()">
-                    <i class="fas fa-shopping-cart"></i>
-                    <span class="cart-count">0</span>
-                </div>
+            </nav>
+            <div class="user-profile">
+                <div class="user-avatar">U</div>
+                <div class="user-name">Guest</div>
             </div>
         </div>
-    </nav>
+    </header>
 
     <div class="container">
         <!-- Breadcrumb -->
@@ -1602,7 +1593,8 @@
         // Initialize
         updateCryptoEquivalents();
     </script>
+    <script type="module" src="/src/nav/inject-nav.js"></script>
+    <script src="/public/js/pva-nav.js" defer></script>
+    <script type="module" src="/src/pages/productshowcase.js"></script>
 </body>
-</html>
-<script type="module" src="/src/pages/productshowcase.js"></script>
 </html>
