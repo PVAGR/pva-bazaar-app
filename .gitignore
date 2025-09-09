@@ -1,1 +1,5 @@
 node_modules
+
+# Environment variables
+backend/.env
+pva-bazaar-app.env
