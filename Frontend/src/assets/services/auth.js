@@ -1,7 +1,10 @@
 // Frontend/src/services/auth.js
+import config from '../../../config';
+
 class AuthService {
   constructor() {
-    this.baseURL = '/api';
+    const envBase = import.meta?.env?.VITE_API_BASE;
+    this.baseURL = envBase || (config?.apiUrl || '/api');
   }
 
   async login(email, password) {

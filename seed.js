@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const Artifact = require('./backend/models/Artifact');
-const User = require('./backend/models/User');
+const User = require('./backend/models/user');
 require('dotenv').config();
 
 async function seedData() {

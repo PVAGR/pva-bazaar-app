@@ -1,0 +1,7 @@
+🧪 Using in-memory MongoDB (dev)
+Vector DB (Chroma) unavailable. Using MongoDB text search fallback. Detail: Failed to connect to chromadb. Make sure your server is running and try again. If you are running from a browser, make sure that your chromadb instance is configured to allow requests from the current origin using the CHROMA_SERVER_CORS_ALLOW_ORIGINS environment variable.
+✅ Connected to in-memory MongoDB
+🌱 Seeding dev database...
+✅ Admin user created: admin@pvabazaar.org / admin123
+✅ Seeded 2 artifacts
+🚀 Server running on http://localhost:5001
