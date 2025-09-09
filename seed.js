@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
-const Artifact = require('./models/Artifact');
+const Artifact = require('./backend/models/Artifact');
+const User = require('./backend/models/User');
 require('dotenv').config();
 
 async function seedData() {
@@ -7,10 +8,20 @@ async function seedData() {
     await mongoose.connect(process.env.MONGODB_URI);
     console.log('Connected to MongoDB');
     
-    // Clear existing data
+    // Create a sample user first (needed for creator field)
+    await User.deleteMany({});
+    const sampleUser = new User({
+      name: 'PVA Admin',
+      email: 'admin@pvabazaar.org',
+      password: 'admin123' // This will be hashed automatically
+    });
+    await sampleUser.save();
+    console.log('✅ Sample user created');
+    
+    // Clear existing artifacts
     await Artifact.deleteMany({});
     
-    // Create sample artifacts
+    // Create sample artifacts (using real user ID)
     const sampleArtifacts = [
       {
         name: 'Maradjet Emerald Pendant',
@@ -21,7 +32,7 @@ async function seedData() {
         category: 'Jewelry',
         materials: ['Panjshir Emerald', '18k Gold'],
         artisan: 'PVA Master Craftsman',
-        creator: new mongoose.Types.ObjectId(),
+        creator: sampleUser._id, // Use real user ID
         physicalSerial: 'PVA-0001',
         fractionalization: {
           enabled: true,
@@ -40,7 +51,7 @@ async function seedData() {
         category: 'Textiles',
         materials: ['Wool', 'Natural Dyes'],
         artisan: 'Herat Weavers Guild',
-        creator: new mongoose.Types.ObjectId(),
+        creator: sampleUser._id, // Use real user ID
         physicalSerial: 'PVA-0002',
         fractionalization: {
           enabled: true,
@@ -49,11 +60,26 @@ async function seedData() {
           soldShares: 0,
           majorityThreshold: 5100
         }
+      },
+      {
+        name: 'Handcrafted Lapis Lazuli Bowl',
+        title: 'Afghan Lapis Lazuli Bowl',
+        description: 'Beautiful bowl carved from authentic Afghan lapis lazuli stone',
+        imageUrl: 'https://via.placeholder.com/400x300/4169E1/FFFFFF?text=Lapis+Bowl',
+        price: 850,
+        category: 'Stone Crafts',
+        materials: ['Lapis Lazuli'],
+        artisan: 'Badakhshan Stoneworkers',
+        creator: sampleUser._id,
+        physicalSerial: 'PVA-0003'
       }
     ];
     
     await Artifact.insertMany(sampleArtifacts);
-    console.log('✅ Sample data inserted successfully');
+    console.log('✅ Sample artifacts inserted successfully');
+    console.log('📧 Test login credentials: admin@pvabazaar.org / admin123');
+    
+    await mongoose.connection.close();
     process.exit(0);
   } catch (error) {
     console.error('❌ Seeding failed:', error);
