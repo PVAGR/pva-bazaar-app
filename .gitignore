@@ -1,1 +1,10 @@
 node_modules
+.env
+backend/.env
+*.env
+.env.local
+.env.development
+.env.production
+dist/
+build/
+.vercel
