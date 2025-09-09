@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "prebuild": "node scripts/vercel-info.cjs",
     "build": "vite build",
     "preview": "vite preview"
   },
