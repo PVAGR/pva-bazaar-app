@@ -647,7 +647,7 @@
                     </div>
                 </div>
                 <div class="token-info">
-                    <div class="token-id">Token ID: PVA-0001</div>
+                    <div class="token-id" id="token-id">Token ID: PVA-0001</div>
                 </div>
             </div>
             
@@ -799,11 +799,11 @@
                     <h3 class="section-title"><i class="fas fa-file-contract"></i> Physical Authentication</h3>
                     <div class="info-item">
                         <div class="info-label"><i class="fas fa-barcode"></i> Physical Serial</div>
-                        <div class="info-value">PVA-0001</div>
+                        <div class="info-value" id="physical-serial">PVA-0001</div>
                     </div>
                     <div class="info-item">
                         <div class="info-label"><i class="fas fa-key"></i> Authentication Code</div>
-                        <div class="info-value mono">AUTH-PVA-0001-XYZ123</div>
+                        <div class="info-value mono" id="authentication-code">AUTH-PVA-0001-XYZ123</div>
                     </div>
                     <div class="info-item">
                         <div class="info-label"><i class="fas fa-clock"></i> Last Verification</div>
@@ -823,7 +823,7 @@
     </div>
     
     <footer>
-        <div class="footer-logo">PVA Bazaar</div>
+    <div class="footer-logo">PVA Bazaar</div>
         <div class="social-links">
             <a href="#"><i class="fab fa-twitter"></i></a>
             <a href="#"><i class="fab fa-instagram"></i></a>
@@ -833,86 +833,6 @@
         <div class="copyright">© 2025 PVA Bazaar. All rights reserved.</div>
     </footer>
 
-    <script>
-        // Interactive verification button
-        document.getElementById('verify-button').addEventListener('click', function() {
-            const verificationSection = document.getElementById('verification-section');
-            const verifyButton = document.getElementById('verify-button');
-            
-            verifyButton.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Verifying...';
-            verifyButton.disabled = true;
-            
-            // Simulate blockchain verification process
-            setTimeout(() => {
-                verifyButton.innerHTML = '<i class="fas fa-check-circle"></i> Verified Successfully';
-                verifyButton.classList.add('verified');
-                verificationSection.classList.add('verified');
-                
-                // Update the timestamp
-                updateTimestamp();
-                
-                // Add visual confirmation
-                const checkmark = document.createElement('div');
-                checkmark.innerHTML = '<i class="fas fa-check-circle" style="font-size: 48px; color: var(--success); margin-top: 15px;"></i>';
-                verificationSection.appendChild(checkmark);
-                
-                // Add success message
-                const successMessage = document.createElement('p');
-                successMessage.textContent = 'Ownership verified on blockchain. This item is authentic.';
-                successMessage.style.color = 'var(--success)';
-                successMessage.style.marginTop = '15px';
-                verificationSection.appendChild(successMessage);
-                
-                // Add pulse animation to important elements
-                document.querySelector('.header-badge').classList.add('pulse');
-                
-                // Reset after 5 seconds
-                setTimeout(() => {
-                    verifyButton.innerHTML = '<i class="fas fa-sync-alt"></i> Verify Again';
-                    verifyButton.disabled = false;
-                }, 5000);
-            }, 2000);
-        });
-        
-        // Function to update the timestamp with current UTC time
-        function updateTimestamp() {
-            const now = new Date();
-            const timeString = now.toISOString().split('T')[0] + ' ' + 
-                              now.getUTCHours().toString().padStart(2, '0') + ':' + 
-                              now.getUTCMinutes().toString().padStart(2, '0') + ' UTC';
-            
-            document.getElementById('last-verification-time').textContent = timeString;
-        }
-        
-        // Add blockchain validation for any changes
-        // This is a simulated function - in a real app this would connect to blockchain
-        function recordBlockchainChange(changeType, details) {
-            // In a real implementation, this would create a transaction on the blockchain
-            console.log(`Change recorded: ${changeType}`, details);
-            // Generate new hash to represent the change
-            const newHash = 'bafybei' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-            // Update UI elements
-            // This would be handled by events from the blockchain in a real implementation
-        }
-        
-        // Progress bar animation
-        const progressBar = document.querySelector('.progress-bar');
-        setTimeout(() => {
-            progressBar.style.width = '24%';
-        }, 500);
-        
-        // Add hover effects to all interactive elements
-        document.querySelectorAll('.btn, .qr-card, .share-stat').forEach(element => {
-            element.addEventListener('mouseenter', () => {
-                element.style.transform = 'translateY(-3px)';
-                element.style.boxShadow = '0 5px 15px rgba(0, 0, 0, 0.2)';
-            });
-            
-            element.addEventListener('mouseleave', () => {
-                element.style.transform = 'translateY(0)';
-                element.style.boxShadow = 'none';
-            });
-        });
-    </script>
+    <script type="module" src="/src/pages/provenance.js"></script>
 </body>
 </html>
