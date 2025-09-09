@@ -48,9 +48,9 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 // Import routes - use relative paths from server.js
-const artifactsRoutes = require('./backend/routes/artifacts');
-const usersRoutes = require('./backend/routes/users');
-const healthRoutes = require('./backend/routes/health');
+const artifactsRoutes = require('../backend/routes/artifacts');
+const usersRoutes = require('../backend/routes/users');
+const healthRoutes = require('../backend/routes/health');
 
 // Use routes
 app.use('/api/artifacts', artifactsRoutes);
@@ -118,9 +118,9 @@ if (process.env.NODE_ENV !== 'production') {
 module.exports = app;
 
 // Add to server.js
-const authRoutes = require('./backend/routes/auth');
-const transactionsRoutes = require('./backend/routes/transactions');
-const certificatesRoutes = require('./backend/routes/certificates');
+const authRoutes = require('../backend/routes/auth');
+const transactionsRoutes = require('../backend/routes/transactions');
+const certificatesRoutes = require('../backend/routes/certificates');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/transactions', transactionsRoutes);
