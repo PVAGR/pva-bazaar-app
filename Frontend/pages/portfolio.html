@@ -6,6 +6,7 @@
     <title>My Portfolio | PVA Bazaar</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --primary-dark: #0f3b2d;
@@ -18,6 +19,9 @@
             --text-muted: #a8b0b9;
             --card-bg: rgba(18, 18, 18, 0.95);
             --card-border: rgba(42, 75, 42, 0.6);
+            --gradient-start: #4ef8a3;
+            --gradient-mid: #2bb673;
+            --gradient-end: #1c5a45;
         }
 
         * {
@@ -35,6 +39,7 @@
             background-image: 
                 radial-gradient(circle at 25% 25%, rgba(28, 90, 69, 0.15) 0%, transparent 40%),
                 radial-gradient(circle at 75% 75%, rgba(28, 90, 69, 0.15) 0%, transparent 40%);
+            overflow-x: hidden;
         }
         
         .container {
@@ -50,6 +55,7 @@
             padding: 20px 0;
             margin-bottom: 30px;
             border-bottom: 1px solid var(--primary);
+            position: relative;
         }
         
         .logo {
@@ -77,15 +83,32 @@
             gap: 30px;
         }
         
+        nav {
+            display: flex;
+            gap: 25px;
+        }
+        
         nav a {
             color: var(--text-muted);
             text-decoration: none;
             font-weight: 500;
             transition: color 0.3s;
+            position: relative;
         }
         
-        nav a:hover {
+        nav a:hover, nav a.active {
             color: var(--accent);
+        }
+        
+        nav a.active::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--accent);
+            border-radius: 2px;
         }
         
         .user-profile {
@@ -93,6 +116,7 @@
             align-items: center;
             gap: 10px;
             cursor: pointer;
+            position: relative;
         }
         
         .user-avatar {
@@ -105,6 +129,23 @@
             justify-content: center;
             color: var(--accent);
             font-weight: 600;
+            position: relative;
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--gold);
+            color: #000;
+            font-size: 10px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
         }
         
         .user-name {
@@ -137,6 +178,24 @@
             border-radius: 12px;
             padding: 25px;
             height: fit-content;
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, 
+                transparent, 
+                var(--accent), 
+                transparent
+            );
+            animation: borderShine 3s infinite linear;
         }
         
         .sidebar-title {
@@ -154,7 +213,18 @@
         
         .menu-item {
             margin-bottom: 15px;
+            opacity: 0;
+            transform: translateX(-20px);
+            animation: fadeInLeft 0.5s forwards;
         }
+        
+        .menu-item:nth-child(1) { animation-delay: 0.1s; }
+        .menu-item:nth-child(2) { animation-delay: 0.2s; }
+        .menu-item:nth-child(3) { animation-delay: 0.3s; }
+        .menu-item:nth-child(4) { animation-delay: 0.4s; }
+        .menu-item:nth-child(5) { animation-delay: 0.5s; }
+        .menu-item:nth-child(6) { animation-delay: 0.6s; }
+        .menu-item:nth-child(7) { animation-delay: 0.7s; }
         
         .menu-link {
             display: flex;
@@ -191,6 +261,22 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .welcome-banner::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, 
+                transparent 0%, 
+                rgba(255, 255, 255, 0.1) 50%, 
+                transparent 100%);
+            animation: shine 5s infinite linear;
         }
         
         .welcome-text h1 {
@@ -208,6 +294,7 @@
         .welcome-actions {
             display: flex;
             gap: 15px;
+            z-index: 2;
         }
         
         .action-btn {
@@ -221,6 +308,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            backdrop-filter: blur(10px);
         }
         
         .action-btn:hover {
@@ -242,6 +330,35 @@
             border-radius: 12px;
             padding: 25px;
             text-align: center;
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.5s forwards;
+        }
+        
+        .stat-card:nth-child(1) { animation-delay: 0.1s; }
+        .stat-card:nth-child(2) { animation-delay: 0.2s; }
+        .stat-card:nth-child(3) { animation-delay: 0.3s; }
+        .stat-card:nth-child(4) { animation-delay: 0.4s; }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            z-index: -1;
+            background: linear-gradient(45deg, 
+                var(--gradient-start), 
+                var(--gradient-mid), 
+                var(--gradient-end),
+                var(--gradient-start));
+            background-size: 400% 400%;
+            border-radius: 14px;
+            animation: gradientBorder 6s ease infinite;
         }
         
         .stat-icon {
@@ -279,7 +396,113 @@
             color: #ff6b6b;
         }
         
-        /* Asset Cards */
+        /* Portfolio Charts */
+        .charts-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        @media (max-width: 900px) {
+            .charts-container {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .chart-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .chart-title {
+            color: var(--gold);
+            font-size: 1.3rem;
+            font-family: 'Playfair Display', serif;
+        }
+        
+        .chart-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .chart-action-btn {
+            background: transparent;
+            border: 1px solid var(--primary);
+            color: var(--text-muted);
+            padding: 5px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s;
+        }
+        
+        .chart-action-btn:hover, .chart-action-btn.active {
+            background: var(--primary);
+            color: var(--text-light);
+        }
+        
+        .chart-container {
+            height: 250px;
+            position: relative;
+        }
+        
+        /* Asset Allocation */
+        .allocation-list {
+            list-style: none;
+            margin-top: 20px;
+        }
+        
+        .allocation-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .allocation-item:last-child {
+            border-bottom: none;
+        }
+        
+        .allocation-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .allocation-color {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+        }
+        
+        .allocation-name {
+            color: var(--text-light);
+            font-weight: 500;
+        }
+        
+        .allocation-value {
+            color: var(--text-light);
+            font-weight: 600;
+        }
+        
+        .allocation-percentage {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+        
+        /* Holdings Section */
         .section-title {
             color: var(--gold);
             font-size: 1.8rem;
@@ -287,238 +510,231 @@
             font-family: 'Playfair Display', serif;
         }
         
-        .assets-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 25px;
-            margin-bottom: 40px;
-        }
-        
-        .asset-card {
+        .holdings-table {
+            width: 100%;
+            border-collapse: collapse;
             background: var(--card-bg);
-            border: 1px solid var(--card-border);
             border-radius: 12px;
             overflow: hidden;
-            transition: transform 0.3s, box-shadow 0.3s;
+            border: 1px solid var(--card-border);
+            margin-bottom: 40px;
+            backdrop-filter: blur(10px);
         }
         
-        .asset-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-        }
-        
-        .asset-image {
-            height: 200px;
-            overflow: hidden;
-        }
-        
-        .asset-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        
-        .asset-details {
-            padding: 20px;
-        }
-        
-        .asset-name {
-            color: var(--text-light);
-            font-size: 1.2rem;
-            margin-bottom: 10px;
-            font-weight: 600;
-        }
-        
-        .asset-description {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            margin-bottom: 15px;
-            line-height: 1.5;
-        }
-        
-        .asset-stats {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        
-        .asset-stat {
-            text-align: center;
-        }
-        
-        .stat-small {
-            color: var(--text-muted);
-            font-size: 0.8rem;
-            margin-bottom: 5px;
-        }
-        
-        .stat-number {
+        .holdings-table th {
+            background: rgba(28, 90, 69, 0.3);
+            padding: 15px;
+            text-align: left;
             color: var(--accent);
             font-weight: 600;
         }
         
-        .asset-actions {
-            display: flex;
-            gap: 10px;
+        .holdings-table td {
+            padding: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
         
-        .asset-btn {
-            flex: 1;
-            padding: 10px;
-            text-align: center;
-            border-radius: 6px;
-            font-size: 0.9rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .btn-invest {
-            background: linear-gradient(90deg, var(--accent), var(--accent-dark));
-            color: var(--primary-dark);
-            border: none;
-        }
-        
-        .btn-invest:hover {
-            opacity: 0.9;
-        }
-        
-        .btn-view {
-            background: transparent;
-            color: var(--text-light);
-            border: 1px solid var(--primary-light);
-        }
-        
-        .btn-view:hover {
-            background: rgba(28, 90, 69, 0.3);
-        }
-        
-        /* Activity Feed */
-        .activity-feed {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 12px;
-            padding: 25px;
-            margin-bottom: 40px;
-        }
-        
-        .activity-list {
-            list-style: none;
-        }
-        
-        .activity-item {
-            display: flex;
-            gap: 15px;
-            padding: 20px 0;
-            border-bottom: 1px solid var(--primary-dark);
-        }
-        
-        .activity-item:last-child {
+        .holdings-table tr:last-child td {
             border-bottom: none;
         }
         
-        .activity-icon {
+        .holdings-table tr {
+            transition: background 0.3s;
+        }
+        
+        .holdings-table tr:hover {
+            background: rgba(28, 90, 69, 0.1);
+        }
+        
+        .asset {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .asset-icon {
             width: 40px;
             height: 40px;
-            border-radius: 50%;
-            background: rgba(28, 90, 69, 0.3);
+            border-radius: 8px;
+            background: var(--primary);
             display: flex;
             align-items: center;
             justify-content: center;
             color: var(--accent);
-            flex-shrink: 0;
+            font-size: 1.2rem;
         }
         
-        .activity-content {
-            flex: 1;
-        }
-        
-        .activity-title {
+        .asset-name {
             color: var(--text-light);
-            margin-bottom: 5px;
             font-weight: 500;
         }
         
-        .activity-desc {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            margin-bottom: 10px;
-        }
-        
-        .activity-time {
+        .asset-symbol {
             color: var(--text-muted);
             font-size: 0.8rem;
         }
         
-        /* Recommendations */
-        .recommendations {
+        .price-change.positive {
+            color: #4ef8a3;
+        }
+        
+        .price-change.negative {
+            color: #ff6b6b;
+        }
+        
+        .action-cell {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .table-btn {
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+        }
+        
+        .btn-buy {
+            background: var(--accent);
+            color: var(--primary-dark);
+        }
+        
+        .btn-sell {
+            background: transparent;
+            color: var(--text-light);
+            border: 1px solid var(--primary);
+        }
+        
+        .btn-buy:hover {
+            opacity: 0.9;
+        }
+        
+        .btn-sell:hover {
+            background: rgba(255, 107, 107, 0.2);
+            border-color: #ff6b6b;
+        }
+        
+        /* Performance Section */
+        .performance-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        
+        .performance-card {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
             border-radius: 12px;
             padding: 25px;
+            text-align: center;
+            backdrop-filter: blur(10px);
         }
         
-        .rec-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 20px;
-        }
-        
-        .rec-card {
-            background: rgba(15, 59, 45, 0.3);
-            border-radius: 10px;
-            overflow: hidden;
-            transition: transform 0.3s;
-        }
-        
-        .rec-card:hover {
-            transform: translateY(-5px);
-        }
-        
-        .rec-image {
-            height: 150px;
-            overflow: hidden;
-        }
-        
-        .rec-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        
-        .rec-details {
-            padding: 15px;
-        }
-        
-        .rec-name {
-            color: var(--text-light);
-            font-size: 1rem;
-            margin-bottom: 10px;
-            font-weight: 600;
-        }
-        
-        .rec-price {
+        .performance-icon {
+            font-size: 2rem;
             color: var(--accent);
-            font-weight: 600;
             margin-bottom: 15px;
         }
         
-        .rec-btn {
-            width: 100%;
-            padding: 8px;
-            background: transparent;
-            color: var(--accent);
-            border: 1px solid var(--accent);
-            border-radius: 6px;
+        .performance-title {
+            color: var(--text-muted);
             font-size: 0.9rem;
-            cursor: pointer;
-            transition: all 0.3s;
+            margin-bottom: 10px;
         }
         
-        .rec-btn:hover {
-            background: var(--accent);
-            color: var(--primary-dark);
+        .performance-value {
+            color: var(--text-light);
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .performance-comparison {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            font-size: 0.9rem;
+        }
+        
+        /* Transactions Section */
+        .transactions {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 40px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .transaction-list {
+            list-style: none;
+        }
+        
+        .transaction-item {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .transaction-item:last-child {
+            border-bottom: none;
+        }
+        
+        .transaction-type {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .type-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .type-icon.buy {
+            background: rgba(78, 248, 163, 0.2);
+            color: #4ef8a3;
+        }
+        
+        .type-icon.sell {
+            background: rgba(255, 107, 107, 0.2);
+            color: #ff6b6b;
+        }
+        
+        .transaction-asset {
+            font-weight: 500;
+        }
+        
+        .transaction-date {
+            color: var(--text-muted);
+        }
+        
+        .transaction-amount {
+            font-weight: 600;
+        }
+        
+        .transaction-status {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.9rem;
+        }
+        
+        .status-completed {
+            color: #4ef8a3;
+        }
+        
+        .status-pending {
+            color: var(--gold);
         }
         
         /* Footer */
@@ -567,6 +783,82 @@
             color: var(--text-muted);
             font-size: 0.9rem;
         }
+        
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes fadeInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        @keyframes gradientBorder {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+        
+        @keyframes shine {
+            0% {
+                transform: translateX(-100%) rotate(45deg);
+            }
+            100% {
+                transform: translateX(200%) rotate(45deg);
+            }
+        }
+        
+        @keyframes borderShine {
+            0% {
+                opacity: 0;
+                transform: translateX(-100%);
+            }
+            50% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+                transform: translateX(200%);
+            }
+        }
+        
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 59, 45, 0.1);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-light);
+        }
     </style>
 </head>
 <body>
@@ -580,11 +872,14 @@
                 <nav>
                     <a href="#">Marketplace</a>
                     <a href="#">Discover</a>
-                    <a href="#">Portfolio</a>
+                    <a href="#" class="active">Portfolio</a>
                     <a href="#">Learn</a>
                 </nav>
                 <div class="user-profile">
-                    <div class="user-avatar">J</div>
+                    <div class="user-avatar">
+                        J
+                        <div class="notification-badge">3</div>
+                    </div>
                     <div class="user-name">James Wilson</div>
                 </div>
             </div>
@@ -593,36 +888,36 @@
         <div class="dashboard">
             <!-- Sidebar -->
             <div class="sidebar">
-                <h2 class="sidebar-title">Dashboard</h2>
+                <h2 class="sidebar-title">Portfolio</h2>
                 <ul class="sidebar-menu">
                     <li class="menu-item">
                         <a href="#" class="menu-link active">
-                            <span class="menu-icon"><i class="fas fa-home"></i></span>
+                            <span class="menu-icon"><i class="fas fa-chart-pie"></i></span>
                             <span>Overview</span>
                         </a>
                     </li>
                     <li class="menu-item">
                         <a href="#" class="menu-link">
-                            <span class="menu-icon"><i class="fas fa-chart-pie"></i></span>
-                            <span>My Portfolio</span>
+                            <span class="menu-icon"><i class="fas fa-coins"></i></span>
+                            <span>Holdings</span>
                         </a>
                     </li>
                     <li class="menu-item">
                         <a href="#" class="menu-link">
-                            <span class="menu-icon"><i class="fas fa-gem"></i></span>
-                            <span>My Assets</span>
+                            <span class="menu-icon"><i class="fas fa-exchange-alt"></i></span>
+                            <span>Transactions</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="#" class="menu-link">
+                            <span class="menu-icon"><i class="fas fa-chart-line"></i></span>
+                            <span>Performance</span>
                         </a>
                     </li>
                     <li class="menu-item">
                         <a href="#" class="menu-link">
                             <span class="menu-icon"><i class="fas fa-wallet"></i></span>
                             <span>Wallet</span>
-                        </a>
-                    </li>
-                    <li class="menu-item">
-                        <a href="#" class="menu-link">
-                            <span class="menu-icon"><i class="fas fa-history"></i></span>
-                            <span>Transaction History</span>
                         </a>
                     </li>
                     <li class="menu-item">
@@ -645,15 +940,15 @@
                 <!-- Welcome Banner -->
                 <div class="welcome-banner">
                     <div class="welcome-text">
-                        <h1>Welcome back, James!</h1>
+                        <h1>Portfolio Overview</h1>
                         <p>Your portfolio is up 3.2% in the last 7 days. You currently own shares in 4 premium assets.</p>
                     </div>
                     <div class="welcome-actions">
                         <button class="action-btn">
-                            <i class="fas fa-plus"></i> Add Funds
+                            <i class="fas fa-download"></i> Export Report
                         </button>
                         <button class="action-btn">
-                            <i class="fas fa-exchange-alt"></i> Trade
+                            <i class="fas fa-sync-alt"></i> Refresh Data
                         </button>
                     </div>
                 </div>
@@ -705,166 +1000,295 @@
                     </div>
                 </div>
                 
-                <!-- My Assets -->
-                <h2 class="section-title">My Assets</h2>
-                <div class="assets-grid">
-                    <div class="asset-card">
-                        <div class="asset-image">
-                            <img src="https://i2.seadn.io/base/0x3b3af296e521a0932041cc5599ea47ec2d4ef8a5/ab0864492d648de4434dd73c10970a/04ab0864492d648de4434dd73c10970a.jpeg?w=1000" alt="Amradjet Emerald Pendant">
+                <!-- Charts -->
+                <div class="charts-container">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3 class="chart-title">Portfolio Performance</h3>
+                            <div class="chart-actions">
+                                <button class="chart-action-btn active">1W</button>
+                                <button class="chart-action-btn">1M</button>
+                                <button class="chart-action-btn">3M</button>
+                                <button class="chart-action-btn">1Y</button>
+                            </div>
                         </div>
-                        <div class="asset-details">
-                            <h3 class="asset-name">Amradjet Emerald Pendant</h3>
-                            <p class="asset-description">Panjshir Emerald set in 18k White Gold with NFT authentication</p>
-                            <div class="asset-stats">
-                                <div class="asset-stat">
-                                    <div class="stat-small">My Ownership</div>
-                                    <div class="stat-number">12.5%</div>
-                                </div>
-                                <div class="asset-stat">
-                                    <div class="stat-small">Value</div>
-                                    <div class="stat-number">$625.00</div>
-                                </div>
-                            </div>
-                            <div class="asset-actions">
-                                <button class="asset-btn btn-invest">Invest More</button>
-                                <button class="asset-btn btn-view">View Details</button>
-                            </div>
+                        <div class="chart-container">
+                            <canvas id="performanceChart"></canvas>
                         </div>
                     </div>
                     
-                    <div class="asset-card">
-                        <div class="asset-image">
-                            <img src="https://images.unsplash.com/photo-1599643478517-a313f52db1bf?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80" alt="Vintage Rolex Watch">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3 class="chart-title">Asset Allocation</h3>
+                            <div class="chart-actions">
+                                <button class="chart-action-btn active">Value</button>
+                                <button class="chart-action-btn">Percentage</button>
+                            </div>
                         </div>
-                        <div class="asset-details">
-                            <h3 class="asset-name">Vintage Rolex Submariner</h3>
-                            <p class="asset-description">1960s Vintage Rolex Submariner, collector's edition</p>
-                            <div class="asset-stats">
-                                <div class="asset-stat">
-                                    <div class="stat-small">My Ownership</div>
-                                    <div class="stat-number">8.2%</div>
+                        <div class="chart-container">
+                            <canvas id="allocationChart"></canvas>
+                        </div>
+                        
+                        <ul class="allocation-list">
+                            <li class="allocation-item">
+                                <div class="allocation-info">
+                                    <div class="allocation-color" style="background: #4ef8a3;"></div>
+                                    <div class="allocation-name">Precious Gems</div>
                                 </div>
-                                <div class="asset-stat">
-                                    <div class="stat-small">Value</div>
-                                    <div class="stat-number">$2,460.00</div>
+                                <div class="allocation-details">
+                                    <div class="allocation-value">$2,850.00</div>
+                                    <div class="allocation-percentage">33.8%</div>
                                 </div>
-                            </div>
-                            <div class="asset-actions">
-                                <button class="asset-btn btn-invest">Invest More</button>
-                                <button class="asset-btn btn-view">View Details</button>
-                            </div>
+                            </li>
+                            <li class="allocation-item">
+                                <div class="allocation-info">
+                                    <div class="allocation-color" style="background: #2bb673;"></div>
+                                    <div class="allocation-name">Luxury Watches</div>
+                                </div>
+                                <div class="allocation-details">
+                                    <div class="allocation-value">$2,460.00</div>
+                                    <div class="allocation-percentage">29.2%</div>
+                                </div>
+                            </li>
+                            <li class="allocation-item">
+                                <div class="allocation-info">
+                                    <div class="allocation-color" style="background: #1c5a45;"></div>
+                                    <div class="allocation-name">Fine Art</div>
+                                </div>
+                                <div class="allocation-details">
+                                    <div class="allocation-value">$2,750.00</div>
+                                    <div class="allocation-percentage">32.6%</div>
+                                </div>
+                            </li>
+                            <li class="allocation-item">
+                                <div class="allocation-info">
+                                    <div class="allocation-color" style="background: #d4af37;"></div>
+                                    <div class="allocation-name">Other</div>
+                                </div>
+                                <div class="allocation-details">
+                                    <div class="allocation-value">$365.75</div>
+                                    <div class="allocation-percentage">4.4%</div>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Holdings Section -->
+                <h2 class="section-title">Your Holdings</h2>
+                <table class="holdings-table">
+                    <thead>
+                        <tr>
+                            <th>Asset</th>
+                            <th>Value</th>
+                            <th>Ownership</th>
+                            <th>24h Change</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <div class="asset">
+                                    <div class="asset-icon">
+                                        <i class="fas fa-gem"></i>
+                                    </div>
+                                    <div>
+                                        <div class="asset-name">Amradjet Emerald Pendant</div>
+                                        <div class="asset-symbol">GEM-8245</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>$625.00</td>
+                            <td>12.5%</td>
+                            <td class="price-change positive">+2.3%</td>
+                            <td class="action-cell">
+                                <button class="table-btn btn-buy">Buy</button>
+                                <button class="table-btn btn-sell">Sell</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="asset">
+                                    <div class="asset-icon">
+                                        <i class="fas fa-clock"></i>
+                                    </div>
+                                    <div>
+                                        <div class="asset-name">Vintage Rolex Submariner</div>
+                                        <div class="asset-symbol">WCH-5192</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>$2,460.00</td>
+                            <td>8.2%</td>
+                            <td class="price-change positive">+1.7%</td>
+                            <td class="action-cell">
+                                <button class="table-btn btn-buy">Buy</button>
+                                <button class="table-btn btn-sell">Sell</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="asset">
+                                    <div class="asset-icon">
+                                        <i class="fas fa-paint-brush"></i>
+                                    </div>
+                                    <div>
+                                        <div class="asset-name">"Sunset Horizon" Oil Painting</div>
+                                        <div class="asset-symbol">ART-3671</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>$2,750.00</td>
+                            <td>5.5%</td>
+                            <td class="price-change positive">+3.1%</td>
+                            <td class="action-cell">
+                                <button class="table-btn btn-buy">Buy</button>
+                                <button class="table-btn btn-sell">Sell</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="asset">
+                                    <div class="asset-icon">
+                                        <i class="fas fa-wine-bottle"></i>
+                                    </div>
+                                    <div>
+                                        <div class="asset-name">Rare Whisky Collection</div>
+                                        <div class="asset-symbol">COL-9283</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>$365.75</td>
+                            <td>2.8%</td>
+                            <td class="price-change negative">-0.8%</td>
+                            <td class="action-cell">
+                                <button class="table-btn btn-buy">Buy</button>
+                                <button class="table-btn btn-sell">Sell</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <!-- Performance Metrics -->
+                <div class="performance-cards">
+                    <div class="performance-card">
+                        <div class="performance-icon">
+                            <i class="fas fa-trophy"></i>
+                        </div>
+                        <div class="performance-title">Total Return</div>
+                        <div class="performance-value">+18.7%</div>
+                        <div class="performance-comparison trend-up">
+                            <i class="fas fa-arrow-up"></i> +2.4% vs. benchmark
                         </div>
                     </div>
                     
-                    <div class="asset-card">
-                        <div class="asset-image">
-                            <img src="https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80" alt="Rare Oil Painting">
+                    <div class="performance-card">
+                        <div class="performance-icon">
+                            <i class="fas fa-shield-alt"></i>
                         </div>
-                        <div class="asset-details">
-                            <h3 class="asset-name">"Sunset Horizon" Oil Painting</h3>
-                            <p class="asset-description">Original oil painting by renowned artist Elena Martinez</p>
-                            <div class="asset-stats">
-                                <div class="asset-stat">
-                                    <div class="stat-small">My Ownership</div>
-                                    <div class="stat-number">5.5%</div>
-                                </div>
-                                <div class="asset-stat">
-                                    <div class="stat-small">Value</div>
-                                    <div class="stat-number">$2,750.00</div>
-                                </div>
-                            </div>
-                            <div class="asset-actions">
-                                <button class="asset-btn btn-invest">Invest More</button>
-                                <button class="asset-btn btn-view">View Details</button>
-                            </div>
+                        <div class="performance-title">Volatility</div>
+                        <div class="performance-value">12.3%</div>
+                        <div class="performance-comparison trend-down">
+                            <i class="fas fa-arrow-down"></i> -3.1% vs. benchmark
+                        </div>
+                    </div>
+                    
+                    <div class="performance-card">
+                        <div class="performance-icon">
+                            <i class="fas fa-balance-scale"></i>
+                        </div>
+                        <div class="performance-title">Sharpe Ratio</div>
+                        <div class="performance-value">1.42</div>
+                        <div class="performance-comparison trend-up">
+                            <i class="fas fa-arrow-up"></i> +0.18 vs. benchmark
+                        </div>
+                    </div>
+                    
+                    <div class="performance-card">
+                        <div class="performance-icon">
+                            <i class="fas fa-chart-pie"></i>
+                        </div>
+                        <div class="performance-title">Diversification</div>
+                        <div class="performance-value">76%</div>
+                        <div class="performance-comparison">
+                            <i class="fas fa-minus"></i> Optimal range
                         </div>
                     </div>
                 </div>
                 
-                <!-- Recent Activity -->
-                <div class="activity-feed">
-                    <h2 class="section-title">Recent Activity</h2>
-                    <ul class="activity-list">
-                        <li class="activity-item">
-                            <div class="activity-icon">
-                                <i class="fas fa-shopping-cart"></i>
+                <!-- Recent Transactions -->
+                <div class="transactions">
+                    <h2 class="section-title">Recent Transactions</h2>
+                    <ul class="transaction-list">
+                        <li class="transaction-item">
+                            <div class="transaction-type">
+                                <div class="type-icon buy">
+                                    <i class="fas fa-arrow-down"></i>
+                                </div>
+                                <div>
+                                    <div class="transaction-asset">Amradjet Emerald Pendant</div>
+                                    <div class="transaction-date">Today, 10:24 AM</div>
+                                </div>
                             </div>
-                            <div class="activity-content">
-                                <h3 class="activity-title">New Investment</h3>
-                                <p class="activity-desc">You purchased 5 shares of Amradjet Emerald Pendant for $250.00</p>
-                                <div class="activity-time">2 hours ago</div>
-                            </div>
-                        </li>
-                        <li class="activity-item">
-                            <div class="activity-icon">
-                                <i class="fas fa-arrow-up"></i>
-                            </div>
-                            <div class="activity-content">
-                                <h3 class="activity-title">Value Increase</h3>
-                                <p class="activity-desc">Your Vintage Rolex investment increased by 2.3% in value</p>
-                                <div class="activity-time">1 day ago</div>
+                            <div>5 shares</div>
+                            <div class="transaction-amount">$250.00</div>
+                            <div class="transaction-status status-completed">
+                                <i class="fas fa-check-circle"></i> Completed
                             </div>
                         </li>
-                        <li class="activity-item">
-                            <div class="activity-icon">
-                                <i class="fas fa-coins"></i>
+                        
+                        <li class="transaction-item">
+                            <div class="transaction-type">
+                                <div class="type-icon sell">
+                                    <i class="fas fa-arrow-up"></i>
+                                </div>
+                                <div>
+                                    <div class="transaction-asset">Vintage Rolex Submariner</div>
+                                    <div class="transaction-date">Yesterday, 3:45 PM</div>
+                                </div>
                             </div>
-                            <div class="activity-content">
-                                <h3 class="activity-title">PVA Rewards</h3>
-                                <p class="activity-desc">You earned 125 PVA coins for referring a friend</p>
-                                <div class="activity-time">2 days ago</div>
+                            <div>2 shares</div>
+                            <div class="transaction-amount">$615.00</div>
+                            <div class="transaction-status status-completed">
+                                <i class="fas fa-check-circle"></i> Completed
                             </div>
                         </li>
-                        <li class="activity-item">
-                            <div class="activity-icon">
-                                <i class="fas fa-gem"></i>
+                        
+                        <li class="transaction-item">
+                            <div class="transaction-type">
+                                <div class="type-icon buy">
+                                    <i class="fas fa-arrow-down"></i>
+                                </div>
+                                <div>
+                                    <div class="transaction-asset">Rare Whisky Collection</div>
+                                    <div class="transaction-date">Oct 12, 11:30 AM</div>
+                                </div>
                             </div>
-                            <div class="activity-content">
-                                <h3 class="activity-title">New Asset Listed</h3>
-                                <p class="activity-desc">Rare Persian Rug is now available for investment</p>
-                                <div class="activity-time">3 days ago</div>
+                            <div>3 shares</div>
+                            <div class="transaction-amount">$360.00</div>
+                            <div class="transaction-status status-completed">
+                                <i class="fas fa-check-circle"></i> Completed
+                            </div>
+                        </li>
+                        
+                        <li class="transaction-item">
+                            <div class="transaction-type">
+                                <div class="type-icon buy">
+                                    <i class="fas fa-arrow-down"></i>
+                                </div>
+                                <div>
+                                    <div class="transaction-asset">"Sunset Horizon" Oil Painting</div>
+                                    <div class="transaction-date">Oct 10, 2:15 PM</div>
+                                </div>
+                            </div>
+                            <div>2.5% ownership</div>
+                            <div class="transaction-amount">$1,250.00</div>
+                            <div class="transaction-status status-completed">
+                                <i class="fas fa-check-circle"></i> Completed
                             </div>
                         </li>
                     </ul>
-                </div>
-                
-                <!-- Recommendations -->
-                <div class="recommendations">
-                    <h2 class="section-title">Recommended Investments</h2>
-                    <div class="rec-grid">
-                        <div class="rec-card">
-                            <div class="rec-image">
-                                <img src="https://images.unsplash.com/photo-160 2751275216-9c7a0b0c32f1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80" alt="Antique Diamond Ring">
-                            </div>
-                            <div class="rec-details">
-                                <h3 class="rec-name">Antique Diamond Ring</h3>
-                                <div class="rec-price">$175 per share</div>
-                                <button class="rec-btn">View Details</button>
-                            </div>
-                        </div>
-                        
-                        <div class="rec-card">
-                            <div class="rec-image">
-                                <img src="https://images.unsplash.com/photo-1596466596120-2a8e4b5d1a51?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80" alt="Limited Edition Sneakers">
-                            </div>
-                            <div class="rec-details">
-                                <h3 class="rec-name">Limited Edition Sneakers</h3>
-                                <div class="rec-price">$85 per share</div>
-                                <button class="rec-btn">View Details</button>
-                            </div>
-                        </div>
-                        
-                        <div class="rec-card">
-                            <div class="rec-image">
-                                <img src="https://images.unsplash.com/photo-1594035910387-fea47794261f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80" alt="Rare Whisky Collection">
-                            </div>
-                            <div class="rec-details">
-                                <h3 class="rec-name">Rare Whisky Collection</h3>
-                                <div class="rec-price">$120 per share</div>
-                                <button class="rec-btn">View Details</button>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -882,33 +1306,162 @@
     </div>
 
     <script>
-        // Simple interactivity for the dashboard
-        document.querySelectorAll('.asset-btn').forEach(button => {
-            button.addEventListener('click', function() {
-                if (this.classList.contains('btn-invest')) {
-                    this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
-                    setTimeout(() => {
-                        alert('Redirecting to investment page...');
-                        this.innerHTML = 'Invest More';
-                    }, 1000);
+        // Initialize Charts
+        document.addEventListener('DOMContentLoaded', function() {
+            // Performance Chart
+            const perfCtx = document.getElementById('performanceChart').getContext('2d');
+            const performanceChart = new Chart(perfCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [{
+                        label: 'Portfolio Value',
+                        data: [7800, 7950, 8100, 8250, 8320, 8420, 8425],
+                        borderColor: '#4ef8a3',
+                        backgroundColor: 'rgba(78, 248, 163, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.3,
+                        pointBackgroundColor: '#4ef8a3',
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#a8b0b9',
+                                callback: function(value) {
+                                    return '$' + value;
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#a8b0b9'
+                            }
+                        }
+                    }
                 }
             });
-        });
-        
-        // Update the current time for activities
-        function updateActivityTimes() {
-            const times = document.querySelectorAll('.activity-time');
-            times.forEach(time => {
-                // This would normally come from a database
-                // For demo purposes, we'll just add a random time
-                const hours = Math.floor(Math.random() * 24);
-                const minutes = Math.floor(Math.random() * 60);
-                time.textContent = `${hours}h ${minutes}m ago`;
+            
+            // Allocation Chart
+            const allocCtx = document.getElementById('allocationChart').getContext('2d');
+            const allocationChart = new Chart(allocCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Precious Gems', 'Luxury Watches', 'Fine Art', 'Other'],
+                    datasets: [{
+                        data: [33.8, 29.2, 32.6, 4.4],
+                        backgroundColor: [
+                            '#4ef8a3',
+                            '#2bb673',
+                            '#1c5a45',
+                            '#d4af37'
+                        ],
+                        borderWidth: 0,
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
             });
-        }
-        
-        // Initialize the dashboard
-        updateActivityTimes();
+            
+            // Add interactivity to chart period buttons
+            document.querySelectorAll('.chart-action-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.chart-action-btn').forEach(b => {
+                        b.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                    
+                    // Here you would update the chart data based on the selected period
+                    // For demo purposes, we're just logging the action
+                    console.log('Selected period: ' + this.textContent);
+                });
+            });
+            
+            // Animate elements on scroll
+            const animateOnScroll = function() {
+                const elements = document.querySelectorAll('.stat-card, .performance-card');
+                
+                elements.forEach(element => {
+                    const position = element.getBoundingClientRect();
+                    
+                    // If element is in viewport
+                    if(position.top < window.innerHeight && position.bottom >= 0) {
+                        element.style.opacity = '1';
+                        element.style.transform = 'translateY(0)';
+                    }
+                });
+            };
+            
+            // Initial animation
+            setTimeout(() => {
+                animateOnScroll();
+            }, 500);
+            
+            // Listen for scroll events
+            window.addEventListener('scroll', animateOnScroll);
+            
+            // Table row hover effect
+            const tableRows = document.querySelectorAll('.holdings-table tr');
+            tableRows.forEach(row => {
+                row.addEventListener('mouseenter', function() {
+                    this.style.backgroundColor = 'rgba(28, 90, 69, 0.1)';
+                });
+                
+                row.addEventListener('mouseleave', function() {
+                    this.style.backgroundColor = '';
+                });
+            });
+            
+            // Update values periodically to simulate live data
+            setInterval(() => {
+                // Randomly update some values to simulate market changes
+                const values = document.querySelectorAll('.stat-value');
+                if (values.length > 0) {
+                    const currentValue = parseFloat(values[0].textContent.replace('$', '').replace(',', ''));
+                    const change = (Math.random() - 0.5) * 20; // Random change between -10 and +10
+                    const newValue = currentValue + change;
+                    
+                    values[0].textContent = '$' + newValue.toFixed(2);
+                    
+                    // Update trend indicator
+                    const trendIndicator = document.querySelector('.trend-indicator');
+                    if (change >= 0) {
+                        trendIndicator.innerHTML = '<i class="fas fa-arrow-up"></i> ' + (change/currentValue*100).toFixed(2) + '%';
+                        trendIndicator.className = 'trend-indicator trend-up';
+                    } else {
+                        trendIndicator.innerHTML = '<i class="fas fa-arrow-down"></i> ' + (change/currentValue*100).toFixed(2) + '%';
+                        trendIndicator.className = 'trend-indicator trend-down';
+                    }
+                }
+            }, 5000);
+        });
     </script>
 </body>
 </html>
