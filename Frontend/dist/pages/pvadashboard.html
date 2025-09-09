@@ -1,0 +1,2036 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PVA Bazaar - Premium Market Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-dark: #0a1f19;
+            --primary: #14372b;
+            --primary-light: #1c5a45;
+            --accent: #4ef8a3;
+            --accent-dark: #2bb673;
+            --gold: #d4af37;
+            --gold-light: #e6c875;
+            --text-light: #e8f4f0;
+            --text-muted: #a8b0b9;
+            --card-bg: rgba(18, 26, 24, 0.97);
+            --card-border: rgba(42, 75, 42, 0.6);
+            --red: #f85e5e;
+            --green: #4ef8a3;
+            --blue: #5e9af8;
+            --purple: #a78efa;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        body {
+            background: #0a0a0a;
+            color: var(--text-light);
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at 25% 25%, rgba(28, 90, 69, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 75% 75%, rgba(28, 90, 69, 0.15) 0%, transparent 40%);
+            overflow-x: hidden;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(18, 18, 18, 0.5);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent);
+            border-radius: 4px;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* Header with glassmorphism effect */
+        header {
+            background: rgba(10, 10, 10, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid var(--primary);
+            padding: 15px 0;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            text-decoration: none;
+        }
+        
+        .logo-icon {
+            font-size: 32px;
+            color: var(--accent);
+            position: relative;
+        }
+        
+        .logo-icon::after {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: var(--gold);
+            border-radius: 50%;
+            bottom: 0;
+            right: 0;
+            border: 2px solid var(--primary-dark);
+        }
+        
+        .logo-text {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--text-light);
+            font-family: 'Playfair Display', serif;
+            background: linear-gradient(to right, var(--accent), var(--gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 10px rgba(78, 248, 163, 0.3);
+        }
+        
+        nav {
+            display: flex;
+            gap: 30px;
+        }
+        
+        nav a {
+            color: var(--text-light);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+            padding: 8px 0;
+        }
+        
+        nav a:hover, nav a.active {
+            color: var(--accent);
+        }
+        
+        nav a::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--accent);
+            transition: width 0.3s ease;
+        }
+        
+        nav a:hover::after, nav a.active::after {
+            width: 100%;
+        }
+        
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .search-container {
+            position: relative;
+        }
+        
+        .search-input {
+            background: rgba(28, 90, 69, 0.2);
+            border: 1px solid var(--primary-light);
+            border-radius: 50px;
+            padding: 10px 20px 10px 45px;
+            color: var(--text-light);
+            width: 250px;
+            transition: all 0.3s ease;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(78, 248, 163, 0.2);
+            width: 300px;
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 24px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: 0.5s;
+        }
+        
+        .btn:hover::before {
+            left: 100%;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(90deg, var(--accent), var(--accent-dark));
+            color: var(--primary-dark);
+            box-shadow: 0 4px 15px rgba(78, 248, 163, 0.3);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(78, 248, 163, 0.4);
+        }
+        
+        .btn-outline {
+            background: transparent;
+            color: var(--accent);
+            border: 1px solid var(--accent);
+        }
+        
+        .btn-outline:hover {
+            background: rgba(78, 248, 163, 0.1);
+            box-shadow: 0 4px 15px rgba(78, 248, 163, 0.2);
+        }
+        
+        .notification-btn, .user-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(28, 90, 69, 0.2);
+            color: var(--text-light);
+            border: 1px solid var(--primary-light);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .notification-btn:hover, .user-btn:hover {
+            background: rgba(78, 248, 163, 0.1);
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 18px;
+            height: 18px;
+            background: var(--red);
+            color: white;
+            border-radius: 50%;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--primary-dark);
+        }
+        
+        /* Hero stats with animated gradient borders */
+        .hero-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 25px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, var(--accent), var(--gold), var(--purple), var(--blue));
+            z-index: -1;
+            border-radius: 18px;
+            animation: borderAnimation 3s linear infinite;
+            background-size: 400%;
+        }
+        
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: var(--card-bg);
+            border-radius: 15px;
+            z-index: -1;
+        }
+        
+        @keyframes borderAnimation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+        }
+        
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+            background: rgba(78, 248, 163, 0.1);
+            color: var(--accent);
+        }
+        
+        .stat-value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+            background: linear-gradient(to right, var(--accent), var(--gold-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .stat-change {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .change-up {
+            background: rgba(78, 248, 163, 0.1);
+            color: var(--green);
+        }
+        
+        .change-down {
+            background: rgba(248, 94, 94, 0.1);
+            color: var(--red);
+        }
+        
+        /* Ticker with gradient background */
+        .ticker-container {
+            background: linear-gradient(90deg, var(--primary-dark), var(--primary));
+            padding: 15px 0;
+            margin: 30px 0;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .ticker-wrap {
+            display: flex;
+            animation: ticker-scroll 60s linear infinite;
+            width: max-content;
+        }
+        
+        @keyframes ticker-scroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        
+        .ticker-item {
+            display: flex;
+            align-items: center;
+            padding: 0 30px;
+            white-space: nowrap;
+        }
+        
+        .ticker-name {
+            font-weight: 500;
+            margin-right: 10px;
+        }
+        
+        .ticker-price {
+            color: var(--gold);
+            font-weight: 600;
+            margin-right: 10px;
+        }
+        
+        .ticker-change {
+            font-weight: 700;
+        }
+        
+        .up {
+            color: var(--green);
+        }
+        
+        .down {
+            color: var(--red);
+        }
+        
+        /* Main content grid */
+        .main-content {
+            display: grid;
+            grid-template-columns: 3fr 1fr;
+            gap: 25px;
+            margin: 30px 0;
+        }
+        
+        /* Chart section with glass effect */
+        .chart-section {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 25px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .chart-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, var(--accent), var(--gold), var(--purple));
+            border-radius: 20px 20px 0 0;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .section-title {
+            color: var(--gold);
+            font-size: 1.5rem;
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+        }
+        
+        .dropdown {
+            position: relative;
+        }
+        
+        .dropdown select {
+            padding: 10px 15px;
+            border-radius: 10px;
+            background: rgba(42, 75, 42, 0.3);
+            color: var(--text-light);
+            border: 1px solid var(--primary-light);
+            outline: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            appearance: none;
+            padding-right: 35px;
+        }
+        
+        .dropdown::after {
+            content: '\f078';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+        
+        .chart-container {
+            height: 350px;
+            width: 100%;
+        }
+        
+        /* Trending items section */
+        .trending-items {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+        
+        .item-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        
+        .item-card {
+            background: rgba(28, 90, 69, 0.1);
+            border: 1px solid var(--primary-light);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .item-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+            border-color: var(--accent);
+        }
+        
+        .item-image {
+            height: 200px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .item-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+        
+        .item-card:hover .item-image img {
+            transform: scale(1.05);
+        }
+        
+        .item-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(212, 175, 55, 0.9);
+            color: #000;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .item-details {
+            padding: 20px;
+        }
+        
+        .item-name {
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--text-light);
+            font-size: 1.1rem;
+        }
+        
+        .item-price {
+            color: var(--gold);
+            font-weight: 700;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+        
+        .item-progress {
+            height: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-dark), var(--accent));
+            border-radius: 5px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 20px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            animation: progressShine 1.5s infinite;
+        }
+        
+        @keyframes progressShine {
+            0% { left: -20px; }
+            100% { left: 100%; }
+        }
+        
+        .item-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+        
+        /* Transactions section */
+        .recent-transactions {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+        
+        .transaction-list {
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+        
+        .transaction-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(42, 75, 42, 0.3);
+            transition: background 0.3s ease;
+        }
+        
+        .transaction-item:hover {
+            background: rgba(28, 90, 69, 0.1);
+            border-radius: 10px;
+        }
+        
+        .transaction-item:last-child {
+            border-bottom: none;
+        }
+        
+        .transaction-icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            flex-shrink: 0;
+            font-size: 1.2rem;
+        }
+        
+        .buy {
+            background: rgba(78, 248, 163, 0.1);
+            color: var(--accent);
+        }
+        
+        .sell {
+            background: rgba(248, 94, 94, 0.1);
+            color: var(--red);
+        }
+        
+        .transaction-details {
+            flex-grow: 1;
+        }
+        
+        .transaction-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .transaction-subtitle {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+        
+        .transaction-amount {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+        
+        /* Sidebar sections */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .sidebar-section {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 25px;
+        }
+        
+        .market-stats-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .market-stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(42, 75, 42, 0.3);
+        }
+        
+        .market-stat-item:last-child {
+            border-bottom: none;
+        }
+        
+        .market-stat-label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+        
+        .market-stat-value {
+            font-weight: 600;
+            color: var(--text-light);
+        }
+        
+        .hot-collections-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .hot-collection {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .collection-image {
+            width: 55px;
+            height: 55px;
+            border-radius: 12px;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        
+        .collection-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .collection-details {
+            flex-grow: 1;
+        }
+        
+        .collection-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .collection-floor {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+        
+        .collection-change {
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+        
+        .user-activity {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .activity-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            overflow: hidden;
+            flex-shrink: 0;
+            border: 2px solid var(--primary-light);
+        }
+        
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .activity-details {
+            font-size: 0.9rem;
+        }
+        
+        .activity-details span {
+            color: var(--accent);
+            font-weight: 600;
+        }
+        
+        .activity-time {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        
+        /* Call to action section */
+        .call-to-action {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            margin: 40px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .call-to-action::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('https://images.unsplash.com/photo-1616587226157-48e49175ee20?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=20');
+            background-size: cover;
+            background-position: center;
+            opacity: 0.15;
+            z-index: 0;
+        }
+        
+        .cta-content {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .counter-container {
+            background: rgba(18, 18, 18, 0.7);
+            border-radius: 12px;
+            padding: 15px 25px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        
+        .counter-label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+        
+        .counter-value {
+            color: var(--accent);
+            font-weight: 800;
+            font-size: 1.5rem;
+            min-width: 60px;
+            text-align: center;
+        }
+        
+        .cta-title {
+            color: var(--gold);
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            font-family: 'Playfair Display', serif;
+            font-weight: 800;
+        }
+        
+        .cta-description {
+            color: var(--text-light);
+            margin-bottom: 30px;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+        
+        .cta-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        /* Footer */
+        footer {
+            background: var(--card-bg);
+            padding: 60px 0 30px;
+            border-top: 1px solid var(--primary-dark);
+            margin-top: 50px;
+        }
+        
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+        
+        .footer-logo {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            color: var(--accent);
+            font-family: 'Playfair Display', serif;
+        }
+        
+        .footer-description {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 25px;
+            max-width: 300px;
+            line-height: 1.6;
+        }
+        
+        .footer-links h4 {
+            color: var(--gold);
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        
+        .footer-links ul {
+            list-style: none;
+        }
+        
+        .footer-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.95rem;
+            line-height: 2.2;
+            transition: color 0.3s;
+        }
+        
+        .footer-links a:hover {
+            color: var(--accent);
+        }
+        
+        .social-links {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+        
+        .social-links a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: rgba(28, 90, 69, 0.2);
+            color: var(--text-light);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 1.1rem;
+        }
+        
+        .social-links a:hover {
+            background: var(--accent);
+            color: var(--primary-dark);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(78, 248, 163, 0.3);
+        }
+        
+        .copyright {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            padding-top: 30px;
+            margin-top: 30px;
+            border-top: 1px solid var(--primary-dark);
+        }
+        
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-fadeIn {
+            animation: fadeIn 1s ease-out forwards;
+        }
+        
+        /* Responsive design */
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .item-grid {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            }
+        }
+        
+        @media (max-width: 992px) {
+            .header-content {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            nav {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .header-actions {
+                margin-top: 15px;
+            }
+            
+            .hero-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .hero-stats {
+                grid-template-columns: 1fr;
+            }
+            
+            .item-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .search-input {
+                width: 200px;
+            }
+            
+            .search-input:focus {
+                width: 250px;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .stat-value {
+                font-size: 1.8rem;
+            }
+            
+            .cta-title {
+                font-size: 2rem;
+            }
+            
+            .footer-content {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <a href="#" class="logo">
+                    <i class="fas fa-gem logo-icon"></i>
+                    <div class="logo-text">PVA Bazaar</div>
+                </a>
+                
+                <nav>
+                    <a href="#" class="active">Dashboard</a>
+                    <a href="#">Marketplace</a>
+                    <script type="module" src="/src/pages/pvadashboard.js"></script>
+                    <script type="module" src="/src/nav/inject-nav.js"></script>
+                    <a href="#">Provenance</a>
+                    <a href="#">Analytics</a>
+                    <a href="#">Portfolio</a>
+                </nav>
+                
+                <div class="header-actions">
+                    <div class="search-container">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" class="search-input" placeholder="Search items, collections...">
+                    </div>
+                    
+                    <button class="notification-btn">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge">3</span>
+                    </button>
+                    
+                    <button class="user-btn">
+                        <i class="fas fa-user"></i>
+                    </button>
+                    
+                    <a href="#" class="btn btn-outline">Connect Wallet</a>
+                    <a href="#" class="btn btn-primary">Join PVA</a>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="hero-stats">
+            <div class="stat-card animate-fadeIn" style="animation-delay: 0.1s;">
+                <div class="stat-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-value" id="totalUsers">12,847</div>
+                <div class="stat-label">Active Users</div>
+                <div class="stat-change change-up">+12.5%</div>
+            </div>
+            
+            <div class="stat-card animate-fadeIn" style="animation-delay: 0.2s;">
+                <div class="stat-icon">
+                    <i class="fas fa-gem"></i>
+                </div>
+                <div class="stat-value" id="totalItems">18,562</div>
+                <div class="stat-label">Items Listed</div>
+                <div class="stat-change change-up">+8.3%</div>
+            </div>
+            
+            <div class="stat-card animate-fadeIn" style="animation-delay: 0.3s;">
+                <div class="stat-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="stat-value" id="totalVolume">$4.7M</div>
+                <div class="stat-label">Trading Volume</div>
+                <div class="stat-change change-up">+15.2%</div>
+            </div>
+            
+            <div class="stat-card animate-fadeIn" style="animation-delay: 0.4s;">
+                <div class="stat-icon">
+                    <i class="fas fa-coins"></i>
+                </div>
+                <div class="stat-value" id="pvaCoin">$0.94</div>
+                <div class="stat-label">PVA Coin</div>
+                <div class="stat-change change-up">+6.8%</div>
+            </div>
+            
+            <div class="stat-card animate-fadeIn" style="animation-delay: 0.5s;">
+                <div class="stat-icon">
+                    <i class="fas fa-tag"></i>
+                </div>
+                <div class="stat-value" id="avgPrice">$427</div>
+                <div class="stat-label">Avg Item Price</div>
+                <div class="stat-change change-down">-1.2%</div>
+            </div>
+        </div>
+        
+        <div class="ticker-container">
+            <div class="ticker-wrap" id="ticker">
+                <div class="ticker-item">
+                    <span class="ticker-name">Amradjet Pendant</span>
+                    <span class="ticker-price">5,000 PVA</span>
+                    <span class="ticker-change up">+12.5%</span>
+                </div>
+                <div class="ticker-item">
+                    <span class="ticker-name">Eternal Echo</span>
+                    <span class="ticker-price">3,250 PVA</span>
+                    <span class="ticker-change down">-3.2%</span>
+                </div>
+                <div class="ticker-item">
+                    <span class="ticker-name">Azure Necklace</span>
+                    <span class="ticker-price">4,200 PVA</span>
+                    <span class="ticker-change up">+5.7%</span>
+                </div>
+                <div class="ticker-item">
+                    <span class="ticker-name">Golden Scarab</span>
+                    <span class="ticker-price">7,500 PVA</span>
+                    <span class="ticker-change up">+8.1%</span>
+                </div>
+                <div class="ticker-item">
+                    <span class="ticker-name">Ruby Dragon</span>
+                    <span class="ticker-price">4,800 PVA</span>
+                    <span class="ticker-change down">-1.4%</span>
+                </div>
+                <div class="ticker-item">
+                    <span class="ticker-name">Sapphire Wave</span>
+                    <span class="ticker-price">3,800 PVA</span>
+                    <span class="ticker-change up">+2.9%</span>
+                </div>
+                <div class="ticker-item">
+                    <span class="ticker-name">Diamond Crown</span>
+                    <span class="ticker-price">9,200 PVA</span>
+                    <span class="ticker-change up">+15.3%</span>
+                </div>
+                <div class="ticker-item">
+                    <span class="ticker-name">Emerald Phoenix</span>
+                    <span class="ticker-price">5,500 PVA</span>
+                    <span class="ticker-change down">-2.7%</span>
+                </div>
+                <div class="ticker-item">
+                    <span class="ticker-name">PVA Index</span>
+                    <span class="ticker-price">142.6</span>
+                    <span class="ticker-change up">+4.2%</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="content-main">
+                <div class="chart-section animate-fadeIn" style="animation-delay: 0.6s;">
+                    <div class="section-header">
+                        <h2 class="section-title">Market Performance</h2>
+                        <div class="dropdown">
+                            <select id="timeframe">
+                                <option value="1d">1 Day</option>
+                                <option value="7d" selected>7 Days</option>
+                                <option value="30d">30 Days</option>
+                                <option value="90d">90 Days</option>
+                                <option value="1y">1 Year</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="marketChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="trending-items animate-fadeIn" style="animation-delay: 0.7s;">
+                    <div class="section-header">
+                        <h2 class="section-title">Trending Items</h2>
+                        <div class="dropdown">
+                            <select id="sortBy">
+                                <option value="popularity">Popularity</option>
+                                <option value="recent">Recently Added</option>
+                                <option value="price-asc">Price: Low to High</option>
+                                <option value="price-desc">Price: High to Low</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="item-grid">
+                        <div class="item-card">
+                            <div class="item-image">
+                                <img src="https://i2.seadn.io/base/0x3b3af296e521a0932041cc5599ea47ec2d4ef8a5/ab0864492d648de4434dd73c10970a/04ab0864492d648de4434dd73c10970a.jpeg?w=500" alt="Amradjet Emerald Pendant">
+                                <div class="item-badge">Hot Item</div>
+                            </div>
+                            <div class="item-details">
+                                <div class="item-name">Amradjet Emerald Pendant</div>
+                                <div class="item-price">5000 PVA ($5,000)</div>
+                                <div class="item-progress">
+                                    <div class="progress-bar" style="width: 62%"></div>
+                                </div>
+                                <div class="item-stats">
+                                    <div>3100/5000 Shares Sold</div>
+                                    <div>62% Complete</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="item-card">
+                            <div class="item-image">
+                                <img src="https://images.unsplash.com/photo-1611224885990-ab7363d1f2a9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80" alt="Sapphire Wave Bracelet">
+                                <div class="item-badge">Trending</div>
+                            </div>
+                            <div class="item-details">
+                                <div class="item-name">Sapphire Wave Bracelet</div>
+                                <div class="item-price">3250 PVA ($3,250)</div>
+                                <div class="item-progress">
+                                    <div class="progress-bar" style="width: 78%"></div>
+                                </div>
+                                <div class="item-stats">
+                                    <div>2535/3250 Shares Sold</div>
+                                    <div>78% Complete</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="item-card">
+                            <div class="item-image">
+                                <img src="https://images.unsplash.com/photo-1599643477877-530eb83abc8e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80" alt="Diamond Crown Brooch">
+                            </div>
+                            <div class="item-details">
+                                <div class="item-name">Diamond Crown Brooch</div>
+                                <div class="item-price">7500 PVA ($7,500)</div>
+                                <div class="item-progress">
+                                    <div class="progress-bar" style="width: 45%"></div>
+                                </div>
+                                <div class="item-stats">
+                                    <div>3375/7500 Shares Sold</div>
+                                    <div>45% Complete</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="item-card">
+                            <div class="item-image">
+                                <img src="https://images.unsplash.com/photo-1601121141461-9d6647bca1ed?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80" alt="Ruby Dragon Pendant">
+                            </div>
+                            <div class="item-details">
+                                <div class="item-name">Ruby Dragon Pendant</div>
+                                <div class="item-price">4200 PVA ($4,200)</div>
+                                <div class="item-progress">
+                                    <div class="progress-bar" style="width: 35%"></div>
+                                </div>
+                                <div class="item-stats">
+                                    <div>1470/4200 Shares Sold</div>
+                                    <div>35% Complete</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="recent-transactions animate-fadeIn" style="animation-delay: 0.8s;">
+                    <div class="section-header">
+                        <h2 class="section-title">Recent Transactions</h2>
+                        <a href="#" style="color: var(--accent); text-decoration: none; font-size: 0.9rem;">View All</a>
+                    </div>
+                    
+                    <div class="transaction-list">
+                        <div class="transaction-item">
+                            <div class="transaction-icon buy">
+                                <i class="fas fa-arrow-down"></i>
+                            </div>
+                            <div class="transaction-details">
+                                <div class="transaction-title">Purchase: Amradjet Emerald Pendant</div>
+                                <div class="transaction-subtitle">By 0x8f7e...34d1 • 3 minutes ago</div>
+                            </div>
+                            <div class="transaction-amount up">+250 PVA</div>
+                        </div>
+                        
+                        <div class="transaction-item">
+                            <div class="transaction-icon sell">
+                                <i class="fas fa-arrow-up"></i>
+                            </div>
+                            <div class="transaction-details">
+                                <div class="transaction-title">Sale: Sapphire Wave Bracelet</div>
+                                <div class="transaction-subtitle">By 0x2a9c...7f53 • 12 minutes ago</div>
+                            </div>
+                            <div class="transaction-amount down">-120 PVA</div>
+                        </div>
+                        
+                        <div class="transaction-item">
+                            <div class="transaction-icon buy">
+                                <i class="fas fa-arrow-down"></i>
+                            </div>
+                            <div class="transaction-details">
+                                <div class="transaction-title">Purchase: Ruby Dragon Pendant</div>
+                                <div class="transaction-subtitle">By 0x6b3d...9e24 • 27 minutes ago</div>
+                            </div>
+                            <div class="transaction-amount up">+350 PVA</div>
+                        </div>
+                        
+                        <div class="transaction-item">
+                            <div class="transaction-icon buy">
+                                <i class="fas fa-arrow-down"></i>
+                            </div>
+                            <div class="transaction-details">
+                                <div class="transaction-title">Purchase: Diamond Crown Brooch</div>
+                                <div class="transaction-subtitle">By 0xf41a...5c78 • 42 minutes ago</div>
+                            </div>
+                            <div class="transaction-amount up">+500 PVA</div>
+                        </div>
+                        
+                        <div class="transaction-item">
+                            <div class="transaction-icon sell">
+                                <i class="fas fa-arrow-up"></i>
+                            </div>
+                            <div class="transaction-details">
+                                <div class="transaction-title">Sale: Emerald Phoenix Earrings</div>
+                                <div class="transaction-subtitle">By 0x3e7b...1d92 • 1 hour ago</div>
+                            </div>
+                            <div class="transaction-amount down">-180 PVA</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="sidebar">
+                <div class="sidebar-section animate-fadeIn" style="animation-delay: 0.9s;">
+                    <h3 class="section-title" style="margin-bottom: 15px;">Market Stats</h3>
+                    <div class="market-stats-list">
+                        <div class="market-stat-item">
+                            <div class="market-stat-label">PVA Coin Price</div>
+                            <div class="market-stat-value up">$0.94 (+6.8%)</div>
+                        </div>
+                        <div class="market-stat-item">
+                            <div class="market-stat-label">24h Volume</div>
+                            <div class="market-stat-value">$184,567</div>
+                        </div>
+                        <div class="market-stat-item">
+                            <div class="market-stat-label">Total Items</div>
+                            <div class="market-stat-value">18,562</div>
+                        </div>
+                        <div class="market-stat-item">
+                            <div class="market-stat-label">Avg Share Price</div>
+                            <div class="market-stat-value">$1.23</div>
+                        </div>
+                        <div class="market-stat-item">
+                            <div class="market-stat-label">Majority Buyouts</div>
+                            <div class="market-stat-value">32 (Last 7 days)</div>
+                        </div>
+                        <div class="market-stat-item">
+                            <div class="market-stat-label">New Listings</div>
+                            <div class="market-stat-value">187 (Last 24h)</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="sidebar-section animate-fadeIn" style="animation-delay: 1.0s;">
+                    <h3 class="section-title" style="margin-bottom: 15px;">Hot Collections</h3>
+                    <div class="hot-collections-list">
+                        <div class="hot-collection">
+                            <div class="collection-image">
+                                <img src="https://images.unsplash.com/photo-1629624927607-36f54e5f7d5a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=100&q=80" alt="Genesis Collection">
+                            </div>
+                            <div class="collection-details">
+                                <div class="collection-name">Genesis Collection</div>
+                                <div class="collection-floor">Floor: 1500 PVA</div>
+                            </div>
+                            <div class="collection-change up">+18.2%</div>
+                        </div>
+                        
+                        <div class="hot-collection">
+                            <div class="collection-image">
+                                <img src="https://images.unsplash.com/photo-1608508644127-ba99d7732fee?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=100&q=80" alt="Artisan Series">
+                            </div>
+                            <div class="collection-details">
+                                <div class="collection-name">Artisan Series</div>
+                                <div class="collection-floor">Floor: 800 PVA</div>
+                            </div>
+                            <div class="collection-change up">+9.7%</div>
+                        </div>
+                        
+                        <div class="hot-collection">
+                            <div class="collection-image">
+                                <img src="https://images.unsplash.com/photo-1573408301185-9146fe634ad0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=100&q=80" alt="Royal Jewels">
+                            </div>
+                            <div class="collection-details">
+                                <div class="collection-name">Royal Jewels</div>
+                                <div class="collection-floor">Floor: 2500 PVA</div>
+                            </div>
+                            <div class="collection-change down">-2.3%</div>
+                        </div>
+                        
+                        <div class="hot-collection">
+                            <div class="collection-image">
+                                <img src="https://images.unsplash.com/photo-1588444650733-d2f3c7e0a47b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=100&q=80" alt="Elemental Set">
+                            </div>
+                            <div class="collection-details">
+                                <div class="collection-name">Elemental Set</div>
+                                <div class="collection-floor">Floor: 950 PVA</div>
+                            </div>
+                            <div class="collection-change up">+5.1%</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="sidebar-section animate-fadeIn" style="animation-delay: 1.1s;">
+                    <h3 class="section-title" style="margin-bottom: 15px;">Recent User Activity</h3>
+                    <div class="user-activity">
+                        <div class="activity-item">
+                            <div class="user-avatar">
+                                <img src="https://randomuser.me/api/portraits/women/42.jpg" alt="User Avatar">
+                            </div>
+                            <div class="activity-details">
+                                <div><span>Sophia</span> purchased 125 shares of Amradjet</div>
+                                <div class="activity-time">Just now</div>
+                            </div>
+                        </div>
+                        
+                        <div class="activity-item">
+                            <div class="user-avatar">
+                                <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="User Avatar">
+                            </div>
+                            <div class="activity-details">
+                                <div><span>Michael</span> reached majority (51%) in Ruby Dragon</div>
+                                <div class="activity-time">5 minutes ago</div>
+                            </div>
+                        </div>
+                        
+                        <div class="activity-item">
+                            <div class="user-avatar">
+                                <img src="https://randomuser.me/api/portraits/women/68.jpg" alt="User Avatar">
+                            </div>
+                            <div class="activity-details">
+                                <div><span>Emma</span> sold 75 shares of Sapphire Wave</div>
+                                <div class="activity-time">12 minutes ago</div>
+                            </div>
+                        </div>
+                        
+                        <div class="activity-item">
+                            <div class="user-avatar">
+                                <img src="https://randomuser.me/api/portraits/men/75.jpg" alt="User Avatar">
+                            </div>
+                            <div class="activity-details">
+                                <div><span>Robert</span> joined PVA Bazaar</div>
+                                <div class="activity-time">28 minutes ago</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="call-to-action animate-fadeIn" style="animation-delay: 1.2s;">
+            <div class="cta-content">
+                <div class="counter-container">
+                    <div class="counter-label">Users joined today:</div>
+                    <div class="counter-value" id="joinCounter">187</div>
+                </div>
+                
+                <h2 class="cta-title">Become Part of the PVA Ecosystem</h2>
+                <p class="cta-description">
+                    Join thousands of collectors, artisans, and investors on PVA Bazaar. Buy shares in exclusive items, 
+                    trade with other users, or list your own creations. Everyone can participate - starting from just $0.01!
+                </p>
+                
+                <div class="cta-buttons">
+                    <a href="#" class="btn btn-primary">Start Investing</a>
+                    <a href="#" class="btn btn-outline">List Your Items</a>
+                    <a href="#" class="btn btn-outline">Learn More</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div>
+                    <div class="footer-logo">PVA Bazaar</div>
+                    <p class="footer-description">
+                        The premier marketplace for physical and digital artifacts, 
+                        with transparent ownership and provenance tracking.
+                    </p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-discord"></i></a>
+                        <a href="#"><i class="fab fa-github"></i></a>
+                    </div>
+                </div>
+                
+                <div class="footer-links">
+                    <h4>Marketplace</h4>
+                    <ul>
+                        <li><a href="#">All Items</a></li>
+                        <li><a href="#">Collections</a></li>
+                        <li><a href="#">Trending</a></li>
+                        <li><a href="#">New Arrivals</a></li>
+                        <li><a href="#">Completed Sales</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-links">
+                    <h4>My Account</h4>
+                    <ul>
+                        <li><a href="#">Profile</a></li>
+                        <li><a href="#">My Collections</a></li>
+                        <li><a href="#">Watchlist</a></li>
+                        <li><a href="#">My Shares</a></li>
+                        <li><a href="#">Settings</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-links">
+                    <h4>Resources</h4>
+                    <ul>
+                        <li><a href="#">Help Center</a></li>
+                        <li><a href="#">Provenance Guide</a></li>
+                        <li><a href="#">Blockchain Basics</a></li>
+                        <li><a href="#">PVA Coin</a></li>
+                        <li><a href="#">Contact Support</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="copyright">
+                © 2025 PVA Bazaar. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Market chart initialization
+        const ctx = document.getElementById('marketChart').getContext('2d');
+        
+        // Generate random data for chart
+        const generateChartData = (days, startValue) => {
+            let data = [];
+            let value = startValue;
+            
+            for (let i = 0; i < days; i++) {
+                // Random walk with some trend
+                value += (Math.random() - 0.45) * 3;
+                if (value < 50) value = 50;
+                data.push(value);
+            }
+            
+            return data;
+        };
+        
+        const labels = Array.from({length: 30}, (_, i) => {
+            const d = new Date();
+            d.setDate(d.getDate() - 29 + i);
+            return d.toLocaleDateString('en-US', {month: 'short', day: 'numeric'});
+        });
+        
+        const marketChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Market Index',
+                        data: generateChartData(30, 100),
+                        borderColor: '#4ef8a3',
+                        backgroundColor: 'rgba(78, 248, 163, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 3,
+                        pointRadius: 0,
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: '#4ef8a3',
+                        pointBorderColor: '#0a0a0a',
+                        pointBorderWidth: 2
+                    },
+                    {
+                        label: 'PVA Coin',
+                        data: generateChartData(30, 80),
+                        borderColor: '#d4af37',
+                        backgroundColor: 'rgba(212, 175, 55, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 3,
+                        pointRadius: 0,
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: '#d4af37',
+                        pointBorderColor: '#0a0a0a',
+                        pointBorderWidth: 2
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.05)'
+                        },
+                        ticks: {
+                            color: '#a8b0b9',
+                            font: {
+                                size: 11
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            color: '#a8b0b9',
+                            maxRotation: 0,
+                            autoSkip: true,
+                            maxTicksLimit: 10,
+                            font: {
+                                size: 11
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#e8f4f0',
+                            font: {
+                                size: 12,
+                                weight: '600'
+                            },
+                            padding: 20
+                        }
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        backgroundColor: 'rgba(18, 26, 24, 0.95)',
+                        borderColor: '#2a4b2a',
+                        borderWidth: 1,
+                        titleColor: '#e8f4f0',
+                        bodyColor: '#e8f4f0',
+                        titleFont: {
+                            size: 14,
+                            weight: '600'
+                        },
+                        bodyFont: {
+                            size: 13
+                        },
+                        padding: 15,
+                        boxPadding: 5
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                }
+            }
+        });
+        
+        // Function to format numbers with commas
+        function formatNumber(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+        
+        // Animated counter for statistics
+        function animateValue(element, start, end, duration) {
+            let startTime = null;
+            const step = (timestamp) => {
+                if (!startTime) startTime = timestamp;
+                const progress = Math.min((timestamp - startTime) / duration, 1);
+                const value = Math.floor(progress * (end - start) + start);
+                element.textContent = formatNumber(value);
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+        
+        // Update stats randomly every few seconds
+        function updateStats() {
+            // Update total users with animation
+            const usersElement = document.getElementById('totalUsers');
+            const currentUsers = parseInt(usersElement.textContent.replace(/,/g, ''));
+            const newUsers = currentUsers + Math.floor(Math.random() * 10);
+            animateValue(usersElement, currentUsers, newUsers, 1000);
+            
+            // Update PVA Coin price
+            const pvaCoin = document.getElementById('pvaCoin');
+            const currentPrice = parseFloat(pvaCoin.textContent.replace('$', ''));
+            const priceChange = (Math.random() - 0.45) * 0.02;
+            const newPrice = Math.max(0.01, currentPrice + priceChange);
+            pvaCoin.textContent = '$' + newPrice.toFixed(2);
+            
+            // Update join counter
+            const joinCounter = document.getElementById('joinCounter');
+            const currentCount = parseInt(joinCounter.textContent);
+            const newCount = currentCount + Math.floor(Math.random() * 3);
+            joinCounter.textContent = newCount;
+            
+            // Randomly update some ticker items
+            const tickerItems = document.querySelectorAll('.ticker-item .ticker-change');
+            tickerItems.forEach(item => {
+                if (Math.random() > 0.9) {
+                    const isUp = Math.random() > 0.4;
+                    const changeValue = (Math.random() * 5).toFixed(1);
+                    
+                    if (isUp) {
+                        item.textContent = '+' + changeValue + '%';
+                        item.className = 'ticker-change up';
+                    } else {
+                        item.textContent = '-' + changeValue + '%';
+                        item.className = 'ticker-change down';
+                    }
+                }
+            });
+            
+            // Update market chart
+            const lastIndex = marketChart.data.datasets[0].data.length - 1;
+            const lastValue0 = marketChart.data.datasets[0].data[lastIndex];
+            const lastValue1 = marketChart.data.datasets[1].data[lastIndex];
+            
+            // Add small random change to continue the chart
+            marketChart.data.datasets[0].data.push(lastValue0 + (Math.random() - 0.4) * 3);
+            marketChart.data.datasets[1].data.push(lastValue1 + (Math.random() - 0.45) * 2.5);
+            
+            // Remove first point to create scrolling effect
+            marketChart.data.datasets[0].data.shift();
+            marketChart.data.datasets[1].data.shift();
+            
+            // Update labels
+            const nextDate = new Date();
+            marketChart.data.labels.push(nextDate.toLocaleDateString('en-US', {month: 'short', day: 'numeric'}));
+            marketChart.data.labels.shift();
+            
+            marketChart.update('none');
+        }
+        
+        // Update stats every 5 seconds
+        setInterval(updateStats, 5000);
+        
+        // Simulate random share transactions
+        function updateShareProgress() {
+            document.querySelectorAll('.item-progress').forEach(item => {
+                const progressBar = item.querySelector('.progress-bar');
+                const statsDiv = item.nextElementSibling;
+                
+                // Extract current values
+                const stats = statsDiv.textContent.split('/');
+                let currentShares = parseInt(stats[0].replace(/\D/g, ''));
+                const totalShares = parseInt(stats[1].split(' ')[0]);
+                
+                // Random increase or decrease
+                const change = Math.floor((Math.random() - 0.3) * 50);
+                currentShares = Math.max(0, Math.min(totalShares, currentShares + change));
+                
+                // Calculate percentage
+                const percentage = Math.round((currentShares / totalShares) * 100);
+                
+                // Update UI
+                progressBar.style.width = percentage + '%';
+                statsDiv.innerHTML = `<div>${formatNumber(currentShares)}/${formatNumber(totalShares)} Shares Sold</div><div>${percentage}% Complete</div>`;
+            });
+        }
+        
+        // Update share progress every 8 seconds
+        setInterval(updateShareProgress, 8000);
+        
+        // Duplicate ticker items for continuous scrolling
+        const ticker = document.getElementById('ticker');
+        ticker.innerHTML = ticker.innerHTML + ticker.innerHTML;
+        
+        // Add new transaction to the list
+        const transactions = [
+            {
+                type: 'buy',
+                title: 'Purchase: Amradjet Emerald Pendant',
+                user: '0x7f3a...9c42',
+                amount: '+125 PVA'
+            },
+            {
+                type: 'sell',
+                title: 'Sale: Sapphire Wave Bracelet',
+                user: '0x5b2d...3e78',
+                amount: '-75 PVA'
+            },
+            {
+                type: 'buy',
+                title: 'Purchase: Diamond Crown Brooch',
+                user: '0x9a4f...1d23',
+                amount: '+300 PVA'
+            },
+            {
+                type: 'buy',
+                title: 'Purchase: Emerald Phoenix Earrings',
+                user: '0x3c8e...7b51',
+                amount: '+200 PVA'
+            },
+            {
+                type: 'sell',
+                title: 'Sale: Ruby Dragon Pendant',
+                user: '0x6d1a...4f93',
+                amount: '-150 PVA'
+            }
+        ];
+        
+        function addNewTransaction() {
+            const transactionList = document.querySelector('.transaction-list');
+            const randomTransaction = transactions[Math.floor(Math.random() * transactions.length)];
+            
+            // Create new transaction element
+            const newTransactionEl = document.createElement('div');
+            newTransactionEl.className = 'transaction-item';
+            newTransactionEl.innerHTML = `
+                <div class="transaction-icon ${randomTransaction.type}">
+                    <i class="fas fa-arrow-${randomTransaction.type === 'buy' ? 'down' : 'up'}"></i>
+                </div>
+                <div class="transaction-details">
+                    <div class="transaction-title">${randomTransaction.title}</div>
+                    <div class="transaction-subtitle">By ${randomTransaction.user} • Just now</div>
+                </div>
+                <div class="transaction-amount ${randomTransaction.type === 'buy' ? 'up' : 'down'}">${randomTransaction.amount}</div>
+            `;
+            
+            // Add to top of list
+            transactionList.insertBefore(newTransactionEl, transactionList.firstChild);
+            
+            // Remove last item if more than 5
+            if (transactionList.children.length > 5) {
+                transactionList.removeChild(transactionList.lastChild);
+            }
+            
+            // Update time for other transactions
+            const otherTimes = document.querySelectorAll('.transaction-subtitle');
+            otherTimes.forEach((item, index) => {
+                if (index > 0) {
+                    const timeText = item.textContent.split('•')[1].trim();
+                    if (timeText === 'Just now') {
+                        item.textContent = item.textContent.replace('Just now', '1 minute ago');
+                    } else if (timeText.includes('minute')) {
+                        const minutes = parseInt(timeText.split(' ')[0]) + 1;
+                        item.textContent = item.textContent.replace(timeText, `${minutes} minutes ago`);
+                    }
+                }
+            });
+        }
+        
+        // Add new transaction every 15-30 seconds
+        function scheduleNextTransaction() {
+            const delay = Math.floor(Math.random() * (30000 - 15000) + 15000); // 15-30 seconds
+            setTimeout(() => {
+                addNewTransaction();
+                scheduleNextTransaction();
+            }, delay);
+        }
+        
+        scheduleNextTransaction();
+        
+        // Add new user activity
+        const userActivities = [
+            {
+                avatar: 'https://randomuser.me/api/portraits/women/33.jpg',
+                name: 'Jessica',
+                action: 'purchased 200 shares of Diamond Crown'
+            },
+            {
+                avatar: 'https://randomuser.me/api/portraits/men/45.jpg',
+                name: 'Daniel',
+                action: 'listed a new item: Golden Scarab'
+            },
+            {
+                avatar: 'https://randomuser.me/api/portraits/women/62.jpg',
+                name: 'Olivia',
+                action: 'sold 50 shares of Ruby Dragon'
+            },
+            {
+                avatar: 'https://randomuser.me/api/portraits/men/28.jpg',
+                name: 'James',
+                action: 'joined PVA Bazaar'
+            },
+            {
+                avatar: 'https://randomuser.me/api/portraits/women/17.jpg',
+                name: 'Sophia',
+                action: 'reached 25% ownership of Sapphire Wave'
+            }
+        ];
+        
+        function addNewUserActivity() {
+            const userActivity = document.querySelector('.user-activity');
+            const randomActivity = userActivities[Math.floor(Math.random() * userActivities.length)];
+            
+            // Create new activity element
+            const newActivityEl = document.createElement('div');
+            newActivityEl.className = 'activity-item';
+            newActivityEl.innerHTML = `
+                <div class="user-avatar">
+                    <img src="${randomActivity.avatar}" alt="User Avatar">
+                </div>
+                <div class="activity-details">
+                    <div><span>${randomActivity.name}</span> ${randomActivity.action}</div>
+                    <div class="activity-time">Just now</div>
+                </div>
+            `;
+            
+            // Add to top of list
+            userActivity.insertBefore(newActivityEl, userActivity.firstChild);
+            
+            // Remove last item if more than 4
+            if (userActivity.children.length > 4) {
+                userActivity.removeChild(userActivity.lastChild);
+            }
+            
+            // Update time for other activities
+            const otherTimes = document.querySelectorAll('.activity-time');
+            otherTimes.forEach((item, index) => {
+                if (index > 0) {
+                    const timeText = item.textContent;
+                    if (timeText === 'Just now') {
+                        item.textContent = '1 minute ago';
+                    } else if (timeText.includes('minute')) {
+                        const minutesMatch = timeText.match(/(\d+)/);
+                        if (minutesMatch) {
+                            const minutes = parseInt(minutesMatch[0]) + 1;
+                            if (minutes >= 60) {
+                                item.textContent = '1 hour ago';
+                            } else {
+                                item.textContent = `${minutes} minutes ago`;
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Add new user activity every 20-40 seconds
+        function scheduleNextActivity() {
+            const delay = Math.floor(Math.random() * (40000 - 20000) + 20000); // 20-40 seconds
+            setTimeout(() => {
+                addNewUserActivity();
+                scheduleNextActivity();
+            }, delay);
+        }
+        
+        scheduleNextActivity();
+        
+        // Update collection percentages
+        function updateCollectionPercentages() {
+            document.querySelectorAll('.collection-change').forEach(item => {
+                const isUp = Math.random() > 0.3;
+                const changeValue = (Math.random() * 20).toFixed(1);
+                
+                if (isUp) {
+                    item.textContent = '+' + changeValue + '%';
+                    item.className = 'collection-change up';
+                } else {
+                    item.textContent = '-' + changeValue + '%';
+                    item.className = 'collection-change down';
+                }
+            });
+        }
+        
+        // Update collection percentages every 45 seconds
+        setInterval(updateCollectionPercentages, 45000);
+        
+        // Initialize animations on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add animation delay to all stat cards
+            const statCards = document.querySelectorAll('.stat-card');
+            statCards.forEach((card, index) => {
+                card.style.animationDelay = `${0.1 + (index * 0.1)}s`;
+            });
+        });
+    </script>
+<script type="module" src="/src/pages/pvadashboard.js"></script>
+</body>
+</html>
