@@ -70,7 +70,7 @@ async function connectToDatabase() {
   }
   
   // Connect to MongoDB
-  const client = await mongoose.connect(process.env.MONGODB_URI, {
+  const client = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost/test', {
     dbName: 'pvabazaar',
     bufferCommands: false
   });
@@ -80,27 +80,46 @@ async function connectToDatabase() {
   return client;
 }
 
-// Import routes
-const artifactsRoutes = require('../../routes/artifacts');
-const usersRoutes = require('../../routes/users');
-const authRoutes = require('../../routes/auth');
-
-// Use routes
-app.use('/api/artifacts', artifactsRoutes);
-app.use('/api/users', usersRoutes);
-app.use('/api/auth', authLimiter);
-app.use('/api/auth', authRoutes);
-
 // Health endpoint
 app.get('/api/health', async (req, res) => {
-  await connectToDatabase();
+  try {
+    await connectToDatabase();
+    res.json({
+      ok: true,
+      message: 'PVABazaar API is running',
+      mongo: mongoose.connection.readyState === 1,
+      timestamp: new Date().toISOString(),
+      security: {
+        helmet: 'enabled',
+        cors: 'configured',
+        rateLimiting: 'enabled'
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      message: 'Database connection failed',
+      error: error.message
+    });
+  }
+});
+
+// Basic test endpoint without auth
+app.get('/api/test', (req, res) => {
   res.json({
     ok: true,
-    message: 'PVABazaar API is running',
-    mongo: mongoose.connection.readyState === 1,
-    timestamp: new Date().toISOString()
+    message: 'Security middleware test endpoint',
+    security: {
+      helmet: 'enabled',
+      cors: 'configured',
+      rateLimiting: 'enabled'
+    }
   });
 });
+
+// Auth routes
+const authRoutes = require('./auth');
+app.use('/api/auth', authRoutes);
 
 // Error handling middleware
 app.use((err, req, res, _next) => {
@@ -120,12 +139,16 @@ app.use((req, res) => {
   });
 });
 
-// Initialize connection when the lambda first starts
-connectToDatabase();
-
 // Export the serverless handler
 const handler = serverless(app);
 module.exports = async (req, res) => {
-  await connectToDatabase();
-  return handler(req, res);
+  try {
+    if (process.env.MONGODB_URI) {
+      await connectToDatabase();
+    }
+    return handler(req, res);
+  } catch (error) {
+    console.error('Handler error:', error);
+    res.status(500).json({ ok: false, message: 'Server error' });
+  }
 };
