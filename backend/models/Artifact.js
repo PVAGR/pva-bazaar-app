@@ -43,5 +43,14 @@ const artifactSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });
+// Text index for search endpoints and vector fallback
+artifactSchema.index({
+  name: 'text',
+  title: 'text',
+  description: 'text',
+  materials: 'text',
+  artisan: 'text',
+  category: 'text'
+});
 
 module.exports = mongoose.model('Artifact', artifactSchema);

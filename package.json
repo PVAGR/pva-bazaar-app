@@ -2,7 +2,6 @@
   "name": "pva-bazaar",
   "version": "1.0.0",
   "description": "PVA Bazaar - Artisan Marketplace with Digital Provenance",
-  "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
