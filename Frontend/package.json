@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "prebuild": "node scripts/vercel-info.cjs",
-    "build": "vite build",
+  "build": "vite build",
+  "postbuild": "node scripts/copy-src-to-dist.cjs",
     "preview": "vite preview"
   },
   "dependencies": {
