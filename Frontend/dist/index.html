@@ -981,3 +981,40 @@
     </script>
 </body>
 </html>
+
+// Add to your Frontend/index.html or create a separate file
+async function loadArtifacts() {
+  try {
+    const response = await fetch('/api/artifacts');
+    const data = await response.json();
+    
+    if (data.ok) {
+      displayArtifacts(data.artifacts);
+    }
+  } catch (error) {
+    console.error('Failed to load artifacts:', error);
+  }
+}
+
+function displayArtifacts(artifacts) {
+  const productGrid = document.querySelector('.products-grid');
+  productGrid.innerHTML = artifacts.map(artifact => `
+    <div class="product-card">
+      <div class="product-image">
+        <img src="${artifact.imageUrl}" alt="${artifact.name}">
+      </div>
+      <div class="product-info">
+        <h3>${artifact.name}</h3>
+        <p>${artifact.description.substring(0, 100)}...</p>
+        <div class="product-price">$${artifact.price}</div>
+        <div class="product-actions">
+          <button class="btn" onclick="viewProduct('${artifact._id}')">View Details</button>
+          <button class="btn" onclick="addToCart('${artifact._id}')">Add to Cart</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// Load artifacts when page loads
+document.addEventListener('DOMContentLoaded', loadArtifacts);

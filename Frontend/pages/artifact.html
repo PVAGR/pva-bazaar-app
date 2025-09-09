@@ -568,11 +568,7 @@
             
             // In a real implementation, this would send data to your backend API
             try {
-                // Simulate API call
-                console.log('Submitting artifact data:', formData);
-                
-                // This would be the actual API call:
-                /*
+                // Connect to backend API
                 const response = await fetch('/api/artifacts', {
                     method: 'POST',
                     headers: {
@@ -581,18 +577,12 @@
                     },
                     body: JSON.stringify(formData)
                 });
-                
                 if (response.ok) {
                     alert('Artifact added successfully!');
                     this.reset();
                 } else {
                     throw new Error('Failed to add artifact');
                 }
-                */
-                
-                // For demo purposes, we'll just show an alert
-                alert('Artifact added successfully! (This is a demo - in a real implementation, data would be saved to your database)');
-                this.reset();
                 
             } catch (error) {
                 console.error('Error adding artifact:', error);
@@ -609,4 +599,6 @@
         });
     </script>
 </body>
+</html>
+<script type="module" src="/src/pages/artifact-admin.js"></script>
 </html>

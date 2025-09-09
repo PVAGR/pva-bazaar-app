@@ -1,16 +1,26 @@
-const { ChromaClient } = require('chromadb');
+let ChromaClient;
+try {
+  // Optional dependency; may not be installed in all environments
+  ({ ChromaClient } = require('chromadb'));
+} catch (e) {
+  ChromaClient = null;
+}
 const Artifact = require('../models/Artifact');
-const EmbeddingService = require('./embeddings');
+const EmbeddingService = require('./embeddingService');
 
 class VectorDB {
   constructor() {
-    this.client = new ChromaClient();
+    this.client = ChromaClient ? new ChromaClient() : null;
     this.embeddingService = new EmbeddingService();
     this.collection = null;
   }
 
   async initialize() {
     try {
+      if (!this.client) {
+        console.warn("chromadb not installed. Falling back to MongoDB text search.");
+        return;
+      }
       // Create or get collection
       this.collection = await this.client.getOrCreateCollection({
         name: "pva_artifacts",
@@ -25,11 +35,13 @@ class VectorDB {
           }
         }
       });
-      
       console.log("Vector database initialized");
     } catch (error) {
-      console.error("Error initializing vector database:", error);
-      throw error;
+  // If Chroma is unavailable, degrade gracefully and use Mongo text search fallback
+  console.warn("Vector DB (Chroma) unavailable. Using MongoDB text search fallback. Detail:", error?.message || error);
+  this.client = null;
+  this.collection = null;
+  return;
     }
   }
 
@@ -58,12 +70,22 @@ class VectorDB {
 
   async searchSimilar(query, limit = 5) {
     try {
-      const results = await this.collection.query({
-        queryTexts: [query],
-        nResults: limit
-      });
-      
-      return results;
+      if (this.collection) {
+        const results = await this.collection.query({
+          queryTexts: [query],
+          nResults: limit
+        });
+        return results;
+      }
+      // Fallback: basic text search via MongoDB if chromadb is unavailable
+      const docs = await Artifact.find(
+        { $text: { $search: query } },
+        { score: { $meta: "textScore" } }
+      )
+        .sort({ score: { $meta: "textScore" } })
+        .limit(parseInt(limit));
+      // Normalize to an array of plain objects with an optional score for consistency
+      return docs.map(d => ({ ...d.toObject(), score: d.score }));
     } catch (error) {
       console.error("Error searching artifacts:", error);
       throw error;
