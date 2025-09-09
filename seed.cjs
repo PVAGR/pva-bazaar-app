@@ -1,11 +1,15 @@
 const mongoose = require('mongoose');
 const Artifact = require('./backend/models/Artifact');
-const User = require('./backend/models/User');
+const User = require('./backend/models/user');
 require('dotenv').config();
 
 async function seedData() {
   try {
-    await mongoose.connect(process.env.MONGODB_URI);
+    await mongoose.connect(process.env.MONGODB_URI, {
+      connectTimeoutMS: 30000,
+      socketTimeoutMS: 30000,
+      bufferCommands: false,
+    });
     console.log('Connected to MongoDB');
     
     // Create a sample user first (needed for creator field)
