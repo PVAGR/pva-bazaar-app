@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discover Your Universal Archetype - PVA</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-dark: #0a2c21;
+            --primary: #143d2e;
+            --primary-light: #1e4e3c;
+            --accent: #3ac389;
+            --accent-dark: #2a9c6f;
+            --text-light: #e8f4f0;
+            --text-muted: #a8b0b9;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --card-border: rgba(58, 195, 137, 0.2);
+            --gold: #c8a971;
+            --shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', system-ui, sans-serif;
+        }
+
+        html { 
+            scroll-behavior: smooth; 
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+            color: var(--text-light);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .quiz-container {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+            position: relative;
+        }
+
+        .quiz-container::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            background: radial-gradient(600px 200px at 20% 10%, rgba(58,195,137,0.12), transparent 60%);
+            pointer-events: none;
+            z-index: -1;
+            border-radius: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .logo {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: var(--accent);
+            margin-bottom: 10px;
+            font-family: 'Playfair Display', serif;
+            text-shadow: 0 0 10px rgba(58, 195, 137, 0.3);
+        }
+        
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 1.1em;
+            line-height: 1.5;
+        }
+        
+        .question-container {
+            display: none;
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        .question-container.active {
+            display: block;
+        }
+        
+        .question {
+            font-size: 1.3em;
+            color: var(--text-light);
+            margin-bottom: 25px;
+            font-weight: 500;
+        }
+        
+        .option {
+            background: var(--card-bg);
+            border: 2px solid var(--card-border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: var(--transition);
+            color: var(--text-light);
+            font-weight: 400;
+        }
+        
+        .option:hover {
+            border-color: var(--accent);
+            background: rgba(58, 195, 137, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(58, 195, 137, 0.2);
+        }
+        
+        .option.selected {
+            border-color: var(--accent);
+            background: rgba(58, 195, 137, 0.15);
+            color: var(--text-light);
+            box-shadow: 0 4px 12px rgba(58, 195, 137, 0.3);
+        }
+        
+        .progress {
+            width: 100%;
+            height: 8px;
+            background: var(--primary-light);
+            border-radius: 4px;
+            margin-bottom: 30px;
+            overflow: hidden;
+            border: 1px solid var(--card-border);
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--accent-dark));
+            border-radius: 4px;
+            transition: width 0.3s ease;
+            width: 0%;
+            box-shadow: 0 0 10px rgba(58, 195, 137, 0.4);
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+            color: var(--primary-dark);
+            border: none;
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-top: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        
+        .result-container {
+            display: none;
+            text-align: center;
+        }
+        
+        .archetype-title {
+            font-size: 2.2em;
+            color: var(--accent);
+            margin-bottom: 20px;
+            font-weight: bold;
+            font-family: 'Playfair Display', serif;
+            text-shadow: 0 0 10px rgba(58, 195, 137, 0.3);
+        }
+        
+        .archetype-description {
+            font-size: 1.1em;
+            line-height: 1.6;
+            color: var(--text-light);
+            margin-bottom: 25px;
+        }
+        
+        .traits {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+            text-align: left;
+        }
+        
+        .traits h3 {
+            color: var(--accent);
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        
+        .trait-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .trait-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid var(--card-border);
+            color: var(--text-light);
+            position: relative;
+            padding-left: 20px;
+        }
+
+        .trait-list li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+            font-weight: bold;
+        }
+        
+        .trait-list li:last-child {
+            border-bottom: none;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .intro-screen {
+            text-align: center;
+        }
+        
+        .intro-text {
+            font-size: 1.2em;
+            line-height: 1.6;
+            color: var(--text-light);
+            margin-bottom: 30px;
+        }
+
+        .back-to-site {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: transparent;
+            border: 1px solid var(--card-border);
+            color: var(--text-light);
+            padding: 8px 16px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .back-to-site:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: rgba(58, 195, 137, 0.1);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .quiz-container {
+                padding: 30px 20px;
+                margin: 10px;
+            }
+
+            .back-to-site {
+                position: static;
+                margin-bottom: 20px;
+                align-self: flex-start;
+            }
+
+            .header {
+                margin-bottom: 20px;
+            }
+
+            .logo {
+                font-size: 2rem;
+            }
+
+            .question {
+                font-size: 1.2em;
+            }
+
+            .option {
+                padding: 15px;
+            }
+
+            .archetype-title {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <a href="#" class="back-to-site">
+            <i class="fas fa-arrow-left"></i>
+            Back to PVA Bazaar
+        </a>
+
+        <div class="header">
+            <div class="logo">PVA</div>
+            <div class="subtitle">Discover Your Universal Archetype</div>
+        </div>
+        
+        <div id="intro" class="intro-screen">
+            <div class="intro-text">
+                This quiz reveals your fundamental human archetype based on psychological research spanning cultures and centuries. Rather than asking what job you do, we explore who you are at your core - your deepest motivations, natural strengths, and how you see the world.
+            </div>
+            <button class="btn" onclick="startQuiz()">Begin Discovery</button>
+        </div>
+        
+        <div id="quiz" style="display: none;">
+            <div class="progress">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            
+            <div class="question-container active" id="question1">
+                <div class="question">What is your greatest gift to a community?</div>
+                <div class="option" onclick="selectOption(this, 'guardian')" data-value="guardian">
+                    My ability to provide practical care and ensure everyone's basic needs are met
+                </div>
+                <div class="option" onclick="selectOption(this, 'pioneer')" data-value="pioneer">
+                    My courage to venture into the unknown and bring back resources or knowledge
+                </div>
+                <div class="option" onclick="selectOption(this, 'strategist')" data-value="strategist">
+                    My capacity to solve complex problems and improve how things work
+                </div>
+                <div class="option" onclick="selectOption(this, 'visionary')" data-value="visionary">
+                    My talent for uniting people around a shared dream or purpose
+                </div>
+            </div>
+            
+            <div class="question-container" id="question2">
+                <div class="question">How do you make difficult decisions?</div>
+                <div class="option" onclick="selectOption(this, 'guardian')" data-value="guardian">
+                    I consider my duty, established practices, and what is most practical for everyone's well-being
+                </div>
+                <div class="option" onclick="selectOption(this, 'pioneer')" data-value="pioneer">
+                    I trust my instincts and choose the path that feels most authentic and free
+                </div>
+                <div class="option" onclick="selectOption(this, 'strategist')" data-value="strategist">
+                    I analyze available data, weigh options logically, and choose the most efficient outcome
+                </div>
+                <div class="option" onclick="selectOption(this, 'visionary')" data-value="visionary">
+                    I consult my values and choose what feels most right for the people involved
+                </div>
+            </div>
+            
+            <div class="question-container" id="question3">
+                <div class="question">What energizes you most?</div>
+                <div class="option" onclick="selectOption(this, 'guardian')" data-value="guardian">
+                    Productive work with tangible results, followed by peaceful time with loved ones
+                </div>
+                <div class="option" onclick="selectOption(this, 'pioneer')" data-value="pioneer">
+                    Adventure, spontaneity, and physical challenges with no set schedule
+                </div>
+                <div class="option" onclick="selectOption(this, 'strategist')" data-value="strategist">
+                    Deep focus on fascinating projects, learning, or mastering complex systems
+                </div>
+                <div class="option" onclick="selectOption(this, 'visionary')" data-value="visionary">
+                    Connecting deeply with others and collaborating on meaningful projects
+                </div>
+            </div>
+            
+            <div class="question-container" id="question4">
+                <div class="question">What do you value most?</div>
+                <div class="option" onclick="selectOption(this, 'guardian')" data-value="guardian">
+                    Stability and Loyalty
+                </div>
+                <div class="option" onclick="selectOption(this, 'pioneer')" data-value="pioneer">
+                    Freedom and Authenticity
+                </div>
+                <div class="option" onclick="selectOption(this, 'strategist')" data-value="strategist">
+                    Knowledge and Competence
+                </div>
+                <div class="option" onclick="selectOption(this, 'visionary')" data-value="visionary">
+                    Compassion and Meaning
+                </div>
+            </div>
+            
+            <div class="question-container" id="question5">
+                <div class="question">What is your deepest concern?</div>
+                <div class="option" onclick="selectOption(this, 'guardian')" data-value="guardian">
+                    Chaos and the breakdown of my community's stability
+                </div>
+                <div class="option" onclick="selectOption(this, 'pioneer')" data-value="pioneer">
+                    Being trapped, confined, or living without spontaneity
+                </div>
+                <div class="option" onclick="selectOption(this, 'strategist')" data-value="strategist">
+                    Incompetence, irrelevance, or being unable to understand important systems
+                </div>
+                <div class="option" onclick="selectOption(this, 'visionary')" data-value="visionary">
+                    Disconnection, hopelessness, or a life without deeper purpose
+                </div>
+            </div>
+            
+            <button class="btn" id="nextBtn" onclick="nextQuestion()" disabled>Next Question</button>
+        </div>
+        
+        <div id="result" class="result-container">
+            <div class="archetype-title" id="archetypeTitle"></div>
+            <div class="archetype-description" id="archetypeDescription"></div>
+            <div class="traits">
+                <h3>Your Core Traits:</h3>
+                <ul class="trait-list" id="traitList"></ul>
+            </div>
+            <button class="btn" onclick="resetQuiz()">Take Quiz Again</button>
+        </div>
+    </div>
+
+    <script>
+        let currentQuestion = 1;
+        let totalQuestions = 5;
+        let scores = {
+            guardian: 0,
+            pioneer: 0,
+            strategist: 0,
+            visionary: 0
+        };
+        
+        const archetypes = {
+            guardian: {
+                title: "The Guardian",
+                description: "You are the foundation of any society. Your strength lies in your practicality, loyalty, and desire to protect and provide for others. You create the stability that allows others to dream and explore. You are dependable, nurturing, and the heart of your community.",
+                traits: [
+                    "Deeply loyal and reliable",
+                    "Practical problem-solver", 
+                    "Natural protector and nurturer",
+                    "Values tradition and stability",
+                    "Excellent at creating systems that work"
+                ]
+            },
+            pioneer: {
+                title: "The Pioneer",
+                description: "You are the adventurous spirit who pushes boundaries and explores new frontiers. Your courage and adaptability inspire others to break free from limitations. You thrive on freedom, authenticity, and hands-on experience. You bring vitality and fresh perspectives to any situation.",
+                traits: [
+                    "Highly adaptable and resourceful",
+                    "Authentic and spontaneous",
+                    "Natural risk-taker and explorer", 
+                    "Values freedom and independence",
+                    "Excellent at thinking on your feet"
+                ]
+            },
+            strategist: {
+                title: "The Strategist", 
+                description: "You are a seeker of truth and a master of systems. Your mind is wired to analyze, understand, and optimize. You find deep satisfaction in uncovering how things work and improving them. You are the innovator, the architect of progress, and the keeper of logic.",
+                traits: [
+                    "Analytical and logical thinker",
+                    "Natural problem-solver and innovator",
+                    "Excellent at seeing patterns and systems",
+                    "Values competence and knowledge",
+                    "Thrives on complex challenges"
+                ]
+            },
+            visionary: {
+                title: "The Visionary",
+                description: "You are an inspiring force who sees potential in people and situations others might miss. Your empathy and charisma allow you to unite people around shared ideals. You create meaning, foster connection, and guide others toward a better future through your values and vision.",
+                traits: [
+                    "Highly empathetic and charismatic",
+                    "Natural leader and inspirator",
+                    "Excellent at seeing potential in people",
+                    "Values meaning and human connection", 
+                    "Thrives on collaborative creativity"
+                ]
+            }
+        };
+        
+        function startQuiz() {
+            document.getElementById('intro').style.display = 'none';
+            document.getElementById('quiz').style.display = 'block';
+            updateProgress();
+        }
+        
+        function selectOption(element, archetype) {
+            // Clear previous selections
+            const container = element.parentNode;
+            container.querySelectorAll('.option').forEach(opt => opt.classList.remove('selected'));
+            
+            // Select current option
+            element.classList.add('selected');
+            
+            // Enable next button
+            document.getElementById('nextBtn').disabled = false;
+            
+            // Store the score
+            scores[archetype]++;
+        }
+        
+        function nextQuestion() {
+            if (currentQuestion < totalQuestions) {
+                // Hide current question
+                document.getElementById(`question${currentQuestion}`).classList.remove('active');
+                
+                // Show next question
+                currentQuestion++;
+                document.getElementById(`question${currentQuestion}`).classList.add('active');
+                
+                // Update progress
+                updateProgress();
+                
+                // Disable next button until selection
+                document.getElementById('nextBtn').disabled = true;
+                
+                // Update button text for last question
+                if (currentQuestion === totalQuestions) {
+                    document.getElementById('nextBtn').textContent = 'Discover My Archetype';
+                    document.getElementById('nextBtn').onclick = showResult;
+                }
+            }
+        }
+        
+        function updateProgress() {
+            const progress = ((currentQuestion - 1) / totalQuestions) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+        }
+        
+        function showResult() {
+            // Find the archetype with highest score
+            let maxScore = 0;
+            let resultArchetype = 'guardian';
+            
+            for (let archetype in scores) {
+                if (scores[archetype] > maxScore) {
+                    maxScore = scores[archetype];
+                    resultArchetype = archetype;
+                }
+            }
+            
+            // Display result
+            const result = archetypes[resultArchetype];
+            document.getElementById('archetypeTitle').textContent = result.title;
+            document.getElementById('archetypeDescription').textContent = result.description;
+            
+            const traitList = document.getElementById('traitList');
+            traitList.innerHTML = '';
+            result.traits.forEach(trait => {
+                const li = document.createElement('li');
+                li.textContent = trait;
+                traitList.appendChild(li);
+            });
+            
+            // Hide quiz, show result
+            document.getElementById('quiz').style.display = 'none';
+            document.getElementById('result').style.display = 'block';
+        }
+        
+        function resetQuiz() {
+            currentQuestion = 1;
+            scores = { guardian: 0, pioneer: 0, strategist: 0, visionary: 0 };
+            
+            // Reset UI
+            document.getElementById('result').style.display = 'none';
+            document.getElementById('intro').style.display = 'block';
+            document.getElementById('nextBtn').textContent = 'Next Question';
+            document.getElementById('nextBtn').onclick = nextQuestion;
+            
+            // Clear all selections
+            document.querySelectorAll('.option').forEach(opt => opt.classList.remove('selected'));
+            document.querySelectorAll('.question-container').forEach(container => container.classList.remove('active'));
+            document.getElementById('question1').classList.add('active');
+            
+            updateProgress();
+        }
+
+        // Back to site link
+        document.querySelector('.back-to-site').addEventListener('click', function(e) {
+            e.preventDefault();
+            // You would link this to your actual site
+            window.history.back();
+        });
+    </script>
+</body>
+</html>

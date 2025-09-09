@@ -40,3 +40,20 @@ console.log('Pages copy complete');
     console.log('Copied', s, '->', d);
   }
 });
+
+// Also copy repository-level public/ so runtime assets (css/js) are available
+const repoPublicSrc = path.join(projectRoot, '..', 'public');
+const repoPublicDest = path.join(projectRoot, 'dist', 'public');
+if (fs.existsSync(repoPublicSrc)) {
+  console.log('Copying repo public', repoPublicSrc, '->', repoPublicDest);
+  copyRecursive(repoPublicSrc, repoPublicDest);
+  console.log('Copied repo public to dist');
+} else {
+  // try sibling public inside same folder
+  const alt = path.join(projectRoot, 'public');
+  if (fs.existsSync(alt)) {
+    console.log('Copying local public', alt, '->', path.join(projectRoot, 'dist', 'public'));
+    copyRecursive(alt, path.join(projectRoot, 'dist', 'public'));
+    console.log('Copied local public to dist');
+  }
+}
