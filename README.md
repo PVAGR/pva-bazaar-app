@@ -83,7 +83,30 @@ VITE_API_URL=http://localhost:5001/api npm run dev
 
 ## 🚀 Deployment
 
-See [production-deploy.md](./production-deploy.md) for detailed deployment instructions.
+### Quick Vercel Deployment
+
+For a complete production deployment to Vercel:
+
+```bash
+./deploy-to-production.sh
+```
+
+This automated script will:
+- Deploy your backend API to Vercel
+- Update frontend configuration automatically
+- Build and deploy your frontend
+- Guide you through custom domain setup
+
+### Detailed Setup Guide
+
+See [VERCEL-SETUP.md](./VERCEL-SETUP.md) for complete deployment instructions including:
+- Environment variable configuration
+- Custom domain setup for pvabazaar.org
+- Troubleshooting common issues
+
+### Alternative Deployment
+
+See [production-deploy.md](./production-deploy.md) for other deployment options.
 
 ## 🔍 Troubleshooting
 
