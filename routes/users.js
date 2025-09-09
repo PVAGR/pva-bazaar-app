@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const User = require('../models/User'); // Fixed path - capital U
-const auth = require('../middleware/auth');
+const User = require('../backend/models/user'); // Fixed path - lowercase user
+const auth = require('../backend/middleware/auth');
 
 // Get user profile
 router.get('/profile', auth, async (req, res) => {

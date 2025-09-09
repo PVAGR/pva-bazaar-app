@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { verifyOnChain } = require('../utils/blockchain');
+const { verifyOnChain } = require('../backend/utils/blockchain');
 
 // GET /api/blockchain/verify - Verify on blockchain
 router.get('/verify', async (req, res) => {

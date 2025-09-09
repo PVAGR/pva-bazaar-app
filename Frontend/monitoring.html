@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PVA Bazaar - Monitoring Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a2c21 0%, #143d2e 100%);
+            color: #e8f4f0;
+            line-height: 1.6;
+        }
+        
+        .dashboard {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            color: #3ac389;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #a8b0b9;
+            font-size: 1.1rem;
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        
+        .metric-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 25px;
+            border: 1px solid rgba(58, 195, 137, 0.2);
+            backdrop-filter: blur(10px);
+        }
+        
+        .metric-card h3 {
+            color: #3ac389;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+        
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #e8f4f0;
+            margin-bottom: 10px;
+        }
+        
+        .metric-label {
+            color: #a8b0b9;
+            font-size: 0.9rem;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-left: 10px;
+        }
+        
+        .status-healthy { background: #3ac389; }
+        .status-warning { background: #f39c12; }
+        .status-error { background: #e74c3c; }
+        
+        .chart-container {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(58, 195, 137, 0.2);
+        }
+        
+        .chart-title {
+            color: #3ac389;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            border: 1px solid rgba(58, 195, 137, 0.2);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(58, 195, 137, 0.1);
+        }
+        
+        th {
+            background: rgba(58, 195, 137, 0.1);
+            color: #3ac389;
+            font-weight: 600;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #3ac389 0%, #2a9c6f 100%);
+            color: #0a2c21;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .loading {
+            text-align: center;
+            color: #a8b0b9;
+            padding: 20px;
+        }
+        
+        .error {
+            background: rgba(231, 76, 60, 0.1);
+            border: 1px solid rgba(231, 76, 60, 0.3);
+            color: #e74c3c;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        
+        .auto-refresh {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(58, 195, 137, 0.3);
+        }
+        
+        .timestamp {
+            color: #a8b0b9;
+            font-size: 0.9rem;
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="auto-refresh">
+        <label>
+            <input type="checkbox" id="autoRefresh" checked> Auto-refresh (30s)
+        </label>
+    </div>
+    
+    <div class="dashboard">
+        <div class="header">
+            <h1>🔍 PVA Bazaar Monitoring Dashboard</h1>
+            <p>Real-time oversight of pvabazaar.com and pvabazaar.org</p>
+        </div>
+        
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <h3>Website Visitors <span id="visitorStatus" class="status-indicator status-healthy"></span></h3>
+                <div class="metric-value" id="visitorsToday">-</div>
+                <div class="metric-label">Today | <span id="visitorsWeek">-</span> this week</div>
+            </div>
+            
+            <div class="metric-card">
+                <h3>Total Users</h3>
+                <div class="metric-value" id="totalUsers">-</div>
+                <div class="metric-label"><span id="newUsersToday">-</span> new today</div>
+            </div>
+            
+            <div class="metric-card">
+                <h3>Artifacts & NFTs</h3>
+                <div class="metric-value" id="totalArtifacts">-</div>
+                <div class="metric-label"><span id="artifactsWithBlockchain">-</span> on blockchain</div>
+            </div>
+            
+            <div class="metric-card">
+                <h3>System Health <span id="systemStatus" class="status-indicator status-healthy"></span></h3>
+                <div class="metric-value" id="systemUptime">-</div>
+                <div class="metric-label">hours uptime</div>
+            </div>
+        </div>
+        
+        <div class="chart-container">
+            <h3 class="chart-title">📊 Top Events Today</h3>
+            <div id="topEvents">Loading...</div>
+        </div>
+        
+        <div class="chart-container">
+            <h3 class="chart-title">📈 Page Views</h3>
+            <div id="pageViews">Loading...</div>
+        </div>
+        
+        <div class="chart-container">
+            <h3 class="chart-title">⛓️ Blockchain Activity</h3>
+            <div id="blockchainActivity">Loading...</div>
+        </div>
+        
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>🎨 Recent Artifacts</th>
+                        <th>Creator</th>
+                        <th>Price</th>
+                        <th>Blockchain Status</th>
+                        <th>Created</th>
+                    </tr>
+                </thead>
+                <tbody id="recentArtifacts">
+                    <tr><td colspan="5" class="loading">Loading recent artifacts...</td></tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div style="text-align: center; margin: 40px 0;">
+            <button class="btn" onclick="generateDailyReport()">📄 Generate Daily Report</button>
+            <button class="btn" onclick="refreshData()">🔄 Refresh Data</button>
+            <button class="btn" onclick="exportData()">📊 Export Analytics</button>
+        </div>
+        
+        <div class="timestamp" id="lastUpdated">
+            Last updated: Loading...
+        </div>
+    </div>
+    
+    <script>
+        let refreshInterval;
+        
+        async function loadDashboardData() {
+            try {
+                // Load analytics dashboard
+                const analyticsResponse = await fetch('/api/analytics/dashboard');
+                const analyticsData = await analyticsResponse.json();
+                
+                if (analyticsData.ok) {
+                    updateAnalyticsMetrics(analyticsData.data);
+                }
+                
+                // Load blockchain monitoring
+                const blockchainResponse = await fetch('/api/monitoring/blockchain');
+                const blockchainData = await blockchainResponse.json();
+                
+                if (blockchainData.ok) {
+                    updateBlockchainMetrics(blockchainData.stats);
+                }
+                
+                // Load user monitoring
+                const userResponse = await fetch('/api/monitoring/users');
+                const userData = await userResponse.json();
+                
+                if (userData.ok) {
+                    updateUserMetrics(userData.data);
+                }
+                
+                // Load health status
+                const healthResponse = await fetch('/api/monitoring/health');
+                const healthData = await healthResponse.json();
+                
+                if (healthData.ok) {
+                    updateHealthMetrics(healthData.health);
+                }
+                
+                document.getElementById('lastUpdated').textContent = 
+                    `Last updated: ${new Date().toLocaleString()}`;
+                    
+            } catch (error) {
+                console.error('Dashboard load error:', error);
+                showError('Failed to load dashboard data: ' + error.message);
+            }
+        }
+        
+        function updateAnalyticsMetrics(data) {
+            document.getElementById('visitorsToday').textContent = data.visitorsToday || 0;
+            document.getElementById('visitorsWeek').textContent = data.visitorsWeek || 0;
+            
+            // Update top events
+            const topEventsHtml = data.topEvents.map(event => 
+                `<div style="margin: 10px 0; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 6px;">
+                    <strong>${event._id}</strong>: ${event.count} times
+                </div>`
+            ).join('');
+            document.getElementById('topEvents').innerHTML = topEventsHtml || 'No events today';
+            
+            // Update page views
+            const pageViewsHtml = data.pageViews.map(page => 
+                `<div style="margin: 10px 0; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 6px;">
+                    <strong>${page._id}</strong>: ${page.count} views
+                </div>`
+            ).join('');
+            document.getElementById('pageViews').innerHTML = pageViewsHtml || 'No page views today';
+        }
+        
+        function updateBlockchainMetrics(stats) {
+            document.getElementById('totalArtifacts').textContent = stats.totalArtifacts || 0;
+            document.getElementById('artifactsWithBlockchain').textContent = stats.artifactsWithBlockchain || 0;
+            
+            // Update recent artifacts table
+            const recentArtifactsHtml = stats.recentArtifacts.map(artifact => 
+                `<tr>
+                    <td>${artifact.name}</td>
+                    <td>${artifact.creator?.name || 'Unknown'}</td>
+                    <td>$${artifact.price}</td>
+                    <td>${artifact.blockchainDetails?.contractAddress ? '✅ On Chain' : '⏳ Pending'}</td>
+                    <td>${new Date(artifact.createdAt).toLocaleDateString()}</td>
+                </tr>`
+            ).join('');
+            document.getElementById('recentArtifacts').innerHTML = recentArtifactsHtml || 
+                '<tr><td colspan="5">No recent artifacts</td></tr>';
+            
+            // Update blockchain activity
+            const blockchainHtml = `
+                <div style="margin: 10px 0; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 6px;">
+                    <div><strong>Network:</strong> ${stats.networkStatus.network}</div>
+                    <div><strong>RPC Status:</strong> ${stats.networkStatus.rpcConnected ? '✅ Connected' : '❌ Disconnected'}</div>
+                    <div><strong>Total Artifacts:</strong> ${stats.totalArtifacts}</div>
+                    <div><strong>On Blockchain:</strong> ${stats.artifactsWithBlockchain}</div>
+                    <div><strong>Last Checked:</strong> ${new Date(stats.networkStatus.lastChecked).toLocaleString()}</div>
+                </div>
+            `;
+            document.getElementById('blockchainActivity').innerHTML = blockchainHtml;
+        }
+        
+        function updateUserMetrics(data) {
+            document.getElementById('totalUsers').textContent = data.userStats.totalUsers || 0;
+            document.getElementById('newUsersToday').textContent = data.userStats.newUsersToday || 0;
+        }
+        
+        function updateHealthMetrics(health) {
+            document.getElementById('systemUptime').textContent = health.metrics?.uptimeHours || 0;
+            
+            const statusIndicator = document.getElementById('systemStatus');
+            statusIndicator.className = `status-indicator status-${
+                health.status === 'healthy' ? 'healthy' : 
+                health.status === 'degraded' ? 'warning' : 'error'
+            }`;
+        }
+        
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error';
+            errorDiv.textContent = message;
+            document.querySelector('.dashboard').insertBefore(errorDiv, document.querySelector('.metrics-grid'));
+            
+            setTimeout(() => errorDiv.remove(), 5000);
+        }
+        
+        async function generateDailyReport() {
+            try {
+                const response = await fetch('/api/reports/send-daily', { method: 'POST' });
+                const data = await response.json();
+                
+                if (data.ok) {
+                    alert('Daily report generated successfully!\n\nPreview:\n' + data.preview);
+                } else {
+                    alert('Failed to generate daily report: ' + data.message);
+                }
+            } catch (error) {
+                alert('Error generating daily report: ' + error.message);
+            }
+        }
+        
+        function refreshData() {
+            loadDashboardData();
+        }
+        
+        function exportData() {
+            window.open('/api/reports/daily?export=json', '_blank');
+        }
+        
+        // Auto-refresh functionality
+        function setupAutoRefresh() {
+            const checkbox = document.getElementById('autoRefresh');
+            
+            function toggleRefresh() {
+                if (checkbox.checked) {
+                    refreshInterval = setInterval(loadDashboardData, 30000);
+                } else {
+                    clearInterval(refreshInterval);
+                }
+            }
+            
+            checkbox.addEventListener('change', toggleRefresh);
+            toggleRefresh(); // Initialize
+        }
+        
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDashboardData();
+            setupAutoRefresh();
+        });
+    </script>
+</body>
+</html>
