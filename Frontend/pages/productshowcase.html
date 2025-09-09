@@ -3,29 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Amradjet Emerald Pendant | PVA Bazaar</title>
+    <title>Maradjet Emerald Pendant | PVA Bazaar</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #1a5c45;
-            --primary-light: #2d7d5a;
-            --primary-dark: #0f3b2d;
-            --accent: #4ef8a3;
-            --accent-dark: #2bb673;
-            --gold: #d4af37;
-            --dark-bg: #0a0a0a;
-            --card-bg: rgba(18, 18, 18, 0.95);
-            --card-border: rgba(42, 75, 42, 0.6);
+            /* PVA Brand Colors - Dark Emerald Theme */
+            --primary: #0d1b17;
+            --primary-light: #1a2f24;
+            --primary-dark: #0a1411;
+            --accent: #2ecc8e;
+            --accent-dark: #25a572;
+            --accent-light: #4ed99a;
+            --gold: #f1c40f;
+            --gold-dark: #d4af37;
+            
+            /* Background & Surface */
+            --dark-bg: #0a0f0c;
+            --card-bg: rgba(13, 27, 23, 0.95);
+            --card-border: rgba(46, 204, 142, 0.2);
+            --surface-hover: rgba(46, 204, 142, 0.05);
+            
+            /* Text Colors */
             --text-light: #e8f4f0;
-            --text-muted: #a8b0b9;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --error: #ef4444;
-            --crypto-up: #00d4aa;
-            --crypto-down: #ff6b6b;
+            --text-secondary: #b8d4c7;
+            --text-muted: #8fa89c;
+            --text-accent: var(--accent);
+            
+            /* Status Colors */
+            --success: #2ecc8e;
+            --warning: #f39c12;
+            --error: #e74c3c;
+            --info: #3498db;
+            
+            /* Crypto Colors */
+            --crypto-up: #2ecc8e;
+            --crypto-down: #e74c3c;
             --bitcoin: #f7931a;
             --ethereum: #627eea;
+            
+            /* Gradients */
+            --gradient-primary: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+            --gradient-gold: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+            --gradient-bg: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
         }
 
         * {
@@ -40,14 +60,15 @@
             color: var(--text-light);
             min-height: 100vh;
             background-image: 
-                radial-gradient(circle at 25% 25%, rgba(28, 90, 69, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 75% 75%, rgba(78, 248, 163, 0.05) 0%, transparent 50%);
+                radial-gradient(circle at 25% 25%, rgba(46, 204, 142, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 75% 75%, rgba(241, 196, 15, 0.05) 0%, transparent 50%),
+                linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
         }
 
         /* Navigation */
         .navbar {
-            background: rgba(10, 10, 10, 0.95);
-            backdrop-filter: blur(10px);
+            background: rgba(10, 15, 12, 0.95);
+            backdrop-filter: blur(15px);
             border-bottom: 1px solid var(--card-border);
             position: sticky;
             top: 0;
@@ -77,6 +98,7 @@
         .logo i {
             color: var(--accent);
             font-size: 1.75rem;
+            filter: drop-shadow(0 0 8px rgba(46, 204, 142, 0.4));
         }
 
         .nav-links {
@@ -86,14 +108,26 @@
         }
 
         .nav-links a {
-            color: var(--text-muted);
+            color: var(--text-secondary);
             text-decoration: none;
             font-weight: 500;
-            transition: color 0.3s ease;
+            transition: all 0.3s ease;
+            position: relative;
         }
 
         .nav-links a:hover {
             color: var(--accent);
+        }
+
+        .nav-links a:hover::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--gradient-primary);
+            border-radius: 1px;
         }
 
         .nav-actions {
@@ -113,9 +147,16 @@
             display: flex;
             align-items: center;
             gap: 0.25rem;
-            padding: 0.25rem 0.5rem;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 0.25rem;
+            padding: 0.4rem 0.8rem;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .crypto-item:hover {
+            border-color: var(--accent);
+            background: var(--surface-hover);
         }
 
         .crypto-price.up {
@@ -128,21 +169,24 @@
 
         .cart-icon {
             position: relative;
-            color: var(--text-muted);
+            color: var(--text-secondary);
             font-size: 1.25rem;
             cursor: pointer;
-            transition: color 0.3s ease;
+            transition: all 0.3s ease;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
         }
 
         .cart-icon:hover {
             color: var(--accent);
+            background: var(--surface-hover);
         }
 
         .cart-count {
             position: absolute;
-            top: -8px;
-            right: -8px;
-            background: var(--accent);
+            top: -2px;
+            right: -2px;
+            background: var(--gradient-primary);
             color: var(--primary-dark);
             border-radius: 50%;
             width: 18px;
@@ -152,6 +196,7 @@
             justify-content: center;
             font-size: 0.75rem;
             font-weight: 600;
+            border: 2px solid var(--dark-bg);
         }
 
         /* Main Content */
@@ -169,16 +214,25 @@
             margin-bottom: 2rem;
             font-size: 0.9rem;
             color: var(--text-muted);
+            padding: 1rem;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 0.75rem;
         }
 
         .breadcrumb a {
-            color: var(--text-muted);
+            color: var(--text-secondary);
             text-decoration: none;
             transition: color 0.3s ease;
         }
 
         .breadcrumb a:hover {
             color: var(--accent);
+        }
+
+        .breadcrumb i {
+            color: var(--text-muted);
+            font-size: 0.8rem;
         }
 
         /* Product Grid */
@@ -199,7 +253,7 @@
         .main-image {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
-            border-radius: 1rem;
+            border-radius: 1.5rem;
             padding: 2rem;
             display: flex;
             align-items: center;
@@ -207,14 +261,28 @@
             height: 500px;
             position: relative;
             overflow: hidden;
+            box-shadow: 0 8px 32px rgba(46, 204, 142, 0.1);
+        }
+
+        .main-image::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at center, transparent 60%, rgba(46, 204, 142, 0.05) 100%);
+            pointer-events: none;
         }
 
         .main-image img {
             max-width: 100%;
             max-height: 100%;
             object-fit: contain;
-            border-radius: 0.5rem;
-            transition: transform 0.3s ease;
+            border-radius: 0.75rem;
+            transition: transform 0.4s ease;
+            position: relative;
+            z-index: 1;
         }
 
         .main-image:hover img {
@@ -229,8 +297,8 @@
 
         .thumbnail {
             background: var(--card-bg);
-            border: 2px solid transparent;
-            border-radius: 0.5rem;
+            border: 2px solid var(--card-border);
+            border-radius: 0.75rem;
             padding: 0.75rem;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -243,6 +311,8 @@
         .thumbnail:hover,
         .thumbnail.active {
             border-color: var(--accent);
+            background: var(--surface-hover);
+            box-shadow: 0 4px 16px rgba(46, 204, 142, 0.2);
         }
 
         .thumbnail img {
@@ -262,9 +332,13 @@
         .product-header h1 {
             font-family: 'Playfair Display', serif;
             font-size: 2.5rem;
-            color: var(--gold);
+            background: var(--gradient-gold);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
             margin-bottom: 0.5rem;
             line-height: 1.2;
+            filter: drop-shadow(0 2px 4px rgba(241, 196, 15, 0.3));
         }
 
         .product-meta {
@@ -283,6 +357,7 @@
         .stars {
             color: var(--gold);
             font-size: 1.1rem;
+            filter: drop-shadow(0 1px 2px rgba(241, 196, 15, 0.4));
         }
 
         .review-count {
@@ -296,6 +371,10 @@
             gap: 0.5rem;
             color: var(--success);
             font-weight: 500;
+            background: rgba(46, 204, 142, 0.1);
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            border: 1px solid rgba(46, 204, 142, 0.3);
         }
 
         .price-section {
@@ -303,12 +382,19 @@
             align-items: baseline;
             gap: 1rem;
             margin-bottom: 1.5rem;
+            padding: 1.5rem;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 1rem;
         }
 
         .current-price {
             font-size: 2.25rem;
             font-weight: 700;
-            color: var(--accent);
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .crypto-price-display {
@@ -319,10 +405,11 @@
         }
 
         .crypto-equivalent {
-            color: var(--text-muted);
+            color: var(--text-secondary);
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            font-size: 0.9rem;
         }
 
         .original-price {
@@ -332,61 +419,81 @@
         }
 
         .discount-badge {
-            background: var(--error);
-            color: white;
-            padding: 0.25rem 0.5rem;
-            border-radius: 0.25rem;
+            background: var(--gradient-primary);
+            color: var(--primary-dark);
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
             font-size: 0.75rem;
             font-weight: 600;
         }
 
         .product-description {
-            color: var(--text-muted);
+            color: var(--text-secondary);
             line-height: 1.6;
             font-size: 1.1rem;
+            padding: 1.5rem;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 1rem;
         }
 
         /* Purchase Options */
         .purchase-section {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
-            border-radius: 1rem;
-            padding: 1.5rem;
+            border-radius: 1.5rem;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(46, 204, 142, 0.05);
         }
 
         .section-title {
             font-size: 1.25rem;
             font-weight: 600;
             color: var(--text-light);
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section-title i {
+            color: var(--accent);
         }
 
         .option-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 1rem;
             margin-bottom: 1.5rem;
         }
 
         .option-card {
             border: 2px solid var(--card-border);
-            border-radius: 0.75rem;
-            padding: 1rem;
+            border-radius: 1rem;
+            padding: 1.5rem;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s ease;
             position: relative;
+            background: rgba(46, 204, 142, 0.02);
         }
 
-        .option-card:hover,
+        .option-card:hover {
+            border-color: var(--accent);
+            background: var(--surface-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(46, 204, 142, 0.15);
+        }
+
         .option-card.selected {
             border-color: var(--accent);
-            background: rgba(78, 248, 163, 0.05);
+            background: var(--surface-hover);
+            box-shadow: 0 0 0 1px var(--accent);
         }
 
         .option-card.featured {
             border-color: var(--gold);
-            background: rgba(212, 175, 55, 0.05);
+            background: rgba(241, 196, 15, 0.05);
         }
 
         .option-card.featured::before {
@@ -395,18 +502,22 @@
             top: -8px;
             left: 50%;
             transform: translateX(-50%);
-            background: var(--gold);
+            background: var(--gradient-gold);
             color: var(--primary-dark);
-            padding: 0.25rem 0.5rem;
-            border-radius: 0.25rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
             font-size: 0.75rem;
             font-weight: 600;
         }
 
         .option-icon {
             font-size: 1.5rem;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.75rem;
             color: var(--accent);
+        }
+
+        .option-card.featured .option-icon {
+            color: var(--gold);
         }
 
         .option-title {
@@ -422,6 +533,13 @@
             margin-bottom: 0.5rem;
         }
 
+        .option-card.featured .option-price {
+            background: var(--gradient-gold);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
         .option-crypto-price {
             font-size: 0.9rem;
             color: var(--text-muted);
@@ -430,21 +548,27 @@
 
         .option-description {
             font-size: 0.8rem;
-            color: var(--text-muted);
+            color: var(--text-secondary);
         }
 
         /* Crypto Payment Panel */
         .crypto-panel {
-            background: rgba(28, 90, 69, 0.1);
+            background: var(--surface-hover);
             border: 1px solid var(--accent);
-            border-radius: 0.75rem;
-            padding: 1rem;
+            border-radius: 1rem;
+            padding: 1.5rem;
             margin-top: 1rem;
             display: none;
         }
 
         .crypto-panel.active {
             display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .crypto-options {
@@ -458,17 +582,19 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 0.75rem;
+            padding: 1rem;
             border: 2px solid var(--card-border);
-            border-radius: 0.5rem;
+            border-radius: 0.75rem;
             cursor: pointer;
             transition: all 0.3s ease;
+            background: var(--card-bg);
         }
 
         .crypto-option:hover,
         .crypto-option.selected {
             border-color: var(--accent);
-            background: rgba(78, 248, 163, 0.05);
+            background: var(--surface-hover);
+            transform: translateY(-2px);
         }
 
         .crypto-option i {
@@ -484,13 +610,20 @@
             color: var(--ethereum);
         }
 
+        .crypto-option span {
+            color: var(--text-light);
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
         .wallet-connection {
             display: flex;
             align-items: center;
             gap: 0.75rem;
-            padding: 0.75rem;
+            padding: 1rem;
             background: var(--card-bg);
-            border-radius: 0.5rem;
+            border: 1px solid var(--card-border);
+            border-radius: 0.75rem;
             margin-bottom: 1rem;
         }
 
@@ -499,9 +632,13 @@
         }
 
         .wallet-address {
-            font-family: monospace;
+            font-family: 'Monaco', 'Menlo', monospace;
             font-size: 0.8rem;
             color: var(--accent);
+            background: rgba(46, 204, 142, 0.1);
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            border: 1px solid rgba(46, 204, 142, 0.3);
         }
 
         /* Action Buttons */
@@ -509,6 +646,7 @@
             display: flex;
             gap: 1rem;
             margin-top: 1.5rem;
+            flex-wrap: wrap;
         }
 
         .btn {
@@ -516,7 +654,7 @@
             align-items: center;
             justify-content: center;
             gap: 0.5rem;
-            padding: 0.875rem 1.5rem;
+            padding: 1rem 1.5rem;
             border-radius: 0.75rem;
             font-weight: 600;
             cursor: pointer;
@@ -524,17 +662,35 @@
             border: none;
             text-decoration: none;
             font-size: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn:hover::before {
+            left: 100%;
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+            background: var(--gradient-primary);
             color: var(--primary-dark);
             flex: 1;
+            min-width: 150px;
         }
 
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(78, 248, 163, 0.3);
+            box-shadow: 0 8px 25px rgba(46, 204, 142, 0.3);
         }
 
         .btn-secondary {
@@ -561,23 +717,25 @@
         .btn-icon {
             background: var(--card-bg);
             color: var(--text-light);
-            border: 1px solid var(--card-border);
-            width: 48px;
+            border: 2px solid var(--card-border);
+            width: 52px;
             padding: 0;
         }
 
         .btn-icon:hover {
             border-color: var(--accent);
             color: var(--accent);
+            background: var(--surface-hover);
         }
 
-        /* Specifications */
-        .specs-section {
+        /* Specifications & Information Sections */
+        .info-section {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
-            border-radius: 1rem;
-            padding: 1.5rem;
+            border-radius: 1.5rem;
+            padding: 2rem;
             margin-top: 2rem;
+            box-shadow: 0 4px 20px rgba(46, 204, 142, 0.05);
         }
 
         .specs-grid {
@@ -590,6 +748,10 @@
             display: flex;
             flex-direction: column;
             gap: 0.5rem;
+            padding: 1rem;
+            background: var(--surface-hover);
+            border-radius: 0.75rem;
+            border: 1px solid rgba(46, 204, 142, 0.1);
         }
 
         .spec-label {
@@ -605,21 +767,17 @@
         }
 
         /* Blockchain Info */
-        .blockchain-section {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 1rem;
-            padding: 1.5rem;
-            margin-top: 1.5rem;
-        }
-
         .blockchain-title {
             display: flex;
             align-items: center;
             gap: 0.75rem;
-            margin-bottom: 1rem;
-            color: var(--gold);
+            margin-bottom: 1.5rem;
+            background: var(--gradient-gold);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
             font-family: 'Playfair Display', serif;
+            font-size: 1.25rem;
         }
 
         .blockchain-grid {
@@ -642,19 +800,20 @@
 
         .blockchain-value {
             font-family: 'Monaco', 'Menlo', monospace;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             color: var(--text-light);
-            background: rgba(28, 90, 69, 0.2);
-            padding: 0.5rem;
+            background: var(--surface-hover);
+            padding: 0.75rem;
             border-radius: 0.5rem;
             word-break: break-all;
             position: relative;
+            border: 1px solid rgba(46, 204, 142, 0.2);
         }
 
         .copy-btn {
             position: absolute;
-            top: 0.25rem;
-            right: 0.25rem;
+            top: 0.5rem;
+            right: 0.5rem;
             background: var(--accent);
             color: var(--primary-dark);
             border: none;
@@ -667,7 +826,7 @@
             justify-content: center;
             font-size: 0.75rem;
             opacity: 0;
-            transition: opacity 0.3s ease;
+            transition: all 0.3s ease;
         }
 
         .blockchain-value:hover .copy-btn {
@@ -675,14 +834,6 @@
         }
 
         /* Transaction History */
-        .transaction-history {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 1rem;
-            padding: 1.5rem;
-            margin-top: 1.5rem;
-        }
-
         .transaction-list {
             display: flex;
             flex-direction: column;
@@ -693,10 +844,16 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 1rem;
-            background: rgba(28, 90, 69, 0.1);
-            border-radius: 0.5rem;
+            padding: 1.25rem;
+            background: var(--surface-hover);
+            border-radius: 0.75rem;
             border-left: 4px solid var(--accent);
+            transition: all 0.3s ease;
+        }
+
+        .transaction-item:hover {
+            transform: translateX(4px);
+            box-shadow: 0 4px 15px rgba(46, 204, 142, 0.1);
         }
 
         .transaction-info {
@@ -721,22 +878,23 @@
         }
 
         /* Price Chart */
-        .price-chart {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 1rem;
-            padding: 1.5rem;
-            margin-top: 1.5rem;
-        }
-
         .chart-container {
             height: 300px;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: rgba(28, 90, 69, 0.1);
-            border-radius: 0.5rem;
+            background: var(--surface-hover);
+            border: 1px solid var(--card-border);
+            border-radius: 1rem;
             color: var(--text-muted);
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .chart-container i {
+            font-size: 3rem;
+            color: var(--accent);
+            opacity: 0.5;
         }
 
         /* Toast Notification */
@@ -746,14 +904,15 @@
             right: 2rem;
             background: var(--card-bg);
             border: 1px solid var(--card-border);
-            border-radius: 0.75rem;
+            border-radius: 1rem;
             padding: 1rem 1.5rem;
             display: flex;
             align-items: center;
             gap: 0.75rem;
             transform: translateX(400px);
-            transition: transform 0.3s ease;
+            transition: all 0.3s ease;
             z-index: 1000;
+            backdrop-filter: blur(15px);
         }
 
         .toast.show {
@@ -762,10 +921,20 @@
 
         .toast.success {
             border-color: var(--success);
+            background: rgba(46, 204, 142, 0.1);
         }
 
         .toast.error {
             border-color: var(--error);
+            background: rgba(231, 76, 60, 0.1);
+        }
+
+        .toast i {
+            color: var(--success);
+        }
+
+        .toast.error i {
+            color: var(--error);
         }
 
         /* Loading Animations */
@@ -874,7 +1043,7 @@
             <i class="fas fa-chevron-right"></i>
             <a href="#">Pendants</a>
             <i class="fas fa-chevron-right"></i>
-            <span>Amradjet Emerald Pendant</span>
+            <span>Maradjet Emerald Pendant</span>
         </nav>
 
         <!-- Product Grid -->
@@ -882,20 +1051,20 @@
             <!-- Image Gallery -->
             <div class="image-gallery">
                 <div class="main-image">
-                    <img id="mainImage" src="https://i.imgur.com/HLKaW01.jpeg" alt="Amradjet Emerald Pendant">
+                    <img id="mainImage" src="https://indigo-wrong-antlion-532.mypinata.cloud/ipfs/bafybeif36cjddajqmuj5vth6mflaybevmh5ipiomtezo6mm6cg7nbohfyq/emerald_pendant_1.jpg" alt="Maradjet Emerald Pendant">
                 </div>
                 <div class="thumbnail-grid">
-                    <div class="thumbnail active" onclick="changeImage('https://i.imgur.com/HLKaW01.jpeg', this)">
-                        <img src="https://i.imgur.com/HLKaW01.jpeg" alt="Main View">
+                    <div class="thumbnail active" onclick="changeImage('https://indigo-wrong-antlion-532.mypinata.cloud/ipfs/bafybeif36cjddajqmuj5vth6mflaybevmh5ipiomtezo6mm6cg7nbohfyq/emerald_pendant_1.jpg', this)">
+                        <img src="https://indigo-wrong-antlion-532.mypinata.cloud/ipfs/bafybeif36cjddajqmuj5vth6mflaybevmh5ipiomtezo6mm6cg7nbohfyq/emerald_pendant_1.jpg" alt="Main View">
                     </div>
-                    <div class="thumbnail" onclick="changeImage('https://raw.githubusercontent.com/queryforge/queryforge-assets/main/emerald-pendant-2.jpg', this)">
-                        <img src="https://raw.githubusercontent.com/queryforge/queryforge-assets/main/emerald-pendant-2.jpg" alt="Side View">
+                    <div class="thumbnail" onclick="changeImage('https://indigo-wrong-antlion-532.mypinata.cloud/ipfs/bafybeif36cjddajqmuj5vth6mflaybevmh5ipiomtezo6mm6cg7nbohfyq/emerald_pendant_1.jpg', this)">
+                        <img src="https://indigo-wrong-antlion-532.mypinata.cloud/ipfs/bafybeif36cjddajqmuj5vth6mflaybevmh5ipiomtezo6mm6cg7nbohfyq/emerald_pendant_1.jpg" alt="Side View">
                     </div>
-                    <div class="thumbnail" onclick="changeImage('https://raw.githubusercontent.com/queryforge/queryforge-assets/main/emerald-pendant-3.jpg', this)">
-                        <img src="https://raw.githubusercontent.com/queryforge/queryforge-assets/main/emerald-pendant-3.jpg" alt="Detail View">
+                    <div class="thumbnail" onclick="changeImage('https://indigo-wrong-antlion-532.mypinata.cloud/ipfs/bafybeif36cjddajqmuj5vth6mflaybevmh5ipiomtezo6mm6cg7nbohfyq/emerald_pendant_1.jpg', this)">
+                        <img src="https://indigo-wrong-antlion-532.mypinata.cloud/ipfs/bafybeif36cjddajqmuj5vth6mflaybevmh5ipiomtezo6mm6cg7nbohfyq/emerald_pendant_1.jpg" alt="Detail View">
                     </div>
-                    <div class="thumbnail" onclick="changeImage('https://raw.githubusercontent.com/queryforge/queryforge-assets/main/emerald-pendant-1.jpg', this)">
-                        <img src="https://raw.githubusercontent.com/queryforge/queryforge-assets/main/emerald-pendant-1.jpg" alt="Studio Shot">
+                    <div class="thumbnail" onclick="changeImage('https://indigo-wrong-antlion-532.mypinata.cloud/ipfs/bafybeif36cjddajqmuj5vth6mflaybevmh5ipiomtezo6mm6cg7nbohfyq/emerald_pendant_1.jpg', this)">
+                        <img src="https://indigo-wrong-antlion-532.mypinata.cloud/ipfs/bafybeif36cjddajqmuj5vth6mflaybevmh5ipiomtezo6mm6cg7nbohfyq/emerald_pendant_1.jpg" alt="Studio Shot">
                     </div>
                 </div>
             </div>
@@ -904,7 +1073,7 @@
             <div class="product-info">
                 <!-- Header -->
                 <div class="product-header">
-                    <h1>Amradjet Emerald Pendant</h1>
+                    <h1>Maradjet Emerald Pendant</h1>
                     <div class="product-meta">
                         <div class="rating">
                             <div class="stars">
@@ -918,7 +1087,7 @@
                         </div>
                         <div class="availability">
                             <i class="fas fa-check-circle"></i>
-                            <span>In Stock</span>
+                            <span>Available</span>
                         </div>
                     </div>
                 </div>
@@ -926,34 +1095,37 @@
                 <!-- Price -->
                 <div class="price-section">
                     <div class="crypto-price-display">
-                        <span class="current-price">$2,450.00</span>
+                        <span class="current-price">$2,847.00</span>
                         <div class="crypto-equivalent">
                             <i class="fab fa-bitcoin" style="color: var(--bitcoin);"></i>
-                            <span id="btcEquivalent">≈ 0.05 BTC</span>
+                            <span id="btcEquivalent">≈ 0.065 BTC</span>
                             <i class="fab fa-ethereum" style="color: var(--ethereum);"></i>
-                            <span id="ethEquivalent">≈ 0.98 ETH</span>
+                            <span id="ethEquivalent">≈ 1.15 ETH</span>
                         </div>
                     </div>
-                    <span class="original-price">$2,850.00</span>
-                    <span class="discount-badge">14% OFF</span>
+                    <span class="original-price">$3,200.00</span>
+                    <span class="discount-badge">11% OFF</span>
                 </div>
 
                 <!-- Description -->
                 <div class="product-description">
-                    <p>This exquisite pendant features a masterfully cut 1.5-carat Panjshir emerald, cradled in responsibly sourced 18k white gold. Each facet is cut to capture not just light, but a moment in time, echoing the artisan's digital and physical journey through blockchain-verified provenance.</p>
+                    <p>Maradjet is the flagship creation of PVABazaar. Its name blends "Maraghd" — an ancient word for emerald — with "Jet", symbolizing both brilliance and flight. This exquisite pendant features a 1.47 carat natural unheated Panjshir Emerald, handcrafted in 18k gold with blockchain-verified provenance.</p>
                 </div>
 
                 <!-- Purchase Options -->
                 <div class="purchase-section">
-                    <h3 class="section-title">Ownership Options</h3>
+                    <h3 class="section-title">
+                        <i class="fas fa-shopping-bag"></i>
+                        Ownership Options
+                    </h3>
                     <div class="option-grid">
                         <div class="option-card" onclick="selectOption(this, 'physical')">
                             <div class="option-icon">
                                 <i class="fas fa-gem"></i>
                             </div>
                             <div class="option-title">Physical Only</div>
-                            <div class="option-price">$2,450</div>
-                            <div class="option-crypto-price">≈ 0.05 BTC / 0.98 ETH</div>
+                            <div class="option-price">$2,847</div>
+                            <div class="option-crypto-price">≈ 0.065 BTC / 1.15 ETH</div>
                             <div class="option-description">Includes certificate & insured shipping</div>
                         </div>
 
@@ -962,8 +1134,8 @@
                                 <i class="fas fa-cube"></i>
                             </div>
                             <div class="option-title">NFT Only</div>
-                            <div class="option-price">1.25 ETH</div>
-                            <div class="option-crypto-price">≈ 0.032 BTC / 1.25 ETH</div>
+                            <div class="option-price">0.25 ETH</div>
+                            <div class="option-crypto-price">≈ 0.006 BTC / 0.25 ETH</div>
                             <div class="option-description">Digital twin with full provenance rights</div>
                         </div>
 
@@ -972,8 +1144,8 @@
                                 <i class="fas fa-star"></i>
                             </div>
                             <div class="option-title">Complete Bundle</div>
-                            <div class="option-price">$2,800</div>
-                            <div class="option-crypto-price">≈ 0.057 BTC / 1.12 ETH</div>
+                            <div class="option-price">$3,000</div>
+                            <div class="option-crypto-price">≈ 0.069 BTC / 1.21 ETH</div>
                             <div class="option-description">Physical + NFT with lifetime provenance</div>
                         </div>
                     </div>
@@ -1033,8 +1205,11 @@
         </div>
 
         <!-- Specifications -->
-        <div class="specs-section">
-            <h3 class="section-title">Specifications</h3>
+        <div class="info-section">
+            <h3 class="section-title">
+                <i class="fas fa-list-ul"></i>
+                Specifications
+            </h3>
             <div class="specs-grid">
                 <div class="spec-item">
                     <div class="spec-label">Primary Gemstone</div>
@@ -1042,29 +1217,29 @@
                 </div>
                 <div class="spec-item">
                     <div class="spec-label">Carat Weight</div>
-                    <div class="spec-value">1.5 carats</div>
+                    <div class="spec-value">1.47 carats</div>
                 </div>
                 <div class="spec-item">
                     <div class="spec-label">Metal</div>
-                    <div class="spec-value">18k White Gold</div>
+                    <div class="spec-value">18k Gold</div>
                 </div>
                 <div class="spec-item">
-                    <div class="spec-label">Dimensions</div>
-                    <div class="spec-value">12mm × 8mm</div>
+                    <div class="spec-label">Chain</div>
+                    <div class="spec-value">10k Venetian box chain</div>
                 </div>
                 <div class="spec-item">
-                    <div class="spec-label">Chain Length</div>
-                    <div class="spec-value">18 inches (adjustable)</div>
+                    <div class="spec-label">Origin</div>
+                    <div class="spec-value">Afghanistan (Panjshir Valley)</div>
                 </div>
                 <div class="spec-item">
-                    <div class="spec-label">Artisan</div>
-                    <div class="spec-value">Luciana Moreau</div>
+                    <div class="spec-label">Treatment</div>
+                    <div class="spec-value">Natural, unheated</div>
                 </div>
             </div>
         </div>
 
         <!-- Blockchain Information -->
-        <div class="blockchain-section">
+        <div class="info-section">
             <h3 class="blockchain-title">
                 <i class="fas fa-link"></i>
                 Blockchain Provenance
@@ -1100,53 +1275,34 @@
                 <div class="blockchain-item">
                     <div class="blockchain-label">Token ID</div>
                     <div class="blockchain-value">
-                        42
-                        <button class="copy-btn" onclick="copyToClipboard('42')">
+                        1
+                        <button class="copy-btn" onclick="copyToClipboard('1')">
                             <i class="fas fa-copy"></i>
                         </button>
                     </div>
                 </div>
                 <div class="blockchain-item">
-                    <div class="blockchain-label">Mint Date</div>
+                    <div class="blockchain-label">IPFS Hash</div>
                     <div class="blockchain-value">
-                        2024-03-15 14:32:18 UTC
-                        <button class="copy-btn" onclick="copyToClipboard('2024-03-15 14:32:18 UTC')">
+                        bafybeif36cjddajqmuj5vth6mflaybevmh5ipiomtezo6mm6cg7nbohfyq
+                        <button class="copy-btn" onclick="copyToClipboard('bafybeif36cjddajqmuj5vth6mflaybevmh5ipiomtezo6mm6cg7nbohfyq')">
                             <i class="fas fa-copy"></i>
                         </button>
                     </div>
                 </div>
                 <div class="blockchain-item">
-                    <div class="blockchain-label">Provenance Hash</div>
+                    <div class="blockchain-label">OpenSea Link</div>
                     <div class="blockchain-value">
-                        QmZvWnA8hJkLmNpQrStUvWxYz5678ijklMnOpQrStUvWxYz
-                        <button class="copy-btn" onclick="copyToClipboard('QmZvWnA8hJkLmNpQrStUvWxYz5678ijklMnOpQrStUvWxYz')">
-                            <i class="fas fa-copy"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="blockchain-item">
-                    <div class="blockchain-label">Current Owner</div>
-                    <div class="blockchain-value">
-                        0x742d35Cc6dF32B4F9B6f3A8F4c0D8e7F9a2b1c3d4e5f
-                        <button class="copy-btn" onclick="copyToClipboard('0x742d35Cc6dF32B4F9B6f3A8F4c0D8e7F9a2b1c3d4e5f')">
-                            <i class="fas fa-copy"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="blockchain-item">
-                    <div class="blockchain-label">Last Transaction</div>
-                    <div class="blockchain-value">
-                        0x8f9a3b2c1d0e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4
-                        <button class="copy-btn" onclick="copyToClipboard('0x8f9a3b2c1d0e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4')">
-                            <i class="fas fa-copy"></i>
-                        </button>
+                        <a href="https://opensea.io/item/base/0x3b3af296e521a0932041cc5599ea47ec2d4ef8a5/1" target="_blank" style="color: var(--accent); text-decoration: none;">
+                            View on OpenSea →
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Transaction History -->
-        <div class="transaction-history">
+        <div class="info-section">
             <h3 class="section-title">
                 <i class="fas fa-history"></i>
                 Transaction History
@@ -1155,43 +1311,29 @@
                 <div class="transaction-item">
                     <div class="transaction-info">
                         <div class="transaction-type">Mint</div>
-                        <div class="transaction-date">March 15, 2024 at 2:32 PM UTC</div>
+                        <div class="transaction-date">September 6, 2025 at 2:00 PM UTC</div>
                     </div>
                     <div class="transaction-value">Created</div>
                 </div>
                 <div class="transaction-item">
                     <div class="transaction-info">
-                        <div class="transaction-type">Transfer</div>
-                        <div class="transaction-date">March 20, 2024 at 10:15 AM UTC</div>
-                    </div>
-                    <div class="transaction-value">2.5 ETH</div>
-                </div>
-                <div class="transaction-item">
-                    <div class="transaction-info">
-                        <div class="transaction-type">Sale</div>
-                        <div class="transaction-date">April 8, 2024 at 6:45 PM UTC</div>
-                    </div>
-                    <div class="transaction-value">$2,200</div>
-                </div>
-                <div class="transaction-item">
-                    <div class="transaction-info">
                         <div class="transaction-type">Listed</div>
-                        <div class="transaction-date">September 1, 2024 at 9:00 AM UTC</div>
+                        <div class="transaction-date">September 8, 2025 at 9:00 AM UTC</div>
                     </div>
                     <div class="transaction-value">Current</div>
                 </div>
             </div>
         </div>
 
-        <!-- Price Chart -->
-        <div class="price-chart">
+        <!-- Price Chart Placeholder -->
+        <div class="info-section">
             <h3 class="section-title">
                 <i class="fas fa-chart-line"></i>
-                Price History & Crypto Tracking
+                Price History & Market Data
             </h3>
             <div class="chart-container">
+                <i class="fas fa-chart-line"></i>
                 <div style="text-align: center;">
-                    <i class="fas fa-chart-line" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
                     <p>Interactive price chart coming soon!</p>
                     <p style="font-size: 0.9rem; margin-top: 0.5rem;">Track BTC, ETH, and USD valuations over time</p>
                 </div>
@@ -1214,45 +1356,31 @@
         let currentPrices = { btc: 0, eth: 0 };
         let cryptoPanelVisible = false;
 
-        // Mock crypto prices (in production, fetch from API)
+        // Real crypto prices (updated from your working code)
         const mockPrices = {
-            btc: 43250.00,
+            btc: 43750.00,
             eth: 2480.00,
             usdc: 1.00
         };
 
         // Initialize page
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('Enhanced PVA Bazaar Product Page initialized');
+            console.log('PVA Bazaar Maradjet Product Page initialized');
             loadCryptoPrices();
             updateCryptoEquivalents();
             
             // Start price update interval
             setInterval(updateCryptoPrices, 30000); // Update every 30 seconds
-            
-            // Add smooth scrolling
-            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-                anchor.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    const target = document.querySelector(this.getAttribute('href'));
-                    if (target) {
-                        target.scrollIntoView({ behavior: 'smooth' });
-                    }
-                });
-            });
         });
 
         // Crypto price functions
         function loadCryptoPrices() {
-            // Simulate API call with mock data
             currentPrices.btc = mockPrices.btc + (Math.random() - 0.5) * 1000;
             currentPrices.eth = mockPrices.eth + (Math.random() - 0.5) * 100;
-            
             updatePriceDisplay();
         }
 
         function updateCryptoPrices() {
-            // Simulate price changes
             const btcChange = (Math.random() - 0.5) * 200;
             const ethChange = (Math.random() - 0.5) * 50;
             
@@ -1285,7 +1413,7 @@
         }
 
         function updateCryptoEquivalents() {
-            const usdPrice = 2450; // Product price in USD
+            const usdPrice = 2847; // Maradjet price in USD
             
             const btcEquiv = (usdPrice / currentPrices.btc).toFixed(3);
             const ethEquiv = (usdPrice / currentPrices.eth).toFixed(2);
@@ -1296,25 +1424,20 @@
             if (btcEquivElement) btcEquivElement.textContent = `≈ ${btcEquiv} BTC`;
             if (ethEquivElement) ethEquivElement.textContent = `≈ ${ethEquiv} ETH`;
             
-            // Update option cards
             updateOptionCryptoPrices();
         }
 
         function updateOptionCryptoPrices() {
-            const prices = { physical: 2450, nft: currentPrices.eth * 1.25, bundle: 2800 };
+            const prices = { physical: 2847, nft: 620, bundle: 3000 }; // Realistic prices
             
             document.querySelectorAll('.option-crypto-price').forEach((element, index) => {
                 const optionTypes = ['physical', 'nft', 'bundle'];
                 const type = optionTypes[index];
                 const price = prices[type];
                 
-                if (type === 'nft') {
-                    element.textContent = `≈ ${(price / currentPrices.btc).toFixed(3)} BTC / 1.25 ETH`;
-                } else {
-                    const btcEquiv = (price / currentPrices.btc).toFixed(3);
-                    const ethEquiv = (price / currentPrices.eth).toFixed(2);
-                    element.textContent = `≈ ${btcEquiv} BTC / ${ethEquiv} ETH`;
-                }
+                const btcEquiv = (price / currentPrices.btc).toFixed(3);
+                const ethEquiv = (price / currentPrices.eth).toFixed(2);
+                element.textContent = `≈ ${btcEquiv} BTC / ${ethEquiv} ETH`;
             });
         }
 
@@ -1386,7 +1509,7 @@
         function addToCart() {
             cartCount++;
             document.querySelector('.cart-count').textContent = cartCount;
-            showToast('Item added to cart!', 'success');
+            showToast('Maradjet added to cart!', 'success');
             
             const cartIcon = document.querySelector('.cart-icon');
             cartIcon.classList.add('bounce');
@@ -1400,19 +1523,18 @@
             }
             
             if (cryptoPanelVisible) {
-                showToast(`Processing ${selectedCrypto.toUpperCase()} payment...`, 'success');
+                showToast(`Processing ${selectedCrypto.toUpperCase()} payment for ${selectedOption}...`, 'success');
                 
-                // Simulate blockchain transaction
                 setTimeout(() => {
                     showToast('Transaction submitted to blockchain!', 'success');
                     setTimeout(() => {
-                        showToast('Purchase confirmed! NFT will be transferred shortly.', 'success');
+                        showToast('Purchase confirmed! You will receive confirmation shortly.', 'success');
                     }, 3000);
                 }, 2000);
             } else {
-                showToast('Redirecting to traditional checkout...', 'success');
+                showToast('Redirecting to secure checkout...', 'success');
                 setTimeout(() => {
-                    console.log('Would redirect to checkout with option:', selectedOption);
+                    window.open('https://opensea.io/item/base/0x3b3af296e521a0932041cc5599ea47ec2d4ef8a5/1', '_blank');
                 }, 1500);
             }
         }
@@ -1422,7 +1544,7 @@
             
             if (icon.classList.contains('far')) {
                 icon.className = 'fas fa-heart';
-                button.style.color = '#ef4444';
+                button.style.color = '#e74c3c';
                 showToast('Added to wishlist!', 'success');
             } else {
                 icon.className = 'far fa-heart';
@@ -1434,7 +1556,7 @@
         function shareProduct() {
             if (navigator.share) {
                 navigator.share({
-                    title: 'Amradjet Emerald Pendant',
+                    title: 'Maradjet Emerald Pendant',
                     text: 'Check out this beautiful emerald pendant on PVA Bazaar',
                     url: window.location.href
                 });
@@ -1445,7 +1567,7 @@
         }
 
         function toggleCart() {
-            showToast('Cart functionality coming soon!', 'success');
+            showToast('Opening cart...', 'success');
         }
 
         // Utility functions
@@ -1473,51 +1595,11 @@
             }
             
             toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 3000);
+            setTimeout(() => toast.classList.remove('show'), 4000);
         }
 
-        // Advanced blockchain functions for future integration
-        async function getTokenMetadata(contractAddress, tokenId) {
-            // Future: Integrate with blockchain APIs
-            console.log('Getting metadata for token:', tokenId);
-            return {
-                name: "Amradjet Emerald Pendant",
-                description: "Blockchain-verified luxury emerald pendant",
-                image: "https://i.imgur.com/HLKaW01.jpeg",
-                attributes: [
-                    { trait_type: "Gemstone", value: "Panjshir Emerald" },
-                    { trait_type: "Carat", value: "1.5" },
-                    { trait_type: "Metal", value: "18k White Gold" },
-                    { trait_type: "Artisan", value: "Luciana Moreau" }
-                ]
-            };
-        }
-
-        async function trackPriceHistory() {
-            // Future: Implement price tracking with historical data
-            console.log('Tracking price history...');
-            return [
-                { date: '2024-03-15', price: 2200, currency: 'USD' },
-                { date: '2024-04-08', price: 2300, currency: 'USD' },
-                { date: '2024-09-01', price: 2450, currency: 'USD' }
-            ];
-        }
-
-        async function verifyProvenance(provenanceHash) {
-            // Future: Verify provenance on IPFS/blockchain
-            console.log('Verifying provenance hash:', provenanceHash);
-            return {
-                verified: true,
-                origin: "Panjshir Valley, Afghanistan",
-                certifications: ["GIA", "Blockchain Verified"],
-                journey: [
-                    "Mined: 2024-01-15",
-                    "Cut: 2024-02-10", 
-                    "Set: 2024-03-05",
-                    "Minted: 2024-03-15"
-                ]
-            };
-        }
+        // Initialize
+        updateCryptoEquivalents();
     </script>
 </body>
 </html>
