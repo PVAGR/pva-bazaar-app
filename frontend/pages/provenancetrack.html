@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Provenance Tracker - PVA Bazaar</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-dark: #0a2c21;
+      --primary: #143d2e;
+      --primary-light: #1e4e3c;
+      --accent: #3ac389;
+      --accent-dark: #2a9c6f;
+      --text-light: #e8f4f0;
+      --text-muted: #a8b0b9;
+      --card-bg: rgba(255, 255, 255, 0.05);
+      --card-border: rgba(58, 195, 137, 0.2);
+      --gold: #c8a971;
+      --shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+      --transition: all 0.3s ease;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', system-ui, sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+      color: var(--text-light);
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 0;
+      margin-bottom: 30px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(10px);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      text-decoration: none;
+      transition: var(--transition);
+    }
+
+    .logo:hover { transform: scale(1.03); }
+
+    .logo-icon {
+      font-size: 32px;
+      color: var(--accent);
+      filter: drop-shadow(0 0 8px rgba(58,195,137,0.3));
+    }
+
+    .logo-text {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text-light);
+      font-family: 'Playfair Display', serif;
+      letter-spacing: 0.5px;
+    }
+
+    nav ul {
+      display: flex;
+      list-style: none;
+      gap: 15px;
+    }
+
+    nav a {
+      color: var(--text-light);
+      text-decoration: none;
+      font-weight: 500;
+      transition: var(--transition);
+      position: relative;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+    }
+
+    nav a:hover {
+      color: var(--accent);
+      background: rgba(58,195,137,0.1);
+    }
+
+    nav a.active {
+      color: var(--accent);
+      background: rgba(58,195,137,0.1);
+      border-bottom: 2px solid var(--accent);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+      color: var(--primary-dark);
+      padding: 12px 20px;
+      border-radius: 25px;
+      text-decoration: none;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: var(--transition);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--accent);
+      border: 2px solid var(--accent);
+      box-shadow: none;
+    }
+
+    .btn-outline:hover {
+      background: var(--accent);
+      color: var(--primary-dark);
+    }
+
+    .btn-sm {
+      padding: 8px 16px;
+      font-size: 0.9rem;
+    }
+
+    .icon-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-light);
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 50%;
+      transition: var(--transition);
+    }
+
+    .icon-btn:hover {
+      background: rgba(255,255,255,0.1);
+      color: var(--accent);
+    }
+
+    /* Page Header */
+    .page-header {
+      text-align: center;
+      margin-bottom: 50px;
+    }
+
+    .page-title {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      font-family: 'Playfair Display', serif;
+      background: linear-gradient(135deg, var(--text-light) 0%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+    }
+
+    .page-subtitle {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      margin-bottom: 30px;
+    }
+
+    /* Search Section */
+    .search-section {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 30px;
+      margin-bottom: 40px;
+      backdrop-filter: blur(10px);
+    }
+
+    .search-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--text-light);
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .search-form {
+      display: flex;
+      gap: 15px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .search-input {
+      flex: 1;
+      padding: 15px 20px;
+      border-radius: 25px;
+      border: 1px solid var(--card-border);
+      background: var(--card-bg);
+      color: var(--text-light);
+      font-size: 1rem;
+      backdrop-filter: blur(10px);
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(58,195,137,0.2);
+    }
+
+    .search-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    /* Provenance Display */
+    .provenance-container {
+      display: none;
+      margin-bottom: 40px;
+    }
+
+    .provenance-container.active {
+      display: block;
+      animation: fadeIn 0.6s ease;
+    }
+
+    .item-header {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 30px;
+      margin-bottom: 30px;
+      backdrop-filter: blur(10px);
+    }
+
+    .item-info {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 30px;
+      align-items: start;
+    }
+
+    .item-image {
+      width: 100%;
+      height: 250px;
+      border-radius: 12px;
+      object-fit: cover;
+      box-shadow: var(--shadow);
+    }
+
+    .item-details h2 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--text-light);
+      margin-bottom: 10px;
+    }
+
+    .item-meta {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .meta-item {
+      background: rgba(255,255,255,0.02);
+      padding: 15px;
+      border-radius: 8px;
+      border: 1px solid var(--card-border);
+    }
+
+    .meta-label {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-bottom: 5px;
+    }
+
+    .meta-value {
+      font-weight: 600;
+      color: var(--text-light);
+    }
+
+    /* Timeline */
+    .timeline-container {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 30px;
+      backdrop-filter: blur(10px);
+    }
+
+    .timeline-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--text-light);
+      margin-bottom: 30px;
+      text-align: center;
+    }
+
+    .timeline {
+      position: relative;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .timeline::after {
+      content: '';
+      position: absolute;
+      width: 3px;
+      background: var(--accent);
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      margin-left: -1.5px;
+      border-radius: 3px;
+    }
+
+    .timeline-item {
+      padding: 10px 40px;
+      position: relative;
+      background-color: inherit;
+      width: 50%;
+    }
+
+    .timeline-item::after {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      right: -10px;
+      background: var(--accent);
+      border: 3px solid var(--primary);
+      top: 15px;
+      border-radius: 50%;
+      z-index: 1;
+    }
+
+    .timeline-item:nth-child(even) {
+      left: 50%;
+    }
+
+    .timeline-item:nth-child(even)::after {
+      left: -10px;
+    }
+
+    .timeline-content {
+      padding: 20px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      backdrop-filter: blur(10px);
+      position: relative;
+    }
+
+    .timeline-content::before {
+      content: '';
+      position: absolute;
+      top: 20px;
+      width: 0;
+      height: 0;
+      border: 10px solid transparent;
+    }
+
+    .timeline-item:nth-child(odd) .timeline-content::before {
+      right: -20px;
+      border-left-color: var(--card-border);
+    }
+
+    .timeline-item:nth-child(even) .timeline-content::before {
+      left: -20px;
+      border-right-color: var(--card-border);
+    }
+
+    .timeline-date {
+      color: var(--accent);
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-bottom: 8px;
+    }
+
+    .timeline-title-text {
+      font-weight: 600;
+      color: var(--text-light);
+      margin-bottom: 8px;
+    }
+
+    .timeline-description {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    .timeline-hash {
+      font-family: 'Courier New', monospace;
+      font-size: 0.8rem;
+      color: var(--gold);
+      background: rgba(200,169,113,0.1);
+      padding: 4px 8px;
+      border-radius: 4px;
+      margin-top: 8px;
+      word-break: break-all;
+    }
+
+    /* Verification Badge */
+    .verification-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--accent);
+      color: var(--primary-dark);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-top: 15px;
+    }
+
+    /* Blockchain Info */
+    .blockchain-info {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 25px;
+      margin-top: 30px;
+      backdrop-filter: blur(10px);
+    }
+
+    .blockchain-title {
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: var(--text-light);
+      margin-bottom: 20px;
+    }
+
+    .blockchain-details {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+    }
+
+    .blockchain-item {
+      background: rgba(255,255,255,0.02);
+      padding: 15px;
+      border-radius: 8px;
+      border: 1px solid var(--card-border);
+    }
+
+    .blockchain-label {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-bottom: 5px;
+    }
+
+    .blockchain-value {
+      font-weight: 600;
+      color: var(--text-light);
+      word-break: break-all;
+    }
+
+    .hash-value {
+      font-family: 'Courier New', monospace;
+      color: var(--gold);
+      font-size: 0.85rem;
+    }
+
+    /* Footer */
+    footer {
+      background: rgba(10, 44, 33, 0.8);
+      padding: 60px 20px 30px;
+      text-align: center;
+      margin-top: 60px;
+      border-top: 1px solid var(--card-border);
+    }
+
+    .footer-logo {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--text-light);
+      margin-bottom: 20px;
+      font-family: 'Playfair Display', serif;
+    }
+
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 25px;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+    }
+
+    .footer-links a {
+      color: var(--text-light);
+      text-decoration: none;
+      transition: var(--transition);
+    }
+
+    .footer-links a:hover {
+      color: var(--accent);
+    }
+
+    .social-links {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .social-links a {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--card-bg);
+      color: var(--text-light);
+      text-decoration: none;
+      transition: var(--transition);
+    }
+
+    .social-links a:hover {
+      background: var(--accent);
+      color: var(--primary-dark);
+      transform: translateY(-3px);
+    }
+
+    .copyright {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      header {
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      nav ul {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+      }
+
+      .page-title {
+        font-size: 2rem;
+      }
+
+      .search-form {
+        flex-direction: column;
+      }
+
+      .item-info {
+        grid-template-columns: 1fr;
+        text-align: center;
+      }
+
+      .item-meta {
+        grid-template-columns: 1fr;
+      }
+
+      .timeline::after {
+        left: 31px;
+      }
+
+      .timeline-item {
+        width: 100%;
+        padding-left: 70px;
+        padding-right: 25px;
+      }
+
+      .timeline-item::after {
+        left: 20px;
+      }
+
+      .timeline-item:nth-child(even) {
+        left: 0%;
+      }
+
+      .timeline-item:nth-child(even)::after {
+        left: 20px;
+      }
+
+      .timeline-content::before {
+        left: -20px !important;
+        border-right-color: var(--card-border) !important;
+        border-left-color: transparent !important;
+      }
+
+      .blockchain-details {
+        grid-template-columns: 1fr;
+      }
+
+      .footer-links {
+        flex-direction: column;
+        gap: 15px;
+      }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="/" class="logo">
+        <i class="fas fa-gem logo-icon"></i>
+        <div class="logo-text">PVA Bazaar</div>
+      </a>
+      <nav>
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/dashboard">Dashboard</a></li>
+          <li><a href="/marketplace">Marketplace</a></li>
+          <li><a href="/portfolio">Portfolio</a></li>
+          <li><a href="/checkout">Checkout</a></li>
+          <li><a href="/provenance" class="active">Provenance</a></li>
+          <li><a href="/artifact">Artifact</a></li>
+        </ul>
+      </nav>
+      <div class="header-actions">
+        <button class="icon-btn" id="scanQR" title="Scan QR Code">
+          <i class="fa-solid fa-qrcode"></i>
+        </button>
+        <button class="btn" id="connectWallet">
+          <i class="fa-solid fa-wallet"></i>
+          Connect Wallet
+        </button>
+      </div>
+    </header>
+
+    <div class="page-header">
+      <h1 class="page-title">Provenance Tracker</h1>
+      <p class="page-subtitle">Verify authenticity and trace the complete history of any item on our platform</p>
+    </div>
+
+    <!-- Search Section -->
+    <div class="search-section">
+      <h2 class="search-title">Track an Item</h2>
+      <div class="search-form">
+        <input type="text" class="search-input" id="provenanceSearch" placeholder="Enter item ID, NFT token, or QR code...">
+        <button class="btn" id="searchBtn">
+          <i class="fas fa-search"></i>
+          Search
+        </button>
+      </div>
+    </div>
+
+    <!-- Provenance Display -->
+    <div class="provenance-container" id="provenanceContainer">
+      <!-- Item Header -->
+      <div class="item-header">
+        <div class="item-info">
+          <img class="item-image" id="itemImage" src="https://images.unsplash.com/photo-1603575449200-7f9b41c1ea67?w=600&h=400&fit=crop" alt="Tracked Item">
+          <div class="item-details">
+            <h2 id="itemName">Panjshir Emerald Pendant</h2>
+            <p id="itemDescription">Handcrafted pendant with natural Panjshir emerald set in 18k yellow gold. Digital certificate of authenticity included.</p>
+            
+            <div class="verification-badge">
+              <i class="fas fa-shield-check"></i>
+              Verified Authentic
+            </div>
+
+            <div class="item-meta">
+              <div class="meta-item">
+                <div class="meta-label">Current Value</div>
+                <div class="meta-value" id="itemValue">$1,200</div>
+              </div>
+              <div class="meta-item">
+                <div class="meta-label">Artisan</div>
+                <div class="meta-value" id="itemArtisan">Maria Lopez</div>
+              </div>
+              <div class="meta-item">
+                <div class="meta-label">Origin</div>
+                <div class="meta-value" id="itemOrigin">Oaxaca, Mexico</div>
+              </div>
+              <div class="meta-item">
+                <div class="meta-label">Creation Date</div>
+                <div class="meta-value" id="creationDate">November 15, 2024</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Timeline -->
+      <div class="timeline-container">
+        <h3 class="timeline-title">Provenance Timeline</h3>
+        <div class="timeline">
+          <div class="timeline-item">
+            <div class="timeline-content">
+              <div class="timeline-date">November 15, 2024</div>
+              <div class="timeline-title-text">Item Created</div>
+              <div class="timeline-description">Handcrafted by Maria Lopez in Oaxaca, Mexico. Natural Panjshir emerald set in 18k yellow gold.</div>
+              <div class="timeline-hash">Genesis: 0xa1b2c3d4e5f6...</div>
+            </div>
+          </div>
+          
+          <div class="timeline-item">
+            <div class="timeline-content">
+              <div class="timeline-date">November 16, 2024</div>
+              <div class="timeline-title-text">Quality Verification</div>
+              <div class="timeline-description">Independent gemologist certification completed. Emerald graded A+ quality with natural origins confirmed.</div>
+              <div class="timeline-hash">Verify: 0xb2c3d4e5f6a1...</div>
+            </div>
+          </div>
+
+          <div class="timeline-item">
+            <div class="timeline-content">
+              <div class="timeline-date">November 18, 2024</div>
+              <div class="timeline-title-text">NFT Minted</div>
+              <div class="timeline-description">Digital certificate created on Ethereum blockchain. Item linked to immutable digital identity.</div>
+              <div class="timeline-hash">Mint: 0xc3d4e5f6a1b2...</div>
+            </div>
+          </div>
+
+          <div class="timeline-item">
+            <div class="timeline-content">
+              <div class="timeline-date">November 20, 2024</div>
+              <div class="timeline-title-text">Listed on PVA Bazaar</div>
+              <div class="timeline-description">Item made available for purchase with QR code generated for physical tracking.</div>
+              <div class="timeline-hash">List: 0xd4e5f6a1b2c3...</div>
+            </div>
+          </div>
+
+          <div class="timeline-item">
+            <div class="timeline-content">
+              <div class="timeline-date">December 15, 2024</div>
+              <div class="timeline-title-text">First Sale</div>
+              <div class="timeline-description">Purchased by collector for $1,200. Ownership transferred via smart contract with automatic royalty distribution.</div>
+              <div class="timeline-hash">Sale: 0xe5f6a1b2c3d4...</div>
+            </div>
+          </div>
+
+          <div class="timeline-item">
+            <div class="timeline-content">
+              <div class="timeline-date">December 16, 2024</div>
+              <div class="timeline-title-text">Shipped</div>
+              <div class="timeline-description">Item securely packaged and shipped via FedEx with tracking number. Insurance coverage active.</div>
+              <div class="timeline-hash">Ship: 0xf6a1b2c3d4e5...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Blockchain Information -->
+      <div class="blockchain-info">
+        <h3 class="blockchain-title">Blockchain Details</h3>
+        <div class="blockchain-details">
+          <div class="blockchain-item">
+            <div class="blockchain-label">Contract Address</div>
+            <div class="blockchain-value hash-value">0x742d35Cc6635C0532925a3b8D489319aA5B0e2A9</div>
+          </div>
+          <div class="blockchain-item">
+            <div class="blockchain-label">Token ID</div>
+            <div class="blockchain-value">#12345</div>
+          </div>
+          <div class="blockchain-item">
+            <div class="blockchain-label">Network</div>
+            <div class="blockchain-value">Ethereum Mainnet</div>
+          </div>
+          <div class="blockchain-item">
+            <div class="blockchain-label">Current Owner</div>
+            <div class="blockchain-value hash-value">0x8ba1f109551bD432803012645Hac136c34B4f2B5</div>
+          </div>
+          <div class="blockchain-item">
+            <div class="blockchain-label">QR Scans</div>
+            <div class="blockchain-value">247 total</div>
+          </div>
+          <div class="blockchain-item">
+            <div class="blockchain-label">Last Updated</div>
+            <div class="blockchain-value">2 minutes ago</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-logo">PVA Bazaar</div>
+    <div class="footer-links">
+      <a href="/">Home</a>
+      <a href="/dashboard">Dashboard</a>
+      <a href="/marketplace">Marketplace</a>
+      <a href="/portfolio">Portfolio</a>
+      <a href="/checkout">Checkout</a>
+      <a href="/provenance">Provenance</a>
+      <a href="/artifact">Artifact</a>
+    </div>
+    <div class="social-links">
+      <a href="#" title="Twitter"><i class="fab fa-twitter"></i></a>
+      <a href="#" title="Instagram"><i class="fab fa-instagram"></i></a>
+      <a href="#" title="Discord"><i class="fab fa-discord"></i></a>
+      <a href="#" title="GitHub"><i class="fab fa-github"></i></a>
+    </div>
+    <div class="copyright">© 2024 PVA Bazaar. All rights reserved.</div>
+  </footer>
+
+  <script>
+    let isWalletConnected = false;
+
+    // Sample provenance data
+    const sampleItems = {
+      'emerald-001': {
+        name: 'Panjshir Emerald Pendant',
+        description: 'Handcrafted pendant with natural Panjshir emerald set in 18k yellow gold. Digital certificate of authenticity included.',
+        image: 'https://images.unsplash.com/photo-1603575449200-7f9b41c1ea67?w=600&h=400&fit=crop',
+        value: '$1,200',
+        artisan: 'Maria Lopez',
+        origin: 'Oaxaca, Mexico',
+        creationDate: 'November 15, 2024',
+        timeline: [
+          {
+            date: 'November 15, 2024',
+            title: 'Item Created',
+            description: 'Handcrafted by Maria Lopez in Oaxaca, Mexico. Natural Panjshir emerald set in 18k yellow gold.',
+            hash: '0xa1b2c3d4e5f6...'
+          },
+          {
+            date: 'November 16, 2024',
+            title: 'Quality Verification',
+            description: 'Independent gemologist certification completed. Emerald graded A+ quality with natural origins confirmed.',
+            hash: '0xb2c3d4e5f6a1...'
+          },
+          {
+            date: 'November 18, 2024',
+            title: 'NFT Minted',
+            description: 'Digital certificate created on Ethereum blockchain. Item linked to immutable digital identity.',
+            hash: '0xc3d4e5f6a1b2...'
+          },
+          {
+            date: 'November 20, 2024',
+            title: 'Listed on PVA Bazaar',
+            description: 'Item made available for purchase with QR code generated for physical tracking.',
+            hash: '0xd4e5f6a1b2c3...'
+          },
+          {
+            date: 'December 15, 2024',
+            title: 'First Sale',
+            description: 'Purchased by collector for $1,200. Ownership transferred via smart contract with automatic royalty distribution.',
+            hash: '0xe5f6a1b2c3d4...'
+          },
+          {
+            date: 'December 16, 2024',
+            title: 'Shipped',
+            description: 'Item securely packaged and shipped via FedEx with tracking number. Insurance coverage active.',
+            hash: '0xf6a1b2c3d4e5...'
+          }
+        ]
+      },
+      'bracelet-050': {
+        name: 'Artisan Silver Bracelet',
+        description: 'Hand-forged sterling silver bracelet with intricate traditional patterns. Limited to 50 pieces.',
+        image: 'https://images.unsplash.com/photo-1617038260897-5dc90f1a45c1?w=600&h=400&fit=crop',
+        value: '$189',
+        artisan: 'James Chen',
+        origin: 'Bali, Indonesia',
+        creationDate: 'October 22, 2024'
+      }
+    };
+
+    // Utility Functions
+    function showToast(message, type = 'info') {
+      const toast = document.createElement('div');
+      toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: var(--card-bg);
+        border: 1px solid var(--accent);
+        border-left: 4px solid var(--accent);
+        color: var(--text-light);
+        padding: 15px 20px;
+        border-radius: 10px;
+        box-shadow: var(--shadow);
+        z-index: 2000;
+        transform: translateX(400px);
+        transition: transform 0.3s ease;
+        backdrop-filter: blur(10px);
+      `;
+      toast.textContent = message;
+      
+      if (type === 'success') {
+        toast.style.borderLeftColor = '#3ac389';
+      } else if (type === 'error') {
+        toast.style.borderLeftColor = '#ff7a7a';
+      }
+      
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.style.transform = 'translateX(0)';
+      }, 100);
+      
+      setTimeout(() => {
+        toast.style.transform = 'translateX(400px)';
+        setTimeout(() => {
+          document.body.removeChild(toast);
+        }, 300);
+      }, 3000);
+    }
+
+    // Search Functionality
+    function searchProvenance() {
+      const searchValue = document.getElementById('provenanceSearch').value.trim();
+      
+      if (!searchValue) {
+        showToast('Please enter an item ID, NFT token, or QR code', 'error');
+        return;
+      }
+
+      showToast('Searching blockchain records...', 'info');
+
+      // Simulate search delay
+      setTimeout(() => {
+        const item = sampleItems[searchValue] || sampleItems['emerald-001'];
+        displayProvenance(item);
+        showToast('Provenance found and verified!', 'success');
+      }, 1500);
+    }
+
+    // Display Provenance
+    function displayProvenance(item) {
+      // Update item details
+      document.getElementById('itemImage').src = item.image;
+      document.getElementById('itemName').textContent = item.name;
+      document.getElementById('itemDescription').textContent = item.description;
+      document.getElementById('itemValue').textContent = item.value;
+      document.getElementById('itemArtisan').textContent = item.artisan;
+      document.getElementById('itemOrigin').textContent = item.origin;
+      document.getElementById('creationDate').textContent = item.creationDate;
+
+      // Update timeline if available
+      if (item.timeline) {
+        updateTimeline(item.timeline);
+      }
+
+      // Show provenance container
+      const container = document.getElementById('provenanceContainer');
+      container.classList.add('active');
+      container.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Update Timeline
+    function updateTimeline(timelineData) {
+      const timeline = document.querySelector('.timeline');
+      timeline.innerHTML = '';
+
+      timelineData.forEach(item => {
+        const timelineItem = document.createElement('div');
+        timelineItem.className = 'timeline-item';
+        timelineItem.innerHTML = `
+          <div class="timeline-content">
+            <div class="timeline-date">${item.date}</div>
+            <div class="timeline-title-text">${item.title}</div>
+            <div class="timeline-description">${item.description}</div>
+            <div class="timeline-hash">${item.title.split(' ')[0]}: ${item.hash}</div>
+          </div>
+        `;
+        timeline.appendChild(timelineItem);
+      });
+    }
+
+    // Wallet Connection
+    function toggleWallet() {
+      isWalletConnected = !isWalletConnected;
+      const connectWalletBtn = document.getElementById('connectWallet');
+      
+      if (isWalletConnected) {
+        connectWalletBtn.innerHTML = '<i class="fa-solid fa-check-circle"></i> Connected';
+        connectWalletBtn.style.background = 'linear-gradient(135deg, #3ac389, #2a9c6f)';
+        showToast('Wallet connected successfully!', 'success');
+      } else {
+        connectWalletBtn.innerHTML = '<i class="fa-solid fa-wallet"></i> Connect Wallet';
+        connectWalletBtn.style.background = 'linear-gradient(135deg, var(--accent), var(--accent-dark))';
+        showToast('Wallet disconnected', 'info');
+      }
+    }
+
+    // QR Code Scanner
+    function openQRScanner() {
+      showToast('QR scanner opening...', 'info');
+      // Simulate QR scan result
+      setTimeout(() => {
+        document.getElementById('provenanceSearch').value = 'emerald-001';
+        searchProvenance();
+      }, 2000);
+    }
+
+    // Event Listeners
+    document.addEventListener('DOMContentLoaded', () => {
+      // Search functionality
+      document.getElementById('searchBtn').addEventListener('click', searchProvenance);
+      document.getElementById('provenanceSearch').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          searchProvenance();
+        }
+      });
+
+      // Wallet connection
+      document.getElementById('connectWallet').addEventListener('click', toggleWallet);
+
+      // QR scanner
+      document.getElementById('scanQR').addEventListener('click', openQRScanner);
+
+      // Auto-demo on page load (optional)
+      setTimeout(() => {
+        if (!document.getElementById('provenanceContainer').classList.contains('active')) {
+          document.getElementById('provenanceSearch').value = 'emerald-001';
+          searchProvenance();
+        }
+      }, 2000);
+    });
+
+    // Demo search suggestions
+    const searchInput = document.getElementById('provenanceSearch');
+    const suggestions = ['emerald-001', 'bracelet-050', '0x742d35Cc...', 'QR:12345'];
+    let suggestionIndex = 0;
+
+    function cycleSuggestions() {
+      if (searchInput === document.activeElement) return;
+      
+      searchInput.placeholder = `Try: ${suggestions[suggestionIndex]}`;
+      suggestionIndex = (suggestionIndex + 1) % suggestions.length;
+    }
+
+    setInterval(cycleSuggestions, 3000);
+  </script>
+</body>
+</html>
