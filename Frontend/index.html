@@ -1,895 +1,1286 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PVA Bazaar - Where Artistry Meets Blockchain</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary-dark: #0a2c21;
-            --primary: #143d2e;
-            --primary-light: #1e4e3c;
-            --accent: #3ac389;
-            --accent-dark: #2a9c6f;
-            --text-light: #e8f4f0;
-            --text-muted: #a8b0b9;
-            --card-bg: rgba(255, 255, 255, 0.05);
-            --card-border: rgba(58, 195, 137, 0.2);
-            --gold: #c8a971;
-            --shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
-            --transition: all 0.3s ease;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PVA Bazaar - Artisan Marketplace & Digital Provenance</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-dark: #0a2c21;
+      --primary: #143d2e;
+      --primary-light: #1e4e3c;
+      --accent: #3ac389;
+      --accent-dark: #2a9c6f;
+      --text-light: #e8f4f0;
+      --text-muted: #a8b0b9;
+      --card-bg: rgba(255, 255, 255, 0.05);
+      --card-border: rgba(58, 195, 137, 0.2);
+      --gold: #c8a971;
+      --shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+      --transition: all 0.3s ease;
+    }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Poppins', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        body {
-            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
-            color: var(--text-light);
-            line-height: 1.6;
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        
-        /* Header & Navigation */
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 0;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-        }
-        
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            transition: var(--transition);
-            text-decoration: none;
-        }
-        
-        .logo:hover {
-            transform: scale(1.03);
-        }
-        
-        .logo-icon {
-            font-size: 32px;
-            color: var(--accent);
-        }
-        
-        .logo-text {
-            font-size: 28px;
-            font-weight: 700;
-            color: var(--text-light);
-            font-family: 'Playfair Display', serif;
-            letter-spacing: 0.5px;
-        }
-        
-        nav ul {
-            display: flex;
-            list-style: none;
-            gap: 25px;
-        }
-        
-        nav a {
-            color: var(--text-light);
-            text-decoration: none;
-            font-weight: 500;
-            transition: var(--transition);
-            position: relative;
-            padding: 5px 0;
-            font-size: 15px;
-            letter-spacing: 0.5px;
-        }
-        
-        nav a:hover {
-            color: var(--accent);
-        }
-        
-        nav a::after {
-            content: '';
-            position: absolute;
-            bottom: -5px;
-            left: 0;
-            width: 0;
-            height: 2px;
-            background: var(--accent);
-            transition: width 0.3s ease;
-        }
-        
-        nav a:hover::after {
-            width: 100%;
-        }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', system-ui, sans-serif;
+    }
 
-        .header-actions {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
+    html { scroll-behavior: smooth; }
 
-        .auth-btn {
-            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
-            color: var(--primary-dark);
-            padding: 10px 20px;
-            border-radius: 25px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 14px;
-            transition: var(--transition);
-            border: none;
-            cursor: pointer;
-        }
+    body {
+      background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+      color: var(--text-light);
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
 
-        .auth-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(58, 195, 137, 0.3);
-        }
-        
-        /* Hero Section */
-        .hero {
-            text-align: center;
-            padding: 80px 20px;
-            margin-bottom: 40px;
-            background: var(--card-bg);
-            border-radius: 16px;
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--card-border);
-            box-shadow: var(--shadow);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .hero::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(58, 195, 137, 0.08) 0%, transparent 70%);
-            pointer-events: none;
-        }
-        
-        .hero h1 {
-            font-size: 3.2rem;
-            margin-bottom: 20px;
-            color: var(--text-light);
-            text-shadow: 0 0 15px rgba(58, 195, 137, 0.4);
-            font-family: 'Playfair Display', serif;
-            position: relative;
-            letter-spacing: 0.5px;
-        }
-        
-        .hero p {
-            font-size: 1.2rem;
-            max-width: 800px;
-            margin: 0 auto 30px;
-            color: var(--text-light);
-            line-height: 1.8;
-            font-weight: 300;
-            letter-spacing: 0.3px;
-        }
-        
-        .btn {
-            display: inline-block;
-            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
-            color: var(--primary-dark);
-            padding: 14px 32px;
-            border-radius: 50px;
-            text-decoration: none;
-            font-weight: 600;
-            transition: var(--transition);
-            border: none;
-            cursor: pointer;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-            letter-spacing: 0.5px;
-            position: relative;
-            z-index: 1;
-        }
-        
-        .btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
-        }
+    .container { 
+      max-width: 1200px; 
+      margin: 0 auto; 
+      padding: 20px; 
+    }
 
-        .btn-outline {
-            background: transparent;
-            border: 2px solid var(--accent);
-            color: var(--accent);
-        }
-        
-        .btn-outline:hover {
-            background: var(--accent);
-            color: var(--primary-dark);
-        }
+    /* Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 0;
+      margin-bottom: 30px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(10px);
+    }
 
-        .btn-sm {
-            padding: 9px 16px;
-            font-size: 0.85rem;
-        }
-        
-        /* Section Titles */
-        .section-title {
-            text-align: center;
-            font-size: 2.3rem;
-            margin-bottom: 50px;
-            color: var(--text-light);
-            font-family: 'Playfair Display', serif;
-            position: relative;
-            padding-bottom: 15px;
-            letter-spacing: 0.5px;
-        }
-        
-        .section-title::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 80px;
-            height: 3px;
-            background: var(--accent);
-            border-radius: 3px;
-        }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      text-decoration: none;
+      transition: var(--transition);
+    }
 
-        /* Stats Section */
-        .stats-section {
-            margin: 60px 0;
-        }
+    .logo:hover { transform: scale(1.03); }
 
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 30px;
-            text-align: center;
-        }
+    .logo-icon {
+      font-size: 32px;
+      color: var(--accent);
+      filter: drop-shadow(0 0 8px rgba(58,195,137,0.3));
+    }
 
-        .stat-card {
-            background: var(--card-bg);
-            padding: 30px 20px;
-            border-radius: 16px;
-            border: 1px solid var(--card-border);
-            backdrop-filter: blur(10px);
-            transition: var(--transition);
-        }
+    .logo-text {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text-light);
+      font-family: 'Playfair Display', serif;
+      letter-spacing: 0.5px;
+    }
 
-        .stat-card:hover {
-            transform: translateY(-5px);
-            border-color: var(--accent);
-        }
+    nav ul {
+      display: flex;
+      list-style: none;
+      gap: 25px;
+    }
 
-        .stat-value {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: var(--accent);
-            margin-bottom: 10px;
-            font-family: 'Playfair Display', serif;
-        }
+    nav a {
+      color: var(--text-light);
+      text-decoration: none;
+      font-weight: 500;
+      transition: var(--transition);
+      position: relative;
+      padding: 8px 12px;
+      border-radius: 8px;
+    }
 
-        .stat-label {
-            color: var(--text-muted);
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        
-        /* Features Grid */
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-            margin-bottom: 80px;
-        }
-        
-        .feature-card {
-            background: var(--card-bg);
-            border-radius: 16px;
-            padding: 30px;
-            text-align: center;
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--card-border);
-            transition: var(--transition);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .feature-card:hover {
-            transform: translateY(-8px);
-            box-shadow: var(--shadow);
-        }
-        
-        .feature-icon {
-            font-size: 42px;
-            color: var(--accent);
-            margin-bottom: 25px;
-            transition: var(--transition);
-        }
-        
-        .feature-card:hover .feature-icon {
-            transform: scale(1.1);
-        }
-        
-        .feature-card h3 {
-            font-size: 1.5rem;
-            margin-bottom: 15px;
-            color: var(--text-light);
-            font-weight: 600;
-        }
-        
-        .feature-card p {
-            color: var(--text-muted);
-            line-height: 1.7;
-            font-weight: 300;
-        }
-        
-        /* Marketplace Grid */
-        .marketplace-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-            margin-bottom: 80px;
-        }
-        
-        .product-card {
-            background: var(--card-bg);
-            border-radius: 16px;
-            overflow: hidden;
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--card-border);
-            transition: var(--transition);
-            position: relative;
-            cursor: pointer;
-        }
-        
-        .product-card:hover {
-            transform: translateY(-8px);
-            box-shadow: var(--shadow);
-        }
-        
-        .product-image {
-            height: 220px;
-            overflow: hidden;
-            position: relative;
-            background: linear-gradient(45deg, #1e4e3c 0%, #2a9c6f 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+    nav a:hover {
+      color: var(--accent);
+      background: rgba(58,195,137,0.1);
+    }
 
-        .product-placeholder {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 48px;
-        }
-        
-        .product-badge {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: var(--gold);
-            color: var(--primary-dark);
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            z-index: 2;
-        }
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
 
-        .shares-badge {
-            background: var(--accent);
-        }
-        
-        .product-content {
-            padding: 25px;
-        }
-        
-        .product-content h3 {
-            font-size: 1.4rem;
-            margin-bottom: 8px;
-            color: var(--accent);
-            font-weight: 600;
-        }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+      color: var(--primary-dark);
+      padding: 12px 20px;
+      border-radius: 25px;
+      text-decoration: none;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: var(--transition);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
 
-        .product-artisan {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            margin-bottom: 12px;
-            font-style: italic;
-        }
-        
-        .product-content p {
-            color: var(--text-muted);
-            margin-bottom: 20px;
-            font-size: 0.95rem;
-            line-height: 1.6;
-            font-weight: 300;
-        }
-        
-        .product-meta {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-        
-        .product-price {
-            font-weight: 700;
-            color: var(--accent);
-            font-size: 1.3rem;
-        }
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+    }
 
-        .shares-info {
-            text-align: right;
-            font-size: 12px;
-            color: var(--text-muted);
-        }
+    .btn-outline {
+      background: transparent;
+      color: var(--accent);
+      border: 2px solid var(--accent);
+      box-shadow: none;
+    }
 
-        .shares-progress {
-            width: 100%;
-            height: 6px;
-            background: var(--card-border);
-            border-radius: 3px;
-            margin: 10px 0;
-            overflow: hidden;
-        }
+    .btn-outline:hover {
+      background: var(--accent);
+      color: var(--primary-dark);
+    }
 
-        .shares-fill {
-            height: 100%;
-            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
-            border-radius: 3px;
-            transition: width 0.5s ease;
-        }
-        
-        .product-actions {
-            display: flex;
-            gap: 12px;
-        }
-        
-        /* CTA Section */
-        .cta-section {
-            text-align: center;
-            padding: 80px 20px;
-            margin-bottom: 60px;
-            background: var(--card-bg);
-            border-radius: 16px;
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--card-border);
-        }
-        
-        .cta-section h2 {
-            font-size: 2.5rem;
-            margin-bottom: 25px;
-            color: var(--text-light);
-            font-family: 'Playfair Display', serif;
-        }
-        
-        .cta-section p {
-            max-width: 700px;
-            margin: 0 auto 40px;
-            font-size: 1.1rem;
-            line-height: 1.8;
-            font-weight: 300;
-        }
-        
-        /* Footer */
-        footer {
-            text-align: center;
-            padding: 60px 20px 40px;
-            margin-top: 60px;
-            border-top: 1px solid var(--card-border);
-        }
-        
-        .footer-logo {
-            font-size: 2rem;
-            font-weight: 700;
-            margin-bottom: 25px;
-            color: var(--accent);
-            font-family: 'Playfair Display', serif;
-        }
-        
-        .footer-links {
-            display: flex;
-            justify-content: center;
-            gap: 25px;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-        }
-        
-        .footer-links a {
-            color: var(--text-light);
-            text-decoration: none;
-            transition: var(--transition);
-            font-weight: 400;
-            font-size: 15px;
-        }
-        
-        .footer-links a:hover {
-            color: var(--accent);
-        }
-        
-        .social-links {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        
-        .social-links a {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            background: var(--card-bg);
-            color: var(--text-light);
-            text-decoration: none;
-            transition: var(--transition);
-            border: 1px solid var(--card-border);
-        }
-        
-        .social-links a:hover {
-            background: var(--accent);
-            color: var(--primary-dark);
-            transform: translateY(-3px);
-            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
-        }
-        
-        .copyright {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            font-weight: 300;
-        }
-        
-        /* Responsive Design */
-        @media (max-width: 1024px) {
-            .hero h1 {
-                font-size: 2.8rem;
-            }
-            
-            .section-title {
-                font-size: 2rem;
-            }
-        }
-        
-        @media (max-width: 768px) {
-            header {
-                flex-direction: column;
-                gap: 20px;
-                padding: 15px 0;
-            }
-            
-            nav ul {
-                flex-wrap: wrap;
-                justify-content: center;
-                gap: 15px;
-            }
-            
-            .hero {
-                padding: 60px 20px;
-            }
-            
-            .hero h1 {
-                font-size: 2.3rem;
-            }
-            
-            .hero p {
-                font-size: 1.1rem;
-            }
-            
-            .section-title {
-                font-size: 1.8rem;
-                margin-bottom: 40px;
-            }
-            
-            .features-grid,
-            .marketplace-grid {
-                grid-template-columns: 1fr;
-                gap: 20px;
-            }
+    .btn-sm { padding: 8px 16px; font-size: 0.9rem; }
 
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .cta-section {
-                padding: 60px 20px;
-            }
-            
-            .cta-section h2 {
-                font-size: 2rem;
-            }
-            
-            .footer-links {
-                flex-direction: column;
-                align-items: center;
-                gap: 15px;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .hero h1 {
-                font-size: 2rem;
-            }
-            
-            .btn {
-                padding: 12px 25px;
-            }
-            
-            .section-title {
-                font-size: 1.6rem;
-            }
-            
-            .product-actions {
-                flex-direction: column;
-                gap: 10px;
-            }
-            
-            .product-meta {
-                flex-direction: column;
-                gap: 15px;
-                align-items: flex-start;
-            }
+    .icon-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      border: 1px solid var(--card-border);
+      background: var(--card-bg);
+      color: var(--text-light);
+      cursor: pointer;
+      transition: var(--transition);
+    }
 
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+    .icon-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+      color: var(--accent);
+    }
+
+    /* Hero */
+    .hero {
+      text-align: center;
+      padding: 80px 20px;
+      margin-bottom: 60px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      background: radial-gradient(600px 200px at 20% 10%, rgba(58,195,137,0.12), transparent 60%);
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.5rem, 4vw, 3.5rem);
+      margin-bottom: 20px;
+      color: var(--text-light);
+      text-shadow: 0 0 15px rgba(58,195,137,0.4);
+      font-family: 'Playfair Display', serif;
+      letter-spacing: 0.5px;
+    }
+
+    .hero p {
+      max-width: 700px;
+      margin: 0 auto 30px;
+      font-size: 1.2rem;
+      color: var(--text-light);
+      opacity: 0.95;
+    }
+
+    .cta-row {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    /* Section Title */
+    .section-title {
+      text-align: center;
+      font-size: clamp(1.8rem, 3vw, 2.5rem);
+      margin: 60px 0 40px;
+      color: var(--text-light);
+      font-family: 'Playfair Display', serif;
+      position: relative;
+      padding-bottom: 15px;
+    }
+
+    .section-title::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 3px;
+      background: var(--accent);
+      border-radius: 3px;
+    }
+
+    /* Stats */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 30px;
+      margin: 50px 0;
+    }
+
+    .stat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 30px 20px;
+      text-align: center;
+      transition: var(--transition);
+    }
+
+    .stat-card:hover {
+      transform: translateY(-5px);
+      border-color: var(--accent);
+    }
+
+    .stat-value {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 10px;
+      font-family: 'Playfair Display', serif;
+    }
+
+    .stat-label {
+      color: var(--text-muted);
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* Features */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 30px;
+      margin-bottom: 60px;
+    }
+
+    .feature-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 30px;
+      text-align: center;
+      transition: var(--transition);
+      position: relative;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-8px);
+      box-shadow: var(--shadow);
+    }
+
+    .feature-icon {
+      font-size: 40px;
+      color: var(--accent);
+      margin-bottom: 20px;
+      transition: var(--transition);
+    }
+
+    .feature-card:hover .feature-icon {
+      transform: scale(1.1);
+    }
+
+    .feature-card h3 {
+      font-size: 1.4rem;
+      margin-bottom: 15px;
+      color: var(--text-light);
+      font-weight: 600;
+    }
+
+    .feature-card p {
+      color: var(--text-muted);
+      line-height: 1.7;
+      font-weight: 300;
+    }
+
+    /* Search & Filters */
+    .toolbar {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 20px;
+      align-items: center;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 30px;
+      backdrop-filter: blur(8px);
+    }
+
+    .search-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 12px 16px;
+    }
+
+    .search-wrapper input {
+      flex: 1;
+      background: transparent;
+      border: 0;
+      color: var(--text-light);
+      outline: none;
+      font-size: 1rem;
+    }
+
+    .search-wrapper input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .filters {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .filter-select {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 10px 15px;
+      color: var(--text-light);
+      cursor: pointer;
+    }
+
+    /* Products Grid */
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 30px;
+      margin-bottom: 60px;
+    }
+
+    .product-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      overflow: hidden;
+      transition: var(--transition);
+      position: relative;
+      cursor: pointer;
+    }
+
+    .product-card:hover {
+      transform: translateY(-8px);
+      box-shadow: var(--shadow);
+    }
+
+    .product-image {
+      height: 220px;
+      position: relative;
+      background: linear-gradient(45deg, #1e4e3c 0%, #2a9c6f 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .product-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.5s ease;
+    }
+
+    .product-card:hover .product-image img {
+      transform: scale(1.1);
+    }
+
+    .product-placeholder {
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 48px;
+    }
+
+    .product-badge {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background: var(--gold);
+      color: var(--primary-dark);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      z-index: 2;
+    }
+
+    .product-content {
+      padding: 25px;
+    }
+
+    .product-title {
+      font-size: 1.3rem;
+      margin-bottom: 8px;
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .product-desc {
+      color: var(--text-muted);
+      margin-bottom: 15px;
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    .product-rating {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 15px;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    .product-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .product-price {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--accent);
+      font-family: 'Playfair Display', serif;
+    }
+
+    .product-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.8);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      backdrop-filter: blur(5px);
+    }
+
+    .modal-backdrop.active {
+      display: flex;
+    }
+
+    .modal {
+      width: min(800px, 90vw);
+      max-height: 85vh;
+      overflow: auto;
+      background: var(--primary);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 25px;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .modal-content {
+      padding: 25px;
+    }
+
+    .modal-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+    }
+
+    .modal-image {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid var(--card-border);
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 60px 20px 40px;
+      margin-top: 80px;
+      border-top: 1px solid var(--card-border);
+    }
+
+    .footer-logo {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 25px;
+      color: var(--accent);
+      font-family: 'Playfair Display', serif;
+    }
+
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 25px;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+    }
+
+    .footer-links a {
+      color: var(--text-light);
+      text-decoration: none;
+      transition: var(--transition);
+    }
+
+    .footer-links a:hover {
+      color: var(--accent);
+    }
+
+    .social-links {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .social-links a {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      background: var(--card-bg);
+      color: var(--text-light);
+      text-decoration: none;
+      transition: var(--transition);
+      border: 1px solid var(--card-border);
+    }
+
+    .social-links a:hover {
+      background: var(--accent);
+      color: var(--primary-dark);
+      transform: translateY(-3px);
+    }
+
+    .copyright {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: var(--card-bg);
+      border: 1px solid var(--accent);
+      border-left: 4px solid var(--accent);
+      color: var(--text-light);
+      padding: 15px 20px;
+      border-radius: 10px;
+      box-shadow: var(--shadow);
+      z-index: 2000;
+      transform: translateX(400px);
+      transition: transform 0.3s ease;
+    }
+
+    .toast.show {
+      transform: translateX(0);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      header {
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      nav ul {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 15px;
+      }
+
+      .hero {
+        padding: 60px 20px;
+      }
+
+      .cta-row {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .toolbar {
+        grid-template-columns: 1fr;
+        gap: 15px;
+      }
+
+      .filters {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .modal-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .features-grid,
+      .products-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .product-actions {
+        flex-direction: column;
+      }
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <a href="/" class="logo">
-                <i class="fas fa-gem logo-icon"></i>
-                <div class="logo-text">PVA Bazaar</div>
-            </a>
-            <nav>
-                <ul>
-                    <li><a href="#marketplace">Marketplace</a></li>
-                    <li><a href="pages/pvadashboard.html">Dashboard</a></li>
-                    <li><a href="#artisans">Artisans</a></li>
-                    <li><a href="#nft">NFTs</a></li>
-                    <li><a href="#about">About</a></li>
-                </ul>
-            </nav>
-            <div class="header-actions">
-                <button class="auth-btn" onclick="alert('Login functionality available - connect to backend to enable')">
-                    <i class="fas fa-user"></i>
-                    Login
-                </button>
-            </div>
-        </header>
-        
-        <section class="hero">
-            <h1>Where Artistry Meets Blockchain</h1>
-            <p>PVA Bazaar is a decentralized marketplace connecting artisans with collectors, using blockchain technology to ensure provenance, authenticity, and fair compensation.</p>
-            <a href="#marketplace" class="btn">Explore Marketplace</a>
-        </section>
+  <div class="container">
+    <header>
+      <a href="/" class="logo">
+        <i class="fas fa-gem logo-icon"></i>
+        <div class="logo-text">PVA Bazaar</div>
+      </a>
+      <nav>
+        <ul>
+          <li><a href="#marketplace">Marketplace</a></li>
+          <li><a href="#artisans">Artisans</a></li>
+          <li><a href="#nft">NFTs</a></li>
+          <li><a href="#about">About</a></li>
+        </ul>
+      </nav>
+      <div class="header-actions">
+        <button class="icon-btn" id="searchToggle" title="Search">
+          <i class="fa-solid fa-magnifying-glass"></i>
+        </button>
+        <button class="btn" id="connectWallet">
+          <i class="fa-solid fa-wallet"></i>
+          Connect Wallet
+        </button>
+      </div>
+    </header>
 
-        <!-- Stats Section -->
-        <section class="stats-section">
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-value">5</div>
-                    <div class="stat-label">Authentic Artifacts</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">12</div>
-                    <div class="stat-label">Global Collectors</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">$45K</div>
-                    <div class="stat-label">Trading Volume</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">24/7</div>
-                    <div class="stat-label">Blockchain Security</div>
-                </div>
-            </div>
-        </section>
-        
-        <h2 class="section-title">Our Ecosystem</h2>
-        <div class="features-grid">
-            <div class="feature-card">
-                <i class="fas fa-fingerprint feature-icon"></i>
-                <h3>Digital Provenance</h3>
-                <p>Every physical item has a digital twin on the blockchain, ensuring authenticity and tracking its complete history from creation to current owner.</p>
-            </div>
-            <div class="feature-card">
-                <i class="fas fa-hand-holding-usd feature-icon"></i>
-                <h3>Fair Compensation</h3>
-                <p>Artisans receive 50% of all sales directly to their wallets with transparent revenue sharing and automatic royalties from secondary market sales.</p>
-            </div>
-            <div class="feature-card">
-                <i class="fas fa-globe feature-icon"></i>
-                <h3>Global Marketplace</h3>
-                <p>Connect with artisans and collectors from around the world in a decentralized ecosystem that transcends borders and traditional limitations.</p>
-            </div>
-            <div class="feature-card">
-                <i class="fas fa-chart-pie feature-icon"></i>
-                <h3>Fractional Ownership</h3>
-                <p>Own shares of high-value artifacts, making art investment accessible to everyone worldwide through blockchain technology.</p>
-            </div>
-            <div class="feature-card">
-                <i class="fas fa-shield-alt feature-icon"></i>
-                <h3>Secure Transactions</h3>
-                <p>All transactions are secured by blockchain technology and smart contracts, ensuring safe and transparent trading.</p>
-            </div>
-            <div class="feature-card">
-                <i class="fas fa-coins feature-icon"></i>
-                <h3>Royalty System</h3>
-                <p>Artisans earn ongoing royalties from secondary market sales, supporting sustainable craftsmanship and fair compensation.</p>
-            </div>
-        </div>
-        
-        <h2 class="section-title" id="marketplace">Featured Products</h2>
-        <div class="marketplace-grid">
-            <!-- Static Sample Products - NO API CALLS -->
-            <div class="product-card" onclick="alert('Product details - connect to backend for full functionality')">
-                <div class="product-image">
-                    <div class="product-placeholder">
-                        <i class="fas fa-gem"></i>
-                    </div>
-                    <div class="product-badge shares-badge">Shares Available</div>
-                </div>
-                
-                <div class="product-content">
-                    <h3>Maradjet Emerald Pendant</h3>
-                    <div class="product-artisan">By PVA Master Craftsman</div>
-                    <p>A stunning emerald pendant featuring natural Panjshir emerald set in 18k gold</p>
-                    
-                    <div class="product-meta">
-                        <div class="product-price">$1,200</div>
-                        <div class="shares-info">
-                            1,250/5,000 shares sold<br>
-                            $0.24/share
-                        </div>
-                    </div>
-                    
-                    <div class="shares-progress">
-                        <div class="shares-fill" style="width: 25%"></div>
-                    </div>
-                    
-                    <div class="product-actions">
-                        <button class="btn btn-sm" onclick="event.stopPropagation(); alert('Buy shares - connect to backend')">
-                            Buy Shares
-                        </button>
-                        <button class="btn btn-sm btn-outline" onclick="event.stopPropagation(); alert('View details')">
-                            View NFT
-                        </button>
-                    </div>
-                </div>
-            </div>
+    <section class="hero">
+      <h1>Where Artistry Meets Blockchain</h1>
+      <p>Discover authentic artisan crafts with blockchain-powered ownership verification, fractional investing, and global accessibility.</p>
+      <div class="cta-row">
+        <a href="#marketplace" class="btn">
+          <i class="fa-solid fa-store"></i>
+          Explore Marketplace
+        </a>
+        <button class="btn btn-outline" id="learnMore">
+          <i class="fa-solid fa-play"></i>
+          Learn More
+        </button>
+      </div>
+    </section>
 
-            <div class="product-card" onclick="alert('Product details - connect to backend for full functionality')">
-                <div class="product-image">
-                    <div class="product-placeholder">
-                        <i class="fas fa-palette"></i>
-                    </div>
-                    <div class="product-badge">Authentic</div>
-                </div>
-                
-                <div class="product-content">
-                    <h3>Traditional Afghan Carpet</h3>
-                    <div class="product-artisan">By Herat Weavers Guild</div>
-                    <p>Traditional Afghan carpet with intricate geometric patterns</p>
-                    
-                    <div class="product-meta">
-                        <div class="product-price">$2,500</div>
-                    </div>
-                    
-                    <div class="product-actions">
-                        <button class="btn btn-sm" onclick="event.stopPropagation(); alert('Buy now - connect to backend')">
-                            Buy Now
-                        </button>
-                        <button class="btn btn-sm btn-outline" onclick="event.stopPropagation(); alert('View details')">
-                            View NFT
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="product-card" onclick="alert('Product details - connect to backend for full functionality')">
-                <div class="product-image">
-                    <div class="product-placeholder">
-                        <i class="fas fa-ring"></i>
-                    </div>
-                    <div class="product-badge">Authentic</div>
-                </div>
-                
-                <div class="product-content">
-                    <h3>Lapis Lazuli Bowl</h3>
-                    <div class="product-artisan">By Badakhshan Stoneworkers</div>
-                    <p>Beautiful bowl carved from authentic Afghan lapis lazuli stone</p>
-                    
-                    <div class="product-meta">
-                        <div class="product-price">$850</div>
-                    </div>
-                    
-                    <div class="product-actions">
-                        <button class="btn btn-sm" onclick="event.stopPropagation(); alert('Buy now - connect to backend')">
-                            Buy Now
-                        </button>
-                        <button class="btn btn-sm btn-outline" onclick="event.stopPropagation(); alert('View details')">
-                            View NFT
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div style="text-align: center; margin-bottom: 60px;">
-            <a href="pages/marketplace.html" class="btn">View All Products</a>
-        </div>
-        
-        <section class="cta-section" id="about">
-            <h2>Join the PVA Bazaar Revolution</h2>
-            <p>Whether you're an artisan looking to reach a global audience or a collector seeking unique pieces with verified provenance, PVA Bazaar offers a new paradigm for artisan commerce.</p>
-            <button class="btn" onclick="alert('Get started - connect to backend for full functionality')">Get Started</button>
-        </section>
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value" id="artifactCount">5</div>
+        <div class="stat-label">Authentic Artifacts</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="userCount">12</div>
+        <div class="stat-label">Global Collectors</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">$45K</div>
+        <div class="stat-label">Trading Volume</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">24/7</div>
+        <div class="stat-label">Blockchain Security</div>
+      </div>
     </div>
-    
-    <footer>
-        <div class="footer-logo">PVA Bazaar</div>
-        <div class="footer-links">
-            <a href="pages/marketplace.html">Marketplace</a>
-            <a href="pages/pvadashboard.html">Dashboard</a>
-            <a href="pages/portfolio.html">Portfolio</a>
-            <a href="pages/productshowcase.html">Products</a>
-            <a href="#about">About</a>
-        </div>
-        <div class="social-links">
-            <a href="#"><i class="fab fa-twitter"></i></a>
-            <a href="#"><i class="fab fa-instagram"></i></a>
-            <a href="#"><i class="fab fa-discord"></i></a>
-            <a href="#"><i class="fab fa-github"></i></a>
-        </div>
-        <div class="copyright">© 2024 PVA Bazaar. All rights reserved.</div>
-    </footer>
 
-    <script>
-        // Simple interactions - NO API CALLS OR LOADERS
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('PVA Bazaar - Static Version Loaded');
-            
-            // Button hover effects
-            document.querySelectorAll('.btn').forEach(button => {
-                button.addEventListener('mouseover', function() {
-                    this.style.boxShadow = '0 0 15px rgba(58, 195, 137, 0.5)';
-                });
-                
-                button.addEventListener('mouseout', function() {
-                    this.style.boxShadow = '0 5px 15px rgba(0, 0, 0, 0.2)';
-                });
-            });
-            
-            // Smooth scrolling for anchor links
-            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-                anchor.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    const target = document.querySelector(this.getAttribute('href'));
-                    if (target) {
-                        target.scrollIntoView({
-                            behavior: 'smooth',
-                            block: 'start'
-                        });
-                    }
-                });
-            });
+    <h2 class="section-title">Our Ecosystem</h2>
+    <div class="features-grid">
+      <div class="feature-card">
+        <i class="fas fa-fingerprint feature-icon"></i>
+        <h3>Digital Provenance</h3>
+        <p>Every physical item has a digital twin on the blockchain, ensuring authenticity and tracking complete history.</p>
+      </div>
+      <div class="feature-card">
+        <i class="fas fa-hand-holding-dollar feature-icon"></i>
+        <h3>Fair Compensation</h3>
+        <p>Transparent revenue sharing and automatic royalties for artisans on secondary market sales.</p>
+      </div>
+      <div class="feature-card">
+        <i class="fas fa-globe feature-icon"></i>
+        <h3>Global Marketplace</h3>
+        <p>Connect artisans with collectors worldwide in a decentralized ecosystem that transcends borders.</p>
+      </div>
+      <div class="feature-card">
+        <i class="fas fa-chart-pie feature-icon"></i>
+        <h3>Fractional Ownership</h3>
+        <p>Own shares of high-value artifacts, making art investment accessible to everyone through blockchain.</p>
+      </div>
+      <div class="feature-card">
+        <i class="fas fa-shield-alt feature-icon"></i>
+        <h3>Secure Transactions</h3>
+        <p>All transactions secured by blockchain technology and smart contracts for transparent trading.</p>
+      </div>
+      <div class="feature-card">
+        <i class="fas fa-coins feature-icon"></i>
+        <h3>Royalty System</h3>
+        <p>Artisans earn ongoing royalties from secondary sales, supporting sustainable craftsmanship.</p>
+      </div>
+    </div>
+
+    <!-- Search & Filters -->
+    <div class="toolbar">
+      <div class="search-wrapper">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="search" id="searchInput" placeholder="Search artifacts, materials, regions...">
+      </div>
+      <div class="filters">
+        <select class="filter-select" id="categoryFilter">
+          <option value="">All Categories</option>
+          <option value="jewelry">Jewelry</option>
+          <option value="textiles">Textiles</option>
+          <option value="metalwork">Metalwork</option>
+          <option value="ceramics">Ceramics</option>
+        </select>
+        <select class="filter-select" id="sortFilter">
+          <option value="relevance">Sort: Relevance</option>
+          <option value="price-low">Price: Low to High</option>
+          <option value="price-high">Price: High to Low</option>
+          <option value="newest">Newest First</option>
+        </select>
+      </div>
+    </div>
+
+    <h2 class="section-title" id="marketplace">Featured Products</h2>
+    <div class="products-grid" id="productsGrid">
+      <!-- Products will be loaded here -->
+    </div>
+
+    <!-- Artisans Section -->
+    <section id="artisans">
+      <h2 class="section-title">Featured Artisans</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(45deg, #1e4e3c, #2a9c6f); margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px;">
+            <i class="fas fa-user"></i>
+          </div>
+          <h3>Maria Lopez</h3>
+          <p>Oaxaca, Mexico • Silversmithing<br>42 pieces • 4.9 rating</p>
+        </div>
+        <div class="feature-card">
+          <div style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(45deg, #1e4e3c, #2a9c6f); margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px;">
+            <i class="fas fa-user"></i>
+          </div>
+          <h3>James Chen</h3>
+          <p>Bali, Indonesia • Wood Carving<br>28 pieces • 4.8 rating</p>
+        </div>
+        <div class="feature-card">
+          <div style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(45deg, #1e4e3c, #2a9c6f); margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px;">
+            <i class="fas fa-user"></i>
+          </div>
+          <h3>Aisha Patel</h3>
+          <p>Jaipur, India • Textile Arts<br>37 pieces • 5.0 rating</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- NFT Section -->
+    <section id="nft">
+      <h2 class="section-title">Digital Provenance with NFTs</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <i class="fas fa-certificate feature-icon"></i>
+          <h3>Authenticity Guaranteed</h3>
+          <p>Each item paired with an NFT verifying origin and authenticity on the blockchain.</p>
+        </div>
+        <div class="feature-card">
+          <i class="fas fa-history feature-icon"></i>
+          <h3>Complete History</h3>
+          <p>Track entire ownership history and provenance from creation to current holder.</p>
+        </div>
+        <div class="feature-card">
+          <i class="fas fa-lock feature-icon"></i>
+          <h3>Secure Ownership</h3>
+          <p>Ownership recorded on-chain with tamper-resistant blockchain technology.</p>
+        </div>
+        <div class="feature-card">
+          <i class="fas fa-sync-alt feature-icon"></i>
+          <h3>Resale Royalties</h3>
+          <p>Smart contracts automatically route royalties to creators on secondary sales.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="hero" id="about">
+      <h2 class="section-title">Join the PVA Bazaar Revolution</h2>
+      <p>Whether you're an artisan or collector, PVA Bazaar offers a new paradigm for provenance-backed commerce.</p>
+      <div class="cta-row">
+        <button class="btn" id="getStarted">
+          <i class="fa-solid fa-rocket"></i>
+          Get Started
+        </button>
+        <button class="btn btn-outline" id="contactUs">
+          <i class="fa-solid fa-message"></i>
+          Contact Us
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    <div class="footer-logo">PVA Bazaar</div>
+    <div class="footer-links">
+      <a href="#about">About</a>
+      <a href="#marketplace">Marketplace</a>
+      <a href="#artisans">Artisans</a>
+      <a href="#nft">NFTs</a>
+      <a href="#contact">Contact</a>
+    </div>
+    <div class="social-links">
+      <a href="#" title="Twitter"><i class="fab fa-twitter"></i></a>
+      <a href="#" title="Instagram"><i class="fab fa-instagram"></i></a>
+      <a href="#" title="Discord"><i class="fab fa-discord"></i></a>
+      <a href="#" title="GitHub"><i class="fab fa-github"></i></a>
+    </div>
+    <div class="copyright">© 2024 PVA Bazaar. All rights reserved.</div>
+  </footer>
+
+  <!-- Product Modal -->
+  <div class="modal-backdrop" id="productModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modalTitle">Artifact Details</h3>
+        <button class="icon-btn" id="closeModal">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="modal-content">
+        <div class="modal-grid">
+          <div>
+            <img id="modalImage" class="modal-image" alt="Artifact">
+          </div>
+          <div>
+            <h3 id="modalName"></h3>
+            <p id="modalDesc"></p>
+            <div class="product-rating" id="modalRating"></div>
+            <div class="product-meta">
+              <div class="product-price" id="modalPrice"></div>
+            </div>
+            <div class="product-actions">
+              <button class="btn btn-sm" id="addToCart">
+                <i class="fa-solid fa-cart-plus"></i>
+                Add to Cart
+              </button>
+              <button class="btn btn-sm btn-outline" id="viewNFT">
+                <i class="fa-brands fa-ethereum"></i>
+                View NFT
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Sample product data
+    const sampleProducts = [
+      {
+        id: 'emerald-001',
+        name: 'Panjshir Emerald Pendant',
+        description: 'Handcrafted pendant with natural Panjshir emerald set in 18k yellow gold. Digital certificate of authenticity included.',
+        price: 1200,
+        rating: 4.9,
+        category: 'jewelry',
+        badge: 'NFT Available',
+        image: 'https://images.unsplash.com/photo-1603575449200-7f9b41c1ea67?w=600&h=400&fit=crop'
+      },
+      {
+        id: 'bracelet-050',
+        name: 'Artisan Silver Bracelet',
+        description: 'Hand-forged sterling silver bracelet with intricate traditional patterns. Limited to 50 pieces.',
+        price: 189,
+        rating: 4.8,
+        category: 'jewelry',
+        badge: 'Limited Edition',
+        image: 'https://images.unsplash.com/photo-1617038260897-5dc90f1a45c1?w=600&h=400&fit=crop'
+      },
+      {
+        id: 'ring-unique',
+        name: 'Sacred Geometry Ring',
+        description: 'Gold ring featuring sacred geometric motifs and a central diamond. One-of-a-kind piece.',
+        price: 420,
+        rating: 5.0,
+        category: 'jewelry',
+        badge: 'One of a Kind',
+        image: 'https://images.unsplash.com/photo-1603570419963-703b2d7b7f0d?w=600&h=400&fit=crop'
+      },
+      {
+        id: 'necklace-neo',
+        name: 'Vibrant Gemstone Necklace',
+        description: 'Multicolor gemstones handcrafted by artisans using time-honored techniques.',
+        price: 275,
+        rating: 4.7,
+        category: 'jewelry',
+        badge: 'New',
+        image: 'https://images.unsplash.com/photo-1556228453-efd1b3362d7a?w=600&h=400&fit=crop'
+      },
+      {
+        id: 'carpet-001',
+        name: 'Traditional Afghan Carpet',
+        description: 'Hand-woven carpet with intricate geometric patterns from Herat artisans.',
+        price: 2500,
+        rating: 4.9,
+        category: 'textiles',
+        badge: 'Authentic',
+        image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=400&fit=crop'
+      },
+      {
+        id: 'bowl-001',
+        name: 'Lapis Lazuli Bowl',
+        description: 'Beautiful bowl carved from authentic Afghan lapis lazuli stone.',
+        price: 850,
+        rating: 4.6,
+        category: 'ceramics',
+        badge: 'Handcrafted',
+        image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600&h=400&fit=crop'
+      }
+    ];
+
+    let filteredProducts = [...sampleProducts];
+    let isWalletConnected = false;
+
+    // DOM Elements
+    const productsGrid = document.getElementById('productsGrid');
+    const searchInput = document.getElementById('searchInput');
+    const categoryFilter = document.getElementById('categoryFilter');
+    const sortFilter = document.getElementById('sortFilter');
+    const connectWalletBtn = document.getElementById('connectWallet');
+    const productModal = document.getElementById('productModal');
+    const closeModalBtn = document.getElementById('closeModal');
+
+    // Utility Functions
+    function formatPrice(price) {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD'
+      }).format(price);
+    }
+
+    function createStarRating(rating) {
+      const fullStars = Math.floor(rating);
+      const hasHalfStar = rating % 1 >= 0.5;
+      let stars = '';
+      
+      for (let i = 0; i < fullStars; i++) {
+        stars += '★';
+      }
+      if (hasHalfStar) {
+        stars += '☆';
+      }
+      for (let i = fullStars + (hasHalfStar ? 1 : 0); i < 5; i++) {
+        stars += '☆';
+      }
+      
+      return `${stars} (${rating.toFixed(1)})`;
+    }
+
+    function showToast(message, type = 'info') {
+      const toast = document.createElement('div');
+      toast.className = 'toast show';
+      toast.textContent = message;
+      
+      if (type === 'success') {
+        toast.style.borderLeftColor = '#3ac389';
+      } else if (type === 'error') {
+        toast.style.borderLeftColor = '#ff7a7a';
+      }
+      
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => {
+          document.body.removeChild(toast);
+        }, 300);
+      }, 3000);
+    }
+
+    // Product Rendering
+    function renderProducts() {
+      productsGrid.innerHTML = '';
+      
+      if (filteredProducts.length === 0) {
+        productsGrid.innerHTML = `
+          <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px;">
+            <i class="fas fa-search" style="font-size: 3rem; color: var(--text-muted); margin-bottom: 20px;"></i>
+            <h3 style="color: var(--text-light); margin-bottom: 10px;">No products found</h3>
+            <p style="color: var(--text-muted);">Try adjusting your search or filters.</p>
+          </div>
+        `;
+        return;
+      }
+
+      filteredProducts.forEach(product => {
+        const productCard = document.createElement('div');
+        productCard.className = 'product-card';
+        productCard.onclick = () => openProductModal(product);
+        
+        productCard.innerHTML = `
+          <div class="product-image">
+            ${product.image ? 
+              `<img src="${product.image}" alt="${product.name}" loading="lazy">` :
+              `<div class="product-placeholder"><i class="fas fa-gem"></i></div>`
+            }
+            ${product.badge ? `<div class="product-badge">${product.badge}</div>` : ''}
+          </div>
+          <div class="product-content">
+            <h3 class="product-title">${product.name}</h3>
+            <p class="product-desc">${product.description}</p>
+            <div class="product-rating">${createStarRating(product.rating)}</div>
+            <div class="product-meta">
+              <div class="product-price">${formatPrice(product.price)}</div>
+            </div>
+            <div class="product-actions">
+              <button class="btn btn-sm" onclick="event.stopPropagation(); addToCart('${product.id}')">
+                <i class="fa-solid fa-cart-plus"></i>
+                Add to Cart
+              </button>
+              <button class="btn btn-sm btn-outline" onclick="event.stopPropagation(); viewDetails('${product.id}')">
+                <i class="fa-solid fa-eye"></i>
+                View Details
+              </button>
+            </div>
+          </div>
+        `;
+        
+        productsGrid.appendChild(productCard);
+      });
+    }
+
+    // Filtering and Sorting
+    function filterProducts() {
+      const searchTerm = searchInput.value.toLowerCase();
+      const selectedCategory = categoryFilter.value;
+      const sortOption = sortFilter.value;
+
+      // Filter
+      filteredProducts = sampleProducts.filter(product => {
+        const matchesSearch = product.name.toLowerCase().includes(searchTerm) ||
+                             product.description.toLowerCase().includes(searchTerm);
+        const matchesCategory = !selectedCategory || product.category === selectedCategory;
+        
+        return matchesSearch && matchesCategory;
+      });
+
+      // Sort
+      switch (sortOption) {
+        case 'price-low':
+          filteredProducts.sort((a, b) => a.price - b.price);
+          break;
+        case 'price-high':
+          filteredProducts.sort((a, b) => b.price - a.price);
+          break;
+        case 'newest':
+          // For demo, reverse order
+          filteredProducts.reverse();
+          break;
+        default:
+          // Keep original order for relevance
+          break;
+      }
+
+      renderProducts();
+    }
+
+    // Product Actions
+    function addToCart(productId) {
+      const product = sampleProducts.find(p => p.id === productId);
+      if (product) {
+        showToast(`${product.name} added to cart!`, 'success');
+      }
+    }
+
+    function viewDetails(productId) {
+      const product = sampleProducts.find(p => p.id === productId);
+      if (product) {
+        openProductModal(product);
+      }
+    }
+
+    function openProductModal(product) {
+      document.getElementById('modalTitle').textContent = product.name;
+      document.getElementById('modalImage').src = product.image || '';
+      document.getElementById('modalName').textContent = product.name;
+      document.getElementById('modalDesc').textContent = product.description;
+      document.getElementById('modalRating').textContent = createStarRating(product.rating);
+      document.getElementById('modalPrice').textContent = formatPrice(product.price);
+      
+      productModal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+      productModal.classList.remove('active');
+      document.body.style.overflow = 'auto';
+    }
+
+    // Wallet Connection
+    function toggleWallet() {
+      isWalletConnected = !isWalletConnected;
+      
+      if (isWalletConnected) {
+        connectWalletBtn.innerHTML = '<i class="fa-solid fa-check-circle"></i> Connected';
+        connectWalletBtn.style.background = 'linear-gradient(135deg, #3ac389, #2a9c6f)';
+        showToast('Wallet connected successfully!', 'success');
+      } else {
+        connectWalletBtn.innerHTML = '<i class="fa-solid fa-wallet"></i> Connect Wallet';
+        connectWalletBtn.style.background = 'linear-gradient(135deg, var(--accent), var(--accent-dark))';
+        showToast('Wallet disconnected', 'info');
+      }
+    }
+
+    // Event Listeners
+    searchInput.addEventListener('input', filterProducts);
+    categoryFilter.addEventListener('change', filterProducts);
+    sortFilter.addEventListener('change', filterProducts);
+    connectWalletBtn.addEventListener('click', toggleWallet);
+    closeModalBtn.addEventListener('click', closeModal);
+
+    // Modal backdrop click to close
+    productModal.addEventListener('click', (e) => {
+      if (e.target === productModal) {
+        closeModal();
+      }
+    });
+
+    // Smooth scrolling for navigation
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }
+      });
+    });
+
+    // Button interactions
+    document.getElementById('learnMore').addEventListener('click', () => {
+      document.getElementById('nft').scrollIntoView({ behavior: 'smooth' });
+    });
+
+    document.getElementById('getStarted').addEventListener('click', () => {
+      if (!isWalletConnected) {
+        showToast('Please connect your wallet to get started', 'info');
+        connectWalletBtn.click();
+      } else {
+        showToast('Welcome to PVA Bazaar!', 'success');
+      }
+    });
+
+    document.getElementById('contactUs').addEventListener('click', () => {
+      showToast('Contact form coming soon...', 'info');
+    });
+
+    // Modal actions
+    document.getElementById('addToCart').addEventListener('click', () => {
+      showToast('Added to cart!', 'success');
+    });
+
+    document.getElementById('viewNFT').addEventListener('click', () => {
+      showToast('NFT viewer coming soon...', 'info');
+    });
+
+    // Search toggle (mobile)
+    document.getElementById('searchToggle').addEventListener('click', () => {
+      const toolbar = document.querySelector('.toolbar');
+      toolbar.scrollIntoView({ behavior: 'smooth' });
+      searchInput.focus();
+    });
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      renderProducts();
+      
+      // Animate stats on load
+      setTimeout(() => {
+        const stats = document.querySelectorAll('.stat-value');
+        stats.forEach(stat => {
+          if (stat.id === 'artifactCount') {
+            animateCounter(stat, 5);
+          } else if (stat.id === 'userCount') {
+            animateCounter(stat, 12);
+          }
         });
-    </script>
+      }, 500);
+    });
+
+    function animateCounter(element, target) {
+      let current = 0;
+      const increment = target / 20;
+      const timer = setInterval(() => {
+        current += increment;
+        if (current >= target) {
+          element.textContent = target;
+          clearInterval(timer);
+        } else {
+          element.textContent = Math.floor(current);
+        }
+      }, 50);
+    }
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeModal();
+      }
+      if (e.key === '/' && document.activeElement.tagName !== 'INPUT') {
+        e.preventDefault();
+        searchInput.focus();
+      }
+    });
+  </script>
 </body>
 </html>
