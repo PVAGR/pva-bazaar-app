@@ -1,11 +1,52 @@
 {
   "name": "pva-bazaar",
   "version": "1.0.0",
-  "description": "PVA Bazaar - Artisan Marketplace with Digital Provenance",
+  "description": "PVA Bazaar - Sacred Marketplace for Authentic Artifacts",
+  "private": true,
+  "packageManager": "npm@10.0.0",
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "dev": "turbo run dev --parallel",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd Frontend && npm run dev",
+    "build": "turbo run build",
+    "build:backend": "cd backend && npm run build",
+    "build:frontend": "cd Frontend && npm run build",
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:ci": "vitest run --coverage",
+    "test:staged": "vitest related --run",
+    "test:smoke": "vitest run --testPathPattern=smoke",
+    "e2e": "playwright test",
+    "e2e:ui": "playwright test --ui",
+    "e2e:headed": "playwright test --headed",
+    "lint": "eslint . --fix",
+    "lint:check": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "prepare": "husky install",
+    "qa:full": "./qa/scripts/orchestrator.sh full",
+    "qa:quick": "./qa/scripts/orchestrator.sh quick",
+    "qa:performance": "./qa/scripts/orchestrator.sh performance",
+    "qa:security": "./qa/scripts/orchestrator.sh security",
+    "qa:accessibility": "./qa/scripts/orchestrator.sh accessibility",
+    "qa:visual": "./qa/scripts/orchestrator.sh visual",
+    "qa:backstop:test": "backstop test --config=qa/backstop.config.js",
+    "qa:backstop:approve": "backstop approve --config=qa/backstop.config.js",
+    "qa:lighthouse": "lhci autorun --config=qa/lighthouse/lhci.json",
+    "qa:axe": "node qa/axe/axe-runner.js",
+    "qa:pa11y": "pa11y-ci --config qa/pa11y/pa11y.ci.json",
+    "qa:artillery": "artillery run qa/artillery/load-test.yml",
+    "qa:brand:check": "node qa/scripts/check-brand-tokens.js",
+    "qa:brand:check:staged": "git diff --cached --name-only '*.css' '*.scss' | xargs -I {} node qa/scripts/check-brand-tokens.js {}",
+    "qa:secrets:scan": "gitleaks detect --source . --verbose",
+    "clean": "rm -rf node_modules dist build out .next coverage qa/reports",
+    "clean:full": "npm run clean && rm -f pnpm-lock.yaml && rm -f package-lock.json && npm install",
+    "setup": "npm install && npm run prepare && npm run build",
+    "ship": "turbo run lint typecheck test build"
   },
   "dependencies": {
     "@pinata/sdk": "^2.1.0",
@@ -20,10 +61,50 @@
     "web3": "^4.16.0"
   },
   "devDependencies": {
+    "turbo": "^2.0.4",
+    "@axe-core/playwright": "^4.8.5",
+    "@commitlint/cli": "^18.4.3",
+    "@commitlint/config-conventional": "^18.4.3",
+    "@eslint/js": "^9.0.0",
+    "@lhci/cli": "^0.12.0",
+    "@playwright/test": "^1.40.0",
+    "@types/node": "^20.10.0",
+    "@typescript-eslint/eslint-plugin": "^6.13.0",
+    "@typescript-eslint/parser": "^6.13.0",
+    "artillery": "^2.0.0",
+    "backstopjs": "^6.2.2",
+    "concurrently": "^8.2.2",
+    "eslint": "^8.55.0",
+  "eslint-plugin-jsx-a11y": "^6.8.0",
+  "eslint-plugin-react": "^7.33.0",
+  "eslint-plugin-react-hooks": "^4.6.0",
+  "eslint-plugin-import": "^2.29.1",
+    "husky": "^8.0.3",
+    "lint-staged": "^15.2.0",
     "nodemon": "^3.1.10",
-    "vite": "^5.0.0"
+    "pa11y-ci": "^3.1.0",
+    "prettier": "^3.1.0",
+    "sort-package-json": "^2.6.0",
+    "typescript": "^5.3.0",
+    "vite": "^5.0.0",
+    "vitest": "^1.0.0"
   },
-  "engines": {
-    "node": ">=18.0.0"
-  }
+  "workspaces": [
+    "apps/*",
+    "services/*",
+    "packages/*",
+    "backend",
+    "Frontend"
+  ],
+  "keywords": [
+    "marketplace",
+    "nft",
+    "blockchain", 
+    "artifacts",
+    "provenance",
+    "pva",
+    "authentication"
+  ],
+  "author": "PVA Team",
+  "license": "UNLICENSED"
 }

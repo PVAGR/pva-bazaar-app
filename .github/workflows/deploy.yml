@@ -1,0 +1,238 @@
+name: Production Deployment
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+        - staging
+        - production
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '9'
+
+jobs:
+  # Pre-deployment quality validation
+  pre_deploy_validation:
+    name: Pre-deployment Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+          
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        
+      - name: Run all tests
+        run: pnpm test
+        
+      - name: Build all applications
+        run: pnpm build
+        
+      - name: Validate build artifacts
+        run: |
+          # Check that all critical files exist
+          test -f apps/web-com/out/index.html
+          test -f apps/web-org/out/index.html
+          test -f dist/backend/api/index.js
+
+  # Deploy backend API
+  deploy_backend:
+    name: Deploy Backend API
+    runs-on: ubuntu-latest
+    needs: pre_deploy_validation
+    environment: ${{ github.event.inputs.environment || 'production' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+          
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        
+      - name: Build backend
+        run: pnpm --filter=backend build
+        
+      - name: Deploy to Vercel (Backend)
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_BACKEND_PROJECT_ID }}
+          working-directory: backend
+          vercel-args: '--prod'
+          
+      - name: Update backend URL environment variable
+        run: |
+          BACKEND_URL=$(vercel ls --token=${{ secrets.VERCEL_TOKEN }} --scope=${{ secrets.VERCEL_ORG_ID }} | grep backend | head -1 | awk '{print $2}')
+          echo "BACKEND_URL=https://$BACKEND_URL" >> $GITHUB_ENV
+          echo "Backend deployed to: https://$BACKEND_URL"
+
+  # Deploy frontend applications
+  deploy_frontends:
+    name: Deploy Frontend Applications
+    runs-on: ubuntu-latest
+    needs: [pre_deploy_validation, deploy_backend]
+    environment: ${{ github.event.inputs.environment || 'production' }}
+    strategy:
+      matrix:
+        app: [web-com, web-org]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+          
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        
+      - name: Build frontend
+        run: pnpm --filter=${{ matrix.app }} build
+        env:
+          NEXT_PUBLIC_API_URL: ${{ needs.deploy_backend.outputs.backend_url }}
+          NEXT_PUBLIC_BRAND_COLORS: '{"primaryDark":"#0f3b2d","primary":"#1c5a45","primaryLight":"#2d7d5a","accent":"#4ef8a3","accentDark":"#2bb673","gold":"#d4af37","textLight":"#e8f4f0","textMuted":"#a8b0b9"}'
+          
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ matrix.app == 'web-com' && secrets.VERCEL_COM_PROJECT_ID || secrets.VERCEL_ORG_PROJECT_ID }}
+          working-directory: apps/${{ matrix.app }}
+          vercel-args: '--prod'
+
+  # Deploy smart contracts (if changed)
+  deploy_contracts:
+    name: Deploy Smart Contracts
+    runs-on: ubuntu-latest
+    needs: pre_deploy_validation
+    if: contains(github.event.head_commit.modified, 'apps/contracts/')
+    environment: ${{ github.event.inputs.environment || 'production' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+          
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        
+      - name: Compile contracts
+        run: |
+          cd apps/contracts
+          forge build
+          
+      - name: Run contract tests
+        run: |
+          cd apps/contracts
+          forge test
+          
+      - name: Deploy contracts (testnet first)
+        run: |
+          cd apps/contracts
+          # Deploy to Base Sepolia first
+          forge script script/Deploy.s.sol --rpc-url ${{ secrets.BASE_SEPOLIA_RPC }} --private-key ${{ secrets.DEPLOYER_PRIVATE_KEY }} --broadcast
+          
+      - name: Deploy contracts (mainnet - manual approval required)
+        if: github.event.inputs.environment == 'production'
+        run: |
+          cd apps/contracts
+          # Deploy to Base mainnet (requires manual approval)
+          forge script script/Deploy.s.sol --rpc-url ${{ secrets.BASE_MAINNET_RPC }} --private-key ${{ secrets.DEPLOYER_PRIVATE_KEY }} --broadcast
+
+  # Post-deployment testing
+  post_deploy_testing:
+    name: Post-deployment Testing
+    runs-on: ubuntu-latest
+    needs: [deploy_backend, deploy_frontends]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+          
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        
+      - name: Install Playwright
+        run: pnpm dlx playwright install --with-deps
+        
+      - name: Run smoke tests against production
+        run: pnpm qa:smoke:production
+        env:
+          TEST_URL_COM: https://pvabazaar.com
+          TEST_URL_ORG: https://pvabazaar.org
+          
+      - name: Run production accessibility audit
+        run: pnpm qa:axe:production
+        
+      - name: Run production performance audit
+        run: pnpm qa:lighthouse:production
+
+  # Deployment notification
+  deployment_notification:
+    name: Deployment Notification
+    runs-on: ubuntu-latest
+    needs: [deploy_backend, deploy_frontends, post_deploy_testing]
+    if: always()
+    steps:
+      - name: Notify deployment status
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          channel: '#deployments'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}

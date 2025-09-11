@@ -864,33 +864,32 @@
 </head>
 <body>
     <div class="container">
-        <header>
-            <a href="#" class="logo">
-                <i class="fas fa-gem logo-icon"></i>
-                <div class="logo-text">PVA Bazaar</div>
-            </a>
-            <div class="user-nav">
-                                <nav class="pva-nav" aria-label="Primary">
-                                        <ul>
-                                            <li><a href="/pages/pvadashboard.html">Dashboard</a></li>
-                                            <li><a href="/pages/productshowcase.html">Marketplace</a></li>
-                                            <li><a href="/pages/portfolio.html">Portfolio</a></li>
-                                            <li><a href="/pages/checkoutmint.html">Checkout</a></li>
-                                            <li><a href="/pages/provenance.html">Provenance</a></li>
-                                            <li><a href="/pages/artifact.html">Artifact</a></li>
-                                        </ul>
-                                <script type="module" src="/src/pages/portfolio.js"></script>
-                                <script type="module" src="/src/nav/inject-nav.js"></script>
-                                </nav>
-                <div class="user-profile">
-                    <div class="user-avatar">
-                        J
-                        <div class="notification-badge">3</div>
-                    </div>
-                    <div class="user-name">James Wilson</div>
-                </div>
-            </div>
-        </header>
+            <header>
+      <a href="/" class="logo">
+        <i class="fas fa-gem logo-icon"></i>
+        <div class="logo-text">PVA Bazaar</div>
+      </a>
+      <nav>
+        <ul>
+          <li><a href="/" class="active">Home</a></li>
+          <li><a href="/pages/pvadashboard.html">Dashboard</a></li>
+          <li><a href="/pages/productshowcase.html">Marketplace</a></li>
+          <li><a href="/pages/portfolio.html">Portfolio</a></li>
+          <li><a href="/pages/checkoutmint.html">Checkout</a></li>
+          <li><a href="/pages/provenance.html">Provenance</a></li>
+          <li><a href="/pages/artifact.html">Artifact</a></li>
+        </ul>
+      </nav>
+      <div class="header-actions">
+        <button class="icon-btn" id="searchToggle" title="Search">
+          <i class="fa-solid fa-magnifying-glass"></i>
+        </button>
+        <button class="btn" id="connectWallet">
+          <i class="fa-solid fa-wallet"></i>
+          Connect Wallet
+        </button>
+      </div>
+    </header>
         
         <div class="dashboard">
             <!-- Sidebar -->
@@ -1313,6 +1312,38 @@
     </div>
 
     <script>
+        // Real-time data fetching functions
+        async function fetchPortfolioData() {
+            try {
+                // Fetch global portfolio stats (since we don't have user auth yet)
+                const response = await fetch('/api/portfolio/stats/global');
+                const data = await response.json();
+                
+                if (data.ok) {
+                    // Update portfolio stats with real data
+                    document.querySelector('.stat-value').textContent = '$' + data.globalStats.totalValue.toLocaleString();
+                    
+                    // Update PVA coins (using total shares as proxy)
+                    const pvaCoinsElement = document.querySelectorAll('.stat-value')[1];
+                    if (pvaCoinsElement) {
+                        pvaCoinsElement.textContent = data.globalStats.totalShares.toLocaleString();
+                    }
+                    
+                    // Update allocation values with mock data based on real artifacts
+                    const allocationValues = document.querySelectorAll('.allocation-value');
+                    if (allocationValues.length >= 3) {
+                        // Distribute the total value across allocations
+                        const totalValue = data.globalStats.totalValue;
+                        allocationValues[0].textContent = '$' + (totalValue * 0.4).toLocaleString(); // 40%
+                        allocationValues[1].textContent = '$' + (totalValue * 0.35).toLocaleString(); // 35%
+                        allocationValues[2].textContent = '$' + (totalValue * 0.25).toLocaleString(); // 25%
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching portfolio data:', error);
+            }
+        }
+        
         // Initialize Charts
         document.addEventListener('DOMContentLoaded', function() {
             // Performance Chart
@@ -1446,6 +1477,12 @@
                 });
             });
             
+            // Fetch initial portfolio data
+            fetchPortfolioData();
+            
+            // Update portfolio data every 30 seconds
+            setInterval(fetchPortfolioData, 30000);
+            
             // Update values periodically to simulate live data
             setInterval(() => {
                 // Randomly update some values to simulate market changes
@@ -1471,6 +1508,8 @@
         });
     </script>
     <script type="module" src="/src/pages/portfolio.js"></script>
-    <script src="/public/js/pva-nav.js" defer></script>
+    
+  <script src="/src/nav/inject-nav.js" defer></script>
+  <script src="/public/js/pva-nav.js" defer></script>
 </body>
 </html>

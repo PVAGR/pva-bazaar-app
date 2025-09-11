@@ -4,7 +4,7 @@
  */
 
 const mongoose = require('mongoose');
-const User = require('../models/user');
+const User = require('../models/User');
 const Artifact = require('../models/Artifact');
 require('dotenv').config();
 

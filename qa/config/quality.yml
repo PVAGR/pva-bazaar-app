@@ -1,0 +1,190 @@
+name: "PVA Bazaar Quality Config"
+version: 2
+
+# Quality Thresholds
+thresholds:
+  coverage:
+    statements: 80
+    branches: 75
+    functions: 80
+    lines: 80
+  performance:
+    lighthouse:
+      performance: 90
+      accessibility: 95
+      best_practices: 90
+      seo: 90
+      pwa: 85
+  accessibility:
+    axe:
+      violations: 0
+      incomplete: 2
+  security:
+    audit:
+      high: 0
+      moderate: 5
+      low: 10
+
+# Lighthouse CI Configuration
+lighthouse:
+  ci:
+    collect:
+      url:
+        - "http://localhost:3000"
+        - "http://localhost:3001"
+        - "http://localhost:3000/artifacts"
+        - "http://localhost:3000/portfolio"
+        - "http://localhost:3001/about"
+        - "http://localhost:3001/contact"
+      startServerCommand: "pnpm dev"
+      startServerReadyPattern: "ready on"
+      numberOfRuns: 3
+    assert:
+      assertions:
+        "categories:performance": ["error", {"minScore": 0.9}]
+        "categories:accessibility": ["error", {"minScore": 0.95}]
+        "categories:best-practices": ["error", {"minScore": 0.9}]
+        "categories:seo": ["error", {"minScore": 0.9}]
+        "categories:pwa": ["warn", {"minScore": 0.85}]
+    upload:
+      target: temporary-public-storage
+      githubAppToken: "${GITHUB_TOKEN}"
+
+# Artillery Load Testing Configuration
+artillery:
+  config:
+    target: "http://localhost:8000"
+    phases:
+      - duration: 60
+        arrivalRate: 10
+        name: "Warm up"
+      - duration: 120
+        arrivalRate: 50
+        name: "Sustained load"
+      - duration: 60
+        arrivalRate: 100
+        name: "Peak load"
+  scenarios:
+    - name: "API Health Check"
+      weight: 20
+      flow:
+        - get:
+            url: "/health"
+    - name: "Artifact Search"
+      weight: 30
+      flow:
+        - get:
+            url: "/api/artifacts/search"
+            qs:
+              q: "art"
+    - name: "User Authentication"
+      weight: 25
+      flow:
+        - post:
+            url: "/api/auth/login"
+            json:
+              email: "test@example.com"
+              password: "password123"
+    - name: "Artifact Details"
+      weight: 25
+      flow:
+        - get:
+            url: "/api/artifacts/{{ $randomString() }}"
+
+# BackstopJS Visual Regression
+backstop:
+  scenarios:
+    - label: "Homepage Desktop"
+      url: "http://localhost:3000"
+      viewports:
+        - name: "desktop"
+          width: 1920
+          height: 1080
+    - label: "Homepage Mobile"
+      url: "http://localhost:3000"
+      viewports:
+        - name: "mobile"
+          width: 375
+          height: 667
+    - label: "Artifact Showcase"
+      url: "http://localhost:3000/artifacts"
+      viewports:
+        - name: "desktop"
+          width: 1920
+          height: 1080
+        - name: "tablet"
+          width: 768
+          height: 1024
+    - label: "Portfolio Page"
+      url: "http://localhost:3000/portfolio"
+      viewports:
+        - name: "desktop"
+          width: 1920
+          height: 1080
+    - label: "About Page"
+      url: "http://localhost:3001/about"
+      viewports:
+        - name: "desktop"
+          width: 1920
+          height: 1080
+
+# Test Environments
+environments:
+  development:
+    api_url: "http://localhost:8000"
+    web_com_url: "http://localhost:3000"
+    web_org_url: "http://localhost:3001"
+    contracts_network: "hardhat"
+  staging:
+    api_url: "https://api-staging.pvabazaar.com"
+    web_com_url: "https://staging.pvabazaar.com"
+    web_org_url: "https://staging.pvabazaar.org"
+    contracts_network: "base-sepolia"
+  production:
+    api_url: "https://api.pvabazaar.com"
+    web_com_url: "https://pvabazaar.com"
+    web_org_url: "https://pvabazaar.org"
+    contracts_network: "base-mainnet"
+
+# Brand Compliance Rules
+brand:
+  colors:
+    allowed:
+      primary_dark: "#0f3b2d"
+      primary: "#1c5a45"
+      primary_light: "#2d7d5a"
+      accent: "#4ef8a3"
+      accent_dark: "#2bb673"
+      gold: "#d4af37"
+      text_light: "#e8f4f0"
+      text_muted: "#a8b0b9"
+    forbidden:
+      - "#ff0000"  # Red (conflicts with brand)
+      - "#0000ff"  # Blue (conflicts with brand)
+      - "#ffff00"  # Yellow (not brand compliant)
+  fonts:
+    allowed:
+      - "Inter"
+      - "system-ui"
+      - "Arial"
+      - "sans-serif"
+    forbidden:
+      - "Comic Sans MS"
+      - "Papyrus"
+
+# Security Configuration
+security:
+  secrets_scan:
+    patterns:
+      - "sk_[a-zA-Z0-9]{32,}"
+      - "pk_[a-zA-Z0-9]{32,}"
+      - "api_key['\"]?\\s*[:=]\\s*['\"]?[a-zA-Z0-9]{20,}"
+      - "secret_key['\"]?\\s*[:=]\\s*['\"]?[a-zA-Z0-9]{20,}"
+      - "password['\"]?\\s*[:=]\\s*['\"]?[^\\s'\"]{8,}"
+      - "token['\"]?\\s*[:=]\\s*['\"]?[a-zA-Z0-9]{20,}"
+  dependency_audit:
+    severity_threshold: "moderate"
+    exclude_dev: false
+  container_scan:
+    ignore_unfixed: true
+    severity: "HIGH,CRITICAL"

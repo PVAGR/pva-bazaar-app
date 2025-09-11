@@ -1,0 +1,33 @@
+{
+  "name": "@pva-bazaar/web-com",
+  "version": "1.0.0",
+  "description": "PVA Bazaar Oracle Assessment Platform (pvabazaar.com)",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.15.0",
+  "@pva/ui": "*",
+    "@pva-bazaar/oracle-engine": "*"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.15",
+    "@types/react-dom": "^18.2.7",
+    "@vitejs/plugin-react": "^4.0.3",
+  "autoprefixer": "^10.4.20",
+  "postcss": "^8.4.49",
+  "tailwindcss": "^3.4.9",
+  "typescript": "^5.0.2",
+  "vite": "^5.4.10"
+  }
+}

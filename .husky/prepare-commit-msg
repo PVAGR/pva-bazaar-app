@@ -1,0 +1,39 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+echo "📝 Preparing commit message with quality context..."
+
+# Get the commit message file
+COMMIT_MSG_FILE=$1
+COMMIT_SOURCE=$2
+SHA1=$3
+
+# If this is not an interactive commit, skip
+if [ "$COMMIT_SOURCE" = "merge" ] || [ "$COMMIT_SOURCE" = "squash" ]; then
+  exit 0
+fi
+
+# Add context about what was checked
+echo "" >> $COMMIT_MSG_FILE
+echo "# Quality Checks Passed:" >> $COMMIT_MSG_FILE
+echo "# ✅ Code formatting (Prettier)" >> $COMMIT_MSG_FILE
+echo "# ✅ Linting (ESLint)" >> $COMMIT_MSG_FILE
+echo "# ✅ Type checking (TypeScript)" >> $COMMIT_MSG_FILE
+echo "# ✅ Unit tests" >> $COMMIT_MSG_FILE
+echo "# ✅ Brand color compliance" >> $COMMIT_MSG_FILE
+echo "# ✅ Basic accessibility checks" >> $COMMIT_MSG_FILE
+echo "# ✅ Security scan (no secrets)" >> $COMMIT_MSG_FILE
+
+# Add contract-specific context if contracts were changed
+if git diff --cached --name-only | grep -q "apps/contracts/"; then
+  echo "# ✅ Smart contract compilation" >> $COMMIT_MSG_FILE
+  echo "# ✅ Smart contract tests" >> $COMMIT_MSG_FILE
+  echo "# ✅ Gas usage validation" >> $COMMIT_MSG_FILE
+fi
+
+# Add helpful reminders
+echo "" >> $COMMIT_MSG_FILE
+echo "# Remember:" >> $COMMIT_MSG_FILE
+echo "# - Use conventional commit format: type(scope): description" >> $COMMIT_MSG_FILE
+echo "# - Types: feat, fix, docs, style, refactor, test, chore" >> $COMMIT_MSG_FILE
+echo "# - Include BREAKING CHANGE: in footer for breaking changes" >> $COMMIT_MSG_FILE

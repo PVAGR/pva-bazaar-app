@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shared Ownership | PVA Bazaar</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="/public/css/pva-nav.css">
+    <style>
+        :root {
+            --primary-dark: #0f3b2d;
+            --primary: #1c5a45;
+            --primary-light: #2d7d5a;
+            --accent: #4ef8a3;
+            --accent-dark: #2bb673;
+            --gold: #d4af37;
+            --text-light: #e8f4f0;
+            --text-muted: #a8b0b9;
+            --card-bg: rgba(18, 18, 18, 0.95);
+            --card-border: rgba(42, 75, 42, 0.6);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: #0a0a0a;
+            color: var(--text-light);
+            min-height: 100vh;
+            padding: 20px;
+            background-image: 
+                radial-gradient(circle at 25% 25%, rgba(28, 90, 69, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 75% 75%, rgba(28, 90, 69, 0.15) 0%, transparent 40%);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        /* Header Styles */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            border-bottom: 1px solid var(--primary);
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            text-decoration: none;
+        }
+        
+        .logo-icon {
+            font-size: 32px;
+            color: var(--accent);
+        }
+        
+        .logo-text {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-light);
+            font-family: 'Playfair Display', serif;
+        }
+        
+        nav {
+            display: flex;
+            gap: 30px;
+        }
+        
+        nav a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        
+        nav a:hover {
+            color: var(--accent);
+        }
+        
+        .cart-icon {
+            position: relative;
+        }
+        
+        .cart-count {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: var(--accent);
+            color: var(--primary-dark);
+            font-size: 12px;
+            font-weight: bold;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Page Title */
+        .page-title {
+            color: var(--gold);
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            font-family: 'Playfair Display', serif;
+            text-align: center;
+        }
+        
+        .page-subtitle {
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            text-align: center;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        /* Ownership Options */
+        .ownership-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+        
+        @media (max-width: 900px) {
+            .ownership-options {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .option-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .option-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        }
+        
+        .option-icon {
+            font-size: 3rem;
+            color: var(--gold);
+            margin-bottom: 20px;
+        }
+        
+        .option-title {
+            color: var(--accent);
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            font-family: 'Playfair Display', serif;
+        }
+        
+        .option-description {
+            color: var(--text-muted);
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+        
+        .option-price {
+            font-size: 2rem;
+            color: var(--accent);
+            margin-bottom: 25px;
+            font-weight: 600;
+        }
+        
+        .option-btn {
+            padding: 12px 25px;
+            background: linear-gradient(90deg, var(--accent), var(--accent-dark));
+            color: var(--primary-dark);
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            font-size: 1.1rem;
+        }
+        
+        .option-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(78, 248, 163, 0.3);
+        }
+        
+        /* Shared Ownership Details */
+        .shared-details {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .shared-title {
+            color: var(--gold);
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            font-family: 'Playfair Display', serif;
+            text-align: center;
+        }
+        
+        .ownership-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        @media (max-width: 768px) {
+            .ownership-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        .stat-card {
+            background: rgba(15, 59, 45, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid var(--primary-light);
+        }
+        
+        .stat-value {
+            color: var(--accent);
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+        
+        .progress-container {
+            margin: 30px 0;
+        }
+        
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        
+        .progress-label {
+            color: var(--text-muted);
+        }
+        
+        .progress-value {
+            color: var(--accent);
+            font-weight: 500;
+        }
+        
+        .progress-bar {
+            height: 10px;
+            background: rgba(28, 90, 69, 0.3);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--accent-dark));
+            border-radius: 5px;
+            width: 65%; /* This would be dynamic based on actual ownership */
+        }
+        
+        /* Investment Interface */
+        .investment-interface {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .interface-title {
+            color: var(--gold);
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            font-family: 'Playfair Display', serif;
+        }
+        
+        .investment-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 600px) {
+            .investment-form {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            color: var(--accent);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(15, 59, 45, 0.3);
+            border: 1px solid var(--primary-light);
+            border-radius: 8px;
+            color: var(--text-light);
+            font-size: 1rem;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        
+        .amount-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .amount-btn {
+            padding: 8px;
+            background: rgba(28, 90, 69, 0.3);
+            border: 1px solid var(--primary-light);
+            border-radius: 6px;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        
+        .amount-btn:hover, .amount-btn.active {
+            background: var(--accent);
+            color: var(--primary-dark);
+            border-color: var(--accent);
+        }
+        
+        .investment-summary {
+            background: rgba(15, 59, 45, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border: 1px solid var(--primary-light);
+        }
+        
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        
+        .summary-label {
+            color: var(--text-muted);
+        }
+        
+        .summary-value {
+            color: var(--text-light);
+            font-weight: 500;
+        }
+        
+        .summary-total {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid var(--primary);
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        
+        .total-label {
+            color: var(--gold);
+        }
+        
+        .total-value {
+            color: var(--accent);
+        }
+        
+        .invest-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(90deg, var(--accent), var(--accent-dark));
+            color: var(--primary-dark);
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 25px;
+        }
+        
+        .invest-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(78, 248, 163, 0.3);
+        }
+        
+        /* Current Owners */
+        .current-owners {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .owners-title {
+            color: var(--gold);
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            font-family: 'Playfair Display', serif;
+        }
+        
+        .owners-list {
+            display: grid;
+            gap: 15px;
+        }
+        
+        .owner-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: rgba(15, 59, 45, 0.3);
+            border-radius: 8px;
+            border: 1px solid var(--primary-light);
+        }
+        
+        .owner-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .owner-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent);
+            font-weight: 600;
+        }
+        
+        .owner-name {
+            color: var(--text-light);
+            font-weight: 500;
+        }
+        
+        .owner-shares {
+            color: var(--accent);
+            font-weight: 600;
+        }
+        
+        /* Footer */
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 40px 20px;
+            border-top: 1px solid var(--primary-dark);
+        }
+        
+        .footer-logo {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--accent);
+            font-family: 'Playfair Display', serif;
+        }
+        
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .social-links a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(28, 90, 69, 0.2);
+            color: var(--text-light);
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .social-links a:hover {
+            background: var(--accent);
+            color: var(--primary-dark);
+            transform: translateY(-3px);
+        }
+        
+        .copyright {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+            <header>
+      <a href="/" class="logo">
+        <i class="fas fa-gem logo-icon"></i>
+        <div class="logo-text">PVA Bazaar</div>
+      </a>
+      <nav>
+        <ul>
+          <li><a href="/" class="active">Home</a></li>
+          <li><a href="/pages/pvadashboard.html">Dashboard</a></li>
+          <li><a href="/pages/productshowcase.html">Marketplace</a></li>
+          <li><a href="/pages/portfolio.html">Portfolio</a></li>
+          <li><a href="/pages/checkoutmint.html">Checkout</a></li>
+          <li><a href="/pages/provenance.html">Provenance</a></li>
+          <li><a href="/pages/artifact.html">Artifact</a></li>
+        </ul>
+      </nav>
+      <div class="header-actions">
+        <button class="icon-btn" id="searchToggle" title="Search">
+          <i class="fa-solid fa-magnifying-glass"></i>
+        </button>
+        <button class="btn" id="connectWallet">
+          <i class="fa-solid fa-wallet"></i>
+          Connect Wallet
+        </button>
+      </div>
+    </header>
+        <p class="page-subtitle">Own a piece of this exquisite emerald pendant through fractional ownership with PVA Coin. Invest any amount and become a co-owner of this valuable asset.</p>
+        
+        <div class="ownership-options">
+            <div class="option-card">
+                <div class="option-icon">
+                    <i class="fas fa-gem"></i>
+                </div>
+                <h2 class="option-title">Full Ownership</h2>
+                <p class="option-description">Purchase this item outright and receive both the physical pendant and its authenticated NFT counterpart.</p>
+                <div class="option-price">$2,450.00</div>
+                <button class="option-btn">Purchase Outright</button>
+            </div>
+            
+            <div class="option-card">
+                <div class="option-icon">
+                    <i class="fas fa-chart-pie"></i>
+                </div>
+                <h2 class="option-title">Fractional Shares</h2>
+                <p class="option-description">Buy shares starting from just $10. Own a percentage of this asset and participate in its value appreciation.</p>
+                <div class="option-price">$10.00+</div>
+                <button class="option-btn">Invest in Shares</button>
+            </div>
+        </div>
+        
+        <div class="shared-details">
+            <h2 class="shared-title">Amradjet Emerald Pendant - Investment Details</h2>
+            
+            <div class="ownership-stats">
+                <div class="stat-card">
+                    <div class="stat-value">$5,000</div>
+                    <div class="stat-label">Total Value</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">1,000</div>
+                    <div class="stat-label">Total Shares</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">$5.00</div>
+                    <div class="stat-label">Price Per Share</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">65%</div>
+                    <div class="stat-label">Shares Sold</div>
+                </div>
+            </div>
+            
+            <div class="progress-container">
+                <div class="progress-info">
+                    <span class="progress-label">Ownership Progress</span>
+                    <span class="progress-value">650/1000 Shares (65%)</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill"></div>
+                </div>
+            </div>
+            
+            <div class="investment-interface">
+                <h3 class="interface-title">Invest in This Asset</h3>
+                
+                <div class="investment-form">
+                    <div class="form-group">
+                        <label class="form-label">Investment Amount ($)</label>
+                        <input type="number" class="form-input" id="investment-amount" value="100" min="10" step="10">
+                        
+                        <div class="amount-buttons">
+                            <div class="amount-btn" data-amount="10">$10</div>
+                            <div class="amount-btn" data-amount="50">$50</div>
+                            <div class="amount-btn active" data-amount="100">$100</div>
+                            <div class="amount-btn" data-amount="500">$500</div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">PVA Coin Wallet Address</label>
+                        <input type="text" class="form-input" placeholder="Enter your wallet address">
+                    </div>
+                </div>
+                
+                <div class="investment-summary">
+                    <div class="summary-item">
+                        <span class="summary-label">Shares to Receive:</span>
+                        <span class="summary-value" id="shares-count">20 Shares</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Ownership Percentage:</span>
+                        <span class="summary-value" id="ownership-percent">2.0%</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Transaction Fee (2%):</span>
+                        <span class="summary-value" id="transaction-fee">$2.00</span>
+                    </div>
+                    <div class="summary-total">
+                        <span class="total-label">Total Cost:</span>
+                        <span class="total-value" id="total-cost">$102.00</span>
+                    </div>
+                </div>
+                
+                <button class="invest-btn">Confirm Investment</button>
+            </div>
+        </div>
+        
+        <div class="current-owners">
+            <h2 class="owners-title">Current Shareholders</h2>
+            
+            <div class="owners-list">
+                <div class="owner-item">
+                    <div class="owner-info">
+                        <div class="owner-avatar">J</div>
+                        <div class="owner-name">James Wilson</div>
+                    </div>
+                    <div class="owner-shares">150 Shares (15%)</div>
+                </div>
+                
+                <div class="owner-item">
+                    <div class="owner-info">
+                        <div class="owner-avatar">S</div>
+                        <div class="owner-name">Sarah Johnson</div>
+                    </div>
+                    <div class="owner-shares">120 Shares (12%)</div>
+                </div>
+                
+                <div class="owner-item">
+                    <div class="owner-info">
+                        <div class="owner-avatar">M</div>
+                        <div class="owner-name">Michael Zhang</div>
+                    </div>
+                    <div class="owner-shares">100 Shares (10%)</div>
+                </div>
+                
+                <div class="owner-item">
+                    <div class="owner-info">
+                        <div class="owner-avatar">P</div>
+                        <div class="owner-name">PVA Treasury</div>
+                    </div>
+                    <div class="owner-shares">280 Shares (28%)</div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <div class="footer-logo">PVA Bazaar</div>
+            <div class="social-links">
+                <a href="#"><i class="fab fa-twitter"></i></a>
+                <a href="#"><i class="fab fa-instagram"></i></a>
+                <a href="#"><i class="fab fa-discord"></i></a>
+                <a href="#"><i class="fab fa-github"></i></a>
+            </div>
+            <div class="copyright">© 2025 PVA Bazaar. All rights reserved.</div>
+        </footer>
+    </div>
+
+    <script>
+        // Investment amount calculation
+        const investmentInput = document.getElementById('investment-amount');
+        const sharesCount = document.getElementById('shares-count');
+        const ownershipPercent = document.getElementById('ownership-percent');
+        const transactionFee = document.getElementById('transaction-fee');
+        const totalCost = document.getElementById('total-cost');
+        
+        const sharePrice = 5.00; // $5 per share
+        const feePercentage = 0.02; // 2% transaction fee
+        const totalShares = 1000;
+        
+        function updateInvestmentSummary() {
+            const amount = parseFloat(investmentInput.value);
+            const shares = Math.floor(amount / sharePrice);
+            const fee = amount * feePercentage;
+            const total = amount + fee;
+            const ownership = (shares / totalShares) * 100;
+            
+            sharesCount.textContent = `${shares} Shares`;
+            ownershipPercent.textContent = `${ownership.toFixed(2)}%`;
+            transactionFee.textContent = `$${fee.toFixed(2)}`;
+            totalCost.textContent = `$${total.toFixed(2)}`;
+        }
+        
+        investmentInput.addEventListener('input', updateInvestmentSummary);
+        
+        // Amount buttons functionality
+        document.querySelectorAll('.amount-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                document.querySelectorAll('.amount-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                
+                this.classList.add('active');
+                const amount = this.getAttribute('data-amount');
+                investmentInput.value = amount;
+                updateInvestmentSummary();
+            });
+        });
+        
+        // Initialize the summary
+        updateInvestmentSummary();
+        
+        // Confirm investment button
+        document.querySelector('.invest-btn').addEventListener('click', function() {
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            
+            setTimeout(() => {
+                alert('Investment successful! You are now a partial owner of this asset.');
+                this.innerHTML = 'Confirm Investment';
+            }, 2000);
+        });
+    </script>
+    <script type="module" src="/src/pages/PVA Bazaar - Shared Ownership Marketplace.js"></script>
+  
+        
+  <script src="/src/nav/inject-nav.js" defer></script>
+  <script src="/public/js/pva-nav.js" defer></script>
+</body>
+</html>

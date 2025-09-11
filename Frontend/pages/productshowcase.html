@@ -1001,29 +1001,32 @@
         }
     </style>
 </head>
-<body>
-    <header>
-        <a href="/" class="logo">
-            <i class="fas fa-gem logo-icon"></i>
-            <div class="logo-text">PVA Bazaar</div>
-        </a>
-        <div class="user-nav">
-            <nav class="pva-nav" aria-label="Primary">
-                <ul>
-                    <li><a href="/pages/pvadashboard.html">Dashboard</a></li>
-                    <li><a href="/pages/productshowcase.html">Marketplace</a></li>
-                    <li><a href="/pages/portfolio.html">Portfolio</a></li>
-                    <li><a href="/pages/checkoutmint.html">Checkout</a></li>
-                    <li><a href="/pages/provenance.html">Provenance</a></li>
-                    <li><a href="/pages/artifact.html">Artifact</a></li>
-                </ul>
-                <script type="module" src="/src/nav/inject-nav.js"></script>
-            </nav>
-            <div class="user-profile">
-                <div class="user-avatar">U</div>
-                <div class="user-name">Guest</div>
-            </div>
-        </div>
+<body class="product-page">
+        <header>
+      <a href="/" class="logo">
+        <i class="fas fa-gem logo-icon"></i>
+        <div class="logo-text">PVA Bazaar</div>
+      </a>
+      <nav>
+        <ul>
+          <li><a href="/" class="active">Home</a></li>
+          <li><a href="/pages/pvadashboard.html">Dashboard</a></li>
+          <li><a href="/pages/productshowcase.html">Marketplace</a></li>
+          <li><a href="/pages/portfolio.html">Portfolio</a></li>
+          <li><a href="/pages/checkoutmint.html">Checkout</a></li>
+          <li><a href="/pages/provenance.html">Provenance</a></li>
+          <li><a href="/pages/artifact.html">Artifact</a></li>
+        </ul>
+      </nav>
+      <div class="header-actions">
+        <button class="icon-btn" id="searchToggle" title="Search">
+          <i class="fa-solid fa-magnifying-glass"></i>
+        </button>
+        <button class="btn" id="connectWallet">
+          <i class="fa-solid fa-wallet"></i>
+          Connect Wallet
+        </button>
+      </div>
     </header>
 
     <div class="container">
@@ -1404,19 +1407,101 @@
             }
         }
 
+        // Real-time data fetching functions
+        async function fetchProductData() {
+            try {
+                // Fetch the Maradjet Emerald Pendant data (using the ID from our seeded data)
+                const response = await fetch('/api/artifacts/68c0c45d7eb21440f8a6bf9e');
+                const data = await response.json();
+                
+                if (data.ok) {
+                    const artifact = data.artifact;
+                    
+                    // Update product title
+                    document.querySelector('.product-header h1').textContent = artifact.name;
+                    
+                    // Update rating
+                    const starsContainer = document.querySelector('.stars');
+                    const rating = artifact.rating;
+                    starsContainer.innerHTML = '';
+                    for (let i = 0; i < 5; i++) {
+                        const star = document.createElement('i');
+                        star.className = i < Math.floor(rating) ? 'fas fa-star' : 'far fa-star';
+                        starsContainer.appendChild(star);
+                    }
+                    
+                    // Update review count
+                    document.querySelector('.review-count').textContent = `(${artifact.reviewCount} reviews)`;
+                    
+                    // Update price
+                    document.querySelector('.current-price').textContent = `$${artifact.price.toLocaleString()}`;
+                    
+                    // Update crypto equivalents
+                    document.getElementById('btcEquivalent').textContent = `≈ ${artifact.cryptoPrices.btc} BTC`;
+                    document.getElementById('ethEquivalent').textContent = `≈ ${artifact.cryptoPrices.eth} ETH`;
+                    
+                    // Update transaction history
+                    const transactionList = document.querySelector('.transaction-list');
+                    transactionList.innerHTML = '';
+                    
+                    artifact.transactionHistory.forEach(transaction => {
+                        const transactionItem = document.createElement('div');
+                        transactionItem.className = 'transaction-item';
+                        transactionItem.innerHTML = `
+                            <div class="transaction-info">
+                                <div class="transaction-type">${transaction.type}</div>
+                                <div class="transaction-date">${new Date(transaction.date).toLocaleDateString('en-US', {
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric',
+                                    hour: 'numeric',
+                                    minute: '2-digit',
+                                    timeZoneName: 'short'
+                                })}</div>
+                            </div>
+                            <div class="transaction-value">${transaction.value}</div>
+                        `;
+                        transactionList.appendChild(transactionItem);
+                    });
+                }
+            } catch (error) {
+                console.error('Error fetching product data:', error);
+            }
+        }
+        
+        async function fetchCryptoPrices() {
+            try {
+                const response = await fetch('/api/market/crypto');
+                const data = await response.json();
+                
+                if (data.ok) {
+                    // Update current prices for crypto equivalent calculations
+                    currentPrices = {
+                        btc: data.crypto.bitcoin.price,
+                        eth: data.crypto.ethereum.price
+                    };
+                }
+            } catch (error) {
+                console.error('Error fetching crypto prices:', error);
+            }
+        }
+
         function updateCryptoEquivalents() {
-            const usdPrice = 2847; // Maradjet price in USD
-            
-            const btcEquiv = (usdPrice / currentPrices.btc).toFixed(3);
-            const ethEquiv = (usdPrice / currentPrices.eth).toFixed(2);
-            
-            const btcEquivElement = document.getElementById('btcEquivalent');
-            const ethEquivElement = document.getElementById('ethEquivalent');
-            
-            if (btcEquivElement) btcEquivElement.textContent = `≈ ${btcEquiv} BTC`;
-            if (ethEquivElement) ethEquivElement.textContent = `≈ ${ethEquiv} ETH`;
-            
-            updateOptionCryptoPrices();
+            // This function now uses real crypto prices from the API
+            if (currentPrices.btc && currentPrices.eth) {
+                const usdPrice = 2847; // Maradjet price in USD
+                
+                const btcEquiv = (usdPrice / currentPrices.btc).toFixed(3);
+                const ethEquiv = (usdPrice / currentPrices.eth).toFixed(2);
+                
+                const btcEquivElement = document.getElementById('btcEquivalent');
+                const ethEquivElement = document.getElementById('ethEquivalent');
+                
+                if (btcEquivElement) btcEquivElement.textContent = `≈ ${btcEquiv} BTC`;
+                if (ethEquivElement) ethEquivElement.textContent = `≈ ${ethEquiv} ETH`;
+                
+                updateOptionCryptoPrices();
+            }
         }
 
         function updateOptionCryptoPrices() {
@@ -1590,11 +1675,25 @@
             setTimeout(() => toast.classList.remove('show'), 4000);
         }
 
-        // Initialize
-        updateCryptoEquivalents();
+        // Initialize with real-time data
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Fetch initial data
+            await fetchCryptoPrices();
+            await fetchProductData();
+            
+            // Update crypto equivalents with real prices
+            updateCryptoEquivalents();
+            
+            // Set up real-time updates
+            setInterval(fetchCryptoPrices, 60000); // Update crypto prices every minute
+            setInterval(fetchProductData, 300000); // Update product data every 5 minutes
+            setInterval(updateCryptoEquivalents, 60000); // Update equivalents every minute
+        });
     </script>
-    <script type="module" src="/src/nav/inject-nav.js"></script>
-    <script src="/public/js/pva-nav.js" defer></script>
+    
+    
     <script type="module" src="/src/pages/productshowcase.js"></script>
+  <script src="/src/nav/inject-nav.js" defer></script>
+  <script src="/public/js/pva-nav.js" defer></script>
 </body>
 </html>

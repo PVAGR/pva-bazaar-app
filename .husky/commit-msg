@@ -1,0 +1,72 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+echo "📋 Validating commit message format..."
+
+# Read the commit message
+COMMIT_MSG_FILE=$1
+COMMIT_MSG=$(cat $COMMIT_MSG_FILE)
+
+# Remove comments and empty lines
+COMMIT_MSG=$(echo "$COMMIT_MSG" | sed '/^#/d' | sed '/^$/d')
+
+# Check if the commit message follows conventional commits format
+if ! echo "$COMMIT_MSG" | grep -qE "^(feat|fix|docs|style|refactor|perf|test|chore|build|ci)(\(.+\))?: .{1,50}"; then
+  echo "❌ Invalid commit message format!"
+  echo ""
+  echo "Commit messages must follow the Conventional Commits specification:"
+  echo "  type(scope): description"
+  echo ""
+  echo "Valid types: feat, fix, docs, style, refactor, perf, test, chore, build, ci"
+  echo ""
+  echo "Examples:"
+  echo "  feat: add user authentication"
+  echo "  fix(api): resolve memory leak in user service"
+  echo "  docs: update README with installation instructions"
+  echo "  style: format code with prettier"
+  echo "  refactor(components): simplify search logic"
+  echo "  test: add unit tests for artifact model"
+  echo "  chore: update dependencies"
+  echo ""
+  exit 1
+fi
+
+# Check for PVA-specific requirements
+if echo "$COMMIT_MSG" | grep -qE "^feat"; then
+  if ! echo "$COMMIT_MSG" | grep -q "test\|spec"; then
+    echo "⚠️  Feature commits should include tests!"
+    echo "Consider adding tests in the same commit or mention testing in the description."
+  fi
+fi
+
+# Check for breaking changes
+if echo "$COMMIT_MSG" | grep -q "BREAKING CHANGE:"; then
+  echo "🚨 BREAKING CHANGE detected!"
+  echo "Make sure to:"
+  echo "  1. Update documentation"
+  echo "  2. Update version number"
+  echo "  3. Notify team members"
+fi
+
+# Check commit message length
+FIRST_LINE=$(echo "$COMMIT_MSG" | head -n1)
+if [ ${#FIRST_LINE} -gt 72 ]; then
+  echo "❌ First line of commit message is too long (${#FIRST_LINE} characters, max 72)"
+  exit 1
+fi
+
+# Validate scope for PVA project
+SCOPE=$(echo "$FIRST_LINE" | sed -n 's/^[^(]*(\([^)]*\)).*/\1/p')
+if [ ! -z "$SCOPE" ]; then
+  case "$SCOPE" in
+    api|backend|frontend|web-com|web-org|contracts|blockchain|auth|ui|components|utils|config|docs|qa|ci|deploy|security)
+      echo "✅ Valid scope: $SCOPE"
+      ;;
+    *)
+      echo "⚠️  Unusual scope: $SCOPE"
+      echo "Common scopes: api, backend, frontend, web-com, web-org, contracts, blockchain, auth, ui, components, utils, config, docs, qa, ci, deploy, security"
+      ;;
+  esac
+fi
+
+echo "✅ Commit message format is valid!"

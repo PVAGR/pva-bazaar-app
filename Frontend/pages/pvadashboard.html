@@ -1053,50 +1053,33 @@
         }
     </style>
 </head>
-<body>
-    <header>
-        <div class="container">
-            <div class="header-content">
-                <a href="#" class="logo">
-                    <i class="fas fa-gem logo-icon"></i>
-                    <div class="logo-text">PVA Bazaar</div>
-                </a>
-                
-                <nav>
-                    <a href="#" class="active">Dashboard</a>
-                    <a href="#">Marketplace</a>
-                    <script type="module" src="/src/pages/pvadashboard.js"></script>
-                    <script type="module" src="/src/nav/inject-nav.js"></script>
-                    <a href="#">Provenance</a>
-                    <a href="#">Analytics</a>
-                    <a href="#">Portfolio</a>
-                </nav>
-                
-                <div class="header-actions">
-                    <div class="search-container">
-                        <i class="fas fa-search search-icon"></i>
-                        <input type="text" class="search-input" placeholder="Search items, collections...">
-                    </div>
-                    
-                    <button class="notification-btn">
-                        <i class="fas fa-bell"></i>
-                        <span class="notification-badge">3</span>
-                    </button>
-                    
-                    <button class="user-btn">
-                        <i class="fas fa-user"></i>
-                    </button>
-                    
-                    <a href="#" class="btn btn-outline">Connect Wallet</a>
-                    <a href="#" class="btn btn-primary">Join PVA</a>
-                </div>
-            </div>
-        </div>
+<body class="admin-theme">
+        <header>
+      <a href="/" class="logo">
+        <i class="fas fa-gem logo-icon"></i>
+        <div class="logo-text">PVA Bazaar</div>
+      </a>
+      <nav>
+        <ul>
+          <li><a href="/" class="active">Home</a></li>
+          <li><a href="/pages/pvadashboard.html">Dashboard</a></li>
+          <li><a href="/pages/productshowcase.html">Marketplace</a></li>
+          <li><a href="/pages/portfolio.html">Portfolio</a></li>
+          <li><a href="/pages/checkoutmint.html">Checkout</a></li>
+          <li><a href="/pages/provenance.html">Provenance</a></li>
+          <li><a href="/pages/artifact.html">Artifact</a></li>
+        </ul>
+      </nav>
+      <div class="header-actions">
+        <button class="icon-btn" id="searchToggle" title="Search">
+          <i class="fa-solid fa-magnifying-glass"></i>
+        </button>
+        <button class="btn" id="connectWallet">
+          <i class="fa-solid fa-wallet"></i>
+          Connect Wallet
+        </button>
+      </div>
     </header>
-    
-    <div class="container">
-        <div class="hero-stats">
-            <div class="stat-card animate-fadeIn" style="animation-delay: 0.1s;">
                 <div class="stat-icon">
                     <i class="fas fa-users"></i>
                 </div>
@@ -2001,17 +1984,80 @@
         // Update collection percentages every 45 seconds
         setInterval(updateCollectionPercentages, 45000);
         
-        // Initialize animations on page load
+        // Real-time data fetching functions
+        async function fetchDashboardStats() {
+            try {
+                const response = await fetch('/api/dashboard/stats');
+                const data = await response.json();
+                
+                if (data.ok) {
+                    // Update stats with real data
+                    document.getElementById('totalUsers').textContent = data.stats.totalUsers.toLocaleString();
+                    document.getElementById('totalItems').textContent = data.stats.totalArtifacts.toLocaleString();
+                    document.getElementById('totalVolume').textContent = '$' + (data.stats.totalValue / 1000000).toFixed(1) + 'M';
+                }
+            } catch (error) {
+                console.error('Error fetching dashboard stats:', error);
+            }
+        }
+        
+        async function fetchCryptoPrices() {
+            try {
+                const response = await fetch('/api/market/crypto');
+                const data = await response.json();
+                
+                if (data.ok) {
+                    // Update ticker with real crypto data
+                    const ticker = document.getElementById('ticker');
+                    ticker.innerHTML = `
+                        <div class="ticker-item">
+                            <span class="ticker-name">BTC</span>
+                            <span class="ticker-price">$${data.crypto.bitcoin.price.toLocaleString()}</span>
+                            <span class="ticker-change ${data.crypto.bitcoin.change24h >= 0 ? 'up' : 'down'}">
+                                ${data.crypto.bitcoin.change24h >= 0 ? '+' : ''}${data.crypto.bitcoin.change24h.toFixed(2)}%
+                            </span>
+                        </div>
+                        <div class="ticker-item">
+                            <span class="ticker-name">ETH</span>
+                            <span class="ticker-price">$${data.crypto.ethereum.price.toLocaleString()}</span>
+                            <span class="ticker-change ${data.crypto.ethereum.change24h >= 0 ? 'up' : 'down'}">
+                                ${data.crypto.ethereum.change24h >= 0 ? '+' : ''}${data.crypto.ethereum.change24h.toFixed(2)}%
+                            </span>
+                        </div>
+                        <div class="ticker-item">
+                            <span class="ticker-name">PVA Total Value</span>
+                            <span class="ticker-price">$3.7K</span>
+                            <span class="ticker-change up">+5.2%</span>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error fetching crypto prices:', error);
+            }
+        }
+        
+        // Initialize animations and fetch real-time data on page load
         document.addEventListener('DOMContentLoaded', function() {
             // Add animation delay to all stat cards
             const statCards = document.querySelectorAll('.stat-card');
             statCards.forEach((card, index) => {
                 card.style.animationDelay = `${0.1 + (index * 0.1)}s`;
             });
+            
+            // Fetch real-time data
+            fetchDashboardStats();
+            fetchCryptoPrices();
+            
+            // Update data every 30 seconds
+            setInterval(fetchDashboardStats, 30000);
+            setInterval(fetchCryptoPrices, 60000); // Update crypto prices every minute
         });
     </script>
 </script>
     <script type="module" src="/src/pages/pvadashboard.js"></script>
-    <script src="/public/js/pva-nav.js" defer></script>
+    
+    
+  <script src="/src/nav/inject-nav.js" defer></script>
+  <script src="/public/js/pva-nav.js" defer></script>
 </body>
 </html>

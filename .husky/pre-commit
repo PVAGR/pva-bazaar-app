@@ -1,0 +1,91 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+echo "🔍 Running pre-commit quality checks..."
+
+# Run lint-staged for code formatting
+echo "📝 Formatting code..."
+npm run lint-staged --if-present || npx lint-staged
+
+# Check for PVA brand color compliance
+echo "🎨 Checking brand color compliance..."
+if npm run qa:brand:check:staged --if-present; then
+  echo "✅ Brand colors compliant"
+else
+  echo "❌ Brand color violations detected"
+  echo "Only use approved PVA colors: #0f3b2d, #1c5a45, #2d7d5a, #4ef8a3, #2bb673, #d4af37, #e8f4f0, #a8b0b9"
+  exit 1
+fi
+
+# Run basic accessibility checks on changed files
+echo "♿ Running accessibility checks..."
+if npm run qa:axe:staged --if-present; then
+  echo "✅ Accessibility checks passed"
+else
+  echo "❌ Accessibility violations detected"
+  exit 1
+fi
+
+# TypeScript type checking
+echo "🔧 Type checking..."
+if npm run typecheck --if-present; then
+  echo "✅ Type checking passed"
+else
+  echo "❌ Type checking failed"
+  exit 1
+fi
+
+# Run unit tests for changed files
+echo "🧪 Running unit tests..."
+if npm run test:staged --if-present; then
+  echo "✅ Unit tests passed"
+else
+  echo "❌ Unit tests failed"
+  exit 1
+fi
+
+# Check for secrets in staged files
+echo "🔐 Scanning for secrets..."
+if git diff --cached --name-only | xargs grep -l "sk_\|pk_\|api_key\|secret_key\|password\|token" 2>/dev/null; then
+  echo "❌ Potential secrets detected in staged files!"
+  echo "Please remove any hardcoded secrets before committing."
+  exit 1
+else
+  echo "✅ No secrets detected"
+fi
+
+# Smart contract specific checks (if contracts changed)
+if git diff --cached --name-only | grep -q "apps/contracts/"; then
+  echo "⛓️  Running smart contract checks..."
+  
+  cd apps/contracts || exit 1
+  
+  # Compile contracts
+  if forge build; then
+    echo "✅ Contracts compiled successfully"
+  else
+    echo "❌ Contract compilation failed"
+    exit 1
+  fi
+  
+  # Run contract tests
+  if forge test; then
+    echo "✅ Contract tests passed"
+  else
+    echo "❌ Contract tests failed"
+    exit 1
+  fi
+  
+  # Gas usage check
+  if forge test --gas-report | grep -q "FAILED\|ERROR"; then
+    echo "❌ Gas usage issues detected"
+    exit 1
+  else
+    echo "✅ Gas usage within limits"
+  fi
+  
+  cd - || exit 1
+fi
+
+echo "✅ All pre-commit checks passed!"
+echo "🚀 Ready to commit with confidence!"

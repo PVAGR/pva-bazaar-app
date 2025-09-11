@@ -1,0 +1,62 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+echo "🔍 Running post-commit quality validation..."
+
+# Get the latest commit hash
+COMMIT_HASH=$(git rev-parse HEAD)
+echo "📄 Commit: $COMMIT_HASH"
+
+# Check if this commit should trigger additional quality checks
+CHANGED_FILES=$(git diff-tree --no-commit-id --name-only -r $COMMIT_HASH)
+
+echo "📁 Changed files:"
+echo "$CHANGED_FILES" | sed 's/^/  /'
+
+# Run quick smoke tests if critical files changed
+if echo "$CHANGED_FILES" | grep -qE "\.(js|ts|jsx|tsx)$"; then
+  echo "🧪 Running quick smoke test..."
+  if pnpm test:smoke; then
+    echo "✅ Smoke tests passed"
+  else
+    echo "⚠️  Smoke tests failed - consider running full test suite"
+  fi
+fi
+
+# Check if documentation needs updating
+if echo "$CHANGED_FILES" | grep -qE "^(apps|packages)/.*\.(js|ts|jsx|tsx)$"; then
+  if ! echo "$CHANGED_FILES" | grep -q "README\|\.md$"; then
+    echo "📚 Consider updating documentation for your changes"
+  fi
+fi
+
+# Suggest running visual regression tests for UI changes
+if echo "$CHANGED_FILES" | grep -qE "\.(css|scss|jsx|tsx)$|^apps/(web-com|web-org)/"; then
+  echo "🎨 UI changes detected - consider running visual regression tests:"
+  echo "  pnpm qa:backstop:test"
+fi
+
+# Suggest security scan for sensitive areas
+if echo "$CHANGED_FILES" | grep -qE "(auth|security|api|backend)"; then
+  echo "🔐 Security-sensitive changes detected - consider running security scan:"
+  echo "  pnpm qa:security:scan"
+fi
+
+# Contract deployment reminder
+if echo "$CHANGED_FILES" | grep -q "apps/contracts/"; then
+  echo "⛓️  Smart contract changes detected!"
+  echo "Remember to:"
+  echo "  1. Test on testnet first"
+  echo "  2. Verify gas costs"
+  echo "  3. Update frontend if interface changed"
+  echo "  4. Run security audit"
+fi
+
+# Performance check suggestion
+if echo "$CHANGED_FILES" | grep -qE "(api|backend|components|pages)"; then
+  echo "⚡ Performance-related changes detected - consider running performance tests:"
+  echo "  pnpm qa:lighthouse"
+fi
+
+echo "✅ Post-commit validation complete!"
+echo "🚀 Ready for peer review and CI/CD pipeline!"

@@ -529,24 +529,32 @@
 </head>
 <body>
     <div class="container">
-        <header>
-            <a href="#" class="logo">
-                <i class="fas fa-gem logo-icon"></i>
-                <div class="logo-text">PVA Bazaar</div>
-            </a>
-            <nav>
-                <a href="#">Marketplace</a>
-                <a href="#">Collections</a>
-                <a href="#">Provenance</a>
-                <a href="#">About</a>
-                <a href="#" class="cart-icon">
-                    <i class="fas fa-shopping-cart"></i>
-                    <span class="cart-count">1</span>
-                </a>
-            </nav>
-        </header>
-        
-        <h1 class="page-title">Shared Ownership Opportunity</h1>
+            <header>
+      <a href="/" class="logo">
+        <i class="fas fa-gem logo-icon"></i>
+        <div class="logo-text">PVA Bazaar</div>
+      </a>
+      <nav>
+        <ul>
+          <li><a href="/" class="active">Home</a></li>
+          <li><a href="/pages/pvadashboard.html">Dashboard</a></li>
+          <li><a href="/pages/productshowcase.html">Marketplace</a></li>
+          <li><a href="/pages/portfolio.html">Portfolio</a></li>
+          <li><a href="/pages/checkoutmint.html">Checkout</a></li>
+          <li><a href="/pages/provenance.html">Provenance</a></li>
+          <li><a href="/pages/artifact.html">Artifact</a></li>
+        </ul>
+      </nav>
+      <div class="header-actions">
+        <button class="icon-btn" id="searchToggle" title="Search">
+          <i class="fa-solid fa-magnifying-glass"></i>
+        </button>
+        <button class="btn" id="connectWallet">
+          <i class="fa-solid fa-wallet"></i>
+          Connect Wallet
+        </button>
+      </div>
+    </header>
         <p class="page-subtitle">Own a piece of this exquisite emerald pendant through fractional ownership with PVA Coin. Invest any amount and become a co-owner of this valuable asset.</p>
         
         <div class="ownership-options">
@@ -753,7 +761,9 @@
         });
     </script>
     <script type="module" src="/src/pages/PVA Bazaar - Shared Ownership Marketplace.js"></script>
-  <script type="module" src="/src/nav/inject-nav.js"></script>
-        <script src="/public/js/pva-nav.js" defer></script>
+    
+    
+  <script src="/src/nav/inject-nav.js" defer></script>
+  <script src="/public/js/pva-nav.js" defer></script>
 </body>
 </html>

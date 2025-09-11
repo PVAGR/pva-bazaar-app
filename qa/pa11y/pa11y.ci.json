@@ -1,0 +1,40 @@
+{
+  "defaults": {
+    "timeout": 30000,
+    "standard": "WCAG2AA",
+    "wait": 2000,
+    "chromeLaunchConfig": {
+      "args": ["--no-sandbox", "--disable-setuid-sandbox"]
+    }
+  },
+  "urls": [
+    {
+      "url": "http://localhost:3000",
+      "screenCapture": "qa/reports/pa11y-home-com.png"
+    },
+    {
+      "url": "http://localhost:3000/artifacts",
+      "screenCapture": "qa/reports/pa11y-artifacts.png"
+    },
+    {
+      "url": "http://localhost:3000/portfolio",
+      "screenCapture": "qa/reports/pa11y-portfolio.png"
+    },
+    {
+      "url": "http://localhost:3000/marketplace",
+      "screenCapture": "qa/reports/pa11y-marketplace.png"
+    },
+    {
+      "url": "http://localhost:3001",
+      "screenCapture": "qa/reports/pa11y-home-org.png"
+    },
+    {
+      "url": "http://localhost:3001/about",
+      "screenCapture": "qa/reports/pa11y-about.png"
+    },
+    {
+      "url": "http://localhost:3001/contact",
+      "screenCapture": "qa/reports/pa11y-contact.png"
+    }
+  ]
+}

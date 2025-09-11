@@ -1,0 +1,228 @@
+name: Security Audit
+on:
+  schedule:
+    - cron: '0 2 * * 1'  # Weekly on Monday at 2 AM
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '9'
+
+jobs:
+  dependency_audit:
+    name: Dependency Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+          
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        
+      - name: Run npm audit
+        run: pnpm audit --audit-level high
+        continue-on-error: true
+        
+      - name: Run Snyk test
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=medium
+          
+      - name: Generate dependency report
+        run: |
+          pnpm list --depth=0 --json > dependency-report.json
+          
+      - name: Upload dependency report
+        uses: actions/upload-artifact@v3
+        with:
+          name: dependency-report
+          path: dependency-report.json
+
+  web_security_scan:
+    name: Web Application Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup OWASP ZAP
+        run: |
+          docker pull owasp/zap2docker-weekly
+          
+      - name: Run ZAP full scan against production
+        run: |
+          docker run -v $(pwd):/zap/wrk/:rw -t owasp/zap2docker-weekly \
+            zap-full-scan.py -t https://pvabazaar.com -J zap-full-report.json -I
+        continue-on-error: true
+        
+      - name: Run ZAP scan against org site
+        run: |
+          docker run -v $(pwd):/zap/wrk/:rw -t owasp/zap2docker-weekly \
+            zap-full-scan.py -t https://pvabazaar.org -J zap-org-report.json -I
+        continue-on-error: true
+        
+      - name: Upload ZAP reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: zap-security-reports
+          path: |
+            zap-full-report.json
+            zap-org-report.json
+
+  smart_contract_audit:
+    name: Smart Contract Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        
+      - name: Setup Python for security tools
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          
+      - name: Install Slither
+        run: pip install slither-analyzer
+        
+      - name: Install Mythril
+        run: pip install mythril
+        
+      - name: Run Slither analysis
+        run: |
+          cd apps/contracts
+          slither . --json slither-report.json
+        continue-on-error: true
+        
+      - name: Run Mythril analysis
+        run: |
+          cd apps/contracts/src
+          myth analyze *.sol --output json > ../mythril-report.json
+        continue-on-error: true
+        
+      - name: Run Foundry fuzz tests
+        run: |
+          cd apps/contracts
+          forge test --fuzz-runs 10000
+          
+      - name: Upload contract security reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: contract-security-reports
+          path: |
+            apps/contracts/slither-report.json
+            apps/contracts/mythril-report.json
+
+  infrastructure_scan:
+    name: Infrastructure Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Run Checkov for IaC security
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: .
+          framework: dockerfile,kubernetes,terraform
+          output_format: json
+          output_file_path: checkov-report.json
+        continue-on-error: true
+        
+      - name: Scan Docker images with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+        continue-on-error: true
+        
+      - name: Upload infrastructure security reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: infrastructure-security-reports
+          path: |
+            checkov-report.json
+            trivy-results.sarif
+
+  secrets_scan:
+    name: Secrets Detection
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for secret scanning
+          
+      - name: Run GitLeaks
+        uses: zricethezav/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Run TruffleHog
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: main
+          head: HEAD
+
+  security_report:
+    name: Compile Security Report
+    runs-on: ubuntu-latest
+    needs: [dependency_audit, web_security_scan, smart_contract_audit, infrastructure_scan, secrets_scan]
+    if: always()
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+        
+      - name: Generate security summary
+        run: |
+          echo "# PVA Bazaar Security Audit Report" > security-summary.md
+          echo "Date: $(date)" >> security-summary.md
+          echo "" >> security-summary.md
+          
+          echo "## Summary" >> security-summary.md
+          echo "- Dependency Audit: ${{ needs.dependency_audit.result }}" >> security-summary.md
+          echo "- Web Security Scan: ${{ needs.web_security_scan.result }}" >> security-summary.md
+          echo "- Smart Contract Audit: ${{ needs.smart_contract_audit.result }}" >> security-summary.md
+          echo "- Infrastructure Scan: ${{ needs.infrastructure_scan.result }}" >> security-summary.md
+          echo "- Secrets Scan: ${{ needs.secrets_scan.result }}" >> security-summary.md
+          
+          # Add detailed findings from each scan
+          echo "## Detailed Findings" >> security-summary.md
+          # Process and summarize findings from each artifact
+          
+      - name: Upload security summary
+        uses: actions/upload-artifact@v3
+        with:
+          name: security-audit-summary
+          path: security-summary.md
+          
+      - name: Create security issue if critical findings
+        uses: actions/github-script@v7
+        if: contains(needs.*.result, 'failure')
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: 'Critical Security Findings - Weekly Audit',
+              body: 'Critical security issues have been detected in the weekly security audit. Please review the security-audit-summary artifact for details.',
+              labels: ['security', 'critical']
+            });

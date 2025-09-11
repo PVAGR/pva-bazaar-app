@@ -31,7 +31,7 @@
             font-family: 'Poppins', sans-serif;
         }
         
-        body {
+    body {
             background: #0a0a0a;
             color: var(--text-light);
             min-height: 100vh;
@@ -619,33 +619,34 @@
         }
     </style>
 </head>
-<body>
+<body class="certificate-page">
     <div class="container">
-        <header>
-            <a href="/" class="logo">
-                <i class="fas fa-gem logo-icon"></i>
-                <div class="logo-text">PVA Bazaar</div>
-            </a>
-            <div class="user-nav">
-                <nav class="pva-nav" aria-label="Primary">
-                    <ul>
-                        <li><a href="/pages/pvadashboard.html">Dashboard</a></li>
-                        <li><a href="/pages/productshowcase.html">Marketplace</a></li>
-                        <li><a href="/pages/portfolio.html">Portfolio</a></li>
-                        <li><a href="/pages/checkoutmint.html">Checkout</a></li>
-                        <li><a href="/pages/provenance.html">Provenance</a></li>
-                        <li><a href="/pages/artifact.html">Artifact</a></li>
-                    </ul>
-                    <script type="module" src="/src/pages/provenance.js"></script>
-                    <script type="module" src="/src/nav/inject-nav.js"></script>
-                </nav>
-                <div class="user-profile">
-                    <div class="user-avatar">U</div>
-                    <div class="user-name">User</div>
-                </div>
-            </div>
-            <p class="subtitle">Digital Ownership Record & Blockchain Authentication</p>
-        </header>
+            <header>
+      <a href="/" class="logo">
+        <i class="fas fa-gem logo-icon"></i>
+        <div class="logo-text">PVA Bazaar</div>
+      </a>
+      <nav>
+        <ul>
+          <li><a href="/" class="active">Home</a></li>
+          <li><a href="/pages/pvadashboard.html">Dashboard</a></li>
+          <li><a href="/pages/productshowcase.html">Marketplace</a></li>
+          <li><a href="/pages/portfolio.html">Portfolio</a></li>
+          <li><a href="/pages/checkoutmint.html">Checkout</a></li>
+          <li><a href="/pages/provenance.html">Provenance</a></li>
+          <li><a href="/pages/artifact.html">Artifact</a></li>
+        </ul>
+      </nav>
+      <div class="header-actions">
+        <button class="icon-btn" id="searchToggle" title="Search">
+          <i class="fa-solid fa-magnifying-glass"></i>
+        </button>
+        <button class="btn" id="connectWallet">
+          <i class="fa-solid fa-wallet"></i>
+          Connect Wallet
+        </button>
+      </div>
+    </header>
         
         <div class="certificate-card">
             <div class="certificate-watermark">CERTIFIED</div>
@@ -848,6 +849,8 @@
     </footer>
 
     <script type="module" src="/src/pages/provenance.js"></script>
-    <script src="/public/js/pva-nav.js" defer></script>
+    
+  <script src="/src/nav/inject-nav.js" defer></script>
+  <script src="/public/js/pva-nav.js" defer></script>
 </body>
 </html>

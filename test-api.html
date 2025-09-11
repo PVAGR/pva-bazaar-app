@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Test</title>
+</head>
+<body>
+    <h1>Testing Real-Time API Integration</h1>
+    <div id="results"></div>
+
+    <script>
+        const results = document.getElementById('results');
+
+        async function testAPIs() {
+            results.innerHTML = '<h2>Testing API Endpoints...</h2>';
+
+            try {
+                // Test dashboard stats
+                const dashboardResponse = await fetch('http://localhost:5000/api/dashboard/stats');
+                const dashboardData = await dashboardResponse.json();
+                results.innerHTML += `<h3>Dashboard Stats:</h3><pre>${JSON.stringify(dashboardData, null, 2)}</pre>`;
+
+                // Test crypto prices
+                const cryptoResponse = await fetch('http://localhost:5000/api/market/crypto');
+                const cryptoData = await cryptoResponse.json();
+                results.innerHTML += `<h3>Crypto Prices:</h3><pre>${JSON.stringify(cryptoData, null, 2)}</pre>`;
+
+                // Test product data
+                const productResponse = await fetch('http://localhost:5000/api/artifacts/68c0c45d7eb21440f8a6bf9e');
+                const productData = await productResponse.json();
+                results.innerHTML += `<h3>Product Data:</h3><pre>${JSON.stringify(productData, null, 2)}</pre>`;
+
+                // Test portfolio stats
+                const portfolioResponse = await fetch('http://localhost:5000/api/portfolio/stats/global');
+                const portfolioData = await portfolioResponse.json();
+                results.innerHTML += `<h3>Portfolio Stats:</h3><pre>${JSON.stringify(portfolioData, null, 2)}</pre>`;
+
+            } catch (error) {
+                results.innerHTML += `<h3 style="color: red;">Error: ${error.message}</h3>`;
+                console.error('API test error:', error);
+            }
+        }
+
+        // Run tests when page loads
+        window.onload = testAPIs;
+    </script>
+</body>
+</html>

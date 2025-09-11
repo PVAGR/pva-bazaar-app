@@ -12,7 +12,25 @@ dotenv.config();
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+    origin: (origin, callback) => {
+      const allowed = [
+        'http://localhost:3000',
+        'http://localhost:5173',
+        'http://localhost:8080',
+        'http://localhost:8081',
+        'http://127.0.0.1:3000',
+        'http://127.0.0.1:5173',
+        'http://127.0.0.1:8080',
+        'http://127.0.0.1:8081',
+      ];
+      if (process.env.ALLOWED_ORIGIN) allowed.push(process.env.ALLOWED_ORIGIN);
+      // Allow requests with no origin (like curl or server-to-server)
+      if (!origin || allowed.includes(origin)) return callback(null, true);
+      return callback(new Error('CORS not allowed for origin: ' + origin));
+    },
+    credentials: true
+}));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
@@ -89,9 +107,12 @@ const certificatesRoutes = require('../routes/certificates');
 const healthRoutes = require('../routes/health');
 const searchRoutes = require('../routes/search');
 const transactionsRoutes = require('../routes/transactions');
+const dashboardRoutes = require('../routes/dashboard');
+const marketRoutes = require('../routes/market');
+const portfolioRoutes = require('../routes/portfolio');
 // Models for optional seeding
 const Artifact = require('../models/Artifact');
-const User = require('../models/user');
+const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 
 // Use routes
@@ -103,6 +124,9 @@ app.use('/api/certificates', certificatesRoutes);
 app.use('/api/health', healthRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/transactions', transactionsRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/market', marketRoutes);
+app.use('/api/portfolio', portfolioRoutes);
 
 // Dev-only: issue a token for quick testing
 app.post('/api/dev/token', (req, res) => {

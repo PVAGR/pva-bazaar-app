@@ -21,40 +21,56 @@ function makeLink(a) {
   return el;
 }
 
-function injectInlineStyles() {
-  if (document.getElementById('injected-nav-styles')) return;
-  const s = document.createElement('style');
-  s.id = 'injected-nav-styles';
-  s.textContent = `
-    .injected-nav { position:fixed;top:10px;right:10px;z-index:9999;background:rgba(0,0,0,0.45);backdrop-filter:blur(6px);padding:6px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);display:flex;gap:6px;align-items:center }
-    .injected-nav a.injected-nav-link{ color:var(--text-light,#e8f4f0); font-weight:600 }
-    .injected-nav a.injected-nav-link:hover{ background:rgba(255,255,255,0.04) }
-    @media (max-width:640px){ .injected-nav{ right:8px; left:8px; bottom:8px; top:auto; justify-content:center; flex-wrap:wrap } }
-  `;
-  document.head.appendChild(s);
-}
-
 function ensureNav() {
-  injectInlineStyles();
   // If page already has a visible nav element with links, add missing links into it.
   const existingNav = document.querySelector('header nav, nav');
   if (existingNav) {
-    // add links only if they don't already exist
     LINKS.forEach(l => {
       if (!existingNav.querySelector(`a[href="${l.href}"]`)) {
         const a = makeLink(l);
-        existingNav.appendChild(a);
+        const li = document.createElement('li');
+        li.appendChild(a);
+        const ul = existingNav.querySelector('ul') || (function(){ const u=document.createElement('ul'); existingNav.appendChild(u); return u; })();
+        ul.appendChild(li);
       }
     });
     return;
   }
 
-  // Otherwise create a small floating nav (non-destructive)
-  if (document.querySelector('.injected-nav')) return;
-  const nav = document.createElement('div');
-  nav.className = 'injected-nav';
-  LINKS.forEach(l => nav.appendChild(makeLink(l)));
-  document.body.appendChild(nav);
+  // If there's a header but no nav, create a normal nav inside the header (not floating)
+  const header = document.querySelector('header');
+  if (header) {
+    const nav = document.createElement('nav');
+    nav.className = 'pva-nav';
+    const ul = document.createElement('ul');
+    LINKS.forEach(l => {
+      const li = document.createElement('li');
+      const a = makeLink(l);
+      li.appendChild(a);
+      ul.appendChild(li);
+    });
+    nav.appendChild(ul);
+    // insert before header badge or at end
+    const badge = header.querySelector('.header-badge');
+    if (badge) header.insertBefore(nav, badge);
+    else header.appendChild(nav);
+    return;
+  }
+
+  // As a last resort, create a normal non-fixed nav at top of the body
+  if (!document.querySelector('body > nav.pva-nav')) {
+    const nav = document.createElement('nav');
+    nav.className = 'pva-nav';
+    const ul = document.createElement('ul');
+    LINKS.forEach(l => {
+      const li = document.createElement('li');
+      const a = makeLink(l);
+      li.appendChild(a);
+      ul.appendChild(li);
+    });
+    nav.appendChild(ul);
+    document.body.insertAdjacentElement('afterbegin', nav);
+  }
 }
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ensureNav);

@@ -1,0 +1,161 @@
+nohup: ignoring input
+127.0.0.1 - - [09/Sep/2025 23:36:50] "GET /pages/portfolio.html HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:36:56] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:37:13] "GET /pages/productshowcase.html HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:37:19] "GET /pages/provenance.html HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:37:26] "GET /pages/checkoutmint.html HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:37:33] "GET /pages/pvadashboard.html HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:43:42] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:43:44] "GET /public/css/pva-nav.css HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:43:44] "GET /public/js/pva-nav.js HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:43:45] code 404, message File not found
+127.0.0.1 - - [09/Sep/2025 23:43:45] "GET /favicon.ico HTTP/1.1" 404 -
+127.0.0.1 - - [09/Sep/2025 23:43:49] "GET /pages/pvadashboard.html HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:43:50] "GET /pages/productshowcase.html HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:43:50] "GET /src/pages/pvadashboard.js HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:43:51] code 404, message File not found
+127.0.0.1 - - [09/Sep/2025 23:43:51] "GET /src/api/client HTTP/1.1" 404 -
+127.0.0.1 - - [09/Sep/2025 23:43:51] "GET /src/pages/productshowcase.js HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:43:51] code 404, message File not found
+127.0.0.1 - - [09/Sep/2025 23:43:51] "GET /src/api/client HTTP/1.1" 404 -
+127.0.0.1 - - [09/Sep/2025 23:43:51] "GET /pages/portfolio.html HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:43:51] "GET /src/nav/inject-nav.js HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:43:51] "GET /src/pages/portfolio.js HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:43:52] "GET /pages/provenance.html HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:43:52] "GET /pages/checkoutmint.html HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:43:52] "GET /src/pages/provenance.js HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:43:52] "GET /src/pages/checkoutmint.js HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:43:52] code 404, message File not found
+127.0.0.1 - - [09/Sep/2025 23:43:52] "GET /src/api/client HTTP/1.1" 404 -
+127.0.0.1 - - [09/Sep/2025 23:43:52] code 404, message File not found
+127.0.0.1 - - [09/Sep/2025 23:43:52] "GET /pages/artifact.html HTTP/1.1" 404 -
+127.0.0.1 - - [09/Sep/2025 23:43:52] code 404, message File not found
+127.0.0.1 - - [09/Sep/2025 23:43:52] "GET /src/api/client HTTP/1.1" 404 -
+127.0.0.1 - - [09/Sep/2025 23:43:53] code 404, message File not found
+127.0.0.1 - - [09/Sep/2025 23:43:53] "GET /src/api/client HTTP/1.1" 404 -
+127.0.0.1 - - [09/Sep/2025 23:48:34] "GET /pages/pvadashboard.html HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:49:32] "GET /pages/pvadashboard.html HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:49:34] "GET /src/pages/pvadashboard.js HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:49:34] "GET /public/css/pva-nav.css HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:49:35] code 404, message File not found
+127.0.0.1 - - [09/Sep/2025 23:49:35] "GET /src/api/client HTTP/1.1" 404 -
+127.0.0.1 - - [09/Sep/2025 23:49:35] "GET /public/js/pva-nav.js HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:49:35] "GET /src/nav/inject-nav.js HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:52:43] "GET /pages/pvadashboard.html HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:53:00] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:53:01] "GET /public/css/pva-nav.css HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:53:01] "GET /public/js/pva-nav.js HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:53:10] "GET /pages/pvadashboard.html HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:53:12] "GET /src/pages/pvadashboard.js HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:53:12] "GET /public/css/pva-nav.css HTTP/1.1" 304 -
+127.0.0.1 - - [09/Sep/2025 23:53:13] "GET /src/nav/inject-nav.js HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:53:13] "GET /public/js/pva-nav.js HTTP/1.1" 304 -
+127.0.0.1 - - [09/Sep/2025 23:53:13] code 404, message File not found
+127.0.0.1 - - [09/Sep/2025 23:53:13] "GET /src/api/client HTTP/1.1" 404 -
+127.0.0.1 - - [09/Sep/2025 23:53:18] "GET /pages/portfolio.html HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:53:19] "GET /src/pages/portfolio.js HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:53:19] "GET /pages/checkoutmint.html HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:53:19] "GET /pages/provenance.html HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:53:19] "GET /pages/productshowcase.html HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:53:19] "GET /src/pages/checkoutmint.js HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:53:20] code 404, message File not found
+127.0.0.1 - - [09/Sep/2025 23:53:20] "GET /pages/artifact.html HTTP/1.1" 404 -
+127.0.0.1 - - [09/Sep/2025 23:53:20] "GET /public/css/pva-nav.css HTTP/1.1" 304 -
+127.0.0.1 - - [09/Sep/2025 23:53:20] "GET /src/nav/inject-nav.js HTTP/1.1" 304 -
+127.0.0.1 - - [09/Sep/2025 23:53:20] "GET /src/pages/provenance.js HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:53:20] code 404, message File not found
+127.0.0.1 - - [09/Sep/2025 23:53:20] "GET /src/api/client HTTP/1.1" 404 -
+127.0.0.1 - - [09/Sep/2025 23:53:20] "GET /public/js/pva-nav.js HTTP/1.1" 304 -
+127.0.0.1 - - [09/Sep/2025 23:53:20] code 404, message File not found
+127.0.0.1 - - [09/Sep/2025 23:53:20] "GET /src/api/client HTTP/1.1" 404 -
+127.0.0.1 - - [09/Sep/2025 23:53:20] code 404, message File not found
+127.0.0.1 - - [09/Sep/2025 23:53:20] "GET /src/api/client HTTP/1.1" 404 -
+127.0.0.1 - - [09/Sep/2025 23:53:21] "GET /src/pages/productshowcase.js HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:53:21] code 404, message File not found
+127.0.0.1 - - [09/Sep/2025 23:53:21] "GET /src/api/client HTTP/1.1" 404 -
+127.0.0.1 - - [09/Sep/2025 23:54:03] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:54:03] "GET /public/css/pva-nav.css HTTP/1.1" 304 -
+127.0.0.1 - - [09/Sep/2025 23:54:03] "GET /public/js/pva-nav.js HTTP/1.1" 304 -
+127.0.0.1 - - [09/Sep/2025 23:54:06] "GET /pages/pvadashboard.html HTTP/1.1" 304 -
+127.0.0.1 - - [09/Sep/2025 23:54:06] "GET /src/pages/pvadashboard.js HTTP/1.1" 304 -
+127.0.0.1 - - [09/Sep/2025 23:54:06] "GET /pages/productshowcase.html HTTP/1.1" 304 -
+127.0.0.1 - - [09/Sep/2025 23:54:06] code 404, message File not found
+127.0.0.1 - - [09/Sep/2025 23:54:06] "GET /src/api/client HTTP/1.1" 404 -
+127.0.0.1 - - [09/Sep/2025 23:54:06] "GET /src/nav/inject-nav.js HTTP/1.1" 304 -
+127.0.0.1 - - [09/Sep/2025 23:54:06] "GET /src/pages/productshowcase.js HTTP/1.1" 304 -
+127.0.0.1 - - [09/Sep/2025 23:54:06] code 404, message File not found
+127.0.0.1 - - [09/Sep/2025 23:54:06] "GET /src/api/client HTTP/1.1" 404 -
+127.0.0.1 - - [09/Sep/2025 23:54:06] "GET /pages/portfolio.html HTTP/1.1" 304 -
+127.0.0.1 - - [09/Sep/2025 23:54:07] "GET /src/pages/portfolio.js HTTP/1.1" 304 -
+127.0.0.1 - - [09/Sep/2025 23:54:07] "GET /pages/checkoutmint.html HTTP/1.1" 304 -
+127.0.0.1 - - [09/Sep/2025 23:54:07] code 404, message File not found
+127.0.0.1 - - [09/Sep/2025 23:54:07] "GET /src/api/client HTTP/1.1" 404 -
+127.0.0.1 - - [09/Sep/2025 23:54:07] "GET /src/pages/checkoutmint.js HTTP/1.1" 304 -
+127.0.0.1 - - [09/Sep/2025 23:54:07] code 404, message File not found
+127.0.0.1 - - [09/Sep/2025 23:54:07] "GET /src/api/client HTTP/1.1" 404 -
+127.0.0.1 - - [09/Sep/2025 23:54:09] "GET /pages/provenance.html HTTP/1.1" 304 -
+127.0.0.1 - - [09/Sep/2025 23:54:09] "GET /src/pages/provenance.js HTTP/1.1" 304 -
+127.0.0.1 - - [09/Sep/2025 23:54:09] code 404, message File not found
+127.0.0.1 - - [09/Sep/2025 23:54:09] "GET /pages/artifact.html HTTP/1.1" 404 -
+127.0.0.1 - - [09/Sep/2025 23:54:09] code 404, message File not found
+127.0.0.1 - - [09/Sep/2025 23:54:09] "GET /src/api/client HTTP/1.1" 404 -
+127.0.0.1 - - [09/Sep/2025 23:58:44] "GET /pages/admin.html HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:59:15] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:59:16] "GET /public/css/pva-nav.css HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:59:17] "GET /public/js/pva-nav.js HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:59:23] "GET /pages/pvadashboard.html HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:59:24] "GET /pages/productshowcase.html HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:59:24] "GET /pages/portfolio.html HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:59:24] "GET /src/nav/inject-nav.js HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:59:24] "GET /src/pages/productshowcase.js HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:59:24] "GET /public/js/pva-nav.js HTTP/1.1" 304 -
+127.0.0.1 - - [09/Sep/2025 23:59:24] "GET /src/pages/portfolio.js HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:59:25] "GET /src/pages/pvadashboard.js HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:59:25] "GET /pages/checkoutmint.html HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:59:25] "GET /public/css/pva-nav.css HTTP/1.1" 304 -
+127.0.0.1 - - [09/Sep/2025 23:59:25] "GET /pages/provenance.html HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:59:25] code 404, message File not found
+127.0.0.1 - - [09/Sep/2025 23:59:25] "GET /src/api/client HTTP/1.1" 404 -
+127.0.0.1 - - [09/Sep/2025 23:59:25] "GET /src/pages/checkoutmint.js HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:59:25] code 404, message File not found
+127.0.0.1 - - [09/Sep/2025 23:59:25] "GET /src/api/client HTTP/1.1" 404 -
+127.0.0.1 - - [09/Sep/2025 23:59:25] code 404, message File not found
+127.0.0.1 - - [09/Sep/2025 23:59:25] "GET /src/api/client HTTP/1.1" 404 -
+127.0.0.1 - - [09/Sep/2025 23:59:25] code 404, message File not found
+127.0.0.1 - - [09/Sep/2025 23:59:25] "GET /pages/artifact.html HTTP/1.1" 404 -
+127.0.0.1 - - [09/Sep/2025 23:59:25] "GET /src/pages/provenance.js HTTP/1.1" 200 -
+127.0.0.1 - - [09/Sep/2025 23:59:25] code 404, message File not found
+127.0.0.1 - - [09/Sep/2025 23:59:25] "GET /src/api/client HTTP/1.1" 404 -
+127.0.0.1 - - [09/Sep/2025 23:59:26] code 404, message File not found
+127.0.0.1 - - [09/Sep/2025 23:59:26] "GET /src/api/client HTTP/1.1" 404 -
+127.0.0.1 - - [10/Sep/2025 00:02:00] "GET /pages/admin.html HTTP/1.1" 200 -
+127.0.0.1 - - [10/Sep/2025 00:03:10] "GET /pages/admin.html HTTP/1.1" 200 -
+127.0.0.1 - - [10/Sep/2025 00:03:30] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [10/Sep/2025 00:03:32] "GET /public/js/pva-nav.js HTTP/1.1" 200 -
+127.0.0.1 - - [10/Sep/2025 00:03:32] "GET /public/css/pva-nav.css HTTP/1.1" 200 -
+127.0.0.1 - - [10/Sep/2025 00:03:41] "GET /pages/pvadashboard.html HTTP/1.1" 200 -
+127.0.0.1 - - [10/Sep/2025 00:03:42] "GET /public/css/pva-nav.css HTTP/1.1" 304 -
+127.0.0.1 - - [10/Sep/2025 00:03:42] "GET /src/pages/pvadashboard.js HTTP/1.1" 200 -
+127.0.0.1 - - [10/Sep/2025 00:03:43] "GET /pages/productshowcase.html HTTP/1.1" 200 -
+127.0.0.1 - - [10/Sep/2025 00:03:43] "GET /pages/checkoutmint.html HTTP/1.1" 200 -
+127.0.0.1 - - [10/Sep/2025 00:03:43] "GET /public/js/pva-nav.js HTTP/1.1" 304 -
+127.0.0.1 - - [10/Sep/2025 00:03:43] "GET /src/nav/inject-nav.js HTTP/1.1" 200 -
+127.0.0.1 - - [10/Sep/2025 00:03:43] code 404, message File not found
+127.0.0.1 - - [10/Sep/2025 00:03:43] "GET /src/api/client HTTP/1.1" 404 -
+127.0.0.1 - - [10/Sep/2025 00:03:43] "GET /pages/portfolio.html HTTP/1.1" 200 -
+127.0.0.1 - - [10/Sep/2025 00:03:43] "GET /src/pages/checkoutmint.js HTTP/1.1" 200 -
+127.0.0.1 - - [10/Sep/2025 00:03:43] code 404, message File not found
+127.0.0.1 - - [10/Sep/2025 00:03:43] "GET /src/api/client HTTP/1.1" 404 -
+127.0.0.1 - - [10/Sep/2025 00:03:44] "GET /src/pages/portfolio.js HTTP/1.1" 200 -
+127.0.0.1 - - [10/Sep/2025 00:03:44] "GET /pages/provenance.html HTTP/1.1" 200 -
+127.0.0.1 - - [10/Sep/2025 00:03:44] code 404, message File not found
+127.0.0.1 - - [10/Sep/2025 00:03:44] "GET /src/api/client HTTP/1.1" 404 -
+127.0.0.1 - - [10/Sep/2025 00:03:44] "GET /src/pages/productshowcase.js HTTP/1.1" 200 -
+127.0.0.1 - - [10/Sep/2025 00:03:44] "GET /src/pages/provenance.js HTTP/1.1" 200 -
+127.0.0.1 - - [10/Sep/2025 00:03:44] code 404, message File not found
+127.0.0.1 - - [10/Sep/2025 00:03:44] "GET /src/api/client HTTP/1.1" 404 -
+127.0.0.1 - - [10/Sep/2025 00:03:44] code 404, message File not found
+127.0.0.1 - - [10/Sep/2025 00:03:44] "GET /src/api/client HTTP/1.1" 404 -
+127.0.0.1 - - [10/Sep/2025 00:03:45] code 404, message File not found
+127.0.0.1 - - [10/Sep/2025 00:03:45] "GET /pages/artifact.html HTTP/1.1" 404 -
+127.0.0.1 - - [10/Sep/2025 01:19:50] "GET /pages/PVA%20Bazaar%20-%20Shared%20Ownership%20Marketplace.html HTTP/1.1" 200 -

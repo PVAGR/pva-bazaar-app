@@ -1,0 +1,17 @@
+
+
+> @pva-bazaar/shared-ui@1.0.0 build
+> tsc && vite build
+
+[31mfailed to load config from /workspaces/pva-bazaar-app/packages/shared-ui/vite.config.js[39m
+[31merror during build:
+Error: config must export or return an object.
+    at loadConfigFromFile (file:///workspaces/pva-bazaar-app/packages/shared-ui/node_modules/vite/dist/node/chunks/dep-827b23df.js:66512:19)
+    at async resolveConfig (file:///workspaces/pva-bazaar-app/packages/shared-ui/node_modules/vite/dist/node/chunks/dep-827b23df.js:66096:28)
+    at async build (file:///workspaces/pva-bazaar-app/packages/shared-ui/node_modules/vite/dist/node/chunks/dep-827b23df.js:47982:20)
+    at async CAC.<anonymous> (file:///workspaces/pva-bazaar-app/packages/shared-ui/node_modules/vite/dist/node/cli.js:843:9)[39m
+[37;40mnpm[0m [0m[31;40mERR![0m [0m[35mLifecycle script `build` failed with error:[0m 
+[0m[37;40mnpm[0m [0m[31;40mERR![0m [0m[35mError: command failed[0m 
+[0m[37;40mnpm[0m [0m[31;40mERR![0m [0m[35m  in workspace: @pva-bazaar/shared-ui@1.0.0[0m 
+[0m[37;40mnpm[0m [0m[31;40mERR![0m [0m[35m  at location: /workspaces/pva-bazaar-app/packages/shared-ui[0m 
+[0m

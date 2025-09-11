@@ -5,7 +5,7 @@
 
 const fs = require('fs');
 const mongoose = require('mongoose');
-const User = require('../models/user');
+const User = require('../models/User');
 const Artifact = require('../models/Artifact');
 const bcrypt = require('bcryptjs');
 require('dotenv').config();

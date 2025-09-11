@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Data Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .data-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .success { border-color: #4CAF50; background-color: #f8fff8; }
+        .error { border-color: #f44336; background-color: #fff8f8; }
+        .loading { border-color: #ff9800; background-color: #fffbf8; }
+    </style>
+</head>
+<body>
+    <h1>PVA Bazaar Real-Time Data Test</h1>
+
+    <div id="dashboard" class="data-section loading">
+        <h2>Dashboard Stats</h2>
+        <div id="dashboard-content">Loading...</div>
+    </div>
+
+    <div id="crypto" class="data-section loading">
+        <h2>Crypto Prices</h2>
+        <div id="crypto-content">Loading...</div>
+    </div>
+
+    <div id="artifacts" class="data-section loading">
+        <h2>Product Data</h2>
+        <div id="artifacts-content">Loading...</div>
+    </div>
+
+    <script>
+        // Test dashboard stats
+        async function testDashboard() {
+            try {
+                const response = await fetch('http://localhost:5000/api/dashboard/stats');
+                const data = await response.json();
+
+                if (data.ok) {
+                    document.getElementById('dashboard').className = 'data-section success';
+                    document.getElementById('dashboard-content').innerHTML = `
+                        <p><strong>Total Users:</strong> ${data.stats.totalUsers.toLocaleString()}</p>
+                        <p><strong>Active Users:</strong> ${data.stats.activeUsers.toLocaleString()}</p>
+                        <p><strong>Total Value:</strong> $${(data.stats.totalValue / 1000000).toFixed(1)}M</p>
+                        <p><strong>Total Artifacts:</strong> ${data.stats.totalArtifacts.toLocaleString()}</p>
+                    `;
+                } else {
+                    throw new Error('API returned error');
+                }
+            } catch (error) {
+                document.getElementById('dashboard').className = 'data-section error';
+                document.getElementById('dashboard-content').innerHTML = `Error: ${error.message}`;
+            }
+        }
+
+        // Test crypto prices
+        async function testCrypto() {
+            try {
+                const response = await fetch('http://localhost:5000/api/market/crypto');
+                const data = await response.json();
+
+                if (data.ok) {
+                    document.getElementById('crypto').className = 'data-section success';
+                    document.getElementById('crypto-content').innerHTML = `
+                        <p><strong>BTC:</strong> $${data.crypto.bitcoin.price.toLocaleString()} (${data.crypto.bitcoin.change24h >= 0 ? '+' : ''}${data.crypto.bitcoin.change24h.toFixed(2)}%)</p>
+                        <p><strong>ETH:</strong> $${data.crypto.ethereum.price.toLocaleString()} (${data.crypto.ethereum.change24h >= 0 ? '+' : ''}${data.crypto.ethereum.change24h.toFixed(2)}%)</p>
+                        <p><em>Last updated: ${new Date(data.lastUpdated).toLocaleTimeString()}</em></p>
+                    `;
+                } else {
+                    throw new Error('API returned error');
+                }
+            } catch (error) {
+                document.getElementById('crypto').className = 'data-section error';
+                document.getElementById('crypto-content').innerHTML = `Error: ${error.message}`;
+            }
+        }
+
+        // Test artifacts
+        async function testArtifacts() {
+            try {
+                const response = await fetch('http://localhost:5000/api/artifacts/68c0c746be57dee7b092fa7e');
+                const data = await response.json();
+
+                if (data.ok) {
+                    document.getElementById('artifacts').className = 'data-section success';
+                    document.getElementById('artifacts-content').innerHTML = `
+                        <p><strong>Name:</strong> ${data.artifact.name}</p>
+                        <p><strong>Price:</strong> $${data.artifact.price.toLocaleString()}</p>
+                        <p><strong>Rating:</strong> ${data.artifact.rating}/5.0 (${data.artifact.reviewCount} reviews)</p>
+                        <p><strong>Crypto Prices:</strong></p>
+                        <ul>
+                            <li>ETH: ${data.artifact.cryptoPrices?.eth || 'N/A'} ETH</li>
+                            <li>BTC: ${data.artifact.cryptoPrices?.btc || 'N/A'} BTC</li>
+                        </ul>
+                        <p><strong>Transaction History:</strong> ${data.artifact.transactionHistory?.length || 0} transactions</p>
+                    `;
+                } else {
+                    throw new Error('API returned error');
+                }
+            } catch (error) {
+                document.getElementById('artifacts').className = 'data-section error';
+                document.getElementById('artifacts-content').innerHTML = `Error: ${error.message}`;
+            }
+        }
+
+        // Run tests on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            testDashboard();
+            testCrypto();
+            testArtifacts();
+        });
+    </script>
+</body>
+</html>
