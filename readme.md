@@ -1,6 +1,8 @@
 <<<<<<< HEAD
 # PVA Bazaar - Artisan Marketplace with Blockchain Provenance
 
+[![Secret Scan (gitleaks)](https://github.com/PVAGR/pva-bazaar-app/actions/workflows/secret-scan.yml/badge.svg)](https://github.com/PVAGR/pva-bazaar-app/actions/workflows/secret-scan.yml)
+
 A blockchain-powered marketplace for artisan goods with provenance tracking and fractional ownership.
 
 ## 🚀 Quick Start
@@ -128,6 +130,47 @@ VITE_API_URL=http://localhost:5001/api npm run dev
 - ✅ Provenance verification
 - ✅ Dashboard with key metrics
 - ✅ MongoDB with in-memory fallback for development
+
+## Security & Secret Scanning
+
+We use [gitleaks](https://github.com/gitleaks/gitleaks) locally (pre-commit) and in CI to prevent accidental secret commits.
+
+### Local Scan
+Run:
+```bash
+scripts/secret-scan.sh
+```
+This is also executed automatically by the pre-commit hook. If prompted, install gitleaks using the provided one-line script.
+
+### CI Scan
+Workflow: "Secret Scan (gitleaks)" runs on:
+- Pull requests (all branches)
+- Pushes to `main`
+- Nightly schedule (03:15 UTC)
+- Manual dispatch
+
+It uploads a SARIF report to GitHub Code Scanning (Security tab) and fails the build if any leak is detected.
+
+### Allowlist Policy
+The allowlist in `gitleaks.toml` is intentionally minimal and only includes specific benign prompt phrases. To request an addition:
+1. Justify why the string is not a credential.
+2. Provide a narrow exact phrase or tightly scoped regex (no wildcards like `.*secret.*`).
+3. Open a PR; requires reviewer approval.
+
+Never allowlist entire files or directories unless absolutely unavoidable.
+
+### False Positive Procedure
+Open an issue or PR containing:
+- File & line reference
+- Detected rule ID / description
+- Rationale for allowlisting
+
+### Real Secret Exposure Procedure
+1. Rotate the affected credential immediately.
+2. (If needed) Purge from git history (e.g., `git filter-repo`).
+3. Open an incident issue documenting remediation steps (private if necessary).
+
+---
 
 ## 📋 Next Steps
 
