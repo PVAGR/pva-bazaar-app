@@ -183,3 +183,33 @@ node scripts/export-data.js > backup.json
 cd backend
 node scripts/import-data.js backup.json
 ```
+
+## 🤖 AI Daily Feedback System
+
+Get automated, AI-readable feedback to continuously improve your code:
+
+```bash
+# Quick daily check
+npm run ai:feedback
+
+# Complete daily routine 
+npm run morning
+
+# Full comprehensive analysis
+npm run ai:feedback:full
+```
+
+The system analyzes:
+- 🚨 **Critical Issues**: Security vulnerabilities, build errors
+- ⚡ **Code Quality**: TODO comments, console.log statements, large files  
+- 🧪 **Testing**: Coverage gaps, missing tests
+- 📚 **Documentation**: Missing or outdated docs
+
+### AI Integration
+Each report includes copy-paste prompts for:
+- **GitHub Copilot**: `@workspace [specific prompt]`
+- **Claude/ChatGPT**: Structured issue descriptions with context
+
+**Reports Location**: `.github/daily-reports/daily-feedback-YYYY-MM-DD.md`
+
+See [AI Feedback Documentation](.github/AI_DAILY_FEEDBACK_README.md) for complete setup and usage guide.
