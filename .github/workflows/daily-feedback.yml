@@ -1,0 +1,252 @@
+name: 🤖 Daily AI Feedback Report
+
+on:
+  schedule:
+    # Run daily at 8 AM UTC (adjust timezone as needed)
+    - cron: '0 8 * * *'
+  
+  # Allow manual trigger
+  workflow_dispatch:
+    inputs:
+      analysis_type:
+        description: 'Type of analysis to run'
+        required: false
+        default: 'full'
+        type: choice
+        options:
+          - quick
+          - full  
+          - security
+          - performance
+
+  # Run on pushes to main (for testing)
+  push:
+    branches: [ main ]
+    paths:
+      - 'scripts/ai-feedback-generator.sh'
+      - '.github/workflows/daily-feedback.yml'
+
+jobs:
+  generate-daily-feedback:
+    name: 📊 Generate AI Feedback Report
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write
+      pull-requests: write
+      
+    steps:
+      - name: 🔍 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          
+      - name: 📦 Install minimal dependencies
+        run: |
+          # Install only essential tools for analysis
+          npm install -g jq
+          # Skip heavy dependencies that aren't needed for analysis
+          echo "Skipping full npm install for feedback generation"
+          
+      - name: 🔒 Setup analysis environment
+        run: |
+          # Create necessary directories
+          mkdir -p .github/daily-reports
+          mkdir -p .github/daily-reports/archive
+          
+          # Make scripts executable
+          chmod +x scripts/ai-feedback-generator.sh
+          
+      - name: 🧪 Run AI Feedback Analysis
+        id: feedback
+        run: |
+          set -e
+          
+          # Determine analysis type
+          ANALYSIS_TYPE="${{ github.event.inputs.analysis_type || 'full' }}"
+          echo "Running analysis type: $ANALYSIS_TYPE"
+          
+          # Run the feedback generator
+          ./scripts/ai-feedback-generator.sh "$ANALYSIS_TYPE"
+          
+          # Set output variables
+          REPORT_DATE=$(date +"%Y-%m-%d")
+          REPORT_PATH=".github/daily-reports/daily-feedback-${REPORT_DATE}.md"
+          
+          echo "report_path=$REPORT_PATH" >> $GITHUB_OUTPUT
+          echo "report_date=$REPORT_DATE" >> $GITHUB_OUTPUT
+          
+          # Check if report was generated
+          if [ -f "$REPORT_PATH" ]; then
+            echo "report_generated=true" >> $GITHUB_OUTPUT
+            echo "✅ Report generated successfully: $REPORT_PATH"
+          else
+            echo "report_generated=false" >> $GITHUB_OUTPUT
+            echo "❌ Report generation failed"
+            exit 1
+          fi
+          
+      - name: 📈 Extract Key Metrics
+        id: metrics
+        if: steps.feedback.outputs.report_generated == 'true'
+        run: |
+          REPORT_PATH="${{ steps.feedback.outputs.report_path }}"
+          
+          # Extract key metrics from the report
+          CRITICAL_ISSUES=$(grep -c "priority: CRITICAL" "$REPORT_PATH" 2>/dev/null || echo "0")
+          HIGH_ISSUES=$(grep -c "priority: HIGH" "$REPORT_PATH" 2>/dev/null || echo "0")  
+          MEDIUM_ISSUES=$(grep -c "priority: MEDIUM" "$REPORT_PATH" 2>/dev/null || echo "0")
+          
+          echo "critical_issues=$CRITICAL_ISSUES" >> $GITHUB_OUTPUT
+          echo "high_issues=$HIGH_ISSUES" >> $GITHUB_OUTPUT
+          echo "medium_issues=$MEDIUM_ISSUES" >> $GITHUB_OUTPUT
+          
+          echo "📊 Metrics extracted:"
+          echo "  Critical issues: $CRITICAL_ISSUES"
+          echo "  High priority issues: $HIGH_ISSUES"
+          echo "  Medium priority issues: $MEDIUM_ISSUES"
+          
+      - name: 💬 Create or Update Issue
+        if: steps.feedback.outputs.report_generated == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = './github/daily-reports/daily-feedback-${{ steps.feedback.outputs.report_date }}.md';
+            
+            let reportContent = '';
+            try {
+              reportContent = fs.readFileSync('${{ steps.feedback.outputs.report_path }}', 'utf8');
+            } catch (error) {
+              console.log('Could not read report file');
+              return;
+            }
+            
+            const title = `🤖 Daily AI Feedback Report - ${{ steps.feedback.outputs.report_date }}`;
+            const criticalIssues = ${{ steps.metrics.outputs.critical_issues }};
+            const highIssues = ${{ steps.metrics.outputs.high_issues }};
+            const mediumIssues = ${{ steps.metrics.outputs.medium_issues }};
+            
+            const body = `# 🤖 Daily AI Feedback Report
+            
+            **Generated:** ${{ steps.feedback.outputs.report_date }}
+            **Analysis Type:** ${{ github.event.inputs.analysis_type || 'full' }}
+            
+            ## 📊 Summary
+            - 🚨 Critical Issues: ${criticalIssues}
+            - ⚡ High Priority: ${highIssues}  
+            - 🔧 Medium Priority: ${mediumIssues}
+            
+            ## 🎯 Quick Actions for AI Tools
+            
+            ### GitHub Copilot Chat
+            Use these prompts in Copilot Chat (\`@workspace [prompt]\`):
+            
+            ${reportContent.match(/copilot_prompt: "([^"]+)"/g)?.slice(0, 5).map(match => 
+              `- ${match.replace('copilot_prompt: "', '').replace('"', '')}`
+            ).join('\n') || 'No specific prompts generated'}
+            
+            ## 📄 Full Report
+            
+            The complete report is available at: [\`${{ steps.feedback.outputs.report_path }}\`](${{ github.server_url }}/${{ github.repository }}/blob/${{ github.ref_name }}/${{ steps.feedback.outputs.report_path }})
+            
+            ## 🔄 Next Steps
+            1. Review critical issues first
+            2. Use the provided AI prompts for quick fixes
+            3. Check the full report for detailed analysis
+            4. Update documentation as needed
+            
+            ---
+            *This report was automatically generated by the AI Daily Feedback System*`;
+            
+            // Look for existing daily feedback issues
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: ['ai-feedback', 'daily-report'],
+              state: 'open'
+            });
+            
+            // Close old daily feedback issues (keep only the latest)
+            for (const issue of issues) {
+              if (issue.title.includes('Daily AI Feedback Report')) {
+                await github.rest.issues.update({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issue.number,
+                  state: 'closed'
+                });
+              }
+            }
+            
+            // Create new issue
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: title,
+              body: body,
+              labels: ['ai-feedback', 'daily-report', 'enhancement']
+            });
+            
+      - name: 📂 Commit Report to Repository
+        if: steps.feedback.outputs.report_generated == 'true'
+        run: |
+          # Configure git
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          # Add the report files
+          git add .github/daily-reports/
+          
+          # Check if there are changes to commit
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            # Commit the changes
+            git commit -m "📊 Daily AI feedback report ${{ steps.feedback.outputs.report_date }}
+            
+            - Critical issues: ${{ steps.metrics.outputs.critical_issues }}
+            - High priority: ${{ steps.metrics.outputs.high_issues }}
+            - Medium priority: ${{ steps.metrics.outputs.medium_issues }}
+            
+            Generated by AI Daily Feedback System"
+            
+            # Push the changes
+            git push
+            echo "✅ Report committed and pushed"
+          fi
+          
+      - name: 📝 Job Summary
+        if: always()
+        run: |
+          echo "## 🤖 AI Daily Feedback Report Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ steps.feedback.outputs.report_generated }}" == "true" ]; then
+            echo "✅ **Report Generated Successfully**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "- **Date**: ${{ steps.feedback.outputs.report_date }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Analysis Type**: ${{ github.event.inputs.analysis_type || 'full' }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Critical Issues**: ${{ steps.metrics.outputs.critical_issues }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **High Priority**: ${{ steps.metrics.outputs.high_issues }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Medium Priority**: ${{ steps.metrics.outputs.medium_issues }}" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "📄 **Report Location**: \`${{ steps.feedback.outputs.report_path }}\`" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Report Generation Failed**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Check the job logs for more details." >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "1. Review the generated issue or report file" >> $GITHUB_STEP_SUMMARY
+          echo "2. Use AI prompts from the report with GitHub Copilot" >> $GITHUB_STEP_SUMMARY
+          echo "3. Address critical issues first" >> $GITHUB_STEP_SUMMARY
+          echo "4. Schedule time for high and medium priority improvements" >> $GITHUB_STEP_SUMMARY
