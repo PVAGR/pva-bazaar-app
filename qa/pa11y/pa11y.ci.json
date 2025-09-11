@@ -1,0 +1,108 @@
+{
+  "defaults": {
+    "timeout": 30000,
+    "wait": 500,
+    "chromeLaunchConfig": {
+      "headless": true,
+      "args": [
+        "--no-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-web-security",
+        "--disable-features=VizDisplayCompositor"
+      ]
+    },
+    "log": {
+      "debug": true,
+      "errors": true,
+      "info": true
+    },
+    "reporters": [
+      "cli",
+      "json"
+    ]
+  },
+  "urls": [
+    {
+      "url": "http://localhost:3000",
+      "screenCapture": "./pa11y-screenshots/homepage.png",
+      "actions": [
+        "wait for element body to be visible"
+      ]
+    },
+    {
+      "url": "http://localhost:3000/products",
+      "screenCapture": "./pa11y-screenshots/products.png",
+      "actions": [
+        "wait for element .product-grid to be visible"
+      ]
+    },
+    {
+      "url": "http://localhost:3000/artists",
+      "screenCapture": "./pa11y-screenshots/artists.png",
+      "actions": [
+        "wait for element .artist-grid to be visible"
+      ]
+    },
+    {
+      "url": "http://localhost:3000/marketplace",
+      "screenCapture": "./pa11y-screenshots/marketplace.png",
+      "actions": [
+        "wait for element .marketplace-container to be visible"
+      ]
+    },
+    {
+      "url": "http://localhost:3000/profile",
+      "screenCapture": "./pa11y-screenshots/profile.png",
+      "actions": [
+        "click element .login-button",
+        "wait for element .profile-container to be visible"
+      ]
+    }
+  ],
+  "standard": "WCAG2AA",
+  "level": "error",
+  "rules": [
+    "color-contrast",
+    "heading-order",
+    "html-has-lang",
+    "image-alt",
+    "label",
+    "landmark-one-main",
+    "link-name",
+    "list",
+    "listitem",
+    "meta-viewport",
+    "region",
+    "skip-link"
+  ],
+  "ignore": [
+    "notice",
+    "warning",
+    "WCAG2AA.Principle1.Guideline1_3.1_3_1.H44.NonExistentFragment",
+    "WCAG2AA.Principle1.Guideline1_3.1_3_1.H65.3",
+    "WCAG2AA.Principle4.Guideline4_1.4_1_2.H91.A.NoContent"
+  ],
+  "hideElements": [
+    ".advertisement",
+    ".cookie-banner",
+    ".debug-panel",
+    "[data-testid='test-element']"
+  ],
+  "includeNotices": false,
+  "includeWarnings": false,
+  "rootElement": "body",
+  "threshold": 0,
+  "userAgent": "pa11y/6.2.3",
+  "viewport": {
+    "width": 1280,
+    "height": 1024,
+    "deviceScaleFactor": 1,
+    "isMobile": false,
+    "hasTouch": false,
+    "isLandscape": true
+  },
+  "runners": [
+    "htmlcs"
+  ],
+  "verifyPage": null
+}

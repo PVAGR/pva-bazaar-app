@@ -1,0 +1,35 @@
+[profile.default]
+src = "src"
+out = "out"
+libs = ["lib"]
+solc_version = "0.8.19"
+optimizer = true
+optimizer_runs = 200
+via_ir = false
+
+[rpc_endpoints]
+mainnet = "https://eth-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}"
+sepolia = "https://eth-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}"
+polygon = "https://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}"
+mumbai = "https://polygon-mumbai.g.alchemy.com/v2/${ALCHEMY_API_KEY}"
+
+[etherscan]
+mainnet = { key = "${ETHERSCAN_API_KEY}" }
+sepolia = { key = "${ETHERSCAN_API_KEY}" }
+polygon = { key = "${POLYGONSCAN_API_KEY}" }
+mumbai = { key = "${POLYGONSCAN_API_KEY}" }
+
+# Gas limit for tests
+[profile.default.fuzz]
+runs = 256
+
+# Coverage options
+[profile.default.model_checker]
+contracts = { "src/Royalties.sol" = ["Royalties"] }
+engine = "chc"
+timeout = 10000
+targets = ["assert", "underflow", "overflow", "divByZero", "constantCondition", "popEmptyArray", "outOfBounds"]
+
+# Gas reports
+[profile.default.gas_reports]
+ignore = ["test/**/*"]

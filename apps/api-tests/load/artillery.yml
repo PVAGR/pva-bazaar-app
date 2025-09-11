@@ -1,0 +1,91 @@
+config:
+  target: 'http://localhost:3000'
+  phases:
+    - duration: 60
+      arrivalRate: 5
+      name: "Warm up"
+    - duration: 120
+      arrivalRate: 10
+      name: "Ramp up load"
+    - duration: 180
+      arrivalRate: 20
+      name: "Sustained load"
+    - duration: 60
+      arrivalRate: 50
+      name: "Peak load"
+  plugins:
+    expect: {}
+    metrics-by-endpoint: {}
+  processor: "./helpers/auth-helper.js"
+
+scenarios:
+  - name: "Product Browsing Flow"
+    weight: 60
+    flow:
+      - get:
+          url: "/api/products"
+          expect:
+            - statusCode: 200
+            - contentType: json
+      - think: 2
+      - get:
+          url: "/api/products/{{ $randomString() }}"
+          expect:
+            - statusCode: [200, 404]
+
+  - name: "Product Search"
+    weight: 20
+    flow:
+      - get:
+          url: "/api/products/search?q=art"
+          expect:
+            - statusCode: 200
+      - think: 1
+      - get:
+          url: "/api/products/search?category=paintings"
+          expect:
+            - statusCode: 200
+
+  - name: "User Authentication Flow"
+    weight: 10
+    flow:
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "test{{ $randomInt(1, 1000) }}@example.com"
+            password: "testpass123"
+          capture:
+            - json: "$.token"
+              as: "authToken"
+      - get:
+          url: "/api/user/profile"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: [200, 401]
+
+  - name: "Product Creation (Authenticated)"
+    weight: 10
+    flow:
+      - function: "authenticateUser"
+      - post:
+          url: "/api/products"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          json:
+            name: "Load Test Product {{ $randomString() }}"
+            description: "Created during load testing"
+            price: "{{ $randomInt(10, 1000) }}"
+            category: "test"
+            imageUrl: "https://example.com/test-image.jpg"
+          expect:
+            - statusCode: [201, 401, 400]
+
+  - name: "Health Check"
+    weight: 5
+    flow:
+      - get:
+          url: "/api/health"
+          expect:
+            - statusCode: 200
+            - hasProperty: "status"
