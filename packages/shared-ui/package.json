@@ -1,1 +1,1 @@
-{ "private": true, "name": "@deprecated/shared-ui", "description": "Deprecated - use @pva/ui instead" }
+{ "private": true, "name": "@deprecated/shared-ui", "deprecated": true, "description": "Tombstoned. Do not use. Will be removed." }

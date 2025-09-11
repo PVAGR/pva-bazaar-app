@@ -5,3 +5,7 @@ node_modules
 # TypeScript build info (ignore build metadata to reduce noise)
 *.tsbuildinfo
 tsconfig.tsbuildinfo
+
+# Logs and Storybook build output
+*.log
+storybook-static
