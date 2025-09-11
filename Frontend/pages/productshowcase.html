@@ -1410,8 +1410,11 @@
         // Real-time data fetching functions
         async function fetchProductData() {
             try {
-                // Fetch the Maradjet Emerald Pendant data (using the ID from our seeded data)
-                const response = await fetch('/api/artifacts/68c0c45d7eb21440f8a6bf9e');
+                // Fetch artifact by id from query string (?id=...)
+                const params = new URLSearchParams(window.location.search);
+                const artifactId = params.get('id');
+                if (!artifactId) { console.warn('No artifact id in query'); return; }
+                const response = await fetch(`/api/artifacts/${artifactId}`);
                 const data = await response.json();
                 
                 if (data.ok) {
@@ -1489,7 +1492,10 @@
         function updateCryptoEquivalents() {
             // This function now uses real crypto prices from the API
             if (currentPrices.btc && currentPrices.eth) {
-                const usdPrice = 2847; // Maradjet price in USD
+                // Use current displayed USD price if available
+                const priceEl = document.querySelector('.current-price');
+                const parsed = priceEl ? Number(priceEl.textContent.replace(/[$,]/g,'')) : 0;
+                const usdPrice = parsed || 0;
                 
                 const btcEquiv = (usdPrice / currentPrices.btc).toFixed(3);
                 const ethEquiv = (usdPrice / currentPrices.eth).toFixed(2);

@@ -44,14 +44,13 @@ else
   exit 1
 fi
 
-# Check for secrets in staged files
-echo "🔐 Scanning for secrets..."
-if git diff --cached --name-only | xargs grep -l "sk_\|pk_\|api_key\|secret_key\|password\|token" 2>/dev/null; then
-  echo "❌ Potential secrets detected in staged files!"
-  echo "Please remove any hardcoded secrets before committing."
-  exit 1
+# Secret scanning using gitleaks
+echo "🔐 Scanning for secrets (gitleaks)..."
+if scripts/secret-scan.sh; then
+  echo "✅ Secret scan passed"
 else
-  echo "✅ No secrets detected"
+  echo "❌ Secret scan failed"
+  exit 1
 fi
 
 # Smart contract specific checks (if contracts changed)
