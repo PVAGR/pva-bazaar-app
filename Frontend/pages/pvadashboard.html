@@ -8,6 +8,94 @@
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/public/css/pva-nav.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+            // --- API Helper ---
+            async function fetchAPI(endpoint) {
+                try {
+                    const res = await fetch(endpoint);
+                    if (!res.ok) throw new Error('API error');
+                    return await res.json();
+                } catch (e) {
+                    console.error('API fetch failed:', endpoint, e);
+                    return null;
+                }
+            }
+            // --- Wallet Connect Placeholder ---
+            function connectWallet() {
+                alert('Wallet connect coming soon!');
+            }
+            // --- Dashboard Dynamic Data Loader ---
+            document.addEventListener('DOMContentLoaded', async () => {
+                // --- Stats ---
+                const stats = await fetchAPI('/api/dashboard/stats'); // TODO: Implement /api/dashboard/stats if missing
+                if (stats && stats.ok && stats.stats) {
+                    document.getElementById('totalUsers').textContent = stats.stats.totalUsers?.toLocaleString() || '';
+                    document.getElementById('totalItems').textContent = stats.stats.totalArtifacts?.toLocaleString() || '';
+                    document.getElementById('totalVolume').textContent = stats.stats.totalValue ? ('$' + (stats.stats.totalValue/1000000).toFixed(1) + 'M') : '';
+                } else {
+                    document.getElementById('totalUsers').textContent = '';
+                    document.getElementById('totalItems').textContent = '';
+                    document.getElementById('totalVolume').textContent = '';
+                }
+                // --- Trending Items ---
+                const trending = await fetchAPI('/api/artifacts?sort=trending&limit=4'); // TODO: Implement trending sort if missing
+                const trendingGrid = document.querySelector('.item-grid');
+                trendingGrid.innerHTML = '';
+                if (trending && trending.length) {
+                    trending.forEach(item => {
+                        const card = document.createElement('div');
+                        card.className = 'item-card';
+                        card.innerHTML = `
+                            <div class="item-image">
+                                <img src="${item.image || ''}" alt="${item.name || ''}">
+                                <div class="item-badge">Trending</div>
+                            </div>
+                            <div class="item-details">
+                                <div class="item-name">${item.name || ''}</div>
+                                <div class="item-price">${item.price ? item.price + ' PVA' : ''}</div>
+                                <div class="item-progress"><div class="progress-bar" style="width: ${item.progress || 0}%"></div></div>
+                                <div class="item-stats"><div>${item.sharesSold || 0}/${item.totalShares || 0} Shares Sold</div><div>${item.progress || 0}% Complete</div></div>
+                            </div>
+                        `;
+                        trendingGrid.appendChild(card);
+                    });
+                }
+                // --- Transactions ---
+                const txs = await fetchAPI('/api/transactions?limit=5'); // TODO: Implement /api/transactions for user
+                const txList = document.querySelector('.transaction-list');
+                txList.innerHTML = '';
+                if (txs && txs.length) {
+                    txs.forEach(tx => {
+                        const div = document.createElement('div');
+                        div.className = 'transaction-item';
+                        div.innerHTML = `
+                            <div class="transaction-icon ${tx.type}"><i class="fas fa-arrow-${tx.type === 'buy' ? 'down' : 'up'}"></i></div>
+                            <div class="transaction-details"><div class="transaction-title">${tx.title || ''}</div><div class="transaction-subtitle">By ${tx.user || ''} • ${tx.time || ''}</div></div>
+                            <div class="transaction-amount ${tx.type === 'buy' ? 'up' : 'down'}">${tx.amount || ''}</div>
+                        `;
+                        txList.appendChild(div);
+                    });
+                }
+                // --- User Activity ---
+                const activity = await fetchAPI('/api/activity?limit=4'); // TODO: Implement /api/activity
+                const activityList = document.querySelector('.user-activity');
+                activityList.innerHTML = '';
+                if (activity && activity.length) {
+                    activity.forEach(act => {
+                        const div = document.createElement('div');
+                        div.className = 'activity-item';
+                        div.innerHTML = `
+                            <div class="user-avatar"><img src="${act.avatar || ''}" alt="User Avatar"></div>
+                            <div class="activity-details"><div><span>${act.name || ''}</span> ${act.action || ''}</div><div class="activity-time">${act.time || ''}</div></div>
+                        `;
+                        activityList.appendChild(div);
+                    });
+                }
+                // --- Wallet Connect Button ---
+                const walletBtn = document.getElementById('connectWallet');
+                if (walletBtn) walletBtn.onclick = connectWallet;
+            });
+        </script>
     <style>
         :root {
             --primary-dark: #0a1f19;
@@ -1085,7 +1173,6 @@
                 </div>
                 <div class="stat-value" id="totalUsers">12,847</div>
                 <div class="stat-label">Active Users</div>
-                <div class="stat-change change-up">+12.5%</div>
             </div>
             
             <div class="stat-card animate-fadeIn" style="animation-delay: 0.2s;">
@@ -1094,7 +1181,6 @@
                 </div>
                 <div class="stat-value" id="totalItems">18,562</div>
                 <div class="stat-label">Items Listed</div>
-                <div class="stat-change change-up">+8.3%</div>
             </div>
             
             <div class="stat-card animate-fadeIn" style="animation-delay: 0.3s;">
@@ -1103,7 +1189,6 @@
                 </div>
                 <div class="stat-value" id="totalVolume">$4.7M</div>
                 <div class="stat-label">Trading Volume</div>
-                <div class="stat-change change-up">+15.2%</div>
             </div>
             
             <div class="stat-card animate-fadeIn" style="animation-delay: 0.4s;">
@@ -1112,7 +1197,6 @@
                 </div>
                 <div class="stat-value" id="pvaCoin">$0.94</div>
                 <div class="stat-label">PVA Coin</div>
-                <div class="stat-change change-up">+6.8%</div>
             </div>
             
             <div class="stat-card animate-fadeIn" style="animation-delay: 0.5s;">
@@ -1121,7 +1205,6 @@
                 </div>
                 <div class="stat-value" id="avgPrice">$427</div>
                 <div class="stat-label">Avg Item Price</div>
-                <div class="stat-change change-down">-1.2%</div>
             </div>
         </div>
         
@@ -1499,72 +1582,7 @@
         <div class="container">
             <div class="footer-content">
                 <div>
-                    <div class="footer-logo">PVA Bazaar</div>
-                    <p class="footer-description">
-                        The premier marketplace for physical and digital artifacts, 
-                        with transparent ownership and provenance tracking.
-                    </p>
-                    <div class="social-links">
-                        <a href="#"><i class="fab fa-twitter"></i></a>
-                        <a href="#"><i class="fab fa-instagram"></i></a>
-                        <a href="#"><i class="fab fa-discord"></i></a>
-                        <a href="#"><i class="fab fa-github"></i></a>
-                    </div>
-                </div>
-                
-                <div class="footer-links">
-                    <h4>Marketplace</h4>
-                    <ul>
-                        <li><a href="#">All Items</a></li>
-                        <li><a href="#">Collections</a></li>
-                        <li><a href="#">Trending</a></li>
-                        <li><a href="#">New Arrivals</a></li>
-                        <li><a href="#">Completed Sales</a></li>
-                    </ul>
-                </div>
-                
-                <div class="footer-links">
-                    <h4>My Account</h4>
-                    <ul>
-                        <li><a href="#">Profile</a></li>
-                        <li><a href="#">My Collections</a></li>
-                        <li><a href="#">Watchlist</a></li>
-                        <li><a href="#">My Shares</a></li>
-                        <li><a href="#">Settings</a></li>
-                    </ul>
-                </div>
-                
-                <div class="footer-links">
-                    <h4>Resources</h4>
-                    <ul>
-                        <li><a href="#">Help Center</a></li>
-                        <li><a href="#">Provenance Guide</a></li>
-                        <li><a href="#">Blockchain Basics</a></li>
-                        <li><a href="#">PVA Coin</a></li>
-                        <li><a href="#">Contact Support</a></li>
-                    </ul>
-                </div>
-            </div>
-            
-            <div class="copyright">
-                © 2025 PVA Bazaar. All rights reserved.
-            </div>
-        </div>
-    </footer>
-
-    <script>
-        // Market chart initialization
-        const ctx = document.getElementById('marketChart').getContext('2d');
-        
-        // Generate random data for chart
-        const generateChartData = (days, startValue) => {
-            let data = [];
-            let value = startValue;
-            
-            for (let i = 0; i < days; i++) {
-                // Random walk with some trend
-                value += (Math.random() - 0.45) * 3;
-                if (value < 50) value = 50;
+                        <!-- Trending items will be loaded here by JS -->
                 data.push(value);
             }
             
@@ -1793,56 +1811,7 @@
         ticker.innerHTML = ticker.innerHTML + ticker.innerHTML;
         
         // Add new transaction to the list
-        const transactions = [
-            {
-                type: 'buy',
-                title: 'Purchase: Amradjet Emerald Pendant',
-                user: '0x7f3a...9c42',
-                amount: '+125 PVA'
-            },
-            {
-                type: 'sell',
-                title: 'Sale: Sapphire Wave Bracelet',
-                user: '0x5b2d...3e78',
-                amount: '-75 PVA'
-            },
-            {
-                type: 'buy',
-                title: 'Purchase: Diamond Crown Brooch',
-                user: '0x9a4f...1d23',
-                amount: '+300 PVA'
-            },
-            {
-                type: 'buy',
-                title: 'Purchase: Emerald Phoenix Earrings',
-                user: '0x3c8e...7b51',
-                amount: '+200 PVA'
-            },
-            {
-                type: 'sell',
-                title: 'Sale: Ruby Dragon Pendant',
-                user: '0x6d1a...4f93',
-                amount: '-150 PVA'
-            }
-        ];
-        
-        function addNewTransaction() {
-            const transactionList = document.querySelector('.transaction-list');
-            const randomTransaction = transactions[Math.floor(Math.random() * transactions.length)];
-            
-            // Create new transaction element
-            const newTransactionEl = document.createElement('div');
-            newTransactionEl.className = 'transaction-item';
-            newTransactionEl.innerHTML = `
-                <div class="transaction-icon ${randomTransaction.type}">
-                    <i class="fas fa-arrow-${randomTransaction.type === 'buy' ? 'down' : 'up'}"></i>
-                </div>
-                <div class="transaction-details">
-                    <div class="transaction-title">${randomTransaction.title}</div>
-                    <div class="transaction-subtitle">By ${randomTransaction.user} • Just now</div>
-                </div>
-                <div class="transaction-amount ${randomTransaction.type === 'buy' ? 'up' : 'down'}">${randomTransaction.amount}</div>
-            `;
+                        <!-- Transactions will be loaded here by JS -->
             
             // Add to top of list
             transactionList.insertBefore(newTransactionEl, transactionList.firstChild);
@@ -1915,42 +1884,7 @@
             const newActivityEl = document.createElement('div');
             newActivityEl.className = 'activity-item';
             newActivityEl.innerHTML = `
-                <div class="user-avatar">
-                    <img src="${randomActivity.avatar}" alt="User Avatar">
-                </div>
-                <div class="activity-details">
-                    <div><span>${randomActivity.name}</span> ${randomActivity.action}</div>
-                    <div class="activity-time">Just now</div>
-                </div>
-            `;
-            
-            // Add to top of list
-            userActivity.insertBefore(newActivityEl, userActivity.firstChild);
-            
-            // Remove last item if more than 4
-            if (userActivity.children.length > 4) {
-                userActivity.removeChild(userActivity.lastChild);
-            }
-            
-            // Update time for other activities
-            const otherTimes = document.querySelectorAll('.activity-time');
-            otherTimes.forEach((item, index) => {
-                if (index > 0) {
-                    const timeText = item.textContent;
-                    if (timeText === 'Just now') {
-                        item.textContent = '1 minute ago';
-                    } else if (timeText.includes('minute')) {
-                        const minutesMatch = timeText.match(/(\d+)/);
-                        if (minutesMatch) {
-                            const minutes = parseInt(minutesMatch[0]) + 1;
-                            if (minutes >= 60) {
-                                item.textContent = '1 hour ago';
-                            } else {
-                                item.textContent = `${minutes} minutes ago`;
-                            }
-                        }
-                    }
-                }
+                        <!-- User activity will be loaded here by JS -->
             });
         }
         
