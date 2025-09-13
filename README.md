@@ -1,56 +1,6 @@
-<<<<<<< HEAD
 # PVA Bazaar - Artisan Marketplace with Blockchain Provenance
 
-A blockchain-powered marketplace for artisan goods with provenance tracking and fractional ownership.
-
-## 🚀 Quick Start
-
-```bash
-# Run the application
-./test-app.sh
-```
-
-## 📱 Available Pages
-
-- **Portfolio**: http://localhost:3000/pages/portfolio.html
-- **Product Showcase**: http://localhost:3000/pages/productshowcase.html?id=[artifact_id]
-- **Provenance**: http://localhost:3000/pages/provenance.html?id=[artifact_id]
-- **Dashboard**: http://localhost:3000/pages/pvadashboard.html
-
-## 👤 Dev Login
-
-- Email: admin@pvabazaar.org
-- Password: admin123
-
-## 🧩 Features Implemented
-
-- ✅ User authentication with JWT
-- ✅ Artifact listing and details
-- ✅ Fractional ownership capabilities
-- ✅ Provenance verification
-- ✅ Dashboard with key metrics
-- ✅ MongoDB with in-memory fallback for development
-
-## 🔧 Development
-
-### Backend
-
-```bash
-cd backend
-npm install
-
-# Start with in-memory database (no MongoDB needed)
-PORT=5001 NODE_ENV=development USE_MEMORY_DB=true DEV_AUTO_SEED=true npm run dev
-```
-
-### Frontend
-
-```bash
-cd Frontend
-npm install
-
-# Connect to backend on port 5001
-# PVA Bazaar - Artisan Marketplace with Blockchain Provenance
+[![Secret Scan](https://github.com/PVAGR/pva-bazaar-app/actions/workflows/secret-scan.yml/badge.svg)](https://github.com/PVAGR/pva-bazaar-app/actions/workflows/secret-scan.yml)
 
 A blockchain-powered marketplace for artisan goods with provenance tracking and fractional ownership.
 
@@ -116,7 +66,6 @@ PORT=5001 NODE_ENV=development USE_MEMORY_DB=true DEV_AUTO_SEED=true npm run dev
 cd Frontend
 npm install
 
-# Connect to backend on port 5001
 VITE_API_URL=http://localhost:5001/api npm run dev
 ```
 
@@ -128,6 +77,30 @@ VITE_API_URL=http://localhost:5001/api npm run dev
 - ✅ Provenance verification
 - ✅ Dashboard with key metrics
 - ✅ MongoDB with in-memory fallback for development
+
+## 🔒 Security & Secret Scanning
+
+This repository uses automated secret scanning to prevent accidental exposure of sensitive information:
+
+- **CI Secret Scanning**: Automated scans run on every push, pull request, and daily via GitHub Actions
+- **Pre-commit Hooks**: Local scanning with gitleaks before commits
+- **SARIF Integration**: Findings are automatically uploaded to GitHub's Code Scanning alerts
+- **Configuration**: See `gitleaks.toml` for scan configuration and allowlist
+
+### Running Secret Scans Locally
+
+```bash
+# Install gitleaks (if not already installed)
+curl -sSfL https://raw.githubusercontent.com/gitleaks/gitleaks/master/install.sh | bash
+
+# Run scan on staged files (pre-commit)
+./scripts/secret-scan.sh
+
+# Run full repository scan
+gitleaks detect --config=gitleaks.toml --redact
+```
+
+**⚠️ Important**: Never commit real secrets or credentials. Use environment variables and `.env` files (which are gitignored) for sensitive configuration.
 
 ## 📋 Next Steps
 
