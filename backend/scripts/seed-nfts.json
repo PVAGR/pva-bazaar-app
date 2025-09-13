@@ -1,0 +1,61 @@
+[
+  {
+    "name": "Maradjet (Emerald Pendant)",
+    "title": "Handcrafted Emerald Pendant",
+    "description": "A stunning pendant featuring a natural Panjshir emerald set in 18k gold.",
+    "category": "Jewelry",
+    "artisan": "PVA Master Craftsman",
+    "materials": ["Panjshir Emerald", "18k Gold"],
+    "imageUrl": "https://i2.seadn.io/base/0x3b3af296e521a0932041cc5599ea47ec2d4ef8a5/ab0864492d648de4434dd73c10970a/04ab0864492d648de4434dd73c10970a.jpeg?w=1000",
+    "blockchain": {
+      "network": "Base",
+      "chainId": 8453,
+      "standard": "ERC-721",
+      "contractAddress": "0x3b3af296e521a0932041cc5599ea47ec2d4ef8a5",
+      "tokenId": "0",
+      "collection": "PuraVidaAyurvedaNFT",
+      "marketplaces": {
+        "openseaUrl": "https://opensea.io/assets/base/0x3b3af296e521a0932041cc5599ea47ec2d4ef8a5/0",
+        "explorerUrl": "https://basescan.org/token/0x3b3af296e521a0932041cc5599ea47ec2d4ef8a5?a=0"
+      },
+      "royalties": { "bps": 500, "recipient": null }
+    },
+    "fractionalization": {
+      "enabled": true,
+      "totalShares": 5000,
+      "sharePriceUSD": 1,
+      "majorityThreshold": 2600
+    },
+    "provenance": {
+      "certificateUrl": "https://www.pvabazaar.com/provenance/maradjet-emerald-pendant",
+      "notes": "Panjshir Emerald, 18k Gold. PVA provenance certificate template in use."
+    }
+  },
+  {
+    "name": "Kṣīrodadhi (The Ocean of Milk)",
+    "title": "Sacred Artwork NFT",
+    "description": "NFT artwork inspired by the churning of the Ocean of Milk.",
+    "category": "Art",
+    "artisan": "Sacred Assets",
+    "materials": ["Digital Artwork"],
+    "imageUrl": "https://openseauserdata.com/files/ksirodadhi-artwork.png",
+    "blockchain": {
+      "network": "Polygon",
+      "chainId": 137,
+      "standard": "ERC-721",
+      "contractAddress": "0x2d1556ff887a20c6a43eb26be0e1f5f93a7e5c91",
+      "tokenId": "0",
+      "collection": "SacredAssets",
+      "marketplaces": {
+        "openseaUrl": "https://opensea.io/assets/matic/0x2d1556ff887a20c6a43eb26be0e1f5f93a7e5c91/0",
+        "explorerUrl": "https://polygonscan.com/token/0x2d1556ff887a20c6a43eb26be0e1f5f93a7e5c91?a=0"
+      },
+      "royalties": { "bps": null, "recipient": null }
+    },
+    "fractionalization": { "enabled": false },
+    "provenance": {
+      "certificateUrl": null,
+      "notes": "Polygon listing; site IPFS link currently a placeholder."
+    }
+  }
+]

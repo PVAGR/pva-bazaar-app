@@ -7,6 +7,38 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/public/css/pva-nav.css">
+        <script>
+            // Helper: Fetch holdings
+            async function fetchHoldings() {
+                try {
+                    const res = await fetch('/api/holdings');
+                    if (!res.ok) throw new Error('API error');
+                    return await res.json();
+                } catch (e) {
+                    console.error('API fetch failed:', e);
+                    return [];
+                }
+            }
+            document.addEventListener('DOMContentLoaded', async () => {
+                // --- Holdings Table ---
+                const holdings = await fetchHoldings();
+                const tbody = document.getElementById('holdingsTableBody');
+                tbody.innerHTML = '';
+                if (holdings && holdings.length) {
+                    holdings.forEach(asset => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td><div class="asset"><div class="asset-icon"><i class="fas fa-gem"></i></div><div><div class="asset-name">${asset.name || ''}</div><div class="asset-symbol">${asset.symbol || ''}</div></div></div></td>
+                            <td>${asset.value ? '$' + asset.value : ''}</td>
+                            <td>${asset.ownership || ''}</td>
+                            <td class="price-change ${asset.change && asset.change > 0 ? 'positive' : 'negative'}">${asset.change ? (asset.change > 0 ? '+' : '') + asset.change + '%' : ''}</td>
+                            <td class="action-cell"><button class="table-btn btn-buy">Buy</button><button class="table-btn btn-sell">Sell</button></td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            });
+        </script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
@@ -871,13 +903,22 @@
       </a>
       <nav>
         <ul>
-          <li><a href="/" class="active">Home</a></li>
-          <li><a href="/pages/pvadashboard.html">Dashboard</a></li>
-          <li><a href="/pages/productshowcase.html">Marketplace</a></li>
-          <li><a href="/pages/portfolio.html">Portfolio</a></li>
-          <li><a href="/pages/checkoutmint.html">Checkout</a></li>
-          <li><a href="/pages/provenance.html">Provenance</a></li>
-          <li><a href="/pages/artifact.html">Artifact</a></li>
+                    <li><a href="/" class="active">Home</a></li>
+                    <li><a href="/pages/pvadashboard.html">Dashboard</a></li>
+                    <li><a href="/pages/productshowcase.html">Marketplace</a></li>
+                    <li><a href="/pages/portfolio.html">Portfolio</a></li>
+                    <li><a href="/pages/checkoutmint.html">Checkout</a></li>
+                    <li><a href="/pages/provenance.html">Provenance</a></li>
+                    <li><a href="/pages/artifact.html">Artifact</a></li>
+                    <li><a href="/pages/assetcreate.html">Asset Creation</a></li>
+                    <li><a href="/pages/pvacertadmit.html">Certificate Admission</a></li>
+                    <li><a href="/pages/admin.html">Admin</a></li>
+                    <li><a href="/pages/market.html">Market (Alt)</a></li>
+                    <li><a href="/pages/PVA Bazaar - Shared Ownership Marketplace.html">Marketplace (Legacy)</a></li>
+                    <li><a href="/pages/provtrack.html">Provenance Tracker</a></li>
+                    <li><a href="/pages/provtracker.html">Provenance Tracker (Alt)</a></li>
+                    <li><a href="/pages/pvashares.html">Shares</a></li>
+                    <li><a href="/pages/welcome.html">Welcome</a></li>
         </ul>
       </nav>
       <div class="header-actions">
@@ -1092,87 +1133,8 @@
                             <th>Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr>
-                            <td>
-                                <div class="asset">
-                                    <div class="asset-icon">
-                                        <i class="fas fa-gem"></i>
-                                    </div>
-                                    <div>
-                                        <div class="asset-name">Amradjet Emerald Pendant</div>
-                                        <div class="asset-symbol">GEM-8245</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>$625.00</td>
-                            <td>12.5%</td>
-                            <td class="price-change positive">+2.3%</td>
-                            <td class="action-cell">
-                                <button class="table-btn btn-buy">Buy</button>
-                                <button class="table-btn btn-sell">Sell</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <div class="asset">
-                                    <div class="asset-icon">
-                                        <i class="fas fa-clock"></i>
-                                    </div>
-                                    <div>
-                                        <div class="asset-name">Vintage Rolex Submariner</div>
-                                        <div class="asset-symbol">WCH-5192</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>$2,460.00</td>
-                            <td>8.2%</td>
-                            <td class="price-change positive">+1.7%</td>
-                            <td class="action-cell">
-                                <button class="table-btn btn-buy">Buy</button>
-                                <button class="table-btn btn-sell">Sell</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <div class="asset">
-                                    <div class="asset-icon">
-                                        <i class="fas fa-paint-brush"></i>
-                                    </div>
-                                    <div>
-                                        <div class="asset-name">"Sunset Horizon" Oil Painting</div>
-                                        <div class="asset-symbol">ART-3671</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>$2,750.00</td>
-                            <td>5.5%</td>
-                            <td class="price-change positive">+3.1%</td>
-                            <td class="action-cell">
-                                <button class="table-btn btn-buy">Buy</button>
-                                <button class="table-btn btn-sell">Sell</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <div class="asset">
-                                    <div class="asset-icon">
-                                        <i class="fas fa-wine-bottle"></i>
-                                    </div>
-                                    <div>
-                                        <div class="asset-name">Rare Whisky Collection</div>
-                                        <div class="asset-symbol">COL-9283</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>$365.75</td>
-                            <td>2.8%</td>
-                            <td class="price-change negative">-0.8%</td>
-                            <td class="action-cell">
-                                <button class="table-btn btn-buy">Buy</button>
-                                <button class="table-btn btn-sell">Sell</button>
-                            </td>
-                        </tr>
+                    <tbody id="holdingsTableBody">
+                        <!-- Holdings will be loaded here by JS -->
                     </tbody>
                 </table>
                 
@@ -1227,73 +1189,45 @@
                 <div class="transactions">
                     <h2 class="section-title">Recent Transactions</h2>
                     <ul class="transaction-list">
-                        <li class="transaction-item">
+                        <!-- Transactions will be loaded here by JS -->
+        // Fetch and render recent transactions
+        async function fetchAndRenderTransactions() {
+            try {
+                const response = await fetch('/api/transactions');
+                const data = await response.json();
+                const list = document.querySelector('.transaction-list');
+                list.innerHTML = '';
+                if (Array.isArray(data.transactions)) {
+                    data.transactions.forEach(tx => {
+                        const li = document.createElement('li');
+                        li.className = 'transaction-item';
+                        li.innerHTML = `
                             <div class="transaction-type">
-                                <div class="type-icon buy">
-                                    <i class="fas fa-arrow-down"></i>
+                                <div class="type-icon ${tx.type === 'buy' ? 'buy' : 'sell'}">
+                                    <i class="fas fa-arrow-${tx.type === 'buy' ? 'down' : 'up'}"></i>
                                 </div>
                                 <div>
-                                    <div class="transaction-asset">Amradjet Emerald Pendant</div>
-                                    <div class="transaction-date">Today, 10:24 AM</div>
+                                    <div class="transaction-asset">${tx.assetName || 'Asset'}</div>
+                                    <div class="transaction-date">${tx.date ? new Date(tx.date).toLocaleString() : ''}</div>
                                 </div>
                             </div>
-                            <div>5 shares</div>
-                            <div class="transaction-amount">$250.00</div>
-                            <div class="transaction-status status-completed">
-                                <i class="fas fa-check-circle"></i> Completed
+                            <div>${tx.shares ? tx.shares + ' shares' : (tx.ownership ? tx.ownership + '% ownership' : '')}</div>
+                            <div class="transaction-amount">$${tx.amount ? tx.amount.toLocaleString() : '0.00'}</div>
+                            <div class="transaction-status status-${tx.status || 'completed'}">
+                                <i class="fas fa-check-circle"></i> ${tx.status ? tx.status.charAt(0).toUpperCase() + tx.status.slice(1) : 'Completed'}
                             </div>
-                        </li>
-                        
-                        <li class="transaction-item">
-                            <div class="transaction-type">
-                                <div class="type-icon sell">
-                                    <i class="fas fa-arrow-up"></i>
-                                </div>
-                                <div>
-                                    <div class="transaction-asset">Vintage Rolex Submariner</div>
-                                    <div class="transaction-date">Yesterday, 3:45 PM</div>
-                                </div>
-                            </div>
-                            <div>2 shares</div>
-                            <div class="transaction-amount">$615.00</div>
-                            <div class="transaction-status status-completed">
-                                <i class="fas fa-check-circle"></i> Completed
-                            </div>
-                        </li>
-                        
-                        <li class="transaction-item">
-                            <div class="transaction-type">
-                                <div class="type-icon buy">
-                                    <i class="fas fa-arrow-down"></i>
-                                </div>
-                                <div>
-                                    <div class="transaction-asset">Rare Whisky Collection</div>
-                                    <div class="transaction-date">Oct 12, 11:30 AM</div>
-                                </div>
-                            </div>
-                            <div>3 shares</div>
-                            <div class="transaction-amount">$360.00</div>
-                            <div class="transaction-status status-completed">
-                                <i class="fas fa-check-circle"></i> Completed
-                            </div>
-                        </li>
-                        
-                        <li class="transaction-item">
-                            <div class="transaction-type">
-                                <div class="type-icon buy">
-                                    <i class="fas fa-arrow-down"></i>
-                                </div>
-                                <div>
-                                    <div class="transaction-asset">"Sunset Horizon" Oil Painting</div>
-                                    <div class="transaction-date">Oct 10, 2:15 PM</div>
-                                </div>
-                            </div>
-                            <div>2.5% ownership</div>
-                            <div class="transaction-amount">$1,250.00</div>
-                            <div class="transaction-status status-completed">
-                                <i class="fas fa-check-circle"></i> Completed
-                            </div>
-                        </li>
+                        `;
+                        list.appendChild(li);
+                    });
+                } else {
+                    list.innerHTML = '<li>No recent transactions found.</li>';
+                }
+            } catch (err) {
+                console.error('Error fetching transactions:', err);
+                const list = document.querySelector('.transaction-list');
+                if (list) list.innerHTML = '<li>Error loading transactions.</li>';
+            }
+        }
                     </ul>
                 </div>
             </div>
@@ -1479,9 +1413,11 @@
             
             // Fetch initial portfolio data
             fetchPortfolioData();
+            fetchAndRenderTransactions();
             
             // Update portfolio data every 30 seconds
             setInterval(fetchPortfolioData, 30000);
+            setInterval(fetchAndRenderTransactions, 30000);
             
             // Update values periodically to simulate live data
             setInterval(() => {

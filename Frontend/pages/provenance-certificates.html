@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PVA Bazaar - Provenance & Certificates</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/public/css/pva-nav.css">
+  <style>
+    :root {
+      --primary-dark: #0f3b2d;
+      --primary: #1c5a45;
+      --primary-light: #2d7d5a;
+      --accent: #4ef8a3;
+      --accent-dark: #2bb673;
+      --gold: #d4af37;
+      --text-light: #e8f4f0;
+      --text-muted: #a8b0b9;
+      --card-bg: rgba(18, 18, 18, 0.95);
+      --card-border: rgba(42, 75, 42, 0.6);
+      --gradient-start: #4ef8a3;
+      --gradient-mid: #2bb673;
+      --gradient-end: #1c5a45;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+    body { background: #0a0a0a; color: var(--text-light); min-height: 100vh; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+    header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; margin-bottom: 30px; border-bottom: 1px solid var(--primary); }
+    .logo { display: flex; align-items: center; gap: 15px; text-decoration: none; }
+    .logo-icon { font-size: 2rem; color: var(--accent); }
+    .logo-text { font-family: 'Playfair Display', serif; font-size: 1.7rem; font-weight: 700; color: var(--gold); }
+    nav ul { display: flex; gap: 18px; list-style: none; }
+    nav a { color: var(--text-light); text-decoration: none; font-weight: 500; }
+    nav a.active, nav a:hover { color: var(--accent); }
+    .header-actions { display: flex; gap: 12px; }
+    .icon-btn, .btn { background: none; border: none; color: var(--accent); font-size: 1.1rem; cursor: pointer; padding: 8px 14px; border-radius: 8px; transition: background 0.2s; }
+    .icon-btn:hover, .btn:hover { background: var(--primary-light); }
+    .provenance-title { font-size: 2rem; font-weight: 700; color: var(--gold); margin-bottom: 24px; }
+    .search-section { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 14px; padding: 24px; margin-bottom: 32px; }
+    .search-title { font-size: 1.2rem; font-weight: 600; color: var(--accent); margin-bottom: 12px; }
+    .search-bar { display: flex; gap: 12px; margin-bottom: 18px; }
+    .search-input { flex: 1; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--primary-light); background: #181818; color: var(--text-light); font-size: 1rem; }
+    .search-btn { background: var(--accent-dark); color: #fff; border: none; border-radius: 8px; padding: 10px 22px; font-size: 1rem; cursor: pointer; transition: background 0.2s; }
+    .search-btn:hover { background: var(--accent); color: #0a0a0a; }
+    .results-section { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 14px; padding: 24px; margin-bottom: 32px; }
+    .results-title { font-size: 1.2rem; font-weight: 600; color: var(--accent); margin-bottom: 12px; }
+    .results-table { width: 100%; border-collapse: collapse; margin-bottom: 18px; }
+    .results-table th, .results-table td { padding: 10px 8px; border-bottom: 1px solid var(--card-border); text-align: left; }
+    .results-table th { color: var(--gold); font-weight: 600; background: var(--primary-dark); }
+    .results-table tr:last-child td { border-bottom: none; }
+    .cert-section { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 14px; padding: 24px; margin-bottom: 32px; }
+    .cert-title { font-size: 1.2rem; font-weight: 600; color: var(--accent); margin-bottom: 12px; }
+    .cert-list { display: flex; flex-wrap: wrap; gap: 18px; }
+    .cert-card { background: #181818; border: 1px solid var(--primary-light); border-radius: 10px; padding: 18px; min-width: 260px; flex: 1; color: var(--text-light); }
+    .cert-id { color: var(--gold); font-size: 1.1rem; font-weight: 600; margin-bottom: 6px; }
+    .cert-meta { color: var(--text-muted); font-size: 0.98rem; margin-bottom: 8px; }
+    .cert-link { color: var(--accent); text-decoration: underline; font-size: 0.98rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="/" class="logo">
+        <i class="fas fa-gem logo-icon"></i>
+        <div class="logo-text">PVA Bazaar</div>
+      </a>
+      <nav>
+        <ul>
+          <li><a href="/" class="active">Home</a></li>
+          <li><a href="/pages/dashboard-portfolio.html">Dashboard</a></li>
+          <li><a href="/pages/marketplace.html">Marketplace</a></li>
+          <li><a href="/pages/provenance-certificates.html">Provenance</a></li>
+          <li><a href="/pages/admin-management.html">Admin</a></li>
+        </ul>
+      </nav>
+      <div class="header-actions">
+        <button class="icon-btn" id="searchToggle" title="Search"><i class="fa-solid fa-magnifying-glass"></i></button>
+        <button class="btn" id="connectWallet"><i class="fa-solid fa-wallet"></i> Connect Wallet</button>
+      </div>
+    </header>
+    <div class="provenance-title">Provenance & Certificates</div>
+    <div class="search-section">
+      <div class="search-title">Track Asset Provenance</div>
+      <div class="search-bar">
+        <input class="search-input" id="provenanceSearchInput" type="text" placeholder="Enter Asset ID, Certificate, or Owner...">
+        <button class="search-btn" id="provenanceSearchBtn">Search</button>
+      </div>
+    </div>
+    <div class="results-section">
+      <div class="results-title">Provenance Results</div>
+      <table class="results-table">
+        <thead>
+          <tr>
+            <th>Asset</th>
+            <th>Owner</th>
+            <th>History</th>
+            <th>Certificate</th>
+          </tr>
+        </thead>
+        <tbody id="provenanceResultsBody"></tbody>
+      </table>
+    </div>
+    <div class="cert-section">
+      <div class="cert-title">Certificates</div>
+      <div class="cert-list" id="certList"></div>
+    </div>
+  </div>
+  <script>
+    // ...existing code for API fetch, search, results, and certificates...
+  </script>
+</body>
+</html>

@@ -3,15 +3,11 @@
   "framework": "vite",
   "buildCommand": "node ./scripts/vercel-build-wrapper.cjs",
   "outputDirectory": "dist",
-  "functions": {
-    "backend/server.js": {
-      "runtime": "@vercel/node"
-    }
-  },
+  
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "/backend/server.js"
+      "dest": "/api/server.js"
     },
     {
       "src": "/(.*)",

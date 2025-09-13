@@ -7,6 +7,73 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/public/css/pva-nav.css">
+        <script>
+            // Helper: Fetch product by ID (or slug)
+            async function fetchProduct(productId) {
+                try {
+                    const res = await fetch(`/api/artifacts/${productId}`);
+                    if (!res.ok) throw new Error('API error');
+                    return await res.json();
+                } catch (e) {
+                    console.error('API fetch failed:', e);
+                    return null;
+                }
+            }
+            // Change main image
+            function changeImage(url, el) {
+                document.getElementById('mainImage').src = url;
+                document.querySelectorAll('.thumbnail').forEach(t => t.classList.remove('active'));
+                if (el) el.classList.add('active');
+            }
+            document.addEventListener('DOMContentLoaded', async () => {
+                                // Get product ID from URL (?id=...)
+                                const params = new URLSearchParams(window.location.search);
+                                const productId = params.get('id') || 'emerald-pendant';
+                                const product = await fetchProduct(productId);
+                                if (!product) return;
+                                // Name
+                                document.getElementById('productName').textContent = product.name || '';
+                                // Images
+                                const mainImage = document.getElementById('mainImage');
+                                if (product.images && product.images.length) {
+                                        mainImage.src = product.images[0];
+                                        // Thumbnails
+                                        const thumbGrid = document.getElementById('thumbnailGrid');
+                                        thumbGrid.innerHTML = '';
+                                        product.images.forEach((img, i) => {
+                                                const div = document.createElement('div');
+                                                div.className = 'thumbnail' + (i === 0 ? ' active' : '');
+                                                div.onclick = () => changeImage(img, div);
+                                                div.innerHTML = `<img src="${img}" alt="${product.name || ''} view">`;
+                                                thumbGrid.appendChild(div);
+                                        });
+                                }
+                                // Price
+                                document.getElementById('currentPrice').textContent = product.price ? `$${product.price}` : '';
+                                // Fetch crypto rates from backend
+                                try {
+                                    const res = await fetch('/api/market/crypto');
+                                    const rates = await res.json();
+                                    if (rates && rates.btc && product.price) {
+                                        document.getElementById('btcEquivalent').textContent = (product.price / rates.btc).toFixed(4) + ' BTC';
+                                    }
+                                    if (rates && rates.eth && product.price) {
+                                        document.getElementById('ethEquivalent').textContent = (product.price / rates.eth).toFixed(4) + ' ETH';
+                                    }
+                                } catch (e) {
+                                    document.getElementById('btcEquivalent').textContent = '';
+                                    document.getElementById('ethEquivalent').textContent = '';
+                                }
+                                // Reviews
+                                document.getElementById('reviewCount').textContent = product.reviews ? `(${product.reviews.length} reviews)` : '';
+                                // Availability
+                                document.getElementById('availability').textContent = product.available ? 'Available' : 'Sold Out';
+                                // Description
+                                document.getElementById('productDescription').textContent = product.description || '';
+                                // Specs, blockchain info, transaction history
+                                // (Implement as API endpoints become available)
+            });
+        </script>
     <style>
         :root {
             /* PVA Brand Colors - Dark Emerald Theme */
@@ -1009,13 +1076,22 @@
       </a>
       <nav>
         <ul>
-          <li><a href="/" class="active">Home</a></li>
-          <li><a href="/pages/pvadashboard.html">Dashboard</a></li>
-          <li><a href="/pages/productshowcase.html">Marketplace</a></li>
-          <li><a href="/pages/portfolio.html">Portfolio</a></li>
-          <li><a href="/pages/checkoutmint.html">Checkout</a></li>
-          <li><a href="/pages/provenance.html">Provenance</a></li>
-          <li><a href="/pages/artifact.html">Artifact</a></li>
+                    <li><a href="/" class="active">Home</a></li>
+                    <li><a href="/pages/pvadashboard.html">Dashboard</a></li>
+                    <li><a href="/pages/productshowcase.html">Marketplace</a></li>
+                    <li><a href="/pages/portfolio.html">Portfolio</a></li>
+                    <li><a href="/pages/checkoutmint.html">Checkout</a></li>
+                    <li><a href="/pages/provenance.html">Provenance</a></li>
+                    <li><a href="/pages/artifact.html">Artifact</a></li>
+                    <li><a href="/pages/assetcreate.html">Asset Creation</a></li>
+                    <li><a href="/pages/pvacertadmit.html">Certificate Admission</a></li>
+                    <li><a href="/pages/admin.html">Admin</a></li>
+                    <li><a href="/pages/market.html">Market (Alt)</a></li>
+                    <li><a href="/pages/PVA Bazaar - Shared Ownership Marketplace.html">Marketplace (Legacy)</a></li>
+                    <li><a href="/pages/provtrack.html">Provenance Tracker</a></li>
+                    <li><a href="/pages/provtracker.html">Provenance Tracker (Alt)</a></li>
+                    <li><a href="/pages/pvashares.html">Shares</a></li>
+                    <li><a href="/pages/welcome.html">Welcome</a></li>
         </ul>
       </nav>
       <div class="header-actions">
@@ -1030,7 +1106,7 @@
     </header>
 
     <div class="container">
-        <!-- Breadcrumb -->
+        <!-- Breadcrumb (static for now, can be dynamic) -->
         <nav class="breadcrumb">
             <a href="#">Home</a>
             <i class="fas fa-chevron-right"></i>
@@ -1038,7 +1114,7 @@
             <i class="fas fa-chevron-right"></i>
             <a href="#">Pendants</a>
             <i class="fas fa-chevron-right"></i>
-            <span>Maradjet Emerald Pendant</span>
+            <span id="productName">...</span>
         </nav>
 
         <!-- Product Grid -->
@@ -1046,21 +1122,10 @@
             <!-- Image Gallery -->
             <div class="image-gallery">
                 <div class="main-image">
-                    <img id="mainImage" src="https://indigo-wrong-antlion-532.mypinata.cloud/ipfs/bafybeif36cjddajqmuj5vth6mflaybevmh5ipiomtezo6mm6cg7nbohfyq/emerald_pendant_1.jpg" alt="Maradjet Emerald Pendant">
+                    <img id="mainImage" src="" alt="Product Main Image">
                 </div>
-                <div class="thumbnail-grid">
-                    <div class="thumbnail active" onclick="changeImage('https://indigo-wrong-antlion-532.mypinata.cloud/ipfs/bafybeif36cjddajqmuj5vth6mflaybevmh5ipiomtezo6mm6cg7nbohfyq/emerald_pendant_1.jpg', this)">
-                        <img src="https://indigo-wrong-antlion-532.mypinata.cloud/ipfs/bafybeif36cjddajqmuj5vth6mflaybevmh5ipiomtezo6mm6cg7nbohfyq/emerald_pendant_1.jpg" alt="Main View">
-                    </div>
-                    <div class="thumbnail" onclick="changeImage('https://indigo-wrong-antlion-532.mypinata.cloud/ipfs/bafybeif36cjddajqmuj5vth6mflaybevmh5ipiomtezo6mm6cg7nbohfyq/emerald_pendant_1.jpg', this)">
-                        <img src="https://indigo-wrong-antlion-532.mypinata.cloud/ipfs/bafybeif36cjddajqmuj5vth6mflaybevmh5ipiomtezo6mm6cg7nbohfyq/emerald_pendant_1.jpg" alt="Side View">
-                    </div>
-                    <div class="thumbnail" onclick="changeImage('https://indigo-wrong-antlion-532.mypinata.cloud/ipfs/bafybeif36cjddajqmuj5vth6mflaybevmh5ipiomtezo6mm6cg7nbohfyq/emerald_pendant_1.jpg', this)">
-                        <img src="https://indigo-wrong-antlion-532.mypinata.cloud/ipfs/bafybeif36cjddajqmuj5vth6mflaybevmh5ipiomtezo6mm6cg7nbohfyq/emerald_pendant_1.jpg" alt="Detail View">
-                    </div>
-                    <div class="thumbnail" onclick="changeImage('https://indigo-wrong-antlion-532.mypinata.cloud/ipfs/bafybeif36cjddajqmuj5vth6mflaybevmh5ipiomtezo6mm6cg7nbohfyq/emerald_pendant_1.jpg', this)">
-                        <img src="https://indigo-wrong-antlion-532.mypinata.cloud/ipfs/bafybeif36cjddajqmuj5vth6mflaybevmh5ipiomtezo6mm6cg7nbohfyq/emerald_pendant_1.jpg" alt="Studio Shot">
-                    </div>
+                <div class="thumbnail-grid" id="thumbnailGrid">
+                    <!-- Thumbnails will be loaded here -->
                 </div>
             </div>
 
@@ -1068,7 +1133,7 @@
             <div class="product-info">
                 <!-- Header -->
                 <div class="product-header">
-                    <h1>Maradjet Emerald Pendant</h1>
+                    <h1 id="productName">...</h1>
                     <div class="product-meta">
                         <div class="rating">
                             <div class="stars">
@@ -1078,11 +1143,11 @@
                                 <i class="fas fa-star"></i>
                                 <i class="fas fa-star"></i>
                             </div>
-                            <span class="review-count">(24 reviews)</span>
+                            <span class="review-count" id="reviewCount"></span>
                         </div>
                         <div class="availability">
                             <i class="fas fa-check-circle"></i>
-                            <span>Available</span>
+                            <span id="availability"></span>
                         </div>
                     </div>
                 </div>
@@ -1090,12 +1155,12 @@
                 <!-- Price -->
                 <div class="price-section">
                     <div class="crypto-price-display">
-                        <span class="current-price">$2,847.00</span>
+                        <span class="current-price" id="currentPrice"></span>
                         <div class="crypto-equivalent">
                             <i class="fab fa-bitcoin" style="color: var(--bitcoin);"></i>
-                            <span id="btcEquivalent">≈ 0.065 BTC</span>
+                            <span id="btcEquivalent"></span>
                             <i class="fab fa-ethereum" style="color: var(--ethereum);"></i>
-                            <span id="ethEquivalent">≈ 1.15 ETH</span>
+                            <span id="ethEquivalent"></span>
                         </div>
                     </div>
                     <span class="original-price">$3,200.00</span>
@@ -1104,7 +1169,7 @@
 
                 <!-- Description -->
                 <div class="product-description">
-                    <p>Maradjet is the flagship creation of PVABazaar. Its name blends "Maraghd" — an ancient word for emerald — with "Jet", symbolizing both brilliance and flight. This exquisite pendant features a 1.47 carat natural unheated Panjshir Emerald, handcrafted in 18k gold with blockchain-verified provenance.</p>
+                    <span id="productDescription"></span>
                 </div>
 
                 <!-- Purchase Options -->
@@ -1410,8 +1475,11 @@
         // Real-time data fetching functions
         async function fetchProductData() {
             try {
-                // Fetch the Maradjet Emerald Pendant data (using the ID from our seeded data)
-                const response = await fetch('/api/artifacts/68c0c45d7eb21440f8a6bf9e');
+                // Fetch artifact by id from query string (?id=...)
+                const params = new URLSearchParams(window.location.search);
+                const artifactId = params.get('id');
+                if (!artifactId) { console.warn('No artifact id in query'); return; }
+                const response = await fetch(`/api/artifacts/${artifactId}`);
                 const data = await response.json();
                 
                 if (data.ok) {
@@ -1489,7 +1557,10 @@
         function updateCryptoEquivalents() {
             // This function now uses real crypto prices from the API
             if (currentPrices.btc && currentPrices.eth) {
-                const usdPrice = 2847; // Maradjet price in USD
+                // Use current displayed USD price if available
+                const priceEl = document.querySelector('.current-price');
+                const parsed = priceEl ? Number(priceEl.textContent.replace(/[$,]/g,'')) : 0;
+                const usdPrice = parsed || 0;
                 
                 const btcEquiv = (usdPrice / currentPrices.btc).toFixed(3);
                 const ethEquiv = (usdPrice / currentPrices.eth).toFixed(2);

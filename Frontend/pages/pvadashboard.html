@@ -8,6 +8,127 @@
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/public/css/pva-nav.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+            // --- API Helper ---
+            async function fetchAPI(endpoint) {
+                try {
+                    const res = await fetch(endpoint);
+                    if (!res.ok) throw new Error('API error');
+                    return await res.json();
+                } catch (e) {
+                    console.error('API fetch failed:', endpoint, e);
+                    return null;
+                }
+            }
+            // --- Wallet Connect Logic ---
+            function getConnectedWallet() {
+                return window.localStorage.getItem('walletAddress') || '';
+            }
+            function setConnectedWallet(addr) {
+                window.localStorage.setItem('walletAddress', addr);
+            }
+            function updateWalletButton() {
+                const walletBtn = document.getElementById('connectWallet');
+                const wallet = getConnectedWallet();
+                if (wallet) {
+                    walletBtn.textContent = 'Wallet: ' + wallet.slice(0,6) + '...' + wallet.slice(-4);
+                    walletBtn.setAttribute('aria-label', 'Connected wallet: ' + wallet);
+                } else {
+                    walletBtn.textContent = 'Connect Wallet';
+                    walletBtn.setAttribute('aria-label', 'Connect your wallet');
+                }
+            }
+            function connectWallet() {
+                const walletBtn = document.getElementById('connectWallet');
+                const wallet = getConnectedWallet();
+                if (wallet) {
+                    if (confirm('Disconnect wallet ' + wallet + '?')) {
+                        setConnectedWallet('');
+                        updateWalletButton();
+                    }
+                } else {
+                    const fakeWallet = prompt('Enter wallet address to connect:');
+                    if (fakeWallet) {
+                        setConnectedWallet(fakeWallet);
+                        updateWalletButton();
+                    }
+                }
+            }
+            // --- Dashboard Dynamic Data Loader ---
+            document.addEventListener('DOMContentLoaded', async () => {
+                // --- Stats ---
+                const stats = await fetchAPI('/api/dashboard/stats'); // TODO: Implement /api/dashboard/stats if missing
+                if (stats && stats.ok && stats.stats) {
+                    document.getElementById('totalUsers').textContent = stats.stats.totalUsers?.toLocaleString() || '';
+                    document.getElementById('totalItems').textContent = stats.stats.totalArtifacts?.toLocaleString() || '';
+                    document.getElementById('totalVolume').textContent = stats.stats.totalValue ? ('$' + (stats.stats.totalValue/1000000).toFixed(1) + 'M') : '';
+                } else {
+                    document.getElementById('totalUsers').textContent = '';
+                    document.getElementById('totalItems').textContent = '';
+                    document.getElementById('totalVolume').textContent = '';
+                }
+                // --- Trending Items ---
+                const trending = await fetchAPI('/api/artifacts?sort=trending&limit=4'); // TODO: Implement trending sort if missing
+                const trendingGrid = document.querySelector('.item-grid');
+                trendingGrid.innerHTML = '';
+                if (trending && trending.length) {
+                    trending.forEach(item => {
+                        const card = document.createElement('div');
+                        card.className = 'item-card';
+                        card.innerHTML = `
+                            <div class="item-image">
+                                <img src="${item.image || ''}" alt="${item.name || ''}">
+                                <div class="item-badge">Trending</div>
+                            </div>
+                            <div class="item-details">
+                                <div class="item-name">${item.name || ''}</div>
+                                <div class="item-price">${item.price ? item.price + ' PVA' : ''}</div>
+                                <div class="item-progress"><div class="progress-bar" style="width: ${item.progress || 0}%"></div></div>
+                                <div class="item-stats"><div>${item.sharesSold || 0}/${item.totalShares || 0} Shares Sold</div><div>${item.progress || 0}% Complete</div></div>
+                            </div>
+                        `;
+                        trendingGrid.appendChild(card);
+                    });
+                }
+                // --- Transactions ---
+                const txs = await fetchAPI('/api/transactions?limit=5'); // TODO: Implement /api/transactions for user
+                const txList = document.querySelector('.transaction-list');
+                txList.innerHTML = '';
+                if (txs && txs.length) {
+                    txs.forEach(tx => {
+                        const div = document.createElement('div');
+                        div.className = 'transaction-item';
+                        div.innerHTML = `
+                            <div class="transaction-icon ${tx.type}"><i class="fas fa-arrow-${tx.type === 'buy' ? 'down' : 'up'}"></i></div>
+                            <div class="transaction-details"><div class="transaction-title">${tx.title || ''}</div><div class="transaction-subtitle">By ${tx.user || ''} • ${tx.time || ''}</div></div>
+                            <div class="transaction-amount ${tx.type === 'buy' ? 'up' : 'down'}">${tx.amount || ''}</div>
+                        `;
+                        txList.appendChild(div);
+                    });
+                }
+                // --- User Activity ---
+                const activity = await fetchAPI('/api/activity?limit=4'); // TODO: Implement /api/activity
+                const activityList = document.querySelector('.user-activity');
+                activityList.innerHTML = '';
+                if (activity && activity.length) {
+                    activity.forEach(act => {
+                        const div = document.createElement('div');
+                        div.className = 'activity-item';
+                        div.innerHTML = `
+                            <div class="user-avatar"><img src="${act.avatar || ''}" alt="User Avatar"></div>
+                            <div class="activity-details"><div><span>${act.name || ''}</span> ${act.action || ''}</div><div class="activity-time">${act.time || ''}</div></div>
+                        `;
+                        activityList.appendChild(div);
+                    });
+                }
+                // --- Wallet Connect Button ---
+                const walletBtn = document.getElementById('connectWallet');
+                if (walletBtn) {
+                    walletBtn.onclick = connectWallet;
+                    updateWalletButton();
+                }
+            });
+        </script>
     <style>
         :root {
             --primary-dark: #0a1f19;
@@ -92,6 +213,7 @@
             color: var(--text-light);
             font-family: 'Playfair Display', serif;
             background: linear-gradient(to right, var(--accent), var(--gold));
+            background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             text-shadow: 0 2px 10px rgba(78, 248, 163, 0.3);
@@ -325,6 +447,7 @@
             font-weight: 700;
             margin-bottom: 5px;
             background: linear-gradient(to right, var(--accent), var(--gold-light));
+            background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -985,70 +1108,85 @@
         }
         
         /* Responsive design */
+        /* --- Enhanced Mobile Responsiveness --- */
         @media (max-width: 1200px) {
             .main-content {
                 grid-template-columns: 1fr;
             }
-            
             .item-grid {
-                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+                grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
             }
         }
-        
         @media (max-width: 992px) {
             .header-content {
                 flex-direction: column;
                 gap: 20px;
             }
-            
             nav {
                 flex-wrap: wrap;
                 justify-content: center;
             }
-            
             .header-actions {
                 margin-top: 15px;
             }
-            
             .hero-stats {
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns: 1fr 1fr;
             }
         }
-        
         @media (max-width: 768px) {
             .hero-stats {
                 grid-template-columns: 1fr;
             }
-            
             .item-grid {
                 grid-template-columns: 1fr;
             }
-            
             .cta-buttons {
                 flex-direction: column;
                 align-items: center;
             }
-            
             .search-input {
-                width: 200px;
+                width: 100%;
+                min-width: 0;
             }
-            
             .search-input:focus {
-                width: 250px;
+                width: 100%;
+            }
+            .stat-card, .chart-section, .trending-items, .recent-transactions, .sidebar-section {
+                padding: 12px;
+            }
+            .item-details {
+                padding: 10px;
+            }
+            .item-image {
+                height: 120px;
+            }
+            .section-title {
+                font-size: 1.1rem;
             }
         }
-        
         @media (max-width: 576px) {
             .stat-value {
-                font-size: 1.8rem;
+                font-size: 1.2rem;
             }
-            
             .cta-title {
-                font-size: 2rem;
+                font-size: 1.3rem;
             }
-            
             .footer-content {
                 grid-template-columns: 1fr;
+            }
+            .header-content, .main-content, .sidebar {
+                padding: 0 4px;
+            }
+            .btn, .btn-primary, .btn-outline {
+                padding: 10px 12px;
+                font-size: 0.95rem;
+            }
+            .item-badge {
+                font-size: 0.7rem;
+                padding: 3px 8px;
+            }
+            .item-name, .item-price {
+                font-size: 1rem;
             }
         }
     </style>
@@ -1060,15 +1198,24 @@
         <div class="logo-text">PVA Bazaar</div>
       </a>
       <nav>
-        <ul>
-          <li><a href="/" class="active">Home</a></li>
-          <li><a href="/pages/pvadashboard.html">Dashboard</a></li>
-          <li><a href="/pages/productshowcase.html">Marketplace</a></li>
-          <li><a href="/pages/portfolio.html">Portfolio</a></li>
-          <li><a href="/pages/checkoutmint.html">Checkout</a></li>
-          <li><a href="/pages/provenance.html">Provenance</a></li>
-          <li><a href="/pages/artifact.html">Artifact</a></li>
-        </ul>
+                <ul>
+                    <li><a href="/" class="active" tabindex="0" aria-current="page">Home</a></li>
+                    <li><a href="/pages/pvadashboard.html" tabindex="0">Dashboard</a></li>
+                    <li><a href="/pages/productshowcase.html" tabindex="0">Marketplace</a></li>
+                    <li><a href="/pages/portfolio.html" tabindex="0">Portfolio</a></li>
+                    <li><a href="/pages/checkoutmint.html" tabindex="0">Checkout</a></li>
+                    <li><a href="/pages/provenance.html" tabindex="0">Provenance</a></li>
+                    <li><a href="/pages/artifact.html" tabindex="0">Artifact</a></li>
+                    <li><a href="/pages/assetcreate.html" tabindex="0">Asset Creation</a></li>
+                    <li><a href="/pages/pvacertadmit.html" tabindex="0">Certificate Admission</a></li>
+                    <li><a href="/pages/admin.html" tabindex="0">Admin</a></li>
+                    <li><a href="/pages/market.html" tabindex="0">Market (Alt)</a></li>
+                    <li><a href="/pages/PVA Bazaar - Shared Ownership Marketplace.html" tabindex="0">Marketplace (Legacy)</a></li>
+                    <li><a href="/pages/provtrack.html" tabindex="0">Provenance Tracker</a></li>
+                    <li><a href="/pages/provtracker.html" tabindex="0">Provenance Tracker (Alt)</a></li>
+                    <li><a href="/pages/pvashares.html" tabindex="0">Shares</a></li>
+                    <li><a href="/pages/welcome.html" tabindex="0">Welcome</a></li>
+                </ul>
       </nav>
       <div class="header-actions">
         <button class="icon-btn" id="searchToggle" title="Search">
@@ -1085,7 +1232,6 @@
                 </div>
                 <div class="stat-value" id="totalUsers">12,847</div>
                 <div class="stat-label">Active Users</div>
-                <div class="stat-change change-up">+12.5%</div>
             </div>
             
             <div class="stat-card animate-fadeIn" style="animation-delay: 0.2s;">
@@ -1094,7 +1240,6 @@
                 </div>
                 <div class="stat-value" id="totalItems">18,562</div>
                 <div class="stat-label">Items Listed</div>
-                <div class="stat-change change-up">+8.3%</div>
             </div>
             
             <div class="stat-card animate-fadeIn" style="animation-delay: 0.3s;">
@@ -1103,7 +1248,6 @@
                 </div>
                 <div class="stat-value" id="totalVolume">$4.7M</div>
                 <div class="stat-label">Trading Volume</div>
-                <div class="stat-change change-up">+15.2%</div>
             </div>
             
             <div class="stat-card animate-fadeIn" style="animation-delay: 0.4s;">
@@ -1112,7 +1256,6 @@
                 </div>
                 <div class="stat-value" id="pvaCoin">$0.94</div>
                 <div class="stat-label">PVA Coin</div>
-                <div class="stat-change change-up">+6.8%</div>
             </div>
             
             <div class="stat-card animate-fadeIn" style="animation-delay: 0.5s;">
@@ -1121,7 +1264,6 @@
                 </div>
                 <div class="stat-value" id="avgPrice">$427</div>
                 <div class="stat-label">Avg Item Price</div>
-                <div class="stat-change change-down">-1.2%</div>
             </div>
         </div>
         
@@ -1499,72 +1641,7 @@
         <div class="container">
             <div class="footer-content">
                 <div>
-                    <div class="footer-logo">PVA Bazaar</div>
-                    <p class="footer-description">
-                        The premier marketplace for physical and digital artifacts, 
-                        with transparent ownership and provenance tracking.
-                    </p>
-                    <div class="social-links">
-                        <a href="#"><i class="fab fa-twitter"></i></a>
-                        <a href="#"><i class="fab fa-instagram"></i></a>
-                        <a href="#"><i class="fab fa-discord"></i></a>
-                        <a href="#"><i class="fab fa-github"></i></a>
-                    </div>
-                </div>
-                
-                <div class="footer-links">
-                    <h4>Marketplace</h4>
-                    <ul>
-                        <li><a href="#">All Items</a></li>
-                        <li><a href="#">Collections</a></li>
-                        <li><a href="#">Trending</a></li>
-                        <li><a href="#">New Arrivals</a></li>
-                        <li><a href="#">Completed Sales</a></li>
-                    </ul>
-                </div>
-                
-                <div class="footer-links">
-                    <h4>My Account</h4>
-                    <ul>
-                        <li><a href="#">Profile</a></li>
-                        <li><a href="#">My Collections</a></li>
-                        <li><a href="#">Watchlist</a></li>
-                        <li><a href="#">My Shares</a></li>
-                        <li><a href="#">Settings</a></li>
-                    </ul>
-                </div>
-                
-                <div class="footer-links">
-                    <h4>Resources</h4>
-                    <ul>
-                        <li><a href="#">Help Center</a></li>
-                        <li><a href="#">Provenance Guide</a></li>
-                        <li><a href="#">Blockchain Basics</a></li>
-                        <li><a href="#">PVA Coin</a></li>
-                        <li><a href="#">Contact Support</a></li>
-                    </ul>
-                </div>
-            </div>
-            
-            <div class="copyright">
-                © 2025 PVA Bazaar. All rights reserved.
-            </div>
-        </div>
-    </footer>
-
-    <script>
-        // Market chart initialization
-        const ctx = document.getElementById('marketChart').getContext('2d');
-        
-        // Generate random data for chart
-        const generateChartData = (days, startValue) => {
-            let data = [];
-            let value = startValue;
-            
-            for (let i = 0; i < days; i++) {
-                // Random walk with some trend
-                value += (Math.random() - 0.45) * 3;
-                if (value < 50) value = 50;
+                        <!-- Trending items will be loaded here by JS -->
                 data.push(value);
             }
             
@@ -1793,56 +1870,7 @@
         ticker.innerHTML = ticker.innerHTML + ticker.innerHTML;
         
         // Add new transaction to the list
-        const transactions = [
-            {
-                type: 'buy',
-                title: 'Purchase: Amradjet Emerald Pendant',
-                user: '0x7f3a...9c42',
-                amount: '+125 PVA'
-            },
-            {
-                type: 'sell',
-                title: 'Sale: Sapphire Wave Bracelet',
-                user: '0x5b2d...3e78',
-                amount: '-75 PVA'
-            },
-            {
-                type: 'buy',
-                title: 'Purchase: Diamond Crown Brooch',
-                user: '0x9a4f...1d23',
-                amount: '+300 PVA'
-            },
-            {
-                type: 'buy',
-                title: 'Purchase: Emerald Phoenix Earrings',
-                user: '0x3c8e...7b51',
-                amount: '+200 PVA'
-            },
-            {
-                type: 'sell',
-                title: 'Sale: Ruby Dragon Pendant',
-                user: '0x6d1a...4f93',
-                amount: '-150 PVA'
-            }
-        ];
-        
-        function addNewTransaction() {
-            const transactionList = document.querySelector('.transaction-list');
-            const randomTransaction = transactions[Math.floor(Math.random() * transactions.length)];
-            
-            // Create new transaction element
-            const newTransactionEl = document.createElement('div');
-            newTransactionEl.className = 'transaction-item';
-            newTransactionEl.innerHTML = `
-                <div class="transaction-icon ${randomTransaction.type}">
-                    <i class="fas fa-arrow-${randomTransaction.type === 'buy' ? 'down' : 'up'}"></i>
-                </div>
-                <div class="transaction-details">
-                    <div class="transaction-title">${randomTransaction.title}</div>
-                    <div class="transaction-subtitle">By ${randomTransaction.user} • Just now</div>
-                </div>
-                <div class="transaction-amount ${randomTransaction.type === 'buy' ? 'up' : 'down'}">${randomTransaction.amount}</div>
-            `;
+                        <!-- Transactions will be loaded here by JS -->
             
             // Add to top of list
             transactionList.insertBefore(newTransactionEl, transactionList.firstChild);
@@ -1915,42 +1943,7 @@
             const newActivityEl = document.createElement('div');
             newActivityEl.className = 'activity-item';
             newActivityEl.innerHTML = `
-                <div class="user-avatar">
-                    <img src="${randomActivity.avatar}" alt="User Avatar">
-                </div>
-                <div class="activity-details">
-                    <div><span>${randomActivity.name}</span> ${randomActivity.action}</div>
-                    <div class="activity-time">Just now</div>
-                </div>
-            `;
-            
-            // Add to top of list
-            userActivity.insertBefore(newActivityEl, userActivity.firstChild);
-            
-            // Remove last item if more than 4
-            if (userActivity.children.length > 4) {
-                userActivity.removeChild(userActivity.lastChild);
-            }
-            
-            // Update time for other activities
-            const otherTimes = document.querySelectorAll('.activity-time');
-            otherTimes.forEach((item, index) => {
-                if (index > 0) {
-                    const timeText = item.textContent;
-                    if (timeText === 'Just now') {
-                        item.textContent = '1 minute ago';
-                    } else if (timeText.includes('minute')) {
-                        const minutesMatch = timeText.match(/(\d+)/);
-                        if (minutesMatch) {
-                            const minutes = parseInt(minutesMatch[0]) + 1;
-                            if (minutes >= 60) {
-                                item.textContent = '1 hour ago';
-                            } else {
-                                item.textContent = `${minutes} minutes ago`;
-                            }
-                        }
-                    }
-                }
+                        <!-- User activity will be loaded here by JS -->
             });
         }
         

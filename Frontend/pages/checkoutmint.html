@@ -433,13 +433,22 @@
       </a>
       <nav>
         <ul>
-          <li><a href="/" class="active">Home</a></li>
-          <li><a href="/pages/pvadashboard.html">Dashboard</a></li>
-          <li><a href="/pages/productshowcase.html">Marketplace</a></li>
-          <li><a href="/pages/portfolio.html">Portfolio</a></li>
-          <li><a href="/pages/checkoutmint.html">Checkout</a></li>
-          <li><a href="/pages/provenance.html">Provenance</a></li>
-          <li><a href="/pages/artifact.html">Artifact</a></li>
+                    <li><a href="/" class="active">Home</a></li>
+                    <li><a href="/pages/pvadashboard.html">Dashboard</a></li>
+                    <li><a href="/pages/productshowcase.html">Marketplace</a></li>
+                    <li><a href="/pages/portfolio.html">Portfolio</a></li>
+                    <li><a href="/pages/checkoutmint.html">Checkout</a></li>
+                    <li><a href="/pages/provenance.html">Provenance</a></li>
+                    <li><a href="/pages/artifact.html">Artifact</a></li>
+                    <li><a href="/pages/assetcreate.html">Asset Creation</a></li>
+                    <li><a href="/pages/pvacertadmit.html">Certificate Admission</a></li>
+                    <li><a href="/pages/admin.html">Admin</a></li>
+                    <li><a href="/pages/market.html">Market (Alt)</a></li>
+                    <li><a href="/pages/PVA Bazaar - Shared Ownership Marketplace.html">Marketplace (Legacy)</a></li>
+                    <li><a href="/pages/provtrack.html">Provenance Tracker</a></li>
+                    <li><a href="/pages/provtracker.html">Provenance Tracker (Alt)</a></li>
+                    <li><a href="/pages/pvashares.html">Shares</a></li>
+                    <li><a href="/pages/welcome.html">Welcome</a></li>
         </ul>
       </nav>
       <div class="header-actions">
@@ -708,7 +717,61 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label">Wallet Address</label>
-                            <input type="text" class="form-input" placeholder="Enter your wallet address" required>
+                                                        <div class="wallet-address-group">
+                                                            <input type="text" class="form-input" id="walletAddressInput" placeholder="Enter your wallet address" required>
+                                                            <button type="button" id="connectWalletBtn" class="btn" style="margin-top:8px;display:none;">Connect Wallet</button>
+                                                        </div>
+        // Wallet connect simulation
+        function getConnectedWallet() {
+            // Simulate wallet connection (replace with real wallet logic)
+            return window.localStorage.getItem('walletAddress') || '';
+        }
+
+        function setConnectedWallet(addr) {
+            window.localStorage.setItem('walletAddress', addr);
+        }
+
+        function showWalletConnect() {
+            const input = document.getElementById('walletAddressInput');
+            const btn = document.getElementById('connectWalletBtn');
+            const wallet = getConnectedWallet();
+            if (wallet) {
+                input.value = wallet;
+                btn.style.display = 'none';
+            } else {
+                input.value = '';
+                btn.style.display = 'block';
+                btn.onclick = async () => {
+                    // Simulate wallet connect
+                    const fakeWallet = prompt('Enter wallet address to connect:');
+                    if (fakeWallet) {
+                        setConnectedWallet(fakeWallet);
+                        input.value = fakeWallet;
+                        btn.style.display = 'none';
+                    }
+                };
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', showWalletConnect);
+
+        // Input masking/validation for card fields
+        document.addEventListener('input', function(e) {
+            if (e.target.placeholder === '1234 5678 9012 3456') {
+                // Card number: allow only digits, auto-insert spaces
+                let v = e.target.value.replace(/\D/g, '').slice(0,16);
+                v = v.replace(/(.{4})/g, '$1 ').trim();
+                e.target.value = v;
+            } else if (e.target.placeholder === 'MM/YY') {
+                // Expiry: MM/YY format
+                let v = e.target.value.replace(/[^\d/]/g, '').slice(0,5);
+                if (v.length === 2 && !v.includes('/')) v = v + '/';
+                e.target.value = v;
+            } else if (e.target.placeholder === '123') {
+                // CVV: 3-4 digits
+                e.target.value = e.target.value.replace(/\D/g, '').slice(0,4);
+            }
+        });
                         </div>
                     `;
                 } else if (optionId === 'option-card') {

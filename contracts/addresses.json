@@ -1,0 +1,5 @@
+{
+  "84532": { "network": "base-sepolia", "PVA_NFT": "0x...", "Marketplace": "0x..." },
+  "8453":  { "network": "base",         "PVA_NFT": "0x...", "Marketplace": "0x..." },
+  "137":   { "network": "polygon",      "PVA_NFT": "0x...", "Marketplace": "0x..." }
+}

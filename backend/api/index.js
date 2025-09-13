@@ -126,6 +126,8 @@ app.use('/api/search', searchRoutes);
 app.use('/api/transactions', transactionsRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/market', marketRoutes);
+app.use('/api/marketplace', marketRoutes); // alias for /api/marketplace/stats
+app.use('/api/categories', marketRoutes); // for /api/categories/counts
 app.use('/api/portfolio', portfolioRoutes);
 
 // Dev-only: issue a token for quick testing

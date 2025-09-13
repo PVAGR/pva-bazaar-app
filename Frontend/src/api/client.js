@@ -3,7 +3,7 @@ import config from '../../config';
 // Use environment variable if available, otherwise fallback to config
 const base = (import.meta?.env?.VITE_API_BASE) || config?.apiUrl || '/api';
 
-console.log('API base URL:', base); // For debugging
+// base API endpoint selected above (debug log removed for production cleanliness)
 
 function authHeaders() {
   const token = localStorage.getItem('token');

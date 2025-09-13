@@ -1,4 +1,5 @@
 import { api } from '../api/client';
+import { getUserAuthContext } from '../auth/authPrompt';
 
 function q(name) {
   const u = new URL(window.location.href);
@@ -40,20 +41,20 @@ async function loadCheckout() {
         if (!shares || shares <= 0) return alert('Enter a valid quantity');
 
         // ensure auth via prompt (simple fallback)
-        let token = localStorage.getItem('token');
-        if (!token) {
-          const email = prompt('Email (try admin@pvabazaar.org)');
-          const password = prompt('Password (try admin123)');
-          if (!email || !password) return alert('Login cancelled');
-          const r = await api.post('/auth/login', { email, password }).catch(e => null);
-          if (!r || !r.token) return alert('Login failed');
-          localStorage.setItem('token', r.token);
-          token = r.token;
-        }
-
         try {
-          const wallet = 'demo-wallet';
-          const amountUSD = 0; // placeholder
+          const auth = await getUserAuthContext();
+          const wallet = auth.walletAddress;
+          // Derive USD amount: prefer fractional sharePrice * shares, else pro-rata artifact.price
+          let amountUSD = 0;
+          try {
+            if (artifact?.fractionalization?.sharePrice) {
+              amountUSD = Number(artifact.fractionalization.sharePrice) * shares;
+            } else if (artifact?.price && artifact?.fractionalization?.totalShares) {
+              const perShare = Number(artifact.price) / Number(artifact.fractionalization.totalShares || 1);
+              amountUSD = perShare * shares;
+            }
+            amountUSD = Math.round((amountUSD + Number.EPSILON) * 100) / 100;
+          } catch(_) {}
           const body = { artifactId: id, wallet, amountUSD, shares };
           const res = await api.post('/transactions/shares/buy', body);
           if (res?.ok) {

@@ -6,11 +6,15 @@
   "scripts": {
     "dev": "vite",
     "prebuild": "node scripts/vercel-info.cjs",
-  "build": "vite build",
-  "postbuild": "node scripts/copy-src-to-dist.cjs",
-    "preview": "vite preview"
+    "build": "vite build",
+    "postbuild": "node scripts/copy-src-to-dist.cjs",
+    "preview": "vite preview",
+    "test": "vitest run"
   },
   "dependencies": {
     "vite": "^5.0.0"
+  },
+  "devDependencies": {
+    "@vitest/ui": "^3.2.4"
   }
 }
