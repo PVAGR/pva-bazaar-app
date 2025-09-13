@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Provenance Tracker - PVA Bazaar</title>
+  <title>PVA Bazaar - Provenance Tracker</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/public/css/pva-nav.css">
   <style>
     :root {
       --primary-dark: #0a2c21;
@@ -32,54 +33,36 @@
     html { scroll-behavior: smooth; }
 
     body {
-      background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
-      color: var(--text-light);
-      line-height: 1.6;
-      min-height: 100vh;
-      overflow-x: hidden;
+  background: #0a0a0a;
+  color: var(--text-light);
+  min-height: 100vh;
     }
 
     .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
     }
 
     /* Header */
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 20px 0;
-      margin-bottom: 30px;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      backdrop-filter: blur(10px);
+    header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; padding: 20px 0; margin-bottom: 30px; border-bottom: 1px solid var(--primary); min-width: 0; }
+    .logo { display: flex; align-items: center; gap: 15px; text-decoration: none; min-width: 0; }
+    .logo-icon { font-size: 2rem; color: var(--accent); }
+    .logo-text { font-family: 'Playfair Display', serif; font-size: 1.7rem; font-weight: 700; color: var(--gold); white-space: nowrap; }
+    nav ul { display: flex; flex-wrap: wrap; gap: 18px; list-style: none; padding: 0; margin: 0; }
+    nav a { color: var(--text-light); text-decoration: none; font-weight: 500; padding: 6px 10px; border-radius: 6px; white-space: nowrap; }
+    nav a.active, nav a:hover { color: var(--accent); background: rgba(46,255,180,0.08); }
+    .header-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+    .icon-btn, .btn { background: none; border: none; color: var(--accent); font-size: 1.1rem; cursor: pointer; padding: 8px 14px; border-radius: 8px; transition: background 0.2s; }
+    .icon-btn:hover, .btn:hover { background: var(--primary-light); }
+    @media (max-width: 900px) {
+      header, .container { padding: 12px; }
+      nav ul { gap: 8px; }
     }
-
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-      text-decoration: none;
-      transition: var(--transition);
-    }
-
-    .logo:hover { transform: scale(1.03); }
-
-    .logo-icon {
-      font-size: 32px;
-      color: var(--accent);
-      filter: drop-shadow(0 0 8px rgba(58,195,137,0.3));
-    }
-
-    .logo-text {
-      font-size: 28px;
-      font-weight: 700;
-      color: var(--text-light);
-      font-family: 'Playfair Display', serif;
-      letter-spacing: 0.5px;
+    @media (max-width: 600px) {
+      header { flex-direction: column; align-items: stretch; gap: 10px; }
+      nav ul { flex-direction: column; align-items: flex-start; gap: 4px; }
+      .header-actions { flex-direction: column; gap: 6px; }
     }
 
     nav ul {
@@ -698,26 +681,26 @@
             </div>
 
             <div class="item-meta">
-              <div class="meta-item">
-                <div class="meta-label">Current Value</div>
-                <div class="meta-value" id="itemValue">$1,200</div>
-              </div>
-              <div class="meta-item">
-                <div class="meta-label">Artisan</div>
-                <div class="meta-value" id="itemArtisan">Maria Lopez</div>
-              </div>
-              <div class="meta-item">
-                <div class="meta-label">Origin</div>
-                <div class="meta-value" id="itemOrigin">Oaxaca, Mexico</div>
-              </div>
-              <div class="meta-item">
-                <div class="meta-label">Creation Date</div>
-                <div class="meta-value" id="creationDate">November 15, 2024</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+              <div class="container">
+                <header>
+                  <a href="/" class="logo">
+                    <i class="fas fa-gem logo-icon"></i>
+                    <div class="logo-text">PVA Bazaar</div>
+                  </a>
+                  <nav>
+                    <ul>
+                      <li><a href="/" class="active">Home</a></li>
+                      <li><a href="/pages/dashboard-portfolio.html">Dashboard</a></li>
+                      <li><a href="/pages/marketplace.html">Marketplace</a></li>
+                      <li><a href="/pages/provenance-certificates.html">Provenance</a></li>
+                      <li><a href="/pages/admin-management.html">Admin</a></li>
+                    </ul>
+                  </nav>
+                  <div class="header-actions">
+                    <button class="icon-btn" id="searchToggle" title="Search"><i class="fa-solid fa-magnifying-glass"></i></button>
+                    <button class="btn" id="connectWallet"><i class="fa-solid fa-wallet"></i> Connect Wallet</button>
+                  </div>
+                </header>
 
       <!-- Timeline -->
       <div class="timeline-container">
