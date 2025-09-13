@@ -26,39 +26,52 @@
                 if (el) el.classList.add('active');
             }
             document.addEventListener('DOMContentLoaded', async () => {
-                // TODO: Replace with real product ID from URL or context
-                const productId = 'emerald-pendant';
-                const product = await fetchProduct(productId);
-                if (!product) return;
-                // Name
-                document.getElementById('productName').textContent = product.name || '';
-                // Images
-                const mainImage = document.getElementById('mainImage');
-                if (product.images && product.images.length) {
-                    mainImage.src = product.images[0];
-                    // Thumbnails
-                    const thumbGrid = document.getElementById('thumbnailGrid');
-                    thumbGrid.innerHTML = '';
-                    product.images.forEach((img, i) => {
-                        const div = document.createElement('div');
-                        div.className = 'thumbnail' + (i === 0 ? ' active' : '');
-                        div.onclick = () => changeImage(img, div);
-                        div.innerHTML = `<img src="${img}" alt="${product.name || ''} view">`;
-                        thumbGrid.appendChild(div);
-                    });
-                }
-                // Price
-                document.getElementById('currentPrice').textContent = product.price ? `$${product.price}` : '';
-                // Crypto equivalents (TODO: fetch rates)
-                document.getElementById('btcEquivalent').textContent = product.btcEquivalent || '';
-                document.getElementById('ethEquivalent').textContent = product.ethEquivalent || '';
-                // Reviews
-                document.getElementById('reviewCount').textContent = product.reviews ? `(${product.reviews.length} reviews)` : '';
-                // Availability
-                document.getElementById('availability').textContent = product.available ? 'Available' : 'Sold Out';
-                // Description
-                document.getElementById('productDescription').textContent = product.description || '';
-                // TODO: Wire up specs, blockchain info, transaction history, etc.
+                                // Get product ID from URL (?id=...)
+                                const params = new URLSearchParams(window.location.search);
+                                const productId = params.get('id') || 'emerald-pendant';
+                                const product = await fetchProduct(productId);
+                                if (!product) return;
+                                // Name
+                                document.getElementById('productName').textContent = product.name || '';
+                                // Images
+                                const mainImage = document.getElementById('mainImage');
+                                if (product.images && product.images.length) {
+                                        mainImage.src = product.images[0];
+                                        // Thumbnails
+                                        const thumbGrid = document.getElementById('thumbnailGrid');
+                                        thumbGrid.innerHTML = '';
+                                        product.images.forEach((img, i) => {
+                                                const div = document.createElement('div');
+                                                div.className = 'thumbnail' + (i === 0 ? ' active' : '');
+                                                div.onclick = () => changeImage(img, div);
+                                                div.innerHTML = `<img src="${img}" alt="${product.name || ''} view">`;
+                                                thumbGrid.appendChild(div);
+                                        });
+                                }
+                                // Price
+                                document.getElementById('currentPrice').textContent = product.price ? `$${product.price}` : '';
+                                // Fetch crypto rates from backend
+                                try {
+                                    const res = await fetch('/api/market/crypto');
+                                    const rates = await res.json();
+                                    if (rates && rates.btc && product.price) {
+                                        document.getElementById('btcEquivalent').textContent = (product.price / rates.btc).toFixed(4) + ' BTC';
+                                    }
+                                    if (rates && rates.eth && product.price) {
+                                        document.getElementById('ethEquivalent').textContent = (product.price / rates.eth).toFixed(4) + ' ETH';
+                                    }
+                                } catch (e) {
+                                    document.getElementById('btcEquivalent').textContent = '';
+                                    document.getElementById('ethEquivalent').textContent = '';
+                                }
+                                // Reviews
+                                document.getElementById('reviewCount').textContent = product.reviews ? `(${product.reviews.length} reviews)` : '';
+                                // Availability
+                                document.getElementById('availability').textContent = product.available ? 'Available' : 'Sold Out';
+                                // Description
+                                document.getElementById('productDescription').textContent = product.description || '';
+                                // Specs, blockchain info, transaction history
+                                // (Implement as API endpoints become available)
             });
         </script>
     <style>
@@ -1063,13 +1076,22 @@
       </a>
       <nav>
         <ul>
-          <li><a href="/" class="active">Home</a></li>
-          <li><a href="/pages/pvadashboard.html">Dashboard</a></li>
-          <li><a href="/pages/productshowcase.html">Marketplace</a></li>
-          <li><a href="/pages/portfolio.html">Portfolio</a></li>
-          <li><a href="/pages/checkoutmint.html">Checkout</a></li>
-          <li><a href="/pages/provenance.html">Provenance</a></li>
-          <li><a href="/pages/artifact.html">Artifact</a></li>
+                    <li><a href="/" class="active">Home</a></li>
+                    <li><a href="/pages/pvadashboard.html">Dashboard</a></li>
+                    <li><a href="/pages/productshowcase.html">Marketplace</a></li>
+                    <li><a href="/pages/portfolio.html">Portfolio</a></li>
+                    <li><a href="/pages/checkoutmint.html">Checkout</a></li>
+                    <li><a href="/pages/provenance.html">Provenance</a></li>
+                    <li><a href="/pages/artifact.html">Artifact</a></li>
+                    <li><a href="/pages/assetcreate.html">Asset Creation</a></li>
+                    <li><a href="/pages/pvacertadmit.html">Certificate Admission</a></li>
+                    <li><a href="/pages/admin.html">Admin</a></li>
+                    <li><a href="/pages/market.html">Market (Alt)</a></li>
+                    <li><a href="/pages/PVA Bazaar - Shared Ownership Marketplace.html">Marketplace (Legacy)</a></li>
+                    <li><a href="/pages/provtrack.html">Provenance Tracker</a></li>
+                    <li><a href="/pages/provtracker.html">Provenance Tracker (Alt)</a></li>
+                    <li><a href="/pages/pvashares.html">Shares</a></li>
+                    <li><a href="/pages/welcome.html">Welcome</a></li>
         </ul>
       </nav>
       <div class="header-actions">
