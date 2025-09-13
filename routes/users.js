@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const User = require('../backend/models/User'); // Fixed path - proper case
+const User = require('../backend/models/User');
 const auth = require('../middleware/auth');
 
 // Get user profile

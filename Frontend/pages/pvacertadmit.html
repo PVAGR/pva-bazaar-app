@@ -204,6 +204,15 @@ Use this anywhere (static hosting, Next.js, IPFS, or server render). It’s a si
   <script id="pva-data" type="application/json">{}</script>
   <script>
     // Admission form logic: fill #pva-data and reload preview
+    // Escape HTML to prevent XSS
+    function escapeHTML(str) {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
     document.getElementById('admit-form')?.addEventListener('submit', function(e) {
       e.preventDefault();
       const form = e.target;
@@ -212,23 +221,32 @@ Use this anywhere (static hosting, Next.js, IPFS, or server render). It’s a si
         if (el.name && el.value !== undefined) data[el.name] = el.value;
       });
       document.getElementById('pva-data').textContent = JSON.stringify(data);
-      // Re-run the template filler
+      // Re-run the template filler with escaping
       const tpl = document.documentElement.innerHTML;
       document.open();
-      document.write(tpl.replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g,(m,k)=> (data[k]??'')));
+      document.write(tpl.replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g,(m,k)=> escapeHTML(data[k]??'')));
       document.close();
     });
   </script>
   <script>
     // Minimal client-side filler: supports JSON in #pva-data or ?data= URL param.
     (function(){
+      // Escape HTML to prevent XSS
+      function escapeHTML(str) {
+        return String(str)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
       const tpl = document.documentElement.innerHTML;
       let data = {};
       try{ const el=document.getElementById('pva-data'); if(el && el.textContent.trim()) data=JSON.parse(el.textContent);}catch(e){}
       const url = new URL(location.href); if(url.searchParams.get('data')){ try{ Object.assign(data, JSON.parse(url.searchParams.get('data')));}catch(e){} }
       if(Object.keys(data).length){
         document.open();
-        document.write(tpl.replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g,(m,k)=> (data[k]??'')));
+        document.write(tpl.replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g,(m,k)=> escapeHTML(data[k]??'')));
         document.close();
       }
     })();

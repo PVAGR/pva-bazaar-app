@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const Artifact = require('../models/Artifact'); // Fixed path - capital A
+const Artifact = require('../backend/models/Artifact');
 const auth = require('../middleware/auth');
 
 // Get all artifacts

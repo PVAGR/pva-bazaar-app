@@ -58,25 +58,47 @@
 </head>
 <body>
   <div class="container">
-    <header>
-      <a href="/" class="logo">
-        <i class="fas fa-gem logo-icon"></i>
-        <div class="logo-text">PVA Bazaar</div>
-      </a>
-      <nav>
-        <ul>
-          <li><a href="/" class="active">Home</a></li>
-          <li><a href="/pages/dashboard-portfolio.html">Dashboard</a></li>
-          <li><a href="/pages/marketplace.html">Marketplace</a></li>
-          <li><a href="/pages/provenance-certificates.html">Provenance</a></li>
-          <li><a href="/pages/admin-management.html">Admin</a></li>
-        </ul>
-      </nav>
-      <div class="header-actions">
-        <button class="icon-btn" id="searchToggle" title="Search"><i class="fa-solid fa-magnifying-glass"></i></button>
-        <button class="btn" id="connectWallet"><i class="fa-solid fa-wallet"></i> Connect Wallet</button>
-      </div>
-    </header>
+  <header>
+    <a href="/" class="logo">
+      <i class="fas fa-gem logo-icon"></i>
+      <div class="logo-text">PVA Bazaar</div>
+    </a>
+    <nav class="pva-nav">
+      <ul class="nav-list">
+        <li><a href="/">Home</a></li>
+        <li class="dropdown">
+          <a href="/pages/productshowcase.html">Marketplace</a>
+          <ul class="dropdown-menu">
+            <li><a href="/pages/market.html">Market (Alt)</a></li>
+            <li><a href="/pages/PVA Bazaar - Shared Ownership Marketplace.html">Marketplace (Legacy)</a></li>
+          </ul>
+        </li>
+        <li><a href="/pages/portfolio.html">Portfolio</a></li>
+        <li class="dropdown">
+          <a href="/pages/provenance.html">Provenance</a>
+          <ul class="dropdown-menu">
+            <li><a href="/pages/provtrack.html">Provenance Tracker</a></li>
+            <li><a href="/pages/provtracker.html">Provenance Tracker (Alt)</a></li>
+          </ul>
+        </li>
+        <li class="dropdown">
+          <a href="#">Asset Tools</a>
+          <ul class="dropdown-menu">
+            <li><a href="/pages/assetcreate.html">Asset Creation</a></li>
+            <li><a href="/pages/artifact.html">Artifact</a></li>
+            <li><a href="/pages/pvacertadmit.html">Certificate Admission</a></li>
+          </ul>
+        </li>
+        <li><a href="/pages/pvashares.html">Shares</a></li>
+        <li><a href="/pages/admin.html">Admin</a></li>
+        <li><a href="/pages/welcome.html">Welcome</a></li>
+      </ul>
+    </nav>
+    <div class="header-actions">
+      <button class="icon-btn" id="searchToggle" title="Search"><i class="fa-solid fa-magnifying-glass"></i></button>
+      <button class="btn" id="connectWallet"><i class="fa-solid fa-wallet"></i> Connect Wallet</button>
+    </div>
+  </header>
     <div class="marketplace-title">Marketplace</div>
     <div class="product-list" id="productList"></div>
     <div class="ownership-section">

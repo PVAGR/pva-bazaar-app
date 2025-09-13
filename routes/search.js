@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const VectorSearchService = require('../utils/vectorSearchService');
-const Artifact = require('../models/Artifact');
+const Artifact = require('../backend/models/Artifact');
 
 const vectorSearch = new VectorSearchService();
 

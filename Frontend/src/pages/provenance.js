@@ -19,6 +19,16 @@ function setHTML(selector, value) {
   if (el && value != null) el.innerHTML = value;
 }
 
+// Escape HTML to prevent XSS
+function escapeHTML(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function setImage(selector, src) {
   const el = document.querySelector(selector);
   if (el && src) {
@@ -93,11 +103,11 @@ async function loadCertificate(id) {
       } else {
         tbody.innerHTML = data.ownershipHistory.map(entry => `
           <tr>
-            <td>${entry.ownerName || ''}</td>
-            <td class="wallet-address">${entry.walletAddress || ''}</td>
-            <td>${entry.ownershipType || ''}</td>
-            <td>${entry.dateAcquired ? new Date(entry.dateAcquired).toLocaleDateString() : ''}</td>
-            <td><span class="status-badge ${entry.status === 'Current' ? 'status-current' : 'status-previous'}">${entry.status || ''}</span></td>
+            <td>${escapeHTML(entry.ownerName || '')}</td>
+            <td class="wallet-address">${escapeHTML(entry.walletAddress || '')}</td>
+            <td>${escapeHTML(entry.ownershipType || '')}</td>
+            <td>${entry.dateAcquired ? escapeHTML(new Date(entry.dateAcquired).toLocaleDateString()) : ''}</td>
+            <td><span class="status-badge ${entry.status === 'Current' ? 'status-current' : 'status-previous'}">${escapeHTML(entry.status || '')}</span></td>
           </tr>
         `).join('');
       }

@@ -27,14 +27,25 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
         body { background: #0a0a0a; color: var(--text-light); min-height: 100vh; }
         .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-        header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; margin-bottom: 30px; border-bottom: 1px solid var(--primary); }
-        .logo { display: flex; align-items: center; gap: 15px; text-decoration: none; }
-        .logo-icon { font-size: 2rem; color: var(--accent); }
-        .logo-text { font-family: 'Playfair Display', serif; font-size: 1.7rem; font-weight: 700; color: var(--gold); }
-        nav ul { display: flex; gap: 18px; list-style: none; }
-        nav a { color: var(--text-light); text-decoration: none; font-weight: 500; }
-        nav a.active, nav a:hover { color: var(--accent); }
-        .header-actions { display: flex; gap: 12px; }
+                header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; padding: 20px 0; margin-bottom: 30px; border-bottom: 1px solid var(--primary); min-width: 0; }
+                .logo { display: flex; align-items: center; gap: 15px; text-decoration: none; min-width: 0; }
+                .logo-icon { font-size: 2rem; color: var(--accent); }
+                .logo-text { font-family: 'Playfair Display', serif; font-size: 1.7rem; font-weight: 700; color: var(--gold); white-space: nowrap; }
+                nav ul { display: flex; flex-wrap: wrap; gap: 18px; list-style: none; padding: 0; margin: 0; }
+                nav a { color: var(--text-light); text-decoration: none; font-weight: 500; padding: 6px 10px; border-radius: 6px; white-space: nowrap; }
+                nav a.active, nav a:hover { color: var(--accent); background: rgba(46,255,180,0.08); }
+                .header-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+                .icon-btn, .btn { background: none; border: none; color: var(--accent); font-size: 1.1rem; cursor: pointer; padding: 8px 14px; border-radius: 8px; transition: background 0.2s; }
+                .icon-btn:hover, .btn:hover { background: var(--primary-light); }
+                @media (max-width: 900px) {
+                    header, .container { padding: 12px; }
+                    nav ul { gap: 8px; }
+                }
+                @media (max-width: 600px) {
+                    header { flex-direction: column; align-items: stretch; gap: 10px; }
+                    nav ul { flex-direction: column; align-items: flex-start; gap: 4px; }
+                    .header-actions { flex-direction: column; gap: 6px; }
+                }
         .icon-btn, .btn { background: none; border: none; color: var(--accent); font-size: 1.1rem; cursor: pointer; padding: 8px 14px; border-radius: 8px; transition: background 0.2s; }
         .icon-btn:hover, .btn:hover { background: var(--primary-light); }
         .dashboard-stats { display: flex; gap: 24px; margin-bottom: 32px; }
@@ -68,13 +79,35 @@
                 <i class="fas fa-gem logo-icon"></i>
                 <div class="logo-text">PVA Bazaar</div>
             </a>
-            <nav>
-                <ul>
-                    <li><a href="/" class="active">Home</a></li>
-                    <li><a href="/pages/dashboard-portfolio.html">Dashboard</a></li>
-                    <li><a href="/pages/marketplace.html">Marketplace</a></li>
-                    <li><a href="/pages/provenance-certificates.html">Provenance</a></li>
-                    <li><a href="/pages/admin-management.html">Admin</a></li>
+            <nav class="pva-nav">
+                <ul class="nav-list">
+                    <li><a href="/">Home</a></li>
+                    <li class="dropdown">
+                        <a href="/pages/productshowcase.html">Marketplace</a>
+                        <ul class="dropdown-menu">
+                            <li><a href="/pages/market.html">Market (Alt)</a></li>
+                            <li><a href="/pages/PVA Bazaar - Shared Ownership Marketplace.html">Marketplace (Legacy)</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="/pages/portfolio.html">Portfolio</a></li>
+                    <li class="dropdown">
+                        <a href="/pages/provenance.html">Provenance</a>
+                        <ul class="dropdown-menu">
+                            <li><a href="/pages/provtrack.html">Provenance Tracker</a></li>
+                            <li><a href="/pages/provtracker.html">Provenance Tracker (Alt)</a></li>
+                        </ul>
+                    </li>
+                    <li class="dropdown">
+                        <a href="#">Asset Tools</a>
+                        <ul class="dropdown-menu">
+                            <li><a href="/pages/assetcreate.html">Asset Creation</a></li>
+                            <li><a href="/pages/artifact.html">Artifact</a></li>
+                            <li><a href="/pages/pvacertadmit.html">Certificate Admission</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="/pages/pvashares.html">Shares</a></li>
+                    <li><a href="/pages/admin.html">Admin</a></li>
+                    <li><a href="/pages/welcome.html">Welcome</a></li>
                 </ul>
             </nav>
             <div class="header-actions">
