@@ -1,5 +1,38 @@
 const express = require('express');
 const router = express.Router();
+const Artifact = require('../models/Artifact');
+const User = require('../models/User');
+
+// GET /api/marketplace/stats - Marketplace stats for dashboard
+router.get('/stats', async (req, res) => {
+	try {
+		const activeListings = await Artifact.countDocuments({ status: 'active' });
+		const totalTransactions = 1200000; // TODO: Replace with real transaction count if available
+		const satisfactionRate = 98; // TODO: Replace with real satisfaction metric if available
+		const totalSellers = await User.countDocuments({ role: 'seller' });
+		res.json({ ok: true, activeListings, totalTransactions, satisfactionRate, totalSellers });
+	} catch (e) {
+		res.status(500).json({ ok: false, error: e.message });
+	}
+});
+
+// GET /api/categories/counts - Category listing counts
+router.get('/categories/counts', async (req, res) => {
+	try {
+		const categories = ['coffee','jewelry','produce','art','vehicles','services'];
+		const data = {};
+		for (const cat of categories) {
+			data[cat] = await Artifact.countDocuments({ category: new RegExp('^' + cat + '$', 'i'), status: 'active' });
+		}
+		res.json({ ok: true, data });
+	} catch (e) {
+		res.status(500).json({ ok: false, error: e.message });
+	}
+});
+
+module.exports = router;
+const express = require('express');
+const router = express.Router();
 const axios = require('axios');
 
 // GET /api/market/crypto - Get cryptocurrency prices

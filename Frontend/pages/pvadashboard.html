@@ -20,9 +20,39 @@
                     return null;
                 }
             }
-            // --- Wallet Connect Placeholder ---
+            // --- Wallet Connect Logic ---
+            function getConnectedWallet() {
+                return window.localStorage.getItem('walletAddress') || '';
+            }
+            function setConnectedWallet(addr) {
+                window.localStorage.setItem('walletAddress', addr);
+            }
+            function updateWalletButton() {
+                const walletBtn = document.getElementById('connectWallet');
+                const wallet = getConnectedWallet();
+                if (wallet) {
+                    walletBtn.textContent = 'Wallet: ' + wallet.slice(0,6) + '...' + wallet.slice(-4);
+                    walletBtn.setAttribute('aria-label', 'Connected wallet: ' + wallet);
+                } else {
+                    walletBtn.textContent = 'Connect Wallet';
+                    walletBtn.setAttribute('aria-label', 'Connect your wallet');
+                }
+            }
             function connectWallet() {
-                alert('Wallet connect coming soon!');
+                const walletBtn = document.getElementById('connectWallet');
+                const wallet = getConnectedWallet();
+                if (wallet) {
+                    if (confirm('Disconnect wallet ' + wallet + '?')) {
+                        setConnectedWallet('');
+                        updateWalletButton();
+                    }
+                } else {
+                    const fakeWallet = prompt('Enter wallet address to connect:');
+                    if (fakeWallet) {
+                        setConnectedWallet(fakeWallet);
+                        updateWalletButton();
+                    }
+                }
             }
             // --- Dashboard Dynamic Data Loader ---
             document.addEventListener('DOMContentLoaded', async () => {
@@ -93,7 +123,10 @@
                 }
                 // --- Wallet Connect Button ---
                 const walletBtn = document.getElementById('connectWallet');
-                if (walletBtn) walletBtn.onclick = connectWallet;
+                if (walletBtn) {
+                    walletBtn.onclick = connectWallet;
+                    updateWalletButton();
+                }
             });
         </script>
     <style>
@@ -180,6 +213,7 @@
             color: var(--text-light);
             font-family: 'Playfair Display', serif;
             background: linear-gradient(to right, var(--accent), var(--gold));
+            background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             text-shadow: 0 2px 10px rgba(78, 248, 163, 0.3);
@@ -413,6 +447,7 @@
             font-weight: 700;
             margin-bottom: 5px;
             background: linear-gradient(to right, var(--accent), var(--gold-light));
+            background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -1073,70 +1108,85 @@
         }
         
         /* Responsive design */
+        /* --- Enhanced Mobile Responsiveness --- */
         @media (max-width: 1200px) {
             .main-content {
                 grid-template-columns: 1fr;
             }
-            
             .item-grid {
-                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+                grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
             }
         }
-        
         @media (max-width: 992px) {
             .header-content {
                 flex-direction: column;
                 gap: 20px;
             }
-            
             nav {
                 flex-wrap: wrap;
                 justify-content: center;
             }
-            
             .header-actions {
                 margin-top: 15px;
             }
-            
             .hero-stats {
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns: 1fr 1fr;
             }
         }
-        
         @media (max-width: 768px) {
             .hero-stats {
                 grid-template-columns: 1fr;
             }
-            
             .item-grid {
                 grid-template-columns: 1fr;
             }
-            
             .cta-buttons {
                 flex-direction: column;
                 align-items: center;
             }
-            
             .search-input {
-                width: 200px;
+                width: 100%;
+                min-width: 0;
             }
-            
             .search-input:focus {
-                width: 250px;
+                width: 100%;
+            }
+            .stat-card, .chart-section, .trending-items, .recent-transactions, .sidebar-section {
+                padding: 12px;
+            }
+            .item-details {
+                padding: 10px;
+            }
+            .item-image {
+                height: 120px;
+            }
+            .section-title {
+                font-size: 1.1rem;
             }
         }
-        
         @media (max-width: 576px) {
             .stat-value {
-                font-size: 1.8rem;
+                font-size: 1.2rem;
             }
-            
             .cta-title {
-                font-size: 2rem;
+                font-size: 1.3rem;
             }
-            
             .footer-content {
                 grid-template-columns: 1fr;
+            }
+            .header-content, .main-content, .sidebar {
+                padding: 0 4px;
+            }
+            .btn, .btn-primary, .btn-outline {
+                padding: 10px 12px;
+                font-size: 0.95rem;
+            }
+            .item-badge {
+                font-size: 0.7rem;
+                padding: 3px 8px;
+            }
+            .item-name, .item-price {
+                font-size: 1rem;
             }
         }
     </style>
@@ -1148,15 +1198,15 @@
         <div class="logo-text">PVA Bazaar</div>
       </a>
       <nav>
-        <ul>
-          <li><a href="/" class="active">Home</a></li>
-          <li><a href="/pages/pvadashboard.html">Dashboard</a></li>
-          <li><a href="/pages/productshowcase.html">Marketplace</a></li>
-          <li><a href="/pages/portfolio.html">Portfolio</a></li>
-          <li><a href="/pages/checkoutmint.html">Checkout</a></li>
-          <li><a href="/pages/provenance.html">Provenance</a></li>
-          <li><a href="/pages/artifact.html">Artifact</a></li>
-        </ul>
+                <ul>
+                    <li><a href="/" class="active" tabindex="0" aria-current="page">Home</a></li>
+                    <li><a href="/pages/pvadashboard.html" tabindex="0">Dashboard</a></li>
+                    <li><a href="/pages/productshowcase.html" tabindex="0">Marketplace</a></li>
+                    <li><a href="/pages/portfolio.html" tabindex="0">Portfolio</a></li>
+                    <li><a href="/pages/checkoutmint.html" tabindex="0">Checkout</a></li>
+                    <li><a href="/pages/provenance.html" tabindex="0">Provenance</a></li>
+                    <li><a href="/pages/artifact.html" tabindex="0">Artifact</a></li>
+                </ul>
       </nav>
       <div class="header-actions">
         <button class="icon-btn" id="searchToggle" title="Search">

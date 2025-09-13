@@ -629,7 +629,10 @@
                     
                     <div class="form-group">
                         <label class="form-label">PVA Coin Wallet Address</label>
-                        <input type="text" class="form-input" placeholder="Enter your wallet address">
+                                                <div class="wallet-address-group">
+                                                    <input type="text" class="form-input" id="walletAddressInput" placeholder="Enter your wallet address">
+                                                    <button type="button" id="connectWalletBtn" class="btn" style="margin-top:8px;display:none;">Connect Wallet</button>
+                                                </div>
                     </div>
                 </div>
                 
@@ -707,6 +710,39 @@
     </div>
 
     <script>
+        // Wallet connect simulation
+        function getConnectedWallet() {
+            // Simulate wallet connection (replace with real wallet logic)
+            return window.localStorage.getItem('walletAddress') || '';
+        }
+
+        function setConnectedWallet(addr) {
+            window.localStorage.setItem('walletAddress', addr);
+        }
+
+        function showWalletConnect() {
+            const input = document.getElementById('walletAddressInput');
+            const btn = document.getElementById('connectWalletBtn');
+            const wallet = getConnectedWallet();
+            if (wallet) {
+                input.value = wallet;
+                btn.style.display = 'none';
+            } else {
+                input.value = '';
+                btn.style.display = 'block';
+                btn.onclick = async () => {
+                    // Simulate wallet connect
+                    const fakeWallet = prompt('Enter wallet address to connect:');
+                    if (fakeWallet) {
+                        setConnectedWallet(fakeWallet);
+                        input.value = fakeWallet;
+                        btn.style.display = 'none';
+                    }
+                };
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', showWalletConnect);
         // Investment amount calculation
         const investmentInput = document.getElementById('investment-amount');
         const sharesCount = document.getElementById('shares-count');
