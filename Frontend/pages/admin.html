@@ -864,4 +864,8 @@
                 console.log('Adding artifact:', formData);
                 
                 // Show success message
-                alert('Artifact added successfully!
+                alert('Artifact added successfully!');
+            } catch (err) {
+                alert('Failed to add artifact: ' + (err?.message || err));
+            }
+        });

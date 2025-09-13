@@ -30,9 +30,7 @@ router.get('/categories/counts', async (req, res) => {
 	}
 });
 
-module.exports = router;
-const express = require('express');
-const router = express.Router();
+
 const axios = require('axios');
 
 // GET /api/market/crypto - Get cryptocurrency prices

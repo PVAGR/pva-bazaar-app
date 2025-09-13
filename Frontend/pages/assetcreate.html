@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PVA Universal Asset Contract Generator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-dark: #0f3b2d;
+            --primary: #1c5a45;
+            --accent: #4ef8a3;
+            --gold: #d4af37;
+            --text-light: #e8f4f0;
+            --card-bg: rgba(18,18,18,0.95);
+            --card-border: rgba(42,75,42,0.6);
+            --bg: #0a0a0a;
+        }
+
+        * { box-sizing: border-box; }
+        
+        body {
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+            background: var(--bg);
+            background-image: 
+                radial-gradient(circle at 20% 15%, rgba(46,204,142,.08), transparent 45%),
+                radial-gradient(circle at 80% 85%, rgba(212,175,55,.06), transparent 40%);
+            color: var(--text-light);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 30px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+        }
+
+        .header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            color: var(--gold);
+            margin: 0 0 10px 0;
+        }
+
+        .header p {
+            color: var(--accent);
+            font-size: 1.1rem;
+            margin: 0;
+        }
+
+        .form-container {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 30px;
+        }
+
+        .form-section {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.4rem;
+            color: var(--gold);
+            margin: 0 0 20px 0;
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 8px;
+        }
+
+        .field-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .field label {
+            color: var(--accent);
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+
+        .field input, .field textarea, .field select {
+            background: rgba(28,90,69,0.2);
+            border: 1px solid var(--primary);
+            border-radius: 8px;
+            padding: 12px;
+            color: var(--text-light);
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .field input:focus, .field textarea:focus, .field select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(78,248,163,0.2);
+        }
+
+        .field textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .field.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .preview-panel {
+            position: sticky;
+            top: 20px;
+            height: fit-content;
+        }
+
+        .preview-container {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 20px;
+        }
+
+        .preview-title {
+            font-family: 'Playfair Display', serif;
+            color: var(--gold);
+            margin: 0 0 15px 0;
+            text-align: center;
+        }
+
+        .preview-content {
+            background: white;
+            color: #333;
+            padding: 20px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .contract-header {
+            text-align: center;
+            border-bottom: 2px solid var(--gold);
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        .contract-header h2 {
+            color: var(--primary);
+            font-family: 'Playfair Display', serif;
+            margin: 0;
+        }
+
+        .contract-section {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-left: 3px solid var(--accent);
+            background: #f8fffe;
+        }
+
+        .contract-section h4 {
+            color: var(--primary);
+            margin: 0 0 8px 0;
+            font-size: 0.95rem;
+        }
+
+        .contract-field {
+            margin-bottom: 8px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .contract-field .label {
+            font-weight: 600;
+            color: var(--primary-dark);
+            min-width: 120px;
+        }
+
+        .contract-field .value {
+            color: #1a3d2e;
+            border-bottom: 1px dotted var(--accent);
+            flex: 1;
+            min-height: 20px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+        }
+
+        .btn-primary {
+            background: linear-gradient(90deg, var(--accent), #2bb673);
+            color: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background: rgba(28,90,69,0.2);
+            border: 1px solid var(--primary);
+            color: var(--text-light);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .auto-gen-section {
+            background: rgba(212,175,55,0.1);
+            border: 1px solid var(--gold);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .auto-gen-section h4 {
+            color: var(--gold);
+            margin: 0 0 10px 0;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-active { background: var(--accent); }
+        .status-pending { background: var(--gold); }
+        .status-inactive { background: #666; }
+
+        @media (max-width: 768px) {
+            .form-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .preview-panel {
+                position: relative;
+            }
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+        <nav style="background:var(--card-bg);border-radius:12px;padding:12px 24px;margin-bottom:24px;display:flex;gap:18px;align-items:center;justify-content:center;">
+            <a href="/" style="color:var(--accent);font-weight:700;text-decoration:none;font-size:1.1rem;">Home</a>
+            <a href="/pages/pvadashboard.html" style="color:var(--text-light);text-decoration:none;">Dashboard</a>
+            <a href="/pages/productshowcase.html" style="color:var(--text-light);text-decoration:none;">Marketplace</a>
+            <a href="/pages/portfolio.html" style="color:var(--text-light);text-decoration:none;">Portfolio</a>
+            <a href="/pages/assetcreate.html" style="color:var(--gold);font-weight:700;text-decoration:none;">Create Asset</a>
+            <a href="/pages/pvacertadmit.html" style="color:var(--text-light);text-decoration:none;">Certificate Admission</a>
+        </nav>
+        <div class="container">
+        <div class="header">
+            <h1>PVA Universal Asset Contract Generator</h1>
+            <p>Automated blockchain-verified asset certification for millions of unique items</p>
+        </div>
+
+        <div class="form-container">
+            <div class="form-content">
+                <!-- Auto-Generation Settings -->
+                <div class="form-section">
+                    <h3 class="section-title">Auto-Generation Settings</h3>
+                    <div class="auto-gen-section">
+                        <h4>Contract Auto-Fill Options</h4>
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="autoGenID" checked>
+                            <label for="autoGenID">Auto-generate Contract ID</label>
+                        </div>
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="autoGenToken">
+                            <label for="autoGenToken">Auto-generate Token ID</label>
+                        </div>
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="autoGenSerial">
+                            <label for="autoGenSerial">Auto-generate PVA Serial</label>
+                        </div>
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="autoTimestamp" checked>
+                            <label for="autoTimestamp">Auto-timestamp creation</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Basic Contract Information -->
+                <div class="form-section">
+                    <h3 class="section-title">Contract Identification</h3>
+                    <div class="field-group">
+                        <div class="field">
+                            <label>Contract ID</label>
+                            <input type="text" id="contractId" placeholder="PVA-2025-0001">
+                        </div>
+                        <div class="field">
+                            <label>Creation Date</label>
+                            <input type="date" id="creationDate">
+                        </div>
+                        <div class="field">
+                            <label>Asset Token ID</label>
+                            <input type="text" id="tokenId" placeholder="#000001">
+                        </div>
+                        <div class="field">
+                            <label>Blockchain Network</label>
+                            <select id="network">
+                                <option value="base">Base Mainnet</option>
+                                <option value="ethereum">Ethereum</option>
+                                <option value="polygon">Polygon</option>
+                            </select>
+                        </div>
+                        <div class="field full-width">
+                            <label>IPFS Metadata Hash</label>
+                            <input type="text" id="ipfsHash" placeholder="bafybe...xyz">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Asset Information -->
+                <div class="form-section">
+                    <h3 class="section-title">Asset Details</h3>
+                    <div class="field-group">
+                        <div class="field">
+                            <label>Asset Name</label>
+                            <input type="text" id="assetName" placeholder="Amradjet Emerald Pendant">
+                        </div>
+                        <div class="field">
+                            <label>PVA Serial Number</label>
+                            <input type="text" id="pvaSerial" placeholder="PVABZ-AEM-00001">
+                        </div>
+                        <div class="field">
+                            <label>Category</label>
+                            <select id="category">
+                                <option value="jewelry">Jewelry</option>
+                                <option value="gemstone">Gemstone</option>
+                                <option value="art">Art</option>
+                                <option value="textile">Textile</option>
+                                <option value="ceramic">Ceramic</option>
+                                <option value="metalwork">Metalwork</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label>Physical Value (USD)</label>
+                            <input type="number" id="physicalValue" placeholder="99.00">
+                        </div>
+                        <div class="field">
+                            <label>NFT Price (ETH)</label>
+                            <input type="number" step="0.001" id="nftPrice" placeholder="0.025">
+                        </div>
+                        <div class="field">
+                            <label>Materials</label>
+                            <input type="text" id="materials" placeholder="Panjshir Emerald & 18k Gold">
+                        </div>
+                        <div class="field">
+                            <label>Dimensions</label>
+                            <input type="text" id="dimensions" placeholder="22.39 × 13.3 × 8.15 mm">
+                        </div>
+                        <div class="field">
+                            <label>Weight</label>
+                            <input type="text" id="weight" placeholder="17.00 ct">
+                        </div>
+                        <div class="field">
+                            <label>Origin Location</label>
+                            <input type="text" id="origin" placeholder="Panjshir Valley, Afghanistan">
+                        </div>
+                        <div class="field full-width">
+                            <label>Detailed Description</label>
+                            <textarea id="description" placeholder="Premium natural emerald with exceptional clarity..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Artisan Information -->
+                <div class="form-section">
+                    <h3 class="section-title">Artisan & Creator Details</h3>
+                    <div class="field-group">
+                        <div class="field">
+                            <label>Artisan Name</label>
+                            <input type="text" id="artisanName" placeholder="Maria Lopez">
+                        </div>
+                        <div class="field">
+                            <label>Artisan Location</label>
+                            <input type="text" id="artisanLocation" placeholder="Lima, Peru">
+                        </div>
+                        <div class="field full-width">
+                            <label>Artisan Wallet Address</label>
+                            <input type="text" id="artisanWallet" placeholder="0xC0FfEe...bEEF">
+                        </div>
+                        <div class="field full-width">
+                            <label>Artisan Story/Background</label>
+                            <textarea id="artisanStory" placeholder="Third-generation jewelry artisan specializing in..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Consignment Partner -->
+                <div class="form-section">
+                    <h3 class="section-title">Consignment Partner Details</h3>
+                    <div class="field-group">
+                        <div class="field">
+                            <label>Partner Name</label>
+                            <input type="text" id="partnerName" placeholder="Davis Market">
+                        </div>
+                        <div class="field">
+                            <label>Partner Code</label>
+                            <input type="text" id="partnerCode" placeholder="DAVIS-001">
+                        </div>
+                        <div class="field">
+                            <label>Business License</label>
+                            <input type="text" id="businessLicense" placeholder="CA-BL-123456">
+                        </div>
+                        <div class="field">
+                            <label>Commission Rate (%)</label>
+                            <input type="number" id="commissionRate" value="15" min="0" max="50">
+                        </div>
+                        <div class="field full-width">
+                            <label>Partner Wallet Address</label>
+                            <input type="text" id="partnerWallet" placeholder="0x1234...5678">
+                        </div>
+                        <div class="field full-width">
+                            <label>Business Address</label>
+                            <textarea id="partnerAddress" placeholder="123 Market St, Davis, CA 95616"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pricing & Distribution -->
+                <div class="form-section">
+                    <h3 class="section-title">Payment Distribution</h3>
+                    <div class="field-group">
+                        <div class="field">
+                            <label>Artisan Share (%)</label>
+                            <input type="number" id="artisanShare" value="50" min="0" max="100">
+                        </div>
+                        <div class="field">
+                            <label>PVA Platform Fee (%)</label>
+                            <input type="number" id="pvaFee" value="30" min="0" max="100">
+                        </div>
+                        <div class="field">
+                            <label>Partner Share (%)</label>
+                            <input type="number" id="partnerShare" value="15" min="0" max="100">
+                        </div>
+                        <div class="field">
+                            <label>Eco Fund (%)</label>
+                            <input type="number" id="ecoFund" value="5" min="0" max="100">
+                        </div>
+                        <div class="field full-width">
+                            <label>Insurance Bond (ETH)</label>
+                            <input type="number" step="0.001" id="insuranceBond" placeholder="0.1">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Authentication & Verification -->
+                <div class="form-section">
+                    <h3 class="section-title">Authentication & Verification</h3>
+                    <div class="field-group">
+                        <div class="field">
+                            <label>Lab Report Number</label>
+                            <input type="text" id="labReport" placeholder="GIA-2025-001">
+                        </div>
+                        <div class="field">
+                            <label>Authentication Method</label>
+                            <select id="authMethod">
+                                <option value="gia">GIA Certified</option>
+                                <option value="pva">PVA Verified</option>
+                                <option value="independent">Independent Lab</option>
+                                <option value="artisan">Artisan Verified</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label>Quality Grade</label>
+                            <input type="text" id="qualityGrade" placeholder="AAA">
+                        </div>
+                        <div class="field">
+                            <label>Condition</label>
+                            <select id="condition">
+                                <option value="new">New</option>
+                                <option value="excellent">Excellent</option>
+                                <option value="very-good">Very Good</option>
+                                <option value="good">Good</option>
+                                <option value="vintage">Vintage</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-secondary" onclick="generatePreview()">Update Preview</button>
+                    <button class="btn btn-primary" onclick="generateContract()">Generate Contract</button>
+                    <button class="btn btn-secondary" onclick="saveAsJSON()">Export Data</button>
+                    <button class="btn btn-primary" id="previewCert">Preview Certificate</button>
+                </div>
+            </div>
+
+            <div class="preview-panel">
+                <div class="preview-container">
+                    <h3 class="preview-title">Contract Preview</h3>
+                    <div class="preview-content" id="previewContent">
+                        <div class="contract-header">
+                            <h2>PVA BAZAAR</h2>
+                            <p>Physical Asset Partnership Contract</p>
+                            <p>Blockchain-Verified Consignment & Provenance Agreement</p>
+                        </div>
+
+                        <div class="contract-section">
+                            <h4>Contract Identification</h4>
+                            <div class="contract-field">
+                                <span class="label">Contract ID:</span>
+                                <span class="value" id="prev-contractId">[AUTO-GENERATED]</span>
+                            </div>
+                            <div class="contract-field">
+                                <span class="label">Date:</span>
+                                <span class="value" id="prev-date">[AUTO-TIMESTAMP]</span>
+                            </div>
+                            <div class="contract-field">
+                                <span class="label">Token ID:</span>
+                                <span class="value" id="prev-tokenId">[PENDING]</span>
+                            </div>
+                        </div>
+
+                        <div class="contract-section">
+                            <h4>Asset Information</h4>
+                            <div class="contract-field">
+                                <span class="label">Name:</span>
+                                <span class="value" id="prev-assetName">[ASSET NAME]</span>
+                            </div>
+                            <div class="contract-field">
+                                <span class="label">Value:</span>
+                                <span class="value" id="prev-value">[VALUE]</span>
+                            </div>
+                            <div class="contract-field">
+                                <span class="label">Materials:</span>
+                                <span class="value" id="prev-materials">[MATERIALS]</span>
+                            </div>
+                        </div>
+
+                        <div class="contract-section">
+                            <h4>Status</h4>
+                            <div class="contract-field">
+                                <span class="status-indicator status-pending"></span>
+                                <span>Ready for Generation</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Preview Certificate button logic
+        document.getElementById('previewCert').addEventListener('click', function() {
+            const formData = collectFormData();
+            // Map assetcreate fields to pvacertadmit fields
+            const certData = {
+                assetTitle: formData.assetName,
+                assetImage: '',
+                contractId: formData.contractId,
+                issueDate: formData.creationDate,
+                version: 'v1.0',
+                pvaSerial: formData.pvaSerial,
+                tokenId: formData.tokenId,
+                contractAddress: '',
+                chain: formData.network,
+                ipfsCid: formData.ipfsHash,
+                species: formData.materials,
+                shape: '',
+                measurements: formData.dimensions,
+                weight: formData.weight,
+                color: '',
+                transparency: '',
+                enhancements: '',
+                origin: formData.origin,
+                mintedBy: formData.artisanName,
+                creatorWallet: formData.artisanWallet,
+                owner: '',
+                royalties: '',
+                metadataNote: formData.description,
+                notes: '',
+                qrCertificate: '',
+                qrAsset: '',
+                docHash: '',
+                verificationUrl: '',
+                pvaSigner: formData.artisanName,
+                signDate: formData.creationDate,
+                ownerName: '',
+                ownerWallet: ''
+            };
+            const url = '/pages/pvacertadmit.html?data=' + encodeURIComponent(JSON.stringify(certData));
+            window.open(url, '_blank');
+        });
+        // Auto-generate functions
+        function generateContractId() {
+            const date = new Date();
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const time = String(date.getTime()).slice(-4);
+            return `PVA-${year}-${month}${day}-${time}`;
+        }
+
+        function generateTokenId() {
+            return '#' + String(Math.floor(Math.random() * 999999) + 1).padStart(6, '0');
+        }
+
+        function generatePVASerial() {
+            const category = document.getElementById('category').value.toUpperCase().slice(0,3);
+            const serial = String(Math.floor(Math.random() * 99999) + 1).padStart(5, '0');
+            return `PVABZ-${category}-${serial}`;
+        }
+
+        // Auto-fill when checkboxes are checked
+        document.getElementById('autoGenID').addEventListener('change', function() {
+            if (this.checked) {
+                document.getElementById('contractId').value = generateContractId();
+            }
+        });
+
+        document.getElementById('autoGenToken').addEventListener('change', function() {
+            if (this.checked) {
+                document.getElementById('tokenId').value = generateTokenId();
+            }
+        });
+
+        document.getElementById('autoGenSerial').addEventListener('change', function() {
+            if (this.checked) {
+                document.getElementById('pvaSerial').value = generatePVASerial();
+            }
+        });
+
+        document.getElementById('autoTimestamp').addEventListener('change', function() {
+            if (this.checked) {
+                document.getElementById('creationDate').value = new Date().toISOString().split('T')[0];
+            }
+        });
+
+        // Initialize with auto-generated values
+        document.getElementById('contractId').value = generateContractId();
+        document.getElementById('creationDate').value = new Date().toISOString().split('T')[0];
+
+        // Update preview function
+        function generatePreview() {
+            const contractId = document.getElementById('contractId').value || '[AUTO-GENERATED]';
+            const date = document.getElementById('creationDate').value || '[AUTO-TIMESTAMP]';
+            const tokenId = document.getElementById('tokenId').value || '[PENDING]';
+            const assetName = document.getElementById('assetName').value || '[ASSET NAME]';
+            const physicalValue = document.getElementById('physicalValue').value;
+            const nftPrice = document.getElementById('nftPrice').value;
+            const materials = document.getElementById('materials').value || '[MATERIALS]';
+
+            document.getElementById('prev-contractId').textContent = contractId;
+            document.getElementById('prev-date').textContent = date;
+            document.getElementById('prev-tokenId').textContent = tokenId;
+            document.getElementById('prev-assetName').textContent = assetName;
+            document.getElementById('prev-value').textContent = physicalValue ? `$${physicalValue} USD / ${nftPrice || '0'} ETH` : '[VALUE]';
+            document.getElementById('prev-materials').textContent = materials;
+        }
+
+        // Generate complete contract
+        function generateContract() {
+            const formData = collectFormData();
+            
+            // Create a new window with the complete contract
+            const contractWindow = window.open('', '_blank');
+            contractWindow.document.write(generateCompleteContractHTML(formData));
+            contractWindow.document.close();
+        }
+
+        // Collect all form data
+        function collectFormData() {
+            return {
+                contractId: document.getElementById('contractId').value,
+                creationDate: document.getElementById('creationDate').value,
+                tokenId: document.getElementById('tokenId').value,
+                network: document.getElementById('network').value,
+                ipfsHash: document.getElementById('ipfsHash').value,
+                assetName: document.getElementById('assetName').value,
+                pvaSerial: document.getElementById('pvaSerial').value,
+                category: document.getElementById('category').value,
+                physicalValue: document.getElementById('physicalValue').value,
+                nftPrice: document.getElementById('nftPrice').value,
+                materials: document.getElementById('materials').value,
+                dimensions: document.getElementById('dimensions').value,
+                weight: document.getElementById('weight').value,
+                origin: document.getElementById('origin').value,
+                description: document.getElementById('description').value,
+                artisanName: document.getElementById('artisanName').value,
+                artisanLocation: document.getElementById('artisanLocation').value,
+                artisanWallet: document.getElementById('artisanWallet').value,
+                artisanStory: document.getElementById('artisanStory').value,
+                partnerName: document.getElementById('partnerName').value,
+                partnerCode: document.getElementById('partnerCode').value,
+                businessLicense: document.getElementById('businessLicense').value,
+                commissionRate: document.getElementById('commissionRate').value,
+                partnerWallet: document.getElementById('partnerWallet').value,
+                partnerAddress: document.getElementById('partnerAddress').value,
+                artisanShare: document.getElementById('artisanShare').value,
+                pvaFee: document.getElementById('pvaFee').value,
+                partnerShare: document.getElementById('partnerShare').value,
+                ecoFund: document.getElementById('ecoFund').value,
+                insuranceBond: document.getElementById('insuranceBond').value,
+                labReport: document.getElementById('labReport').value,
+                authMethod: document.getElementById('authMethod').value,
+                qualityGrade: document.getElementById('qualityGrade').value,
+                condition: document.getElementById('condition').value
+            };
+        }
+
+        // Save form data as JSON
+        function saveAsJSON() {
+            const formData = collectFormData();
+            const jsonString = JSON.stringify(formData, null, 2);
+            
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${formData.contractId || 'pva-contract'}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Generate complete contract HTML
+        function generateCompleteContractHTML(data) {
+            return `<!DOCTYPE html>
+<html>
+<head>
+    <title>PVA Contract - ${data.contractId}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background: white; color: #333; }
+        .contract { max-width: 800px; margin: 0 auto; border: 2px solid #d4af37; padding: 30px; }
+        .header { text-align: center; border-bottom: 2px solid #4ef8a3; padding-bottom: 20px; margin-bottom: 30px; }
+        .section { margin-bottom: 25px; padding: 15px; border-left: 4px solid #4ef8a3; background: #f8fffe; }
+        .field { display: flex; margin-bottom: 8px; }
+        .label { font-weight: bold; min-width: 150px; }
+        .value { border-bottom: 1px dotted #4ef8a3; flex: 1; }
+        .signatures { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 40px; }
+        .sig-line { border-bottom: 2px solid #000; height: 40px; margin: 20px 0 10px 0; }
+        @media print { body { margin: 0; } }
+    </style>
+</head>
+<body>
+    <div class="contract">
+        <div class="header">
+            <h1>PVA BAZAAR</h1>
+            <h2>Physical Asset Partnership Contract</h2>
+            <p>Blockchain-Verified Consignment & Provenance Agreement</p>
+        </div>
+        
+        <div class="section">
+            <h3>Contract Identification</h3>
+            <div class="field"><span class="label">Contract ID:</span><span class="value">${data.contractId}</span></div>
+            <div class="field"><span class="label">Date Created:</span><span class="value">${data.creationDate}</span></div>
+            <div class="field"><span class="label">Token ID:</span><span class="value">${data.tokenId}</span></div>
+            <div class="field"><span class="label">Network:</span><span class="value">${data.network}</span></div>
+        </div>
+        
+        <div class="section">
+            <h3>Asset Information</h3>
+            <div class="field"><span class="label">Asset Name:</span><span class="value">${data.assetName}</span></div>
+            <div class="field"><span class="label">PVA Serial:</span><span class="value">${data.pvaSerial}</span></div>
+        </div>
+    </div>
+</body>
+</html>`;
+    }
