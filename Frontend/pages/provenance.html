@@ -654,15 +654,15 @@
             <div class="certificate-header">
                 <div class="item-info">
                     <div class="item-image">
-                        <img src="https://i2.seadn.io/base/0x3b3af296e521a0932041cc5599ea47ec2d4ef8a5/ab0864492d648de4434dd73c10970a/04ab0864492d648de4434dd73c10970a.jpeg?w=1000" alt="Amradjet Emerald Pendant">
+                        <img id="artifact-image" src="" alt="Artifact Image" style="display:none;">
                     </div>
                     <div class="item-details">
-                        <h2>Amradjet Emerald Pendant</h2>
-                        <p>Physical & Digital Authentication Record</p>
+                        <h2 id="artifact-name">Loading...</h2>
+                        <p id="artifact-desc">Loading artifact description...</p>
                     </div>
                 </div>
                 <div class="token-info">
-                    <div class="token-id" id="token-id">Token ID: PVA-0001</div>
+                    <div class="token-id" id="token-id">Token ID: <span id="token-id-value">...</span></div>
                 </div>
             </div>
             
@@ -672,19 +672,19 @@
                     <div class="info-grid">
                         <div class="info-item">
                             <div class="info-label"><i class="fas fa-tag"></i> Artifact Name</div>
-                            <div class="info-value">Amradjet Emerald Pendant</div>
+                            <div class="info-value" id="artifact-name-detail">...</div>
                         </div>
                         <div class="info-item">
                             <div class="info-label"><i class="fas fa-calendar"></i> Creation Date</div>
-                            <div class="info-value">September 7, 2025</div>
+                            <div class="info-value" id="creation-date">...</div>
                         </div>
                         <div class="info-item">
                             <div class="info-label"><i class="fas fa-cube"></i> Primary Material</div>
-                            <div class="info-value">Panjshir Emerald & 18k Gold</div>
+                            <div class="info-value" id="primary-material">...</div>
                         </div>
                         <div class="info-item">
                             <div class="info-label"><i class="fas fa-layer-group"></i> Collection</div>
-                            <div class="info-value">PVA Bazaar Appraisals</div>
+                            <div class="info-value" id="collection">...</div>
                         </div>
                     </div>
                 </div>
@@ -694,19 +694,19 @@
                     <div class="info-grid">
                         <div class="info-item">
                             <div class="info-label"><i class="fas fa-network-wired"></i> Network</div>
-                            <div class="info-value">Base (Ethereum L2)</div>
+                            <div class="info-value" id="network">...</div>
                         </div>
                         <div class="info-item">
                             <div class="info-label"><i class="fas fa-file-contract"></i> Token Standard</div>
-                            <div class="info-value">ERC-721</div>
+                            <div class="info-value" id="token-standard">...</div>
                         </div>
                         <div class="info-item">
                             <div class="info-label"><i class="fas fa-hashtag"></i> Contract Address</div>
-                            <div class="info-value mono">0x3b3af296e521a0932041cc5599ea47ec2d4ef8a5</div>
+                            <div class="info-value mono" id="contract-address">...</div>
                         </div>
                         <div class="info-item">
                             <div class="info-label"><i class="fas fa-fingerprint"></i> Token ID</div>
-                            <div class="info-value mono">0</div>
+                            <div class="info-value mono" id="token-id-detail">...</div>
                         </div>
                     </div>
                 </div>
@@ -717,25 +717,25 @@
                     
                     <div class="progress-container">
                         <div class="progress-bar">
-                            <span class="progress-text">24% Sold</span>
+                            <span class="progress-text" id="progress-text">...</span>
                         </div>
                     </div>
                     
                     <div class="share-stats">
                         <div class="share-stat">
-                            <div class="share-stat-value">5,000</div>
+                            <div class="share-stat-value" id="total-shares">...</div>
                             <div class="share-stat-label">Total Shares</div>
                         </div>
                         <div class="share-stat">
-                            <div class="share-stat-value">1,200</div>
+                            <div class="share-stat-value" id="shares-sold">...</div>
                             <div class="share-stat-label">Shares Sold</div>
                         </div>
                         <div class="share-stat">
-                            <div class="share-stat-value">$1.00</div>
+                            <div class="share-stat-value" id="per-share">...</div>
                             <div class="share-stat-label">Per Share</div>
                         </div>
                         <div class="share-stat">
-                            <div class="share-stat-value">2,501</div>
+                            <div class="share-stat-value" id="majority-threshold">...</div>
                             <div class="share-stat-label">Majority Threshold</div>
                         </div>
                     </div>
@@ -749,18 +749,18 @@
                 
                 <div class="qr-section">
                     <div class="qr-card">
-                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://opensea.io/item/base/0x3b3af296e521a0932041cc5599ea47ec2d4ef8a5/0" alt="NFT QR Code">
-                        <p>Scan to verify NFT on OpenSea</p>
+                        <img id="nft-qr" src="" alt="NFT QR Code" style="display:none;">
+                        <p id="nft-qr-desc">Loading...</p>
                     </div>
                     
                     <div class="qr-card">
-                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://www.pvabazaar.com/products/p/amradjet" alt="Product QR Code">
-                        <p>Scan for complete product details</p>
+                        <img id="product-qr" src="" alt="Product QR Code" style="display:none;">
+                        <p id="product-qr-desc">Loading...</p>
                     </div>
                     
                     <div class="qr-card">
-                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://ipfs.io/ipfs/bafybeif36cjddajqmuj5vth6mflaybevmh5ipiomtezo6mm6cg7nbohfyq/emerald_pendant_1.jpg" alt="IPFS QR Code">
-                        <p>IPFS immutable metadata</p>
+                        <img id="ipfs-qr" src="" alt="IPFS QR Code" style="display:none;">
+                        <p id="ipfs-qr-desc">Loading...</p>
                     </div>
                 </div>
                 
@@ -776,28 +776,8 @@
                                 <th>Status</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr>
-                                <td>PVA Bazaar Creator</td>
-                                <td class="wallet-address">0xPVAB...Cr3at0r</td>
-                                <td>Minter</td>
-                                <td>2025-09-07</td>
-                                <td><span class="status-badge status-previous">Previous</span></td>
-                            </tr>
-                            <tr>
-                                <td>PVA Bazaar Market</td>
-                                <td class="wallet-address">0xPVAB...Mark3t</td>
-                                <td>Custodian</td>
-                                <td>2025-09-07</td>
-                                <td><span class="status-badge status-previous">Previous</span></td>
-                            </tr>
-                            <tr>
-                                <td>Current Owner</td>
-                                <td class="wallet-address">0xCurr...0wn3r</td>
-                                <td>Full Ownership</td>
-                                <td>2025-09-07</td>
-                                <td><span class="status-badge status-current">Current</span></td>
-                            </tr>
+                        <tbody id="ownership-history-body">
+                            <tr><td colspan="5">Loading ownership history...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -806,7 +786,7 @@
                     <h3 class="section-title"><i class="fas fa-certificate"></i> Provenance Hash</h3>
                     <div class="info-item">
                         <div class="info-label"><i class="fas fa-hashtag"></i> Current Hash</div>
-                        <div class="info-value mono">bafybeif36cjddajqmuj5vth6mflaybevmh5ipiomtezo6mm6cg7nbohfyq</div>
+                        <div class="info-value mono" id="provenance-hash">...</div>
                     </div>
                 </div>
                 
@@ -814,15 +794,15 @@
                     <h3 class="section-title"><i class="fas fa-file-contract"></i> Physical Authentication</h3>
                     <div class="info-item">
                         <div class="info-label"><i class="fas fa-barcode"></i> Physical Serial</div>
-                        <div class="info-value" id="physical-serial">PVA-0001</div>
+                        <div class="info-value" id="physical-serial">...</div>
                     </div>
                     <div class="info-item">
                         <div class="info-label"><i class="fas fa-key"></i> Authentication Code</div>
-                        <div class="info-value mono" id="authentication-code">AUTH-PVA-0001-XYZ123</div>
+                        <div class="info-value mono" id="authentication-code">...</div>
                     </div>
                     <div class="info-item">
                         <div class="info-label"><i class="fas fa-clock"></i> Last Verification</div>
-                        <div class="info-value" id="last-verification-time">2025-09-07 06:28 UTC</div>
+                        <div class="info-value" id="last-verification-time">...</div>
                     </div>
                 </div>
                 
