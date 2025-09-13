@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PVA Bazaar - Marketplace</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/public/css/pva-nav.css">
+  <style>
+    :root {
+      --primary-dark: #0f3b2d;
+      --primary: #1c5a45;
+      --primary-light: #2d7d5a;
+      --accent: #4ef8a3;
+      --accent-dark: #2bb673;
+      --gold: #d4af37;
+      --text-light: #e8f4f0;
+      --text-muted: #a8b0b9;
+      --card-bg: rgba(18, 18, 18, 0.95);
+      --card-border: rgba(42, 75, 42, 0.6);
+      --gradient-start: #4ef8a3;
+      --gradient-mid: #2bb673;
+      --gradient-end: #1c5a45;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+    body { background: #0a0a0a; color: var(--text-light); min-height: 100vh; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+    header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; margin-bottom: 30px; border-bottom: 1px solid var(--primary); }
+    .logo { display: flex; align-items: center; gap: 15px; text-decoration: none; }
+    .logo-icon { font-size: 2rem; color: var(--accent); }
+    .logo-text { font-family: 'Playfair Display', serif; font-size: 1.7rem; font-weight: 700; color: var(--gold); }
+    nav ul { display: flex; gap: 18px; list-style: none; }
+    nav a { color: var(--text-light); text-decoration: none; font-weight: 500; }
+    nav a.active, nav a:hover { color: var(--accent); }
+    .header-actions { display: flex; gap: 12px; }
+    .icon-btn, .btn { background: none; border: none; color: var(--accent); font-size: 1.1rem; cursor: pointer; padding: 8px 14px; border-radius: 8px; transition: background 0.2s; }
+    .icon-btn:hover, .btn:hover { background: var(--primary-light); }
+    .marketplace-title { font-size: 2rem; font-weight: 700; color: var(--gold); margin-bottom: 24px; }
+    .product-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 28px; margin-bottom: 36px; }
+    .product-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 14px; padding: 22px; display: flex; flex-direction: column; align-items: flex-start; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+    .product-title { font-size: 1.2rem; font-weight: 600; color: var(--accent); margin-bottom: 8px; }
+    .product-meta { color: var(--text-muted); font-size: 0.98rem; margin-bottom: 10px; }
+    .product-desc { font-size: 1rem; margin-bottom: 14px; color: var(--text-light); }
+    .product-actions { display: flex; gap: 10px; margin-top: auto; }
+    .buy-btn, .share-btn { background: var(--accent-dark); color: #fff; border: none; border-radius: 6px; padding: 7px 16px; font-size: 1rem; cursor: pointer; transition: background 0.2s; }
+    .buy-btn:hover, .share-btn:hover { background: var(--accent); color: #0a0a0a; }
+    .ownership-section { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 14px; padding: 24px; margin-bottom: 32px; }
+    .ownership-title { font-size: 1.3rem; font-weight: 600; color: var(--accent); margin-bottom: 18px; }
+    .ownership-table { width: 100%; border-collapse: collapse; margin-bottom: 18px; }
+    .ownership-table th, .ownership-table td { padding: 10px 8px; border-bottom: 1px solid var(--card-border); text-align: left; }
+    .ownership-table th { color: var(--gold); font-weight: 600; background: var(--primary-dark); }
+    .ownership-table tr:last-child td { border-bottom: none; }
+    .action-cell { display: flex; gap: 8px; }
+    .table-btn { background: var(--accent-dark); color: #fff; border: none; border-radius: 6px; padding: 6px 14px; font-size: 0.98rem; cursor: pointer; transition: background 0.2s; }
+    .table-btn:hover { background: var(--accent); color: #0a0a0a; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="/" class="logo">
+        <i class="fas fa-gem logo-icon"></i>
+        <div class="logo-text">PVA Bazaar</div>
+      </a>
+      <nav>
+        <ul>
+          <li><a href="/" class="active">Home</a></li>
+          <li><a href="/pages/dashboard-portfolio.html">Dashboard</a></li>
+          <li><a href="/pages/marketplace.html">Marketplace</a></li>
+          <li><a href="/pages/provenance-certificates.html">Provenance</a></li>
+          <li><a href="/pages/admin-management.html">Admin</a></li>
+        </ul>
+      </nav>
+      <div class="header-actions">
+        <button class="icon-btn" id="searchToggle" title="Search"><i class="fa-solid fa-magnifying-glass"></i></button>
+        <button class="btn" id="connectWallet"><i class="fa-solid fa-wallet"></i> Connect Wallet</button>
+      </div>
+    </header>
+    <div class="marketplace-title">Marketplace</div>
+    <div class="product-list" id="productList"></div>
+    <div class="ownership-section">
+      <div class="ownership-title">Shared Ownership Opportunities</div>
+      <table class="ownership-table">
+        <thead>
+          <tr>
+            <th>Asset</th>
+            <th>Shares Available</th>
+            <th>Price/Share</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="ownershipTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+  <script>
+    // ...existing code for API fetch, wallet connect, product list, and ownership table...
+  </script>
+</body>
+</html>

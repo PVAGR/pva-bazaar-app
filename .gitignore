@@ -9,3 +9,4 @@ tsconfig.tsbuildinfo
 # Logs and Storybook build output
 *.log
 storybook-static
+.vercel
