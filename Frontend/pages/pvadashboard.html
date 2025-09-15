@@ -1209,40 +1209,43 @@
         }
     </style>
 </head>
-<body class="admin-theme">
-                <header>
-                    <a href="/" class="logo">
-                        <i class="fas fa-gem logo-icon"></i>
-                        <div class="logo-text">PVA Bazaar</div>
-                    </a>
-                    <nav>
-                        <ul>
-                            <li><a href="/">Home</a></li>
-                            <li><a href="/pages/pvadashboard.html">Dashboard</a></li>
-                            <li><a href="/pages/productshowcase.html">Marketplace</a></li>
-                            <li><a href="/pages/portfolio.html">Portfolio</a></li>
-                            <li><a href="/pages/checkoutmint.html">Checkout</a></li>
-                            <li><a href="/pages/provenance.html">Provenance</a></li>
-                            <li><a href="/pages/artifact.html">Artifact</a></li>
-                            <li><a href="/pages/assetcreate.html">Asset Creation</a></li>
-                            <li><a href="/pages/pvacertadmit.html">Certificate Admission</a></li>
-                            <li><a href="/pages/admin.html">Admin</a></li>
-                            <li><a href="/pages/market.html">Market (Alt)</a></li>
-                            <li><a href="/pages/PVA Bazaar - Shared Ownership Marketplace.html">Marketplace (Legacy)</a></li>
-                            <li><a href="/pages/provtrack.html">Provenance Tracker</a></li>
-                            <li><a href="/pages/provtracker.html">Provenance Tracker (Alt)</a></li>
-                            <li><a href="/pages/pvashares.html">Shares</a></li>
-                            <li><a href="/pages/welcome.html">Welcome</a></li>
-                        </ul>
-                    </nav>
-                    <form class="global-search" role="search" aria-label="Sitewide search" style="flex:1;max-width:340px;margin:0 18px;">
-                        <input type="search" placeholder="Search products, creators, or categories..." aria-label="Search" style="width:100%;padding:8px 14px 8px 38px;border-radius:8px;border:1px solid var(--card-border);background:var(--card-bg);color:var(--text-light);font-size:1rem;outline:none;">
-                        <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none;"><i class="fa fa-search"></i></span>
-                    </form>
-                    <div class="header-actions">
-                        <button class="btn" id="connectWallet"><i class="fa-solid fa-wallet"></i> Connect Wallet</button>
-                    </div>
-                </header>
+<body>
+    <div class="container">
+        <header>
+            <a href="/" class="logo">
+                <i class="fas fa-gem logo-icon"></i>
+                <div class="logo-text">PVA Bazaar</div>
+            </a>
+            <nav>
+                <ul>
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/pages/pvadashboard.html" class="active">Dashboard</a></li>
+                    <li><a href="/pages/productshowcase.html">Marketplace</a></li>
+                    <li><a href="/pages/portfolio.html">Portfolio</a></li>
+                    <li><a href="/pages/checkoutmint.html">Checkout</a></li>
+                    <li><a href="/pages/provenance.html">Provenance</a></li>
+                    <li><a href="/pages/artifact.html">Artifact</a></li>
+                    <li><a href="/pages/assetcreate.html">Asset Creation</a></li>
+                    <li><a href="/pages/pvacertadmit.html">Certificate Admission</a></li>
+                    <li><a href="/pages/admin.html">Admin</a></li>
+                    <li><a href="/pages/market.html">Market (Alt)</a></li>
+                    <li><a href="/pages/PVA Bazaar - Shared Ownership Marketplace.html">Marketplace (Legacy)</a></li>
+                    <li><a href="/pages/provtrack.html">Provenance Tracker</a></li>
+                    <li><a href="/pages/provtracker.html">Provenance Tracker (Alt)</a></li>
+                    <li><a href="/pages/pvashares.html">Shares</a></li>
+                    <li><a href="/pages/welcome.html">Welcome</a></li>
+                </ul>
+            </nav>
+            <div class="header-actions">
+                <button class="icon-btn" id="searchToggle" title="Search">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </button>
+                <button class="btn" id="connectWallet">
+                    <i class="fa-solid fa-wallet"></i>
+                    Connect Wallet
+                </button>
+            </div>
+        </header>
                 <div class="stat-icon">
                     <i class="fas fa-users"></i>
                 </div>
