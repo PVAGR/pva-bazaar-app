@@ -1,3 +1,28 @@
+// GET /api/transactions?limit=5 - Recent transactions (mocked for now)
+router.get('/', async (req, res) => {
+	try {
+		const limit = parseInt(req.query.limit, 10) || 5;
+		// In a real app, fetch from a Transaction model/log
+		// For now, mock with recent artifacts and users
+		const Artifact = require('../models/Artifact');
+		const User = require('../models/User');
+		const artifacts = await Artifact.find().sort({ createdAt: -1 }).limit(limit);
+		const users = await User.find().sort({ createdAt: -1 }).limit(limit);
+		const txs = [];
+		for (let i = 0; i < limit; i++) {
+			txs.push({
+				type: i % 2 === 0 ? 'buy' : 'sell',
+				title: artifacts[i % artifacts.length]?.title || 'Artifact',
+				user: users[i % users.length]?.name || 'User',
+				time: artifacts[i % artifacts.length]?.createdAt?.toLocaleString() || '',
+				amount: '$' + (artifacts[i % artifacts.length]?.price || 0)
+			});
+		}
+		res.json(txs);
+	} catch (err) {
+		res.status(500).json({ ok: false, message: err.message });
+	}
+});
 const express = require('express');
 const router = express.Router();
 const Artifact = require('../models/Artifact');

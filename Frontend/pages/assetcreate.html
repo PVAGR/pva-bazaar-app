@@ -366,6 +366,10 @@
                 <div class="form-section">
                     <h3 class="section-title">Asset Details</h3>
                     <div class="field-group">
+                        <div class="field full-width">
+                            <label>Upload Asset Photos</label>
+                            <input type="file" id="assetPhotos" accept="image/*" multiple>
+                        </div>
                         <div class="field">
                             <label>Asset Name</label>
                             <input type="text" id="assetName" placeholder="Amradjet Emerald Pendant">
@@ -468,28 +472,36 @@
                             <label>Business Address</label>
                             <textarea id="partnerAddress" placeholder="123 Market St, Davis, CA 95616"></textarea>
                         </div>
+                        <div class="field full-width">
+                            <label>Promoter Name (if any)</label>
+                            <input type="text" id="promoterName" placeholder="Etsy/Amazon Seller Name">
+                        </div>
+                        <div class="field full-width">
+                            <label>Promoter Contact/Account</label>
+                            <input type="text" id="promoterContact" placeholder="Etsy/Amazon Account or Email">
+                        </div>
                     </div>
                 </div>
 
                 <!-- Pricing & Distribution -->
                 <div class="form-section">
-                    <h3 class="section-title">Payment Distribution</h3>
+                    <h3 class="section-title">Pricing & Payment Distribution</h3>
                     <div class="field-group">
                         <div class="field">
+                            <label>Sale Price (USD)</label>
+                            <input type="number" id="salePrice" placeholder="Enter sale price">
+                        </div>
+                        <div class="field">
                             <label>Artisan Share (%)</label>
-                            <input type="number" id="artisanShare" value="50" min="0" max="100">
+                            <input type="number" id="artisanShare" value="50" min="0" max="100" readonly>
                         </div>
                         <div class="field">
                             <label>PVA Platform Fee (%)</label>
-                            <input type="number" id="pvaFee" value="30" min="0" max="100">
+                            <input type="number" id="pvaFee" value="35" min="0" max="100" readonly>
                         </div>
                         <div class="field">
-                            <label>Partner Share (%)</label>
-                            <input type="number" id="partnerShare" value="15" min="0" max="100">
-                        </div>
-                        <div class="field">
-                            <label>Eco Fund (%)</label>
-                            <input type="number" id="ecoFund" value="5" min="0" max="100">
+                            <label>Promoter Share (%)</label>
+                            <input type="number" id="partnerShare" value="15" min="0" max="100" readonly>
                         </div>
                         <div class="field full-width">
                             <label>Insurance Bond (ETH)</label>
@@ -537,6 +549,25 @@
                     <button class="btn btn-primary" onclick="generateContract()">Generate Contract</button>
                     <button class="btn btn-secondary" onclick="saveAsJSON()">Export Data</button>
                     <button class="btn btn-primary" id="previewCert">Preview Certificate</button>
+                    <button class="btn btn-primary" id="submitAsset">Submit Asset to Marketplace</button>
+                </div>
+
+                <!-- Consignment Terms & Signature -->
+                <div class="form-section">
+                    <h3 class="section-title">Consignment Terms & Agreement</h3>
+                    <div style="background:rgba(28,90,69,0.15);padding:18px;border-radius:8px;margin-bottom:12px;">
+                        <strong>Consignment Split:</strong> 50% Artisan, 35% PVA, 15% Promoter<br>
+                        By submitting, you agree to the <a href="/terms/consignment.html" target="_blank" style="color:var(--accent);text-decoration:underline;">PVA Consignment Agreement</a> and authorize payout distribution as described above. You also agree to provide accurate payout/bank information for settlement.
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="agreeTerms" required>
+                        <label for="agreeTerms">I have read and agree to the consignment terms and payout structure.</label>
+                    </div>
+                    <div class="field full-width">
+                        <label>Digital Signature (type your full name)</label>
+                        <input type="text" id="digitalSignature" placeholder="Full Name for Signature" required>
+                    </div>
+                </div>
                 </div>
             </div>
 
@@ -596,6 +627,58 @@
     </div>
 
     <script>
+        // Asset submission logic
+        document.getElementById('submitAsset').addEventListener('click', async function() {
+            const formData = new FormData();
+            // Collect all fields
+            formData.append('name', document.getElementById('assetName').value);
+            formData.append('title', document.getElementById('assetName').value);
+            formData.append('description', document.getElementById('description').value);
+            formData.append('price', document.getElementById('physicalValue').value);
+            formData.append('salePrice', document.getElementById('salePrice').value);
+            formData.append('category', document.getElementById('category').value);
+            formData.append('materials', document.getElementById('materials').value);
+            formData.append('artisan', document.getElementById('artisanName').value);
+            formData.append('artisanWallet', document.getElementById('artisanWallet').value);
+            formData.append('partnerName', document.getElementById('partnerName').value);
+            formData.append('partnerCode', document.getElementById('partnerCode').value);
+            formData.append('businessLicense', document.getElementById('businessLicense').value);
+            formData.append('partnerWallet', document.getElementById('partnerWallet').value);
+            formData.append('partnerAddress', document.getElementById('partnerAddress').value);
+            formData.append('promoterName', document.getElementById('promoterName').value);
+            formData.append('promoterContact', document.getElementById('promoterContact').value);
+            formData.append('artisanShare', document.getElementById('artisanShare').value);
+            formData.append('pvaFee', document.getElementById('pvaFee').value);
+            formData.append('partnerShare', document.getElementById('partnerShare').value);
+            formData.append('insuranceBond', document.getElementById('insuranceBond').value);
+            formData.append('digitalSignature', document.getElementById('digitalSignature').value);
+            formData.append('agreeTerms', document.getElementById('agreeTerms').checked);
+            formData.append('network', document.getElementById('network').value);
+            // Add images
+            const photoInput = document.getElementById('assetPhotos');
+            if (photoInput && photoInput.files.length > 0) {
+                for (let i = 0; i < photoInput.files.length; i++) {
+                    formData.append('assetPhotos', photoInput.files[i]);
+                }
+            }
+            // Auth: get token if needed (assume JWT in localStorage for now)
+            let token = localStorage.getItem('jwt');
+            try {
+                const res = await fetch('/api/artifacts', {
+                    method: 'POST',
+                    headers: token ? { 'Authorization': 'Bearer ' + token } : {},
+                    body: formData
+                });
+                const data = await res.json();
+                if (data.ok) {
+                    alert('Asset submitted successfully!');
+                } else {
+                    alert('Submission failed: ' + (data.message || 'Unknown error'));
+                }
+            } catch (e) {
+                alert('Submission error: ' + e.message);
+            }
+        });
         // Preview Certificate button logic
         document.getElementById('previewCert').addEventListener('click', function() {
             const formData = collectFormData();

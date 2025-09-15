@@ -57,7 +57,7 @@
             // --- Dashboard Dynamic Data Loader ---
             document.addEventListener('DOMContentLoaded', async () => {
                 // --- Stats ---
-                const stats = await fetchAPI('/api/dashboard/stats'); // TODO: Implement /api/dashboard/stats if missing
+                const stats = await fetchAPI('/api/dashboard/stats');
                 if (stats && stats.ok && stats.stats) {
                     document.getElementById('totalUsers').textContent = stats.stats.totalUsers?.toLocaleString() || '';
                     document.getElementById('totalItems').textContent = stats.stats.totalArtifacts?.toLocaleString() || '';
@@ -68,30 +68,48 @@
                     document.getElementById('totalVolume').textContent = '';
                 }
                 // --- Trending Items ---
-                const trending = await fetchAPI('/api/artifacts?sort=trending&limit=4'); // TODO: Implement trending sort if missing
+                const trendingRes = await fetchAPI('/api/artifacts?sort=trending&limit=4');
                 const trendingGrid = document.querySelector('.item-grid');
                 trendingGrid.innerHTML = '';
-                if (trending && trending.length) {
-                    trending.forEach(item => {
+                if (trendingRes && trendingRes.ok && trendingRes.artifacts && trendingRes.artifacts.length) {
+                    trendingRes.artifacts.forEach(item => {
                         const card = document.createElement('div');
                         card.className = 'item-card';
+                        // Use first image from imageUrls array, fallback to placeholder if missing
+                        const imgSrc = (Array.isArray(item.imageUrls) && item.imageUrls.length > 0 && item.imageUrls[0])
+                            ? item.imageUrls[0]
+                            : '/public/img/placeholder.png';
                         card.innerHTML = `
                             <div class="item-image">
-                                <img src="${item.image || ''}" alt="${item.name || ''}">
+                                <img src="${imgSrc}" alt="${item.title || item.name || ''}">
                                 <div class="item-badge">Trending</div>
                             </div>
                             <div class="item-details">
-                                <div class="item-name">${item.name || ''}</div>
-                                <div class="item-price">${item.price ? item.price + ' PVA' : ''}</div>
-                                <div class="item-progress"><div class="progress-bar" style="width: ${item.progress || 0}%"></div></div>
-                                <div class="item-stats"><div>${item.sharesSold || 0}/${item.totalShares || 0} Shares Sold</div><div>${item.progress || 0}% Complete</div></div>
+                                <div class="item-name">${item.title || item.name || ''}</div>
+                                <div class="item-price">${item.price ? ('$' + item.price) : ''}</div>
+                                <div class="item-progress"><div class="progress-bar" style="width: ${(item.fractionalization?.soldShares && item.fractionalization?.totalShares) ? Math.round(100 * item.fractionalization.soldShares / item.fractionalization.totalShares) : 0}%"></div></div>
+                                <div class="item-stats"><div>${item.fractionalization?.soldShares || 0}/${item.fractionalization?.totalShares || 0} Shares Sold</div><div>${(item.fractionalization?.soldShares && item.fractionalization?.totalShares) ? Math.round(100 * item.fractionalization.soldShares / item.fractionalization.totalShares) : 0}% Complete</div></div>
+                                <div class="item-consignment">
+                                    <strong>Consignment:</strong><br>
+                                    Artisan Share: <span>${item.consignment?.artisanShare ?? ''}%</span><br>
+                                    PVA Fee: <span>${item.consignment?.pvaFee ?? ''}%</span><br>
+                                    Promoter Share: <span>${item.consignment?.promoterShare ?? ''}%</span><br>
+                                    Digital Signature: <span>${item.consignment?.digitalSignature ? 'Signed' : '—'}</span>
+                                </div>
+                                <div class="item-payout">
+                                    <strong>Payout Info:</strong><br>
+                                    Artisan Wallet: <span>${item.payoutInfo?.artisanWallet ?? ''}</span><br>
+                                    Partner Wallet: <span>${item.payoutInfo?.partnerWallet ?? ''}</span><br>
+                                    Promoter Name: <span>${item.payoutInfo?.promoterName ?? ''}</span><br>
+                                    Promoter Contact: <span>${item.payoutInfo?.promoterContact ?? ''}</span>
+                                </div>
                             </div>
                         `;
                         trendingGrid.appendChild(card);
                     });
                 }
                 // --- Transactions ---
-                const txs = await fetchAPI('/api/transactions?limit=5'); // TODO: Implement /api/transactions for user
+                const txs = await fetchAPI('/api/transactions?limit=5');
                 const txList = document.querySelector('.transaction-list');
                 txList.innerHTML = '';
                 if (txs && txs.length) {
@@ -107,7 +125,7 @@
                     });
                 }
                 // --- User Activity ---
-                const activity = await fetchAPI('/api/activity?limit=4'); // TODO: Implement /api/activity
+                const activity = await fetchAPI('/api/activity?limit=4');
                 const activityList = document.querySelector('.user-activity');
                 activityList.innerHTML = '';
                 if (activity && activity.length) {
@@ -116,7 +134,7 @@
                         div.className = 'activity-item';
                         div.innerHTML = `
                             <div class="user-avatar"><img src="${act.avatar || ''}" alt="User Avatar"></div>
-                            <div class="activity-details"><div><span>${act.name || ''}</span> ${act.action || ''}</div><div class="activity-time">${act.time || ''}</div></div>
+                            <div class="activity-details"><div><span>${act.name || ''}</span> ${act.action || ''}</div><div class="activity-time">${new Date(act.time).toLocaleString() || ''}</div></div>
                         `;
                         activityList.appendChild(div);
                     });
@@ -1192,36 +1210,39 @@
     </style>
 </head>
 <body class="admin-theme">
-        <header>
-          <a href="/" class="logo">
-            <i class="fas fa-gem logo-icon"></i>
-            <div class="logo-text">PVA Bazaar</div>
-          </a>
-          <nav>
-            <ul>
-              <li><a href="/">Home</a></li>
-              <li><a href="/pages/pvadashboard.html">Dashboard</a></li>
-              <li><a href="/pages/productshowcase.html">Marketplace</a></li>
-              <li><a href="/pages/portfolio.html">Portfolio</a></li>
-              <li><a href="/pages/checkoutmint.html">Checkout</a></li>
-              <li><a href="/pages/provenance.html">Provenance</a></li>
-              <li><a href="/pages/artifact.html">Artifact</a></li>
-              <li><a href="/pages/assetcreate.html">Asset Creation</a></li>
-              <li><a href="/pages/pvacertadmit.html">Certificate Admission</a></li>
-              <li><a href="/pages/admin.html">Admin</a></li>
-              <li><a href="/pages/market.html">Market (Alt)</a></li>
-              <li><a href="/pages/PVA Bazaar - Shared Ownership Marketplace.html">Marketplace (Legacy)</a></li>
-              <li><a href="/pages/provtrack.html">Provenance Tracker</a></li>
-              <li><a href="/pages/provtracker.html">Provenance Tracker (Alt)</a></li>
-              <li><a href="/pages/pvashares.html">Shares</a></li>
-              <li><a href="/pages/welcome.html">Welcome</a></li>
-            </ul>
-          </nav>
-          <div class="header-actions">
-            <button class="icon-btn" id="searchToggle" title="Search"><i class="fa-solid fa-magnifying-glass"></i></button>
-            <button class="btn" id="connectWallet"><i class="fa-solid fa-wallet"></i> Connect Wallet</button>
-          </div>
-        </header>
+                <header>
+                    <a href="/" class="logo">
+                        <i class="fas fa-gem logo-icon"></i>
+                        <div class="logo-text">PVA Bazaar</div>
+                    </a>
+                    <nav>
+                        <ul>
+                            <li><a href="/">Home</a></li>
+                            <li><a href="/pages/pvadashboard.html">Dashboard</a></li>
+                            <li><a href="/pages/productshowcase.html">Marketplace</a></li>
+                            <li><a href="/pages/portfolio.html">Portfolio</a></li>
+                            <li><a href="/pages/checkoutmint.html">Checkout</a></li>
+                            <li><a href="/pages/provenance.html">Provenance</a></li>
+                            <li><a href="/pages/artifact.html">Artifact</a></li>
+                            <li><a href="/pages/assetcreate.html">Asset Creation</a></li>
+                            <li><a href="/pages/pvacertadmit.html">Certificate Admission</a></li>
+                            <li><a href="/pages/admin.html">Admin</a></li>
+                            <li><a href="/pages/market.html">Market (Alt)</a></li>
+                            <li><a href="/pages/PVA Bazaar - Shared Ownership Marketplace.html">Marketplace (Legacy)</a></li>
+                            <li><a href="/pages/provtrack.html">Provenance Tracker</a></li>
+                            <li><a href="/pages/provtracker.html">Provenance Tracker (Alt)</a></li>
+                            <li><a href="/pages/pvashares.html">Shares</a></li>
+                            <li><a href="/pages/welcome.html">Welcome</a></li>
+                        </ul>
+                    </nav>
+                    <form class="global-search" role="search" aria-label="Sitewide search" style="flex:1;max-width:340px;margin:0 18px;">
+                        <input type="search" placeholder="Search products, creators, or categories..." aria-label="Search" style="width:100%;padding:8px 14px 8px 38px;border-radius:8px;border:1px solid var(--card-border);background:var(--card-bg);color:var(--text-light);font-size:1rem;outline:none;">
+                        <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none;"><i class="fa fa-search"></i></span>
+                    </form>
+                    <div class="header-actions">
+                        <button class="btn" id="connectWallet"><i class="fa-solid fa-wallet"></i> Connect Wallet</button>
+                    </div>
+                </header>
                 <div class="stat-icon">
                     <i class="fas fa-users"></i>
                 </div>
@@ -1346,75 +1367,7 @@
                     </div>
                     
                     <div class="item-grid">
-                        <div class="item-card">
-                            <div class="item-image">
-                                <img src="https://i2.seadn.io/base/0x3b3af296e521a0932041cc5599ea47ec2d4ef8a5/ab0864492d648de4434dd73c10970a/04ab0864492d648de4434dd73c10970a.jpeg?w=500" alt="Amradjet Emerald Pendant">
-                                <div class="item-badge">Hot Item</div>
-                            </div>
-                            <div class="item-details">
-                                <div class="item-name">Amradjet Emerald Pendant</div>
-                                <div class="item-price">5000 PVA ($5,000)</div>
-                                <div class="item-progress">
-                                    <div class="progress-bar" style="width: 62%"></div>
-                                </div>
-                                <div class="item-stats">
-                                    <div>3100/5000 Shares Sold</div>
-                                    <div>62% Complete</div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="item-card">
-                            <div class="item-image">
-                                <img src="https://images.unsplash.com/photo-1611224885990-ab7363d1f2a9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80" alt="Sapphire Wave Bracelet">
-                                <div class="item-badge">Trending</div>
-                            </div>
-                            <div class="item-details">
-                                <div class="item-name">Sapphire Wave Bracelet</div>
-                                <div class="item-price">3250 PVA ($3,250)</div>
-                                <div class="item-progress">
-                                    <div class="progress-bar" style="width: 78%"></div>
-                                </div>
-                                <div class="item-stats">
-                                    <div>2535/3250 Shares Sold</div>
-                                    <div>78% Complete</div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="item-card">
-                            <div class="item-image">
-                                <img src="https://images.unsplash.com/photo-1599643477877-530eb83abc8e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80" alt="Diamond Crown Brooch">
-                            </div>
-                            <div class="item-details">
-                                <div class="item-name">Diamond Crown Brooch</div>
-                                <div class="item-price">7500 PVA ($7,500)</div>
-                                <div class="item-progress">
-                                    <div class="progress-bar" style="width: 45%"></div>
-                                </div>
-                                <div class="item-stats">
-                                    <div>3375/7500 Shares Sold</div>
-                                    <div>45% Complete</div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="item-card">
-                            <div class="item-image">
-                                <img src="https://images.unsplash.com/photo-1601121141461-9d6647bca1ed?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80" alt="Ruby Dragon Pendant">
-                            </div>
-                            <div class="item-details">
-                                <div class="item-name">Ruby Dragon Pendant</div>
-                                <div class="item-price">4200 PVA ($4,200)</div>
-                                <div class="item-progress">
-                                    <div class="progress-bar" style="width: 35%"></div>
-                                </div>
-                                <div class="item-stats">
-                                    <div>1470/4200 Shares Sold</div>
-                                    <div>35% Complete</div>
-                                </div>
-                            </div>
-                        </div>
+                        <!-- Trending items will be loaded here by JS -->
                     </div>
                 </div>
                 
@@ -1902,56 +1855,7 @@
         scheduleNextTransaction();
         
         // Add new user activity
-        const userActivities = [
-            {
-                avatar: 'https://randomuser.me/api/portraits/women/33.jpg',
-                name: 'Jessica',
-                action: 'purchased 200 shares of Diamond Crown'
-            },
-            {
-                avatar: 'https://randomuser.me/api/portraits/men/45.jpg',
-                name: 'Daniel',
-                action: 'listed a new item: Golden Scarab'
-            },
-            {
-                avatar: 'https://randomuser.me/api/portraits/women/62.jpg',
-                name: 'Olivia',
-                action: 'sold 50 shares of Ruby Dragon'
-            },
-            {
-                avatar: 'https://randomuser.me/api/portraits/men/28.jpg',
-                name: 'James',
-                action: 'joined PVA Bazaar'
-            },
-            {
-                avatar: 'https://randomuser.me/api/portraits/women/17.jpg',
-                name: 'Sophia',
-                action: 'reached 25% ownership of Sapphire Wave'
-            }
-        ];
-        
-        function addNewUserActivity() {
-            const userActivity = document.querySelector('.user-activity');
-            const randomActivity = userActivities[Math.floor(Math.random() * userActivities.length)];
-            
-            // Create new activity element
-            const newActivityEl = document.createElement('div');
-            newActivityEl.className = 'activity-item';
-            newActivityEl.innerHTML = `
-                        <!-- User activity will be loaded here by JS -->
-            });
-        }
-        
-        // Add new user activity every 20-40 seconds
-        function scheduleNextActivity() {
-            const delay = Math.floor(Math.random() * (40000 - 20000) + 20000); // 20-40 seconds
-            setTimeout(() => {
-                addNewUserActivity();
-                scheduleNextActivity();
-            }, delay);
-        }
-        
-        scheduleNextActivity();
+        // Removed hardcoded userActivities and demo activity logic. All activity is now live from API.
         
         // Update collection percentages
         function updateCollectionPercentages() {

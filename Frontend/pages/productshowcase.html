@@ -26,52 +26,71 @@
                 if (el) el.classList.add('active');
             }
             document.addEventListener('DOMContentLoaded', async () => {
-                                // Get product ID from URL (?id=...)
-                                const params = new URLSearchParams(window.location.search);
-                                const productId = params.get('id') || 'emerald-pendant';
-                                const product = await fetchProduct(productId);
-                                if (!product) return;
-                                // Name
-                                document.getElementById('productName').textContent = product.name || '';
-                                // Images
-                                const mainImage = document.getElementById('mainImage');
-                                if (product.images && product.images.length) {
-                                        mainImage.src = product.images[0];
-                                        // Thumbnails
-                                        const thumbGrid = document.getElementById('thumbnailGrid');
-                                        thumbGrid.innerHTML = '';
-                                        product.images.forEach((img, i) => {
-                                                const div = document.createElement('div');
-                                                div.className = 'thumbnail' + (i === 0 ? ' active' : '');
-                                                div.onclick = () => changeImage(img, div);
-                                                div.innerHTML = `<img src="${img}" alt="${product.name || ''} view">`;
-                                                thumbGrid.appendChild(div);
-                                        });
-                                }
-                                // Price
-                                document.getElementById('currentPrice').textContent = product.price ? `$${product.price}` : '';
-                                // Fetch crypto rates from backend
-                                try {
-                                    const res = await fetch('/api/market/crypto');
-                                    const rates = await res.json();
-                                    if (rates && rates.btc && product.price) {
-                                        document.getElementById('btcEquivalent').textContent = (product.price / rates.btc).toFixed(4) + ' BTC';
-                                    }
-                                    if (rates && rates.eth && product.price) {
-                                        document.getElementById('ethEquivalent').textContent = (product.price / rates.eth).toFixed(4) + ' ETH';
-                                    }
-                                } catch (e) {
-                                    document.getElementById('btcEquivalent').textContent = '';
-                                    document.getElementById('ethEquivalent').textContent = '';
-                                }
-                                // Reviews
-                                document.getElementById('reviewCount').textContent = product.reviews ? `(${product.reviews.length} reviews)` : '';
-                                // Availability
-                                document.getElementById('availability').textContent = product.available ? 'Available' : 'Sold Out';
-                                // Description
-                                document.getElementById('productDescription').textContent = product.description || '';
-                                // Specs, blockchain info, transaction history
-                                // (Implement as API endpoints become available)
+        // Get product ID from URL (?id=...)
+        const params = new URLSearchParams(window.location.search);
+        const productId = params.get('id') || 'emerald-pendant';
+        const product = await fetchProduct(productId);
+        if (!product) return;
+        // Name
+        document.getElementById('productName').textContent = product.name || '';
+        // Images
+        const mainImage = document.getElementById('mainImage');
+        if (product.images && product.images.length) {
+            mainImage.src = product.images[0];
+            // Thumbnails
+            const thumbGrid = document.getElementById('thumbnailGrid');
+            thumbGrid.innerHTML = '';
+            product.images.forEach((img, i) => {
+                const div = document.createElement('div');
+                div.className = 'thumbnail' + (i === 0 ? ' active' : '');
+                div.onclick = () => changeImage(img, div);
+                div.innerHTML = `<img src="${img}" alt="${product.name || ''} view">`;
+                thumbGrid.appendChild(div);
+            });
+        }
+        // Price
+        document.getElementById('currentPrice').textContent = product.price ? `$${product.price}` : '';
+        // Fetch crypto rates from backend
+        try {
+            const res = await fetch('/api/market/crypto');
+            const rates = await res.json();
+            if (rates && rates.btc && product.price) {
+                document.getElementById('btcEquivalent').textContent = (product.price / rates.btc).toFixed(4) + ' BTC';
+            }
+            if (rates && rates.eth && product.price) {
+                document.getElementById('ethEquivalent').textContent = (product.price / rates.eth).toFixed(4) + ' ETH';
+            }
+        } catch (e) {
+            document.getElementById('btcEquivalent').textContent = '';
+            document.getElementById('ethEquivalent').textContent = '';
+        }
+        // Trust Badges
+        let badges = '';
+        if (product.verified) badges += `<span class='badge verified'><i class='fa fa-check-circle'></i> Verified</span>`;
+        if (product.topSeller) badges += `<span class='badge top'><i class='fa fa-star'></i> Top Seller</span>`;
+        if (product.isNew) badges += `<span class='badge new'>New</span>`;
+        let badgeContainer = document.getElementById('productBadges');
+        if (badgeContainer) badgeContainer.innerHTML = badges;
+        // Dynamic Star Rating
+        let stars = '';
+        let rating = product.rating || 0;
+        const fullStars = Math.floor(rating);
+        const halfStar = rating % 1 >= 0.5;
+        for (let i = 0; i < 5; i++) {
+            if (i < fullStars) stars += '<i class="fa fa-star"></i>';
+            else if (i === fullStars && halfStar) stars += '<i class="fa fa-star-half-alt"></i>';
+            else stars += '<i class="fa fa-star" style="color:#444;"></i>';
+        }
+        let starContainer = document.getElementById('starRating');
+        if (starContainer) starContainer.innerHTML = stars;
+        // Reviews
+        document.getElementById('reviewCount').textContent = product.reviews ? `(${product.reviews.length} reviews)` : '';
+        // Availability
+        document.getElementById('availability').textContent = product.available ? 'Available' : 'Sold Out';
+        // Description
+        document.getElementById('productDescription').textContent = product.description || '';
+        // Specs, blockchain info, transaction history
+        // (Implement as API endpoints become available)
             });
         </script>
     <style>
@@ -134,23 +153,14 @@
         }
 
         /* Navigation */
-        .navbar {
-            background: rgba(10, 15, 12, 0.95);
-            backdrop-filter: blur(15px);
-            border-bottom: 1px solid var(--card-border);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .nav-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1rem 2rem;
-        }
+        .product-badges { display: flex; gap: 7px; margin-bottom: 7px; }
+        .badge { display: inline-flex; align-items: center; font-size: 0.85rem; font-weight: 600; border-radius: 6px; padding: 2px 8px; background: var(--primary-light); color: #fff; letter-spacing: 0.01em; }
+        .badge.verified { background: var(--accent-dark); color: #fff; }
+        .badge.top { background: var(--gold); color: #222; }
+        .badge.new { background: #2d7d5a; color: #fff; }
+        .rating { display: flex; align-items: center; gap: 0.4rem; font-size: 1.1rem; color: var(--gold); }
+        .rating .stars { display: flex; gap: 2px; }
+    .review-count { color: var(--text-muted); font-size: 0.98em; margin-left: 6px; }
 
         .logo {
             display: flex;
@@ -1118,14 +1128,8 @@
 
     <div class="container">
         <!-- Breadcrumb (static for now, can be dynamic) -->
-        <nav class="breadcrumb">
-            <a href="#">Home</a>
-            <i class="fas fa-chevron-right"></i>
-            <a href="#">Jewelry</a>
-            <i class="fas fa-chevron-right"></i>
-            <a href="#">Pendants</a>
-            <i class="fas fa-chevron-right"></i>
-            <span id="productName">...</span>
+        <nav class="breadcrumb" id="breadcrumbNav">
+            <!-- Dynamic breadcrumb will be rendered here -->
         </nav>
 
         <!-- Product Grid -->
@@ -1145,15 +1149,10 @@
                 <!-- Header -->
                 <div class="product-header">
                     <h1 id="productName">...</h1>
+                    <div class="product-badges" id="productBadges"></div>
                     <div class="product-meta">
                         <div class="rating">
-                            <div class="stars">
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                            </div>
+                            <div class="stars" id="starRating"></div>
                             <span class="review-count" id="reviewCount"></span>
                         </div>
                         <div class="availability">
@@ -1403,11 +1402,7 @@
                 Price History & Market Data
             </h3>
             <div class="chart-container">
-                <i class="fas fa-chart-line"></i>
-                <div style="text-align: center;">
-                    <p>Interactive price chart coming soon!</p>
-                    <p style="font-size: 0.9rem; margin-top: 0.5rem;">Track BTC, ETH, and USD valuations over time</p>
-                </div>
+                <canvas id="priceChart" height="120"></canvas>
             </div>
         </div>
     </div>
@@ -1417,6 +1412,76 @@
         <i class="fas fa-check-circle"></i>
         <span id="toastMessage">Item added to cart!</span>
     </div>
+
+    <!-- Dynamic Breadcrumb & Price Chart Script -->
+    <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+        // Helper: Fetch product by ID (or slug)
+        async function fetchProduct(productId) {
+            try {
+                const res = await fetch(`/api/artifacts/${productId}`);
+                if (!res.ok) throw new Error('API error');
+                return await res.json();
+            } catch (e) {
+                console.error('API fetch failed:', e);
+                return null;
+            }
+        }
+        // Render dynamic breadcrumb
+        function renderBreadcrumb(product) {
+            const nav = document.getElementById('breadcrumbNav');
+            if (!nav || !product) return;
+            let cats = [];
+            if (product.category) cats = product.category.split('>');
+            let html = `<a href="/">Home</a>`;
+            cats.forEach(cat => {
+                html += ` <i class='fas fa-chevron-right'></i> <a href='/pages/marketplace.html?cat=${encodeURIComponent(cat.trim())}'>${cat.trim()}</a>`;
+            });
+            html += ` <i class='fas fa-chevron-right'></i> <span>${product.name || product.title || ''}</span>`;
+            nav.innerHTML = html;
+        }
+        // Render price chart
+        function renderPriceChart(product) {
+            let priceHistory = product.priceHistory || [];
+            if (!priceHistory.length) {
+                // Fallback: static sample data for now
+                const now = Date.now();
+                priceHistory = Array.from({length: 14}, (_, i) => ({
+                    date: new Date(now - (13-i)*24*60*60*1000),
+                    price: product.price ? product.price * (0.98 + 0.04*Math.random()) : 1000
+                }));
+            }
+            const ctx = document.getElementById('priceChart').getContext('2d');
+            new window.Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: priceHistory.map(p => p.date instanceof Date ? p.date.toLocaleDateString() : new Date(p.date).toLocaleDateString()),
+                    datasets: [{
+                        label: 'USD',
+                        data: priceHistory.map(p => p.price),
+                        borderColor: '#4ef8a3',
+                        backgroundColor: 'rgba(78,248,163,0.08)',
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    plugins: { legend: { display: false } },
+                    scales: { x: { display: true }, y: { display: true } },
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+        // Get product ID from URL (?id=...)
+        const params = new URLSearchParams(window.location.search);
+        const productId = params.get('id') || 'emerald-pendant';
+        const product = await fetchProduct(productId);
+        if (!product) return;
+        renderBreadcrumb(product);
+        renderPriceChart(product);
+    });
+    </script>
 
     <script>
         // Global variables

@@ -110,6 +110,7 @@ const transactionsRoutes = require('../routes/transactions');
 const dashboardRoutes = require('../routes/dashboard');
 const marketRoutes = require('../routes/market');
 const portfolioRoutes = require('../routes/portfolio');
+const activityRoutes = require('../routes/activity'); // Import activity routes
 // Models for optional seeding
 const Artifact = require('../models/Artifact');
 const User = require('../models/User');
@@ -129,6 +130,7 @@ app.use('/api/market', marketRoutes);
 app.use('/api/marketplace', marketRoutes); // alias for /api/marketplace/stats
 app.use('/api/categories', marketRoutes); // for /api/categories/counts
 app.use('/api/portfolio', portfolioRoutes);
+app.use('/api/activity', activityRoutes); // Register the new activity route
 
 // Dev-only: issue a token for quick testing
 app.post('/api/dev/token', (req, res) => {

@@ -2,6 +2,20 @@ const express = require('express');
 const router = express.Router();
 const Artifact = require('../models/Artifact');
 const auth = require('../middleware/auth');
+const multer = require('multer');
+const path = require('path');
+
+// Configure multer for image uploads
+const storage = multer.diskStorage({
+	destination: function (req, file, cb) {
+		cb(null, path.join(__dirname, '../../uploads/artifacts'));
+	},
+	filename: function (req, file, cb) {
+		const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+		cb(null, uniqueSuffix + '-' + file.originalname.replace(/\s+/g, '_'));
+	}
+});
+const upload = multer({ storage });
 
 // Helper function to fetch live crypto prices
 async function getCryptoPrices() {
@@ -61,8 +75,19 @@ async function getCryptoPrices() {
 // Get all artifacts
 router.get('/', async (req, res) => {
 	try {
-		const artifacts = await Artifact.find().populate('creator', 'name email');
-		res.json({ ok: true, artifacts });
+		   let query = Artifact.find();
+		   // Trending: sort by soldShares (desc), then createdAt (desc)
+		   if (req.query.sort === 'trending') {
+			   query = query.sort({ 'fractionalization.soldShares': -1, createdAt: -1 });
+		   } else if (req.query.sort === 'newest') {
+			   query = query.sort({ createdAt: -1 });
+		   }
+		   if (req.query.limit) {
+			   const limit = parseInt(req.query.limit, 10);
+			   if (!isNaN(limit) && limit > 0) query = query.limit(limit);
+		   }
+		   const artifacts = await query.populate('creator', 'name email');
+		   res.json({ ok: true, artifacts });
 	} catch (err) {
 		res.status(500).json({ ok: false, message: err.message });
 	}
@@ -119,20 +144,52 @@ router.get('/:id', async (req, res) => {
 });
 
 // Create new artifact (requires authentication)
-router.post('/', auth, async (req, res) => {
+router.post('/', auth, upload.array('assetPhotos', 6), async (req, res) => {
 	try {
-		const { name, title, description, imageUrl, price, category, materials, artisan } = req.body;
+		// Parse fields from form-data
+		const {
+			name, title, description, price, salePrice, category, materials,
+			artisan, partnerName, partnerCode, businessLicense, partnerWallet, partnerAddress,
+			promoterName, promoterContact, artisanShare, pvaFee, partnerShare, insuranceBond,
+			artisanWallet, digitalSignature, agreeTerms, network
+		} = req.body;
+
+		// Handle images
+		let imageUrls = [];
+		if (req.files && req.files.length > 0) {
+			imageUrls = req.files.map(f => '/uploads/artifacts/' + f.filename);
+		}
+
+		// Build payout and consignment info
+		const payoutInfo = {
+			artisanWallet,
+			partnerWallet,
+			promoterName,
+			promoterContact
+		};
+		const consignment = {
+			artisanShare: Number(artisanShare) || 50,
+			pvaFee: Number(pvaFee) || 35,
+			promoterShare: Number(partnerShare) || 15,
+			digitalSignature,
+			agreed: agreeTerms === 'true' || agreeTerms === true
+		};
+
 		const artifact = new Artifact({
 			name,
 			title,
 			description,
-			imageUrl,
+			imageUrls,
 			price,
+			salePrice,
 			category,
-			materials,
+			materials: materials ? (Array.isArray(materials) ? materials : [materials]) : [],
 			artisan,
 			creator: req.user.id,
-			physicalSerial: `PVA-${Date.now()}` // Auto-generate serial
+			physicalSerial: `PVA-${Date.now()}`,
+			payoutInfo,
+			consignment,
+			blockchainDetails: { network: network || 'base' }
 		});
 		await artifact.save();
 		res.status(201).json({ ok: true, artifact });

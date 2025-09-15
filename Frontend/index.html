@@ -968,71 +968,9 @@
   </div>
 
   <script>
-    // Sample product data
-    const sampleProducts = [
-      {
-        id: 'emerald-001',
-        name: 'Panjshir Emerald Pendant',
-        description: 'Handcrafted pendant with natural Panjshir emerald set in 18k yellow gold. Digital certificate of authenticity included.',
-        price: 1200,
-        rating: 4.9,
-        category: 'jewelry',
-        badge: 'NFT Available',
-        image: 'https://images.unsplash.com/photo-1603575449200-7f9b41c1ea67?w=600&h=400&fit=crop'
-      },
-      {
-        id: 'bracelet-050',
-        name: 'Artisan Silver Bracelet',
-        description: 'Hand-forged sterling silver bracelet with intricate traditional patterns. Limited to 50 pieces.',
-        price: 189,
-        rating: 4.8,
-        category: 'jewelry',
-        badge: 'Limited Edition',
-        image: 'https://images.unsplash.com/photo-1617038260897-5dc90f1a45c1?w=600&h=400&fit=crop'
-      },
-      {
-        id: 'ring-unique',
-        name: 'Sacred Geometry Ring',
-        description: 'Gold ring featuring sacred geometric motifs and a central diamond. One-of-a-kind piece.',
-        price: 420,
-        rating: 5.0,
-        category: 'jewelry',
-        badge: 'One of a Kind',
-        image: 'https://images.unsplash.com/photo-1603570419963-703b2d7b7f0d?w=600&h=400&fit=crop'
-      },
-      {
-        id: 'necklace-neo',
-        name: 'Vibrant Gemstone Necklace',
-        description: 'Multicolor gemstones handcrafted by artisans using time-honored techniques.',
-        price: 275,
-        rating: 4.7,
-        category: 'jewelry',
-        badge: 'New',
-        image: 'https://images.unsplash.com/photo-1556228453-efd1b3362d7a?w=600&h=400&fit=crop'
-      },
-      {
-        id: 'carpet-001',
-        name: 'Traditional Afghan Carpet',
-        description: 'Hand-woven carpet with intricate geometric patterns from Herat artisans.',
-        price: 2500,
-        rating: 4.9,
-        category: 'textiles',
-        badge: 'Authentic',
-        image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=400&fit=crop'
-      },
-      {
-        id: 'bowl-001',
-        name: 'Lapis Lazuli Bowl',
-        description: 'Beautiful bowl carved from authentic Afghan lapis lazuli stone.',
-        price: 850,
-        rating: 4.6,
-        category: 'ceramics',
-        badge: 'Handcrafted',
-        image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600&h=400&fit=crop'
-      }
-    ];
-
-    let filteredProducts = [...sampleProducts];
+    // Live product data
+    let allProducts = [];
+    let filteredProducts = [];
     let isWalletConnected = false;
 
     // DOM Elements
@@ -1092,9 +1030,8 @@
     }
 
     // Product Rendering
-    function renderProducts() {
+    async function renderProducts() {
       productsGrid.innerHTML = '';
-      
       if (filteredProducts.length === 0) {
         productsGrid.innerHTML = `
           <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px;">
@@ -1105,40 +1042,37 @@
         `;
         return;
       }
-
       filteredProducts.forEach(product => {
         const productCard = document.createElement('div');
         productCard.className = 'product-card';
         productCard.onclick = () => openProductModal(product);
-        
         productCard.innerHTML = `
           <div class="product-image">
-            ${product.image ? 
-              `<img src="${product.image}" alt="${product.name}" loading="lazy">` :
+            ${product.imageUrl ? 
+              `<img src="${product.imageUrl}" alt="${product.title || product.name}" loading="lazy">` :
               `<div class="product-placeholder"><i class="fas fa-gem"></i></div>`
             }
             ${product.badge ? `<div class="product-badge">${product.badge}</div>` : ''}
           </div>
           <div class="product-content">
-            <h3 class="product-title">${product.name}</h3>
-            <p class="product-desc">${product.description}</p>
-            <div class="product-rating">${createStarRating(product.rating)}</div>
+            <h3 class="product-title">${product.title || product.name}</h3>
+            <p class="product-desc">${product.description || ''}</p>
+            <div class="product-rating">${createStarRating(product.rating || 0)}</div>
             <div class="product-meta">
-              <div class="product-price">${formatPrice(product.price)}</div>
+              <div class="product-price">${formatPrice(product.price || 0)}</div>
             </div>
             <div class="product-actions">
-              <button class="btn btn-sm" onclick="event.stopPropagation(); addToCart('${product.id}')">
+              <button class="btn btn-sm" onclick="event.stopPropagation(); addToCart('${product._id}')">
                 <i class="fa-solid fa-cart-plus"></i>
                 Add to Cart
               </button>
-              <button class="btn btn-sm btn-outline" onclick="event.stopPropagation(); viewDetails('${product.id}')">
+              <button class="btn btn-sm btn-outline" onclick="event.stopPropagation(); viewDetails('${product._id}')">
                 <i class="fa-solid fa-eye"></i>
                 View Details
               </button>
             </div>
           </div>
         `;
-        
         productsGrid.appendChild(productCard);
       });
     }
@@ -1148,59 +1082,52 @@
       const searchTerm = searchInput.value.toLowerCase();
       const selectedCategory = categoryFilter.value;
       const sortOption = sortFilter.value;
-
       // Filter
-      filteredProducts = sampleProducts.filter(product => {
-        const matchesSearch = product.name.toLowerCase().includes(searchTerm) ||
-                             product.description.toLowerCase().includes(searchTerm);
-        const matchesCategory = !selectedCategory || product.category === selectedCategory;
-        
+      filteredProducts = allProducts.filter(product => {
+        const matchesSearch = (product.title || product.name || '').toLowerCase().includes(searchTerm) ||
+                             (product.description || '').toLowerCase().includes(searchTerm);
+        const matchesCategory = !selectedCategory || (product.category && product.category === selectedCategory);
         return matchesSearch && matchesCategory;
       });
-
       // Sort
       switch (sortOption) {
         case 'price-low':
-          filteredProducts.sort((a, b) => a.price - b.price);
+          filteredProducts.sort((a, b) => (a.price || 0) - (b.price || 0));
           break;
         case 'price-high':
-          filteredProducts.sort((a, b) => b.price - a.price);
+          filteredProducts.sort((a, b) => (b.price || 0) - (a.price || 0));
           break;
         case 'newest':
-          // For demo, reverse order
-          filteredProducts.reverse();
+          filteredProducts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
           break;
         default:
-          // Keep original order for relevance
           break;
       }
-
       renderProducts();
     }
 
     // Product Actions
     function addToCart(productId) {
-      const product = sampleProducts.find(p => p.id === productId);
+      const product = allProducts.find(p => p._id === productId);
       if (product) {
-        showToast(`${product.name} added to cart!`, 'success');
+        showToast(`${product.title || product.name} added to cart!`, 'success');
       }
     }
 
     function viewDetails(productId) {
-      const product = sampleProducts.find(p => p.id === productId);
+      const product = allProducts.find(p => p._id === productId);
       if (product) {
         openProductModal(product);
       }
     }
 
     function openProductModal(product) {
-      document.getElementById('modalTitle').textContent = product.name;
-      document.getElementById('modalImage').src = product.image || '';
-      document.getElementById('modalName').textContent = product.name;
-      document.getElementById('modalDesc').textContent = product.description;
-      document.getElementById('modalRating').textContent = createStarRating(product.rating);
-      document.getElementById('modalPrice').textContent = formatPrice(product.price);
-      
+      document.getElementById('modalTitle').textContent = product.title || product.name;
+      document.getElementById('modalImage').src = product.imageUrl || '';
+      document.getElementById('modalName').textContent = product.title || product.name;
+      document.getElementById('modalDesc').textContent = product.description || '';
+      document.getElementById('modalRating').textContent = createStarRating(product.rating || 0);
+      document.getElementById('modalPrice').textContent = formatPrice(product.price || 0);
       productModal.classList.add('active');
       document.body.style.overflow = 'hidden';
     }
@@ -1254,7 +1181,7 @@
     });
 
     document.getElementById('contactUs').addEventListener('click', () => {
-      showToast('Contact form coming soon...', 'info');
+      window.location.href = '/pages/contact.html';
     });
 
     // Modal actions
@@ -1263,7 +1190,7 @@
     });
 
     document.getElementById('viewNFT').addEventListener('click', () => {
-      showToast('NFT viewer coming soon...', 'info');
+      window.open('https://opensea.io/', '_blank');
     });
 
     // Search toggle (mobile)
@@ -1274,15 +1201,27 @@
     });
 
     // Initialize
-    document.addEventListener('DOMContentLoaded', () => {
-      renderProducts();
-      
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Fetch products from backend
+      try {
+        const res = await fetch('/api/artifacts');
+        const data = await res.json();
+        if (data.ok && data.artifacts) {
+          allProducts = data.artifacts;
+        } else {
+          allProducts = [];
+        }
+      } catch (e) {
+        allProducts = [];
+      }
+      filteredProducts = [...allProducts];
+      await renderProducts();
       // Animate stats on load
       setTimeout(() => {
         const stats = document.querySelectorAll('.stat-value');
         stats.forEach(stat => {
           if (stat.id === 'artifactCount') {
-            animateCounter(stat, 5);
+            animateCounter(stat, allProducts.length);
           } else if (stat.id === 'userCount') {
             animateCounter(stat, 12);
           }
