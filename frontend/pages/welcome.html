@@ -1025,34 +1025,15 @@
                         }
                         setTimeout(updateStat, 16);
                     } else {
-                        stat.textContent = originalText;
-                    }
-                };
-                
-                // Start animation when element is in view
-                const statObserver = new IntersectionObserver((entries) => {
-                    entries.forEach(entry => {
-                        if (entry.isIntersecting) {
-                            updateStat();
-                            statObserver.unobserve(entry.target);
+                        if (stat.textContent.includes('$')) {
+                            stat.textContent = '$' + targetValue.toLocaleString();
+                        } else {
+                            stat.textContent = targetValue.toLocaleString();
                         }
                     });
                 });
                 
                 statObserver.observe(stat);
-            });
-        });
-    </script>
-</body>
-</html>                 if (stat.textContent.includes('$')) {
-                            stat.textContent = '$' + targetValue.toLocaleString();
-                        } else {
-                            stat.textContent = targetValue.toLocaleString();
-                        }
-                    }
-                };
-                
-                setTimeout(updateStat, 500);
             });
         });
     </script>
