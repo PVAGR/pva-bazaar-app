@@ -3,24 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PVA Bazaar - Admin Dashboard</title>
+    <title>PVA Bazaar - Complete Admin Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --primary-dark: #0f3b2d;
-            --primary: #1c5a45;
-            --primary-light: #2d7d5a;
+            --primary-dark: #0a1f19;
+            --primary: #14372b;
+            --primary-light: #1c5a45;
             --accent: #4ef8a3;
             --accent-dark: #2bb673;
             --gold: #d4af37;
+            --gold-light: #e6c875;
             --text-light: #e8f4f0;
             --text-muted: #a8b0b9;
-            --card-bg: rgba(18, 18, 18, 0.95);
+            --card-bg: rgba(18, 26, 24, 0.97);
             --card-border: rgba(42, 75, 42, 0.6);
-            --gradient-start: #4ef8a3;
-            --gradient-mid: #2bb673;
-            --gradient-end: #1c5a45;
+            --red: #f85e5e;
+            --green: #4ef8a3;
+            --blue: #5e9af8;
+            --purple: #a78efa;
             --danger: #ff6b6b;
             --warning: #ffd166;
         }
@@ -29,7 +32,7 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Poppins', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Poppins', sans-serif;
         }
         
         body {
@@ -41,17 +44,19 @@
                 radial-gradient(circle at 75% 75%, rgba(28, 90, 69, 0.15) 0%, transparent 40%);
             overflow-x: hidden;
         }
-        
+
         /* Header Styles */
         header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 20px 40px;
+            padding: 15px 40px;
             border-bottom: 1px solid var(--primary);
-            position: relative;
             background: var(--card-bg);
             backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
         }
         
         .logo {
@@ -71,45 +76,16 @@
             font-weight: 700;
             color: var(--text-light);
             font-family: 'Playfair Display', serif;
-        }
-        
-        nav ul {
-            display: flex;
-            list-style: none;
-            gap: 25px;
-        }
-        
-        nav a {
-            color: var(--text-muted);
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.3s;
-            position: relative;
-        }
-        
-        nav a:hover, nav a.active {
-            color: var(--accent);
+            background: linear-gradient(to right, var(--accent), var(--gold));
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
         
         .header-actions {
             display: flex;
             align-items: center;
             gap: 15px;
-        }
-        
-        .icon-btn {
-            background: rgba(28, 90, 69, 0.2);
-            border: 1px solid var(--primary);
-            color: var(--text-light);
-            padding: 10px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .icon-btn:hover {
-            background: var(--primary);
-            color: var(--accent);
         }
         
         .btn {
@@ -129,12 +105,12 @@
         .btn:hover {
             background: var(--accent-dark);
         }
-        
+
         .container {
             display: flex;
             min-height: calc(100vh - 80px);
         }
-        
+
         /* Sidebar Navigation */
         .sidebar {
             width: 280px;
@@ -172,17 +148,21 @@
             text-decoration: none;
             padding: 12px 30px;
             transition: all 0.3s;
+            border-left: 3px solid transparent;
         }
         
-        .nav-links a:hover, .nav-links a.active {
+        .nav-links a:hover, 
+        .nav-links a.active {
             background: rgba(28, 90, 69, 0.3);
             color: var(--accent);
+            border-left-color: var(--accent);
         }
-        
+
         /* Main Content */
         .main-content {
             flex: 1;
             padding: 30px;
+            overflow-y: auto;
         }
         
         .page-header {
@@ -199,32 +179,8 @@
             font-size: 2.2rem;
             font-family: 'Playfair Display', serif;
         }
-        
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        
-        .user-avatar {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            background: var(--primary);
-            color: var(--accent);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 1.1rem;
-        }
-        
-        .user-name {
-            color: var(--text-light);
-            font-weight: 500;
-        }
-        
-        /* Dashboard Cards */
+
+        /* Dashboard Stats */
         .dashboard-cards {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -240,24 +196,6 @@
             backdrop-filter: blur(10px);
             position: relative;
             overflow: hidden;
-        }
-        
-        .card::before {
-            content: '';
-            position: absolute;
-            top: -2px;
-            left: -2px;
-            right: -2px;
-            bottom: -2px;
-            z-index: -1;
-            background: linear-gradient(45deg, 
-                var(--gradient-start), 
-                var(--gradient-mid), 
-                var(--gradient-end),
-                var(--gradient-start));
-            background-size: 400% 400%;
-            border-radius: 14px;
-            animation: gradientBorder 6s ease infinite;
         }
         
         .stat-card {
@@ -282,19 +220,14 @@
             font-size: 0.9rem;
             margin-bottom: 10px;
         }
-        
-        .stat-change {
-            color: var(--accent);
-            font-size: 0.8rem;
-            font-weight: 500;
-        }
-        
-        /* Tabs */
+
+        /* Tabs Navigation */
         .tabs {
             display: flex;
             border-bottom: 1px solid var(--primary);
             margin-bottom: 30px;
             gap: 10px;
+            flex-wrap: wrap;
         }
         
         .tab {
@@ -307,7 +240,8 @@
             position: relative;
         }
         
-        .tab:hover, .tab.active {
+        .tab:hover, 
+        .tab.active {
             color: var(--accent);
             background: rgba(28, 90, 69, 0.2);
         }
@@ -321,17 +255,18 @@
             height: 2px;
             background: var(--accent);
         }
-        
+
         /* Tab Content */
         .tab-content {
             display: none;
+            animation: fadeIn 0.3s ease-in;
         }
         
         .tab-content.active {
             display: block;
         }
-        
-        /* Forms */
+
+        /* Form Styles */
         .form-section {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
@@ -352,10 +287,6 @@
             font-size: 1.8rem;
             margin-bottom: 10px;
             font-family: 'Playfair Display', serif;
-        }
-        
-        .form-header p {
-            color: var(--text-muted);
         }
         
         .form-grid {
@@ -393,22 +324,9 @@
             background: rgba(255, 255, 255, 0.08);
         }
         
-        .form-control::placeholder {
-            color: var(--text-muted);
-        }
-        
         textarea.form-control {
             min-height: 100px;
             resize: vertical;
-        }
-        
-        select.form-control {
-            cursor: pointer;
-        }
-        
-        input[type="checkbox"] {
-            margin-right: 8px;
-            accent-color: var(--accent);
         }
         
         .btn-primary {
@@ -426,8 +344,24 @@
             background: var(--accent-dark);
             transform: translateY(-2px);
         }
+
+        /* Auto-generation Section */
+        .auto-gen-section {
+            background: rgba(212,175,55,0.1);
+            border: 1px solid var(--gold);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
         
-        /* Tables */
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        /* Table Styles */
         .artifacts-table {
             width: 100%;
             border-collapse: collapse;
@@ -453,11 +387,8 @@
         .artifacts-table tr:hover {
             background: rgba(28, 90, 69, 0.1);
         }
-        
-        .artifacts-table tr:last-child td {
-            border-bottom: none;
-        }
-        
+
+        /* Status Badges */
         .status-badge {
             padding: 6px 12px;
             border-radius: 20px;
@@ -470,61 +401,17 @@
             color: var(--accent);
         }
         
-        .status-draft {
+        .status-pending {
             background: rgba(255, 209, 102, 0.2);
             color: var(--warning);
         }
-        
-        .action-buttons {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .btn-sm {
-            padding: 6px 12px;
-            font-size: 0.8rem;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 500;
-            transition: all 0.3s;
-        }
-        
-        .btn-edit {
-            background: rgba(255, 209, 102, 0.2);
-            color: var(--warning);
-            border: 1px solid var(--warning);
-        }
-        
-        .btn-edit:hover {
-            background: var(--warning);
-            color: var(--primary-dark);
-        }
-        
-        .btn-delete {
-            background: rgba(255, 107, 107, 0.2);
-            color: var(--danger);
-            border: 1px solid var(--danger);
-        }
-        
-        .btn-delete:hover {
-            background: var(--danger);
-            color: white;
-        }
-        
+
         /* Animations */
-        @keyframes gradientBorder {
-            0% {
-                background-position: 0% 50%;
-            }
-            50% {
-                background-position: 100% 50%;
-            }
-            100% {
-                background-position: 0% 50%;
-            }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        
+
         /* Responsive Design */
         @media (max-width: 1200px) {
             .container {
@@ -534,14 +421,6 @@
             .sidebar {
                 width: 100%;
                 padding: 20px;
-            }
-            
-            .dashboard-cards {
-                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            }
-            
-            .form-grid {
-                grid-template-columns: 1fr;
             }
         }
         
@@ -564,62 +443,43 @@
                 padding: 8px 16px;
                 font-size: 0.9rem;
             }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
     <header>
-      <a href="/" class="logo">
-        <i class="fas fa-gem logo-icon"></i>
-        <div class="logo-text">PVA Bazaar</div>
-      </a>
-      <nav>
-        <ul>
-                    <li><a href="/">Home</a></li>
-                    <li><a href="/pages/pvadashboard.html">Dashboard</a></li>
-                    <li><a href="/pages/productshowcase.html">Marketplace</a></li>
-                    <li><a href="/pages/portfolio.html">Portfolio</a></li>
-                    <li><a href="/pages/checkoutmint.html">Checkout</a></li>
-                    <li><a href="/pages/provenance.html">Provenance</a></li>
-                    <li><a href="/pages/artifact.html" class="active">Artifact</a></li>
-                    <li><a href="/pages/assetcreate.html">Asset Creation</a></li>
-                    <li><a href="/pages/pvacertadmit.html">Certificate Admission</a></li>
-                    <li><a href="/pages/admin.html">Admin</a></li>
-                    <li><a href="/pages/market.html">Market (Alt)</a></li>
-                    <li><a href="/pages/PVA Bazaar - Shared Ownership Marketplace.html">Marketplace (Legacy)</a></li>
-                    <li><a href="/pages/provtrack.html">Provenance Tracker</a></li>
-                    <li><a href="/pages/provtracker.html">Provenance Tracker (Alt)</a></li>
-                    <li><a href="/pages/pvashares.html">Shares</a></li>
-                    <li><a href="/pages/welcome.html">Welcome</a></li>
-        </ul>
-      </nav>
-      <div class="header-actions">
-        <button class="icon-btn" id="searchToggle" title="Search">
-          <i class="fa-solid fa-magnifying-glass"></i>
-        </button>
-        <button class="btn" id="connectWallet">
-          <i class="fa-solid fa-wallet"></i>
-          Connect Wallet
-        </button>
-      </div>
+        <a href="/" class="logo">
+            <i class="fas fa-gem logo-icon"></i>
+            <div class="logo-text">PVA Bazaar</div>
+        </a>
+        <div class="header-actions">
+            <button class="btn" id="connectWallet">
+                <i class="fa-solid fa-wallet"></i>
+                Connect Wallet
+            </button>
+        </div>
     </header>
 
     <div class="container">
         <!-- Sidebar Navigation -->
         <div class="sidebar">
             <div class="sidebar-logo">
-                <h2>Admin Control</h2>
+                <h2>Admin Control Panel</h2>
             </div>
             
-            <nav class="site-nav" aria-label="Admin navigation">
+            <nav class="site-nav">
                 <ul class="nav-links">
-                    <li><a href="#" class="active"><i class="fas fa-chart-pie"></i> Dashboard</a></li>
-                    <li><a href="#"><i class="fas fa-gem"></i> Artifacts</a></li>
-                    <li><a href="#"><i class="fas fa-users"></i> Users</a></li>
-                    <li><a href="#"><i class="fas fa-exchange-alt"></i> Transactions</a></li>
-                    <li><a href="#"><i class="fas fa-chart-line"></i> Analytics</a></li>
-                    <li><a href="#"><i class="fas fa-cog"></i> Settings</a></li>
-                    <li><a href="#"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                    <li><a href="#" class="active" data-tab="dashboard"><i class="fas fa-chart-pie"></i> Dashboard</a></li>
+                    <li><a href="#" data-tab="asset-creation"><i class="fas fa-plus-circle"></i> Asset Creation</a></li>
+                    <li><a href="#" data-tab="contract-generator"><i class="fas fa-file-contract"></i> Contract Generator</a></li>
+                    <li><a href="#" data-tab="certificate-admit"><i class="fas fa-certificate"></i> Certificate Admission</a></li>
+                    <li><a href="#" data-tab="artifact-management"><i class="fas fa-gem"></i> Artifact Management</a></li>
+                    <li><a href="#" data-tab="user-management"><i class="fas fa-users"></i> User Management</a></li>
+                    <li><a href="#" data-tab="system-tools"><i class="fas fa-cog"></i> System Tools</a></li>
                 </ul>
             </nav>
         </div>
@@ -638,243 +498,336 @@
             <div class="dashboard-cards">
                 <div class="card stat-card">
                     <div class="stat-icon"><i class="fas fa-gem"></i></div>
-                    <div class="stat-value">24</div>
+                    <div class="stat-value" id="totalArtifacts">24</div>
                     <div class="stat-label">Total Artifacts</div>
-                    <div class="stat-change">+5 from last week</div>
                 </div>
                 <div class="card stat-card">
                     <div class="stat-icon"><i class="fas fa-users"></i></div>
-                    <div class="stat-value">153</div>
+                    <div class="stat-value" id="totalUsers">153</div>
                     <div class="stat-label">Registered Users</div>
-                    <div class="stat-change">+12 from last week</div>
                 </div>
                 <div class="card stat-card">
                     <div class="stat-icon"><i class="fas fa-exchange-alt"></i></div>
-                    <div class="stat-value">42</div>
+                    <div class="stat-value" id="totalTransactions">42</div>
                     <div class="stat-label">Transactions</div>
-                    <div class="stat-change">+8 from last week</div>
                 </div>
                 <div class="card stat-card">
                     <div class="stat-icon"><i class="fas fa-dollar-sign"></i></div>
-                    <div class="stat-value">$8,240</div>
-                    <div class="stat-label">Revenue</div>
-                    <div class="stat-change">+$1,200 from last week</div>
+                    <div class="stat-value" id="totalRevenue">$8,240</div>
+                    <div class="stat-label">Total Revenue</div>
                 </div>
             </div>
 
-            <!-- Tabs for different sections -->
-            <div class="tabs">
-                <div class="tab active" data-tab="add-artifact">Add New Artifact</div>
-                <div class="tab" data-tab="manage-artifacts">Manage Artifacts</div>
-                <div class="tab" data-tab="user-management">User Management</div>
-            </div>
-
-            <!-- Add Artifact Form -->
-            <div class="tab-content active" id="add-artifact">
+            <!-- Tab Contents -->
+            
+            <!-- Asset Creation Tab -->
+            <div class="tab-content active" id="asset-creation">
                 <div class="form-section">
                     <div class="form-header">
-                        <h2>Add New Artifact</h2>
-                        <p>Add a new physical artifact to the marketplace</p>
+                        <h2>Create New Asset</h2>
+                        <p>Add a new physical artifact to the marketplace with complete metadata</p>
                     </div>
-                    <form id="artifact-form">
+                    <form id="asset-form">
                         <div class="form-grid">
                             <div class="form-group">
-                                <label for="name">Artifact Name</label>
-                                <input type="text" id="name" class="form-control" required>
+                                <label for="assetName">Asset Name</label>
+                                <input type="text" id="assetName" class="form-control" required placeholder="Amradjet Emerald Pendant">
                             </div>
                             <div class="form-group">
-                                <label for="title">Display Title</label>
-                                <input type="text" id="title" class="form-control" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="price">Price ($)</label>
-                                <input type="number" id="price" class="form-control" step="0.01" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="category">Category</label>
-                                <select id="category" class="form-control" required>
+                                <label for="assetCategory">Category</label>
+                                <select id="assetCategory" class="form-control" required>
                                     <option value="">Select Category</option>
-                                    <option value="Jewelry">Jewelry</option>
-                                    <option value="Sculpture">Sculpture</option>
-                                    <option value="Textile">Textile</option>
-                                    <option value="Pottery">Pottery</option>
-                                    <option value="Painting">Painting</option>
+                                    <option value="jewelry">Jewelry</option>
+                                    <option value="gemstone">Gemstone</option>
+                                    <option value="art">Art</option>
+                                    <option value="textile">Textile</option>
                                 </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="assetPrice">Price ($)</label>
+                                <input type="number" id="assetPrice" class="form-control" step="0.01" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="assetMaterials">Materials</label>
+                                <input type="text" id="assetMaterials" class="form-control" placeholder="Gold, Emerald, Diamond">
                             </div>
                         </div>
                         
                         <div class="form-group">
-                            <label for="description">Description</label>
-                            <textarea id="description" class="form-control" required></textarea>
+                            <label for="assetDescription">Description</label>
+                            <textarea id="assetDescription" class="form-control" required></textarea>
                         </div>
-                        
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label for="imageUrl">Image URL</label>
-                                <input type="url" id="imageUrl" class="form-control" required>
+
+                        <div class="auto-gen-section">
+                            <h4>Automated Features</h4>
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="autoGenAssetId" checked>
+                                <label for="autoGenAssetId">Auto-generate Asset ID</label>
                             </div>
-                            <div class="form-group">
-                                <label for="physicalSerial">Physical Serial Number</label>
-                                <input type="text" id="physicalSerial" class="form-control" required>
-                            </div>
-                        </div>
-                        
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label for="materials">Materials (comma separated)</label>
-                                <input type="text" id="materials" class="form-control" placeholder="Gold, Emerald, Diamond">
-                            </div>
-                            <div class="form-group">
-                                <label for="artisan">Artisan/Creator</label>
-                                <input type="text" id="artisan" class="form-control" required>
-                            </div>
-                        </div>
-                        
-                        <h3 style="color: var(--gold); margin: 30px 0 20px 0; font-family: 'Playfair Display', serif;">Fractionalization Options</h3>
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label>
-                                    <input type="checkbox" id="enableFractionalization"> Enable Fractional Ownership
-                                </label>
-                            </div>
-                            <div class="form-group">
-                                <label for="totalShares">Total Shares</label>
-                                <input type="number" id="totalShares" class="form-control" value="5000" disabled>
-                            </div>
-                            <div class="form-group">
-                                <label for="sharePrice">Share Price ($)</label>
-                                <input type="number" id="sharePrice" class="form-control" step="0.01" value="1.00" disabled>
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="autoTimestampAsset" checked>
+                                <label for="autoTimestampAsset">Auto-timestamp creation</label>
                             </div>
                         </div>
                         
                         <button type="submit" class="btn-primary">
-                            <i class="fas fa-plus"></i> Add Artifact
+                            <i class="fas fa-plus"></i> Create Asset
                         </button>
                     </form>
                 </div>
             </div>
 
-            <!-- Manage Artifacts Table -->
-            <div class="tab-content" id="manage-artifacts">
+            <!-- Contract Generator Tab -->
+            <div class="tab-content" id="contract-generator">
                 <div class="form-section">
                     <div class="form-header">
-                        <h2>Manage Artifacts</h2>
-                        <p>View and manage all artifacts in the marketplace</p>
+                        <h2>Universal Asset Contract Generator</h2>
+                        <p>Create blockchain-verified contracts for physical-digital assets</p>
                     </div>
                     
-                    <table class="artifacts-table">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Category</th>
-                                <th>Price</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Maradjet Emerald Pendant</td>
-                                <td>Jewelry</td>
-                                <td>$1,200</td>
-                                <td><span class="status-badge status-active">Active</span></td>
-                                <td class="action-buttons">
-                                    <button class="btn btn-sm btn-edit"><i class="fas fa-edit"></i> Edit</button>
-                                    <button class="btn btn-sm btn-delete"><i class="fas fa-trash"></i> Delete</button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Handwoven Afghan Rug</td>
-                                <td>Textile</td>
-                                <td>$850</td>
-                                <td><span class="status-badge status-active">Active</span></td>
-                                <td class="action-buttons">
-                                    <button class="btn btn-sm btn-edit"><i class="fas fa-edit"></i> Edit</button>
-                                    <button class="btn btn-sm btn-delete"><i class="fas fa-trash"></i> Delete</button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Lapis Lazuli Bracelet</td>
-                                <td>Jewelry</td>
-                                <td>$320</td>
-                                <td><span class="status-badge status-draft">Draft</span></td>
-                                <td class="action-buttons">
-                                    <button class="btn btn-sm btn-edit"><i class="fas fa-edit"></i> Edit</button>
-                                    <button class="btn btn-sm btn-delete"><i class="fas fa-trash"></i> Delete</button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <div class="auto-gen-section">
+                        <h4>Auto-Generation Settings</h4>
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="autoGenContractId" checked>
+                            <label for="autoGenContractId">Auto-generate Contract ID</label>
+                        </div>
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="autoGenTokenId">
+                            <label for="autoGenTokenId">Auto-generate Token ID</label>
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="contractAsset">Select Asset</label>
+                            <select id="contractAsset" class="form-control" required>
+                                <option value="">Choose an asset...</option>
+                                <!-- Assets will be populated dynamically -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="contractNetwork">Blockchain Network</label>
+                            <select id="contractNetwork" class="form-control" required>
+                                <option value="base">Base Mainnet</option>
+                                <option value="ethereum">Ethereum</option>
+                                <option value="polygon">Polygon</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="artisanWallet">Artisan Wallet</label>
+                            <input type="text" id="artisanWallet" class="form-control" placeholder="0x..." required>
+                        </div>
+                        <div class="form-group">
+                            <label for="partnerWallet">Partner Wallet</label>
+                            <input type="text" id="partnerWallet" class="form-control" placeholder="0x...">
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="artisanShare">Artisan Share (%)</label>
+                            <input type="number" id="artisanShare" class="form-control" value="50" min="0" max="100">
+                        </div>
+                        <div class="form-group">
+                            <label for="pvaFee">PVA Fee (%)</label>
+                            <input type="number" id="pvaFee" class="form-control" value="35" min="0" max="100">
+                        </div>
+                        <div class="form-group">
+                            <label for="partnerShare">Partner Share (%)</label>
+                            <input type="number" id="partnerShare" class="form-control" value="15" min="0" max="100">
+                        </div>
+                    </div>
+
+                    <button type="button" class="btn-primary" onclick="generateContract()">
+                        <i class="fas fa-file-contract"></i> Generate Contract
+                    </button>
                 </div>
             </div>
 
-            <!-- User Management -->
-            <div class="tab-content" id="user-management">
-                <div class="form-section">
-                    <div class="form-header">
-                        <h2>User Management</h2>
-                        <p>Manage registered users and their permissions</p>
-                    </div>
-                    <div style="padding: 40px; text-align: center; color: var(--text-muted);">
-                        <i class="fas fa-users" style="font-size: 4rem; margin-bottom: 20px; color: var(--primary);"></i>
-                        <p>User management interface will be implemented here with user list, role assignment, and activity tracking.</p>
-                    </div>
-                </div>
-            </div>
+            <!-- Additional tab contents would continue here for certificate admission, 
+                 artifact management, user management, and system tools -->
+
         </div>
     </div>
 
     <script>
-        // Tab functionality
-        document.querySelectorAll('.tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                // Remove active class from all tabs and contents
-                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-                
-                // Add active class to clicked tab and corresponding content
-                tab.classList.add('active');
-                document.getElementById(tab.dataset.tab).classList.add('active');
+        // API Helper
+        async function fetchAPI(endpoint) {
+            try {
+                const res = await fetch(endpoint);
+                if (!res.ok) throw new Error('API error');
+                return await res.json();
+            } catch (e) {
+                console.error('API fetch failed:', endpoint, e);
+                return null;
+            }
+        }
+
+        // Tab Functionality
+        function initializeTabs() {
+            // Sidebar navigation
+            document.querySelectorAll('.nav-links a').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const tabId = link.getAttribute('data-tab');
+                    
+                    // Update active states
+                    document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                    
+                    link.classList.add('active');
+                    if (tabId && document.getElementById(tabId)) {
+                        document.getElementById(tabId).classList.add('active');
+                    }
+                });
             });
-        });
 
-        // Enable/disable fractionalization fields
-        document.getElementById('enableFractionalization').addEventListener('change', function() {
-            const isEnabled = this.checked;
-            document.getElementById('totalShares').disabled = !isEnabled;
-            document.getElementById('sharePrice').disabled = !isEnabled;
-        });
+            // Main tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabId = tab.getAttribute('data-tab');
+                    
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    tab.classList.add('active');
+                    if (tabId && document.getElementById(tabId)) {
+                        document.getElementById(tabId).classList.add('active');
+                    }
+                });
+            });
+        }
 
-        // Form submission
-        document.getElementById('artifact-form').addEventListener('submit', async function(e) {
+        // Asset Form Handling
+        document.getElementById('asset-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            // Collect form data
             const formData = {
-                name: document.getElementById('name').value,
-                title: document.getElementById('title').value,
-                description: document.getElementById('description').value,
-                price: parseFloat(document.getElementById('price').value),
-                category: document.getElementById('category').value,
-                imageUrl: document.getElementById('imageUrl').value,
-                physicalSerial: document.getElementById('physicalSerial').value,
-                materials: document.getElementById('materials').value.split(',').map(m => m.trim()),
-                artisan: document.getElementById('artisan').value,
-                fractionalization: {
-                    enabled: document.getElementById('enableFractionalization').checked,
-                    totalShares: parseInt(document.getElementById('totalShares').value) || 0,
-                    sharePrice: parseFloat(document.getElementById('sharePrice').value) || 0
-                }
+                name: document.getElementById('assetName').value,
+                category: document.getElementById('assetCategory').value,
+                price: parseFloat(document.getElementById('assetPrice').value),
+                materials: document.getElementById('assetMaterials').value,
+                description: document.getElementById('assetDescription').value,
+                assetId: document.getElementById('autoGenAssetId').checked ? generateAssetId() : 'manual',
+                timestamp: document.getElementById('autoTimestampAsset').checked ? new Date().toISOString() : null
             };
             
-            // In a real implementation, this would send data to your backend API
             try {
-                // Simulate API call
-                console.log('Adding artifact:', formData);
+                // Simulate API call - replace with actual endpoint
+                const response = await fetch('/api/artifacts', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
                 
-                // Show success message
-                alert('Artifact added successfully!');
-            } catch (err) {
-                alert('Failed to add artifact: ' + (err?.message || err));
+                if (response.ok) {
+                    alert('Asset created successfully!');
+                    this.reset();
+                    updateDashboardStats();
+                } else {
+                    throw new Error('Failed to create asset');
+                }
+            } catch (error) {
+                alert('Error creating asset: ' + error.message);
             }
         });
+
+        // Contract Generation
+        function generateContract() {
+            const assetSelect = document.getElementById('contractAsset');
+            const selectedAsset = assetSelect.options[assetSelect.selectedIndex];
+            
+            if (!selectedAsset.value) {
+                alert('Please select an asset first');
+                return;
+            }
+            
+            const contractData = {
+                contractId: document.getElementById('autoGenContractId').checked ? generateContractId() : 'manual',
+                assetId: selectedAsset.value,
+                network: document.getElementById('contractNetwork').value,
+                artisanWallet: document.getElementById('artisanWallet').value,
+                partnerWallet: document.getElementById('partnerWallet').value,
+                shares: {
+                    artisan: parseInt(document.getElementById('artisanShare').value),
+                    pva: parseInt(document.getElementById('pvaFee').value),
+                    partner: parseInt(document.getElementById('partnerShare').value)
+                },
+                timestamp: new Date().toISOString()
+            };
+            
+            // Generate and display contract
+            const contractWindow = window.open('', '_blank');
+            contractWindow.document.write(`
+                <html>
+                <head><title>PVA Contract - ${contractData.contractId}</title></head>
+                <body>
+                    <h1>PVA Asset Contract</h1>
+                    <pre>${JSON.stringify(contractData, null, 2)}</pre>
+                </body>
+                </html>
+            `);
+            contractWindow.document.close();
+        }
+
+        // Utility Functions
+        function generateAssetId() {
+            return 'AST-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+        }
+
+        function generateContractId() {
+            return 'PVA-CONTRACT-' + Date.now();
+        }
+
+        function updateDashboardStats() {
+            // This would fetch real data from your APIs
+            fetchAPI('/api/dashboard/stats').then(data => {
+                if (data && data.ok) {
+                    document.getElementById('totalArtifacts').textContent = data.stats.totalArtifacts || '24';
+                    document.getElementById('totalUsers').textContent = data.stats.totalUsers || '153';
+                    document.getElementById('totalTransactions').textContent = data.stats.totalTransactions || '42';
+                    document.getElementById('totalRevenue').textContent = data.stats.totalRevenue ? '$' + data.stats.totalRevenue : '$8,240';
+                }
+            });
+        }
+
+        // Wallet Connection
+        document.getElementById('connectWallet').addEventListener('click', function() {
+            const walletAddress = prompt('Enter wallet address (for demo purposes):');
+            if (walletAddress) {
+                this.innerHTML = `<i class="fa-solid fa-wallet"></i> ${walletAddress.slice(0,8)}...${walletAddress.slice(-6)}`;
+                localStorage.setItem('demoWallet', walletAddress);
+            }
+        });
+
+        // Load saved wallet
+        const savedWallet = localStorage.getItem('demoWallet');
+        if (savedWallet) {
+            document.getElementById('connectWallet').innerHTML = 
+                `<i class="fa-solid fa-wallet"></i> ${savedWallet.slice(0,8)}...${savedWallet.slice(-6)}`;
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeTabs();
+            updateDashboardStats();
+            
+            // Load assets for contract generator
+            fetchAPI('/api/artifacts').then(data => {
+                if (data && data.artifacts) {
+                    const assetSelect = document.getElementById('contractAsset');
+                    assetSelect.innerHTML = '<option value="">Choose an asset...</option>';
+                    data.artifacts.forEach(asset => {
+                        const option = document.createElement('option');
+                        option.value = asset.id;
+                        option.textContent = asset.name || asset.title;
+                        assetSelect.appendChild(option);
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
