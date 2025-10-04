@@ -76,18 +76,14 @@
         <ul>
           <li><a href="/">Home</a></li>
           <li><a href="/pages/pvadashboard.html">Dashboard</a></li>
-          <li><a href="/pages/productshowcase.html" class="active">Marketplace</a></li>
+          <li><a href="/pages/marketplace.html" class="active">Marketplace</a></li>
           <li><a href="/pages/portfolio.html">Portfolio</a></li>
           <li><a href="/pages/checkoutmint.html">Checkout</a></li>
           <li><a href="/pages/provenance.html">Provenance</a></li>
-          <li><a href="/pages/artifact.html">Artifact</a></li>
+          <li><a href="/pages/provtrack.html">Provenance Tracker</a></li>
           <li><a href="/pages/assetcreate.html">Asset Creation</a></li>
           <li><a href="/pages/pvacertadmit.html">Certificate Admission</a></li>
           <li><a href="/pages/admin.html">Admin</a></li>
-          <li><a href="/pages/market.html">Market (Alt)</a></li>
-          <li><a href="/pages/PVA Bazaar - Shared Ownership Marketplace.html">Marketplace (Legacy)</a></li>
-          <li><a href="/pages/provtrack.html">Provenance Tracker</a></li>
-          <li><a href="/pages/provtracker.html">Provenance Tracker (Alt)</a></li>
           <li><a href="/pages/pvashares.html">Shares</a></li>
           <li><a href="/pages/welcome.html">Welcome</a></li>
         </ul>
@@ -133,8 +129,7 @@
           title: a.title || a.name,
           description: a.description,
           seller: a.artisan || (a.creator && a.creator.name) || 'Unknown',
-          verified: true, // TODO: Replace with real verification logic if available
-          topSeller: false, // TODO: Replace with real top seller logic if available
+          verified: false, // Verification logic will be implemented\n          topSeller: false, // Top seller logic will be implemented
           isNew: (Date.now() - new Date(a.createdAt).getTime()) < 1000*60*60*24*14, // New if within 2 weeks
           rating: a.rating || (Math.random() * 2 + 3).toFixed(1), // Use backend rating if present, else mock
           reviews: a.reviewCount || Math.floor(Math.random() * 50) + 10, // Use backend reviewCount if present, else mock

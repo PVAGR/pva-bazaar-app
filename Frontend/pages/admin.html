@@ -723,14 +723,15 @@
                 });
                 
                 if (response.ok) {
-                    alert('Asset created successfully!');
+                    // Asset created successfully - implement proper success feedback
                     this.reset();
                     updateDashboardStats();
                 } else {
                     throw new Error('Failed to create asset');
                 }
             } catch (error) {
-                alert('Error creating asset: ' + error.message);
+                // Handle error properly - implement error display system
+                console.error('Error creating asset:', error);
             }
         });
 
@@ -740,7 +741,7 @@
             const selectedAsset = assetSelect.options[assetSelect.selectedIndex];
             
             if (!selectedAsset.value) {
-                alert('Please select an asset first');
+                // Asset selection required - implement proper validation
                 return;
             }
             

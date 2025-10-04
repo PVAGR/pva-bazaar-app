@@ -1088,18 +1088,15 @@
                 <ul>
                     <li><a href="/">Home</a></li>
                     <li><a href="/pages/pvadashboard.html">Dashboard</a></li>
-                    <li><a href="/pages/productshowcase.html" class="active">Marketplace</a></li>
+                    <li><a href="/pages/marketplace.html">Marketplace</a></li>
+                    <li><a href="/pages/productshowcase.html" class="active">Product Details</a></li>
                     <li><a href="/pages/portfolio.html">Portfolio</a></li>
                     <li><a href="/pages/checkoutmint.html">Checkout</a></li>
                     <li><a href="/pages/provenance.html">Provenance</a></li>
-                    <li><a href="/pages/artifact.html">Artifact</a></li>
+                    <li><a href="/pages/provtrack.html">Provenance Tracker</a></li>
                     <li><a href="/pages/assetcreate.html">Asset Creation</a></li>
                     <li><a href="/pages/pvacertadmit.html">Certificate Admission</a></li>
                     <li><a href="/pages/admin.html">Admin</a></li>
-                    <li><a href="/pages/market.html">Market (Alt)</a></li>
-                    <li><a href="/pages/PVA Bazaar - Shared Ownership Marketplace.html">Marketplace (Legacy)</a></li>
-                    <li><a href="/pages/provtrack.html">Provenance Tracker</a></li>
-                    <li><a href="/pages/provtracker.html">Provenance Tracker (Alt)</a></li>
                     <li><a href="/pages/pvashares.html">Shares</a></li>
                     <li><a href="/pages/welcome.html">Welcome</a></li>
                 </ul>
@@ -1433,7 +1430,7 @@
         function renderPriceChart(product) {
             let priceHistory = product.priceHistory || [];
             if (!priceHistory.length) {
-                // Fallback: static sample data for now
+                // Static data for now - will be replaced with API data
                 const now = Date.now();
                 priceHistory = Array.from({length: 14}, (_, i) => ({
                     date: new Date(now - (13-i)*24*60*60*1000),
@@ -1490,7 +1487,7 @@
 
         // Initialize page
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('PVA Bazaar Maradjet Product Page initialized');
+            // PVA Bazaar Product Page initialized
             loadCryptoPrices();
             updateCryptoEquivalents();
             
@@ -1666,14 +1663,14 @@
             document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
             card.classList.add('selected');
             selectedOption = option;
-            console.log('Selected option:', option);
+            // Selected option functionality
         }
 
         function selectCrypto(card, crypto) {
             document.querySelectorAll('.crypto-option').forEach(c => c.classList.remove('selected'));
             card.classList.add('selected');
             selectedCrypto = crypto;
-            console.log('Selected crypto:', crypto);
+            // Selected crypto functionality
         }
 
         // Crypto payment functions

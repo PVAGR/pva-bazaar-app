@@ -556,7 +556,7 @@
             </div>
             
             <div class="search-box">
-                <input type="text" class="search-input" id="searchInput" placeholder="Search items, collections, or artifacts...">
+                <input type="text" class="search-input" id="searchInput" placeholder="Search...">
                 <button class="btn btn-primary">
                     <i class="fas fa-search"></i>
                     Search
@@ -625,11 +625,8 @@
                     updateWalletButton();
                 }
             } else {
-                const fakeWallet = prompt('Enter wallet address to connect:');
-                if (fakeWallet) {
-                    setConnectedWallet(fakeWallet);
-                    updateWalletButton();
-                }
+                // Wallet connection functionality will be implemented
+                alert('Wallet connection feature will be available soon.');
             }
         }
 
@@ -651,51 +648,14 @@
                 updateItemsCount(currentItems.length);
                 setupPagination(currentItems.length);
             } else {
-                // Fallback demo data
-                currentItems = generateDemoItems();
+                // No items available
+                currentItems = [];
                 displayItems(currentItems);
-                updateItemsCount(currentItems.length);
-                setupPagination(currentItems.length);
+                updateItemsCount(0);
             }
         }
 
-        function generateDemoItems() {
-            return [
-                {
-                    id: 1,
-                    name: "Amradjet Emerald Pendant",
-                    collection: "Genesis Collection",
-                    description: "Exquisite emerald pendant with diamond accents, certified natural stones.",
-                    price: 2500,
-                    image: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80",
-                    shares: { sold: 845, total: 1000 },
-                    consignment: { artisan: 70, pva: 15, promoter: 15 },
-                    badges: ["trending", "new"]
-                },
-                {
-                    id: 2,
-                    name: "Sapphire Wave Bracelet",
-                    collection: "Ocean Series",
-                    description: "Handcrafted bracelet featuring natural sapphires in wave-inspired design.",
-                    price: 1800,
-                    image: "https://images.unsplash.com/photo-1602173574767-37ac01994b2a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80",
-                    shares: { sold: 420, total: 500 },
-                    consignment: { artisan: 65, pva: 20, promoter: 15 },
-                    badges: ["limited"]
-                },
-                {
-                    id: 3,
-                    name: "Ruby Dragon Pendant",
-                    collection: "Mythical Collection",
-                    description: "Dragon-inspired pendant with rare ruby and gold craftsmanship.",
-                    price: 3500,
-                    image: "https://images.unsplash.com/photo-1599643478510-a349f0d8a0e8?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80",
-                    shares: { sold: 300, total: 400 },
-                    consignment: { artisan: 75, pva: 15, promoter: 10 },
-                    badges: ["trending"]
-                }
-            ];
-        }
+
 
         function displayItems(items) {
             const itemsGrid = document.getElementById('itemsGrid');
@@ -798,7 +758,7 @@
         function openPurchaseModal(itemId) {
             const item = currentItems.find(i => i.id === itemId);
             if (item) {
-                alert(`Purchase modal for: ${item.name}\nPrice: $${item.price}\nAvailable shares: ${item.shares.total - item.shares.sold}`);
+                // Show purchase modal functionality to be implemented
                 // You would implement a proper modal here
             }
         }
@@ -826,8 +786,6 @@
         function applyFilters() {
             // Implementation for filtering based on selected criteria
             // This would filter currentItems based on all active filters
-            console.log('Applying filters...');
-            // For now, we'll just reload all items
             loadMarketplaceItems();
         }
     </script>
