@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Contact | PVA Bazaar</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Partner with PVA Bazaar to promote ethical trade and sustainability." />
+</head>
+<body>
+  <header>
+    <nav>
+      <a href="/">Home</a> |
+      <a href="/our-goal/">Mission Goals</a> |
+      <a href="/about-1/">About</a> |
+      <a href="/contact-us/">Contact</a>
+    </nav>
+  </header>
+
+  <main>
+    <article>
+      <h2>Partner with Us</h2>
+      <p>At Pura Vida Ayurveda, we're always looking to forge new partnerships that align with our mission of promoting ethical trade and sustainability.</p>
+      <h3>Why Partner with Us?</h3>
+      <ul>
+        <li><strong>Ethical Engagement:</strong> Join a network that values fair trade</li>
+        <li><strong>Community Impact:</strong> Work with us on initiatives that empower communities</li>
+        <li><strong>Innovative Projects:</strong> Be part of innovative projects</li>
+      </ul>
+
+      <hr />
+
+      <h3>Contact Us</h3>
+      <form id="contact-form">
+        <label>
+          Your Name
+          <input type="text" name="name" required />
+        </label>
+        <br />
+        <label>
+          Email
+          <input type="email" name="email" required />
+        </label>
+        <br />
+        <label>
+          Message
+          <textarea name="message" rows="5" required></textarea>
+        </label>
+        <br />
+        <button type="submit">Send</button>
+      </form>
+
+      <p>Or email: <a href="mailto:pvaglobalreach@gmail.com">pvaglobalreach@gmail.com</a></p>
+    </article>
+  </main>
+
+  <script>
+    const form = document.getElementById('contact-form');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(form).entries());
+      try {
+        const res = await fetch('/api/contact', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+        if (res.ok) {
+          alert('Thanks! Your message has been sent.');
+          form.reset();
+        } else {
+          const text = await res.text();
+          alert('Sorry, there was a problem: ' + text);
+        }
+      } catch (err) {
+        alert('Network error. Please try again later.');
+      }
+    });
+  </script>
+</body>
+</html>

@@ -46,7 +46,7 @@
             padding: 0 20px;
         }
         
-        /* Header Styles */
+        /* Header Styles - FIXED */
         header {
             display: flex;
             justify-content: space-between;
@@ -54,7 +54,11 @@
             padding: 20px 0;
             margin-bottom: 30px;
             border-bottom: 1px solid var(--primary);
-            position: relative;
+            position: sticky;
+            top: 0;
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
         }
         
         .logo {
@@ -82,24 +86,26 @@
             gap: 30px;
         }
         
-        nav {
+        /* FIXED NAVIGATION */
+        .main-nav {
             display: flex;
             gap: 25px;
         }
         
-        nav a {
+        .main-nav a {
             color: var(--text-muted);
             text-decoration: none;
             font-weight: 500;
             transition: color 0.3s;
             position: relative;
+            white-space: nowrap;
         }
         
-        nav a:hover, nav a.active {
+        .main-nav a:hover, .main-nav a.active {
             color: var(--accent);
         }
         
-        nav a.active::after {
+        .main-nav a.active::after {
             content: '';
             position: absolute;
             bottom: -5px;
@@ -110,12 +116,72 @@
             border-radius: 2px;
         }
         
+        /* Mobile Menu Button */
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-light);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        
+        /* Dropdown Menu */
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background: var(--card-bg);
+            min-width: 220px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            z-index: 1000;
+            top: 100%;
+            right: 0;
+            margin-top: 10px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .dropdown-content a {
+            color: var(--text-muted);
+            padding: 12px 20px;
+            text-decoration: none;
+            display: block;
+            transition: all 0.3s;
+            border-bottom: 1px solid rgba(42, 75, 42, 0.3);
+        }
+        
+        .dropdown-content a:last-child {
+            border-bottom: none;
+        }
+        
+        .dropdown-content a:hover {
+            color: var(--accent);
+            background: rgba(28, 90, 69, 0.2);
+        }
+        
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+        
         .user-profile {
             display: flex;
             align-items: center;
             gap: 10px;
             cursor: pointer;
             position: relative;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: background 0.3s;
+        }
+        
+        .user-profile:hover {
+            background: rgba(28, 90, 69, 0.2);
         }
         
         .user-avatar {
@@ -170,6 +236,7 @@
             font-family: 'Playfair Display', serif;
             background: linear-gradient(45deg, var(--accent), var(--gold));
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
         }
         
@@ -585,21 +652,13 @@
             }
         }
         
-        @keyframes borderShine {
-            0% {
-                opacity: 0;
-                transform: translateX(-100%);
-            }
-            50% {
-                opacity: 1;
-            }
-            100% {
-                opacity: 0;
-                transform: translateX(200%);
+        /* Responsive Styles */
+        @media (max-width: 1200px) {
+            .main-nav {
+                gap: 15px;
             }
         }
         
-        /* Responsive Styles */
         @media (max-width: 992px) {
             .hero-title {
                 font-size: 2.8rem;
@@ -612,6 +671,36 @@
             
             .step:not(:last-child)::after {
                 display: none;
+            }
+            
+            .mobile-menu-btn {
+                display: block;
+            }
+            
+            .main-nav {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: var(--card-bg);
+                flex-direction: column;
+                padding: 20px;
+                border-top: 1px solid var(--primary);
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            }
+            
+            .main-nav.active {
+                display: flex;
+            }
+            
+            .main-nav a {
+                padding: 12px 0;
+                border-bottom: 1px solid rgba(42, 75, 42, 0.3);
+            }
+            
+            .main-nav a:last-child {
+                border-bottom: none;
             }
         }
         
@@ -649,18 +738,16 @@
         }
         
         @media (max-width: 576px) {
-            nav {
-                flex-wrap: wrap;
-                justify-content: center;
-                gap: 15px;
-            }
-            
             .hero-title {
                 font-size: 1.8rem;
             }
             
             .section-title {
                 font-size: 2rem;
+            }
+            
+            .user-name {
+                display: none;
             }
         }
     </style>
@@ -672,21 +759,32 @@
                 <i class="fas fa-gem logo-icon"></i>
                 <div class="logo-text">PVA Bazaar</div>
             </a>
+            
+            <button class="mobile-menu-btn" id="mobileMenuBtn">
+                <i class="fas fa-bars"></i>
+            </button>
+            
             <div class="user-nav">
-                <nav>
-                    <a href="index.html" class="active">Home</a>
-                    <a href="marketplace.html">Marketplace</a>
-                    <a href="portfolio.html">Portfolio</a>
-                    <a href="blockchain.html">Blockchain</a>
-                    <a href="scanning.html">Scanning</a>
-                    <a href="about.html">About</a>
-                </nav>
-                <div class="user-profile">
-                    <div class="user-avatar">
-                        J
-                        <div class="notification-badge">3</div>
+                                <nav class="main-nav" id="mainNav">\n                    <a href="/" class="active">Home</a>\n                    <a href="/pages/marketplace.html">Marketplace</a>\n                    <a href="/pages/portfolio.html">Portfolio</a>\n                    <a href="/pages/pvadashboard.html">Dashboard</a>\n                    <a href="/pages/checkoutmint.html">Checkout</a>\n                </nav>
+                
+                <div class="dropdown">
+                    <div class="user-profile">
+                        <div class="user-avatar">
+                            J
+                            <div class="notification-badge">3</div>
+                        </div>
+                        <div class="user-name">James Wilson</div>
+                        <i class="fas fa-chevron-down" style="font-size: 12px; margin-left: 5px;"></i>
                     </div>
-                    <div class="user-name">James Wilson</div>
+                    <div class="dropdown-content">
+                        <a href="/pages/provenance.html">Provenance</a>
+                        <a href="/pages/artifact.html">Artifact</a>
+                        <a href="/pages/assetcreate.html">Asset Creation</a>
+                        <a href="/pages/pvacertadmit.html">Certificate</a>
+                        <a href="/pages/admin.html">Admin</a>
+                        <a href="/pages/pvashares.html">Shares</a>
+                        <a href="/pages/provtrack.html">Provenance Tracker</a>
+                    </div>
                 </div>
             </div>
         </header>
@@ -875,6 +973,11 @@
     </footer>
 
     <script>
+        // Mobile menu toggle
+        document.getElementById('mobileMenuBtn').addEventListener('click', function() {
+            document.getElementById('mainNav').classList.toggle('active');
+        });
+
         // Simple animation for elements when they come into view
         document.addEventListener('DOMContentLoaded', function() {
             const animatedElements = document.querySelectorAll('.feature-card, .step, .testimonial-card');
@@ -899,7 +1002,9 @@
             // Update stats counter animation
             const statValues = document.querySelectorAll('.stat-value');
             statValues.forEach(stat => {
-                const targetValue = parseInt(stat.textContent.replace('$', '').replace(',', ''));
+                const originalText = stat.textContent;
+                const hasDollar = originalText.includes('$');
+                const targetValue = parseInt(originalText.replace('$', '').replace(',', ''));
                 let currentValue = 0;
                 const duration = 2000;
                 const increment = targetValue / (duration / 16);
@@ -907,7 +1012,7 @@
                 const updateStat = () => {
                     currentValue += increment;
                     if (currentValue < targetValue) {
-                        if (stat.textContent.includes('$')) {
+                        if (hasDollar) {
                             stat.textContent = '$' + Math.round(currentValue).toLocaleString();
                         } else {
                             stat.textContent = Math.round(currentValue).toLocaleString();
@@ -919,10 +1024,10 @@
                         } else {
                             stat.textContent = targetValue.toLocaleString();
                         }
-                    }
-                };
+                    });
+                });
                 
-                setTimeout(updateStat, 500);
+                statObserver.observe(stat);
             });
         });
     </script>

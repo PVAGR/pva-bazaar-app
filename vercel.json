@@ -6,6 +6,10 @@
   
   "routes": [
     {
+      "src": "/api/contact",
+      "dest": "/api/contact.js"
+    },
+    {
       "src": "/api/(.*)",
       "dest": "/api/server.js"
     },
