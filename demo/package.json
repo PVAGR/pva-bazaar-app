@@ -1,0 +1,14 @@
+{
+  "name": "pva-ai-demo",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "tsx gateway.ts"
+  },
+  "dependencies": {
+    "ai": "latest",
+    "dotenv": "latest",
+    "tsx": "latest",
+    "@types/node": "latest"
+  }
+}
