@@ -1,0 +1,19 @@
+{
+  "rewrites": [
+    { "source": "/pages/productshowcase.html", "destination": "/pages/marketplace.html" },
+    { "source": "/pages/portfolio.html", "destination": "/pages/dashboard.html" },
+    { "source": "/pages/checkoutmint.html", "destination": "/pages/marketplace.html" },
+    { "source": "/pages/pvadashboard.html", "destination": "/pages/dashboard.html" },
+    { "source": "/pages/pvashares.html", "destination": "/pages/marketplace.html" },
+    { "source": "/pages/provenancetrack.html", "destination": "/pages/provenance.html" },
+    { "source": "/pages/provtrack.html", "destination": "/pages/provenance.html" },
+    { "source": "/pages/provtracker.html", "destination": "/pages/provenance.html" },
+    { "source": "/pages/pvacertadmit.html", "destination": "/pages/admin.html" },
+    { "source": "/pages/assetcreate.html", "destination": "/pages/admin.html" },
+    { "source": "/pages/welcome.html", "destination": "/pages/home.html" }
+  ],
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "public": true,
+  "outputDirectory": "dist"
+}

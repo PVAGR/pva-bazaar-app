@@ -1,3 +1,44 @@
+/* --- Living UI Animations & Feedback --- */
+.fade-in {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeInUp 0.7s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
+@keyframes fadeInUp {
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.card, .item-card, .glass, .performance-card, .stat-card {
+    transition: box-shadow 0.3s cubic-bezier(0.23, 1, 0.32, 1), transform 0.25s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.card:hover, .item-card:hover, .glass:hover, .performance-card:hover, .stat-card:hover {
+    box-shadow: 0 8px 32px 0 rgba(78, 248, 163, 0.15), 0 1.5px 6px 0 rgba(0,0,0,0.08);
+    transform: translateY(-4px) scale(1.025);
+}
+
+/* Button press feedback */
+.btn:active {
+    transform: scale(0.97);
+    filter: brightness(0.96);
+}
+
+/* Loading skeleton */
+.skeleton {
+    background: linear-gradient(90deg, rgba(255,255,255,0.07) 25%, rgba(78,248,163,0.13) 50%, rgba(255,255,255,0.07) 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.2s infinite linear;
+    border-radius: 0.5rem;
+    min-height: 1.2em;
+}
+
+@keyframes skeleton-loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
 :root {
     --primary-dark: #0f3b2d;
     --primary: #1c5a45;

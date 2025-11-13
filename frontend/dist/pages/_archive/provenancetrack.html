@@ -26,7 +26,7 @@
       margin: 0;
       padding: 0;
       box-sizing: border-box;
-      font-family: 'Poppins', system-ui, sans-serif;
+      font-family: 'Pop      // QR scanner\n      document.getElementById('scanQR').addEventListener('click', openQRScanner);\n    });\n  </script>\n</body>\n</html>ins', system-ui, sans-serif;
     }
 
     html { scroll-behavior: smooth; }
@@ -339,7 +339,7 @@
       left: 50%;
       margin-left: -1.5px;
       border-radius: 3px;
-    }
+          // Moved to _archive for cleanup
 
     .timeline-item {
       padding: 10px 40px;
@@ -666,7 +666,7 @@
     <div class="search-section">
       <h2 class="search-title">Track an Item</h2>
       <div class="search-form">
-        <input type="text" class="search-input" id="provenanceSearch" placeholder="Enter item ID, NFT token, or QR code...">
+        <input type="text" class="search-input" id="provenanceSearch" placeholder="Search...">
         <button class="btn" id="searchBtn">
           <i class="fas fa-search"></i>
           Search
@@ -827,67 +827,7 @@
   <script>
     let isWalletConnected = false;
 
-    // Sample provenance data
-    const sampleItems = {
-      'emerald-001': {
-        name: 'Panjshir Emerald Pendant',
-        description: 'Handcrafted pendant with natural Panjshir emerald set in 18k yellow gold. Digital certificate of authenticity included.',
-        image: 'https://images.unsplash.com/photo-1603575449200-7f9b41c1ea67?w=600&h=400&fit=crop',
-        value: '$1,200',
-        artisan: 'Maria Lopez',
-        origin: 'Oaxaca, Mexico',
-        creationDate: 'November 15, 2024',
-        timeline: [
-          {
-            date: 'November 15, 2024',
-            title: 'Item Created',
-            description: 'Handcrafted by Maria Lopez in Oaxaca, Mexico. Natural Panjshir emerald set in 18k yellow gold.',
-            hash: '0xa1b2c3d4e5f6...'
-          },
-          {
-            date: 'November 16, 2024',
-            title: 'Quality Verification',
-            description: 'Independent gemologist certification completed. Emerald graded A+ quality with natural origins confirmed.',
-            hash: '0xb2c3d4e5f6a1...'
-          },
-          {
-            date: 'November 18, 2024',
-            title: 'NFT Minted',
-            description: 'Digital certificate created on Ethereum blockchain. Item linked to immutable digital identity.',
-            hash: '0xc3d4e5f6a1b2...'
-          },
-          {
-            date: 'November 20, 2024',
-            title: 'Listed on PVA Bazaar',
-            description: 'Item made available for purchase with QR code generated for physical tracking.',
-            hash: '0xd4e5f6a1b2c3...'
-          },
-          {
-            date: 'December 15, 2024',
-            title: 'First Sale',
-            description: 'Purchased by collector for $1,200. Ownership transferred via smart contract with automatic royalty distribution.',
-            hash: '0xe5f6a1b2c3d4...'
-          },
-          {
-            date: 'December 16, 2024',
-            title: 'Shipped',
-            description: 'Item securely packaged and shipped via FedEx with tracking number. Insurance coverage active.',
-            hash: '0xf6a1b2c3d4e5...'
-          }
-        ]
-      },
-      'bracelet-050': {
-        name: 'Artisan Silver Bracelet',
-        description: 'Hand-forged sterling silver bracelet with intricate traditional patterns. Limited to 50 pieces.',
-        image: 'https://images.unsplash.com/photo-1617038260897-5dc90f1a45c1?w=600&h=400&fit=crop',
-        value: '$189',
-        artisan: 'James Chen',
-        origin: 'Bali, Indonesia',
-        creationDate: 'October 22, 2024'
-      }
-    };
-
-    // Utility Functions
+    // Sample provenance data - Replace with real API data\n    const sampleItems = {};    // Utility Functions
     function showToast(message, type = 'info') {
       const toast = document.createElement('div');
       toast.style.cssText = `
@@ -941,7 +881,7 @@
 
       // Simulate search delay
       setTimeout(() => {
-        const item = sampleItems[searchValue] || sampleItems['emerald-001'];
+        const item = sampleItems[searchValue];
         displayProvenance(item);
         showToast('Provenance found and verified!', 'success');
       }, 1500);
@@ -1028,31 +968,4 @@
       // Wallet connection
       document.getElementById('connectWallet').addEventListener('click', toggleWallet);
 
-      // QR scanner
-      document.getElementById('scanQR').addEventListener('click', openQRScanner);
-
-      // Auto-demo on page load (optional)
-      setTimeout(() => {
-        if (!document.getElementById('provenanceContainer').classList.contains('active')) {
-          document.getElementById('provenanceSearch').value = 'emerald-001';
-          searchProvenance();
-        }
-      }, 2000);
-    });
-
-    // Demo search suggestions
-    const searchInput = document.getElementById('provenanceSearch');
-    const suggestions = ['emerald-001', 'bracelet-050', '0x742d35Cc...', 'QR:12345'];
-    let suggestionIndex = 0;
-
-    function cycleSuggestions() {
-      if (searchInput === document.activeElement) return;
-      
-      searchInput.placeholder = `Try: ${suggestions[suggestionIndex]}`;
-      suggestionIndex = (suggestionIndex + 1) % suggestions.length;
-    }
-
-    setInterval(cycleSuggestions, 3000);
-  </script>
-</body>
-</html>
+            // QR scanner\n      document.getElementById('scanQR').addEventListener('click', openQRScanner);\n    });\n  </script>\n</body>\n</html>
