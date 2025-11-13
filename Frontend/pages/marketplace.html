@@ -67,125 +67,51 @@
 </head>
 <body>
   <div class="container">
+    <nav style="display:flex;justify-content:center;gap:30px;margin-bottom:30px;">
+      <a href="home.html">Home</a>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="marketplace.html" style="font-weight:bold;color:#8bc34a;">Marketplace</a>
+      <a href="provenance.html">Provenance</a>
+      <a href="admin.html">Admin</a>
+    </nav>
     <header>
-      <a href="/" class="logo">
-        <i class="fas fa-gem logo-icon"></i>
-        <div class="logo-text">PVA Bazaar</div>
-      </a>
-      <nav>
-        <ul>
-          <li><a href="/">Home</a></li>
-          <li><a href="/pages/pvadashboard.html">Dashboard</a></li>
-          <li><a href="/pages/marketplace.html" class="active">Marketplace</a></li>
-          <li><a href="/pages/portfolio.html">Portfolio</a></li>
-          <li><a href="/pages/checkoutmint.html">Checkout</a></li>
-          <li><a href="/pages/provenance.html">Provenance</a></li>
-          <li><a href="/pages/provtrack.html">Provenance Tracker</a></li>
-          <li><a href="/pages/assetcreate.html">Asset Creation</a></li>
-          <li><a href="/pages/pvacertadmit.html">Certificate Admission</a></li>
-          <li><a href="/pages/admin.html">Admin</a></li>
-          <li><a href="/pages/pvashares.html">Shares</a></li>
-          <li><a href="/pages/welcome.html">Welcome</a></li>
-        </ul>
-      </nav>
-      <div class="header-actions">
-        <button class="icon-btn" id="searchToggle" title="Search">
-          <i class="fa-solid fa-magnifying-glass"></i>
-        </button>
-        <button class="btn" id="connectWallet">
-          <i class="fa-solid fa-wallet"></i>
-          Connect Wallet
-        </button>
-      </div>
+      <h1>Marketplace</h1>
     </header>
-    <div class="marketplace-title">Marketplace</div>
-    <div class="product-list" id="productList"></div>
-    <div class="ownership-section">
-      <div class="ownership-title">Shared Ownership Opportunities</div>
-      <table class="ownership-table">
-        <thead>
-          <tr>
-            <th>Asset</th>
-            <th>Shares Available</th>
-            <th>Price/Share</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="ownershipTableBody"></tbody>
-      </table>
-    </div>
+    <div class="market-list" id="marketList"></div>
   </div>
+  <footer>
+    <p>© 2025 PVA Bazaar. All rights reserved.</p>
+  </footer>
   <script>
-    // --- Product Card Rendering with Trust Signals --- //
-    // Example API fetch (replace with real endpoint)
-    async function fetchProducts() {
-      try {
-        const res = await fetch('/api/artifacts');
-        const data = await res.json();
-        if (!data.ok) throw new Error('Failed to fetch products');
-        // Map backend artifact fields to product card fields
-        return data.artifacts.map(a => ({
-          id: a._id,
-          title: a.title || a.name,
-          description: a.description,
-          seller: a.artisan || (a.creator && a.creator.name) || 'Unknown',
-          verified: false, // Verification logic will be implemented\n          topSeller: false, // Top seller logic will be implemented
-          isNew: (Date.now() - new Date(a.createdAt).getTime()) < 1000*60*60*24*14, // New if within 2 weeks
-          rating: a.rating || (Math.random() * 2 + 3).toFixed(1), // Use backend rating if present, else mock
-          reviews: a.reviewCount || Math.floor(Math.random() * 50) + 10, // Use backend reviewCount if present, else mock
-          price: a.price ? `${a.price} USD` : '',
-          image: a.imageUrl,
-        }));
-      } catch (e) {
-        return [];
-      }
+  async function fetchArtifacts() {
+    try {
+      const res = await fetch('/api/artifacts');
+      const data = await res.json();
+      if (!data.ok) throw new Error('API error');
+      return data.artifacts;
+    } catch (e) {
+      return [];
     }
-
-    function renderProductCard(product) {
-      // Badges
-      let badges = '';
-      if (product.verified) badges += `<span class="badge verified"><i class='fa fa-check-circle'></i> Verified</span>`;
-      if (product.topSeller) badges += `<span class="badge top"><i class='fa fa-star'></i> Top Seller</span>`;
-      if (product.isNew) badges += `<span class="badge new">New</span>`;
-      // Rating
-      let stars = '';
-      const fullStars = Math.floor(product.rating);
-      const halfStar = product.rating % 1 >= 0.5;
-      for (let i = 0; i < 5; i++) {
-        if (i < fullStars) stars += '<i class="fa fa-star"></i>';
-        else if (i === fullStars && halfStar) stars += '<i class="fa fa-star-half-alt"></i>';
-        else stars += '<i class="fa fa-star" style="color:#444;"></i>';
-      }
-      // Card HTML
-      return `
-        <div class="product-card">
-          <img src="${product.image}" alt="${product.title}" style="width:100%;height:160px;object-fit:cover;border-radius:10px;margin-bottom:10px;">
-          <div class="product-badges">${badges}</div>
-          <div class="product-title">${product.title}</div>
-          <div class="product-meta">by ${product.seller}</div>
-          <div class="product-rating">${stars}<span class="review-count">(${product.reviews})</span></div>
-          <div class="product-desc">${product.description}</div>
-          <div class="product-meta" style="margin-bottom:10px;font-weight:600;">${product.price}</div>
-          <div class="product-actions">
-            <button class="buy-btn"><i class="fa fa-shopping-cart"></i> Buy Now</button>
-            <button class="share-btn"><i class="fa fa-share"></i> Share</button>
-          </div>
-        </div>
-      `;
+  }
+  function renderArtifactCard(artifact) {
+    return `<div class="market-card" tabindex="0">
+      <img src="${artifact.imageUrls && artifact.imageUrls[0] ? artifact.imageUrls[0] : 'https://via.placeholder.com/100'}" alt="${artifact.title || 'Artifact Image'}">
+      <div class="market-title">${artifact.title}</div>
+      <div class="market-desc">${artifact.description}</div>
+      <button class="btn" onclick="window.location.href='provenance.html?id=${artifact._id}'" aria-label="View certificate for ${artifact.title}">View Certificate</button>
+    </div>`;
+  }
+  async function renderMarketList() {
+    const marketList = document.getElementById('marketList');
+    marketList.innerHTML = '<div style="color:#aaa;">Loading...</div>';
+    const artifacts = await fetchArtifacts();
+    if (artifacts.length === 0) {
+      marketList.innerHTML = '<div style="color:#aaa;">No items found.</div>';
+    } else {
+      marketList.innerHTML = artifacts.map(renderArtifactCard).join('');
     }
-
-    async function renderProductList() {
-      const productList = document.getElementById('productList');
-      productList.innerHTML = '<div style="color:#aaa;">Loading products...</div>';
-      const products = await fetchProducts();
-      productList.innerHTML = products.map(renderProductCard).join('');
-    }
-
-    // On page load
-    document.addEventListener('DOMContentLoaded', () => {
-      renderProductList();
-    });
-    // ...existing code for wallet connect, ownership table, etc...
+  }
+  document.addEventListener('DOMContentLoaded', renderMarketList);
   </script>
 </body>
 </html>
