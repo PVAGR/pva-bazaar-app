@@ -51,77 +51,21 @@
             margin-bottom: 30px;
             padding: 20px;
             border-bottom: 1px solid var(--primary);
-            position: relative;
-        }
-        
-        .logo {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        
-        .logo-icon {
-            font-size: 32px;
-            color: var(--accent);
-        }
-        
-        .logo-text {
-            font-size: 28px;
-            font-weight: 700;
-            color: var(--text-light);
-            font-family: 'Playfair Display', serif;
-        }
-        
-        h1 {
-            font-size: 2.5rem;
-            color: var(--accent);
-            margin-bottom: 15px;
-            letter-spacing: 2px;
-            font-family: 'Playfair Display', serif;
-        }
-        
-        .subtitle {
-            color: var(--text-muted);
-            font-size: 1.2rem;
-            margin-bottom: 10px;
-        }
-        
-        .header-badge {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: var(--primary-light);
-            color: var(--accent);
-            padding: 8px 16px;
-            border-radius: 50px;
-            font-size: 0.9rem;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        /* Certificate card */
-        .certificate-card {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
-            margin-bottom: 30px;
-            position: relative;
-        }
-        
-        .certificate-header {
-            background: linear-gradient(90deg, var(--primary-dark), #142814);
-            padding: 25px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--primary);
-            position: relative;
+            <div class="container">
+                <nav style="display:flex;justify-content:center;gap:30px;margin-bottom:30px;">
+                    <a href="home.html">Home</a>
+                    <a href="dashboard.html">Dashboard</a>
+                    <a href="marketplace.html">Marketplace</a>
+                    <a href="provenance.html" style="font-weight:bold;color:#8bc34a;">Provenance</a>
+                    <a href="admin.html">Admin</a>
+                </nav>
+                <header>
+                    <h1>Provenance Certificate</h1>
+                </header>
+                <div class="certificate-card" id="certificateCard">
+                    <div style="color:#aaa;text-align:center;">Loading certificate...</div>
+                </div>
+            </div>
         }
         
         .certificate-watermark {
@@ -620,59 +564,23 @@
     </style>
 </head>
 <body class="certificate-page">
-    <div class="container">
-            <header>
-        <a href="/" class="logo">
-            <i class="fas fa-gem logo-icon"></i>
-            <div class="logo-text">PVA Bazaar</div>
-        </a>
-        <nav class="pva-nav">
-            <ul class="nav-list">
-                <li><a href="/">Home</a></li>
-                <li class="dropdown">
-                    <a href="/pages/productshowcase.html">Marketplace</a>
-                    <ul class="dropdown-menu">
-                        <li><a href="/pages/market.html">Market (Alt)</a></li>
-                        <li><a href="/pages/PVA Bazaar - Shared Ownership Marketplace.html">Marketplace (Legacy)</a></li>
-                    </ul>
-                </li>
-                <li><a href="/pages/portfolio.html">Portfolio</a></li>
-                <li class="dropdown">
-                    <a href="/pages/provenance.html">Provenance</a>
-                    <ul class="dropdown-menu">
-                        <li><a href="/pages/provtrack.html">Provenance Tracker</a></li>
-                    </ul>
-                </li>
-                <li class="dropdown">
-                    <a href="#">Asset Tools</a>
-                    <ul class="dropdown-menu">
-                        <li><a href="/pages/assetcreate.html">Asset Creation</a></li>
-                        <li><a href="/pages/pvacertadmit.html">Certificate Admission</a></li>
-                    </ul>
-                </li>
-                <li><a href="/pages/pvashares.html">Shares</a></li>
-                <li><a href="/pages/admin.html">Admin</a></li>
-                <li><a href="/pages/welcome.html">Welcome</a></li>
-            </ul>
-        </nav>
-        <div class="header-actions">
-        <button class="icon-btn" id="searchToggle" title="Search">
-          <i class="fa-solid fa-magnifying-glass"></i>
-        </button>
-        <button class="btn" id="connectWallet">
-          <i class="fa-solid fa-wallet"></i>
-          Connect Wallet
-        </button>
-      </div>
+    <nav style="display:flex;justify-content:center;gap:30px;margin-bottom:30px;">
+        <a href="home.html">Home</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="marketplace.html">Marketplace</a>
+        <a href="provenance.html" style="font-weight:bold;color:#8bc34a;">Provenance</a>
+        <a href="admin.html">Admin</a>
+    </nav>
+    <header style="text-align:center;margin-bottom:30px;">
+        <h1>Provenance Certificate</h1>
     </header>
-        
-        <div class="certificate-card">
+    <div class="certificate-card" id="certificateCard">
             <div class="certificate-watermark">CERTIFIED</div>
             
             <div class="certificate-header">
                 <div class="item-info">
                     <div class="item-image">
-                        <img id="artifact-image" src="" alt="Artifact Image" style="display:none;">
+                    <img id="artifact-image" src="" alt="Artifact image for provenance certificate" style="display:none;">
                     </div>
                     <div class="item-details">
                         <h2 id="artifact-name">Loading...</h2>
@@ -767,17 +675,15 @@
                 
                 <div class="qr-section">
                     <div class="qr-card">
-                        <img id="nft-qr" src="" alt="NFT QR Code" style="display:none;">
+                        <img id="nft-qr" src="" alt="NFT QR code for provenance certificate" style="display:none;">
                         <p id="nft-qr-desc">Loading...</p>
                     </div>
-                    
                     <div class="qr-card">
-                        <img id="product-qr" src="" alt="Product QR Code" style="display:none;">
+                        <img id="product-qr" src="" alt="Product QR code for provenance certificate" style="display:none;">
                         <p id="product-qr-desc">Loading...</p>
                     </div>
-                    
                     <div class="qr-card">
-                        <img id="ipfs-qr" src="" alt="IPFS QR Code" style="display:none;">
+                        <img id="ipfs-qr" src="" alt="IPFS QR code for provenance certificate" style="display:none;">
                         <p id="ipfs-qr-desc">Loading...</p>
                     </div>
                 </div>
@@ -836,17 +742,98 @@
     </div>
     
     <footer>
-    <div class="footer-logo">PVA Bazaar</div>
+        <div class="footer-logo">PVA Bazaar</div>
         <div class="social-links">
-            <a href="#"><i class="fab fa-twitter"></i></a>
-            <a href="#"><i class="fab fa-instagram"></i></a>
-            <a href="#"><i class="fab fa-discord"></i></a>
-            <a href="#"><i class="fab fa-github"></i></a>
+            <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+            <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+            <a href="#" aria-label="Discord"><i class="fab fa-discord"></i></a>
+            <a href="#" aria-label="GitHub"><i class="fab fa-github"></i></a>
         </div>
         <div class="copyright">© 2025 PVA Bazaar. All rights reserved.</div>
     </footer>
-
-    <script type="module" src="/src/pages/provenance.js"></script>
+    <script>
+    // Accessibility: focus style for navigation
+    document.querySelectorAll('nav a').forEach(a => {
+        a.addEventListener('focus', function() {
+            this.style.outline = '2px solid #8bc34a';
+        });
+        a.addEventListener('blur', function() {
+            this.style.outline = '';
+        });
+    });
+    // Helper to get query param
+    function getQueryParam(name) {
+        const url = new URL(window.location.href);
+        return url.searchParams.get(name);
+    }
+    // Fetch certificate from backend
+    async function fetchCertificate(id) {
+        try {
+            const res = await fetch(`/api/certificates/${id}`);
+            const data = await res.json();
+            if (!data.ok) throw new Error('API error');
+            return data.data;
+        } catch (e) {
+            return null;
+        }
+    }
+    // Render certificate card with real data
+    function renderCertificate(cert) {
+        if (!cert) return '<div style="color:#f85e5e;text-align:center;">Certificate not found.</div>';
+        const artifact = cert.artifact;
+        return `
+        <div class="certificate-header">
+            <div class="item-info">
+                <div class="item-image">
+                    <img src="${artifact.imageUrl || 'https://via.placeholder.com/80'}" alt="Artifact image for provenance certificate">
+                </div>
+                <div class="item-details">
+                    <h2>${artifact.title || artifact.name}</h2>
+                    <p>${artifact.description}</p>
+                </div>
+            </div>
+            <div class="token-info">
+                <div class="token-id">Serial: ${artifact.physicalSerial || 'N/A'}</div>
+            </div>
+        </div>
+        <div class="info-grid">
+            <div>
+                <div class="info-label">Artifact Name</div>
+                <div class="info-value">${artifact.name}</div>
+            </div>
+            <div>
+                <div class="info-label">Materials</div>
+                <div class="info-value">${(artifact.materials || []).join(', ')}</div>
+            </div>
+            <div>
+                <div class="info-label">Artisan</div>
+                <div class="info-value">${artifact.artisan}</div>
+            </div>
+            <div>
+                <div class="info-label">Created</div>
+                <div class="info-value">${artifact.creationDate ? new Date(artifact.creationDate).toLocaleDateString() : 'N/A'}</div>
+            </div>
+        </div>
+        <div class="verification-section">
+            <h3><i class="fas fa-shield-alt"></i> Real-Time Provenance Verification</h3>
+            <p>Last Verified: ${cert.verification.lastVerified ? new Date(cert.verification.lastVerified).toLocaleString() : 'Never'}</p>
+            <button class="verification-button" onclick="verifyCertificate('${artifact.physicalSerial}')">Verify Current Ownership</button>
+        </div>
+        `;
+    }
+    // Render page on load
+    async function renderCertificatePage() {
+        const id = getQueryParam('id');
+        const card = document.getElementById('certificateCard');
+        if (!id) {
+            card.innerHTML = '<div style="color:#f85e5e;text-align:center;">No artifact selected.</div>';
+            return;
+        }
+        const cert = await fetchCertificate(id);
+        card.innerHTML = renderCertificate(cert);
+    }
+    document.addEventListener('DOMContentLoaded', renderCertificatePage);
+    </script>
     
   <script src="/src/nav/inject-nav.js" defer></script>
   <script src="/public/js/pva-nav.js" defer></script>

@@ -189,3 +189,77 @@
   </script>
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PVA Bazaar - Marketplace</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { background: #0a0a0a; color: #e0e0e0; font-family: 'Poppins', sans-serif; }
+        .container { max-width: 1000px; margin: 0 auto; padding: 40px 20px; }
+        header { text-align: center; margin-bottom: 30px; }
+        h1 { font-size: 2.2rem; color: #d4af37; }
+        .market-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px; }
+        .market-card { background: #222; border-radius: 10px; padding: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.2); text-align: center; }
+  .market-card img { width: 100px; height: 100px; object-fit: cover; border-radius: 8px; margin-bottom: 15px; border: 2px solid #d4af37; }
+  .market-title { color: #4ef8a3; font-size: 1.2rem; margin-bottom: 8px; font-weight: 600; }
+        .market-desc { color: #e0e0e0; font-size: 1rem; margin-bottom: 10px; }
+  .btn { background: #4ef8a3; color: #121212; border: none; padding: 10px 24px; border-radius: 6px; font-weight: 600; cursor: pointer; margin-top: 10px; transition: background 0.2s; outline: none; }
+  .btn:focus { box-shadow: 0 0 0 2px #d4af37; }
+  .btn:hover { background: #d4af37; color: #121212; }
+        footer { text-align: center; color: #666; margin-top: 40px; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+  <div class="container">
+    <nav style="display:flex;justify-content:center;gap:30px;margin-bottom:30px;">
+      <a href="home.html">Home</a>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="marketplace.html" style="font-weight:bold;color:#8bc34a;">Marketplace</a>
+      <a href="provenance.html">Provenance</a>
+      <a href="admin.html">Admin</a>
+    </nav>
+    <header>
+      <h1>Marketplace</h1>
+    </header>
+    <div class="market-list" id="marketList"></div>
+  </div>
+  <footer>
+    <p>© 2025 PVA Bazaar. All rights reserved.</p>
+  </footer>
+  <script>
+  async function fetchArtifacts() {
+    try {
+      const res = await fetch('/api/artifacts');
+      const data = await res.json();
+      if (!data.ok) throw new Error('API error');
+      return data.artifacts;
+    } catch (e) {
+      return [];
+    }
+  }
+  function renderArtifactCard(artifact) {
+    return `<div class="market-card" tabindex="0">
+      <img src="${artifact.imageUrls && artifact.imageUrls[0] ? artifact.imageUrls[0] : 'https://via.placeholder.com/100'}" alt="${artifact.title || 'Artifact Image'}">
+      <div class="market-title">${artifact.title}</div>
+      <div class="market-desc">${artifact.description}</div>
+      <button class="btn" onclick="window.location.href='provenance.html?id=${artifact._id}'" aria-label="View certificate for ${artifact.title}">View Certificate</button>
+    </div>`;
+  }
+  async function renderMarketList() {
+    const marketList = document.getElementById('marketList');
+    marketList.innerHTML = '<div style="color:#aaa;">Loading...</div>';
+    const artifacts = await fetchArtifacts();
+    if (artifacts.length === 0) {
+      marketList.innerHTML = '<div style="color:#aaa;">No items found.</div>';
+    } else {
+      marketList.innerHTML = artifacts.map(renderArtifactCard).join('');
+    }
+  }
+  document.addEventListener('DOMContentLoaded', renderMarketList);
+  </script>
+</body>
+</html>

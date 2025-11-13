@@ -10,6 +10,47 @@
     <style>
         /* Reuse your existing CSS variables and base styles */
         :root {
+        /* Header - Reuse your dashboard header styles */
+        header {
+            background: rgba(10, 10, 10, 0.85);
+        <div class="container">
+            <header>
+                <div class="header-content">
+                <nav>
+                    <a href="/">Home</a>
+                    <a href="/pages/pvadashboard.html">Dashboard</a>
+                <section class="marketplace-hero">
+                    <h1 class="marketplace-title">Premium Artifact Marketplace</h1>
+                    <p class="marketplace-subtitle">Discover exclusive physical items with digital ownership. Invest in shares, trade collectibles, and join the future of asset ownership.</p>
+                <section class="filters-section">
+                    <div class="filters-grid">
+                        <div class="filter-group">
+                <section class="items-section">
+                    <div class="items-header">
+                        <h2 class="section-title">Featured Artifacts</h2>
+                <script>
+                    // API Helper (same as dashboard)
+                    async function fetchAPI(endpoint) {
+                    // Initialize marketplace
+                    document.addEventListener('DOMContentLoaded', function() {
+                        // Initialize wallet
+                    });
+                </script>
+            </body>
+    </html>
+    // Moved to _archive for cleanup
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PVA Bazaar - Premium Marketplace</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Reuse your existing CSS variables and base styles */
+        :root {
             --primary-dark: #0a1f19;
             --primary: #14372b;
             --primary-light: #1c5a45;

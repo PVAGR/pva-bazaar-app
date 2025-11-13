@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PVA Bazaar - Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { background: #121212; color: #e0e0e0; font-family: 'Poppins', sans-serif; }
+        .container { max-width: 1000px; margin: 0 auto; padding: 40px 20px; }
+        header { text-align: center; margin-bottom: 30px; }
+        h1 { font-size: 2.2rem; color: #8bc34a; }
+        .stats { display: flex; gap: 30px; justify-content: center; margin-bottom: 40px; }
+        .stat-card { background: #222; border-radius: 10px; padding: 30px; text-align: center; box-shadow: 0 4px 16px rgba(0,0,0,0.2); }
+        .stat-value { font-size: 2rem; color: #d4af37; margin-bottom: 10px; }
+        .stat-label { color: #8bc34a; font-size: 1rem; }
+        .actions { text-align: center; margin-top: 30px; }
+    .btn { background: #4ef8a3; color: #121212; border: none; padding: 12px 30px; border-radius: 6px; font-weight: 600; cursor: pointer; margin: 0 10px; transition: background 0.2s; outline: none; }
+    .btn:focus { box-shadow: 0 0 0 2px #d4af37; }
+    .btn:hover { background: #d4af37; color: #121212; }
+        footer { text-align: center; color: #666; margin-top: 40px; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav style="display:flex;justify-content:center;gap:30px;margin-bottom:30px;">
+            <a href="home.html">Home</a>
+            <a href="dashboard.html" style="font-weight:bold;color:#4ef8a3;">Dashboard</a>
+            <a href="marketplace.html">Marketplace</a>
+            <a href="provenance.html">Provenance</a>
+            <a href="admin.html">Admin</a>
+        </nav>
+        <header>
+            <h1>Dashboard</h1>
+        </header>
+        <div class="stats" id="dashboardStats">
+            <div class="stat-card">
+                <div class="stat-value" id="assetsOwned">...</div>
+                <div class="stat-label">Assets Owned</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="certificates">...</div>
+                <div class="stat-label">Certificates</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="pendingTransfers">...</div>
+                <div class="stat-label">Pending Transfers</div>
+            </div>
+        </div>
+        <div class="actions">
+            <button class="btn">Add Asset</button>
+            <button class="btn">View Certificates</button>
+        </div>
+        <script>
+        async function fetchDashboardStats() {
+            try {
+                const res = await fetch('/api/dashboard/stats');
+                const data = await res.json();
+                if (!data.ok) throw new Error('API error');
+                document.getElementById('assetsOwned').textContent = data.stats.totalArtifacts;
+                document.getElementById('certificates').textContent = data.stats.totalUsers;
+                document.getElementById('pendingTransfers').textContent = data.stats.transactionCount;
+            } catch (e) {
+                document.getElementById('assetsOwned').textContent = 'N/A';
+                document.getElementById('certificates').textContent = 'N/A';
+                document.getElementById('pendingTransfers').textContent = 'N/A';
+            }
+        }
+        document.addEventListener('DOMContentLoaded', fetchDashboardStats);
+        </script>
+    </div>
+    <footer>
+        <p>© 2025 PVA Bazaar. All rights reserved.</p>
+    </footer>
+</body>
+</html>

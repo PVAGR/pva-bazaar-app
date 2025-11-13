@@ -3,6 +3,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PVA Bazaar - Admin Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { background: #121212; color: #e0e0e0; font-family: 'Poppins', sans-serif; }
+        .container { max-width: 1000px; margin: 0 auto; padding: 40px 20px; }
+        nav { display:flex;justify-content:center;gap:30px;margin-bottom:30px; }
+        nav a { color: #8bc34a; text-decoration: none; font-weight: 500; padding: 8px 18px; border-radius: 6px; transition: background 0.2s; }
+        nav a:focus { outline: 2px solid #d4af37; }
+        nav a[style*="font-weight:bold"] { color: #d4af37; background: #222; }
+        header { text-align: center; margin-bottom: 30px; }
+        h1 { font-size: 2.2rem; color: #d4af37; }
+        .dashboard-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 25px; margin-bottom: 40px; }
+        .card { background: #222; border-radius: 10px; padding: 30px; box-shadow: 0 4px 16px rgba(0,0,0,0.2); text-align: center; }
+        .stat-icon { font-size: 2.5rem; color: #8bc34a; margin-bottom: 15px; }
+        .stat-value { font-size: 2rem; font-weight: 700; color: #d4af37; margin-bottom: 8px; }
+        .stat-label { color: #e0e0e0; font-size: 0.9rem; margin-bottom: 10px; }
+        .admin-section { background: #222; border-radius: 10px; padding: 30px; box-shadow: 0 4px 16px rgba(0,0,0,0.2); margin-bottom: 30px; }
+        .admin-title { color: #8bc34a; font-size: 1.3rem; margin-bottom: 10px; }
+        .admin-desc { color: #e0e0e0; font-size: 1rem; margin-bottom: 20px; }
+        .btn { background: #d4af37; color: #121212; border: none; padding: 12px 30px; border-radius: 6px; font-weight: 600; cursor: pointer; margin: 0 10px; transition: background 0.2s; }
+        .btn:focus { outline: 2px solid #8bc34a; }
+        .btn:hover { background: #8bc34a; color: #121212; }
+        footer { text-align: center; color: #666; margin-top: 40px; font-size: 0.9rem; }
+        @media (max-width: 768px) {
+            .dashboard-cards { grid-template-columns: 1fr; }
+            .container { padding: 20px 5px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav>
+            <a href="home.html">Home</a>
+            <a href="dashboard.html">Dashboard</a>
+            <a href="marketplace.html">Marketplace</a>
+            <a href="provenance.html">Provenance</a>
+            <a href="admin.html" style="font-weight:bold;color:#d4af37;">Admin</a>
+        </nav>
+        <header>
+            <h1>Admin Dashboard</h1>
+        </header>
+        <div class="dashboard-cards">
+            <div class="card">
+                <div class="stat-icon"><i class="fas fa-gem"></i></div>
+                <div class="stat-value" id="totalArtifacts">...</div>
+                <div class="stat-label">Total Artifacts</div>
+            </div>
+            <div class="card">
+                <div class="stat-icon"><i class="fas fa-users"></i></div>
+                <div class="stat-value" id="totalUsers">...</div>
+                <div class="stat-label">Registered Users</div>
+            </div>
+            <div class="card">
+                <div class="stat-icon"><i class="fas fa-exchange-alt"></i></div>
+                <div class="stat-value" id="totalTransactions">...</div>
+                <div class="stat-label">Transactions</div>
+            </div>
+            <div class="card">
+                <div class="stat-icon"><i class="fas fa-dollar-sign"></i></div>
+                <div class="stat-value" id="totalRevenue">...</div>
+                <div class="stat-label">Total Revenue</div>
+            </div>
+        </div>
+        <div class="admin-section">
+            <div class="admin-title">Site Settings</div>
+            <div class="admin-desc">Manage users, assets, and system configurations.</div>
+            <button class="btn">Manage Users</button>
+            <button class="btn">System Settings</button>
+        </div>
+        <div class="admin-section">
+            <div class="admin-title">Advanced Tools</div>
+            <div class="admin-desc">Access advanced management and analytics tools.</div>
+            <button class="btn">View Logs</button>
+            <button class="btn">Analytics</button>
+        </div>
+    </div>
+    <footer>
+        <p>© 2025 PVA Bazaar. All rights reserved.</p>
+    </footer>
+    <script>
+    // Accessibility: focus style for navigation
+    document.querySelectorAll('nav a').forEach(a => {
+        a.addEventListener('focus', function() {
+            this.style.outline = '2px solid #8bc34a';
+        });
+        a.addEventListener('blur', function() {
+            this.style.outline = '';
+        });
+    });
+    // Fetch dashboard stats from backend
+    async function updateDashboardStats() {
+        try {
+            const res = await fetch('/api/dashboard/stats');
+            const data = await res.json();
+            if (data && data.ok) {
+                document.getElementById('totalArtifacts').textContent = data.stats.totalArtifacts || '0';
+                document.getElementById('totalUsers').textContent = data.stats.totalUsers || '0';
+                document.getElementById('totalTransactions').textContent = data.stats.totalTransactions || '0';
+                document.getElementById('totalRevenue').textContent = data.stats.totalRevenue ? '$' + data.stats.totalRevenue : '$0';
+            }
+        } catch (e) {
+            document.getElementById('totalArtifacts').textContent = '0';
+            document.getElementById('totalUsers').textContent = '0';
+            document.getElementById('totalTransactions').textContent = '0';
+            document.getElementById('totalRevenue').textContent = '$0';
+        }
+    }
+    document.addEventListener('DOMContentLoaded', updateDashboardStats);
+    </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PVA Bazaar - Complete Admin Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
