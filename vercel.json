@@ -1,20 +1,16 @@
 {
   "version": 2,
   "framework": "vite",
-  "buildCommand": "node ./scripts/vercel-build-wrapper.cjs",
+  "buildCommand": "echo 'Static site - no build needed'",
   "outputDirectory": "dist",
-  
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/server.js"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/dist/$1"
-    }
-  ],
+  "public": true,
   "env": {
     "NODE_ENV": "production"
-  }
+  },
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ]
 }
