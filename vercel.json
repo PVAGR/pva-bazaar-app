@@ -1,8 +1,7 @@
 {
   "version": 2,
-  "framework": "vite",
-  "buildCommand": "echo 'Static site - no build needed'",
-  "outputDirectory": "dist",
+  "buildCommand": "cd frontend && npm install && npm run build",
+  "outputDirectory": "frontend/dist",
   "public": true,
   "env": {
     "NODE_ENV": "production"
