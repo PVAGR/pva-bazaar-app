@@ -5,6 +5,7 @@
   "public": true,
   "cleanUrls": true,
   "trailingSlash": false,
+  "engine": "no-turbo",
   "env": {
     "NODE_ENV": "production"
   },
