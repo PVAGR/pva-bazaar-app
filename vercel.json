@@ -3,10 +3,24 @@
   "buildCommand": "cd frontend && npm install && npm run build",
   "outputDirectory": "frontend/dist",
   "public": true,
+  "cleanUrls": true,
+  "trailingSlash": false,
   "env": {
     "NODE_ENV": "production"
   },
   "routes": [
+    {
+      "src": "^/novel/(.*)",
+      "dest": "/novel/$1"
+    },
+    {
+      "src": "^/biography/(.*)",
+      "dest": "/biography/$1"
+    },
+    {
+      "src": "^/research/(.*)",
+      "dest": "/research/$1"
+    },
     {
       "src": "/(.*)",
       "dest": "/index.html"
