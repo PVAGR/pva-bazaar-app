@@ -51,21 +51,6 @@
             margin-bottom: 30px;
             padding: 20px;
             border-bottom: 1px solid var(--primary);
-            <div class="container">
-                <nav style="display:flex;justify-content:center;gap:30px;margin-bottom:30px;">
-                    <a href="home.html">Home</a>
-                    <a href="dashboard.html">Dashboard</a>
-                    <a href="marketplace.html">Marketplace</a>
-                    <a href="provenance.html" style="font-weight:bold;color:#8bc34a;">Provenance</a>
-                    <a href="admin.html">Admin</a>
-                </nav>
-                <header>
-                    <h1>Provenance Certificate</h1>
-                </header>
-                <div class="certificate-card" id="certificateCard">
-                    <div style="color:#aaa;text-align:center;">Loading certificate...</div>
-                </div>
-            </div>
         }
         
         .certificate-watermark {
@@ -768,15 +753,21 @@
     }
     // Fetch certificate from backend
     async function fetchCertificate(id) {
-        try {
-            const res = await fetch(`/api/certificates/${id}`);
-            const data = await res.json();
-            if (!data.ok) throw new Error('API error');
-            return data.data;
-        } catch (e) {
-            return null;
-        }
-    }
+        <div class="container">
+            <nav style="display:flex;justify-content:center;gap:30px;margin-bottom:30px;">
+                <a href="home.html">Home</a>
+                <a href="dashboard.html">Dashboard</a>
+                <a href="marketplace.html">Marketplace</a>
+                <a href="provenance.html" style="font-weight:bold;color:#8bc34a;">Provenance</a>
+                <a href="admin.html">Admin</a>
+            </nav>
+            <header>
+                <h1>Provenance Certificate</h1>
+            </header>
+            <div class="certificate-card" id="certificateCard">
+                <div style="color:#aaa;text-align:center;">Loading certificate...</div>
+            </div>
+        </div>
     // Render certificate card with real data
     function renderCertificate(cert) {
         if (!cert) return '<div style="color:#f85e5e;text-align:center;">Certificate not found.</div>';
