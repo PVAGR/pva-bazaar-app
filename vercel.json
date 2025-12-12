@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "buildCommand": "cd frontend && npm install && npm run build",
-  "outputDirectory": "frontend/dist",
+  "buildCommand": "cd apps/web-org && npm install && npm run build",
+  "outputDirectory": "apps/web-org/dist",
   "public": true,
   "cleanUrls": true,
   "trailingSlash": false,
@@ -9,18 +9,6 @@
     "NODE_ENV": "production"
   },
   "routes": [
-    {
-      "src": "^/novel/(.*)",
-      "dest": "/novel/$1"
-    },
-    {
-      "src": "^/biography/(.*)",
-      "dest": "/biography/$1"
-    },
-    {
-      "src": "^/research/(.*)",
-      "dest": "/research/$1"
-    },
     {
       "src": "/(.*)",
       "dest": "/index.html"
