@@ -1,18 +1,8 @@
 {
   "version": 2,
-  "buildCommand": "cd apps/web-org && npm install && npm run build",
-  "outputDirectory": "apps/web-org/dist",
+  "buildCommand": "echo 'No build needed - serving static files'",
+  "outputDirectory": "frontend",
   "public": true,
   "cleanUrls": true,
-  "trailingSlash": false,
-  "engine": "no-turbo",
-  "env": {
-    "NODE_ENV": "production"
-  },
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
-    }
-  ]
+  "trailingSlash": false
 }
