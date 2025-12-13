@@ -31,6 +31,19 @@ console.log('Copying', pagesSrc, '->', pagesDest);
 copyRecursive(pagesSrc, pagesDest);
 console.log('Pages copy complete');
 
+// Copy all static HTML directories (CRITICAL FOR WRITINGS!)
+['writings', 'biography', 'novel', 'research'].forEach(dir => {
+  const s = path.join(projectRoot, dir);
+  const d = path.join(projectRoot, 'dist', dir);
+  if (fs.existsSync(s)) {
+    console.log('Copying', s, '->', d);
+    copyRecursive(s, d);
+    console.log(`Copied ${dir}/ to dist`);
+  } else {
+    console.warn(`WARNING: ${dir} folder not found at ${s}`);
+  }
+});
+
 // Copy a few common top-level static files (if present)
 ['index.html','main.css','i'].forEach(name => {
   const s = path.join(projectRoot, name);
