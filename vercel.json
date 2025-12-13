@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "buildCommand": "echo 'Serving static files from frontend folder'",
-  "outputDirectory": "frontend",
-  "installCommand": "echo 'No install needed'",
+  "buildCommand": "cd Frontend && npm install && npm run build",
+  "outputDirectory": "Frontend/dist",
+  "installCommand": "npm install",
   "cleanUrls": true,
   "trailingSlash": false,
   "routes": [
