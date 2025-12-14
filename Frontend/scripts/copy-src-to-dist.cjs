@@ -45,7 +45,17 @@ console.log('Pages copy complete');
 });
 
 // Copy a few common top-level static files (if present)
-['index.html','main.css','i'].forEach(name => {
+// CRITICAL: Force copy index.html to ensure root page works
+const indexSrc = path.join(projectRoot, 'index.html');
+const indexDest = path.join(projectRoot, 'dist', 'index.html');
+if (fs.existsSync(indexSrc)) {
+  fs.copyFileSync(indexSrc, indexDest);
+  console.log('FORCE COPIED index.html to dist (overwriting any vite-generated file)');
+} else {
+  console.error('ERROR: index.html not found at', indexSrc);
+}
+
+['main.css','i'].forEach(name => {
   const s = path.join(projectRoot, name);
   const d = path.join(projectRoot, 'dist', name);
   if (fs.existsSync(s)) {
