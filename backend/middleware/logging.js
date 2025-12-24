@@ -6,6 +6,9 @@
  * - Response status and time
  * - Error tracking
  * - Performance monitoring
+ * 
+ * Dependencies: Requires 'morgan' package
+ * Note: morgan is listed in the root package.json dependencies
  */
 
 const morgan = require('morgan');

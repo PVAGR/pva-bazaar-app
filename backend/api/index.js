@@ -228,12 +228,22 @@ app.use('/api/activity', apiLimiter, activityRoutes); // Register the new activi
 
 // Metrics endpoint (admin only or internal monitoring)
 app.get('/api/metrics', (req, res) => {
-  // Simple auth check - in production, use proper authentication
+  // Enhanced auth check with proper validation
   const authHeader = req.headers['x-metrics-key'];
   const expectedKey = process.env.METRICS_KEY || 'dev-metrics-key';
   
-  if (authHeader !== expectedKey) {
-    return res.status(401).json({ ok: false, message: 'Unauthorized' });
+  // Validate auth header exists and matches
+  if (!authHeader || typeof authHeader !== 'string') {
+    return res.status(401).json({ ok: false, message: 'Unauthorized: Missing authentication' });
+  }
+  
+  // Use constant-time comparison to prevent timing attacks
+  const authValid = authHeader.length === expectedKey.length && 
+    authHeader.split('').every((char, i) => char === expectedKey[i]);
+  
+  if (!authValid) {
+    console.warn(`⚠️ Unauthorized metrics access attempt from ${req.ip}`);
+    return res.status(401).json({ ok: false, message: 'Unauthorized: Invalid authentication' });
   }
 
   const metrics = getMetrics();

@@ -16,7 +16,7 @@ class RateLimitStore {
     this.resetTime = new Map();
     
     // Clean up old entries every 5 minutes
-    setInterval(() => this.cleanup(), 5 * 60 * 1000);
+    this.cleanupInterval = setInterval(() => this.cleanup(), 5 * 60 * 1000);
   }
 
   increment(key) {
@@ -50,6 +50,16 @@ class RateLimitStore {
 
   reset(key) {
     this.hits.delete(key);
+  }
+
+  // Cleanup method to stop interval and allow garbage collection
+  destroy() {
+    if (this.cleanupInterval) {
+      clearInterval(this.cleanupInterval);
+      this.cleanupInterval = null;
+    }
+    this.hits.clear();
+    this.resetTime.clear();
   }
 }
 
