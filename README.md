@@ -1,16 +1,45 @@
-<<<<<<< HEAD
 # PVA Bazaar - Artisan Marketplace with Blockchain Provenance
 
 [![Secret Scan (gitleaks)](https://github.com/PVAGR/pva-bazaar-app/actions/workflows/secret-scan.yml/badge.svg)](https://github.com/PVAGR/pva-bazaar-app/actions/workflows/secret-scan.yml)
+[![Uptime Monitoring](https://github.com/PVAGR/pva-bazaar-app/actions/workflows/uptime-monitoring.yml/badge.svg)](https://github.com/PVAGR/pva-bazaar-app/actions/workflows/uptime-monitoring.yml)
 
 A blockchain-powered marketplace for artisan goods with provenance tracking and fractional ownership.
 
-## 🚀 Quick Start
+## 🚀 Quick Start (Local Docker)
+
+Docker-based setup to run the full stack locally before deploying to production.
+
+### Files for local testing:
+- `backend/Dockerfile` — runs the Node API
+- `Frontend/Dockerfile` — builds the Vite app and serves with nginx
+- `docker-compose.yml` — brings up MongoDB, backend (port 5001) and frontend (port 3000)
+- `.env.docker` — local environment values for Docker (do NOT use in production)
+
+### Quickstart:
+
+1. Build and start the stack:
 
 ```bash
-# Run the application
-./test-app.sh
+docker compose up -d --build
 ```
+
+2. Wait a few seconds, then check health:
+
+```bash
+curl http://localhost:5001/api/health
+# or use the monitoring script
+./scripts/monitor-health.sh http://localhost:5001
+```
+
+3. Visit the frontend in a browser:
+
+```
+http://localhost:3000
+```
+
+**Notes:**
+- The backend will auto-seed an admin user (`admin@pvabazaar.org` / `admin123`) when running with `DEV_AUTO_SEED=true`.
+- This is for local testing only. Do not use `.env.docker` or these secrets in production.
 
 ## 📱 Available Pages
 
@@ -24,83 +53,7 @@ A blockchain-powered marketplace for artisan goods with provenance tracking and 
 - Email: admin@pvabazaar.org
 - Password: admin123
 
-## 🧩 Features Implemented
-
-- ✅ User authentication with JWT
-- ✅ Artifact listing and details
-- ✅ Fractional ownership capabilities
-- ✅ Provenance verification
-- ✅ Dashboard with key metrics
-- ✅ MongoDB with in-memory fallback for development
-
 ## 🔧 Development
-
-### Backend
-
-```bash
-cd backend
-npm install
-
-# Start with in-memory database (no MongoDB needed)
-PORT=5001 NODE_ENV=development USE_MEMORY_DB=true DEV_AUTO_SEED=true npm run dev
-```
-
-### Frontend
-
-```bash
-cd Frontend
-npm install
-
-# Connect to backend on port 5001
-# PVA Bazaar - Artisan Marketplace with Blockchain Provenance
-
-A blockchain-powered marketplace for artisan goods with provenance tracking and fractional ownership.
-
-## 🚀 Quick Start (Local Docker)
-
-I added a Docker-based test setup so you can run the full stack on a personal server before deploying to Vercel.
-
-Files added for local testing:
-- `backend/Dockerfile` — runs the Node API
-- `Frontend/Dockerfile` — builds the Vite app and serves with nginx
-- `docker-compose.yml` — brings up MongoDB, backend (port 5001) and frontend (port 3000)
-- `.env.docker` — local environment values for Docker (do NOT use in production)
-
-Quickstart (on your server):
-
-1. Build and start the stack:
-
-```bash
-docker compose up -d --build
-```
-
-2. Wait a few seconds, then check health:
-
-```bash
-curl http://localhost:5001/api/health
-```
-
-3. Visit the frontend in a browser:
-
-http://<server-ip-or-hostname>:3000
-
-Notes:
-- The backend will auto-seed an admin user (`admin@pvabazaar.org` / `admin123`) when running with `DEV_AUTO_SEED=true`.
-- This is for local testing only. Do not use `.env.docker` or these secrets in production.
-
-## 📱 Available Pages (local dev)
-
-- **Portfolio**: http://localhost:3000/pages/portfolio.html
-- **Product Showcase**: http://localhost:3000/pages/productshowcase.html?id=[artifact_id]
-- **Provenance**: http://localhost:3000/pages/provenance.html?id=[artifact_id]
-- **Dashboard**: http://localhost:3000/pages/pvadashboard.html
-
-## 👤 Dev Login
-
-- Email: admin@pvabazaar.org
-- Password: admin123
-
-## 🔧 Development (commands)
 
 ### Backend
 
@@ -130,6 +83,85 @@ VITE_API_URL=http://localhost:5001/api npm run dev
 - ✅ Provenance verification
 - ✅ Dashboard with key metrics
 - ✅ MongoDB with in-memory fallback for development
+- ✅ **24/7 Health Monitoring & Auto-Recovery**
+- ✅ **Request Logging & Metrics**
+- ✅ **Rate Limiting & API Protection**
+- ✅ **Automated Uptime Monitoring**
+
+## 🏥 Health Monitoring & Availability
+
+### Health Check Endpoints
+
+The application provides multiple health check endpoints:
+
+- **Comprehensive Health**: `GET /api/health` - Detailed system status
+- **Quick Ping**: `GET /api/health/ping` - Fast uptime check
+- **Readiness**: `GET /api/health/ready` - Service ready for traffic
+- **Liveness**: `GET /api/health/live` - Process is alive
+
+### Monitoring Script
+
+Run comprehensive health checks:
+
+```bash
+# Monitor local server
+./scripts/monitor-health.sh http://localhost:5001
+
+# Monitor production with verbose output
+./scripts/monitor-health.sh https://api.pvabazaar.org --verbose
+
+# JSON output for automation
+./scripts/monitor-health.sh https://api.pvabazaar.org --json
+
+# With Slack alerts
+./scripts/monitor-health.sh https://api.pvabazaar.org --slack https://hooks.slack.com/YOUR/WEBHOOK
+```
+
+### Automated Monitoring
+
+- ✅ GitHub Actions workflow runs every 5 minutes
+- ✅ Automatic alerts on failures (GitHub Issues + Slack)
+- ✅ Health reports available as workflow artifacts
+- ✅ Status badges show real-time availability
+
+### Auto-Recovery Features
+
+- ✅ Database connection retry with exponential backoff
+- ✅ Automatic failover to in-memory DB (development)
+- ✅ Docker auto-restart on health check failures
+- ✅ Connection state monitoring and auto-reconnection
+- ✅ Graceful shutdown handling
+
+### Logging & Metrics
+
+All requests are logged with performance tracking:
+
+```bash
+# View access logs
+tail -f backend/logs/access.log
+
+# View error logs
+tail -f backend/logs/error.log
+
+# View slow requests
+tail -f backend/logs/slow-requests.log
+
+# Get metrics (requires authentication)
+curl -H "X-Metrics-Key: YOUR_KEY" http://localhost:5001/api/metrics
+```
+
+### Rate Limiting
+
+API protection with intelligent rate limiting:
+
+| Endpoint Type | Limit | Purpose |
+|--------------|-------|---------|
+| Health checks | 1000/min | High availability monitoring |
+| Authentication | 5/15min | Brute force protection |
+| General API | 100/min | Standard protection |
+| Search | 50/min | Resource management |
+
+For complete monitoring documentation, see **[OPERATIONS_GUIDE.md](./OPERATIONS_GUIDE.md)**.
 
 ## Security & Secret Scanning
 
@@ -205,13 +237,31 @@ Open an issue or PR containing:
 
 See [DEPLOYMENT_CHECKLIST.md](./DEPLOYMENT_CHECKLIST.md) for detailed deployment instructions.
 
+## 📖 Documentation
+
+- **[Operations Guide](./OPERATIONS_GUIDE.md)** - Health monitoring, troubleshooting, incident response
+- **[Deployment Checklist](./DEPLOYMENT_CHECKLIST.md)** - Production deployment guide
+- **[CI/CD Setup](./CICD_SETUP.md)** - Continuous integration and deployment
+- **[Next Steps](./NEXT_STEPS.md)** - Development roadmap
+
 ## 🔍 Troubleshooting
+
+### Quick Health Check
 
 Use the API health check script to verify backend connectivity:
 
 ```bash
 ./api-health-check.sh
 ```
+
+### Monitoring Issues
+
+If you encounter availability issues:
+
+1. Check health status: `./scripts/monitor-health.sh http://localhost:5001 --verbose`
+2. Review logs: `docker-compose logs backend`
+3. Check GitHub Actions for uptime monitoring results
+4. See [OPERATIONS_GUIDE.md](./OPERATIONS_GUIDE.md) for detailed troubleshooting
 
 ## 📊 Database Management
 
@@ -226,3 +276,9 @@ node scripts/export-data.js > backup.json
 cd backend
 node scripts/import-data.js backup.json
 ```
+
+---
+
+**Last Updated:** December 24, 2024  
+**Version:** 1.0.0  
+**Maintained By:** PVA Team
