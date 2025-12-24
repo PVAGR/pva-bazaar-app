@@ -11,7 +11,22 @@ dotenv.config();
 // Initialize Express app
 const app = express();
 
-// Middleware
+// Import middleware
+const { 
+  requestLogger, 
+  errorLogger, 
+  performanceMonitor, 
+  metricsMiddleware, 
+  getMetrics 
+} = require('../middleware/logging');
+const { 
+  apiLimiter, 
+  authLimiter, 
+  healthLimiter,
+  getRateLimitStats 
+} = require('../middleware/rateLimit');
+
+// Basic middleware
 app.use(cors({
     origin: (origin, callback) => {
       const allowed = [
@@ -25,6 +40,7 @@ app.use(cors({
         'http://127.0.0.1:8081',
       ];
       if (process.env.ALLOWED_ORIGIN) allowed.push(process.env.ALLOWED_ORIGIN);
+      if (process.env.PRODUCTION_DOMAIN) allowed.push(process.env.PRODUCTION_DOMAIN);
       // Allow requests with no origin (like curl or server-to-server)
       if (!origin || allowed.includes(origin)) return callback(null, true);
       return callback(new Error('CORS not allowed for origin: ' + origin));
@@ -34,10 +50,33 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Connect to MongoDB - optimized for serverless
+// Logging and monitoring middleware
+app.use(performanceMonitor);
+app.use(metricsMiddleware);
+app.use(requestLogger);
+
+// Connect to MongoDB - optimized for serverless with retry logic
 let cachedDb = null;
 let connecting = null;
+let connectionAttempts = 0;
+const MAX_RETRY_ATTEMPTS = 3;
+const RETRY_DELAY_MS = 2000;
 
+/**
+ * Sleep function for retry delays
+ */
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+/**
+ * Connect to MongoDB with automatic retry and fallback mechanisms
+ * Features:
+ * - Connection pooling and caching
+ * - Automatic retry on transient failures
+ * - Graceful fallback to in-memory DB in development
+ * - Connection state monitoring
+ */
 async function connectToDatabase() {
   if (cachedDb) return cachedDb;
   if (connecting) return connecting;
@@ -68,23 +107,50 @@ async function connectToDatabase() {
     return connecting;
   }
 
-  // Try Atlas/remote, then fall back to memory in non-production
-  try {
-    if (mongoose.connection.readyState === 1) {
-      cachedDb = mongoose.connection;
-      return cachedDb;
+  // Try Atlas/remote with retry logic
+  const attemptConnection = async (attemptNum) => {
+    try {
+      if (mongoose.connection.readyState === 1) {
+        cachedDb = mongoose.connection;
+        return cachedDb;
+      }
+      
+      console.log(`🔄 Attempting MongoDB connection (attempt ${attemptNum}/${MAX_RETRY_ATTEMPTS})...`);
+      
+      const client = await mongoose.connect(process.env.MONGODB_URI, {
+        dbName: 'pvabazaar',
+        bufferCommands: false,
+        autoIndex: true,
+        serverSelectionTimeoutMS: 10000,
+        socketTimeoutMS: 45000,
+        maxPoolSize: isProd ? 10 : 5,
+        minPoolSize: isProd ? 2 : 1
+      });
+      
+      console.log('✅ MongoDB Connected successfully');
+      connectionAttempts = 0; // Reset counter on success
+      cachedDb = client;
+      return client;
+    } catch (err) {
+      console.error(`❌ MongoDB connection attempt ${attemptNum} failed:`, err?.message || err);
+      
+      if (attemptNum < MAX_RETRY_ATTEMPTS) {
+        const delay = RETRY_DELAY_MS * attemptNum; // Exponential backoff
+        console.log(`⏳ Retrying in ${delay}ms...`);
+        await sleep(delay);
+        return attemptConnection(attemptNum + 1);
+      }
+      
+      throw err;
     }
-    const client = await mongoose.connect(process.env.MONGODB_URI, {
-      dbName: 'pvabazaar',
-      bufferCommands: false,
-      autoIndex: true
-    });
-    console.log('✅ MongoDB Connected successfully');
-    cachedDb = client;
-    return client;
+  };
+
+  try {
+    connecting = attemptConnection(1).finally(() => { connecting = null; });
+    return await connecting;
   } catch (err) {
     if (!isProd) {
-      console.warn('⚠️ MongoDB Atlas connection failed, falling back to in-memory for dev...', err?.message || err);
+      console.warn('⚠️ MongoDB Atlas connection failed after retries, falling back to in-memory for dev...', err?.message || err);
       try {
         connecting = startMemory().finally(() => { connecting = null; });
         return await connecting;
@@ -94,9 +160,37 @@ async function connectToDatabase() {
       }
     }
     // In production, do not silently fall back; rethrow to fail fast
+    console.error('🚨 CRITICAL: Production database connection failed after all retries');
     throw err;
   }
 }
+
+// Setup connection event handlers for monitoring
+mongoose.connection.on('connected', () => {
+  console.log('📡 Mongoose connected to MongoDB');
+});
+
+mongoose.connection.on('error', (err) => {
+  console.error('🚨 Mongoose connection error:', err);
+});
+
+mongoose.connection.on('disconnected', () => {
+  console.warn('⚠️ Mongoose disconnected from MongoDB');
+  // Clear cache to force reconnection on next request
+  cachedDb = null;
+});
+
+// Handle process termination gracefully
+process.on('SIGINT', async () => {
+  try {
+    await mongoose.connection.close();
+    console.log('✅ MongoDB connection closed through app termination');
+    process.exit(0);
+  } catch (err) {
+    console.error('❌ Error closing MongoDB connection:', err);
+    process.exit(1);
+  }
+});
 
 // Import routes
 const artifactsRoutes = require('../routes/artifacts');
@@ -116,21 +210,51 @@ const Artifact = require('../models/Artifact');
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 
-// Use routes
-app.use('/api/artifacts', artifactsRoutes);
-app.use('/api/users', usersRoutes);
-app.use('/api/auth', authRoutes);
-app.use('/api/blockchain', blockchainRoutes);
-app.use('/api/certificates', certificatesRoutes);
-app.use('/api/health', healthRoutes);
-app.use('/api/search', searchRoutes);
-app.use('/api/transactions', transactionsRoutes);
-app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/market', marketRoutes);
-app.use('/api/marketplace', marketRoutes); // alias for /api/marketplace/stats
-app.use('/api/categories', marketRoutes); // for /api/categories/counts
-app.use('/api/portfolio', portfolioRoutes);
-app.use('/api/activity', activityRoutes); // Register the new activity route
+// Apply rate limiting to routes
+app.use('/api/artifacts', apiLimiter, artifactsRoutes);
+app.use('/api/users', apiLimiter, usersRoutes);
+app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/blockchain', apiLimiter, blockchainRoutes);
+app.use('/api/certificates', apiLimiter, certificatesRoutes);
+app.use('/api/health', healthLimiter, healthRoutes);
+app.use('/api/search', apiLimiter, searchRoutes);
+app.use('/api/transactions', apiLimiter, transactionsRoutes);
+app.use('/api/dashboard', apiLimiter, dashboardRoutes);
+app.use('/api/market', apiLimiter, marketRoutes);
+app.use('/api/marketplace', apiLimiter, marketRoutes); // alias for /api/marketplace/stats
+app.use('/api/categories', apiLimiter, marketRoutes); // for /api/categories/counts
+app.use('/api/portfolio', apiLimiter, portfolioRoutes);
+app.use('/api/activity', apiLimiter, activityRoutes); // Register the new activity route
+
+// Metrics endpoint (admin only or internal monitoring)
+app.get('/api/metrics', (req, res) => {
+  // Simple auth check - in production, use proper authentication
+  const authHeader = req.headers['x-metrics-key'];
+  const expectedKey = process.env.METRICS_KEY || 'dev-metrics-key';
+  
+  if (authHeader !== expectedKey) {
+    return res.status(401).json({ ok: false, message: 'Unauthorized' });
+  }
+
+  const metrics = getMetrics();
+  const rateLimitStats = getRateLimitStats();
+
+  res.json({
+    ok: true,
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    metrics: metrics,
+    rateLimits: rateLimitStats,
+    database: {
+      connected: mongoose.connection.readyState === 1,
+      state: ['disconnected', 'connected', 'connecting', 'disconnecting'][mongoose.connection.readyState] || 'unknown'
+    },
+    memory: {
+      heapUsed: Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + ' MB',
+      heapTotal: Math.round(process.memoryUsage().heapTotal / 1024 / 1024) + ' MB'
+    }
+  });
+});
 
 // Dev-only: issue a token for quick testing
 app.post('/api/dev/token', (req, res) => {
@@ -141,7 +265,7 @@ app.post('/api/dev/token', (req, res) => {
   res.json({ ok: true, token });
 });
 
-// Health endpoint
+// Health endpoint (handled by healthRoutes but kept for backward compatibility)
 app.get('/api/health', async (req, res) => {
   await connectToDatabase();
   res.json({
@@ -152,10 +276,13 @@ app.get('/api/health', async (req, res) => {
   });
 });
 
+// Error logging middleware (must be before error handler)
+app.use(errorLogger);
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('🚨 Error:', err.stack);
-  res.status(500).json({
+  res.status(err.status || 500).json({
     ok: false,
     message: 'Something went wrong!',
     error: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'

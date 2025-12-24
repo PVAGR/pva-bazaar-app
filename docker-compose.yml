@@ -7,11 +7,18 @@ services:
       - mongo-data:/data/db
     ports:
       - "27017:27017"
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   backend:
     build: ./backend
     depends_on:
-      - mongo
+      mongo:
+        condition: service_healthy
     environment:
       MONGODB_URI: "mongodb://mongo:27017/pvabazaar"
       PORT: "5001"
@@ -24,16 +31,32 @@ services:
       - "5001:5001"
     volumes:
       - ./backend:/app
+      - /app/node_modules
     command: sh -c "sleep 5 && node seed.js || true && node api/index.js"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5001/api/health/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   frontend:
     build: ./Frontend
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     ports:
       - "3000:80"
     environment:
       VITE_API_URL: "http://localhost:5001"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
 volumes:
   mongo-data:

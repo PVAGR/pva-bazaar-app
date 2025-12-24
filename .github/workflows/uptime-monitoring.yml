@@ -1,0 +1,267 @@
+name: Uptime Monitoring
+
+# This workflow monitors the health and availability of deployed PVA Bazaar services
+# Runs every 5 minutes to ensure 24/7 monitoring and alerting
+
+on:
+  schedule:
+    # Run every 5 minutes
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to monitor'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  monitor_production:
+    name: Monitor Production Services
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event.inputs.environment == 'production'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check Backend API Health
+        id: backend_health
+        continue-on-error: true
+        run: |
+          echo "Checking backend health..."
+          
+          # Try to get health status
+          RESPONSE=$(curl -s --max-time 30 https://api.pvabazaar.org/api/health || echo '{"ok":false}')
+          
+          # Check if response is valid JSON and contains ok:true
+          if echo "$RESPONSE" | grep -q '"ok":true'; then
+            echo "status=healthy" >> $GITHUB_OUTPUT
+            echo "✅ Backend is healthy"
+          else
+            echo "status=unhealthy" >> $GITHUB_OUTPUT
+            echo "❌ Backend health check failed"
+            echo "Response: $RESPONSE"
+            exit 1
+          fi
+
+      - name: Check Frontend Availability
+        id: frontend_health
+        continue-on-error: true
+        run: |
+          echo "Checking frontend availability..."
+          
+          # Check pvabazaar.com
+          HTTP_CODE_COM=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 https://pvabazaar.com || echo "000")
+          
+          # Check pvabazaar.org
+          HTTP_CODE_ORG=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 https://pvabazaar.org || echo "000")
+          
+          if [ "$HTTP_CODE_COM" = "200" ] && [ "$HTTP_CODE_ORG" = "200" ]; then
+            echo "status=healthy" >> $GITHUB_OUTPUT
+            echo "✅ Frontend sites are accessible"
+          else
+            echo "status=unhealthy" >> $GITHUB_OUTPUT
+            echo "❌ Frontend availability issue"
+            echo "pvabazaar.com: HTTP $HTTP_CODE_COM"
+            echo "pvabazaar.org: HTTP $HTTP_CODE_ORG"
+            exit 1
+          fi
+
+      - name: Run Comprehensive Health Check
+        id: comprehensive_check
+        continue-on-error: true
+        run: |
+          chmod +x ./scripts/monitor-health.sh
+          
+          # Run against production API
+          ./scripts/monitor-health.sh https://api.pvabazaar.org --verbose --json > health-report.json || true
+          
+          # Display results
+          if [ -f health-report.json ]; then
+            cat health-report.json
+            
+            # Check overall status
+            STATUS=$(cat health-report.json | grep -o '"status":"[^"]*"' | cut -d'"' -f4)
+            echo "status=$STATUS" >> $GITHUB_OUTPUT
+            
+            if [ "$STATUS" = "healthy" ]; then
+              echo "✅ Comprehensive health check passed"
+            else
+              echo "⚠️ Health check detected issues: $STATUS"
+            fi
+          else
+            echo "status=unknown" >> $GITHUB_OUTPUT
+            echo "❌ Failed to generate health report"
+          fi
+
+      - name: Upload Health Report
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: health-report-${{ github.run_number }}
+          path: health-report.json
+          retention-days: 7
+
+      - name: Update Status Badge
+        if: always()
+        uses: schneegans/dynamic-badges-action@v1.6.0
+        with:
+          auth: ${{ secrets.GIST_TOKEN }}
+          gistID: ${{ secrets.STATUS_GIST_ID }}
+          filename: pva-bazaar-uptime.json
+          label: Status
+          message: ${{ steps.backend_health.outputs.status == 'healthy' && steps.frontend_health.outputs.status == 'healthy' && 'Online' || 'Issues Detected' }}
+          color: ${{ steps.backend_health.outputs.status == 'healthy' && steps.frontend_health.outputs.status == 'healthy' && '4ef8a3' || 'd4af37' }}
+
+      - name: Create Issue on Failure
+        if: failure() && github.event_name == 'schedule'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = '🚨 Production Health Check Failed';
+            const body = `
+            ## Production Health Check Alert
+            
+            **Time:** ${new Date().toISOString()}
+            **Workflow Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            
+            ### Status Summary
+            - Backend Health: ${{ steps.backend_health.outputs.status || 'unknown' }}
+            - Frontend Health: ${{ steps.frontend_health.outputs.status || 'unknown' }}
+            - Comprehensive Check: ${{ steps.comprehensive_check.outputs.status || 'unknown' }}
+            
+            ### Action Required
+            Please investigate the production environment immediately.
+            
+            ### Health Report
+            Download the health report artifact from the workflow run for detailed diagnostics.
+            `;
+            
+            // Check if an issue already exists
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: ['health-alert', 'production'],
+              state: 'open'
+            });
+            
+            if (issues.data.length === 0) {
+              // Create new issue
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: title,
+                body: body,
+                labels: ['health-alert', 'production', 'urgent']
+              });
+            } else {
+              // Comment on existing issue
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issues.data[0].number,
+                body: `### Additional Alert\n\n${body}`
+              });
+            }
+
+      - name: Send Slack Notification on Failure
+        if: failure() && github.event_name == 'schedule'
+        uses: 8398a7/action-slack@v3
+        with:
+          status: custom
+          custom_payload: |
+            {
+              text: '🚨 PVA Bazaar Production Health Alert',
+              attachments: [{
+                color: 'danger',
+                title: 'Production Service Health Check Failed',
+                fields: [
+                  {
+                    title: 'Backend Status',
+                    value: '${{ steps.backend_health.outputs.status || "unknown" }}',
+                    short: true
+                  },
+                  {
+                    title: 'Frontend Status',
+                    value: '${{ steps.frontend_health.outputs.status || "unknown" }}',
+                    short: true
+                  },
+                  {
+                    title: 'Time',
+                    value: new Date().toISOString(),
+                    short: true
+                  },
+                  {
+                    title: 'Workflow',
+                    value: '<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>',
+                    short: true
+                  }
+                ]
+              }]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+
+  monitor_staging:
+    name: Monitor Staging Services
+    runs-on: ubuntu-latest
+    if: github.event.inputs.environment == 'staging'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check Staging Health
+        run: |
+          echo "Checking staging environment health..."
+          
+          # Check staging backend (if exists)
+          if [ -n "${{ secrets.STAGING_API_URL }}" ]; then
+            RESPONSE=$(curl -s --max-time 30 ${{ secrets.STAGING_API_URL }}/api/health || echo '{"ok":false}')
+            
+            if echo "$RESPONSE" | grep -q '"ok":true'; then
+              echo "✅ Staging backend is healthy"
+            else
+              echo "⚠️ Staging backend health check failed"
+              echo "Response: $RESPONSE"
+            fi
+          else
+            echo "ℹ️ No staging API URL configured"
+          fi
+
+      - name: Run Staging Health Check
+        continue-on-error: true
+        run: |
+          if [ -n "${{ secrets.STAGING_API_URL }}" ]; then
+            chmod +x ./scripts/monitor-health.sh
+            ./scripts/monitor-health.sh ${{ secrets.STAGING_API_URL }} --verbose
+          fi
+
+  health_summary:
+    name: Health Monitoring Summary
+    runs-on: ubuntu-latest
+    needs: [monitor_production]
+    if: always() && github.event_name == 'schedule'
+    steps:
+      - name: Generate Summary
+        run: |
+          echo "## PVA Bazaar Health Monitoring Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Timestamp:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Production Status" >> $GITHUB_STEP_SUMMARY
+          echo "- Production monitoring: ${{ needs.monitor_production.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ needs.monitor_production.result }}" = "success" ]; then
+            echo "✅ All production services are healthy" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Production services have detected issues" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Action:** Check the workflow logs and health report artifacts for details." >> $GITHUB_STEP_SUMMARY
+          fi
