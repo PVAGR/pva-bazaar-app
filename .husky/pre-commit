@@ -3,6 +3,12 @@
 
 echo "🔍 Running pre-commit quality checks..."
 
+# Optional local bypass (do not affect CI)
+if [ "$HUSKY" = "0" ] || [ "$SKIP_QUALITY_CHECKS" = "true" ] || [ "$FAST_COMMIT" = "1" ]; then
+  echo "⏭️  Skipping pre-commit hooks (local bypass)."
+  exit 0
+fi
+
 # Run lint-staged for code formatting
 echo "📝 Formatting code..."
 npm run lint-staged --if-present || npx lint-staged

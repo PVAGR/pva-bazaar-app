@@ -15,3 +15,4 @@ pva-bazaar-app.env
 # Ignore env files anywhere in the repo
 **/.env
 **/*.env
+.env*.local

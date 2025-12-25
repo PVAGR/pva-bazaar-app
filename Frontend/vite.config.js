@@ -65,8 +65,7 @@ export default defineConfig({
       '/api': {
         target: process.env.VITE_API_URL || 'http://localhost:5000',
         changeOrigin: true,
-        secure: false,
-        rewrite: (p) => p.replace(/^\/api/, '')
+        secure: false
       }
     }
   }

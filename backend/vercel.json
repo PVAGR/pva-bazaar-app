@@ -17,6 +17,7 @@
     }
   ],
   "env": {
-    "NODE_ENV": "production"
+    "NODE_ENV": "production",
+    "ALLOWED_ORIGIN": "https://www.pvabazaar.org"
   }
 }

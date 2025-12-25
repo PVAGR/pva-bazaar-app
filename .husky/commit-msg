@@ -3,6 +3,12 @@
 
 echo "📋 Validating commit message format..."
 
+# Optional local bypass
+if [ "$HUSKY" = "0" ] || [ "$SKIP_COMMIT_MSG" = "true" ] || [ "$FAST_COMMIT" = "1" ]; then
+  echo "⏭️  Skipping commit message validation (local bypass)."
+  exit 0
+fi
+
 # Read the commit message
 COMMIT_MSG_FILE=$1
 COMMIT_MSG=$(cat $COMMIT_MSG_FILE)
