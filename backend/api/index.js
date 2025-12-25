@@ -23,6 +23,8 @@ app.use(cors({
         'http://127.0.0.1:5173',
         'http://127.0.0.1:8080',
         'http://127.0.0.1:8081',
+        'https://pvabazaar.org',
+        'https://www.pvabazaar.org',
       ];
       if (process.env.ALLOWED_ORIGIN) allowed.push(process.env.ALLOWED_ORIGIN);
       // Allow requests with no origin (like curl or server-to-server)
