@@ -1,3 +1,8 @@
+const express = require('express');
+const router = express.Router();
+const Artifact = require('../models/Artifact');
+const auth = require('../middleware/auth');
+
 // GET /api/transactions?limit=5 - Recent transactions (mocked for now)
 router.get('/', async (req, res) => {
 	try {
@@ -23,10 +28,6 @@ router.get('/', async (req, res) => {
 		res.status(500).json({ ok: false, message: err.message });
 	}
 });
-const express = require('express');
-const router = express.Router();
-const Artifact = require('../models/Artifact');
-const auth = require('../middleware/auth');
 
 // POST /api/transactions/shares/buy - Buy shares
 router.post('/shares/buy', auth, async (req, res) => {

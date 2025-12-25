@@ -1,0 +1,97 @@
+const express = require('express');
+const router = express.Router();
+const rateLimit = require('express-rate-limit');
+const Comment = require('../models/Comment');
+const Blog = require('../models/Blog');
+
+// Basic rate limiter for comment posting (per IP)
+const commentsLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+// List comments for a blog slug
+router.get('/:slug', async (req, res) => {
+  try {
+    const slug = req.params.slug.trim().toLowerCase();
+    const comments = await Comment.find({ blogSlug: slug, approved: true }).sort({ createdAt: -1 }).lean();
+    res.json({ ok: true, comments });
+  } catch (err) {
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// Add a comment for a blog slug
+router.post('/:slug/add', commentsLimiter, async (req, res) => {
+  try {
+    const slug = req.params.slug.trim().toLowerCase();
+    const { authorName, body } = req.body || {};
+    if (!body || body.trim().length < 2) return res.status(400).json({ ok: false, message: 'Comment body too short' });
+    const blogExists = await Blog.findOne({ slug, status: 'published' }).select('_id');
+    if (!blogExists) return res.status(404).json({ ok: false, message: 'Blog not found' });
+    const comment = new Comment({ blogSlug: slug, authorName: (authorName || 'Anonymous').toString(), body: body.toString(), approved: false });
+    await comment.save();
+    res.json({ ok: true, message: 'Comment added', commentId: comment._id });
+  } catch (err) {
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// Admin-only: list pending comments
+router.get('/pending', async (req, res) => {
+  try {
+    const adminSecret = process.env.ADMIN_SECRET_CODE;
+    if (!adminSecret) return res.status(500).json({ ok: false, message: 'ADMIN_SECRET_CODE not configured' });
+    if ((req.query?.secret || '') !== adminSecret) return res.status(401).json({ ok: false, message: 'Unauthorized' });
+    const comments = await Comment.find({ approved: false }).sort({ createdAt: -1 }).lean();
+    res.json({ ok: true, comments });
+  } catch (err) {
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// Admin-only: approve a comment
+router.post('/:id/approve', async (req, res) => {
+  try {
+    const adminSecret = process.env.ADMIN_SECRET_CODE;
+    if (!adminSecret) return res.status(500).json({ ok: false, message: 'ADMIN_SECRET_CODE not configured' });
+    if (req.body?.secret !== adminSecret) return res.status(401).json({ ok: false, message: 'Unauthorized' });
+    const comment = await Comment.findById(req.params.id);
+    if (!comment) return res.status(404).json({ ok: false, message: 'Comment not found' });
+    comment.approved = true;
+    await comment.save();
+    res.json({ ok: true, message: 'Approved' });
+  } catch (err) {
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// Admin-only: delete a comment
+router.post('/:id/delete', async (req, res) => {
+  try {
+    const adminSecret = process.env.ADMIN_SECRET_CODE;
+    if (!adminSecret) return res.status(500).json({ ok: false, message: 'ADMIN_SECRET_CODE not configured' });
+    if (req.body?.secret !== adminSecret) return res.status(401).json({ ok: false, message: 'Unauthorized' });
+    await Comment.findByIdAndDelete(req.params.id);
+    res.json({ ok: true, message: 'Deleted' });
+  } catch (err) {
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// Admin-only: debug list all comments
+router.get('/debug/all', async (req, res) => {
+  try {
+    const adminSecret = process.env.ADMIN_SECRET_CODE;
+    if (!adminSecret) return res.status(500).json({ ok: false, message: 'ADMIN_SECRET_CODE not configured' });
+    if ((req.query?.secret || '') !== adminSecret) return res.status(401).json({ ok: false, message: 'Unauthorized' });
+    const comments = await Comment.find({}).sort({ createdAt: -1 }).lean();
+    res.json({ ok: true, comments });
+  } catch (err) {
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+module.exports = router;

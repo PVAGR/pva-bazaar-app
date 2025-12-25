@@ -111,6 +111,10 @@ const dashboardRoutes = require('../routes/dashboard');
 const marketRoutes = require('../routes/market');
 const portfolioRoutes = require('../routes/portfolio');
 const activityRoutes = require('../routes/activity'); // Import activity routes
+const pagesRoutes = require('../routes/pages');
+const blogsRoutes = require('../routes/blogs');
+const commentsRoutes = require('../routes/comments');
+const contributeRoutes = require('../routes/contribute');
 // Models for optional seeding
 const Artifact = require('../models/Artifact');
 const User = require('../models/User');
@@ -131,6 +135,10 @@ app.use('/api/marketplace', marketRoutes); // alias for /api/marketplace/stats
 app.use('/api/categories', marketRoutes); // for /api/categories/counts
 app.use('/api/portfolio', portfolioRoutes);
 app.use('/api/activity', activityRoutes); // Register the new activity route
+app.use('/api/pages', pagesRoutes);
+app.use('/api/blogs', blogsRoutes);
+app.use('/api/comments', commentsRoutes);
+app.use('/api/contribute', contributeRoutes);
 
 // Dev-only: issue a token for quick testing
 app.post('/api/dev/token', (req, res) => {
