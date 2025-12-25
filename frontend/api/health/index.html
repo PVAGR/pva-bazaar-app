@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<title>API Health</title>
+</head>
+<body>
+<pre id="json">{
+  "ok": true,
+  "message": "PVABazaar API static health endpoint",
+  "timestamp": ""
+}
+</pre>
+<script>
+  const el = document.getElementById('json');
+  const data = {
+    ok: true,
+    message: 'PVABazaar API static health endpoint',
+    timestamp: new Date().toISOString(),
+  };
+  el.textContent = JSON.stringify(data, null, 2);
+</script>
+</body></html>
