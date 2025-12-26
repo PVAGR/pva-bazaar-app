@@ -5,7 +5,7 @@
     { "src": "dist/**", "use": "@vercel/static" }
   ],
   "routes": [
-    { "src": "^/writings/?$", "dest": "/dist/writings/index.html" },
+    { "src": "^/writings/?$", "dest": "/dist/writings/pva-archive.html" },
     { "src": "^/novel/?$", "dest": "/dist/novel/index.html" },
     { "src": "^/biography/?$", "dest": "/dist/biography/index.html" },
     { "src": "^/research/?$", "dest": "/dist/research/index.html" },
