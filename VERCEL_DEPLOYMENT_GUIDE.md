@@ -48,16 +48,38 @@ vercel --prod
 ```
 
 ### 3. Environment Variables Setup
-Configure in Vercel Dashboard:
+Configure in Vercel Dashboard or via CLI:
+
+Backend (serverless API):
 - `MONGODB_URI`: Production MongoDB connection string
 - `JWT_SECRET`: Strong production secret
 - `NODE_ENV`: production
 - `ETHEREUM_RPC_URL`: https://mainnet.base.org
-- `ALLOWED_ORIGIN`: https://your-domain.vercel.app
+- `ALLOWED_ORIGIN`: https://your-frontend-domain
+
+Frontend (static + serverless helpers):
+- `BACKEND_URL`: URL of your Backend deployment (e.g., `https://pvabazaar-backend.vercel.app`).
+	- When set, frontend serverless APIs (`/api/blogs/*`, `/api/comments/*`) proxy to Backend for persistence.
+	- When not set, they run in serverless demo mode (in-memory).
+
+CLI example:
+```
+cd Frontend
+vercel env set BACKEND_URL https://<your-backend-domain> production
+vercel env set BACKEND_URL https://<your-backend-domain> preview
+vercel env set BACKEND_URL https://<your-backend-domain> development
+vercel redeploy --prod --yes
+```
 
 ### 4. Domain Configuration
 - Set up custom domain in Vercel dashboard
-- Update `Frontend/config.js` API URL if needed
+- Alias Frontend to `pvabazaar.org`:
+```
+cd Frontend
+vercel alias pvabazaar-frontend.vercel.app pvabazaar.org
+```
+- Ensure DNS CNAME points to `cname.vercel-dns.com`.
+- Backend CORS: allow the aliased frontend domain or rely on serverless proxy (calls originate from Vercel functions).
 
 ## Verification Commands
 

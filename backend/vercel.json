@@ -18,6 +18,9 @@
   ],
   "env": {
     "NODE_ENV": "production",
+    "USE_MEMORY_DB": "true",
+    "ENABLE_QUICK_PUBLISH": "true",
+    "ALLOW_ALL_ORIGINS": "true",
     "ALLOWED_ORIGIN": "https://www.pvabazaar.org"
   }
 }

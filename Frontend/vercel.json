@@ -5,6 +5,10 @@
     { "src": "dist/**", "use": "@vercel/static" }
   ],
   "routes": [
+    { "src": "^/api/blogs/quick-publish$", "dest": "api/blogs/quick-publish.js" },
+    { "src": "^/api/blogs/([^/]+)$", "dest": "api/blogs/[slug].js" },
+    { "src": "^/api/comments/([^/]+)/add$", "dest": "api/comments/[slug]/add.js" },
+    { "src": "^/api/comments/([^/]+)$", "dest": "api/comments/[slug]/index.js" },
     { "src": "^/api/(.*)", "dest": "api/$1" },
     { "src": "^/(.*)", "dest": "/dist/$1" }
   ]

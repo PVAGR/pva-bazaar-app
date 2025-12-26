@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>New Post • PVA Bazaar</title>
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto;max-width:720px;margin:40px auto;padding:0 16px;background:#0b0f12;color:#e6eef6}
+    a{color:#79c0ff}
+    header{margin-bottom:24px}
+    label{display:block;margin:12px 0 6px}
+    input,textarea{width:100%;padding:10px;border-radius:8px;border:1px solid #253040;background:#11161b;color:#e6eef6}
+    textarea{min-height:200px}
+    button{margin-top:16px;padding:10px 16px;border-radius:8px;border:1px solid #2a3a4a;background:#183247;color:#e6eef6;cursor:pointer}
+    .msg{margin-top:16px}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>New Blog Post</h1>
+    <p><a href="/public/blogs.html">Back to Blogs</a></p>
+  </header>
+  <main>
+    <form id="postForm">
+      <label for="title">Title</label>
+      <input id="title" name="title" required />
+      <label for="slug">Slug</label>
+      <input id="slug" name="slug" placeholder="e.g., welcome" required />
+      <label for="body">Body</label>
+      <textarea id="body" name="body" required></textarea>
+      <button type="submit">Publish</button>
+    </form>
+    <div id="msg" class="msg"></div>
+  </main>
+  <script>
+    const form = document.getElementById('postForm');
+    const msg = document.getElementById('msg');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const title = document.getElementById('title').value.trim();
+      const slug = document.getElementById('slug').value.trim();
+      const body = document.getElementById('body').value.trim();
+      msg.textContent = 'Publishing...';
+      try {
+        const res = await fetch('/api/blogs/quick-publish', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, slug, body })
+        });
+        const data = await res.json();
+        if (data && data.ok !== false) {
+          msg.textContent = 'Published! View it now.';
+          const link = document.createElement('a');
+          link.href = `/public/blog.html?slug=${encodeURIComponent(slug)}`;
+          link.textContent = 'Open post';
+          msg.append(' ');
+          msg.appendChild(link);
+        } else {
+          msg.textContent = 'Publish failed.';
+        }
+      } catch (err) {
+        msg.textContent = 'Error: ' + (err && err.message || 'Unknown');
+      }
+    });
+  </script>
+</body>
+</html>

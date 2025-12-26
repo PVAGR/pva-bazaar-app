@@ -1,0 +1,16 @@
+[
+  {
+    "slug": "welcome",
+    "title": "Welcome to PVA Bazaar",
+    "content": "<p>This is your space to write and publish. Use the editor to create your first post.</p>",
+    "status": "published",
+    "updatedAt": "2025-12-26T00:00:00.000Z"
+  },
+  {
+    "slug": "vision",
+    "title": "The Vision",
+    "content": "<p>We believe in transparent craftsmanship, fair trade, and a living archive of thought.</p>",
+    "status": "published",
+    "updatedAt": "2025-12-26T00:00:00.000Z"
+  }
+]

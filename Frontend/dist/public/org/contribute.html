@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PVA Bazaar — Contribute</title>
+  <link href="/style.css" rel="stylesheet" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Contribute a Blog</h1>
+      <nav><a href="/blog.html" class="note">Blogs</a> · <a href="/page.html?slug=home" class="note">Editor</a> · <a href="/admin.html" class="note">Admin</a></nav>
+    </header>
+
+    <form id="form">
+      <div class="field"><input id="name" placeholder="Your name" /></div>
+      <div class="field"><input id="title" placeholder="Blog title" /></div>
+      <div class="field"><textarea id="content" placeholder="Write your content here" rows="10"></textarea></div>
+      <button type="submit">Submit</button>
+      <div class="note">Submissions are saved as pending. Admin may publish.</div>
+    </form>
+    <div id="result" class="note" style="margin-top:0.8rem"></div>
+  </div>
+
+  <script>
+    const form = document.getElementById('form');
+    const resultEl = document.getElementById('result');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const title = document.getElementById('title').value;
+      const content = document.getElementById('content').value;
+      const authorName = document.getElementById('name').value;
+      const res = await fetch('/api/contribute/submit', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title, content, authorName })
+      });
+      const data = await res.json();
+      if (!data.ok) { resultEl.textContent = data.message || 'Failed'; return; }
+      resultEl.textContent = `Submitted! Slug: ${data.slug}`;
+      form.reset();
+    });
+  </script>
+</body>
+</html>

@@ -1,3 +1,33 @@
+## Commit Guide (Local Bypass + Secret Scan)
+
+- Hooks: This repo uses Husky pre-commit checks (formatting, brand, accessibility, typecheck, tests, secret scan).
+- Secret scan: `scripts/secret-scan.sh` scans only staged files using `gitleaks`.
+   - It prefers a system install but will also use the bundled binary in `bin/`.
+   - In CI, missing `gitleaks` fails the job; locally it prints a warning and skips.
+
+Install gitleaks locally (optional):
+
+```
+curl -sSfL https://raw.githubusercontent.com/gitleaks/gitleaks/master/install.sh | bash
+```
+
+Local commit bypass options (use sparingly):
+
+```
+# Skip all Husky hooks
+HUSKY=0 git commit -m "your message"
+
+# Skip quality checks while keeping Husky framework
+SKIP_QUALITY_CHECKS=true git commit -m "your message"
+
+# Fast path (equivalent intent)
+FAST_COMMIT=1 git commit -m "your message"
+```
+
+Notes:
+- Keep `.env` files out of Git; they are ignored by default. Never commit secrets.
+- If a check fails, prefer fixing the underlying issue, then re-commit.
+
 <<<<<<< HEAD
 # PVA Bazaar - Artisan Marketplace with Blockchain Provenance
 

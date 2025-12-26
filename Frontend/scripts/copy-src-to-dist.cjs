@@ -64,19 +64,26 @@ if (fs.existsSync(indexSrc)) {
   }
 });
 
-// Also copy repository-level public/ so runtime assets (css/js) are available
+// Copy both local Frontend/public and repository-level public into dist/public
+const distPublic = path.join(projectRoot, 'dist', 'public');
+const localPublic = path.join(projectRoot, 'public');
+if (fs.existsSync(localPublic)) {
+  console.log('Copying local public', localPublic, '->', distPublic);
+  copyRecursive(localPublic, distPublic);
+  console.log('Copied local public to dist');
+}
 const repoPublicSrc = path.join(projectRoot, '..', 'public');
-const repoPublicDest = path.join(projectRoot, 'dist', 'public');
 if (fs.existsSync(repoPublicSrc)) {
-  console.log('Copying repo public', repoPublicSrc, '->', repoPublicDest);
-  copyRecursive(repoPublicSrc, repoPublicDest);
-  console.log('Copied repo public to dist');
-} else {
-  // try sibling public inside same folder
-  const alt = path.join(projectRoot, 'public');
-  if (fs.existsSync(alt)) {
-    console.log('Copying local public', alt, '->', path.join(projectRoot, 'dist', 'public'));
-    copyRecursive(alt, path.join(projectRoot, 'dist', 'public'));
-    console.log('Copied local public to dist');
-  }
+  console.log('Merging repo public', repoPublicSrc, '->', distPublic);
+  copyRecursive(repoPublicSrc, distPublic);
+  console.log('Merged repo public to dist');
+}
+
+// Copy organization static pages (apps/web-org) into public/org
+const webOrgSrc = path.join(projectRoot, '..', 'apps', 'web-org');
+const webOrgDest = path.join(distPublic, 'org');
+if (fs.existsSync(webOrgSrc)) {
+  console.log('Copying apps/web-org', webOrgSrc, '->', webOrgDest);
+  copyRecursive(webOrgSrc, webOrgDest);
+  console.log('Copied apps/web-org to dist/public/org');
 }

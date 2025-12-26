@@ -14,6 +14,7 @@ const app = express();
 // Middleware
 app.use(cors({
     origin: (origin, callback) => {
+      if (process.env.ALLOW_ALL_ORIGINS === 'true') return callback(null, true);
       const allowed = [
         'http://localhost:3000',
         'http://localhost:5173',
@@ -45,7 +46,9 @@ async function connectToDatabase() {
   if (connecting) return connecting;
 
   const isProd = process.env.NODE_ENV === 'production';
-  const preferMemory = !isProd && (process.env.USE_MEMORY_DB === 'true' || !process.env.MONGODB_URI);
+  // Allow explicit memory DB even in production when USE_MEMORY_DB=true;
+  // otherwise prefer memory only in non-production when no MONGODB_URI is provided.
+  const preferMemory = (process.env.USE_MEMORY_DB === 'true') || (!isProd && !process.env.MONGODB_URI);
 
   // Helper to start in-memory Mongo
   const startMemory = async () => {

@@ -168,7 +168,18 @@
         <a href="novel/">Novel</a>
         <a href="biography/">Biography</a>
         <a href="research/">Research</a>
+        <a href="public/blogs.html">Blogs</a>
+        <a href="public/new-post.html">New Post</a>
+                <a href="public/org/blog.html">Org Pages</a>
     </nav>
+    <script src="/public/config.js"></script>
+        <div id="conn" class="timestamp" style="margin-bottom:8px;">Checking backend…</div>
+        <form id="backendForm" style="margin:8px 0 24px 0;">
+            <label for="backendUrl" style="display:block;margin-bottom:6px;color:#8ba3bf;">Backend URL (optional)</label>
+            <input id="backendUrl" placeholder="https://your-backend.example.com" style="width:100%;padding:8px;border-radius:6px;border:1px solid #2a3f5f;background:#11161b;color:#e1e8ed;" />
+            <button type="submit" style="margin-top:8px;padding:8px 12px;border-radius:6px;border:1px solid #2a3f5f;background:#183247;color:#e1e8ed;cursor:pointer;">Save</button>
+            <small id="backendMsg" style="display:block;margin-top:6px;color:#8ba3bf;"></small>
+        </form>
 
     <section id="intro">
         <div class="intro-box">
@@ -326,8 +337,29 @@
     </section>
 
     <footer>
-        <p>© 2025 Richard Torres. All writings released freely under <a href="https://creativecommons.org/publicdomain/zero/1.0/" style="color: #00d9ff;">CC0 Public Domain</a>.</p>
+                <p>© 2025 Richard Torres. All writings released freely under <a href="https://creativecommons.org/publicdomain/zero/1.0/" style="color: #00d9ff;">CC0 Public Domain</a>.</p>
         <p style="margin-top: 0.5rem; color: #999;">No paywalls. No gatekeeping. Just words that stay.</p>
     </footer>
+        <script>
+            (async function(){
+                const backend = (window.APP_CONFIG && window.APP_CONFIG.backendUrl) || null;
+                const el = document.getElementById('conn');
+                const input = document.getElementById('backendUrl');
+                const msg = document.getElementById('backendMsg');
+                if (backend) input.value = backend;
+                document.getElementById('backendForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const val = input.value.trim();
+                    try { localStorage.setItem('backendUrl', val || ''); } catch {}
+                    msg.textContent = val ? 'Saved. Reloading…' : 'Cleared. Reloading…';
+                    setTimeout(() => location.reload(), 300);
+                });
+                if (!backend) { el.textContent = 'Serverless mode'; return; }
+                try {
+                    const r = await fetch(`${backend}/api/health`, { credentials:'omit' });
+                    el.textContent = r.ok ? `Backend connected: ${backend}` : 'Backend unreachable';
+                } catch { el.textContent = 'Backend unreachable'; }
+            })();
+        </script>
 </body>
 </html>

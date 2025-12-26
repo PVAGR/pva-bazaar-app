@@ -5,6 +5,33 @@ const { v4: uuidv4 } = require('uuid');
 const Blog = require('../models/Blog');
 const Comment = require('../models/Comment');
 
+// Temporary: allow quick publish without admin secret when enabled
+if (process.env.ENABLE_QUICK_PUBLISH === 'true') {
+  router.post('/quick-publish', async (req, res) => {
+    try {
+      const slug = (req.body?.slug || '').trim().toLowerCase();
+      const title = (req.body?.title || '').trim();
+      const content = (req.body?.content || '').toString();
+      if (!slug || !title) return res.status(400).json({ ok: false, message: 'slug and title are required' });
+
+      let blog = await Blog.findOne({ slug });
+      if (!blog) {
+        blog = new Blog({ slug, title, content, status: 'published' });
+        await blog.save();
+        return res.json({ ok: true, message: 'Blog created and published', slug });
+      }
+      blog.title = title || blog.title;
+      blog.content = content;
+      blog.status = 'published';
+      await blog.save();
+      res.json({ ok: true, message: 'Blog updated and published', slug });
+    } catch (err) {
+      console.error('blogs.quick-publish error', err);
+      res.status(500).json({ ok: false, message: err.message || 'Internal error' });
+    }
+  });
+}
+
 // Admin-only: create or rotate a blog's edit secret
 router.post('/setup', async (req, res) => {
   try {
