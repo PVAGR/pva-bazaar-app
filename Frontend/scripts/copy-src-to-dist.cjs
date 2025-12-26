@@ -80,10 +80,29 @@ if (fs.existsSync(repoPublicSrc)) {
 }
 
 // Copy organization static pages (apps/web-org) into public/org
-const webOrgSrc = path.join(projectRoot, '..', 'apps', 'web-org');
+const webOrgRoot = path.join(projectRoot, '..', 'apps', 'web-org');
+const webOrgDist = path.join(webOrgRoot, 'dist');
 const webOrgDest = path.join(distPublic, 'org');
-if (fs.existsSync(webOrgSrc)) {
-  console.log('Copying apps/web-org', webOrgSrc, '->', webOrgDest);
-  copyRecursive(webOrgSrc, webOrgDest);
-  console.log('Copied apps/web-org to dist/public/org');
+if (fs.existsSync(webOrgDist)) {
+  console.log('Copying apps/web-org/dist', webOrgDist, '->', webOrgDest);
+  copyRecursive(webOrgDist, webOrgDest);
+  console.log('Copied apps/web-org/dist to dist/public/org');
+} else if (fs.existsSync(webOrgRoot)) {
+  console.log('Copying apps/web-org (no dist found)', webOrgRoot, '->', webOrgDest);
+  copyRecursive(webOrgRoot, webOrgDest);
+  console.log('Copied apps/web-org (source) to dist/public/org');
+}
+
+// Copy marketplace build (apps/web-com) into public/com
+const webComRoot = path.join(projectRoot, '..', 'apps', 'web-com');
+const webComDist = path.join(webComRoot, 'dist');
+const webComDest = path.join(distPublic, 'com');
+if (fs.existsSync(webComDist)) {
+  console.log('Copying apps/web-com/dist', webComDist, '->', webComDest);
+  copyRecursive(webComDist, webComDest);
+  console.log('Copied apps/web-com/dist to dist/public/com');
+} else if (fs.existsSync(webComRoot)) {
+  console.log('Copying apps/web-com (no dist found)', webComRoot, '->', webComDest);
+  copyRecursive(webComRoot, webComDest);
+  console.log('Copied apps/web-com (source) to dist/public/com');
 }

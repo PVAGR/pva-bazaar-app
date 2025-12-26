@@ -1,9 +1,0 @@
-{
-  "extends": "../../packages/tsconfig/base.json",
-  "compilerOptions": {
-    "outDir": "dist",
-    "skipLibCheck": true
-  },
-  "include": ["*.html"],
-  "exclude": ["node_modules", "dist"]
-}
