@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 const pagesDir = path.resolve(__dirname, '../pages');
+const staticDirs = ['writings','biography','novel','research'];
 const indexHtml = path.resolve(__dirname, '../index.html');
 
 function readCanonicalHeader(){
@@ -53,16 +54,27 @@ function replaceHeaderInFile(file, headerHtml){
   return false;
 }
 
+function processDir(dirPath, header){
+  if(!fs.existsSync(dirPath)) return [];
+  const changed = [];
+  const entries = fs.readdirSync(dirPath, { withFileTypes: true });
+  for(const e of entries){
+    const full = path.join(dirPath, e.name);
+    if(e.isDirectory()){
+      changed.push(...processDir(full, header));
+    } else if(e.isFile() && e.name.endsWith('.html')){
+      const ok = replaceHeaderInFile(full, header);
+      if(ok) changed.push(full);
+    }
+  }
+  return changed;
+}
+
 function main(){
   const header = readCanonicalHeader();
-  const files = fs.readdirSync(pagesDir).filter(f => f.endsWith('.html'));
-  const changed = [];
-  for(const f of files){
-    const filePath = path.join(pagesDir,f);
-    const ok = replaceHeaderInFile(filePath, header);
-    if(ok) changed.push(f);
-  }
-  console.log('Changed pages:', changed);
+  const changedPages = processDir(pagesDir, header);
+  const changedStatics = staticDirs.flatMap(d => processDir(path.resolve(__dirname,'..', d), header));
+  console.log('Changed files:', JSON.stringify([...changedPages, ...changedStatics], null, 2));
 }
 
 main();
