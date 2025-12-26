@@ -10,6 +10,8 @@
     { "src": "^/api/comments/([^/]+)/add$", "dest": "api/comments/[slug]/add.js" },
     { "src": "^/api/comments/([^/]+)$", "dest": "api/comments/[slug]/index.js" },
     { "src": "^/api/(.*)", "dest": "api/$1" },
+    { "src": "^/com/(.*)", "dest": "/dist/com/$1" },
+    { "src": "^/org/(.*)", "dest": "/dist/org/$1" },
     { "src": "^/(.*)", "dest": "/dist/$1" }
   ]
 }

@@ -1,7 +1,7 @@
-import { default as React } from 'react';
-export type CardProps = React.HTMLAttributes<HTMLDivElement> & {
-    variant?: "elevated" | "outline" | "flat";
-    header?: React.ReactNode;
-    footer?: React.ReactNode;
-};
-export declare const Card: React.FC<CardProps>;
+import * as React from "react";
+export interface CardProps {
+    title: string;
+    children: React.ReactNode;
+    href: string;
+}
+export declare function Card({ title, children, href }: CardProps): JSX.Element;
