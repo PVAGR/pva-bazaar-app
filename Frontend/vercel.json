@@ -29,7 +29,6 @@
     { "src": "^/writing/?$", "status": 308, "dest": "/org/writings/" },
     { "src": "^/archive/?$", "status": 308, "dest": "/org/writings/" },
     { "src": "^/archives/?$", "status": 308, "dest": "/org/writings/" },
-    { "src": "^/(writings|writing|archive|archives)/(.*)", "status": 308, "dest": "/org/writings/" },
     { "src": "^/novel/?$", "dest": "/dist/novel/index.html" },
     { "src": "^/biography/?$", "dest": "/dist/biography/index.html" },
     { "src": "^/research/?$", "dest": "/dist/research/index.html" },

@@ -64,6 +64,16 @@ if (fs.existsSync(indexSrc)) {
   }
 });
 
+// Ensure status.html is available at the root
+const statusSrc = path.join(projectRoot, 'status.html');
+const statusDest = path.join(projectRoot, 'dist', 'status.html');
+if (fs.existsSync(statusSrc)) {
+  fs.copyFileSync(statusSrc, statusDest);
+  console.log('COPIED status.html to dist');
+} else {
+  console.warn('WARNING: status.html not found at', statusSrc);
+}
+
 // Copy both local Frontend/public and repository-level public into dist/public
 const distPublic = path.join(projectRoot, 'dist', 'public');
 const localPublic = path.join(projectRoot, 'public');
