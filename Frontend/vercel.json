@@ -5,15 +5,15 @@
     { "src": "dist/**", "use": "@vercel/static" }
   ],
   "routes": [
-    { "src": "^/com/?$", "dest": "/dist/public/com/index.html" },
+    { "src": "^/market/?$", "dest": "/dist/public/market/index.html" },
+    { "src": "^/market/(.*)", "dest": "/dist/public/market/$1" },
     { "src": "^/org/?$", "dest": "/dist/public/org/index.html" },
+    { "src": "^/org/(.*)", "dest": "/dist/public/org/$1" },
     { "src": "^/api/blogs/quick-publish$", "dest": "api/blogs/quick-publish.js" },
     { "src": "^/api/blogs/([^/]+)$", "dest": "api/blogs/[slug].js" },
     { "src": "^/api/comments/([^/]+)/add$", "dest": "api/comments/[slug]/add.js" },
     { "src": "^/api/comments/([^/]+)$", "dest": "api/comments/[slug]/index.js" },
     { "src": "^/api/(.*)", "dest": "api/$1" },
-    { "src": "^/com/(.*)", "dest": "/dist/public/com/$1" },
-    { "src": "^/org/(.*)", "dest": "/dist/public/org/$1" },
     { "src": "^/(.*)", "dest": "/dist/$1" }
   ]
 }

@@ -93,16 +93,24 @@ if (fs.existsSync(webOrgDist)) {
   console.log('Copied apps/web-org (source) to dist/public/org');
 }
 
-// Copy marketplace build (apps/web-com) into public/com
+// Copy marketplace build (apps/web-com) into public/market (and keep /com for backward-compat)
 const webComRoot = path.join(projectRoot, '..', 'apps', 'web-com');
 const webComDist = path.join(webComRoot, 'dist');
-const webComDest = path.join(distPublic, 'com');
+const webComDestCom = path.join(distPublic, 'com');
+const webComDestMarket = path.join(distPublic, 'market');
 if (fs.existsSync(webComDist)) {
-  console.log('Copying apps/web-com/dist', webComDist, '->', webComDest);
-  copyRecursive(webComDist, webComDest);
+  console.log('Copying apps/web-com/dist', webComDist, '->', webComDestMarket);
+  copyRecursive(webComDist, webComDestMarket);
+  console.log('Copied apps/web-com/dist to dist/public/market');
+  // also mirror to /com for any existing links
+  console.log('Mirroring apps/web-com/dist', webComDist, '->', webComDestCom);
+  copyRecursive(webComDist, webComDestCom);
   console.log('Copied apps/web-com/dist to dist/public/com');
 } else if (fs.existsSync(webComRoot)) {
-  console.log('Copying apps/web-com (no dist found)', webComRoot, '->', webComDest);
-  copyRecursive(webComRoot, webComDest);
+  console.log('Copying apps/web-com (no dist found)', webComRoot, '->', webComDestMarket);
+  copyRecursive(webComRoot, webComDestMarket);
+  console.log('Copied apps/web-com (source) to dist/public/market');
+  console.log('Mirroring apps/web-com (no dist found)', webComRoot, '->', webComDestCom);
+  copyRecursive(webComRoot, webComDestCom);
   console.log('Copied apps/web-com (source) to dist/public/com');
 }
