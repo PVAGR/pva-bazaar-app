@@ -5,6 +5,10 @@
     { "src": "dist/**", "use": "@vercel/static" }
   ],
   "routes": [
+    { "src": "^/writings/?$", "dest": "/dist/writings/index.html" },
+    { "src": "^/novel/?$", "dest": "/dist/novel/index.html" },
+    { "src": "^/biography/?$", "dest": "/dist/biography/index.html" },
+    { "src": "^/research/?$", "dest": "/dist/research/index.html" },
     { "src": "^/market/?$", "dest": "/dist/public/market/index.html" },
     { "src": "^/market/(.*)", "dest": "/dist/public/market/$1" },
     { "src": "^/org/?$", "dest": "/dist/public/org/index.html" },
