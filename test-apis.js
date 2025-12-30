@@ -33,6 +33,27 @@ async function testArtifactsAPI() {
     }
 }
 
+async function testBlogsAPI() {
+    try {
+        console.log('Testing Blogs API...');
+        // Quick publish a test blog
+        const publishRes = await fetch('http://localhost:5000/api/blogs/quick-publish', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ slug: 'api-test', title: 'API Test', content: 'Hello from test runner' })
+        });
+        const publishData = await publishRes.json();
+        console.log('Publish Response:', JSON.stringify(publishData, null, 2));
+
+        // Fetch the blog
+        const getRes = await fetch('http://localhost:5000/api/blogs/api-test');
+        const getData = await getRes.json();
+        console.log('Get Blog Response:', JSON.stringify(getData, null, 2));
+    } catch (error) {
+        console.error('Blogs API Error:', error.message);
+    }
+}
+
 async function runTests() {
     console.log('=== Testing PVA Bazaar Real-Time Data APIs ===\n');
 
@@ -43,6 +64,9 @@ async function runTests() {
     console.log('\n' + '='.repeat(50) + '\n');
 
     await testArtifactsAPI();
+    console.log('\n' + '='.repeat(50) + '\n');
+
+    await testBlogsAPI();
     console.log('\n' + '='.repeat(50) + '\n');
 
     console.log('=== Test Complete ===');

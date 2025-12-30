@@ -45,7 +45,7 @@
         const res = await fetch('/api/blogs/quick-publish', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title, slug, body })
+          body: JSON.stringify({ title, slug, content: body })
         });
         const data = await res.json();
         if (data && data.ok !== false) {

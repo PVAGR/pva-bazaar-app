@@ -14,16 +14,24 @@ echo "📦 Installing frontend dependencies..."
 cd /workspaces/pva-bazaar-app/Frontend
 npm install
 
-# Start backend in dev mode with in-memory DB and auto-seed
-echo "🔧 Starting backend server..."
+# Ensure MongoDB is running via Docker and start backend against it
+echo "🧰 Ensuring local MongoDB (Docker) is running..."
+cd /workspaces/pva-bazaar-app
+docker compose up -d mongo >/dev/null 2>&1 || true
+
+echo "🔧 Starting backend server (Mongo on localhost:27017)..."
 cd /workspaces/pva-bazaar-app/backend
-PORT=5001 NODE_ENV=development USE_MEMORY_DB=true DEV_AUTO_SEED=true npm run dev &
+# Seed sample data (non-fatal if it fails)
+PORT=5001 NODE_ENV=development USE_MEMORY_DB=false MONGODB_URI=mongodb://localhost:27017/pvabazaar npm run seed || true
+
+# Start dev server
+PORT=5001 NODE_ENV=development USE_MEMORY_DB=false MONGODB_URI=mongodb://localhost:27017/pvabazaar DEV_AUTO_SEED=true ENABLE_QUICK_PUBLISH=true npm run dev &
 BACKEND_PID=$!
 
-# Start frontend in dev mode
+# Start frontend in dev mode (proxy /api -> backend)
 echo "💻 Starting frontend server..."
 cd /workspaces/pva-bazaar-app/Frontend
-VITE_API_URL=http://localhost:5001/api npm run dev &
+VITE_API_URL=http://localhost:5001 npm run dev &
 FRONTEND_PID=$!
 
 # Function to handle script termination

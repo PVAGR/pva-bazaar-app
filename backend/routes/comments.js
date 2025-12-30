@@ -12,34 +12,7 @@ const commentsLimiter = rateLimit({
   legacyHeaders: false
 });
 
-// List comments for a blog slug
-router.get('/:slug', async (req, res) => {
-  try {
-    const slug = req.params.slug.trim().toLowerCase();
-    const comments = await Comment.find({ blogSlug: slug, approved: true }).sort({ createdAt: -1 }).lean();
-    res.json({ ok: true, comments });
-  } catch (err) {
-    res.status(500).json({ ok: false, message: err.message });
-  }
-});
-
-// Add a comment for a blog slug
-router.post('/:slug/add', commentsLimiter, async (req, res) => {
-  try {
-    const slug = req.params.slug.trim().toLowerCase();
-    const { authorName, body } = req.body || {};
-    if (!body || body.trim().length < 2) return res.status(400).json({ ok: false, message: 'Comment body too short' });
-    const blogExists = await Blog.findOne({ slug, status: 'published' }).select('_id');
-    if (!blogExists) return res.status(404).json({ ok: false, message: 'Blog not found' });
-    const comment = new Comment({ blogSlug: slug, authorName: (authorName || 'Anonymous').toString(), body: body.toString(), approved: false });
-    await comment.save();
-    res.json({ ok: true, message: 'Comment added', commentId: comment._id });
-  } catch (err) {
-    res.status(500).json({ ok: false, message: err.message });
-  }
-});
-
-// Admin-only: list pending comments
+// Admin-only: list pending comments (place before slug routes to avoid conflicts)
 router.get('/pending', async (req, res) => {
   try {
     const adminSecret = process.env.ADMIN_SECRET_CODE;
@@ -89,6 +62,33 @@ router.get('/debug/all', async (req, res) => {
     if ((req.query?.secret || '') !== adminSecret) return res.status(401).json({ ok: false, message: 'Unauthorized' });
     const comments = await Comment.find({}).sort({ createdAt: -1 }).lean();
     res.json({ ok: true, comments });
+  } catch (err) {
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// List comments for a blog slug
+router.get('/:slug', async (req, res) => {
+  try {
+    const slug = req.params.slug.trim().toLowerCase();
+    const comments = await Comment.find({ blogSlug: slug, approved: true }).sort({ createdAt: -1 }).lean();
+    res.json({ ok: true, comments });
+  } catch (err) {
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+// Add a comment for a blog slug
+router.post('/:slug/add', commentsLimiter, async (req, res) => {
+  try {
+    const slug = req.params.slug.trim().toLowerCase();
+    const { authorName, body } = req.body || {};
+    if (!body || body.trim().length < 2) return res.status(400).json({ ok: false, message: 'Comment body too short' });
+    const blogExists = await Blog.findOne({ slug, status: 'published' }).select('_id');
+    if (!blogExists) return res.status(404).json({ ok: false, message: 'Blog not found' });
+    const comment = new Comment({ blogSlug: slug, authorName: (authorName || 'Anonymous').toString(), body: body.toString(), approved: false });
+    await comment.save();
+    res.json({ ok: true, message: 'Comment added', commentId: comment._id });
   } catch (err) {
     res.status(500).json({ ok: false, message: err.message });
   }

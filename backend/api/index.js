@@ -191,6 +191,8 @@ async function autoSeed() {
   try {
     const enable = (process.env.DEV_AUTO_SEED === 'true' || process.env.USE_MEMORY_DB === 'true') && process.env.NODE_ENV !== 'production';
     if (!enable) return;
+    // Ensure connection is fully ready before seeding to avoid bufferCommands warnings
+    await connectToDatabase();
     if (await Artifact.estimatedDocumentCount() > 0) return;
 
     console.log('🌱 Seeding dev database...');
