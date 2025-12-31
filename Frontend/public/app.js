@@ -361,9 +361,64 @@
           React.createElement('h1', null, state.blog.title || state.blog.slug),
           React.createElement('div', { className: 'subtle', style: { marginBottom: 8 } }, (state.blog.updatedAt || '').slice(0,10)),
           React.createElement('div', { className: 'entryPage__content', dangerouslySetInnerHTML: { __html: state.blog.content || '' } }),
+          React.createElement('div', { style: { marginTop: 12 } }, React.createElement('a', { className: 'link', href: `#/blog/${slug}/edit` }, 'Edit →')),
           React.createElement('h3', { style: { marginTop: 16 } }, 'Comments'),
           React.createElement('ul', { className: 'list' },
             (state.comments || []).map((c, i) => React.createElement('li', { key: i, className: 'list__item' }, c.content || c.text || ''))
+          )
+        )
+      )
+    );
+  }
+
+  function BlogEditorPage() {
+    const { slug } = useParams();
+    const navigate = useNavigate();
+    const [title, setTitle] = useState('');
+    const [content, setContent] = useState('');
+    const [editSecret, setEditSecret] = useState(localStorage.getItem('blog:editSecret:' + slug) || '');
+    const [status, setStatus] = useState('');
+    useEffect(() => {
+      (async () => {
+        try {
+          const res = await fetch(`/api/blogs/${encodeURIComponent(slug)}`);
+          const json = await res.json();
+          if (res.ok && json && json.ok) {
+            setTitle(json.blog.title || slug);
+            setContent(json.blog.content || '');
+          }
+        } catch (_) {}
+      })();
+    }, [slug]);
+    async function save(e) {
+      e.preventDefault(); setStatus('');
+      try {
+        const res = await fetch(`/api/blogs/${encodeURIComponent(slug)}/update`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ edit: editSecret, title, content })
+        });
+        const json = await res.json();
+        if (res.ok && json && json.ok) {
+          localStorage.setItem('blog:editSecret:' + slug, editSecret);
+          setStatus('Saved');
+          navigate('/blog/' + slug);
+        } else {
+          setStatus(json?.message || 'Save failed');
+        }
+      } catch (_) { setStatus('Save failed'); }
+    }
+    return (
+      React.createElement('section', { className: 'card' },
+        React.createElement('div', { className: 'card__body' },
+          React.createElement('h1', null, 'Edit Blog'),
+          React.createElement('form', { onSubmit: save, className: 'form' },
+            React.createElement('label', { className: 'label' }, 'Edit Secret', React.createElement('input', { className: 'input', value: editSecret, onChange: e => setEditSecret(e.target.value) })),
+            React.createElement('label', { className: 'label' }, 'Title', React.createElement('input', { className: 'input', value: title, onChange: e => setTitle(e.target.value) })),
+            React.createElement('label', { className: 'label' }, 'Content', React.createElement('textarea', { className: 'textarea', rows: 12, value: content, onChange: e => setContent(e.target.value) })),
+            React.createElement('div', { className: 'form__actions' },
+              React.createElement('button', { className: 'themeToggle', type: 'submit' }, 'Save')
+            ),
+            React.createElement('div', { className: 'subtle', style: { marginTop: 8 } }, status)
           )
         )
       )
@@ -478,11 +533,49 @@
           React.createElement('div', { className: 'cards-grid' },
             items.map(a => (
               React.createElement('div', { key: a._id, className: 'writing-card' },
-                React.createElement('h3', null, a.title || a.name || 'Artifact'),
+                React.createElement('h3', null, React.createElement('a', { href: `#/artifact/${a._id}` }, a.title || a.name || 'Artifact')),
                 React.createElement('p', null, a.description || ''),
                 React.createElement('div', { className: 'subtle' }, `${a.category || 'General'} · $${a.price || 0}`)
               )
             ))
+          )
+        )
+      )
+    );
+  }
+
+  function ArtifactDetailPage() {
+    const { id } = useParams();
+    const [state, setState] = useState({ loading: true, artifact: null });
+    useEffect(() => {
+      (async () => {
+        try {
+          const res = await fetch('/api/artifacts/' + encodeURIComponent(id));
+          const json = await res.json();
+          if (res.ok && json && json.ok) setState({ loading: false, artifact: json.artifact });
+          else setState({ loading: false, artifact: null });
+        } catch (_) { setState({ loading: false, artifact: null }); }
+      })();
+    }, [id]);
+    if (state.loading) return React.createElement('div', null, 'Loading…');
+    if (!state.artifact) return React.createElement('div', null, 'Not found');
+    const a = state.artifact;
+    return (
+      React.createElement('section', { className: 'card' },
+        React.createElement('div', { className: 'card__body' },
+          React.createElement('h1', null, a.title || a.name),
+          React.createElement('div', { className: 'subtle' }, `${a.category || 'General'} · $${a.price || 0}`),
+          React.createElement('p', null, a.description || ''),
+          React.createElement('div', { className: 'surface pad', style: { marginTop: 12 } },
+            React.createElement('h3', null, 'Ratings & Crypto Equivalents'),
+            React.createElement('ul', { className: 'list' },
+              React.createElement('li', { className: 'list__item' }, `Rating: ${a.rating || '—'} (${a.reviewCount || 0} reviews)`),
+              React.createElement('li', { className: 'list__item' }, `ETH: ${a.cryptoPrices?.eth || '—'} · BTC: ${a.cryptoPrices?.btc || '—'}`)
+            )
+          ),
+          React.createElement('div', { className: 'surface pad', style: { marginTop: 12 } },
+            React.createElement('h3', null, 'Transaction History'),
+            React.createElement('ul', { className: 'list' }, (a.transactionHistory || []).map((t, i) => React.createElement('li', { key: i, className: 'list__item' }, `${t.type} — ${(t.date || '').toString().slice(0,10)} — ${t.value}`)))
           )
         )
       )
@@ -841,7 +934,10 @@
           React.createElement(Route, { path: '/admin/new-journal', element: React.createElement(AdminNewJournalPage) }),
           React.createElement(Route, { path: '/writings', element: React.createElement(WritingsPage) }),
           React.createElement(Route, { path: '/blogs', element: React.createElement(BlogsPage) }),
+          React.createElement(Route, { path: '/blog/:slug', element: React.createElement(BlogDetailPage) }),
+          React.createElement(Route, { path: '/blog/:slug/edit', element: React.createElement(BlogEditorPage) }),
           React.createElement(Route, { path: '/gallery', element: React.createElement(GalleryPage) }),
+          React.createElement(Route, { path: '/artifact/:id', element: React.createElement(ArtifactDetailPage) }),
           React.createElement(Route, { path: '/blog/:slug', element: React.createElement(BlogDetailPage) }),
           React.createElement(Route, { path: '/biography', element: React.createElement(BiographyPage) }),
           React.createElement(Route, { path: '/novel', element: React.createElement(NovelPage) }),
