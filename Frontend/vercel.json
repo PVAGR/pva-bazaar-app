@@ -5,6 +5,8 @@
     { "src": "dist/**", "use": "@vercel/static" }
   ],
   "routes": [
+    { "src": "^/frontend/?$", "status": 308, "dest": "/" },
+    { "src": "^/frontend/(.*)$", "dest": "/dist/$1" },
     { "src": "^/index.html$", "status": 308, "dest": "/" },
     { "src": "^/home/?$", "status": 308, "dest": "/" },
     { "src": "^/status/?$", "status": 308, "dest": "/status.html" },
