@@ -361,7 +361,10 @@
           React.createElement('h1', null, state.blog.title || state.blog.slug),
           React.createElement('div', { className: 'subtle', style: { marginBottom: 8 } }, (state.blog.updatedAt || '').slice(0,10)),
           React.createElement('div', { className: 'entryPage__content', dangerouslySetInnerHTML: { __html: state.blog.content || '' } }),
-          React.createElement('div', { style: { marginTop: 12 } }, React.createElement('a', { className: 'link', href: `#/blog/${slug}/edit` }, 'Edit →')),
+          React.createElement('div', { style: { marginTop: 12, display: 'flex', gap: 12 } },
+            React.createElement('a', { className: 'link', href: `#/blog/${slug}/edit` }, 'Edit →'),
+            React.createElement('a', { className: 'link', href: `#/blog/${slug}/publish` }, 'Publish →')
+          ),
           React.createElement('h3', { style: { marginTop: 16 } }, 'Comments'),
           React.createElement('ul', { className: 'list' },
             (state.comments || []).map((c, i) => React.createElement('li', { key: i, className: 'list__item' }, c.content || c.text || ''))
@@ -418,6 +421,41 @@
             React.createElement('div', { className: 'form__actions' },
               React.createElement('button', { className: 'themeToggle', type: 'submit' }, 'Save')
             ),
+            React.createElement('div', { className: 'subtle', style: { marginTop: 8 } }, status)
+          )
+        )
+      )
+    );
+  }
+
+  function BlogPublishPage() {
+    const { slug } = useParams();
+    const navigate = useNavigate();
+    const [secret, setSecret] = useState(localStorage.getItem('admin:secret') || '');
+    const [status, setStatus] = useState('');
+    async function publish(e) {
+      e.preventDefault(); setStatus('');
+      try {
+        const res = await fetch(`/api/blogs/${encodeURIComponent(slug)}/publish`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ secret })
+        });
+        const json = await res.json();
+        if (res.ok && json && json.ok) {
+          localStorage.setItem('admin:secret', secret);
+          setStatus('Published');
+          navigate('/blog/' + slug);
+        } else {
+          setStatus(json?.message || 'Publish failed');
+        }
+      } catch (_) { setStatus('Publish failed'); }
+    }
+    return (
+      React.createElement('section', { className: 'card' },
+        React.createElement('div', { className: 'card__body' },
+          React.createElement('h1', null, 'Publish Blog'),
+          React.createElement('form', { onSubmit: publish, className: 'form' },
+            React.createElement('label', { className: 'label' }, 'Admin Secret', React.createElement('input', { className: 'input', value: secret, onChange: e => setSecret(e.target.value) })),
+            React.createElement('div', { className: 'form__actions' }, React.createElement('button', { className: 'themeToggle', type: 'submit' }, 'Publish')),
             React.createElement('div', { className: 'subtle', style: { marginTop: 8 } }, status)
           )
         )
@@ -528,7 +566,10 @@
     return (
       React.createElement('section', { className: 'card' },
         React.createElement('div', { className: 'card__body' },
-          React.createElement('h1', null, 'Gallery — Artifacts'),
+          React.createElement('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' } },
+            React.createElement('h1', null, 'Gallery — Artifacts'),
+            React.createElement('a', { className: 'link', href: '#/artifact/new' }, 'Add New Artifact →')
+          ),
           loading ? React.createElement('div', { className: 'subtle' }, 'Loading…') :
           React.createElement('div', { className: 'cards-grid' },
             items.map(a => (
@@ -576,6 +617,56 @@
           React.createElement('div', { className: 'surface pad', style: { marginTop: 12 } },
             React.createElement('h3', null, 'Transaction History'),
             React.createElement('ul', { className: 'list' }, (a.transactionHistory || []).map((t, i) => React.createElement('li', { key: i, className: 'list__item' }, `${t.type} — ${(t.date || '').toString().slice(0,10)} — ${t.value}`)))
+          )
+        )
+      )
+    );
+  }
+
+  function NewArtifactPage() {
+    const navigate = useNavigate();
+    const [name, setName] = useState('');
+    const [title, setTitle] = useState('');
+    const [description, setDescription] = useState('');
+    const [price, setPrice] = useState('');
+    const [category, setCategory] = useState('');
+    const [status, setStatus] = useState('');
+    async function submit(e) {
+      e.preventDefault(); setStatus('');
+      try {
+        const res = await fetch('/api/artifacts', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, title, description, price, category })
+        });
+        const json = await res.json();
+        if (res.ok && json && json.ok && json.artifact?._id) {
+          setStatus('Created');
+          navigate('/artifact/' + json.artifact._id);
+        } else {
+          // Dev-friendly fallback: store locally and show as pending
+          const pending = JSON.parse(localStorage.getItem('gallery:pending') || '[]');
+          const id = 'pending-' + Date.now();
+          pending.unshift({ _id: id, name, title, description, price, category });
+          localStorage.setItem('gallery:pending', JSON.stringify(pending));
+          setStatus('Saved locally (dev)');
+          navigate('/gallery');
+        }
+      } catch (_) {
+        setStatus('Failed to create');
+      }
+    }
+    return (
+      React.createElement('section', { className: 'card' },
+        React.createElement('div', { className: 'card__body' },
+          React.createElement('h1', null, 'New Artifact'),
+          React.createElement('form', { onSubmit: submit, className: 'form' },
+            React.createElement('label', { className: 'label' }, 'Name', React.createElement('input', { className: 'input', value: name, onChange: e => setName(e.target.value) })),
+            React.createElement('label', { className: 'label' }, 'Title', React.createElement('input', { className: 'input', value: title, onChange: e => setTitle(e.target.value) })),
+            React.createElement('label', { className: 'label' }, 'Description', React.createElement('textarea', { className: 'textarea', rows: 8, value: description, onChange: e => setDescription(e.target.value) })),
+            React.createElement('label', { className: 'label' }, 'Price', React.createElement('input', { className: 'input', type: 'number', value: price, onChange: e => setPrice(e.target.value) })),
+            React.createElement('label', { className: 'label' }, 'Category', React.createElement('input', { className: 'input', value: category, onChange: e => setCategory(e.target.value) })),
+            React.createElement('div', { className: 'form__actions' }, React.createElement('button', { className: 'themeToggle', type: 'submit' }, 'Create')),
+            React.createElement('div', { className: 'subtle', style: { marginTop: 8 } }, status)
           )
         )
       )
@@ -936,8 +1027,10 @@
           React.createElement(Route, { path: '/blogs', element: React.createElement(BlogsPage) }),
           React.createElement(Route, { path: '/blog/:slug', element: React.createElement(BlogDetailPage) }),
           React.createElement(Route, { path: '/blog/:slug/edit', element: React.createElement(BlogEditorPage) }),
+          React.createElement(Route, { path: '/blog/:slug/publish', element: React.createElement(BlogPublishPage) }),
           React.createElement(Route, { path: '/gallery', element: React.createElement(GalleryPage) }),
           React.createElement(Route, { path: '/artifact/:id', element: React.createElement(ArtifactDetailPage) }),
+          React.createElement(Route, { path: '/artifact/new', element: React.createElement(NewArtifactPage) }),
           React.createElement(Route, { path: '/blog/:slug', element: React.createElement(BlogDetailPage) }),
           React.createElement(Route, { path: '/biography', element: React.createElement(BiographyPage) }),
           React.createElement(Route, { path: '/novel', element: React.createElement(NovelPage) }),
