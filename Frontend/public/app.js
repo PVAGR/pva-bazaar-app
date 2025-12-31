@@ -324,7 +324,45 @@
             )
           ),
           React.createElement('ul', { className: 'list' },
-            filtered.map(e => React.createElement('li', { key: e.id, className: 'list__item' }, `${formatDate(e.date)} · ${e.title} — ${e.excerpt}`))
+            filtered.map(e => React.createElement('li', { key: e.id, className: 'list__item' },
+              React.createElement('a', { href: `#/blog/${e.id}` }, `${formatDate(e.date)} · ${e.title}`),
+              e.excerpt ? ` — ${e.excerpt}` : ''
+            ))
+          )
+        )
+      )
+    );
+  }
+
+  function BlogDetailPage() {
+    const { slug } = useParams();
+    const [state, setState] = useState({ loading: true, blog: null, comments: [] });
+    useEffect(() => {
+      (async () => {
+        try {
+          const res = await fetch(`/api/blogs/${encodeURIComponent(slug)}`);
+          const json = await res.json();
+          if (res.ok && json && json.ok) {
+            setState({ loading: false, blog: json.blog, comments: json.comments || [] });
+          } else {
+            setState({ loading: false, blog: null, comments: [] });
+          }
+        } catch (_) {
+          setState({ loading: false, blog: null, comments: [] });
+        }
+      })();
+    }, [slug]);
+    if (state.loading) return React.createElement('div', null, 'Loading...');
+    if (!state.blog) return React.createElement('div', null, 'Blog not found.');
+    return (
+      React.createElement('section', { className: 'card' },
+        React.createElement('div', { className: 'card__body' },
+          React.createElement('h1', null, state.blog.title || state.blog.slug),
+          React.createElement('div', { className: 'subtle', style: { marginBottom: 8 } }, (state.blog.updatedAt || '').slice(0,10)),
+          React.createElement('div', { className: 'entryPage__content', dangerouslySetInnerHTML: { __html: state.blog.content || '' } }),
+          React.createElement('h3', { style: { marginTop: 16 } }, 'Comments'),
+          React.createElement('ul', { className: 'list' },
+            (state.comments || []).map((c, i) => React.createElement('li', { key: i, className: 'list__item' }, c.content || c.text || ''))
           )
         )
       )
@@ -369,6 +407,25 @@
   function MarketplacePage() {
     const sampleDiagram = 'flowchart LR; Fiat-->Gateway; Crypto-->Gateway; PVA-->Gateway; Gateway-->Settlement;';
     function pay(kind) { alert(`Initiate ${kind} payment (stub)`); }
+    const [stats, setStats] = useState(null);
+    const [cats, setCats] = useState([]);
+    const [crypto, setCrypto] = useState(null);
+    useEffect(() => {
+      (async () => {
+        try {
+          const s = await fetch('/api/market/stats');
+          if (s.ok) { const j = await s.json(); setStats(j); }
+        } catch {}
+        try {
+          const c = await fetch('/api/market/categories/counts');
+          if (c.ok) { const j = await c.json(); setCats(Array.isArray(j?.counts) ? j.counts : []); }
+        } catch {}
+        try {
+          const k = await fetch('/api/market/crypto?symbol=ETH');
+          if (k.ok) { const j = await k.json(); setCrypto(j); }
+        } catch {}
+      })();
+    }, []);
     return (
       React.createElement('section', { className: 'card' },
         React.createElement('div', { className: 'card__body' },
@@ -380,6 +437,18 @@
             React.createElement('button', { onClick: () => pay('PVA Coin') }, 'Pay (PVA Coin)')
           ),
           React.createElement(WalletConnect, null),
+          React.createElement('div', { className: 'surface pad', style: { marginTop: 12 } },
+            React.createElement('h3', null, 'Marketplace Stats'),
+            stats ? React.createElement('pre', { className: 'subtle' }, JSON.stringify(stats, null, 2)) : React.createElement('div', { className: 'subtle' }, 'Loading stats…')
+          ),
+          React.createElement('div', { className: 'surface pad', style: { marginTop: 12 } },
+            React.createElement('h3', null, 'Categories'),
+            cats.length ? React.createElement('ul', { className: 'list' }, cats.map((c, i) => React.createElement('li', { key: i, className: 'list__item' }, `${c.category || c.name || 'Category'} — ${c.count || 0}`))) : React.createElement('div', { className: 'subtle' }, 'Loading categories…')
+          ),
+          React.createElement('div', { className: 'surface pad', style: { marginTop: 12 } },
+            React.createElement('h3', null, 'Crypto Snapshot (ETH)'),
+            crypto ? React.createElement('pre', { className: 'subtle' }, JSON.stringify(crypto, null, 2)) : React.createElement('div', { className: 'subtle' }, 'Loading crypto…')
+          ),
           React.createElement('h3', { style: { marginTop: 16 } }, 'Settlement Flow'),
           React.createElement(MermaidBlock, { code: sampleDiagram })
         )
@@ -739,6 +808,7 @@
           React.createElement(Route, { path: '/admin/new-journal', element: React.createElement(AdminNewJournalPage) }),
           React.createElement(Route, { path: '/writings', element: React.createElement(WritingsPage) }),
           React.createElement(Route, { path: '/blogs', element: React.createElement(BlogsPage) }),
+          React.createElement(Route, { path: '/blog/:slug', element: React.createElement(BlogDetailPage) }),
           React.createElement(Route, { path: '/biography', element: React.createElement(BiographyPage) }),
           React.createElement(Route, { path: '/novel', element: React.createElement(NovelPage) }),
           React.createElement(Route, { path: '/research', element: React.createElement(ResearchPage) }),
