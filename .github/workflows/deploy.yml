@@ -25,18 +25,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js 18
+      - name: Setup Node.js 20
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
           cache: npm
           # Use package.json for cache key since no package-lock.json is committed
           cache-dependency-path: Frontend/package.json
 
-      - name: Install dependencies
+      - name: Install dependencies (ignore lifecycle scripts)
         env:
           HUSKY: 0
-        run: npm install
+          NPM_CONFIG_IGNORE_SCRIPTS: true
+        run: npm install --no-audit --no-fund
 
       - name: Build
         run: npm run build
