@@ -7,13 +7,11 @@ function findFrontendDir() {
   const cwd = process.cwd();
   const candidates = [
     path.join(cwd, 'Frontend'),
-    path.join(cwd),
-    path.join(cwd, '..', 'Frontend'),
-    path.join(cwd, 'frontend'),
-    path.join(cwd, '..', 'frontend')
+    path.join(cwd, '..', 'Frontend')
   ];
   for (const d of candidates) {
     try {
+      if (path.basename(d).toLowerCase() !== 'frontend') continue;
       if (fs.existsSync(path.join(d, 'package.json'))) return d;
     } catch (e) {}
   }

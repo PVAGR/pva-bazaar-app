@@ -19,3 +19,11 @@ packages
 qa
 bin
 public
+
+# Ensure Vercel includes built frontend assets when Root Directory = "Frontend"
+!Frontend/dist
+!Frontend/dist/**
+
+# Ignore legacy and misnamed frontends to avoid confusion
+frontend
+frontend 

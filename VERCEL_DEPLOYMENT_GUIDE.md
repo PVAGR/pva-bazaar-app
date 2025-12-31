@@ -32,6 +32,7 @@ Vercel CLI 47.0.5
 - **Build Command**: `cd Frontend && npm install && npm run build`
 - **Output Directory**: `Frontend/dist`
 - **API Proxy**: Configured for production API endpoints
+ - **Root Directory (Vercel Settings)**: set to `Frontend` (case-sensitive). Do not use `frontend` or `frontend `.
 
 ## Deployment Steps
 

@@ -61,7 +61,7 @@
     }
     checkHealth();
     const params = new URLSearchParams(location.search);
-    const slug = params.get('slug');
+    let slug = params.get('slug');
     const titleEl = document.getElementById('title');
     const contentEl = document.getElementById('content');
     const editTitleEl = document.getElementById('edit-title');
@@ -69,6 +69,15 @@
     const statusEl = document.getElementById('status');
     const commentsLink = document.getElementById('commentsLink');
     if (slug) commentsLink.href = `/public/comments.html?slug=${encodeURIComponent(slug)}`;
+    function slugify(s) {
+      return (s || '')
+        .toString()
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/[\s_-]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+    }
     async function load() {
       try {
         const res = await fetch(`${apiBase}/${encodeURIComponent(slug)}`);
@@ -101,16 +110,25 @@
       try {
         const title = editTitleEl.value.trim();
         const content = editContentEl.value;
+        let slugToUse = (slug && slug.trim()) ? slug.toLowerCase() : slugify(title);
+        if (!slugToUse) slugToUse = `post-${Date.now()}`;
         // Save local draft for resilience
-        localStorage.setItem(`draft:${slug}`, JSON.stringify({ slug, title, content }));
+        localStorage.setItem(`draft:${slugToUse}`, JSON.stringify({ slug: slugToUse, title, content }));
         const res = await fetch(`${apiBase}/quick-publish`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ slug, title, content })
+          body: JSON.stringify({ slug: slugToUse, title, content })
         });
         const data = await res.json();
         if (!res.ok || !data.ok) throw new Error(data.message || `Status ${res.status}`);
-        statusEl.textContent = 'Saved';
+        statusEl.textContent = `Saved (slug: ${slugToUse})`;
+        // Update URL to canonical slug and comments link
+        if (slug !== slugToUse) {
+          slug = slugToUse;
+          const newUrl = `/public/blog.html?slug=${encodeURIComponent(slugToUse)}`;
+          try { history.replaceState(null, '', newUrl); } catch {}
+          commentsLink.href = `/public/comments.html?slug=${encodeURIComponent(slugToUse)}`;
+        }
         await load();
       } catch (e) {
         statusEl.textContent = `Save failed: ${e.message}`;
