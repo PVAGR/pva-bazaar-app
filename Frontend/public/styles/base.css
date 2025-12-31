@@ -17,7 +17,9 @@
 /* Typography & Colors */
 :root {
   --font-ui: Inter, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
-  --font-text: "Merriweather", Georgia, "Times New Roman", Times, serif;
+  --font-text: "Open Sans", Inter, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif;
+  --font-heading: "Merriweather", Georgia, "Times New Roman", Times, serif;
+  --font-code: "Fira Code", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
   --bg: #f8fafc;           /* slate-50 */
   --bg-muted: #f1f5f9;     /* slate-100 */
@@ -26,8 +28,10 @@
   --text-muted: #334155;   /* slate-700 */
   --border: #e2e8f0;       /* slate-200 */
   --shadow: 0 8px 24px rgba(2, 6, 23, 0.08);
-  --accent: #0ea5e9;       /* sky-500 */
-  --accent-strong: #0284c7;/* sky-600 */
+  --primary: #4169E1;      /* Consciousness Blue */
+  --accent: #9370DB;       /* Blockchain Purple */
+  --accent-strong: #7a5bd4;
+  --wellness: #228B22;     /* Wellness Green */
 }
 
 [data-theme="dark"] {
@@ -55,6 +59,8 @@ body {
 
 /* Text defaults: serif for long-form, sans for UI */
 body { font-family: var(--font-text); font-size: 15.5px; line-height: 1.65; }
+h1, h2, h3, h4, h5, h6 { font-family: var(--font-heading); }
+code, pre, kbd, samp { font-family: var(--font-code); }
 h1, h2, h3, h4, h5, h6, nav, button, input, textarea { font-family: var(--font-ui); }
 
 /* Links */

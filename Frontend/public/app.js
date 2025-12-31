@@ -4,6 +4,15 @@
   const { createRoot } = ReactDOM;
   const { HashRouter, Routes, Route, NavLink, useParams, useNavigate, useLocation } = ReactRouterDOM;
 
+  // Utility: dynamically load external UMD scripts when needed
+  function loadScript(src) {
+    return new Promise((resolve, reject) => {
+      if (document.querySelector(`script[src="${src}"]`)) return resolve();
+      const s = document.createElement('script');
+      s.src = src; s.async = true; s.onload = () => resolve(); s.onerror = reject; document.head.appendChild(s);
+    });
+  }
+
   // Merge any locally-persisted custom entries into the global entries source
   const CUSTOM_KEY = 'journal:customEntries';
   try {
@@ -55,6 +64,10 @@
               React.createElement(NavLink, { to: '/biography' }, 'Biography'),
               React.createElement(NavLink, { to: '/novel' }, 'Novel'),
               React.createElement(NavLink, { to: '/research' }, 'Research'),
+              React.createElement(NavLink, { to: '/pva-food' }, 'PVA Food'),
+              React.createElement(NavLink, { to: '/marketplace' }, 'Marketplace'),
+              React.createElement(NavLink, { to: '/pva-nation' }, 'PVA Nation'),
+              React.createElement(NavLink, { to: '/partners' }, 'Partners'),
               React.createElement(NavLink, { to: '/archive' }, 'Archive'),
               React.createElement(NavLink, { to: '/about' }, 'About'),
               React.createElement(NavLink, { to: '/search' }, 'Search'),
@@ -92,8 +105,22 @@
           React.createElement('div', { className: 'tabs', role: 'tablist' },
             React.createElement('button', { className: 'tab', role: 'tab', 'aria-selected': tab === 'writings', onClick: () => setTab('writings') }, 'Writings'),
             React.createElement('button', { className: 'tab', role: 'tab', 'aria-selected': tab === 'journal', onClick: () => setTab('journal') }, 'Journals'),
-            React.createElement('button', { className: 'tab', role: 'tab', 'aria-selected': tab === 'blogs', onClick: () => setTab('blogs') }, 'Blogs')
+            React.createElement('button', { className: 'tab', role: 'tab', 'aria-selected': tab === 'blogs', onClick: () => setTab('blogs') }, 'Blogs'),
+            React.createElement('button', { className: 'tab', role: 'tab', 'aria-selected': tab === 'pvafood', onClick: () => setTab('pvafood') }, 'PVA Food'),
+            React.createElement('button', { className: 'tab', role: 'tab', 'aria-selected': tab === 'business', onClick: () => setTab('business') }, 'Business Model')
           ),
+                    tab === 'pvafood' && (
+                      React.createElement('div', { className: 'tab-panel' },
+                        React.createElement('p', { className: 'subtle' }, 'Top recipes and ancient practices.'),
+                        React.createElement('a', { className: 'link', href: '#/pva-food' }, 'Open PVA Food →')
+                      )
+                    ),
+                    tab === 'business' && (
+                      React.createElement('div', { className: 'tab-panel' },
+                        React.createElement('p', { className: 'subtle' }, 'Diagrams and marketplace overview.'),
+                        React.createElement('a', { className: 'link', href: '#/marketplace' }, 'Open Marketplace →')
+                      )
+                    )
           tab === 'journal' && (
             React.createElement('div', { className: 'tab-panel' },
               React.createElement('div', { className: 'mini-list' },
@@ -132,6 +159,9 @@
               React.createElement('a', { href: `#/entry/${e.id}` }, 'Read →')
             )
           ))
+        )
+        , React.createElement('div', { style: { marginTop: '1rem', textAlign: 'center' } },
+          React.createElement('a', { href: '#/pva-nation', className: 'themeToggle', style: { display: 'inline-block' } }, 'Join PVA Nation')
         )
       )
     );
@@ -269,6 +299,145 @@
           React.createElement('ul', { className: 'list' },
             filtered.map(e => React.createElement('li', { key: e.id, className: 'list__item' }, `${formatDate(e.date)} · ${e.title} — ${e.excerpt}`))
           )
+        )
+      )
+    );
+  }
+
+  function WalletConnect() {
+    const [account, setAccount] = useState('');
+    async function connect() {
+      if (!window.ethereum) { alert('MetaMask not detected'); return; }
+      try {
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        setAccount(accounts[0] || '');
+      } catch (e) { console.error(e); alert('Wallet connection failed'); }
+    }
+    return React.createElement('div', { className: 'card', style: { marginTop: 12 } },
+      React.createElement('div', { className: 'card__body' },
+        React.createElement('div', null, account ? `Connected: ${account}` : 'Not connected'),
+        React.createElement('button', { className: 'themeToggle', onClick: connect }, account ? 'Reconnect' : 'Connect Wallet')
+      )
+    );
+  }
+
+  function MermaidBlock({ code }) {
+    const ref = React.useRef(null);
+    useEffect(() => {
+      (async () => {
+        try {
+          await loadScript('https://unpkg.com/mermaid@10/dist/mermaid.min.js');
+          if (window.mermaid) {
+            window.mermaid.initialize({ startOnLoad: false });
+            const id = 'mermaid-' + Math.random().toString(36).slice(2);
+            const svg = await window.mermaid.render(id, code);
+            if (ref.current) ref.current.innerHTML = svg;
+          }
+        } catch (e) { console.error('Mermaid load/render failed', e); }
+      })();
+    }, [code]);
+    return React.createElement('div', { ref, className: 'surface pad' });
+  }
+
+  function MarketplacePage() {
+    const sampleDiagram = 'flowchart LR; Fiat-->Gateway; Crypto-->Gateway; PVA-->Gateway; Gateway-->Settlement;';
+    function pay(kind) { alert(`Initiate ${kind} payment (stub)`); }
+    return (
+      React.createElement('section', { className: 'card' },
+        React.createElement('div', { className: 'card__body' },
+          React.createElement('h1', null, 'Decentralized Ideas Exchange — Marketplace'),
+          React.createElement('p', null, 'Trade recipes, NFTs, shares, and provenance.'),
+          React.createElement('div', { style: { display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 } },
+            React.createElement('button', { onClick: () => pay('Fiat (Stripe)') }, 'Pay (Fiat)'),
+            React.createElement('button', { onClick: () => pay('Crypto (ETH/BTC)') }, 'Pay (Crypto)'),
+            React.createElement('button', { onClick: () => pay('PVA Coin') }, 'Pay (PVA Coin)')
+          ),
+          React.createElement(WalletConnect, null),
+          React.createElement('h3', { style: { marginTop: 16 } }, 'Settlement Flow'),
+          React.createElement(MermaidBlock, { code: sampleDiagram })
+        )
+      )
+    );
+  }
+
+  function PvaFoodPage() {
+    const recipes = [
+      { title: 'Onion & Banana Juice', notes: 'Energizing blend, ancient practice.' },
+      { title: 'Ashwagandha Cheese', notes: 'Wellness-focused creation.' },
+      { title: 'Nori Crackers', notes: 'Mineral-rich snack.' }
+    ];
+    return (
+      React.createElement('section', { className: 'card' },
+        React.createElement('div', { className: 'card__body' },
+          React.createElement('h1', null, 'PVA Food & Ancient Wellness'),
+          React.createElement('ul', { className: 'list' },
+            recipes.map((r, i) => React.createElement('li', { key: i, className: 'list__item' }, `${r.title} — ${r.notes}`))
+          )
+        )
+      )
+    );
+  }
+
+  function PvaNationPage() {
+    const tiers = ['Resident', 'Citizen', 'Patron'];
+    return (
+      React.createElement('section', { className: 'card' },
+        React.createElement('div', { className: 'card__body' },
+          React.createElement('h1', null, 'PVA Nation — Citizenship'),
+          React.createElement('p', null, 'Join tiers and participate in the treasury and game loop.'),
+          React.createElement('ul', { className: 'list' }, tiers.map(t => React.createElement('li', { key: t }, t)))
+        )
+      )
+    );
+  }
+
+  function PartnersPage() {
+    const [email, setEmail] = useState('');
+    const [name, setName] = useState('');
+    async function submit(e) {
+      e.preventDefault();
+      try {
+        await fetch('/api/partners', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, name }) });
+        alert('Submitted! (stub — integrate backend)');
+      } catch (err) { console.error(err); alert('Submission failed'); }
+    }
+    return (
+      React.createElement('section', { className: 'card' },
+        React.createElement('div', { className: 'card__body' },
+          React.createElement('h1', null, 'Local Business Partners'),
+          React.createElement('form', { onSubmit: submit, className: 'form' },
+            React.createElement('label', { className: 'label' }, 'Business Name', React.createElement('input', { className: 'input', value: name, onChange: e => setName(e.target.value) })),
+            React.createElement('label', { className: 'label' }, 'Email', React.createElement('input', { className: 'input', type: 'email', value: email, onChange: e => setEmail(e.target.value) })),
+            React.createElement('div', { className: 'form__actions' }, React.createElement('button', { className: 'themeToggle', type: 'submit' }, 'Submit'))
+          )
+        )
+      )
+    );
+  }
+
+  function AdminDashboard() {
+    const canvasRef = React.useRef(null);
+    async function preview3D() {
+      try {
+        await loadScript('https://unpkg.com/three@0.157.0/build/three.min.js');
+        const THREE = window.THREE;
+        const canvas = canvasRef.current; if (!canvas) return;
+        const renderer = new THREE.WebGLRenderer({ canvas });
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(70, 1, 0.1, 100); camera.position.z = 3;
+        const cube = new THREE.Mesh(new THREE.BoxGeometry(1,1,1), new THREE.MeshNormalMaterial());
+        scene.add(cube);
+        function animate(){ cube.rotation.x += 0.01; cube.rotation.y += 0.01; renderer.setSize(300,300); renderer.render(scene, camera); requestAnimationFrame(animate); }
+        animate();
+      } catch (e) { console.error('Three.js preview failed', e); }
+    }
+    return (
+      React.createElement('section', { className: 'card' },
+        React.createElement('div', { className: 'card__body' },
+          React.createElement('h1', null, 'Admin Dashboard'),
+          React.createElement('p', null, 'Upload 3D models, manage partner contracts (stubs).'),
+          React.createElement('button', { className: 'themeToggle', onClick: preview3D }, 'Preview 3D Cube'),
+          React.createElement('div', { style: { marginTop: 12 } }, React.createElement('canvas', { ref: canvasRef, width: 300, height: 300 }))
         )
       )
     );
@@ -498,6 +667,11 @@
           React.createElement(Route, { path: '/biography', element: React.createElement(BiographyPage) }),
           React.createElement(Route, { path: '/novel', element: React.createElement(NovelPage) }),
           React.createElement(Route, { path: '/research', element: React.createElement(ResearchPage) }),
+          React.createElement(Route, { path: '/marketplace', element: React.createElement(MarketplacePage) }),
+          React.createElement(Route, { path: '/pva-food', element: React.createElement(PvaFoodPage) }),
+          React.createElement(Route, { path: '/pva-nation', element: React.createElement(PvaNationPage) }),
+          React.createElement(Route, { path: '/partners', element: React.createElement(PartnersPage) }),
+          React.createElement(Route, { path: '/admin', element: React.createElement(AdminDashboard) }),
         )
       )
     );
