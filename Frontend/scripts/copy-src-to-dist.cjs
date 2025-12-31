@@ -104,53 +104,33 @@ if (fs.existsSync(fallback404Src)) {
   }
 }
 
-// Copy both local Frontend/public and repository-level public into dist/public
+// Copy only whitelisted assets from Frontend/public into dist/public
 const distPublic = path.join(projectRoot, 'dist', 'public');
 const localPublic = path.join(projectRoot, 'public');
 if (fs.existsSync(localPublic)) {
-  console.log('Copying local public', localPublic, '->', distPublic);
-  copyRecursive(localPublic, distPublic);
-  console.log('Copied local public to dist');
-}
-const repoPublicSrc = path.join(projectRoot, '..', 'public');
-if (fs.existsSync(repoPublicSrc)) {
-  console.log('Merging repo public', repoPublicSrc, '->', distPublic);
-  copyRecursive(repoPublicSrc, distPublic);
-  console.log('Merged repo public to dist');
+  console.log('Preparing dist/public');
+  if (!fs.existsSync(distPublic)) fs.mkdirSync(distPublic, { recursive: true });
+  const whitelistFiles = ['app.js', 'config.js', 'sitemap.xml', 'robots.txt', 'status.html'];
+  const whitelistDirs = ['styles'];
+  for (const f of whitelistFiles) {
+    const s = path.join(localPublic, f);
+    const d = path.join(distPublic, f);
+    if (fs.existsSync(s)) {
+      const dir = path.dirname(d);
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+      fs.copyFileSync(s, d);
+      console.log('Copied file', s, '->', d);
+    }
+  }
+  for (const dname of whitelistDirs) {
+    const sdir = path.join(localPublic, dname);
+    const ddir = path.join(distPublic, dname);
+    if (fs.existsSync(sdir)) {
+      console.log('Copying directory', sdir, '->', ddir);
+      copyRecursive(sdir, ddir);
+      console.log('Copied directory', dname);
+    }
+  }
 }
 
-// Copy organization static pages (apps/web-org) into public/org
-const webOrgRoot = path.join(projectRoot, '..', 'apps', 'web-org');
-const webOrgDist = path.join(webOrgRoot, 'dist');
-const webOrgDest = path.join(distPublic, 'org');
-if (fs.existsSync(webOrgDist)) {
-  console.log('Copying apps/web-org/dist', webOrgDist, '->', webOrgDest);
-  copyRecursive(webOrgDist, webOrgDest);
-  console.log('Copied apps/web-org/dist to dist/public/org');
-} else if (fs.existsSync(webOrgRoot)) {
-  console.log('Copying apps/web-org (no dist found)', webOrgRoot, '->', webOrgDest);
-  copyRecursive(webOrgRoot, webOrgDest);
-  console.log('Copied apps/web-org (source) to dist/public/org');
-}
-
-// Copy marketplace build (apps/web-com) into public/market (and keep /com for backward-compat)
-const webComRoot = path.join(projectRoot, '..', 'apps', 'web-com');
-const webComDist = path.join(webComRoot, 'dist');
-const webComDestCom = path.join(distPublic, 'com');
-const webComDestMarket = path.join(distPublic, 'market');
-if (fs.existsSync(webComDist)) {
-  console.log('Copying apps/web-com/dist', webComDist, '->', webComDestMarket);
-  copyRecursive(webComDist, webComDestMarket);
-  console.log('Copied apps/web-com/dist to dist/public/market');
-  // also mirror to /com for any existing links
-  console.log('Mirroring apps/web-com/dist', webComDist, '->', webComDestCom);
-  copyRecursive(webComDist, webComDestCom);
-  console.log('Copied apps/web-com/dist to dist/public/com');
-} else if (fs.existsSync(webComRoot)) {
-  console.log('Copying apps/web-com (no dist found)', webComRoot, '->', webComDestMarket);
-  copyRecursive(webComRoot, webComDestMarket);
-  console.log('Copied apps/web-com (source) to dist/public/market');
-  console.log('Mirroring apps/web-com (no dist found)', webComRoot, '->', webComDestCom);
-  copyRecursive(webComRoot, webComDestCom);
-  console.log('Copied apps/web-com (source) to dist/public/com');
-}
+// Skip copying organization/marketplace apps to ensure journal-only deploy
