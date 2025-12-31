@@ -1,3 +1,15 @@
+# Secrets and environment files
+.env
+.env.*
+*/.env
+*/.env.*
+.vercel/*.env*
+.vercel/*.local
+
+# Node modules and logs (keep minimal)
+node_modules/
+npm-debug.log*
+yarn-error.log*
 node_modules
 
 .env
