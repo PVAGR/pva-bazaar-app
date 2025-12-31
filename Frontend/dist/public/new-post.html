@@ -60,6 +60,8 @@
     </header>
     <main>
       <form id="postForm">
+        <label for="secret">Admin Secret (optional, required in production)</label>
+        <input id="secret" name="secret" placeholder="Enter admin secret for prod" />
         <label for="title">Title</label>
         <input id="title" name="title" required />
         <label for="slug">Slug</label>
@@ -76,17 +78,62 @@
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const title = document.getElementById('title').value.trim();
-        const slug = document.getElementById('slug').value.trim();
+        const slug = document.getElementById('slug').value.trim().toLowerCase();
         const body = document.getElementById('body').value.trim();
+        const secret = document.getElementById('secret').value.trim();
         msg.textContent = 'Publishing...';
         try {
-          const res = await fetch('/api/blogs/quick-publish', {
+          // First try quick-publish (dev-friendly)
+          const qp = await fetch('/api/blogs/quick-publish', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title, slug, body }),
+            body: JSON.stringify({ title, slug, content: body }),
           });
-          const data = await res.json();
-          if (data && data.ok !== false) {
+          let ok = false;
+          if (qp.ok) {
+            const data = await qp.json();
+            ok = data && data.ok !== false;
+          }
+
+          if (!ok && secret) {
+            // Fallback path for production: admin setup + publish + update content
+            const setupRes = await fetch('/api/blogs/setup', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ secret, slug, title }),
+            });
+            const setup = await setupRes.json();
+            if (!setupRes.ok || setup.ok === false) {
+              throw new Error(setup.message || 'Admin setup failed');
+            }
+
+            const publishRes = await fetch(`/api/blogs/${encodeURIComponent(slug)}/publish`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ secret }),
+            });
+            const publish = await publishRes.json();
+            if (!publishRes.ok || publish.ok === false) {
+              throw new Error(publish.message || 'Publish failed');
+            }
+
+            // Update content using edit secret returned from publish
+            const editSecret = publish.editSecret || setup.editSecret;
+            if (editSecret) {
+              const updateRes = await fetch(`/api/blogs/${encodeURIComponent(slug)}/update`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ edit: editSecret, content: body }),
+              });
+              const update = await updateRes.json();
+              if (!updateRes.ok || update.ok === false) {
+                throw new Error(update.message || 'Content update failed');
+              }
+            }
+            ok = true;
+          }
+
+          if (ok) {
             msg.textContent = 'Published! View it now.';
             const link = document.createElement('a');
             link.href = `/public/blog.html?slug=${encodeURIComponent(slug)}`;
@@ -94,10 +141,16 @@
             msg.append(' ');
             msg.appendChild(link);
           } else {
-            msg.textContent = 'Publish failed.';
+            msg.textContent =
+              'Publish failed. Quick-publish may be disabled in production. Provide admin secret or use Admin Blogs.';
           }
         } catch (err) {
           msg.textContent = 'Error: ' + ((err && err.message) || 'Unknown');
+          const hint = document.createElement('div');
+          hint.style.marginTop = '8px';
+          hint.textContent =
+            'Tip: In production, quick-publish is disabled. Enter the admin secret or use Admin Blogs page.';
+          msg.appendChild(hint);
         }
       });
     </script>

@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin • Blogs</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Source+Code+Pro:wght@300;400&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: 'Inter', sans-serif;
+        line-height: 1.8;
+        color: #e1e8ed;
+        background: linear-gradient(135deg, #0f1419 0%, #1a2332 50%, #0f1419 100%);
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 2rem;
+        border-left: 1px solid #2a3f5f;
+        border-right: 1px solid #2a3f5f;
+        min-height: 100vh;
+      }
+      header {
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 3px solid #00d9ff;
+      }
+      nav {
+        margin: 0.5rem 0 1rem;
+      }
+      nav a {
+        color: #00d9ff;
+        text-decoration: none;
+        margin-right: 1rem;
+      }
+      label {
+        display: block;
+        margin-top: 0.75rem;
+      }
+      input,
+      textarea {
+        width: 100%;
+        padding: 0.6rem;
+        border-radius: 6px;
+        border: 1px solid rgba(0, 217, 255, 0.3);
+        background: rgba(26, 35, 50, 0.6);
+        color: #e1e8ed;
+      }
+      button {
+        margin-top: 0.75rem;
+        padding: 0.6rem 1rem;
+        border-radius: 6px;
+        border: 1px solid rgba(0, 217, 255, 0.3);
+        background: rgba(0, 217, 255, 0.1);
+        color: #00d9ff;
+        cursor: pointer;
+      }
+      .status {
+        margin-top: 0.5rem;
+        color: #5eead4;
+      }
+      .card {
+        background: rgba(26, 35, 50, 0.6);
+        border: 1px solid rgba(0, 217, 255, 0.2);
+        border-left: 3px solid #00d9ff;
+        padding: 1rem;
+        margin: 0.75rem 0;
+        border-radius: 6px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Admin • Blogs</h1>
+    </header>
+    <nav>
+      <a href="/index.html">Home</a>
+      <a href="/public/blogs.html">Blogs</a>
+      <a href="/public/blog.html?slug=welcome">View Welcome</a>
+      <a href="/public/admin-comments.html">Comments Admin</a>
+    </nav>
+    <script src="/public/config.js"></script>
+    <div id="conn" class="status" style="margin-top: 0.5rem"></div>
+    <section>
+      <h2>Admin Secret</h2>
+      <label>Secret</label>
+      <input id="secret" placeholder="admin secret (dev_admin_code in dev)" />
+      <small class="status">This is required for admin endpoints.</small>
+    </section>
+    <section>
+      <h2>Pending Blogs</h2>
+      <button id="loadPending">Load Pending</button>
+      <div id="pendingList"></div>
+    </section>
+    <section>
+      <h2>Publish Blog</h2>
+      <label>Slug</label>
+      <input id="pubSlug" placeholder="slug" />
+      <button id="publish">Publish</button>
+      <div id="pubStatus" class="status"></div>
+    </section>
+    <section>
+      <h2>Rotate/Edit Secret</h2>
+      <label>Slug</label>
+      <input id="setupSlug" placeholder="slug" />
+      <label>Title</label>
+      <input id="setupTitle" placeholder="Title" />
+      <button id="setup">Create/Rotate Secret</button>
+      <div id="setupStatus" class="status"></div>
+    </section>
+    <script>
+      const backend = (window.APP_CONFIG && window.APP_CONFIG.backendUrl) || null;
+      const base = (backend ? `${backend}/api` : '/api') + '/blogs';
+      async function checkHealth() {
+        const el = document.getElementById('conn');
+        if (!backend) {
+          el.textContent = 'Serverless mode';
+          return;
+        }
+        try {
+          const r = await fetch(`${backend}/api/health`);
+          el.textContent = r.ok ? 'Backend connected' : 'Backend unreachable';
+        } catch {
+          el.textContent = 'Backend unreachable';
+        }
+      }
+      checkHealth();
+      async function loadPending() {
+        const s = document.getElementById('secret').value.trim();
+        const list = document.getElementById('pendingList');
+        list.textContent = 'Loading...';
+        try {
+          const r = await fetch(`${base}/pending?secret=${encodeURIComponent(s)}`);
+          const j = await r.json();
+          if (!r.ok || !j.ok) throw new Error(j.message || `Status ${r.status}`);
+          list.innerHTML = '';
+          (j.blogs || []).forEach((b) => {
+            const d = document.createElement('div');
+            d.className = 'card';
+            d.innerHTML = `<strong>${b.title}</strong><br/><small>${b.slug}</small><br/>`;
+            list.appendChild(d);
+          });
+          if (!j.blogs || !j.blogs.length) list.innerHTML = '<em>No pending blogs</em>';
+        } catch (e) {
+          list.textContent = 'Failed: ' + e.message;
+        }
+      }
+      async function publish() {
+        const s = document.getElementById('secret').value.trim();
+        const slug = document.getElementById('pubSlug').value.trim().toLowerCase();
+        const status = document.getElementById('pubStatus');
+        status.textContent = 'Publishing...';
+        try {
+          const r = await fetch(`${base}/${encodeURIComponent(slug)}/publish`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ secret: s }),
+          });
+          const j = await r.json();
+          if (!r.ok || !j.ok) throw new Error(j.message || `Status ${r.status}`);
+          status.textContent = `Published. Edit secret: ${j.editSecret}`;
+        } catch (e) {
+          status.textContent = 'Failed: ' + e.message;
+        }
+      }
+      async function setup() {
+        const s = document.getElementById('secret').value.trim();
+        const slug = document.getElementById('setupSlug').value.trim().toLowerCase();
+        const title = document.getElementById('setupTitle').value.trim();
+        const status = document.getElementById('setupStatus');
+        status.textContent = 'Submitting...';
+        try {
+          const r = await fetch(`${base}/setup`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ secret: s, slug, title }),
+          });
+          const j = await r.json();
+          if (!r.ok || !j.ok) throw new Error(j.message || `Status ${r.status}`);
+          status.textContent = `OK. New edit secret: ${j.editSecret || 'none (existing)'}`;
+        } catch (e) {
+          status.textContent = 'Failed: ' + e.message;
+        }
+      }
+      document.getElementById('loadPending').addEventListener('click', loadPending);
+      document.getElementById('publish').addEventListener('click', publish);
+      document.getElementById('setup').addEventListener('click', setup);
+    </script>
+  </body>
+</html>

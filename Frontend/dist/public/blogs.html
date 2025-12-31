@@ -156,6 +156,8 @@
           <input id="title" placeholder="My First Post" />
         </div>
       </div>
+      <label>Admin Secret (optional, required in production)</label>
+      <input id="secret" placeholder="Enter admin secret for prod" />
       <label>Content</label>
       <textarea id="content" rows="8" placeholder="Write your blog content here..."></textarea>
       <button id="publish">Publish</button>
@@ -206,28 +208,78 @@
         }
       }
 
-      async function quickPublish() {
+      async function publishBlog() {
         const slug = document.getElementById('slug').value.trim().toLowerCase();
         const title = document.getElementById('title').value.trim();
         const content = document.getElementById('content').value;
+        const secret = document.getElementById('secret').value.trim();
         const status = document.getElementById('publish-status');
         status.textContent = 'Publishing...';
         try {
-          const res = await fetch(`${apiBase}/blogs/quick-publish`, {
+          // Try quick-publish (dev-friendly)
+          let ok = false;
+          const qp = await fetch(`${apiBase}/blogs/quick-publish`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ slug, title, content }),
           });
-          const data = await res.json();
-          if (!res.ok || !data.ok) throw new Error(data.message || `Status ${res.status}`);
-          status.textContent = 'Published successfully';
-          fetchBlogs();
+          if (qp.ok) {
+            const data = await qp.json();
+            ok = data && data.ok !== false;
+          }
+
+          // Fallback for production: admin setup + publish + update
+          if (!ok && secret) {
+            const setupRes = await fetch(`${apiBase}/blogs/setup`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ secret, slug, title }),
+            });
+            const setup = await setupRes.json();
+            if (!setupRes.ok || setup.ok === false)
+              throw new Error(setup.message || 'Admin setup failed');
+
+            const publishRes = await fetch(`${apiBase}/blogs/${encodeURIComponent(slug)}/publish`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ secret }),
+            });
+            const publish = await publishRes.json();
+            if (!publishRes.ok || publish.ok === false)
+              throw new Error(publish.message || 'Publish failed');
+
+            const editSecret = publish.editSecret || setup.editSecret;
+            if (editSecret) {
+              const updateRes = await fetch(`${apiBase}/blogs/${encodeURIComponent(slug)}/update`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ edit: editSecret, content }),
+              });
+              const update = await updateRes.json();
+              if (!updateRes.ok || update.ok === false)
+                throw new Error(update.message || 'Content update failed');
+            }
+            ok = true;
+          }
+
+          if (ok) {
+            status.textContent = 'Published successfully';
+            fetchBlogs();
+          } else {
+            status.textContent =
+              'Publish failed. Quick-publish may be disabled in production. Provide admin secret or use Admin Blogs.';
+          }
         } catch (e) {
           status.textContent = `Publish failed: ${e.message}`;
+          const hint = document.createElement('div');
+          hint.style.marginTop = '8px';
+          hint.textContent =
+            'Tip: In production, quick-publish is disabled. Enter the admin secret or use Admin Blogs page.';
+          status.appendChild(hint);
         }
       }
 
-      document.getElementById('publish').addEventListener('click', quickPublish);
+      document.getElementById('publish').addEventListener('click', publishBlog);
       fetchBlogs();
     </script>
   </body>
