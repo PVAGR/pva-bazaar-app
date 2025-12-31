@@ -30,12 +30,13 @@ jobs:
         with:
           node-version: 18
           cache: npm
-          cache-dependency-path: Frontend/package-lock.json
+          # Use package.json for cache key since no package-lock.json is committed
+          cache-dependency-path: Frontend/package.json
 
       - name: Install dependencies
         env:
           HUSKY: 0
-        run: npm ci
+        run: npm install
 
       - name: Build
         run: npm run build
