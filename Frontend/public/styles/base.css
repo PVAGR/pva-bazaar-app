@@ -54,7 +54,7 @@ body {
 }
 
 /* Text defaults: serif for long-form, sans for UI */
-body { font-family: var(--font-text); font-size: 16px; line-height: 1.65; }
+body { font-family: var(--font-text); font-size: 15.5px; line-height: 1.65; }
 h1, h2, h3, h4, h5, h6, nav, button, input, textarea { font-family: var(--font-ui); }
 
 /* Links */
@@ -162,9 +162,9 @@ body {
 }
 
 .container {
-  max-width: 1000px;
+  max-width: 720px;
   margin: 0 auto;
-  padding: 24px;
+  padding: 20px;
 }
 
 .header { border-bottom: 1px solid var(--border); }

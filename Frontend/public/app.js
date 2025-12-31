@@ -51,6 +51,10 @@
               React.createElement(NavLink, { to: '/', end: true }, 'Home'),
               React.createElement(NavLink, { to: '/journal' }, 'Journal'),
               React.createElement(NavLink, { to: '/journals' }, 'Journals'),
+              React.createElement(NavLink, { to: '/writings' }, 'Writings'),
+              React.createElement(NavLink, { to: '/biography' }, 'Biography'),
+              React.createElement(NavLink, { to: '/novel' }, 'Novel'),
+              React.createElement(NavLink, { to: '/research' }, 'Research'),
               React.createElement(NavLink, { to: '/archive' }, 'Archive'),
               React.createElement(NavLink, { to: '/about' }, 'About'),
               React.createElement(NavLink, { to: '/search' }, 'Search'),
@@ -80,15 +84,15 @@
   function HomePage() {
     const [tab, setTab] = React.useState('journal');
     const entries = useMemo(() => (window.JOURNAL_ENTRIES || []).slice().sort((a, b) => new Date(b.date) - new Date(a.date)), []);
-    const latest = entries.slice(0, 6);
+    const latest = entries.slice(0, 9);
 
     return (
       React.createElement('section', { className: 'homePage' },
         React.createElement('div', { className: 'homePage__hero' },
           React.createElement('div', { className: 'tabs', role: 'tablist' },
-            React.createElement('button', { className: 'tab', role: 'tab', 'aria-selected': tab === 'journal', onClick: () => setTab('journal') }, 'Journal'),
-            React.createElement('button', { className: 'tab', role: 'tab', 'aria-selected': tab === 'archive', onClick: () => setTab('archive') }, 'Archive'),
-            React.createElement('button', { className: 'tab', role: 'tab', 'aria-selected': tab === 'about', onClick: () => setTab('about') }, 'About')
+            React.createElement('button', { className: 'tab', role: 'tab', 'aria-selected': tab === 'writings', onClick: () => setTab('writings') }, 'Writings'),
+            React.createElement('button', { className: 'tab', role: 'tab', 'aria-selected': tab === 'journal', onClick: () => setTab('journal') }, 'Journals'),
+            React.createElement('button', { className: 'tab', role: 'tab', 'aria-selected': tab === 'blogs', onClick: () => setTab('blogs') }, 'Blogs')
           ),
           tab === 'journal' && (
             React.createElement('div', { className: 'tab-panel' },
@@ -107,17 +111,16 @@
               )
             )
           ),
-          tab === 'archive' && (
+          tab === 'writings' && (
             React.createElement('div', { className: 'tab-panel' },
-              React.createElement('p', { className: 'subtle' }, 'Browse by year and category.'),
-              React.createElement('a', { className: 'link', href: '#/archive' }, 'Open Archive →')
+              React.createElement('p', { className: 'subtle' }, 'Selected writings and essays.'),
+              React.createElement('a', { className: 'link', href: '#/writings' }, 'Open Writings →')
             )
           ),
-          tab === 'about' && (
+          tab === 'blogs' && (
             React.createElement('div', { className: 'tab-panel' },
-              React.createElement('h2', null, 'pvabazaar.org — A Life in Words'),
-              React.createElement('p', null, 'Personal reflections, travels, thoughts, and observations.'),
-              React.createElement('a', { className: 'link', href: '#/about' }, 'Read About →')
+              React.createElement('p', { className: 'subtle' }, 'Occasional blog posts and updates.'),
+              React.createElement('a', { className: 'link', href: '#/blogs' }, 'Open Blogs →')
             )
           )
         ),
@@ -211,6 +214,74 @@
           React.createElement('div', { style: { marginTop: '1rem' } },
             React.createElement('a', { className: 'link', href: '#/admin/new-journal' }, 'Add New Journal →')
           )
+        )
+      )
+    );
+  }
+
+  function WritingsPage() {
+    const list = [
+      { id: 'w-1', title: 'On Clarity and Craft', date: '2025-08-20', excerpt: 'Notes on writing cleanly and honestly.' },
+      { id: 'w-2', title: 'Smallness as Strength', date: '2025-06-05', excerpt: 'Choosing constraints to move faster.' },
+      { id: 'w-3', title: 'Letters to the Future', date: '2025-02-10', excerpt: 'A short manifesto for documenting life.' }
+    ];
+    return (
+      React.createElement('section', { className: 'card' },
+        React.createElement('div', { className: 'card__body' },
+          React.createElement('h1', null, 'Writings'),
+          React.createElement('ul', { className: 'list' },
+            list.map(e => React.createElement('li', { key: e.id, className: 'list__item' }, `${formatDate(e.date)} · ${e.title} — ${e.excerpt}`))
+          )
+        )
+      )
+    );
+  }
+
+  function BlogsPage() {
+    const list = [
+      { id: 'b-1', title: 'Site Updates — December', date: '2025-12-28', excerpt: 'UI refresh and deploy improvements.' },
+      { id: 'b-2', title: 'On Journaling Daily', date: '2025-11-15', excerpt: 'Habits that stick.' }
+    ];
+    return (
+      React.createElement('section', { className: 'card' },
+        React.createElement('div', { className: 'card__body' },
+          React.createElement('h1', null, 'Blogs'),
+          React.createElement('ul', { className: 'list' },
+            list.map(e => React.createElement('li', { key: e.id, className: 'list__item' }, `${formatDate(e.date)} · ${e.title} — ${e.excerpt}`))
+          )
+        )
+      )
+    );
+  }
+
+  function BiographyPage() {
+    return (
+      React.createElement('section', { className: 'card' },
+        React.createElement('div', { className: 'card__body' },
+          React.createElement('h1', null, 'Biography'),
+          React.createElement('p', null, 'A brief personal profile and timeline. More to come.')
+        )
+      )
+    );
+  }
+
+  function NovelPage() {
+    return (
+      React.createElement('section', { className: 'card' },
+        React.createElement('div', { className: 'card__body' },
+          React.createElement('h1', null, 'Novel'),
+          React.createElement('p', null, 'Draft chapters and notes placeholder.')
+        )
+      )
+    );
+  }
+
+  function ResearchPage() {
+    return (
+      React.createElement('section', { className: 'card' },
+        React.createElement('div', { className: 'card__body' },
+          React.createElement('h1', null, 'Research'),
+          React.createElement('p', null, 'Ongoing explorations and references placeholder.')
         )
       )
     );
@@ -402,6 +473,11 @@
           React.createElement(Route, { path: '/about', element: React.createElement(AboutPage) }),
           React.createElement(Route, { path: '/search', element: React.createElement(SearchPage) }),
           React.createElement(Route, { path: '/admin/new-journal', element: React.createElement(AdminNewJournalPage) }),
+          React.createElement(Route, { path: '/writings', element: React.createElement(WritingsPage) }),
+          React.createElement(Route, { path: '/blogs', element: React.createElement(BlogsPage) }),
+          React.createElement(Route, { path: '/biography', element: React.createElement(BiographyPage) }),
+          React.createElement(Route, { path: '/novel', element: React.createElement(NovelPage) }),
+          React.createElement(Route, { path: '/research', element: React.createElement(ResearchPage) }),
         )
       )
     );
