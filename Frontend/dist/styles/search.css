@@ -1,0 +1,4 @@
+/* Search page styles */
+.searchPage__bar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+.searchPage__results { display: grid; gap: 12px; }
+.searchHit__excerpt { color: var(--muted); }

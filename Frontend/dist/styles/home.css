@@ -1,0 +1,23 @@
+/* Home page styles */
+.homePage__hero {
+  background: linear-gradient(135deg, rgba(94, 234, 212, 0.15), rgba(31, 111, 235, 0.15));
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 18px;
+}
+.homePage__title { font-size: 36px; margin-bottom: 10px; }
+.homePage__subtitle { color: var(--muted); }
+.homePage__cta { margin-top: 16px; }
+.homePage__cta a {
+  display: inline-block;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-elev);
+  color: var(--text);
+  text-decoration: none;
+}
+.homePage__cta a:hover { color: var(--primary); }
+
+.homePage__sections .card__body { padding: 16px; }
