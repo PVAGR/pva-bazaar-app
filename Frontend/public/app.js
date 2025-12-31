@@ -61,6 +61,7 @@
               React.createElement(NavLink, { to: '/journal' }, 'Journal'),
               React.createElement(NavLink, { to: '/journals' }, 'Journals'),
               React.createElement(NavLink, { to: '/writings' }, 'Writings'),
+              React.createElement(NavLink, { to: '/gallery' }, 'Gallery'),
               React.createElement(NavLink, { to: '/biography' }, 'Biography'),
               React.createElement(NavLink, { to: '/novel' }, 'Novel'),
               React.createElement(NavLink, { to: '/research' }, 'Research'),
@@ -456,6 +457,38 @@
     );
   }
 
+  function GalleryPage() {
+    const [items, setItems] = useState([]);
+    const [loading, setLoading] = useState(true);
+    useEffect(() => {
+      (async () => {
+        try {
+          const res = await fetch('/api/artifacts?sort=trending&limit=12');
+          const json = await res.json();
+          if (res.ok && json && json.ok && Array.isArray(json.artifacts)) setItems(json.artifacts);
+        } catch (_) {}
+        setLoading(false);
+      })();
+    }, []);
+    return (
+      React.createElement('section', { className: 'card' },
+        React.createElement('div', { className: 'card__body' },
+          React.createElement('h1', null, 'Gallery — Artifacts'),
+          loading ? React.createElement('div', { className: 'subtle' }, 'Loading…') :
+          React.createElement('div', { className: 'cards-grid' },
+            items.map(a => (
+              React.createElement('div', { key: a._id, className: 'writing-card' },
+                React.createElement('h3', null, a.title || a.name || 'Artifact'),
+                React.createElement('p', null, a.description || ''),
+                React.createElement('div', { className: 'subtle' }, `${a.category || 'General'} · $${a.price || 0}`)
+              )
+            ))
+          )
+        )
+      )
+    );
+  }
+
   function PvaFoodPage() {
     const recipes = [
       { title: 'Onion & Banana Juice', notes: 'Energizing blend, ancient practice.' },
@@ -808,6 +841,7 @@
           React.createElement(Route, { path: '/admin/new-journal', element: React.createElement(AdminNewJournalPage) }),
           React.createElement(Route, { path: '/writings', element: React.createElement(WritingsPage) }),
           React.createElement(Route, { path: '/blogs', element: React.createElement(BlogsPage) }),
+          React.createElement(Route, { path: '/gallery', element: React.createElement(GalleryPage) }),
           React.createElement(Route, { path: '/blog/:slug', element: React.createElement(BlogDetailPage) }),
           React.createElement(Route, { path: '/biography', element: React.createElement(BiographyPage) }),
           React.createElement(Route, { path: '/novel', element: React.createElement(NovelPage) }),
