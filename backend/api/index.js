@@ -8,6 +8,22 @@ let MongoMemoryServer;
 // Load environment variables
 dotenv.config();
 
+// Validate critical env and mark API readiness (fail-safe in production)
+function validateEnv() {
+  const isProd = process.env.NODE_ENV === 'production';
+  const missing = [];
+  if (!process.env.JWT_SECRET) missing.push('JWT_SECRET');
+  if (isProd && !process.env.MONGODB_URI) missing.push('MONGODB_URI');
+  if (missing.length) {
+    const msg = `Missing env: ${missing.join(', ')}`;
+    console.warn('⚠️ Env validation:', msg);
+    process.env.API_READY = 'false';
+  } else {
+    process.env.API_READY = 'true';
+  }
+}
+validateEnv();
+
 // Initialize Express app
 const app = express();
 
@@ -36,6 +52,13 @@ app.use(
     credentials: true,
   }),
 );
+// If API is not ready (e.g., missing secrets in production), return 503 for most endpoints
+app.use((req, res, next) => {
+  if (process.env.API_READY === 'false' && !req.path.startsWith('/api/health')) {
+    return res.status(503).json({ ok: false, message: 'Service not configured. Missing environment secrets.' });
+  }
+  next();
+});
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
@@ -130,6 +153,7 @@ const pagesRoutes = require('../routes/pages');
 const blogsRoutes = require('../routes/blogs');
 const commentsRoutes = require('../routes/comments');
 const contributeRoutes = require('../routes/contribute');
+const partnersRoutes = require('../routes/partners');
 // Models for optional seeding
 const Artifact = require('../models/Artifact');
 const User = require('../models/User');
@@ -154,6 +178,7 @@ app.use('/api/pages', pagesRoutes);
 app.use('/api/blogs', blogsRoutes);
 app.use('/api/comments', commentsRoutes);
 app.use('/api/contribute', contributeRoutes);
+app.use('/api/partners', partnersRoutes);
 
 // Dev-only: issue a token for quick testing
 app.post('/api/dev/token', (req, res) => {
@@ -172,6 +197,7 @@ app.get('/api/health', async (req, res) => {
     ok: true,
     message: 'PVABazaar API is running',
     mongo: mongoose.connection.readyState === 1,
+    ready: process.env.API_READY !== 'false',
     timestamp: new Date().toISOString(),
   });
 });
