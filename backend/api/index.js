@@ -154,6 +154,7 @@ const blogsRoutes = require('../routes/blogs');
 const commentsRoutes = require('../routes/comments');
 const contributeRoutes = require('../routes/contribute');
 const partnersRoutes = require('../routes/partners');
+const adminRoutes = require('../routes/admin');
 // Models for optional seeding
 const Artifact = require('../models/Artifact');
 const User = require('../models/User');
@@ -179,6 +180,7 @@ app.use('/api/blogs', blogsRoutes);
 app.use('/api/comments', commentsRoutes);
 app.use('/api/contribute', contributeRoutes);
 app.use('/api/partners', partnersRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Dev-only: issue a token for quick testing
 app.post('/api/dev/token', (req, res) => {
@@ -186,7 +188,7 @@ app.post('/api/dev/token', (req, res) => {
   if (req.body?.secret !== process.env.ADMIN_SECRET_CODE)
     return res.status(401).json({ ok: false, message: 'Unauthorized' });
   const id = req.body.userId || 'dev-user-id';
-  const token = jwt.sign({ id }, process.env.JWT_SECRET);
+  const token = jwt.sign({ id, role: 'admin' }, process.env.JWT_SECRET);
   res.json({ ok: true, token });
 });
 

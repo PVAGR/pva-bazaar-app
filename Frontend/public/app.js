@@ -417,6 +417,27 @@
 
   function AdminDashboard() {
     const canvasRef = React.useRef(null);
+    const [status, setStatus] = React.useState('');
+    async function checkStatus() {
+      try {
+        const token = localStorage.getItem('admin:token') || '';
+        let res = await fetch('/api/admin/status', { headers: token ? { Authorization: 'Bearer ' + token } : {} });
+        if (res.status === 401 || res.status === 403) {
+          const secret = prompt('Enter admin secret (dev only)');
+          if (!secret) return alert('No secret provided');
+          const tRes = await fetch('/api/dev/token', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ secret }) });
+          const tJson = await tRes.json();
+          if (!tRes.ok || !tJson.token) return alert('Failed to obtain dev token');
+          localStorage.setItem('admin:token', tJson.token);
+          res = await fetch('/api/admin/status', { headers: { Authorization: 'Bearer ' + tJson.token } });
+        }
+        const json = await res.json();
+        setStatus(res.ok && json.ok ? 'Admin OK' : 'Access denied');
+      } catch (e) {
+        console.error(e);
+        setStatus('Error checking status');
+      }
+    }
     async function preview3D() {
       try {
         await loadScript('https://unpkg.com/three@0.157.0/build/three.min.js');
@@ -436,6 +457,10 @@
         React.createElement('div', { className: 'card__body' },
           React.createElement('h1', null, 'Admin Dashboard'),
           React.createElement('p', null, 'Upload 3D models, manage partner contracts (stubs).'),
+          React.createElement('div', { style: { display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 } },
+            React.createElement('button', { className: 'themeToggle', onClick: checkStatus }, 'Check Admin Status'),
+            React.createElement('span', { className: 'subtle' }, status)
+          ),
           React.createElement('button', { className: 'themeToggle', onClick: preview3D }, 'Preview 3D Cube'),
           React.createElement('div', { style: { marginTop: 12 } }, React.createElement('canvas', { ref: canvasRef, width: 300, height: 300 }))
         )
