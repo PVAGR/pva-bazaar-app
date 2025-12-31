@@ -51,6 +51,20 @@ const indexDest = path.join(projectRoot, 'dist', 'index.html');
 if (fs.existsSync(indexSrc)) {
   fs.copyFileSync(indexSrc, indexDest);
   console.log('FORCE COPIED index.html to dist (overwriting any vite-generated file)');
+  // Cache bust key assets referenced by index.html to avoid GitHub Pages CDN staleness
+  try {
+    const version = Date.now().toString();
+    let html = fs.readFileSync(indexDest, 'utf8');
+    html = html.replace(/(\/public\/app\.js)(?!\?)/, `$1?v=${version}`);
+    html = html.replace(/(\/src\/data\/entries\.js)(?!\?)/, `$1?v=${version}`);
+    // Also bust primary CSS files if present
+    html = html.replace(/(\/public\/styles\/base\.css)(?!\?)/, `$1?v=${version}`);
+    html = html.replace(/(\/public\/styles\/theme\.css)(?!\?)/, `$1?v=${version}`);
+    fs.writeFileSync(indexDest, html, 'utf8');
+    console.log('APPLIED cache-busting query params to index.html');
+  } catch (e) {
+    console.warn('WARNING: failed to apply cache-busting to index.html', e);
+  }
 } else {
   console.error('ERROR: index.html not found at', indexSrc);
 }
