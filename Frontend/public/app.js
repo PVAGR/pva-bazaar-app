@@ -4,6 +4,16 @@
   const { createRoot } = ReactDOM;
   const { HashRouter, Routes, Route, NavLink, useParams, useNavigate, useLocation } = ReactRouterDOM;
 
+  // Merge any locally-persisted custom entries into the global entries source
+  const CUSTOM_KEY = 'journal:customEntries';
+  try {
+    const existing = Array.isArray(window.JOURNAL_ENTRIES) ? window.JOURNAL_ENTRIES : [];
+    const custom = JSON.parse(localStorage.getItem(CUSTOM_KEY) || '[]');
+    if (Array.isArray(custom) && custom.length) {
+      window.JOURNAL_ENTRIES = existing.concat(custom).sort((a, b) => new Date(b.date) - new Date(a.date));
+    }
+  } catch {}
+
   function useTheme() {
     const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
     useEffect(() => { document.documentElement.setAttribute('data-theme', theme); localStorage.setItem('theme', theme); }, [theme]);
@@ -40,9 +50,11 @@
             React.createElement('nav', { className: 'nav', 'aria-label': 'Main' },
               React.createElement(NavLink, { to: '/', end: true }, 'Home'),
               React.createElement(NavLink, { to: '/journal' }, 'Journal'),
+              React.createElement(NavLink, { to: '/journals' }, 'Journals'),
               React.createElement(NavLink, { to: '/archive' }, 'Archive'),
               React.createElement(NavLink, { to: '/about' }, 'About'),
               React.createElement(NavLink, { to: '/search' }, 'Search'),
+              React.createElement(NavLink, { to: '/admin/new-journal' }, 'Admin')
             ),
             React.createElement('div', { className: 'header__right' },
               React.createElement('input', {
@@ -181,6 +193,88 @@
     );
   }
 
+  function JournalsPage() {
+    const entries = useMemo(() => (window.JOURNAL_ENTRIES || []).slice().sort((a, b) => new Date(b.date) - new Date(a.date)), []);
+    return (
+      React.createElement('section', { className: 'journalsPage card' },
+        React.createElement('div', { className: 'card__body' },
+          React.createElement('h1', null, 'Journals'),
+          React.createElement('p', { className: 'subtle' }, 'Personal chronicles and reflections.'),
+          React.createElement('ul', { className: 'list' },
+            entries.map(e => (
+              React.createElement('li', { key: e.id, className: 'list__item' },
+                React.createElement('a', { href: `#/entry/${e.id}` }, `${formatDate(e.date)}: ${e.title}`),
+                React.createElement('span', { className: 'subtle', style: { marginLeft: 8 } }, e.excerpt)
+              )
+            ))
+          ),
+          React.createElement('div', { style: { marginTop: '1rem' } },
+            React.createElement('a', { className: 'link', href: '#/admin/new-journal' }, 'Add New Journal →')
+          )
+        )
+      )
+    );
+  }
+
+  function AdminNewJournalPage() {
+    const navigate = useNavigate();
+    const [title, setTitle] = useState('');
+    const [date, setDate] = useState('');
+    const [content, setContent] = useState('');
+    const [tags, setTags] = useState('');
+
+    function onSubmit(e) {
+      e.preventDefault();
+      const id = `custom-${Date.now()}`;
+      const entry = {
+        id,
+        title: title.trim() || 'Untitled',
+        date: date || new Date().toISOString().slice(0,10),
+        content: (content || '').replace(/\n/g, '<br/>'),
+        excerpt: (content || '').split('\n')[0].slice(0, 180),
+        tags: tags.split(',').map(t => t.trim()).filter(Boolean),
+        category: 'Journal'
+      };
+      try {
+        const arr = JSON.parse(localStorage.getItem(CUSTOM_KEY) || '[]');
+        arr.unshift(entry);
+        localStorage.setItem(CUSTOM_KEY, JSON.stringify(arr));
+        window.JOURNAL_ENTRIES = (window.JOURNAL_ENTRIES || []).concat([entry]).sort((a, b) => new Date(b.date) - new Date(a.date));
+        console.log('New journal submitted:', entry);
+        alert('Journal added!');
+        navigate(`/entry/${id}`);
+      } catch (err) {
+        console.error('Failed to save journal entry', err);
+        alert('Failed to save journal entry');
+      }
+    }
+
+    return (
+      React.createElement('section', { className: 'adminPage card' },
+        React.createElement('div', { className: 'card__body' },
+          React.createElement('h1', null, 'Create New Journal Entry'),
+          React.createElement('form', { onSubmit: onSubmit, className: 'form' },
+            React.createElement('label', { className: 'label' }, 'Title',
+              React.createElement('input', { className: 'input', type: 'text', value: title, onChange: e => setTitle(e.target.value) })
+            ),
+            React.createElement('label', { className: 'label' }, 'Date',
+              React.createElement('input', { className: 'input', type: 'date', value: date, onChange: e => setDate(e.target.value) })
+            ),
+            React.createElement('label', { className: 'label' }, 'Content',
+              React.createElement('textarea', { className: 'textarea', rows: 10, value: content, onChange: e => setContent(e.target.value) })
+            ),
+            React.createElement('label', { className: 'label' }, 'Tags (comma-separated)',
+              React.createElement('input', { className: 'input', type: 'text', value: tags, onChange: e => setTags(e.target.value), placeholder: 'e.g., consciousness, wellness' })
+            ),
+            React.createElement('div', { className: 'form__actions' },
+              React.createElement('button', { className: 'themeToggle', type: 'submit' }, 'Submit')
+            )
+          )
+        )
+      )
+    );
+  }
+
   function EntryDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -302,10 +396,12 @@
         React.createElement(Routes, null,
           React.createElement(Route, { path: '/', element: React.createElement(HomePage) }),
           React.createElement(Route, { path: '/journal', element: React.createElement(JournalPage) }),
+          React.createElement(Route, { path: '/journals', element: React.createElement(JournalsPage) }),
           React.createElement(Route, { path: '/entry/:id', element: React.createElement(EntryDetail) }),
           React.createElement(Route, { path: '/archive', element: React.createElement(ArchivePage) }),
           React.createElement(Route, { path: '/about', element: React.createElement(AboutPage) }),
           React.createElement(Route, { path: '/search', element: React.createElement(SearchPage) }),
+          React.createElement(Route, { path: '/admin/new-journal', element: React.createElement(AdminNewJournalPage) }),
         )
       )
     );
