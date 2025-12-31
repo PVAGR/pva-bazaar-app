@@ -250,11 +250,24 @@
   }
 
   function WritingsPage() {
-    const list = [
+    const [list, setList] = React.useState([
       { id: 'w-1', title: 'On Clarity and Craft', date: '2025-08-20', excerpt: 'Notes on writing cleanly and honestly.', category: 'Essay' },
       { id: 'w-2', title: 'Smallness as Strength', date: '2025-06-05', excerpt: 'Choosing constraints to move faster.', category: 'Essay' },
       { id: 'w-3', title: 'Letters to the Future', date: '2025-02-10', excerpt: 'A short manifesto for documenting life.', category: 'Manifesto' }
-    ];
+    ]);
+    React.useEffect(() => {
+      (async () => {
+        try {
+          const res = await fetch('/api/pages/writings');
+          if (res.ok) {
+            const page = await res.json();
+            if (page && page.content) {
+              setList(prev => [{ id: 'w-backend', title: page.title || 'Writings', date: new Date().toISOString().slice(0,10), excerpt: (page.content || '').slice(0, 180), category: 'Backend' }, ...prev]);
+            }
+          }
+        } catch (_) {}
+      })();
+    }, []);
     const [category, setCategory] = React.useState('');
     const categories = React.useMemo(() => Array.from(new Set(list.map(e => e.category))).sort(), [list]);
     const filtered = React.useMemo(() => list.filter(e => !category || e.category === category), [list, category]);
@@ -278,10 +291,24 @@
   }
 
   function BlogsPage() {
-    const list = [
+    const [list, setList] = React.useState([
       { id: 'b-1', title: 'Site Updates — December', date: '2025-12-28', excerpt: 'UI refresh and deploy improvements.', category: 'Update' },
       { id: 'b-2', title: 'On Journaling Daily', date: '2025-11-15', excerpt: 'Habits that stick.', category: 'Thoughts' }
-    ];
+    ]);
+    React.useEffect(() => {
+      (async () => {
+        try {
+          const res = await fetch('/api/blogs');
+          if (res.ok) {
+            const data = await res.json();
+            if (data && data.ok && Array.isArray(data.blogs)) {
+              const mapped = data.blogs.map(b => ({ id: b.slug, title: b.title, date: (b.updatedAt || new Date().toISOString()).slice(0,10), excerpt: '', category: 'Blog' }));
+              setList(prev => mapped.length ? mapped : prev);
+            }
+          }
+        } catch (_) {}
+      })();
+    }, []);
     const [category, setCategory] = React.useState('');
     const categories = React.useMemo(() => Array.from(new Set(list.map(e => e.category))).sort(), [list]);
     const filtered = React.useMemo(() => list.filter(e => !category || e.category === category), [list, category]);
@@ -469,33 +496,39 @@
   }
 
   function BiographyPage() {
+    const [content, setContent] = React.useState('A brief personal profile and timeline. More to come.');
+    React.useEffect(() => { (async () => { try { const r = await fetch('/api/pages/biography'); if (r.ok) { const p = await r.json(); if (p && p.content) setContent(p.content); } } catch (_) {} })(); }, []);
     return (
       React.createElement('section', { className: 'card' },
         React.createElement('div', { className: 'card__body' },
           React.createElement('h1', null, 'Biography'),
-          React.createElement('p', null, 'A brief personal profile and timeline. More to come.')
+          React.createElement('p', null, content)
         )
       )
     );
   }
 
   function NovelPage() {
+    const [content, setContent] = React.useState('Draft chapters and notes placeholder.');
+    React.useEffect(() => { (async () => { try { const r = await fetch('/api/pages/novel'); if (r.ok) { const p = await r.json(); if (p && p.content) setContent(p.content); } } catch (_) {} })(); }, []);
     return (
       React.createElement('section', { className: 'card' },
         React.createElement('div', { className: 'card__body' },
           React.createElement('h1', null, 'Novel'),
-          React.createElement('p', null, 'Draft chapters and notes placeholder.')
+          React.createElement('p', null, content)
         )
       )
     );
   }
 
   function ResearchPage() {
+    const [content, setContent] = React.useState('Ongoing explorations and references placeholder.');
+    React.useEffect(() => { (async () => { try { const r = await fetch('/api/pages/research'); if (r.ok) { const p = await r.json(); if (p && p.content) setContent(p.content); } } catch (_) {} })(); }, []);
     return (
       React.createElement('section', { className: 'card' },
         React.createElement('div', { className: 'card__body' },
           React.createElement('h1', null, 'Research'),
-          React.createElement('p', null, 'Ongoing explorations and references placeholder.')
+          React.createElement('p', null, content)
         )
       )
     );
@@ -640,13 +673,31 @@
     const params = useSearchParam();
     const initialQ = params.get('q') || '';
     const [q, setQ] = useState(initialQ);
+    const [apiHits, setApiHits] = useState([]);
     const entries = useMemo(() => (window.JOURNAL_ENTRIES || []).slice().sort((a, b) => new Date(b.date) - new Date(a.date)), []);
 
     const hits = useMemo(() => {
       const term = q.trim().toLowerCase();
       if (!term) return [];
-      return entries.filter(e => [e.title, e.excerpt, e.content].some(t => String(t).toLowerCase().includes(term))).slice(0, 50);
+      const local = entries.filter(e => [e.title, e.excerpt, e.content].some(t => String(t).toLowerCase().includes(term))).slice(0, 50);
+      return local;
     }, [entries, q]);
+
+    React.useEffect(() => {
+      (async () => {
+        const term = (q || '').trim(); if (!term) { setApiHits([]); return; }
+        try {
+          const res = await fetch('/api/search/text?q=' + encodeURIComponent(term));
+          if (res.ok) {
+            const data = await res.json();
+            if (data && data.success && Array.isArray(data.results)) {
+              const mapped = data.results.map(r => ({ id: r._id || r.id || r.slug || Math.random().toString(36).slice(2), title: r.title || r.name || 'Artifact', excerpt: r.description || '', date: new Date().toISOString() }));
+              setApiHits(mapped);
+            } else setApiHits([]);
+          }
+        } catch (_) { setApiHits([]); }
+      })();
+    }, [q]);
 
     return (
       React.createElement('section', { className: 'searchPage' },
@@ -654,15 +705,14 @@
           React.createElement('input', { className: 'input', value: q, onChange: e => setQ(e.target.value), placeholder: 'Search…', 'aria-label': 'Search term' })
         ),
         React.createElement('div', { className: 'searchPage__results' },
-          hits.map(e => (
+          (apiHits.length ? apiHits : hits).map(e => (
             React.createElement('article', { key: e.id, className: 'searchHit card' },
               React.createElement('div', { className: 'card__body' },
                 React.createElement('div', { className: 'journalCard__header' },
                   React.createElement('div', { className: 'journalCard__title' }, e.title),
-                  React.createElement('div', { className: 'journalCard__meta' }, formatDate(e.date), e.location ? ` · ${e.location}` : '')
+                  React.createElement('div', { className: 'journalCard__meta' }, e.date ? formatDate(e.date) : '')
                 ),
-                React.createElement('p', { className: 'searchHit__excerpt', dangerouslySetInnerHTML: { __html: highlight(e.excerpt, q) } }),
-                React.createElement('a', { className: 'link', href: `#/entry/${e.id}` }, 'Read →')
+                React.createElement('p', { className: 'searchHit__excerpt', dangerouslySetInnerHTML: { __html: highlight(e.excerpt || '', q) } })
               )
             )
           ))
