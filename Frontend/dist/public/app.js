@@ -66,29 +66,55 @@
   }
 
   function HomePage() {
+    const [tab, setTab] = React.useState('journal');
+    const entries = useMemo(() => (window.JOURNAL_ENTRIES || []).slice().sort((a, b) => new Date(b.date) - new Date(a.date)), []);
+    const latest = entries.slice(0, 6);
+
     return (
       React.createElement('section', { className: 'homePage' },
-        React.createElement('div', { className: 'homePage__hero card' },
-          React.createElement('div', { className: 'card__body' },
-            React.createElement('h1', { className: 'homePage__title' }, 'pvabazaar.org'),
-            React.createElement('p', { className: 'homePage__subtitle' }, 'A Life in Words — My Personal Journal'),
-            React.createElement('div', { className: 'homePage__cta' },
-              React.createElement(NavLink, { to: '/journal' }, 'Explore My Story')
+        React.createElement('div', { className: 'homePage__hero' },
+          React.createElement('div', { className: 'tabs', role: 'tablist' },
+            React.createElement('button', { className: 'tab', role: 'tab', 'aria-selected': tab === 'journal', onClick: () => setTab('journal') }, 'Journal'),
+            React.createElement('button', { className: 'tab', role: 'tab', 'aria-selected': tab === 'archive', onClick: () => setTab('archive') }, 'Archive'),
+            React.createElement('button', { className: 'tab', role: 'tab', 'aria-selected': tab === 'about', onClick: () => setTab('about') }, 'About')
+          ),
+          tab === 'journal' && (
+            React.createElement('div', { className: 'tab-panel' },
+              React.createElement('div', { className: 'mini-list' },
+                latest.map(e => (
+                  React.createElement('div', { key: e.id, className: 'mini-item' },
+                    React.createElement('div', { className: 'title' },
+                      React.createElement('a', { href: `#/entry/${e.id}` }, e.title)
+                    ),
+                    React.createElement('div', { className: 'meta' }, formatDate(e.date)),
+                    React.createElement('div', { className: 'excerpt subtle' }, e.excerpt)
+                  )
+                )),
+              React.createElement('div', { style: { marginTop: '0.5rem' } },
+                React.createElement('a', { className: 'link', href: '#/journal' }, 'View all entries →')
+              )
+            )
+          ),
+          tab === 'archive' && (
+            React.createElement('div', { className: 'tab-panel' },
+              React.createElement('p', { className: 'subtle' }, 'Browse by year and category.'),
+              React.createElement('a', { className: 'link', href: '#/archive' }, 'Open Archive →')
+            )
+          ),
+          tab === 'about' && (
+            React.createElement('div', { className: 'tab-panel' },
+              React.createElement('h2', null, 'pvabazaar.org — A Life in Words'),
+              React.createElement('p', null, 'Personal reflections, travels, thoughts, and observations.'),
+              React.createElement('a', { className: 'link', href: '#/about' }, 'Read About →')
             )
           )
         ),
-        React.createElement('div', { className: 'homePage__sections grid cols-3' },
-          [
-            { title: 'Latest Entries', desc: 'Read recent thoughts and reflections.', link: '#/journal' },
-            { title: 'Archive', desc: 'Browse by year and category.', link: '#/archive' },
-            { title: 'About', desc: 'Why this journal exists.', link: '#/about' },
-          ].map((s, i) => (
-            React.createElement('div', { key: i, className: 'card' },
-              React.createElement('div', { className: 'card__body' },
-                React.createElement('h3', null, s.title),
-                React.createElement('p', null, s.desc),
-                React.createElement('a', { className: 'link', href: s.link }, 'Open →')
-              )
+        React.createElement('div', { className: 'cards-grid' },
+          latest.map(e => (
+            React.createElement('div', { key: e.id, className: 'writing-card' },
+              React.createElement('h3', null, e.title),
+              React.createElement('p', null, e.excerpt),
+              React.createElement('a', { href: `#/entry/${e.id}` }, 'Read →')
             )
           ))
         )
