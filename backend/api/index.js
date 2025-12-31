@@ -54,7 +54,10 @@ app.use(
 );
 // If API is not ready (e.g., missing secrets in production), return 503 for most endpoints
 app.use((req, res, next) => {
-  if (process.env.API_READY === 'false' && !req.path.startsWith('/api/health')) {
+  const apiNotReady = process.env.API_READY === 'false';
+  const isProd = process.env.NODE_ENV === 'production';
+  const allowlist = ['/api/health', '/api/dev/token'];
+  if (apiNotReady && isProd && !allowlist.some(p => req.path.startsWith(p))) {
     return res.status(503).json({ ok: false, message: 'Service not configured. Missing environment secrets.' });
   }
   next();
