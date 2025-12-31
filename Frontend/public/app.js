@@ -13,6 +13,35 @@
     });
   }
 
+  // API base override: use localStorage 'api:base' when set; otherwise relative path
+  function apiFetch(path, options) {
+    try {
+      const base = (localStorage.getItem('api:base') || '').trim();
+      const cleanBase = base.replace(/\/+$/, '');
+      const url = base ? `${cleanBase}${path}` : path;
+      return fetch(url, options);
+    } catch (_) {
+      return fetch(path, options);
+    }
+  }
+
+  // Runtime API base auto-detection: try multiple paths and set localStorage if not set
+  (function initApiBase() {
+    try {
+      const existing = (localStorage.getItem('api:base') || '').trim();
+      if (existing) return;
+      const tryFetch = (p) => fetch(p, { cache: 'no-store' }).then(res => res.ok ? res.json() : null).catch(() => null);
+      tryFetch('/public/api-base.json')
+        .then(cfg => cfg || tryFetch('/api-base.json'))
+        .then(cfg => {
+          if (cfg && typeof cfg.base === 'string' && cfg.base.trim().length) {
+            localStorage.setItem('api:base', cfg.base.trim());
+          }
+        })
+        .catch(() => {});
+    } catch (_) {}
+  })();
+
   // Merge any locally-persisted custom entries into the global entries source
   const CUSTOM_KEY = 'journal:customEntries';
   try {
@@ -259,7 +288,7 @@
     React.useEffect(() => {
       (async () => {
         try {
-          const res = await fetch('/api/pages/writings');
+          const res = await apiFetch('/api/pages/writings');
           if (res.ok) {
             const page = await res.json();
             if (page && page.content) {
@@ -299,7 +328,7 @@
     React.useEffect(() => {
       (async () => {
         try {
-          const res = await fetch('/api/blogs');
+          const res = await apiFetch('/api/blogs');
           if (res.ok) {
             const data = await res.json();
             if (data && data.ok && Array.isArray(data.blogs)) {
@@ -341,7 +370,7 @@
     useEffect(() => {
       (async () => {
         try {
-          const res = await fetch(`/api/blogs/${encodeURIComponent(slug)}`);
+          const res = await apiFetch(`/api/blogs/${encodeURIComponent(slug)}`);
           const json = await res.json();
           if (res.ok && json && json.ok) {
             setState({ loading: false, blog: json.blog, comments: json.comments || [] });
@@ -384,7 +413,7 @@
     useEffect(() => {
       (async () => {
         try {
-          const res = await fetch(`/api/blogs/${encodeURIComponent(slug)}`);
+          const res = await apiFetch(`/api/blogs/${encodeURIComponent(slug)}`);
           const json = await res.json();
           if (res.ok && json && json.ok) {
             setTitle(json.blog.title || slug);
@@ -396,7 +425,7 @@
     async function save(e) {
       e.preventDefault(); setStatus('');
       try {
-        const res = await fetch(`/api/blogs/${encodeURIComponent(slug)}/update`, {
+        const res = await apiFetch(`/api/blogs/${encodeURIComponent(slug)}/update`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ edit: editSecret, title, content })
         });
@@ -436,7 +465,7 @@
     async function publish(e) {
       e.preventDefault(); setStatus('');
       try {
-        const res = await fetch(`/api/blogs/${encodeURIComponent(slug)}/publish`, {
+        const res = await apiFetch(`/api/blogs/${encodeURIComponent(slug)}/publish`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ secret })
         });
         const json = await res.json();
@@ -507,15 +536,15 @@
     useEffect(() => {
       (async () => {
         try {
-          const s = await fetch('/api/market/stats');
+          const s = await apiFetch('/api/market/stats');
           if (s.ok) { const j = await s.json(); setStats(j); }
         } catch {}
         try {
-          const c = await fetch('/api/market/categories/counts');
+          const c = await apiFetch('/api/market/categories/counts');
           if (c.ok) { const j = await c.json(); setCats(Array.isArray(j?.counts) ? j.counts : []); }
         } catch {}
         try {
-          const k = await fetch('/api/market/crypto?symbol=ETH');
+          const k = await apiFetch('/api/market/crypto?symbol=ETH');
           if (k.ok) { const j = await k.json(); setCrypto(j); }
         } catch {}
       })();
@@ -556,7 +585,7 @@
     useEffect(() => {
       (async () => {
         try {
-          const res = await fetch('/api/artifacts?sort=trending&limit=12');
+          const res = await apiFetch('/api/artifacts?sort=trending&limit=12');
           const json = await res.json();
           if (res.ok && json && json.ok && Array.isArray(json.artifacts)) setItems(json.artifacts);
         } catch (_) {}
@@ -591,7 +620,7 @@
     useEffect(() => {
       (async () => {
         try {
-          const res = await fetch('/api/artifacts/' + encodeURIComponent(id));
+          const res = await apiFetch('/api/artifacts/' + encodeURIComponent(id));
           const json = await res.json();
           if (res.ok && json && json.ok) setState({ loading: false, artifact: json.artifact });
           else setState({ loading: false, artifact: null });
@@ -634,7 +663,7 @@
     async function submit(e) {
       e.preventDefault(); setStatus('');
       try {
-        const res = await fetch('/api/artifacts', {
+        const res = await apiFetch('/api/artifacts', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name, title, description, price, category })
         });
@@ -710,7 +739,7 @@
     async function submit(e) {
       e.preventDefault();
       try {
-        await fetch('/api/partners', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, name }) });
+        await apiFetch('/api/partners', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, name }) });
         alert('Submitted! (stub — integrate backend)');
       } catch (err) { console.error(err); alert('Submission failed'); }
     }
@@ -731,24 +760,68 @@
   function AdminDashboard() {
     const canvasRef = React.useRef(null);
     const [status, setStatus] = React.useState('');
+    const [apiBase, setApiBase] = React.useState(() => localStorage.getItem('api:base') || '');
+    const [health, setHealth] = React.useState(null);
+    const [corsOrigin, setCorsOrigin] = React.useState('');
+    const [blogsInfo, setBlogsInfo] = React.useState(null);
+    const [artifactsInfo, setArtifactsInfo] = React.useState(null);
+    function saveApiBase() { localStorage.setItem('api:base', apiBase.trim()); setStatus('API base saved'); }
+    function clearApiBase() { localStorage.removeItem('api:base'); setApiBase(''); setStatus('API base cleared'); }
     async function checkStatus() {
       try {
         const token = localStorage.getItem('admin:token') || '';
-        let res = await fetch('/api/admin/status', { headers: token ? { Authorization: 'Bearer ' + token } : {} });
+        let res = await apiFetch('/api/admin/status', { headers: token ? { Authorization: 'Bearer ' + token } : {} });
         if (res.status === 401 || res.status === 403) {
           const secret = prompt('Enter admin secret (dev only)');
           if (!secret) return alert('No secret provided');
-          const tRes = await fetch('/api/dev/token', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ secret }) });
+          const tRes = await apiFetch('/api/dev/token', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ secret }) });
           const tJson = await tRes.json();
           if (!tRes.ok || !tJson.token) return alert('Failed to obtain dev token');
           localStorage.setItem('admin:token', tJson.token);
-          res = await fetch('/api/admin/status', { headers: { Authorization: 'Bearer ' + tJson.token } });
+          res = await apiFetch('/api/admin/status', { headers: { Authorization: 'Bearer ' + tJson.token } });
         }
         const json = await res.json();
         setStatus(res.ok && json.ok ? 'Admin OK' : 'Access denied');
       } catch (e) {
         console.error(e);
         setStatus('Error checking status');
+      }
+    }
+
+    async function checkHealth() {
+      try {
+        const res = await apiFetch('/api/health', { method: 'GET' });
+        const origin = res.headers ? (res.headers.get('access-control-allow-origin') || '') : '';
+        setCorsOrigin(origin);
+        const json = await res.json();
+        setHealth({ ok: res.ok, status: res.status, json });
+      } catch (e) {
+        console.error('Health check failed:', e);
+        setHealth({ ok: false, status: 0, json: { error: 'Fetch blocked (likely CORS) or network error' } });
+        setCorsOrigin('');
+      }
+    }
+
+    async function checkBlogs() {
+      try {
+        const res = await apiFetch('/api/blogs', { method: 'GET' });
+        const json = await res.json().catch(() => ({}));
+        setBlogsInfo({ ok: res.ok, status: res.status, count: Array.isArray(json) ? json.length : 0 });
+      } catch (e) {
+        console.error('Blogs check failed:', e);
+        setBlogsInfo({ ok: false, status: 0, count: 0 });
+      }
+    }
+
+    async function checkArtifacts() {
+      try {
+        const res = await apiFetch('/api/artifacts', { method: 'GET' });
+        const json = await res.json().catch(() => ({}));
+        const count = Array.isArray(json) ? json.length : (Array.isArray(json?.items) ? json.items.length : 0);
+        setArtifactsInfo({ ok: res.ok, status: res.status, count });
+      } catch (e) {
+        console.error('Artifacts check failed:', e);
+        setArtifactsInfo({ ok: false, status: 0, count: 0 });
       }
     }
     async function preview3D() {
@@ -770,9 +843,30 @@
         React.createElement('div', { className: 'card__body' },
           React.createElement('h1', null, 'Admin Dashboard'),
           React.createElement('p', null, 'Upload 3D models, manage partner contracts (stubs).'),
+          React.createElement('div', { className: 'surface pad', style: { marginBottom: 12, display: 'flex', gap: 8, alignItems: 'center' } },
+            React.createElement('span', { className: 'subtle' }, 'API Base:'),
+            React.createElement('input', { className: 'input', style: { flex: '1' }, placeholder: 'e.g., https://api.example.com', value: apiBase, onChange: e => setApiBase(e.target.value) }),
+            React.createElement('button', { className: 'themeToggle', onClick: saveApiBase }, 'Save'),
+            React.createElement('button', { className: 'themeToggle', onClick: clearApiBase }, 'Clear')
+          ),
           React.createElement('div', { style: { display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 } },
             React.createElement('button', { className: 'themeToggle', onClick: checkStatus }, 'Check Admin Status'),
             React.createElement('span', { className: 'subtle' }, status)
+          ),
+          React.createElement('div', { className: 'surface pad', style: { marginBottom: 12 } },
+            React.createElement('div', { style: { display: 'flex', gap: 8, alignItems: 'center' } },
+              React.createElement('button', { className: 'themeToggle', onClick: checkHealth }, 'Check API Health'),
+              React.createElement('span', { className: 'subtle' }, health ? `Status: ${health.status} (${health.ok ? 'OK' : 'Error'})` : '—')
+            ),
+            React.createElement('div', { className: 'subtle', style: { marginTop: 6 } }, corsOrigin ? `Access-Control-Allow-Origin: ${corsOrigin}` : '')
+          ),
+          React.createElement('div', { className: 'surface pad', style: { marginBottom: 12 } },
+            React.createElement('div', { style: { display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' } },
+              React.createElement('button', { className: 'themeToggle', onClick: checkBlogs }, 'Check Blogs'),
+              React.createElement('span', { className: 'subtle' }, blogsInfo ? `Blogs: ${blogsInfo.count} (HTTP ${blogsInfo.status}, ${blogsInfo.ok ? 'OK' : 'Error'})` : '—'),
+              React.createElement('button', { className: 'themeToggle', onClick: checkArtifacts }, 'Check Artifacts'),
+              React.createElement('span', { className: 'subtle' }, artifactsInfo ? `Artifacts: ${artifactsInfo.count} (HTTP ${artifactsInfo.status}, ${artifactsInfo.ok ? 'OK' : 'Error'})` : '—')
+            )
           ),
           React.createElement('button', { className: 'themeToggle', onClick: preview3D }, 'Preview 3D Cube'),
           React.createElement('div', { style: { marginTop: 12 } }, React.createElement('canvas', { ref: canvasRef, width: 300, height: 300 }))
@@ -783,7 +877,7 @@
 
   function BiographyPage() {
     const [content, setContent] = React.useState('A brief personal profile and timeline. More to come.');
-    React.useEffect(() => { (async () => { try { const r = await fetch('/api/pages/biography'); if (r.ok) { const p = await r.json(); if (p && p.content) setContent(p.content); } } catch (_) {} })(); }, []);
+    React.useEffect(() => { (async () => { try { const r = await apiFetch('/api/pages/biography'); if (r.ok) { const p = await r.json(); if (p && p.content) setContent(p.content); } } catch (_) {} })(); }, []);
     return (
       React.createElement('section', { className: 'card' },
         React.createElement('div', { className: 'card__body' },
@@ -796,7 +890,7 @@
 
   function NovelPage() {
     const [content, setContent] = React.useState('Draft chapters and notes placeholder.');
-    React.useEffect(() => { (async () => { try { const r = await fetch('/api/pages/novel'); if (r.ok) { const p = await r.json(); if (p && p.content) setContent(p.content); } } catch (_) {} })(); }, []);
+    React.useEffect(() => { (async () => { try { const r = await apiFetch('/api/pages/novel'); if (r.ok) { const p = await r.json(); if (p && p.content) setContent(p.content); } } catch (_) {} })(); }, []);
     return (
       React.createElement('section', { className: 'card' },
         React.createElement('div', { className: 'card__body' },
@@ -809,7 +903,7 @@
 
   function ResearchPage() {
     const [content, setContent] = React.useState('Ongoing explorations and references placeholder.');
-    React.useEffect(() => { (async () => { try { const r = await fetch('/api/pages/research'); if (r.ok) { const p = await r.json(); if (p && p.content) setContent(p.content); } } catch (_) {} })(); }, []);
+    React.useEffect(() => { (async () => { try { const r = await apiFetch('/api/pages/research'); if (r.ok) { const p = await r.json(); if (p && p.content) setContent(p.content); } } catch (_) {} })(); }, []);
     return (
       React.createElement('section', { className: 'card' },
         React.createElement('div', { className: 'card__body' },
@@ -973,7 +1067,7 @@
       (async () => {
         const term = (q || '').trim(); if (!term) { setApiHits([]); return; }
         try {
-          const res = await fetch('/api/search/text?q=' + encodeURIComponent(term));
+          const res = await apiFetch('/api/search/text?q=' + encodeURIComponent(term));
           if (res.ok) {
             const data = await res.json();
             if (data && data.success && Array.isArray(data.results)) {

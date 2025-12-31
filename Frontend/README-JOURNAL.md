@@ -72,3 +72,42 @@ Edit `Frontend/src/data/entries.js` and append to `window.JOURNAL_ENTRIES` array
 - We did not modify `vite.config.js` or deploy config.
 - Static copying scripts remain intact.
 - If you need true CSS Modules later, we can refactor to bundled JSX and adjust copy logic, but this design intentionally avoids altering build pipeline.
+
+## Runtime API Base Config
+- File: `Frontend/public/api-base.json`
+- Structure:
+
+```json
+{
+  "base": "https://your-backend.example.com"
+}
+```
+
+- Behavior:
+  - On startup, the app fetches `/public/api-base.json`.
+  - If `base` is non-empty and no local override exists, it saves to `localStorage("api:base")`.
+  - All API calls use `apiFetch()` which respects this base.
+
+- Overrides:
+  - Admin page includes an “API Base” input to set/clear at runtime.
+  - A value in localStorage takes precedence over the JSON file.
+
+- CORS:
+  - Ensure your backend allows `Origin: https://pvabazaar.org` (and subpaths) in production.
+  - Include `Access-Control-Allow-Origin` and credentials rules as needed.
+
+## Admin Diagnostics
+- Open the Admin page and use:
+  - "API Base" to set the backend base URL.
+  - "Check API Health" to call `/api/health`:
+    - Shows HTTP status and whether the call succeeded.
+    - Displays `Access-Control-Allow-Origin` header if available.
+  - "Check Admin Status" to verify admin endpoint access.
+  - "Check Blogs" to fetch `/api/blogs` and display item count and HTTP status.
+  - "Check Artifacts" to fetch `/api/artifacts` and display item count and HTTP status.
+
+- If the health request fails immediately, it’s likely a CORS block. Confirm backend allows `https://pvabazaar.org` and `https://www.pvabazaar.org`.
+
+- Deploy Notes:
+  - Update the JSON file in the repo and redeploy.
+  - Alternatively, set via Admin UI without redeploy for quick testing.

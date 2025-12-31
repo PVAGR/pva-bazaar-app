@@ -110,7 +110,7 @@ const localPublic = path.join(projectRoot, 'public');
 if (fs.existsSync(localPublic)) {
   console.log('Preparing dist/public');
   if (!fs.existsSync(distPublic)) fs.mkdirSync(distPublic, { recursive: true });
-  const whitelistFiles = ['app.js', 'config.js', 'sitemap.xml', 'robots.txt', 'status.html'];
+  const whitelistFiles = ['app.js', 'config.js', 'sitemap.xml', 'robots.txt', 'status.html', 'api-base.json'];
   const whitelistDirs = ['styles'];
   for (const f of whitelistFiles) {
     const s = path.join(localPublic, f);
