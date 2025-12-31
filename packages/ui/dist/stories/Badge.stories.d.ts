@@ -1,20 +1,20 @@
 import { StoryObj } from '@storybook/react';
 declare const meta: {
-    title: string;
-    component: import('react').FC<import('..').BadgeProps>;
-    parameters: {
-        layout: string;
+  title: string;
+  component: import('react').FC<import('..').BadgeProps>;
+  parameters: {
+    layout: string;
+  };
+  tags: string[];
+  argTypes: {
+    children: {
+      control: 'text';
     };
-    tags: string[];
-    argTypes: {
-        children: {
-            control: "text";
-        };
-        color: {
-            control: "select";
-            options: string[];
-        };
+    color: {
+      control: 'select';
+      options: string[];
     };
+  };
 };
 export default meta;
 type Story = StoryObj<typeof meta>;

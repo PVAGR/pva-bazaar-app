@@ -1,502 +1,760 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sacred Cannabis Cultivation | Writings Archive</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Source+Code+Pro:wght@400;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Source+Code+Pro:wght@400;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap"
+      rel="stylesheet"
+    />
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Inter', sans-serif;
-            line-height: 1.8;
-            color: #2c3e50;
-            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-            padding: 2rem 1rem;
-        }
-        
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Inter', sans-serif;
+        line-height: 1.8;
+        color: #2c3e50;
+        background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+        padding: 2rem 1rem;
+      }
+
+      .container {
+        max-width: 1000px;
+        margin: 0 auto;
+        background: white;
+        padding: 3rem;
+        border-radius: 8px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+      }
+
+      h1 {
+        font-family: 'Playfair Display', serif;
+        font-size: 3.2rem;
+        color: #059669;
+        margin-bottom: 0.5rem;
+        line-height: 1.2;
+      }
+
+      .subtitle {
+        font-size: 1.2rem;
+        color: #78716c;
+        margin-bottom: 2rem;
+        font-style: italic;
+      }
+
+      .nav-link {
+        display: inline-block;
+        margin-bottom: 2rem;
+        color: #059669;
+        text-decoration: none;
+        font-weight: 600;
+      }
+
+      .nav-link:hover {
+        text-decoration: underline;
+      }
+
+      h2 {
+        font-family: 'Playfair Display', serif;
+        font-size: 2rem;
+        color: #047857;
+        margin-top: 2.5rem;
+        margin-bottom: 1rem;
+        border-bottom: 2px solid #6ee7b7;
+        padding-bottom: 0.5rem;
+      }
+
+      h3 {
+        font-size: 1.4rem;
+        color: #059669;
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+      }
+
+      h4 {
+        font-size: 1.15rem;
+        color: #047857;
+        margin-top: 1.5rem;
+        margin-bottom: 0.75rem;
+      }
+
+      p {
+        margin-bottom: 1.5rem;
+        font-size: 1.05rem;
+      }
+
+      .sacred-box {
+        background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+        padding: 2rem;
+        border-left: 5px solid #10b981;
+        border-radius: 4px;
+        margin: 2rem 0;
+      }
+
+      .vedic-box {
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        padding: 1.5rem;
+        border-left: 5px solid #f59e0b;
+        border-radius: 4px;
+        margin: 2rem 0;
+      }
+
+      .tibetan-box {
+        background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+        padding: 1.5rem;
+        border-left: 5px solid #3b82f6;
+        border-radius: 4px;
+        margin: 2rem 0;
+      }
+
+      .practice-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin: 2rem 0;
+      }
+
+      .practice-card {
+        background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+        padding: 1.5rem;
+        border-radius: 8px;
+        border: 2px solid #86efac;
+      }
+
+      .practice-card h4 {
+        color: #166534;
+        margin-bottom: 0.75rem;
+      }
+
+      .lunar-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 2rem 0;
+        background: white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .lunar-table th {
+        background: #10b981;
+        color: white;
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+      }
+
+      .lunar-table td {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #d1fae5;
+      }
+
+      .lunar-table tr:hover {
+        background: #ecfdf5;
+      }
+
+      blockquote {
+        border-left: 4px solid #10b981;
+        padding-left: 1.5rem;
+        margin: 2rem 0;
+        font-style: italic;
+        color: #78716c;
+        background: #ecfdf5;
+        padding: 1.5rem;
+        border-radius: 4px;
+      }
+
+      ul {
+        margin-left: 2rem;
+        margin-bottom: 1.5rem;
+      }
+
+      li {
+        margin-bottom: 0.75rem;
+      }
+
+      .dmt-box {
+        background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
+        padding: 2rem;
+        border-left: 5px solid #7c3aed;
+        border-radius: 4px;
+        margin: 2.5rem 0;
+      }
+
+      .dmt-box h3 {
+        color: #6d28d9;
+      }
+
+      .footer {
+        margin-top: 3rem;
+        padding-top: 2rem;
+        border-top: 1px solid #e5e7eb;
+        text-align: center;
+        color: #78716c;
+        font-size: 0.9rem;
+      }
+
+      @media (max-width: 768px) {
         .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            background: white;
-            padding: 3rem;
-            border-radius: 8px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+          padding: 2rem 1.5rem;
         }
-        
+
         h1 {
-            font-family: 'Playfair Display', serif;
-            font-size: 3.2rem;
-            color: #059669;
-            margin-bottom: 0.5rem;
-            line-height: 1.2;
+          font-size: 2.4rem;
         }
-        
-        .subtitle {
-            font-size: 1.2rem;
-            color: #78716c;
-            margin-bottom: 2rem;
-            font-style: italic;
-        }
-        
-        .nav-link {
-            display: inline-block;
-            margin-bottom: 2rem;
-            color: #059669;
-            text-decoration: none;
-            font-weight: 600;
-        }
-        
-        .nav-link:hover {
-            text-decoration: underline;
-        }
-        
-        h2 {
-            font-family: 'Playfair Display', serif;
-            font-size: 2rem;
-            color: #047857;
-            margin-top: 2.5rem;
-            margin-bottom: 1rem;
-            border-bottom: 2px solid #6ee7b7;
-            padding-bottom: 0.5rem;
-        }
-        
-        h3 {
-            font-size: 1.4rem;
-            color: #059669;
-            margin-top: 2rem;
-            margin-bottom: 1rem;
-        }
-        
-        h4 {
-            font-size: 1.15rem;
-            color: #047857;
-            margin-top: 1.5rem;
-            margin-bottom: 0.75rem;
-        }
-        
-        p {
-            margin-bottom: 1.5rem;
-            font-size: 1.05rem;
-        }
-        
-        .sacred-box {
-            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
-            padding: 2rem;
-            border-left: 5px solid #10b981;
-            border-radius: 4px;
-            margin: 2rem 0;
-        }
-        
-        .vedic-box {
-            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-            padding: 1.5rem;
-            border-left: 5px solid #f59e0b;
-            border-radius: 4px;
-            margin: 2rem 0;
-        }
-        
-        .tibetan-box {
-            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-            padding: 1.5rem;
-            border-left: 5px solid #3b82f6;
-            border-radius: 4px;
-            margin: 2rem 0;
-        }
-        
-        .practice-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1.5rem;
-            margin: 2rem 0;
-        }
-        
-        .practice-card {
-            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-            padding: 1.5rem;
-            border-radius: 8px;
-            border: 2px solid #86efac;
-        }
-        
-        .practice-card h4 {
-            color: #166534;
-            margin-bottom: 0.75rem;
-        }
-        
-        .lunar-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 2rem 0;
-            background: white;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        
-        .lunar-table th {
-            background: #10b981;
-            color: white;
-            padding: 1rem;
-            text-align: left;
-            font-weight: 600;
-        }
-        
-        .lunar-table td {
-            padding: 0.75rem 1rem;
-            border-bottom: 1px solid #d1fae5;
-        }
-        
-        .lunar-table tr:hover {
-            background: #ecfdf5;
-        }
-        
-        blockquote {
-            border-left: 4px solid #10b981;
-            padding-left: 1.5rem;
-            margin: 2rem 0;
-            font-style: italic;
-            color: #78716c;
-            background: #ecfdf5;
-            padding: 1.5rem;
-            border-radius: 4px;
-        }
-        
-        ul {
-            margin-left: 2rem;
-            margin-bottom: 1.5rem;
-        }
-        
-        li {
-            margin-bottom: 0.75rem;
-        }
-        
-        .dmt-box {
-            background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
-            padding: 2rem;
-            border-left: 5px solid #7c3aed;
-            border-radius: 4px;
-            margin: 2.5rem 0;
-        }
-        
-        .dmt-box h3 {
-            color: #6d28d9;
-        }
-        
-        .footer {
-            margin-top: 3rem;
-            padding-top: 2rem;
-            border-top: 1px solid #e5e7eb;
-            text-align: center;
-            color: #78716c;
-            font-size: 0.9rem;
-        }
-        
-        @media (max-width: 768px) {
-            .container {
-                padding: 2rem 1.5rem;
-            }
-            
-            h1 {
-                font-size: 2.4rem;
-            }
-        }
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <a href="/writings/" class="nav-link">← Back to Writings Archive</a>
-        
-        <h1>Sacred Cannabis Cultivation</h1>
-        <p class="subtitle">Growing the holy plant according to ancient Hindu and Tibetan spiritual traditions</p>
+      <a href="/writings/" class="nav-link">← Back to Writings Archive</a>
 
-        <div class="sacred-box">
-            <p><strong>Introduction: The Sacred Role of Cannabis in Eastern Spiritual Traditions</strong></p>
-            <p>For millennia, cannabis has been revered as a sacred plant across various spiritual traditions, particularly in Hinduism and Tibetan Buddhism. These ancient cultures did not approach cannabis as a recreational substance but as a divine gift that facilitated deeper connection with the divine, enhanced meditation, and provided healing.</p>
+      <h1>Sacred Cannabis Cultivation</h1>
+      <p class="subtitle">
+        Growing the holy plant according to ancient Hindu and Tibetan spiritual traditions
+      </p>
+
+      <div class="sacred-box">
+        <p>
+          <strong>Introduction: The Sacred Role of Cannabis in Eastern Spiritual Traditions</strong>
+        </p>
+        <p>
+          For millennia, cannabis has been revered as a sacred plant across various spiritual
+          traditions, particularly in Hinduism and Tibetan Buddhism. These ancient cultures did not
+          approach cannabis as a recreational substance but as a divine gift that facilitated deeper
+          connection with the divine, enhanced meditation, and provided healing.
+        </p>
+      </div>
+
+      <p>
+        The Vedas, ancient Hindu scriptures dating back to 1500-500 BCE, explicitly reference
+        cannabis as one of five sacred plants that release humans from anxiety and serve as a
+        "source of happiness" and "joy-giver." Similarly, Tibetan Buddhists, especially in Tantric
+        practices, valued cannabis for its role in meditative enhancement and spiritual ceremonies.
+      </p>
+
+      <p>
+        This report synthesizes the optimal cultivation methods derived from these ancient
+        traditions, combining Vedic and Tibetan knowledge to help you grow cannabis with spiritual
+        intention and divine reverence.
+      </p>
+
+      <h2>The Fundamental Principle</h2>
+
+      <p>
+        The fundamental principle underlying these ancient practices is that
+        <strong>conscious intention shapes the growth and effects of the plant</strong>. From soil
+        preparation to harvesting, every step was imbued with ritual and reverence, recognizing the
+        plant as a conscious being with spiritual properties.
+      </p>
+
+      <p>
+        This approach stands in stark contrast to modern commercial cultivation, prioritizing yield
+        and potency over spiritual essence. By integrating these ancient methods, you can create a
+        cultivation practice that honors the plant's sacred history while potentially enhancing its
+        spiritual properties through conscious cultivation.
+      </p>
+
+      <h2>Vedic Cultivation Philosophy and Methods</h2>
+
+      <h3>Cannabis in Ancient Hindu Scriptures</h3>
+
+      <div class="vedic-box">
+        <h4>Sacred Status</h4>
+        <p>
+          The Vedas refer to cannabis as "bhang" and classify it among five sacred plants capable of
+          releasing humanity from anxiety. The texts explicitly state that a guardian angel resides
+          in the leaves of the cannabis plant, making it a spiritually charged substance that
+          deserves reverence and respect during cultivation and consumption.
+        </p>
+
+        <p>
+          This spiritual perspective fundamentally shapes the cultivation approach—the plant is not
+          merely a physical organism but a conscious being with divine aspects.
+        </p>
+      </div>
+
+      <h3>Connection to Shiva</h3>
+
+      <p>
+        Hindu tradition holds that Lord Shiva, the god of destruction and transformation, made
+        cannabis his favorite food after discovering its rejuvenating properties. According to
+        legend, Shiva stumbled upon the plant while wandering through the Himalayan mountains and
+        experienced its euphoric and meditative properties firsthand.
+      </p>
+
+      <p>
+        This connection establishes cannabis as particularly sacred to Shaivite traditions and
+        suggests that cultivation should be approached as an offering to Shiva, with mantras and
+        prayers directed to this deity throughout the growth cycle.
+      </p>
+
+      <h3>Spiritual Intention and Energy in Cultivation</h3>
+
+      <p>
+        The Vedic approach emphasizes that the cultivator's mental state and spiritual purity
+        directly influence the plant's energy and effects. Ancient shamans believed that plants
+        respond to human consciousness, absorbing the energy of the grower's thoughts and emotions.
+      </p>
+
+      <h4>Practical Approaches:</h4>
+
+      <ul>
+        <li>
+          <strong>Meditative Practice:</strong> Cultivators should engage in daily meditation near
+          the plants, directing positive intentions and loving energy toward them. This might
+          include chanting Om or specific mantras associated with Shiva, such as "Om Namah Shivaya,"
+          while tending to the plants.
+        </li>
+        <li>
+          <strong>Purity Practices:</strong> Traditional growers maintained physical and spiritual
+          purity through vegetarian diets, abstinence from alcohol and other intoxicants, and daily
+          cleansing rituals before approaching the plants. This purity was believed to prevent the
+          transfer of negative energies to the cannabis.
+        </li>
+        <li>
+          <strong>Offerings and Blessings:</strong> Regular offerings of water, milk, and flowers
+          were made to the plants throughout their growth cycle, acknowledging their divine nature
+          and seeking blessings for their beneficial development.
+        </li>
+      </ul>
+
+      <h3>Natural Growing Conditions and Timing</h3>
+
+      <p>
+        Ancient Vedic cultivation employed natural cycles and organic methods that aligned with
+        cosmic rhythms:
+      </p>
+
+      <h4>Lunar Planting</h4>
+
+      <p>
+        Cannabis was traditionally planted during the waxing moon phase, believed to enhance growth
+        and vitality. The lunar calendar guided all major cultivation activities, from planting to
+        harvesting, with specific phases considered optimal for different stages.
+      </p>
+
+      <table class="lunar-table">
+        <thead>
+          <tr>
+            <th>Lunar Phase</th>
+            <th>Recommended Activity</th>
+            <th>Spiritual Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>New Moon</td>
+            <td>Soil preparation</td>
+            <td>Setting intentions</td>
+          </tr>
+          <tr>
+            <td>Waxing Moon</td>
+            <td>Planting seeds</td>
+            <td>Enhancing growth</td>
+          </tr>
+          <tr>
+            <td>Full Moon</td>
+            <td>Watering with mantras</td>
+            <td>Charging with energy</td>
+          </tr>
+          <tr>
+            <td>Waning Moon</td>
+            <td>Pruning</td>
+            <td>Releasing negative energy</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h4>Soil Preparation</h4>
+
+      <p>
+        The Vedas emphasize the importance of living soil enriched with natural compost and
+        beneficial microorganisms. Traditional practices included:
+      </p>
+
+      <ul>
+        <li>Mixing soil with cow dung (considered sacred and rich in nutrients)</li>
+        <li>Adding neem leaves for natural pest control</li>
+        <li>Using organic matter from sacred plants like tulsi (holy basil)</li>
+      </ul>
+
+      <h4>Natural Pest Management</h4>
+
+      <p>
+        Instead of chemical pesticides, ancient growers used companion planting with sacred herbs
+        like tulsi and turmeric, which naturally repel pests while enhancing the spiritual
+        atmosphere of the garden.
+      </p>
+
+      <h2>Tibetan Buddhist Growing Methods and Spiritual Practices</h2>
+
+      <h3>Cannabis in Tantric Buddhism and Meditation</h3>
+
+      <div class="tibetan-box">
+        <p>
+          Tibetan Buddhism, particularly Vajrayana and Tantric traditions, has a long history of
+          cannabis use for enhancing meditation and spiritual practices. Unlike the Vedic approach,
+          which emphasizes devotion to Shiva, Tibetan methods focus on cannabis as a tool for
+          heightening awareness during meditation and facilitating mystical experiences.
+        </p>
+      </div>
+
+      <h4>Meditation Enhancement</h4>
+
+      <p>
+        Tibetan monks historically used cannabis to deepen meditation practice and achieve states of
+        heightened awareness. The plant was not used recreationally but as a sacred substance that
+        facilitated connection with higher consciousness.
+      </p>
+
+      <h4>Ritual Use in Tantra</h4>
+
+      <p>
+        In Tantric Buddhist practices, cannabis was sometimes used in rituals that involved sexual
+        intercourse as a spiritual practice. Large doses were employed to transcend ordinary
+        consciousness and achieve mystical states. This suggests that cultivation for these purposes
+        would require particularly careful intention-setting and ritual practice throughout the
+        growth cycle.
+      </p>
+
+      <h3>High-Altitude Adaptation and Natural Growing Methods</h3>
+
+      <p>
+        Tibetan cultivation methods developed in the high-altitude environment of the Himalayas,
+        resulting in unique adaptations:
+      </p>
+
+      <ul>
+        <li>
+          <strong>Hardy Varieties:</strong> Tibetan landrace strains evolved to thrive in harsh
+          conditions with low oxygen, intense sunlight, and dramatic temperature fluctuations. These
+          natural adaptations make them particularly resilient when grown using natural methods.
+        </li>
+        <li>
+          <strong>Traditional Processing:</strong> Tibetans developed specialized methods for
+          creating "temple balls" of hashish by rubbing cannabis flowers between their hands. The
+          heat and pressure caused decarboxylation, converting cannabinoid acids into active
+          cannabinoids. These temple balls were traditionally piled at temple entrances and sold by
+          monks to raise funds for maintenance.
+        </li>
+        <li>
+          <strong>Natural Nutrient Sources:</strong> Tibetan growers used local materials like yak
+          manure, bone meal, and composted high-altitude vegetation to nourish their plants without
+          synthetic inputs.
+        </li>
+      </ul>
+
+      <h3>Integration with Buddhist Philosophy</h3>
+
+      <p>
+        The Tibetan approach to cannabis cultivation is deeply intertwined with Buddhist principles:
+      </p>
+
+      <div class="practice-grid">
+        <div class="practice-card">
+          <h4>Compassionate Intention</h4>
+          <p>
+            Plants were grown with the intention of alleviating suffering—both physical pain through
+            medicinal use and spiritual suffering through enhanced meditation practice.
+          </p>
         </div>
 
-        <p>The Vedas, ancient Hindu scriptures dating back to 1500-500 BCE, explicitly reference cannabis as one of five sacred plants that release humans from anxiety and serve as a "source of happiness" and "joy-giver." Similarly, Tibetan Buddhists, especially in Tantric practices, valued cannabis for its role in meditative enhancement and spiritual ceremonies.</p>
-
-        <p>This report synthesizes the optimal cultivation methods derived from these ancient traditions, combining Vedic and Tibetan knowledge to help you grow cannabis with spiritual intention and divine reverence.</p>
-
-        <h2>The Fundamental Principle</h2>
-
-        <p>The fundamental principle underlying these ancient practices is that <strong>conscious intention shapes the growth and effects of the plant</strong>. From soil preparation to harvesting, every step was imbued with ritual and reverence, recognizing the plant as a conscious being with spiritual properties.</p>
-
-        <p>This approach stands in stark contrast to modern commercial cultivation, prioritizing yield and potency over spiritual essence. By integrating these ancient methods, you can create a cultivation practice that honors the plant's sacred history while potentially enhancing its spiritual properties through conscious cultivation.</p>
-
-        <h2>Vedic Cultivation Philosophy and Methods</h2>
-
-        <h3>Cannabis in Ancient Hindu Scriptures</h3>
-
-        <div class="vedic-box">
-            <h4>Sacred Status</h4>
-            <p>The Vedas refer to cannabis as "bhang" and classify it among five sacred plants capable of releasing humanity from anxiety. The texts explicitly state that a guardian angel resides in the leaves of the cannabis plant, making it a spiritually charged substance that deserves reverence and respect during cultivation and consumption.</p>
-            
-            <p>This spiritual perspective fundamentally shapes the cultivation approach—the plant is not merely a physical organism but a conscious being with divine aspects.</p>
+        <div class="practice-card">
+          <h4>Mindfulness Practices</h4>
+          <p>
+            The cultivation process itself was treated as a meditative practice, with careful
+            attention to each action and complete presence during watering, pruning, and harvesting.
+          </p>
         </div>
 
-        <h3>Connection to Shiva</h3>
-
-        <p>Hindu tradition holds that Lord Shiva, the god of destruction and transformation, made cannabis his favorite food after discovering its rejuvenating properties. According to legend, Shiva stumbled upon the plant while wandering through the Himalayan mountains and experienced its euphoric and meditative properties firsthand.</p>
-
-        <p>This connection establishes cannabis as particularly sacred to Shaivite traditions and suggests that cultivation should be approached as an offering to Shiva, with mantras and prayers directed to this deity throughout the growth cycle.</p>
-
-        <h3>Spiritual Intention and Energy in Cultivation</h3>
-
-        <p>The Vedic approach emphasizes that the cultivator's mental state and spiritual purity directly influence the plant's energy and effects. Ancient shamans believed that plants respond to human consciousness, absorbing the energy of the grower's thoughts and emotions.</p>
-
-        <h4>Practical Approaches:</h4>
-
-        <ul>
-            <li><strong>Meditative Practice:</strong> Cultivators should engage in daily meditation near the plants, directing positive intentions and loving energy toward them. This might include chanting Om or specific mantras associated with Shiva, such as "Om Namah Shivaya," while tending to the plants.</li>
-            <li><strong>Purity Practices:</strong> Traditional growers maintained physical and spiritual purity through vegetarian diets, abstinence from alcohol and other intoxicants, and daily cleansing rituals before approaching the plants. This purity was believed to prevent the transfer of negative energies to the cannabis.</li>
-            <li><strong>Offerings and Blessings:</strong> Regular offerings of water, milk, and flowers were made to the plants throughout their growth cycle, acknowledging their divine nature and seeking blessings for their beneficial development.</li>
-        </ul>
-
-        <h3>Natural Growing Conditions and Timing</h3>
-
-        <p>Ancient Vedic cultivation employed natural cycles and organic methods that aligned with cosmic rhythms:</p>
-
-        <h4>Lunar Planting</h4>
-
-        <p>Cannabis was traditionally planted during the waxing moon phase, believed to enhance growth and vitality. The lunar calendar guided all major cultivation activities, from planting to harvesting, with specific phases considered optimal for different stages.</p>
-
-        <table class="lunar-table">
-            <thead>
-                <tr>
-                    <th>Lunar Phase</th>
-                    <th>Recommended Activity</th>
-                    <th>Spiritual Purpose</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>New Moon</td>
-                    <td>Soil preparation</td>
-                    <td>Setting intentions</td>
-                </tr>
-                <tr>
-                    <td>Waxing Moon</td>
-                    <td>Planting seeds</td>
-                    <td>Enhancing growth</td>
-                </tr>
-                <tr>
-                    <td>Full Moon</td>
-                    <td>Watering with mantras</td>
-                    <td>Charging with energy</td>
-                </tr>
-                <tr>
-                    <td>Waning Moon</td>
-                    <td>Pruning</td>
-                    <td>Releasing negative energy</td>
-                </tr>
-            </tbody>
-        </table>
-
-        <h4>Soil Preparation</h4>
-
-        <p>The Vedas emphasize the importance of living soil enriched with natural compost and beneficial microorganisms. Traditional practices included:</p>
-
-        <ul>
-            <li>Mixing soil with cow dung (considered sacred and rich in nutrients)</li>
-            <li>Adding neem leaves for natural pest control</li>
-            <li>Using organic matter from sacred plants like tulsi (holy basil)</li>
-        </ul>
-
-        <h4>Natural Pest Management</h4>
-
-        <p>Instead of chemical pesticides, ancient growers used companion planting with sacred herbs like tulsi and turmeric, which naturally repel pests while enhancing the spiritual atmosphere of the garden.</p>
-
-        <h2>Tibetan Buddhist Growing Methods and Spiritual Practices</h2>
-
-        <h3>Cannabis in Tantric Buddhism and Meditation</h3>
-
-        <div class="tibetan-box">
-            <p>Tibetan Buddhism, particularly Vajrayana and Tantric traditions, has a long history of cannabis use for enhancing meditation and spiritual practices. Unlike the Vedic approach, which emphasizes devotion to Shiva, Tibetan methods focus on cannabis as a tool for heightening awareness during meditation and facilitating mystical experiences.</p>
+        <div class="practice-card">
+          <h4>Non-Attachment</h4>
+          <p>
+            Despite caring for the plants diligently, growers practiced non-attachment to outcomes,
+            accepting whatever the plants produced as perfect and sufficient.
+          </p>
         </div>
+      </div>
 
-        <h4>Meditation Enhancement</h4>
+      <h2>Integrated Natural Cultivation Approach</h2>
 
-        <p>Tibetan monks historically used cannabis to deepen meditation practice and achieve states of heightened awareness. The plant was not used recreationally but as a sacred substance that facilitated connection with higher consciousness.</p>
+      <h3>Soil Composition and Natural Amendments</h3>
 
-        <h4>Ritual Use in Tantra</h4>
+      <p>
+        Based on both Vedic and Tibetan approaches, the ideal spiritual cultivation uses living soil
+        rich in organic matter and beneficial microorganisms:
+      </p>
 
-        <p>In Tantric Buddhist practices, cannabis was sometimes used in rituals that involved sexual intercourse as a spiritual practice. Large doses were employed to transcend ordinary consciousness and achieve mystical states. This suggests that cultivation for these purposes would require particularly careful intention-setting and ritual practice throughout the growth cycle.</p>
+      <h4>Base Soil Composition:</h4>
 
-        <h3>High-Altitude Adaptation and Natural Growing Methods</h3>
+      <ul>
+        <li>40% high-quality compost (based on Vedic use of sacred cow dung)</li>
+        <li>30% peat or coconut coir for moisture retention</li>
+        <li>20% perlite or vermiculite for drainage</li>
+        <li>10% sand or mineral components</li>
+      </ul>
 
-        <p>Tibetan cultivation methods developed in the high-altitude environment of the Himalayas, resulting in unique adaptations:</p>
+      <h4>Sacred Amendments:</h4>
 
+      <ul>
+        <li>
+          <strong>Vedic:</strong> Neem cake for pest resistance, tulsi leaves, turmeric powder
+        </li>
+        <li>
+          <strong>Tibetan:</strong> Yak manure (or local alternative), bone meal, high-altitude
+          mineral dust
+        </li>
+        <li>
+          <strong>Universal:</strong> Wood ash for potassium, crushed eggshells for calcium, seaweed
+          for micronutrients
+        </li>
+      </ul>
+
+      <h3>Water Management and Spiritual Charging</h3>
+
+      <p>
+        Both traditions emphasize the importance of consciously charged water for optimal spiritual
+        growth:
+      </p>
+
+      <ul>
+        <li>
+          <strong>Moon-Charged Water:</strong> Water left under the full moon overnight is believed
+          to carry enhanced energy and vitality.
+        </li>
+        <li>
+          <strong>Mantra-Infused Water:</strong> Chanting sacred sounds (Om, Shiva mantras, or
+          Buddhist mantras) over water before irrigation imprints the water with spiritual
+          vibrations.
+        </li>
+        <li>
+          <strong>Herbal Enhancements:</strong> Adding sacred herbs like tulsi, neem, or saffron to
+          irrigation water provides subtle energetic benefits beyond physical nutrition.
+        </li>
+      </ul>
+
+      <h3>Light and Environmental Considerations</h3>
+
+      <p>
+        While ancient growers used natural sunlight, we can adapt their principles to modern
+        cultivation:
+      </p>
+
+      <ul>
+        <li>
+          <strong>Sunlight Alignment:</strong> Align plants along an east-west axis to maximize
+          exposure to morning sun (valued in both traditions for its spiritual purity).
+        </li>
+        <li>
+          <strong>Lunar Light Exposure:</strong> Allow plants to receive moonlight during full moon
+          periods, believed to enhance spiritual properties.
+        </li>
+        <li>
+          <strong>Temperature Cycling:</strong> Mimic Tibetan high-altitude conditions with cool
+          nights (55-65°F) and warm days (75-85°F) to encourage natural resilience.
+        </li>
+      </ul>
+
+      <h2>Sacred Harvesting and Consumption Methods</h2>
+
+      <h3>Vedic Harvesting Rituals and Timing</h3>
+
+      <p>
+        According to Vedic tradition, the timing and method of harvesting significantly influence
+        the spiritual qualities of cannabis:
+      </p>
+
+      <ul>
+        <li>
+          <strong>Astrological Timing:</strong> Cannabis was traditionally harvested during specific
+          planetary alignments, particularly when Jupiter was prominent, believed to enhance the
+          plant's expansive, consciousness-opening properties.
+        </li>
+        <li>
+          <strong>Ritual Harvesting:</strong> The harvest was conducted as a sacred ceremony with
+          prayers, chanting, and expressions of gratitude to the plant spirits. Tools were purified
+          with smoke from sacred herbs like sandalwood or sage before use.
+        </li>
+        <li>
+          <strong>Offerings to Shiva:</strong> The first harvested flowers were offered to Lord
+          Shiva before any human consumption, acknowledging his connection to the plant and seeking
+          blessings for its spiritual use.
+        </li>
+      </ul>
+
+      <h3>Tibetan Processing and Temple Ball Creation</h3>
+
+      <p>
+        Tibetan methods focus on traditional processing techniques that maximize spiritual benefits:
+      </p>
+
+      <ul>
+        <li>
+          <strong>Hand-Rubbing Technique:</strong> The famous Tibetan temple balls were created by
+          gently rubbing fresh cannabis flowers between the palms, collecting the resin, and forming
+          it into balls. This method was considered a meditative practice in itself.
+        </li>
+        <li>
+          <strong>Aging and Curing:</strong> Processed cannabis was often aged for years in cool,
+          dark places, believed to enhance its spiritual properties and smooth its effects.
+        </li>
+        <li>
+          <strong>Consecration Rituals:</strong> Finished products were consecrated through Buddhist
+          ceremonies involving chanting, mantra recitation, and blessings from realized
+          practitioners.
+        </li>
+      </ul>
+
+      <h3>Sacred Consumption Rituals</h3>
+
+      <p>Both traditions emphasize ritualized consumption to maximize spiritual benefits:</p>
+
+      <ul>
+        <li>
+          <strong>Vedic Bhang Preparation:</strong> The Vedas describe preparing bhang as a sacred
+          ritual: cannabis leaves are ground with a mortar and pestle while chanting mantras, then
+          mixed with milk, spices, and herbs. This preparation was consumed during religious
+          festivals, particularly those dedicated to Shiva.
+        </li>
+        <li>
+          <strong>Tibetan Meditation Support:</strong> Tibetan practitioners consumed small amounts
+          of cannabis before extended meditation sessions, using it to heighten awareness and
+          facilitate deeper states of concentration.
+        </li>
+        <li>
+          <strong>Set and Setting:</strong> Both traditions emphasize the importance of spiritual
+          intention and sacred environment during consumption, considering these factors as
+          important as the substance itself.
+        </li>
+      </ul>
+
+      <div class="dmt-box">
+        <h3>DMT and Pineal Gland Activation</h3>
+        <p>
+          The pineal gland, often called the "third eye" in spiritual traditions, naturally produces
+          DMT (dimethyltryptamine), a powerful psychoactive compound associated with mystical
+          experiences and ego death awakening.
+        </p>
+
+        <p>
+          Some practitioners believe that cannabis, when prepared and consumed with proper intention
+          and ritual, can help activate the pineal gland and facilitate the kind of consciousness
+          expansion that people experience with psilocybin or DMT.
+        </p>
+
+        <p>
+          The goal isn't recreational intoxication but spiritual awakening—a temporary dissolution
+          of the ego that allows direct experience of cosmic consciousness, similar to the mystical
+          states described in both Vedic and Tibetan texts.
+        </p>
+      </div>
+
+      <h2>Modern Adaptation and Implementation</h2>
+
+      <h3>Legal and Ethical Considerations</h3>
+
+      <p>
+        While ancient traditions freely used cannabis spiritually, modern growers must consider:
+      </p>
+
+      <ul>
+        <li>
+          <strong>Legal Compliance:</strong> Ensure cultivation complies with local regulations
+          regarding medical or recreational cannabis growing.
+        </li>
+        <li>
+          <strong>Ethical Use:</strong> Approach cannabis as the ancient traditions did—as a
+          sacrament rather than an intoxicant, using it mindfully and with spiritual intention.
+        </li>
+        <li>
+          <strong>Community Sharing:</strong> Follow the Tibetan example of using cannabis to
+          benefit others, whether through healing, spiritual guidance, or community building.
+        </li>
+      </ul>
+
+      <h3>Adapting Ancient Methods to Modern Contexts</h3>
+
+      <p>You can integrate ancient wisdom with modern technology:</p>
+
+      <ul>
+        <li>
+          <strong>Organic Certification:</strong> Pursue organic certification to ensure growing
+          methods align with ancient natural approaches.
+        </li>
+        <li>
+          <strong>Energy Efficiency:</strong> Use energy-efficient LED lights with customizable
+          spectra to mimic the beneficial aspects of natural sunlight while conserving energy.
+        </li>
+        <li>
+          <strong>Water Conservation:</strong> Implement water-recycling systems to honor the
+          Tibetan respect for natural resources.
+        </li>
+      </ul>
+
+      <h2>Conclusion: Synthesizing Ancient Wisdom for Modern Spiritual Cultivation</h2>
+
+      <p>
+        The ancient Hindu and Tibetan approaches to cannabis cultivation share fundamental
+        principles that modern spiritual growers can apply regardless of their specific tradition.
+        Both emphasize reverence for the plant as a conscious being with spiritual properties,
+        intentionality in all practices from planting to consumption, and alignment with natural
+        cycles and rhythms.
+      </p>
+
+      <blockquote>
+        "Whatever it is that we experience, it is not only a gift, but also a responsibility. You
+        cannot abuse the gift you were given the opportunity to experience. You must respect it and
+        in doing so treat it with the utmost respect as the highest thing you respect. For me, it is
+        God."
+      </blockquote>
+
+      <p>
+        By combining Vedic devotional practices with Tibetan mindfulness approaches, you can create
+        a comprehensive spiritual cultivation method that honors the plant's sacred history while
+        potentially enhancing its consciousness-expanding properties.
+      </p>
+
+      <div class="sacred-box">
+        <p><strong>The Essential Elements:</strong></p>
         <ul>
-            <li><strong>Hardy Varieties:</strong> Tibetan landrace strains evolved to thrive in harsh conditions with low oxygen, intense sunlight, and dramatic temperature fluctuations. These natural adaptations make them particularly resilient when grown using natural methods.</li>
-            <li><strong>Traditional Processing:</strong> Tibetans developed specialized methods for creating "temple balls" of hashish by rubbing cannabis flowers between their hands. The heat and pressure caused decarboxylation, converting cannabinoid acids into active cannabinoids. These temple balls were traditionally piled at temple entrances and sold by monks to raise funds for maintenance.</li>
-            <li><strong>Natural Nutrient Sources:</strong> Tibetan growers used local materials like yak manure, bone meal, and composted high-altitude vegetation to nourish their plants without synthetic inputs.</li>
+          <li>Preparing living soil with natural amendments</li>
+          <li>Charging water with mantras and moonlight</li>
+          <li>Aligning gardening activities with lunar and planetary cycles</li>
+          <li>Maintaining personal purity and spiritual practice throughout the growing process</li>
+          <li>Harvesting with gratitude and ritual</li>
+          <li>Consuming consciously in sacred contexts</li>
         </ul>
+      </div>
 
-        <h3>Integration with Buddhist Philosophy</h3>
+      <p>
+        Whether you feel more connected to the Vedic path of devotion to Shiva or the Tibetan
+        Buddhist path of mindful awareness, the key is consistent spiritual intention throughout the
+        process. By growing cannabis with these principles, you participate in an ancient spiritual
+        tradition that recognizes this plant as a sacred gift for healing, consciousness expansion,
+        and connection to the divine.
+      </p>
 
-        <p>The Tibetan approach to cannabis cultivation is deeply intertwined with Buddhist principles:</p>
+      <blockquote>
+        "Remember that the goal is not just maximum yield or potency, but growing cannabis with
+        spiritual integrity that honors its ancient sacramental use across Eastern traditions. By
+        approaching cultivation with reverence, intention, and love, you participate in the timeless
+        tradition of shamans and spiritual seekers who have recognized this plant's sacred potential
+        for millennia."
+      </blockquote>
 
-        <div class="practice-grid">
-            <div class="practice-card">
-                <h4>Compassionate Intention</h4>
-                <p>Plants were grown with the intention of alleviating suffering—both physical pain through medicinal use and spiritual suffering through enhanced meditation practice.</p>
-            </div>
-
-            <div class="practice-card">
-                <h4>Mindfulness Practices</h4>
-                <p>The cultivation process itself was treated as a meditative practice, with careful attention to each action and complete presence during watering, pruning, and harvesting.</p>
-            </div>
-
-            <div class="practice-card">
-                <h4>Non-Attachment</h4>
-                <p>Despite caring for the plants diligently, growers practiced non-attachment to outcomes, accepting whatever the plants produced as perfect and sufficient.</p>
-            </div>
-        </div>
-
-        <h2>Integrated Natural Cultivation Approach</h2>
-
-        <h3>Soil Composition and Natural Amendments</h3>
-
-        <p>Based on both Vedic and Tibetan approaches, the ideal spiritual cultivation uses living soil rich in organic matter and beneficial microorganisms:</p>
-
-        <h4>Base Soil Composition:</h4>
-
-        <ul>
-            <li>40% high-quality compost (based on Vedic use of sacred cow dung)</li>
-            <li>30% peat or coconut coir for moisture retention</li>
-            <li>20% perlite or vermiculite for drainage</li>
-            <li>10% sand or mineral components</li>
-        </ul>
-
-        <h4>Sacred Amendments:</h4>
-
-        <ul>
-            <li><strong>Vedic:</strong> Neem cake for pest resistance, tulsi leaves, turmeric powder</li>
-            <li><strong>Tibetan:</strong> Yak manure (or local alternative), bone meal, high-altitude mineral dust</li>
-            <li><strong>Universal:</strong> Wood ash for potassium, crushed eggshells for calcium, seaweed for micronutrients</li>
-        </ul>
-
-        <h3>Water Management and Spiritual Charging</h3>
-
-        <p>Both traditions emphasize the importance of consciously charged water for optimal spiritual growth:</p>
-
-        <ul>
-            <li><strong>Moon-Charged Water:</strong> Water left under the full moon overnight is believed to carry enhanced energy and vitality.</li>
-            <li><strong>Mantra-Infused Water:</strong> Chanting sacred sounds (Om, Shiva mantras, or Buddhist mantras) over water before irrigation imprints the water with spiritual vibrations.</li>
-            <li><strong>Herbal Enhancements:</strong> Adding sacred herbs like tulsi, neem, or saffron to irrigation water provides subtle energetic benefits beyond physical nutrition.</li>
-        </ul>
-
-        <h3>Light and Environmental Considerations</h3>
-
-        <p>While ancient growers used natural sunlight, we can adapt their principles to modern cultivation:</p>
-
-        <ul>
-            <li><strong>Sunlight Alignment:</strong> Align plants along an east-west axis to maximize exposure to morning sun (valued in both traditions for its spiritual purity).</li>
-            <li><strong>Lunar Light Exposure:</strong> Allow plants to receive moonlight during full moon periods, believed to enhance spiritual properties.</li>
-            <li><strong>Temperature Cycling:</strong> Mimic Tibetan high-altitude conditions with cool nights (55-65°F) and warm days (75-85°F) to encourage natural resilience.</li>
-        </ul>
-
-        <h2>Sacred Harvesting and Consumption Methods</h2>
-
-        <h3>Vedic Harvesting Rituals and Timing</h3>
-
-        <p>According to Vedic tradition, the timing and method of harvesting significantly influence the spiritual qualities of cannabis:</p>
-
-        <ul>
-            <li><strong>Astrological Timing:</strong> Cannabis was traditionally harvested during specific planetary alignments, particularly when Jupiter was prominent, believed to enhance the plant's expansive, consciousness-opening properties.</li>
-            <li><strong>Ritual Harvesting:</strong> The harvest was conducted as a sacred ceremony with prayers, chanting, and expressions of gratitude to the plant spirits. Tools were purified with smoke from sacred herbs like sandalwood or sage before use.</li>
-            <li><strong>Offerings to Shiva:</strong> The first harvested flowers were offered to Lord Shiva before any human consumption, acknowledging his connection to the plant and seeking blessings for its spiritual use.</li>
-        </ul>
-
-        <h3>Tibetan Processing and Temple Ball Creation</h3>
-
-        <p>Tibetan methods focus on traditional processing techniques that maximize spiritual benefits:</p>
-
-        <ul>
-            <li><strong>Hand-Rubbing Technique:</strong> The famous Tibetan temple balls were created by gently rubbing fresh cannabis flowers between the palms, collecting the resin, and forming it into balls. This method was considered a meditative practice in itself.</li>
-            <li><strong>Aging and Curing:</strong> Processed cannabis was often aged for years in cool, dark places, believed to enhance its spiritual properties and smooth its effects.</li>
-            <li><strong>Consecration Rituals:</strong> Finished products were consecrated through Buddhist ceremonies involving chanting, mantra recitation, and blessings from realized practitioners.</li>
-        </ul>
-
-        <h3>Sacred Consumption Rituals</h3>
-
-        <p>Both traditions emphasize ritualized consumption to maximize spiritual benefits:</p>
-
-        <ul>
-            <li><strong>Vedic Bhang Preparation:</strong> The Vedas describe preparing bhang as a sacred ritual: cannabis leaves are ground with a mortar and pestle while chanting mantras, then mixed with milk, spices, and herbs. This preparation was consumed during religious festivals, particularly those dedicated to Shiva.</li>
-            <li><strong>Tibetan Meditation Support:</strong> Tibetan practitioners consumed small amounts of cannabis before extended meditation sessions, using it to heighten awareness and facilitate deeper states of concentration.</li>
-            <li><strong>Set and Setting:</strong> Both traditions emphasize the importance of spiritual intention and sacred environment during consumption, considering these factors as important as the substance itself.</li>
-        </ul>
-
-        <div class="dmt-box">
-            <h3>DMT and Pineal Gland Activation</h3>
-            <p>The pineal gland, often called the "third eye" in spiritual traditions, naturally produces DMT (dimethyltryptamine), a powerful psychoactive compound associated with mystical experiences and ego death awakening.</p>
-            
-            <p>Some practitioners believe that cannabis, when prepared and consumed with proper intention and ritual, can help activate the pineal gland and facilitate the kind of consciousness expansion that people experience with psilocybin or DMT.</p>
-            
-            <p>The goal isn't recreational intoxication but spiritual awakening—a temporary dissolution of the ego that allows direct experience of cosmic consciousness, similar to the mystical states described in both Vedic and Tibetan texts.</p>
-        </div>
-
-        <h2>Modern Adaptation and Implementation</h2>
-
-        <h3>Legal and Ethical Considerations</h3>
-
-        <p>While ancient traditions freely used cannabis spiritually, modern growers must consider:</p>
-
-        <ul>
-            <li><strong>Legal Compliance:</strong> Ensure cultivation complies with local regulations regarding medical or recreational cannabis growing.</li>
-            <li><strong>Ethical Use:</strong> Approach cannabis as the ancient traditions did—as a sacrament rather than an intoxicant, using it mindfully and with spiritual intention.</li>
-            <li><strong>Community Sharing:</strong> Follow the Tibetan example of using cannabis to benefit others, whether through healing, spiritual guidance, or community building.</li>
-        </ul>
-
-        <h3>Adapting Ancient Methods to Modern Contexts</h3>
-
-        <p>You can integrate ancient wisdom with modern technology:</p>
-
-        <ul>
-            <li><strong>Organic Certification:</strong> Pursue organic certification to ensure growing methods align with ancient natural approaches.</li>
-            <li><strong>Energy Efficiency:</strong> Use energy-efficient LED lights with customizable spectra to mimic the beneficial aspects of natural sunlight while conserving energy.</li>
-            <li><strong>Water Conservation:</strong> Implement water-recycling systems to honor the Tibetan respect for natural resources.</li>
-        </ul>
-
-        <h2>Conclusion: Synthesizing Ancient Wisdom for Modern Spiritual Cultivation</h2>
-
-        <p>The ancient Hindu and Tibetan approaches to cannabis cultivation share fundamental principles that modern spiritual growers can apply regardless of their specific tradition. Both emphasize reverence for the plant as a conscious being with spiritual properties, intentionality in all practices from planting to consumption, and alignment with natural cycles and rhythms.</p>
-
-        <blockquote>
-            "Whatever it is that we experience, it is not only a gift, but also a responsibility. You cannot abuse the gift you were given the opportunity to experience. You must respect it and in doing so treat it with the utmost respect as the highest thing you respect. For me, it is God."
-        </blockquote>
-
-        <p>By combining Vedic devotional practices with Tibetan mindfulness approaches, you can create a comprehensive spiritual cultivation method that honors the plant's sacred history while potentially enhancing its consciousness-expanding properties.</p>
-
-        <div class="sacred-box">
-            <p><strong>The Essential Elements:</strong></p>
-            <ul>
-                <li>Preparing living soil with natural amendments</li>
-                <li>Charging water with mantras and moonlight</li>
-                <li>Aligning gardening activities with lunar and planetary cycles</li>
-                <li>Maintaining personal purity and spiritual practice throughout the growing process</li>
-                <li>Harvesting with gratitude and ritual</li>
-                <li>Consuming consciously in sacred contexts</li>
-            </ul>
-        </div>
-
-        <p>Whether you feel more connected to the Vedic path of devotion to Shiva or the Tibetan Buddhist path of mindful awareness, the key is consistent spiritual intention throughout the process. By growing cannabis with these principles, you participate in an ancient spiritual tradition that recognizes this plant as a sacred gift for healing, consciousness expansion, and connection to the divine.</p>
-
-        <blockquote>
-            "Remember that the goal is not just maximum yield or potency, but growing cannabis with spiritual integrity that honors its ancient sacramental use across Eastern traditions. By approaching cultivation with reverence, intention, and love, you participate in the timeless tradition of shamans and spiritual seekers who have recognized this plant's sacred potential for millennia."
-        </blockquote>
-
-        <div class="footer">
-            <p>Part of the Writings Archive | <a href="/writings/" style="color: #059669;">Explore More</a></p>
-            <p>This work is released into the public domain under CC0 1.0 Universal</p>
-        </div>
+      <div class="footer">
+        <p>
+          Part of the Writings Archive |
+          <a href="/writings/" style="color: #059669">Explore More</a>
+        </p>
+        <p>This work is released into the public domain under CC0 1.0 Universal</p>
+      </div>
     </div>
-</body>
+  </body>
 </html>

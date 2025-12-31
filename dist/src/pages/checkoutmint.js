@@ -45,7 +45,7 @@ async function loadCheckout() {
           const email = prompt('Email (try admin@pvabazaar.org)');
           const password = prompt('Password (try admin123)');
           if (!email || !password) return alert('Login cancelled');
-          const r = await api.post('/auth/login', { email, password }).catch(e => null);
+          const r = await api.post('/auth/login', { email, password }).catch((e) => null);
           if (!r || !r.token) return alert('Login failed');
           localStorage.setItem('token', r.token);
           token = r.token;
@@ -60,8 +60,14 @@ async function loadCheckout() {
             alert('Purchase successful');
             // update sold status if present
             const soldEl = document.querySelector('.progress-text');
-            if (soldEl && res?.data?.newSoldShares != null && artifact.fractionalization?.totalShares) {
-              const pct = Math.round((res.data.newSoldShares / artifact.fractionalization.totalShares) * 100);
+            if (
+              soldEl &&
+              res?.data?.newSoldShares != null &&
+              artifact.fractionalization?.totalShares
+            ) {
+              const pct = Math.round(
+                (res.data.newSoldShares / artifact.fractionalization.totalShares) * 100,
+              );
               soldEl.textContent = `${pct}% Sold`;
             }
           } else {

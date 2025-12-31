@@ -1,265 +1,430 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sacred Pilgrimage - Places I Must Visit</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Source+Code+Pro:wght@300;400&display=swap" rel="stylesheet">
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Source+Code+Pro:wght@300;400&display=swap"
+      rel="stylesheet"
+    />
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Inter', sans-serif;
-            line-height: 1.8;
-            color: #2d3436;
-            background: #fafafa;
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 3rem 2rem;
-        }
-        header { margin-bottom: 3rem; padding-bottom: 2rem; border-bottom: 3px solid #059669; text-align: center; }
-        h1 { font-size: 3rem; color: #0a1f19; }
-        .subtitle { font-size: 1.1rem; color: #059669; margin-top: 0.5rem; }
-        nav { margin: 2rem 0; text-align: center; }
-        nav a { color: #059669; text-decoration: none; font-weight: 500; }
-        h2 { font-size: 2rem; color: #059669; margin: 3rem 0 2rem 0; border-bottom: 2px dashed #059669; padding-bottom: 0.5rem; }
-        h3 { font-size: 1.4rem; color: #0a1f19; margin: 2rem 0 1rem 0; }
-        p, li { font-size: 1.05rem; margin-bottom: 1rem; color: #444; }
-        .place-card {
-            background: white;
-            border-left: 4px solid #059669;
-            padding: 1.5rem;
-            margin: 2rem 0;
-            border-radius: 0 4px 4px 0;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        }
-        .place-card h3 { margin-top: 0; color: #059669; }
-        .location { font-size: 0.9rem; color: #999; font-style: italic; margin-bottom: 1rem; }
-        footer { margin-top: 5rem; padding-top: 2rem; border-top: 1px solid #ddd; text-align: center; color: #777; font-size: 0.9rem; }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: 'Inter', sans-serif;
+        line-height: 1.8;
+        color: #2d3436;
+        background: #fafafa;
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 3rem 2rem;
+      }
+      header {
+        margin-bottom: 3rem;
+        padding-bottom: 2rem;
+        border-bottom: 3px solid #059669;
+        text-align: center;
+      }
+      h1 {
+        font-size: 3rem;
+        color: #0a1f19;
+      }
+      .subtitle {
+        font-size: 1.1rem;
+        color: #059669;
+        margin-top: 0.5rem;
+      }
+      nav {
+        margin: 2rem 0;
+        text-align: center;
+      }
+      nav a {
+        color: #059669;
+        text-decoration: none;
+        font-weight: 500;
+      }
+      h2 {
+        font-size: 2rem;
+        color: #059669;
+        margin: 3rem 0 2rem 0;
+        border-bottom: 2px dashed #059669;
+        padding-bottom: 0.5rem;
+      }
+      h3 {
+        font-size: 1.4rem;
+        color: #0a1f19;
+        margin: 2rem 0 1rem 0;
+      }
+      p,
+      li {
+        font-size: 1.05rem;
+        margin-bottom: 1rem;
+        color: #444;
+      }
+      .place-card {
+        background: white;
+        border-left: 4px solid #059669;
+        padding: 1.5rem;
+        margin: 2rem 0;
+        border-radius: 0 4px 4px 0;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      }
+      .place-card h3 {
+        margin-top: 0;
+        color: #059669;
+      }
+      .location {
+        font-size: 0.9rem;
+        color: #999;
+        font-style: italic;
+        margin-bottom: 1rem;
+      }
+      footer {
+        margin-top: 5rem;
+        padding-top: 2rem;
+        border-top: 1px solid #ddd;
+        text-align: center;
+        color: #777;
+        font-size: 0.9rem;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <header>
-        <h1>Sacred Pilgrimage</h1>
-        <p class="subtitle">Places I Must Visit Before I Die</p>
+      <h1>Sacred Pilgrimage</h1>
+      <p class="subtitle">Places I Must Visit Before I Die</p>
     </header>
 
     <nav>
-        <a href="index.html">← Back to Writings Archive</a>
+      <a href="index.html">← Back to Writings Archive</a>
     </nav>
 
     <section>
-        <p>This is my bucket list. Not for adventure or tourism, but for pilgrimage. Each location represents a person, an idea, or a moment in history that shaped humanity. If I can't visit them all, maybe these words will inspire someone else to make the journey.</p>
+      <p>
+        This is my bucket list. Not for adventure or tourism, but for pilgrimage. Each location
+        represents a person, an idea, or a moment in history that shaped humanity. If I can't visit
+        them all, maybe these words will inspire someone else to make the journey.
+      </p>
     </section>
 
     <h2>🌌 Natural Wonders & Sacred Lands</h2>
 
     <div class="place-card">
-        <h3>Aurora Borealis</h3>
-        <p class="location">Alaska, USA</p>
-        <p>To witness the dance of light in the northern sky. A reminder that beauty exists beyond human creation, a celestial performance that has inspired wonder for millennia.</p>
+      <h3>Aurora Borealis</h3>
+      <p class="location">Alaska, USA</p>
+      <p>
+        To witness the dance of light in the northern sky. A reminder that beauty exists beyond
+        human creation, a celestial performance that has inspired wonder for millennia.
+      </p>
     </div>
 
     <div class="place-card">
-        <h3>Eridu</h3>
-        <p class="location">Iraq (Ancient Sumeria)</p>
-        <p>The heart of the world. The oldest known city in human history. Where civilization began. To stand on that ground is to connect with the first humans who dared to build something permanent.</p>
+      <h3>Eridu</h3>
+      <p class="location">Iraq (Ancient Sumeria)</p>
+      <p>
+        The heart of the world. The oldest known city in human history. Where civilization began. To
+        stand on that ground is to connect with the first humans who dared to build something
+        permanent.
+      </p>
     </div>
 
     <div class="place-card">
-        <h3>Libyan Desert</h3>
-        <p class="location">Libya</p>
-        <p>Anywhere in Libya, just to feel the ground where Gaddafi has been laid to rest. To see the capital and understand what could have been. He attempted to make Africa economically independent with a unified currency. Interventions stopped him. This had the potential of what Ethiopia could be.</p>
+      <h3>Libyan Desert</h3>
+      <p class="location">Libya</p>
+      <p>
+        Anywhere in Libya, just to feel the ground where Gaddafi has been laid to rest. To see the
+        capital and understand what could have been. He attempted to make Africa economically
+        independent with a unified currency. Interventions stopped him. This had the potential of
+        what Ethiopia could be.
+      </p>
     </div>
 
     <h2>🏛️ Philosophers & Thinkers</h2>
 
     <div class="place-card">
-        <h3>Zhou Dunyi Bronze Statue</h3>
-        <p class="location">White Deer Grotto, China</p>
-        <p>A Neo-Confucian philosopher who synthesized Buddhist, Daoist, and Confucian thought. To see where his ideas took root and influenced Chinese philosophy for centuries.</p>
+      <h3>Zhou Dunyi Bronze Statue</h3>
+      <p class="location">White Deer Grotto, China</p>
+      <p>
+        A Neo-Confucian philosopher who synthesized Buddhist, Daoist, and Confucian thought. To see
+        where his ideas took root and influenced Chinese philosophy for centuries.
+      </p>
     </div>
 
     <div class="place-card">
-        <h3>Lyceum of Aristotle</h3>
-        <p class="location">Athens, Greece</p>
-        <p>To see one of the first western thinkers. From the root of it all—Socrates, whose school is destroyed. This is where systematic philosophy was born.</p>
+      <h3>Lyceum of Aristotle</h3>
+      <p class="location">Athens, Greece</p>
+      <p>
+        To see one of the first western thinkers. From the root of it all—Socrates, whose school is
+        destroyed. This is where systematic philosophy was born.
+      </p>
     </div>
 
     <div class="place-card">
-        <h3>Königsberg Cathedral</h3>
-        <p class="location">Kaliningrad, Russia</p>
-        <p>To see where Immanuel Kant is resting. The man who wrote about transcendental idealism and perpetual peace. His ideas shaped how we understand reality itself.</p>
+      <h3>Königsberg Cathedral</h3>
+      <p class="location">Kaliningrad, Russia</p>
+      <p>
+        To see where Immanuel Kant is resting. The man who wrote about transcendental idealism and
+        perpetual peace. His ideas shaped how we understand reality itself.
+      </p>
     </div>
 
     <div class="place-card">
-        <h3>Karl Marx Statue</h3>
-        <p class="location">Trier, Germany</p>
-        <p>Love him or hate him, Marx changed the world. His ideas influenced revolutions, governments, and economic systems. To understand history, you must understand Marx.</p>
+      <h3>Karl Marx Statue</h3>
+      <p class="location">Trier, Germany</p>
+      <p>
+        Love him or hate him, Marx changed the world. His ideas influenced revolutions, governments,
+        and economic systems. To understand history, you must understand Marx.
+      </p>
     </div>
 
     <div class="place-card">
-        <h3>Druid Heights</h3>
-        <p class="location">California, USA (Alan Watts' former home)</p>
-        <p>Where Alan Watts lived and contemplated Eastern philosophy for Western minds. A pilgrimage for anyone seeking to bridge the gap between spirituality and everyday life.</p>
+      <h3>Druid Heights</h3>
+      <p class="location">California, USA (Alan Watts' former home)</p>
+      <p>
+        Where Alan Watts lived and contemplated Eastern philosophy for Western minds. A pilgrimage
+        for anyone seeking to bridge the gap between spirituality and everyday life.
+      </p>
     </div>
 
     <h2>🕉️ Religious Sites & Spiritual Centers</h2>
 
     <div class="place-card">
-        <h3>Bodhi Tree</h3>
-        <p class="location">Bodh Gaya, India</p>
-        <p>Where Buddha achieved enlightenment. The descendant of the original tree still stands. To sit beneath it is to sit where the foundation of Buddhism was laid.</p>
+      <h3>Bodhi Tree</h3>
+      <p class="location">Bodh Gaya, India</p>
+      <p>
+        Where Buddha achieved enlightenment. The descendant of the original tree still stands. To
+        sit beneath it is to sit where the foundation of Buddhism was laid.
+      </p>
     </div>
 
     <div class="place-card">
-        <h3>Gurdwara Thum Sahib</h3>
-        <p class="location">Kartarpur, Pakistan</p>
-        <p>To see the Guru Granth Sahib in the possession of the Sodhi family. A sacred text that guides millions of Sikhs worldwide.</p>
+      <h3>Gurdwara Thum Sahib</h3>
+      <p class="location">Kartarpur, Pakistan</p>
+      <p>
+        To see the Guru Granth Sahib in the possession of the Sodhi family. A sacred text that
+        guides millions of Sikhs worldwide.
+      </p>
     </div>
 
     <div class="place-card">
-        <h3>Darbar Sahib</h3>
-        <p class="location">Amritsar, India</p>
-        <p>The Golden Temple. The spiritual center of Sikhism. A place of equality, service, and divine connection.</p>
+      <h3>Darbar Sahib</h3>
+      <p class="location">Amritsar, India</p>
+      <p>
+        The Golden Temple. The spiritual center of Sikhism. A place of equality, service, and divine
+        connection.
+      </p>
     </div>
 
     <div class="place-card">
-        <h3>St. Sofia Church</h3>
-        <p class="location">Sofia, Bulgaria</p>
-        <p>Has the Edict of Toleration written trilingually. It was what made Christianity as mighty as it is today. Without that edict, Christianity wouldn't have spread as wide as it did. Christians were persecuted before this, but when this was written, they were able to embrace who they worship without reparations. Now recognized by the Roman Empire, it spread like wildfire.</p>
+      <h3>St. Sofia Church</h3>
+      <p class="location">Sofia, Bulgaria</p>
+      <p>
+        Has the Edict of Toleration written trilingually. It was what made Christianity as mighty as
+        it is today. Without that edict, Christianity wouldn't have spread as wide as it did.
+        Christians were persecuted before this, but when this was written, they were able to embrace
+        who they worship without reparations. Now recognized by the Roman Empire, it spread like
+        wildfire.
+      </p>
     </div>
 
     <div class="place-card">
-        <h3>Holy Trinity Cathedral</h3>
-        <p class="location">Addis Ababa, Ethiopia</p>
-        <p>See the alleged blood of King Solomon's last living emperor on our earth. Ethiopia, as a rising nation of Africa, represents what the continent could become.</p>
+      <h3>Holy Trinity Cathedral</h3>
+      <p class="location">Addis Ababa, Ethiopia</p>
+      <p>
+        See the alleged blood of King Solomon's last living emperor on our earth. Ethiopia, as a
+        rising nation of Africa, represents what the continent could become.
+      </p>
     </div>
 
     <div class="place-card">
-        <h3>Convent of Christ</h3>
-        <p class="location">Tomar, Portugal</p>
-        <p>A UNESCO World Heritage site built by the Knights Templar. A place where military might and spiritual devotion intersected.</p>
+      <h3>Convent of Christ</h3>
+      <p class="location">Tomar, Portugal</p>
+      <p>
+        A UNESCO World Heritage site built by the Knights Templar. A place where military might and
+        spiritual devotion intersected.
+      </p>
     </div>
 
     <h2>⚰️ Burial Sites & Memorials</h2>
 
     <div class="place-card">
-        <h3>Marco Polo Burial - Igreja de San Lorenzo</h3>
-        <p class="location">Venice, Italy</p>
-        <p>The man who bridged East and West. His travels opened Europe's eyes to Asia and sparked centuries of exploration.</p>
+      <h3>Marco Polo Burial - Igreja de San Lorenzo</h3>
+      <p class="location">Venice, Italy</p>
+      <p>
+        The man who bridged East and West. His travels opened Europe's eyes to Asia and sparked
+        centuries of exploration.
+      </p>
     </div>
 
     <div class="place-card">
-        <h3>Anwar Sadat Memorial</h3>
-        <p class="location">Monumento al soldado desconocido, Egypt</p>
-        <p>An Arab Muslim president who made peace with Israel. A bold move that cost him his life but changed the trajectory of Middle Eastern politics.</p>
+      <h3>Anwar Sadat Memorial</h3>
+      <p class="location">Monumento al soldado desconocido, Egypt</p>
+      <p>
+        An Arab Muslim president who made peace with Israel. A bold move that cost him his life but
+        changed the trajectory of Middle Eastern politics.
+      </p>
     </div>
 
     <div class="place-card">
-        <h3>Nasser Mosque</h3>
-        <p class="location">Egypt</p>
-        <p>Egypt's leader of pan-Arabism to pan-Africa to pan-Earth. A visionary who saw beyond borders.</p>
+      <h3>Nasser Mosque</h3>
+      <p class="location">Egypt</p>
+      <p>
+        Egypt's leader of pan-Arabism to pan-Africa to pan-Earth. A visionary who saw beyond
+        borders.
+      </p>
     </div>
 
     <div class="place-card">
-        <h3>Princess Diana Burial</h3>
-        <p class="location">Althorp, Wales</p>
-        <p>The People's Princess. A woman who used her platform for compassion and humanitarian work.</p>
+      <h3>Princess Diana Burial</h3>
+      <p class="location">Althorp, Wales</p>
+      <p>
+        The People's Princess. A woman who used her platform for compassion and humanitarian work.
+      </p>
     </div>
 
     <div class="place-card">
-        <h3>Subutai's Resting Place (Folk Legend)</h3>
-        <p class="location">Sulina, Romania (Banks of the Danube River)</p>
-        <p>Based on folk legend, this is where the Mongol Empire ended. Subutai was a great strategist. I would've loved to have met or talked to him once. Now I'll just have a photo where he was last around.</p>
+      <h3>Subutai's Resting Place (Folk Legend)</h3>
+      <p class="location">Sulina, Romania (Banks of the Danube River)</p>
+      <p>
+        Based on folk legend, this is where the Mongol Empire ended. Subutai was a great strategist.
+        I would've loved to have met or talked to him once. Now I'll just have a photo where he was
+        last around.
+      </p>
     </div>
 
     <div class="place-card">
-        <h3>Maria Veniaminovna Yudina Burial</h3>
-        <p class="location">Vvedenskoye Cemetery, Moscow, Russia</p>
-        <p>A pianist who stood up to Stalin. Her courage in the face of tyranny is legendary.</p>
+      <h3>Maria Veniaminovna Yudina Burial</h3>
+      <p class="location">Vvedenskoye Cemetery, Moscow, Russia</p>
+      <p>A pianist who stood up to Stalin. Her courage in the face of tyranny is legendary.</p>
     </div>
 
     <div class="place-card">
-        <h3>John D. Rockefeller</h3>
-        <p class="location">Lakeview Cemetery, Ohio, USA</p>
-        <p>Just because the alternate timeline. What if wealth was used differently?</p>
+      <h3>John D. Rockefeller</h3>
+      <p class="location">Lakeview Cemetery, Ohio, USA</p>
+      <p>Just because the alternate timeline. What if wealth was used differently?</p>
     </div>
 
     <div class="place-card">
-        <h3>James Dean</h3>
-        <p class="location">Park Cemetery, Indiana, USA</p>
-        <p>Also because alternate timeline. A symbol of youth, rebellion, and the ephemeral nature of fame.</p>
+      <h3>James Dean</h3>
+      <p class="location">Park Cemetery, Indiana, USA</p>
+      <p>
+        Also because alternate timeline. A symbol of youth, rebellion, and the ephemeral nature of
+        fame.
+      </p>
     </div>
 
     <h2>🏺 Ancient Civilizations</h2>
 
     <div class="place-card">
-        <h3>Avaris (Pi-Ramesses)</h3>
-        <p class="location">Egypt</p>
-        <p>To see the greatest ruler of Egypt during the period where they created the pyramids. To see who they considered the best of themselves and why he decided to build his palace right there. They said only the feet are on surface level. Everything else is buried underneath. We need to check underneath.</p>
+      <h3>Avaris (Pi-Ramesses)</h3>
+      <p class="location">Egypt</p>
+      <p>
+        To see the greatest ruler of Egypt during the period where they created the pyramids. To see
+        who they considered the best of themselves and why he decided to build his palace right
+        there. They said only the feet are on surface level. Everything else is buried underneath.
+        We need to check underneath.
+      </p>
     </div>
 
     <div class="place-card">
-        <h3>Knossos Palace</h3>
-        <p class="location">Heraklion, Crete, Greece</p>
-        <p>To see the Minoans' greatest architecture and how they created such magnificent buildings—four-story places with plumbing and a writing system and infrastructure—back when people were still using bushels of leaves as toilet paper. I'm amazed and would love to see what was so special about being there.</p>
+      <h3>Knossos Palace</h3>
+      <p class="location">Heraklion, Crete, Greece</p>
+      <p>
+        To see the Minoans' greatest architecture and how they created such magnificent
+        buildings—four-story places with plumbing and a writing system and infrastructure—back when
+        people were still using bushels of leaves as toilet paper. I'm amazed and would love to see
+        what was so special about being there.
+      </p>
     </div>
 
     <div class="place-card">
-        <h3>Su Nuraxi of Barumini</h3>
-        <p class="location">Sardinia, Italy</p>
-        <p>Nuragic civilization. The pinecone shape holds symbolic significance across various cultures, including ancient Egyptian, Hermetic, and Gnostic traditions. This structure embodies that sacred geometry.</p>
+      <h3>Su Nuraxi of Barumini</h3>
+      <p class="location">Sardinia, Italy</p>
+      <p>
+        Nuragic civilization. The pinecone shape holds symbolic significance across various
+        cultures, including ancient Egyptian, Hermetic, and Gnostic traditions. This structure
+        embodies that sacred geometry.
+      </p>
     </div>
 
     <div class="place-card">
-        <h3>L'Anse aux Meadows</h3>
-        <p class="location">Newfoundland, Canada</p>
-        <p>The only confirmed Viking settlement in North America. Proof that exploration happened long before Columbus.</p>
+      <h3>L'Anse aux Meadows</h3>
+      <p class="location">Newfoundland, Canada</p>
+      <p>
+        The only confirmed Viking settlement in North America. Proof that exploration happened long
+        before Columbus.
+      </p>
     </div>
 
     <h2>🎨 Art & Culture</h2>
 
     <div class="place-card">
-        <h3>Michelangelo's David & His Tomb</h3>
-        <p class="location">Florence, Italy (Statue) & Basilica of Santa Croce (Tomb)</p>
-        <p>To document the statue before it collapses. To go to his grave to see a divine man in his glory. A Renaissance master who defined beauty.</p>
+      <h3>Michelangelo's David & His Tomb</h3>
+      <p class="location">Florence, Italy (Statue) & Basilica of Santa Croce (Tomb)</p>
+      <p>
+        To document the statue before it collapses. To go to his grave to see a divine man in his
+        glory. A Renaissance master who defined beauty.
+      </p>
     </div>
 
     <div class="place-card">
-        <h3>Gamzigrad (Felix Romuliana)</h3>
-        <p class="location">Serbia</p>
-        <p>While I'm there I'll take a picture with the remnants where the great emperor was. My family loves and worships God and therefore loves and respects Constantine for spreading it to their families. The emperor deserves more credit than he gets. Maybe go down the Roman emperors' route as well.</p>
+      <h3>Gamzigrad (Felix Romuliana)</h3>
+      <p class="location">Serbia</p>
+      <p>
+        While I'm there I'll take a picture with the remnants where the great emperor was. My family
+        loves and worships God and therefore loves and respects Constantine for spreading it to
+        their families. The emperor deserves more credit than he gets. Maybe go down the Roman
+        emperors' route as well.
+      </p>
     </div>
 
     <div class="place-card">
-        <h3>Homer's Rock</h3>
-        <p class="location">Chios, Greece</p>
-        <p>The birthplace (allegedly) of Homer, who wrote the Iliad and the Odyssey. The foundation of Western literature.</p>
+      <h3>Homer's Rock</h3>
+      <p class="location">Chios, Greece</p>
+      <p>
+        The birthplace (allegedly) of Homer, who wrote the Iliad and the Odyssey. The foundation of
+        Western literature.
+      </p>
     </div>
 
     <h2>🕊️ Peace & Remembrance</h2>
 
     <div class="place-card">
-        <h3>Stanislav Petrov Memorial</h3>
-        <p class="location">Russia</p>
-        <p>To pay tribute for a world nuclear war he prevented. On September 26, 1983, he made the decision that saved billions of lives. A hero the world forgot.</p>
+      <h3>Stanislav Petrov Memorial</h3>
+      <p class="location">Russia</p>
+      <p>
+        To pay tribute for a world nuclear war he prevented. On September 26, 1983, he made the
+        decision that saved billions of lives. A hero the world forgot.
+      </p>
     </div>
 
     <div class="place-card">
-        <h3>This Bird Temple</h3>
-        <p class="location">Kerala, India</p>
-        <p>A sacred site I need to explore. Details are sparse, but the pull is strong.</p>
+      <h3>This Bird Temple</h3>
+      <p class="location">Kerala, India</p>
+      <p>A sacred site I need to explore. Details are sparse, but the pull is strong.</p>
     </div>
 
     <h2>🌍 Final Thoughts</h2>
 
     <section>
-        <p>These places aren't just tourist destinations. They're coordinates on the map of human consciousness. Each one represents a moment when someone dared to think differently, act courageously, or create something that outlasted their mortal body.</p>
-        <p>If I can't make it to all of them, I hope someone reading this will. Take a photo. Feel the ground. And remember that history isn't just in books—it's in the places where great minds walked.</p>
+      <p>
+        These places aren't just tourist destinations. They're coordinates on the map of human
+        consciousness. Each one represents a moment when someone dared to think differently, act
+        courageously, or create something that outlasted their mortal body.
+      </p>
+      <p>
+        If I can't make it to all of them, I hope someone reading this will. Take a photo. Feel the
+        ground. And remember that history isn't just in books—it's in the places where great minds
+        walked.
+      </p>
     </section>
 
     <footer>
-        <p>© 2025 Richy. May these journeys happen in this life or the next.</p>
+      <p>© 2025 Richy. May these journeys happen in this life or the next.</p>
     </footer>
-</body>
+  </body>
 </html>

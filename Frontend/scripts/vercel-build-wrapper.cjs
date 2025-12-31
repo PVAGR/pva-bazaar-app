@@ -5,10 +5,7 @@ const path = require('path');
 
 function findFrontendDir() {
   const cwd = process.cwd();
-  const candidates = [
-    path.join(cwd, 'Frontend'),
-    path.join(cwd, '..', 'Frontend')
-  ];
+  const candidates = [path.join(cwd, 'Frontend'), path.join(cwd, '..', 'Frontend')];
   for (const d of candidates) {
     try {
       if (path.basename(d).toLowerCase() !== 'frontend') continue;
@@ -26,9 +23,13 @@ if (!frontendDir) {
 
 console.log('ℹ️ Using frontend dir:', frontendDir);
 
-function run(cmd, args, options={}){
+function run(cmd, args, options = {}) {
   console.log('> ', cmd, args.join(' '));
-  const r = spawnSync(cmd, args, Object.assign({ stdio: 'inherit', cwd: frontendDir, shell: false }, options));
+  const r = spawnSync(
+    cmd,
+    args,
+    Object.assign({ stdio: 'inherit', cwd: frontendDir, shell: false }, options),
+  );
   if (r.error) {
     console.error('Command failed', r.error);
     process.exit(1);

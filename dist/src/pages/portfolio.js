@@ -19,7 +19,9 @@ async function loadPortfolio() {
     const targetBody = artifactsTableBody || holdingsTableBody;
 
     if (targetBody) {
-      targetBody.innerHTML = artifacts.map(a => `
+      targetBody.innerHTML = artifacts
+        .map(
+          (a) => `
         <tr>
           <td>
             <div class="asset">
@@ -38,18 +40,22 @@ async function loadPortfolio() {
             <button class="table-btn btn-buy" data-id="${a._id}">Buy</button>
           </td>
         </tr>
-      `).join('');
+      `,
+        )
+        .join('');
     } else {
       // Page has no table the script knows about; skip DOM population silently.
       console.debug('No artifacts/holdings table found on this page.');
     }
 
     // Update simple stats (fall back to any visible stat-value)
-    const totalEl = document.querySelector('.portfolio-overview .stat-card .stat-value') || document.querySelector('.stat-card .stat-value');
+    const totalEl =
+      document.querySelector('.portfolio-overview .stat-card .stat-value') ||
+      document.querySelector('.stat-card .stat-value');
     if (totalEl) totalEl.textContent = String(artifacts.length);
 
     // Attach buy handlers (simple navigation for now)
-    document.querySelectorAll('.table-btn.btn-buy').forEach(btn => {
+    document.querySelectorAll('.table-btn.btn-buy').forEach((btn) => {
       btn.addEventListener('click', () => {
         const id = btn.dataset.id;
         // Navigate to checkout page with selected artifact

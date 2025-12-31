@@ -15,7 +15,9 @@ export default async function handler(req, res) {
     if (req.method === 'GET') {
       const slug = path.replace(/\/$/, '');
       if (!slug) return res.status(400).json({ ok: false, message: 'Missing slug' });
-      const list = Array.isArray(global.__PVA_COMMENTS__[slug]) ? global.__PVA_COMMENTS__[slug] : [];
+      const list = Array.isArray(global.__PVA_COMMENTS__[slug])
+        ? global.__PVA_COMMENTS__[slug]
+        : [];
       return res.status(200).json({ ok: true, comments: list });
     }
 
@@ -27,15 +29,23 @@ export default async function handler(req, res) {
 
       // Parse JSON body
       let body = '';
-      req.on('data', chunk => { body += chunk; });
-      await new Promise(resolve => req.on('end', resolve));
+      req.on('data', (chunk) => {
+        body += chunk;
+      });
+      await new Promise((resolve) => req.on('end', resolve));
       const payload = JSON.parse(body || '{}');
 
       const authorName = (payload.authorName || '').toString().trim() || 'Anonymous';
       const content = (payload.body || '').toString();
       if (!content) return res.status(400).json({ ok: false, message: 'Empty comment' });
 
-      const entry = { blogSlug: slug, authorName, body: content, createdAt: new Date().toISOString(), approved: true };
+      const entry = {
+        blogSlug: slug,
+        authorName,
+        body: content,
+        createdAt: new Date().toISOString(),
+        approved: true,
+      };
       global.__PVA_COMMENTS__[slug] = global.__PVA_COMMENTS__[slug] || [];
       global.__PVA_COMMENTS__[slug].unshift(entry);
 

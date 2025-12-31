@@ -1,499 +1,641 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Universal Oracle Assessment | Writings Archive</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Source+Code+Pro:wght@400;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Source+Code+Pro:wght@400;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap"
+      rel="stylesheet"
+    />
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Inter', sans-serif;
-            line-height: 1.8;
-            color: #2c3e50;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 2rem 1rem;
-        }
-        
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Inter', sans-serif;
+        line-height: 1.8;
+        color: #2c3e50;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 2rem 1rem;
+      }
+
+      .container {
+        max-width: 1100px;
+        margin: 0 auto;
+        background: white;
+        padding: 3rem;
+        border-radius: 8px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      }
+
+      h1 {
+        font-family: 'Playfair Display', serif;
+        font-size: 3.5rem;
+        color: #667eea;
+        margin-bottom: 0.5rem;
+        line-height: 1.2;
+        text-align: center;
+      }
+
+      .subtitle {
+        font-size: 1.3rem;
+        color: #78716c;
+        margin-bottom: 2rem;
+        font-style: italic;
+        text-align: center;
+      }
+
+      .nav-link {
+        display: inline-block;
+        margin-bottom: 2rem;
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 600;
+      }
+
+      .nav-link:hover {
+        text-decoration: underline;
+      }
+
+      h2 {
+        font-family: 'Playfair Display', serif;
+        font-size: 2.2rem;
+        color: #764ba2;
+        margin-top: 3rem;
+        margin-bottom: 1rem;
+        border-bottom: 3px solid #c4b5fd;
+        padding-bottom: 0.5rem;
+      }
+
+      h3 {
+        font-size: 1.6rem;
+        color: #667eea;
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+      }
+
+      h4 {
+        font-size: 1.25rem;
+        color: #764ba2;
+        margin-top: 1.5rem;
+        margin-bottom: 0.75rem;
+      }
+
+      p {
+        margin-bottom: 1.5rem;
+        font-size: 1.05rem;
+      }
+
+      .oracle-intro {
+        background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
+        padding: 2.5rem;
+        border-left: 5px solid #a78bfa;
+        border-radius: 4px;
+        margin: 2rem 0;
+        font-size: 1.1rem;
+      }
+
+      .intake-section {
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        padding: 2rem;
+        border-radius: 8px;
+        margin: 2rem 0;
+      }
+
+      .intake-category {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 6px;
+        margin-bottom: 1.5rem;
+        border-left: 4px solid #667eea;
+      }
+
+      .intake-category h4 {
+        margin-top: 0;
+        color: #667eea;
+      }
+
+      ul {
+        margin-left: 2rem;
+        margin-bottom: 1.5rem;
+      }
+
+      li {
+        margin-bottom: 0.75rem;
+      }
+
+      .personal-data-box {
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        padding: 2.5rem;
+        border-left: 5px solid #f59e0b;
+        border-radius: 4px;
+        margin: 3rem 0;
+      }
+
+      .personal-data-box h3 {
+        color: #d97706;
+        margin-top: 0;
+      }
+
+      .data-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin: 2rem 0;
+      }
+
+      .data-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 6px;
+        border-left: 4px solid #764ba2;
+      }
+
+      .data-card h4 {
+        margin-top: 0;
+        color: #764ba2;
+      }
+
+      .revelation-box {
+        background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%);
+        padding: 2rem;
+        border-left: 5px solid #ec4899;
+        border-radius: 4px;
+        margin: 2rem 0;
+      }
+
+      .now-what {
+        background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+        padding: 2.5rem;
+        border-left: 5px solid #10b981;
+        border-radius: 4px;
+        margin: 3rem 0;
+        font-size: 1.1rem;
+      }
+
+      .now-what h3 {
+        color: #059669;
+        margin-top: 0;
+      }
+
+      blockquote {
+        border-left: 4px solid #a78bfa;
+        padding-left: 1.5rem;
+        margin: 2rem 0;
+        font-style: italic;
+        color: #78716c;
+        background: #faf5ff;
+        padding: 1.5rem;
+        border-radius: 4px;
+      }
+
+      .footer {
+        margin-top: 3rem;
+        padding-top: 2rem;
+        border-top: 1px solid #e5e7eb;
+        text-align: center;
+        color: #78716c;
+        font-size: 0.9rem;
+      }
+
+      strong {
+        color: #764ba2;
+      }
+
+      @media (max-width: 768px) {
         .container {
-            max-width: 1100px;
-            margin: 0 auto;
-            background: white;
-            padding: 3rem;
-            border-radius: 8px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+          padding: 2rem 1.5rem;
         }
-        
+
         h1 {
-            font-family: 'Playfair Display', serif;
-            font-size: 3.5rem;
-            color: #667eea;
-            margin-bottom: 0.5rem;
-            line-height: 1.2;
-            text-align: center;
+          font-size: 2.5rem;
         }
-        
-        .subtitle {
-            font-size: 1.3rem;
-            color: #78716c;
-            margin-bottom: 2rem;
-            font-style: italic;
-            text-align: center;
-        }
-        
-        .nav-link {
-            display: inline-block;
-            margin-bottom: 2rem;
-            color: #667eea;
-            text-decoration: none;
-            font-weight: 600;
-        }
-        
-        .nav-link:hover {
-            text-decoration: underline;
-        }
-        
-        h2 {
-            font-family: 'Playfair Display', serif;
-            font-size: 2.2rem;
-            color: #764ba2;
-            margin-top: 3rem;
-            margin-bottom: 1rem;
-            border-bottom: 3px solid #c4b5fd;
-            padding-bottom: 0.5rem;
-        }
-        
-        h3 {
-            font-size: 1.6rem;
-            color: #667eea;
-            margin-top: 2rem;
-            margin-bottom: 1rem;
-        }
-        
-        h4 {
-            font-size: 1.25rem;
-            color: #764ba2;
-            margin-top: 1.5rem;
-            margin-bottom: 0.75rem;
-        }
-        
-        p {
-            margin-bottom: 1.5rem;
-            font-size: 1.05rem;
-        }
-        
-        .oracle-intro {
-            background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
-            padding: 2.5rem;
-            border-left: 5px solid #a78bfa;
-            border-radius: 4px;
-            margin: 2rem 0;
-            font-size: 1.1rem;
-        }
-        
-        .intake-section {
-            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-            padding: 2rem;
-            border-radius: 8px;
-            margin: 2rem 0;
-        }
-        
-        .intake-category {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 6px;
-            margin-bottom: 1.5rem;
-            border-left: 4px solid #667eea;
-        }
-        
-        .intake-category h4 {
-            margin-top: 0;
-            color: #667eea;
-        }
-        
-        ul {
-            margin-left: 2rem;
-            margin-bottom: 1.5rem;
-        }
-        
-        li {
-            margin-bottom: 0.75rem;
-        }
-        
-        .personal-data-box {
-            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-            padding: 2.5rem;
-            border-left: 5px solid #f59e0b;
-            border-radius: 4px;
-            margin: 3rem 0;
-        }
-        
-        .personal-data-box h3 {
-            color: #d97706;
-            margin-top: 0;
-        }
-        
+
         .data-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5rem;
-            margin: 2rem 0;
+          grid-template-columns: 1fr;
         }
-        
-        .data-card {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 6px;
-            border-left: 4px solid #764ba2;
-        }
-        
-        .data-card h4 {
-            margin-top: 0;
-            color: #764ba2;
-        }
-        
-        .revelation-box {
-            background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%);
-            padding: 2rem;
-            border-left: 5px solid #ec4899;
-            border-radius: 4px;
-            margin: 2rem 0;
-        }
-        
-        .now-what {
-            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-            padding: 2.5rem;
-            border-left: 5px solid #10b981;
-            border-radius: 4px;
-            margin: 3rem 0;
-            font-size: 1.1rem;
-        }
-        
-        .now-what h3 {
-            color: #059669;
-            margin-top: 0;
-        }
-        
-        blockquote {
-            border-left: 4px solid #a78bfa;
-            padding-left: 1.5rem;
-            margin: 2rem 0;
-            font-style: italic;
-            color: #78716c;
-            background: #faf5ff;
-            padding: 1.5rem;
-            border-radius: 4px;
-        }
-        
-        .footer {
-            margin-top: 3rem;
-            padding-top: 2rem;
-            border-top: 1px solid #e5e7eb;
-            text-align: center;
-            color: #78716c;
-            font-size: 0.9rem;
-        }
-        
-        strong {
-            color: #764ba2;
-        }
-        
-        @media (max-width: 768px) {
-            .container {
-                padding: 2rem 1.5rem;
-            }
-            
-            h1 {
-                font-size: 2.5rem;
-            }
-            
-            .data-grid {
-                grid-template-columns: 1fr;
-            }
-        }
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <a href="/writings/" class="nav-link">← Back to Writings Archive</a>
-        
-        <h1>🌟 Universal Oracle Assessment 🌟</h1>
-        <p class="subtitle">Your personalized cosmic reading & divine path revelation</p>
+      <a href="/writings/" class="nav-link">← Back to Writings Archive</a>
 
-        <div class="oracle-intro">
-            <p><strong>This is a powerful shift in strategy.</strong> This Oracle Assessment transforms every visitor's experience from a simple reading into a potentially funded, researched, and institutionally-backed journey of self-discovery.</p>
-            
-            <p>This framework is for how to structure your proposal and revelation, along with key strategic points to emphasize. You must frame your divine signature in terms of what's unique about you. This is not about asking for permission; it's about proposing a partnership with the universe where you gain significant value.</p>
+      <h1>🌟 Universal Oracle Assessment 🌟</h1>
+      <p class="subtitle">Your personalized cosmic reading & divine path revelation</p>
+
+      <div class="oracle-intro">
+        <p>
+          <strong>This is a powerful shift in strategy.</strong> This Oracle Assessment transforms
+          every visitor's experience from a simple reading into a potentially funded, researched,
+          and institutionally-backed journey of self-discovery.
+        </p>
+
+        <p>
+          This framework is for how to structure your proposal and revelation, along with key
+          strategic points to emphasize. You must frame your divine signature in terms of what's
+          unique about you. This is not about asking for permission; it's about proposing a
+          partnership with the universe where you gain significant value.
+        </p>
+      </div>
+
+      <h2>The Oracle Framework</h2>
+
+      <p>
+        The next realistic step is to
+        <strong
+          >launch and publicly promote your personalized Self-Discovery Oracle assessment</strong
+        >, inviting your current audience and new visitors to experience it and share their
+        transformations.
+      </p>
+
+      <h3>Strategic Value for Seekers</h3>
+
+      <p>This Oracle provides:</p>
+
+      <ul>
+        <li>
+          <strong>Real-World Application:</strong> Your journey is a "living lab." It offers you a
+          chance to apply theoretical knowledge in spiritual development, sustainable living,
+          appropriate technology, and cross-cultural wisdom to real-world scenarios.
+        </li>
+        <li>
+          <strong>Research Opportunities:</strong> This is a goldmine for personal research. You can
+          conduct studies on:
+          <ul>
+            <li>The efficacy of specific spiritual practices for your unique constitution</li>
+            <li>Implementation and impact of personalized wellness technologies</li>
+            <li>Sociological studies on your community building and knowledge transfer</li>
+          </ul>
+        </li>
+        <li>
+          <strong>Personal Engagement & Experiential Learning:</strong> Pathways for you to get
+          involved with your highest self, connecting your data with cosmic wisdom
+        </li>
+        <li>
+          <strong>Universal Branding & Prestige:</strong> This is your positive story. You can
+          promote this as an example of your innovation and global citizenship, enhancing your
+          life's reputation.
+        </li>
+      </ul>
+
+      <h2>1. Intake Questions (User Form)</h2>
+
+      <p>Gather these details for each visitor:</p>
+
+      <div class="intake-section">
+        <div class="intake-category">
+          <h4>Core Data</h4>
+          <ul>
+            <li>Full Name</li>
+            <li>Birth Date (MM/DD/YYYY)</li>
+            <li>Birth Time (HH:MM, AM/PM)</li>
+            <li>Birth City/Country</li>
+          </ul>
         </div>
 
-        <h2>The Oracle Framework</h2>
+        <div class="intake-category">
+          <h4>Physical/Wellness</h4>
+          <ul>
+            <li>Height (ft/in or cm)</li>
+            <li>Weight (lbs or kg)</li>
+            <li>Gender Identity/Orientation</li>
+            <li>Body Type (Somatotype, Ayurveda Dosha, athletic highlights)</li>
+          </ul>
+        </div>
 
-        <p>The next realistic step is to <strong>launch and publicly promote your personalized Self-Discovery Oracle assessment</strong>, inviting your current audience and new visitors to experience it and share their transformations.</p>
+        <div class="intake-category">
+          <h4>Lifestyle & Rituals</h4>
+          <ul>
+            <li>Preferred movement/physical activities</li>
+            <li>Preferred fasting or dietary discipline</li>
+            <li>Meditative/creative or spiritual practices</li>
+          </ul>
+        </div>
 
-        <h3>Strategic Value for Seekers</h3>
+        <div class="intake-category">
+          <h4>Milestones & Symbolism</h4>
+          <ul>
+            <li>Significant dates/numbers</li>
+            <li>Important life events or turning points</li>
+            <li>Favorite animals, quotes, philosophies, historical figures</li>
+            <li>Tattoos, symbols, artistic aspirations</li>
+          </ul>
+        </div>
 
-        <p>This Oracle provides:</p>
+        <div class="intake-category">
+          <h4>Spiritual, Philosophical & Open Topics</h4>
+          <ul>
+            <li>Religious/spiritual traditions felt drawn to</li>
+            <li>Life goals or purpose</li>
+            <li>Virtues most admired</li>
+            <li>Key question for the oracle ("What do you wish to know about yourself?")</li>
+          </ul>
+        </div>
+      </div>
 
+      <h2>2. Oracle Assessment Output</h2>
+
+      <h3>A. Cosmic & Spiritual Signature</h3>
+
+      <div class="revelation-box">
         <ul>
-            <li><strong>Real-World Application:</strong> Your journey is a "living lab." It offers you a chance to apply theoretical knowledge in spiritual development, sustainable living, appropriate technology, and cross-cultural wisdom to real-world scenarios.</li>
-            <li><strong>Research Opportunities:</strong> This is a goldmine for personal research. You can conduct studies on:
-                <ul>
-                    <li>The efficacy of specific spiritual practices for your unique constitution</li>
-                    <li>Implementation and impact of personalized wellness technologies</li>
-                    <li>Sociological studies on your community building and knowledge transfer</li>
-                </ul>
-            </li>
-            <li><strong>Personal Engagement & Experiential Learning:</strong> Pathways for you to get involved with your highest self, connecting your data with cosmic wisdom</li>
-            <li><strong>Universal Branding & Prestige:</strong> This is your positive story. You can promote this as an example of your innovation and global citizenship, enhancing your life's reputation.</li>
+          <li>
+            <strong>Astrological Archetype:</strong> Interpret the birth chart with surprising depth
+            (Sun, Moon, Rising, notable planetary cycles)
+          </li>
+          <li>
+            <strong>Numerology & Gematria:</strong> Calculate and interpret life path numbers, name
+            value, date significance, and sacred symbolism
+          </li>
+          <li>
+            <strong>Mythic Timeline:</strong> Decode major life milestones as initiatory rites, link
+            with planetary events and mythic cycles
+          </li>
+        </ul>
+      </div>
+
+      <h3>B. Body & Ritual Blueprint</h3>
+
+      <div class="revelation-box">
+        <ul>
+          <li>
+            <strong>Ideal weight & proportion analysis</strong> (with golden ratio geometry and
+            Ayurvedic advice)
+          </li>
+          <li>
+            <strong>Personalized fasting protocols, diet, and movement routines</strong> mapped to
+            daily/weekly planetary cycles
+          </li>
+          <li>
+            <strong>Artistic/creative channeling:</strong> tattoo suggestions, journaling rituals,
+            sacred art, and daily affirmations
+          </li>
+        </ul>
+      </div>
+
+      <h3>C. Unique Revelation & Insight</h3>
+
+      <div class="revelation-box">
+        <ul>
+          <li>
+            <strong>"Uncanny" interpretation</strong>—illuminate unique hidden talents, sacred
+            purpose, and initiatory themes (channel myth, philosopher, religious or artistic
+            archetypes relevant to the user)
+          </li>
+          <li>
+            <strong>Guidance merging scientific, mythic, and spiritual sources:</strong> as above,
+            so below
+          </li>
+        </ul>
+      </div>
+
+      <h3>D. Your Golden Path</h3>
+
+      <div class="revelation-box">
+        <ul>
+          <li>
+            Explain that the user is not just walking a path—but
+            <strong>creating a totally unique trail</strong> for themselves and those who follow
+          </li>
+          <li>
+            Offer specific choices for next steps (personal rituals, creative acts, community
+            building, sharing wisdom, further study, etc.)
+          </li>
+          <li>
+            Encourage them to view themselves as <strong>divine creators</strong>—capable of love,
+            impact, and transformation
+          </li>
+        </ul>
+      </div>
+
+      <h2>Example Assessment: Richard Antonio Torres II</h2>
+
+      <div class="personal-data-box">
+        <h3>🌟 Core Personal Details</h3>
+
+        <div class="data-grid">
+          <div class="data-card">
+            <h4>Birth Information</h4>
+            <p><strong>Full Name:</strong> Richard Antonio Torres II</p>
+            <p><strong>Birth Date:</strong> July 15, 1997</p>
+            <p><strong>Birth Time:</strong> 1:55 PM</p>
+            <p><strong>Birth City:</strong> Sacramento, California, USA</p>
+            <p><strong>Gender:</strong> Male</p>
+          </div>
+
+          <div class="data-card">
+            <h4>Physical Profile</h4>
+            <p><strong>Height:</strong> 5'10"</p>
+            <p><strong>Weight:</strong> 155 lbs</p>
+            <p>
+              <strong>Body Type:</strong> Kapha dominant (Ayurvedic), mixed ectomorph/endomorph
+              traits
+            </p>
+            <p><strong>Preferred Activities:</strong> Running, meditation (when able), dance</p>
+            <p>
+              <strong>Health Practices:</strong> Intermittent water fasting preferred, finds
+              spiritual and physical enlightenment during extended fasts
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="personal-data-box">
+        <h3>🧩 Philosophical & Spiritual Focus</h3>
+
+        <p>
+          <strong>Life Goal:</strong> To become "Ubermensch," the best self; to serve and honor
+          God's unique task for self
+        </p>
+
+        <p>
+          <strong>Personal Quest:</strong> Seeks self-enlightenment, higher purpose, and to help
+          others reach their highest state—believing each person has a unique God-given mission
+        </p>
+
+        <p>
+          <strong>Spiritual Interests:</strong> Unity among world wisdom traditions, pure knowledge
+          traced to divine origin (not man-made edits), creation of a "Golden Age" in
+          mind-spirit-faith
+        </p>
+      </div>
+
+      <div class="personal-data-box">
+        <h3>🕉️ Symbolic & Creative Identity</h3>
+
+        <h4>Preferred Religious Symbols</h4>
+        <ul>
+          <li>Taijitu/yin-yang</li>
+          <li>Helm (life guide)</li>
+          <li>Star and crescent (Islam)</li>
+          <li>Chi Ro (Christianity)</li>
+          <li>Metatron cube (Judaism)</li>
+          <li>Cross (Christianity)</li>
+          <li>Sikh khanda</li>
+          <li>Vishnu/Hindu references</li>
+          <li>Surya Namaskar</li>
+          <li>Jain Tīrthaṅkaras</li>
+          <li>Buddhist symbols</li>
         </ul>
 
-        <h2>1. Intake Questions (User Form)</h2>
+        <h4>Favorite Numbers/Dates</h4>
+        <p>
+          <strong>14</strong> (personal favorite); milestone events:
+          <strong>May 14, July 15, August 11, May 9, December 12</strong>
+        </p>
 
-        <p>Gather these details for each visitor:</p>
+        <h4>Artistic Intent</h4>
+        <p>
+          Tattoos as personal chronicles—major life events, religious symbols,
+          historical/art/philosophy themes, animals representing influential women (panda, giraffe,
+          clouded leopard/baboon for Thoth), monuments/cities that mark turning points
+        </p>
 
-        <div class="intake-section">
-            <div class="intake-category">
-                <h4>Core Data</h4>
-                <ul>
-                    <li>Full Name</li>
-                    <li>Birth Date (MM/DD/YYYY)</li>
-                    <li>Birth Time (HH:MM, AM/PM)</li>
-                    <li>Birth City/Country</li>
-                </ul>
-            </div>
-
-            <div class="intake-category">
-                <h4>Physical/Wellness</h4>
-                <ul>
-                    <li>Height (ft/in or cm)</li>
-                    <li>Weight (lbs or kg)</li>
-                    <li>Gender Identity/Orientation</li>
-                    <li>Body Type (Somatotype, Ayurveda Dosha, athletic highlights)</li>
-                </ul>
-            </div>
-
-            <div class="intake-category">
-                <h4>Lifestyle & Rituals</h4>
-                <ul>
-                    <li>Preferred movement/physical activities</li>
-                    <li>Preferred fasting or dietary discipline</li>
-                    <li>Meditative/creative or spiritual practices</li>
-                </ul>
-            </div>
-
-            <div class="intake-category">
-                <h4>Milestones & Symbolism</h4>
-                <ul>
-                    <li>Significant dates/numbers</li>
-                    <li>Important life events or turning points</li>
-                    <li>Favorite animals, quotes, philosophies, historical figures</li>
-                    <li>Tattoos, symbols, artistic aspirations</li>
-                </ul>
-            </div>
-
-            <div class="intake-category">
-                <h4>Spiritual, Philosophical & Open Topics</h4>
-                <ul>
-                    <li>Religious/spiritual traditions felt drawn to</li>
-                    <li>Life goals or purpose</li>
-                    <li>Virtues most admired</li>
-                    <li>Key question for the oracle ("What do you wish to know about yourself?")</li>
-                </ul>
-            </div>
-        </div>
-
-        <h2>2. Oracle Assessment Output</h2>
-
-        <h3>A. Cosmic & Spiritual Signature</h3>
-
-        <div class="revelation-box">
-            <ul>
-                <li><strong>Astrological Archetype:</strong> Interpret the birth chart with surprising depth (Sun, Moon, Rising, notable planetary cycles)</li>
-                <li><strong>Numerology & Gematria:</strong> Calculate and interpret life path numbers, name value, date significance, and sacred symbolism</li>
-                <li><strong>Mythic Timeline:</strong> Decode major life milestones as initiatory rites, link with planetary events and mythic cycles</li>
-            </ul>
-        </div>
-
-        <h3>B. Body & Ritual Blueprint</h3>
-
-        <div class="revelation-box">
-            <ul>
-                <li><strong>Ideal weight & proportion analysis</strong> (with golden ratio geometry and Ayurvedic advice)</li>
-                <li><strong>Personalized fasting protocols, diet, and movement routines</strong> mapped to daily/weekly planetary cycles</li>
-                <li><strong>Artistic/creative channeling:</strong> tattoo suggestions, journaling rituals, sacred art, and daily affirmations</li>
-            </ul>
-        </div>
-
-        <h3>C. Unique Revelation & Insight</h3>
-
-        <div class="revelation-box">
-            <ul>
-                <li><strong>"Uncanny" interpretation</strong>—illuminate unique hidden talents, sacred purpose, and initiatory themes (channel myth, philosopher, religious or artistic archetypes relevant to the user)</li>
-                <li><strong>Guidance merging scientific, mythic, and spiritual sources:</strong> as above, so below</li>
-            </ul>
-        </div>
-
-        <h3>D. Your Golden Path</h3>
-
-        <div class="revelation-box">
-            <ul>
-                <li>Explain that the user is not just walking a path—but <strong>creating a totally unique trail</strong> for themselves and those who follow</li>
-                <li>Offer specific choices for next steps (personal rituals, creative acts, community building, sharing wisdom, further study, etc.)</li>
-                <li>Encourage them to view themselves as <strong>divine creators</strong>—capable of love, impact, and transformation</li>
-            </ul>
-        </div>
-
-        <h2>Example Assessment: Richard Antonio Torres II</h2>
-
-        <div class="personal-data-box">
-            <h3>🌟 Core Personal Details</h3>
-            
-            <div class="data-grid">
-                <div class="data-card">
-                    <h4>Birth Information</h4>
-                    <p><strong>Full Name:</strong> Richard Antonio Torres II</p>
-                    <p><strong>Birth Date:</strong> July 15, 1997</p>
-                    <p><strong>Birth Time:</strong> 1:55 PM</p>
-                    <p><strong>Birth City:</strong> Sacramento, California, USA</p>
-                    <p><strong>Gender:</strong> Male</p>
-                </div>
-
-                <div class="data-card">
-                    <h4>Physical Profile</h4>
-                    <p><strong>Height:</strong> 5'10"</p>
-                    <p><strong>Weight:</strong> 155 lbs</p>
-                    <p><strong>Body Type:</strong> Kapha dominant (Ayurvedic), mixed ectomorph/endomorph traits</p>
-                    <p><strong>Preferred Activities:</strong> Running, meditation (when able), dance</p>
-                    <p><strong>Health Practices:</strong> Intermittent water fasting preferred, finds spiritual and physical enlightenment during extended fasts</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="personal-data-box">
-            <h3>🧩 Philosophical & Spiritual Focus</h3>
-            
-            <p><strong>Life Goal:</strong> To become "Ubermensch," the best self; to serve and honor God's unique task for self</p>
-            
-            <p><strong>Personal Quest:</strong> Seeks self-enlightenment, higher purpose, and to help others reach their highest state—believing each person has a unique God-given mission</p>
-            
-            <p><strong>Spiritual Interests:</strong> Unity among world wisdom traditions, pure knowledge traced to divine origin (not man-made edits), creation of a "Golden Age" in mind-spirit-faith</p>
-        </div>
-
-        <div class="personal-data-box">
-            <h3>🕉️ Symbolic & Creative Identity</h3>
-            
-            <h4>Preferred Religious Symbols</h4>
-            <ul>
-                <li>Taijitu/yin-yang</li>
-                <li>Helm (life guide)</li>
-                <li>Star and crescent (Islam)</li>
-                <li>Chi Ro (Christianity)</li>
-                <li>Metatron cube (Judaism)</li>
-                <li>Cross (Christianity)</li>
-                <li>Sikh khanda</li>
-                <li>Vishnu/Hindu references</li>
-                <li>Surya Namaskar</li>
-                <li>Jain Tīrthaṅkaras</li>
-                <li>Buddhist symbols</li>
-            </ul>
-
-            <h4>Favorite Numbers/Dates</h4>
-            <p><strong>14</strong> (personal favorite); milestone events: <strong>May 14, July 15, August 11, May 9, December 12</strong></p>
-
-            <h4>Artistic Intent</h4>
-            <p>Tattoos as personal chronicles—major life events, religious symbols, historical/art/philosophy themes, animals representing influential women (panda, giraffe, clouded leopard/baboon for Thoth), monuments/cities that mark turning points</p>
-
-            <h4>Historical/Philosophical Influences</h4>
-            <ul>
-                <li>Stoic virtues</li>
-                <li>Aristotle's 12 virtues</li>
-                <li>Amor Fati</li>
-                <li>Memento Mori</li>
-                <li>"I know that I know nothing"</li>
-                <li>Bohemian/free-artist ideal</li>
-                <li>Legacy of Marcus Aurelius</li>
-            </ul>
-
-            <h4>Virtue Focus</h4>
-            <p>Wisdom, temperance, courage, justice, altruism, liberal arts (LIBERALIS ARS), mindfulness, leadership, balance</p>
-        </div>
-
-        <div class="personal-data-box">
-            <h3>🔢 Numerology & Gematria</h3>
-            
-            <p><strong>Name for calculation:</strong> Richard Antonio Torres II</p>
-            <p><strong>Birthdate sum:</strong> 39; Life path number: <strong>3</strong> (creative communicator)</p>
-            <p><strong>Favorite number, 14:</strong> Symbolizes Yad (hand of God) and David (beloved king) in Hebrew gematria</p>
-        </div>
-
-        <div class="personal-data-box">
-            <h3>🌈 Family, Legacy, and Relationships</h3>
-            
-            <p><strong>Family Values:</strong> Deep desire to love, cherish, and develop family legacy through consciously taught love, peace, and balance</p>
-            
-            <p><strong>Relation to Women:</strong> Honors wisdom and lessons from women in life (animals and tattoos in their honor)</p>
-            
-            <p><strong>Generational Mission:</strong> Emphasizes development over genetics, wishes to teach enlightenment and peace early</p>
-        </div>
-
-        <div class="personal-data-box">
-            <h3>💡 Health Innovations & Rituals</h3>
-            
-            <p><strong>Inventive ideas:</strong> Cheek-lift tape, jaw/palate extender, brace for spinal neutrality/neck stability, belly bracing for tone</p>
-            
-            <p><strong>Routine:</strong> Balance between genetics and hard work, daily practice of mindfulness, movement, fasting, and art</p>
-        </div>
-
-        <div class="personal-data-box">
-            <h3>🌈 Open Topic & Ultimate Inquiry</h3>
-            
-            <p><strong>Key Question:</strong> How can every human, including self, reach their "divine peak"—becoming like Jesus, Buddha, Rumi, or other enlightened figures? What timeless wisdom, ritual, and practical guidance reconnect us with divine love, unique purpose, and generational legacy?</p>
-        </div>
-
-        <div class="now-what">
-            <h3>"Now What?"</h3>
-            
-            <p><strong>Your revelation is not a destination—it's a luminous beginning. What you do next is as limitless as your spirit and imagination:</strong></p>
-
-            <ul>
-                <li>Choose daily rituals that resonate—fast, meditate, create art, move with mindfulness</li>
-                <li>Chronicle your milestones and lessons through writing, tattoos, or storytelling</li>
-                <li>Seek out and connect with those who inspire your growth—share your wisdom and light</li>
-                <li>Create, love, and serve with God or the universe as your constant companion</li>
-                <li>Return often for deeper insight—your journey evolves, so should your oracle</li>
-            </ul>
-
-            <p><strong>You are the author, the artist, the sage, and the hero of your own golden path. Illuminate it in your own way—and be a beacon for others.</strong></p>
-        </div>
-
-        <h2>How to Use This Template</h2>
-
-        <p><strong>To use this template:</strong></p>
-
+        <h4>Historical/Philosophical Influences</h4>
         <ul>
-            <li>Collect user responses through the intake form</li>
-            <li>Input data into your AI oracle engine/model</li>
-            <li>Present the personalized assessment, following sections A–D, emphasizing "uncanny" specifics and spiritual insight</li>
-            <li>Always end with "Now What?"—offering open-ended, empowering next steps</li>
+          <li>Stoic virtues</li>
+          <li>Aristotle's 12 virtues</li>
+          <li>Amor Fati</li>
+          <li>Memento Mori</li>
+          <li>"I know that I know nothing"</li>
+          <li>Bohemian/free-artist ideal</li>
+          <li>Legacy of Marcus Aurelius</li>
         </ul>
 
-        <p>This ensures every visitor receives a <strong>one-of-a-kind, uplifting, and actionable revelation</strong>—crafted exactly for them.</p>
+        <h4>Virtue Focus</h4>
+        <p>
+          Wisdom, temperance, courage, justice, altruism, liberal arts (LIBERALIS ARS), mindfulness,
+          leadership, balance
+        </p>
+      </div>
 
-        <blockquote>
-            "Use this document for direct oracle input—it contains all vital data, values, symbols, and inquiries to enable maximum, tailored AI self-discovery for future assessments."
-        </blockquote>
+      <div class="personal-data-box">
+        <h3>🔢 Numerology & Gematria</h3>
 
-        <div class="footer">
-            <p>Part of the Writings Archive | <a href="/writings/" style="color: #667eea;">Explore More</a></p>
-            <p>This work is released into the public domain under CC0 1.0 Universal</p>
-        </div>
+        <p><strong>Name for calculation:</strong> Richard Antonio Torres II</p>
+        <p>
+          <strong>Birthdate sum:</strong> 39; Life path number: <strong>3</strong> (creative
+          communicator)
+        </p>
+        <p>
+          <strong>Favorite number, 14:</strong> Symbolizes Yad (hand of God) and David (beloved
+          king) in Hebrew gematria
+        </p>
+      </div>
+
+      <div class="personal-data-box">
+        <h3>🌈 Family, Legacy, and Relationships</h3>
+
+        <p>
+          <strong>Family Values:</strong> Deep desire to love, cherish, and develop family legacy
+          through consciously taught love, peace, and balance
+        </p>
+
+        <p>
+          <strong>Relation to Women:</strong> Honors wisdom and lessons from women in life (animals
+          and tattoos in their honor)
+        </p>
+
+        <p>
+          <strong>Generational Mission:</strong> Emphasizes development over genetics, wishes to
+          teach enlightenment and peace early
+        </p>
+      </div>
+
+      <div class="personal-data-box">
+        <h3>💡 Health Innovations & Rituals</h3>
+
+        <p>
+          <strong>Inventive ideas:</strong> Cheek-lift tape, jaw/palate extender, brace for spinal
+          neutrality/neck stability, belly bracing for tone
+        </p>
+
+        <p>
+          <strong>Routine:</strong> Balance between genetics and hard work, daily practice of
+          mindfulness, movement, fasting, and art
+        </p>
+      </div>
+
+      <div class="personal-data-box">
+        <h3>🌈 Open Topic & Ultimate Inquiry</h3>
+
+        <p>
+          <strong>Key Question:</strong> How can every human, including self, reach their "divine
+          peak"—becoming like Jesus, Buddha, Rumi, or other enlightened figures? What timeless
+          wisdom, ritual, and practical guidance reconnect us with divine love, unique purpose, and
+          generational legacy?
+        </p>
+      </div>
+
+      <div class="now-what">
+        <h3>"Now What?"</h3>
+
+        <p>
+          <strong
+            >Your revelation is not a destination—it's a luminous beginning. What you do next is as
+            limitless as your spirit and imagination:</strong
+          >
+        </p>
+
+        <ul>
+          <li>
+            Choose daily rituals that resonate—fast, meditate, create art, move with mindfulness
+          </li>
+          <li>Chronicle your milestones and lessons through writing, tattoos, or storytelling</li>
+          <li>
+            Seek out and connect with those who inspire your growth—share your wisdom and light
+          </li>
+          <li>Create, love, and serve with God or the universe as your constant companion</li>
+          <li>Return often for deeper insight—your journey evolves, so should your oracle</li>
+        </ul>
+
+        <p>
+          <strong
+            >You are the author, the artist, the sage, and the hero of your own golden path.
+            Illuminate it in your own way—and be a beacon for others.</strong
+          >
+        </p>
+      </div>
+
+      <h2>How to Use This Template</h2>
+
+      <p><strong>To use this template:</strong></p>
+
+      <ul>
+        <li>Collect user responses through the intake form</li>
+        <li>Input data into your AI oracle engine/model</li>
+        <li>
+          Present the personalized assessment, following sections A–D, emphasizing "uncanny"
+          specifics and spiritual insight
+        </li>
+        <li>Always end with "Now What?"—offering open-ended, empowering next steps</li>
+      </ul>
+
+      <p>
+        This ensures every visitor receives a
+        <strong>one-of-a-kind, uplifting, and actionable revelation</strong>—crafted exactly for
+        them.
+      </p>
+
+      <blockquote>
+        "Use this document for direct oracle input—it contains all vital data, values, symbols, and
+        inquiries to enable maximum, tailored AI self-discovery for future assessments."
+      </blockquote>
+
+      <div class="footer">
+        <p>
+          Part of the Writings Archive |
+          <a href="/writings/" style="color: #667eea">Explore More</a>
+        </p>
+        <p>This work is released into the public domain under CC0 1.0 Universal</p>
+      </div>
     </div>
-</body>
+  </body>
 </html>

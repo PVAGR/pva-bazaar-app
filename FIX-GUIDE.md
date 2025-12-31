@@ -13,6 +13,7 @@ To run through all stages with guidance:
 ## Staged Approach
 
 ### Stage 1: Fix Case-Sensitivity Imports
+
 Addresses the issue with inconsistent case in imports (`user.js` vs `User.js`).
 
 ```bash
@@ -20,6 +21,7 @@ Addresses the issue with inconsistent case in imports (`user.js` vs `User.js`).
 ```
 
 ### Stage 2: Ensure Environment Setup
+
 Sets up the proper environment variables and cleans hardcoded secrets.
 
 ```bash
@@ -27,6 +29,7 @@ Sets up the proper environment variables and cleans hardcoded secrets.
 ```
 
 ### Stage 3: Test Backend Connectivity
+
 Verifies that the backend APIs work correctly with the fixed imports.
 
 ```bash
@@ -34,6 +37,7 @@ Verifies that the backend APIs work correctly with the fixed imports.
 ```
 
 ### Stage 4: Test Frontend-Backend Connection
+
 Verifies that the frontend can connect to the backend and display data.
 
 ```bash
@@ -41,6 +45,7 @@ Verifies that the frontend can connect to the backend and display data.
 ```
 
 ### Stage 5: Final Integration Test
+
 Runs the complete application to verify all components work together.
 
 ```bash

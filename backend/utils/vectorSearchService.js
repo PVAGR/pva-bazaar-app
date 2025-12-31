@@ -17,13 +17,13 @@ class VectorSearchService {
     try {
       const artifacts = await Artifact.find({});
       console.log(`Indexing ${artifacts.length} artifacts...`);
-      
+
       let updated = 0;
       for (const artifact of artifacts) {
         await this.indexArtifact(artifact);
         updated++;
       }
-      
+
       console.log(`Successfully indexed ${updated} artifacts`);
       return updated;
     } catch (error) {
@@ -31,7 +31,7 @@ class VectorSearchService {
       throw error;
     }
   }
-  
+
   /**
    * Generate and store embedding for a single artifact
    * @param {Object} artifact - The artifact to index
@@ -44,26 +44,26 @@ class VectorSearchService {
         artifact.name,
         artifact.description,
         artifact.materials?.join(' ') || '',
-        artifact.artisan
+        artifact.artisan,
       ].join(' ');
-      
+
       // Generate embedding
       const embedding = await this.embeddingService.generateEmbedding(textContent);
-      
+
       // Update the artifact with the embedding
       const updatedArtifact = await Artifact.findByIdAndUpdate(
         artifact._id,
         { embedding: embedding },
-        { new: true }
+        { new: true },
       );
-      
+
       return updatedArtifact;
     } catch (error) {
       console.error(`Error indexing artifact ${artifact._id}:`, error);
       throw error;
     }
   }
-  
+
   /**
    * Search for artifacts using vector similarity
    * @param {string} query - The search query
@@ -72,20 +72,20 @@ class VectorSearchService {
    */
   async search(query, options = {}) {
     const { limit = 10, threshold = 0.5 } = options;
-    
+
     try {
       // Get vector search results
       const results = await this.vectorDB.searchSimilar(query, limit);
-      
+
       // Filter by similarity threshold if specified
-      const filteredResults = threshold 
-        ? results.filter(item => item.score >= threshold)
+      const filteredResults = threshold
+        ? results.filter((item) => item.score >= threshold)
         : results;
-      
+
       return {
         query,
         results: filteredResults,
-        count: filteredResults.length
+        count: filteredResults.length,
       };
     } catch (error) {
       console.error('Search error:', error);
@@ -101,31 +101,30 @@ class VectorSearchService {
    */
   async hybridSearch(query, options = {}) {
     const { limit = 10 } = options;
-    
+
     try {
       // Get both vector and text search results
       const [vectorResults, textResults] = await Promise.all([
         this.vectorDB.searchSimilar(query, limit),
-        Artifact.find(
-          { $text: { $search: query } },
-          { score: { $meta: "textScore" } }
-        ).sort({ score: { $meta: "textScore" } }).limit(parseInt(limit))
+        Artifact.find({ $text: { $search: query } }, { score: { $meta: 'textScore' } })
+          .sort({ score: { $meta: 'textScore' } })
+          .limit(parseInt(limit)),
       ]);
 
       // Combine results (removing duplicates)
       const seen = new Set();
       const combinedResults = [];
-      
+
       // Add text results first
       for (const item of textResults) {
         seen.add(item._id.toString());
         combinedResults.push({
           ...item.toObject(),
           source: 'text',
-          matchType: 'keyword'
+          matchType: 'keyword',
         });
       }
-      
+
       // Add vector results that aren't duplicates
       for (const item of vectorResults) {
         const id = item._id.toString();
@@ -134,15 +133,15 @@ class VectorSearchService {
           combinedResults.push({
             ...item,
             source: 'vector',
-            matchType: 'semantic'
+            matchType: 'semantic',
           });
         }
       }
-      
+
       return {
         query,
         results: combinedResults.slice(0, limit),
-        count: combinedResults.length
+        count: combinedResults.length,
       };
     } catch (error) {
       console.error('Hybrid search error:', error);

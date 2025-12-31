@@ -1,6 +1,8 @@
 import { api } from '../api/client';
 
-function readValue(id) { return document.getElementById(id)?.value?.trim(); }
+function readValue(id) {
+  return document.getElementById(id)?.value?.trim();
+}
 
 async function onSubmit(e) {
   e.preventDefault();
@@ -12,11 +14,14 @@ async function onSubmit(e) {
       imageUrl: readValue('imageUrl'),
       price: Number(readValue('price')) || 0,
       category: readValue('category'),
-      materials: (readValue('materials') || '').split(',').map(s => s.trim()).filter(Boolean),
-      artisan: readValue('artisan')
+      materials: (readValue('materials') || '')
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean),
+      artisan: readValue('artisan'),
     };
     const res = await api.post('/artifacts', body);
-    alert(res?.ok ? 'Artifact created' : (res?.message || 'Failed'));
+    alert(res?.ok ? 'Artifact created' : res?.message || 'Failed');
   } catch (err) {
     alert(`Error: ${err.message}`);
   }

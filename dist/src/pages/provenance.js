@@ -20,8 +20,10 @@ function setImage(selector, src) {
 }
 
 function setProgress(total, sold) {
-  const bar = document.getElementById('shares-progress-bar') || document.querySelector('.progress-bar');
-  const text = document.getElementById('shares-progress-text') || document.querySelector('.progress-text');
+  const bar =
+    document.getElementById('shares-progress-bar') || document.querySelector('.progress-bar');
+  const text =
+    document.getElementById('shares-progress-text') || document.querySelector('.progress-text');
   const t = Number(total) || 0;
   const s = Number(sold) || 0;
   const pct = t > 0 ? Math.min(100, Math.max(0, Math.round((s / t) * 100))) : 0;
@@ -62,14 +64,23 @@ async function loadShares(id) {
     if (!s.enabled) return;
     setProgress(s.totalShares, s.soldShares);
 
-    const totalEl = document.getElementById('total-shares-value') || document.querySelectorAll('.share-stat-value')[0];
-    const soldEl = document.getElementById('sold-shares-value') || document.querySelectorAll('.share-stat-value')[1];
-    const priceEl = document.getElementById('share-price-value') || document.querySelectorAll('.share-stat-value')[2];
-    const majorityEl = document.getElementById('majority-threshold-value') || document.querySelectorAll('.share-stat-value')[3];
+    const totalEl =
+      document.getElementById('total-shares-value') ||
+      document.querySelectorAll('.share-stat-value')[0];
+    const soldEl =
+      document.getElementById('sold-shares-value') ||
+      document.querySelectorAll('.share-stat-value')[1];
+    const priceEl =
+      document.getElementById('share-price-value') ||
+      document.querySelectorAll('.share-stat-value')[2];
+    const majorityEl =
+      document.getElementById('majority-threshold-value') ||
+      document.querySelectorAll('.share-stat-value')[3];
 
     if (totalEl) totalEl.textContent = String(s.totalShares ?? 0);
     if (soldEl) soldEl.textContent = String(s.soldShares ?? 0);
-    if (priceEl) priceEl.textContent = `$${(s.sharePrice ?? 0).toFixed ? s.sharePrice.toFixed(2) : s.sharePrice}`;
+    if (priceEl)
+      priceEl.textContent = `$${(s.sharePrice ?? 0).toFixed ? s.sharePrice.toFixed(2) : s.sharePrice}`;
     if (majorityEl) majorityEl.textContent = String(s.majorityThreshold ?? 0);
   } catch (e) {
     // Non-fatal if shares aren’t configured yet

@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+
 # PVA Bazaar - Artisan Marketplace with Blockchain Provenance
 
 [![Secret Scan (gitleaks)](https://github.com/PVAGR/pva-bazaar-app/actions/workflows/secret-scan.yml/badge.svg)](https://github.com/PVAGR/pva-bazaar-app/actions/workflows/secret-scan.yml)
@@ -47,7 +48,7 @@ PORT=5001 NODE_ENV=development USE_MEMORY_DB=true DEV_AUTO_SEED=true npm run dev
 
 ### Frontend
 
-```bash
+````bash
 cd Frontend
 npm install
 
@@ -72,7 +73,7 @@ Quickstart (on your server):
 
 ```bash
 docker compose up -d --build
-```
+````
 
 2. Wait a few seconds, then check health:
 
@@ -85,6 +86,7 @@ curl http://localhost:5001/api/health
 http://<server-ip-or-hostname>:3000
 
 Notes:
+
 - The backend will auto-seed an admin user (`admin@pvabazaar.org` / `admin123`) when running with `DEV_AUTO_SEED=true`.
 - This is for local testing only. Do not use `.env.docker` or these secrets in production.
 
@@ -136,14 +138,19 @@ VITE_API_URL=http://localhost:5001/api npm run dev
 We use [gitleaks](https://github.com/gitleaks/gitleaks) locally (pre-commit) and in CI to prevent accidental secret commits.
 
 ### Local Scan
+
 Run:
+
 ```bash
 scripts/secret-scan.sh
 ```
+
 This is also executed automatically by the pre-commit hook. If prompted, install gitleaks using the provided one-line script.
 
 ### CI Scan
+
 Workflow: "Secret Scan (gitleaks)" runs on:
+
 - Pull requests (all branches)
 - Pushes to `main`
 - Nightly schedule (03:15 UTC)
@@ -152,7 +159,9 @@ Workflow: "Secret Scan (gitleaks)" runs on:
 It uploads a SARIF report to GitHub Code Scanning (Security tab) and fails the build if any leak is detected.
 
 ### Allowlist Policy
+
 The allowlist in `gitleaks.toml` is intentionally minimal and only includes specific benign prompt phrases. To request an addition:
+
 1. Justify why the string is not a credential.
 2. Provide a narrow exact phrase or tightly scoped regex (no wildcards like `.*secret.*`).
 3. Open a PR; requires reviewer approval.
@@ -160,12 +169,15 @@ The allowlist in `gitleaks.toml` is intentionally minimal and only includes spec
 Never allowlist entire files or directories unless absolutely unavoidable.
 
 ### False Positive Procedure
+
 Open an issue or PR containing:
+
 - File & line reference
 - Detected rule ID / description
 - Rationale for allowlisting
 
 ### Real Secret Exposure Procedure
+
 1. Rotate the affected credential immediately.
 2. (If needed) Purge from git history (e.g., `git filter-repo`).
 3. Open an incident issue documenting remediation steps (private if necessary).

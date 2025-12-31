@@ -1,7 +1,7 @@
-import React from "react";
-import { createRoot } from "react-dom/client";
-import "./styles.css";
-import { Button } from "@pva/ui";
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import './styles.css';
+import { Button } from '@pva/ui';
 
 function App() {
   return (
@@ -18,4 +18,4 @@ function App() {
   );
 }
 
-createRoot(document.getElementById("root")!).render(<App />);
+createRoot(document.getElementById('root')!).render(<App />);

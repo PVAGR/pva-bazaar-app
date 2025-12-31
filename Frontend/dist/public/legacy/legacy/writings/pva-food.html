@@ -1,418 +1,548 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PVA Food & Ancient Wellness | Writings Archive</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Source+Code+Pro:wght@400;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Source+Code+Pro:wght@400;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap"
+      rel="stylesheet"
+    />
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Inter', sans-serif;
-            line-height: 1.8;
-            color: #2c3e50;
-            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-            padding: 2rem 1rem;
-        }
-        
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Inter', sans-serif;
+        line-height: 1.8;
+        color: #2c3e50;
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        padding: 2rem 1rem;
+      }
+
+      .container {
+        max-width: 950px;
+        margin: 0 auto;
+        background: white;
+        padding: 3rem;
+        border-radius: 8px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+      }
+
+      h1 {
+        font-family: 'Playfair Display', serif;
+        font-size: 3rem;
+        color: #d97706;
+        margin-bottom: 0.5rem;
+        line-height: 1.2;
+      }
+
+      .subtitle {
+        font-size: 1.2rem;
+        color: #78716c;
+        margin-bottom: 2rem;
+        font-style: italic;
+      }
+
+      .nav-link {
+        display: inline-block;
+        margin-bottom: 2rem;
+        color: #d97706;
+        text-decoration: none;
+        font-weight: 600;
+      }
+
+      .nav-link:hover {
+        text-decoration: underline;
+      }
+
+      h2 {
+        font-family: 'Playfair Display', serif;
+        font-size: 2rem;
+        color: #c2410c;
+        margin-top: 2.5rem;
+        margin-bottom: 1rem;
+        border-bottom: 2px solid #fed7aa;
+        padding-bottom: 0.5rem;
+      }
+
+      h3 {
+        font-size: 1.4rem;
+        color: #ea580c;
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+      }
+
+      h4 {
+        font-size: 1.15rem;
+        color: #c2410c;
+        margin-top: 1.5rem;
+        margin-bottom: 0.75rem;
+      }
+
+      p {
+        margin-bottom: 1.5rem;
+        font-size: 1.05rem;
+      }
+
+      .food-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin: 2rem 0;
+      }
+
+      .food-card {
+        background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+        padding: 1.5rem;
+        border-radius: 8px;
+        border: 2px solid #fb923c;
+      }
+
+      .food-card h4 {
+        color: #c2410c;
+        margin-bottom: 0.75rem;
+      }
+
+      .egyptian-box {
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        padding: 2rem;
+        border-left: 5px solid #f59e0b;
+        border-radius: 4px;
+        margin: 2rem 0;
+      }
+
+      .nutrition-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 2rem 0;
+        background: white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .nutrition-table th {
+        background: #f97316;
+        color: white;
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+      }
+
+      .nutrition-table td {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #fed7aa;
+      }
+
+      .nutrition-table tr:hover {
+        background: #fff7ed;
+      }
+
+      blockquote {
+        border-left: 4px solid #f97316;
+        padding-left: 1.5rem;
+        margin: 2rem 0;
+        font-style: italic;
+        color: #78716c;
+        background: #fff7ed;
+        padding: 1.5rem;
+        border-radius: 4px;
+      }
+
+      ul {
+        margin-left: 2rem;
+        margin-bottom: 1.5rem;
+      }
+
+      li {
+        margin-bottom: 0.75rem;
+      }
+
+      .recipe-box {
+        background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+        padding: 2rem;
+        border-left: 5px solid #10b981;
+        border-radius: 4px;
+        margin: 2.5rem 0;
+      }
+
+      .recipe-box h3 {
+        color: #059669;
+      }
+
+      .footer {
+        margin-top: 3rem;
+        padding-top: 2rem;
+        border-top: 1px solid #e5e7eb;
+        text-align: center;
+        color: #78716c;
+        font-size: 0.9rem;
+      }
+
+      @media (max-width: 768px) {
         .container {
-            max-width: 950px;
-            margin: 0 auto;
-            background: white;
-            padding: 3rem;
-            border-radius: 8px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+          padding: 2rem 1.5rem;
         }
-        
+
         h1 {
-            font-family: 'Playfair Display', serif;
-            font-size: 3rem;
-            color: #d97706;
-            margin-bottom: 0.5rem;
-            line-height: 1.2;
+          font-size: 2.2rem;
         }
-        
-        .subtitle {
-            font-size: 1.2rem;
-            color: #78716c;
-            margin-bottom: 2rem;
-            font-style: italic;
-        }
-        
-        .nav-link {
-            display: inline-block;
-            margin-bottom: 2rem;
-            color: #d97706;
-            text-decoration: none;
-            font-weight: 600;
-        }
-        
-        .nav-link:hover {
-            text-decoration: underline;
-        }
-        
-        h2 {
-            font-family: 'Playfair Display', serif;
-            font-size: 2rem;
-            color: #c2410c;
-            margin-top: 2.5rem;
-            margin-bottom: 1rem;
-            border-bottom: 2px solid #fed7aa;
-            padding-bottom: 0.5rem;
-        }
-        
-        h3 {
-            font-size: 1.4rem;
-            color: #ea580c;
-            margin-top: 2rem;
-            margin-bottom: 1rem;
-        }
-        
-        h4 {
-            font-size: 1.15rem;
-            color: #c2410c;
-            margin-top: 1.5rem;
-            margin-bottom: 0.75rem;
-        }
-        
-        p {
-            margin-bottom: 1.5rem;
-            font-size: 1.05rem;
-        }
-        
-        .food-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1.5rem;
-            margin: 2rem 0;
-        }
-        
-        .food-card {
-            background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
-            padding: 1.5rem;
-            border-radius: 8px;
-            border: 2px solid #fb923c;
-        }
-        
-        .food-card h4 {
-            color: #c2410c;
-            margin-bottom: 0.75rem;
-        }
-        
-        .egyptian-box {
-            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-            padding: 2rem;
-            border-left: 5px solid #f59e0b;
-            border-radius: 4px;
-            margin: 2rem 0;
-        }
-        
-        .nutrition-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 2rem 0;
-            background: white;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        
-        .nutrition-table th {
-            background: #f97316;
-            color: white;
-            padding: 1rem;
-            text-align: left;
-            font-weight: 600;
-        }
-        
-        .nutrition-table td {
-            padding: 0.75rem 1rem;
-            border-bottom: 1px solid #fed7aa;
-        }
-        
-        .nutrition-table tr:hover {
-            background: #fff7ed;
-        }
-        
-        blockquote {
-            border-left: 4px solid #f97316;
-            padding-left: 1.5rem;
-            margin: 2rem 0;
-            font-style: italic;
-            color: #78716c;
-            background: #fff7ed;
-            padding: 1.5rem;
-            border-radius: 4px;
-        }
-        
-        ul {
-            margin-left: 2rem;
-            margin-bottom: 1.5rem;
-        }
-        
-        li {
-            margin-bottom: 0.75rem;
-        }
-        
-        .recipe-box {
-            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
-            padding: 2rem;
-            border-left: 5px solid #10b981;
-            border-radius: 4px;
-            margin: 2.5rem 0;
-        }
-        
-        .recipe-box h3 {
-            color: #059669;
-        }
-        
-        .footer {
-            margin-top: 3rem;
-            padding-top: 2rem;
-            border-top: 1px solid #e5e7eb;
-            text-align: center;
-            color: #78716c;
-            font-size: 0.9rem;
-        }
-        
-        @media (max-width: 768px) {
-            .container {
-                padding: 2rem 1.5rem;
-            }
-            
-            h1 {
-                font-size: 2.2rem;
-            }
-        }
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <a href="/writings/" class="nav-link">← Back to Writings Archive</a>
-        
-        <h1>PVA Food & Ancient Wellness</h1>
-        <p class="subtitle">Nourishment from ancient wisdom: Egyptian, Ayurvedic, and healing traditions</p>
+      <a href="/writings/" class="nav-link">← Back to Writings Archive</a>
 
-        <p>Food is medicine. This isn't a modern concept—it's ancient wisdom that predates pharmaceutical companies and processed nutrition by millennia. The Pura Vida Ayurveda approach to food draws from Egyptian, Hindu, and indigenous traditions that understood the body as a holistic system requiring balance, not just calories.</p>
+      <h1>PVA Food & Ancient Wellness</h1>
+      <p class="subtitle">
+        Nourishment from ancient wisdom: Egyptian, Ayurvedic, and healing traditions
+      </p>
 
-        <h2>PVA Essential Foods</h2>
+      <p>
+        Food is medicine. This isn't a modern concept—it's ancient wisdom that predates
+        pharmaceutical companies and processed nutrition by millennia. The Pura Vida Ayurveda
+        approach to food draws from Egyptian, Hindu, and indigenous traditions that understood the
+        body as a holistic system requiring balance, not just calories.
+      </p>
 
-        <p>These are the foundational foods that form the core of the PVA nutritional philosophy:</p>
+      <h2>PVA Essential Foods</h2>
 
-        <div class="food-grid">
-            <div class="food-card">
-                <h4>🧅 Onion & Banana Juice</h4>
-                <p>An unlikely combination with powerful healing properties. Onions provide quercetin and anti-inflammatory compounds. Bananas offer potassium and natural sweetness to balance the intensity.</p>
-                <p><strong>Use:</strong> Immune support, respiratory health, natural antibiotic properties</p>
-            </div>
+      <p>These are the foundational foods that form the core of the PVA nutritional philosophy:</p>
 
-            <div class="food-card">
-                <h4>🧄 Garlic</h4>
-                <p>The ancient Egyptians gave garlic rations to pyramid builders for strength and endurance. Contains allicin with powerful medicinal properties.</p>
-                <p><strong>Use:</strong> Cardiovascular health, blood pressure regulation, immune boosting</p>
-            </div>
-
-            <div class="food-card">
-                <h4>🍃 Nori Senbei Crackers</h4>
-                <p>Seaweed-based crackers providing iodine, protein, and minerals from the ocean. Ancient coastal cultures understood the nutritional power of sea vegetables.</p>
-                <p><strong>Use:</strong> Thyroid health, mineral supplementation, sustainable protein</p>
-            </div>
-
-            <div class="food-card">
-                <h4>🌿 Frankincense & Myrrh Incense</h4>
-                <p>Not consumed but inhaled. These sacred resins were used in Egyptian temples for their mind-clearing and anti-inflammatory aromatherapy properties.</p>
-                <p><strong>Use:</strong> Meditation enhancement, respiratory health, sacred space creation</p>
-            </div>
-
-            <div class="food-card">
-                <h4>🌵 Aloe Vera</h4>
-                <p>The Egyptian "plant of immortality." Used both internally and externally for healing. Cleopatra applied it to her skin daily.</p>
-                <p><strong>Use:</strong> Skin healing, digestive health, inflammation reduction</p>
-            </div>
-
-            <div class="food-card">
-                <h4>🌱 Ashwagandha</h4>
-                <p>Ayurvedic adaptogen that balances stress hormones. The seeds can be popped like popcorn for a nutritious snack.</p>
-                <p><strong>Use:</strong> Stress reduction, hormonal balance, cognitive enhancement</p>
-            </div>
+      <div class="food-grid">
+        <div class="food-card">
+          <h4>🧅 Onion & Banana Juice</h4>
+          <p>
+            An unlikely combination with powerful healing properties. Onions provide quercetin and
+            anti-inflammatory compounds. Bananas offer potassium and natural sweetness to balance
+            the intensity.
+          </p>
+          <p>
+            <strong>Use:</strong> Immune support, respiratory health, natural antibiotic properties
+          </p>
         </div>
 
-        <h2>Ancient Egyptian Holistic Wellness</h2>
-
-        <div class="egyptian-box">
-            <p>Ancient Egyptians believed in a holistic approach to health and wellness, incorporating natural resources, practices, and beliefs to improve their lives. Many of these elements are still accessible and influential in our world today.</p>
+        <div class="food-card">
+          <h4>🧄 Garlic</h4>
+          <p>
+            The ancient Egyptians gave garlic rations to pyramid builders for strength and
+            endurance. Contains allicin with powerful medicinal properties.
+          </p>
+          <p>
+            <strong>Use:</strong> Cardiovascular health, blood pressure regulation, immune boosting
+          </p>
         </div>
 
-        <h3>1. Herbal Medicine</h3>
-
-        <p>Herbs, spices, and plants were extensively used for healing, preservation, and religious ceremonies. Common examples include:</p>
-
-        <ul>
-            <li><strong>Cumin:</strong> Digestive aid and antimicrobial properties</li>
-            <li><strong>Coriander:</strong> Blood sugar regulation and antioxidant effects</li>
-            <li><strong>Mint:</strong> Digestive comfort and respiratory support</li>
-            <li><strong>Fenugreek:</strong> Milk production support and blood sugar management</li>
-        </ul>
-
-        <p>All of these remain staples in cooking and herbal medicine today, validating the Egyptian understanding of plant medicine.</p>
-
-        <h3>2. Honey</h3>
-
-        <p>Egyptians recognized honey for its healing properties, using it as an antiseptic for wounds and a base for treating various ailments. Honey remains a popular natural remedy for its antibacterial and healing properties. Egyptian tomb paintings show beekeepers harvesting honey over 4,500 years ago.</p>
-
-        <h3>3. Linen Clothing</h3>
-
-        <p>Egyptians valued linen made from flax plants for its lightweight, breathable qualities, especially in their hot climate. Linen is still appreciated today for similar reasons, especially in sustainable and high-quality clothing. The fabric's natural moisture-wicking and antimicrobial properties made it ideal for both daily wear and ceremonial garments.</p>
-
-        <h3>4. Physical Exercises</h3>
-
-        <p>While not directly akin to modern yoga, Egyptians practiced forms of stretching and physical exercises to maintain health and flexibility, evident from tomb paintings. Physical wellness through exercise is a universal concept, with yoga and other forms being popular worldwide. Egyptian murals depict acrobatic movements, dance, and martial training.</p>
-
-        <h3>5. Meditation and Spiritual Practices</h3>
-
-        <p>Spiritual well-being was crucial, with practices that included meditation, prayers, and rituals to honor gods and goddesses for health, protection, and guidance. Modern spiritual and meditation practices share these goals of peace, guidance, and mental health. Temple priests would enter altered states through chanting, breath control, and ritual movement.</p>
-
-        <h3>6. Aromatherapy</h3>
-
-        <p>Using aromatic oils and incense, such as frankincense and myrrh, was common for therapeutic, cosmetic, and religious purposes. Aromatherapy continues to be a popular method for enhancing mood, reducing stress, and improving overall well-being. Egyptian perfumers were master chemists who created complex blends still studied today.</p>
-
-        <h3>7. Cosmetics and Skin Care</h3>
-
-        <p>Ancient Egyptians used natural substances for cosmetics and skin care, including:</p>
-
-        <ul>
-            <li><strong>Malachite (green pigment):</strong> For eyeliner and eye protection from the sun's glare</li>
-            <li><strong>Red ochre:</strong> For lips and cheeks, providing iron oxide for skin health</li>
-            <li><strong>Kohl:</strong> Black eyeliner with lead sulfide and antimony for eye health and sun protection</li>
-        </ul>
-
-        <p>Modern natural and organic cosmetics often draw inspiration from such ancient practices, emphasizing the use of earth-derived pigments and materials.</p>
-
-        <h3>8. Architecture and Environmental Design</h3>
-
-        <p>The design of their buildings, homes, and temples was not only functional but also harmonized with spiritual beliefs and natural elements. Modern architecture and design often incorporate elements that promote harmony, sustainability, and well-being, reflecting this ancient wisdom. Egyptian structures were oriented to celestial bodies, built with natural cooling systems, and designed to enhance human consciousness.</p>
-
-        <h2>Edible Marine Plants and Algae</h2>
-
-        <p>While not all marine plants and algae are commonly consumed, several are edible and offer nutritional benefits:</p>
-
-        <table class="nutrition-table">
-            <thead>
-                <tr>
-                    <th>Plant/Algae</th>
-                    <th>Calories (per 100g)</th>
-                    <th>Key Nutritional Benefits</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td><strong>Kelp</strong> (Laminariales)</td>
-                    <td>43</td>
-                    <td>High in iodine, fiber, vitamins (A, C, E, K), and minerals (calcium, magnesium, iron)</td>
-                </tr>
-                <tr>
-                    <td><strong>Sargassum</strong></td>
-                    <td>20-30</td>
-                    <td>Rich in vitamins and minerals, including iodine, magnesium, and calcium</td>
-                </tr>
-                <tr>
-                    <td><strong>Sea Lettuce</strong> (Ulva spp.)</td>
-                    <td>130</td>
-                    <td>High in protein, dietary fiber, and a good source of vitamins A, B, C, and iron</td>
-                </tr>
-                <tr>
-                    <td><strong>Dulse</strong> (Palmaria palmata)</td>
-                    <td>220 (dried)</td>
-                    <td>High in protein, fiber, and rich in vitamins and minerals</td>
-                </tr>
-                <tr>
-                    <td><strong>Nori</strong> (Porphyra spp.)</td>
-                    <td>35</td>
-                    <td>High in protein, fiber, vitamins A, B, C, and iodine</td>
-                </tr>
-            </tbody>
-        </table>
-
-        <p>These marine plants and algae are not only low in calories but also rich in various nutrients, making them a healthy addition to many diets. However, their availability and cultural culinary use can vary significantly.</p>
-
-        <h2>Protein-Rich Foods for Optimal Nutrition</h2>
-
-        <p>A comprehensive approach to protein includes both animal and plant sources:</p>
-
-        <h3>Top Protein Sources:</h3>
-
-        <ul>
-            <li><strong>Beef</strong> (lean, cooked) - Complete protein with iron and B12</li>
-            <li><strong>Parmesan cheese</strong> - Concentrated protein and calcium</li>
-            <li><strong>Lamb</strong> (lean, cooked) - Rich in zinc and selenium</li>
-            <li><strong>Turkey & Chicken breast</strong> - Lean, versatile protein</li>
-            <li><strong>Pumpkin seeds</strong> - Plant protein with magnesium and zinc</li>
-            <li><strong>Hemp seeds</strong> - Complete plant protein with omega-3s</li>
-            <li><strong>Pistachio nuts</strong> - Protein with healthy fats and fiber</li>
-            <li><strong>Eggs</strong> - Perfect amino acid profile</li>
-            <li><strong>Soybeans & Tofu</strong> - Complete plant protein</li>
-            <li><strong>Lentils</strong> - High protein legume with iron</li>
-            <li><strong>Almonds & Brazil nuts</strong> - Protein with selenium and vitamin E</li>
-            <li><strong>Sesame seeds</strong> - Protein with calcium and copper</li>
-            <li><strong>Sunflower seeds</strong> - Protein with vitamin E</li>
-            <li><strong>Peanuts</strong> - Affordable, accessible protein</li>
-        </ul>
-
-        <h2>Special Ingredients: Amygdalin-Containing Foods</h2>
-
-        <p>Amygdalin is a naturally occurring compound found in the seeds (kernels) of:</p>
-
-        <ul>
-            <li>Apricots</li>
-            <li>Bitter almonds</li>
-            <li>Apples</li>
-            <li>Peaches</li>
-            <li>Cherries and plums</li>
-            <li>Manioc (cassava) roots</li>
-            <li>Sorghum</li>
-            <li>Lima beans</li>
-            <li>Stone fruits</li>
-            <li>Bamboo shoots</li>
-        </ul>
-
-        <p><strong>Important Note:</strong> Cassava (Manihot esculenta), also known by the names manioc, yuca, and tapioca, is a cyanogenic food of particular economic importance. These foods require proper preparation to remove toxic compounds. Traditional cultures developed sophisticated processing methods to make these foods safe and nutritious.</p>
-
-        <h2>PVA Innovation: Ashwagandha Cheese & Popcorn</h2>
-
-        <div class="recipe-box">
-            <h3>Revolutionary Ashwagandha Products</h3>
-            
-            <h4>Ashwagandha Seed Cheese</h4>
-            <p>Use ashwagandha seeds as natural coagulants to create a unique, adaptogenic cheese. The seeds contain compounds that can curdle milk while infusing the cheese with stress-reducing properties.</p>
-            <p><strong>Process:</strong> Soak ashwagandha seeds, blend into paste, add to warm milk, strain and press the curds. Age if desired.</p>
-
-            <h4>Asha Pops (Ashwagandha Popcorn)</h4>
-            <p>Pop ashwagandha seeds similar to popcorn for a nutritious, adaptogenic snack. The key is to make it affordable and accessible—if these seeds are easy to produce, don't price gouge.</p>
-            <p><strong>Philosophy:</strong> Sacred foods should be available to all, not just the wealthy. PVA commits to fair pricing that reflects true production costs, not artificial scarcity markup.</p>
+        <div class="food-card">
+          <h4>🍃 Nori Senbei Crackers</h4>
+          <p>
+            Seaweed-based crackers providing iodine, protein, and minerals from the ocean. Ancient
+            coastal cultures understood the nutritional power of sea vegetables.
+          </p>
+          <p><strong>Use:</strong> Thyroid health, mineral supplementation, sustainable protein</p>
         </div>
 
-        <h2>Conclusion: Food as Sacred Medicine</h2>
-
-        <p>The PVA approach to food is rooted in ancient wisdom that viewed nourishment as inseparable from spiritual practice, environmental harmony, and community well-being.</p>
-
-        <blockquote>
-            "Let food be thy medicine and medicine be thy food."<br>
-            — Hippocrates (echoing Egyptian and Ayurvedic wisdom)
-        </blockquote>
-
-        <p>These examples illustrate how ancient Egyptian beliefs and practices aimed at improving life have enduring relevance. Their holistic approach to health, beauty, and well-being continues to influence modern practices, emphasizing the value of natural and balanced lifestyles.</p>
-
-        <p>By integrating these ancient food traditions into modern life, we reconnect with the wisdom that sustained humanity for thousands of years—wisdom that recognized food as sacred, healing, and essential to living in harmony with the natural world.</p>
-
-        <div class="footer">
-            <p>Part of the Writings Archive | <a href="/writings/" style="color: #d97706;">Explore More</a></p>
-            <p>This work is released into the public domain under CC0 1.0 Universal</p>
+        <div class="food-card">
+          <h4>🌿 Frankincense & Myrrh Incense</h4>
+          <p>
+            Not consumed but inhaled. These sacred resins were used in Egyptian temples for their
+            mind-clearing and anti-inflammatory aromatherapy properties.
+          </p>
+          <p>
+            <strong>Use:</strong> Meditation enhancement, respiratory health, sacred space creation
+          </p>
         </div>
+
+        <div class="food-card">
+          <h4>🌵 Aloe Vera</h4>
+          <p>
+            The Egyptian "plant of immortality." Used both internally and externally for healing.
+            Cleopatra applied it to her skin daily.
+          </p>
+          <p><strong>Use:</strong> Skin healing, digestive health, inflammation reduction</p>
+        </div>
+
+        <div class="food-card">
+          <h4>🌱 Ashwagandha</h4>
+          <p>
+            Ayurvedic adaptogen that balances stress hormones. The seeds can be popped like popcorn
+            for a nutritious snack.
+          </p>
+          <p><strong>Use:</strong> Stress reduction, hormonal balance, cognitive enhancement</p>
+        </div>
+      </div>
+
+      <h2>Ancient Egyptian Holistic Wellness</h2>
+
+      <div class="egyptian-box">
+        <p>
+          Ancient Egyptians believed in a holistic approach to health and wellness, incorporating
+          natural resources, practices, and beliefs to improve their lives. Many of these elements
+          are still accessible and influential in our world today.
+        </p>
+      </div>
+
+      <h3>1. Herbal Medicine</h3>
+
+      <p>
+        Herbs, spices, and plants were extensively used for healing, preservation, and religious
+        ceremonies. Common examples include:
+      </p>
+
+      <ul>
+        <li><strong>Cumin:</strong> Digestive aid and antimicrobial properties</li>
+        <li><strong>Coriander:</strong> Blood sugar regulation and antioxidant effects</li>
+        <li><strong>Mint:</strong> Digestive comfort and respiratory support</li>
+        <li><strong>Fenugreek:</strong> Milk production support and blood sugar management</li>
+      </ul>
+
+      <p>
+        All of these remain staples in cooking and herbal medicine today, validating the Egyptian
+        understanding of plant medicine.
+      </p>
+
+      <h3>2. Honey</h3>
+
+      <p>
+        Egyptians recognized honey for its healing properties, using it as an antiseptic for wounds
+        and a base for treating various ailments. Honey remains a popular natural remedy for its
+        antibacterial and healing properties. Egyptian tomb paintings show beekeepers harvesting
+        honey over 4,500 years ago.
+      </p>
+
+      <h3>3. Linen Clothing</h3>
+
+      <p>
+        Egyptians valued linen made from flax plants for its lightweight, breathable qualities,
+        especially in their hot climate. Linen is still appreciated today for similar reasons,
+        especially in sustainable and high-quality clothing. The fabric's natural moisture-wicking
+        and antimicrobial properties made it ideal for both daily wear and ceremonial garments.
+      </p>
+
+      <h3>4. Physical Exercises</h3>
+
+      <p>
+        While not directly akin to modern yoga, Egyptians practiced forms of stretching and physical
+        exercises to maintain health and flexibility, evident from tomb paintings. Physical wellness
+        through exercise is a universal concept, with yoga and other forms being popular worldwide.
+        Egyptian murals depict acrobatic movements, dance, and martial training.
+      </p>
+
+      <h3>5. Meditation and Spiritual Practices</h3>
+
+      <p>
+        Spiritual well-being was crucial, with practices that included meditation, prayers, and
+        rituals to honor gods and goddesses for health, protection, and guidance. Modern spiritual
+        and meditation practices share these goals of peace, guidance, and mental health. Temple
+        priests would enter altered states through chanting, breath control, and ritual movement.
+      </p>
+
+      <h3>6. Aromatherapy</h3>
+
+      <p>
+        Using aromatic oils and incense, such as frankincense and myrrh, was common for therapeutic,
+        cosmetic, and religious purposes. Aromatherapy continues to be a popular method for
+        enhancing mood, reducing stress, and improving overall well-being. Egyptian perfumers were
+        master chemists who created complex blends still studied today.
+      </p>
+
+      <h3>7. Cosmetics and Skin Care</h3>
+
+      <p>Ancient Egyptians used natural substances for cosmetics and skin care, including:</p>
+
+      <ul>
+        <li>
+          <strong>Malachite (green pigment):</strong> For eyeliner and eye protection from the sun's
+          glare
+        </li>
+        <li>
+          <strong>Red ochre:</strong> For lips and cheeks, providing iron oxide for skin health
+        </li>
+        <li>
+          <strong>Kohl:</strong> Black eyeliner with lead sulfide and antimony for eye health and
+          sun protection
+        </li>
+      </ul>
+
+      <p>
+        Modern natural and organic cosmetics often draw inspiration from such ancient practices,
+        emphasizing the use of earth-derived pigments and materials.
+      </p>
+
+      <h3>8. Architecture and Environmental Design</h3>
+
+      <p>
+        The design of their buildings, homes, and temples was not only functional but also
+        harmonized with spiritual beliefs and natural elements. Modern architecture and design often
+        incorporate elements that promote harmony, sustainability, and well-being, reflecting this
+        ancient wisdom. Egyptian structures were oriented to celestial bodies, built with natural
+        cooling systems, and designed to enhance human consciousness.
+      </p>
+
+      <h2>Edible Marine Plants and Algae</h2>
+
+      <p>
+        While not all marine plants and algae are commonly consumed, several are edible and offer
+        nutritional benefits:
+      </p>
+
+      <table class="nutrition-table">
+        <thead>
+          <tr>
+            <th>Plant/Algae</th>
+            <th>Calories (per 100g)</th>
+            <th>Key Nutritional Benefits</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Kelp</strong> (Laminariales)</td>
+            <td>43</td>
+            <td>
+              High in iodine, fiber, vitamins (A, C, E, K), and minerals (calcium, magnesium, iron)
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Sargassum</strong></td>
+            <td>20-30</td>
+            <td>Rich in vitamins and minerals, including iodine, magnesium, and calcium</td>
+          </tr>
+          <tr>
+            <td><strong>Sea Lettuce</strong> (Ulva spp.)</td>
+            <td>130</td>
+            <td>High in protein, dietary fiber, and a good source of vitamins A, B, C, and iron</td>
+          </tr>
+          <tr>
+            <td><strong>Dulse</strong> (Palmaria palmata)</td>
+            <td>220 (dried)</td>
+            <td>High in protein, fiber, and rich in vitamins and minerals</td>
+          </tr>
+          <tr>
+            <td><strong>Nori</strong> (Porphyra spp.)</td>
+            <td>35</td>
+            <td>High in protein, fiber, vitamins A, B, C, and iodine</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>
+        These marine plants and algae are not only low in calories but also rich in various
+        nutrients, making them a healthy addition to many diets. However, their availability and
+        cultural culinary use can vary significantly.
+      </p>
+
+      <h2>Protein-Rich Foods for Optimal Nutrition</h2>
+
+      <p>A comprehensive approach to protein includes both animal and plant sources:</p>
+
+      <h3>Top Protein Sources:</h3>
+
+      <ul>
+        <li><strong>Beef</strong> (lean, cooked) - Complete protein with iron and B12</li>
+        <li><strong>Parmesan cheese</strong> - Concentrated protein and calcium</li>
+        <li><strong>Lamb</strong> (lean, cooked) - Rich in zinc and selenium</li>
+        <li><strong>Turkey & Chicken breast</strong> - Lean, versatile protein</li>
+        <li><strong>Pumpkin seeds</strong> - Plant protein with magnesium and zinc</li>
+        <li><strong>Hemp seeds</strong> - Complete plant protein with omega-3s</li>
+        <li><strong>Pistachio nuts</strong> - Protein with healthy fats and fiber</li>
+        <li><strong>Eggs</strong> - Perfect amino acid profile</li>
+        <li><strong>Soybeans & Tofu</strong> - Complete plant protein</li>
+        <li><strong>Lentils</strong> - High protein legume with iron</li>
+        <li><strong>Almonds & Brazil nuts</strong> - Protein with selenium and vitamin E</li>
+        <li><strong>Sesame seeds</strong> - Protein with calcium and copper</li>
+        <li><strong>Sunflower seeds</strong> - Protein with vitamin E</li>
+        <li><strong>Peanuts</strong> - Affordable, accessible protein</li>
+      </ul>
+
+      <h2>Special Ingredients: Amygdalin-Containing Foods</h2>
+
+      <p>Amygdalin is a naturally occurring compound found in the seeds (kernels) of:</p>
+
+      <ul>
+        <li>Apricots</li>
+        <li>Bitter almonds</li>
+        <li>Apples</li>
+        <li>Peaches</li>
+        <li>Cherries and plums</li>
+        <li>Manioc (cassava) roots</li>
+        <li>Sorghum</li>
+        <li>Lima beans</li>
+        <li>Stone fruits</li>
+        <li>Bamboo shoots</li>
+      </ul>
+
+      <p>
+        <strong>Important Note:</strong> Cassava (Manihot esculenta), also known by the names
+        manioc, yuca, and tapioca, is a cyanogenic food of particular economic importance. These
+        foods require proper preparation to remove toxic compounds. Traditional cultures developed
+        sophisticated processing methods to make these foods safe and nutritious.
+      </p>
+
+      <h2>PVA Innovation: Ashwagandha Cheese & Popcorn</h2>
+
+      <div class="recipe-box">
+        <h3>Revolutionary Ashwagandha Products</h3>
+
+        <h4>Ashwagandha Seed Cheese</h4>
+        <p>
+          Use ashwagandha seeds as natural coagulants to create a unique, adaptogenic cheese. The
+          seeds contain compounds that can curdle milk while infusing the cheese with
+          stress-reducing properties.
+        </p>
+        <p>
+          <strong>Process:</strong> Soak ashwagandha seeds, blend into paste, add to warm milk,
+          strain and press the curds. Age if desired.
+        </p>
+
+        <h4>Asha Pops (Ashwagandha Popcorn)</h4>
+        <p>
+          Pop ashwagandha seeds similar to popcorn for a nutritious, adaptogenic snack. The key is
+          to make it affordable and accessible—if these seeds are easy to produce, don't price
+          gouge.
+        </p>
+        <p>
+          <strong>Philosophy:</strong> Sacred foods should be available to all, not just the
+          wealthy. PVA commits to fair pricing that reflects true production costs, not artificial
+          scarcity markup.
+        </p>
+      </div>
+
+      <h2>Conclusion: Food as Sacred Medicine</h2>
+
+      <p>
+        The PVA approach to food is rooted in ancient wisdom that viewed nourishment as inseparable
+        from spiritual practice, environmental harmony, and community well-being.
+      </p>
+
+      <blockquote>
+        "Let food be thy medicine and medicine be thy food."<br />
+        — Hippocrates (echoing Egyptian and Ayurvedic wisdom)
+      </blockquote>
+
+      <p>
+        These examples illustrate how ancient Egyptian beliefs and practices aimed at improving life
+        have enduring relevance. Their holistic approach to health, beauty, and well-being continues
+        to influence modern practices, emphasizing the value of natural and balanced lifestyles.
+      </p>
+
+      <p>
+        By integrating these ancient food traditions into modern life, we reconnect with the wisdom
+        that sustained humanity for thousands of years—wisdom that recognized food as sacred,
+        healing, and essential to living in harmony with the natural world.
+      </p>
+
+      <div class="footer">
+        <p>
+          Part of the Writings Archive |
+          <a href="/writings/" style="color: #d97706">Explore More</a>
+        </p>
+        <p>This work is released into the public domain under CC0 1.0 Universal</p>
+      </div>
     </div>
-</body>
+  </body>
 </html>

@@ -21,34 +21,34 @@ async function importData() {
   try {
     // Read JSON file
     const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-    
+
     // Connect to MongoDB
     await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/pvabazaar');
-    
+
     // Import users (need to rehash passwords)
     if (data.users && data.users.length) {
       // First clean existing users
       await User.deleteMany({});
-      
+
       // For each user, we need to create a new user with a temporary password
       // since we don't export passwords
       for (const user of data.users) {
         const newUser = new User({
           ...user,
-          password: await bcrypt.hash('tempPassword123', 10) // Temporary password
+          password: await bcrypt.hash('tempPassword123', 10), // Temporary password
         });
         await newUser.save();
       }
       console.log(`✅ Imported ${data.users.length} users`);
     }
-    
+
     // Import artifacts
     if (data.artifacts && data.artifacts.length) {
       await Artifact.deleteMany({});
       await Artifact.insertMany(data.artifacts);
       console.log(`✅ Imported ${data.artifacts.length} artifacts`);
     }
-    
+
     console.log('✅ Import completed successfully');
     await mongoose.disconnect();
   } catch (err) {

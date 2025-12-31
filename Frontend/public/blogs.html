@@ -1,176 +1,286 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PVA Bazaar Blogs</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Source+Code+Pro:wght@300;400&display=swap" rel="stylesheet">
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Inter', sans-serif; line-height: 1.8; color: #e1e8ed; background: linear-gradient(135deg, #0f1419 0%, #1a2332 50%, #0f1419 100%); max-width: 900px; margin: 0 auto; padding: 3rem 2rem; border-left: 1px solid #2a3f5f; border-right: 1px solid #2a3f5f; min-height: 100vh; }
-    header { margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 3px solid #00d9ff; }
-    h1 { font-size: 2.4rem; font-weight: 700; color: #fff; letter-spacing: -0.5px; }
-    nav { margin: 1rem 0 2rem; padding: 1rem 0; border-bottom: 1px dashed #ddd; }
-    nav a { color: #00d9ff; text-decoration: none; margin-right: 1.5rem; font-weight: 500; border-bottom: 2px solid transparent; transition: all 0.2s; }
-    nav a:hover { border-bottom: 2px solid #5eead4; color: #5eead4; }
-    .hint { color: #b0c4d6; margin-bottom: 1rem; }
-    label { display:block; margin-top: 0.75rem; color: #c5d3e0; }
-    input, textarea { width: 100%; padding: 0.6rem; margin-top: 0.25rem; border-radius: 6px; border: 1px solid rgba(0, 217, 255, 0.3); background: rgba(26, 35, 50, 0.6); color: #e1e8ed; }
-    button { margin-top: 1rem; padding: 0.6rem 1.2rem; background: rgba(0, 217, 255, 0.1); border-radius: 4px; border: 1px solid rgba(0, 217, 255, 0.3); color: #00d9ff; font-weight: 600; cursor: pointer; }
-    button:hover { background: rgba(0, 217, 255, 0.2); color: #5eead4; }
-    .card { background: rgba(26, 35, 50, 0.6); border: 1px solid rgba(0, 217, 255, 0.2); border-left: 3px solid #00d9ff; padding: 1rem; margin: 0.75rem 0; border-radius: 6px; }
-    .row { display:flex; gap: 1rem; }
-    .row > div { flex:1; }
-    .status { margin-top: 1rem; color: #5eead4; }
-    .list-title { font-size: 1.3rem; color: #ffffff; margin: 1.5rem 0 0.8rem; border-bottom: 1px dashed #00d9ff; padding-bottom: 0.5rem; }
-    .card a { color: #00d9ff; text-decoration: none; font-weight: 500; }
-    .card a:hover { color: #5eead4; }
-  </style>
-</head>
-<body>
-  <header>
-    <h1>PVA Bazaar Blogs</h1>
-    <p class="hint">Publish new posts and view existing ones. For now, this uses a temporary quick-publish endpoint.</p>
-  </header>
-  <nav>
-    <a href="/index.html">Home</a>
-    <a href="/novel/">Novel</a>
-    <a href="/biography/">Biography</a>
-    <a href="/research/">Research</a>
-    <a href="/public/blogs.html">Blogs</a>
-    <a href="/public/new-post.html">New Post</a>
-  </nav>
-  <script src="/public/config.js"></script>
-  <div id="conn" class="status" style="margin-top:0.5rem"></div>
-
-  <section>
-    <h2>Publish Blog</h2>
-    <div class="row">
-      <div>
-        <label>Slug</label>
-        <input id="slug" placeholder="my-first-post" />
-      </div>
-      <div>
-        <label>Title</label>
-        <input id="title" placeholder="My First Post" />
-      </div>
-    </div>
-    <label>Admin Secret (optional, required in production)</label>
-    <input id="secret" placeholder="Enter admin secret for prod" />
-    <label>Content</label>
-    <textarea id="content" rows="8" placeholder="Write your blog content here..."></textarea>
-    <button id="publish">Publish</button>
-    <div class="status" id="publish-status"></div>
-  </section>
-
-  <section>
-    <h2 class="list-title">Published Blogs</h2>
-    <div id="list"></div>
-  </section>
-
-  <script>
-    const backend = (window.APP_CONFIG && window.APP_CONFIG.backendUrl) || null;
-    const apiBase = backend ? `${backend}/api` : '/api';
-    async function checkHealth(){
-      const el = document.getElementById('conn');
-      if (!backend) { el.textContent = 'Serverless mode'; return; }
-      try {
-        const r = await fetch(`${backend}/api/health`, { credentials:'omit' });
-        el.textContent = r.ok ? 'Backend connected' : 'Backend unreachable';
-      } catch { el.textContent = 'Backend unreachable'; }
-    }
-    checkHealth();
-    async function fetchBlogs() {
-      try {
-        const res = await fetch(`${apiBase}/blogs/`);
-        if (!res.ok) throw new Error(`Status ${res.status}`);
-        const data = await res.json();
-        const list = document.getElementById('list');
-        list.innerHTML = '';
-        (data.blogs || []).forEach(b => {
-          const d = document.createElement('div');
-          d.className = 'card';
-          const viewUrl = `/public/blog.html?slug=${encodeURIComponent(b.slug)}`;
-          const commentsUrl = `/public/comments.html?slug=${encodeURIComponent(b.slug)}`;
-          d.innerHTML = `<strong>${b.title}</strong><br/><small>${b.slug}</small><br/>
-            <a href="${viewUrl}">View →</a> · <a href="${commentsUrl}">Comments</a>`;
-          list.appendChild(d);
-        });
-      } catch (e) {
-        document.getElementById('list').innerHTML = `<em>Could not load blogs (${e.message}). If protected, try again later.</em>`;
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PVA Bazaar Blogs</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Source+Code+Pro:wght@300;400&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
       }
-    }
+      body {
+        font-family: 'Inter', sans-serif;
+        line-height: 1.8;
+        color: #e1e8ed;
+        background: linear-gradient(135deg, #0f1419 0%, #1a2332 50%, #0f1419 100%);
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 3rem 2rem;
+        border-left: 1px solid #2a3f5f;
+        border-right: 1px solid #2a3f5f;
+        min-height: 100vh;
+      }
+      header {
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 3px solid #00d9ff;
+      }
+      h1 {
+        font-size: 2.4rem;
+        font-weight: 700;
+        color: #fff;
+        letter-spacing: -0.5px;
+      }
+      nav {
+        margin: 1rem 0 2rem;
+        padding: 1rem 0;
+        border-bottom: 1px dashed #ddd;
+      }
+      nav a {
+        color: #00d9ff;
+        text-decoration: none;
+        margin-right: 1.5rem;
+        font-weight: 500;
+        border-bottom: 2px solid transparent;
+        transition: all 0.2s;
+      }
+      nav a:hover {
+        border-bottom: 2px solid #5eead4;
+        color: #5eead4;
+      }
+      .hint {
+        color: #b0c4d6;
+        margin-bottom: 1rem;
+      }
+      label {
+        display: block;
+        margin-top: 0.75rem;
+        color: #c5d3e0;
+      }
+      input,
+      textarea {
+        width: 100%;
+        padding: 0.6rem;
+        margin-top: 0.25rem;
+        border-radius: 6px;
+        border: 1px solid rgba(0, 217, 255, 0.3);
+        background: rgba(26, 35, 50, 0.6);
+        color: #e1e8ed;
+      }
+      button {
+        margin-top: 1rem;
+        padding: 0.6rem 1.2rem;
+        background: rgba(0, 217, 255, 0.1);
+        border-radius: 4px;
+        border: 1px solid rgba(0, 217, 255, 0.3);
+        color: #00d9ff;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      button:hover {
+        background: rgba(0, 217, 255, 0.2);
+        color: #5eead4;
+      }
+      .card {
+        background: rgba(26, 35, 50, 0.6);
+        border: 1px solid rgba(0, 217, 255, 0.2);
+        border-left: 3px solid #00d9ff;
+        padding: 1rem;
+        margin: 0.75rem 0;
+        border-radius: 6px;
+      }
+      .row {
+        display: flex;
+        gap: 1rem;
+      }
+      .row > div {
+        flex: 1;
+      }
+      .status {
+        margin-top: 1rem;
+        color: #5eead4;
+      }
+      .list-title {
+        font-size: 1.3rem;
+        color: #ffffff;
+        margin: 1.5rem 0 0.8rem;
+        border-bottom: 1px dashed #00d9ff;
+        padding-bottom: 0.5rem;
+      }
+      .card a {
+        color: #00d9ff;
+        text-decoration: none;
+        font-weight: 500;
+      }
+      .card a:hover {
+        color: #5eead4;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>PVA Bazaar Blogs</h1>
+      <p class="hint">
+        Publish new posts and view existing ones. For now, this uses a temporary quick-publish
+        endpoint.
+      </p>
+    </header>
+    <nav>
+      <a href="/index.html">Home</a>
+      <a href="/novel/">Novel</a>
+      <a href="/biography/">Biography</a>
+      <a href="/research/">Research</a>
+      <a href="/public/blogs.html">Blogs</a>
+      <a href="/public/new-post.html">New Post</a>
+    </nav>
+    <script src="/public/config.js"></script>
+    <div id="conn" class="status" style="margin-top: 0.5rem"></div>
 
-    async function publishBlog() {
-      const slug = document.getElementById('slug').value.trim().toLowerCase();
-      const title = document.getElementById('title').value.trim();
-      const content = document.getElementById('content').value;
-      const secret = document.getElementById('secret').value.trim();
-      const status = document.getElementById('publish-status');
-      status.textContent = 'Publishing...';
-      try {
-        // Try quick-publish (dev-friendly)
-        let ok = false;
-        const qp = await fetch(`${apiBase}/blogs/quick-publish`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ slug, title, content })
-        });
-        if (qp.ok) {
-          const data = await qp.json();
-          ok = data && data.ok !== false;
+    <section>
+      <h2>Publish Blog</h2>
+      <div class="row">
+        <div>
+          <label>Slug</label>
+          <input id="slug" placeholder="my-first-post" />
+        </div>
+        <div>
+          <label>Title</label>
+          <input id="title" placeholder="My First Post" />
+        </div>
+      </div>
+      <label>Admin Secret (optional, required in production)</label>
+      <input id="secret" placeholder="Enter admin secret for prod" />
+      <label>Content</label>
+      <textarea id="content" rows="8" placeholder="Write your blog content here..."></textarea>
+      <button id="publish">Publish</button>
+      <div class="status" id="publish-status"></div>
+    </section>
+
+    <section>
+      <h2 class="list-title">Published Blogs</h2>
+      <div id="list"></div>
+    </section>
+
+    <script>
+      const backend = (window.APP_CONFIG && window.APP_CONFIG.backendUrl) || null;
+      const apiBase = backend ? `${backend}/api` : '/api';
+      async function checkHealth() {
+        const el = document.getElementById('conn');
+        if (!backend) {
+          el.textContent = 'Serverless mode';
+          return;
         }
+        try {
+          const r = await fetch(`${backend}/api/health`, { credentials: 'omit' });
+          el.textContent = r.ok ? 'Backend connected' : 'Backend unreachable';
+        } catch {
+          el.textContent = 'Backend unreachable';
+        }
+      }
+      checkHealth();
+      async function fetchBlogs() {
+        try {
+          const res = await fetch(`${apiBase}/blogs/`);
+          if (!res.ok) throw new Error(`Status ${res.status}`);
+          const data = await res.json();
+          const list = document.getElementById('list');
+          list.innerHTML = '';
+          (data.blogs || []).forEach((b) => {
+            const d = document.createElement('div');
+            d.className = 'card';
+            const viewUrl = `/public/blog.html?slug=${encodeURIComponent(b.slug)}`;
+            const commentsUrl = `/public/comments.html?slug=${encodeURIComponent(b.slug)}`;
+            d.innerHTML = `<strong>${b.title}</strong><br/><small>${b.slug}</small><br/>
+            <a href="${viewUrl}">View →</a> · <a href="${commentsUrl}">Comments</a>`;
+            list.appendChild(d);
+          });
+        } catch (e) {
+          document.getElementById('list').innerHTML =
+            `<em>Could not load blogs (${e.message}). If protected, try again later.</em>`;
+        }
+      }
 
-        // Fallback for production: admin setup + publish + update
-        if (!ok && secret) {
-          const setupRes = await fetch(`${apiBase}/blogs/setup`, {
+      async function publishBlog() {
+        const slug = document.getElementById('slug').value.trim().toLowerCase();
+        const title = document.getElementById('title').value.trim();
+        const content = document.getElementById('content').value;
+        const secret = document.getElementById('secret').value.trim();
+        const status = document.getElementById('publish-status');
+        status.textContent = 'Publishing...';
+        try {
+          // Try quick-publish (dev-friendly)
+          let ok = false;
+          const qp = await fetch(`${apiBase}/blogs/quick-publish`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ secret, slug, title })
+            body: JSON.stringify({ slug, title, content }),
           });
-          const setup = await setupRes.json();
-          if (!setupRes.ok || setup.ok === false) throw new Error(setup.message || 'Admin setup failed');
+          if (qp.ok) {
+            const data = await qp.json();
+            ok = data && data.ok !== false;
+          }
 
-          const publishRes = await fetch(`${apiBase}/blogs/${encodeURIComponent(slug)}/publish`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ secret })
-          });
-          const publish = await publishRes.json();
-          if (!publishRes.ok || publish.ok === false) throw new Error(publish.message || 'Publish failed');
-
-          const editSecret = publish.editSecret || setup.editSecret;
-          if (editSecret) {
-            const updateRes = await fetch(`${apiBase}/blogs/${encodeURIComponent(slug)}/update`, {
+          // Fallback for production: admin setup + publish + update
+          if (!ok && secret) {
+            const setupRes = await fetch(`${apiBase}/blogs/setup`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ edit: editSecret, content })
+              body: JSON.stringify({ secret, slug, title }),
             });
-            const update = await updateRes.json();
-            if (!updateRes.ok || update.ok === false) throw new Error(update.message || 'Content update failed');
+            const setup = await setupRes.json();
+            if (!setupRes.ok || setup.ok === false)
+              throw new Error(setup.message || 'Admin setup failed');
+
+            const publishRes = await fetch(`${apiBase}/blogs/${encodeURIComponent(slug)}/publish`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ secret }),
+            });
+            const publish = await publishRes.json();
+            if (!publishRes.ok || publish.ok === false)
+              throw new Error(publish.message || 'Publish failed');
+
+            const editSecret = publish.editSecret || setup.editSecret;
+            if (editSecret) {
+              const updateRes = await fetch(`${apiBase}/blogs/${encodeURIComponent(slug)}/update`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ edit: editSecret, content }),
+              });
+              const update = await updateRes.json();
+              if (!updateRes.ok || update.ok === false)
+                throw new Error(update.message || 'Content update failed');
+            }
+            ok = true;
           }
-          ok = true;
-        }
 
-        if (ok) {
-          status.textContent = 'Published successfully';
-          fetchBlogs();
-        } else {
-          status.textContent = 'Publish failed. Quick-publish may be disabled in production. Provide admin secret or use Admin Blogs.';
+          if (ok) {
+            status.textContent = 'Published successfully';
+            fetchBlogs();
+          } else {
+            status.textContent =
+              'Publish failed. Quick-publish may be disabled in production. Provide admin secret or use Admin Blogs.';
+          }
+        } catch (e) {
+          status.textContent = `Publish failed: ${e.message}`;
+          const hint = document.createElement('div');
+          hint.style.marginTop = '8px';
+          hint.textContent =
+            'Tip: In production, quick-publish is disabled. Enter the admin secret or use Admin Blogs page.';
+          status.appendChild(hint);
         }
-      } catch (e) {
-        status.textContent = `Publish failed: ${e.message}`;
-        const hint = document.createElement('div');
-        hint.style.marginTop = '8px';
-        hint.textContent = 'Tip: In production, quick-publish is disabled. Enter the admin secret or use Admin Blogs page.';
-        status.appendChild(hint);
       }
-    }
 
-    document.getElementById('publish').addEventListener('click', publishBlog);
-    fetchBlogs();
-  </script>
-</body>
+      document.getElementById('publish').addEventListener('click', publishBlog);
+      fetchBlogs();
+    </script>
+  </body>
 </html>

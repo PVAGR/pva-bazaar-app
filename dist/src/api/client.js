@@ -1,7 +1,7 @@
 import config from '../../config';
 
 // Use environment variable if available, otherwise fallback to config
-const base = (import.meta?.env?.VITE_API_BASE) || config?.apiUrl || '/api';
+const base = import.meta?.env?.VITE_API_BASE || config?.apiUrl || '/api';
 
 console.log('API base URL:', base); // For debugging
 
@@ -16,8 +16,8 @@ async function request(path, options = {}) {
     headers: {
       'Content-Type': 'application/json',
       ...options.headers,
-      ...authHeaders()
-    }
+      ...authHeaders(),
+    },
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
@@ -31,7 +31,7 @@ export const api = {
   get: (path) => request(path, { method: 'GET' }),
   post: (path, body) => request(path, { method: 'POST', body: JSON.stringify(body) }),
   put: (path, body) => request(path, { method: 'PUT', body: JSON.stringify(body) }),
-  del: (path) => request(path, { method: 'DELETE' })
+  del: (path) => request(path, { method: 'DELETE' }),
 };
 
 export default api;

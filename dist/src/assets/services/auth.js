@@ -4,17 +4,17 @@ import config from '../../../config';
 class AuthService {
   constructor() {
     const envBase = import.meta?.env?.VITE_API_BASE;
-    this.baseURL = envBase || (config?.apiUrl || '/api');
+    this.baseURL = envBase || config?.apiUrl || '/api';
   }
 
   async login(email, password) {
     const response = await fetch(`${this.baseURL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify({ email, password }),
     });
     const data = await response.json();
-    
+
     if (data.ok) {
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
@@ -26,10 +26,10 @@ class AuthService {
     const response = await fetch(`${this.baseURL}/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, password })
+      body: JSON.stringify({ name, email, password }),
     });
     const data = await response.json();
-    
+
     if (data.ok) {
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));

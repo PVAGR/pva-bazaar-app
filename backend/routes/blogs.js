@@ -12,7 +12,8 @@ if (process.env.ENABLE_QUICK_PUBLISH === 'true') {
       const slug = (req.body?.slug || '').trim().toLowerCase();
       const title = (req.body?.title || '').trim();
       const content = (req.body?.content || '').toString();
-      if (!slug || !title) return res.status(400).json({ ok: false, message: 'slug and title are required' });
+      if (!slug || !title)
+        return res.status(400).json({ ok: false, message: 'slug and title are required' });
 
       let blog = await Blog.findOne({ slug });
       if (!blog) {
@@ -36,12 +37,15 @@ if (process.env.ENABLE_QUICK_PUBLISH === 'true') {
 router.post('/setup', async (req, res) => {
   try {
     const adminSecret = process.env.ADMIN_SECRET_CODE;
-    if (!adminSecret) return res.status(500).json({ ok: false, message: 'ADMIN_SECRET_CODE not configured' });
-    if (req.body?.secret !== adminSecret) return res.status(401).json({ ok: false, message: 'Unauthorized' });
+    if (!adminSecret)
+      return res.status(500).json({ ok: false, message: 'ADMIN_SECRET_CODE not configured' });
+    if (req.body?.secret !== adminSecret)
+      return res.status(401).json({ ok: false, message: 'Unauthorized' });
 
     const slug = (req.body?.slug || '').trim().toLowerCase();
     const title = (req.body?.title || '').trim();
-    if (!slug || !title) return res.status(400).json({ ok: false, message: 'slug and title are required' });
+    if (!slug || !title)
+      return res.status(400).json({ ok: false, message: 'slug and title are required' });
 
     let blog = await Blog.findOne({ slug });
     const newSecret = uuidv4();
@@ -50,12 +54,22 @@ router.post('/setup', async (req, res) => {
     if (!blog) {
       blog = new Blog({ slug, title, content: '', editHashHashed: hashed, status: 'published' });
       await blog.save();
-      return res.json({ ok: true, slug, editSecret: newSecret, message: 'Blog created. Keep the secret safe!' });
+      return res.json({
+        ok: true,
+        slug,
+        editSecret: newSecret,
+        message: 'Blog created. Keep the secret safe!',
+      });
     }
 
     blog.editHashHashed = hashed;
     await blog.save();
-    return res.json({ ok: true, slug, editSecret: newSecret, message: 'Secret rotated. Keep the new secret safe!' });
+    return res.json({
+      ok: true,
+      slug,
+      editSecret: newSecret,
+      message: 'Secret rotated. Keep the new secret safe!',
+    });
   } catch (err) {
     console.error('blogs.setup error', err);
     res.status(500).json({ ok: false, message: err.message || 'Internal error' });
@@ -65,7 +79,9 @@ router.post('/setup', async (req, res) => {
 // List published blogs
 router.get('/', async (req, res) => {
   try {
-    const blogs = await Blog.find({ status: 'published' }).sort({ createdAt: -1 }).select('slug title updatedAt');
+    const blogs = await Blog.find({ status: 'published' })
+      .sort({ createdAt: -1 })
+      .select('slug title updatedAt');
     res.json({ ok: true, blogs });
   } catch (err) {
     res.status(500).json({ ok: false, message: err.message });
@@ -76,9 +92,13 @@ router.get('/', async (req, res) => {
 router.get('/pending', async (req, res) => {
   try {
     const adminSecret = process.env.ADMIN_SECRET_CODE;
-    if (!adminSecret) return res.status(500).json({ ok: false, message: 'ADMIN_SECRET_CODE not configured' });
-    if ((req.query?.secret || '') !== adminSecret) return res.status(401).json({ ok: false, message: 'Unauthorized' });
-    const blogs = await Blog.find({ status: 'pending' }).sort({ createdAt: -1 }).select('slug title createdAt');
+    if (!adminSecret)
+      return res.status(500).json({ ok: false, message: 'ADMIN_SECRET_CODE not configured' });
+    if ((req.query?.secret || '') !== adminSecret)
+      return res.status(401).json({ ok: false, message: 'Unauthorized' });
+    const blogs = await Blog.find({ status: 'pending' })
+      .sort({ createdAt: -1 })
+      .select('slug title createdAt');
     res.json({ ok: true, blogs });
   } catch (err) {
     res.status(500).json({ ok: false, message: err.message });
@@ -91,8 +111,19 @@ router.get('/:slug', async (req, res) => {
     const slug = req.params.slug.trim().toLowerCase();
     const blog = await Blog.findOne({ slug, status: 'published' });
     if (!blog) return res.status(404).json({ ok: false, message: 'Blog not found' });
-    const comments = await Comment.find({ blogSlug: slug, approved: true }).sort({ createdAt: -1 }).lean();
-    res.json({ ok: true, blog: { slug: blog.slug, title: blog.title, content: blog.content, updatedAt: blog.updatedAt }, comments });
+    const comments = await Comment.find({ blogSlug: slug, approved: true })
+      .sort({ createdAt: -1 })
+      .lean();
+    res.json({
+      ok: true,
+      blog: {
+        slug: blog.slug,
+        title: blog.title,
+        content: blog.content,
+        updatedAt: blog.updatedAt,
+      },
+      comments,
+    });
   } catch (err) {
     res.status(500).json({ ok: false, message: err.message });
   }
@@ -125,8 +156,10 @@ router.post('/:slug/update', async (req, res) => {
 router.post('/:slug/publish', async (req, res) => {
   try {
     const adminSecret = process.env.ADMIN_SECRET_CODE;
-    if (!adminSecret) return res.status(500).json({ ok: false, message: 'ADMIN_SECRET_CODE not configured' });
-    if (req.body?.secret !== adminSecret) return res.status(401).json({ ok: false, message: 'Unauthorized' });
+    if (!adminSecret)
+      return res.status(500).json({ ok: false, message: 'ADMIN_SECRET_CODE not configured' });
+    if (req.body?.secret !== adminSecret)
+      return res.status(401).json({ ok: false, message: 'Unauthorized' });
 
     const slug = req.params.slug.trim().toLowerCase();
     const blog = await Blog.findOne({ slug });

@@ -18,12 +18,12 @@ class VectorDB {
   async initialize() {
     try {
       if (!this.client) {
-        console.warn("chromadb not installed. Falling back to MongoDB text search.");
+        console.warn('chromadb not installed. Falling back to MongoDB text search.');
         return;
       }
       // Create or get collection
       this.collection = await this.client.getOrCreateCollection({
-        name: "pva_artifacts",
+        name: 'pva_artifacts',
         embeddingFunction: {
           generate: async (texts) => {
             const embeddings = [];
@@ -32,16 +32,19 @@ class VectorDB {
               embeddings.push(embedding);
             }
             return embeddings;
-          }
-        }
+          },
+        },
       });
-      console.log("Vector database initialized");
+      console.log('Vector database initialized');
     } catch (error) {
-  // If Chroma is unavailable, degrade gracefully and use Mongo text search fallback
-  console.warn("Vector DB (Chroma) unavailable. Using MongoDB text search fallback. Detail:", error?.message || error);
-  this.client = null;
-  this.collection = null;
-  return;
+      // If Chroma is unavailable, degrade gracefully and use Mongo text search fallback
+      console.warn(
+        'Vector DB (Chroma) unavailable. Using MongoDB text search fallback. Detail:',
+        error?.message || error,
+      );
+      this.client = null;
+      this.collection = null;
+      return;
     }
   }
 
@@ -49,21 +52,21 @@ class VectorDB {
     try {
       const artifacts = await Artifact.find({});
       const embeddings = await this.embeddingService.generateArtifactEmbeddings(artifacts);
-      
-      const ids = embeddings.map(e => e.artifactId.toString());
-      const embeddingsData = embeddings.map(e => e.embedding);
-      const documents = embeddings.map(e => e.text);
-      
+
+      const ids = embeddings.map((e) => e.artifactId.toString());
+      const embeddingsData = embeddings.map((e) => e.embedding);
+      const documents = embeddings.map((e) => e.text);
+
       await this.collection.add({
         ids: ids,
         embeddings: embeddingsData,
         documents: documents,
-        metadatas: embeddings.map(e => ({ artifactId: e.artifactId.toString() }))
+        metadatas: embeddings.map((e) => ({ artifactId: e.artifactId.toString() })),
       });
-      
+
       console.log(`Indexed ${artifacts.length} artifacts`);
     } catch (error) {
-      console.error("Error indexing artifacts:", error);
+      console.error('Error indexing artifacts:', error);
       throw error;
     }
   }
@@ -73,21 +76,21 @@ class VectorDB {
       if (this.collection) {
         const results = await this.collection.query({
           queryTexts: [query],
-          nResults: limit
+          nResults: limit,
         });
         return results;
       }
       // Fallback: basic text search via MongoDB if chromadb is unavailable
       const docs = await Artifact.find(
         { $text: { $search: query } },
-        { score: { $meta: "textScore" } }
+        { score: { $meta: 'textScore' } },
       )
-        .sort({ score: { $meta: "textScore" } })
+        .sort({ score: { $meta: 'textScore' } })
         .limit(parseInt(limit));
       // Normalize to an array of plain objects with an optional score for consistency
-      return docs.map(d => ({ ...d.toObject(), score: d.score }));
+      return docs.map((d) => ({ ...d.toObject(), score: d.score }));
     } catch (error) {
-      console.error("Error searching artifacts:", error);
+      console.error('Error searching artifacts:', error);
       throw error;
     }
   }

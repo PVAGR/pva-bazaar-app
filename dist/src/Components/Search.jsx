@@ -15,7 +15,7 @@ const Search = () => {
     setIsLoading(true);
     try {
       const response = await axios.get(`/api/search/${searchType}`, {
-        params: { q: query, limit: 12 }
+        params: { q: query, limit: 12 },
       });
       setResults(response.data.results);
     } catch (error) {
@@ -37,8 +37,8 @@ const Search = () => {
             placeholder="Search artifacts by name, description, materials, or artisan..."
             className="search-input"
           />
-          <select 
-            value={searchType} 
+          <select
+            value={searchType}
             onChange={(e) => setSearchType(e.target.value)}
             className="search-type-select"
           >
@@ -54,7 +54,7 @@ const Search = () => {
       <div className="search-results">
         {results.length > 0 ? (
           <div className="artifact-grid">
-            {results.map(artifact => (
+            {results.map((artifact) => (
               <div key={artifact._id} className="artifact-card">
                 {artifact.imageUrl && (
                   <img src={artifact.imageUrl} alt={artifact.name} className="artifact-image" />
@@ -63,13 +63,17 @@ const Search = () => {
                   <h3>{artifact.name}</h3>
                   <p className="artifact-artisan">By {artifact.artisan}</p>
                   <p className="artifact-materials">{artifact.materials.join(', ')}</p>
-                  <p className="artifact-description">{artifact.description.substring(0, 100)}...</p>
+                  <p className="artifact-description">
+                    {artifact.description.substring(0, 100)}...
+                  </p>
                 </div>
               </div>
             ))}
           </div>
         ) : (
-          !isLoading && <p className="no-results">No artifacts found. Try a different search term.</p>
+          !isLoading && (
+            <p className="no-results">No artifacts found. Try a different search term.</p>
+          )
         )}
       </div>
     </div>

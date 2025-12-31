@@ -1,19 +1,7 @@
 {
-  "*.{js,jsx,ts,tsx}": [
-    "eslint --fix",
-    "prettier --write"
-  ],
-  "*.{json,yml,yaml,md}": [
-    "prettier --write"
-  ],
-  "*.{css,scss}": [
-    "prettier --write",
-    "node qa/scripts/check-brand-tokens.js"
-  ],
-  "apps/contracts/**/*.sol": [
-    "forge fmt"
-  ],
-  "package.json": [
-    "sort-package-json"
-  ]
+  "*.{js,jsx,ts,tsx}": ["eslint --fix", "prettier --write"],
+  "*.{json,yml,yaml,md}": ["prettier --write"],
+  "*.{css,scss}": ["prettier --write", "node qa/scripts/check-brand-tokens.js"],
+  "apps/contracts/**/*.sol": ["forge fmt"],
+  "package.json": ["sort-package-json"]
 }

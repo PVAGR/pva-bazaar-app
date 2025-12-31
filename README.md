@@ -2,8 +2,8 @@
 
 - Hooks: This repo uses Husky pre-commit checks (formatting, brand, accessibility, typecheck, tests, secret scan).
 - Secret scan: `scripts/secret-scan.sh` scans only staged files using `gitleaks`.
-   - It prefers a system install but will also use the bundled binary in `bin/`.
-   - In CI, missing `gitleaks` fails the job; locally it prints a warning and skips.
+  - It prefers a system install but will also use the bundled binary in `bin/`.
+  - In CI, missing `gitleaks` fails the job; locally it prints a warning and skips.
 
 Install gitleaks locally (optional):
 
@@ -25,6 +25,7 @@ FAST_COMMIT=1 git commit -m "your message"
 ```
 
 Notes:
+
 - Keep `.env` files out of Git; they are ignored by default. Never commit secrets.
 - If a check fails, prefer fixing the underlying issue, then re-commit.
 
@@ -70,6 +71,7 @@ curl -X POST http://localhost:5001/api/blogs/quick-publish \
 ```
 
 Environment setup:
+
 - Use [backend/.env.example](backend/.env.example) to create `backend/.env` for local dev.
 - In production, set secrets via deployment environment. Do not commit real secrets.
 
@@ -99,14 +101,19 @@ Then visit: http://localhost:3000
 We use [gitleaks](https://github.com/gitleaks/gitleaks) locally (pre-commit) and in CI to prevent accidental secret commits.
 
 ### Local Scan
+
 Run:
+
 ```bash
 scripts/secret-scan.sh
 ```
+
 This is also executed automatically by the pre-commit hook. If prompted, install gitleaks using the provided one-line script.
 
 ### CI Scan
+
 Workflow: "Secret Scan (gitleaks)" runs on:
+
 - Pull requests (all branches)
 - Pushes to `main`
 - Nightly schedule (03:15 UTC)
@@ -115,7 +122,9 @@ Workflow: "Secret Scan (gitleaks)" runs on:
 It uploads a SARIF report to GitHub Code Scanning (Security tab) and fails the build if any leak is detected.
 
 ### Allowlist Policy
+
 The allowlist in `gitleaks.toml` is intentionally minimal and only includes specific benign prompt phrases. To request an addition:
+
 1. Justify why the string is not a credential.
 2. Provide a narrow exact phrase or tightly scoped regex (no wildcards like `.*secret.*`).
 3. Open a PR; requires reviewer approval.
@@ -123,12 +132,15 @@ The allowlist in `gitleaks.toml` is intentionally minimal and only includes spec
 Never allowlist entire files or directories unless absolutely unavoidable.
 
 ### False Positive Procedure
+
 Open an issue or PR containing:
+
 - File & line reference
 - Detected rule ID / description
 - Rationale for allowlisting
 
 ### Real Secret Exposure Procedure
+
 1. Rotate the affected credential immediately.
 2. (If needed) Purge from git history (e.g., `git filter-repo`).
 3. Open an incident issue documenting remediation steps (private if necessary).

@@ -1,324 +1,442 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Writings Archive - Richy's Complete Works</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Source+Code+Pro:wght@300;400&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Source+Code+Pro:wght@300;400&display=swap"
+      rel="stylesheet"
+    />
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: 'Inter', sans-serif;
+        line-height: 1.8;
+        color: #2d3436;
+        background: linear-gradient(to right, #fafafa 0%, #ffffff 50%, #fafafa 100%);
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 3rem 2rem;
+        border-left: 1px solid #e0e0e0;
+        border-right: 1px solid #e0e0e0;
+        min-height: 100vh;
+      }
+      header {
+        margin-bottom: 4rem;
+        padding-bottom: 2rem;
+        border-bottom: 3px solid #1c5a45;
+      }
+      h1 {
+        font-size: 3.2rem;
+        font-weight: 700;
+        margin-bottom: 0.3rem;
+        color: #0a1f19;
+        letter-spacing: -0.5px;
+      }
+      .subtitle {
+        font-family: 'Source Code Pro', monospace;
+        font-size: 1.15rem;
+        color: #4ef8a3;
+        font-weight: 400;
+        margin-bottom: 1rem;
+      }
+      .timestamp {
+        font-family: 'Source Code Pro', monospace;
+        font-size: 0.85rem;
+        color: #999;
+        margin-top: 1rem;
+      }
+      nav {
+        margin: 2rem 0;
+        padding: 1rem 0;
+        border-bottom: 1px dashed #ddd;
+      }
+      nav a {
+        color: #1c5a45;
+        text-decoration: none;
+        margin-right: 1.5rem;
+        font-weight: 500;
+        border-bottom: 2px solid transparent;
+        transition: all 0.2s;
+      }
+      nav a:hover {
+        border-bottom: 2px solid #4ef8a3;
+        color: #4ef8a3;
+      }
+      section {
+        margin-bottom: 4rem;
+      }
+      h2 {
+        font-size: 2rem;
+        color: #0a1f19;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.8rem;
+        border-bottom: 2px dashed #4ef8a3;
+      }
+      h3 {
+        font-size: 1.3rem;
+        color: #1c5a45;
+        margin-top: 1.5rem;
+        margin-bottom: 1rem;
+      }
+      p,
+      li {
+        margin-bottom: 1.3rem;
+        font-size: 1.05rem;
+        color: #444;
+      }
+      ul {
+        padding-left: 2rem;
+      }
+      li {
+        margin-bottom: 0.8rem;
+      }
+      .intro-box {
+        background: linear-gradient(135deg, #fff7ed 0%, #fffbf0 100%);
+        border-left: 5px solid #f97316;
+        padding: 2rem;
+        margin: 2.5rem 0;
+        border-radius: 0 4px 4px 0;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      }
+      .intro-box p {
+        margin-bottom: 1rem;
+      }
+      .intro-box strong {
+        color: #0a1f19;
+      }
+      .writings-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        margin: 2rem 0;
+      }
+      .writing-card {
+        background: #f8f8f8;
+        border-left: 4px solid #1c5a45;
+        padding: 1.5rem;
+        border-radius: 0 4px 4px 0;
+        transition: all 0.3s;
+      }
+      .writing-card:hover {
+        border-left-color: #4ef8a3;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      }
+      .writing-card h3 {
+        margin-top: 0;
+        font-size: 1.2rem;
+      }
+      .writing-card p {
+        font-size: 0.95rem;
+        color: #666;
+        margin-bottom: 1rem;
+      }
+      .writing-card a {
+        color: #1c5a45;
+        text-decoration: none;
+        font-weight: 600;
+        border-bottom: 2px solid transparent;
+        transition: all 0.2s;
+      }
+      .writing-card a:hover {
+        border-bottom: 2px solid #4ef8a3;
+        color: #4ef8a3;
+      }
+      footer {
+        margin-top: 5rem;
+        padding-top: 2.5rem;
+        border-top: 1px solid #e0e0e0;
+        text-align: center;
+        font-size: 0.9rem;
+        color: #777;
+      }
+      @media (max-width: 600px) {
         body {
-            font-family: 'Inter', sans-serif;
-            line-height: 1.8;
-            color: #2d3436;
-            background: linear-gradient(to right, #fafafa 0%, #ffffff 50%, #fafafa 100%);
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 3rem 2rem;
-            border-left: 1px solid #e0e0e0;
-            border-right: 1px solid #e0e0e0;
-            min-height: 100vh;
+          padding: 1.5rem 1rem;
         }
-        header { 
-            margin-bottom: 4rem; 
-            padding-bottom: 2rem; 
-            border-bottom: 3px solid #1c5a45; 
+        h1 {
+          font-size: 2.2rem;
         }
-        h1 { 
-            font-size: 3.2rem; 
-            font-weight: 700; 
-            margin-bottom: 0.3rem; 
-            color: #0a1f19; 
-            letter-spacing: -0.5px; 
-        }
-        .subtitle {
-            font-family: 'Source Code Pro', monospace;
-            font-size: 1.15rem;
-            color: #4ef8a3;
-            font-weight: 400;
-            margin-bottom: 1rem;
-        }
-        .timestamp {
-            font-family: 'Source Code Pro', monospace;
-            font-size: 0.85rem;
-            color: #999;
-            margin-top: 1rem;
-        }
-        nav {
-            margin: 2rem 0;
-            padding: 1rem 0;
-            border-bottom: 1px dashed #ddd;
-        }
-        nav a {
-            color: #1c5a45;
-            text-decoration: none;
-            margin-right: 1.5rem;
-            font-weight: 500;
-            border-bottom: 2px solid transparent;
-            transition: all 0.2s;
-        }
-        nav a:hover {
-            border-bottom: 2px solid #4ef8a3;
-            color: #4ef8a3;
-        }
-        section { margin-bottom: 4rem; }
-        h2 {
-            font-size: 2rem;
-            color: #0a1f19;
-            margin-bottom: 1.5rem;
-            padding-bottom: 0.8rem;
-            border-bottom: 2px dashed #4ef8a3;
-        }
-        h3 {
-            font-size: 1.3rem;
-            color: #1c5a45;
-            margin-top: 1.5rem;
-            margin-bottom: 1rem;
-        }
-        p, li { 
-            margin-bottom: 1.3rem; 
-            font-size: 1.05rem; 
-            color: #444; 
-        }
-        ul { padding-left: 2rem; }
-        li { margin-bottom: 0.8rem; }
-        .intro-box {
-            background: linear-gradient(135deg, #fff7ed 0%, #fffbf0 100%);
-            border-left: 5px solid #f97316;
-            padding: 2rem;
-            margin: 2.5rem 0;
-            border-radius: 0 4px 4px 0;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        }
-        .intro-box p { margin-bottom: 1rem; }
-        .intro-box strong { color: #0a1f19; }
         .writings-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
-            margin: 2rem 0;
+          grid-template-columns: 1fr;
         }
-        .writing-card {
-            background: #f8f8f8;
-            border-left: 4px solid #1c5a45;
-            padding: 1.5rem;
-            border-radius: 0 4px 4px 0;
-            transition: all 0.3s;
-        }
-        .writing-card:hover {
-            border-left-color: #4ef8a3;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-        .writing-card h3 {
-            margin-top: 0;
-            font-size: 1.2rem;
-        }
-        .writing-card p {
-            font-size: 0.95rem;
-            color: #666;
-            margin-bottom: 1rem;
-        }
-        .writing-card a {
-            color: #1c5a45;
-            text-decoration: none;
-            font-weight: 600;
-            border-bottom: 2px solid transparent;
-            transition: all 0.2s;
-        }
-        .writing-card a:hover {
-            border-bottom: 2px solid #4ef8a3;
-            color: #4ef8a3;
-        }
-        footer {
-            margin-top: 5rem;
-            padding-top: 2.5rem;
-            border-top: 1px solid #e0e0e0;
-            text-align: center;
-            font-size: 0.9rem;
-            color: #777;
-        }
-        @media (max-width: 600px) {
-            body { padding: 1.5rem 1rem; }
-            h1 { font-size: 2.2rem; }
-            .writings-grid { grid-template-columns: 1fr; }
-        }
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <header>
-        <h1>Complete Writings Archive</h1>
-        <p class="subtitle">// 29 Years of Thought, Preserved Forever</p>
-        <p class="timestamp">Published: December 12, 2025 | Inspired by Aaron Swartz</p>
+      <h1>Complete Writings Archive</h1>
+      <p class="subtitle">// 29 Years of Thought, Preserved Forever</p>
+      <p class="timestamp">Published: December 12, 2025 | Inspired by Aaron Swartz</p>
     </header>
 
     <nav>
-        <a href="/writings/">All Writings</a>
-        <a href="/novel/">Novel</a>
-        <a href="/biography/">Biography</a>
-        <a href="/research/">Research</a>
+      <a href="/writings/">All Writings</a>
+      <a href="/novel/">Novel</a>
+      <a href="/biography/">Biography</a>
+      <a href="/research/">Research</a>
     </nav>
 
     <section id="intro">
-        <div class="intro-box">
-            <p><strong>Why This Archive Exists</strong></p>
-            <p>I had 11 of my best pieces locked behind a Squarespace paywall. Nobody read them. Nobody will. So I'm releasing <em>everything</em>&mdash;every thought, every philosophical exploration, every unfiltered idea from 29 years of life.</p>
-            <p><strong>These are not polished essays. They are raw thoughts.</strong> Stream of consciousness. The kind of writing that happens when you smoke OG Gas and let your mind wander to the edges of existence.</p>
-            <p>If my magnum opus fails, maybe someone in 5 years or 500 years will find inspiration here. That's enough.</p>
-            <p style="margin: 0;"><em>&mdash; Richy, December 2025</em></p>
-        </div>
+      <div class="intro-box">
+        <p><strong>Why This Archive Exists</strong></p>
+        <p>
+          I had 11 of my best pieces locked behind a Squarespace paywall. Nobody read them. Nobody
+          will. So I'm releasing <em>everything</em>&mdash;every thought, every philosophical
+          exploration, every unfiltered idea from 29 years of life.
+        </p>
+        <p>
+          <strong>These are not polished essays. They are raw thoughts.</strong> Stream of
+          consciousness. The kind of writing that happens when you smoke OG Gas and let your mind
+          wander to the edges of existence.
+        </p>
+        <p>
+          If my magnum opus fails, maybe someone in 5 years or 500 years will find inspiration here.
+          That's enough.
+        </p>
+        <p style="margin: 0"><em>&mdash; Richy, December 2025</em></p>
+      </div>
     </section>
 
     <section id="main-works">
-        <h2>Core Philosophical Works</h2>
-        <div class="writings-grid">
-            <div class="writing-card">
-                <h3>This or That Book</h3>
-                <p>The complete theory of binary choice, balance, and the third door. 12 chapters exploring how every decision shapes destiny.</p>
-                <a href="/writings/this-or-that.html">Read Full Book &rarr;</a>
-            </div>
-            
-            <div class="writing-card">
-                <h3>Aetherzamin Language</h3>
-                <p>A universal language concept inspired by Greek, Persian, and Egyptian traditions. The bridge between all human communication.</p>
-                <a href="/writings/aetherzamin.html">Explore Language &rarr;</a>
-            </div>
-
-            <div class="writing-card">
-                <h3>Pura Vida Ayurveda</h3>
-                <p>Pure life knowledge. The synthesis of balance, breath, Costa Rica philosophy, and ancient Ayurvedic wisdom.</p>
-                <a href="/writings/pura-vida.html">Read Philosophy &rarr;</a>
-            </div>
-
-            <div class="writing-card">
-                <h3>Balance & Symmetry</h3>
-                <p>Physical and mental balance. Why we're all 2-3 inches shorter than we should be. How to love both sides of your face.</p>
-                <a href="/writings/balance.html">Discover Balance &rarr;</a>
-            </div>
-
-            <div class="writing-card">
-                <h3>Places I Must Visit</h3>
-                <p>A pilgrimage list spanning Aurora Borealis, Marco Polo's burial, Immanuel Kant's tomb, and the heart of the world in Eridu.</p>
-                <a href="/writings/pilgrimage.html">View Sacred Sites &rarr;</a>
-            </div>
-
-            <div class="writing-card">
-                <h3>On Religion & God</h3>
-                <p>Why I believe in all religions and none exclusively. The deep state, consciousness, and the universal one.</p>
-                <a href="/writings/religion.html">Read Spiritual Views &rarr;</a>
-            </div>
-
-            <div class="writing-card">
-                <h3>Consciousness & Brain Evolution</h3>
-                <p>Generational knowledge transfer, why we get smarter each generation, and the path to unlocking full human potential.</p>
-                <a href="/writings/consciousness.html">Explore Theory &rarr;</a>
-            </div>
-
-            <div class="writing-card">
-                <h3>Marijuana & Enlightenment</h3>
-                <p>OG Gas from Organic Care of California. How cannabis became my teacher and crutch. The magic herb that slows your mind.</p>
-                <a href="/writings/marijuana.html">Read Reflection &rarr;</a>
-            </div>
-
-            <div class="writing-card">
-                <h3>Sacred Texts Manipulation</h3>
-                <p>How the Bible, Quran, and Talmud have been twisted to justify slavery, oppression, and control. Reclaiming universal truth.</p>
-                <a href="/writings/sacred-texts.html">Read Analysis &rarr;</a>
-            </div>
-
-            <div class="writing-card">
-                <h3>The Divine Duality</h3>
-                <p>Metamaterials, wave-particle duality, and Zoroastrian Asha vs Druj. Scientific evidence of cosmic design.</p>
-                <a href="/writings/divine-duality.html">Explore Science &rarr;</a>
-            </div>
-
-            <div class="writing-card">
-                <h3>The Akashic Records</h3>
-                <p>Universal knowledge, Default Mode Network suppression, and how meditation and psychedelics access cosmic truth.</p>
-                <a href="/writings/akashic-records.html">Access Wisdom &rarr;</a>
-            </div>
-
-            <div class="writing-card">
-                <h3>The Eden Theory</h3>
-                <p>Garden of Eden as pre-evil paradise. The foreign introduction of Druj. Heaven and hell as states of mind.</p>
-                <a href="/writings/eden-theory.html">Read Theory &rarr;</a>
-            </div>
-
-            <div class="writing-card">
-                <h3>Personal Reflections</h3>
-                <p>Raw thoughts on honoring my father, social anxiety, being a wallflower, and substances as crutches. Unfiltered honesty.</p>
-                <a href="/writings/personal-reflections.html">Read Reflections &rarr;</a>
-            </div>
-
-            <div class="writing-card">
-                <h3>Amnesia &amp; Consciousness</h3>
-                <p>How parental denial creates generational forgetting. Conscious vs unconscious. Choosing Asha over Druj daily.</p>
-                <a href="/writings/amnesia-consciousness.html">Explore Consciousness &rarr;</a>
-            </div>
-
-            <div class="writing-card">
-                <h3>PVA Food &amp; Ancient Wellness</h3>
-                <p>Egyptian, Ayurvedic, and healing nutrition. Onion juice, garlic, sea vegetables, ashwagandha, and sacred nourishment.</p>
-                <a href="/writings/pva-food.html">Explore Foods &rarr;</a>
-            </div>
-
-            <div class="writing-card">
-                <h3>Sacred Cannabis Cultivation</h3>
-                <p>Hindu and Tibetan spiritual traditions for growing cannabis. Vedic mantras, lunar cycles, temple balls, and conscious cultivation.</p>
-                <a href="/writings/sacred-cannabis.html">Read Methods &rarr;</a>
-            </div>
-
-            <div class="writing-card">
-                <h3>Stream of Consciousness</h3>
-                <p>Unfiltered thoughts on ego, love thresholds, laughter, potential, action, and why nobody is perfect.</p>
-                <a href="/writings/stream.html">Read Raw Thoughts &rarr;</a>
-            </div>
-
-            <div class="writing-card">
-                <h3>Universal Oracle Assessment</h3>
-                <p>Complete framework for personalized spiritual readings. Includes intake form, cosmic signature analysis, body blueprint, and the "Now What?" empowerment system.</p>
-                <a href="/writings/oracle-assessment.html">Access Oracle &rarr;</a>
-            </div>
-
-            <div class="writing-card">
-                <h3>PVA Bazaar Business Model</h3>
-                <p>Decentralized marketplace system. Blockchain architecture, NFT deeds, three-tier ownership, smart contracts, and the Kenya Digital Bridge Initiative.</p>
-                <a href="/writings/pva-business-model.html">Explore System &rarr;</a>
-            </div>
-
-            <div class="writing-card">
-                <h3>Eternal Renewal: The Magnum Opus</h3>
-                <p>Civilization-building framework. Living Press Kiosks, Memory Gardens, Archive Airships, Cycle Workshops, and 15+ infinite jobs for a post-scarcity world.</p>
-                <a href="/writings/eternal-renewal.html">Read Vision &rarr;</a>
-            </div>
-
-            <div class="writing-card">
-                <h3>Personal Chronicle: The Man from Taured</h3>
-                <p>Awakening manifesto, truth-tellers memorial, trans-dimensional rescue research (Lucas/Nietzsche/Tesla), and the philosophy of God's programming vs DRUJ.</p>
-                <a href="/writings/personal-chronicle.html">Enter Archive &rarr;</a>
-            </div>
-
-            <div class="writing-card">
-                <h3>Kenya Initiative</h3>
-                <p>Samagardens partnership. Real-world PVA deployment, Mama Salome's schools, interview frameworks, and proof-of-concept for global decentralized economics.</p>
-                <a href="/writings/kenya-initiative.html">View Project &rarr;</a>
-            </div>
+      <h2>Core Philosophical Works</h2>
+      <div class="writings-grid">
+        <div class="writing-card">
+          <h3>This or That Book</h3>
+          <p>
+            The complete theory of binary choice, balance, and the third door. 12 chapters exploring
+            how every decision shapes destiny.
+          </p>
+          <a href="/writings/this-or-that.html">Read Full Book &rarr;</a>
         </div>
+
+        <div class="writing-card">
+          <h3>Aetherzamin Language</h3>
+          <p>
+            A universal language concept inspired by Greek, Persian, and Egyptian traditions. The
+            bridge between all human communication.
+          </p>
+          <a href="/writings/aetherzamin.html">Explore Language &rarr;</a>
+        </div>
+
+        <div class="writing-card">
+          <h3>Pura Vida Ayurveda</h3>
+          <p>
+            Pure life knowledge. The synthesis of balance, breath, Costa Rica philosophy, and
+            ancient Ayurvedic wisdom.
+          </p>
+          <a href="/writings/pura-vida.html">Read Philosophy &rarr;</a>
+        </div>
+
+        <div class="writing-card">
+          <h3>Balance & Symmetry</h3>
+          <p>
+            Physical and mental balance. Why we're all 2-3 inches shorter than we should be. How to
+            love both sides of your face.
+          </p>
+          <a href="/writings/balance.html">Discover Balance &rarr;</a>
+        </div>
+
+        <div class="writing-card">
+          <h3>Places I Must Visit</h3>
+          <p>
+            A pilgrimage list spanning Aurora Borealis, Marco Polo's burial, Immanuel Kant's tomb,
+            and the heart of the world in Eridu.
+          </p>
+          <a href="/writings/pilgrimage.html">View Sacred Sites &rarr;</a>
+        </div>
+
+        <div class="writing-card">
+          <h3>On Religion & God</h3>
+          <p>
+            Why I believe in all religions and none exclusively. The deep state, consciousness, and
+            the universal one.
+          </p>
+          <a href="/writings/religion.html">Read Spiritual Views &rarr;</a>
+        </div>
+
+        <div class="writing-card">
+          <h3>Consciousness & Brain Evolution</h3>
+          <p>
+            Generational knowledge transfer, why we get smarter each generation, and the path to
+            unlocking full human potential.
+          </p>
+          <a href="/writings/consciousness.html">Explore Theory &rarr;</a>
+        </div>
+
+        <div class="writing-card">
+          <h3>Marijuana & Enlightenment</h3>
+          <p>
+            OG Gas from Organic Care of California. How cannabis became my teacher and crutch. The
+            magic herb that slows your mind.
+          </p>
+          <a href="/writings/marijuana.html">Read Reflection &rarr;</a>
+        </div>
+
+        <div class="writing-card">
+          <h3>Sacred Texts Manipulation</h3>
+          <p>
+            How the Bible, Quran, and Talmud have been twisted to justify slavery, oppression, and
+            control. Reclaiming universal truth.
+          </p>
+          <a href="/writings/sacred-texts.html">Read Analysis &rarr;</a>
+        </div>
+
+        <div class="writing-card">
+          <h3>The Divine Duality</h3>
+          <p>
+            Metamaterials, wave-particle duality, and Zoroastrian Asha vs Druj. Scientific evidence
+            of cosmic design.
+          </p>
+          <a href="/writings/divine-duality.html">Explore Science &rarr;</a>
+        </div>
+
+        <div class="writing-card">
+          <h3>The Akashic Records</h3>
+          <p>
+            Universal knowledge, Default Mode Network suppression, and how meditation and
+            psychedelics access cosmic truth.
+          </p>
+          <a href="/writings/akashic-records.html">Access Wisdom &rarr;</a>
+        </div>
+
+        <div class="writing-card">
+          <h3>The Eden Theory</h3>
+          <p>
+            Garden of Eden as pre-evil paradise. The foreign introduction of Druj. Heaven and hell
+            as states of mind.
+          </p>
+          <a href="/writings/eden-theory.html">Read Theory &rarr;</a>
+        </div>
+
+        <div class="writing-card">
+          <h3>Personal Reflections</h3>
+          <p>
+            Raw thoughts on honoring my father, social anxiety, being a wallflower, and substances
+            as crutches. Unfiltered honesty.
+          </p>
+          <a href="/writings/personal-reflections.html">Read Reflections &rarr;</a>
+        </div>
+
+        <div class="writing-card">
+          <h3>Amnesia &amp; Consciousness</h3>
+          <p>
+            How parental denial creates generational forgetting. Conscious vs unconscious. Choosing
+            Asha over Druj daily.
+          </p>
+          <a href="/writings/amnesia-consciousness.html">Explore Consciousness &rarr;</a>
+        </div>
+
+        <div class="writing-card">
+          <h3>PVA Food &amp; Ancient Wellness</h3>
+          <p>
+            Egyptian, Ayurvedic, and healing nutrition. Onion juice, garlic, sea vegetables,
+            ashwagandha, and sacred nourishment.
+          </p>
+          <a href="/writings/pva-food.html">Explore Foods &rarr;</a>
+        </div>
+
+        <div class="writing-card">
+          <h3>Sacred Cannabis Cultivation</h3>
+          <p>
+            Hindu and Tibetan spiritual traditions for growing cannabis. Vedic mantras, lunar
+            cycles, temple balls, and conscious cultivation.
+          </p>
+          <a href="/writings/sacred-cannabis.html">Read Methods &rarr;</a>
+        </div>
+
+        <div class="writing-card">
+          <h3>Stream of Consciousness</h3>
+          <p>
+            Unfiltered thoughts on ego, love thresholds, laughter, potential, action, and why nobody
+            is perfect.
+          </p>
+          <a href="/writings/stream.html">Read Raw Thoughts &rarr;</a>
+        </div>
+
+        <div class="writing-card">
+          <h3>Universal Oracle Assessment</h3>
+          <p>
+            Complete framework for personalized spiritual readings. Includes intake form, cosmic
+            signature analysis, body blueprint, and the "Now What?" empowerment system.
+          </p>
+          <a href="/writings/oracle-assessment.html">Access Oracle &rarr;</a>
+        </div>
+
+        <div class="writing-card">
+          <h3>PVA Bazaar Business Model</h3>
+          <p>
+            Decentralized marketplace system. Blockchain architecture, NFT deeds, three-tier
+            ownership, smart contracts, and the Kenya Digital Bridge Initiative.
+          </p>
+          <a href="/writings/pva-business-model.html">Explore System &rarr;</a>
+        </div>
+
+        <div class="writing-card">
+          <h3>Eternal Renewal: The Magnum Opus</h3>
+          <p>
+            Civilization-building framework. Living Press Kiosks, Memory Gardens, Archive Airships,
+            Cycle Workshops, and 15+ infinite jobs for a post-scarcity world.
+          </p>
+          <a href="/writings/eternal-renewal.html">Read Vision &rarr;</a>
+        </div>
+
+        <div class="writing-card">
+          <h3>Personal Chronicle: The Man from Taured</h3>
+          <p>
+            Awakening manifesto, truth-tellers memorial, trans-dimensional rescue research
+            (Lucas/Nietzsche/Tesla), and the philosophy of God's programming vs DRUJ.
+          </p>
+          <a href="/writings/personal-chronicle.html">Enter Archive &rarr;</a>
+        </div>
+
+        <div class="writing-card">
+          <h3>Kenya Initiative</h3>
+          <p>
+            Samagardens partnership. Real-world PVA deployment, Mama Salome's schools, interview
+            frameworks, and proof-of-concept for global decentralized economics.
+          </p>
+          <a href="/writings/kenya-initiative.html">View Project &rarr;</a>
+        </div>
+      </div>
     </section>
 
     <section id="about-archive">
-        <h2>About This Archive</h2>
-        <p>This is not a blog. It's not a portfolio. It's a <strong>testament.</strong></p>
-        <p>Every page here represents hours, days, sometimes months of thinking, writing, and refining ideas. Some are polished. Most are raw. All are honest.</p>
-        <p>I was inspired by <strong>Aaron Swartz</strong>, who believed knowledge should be free and accessible. His blog remains online, a permanent record of his thoughts. This is my version of that.</p>
-        <p>If you're reading this and I'm gone, know that these words mattered to me. If you're reading this and I'm still here, reach out. Let's talk about balance, consciousness, or why sloths are the perfect metaphor for living.</p>
+      <h2>About This Archive</h2>
+      <p>This is not a blog. It's not a portfolio. It's a <strong>testament.</strong></p>
+      <p>
+        Every page here represents hours, days, sometimes months of thinking, writing, and refining
+        ideas. Some are polished. Most are raw. All are honest.
+      </p>
+      <p>
+        I was inspired by <strong>Aaron Swartz</strong>, who believed knowledge should be free and
+        accessible. His blog remains online, a permanent record of his thoughts. This is my version
+        of that.
+      </p>
+      <p>
+        If you're reading this and I'm gone, know that these words mattered to me. If you're reading
+        this and I'm still here, reach out. Let's talk about balance, consciousness, or why sloths
+        are the perfect metaphor for living.
+      </p>
     </section>
 
     <footer>
-        <p>&copy; 2025 Richy. All writings released freely under <a href="https://creativecommons.org/publicdomain/zero/1.0/" style="color: #1c5a45;">CC0 Public Domain</a>.</p>
-        <p style="margin-top: 0.5rem; color: #999;">No paywalls. No gatekeeping. Just words that stay.</p>
+      <p>
+        &copy; 2025 Richy. All writings released freely under
+        <a href="https://creativecommons.org/publicdomain/zero/1.0/" style="color: #1c5a45"
+          >CC0 Public Domain</a
+        >.
+      </p>
+      <p style="margin-top: 0.5rem; color: #999">
+        No paywalls. No gatekeeping. Just words that stay.
+      </p>
     </footer>
-</body>
+  </body>
 </html>
-

@@ -1,14 +1,14 @@
 module.exports = async (page, scenario, viewport) => {
   console.log('SCENARIO > ' + scenario.label);
-  
+
   // Wait for fonts to load
   await page.waitForLoadState('networkidle');
-  
+
   // Ensure PVA brand fonts are loaded
   await page.waitForFunction(() => {
     return document.fonts.ready;
   });
-  
+
   // Hide dynamic elements that change between runs
   await page.addStyleTag({
     content: `
@@ -28,9 +28,9 @@ module.exports = async (page, scenario, viewport) => {
       * {
         scroll-behavior: auto !important;
       }
-    `
+    `,
   });
-  
+
   // Wait for any lazy-loaded images
   await page.waitForTimeout(1000);
 };

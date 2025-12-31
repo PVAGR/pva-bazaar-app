@@ -5,11 +5,11 @@ module.exports = (req, res, next) => {
     // Get token from header
     const authHeader = req.headers.authorization || '';
     const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
-    
+
     if (!token) {
       return res.status(401).json({
         ok: false,
-        message: 'No authentication token provided'
+        message: 'No authentication token provided',
       });
     }
 
@@ -21,7 +21,7 @@ module.exports = (req, res, next) => {
     console.error('Auth middleware error:', error);
     res.status(401).json({
       ok: false,
-      message: 'Invalid authentication token'
+      message: 'Invalid authentication token',
     });
   }
 };

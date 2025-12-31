@@ -8,10 +8,10 @@ const editablePageSchema = new mongoose.Schema({
   editHashHashed: { type: String, required: true },
   owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
   createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now }
+  updatedAt: { type: Date, default: Date.now },
 });
 
-editablePageSchema.pre('save', function(next) {
+editablePageSchema.pre('save', function (next) {
   this.updatedAt = Date.now();
   next();
 });

@@ -1,118 +1,158 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>New Post • PVA Bazaar</title>
-  <style>
-    body{font-family:system-ui,-apple-system,Segoe UI,Roboto;max-width:720px;margin:40px auto;padding:0 16px;background:#0b0f12;color:#e6eef6}
-    a{color:#79c0ff}
-    header{margin-bottom:24px}
-    label{display:block;margin:12px 0 6px}
-    input,textarea{width:100%;padding:10px;border-radius:8px;border:1px solid #253040;background:#11161b;color:#e6eef6}
-    textarea{min-height:200px}
-    button{margin-top:16px;padding:10px 16px;border-radius:8px;border:1px solid #2a3a4a;background:#183247;color:#e6eef6;cursor:pointer}
-    .msg{margin-top:16px}
-  </style>
-</head>
-<body>
-  <header>
-    <h1>New Blog Post</h1>
-    <p><a href="/public/blogs.html">Back to Blogs</a></p>
-  </header>
-  <main>
-    <form id="postForm">
-      <label for="secret">Admin Secret (optional, required in production)</label>
-      <input id="secret" name="secret" placeholder="Enter admin secret for prod" />
-      <label for="title">Title</label>
-      <input id="title" name="title" required />
-      <label for="slug">Slug</label>
-      <input id="slug" name="slug" placeholder="e.g., welcome" required />
-      <label for="body">Body</label>
-      <textarea id="body" name="body" required></textarea>
-      <button type="submit">Publish</button>
-    </form>
-    <div id="msg" class="msg"></div>
-  </main>
-  <script>
-    const form = document.getElementById('postForm');
-    const msg = document.getElementById('msg');
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const title = document.getElementById('title').value.trim();
-      const slug = document.getElementById('slug').value.trim().toLowerCase();
-      const body = document.getElementById('body').value.trim();
-      const secret = document.getElementById('secret').value.trim();
-      msg.textContent = 'Publishing...';
-      try {
-        // First try quick-publish (dev-friendly)
-        const qp = await fetch('/api/blogs/quick-publish', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title, slug, content: body })
-        });
-        let ok = false;
-        if (qp.ok) {
-          const data = await qp.json();
-          ok = data && data.ok !== false;
-        }
-
-        if (!ok && secret) {
-          // Fallback path for production: admin setup + publish + update content
-          const setupRes = await fetch('/api/blogs/setup', {
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>New Post • PVA Bazaar</title>
+    <style>
+      body {
+        font-family:
+          system-ui,
+          -apple-system,
+          Segoe UI,
+          Roboto;
+        max-width: 720px;
+        margin: 40px auto;
+        padding: 0 16px;
+        background: #0b0f12;
+        color: #e6eef6;
+      }
+      a {
+        color: #79c0ff;
+      }
+      header {
+        margin-bottom: 24px;
+      }
+      label {
+        display: block;
+        margin: 12px 0 6px;
+      }
+      input,
+      textarea {
+        width: 100%;
+        padding: 10px;
+        border-radius: 8px;
+        border: 1px solid #253040;
+        background: #11161b;
+        color: #e6eef6;
+      }
+      textarea {
+        min-height: 200px;
+      }
+      button {
+        margin-top: 16px;
+        padding: 10px 16px;
+        border-radius: 8px;
+        border: 1px solid #2a3a4a;
+        background: #183247;
+        color: #e6eef6;
+        cursor: pointer;
+      }
+      .msg {
+        margin-top: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>New Blog Post</h1>
+      <p><a href="/public/blogs.html">Back to Blogs</a></p>
+    </header>
+    <main>
+      <form id="postForm">
+        <label for="secret">Admin Secret (optional, required in production)</label>
+        <input id="secret" name="secret" placeholder="Enter admin secret for prod" />
+        <label for="title">Title</label>
+        <input id="title" name="title" required />
+        <label for="slug">Slug</label>
+        <input id="slug" name="slug" placeholder="e.g., welcome" required />
+        <label for="body">Body</label>
+        <textarea id="body" name="body" required></textarea>
+        <button type="submit">Publish</button>
+      </form>
+      <div id="msg" class="msg"></div>
+    </main>
+    <script>
+      const form = document.getElementById('postForm');
+      const msg = document.getElementById('msg');
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const title = document.getElementById('title').value.trim();
+        const slug = document.getElementById('slug').value.trim().toLowerCase();
+        const body = document.getElementById('body').value.trim();
+        const secret = document.getElementById('secret').value.trim();
+        msg.textContent = 'Publishing...';
+        try {
+          // First try quick-publish (dev-friendly)
+          const qp = await fetch('/api/blogs/quick-publish', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ secret, slug, title })
+            body: JSON.stringify({ title, slug, content: body }),
           });
-          const setup = await setupRes.json();
-          if (!setupRes.ok || setup.ok === false) {
-            throw new Error(setup.message || 'Admin setup failed');
+          let ok = false;
+          if (qp.ok) {
+            const data = await qp.json();
+            ok = data && data.ok !== false;
           }
 
-          const publishRes = await fetch(`/api/blogs/${encodeURIComponent(slug)}/publish`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ secret })
-          });
-          const publish = await publishRes.json();
-          if (!publishRes.ok || publish.ok === false) {
-            throw new Error(publish.message || 'Publish failed');
-          }
-
-          // Update content using edit secret returned from publish
-          const editSecret = publish.editSecret || setup.editSecret;
-          if (editSecret) {
-            const updateRes = await fetch(`/api/blogs/${encodeURIComponent(slug)}/update`, {
+          if (!ok && secret) {
+            // Fallback path for production: admin setup + publish + update content
+            const setupRes = await fetch('/api/blogs/setup', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ edit: editSecret, content: body })
+              body: JSON.stringify({ secret, slug, title }),
             });
-            const update = await updateRes.json();
-            if (!updateRes.ok || update.ok === false) {
-              throw new Error(update.message || 'Content update failed');
+            const setup = await setupRes.json();
+            if (!setupRes.ok || setup.ok === false) {
+              throw new Error(setup.message || 'Admin setup failed');
             }
-          }
-          ok = true;
-        }
 
-        if (ok) {
-          msg.textContent = 'Published! View it now.';
-          const link = document.createElement('a');
-          link.href = `/public/blog.html?slug=${encodeURIComponent(slug)}`;
-          link.textContent = 'Open post';
-          msg.append(' ');
-          msg.appendChild(link);
-        } else {
-          msg.textContent = 'Publish failed. Quick-publish may be disabled in production. Provide admin secret or use Admin Blogs.';
+            const publishRes = await fetch(`/api/blogs/${encodeURIComponent(slug)}/publish`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ secret }),
+            });
+            const publish = await publishRes.json();
+            if (!publishRes.ok || publish.ok === false) {
+              throw new Error(publish.message || 'Publish failed');
+            }
+
+            // Update content using edit secret returned from publish
+            const editSecret = publish.editSecret || setup.editSecret;
+            if (editSecret) {
+              const updateRes = await fetch(`/api/blogs/${encodeURIComponent(slug)}/update`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ edit: editSecret, content: body }),
+              });
+              const update = await updateRes.json();
+              if (!updateRes.ok || update.ok === false) {
+                throw new Error(update.message || 'Content update failed');
+              }
+            }
+            ok = true;
+          }
+
+          if (ok) {
+            msg.textContent = 'Published! View it now.';
+            const link = document.createElement('a');
+            link.href = `/public/blog.html?slug=${encodeURIComponent(slug)}`;
+            link.textContent = 'Open post';
+            msg.append(' ');
+            msg.appendChild(link);
+          } else {
+            msg.textContent =
+              'Publish failed. Quick-publish may be disabled in production. Provide admin secret or use Admin Blogs.';
+          }
+        } catch (err) {
+          msg.textContent = 'Error: ' + ((err && err.message) || 'Unknown');
+          const hint = document.createElement('div');
+          hint.style.marginTop = '8px';
+          hint.textContent =
+            'Tip: In production, quick-publish is disabled. Enter the admin secret or use Admin Blogs page.';
+          msg.appendChild(hint);
         }
-      } catch (err) {
-        msg.textContent = 'Error: ' + (err && err.message || 'Unknown');
-        const hint = document.createElement('div');
-        hint.style.marginTop = '8px';
-        hint.textContent = 'Tip: In production, quick-publish is disabled. Enter the admin secret or use Admin Blogs page.';
-        msg.appendChild(hint);
-      }
-    });
-  </script>
-</body>
+      });
+    </script>
+  </body>
 </html>

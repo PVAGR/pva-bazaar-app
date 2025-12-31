@@ -9,29 +9,33 @@ export default async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     if (req.method === 'OPTIONS') return res.status(204).end();
-    if (req.method !== 'POST') return res.status(405).json({ ok: false, message: 'Method not allowed' });
+    if (req.method !== 'POST')
+      return res.status(405).json({ ok: false, message: 'Method not allowed' });
 
     let body = '';
-    req.on('data', chunk => { body += chunk; });
-    await new Promise(resolve => req.on('end', resolve));
+    req.on('data', (chunk) => {
+      body += chunk;
+    });
+    await new Promise((resolve) => req.on('end', resolve));
     const payload = JSON.parse(body || '{}');
 
     const slug = (payload.slug || '').toString().trim().toLowerCase();
     const title = (payload.title || '').toString().trim();
     const content = (payload.content || '').toString();
-    if (!slug || !title) return res.status(400).json({ ok: false, message: 'slug and title are required' });
+    if (!slug || !title)
+      return res.status(400).json({ ok: false, message: 'slug and title are required' });
 
     if (useBackend) {
       const r = await fetch(`${backend}/api/blogs/quick-publish`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ slug, title, content })
+        body: JSON.stringify({ slug, title, content }),
       });
       const j = await r.json();
       return res.status(r.status).json(j);
     }
 
-    const existing = store.find(b => b.slug === slug);
+    const existing = store.find((b) => b.slug === slug);
     if (existing) {
       existing.title = title || existing.title;
       existing.content = content;

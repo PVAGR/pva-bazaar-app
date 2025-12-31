@@ -1,428 +1,552 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>How Sacred Texts Have Been Manipulated | Writings Archive</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Source+Code+Pro:wght@400;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Source+Code+Pro:wght@400;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap"
+      rel="stylesheet"
+    />
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Inter', sans-serif;
-            line-height: 1.8;
-            color: #2c3e50;
-            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-            padding: 2rem 1rem;
-        }
-        
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Inter', sans-serif;
+        line-height: 1.8;
+        color: #2c3e50;
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        padding: 2rem 1rem;
+      }
+
+      .container {
+        max-width: 900px;
+        margin: 0 auto;
+        background: white;
+        padding: 3rem;
+        border-radius: 8px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+      }
+
+      h1 {
+        font-family: 'Playfair Display', serif;
+        font-size: 3rem;
+        color: #d97706;
+        margin-bottom: 0.5rem;
+        line-height: 1.2;
+      }
+
+      .subtitle {
+        font-size: 1.2rem;
+        color: #78716c;
+        margin-bottom: 2rem;
+        font-style: italic;
+      }
+
+      .nav-link {
+        display: inline-block;
+        margin-bottom: 2rem;
+        color: #d97706;
+        text-decoration: none;
+        font-weight: 600;
+      }
+
+      .nav-link:hover {
+        text-decoration: underline;
+      }
+
+      h2 {
+        font-family: 'Playfair Display', serif;
+        font-size: 2rem;
+        color: #c2410c;
+        margin-top: 2.5rem;
+        margin-bottom: 1rem;
+        border-bottom: 2px solid #fed7aa;
+        padding-bottom: 0.5rem;
+      }
+
+      h3 {
+        font-size: 1.4rem;
+        color: #ea580c;
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+      }
+
+      p {
+        margin-bottom: 1.5rem;
+        font-size: 1.05rem;
+      }
+
+      .warning-box {
+        background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+        padding: 1.5rem;
+        border-left: 5px solid #dc2626;
+        border-radius: 4px;
+        margin: 2rem 0;
+      }
+
+      .example-box {
+        background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+        padding: 1.5rem;
+        border-left: 5px solid #f97316;
+        border-radius: 4px;
+        margin: 2rem 0;
+      }
+
+      .example-box h4 {
+        color: #ea580c;
+        margin-bottom: 0.75rem;
+        font-size: 1.1rem;
+      }
+
+      .verse {
+        font-family: 'Source Code Pro', monospace;
+        background: #fafaf9;
+        padding: 1rem;
+        border-left: 3px solid #d97706;
+        margin: 1rem 0;
+        font-size: 0.95rem;
+        font-style: italic;
+      }
+
+      .contrast {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        margin: 2rem 0;
+      }
+
+      .contrast-card {
+        padding: 1.5rem;
+        border-radius: 8px;
+      }
+
+      .misused {
+        background: #fef2f2;
+        border: 2px solid #fca5a5;
+      }
+
+      .ignored {
+        background: #ecfdf5;
+        border: 2px solid #6ee7b7;
+      }
+
+      .contrast-card h4 {
+        margin-bottom: 0.75rem;
+        font-size: 1.1rem;
+      }
+
+      .misused h4 {
+        color: #dc2626;
+      }
+
+      .ignored h4 {
+        color: #059669;
+      }
+
+      blockquote {
+        border-left: 4px solid #f59e0b;
+        padding-left: 1.5rem;
+        margin: 2rem 0;
+        font-style: italic;
+        color: #78716c;
+        background: #fffbeb;
+        padding: 1.5rem;
+        border-radius: 4px;
+      }
+
+      ul {
+        margin-left: 2rem;
+        margin-bottom: 1.5rem;
+      }
+
+      li {
+        margin-bottom: 0.75rem;
+      }
+
+      .section-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin: 2rem 0;
+      }
+
+      .section-card {
+        background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+        padding: 1.5rem;
+        border-radius: 8px;
+        border: 2px solid #fcd34d;
+      }
+
+      .section-card h4 {
+        color: #d97706;
+        margin-bottom: 0.75rem;
+      }
+
+      .truth-box {
+        background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+        padding: 2rem;
+        border-left: 5px solid #10b981;
+        border-radius: 4px;
+        margin: 2.5rem 0;
+      }
+
+      .truth-box h3 {
+        color: #059669;
+      }
+
+      .footer {
+        margin-top: 3rem;
+        padding-top: 2rem;
+        border-top: 1px solid #e5e7eb;
+        text-align: center;
+        color: #78716c;
+        font-size: 0.9rem;
+      }
+
+      @media (max-width: 768px) {
         .container {
-            max-width: 900px;
-            margin: 0 auto;
-            background: white;
-            padding: 3rem;
-            border-radius: 8px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+          padding: 2rem 1.5rem;
         }
-        
+
         h1 {
-            font-family: 'Playfair Display', serif;
-            font-size: 3rem;
-            color: #d97706;
-            margin-bottom: 0.5rem;
-            line-height: 1.2;
+          font-size: 2.2rem;
         }
-        
-        .subtitle {
-            font-size: 1.2rem;
-            color: #78716c;
-            margin-bottom: 2rem;
-            font-style: italic;
-        }
-        
-        .nav-link {
-            display: inline-block;
-            margin-bottom: 2rem;
-            color: #d97706;
-            text-decoration: none;
-            font-weight: 600;
-        }
-        
-        .nav-link:hover {
-            text-decoration: underline;
-        }
-        
-        h2 {
-            font-family: 'Playfair Display', serif;
-            font-size: 2rem;
-            color: #c2410c;
-            margin-top: 2.5rem;
-            margin-bottom: 1rem;
-            border-bottom: 2px solid #fed7aa;
-            padding-bottom: 0.5rem;
-        }
-        
-        h3 {
-            font-size: 1.4rem;
-            color: #ea580c;
-            margin-top: 2rem;
-            margin-bottom: 1rem;
-        }
-        
-        p {
-            margin-bottom: 1.5rem;
-            font-size: 1.05rem;
-        }
-        
-        .warning-box {
-            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
-            padding: 1.5rem;
-            border-left: 5px solid #dc2626;
-            border-radius: 4px;
-            margin: 2rem 0;
-        }
-        
-        .example-box {
-            background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
-            padding: 1.5rem;
-            border-left: 5px solid #f97316;
-            border-radius: 4px;
-            margin: 2rem 0;
-        }
-        
-        .example-box h4 {
-            color: #ea580c;
-            margin-bottom: 0.75rem;
-            font-size: 1.1rem;
-        }
-        
-        .verse {
-            font-family: 'Source Code Pro', monospace;
-            background: #fafaf9;
-            padding: 1rem;
-            border-left: 3px solid #d97706;
-            margin: 1rem 0;
-            font-size: 0.95rem;
-            font-style: italic;
-        }
-        
+
         .contrast {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
-            margin: 2rem 0;
+          grid-template-columns: 1fr;
         }
-        
-        .contrast-card {
-            padding: 1.5rem;
-            border-radius: 8px;
-        }
-        
-        .misused {
-            background: #fef2f2;
-            border: 2px solid #fca5a5;
-        }
-        
-        .ignored {
-            background: #ecfdf5;
-            border: 2px solid #6ee7b7;
-        }
-        
-        .contrast-card h4 {
-            margin-bottom: 0.75rem;
-            font-size: 1.1rem;
-        }
-        
-        .misused h4 {
-            color: #dc2626;
-        }
-        
-        .ignored h4 {
-            color: #059669;
-        }
-        
-        blockquote {
-            border-left: 4px solid #f59e0b;
-            padding-left: 1.5rem;
-            margin: 2rem 0;
-            font-style: italic;
-            color: #78716c;
-            background: #fffbeb;
-            padding: 1.5rem;
-            border-radius: 4px;
-        }
-        
-        ul {
-            margin-left: 2rem;
-            margin-bottom: 1.5rem;
-        }
-        
-        li {
-            margin-bottom: 0.75rem;
-        }
-        
-        .section-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1.5rem;
-            margin: 2rem 0;
-        }
-        
-        .section-card {
-            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
-            padding: 1.5rem;
-            border-radius: 8px;
-            border: 2px solid #fcd34d;
-        }
-        
-        .section-card h4 {
-            color: #d97706;
-            margin-bottom: 0.75rem;
-        }
-        
-        .truth-box {
-            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
-            padding: 2rem;
-            border-left: 5px solid #10b981;
-            border-radius: 4px;
-            margin: 2.5rem 0;
-        }
-        
-        .truth-box h3 {
-            color: #059669;
-        }
-        
-        .footer {
-            margin-top: 3rem;
-            padding-top: 2rem;
-            border-top: 1px solid #e5e7eb;
-            text-align: center;
-            color: #78716c;
-            font-size: 0.9rem;
-        }
-        
-        @media (max-width: 768px) {
-            .container {
-                padding: 2rem 1.5rem;
-            }
-            
-            h1 {
-                font-size: 2.2rem;
-            }
-            
-            .contrast {
-                grid-template-columns: 1fr;
-            }
-        }
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <a href="/writings/" class="nav-link">← Back to Writings Archive</a>
-        
-        <h1>How Sacred Texts Have Been Manipulated for Human Gain</h1>
-        <p class="subtitle">A critical examination of how divine scriptures have been twisted to serve power, control, and social dominance</p>
+      <a href="/writings/" class="nav-link">← Back to Writings Archive</a>
 
-        <p>Throughout history, sacred texts have served as the foundation of human spirituality, guiding millions toward divine truths, moral clarity, and inner peace. However, these texts have also been manipulated by individuals and institutions seeking power, control, or social dominance. When misinterpreted or selectively quoted, the very words meant to liberate the soul have been used to bind it.</p>
+      <h1>How Sacred Texts Have Been Manipulated for Human Gain</h1>
+      <p class="subtitle">
+        A critical examination of how divine scriptures have been twisted to serve power, control,
+        and social dominance
+      </p>
 
-        <p>This exploration examines examples from various religious traditions where divine scriptures were co-opted for human agendas and highlights the need to reconnect with the universal truths at their core.</p>
+      <p>
+        Throughout history, sacred texts have served as the foundation of human spirituality,
+        guiding millions toward divine truths, moral clarity, and inner peace. However, these texts
+        have also been manipulated by individuals and institutions seeking power, control, or social
+        dominance. When misinterpreted or selectively quoted, the very words meant to liberate the
+        soul have been used to bind it.
+      </p>
 
-        <h2>The Bible: Weaponizing Divine Words</h2>
+      <p>
+        This exploration examines examples from various religious traditions where divine scriptures
+        were co-opted for human agendas and highlights the need to reconnect with the universal
+        truths at their core.
+      </p>
 
-        <p>The Bible, revered by billions, is a profound spiritual document. Yet, parts of it have been used to justify oppression across centuries. The pattern of selective interpretation reveals how scripture was manipulated for economic and social control.</p>
+      <h2>The Bible: Weaponizing Divine Words</h2>
 
-        <h3>1. Slavery</h3>
+      <p>
+        The Bible, revered by billions, is a profound spiritual document. Yet, parts of it have been
+        used to justify oppression across centuries. The pattern of selective interpretation reveals
+        how scripture was manipulated for economic and social control.
+      </p>
 
-        <div class="contrast">
-            <div class="contrast-card misused">
-                <h4>🚫 Verses Misused to Justify Slavery</h4>
-                <div class="verse">
-                    "Slaves, obey your earthly masters with respect and fear, and with sincerity of heart, just as you would obey Christ."<br>
-                    — Ephesians 6:5
-                </div>
-                <p>During the Atlantic slave trade, this verse was often cited by enslavers to justify slavery as a divinely ordained institution.</p>
-            </div>
+      <h3>1. Slavery</h3>
 
-            <div class="contrast-card ignored">
-                <h4>✓ Verses Ignored That Teach Equality</h4>
-                <div class="verse">
-                    "There is neither slave nor free... for you are all one in Christ Jesus."<br>
-                    — Galatians 3:28
-                </div>
-                <p>These verses promoting radical equality were conveniently overlooked by those seeking to maintain oppressive systems.</p>
-            </div>
+      <div class="contrast">
+        <div class="contrast-card misused">
+          <h4>🚫 Verses Misused to Justify Slavery</h4>
+          <div class="verse">
+            "Slaves, obey your earthly masters with respect and fear, and with sincerity of heart,
+            just as you would obey Christ."<br />
+            — Ephesians 6:5
+          </div>
+          <p>
+            During the Atlantic slave trade, this verse was often cited by enslavers to justify
+            slavery as a divinely ordained institution.
+          </p>
         </div>
 
-        <div class="warning-box">
-            <p><strong>The Pattern of Omission:</strong> By selectively emphasizing verses about obedience while ignoring passages about equality and freedom, religious authorities created a scriptural justification for economic exploitation.</p>
+        <div class="contrast-card ignored">
+          <h4>✓ Verses Ignored That Teach Equality</h4>
+          <div class="verse">
+            "There is neither slave nor free... for you are all one in Christ Jesus."<br />
+            — Galatians 3:28
+          </div>
+          <p>
+            These verses promoting radical equality were conveniently overlooked by those seeking to
+            maintain oppressive systems.
+          </p>
+        </div>
+      </div>
+
+      <div class="warning-box">
+        <p>
+          <strong>The Pattern of Omission:</strong> By selectively emphasizing verses about
+          obedience while ignoring passages about equality and freedom, religious authorities
+          created a scriptural justification for economic exploitation.
+        </p>
+      </div>
+
+      <h3>2. Gender Roles and Women's Suppression</h3>
+
+      <div class="contrast">
+        <div class="contrast-card misused">
+          <h4>🚫 Verses Used to Suppress Women</h4>
+          <div class="verse">
+            "I do not permit a woman to teach or to assume authority over a man."<br />
+            — 1 Timothy 2:12
+          </div>
+          <p>
+            This verse has been used for centuries to suppress women in leadership roles within
+            churches and justify patriarchal hierarchies.
+          </p>
         </div>
 
-        <h3>2. Gender Roles and Women's Suppression</h3>
+        <div class="contrast-card ignored">
+          <h4>✓ Strong Female Leaders in Scripture</h4>
+          <div class="verse">
+            Deborah (Judges 4) — A prophet and judge who led Israel<br />
+            Junia (Romans 16:7) — Described as "outstanding among the apostles"
+          </div>
+          <p>
+            Examples of powerful female figures in the Bible are systematically downplayed or
+            reinterpreted to maintain male dominance.
+          </p>
+        </div>
+      </div>
 
-        <div class="contrast">
-            <div class="contrast-card misused">
-                <h4>🚫 Verses Used to Suppress Women</h4>
-                <div class="verse">
-                    "I do not permit a woman to teach or to assume authority over a man."<br>
-                    — 1 Timothy 2:12
-                </div>
-                <p>This verse has been used for centuries to suppress women in leadership roles within churches and justify patriarchal hierarchies.</p>
-            </div>
+      <h2>The Quran: Authority and Obedience</h2>
 
-            <div class="contrast-card ignored">
-                <h4>✓ Strong Female Leaders in Scripture</h4>
-                <div class="verse">
-                    Deborah (Judges 4) — A prophet and judge who led Israel<br>
-                    Junia (Romans 16:7) — Described as "outstanding among the apostles"
-                </div>
-                <p>Examples of powerful female figures in the Bible are systematically downplayed or reinterpreted to maintain male dominance.</p>
-            </div>
+      <p>
+        Islamic scripture has similarly been manipulated to consolidate power and justify
+        authoritarian rule, despite the Quran's emphasis on justice, consultation, and equality.
+      </p>
+
+      <h3>1. Obedience to Rulers</h3>
+
+      <div class="example-box">
+        <h4>The Verse in Question:</h4>
+        <div class="verse">
+          "Obey Allah and obey the Messenger and those in authority among you."<br />
+          — Surah An-Nisa (4:59)
+        </div>
+        <p>
+          While this verse emphasizes the need for lawful governance, authoritarian regimes have
+          often used it to demand <strong>absolute obedience</strong>, even when their rule
+          contradicts the principles of justice and equality that underpin Islamic teachings.
+        </p>
+      </div>
+
+      <div class="warning-box">
+        <p>
+          <strong>The Selective Reading Problem:</strong> This interpretation undermines verses like
+          Surah Ash-Shura (42:38), which advocates for <em>mutual consultation</em> in governance,
+          showing that leadership should be participatory, not dictatorial.
+        </p>
+      </div>
+
+      <h3>2. Gender Inequality</h3>
+
+      <div class="example-box">
+        <h4>Misinterpreted Verse:</h4>
+        <div class="verse">
+          "Men are in charge of women by [right of] what Allah has given one over the other."<br />
+          — Surah An-Nisa (4:34)
+        </div>
+        <p>
+          Misinterpretations of this verse have been used to justify patriarchal practices, despite
+          the Prophet Muhammad's example of treating women with respect and promoting their rights.
+          The historical context shows Muhammad elevated women's status significantly in 7th century
+          Arabia.
+        </p>
+      </div>
+
+      <h2>The Talmud: Elevating One Group Over Another</h2>
+
+      <p>
+        The Talmud, a rich collection of rabbinical teachings and debates, has occasionally been
+        cited to justify exclusivity and superiority, despite Judaism's core teachings about human
+        dignity.
+      </p>
+
+      <div class="example-box">
+        <h4>Contextual Misinterpretation:</h4>
+        <div class="verse">
+          "The Jewish people are called men, but the nations of the world are not called men."<br />
+          — Avodah Zarah 2a
+        </div>
+        <p>
+          While this statement was contextually tied to specific theological discussions about
+          covenant relationships, it has been misinterpreted to suggest Jewish superiority over
+          non-Jews.
+        </p>
+      </div>
+
+      <div class="contrast">
+        <div class="contrast-card ignored">
+          <h4>✓ The Universal Message</h4>
+          <div class="verse">
+            "So God created mankind in his own image."<br />
+            — Genesis 1:27
+          </div>
+          <p>
+            This foundational verse affirms the equal dignity and divine image in ALL humans,
+            contradicting supremacist interpretations.
+          </p>
+        </div>
+      </div>
+
+      <h2>Religious Texts and Political Power</h2>
+
+      <p>
+        Perhaps nowhere is the manipulation of scripture more evident than in its use to justify
+        political control and suppress dissent.
+      </p>
+
+      <h3>The Divine Right of Kings</h3>
+
+      <div class="contrast">
+        <div class="contrast-card misused">
+          <h4>🚫 Used to Enforce Tyranny</h4>
+          <div class="verse">
+            "Let everyone be subject to the governing authorities, for there is no authority except
+            that which God has established."<br />
+            — Romans 13:1
+          </div>
+          <p>
+            During the English Reformation and beyond, monarchs and rulers invoked this passage to
+            enforce the "divine right of kings," stifling dissent and rebellion.
+          </p>
         </div>
 
-        <h2>The Quran: Authority and Obedience</h2>
+        <div class="contrast-card ignored">
+          <h4>✓ Celebrating Resistance to Tyranny</h4>
+          <div class="verse">
+            The story of Moses leading the Israelites out of Egypt<br />
+            The prophets confronting corrupt kings
+          </div>
+          <p>
+            The Bible also celebrates resistance against tyranny and prophetic voices challenging
+            unjust authority—conveniently ignored by those in power.
+          </p>
+        </div>
+      </div>
 
-        <p>Islamic scripture has similarly been manipulated to consolidate power and justify authoritarian rule, despite the Quran's emphasis on justice, consultation, and equality.</p>
+      <h2>Universal Truths vs. Human Manipulation</h2>
 
-        <h3>1. Obedience to Rulers</h3>
+      <p>
+        Despite these examples of manipulation, sacred texts often share common themes: love, unity,
+        justice, and compassion. However, when humans impose their own agendas, these principles can
+        be overshadowed by:
+      </p>
 
-        <div class="example-box">
-            <h4>The Verse in Question:</h4>
-            <div class="verse">
-                "Obey Allah and obey the Messenger and those in authority among you."<br>
-                — Surah An-Nisa (4:59)
-            </div>
-            <p>While this verse emphasizes the need for lawful governance, authoritarian regimes have often used it to demand <strong>absolute obedience</strong>, even when their rule contradicts the principles of justice and equality that underpin Islamic teachings.</p>
+      <div class="section-grid">
+        <div class="section-card">
+          <h4>Social Hierarchies</h4>
+          <p>
+            Caste systems, patriarchy, and class divisions justified through selective scripture
+            reading.
+          </p>
         </div>
 
-        <div class="warning-box">
-            <p><strong>The Selective Reading Problem:</strong> This interpretation undermines verses like Surah Ash-Shura (42:38), which advocates for <em>mutual consultation</em> in governance, showing that leadership should be participatory, not dictatorial.</p>
+        <div class="section-card">
+          <h4>Economic Exploitation</h4>
+          <p>Slavery, labor systems, and wealth inequality defended as "divinely ordained."</p>
         </div>
 
-        <h3>2. Gender Inequality</h3>
-
-        <div class="example-box">
-            <h4>Misinterpreted Verse:</h4>
-            <div class="verse">
-                "Men are in charge of women by [right of] what Allah has given one over the other."<br>
-                — Surah An-Nisa (4:34)
-            </div>
-            <p>Misinterpretations of this verse have been used to justify patriarchal practices, despite the Prophet Muhammad's example of treating women with respect and promoting their rights. The historical context shows Muhammad elevated women's status significantly in 7th century Arabia.</p>
+        <div class="section-card">
+          <h4>Political Domination</h4>
+          <p>
+            Monarchy, authoritarian regimes, and theocratic control legitimized through religious
+            texts.
+          </p>
         </div>
+      </div>
 
-        <h2>The Talmud: Elevating One Group Over Another</h2>
+      <h2>Reconnecting with the Divine Message</h2>
 
-        <p>The Talmud, a rich collection of rabbinical teachings and debates, has occasionally been cited to justify exclusivity and superiority, despite Judaism's core teachings about human dignity.</p>
+      <p>
+        To uncover the true essence of sacred texts, it's essential to approach them with humility,
+        historical awareness, and a willingness to question human interpretations. Here are key
+        steps to guide this process:
+      </p>
 
-        <div class="example-box">
-            <h4>Contextual Misinterpretation:</h4>
-            <div class="verse">
-                "The Jewish people are called men, but the nations of the world are not called men."<br>
-                — Avodah Zarah 2a
-            </div>
-            <p>While this statement was contextually tied to specific theological discussions about covenant relationships, it has been misinterpreted to suggest Jewish superiority over non-Jews.</p>
-        </div>
+      <div class="truth-box">
+        <h3>Three Steps to Authentic Understanding</h3>
 
-        <div class="contrast">
-            <div class="contrast-card ignored">
-                <h4>✓ The Universal Message</h4>
-                <div class="verse">
-                    "So God created mankind in his own image."<br>
-                    — Genesis 1:27
-                </div>
-                <p>This foundational verse affirms the equal dignity and divine image in ALL humans, contradicting supremacist interpretations.</p>
-            </div>
-        </div>
+        <h4>1. Contextual Study</h4>
+        <p>
+          Understand the historical, cultural, and social context in which the text was written.
+          What were the economic conditions? What power structures existed? Who benefited from
+          certain interpretations?
+        </p>
 
-        <h2>Religious Texts and Political Power</h2>
+        <h4>2. Comparative Reading</h4>
+        <p>
+          Explore multiple translations and interpretations to uncover a broader perspective.
+          Compare ancient manuscripts, different denominational readings, and scholarly analysis.
+        </p>
 
-        <p>Perhaps nowhere is the manipulation of scripture more evident than in its use to justify political control and suppress dissent.</p>
+        <h4>3. Seek Commonality</h4>
+        <p>
+          Focus on universal themes of compassion, justice, and interconnectedness present across
+          religious traditions. Where do all faiths agree? Those are likely the divine truths.
+        </p>
+      </div>
 
-        <h3>The Divine Right of Kings</h3>
+      <blockquote>
+        "Religious texts were never intended to divide or oppress. They are gifts meant to guide
+        humanity toward unity, love, and alignment with the divine. By recognizing and rejecting
+        manipulative interpretations, we can reclaim the sacred wisdom these texts offer and use
+        them as tools for liberation, not control."
+      </blockquote>
 
-        <div class="contrast">
-            <div class="contrast-card misused">
-                <h4>🚫 Used to Enforce Tyranny</h4>
-                <div class="verse">
-                    "Let everyone be subject to the governing authorities, for there is no authority except that which God has established."<br>
-                    — Romans 13:1
-                </div>
-                <p>During the English Reformation and beyond, monarchs and rulers invoked this passage to enforce the "divine right of kings," stifling dissent and rebellion.</p>
-            </div>
+      <h2>Conclusion: A Call for Spiritual Awakening</h2>
 
-            <div class="contrast-card ignored">
-                <h4>✓ Celebrating Resistance to Tyranny</h4>
-                <div class="verse">
-                    The story of Moses leading the Israelites out of Egypt<br>
-                    The prophets confronting corrupt kings
-                </div>
-                <p>The Bible also celebrates resistance against tyranny and prophetic voices challenging unjust authority—conveniently ignored by those in power.</p>
-            </div>
-        </div>
+      <p>
+        The revelation is clear:
+        <strong
+          >we are all connected, equal in the eyes of the divine, and capable of accessing sacred
+          truth without intermediaries who seek to distort it for personal gain.</strong
+        >
+      </p>
 
-        <h2>Universal Truths vs. Human Manipulation</h2>
+      <p>
+        When we examine how sacred texts have been manipulated—whether to justify slavery, suppress
+        women, enforce political obedience, or create hierarchies of human worth—we see a pattern:
+        those in power select verses that benefit them while ignoring those that challenge their
+        authority.
+      </p>
 
-        <p>Despite these examples of manipulation, sacred texts often share common themes: love, unity, justice, and compassion. However, when humans impose their own agendas, these principles can be overshadowed by:</p>
+      <p>
+        The antidote is not to abandon these texts but to approach them with fresh eyes, seeking the
+        universal truths that transcend culture, time, and human agendas. Love, justice, compassion,
+        and unity—these are the threads that run through all genuine spiritual teaching.
+      </p>
 
-        <div class="section-grid">
-            <div class="section-card">
-                <h4>Social Hierarchies</h4>
-                <p>Caste systems, patriarchy, and class divisions justified through selective scripture reading.</p>
-            </div>
+      <div class="warning-box">
+        <p>
+          <strong>Question for Reflection:</strong> How do you interpret sacred texts? Have you
+          encountered instances where these texts have been misused? The journey to authentic
+          spirituality begins with honest inquiry and the courage to challenge inherited
+          interpretations.
+        </p>
+      </div>
 
-            <div class="section-card">
-                <h4>Economic Exploitation</h4>
-                <p>Slavery, labor systems, and wealth inequality defended as "divinely ordained."</p>
-            </div>
-
-            <div class="section-card">
-                <h4>Political Domination</h4>
-                <p>Monarchy, authoritarian regimes, and theocratic control legitimized through religious texts.</p>
-            </div>
-        </div>
-
-        <h2>Reconnecting with the Divine Message</h2>
-
-        <p>To uncover the true essence of sacred texts, it's essential to approach them with humility, historical awareness, and a willingness to question human interpretations. Here are key steps to guide this process:</p>
-
-        <div class="truth-box">
-            <h3>Three Steps to Authentic Understanding</h3>
-            
-            <h4>1. Contextual Study</h4>
-            <p>Understand the historical, cultural, and social context in which the text was written. What were the economic conditions? What power structures existed? Who benefited from certain interpretations?</p>
-
-            <h4>2. Comparative Reading</h4>
-            <p>Explore multiple translations and interpretations to uncover a broader perspective. Compare ancient manuscripts, different denominational readings, and scholarly analysis.</p>
-
-            <h4>3. Seek Commonality</h4>
-            <p>Focus on universal themes of compassion, justice, and interconnectedness present across religious traditions. Where do all faiths agree? Those are likely the divine truths.</p>
-        </div>
-
-        <blockquote>
-            "Religious texts were never intended to divide or oppress. They are gifts meant to guide humanity toward unity, love, and alignment with the divine. By recognizing and rejecting manipulative interpretations, we can reclaim the sacred wisdom these texts offer and use them as tools for liberation, not control."
-        </blockquote>
-
-        <h2>Conclusion: A Call for Spiritual Awakening</h2>
-
-        <p>The revelation is clear: <strong>we are all connected, equal in the eyes of the divine, and capable of accessing sacred truth without intermediaries who seek to distort it for personal gain.</strong></p>
-
-        <p>When we examine how sacred texts have been manipulated—whether to justify slavery, suppress women, enforce political obedience, or create hierarchies of human worth—we see a pattern: those in power select verses that benefit them while ignoring those that challenge their authority.</p>
-
-        <p>The antidote is not to abandon these texts but to approach them with fresh eyes, seeking the universal truths that transcend culture, time, and human agendas. Love, justice, compassion, and unity—these are the threads that run through all genuine spiritual teaching.</p>
-
-        <div class="warning-box">
-            <p><strong>Question for Reflection:</strong> How do you interpret sacred texts? Have you encountered instances where these texts have been misused? The journey to authentic spirituality begins with honest inquiry and the courage to challenge inherited interpretations.</p>
-        </div>
-
-        <div class="footer">
-            <p>Part of the Writings Archive | <a href="/writings/" style="color: #d97706;">Explore More</a></p>
-            <p>This work is released into the public domain under CC0 1.0 Universal</p>
-        </div>
+      <div class="footer">
+        <p>
+          Part of the Writings Archive |
+          <a href="/writings/" style="color: #d97706">Explore More</a>
+        </p>
+        <p>This work is released into the public domain under CC0 1.0 Universal</p>
+      </div>
     </div>
-</body>
+  </body>
 </html>

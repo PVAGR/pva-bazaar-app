@@ -3,6 +3,7 @@
 ## 🚀 Quick Start
 
 Run quality checks locally:
+
 ```bash
 # Quick checks (fastest)
 ./qa/scripts/orchestrator.sh quick
@@ -19,16 +20,19 @@ Run quality checks locally:
 ## 🏗️ CI/CD Pipeline Overview
 
 ### Quality Gates Workflow
+
 - **Trigger**: Pull requests to `develop` or `main`
 - **Jobs**: Unit tests, E2E tests, visual regression, accessibility, performance, security
 - **Gate**: All critical checks must pass before merge
 
-### Deployment Workflow  
+### Deployment Workflow
+
 - **Trigger**: Push to `main` branch
 - **Steps**: Build → Deploy Backend → Deploy Frontends → Deploy Contracts → Post-deployment tests
 - **Environments**: Staging → Production
 
 ### Security Audit Workflow
+
 - **Trigger**: Weekly schedule (Monday 2 AM) + manual
 - **Scope**: Dependencies, web app, smart contracts, infrastructure, secrets
 - **Output**: Security report + GitHub issues for critical findings
@@ -36,6 +40,7 @@ Run quality checks locally:
 ## 🔧 Local Development Setup
 
 ### Prerequisites
+
 ```bash
 # Install dependencies
 pnpm install
@@ -49,6 +54,7 @@ foundryup
 ```
 
 ### Git Hooks Setup
+
 ```bash
 # Hooks are automatically installed with husky
 # Verify they're working:
@@ -59,31 +65,37 @@ git commit -m "test: verify hooks"
 ## 🧪 Testing Framework
 
 ### Unit & Integration Tests
+
 - **Framework**: Vitest
 - **Coverage**: 80% minimum
 - **Location**: `**/tests/` directories
 
-### End-to-End Tests  
+### End-to-End Tests
+
 - **Framework**: Playwright
 - **Browsers**: Chromium, Firefox, WebKit, Mobile
 - **Location**: `tests/e2e/`
 
 ### Visual Regression
+
 - **Framework**: BackstopJS
 - **Viewports**: Desktop, tablet, mobile
 - **Brand**: Automated color compliance checking
 
 ### Performance Testing
+
 - **Lighthouse**: Performance, accessibility, SEO, PWA
 - **Load Testing**: Artillery for API endpoints
 - **Thresholds**: 90% performance, 95% accessibility
 
 ### Accessibility Testing
+
 - **Tools**: axe-core, Pa11y
 - **Standard**: WCAG 2.1 AA compliance
 - **Requirement**: Zero violations
 
 ### Security Testing
+
 - **Dependencies**: npm audit, Snyk
 - **Web App**: OWASP ZAP scans
 - **Contracts**: Slither, Mythril
@@ -92,9 +104,10 @@ git commit -m "test: verify hooks"
 ## 🎨 Brand Compliance
 
 ### Approved Colors
+
 ```css
 --primary-dark: #0f3b2d;
---primary: #1c5a45; 
+--primary: #1c5a45;
 --primary-light: #2d7d5a;
 --accent: #4ef8a3;
 --accent-dark: #2bb673;
@@ -104,18 +117,21 @@ git commit -m "test: verify hooks"
 ```
 
 ### Font Stack
+
 - Primary: Inter
 - Fallback: system-ui, Arial, sans-serif
 
 ## 📋 Quality Metrics
 
 ### Coverage Requirements
+
 - **Statements**: 80%
-- **Branches**: 75%  
+- **Branches**: 75%
 - **Functions**: 80%
 - **Lines**: 80%
 
 ### Performance Thresholds
+
 - **Performance**: 90
 - **Accessibility**: 95
 - **Best Practices**: 90
@@ -123,6 +139,7 @@ git commit -m "test: verify hooks"
 - **PWA**: 85
 
 ### Security Standards
+
 - **High Severity**: 0 allowed
 - **Moderate Severity**: 5 max
 - **Low Severity**: 10 max
@@ -130,6 +147,7 @@ git commit -m "test: verify hooks"
 ## 🔄 Git Workflow
 
 ### Commit Message Format
+
 ```
 type(scope): description
 
@@ -143,8 +161,9 @@ chore: update dependencies
 ```
 
 ### Pre-commit Checks
+
 - ✅ Code formatting (Prettier)
-- ✅ Linting (ESLint)  
+- ✅ Linting (ESLint)
 - ✅ Type checking (TypeScript)
 - ✅ Unit tests
 - ✅ Brand color compliance
@@ -155,11 +174,13 @@ chore: update dependencies
 ## 🚀 Deployment
 
 ### Environments
+
 - **Development**: Local development servers
 - **Staging**: `staging.pvabazaar.com` / `staging.pvabazaar.org`
 - **Production**: `pvabazaar.com` / `pvabazaar.org`
 
 ### Deployment Steps
+
 1. Pre-deployment validation
 2. Backend API deployment (Vercel)
 3. Frontend applications deployment
@@ -168,13 +189,14 @@ chore: update dependencies
 6. Notification to team
 
 ### Environment Variables
+
 ```bash
 # Backend
 VERCEL_TOKEN=xxx
 VERCEL_ORG_ID=xxx
 VERCEL_BACKEND_PROJECT_ID=xxx
 
-# Frontends  
+# Frontends
 VERCEL_COM_PROJECT_ID=xxx
 VERCEL_ORG_PROJECT_ID=xxx
 
@@ -193,25 +215,30 @@ SLACK_WEBHOOK=xxx
 ### Common Issues
 
 **Tests failing locally but passing in CI:**
+
 - Check Node.js version matches CI (v20)
 - Ensure all dependencies are installed
 - Clear node_modules and reinstall
 
 **Visual regression tests failing:**
+
 - UI changes require baseline updates
 - Run `pnpm qa:backstop:approve` to update baselines
 
 **Performance tests failing:**
+
 - Check if development servers are running
 - Verify lighthouse thresholds in config
 - Consider hardware differences
 
 **Contract tests failing:**
+
 - Ensure Foundry is installed and updated
 - Check gas limits and network configuration
 - Verify contract dependencies
 
 ### Getting Help
+
 - Check GitHub Actions logs for detailed error messages
 - Review individual test reports in `qa/reports/`
 - Run specific test suites locally to debug

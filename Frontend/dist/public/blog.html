@@ -1,123 +1,205 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Blog</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Source+Code+Pro:wght@300;400&display=swap" rel="stylesheet">
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Inter', sans-serif; line-height: 1.8; color: #e1e8ed; background: linear-gradient(135deg, #0f1419 0%, #1a2332 50%, #0f1419 100%); max-width: 900px; margin: 0 auto; padding: 3rem 2rem; border-left: 1px solid #2a3f5f; border-right: 1px solid #2a3f5f; min-height: 100vh; }
-    header { margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 3px solid #00d9ff; }
-    h1 { font-size: 2.2rem; font-weight: 700; color: #fff; letter-spacing: -0.5px; }
-    nav { margin: 1rem 0 2rem; padding: 1rem 0; border-bottom: 1px dashed #ddd; }
-    nav a { color: #00d9ff; text-decoration: none; margin-right: 1.5rem; font-weight: 500; border-bottom: 2px solid transparent; transition: all 0.2s; }
-    nav a:hover { border-bottom: 2px solid #5eead4; color: #5eead4; }
-    .content { background: rgba(26, 35, 50, 0.6); border: 1px solid rgba(0, 217, 255, 0.2); border-left: 3px solid #00d9ff; padding: 1.2rem; border-radius: 6px; white-space: pre-wrap; color: #c5d3e0; }
-    label { display:block; margin-top: 0.75rem; color: #c5d3e0; }
-    input, textarea { width: 100%; padding: 0.6rem; margin-top: 0.25rem; border-radius: 6px; border: 1px solid rgba(0, 217, 255, 0.3); background: rgba(26, 35, 50, 0.6); color: #e1e8ed; }
-    button { margin-top: 1rem; padding: 0.6rem 1.2rem; background: rgba(0, 217, 255, 0.1); border-radius: 4px; border: 1px solid rgba(0, 217, 255, 0.3); color: #00d9ff; font-weight: 600; cursor: pointer; }
-    button:hover { background: rgba(0, 217, 255, 0.2); color: #5eead4; }
-    .status { margin-top: 0.75rem; color: #5eead4; }
-  </style>
-</head>
-<body>
-  <header>
-    <h1 id="title">Blog</h1>
-  </header>
-  <nav>
-    <a href="/index.html">Home</a>
-    <a href="/novel/">Novel</a>
-    <a href="/biography/">Biography</a>
-    <a href="/research/">Research</a>
-    <a href="/public/blogs.html">Blogs</a>
-    <a id="commentsLink" href="#">Comments</a>
-    <a href="/public/new-post.html">New Post</a>
-  </nav>
-  <script src="/public/config.js"></script>
-  <div id="conn" class="status" style="margin-top:0.5rem"></div>
-  <section>
-    <div id="content" class="content"></div>
-    <h2 style="margin-top:1.5rem;color:#fff">Edit</h2>
-    <label>Title</label>
-    <input id="edit-title" />
-    <label>Content</label>
-    <textarea id="edit-content" rows="8"></textarea>
-    <button id="save">Save</button>
-    <div id="status" class="status"></div>
-  </section>
-  <script>
-    const backend = (window.APP_CONFIG && window.APP_CONFIG.backendUrl) || null;
-    const apiBase = (backend ? `${backend}/api` : '/api') + '/blogs';
-    async function checkHealth(){
-      const el = document.getElementById('conn');
-      if (!backend) { el.textContent = 'Serverless mode'; return; }
-      try {
-        const r = await fetch(`${backend}/api/health`, { credentials:'omit' });
-        el.textContent = r.ok ? 'Backend connected' : 'Backend unreachable';
-      } catch { el.textContent = 'Backend unreachable'; }
-    }
-    checkHealth();
-    const params = new URLSearchParams(location.search);
-    const slug = params.get('slug');
-    const titleEl = document.getElementById('title');
-    const contentEl = document.getElementById('content');
-    const editTitleEl = document.getElementById('edit-title');
-    const editContentEl = document.getElementById('edit-content');
-    const statusEl = document.getElementById('status');
-    const commentsLink = document.getElementById('commentsLink');
-    if (slug) commentsLink.href = `/public/comments.html?slug=${encodeURIComponent(slug)}`;
-    async function load() {
-      try {
-        const res = await fetch(`${apiBase}/${encodeURIComponent(slug)}`);
-        if (!res.ok) throw new Error(`Status ${res.status}`);
-        const data = await res.json();
-        const b = data.blog;
-        titleEl.textContent = b.title;
-        contentEl.textContent = b.content || '';
-        editTitleEl.value = b.title;
-        editContentEl.value = b.content || '';
-      } catch (e) {
-        // Fallback: try localStorage draft
-        const draftKey = `draft:${slug}`;
-        const draft = localStorage.getItem(draftKey);
-        if (draft) {
-          const b = JSON.parse(draft);
-          titleEl.textContent = b.title || '(Draft)';
-          contentEl.textContent = b.content || '';
-          editTitleEl.value = b.title || '';
-          editContentEl.value = b.content || '';
-          statusEl.textContent = 'Loaded local draft';
-        } else {
-          titleEl.textContent = 'Blog Not Found';
-          contentEl.textContent = e.message;
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Source+Code+Pro:wght@300;400&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: 'Inter', sans-serif;
+        line-height: 1.8;
+        color: #e1e8ed;
+        background: linear-gradient(135deg, #0f1419 0%, #1a2332 50%, #0f1419 100%);
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 3rem 2rem;
+        border-left: 1px solid #2a3f5f;
+        border-right: 1px solid #2a3f5f;
+        min-height: 100vh;
+      }
+      header {
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 3px solid #00d9ff;
+      }
+      h1 {
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: #fff;
+        letter-spacing: -0.5px;
+      }
+      nav {
+        margin: 1rem 0 2rem;
+        padding: 1rem 0;
+        border-bottom: 1px dashed #ddd;
+      }
+      nav a {
+        color: #00d9ff;
+        text-decoration: none;
+        margin-right: 1.5rem;
+        font-weight: 500;
+        border-bottom: 2px solid transparent;
+        transition: all 0.2s;
+      }
+      nav a:hover {
+        border-bottom: 2px solid #5eead4;
+        color: #5eead4;
+      }
+      .content {
+        background: rgba(26, 35, 50, 0.6);
+        border: 1px solid rgba(0, 217, 255, 0.2);
+        border-left: 3px solid #00d9ff;
+        padding: 1.2rem;
+        border-radius: 6px;
+        white-space: pre-wrap;
+        color: #c5d3e0;
+      }
+      label {
+        display: block;
+        margin-top: 0.75rem;
+        color: #c5d3e0;
+      }
+      input,
+      textarea {
+        width: 100%;
+        padding: 0.6rem;
+        margin-top: 0.25rem;
+        border-radius: 6px;
+        border: 1px solid rgba(0, 217, 255, 0.3);
+        background: rgba(26, 35, 50, 0.6);
+        color: #e1e8ed;
+      }
+      button {
+        margin-top: 1rem;
+        padding: 0.6rem 1.2rem;
+        background: rgba(0, 217, 255, 0.1);
+        border-radius: 4px;
+        border: 1px solid rgba(0, 217, 255, 0.3);
+        color: #00d9ff;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      button:hover {
+        background: rgba(0, 217, 255, 0.2);
+        color: #5eead4;
+      }
+      .status {
+        margin-top: 0.75rem;
+        color: #5eead4;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1 id="title">Blog</h1>
+    </header>
+    <nav>
+      <a href="/index.html">Home</a>
+      <a href="/novel/">Novel</a>
+      <a href="/biography/">Biography</a>
+      <a href="/research/">Research</a>
+      <a href="/public/blogs.html">Blogs</a>
+      <a id="commentsLink" href="#">Comments</a>
+      <a href="/public/new-post.html">New Post</a>
+    </nav>
+    <script src="/public/config.js"></script>
+    <div id="conn" class="status" style="margin-top: 0.5rem"></div>
+    <section>
+      <div id="content" class="content"></div>
+      <h2 style="margin-top: 1.5rem; color: #fff">Edit</h2>
+      <label>Title</label>
+      <input id="edit-title" />
+      <label>Content</label>
+      <textarea id="edit-content" rows="8"></textarea>
+      <button id="save">Save</button>
+      <div id="status" class="status"></div>
+    </section>
+    <script>
+      const backend = (window.APP_CONFIG && window.APP_CONFIG.backendUrl) || null;
+      const apiBase = (backend ? `${backend}/api` : '/api') + '/blogs';
+      async function checkHealth() {
+        const el = document.getElementById('conn');
+        if (!backend) {
+          el.textContent = 'Serverless mode';
+          return;
+        }
+        try {
+          const r = await fetch(`${backend}/api/health`, { credentials: 'omit' });
+          el.textContent = r.ok ? 'Backend connected' : 'Backend unreachable';
+        } catch {
+          el.textContent = 'Backend unreachable';
         }
       }
-    }
-    async function save() {
-      statusEl.textContent = 'Saving...';
-      try {
-        const title = editTitleEl.value.trim();
-        const content = editContentEl.value;
-        // Save local draft for resilience
-        localStorage.setItem(`draft:${slug}`, JSON.stringify({ slug, title, content }));
-        const res = await fetch(`${apiBase}/quick-publish`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ slug, title, content })
-        });
-        const data = await res.json();
-        if (!res.ok || !data.ok) throw new Error(data.message || `Status ${res.status}`);
-        statusEl.textContent = 'Saved';
-        await load();
-      } catch (e) {
-        statusEl.textContent = `Save failed: ${e.message}`;
+      checkHealth();
+      const params = new URLSearchParams(location.search);
+      const slug = params.get('slug');
+      const titleEl = document.getElementById('title');
+      const contentEl = document.getElementById('content');
+      const editTitleEl = document.getElementById('edit-title');
+      const editContentEl = document.getElementById('edit-content');
+      const statusEl = document.getElementById('status');
+      const commentsLink = document.getElementById('commentsLink');
+      if (slug) commentsLink.href = `/public/comments.html?slug=${encodeURIComponent(slug)}`;
+      async function load() {
+        try {
+          const res = await fetch(`${apiBase}/${encodeURIComponent(slug)}`);
+          if (!res.ok) throw new Error(`Status ${res.status}`);
+          const data = await res.json();
+          const b = data.blog;
+          titleEl.textContent = b.title;
+          contentEl.textContent = b.content || '';
+          editTitleEl.value = b.title;
+          editContentEl.value = b.content || '';
+        } catch (e) {
+          // Fallback: try localStorage draft
+          const draftKey = `draft:${slug}`;
+          const draft = localStorage.getItem(draftKey);
+          if (draft) {
+            const b = JSON.parse(draft);
+            titleEl.textContent = b.title || '(Draft)';
+            contentEl.textContent = b.content || '';
+            editTitleEl.value = b.title || '';
+            editContentEl.value = b.content || '';
+            statusEl.textContent = 'Loaded local draft';
+          } else {
+            titleEl.textContent = 'Blog Not Found';
+            contentEl.textContent = e.message;
+          }
+        }
       }
-    }
-    document.getElementById('save').addEventListener('click', save);
-    load();
-  </script>
-</body>
+      async function save() {
+        statusEl.textContent = 'Saving...';
+        try {
+          const title = editTitleEl.value.trim();
+          const content = editContentEl.value;
+          // Save local draft for resilience
+          localStorage.setItem(`draft:${slug}`, JSON.stringify({ slug, title, content }));
+          const res = await fetch(`${apiBase}/quick-publish`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ slug, title, content }),
+          });
+          const data = await res.json();
+          if (!res.ok || !data.ok) throw new Error(data.message || `Status ${res.status}`);
+          statusEl.textContent = 'Saved';
+          await load();
+        } catch (e) {
+          statusEl.textContent = `Save failed: ${e.message}`;
+        }
+      }
+      document.getElementById('save').addEventListener('click', save);
+      load();
+    </script>
+  </body>
 </html>

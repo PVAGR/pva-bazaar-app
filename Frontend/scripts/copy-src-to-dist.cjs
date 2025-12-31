@@ -32,7 +32,7 @@ copyRecursive(pagesSrc, pagesDest);
 console.log('Pages copy complete');
 
 // Copy all static HTML directories (CRITICAL FOR WRITINGS!)
-['writings', 'biography', 'novel', 'research'].forEach(dir => {
+['writings', 'biography', 'novel', 'research'].forEach((dir) => {
   const s = path.join(projectRoot, dir);
   const d = path.join(projectRoot, 'dist', dir);
   if (fs.existsSync(s)) {
@@ -55,7 +55,7 @@ if (fs.existsSync(indexSrc)) {
   console.error('ERROR: index.html not found at', indexSrc);
 }
 
-['main.css','i'].forEach(name => {
+['main.css', 'i'].forEach((name) => {
   const s = path.join(projectRoot, name);
   const d = path.join(projectRoot, 'dist', name);
   if (fs.existsSync(s)) {

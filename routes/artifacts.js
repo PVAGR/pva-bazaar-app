@@ -40,7 +40,7 @@ router.post('/', auth, async (req, res) => {
       materials,
       artisan,
       creator: req.user.id,
-      physicalSerial: `PVA-${Date.now()}` // Auto-generate serial
+      physicalSerial: `PVA-${Date.now()}`, // Auto-generate serial
     });
     await artifact.save();
     res.status(201).json({ ok: true, artifact });

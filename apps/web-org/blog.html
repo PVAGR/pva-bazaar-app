@@ -1,125 +1,146 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PVA Bazaar — Blogs</title>
-  <link href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet" />
-  <link href="/style.css" rel="stylesheet" />
-</head>
-<body>
-  <div class="container">
-    <header>
-      <h1>Blogs</h1>
-      <nav><a href="/page.html?slug=home" class="note">Editor Page</a> · <a href="/contribute.html" class="note">Contribute</a> · <a href="/admin.html" class="note">Admin</a></nav>
-    </header>
-    <div id="list" class="grid"></div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PVA Bazaar — Blogs</title>
+    <link href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet" />
+    <link href="/style.css" rel="stylesheet" />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>Blogs</h1>
+        <nav>
+          <a href="/page.html?slug=home" class="note">Editor Page</a> ·
+          <a href="/contribute.html" class="note">Contribute</a> ·
+          <a href="/admin.html" class="note">Admin</a>
+        </nav>
+      </header>
+      <div id="list" class="grid"></div>
 
-    <hr style="margin: 1.5rem 0" />
-    <div>
-      <h2 id="title">View Blog</h2>
-      <div id="viewer"></div>
-      <div id="editor"></div>
-      <div class="actions">
-        <button id="saveBtn" style="display:none">Save</button>
+      <hr style="margin: 1.5rem 0" />
+      <div>
+        <h2 id="title">View Blog</h2>
+        <div id="viewer"></div>
+        <div id="editor"></div>
+        <div class="actions">
+          <button id="saveBtn" style="display: none">Save</button>
+        </div>
+        <div class="note">
+          Use URL params: <strong>?slug=my-post</strong> and optional
+          <strong>&edit=YOUR_SECRET</strong>.
+        </div>
       </div>
-      <div class="note">Use URL params: <strong>?slug=my-post</strong> and optional <strong>&edit=YOUR_SECRET</strong>.</div>
+
+      <hr style="margin: 1.5rem 0" />
+      <div>
+        <h3>Comments</h3>
+        <div id="comments"></div>
+        <form id="commentForm" style="margin-top: 1rem">
+          <input id="cname" placeholder="Your name" style="padding: 0.5rem" />
+          <textarea
+            id="cbody"
+            placeholder="Write a comment"
+            style="width: 100%; height: 100px; margin-top: 0.5rem"
+          ></textarea>
+          <button type="submit" class="secondary" style="margin-top: 0.5rem">Post Comment</button>
+        </form>
+      </div>
     </div>
 
-    <hr style="margin: 1.5rem 0" />
-    <div>
-      <h3>Comments</h3>
-      <div id="comments"></div>
-      <form id="commentForm" style="margin-top:1rem">
-        <input id="cname" placeholder="Your name" style="padding:0.5rem" />
-        <textarea id="cbody" placeholder="Write a comment" style="width:100%; height:100px; margin-top:0.5rem"></textarea>
-        <button type="submit" class="secondary" style="margin-top:0.5rem">Post Comment</button>
-      </form>
-    </div>
-  </div>
+    <script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const currentSlug = (params.get('slug') || '').toLowerCase();
+      const editSecret = params.get('edit') || '';
+      const listEl = document.getElementById('list');
+      const titleEl = document.getElementById('title');
+      const viewerEl = document.getElementById('viewer');
+      const editorEl = document.getElementById('editor');
+      const saveBtn = document.getElementById('saveBtn');
+      const commentsEl = document.getElementById('comments');
+      const commentForm = document.getElementById('commentForm');
 
-  <script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
-  <script>
-    const params = new URLSearchParams(window.location.search);
-    const currentSlug = (params.get('slug') || '').toLowerCase();
-    const editSecret = params.get('edit') || '';
-    const listEl = document.getElementById('list');
-    const titleEl = document.getElementById('title');
-    const viewerEl = document.getElementById('viewer');
-    const editorEl = document.getElementById('editor');
-    const saveBtn = document.getElementById('saveBtn');
-    const commentsEl = document.getElementById('comments');
-    const commentForm = document.getElementById('commentForm');
+      const quill = new Quill('#editor', { theme: 'snow' });
 
-    const quill = new Quill('#editor', { theme: 'snow' });
-
-    async function fetchList() {
-      const res = await fetch('/api/blogs');
-      const data = await res.json();
-      if (!data.ok) return;
-      listEl.innerHTML = '';
-      data.blogs.forEach(b => {
-        const div = document.createElement('div');
-        div.className = 'card';
-        div.innerHTML = `<strong>${b.title}</strong><div class="actions"><a href="/blog.html?slug=${b.slug}">View</a></div>`;
-        listEl.appendChild(div);
-      });
-    }
-
-    async function loadBlog(slug) {
-      if (!slug) return;
-      const res = await fetch(`/api/blogs/${encodeURIComponent(slug)}`);
-      const data = await res.json();
-      if (!data.ok) { viewerEl.textContent = data.message || 'Not found'; return; }
-      titleEl.textContent = data.blog.title;
-      viewerEl.innerHTML = data.blog.content || '<em>No content</em>';
-      // comments (render safely)
-      commentsEl.innerHTML = '';
-      (data.comments || []).forEach(c => {
-        const div = document.createElement('div');
-        div.className = 'card';
-        const strong = document.createElement('strong');
-        strong.textContent = c.authorName || 'Anonymous';
-        const body = document.createElement('div');
-        body.textContent = c.body || '';
-        div.appendChild(strong);
-        div.appendChild(body);
-        commentsEl.appendChild(div);
-      });
-      if (editSecret) {
-        viewerEl.style.display = 'none';
-        editorEl.style.display = 'block';
-        saveBtn.style.display = 'inline-block';
-        quill.root.innerHTML = data.blog.content || '';
+      async function fetchList() {
+        const res = await fetch('/api/blogs');
+        const data = await res.json();
+        if (!data.ok) return;
+        listEl.innerHTML = '';
+        data.blogs.forEach((b) => {
+          const div = document.createElement('div');
+          div.className = 'card';
+          div.innerHTML = `<strong>${b.title}</strong><div class="actions"><a href="/blog.html?slug=${b.slug}">View</a></div>`;
+          listEl.appendChild(div);
+        });
       }
-    }
 
-    saveBtn.addEventListener('click', async () => {
-      const html = quill.root.innerHTML;
-      const res = await fetch(`/api/blogs/${encodeURIComponent(currentSlug)}/update?edit=${encodeURIComponent(editSecret)}`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content: html })
+      async function loadBlog(slug) {
+        if (!slug) return;
+        const res = await fetch(`/api/blogs/${encodeURIComponent(slug)}`);
+        const data = await res.json();
+        if (!data.ok) {
+          viewerEl.textContent = data.message || 'Not found';
+          return;
+        }
+        titleEl.textContent = data.blog.title;
+        viewerEl.innerHTML = data.blog.content || '<em>No content</em>';
+        // comments (render safely)
+        commentsEl.innerHTML = '';
+        (data.comments || []).forEach((c) => {
+          const div = document.createElement('div');
+          div.className = 'card';
+          const strong = document.createElement('strong');
+          strong.textContent = c.authorName || 'Anonymous';
+          const body = document.createElement('div');
+          body.textContent = c.body || '';
+          div.appendChild(strong);
+          div.appendChild(body);
+          commentsEl.appendChild(div);
+        });
+        if (editSecret) {
+          viewerEl.style.display = 'none';
+          editorEl.style.display = 'block';
+          saveBtn.style.display = 'inline-block';
+          quill.root.innerHTML = data.blog.content || '';
+        }
+      }
+
+      saveBtn.addEventListener('click', async () => {
+        const html = quill.root.innerHTML;
+        const res = await fetch(
+          `/api/blogs/${encodeURIComponent(currentSlug)}/update?edit=${encodeURIComponent(editSecret)}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ content: html }),
+          },
+        );
+        const data = await res.json();
+        if (!data.ok) return alert(data.message || 'Update failed');
+        alert('Saved');
+        loadBlog(currentSlug);
       });
-      const data = await res.json();
-      if (!data.ok) return alert(data.message || 'Update failed');
-      alert('Saved');
-      loadBlog(currentSlug);
-    });
 
-    commentForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const authorName = document.getElementById('cname').value;
-      const body = document.getElementById('cbody').value;
-      const res = await fetch(`/api/comments/${encodeURIComponent(currentSlug)}/add`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ authorName, body })
+      commentForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const authorName = document.getElementById('cname').value;
+        const body = document.getElementById('cbody').value;
+        const res = await fetch(`/api/comments/${encodeURIComponent(currentSlug)}/add`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ authorName, body }),
+        });
+        const data = await res.json();
+        if (!data.ok) return alert(data.message || 'Failed to post');
+        document.getElementById('cbody').value = '';
+        loadBlog(currentSlug);
       });
-      const data = await res.json();
-      if (!data.ok) return alert(data.message || 'Failed to post');
-      document.getElementById('cbody').value = '';
-      loadBlog(currentSlug);
-    });
 
-    fetchList();
-    if (currentSlug) loadBlog(currentSlug);
-  </script>
-</body>
+      fetchList();
+      if (currentSlug) loadBlog(currentSlug);
+    </script>
+  </body>
 </html>
