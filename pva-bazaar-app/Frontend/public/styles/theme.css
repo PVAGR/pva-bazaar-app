@@ -1,0 +1,54 @@
+Here are the contents for the file `Frontend/public/styles/theme.css`:
+
+/* Theme styles for the Journal website */
+body {
+    background-color: #f0f0f0;
+    color: #333;
+    font-family: 'Arial', sans-serif;
+}
+
+h1, h2, h3 {
+    color: #2c3e50;
+}
+
+a {
+    color: #2980b9;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.header {
+    background-color: #34495e;
+    color: white;
+    padding: 10px 0;
+    text-align: center;
+}
+
+.footer {
+    background-color: #34495e;
+    color: white;
+    padding: 10px 0;
+    text-align: center;
+}
+
+.button {
+    background-color: #2980b9;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.button:hover {
+    background-color: #3498db;
+}
