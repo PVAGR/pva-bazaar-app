@@ -221,16 +221,26 @@
 
   function WritingsPage() {
     const list = [
-      { id: 'w-1', title: 'On Clarity and Craft', date: '2025-08-20', excerpt: 'Notes on writing cleanly and honestly.' },
-      { id: 'w-2', title: 'Smallness as Strength', date: '2025-06-05', excerpt: 'Choosing constraints to move faster.' },
-      { id: 'w-3', title: 'Letters to the Future', date: '2025-02-10', excerpt: 'A short manifesto for documenting life.' }
+      { id: 'w-1', title: 'On Clarity and Craft', date: '2025-08-20', excerpt: 'Notes on writing cleanly and honestly.', category: 'Essay' },
+      { id: 'w-2', title: 'Smallness as Strength', date: '2025-06-05', excerpt: 'Choosing constraints to move faster.', category: 'Essay' },
+      { id: 'w-3', title: 'Letters to the Future', date: '2025-02-10', excerpt: 'A short manifesto for documenting life.', category: 'Manifesto' }
     ];
+    const [category, setCategory] = React.useState('');
+    const categories = React.useMemo(() => Array.from(new Set(list.map(e => e.category))).sort(), [list]);
+    const filtered = React.useMemo(() => list.filter(e => !category || e.category === category), [list, category]);
+
     return (
       React.createElement('section', { className: 'card' },
         React.createElement('div', { className: 'card__body' },
           React.createElement('h1', null, 'Writings'),
+          React.createElement('div', { className: 'journalPage__controls', style: { marginBottom: 12 } },
+            React.createElement('select', { className: 'select', value: category, onChange: e => setCategory(e.target.value), 'aria-label': 'Filter by category' },
+              React.createElement('option', { value: '' }, 'All Categories'),
+              categories.map(c => React.createElement('option', { key: c, value: c }, c))
+            )
+          ),
           React.createElement('ul', { className: 'list' },
-            list.map(e => React.createElement('li', { key: e.id, className: 'list__item' }, `${formatDate(e.date)} · ${e.title} — ${e.excerpt}`))
+            filtered.map(e => React.createElement('li', { key: e.id, className: 'list__item' }, `${formatDate(e.date)} · ${e.title} — ${e.excerpt}`))
           )
         )
       )
@@ -239,15 +249,25 @@
 
   function BlogsPage() {
     const list = [
-      { id: 'b-1', title: 'Site Updates — December', date: '2025-12-28', excerpt: 'UI refresh and deploy improvements.' },
-      { id: 'b-2', title: 'On Journaling Daily', date: '2025-11-15', excerpt: 'Habits that stick.' }
+      { id: 'b-1', title: 'Site Updates — December', date: '2025-12-28', excerpt: 'UI refresh and deploy improvements.', category: 'Update' },
+      { id: 'b-2', title: 'On Journaling Daily', date: '2025-11-15', excerpt: 'Habits that stick.', category: 'Thoughts' }
     ];
+    const [category, setCategory] = React.useState('');
+    const categories = React.useMemo(() => Array.from(new Set(list.map(e => e.category))).sort(), [list]);
+    const filtered = React.useMemo(() => list.filter(e => !category || e.category === category), [list, category]);
+
     return (
       React.createElement('section', { className: 'card' },
         React.createElement('div', { className: 'card__body' },
           React.createElement('h1', null, 'Blogs'),
+          React.createElement('div', { className: 'journalPage__controls', style: { marginBottom: 12 } },
+            React.createElement('select', { className: 'select', value: category, onChange: e => setCategory(e.target.value), 'aria-label': 'Filter by category' },
+              React.createElement('option', { value: '' }, 'All Categories'),
+              categories.map(c => React.createElement('option', { key: c, value: c }, c))
+            )
+          ),
           React.createElement('ul', { className: 'list' },
-            list.map(e => React.createElement('li', { key: e.id, className: 'list__item' }, `${formatDate(e.date)} · ${e.title} — ${e.excerpt}`))
+            filtered.map(e => React.createElement('li', { key: e.id, className: 'list__item' }, `${formatDate(e.date)} · ${e.title} — ${e.excerpt}`))
           )
         )
       )
