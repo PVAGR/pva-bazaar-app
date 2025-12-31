@@ -74,6 +74,22 @@ if (fs.existsSync(statusSrc)) {
   console.warn('WARNING: status.html not found at', statusSrc);
 }
 
+// Ensure SPA routing works on GitHub Pages by providing a 404 fallback
+const fallback404Src = path.join(projectRoot, '404.html');
+const fallback404Dest = path.join(projectRoot, 'dist', '404.html');
+if (fs.existsSync(fallback404Src)) {
+  fs.copyFileSync(fallback404Src, fallback404Dest);
+  console.log('COPIED 404.html to dist');
+} else {
+  // If a custom 404.html does not exist, mirror index.html for client-side routing
+  try {
+    fs.copyFileSync(indexSrc, fallback404Dest);
+    console.log('CREATED 404.html fallback by mirroring index.html');
+  } catch (e) {
+    console.warn('WARNING: could not create 404.html fallback', e);
+  }
+}
+
 // Copy both local Frontend/public and repository-level public into dist/public
 const distPublic = path.join(projectRoot, 'dist', 'public');
 const localPublic = path.join(projectRoot, 'public');
