@@ -1,6 +1,5 @@
 import React from 'react';
 
-// Example: philosophical notes mapped from Archive (1).md
 const writings = [
   {
     title: 'On the Nature of Change',
@@ -10,18 +9,24 @@ const writings = [
     title: 'Fragments on Identity',
     content: `Identity is not a fixed point, but a constellation of moments, choices, and memories. Each entry is a star in the night sky of the self.`,
   },
+  {
+    title: 'Notes on Belonging',
+    content: `To belong is not to fit, but to be accepted in one's wholeness. The archive is a home for every fragment.`,
+  },
 ];
 
 export default function Writings() {
   return (
     <section>
       <h2>Writings</h2>
-      {writings.map((w, i) => (
-        <article key={i} className="writing-entry">
-          <h3>{w.title}</h3>
-          <p>{w.content}</p>
-        </article>
-      ))}
+      <div>
+        {writings.map((w, i) => (
+          <article key={i} className="writing-entry">
+            <h3>{w.title}</h3>
+            <p>{w.content}</p>
+          </article>
+        ))}
+      </div>
     </section>
   );
 }
