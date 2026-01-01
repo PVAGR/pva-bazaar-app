@@ -1,4 +1,3 @@
-// Main app structure with tabbed Home, imports all new components
 import React from 'react';
 import './base.css';
 import HomeTabs from './components/HomeTabs';
