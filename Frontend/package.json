@@ -12,6 +12,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "mermaid": "^11.12.2",
     "vite": "^5.0.0"
   },
   "devDependencies": {
