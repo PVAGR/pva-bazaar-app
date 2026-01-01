@@ -139,18 +139,18 @@
             React.createElement('button', { className: 'tab', role: 'tab', 'aria-selected': tab === 'pvafood', onClick: () => setTab('pvafood') }, 'PVA Food'),
             React.createElement('button', { className: 'tab', role: 'tab', 'aria-selected': tab === 'business', onClick: () => setTab('business') }, 'Business Model')
           ),
-                    tab === 'pvafood' && (
-                      React.createElement('div', { className: 'tab-panel' },
-                        React.createElement('p', { className: 'subtle' }, 'Top recipes and ancient practices.'),
-                        React.createElement('a', { className: 'link', href: '#/pva-food' }, 'Open PVA Food →')
-                      )
-                    ),
-                    tab === 'business' && (
-                      React.createElement('div', { className: 'tab-panel' },
-                        React.createElement('p', { className: 'subtle' }, 'Diagrams and marketplace overview.'),
-                        React.createElement('a', { className: 'link', href: '#/marketplace' }, 'Open Marketplace →')
-                      )
-                    )
+          tab === 'pvafood' && (
+            React.createElement('div', { className: 'tab-panel' },
+              React.createElement('p', { className: 'subtle' }, 'Top recipes and ancient practices.'),
+              React.createElement('a', { className: 'link', href: '#/pva-food' }, 'Open PVA Food →')
+            )
+          ),
+          tab === 'business' && (
+            React.createElement('div', { className: 'tab-panel' },
+              React.createElement('p', { className: 'subtle' }, 'Diagrams and marketplace overview.'),
+              React.createElement('a', { className: 'link', href: '#/marketplace' }, 'Open Marketplace →')
+            )
+          ),
           tab === 'journal' && (
             React.createElement('div', { className: 'tab-panel' },
               React.createElement('div', { className: 'mini-list' },
@@ -162,7 +162,8 @@
                     React.createElement('div', { className: 'meta' }, formatDate(e.date)),
                     React.createElement('div', { className: 'excerpt subtle' }, e.excerpt)
                   )
-                )),
+                ))
+              ),
               React.createElement('div', { style: { marginTop: '0.5rem' } },
                 React.createElement('a', { className: 'link', href: '#/journal' }, 'View all entries →')
               )
@@ -189,8 +190,8 @@
               React.createElement('a', { href: `#/entry/${e.id}` }, 'Read →')
             )
           ))
-        )
-        , React.createElement('div', { style: { marginTop: '1rem', textAlign: 'center' } },
+        ),
+        React.createElement('div', { style: { marginTop: '1rem', textAlign: 'center' } },
           React.createElement('a', { href: '#/pva-nation', className: 'themeToggle', style: { display: 'inline-block' } }, 'Join PVA Nation')
         )
       )
@@ -1125,7 +1126,6 @@
           React.createElement(Route, { path: '/gallery', element: React.createElement(GalleryPage) }),
           React.createElement(Route, { path: '/artifact/:id', element: React.createElement(ArtifactDetailPage) }),
           React.createElement(Route, { path: '/artifact/new', element: React.createElement(NewArtifactPage) }),
-          React.createElement(Route, { path: '/blog/:slug', element: React.createElement(BlogDetailPage) }),
           React.createElement(Route, { path: '/biography', element: React.createElement(BiographyPage) }),
           React.createElement(Route, { path: '/novel', element: React.createElement(NovelPage) }),
           React.createElement(Route, { path: '/research', element: React.createElement(ResearchPage) }),
