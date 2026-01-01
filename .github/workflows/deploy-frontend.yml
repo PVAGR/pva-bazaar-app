@@ -1,8 +1,11 @@
-name: Deploy Frontend to Vercel
+name: Deploy Frontend to GitHub Pages
 
 on:
   push:
     branches: [main]
+    paths:
+      - 'Frontend/**'
+      - '.github/workflows/deploy-frontend.yml'
 
 jobs:
   build-and-deploy:
@@ -10,26 +13,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '18'
 
-      - name: Install frontend dependencies
-        run: |
-          cd Frontend
-          npm ci
+      - name: Install dependencies
+        run: cd Frontend && npm install
 
-      - name: Build frontend
-        run: |
-          cd Frontend
-          npm run build
+      - name: Build Frontend
+        run: cd Frontend && npm run build
 
-      - name: Deploy Frontend to Vercel
-        uses: amondnet/vercel-action@v20
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
         with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-args: '--prod'
-          working-directory: ./Frontend
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./Frontend/dist
+          cname: pvabazaar.org
