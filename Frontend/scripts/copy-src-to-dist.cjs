@@ -88,6 +88,16 @@ if (fs.existsSync(statusSrc)) {
   console.warn('WARNING: status.html not found at', statusSrc);
 }
 
+// Copy magnum-opus.html to dist
+const magnumOpusSrc = path.join(projectRoot, 'magnum-opus.html');
+const magnumOpusDest = path.join(projectRoot, 'dist', 'magnum-opus.html');
+if (fs.existsSync(magnumOpusSrc)) {
+  fs.copyFileSync(magnumOpusSrc, magnumOpusDest);
+  console.log('COPIED magnum-opus.html to dist');
+} else {
+  console.warn('WARNING: magnum-opus.html not found at', magnumOpusSrc);
+}
+
 // Ensure SPA routing works on GitHub Pages by providing a 404 fallback
 const fallback404Src = path.join(projectRoot, '404.html');
 const fallback404Dest = path.join(projectRoot, 'dist', '404.html');
@@ -110,7 +120,7 @@ const localPublic = path.join(projectRoot, 'public');
 if (fs.existsSync(localPublic)) {
   console.log('Preparing dist/public');
   if (!fs.existsSync(distPublic)) fs.mkdirSync(distPublic, { recursive: true });
-  const whitelistFiles = ['app.js', 'config.js', 'sitemap.xml', 'robots.txt', 'status.html', 'api-base.json'];
+  const whitelistFiles = ['app.js', 'config.js', 'sitemap.xml', 'robots.txt', 'status.html', 'api-base.json', 'magnum-opus.js'];
   const whitelistDirs = ['styles'];
   for (const f of whitelistFiles) {
     const s = path.join(localPublic, f);

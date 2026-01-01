@@ -87,6 +87,7 @@
             ),
             React.createElement('nav', { className: 'nav', 'aria-label': 'Main' },
               React.createElement(NavLink, { to: '/', end: true }, 'Home'),
+              React.createElement('a', { href: '/magnum-opus.html', className: 'nav-link magnum-opus-link' }, '✨ Bazaar'),
               React.createElement(NavLink, { to: '/journal' }, 'Journal'),
               React.createElement(NavLink, { to: '/journals' }, 'Journals'),
               React.createElement(NavLink, { to: '/writings' }, 'Writings'),

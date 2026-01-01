@@ -27,6 +27,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: path.resolve(__dirname, 'index.html'),
+        'magnum-opus': path.resolve(__dirname, 'magnum-opus.html'),
       },
     },
   },
@@ -56,6 +57,17 @@ export default defineConfig({
           console.log('Copied index.html to dist/');
         } catch (err) {
           console.warn('Could not copy index.html:', err.message);
+        }
+
+        // Copy magnum-opus.html
+        try {
+          copyFileSync(
+            path.resolve(__dirname, 'magnum-opus.html'),
+            path.resolve(__dirname, 'dist', 'magnum-opus.html'),
+          );
+          console.log('Copied magnum-opus.html to dist/');
+        } catch (err) {
+          console.warn('Could not copy magnum-opus.html:', err.message);
         }
       },
     },
