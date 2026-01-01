@@ -32,6 +32,7 @@ export default function HomeTabs() {
             key={tab.label}
             className={i === active ? 'active' : ''}
             onClick={() => setActive(i)}
+            aria-selected={i === active}
           >
             {tab.label}
           </button>
