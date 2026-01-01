@@ -19,7 +19,7 @@ jobs:
           node-version: '18'
 
       - name: Install dependencies
-        run: cd Frontend && npm install
+        run: cd Frontend && HUSKY=0 npm install
 
       - name: Build Frontend
         run: cd Frontend && npm run build
