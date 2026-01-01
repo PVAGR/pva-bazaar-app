@@ -1205,3 +1205,9 @@
   }
 ];
 })();
+
+// Export for module consumers (Vite build) while keeping window fallback for UMD usage
+export const entries = (typeof window !== 'undefined' && Array.isArray(window.JOURNAL_ENTRIES))
+  ? window.JOURNAL_ENTRIES
+  : [];
+export default entries;

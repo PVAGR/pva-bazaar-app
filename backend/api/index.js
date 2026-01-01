@@ -158,6 +158,7 @@ const commentsRoutes = require('../routes/comments');
 const contributeRoutes = require('../routes/contribute');
 const partnersRoutes = require('../routes/partners');
 const adminRoutes = require('../routes/admin');
+const archiveRoutes = require('../routes/archive');
 // Models for optional seeding
 const Artifact = require('../models/Artifact');
 const User = require('../models/User');
@@ -184,6 +185,7 @@ app.use('/api/comments', commentsRoutes);
 app.use('/api/contribute', contributeRoutes);
 app.use('/api/partners', partnersRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/archive', archiveRoutes);
 
 // Dev-only: issue a token for quick testing
 app.post('/api/dev/token', (req, res) => {
