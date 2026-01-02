@@ -303,7 +303,7 @@ module.exports = { app, connectToDatabase };
 
 // Start the server only when run directly (local dev)
 if (require.main === module) {
-  const PORT = process.env.PORT || 5000;
+  const PORT = process.env.PORT || 5001;
   connectToDatabase()
     .then(() => autoSeed())
     .finally(() => {

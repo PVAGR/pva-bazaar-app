@@ -182,6 +182,16 @@ Open an issue or PR containing:
 
 This project uses **GitHub Pages** for the static frontend and **Vercel** for the backend API.
 
+#### ✅ Pre-Deployment Verification
+
+Run the verification script to ensure all configurations are correct:
+
+```bash
+./verify-fixes.sh
+```
+
+All checks should pass ✅ before proceeding with deployment.
+
 #### Frontend Deployment to GitHub Pages
 
 1. **Build the frontend:**
@@ -258,10 +268,40 @@ This starts backend on port 5001 and frontend on port 3000.
 
 #### Troubleshooting Deployment
 
-- **Blank white screen:** Check browser console (F12) for errors
-- **API connection errors:** Verify CORS settings in backend and API URL in frontend
-- **404 errors:** Ensure base path is `/` in `vite.config.js`
-- **Database errors:** Check MongoDB connection string in Vercel environment variables
+**Issue: Blank white screen on pvabazaar.org**
+- Open browser DevTools (F12) → Console tab
+- Look for errors:
+  - **404 on assets:** Base path might be wrong in `vite.config.js` (should be `'/'`)
+  - **CORS errors:** Check `ALLOWED_ORIGIN` in Vercel backend environment variables
+  - **Failed to fetch API:** Verify `VITE_API_URL` in `.env.production` matches your Vercel backend URL
+- Check Network tab for failed requests
+
+**Issue: API connection errors**
+- Verify backend is deployed and running on Vercel
+- Check Vercel logs: Project → Deployments → Click deployment → View Function Logs
+- Ensure `MONGODB_URI` and `JWT_SECRET` are set in Vercel environment variables
+- Test backend directly: `curl https://your-backend.vercel.app/api/health`
+
+**Issue: GitHub Pages shows 404**
+- Ensure deployment folder is set to `/Frontend/dist` in GitHub Pages settings
+- Check GitHub Actions tab for deployment status
+- Verify `dist` folder was created after running `npm run build`
+
+**Issue: Database connection fails**
+- Verify MongoDB Atlas allows connections from anywhere (0.0.0.0/0) for serverless
+- Check MongoDB connection string format includes `?retryWrites=true&w=majority`
+- Ensure MongoDB user has read/write permissions
+
+**Verifying Deployment Status:**
+```bash
+# Check if site loads
+curl -I https://pvabazaar.org
+
+# Check if backend is up
+curl https://your-backend.vercel.app/api/health
+
+# Should return: {"ok":true,"message":"API is healthy"}
+```
 
 For detailed deployment information, see [DEPLOYMENT_CHECKLIST.md](./DEPLOYMENT_CHECKLIST.md).
 
