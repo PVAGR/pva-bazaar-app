@@ -45,26 +45,14 @@ console.log('Pages copy complete');
 });
 
 // Copy a few common top-level static files (if present)
-// CRITICAL: Force copy index.html to ensure root page works
+// IMPORTANT: keep Vite-generated index.html intact to avoid breaking bundled assets
 const indexSrc = path.join(projectRoot, 'index.html');
-const indexDest = path.join(projectRoot, 'dist', 'index.html');
-if (fs.existsSync(indexSrc)) {
-  fs.copyFileSync(indexSrc, indexDest);
-  console.log('FORCE COPIED index.html to dist (overwriting any vite-generated file)');
-  // Cache bust key assets referenced by index.html to avoid GitHub Pages CDN staleness
-  try {
-    const version = Date.now().toString();
-    let html = fs.readFileSync(indexDest, 'utf8');
-    html = html.replace(/(\/public\/app\.js)(?!\?)/, `$1?v=${version}`);
-    html = html.replace(/(\/src\/data\/entries\.js)(?!\?)/, `$1?v=${version}`);
-    // Also bust primary CSS files if present
-    html = html.replace(/(\/public\/styles\/base\.css)(?!\?)/, `$1?v=${version}`);
-    html = html.replace(/(\/public\/styles\/theme\.css)(?!\?)/, `$1?v=${version}`);
-    fs.writeFileSync(indexDest, html, 'utf8');
-    console.log('APPLIED cache-busting query params to index.html');
-  } catch (e) {
-    console.warn('WARNING: failed to apply cache-busting to index.html', e);
-  }
+const distIndex = path.join(projectRoot, 'dist', 'index.html');
+if (fs.existsSync(distIndex)) {
+  console.log('Keeping Vite-generated index.html (not overwritten)');
+} else if (fs.existsSync(indexSrc)) {
+  fs.copyFileSync(indexSrc, distIndex);
+  console.log('Copied source index.html to dist because Vite output was missing');
 } else {
   console.error('ERROR: index.html not found at', indexSrc);
 }
@@ -104,14 +92,16 @@ const fallback404Dest = path.join(projectRoot, 'dist', '404.html');
 if (fs.existsSync(fallback404Src)) {
   fs.copyFileSync(fallback404Src, fallback404Dest);
   console.log('COPIED 404.html to dist');
-} else {
-  // If a custom 404.html does not exist, mirror index.html for client-side routing
+} else if (fs.existsSync(distIndex)) {
+  // Mirror the built index for client-side routing fallbacks
   try {
-    fs.copyFileSync(indexSrc, fallback404Dest);
-    console.log('CREATED 404.html fallback by mirroring index.html');
+    fs.copyFileSync(distIndex, fallback404Dest);
+    console.log('CREATED 404.html fallback by mirroring built index.html');
   } catch (e) {
-    console.warn('WARNING: could not create 404.html fallback', e);
+    console.warn('WARNING: could not create 404.html fallback from built index', e);
   }
+} else {
+  console.warn('WARNING: 404.html fallback skipped (no source or built index found)');
 }
 
 // Copy only whitelisted assets from Frontend/public into dist/public
