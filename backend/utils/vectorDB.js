@@ -17,6 +17,12 @@ class VectorDB {
 
   async initialize() {
     try {
+      if (process.env.USE_VECTOR_DB === 'false' || process.env.USE_VECTOR_DB === '0') {
+        console.warn('Vector DB disabled via USE_VECTOR_DB=false. Skipping initialization.');
+        this.client = null;
+        this.collection = null;
+        return;
+      }
       if (!this.client) {
         console.warn('chromadb not installed. Falling back to MongoDB text search.');
         return;

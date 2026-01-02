@@ -112,7 +112,6 @@ async function connectToDatabase() {
     }
     const client = await mongoose.connect(process.env.MONGODB_URI, {
       dbName: 'pvabazaar',
-      bufferCommands: false,
       autoIndex: true,
     });
     console.log('✅ MongoDB Connected successfully');

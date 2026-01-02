@@ -9,7 +9,7 @@ const Artifact = require('./models/Artifact');
 
 async function main() {
   const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/pvabazaar';
-  await mongoose.connect(uri, { dbName: 'pvabazaar', bufferCommands: false, autoIndex: true });
+  await mongoose.connect(uri, { dbName: 'pvabazaar', autoIndex: true });
 
   let admin = await User.findOne({ email: 'admin@pvabazaar.org' });
   if (!admin) {

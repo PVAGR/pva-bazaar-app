@@ -16,7 +16,7 @@ echo "$CHANGED_FILES" | sed 's/^/  /'
 # Run quick smoke tests if critical files changed
 if echo "$CHANGED_FILES" | grep -qE "\.(js|ts|jsx|tsx)$"; then
   echo "🧪 Running quick smoke test..."
-  if pnpm test:smoke; then
+  if npm run test:smoke; then
     echo "✅ Smoke tests passed"
   else
     echo "⚠️  Smoke tests failed - consider running full test suite"
@@ -33,13 +33,13 @@ fi
 # Suggest running visual regression tests for UI changes
 if echo "$CHANGED_FILES" | grep -qE "\.(css|scss|jsx|tsx)$|^apps/(web-com|web-org)/"; then
   echo "🎨 UI changes detected - consider running visual regression tests:"
-  echo "  pnpm qa:backstop:test"
+  echo "  npm run qa:backstop:test"
 fi
 
 # Suggest security scan for sensitive areas
 if echo "$CHANGED_FILES" | grep -qE "(auth|security|api|backend)"; then
   echo "🔐 Security-sensitive changes detected - consider running security scan:"
-  echo "  pnpm qa:security:scan"
+  echo "  npm run qa:security:scan"
 fi
 
 # Contract deployment reminder
@@ -55,7 +55,7 @@ fi
 # Performance check suggestion
 if echo "$CHANGED_FILES" | grep -qE "(api|backend|components|pages)"; then
   echo "⚡ Performance-related changes detected - consider running performance tests:"
-  echo "  pnpm qa:lighthouse"
+  echo "  npm run qa:lighthouse"
 fi
 
 echo "✅ Post-commit validation complete!"
