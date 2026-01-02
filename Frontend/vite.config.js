@@ -20,7 +20,7 @@ function copyDir(src, dest) {
 }
 
 export default defineConfig({
-  base: '/pva-bazaar-app/',
+  base: '/',
   build: {
     outDir: 'dist',
     emptyOutDir: true,

@@ -178,7 +178,92 @@ Open an issue or PR containing:
 
 ## 🚀 Deployment
 
-See [DEPLOYMENT_CHECKLIST.md](./DEPLOYMENT_CHECKLIST.md) for detailed deployment instructions.
+### GitHub Pages (Frontend) + Vercel (Backend) Setup
+
+This project uses **GitHub Pages** for the static frontend and **Vercel** for the backend API.
+
+#### Frontend Deployment to GitHub Pages
+
+1. **Build the frontend:**
+   ```bash
+   cd Frontend
+   npm install
+   npm run build
+   ```
+   The `dist` folder contains your static files.
+
+2. **Deploy to GitHub Pages:**
+   
+   **Option A - Using GitHub Settings:**
+   - Go to your repo on GitHub: Settings → Pages
+   - Source: Deploy from a branch
+   - Branch: `main`
+   - Folder: `/Frontend/dist`
+   - Save and wait for deployment
+   
+   **Option B - Using gh-pages package:**
+   ```bash
+   cd Frontend
+   npm install -D gh-pages
+   # Add to package.json scripts: "deploy": "gh-pages -d dist"
+   npm run deploy
+   ```
+
+3. **Set up custom domain:**
+   - In GitHub Pages settings, add custom domain: `pvabazaar.org`
+   - In your DNS provider, add a CNAME record pointing to `<username>.github.io`
+   - Wait for DNS propagation (can take up to 48 hours)
+
+#### Backend Deployment to Vercel
+
+1. **Create new Vercel project:**
+   - Go to [vercel.com](https://vercel.com) and sign in
+   - Click "Add New" → "Project"
+   - Import your GitHub repository
+   - Set **Root Directory** to `backend`
+   - Framework Preset: Other
+   - Build Command: `npm install`
+   - Output Directory: (leave empty for Node.js API)
+
+2. **Add environment variables in Vercel dashboard:**
+   Go to Project Settings → Environment Variables and add:
+   ```
+   MONGODB_URI=<your-production-mongodb-connection-string>
+   JWT_SECRET=<strong-random-secret-minimum-32-chars>
+   NODE_ENV=production
+   ALLOWED_ORIGIN=https://pvabazaar.org
+   USE_MEMORY_DB=false
+   ETHEREUM_RPC_URL=https://mainnet.base.org
+   ADMIN_WALLET_PUBLIC=<your-wallet-address>
+   ```
+
+3. **Deploy:**
+   - Click "Deploy"
+   - Note your backend URL (e.g., `https://pva-bazaar-backend.vercel.app`)
+
+4. **Update frontend API URL:**
+   - Edit `Frontend/.env.production`
+   - Set `VITE_API_URL=https://your-backend-url.vercel.app/api`
+   - Rebuild and redeploy frontend
+
+#### Local Testing Before Deployment
+
+Always test locally first:
+
+```bash
+./test-app.sh
+```
+
+This starts backend on port 5001 and frontend on port 3000.
+
+#### Troubleshooting Deployment
+
+- **Blank white screen:** Check browser console (F12) for errors
+- **API connection errors:** Verify CORS settings in backend and API URL in frontend
+- **404 errors:** Ensure base path is `/` in `vite.config.js`
+- **Database errors:** Check MongoDB connection string in Vercel environment variables
+
+For detailed deployment information, see [DEPLOYMENT_CHECKLIST.md](./DEPLOYMENT_CHECKLIST.md).
 
 ## 🔍 Troubleshooting
 
