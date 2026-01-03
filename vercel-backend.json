@@ -1,0 +1,28 @@
+{
+  "version": 2,
+  "name": "backend",
+  "builds": [
+    {
+      "src": "backend/server.js",
+      "use": "@vercel/node",
+      "config": {
+        "maxLambdaSize": "50mb"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "backend/server.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "backend/server.js"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production",
+    "USE_MEMORY_DB": "false",
+    "ALLOWED_ORIGIN": "https://pvabazaar.org"
+  }
+}
