@@ -10,7 +10,7 @@
       "use": "@vercel/node"
     },
     {
-      "src": "api/test.js",
+      "src": "api/minimal.js",
       "use": "@vercel/node"
     },
     {
@@ -31,8 +31,8 @@
       "dest": "api/health.js"
     },
     {
-      "src": "/api/test",
-      "dest": "api/test.js"
+      "src": "/api/minimal",
+      "dest": "api/minimal.js"
     },
     {
       "src": "/api/(.*)",
