@@ -82,10 +82,29 @@ if git ls-remote --heads origin gh-pages &>/dev/null; then
   echo "   ✅ gh-pages branch exists"
   # Fetch and check gh-pages content
   git fetch origin gh-pages --quiet 2>/dev/null || true
-  if git ls-tree -r origin/gh-pages --name-only 2>/dev/null | grep -q '^index.html$'; then
+  
+  # Get list of files at root of gh-pages
+  files=$(git ls-tree -r origin/gh-pages --name-only 2>/dev/null)
+  
+  # Check for index.html at root
+  if echo "$files" | grep -q '^index.html$'; then
     echo "   ✅ gh-pages has index.html at root"
   else
-    echo "   ⚠️  gh-pages missing index.html at root (check workflow)"
+    echo "   ❌ gh-pages missing index.html at root (deployment issue)"
+  fi
+  
+  # Check for src/ or public/ directories (should NOT exist)
+  if echo "$files" | grep -q '^src/'; then
+    echo "   ❌ Source directories (src/) present in gh-pages - needs force clean"
+  else
+    echo "   ✅ No source directories in gh-pages (clean deployment)"
+  fi
+  
+  # Check for assets directory (should exist)
+  if echo "$files" | grep -q '^assets/'; then
+    echo "   ✅ Built assets directory present"
+  else
+    echo "   ⚠️  No assets directory found"
   fi
 else
   echo "   ⚠️  gh-pages branch not yet created (will be created on first deploy)"
@@ -98,4 +117,5 @@ echo "Next steps:"
 echo "  1. Run './test-app.sh' to test locally"
 echo "  2. Push to main to trigger GitHub Actions deployment"
 echo "  3. Monitor: https://github.com/PVAGR/pva-bazaar-app/actions"
-echo "  4. Deploy backend folder to Vercel"
+echo "  4. Check artifacts in Actions for debugging"
+echo "  5. Deploy backend folder to Vercel"

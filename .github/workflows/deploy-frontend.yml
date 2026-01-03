@@ -27,11 +27,18 @@ jobs:
 
       - name: Install and Build
         env:
-          VITE_API_URL: ${{ secrets.VITE_API_URL || 'https://pva-bazaar-backend.vercel.app/api' }}
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
         run: |
           cd Frontend
           npm ci
           npm run build
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-dist
+          path: Frontend/dist
+          retention-days: 7
 
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
@@ -39,3 +46,4 @@ jobs:
           branch: gh-pages
           folder: Frontend/dist
           clean: true
+          force: true

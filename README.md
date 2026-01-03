@@ -313,6 +313,33 @@ This starts backend on port 5001 and frontend on port 3000.
 5. Check latest "Deploy Frontend to GitHub Pages" workflow logs
 6. Verify "Deploy to GitHub Pages" step shows `Frontend/dist` folder being deployed
 
+**Post-Deploy Verification**
+After GitHub Actions completes:
+1. **Download build artifact** from Actions run:
+   - Go to: https://github.com/PVAGR/pva-bazaar-app/actions
+   - Click latest "Deploy Frontend to GitHub Pages" run
+   - Scroll to "Artifacts" section at bottom
+   - Download `build-dist.zip` to verify built files locally
+   - Should contain: `index.html`, `assets/`, NOT `src/` or `public/`
+   
+2. **Run local verification:**
+   ```bash
+   ./verify-fixes.sh
+   ```
+   Should show: "✅ gh-pages has index.html at root" and "✅ No source directories"
+
+3. **Force redeploy if needed:**
+   - Go to: https://github.com/PVAGR/pva-bazaar-app/actions
+   - Click "Deploy Frontend to GitHub Pages" workflow
+   - Click "Run workflow" button (top right)
+   - Select main branch → Run workflow
+   - This forces a fresh deployment with `force: true` and `clean: true`
+
+4. **Check GitHub Pages settings:**
+   - Go to: https://github.com/PVAGR/pva-bazaar-app/settings/pages
+   - Source: Should be "gh-pages" branch, "/ (root)" folder
+   - Custom domain: Should show `pvabazaar.org` (if configured)
+
 **Issue: After push, check Actions logs for build/deploy steps**
 1. Visit: https://github.com/PVAGR/pva-bazaar-app/actions
 2. Click latest workflow run
