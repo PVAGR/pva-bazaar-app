@@ -65,75 +65,96 @@ app.use((req, res, next) => {
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Connect to MongoDB - optimized for serverless
-let cachedDb = null;
-let connecting = null;
+// Connect to MongoDB - optimized for serverless with global caching
+// Use global to persist connection across serverless function invocations
+global._mongooseConn = global._mongooseConn || { conn: null, promise: null };
 
 async function connectToDatabase() {
-  if (cachedDb) return cachedDb;
-  if (connecting) return connecting;
+  // Return cached connection if available
+  if (global._mongooseConn.conn) {
+    return global._mongooseConn.conn;
+  }
+
+  // Return in-flight connection promise if connecting
+  if (global._mongooseConn.promise) {
+    return global._mongooseConn.promise;
+  }
 
   const isProd = process.env.NODE_ENV === 'production';
-  // Allow explicit memory DB even in production when USE_MEMORY_DB=true;
-  // otherwise prefer memory only in non-production when no MONGODB_URI is provided.
   const preferMemory =
     process.env.USE_MEMORY_DB === 'true' || (!isProd && !process.env.MONGODB_URI);
 
-  // Helper to start in-memory Mongo
+  // Helper to start in-memory Mongo (dev only)
   const startMemory = async () => {
     if (mongoose.connection.readyState === 1) {
-      // Already connected
-      return mongoose.connection;
+      global._mongooseConn.conn = mongoose.connection;
+      return global._mongooseConn.conn;
     }
     if (!MongoMemoryServer) {
       ({ MongoMemoryServer } = require('mongodb-memory-server'));
     }
     const mongod = await MongoMemoryServer.create();
     const uri = mongod.getUri();
-    const client = await mongoose.connect(uri, { dbName: 'pvabazaar', autoIndex: true });
+    const client = await mongoose.connect(uri, { 
+      dbName: 'pvabazaar', 
+      autoIndex: true,
+      serverSelectionTimeoutMS: 5000,
+    });
     console.log('✅ Connected to in-memory MongoDB');
-    cachedDb = client;
+    global._mongooseConn.conn = client;
     return client;
   };
 
   if (preferMemory) {
     console.log('🧪 Using in-memory MongoDB (dev)');
-    connecting = startMemory().finally(() => {
-      connecting = null;
-    });
-    return connecting;
+    global._mongooseConn.promise = startMemory()
+      .then(conn => {
+        global._mongooseConn.promise = null;
+        return conn;
+      })
+      .catch(err => {
+        global._mongooseConn.promise = null;
+        throw err;
+      });
+    return global._mongooseConn.promise;
   }
 
-  // Try Atlas/remote, then fall back to memory in non-production
+  // Production: Connect to MongoDB Atlas with explicit timeouts
   try {
+    // Check if already connected
     if (mongoose.connection.readyState === 1) {
-      cachedDb = mongoose.connection;
-      return cachedDb;
+      global._mongooseConn.conn = mongoose.connection;
+      return global._mongooseConn.conn;
     }
-    const client = await mongoose.connect(process.env.MONGODB_URI, {
+
+    console.log('🔗 Connecting to MongoDB Atlas...');
+    
+    // Create connection promise with timeouts
+    global._mongooseConn.promise = mongoose.connect(process.env.MONGODB_URI, {
       dbName: 'pvabazaar',
-      autoIndex: true,
+      autoIndex: false, // Disable in production for faster startup
+      serverSelectionTimeoutMS: 5000, // Fail fast if server unreachable
+      connectTimeoutMS: 10000, // 10s to establish connection
+      socketTimeoutMS: 20000, // 20s for socket operations
+      maxPoolSize: 10, // Connection pool size
+      minPoolSize: 2,
+      maxIdleTimeMS: 30000,
+    })
+    .then(client => {
+      console.log('✅ MongoDB Atlas connected successfully');
+      global._mongooseConn.conn = client;
+      global._mongooseConn.promise = null;
+      return client;
+    })
+    .catch(err => {
+      console.error('❌ MongoDB connection failed:', err.message);
+      global._mongooseConn.promise = null;
+      throw err;
     });
-    console.log('✅ MongoDB Connected successfully');
-    cachedDb = client;
-    return client;
+
+    return global._mongooseConn.promise;
   } catch (err) {
-    if (!isProd) {
-      console.warn(
-        '⚠️ MongoDB Atlas connection failed, falling back to in-memory for dev...',
-        err?.message || err,
-      );
-      try {
-        connecting = startMemory().finally(() => {
-          connecting = null;
-        });
-        return await connecting;
-      } catch (memErr) {
-        console.error('❌ Failed to start in-memory MongoDB:', memErr);
-        throw err;
-      }
-    }
-    // In production, do not silently fall back; rethrow to fail fast
+    console.error('❌ MongoDB connection error:', err.message);
     throw err;
   }
 }
@@ -196,15 +217,33 @@ app.post('/api/dev/token', (req, res) => {
   res.json({ ok: true, token });
 });
 
-// Health endpoint
+// Health endpoint - returns quickly even if DB is unreachable
 app.get('/api/health', async (req, res) => {
-  await connectToDatabase();
+  let mongoConnected = false;
+  let dbError = null;
+
+  try {
+    // Attempt to connect with timeout protection
+    const connectPromise = connectToDatabase();
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Connection timeout')), 5000)
+    );
+    
+    await Promise.race([connectPromise, timeoutPromise]);
+    mongoConnected = mongoose.connection.readyState === 1;
+  } catch (err) {
+    dbError = err.message;
+    console.warn('⚠️ Health check DB connection failed:', dbError);
+  }
+
+  // Always return 200 with status info
   res.json({
     ok: true,
     message: 'PVABazaar API is running',
-    mongo: mongoose.connection.readyState === 1,
-    ready: process.env.API_READY !== 'false',
+    mongo: mongoConnected,
+    ready: process.env.API_READY !== 'false' && mongoConnected,
     timestamp: new Date().toISOString(),
+    ...(dbError && { dbError }),
   });
 });
 
