@@ -61,8 +61,16 @@
         <div id="health">Checking...</div>
       </div>
       <div class="card">
-        <h2>/api/artifacts</h2>
-        <div id="artifacts">Checking...</div>
+        <h2>/api/archive</h2>
+        <div id="archive">Checking...</div>
+      </div>
+      <div class="card">
+        <h2>/api/blogs</h2>
+        <div id="blogs">Checking...</div>
+      </div>
+      <div class="card">
+        <h2>/api/search/text?q=test</h2>
+        <div id="search">Checking...</div>
       </div>
     </div>
     <p style="margin-top: 1rem">
@@ -89,7 +97,9 @@
         }
       }
       check('/api/health', 'health');
-      check('/api/artifacts', 'artifacts');
+      check('/api/archive', 'archive');
+      check('/api/blogs', 'blogs');
+      check('/api/search/text?q=test', 'search');
     </script>
   </body>
 </html>

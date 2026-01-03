@@ -20,8 +20,21 @@ const projectRoot = process.cwd();
 const srcDir = path.join(projectRoot, 'src');
 const destDir = path.join(projectRoot, 'dist', 'src');
 
-console.log('Copying', srcDir, '->', destDir);
-copyRecursive(srcDir, destDir);
+console.log('Copying', srcDir, '->', destDir, '(excluding api-test.js)');
+
+if (!fs.existsSync(srcDir)) {
+  console.warn('WARNING: src directory not found');
+} else {
+  fs.mkdirSync(destDir, { recursive: true });
+  for (const item of fs.readdirSync(srcDir)) {
+    if (item === 'api-test.js') {
+      console.log('EXCLUDED api-test.js from dist/src');
+      continue;
+    }
+    copyRecursive(path.join(srcDir, item), path.join(destDir, item));
+  }
+}
+
 console.log('Copy complete');
 
 // Also copy static pages and top-level static files so they exist in dist for deployment
@@ -110,7 +123,7 @@ const localPublic = path.join(projectRoot, 'public');
 if (fs.existsSync(localPublic)) {
   console.log('Preparing dist/public');
   if (!fs.existsSync(distPublic)) fs.mkdirSync(distPublic, { recursive: true });
-  const whitelistFiles = ['app.js', 'config.js', 'sitemap.xml', 'robots.txt', 'status.html', 'api-base.json', 'magnum-opus.js'];
+  const whitelistFiles = ['config.js', 'sitemap.xml', 'robots.txt', 'status.html', 'api-base.json', 'magnum-opus.js'];
   const whitelistDirs = ['styles'];
   for (const f of whitelistFiles) {
     const s = path.join(localPublic, f);

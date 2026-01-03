@@ -34,3 +34,9 @@ pva-bazaar-app.env
 .env*.local
 /Frontend/archive.html
 /Frontend/private/
+
+# Documentation artifacts generated during dev/analysis
+*_PACK.txt
+*_PACK.md
+*SUMMARY*.md
+*magnum-opus-organized.html
