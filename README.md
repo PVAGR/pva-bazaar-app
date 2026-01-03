@@ -192,7 +192,32 @@ Run the verification script to ensure all configurations are correct:
 
 All checks should pass ✅ before proceeding with deployment.
 
-#### Frontend Deployment to GitHub Pages
+### GitHub Pages Deployment Options
+
+**Option 1: GitHub Actions (RECOMMENDED)**
+
+This repo includes a GitHub Actions workflow that automatically builds and deploys the frontend:
+
+- **What it does:** Automatically builds `Frontend/dist` and deploys to `gh-pages` branch
+- **When it runs:** On every push to `main` that changes `Frontend/**`
+- **How to use:** Just push your changes! No manual steps needed.
+- **Workflow file:** `.github/workflows/deploy-frontend.yml`
+
+**Benefits:**
+- ✅ Automatic builds on every push
+- ✅ No manual build/deploy steps
+- ✅ Ensures consistent production builds
+- ✅ Uses proper Node.js version (20)
+- ✅ Injects VITE_API_URL from GitHub secrets
+
+**To use GitHub Actions deployment:**
+1. Push your changes to `main` branch
+2. Check Actions tab on GitHub for deployment status
+3. Visit https://pvabazaar.org after deployment completes (2-5 minutes)
+
+**Option 2: Manual GitHub Pages Deploy**
+
+Only use this if you need to bypass Actions:
 
 1. **Build the frontend:**
    ```bash
