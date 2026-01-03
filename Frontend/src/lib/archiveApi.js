@@ -9,15 +9,20 @@ export async function fetchAdminStatus(token) {
   return json;
 }
 
-export async function requestDevToken(secret) {
-  const res = await apiFetch('/api/dev/token', {
+export async function requestAdminToken(secret) {
+  const res = await apiFetch('/api/admin/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ secret }),
   });
   const json = await res.json().catch(() => ({}));
-  if (!res.ok || !json.token) throw new Error(json.message || 'Dev token failed');
+  if (!res.ok || !json.token) throw new Error(json.message || 'Admin token failed');
   return json.token;
+}
+
+export async function requestDevToken(secret) {
+  // Kept for backward compatibility, calls admin token endpoint
+  return requestAdminToken(secret);
 }
 
 export async function createArchiveEntry(entry, token) {
