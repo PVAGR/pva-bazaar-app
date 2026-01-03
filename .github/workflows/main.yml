@@ -24,7 +24,14 @@ jobs:
         run: cd Frontend && npm install
 
       - name: Build Frontend
-        run: cd Frontend && npm run build
+        run: |
+          cd Frontend
+          # Read API base from config file and export for build
+          API_URL=$(node -pe "JSON.parse(require('fs').readFileSync('public/api-base.json', 'utf8')).apiUrl || ''")
+          echo "Building with VITE_API_URL: $API_URL"
+          VITE_API_URL="$API_URL" npm run build
+        env:
+          NODE_ENV: production
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
