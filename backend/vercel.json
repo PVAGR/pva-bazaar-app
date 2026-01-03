@@ -10,6 +10,10 @@
       "use": "@vercel/node"
     },
     {
+      "src": "api/test.js",
+      "use": "@vercel/node"
+    },
+    {
       "src": "server.js",
       "use": "@vercel/node",
       "config": {
@@ -25,6 +29,10 @@
     {
       "src": "/api/health",
       "dest": "api/health.js"
+    },
+    {
+      "src": "/api/test",
+      "dest": "api/test.js"
     },
     {
       "src": "/api/(.*)",
