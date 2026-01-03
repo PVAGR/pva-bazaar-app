@@ -27,7 +27,7 @@
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "prepare": "husky install",
+    "prepare": "test -d .git && husky install || true",
     "qa:full": "./qa/scripts/orchestrator.sh full",
     "qa:quick": "./qa/scripts/orchestrator.sh quick",
     "qa:performance": "./qa/scripts/orchestrator.sh performance",
