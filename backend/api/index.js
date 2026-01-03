@@ -149,28 +149,48 @@ const Artifact = require('../models/Artifact');
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 
-// Use routes
-app.use('/api/artifacts', artifactsRoutes);
-app.use('/api/users', usersRoutes);
-app.use('/api/auth', authRoutes);
-app.use('/api/blockchain', blockchainRoutes);
-app.use('/api/certificates', certificatesRoutes);
+// Legacy gating middleware - returns 410 Gone when LEGACY_MODE !== 'true'
+function legacyGate(req, res, next) {
+  if (process.env.LEGACY_MODE === 'true') {
+    return next();
+  }
+  res.status(410).json({
+    ok: false,
+    message: 'This endpoint is part of legacy marketplace features and has been retired.',
+    migration: 'For current journal/archive APIs, see /api/blogs, /api/pages, /api/archive',
+  });
+}
+
+// Set LEGACY_MODE default
+if (!process.env.LEGACY_MODE) {
+  process.env.LEGACY_MODE = 'false';
+}
+console.log('🔒 LEGACY_MODE:', process.env.LEGACY_MODE);
+
+// Use routes - JOURNAL/BLOG (always active)
 app.use('/api/health', healthRoutes);
-app.use('/api/search', searchRoutes);
-app.use('/api/transactions', transactionsRoutes);
-app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/market', marketRoutes);
-app.use('/api/marketplace', marketRoutes); // alias for /api/marketplace/stats
-app.use('/api/categories', marketRoutes); // for /api/categories/counts
-app.use('/api/portfolio', portfolioRoutes);
-app.use('/api/activity', activityRoutes); // Register the new activity route
-app.use('/api/pages', pagesRoutes);
 app.use('/api/blogs', blogsRoutes);
+app.use('/api/pages', pagesRoutes);
 app.use('/api/comments', commentsRoutes);
-app.use('/api/contribute', contributeRoutes);
-app.use('/api/partners', partnersRoutes);
+app.use('/api/search', searchRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/archive', archiveRoutes);
+app.use('/api/contribute', contributeRoutes);
+app.use('/api/partners', partnersRoutes);
+app.use('/api/users', usersRoutes);
+app.use('/api/auth', authRoutes);
+
+// LEGACY MARKETPLACE (gated by LEGACY_MODE flag)
+app.use('/api/artifacts', legacyGate, artifactsRoutes);
+app.use('/api/market', legacyGate, marketRoutes);
+app.use('/api/marketplace', legacyGate, marketRoutes);
+app.use('/api/categories', legacyGate, marketRoutes);
+app.use('/api/transactions', legacyGate, transactionsRoutes);
+app.use('/api/portfolio', legacyGate, portfolioRoutes);
+app.use('/api/blockchain', legacyGate, blockchainRoutes);
+app.use('/api/certificates', legacyGate, certificatesRoutes);
+app.use('/api/dashboard', legacyGate, dashboardRoutes);
+app.use('/api/activity', legacyGate, activityRoutes);
 
 // Dev-only: issue a token for quick testing
 app.post('/api/dev/token', (req, res) => {
