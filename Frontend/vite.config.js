@@ -48,16 +48,8 @@ export default defineConfig({
           }
         });
 
-        // Copy root index.html
-        try {
-          copyFileSync(
-            path.resolve(__dirname, 'index.html'),
-            path.resolve(__dirname, 'dist', 'index.html'),
-          );
-          console.log('Copied index.html to dist/');
-        } catch (err) {
-          console.warn('Could not copy index.html:', err.message);
-        }
+        // Note: index.html is already handled by Vite's build process
+        // DO NOT copy the raw source index.html or it will break bundled assets
 
         // Copy magnum-opus.html
         try {
