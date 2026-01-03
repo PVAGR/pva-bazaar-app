@@ -6,6 +6,10 @@
       "use": "@vercel/node"
     },
     {
+      "src": "api/health.js",
+      "use": "@vercel/node"
+    },
+    {
       "src": "server.js",
       "use": "@vercel/node",
       "config": {
@@ -17,6 +21,10 @@
     {
       "src": "/api/ping",
       "dest": "api/ping.js"
+    },
+    {
+      "src": "/api/health",
+      "dest": "api/health.js"
     },
     {
       "src": "/api/(.*)",
