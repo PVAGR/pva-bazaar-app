@@ -1,6 +1,5 @@
-// Vercel serverless entry point that wraps the Express app
-const serverless = require('serverless-http');
+// Vercel serverless entry point - direct Express export
 const { app } = require('./api/index');
 
-// Export serverless handler directly
-module.exports = serverless(app);
+// Export Express app directly (Vercel handles serverless wrapping)
+module.exports = app;
