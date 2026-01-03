@@ -1,18 +1,16 @@
 // Vercel serverless entry point that wraps the Express app
 const serverless = require('serverless-http');
-const { app, connectToDatabase } = require('./api/index');
+const { app } = require('./api/index');
 
-let handlerPromise = null;
+let handler = null;
 
 module.exports = async (req, res) => {
   try {
-    if (!handlerPromise) {
-      handlerPromise = (async () => {
-        await connectToDatabase();
-        return serverless(app);
-      })();
+    // Initialize serverless handler once (lazy, no DB connection here)
+    if (!handler) {
+      handler = serverless(app);
     }
-    const handler = await handlerPromise;
+    // Routes will connect to DB on-demand when needed
     return handler(req, res);
   } catch (err) {
     console.error('Serverless handler error:', err);
