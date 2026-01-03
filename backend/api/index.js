@@ -217,6 +217,16 @@ app.post('/api/dev/token', (req, res) => {
   res.json({ ok: true, token });
 });
 
+// Instant health check (no DB connection)
+app.get('/api/ping', (req, res) => {
+  res.json({
+    ok: true,
+    message: 'API is responding',
+    timestamp: new Date().toISOString(),
+    version: '1.0.1',
+  });
+});
+
 // Health endpoint - returns quickly even if DB is unreachable
 app.get('/api/health', async (req, res) => {
   let mongoConnected = false;
@@ -265,8 +275,9 @@ app.use((req, res) => {
   });
 });
 
-// Initialize connection when the lambda first starts
-connectToDatabase();
+// Don't initialize connection on module load - let routes connect lazily
+// This prevents serverless timeout on cold starts if DB is unreachable
+// connectToDatabase();  // REMOVED - connections happen on-demand
 
 // Dev auto-seed: populate a default admin and sample artifacts when using memory DB
 async function autoSeed() {
