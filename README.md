@@ -251,16 +251,29 @@ Only use this if you need to bypass Actions:
 
 #### Backend Deployment to Vercel
 
+**IMPORTANT:** The backend is a Node.js Express API, NOT a static site. Configure correctly to avoid deployment failures.
+
 1. **Create new Vercel project:**
    - Go to [vercel.com](https://vercel.com) and sign in
    - Click "Add New" → "Project"
    - Import your GitHub repository
-   - Set **Root Directory** to `backend`
-   - Framework Preset: Other
-   - Build Command: `npm install`
-   - Output Directory: (leave empty for Node.js API)
+   - **Set Root Directory to `backend`** ⚠️ CRITICAL
+   - Framework Preset: **Other** (not Next.js, not Create React App)
+   - Build Command: Leave empty or `npm install` (no build needed)
+   - Output Directory: **Leave empty** (Node.js serverless function, not static)
 
-2. **Add environment variables in Vercel dashboard:**
+2. **Verify vercel.json configuration:**
+   The `backend/vercel.json` should already be configured correctly:
+   ```json
+   {
+     "version": 2,
+     "builds": [{ "src": "api/index.js", "use": "@vercel/node" }],
+     "routes": [{ "src": "/(.*)", "dest": "api/index.js" }]
+   }
+   ```
+   This tells Vercel to deploy as a Node.js serverless function, NOT generate a `dist` folder.
+
+3. **Add environment variables in Vercel dashboard:**
    Go to Project Settings → Environment Variables and add:
    ```
    MONGODB_URI=<your-production-mongodb-connection-string>
@@ -272,11 +285,18 @@ Only use this if you need to bypass Actions:
    ADMIN_WALLET_PUBLIC=<your-wallet-address>
    ```
 
-3. **Deploy:**
+4. **Deploy:**
    - Click "Deploy"
    - Note your backend URL (e.g., `https://pva-bazaar-backend.vercel.app`)
+   - **Ignore any warnings about "dist" not found** - Node.js APIs don't create dist folders
 
-4. **Update frontend API URL:**
+5. **Test backend deployment:**
+   ```bash
+   curl https://your-backend-url.vercel.app/api/health
+   ```
+   Should return: `{"status":"ok","timestamp":"..."}`
+
+6. **Update frontend API URL:**
    - Edit `Frontend/.env.production`
    - Set `VITE_API_URL=https://your-backend-url.vercel.app/api`
    - Rebuild and redeploy frontend

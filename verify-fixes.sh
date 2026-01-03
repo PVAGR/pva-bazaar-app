@@ -93,11 +93,12 @@ if git ls-remote --heads origin gh-pages &>/dev/null; then
     echo "   ❌ gh-pages missing index.html at root (deployment issue)"
   fi
   
-  # Check for src/ or public/ directories (should NOT exist)
-  if echo "$files" | grep -q '^src/'; then
-    echo "   ❌ Source directories (src/) present in gh-pages - needs force clean"
+  # Check for pollution (unwanted directories that shouldn't be deployed)
+  if echo "$files" | grep -Eq '^(src/|public/|styles/|node_modules/|biography/|novel/|research/|writings/)'; then
+    echo "   ❌ Pollution detected - Source directories present in gh-pages"
+    echo "   → Need to delete/recreate gh-pages branch for clean deployment"
   else
-    echo "   ✅ No source directories in gh-pages (clean deployment)"
+    echo "   ✅ No pollution - Clean deployment (only built files)"
   fi
   
   # Check for assets directory (should exist)

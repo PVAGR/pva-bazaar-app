@@ -17,6 +17,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -40,10 +42,30 @@ jobs:
           path: Frontend/dist
           retention-days: 7
 
-      - name: Deploy to GitHub Pages
-        uses: JamesIves/github-pages-deploy-action@v4
-        with:
-          branch: gh-pages
-          folder: Frontend/dist
-          clean: true
-          force: true
+      - name: Clean and Deploy to GitHub Pages
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+          
+          # Delete existing gh-pages branch (local and remote)
+          git branch -D gh-pages || true
+          git push origin --delete gh-pages || true
+          
+          # Create fresh orphan branch
+          git checkout --orphan gh-pages
+          
+          # Remove all files from working tree
+          git rm -rf .
+          
+          # Copy only built dist files
+          cp -r Frontend/dist/* .
+          cp -r Frontend/dist/.* . 2>/dev/null || true
+          
+          # Add CNAME for custom domain
+          echo "pvabazaar.org" > CNAME
+          
+          # Commit and force push
+          git add .
+          git commit -m "Deploy clean build from commit ${{ github.sha }}"
+          git push origin gh-pages --force
