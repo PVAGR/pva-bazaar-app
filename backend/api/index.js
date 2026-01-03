@@ -228,6 +228,11 @@ app.get('/api/version', (req, res) => {
   });
 });
 
+// Express ping - guaranteed fast, no DB
+app.get('/api/express-ping', (req, res) => {
+  res.json({ ok: true, source: 'express' });
+});
+
 // Instant health check (no DB connection)
 app.get('/api/ping', (req, res) => {
   res.setHeader('X-App-Version', '4f443b9');
