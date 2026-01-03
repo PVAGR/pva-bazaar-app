@@ -217,8 +217,20 @@ app.post('/api/dev/token', (req, res) => {
   res.json({ ok: true, token });
 });
 
+// Version endpoint - shows deployed git commit
+app.get('/api/version', (req, res) => {
+  res.json({
+    ok: true,
+    sha: '4f443b9b29d51e45eb4c5423ebfcfa1920873979',
+    shortSha: '4f443b9',
+    message: 'fix: Remove eager DB connection on module load, add /api/ping endpoint',
+    timestamp: new Date().toISOString(),
+  });
+});
+
 // Instant health check (no DB connection)
 app.get('/api/ping', (req, res) => {
+  res.setHeader('X-App-Version', '4f443b9');
   res.json({
     ok: true,
     message: 'API is responding',
