@@ -56,7 +56,7 @@ app.use(
 app.use((req, res, next) => {
   const apiNotReady = process.env.API_READY === 'false';
   const isProd = process.env.NODE_ENV === 'production';
-  const allowlist = ['/api/health', '/api/dev/token'];
+  const allowlist = ['/api/health', '/api/dev/token', '/api/ping', '/api/version', '/api/express-ping'];
   if (apiNotReady && isProd && !allowlist.some(p => req.path.startsWith(p))) {
     return res.status(503).json({ ok: false, message: 'Service not configured. Missing environment secrets.' });
   }
@@ -75,89 +75,53 @@ async function connectToDatabase() {
     return global._mongooseConn.conn;
   }
 
-  // Return in-flight connection promise if connecting
+  // If a connection is in progress, wait for it
   if (global._mongooseConn.promise) {
-    return global._mongooseConn.promise;
+    global._mongooseConn.conn = await global._mongooseConn.promise;
+    return global._mongooseConn.conn;
   }
 
-  const isProd = process.env.NODE_ENV === 'production';
-  const preferMemory =
-    process.env.USE_MEMORY_DB === 'true' || (!isProd && !process.env.MONGODB_URI);
-
-  // Helper to start in-memory Mongo (dev only)
-  const startMemory = async () => {
-    if (mongoose.connection.readyState === 1) {
-      global._mongooseConn.conn = mongoose.connection;
-      return global._mongooseConn.conn;
-    }
-    if (!MongoMemoryServer) {
-      ({ MongoMemoryServer } = require('mongodb-memory-server'));
-    }
-    const mongod = await MongoMemoryServer.create();
-    const uri = mongod.getUri();
-    const client = await mongoose.connect(uri, { 
-      dbName: 'pvabazaar', 
-      autoIndex: true,
-      serverSelectionTimeoutMS: 5000,
-    });
-    console.log('✅ Connected to in-memory MongoDB');
-    global._mongooseConn.conn = client;
-    return client;
-  };
-
-  if (preferMemory) {
-    console.log('🧪 Using in-memory MongoDB (dev)');
-    global._mongooseConn.promise = startMemory()
-      .then(conn => {
-        global._mongooseConn.promise = null;
-        return conn;
-      })
-      .catch(err => {
-        global._mongooseConn.promise = null;
-        throw err;
-      });
-    return global._mongooseConn.promise;
-  }
-
-  // Production: Connect to MongoDB Atlas with explicit timeouts
   try {
-    // Check if already connected
-    if (mongoose.connection.readyState === 1) {
-      global._mongooseConn.conn = mongoose.connection;
-      return global._mongooseConn.conn;
-    }
+    // Start new connection
+    const mongoUri =
+      process.env.MONGODB_URI ||
+      'mongodb://localhost:27017/pva-bazaar';
 
-    console.log('🔗 Connecting to MongoDB Atlas...');
-    
-    // Create connection promise with timeouts
-    global._mongooseConn.promise = mongoose.connect(process.env.MONGODB_URI, {
-      dbName: 'pvabazaar',
-      autoIndex: false, // Disable in production for faster startup
-      serverSelectionTimeoutMS: 5000, // Fail fast if server unreachable
-      connectTimeoutMS: 10000, // 10s to establish connection
-      socketTimeoutMS: 20000, // 20s for socket operations
-      maxPoolSize: 10, // Connection pool size
-      minPoolSize: 2,
-      maxIdleTimeMS: 30000,
-    })
-    .then(client => {
-      console.log('✅ MongoDB Atlas connected successfully');
-      global._mongooseConn.conn = client;
-      global._mongooseConn.promise = null;
-      return client;
-    })
-    .catch(err => {
-      console.error('❌ MongoDB connection failed:', err.message);
-      global._mongooseConn.promise = null;
-      throw err;
+    console.log('🔌 Connecting to MongoDB...');
+
+    // Set timeouts for serverless environment
+    global._mongooseConn.promise = mongoose.connect(mongoUri, {
+      serverSelectionTimeoutMS: 5000,
+      connectTimeoutMS: 10000,
+      socketTimeoutMS: 20000,
+      maxPoolSize: 10,
+      autoIndex: process.env.NODE_ENV !== 'production', // Don't build indexes in prod
     });
 
-    return global._mongooseConn.promise;
+    global._mongooseConn.conn = await global._mongooseConn.promise;
+    console.log('✅ MongoDB connected');
+    return global._mongooseConn.conn;
   } catch (err) {
     console.error('❌ MongoDB connection error:', err.message);
     throw err;
   }
 }
+
+// Middleware: Ensure DB connection for routes that need it
+app.use(async (req, res, next) => {
+  // Skip DB connection for health/ping endpoints
+  const skipPaths = ['/api/health', '/api/ping', '/api/version', '/api/express-ping', '/api/dev/token'];
+  if (skipPaths.some(p => req.path === p)) {
+    return next();
+  }
+
+  // Connect to DB for all other routes
+  try {
+    await connectToDatabase();
+    next();
+  } catch (err) {
+    res.status(503).json({ ok: false, message: 'Database connection failed', error: err.message });
+  }
 
 // Import routes
 const artifactsRoutes = require('../routes/artifacts');
