@@ -1,10 +1,18 @@
 export function getApiBase() {
+  // First check environment variable (build-time)
+  const envApiUrl = import.meta.env.VITE_API_URL;
+  if (envApiUrl) return envApiUrl;
+  
+  // Fallback to localStorage (runtime override)
   try {
-    return (localStorage.getItem('api:base') || '').trim();
+    const stored = localStorage.getItem('api:base');
+    if (stored) return stored.trim();
   } catch (err) {
     console.warn('api base read failed', err);
-    return '';
   }
+  
+  // Default fallback for development
+  return '';
 }
 
 export function setApiBase(base) {

@@ -301,6 +301,32 @@ This starts backend on port 5001 and frontend on port 3000.
   - **Failed to fetch API:** Verify `VITE_API_URL` in `.env.production` matches your Vercel backend URL
 - Check Network tab for failed requests
 
+**Issue: GitHub Actions deployment succeeds but site still blank**
+1. Check gh-pages branch content:
+   ```bash
+   git fetch origin gh-pages
+   git ls-tree -r origin/gh-pages --name-only
+   ```
+2. **Expected:** Should show `index.html`, `assets/`, etc. at root (NOT `src/`, `public/`)
+3. **If wrong:** Workflow may be deploying source instead of built files
+4. Go to: https://github.com/PVAGR/pva-bazaar-app/actions
+5. Check latest "Deploy Frontend to GitHub Pages" workflow logs
+6. Verify "Deploy to GitHub Pages" step shows `Frontend/dist` folder being deployed
+
+**Issue: After push, check Actions logs for build/deploy steps**
+1. Visit: https://github.com/PVAGR/pva-bazaar-app/actions
+2. Click latest workflow run
+3. Expand "Install and Build" step - should show successful Vite build
+4. Expand "Deploy to GitHub Pages" step - should show files being deployed
+5. Common errors:
+   - **Build fails:** Check for missing dependencies or build errors
+   - **Deploy fails:** Check branch permissions (needs `contents: write`)
+
+**Issue: Clear browser cache if site doesn't update**
+- Hard refresh: Ctrl+Shift+R (Windows/Linux) or Cmd+Shift+R (Mac)
+- Or open DevTools (F12) → Network tab → check "Disable cache"
+- Or try incognito/private browsing mode
+
 **Issue: API connection errors**
 - Verify backend is deployed and running on Vercel
 - Check Vercel logs: Project → Deployments → Click deployment → View Function Logs
@@ -308,9 +334,10 @@ This starts backend on port 5001 and frontend on port 3000.
 - Test backend directly: `curl https://your-backend.vercel.app/api/health`
 
 **Issue: GitHub Pages shows 404**
-- Ensure deployment folder is set to `/Frontend/dist` in GitHub Pages settings
-- Check GitHub Actions tab for deployment status
-- Verify `dist` folder was created after running `npm run build`
+- Ensure GitHub Pages is enabled: Settings → Pages → Source: gh-pages branch
+- Custom domain should be set to `pvabazaar.org` in GitHub Pages settings
+- Check DNS: CNAME record should point to `pvagr.github.io`
+- Wait 5-10 minutes after first deployment for DNS propagation
 
 **Issue: Database connection fails**
 - Verify MongoDB Atlas allows connections from anywhere (0.0.0.0/0) for serverless
@@ -321,6 +348,9 @@ This starts backend on port 5001 and frontend on port 3000.
 ```bash
 # Check if site loads
 curl -I https://pvabazaar.org
+
+# Check gh-pages branch content
+git fetch origin gh-pages && git ls-tree -r origin/gh-pages --name-only | head -20
 
 # Check if backend is up
 curl https://your-backend.vercel.app/api/health

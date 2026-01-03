@@ -77,10 +77,25 @@ else
 fi
 
 echo ""
+echo "9️⃣ Checking gh-pages deployment..."
+if git ls-remote --heads origin gh-pages &>/dev/null; then
+  echo "   ✅ gh-pages branch exists"
+  # Fetch and check gh-pages content
+  git fetch origin gh-pages --quiet 2>/dev/null || true
+  if git ls-tree -r origin/gh-pages --name-only 2>/dev/null | grep -q '^index.html$'; then
+    echo "   ✅ gh-pages has index.html at root"
+  else
+    echo "   ⚠️  gh-pages missing index.html at root (check workflow)"
+  fi
+else
+  echo "   ⚠️  gh-pages branch not yet created (will be created on first deploy)"
+fi
+
+echo ""
 echo "📊 Verification Complete!"
 echo ""
 echo "Next steps:"
 echo "  1. Run './test-app.sh' to test locally"
-echo "  2. Run 'cd Frontend && npm run build' to build for production"
-echo "  3. Deploy dist folder to GitHub Pages"
+echo "  2. Push to main to trigger GitHub Actions deployment"
+echo "  3. Monitor: https://github.com/PVAGR/pva-bazaar-app/actions"
 echo "  4. Deploy backend folder to Vercel"
