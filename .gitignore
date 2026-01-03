@@ -1,10 +1,14 @@
-# Secrets and environment files
+# Secrets and environment files (but allow production config)
 .env
-.env.*
+.env.local
+.env.development
+.env.test
 */.env
-*/.env.*
+*/.env.local
 .vercel/*.env*
 .vercel/*.local
+# ALLOW .env.production - it only contains non-secret API URLs
+!Frontend/.env.production
 
 # Node modules and logs (keep minimal)
 node_modules/
@@ -24,9 +28,9 @@ storybook-static
 .vercel
 pva-bazaar-app.env
 
-# Ignore env files anywhere in the repo
+# Ignore most env files anywhere in the repo
 **/.env
-**/*.env
+**/.env.local
 .env*.local
 /Frontend/archive.html
 /Frontend/private/
