@@ -122,6 +122,7 @@ app.use(async (req, res, next) => {
   } catch (err) {
     res.status(503).json({ ok: false, message: 'Database connection failed', error: err.message });
   }
+});
 
 // Import routes
 const artifactsRoutes = require('../routes/artifacts');
