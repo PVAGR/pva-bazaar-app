@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blog Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 2rem;
+      background: #f5f5f5;
+    }
+    .btn {
+      padding: 0.5rem 1rem;
+      margin: 0.5rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    .btn-edit {
+      background: #4CAF50;
+      color: white;
+    }
+    .btn-delete {
+      background: #f44336;
+      color: white;
+    }
+    .post {
+      background: white;
+      padding: 1.5rem;
+      margin: 1rem 0;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
+  <h1>Blog Post Test</h1>
+  <p>This is a simple test to verify the edit and delete buttons work.</p>
+  
+  <div class="post">
+    <h2>Test Blog Post</h2>
+    <p>This is a test post content.</p>
+    <div>
+      <button class="btn btn-edit" onclick="editPost()">✏️ Edit</button>
+      <button class="btn btn-delete" onclick="deletePost()">🗑️ Delete</button>
+    </div>
+  </div>
+
+  <script>
+    function editPost() {
+      alert('Edit button clicked! This would open the editor.');
+      console.log('Edit function called');
+    }
+    
+    function deletePost() {
+      if (confirm('Delete this post?')) {
+        alert('Post would be deleted!');
+        console.log('Delete function called');
+      }
+    }
+  </script>
+</body>
+</html>

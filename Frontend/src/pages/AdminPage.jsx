@@ -23,6 +23,7 @@ export default function AdminPage() {
   
   const [savedEntries, setSavedEntries] = useState([]);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [editingEntry, setEditingEntry] = useState(null);
 
   // Check if already authenticated with NEW credentials system
   useEffect(() => {
@@ -80,29 +81,74 @@ export default function AdminPage() {
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    // Create new entry with unique ID
-    const newEntry = {
-      id: `custom-${Date.now()}`,
-      title: formData.title,
-      file: `${formData.title.toLowerCase().replace(/\s+/g, '-')}.md`,
-      category: formData.category,
-      description: formData.description,
-      wordCount: formData.wordCount,
-      content: formData.content,
-      createdAt: new Date().toISOString(),
-      priority: 1
-    };
+    if (editingEntry) {
+      // Update existing entry
+      const updatedEntries = savedEntries.map(entry => 
+        entry.id === editingEntry.id 
+          ? {
+              ...entry,
+              title: formData.title,
+              file: `${formData.title.toLowerCase().replace(/\s+/g, '-')}.md`,
+              category: formData.category,
+              description: formData.description,
+              wordCount: formData.wordCount,
+              content: formData.content,
+              updatedAt: new Date().toISOString()
+            }
+          : entry
+      );
+      setSavedEntries(updatedEntries);
+      localStorage.setItem('custom-archive-entries', JSON.stringify(updatedEntries));
+      setEditingEntry(null);
+    } else {
+      // Create new entry with unique ID
+      const newEntry = {
+        id: `custom-${Date.now()}`,
+        title: formData.title,
+        file: `${formData.title.toLowerCase().replace(/\s+/g, '-')}.md`,
+        category: formData.category,
+        description: formData.description,
+        wordCount: formData.wordCount,
+        content: formData.content,
+        createdAt: new Date().toISOString(),
+        priority: 1
+      };
 
-    // Save to localStorage
-    const updatedEntries = [...savedEntries, newEntry];
-    setSavedEntries(updatedEntries);
-    localStorage.setItem('custom-archive-entries', JSON.stringify(updatedEntries));
+      // Save to localStorage
+      const updatedEntries = [...savedEntries, newEntry];
+      setSavedEntries(updatedEntries);
+      localStorage.setItem('custom-archive-entries', JSON.stringify(updatedEntries));
+    }
 
     // Show success message
     setShowSuccess(true);
     setTimeout(() => setShowSuccess(false), 3000);
 
     // Reset form
+    setFormData({
+      title: '',
+      category: 'Personal',
+      description: '',
+      content: '',
+      wordCount: '0'
+    });
+  };
+
+  const handleEdit = (entry) => {
+    setEditingEntry(entry);
+    setFormData({
+      title: entry.title,
+      category: entry.category,
+      description: entry.description,
+      content: entry.content,
+      wordCount: entry.wordCount
+    });
+    // Scroll to form
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingEntry(null);
     setFormData({
       title: '',
       category: 'Personal',
@@ -219,16 +265,25 @@ export default function AdminPage() {
             ) : (
               <div className="entries-list">
                 {savedEntries.map(entry => (
-                  <div key={entry.id} className="entry-preview">
+                  <div 
+                    key={entry.id} 
+                    className={`entry-preview ${editingEntry?.id === entry.id ? 'active' : ''}`}
+                    onClick={() => handleEdit(entry)}
+                  >
                     <div className="entry-preview-header">
                       <strong>{entry.title}</strong>
-                      <button 
-                        onClick={() => handleDelete(entry.id)}
-                        className="delete-btn"
-                        title="Delete entry"
-                      >
-                        🗑️
-                      </button>
+                      <div className="entry-actions">
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(entry.id);
+                          }}
+                          className="delete-btn"
+                          title="Delete entry"
+                        >
+                          🗑️
+                        </button>
+                      </div>
                     </div>
                     <span className="entry-category">{entry.category}</span>
                     <span className="entry-words">{entry.wordCount} words</span>
@@ -241,11 +296,18 @@ export default function AdminPage() {
 
         <div className="admin-main">
           <div className="form-card">
-            <h2>✍️ Create New Archive Entry</h2>
+            <h2>{editingEntry ? '✏️ Edit Archive Entry' : '✍️ Create New Archive Entry'}</h2>
+            
+            {editingEntry && (
+              <div className="info-message">
+                📝 Editing: <strong>{editingEntry.title}</strong>
+                <button onClick={handleCancelEdit} className="cancel-edit-btn">✕ Cancel</button>
+              </div>
+            )}
             
             {showSuccess && (
               <div className="success-message">
-                ✅ Entry saved successfully! It will appear in the archive library.
+                ✅ Entry {editingEntry ? 'updated' : 'saved'} successfully! It will appear in the archive library.
               </div>
             )}
 
@@ -325,7 +387,7 @@ Your text...
               </div>
 
               <button type="submit" className="submit-btn">
-                💾 Save Entry to Archive
+                {editingEntry ? '✅ Update Entry' : '💾 Save Entry to Archive'}
               </button>
             </form>
           </div>
