@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import './AdminPage.css';
 
 export default function AdminPage() {
@@ -173,6 +174,9 @@ export default function AdminPage() {
         <div className="header-content">
           <h1>⚙️ Archive Admin Panel</h1>
           <div className="header-actions">
+            <Link to="/" className="home-btn">
+              🏠 Home
+            </Link>
             <button 
               className="theme-toggle" 
               onClick={() => {

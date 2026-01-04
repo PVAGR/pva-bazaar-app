@@ -172,6 +172,28 @@
   z-index: 1000;
 }
 
+.home-btn {
+  padding: 0.6rem 1.2rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-primary);
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.95rem;
+}
+
+.home-btn:hover {
+  background: var(--highlight);
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: translateY(-1px);
+}
+
 .logout-btn {
   padding: 0.6rem 1.2rem;
   background: rgba(255, 255, 255, 0.05);
