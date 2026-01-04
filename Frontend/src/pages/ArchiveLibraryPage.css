@@ -113,8 +113,28 @@
 .archive-sidebar {
   background: rgba(0, 0, 0, 0.4);
   border-right: 1px solid #333;
-  height: 100%
+  height: 100%;
   max-height: calc(100vh - 200px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+.archive-sidebar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.archive-sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.archive-sidebar::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+.archive-sidebar::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
 }
 
 .category-filter {
