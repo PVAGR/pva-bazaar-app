@@ -2,8 +2,13 @@ const express = require('express');
 const router = express.Router();
 const VectorSearchService = require('../utils/vectorSearchService');
 const Artifact = require('../models/Artifact');
+const ArchiveEntry = require('../models/ArchiveEntry');
 
 const vectorSearch = new VectorSearchService();
+
+function escapeRegExp(str) {
+  return String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
 // Initialize optional vector DB lazily
 (async () => {
   try {
@@ -33,13 +38,27 @@ router.get('/text', async (req, res) => {
     if (!q) {
       return res.status(400).json({ success: false, error: 'Query parameter "q" is required' });
     }
-    const results = await Artifact.find(
-      { $text: { $search: q } },
-      { score: { $meta: 'textScore' } },
-    )
-      .sort({ score: { $meta: 'textScore' } })
-      .limit(parseInt(limit));
-    res.json({ success: true, query: q, results: results, count: results.length });
+
+    const qSafe = String(q).slice(0, 100);
+    const regex = new RegExp(escapeRegExp(qSafe), 'i');
+    const lim = Math.min(parseInt(limit, 10) || 10, 50);
+
+    const results = await ArchiveEntry.find({
+      $or: [
+        { title: regex },
+        { contentHtml: regex },
+        { excerpt: regex },
+        { tags: regex },
+        { category: regex },
+      ],
+    })
+      .select('title date excerpt category tags location externalId createdAt')
+      .sort({ date: -1, createdAt: -1 })
+      .limit(lim)
+      .lean();
+
+    const normalized = results.map((e) => ({ ...e, id: e._id || e.id }));
+    res.json({ success: true, query: qSafe, results: normalized, count: normalized.length });
   } catch (error) {
     console.error('Text search error:', error);
     res.status(500).json({ success: false, error: 'An error occurred during search' });

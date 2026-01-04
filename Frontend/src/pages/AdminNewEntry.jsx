@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createArchiveEntry, requestDevToken } from '../lib/archiveApi.js';
-import { addLocalEntry } from '../lib/entries.js';
+import { createArchiveEntry, requestAdminToken } from '../lib/archiveApi.js';
 
 export default function AdminNewEntry({ onCreated }) {
   const navigate = useNavigate();
@@ -17,9 +16,9 @@ export default function AdminNewEntry({ onCreated }) {
   const ensureToken = async () => {
     let token = localStorage.getItem('admin:token') || '';
     if (token) return token;
-    const secret = prompt('Enter dev admin secret');
+    const secret = prompt('Enter admin secret');
     if (!secret) throw new Error('No secret provided');
-    token = await requestDevToken(secret);
+    token = await requestAdminToken(secret);
     localStorage.setItem('admin:token', token);
     return token;
   };
@@ -43,16 +42,13 @@ export default function AdminNewEntry({ onCreated }) {
       const token = await ensureToken();
       const created = await createArchiveEntry(entry, token);
       const newId = created._id || created.id || entry.id;
-      addLocalEntry({ ...entry, id: newId });
-      onCreated?.();
+      await onCreated?.(); // refresh from backend
       setStatus('Saved to backend');
       navigate(`/entry/${newId}`);
     } catch (err) {
-      console.error('Save failed, storing locally', err);
-      addLocalEntry(entry);
-      onCreated?.();
-      setStatus('Stored locally (backend unavailable)');
-      navigate(`/entry/${entry.id}`);
+      console.error('Save failed', err);
+      setStatus('Failed to save');
+      alert(`Failed to save entry: ${err.message}\n\nPlease check your connection and try again.`);
     } finally {
       setSaving(false);
     }
