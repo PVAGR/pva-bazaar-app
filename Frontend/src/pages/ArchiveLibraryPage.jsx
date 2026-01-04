@@ -163,7 +163,8 @@ export default function ArchiveLibraryPage() {
   const [selectedEntry, setSelectedEntry] = useState(null);
   const [markdown, setMarkdown] = useState('');
   const [loading, setLoading] = useState(false);
-  const [allEntries, setAllEntries] = useState(archiveEntries);
+  const [customEntries, setCustomEntries] = useState([]);
+  const [viewMode, setViewMode] = useState('archive'); // 'archive' or 'blog'
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem('archive-theme');
     return saved ? saved === 'dark' : true;
@@ -171,15 +172,27 @@ export default function ArchiveLibraryPage() {
 
   // Load custom entries from localStorage
   useEffect(() => {
-    const customEntries = localStorage.getItem('custom-archive-entries');
-    if (customEntries) {
-      try {
-        const parsed = JSON.parse(customEntries);
-        setAllEntries([...archiveEntries, ...parsed]);
-      } catch (error) {
-        console.error('Failed to load custom entries:', error);
+    const loadCustomEntries = () => {
+      const stored = localStorage.getItem('custom-archive-entries');
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          setCustomEntries(parsed);
+        } catch (error) {
+          console.error('Failed to load custom entries:', error);
+        }
       }
-    }
+    };
+    
+    loadCustomEntries();
+    
+    // Listen for storage changes (when new entries are added)
+    const handleStorageChange = () => {
+      loadCustomEntries();
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   useEffect(() => {
@@ -188,10 +201,13 @@ export default function ArchiveLibraryPage() {
 
   const categories = ['All', 'Index', 'Fiction', 'Spiritual', 'Technology', 'Business', 'Personal', 'Philosophy', 'Wisdom', 'Architecture', 'Strategic'];
 
+  // Get entries based on view mode
+  const currentEntries = viewMode === 'archive' ? archiveEntries : customEntries;
+  
   const filteredEntries =
     selectedCategory === 'All'
-      ? allEntries
-      : allEntries.filter((e) => e.category === selectedCategory);
+      ? currentEntries
+      : currentEntries.filter((e) => e.category === selectedCategory);
 
   const loadMarkdown = async (entry) => {
     setLoading(true);
@@ -266,15 +282,42 @@ export default function ArchiveLibraryPage() {
             </button>
           </div>
         </div>
+        
+        <div className="view-mode-toggle">
+          <button 
+            className={`view-btn ${viewMode === 'archive' ? 'active' : ''}`}
+            onClick={() => {
+              setViewMode('archive');
+              setSelectedEntry(null);
+              setMarkdown('');
+            }}
+          >
+            📚 Original Archive ({archiveEntries.length})
+          </button>
+          <button 
+            className={`view-btn ${viewMode === 'blog' ? 'active' : ''}`}
+            onClick={() => {
+              setViewMode('blog');
+              setSelectedEntry(null);
+              setMarkdown('');
+              setSelectedCategory('All');
+            }}
+          >
+            ✍️ New Blog Posts ({customEntries.length})
+          </button>
+        </div>
+
         <p className="archive-subtitle">
-          110,000+ words • Ages 24-28 (2020-2026) • Every line preserved
+          {viewMode === 'archive' 
+            ? '110,000+ words • Ages 24-28 (2020-2026) • Every line preserved'
+            : 'Fresh perspectives and new stories starting 2026'}
         </p>
         <div className="archive-stats">
-          <span>{allEntries.length} Documents</span>
+          <span>{currentEntries.length} {viewMode === 'archive' ? 'Documents' : 'Posts'}</span>
           <span>•</span>
           <span>12 Categories</span>
           <span>•</span>
-          <span>40+ Distinct Works</span>
+          <span>{viewMode === 'archive' ? '40+ Distinct Works' : 'Updated Regularly'}</span>
         </div>
       </header>
 
@@ -319,7 +362,7 @@ export default function ArchiveLibraryPage() {
         </aside>
 
         <main className="archive-content">
-          {!selectedEntry && (
+          {!selectedEntry && viewMode === 'archive' && (
             <div className="archive-welcome">
               <h2>Welcome to the Archive</h2>
               <p>
@@ -339,6 +382,31 @@ export default function ArchiveLibraryPage() {
                   📖 Read the Novel (The Man from Taured)
                 </button>
               </div>
+            </div>
+          )}
+
+          {!selectedEntry && viewMode === 'blog' && (
+            <div className="archive-welcome">
+              <h2>New Blog Posts</h2>
+              {customEntries.length === 0 ? (
+                <>
+                  <p>
+                    No blog posts yet. This section will display new writings created from 2026 onwards.
+                  </p>
+                  <p>
+                    Visit the <a href="#/admin" style={{color: 'var(--accent)', textDecoration: 'underline'}}>Admin Panel</a> to create your first blog post.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p>
+                    Fresh perspectives and evolving thoughts starting 2026. Select a post from the sidebar to read.
+                  </p>
+                  <p className="blog-count">
+                    {customEntries.length} {customEntries.length === 1 ? 'post' : 'posts'} published
+                  </p>
+                </>
+              )}
             </div>
           )}
 

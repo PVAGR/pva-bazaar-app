@@ -118,8 +118,16 @@
 .archive-subtitle {
   font-size: 1rem;
   color: var(--text-secondary);
-  margin: 0 0 0.75rem;
+  margin: 0 0 0.5rem;
   line-height: 1.5;
+}
+
+.view-mode-toggle {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin: 1rem 0;
+  padding: 0.5rem 0;
 }
 
 .archive-stats {
@@ -129,6 +137,38 @@
   font-size: 0.9rem;
   color: var(--text-muted);
 }
+
+.view-btn {
+  background: var(--bg-secondary);
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  padding: 0.75rem 1.5rem;
+  font-size: 1.05rem;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+}
+
+.view-btn:hover {
+  background: var(--highlight);
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.view-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.4);
+}
+
 
 .archive-layout {
   display: grid;
