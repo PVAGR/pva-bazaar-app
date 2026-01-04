@@ -16,8 +16,8 @@
 
 .archive-library.light-theme {
   --bg-primary: linear-gradient(135deg, #1a4d2e 0%, #0f3a24 100%);
-  --bg-secondary: rgba(26, 77, 46, 0.9);
-  --bg-tertiary: rgba(31, 92, 57, 0.85);
+  --bg-secondary: rgba(20, 60, 38, 0.95);
+  --bg-tertiary: rgba(26, 77, 46, 0.9);
   --text-primary: #e8f5e9;
   --text-secondary: #c8e6c9;
   --text-muted: #a5d6a7;
