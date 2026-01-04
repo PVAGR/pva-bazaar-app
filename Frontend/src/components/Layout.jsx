@@ -14,6 +14,7 @@ export default function Layout({ children, onSearch, searchTerm }) {
           <NavLink to="/" end>Home</NavLink>
           <NavLink to="/journal">Journal</NavLink>
           <NavLink to="/archive">Archive</NavLink>
+          <NavLink to="/library">📚 Library</NavLink>
           <NavLink to="/about">About</NavLink>
           <NavLink to="/search">Search</NavLink>
           <NavLink to="/admin">Admin</NavLink>

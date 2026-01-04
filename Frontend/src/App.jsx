@@ -7,6 +7,7 @@ import EntryDetail from './pages/EntryDetail.jsx';
 import AboutPage from './pages/AboutPage.jsx';
 import SearchPage from './pages/SearchPage.jsx';
 import ArchivePage from './pages/ArchivePage.jsx';
+import ArchiveLibraryPage from './pages/ArchiveLibraryPage.jsx';
 import AdminDashboard from './pages/AdminDashboard.jsx';
 import AdminNewEntry from './pages/AdminNewEntry.jsx';
 import { filterEntries, getEntries } from './lib/entries.js';
@@ -94,6 +95,7 @@ export default function App() {
             <Route path="/" element={<HomePage entries={entries} />} />
             <Route path="/journal" element={<JournalPage entries={filtered} searchTerm={searchTerm} />} />
             <Route path="/archive" element={<ArchivePage entries={filtered} searchTerm={searchTerm} />} />
+            <Route path="/library" element={<ArchiveLibraryPage />} />
             <Route path="/entry/:id" element={<EntryDetail entries={entries} />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/search" element={<SearchPage />} />
