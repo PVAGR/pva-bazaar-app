@@ -34,7 +34,7 @@ export default function App() {
           <Route path="/archive" element={<ArchivePage entries={filtered} searchTerm={searchTerm} />} />
           <Route path="/entry/:id" element={<EntryDetail entries={entries} />} />
           <Route path="/about" element={<AboutPage />} />
-          <Route path="/search" element={<SearchPage entries={filtered} searchTerm={searchTerm} />} />
+          <Route path="/search" element={<SearchPage />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/new-journal" element={<AdminNewEntry onCreated={handleNewEntry} />} />
         </Routes>

@@ -17,25 +17,10 @@ function copyRecursive(src, dest) {
 }
 
 const projectRoot = process.cwd();
-const srcDir = path.join(projectRoot, 'src');
-const destDir = path.join(projectRoot, 'dist', 'src');
 
-console.log('Copying', srcDir, '->', destDir, '(excluding api-test.js)');
-
-if (!fs.existsSync(srcDir)) {
-  console.warn('WARNING: src directory not found');
-} else {
-  fs.mkdirSync(destDir, { recursive: true });
-  for (const item of fs.readdirSync(srcDir)) {
-    if (item === 'api-test.js') {
-      console.log('EXCLUDED api-test.js from dist/src');
-      continue;
-    }
-    copyRecursive(path.join(srcDir, item), path.join(destDir, item));
-  }
-}
-
-console.log('Copy complete');
+// REMOVED: src/ copying - Vite bundles already handle all JS/JSX compilation
+// Raw source files should NOT be shipped to production
+console.log('Skipping src/ copy - using Vite-compiled bundles only');
 
 // Also copy static pages and top-level static files so they exist in dist for deployment
 const pagesSrc = path.join(projectRoot, 'pages');
