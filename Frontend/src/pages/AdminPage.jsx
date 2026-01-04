@@ -19,11 +19,19 @@ export default function AdminPage() {
   const [savedEntries, setSavedEntries] = useState([]);
   const [showSuccess, setShowSuccess] = useState(false);
 
-  // Check if already authenticated
+  // Check if already authenticated with NEW credentials system
   useEffect(() => {
     const auth = sessionStorage.getItem('admin-auth');
-    if (auth === 'authenticated') {
+    const authVersion = sessionStorage.getItem('admin-auth-version');
+    
+    // Only accept sessions with v2 (username+password) - invalidate old password-only sessions
+    if (auth === 'authenticated' && authVersion === 'v2') {
       setIsAuthenticated(true);
+    } else {
+      // Clear old sessions
+      sessionStorage.removeItem('admin-auth');
+      sessionStorage.removeItem('admin-auth-version');
+      setIsAuthenticated(false);
     }
     
     // Load saved custom entries
@@ -39,6 +47,7 @@ export default function AdminPage() {
     if (username === 'richyrichaii' && password === 'pva123zxc!') {
       setIsAuthenticated(true);
       sessionStorage.setItem('admin-auth', 'authenticated');
+      sessionStorage.setItem('admin-auth-version', 'v2'); // Mark as new version with username
       setError('');
     } else {
       setError('Invalid username or password. Access denied.');
@@ -48,6 +57,7 @@ export default function AdminPage() {
   const handleLogout = () => {
     setIsAuthenticated(false);
     sessionStorage.removeItem('admin-auth');
+    sessionStorage.removeItem('admin-auth-version');
     setUsername('');
     setPassword('');
   };
