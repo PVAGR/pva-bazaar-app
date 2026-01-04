@@ -15,18 +15,18 @@
 }
 
 .archive-library.light-theme {
-  --bg-primary: linear-gradient(135deg, #f0f7f0 0%, #e8f5e8 100%);
-  --bg-secondary: rgba(245, 250, 245, 0.95);
-  --bg-tertiary: rgba(248, 252, 248, 0.9);
-  --text-primary: #2d5016;
-  --text-secondary: #4a6741;
-  --text-muted: #6b8070;
-  --accent: #5a9367;
-  --accent-hover: #4a7d56;
-  --border: #d4e7d4;
-  --border-accent: #5a9367;
-  --highlight: rgba(90, 147, 103, 0.08);
-  --highlight-strong: rgba(90, 147, 103, 0.15);
+  --bg-primary: linear-gradient(135deg, #1a4d2e 0%, #0f3a24 100%);
+  --bg-secondary: rgba(26, 77, 46, 0.9);
+  --bg-tertiary: rgba(31, 92, 57, 0.85);
+  --text-primary: #e8f5e9;
+  --text-secondary: #c8e6c9;
+  --text-muted: #a5d6a7;
+  --accent: #66bb6a;
+  --accent-hover: #81c784;
+  --border: #2e7d4e;
+  --border-accent: #66bb6a;
+  --highlight: rgba(102, 187, 106, 0.15);
+  --highlight-strong: rgba(102, 187, 106, 0.25);
 }
 
 .archive-library {
