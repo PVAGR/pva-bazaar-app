@@ -123,6 +123,16 @@ export default function AdminPage() {
   if (!isAuthenticated) {
     return (
       <div className={`admin-page ${darkMode ? 'dark-theme' : 'light-theme'}`}>
+        <button 
+          className="theme-toggle login-theme-toggle" 
+          onClick={() => {
+            setDarkMode(!darkMode);
+            localStorage.setItem('archive-theme', !darkMode ? 'dark' : 'light');
+          }}
+          aria-label="Toggle theme"
+        >
+          {darkMode ? '☀️' : '🌙'}
+        </button>
         <div className="admin-login">
           <div className="login-card">
             <h1>🔒 Admin Access</h1>
@@ -162,9 +172,21 @@ export default function AdminPage() {
       <div className="admin-header">
         <div className="header-content">
           <h1>⚙️ Archive Admin Panel</h1>
-          <button onClick={handleLogout} className="logout-btn">
-            Logout
-          </button>
+          <div className="header-actions">
+            <button 
+              className="theme-toggle" 
+              onClick={() => {
+                setDarkMode(!darkMode);
+                localStorage.setItem('archive-theme', !darkMode ? 'dark' : 'light');
+              }}
+              aria-label="Toggle theme"
+            >
+              {darkMode ? '☀️' : '🌙'}
+            </button>
+            <button onClick={handleLogout} className="logout-btn">
+              Logout
+            </button>
+          </div>
         </div>
       </div>
 
