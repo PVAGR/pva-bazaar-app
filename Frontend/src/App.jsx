@@ -8,13 +8,11 @@ import './base.css';
 export default function App() {
   return (
     <HashRouter>
-      <Layout>
-        <Routes>
-          <Route path="/" element={<ArchiveLibraryPage />} />
-          <Route path="/library" element={<ArchiveLibraryPage />} />
-          <Route path="/about" element={<AboutPage />} />
-        </Routes>
-      </Layout>
+      <Routes>
+        <Route path="/" element={<ArchiveLibraryPage />} />
+        <Route path="/library" element={<ArchiveLibraryPage />} />
+        <Route path="/about" element={<AboutPage />} />
+      </Routes>
     </HashRouter>
   );
 }

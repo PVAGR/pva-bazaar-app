@@ -1,14 +1,24 @@
 .archive-library {
   min-height: 100vh;
+  height: 100vh;
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
   color: #e0e0e0;
+  margin: 0;
+  padding: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
 }
 
 .archive-header {
-  padding: 3rem 2rem 2rem;
+  padding: 2rem 2rem 1.5rem;
   text-align: center;
   background: rgba(0, 0, 0, 0.3);
   border-bottom: 2px solid #4a90e2;
+  flex-shrink: 0;
 }
 
 .archive-header h1 {
@@ -35,13 +45,14 @@
   display: grid;
   grid-template-columns: 350px 1fr;
   gap: 0;
-  min-height: calc(100vh - 200px);
+  height: calc(100vh - 180px);
+  overflow: hidden;
 }
 
 .archive-sidebar {
   background: rgba(0, 0, 0, 0.4);
   border-right: 1px solid #333;
-  overflow-y: auto;
+  height: 100%
   max-height: calc(100vh - 200px);
 }
 
@@ -151,7 +162,7 @@
 .archive-content {
   padding: 2rem;
   overflow-y: auto;
-  max-height: calc(100vh - 200px);
+  height: 100%;
 }
 
 .archive-welcome {
