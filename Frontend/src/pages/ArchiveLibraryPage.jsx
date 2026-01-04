@@ -163,6 +163,14 @@ export default function ArchiveLibraryPage() {
   const [selectedEntry, setSelectedEntry] = useState(null);
   const [markdown, setMarkdown] = useState('');
   const [loading, setLoading] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => {
+    const saved = localStorage.getItem('archive-theme');
+    return saved ? saved === 'dark' : true;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('archive-theme', darkMode ? 'dark' : 'light');
+  }, [darkMode]);
 
   const categories = ['All', 'Index', 'Fiction', 'Spiritual', 'Technology', 'Business', 'Personal', 'Philosophy', 'Wisdom', 'Architecture', 'Strategic'];
 
@@ -223,9 +231,18 @@ export default function ArchiveLibraryPage() {
   };
 
   return (
-    <div className="archive-library">
+    <div className={`archive-library ${darkMode ? 'dark-theme' : 'light-theme'}`}>
       <header className="archive-header">
-        <h1>📚 The Complete Archive</h1>
+        <div className="header-content">
+          <h1>📚 The Complete Archive</h1>
+          <button 
+            className="theme-toggle" 
+            onClick={() => setDarkMode(!darkMode)}
+            aria-label="Toggle theme"
+          >
+            {darkMode ? '☀️' : '🌙'}
+          </button>
+        </div>
         <p className="archive-subtitle">
           110,000+ words • Ages 24-28 (2020-2026) • Every line preserved
         </p>
