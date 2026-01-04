@@ -3,6 +3,7 @@ import './AdminPage.css';
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   
@@ -34,19 +35,20 @@ export default function AdminPage() {
 
   const handleLogin = (e) => {
     e.preventDefault();
-    // Simple password protection - you should change this password!
-    if (password === 'pvabazaar2026') {
+    // Admin credentials - only richyrichaii can access
+    if (username === 'richyrichaii' && password === 'pva123zxc!') {
       setIsAuthenticated(true);
       sessionStorage.setItem('admin-auth', 'authenticated');
       setError('');
     } else {
-      setError('Invalid password. Access denied.');
+      setError('Invalid username or password. Access denied.');
     }
   };
 
   const handleLogout = () => {
     setIsAuthenticated(false);
     sessionStorage.removeItem('admin-auth');
+    setUsername('');
     setPassword('');
   };
 
@@ -110,15 +112,24 @@ export default function AdminPage() {
         <div className="admin-login">
           <div className="login-card">
             <h1>🔒 Admin Access</h1>
-            <p>Enter password to access the admin panel</p>
+            <p>Enter your credentials to access the admin panel</p>
             <form onSubmit={handleLogin}>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Username"
+                className="login-input"
+                autoFocus
+                required
+              />
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter admin password"
+                placeholder="Password"
                 className="login-input"
-                autoFocus
+                required
               />
               {error && <div className="error-message">{error}</div>}
               <button type="submit" className="login-btn">
