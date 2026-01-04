@@ -6,6 +6,10 @@ export default function AdminPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [darkMode, setDarkMode] = useState(() => {
+    const saved = localStorage.getItem('archive-theme');
+    return saved ? saved === 'dark' : true;
+  });
   
   // Form state for new archive entry
   const [formData, setFormData] = useState({
@@ -118,7 +122,7 @@ export default function AdminPage() {
   // Login screen
   if (!isAuthenticated) {
     return (
-      <div className="admin-page">
+      <div className={`admin-page ${darkMode ? 'dark-theme' : 'light-theme'}`}>
         <div className="admin-login">
           <div className="login-card">
             <h1>🔒 Admin Access</h1>
@@ -154,7 +158,7 @@ export default function AdminPage() {
 
   // Admin panel
   return (
-    <div className="admin-page authenticated">
+    <div className={`admin-page authenticated ${darkMode ? 'dark-theme' : 'light-theme'}`}>
       <div className="admin-header">
         <div className="header-content">
           <h1>⚙️ Archive Admin Panel</h1>
