@@ -255,13 +255,16 @@ export default function ArchiveLibraryPage() {
       <header className="archive-header">
         <div className="header-content">
           <h1>📚 The Complete Archive</h1>
-          <button 
-            className="theme-toggle" 
-            onClick={() => setDarkMode(!darkMode)}
-            aria-label="Toggle theme"
-          >
-            {darkMode ? '☀️' : '🌙'}
-          </button>
+          <div className="header-actions">
+            <Link to="/admin" className="admin-link">⚙️ Admin</Link>
+            <button 
+              className="theme-toggle" 
+              onClick={() => setDarkMode(!darkMode)}
+              aria-label="Toggle theme"
+            >
+              {darkMode ? '☀️' : '🌙'}
+            </button>
+          </div>
         </div>
         <p className="archive-subtitle">
           110,000+ words • Ages 24-28 (2020-2026) • Every line preserved
