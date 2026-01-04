@@ -3,6 +3,7 @@ import { HashRouter, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout.jsx';
 import AboutPage from './pages/AboutPage.jsx';
 import ArchiveLibraryPage from './pages/ArchiveLibraryPage.jsx';
+import AdminPage from './pages/AdminPage.jsx';
 import './base.css';
 
 export default function App() {
@@ -12,6 +13,7 @@ export default function App() {
         <Route path="/" element={<ArchiveLibraryPage />} />
         <Route path="/library" element={<ArchiveLibraryPage />} />
         <Route path="/about" element={<AboutPage />} />
+        <Route path="/admin" element={<AdminPage />} />
       </Routes>
     </HashRouter>
   );

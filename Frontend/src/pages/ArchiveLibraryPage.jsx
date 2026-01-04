@@ -163,10 +163,24 @@ export default function ArchiveLibraryPage() {
   const [selectedEntry, setSelectedEntry] = useState(null);
   const [markdown, setMarkdown] = useState('');
   const [loading, setLoading] = useState(false);
+  const [allEntries, setAllEntries] = useState(archiveEntries);
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem('archive-theme');
     return saved ? saved === 'dark' : true;
   });
+
+  // Load custom entries from localStorage
+  useEffect(() => {
+    const customEntries = localStorage.getItem('custom-archive-entries');
+    if (customEntries) {
+      try {
+        const parsed = JSON.parse(customEntries);
+        setAllEntries([...archiveEntries, ...parsed]);
+      } catch (error) {
+        console.error('Failed to load custom entries:', error);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     localStorage.setItem('archive-theme', darkMode ? 'dark' : 'light');
@@ -176,16 +190,22 @@ export default function ArchiveLibraryPage() {
 
   const filteredEntries =
     selectedCategory === 'All'
-      ? archiveEntries
-      : archiveEntries.filter((e) => e.category === selectedCategory);
+      ? allEntries
+      : allEntries.filter((e) => e.category === selectedCategory);
 
   const loadMarkdown = async (entry) => {
     setLoading(true);
     setSelectedEntry(entry);
     try {
-      const response = await fetch(`/archive/${entry.file}`);
-      const text = await response.text();
-      setMarkdown(text);
+      // Check if it's a custom entry (has content field)
+      if (entry.content) {
+        setMarkdown(entry.content);
+      } else {
+        // Load from file for original entries
+        const response = await fetch(`/archive/${entry.file}`);
+        const text = await response.text();
+        setMarkdown(text);
+      }
     } catch (error) {
       console.error('Failed to load archive entry:', error);
       setMarkdown('# Error\n\nFailed to load this archive entry.');
@@ -247,7 +267,7 @@ export default function ArchiveLibraryPage() {
           110,000+ words • Ages 24-28 (2020-2026) • Every line preserved
         </p>
         <div className="archive-stats">
-          <span>17 Documents</span>
+          <span>{allEntries.length} Documents</span>
           <span>•</span>
           <span>12 Categories</span>
           <span>•</span>
