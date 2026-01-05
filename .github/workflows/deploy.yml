@@ -1,3 +1,4 @@
+# DISABLED (using deploy-frontend.yml instead) '
 name: Deploy Frontend to GitHub Pages
 
 on:
