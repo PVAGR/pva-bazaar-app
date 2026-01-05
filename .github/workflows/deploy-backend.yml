@@ -1,6 +1,7 @@
 name: Deploy Backend to Vercel
 
-on:
+on: []
+
   push:
     branches: [main]
 
