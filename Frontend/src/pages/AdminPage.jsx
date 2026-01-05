@@ -8,7 +8,7 @@ export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [adminCode, setAdminCode] = useState('pva123zxc!'); // Admin secret code for API
+  const [adminCode, setAdminCode] = useState('dev_admin_code'); // Admin secret code for API
   const [error, setError] = useState('');
   const [apiError, setApiError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
