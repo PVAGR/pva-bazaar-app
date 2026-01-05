@@ -333,25 +333,6 @@ export default function AdminPage() {
 
             <form onSubmit={handleSubmit}>
               <div className="form-group">
-                <label htmlFor="adminCode">Admin Secret Code *</label>
-                <input
-                  type="password"
-                  id="adminCode"
-                  value={adminCode}
-                  onChange={(e) => setAdminCode(e.target.value)}
-                  placeholder="Enter admin secret code"
-                  required
-                  style={{
-                    background: '#fffacd',
-                    border: '2px solid #f0e68c'
-                  }}
-                />
-                <small style={{color: '#666', fontSize: '0.85em'}}>
-                  Required to publish entries to the live site
-                </small>
-              </div>
-
-              <div className="form-group">
                 <label htmlFor="title">Title *</label>
                 <input
                   type="text"
