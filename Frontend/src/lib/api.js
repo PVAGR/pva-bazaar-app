@@ -6,62 +6,13 @@ export function getApiBase() {
   const envApiUrl = import.meta.env.VITE_API_URL;
   if (envApiUrl) return envApiUrl;
   
-  // 2. Check localStorage for runtime override
-  try {
-    const stored = localStorage.getItem('api:base');
-    if (stored) return stored.trim();
-  } catch (err) {
-    console.warn('[api] localStorage read failed', err);
-  }
-  
-  // 3. Same-origin fallback (GitHub Pages + Vercel serverless default)
-  return '';
+  // 2. Fallback to production backend
+  return 'https://pva-backend-api.vercel.app';
 }
 
 export async function getApiBaseAsync() {
-  // 1. Build-time env (immediate)
-  const envApiUrl = import.meta.env.VITE_API_URL;
-  if (envApiUrl) return envApiUrl;
-  
-  // 2. Runtime localStorage (immediate)
-  try {
-    const stored = localStorage.getItem('api:base');
-    if (stored) return stored.trim();
-  } catch {}
-  
-  // 3. Runtime config file /api-base.json (async)
-  if (cachedApiBase !== null) return cachedApiBase;
-  if (cachePromise) return cachePromise;
-  
-  cachePromise = (async () => {
-    try {
-      const res = await fetch('/api-base.json');
-      const data = await res.json();
-      cachedApiBase = data.apiUrl || data.base || '';
-      console.log('[api] Loaded from api-base.json:', cachedApiBase);
-      return cachedApiBase;
-    } catch (e) {
-      console.log('[api] api-base.json not found, using same-origin');
-      cachedApiBase = '';
-      return '';
-    } finally {
-      cachePromise = null;
-    }
-  })();
-  
-  return cachePromise;
-}
-
-export function setApiBase(base) {
-  try {
-    if (!base) {
-      localStorage.removeItem('api:base');
-      return;
-    }
-    localStorage.setItem('api:base', base.trim());
-  } catch (err) {
-    console.warn('api base write failed', err);
-  }
+  // Use same logic as getApiBase
+  return getApiBase();
 }
 
 export function apiFetch(path, options = {}) {
@@ -69,4 +20,43 @@ export function apiFetch(path, options = {}) {
   const clean = base ? base.replace(/\/+$/, '') : '';
   const url = clean ? `${clean}${path}` : path;
   return fetch(url, options);
+}
+
+// Archive API functions
+export async function fetchArchiveEntries() {
+  try {
+    const response = await apiFetch('/api/archive');
+    const data = await response.json();
+    if (data.ok && Array.isArray(data.items)) {
+      return data.items;
+    }
+    console.warn('Unexpected archive response:', data);
+    return [];
+  } catch (err) {
+    console.error('Failed to fetch archive entries:', err);
+    return [];
+  }
+}
+
+export async function createArchiveEntry(entry, adminCode) {
+  try {
+    const response = await apiFetch('/api/archive', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Admin-Code': adminCode || '',
+      },
+      body: JSON.stringify(entry),
+    });
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.error || `HTTP ${response.status}`);
+    }
+    
+    return { ok: true, item: data.item };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
 }

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { fetchArchiveEntries } from '../lib/api';
 import './ArchiveLibraryPage.css';
 
 const archiveEntries = [
@@ -170,29 +171,22 @@ export default function ArchiveLibraryPage() {
     return saved ? saved === 'dark' : true;
   });
 
-  // Load custom entries from localStorage
+  // Load custom entries from backend
   useEffect(() => {
-    const loadCustomEntries = () => {
-      const stored = localStorage.getItem('custom-archive-entries');
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored);
-          setCustomEntries(parsed);
-        } catch (error) {
-          console.error('Failed to load custom entries:', error);
-        }
+    const loadCustomEntries = async () => {
+      try {
+        const entries = await fetchArchiveEntries();
+        setCustomEntries(entries);
+      } catch (error) {
+        console.error('Failed to load custom entries from server:', error);
       }
     };
     
     loadCustomEntries();
     
-    // Listen for storage changes (when new entries are added)
-    const handleStorageChange = () => {
-      loadCustomEntries();
-    };
-    
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    // Refresh entries every 30 seconds to show new posts
+    const interval = setInterval(loadCustomEntries, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {

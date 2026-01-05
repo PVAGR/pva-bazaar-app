@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { createArchiveEntry, fetchArchiveEntries } from '../lib/api';
 import './AdminPage.css';
 
 export default function AdminPage() {
+  const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [adminCode, setAdminCode] = useState('dev_admin_code'); // Admin secret code for API
   const [error, setError] = useState('');
+  const [apiError, setApiError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem('archive-theme');
     return saved ? saved === 'dark' : true;
@@ -40,13 +45,17 @@ export default function AdminPage() {
       setIsAuthenticated(false);
     }
     
-    // Load saved custom entries
-    const customEntries = localStorage.getItem('custom-archive-entries');
-    if (customEntries) {
-      setSavedEntries(JSON.parse(customEntries));
-    }
+    // Load saved entries from server
+    loadEntriesFromServer();
   }, []);
-
+  const loadEntriesFromServer = async () => {
+    try {
+      const entries = await fetchArchiveEntries();
+      setSavedEntries(entries);
+    } catch (err) {
+      console.error('Failed to load entries from server:', err);
+    }
+  };
   const handleLogin = (e) => {
     e.preventDefault();
     // Admin credentials - only richyrichaii can access
@@ -78,60 +87,61 @@ export default function AdminPage() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setApiError('');
+    setIsSubmitting(true);
     
-    if (editingEntry) {
-      // Update existing entry
-      const updatedEntries = savedEntries.map(entry => 
-        entry.id === editingEntry.id 
-          ? {
-              ...entry,
-              title: formData.title,
-              file: `${formData.title.toLowerCase().replace(/\s+/g, '-')}.md`,
-              category: formData.category,
-              description: formData.description,
-              wordCount: formData.wordCount,
-              content: formData.content,
-              updatedAt: new Date().toISOString()
-            }
-          : entry
-      );
-      setSavedEntries(updatedEntries);
-      localStorage.setItem('custom-archive-entries', JSON.stringify(updatedEntries));
-      setEditingEntry(null);
-    } else {
-      // Create new entry with unique ID
-      const newEntry = {
-        id: `custom-${Date.now()}`,
-        title: formData.title,
-        file: `${formData.title.toLowerCase().replace(/\s+/g, '-')}.md`,
-        category: formData.category,
-        description: formData.description,
-        wordCount: formData.wordCount,
-        content: formData.content,
-        createdAt: new Date().toISOString(),
-        priority: 1
-      };
+    try {
+      if (editingEntry) {
+        // For now, editing is not supported via API - show message
+        setApiError('Editing existing entries is not yet supported. Please create a new entry.');
+        setIsSubmitting(false);
+        return;
+      } else {
+        // Create new entry via API
+        const entryData = {
+          title: formData.title,
+          category: formData.category,
+          description: formData.description,
+          content: formData.content,
+          wordCount: formData.wordCount,
+        };
 
-      // Save to localStorage
-      const updatedEntries = [...savedEntries, newEntry];
-      setSavedEntries(updatedEntries);
-      localStorage.setItem('custom-archive-entries', JSON.stringify(updatedEntries));
+        const result = await createArchiveEntry(entryData, adminCode);
+        
+        if (!result.ok) {
+          if (result.error.includes('401') || result.error.toLowerCase().includes('unauthorized')) {
+            setApiError('Admin code incorrect. Please check your secret code.');
+          } else {
+            setApiError(`Failed to create entry: ${result.error}`);
+          }
+          setIsSubmitting(false);
+          return;
+        }
+
+        // Success - refresh entries
+        await loadEntriesFromServer();
+      }
+
+      // Show success message
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
+
+      // Reset form
+      setFormData({
+        title: '',
+        category: 'Personal',
+        description: '',
+        content: '',
+        wordCount: '0'
+      });
+      setApiError('');
+    } catch (err) {
+      setApiError(`Error: ${err.message}`);
+    } finally {
+      setIsSubmitting(false);
     }
-
-    // Show success message
-    setShowSuccess(true);
-    setTimeout(() => setShowSuccess(false), 3000);
-
-    // Reset form
-    setFormData({
-      title: '',
-      category: 'Personal',
-      description: '',
-      content: '',
-      wordCount: '0'
-    });
   };
 
   const handleEdit = (entry) => {
@@ -159,11 +169,8 @@ export default function AdminPage() {
   };
 
   const handleDelete = (id) => {
-    if (window.confirm('Are you sure you want to delete this entry?')) {
-      const updatedEntries = savedEntries.filter(entry => entry.id !== id);
-      setSavedEntries(updatedEntries);
-      localStorage.setItem('custom-archive-entries', JSON.stringify(updatedEntries));
-    }
+    // Deletion not supported via API yet - show message
+    alert('Deletion is not yet supported. Please contact the administrator to remove entries.');
   };
 
   // Login screen
@@ -311,7 +318,39 @@ export default function AdminPage() {
               </div>
             )}
 
+            {apiError && (
+              <div className="error-message" style={{
+                background: '#fee',
+                color: '#c33',
+                padding: '12px',
+                borderRadius: '8px',
+                marginBottom: '16px',
+                border: '1px solid #fcc'
+              }}>
+                ❌ {apiError}
+              </div>
+            )}
+
             <form onSubmit={handleSubmit}>
+              <div className="form-group">
+                <label htmlFor="adminCode">Admin Secret Code *</label>
+                <input
+                  type="password"
+                  id="adminCode"
+                  value={adminCode}
+                  onChange={(e) => setAdminCode(e.target.value)}
+                  placeholder="Enter admin secret code"
+                  required
+                  style={{
+                    background: '#fffacd',
+                    border: '2px solid #f0e68c'
+                  }}
+                />
+                <small style={{color: '#666', fontSize: '0.85em'}}>
+                  Required to publish entries to the live site
+                </small>
+              </div>
+
               <div className="form-group">
                 <label htmlFor="title">Title *</label>
                 <input
@@ -386,8 +425,8 @@ Your text...
                 </div>
               </div>
 
-              <button type="submit" className="submit-btn">
-                {editingEntry ? '✅ Update Entry' : '💾 Save Entry to Archive'}
+              <button type="submit" className="submit-btn" disabled={isSubmitting}>
+                {isSubmitting ? '⏳ Publishing...' : (editingEntry ? '✅ Update Entry' : '💾 Publish to Live Site')}
               </button>
             </form>
           </div>
