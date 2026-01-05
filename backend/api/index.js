@@ -32,6 +32,8 @@ app.use(
   cors({
     origin: (origin, callback) => {
       if (process.env.ALLOW_ALL_ORIGINS === 'true') return callback(null, true);
+      
+      // Default allowed origins
       const allowed = [
         'http://localhost:3000',
         'http://localhost:5173',
@@ -44,7 +46,16 @@ app.use(
         'https://pvabazaar.org',
         'https://www.pvabazaar.org',
       ];
-      if (process.env.ALLOWED_ORIGIN) allowed.push(process.env.ALLOWED_ORIGIN);
+      
+      // Support comma-separated ALLOWED_ORIGIN for multiple production domains
+      if (process.env.ALLOWED_ORIGIN) {
+        const additionalOrigins = process.env.ALLOWED_ORIGIN
+          .split(',')
+          .map(o => o.trim())
+          .filter(o => o.length > 0);
+        allowed.push(...additionalOrigins);
+      }
+      
       // Allow requests with no origin (like curl or server-to-server)
       if (!origin || allowed.includes(origin)) return callback(null, true);
       return callback(new Error('CORS not allowed for origin: ' + origin));
@@ -248,12 +259,29 @@ app.get('/api/health', async (req, res) => {
     console.warn('⚠️ Health check DB connection failed:', dbError);
   }
 
+  // Prepare allowed origins for display (safe - no secrets)
+  const allowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'https://pvabazaar.org',
+    'https://www.pvabazaar.org',
+  ];
+  if (process.env.ALLOWED_ORIGIN) {
+    const additionalOrigins = process.env.ALLOWED_ORIGIN
+      .split(',')
+      .map(o => o.trim())
+      .filter(o => o.length > 0);
+    allowedOrigins.push(...additionalOrigins);
+  }
+
   // Always return 200 with status info
   res.json({
     ok: true,
     message: 'PVABazaar API is running',
     mongo: mongoConnected,
     ready: process.env.API_READY !== 'false' && mongoConnected,
+    nodeEnv: process.env.NODE_ENV || 'development',
+    allowedOrigins: allowedOrigins,
     timestamp: new Date().toISOString(),
     ...(dbError && { dbError }),
   });

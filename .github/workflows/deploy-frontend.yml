@@ -29,7 +29,8 @@ jobs:
 
       - name: Install and Build
         env:
-          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+          # Use GitHub repository variable (not secret) with fallback
+          VITE_API_URL: ${{ vars.VITE_API_URL || 'https://pva-backend-api.vercel.app' }}
         run: |
           cd Frontend
           npm ci

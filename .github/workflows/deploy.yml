@@ -40,6 +40,9 @@ jobs:
         run: npm install --no-audit --no-fund
 
       - name: Build
+        env:
+          # Use GitHub repository variable (set in Settings > Variables) with fallback
+          VITE_API_URL: ${{ vars.VITE_API_URL || 'https://pva-backend-api.vercel.app' }}
         run: npm run build
 
       - name: Add custom domain CNAME
