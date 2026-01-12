@@ -1,11 +1,13 @@
-// JavaScript file with content
-console.log('App starting');
+// JavaScript application file
+console.log('Starting application...');
 
-function test() {
-    return 'test';
+// Function to initialize the app
+function initializeApp() {
+    console.log('App initialized');
 }
 
-// Line 134 - potential syntax error
-const broken = null; // Fixed syntax error
+// Line 134 - syntax error to fix
+const brokenVariable = null; // Fixed syntax error
 
-console.log('App loaded');
+// Rest of the code
+console.log('Application loaded successfully');
