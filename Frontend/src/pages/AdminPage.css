@@ -1,8 +1,8 @@
 /* Theme Variables */
 .admin-page.dark-theme {
-  --bg-primary: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-  --bg-secondary: rgba(0, 0, 0, 0.4);
-  --bg-tertiary: rgba(0, 0, 0, 0.3);
+  --bg-primary: linear-gradient(135deg, #0a0a15 0%, #0d0f1a 100%);
+  --bg-secondary: rgba(0, 0, 0, 0.6);
+  --bg-tertiary: rgba(0, 0, 0, 0.5);
   --text-primary: #e0e0e0;
   --text-secondary: #b0b0b0;
   --text-muted: #888;

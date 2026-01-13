@@ -1,8 +1,8 @@
 /* Theme Variables */
 .archive-library.dark-theme {
-  --bg-primary: linear-gradient(135deg, #0a3d62 0%, #1a4d7a 100%);
-  --bg-secondary: rgba(10, 61, 98, 0.6);
-  --bg-tertiary: rgba(10, 61, 98, 0.4);
+  --bg-primary: linear-gradient(135deg, #0a0e27 0%, #1a1a3a 100%);
+  --bg-secondary: rgba(15, 15, 30, 0.8);
+  --bg-tertiary: rgba(20, 20, 40, 0.7);
   --text-primary: #e0f2f1;
   --text-secondary: #b2dfdb;
   --text-muted: #80cbc4;
