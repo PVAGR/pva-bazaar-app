@@ -72,4 +72,16 @@ router.put('/:id', auth, adminOnly, async (req, res) => {
   }
 });
 
+// Delete an entry (admin only)
+router.delete('/:id', auth, adminOnly, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const entry = await ArchiveEntry.findByIdAndDelete(id).lean();
+    if (!entry) return res.status(404).json({ ok: false, message: 'Entry not found' });
+    res.json({ ok: true, message: 'Entry deleted successfully', entry });
+  } catch (err) {
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
 module.exports = router;

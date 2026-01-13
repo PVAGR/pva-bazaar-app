@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { createArchiveEntry, fetchArchiveEntries } from '../lib/api';
+import { createArchiveEntry, fetchArchiveEntries, deleteArchiveEntry } from '../lib/api';
 import './AdminPage.css';
 
 export default function AdminPage() {
@@ -168,9 +168,33 @@ export default function AdminPage() {
     });
   };
 
-  const handleDelete = (id) => {
-    // Deletion not supported via API yet - show message
-    alert('Deletion is not yet supported. Please contact the administrator to remove entries.');
+  const handleDelete = async (id) => {
+    // Show confirmation dialog
+    const confirmDelete = window.confirm(
+      'Are you sure you want to delete this entry? This action cannot be undone.'
+    );
+    
+    if (!confirmDelete) return;
+    
+    try {
+      setIsSubmitting(true);
+      const result = await deleteArchiveEntry(id, adminCode);
+      
+      if (result.ok) {
+        // Remove from list
+        setSavedEntries(prev => prev.filter(entry => entry._id !== id));
+        setShowSuccess(true);
+        setTimeout(() => setShowSuccess(false), 3000);
+      } else {
+        setApiError(result.error || 'Failed to delete entry');
+        setTimeout(() => setApiError(''), 5000);
+      }
+    } catch (err) {
+      setApiError(err.message || 'Error deleting entry');
+      setTimeout(() => setApiError(''), 5000);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Login screen

@@ -60,3 +60,25 @@ export async function createArchiveEntry(entry, adminCode) {
     return { ok: false, error: err.message };
   }
 }
+
+export async function deleteArchiveEntry(id, adminCode) {
+  try {
+    const response = await apiFetch(`/api/archive/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Admin-Code': adminCode || '',
+      },
+    });
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || data.error || `HTTP ${response.status}`);
+    }
+    
+    return { ok: true, message: data.message };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+}
