@@ -72,9 +72,17 @@ router.put('/:id', auth, adminOnly, async (req, res) => {
   }
 });
 
-// Delete an entry (admin only)
-router.delete('/:id', auth, adminOnly, async (req, res) => {
+// Delete an entry (admin secret code only)
+router.delete('/:id', async (req, res) => {
   try {
+    // Verify admin secret code from header
+    const adminCode = req.headers['x-admin-code'];
+    const validAdminCode = process.env.ADMIN_SECRET_CODE || 'pva123zxc!';
+    
+    if (!adminCode || adminCode !== validAdminCode) {
+      return res.status(403).json({ ok: false, message: 'Invalid admin code' });
+    }
+    
     const { id } = req.params;
     const entry = await ArchiveEntry.findByIdAndDelete(id).lean();
     if (!entry) return res.status(404).json({ ok: false, message: 'Entry not found' });
