@@ -1,17 +1,17 @@
 /* Theme Variables */
 .archive-library.dark-theme {
-  --bg-primary: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-  --bg-secondary: rgba(0, 0, 0, 0.4);
-  --bg-tertiary: rgba(0, 0, 0, 0.3);
-  --text-primary: #e0e0e0;
-  --text-secondary: #b0b0b0;
-  --text-muted: #888;
-  --accent: #4a90e2;
-  --accent-hover: #5fa3e8;
-  --border: #333;
-  --border-accent: #4a90e2;
-  --highlight: rgba(74, 144, 226, 0.1);
-  --highlight-strong: rgba(74, 144, 226, 0.2);
+  --bg-primary: linear-gradient(135deg, #0a3d62 0%, #1a4d7a 100%);
+  --bg-secondary: rgba(10, 61, 98, 0.6);
+  --bg-tertiary: rgba(10, 61, 98, 0.4);
+  --text-primary: #e0f2f1;
+  --text-secondary: #b2dfdb;
+  --text-muted: #80cbc4;
+  --accent: #26c6da;
+  --accent-hover: #4dd0e1;
+  --border: #00695c;
+  --border-accent: #26c6da;
+  --highlight: rgba(38, 198, 218, 0.15);
+  --highlight-strong: rgba(38, 198, 218, 0.25);
 }
 
 .archive-library.light-theme {

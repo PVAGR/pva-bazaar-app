@@ -27,34 +27,40 @@ validateEnv();
 // Initialize Express app
 const app = express();
 
+// Helper: Get allowed origins (reused across middlewares)
+function getAllowedOrigins() {
+  const allowed = [
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'http://localhost:8080',
+    'http://localhost:8081',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:5173',
+    'http://127.0.0.1:8080',
+    'http://127.0.0.1:8081',
+    'https://pvabazaar.org',
+    'https://www.pvabazaar.org',
+  ];
+  
+  // Support comma-separated ALLOWED_ORIGIN for multiple production domains
+  if (process.env.ALLOWED_ORIGIN) {
+    const additionalOrigins = process.env.ALLOWED_ORIGIN
+      .split(',')
+      .map(o => o.trim())
+      .filter(o => o.length > 0);
+    allowed.push(...additionalOrigins);
+  }
+  
+  return allowed;
+}
+
 // Middleware
 app.use(
   cors({
     origin: (origin, callback) => {
       if (process.env.ALLOW_ALL_ORIGINS === 'true') return callback(null, true);
       
-      // Default allowed origins
-      const allowed = [
-        'http://localhost:3000',
-        'http://localhost:5173',
-        'http://localhost:8080',
-        'http://localhost:8081',
-        'http://127.0.0.1:3000',
-        'http://127.0.0.1:5173',
-        'http://127.0.0.1:8080',
-        'http://127.0.0.1:8081',
-        'https://pvabazaar.org',
-        'https://www.pvabazaar.org',
-      ];
-      
-      // Support comma-separated ALLOWED_ORIGIN for multiple production domains
-      if (process.env.ALLOWED_ORIGIN) {
-        const additionalOrigins = process.env.ALLOWED_ORIGIN
-          .split(',')
-          .map(o => o.trim())
-          .filter(o => o.length > 0);
-        allowed.push(...additionalOrigins);
-      }
+      const allowed = getAllowedOrigins();
       
       // Allow requests with no origin (like curl or server-to-server)
       if (!origin || allowed.includes(origin)) return callback(null, true);
@@ -63,6 +69,22 @@ app.use(
     credentials: true,
   }),
 );
+
+// Middleware: Ensure CORS headers on all responses (including errors)
+app.use((req, res, next) => {
+  const origin = req.get('origin');
+  const allowed = getAllowedOrigins();
+  
+  // Set CORS headers if origin is allowed or no origin header (server-to-server)
+  if (!origin || allowed.includes(origin)) {
+    res.set('Access-Control-Allow-Origin', origin || 'https://pvabazaar.org');
+    res.set('Access-Control-Allow-Credentials', 'true');
+    res.set('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
+    res.set('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Admin-Code,X-Requested-With');
+  }
+  
+  next();
+});
 // If API is not ready (e.g., missing secrets in production), return 503 for most endpoints
 app.use((req, res, next) => {
   const apiNotReady = process.env.API_READY === 'false';
@@ -290,6 +312,15 @@ app.get('/api/health', async (req, res) => {
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('🚨 Error:', err.stack);
+  
+  // Ensure CORS headers are present on error responses
+  const origin = req.get('origin');
+  const allowed = getAllowedOrigins();
+  if (!origin || allowed.includes(origin)) {
+    res.set('Access-Control-Allow-Origin', origin || 'https://pvabazaar.org');
+    res.set('Access-Control-Allow-Credentials', 'true');
+  }
+  
   res.status(500).json({
     ok: false,
     message: 'Something went wrong!',
@@ -299,6 +330,14 @@ app.use((err, req, res, next) => {
 
 // 404 handler
 app.use((req, res) => {
+  // Ensure CORS headers are present on 404 responses
+  const origin = req.get('origin');
+  const allowed = getAllowedOrigins();
+  if (!origin || allowed.includes(origin)) {
+    res.set('Access-Control-Allow-Origin', origin || 'https://pvabazaar.org');
+    res.set('Access-Control-Allow-Credentials', 'true');
+  }
+  
   res.status(404).json({
     ok: false,
     message: 'API endpoint not found',
