@@ -1,0 +1,5 @@
+/* Minor transitions & theme helpers */
+* { transition: background-color 0.2s ease, color 0.2s ease; }
+hr { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+.link { color: var(--primary); text-decoration: none; }
+.link:hover { color: var(--accent); }
