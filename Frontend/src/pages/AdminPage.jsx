@@ -29,6 +29,7 @@ export default function AdminPage() {
   const [savedEntries, setSavedEntries] = useState([]);
   const [showSuccess, setShowSuccess] = useState(false);
   const [editingEntry, setEditingEntry] = useState(null);
+  const [deleteConfirm, setDeleteConfirm] = useState(null); // {id, title} for confirmation modal
 
   // Check if already authenticated with NEW credentials system
   useEffect(() => {
@@ -168,33 +169,41 @@ export default function AdminPage() {
     });
   };
 
-  const handleDelete = async (id) => {
-    // Show confirmation dialog
-    const confirmDelete = window.confirm(
-      'Are you sure you want to delete this entry? This action cannot be undone.'
-    );
+  const handleDelete = async (id, title) => {
+    // Show custom confirmation modal
+    setDeleteConfirm({ id, title });
+  };
+
+  const confirmDeleteAction = async () => {
+    if (!deleteConfirm) return;
     
-    if (!confirmDelete) return;
+    const { id } = deleteConfirm;
     
     try {
       setIsSubmitting(true);
       const result = await deleteArchiveEntry(id, adminCode);
       
       if (result.ok) {
-        // Remove from list
-        setSavedEntries(prev => prev.filter(entry => entry._id !== id));
+        setSavedEntries(prev => prev.filter(entry => entry._id !== id && entry.id !== id));
         setShowSuccess(true);
         setTimeout(() => setShowSuccess(false), 3000);
+        setDeleteConfirm(null);
       } else {
         setApiError(result.error || 'Failed to delete entry');
         setTimeout(() => setApiError(''), 5000);
+        setDeleteConfirm(null);
       }
     } catch (err) {
       setApiError(err.message || 'Error deleting entry');
       setTimeout(() => setApiError(''), 5000);
+      setDeleteConfirm(null);
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const cancelDelete = () => {
+    setDeleteConfirm(null);
   };
 
   // Login screen
@@ -307,7 +316,7 @@ export default function AdminPage() {
                         <button 
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleDelete(entry.id);
+                            handleDelete(entry._id || entry.id, entry.title);
                           }}
                           className="delete-btn"
                           title="Delete entry"
@@ -456,6 +465,34 @@ Your text...
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm && (
+        <div className="modal-overlay">
+          <div className="delete-confirmation-bubble">
+            <div className="bubble-icon">⚠️</div>
+            <h3>Delete Entry?</h3>
+            <p className="entry-title-confirm">{deleteConfirm.title}</p>
+            <p className="warning-text">This action cannot be undone.</p>
+            
+            <div className="button-group">
+              <button 
+                onClick={cancelDelete}
+                className="cancel-btn"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={confirmDeleteAction}
+                className="confirm-delete-btn"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? '⏳ Deleting...' : '🗑️ Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
