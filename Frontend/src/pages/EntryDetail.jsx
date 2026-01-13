@@ -89,13 +89,13 @@ export default function EntryDetail({ entries = [] }) {
           </div>
           <div className="entry-page__body" dangerouslySetInnerHTML={{ __html: displayEntry.contentHtml || displayEntry.content }} />
         </article>
-
-        <nav className="entry-detail-nav">
-          {prev && <Link to={`#/entry/${prev.id}`} className="nav-link nav-prev">← Previous</Link>}
-          <Link to="#/journal" className="nav-link nav-back">Back to Journal</Link>
-          {next && <Link to={`#/entry/${next.id}`} className="nav-link nav-next">Next →</Link>}
-        </nav>
       </div>
+
+      <nav className="entry-detail-nav">
+        {prev && <Link to={`#/entry/${prev.id}`} className="nav-link nav-prev">← Previous</Link>}
+        <Link to="#/journal" className="nav-link nav-back">Back to Journal</Link>
+        {next && <Link to={`#/entry/${next.id}`} className="nav-link nav-next">Next →</Link>}
+      </nav>
     </section>
   );
 }
