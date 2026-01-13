@@ -59,14 +59,21 @@ export default function AdminPage() {
   };
   const handleLogin = (e) => {
     e.preventDefault();
+    // Trim whitespace from inputs
+    const trimmedUsername = username.trim();
+    const trimmedPassword = password.trim();
+    
     // Admin credentials - only richyrichaii can access
-    if (username === 'richyrichaii' && password === 'pva123zxc!') {
+    if (trimmedUsername === 'richyrichaii' && trimmedPassword === 'pva123zxc!') {
       setIsAuthenticated(true);
       sessionStorage.setItem('admin-auth', 'authenticated');
       sessionStorage.setItem('admin-auth-version', 'v2'); // Mark as new version with username
       setError('');
+      setUsername('');
+      setPassword('');
     } else {
       setError('Invalid username or password. Access denied.');
+      setPassword('');
     }
   };
 
