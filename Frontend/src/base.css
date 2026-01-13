@@ -318,20 +318,20 @@ body {
   align-items: center;
   justify-content: center;
   font-size: 1.2rem;
-  color: #555;
+  color: #fff;
   text-decoration: none;
   border-radius: 8px;
-  background: #f5f9fd;
-  border: 1px solid #d1e3f0;
+  background: #4a90e2;
+  border: 1px solid #4a90e2;
   cursor: pointer;
   transition: all 0.2s;
   line-height: 1;
 }
 
 .entry-home-btn:hover {
-  background: #4a90e2;
+  background: #2d5fa3;
   color: #fff;
-  border-color: #4a90e2;
+  border-color: #2d5fa3;
 }
 
 /* Scrollable Content Area */
