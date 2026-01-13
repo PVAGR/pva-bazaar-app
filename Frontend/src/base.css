@@ -308,6 +308,8 @@ body {
   background: #228b22;
   color: #fff;
   border-color: #228b22;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(34, 139, 34, 0.3);
 }
 
 .entry-home-btn {
@@ -332,6 +334,8 @@ body {
   background: #2d5fa3;
   color: #fff;
   border-color: #2d5fa3;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(45, 95, 163, 0.3);
 }
 
 /* Scrollable Content Area */
@@ -383,6 +387,8 @@ body {
   background: #228b22;
   color: #fff;
   border-color: #228b22;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(34, 139, 34, 0.2);
 }
 
 .nav-prev,
