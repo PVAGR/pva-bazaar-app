@@ -321,17 +321,17 @@ body {
   color: #555;
   text-decoration: none;
   border-radius: 8px;
-  background: #e3f2fd;
-  border: 1px solid #bbdefb;
+  background: #f5f9fd;
+  border: 1px solid #d1e3f0;
   cursor: pointer;
   transition: all 0.2s;
   line-height: 1;
 }
 
 .entry-home-btn:hover {
-  background: #1976d2;
+  background: #4a90e2;
   color: #fff;
-  border-color: #1976d2;
+  border-color: #4a90e2;
 }
 
 /* Scrollable Content Area */
