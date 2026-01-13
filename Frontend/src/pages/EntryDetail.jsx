@@ -94,7 +94,7 @@ export default function EntryDetail({ entries = [] }) {
 
       <nav className="entry-detail-nav">
         {prev && <Link to={`#/entry/${prev.id}`} className="nav-link nav-prev">← Previous</Link>}
-        <Link to="#/journal" className="nav-link nav-back">Back to Journal</Link>
+        <Link to="#/" className="nav-link nav-back">Back to Home</Link>
         {next && <Link to={`#/entry/${next.id}`} className="nav-link nav-next">Next →</Link>}
       </nav>
     </section>
