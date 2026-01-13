@@ -76,6 +76,7 @@ export default function EntryDetail({ entries = [] }) {
   return (
     <section className="entry-detail-container">
       <div className="entry-detail-header">
+        <Link to="#/" className="entry-home-btn" aria-label="Home">🏠</Link>
         <h2 className="entry-detail-title">{displayEntry.title}</h2>
         <Link to="#/journal" className="entry-close-btn" aria-label="Close">✕</Link>
       </div>

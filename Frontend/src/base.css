@@ -310,6 +310,30 @@ body {
   border-color: #228b22;
 }
 
+.entry-home-btn {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  color: #555;
+  text-decoration: none;
+  border-radius: 8px;
+  background: #e3f2fd;
+  border: 1px solid #bbdefb;
+  cursor: pointer;
+  transition: all 0.2s;
+  line-height: 1;
+}
+
+.entry-home-btn:hover {
+  background: #1976d2;
+  color: #fff;
+  border-color: #1976d2;
+}
+
 /* Scrollable Content Area */
 .entry-detail-scrollable {
   flex: 1;
