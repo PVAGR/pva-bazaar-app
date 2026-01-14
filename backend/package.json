@@ -19,6 +19,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongodb-memory-server": "^10.2.0",
     "mongoose": "^7.5.0",
+    "multer": "^2.0.2",
     "serverless-http": "^3.2.0",
     "web3": "^4.16.0"
   },

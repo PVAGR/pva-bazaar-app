@@ -2,9 +2,18 @@ import { defineConfig } from 'vite';
 import path from 'path';
 
 export default defineConfig({
+  base: process.env.VITE_BASE_PATH || '/',
   build: {
     outDir: 'dist',
-    emptyOutDir: true
+    emptyOutDir: true,
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['vite']
+        }
+      }
+    }
   },
   server: {
     port: 3000,
