@@ -417,8 +417,11 @@ async function autoSeed() {
   }
 }
 
-// Export app for serverless adapters and tests
-module.exports = { app, connectToDatabase };
+// Export for Vercel serverless
+module.exports = app;
+
+// Also export connectToDatabase for tests
+module.exports.connectToDatabase = connectToDatabase;
 
 // Start the server only when run directly (local dev)
 if (require.main === module) {
