@@ -1,8 +1,0 @@
-/* Entry detail styles */
-.entryPage__header { margin-bottom: 14px; }
-.entryPage__title { font-size: 28px; }
-.entryPage__meta { color: var(--muted); font-size: 13px; }
-.entryPage__content { font-family: var(--serif); font-size: 18px; line-height: 1.9; }
-.entryPage__nav { margin-top: 18px; display: flex; justify-content: space-between; }
-.entryPage__nav a { text-decoration: none; color: var(--text); }
-.entryPage__nav a:hover { color: var(--primary); }
