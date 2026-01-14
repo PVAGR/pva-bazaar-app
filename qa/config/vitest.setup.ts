@@ -20,16 +20,16 @@ beforeAll(() => {
   // Mock environment variables
   process.env.NODE_ENV = 'test';
   process.env.NEXT_PUBLIC_API_URL = 'http://localhost:3000/api';
-  
+
   // Mock Web3 if needed
   if (typeof window !== 'undefined') {
     (window as any).ethereum = {
       request: () => Promise.resolve(['0x1234567890abcdef']),
       on: () => {},
-      removeListener: () => {}
+      removeListener: () => {},
     };
   }
-  
+
   // Mock console methods in test environment
   global.console = {
     ...console,
@@ -38,7 +38,7 @@ beforeAll(() => {
     debug: () => {},
     info: () => {},
     warn: console.warn,
-    error: console.error
+    error: console.error,
   };
 });
 
@@ -53,7 +53,7 @@ beforeAll(() => {
   accentDark: '#2bb673',
   gold: '#d4af37',
   textLight: '#e8f4f0',
-  textMuted: '#a8b0b9'
+  textMuted: '#a8b0b9',
 };
 
 // Mock fetch for API tests
@@ -62,6 +62,6 @@ beforeAll(() => {
   console.warn(`Mock fetch called with: ${url}`);
   return new Response(JSON.stringify({ message: 'Mock response' }), {
     status: 200,
-    headers: { 'Content-Type': 'application/json' }
+    headers: { 'Content-Type': 'application/json' },
   });
 };

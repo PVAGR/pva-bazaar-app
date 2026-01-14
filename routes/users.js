@@ -20,9 +20,9 @@ router.put('/profile', auth, async (req, res) => {
     const user = await User.findByIdAndUpdate(
       req.user.id,
       { name, email, updatedAt: Date.now() },
-      { new: true }
+      { new: true },
     ).select('-password');
-    
+
     res.json({ ok: true, user });
   } catch (err) {
     res.status(400).json({ ok: false, message: err.message });

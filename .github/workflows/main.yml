@@ -1,0 +1,41 @@
+name: Deploy Frontend to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'Frontend/**'
+      - '.github/workflows/main.yml'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: cd Frontend && npm install
+
+      - name: Build Frontend
+        run: |
+          cd Frontend
+          # Read API base from config file and export for build
+          API_URL=$(node -pe "JSON.parse(require('fs').readFileSync('public/api-base.json', 'utf8')).apiUrl || ''")
+          echo "Building with VITE_API_URL: $API_URL"
+          VITE_API_URL="$API_URL" npm run build
+        env:
+          NODE_ENV: production
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./Frontend/dist
+          cname: pvabazaar.org

@@ -1,145 +1,145 @@
 config:
-  target: "http://localhost:4000"
+  target: 'http://localhost:4000'
   phases:
     - duration: 60
       arrivalRate: 5
-      name: "Warm up"
+      name: 'Warm up'
     - duration: 120
       arrivalRate: 20
-      name: "Sustained load"
+      name: 'Sustained load'
     - duration: 60
       arrivalRate: 50
-      name: "Peak load"
+      name: 'Peak load'
   payload:
-    path: "qa/artillery/test-data.csv"
+    path: 'qa/artillery/test-data.csv'
     fields:
-      - "email"
-      - "password"
+      - 'email'
+      - 'password'
   plugins:
     expect: {}
     metrics-by-endpoint: {}
 
 scenarios:
-  - name: "Health Check"
+  - name: 'Health Check'
     weight: 10
     flow:
       - get:
-          url: "/health"
+          url: '/health'
           expect:
             - statusCode: 200
-            - hasProperty: "status"
+            - hasProperty: 'status'
 
-  - name: "API Authentication Flow"
+  - name: 'API Authentication Flow'
     weight: 20
     flow:
       - post:
-          url: "/api/auth/register"
+          url: '/api/auth/register'
           json:
-            email: "test-{{ $randomString() }}@example.com"
-            password: "SecurePassword123!"
-            name: "Test User"
+            email: 'test-{{ $randomString() }}@example.com'
+            password: 'SecurePassword123!'
+            name: 'Test User'
           capture:
-            - json: "$.token"
-              as: "authToken"
+            - json: '$.token'
+              as: 'authToken'
           expect:
             - statusCode: 201
       - post:
-          url: "/api/auth/login"
+          url: '/api/auth/login'
           json:
-            email: "{{ email }}"
-            password: "{{ password }}"
+            email: '{{ email }}'
+            password: '{{ password }}'
           expect:
             - statusCode: 200
-            - hasProperty: "token"
+            - hasProperty: 'token'
 
-  - name: "Artifact Search and Browse"
+  - name: 'Artifact Search and Browse'
     weight: 30
     flow:
       - get:
-          url: "/api/artifacts/search"
+          url: '/api/artifacts/search'
           qs:
-            q: "emerald"
+            q: 'emerald'
             limit: 12
             page: 1
           expect:
             - statusCode: 200
-            - hasProperty: "artifacts"
+            - hasProperty: 'artifacts'
       - get:
-          url: "/api/artifacts/featured"
+          url: '/api/artifacts/featured'
           expect:
             - statusCode: 200
       - get:
-          url: "/api/artifacts/{{ $randomInt(1, 100) }}"
+          url: '/api/artifacts/{{ $randomInt(1, 100) }}'
           expect:
             - statusCode: [200, 404]
 
-  - name: "User Portfolio Operations"
+  - name: 'User Portfolio Operations'
     weight: 25
     flow:
       - post:
-          url: "/api/auth/login"
+          url: '/api/auth/login'
           json:
-            email: "{{ email }}"
-            password: "{{ password }}"
+            email: '{{ email }}'
+            password: '{{ password }}'
           capture:
-            - json: "$.token"
-              as: "authToken"
+            - json: '$.token'
+              as: 'authToken'
       - get:
-          url: "/api/portfolio"
+          url: '/api/portfolio'
           headers:
-            Authorization: "Bearer {{ authToken }}"
+            Authorization: 'Bearer {{ authToken }}'
           expect:
             - statusCode: 200
       - get:
-          url: "/api/portfolio/transactions"
+          url: '/api/portfolio/transactions'
           headers:
-            Authorization: "Bearer {{ authToken }}"
+            Authorization: 'Bearer {{ authToken }}'
           expect:
             - statusCode: 200
 
-  - name: "Marketplace Transactions"
+  - name: 'Marketplace Transactions'
     weight: 15
     flow:
       - post:
-          url: "/api/auth/login"
+          url: '/api/auth/login'
           json:
-            email: "{{ email }}"
-            password: "{{ password }}"
+            email: '{{ email }}'
+            password: '{{ password }}'
           capture:
-            - json: "$.token"
-              as: "authToken"
+            - json: '$.token'
+              as: 'authToken'
       - post:
-          url: "/api/cart/add"
+          url: '/api/cart/add'
           headers:
-            Authorization: "Bearer {{ authToken }}"
+            Authorization: 'Bearer {{ authToken }}'
           json:
-            artifactId: "{{ $randomInt(1, 50) }}"
+            artifactId: '{{ $randomInt(1, 50) }}'
             quantity: 1
-            type: "full"
+            type: 'full'
           expect:
             - statusCode: [200, 201, 400, 404]
       - get:
-          url: "/api/cart"
+          url: '/api/cart'
           headers:
-            Authorization: "Bearer {{ authToken }}"
+            Authorization: 'Bearer {{ authToken }}'
           expect:
             - statusCode: 200
 
-  - name: "Blockchain Integration"
+  - name: 'Blockchain Integration'
     weight: 10
     flow:
       - get:
-          url: "/api/blockchain/contracts"
+          url: '/api/blockchain/contracts'
           expect:
             - statusCode: 200
       - get:
-          url: "/api/blockchain/network-status"
+          url: '/api/blockchain/network-status'
           expect:
             - statusCode: 200
       - post:
-          url: "/api/blockchain/verify-transaction"
+          url: '/api/blockchain/verify-transaction'
           json:
-            txHash: "0x1234567890abcdef"
-            network: "base-sepolia"
+            txHash: '0x1234567890abcdef'
+            network: 'base-sepolia'
           expect:
             - statusCode: [200, 400, 404]

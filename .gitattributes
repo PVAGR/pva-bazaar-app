@@ -1,0 +1,13 @@
+# Ensure consistent line endings
+* text=auto
+
+# Explicitly mark files as binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+
+# Frontend build artifacts - not tracked
+Frontend/dist/** linguist-generated=true

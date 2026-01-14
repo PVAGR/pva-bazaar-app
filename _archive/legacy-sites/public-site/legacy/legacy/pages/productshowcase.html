@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Artifact Details</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Source+Code+Pro:wght@300;400&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: 'Inter', sans-serif;
+        line-height: 1.8;
+        color: #e1e8ed;
+        background: linear-gradient(135deg, #0f1419 0%, #1a2332 50%, #0f1419 100%);
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 2rem;
+        min-height: 100vh;
+      }
+      h1 {
+        font-size: 2rem;
+        color: #fff;
+        margin-bottom: 1rem;
+      }
+      .subtitle {
+        font-family: 'Source Code Pro', monospace;
+        color: #00d9ff;
+      }
+      .wrap {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+      }
+      .card {
+        background: rgba(26, 35, 50, 0.6);
+        border: 1px solid rgba(0, 217, 255, 0.2);
+        border-left: 3px solid #00d9ff;
+        padding: 1.2rem;
+        border-radius: 6px;
+      }
+      .img {
+        width: 100%;
+        border-radius: 6px;
+        border: 1px solid #2a3f5f;
+      }
+      .note {
+        color: #8ba3bf;
+        font-size: 0.95rem;
+        margin-top: 1rem;
+      }
+      a {
+        color: #00d9ff;
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Artifact</h1>
+      <p class="subtitle">Details</p>
+    </header>
+    <section id="detail">
+      <div class="note">Loading...</div>
+    </section>
+    <script type="module">
+      import { getArtifact } from '/js/api.js';
+      const el = document.getElementById('detail');
+      const params = new URLSearchParams(location.search);
+      const id = params.get('id');
+
+      async function render() {
+        if (!id) {
+          el.innerHTML = '<div class="note">Missing artifact id.</div>';
+          return;
+        }
+        try {
+          const a = await getArtifact(id);
+          const wrap = document.createElement('div');
+          wrap.className = 'wrap';
+          const left = document.createElement('div');
+          left.className = 'card';
+          const right = document.createElement('div');
+          right.className = 'card';
+
+          const title = document.createElement('h2');
+          title.textContent = a.title || a.name || 'Artifact';
+          const img = document.createElement('img');
+          img.className = 'img';
+          img.alt = title.textContent;
+          img.src = a.imageUrl || a.image || '';
+          left.appendChild(title);
+          if (img.src) left.appendChild(img);
+
+          const desc = document.createElement('p');
+          desc.textContent = a.description || 'No description provided.';
+          const meta = document.createElement('p');
+          meta.textContent = `Category: ${a.category || 'N/A'} • Price: ${a.price ?? 'N/A'}`;
+          right.appendChild(desc);
+          right.appendChild(meta);
+
+          wrap.appendChild(left);
+          wrap.appendChild(right);
+          el.innerHTML = '';
+          el.appendChild(wrap);
+        } catch (e) {
+          el.innerHTML = '<div class="note">API unavailable or artifact not found.</div>';
+        }
+      }
+      render();
+    </script>
+  </body>
+</html>

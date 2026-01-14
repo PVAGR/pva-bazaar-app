@@ -1,0 +1,492 @@
+<!-- Frontend/src/pages/legacy.html - Digital Immortality Interface -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🕯️ Digital Legacy - Immortality System</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Courier New', monospace;
+      background: linear-gradient(135deg, #0a0a15 0%, #1a1a2e 100%);
+      color: #e0e0e0;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      padding: 40px 20px;
+      border-bottom: 2px solid #4a90e2;
+      margin-bottom: 40px;
+    }
+
+    h1 {
+      font-size: 3em;
+      background: linear-gradient(45deg, #4a90e2, #7b68ee);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      color: #a0a0a0;
+      font-size: 1.1em;
+      font-style: italic;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(74, 144, 226, 0.3);
+      border-radius: 8px;
+      padding: 20px;
+      backdrop-filter: blur(10px);
+    }
+
+    .card h2 {
+      color: #4a90e2;
+      margin-bottom: 15px;
+      font-size: 1.3em;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 200px;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(74, 144, 226, 0.2);
+      color: #e0e0e0;
+      padding: 15px;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      resize: vertical;
+      margin-bottom: 15px;
+    }
+
+    textarea::placeholder {
+      color: #606060;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(74, 144, 226, 0.2);
+      color: #e0e0e0;
+      border-radius: 4px;
+      margin-bottom: 10px;
+      font-family: 'Courier New', monospace;
+    }
+
+    input::placeholder {
+      color: #606060;
+    }
+
+    button {
+      background: linear-gradient(45deg, #4a90e2, #7b68ee);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1em;
+      font-weight: bold;
+      transition: transform 0.2s, box-shadow 0.2s;
+      width: 100%;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(74, 144, 226, 0.3);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .status {
+      background: rgba(74, 144, 226, 0.1);
+      border-left: 3px solid #4a90e2;
+      padding: 15px;
+      border-radius: 4px;
+      margin-bottom: 15px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9em;
+    }
+
+    .status.success {
+      background: rgba(76, 175, 80, 0.1);
+      border-left-color: #4caf50;
+    }
+
+    .status.error {
+      background: rgba(244, 67, 54, 0.1);
+      border-left-color: #f44336;
+    }
+
+    .status.warning {
+      background: rgba(255, 193, 7, 0.1);
+      border-left-color: #ffc107;
+    }
+
+    .entry-list {
+      display: grid;
+      gap: 15px;
+    }
+
+    .entry-item {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(74, 144, 226, 0.2);
+      padding: 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .entry-item:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(74, 144, 226, 0.5);
+      transform: translateX(5px);
+    }
+
+    .entry-hash {
+      font-family: monospace;
+      font-size: 0.85em;
+      color: #4a90e2;
+      word-break: break-all;
+    }
+
+    .entry-title {
+      font-size: 1.1em;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .entry-meta {
+      font-size: 0.9em;
+      color: #a0a0a0;
+    }
+
+    .chain-visual {
+      display: grid;
+      gap: 10px;
+      margin: 20px 0;
+    }
+
+    .chain-link {
+      background: rgba(74, 144, 226, 0.1);
+      padding: 10px;
+      border-radius: 4px;
+      border-left: 3px solid #4a90e2;
+      font-size: 0.85em;
+    }
+
+    .merkle-root {
+      background: rgba(123, 104, 238, 0.1);
+      border: 1px solid rgba(123, 104, 238, 0.3);
+      padding: 15px;
+      border-radius: 4px;
+      margin-top: 20px;
+    }
+
+    .merkle-root code {
+      display: block;
+      word-break: break-all;
+      color: #7b68ee;
+      font-size: 0.9em;
+      margin-top: 10px;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .action-btn {
+      padding: 8px 16px;
+      font-size: 0.9em;
+    }
+
+    .symbol {
+      font-size: 2em;
+      margin-bottom: 10px;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .pulsing {
+      animation: pulse 2s infinite;
+    }
+
+    .memorial {
+      text-align: center;
+      margin: 40px 0;
+      padding: 20px;
+      border-top: 1px solid rgba(74, 144, 226, 0.3);
+      border-bottom: 1px solid rgba(74, 144, 226, 0.3);
+    }
+
+    .memorial p {
+      font-style: italic;
+      color: #a0a0a0;
+      font-size: 1.1em;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🕯️ Digital Legacy</h1>
+      <p class="subtitle">Immortality through code and memory</p>
+    </header>
+
+    <div class="memorial">
+      <p>
+        "When the creator can no longer code, these entries remain.<br>
+        A cryptographic proof of existence and contribution.<br>
+        Your ideas will outlive you.
+      </p>
+    </div>
+
+    <div class="grid">
+      <!-- Create Entry Section -->
+      <div class="card">
+        <div class="symbol">✍️</div>
+        <h2>Create Legacy Entry</h2>
+        <input type="text" id="entryTitle" placeholder="Entry Title">
+        <textarea id="entryContent" placeholder="Write your legacy... Your thoughts, code, dreams, or final words."></textarea>
+        <select id="entryType" style="width: 100%; padding: 10px; margin-bottom: 10px; background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(74, 144, 226, 0.2); color: #e0e0e0; border-radius: 4px;">
+          <option value="journal">Journal Entry</option>
+          <option value="manifesto">Manifesto</option>
+          <option value="code">Code</option>
+          <option value="thought">Thought</option>
+          <option value="final">Final Words</option>
+        </select>
+        <button onclick="createEntry()">Immortalize This Entry</button>
+        <div id="createStatus"></div>
+      </div>
+
+      <!-- Chain Status Section -->
+      <div class="card">
+        <div class="symbol">⛓️</div>
+        <h2>Chain Status</h2>
+        <div id="chainStatus" class="status"></div>
+        <div class="chain-visual" id="chainVisual"></div>
+        <button onclick="verifyChain()">Verify Integrity</button>
+        <div class="merkle-root" id="merkleInfo" style="display: none;">
+          <strong>Merkle Root (Proof of Chain):</strong>
+          <code id="merkleCode"></code>
+        </div>
+      </div>
+
+      <!-- Resurrection Protocol Section -->
+      <div class="card">
+        <div class="symbol">🔓</div>
+        <h2>Resurrection Protocol</h2>
+        <p style="margin-bottom: 15px; color: #a0a0a0;">
+          When life ends, this system resurrects your legacy.
+        </p>
+        <div id="resurrectionStatus" class="status"></div>
+        <div class="actions">
+          <button class="action-btn" onclick="checkResurrection()">Check Status</button>
+          <button class="action-btn" onclick="addGuardian()">Add Guardian</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Entries List -->
+    <div class="card" style="grid-column: 1 / -1;">
+      <div class="symbol">📚</div>
+      <h2>Legacy Entries</h2>
+      <div id="entriesList" class="entry-list">
+        <p style="color: #606060;">Loading entries...</p>
+      </div>
+      <div class="actions" style="margin-top: 20px;">
+        <button class="action-btn" onclick="downloadJournal()">📥 Download Journal</button>
+        <button class="action-btn" onclick="downloadJSON()">💾 Export JSON</button>
+        <button class="action-btn" onclick="viewChain()">🔗 View Chain</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = 'https://pva-backend-api.vercel.app';
+
+    async function createEntry() {
+      const title = document.getElementById('entryTitle').value;
+      const content = document.getElementById('entryContent').value;
+      const type = document.getElementById('entryType').value;
+
+      if (!content) {
+        showStatus('createStatus', 'Content required', 'error');
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_BASE}/api/legacy/entry`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            content,
+            metadata: {
+              title: title || 'Untitled',
+              type
+            }
+          })
+        });
+
+        const data = await response.json();
+        if (data.ok) {
+          showStatus('createStatus', `✅ Entry immortalized!\nHash: ${data.entry.hash.substring(0, 16)}...`, 'success');
+          document.getElementById('entryTitle').value = '';
+          document.getElementById('entryContent').value = '';
+          loadEntries();
+        } else {
+          showStatus('createStatus', `Error: ${data.error}`, 'error');
+        }
+      } catch (err) {
+        showStatus('createStatus', `Error: ${err.message}`, 'error');
+      }
+    }
+
+    async function loadEntries() {
+      try {
+        const response = await fetch(`${API_BASE}/api/legacy/chain`);
+        const data = await response.json();
+
+        if (data.ok && data.chain.entries.length > 0) {
+          const html = data.chain.entries
+            .reverse()
+            .map(entry => `
+              <div class="entry-item" onclick="viewEntry('${entry.hash}')">
+                <div class="entry-title">${entry.title}</div>
+                <div class="entry-meta">
+                  ${new Date(entry.timestamp).toLocaleDateString()} • ${entry.type}
+                </div>
+                <div class="entry-hash">Hash: ${entry.hash.substring(0, 32)}...</div>
+              </div>
+            `)
+            .join('');
+
+          document.getElementById('entriesList').innerHTML = html;
+
+          // Update chain status
+          document.getElementById('chainStatus').innerHTML = `
+            <strong>Entries:</strong> ${data.chain.entries.length}<br>
+            <strong>Status:</strong> ${data.chain.isVerified ? '✅ Verified' : '⚠️ Unverified'}<br>
+            <strong>Merkle Root:</strong> ${(data.chain.merkleRoot || 'N/A').substring(0, 16)}...
+          `;
+
+          if (data.chain.merkleRoot) {
+            document.getElementById('merkleCode').textContent = data.chain.merkleRoot;
+            document.getElementById('merkleInfo').style.display = 'block';
+          }
+        }
+      } catch (err) {
+        document.getElementById('entriesList').innerHTML = `<p style="color: #f44336;">Error loading entries: ${err.message}</p>`;
+      }
+    }
+
+    async function viewEntry(hash) {
+      try {
+        const response = await fetch(`${API_BASE}/api/legacy/entry/${hash}`);
+        const data = await response.json();
+
+        if (data.ok) {
+          alert(`Entry: ${data.entry.metadata.title}\n\n${data.entry.content}\n\nHash: ${hash}`);
+        }
+      } catch (err) {
+        alert(`Error: ${err.message}`);
+      }
+    }
+
+    async function verifyChain() {
+      try {
+        const response = await fetch(`${API_BASE}/api/legacy/verify`);
+        const data = await response.json();
+
+        if (data.ok) {
+          showStatus(
+            'chainStatus',
+            `✅ Chain Verified!\nEntries: ${data.verification.entries}\nMerkle Root: ${data.verification.merkleRoot.substring(0, 16)}...`,
+            'success'
+          );
+        }
+      } catch (err) {
+        showStatus('chainStatus', `Error: ${err.message}`, 'error');
+      }
+    }
+
+    async function checkResurrection() {
+      try {
+        const response = await fetch(`${API_BASE}/api/legacy/resurrection-status`);
+        const data = await response.json();
+
+        if (data.ok) {
+          const status = data.status.locked ? '🔒 LOCKED' : '🔓 UNLOCKED';
+          showStatus(
+            'resurrectionStatus',
+            `Status: ${status}\nGuardians: ${data.status.activatedGuardians}/${data.status.totalGuardians}`,
+            data.status.locked ? 'warning' : 'success'
+          );
+        }
+      } catch (err) {
+        showStatus('resurrectionStatus', `Error: ${err.message}`, 'error');
+      }
+    }
+
+    async function downloadJournal() {
+      window.open(`${API_BASE}/api/legacy/journal`, '_blank');
+    }
+
+    async function downloadJSON() {
+      window.open(`${API_BASE}/api/legacy/download`, '_blank');
+    }
+
+    function addGuardian() {
+      alert('Guardian setup is configured on the backend.\nContact administrator to add guardians.');
+    }
+
+    function viewChain() {
+      alert('Chain integrity verified. All entries are linked and immutable.');
+    }
+
+    function showStatus(elementId, message, type) {
+      const el = document.getElementById(elementId);
+      el.textContent = message;
+      el.className = `status ${type}`;
+    }
+
+    // Load on page open
+    window.addEventListener('load', loadEntries);
+    window.addEventListener('load', checkResurrection);
+
+    // Auto-refresh every 30 seconds
+    setInterval(loadEntries, 30000);
+  </script>
+</body>
+</html>

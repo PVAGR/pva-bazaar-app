@@ -1,0 +1,4 @@
+/* About page styles */
+.aboutPage__intro { margin-bottom: 16px; }
+.aboutPage__photo { width: 140px; height: 140px; border-radius: 50%; object-fit: cover; margin: 10px 0; border: 1px solid var(--border); }
+.aboutPage__section { margin-top: 16px; }

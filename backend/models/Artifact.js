@@ -20,14 +20,14 @@ const artifactSchema = new mongoose.Schema({
     partnerWallet: String,
     bankDetails: String,
     promoterName: String,
-    promoterContact: String
+    promoterContact: String,
   },
   consignment: {
     artisanShare: { type: Number, default: 50 },
     pvaFee: { type: Number, default: 35 },
     promoterShare: { type: Number, default: 15 },
     digitalSignature: String,
-    agreed: { type: Boolean, default: false }
+    agreed: { type: Boolean, default: false },
   },
 
   // Blockchain integration
@@ -35,7 +35,7 @@ const artifactSchema = new mongoose.Schema({
     network: { type: String, default: 'base' },
     contractAddress: String,
     tokenId: String,
-    tokenStandard: { type: String, default: 'ERC-721' }
+    tokenStandard: { type: String, default: 'ERC-721' },
   },
 
   // Fractionalization for shares
@@ -44,21 +44,23 @@ const artifactSchema = new mongoose.Schema({
     totalShares: { type: Number, default: 0 },
     soldShares: { type: Number, default: 0 },
     sharePrice: { type: Number, default: 0 },
-    majorityThreshold: { type: Number, default: 0 }
+    majorityThreshold: { type: Number, default: 0 },
   },
 
   // Ownership and verification
-  ownershipHistory: [{
-    owner: String,
-    date: { type: Date, default: Date.now },
-    transactionHash: String
-  }],
+  ownershipHistory: [
+    {
+      owner: String,
+      date: { type: Date, default: Date.now },
+      transactionHash: String,
+    },
+  ],
 
   authenticationCode: String,
   lastVerification: Date,
 
   createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now }
+  updatedAt: { type: Date, default: Date.now },
 });
 // Text index for search endpoints and vector fallback
 artifactSchema.index({
@@ -67,7 +69,7 @@ artifactSchema.index({
   description: 'text',
   materials: 'text',
   artisan: 'text',
-  category: 'text'
+  category: 'text',
 });
 
 module.exports = mongoose.model('Artifact', artifactSchema);

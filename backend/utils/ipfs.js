@@ -3,10 +3,7 @@ const pinataSDK = require('@pinata/sdk');
 // Initialize Pinata
 let pinata;
 try {
-  pinata = new pinataSDK(
-    process.env.PINATA_API_KEY,
-    process.env.PINATA_SECRET_API_KEY
-  );
+  pinata = new pinataSDK(process.env.PINATA_API_KEY, process.env.PINATA_SECRET_API_KEY);
 } catch (error) {
   console.warn('Pinata initialization failed. IPFS functions will not work.');
   console.warn('Error:', error.message);
@@ -31,9 +28,9 @@ async function pinBuffer(buffer, fileName, metadata = {}) {
         keyvalues: {
           ...metadata,
           uploadedBy: 'pvabazaar-api',
-          timestamp: new Date().toISOString()
-        }
-      }
+          timestamp: new Date().toISOString(),
+        },
+      },
     };
 
     const result = await pinata.pinFileToIPFS(buffer, options);
@@ -63,9 +60,9 @@ async function pinJSON(json, name = 'metadata.json', metadata = {}) {
         keyvalues: {
           ...metadata,
           uploadedBy: 'pvabazaar-api',
-          timestamp: new Date().toISOString()
-        }
-      }
+          timestamp: new Date().toISOString(),
+        },
+      },
     };
 
     const result = await pinata.pinJSONToIPFS(json, options);
@@ -79,5 +76,5 @@ async function pinJSON(json, name = 'metadata.json', metadata = {}) {
 module.exports = {
   pinata,
   pinBuffer,
-  pinJSON
+  pinJSON,
 };

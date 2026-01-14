@@ -11,6 +11,7 @@ Just run the test script to start the application:
 ```
 
 This will:
+
 1. Fix any import case-sensitivity issues
 2. Start the backend on port 5001 with in-memory DB
 3. Start the frontend on port 3000

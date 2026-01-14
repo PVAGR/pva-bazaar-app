@@ -11,8 +11,9 @@ PVA Bazaar is an artisan marketplace with digital provenance, built as a full-st
 The project follows a traditional full-stack architecture with separate frontend and backend components:
 
 ### Backend (`/backend/`)
+
 - **Framework**: Express.js with MongoDB (Mongoose ODM)
-- **Key Models**: 
+- **Key Models**:
   - `Artifact.js`: Core artifact model with blockchain integration, fractionalization support, and ownership history
   - `User.js`: User authentication and management
 - **API Structure**: RESTful API with route modules in `/routes/`
@@ -20,13 +21,15 @@ The project follows a traditional full-stack architecture with separate frontend
 - **Additional Services**: IPFS integration, vector database, and embedding services
 
 ### Frontend (`/Frontend/`)
+
 - **Framework**: Vanilla JavaScript with Vite build system
 - **Structure**: HTML pages in `/pages/` with shared assets in `/src/`
 - **Key Pages**: artifact viewer, portfolio, dashboard, checkout/mint, provenance tracking
 
 ### Deployment
+
 - **Platform**: Vercel (serverless functions)
-- **Entry Points**: 
+- **Entry Points**:
   - `/backend/api/index.js`: Main serverless API handler
   - `/Frontend/server.js`: Alternative server configuration
 - **Database**: MongoDB with connection caching for serverless optimization
@@ -60,6 +63,7 @@ The application uses MongoDB with the database name `pvabazaar`. Run `node seed.
 ## Blockchain Integration
 
 The system supports:
+
 - ERC-721 NFTs for artifact tokenization
 - On-chain ownership verification via Web3.js
 - Base network as default blockchain
@@ -69,7 +73,7 @@ The system supports:
 
 - `/api/artifacts`: CRUD operations for artifacts
 - `/api/users`: User management
-- `/api/auth`: Authentication endpoints  
+- `/api/auth`: Authentication endpoints
 - `/api/health`: Health check endpoints
 - `/api/transactions`: Transaction handling
 - `/api/certificates`: Certificate management
@@ -84,5 +88,6 @@ The system supports:
 ## Testing Data
 
 Use the seeded data for development:
-- Test user: admin@pvabazaar.org / admin123  
+
+- Test user: admin@pvabazaar.org / admin123
 - Sample artifacts include Afghan crafts with fractionalization enabled

@@ -17,7 +17,7 @@ export default defineConfig({
   reporter: [
     ['html', { outputFolder: 'qa/reports/playwright-report' }],
     ['json', { outputFile: 'qa/reports/playwright-results.json' }],
-    ['list']
+    ['list'],
   ],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
@@ -28,7 +28,7 @@ export default defineConfig({
     /* Take screenshot on failure */
     screenshot: 'only-on-failure',
     /* Video recording */
-    video: 'retain-on-failure'
+    video: 'retain-on-failure',
   },
 
   /* Configure projects for major browsers */
@@ -71,17 +71,17 @@ export default defineConfig({
       command: 'pnpm dev:frontend',
       port: 3000,
       reuseExistingServer: !process.env.CI,
-    }
+    },
   ],
-  
+
   /* Test timeout */
   timeout: 30 * 1000,
   expect: {
     /* Maximum time expect() should wait for the condition to be met. */
-    timeout: 5000
+    timeout: 5000,
   },
-  
+
   /* Global test configuration */
   globalSetup: require.resolve('./qa/config/playwright.global-setup.ts'),
-  globalTeardown: require.resolve('./qa/config/playwright.global-teardown.ts')
+  globalTeardown: require.resolve('./qa/config/playwright.global-teardown.ts'),
 });

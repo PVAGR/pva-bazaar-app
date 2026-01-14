@@ -7,11 +7,11 @@ const auth = require('../backend/middleware/auth');
 router.post('/shares/buy', auth, async (req, res) => {
   try {
     const { artifactId, wallet, amountUSD, shares } = req.body || {};
-    
+
     if (!artifactId || !wallet || !shares) {
       return res.status(400).json({
         ok: false,
-        message: 'Artifact ID, wallet, and shares are required'
+        message: 'Artifact ID, wallet, and shares are required',
       });
     }
 
@@ -19,24 +19,24 @@ router.post('/shares/buy', auth, async (req, res) => {
     if (!artifact) {
       return res.status(404).json({
         ok: false,
-        message: 'Artifact not found'
+        message: 'Artifact not found',
       });
     }
 
     if (!artifact.fractionalization?.enabled) {
       return res.status(400).json({
         ok: false,
-        message: 'Shares not enabled for this artifact'
+        message: 'Shares not enabled for this artifact',
       });
     }
 
     const current = artifact.fractionalization.soldShares || 0;
     const total = artifact.fractionalization.totalShares || 0;
-    
+
     if (current + shares > total) {
       return res.status(400).json({
         ok: false,
-        message: 'Not enough shares available'
+        message: 'Not enough shares available',
       });
     }
 
@@ -50,14 +50,14 @@ router.post('/shares/buy', auth, async (req, res) => {
         artifactId,
         newSoldShares: artifact.fractionalization.soldShares,
         amountUSD: amountUSD || 0,
-        buyer: wallet
-      }
+        buyer: wallet,
+      },
     });
   } catch (error) {
     console.error('Share purchase error:', error);
     res.status(500).json({
       ok: false,
-      message: 'Failed to purchase shares'
+      message: 'Failed to purchase shares',
     });
   }
 });
@@ -66,11 +66,11 @@ router.post('/shares/buy', auth, async (req, res) => {
 router.get('/shares/status/:id', async (req, res) => {
   try {
     const artifact = await Artifact.findById(req.params.id);
-    
+
     if (!artifact) {
       return res.status(404).json({
         ok: false,
-        message: 'Artifact not found'
+        message: 'Artifact not found',
       });
     }
 
@@ -81,14 +81,14 @@ router.get('/shares/status/:id', async (req, res) => {
         totalShares: artifact.fractionalization?.totalShares || 0,
         soldShares: artifact.fractionalization?.soldShares || 0,
         sharePrice: artifact.fractionalization?.sharePrice || 0,
-        majorityThreshold: artifact.fractionalization?.majorityThreshold || 0
-      }
+        majorityThreshold: artifact.fractionalization?.majorityThreshold || 0,
+      },
     });
   } catch (error) {
     console.error('Shares status error:', error);
     res.status(500).json({
       ok: false,
-      message: 'Failed to get shares status'
+      message: 'Failed to get shares status',
     });
   }
 });

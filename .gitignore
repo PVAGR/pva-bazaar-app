@@ -1,3 +1,19 @@
+# Secrets and environment files (but allow production config)
+.env
+.env.local
+.env.development
+.env.test
+*/.env
+*/.env.local
+.vercel/*.env*
+.vercel/*.local
+# ALLOW .env.production - it only contains non-secret API URLs
+!Frontend/.env.production
+
+# Node modules and logs (keep minimal)
+node_modules/
+npm-debug.log*
+yarn-error.log*
 node_modules
 
 .env
@@ -11,3 +27,17 @@ tsconfig.tsbuildinfo
 storybook-static
 .vercel
 pva-bazaar-app.env
+
+# Ignore most env files anywhere in the repo
+**/.env
+**/.env.local
+.env*.local
+/Frontend/archive.html
+/Frontend/private/
+
+# Documentation artifacts generated during dev/analysis
+*_PACK.txt
+*_PACK.md
+*SUMMARY*.md
+*magnum-opus-organized.html
+Frontend/dist/

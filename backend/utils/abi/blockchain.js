@@ -32,11 +32,14 @@ async function verifyOnChain(contractAddress, tokenId) {
     }
 
     const contract = new web3.eth.Contract(ABI, contractAddress);
-    
+
     const [owner, uri, baseURI] = await Promise.all([
       contract.methods.ownerOf(tokenId).call(),
       contract.methods.tokenURI(tokenId).call(),
-      contract.methods.baseURI().call().catch(() => null) // baseURI might not exist
+      contract.methods
+        .baseURI()
+        .call()
+        .catch(() => null), // baseURI might not exist
     ]);
 
     return {
@@ -44,7 +47,7 @@ async function verifyOnChain(contractAddress, tokenId) {
       tokenURI: uri,
       baseURI: baseURI,
       verified: true,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   } catch (error) {
     console.error('Blockchain verification error:', error);
@@ -54,5 +57,5 @@ async function verifyOnChain(contractAddress, tokenId) {
 
 module.exports = {
   web3,
-  verifyOnChain
+  verifyOnChain,
 };

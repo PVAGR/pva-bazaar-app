@@ -1,0 +1,26 @@
+Here are the contents for the file `Frontend/public/styles/entry.css`:
+
+/* Entry specific styles */
+.entry {
+    padding: 20px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+}
+
+.entry h2 {
+    font-size: 1.5em;
+    color: #333;
+}
+
+.entry p {
+    font-size: 1em;
+    color: #666;
+}
+
+.entry .date {
+    font-size: 0.9em;
+    color: #999;
+    text-align: right;
+}

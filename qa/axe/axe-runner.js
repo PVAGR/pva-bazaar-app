@@ -10,7 +10,7 @@ const urls = [
   'http://localhost:3000/marketplace',
   'http://localhost:3001',
   'http://localhost:3001/about',
-  'http://localhost:3001/contact'
+  'http://localhost:3001/contact',
 ];
 
 const PVA_COLORS = {
@@ -21,108 +21,111 @@ const PVA_COLORS = {
   accentDark: '#2bb673',
   gold: '#d4af37',
   textLight: '#e8f4f0',
-  textMuted: '#a8b0b9'
+  textMuted: '#a8b0b9',
 };
 
 async function runAxeAudit() {
   const browser = await chromium.launch();
   const results = [];
-  
+
   for (const url of urls) {
     console.log(`🔍 Testing accessibility: ${url}`);
-    
+
     const page = await browser.newPage();
-    
+
     try {
       await page.goto(url, { waitUntil: 'networkidle' });
-      
+
       // Wait for page to be fully rendered
       await page.waitForTimeout(2000);
-      
+
       // Check for PVA brand color compliance
       const colorCompliance = await page.evaluate((colors) => {
         const issues = [];
         const allElements = document.querySelectorAll('*');
-        
-        allElements.forEach(el => {
+
+        allElements.forEach((el) => {
           const style = getComputedStyle(el);
           const bgColor = style.backgroundColor;
           const textColor = style.color;
-          
+
           // Check for non-PVA colors (basic check)
-          if (bgColor.includes('rgb(255, 0, 0)')) { // Red
+          if (bgColor.includes('rgb(255, 0, 0)')) {
+            // Red
             issues.push(`Non-PVA red color found on ${el.tagName}`);
           }
-          if (bgColor.includes('rgb(0, 0, 255)')) { // Blue  
+          if (bgColor.includes('rgb(0, 0, 255)')) {
+            // Blue
             issues.push(`Non-PVA blue color found on ${el.tagName}`);
           }
         });
-        
+
         return issues;
       }, PVA_COLORS);
-      
+
       // Run axe accessibility audit
       const axeResults = await new AxeBuilder({ page })
         .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
         .exclude('[data-testid="external-iframe"]') // Exclude third-party content
         .analyze();
-      
+
       results.push({
         url,
         violations: axeResults.violations,
         passes: axeResults.passes.length,
         incomplete: axeResults.incomplete,
         colorCompliance,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
-      
-      console.log(`✅ ${url}: ${axeResults.violations.length} violations, ${axeResults.passes.length} passes`);
-      
+
+      console.log(
+        `✅ ${url}: ${axeResults.violations.length} violations, ${axeResults.passes.length} passes`,
+      );
+
       if (colorCompliance.length > 0) {
         console.warn(`⚠️  Color compliance issues: ${colorCompliance.length}`);
       }
-      
     } catch (error) {
       console.error(`❌ Error testing ${url}:`, error.message);
       results.push({
         url,
         error: error.message,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     } finally {
       await page.close();
     }
   }
-  
+
   await browser.close();
-  
+
   // Generate report
   const reportDir = 'qa/reports';
   if (!fs.existsSync(reportDir)) {
     fs.mkdirSync(reportDir, { recursive: true });
   }
-  
+
   const reportPath = path.join(reportDir, `axe-report-${Date.now()}.json`);
   fs.writeFileSync(reportPath, JSON.stringify(results, null, 2));
-  
+
   // Generate HTML report
   const htmlReport = generateHtmlReport(results);
   const htmlReportPath = path.join(reportDir, `axe-report-${Date.now()}.html`);
   fs.writeFileSync(htmlReportPath, htmlReport);
-  
+
   console.log(`📊 Accessibility report saved: ${reportPath}`);
   console.log(`🌐 HTML report saved: ${htmlReportPath}`);
-  
+
   // Check if any critical violations exist
-  const criticalViolations = results.filter(r => 
-    r.violations && r.violations.some(v => v.impact === 'critical')
+  const criticalViolations = results.filter(
+    (r) => r.violations && r.violations.some((v) => v.impact === 'critical'),
   );
-  
+
   if (criticalViolations.length > 0) {
     console.error('❌ Critical accessibility violations found!');
     process.exit(1);
   }
-  
+
   console.log('✅ Accessibility audit completed successfully');
 }
 
@@ -133,7 +136,7 @@ function generateHtmlReport(results) {
     }
     return acc;
   }, 0);
-  
+
   return `
 <!DOCTYPE html>
 <html>
@@ -165,33 +168,51 @@ function generateHtmlReport(results) {
         <p>Tested ${results.length} pages against WCAG 2.1 AA standards and PVA brand compliance.</p>
     </div>
     
-    ${results.map(result => `
+    ${results
+      .map(
+        (result) => `
         <div class="result">
             <h3>📄 ${result.url}</h3>
-            ${result.error ? `
+            ${
+              result.error
+                ? `
                 <p class="fail">❌ Error: ${result.error}</p>
-            ` : `
+            `
+                : `
                 <p class="pass">✅ Passes: ${result.passes}</p>
                 <p class="${result.violations?.length > 0 ? 'fail' : 'pass'}">
                     ${result.violations?.length > 0 ? '❌' : '✅'} Violations: ${result.violations?.length || 0}
                 </p>
-                ${result.colorCompliance?.length > 0 ? `
+                ${
+                  result.colorCompliance?.length > 0
+                    ? `
                     <p class="fail">🎨 Brand compliance issues: ${result.colorCompliance.length}</p>
-                ` : `
+                `
+                    : `
                     <p class="pass">🎨 Brand compliant</p>
-                `}
+                `
+                }
                 
-                ${result.violations?.map(violation => `
+                ${
+                  result.violations
+                    ?.map(
+                      (violation) => `
                     <div class="violation impact-${violation.impact}">
                         <h4>${violation.id}: ${violation.description}</h4>
                         <p><strong>Impact:</strong> ${violation.impact}</p>
                         <p><strong>Help:</strong> <a href="${violation.helpUrl}" target="_blank">${violation.help}</a></p>
                         <p><strong>Affected elements:</strong> ${violation.nodes.length}</p>
                     </div>
-                `).join('') || ''}
-            `}
+                `,
+                    )
+                    .join('') || ''
+                }
+            `
+            }
         </div>
-    `).join('')}
+    `,
+      )
+      .join('')}
 </body>
 </html>
   `;

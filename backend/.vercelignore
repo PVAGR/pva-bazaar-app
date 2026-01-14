@@ -1,0 +1,17 @@
+# Backend-specific Vercel ignore
+node_modules
+*.log
+.env.local
+.env.development
+coverage
+test
+tests
+*.test.js
+*.spec.js
+.git
+.gitignore
+.DS_Store
+README.md
+README-SECRETS.md
+Dockerfile
+ssh-keygen

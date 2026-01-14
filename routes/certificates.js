@@ -6,11 +6,11 @@ const Artifact = require('../backend/models/Artifact');
 router.get('/:id', async (req, res) => {
   try {
     const artifact = await Artifact.findById(req.params.id);
-    
+
     if (!artifact) {
       return res.status(404).json({
         ok: false,
-        message: 'Artifact not found'
+        message: 'Artifact not found',
       });
     }
 
@@ -22,26 +22,26 @@ router.get('/:id', async (req, res) => {
         creationDate: artifact.creationDate,
         materials: artifact.materials,
         artisan: artifact.artisan,
-        imageUrl: artifact.imageUrl
+        imageUrl: artifact.imageUrl,
       },
       blockchain: artifact.blockchainDetails,
       verification: {
         lastVerified: artifact.lastVerification,
-        verified: true
+        verified: true,
       },
       ownership: artifact.ownershipHistory,
-      authenticationCode: artifact.authenticationCode
+      authenticationCode: artifact.authenticationCode,
     };
 
     res.json({
       ok: true,
-      data: certificateData
+      data: certificateData,
     });
   } catch (error) {
     console.error('Certificate error:', error);
     res.status(500).json({
       ok: false,
-      message: 'Failed to fetch certificate'
+      message: 'Failed to fetch certificate',
     });
   }
 });
@@ -50,11 +50,11 @@ router.get('/:id', async (req, res) => {
 router.post('/verify/:id', async (req, res) => {
   try {
     const artifact = await Artifact.findById(req.params.id);
-    
+
     if (!artifact) {
       return res.status(404).json({
         ok: false,
-        message: 'Artifact not found'
+        message: 'Artifact not found',
       });
     }
 
@@ -65,14 +65,14 @@ router.post('/verify/:id', async (req, res) => {
       ok: true,
       message: 'Artifact verified successfully',
       data: {
-        lastVerification: artifact.lastVerification
-      }
+        lastVerification: artifact.lastVerification,
+      },
     });
   } catch (error) {
     console.error('Verification error:', error);
     res.status(500).json({
       ok: false,
-      message: 'Failed to verify artifact'
+      message: 'Failed to verify artifact',
     });
   }
 });
