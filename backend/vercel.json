@@ -1,5 +1,7 @@
 {
   "version": 2,
+  "buildCommand": "mkdir -p dist && echo 'Build complete' > dist/index.txt",
+  "outputDirectory": "dist",
   "builds": [
     {
       "src": "api/index.js",
