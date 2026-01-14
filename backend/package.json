@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node api/index.js",
     "dev": "nodemon api/index.js",
-    "build": "mkdir -p dist && echo 'Build complete' > dist/index.txt",
+    "build": "echo \"Serverless build\"",
     "seed": "node seed.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
