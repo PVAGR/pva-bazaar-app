@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "PVA Bazaar - Blockchain-powered artisan marketplace",
   "main": "api/index.js",
+  "engines": {
+    "node": "20.x"
+  },
   "scripts": {
     "start": "node api/index.js",
     "dev": "nodemon api/index.js",
