@@ -8,17 +8,6 @@ coverage
 build
 dist
 .turbo
-backend
-apps
-api
-routes
-services
-contracts
-demo
-packages
-qa
-bin
-public
 
 # Ensure Vercel includes built frontend assets when Root Directory = "Frontend"
 !Frontend/dist
