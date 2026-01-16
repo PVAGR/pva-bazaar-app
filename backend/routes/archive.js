@@ -40,6 +40,7 @@ router.post('/', auth, adminOnly, async (req, res) => {
       category: req.body?.category || 'journal',
       location: req.body?.location || '',
       externalId: req.body?.id || '',
+      media: Array.isArray(req.body?.media) ? req.body.media : [],
     };
     const entry = new ArchiveEntry(payload);
     await entry.save();
@@ -61,6 +62,7 @@ router.put('/:id', auth, adminOnly, async (req, res) => {
       tags: Array.isArray(req.body?.tags) ? req.body.tags : undefined,
       category: req.body?.category,
       location: req.body?.location,
+      media: Array.isArray(req.body?.media) ? req.body.media : undefined,
     };
     Object.keys(updates).forEach((key) => updates[key] === undefined && delete updates[key]);
 

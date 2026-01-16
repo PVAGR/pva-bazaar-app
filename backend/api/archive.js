@@ -32,6 +32,7 @@ const ArchiveEntrySchema = new mongoose.Schema(
     content: { type: String, required: true },
     wordCount: { type: String, default: '0' },
     priority: { type: Number, default: 5 },
+    media: [{ type: String }],
   },
   { timestamps: true }
 );
@@ -83,6 +84,7 @@ module.exports = async (req, res) => {
           content: e.content,
           wordCount: e.wordCount || '0',
           priority: e.priority || 5,
+          media: Array.isArray(e.media) ? e.media : [],
           createdAt: e.createdAt,
           updatedAt: e.updatedAt,
         })),
@@ -131,6 +133,7 @@ module.exports = async (req, res) => {
         content: body.content,
         wordCount: body.wordCount || '0',
         priority: body.priority || 5,
+        media: Array.isArray(body.media) ? body.media : [],
       });
 
       await newEntry.save();
@@ -145,6 +148,7 @@ module.exports = async (req, res) => {
           content: newEntry.content,
           wordCount: newEntry.wordCount,
           priority: newEntry.priority,
+          media: Array.isArray(newEntry.media) ? newEntry.media : [],
           createdAt: newEntry.createdAt,
           updatedAt: newEntry.updatedAt,
         },

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { createArchiveEntry, fetchArchiveEntries, deleteArchiveEntry } from '../lib/api';
+import { createArchiveEntry, fetchArchiveEntries, deleteArchiveEntry, apiFetch, getApiBase } from '../lib/api';
 import './AdminPage.css';
 
 export default function AdminPage() {
@@ -23,13 +23,23 @@ export default function AdminPage() {
     category: 'Personal',
     description: '',
     content: '',
-    wordCount: '0'
+    wordCount: '0',
+    mediaUrls: ''
   });
   
   const [savedEntries, setSavedEntries] = useState([]);
   const [showSuccess, setShowSuccess] = useState(false);
   const [editingEntry, setEditingEntry] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null); // {id, title} for confirmation modal
+  const [uploadingMedia, setUploadingMedia] = useState(false);
+  const [mediaError, setMediaError] = useState('');
+  const [adminTokenInput, setAdminTokenInput] = useState('');
+  const [connectionStatus, setConnectionStatus] = useState({
+    loading: true,
+    checkedAt: null,
+    apiBase: getApiBase(),
+    results: {},
+  });
 
   // Check if already authenticated with NEW credentials system
   useEffect(() => {
@@ -48,6 +58,73 @@ export default function AdminPage() {
     
     // Load saved entries from server
     loadEntriesFromServer();
+  }, []);
+
+  const runConnectionCheck = async () => {
+    const endpoints = [
+      { key: 'health', path: '/api/health' },
+      { key: 'ping', path: '/api/ping' },
+      { key: 'version', path: '/api/version' },
+      { key: 'archive', path: '/api/archive' },
+    ];
+
+    setConnectionStatus((prev) => ({
+      ...prev,
+      loading: true,
+      apiBase: getApiBase(),
+    }));
+
+    const results = {};
+
+    for (const endpoint of endpoints) {
+      try {
+        const res = await apiFetch(endpoint.path, { method: 'GET' });
+        const json = await res.json().catch(() => ({}));
+        results[endpoint.key] = {
+          ok: res.ok,
+          status: res.status,
+          message: json.message || json.status || json.error || '',
+        };
+      } catch (err) {
+        results[endpoint.key] = {
+          ok: false,
+          status: 'error',
+          message: err.message || 'Request failed',
+        };
+      }
+    }
+
+    if (adminTokenInput.trim()) {
+      try {
+        const res = await apiFetch('/api/admin/status', {
+          method: 'GET',
+          headers: { Authorization: `Bearer ${adminTokenInput.trim()}` },
+        });
+        const json = await res.json().catch(() => ({}));
+        results.admin = {
+          ok: res.ok,
+          status: res.status,
+          message: json.message || json.status || json.error || '',
+        };
+      } catch (err) {
+        results.admin = {
+          ok: false,
+          status: 'error',
+          message: err.message || 'Request failed',
+        };
+      }
+    }
+
+    setConnectionStatus({
+      loading: false,
+      checkedAt: new Date().toLocaleString(),
+      apiBase: getApiBase(),
+      results,
+    });
+  };
+
+  useEffect(() => {
+    runConnectionCheck();
   }, []);
   const loadEntriesFromServer = async () => {
     try {
@@ -95,6 +172,58 @@ export default function AdminPage() {
     }));
   };
 
+  const parseMediaUrls = (value) =>
+    value
+      .split(/[\n,]+/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+
+  const getCloudinaryConfig = () => {
+    const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+    const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
+    return { cloudName, uploadPreset };
+  };
+
+  const uploadMediaFiles = async (files) => {
+    const { cloudName, uploadPreset } = getCloudinaryConfig();
+    if (!cloudName || !uploadPreset) {
+      setMediaError('Missing Cloudinary config. Set VITE_CLOUDINARY_CLOUD_NAME and VITE_CLOUDINARY_UPLOAD_PRESET.');
+      return;
+    }
+    if (!files?.length) return;
+
+    setMediaError('');
+    setUploadingMedia(true);
+
+    try {
+      const uploads = await Promise.all(
+        Array.from(files).map(async (file) => {
+          const form = new FormData();
+          form.append('file', file);
+          form.append('upload_preset', uploadPreset);
+          const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
+            method: 'POST',
+            body: form,
+          });
+          const data = await res.json();
+          if (!res.ok) {
+            throw new Error(data?.error?.message || 'Upload failed');
+          }
+          return data.secure_url;
+        })
+      );
+
+      setFormData((prev) => {
+        const existing = prev.mediaUrls ? `${prev.mediaUrls}\n` : '';
+        return { ...prev, mediaUrls: `${existing}${uploads.join('\n')}`.trim() };
+      });
+    } catch (err) {
+      setMediaError(err.message || 'Upload failed');
+    } finally {
+      setUploadingMedia(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setApiError('');
@@ -114,6 +243,7 @@ export default function AdminPage() {
           description: formData.description,
           content: formData.content,
           wordCount: formData.wordCount,
+          media: parseMediaUrls(formData.mediaUrls),
         };
 
         const result = await createArchiveEntry(entryData, adminCode);
@@ -142,7 +272,8 @@ export default function AdminPage() {
         category: 'Personal',
         description: '',
         content: '',
-        wordCount: '0'
+        wordCount: '0',
+        mediaUrls: ''
       });
       setApiError('');
     } catch (err) {
@@ -159,7 +290,8 @@ export default function AdminPage() {
       category: entry.category,
       description: entry.description,
       content: entry.content,
-      wordCount: entry.wordCount
+      wordCount: entry.wordCount,
+      mediaUrls: Array.isArray(entry.media) ? entry.media.join('\n') : ''
     });
     // Scroll to form
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -172,7 +304,8 @@ export default function AdminPage() {
       category: 'Personal',
       description: '',
       content: '',
-      wordCount: '0'
+      wordCount: '0',
+      mediaUrls: ''
     });
   };
 
@@ -279,6 +412,54 @@ export default function AdminPage() {
               aria-label="Toggle theme"
             >
               {darkMode ? '☀️' : '🌙'}
+            <div className="sidebar-section connection-panel">
+              <div className="connection-header">
+                <h2>Connection Status</h2>
+                <button
+                  type="button"
+                  className="connection-refresh"
+                  onClick={runConnectionCheck}
+                  disabled={connectionStatus.loading}
+                >
+                  {connectionStatus.loading ? 'Checking…' : 'Refresh'}
+                </button>
+              </div>
+              <div className="connection-base">
+                API: <span>{connectionStatus.apiBase}</span>
+              </div>
+              {connectionStatus.checkedAt && (
+                <div className="connection-updated">
+                  Last check: {connectionStatus.checkedAt}
+                </div>
+              )}
+              <div className="connection-token">
+                <label htmlFor="adminToken">Admin token (optional)</label>
+                <input
+                  id="adminToken"
+                  type="password"
+                  value={adminTokenInput}
+                  onChange={(e) => setAdminTokenInput(e.target.value)}
+                  placeholder="Paste admin JWT token"
+                />
+                <small>Used only for /api/admin/status check.</small>
+              </div>
+              <ul className="connection-list">
+                {['health', 'ping', 'version', 'archive', 'admin'].map((key) => {
+                  const item = connectionStatus.results[key];
+                  return (
+                    <li key={key} className={`connection-item ${item?.ok ? 'ok' : 'bad'}`}>
+                      <div className="connection-item__name">/api/{key}</div>
+                      <div className="connection-item__status">
+                        {item ? (item.ok ? 'OK' : `Fail (${item.status})`) : '—'}
+                      </div>
+                      {item?.message && (
+                        <div className="connection-item__message">{item.message}</div>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
             </button>
             <button onClick={handleLogout} className="logout-btn">
               Logout
@@ -437,6 +618,45 @@ export default function AdminPage() {
                   rows="2"
                   required
                 />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="mediaUrls">Media URLs (optional)</label>
+                <textarea
+                  id="mediaUrls"
+                  name="mediaUrls"
+                  value={formData.mediaUrls}
+                  onChange={handleInputChange}
+                  placeholder="https://example.com/photo.jpg
+https://example.com/video.mp4"
+                  rows="3"
+                />
+                <small style={{ color: '#666', fontSize: '0.85em' }}>
+                  Add one URL per line or separate with commas.
+                </small>
+                <div
+                  className="media-uploader"
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    uploadMediaFiles(e.dataTransfer.files);
+                  }}
+                >
+                  <div className="media-uploader__text">
+                    Drag & drop files here, or select files to upload
+                  </div>
+                  <label className="media-uploader__button">
+                    {uploadingMedia ? 'Uploading…' : 'Choose files'}
+                    <input
+                      type="file"
+                      accept="image/*,video/*,audio/*"
+                      multiple
+                      disabled={uploadingMedia}
+                      onChange={(e) => uploadMediaFiles(e.target.files)}
+                    />
+                  </label>
+                  {mediaError && <div className="media-uploader__error">{mediaError}</div>}
+                </div>
               </div>
 
               <div className="form-group">

@@ -241,6 +241,118 @@
   color: var(--accent);
 }
 
+.connection-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.connection-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.connection-refresh {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-primary);
+  padding: 0.35rem 0.6rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.connection-refresh:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.connection-base {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  word-break: break-all;
+}
+
+.connection-base span {
+  color: var(--text-primary);
+}
+
+.connection-updated {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.connection-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.connection-token {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.connection-token label {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.connection-token input {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+}
+
+.connection-token small {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.connection-item {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.6rem 0.7rem;
+  background: var(--bg-secondary);
+  display: grid;
+  gap: 0.25rem;
+}
+
+.connection-item.ok {
+  border-color: rgba(46, 204, 113, 0.6);
+}
+
+.connection-item.bad {
+  border-color: rgba(231, 76, 60, 0.6);
+}
+
+.connection-item__name {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.connection-item__status {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.connection-item__message {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  word-break: break-word;
+}
+
 .stat-item {
   display: flex;
   justify-content: space-between;
@@ -487,6 +599,24 @@
   min-height: 100px;
   font-family: 'Courier New', monospace;
   line-height: 1.6;
+}
+
+.admin-page .media-uploader {
+  border-color: var(--border);
+  background: var(--bg-secondary);
+}
+
+.admin-page .media-uploader__text {
+  color: var(--text-secondary);
+}
+
+.admin-page .media-uploader__button {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.admin-page .media-uploader__error {
+  color: #ffb4b4;
 }
 
 .word-count {

@@ -10,8 +10,63 @@ export default function AdminNewEntry({ onCreated }) {
   const [tags, setTags] = useState('');
   const [category, setCategory] = useState('journal');
   const [location, setLocation] = useState('');
+  const [mediaUrls, setMediaUrls] = useState('');
+  const [uploadingMedia, setUploadingMedia] = useState(false);
+  const [mediaError, setMediaError] = useState('');
   const [status, setStatus] = useState('');
   const [saving, setSaving] = useState(false);
+
+  const parseMediaUrls = (value) =>
+    value
+      .split(/[\n,]+/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+
+  const getCloudinaryConfig = () => {
+    const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+    const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
+    return { cloudName, uploadPreset };
+  };
+
+  const uploadMediaFiles = async (files) => {
+    const { cloudName, uploadPreset } = getCloudinaryConfig();
+    if (!cloudName || !uploadPreset) {
+      setMediaError('Missing Cloudinary config. Set VITE_CLOUDINARY_CLOUD_NAME and VITE_CLOUDINARY_UPLOAD_PRESET.');
+      return;
+    }
+    if (!files?.length) return;
+
+    setMediaError('');
+    setUploadingMedia(true);
+
+    try {
+      const uploads = await Promise.all(
+        Array.from(files).map(async (file) => {
+          const form = new FormData();
+          form.append('file', file);
+          form.append('upload_preset', uploadPreset);
+          const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
+            method: 'POST',
+            body: form,
+          });
+          const data = await res.json();
+          if (!res.ok) {
+            throw new Error(data?.error?.message || 'Upload failed');
+          }
+          return data.secure_url;
+        })
+      );
+
+      setMediaUrls((prev) => {
+        const existing = prev ? `${prev}\n` : '';
+        return `${existing}${uploads.join('\n')}`.trim();
+      });
+    } catch (err) {
+      setMediaError(err.message || 'Upload failed');
+    } finally {
+      setUploadingMedia(false);
+    }
+  };
 
   const ensureToken = async () => {
     let token = localStorage.getItem('admin:token') || '';
@@ -36,6 +91,7 @@ export default function AdminNewEntry({ onCreated }) {
       tags: tags.split(',').map((t) => t.trim()).filter(Boolean),
       category,
       location,
+      media: parseMediaUrls(mediaUrls),
     };
 
     try {
@@ -70,6 +126,33 @@ export default function AdminNewEntry({ onCreated }) {
         <label>Location<input value={location} onChange={(e) => setLocation(e.target.value)} /></label>
         <label>Category<input value={category} onChange={(e) => setCategory(e.target.value)} /></label>
         <label>Tags (comma separated)<input value={tags} onChange={(e) => setTags(e.target.value)} /></label>
+        <label>
+          Media URLs (comma or new line separated)
+          <textarea rows={3} value={mediaUrls} onChange={(e) => setMediaUrls(e.target.value)} />
+        </label>
+        <div
+          className="media-uploader"
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={(e) => {
+            e.preventDefault();
+            uploadMediaFiles(e.dataTransfer.files);
+          }}
+        >
+          <div className="media-uploader__text">
+            Drag & drop files here, or select files to upload
+          </div>
+          <label className="media-uploader__button">
+            {uploadingMedia ? 'Uploading…' : 'Choose files'}
+            <input
+              type="file"
+              accept="image/*,video/*,audio/*"
+              multiple
+              disabled={uploadingMedia}
+              onChange={(e) => uploadMediaFiles(e.target.files)}
+            />
+          </label>
+          {mediaError && <div className="media-uploader__error">{mediaError}</div>}
+        </div>
         <label>Content<textarea rows={10} value={content} onChange={(e) => setContent(e.target.value)} /></label>
         <div className="form__actions">
           <button className="button" type="submit" disabled={saving}>{saving ? 'Saving…' : 'Save entry'}</button>

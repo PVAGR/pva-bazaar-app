@@ -530,6 +530,14 @@
   border-bottom-color: #5fa3e8;
 }
 
+.markdown-content img {
+  max-width: 100%;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  margin: 1.25rem 0;
+  display: block;
+}
+
 .markdown-content code {
   background: rgba(0, 0, 0, 0.5);
   padding: 0.2rem 0.5rem;
@@ -538,8 +546,62 @@
   font-size: 0.95rem;
 }
 
+.entry-media {
+  margin-top: 2.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.entry-media h3 {
+  margin: 0 0 1rem;
+  color: var(--accent);
+  font-size: 1.2rem;
+}
+
+.media-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.media-item img,
+.media-item video {
+  width: 100%;
+  display: block;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.media-item audio {
+  width: 100%;
+}
+
+.media-link {
+  display: block;
+  padding: 0.75rem 0.9rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--accent);
+  text-decoration: none;
+  word-break: break-all;
+}
+
+.media-link:hover {
+  border-color: var(--accent);
+  background: var(--highlight);
+}
+
 /* Mobile responsiveness */
 @media (max-width: 1024px) {
+  .archive-library {
+    position: relative;
+    height: auto;
+    min-height: 100vh;
+    overflow: auto;
+  }
+
   .archive-layout {
     grid-template-columns: 1fr;
     height: auto;
@@ -557,6 +619,7 @@
     height: auto;
     min-height: 500px;
     max-height: none;
+    overflow: visible;
   }
 }
 
@@ -565,16 +628,83 @@
     font-size: 2rem;
   }
 
+  .archive-header {
+    padding: 1.1rem 1.25rem 1rem;
+  }
+
+  .view-mode-toggle {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .view-btn {
+    font-size: 0.95rem;
+    padding: 0.6rem 1rem;
+  }
+
   .archive-stats {
     flex-direction: column;
     gap: 0.5rem;
   }
 
   .document-header h1 {
-    font-size: 1.8rem;
+    font-size: 1.6rem;
   }
 
   .markdown-content {
-    font-size: 1rem;
+    font-size: 0.95rem;
+    line-height: 1.75;
+  }
+
+  .archive-document {
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .archive-content {
+    padding: 1.5rem 1.25rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .archive-header h1 {
+    font-size: 1.6rem;
+  }
+
+  .archive-subtitle {
+    font-size: 0.9rem;
+  }
+
+  .archive-stats {
+    font-size: 0.8rem;
+  }
+
+  .document-header h1 {
+    font-size: 1.45rem;
+  }
+
+  .document-description {
+    font-size: 0.95rem;
+  }
+
+  .markdown-content h1 {
+    font-size: 1.5rem;
+  }
+
+  .markdown-content h2 {
+    font-size: 1.25rem;
+  }
+
+  .markdown-content h3 {
+    font-size: 1.05rem;
+  }
+
+  .markdown-content p,
+  .markdown-content li {
+    font-size: 0.95rem;
+  }
+
+  .media-grid {
+    grid-template-columns: 1fr;
   }
 }

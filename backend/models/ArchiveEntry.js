@@ -10,6 +10,7 @@ const ArchiveEntrySchema = new mongoose.Schema(
     category: { type: String, default: 'journal' },
     location: { type: String, default: '' },
     externalId: { type: String, default: '' },
+    media: [{ type: String }],
   },
   { timestamps: true },
 );

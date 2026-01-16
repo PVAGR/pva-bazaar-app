@@ -224,6 +224,44 @@ export default function ArchiveLibraryPage() {
     }
   };
 
+  const getMediaType = (url) => {
+    const lower = url.toLowerCase();
+    if (/(\.png|\.jpe?g|\.gif|\.webp|\.svg)$/.test(lower)) return 'image';
+    if (/(\.mp4|\.webm|\.ogg|\.mov)$/.test(lower)) return 'video';
+    if (/(\.mp3|\.wav|\.m4a|\.aac)$/.test(lower)) return 'audio';
+    return 'link';
+  };
+
+  const renderMediaItem = (url, index) => {
+    const type = getMediaType(url);
+    if (type === 'image') {
+      return (
+        <div className="media-item" key={`${url}-${index}`}>
+          <img src={url} alt="Entry media" loading="lazy" />
+        </div>
+      );
+    }
+    if (type === 'video') {
+      return (
+        <div className="media-item" key={`${url}-${index}`}>
+          <video src={url} controls preload="metadata" />
+        </div>
+      );
+    }
+    if (type === 'audio') {
+      return (
+        <div className="media-item" key={`${url}-${index}`}>
+          <audio src={url} controls preload="metadata" />
+        </div>
+      );
+    }
+    return (
+      <a className="media-link" key={`${url}-${index}`} href={url} target="_blank" rel="noopener">
+        {url}
+      </a>
+    );
+  };
+
   // Convert markdown to simple HTML (basic parser)
   const renderMarkdown = (md) => {
     if (!md) return '';
@@ -237,6 +275,8 @@ export default function ArchiveLibraryPage() {
       .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
       // Italic
       .replace(/\*(.+?)\*/g, '<em>$1</em>')
+      // Images
+      .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" />')
       // Links
       .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
       // Lists
@@ -416,17 +456,27 @@ export default function ArchiveLibraryPage() {
               <div className="document-header">
                 <span className="document-category">{selectedEntry.category}</span>
                 <h1>{selectedEntry.title}</h1>
-                <p className="document-description">{selectedEntry.description}</p>
+                {selectedEntry.description && (
+                  <p className="document-description">{selectedEntry.description}</p>
+                )}
                 <div className="document-meta">
-                  <span>📝 {selectedEntry.wordCount} words</span>
-                  <span>•</span>
-                  <span>📄 {selectedEntry.file}</span>
+                  {selectedEntry.wordCount && <span>📝 {selectedEntry.wordCount} words</span>}
+                  {selectedEntry.wordCount && selectedEntry.file && <span>•</span>}
+                  {selectedEntry.file && <span>📄 {selectedEntry.file}</span>}
                 </div>
               </div>
               <div
                 className="markdown-content"
                 dangerouslySetInnerHTML={{ __html: renderMarkdown(markdown) }}
               />
+              {Array.isArray(selectedEntry.media) && selectedEntry.media.length > 0 && (
+                <div className="entry-media">
+                  <h3>Media</h3>
+                  <div className="media-grid">
+                    {selectedEntry.media.map((url, index) => renderMediaItem(url, index))}
+                  </div>
+                </div>
+              )}
             </article>
           )}
         </main>

@@ -10,16 +10,6 @@ export default function EntryDetail({ entries = [] }) {
   const prev = idx > 0 ? list[idx - 1] : null;
   const next = idx >= 0 && idx + 1 < list.length ? list[idx + 1] : null;
 
-  // Lock body scroll on mobile detail view
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      document.body.style.overflow = 'hidden';
-      return () => {
-        document.body.style.overflow = 'auto';
-      };
-    }
-  }, []);
-
   const [fetchedEntry, setFetchedEntry] = useState(null);
   const [loading, setLoading] = useState(false);
 
