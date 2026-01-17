@@ -1,3 +1,62 @@
+  {/* ===== Ultra-compact API Connection Panel Modal ===== */}
+  {showConnectionPanel && (
+    <div className="apiConnOverlay" role="dialog" aria-modal="true">
+      <div className="apiConnModal">
+        <div className="apiConnHeader">
+          <div className="apiConnTitle">API</div>
+
+          <div className="apiConnHeaderActions">
+            <button
+              className="btnCompact"
+              onClick={() => setShowConnectionPanel(false)}
+              aria-label="Close API connection panel"
+              title="Close"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+
+        <div className="apiConnList">
+          {(connectionChecks || []).map((c) => {
+            const status = c?.ok === true ? "ok" : c?.ok === false ? "err" : "unknown";
+            const statusLabel =
+              status === "ok" ? "OK" : status === "err" ? "Fail" : "—";
+
+            // one-line summary (compact)
+            const oneLine =
+              status === "ok"
+                ? "OK"
+                : (c?.errorShort || c?.error || c?.message || "Failed");
+
+            return (
+              <div key={c.path} className="apiConnRow">
+                <div className="apiConnRowTop">
+                  <span className={`statusDot ${status}`} aria-hidden="true" />
+                  <span className="apiConnPath" title={c.path}>
+                    {c.path}
+                  </span>
+                  <span className={`apiConnStatus ${status}`}>
+                    {statusLabel}
+                  </span>
+                </div>
+
+                {/* secondary line: hidden on small screens by CSS */}
+                <div className="apiConnSub" title={c?.error || c?.message || ""}>
+                  {oneLine}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="apiConnActions">
+          <button className="btnCompact" onClick={() => navigate("/")}>Home</button>
+          <button className="btnCompact" onClick={handleLogout}>Logout</button>
+        </div>
+      </div>
+    </div>
+  )}
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createArchiveEntry, fetchArchiveEntries, deleteArchiveEntry, apiFetch, getApiBase } from '../lib/api';

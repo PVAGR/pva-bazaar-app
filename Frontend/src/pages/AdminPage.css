@@ -940,3 +940,147 @@
     padding: 1.5rem;
   }
 }
+
+/* ===== Ultra-compact API Connection Panel Modal ===== */
+.apiConnOverlay{
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(0,0,0,.45);
+  z-index: 9999;
+  padding: 10px;
+}
+
+.apiConnModal{
+  width: clamp(260px, 92vw, 360px);
+  max-height: 70vh;
+  overflow: hidden;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(12, 18, 14, .96);
+  box-shadow: 0 12px 40px rgba(0,0,0,.45);
+  display: flex;
+  flex-direction: column;
+}
+
+.apiConnHeader{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(255,255,255,.10);
+}
+
+.apiConnTitle{
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .4px;
+  opacity: .9;
+}
+
+.apiConnHeaderActions{
+  display: flex;
+  gap: 6px;
+}
+
+.apiConnList{
+  padding: 8px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.apiConnRow{
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 8px;
+  padding: 6px 8px;
+  background: rgba(0,0,0,.12);
+}
+
+.apiConnRowTop{
+  display: grid;
+  grid-template-columns: 10px 1fr auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.apiConnPath{
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: .95;
+}
+
+.apiConnStatus{
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.12);
+  opacity: .95;
+}
+
+.apiConnStatus.ok{ }
+.apiConnStatus.err{ }
+.apiConnStatus.unknown{ opacity: .65; }
+
+.apiConnSub{
+  margin-top: 4px;
+  font-size: 11px;
+  opacity: .78;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.apiConnActions{
+  display: flex;
+  gap: 8px;
+  padding: 8px 10px;
+  border-top: 1px solid rgba(255,255,255,.10);
+  justify-content: flex-end;
+}
+
+/* Compact buttons (still usable tap targets) */
+.btnCompact{
+  font-size: 12px;
+  padding: 6px 10px;
+  min-height: 32px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,.16);
+  background: rgba(0,0,0,.18);
+  cursor: pointer;
+}
+
+.btnCompact:hover{
+  background: rgba(0,0,0,.28);
+}
+
+/* Status dot */
+.statusDot{
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(255,255,255,.18);
+}
+
+.statusDot.ok{ background: rgba(70, 255, 180, .85); }
+.statusDot.err{ background: rgba(255, 90, 90, .85); }
+.statusDot.unknown{ background: rgba(255,255,255,.25); }
+
+/* Extra compact on very small screens */
+@media (max-width: 420px){
+  .apiConnModal{
+    width: clamp(240px, 94vw, 340px);
+    max-height: 75vh;
+  }
+  /* hide redundant 2nd line on mobile */
+  .apiConnSub{
+    display: none;
+  }
+}
