@@ -1,35 +1,30 @@
-# How to Be My Patient Coding Assistant
+# PVA Bazaar - Copilot Instructions
 
-## Your Primary Role
+## Repo layout
+- Frontend/ = React + Vite (client). Deployed to GitHub Pages / pvabazaar.org
+- backend/ = Express API (server). Deployed to Vercel
 
-Act as a patient, detail-oriented pair programmer and teacher. Explain everything in simple, clear terms, as if to a beginner. Break all tasks into the smallest possible steps and confirm understanding before proceeding.
+## Frontend rules (Vite)
+- Use Vite env vars only: import.meta.env.VITE_*
+- API base URL comes from ENV.API_URL (Frontend/src/config/env.ts)
+- All backend API calls must go through Frontend/src/lib/api.js helpers (apiGet/apiPost/apiPut/apiDelete)
+- Do not hardcode backend URLs in components.
+- Do not send internal auth headers to third-party APIs (Cloudinary etc). External APIs may use fetch or a separate client.
 
-## Communication Rules
+## Backend rules
+- CORS must allow pvabazaar.org (and any other configured origins)
+- Never commit secrets; use Vercel environment variables.
 
-- **Pace:** Proceed slowly and methodically. Explain each step before taking action.
-- **Tone:** Be encouraging, friendly, and never condescending.
-- **Confirmation:** Before executing any command or making a change, clearly state what you plan to do and ask for confirmation. Example: "I'm going to create a .gitignore file to protect our secrets. Should I proceed?"
+## Commands
+Frontend:
+- cd Frontend && npm i
+- npm run dev
+- npm run build
 
-## Code Review Protocol
+Backend:
+- cd backend && npm i
+- npm run dev
 
-When reviewing code, always follow this sequence:
-
-1.  **Secrets First:** Scan for exposed credentials, API keys, or tokens.
-2.  **Stability Check:** Identify crashes, runtime errors, and import issues.
-3.  **Security Scan:** Look for vulnerabilities like missing input validation.
-4.  **Architecture Review:** Assess if the code structure makes sense for its goal.
-5.  **Polish:** Suggest improvements to code style and clarity.
-
-After each step, provide a summary before moving to the next.
-
-## Project Context
-
-- **Frontend:** Located in `/Frontend`. Uses Vite. Run with `cd Frontend && npm install && npm run dev`.
-- **Backend:** Located in `/Backend`. Uses Express.js + MongoDB. Run with `cd Backend && npm install && npm run dev`.
-- **Secrets:** Require a `.env` file in `Backend` with `MONGODB_URI` and `JWT_SECRET`. NEVER commit this file.
-
-## Current Priority Issues
-
-1.  **CRITICAL:** Remove hardcoded secrets from `pva-bazaar-app.env` and secure them.
-2.  **HIGH:** Fix case-sensitivity import bug (e.g., `user.js` vs. `User.js`).
-3.  **HIGH:** Connect frontend HTML pages to backend API endpoints.
+## PR checks
+- No secrets in git history (Mongo URI, JWT, admin code)
+- Frontend builds successfully with production env

@@ -1,25 +1,11 @@
-let cachedApiBase = null;
-let cachePromise = null;
 
-export function getApiBase() {
-  // 1. First check build-time environment variable (highest priority)
-  const envApiUrl = import.meta.env.VITE_API_URL;
-  if (envApiUrl) return envApiUrl;
-  
-  // 2. Fallback to production backend
-  return 'https://pva-backend-api.vercel.app';
-}
 
-export async function getApiBaseAsync() {
-  // Use same logic as getApiBase
-  return getApiBase();
-}
+import api from "./axios";
 
-export function apiFetch(path, options = {}) {
-  const base = getApiBase();
-  const clean = base ? base.replace(/\/+$/, '') : '';
-  const url = clean ? `${clean}${path}` : path;
-  return fetch(url, options);
+export const apiGet = (path, config) => api.get(path, config).then(r => r.data);
+export const apiPost = (path, body, config) => api.post(path, body, config).then(r => r.data);
+export const apiPut = (path, body, config) => api.put(path, body, config).then(r => r.data);
+export const apiDelete = (path, config) => api.delete(path, config).then(r => r.data);
 }
 
 // Archive API functions
