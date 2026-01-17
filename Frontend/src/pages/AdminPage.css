@@ -1084,3 +1084,35 @@
     display: none;
   }
 }
+
+/* Force the connection modal to be compact */
+.apiConnModal {
+  width: clamp(240px, 34vw, 320px);
+  max-height: 60vh;
+  overflow: hidden;
+  padding: 8px 8px;
+}
+
+/* Scroll inside the list area, not the page */
+.apiConnList {
+  max-height: calc(60vh - 42px); /* header/footer allowance */
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Make each endpoint card smaller */
+.apiConnList .apiConnRow {
+  padding: 6px 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 1.1;
+}
+
+/* Hide the redundant third line on small screens */
+@media (max-width: 420px) {
+  .apiConnList .apiConnSub {
+    display: none;
+  }
+}
