@@ -357,6 +357,7 @@ export default function AdminPage() {
             localStorage.setItem('archive-theme', !darkMode ? 'dark' : 'light');
           }}
           aria-label="Toggle theme"
+          title="Toggle light/dark theme"
         >
           {darkMode ? '☀️' : '🌙'}
         </button>
@@ -410,6 +411,7 @@ export default function AdminPage() {
                 localStorage.setItem('archive-theme', !darkMode ? 'dark' : 'light');
               }}
               aria-label="Toggle theme"
+              title="Toggle light/dark theme"
             >
               {darkMode ? '☀️' : '🌙'}
             <div className="sidebar-section connection-panel">
@@ -420,6 +422,8 @@ export default function AdminPage() {
                   className="connection-refresh"
                   onClick={runConnectionCheck}
                   disabled={connectionStatus.loading}
+                  aria-label="Refresh connection status"
+                  title="Refresh connection status"
                 >
                   {connectionStatus.loading ? 'Checking…' : 'Refresh'}
                 </button>
