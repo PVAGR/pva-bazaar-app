@@ -452,9 +452,12 @@ export default function AdminPage() {
                   const item = connectionStatus.results[key];
                   return (
                     <li key={key} className={`connection-item ${item?.ok ? 'ok' : 'bad'}`}>
-                      <div className="connection-item__name">/api/{key}</div>
-                      <div className="connection-item__status">
-                        {item ? (item.ok ? 'OK' : `Fail (${item.status})`) : '—'}
+                      <div className="connection-item__row">
+                        <span className="connection-item__status-dot" aria-hidden="true"></span>
+                        <span className="connection-item__name">/api/{key}</span>
+                        <span className="connection-item__status">
+                          {item ? (item.ok ? 'OK' : `Fail (${item.status})`) : '—'}
+                        </span>
                       </div>
                       {item?.message && (
                         <div className="connection-item__message">{item.message}</div>
