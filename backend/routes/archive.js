@@ -1,16 +1,64 @@
+
 const express = require('express');
 const router = express.Router();
 const ArchiveEntry = require('../models/ArchiveEntry');
-const auth = require('../middleware/auth');
-const adminOnly = require('../middleware/adminOnly');
+const { normalizeArchiveInput, toPublicArchiveEntry } = require('../lib/archiveNormalize');
+const adminSession = require('../middleware/adminSession');
 
-// List all archive entries (newest first)
+
+// Cursor-based pagination, filtering, and search
+const { encodeCursor, decodeCursor } = require('../lib/cursor');
 router.get('/', async (req, res) => {
   try {
-    const entries = await ArchiveEntry.find().sort({ date: -1, createdAt: -1 }).lean();
-    res.json({ ok: true, entries });
+    // Parse query params
+    const limit = Math.max(1, Math.min(parseInt(req.query.limit, 10) || 12, 50));
+    const cursor = req.query.cursor ? decodeCursor(req.query.cursor) : null;
+    const category = req.query.category ? String(req.query.category).toLowerCase() : null;
+    const tag = req.query.tag ? String(req.query.tag) : null;
+    const q = req.query.q ? String(req.query.q) : null;
+    const sort = req.query.sort === 'old' ? 'old' : 'new';
+
+    // Build filter
+    const filter = {};
+    if (category) filter.category = new RegExp('^' + category + '$', 'i');
+    if (tag) filter.tags = tag;
+
+    // Search
+    if (q) {
+      // Prefer text index
+      filter.$text = { $search: q };
+    }
+
+    // Cursor pagination
+    if (cursor && cursor.createdAt && cursor.id) {
+      const cmp = sort === 'old' ? '$gt' : '$lt';
+      filter.$or = [
+        { createdAt: { [cmp]: cursor.createdAt } },
+        { createdAt: cursor.createdAt, _id: { [cmp]: cursor.id } },
+      ];
+    }
+
+    // Sort order
+    const sortOrder = sort === 'old' ? { createdAt: 1, _id: 1 } : { createdAt: -1, _id: -1 };
+
+    // Projection: avoid huge text payloads in list
+    const projection = q ? { score: { $meta: 'textScore' } } : {};
+
+    let query = ArchiveEntry.find(filter, projection).sort(sortOrder).limit(limit + 1);
+    if (q) query = query.sort({ score: { $meta: 'textScore' }, ...sortOrder });
+    const docs = await query.lean();
+
+    // Prepare items and nextCursor
+    const items = docs.slice(0, limit).map(toPublicArchiveEntry);
+    let nextCursor = null;
+    if (docs.length > limit) {
+      const last = docs[limit - 1];
+      nextCursor = encodeCursor({ createdAt: last.createdAt, id: last._id.toString() });
+    }
+
+    res.json({ ok: true, items, nextCursor });
   } catch (err) {
-    res.status(500).json({ ok: false, message: err.message });
+    res.status(500).json({ ok: false, error: err.message });
   }
 });
 
@@ -21,76 +69,47 @@ router.get('/:id', async (req, res) => {
     const entry =
       (await ArchiveEntry.findById(id).lean()) ||
       (await ArchiveEntry.findOne({ externalId: id }).lean());
-    if (!entry) return res.status(404).json({ ok: false, message: 'Entry not found' });
-    res.json({ ok: true, entry });
+    if (!entry) return res.status(404).json({ ok: false, error: 'Entry not found' });
+    res.json({ ok: true, item: toPublicArchiveEntry(entry) });
   } catch (err) {
-    res.status(500).json({ ok: false, message: err.message });
+    res.status(500).json({ ok: false, error: err.message });
   }
 });
 
-// Create a new entry (admin only)
-router.post('/', auth, adminOnly, async (req, res) => {
+// Create a new entry (admin only, session-based)
+router.post('/', adminSession, async (req, res) => {
   try {
-    const payload = {
-      title: req.body?.title || 'Untitled',
-      date: req.body?.date || new Date(),
-      contentHtml: req.body?.contentHtml || req.body?.content || '',
-      excerpt: req.body?.excerpt || '',
-      tags: Array.isArray(req.body?.tags) ? req.body.tags : [],
-      category: req.body?.category || 'journal',
-      location: req.body?.location || '',
-      externalId: req.body?.id || '',
-      media: Array.isArray(req.body?.media) ? req.body.media : [],
-    };
+    const payload = normalizeArchiveInput(req.body);
     const entry = new ArchiveEntry(payload);
     await entry.save();
-    res.status(201).json({ ok: true, entry });
+    res.status(201).json({ ok: true, item: toPublicArchiveEntry(entry) });
   } catch (err) {
-    res.status(500).json({ ok: false, message: err.message });
+    res.status(500).json({ ok: false, error: err.message });
   }
 });
 
-// Update an entry (admin only)
-router.put('/:id', auth, adminOnly, async (req, res) => {
+// Update an entry (admin only, session-based)
+router.put('/:id', adminSession, async (req, res) => {
   try {
     const { id } = req.params;
-    const updates = {
-      title: req.body?.title,
-      date: req.body?.date,
-      contentHtml: req.body?.contentHtml || req.body?.content,
-      excerpt: req.body?.excerpt,
-      tags: Array.isArray(req.body?.tags) ? req.body.tags : undefined,
-      category: req.body?.category,
-      location: req.body?.location,
-      media: Array.isArray(req.body?.media) ? req.body.media : undefined,
-    };
-    Object.keys(updates).forEach((key) => updates[key] === undefined && delete updates[key]);
-
+    const updates = normalizeArchiveInput(req.body);
     const entry = await ArchiveEntry.findByIdAndUpdate(id, updates, { new: true }).lean();
-    if (!entry) return res.status(404).json({ ok: false, message: 'Entry not found' });
-    res.json({ ok: true, entry });
+    if (!entry) return res.status(404).json({ ok: false, error: 'Entry not found' });
+    res.json({ ok: true, item: toPublicArchiveEntry(entry) });
   } catch (err) {
-    res.status(500).json({ ok: false, message: err.message });
+    res.status(500).json({ ok: false, error: err.message });
   }
 });
 
-// Delete an entry (admin secret code only)
-router.delete('/:id', async (req, res) => {
+// Delete an entry (admin only, session-based)
+router.delete('/:id', adminSession, async (req, res) => {
   try {
-    // Verify admin secret code from header
-    const adminCode = req.headers['x-admin-code'];
-    const validAdminCode = process.env.ADMIN_SECRET_CODE || 'pva123zxc!';
-    
-    if (!adminCode || adminCode !== validAdminCode) {
-      return res.status(403).json({ ok: false, message: 'Invalid admin code' });
-    }
-    
     const { id } = req.params;
     const entry = await ArchiveEntry.findByIdAndDelete(id).lean();
-    if (!entry) return res.status(404).json({ ok: false, message: 'Entry not found' });
-    res.json({ ok: true, message: 'Entry deleted successfully', entry });
+    if (!entry) return res.status(404).json({ ok: false, error: 'Entry not found' });
+    res.json({ ok: true, message: 'Entry deleted successfully', item: toPublicArchiveEntry(entry) });
   } catch (err) {
-    res.status(500).json({ ok: false, message: err.message });
+    res.status(500).json({ ok: false, error: err.message });
   }
 });
 

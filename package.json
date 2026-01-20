@@ -58,6 +58,9 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.18.0",
     "morgan": "^1.10.1",
+    "react-helmet-async": "^2.0.5",
+    "react-markdown": "^10.1.0",
+    "rehype-sanitize": "^6.0.0",
     "serverless-http": "^3.2.0",
     "web3": "^4.16.0"
   },

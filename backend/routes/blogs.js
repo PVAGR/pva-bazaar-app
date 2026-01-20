@@ -1,3 +1,4 @@
+const adminSession = require('../middleware/adminSession');
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
@@ -33,15 +34,9 @@ if (process.env.ENABLE_QUICK_PUBLISH === 'true') {
   });
 }
 
-// Admin-only: create or rotate a blog's edit secret
-router.post('/setup', async (req, res) => {
+// Admin-only: create or rotate a blog's edit secret (session-based)
+router.post('/setup', adminSession, async (req, res) => {
   try {
-    const adminSecret = process.env.ADMIN_SECRET_CODE;
-    if (!adminSecret)
-      return res.status(500).json({ ok: false, message: 'ADMIN_SECRET_CODE not configured' });
-    if (req.body?.secret !== adminSecret)
-      return res.status(401).json({ ok: false, message: 'Unauthorized' });
-
     const slug = (req.body?.slug || '').trim().toLowerCase();
     const title = (req.body?.title || '').trim();
     if (!slug || !title)
@@ -88,14 +83,9 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Admin-only: list pending blogs
-router.get('/pending', async (req, res) => {
+// Admin-only: list pending blogs (session-based)
+router.get('/pending', adminSession, async (req, res) => {
   try {
-    const adminSecret = process.env.ADMIN_SECRET_CODE;
-    if (!adminSecret)
-      return res.status(500).json({ ok: false, message: 'ADMIN_SECRET_CODE not configured' });
-    if ((req.query?.secret || '') !== adminSecret)
-      return res.status(401).json({ ok: false, message: 'Unauthorized' });
     const blogs = await Blog.find({ status: 'pending' })
       .sort({ createdAt: -1 })
       .select('slug title createdAt');
@@ -152,15 +142,9 @@ router.post('/:slug/update', async (req, res) => {
   }
 });
 
-// Admin-only: publish a pending blog and issue an edit secret
-router.post('/:slug/publish', async (req, res) => {
+// Admin-only: publish a pending blog and issue an edit secret (session-based)
+router.post('/:slug/publish', adminSession, async (req, res) => {
   try {
-    const adminSecret = process.env.ADMIN_SECRET_CODE;
-    if (!adminSecret)
-      return res.status(500).json({ ok: false, message: 'ADMIN_SECRET_CODE not configured' });
-    if (req.body?.secret !== adminSecret)
-      return res.status(401).json({ ok: false, message: 'Unauthorized' });
-
     const slug = req.params.slug.trim().toLowerCase();
     const blog = await Blog.findOne({ slug });
     if (!blog) return res.status(404).json({ ok: false, message: 'Blog not found' });

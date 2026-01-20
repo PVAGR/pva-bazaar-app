@@ -1,3 +1,4 @@
+const adminSession = require('../middleware/adminSession');
 const express = require('express');
 const router = express.Router();
 const rateLimit = require('express-rate-limit');
@@ -12,14 +13,9 @@ const commentsLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-// Admin-only: list pending comments (place before slug routes to avoid conflicts)
-router.get('/pending', async (req, res) => {
+// Admin-only: list pending comments (session-based)
+router.get('/pending', adminSession, async (req, res) => {
   try {
-    const adminSecret = process.env.ADMIN_SECRET_CODE;
-    if (!adminSecret)
-      return res.status(500).json({ ok: false, message: 'ADMIN_SECRET_CODE not configured' });
-    if ((req.query?.secret || '') !== adminSecret)
-      return res.status(401).json({ ok: false, message: 'Unauthorized' });
     const comments = await Comment.find({ approved: false }).sort({ createdAt: -1 }).lean();
     res.json({ ok: true, comments });
   } catch (err) {
@@ -27,14 +23,9 @@ router.get('/pending', async (req, res) => {
   }
 });
 
-// Admin-only: approve a comment
-router.post('/:id/approve', async (req, res) => {
+// Admin-only: approve a comment (session-based)
+router.post('/:id/approve', adminSession, async (req, res) => {
   try {
-    const adminSecret = process.env.ADMIN_SECRET_CODE;
-    if (!adminSecret)
-      return res.status(500).json({ ok: false, message: 'ADMIN_SECRET_CODE not configured' });
-    if (req.body?.secret !== adminSecret)
-      return res.status(401).json({ ok: false, message: 'Unauthorized' });
     const comment = await Comment.findById(req.params.id);
     if (!comment) return res.status(404).json({ ok: false, message: 'Comment not found' });
     comment.approved = true;
@@ -45,14 +36,9 @@ router.post('/:id/approve', async (req, res) => {
   }
 });
 
-// Admin-only: delete a comment
-router.post('/:id/delete', async (req, res) => {
+// Admin-only: delete a comment (session-based)
+router.post('/:id/delete', adminSession, async (req, res) => {
   try {
-    const adminSecret = process.env.ADMIN_SECRET_CODE;
-    if (!adminSecret)
-      return res.status(500).json({ ok: false, message: 'ADMIN_SECRET_CODE not configured' });
-    if (req.body?.secret !== adminSecret)
-      return res.status(401).json({ ok: false, message: 'Unauthorized' });
     await Comment.findByIdAndDelete(req.params.id);
     res.json({ ok: true, message: 'Deleted' });
   } catch (err) {
@@ -60,14 +46,9 @@ router.post('/:id/delete', async (req, res) => {
   }
 });
 
-// Admin-only: debug list all comments
-router.get('/debug/all', async (req, res) => {
+// Admin-only: debug list all comments (session-based)
+router.get('/debug/all', adminSession, async (req, res) => {
   try {
-    const adminSecret = process.env.ADMIN_SECRET_CODE;
-    if (!adminSecret)
-      return res.status(500).json({ ok: false, message: 'ADMIN_SECRET_CODE not configured' });
-    if ((req.query?.secret || '') !== adminSecret)
-      return res.status(401).json({ ok: false, message: 'Unauthorized' });
     const comments = await Comment.find({}).sort({ createdAt: -1 }).lean();
     res.json({ ok: true, comments });
   } catch (err) {

@@ -1,44 +1,11 @@
 // Serverless archive API endpoint - GET and POST
-const mongoose = require('mongoose');
 
-// Connection caching for serverless
-let cachedConnection = null;
+// Serverless archive API endpoint - GET and POST (Vercel)
+const dbConnect = require('../lib/dbConnect');
+const ArchiveEntry = require('../models/ArchiveEntry');
+const { normalizeArchiveInput, toPublicArchiveEntry } = require('../lib/archiveNormalize');
 
-async function connectDB() {
-  if (cachedConnection && mongoose.connection.readyState === 1) {
-    return cachedConnection;
-  }
-
-  try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI, {
-      serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 10000,
-      maxPoolSize: 1,
-    });
-    cachedConnection = conn;
-    return conn;
-  } catch (err) {
-    console.error('MongoDB connection error:', err);
-    throw err;
-  }
-}
-
-// Define ArchiveEntry schema inline (for serverless independence)
-const ArchiveEntrySchema = new mongoose.Schema(
-  {
-    title: { type: String, required: true },
-    category: { type: String, required: true },
-    description: { type: String, default: '' },
-    content: { type: String, required: true },
-    wordCount: { type: String, default: '0' },
-    priority: { type: Number, default: 5 },
-    media: [{ type: String }],
-  },
-  { timestamps: true }
-);
-
-// Ensure model is only created once
-const ArchiveEntry = mongoose.models.ArchiveEntry || mongoose.model('ArchiveEntry', ArchiveEntrySchema);
+const { encodeCursor, decodeCursor } = require('../lib/cursor');
 
 module.exports = async (req, res) => {
   // CORS headers - allow pvabazaar.org
@@ -48,12 +15,10 @@ module.exports = async (req, res) => {
     .filter(Boolean);
 
   const origin = req.headers.origin;
-
   if (origin && allowed.includes(origin)) {
     res.setHeader("Access-Control-Allow-Origin", origin);
     res.setHeader("Vary", "Origin");
   }
-
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Admin-Code");
   res.setHeader('Content-Type', 'application/json');
@@ -64,73 +29,74 @@ module.exports = async (req, res) => {
   }
 
   try {
-    // Connect to DB
-    await connectDB();
+    await dbConnect();
 
-    // GET - fetch all entries (public)
     if (req.method === 'GET') {
-      const entries = await ArchiveEntry.find()
-        .sort({ createdAt: -1 })
-        .lean()
-        .exec();
+      // Parse query params
+      const limit = Math.max(1, Math.min(parseInt(req.query.limit, 10) || 12, 50));
+      const cursor = req.query.cursor ? decodeCursor(req.query.cursor) : null;
+      const category = req.query.category ? String(req.query.category).toLowerCase() : null;
+      const tag = req.query.tag ? String(req.query.tag) : null;
+      const q = req.query.q ? String(req.query.q) : null;
+      const sort = req.query.sort === 'old' ? 'old' : 'new';
 
-      return res.status(200).json({
-        ok: true,
-        items: entries.map(e => ({
-          id: e._id.toString(),
-          title: e.title,
-          category: e.category,
-          description: e.description || '',
-          content: e.content,
-          wordCount: e.wordCount || '0',
-          priority: e.priority || 5,
-          media: Array.isArray(e.media) ? e.media : [],
-          createdAt: e.createdAt,
-          updatedAt: e.updatedAt,
-        })),
-      });
+      // Build filter
+      const filter = {};
+      if (category) filter.category = new RegExp('^' + category + '$', 'i');
+      if (tag) filter.tags = tag;
+
+      // Search
+      if (q) {
+        filter.$text = { $search: q };
+      }
+
+      // Cursor pagination
+      if (cursor && cursor.createdAt && cursor.id) {
+        const cmp = sort === 'old' ? '$gt' : '$lt';
+        filter.$or = [
+          { createdAt: { [cmp]: cursor.createdAt } },
+          { createdAt: cursor.createdAt, _id: { [cmp]: cursor.id } },
+        ];
+      }
+
+      // Sort order
+      const sortOrder = sort === 'old' ? { createdAt: 1, _id: 1 } : { createdAt: -1, _id: -1 };
+
+      // Projection: avoid huge text payloads in list
+      const projection = q ? { score: { $meta: 'textScore' } } : {};
+
+      let query = ArchiveEntry.find(filter, projection).sort(sortOrder).limit(limit + 1);
+      if (q) query = query.sort({ score: { $meta: 'textScore' }, ...sortOrder });
+      const docs = await query.lean();
+
+      // Prepare items and nextCursor
+      const items = docs.slice(0, limit).map(toPublicArchiveEntry);
+      let nextCursor = null;
+      if (docs.length > limit) {
+        const last = docs[limit - 1];
+        nextCursor = encodeCursor({ createdAt: last.createdAt, id: last._id.toString() });
+      }
+
+      return res.status(200).json({ ok: true, items, nextCursor });
     }
 
-    // POST - create entry (admin only)
     if (req.method === 'POST') {
-      // Check admin code
-      const adminCode = req.headers['x-admin-code'];
-      const expectedCode = process.env.ADMIN_SECRET_CODE;
-
-      if (!adminCode || !expectedCode || adminCode !== expectedCode) {
-        return res.status(401).json({
-          ok: false,
-          error: 'Unauthorized - Invalid or missing admin code',
-        });
-      }
-
-      // Parse body
+      // Parse JSON body (Vercel passes req.body as string sometimes)
       let body = req.body;
       if (typeof body === 'string') {
-        try {
-          body = JSON.parse(body);
-        } catch (err) {
-          return res.status(400).json({
-            ok: false,
-            error: 'Invalid JSON body',
-          });
-        }
+        try { body = JSON.parse(body); } catch { body = {}; }
       }
+      const payload = normalizeArchiveInput(body);
+      const entry = new ArchiveEntry(payload);
+      await entry.save();
+      return res.status(201).json({ ok: true, item: toPublicArchiveEntry(entry) });
+    }
 
-      // Validate required fields
-      if (!body.title || !body.category || !body.content) {
-        return res.status(400).json({
-          ok: false,
-          error: 'Missing required fields: title, category, content',
-        });
-      }
-
-      // Create entry
-      const newEntry = new ArchiveEntry({
-        title: body.title,
-        category: body.category,
-        description: body.description || '',
-        content: body.content,
+    res.status(405).json({ ok: false, error: 'Method not allowed' });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+};
         wordCount: body.wordCount || '0',
         priority: body.priority || 5,
         media: Array.isArray(body.media) ? body.media : [],

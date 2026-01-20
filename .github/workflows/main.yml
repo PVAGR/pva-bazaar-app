@@ -1,11 +1,9 @@
+
+# Disabled push trigger: Canonical deploy is deploy-frontend.yml. This workflow is workflow_dispatch only for manual use.
 name: Deploy Frontend to GitHub Pages
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'Frontend/**'
-      - '.github/workflows/main.yml'
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:

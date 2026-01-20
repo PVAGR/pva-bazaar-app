@@ -1,18 +1,13 @@
+const adminSession = require('../middleware/adminSession');
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
 const EditablePage = require('../models/EditablePage');
 
-// Create or rotate an editable page's secret (admin-only via ADMIN_SECRET_CODE)
-router.post('/setup', async (req, res) => {
+// Create or rotate an editable page's secret (admin-only, session-based)
+router.post('/setup', adminSession, async (req, res) => {
   try {
-    const adminSecret = process.env.ADMIN_SECRET_CODE;
-    if (!adminSecret)
-      return res.status(500).json({ ok: false, message: 'ADMIN_SECRET_CODE not configured' });
-    if (req.body?.secret !== adminSecret)
-      return res.status(401).json({ ok: false, message: 'Unauthorized' });
-
     const slug = (req.body?.slug || 'home').trim().toLowerCase();
     const title = req.body?.title || '';
     const rotate = !!req.body?.rotate;

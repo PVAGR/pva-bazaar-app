@@ -1,3 +1,8 @@
+  // Inventory fields
+  stockQty: { type: Number, default: 0 },
+  reservedQty: { type: Number, default: 0 },
+  soldQty: { type: Number, default: 0 },
+  isUnlimited: { type: Boolean, default: false },
 // backend/models/Artifact.js - Enhanced version
 const mongoose = require('mongoose');
 
@@ -13,6 +18,11 @@ const artifactSchema = new mongoose.Schema({
   materials: [String],
   artisan: { type: String, required: true },
   creator: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+
+  // Canonical MarketplaceItem fields
+  slug: { type: String, unique: true, sparse: true },
+  status: { type: String, enum: ['draft', 'published'], default: 'published' },
+  tags: [{ type: String }],
 
   // Payout and consignment info
   payoutInfo: {
@@ -62,14 +72,20 @@ const artifactSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });
+
+// Compound index for pagination
+artifactSchema.index({ createdAt: -1, _id: -1 });
+// Unique slug index
+artifactSchema.index({ slug: 1 }, { unique: true, sparse: true });
 // Text index for search endpoints and vector fallback
 artifactSchema.index({
   name: 'text',
   title: 'text',
   description: 'text',
+  category: 'text',
+  tags: 'text',
   materials: 'text',
   artisan: 'text',
-  category: 'text',
 });
 
 module.exports = mongoose.model('Artifact', artifactSchema);

@@ -6,8 +6,6 @@ on:
     paths:
       - 'Frontend/**'
       - '.github/workflows/deploy-frontend.yml'
-  pull_request:
-    branches: [ main ]
   workflow_dispatch:
 
 permissions:
@@ -17,7 +15,7 @@ permissions:
 
 concurrency:
   group: "pages"
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -38,14 +36,25 @@ jobs:
           cd Frontend
           npm ci
 
+      - name: Set Sentry Release (git SHA)
+        id: sentry_release
+        run: echo "RELEASE=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
       - name: Build frontend
         run: |
           cd Frontend
           npm run build
         env:
-          VITE_API_URL: ${{ secrets.VITE_API_URL || 'https://pva-bazaar-api.vercel.app' }}
+          VITE_API_URL: ${{ vars.VITE_API_BASE_URL || secrets.VITE_API_URL || 'https://api.pvabazaar.org' }}
           VITE_BASE_PATH: '/pva-bazaar-app/'
+          VITE_SENTRY_RELEASE: ${{ env.RELEASE }}
 
+      - name: Validate dist output
+        run: |
+          if [ ! -d "Frontend/dist" ] || [ ! -f "Frontend/dist/index.html" ]; then
+            echo "dist validation failed: dist or index.html missing" && exit 1
+          fi
+          echo "dist validation passed"
       - name: Upload GitHub Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:

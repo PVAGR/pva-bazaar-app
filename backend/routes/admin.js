@@ -3,6 +3,7 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const auth = require('../middleware/auth');
 const adminOnly = require('../middleware/adminOnly');
+const adminSession = require('../middleware/adminSession');
 
 // POST /api/admin/token - Production-safe admin auth via secret code
 router.post('/token', (req, res) => {
@@ -51,6 +52,11 @@ router.get('/status', (req, res, next) => {
       res.json({ ok: true, status: 'admin-ok', user: req.user, timestamp: new Date().toISOString() });
     });
   });
+});
+
+// GET /api/admin/secure-status - Check admin session via cookie
+router.get('/secure-status', adminSession, (req, res) => {
+  res.json({ ok: true, status: 'admin-ok', user: req.admin, timestamp: new Date().toISOString() });
 });
 
 module.exports = router;

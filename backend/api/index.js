@@ -1,4 +1,7 @@
 const express = require('express');
+const helmet = require('helmet');
+const Sentry = require('@sentry/node');
+const SentryTracing = require('@sentry/tracing');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
@@ -27,62 +30,105 @@ validateEnv();
 // Initialize Express app
 const app = express();
 
-// Helper: Get allowed origins (reused across middlewares)
-function getAllowedOrigins() {
-  const allowed = [
-    'http://localhost:3000',
-    'http://localhost:5173',
-    'http://localhost:8080',
-    'http://localhost:8081',
-    'http://127.0.0.1:3000',
-    'http://127.0.0.1:5173',
-    'http://127.0.0.1:8080',
-    'http://127.0.0.1:8081',
-    'https://pvabazaar.org',
-    'https://www.pvabazaar.org',
-  ];
-  
-  // Support comma-separated ALLOWED_ORIGIN for multiple production domains
-  if (process.env.ALLOWED_ORIGIN) {
-    const additionalOrigins = process.env.ALLOWED_ORIGIN
-      .split(',')
-      .map(o => o.trim())
-      .filter(o => o.length > 0);
-    allowed.push(...additionalOrigins);
-  }
-  
-  return allowed;
+// Trust proxy for correct client IPs behind Vercel/reverse proxy
+app.set('trust proxy', 1);
+
+// Security headers (Helmet)
+app.use(helmet({
+  contentSecurityPolicy: false, // Will tighten in Phase 3.13.2
+}));
+
+// Body size limits (before routes)
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+
+// Rate limiting
+const { generalLimiter, authLimiter, checkoutLimiter, webhookLimiter } = require('../middleware/rateLimit');
+app.use('/api', generalLimiter);
+
+// --- Sentry Monitoring ---
+if (process.env.SENTRY_DSN) {
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN,
+    release: process.env.SENTRY_RELEASE,
+    environment: process.env.SENTRY_ENVIRONMENT || process.env.NODE_ENV,
+    tracesSampleRate: 0.5,
+    integrations: [
+      new Sentry.Integrations.Http({ tracing: true }),
+      new SentryTracing.Integrations.Express({ app }),
+    ],
+    beforeSend(event) {
+      // Scrub PII/tokens/admin codes from event data
+      function scrub(obj) {
+        if (!obj || typeof obj !== 'object') return obj;
+        for (const key of Object.keys(obj)) {
+          if (/token|authorization|jwt|admin/i.test(key)) {
+            obj[key] = '[Filtered]';
+          } else if (typeof obj[key] === 'object') {
+            scrub(obj[key]);
+          }
+        }
+        return obj;
+      }
+      if (event.request) scrub(event.request.headers);
+      if (event.request) scrub(event.request.data);
+      if (event.user) scrub(event.user);
+      if (event.extra) scrub(event.extra);
+      if (event.breadcrumbs) event.breadcrumbs.forEach(b => scrub(b));
+      return event;
+    },
+  });
+  app.use(Sentry.Handlers.requestHandler());
+  app.use(Sentry.Handlers.tracingHandler());
 }
 
-// Middleware
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      if (process.env.ALLOW_ALL_ORIGINS === 'true') return callback(null, true);
-      
-      const allowed = getAllowedOrigins();
-      
-      // Allow requests with no origin (like curl or server-to-server)
-      if (!origin || allowed.includes(origin)) return callback(null, true);
-      return callback(new Error('CORS not allowed for origin: ' + origin));
-    },
-    credentials: true,
-  }),
-);
+// --- Robust CORS Setup ---
 
-// Middleware: Ensure CORS headers on all responses (including errors)
+// Stripe webhook: use express.raw for signature verification (body limit handled by Stripe)
+const stripeWebhookPath = "/api/webhooks/stripe";
+app.use((req, res, next) => {
+  if (req.originalUrl === stripeWebhookPath) {
+    express.raw({ type: "application/json" })(req, res, next);
+  } else {
+    next();
+  }
+});
+// Apply stricter rate limiters to sensitive routes
+app.use('/api/admin', authLimiter);
+app.use('/api/orders', authLimiter);
+app.use('/api/checkout', checkoutLimiter);
+app.use('/api/webhooks', webhookLimiter);
+const allowed = [
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'https://pvabazaar.org',
+  'https://www.pvabazaar.org',
+  // Add more as needed
+  ...((process.env.ALLOWED_ORIGIN || "").split(",").map(s => s.trim()).filter(Boolean))
+];
+
+const corsOptions = {
+  origin: (origin, cb) => {
+    if (!origin) return cb(null, true);
+    if (allowed.includes(origin)) return cb(null, true);
+    return cb(new Error("Not allowed by CORS"));
+  },
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Admin-Code'],
+};
+
+app.use(require('cors')(corsOptions));
+app.options("*", require('cors')(corsOptions));
+
+// Ensure CORS headers on all responses (including errors)
 app.use((req, res, next) => {
   const origin = req.get('origin');
-  const allowed = getAllowedOrigins();
-  
-  // Set CORS headers if origin is allowed or no origin header (server-to-server)
   if (!origin || allowed.includes(origin)) {
     res.set('Access-Control-Allow-Origin', origin || 'https://pvabazaar.org');
     res.set('Access-Control-Allow-Credentials', 'true');
     res.set('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
-    res.set('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Admin-Code,X-Requested-With');
+    res.set('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Admin-Code');
   }
-  
   next();
 });
 // If API is not ready (e.g., missing secrets in production), return 503 for most endpoints
@@ -95,8 +141,10 @@ app.use((req, res, next) => {
   }
   next();
 });
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Stripe webhook route (must come after raw body middleware)
+const webhooksStripeRoutes = require('../routes/webhooksStripe');
+app.use('/api/webhooks', webhooksStripeRoutes);
 
 // Connect to MongoDB - optimized for serverless with global caching
 // Use global to persist connection across serverless function invocations
@@ -177,6 +225,8 @@ const contributeRoutes = require('../routes/contribute');
 const partnersRoutes = require('../routes/partners');
 const adminRoutes = require('../routes/admin');
 const archiveRoutes = require('../routes/archive');
+// Secure admin login endpoint
+const adminLoginRoutes = require('../routes/adminLogin');
 // Models for optional seeding
 const Artifact = require('../models/Artifact');
 const User = require('../models/User');
@@ -309,10 +359,15 @@ app.get('/api/health', async (req, res) => {
   });
 });
 
+
+// Sentry error handler (must be before any other error middleware)
+if (process.env.SENTRY_DSN) {
+  app.use(Sentry.Handlers.errorHandler());
+}
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('🚨 Error:', err.stack);
-  
   // Ensure CORS headers are present on error responses
   const origin = req.get('origin');
   const allowed = getAllowedOrigins();
@@ -320,7 +375,6 @@ app.use((err, req, res, next) => {
     res.set('Access-Control-Allow-Origin', origin || 'https://pvabazaar.org');
     res.set('Access-Control-Allow-Credentials', 'true');
   }
-  
   res.status(500).json({
     ok: false,
     message: 'Something went wrong!',

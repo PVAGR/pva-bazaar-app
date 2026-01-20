@@ -1,10 +1,8 @@
+
+# Disabled push trigger: Canonical deploy is deploy-frontend.yml. This workflow is workflow_dispatch only for manual use.
 name: Deploy Frontend to GitHub Pages
 
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
   workflow_dispatch:
 
 permissions:
@@ -39,7 +37,7 @@ jobs:
         working-directory: Frontend
         run: npm run build
         env:
-          VITE_API_URL: ${{ secrets.VITE_API_URL || 'https://pva-bazaar-api.vercel.app' }}
+          VITE_API_URL: ${{ vars.VITE_API_BASE_URL || secrets.VITE_API_URL || 'https://api.pvabazaar.org' }}
 
       - name: Upload build artifacts
         uses: actions/upload-pages-artifact@v3
