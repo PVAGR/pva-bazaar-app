@@ -1,3 +1,87 @@
+.connection-panel {
+  width: clamp(240px, 34vw, 320px);
+  max-height: 60vh;
+  position: fixed;
+  top: 74px;
+  right: 16px;
+  z-index: 9999;
+  background: #fffbe9;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px #0001;
+  padding: 12px 10px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.connection-list {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  max-height: calc(60vh - 110px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.connection-item {
+  font-size: 0.97em;
+  padding: 6px 4px;
+  margin-bottom: 2px;
+  border-radius: 6px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.connection-item__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.connection-item__status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #bbb;
+  margin-right: 4px;
+  display: inline-block;
+}
+.connection-item.ok .connection-item__status-dot { background: #4caf50; }
+.connection-item.bad .connection-item__status-dot { background: #e53935; }
+
+.connection-item__name {
+  flex: 1 1 auto;
+  font-weight: 500;
+  font-size: 0.98em;
+}
+
+.connection-item__status {
+  font-size: 0.93em;
+  font-weight: 400;
+  color: #888;
+}
+
+.connection-item__message {
+  font-size: 0.88em;
+  color: #b33;
+  margin-left: 18px;
+  margin-top: 2px;
+}
+
+@media (max-width: 420px) {
+  .connection-panel {
+    width: 98vw;
+    max-width: 99vw;
+    min-width: 0;
+    padding: 7px 2vw;
+    right: 0;
+  }
+  .connection-item__message {
+    display: none;
+  }
+}
 /* --- Connection Panel Popup --- */
 .connection-panel {
   background: var(--bg-tertiary);
@@ -1024,8 +1108,7 @@
   opacity: .95;
 }
 
-.apiConnStatus.ok{ }
-.apiConnStatus.err{ }
+
 .apiConnStatus.unknown{ opacity: .65; }
 
 .apiConnSub{

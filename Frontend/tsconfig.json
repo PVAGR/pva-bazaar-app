@@ -1,0 +1,20 @@
+{
+  // "extends": "vite/client", // Not needed, use vite-env.d.ts instead
+  "compilerOptions": {
+    "strict": true,
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "target": "ESNext",
+    "jsx": "react-jsx",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": "./src"
+  },
+  "include": [
+    "src",
+    "vite-env.d.ts"
+  ]
+}

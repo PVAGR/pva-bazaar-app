@@ -4,11 +4,11 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vike dev",
     "prebuild": "node scripts/vercel-info.cjs",
-    "build": "vite build",
+    "build": "vike build",
     "postbuild": "node scripts/copy-src-to-dist.cjs",
-    "preview": "vite preview",
+    "preview": "vike preview",
     "test": "vitest run"
   },
   "dependencies": {
@@ -16,9 +16,12 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.30.3",
+    "vike-react": "^0.6.18",
     "vite": "^5.0.0"
   },
   "devDependencies": {
-    "@vitest/ui": "^3.2.4"
+    "@sentry/vite-plugin": "^4.7.0",
+    "@vitest/ui": "^3.2.4",
+    "vike": "^0.4.252"
   }
 }

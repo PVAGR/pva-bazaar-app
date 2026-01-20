@@ -1,17 +1,37 @@
+
 import { defineConfig } from 'vite';
+import vike from 'vike/plugin';
+import react from '@vitejs/plugin-react';
+import { sentryVitePlugin } from '@sentry/vite-plugin';
 import path from 'path';
 
 export default defineConfig({
   base: process.env.VITE_BASE_PATH || '/',
+  plugins: [
+    vike(),
+    react(),
+    sentryVitePlugin({
+      org: process.env.SENTRY_ORG,
+      project: process.env.SENTRY_PROJECT,
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+      sourcemaps: {
+        assets: './dist/client/assets',
+      },
+      release: process.env.SENTRY_RELEASE,
+      dryRun: !process.env.SENTRY_AUTH_TOKEN,
+    })
+  ],
   build: {
     outDir: 'dist',
     emptyOutDir: true,
-    sourcemap: false,
+    sourcemap: true,
     rollupOptions: {
       external: ['fsevents'],
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom']
+        manualChunks(id, { getModuleInfo }) {
+          if (id.includes('node_modules')) {
+            return 'vendor';
+          }
         }
       }
     }

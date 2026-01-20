@@ -1,4 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
+// Helper to build canonical URLs
+function getCanonicalUrl(path = '') {
+  const base = 'https://pvabazaar.org';
+  return base + (path.startsWith('/') ? path : '/' + path);
+}
 import { Link } from 'react-router-dom';
 import { fetchArchiveEntries } from '../lib/api';
 import './ArchiveLibraryPage.css';
@@ -170,18 +176,9 @@ export default function ArchiveLibraryPage() {
     const saved = localStorage.getItem('archive-theme');
     return saved ? saved === 'dark' : true;
   });
-
-  // Load custom entries from backend
-  useEffect(() => {
-    const loadCustomEntries = async () => {
-      try {
-        const entries = await fetchArchiveEntries();
-        setCustomEntries(entries);
-      } catch (error) {
-        console.error('Failed to load custom entries from server:', error);
-      }
-    };
-    
+  const categories = [
+    'All', 'Index', 'Fiction', 'Spiritual', 'Technology', 'Business', 'Personal', 'Philosophy', 'Wisdom', 'Architecture', 'Strategic'
+  ];
     loadCustomEntries();
     
     // Refresh entries every 30 seconds to show new posts
@@ -217,7 +214,11 @@ export default function ArchiveLibraryPage() {
         setMarkdown(text);
       }
     } catch (error) {
-      console.error('Failed to load archive entry:', error);
+    const [items, setItems] = useState([]);
+    const [nextCursor, setNextCursor] = useState(null);
+    const [error, setError] = useState(null);
+    const [query, setQuery] = useState('');
+    const debouncedQuery = useDebounce(query, 350);
       setMarkdown('# Error\n\nFailed to load this archive entry.');
     } finally {
       setLoading(false);
@@ -301,8 +302,20 @@ export default function ArchiveLibraryPage() {
   };
 
   return (
-    <div className={`archive-library ${darkMode ? 'dark-theme' : 'light-theme'}`}>
-      <header className="archive-header">
+    <>
+      <Helmet>
+        <title>Archive Library | PVA Bazaar</title>
+        <meta name="description" content="Browse the complete PVA Bazaar Archive: 40+ works, 12 categories, 110,000+ words." />
+        <meta property="og:title" content="Archive Library | PVA Bazaar" />
+        <meta property="og:description" content="Browse the complete PVA Bazaar Archive: 40+ works, 12 categories, 110,000+ words." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={getCanonicalUrl('/archive')} />
+        <meta property="og:image" content={getCanonicalUrl('/og-default.jpg')} />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:image" content={getCanonicalUrl('/og-default.jpg')} />
+      </Helmet>
+      <div className={`archive-library ${darkMode ? 'dark-theme' : 'light-theme'}`}>
+        <header className="archive-header">
         <div className="header-content">
           <h1>📚 The Complete Archive</h1>
           <div className="header-actions">

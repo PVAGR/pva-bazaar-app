@@ -59,7 +59,8 @@
   )}
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { createArchiveEntry, fetchArchiveEntries, deleteArchiveEntry, apiFetch, getApiBase } from '../lib/api';
+import { createArchiveEntry, fetchArchiveEntries, deleteArchiveEntry, apiGet } from '../lib/api';
+import { ENV } from '../config/env';
 import './AdminPage.css';
 
 export default function AdminPage() {
@@ -67,7 +68,7 @@ export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [adminCode, setAdminCode] = useState('dev_admin_code'); // Admin secret code for API
+    // Admin code state removed: now session-based only
   const [error, setError] = useState('');
   const [apiError, setApiError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -96,7 +97,7 @@ export default function AdminPage() {
   const [connectionStatus, setConnectionStatus] = useState({
     loading: true,
     checkedAt: null,
-    apiBase: getApiBase(),
+    apiBase: ENV.API_URL,
     results: {},
   });
 
@@ -125,48 +126,27 @@ export default function AdminPage() {
       { key: 'ping', path: '/api/ping' },
       { key: 'version', path: '/api/version' },
       { key: 'archive', path: '/api/archive' },
+      { key: 'items', path: '/api/items' },
     ];
 
     setConnectionStatus((prev) => ({
       ...prev,
       loading: true,
-      apiBase: getApiBase(),
+      apiBase: ENV.API_URL,
     }));
 
     const results = {};
 
     for (const endpoint of endpoints) {
       try {
-        const res = await apiFetch(endpoint.path, { method: 'GET' });
-        const json = await res.json().catch(() => ({}));
+        const res = await apiGet(endpoint.path);
         results[endpoint.key] = {
-          ok: res.ok,
-          status: res.status,
-          message: json.message || json.status || json.error || '',
+          ok: res.ok !== false,
+          status: res.status || 200,
+          message: res.message || res.status || res.error || '',
         };
       } catch (err) {
         results[endpoint.key] = {
-          ok: false,
-          status: 'error',
-          message: err.message || 'Request failed',
-        };
-      }
-    }
-
-    if (adminTokenInput.trim()) {
-      try {
-        const res = await apiFetch('/api/admin/status', {
-          method: 'GET',
-          headers: { Authorization: `Bearer ${adminTokenInput.trim()}` },
-        });
-        const json = await res.json().catch(() => ({}));
-        results.admin = {
-          ok: res.ok,
-          status: res.status,
-          message: json.message || json.status || json.error || '',
-        };
-      } catch (err) {
-        results.admin = {
           ok: false,
           status: 'error',
           message: err.message || 'Request failed',
@@ -177,7 +157,7 @@ export default function AdminPage() {
     setConnectionStatus({
       loading: false,
       checkedAt: new Date().toLocaleString(),
-      apiBase: getApiBase(),
+      apiBase: ENV.API_URL,
       results,
     });
   };
@@ -193,24 +173,37 @@ export default function AdminPage() {
       console.error('Failed to load entries from server:', err);
     }
   };
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     // Trim whitespace from inputs
     const trimmedUsername = username.trim();
     const trimmedPassword = password.trim();
     
-    // Admin credentials - only richyrichaii can access
-    if (trimmedUsername === 'richyrichaii' && trimmedPassword === 'pva123zxc!') {
-      setIsAuthenticated(true);
-      sessionStorage.setItem('admin-auth', 'authenticated');
-      sessionStorage.setItem('admin-auth-version', 'v2'); // Mark as new version with username
+      setIsSubmitting(true);
       setError('');
-      setUsername('');
-      setPassword('');
-    } else {
-      setError('Invalid username or password. Access denied.');
-      setPassword('');
-    }
+      try {
+        const res = await fetch('/api/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: trimmedUsername, password: trimmedPassword })
+        });
+        if (res.ok) {
+          setIsAuthenticated(true);
+          sessionStorage.setItem('admin-auth', 'authenticated');
+          sessionStorage.setItem('admin-auth-version', 'v2');
+          setUsername('');
+          setPassword('');
+          setError('');
+        } else {
+          const data = await res.json().catch(() => ({}));
+          setError(data.message || 'Invalid username or password. Access denied.');
+          setPassword('');
+        }
+      } catch (err) {
+        setError('Network error. Please try again.');
+      } finally {
+        setIsSubmitting(false);
+      }
   };
 
   const handleLogout = () => {
@@ -305,14 +298,10 @@ export default function AdminPage() {
           media: parseMediaUrls(formData.mediaUrls),
         };
 
-        const result = await createArchiveEntry(entryData, adminCode);
+        const result = await createArchiveEntry(entryData);
         
         if (!result.ok) {
-          if (result.error.includes('401') || result.error.toLowerCase().includes('unauthorized')) {
-            setApiError('Admin code incorrect. Please check your secret code.');
-          } else {
-            setApiError(`Failed to create entry: ${result.error}`);
-          }
+          setApiError(`Failed to create entry: ${result.error}`);
           setIsSubmitting(false);
           return;
         }
@@ -380,7 +369,7 @@ export default function AdminPage() {
     
     try {
       setIsSubmitting(true);
-      const result = await deleteArchiveEntry(id, adminCode);
+      const result = await deleteArchiveEntry(id);
       
       if (result.ok) {
         setSavedEntries(prev => prev.filter(entry => entry._id !== id && entry.id !== id));
@@ -455,24 +444,28 @@ export default function AdminPage() {
 
   // Admin panel
   return (
-    <div className={`admin-page authenticated ${darkMode ? 'dark-theme' : 'light-theme'}`}>
-      <div className="admin-header">
-        <div className="header-content">
-          <h1>⚙️ Archive Admin Panel</h1>
-          <div className="header-actions">
-            <Link to="/" className="home-btn">
-              🏠 Home
-            </Link>
-            <button 
-              className="theme-toggle" 
-              onClick={() => {
-                setDarkMode(!darkMode);
-                localStorage.setItem('archive-theme', !darkMode ? 'dark' : 'light');
-              }}
-              aria-label="Toggle theme"
-              title="Toggle light/dark theme"
-            >
-              {darkMode ? '☀️' : '🌙'}
+    <>
+      <div className={`admin-page authenticated ${darkMode ? 'dark-theme' : 'light-theme'}`}>
+        <div className="admin-header">
+          <div className="header-content">
+            <h1>⚙️ Archive Admin Panel</h1>
+            <div className="header-actions">
+              <Link to="/" className="home-btn">
+                🏠 Home
+              </Link>
+              <button 
+                className="theme-toggle" 
+                onClick={() => {
+                  setDarkMode(!darkMode);
+                  localStorage.setItem('archive-theme', !darkMode ? 'dark' : 'light');
+                }}
+                aria-label="Toggle theme"
+                title="Toggle light/dark theme"
+              >
+                {darkMode ? '☀️' : '🌙'}
+              </button>
+            </div>
+            {/* Connection Status Panel - moved outside button for correct layout */}
             <div className="sidebar-section connection-panel">
               <div className="connection-header">
                 <h2>Connection Status</h2>
@@ -507,7 +500,7 @@ export default function AdminPage() {
                 <small>Used only for /api/admin/status check.</small>
               </div>
               <ul className="connection-list">
-                {['health', 'ping', 'version', 'archive', 'admin'].map((key) => {
+                {['health', 'ping', 'version', 'archive', 'items'].map((key) => {
                   const item = connectionStatus.results[key];
                   return (
                     <li key={key} className={`connection-item ${item?.ok ? 'ok' : 'bad'}`}>
@@ -525,240 +518,197 @@ export default function AdminPage() {
                   );
                 })}
               </ul>
-            </div>
-            </button>
-            <button onClick={handleLogout} className="logout-btn">
-              Logout
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div className="admin-container">
-        <div className="admin-sidebar">
-          <div className="sidebar-section">
-            <h2>📊 Statistics</h2>
-            <div className="stat-item">
-              <span>Original Entries:</span>
-              <strong>17</strong>
-            </div>
-            <div className="stat-item">
-              <span>Custom Entries:</span>
-              <strong>{savedEntries.length}</strong>
-            </div>
-            <div className="stat-item">
-              <span>Total Entries:</span>
-              <strong>{17 + savedEntries.length}</strong>
-            </div>
-          </div>
-
-          <div className="sidebar-section">
-            <h2>📝 Your Entries</h2>
-            {savedEntries.length === 0 ? (
-              <p className="empty-message">No custom entries yet</p>
-            ) : (
-              <div className="entries-list">
-                {savedEntries.map(entry => (
-                  <div 
-                    key={entry.id} 
-                    className={`entry-preview ${editingEntry?.id === entry.id ? 'active' : ''}`}
-                    onClick={() => handleEdit(entry)}
-                  >
-                    <div className="entry-preview-header">
-                      <strong>{entry.title}</strong>
-                      <div className="entry-actions">
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDelete(entry._id || entry.id, entry.title);
-                          }}
-                          className="delete-btn"
-                          title="Delete entry"
-                        >
-                          🗑️
-                        </button>
-                      </div>
-                    </div>
-                    <span className="entry-category">{entry.category}</span>
-                    <span className="entry-words">{entry.wordCount} words</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="admin-main">
-          <div className="form-card">
-            <h2>{editingEntry ? '✏️ Edit Archive Entry' : '✍️ Create New Archive Entry'}</h2>
-            
-            {editingEntry && (
-              <div className="info-message">
-                📝 Editing: <strong>{editingEntry.title}</strong>
-                <button onClick={handleCancelEdit} className="cancel-edit-btn">✕ Cancel</button>
-              </div>
-            )}
-            
-            {showSuccess && (
-              <div className="success-message">
-                ✅ Entry {editingEntry ? 'updated' : 'saved'} successfully! It will appear in the archive library.
-              </div>
-            )}
-
-            {apiError && (
-              <div className="error-message" style={{
-                background: '#fee',
-                color: '#c33',
-                padding: '12px',
-                borderRadius: '8px',
-                marginBottom: '16px',
-                border: '1px solid #fcc'
-              }}>
-                ❌ {apiError}
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit}>
-              <div className="form-group">
-                <label htmlFor="adminCode">Admin Secret Code *</label>
-                <input
-                  type="password"
-                  id="adminCode"
-                  value={adminCode}
-                  onChange={(e) => setAdminCode(e.target.value)}
-                  placeholder="Enter admin secret code"
-                  required
-                  style={{
-                    background: '#fffacd',
-                    border: '2px solid #f0e68c'
-                  }}
-                />
-                <small style={{color: '#666', fontSize: '0.85em'}}>
-                  Required to publish entries to the live site
-                </small>
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="title">Title *</label>
-                <input
-                  type="text"
-                  id="title"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleInputChange}
-                  placeholder="Archive Entry 018: My New Story"
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="category">Category *</label>
-                <select
-                  id="category"
-                  name="category"
-                  value={formData.category}
-                  onChange={handleInputChange}
-                  required
-                >
-                  <option value="Fiction">Fiction</option>
-                  <option value="Spiritual">Spiritual</option>
-                  <option value="Technology">Technology</option>
-                  <option value="Business">Business</option>
-                  <option value="Personal">Personal</option>
-                  <option value="Philosophy">Philosophy</option>
-                  <option value="Wisdom">Wisdom</option>
-                  <option value="Architecture">Architecture</option>
-                  <option value="Strategic">Strategic</option>
-                  <option value="Index">Index</option>
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="description">Description *</label>
-                <textarea
-                  id="description"
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  placeholder="A brief description of this archive entry..."
-                  rows="2"
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="mediaUrls">Media URLs (optional)</label>
-                <textarea
-                  id="mediaUrls"
-                  name="mediaUrls"
-                  value={formData.mediaUrls}
-                  onChange={handleInputChange}
-                  placeholder="https://example.com/photo.jpg
-https://example.com/video.mp4"
-                  rows="3"
-                />
-                <small style={{ color: '#666', fontSize: '0.85em' }}>
-                  Add one URL per line or separate with commas.
-                </small>
-                <div
-                  className="media-uploader"
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    uploadMediaFiles(e.dataTransfer.files);
-                  }}
-                >
-                  <div className="media-uploader__text">
-                    Drag & drop files here, or select files to upload
-                  </div>
-                  <label className="media-uploader__button">
-                    {uploadingMedia ? 'Uploading…' : 'Choose files'}
-                    <input
-                      type="file"
-                      accept="image/*,video/*,audio/*"
-                      multiple
-                      disabled={uploadingMedia}
-                      onChange={(e) => uploadMediaFiles(e.target.files)}
-                    />
-                  </label>
-                  {mediaError && <div className="media-uploader__error">{mediaError}</div>}
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="content">Content * (Markdown supported)</label>
-                <textarea
-                  id="content"
-                  name="content"
-                  value={formData.content}
-                  onChange={handleInputChange}
-                  placeholder="# Your Title Here
-
-Write your content here...
-
-## Section
-Your text...
-
-- Bullet points
-- Are supported
-
-**Bold** and *italic* text work too."
-                  rows="15"
-                  required
-                />
-                <div className="word-count">
-                  Word count: {formData.wordCount}
-                </div>
-              </div>
-
-              <button type="submit" className="submit-btn" disabled={isSubmitting}>
-                {isSubmitting ? '⏳ Publishing...' : (editingEntry ? '✅ Update Entry' : '💾 Publish to Live Site')}
+              <button onClick={handleLogout} className="logout-btn">
+                Logout
               </button>
-            </form>
+            </div>
+          </div>
+        </div>
+        <div className="admin-container">
+          <div className="admin-sidebar">
+            <div className="sidebar-section">
+              <h2>📊 Statistics</h2>
+              <div className="stat-item">
+                <span>Original Entries:</span>
+                <strong>17</strong>
+              </div>
+              <div className="stat-item">
+                <span>Custom Entries:</span>
+                <strong>{savedEntries.length}</strong>
+              </div>
+              <div className="stat-item">
+                <span>Total Entries:</span>
+                <strong>{17 + savedEntries.length}</strong>
+              </div>
+            </div>
+            <div className="sidebar-section">
+              <h2>📝 Your Entries</h2>
+              {savedEntries.length === 0 ? (
+                <p className="empty-message">No custom entries yet</p>
+              ) : (
+                <div className="entries-list">
+                  {savedEntries.map(entry => (
+                    <div 
+                      key={entry.id} 
+                      className={`entry-preview ${editingEntry?.id === entry.id ? 'active' : ''}`}
+                      onClick={() => handleEdit(entry)}
+                    >
+                      <div className="entry-preview-header">
+                        <strong>{entry.title}</strong>
+                        <div className="entry-actions">
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(entry._id || entry.id, entry.title);
+                            }}
+                            className="delete-btn"
+                            title="Delete entry"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      </div>
+                      <span className="entry-category">{entry.category}</span>
+                      <span className="entry-words">{entry.wordCount} words</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="admin-main">
+            <div className="form-card">
+              <h2>{editingEntry ? '✏️ Edit Archive Entry' : '✍️ Create New Archive Entry'}</h2>
+              {editingEntry && (
+                <div className="info-message">
+                  📝 Editing: <strong>{editingEntry.title}</strong>
+                  <button onClick={handleCancelEdit} className="cancel-edit-btn">✕ Cancel</button>
+                </div>
+              )}
+              {showSuccess && (
+                <div className="success-message">
+                  ✅ Entry {editingEntry ? 'updated' : 'saved'} successfully! It will appear in the archive library.
+                </div>
+              )}
+              {apiError && (
+                <div className="error-message" style={{
+                  background: '#fee',
+                  color: '#c33',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  marginBottom: '16px',
+                  border: '1px solid #fcc'
+                }}>
+                  ❌ {apiError}
+                </div>
+              )}
+              <form onSubmit={handleSubmit}>
+                {/* Admin code input removed: session-based auth only */}
+                <div className="form-group">
+                  <label htmlFor="title">Title *</label>
+                  <input
+                    type="text"
+                    id="title"
+                    name="title"
+                    value={formData.title}
+                    onChange={handleInputChange}
+                    placeholder="Archive Entry 018: My New Story"
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="category">Category *</label>
+                  <select
+                    id="category"
+                    name="category"
+                    value={formData.category}
+                    onChange={handleInputChange}
+                    required
+                  >
+                    <option value="Fiction">Fiction</option>
+                    <option value="Spiritual">Spiritual</option>
+                    <option value="Technology">Technology</option>
+                    <option value="Business">Business</option>
+                    <option value="Personal">Personal</option>
+                    <option value="Philosophy">Philosophy</option>
+                    <option value="Wisdom">Wisdom</option>
+                    <option value="Architecture">Architecture</option>
+                    <option value="Strategic">Strategic</option>
+                    <option value="Index">Index</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label htmlFor="description">Description *</label>
+                  <textarea
+                    id="description"
+                    name="description"
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    placeholder="A brief description of this archive entry..."
+                    rows="2"
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="mediaUrls">Media URLs (optional)</label>
+                  <textarea
+                    id="mediaUrls"
+                    name="mediaUrls"
+                    value={formData.mediaUrls}
+                    onChange={handleInputChange}
+                    placeholder="https://example.com/photo.jpg\nhttps://example.com/video.mp4"
+                    rows="3"
+                  />
+                  <small style={{ color: '#666', fontSize: '0.85em' }}>
+                    Add one URL per line or separate with commas.
+                  </small>
+                  <div
+                    className="media-uploader"
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      uploadMediaFiles(e.dataTransfer.files);
+                    }}
+                  >
+                    <div className="media-uploader__text">
+                      Drag & drop files here, or select files to upload
+                    </div>
+                    <label className="media-uploader__button">
+                      {uploadingMedia ? 'Uploading…' : 'Choose files'}
+                      <input
+                        type="file"
+                        accept="image/*,video/*,audio/*"
+                        multiple
+                        disabled={uploadingMedia}
+                        onChange={(e) => uploadMediaFiles(e.target.files)}
+                      />
+                    </label>
+                    {mediaError && <div className="media-uploader__error">{mediaError}</div>}
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label htmlFor="content">Content * (Markdown supported)</label>
+                  <textarea
+                    id="content"
+                    name="content"
+                    value={formData.content}
+                    onChange={handleInputChange}
+                    placeholder="# Your Title Here\n\nWrite your content here...\n\n## Section\nYour text...\n\n- Bullet points\n- Are supported\n\n**Bold** and *italic* text work too."
+                    rows="15"
+                    required
+                  />
+                  <div className="word-count">
+                    Word count: {formData.wordCount}
+                  </div>
+                </div>
+                <button type="submit" className="submit-btn" disabled={isSubmitting}>
+                  {isSubmitting ? '⏳ Publishing...' : (editingEntry ? '✅ Update Entry' : '💾 Publish to Live Site')}
+                </button>
+              </form>
+            </div>
           </div>
         </div>
       </div>
-
       {/* Delete Confirmation Modal */}
       {deleteConfirm && (
         <div className="modal-overlay">
@@ -767,7 +717,6 @@ Your text...
             <h3>Delete Entry?</h3>
             <p className="entry-title-confirm">{deleteConfirm.title}</p>
             <p className="warning-text">This action cannot be undone.</p>
-            
             <div className="button-group">
               <button 
                 onClick={cancelDelete}
@@ -786,6 +735,6 @@ Your text...
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }

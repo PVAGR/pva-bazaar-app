@@ -1,3 +1,112 @@
+// Update order (admin-only)
+export async function updateOrder(id, patch) {
+  try {
+    const response = await apiPut(`/api/orders/${id}`, patch);
+    return response;
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+}
+// Admin Orders API helpers
+export async function fetchOrders({ limit = 25, cursor = null } = {}) {
+  try {
+    const response = await apiGet("/api/orders", { params: { limit, cursor } });
+    if (response && response.ok && Array.isArray(response.items)) {
+      return { ok: true, items: response.items, nextCursor: response.nextCursor || null };
+    }
+    return { ok: false, items: [], nextCursor: null };
+  } catch (err) {
+    return { ok: false, items: [], nextCursor: null, error: err.message };
+  }
+}
+
+export async function fetchOrder(id) {
+  try {
+    const response = await apiGet(`/api/orders/${id}`);
+    if (response && response.ok && response.item) {
+      return { ok: true, item: response.item };
+    }
+    return { ok: false, item: null };
+  } catch (err) {
+    return { ok: false, item: null, error: err.message };
+  }
+}
+
+export async function refundOrder(id, { amountCents, reason } = {}) {
+  try {
+    const response = await apiPost(`/api/orders/${id}/refund`, { amountCents, reason });
+    if (response && response.ok && response.refundId) {
+      return { ok: true, refundId: response.refundId, status: response.status };
+    }
+    return { ok: false, error: response?.error || "Refund failed" };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+}
+// Create Stripe Checkout Session
+export async function createCheckoutSession(itemId) {
+  try {
+    const response = await apiPost("/api/checkout/create-session", { itemId });
+    if (response && response.ok && response.url) {
+      return { ok: true, url: response.url };
+    }
+    return { ok: false, error: response?.error || "Failed to create session" };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+}
+
+// Fetch Stripe Checkout Session details
+export async function fetchCheckoutSession(sessionId) {
+  try {
+    const response = await apiGet("/api/checkout/session", { params: { session_id: sessionId } });
+    if (response && response.ok && response.session) {
+      return { ok: true, session: response.session };
+    }
+    return { ok: false, error: response?.error || "Session not found" };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+}
+// fetchMarketplaceItem(slugOrId): fetches a single marketplace item by slug or id
+export async function fetchMarketplaceItem(slugOrId) {
+  if (!slugOrId) return { ok: false, item: null, error: "Missing slug or id" };
+  try {
+    const url = `/api/items/${encodeURIComponent(slugOrId)}`;
+    const response = await apiGet(url);
+    if (response && response.ok && response.item) {
+      return { ok: true, item: response.item };
+    }
+    return { ok: false, item: null };
+  } catch (err) {
+    return { ok: false, item: null, error: err.message };
+  }
+}
+// Marketplace API functions
+// fetchMarketplaceItems({ limit=12, cursor=null, category=null, q=null, signal=null })
+export async function fetchMarketplaceItems({ limit = 12, cursor = null, category = null, q = null, signal = null } = {}) {
+  try {
+    const params = new URLSearchParams();
+    if (limit) params.append('limit', limit);
+    if (cursor) params.append('cursor', cursor);
+    if (category) params.append('category', category);
+    if (q) params.append('q', q);
+    const url = `/api/items?${params.toString()}`;
+    const config = signal ? { signal } : undefined;
+    const response = await apiGet(url, config);
+    if (response && response.ok && Array.isArray(response.items)) {
+      return {
+        ok: true,
+        items: response.items,
+        nextCursor: response.nextCursor || null,
+        categories: response.categories || [],
+      };
+    }
+    return { ok: false, items: [], nextCursor: null, categories: [] };
+  } catch (err) {
+    return { ok: false, items: [], nextCursor: null, categories: [], error: err.message };
+  }
+}
 
 
 import api from "./axios";
@@ -6,63 +115,62 @@ export const apiGet = (path, config) => api.get(path, config).then(r => r.data);
 export const apiPost = (path, body, config) => api.post(path, body, config).then(r => r.data);
 export const apiPut = (path, body, config) => api.put(path, body, config).then(r => r.data);
 export const apiDelete = (path, config) => api.delete(path, config).then(r => r.data);
-}
+
+
 
 // Archive API functions
-export async function fetchArchiveEntries() {
+// fetchArchiveEntries({ limit=12, cursor=null, category=null, tag=null, q=null, sort="new" })
+export async function fetchArchiveEntries({ limit = 12, cursor = null, category = null, tag = null, q = null, sort = "new" } = {}) {
   try {
-    const response = await apiFetch('/api/archive');
-    const data = await response.json();
-    if (data.ok && Array.isArray(data.items)) {
-      return data.items;
+    const params = new URLSearchParams();
+    if (limit) params.append('limit', limit);
+    if (cursor) params.append('cursor', cursor);
+    if (category) params.append('category', category);
+    if (tag) params.append('tag', tag);
+    if (q) params.append('q', q);
+    if (sort) params.append('sort', sort);
+    const url = `/api/archive?${params.toString()}`;
+    const response = await apiGet(url);
+    if (response && response.ok && Array.isArray(response.items)) {
+      return { ok: true, items: response.items, nextCursor: response.nextCursor || null };
     }
-    console.warn('Unexpected archive response:', data);
-    return [];
+    return { ok: false, items: [], nextCursor: null };
   } catch (err) {
-    console.error('Failed to fetch archive entries:', err);
-    return [];
+    return { ok: false, items: [], nextCursor: null, error: err.message };
   }
 }
 
-export async function createArchiveEntry(entry, adminCode) {
+export async function createArchiveEntry(entry) {
   try {
     const response = await apiFetch('/api/archive', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-Admin-Code': adminCode || '',
       },
       body: JSON.stringify(entry),
     });
-    
     const data = await response.json();
-    
     if (!response.ok) {
       throw new Error(data.error || `HTTP ${response.status}`);
     }
-    
     return { ok: true, item: data.item };
   } catch (err) {
     return { ok: false, error: err.message };
   }
 }
 
-export async function deleteArchiveEntry(id, adminCode) {
+export async function deleteArchiveEntry(id) {
   try {
     const response = await apiFetch(`/api/archive/${id}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
-        'X-Admin-Code': adminCode || '',
       },
     });
-    
     const data = await response.json();
-    
     if (!response.ok) {
       throw new Error(data.message || data.error || `HTTP ${response.status}`);
     }
-    
     return { ok: true, message: data.message };
   } catch (err) {
     return { ok: false, error: err.message };
