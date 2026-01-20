@@ -3,8 +3,7 @@ import fetch from 'node-fetch';
 const API_URL = process.env.VITE_API_URL || process.env.API_URL || 'https://pvabazaar.org/api';
 
 export default async function onBeforePrerenderStart() {
-  const urls = ['/archive', '/marketplace', '/admin', '/admin/orders'];
-  // '/' will be added at the end if not present
+  const urls = [];
 
   // Archive entries
   try {
@@ -28,7 +27,16 @@ export default async function onBeforePrerenderStart() {
     }
   } catch {}
 
-  // Remove duplicates and ensure '/' is only present once at the start
-  const filtered = urls.filter(u => u && u !== '/');
-  return ['/', ...Array.from(new Set(filtered))];
+  // Normalize and filter URLs
+  const normalized = urls
+    .map(u => {
+      // Remove query/hash, trailing slash except root
+      let url = u.split('?')[0].split('#')[0];
+      if (url.length > 1 && url.endsWith('/')) url = url.slice(0, -1);
+      return url;
+    })
+    .filter(u => u && u !== '/');
+
+  // Return only unique, normalized, parameterized URLs
+  return Array.from(new Set(normalized));
 }
