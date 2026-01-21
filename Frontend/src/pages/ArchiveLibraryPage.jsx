@@ -180,10 +180,11 @@ export default function ArchiveLibraryPage() {
   // Function to load custom entries from API
   const loadCustomEntries = async () => {
     try {
-      const response = await fetch('/api/archive');
-      if (response.ok) {
-        const data = await response.json();
-        setCustomEntries(data.entries || []);
+      const result = await fetchArchiveEntries({ limit: 100 });
+      if (result.ok && Array.isArray(result.items)) {
+        setCustomEntries(result.items);
+      } else {
+        setCustomEntries([]);
       }
     } catch (error) {
       console.error('Failed to load custom entries:', error);
