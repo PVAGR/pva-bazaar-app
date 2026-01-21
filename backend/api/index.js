@@ -368,10 +368,6 @@ app.get('/api/health', async (req, res) => {
   });
 });
 
-// Export for Vercel serverless and local dev
-module.exports = app;
-
-
 // Sentry error handler (must be before any other error middleware)
 if (process.env.SENTRY_DSN) {
   app.use(Sentry.Handlers.errorHandler());
