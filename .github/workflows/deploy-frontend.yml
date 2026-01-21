@@ -47,7 +47,6 @@ jobs:
         run: npm run build
         env:
           VITE_API_URL: ${{ secrets.VITE_API_URL || 'https://api.pvabazaar.org/api' }}
-          VITE_BASE_PATH: '/pva-bazaar-app/'
           VITE_SENTRY_RELEASE: ${{ env.RELEASE }}
 
       - name: Validate dist output
