@@ -49,10 +49,10 @@ const allowedOrigins = new Set([
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   
-  // Always set Vary header
+  // Always set Vary header for cache correctness
   res.setHeader('Vary', 'Origin');
   
-  // Set CORS headers if origin is allowed
+  // Set CORS headers if origin is allowed (never use * with credentials)
   if (allowedOrigins.has(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -256,28 +256,28 @@ if (!process.env.LEGACY_MODE) {
 console.log('🔒 LEGACY_MODE:', process.env.LEGACY_MODE);
 
 // Use routes - JOURNAL/BLOG (always active)
-app.use('/health', healthRoutes);
-app.use('/blogs', blogsRoutes);
-app.use('/pages', pagesRoutes);
-app.use('/comments', commentsRoutes);
-app.use('/search', searchRoutes);
-app.use('/admin', adminLoginRoutes); // Mount admin login route first
-app.use('/admin', adminRoutes);
-app.use('/archive', archiveRoutes);
-app.use('/checkout', checkoutRoutes);
-app.use('/orders', ordersRoutes);
-app.use('/items', itemsRoutes);
-app.use('/contribute', contributeRoutes);
-app.use('/partners', partnersRoutes);
-app.use('/users', usersRoutes);
-app.use('/auth', authRoutes);
+app.use('/api/health', healthRoutes);
+app.use('/api/blogs', blogsRoutes);
+app.use('/api/pages', pagesRoutes);
+app.use('/api/comments', commentsRoutes);
+app.use('/api/search', searchRoutes);
+app.use('/api/admin', adminLoginRoutes); // Mount admin login route first
+app.use('/api/admin', adminRoutes);
+app.use('/api/archive', archiveRoutes);
+app.use('/api/checkout', checkoutRoutes);
+app.use('/api/orders', ordersRoutes);
+app.use('/api/items', itemsRoutes);
+app.use('/api/contribute', contributeRoutes);
+app.use('/api/partners', partnersRoutes);
+app.use('/api/users', usersRoutes);
+app.use('/api/auth', authRoutes);
 
 // LEGACY MARKETPLACE (gated by LEGACY_MODE flag)
-app.use('/artifacts', legacyGate, artifactsRoutes);
-app.use('/market', legacyGate, marketRoutes);
-app.use('/marketplace', legacyGate, marketRoutes);
-app.use('/categories', legacyGate, marketRoutes);
-app.use('/transactions', legacyGate, transactionsRoutes);
+app.use('/api/artifacts', legacyGate, artifactsRoutes);
+app.use('/api/market', legacyGate, marketRoutes);
+app.use('/api/marketplace', legacyGate, marketRoutes);
+app.use('/api/categories', legacyGate, marketRoutes);
+app.use('/api/transactions', legacyGate, transactionsRoutes);
 app.use('/portfolio', legacyGate, portfolioRoutes);
 app.use('/blockchain', legacyGate, blockchainRoutes);
 app.use('/api/certificates', legacyGate, certificatesRoutes);
