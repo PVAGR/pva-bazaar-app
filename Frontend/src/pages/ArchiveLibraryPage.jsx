@@ -177,6 +177,20 @@ export default function ArchiveLibraryPage() {
     return saved ? saved === 'dark' : true;
   });
 
+  // Function to load custom entries from API
+  const loadCustomEntries = async () => {
+    try {
+      const response = await fetch('/api/archive');
+      if (response.ok) {
+        const data = await response.json();
+        setCustomEntries(data.entries || []);
+      }
+    } catch (error) {
+      console.error('Failed to load custom entries:', error);
+      setCustomEntries([]);
+    }
+  };
+
   useEffect(() => {
     loadCustomEntries();
     
