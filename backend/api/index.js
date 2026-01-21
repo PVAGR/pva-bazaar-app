@@ -371,8 +371,8 @@ app.get('/api/health', async (req, res) => {
   });
 });
 
-// Export setCorsHeaders for use in other modules if needed
-module.exports = { app, setCorsHeaders };
+// Export for Vercel serverless and local dev
+module.exports = app;
 
 
 // Sentry error handler (must be before any other error middleware)
