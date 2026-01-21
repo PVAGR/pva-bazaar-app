@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import fetchMarketplaceItems from "../lib/api";
+import { fetchMarketplaceItems } from "../lib/api";
 import useDebounce from "../hooks/useDebounce";
 import "./MarketplacePage.css";
 

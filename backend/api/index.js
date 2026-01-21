@@ -225,6 +225,9 @@ const contributeRoutes = require('../routes/contribute');
 const partnersRoutes = require('../routes/partners');
 const adminRoutes = require('../routes/admin');
 const archiveRoutes = require('../routes/archive');
+const checkoutRoutes = require('../routes/checkout');
+const ordersRoutes = require('../routes/orders');
+const itemsRoutes = require('../routes/items');
 // Secure admin login endpoint
 const adminLoginRoutes = require('../routes/adminLogin');
 // Models for optional seeding
@@ -256,8 +259,12 @@ app.use('/api/blogs', blogsRoutes);
 app.use('/api/pages', pagesRoutes);
 app.use('/api/comments', commentsRoutes);
 app.use('/api/search', searchRoutes);
+app.use('/api/admin', adminLoginRoutes); // Mount admin login route first
 app.use('/api/admin', adminRoutes);
 app.use('/api/archive', archiveRoutes);
+app.use('/api/checkout', checkoutRoutes);
+app.use('/api/orders', ordersRoutes);
+app.use('/api/items', itemsRoutes);
 app.use('/api/contribute', contributeRoutes);
 app.use('/api/partners', partnersRoutes);
 app.use('/api/users', usersRoutes);

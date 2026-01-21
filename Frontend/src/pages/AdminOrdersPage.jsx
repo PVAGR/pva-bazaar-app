@@ -1,7 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
 import { fetchOrders, fetchOrder, refundOrder, updateOrder } from "../lib/api";
-  const [edit, setEdit] = useState({});
-  const [saveLoading, setSaveLoading] = useState(false);
 import "./AdminOrdersPage.css";
 
 function formatDate(dt) {
@@ -35,6 +33,8 @@ export default function AdminOrdersPage() {
   const [showRefund, setShowRefund] = useState(false);
   const [refundAmount, setRefundAmount] = useState("");
   const [refundReason, setRefundReason] = useState("");
+  const [edit, setEdit] = useState({});
+  const [saveLoading, setSaveLoading] = useState(false);
   const abortRef = useRef();
 
   useEffect(() => {
@@ -220,7 +220,7 @@ export default function AdminOrdersPage() {
                     <label>
                       Admin Notes:
                       <textarea
-                        value={edit.adminNotes ?? orderDetail.adminNotes || ""}
+                        value={(edit.adminNotes ?? orderDetail.adminNotes) || ""}
                         onChange={e => setEdit(edit => ({ ...edit, adminNotes: e.target.value }))}
                         rows={2}
                         disabled={saveLoading}
@@ -231,7 +231,7 @@ export default function AdminOrdersPage() {
                       Tracking Number:
                       <input
                         type="text"
-                        value={edit.trackingNumber ?? orderDetail.trackingNumber || ""}
+                        value={(edit.trackingNumber ?? orderDetail.trackingNumber) || ""}
                         onChange={e => setEdit(edit => ({ ...edit, trackingNumber: e.target.value }))}
                         disabled={saveLoading}
                       />
@@ -240,7 +240,7 @@ export default function AdminOrdersPage() {
                       Carrier:
                       <input
                         type="text"
-                        value={edit.carrier ?? orderDetail.carrier || ""}
+                        value={(edit.carrier ?? orderDetail.carrier) || ""}
                         onChange={e => setEdit(edit => ({ ...edit, carrier: e.target.value }))}
                         disabled={saveLoading}
                       />

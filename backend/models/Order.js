@@ -1,12 +1,3 @@
-    fulfillmentStatus: {
-      type: String,
-      enum: ["unfulfilled", "processing", "shipped", "delivered"],
-      default: "unfulfilled",
-    },
-    adminNotes: { type: String, default: "" },
-    trackingNumber: { type: String },
-    carrier: { type: String },
-    fulfilledAt: { type: Date },
 const mongoose = require("mongoose");
 
 const OrderSchema = new mongoose.Schema(
@@ -39,6 +30,15 @@ const OrderSchema = new mongoose.Schema(
     customerEmail: String,
     customerName: String,
     shipping: Object,
+    fulfillmentStatus: {
+      type: String,
+      enum: ["unfulfilled", "processing", "shipped", "delivered"],
+      default: "unfulfilled",
+    },
+    adminNotes: { type: String, default: "" },
+    trackingNumber: { type: String },
+    carrier: { type: String },
+    fulfilledAt: { type: Date },
   },
   { timestamps: true }
 );

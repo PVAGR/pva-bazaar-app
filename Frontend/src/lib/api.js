@@ -1,3 +1,36 @@
+import api from "./axios";
+
+export const apiGet = (path, config) => api.get(path, config).then(r => r.data);
+export const apiPost = (path, body, config) => api.post(path, body, config).then(r => r.data);
+export const apiPut = (path, body, config) => api.put(path, body, config).then(r => r.data);
+export const apiDelete = (path, config) => api.delete(path, config).then(r => r.data);
+
+// Helper for native fetch (with proper base URL handling)
+export async function apiFetch(path, options = {}) {
+  const { ENV } = await import('../config/env');
+  const url = path.startsWith('http') ? path : `${ENV.API_URL}${path}`;
+  return fetch(url, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+}
+
+// API base URL management (for AdminDashboard)
+export function getApiBase() {
+  return localStorage.getItem('api-base-url') || '';
+}
+
+export function setApiBase(url) {
+  if (url) {
+    localStorage.setItem('api-base-url', url);
+  } else {
+    localStorage.removeItem('api-base-url');
+  }
+}
+
 // Update order (admin-only)
 export async function updateOrder(id, patch) {
   try {
@@ -107,15 +140,6 @@ export async function fetchMarketplaceItems({ limit = 12, cursor = null, categor
     return { ok: false, items: [], nextCursor: null, categories: [], error: err.message };
   }
 }
-
-
-import api from "./axios";
-
-export const apiGet = (path, config) => api.get(path, config).then(r => r.data);
-export const apiPost = (path, body, config) => api.post(path, body, config).then(r => r.data);
-export const apiPut = (path, body, config) => api.put(path, body, config).then(r => r.data);
-export const apiDelete = (path, config) => api.delete(path, config).then(r => r.data);
-
 
 
 // Archive API functions

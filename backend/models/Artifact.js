@@ -1,8 +1,3 @@
-  // Inventory fields
-  stockQty: { type: Number, default: 0 },
-  reservedQty: { type: Number, default: 0 },
-  soldQty: { type: Number, default: 0 },
-  isUnlimited: { type: Boolean, default: false },
 // backend/models/Artifact.js - Enhanced version
 const mongoose = require('mongoose');
 
@@ -23,6 +18,12 @@ const artifactSchema = new mongoose.Schema({
   slug: { type: String, unique: true, sparse: true },
   status: { type: String, enum: ['draft', 'published'], default: 'published' },
   tags: [{ type: String }],
+
+  // Inventory fields
+  stockQty: { type: Number, default: 0 },
+  reservedQty: { type: Number, default: 0 },
+  soldQty: { type: Number, default: 0 },
+  isUnlimited: { type: Boolean, default: false },
 
   // Payout and consignment info
   payoutInfo: {
