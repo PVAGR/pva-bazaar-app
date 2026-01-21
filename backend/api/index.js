@@ -38,6 +38,38 @@ app.use(helmet({
   contentSecurityPolicy: false, // Will tighten in Phase 3.13.2
 }));
 
+// --- UNCONDITIONAL CORS (runs before everything, even on errors) ---
+const allowedOrigins = new Set([
+  'https://pvabazaar.org',
+  'https://www.pvabazaar.org',
+  'http://localhost:3000',
+  'http://localhost:5173',
+]);
+
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  
+  // Always set Vary header
+  res.setHeader('Vary', 'Origin');
+  
+  // Set CORS headers if origin is allowed
+  if (allowedOrigins.has(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+  }
+  
+  // Always allow these methods and headers
+  res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Admin-Code,Origin,X-Requested-With,Accept');
+  
+  // Handle OPTIONS preflight requests
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end();
+  }
+  
+  next();
+});
+
 // Body size limits (before routes)
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
@@ -81,40 +113,6 @@ if (process.env.SENTRY_DSN) {
   app.use(Sentry.Handlers.requestHandler());
   app.use(Sentry.Handlers.tracingHandler());
 }
-
-// --- Robust CORS Setup (Applied EARLY, before any routes) ---
-
-// Define allowed origins
-const allowed = [
-  'http://localhost:3000',
-  'http://localhost:5173',
-  'https://pvabazaar.org',
-  'https://www.pvabazaar.org',
-  ...((process.env.ALLOWED_ORIGIN || "").split(",").map(s => s.trim()).filter(Boolean))
-];
-
-// Helper to set CORS headers
-const setCorsHeaders = (req, res) => {
-  const origin = req.get('origin');
-  if (!origin || allowed.includes(origin)) {
-    res.set('Access-Control-Allow-Origin', origin || '*');
-    res.set('Access-Control-Allow-Credentials', 'true');
-    res.set('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
-    res.set('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Admin-Code');
-  }
-};
-
-// Apply CORS to all requests (middleware runs even on error paths)
-app.use((req, res, next) => {
-  setCorsHeaders(req, res);
-  next();
-});
-
-// Handle preflight requests
-app.options('*', (req, res) => {
-  setCorsHeaders(req, res);
-  res.sendStatus(200);
-});
 
 // Stripe webhook: use express.raw for signature verification (body limit handled by Stripe)
 const stripeWebhookPath = "/webhooks/stripe";
@@ -203,8 +201,7 @@ app.use(async (req, res, next) => {
     await connectToDatabase();
     next();
   } catch (err) {
-    // Ensure CORS headers are set even on DB connection error
-    setCorsHeaders(req, res);
+    // CORS headers already set by middleware above
     console.error('❌ DB connection failed:', err.message);
     res.status(503).json({ ok: false, message: 'Database connection failed', error: err.message });
   }
@@ -383,8 +380,7 @@ if (process.env.SENTRY_DSN) {
 // Error handling middleware (4-arg signature)
 app.use((err, req, res, next) => {
   console.error('🚨 Error:', err.stack);
-  // Ensure CORS headers are present on error responses
-  setCorsHeaders(req, res);
+  // CORS headers already set by middleware above
   res.status(500).json({
     ok: false,
     message: 'Something went wrong!',
@@ -394,8 +390,7 @@ app.use((err, req, res, next) => {
 
 // 404 handler
 app.use((req, res) => {
-  // Ensure CORS headers are present on 404 responses
-  setCorsHeaders(req, res);
+  // CORS headers already set by middleware above
   
   res.status(404).json({
     ok: false,
