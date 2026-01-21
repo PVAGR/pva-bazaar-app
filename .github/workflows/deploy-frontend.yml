@@ -21,6 +21,11 @@ jobs:
   build:
     name: Build Frontend
     runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        working-directory: Frontend
+    
     steps:
       - uses: actions/checkout@v4
 
@@ -32,29 +37,26 @@ jobs:
           cache-dependency-path: 'Frontend/package-lock.json'
 
       - name: Install frontend dependencies
-        run: |
-          cd Frontend
-          npm ci
+        run: npm ci
 
       - name: Set Sentry Release (git SHA)
         id: sentry_release
         run: echo "RELEASE=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
       - name: Build frontend
-        run: |
-          cd Frontend
-          npm run build
+        run: npm run build
         env:
-          VITE_API_URL: ${{ vars.VITE_API_BASE_URL || secrets.VITE_API_URL || 'https://api.pvabazaar.org/api' }}
+          VITE_API_URL: ${{ secrets.VITE_API_URL || 'https://api.pvabazaar.org/api' }}
           VITE_BASE_PATH: '/pva-bazaar-app/'
           VITE_SENTRY_RELEASE: ${{ env.RELEASE }}
 
       - name: Validate dist output
         run: |
-          if [ ! -d "Frontend/dist" ] || [ ! -f "Frontend/dist/index.html" ]; then
+          if [ ! -d "dist" ] || [ ! -f "dist/index.html" ]; then
             echo "dist validation failed: dist or index.html missing" && exit 1
           fi
           echo "dist validation passed"
+      
       - name: Upload GitHub Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
@@ -77,6 +79,11 @@ jobs:
     name: Deploy Frontend to Vercel (Preview)
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    defaults:
+      run:
+        working-directory: Frontend
+    
     steps:
       - uses: actions/checkout@v4
 
@@ -88,20 +95,16 @@ jobs:
           cache-dependency-path: 'Frontend/package-lock.json'
 
       - name: Install frontend dependencies
-        run: |
-          cd Frontend
-          npm ci
+        run: npm ci
 
       - name: Build frontend
-        run: |
-          cd Frontend
-          npm run build
+        run: npm run build
         env:
           VITE_API_URL: ${{ secrets.VITE_API_URL || 'https://api.pvabazaar.org/api' }}
 
       - name: Create .vercelignore
         run: |
-          cat > Frontend/.vercelignore <<EOF
+          cat > .vercelignore <<EOF
           node_modules
           .env.local
           .env.*.local
