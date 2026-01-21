@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { createArchiveEntry, fetchArchiveEntries, deleteArchiveEntry, apiGet } from '../lib/api';
+import { createArchiveEntry, fetchArchiveEntries, deleteArchiveEntry, apiGet, apiFetch } from '../lib/api';
 import { ENV } from '../config/env';
 import './AdminPage.css';
 
@@ -63,11 +63,11 @@ export default function AdminPage() {
 
   const runConnectionCheck = async () => {
     const endpoints = [
-      { key: 'health', path: '/api/health' },
-      { key: 'ping', path: '/api/ping' },
-      { key: 'version', path: '/api/version' },
-      { key: 'archive', path: '/api/archive' },
-      { key: 'items', path: '/api/items' },
+      { key: 'health', path: '/health' },
+      { key: 'ping', path: '/ping' },
+      { key: 'version', path: '/version' },
+      { key: 'archive', path: '/archive' },
+      { key: 'items', path: '/items' },
     ];
 
     setConnectionStatus((prev) => ({
@@ -123,7 +123,7 @@ export default function AdminPage() {
       setIsSubmitting(true);
       setError('');
       try {
-        const res = await fetch('/api/admin/login', {
+        const res = await apiFetch('/admin/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ username: trimmedUsername, password: trimmedPassword })
