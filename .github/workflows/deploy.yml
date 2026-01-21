@@ -1,4 +1,3 @@
-# DISABLED (using deploy-frontend.yml instead) '
 name: Deploy Frontend to GitHub Pages
 
 on:
@@ -17,7 +16,6 @@ concurrency:
 
 jobs:
   build:
-    name: Build Frontend
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -26,38 +24,29 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js 20
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: "20"
           cache: npm
-          # Use package.json for cache key since no package-lock.json is committed
-          cache-dependency-path: Frontend/package.json
+          cache-dependency-path: Frontend/package-lock.json
 
-      - name: Install dependencies (ignore lifecycle scripts)
-        env:
-          HUSKY: 0
-          NPM_CONFIG_IGNORE_SCRIPTS: true
-        run: npm install --no-audit --no-fund
+      - name: Install
+        run: npm ci
 
       - name: Build
-        env:
-          # Use GitHub repository variable (set in Settings > Variables) with fallback
-          VITE_API_URL: ${{ vars.VITE_API_URL || 'https://pva-backend-api.vercel.app' }}
         run: npm run build
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
 
-      - name: Add custom domain CNAME
-        run: echo "pvabazaar.org" > dist/CNAME
-
-      - name: Upload Pages artifact
+      - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: Frontend/dist
 
   deploy:
-    name: Deploy to GitHub Pages
-    runs-on: ubuntu-latest
     needs: build
+    runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
