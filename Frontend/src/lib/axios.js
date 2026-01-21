@@ -36,8 +36,12 @@ api.interceptors.response.use(
 
     // Network/CORS errors often have no response/status
     if (!status) {
-      console.error("[API NETWORK ERROR]", error?.message || error);
-      alert("Network error: unable to reach the API. Check connection/CORS.");
+      console.error("[API NETWORK ERROR]", {
+        message: error?.message,
+        code: error?.code,
+        config: error?.config,
+      });
+      // Don't show alert for network errors - let components handle gracefully
       return Promise.reject(error);
     }
 
@@ -51,15 +55,14 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // 500+: show alert (swap to toast later)
+    // 500+: log but don't alert (let components decide)
     if (status >= 500) {
       const msg =
         error?.response?.data?.message ||
         error?.message ||
         `Server error (${status})`;
 
-      console.error("[API 500+]", msg);
-      alert(msg);
+      console.error("[API 500+]", msg, error?.response?.data);
     }
 
     return Promise.reject(error);
