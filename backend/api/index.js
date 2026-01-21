@@ -82,7 +82,39 @@ if (process.env.SENTRY_DSN) {
   app.use(Sentry.Handlers.tracingHandler());
 }
 
-// --- Robust CORS Setup ---
+// --- Robust CORS Setup (Applied EARLY, before any routes) ---
+
+// Define allowed origins
+const allowed = [
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'https://pvabazaar.org',
+  'https://www.pvabazaar.org',
+  ...((process.env.ALLOWED_ORIGIN || "").split(",").map(s => s.trim()).filter(Boolean))
+];
+
+// Helper to set CORS headers
+const setCorsHeaders = (req, res) => {
+  const origin = req.get('origin');
+  if (!origin || allowed.includes(origin)) {
+    res.set('Access-Control-Allow-Origin', origin || '*');
+    res.set('Access-Control-Allow-Credentials', 'true');
+    res.set('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
+    res.set('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Admin-Code');
+  }
+};
+
+// Apply CORS to all requests (middleware runs even on error paths)
+app.use((req, res, next) => {
+  setCorsHeaders(req, res);
+  next();
+});
+
+// Handle preflight requests
+app.options('*', (req, res) => {
+  setCorsHeaders(req, res);
+  res.sendStatus(200);
+});
 
 // Stripe webhook: use express.raw for signature verification (body limit handled by Stripe)
 const stripeWebhookPath = "/webhooks/stripe";
@@ -93,44 +125,12 @@ app.use((req, res, next) => {
     next();
   }
 });
+
 // Apply stricter rate limiters to sensitive routes
 app.use('/admin', authLimiter);
 app.use('/orders', authLimiter);
 app.use('/checkout', checkoutLimiter);
 app.use('/webhooks', webhookLimiter);
-const allowed = [
-  'http://localhost:3000',
-  'http://localhost:5173',
-  'https://pvabazaar.org',
-  'https://www.pvabazaar.org',
-  // Add more as needed
-  ...((process.env.ALLOWED_ORIGIN || "").split(",").map(s => s.trim()).filter(Boolean))
-];
-
-const corsOptions = {
-  origin: (origin, cb) => {
-    if (!origin) return cb(null, true);
-    if (allowed.includes(origin)) return cb(null, true);
-    return cb(new Error("Not allowed by CORS"));
-  },
-  credentials: true,
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Admin-Code'],
-};
-
-app.use(require('cors')(corsOptions));
-app.options("*", require('cors')(corsOptions));
-
-// Ensure CORS headers on all responses (including errors)
-app.use((req, res, next) => {
-  const origin = req.get('origin');
-  if (!origin || allowed.includes(origin)) {
-    res.set('Access-Control-Allow-Origin', origin || 'https://pvabazaar.org');
-    res.set('Access-Control-Allow-Credentials', 'true');
-    res.set('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
-    res.set('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Admin-Code');
-  }
-  next();
-});
 // If API is not ready (e.g., missing secrets in production), return 503 for most endpoints
 app.use((req, res, next) => {
   const apiNotReady = process.env.API_READY === 'false';
@@ -190,9 +190,11 @@ async function connectToDatabase() {
 
 // Middleware: Ensure DB connection for routes that need it
 app.use(async (req, res, next) => {
-  // Skip DB connection for health/ping endpoints
-  const skipPaths = ['/health', '/ping', '/version', '/express-ping', '/dev/token'];
-  if (skipPaths.some(p => req.path === p)) {
+  // Skip DB connection for health/ping endpoints and explicit safe endpoints
+  const skipPaths = ['/health', '/ping', '/version', '/express-ping', '/dev/token', '/webhooks/stripe'];
+  const skipPath = skipPaths.some(p => req.path === p || req.path.startsWith(p));
+  
+  if (skipPath) {
     return next();
   }
 
@@ -201,6 +203,9 @@ app.use(async (req, res, next) => {
     await connectToDatabase();
     next();
   } catch (err) {
+    // Ensure CORS headers are set even on DB connection error
+    setCorsHeaders(req, res);
+    console.error('❌ DB connection failed:', err.message);
     res.status(503).json({ ok: false, message: 'Database connection failed', error: err.message });
   }
 });
@@ -366,22 +371,20 @@ app.get('/api/health', async (req, res) => {
   });
 });
 
+// Export setCorsHeaders for use in other modules if needed
+module.exports = { app, setCorsHeaders };
+
 
 // Sentry error handler (must be before any other error middleware)
 if (process.env.SENTRY_DSN) {
   app.use(Sentry.Handlers.errorHandler());
 }
 
-// Error handling middleware
+// Error handling middleware (4-arg signature)
 app.use((err, req, res, next) => {
   console.error('🚨 Error:', err.stack);
   // Ensure CORS headers are present on error responses
-  const origin = req.get('origin');
-  const allowed = getAllowedOrigins();
-  if (!origin || allowed.includes(origin)) {
-    res.set('Access-Control-Allow-Origin', origin || 'https://pvabazaar.org');
-    res.set('Access-Control-Allow-Credentials', 'true');
-  }
+  setCorsHeaders(req, res);
   res.status(500).json({
     ok: false,
     message: 'Something went wrong!',
@@ -392,12 +395,7 @@ app.use((err, req, res, next) => {
 // 404 handler
 app.use((req, res) => {
   // Ensure CORS headers are present on 404 responses
-  const origin = req.get('origin');
-  const allowed = getAllowedOrigins();
-  if (!origin || allowed.includes(origin)) {
-    res.set('Access-Control-Allow-Origin', origin || 'https://pvabazaar.org');
-    res.set('Access-Control-Allow-Credentials', 'true');
-  }
+  setCorsHeaders(req, res);
   
   res.status(404).json({
     ok: false,
