@@ -15,7 +15,7 @@ Sentry.init({
     new BrowserTracing({
       tracePropagationTargets: [
         'pvabazaar.org',
-        'vercel.app',
+        'api.pvabazaar.org',
         /^https:\/\/pvabazaar\.org/,
         /^https:\/\/.*vercel\.app/
       ],

@@ -8,7 +8,8 @@ export const apiDelete = (path, config) => api.delete(path, config).then(r => r.
 // Helper for native fetch (with proper base URL handling)
 export async function apiFetch(path, options = {}) {
   const { ENV } = await import('../config/env');
-  const url = path.startsWith('http') ? path : `${ENV.API_URL}${path}`;
+  const API_BASE = ENV.API_URL.replace(/\/+$/, '');
+  const url = path.startsWith('http') ? path : `${API_BASE}${path}`;
   return fetch(url, {
     ...options,
     headers: {
@@ -34,7 +35,7 @@ export function setApiBase(url) {
 // Update order (admin-only)
 export async function updateOrder(id, patch) {
   try {
-    const response = await apiPut(`/api/orders/${id}`, patch);
+    const response = await apiPut(`/orders/${id}`, patch);
     return response;
   } catch (err) {
     return { ok: false, error: err.message };
@@ -43,7 +44,7 @@ export async function updateOrder(id, patch) {
 // Admin Orders API helpers
 export async function fetchOrders({ limit = 25, cursor = null } = {}) {
   try {
-    const response = await apiGet("/api/orders", { params: { limit, cursor } });
+    const response = await apiGet("/orders", { params: { limit, cursor } });
     if (response && response.ok && Array.isArray(response.items)) {
       return { ok: true, items: response.items, nextCursor: response.nextCursor || null };
     }
@@ -55,7 +56,7 @@ export async function fetchOrders({ limit = 25, cursor = null } = {}) {
 
 export async function fetchOrder(id) {
   try {
-    const response = await apiGet(`/api/orders/${id}`);
+    const response = await apiGet(`/orders/${id}`);
     if (response && response.ok && response.item) {
       return { ok: true, item: response.item };
     }
@@ -67,7 +68,7 @@ export async function fetchOrder(id) {
 
 export async function refundOrder(id, { amountCents, reason } = {}) {
   try {
-    const response = await apiPost(`/api/orders/${id}/refund`, { amountCents, reason });
+    const response = await apiPost(`/orders/${id}/refund`, { amountCents, reason });
     if (response && response.ok && response.refundId) {
       return { ok: true, refundId: response.refundId, status: response.status };
     }
@@ -79,7 +80,7 @@ export async function refundOrder(id, { amountCents, reason } = {}) {
 // Create Stripe Checkout Session
 export async function createCheckoutSession(itemId) {
   try {
-    const response = await apiPost("/api/checkout/create-session", { itemId });
+    const response = await apiPost("/checkout/create-session", { itemId });
     if (response && response.ok && response.url) {
       return { ok: true, url: response.url };
     }
@@ -92,7 +93,7 @@ export async function createCheckoutSession(itemId) {
 // Fetch Stripe Checkout Session details
 export async function fetchCheckoutSession(sessionId) {
   try {
-    const response = await apiGet("/api/checkout/session", { params: { session_id: sessionId } });
+    const response = await apiGet("/checkout/session", { params: { session_id: sessionId } });
     if (response && response.ok && response.session) {
       return { ok: true, session: response.session };
     }
@@ -105,7 +106,7 @@ export async function fetchCheckoutSession(sessionId) {
 export async function fetchMarketplaceItem(slugOrId) {
   if (!slugOrId) return { ok: false, item: null, error: "Missing slug or id" };
   try {
-    const url = `/api/items/${encodeURIComponent(slugOrId)}`;
+    const url = `/items/${encodeURIComponent(slugOrId)}`;
     const response = await apiGet(url);
     if (response && response.ok && response.item) {
       return { ok: true, item: response.item };
@@ -124,7 +125,7 @@ export async function fetchMarketplaceItems({ limit = 12, cursor = null, categor
     if (cursor) params.append('cursor', cursor);
     if (category) params.append('category', category);
     if (q) params.append('q', q);
-    const url = `/api/items?${params.toString()}`;
+    const url = `/items?${params.toString()}`;
     const config = signal ? { signal } : undefined;
     const response = await apiGet(url, config);
     if (response && response.ok && Array.isArray(response.items)) {
@@ -153,7 +154,7 @@ export async function fetchArchiveEntries({ limit = 12, cursor = null, category 
     if (tag) params.append('tag', tag);
     if (q) params.append('q', q);
     if (sort) params.append('sort', sort);
-    const url = `/api/archive?${params.toString()}`;
+    const url = `/archive?${params.toString()}`;
     const response = await apiGet(url);
     if (response && response.ok && Array.isArray(response.items)) {
       return { ok: true, items: response.items, nextCursor: response.nextCursor || null };
@@ -166,7 +167,7 @@ export async function fetchArchiveEntries({ limit = 12, cursor = null, category 
 
 export async function createArchiveEntry(entry) {
   try {
-    const response = await apiFetch('/api/archive', {
+    const response = await apiFetch('/archive', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -185,7 +186,7 @@ export async function createArchiveEntry(entry) {
 
 export async function deleteArchiveEntry(id) {
   try {
-    const response = await apiFetch(`/api/archive/${id}`, {
+    const response = await apiFetch(`/archive/${id}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
