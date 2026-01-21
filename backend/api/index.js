@@ -44,7 +44,7 @@ app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
 // Rate limiting
 const { generalLimiter, authLimiter, checkoutLimiter, webhookLimiter } = require('../middleware/rateLimit');
-app.use('/api', generalLimiter);
+app.use('/', generalLimiter);
 
 // --- Sentry Monitoring ---
 if (process.env.SENTRY_DSN) {
@@ -85,7 +85,7 @@ if (process.env.SENTRY_DSN) {
 // --- Robust CORS Setup ---
 
 // Stripe webhook: use express.raw for signature verification (body limit handled by Stripe)
-const stripeWebhookPath = "/api/webhooks/stripe";
+const stripeWebhookPath = "/webhooks/stripe";
 app.use((req, res, next) => {
   if (req.originalUrl === stripeWebhookPath) {
     express.raw({ type: "application/json" })(req, res, next);
@@ -94,10 +94,10 @@ app.use((req, res, next) => {
   }
 });
 // Apply stricter rate limiters to sensitive routes
-app.use('/api/admin', authLimiter);
-app.use('/api/orders', authLimiter);
-app.use('/api/checkout', checkoutLimiter);
-app.use('/api/webhooks', webhookLimiter);
+app.use('/admin', authLimiter);
+app.use('/orders', authLimiter);
+app.use('/checkout', checkoutLimiter);
+app.use('/webhooks', webhookLimiter);
 const allowed = [
   'http://localhost:3000',
   'http://localhost:5173',
@@ -135,7 +135,7 @@ app.use((req, res, next) => {
 app.use((req, res, next) => {
   const apiNotReady = process.env.API_READY === 'false';
   const isProd = process.env.NODE_ENV === 'production';
-  const allowlist = ['/api/health', '/api/dev/token', '/api/ping', '/api/version', '/api/express-ping'];
+  const allowlist = ['/health', '/dev/token', '/ping', '/version', '/express-ping'];
   if (apiNotReady && isProd && !allowlist.some(p => req.path.startsWith(p))) {
     return res.status(503).json({ ok: false, message: 'Service not configured. Missing environment secrets.' });
   }
@@ -144,7 +144,7 @@ app.use((req, res, next) => {
 
 // Stripe webhook route (must come after raw body middleware)
 const webhooksStripeRoutes = require('../routes/webhooksStripe');
-app.use('/api/webhooks', webhooksStripeRoutes);
+app.use('/webhooks', webhooksStripeRoutes);
 
 // Connect to MongoDB - optimized for serverless with global caching
 // Use global to persist connection across serverless function invocations
@@ -191,7 +191,7 @@ async function connectToDatabase() {
 // Middleware: Ensure DB connection for routes that need it
 app.use(async (req, res, next) => {
   // Skip DB connection for health/ping endpoints
-  const skipPaths = ['/api/health', '/api/ping', '/api/version', '/api/express-ping', '/api/dev/token'];
+  const skipPaths = ['/health', '/ping', '/version', '/express-ping', '/dev/token'];
   if (skipPaths.some(p => req.path === p)) {
     return next();
   }
@@ -254,30 +254,30 @@ if (!process.env.LEGACY_MODE) {
 console.log('🔒 LEGACY_MODE:', process.env.LEGACY_MODE);
 
 // Use routes - JOURNAL/BLOG (always active)
-app.use('/api/health', healthRoutes);
-app.use('/api/blogs', blogsRoutes);
-app.use('/api/pages', pagesRoutes);
-app.use('/api/comments', commentsRoutes);
-app.use('/api/search', searchRoutes);
-app.use('/api/admin', adminLoginRoutes); // Mount admin login route first
-app.use('/api/admin', adminRoutes);
-app.use('/api/archive', archiveRoutes);
-app.use('/api/checkout', checkoutRoutes);
-app.use('/api/orders', ordersRoutes);
-app.use('/api/items', itemsRoutes);
-app.use('/api/contribute', contributeRoutes);
-app.use('/api/partners', partnersRoutes);
-app.use('/api/users', usersRoutes);
-app.use('/api/auth', authRoutes);
+app.use('/health', healthRoutes);
+app.use('/blogs', blogsRoutes);
+app.use('/pages', pagesRoutes);
+app.use('/comments', commentsRoutes);
+app.use('/search', searchRoutes);
+app.use('/admin', adminLoginRoutes); // Mount admin login route first
+app.use('/admin', adminRoutes);
+app.use('/archive', archiveRoutes);
+app.use('/checkout', checkoutRoutes);
+app.use('/orders', ordersRoutes);
+app.use('/items', itemsRoutes);
+app.use('/contribute', contributeRoutes);
+app.use('/partners', partnersRoutes);
+app.use('/users', usersRoutes);
+app.use('/auth', authRoutes);
 
 // LEGACY MARKETPLACE (gated by LEGACY_MODE flag)
-app.use('/api/artifacts', legacyGate, artifactsRoutes);
-app.use('/api/market', legacyGate, marketRoutes);
-app.use('/api/marketplace', legacyGate, marketRoutes);
-app.use('/api/categories', legacyGate, marketRoutes);
-app.use('/api/transactions', legacyGate, transactionsRoutes);
-app.use('/api/portfolio', legacyGate, portfolioRoutes);
-app.use('/api/blockchain', legacyGate, blockchainRoutes);
+app.use('/artifacts', legacyGate, artifactsRoutes);
+app.use('/market', legacyGate, marketRoutes);
+app.use('/marketplace', legacyGate, marketRoutes);
+app.use('/categories', legacyGate, marketRoutes);
+app.use('/transactions', legacyGate, transactionsRoutes);
+app.use('/portfolio', legacyGate, portfolioRoutes);
+app.use('/blockchain', legacyGate, blockchainRoutes);
 app.use('/api/certificates', legacyGate, certificatesRoutes);
 app.use('/api/dashboard', legacyGate, dashboardRoutes);
 app.use('/api/activity', legacyGate, activityRoutes);
