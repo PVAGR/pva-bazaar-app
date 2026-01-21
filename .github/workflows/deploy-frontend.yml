@@ -45,7 +45,7 @@ jobs:
           cd Frontend
           npm run build
         env:
-          VITE_API_URL: ${{ vars.VITE_API_BASE_URL || secrets.VITE_API_URL || 'https://api.pvabazaar.org' }}
+          VITE_API_URL: ${{ vars.VITE_API_BASE_URL || secrets.VITE_API_URL || 'https://api.pvabazaar.org/api' }}
           VITE_BASE_PATH: '/pva-bazaar-app/'
           VITE_SENTRY_RELEASE: ${{ env.RELEASE }}
 
@@ -97,7 +97,7 @@ jobs:
           cd Frontend
           npm run build
         env:
-          VITE_API_URL: ${{ secrets.VITE_API_URL || 'https://pva-bazaar-api.vercel.app' }}
+          VITE_API_URL: ${{ secrets.VITE_API_URL || 'https://api.pvabazaar.org/api' }}
 
       - name: Create .vercelignore
         run: |
