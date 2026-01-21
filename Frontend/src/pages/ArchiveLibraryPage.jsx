@@ -176,9 +176,8 @@ export default function ArchiveLibraryPage() {
     const saved = localStorage.getItem('archive-theme');
     return saved ? saved === 'dark' : true;
   });
-  const categories = [
-    'All', 'Index', 'Fiction', 'Spiritual', 'Technology', 'Business', 'Personal', 'Philosophy', 'Wisdom', 'Architecture', 'Strategic'
-  ];
+
+  useEffect(() => {
     loadCustomEntries();
     
     // Refresh entries every 30 seconds to show new posts
@@ -214,11 +213,7 @@ export default function ArchiveLibraryPage() {
         setMarkdown(text);
       }
     } catch (error) {
-    const [items, setItems] = useState([]);
-    const [nextCursor, setNextCursor] = useState(null);
-    const [error, setError] = useState(null);
-    const [query, setQuery] = useState('');
-    const debouncedQuery = useDebounce(query, 350);
+      console.error('Failed to load entry:', error);
       setMarkdown('# Error\n\nFailed to load this archive entry.');
     } finally {
       setLoading(false);
@@ -495,5 +490,6 @@ export default function ArchiveLibraryPage() {
         </main>
       </div>
     </div>
+    </>
   );
 }

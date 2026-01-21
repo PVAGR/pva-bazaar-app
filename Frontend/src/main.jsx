@@ -4,7 +4,6 @@ import { createRoot } from 'react-dom/client';
 import App from './App.jsx';
 import { HelmetProvider } from 'react-helmet-async';
 import * as Sentry from '@sentry/react';
-import { BrowserTracing, Replay } from '@sentry/react';
 import './base.css';
 
 Sentry.init({
@@ -12,7 +11,7 @@ Sentry.init({
   release: import.meta.env.VITE_SENTRY_RELEASE,
   environment: import.meta.env.MODE,
   integrations: [
-    new BrowserTracing({
+    Sentry.browserTracingIntegration({
       tracePropagationTargets: [
         'pvabazaar.org',
         'api.pvabazaar.org',
@@ -20,7 +19,7 @@ Sentry.init({
         /^https:\/\/.*vercel\.app/
       ],
     }),
-    new Replay({
+    Sentry.replayIntegration({
       maskAllText: true,
       blockAllMedia: true,
     }),
