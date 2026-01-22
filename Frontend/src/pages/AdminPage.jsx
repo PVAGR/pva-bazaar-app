@@ -35,6 +35,7 @@ export default function AdminPage() {
   const [uploadingMedia, setUploadingMedia] = useState(false);
   const [mediaError, setMediaError] = useState('');
   const [adminTokenInput, setAdminTokenInput] = useState('');
+  const [showConnectionStatus, setShowConnectionStatus] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState({
     loading: true,
     checkedAt: null,
@@ -410,64 +411,76 @@ export default function AdminPage() {
               >
                 {darkMode ? '☀️' : '🌙'}
               </button>
-            </div>
-            {/* Connection Status Panel - moved outside button for correct layout */}
-            <div className="sidebar-section connection-panel">
-              <div className="connection-header">
-                <h2>Connection Status</h2>
-                <button
-                  type="button"
-                  className="connection-refresh"
-                  onClick={runConnectionCheck}
-                  disabled={connectionStatus.loading}
-                  aria-label="Refresh connection status"
-                  title="Refresh connection status"
-                >
-                  {connectionStatus.loading ? 'Checking…' : 'Refresh'}
-                </button>
-              </div>
-              <div className="connection-base">
-                API: <span>{connectionStatus.apiBase}</span>
-              </div>
-              {connectionStatus.checkedAt && (
-                <div className="connection-updated">
-                  Last check: {connectionStatus.checkedAt}
-                </div>
-              )}
-              <div className="connection-token">
-                <label htmlFor="adminToken">Admin token (optional)</label>
-                <input
-                  id="adminToken"
-                  type="password"
-                  value={adminTokenInput}
-                  onChange={(e) => setAdminTokenInput(e.target.value)}
-                  placeholder="Paste admin JWT token"
-                />
-                <small>Used only for /api/admin/status check.</small>
-              </div>
-              <ul className="connection-list">
-                {['health', 'ping', 'version', 'archive', 'items'].map((key) => {
-                  const item = connectionStatus.results[key];
-                  return (
-                    <li key={key} className={`connection-item ${item?.ok ? 'ok' : 'bad'}`}>
-                      <div className="connection-item__row">
-                        <span className="connection-item__status-dot" aria-hidden="true"></span>
-                        <span className="connection-item__name">/api/{key}</span>
-                        <span className="connection-item__status">
-                          {item ? (item.ok ? 'OK' : `Fail (${item.status})`) : '—'}
-                        </span>
-                      </div>
-                      {item?.message && (
-                        <div className="connection-item__message">{item.message}</div>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
-              <button onClick={handleLogout} className="logout-btn">
-                Logout
+              <button 
+                className="connection-status-toggle" 
+                onClick={() => setShowConnectionStatus(!showConnectionStatus)}
+                aria-label="Toggle connection status"
+                title="Connection status"
+              >
+                🔌
               </button>
             </div>
+            {/* Connection Status Dropdown */}
+            {showConnectionStatus && (
+              <div className="connection-status-dropdown">
+                <div className="sidebar-section connection-panel">
+                  <div className="connection-header">
+                    <h2>Connection Status</h2>
+                    <button
+                      type="button"
+                      className="connection-refresh"
+                      onClick={runConnectionCheck}
+                      disabled={connectionStatus.loading}
+                      aria-label="Refresh connection status"
+                      title="Refresh connection status"
+                    >
+                      {connectionStatus.loading ? 'Checking…' : 'Refresh'}
+                    </button>
+                  </div>
+                  <div className="connection-base">
+                    API: <span>{connectionStatus.apiBase}</span>
+                  </div>
+                  {connectionStatus.checkedAt && (
+                    <div className="connection-updated">
+                      Last check: {connectionStatus.checkedAt}
+                    </div>
+                  )}
+                  <div className="connection-token">
+                    <label htmlFor="adminToken">Admin token (optional)</label>
+                    <input
+                      id="adminToken"
+                      type="password"
+                      value={adminTokenInput}
+                      onChange={(e) => setAdminTokenInput(e.target.value)}
+                      placeholder="Paste admin JWT token"
+                    />
+                    <small>Used only for /api/admin/status check.</small>
+                  </div>
+                  <ul className="connection-list">
+                    {['health', 'ping', 'version', 'archive', 'items'].map((key) => {
+                      const item = connectionStatus.results[key];
+                      return (
+                        <li key={key} className={`connection-item ${item?.ok ? 'ok' : 'bad'}`}>
+                          <div className="connection-item__row">
+                            <span className="connection-item__status-dot" aria-hidden="true"></span>
+                            <span className="connection-item__name">/api/{key}</span>
+                            <span className="connection-item__status">
+                              {item ? (item.ok ? 'OK' : `Fail (${item.status})`) : '—'}
+                            </span>
+                          </div>
+                          {item?.message && (
+                            <div className="connection-item__message">{item.message}</div>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                  <button onClick={handleLogout} className="logout-btn">
+                    Logout
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
         <div className="admin-container">

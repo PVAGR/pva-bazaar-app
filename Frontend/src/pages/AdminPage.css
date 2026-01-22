@@ -234,6 +234,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  position: relative;
 }
 
 .admin-header h1 {
@@ -280,6 +281,50 @@
   background: var(--highlight);
   border-color: var(--accent);
   transform: scale(1.05);
+}
+
+.connection-status-toggle {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 0;
+  font-size: 0.95rem;
+  min-width: 44px;
+  min-height: 44px;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--text-primary);
+}
+
+.connection-status-toggle:hover {
+  background: var(--highlight);
+  border-color: var(--accent);
+  transform: scale(1.05);
+}
+
+.connection-status-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 0.5rem;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  min-width: 320px;
+  max-width: 400px;
+}
+
+.connection-status-dropdown .connection-panel {
+  margin: 0;
+  border: none;
+  box-shadow: none;
 }
 
 .login-theme-toggle {
