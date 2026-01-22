@@ -2,13 +2,16 @@ const express = require('express');
 const router = express.Router();
 const Artifact = require('../models/Artifact');
 const User = require('../models/User');
+const Order = require('../models/Order');
 
 // GET /api/marketplace/stats - Marketplace stats for dashboard
 router.get('/stats', async (req, res) => {
   try {
     const activeListings = await Artifact.countDocuments({ status: 'active' });
-    const totalTransactions = 1200000; // TODO: Replace with real transaction count if available
-    const satisfactionRate = 98; // TODO: Replace with real satisfaction metric if available
+    // Get real metrics from database
+    const totalTransactions = (await Order.countDocuments({ paymentStatus: 'paid' })) || 0;
+    const satisfactionRate = 95; // Default to 95%, would be calculated from reviews/ratings
+    // TODO: Implement actual satisfaction rate calculation from Order reviews
     const totalSellers = await User.countDocuments({ role: 'seller' });
     res.json({ ok: true, activeListings, totalTransactions, satisfactionRate, totalSellers });
   } catch (e) {
