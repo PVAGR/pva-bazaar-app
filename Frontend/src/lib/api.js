@@ -154,7 +154,7 @@ export async function fetchArchiveEntries({ limit = 12, cursor = null, category 
     if (tag) params.append('tag', tag);
     if (q) params.append('q', q);
     if (sort) params.append('sort', sort);
-    const url = `/api/archive?${params.toString()}`;
+    const url = `/archive?${params.toString()}`;
     const response = await apiGet(url);
     if (response && response.ok && Array.isArray(response.items)) {
       return { ok: true, items: response.items, nextCursor: response.nextCursor || null };
@@ -167,7 +167,7 @@ export async function fetchArchiveEntries({ limit = 12, cursor = null, category 
 
 export async function createArchiveEntry(entry) {
   try {
-    const response = await apiFetch('/api/archive', {
+    const response = await apiFetch('/archive', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -186,7 +186,7 @@ export async function createArchiveEntry(entry) {
 
 export async function deleteArchiveEntry(id) {
   try {
-    const response = await apiFetch(`/api/archive/${id}`, {
+    const response = await apiFetch(`/archive/${id}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
