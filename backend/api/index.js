@@ -257,6 +257,16 @@ console.log('🔒 LEGACY_MODE:', process.env.LEGACY_MODE);
 
 // Use routes - JOURNAL/BLOG (always active)
 app.use('/api/health', healthRoutes);
+
+// Simple health check endpoints (no DB dependency)
+app.get('/api/ping', (req, res) => {
+  res.status(200).json({ ok: true, message: 'pong', timestamp: new Date().toISOString() });
+});
+
+app.get('/api/version', (req, res) => {
+  res.status(200).json({ ok: true, version: '1.0.0', timestamp: new Date().toISOString() });
+});
+
 app.use('/api/blogs', blogsRoutes);
 app.use('/api/pages', pagesRoutes);
 app.use('/api/comments', commentsRoutes);

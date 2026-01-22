@@ -12,4 +12,14 @@ router.get('/', (req, res) => {
   });
 });
 
+router.get('/ping', (req, res) => {
+  // Simple ping endpoint for monitoring
+  res.status(200).json({ ok: true, message: 'pong', timestamp: new Date().toISOString() });
+});
+
+router.get('/version', (req, res) => {
+  // Version endpoint
+  res.status(200).json({ ok: true, version: '1.0.0', timestamp: new Date().toISOString() });
+});
+
 module.exports = router;
