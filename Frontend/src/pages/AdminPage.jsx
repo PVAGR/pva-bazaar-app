@@ -108,10 +108,15 @@ export default function AdminPage() {
   }, []);
   const loadEntriesFromServer = async () => {
     try {
-      const entries = await fetchArchiveEntries();
-      setSavedEntries(entries);
+      const response = await fetchArchiveEntries({ limit: 100 });
+      if (response.ok && Array.isArray(response.items)) {
+        setSavedEntries(response.items);
+      } else {
+        setSavedEntries([]);
+      }
     } catch (err) {
       console.error('Failed to load entries from server:', err);
+      setSavedEntries([]);
     }
   };
   const handleLogin = async (e) => {
