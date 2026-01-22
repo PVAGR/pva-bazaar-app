@@ -1,430 +1,548 @@
-## Commit Guide (Local Bypass + Secret Scan)
+# 🛍️ PVA Bazaar - Sacred Marketplace for Authentic Artifacts
 
-- Hooks: This repo uses Husky pre-commit checks (formatting, brand, accessibility, typecheck, tests, secret scan).
-- Secret scan: `scripts/secret-scan.sh` scans only staged files using `gitleaks`.
-  - It prefers a system install but will also use the bundled binary in `bin/`.
-  - In CI, missing `gitleaks` fails the job; locally it prints a warning and skips.
+[![Production Status](https://img.shields.io/badge/status-production%20ready-brightgreen)](https://pvabazaar.org)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Node.js](https://img.shields.io/badge/Node.js-20.x-green)](https://nodejs.org/)
+[![React](https://img.shields.io/badge/React-18.3-blue)](https://react.dev/)
+[![MongoDB](https://img.shields.io/badge/Database-MongoDB-success)](https://www.mongodb.com/)
+[![Secret Scan](https://github.com/PVAGR/pva-bazaar-app/actions/workflows/secret-scan.yml/badge.svg)](https://github.com/PVAGR/pva-bazaar-app/actions/workflows/secret-scan.yml)
 
-Install gitleaks locally (optional):
+> A full-stack marketplace for authentic artifacts with real-time inventory, secure payments, and admin controls. Built with React, Express, MongoDB, and Stripe.
 
-```
-curl -sSfL https://raw.githubusercontent.com/gitleaks/gitleaks/master/install.sh | bash
-```
-
-Local commit bypass options (use sparingly):
-
-```
-# Skip all Husky hooks
-HUSKY=0 git commit -m "your message"
-
-# Skip quality checks while keeping Husky framework
-SKIP_QUALITY_CHECKS=true git commit -m "your message"
-
-# Fast path (equivalent intent)
-FAST_COMMIT=1 git commit -m "your message"
-```
-
-Notes:
-
-- Keep `.env` files out of Git; they are ignored by default. Never commit secrets.
-- If a check fails, prefer fixing the underlying issue, then re-commit.
-
-# PVA Bazaar - Artisan Marketplace with Blockchain Provenance
-
-[![Secret Scan (gitleaks)](https://github.com/PVAGR/pva-bazaar-app/actions/workflows/secret-scan.yml/badge.svg)](https://github.com/PVAGR/pva-bazaar-app/actions/workflows/secret-scan.yml)
-
-A blockchain-powered marketplace for artisan goods with provenance tracking and fractional ownership.
-
-## 🚀 Quick Start
-
-```bash
-# One-shot dev run (backend + frontend)
-./run-app.sh
-```
-
-Or run manually:
-
-```bash
-# Backend
-cd backend
-npm install
-PORT=5001 NODE_ENV=development USE_MEMORY_DB=true DEV_AUTO_SEED=true npm run dev
-
-# Frontend (separate terminal)
-cd Frontend
-npm install
-VITE_API_URL=http://localhost:5001 npm run dev
-```
-
-## Blogs (Dev)
-
-Quick test end-to-end:
-
-```bash
-# Publish a blog (dev quick-publish)
-curl -X POST http://localhost:5001/api/blogs/quick-publish \
-   -H 'Content-Type: application/json' \
-   -d '{"slug":"welcome","title":"Welcome","content":"Hello from PVA"}'
-
-# View in the frontend
-# Open http://localhost:3000/public/blog.html?slug=welcome
-```
-
-Environment setup:
-
-- Use [backend/.env.example](backend/.env.example) to create `backend/.env` for local dev.
-- In production, set secrets via deployment environment. Do not commit real secrets.
-
-## 📱 Available Pages
-
-- Portfolio: http://localhost:3000/pages/portfolio.html
-- Product Showcase: http://localhost:3000/pages/productshowcase.html?id=[artifact_id]
-- Provenance: http://localhost:3000/pages/provenance.html?id=[artifact_id]
-- Dashboard: http://localhost:3000/pages/pvadashboard.html
-
-## 👤 Dev Login
-
-- Email: admin@pvabazaar.org
-- Password: admin123
-
-## 🐳 Quick Start (Docker)
-
-```bash
-docker compose up -d --build
-curl http://localhost:5001/api/health
-```
-
-Then visit: http://localhost:3000
-
-## Security & Secret Scanning
-
-We use [gitleaks](https://github.com/gitleaks/gitleaks) locally (pre-commit) and in CI to prevent accidental secret commits.
-
-### Local Scan
-
-Run:
-
-```bash
-scripts/secret-scan.sh
-```
-
-This is also executed automatically by the pre-commit hook. If prompted, install gitleaks using the provided one-line script.
-
-### CI Scan
-
-Workflow: "Secret Scan (gitleaks)" runs on:
-
-- Pull requests (all branches)
-- Pushes to `main`
-- Nightly schedule (03:15 UTC)
-- Manual dispatch
-
-It uploads a SARIF report to GitHub Code Scanning (Security tab) and fails the build if any leak is detected.
-
-### Allowlist Policy
-
-The allowlist in `gitleaks.toml` is intentionally minimal and only includes specific benign prompt phrases. To request an addition:
-
-1. Justify why the string is not a credential.
-2. Provide a narrow exact phrase or tightly scoped regex (no wildcards like `.*secret.*`).
-3. Open a PR; requires reviewer approval.
-
-Never allowlist entire files or directories unless absolutely unavoidable.
-
-### False Positive Procedure
-
-Open an issue or PR containing:
-
-- File & line reference
-- Detected rule ID / description
-- Rationale for allowlisting
-
-### Real Secret Exposure Procedure
-
-1. Rotate the affected credential immediately.
-2. (If needed) Purge from git history (e.g., `git filter-repo`).
-3. Open an incident issue documenting remediation steps (private if necessary).
+**[🚀 Live Demo](https://pvabazaar.org)** | **[📖 Full Documentation](./PRODUCTION_DEPLOYMENT_GUIDE.md)** | **[🐛 Report Issues](https://github.com/PVAGR/pva-bazaar-app/issues)**
 
 ---
 
-## 📋 Next Steps
+## 📋 Table of Contents
 
-### Priority Implementation Order
+- [Features](#-features)
+- [Quick Start](#-quick-start)
+- [Architecture](#-architecture)
+- [Tech Stack](#-tech-stack)
+- [Deployment](#-deployment)
+- [Documentation](#-documentation)
+- [Development](#-development)
+- [Contributing](#-contributing)
+- [License](#-license)
 
-1. **Enhanced Authentication UI**
-   - Implement proper login/signup modal
-   - Add profile management page
-   - Add password reset functionality
+---
 
-2. **Shopping Cart**
-   - Create cart model in backend
-   - Add cart API endpoints
-   - Implement cart UI components
+## ✨ Features
 
-3. **Payment Processing**
-   - Integrate with payment gateway
-   - Implement checkout flow
-   - Handle payment confirmations
+### 🛒 Marketplace
+- Browse & search artifacts
+- Real-time inventory tracking
+- Product details & specifications
+- Shopping cart functionality
+- Secure checkout process
 
-4. **Enhanced Blockchain Features**
-   - Complete smart contract integration
-   - Add real-time ownership verification
-   - Implement on-chain provenance
+### 💳 Payments
+- Stripe integration
+- Secure payment processing
+- Webhook validation
+- Transaction history
+- Multiple payment methods
 
-5. **Admin Dashboard**
-   - Add artifact management tools
-   - User management features
-   - Sales analytics
+### 👥 User Management
+- User registration & authentication
+- JWT-based security
+- Password hashing (bcryptjs)
+- User profiles
+- Order history
+
+### 🔐 Admin Dashboard
+- Product management
+- Order management
+- User management
+- Analytics & metrics
+- System settings
+
+### 📚 Content
+- Archive library
+- Blog pages
+- Biography section
+- Research materials
+- Writings collection
+
+### 🔒 Security
+- HTTPS/TLS encryption
+- Rate limiting (300 req/15min)
+- CORS protection
+- Admin secret code
+- PII scrubbing
+- Stripe webhook validation
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Node.js 20.x
+- npm 10.x
+- MongoDB Atlas account (or local MongoDB)
+- Stripe account (for payments)
+
+### Local Development
+
+**Clone the repository:**
+```bash
+git clone https://github.com/PVAGR/pva-bazaar-app.git
+cd pva-bazaar-app
+```
+
+**Install dependencies:**
+```bash
+npm install
+```
+
+**Create environment files:**
+```bash
+# Backend
+cp backend/.env.example backend/.env
+
+# Frontend
+cp Frontend/.env.example Frontend/.env.development
+```
+
+**Start development servers:**
+```bash
+# Terminal 1 - Backend
+npm run dev:backend
+# Output: 🚀 Server running on http://localhost:5001
+
+# Terminal 2 - Frontend
+npm run dev:frontend
+# Output: ➜  Local:   http://localhost:5173/
+```
+
+**Access the application:**
+- Frontend: http://localhost:5173
+- Backend API: http://localhost:5001
+- Admin: http://localhost:5173/admin
+
+**Dev Login Credentials:**
+- Email: `admin@pvabazaar.org`
+- Password: `admin123`
+
+### Using Docker
+
+```bash
+docker compose up -d --build
+# Frontend: http://localhost:5173
+# Backend: http://localhost:5001
+# MongoDB: localhost:27017
+```
+
+---
+
+## 🏗️ Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    User's Browser                           │
+└────────────────────┬────────────────────────────────────────┘
+                     │ HTTPS
+                     ▼
+┌─────────────────────────────────────────────────────────────┐
+│      Frontend (React + Vite)                                │
+│      🌐 localhost:5173 (local) / pvabazaar.org (prod)       │
+│      📍 Hosted on GitHub Pages                              │
+│      ✓ Static SPA with client-side routing                  │
+└────────────────┬────────────────────────────────────────────┘
+                 │ API Calls (HTTPS)
+                 ▼
+┌─────────────────────────────────────────────────────────────┐
+│      Backend (Express.js)                                   │
+│      🌐 localhost:5001 (local) / api.pvabazaar.org (prod)  │
+│      📍 Hosted on Vercel (Serverless)                       │
+│      ✓ RESTful API with CORS & rate limiting               │
+└────────────────┬────────────────────────────────────────────┘
+                 │
+        ┌────────┴─────────┐
+        │                  │
+        ▼                  ▼
+    MongoDB         Stripe API
+    (Atlas)         (Payments)
+```
+
+---
+
+## 🛠️ Tech Stack
+
+### Frontend
+- **Framework:** React 18.3.1
+- **Build Tool:** Vite 5.0.0
+- **Routing:** React Router 6.30.3
+- **Styling:** CSS/SCSS
+- **Error Tracking:** Sentry
+- **Deployment:** GitHub Pages
+
+### Backend
+- **Runtime:** Node.js 20.x
+- **Framework:** Express.js
+- **Database:** MongoDB (Mongoose ODM)
+- **Authentication:** JWT
+- **Password Hashing:** bcryptjs
+- **Payments:** Stripe
+- **Security:** Helmet, CORS, Rate Limiting
+- **Logging:** Sentry
+- **Deployment:** Vercel (Serverless)
+
+### Database
+- **MongoDB Atlas** (Cloud-hosted)
+- **8 Models:** User, Artifact, Order, Comment, Blog, EditablePage, StripeEventLog, ArchiveEntry
+- **Connection Pooling:** Optimized for serverless
+
+### Hosting
+- **Frontend:** GitHub Pages (CDN-delivered)
+- **Backend:** Vercel (Serverless functions)
+- **Database:** MongoDB Atlas
+- **Payments:** Stripe
+- **Error Tracking:** Sentry
+
+---
 
 ## 🚀 Deployment
 
-### GitHub Pages (Frontend) + Vercel (Backend) Setup
+### Production Ready ✅
+The application is production-ready and can be deployed in ~30 minutes.
 
-This project uses **GitHub Pages** for the static frontend and **Vercel** for the backend API.
+### Deploy to Production
 
-#### ✅ Pre-Deployment Verification
-
-Run the verification script to ensure all configurations are correct:
-
+**Step 1: Backend to Vercel**
 ```bash
-./verify-fixes.sh
+cd backend
+npx vercel --prod
 ```
 
-All checks should pass ✅ before proceeding with deployment.
-
-### GitHub Pages Deployment Options
-
-**Option 1: GitHub Actions (RECOMMENDED)**
-
-This repo includes a GitHub Actions workflow that automatically builds and deploys the frontend:
-
-- **What it does:** Automatically builds `Frontend/dist` and deploys to `gh-pages` branch
-- **When it runs:** On every push to `main` that changes `Frontend/**`
-- **How to use:** Just push your changes! No manual steps needed.
-- **Workflow file:** `.github/workflows/deploy-frontend.yml`
-
-**Benefits:**
-- ✅ Automatic builds on every push
-- ✅ No manual build/deploy steps
-- ✅ Ensures consistent production builds
-- ✅ Uses proper Node.js version (20)
-- ✅ Injects VITE_API_URL from GitHub secrets
-
-**To use GitHub Actions deployment:**
-1. Push your changes to `main` branch
-2. Check Actions tab on GitHub for deployment status
-3. Visit https://pvabazaar.org after deployment completes (2-5 minutes)
-
-**Option 2: Manual GitHub Pages Deploy**
-
-Only use this if you need to bypass Actions:
-
-1. **Build the frontend:**
-   ```bash
-   cd Frontend
-   npm install
-   npm run build
-   ```
-   The `dist` folder contains your static files.
-
-2. **Deploy to GitHub Pages:**
-   
-   **Option A - Using GitHub Settings:**
-   - Go to your repo on GitHub: Settings → Pages
-   - Source: Deploy from a branch
-   - Branch: `main`
-   - Folder: `/Frontend/dist`
-   - Save and wait for deployment
-   
-   **Option B - Using gh-pages package:**
-   ```bash
-   cd Frontend
-   npm install -D gh-pages
-   # Add to package.json scripts: "deploy": "gh-pages -d dist"
-   npm run deploy
-   ```
-
-3. **Set up custom domain:**
-   - In GitHub Pages settings, add custom domain: `pvabazaar.org`
-   - In your DNS provider, add a CNAME record pointing to `<username>.github.io`
-   - Wait for DNS propagation (can take up to 48 hours)
-
-#### Backend Deployment to Vercel
-
-**IMPORTANT:** The backend is a Node.js Express API, NOT a static site. Configure correctly to avoid deployment failures.
-
-1. **Create new Vercel project:**
-   - Go to [vercel.com](https://vercel.com) and sign in
-   - Click "Add New" → "Project"
-   - Import your GitHub repository
-   - **Set Root Directory to `backend`** ⚠️ CRITICAL
-   - Framework Preset: **Other** (not Next.js, not Create React App)
-   - Build Command: Leave empty or `npm install` (no build needed)
-   - Output Directory: **Leave empty** (Node.js serverless function, not static)
-
-2. **Verify vercel.json configuration:**
-   The `backend/vercel.json` should already be configured correctly:
-   ```json
-   {
-     "version": 2,
-     "builds": [{ "src": "api/index.js", "use": "@vercel/node" }],
-     "routes": [{ "src": "/(.*)", "dest": "api/index.js" }]
-   }
-   ```
-   This tells Vercel to deploy as a Node.js serverless function, NOT generate a `dist` folder.
-
-3. **Add environment variables in Vercel dashboard:**
-   Go to Project Settings → Environment Variables and add:
-   ```
-   MONGODB_URI=<your-production-mongodb-connection-string>
-   JWT_SECRET=<strong-random-secret-minimum-32-chars>
-   NODE_ENV=production
-   ALLOWED_ORIGIN=https://pvabazaar.org
-   USE_MEMORY_DB=false
-   ETHEREUM_RPC_URL=https://mainnet.base.org
-   ADMIN_WALLET_PUBLIC=<your-wallet-address>
-   ```
-
-4. **Deploy:**
-   - Click "Deploy"
-   - Note your backend URL (e.g., `https://pva-bazaar-backend.vercel.app`)
-   - **Ignore any warnings about "dist" not found** - Node.js APIs don't create dist folders
-
-5. **Test backend deployment:**
-   ```bash
-   curl https://your-backend-url.vercel.app/api/health
-   ```
-   Should return: `{"status":"ok","timestamp":"..."}`
-
-6. **Update frontend API URL:**
-   - Edit `Frontend/.env.production`
-   - Set `VITE_API_URL=https://your-backend-url.vercel.app/api`
-   - Rebuild and redeploy frontend
-
-#### Local Testing Before Deployment
-
-Always test locally first:
-
-```bash
-./test-app.sh
+Then add environment variables in Vercel dashboard:
+```env
+NODE_ENV=production
+MONGODB_URI=<your-connection-string>
+JWT_SECRET=<generate-random>
+STRIPE_SECRET_KEY=<your-key>
+STRIPE_WEBHOOK_SECRET=<your-webhook-secret>
+SENTRY_DSN=<your-sentry-dsn>
+CORS_ALLOWED_ORIGINS=https://pvabazaar.org
+ADMIN_SECRET_CODE=<secure-code>
 ```
 
-This starts backend on port 5001 and frontend on port 3000.
-
-#### Troubleshooting Deployment
-
-**Issue: Blank white screen on pvabazaar.org**
-- Open browser DevTools (F12) → Console tab
-- Look for errors:
-  - **404 on assets:** Base path might be wrong in `vite.config.js` (should be `'/'`)
-  - **CORS errors:** Check `ALLOWED_ORIGIN` in Vercel backend environment variables
-  - **Failed to fetch API:** Verify `VITE_API_URL` in `.env.production` matches your Vercel backend URL
-- Check Network tab for failed requests
-
-**Issue: GitHub Actions deployment succeeds but site still blank**
-1. Check gh-pages branch content:
-   ```bash
-   git fetch origin gh-pages
-   git ls-tree -r origin/gh-pages --name-only
-   ```
-2. **Expected:** Should show `index.html`, `assets/`, etc. at root (NOT `src/`, `public/`)
-3. **If wrong:** Workflow may be deploying source instead of built files
-4. Go to: https://github.com/PVAGR/pva-bazaar-app/actions
-5. Check latest "Deploy Frontend to GitHub Pages" workflow logs
-6. Verify "Deploy to GitHub Pages" step shows `Frontend/dist` folder being deployed
-
-**Post-Deploy Verification**
-After GitHub Actions completes:
-1. **Download build artifact** from Actions run:
-   - Go to: https://github.com/PVAGR/pva-bazaar-app/actions
-   - Click latest "Deploy Frontend to GitHub Pages" run
-   - Scroll to "Artifacts" section at bottom
-   - Download `build-dist.zip` to verify built files locally
-   - Should contain: `index.html`, `assets/`, NOT `src/` or `public/`
-   
-2. **Run local verification:**
-   ```bash
-   ./verify-fixes.sh
-   ```
-   Should show: "✅ gh-pages has index.html at root" and "✅ No source directories"
-
-3. **Force redeploy if needed:**
-   - Go to: https://github.com/PVAGR/pva-bazaar-app/actions
-   - Click "Deploy Frontend to GitHub Pages" workflow
-   - Click "Run workflow" button (top right)
-   - Select main branch → Run workflow
-   - This forces a fresh deployment with `force: true` and `clean: true`
-
-4. **Check GitHub Pages settings:**
-   - Go to: https://github.com/PVAGR/pva-bazaar-app/settings/pages
-   - Source: Should be "gh-pages" branch, "/ (root)" folder
-   - Custom domain: Should show `pvabazaar.org` (if configured)
-
-**Issue: After push, check Actions logs for build/deploy steps**
-1. Visit: https://github.com/PVAGR/pva-bazaar-app/actions
-2. Click latest workflow run
-3. Expand "Install and Build" step - should show successful Vite build
-4. Expand "Deploy to GitHub Pages" step - should show files being deployed
-5. Common errors:
-   - **Build fails:** Check for missing dependencies or build errors
-   - **Deploy fails:** Check branch permissions (needs `contents: write`)
-
-**Issue: Clear browser cache if site doesn't update**
-- Hard refresh: Ctrl+Shift+R (Windows/Linux) or Cmd+Shift+R (Mac)
-- Or open DevTools (F12) → Network tab → check "Disable cache"
-- Or try incognito/private browsing mode
-
-**Issue: API connection errors**
-- Verify backend is deployed and running on Vercel
-- Check Vercel logs: Project → Deployments → Click deployment → View Function Logs
-- Ensure `MONGODB_URI` and `JWT_SECRET` are set in Vercel environment variables
-- Test backend directly: `curl https://your-backend.vercel.app/api/health`
-
-**Issue: GitHub Pages shows 404**
-- Ensure GitHub Pages is enabled: Settings → Pages → Source: gh-pages branch
-- Custom domain should be set to `pvabazaar.org` in GitHub Pages settings
-- Check DNS: CNAME record should point to `pvagr.github.io`
-- Wait 5-10 minutes after first deployment for DNS propagation
-
-**Issue: Database connection fails**
-- Verify MongoDB Atlas allows connections from anywhere (0.0.0.0/0) for serverless
-- Check MongoDB connection string format includes `?retryWrites=true&w=majority`
-- Ensure MongoDB user has read/write permissions
-
-**Verifying Deployment Status:**
+**Step 2: Frontend to GitHub Pages**
 ```bash
-# Check if site loads
+# Update API URL in Frontend/.env.production
+echo 'VITE_API_URL=https://api.pvabazaar.org' > Frontend/.env.production
+
+# Commit and push
+git add .
+git commit -m "feat: production deployment"
+git push origin main
+```
+
+GitHub Actions automatically deploys to GitHub Pages.
+
+**Step 3: Configure Custom Domain**
+- Add CNAME records for your domain
+- Configure in Vercel & GitHub Pages dashboards
+- (Optional) Enable HTTPS with Let's Encrypt
+
+### Verify Deployment
+```bash
+# Check frontend
 curl -I https://pvabazaar.org
 
-# Check gh-pages branch content
-git fetch origin gh-pages && git ls-tree -r origin/gh-pages --name-only | head -20
+# Check backend
+curl https://api.pvabazaar.org/health
 
-# Check if backend is up
-curl https://your-backend.vercel.app/api/health
-
-# Should return: {"ok":true,"message":"API is healthy"}
+# Check API
+curl https://api.pvabazaar.org/marketplace/stats
 ```
 
-For detailed deployment information, see [DEPLOYMENT_CHECKLIST.md](./DEPLOYMENT_CHECKLIST.md).
+See [PRODUCTION_DEPLOYMENT_GUIDE.md](./PRODUCTION_DEPLOYMENT_GUIDE.md) for detailed instructions.
 
-## 🔍 Troubleshooting
+---
 
-Use the API health check script to verify backend connectivity:
+## 📖 Documentation
 
+### Main Guides
+- **[PRODUCTION_DEPLOYMENT_GUIDE.md](./PRODUCTION_DEPLOYMENT_GUIDE.md)** - Comprehensive deployment guide
+- **[QUICK_DEPLOYMENT_CHECKLIST.md](./QUICK_DEPLOYMENT_CHECKLIST.md)** - Quick reference
+- **[GO_LIVE_GUIDE.md](./GO_LIVE_GUIDE.md)** - Fast 3-step deployment
+- **[LOCAL_SETUP.md](./LOCAL_SETUP.md)** - Local development setup
+
+### Technical Documentation
+- **[COMPREHENSIVE_FINDINGS_REPORT.md](./COMPREHENSIVE_FINDINGS_REPORT.md)** - Code review findings
+- **[TROUBLESHOOTING_PERFORMANCE.md](./TROUBLESHOOTING_PERFORMANCE.md)** - Performance guide
+- **[INTEGRATION_GUIDE.md](./INTEGRATION_GUIDE.md)** - Architecture & integration
+- **[Copilot Instructions](./.github/copilot-instructions.md)** - AI assistant guidelines
+
+### Configuration Files
+- **[Frontend/.env.example](./Frontend/.env.example)** - Frontend environment template
+- **[backend/.env.example](./backend/.env.example)** - Backend environment template
+- **[vercel.json](./vercel.json)** - Vercel deployment config
+- **[Frontend/vite.config.js](./Frontend/vite.config.js)** - Vite configuration
+
+---
+
+## 💻 Development
+
+### Available Commands
+
+**Root Level:**
 ```bash
-./api-health-check.sh
+npm run dev              # Start both frontend & backend
+npm run dev:backend     # Start backend only
+npm run dev:frontend    # Start frontend only
+npm run build:backend   # Build backend
+npm run build:frontend  # Build frontend
+npm run lint            # Lint all code
+npm run format          # Format code with Prettier
+npm run test            # Run tests
+npm run test:ci         # Run tests in CI mode
 ```
 
-## 📊 Database Management
-
-Export and import data between environments:
-
+**Backend (cd backend):**
 ```bash
-# Export data
-cd backend
-node scripts/export-data.js > backup.json
-
-# Import data
-cd backend
-node scripts/import-data.js backup.json
+npm run dev             # Start dev server with nodemon
+npm install             # Install dependencies
+npm run build           # Build for production
 ```
+
+**Frontend (cd Frontend):**
+```bash
+npm run dev             # Start Vite dev server
+npm run build           # Build for production
+npm run preview         # Preview production build
+npm install             # Install dependencies
+```
+
+### Project Structure
+
+```
+pva-bazaar-app/
+├── Frontend/                    # React frontend (Vite)
+│   ├── src/
+│   │   ├── components/         # Reusable components
+│   │   ├── pages/              # Page components
+│   │   ├── lib/                # Utilities & API client
+│   │   └── config/             # Configuration
+│   ├── public/                 # Static assets
+│   └── vite.config.js          # Vite configuration
+│
+├── backend/                     # Express backend
+│   ├── api/
+│   │   └── index.js            # Express app & routes
+│   ├── routes/                 # API routes (25+)
+│   ├── models/                 # MongoDB schemas
+│   ├── middleware/             # Express middleware
+│   ├── lib/                    # Utilities & services
+│   └── .env.example            # Environment template
+│
+├── .github/
+│   ├── workflows/              # GitHub Actions
+│   ├── instructions/           # Guidelines
+│   └── copilot-instructions.md # AI assistant config
+│
+├── docs/                        # Documentation
+├── scripts/                     # Utility scripts
+└── package.json                # Root package.json
+```
+
+### Database Models
+
+- **User** - User accounts & authentication
+- **Artifact** - Products/items for sale
+- **Order** - Purchase orders & transactions
+- **Comment** - User reviews & comments
+- **Blog** - Blog posts
+- **EditablePage** - Dynamic content pages
+- **StripeEventLog** - Payment webhooks
+- **ArchiveEntry** - Archive catalog
+
+### API Routes
+
+**Marketplace:**
+- `GET /marketplace/stats` - Marketplace statistics
+- `GET /marketplace/listings` - Browse listings
+
+**Orders:**
+- `POST /orders` - Create order
+- `GET /orders/:id` - Get order details
+- `PUT /orders/:id` - Update order
+
+**Products:**
+- `GET /artifacts` - List artifacts
+- `POST /artifacts` - Create artifact (admin)
+- `PUT /artifacts/:id` - Update artifact
+- `DELETE /artifacts/:id` - Delete artifact
+
+**Users:**
+- `POST /auth/register` - Register user
+- `POST /auth/login` - Login
+- `GET /users/:id` - Get user profile
+
+**Payments:**
+- `POST /checkout/create-session` - Create Stripe session
+- `POST /webhooks/stripe` - Stripe webhook
+
+**Admin:**
+- `GET /admin/users` - List users (admin)
+- `GET /admin/orders` - List orders (admin)
+- `GET /admin/products` - List products (admin)
+
+See code for complete API documentation.
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions! Please follow these guidelines:
+
+### Code Style
+- Use Prettier for formatting
+- Follow ESLint rules
+- Write descriptive commit messages
+- Add comments for complex logic
+
+### Commit Message Format
+```
+feat: add new feature
+fix: fix a bug
+docs: update documentation
+style: formatting changes
+refactor: code restructuring
+test: add/update tests
+chore: maintenance tasks
+```
+
+### Pull Request Process
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'feat: add amazing-feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+### Pre-Commit Hooks
+This repo uses Husky for pre-commit checks:
+- Formatting (Prettier)
+- Linting (ESLint)
+- Type checking
+- Secret scanning (gitleaks)
+
+To bypass checks (use sparingly):
+```bash
+HUSKY=0 git commit -m "your message"
+```
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for detailed guidelines.
+
+---
+
+## 🔒 Security
+
+- **No secrets in Git** - Use `.env` files (gitignored)
+- **Pre-commit scanning** - gitleaks scans for secrets
+- **HTTPS only** - All traffic encrypted
+- **Rate limiting** - Protects against abuse
+- **Password hashing** - bcryptjs with salt
+- **JWT tokens** - Secure authentication
+- **CORS validation** - Prevents cross-origin abuse
+- **Admin verification** - Secret code required
+
+See [SECURITY.md](./SECURITY.md) for security policy.
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see [LICENSE](LICENSE) file for details.
+
+### Summary
+- ✅ Free to use
+- ✅ Free to modify
+- ✅ Free to distribute
+- ⚠️ Include original license & copyright notice
+- ⚠️ No warranty provided
+
+---
+
+## 🙏 Acknowledgments
+
+- React & Vite teams for excellent tools
+- MongoDB & Stripe for reliable services
+- GitHub for version control & hosting
+- Vercel for serverless backend hosting
+- All contributors who have helped improve this project
+
+---
+
+## 📞 Support
+
+### Documentation
+- Read the comprehensive guides in the `/docs` folder
+- Check [TROUBLESHOOTING_PERFORMANCE.md](./TROUBLESHOOTING_PERFORMANCE.md) for common issues
+- Review [INTEGRATION_GUIDE.md](./INTEGRATION_GUIDE.md) for architecture details
+
+### Issues & Bugs
+- [Report issues on GitHub](https://github.com/PVAGR/pva-bazaar-app/issues)
+- Include error messages, steps to reproduce, and environment info
+
+### Discussions
+- [GitHub Discussions](https://github.com/PVAGR/pva-bazaar-app/discussions)
+- Ask questions and share ideas
+
+---
+
+## 🎯 Roadmap
+
+### Completed ✅
+- [x] Full-stack marketplace
+- [x] User authentication
+- [x] Payment processing
+- [x] Admin dashboard
+- [x] Production deployment
+- [x] Comprehensive documentation
+
+### In Progress 🔄
+- [ ] Advanced testing suite
+- [ ] Performance optimization
+- [ ] Extended admin features
+- [ ] Mobile app
+
+### Planned 📅
+- [ ] Advanced analytics
+- [ ] AI-powered recommendations
+- [ ] Real-time notifications
+- [ ] API rate limiting dashboard
+- [ ] Advanced search filters
+
+---
+
+## 📊 Project Status
+
+| Component | Status | Details |
+|-----------|--------|---------|
+| **Frontend** | ✅ Production Ready | React 18 + Vite 5 |
+| **Backend** | ✅ Production Ready | Express.js on Vercel |
+| **Database** | ✅ Production Ready | MongoDB Atlas |
+| **Payments** | ✅ Production Ready | Stripe integrated |
+| **Security** | ✅ Production Ready | Full HTTPS, JWT, rate limiting |
+| **Documentation** | ✅ Complete | Deployment, API, architecture guides |
+| **Testing** | ⚠️ Partial | Ready for tests to be added |
+| **Monitoring** | ✅ Active | Sentry error tracking |
+
+---
+
+## 🚀 Get Started Now!
+
+1. **Clone the repo:** `git clone https://github.com/PVAGR/pva-bazaar-app.git`
+2. **Read:** [LOCAL_SETUP.md](./LOCAL_SETUP.md)
+3. **Install:** `npm install && npm run dev`
+4. **Deploy:** Follow [PRODUCTION_DEPLOYMENT_GUIDE.md](./PRODUCTION_DEPLOYMENT_GUIDE.md)
+
+Your marketplace will be live in 30 minutes! 🎉
+
+---
+
+**Made with ❤️ by PVA Bazaar Team**
+
+[⬆ back to top](#-pva-bazaar---sacred-marketplace-for-authentic-artifacts)
