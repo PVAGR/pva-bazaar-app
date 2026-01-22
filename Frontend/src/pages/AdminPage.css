@@ -307,6 +307,45 @@
   transform: scale(1.05);
 }
 
+.header-btn {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 0;
+  font-size: 0.95rem;
+  min-width: 44px;
+  min-height: 44px;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--text-primary);
+}
+
+.header-btn:hover {
+  background: var(--highlight);
+  border-color: var(--accent);
+  transform: scale(1.05);
+}
+
+.header-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.refresh-btn:hover {
+  background: var(--success);
+  border-color: var(--success);
+}
+
+.logout-header-btn:hover {
+  background: var(--error);
+  border-color: var(--error);
+}
+
 .connection-status-dropdown {
   position: absolute;
   top: 100%;

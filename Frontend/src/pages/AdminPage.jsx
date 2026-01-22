@@ -401,6 +401,23 @@ export default function AdminPage() {
                 🏠 Home
               </Link>
               <button 
+                className="header-btn refresh-btn"
+                onClick={runConnectionCheck}
+                disabled={connectionStatus.loading}
+                aria-label="Refresh connection status"
+                title="Refresh connection status"
+              >
+                {connectionStatus.loading ? '⏳' : '🔄'}
+              </button>
+              <button 
+                className="header-btn logout-header-btn"
+                onClick={handleLogout}
+                aria-label="Logout"
+                title="Logout"
+              >
+                🚪
+              </button>
+              <button 
                 className="theme-toggle" 
                 onClick={() => {
                   setDarkMode(!darkMode);
@@ -426,16 +443,6 @@ export default function AdminPage() {
                 <div className="sidebar-section connection-panel">
                   <div className="connection-header">
                     <h2>Connection Status</h2>
-                    <button
-                      type="button"
-                      className="connection-refresh"
-                      onClick={runConnectionCheck}
-                      disabled={connectionStatus.loading}
-                      aria-label="Refresh connection status"
-                      title="Refresh connection status"
-                    >
-                      {connectionStatus.loading ? 'Checking…' : 'Refresh'}
-                    </button>
                   </div>
                   <div className="connection-base">
                     API: <span>{connectionStatus.apiBase}</span>
@@ -475,9 +482,6 @@ export default function AdminPage() {
                       );
                     })}
                   </ul>
-                  <button onClick={handleLogout} className="logout-btn">
-                    Logout
-                  </button>
                 </div>
               </div>
             )}
