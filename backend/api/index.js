@@ -232,6 +232,11 @@ const ordersRoutes = require('../routes/orders');
 const itemsRoutes = require('../routes/items');
 // Secure admin login endpoint
 const adminLoginRoutes = require('../routes/adminLogin');
+// Decentralized platform routes
+const streamsRoutes = require('../routes/streams');
+const journalRoutes = require('../routes/journal');
+const didRoutes = require('../routes/did');
+const databasesRoutes = require('../routes/databases');
 // Models for optional seeding
 const Artifact = require('../models/Artifact');
 const User = require('../models/User');
@@ -281,6 +286,12 @@ app.use('/api/contribute', contributeRoutes);
 app.use('/api/partners', partnersRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/auth', authRoutes);
+
+// DECENTRALIZED PLATFORM ROUTES (Blueprint v1)
+app.use('/api/streams', streamsRoutes);
+app.use('/api/journal', journalRoutes);
+app.use('/api/did', didRoutes);
+app.use('/api/databases', databasesRoutes);
 
 // LEGACY MARKETPLACE (gated by LEGACY_MODE flag)
 app.use('/api/artifacts', legacyGate, artifactsRoutes);
