@@ -1,11 +1,11 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { verifyCredential } from 'did-jwt-vc';
 import { getResolver } from 'key-did-resolver';
 import { Resolver } from 'did-resolver';
 
 const resolver = new Resolver(getResolver());
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   const { vcJwt } = await req.json();
 
   if (!vcJwt) {

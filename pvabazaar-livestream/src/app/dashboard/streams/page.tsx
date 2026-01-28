@@ -3,12 +3,12 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 
-import { Twitch, Kick, Livepeer, Clapperboard, Trash2, Video, PlusCircle } from 'lucide-react';
+import { Twitch, Clapperboard, Trash2, Video, PlusCircle } from 'lucide-react';
 
 const platformIcons = {
   twitch: <Twitch size={20} className="text-purple-500" />,
-  kick: <Kick size={20} className="text-green-500" />, // Assuming a custom Kick icon component or similar
-  livepeer: <Livepeer size={20} className="text-green-400" />,
+  kick: <Clapperboard size={20} className="text-green-500" />,
+  livepeer: <Video size={20} className="text-green-400" />,
   custom: <Clapperboard size={20} className="text-gray-400" />,
 };
 

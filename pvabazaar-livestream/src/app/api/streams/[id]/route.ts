@@ -1,26 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-import dbConnect from '@/lib/mongodb';
-import Stream from '@/models/Stream';
+import { connectToDatabase } from '@/lib/mongodb';
+import { Stream } from '@/models/Stream';
 import { isValidObjectId } from 'mongoose';
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const session = await getServerSession(authOptions);
   if (!session) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
 
-  const { id } = params;
-
   if (!isValidObjectId(id)) {
     return NextResponse.json({ message: 'Invalid Stream ID' }, { status: 400 });
   }
 
-  await dbConnect();
+  await connectToDatabase();
 
   try {
     const stream = await Stream.findOne({ _id: id, userId: session.user.id });

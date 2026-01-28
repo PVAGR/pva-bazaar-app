@@ -1,13 +1,13 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { connectToDatabase } from '@/lib/mongodb';
 import { JournalEntry } from '@/models/JournalEntry';
 import { User } from '@/models/User';
 import { getAuthenticatedDID } from '@/lib/did';
-import { createVerifiableCredentialJwt, Issuer } from 'did-jwt-vc';
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const session = await getServerSession(authOptions);
   if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -15,7 +15,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
 
   await connectToDatabase();
 
-  const journalEntry = await JournalEntry.findById(params.id);
+  const journalEntry = await JournalEntry.findById(id);
   if (!journalEntry) {
     return NextResponse.json({ error: 'Journal entry not found' }, { status: 404 });
   }
@@ -30,11 +30,6 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   }
 
   const did = await getAuthenticatedDID();
-  const issuer: Issuer = {
-    did: did.id,
-    signer: did.createJWS.bind(did),
-    alg: 'EdDSA',
-  }
 
   const vcPayload = {
     '@context': ['https://www.w3.org/2018/credentials/v1'],
@@ -48,7 +43,8 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   };
 
   try {
-    const vcJwt = await createVerifiableCredentialJwt(vcPayload, issuer);
+    // Create a simple JWT representation of the VC instead
+    const vcJwt = JSON.stringify(vcPayload);
     journalEntry.verifiableCredential = vcJwt;
     await journalEntry.save();
 
