@@ -237,6 +237,8 @@ const streamsRoutes = require('../routes/streams');
 const journalRoutes = require('../routes/journal');
 const didRoutes = require('../routes/did');
 const databasesRoutes = require('../routes/databases');
+// Oracle Assessment routes
+const oracleRoutes = require('../routes/oracle');
 // Models for optional seeding
 const Artifact = require('../models/Artifact');
 const User = require('../models/User');
@@ -292,6 +294,8 @@ app.use('/api/streams', streamsRoutes);
 app.use('/api/journal', journalRoutes);
 app.use('/api/did', didRoutes);
 app.use('/api/databases', databasesRoutes);
+// ORACLE ASSESSMENT ROUTES
+app.use('/api/oracle', oracleRoutes);
 
 // LEGACY MARKETPLACE (gated by LEGACY_MODE flag)
 app.use('/api/artifacts', legacyGate, artifactsRoutes);

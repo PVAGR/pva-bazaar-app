@@ -83,6 +83,125 @@ router.get('/:slugOrId', async (req, res) => {
   }
 });
 
+// POST /api/items/register - User-facing item registration
+// Requires authentication via JWT token
+router.post('/register', require('../middleware/auth').authMiddleware, async (req, res) => {
+  try {
+    const { title, name, description, price, category, condition, materials, images, imageUrls, brand, measurements } = req.body;
+
+    // Validation
+    if (!title && !name) {
+      return res.status(400).json({ ok: false, error: 'Title or name is required' });
+    }
+    if (!description || description.trim().length === 0) {
+      return res.status(400).json({ ok: false, error: 'Description is required' });
+    }
+    if (!price || isNaN(price) || Number(price) <= 0) {
+      return res.status(400).json({ ok: false, error: 'Valid price greater than 0 is required' });
+    }
+    if (!category || category.trim().length === 0) {
+      return res.status(400).json({ ok: false, error: 'Category is required' });
+    }
+
+    // Sanitize inputs (basic XSS prevention)
+    const sanitize = (str) => {
+      if (typeof str !== 'string') return str;
+      return str.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+    };
+
+    // Prepare artifact data
+    const artifactData = {
+      name: sanitize(name || title),
+      title: sanitize(title || name),
+      description: sanitize(description),
+      price: Number(price),
+      category: sanitize(category),
+      imageUrls: Array.isArray(imageUrls) ? imageUrls : (Array.isArray(images) ? images : []),
+      materials: Array.isArray(materials) ? materials : [],
+      artisan: sanitize(brand || req.user.name || 'User'),
+      creator: req.user.id, // Set creator from authenticated user
+      status: 'draft', // Start as draft, admin approves before publishing
+      tags: condition ? [condition] : [],
+    };
+
+    // Add optional fields if provided
+    if (measurements) {
+      artifactData.description += `\n\nMeasurements: ${sanitize(measurements)}`;
+    }
+
+    // Initialize consignment status
+    artifactData.consignment = {
+      artisanShare: 50,
+      pvaFee: 35,
+      promoterShare: 15,
+      agreed: false,
+    };
+
+    // Create artifact
+    const artifact = new Artifact(artifactData);
+    await artifact.save();
+
+    // Send confirmation email to user (non-blocking)
+    try {
+      const User = require('../models/User');
+      const { sendConsignmentEmail, sendAdminNotification } = require('../service/emailService');
+      
+      // Get user details for email
+      const user = await User.findById(req.user.id);
+      if (user && user.email) {
+        // Send confirmation to user
+        await sendConsignmentEmail({
+          to: user.email,
+          subject: 'Item Registration Confirmation',
+          itemData: artifact,
+          status: 'pending_review',
+        });
+
+        // Send admin notification (optional, won't fail if it errors)
+        try {
+          await sendAdminNotification({
+            itemData: artifact,
+            userEmail: user.email,
+          });
+        } catch (adminEmailErr) {
+          console.warn('Admin notification email failed (non-critical):', adminEmailErr.message);
+        }
+      }
+    } catch (emailErr) {
+      console.error('Failed to send confirmation email:', emailErr);
+      // Don't fail the request if email fails - email is a nice-to-have, not critical
+    }
+
+    res.status(201).json({
+      ok: true,
+      item: toPublicItem(artifact),
+      message: 'Item registered successfully. It will be reviewed before publishing.',
+    });
+  } catch (err) {
+    console.error('Item registration error:', err);
+    
+    // Handle duplicate key errors (e.g., duplicate slug)
+    if (err.code === 11000) {
+      return res.status(400).json({
+        ok: false,
+        error: 'An item with this name already exists. Please use a different title.',
+      });
+    }
+
+    // Handle validation errors
+    if (err.name === 'ValidationError') {
+      const errors = Object.values(err.errors).map(e => e.message).join(', ');
+      return res.status(400).json({ ok: false, error: `Validation error: ${errors}` });
+    }
+
+    res.status(500).json({
+      ok: false,
+      error: 'Failed to register item',
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined,
+    });
+  }
+});
+
 // POST /api/items (admin only)
 router.post('/', async (req, res) => {
   const isAdmin = req.headers['x-admin-code'] === process.env.ADMIN_SECRET_CODE;

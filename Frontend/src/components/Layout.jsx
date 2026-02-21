@@ -13,6 +13,7 @@ export default function Layout({ children }) {
         <nav className="layout__nav" aria-label="Primary">
           <NavLink to="/" end>📚 Archive Library</NavLink>
           <NavLink to="/marketplace">🛒 Marketplace</NavLink>
+          <NavLink to="/oracle">🔮 Oracle Assessment</NavLink>
           <NavLink to="/about">About</NavLink>
         </nav>
       </header>

@@ -10,6 +10,7 @@ import MarketplacePage from './pages/MarketplacePage.jsx';
 import MarketplaceItemPage from './pages/MarketplaceItemPage.jsx';
 import CheckoutSuccessPage from './pages/CheckoutSuccessPage.jsx';
 import CheckoutCancelPage from './pages/CheckoutCancelPage.jsx';
+import OracleAssessmentPage from './pages/OracleAssessmentPage.jsx';
 import './base.css';
 
 export default function App() {
@@ -23,6 +24,7 @@ export default function App() {
         <Route path="/admin/orders" element={<AdminOrdersPage />} />
         <Route path="/marketplace" element={<MarketplacePage />} />
         <Route path="/marketplace/:slugOrId" element={<MarketplaceItemPage />} />
+        <Route path="/oracle" element={<OracleAssessmentPage />} />
         <Route path="/checkout/success" element={<CheckoutSuccessPage />} />
         <Route path="/checkout/cancel" element={<CheckoutCancelPage />} />
       </Routes>
