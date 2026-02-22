@@ -9,7 +9,15 @@ export const apiDelete = (path, config) => api.delete(path, config).then(r => r.
 // Helper for native fetch (with proper base URL handling)
 export async function apiFetch(path, options = {}) {
   const API_BASE = ENV.API_URL.replace(/\/+$/, '');
-  const url = path.startsWith('http') ? path : `${API_BASE}${path}`;
+  const normalizedPath = (() => {
+    if (!path || path.startsWith('http')) return path;
+    // Allow both '/items' and '/api/items' call styles when API_BASE already includes '/api'.
+    if (API_BASE.endsWith('/api') && path.startsWith('/api/')) {
+      return path.slice(4);
+    }
+    return path;
+  })();
+  const url = normalizedPath.startsWith('http') ? normalizedPath : `${API_BASE}${normalizedPath}`;
   return fetch(url, {
     ...options,
     headers: {
