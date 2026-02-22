@@ -265,13 +265,29 @@ console.log('🔒 LEGACY_MODE:', process.env.LEGACY_MODE);
 // Use routes - JOURNAL/BLOG (always active)
 app.use('/api/health', healthRoutes);
 
-// Simple health check endpoints (no DB dependency)
+// Simple version/ping endpoints (no DB dependency)
 app.get('/api/ping', (req, res) => {
-  res.status(200).json({ ok: true, message: 'pong', timestamp: new Date().toISOString() });
+  const sha = process.env.VERCEL_GIT_COMMIT_SHA || 'local';
+  const shortSha = sha === 'local' ? sha : sha.slice(0, 7);
+  res.setHeader('X-App-Version', shortSha);
+  res.status(200).json({
+    ok: true,
+    message: 'API is responding',
+    timestamp: new Date().toISOString(),
+    version: '1.0.1',
+    shortSha,
+  });
 });
 
 app.get('/api/version', (req, res) => {
-  res.status(200).json({ ok: true, version: '1.0.0', timestamp: new Date().toISOString() });
+  const sha = process.env.VERCEL_GIT_COMMIT_SHA || 'local';
+  const shortSha = sha === 'local' ? sha : sha.slice(0, 7);
+  res.status(200).json({
+    ok: true,
+    sha,
+    shortSha,
+    timestamp: new Date().toISOString(),
+  });
 });
 
 app.use('/api/blogs', blogsRoutes);
@@ -319,31 +335,9 @@ app.post('/api/dev/token', (req, res) => {
   res.json({ ok: true, token });
 });
 
-// Version endpoint - shows deployed git commit
-app.get('/api/version', (req, res) => {
-  res.json({
-    ok: true,
-    sha: '4f443b9b29d51e45eb4c5423ebfcfa1920873979',
-    shortSha: '4f443b9',
-    message: 'fix: Remove eager DB connection on module load, add /api/ping endpoint',
-    timestamp: new Date().toISOString(),
-  });
-});
-
 // Express ping - guaranteed fast, no DB
 app.get('/api/express-ping', (req, res) => {
   res.json({ ok: true, source: 'express' });
-});
-
-// Instant health check (no DB connection)
-app.get('/api/ping', (req, res) => {
-  res.setHeader('X-App-Version', '4f443b9');
-  res.json({
-    ok: true,
-    message: 'API is responding',
-    timestamp: new Date().toISOString(),
-    version: '1.0.1',
-  });
 });
 
 // Health endpoint - returns quickly even if DB is unreachable

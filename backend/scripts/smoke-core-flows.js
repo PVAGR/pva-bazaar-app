@@ -35,9 +35,9 @@ function makeRequest(method, path, body, headers = {}) {
         res.on('data', chunk => (data += chunk));
         res.on('end', () => {
           try {
-            resolve({ status: res.statusCode, body: JSON.parse(data) });
+            resolve({ status: res.statusCode, body: JSON.parse(data), headers: res.headers });
           } catch {
-            resolve({ status: res.statusCode, body: data });
+            resolve({ status: res.statusCode, body: data, headers: res.headers });
           }
         });
       },
@@ -70,6 +70,19 @@ async function run() {
     const health = await makeRequest('GET', '/api/health');
     assert(health.status === 200 && health.body.ok, 'Health check failed');
     console.log('✅ health ok');
+
+    // 1b) Ping/version metadata endpoints
+    const ping = await makeRequest('GET', '/api/ping');
+    assert(ping.status === 200 && ping.body.ok, `Ping failed: ${ping.status}`);
+    assert(typeof ping.body.shortSha === 'string' && ping.body.shortSha.length > 0, 'Ping shortSha missing');
+    assert(ping.headers && ping.headers['x-app-version'], 'Ping X-App-Version header missing');
+    console.log('✅ ping/version header ok');
+
+    const version = await makeRequest('GET', '/api/version');
+    assert(version.status === 200 && version.body.ok, `Version failed: ${version.status}`);
+    assert(typeof version.body.sha === 'string' && version.body.sha.length > 0, 'Version sha missing');
+    assert(typeof version.body.shortSha === 'string' && version.body.shortSha.length > 0, 'Version shortSha missing');
+    console.log('✅ version metadata ok');
 
     // 2) Auth register + login
     const stamp = Date.now();
