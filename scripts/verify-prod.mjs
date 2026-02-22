@@ -47,6 +47,10 @@ async function getJson(url) {
   return { res, json, text };
 }
 
+function isLocalhostUrl(url) {
+  return typeof url === "string" && /https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i.test(url);
+}
+
 function isArrayLike(v) {
   return Array.isArray(v) || (v && typeof v === "object" && Array.isArray(v.items));
 }
@@ -151,14 +155,20 @@ function isArrayLike(v) {
     else console.log(`✅ bundle does not contain ${s}`);
   }
 
-  if (js.includes("localhost")) {
-    console.warn("⚠️ bundle contains 'localhost' string; verify this is not an active production API base.");
-  }
-
   if (!js.includes("/api/")) {
     console.warn("⚠️ bundle does not contain '/api/' references. Double-check runtime API base configuration.");
   } else {
     console.log("✅ bundle contains API references");
+  }
+
+  // Runtime API base validation from deployed static config
+  const { res: runtimeCfgRes, json: runtimeCfg } = await getJson(`${FRONTEND}/public/api-base.json`);
+  if (!runtimeCfgRes.ok || !runtimeCfg || typeof runtimeCfg.apiUrl !== "string") {
+    console.warn("⚠️ Could not read runtime api-base.json from frontend deployment.");
+  } else if (isLocalhostUrl(runtimeCfg.apiUrl)) {
+    fail(`runtime api-base.json points to localhost: ${runtimeCfg.apiUrl}`);
+  } else {
+    console.log(`✅ runtime api-base.json URL: ${runtimeCfg.apiUrl}`);
   }
 
   console.log("\nDone.");
