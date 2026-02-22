@@ -55,11 +55,15 @@ function isArrayLike(v) {
   console.log(`Frontend URL: ${FRONTEND}`);
   console.log(`Backend URL:  ${BACKEND}`);
   console.log("== Backend checks ==");
+  let healthJson = null;
   {
     const { res, json, text } = await getJson(`${BACKEND}/api/health`);
     if (!res.ok) fail(`/api/health not ok: ${res.status}`);
     if (!json) fail(`/api/health not JSON: ${text.slice(0, 200)}`);
-    else console.log("✅ health ok");
+    else {
+      healthJson = json;
+      console.log("✅ health ok");
+    }
   }
 
   {
@@ -104,10 +108,17 @@ function isArrayLike(v) {
 
   {
     const { res } = await get(`${BACKEND}/api/artifacts`);
-    if (res.status === 410) {
+    const legacyMode = Boolean(healthJson && healthJson.legacyMode === true);
+    if (legacyMode && res.status === 200) {
+      console.log("✅ legacy enabled (/api/artifacts available)");
+    } else if (!legacyMode && res.status === 410) {
       console.log("✅ legacy gated (410)");
     } else {
-      console.warn(`⚠️ /api/artifacts returned ${res.status} (expected 410 when LEGACY_MODE=false)`);
+      console.warn(
+        `⚠️ /api/artifacts returned ${res.status} (legacyMode=${legacyMode}; expected ${
+          legacyMode ? "200" : "410"
+        })`,
+      );
     }
   }
 

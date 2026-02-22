@@ -69,6 +69,9 @@ async function run() {
     // 1) Health
     const health = await makeRequest('GET', '/api/health');
     assert(health.status === 200 && health.body.ok, 'Health check failed');
+    if (Object.prototype.hasOwnProperty.call(health.body, 'legacyMode')) {
+      assert(health.body.legacyMode === false, 'LEGACY_MODE should be false in smoke flow');
+    }
     console.log('✅ health ok');
 
     // 1b) Ping/version metadata endpoints

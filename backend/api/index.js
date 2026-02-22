@@ -380,6 +380,7 @@ app.get('/api/health', async (req, res) => {
     message: 'PVABazaar API is running',
     mongo: mongoConnected,
     ready: process.env.API_READY !== 'false' && mongoConnected,
+    legacyMode: process.env.LEGACY_MODE === 'true',
     nodeEnv: process.env.NODE_ENV || 'development',
     allowedOrigins: allowedOrigins,
     timestamp: new Date().toISOString(),
