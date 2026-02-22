@@ -4,6 +4,7 @@
 //   FRONTEND_URL=https://pvabazaar.org BACKEND_URL=https://api.example.com npm run verify:prod
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { execSync } from "node:child_process";
 
 const FRONTEND = process.env.FRONTEND_URL || "https://pvabazaar.org";
 
@@ -55,11 +56,22 @@ function isArrayLike(v) {
   return Array.isArray(v) || (v && typeof v === "object" && Array.isArray(v.items));
 }
 
+function getLocalShortSha() {
+  try {
+    return execSync("git rev-parse --short HEAD", { stdio: ["ignore", "pipe", "ignore"] })
+      .toString()
+      .trim();
+  } catch {
+    return null;
+  }
+}
+
 (async () => {
   console.log(`Frontend URL: ${FRONTEND}`);
   console.log(`Backend URL:  ${BACKEND}`);
   console.log("== Backend checks ==");
   let healthJson = null;
+  let versionJson = null;
   {
     const { res, json, text } = await getJson(`${BACKEND}/api/health`);
     if (!res.ok) fail(`/api/health not ok: ${res.status}`);
@@ -88,7 +100,21 @@ function isArrayLike(v) {
     if (!hasNewShape && !hasLegacyShape) {
       fail(`/api/version wrong shape: ${JSON.stringify(json)?.slice(0, 200)}`);
     } else {
+      versionJson = json;
       console.log("✅ version ok");
+    }
+  }
+
+  {
+    const localShortSha = getLocalShortSha();
+    if (localShortSha && versionJson?.shortSha && localShortSha !== versionJson.shortSha) {
+      console.warn(
+        `⚠️ backend deploy lag detected: live=${versionJson.shortSha}, local=${localShortSha} (latest commit may still be deploying)`,
+      );
+    } else if (localShortSha && versionJson?.shortSha && localShortSha === versionJson.shortSha) {
+      console.log("✅ backend deployment matches local HEAD");
+    } else if (localShortSha && !versionJson?.shortSha) {
+      console.warn("⚠️ live /api/version does not expose shortSha; cannot confirm deploy parity.");
     }
   }
 
