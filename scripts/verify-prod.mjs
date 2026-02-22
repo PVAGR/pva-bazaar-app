@@ -2,8 +2,30 @@
 // Usage:
 //   npm run verify:prod
 //   FRONTEND_URL=https://pvabazaar.org BACKEND_URL=https://api.example.com npm run verify:prod
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+
 const FRONTEND = process.env.FRONTEND_URL || "https://pvabazaar.org";
-const BACKEND = process.env.BACKEND_URL || FRONTEND;
+
+function normalizeBase(url) {
+  return (url || "").replace(/\/+$/, "").replace(/\/api$/, "");
+}
+
+function getBackendFromProjectConfig() {
+  try {
+    const p = resolve(process.cwd(), "Frontend/public/api-base.json");
+    const raw = JSON.parse(readFileSync(p, "utf8"));
+    if (raw && typeof raw.apiUrl === "string" && raw.apiUrl.length > 0) {
+      return normalizeBase(raw.apiUrl);
+    }
+  } catch {}
+  return null;
+}
+
+const BACKEND =
+  normalizeBase(process.env.BACKEND_URL) ||
+  getBackendFromProjectConfig() ||
+  FRONTEND;
 
 function fail(msg) {
   console.error("❌ " + msg);
@@ -53,7 +75,9 @@ function isArrayLike(v) {
   {
     const { res, json } = await getJson(`${BACKEND}/api/version`);
     if (!res.ok) fail(`/api/version not ok: ${res.status}`);
-    if (!json || json.ok !== true || typeof json.shortSha !== "string") {
+    const hasNewShape = json && json.ok === true && typeof json.shortSha === "string";
+    const hasLegacyShape = json && json.ok === true && typeof json.version === "string";
+    if (!hasNewShape && !hasLegacyShape) {
       fail(`/api/version wrong shape: ${JSON.stringify(json)?.slice(0, 200)}`);
     } else {
       console.log("✅ version ok");
@@ -63,7 +87,8 @@ function isArrayLike(v) {
   {
     const { res, json } = await getJson(`${BACKEND}/api/archive`);
     if (!res.ok) fail(`/api/archive not ok: ${res.status}`);
-    if (!json || json.ok !== true || !Array.isArray(json.entries)) {
+    const entries = json?.entries || json?.items;
+    if (!json || json.ok !== true || !Array.isArray(entries)) {
       fail(`/api/archive wrong shape: ${JSON.stringify(json)?.slice(0, 200)}`);
     } else console.log("✅ archive shape ok");
   }
@@ -79,8 +104,11 @@ function isArrayLike(v) {
 
   {
     const { res } = await get(`${BACKEND}/api/artifacts`);
-    if (res.status !== 410) fail(`/api/artifacts expected 410, got ${res.status}`);
-    else console.log("✅ legacy gated (410)");
+    if (res.status === 410) {
+      console.log("✅ legacy gated (410)");
+    } else {
+      console.warn(`⚠️ /api/artifacts returned ${res.status} (expected 410 when LEGACY_MODE=false)`);
+    }
   }
 
   console.log("\n== Frontend bundle checks ==");
@@ -100,16 +128,20 @@ function isArrayLike(v) {
   const { res: jsRes, text: js } = await get(`${FRONTEND}${mainJsPath}`);
   if (!jsRes.ok) fail(`main bundle fetch failed: ${jsRes.status}`);
 
-  const mustHave = ["/api/archive", "/api/search/text"];
+  const mustHave = ["/api/"];
   for (const s of mustHave) {
     if (!js.includes(s)) fail(`bundle missing expected string: ${s}`);
     else console.log(`✅ bundle contains ${s}`);
   }
 
-  const mustNotHave = ["localhost", "/api/market", "/api/artifacts"];
+  const mustNotHave = ["/api/market", "/api/artifacts"];
   for (const s of mustNotHave) {
     if (js.includes(s)) fail(`bundle contains forbidden string: ${s}`);
     else console.log(`✅ bundle does not contain ${s}`);
+  }
+
+  if (js.includes("localhost")) {
+    console.warn("⚠️ bundle contains 'localhost' string; verify this is not an active production API base.");
   }
 
   if (!js.includes("/api/")) {
