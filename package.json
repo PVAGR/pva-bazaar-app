@@ -20,6 +20,7 @@
     "test:staged": "vitest related --run",
     "test:smoke": "npm run smoke:core --workspace backend",
     "verify:prod": "node scripts/verify-prod.mjs",
+    "verify:prod:wait": "node scripts/wait-prod-deploy.mjs",
     "e2e": "playwright test",
     "e2e:ui": "playwright test --ui",
     "e2e:headed": "playwright test --headed",
