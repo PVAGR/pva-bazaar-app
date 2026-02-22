@@ -284,6 +284,7 @@ app.get('/api/version', (req, res) => {
   const shortSha = sha === 'local' ? sha : sha.slice(0, 7);
   res.status(200).json({
     ok: true,
+    version: '1.0.1',
     sha,
     shortSha,
     timestamp: new Date().toISOString(),

@@ -87,6 +87,12 @@ async function run() {
     assert(typeof version.body.shortSha === 'string' && version.body.shortSha.length > 0, 'Version shortSha missing');
     console.log('✅ version metadata ok');
 
+    const healthVersion = await makeRequest('GET', '/api/health/version');
+    assert(healthVersion.status === 200 && healthVersion.body.ok, `Health version failed: ${healthVersion.status}`);
+    assert(typeof healthVersion.body.version === 'string' && healthVersion.body.version.length > 0, 'Health version missing');
+    assert(typeof healthVersion.body.shortSha === 'string' && healthVersion.body.shortSha.length > 0, 'Health shortSha missing');
+    console.log('✅ health/version metadata ok');
+
     // 2) Auth register + login
     const stamp = Date.now();
     const email = `smoke-${stamp}@example.com`;

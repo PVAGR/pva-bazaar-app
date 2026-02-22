@@ -23,7 +23,15 @@ router.get('/ping', (req, res) => {
 
 router.get('/version', (req, res) => {
   // Version endpoint
-  res.status(200).json({ ok: true, version: '1.0.0', timestamp: new Date().toISOString() });
+  const sha = process.env.VERCEL_GIT_COMMIT_SHA || 'local';
+  const shortSha = sha === 'local' ? sha : sha.slice(0, 7);
+  res.status(200).json({
+    ok: true,
+    version: '1.0.1',
+    sha,
+    shortSha,
+    timestamp: new Date().toISOString(),
+  });
 });
 
 module.exports = router;
