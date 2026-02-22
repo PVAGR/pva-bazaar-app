@@ -5,6 +5,8 @@ import { execSync } from "node:child_process";
 const FRONTEND = process.env.FRONTEND_URL || "https://pvabazaar.org";
 const WAIT_TIMEOUT_MS = Number(process.env.WAIT_TIMEOUT_MS || 60000);
 const WAIT_POLL_MS = Number(process.env.WAIT_POLL_MS || 10000);
+const STRICT = process.env.STRICT === "true";
+let softIssues = 0;
 
 function normalizeBase(url) {
   return (url || "").replace(/\/+$/, "").replace(/\/api$/, "");
@@ -63,6 +65,11 @@ function fail(msg) {
   process.exitCode = 1;
 }
 
+function softWarn(msg) {
+  softIssues += 1;
+  console.warn(`⚠️ ${msg}`);
+}
+
 const BACKEND =
   normalizeBase(process.env.BACKEND_URL) ||
   getBackendFromProjectConfig() ||
@@ -108,7 +115,7 @@ else console.log(`✅ frontend assets found (${assets.length})`);
 
 const runtimeCfg = await getJson(`${FRONTEND}/public/api-base.json`);
 if (!runtimeCfg.res.ok || typeof runtimeCfg.json?.apiUrl !== "string") {
-  console.warn("⚠️ runtime api-base.json unavailable");
+  softWarn("runtime api-base.json unavailable");
 } else if (isLocalhostUrl(runtimeCfg.json.apiUrl)) {
   fail(`runtime api-base.json points to localhost (${runtimeCfg.json.apiUrl})`);
 } else {
@@ -121,11 +128,11 @@ const deadline = Date.now() + WAIT_TIMEOUT_MS;
 let liveShortSha = version.json?.shortSha || null;
 
 if (!localShortSha) {
-  console.warn("⚠️ local git short SHA unavailable; parity skipped.");
+  softWarn("local git short SHA unavailable; parity skipped.");
 } else if (liveShortSha === localShortSha) {
   console.log(`✅ parity ok (live=${liveShortSha}, local=${localShortSha})`);
 } else if (!liveShortSha) {
-  console.warn("⚠️ live /api/version has no shortSha; cannot prove parity.");
+  softWarn("live /api/version has no shortSha; cannot prove parity.");
 } else {
   while (Date.now() < deadline && liveShortSha !== localShortSha) {
     console.log(`⏳ waiting parity: live=${liveShortSha}, local=${localShortSha}`);
@@ -139,7 +146,7 @@ if (!localShortSha) {
   if (liveShortSha === localShortSha) {
     console.log(`✅ parity reached (live=${liveShortSha})`);
   } else {
-    console.warn(`⚠️ parity pending (live=${liveShortSha || "missing"}, local=${localShortSha})`);
+    softWarn(`parity pending (live=${liveShortSha || "missing"}, local=${localShortSha})`);
   }
 }
 
@@ -147,5 +154,12 @@ console.log("\n== Final status ==");
 if (process.exitCode && process.exitCode !== 0) {
   console.error("❌ LIVE NOT READY: critical checks failed.");
 } else {
-  console.log("✅ LIVE CONNECTIVITY READY: core frontend/backend routes are reachable and configured.");
+  if (STRICT && softIssues > 0) {
+    console.error(`❌ LIVE NOT READY (STRICT): ${softIssues} warning(s) present.`);
+    process.exitCode = 1;
+  } else if (softIssues > 0) {
+    console.log(`⚠️ LIVE PARTIAL: core checks passed with ${softIssues} warning(s).`);
+  } else {
+    console.log("✅ LIVE CONNECTIVITY READY: core frontend/backend routes are reachable and configured.");
+  }
 }
