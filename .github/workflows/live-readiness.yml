@@ -1,0 +1,70 @@
+name: Live Readiness Check
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - "Frontend/**"
+      - "scripts/**"
+      - "package.json"
+      - ".github/workflows/live-readiness.yml"
+  workflow_dispatch:
+    inputs:
+      strict:
+        description: "Fail on warnings (strict mode)"
+        required: false
+        type: boolean
+        default: false
+      frontend_url:
+        description: "Frontend base URL"
+        required: false
+        type: string
+        default: "https://pvabazaar.org"
+      backend_url:
+        description: "Backend base URL (optional; leave blank to auto-detect)"
+        required: false
+        type: string
+        default: ""
+      wait_timeout_ms:
+        description: "Deploy parity wait timeout in ms"
+        required: false
+        type: string
+        default: "120000"
+      wait_poll_ms:
+        description: "Deploy parity polling interval in ms"
+        required: false
+        type: string
+        default: "10000"
+
+jobs:
+  verify-live:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Run live readiness (non-strict on push)
+        if: github.event_name != 'workflow_dispatch' || inputs.strict != true
+        env:
+          FRONTEND_URL: ${{ github.event_name == 'workflow_dispatch' && inputs.frontend_url || 'https://pvabazaar.org' }}
+          BACKEND_URL: ${{ github.event_name == 'workflow_dispatch' && inputs.backend_url || '' }}
+          WAIT_TIMEOUT_MS: ${{ github.event_name == 'workflow_dispatch' && inputs.wait_timeout_ms || '120000' }}
+          WAIT_POLL_MS: ${{ github.event_name == 'workflow_dispatch' && inputs.wait_poll_ms || '10000' }}
+        run: npm run verify:live
+
+      - name: Run live readiness (strict manual gate)
+        if: github.event_name == 'workflow_dispatch' && inputs.strict == true
+        env:
+          FRONTEND_URL: ${{ inputs.frontend_url }}
+          BACKEND_URL: ${{ inputs.backend_url }}
+          WAIT_TIMEOUT_MS: ${{ inputs.wait_timeout_ms }}
+          WAIT_POLL_MS: ${{ inputs.wait_poll_ms }}
+        run: npm run verify:live:strict
