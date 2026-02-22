@@ -2,17 +2,20 @@
 const dotenv = require('dotenv');
 const http = require('http');
 const crypto = require('crypto');
+const { MongoMemoryServer } = require('mongodb-memory-server');
+const mongoose = require('mongoose');
 
 dotenv.config({ path: '.env.local' });
 process.env.USE_MEMORY_DB = 'true';
 process.env.DEV_AUTO_SEED = 'false';
 process.env.LEGACY_MODE = 'false';
+process.env.USE_VECTOR_DB = 'false';
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'smoke-test-secret';
 process.env.STREAM_WEBHOOK_SECRET = process.env.STREAM_WEBHOOK_SECRET || 'smoke-webhook-secret';
 
-const app = require('../api/index');
-const server = http.createServer(app);
 const PORT = 5560;
+let server;
+let mongoServer;
 
 function makeRequest(method, path, body, headers = {}) {
   return new Promise((resolve, reject) => {
@@ -53,6 +56,12 @@ function assert(cond, message) {
 }
 
 async function run() {
+  // Always use an isolated in-memory MongoDB for smoke tests.
+  mongoServer = await MongoMemoryServer.create();
+  process.env.MONGODB_URI = mongoServer.getUri('pvabazaar-smoke');
+
+  const app = require('../api/index');
+  server = http.createServer(app);
   await new Promise(resolve => server.listen(PORT, resolve));
   console.log(`✓ smoke server started on :${PORT}`);
 
@@ -155,7 +164,11 @@ async function run() {
 
     console.log('\n🎉 smoke-core-flows passed');
   } finally {
-    server.close();
+    if (server) server.close();
+    if (mongoose.connection.readyState !== 0) {
+      await mongoose.disconnect();
+    }
+    if (mongoServer) await mongoServer.stop();
   }
 }
 

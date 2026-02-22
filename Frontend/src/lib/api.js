@@ -1,4 +1,5 @@
 import api from "./axios";
+import { ENV } from "../config/env";
 
 export const apiGet = (path, config) => api.get(path, config).then(r => r.data);
 export const apiPost = (path, body, config) => api.post(path, body, config).then(r => r.data);
@@ -7,7 +8,6 @@ export const apiDelete = (path, config) => api.delete(path, config).then(r => r.
 
 // Helper for native fetch (with proper base URL handling)
 export async function apiFetch(path, options = {}) {
-  const { ENV } = await import('../config/env');
   const API_BASE = ENV.API_URL.replace(/\/+$/, '');
   const url = path.startsWith('http') ? path : `${API_BASE}${path}`;
   return fetch(url, {
