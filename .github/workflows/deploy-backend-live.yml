@@ -26,9 +26,6 @@ jobs:
           cache: npm
           cache-dependency-path: package-lock.json
 
-      - name: Install dependencies
-        run: npm install --no-audit --no-fund
-
       - name: Validate required Vercel secrets
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
