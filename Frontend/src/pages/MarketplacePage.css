@@ -19,6 +19,23 @@
   margin: 0;
 }
 
+.marketplace-topbar {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.create-listing-btn {
+  text-decoration: none;
+  background: #0077ff;
+  color: #fff;
+  border-radius: 8px;
+  padding: 0.55rem 0.9rem;
+  font-weight: 600;
+}
+
 .marketplace-search {
   width: 100%;
   max-width: 350px;
@@ -59,6 +76,11 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 1.5rem;
+}
+
+.item-card-link {
+  text-decoration: none;
+  color: inherit;
 }
 .item-card {
   background: #fff;
@@ -135,6 +157,10 @@
   color: #888;
   font-size: 1.1rem;
   margin: 2rem 0;
+}
+
+.empty a {
+  color: #0077ff;
 }
 .error {
   color: #c00;

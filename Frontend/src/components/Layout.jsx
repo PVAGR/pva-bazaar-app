@@ -2,6 +2,9 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 
 export default function Layout({ children }) {
+  const token =
+    typeof window !== 'undefined' &&
+    (localStorage.getItem('token') || localStorage.getItem('authToken') || localStorage.getItem('jwt'));
   return (
     <div className="layout">
       <a className="sr-only" href="#content">Skip to content</a>
@@ -13,6 +16,7 @@ export default function Layout({ children }) {
         <nav className="layout__nav" aria-label="Primary">
           <NavLink to="/" end>📚 Archive Library</NavLink>
           <NavLink to="/marketplace">🛒 Marketplace</NavLink>
+          {token ? <NavLink to="/items/new">📦 Sell Item</NavLink> : null}
           <NavLink to="/oracle">🔮 Oracle Assessment</NavLink>
           <NavLink to="/about">About</NavLink>
         </nav>

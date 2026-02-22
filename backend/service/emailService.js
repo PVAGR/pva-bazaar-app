@@ -171,9 +171,10 @@ Visit https://pvabazaar.org for more information.
  */
 async function sendAdminNotification({ itemData, userEmail }) {
   const adminEmail = process.env.ADMIN_EMAIL || process.env.SMTP_USER;
+  const emailTransporter = getTransporter();
   
-  if (!adminEmail) {
-    console.warn('⚠️ ADMIN_EMAIL not set, skipping admin notification');
+  if (!adminEmail || !emailTransporter) {
+    console.warn('⚠️ ADMIN_EMAIL/SMTP not configured, skipping admin notification');
     return;
   }
 
@@ -181,34 +182,19 @@ async function sendAdminNotification({ itemData, userEmail }) {
   const itemPrice = itemData.price ? `$${Number(itemData.price).toFixed(2)}` : 'TBD';
   const itemId = itemData._id || itemData.id || 'N/A';
 
-  const html = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="UTF-8">
-      <title>New Item Registration</title>
-    </head>
-    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-      <h2>🔔 New Item Registration</h2>
-      <p>A new item has been registered and is pending review:</p>
-      <ul>
-        <li><strong>Item:</strong> ${itemName}</li>
-        <li><strong>Price:</strong> ${itemPrice}</li>
-        <li><strong>Category:</strong> ${itemData.category || 'Uncategorized'}</li>
-        <li><strong>Registered by:</strong> ${userEmail}</li>
-        <li><strong>Item ID:</strong> ${itemId}</li>
-      </ul>
-      <p><a href="https://pvabazaar.org/admin/items/${itemId}">Review Item →</a></p>
-    </body>
-    </html>
-  `;
-
   try {
-    await sendConsignmentEmail({
+    await emailTransporter.sendMail({
+      from: `"PVABazaar Consignment" <${process.env.SMTP_USER}>`,
       to: adminEmail,
       subject: `New Item Registration: ${itemName}`,
-      itemData,
-      status: 'pending_review',
+      text: [
+        'New item is pending review:',
+        `Item: ${itemName}`,
+        `Price: ${itemPrice}`,
+        `Category: ${itemData.category || 'Uncategorized'}`,
+        `Registered by: ${userEmail || 'unknown'}`,
+        `Item ID: ${itemId}`,
+      ].join('\n'),
     });
   } catch (error) {
     console.error('Failed to send admin notification:', error);

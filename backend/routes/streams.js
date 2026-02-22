@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const crypto = require('crypto');
 const StreamSession = require('../models/StreamSession');
 const { authMiddleware } = require('../middleware/auth');
 
@@ -175,7 +176,48 @@ router.delete('/:id', authMiddleware, async (req, res) => {
  */
 router.post('/:id/webhook', async (req, res) => {
   try {
-    // TODO: Add webhook signature verification for security
+    // Webhook signature verification (HMAC SHA-256)
+    // Expected headers:
+    //  - x-webhook-signature: hex digest of HMAC(secret, `${timestamp}.${jsonPayload}`)
+    //  - x-webhook-timestamp: unix epoch seconds
+    const webhookSecret = process.env.STREAM_WEBHOOK_SECRET;
+    const signature = req.headers['x-webhook-signature'];
+    const timestamp = req.headers['x-webhook-timestamp'];
+    const isProd = process.env.NODE_ENV === 'production';
+
+    if (webhookSecret) {
+      if (!signature || !timestamp) {
+        return res.status(401).json({ ok: false, error: 'Missing webhook signature headers' });
+      }
+
+      const ts = Number(timestamp);
+      if (!Number.isFinite(ts)) {
+        return res.status(401).json({ ok: false, error: 'Invalid webhook timestamp' });
+      }
+
+      // Replay protection: reject requests older than 5 minutes
+      const now = Math.floor(Date.now() / 1000);
+      if (Math.abs(now - ts) > 300) {
+        return res.status(401).json({ ok: false, error: 'Stale webhook timestamp' });
+      }
+
+      const payload = JSON.stringify(req.body || {});
+      const expected = crypto
+        .createHmac('sha256', webhookSecret)
+        .update(`${timestamp}.${payload}`)
+        .digest('hex');
+
+      // timing-safe compare
+      const sigBuf = Buffer.from(String(signature), 'utf8');
+      const expBuf = Buffer.from(expected, 'utf8');
+      if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
+        return res.status(401).json({ ok: false, error: 'Invalid webhook signature' });
+      }
+    } else if (isProd) {
+      // In production, require the secret to be configured.
+      console.error('STREAM_WEBHOOK_SECRET is not configured in production');
+      return res.status(503).json({ ok: false, error: 'Webhook not configured' });
+    }
     
     const stream = await StreamSession.findById(req.params.id);
     

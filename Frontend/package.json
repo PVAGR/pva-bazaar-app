@@ -4,12 +4,12 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "npx vite",
     "prebuild": "node scripts/vercel-info.cjs",
-    "build": "vite build",
+    "build": "npx vite build",
     "postbuild": "node scripts/copy-src-to-dist.cjs",
-    "preview": "vite preview",
-    "test": "vitest run"
+    "preview": "npx vite preview",
+    "test": "npx vitest run"
   },
   "dependencies": {
     "@sentry/react": "^10.35.0",

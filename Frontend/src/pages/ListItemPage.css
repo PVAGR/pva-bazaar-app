@@ -1,0 +1,143 @@
+.list-item-page {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.list-item-header h1 {
+  margin: 0 0 0.4rem 0;
+}
+
+.list-item-header p {
+  margin: 0 0 1rem 0;
+  color: #666;
+}
+
+.list-progress {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.list-progress-step {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 0.5rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.list-progress-step span {
+  font-weight: 700;
+}
+
+.list-progress-step.active {
+  border-color: #2a7fff;
+}
+
+.list-progress-step.done {
+  background: #eef6ff;
+}
+
+.list-form {
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.list-form label {
+  font-weight: 600;
+  display: block;
+  margin-top: 0.6rem;
+}
+
+.list-form input,
+.list-form textarea,
+.list-form select {
+  width: 100%;
+  border: 1px solid #d2d2d2;
+  border-radius: 8px;
+  padding: 0.6rem;
+  margin-top: 0.35rem;
+}
+
+.hint {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.image-previews {
+  margin-top: 0.7rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  gap: 0.5rem;
+}
+
+.image-previews img {
+  width: 100%;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.check {
+  display: flex !important;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500 !important;
+}
+
+.check input {
+  width: auto;
+  margin: 0;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.btn {
+  border-radius: 8px;
+  padding: 0.55rem 0.9rem;
+  border: 1px solid #d0d0d0;
+  text-decoration: none;
+  cursor: pointer;
+  background: #fff;
+}
+
+.btn.primary {
+  border-color: #2a7fff;
+  background: #2a7fff;
+  color: #fff;
+}
+
+.btn.ghost {
+  color: #333;
+}
+
+.form-error {
+  color: #b10000;
+  background: #fff2f2;
+  border: 1px solid #ffc7c7;
+  padding: 0.5rem;
+  border-radius: 8px;
+}
+
+.form-success {
+  color: #0a6a1f;
+  background: #edfbed;
+  border: 1px solid #b8edbf;
+  padding: 0.5rem;
+  border-radius: 8px;
+}
+

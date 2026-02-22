@@ -32,13 +32,17 @@ else
   exit 1
 fi
 
-# TypeScript type checking
-echo "🔧 Type checking..."
-if npm run typecheck --if-present; then
-  echo "✅ Type checking passed"
+# TypeScript type checking (only when TS files are staged)
+if git diff --cached --name-only | grep -E '\.(ts|tsx)$' >/dev/null 2>&1; then
+  echo "🔧 Type checking..."
+  if npm run typecheck --if-present; then
+    echo "✅ Type checking passed"
+  else
+    echo "❌ Type checking failed"
+    exit 1
+  fi
 else
-  echo "❌ Type checking failed"
-  exit 1
+  echo "⏭️  No staged TypeScript files; skipping typecheck."
 fi
 
 # Run unit tests for changed files

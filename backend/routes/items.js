@@ -2,8 +2,11 @@
 const express = require('express');
 const router = express.Router();
 const Artifact = require('../models/Artifact');
+const User = require('../models/User');
+const { sendConsignmentEmail, sendAdminNotification } = require('../service/emailService');
 const { normalizeItemInput, toPublicItem } = require('../lib/itemNormalize');
 const { encodeCursor, decodeCursor } = require('../lib/cursor');
+const { authMiddleware } = require('../middleware/auth');
 const mongoose = require('mongoose');
 
 // GET /api/items
@@ -85,7 +88,7 @@ router.get('/:slugOrId', async (req, res) => {
 
 // POST /api/items/register - User-facing item registration
 // Requires authentication via JWT token
-router.post('/register', require('../middleware/auth').authMiddleware, async (req, res) => {
+router.post('/register', authMiddleware, async (req, res) => {
   try {
     const { title, name, description, price, category, condition, materials, images, imageUrls, brand, measurements } = req.body;
 
@@ -109,6 +112,17 @@ router.post('/register', require('../middleware/auth').authMiddleware, async (re
       return str.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
     };
 
+    // Guard rails for payload size/shape to avoid hitting body limits with inline images.
+    const submittedImages = Array.isArray(imageUrls) ? imageUrls : (Array.isArray(images) ? images : []);
+    if (submittedImages.length > 6) {
+      return res.status(400).json({ ok: false, error: 'Maximum 6 images allowed' });
+    }
+    if (submittedImages.some(img => typeof img === 'string' && img.length > 350000)) {
+      return res.status(400).json({ ok: false, error: 'One or more images are too large. Please upload smaller files.' });
+    }
+
+    const user = await User.findById(req.user.id).select('name email');
+
     // Prepare artifact data
     const artifactData = {
       name: sanitize(name || title),
@@ -116,9 +130,9 @@ router.post('/register', require('../middleware/auth').authMiddleware, async (re
       description: sanitize(description),
       price: Number(price),
       category: sanitize(category),
-      imageUrls: Array.isArray(imageUrls) ? imageUrls : (Array.isArray(images) ? images : []),
+      imageUrls: submittedImages,
       materials: Array.isArray(materials) ? materials : [],
-      artisan: sanitize(brand || req.user.name || 'User'),
+      artisan: sanitize(brand || user?.name || 'User'),
       creator: req.user.id, // Set creator from authenticated user
       status: 'draft', // Start as draft, admin approves before publishing
       tags: condition ? [condition] : [],
@@ -143,11 +157,6 @@ router.post('/register', require('../middleware/auth').authMiddleware, async (re
 
     // Send confirmation email to user (non-blocking)
     try {
-      const User = require('../models/User');
-      const { sendConsignmentEmail, sendAdminNotification } = require('../service/emailService');
-      
-      // Get user details for email
-      const user = await User.findById(req.user.id);
       if (user && user.email) {
         // Send confirmation to user
         await sendConsignmentEmail({

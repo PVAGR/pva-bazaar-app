@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
 import { fetchMarketplaceItems } from "../lib/api";
 import useDebounce from "../hooks/useDebounce";
 import "./MarketplacePage.css";
@@ -13,6 +14,11 @@ export default function MarketplacePage() {
   const [error, setError] = useState(null);
   const debouncedSearch = useDebounce(search, 400);
   const abortRef = useRef();
+  const isAuthed = !!(
+    localStorage.getItem("token") ||
+    localStorage.getItem("authToken") ||
+    localStorage.getItem("jwt")
+  );
 
   useEffect(() => {
     setItems([]);
@@ -38,7 +44,10 @@ export default function MarketplacePage() {
       if (res.ok) {
         setItems(reset ? res.items : prev => [...prev, ...res.items]);
         setNextCursor(res.nextCursor || null);
-        if (reset && res.categories) setCategories(res.categories);
+        if (reset) {
+          const derived = Array.from(new Set((res.items || []).map(i => i.category).filter(Boolean)));
+          setCategories(Array.isArray(res.categories) && res.categories.length ? res.categories : derived);
+        }
       } else {
         setError(res.error || "Failed to load items");
       }
@@ -60,7 +69,12 @@ export default function MarketplacePage() {
   return (
     <main className="marketplace-page">
       <section className="marketplace-header">
-        <h1>Marketplace</h1>
+        <div className="marketplace-topbar">
+          <h1>Marketplace</h1>
+          <Link to={isAuthed ? "/items/new" : "/admin"} className="create-listing-btn">
+            {isAuthed ? "Create New Listing" : "Login to Sell"}
+          </Link>
+        </div>
         <input
           aria-label="Search items"
           className="marketplace-search"
@@ -83,20 +97,33 @@ export default function MarketplacePage() {
         </div>
       </section>
       <section className="marketplace-items">
-        {items.length === 0 && !loading && <div className="empty">No items found.</div>}
+        {items.length === 0 && !loading && (
+          <div className="empty">
+            <p>No items found.</p>
+            {isAuthed ? <Link to="/items/new">Create your first listing</Link> : null}
+          </div>
+        )}
         <div className="item-grid">
           {items.map(item => (
-            <article className="item-card" key={item._id || item.id} tabIndex={0} aria-label={item.title}>
-              <img src={item.image || "/placeholder.png"} alt={item.title} className="item-image" />
+            <Link
+              to={`/marketplace/${encodeURIComponent(item.slug || item.id)}`}
+              className="item-card-link"
+              key={item.id || item._id}
+            >
+            <article className="item-card" tabIndex={0} aria-label={item.name || item.title}>
+              <img src={(item.media && item.media[0]) || item.image || "/placeholder.png"} alt={item.name || item.title} className="item-image" />
               <div className="item-info">
-                <h2 className="item-title">{item.title}</h2>
+                <h2 className="item-title">{item.name || item.title}</h2>
                 <div className="item-meta">
                   <span className="item-category">{item.category}</span>
-                  {item.price && <span className="item-price">${item.price}</span>}
+                  {typeof item.priceCents === "number" ? (
+                    <span className="item-price">${(item.priceCents / 100).toFixed(2)}</span>
+                  ) : null}
                 </div>
                 <p className="item-desc">{item.description}</p>
               </div>
             </article>
+            </Link>
           ))}
         </div>
         {nextCursor && (

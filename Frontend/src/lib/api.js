@@ -142,6 +142,19 @@ export async function fetchMarketplaceItems({ limit = 12, cursor = null, categor
   }
 }
 
+// Create a new marketplace item (authenticated user flow)
+export async function createMarketplaceItem(payload) {
+  try {
+    const response = await apiPost('/items/register', payload);
+    if (response && response.ok && response.item) {
+      return { ok: true, item: response.item, message: response.message || 'Item created' };
+    }
+    return { ok: false, error: response?.error || response?.message || 'Failed to create item' };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+}
+
 
 // Archive API functions
 // fetchArchiveEntries({ limit=12, cursor=null, category=null, tag=null, q=null, sort="new" })
