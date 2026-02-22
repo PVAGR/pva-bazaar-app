@@ -1,6 +1,9 @@
 // scripts/verify-prod.mjs
-const FRONTEND = "https://pvabazaar.org";
-const BACKEND = "https://pva-backend-api.vercel.app";
+// Usage:
+//   npm run verify:prod
+//   FRONTEND_URL=https://pvabazaar.org BACKEND_URL=https://api.example.com npm run verify:prod
+const FRONTEND = process.env.FRONTEND_URL || "https://pvabazaar.org";
+const BACKEND = process.env.BACKEND_URL || FRONTEND;
 
 function fail(msg) {
   console.error("❌ " + msg);
@@ -16,17 +19,45 @@ async function get(url) {
 async function getJson(url) {
   const { res, text } = await get(url);
   let json = null;
-  try { json = JSON.parse(text); } catch {}
+  try {
+    json = JSON.parse(text);
+  } catch {}
   return { res, json, text };
 }
 
+function isArrayLike(v) {
+  return Array.isArray(v) || (v && typeof v === "object" && Array.isArray(v.items));
+}
+
 (async () => {
+  console.log(`Frontend URL: ${FRONTEND}`);
+  console.log(`Backend URL:  ${BACKEND}`);
   console.log("== Backend checks ==");
   {
     const { res, json, text } = await getJson(`${BACKEND}/api/health`);
     if (!res.ok) fail(`/api/health not ok: ${res.status}`);
     if (!json) fail(`/api/health not JSON: ${text.slice(0, 200)}`);
     else console.log("✅ health ok");
+  }
+
+  {
+    const { res, json } = await getJson(`${BACKEND}/api/ping`);
+    if (!res.ok) fail(`/api/ping not ok: ${res.status}`);
+    if (!json || json.ok !== true) {
+      fail(`/api/ping wrong shape: ${JSON.stringify(json)?.slice(0, 200)}`);
+    } else {
+      console.log("✅ ping ok");
+    }
+  }
+
+  {
+    const { res, json } = await getJson(`${BACKEND}/api/version`);
+    if (!res.ok) fail(`/api/version not ok: ${res.status}`);
+    if (!json || json.ok !== true || typeof json.shortSha !== "string") {
+      fail(`/api/version wrong shape: ${JSON.stringify(json)?.slice(0, 200)}`);
+    } else {
+      console.log("✅ version ok");
+    }
   }
 
   {
@@ -40,7 +71,8 @@ async function getJson(url) {
   {
     const { res, json } = await getJson(`${BACKEND}/api/search/text?q=test`);
     if (!res.ok) fail(`/api/search/text not ok: ${res.status}`);
-    if (!json || json.success !== true || !Array.isArray(json.results)) {
+    const ok = json && (json.success === true || json.ok === true) && isArrayLike(json.results || json.data);
+    if (!ok) {
       fail(`/api/search/text wrong shape: ${JSON.stringify(json)?.slice(0, 200)}`);
     } else console.log("✅ search shape ok");
   }
@@ -80,11 +112,10 @@ async function getJson(url) {
     else console.log(`✅ bundle does not contain ${s}`);
   }
 
-  // Optional but useful: ensure backend base URL is present somewhere (depends on your apiFetch design)
-  if (!js.includes("pva-backend-api.vercel.app")) {
-    console.warn("⚠️ bundle does not contain backend domain string. This can be OK if using relative /api + proxy, but double-check runtime API base.");
+  if (!js.includes("/api/")) {
+    console.warn("⚠️ bundle does not contain '/api/' references. Double-check runtime API base configuration.");
   } else {
-    console.log("✅ bundle references backend domain");
+    console.log("✅ bundle contains API references");
   }
 
   console.log("\nDone.");

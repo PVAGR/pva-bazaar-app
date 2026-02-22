@@ -269,9 +269,9 @@ export async function fetchArchive() {
 ```env
 PORT=3000
 NODE_ENV=development
-MONGODB_URI=mongodb+srv://richyai:***@cluster0.vyhnsiy.mongodb.net/pva-bazaar
+MONGODB_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/pva-bazaar
 USE_MEMORY_DB=false
-JWT_SECRET=7e0f508c624034bee45998dc2bab42776049fd87094dd79edc10067cbfa19bfc
+JWT_SECRET=<generate-strong-random-secret>
 ETHEREUM_RPC_URL=https://mainnet.base.org
 ADMIN_WALLET_PUBLIC=0x463ace850a958e768618361e352fe9efe31d5d0e
 ALLOWED_ORIGIN=http://localhost:3000
@@ -286,8 +286,8 @@ USE_VECTOR_DB=false
 
 | Variable | Value | Purpose |
 |----------|-------|---------|
-| `MONGODB_URI` | `mongodb+srv://richyai:***@cluster0...` | Database connection |
-| `JWT_SECRET` | `7e0f508c624034bee45998dc2bab42776049fd87094dd79edc10067cbfa19bfc` | Token signing |
+| `MONGODB_URI` | `mongodb+srv://<username>:<password>@<cluster>...` | Database connection |
+| `JWT_SECRET` | `<generate-strong-random-secret>` | Token signing |
 | `NODE_ENV` | `production` | Environment mode |
 | `ALLOWED_ORIGIN` | `https://pvabazaar.org` | CORS configuration |
 
@@ -365,8 +365,8 @@ VITE_API_URL=https://backend-pvagrs-projects.vercel.app
 # Go to: https://vercel.com/pvagrs-projects/backend/settings/environment-variables
 # Add these for "Production" environment:
 
-MONGODB_URI=mongodb+srv://richyai:123zxc12@cluster0.vyhnsiy.mongodb.net/pva-bazaar?retryWrites=true&w=majority&appName=Cluster0
-JWT_SECRET=7e0f508c624034bee45998dc2bab42776049fd87094dd79edc10067cbfa19bfc
+MONGODB_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/pva-bazaar?retryWrites=true&w=majority
+JWT_SECRET=<generate-strong-random-secret>
 NODE_ENV=production
 ALLOWED_ORIGIN=https://pvabazaar.org
 USE_MEMORY_DB=false
