@@ -3,12 +3,16 @@ const router = express.Router();
 
 router.get('/', (req, res) => {
   // Health check: simple, no DB dependency
+  const legacyMode = process.env.LEGACY_MODE === 'true';
+  const apiReady = process.env.API_READY !== 'false';
   res.status(200).json({ 
     ok: true, 
     message: 'PVA Bazaar API is healthy!', 
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || 'development',
+    legacyMode,
+    apiReady,
   });
 });
 

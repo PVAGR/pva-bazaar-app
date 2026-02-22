@@ -112,11 +112,14 @@ function isArrayLike(v) {
 
   {
     const { res } = await get(`${BACKEND}/api/artifacts`);
-    const legacyMode = Boolean(healthJson && healthJson.legacyMode === true);
-    if (legacyMode && res.status === 200) {
+    const hasLegacyMode = Boolean(healthJson && typeof healthJson.legacyMode === "boolean");
+    const legacyMode = hasLegacyMode ? healthJson.legacyMode : null;
+    if (legacyMode === true && res.status === 200) {
       console.log("✅ legacy enabled (/api/artifacts available)");
-    } else if (!legacyMode && res.status === 410) {
+    } else if (legacyMode === false && res.status === 410) {
       console.log("✅ legacy gated (410)");
+    } else if (!hasLegacyMode) {
+      console.warn(`⚠️ /api/health did not include legacyMode; /api/artifacts returned ${res.status}`);
     } else {
       console.warn(
         `⚠️ /api/artifacts returned ${res.status} (legacyMode=${legacyMode}; expected ${
