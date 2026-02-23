@@ -34,6 +34,26 @@ function getBearerToken(req) {
   return authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
 }
 
+// GET /api/oauth/twitch/status
+// Returns configuration status (never returns secret values).
+router.get('/twitch/status', (req, res) => {
+  const required = ['TWITCH_CLIENT_ID', 'TWITCH_CLIENT_SECRET'];
+  const optional = ['TWITCH_REDIRECT_URI', 'OAUTH_FRONTEND_RETURN_URL'];
+  const missing = required.filter((k) => !process.env[k]);
+  res.json({
+    ok: true,
+    configured: missing.length === 0,
+    missing,
+    required,
+    optional,
+    // Helpful diagnostics for the UI (these are not secrets)
+    redirectUri: getRedirectUri(req),
+    frontendReturnUrl: getFrontendReturnUrl(req),
+    clientIdSet: !!process.env.TWITCH_CLIENT_ID,
+    clientSecretSet: !!process.env.TWITCH_CLIENT_SECRET,
+  });
+});
+
 // GET /api/oauth/twitch/start
 // - If called from the frontend app, it should use Authorization header and request mode=json,
 //   then the UI redirects to the returned URL.

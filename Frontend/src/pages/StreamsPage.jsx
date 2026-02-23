@@ -43,6 +43,7 @@ export default function StreamsPage() {
   const [draftLoaded, setDraftLoaded] = useState(false);
   const [draftSaving, setDraftSaving] = useState(false);
   const [draftRestoreHint, setDraftRestoreHint] = useState('');
+  const [twitchStatus, setTwitchStatus] = useState(null);
 
   const tokenPresent = useMemo(() => {
     if (typeof window === 'undefined') return false;
@@ -101,6 +102,15 @@ export default function StreamsPage() {
             };
           });
         }
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    // Self-diagnose Twitch configuration (no secrets).
+    apiGet('/oauth/twitch/status')
+      .then((res) => {
+        if (res?.ok) setTwitchStatus(res);
       })
       .catch(() => {});
   }, []);
@@ -194,6 +204,10 @@ export default function StreamsPage() {
   async function handleConnectTwitch() {
     setError('');
     try {
+      if (twitchStatus && twitchStatus.configured === false) {
+        const missing = Array.isArray(twitchStatus.missing) ? twitchStatus.missing.join(', ') : 'missing env vars';
+        throw new Error(`Twitch is not configured yet (${missing})`);
+      }
       // Must be an authenticated API call (Authorization header) so the backend can
       // bind the OAuth state to your user id.
       const res = await apiGet('/oauth/twitch/start', { params: { mode: 'json' } });
@@ -325,6 +339,23 @@ export default function StreamsPage() {
             <div className="muted">
               Twitch: {profile.twitch?.login ? <b>connected (@{profile.twitch.login})</b> : <b>not connected</b>}
             </div>
+            {twitchStatus ? (
+              <div className="muted small">
+                Twitch config:{' '}
+                {twitchStatus.configured ? (
+                  <b>configured</b>
+                ) : (
+                  <b>
+                    missing {Array.isArray(twitchStatus.missing) && twitchStatus.missing.length ? twitchStatus.missing.join(', ') : 'env vars'}
+                  </b>
+                )}{' '}
+                <HelpTip
+                  title="Twitch setup"
+                  body="To enable Twitch connect, set TWITCH_CLIENT_ID, TWITCH_CLIENT_SECRET, and a matching TWITCH_REDIRECT_URI in Vercel. This status check never shows secret values."
+                  example="TWITCH_REDIRECT_URI=https://api.pvabazaar.org/api/oauth/twitch/callback"
+                />
+              </div>
+            ) : null}
             {profile?.preferences ? (
               <div className="streams-defaults">
                 <div className="muted">
