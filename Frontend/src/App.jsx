@@ -13,6 +13,7 @@ import CheckoutCancelPage from './pages/CheckoutCancelPage.jsx';
 import OracleAssessmentPage from './pages/OracleAssessmentPage.jsx';
 import ListItemPage from './pages/ListItemPage.jsx';
 import StreamsPage from './pages/StreamsPage.jsx';
+import DealsPage from './pages/DealsPage.jsx';
 import './base.css';
 
 function ProtectedRoute({ children }) {
@@ -48,6 +49,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <StreamsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/deals"
+          element={
+            <ProtectedRoute>
+              <DealsPage />
             </ProtectedRoute>
           }
         />

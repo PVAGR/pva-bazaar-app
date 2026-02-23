@@ -412,6 +412,9 @@ export default function AdminPage() {
               <Link to="/streams" className="header-btn" title="Livestreams">
                 📺 Streams
               </Link>
+              <Link to="/deals" className="header-btn" title="Deals">
+                🤝 Deals
+              </Link>
               <button 
                 className="header-btn refresh-btn"
                 onClick={runConnectionCheck}
