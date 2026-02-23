@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { apiDelete, apiGet, apiPost, apiPut } from '../lib/api';
+import { ENV } from '../config/env';
 import './StreamsPage.css';
 
 const PLATFORM_OPTIONS = ['none', 'youtube', 'twitch', 'kick', 'facebook', 'custom'];
@@ -38,6 +39,8 @@ export default function StreamsPage() {
     if (typeof window === 'undefined') return false;
     return !!(localStorage.getItem('token') || localStorage.getItem('authToken') || localStorage.getItem('jwt'));
   }, []);
+
+  const twitchConnectUrl = `${ENV.API_URL.replace(/\/+$/, '')}/oauth/twitch/start`;
 
   async function loadStreams() {
     setLoading(true);
@@ -135,9 +138,14 @@ export default function StreamsPage() {
         </div>
         <div className="streams-actions">
           <Link to="/admin" className="btn ghost">← Admin</Link>
+          <Link to="/deals" className="btn ghost">🤝 Deals</Link>
+          <Link to="/items/new" className="btn ghost">📦 Sell</Link>
           <button className="btn ghost" onClick={loadStreams} disabled={loading}>
             Refresh
           </button>
+          <a className="btn primary" href={twitchConnectUrl} title="Connect Twitch (OAuth)">
+            Connect Twitch
+          </a>
           <button
             className="btn ghost"
             onClick={() => {
@@ -153,21 +161,22 @@ export default function StreamsPage() {
         </div>
       </header>
 
-      {!tokenPresent ? (
-        <div className="notice">
-          <b>Not authenticated for streams yet.</b> Login in <code>/admin</code> first.
-        </div>
-      ) : null}
+      <main className="streams-main">
+        {!tokenPresent ? (
+          <div className="notice">
+            <b>Not authenticated for streams yet.</b> Login in <code>/admin</code> first.
+          </div>
+        ) : null}
 
-      {error ? (
-        <div className="error" role="alert">
-          {error}
-        </div>
-      ) : null}
+        {error ? (
+          <div className="error" role="alert">
+            {error}
+          </div>
+        ) : null}
 
-      <section className="card">
-        <h2>Create stream session</h2>
-        <form className="form" onSubmit={handleCreate}>
+        <section className="card">
+          <h2>Create stream session</h2>
+          <form className="form" onSubmit={handleCreate}>
           <label>
             Title
             <input
@@ -232,47 +241,48 @@ export default function StreamsPage() {
               {creating ? 'Creating...' : 'Create'}
             </button>
           </div>
-        </form>
-      </section>
+          </form>
+        </section>
 
-      <section className="card">
-        <h2>Your stream sessions</h2>
-        {loading ? <div className="muted">Loading…</div> : null}
-        {!loading && items.length === 0 ? <div className="muted">No stream sessions yet.</div> : null}
-        <div className="streams-list">
-          {items.map(s => (
-            <div key={s._id} className="stream-row">
-              <div className="stream-main">
-                <div className="stream-title">{s.title}</div>
-                <div className="muted">
-                  {s.platform ? `${s.platform}` : 'none'}
-                  {s.platformStreamUrl ? ` · ${s.platformStreamUrl}` : ''}
+        <section className="card">
+          <h2>Your stream sessions</h2>
+          {loading ? <div className="muted">Loading…</div> : null}
+          {!loading && items.length === 0 ? <div className="muted">No stream sessions yet.</div> : null}
+          <div className="streams-list">
+            {items.map(s => (
+              <div key={s._id} className="stream-row">
+                <div className="stream-main">
+                  <div className="stream-title">{s.title}</div>
+                  <div className="muted">
+                    {s.platform ? `${s.platform}` : 'none'}
+                    {s.platformStreamUrl ? ` · ${s.platformStreamUrl}` : ''}
+                  </div>
+                  <div className="muted">
+                    created {formatDate(s.createdAt)}{s.startedAt ? ` · started ${formatDate(s.startedAt)}` : ''}
+                  </div>
                 </div>
-                <div className="muted">
-                  created {formatDate(s.createdAt)}{s.startedAt ? ` · started ${formatDate(s.startedAt)}` : ''}
+
+                <div className="stream-controls">
+                  <select
+                    value={s.status || 'scheduled'}
+                    onChange={e => handleUpdate(s._id, { status: e.target.value })}
+                  >
+                    {STATUS_OPTIONS.map(st => (
+                      <option key={st} value={st}>
+                        {st}
+                      </option>
+                    ))}
+                  </select>
+
+                  <button className="btn ghost" onClick={() => handleDelete(s._id)}>
+                    Delete
+                  </button>
                 </div>
               </div>
-
-              <div className="stream-controls">
-                <select
-                  value={s.status || 'scheduled'}
-                  onChange={e => handleUpdate(s._id, { status: e.target.value })}
-                >
-                  {STATUS_OPTIONS.map(st => (
-                    <option key={st} value={st}>
-                      {st}
-                    </option>
-                  ))}
-                </select>
-
-                <button className="btn ghost" onClick={() => handleDelete(s._id)}>
-                  Delete
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+            ))}
+          </div>
+        </section>
+      </main>
     </div>
   );
 }

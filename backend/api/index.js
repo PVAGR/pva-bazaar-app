@@ -238,6 +238,7 @@ const journalRoutes = require('../routes/journal');
 const didRoutes = require('../routes/did');
 const databasesRoutes = require('../routes/databases');
 const dealsRoutes = require('../routes/deals');
+const oauthTwitchRoutes = require('../routes/oauthTwitch');
 // Oracle Assessment routes
 const oracleRoutes = require('../routes/oracle');
 // Models for optional seeding
@@ -313,6 +314,7 @@ app.use('/api/journal', journalRoutes);
 app.use('/api/did', didRoutes);
 app.use('/api/databases', databasesRoutes);
 app.use('/api/deals', dealsRoutes);
+app.use('/api/oauth', oauthTwitchRoutes);
 // ORACLE ASSESSMENT ROUTES
 app.use('/api/oracle', oracleRoutes);
 

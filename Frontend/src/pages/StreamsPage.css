@@ -2,6 +2,12 @@
   min-height: 100vh;
 }
 
+.streams-main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
 /* Keep Streams page consistent with Admin theme variables */
 .streams-shell .card {
   background: var(--bg-tertiary);
@@ -131,5 +137,14 @@
 .stream-controls select {
   padding: 8px 10px;
   border-radius: 8px;
+}
+
+@media (max-width: 900px) {
+  .stream-row {
+    flex-direction: column;
+  }
+  .stream-controls {
+    justify-content: flex-start;
+  }
 }
 

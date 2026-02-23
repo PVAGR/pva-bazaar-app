@@ -6,6 +6,12 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   profilePicture: { type: String, default: '' },
+  twitch: {
+    id: { type: String, default: '' },
+    login: { type: String, default: '' },
+    displayName: { type: String, default: '' },
+    connectedAt: { type: Date },
+  },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });

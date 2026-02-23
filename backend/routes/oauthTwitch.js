@@ -1,0 +1,151 @@
+const express = require('express');
+const router = express.Router();
+const jwt = require('jsonwebtoken');
+const axios = require('axios');
+const User = require('../models/User');
+const { authMiddleware } = require('../middleware/auth');
+
+function mustEnv(key) {
+  const v = process.env[key];
+  if (!v) throw new Error(`Missing ${key}`);
+  return v;
+}
+
+function getRedirectUri(req) {
+  // Prefer explicit config so it matches Twitch dev console exactly.
+  if (process.env.TWITCH_REDIRECT_URI) return process.env.TWITCH_REDIRECT_URI;
+
+  // Safe default for our production domain. Works for most users but still should be
+  // set explicitly in Vercel to avoid mismatch if domains change.
+  const host = req.get('host');
+  const proto = (req.headers['x-forwarded-proto'] || 'https').split(',')[0].trim();
+  return `${proto}://${host}/api/oauth/twitch/callback`;
+}
+
+function getFrontendReturnUrl(req) {
+  return process.env.OAUTH_FRONTEND_RETURN_URL || 'https://pvabazaar.org/#/streams';
+}
+
+// GET /api/oauth/twitch/start (auth required)
+router.get('/twitch/start', authMiddleware, async (req, res) => {
+  try {
+    const clientId = mustEnv('TWITCH_CLIENT_ID');
+    mustEnv('TWITCH_CLIENT_SECRET'); // we only validate here; used in callback
+    const redirectUri = getRedirectUri(req);
+
+    // Encode user id into signed state so callback can link the Twitch identity.
+    const state = jwt.sign(
+      { uid: req.user.id, nonce: Math.random().toString(36).slice(2) },
+      process.env.JWT_SECRET,
+      { expiresIn: '10m' }
+    );
+
+    const params = new URLSearchParams({
+      client_id: clientId,
+      redirect_uri: redirectUri,
+      response_type: 'code',
+      // Minimal scope: login/id/display_name are accessible without extra scopes.
+      scope: '',
+      state,
+      force_verify: 'true',
+    });
+
+    return res.redirect(`https://id.twitch.tv/oauth2/authorize?${params.toString()}`);
+  } catch (err) {
+    console.error('Twitch oauth start error:', err);
+    return res.status(503).json({
+      ok: false,
+      error: 'Twitch OAuth not configured',
+      message: err.message,
+    });
+  }
+});
+
+// GET /api/oauth/twitch/callback (public)
+router.get('/twitch/callback', async (req, res) => {
+  try {
+    const clientId = mustEnv('TWITCH_CLIENT_ID');
+    const clientSecret = mustEnv('TWITCH_CLIENT_SECRET');
+    const redirectUri = getRedirectUri(req);
+
+    const code = req.query.code;
+    const state = req.query.state;
+    const error = req.query.error;
+    const errorDesc = req.query.error_description;
+
+    const returnUrl = getFrontendReturnUrl(req);
+
+    if (error) {
+      const msg = `${error}${errorDesc ? `: ${errorDesc}` : ''}`;
+      return res.redirect(`${returnUrl}${returnUrl.includes('?') ? '&' : '?'}oauth_error=${encodeURIComponent(msg)}`);
+    }
+
+    if (!code || !state) {
+      return res.redirect(`${returnUrl}${returnUrl.includes('?') ? '&' : '?'}oauth_error=${encodeURIComponent('Missing code/state')}`);
+    }
+
+    let decoded;
+    try {
+      decoded = jwt.verify(String(state), process.env.JWT_SECRET);
+    } catch (e) {
+      return res.redirect(`${returnUrl}${returnUrl.includes('?') ? '&' : '?'}oauth_error=${encodeURIComponent('Invalid OAuth state. Please try again.')}`);
+    }
+
+    const uid = decoded?.uid;
+    if (!uid) {
+      return res.redirect(`${returnUrl}${returnUrl.includes('?') ? '&' : '?'}oauth_error=${encodeURIComponent('OAuth state missing user id')}`);
+    }
+
+    // Exchange code -> user access token
+    const tokenRes = await axios.post('https://id.twitch.tv/oauth2/token', null, {
+      params: {
+        client_id: clientId,
+        client_secret: clientSecret,
+        code: String(code),
+        grant_type: 'authorization_code',
+        redirect_uri: redirectUri,
+      },
+      timeout: 15000,
+    });
+
+    const accessToken = tokenRes?.data?.access_token;
+    if (!accessToken) throw new Error('Twitch token exchange failed');
+
+    // Fetch Twitch user info
+    const userRes = await axios.get('https://api.twitch.tv/helix/users', {
+      headers: {
+        'Client-ID': clientId,
+        Authorization: `Bearer ${accessToken}`,
+      },
+      timeout: 15000,
+    });
+
+    const twitchUser = userRes?.data?.data?.[0];
+    if (!twitchUser?.id) throw new Error('Twitch user fetch failed');
+
+    await User.findByIdAndUpdate(
+      uid,
+      {
+        $set: {
+          twitch: {
+            id: String(twitchUser.id || ''),
+            login: String(twitchUser.login || ''),
+            displayName: String(twitchUser.display_name || ''),
+            connectedAt: new Date(),
+          },
+        },
+      },
+      { new: true }
+    );
+
+    // Do not persist user tokens yet (foundation step). We can add encrypted token storage later.
+    return res.redirect(`${returnUrl}${returnUrl.includes('?') ? '&' : '?'}connected=twitch`);
+  } catch (err) {
+    console.error('Twitch oauth callback error:', err.response?.data || err.message);
+    const returnUrl = getFrontendReturnUrl(req);
+    return res.redirect(`${returnUrl}${returnUrl.includes('?') ? '&' : '?'}oauth_error=${encodeURIComponent('Twitch connect failed')}`);
+  }
+});
+
+module.exports = router;
+
