@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { apiGet, apiPost, apiPut } from '../lib/api';
+import { apiDelete, apiGet, apiPost, apiPut } from '../lib/api';
 import HelpTip from '../components/HelpTip.jsx';
 import AdminNav from '../components/AdminNav.jsx';
 import './DealsPage.css';
@@ -18,6 +18,9 @@ export default function DealsPage() {
   const [profile, setProfile] = useState(null);
   const [prefsSaving, setPrefsSaving] = useState(false);
   const [prefsSavedOk, setPrefsSavedOk] = useState(false);
+  const [draftLoaded, setDraftLoaded] = useState(false);
+  const [draftSaving, setDraftSaving] = useState(false);
+  const [draftRestoreHint, setDraftRestoreHint] = useState('');
 
   const [creating, setCreating] = useState(false);
   const [draft, setDraft] = useState({
@@ -101,6 +104,95 @@ export default function DealsPage() {
       .catch(() => {});
   }, []);
 
+  useEffect(() => {
+    if (draftLoaded) return;
+    apiGet('/deals/drafts')
+      .then((res) => {
+        setDraftLoaded(true);
+        const saved = res?.draft;
+        if (!saved || typeof saved !== 'object') return;
+
+        setDraft((prev) => {
+          const pristine =
+            !prev.title &&
+            !prev.description &&
+            !prev.counterpartyName &&
+            !prev.counterpartyCountry &&
+            !prev.counterpartyWallet &&
+            !prev.totalAmount;
+          if (!pristine) {
+            setDraftRestoreHint('A previous draft exists (not auto-restored because you already started typing).');
+            return prev;
+          }
+          setDraftRestoreHint('Restored your last saved deal draft.');
+          return { ...prev, ...saved };
+        });
+      })
+      .catch(() => setDraftLoaded(true));
+  }, [draftLoaded]);
+
+  useEffect(() => {
+    if (!draftLoaded) return;
+
+    const hasPayment = (draft.payments || []).some((p) => String(p?.amount || '').trim());
+    const hasMilestone = (draft.milestones || []).some((m) => String(m?.title || '').trim());
+    const hasMeaningful =
+      !!draft.title ||
+      !!draft.description ||
+      !!draft.counterpartyName ||
+      !!draft.counterpartyCountry ||
+      !!draft.counterpartyWallet ||
+      !!draft.totalAmount ||
+      hasPayment ||
+      hasMilestone;
+
+    if (!hasMeaningful) return;
+
+    const timer = setTimeout(async () => {
+      setDraftSaving(true);
+      try {
+        await apiPut('/deals/drafts', { draft });
+      } catch {
+        // Best-effort: draft autosave should never block the user.
+      } finally {
+        setDraftSaving(false);
+      }
+    }, 650);
+    return () => clearTimeout(timer);
+  }, [draft, draftLoaded]);
+
+  async function clearDraft() {
+    setDraftSaving(true);
+    setError('');
+    try {
+      await apiDelete('/deals/drafts');
+      setDraftRestoreHint('Draft cleared.');
+      setDraft({
+        title: '',
+        description: '',
+        counterpartyName: '',
+        counterpartyCountry: profile?.preferences?.defaultCountry || '',
+        counterpartyWallet: '',
+        totalAmount: '',
+        currency: profile?.preferences?.defaultCurrency || 'USD',
+        payments: [
+          { label: 'Deposit', amount: '', currency: profile?.preferences?.defaultCurrency || 'USD', status: 'pending' },
+          { label: 'Mid', amount: '', currency: profile?.preferences?.defaultCurrency || 'USD', status: 'pending' },
+          { label: 'Final', amount: '', currency: profile?.preferences?.defaultCurrency || 'USD', status: 'pending' },
+        ],
+        milestones: [
+          { title: 'Tracking number provided', evidenceType: 'tracking_number', status: 'pending' },
+          { title: 'Delivery confirmed', evidenceType: 'message', status: 'pending' },
+        ],
+      });
+    } catch (e) {
+      const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
+      setError(serverMsg || e.message || 'Failed to clear draft');
+    } finally {
+      setDraftSaving(false);
+    }
+  }
+
   const preferencesDraft = useMemo(() => {
     const prefs = profile?.preferences || {};
     return {
@@ -166,6 +258,8 @@ export default function DealsPage() {
       };
       const res = await apiPost('/deals', payload);
       if (!res?.ok || !res.item) throw new Error(res?.error || res?.message || 'Create failed');
+      // Clear Mongo-backed draft after a successful create.
+      apiDelete('/deals/drafts').catch(() => {});
       await loadDeals();
       setSelectedId(res.item._id);
       setDraft((prev) => ({ ...prev, title: '', description: '' }));
@@ -306,6 +400,16 @@ export default function DealsPage() {
                 </button>
                 {prefsSavedOk ? <span className="muted small">Saved</span> : null}
               </div>
+            </div>
+          ) : null}
+
+          {draftRestoreHint ? <div className="muted small">{draftRestoreHint}</div> : null}
+          {draftLoaded ? (
+            <div className="row">
+              <button type="button" className="btn ghost" disabled={draftSaving} onClick={clearDraft}>
+                Clear draft
+              </button>
+              {draftSaving ? <span className="muted small">Saving draft…</span> : null}
             </div>
           ) : null}
 

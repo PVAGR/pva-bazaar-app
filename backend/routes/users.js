@@ -27,11 +27,23 @@ router.put('/profile', auth, async (req, res) => {
 
     // Store simple defaults so forms can auto-fill for this user later.
     if (req.body?.preferences && typeof req.body.preferences === 'object') {
-      patch.preferences = {
-        defaultCountry: sanitize(req.body.preferences.defaultCountry || ''),
-        defaultCurrency: sanitize(req.body.preferences.defaultCurrency || 'USD') || 'USD',
-        defaultWalletAddress: sanitize(req.body.preferences.defaultWalletAddress || ''),
-      };
+      const prefs = req.body.preferences;
+
+      // Use dot-path updates so we don't overwrite other preferences (e.g. drafts).
+      if (prefs.defaultCountry !== undefined) patch['preferences.defaultCountry'] = sanitize(prefs.defaultCountry || '');
+      if (prefs.defaultCurrency !== undefined) {
+        patch['preferences.defaultCurrency'] = sanitize(prefs.defaultCurrency || 'USD') || 'USD';
+      }
+      if (prefs.defaultWalletAddress !== undefined) {
+        patch['preferences.defaultWalletAddress'] = sanitize(prefs.defaultWalletAddress || '');
+      }
+      if (prefs.defaultTags !== undefined) patch['preferences.defaultTags'] = sanitize(prefs.defaultTags || '');
+      if (prefs.defaultStreamPlatform !== undefined) {
+        patch['preferences.defaultStreamPlatform'] = sanitize(prefs.defaultStreamPlatform || 'none') || 'none';
+      }
+      if (prefs.defaultPublicVisibility !== undefined) {
+        patch['preferences.defaultPublicVisibility'] = !!prefs.defaultPublicVisibility;
+      }
     }
 
     patch.updatedAt = Date.now();

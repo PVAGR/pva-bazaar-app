@@ -119,6 +119,37 @@
   gap: 10px;
 }
 
+.streams-defaults {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  display: grid;
+  gap: 10px;
+}
+
+.streams-defaults__row {
+  flex-wrap: wrap;
+}
+
+.streams-defaults__field {
+  display: grid;
+  gap: 6px;
+  font-weight: 600;
+  flex: 1;
+  min-width: 220px;
+}
+
+.streams-defaults__check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.streams-shell .small {
+  font-size: 0.85rem;
+}
+
 .stream-row {
   display: flex;
   justify-content: space-between;

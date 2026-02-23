@@ -1,11 +1,23 @@
 const express = require('express');
 const router = express.Router();
 const Deal = require('../models/Deal');
+const User = require('../models/User');
 const { authMiddleware } = require('../middleware/auth');
 
 function sanitize(str) {
   if (typeof str !== 'string') return str;
   return str.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '').trim();
+}
+
+function sanitizeDeep(v) {
+  if (typeof v === 'string') return sanitize(v);
+  if (Array.isArray(v)) return v.map(sanitizeDeep);
+  if (v && typeof v === 'object') {
+    const out = {};
+    for (const [k, val] of Object.entries(v)) out[k] = sanitizeDeep(val);
+    return out;
+  }
+  return v;
 }
 
 function toPublicDeal(deal) {
@@ -100,6 +112,46 @@ router.post('/', authMiddleware, async (req, res) => {
   } catch (err) {
     console.error('Error creating deal:', err);
     res.status(500).json({ ok: false, error: 'Failed to create deal' });
+  }
+});
+
+// GET /api/deals/drafts - fetch create-deal draft for current user
+router.get('/drafts', authMiddleware, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('preferences');
+    const draft = user?.preferences?.drafts?.deals || null;
+    res.json({ ok: true, draft });
+  } catch (err) {
+    console.error('Error fetching deal draft:', err);
+    res.status(500).json({ ok: false, error: 'Failed to fetch deal draft' });
+  }
+});
+
+// PUT /api/deals/drafts - save create-deal draft for current user
+router.put('/drafts', authMiddleware, async (req, res) => {
+  try {
+    const incoming = req.body?.draft !== undefined ? req.body.draft : req.body;
+    const draft = sanitizeDeep(incoming || null);
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { 'preferences.drafts.deals': draft, updatedAt: Date.now() },
+      { new: true }
+    ).select('preferences');
+    res.json({ ok: true, draft: user?.preferences?.drafts?.deals || null });
+  } catch (err) {
+    console.error('Error saving deal draft:', err);
+    res.status(500).json({ ok: false, error: 'Failed to save deal draft' });
+  }
+});
+
+// DELETE /api/deals/drafts - clear create-deal draft
+router.delete('/drafts', authMiddleware, async (req, res) => {
+  try {
+    await User.findByIdAndUpdate(req.user.id, { 'preferences.drafts.deals': null, updatedAt: Date.now() }, { new: true });
+    res.json({ ok: true, draft: null });
+  } catch (err) {
+    console.error('Error clearing deal draft:', err);
+    res.status(500).json({ ok: false, error: 'Failed to clear deal draft' });
   }
 });
 

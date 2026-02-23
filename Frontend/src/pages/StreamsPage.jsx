@@ -37,6 +37,11 @@ export default function StreamsPage() {
     isPublic: true,
   });
   const [profile, setProfile] = useState(null);
+  const [prefsSaving, setPrefsSaving] = useState(false);
+  const [prefsSavedOk, setPrefsSavedOk] = useState(false);
+  const [draftLoaded, setDraftLoaded] = useState(false);
+  const [draftSaving, setDraftSaving] = useState(false);
+  const [draftRestoreHint, setDraftRestoreHint] = useState('');
 
   const tokenPresent = useMemo(() => {
     if (typeof window === 'undefined') return false;
@@ -73,10 +78,117 @@ export default function StreamsPage() {
     // Best-effort: show who is signed in + connected services.
     apiGet('/users/profile')
       .then((res) => {
-        if (res?.ok && res.user) setProfile(res.user);
+        if (res?.ok && res.user) {
+          setProfile(res.user);
+
+          const prefs = res.user?.preferences || {};
+          // Prefill defaults if the user hasn't typed anything yet.
+          setForm((prev) => {
+            const pristine =
+              !prev.title &&
+              !prev.platformStreamUrl &&
+              !prev.description &&
+              !prev.tags &&
+              (prev.platform === 'none' || !prev.platform);
+            if (!pristine) return prev;
+            return {
+              ...prev,
+              platform: prefs.defaultStreamPlatform || prev.platform,
+              tags: prefs.defaultTags || prev.tags,
+              isPublic:
+                typeof prefs.defaultPublicVisibility === 'boolean' ? prefs.defaultPublicVisibility : prev.isPublic,
+            };
+          });
+        }
       })
       .catch(() => {});
   }, []);
+
+  async function savePreferences(nextPrefs) {
+    setPrefsSaving(true);
+    setPrefsSavedOk(false);
+    setError('');
+    try {
+      const res = await apiPut('/users/profile', { preferences: nextPrefs });
+      if (!res?.ok || !res.user) throw new Error(res?.message || 'Failed to save defaults');
+      setProfile(res.user);
+      setPrefsSavedOk(true);
+      setTimeout(() => setPrefsSavedOk(false), 2000);
+    } catch (e) {
+      const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
+      setError(serverMsg || e.message || 'Failed to save defaults');
+    } finally {
+      setPrefsSaving(false);
+    }
+  }
+
+  useEffect(() => {
+    if (!tokenPresent) return;
+    if (draftLoaded) return;
+    apiGet('/streams/drafts')
+      .then((res) => {
+        setDraftLoaded(true);
+        const draft = res?.draft;
+        if (!draft || typeof draft !== 'object') return;
+
+        setForm((prev) => {
+          const pristine =
+            !prev.title &&
+            !prev.platformStreamUrl &&
+            !prev.description &&
+            !prev.tags &&
+            (prev.platform === 'none' || !prev.platform);
+          if (!pristine) {
+            setDraftRestoreHint('A previous draft exists (not auto-restored because you already started typing).');
+            return prev;
+          }
+          setDraftRestoreHint('Restored your last saved stream draft.');
+          return { ...prev, ...draft };
+        });
+      })
+      .catch(() => setDraftLoaded(true));
+  }, [draftLoaded, tokenPresent]);
+
+  useEffect(() => {
+    if (!tokenPresent) return;
+    if (!draftLoaded) return; // avoid saving before we had a chance to restore
+
+    const empty =
+      !form.title &&
+      !form.platformStreamUrl &&
+      !form.description &&
+      !form.tags &&
+      (form.platform === 'none' || !form.platform) &&
+      form.isPublic === true;
+    if (empty) return;
+
+    const timer = setTimeout(async () => {
+      setDraftSaving(true);
+      try {
+        await apiPut('/streams/drafts', { draft: form });
+      } catch {
+        // Best-effort: draft autosave should never block the user.
+      } finally {
+        setDraftSaving(false);
+      }
+    }, 650);
+    return () => clearTimeout(timer);
+  }, [draftLoaded, form, tokenPresent]);
+
+  async function clearDraft() {
+    setDraftSaving(true);
+    setError('');
+    try {
+      await apiDelete('/streams/drafts');
+      setDraftRestoreHint('Draft cleared.');
+      setForm({ title: '', platform: 'none', platformStreamUrl: '', description: '', tags: '', isPublic: true });
+    } catch (e) {
+      const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
+      setError(serverMsg || e.message || 'Failed to clear draft');
+    } finally {
+      setDraftSaving(false);
+    }
+  }
 
   async function handleConnectTwitch() {
     setError('');
@@ -114,6 +226,8 @@ export default function StreamsPage() {
       if (!res?.ok || !res.item) {
         throw new Error(res?.error || res?.message || 'Create failed');
       }
+      // Clear Mongo-backed draft after a successful create.
+      apiDelete('/streams/drafts').catch(() => {});
       setForm({ title: '', platform: 'none', platformStreamUrl: '', description: '', tags: '', isPublic: true });
       await loadStreams();
     } catch (e2) {
@@ -210,6 +324,97 @@ export default function StreamsPage() {
             <div className="muted">
               Twitch: {profile.twitch?.login ? <b>connected (@{profile.twitch.login})</b> : <b>not connected</b>}
             </div>
+            {profile?.preferences ? (
+              <div className="streams-defaults">
+                <div className="muted">
+                  Defaults (saved to Mongo){' '}
+                  <HelpTip
+                    title="Saved defaults"
+                    body="These defaults auto-fill new stream sessions and persist across refreshes."
+                    example="Default platform: twitch"
+                  />
+                </div>
+                <div className="row streams-defaults__row">
+                  <label className="streams-defaults__field">
+                    Platform
+                    <select
+                      value={profile.preferences.defaultStreamPlatform || 'none'}
+                      onChange={(e) =>
+                        setProfile((p) => ({
+                          ...p,
+                          preferences: { ...(p?.preferences || {}), defaultStreamPlatform: e.target.value },
+                        }))
+                      }
+                    >
+                      {PLATFORM_OPTIONS.map((p) => (
+                        <option key={p} value={p}>
+                          {p}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="streams-defaults__field">
+                    Tags
+                    <input
+                      value={profile.preferences.defaultTags || ''}
+                      onChange={(e) =>
+                        setProfile((p) => ({
+                          ...p,
+                          preferences: { ...(p?.preferences || {}), defaultTags: e.target.value },
+                        }))
+                      }
+                      placeholder="coffee, kenya, logistics"
+                    />
+                  </label>
+                </div>
+                <label className="streams-defaults__check">
+                  <input
+                    type="checkbox"
+                    checked={
+                      typeof profile.preferences.defaultPublicVisibility === 'boolean'
+                        ? profile.preferences.defaultPublicVisibility
+                        : true
+                    }
+                    onChange={(e) =>
+                      setProfile((p) => ({
+                        ...p,
+                        preferences: { ...(p?.preferences || {}), defaultPublicVisibility: e.target.checked },
+                      }))
+                    }
+                  />
+                  Default: Public
+                </label>
+                <div className="row">
+                  <button
+                    type="button"
+                    className="btn ghost"
+                    disabled={prefsSaving}
+                    onClick={() =>
+                      savePreferences({
+                        defaultStreamPlatform: profile.preferences.defaultStreamPlatform || 'none',
+                        defaultTags: profile.preferences.defaultTags || '',
+                        defaultPublicVisibility:
+                          typeof profile.preferences.defaultPublicVisibility === 'boolean'
+                            ? profile.preferences.defaultPublicVisibility
+                            : true,
+                      })
+                    }
+                  >
+                    {prefsSaving ? 'Saving…' : 'Save defaults'}
+                  </button>
+                  {prefsSavedOk ? <span className="muted small">Saved</span> : null}
+                  {draftSaving ? <span className="muted small">Saving draft…</span> : null}
+                </div>
+              </div>
+            ) : null}
+            {draftRestoreHint ? <div className="muted small">{draftRestoreHint}</div> : null}
+            {tokenPresent ? (
+              <div className="row">
+                <button type="button" className="btn ghost" disabled={draftSaving} onClick={clearDraft}>
+                  Clear draft
+                </button>
+              </div>
+            ) : null}
           </section>
         ) : null}
 

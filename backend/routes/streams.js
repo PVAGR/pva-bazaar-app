@@ -2,7 +2,24 @@ const express = require('express');
 const router = express.Router();
 const crypto = require('crypto');
 const StreamSession = require('../models/StreamSession');
+const User = require('../models/User');
 const { authMiddleware } = require('../middleware/auth');
+
+function sanitize(str) {
+  if (typeof str !== 'string') return str;
+  return str.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '').trim();
+}
+
+function sanitizeDeep(v) {
+  if (typeof v === 'string') return sanitize(v);
+  if (Array.isArray(v)) return v.map(sanitizeDeep);
+  if (v && typeof v === 'object') {
+    const out = {};
+    for (const [k, val] of Object.entries(v)) out[k] = sanitizeDeep(val);
+    return out;
+  }
+  return v;
+}
 
 /**
  * @route   GET /api/streams
@@ -32,6 +49,68 @@ router.get('/', authMiddleware, async (req, res) => {
   } catch (error) {
     console.error('Error fetching streams:', error);
     res.status(500).json({ ok: false, error: 'Failed to fetch streams' });
+  }
+});
+
+/**
+ * @route   GET /api/streams/drafts
+ * @desc    Fetch the saved create-stream draft for the current user
+ * @access  Private
+ */
+router.get('/drafts', authMiddleware, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('preferences');
+    const draft = user?.preferences?.drafts?.streams || null;
+    res.json({ ok: true, draft });
+  } catch (error) {
+    console.error('Error fetching stream draft:', error);
+    res.status(500).json({ ok: false, error: 'Failed to fetch stream draft' });
+  }
+});
+
+/**
+ * @route   PUT /api/streams/drafts
+ * @desc    Save the create-stream draft for the current user (Mongo-backed)
+ * @access  Private
+ */
+router.put('/drafts', authMiddleware, async (req, res) => {
+  try {
+    const incoming = req.body?.draft !== undefined ? req.body.draft : req.body;
+    const draft = sanitizeDeep(incoming || null);
+
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      {
+        'preferences.drafts.streams': draft,
+        updatedAt: Date.now(),
+      },
+      { new: true }
+    ).select('preferences');
+
+    res.json({ ok: true, draft: user?.preferences?.drafts?.streams || null });
+  } catch (error) {
+    console.error('Error saving stream draft:', error);
+    res.status(500).json({ ok: false, error: 'Failed to save stream draft' });
+  }
+});
+
+/**
+ * @route   DELETE /api/streams/drafts
+ * @desc    Clear the saved stream draft
+ * @access  Private
+ */
+router.delete('/drafts', authMiddleware, async (req, res) => {
+  try {
+    await User.findByIdAndUpdate(
+      req.user.id,
+      { 'preferences.drafts.streams': null, updatedAt: Date.now() },
+      { new: true }
+    ).select('preferences');
+
+    res.json({ ok: true, draft: null });
+  } catch (error) {
+    console.error('Error clearing stream draft:', error);
+    res.status(500).json({ ok: false, error: 'Failed to clear stream draft' });
   }
 });
 

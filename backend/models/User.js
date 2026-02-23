@@ -16,6 +16,13 @@ const userSchema = new mongoose.Schema({
     defaultCountry: { type: String, default: '' },
     defaultCurrency: { type: String, default: 'USD' },
     defaultWalletAddress: { type: String, default: '' },
+    defaultTags: { type: String, default: '' }, // comma-separated
+    defaultStreamPlatform: { type: String, default: 'none' },
+    defaultPublicVisibility: { type: Boolean, default: true },
+    drafts: {
+      streams: { type: mongoose.Schema.Types.Mixed, default: null },
+      deals: { type: mongoose.Schema.Types.Mixed, default: null },
+    },
   },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
