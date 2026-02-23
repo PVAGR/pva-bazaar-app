@@ -9,9 +9,9 @@
   width: 20px;
   height: 20px;
   border-radius: 999px;
-  border: 1px solid var(--border);
-  background: var(--bg-secondary);
-  color: var(--text-primary);
+  border: 1px solid var(--border, #d8e9da);
+  background: var(--bg-secondary, #f9fbf9);
+  color: var(--text-primary, #0f5132);
   font-weight: 800;
   line-height: 1;
   cursor: pointer;
@@ -32,10 +32,10 @@
   right: 0;
   min-width: 260px;
   max-width: min(420px, 92vw);
-  border: 1px solid var(--border);
+  border: 1px solid var(--border, #d8e9da);
   border-radius: 12px;
-  background: var(--bg-tertiary);
-  color: var(--text-primary);
+  background: var(--bg-tertiary, #fff);
+  color: var(--text-primary, #222);
   box-shadow: 0 12px 36px rgba(0, 0, 0, 0.35);
   padding: 10px;
   z-index: 2000;
@@ -52,7 +52,7 @@
 
 .helpTip__title {
   font-weight: 800;
-  color: var(--accent);
+  color: var(--accent, #228b22);
   font-size: 0.95rem;
 }
 
@@ -60,9 +60,9 @@
   width: 28px;
   height: 28px;
   border-radius: 8px;
-  border: 1px solid var(--border);
-  background: var(--bg-secondary);
-  color: var(--text-primary);
+  border: 1px solid var(--border, #d8e9da);
+  background: var(--bg-secondary, #f9fbf9);
+  color: var(--text-primary, #222);
   cursor: pointer;
 }
 
@@ -71,7 +71,7 @@
 }
 
 .helpTip__body {
-  color: var(--text-secondary);
+  color: var(--text-secondary, #555);
   font-size: 0.9rem;
   line-height: 1.35;
   white-space: pre-wrap;
@@ -79,19 +79,19 @@
 
 .helpTip__example {
   font-size: 0.9rem;
-  color: var(--text-secondary);
+  color: var(--text-secondary, #555);
 }
 
 .helpTip__exampleLabel {
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--text-primary, #222);
 }
 
 .helpTip__example code {
   background: rgba(0, 0, 0, 0.18);
-  border: 1px solid var(--border);
+  border: 1px solid var(--border, #d8e9da);
   padding: 2px 6px;
   border-radius: 8px;
-  color: var(--text-primary);
+  color: var(--text-primary, #222);
 }
 

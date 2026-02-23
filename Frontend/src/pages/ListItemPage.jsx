@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
+import HelpTip from '../components/HelpTip.jsx';
 import { createMarketplaceItem } from '../lib/api';
 import './ListItemPage.css';
 
@@ -171,17 +172,38 @@ export default function ListItemPage() {
         <form className="list-form" onSubmit={handleSubmit}>
           {step === 1 && (
             <section>
-              <label>Title *</label>
+              <label className="list-labelRow">
+                Title *
+                <HelpTip
+                  title="Listing title"
+                  body="Short, clear name for the item. Buyers see this first."
+                  example="Handmade silver ring"
+                />
+              </label>
               <input value={form.title} onChange={e => updateField('title', e.target.value)} />
 
-              <label>Description *</label>
+              <label className="list-labelRow">
+                Description *
+                <HelpTip
+                  title="Description"
+                  body="Explain what it is, condition, size, and anything a buyer should know. This improves conversion and reduces refunds."
+                  example="Size 7, worn twice, no scratches"
+                />
+              </label>
               <textarea
                 rows={5}
                 value={form.description}
                 onChange={e => updateField('description', e.target.value)}
               />
 
-              <label>Category *</label>
+              <label className="list-labelRow">
+                Category *
+                <HelpTip
+                  title="Category"
+                  body="Used for filtering and marketplace SEO. Pick the closest match."
+                  example="jewelry"
+                />
+              </label>
               <select value={form.category} onChange={e => updateField('category', e.target.value)}>
                 <option value="">Select category</option>
                 {CATEGORY_OPTIONS.map(c => (
@@ -195,7 +217,14 @@ export default function ListItemPage() {
 
           {step === 2 && (
             <section>
-              <label>Price (USD) *</label>
+              <label className="list-labelRow">
+                Price (USD) *
+                <HelpTip
+                  title="Price"
+                  body="The amount the buyer pays. Use a realistic price; you can always adjust later."
+                  example="49.99"
+                />
+              </label>
               <input
                 type="number"
                 min="0.01"
@@ -204,7 +233,14 @@ export default function ListItemPage() {
                 onChange={e => updateField('price', e.target.value)}
               />
 
-              <label>Condition *</label>
+              <label className="list-labelRow">
+                Condition *
+                <HelpTip
+                  title="Condition"
+                  body="Set expectations for buyers. Pick the option that matches the real condition."
+                  example="like-new"
+                />
+              </label>
               <select value={form.condition} onChange={e => updateField('condition', e.target.value)}>
                 {CONDITION_OPTIONS.map(c => (
                   <option key={c} value={c}>
@@ -213,17 +249,38 @@ export default function ListItemPage() {
                 ))}
               </select>
 
-              <label>Brand</label>
+              <label className="list-labelRow">
+                Brand
+                <HelpTip
+                  title="Brand"
+                  body="Optional. If the item is handmade, you can put your maker name or studio."
+                  example="PVA Studio"
+                />
+              </label>
               <input value={form.brand} onChange={e => updateField('brand', e.target.value)} />
 
-              <label>Measurements</label>
+              <label className="list-labelRow">
+                Measurements
+                <HelpTip
+                  title="Measurements"
+                  body="Optional. Size details reduce returns."
+                  example="10 x 8 x 5 in"
+                />
+              </label>
               <input
                 placeholder="e.g. 10 x 8 x 5 in"
                 value={form.measurements}
                 onChange={e => updateField('measurements', e.target.value)}
               />
 
-              <label>Materials (comma separated)</label>
+              <label className="list-labelRow">
+                Materials (comma separated)
+                <HelpTip
+                  title="Materials"
+                  body="Optional tags used for search and trust."
+                  example="silver, ruby"
+                />
+              </label>
               <input
                 placeholder="e.g. cotton, leather"
                 value={form.materials}
@@ -234,7 +291,14 @@ export default function ListItemPage() {
 
           {step === 3 && (
             <section>
-              <label>Upload Images</label>
+              <label className="list-labelRow">
+                Upload Images
+                <HelpTip
+                  title="Images"
+                  body="Upload up to 6 images. For now this draft flow stores small images inline."
+                  example="Front, back, close-up"
+                />
+              </label>
               <input type="file" multiple accept="image/*" onChange={handleImageUpload} />
               <p className="hint">Images are currently sent as inline data URLs for the draft flow.</p>
 
@@ -259,6 +323,11 @@ export default function ListItemPage() {
                     onChange={() => updateSyndication(platform)}
                   />
                   {platform}
+                  <HelpTip
+                    title="Syndication (future)"
+                    body="This is a placeholder for automation. Selecting a platform won’t publish yet, but we save your intent for later integrations."
+                    example="ebay"
+                  />
                 </label>
               ))}
             </section>

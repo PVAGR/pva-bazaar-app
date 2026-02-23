@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { createArchiveEntry, fetchArchiveEntries, deleteArchiveEntry, apiGet, apiFetch } from '../lib/api';
 import { ENV } from '../config/env';
 import AdminNav from '../components/AdminNav.jsx';
+import HelpTip from '../components/HelpTip.jsx';
 import './AdminPage.css';
 
 export default function AdminPage() {
@@ -585,7 +586,14 @@ export default function AdminPage() {
               <form onSubmit={handleSubmit}>
                 {/* Admin code input removed: session-based auth only */}
                 <div className="form-group">
-                  <label htmlFor="title">Title *</label>
+                  <label htmlFor="title">
+                    Title *{' '}
+                    <HelpTip
+                      title="Title"
+                      body="A clear name for this archive entry. It will be shown in the library list."
+                      example="Archive Entry 018: My New Story"
+                    />
+                  </label>
                   <input
                     type="text"
                     id="title"
@@ -597,7 +605,14 @@ export default function AdminPage() {
                   />
                 </div>
                 <div className="form-group">
-                  <label htmlFor="category">Category *</label>
+                  <label htmlFor="category">
+                    Category *{' '}
+                    <HelpTip
+                      title="Category"
+                      body="Used to organize entries and filter the library."
+                      example="Technology"
+                    />
+                  </label>
                   <select
                     id="category"
                     name="category"
@@ -618,7 +633,14 @@ export default function AdminPage() {
                   </select>
                 </div>
                 <div className="form-group">
-                  <label htmlFor="description">Description *</label>
+                  <label htmlFor="description">
+                    Description *{' '}
+                    <HelpTip
+                      title="Description"
+                      body="A short summary shown in the list preview."
+                      example="A brief description of this archive entry..."
+                    />
+                  </label>
                   <textarea
                     id="description"
                     name="description"
@@ -630,7 +652,14 @@ export default function AdminPage() {
                   />
                 </div>
                 <div className="form-group">
-                  <label htmlFor="mediaUrls">Media URLs (optional)</label>
+                  <label htmlFor="mediaUrls">
+                    Media URLs (optional){' '}
+                    <HelpTip
+                      title="Media URLs"
+                      body="Optional links to images/video/audio that will be shown under the entry. You can also drag & drop files to upload."
+                      example="https://example.com/photo.jpg"
+                    />
+                  </label>
                   <textarea
                     id="mediaUrls"
                     name="mediaUrls"
@@ -667,7 +696,14 @@ export default function AdminPage() {
                   </div>
                 </div>
                 <div className="form-group">
-                  <label htmlFor="content">Content * (Markdown supported)</label>
+                  <label htmlFor="content">
+                    Content * (Markdown supported){' '}
+                    <HelpTip
+                      title="Content"
+                      body="Write the full entry content. Markdown formatting is supported."
+                      example="# Title\\n\\nYour content here..."
+                    />
+                  </label>
                   <textarea
                     id="content"
                     name="content"

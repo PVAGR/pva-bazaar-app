@@ -1,4 +1,4 @@
-import React, { useId, useMemo, useState } from 'react';
+import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
 import './HelpTip.css';
 
 /**
@@ -8,11 +8,36 @@ import './HelpTip.css';
 export default function HelpTip({ title, body, example }) {
   const id = useId();
   const [open, setOpen] = useState(false);
+  const rootRef = useRef(null);
   const hasContent = useMemo(() => !!(title || body || example), [title, body, example]);
   if (!hasContent) return null;
 
+  useEffect(() => {
+    if (!open) return;
+
+    function onKeyDown(e) {
+      if (e.key === 'Escape') setOpen(false);
+    }
+
+    function onPointerDown(e) {
+      const root = rootRef.current;
+      if (!root) return;
+      if (root.contains(e.target)) return;
+      setOpen(false);
+    }
+
+    window.addEventListener('keydown', onKeyDown, { passive: true });
+    window.addEventListener('mousedown', onPointerDown);
+    window.addEventListener('touchstart', onPointerDown, { passive: true });
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('mousedown', onPointerDown);
+      window.removeEventListener('touchstart', onPointerDown);
+    };
+  }, [open]);
+
   return (
-    <span className="helpTip">
+    <span className="helpTip" ref={rootRef}>
       <button
         type="button"
         className="helpTip__btn"

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { apiPost, apiGet } from '../lib/api';
 import Layout from '../components/Layout';
+import HelpTip from '../components/HelpTip.jsx';
 
 export default function OracleAssessmentPage() {
   const [step, setStep] = useState(1);
@@ -70,8 +71,9 @@ export default function OracleAssessmentPage() {
     setError(null);
 
     try {
-      // Get auth token from localStorage (assuming it's stored there)
-      const token = localStorage.getItem('token');
+      // Get auth token from localStorage (same keys used across the app)
+      const token =
+        localStorage.getItem('token') || localStorage.getItem('authToken') || localStorage.getItem('jwt');
       if (!token) {
         throw new Error('Please log in to create an assessment');
       }
@@ -176,7 +178,10 @@ export default function OracleAssessmentPage() {
             <h2>Step 1: Basic Information</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div>
-                <label>Full Name *</label>
+                <label>
+                  Full Name *
+                  <HelpTip title="Full name" body="Used to personalize your oracle assessment." example="Jane Doe" />
+                </label>
                 <input
                   type="text"
                   value={formData.personalData.fullName}
@@ -186,7 +191,10 @@ export default function OracleAssessmentPage() {
                 />
               </div>
               <div>
-                <label>Birth Date *</label>
+                <label>
+                  Birth Date *
+                  <HelpTip title="Birth date" body="Used for astrology and timing-based interpretations." example="1996-02-20" />
+                </label>
                 <input
                   type="date"
                   value={formData.personalData.birthDate}
@@ -213,7 +221,10 @@ export default function OracleAssessmentPage() {
             <h2>Step 2: Birth Details</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div>
-                <label>Birth Time *</label>
+                <label>
+                  Birth Time *
+                  <HelpTip title="Birth time" body="Helps refine the assessment. If unknown, use 12:00 PM." example="12:00" />
+                </label>
                 <input
                   type="time"
                   value={formData.personalData.birthTime}
@@ -223,7 +234,10 @@ export default function OracleAssessmentPage() {
                 <small>If unknown, use 12:00 PM</small>
               </div>
               <div>
-                <label>Birth Place *</label>
+                <label>
+                  Birth Place *
+                  <HelpTip title="Birth place" body="City and country are enough. Used for geo/cosmic mapping." example="Nairobi, Kenya" />
+                </label>
                 <input
                   type="text"
                   value={formData.personalData.birthPlace}

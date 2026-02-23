@@ -58,6 +58,12 @@
   margin-top: 0.6rem;
 }
 
+.list-labelRow {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 6px;
+}
+
 .list-form input,
 .list-form textarea,
 .list-form select {
