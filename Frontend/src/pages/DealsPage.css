@@ -98,6 +98,17 @@
   gap: 10px;
 }
 
+.json {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.9rem;
+  white-space: pre-wrap;
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid var(--border);
+  padding: 10px 12px;
+  border-radius: 12px;
+  overflow: auto;
+}
+
 .grid2 {
   display: grid;
   gap: 12px;

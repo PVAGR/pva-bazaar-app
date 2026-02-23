@@ -43,6 +43,24 @@ export default function DealsPage() {
   });
 
   const [newMessage, setNewMessage] = useState('');
+  const [inviteLink, setInviteLink] = useState('');
+  const [inviteExpiresAt, setInviteExpiresAt] = useState('');
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [evidenceDrafts, setEvidenceDrafts] = useState({});
+  const [milestoneHashes, setMilestoneHashes] = useState({});
+
+  async function sha256Hex(input) {
+    try {
+      if (!window.crypto?.subtle) return '';
+      const bytes = new TextEncoder().encode(String(input));
+      const digest = await window.crypto.subtle.digest('SHA-256', bytes);
+      return Array.from(new Uint8Array(digest))
+        .map((b) => b.toString(16).padStart(2, '0'))
+        .join('');
+    } catch {
+      return '';
+    }
+  }
 
   async function loadDeals() {
     setLoading(true);
@@ -84,6 +102,27 @@ export default function DealsPage() {
   useEffect(() => {
     if (selectedId) loadDeal(selectedId);
   }, [selectedId]);
+
+  useEffect(() => {
+    // Derive milestone hashes for the "contract draft" section (best-effort).
+    const ms = Array.isArray(selected?.milestones) ? selected.milestones : [];
+    if (!selected?._id || ms.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      const entries = await Promise.all(
+        ms.map(async (m) => {
+          const base = `${selected._id}:${m._id || ''}:${m.title || ''}`;
+          const h = await sha256Hex(base);
+          return [String(m._id || m.title || ''), h];
+        })
+      );
+      if (cancelled) return;
+      setMilestoneHashes(Object.fromEntries(entries));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [selected?._id, selected?.milestones]);
 
   useEffect(() => {
     // Load user defaults from Mongo so deals can auto-fill.
@@ -284,6 +323,44 @@ export default function DealsPage() {
     } catch (e) {
       const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
       setError(serverMsg || e.message || 'Failed to add message');
+    }
+  }
+
+  async function handleGenerateInvite() {
+    if (!selected?._id) return;
+    setInviteLoading(true);
+    setError('');
+    try {
+      const res = await apiPost(`/deals/${selected._id}/invite`, {});
+      if (!res?.ok || !res?.joinUrl) throw new Error(res?.error || res?.message || 'Failed to generate invite');
+      setInviteLink(res.joinUrl);
+      setInviteExpiresAt(res.expiresAt || '');
+      try {
+        await navigator.clipboard.writeText(res.joinUrl);
+      } catch {
+        // ignore clipboard errors
+      }
+    } catch (e) {
+      const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
+      setError(serverMsg || e.message || 'Failed to generate invite');
+    } finally {
+      setInviteLoading(false);
+    }
+  }
+
+  async function handleSubmitEvidence(milestoneId) {
+    if (!selected?._id || !milestoneId) return;
+    const evidenceValue = String(evidenceDrafts[milestoneId] || '').trim();
+    if (!evidenceValue) return;
+    setError('');
+    try {
+      const res = await apiPost(`/deals/${selected._id}/milestones/${milestoneId}/evidence`, { evidenceValue });
+      if (!res?.ok || !res.item) throw new Error(res?.error || res?.message || 'Failed to submit evidence');
+      setSelected(res.item);
+      setEvidenceDrafts((prev) => ({ ...prev, [milestoneId]: '' }));
+    } catch (e) {
+      const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
+      setError(serverMsg || e.message || 'Failed to submit evidence');
     }
   }
 
@@ -629,6 +706,31 @@ export default function DealsPage() {
             <h2>Deal workspace</h2>
             <div className="workspace">
               <div className="workspace-col">
+                <h3>
+                  Counterparty join link{' '}
+                  <HelpTip
+                    title="Counterparty join link"
+                    body="Generate a shareable link so the counterparty can view the deal, message, and submit milestone evidence without creating a full account yet."
+                    example="Send link via email/Telegram"
+                  />
+                </h3>
+                <div className="row">
+                  <button className="btn ghost" type="button" disabled={inviteLoading} onClick={handleGenerateInvite}>
+                    {inviteLoading ? 'Generating…' : 'Generate join link'}
+                  </button>
+                </div>
+                {inviteLink ? (
+                  <div className="subcard">
+                    <div className="muted small">Join URL (copied to clipboard if supported):</div>
+                    <div className="muted small" style={{ wordBreak: 'break-all' }}>
+                      {inviteLink}
+                    </div>
+                    {inviteExpiresAt ? (
+                      <div className="muted small">Expires: {new Date(inviteExpiresAt).toLocaleString()}</div>
+                    ) : null}
+                  </div>
+                ) : null}
+
                 <h3>Milestones</h3>
                 {Array.isArray(selected.milestones) && selected.milestones.length ? (
                   <div className="milestones">
@@ -637,6 +739,19 @@ export default function DealsPage() {
                         <div className="milestone-title">{m.title}</div>
                         {m.description ? <div className="muted small">{m.description}</div> : null}
                         <div className="muted small">evidence: {m.evidenceType || 'none'}</div>
+                        {m.evidenceValue ? <div className="muted small">evidence value: {m.evidenceValue}</div> : null}
+                        {m.evidenceType && m.evidenceType !== 'none' ? (
+                          <div className="row">
+                            <input
+                              value={evidenceDrafts[m._id] ?? ''}
+                              onChange={(e) => setEvidenceDrafts((prev) => ({ ...prev, [m._id]: e.target.value }))}
+                              placeholder="Submit evidence (tracking number, link, etc.)"
+                            />
+                            <button className="btn ghost" type="button" onClick={() => handleSubmitEvidence(m._id)}>
+                              Save evidence
+                            </button>
+                          </div>
+                        ) : null}
                         {m.status !== 'completed' ? (
                           <button className="btn ghost" onClick={() => handleMarkMilestoneCompleted(idx)}>
                             Mark completed
@@ -693,6 +808,46 @@ export default function DealsPage() {
                 <p className="muted small">
                   Next step: allow counterparty to join via link + wallet signature, then deploy an escrow contract on Base.
                 </p>
+
+                <h3>
+                  Escrow contract draft (foundation){' '}
+                  <HelpTip
+                    title="Contract draft"
+                    body="This is a structured draft of what an escrow smart contract would need (payments + milestone hashes). It does not deploy anything yet."
+                    example="Base chainId 8453"
+                  />
+                </h3>
+                <pre className="json">
+                  {JSON.stringify(
+                    {
+                      chainId: selected.chainId || 8453,
+                      tokenAddress: selected.tokenAddress || '',
+                      totalAmount: selected.totalAmount || 0,
+                      currency: selected.currency || 'USD',
+                      parties: {
+                        ownerId: selected.ownerId || '',
+                        mediatorId: selected.mediatorId || '',
+                        counterpartyWallet: selected.counterparty?.walletAddress || '',
+                      },
+                      payments: (selected.payments || []).map((p) => ({
+                        label: p.label || '',
+                        amount: p.amount || 0,
+                        currency: p.currency || selected.currency || 'USD',
+                        status: p.status || 'pending',
+                      })),
+                      milestones: (selected.milestones || []).map((m) => ({
+                        id: m._id || '',
+                        title: m.title || '',
+                        evidenceType: m.evidenceType || 'none',
+                        evidenceValue: m.evidenceValue || '',
+                        status: m.status || 'pending',
+                        sha256: milestoneHashes[String(m._id || m.title || '')] || '',
+                      })),
+                    },
+                    null,
+                    2
+                  )}
+                </pre>
               </div>
             </div>
           </section>

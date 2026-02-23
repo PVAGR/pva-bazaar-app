@@ -51,6 +51,7 @@ const dealMilestoneSchema = new mongoose.Schema(
 const dealSchema = new mongoose.Schema(
   {
     ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+    mediatorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // optional (future: broker role distinct from owner)
 
     title: { type: String, required: true },
     description: { type: String, default: '' },
@@ -73,6 +74,14 @@ const dealSchema = new mongoose.Schema(
     contractAddress: { type: String, default: '' }, // deployed contract address
 
     status: { type: String, enum: ['draft', 'active', 'completed', 'cancelled'], default: 'draft' },
+
+    // Counterparty access (foundation for "join link" flow).
+    counterpartyAccess: {
+      inviteJtiHash: { type: String, default: '' },
+      inviteCreatedAt: { type: Date },
+      inviteExpiresAt: { type: Date },
+      joinedAt: { type: Date },
+    },
 
     payments: { type: [dealPaymentSchema], default: [] },
     milestones: { type: [dealMilestoneSchema], default: [] },

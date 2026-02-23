@@ -1,5 +1,7 @@
 const express = require('express');
 const router = express.Router();
+const crypto = require('crypto');
+const jwt = require('jsonwebtoken');
 const Deal = require('../models/Deal');
 const User = require('../models/User');
 const { authMiddleware } = require('../middleware/auth');
@@ -20,11 +22,97 @@ function sanitizeDeep(v) {
   return v;
 }
 
+function isObjectIdHex(v) {
+  return typeof v === 'string' && /^[a-f\d]{24}$/i.test(v);
+}
+
+function getBearerToken(req) {
+  const authHeader = req.headers.authorization || '';
+  return authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+}
+
+function sha256Hex(v) {
+  return crypto.createHash('sha256').update(String(v)).digest('hex');
+}
+
 function toPublicDeal(deal) {
   if (!deal) return null;
   const d = deal.toObject ? deal.toObject() : deal;
   // Keep it simple; we can tighten this later when we add counterparty join links.
   return d;
+}
+
+function toJoinDeal(deal) {
+  if (!deal) return null;
+  const d = deal.toObject ? deal.toObject() : deal;
+  // Never leak invite hashes or internal access state.
+  if (d.counterpartyAccess) {
+    d.counterpartyAccess = {
+      joinedAt: d.counterpartyAccess.joinedAt || null,
+    };
+  }
+  return d;
+}
+
+async function verifyDealActor(req, deal) {
+  const token = getBearerToken(req);
+  if (!token) {
+    const err = new Error('No authentication token provided');
+    err.status = 401;
+    throw err;
+  }
+
+  let decoded;
+  try {
+    decoded = jwt.verify(token, process.env.JWT_SECRET);
+  } catch {
+    const err = new Error('Invalid authentication token');
+    err.status = 401;
+    throw err;
+  }
+
+  // Counterparty invite token (no account required).
+  if (decoded?.role === 'deal_counterparty') {
+    if (!decoded?.dealId || String(decoded.dealId) !== String(deal._id)) {
+      const err = new Error('Invalid deal access token (deal mismatch)');
+      err.status = 401;
+      throw err;
+    }
+    const jti = decoded?.jti ? String(decoded.jti) : '';
+    const jtiHash = jti ? sha256Hex(jti) : '';
+    const stored = deal?.counterpartyAccess?.inviteJtiHash || '';
+    const expiresAt = deal?.counterpartyAccess?.inviteExpiresAt ? new Date(deal.counterpartyAccess.inviteExpiresAt) : null;
+    const now = Date.now();
+    if (!stored || !jtiHash || stored !== jtiHash) {
+      const err = new Error('Invalid deal access token');
+      err.status = 401;
+      throw err;
+    }
+    if (expiresAt && expiresAt.getTime() < now) {
+      const err = new Error('Deal invite has expired');
+      err.status = 401;
+      throw err;
+    }
+    return { actor: 'counterparty', decoded };
+  }
+
+  // Normal user/admin token (requires id ObjectId).
+  const subjectId = decoded?.id ? String(decoded.id) : '';
+  if (!subjectId || !isObjectIdHex(subjectId)) {
+    const err = new Error('Invalid authentication token (subject)');
+    err.status = 401;
+    throw err;
+  }
+
+  const isOwner = String(deal.ownerId) === subjectId;
+  const isMediator = deal.mediatorId && String(deal.mediatorId) === subjectId;
+  if (!isOwner && !isMediator) {
+    const err = new Error('Forbidden');
+    err.status = 403;
+    throw err;
+  }
+
+  return { actor: isOwner ? 'owner' : 'mediator', decoded };
 }
 
 // GET /api/deals - list deals for current user
@@ -155,6 +243,71 @@ router.delete('/drafts', authMiddleware, async (req, res) => {
   }
 });
 
+// POST /api/deals/:id/invite - generate counterparty join link (owner-only)
+router.post('/:id/invite', authMiddleware, async (req, res) => {
+  try {
+    const deal = await Deal.findOne({ _id: req.params.id, ownerId: req.user.id });
+    if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
+
+    const inviteJti = crypto.randomBytes(24).toString('hex');
+    const expiresMs = 1000 * 60 * 60 * 24 * 30; // 30 days
+    const inviteExpiresAt = new Date(Date.now() + expiresMs);
+    const token = jwt.sign(
+      { role: 'deal_counterparty', dealId: String(deal._id), jti: inviteJti },
+      process.env.JWT_SECRET,
+      { expiresIn: '30d' }
+    );
+
+    deal.counterpartyAccess = {
+      inviteJtiHash: sha256Hex(inviteJti),
+      inviteCreatedAt: new Date(),
+      inviteExpiresAt,
+      joinedAt: deal.counterpartyAccess?.joinedAt,
+    };
+    deal.messages.push({ author: 'system', text: 'Counterparty invite generated' });
+    await deal.save();
+
+    const origin = req.get('origin') || 'https://pvabazaar.org';
+    const joinUrl = `${origin.replace(/\/+$/, '')}/#/deals/join?token=${encodeURIComponent(token)}`;
+    res.json({ ok: true, joinUrl, expiresAt: inviteExpiresAt.toISOString() });
+  } catch (err) {
+    console.error('Error generating deal invite:', err);
+    res.status(500).json({ ok: false, error: 'Failed to generate invite' });
+  }
+});
+
+// GET /api/deals/join - view deal as counterparty via invite token
+router.get('/join', async (req, res) => {
+  try {
+    const token = getBearerToken(req);
+    if (!token) return res.status(401).json({ ok: false, error: 'No authentication token provided' });
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch {
+      return res.status(401).json({ ok: false, error: 'Invalid authentication token' });
+    }
+    if (decoded?.role !== 'deal_counterparty' || !decoded?.dealId) {
+      return res.status(401).json({ ok: false, error: 'Invalid deal access token' });
+    }
+
+    const deal = await Deal.findById(decoded.dealId);
+    if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
+    await verifyDealActor(req, deal);
+
+    // Mark joined (first use) for audit trail.
+    if (!deal.counterpartyAccess?.joinedAt) {
+      deal.counterpartyAccess = { ...(deal.counterpartyAccess || {}), joinedAt: new Date() };
+      deal.messages.push({ author: 'system', text: 'Counterparty joined via invite link' });
+      await deal.save();
+    }
+
+    res.json({ ok: true, item: toJoinDeal(deal) });
+  } catch (err) {
+    res.status(err.status || 500).json({ ok: false, error: err.message || 'Join failed' });
+  }
+});
+
 // GET /api/deals/:id - get single deal
 router.get('/:id', authMiddleware, async (req, res) => {
   try {
@@ -234,14 +387,15 @@ router.put('/:id', authMiddleware, async (req, res) => {
 });
 
 // POST /api/deals/:id/messages - append message (owner-only for now)
-router.post('/:id/messages', authMiddleware, async (req, res) => {
+router.post('/:id/messages', async (req, res) => {
   try {
-    const deal = await Deal.findOne({ _id: req.params.id, ownerId: req.user.id });
+    const deal = await Deal.findById(req.params.id);
     if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
+    const { actor } = await verifyDealActor(req, deal);
     const text = sanitize(req.body?.text);
     if (!text) return res.status(400).json({ ok: false, error: 'Message text is required' });
     deal.messages.push({
-      author: 'owner',
+      author: actor,
       authorWallet: sanitize(req.body?.authorWallet || ''),
       text,
       signature: sanitize(req.body?.signature || ''),
@@ -250,7 +404,33 @@ router.post('/:id/messages', authMiddleware, async (req, res) => {
     res.status(201).json({ ok: true, item: toPublicDeal(deal) });
   } catch (err) {
     console.error('Error adding deal message:', err);
-    res.status(500).json({ ok: false, error: 'Failed to add message' });
+    res.status(err.status || 500).json({ ok: false, error: err.message || 'Failed to add message' });
+  }
+});
+
+// POST /api/deals/:id/milestones/:milestoneId/evidence - submit evidence (owner or counterparty)
+router.post('/:id/milestones/:milestoneId/evidence', async (req, res) => {
+  try {
+    const deal = await Deal.findById(req.params.id);
+    if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
+    const { actor } = await verifyDealActor(req, deal);
+
+    const evidenceValue = sanitize(req.body?.evidenceValue || '');
+    if (!evidenceValue) return res.status(400).json({ ok: false, error: 'evidenceValue is required' });
+
+    const milestone = (deal.milestones || []).find((m) => String(m._id) === String(req.params.milestoneId));
+    if (!milestone) return res.status(404).json({ ok: false, error: 'Milestone not found' });
+
+    milestone.evidenceValue = evidenceValue;
+    deal.messages.push({
+      author: 'system',
+      text: `${actor} submitted evidence for milestone: ${milestone.title}`,
+    });
+    await deal.save();
+    res.status(201).json({ ok: true, item: toPublicDeal(deal) });
+  } catch (err) {
+    console.error('Error submitting milestone evidence:', err);
+    res.status(err.status || 500).json({ ok: false, error: err.message || 'Failed to submit evidence' });
   }
 });
 

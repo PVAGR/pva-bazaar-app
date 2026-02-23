@@ -14,6 +14,7 @@ import OracleAssessmentPage from './pages/OracleAssessmentPage.jsx';
 import ListItemPage from './pages/ListItemPage.jsx';
 import StreamsPage from './pages/StreamsPage.jsx';
 import DealsPage from './pages/DealsPage.jsx';
+import DealJoinPage from './pages/DealJoinPage.jsx';
 import LoginPage from './pages/LoginPage.jsx';
 import RegisterPage from './pages/RegisterPage.jsx';
 import AccountPage from './pages/AccountPage.jsx';
@@ -68,6 +69,7 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="/deals/join" element={<DealJoinPage />} />
         <Route
           path="/account"
           element={
