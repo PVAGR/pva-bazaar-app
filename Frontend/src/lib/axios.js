@@ -45,9 +45,9 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // 401: redirect to login
+    // 401: redirect to admin login
     if (status === 401) {
-      const loginPath = "/admin/login";
+      const loginPath = "/admin";
       localStorage.removeItem("token");
       localStorage.removeItem("authToken");
       localStorage.removeItem("jwt");

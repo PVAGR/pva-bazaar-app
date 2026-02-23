@@ -12,6 +12,7 @@ import CheckoutSuccessPage from './pages/CheckoutSuccessPage.jsx';
 import CheckoutCancelPage from './pages/CheckoutCancelPage.jsx';
 import OracleAssessmentPage from './pages/OracleAssessmentPage.jsx';
 import ListItemPage from './pages/ListItemPage.jsx';
+import StreamsPage from './pages/StreamsPage.jsx';
 import './base.css';
 
 function ProtectedRoute({ children }) {
@@ -42,6 +43,14 @@ export default function App() {
           }
         />
         <Route path="/oracle" element={<OracleAssessmentPage />} />
+        <Route
+          path="/streams"
+          element={
+            <ProtectedRoute>
+              <StreamsPage />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/checkout/success" element={<CheckoutSuccessPage />} />
         <Route path="/checkout/cancel" element={<CheckoutCancelPage />} />
       </Routes>

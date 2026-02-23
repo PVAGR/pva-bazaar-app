@@ -1,0 +1,131 @@
+.streams-page {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+.streams-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.streams-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.muted {
+  color: #6b7280;
+  font-size: 0.95rem;
+}
+
+.notice {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  padding: 12px;
+  border-radius: 8px;
+  margin: 12px 0;
+}
+
+.error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  padding: 12px;
+  border-radius: 8px;
+  margin: 12px 0;
+}
+
+.card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+  margin: 16px 0;
+}
+
+.form {
+  display: grid;
+  gap: 12px;
+}
+
+.form label {
+  display: grid;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.form input,
+.form textarea,
+.form select {
+  font: inherit;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+}
+
+.check {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+}
+
+.btn {
+  font: inherit;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  cursor: pointer;
+}
+
+.btn.primary {
+  background: #111827;
+  border-color: #111827;
+  color: #fff;
+}
+
+.btn.ghost {
+  background: transparent;
+}
+
+.streams-list {
+  display: grid;
+  gap: 10px;
+}
+
+.stream-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.stream-title {
+  font-weight: 700;
+}
+
+.stream-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stream-controls select {
+  padding: 8px 10px;
+  border-radius: 8px;
+}
+

@@ -135,6 +135,12 @@ export default function AdminPage() {
           body: JSON.stringify({ username: trimmedUsername, password: trimmedPassword })
         });
         if (res.ok) {
+          // Admin login returns a JWT token. Store it so other protected pages (streams/items)
+          // can call authenticated endpoints using the shared axios interceptor.
+          const data = await res.json().catch(() => ({}));
+          if (data && data.token) {
+            localStorage.setItem('token', data.token);
+          }
           setIsAuthenticated(true);
           sessionStorage.setItem('admin-auth', 'authenticated');
           sessionStorage.setItem('admin-auth-version', 'v2');
@@ -157,6 +163,9 @@ export default function AdminPage() {
     setIsAuthenticated(false);
     sessionStorage.removeItem('admin-auth');
     sessionStorage.removeItem('admin-auth-version');
+    localStorage.removeItem('token');
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('jwt');
     setUsername('');
     setPassword('');
   };
@@ -399,6 +408,9 @@ export default function AdminPage() {
             <div className="header-actions">
               <Link to="/" className="home-btn">
                 🏠 Home
+              </Link>
+              <Link to="/streams" className="header-btn" title="Livestreams">
+                📺 Streams
               </Link>
               <button 
                 className="header-btn refresh-btn"
