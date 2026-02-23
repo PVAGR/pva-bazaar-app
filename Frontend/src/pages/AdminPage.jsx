@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createArchiveEntry, fetchArchiveEntries, deleteArchiveEntry, apiGet, apiFetch } from '../lib/api';
 import { ENV } from '../config/env';
+import { getErrorMessage } from '../lib/errorUtils';
+import ErrorBanner from '../components/ErrorBanner.jsx';
 import AdminNav from '../components/AdminNav.jsx';
 import HelpTip from '../components/HelpTip.jsx';
 import { clearToken, setToken } from '../lib/auth';
@@ -135,7 +137,8 @@ export default function AdminPage() {
         const res = await apiFetch('/admin/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: trimmedUsername, password: trimmedPassword })
+          body: JSON.stringify({ username: trimmedUsername, password: trimmedPassword }),
+          credentials: 'include',
         });
         if (res.ok) {
           // Admin login returns a JWT token. Store it so other protected pages (streams/items)
@@ -156,7 +159,7 @@ export default function AdminPage() {
           setPassword('');
         }
       } catch (err) {
-        setError('Network error. Please try again.');
+        setError(getErrorMessage(err, 'Network error. Check your connection and that the API is reachable, then try again.'));
       } finally {
         setIsSubmitting(false);
       }
@@ -388,9 +391,15 @@ export default function AdminPage() {
                 className="login-input"
                 required
               />
-              {error && <div className="error-message">{error}</div>}
-              <button type="submit" className="login-btn">
-                Access Admin Panel
+              {error ? (
+                <ErrorBanner
+                  message={error}
+                  onRetry={() => setError('')}
+                  onDismiss={() => setError('')}
+                />
+              ) : null}
+              <button type="submit" className="login-btn" disabled={isSubmitting}>
+                {isSubmitting ? 'Signing in…' : 'Access Admin Panel'}
               </button>
             </form>
           </div>
