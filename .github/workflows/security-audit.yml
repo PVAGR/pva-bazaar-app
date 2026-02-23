@@ -46,7 +46,7 @@ jobs:
           pnpm list --depth=0 --json > dependency-report.json
 
       - name: Upload dependency report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: dependency-report
           path: dependency-report.json
@@ -75,7 +75,7 @@ jobs:
         continue-on-error: true
 
       - name: Upload ZAP reports
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: zap-security-reports
           path: |
@@ -121,7 +121,7 @@ jobs:
           forge test --fuzz-runs 10000
 
       - name: Upload contract security reports
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: contract-security-reports
           path: |
@@ -154,7 +154,7 @@ jobs:
         continue-on-error: true
 
       - name: Upload infrastructure security reports
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: infrastructure-security-reports
           path: |
@@ -171,7 +171,7 @@ jobs:
           fetch-depth: 0 # Full history for secret scanning
 
       - name: Run GitLeaks
-        uses: zricethezav/gitleaks-action@v2
+        uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -190,7 +190,7 @@ jobs:
     if: always()
     steps:
       - name: Download all artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
 
       - name: Generate security summary
         run: |
@@ -210,7 +210,7 @@ jobs:
           # Process and summarize findings from each artifact
 
       - name: Upload security summary
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: security-audit-summary
           path: security-summary.md
