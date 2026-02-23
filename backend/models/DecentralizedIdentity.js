@@ -11,14 +11,12 @@ const decentralizedIdentitySchema = new mongoose.Schema({
     ref: 'User',
     required: true,
     unique: true,
-    index: true,
   },
   // DID standard format: did:method:identifier
   did: {
     type: String,
     required: true,
     unique: true,
-    index: true,
   },
   didMethod: {
     type: String,
@@ -75,9 +73,5 @@ decentralizedIdentitySchema.pre('save', function (next) {
   this.updatedAt = Date.now();
   next();
 });
-
-// Index for efficient DID lookups
-decentralizedIdentitySchema.index({ did: 1 });
-decentralizedIdentitySchema.index({ userId: 1 });
 
 module.exports = mongoose.model('DecentralizedIdentity', decentralizedIdentitySchema);

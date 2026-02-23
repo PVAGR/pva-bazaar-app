@@ -44,7 +44,7 @@
 ### Admin Panel
 - [ ] Navigate to https://pvabazaar.org/#/admin
 - [ ] Login form displays
-- [ ] Enter: richyrichaii / pva123zxc!
+- [ ] Enter: <admin-username> / <admin-password>
 - [ ] Login succeeds
 - [ ] Admin panel loads with entry list
 - [ ] Can create/delete entries
@@ -73,7 +73,7 @@
 
 ### Admin Panel
 - [ ] Login form works
-- [ ] Credentials: richyrichaii / pva123zxc!
+- [ ] Credentials: <admin-username> / <admin-password>
 - [ ] Authentication succeeds
 - [ ] Admin interface fully functional
 - [ ] Can manage entries
@@ -90,8 +90,8 @@ Test from live site (https://pvabazaar.org/):
 - [ ] All use global backend URL, NOT localhost
 
 ### Admin Authentication
-- [ ] Username: richyrichaii
-- [ ] Password: pva123zxc!
+- [ ] Username: <admin-username>
+- [ ] Password: <admin-password>
 - [ ] No hardcoded localhost URLs
 - [ ] Uses live Vercel backend
 

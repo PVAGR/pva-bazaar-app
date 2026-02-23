@@ -76,8 +76,6 @@ const artifactSchema = new mongoose.Schema({
 
 // Compound index for pagination
 artifactSchema.index({ createdAt: -1, _id: -1 });
-// Unique slug index
-artifactSchema.index({ slug: 1 }, { unique: true, sparse: true });
 // Text index for search endpoints and vector fallback
 artifactSchema.index({
   name: 'text',

@@ -40,7 +40,7 @@
 - [ ] GitHub Pages deploys
 - [ ] Visit https://pvabazaar.org/#/admin on MOBILE
 - [ ] Visit https://pvabazaar.org/#/admin on DESKTOP
-- [ ] Try login with: username=`richyrichaii` password=`pva123zxc!`
+- [ ] Try login with: username=`<admin-username>` password=`<admin-password>`
 - [ ] Should authenticate successfully
 - [ ] Admin panel loads
 

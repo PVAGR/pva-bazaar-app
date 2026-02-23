@@ -42,8 +42,8 @@ Your website is live at **https://pvabazaar.org** with everything connected glob
 - You'll see login form
 
 ### Step 2: Login
-- **Username:** `richyrichaii`
-- **Password:** `pva123zxc!`
+- **Username:** `<admin-username>`
+- **Password:** `<admin-password>`
 - Click **Login**
 
 ### Step 3: Verify Success
@@ -53,8 +53,8 @@ Your website is live at **https://pvabazaar.org** with everything connected glob
 ### Step 4: Test Whitespace Handling (OPTIONAL)
 - Click **Logout**
 - Try logging in with spaces:
-  - Username: `  richyrichaii  ` (with spaces before/after)
-  - Password: `  pva123zxc!  ` (with spaces before/after)
+  - Username: `  <admin-username>  ` (with spaces before/after)
+  - Password: `  <admin-password>  ` (with spaces before/after)
 - Should still work because we trim spaces
 - ✅ If this works, **WHITESPACE HANDLING WORKING**
 
@@ -112,7 +112,7 @@ Your website is live at **https://pvabazaar.org** with everything connected glob
 - Hard refresh page
 
 ### Admin login not working?
-- Check password exactly: `pva123zxc!` (with exclamation mark)
+- Check password exactly as configured in your environment
 - Try without spaces first
 - Then try with spaces
 

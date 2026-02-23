@@ -1,10 +1,14 @@
 const { MongoClient } = require('mongodb');
 
-// Use the same connection string from your .env file
-const uri =
-  'mongodb+srv://pvaglobalreach_db_user:YOUR_PASSWORD@cluster0.vyhnsiy.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
+// Use MONGODB_URI from environment to avoid hardcoding credentials.
+const uri = process.env.MONGODB_URI;
 
 async function test() {
+  if (!uri) {
+    console.error('❌ Missing MONGODB_URI env var.');
+    process.exit(1);
+  }
+
   const client = new MongoClient(uri);
 
   try {

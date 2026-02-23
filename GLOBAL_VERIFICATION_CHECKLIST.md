@@ -57,7 +57,7 @@
 ### ✅ ROUND 2: Login Whitespace Fix
 - **Expected:** Login accepts credentials with accidental spaces
 - **Code:** `username.trim()` and `password.trim()` ✓
-- **Credentials:** richyrichaii / pva123zxc!
+- **Credentials:** <admin-username> / <admin-password>
 - **Status:** ✅ LIVE
 
 ### ✅ ROUND 3: Footer Navigation Update
@@ -90,10 +90,10 @@ Test URL: https://pvabazaar.org
 
 3. **Admin Login**
    - [ ] Navigate to https://pvabazaar.org/#/admin
-   - [ ] Login with: `richyrichaii` / `pva123zxc!`
+   - [ ] Login with: `<admin-username>` / `<admin-password>`
    - [ ] Click "Login" button
    - [ ] Should see admin dashboard
-   - [ ] Try logging in with spaces: `  richyrichaii  ` / `  pva123zxc!  `
+   - [ ] Try logging in with spaces: `  <admin-username>  ` / `  <admin-password>  `
    - [ ] Should trim spaces and work
 
 4. **Mobile Scrolling**
@@ -119,7 +119,7 @@ Test URL: https://pvabazaar.org
 
 3. **Admin Panel**
    - [ ] Navigate to https://pvabazaar.org/#/admin
-   - [ ] Login with: `richyrichaii` / `pva123zxc!`
+   - [ ] Login with: `<admin-username>` / `<admin-password>`
    - [ ] Dashboard shows entries list
    - [ ] Create/edit functionality available
    - [ ] Logout button works
@@ -165,7 +165,7 @@ curl -s https://pva-backend-api.vercel.app/api/health | jq .
 ✅ **User can visit https://pvabazaar.org from anywhere in the world**
 ✅ **View archive entries with dark mode colors working**
 ✅ **Home button (🏠) with proper dark theme styling**
-✅ **Login with admin credentials (richyrichaii/pva123zxc!)**
+✅ **Login with admin credentials (<admin-username>/<admin-password>)**
 ✅ **Backend API at Vercel returning real data**
 ✅ **Database connected and accessible**
 ✅ **All API calls go to production servers (zero localhost dependencies)**

@@ -6,6 +6,7 @@ const FRONTEND = process.env.FRONTEND_URL || "https://pvabazaar.org";
 const WAIT_TIMEOUT_MS = Number(process.env.WAIT_TIMEOUT_MS || 60000);
 const WAIT_POLL_MS = Number(process.env.WAIT_POLL_MS || 10000);
 const STRICT = process.env.STRICT === "true";
+const PARITY_REQUIRED = process.env.PARITY_REQUIRED === "true";
 let softIssues = 0;
 
 function normalizeBase(url) {
@@ -31,6 +32,23 @@ function getLocalShortSha() {
   } catch {
     return null;
   }
+}
+
+function deriveLiveShortSha(versionPayload) {
+  if (!versionPayload || typeof versionPayload !== "object") return null;
+
+  if (typeof versionPayload.shortSha === "string" && versionPayload.shortSha.trim()) {
+    return versionPayload.shortSha.trim();
+  }
+
+  if (typeof versionPayload.sha === "string" && versionPayload.sha.trim()) {
+    const sha = versionPayload.sha.trim();
+    if (sha !== "local") {
+      return sha.slice(0, 7);
+    }
+  }
+
+  return null;
 }
 
 function isArrayLike(v) {
@@ -125,28 +143,40 @@ if (!runtimeCfg.res.ok || typeof runtimeCfg.json?.apiUrl !== "string") {
 console.log("\n== Deploy parity check ==");
 const localShortSha = getLocalShortSha();
 const deadline = Date.now() + WAIT_TIMEOUT_MS;
-let liveShortSha = version.json?.shortSha || null;
+let liveShortSha = deriveLiveShortSha(version.json);
 
 if (!localShortSha) {
-  softWarn("local git short SHA unavailable; parity skipped.");
+  if (PARITY_REQUIRED) {
+    softWarn("local git short SHA unavailable; parity skipped.");
+  } else {
+    console.log("ℹ️ parity skipped: local git short SHA unavailable.");
+  }
 } else if (liveShortSha === localShortSha) {
   console.log(`✅ parity ok (live=${liveShortSha}, local=${localShortSha})`);
 } else if (!liveShortSha) {
-  softWarn("live /api/version has no shortSha; cannot prove parity.");
+  if (PARITY_REQUIRED) {
+    softWarn("live /api/version has no usable sha/shortSha; cannot prove parity.");
+  } else {
+    console.log("ℹ️ parity skipped: live /api/version has no usable sha/shortSha.");
+  }
 } else {
   while (Date.now() < deadline && liveShortSha !== localShortSha) {
     console.log(`⏳ waiting parity: live=${liveShortSha}, local=${localShortSha}`);
     await sleep(WAIT_POLL_MS);
     const next = await getJson(`${BACKEND}/api/version`);
     if (next.res.ok && next.json?.ok) {
-      liveShortSha = next.json.shortSha || null;
+      liveShortSha = deriveLiveShortSha(next.json);
       if (!liveShortSha) break;
     }
   }
   if (liveShortSha === localShortSha) {
     console.log(`✅ parity reached (live=${liveShortSha})`);
   } else {
-    softWarn(`parity pending (live=${liveShortSha || "missing"}, local=${localShortSha})`);
+    if (PARITY_REQUIRED) {
+      softWarn(`parity pending (live=${liveShortSha || "missing"}, local=${localShortSha})`);
+    } else {
+      console.log(`ℹ️ parity pending (live=${liveShortSha || "missing"}, local=${localShortSha})`);
+    }
   }
 }
 

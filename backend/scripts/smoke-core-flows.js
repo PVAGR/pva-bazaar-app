@@ -55,6 +55,21 @@ function assert(cond, message) {
   }
 }
 
+async function waitForAssessmentFinalStatus(id, authHeaders, maxAttempts = 20, delayMs = 300) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    const current = await makeRequest('GET', `/api/oracle/assessment/${id}`, null, authHeaders);
+    if (current.status !== 200 || !current.body?.ok) {
+      throw new Error(`Oracle assessment fetch failed during poll: ${current.status}`);
+    }
+    const status = current.body?.assessment?.status;
+    if (status === 'completed' || status === 'failed') {
+      return status;
+    }
+    await new Promise(resolve => setTimeout(resolve, delayMs));
+  }
+  throw new Error('Oracle assessment did not reach a terminal status in time');
+}
+
 async function run() {
   // Always use an isolated in-memory MongoDB for smoke tests.
   mongoServer = await MongoMemoryServer.create();
@@ -149,6 +164,8 @@ async function run() {
     );
     assert(oracle.status === 202 && oracle.body.ok, `Oracle create failed: ${oracle.status}`);
     assert(oracle.body.assessment && oracle.body.assessment.id, 'Oracle assessment id missing');
+    const oracleFinalStatus = await waitForAssessmentFinalStatus(oracle.body.assessment.id, authHeaders);
+    assert(['completed', 'failed'].includes(oracleFinalStatus), `Unexpected oracle status: ${oracleFinalStatus}`);
     console.log('✅ oracle create ok');
 
     // 5) Stream create
