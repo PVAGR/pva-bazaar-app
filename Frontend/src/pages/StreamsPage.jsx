@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { apiDelete, apiGet, apiPost, apiPut } from '../lib/api';
 import { ENV } from '../config/env';
 import HelpTip from '../components/HelpTip.jsx';
+import AdminNav from '../components/AdminNav.jsx';
 import './StreamsPage.css';
 
 const PLATFORM_OPTIONS = ['none', 'youtube', 'twitch', 'kick', 'facebook', 'custom'];
@@ -191,6 +192,8 @@ export default function StreamsPage() {
           </button>
         </div>
       </header>
+
+      <AdminNav />
 
       <main className="streams-main">
         {profile?.email ? (

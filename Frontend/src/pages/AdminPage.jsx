@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createArchiveEntry, fetchArchiveEntries, deleteArchiveEntry, apiGet, apiFetch } from '../lib/api';
 import { ENV } from '../config/env';
+import AdminNav from '../components/AdminNav.jsx';
 import './AdminPage.css';
 
 export default function AdminPage() {
@@ -502,6 +503,7 @@ export default function AdminPage() {
             )}
           </div>
         </div>
+        <AdminNav />
         <div className="admin-container">
           <div className="admin-sidebar">
             <div className="sidebar-section">

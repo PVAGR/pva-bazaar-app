@@ -1,0 +1,29 @@
+.adminNav {
+  max-width: 1200px;
+  margin: 14px auto 0;
+  padding: 0 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.adminNav__tab {
+  text-decoration: none;
+  border: 1px solid var(--border);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  padding: 10px 12px;
+  border-radius: 10px;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.adminNav__tab:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.adminNav__tab.active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { apiGet, apiPost, apiPut } from '../lib/api';
 import HelpTip from '../components/HelpTip.jsx';
+import AdminNav from '../components/AdminNav.jsx';
 import './DealsPage.css';
 
 export default function DealsPage() {
@@ -236,6 +237,8 @@ export default function DealsPage() {
           </div>
         </div>
       </header>
+
+      <AdminNav />
 
       <main className="deals-main">
         {error ? <div className="error" role="alert">{error}</div> : null}
