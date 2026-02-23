@@ -141,6 +141,13 @@ if (!twitchStatus.res.ok || twitchStatus.json?.ok !== true) {
   console.log("✅ twitch status ok");
 }
 
+const youtubeStatus = await getJson(`${BACKEND}/api/oauth/youtube/status`);
+if (!youtubeStatus.res.ok || youtubeStatus.json?.ok !== true) {
+  softWarn(`/api/oauth/youtube/status unavailable (${youtubeStatus.res.status})`);
+} else {
+  console.log("✅ youtube status ok");
+}
+
 const home = await get(`${FRONTEND}/`);
 if (!home.res.ok) fail(`frontend / failed (${home.res.status})`);
 else console.log("✅ frontend home ok");

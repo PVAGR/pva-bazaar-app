@@ -16,6 +16,10 @@
   align-items: center;
 }
 
+.rowWrap {
+  flex-wrap: wrap;
+}
+
 .milestones {
   display: grid;
   gap: 10px;

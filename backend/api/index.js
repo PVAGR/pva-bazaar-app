@@ -239,6 +239,7 @@ const didRoutes = require('../routes/did');
 const databasesRoutes = require('../routes/databases');
 const dealsRoutes = require('../routes/deals');
 const oauthTwitchRoutes = require('../routes/oauthTwitch');
+const oauthYouTubeRoutes = require('../routes/oauthYouTube');
 // Oracle Assessment routes
 const oracleRoutes = require('../routes/oracle');
 // Models for optional seeding
@@ -315,6 +316,7 @@ app.use('/api/did', didRoutes);
 app.use('/api/databases', databasesRoutes);
 app.use('/api/deals', dealsRoutes);
 app.use('/api/oauth', oauthTwitchRoutes);
+app.use('/api/oauth', oauthYouTubeRoutes);
 // ORACLE ASSESSMENT ROUTES
 app.use('/api/oracle', oracleRoutes);
 

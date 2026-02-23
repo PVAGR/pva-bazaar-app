@@ -3,6 +3,8 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const axios = require('axios');
 const User = require('../models/User');
+const { decryptJson, encryptJson } = require('../utils/cryptoVault');
+const { authMiddleware } = require('../middleware/auth');
 
 function mustEnv(key) {
   const v = process.env[key];
@@ -34,10 +36,23 @@ function getBearerToken(req) {
   return authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
 }
 
+async function refreshTwitchToken({ clientId, clientSecret, refreshToken }) {
+  const tokenRes = await axios.post('https://id.twitch.tv/oauth2/token', null, {
+    params: {
+      client_id: clientId,
+      client_secret: clientSecret,
+      grant_type: 'refresh_token',
+      refresh_token: refreshToken,
+    },
+    timeout: 15000,
+  });
+  return tokenRes?.data || null;
+}
+
 // GET /api/oauth/twitch/status
 // Returns configuration status (never returns secret values).
 router.get('/twitch/status', (req, res) => {
-  const required = ['TWITCH_CLIENT_ID', 'TWITCH_CLIENT_SECRET'];
+  const required = ['TWITCH_CLIENT_ID', 'TWITCH_CLIENT_SECRET', 'OAUTH_TOKEN_ENC_KEY'];
   const optional = ['TWITCH_REDIRECT_URI', 'OAUTH_FRONTEND_RETURN_URL'];
   const missing = required.filter((k) => !process.env[k]);
   res.json({
@@ -51,7 +66,83 @@ router.get('/twitch/status', (req, res) => {
     frontendReturnUrl: getFrontendReturnUrl(req),
     clientIdSet: !!process.env.TWITCH_CLIENT_ID,
     clientSecretSet: !!process.env.TWITCH_CLIENT_SECRET,
+    tokenVaultKeySet: !!process.env.OAUTH_TOKEN_ENC_KEY,
   });
+});
+
+// GET /api/oauth/twitch/live-status (auth required)
+router.get('/twitch/live-status', authMiddleware, async (req, res) => {
+  try {
+    const clientId = mustEnv('TWITCH_CLIENT_ID');
+    const clientSecret = mustEnv('TWITCH_CLIENT_SECRET');
+    mustEnv('OAUTH_TOKEN_ENC_KEY');
+
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ ok: false, message: 'User not found' });
+    if (!user.twitch?.id) {
+      return res.json({ ok: true, connected: false, live: false, message: 'Twitch not connected' });
+    }
+
+    const stored = user.oauthTokens?.twitch?.payload || null;
+    const tokens = decryptJson(stored);
+    if (!tokens?.access_token) {
+      return res.status(409).json({
+        ok: false,
+        message: 'Twitch connected, but tokens are not stored yet. Reconnect Twitch.',
+      });
+    }
+
+    // Best-effort refresh if expired or if API returns 401.
+    async function callHelix(accessToken) {
+      return axios.get('https://api.twitch.tv/helix/streams', {
+        headers: { 'Client-ID': clientId, Authorization: `Bearer ${accessToken}` },
+        params: { user_id: user.twitch.id },
+        timeout: 15000,
+      });
+    }
+
+    let accessToken = tokens.access_token;
+    let helix;
+    try {
+      helix = await callHelix(accessToken);
+    } catch (e) {
+      const status = e?.response?.status;
+      if (status === 401 && tokens.refresh_token) {
+        const refreshed = await refreshTwitchToken({
+          clientId,
+          clientSecret,
+          refreshToken: tokens.refresh_token,
+        });
+        if (refreshed?.access_token) {
+          accessToken = refreshed.access_token;
+          const nextTokens = { ...tokens, ...refreshed, refreshed_at: new Date().toISOString() };
+          user.oauthTokens = user.oauthTokens || {};
+          user.oauthTokens.twitch = { payload: encryptJson(nextTokens), updatedAt: new Date() };
+          await user.save();
+          helix = await callHelix(accessToken);
+        } else {
+          throw e;
+        }
+      } else {
+        throw e;
+      }
+    }
+
+    const stream = helix?.data?.data?.[0] || null;
+    if (!stream) return res.json({ ok: true, connected: true, live: false });
+    return res.json({
+      ok: true,
+      connected: true,
+      live: true,
+      title: stream.title || '',
+      viewerCount: stream.viewer_count || 0,
+      startedAt: stream.started_at || null,
+      gameName: stream.game_name || '',
+    });
+  } catch (err) {
+    console.error('Twitch live status error:', err.response?.data || err.message);
+    return res.status(503).json({ ok: false, message: 'Twitch status unavailable' });
+  }
 });
 
 // GET /api/oauth/twitch/start
@@ -98,8 +189,8 @@ router.get('/twitch/start', async (req, res) => {
       client_id: clientId,
       redirect_uri: redirectUri,
       response_type: 'code',
-      // Minimal scope: login/id/display_name are accessible without extra scopes.
-      scope: '',
+      // Request basic user identity + refresh token.
+      scope: 'user:read:email',
       state,
       force_verify: 'true',
     });
@@ -168,6 +259,9 @@ router.get('/twitch/callback', async (req, res) => {
 
     const accessToken = tokenRes?.data?.access_token;
     if (!accessToken) throw new Error('Twitch token exchange failed');
+    const refreshToken = tokenRes?.data?.refresh_token || '';
+    const expiresIn = tokenRes?.data?.expires_in;
+    const tokenType = tokenRes?.data?.token_type || '';
 
     // Fetch Twitch user info
     const userRes = await axios.get('https://api.twitch.tv/helix/users', {
@@ -196,7 +290,24 @@ router.get('/twitch/callback', async (req, res) => {
       { new: true }
     );
 
-    // Do not persist user tokens yet (foundation step). We can add encrypted token storage later.
+    // Persist tokens encrypted (foundation for real API calls).
+    const user = await User.findById(uid);
+    if (user) {
+      user.oauthTokens = user.oauthTokens || {};
+      user.oauthTokens.twitch = {
+        payload: encryptJson({
+          provider: 'twitch',
+          access_token: accessToken,
+          refresh_token: refreshToken,
+          expires_in: expiresIn,
+          token_type: tokenType,
+          saved_at: new Date().toISOString(),
+        }),
+        updatedAt: new Date(),
+      };
+      await user.save();
+    }
+
     return res.redirect(`${returnUrl}${returnUrl.includes('?') ? '&' : '?'}connected=twitch`);
   } catch (err) {
     console.error('Twitch oauth callback error:', err.response?.data || err.message);

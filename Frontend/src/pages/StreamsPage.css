@@ -150,6 +150,31 @@
   font-size: 0.85rem;
 }
 
+.streaming-connectRow {
+  flex-wrap: wrap;
+}
+
+.streaming-status {
+  margin-top: 8px;
+  display: grid;
+  gap: 4px;
+}
+
+.streaming-embeds {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 10px;
+}
+
+.streaming-embed iframe {
+  width: 100%;
+  height: 360px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-secondary);
+}
+
 .stream-row {
   display: flex;
   justify-content: space-between;
@@ -175,6 +200,12 @@
 }
 
 @media (max-width: 900px) {
+  .streaming-embeds {
+    grid-template-columns: 1fr;
+  }
+  .streaming-embed iframe {
+    height: 320px;
+  }
   .stream-row {
     flex-direction: column;
   }

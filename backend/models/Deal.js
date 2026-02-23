@@ -42,6 +42,8 @@ const dealMilestoneSchema = new mongoose.Schema(
       default: 'none',
     },
     evidenceValue: { type: String, default: '' },
+    evidenceAuthorWallet: { type: String, default: '' }, // optional: wallet address that submitted evidence
+    evidenceSignature: { type: String, default: '' }, // optional: signed evidence payload (EIP-191)
     status: { type: String, enum: ['pending', 'completed'], default: 'pending' },
     completedAt: { type: Date },
   },

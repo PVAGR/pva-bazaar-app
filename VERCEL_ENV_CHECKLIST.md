@@ -17,6 +17,14 @@ Do not store real secret values in git.
 ## Backend Project (Vercel) Optional / Feature-Based
 
 - `OPENAI_API_KEY` (Oracle AI assessments)
+- `OAUTH_TOKEN_ENC_KEY` (required for OAuth token storage; set a random value and keep it secret)
+- `OAUTH_FRONTEND_RETURN_URL` (default: `https://pvabazaar.org/#/streams`)
+- `TWITCH_CLIENT_ID`
+- `TWITCH_CLIENT_SECRET`
+- `TWITCH_REDIRECT_URI` (recommended exact match for Twitch console; example: `https://api.pvabazaar.org/api/oauth/twitch/callback`)
+- `YOUTUBE_CLIENT_ID`
+- `YOUTUBE_CLIENT_SECRET`
+- `YOUTUBE_REDIRECT_URI` (recommended exact match for Google console; example: `https://api.pvabazaar.org/api/oauth/youtube/callback`)
 - `SMTP_HOST`
 - `SMTP_PORT`
 - `SMTP_USER`

@@ -44,6 +44,10 @@ export default function StreamsPage() {
   const [draftSaving, setDraftSaving] = useState(false);
   const [draftRestoreHint, setDraftRestoreHint] = useState('');
   const [twitchStatus, setTwitchStatus] = useState(null);
+  const [youtubeStatus, setYouTubeStatus] = useState(null);
+  const [liveLoading, setLiveLoading] = useState(false);
+  const [twitchLive, setTwitchLive] = useState(null);
+  const [youtubeLive, setYouTubeLive] = useState(null);
 
   const tokenPresent = useMemo(() => {
     if (typeof window === 'undefined') return false;
@@ -114,6 +118,37 @@ export default function StreamsPage() {
       })
       .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    // Self-diagnose YouTube configuration (no secrets).
+    apiGet('/oauth/youtube/status')
+      .then((res) => {
+        if (res?.ok) setYouTubeStatus(res);
+      })
+      .catch(() => {});
+  }, []);
+
+  async function refreshLiveStatus() {
+    if (!tokenPresent) return;
+    setLiveLoading(true);
+    try {
+      const [tw, yt] = await Promise.allSettled([
+        apiGet('/oauth/twitch/live-status'),
+        apiGet('/oauth/youtube/live-status'),
+      ]);
+      if (tw.status === 'fulfilled' && tw.value?.ok) setTwitchLive(tw.value);
+      if (yt.status === 'fulfilled' && yt.value?.ok) setYouTubeLive(yt.value);
+    } finally {
+      setLiveLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    if (!tokenPresent) return;
+    // Fetch once on load; user can refresh manually.
+    refreshLiveStatus().catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tokenPresent]);
 
   async function savePreferences(nextPrefs) {
     setPrefsSaving(true);
@@ -221,6 +256,33 @@ export default function StreamsPage() {
     }
   }
 
+  async function handleConnectYouTube() {
+    setError('');
+    try {
+      if (youtubeStatus && youtubeStatus.configured === false) {
+        const missing = Array.isArray(youtubeStatus.missing) ? youtubeStatus.missing.join(', ') : 'missing env vars';
+        throw new Error(`YouTube is not configured yet (${missing})`);
+      }
+      const res = await apiGet('/oauth/youtube/start', { params: { mode: 'json' } });
+      if (!res?.ok || !res?.url) {
+        throw new Error(res?.message || res?.error || 'Failed to start YouTube connect');
+      }
+      window.location.assign(res.url);
+    } catch (e) {
+      const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
+      setError(serverMsg || e.message || `Failed to start YouTube connect (apiBase=${apiBase})`);
+    }
+  }
+
+  const twitchChannel = profile?.twitch?.login || '';
+  const twitchParent = typeof window !== 'undefined' ? window.location.hostname : 'pvabazaar.org';
+  const twitchPlayerUrl = twitchChannel
+    ? `https://player.twitch.tv/?channel=${encodeURIComponent(twitchChannel)}&parent=${encodeURIComponent(twitchParent)}`
+    : '';
+  const twitchChatUrl = twitchChannel
+    ? `https://www.twitch.tv/embed/${encodeURIComponent(twitchChannel)}/chat?parent=${encodeURIComponent(twitchParent)}`
+    : '';
+
   async function handleCreate(e) {
     e.preventDefault();
     setCreating(true);
@@ -299,13 +361,8 @@ export default function StreamsPage() {
           <button className="btn ghost" onClick={loadStreams} disabled={loading}>
             Refresh
           </button>
-          <button
-            className="btn primary"
-            type="button"
-            onClick={handleConnectTwitch}
-            title="Connect Twitch (OAuth)"
-          >
-            Connect Twitch
+          <button className="btn ghost" type="button" onClick={refreshLiveStatus} disabled={liveLoading || !tokenPresent}>
+            {liveLoading ? 'Checking live…' : 'Check live'}
           </button>
           <button
             className="btn ghost"
@@ -339,6 +396,9 @@ export default function StreamsPage() {
             <div className="muted">
               Twitch: {profile.twitch?.login ? <b>connected (@{profile.twitch.login})</b> : <b>not connected</b>}
             </div>
+            <div className="muted">
+              YouTube: {youtubeLive?.connected ? <b>connected</b> : <b>not connected</b>}
+            </div>
             {twitchStatus ? (
               <div className="muted small">
                 Twitch config:{' '}
@@ -354,6 +414,89 @@ export default function StreamsPage() {
                   body="To enable Twitch connect, set TWITCH_CLIENT_ID, TWITCH_CLIENT_SECRET, and a matching TWITCH_REDIRECT_URI in Vercel. This status check never shows secret values."
                   example="TWITCH_REDIRECT_URI=https://api.pvabazaar.org/api/oauth/twitch/callback"
                 />
+              </div>
+            ) : null}
+            {youtubeStatus ? (
+              <div className="muted small">
+                YouTube config:{' '}
+                {youtubeStatus.configured ? (
+                  <b>configured</b>
+                ) : (
+                  <b>
+                    missing{' '}
+                    {Array.isArray(youtubeStatus.missing) && youtubeStatus.missing.length
+                      ? youtubeStatus.missing.join(', ')
+                      : 'env vars'}
+                  </b>
+                )}{' '}
+                <HelpTip
+                  title="YouTube setup"
+                  body="To enable YouTube connect, set YOUTUBE_CLIENT_ID, YOUTUBE_CLIENT_SECRET, and a matching YOUTUBE_REDIRECT_URI in Vercel. This status check never shows secret values."
+                  example="YOUTUBE_REDIRECT_URI=https://api.pvabazaar.org/api/oauth/youtube/callback"
+                />
+              </div>
+            ) : null}
+
+            <div className="row streaming-connectRow">
+              <button className="btn primary" type="button" onClick={handleConnectTwitch} title="Connect Twitch (OAuth)">
+                Connect Twitch
+              </button>
+              <button className="btn ghost" type="button" onClick={handleConnectYouTube} title="Connect YouTube (OAuth)">
+                Connect YouTube
+              </button>
+              <a className="btn ghost" href="https://studio.youtube.com/channel/UC/livestreaming" target="_blank" rel="noreferrer">
+                YouTube Studio
+              </a>
+              {twitchChannel ? (
+                <a className="btn ghost" href="https://dashboard.twitch.tv/u/me/stream-manager" target="_blank" rel="noreferrer">
+                  Twitch Stream Manager
+                </a>
+              ) : null}
+            </div>
+
+            <div className="streaming-status">
+              <div className="muted small">
+                Twitch live:{' '}
+                {twitchLive?.connected ? (
+                  twitchLive.live ? (
+                    <b>
+                      LIVE{typeof twitchLive.viewerCount === 'number' ? ` · ${twitchLive.viewerCount} viewers` : ''}
+                    </b>
+                  ) : (
+                    <b>offline</b>
+                  )
+                ) : (
+                  <b>not connected</b>
+                )}
+              </div>
+              <div className="muted small">
+                YouTube live:{' '}
+                {youtubeLive?.connected ? <b>connected</b> : <b>not connected</b>}{' '}
+                {youtubeLive?.channelTitle ? <span className="muted small">({youtubeLive.channelTitle})</span> : null}
+              </div>
+            </div>
+
+            {twitchChannel ? (
+              <div className="streaming-embeds">
+                <div className="streaming-embed">
+                  <div className="muted small">Player</div>
+                  <iframe
+                    title="Twitch player"
+                    src={twitchPlayerUrl}
+                    allowFullScreen
+                    frameBorder="0"
+                    scrolling="no"
+                  />
+                </div>
+                <div className="streaming-embed">
+                  <div className="muted small">Chat</div>
+                  <iframe
+                    title="Twitch chat"
+                    src={twitchChatUrl}
+                    frameBorder="0"
+                    scrolling="no"
+                  />
+                </div>
               </div>
             ) : null}
             {profile?.preferences ? (

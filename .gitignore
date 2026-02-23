@@ -44,3 +44,6 @@ Frontend/dist/
 
 # QA / test reports (generated)
 qa/reports/
+
+# Coverage output (generated)
+coverage/

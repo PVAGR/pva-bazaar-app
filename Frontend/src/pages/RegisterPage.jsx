@@ -11,7 +11,7 @@ export default function RegisterPage() {
   const location = useLocation();
   const next = useMemo(() => {
     const params = new URLSearchParams(location.search || '');
-    return params.get('next') || '/account';
+    return params.get('next') || '/onboarding';
   }, [location.search]);
 
   const [loading, setLoading] = useState(false);

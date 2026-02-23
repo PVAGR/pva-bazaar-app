@@ -48,6 +48,66 @@ export default function DealsPage() {
   const [inviteLoading, setInviteLoading] = useState(false);
   const [evidenceDrafts, setEvidenceDrafts] = useState({});
   const [milestoneHashes, setMilestoneHashes] = useState({});
+  const [wallet, setWallet] = useState({ address: '', chainId: '', connecting: false });
+  const [requireSignature, setRequireSignature] = useState(true);
+
+  const CHAINS = [
+    { id: 1, name: 'Ethereum', hex: '0x1' },
+    { id: 137, name: 'Polygon', hex: '0x89' },
+    { id: 8453, name: 'Base', hex: '0x2105' },
+  ];
+
+  function hasEthereum() {
+    return typeof window !== 'undefined' && !!window.ethereum?.request;
+  }
+
+  async function connectWallet() {
+    setError('');
+    if (!hasEthereum()) {
+      setError('No wallet detected. Install MetaMask or use a wallet-enabled browser.');
+      return;
+    }
+    setWallet((w) => ({ ...w, connecting: true }));
+    try {
+      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      const address = Array.isArray(accounts) ? String(accounts[0] || '') : '';
+      const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+      setWallet({ address, chainId: String(chainId || ''), connecting: false });
+
+      // Best-effort: prefill default wallet if user hasn't set one yet.
+      if (address && !profile?.preferences?.defaultWalletAddress) {
+        setProfile((p) => ({
+          ...(p || {}),
+          preferences: { ...((p && p.preferences) || {}), defaultWalletAddress: address },
+        }));
+      }
+    } catch (e) {
+      setWallet((w) => ({ ...w, connecting: false }));
+      setError(e?.message || 'Failed to connect wallet');
+    }
+  }
+
+  async function switchChain(hexChainId) {
+    setError('');
+    if (!hasEthereum()) return;
+    try {
+      await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: hexChainId }] });
+      const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+      setWallet((w) => ({ ...w, chainId: String(chainId || '') }));
+    } catch (e) {
+      setError(e?.message || 'Failed to switch chain');
+    }
+  }
+
+  async function personalSign(message) {
+    if (!hasEthereum()) throw new Error('No wallet detected');
+    if (!wallet.address) throw new Error('Wallet not connected');
+    const sig = await window.ethereum.request({
+      method: 'personal_sign',
+      params: [String(message), String(wallet.address)],
+    });
+    return String(sig || '');
+  }
 
   async function sha256Hex(input) {
     try {
@@ -141,6 +201,25 @@ export default function DealsPage() {
         }
       })
       .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!hasEthereum()) return;
+    const eth = window.ethereum;
+    function onAccountsChanged(acc) {
+      const next = Array.isArray(acc) ? String(acc[0] || '') : '';
+      setWallet((w) => ({ ...w, address: next }));
+    }
+    function onChainChanged(next) {
+      setWallet((w) => ({ ...w, chainId: String(next || '') }));
+    }
+    eth.on?.('accountsChanged', onAccountsChanged);
+    eth.on?.('chainChanged', onChainChanged);
+    return () => {
+      eth.removeListener?.('accountsChanged', onAccountsChanged);
+      eth.removeListener?.('chainChanged', onChainChanged);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -316,7 +395,14 @@ export default function DealsPage() {
     if (!text) return;
     setError('');
     try {
-      const res = await apiPost(`/deals/${selected._id}/messages`, { text });
+      let signature = '';
+      let authorWallet = '';
+      if (wallet.address && requireSignature) {
+        const payload = `PVA Bazaar Deal Message\nDealId: ${selected._id}\nText: ${text}\nTime: ${new Date().toISOString()}`;
+        signature = await personalSign(payload);
+        authorWallet = wallet.address;
+      }
+      const res = await apiPost(`/deals/${selected._id}/messages`, { text, authorWallet, signature });
       if (!res?.ok || !res.item) throw new Error(res?.error || res?.message || 'Failed to add message');
       setSelected(res.item);
       setNewMessage('');
@@ -354,7 +440,18 @@ export default function DealsPage() {
     if (!evidenceValue) return;
     setError('');
     try {
-      const res = await apiPost(`/deals/${selected._id}/milestones/${milestoneId}/evidence`, { evidenceValue });
+      let signature = '';
+      let authorWallet = '';
+      if (wallet.address && requireSignature) {
+        const payload = `PVA Bazaar Deal Evidence\nDealId: ${selected._id}\nMilestoneId: ${milestoneId}\nEvidence: ${evidenceValue}\nTime: ${new Date().toISOString()}`;
+        signature = await personalSign(payload);
+        authorWallet = wallet.address;
+      }
+      const res = await apiPost(`/deals/${selected._id}/milestones/${milestoneId}/evidence`, {
+        evidenceValue,
+        authorWallet,
+        signature,
+      });
       if (!res?.ok || !res.item) throw new Error(res?.error || res?.message || 'Failed to submit evidence');
       setSelected(res.item);
       setEvidenceDrafts((prev) => ({ ...prev, [milestoneId]: '' }));
@@ -413,6 +510,47 @@ export default function DealsPage() {
 
       <main className="deals-main">
         {error ? <div className="error" role="alert">{error}</div> : null}
+
+        <section className="card">
+          <h2>
+            Wallet (real crypto)
+            <HelpTip
+              title="Why connect a wallet?"
+              body="Connecting a wallet lets you sign deal messages and milestone evidence. This creates a verifiable trail (signatures) even before we deploy escrow contracts."
+              example="Sign: “Tracking number provided: 12345”"
+            />
+          </h2>
+          <div className="row rowWrap">
+            <button className="btn primary" type="button" onClick={connectWallet} disabled={wallet.connecting}>
+              {wallet.address ? 'Wallet connected' : wallet.connecting ? 'Connecting…' : 'Connect wallet'}
+            </button>
+            {wallet.address ? <span className="muted small">Address: {wallet.address}</span> : null}
+            {wallet.chainId ? <span className="muted small">Chain: {wallet.chainId}</span> : null}
+          </div>
+          <div className="row rowWrap" style={{ marginTop: '8px' }}>
+            <span className="muted small">Switch chain:</span>
+            {CHAINS.map((c) => (
+              <button key={c.id} className="btn ghost" type="button" onClick={() => switchChain(c.hex)}>
+                {c.name}
+              </button>
+            ))}
+            <label className="check" style={{ marginLeft: 'auto' }}>
+              <input
+                type="checkbox"
+                checked={requireSignature}
+                onChange={(e) => setRequireSignature(e.target.checked)}
+              />
+              <span className="muted small">
+                Require signature
+                <HelpTip
+                  title="Require signature"
+                  body="If enabled, you’ll be prompted to sign messages/evidence from your wallet before they’re saved."
+                  example="Turn off if you just want quick notes while testing"
+                />
+              </span>
+            </label>
+          </div>
+        </section>
 
         <section className="card">
           <h2>

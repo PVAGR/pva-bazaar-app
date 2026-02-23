@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import HelpTip from '../components/HelpTip.jsx';
-import { apiFetch, apiPost } from '../lib/api';
+import { apiFetch, apiGet, apiPost } from '../lib/api';
 import { setToken } from '../lib/auth';
 import '../styles/admin-common.css';
 import './LoginPage.css';
@@ -9,9 +9,9 @@ import './LoginPage.css';
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const next = useMemo(() => {
+  const nextFromUrl = useMemo(() => {
     const params = new URLSearchParams(location.search || '');
-    return params.get('next') || '/admin';
+    return params.get('next') || '';
   }, [location.search]);
 
   const [mode, setMode] = useState('admin'); // 'admin' | 'user'
@@ -38,7 +38,7 @@ export default function LoginPage() {
       setToken(data.token);
       sessionStorage.setItem('admin-auth', 'authenticated');
       sessionStorage.setItem('admin-auth-version', 'v2');
-      navigate(next, { replace: true });
+      navigate(nextFromUrl || '/admin', { replace: true });
     } catch (err) {
       setError(err.message || 'Login failed');
     } finally {
@@ -57,7 +57,23 @@ export default function LoginPage() {
       });
       if (!res?.ok || !res?.token) throw new Error(res?.message || 'Invalid email or password');
       setToken(res.token);
-      navigate(next, { replace: true });
+      if (nextFromUrl) {
+        navigate(nextFromUrl, { replace: true });
+        return;
+      }
+
+      // If the user already dismissed/completed onboarding, don't force them through it every time.
+      try {
+        const prof = await apiGet('/users/profile');
+        const ob = prof?.user?.preferences?.onboarding || {};
+        if (ob?.dismissedAt || ob?.completedAt) {
+          navigate('/account', { replace: true });
+          return;
+        }
+      } catch {
+        // ignore and fall back to onboarding
+      }
+      navigate('/onboarding', { replace: true });
     } catch (err) {
       const serverMsg = err?.response?.data?.message || err?.response?.data?.error;
       setError(serverMsg || err.message || 'Login failed');
@@ -170,7 +186,7 @@ export default function LoginPage() {
                 <button className="btn primary" type="submit" disabled={loading}>
                   {loading ? 'Signing in…' : 'Sign in (User)'}
                 </button>
-                <Link to={`/register?next=${encodeURIComponent(next)}`} className="btn ghost">
+                <Link to={`/register?next=${encodeURIComponent(nextFromUrl || '/onboarding')}`} className="btn ghost">
                   Create account
                 </Link>
               </div>

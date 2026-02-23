@@ -422,6 +422,8 @@ router.post('/:id/milestones/:milestoneId/evidence', async (req, res) => {
     if (!milestone) return res.status(404).json({ ok: false, error: 'Milestone not found' });
 
     milestone.evidenceValue = evidenceValue;
+    milestone.evidenceAuthorWallet = sanitize(req.body?.authorWallet || '');
+    milestone.evidenceSignature = sanitize(req.body?.signature || '');
     deal.messages.push({
       author: 'system',
       text: `${actor} submitted evidence for milestone: ${milestone.title}`,

@@ -18,6 +18,7 @@ import DealJoinPage from './pages/DealJoinPage.jsx';
 import LoginPage from './pages/LoginPage.jsx';
 import RegisterPage from './pages/RegisterPage.jsx';
 import AccountPage from './pages/AccountPage.jsx';
+import OnboardingPage from './pages/OnboardingPage.jsx';
 import { getToken } from './lib/auth.js';
 import './base.css';
 
@@ -75,6 +76,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <AccountPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/onboarding"
+          element={
+            <ProtectedRoute>
+              <OnboardingPage />
             </ProtectedRoute>
           }
         />
