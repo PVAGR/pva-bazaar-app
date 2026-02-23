@@ -3,12 +3,15 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const axios = require('axios');
 const User = require('../models/User');
-const { authMiddleware } = require('../middleware/auth');
 
 function mustEnv(key) {
   const v = process.env[key];
   if (!v) throw new Error(`Missing ${key}`);
   return v;
+}
+
+function isObjectIdHex(v) {
+  return typeof v === 'string' && /^[a-f\d]{24}$/i.test(v);
 }
 
 function getRedirectUri(req) {
@@ -26,16 +29,47 @@ function getFrontendReturnUrl(req) {
   return process.env.OAUTH_FRONTEND_RETURN_URL || 'https://pvabazaar.org/#/streams';
 }
 
-// GET /api/oauth/twitch/start (auth required)
-router.get('/twitch/start', authMiddleware, async (req, res) => {
+function getBearerToken(req) {
+  const authHeader = req.headers.authorization || '';
+  return authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+}
+
+// GET /api/oauth/twitch/start
+// - If called from the frontend app, it should use Authorization header and request mode=json,
+//   then the UI redirects to the returned URL.
+// - If opened directly in a browser tab without auth, redirect to the frontend login.
+router.get('/twitch/start', async (req, res) => {
   try {
+    const mode = String(req.query.mode || '');
+    const token = getBearerToken(req);
+
+    if (!token) {
+      const returnUrl = getFrontendReturnUrl(req);
+      if (mode === 'json') {
+        return res.status(401).json({ ok: false, message: 'No authentication token provided' });
+      }
+      return res.redirect(
+        `${returnUrl}${returnUrl.includes('?') ? '&' : '?'}oauth_error=${encodeURIComponent('Please log in first')}`
+      );
+    }
+
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch {
+      return res.status(401).json({ ok: false, message: 'Invalid authentication token' });
+    }
+    if (!decoded?.id || !isObjectIdHex(String(decoded.id))) {
+      return res.status(401).json({ ok: false, message: 'Invalid authentication token (subject)' });
+    }
+
     const clientId = mustEnv('TWITCH_CLIENT_ID');
     mustEnv('TWITCH_CLIENT_SECRET'); // we only validate here; used in callback
     const redirectUri = getRedirectUri(req);
 
     // Encode user id into signed state so callback can link the Twitch identity.
     const state = jwt.sign(
-      { uid: req.user.id, nonce: Math.random().toString(36).slice(2) },
+      { uid: decoded.id, nonce: Math.random().toString(36).slice(2) },
       process.env.JWT_SECRET,
       { expiresIn: '10m' }
     );
@@ -50,7 +84,11 @@ router.get('/twitch/start', authMiddleware, async (req, res) => {
       force_verify: 'true',
     });
 
-    return res.redirect(`https://id.twitch.tv/oauth2/authorize?${params.toString()}`);
+    const url = `https://id.twitch.tv/oauth2/authorize?${params.toString()}`;
+    if (mode === 'json') {
+      return res.json({ ok: true, url });
+    }
+    return res.redirect(url);
   } catch (err) {
     console.error('Twitch oauth start error:', err);
     return res.status(503).json({

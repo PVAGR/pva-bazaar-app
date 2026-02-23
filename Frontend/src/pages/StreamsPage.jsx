@@ -41,8 +41,7 @@ export default function StreamsPage() {
     if (typeof window === 'undefined') return false;
     return !!(localStorage.getItem('token') || localStorage.getItem('authToken') || localStorage.getItem('jwt'));
   }, []);
-
-  const twitchConnectUrl = `${ENV.API_URL.replace(/\/+$/, '')}/oauth/twitch/start`;
+  const apiBase = ENV.API_URL.replace(/\/+$/, '');
 
   async function loadStreams() {
     setLoading(true);
@@ -77,6 +76,22 @@ export default function StreamsPage() {
       })
       .catch(() => {});
   }, []);
+
+  async function handleConnectTwitch() {
+    setError('');
+    try {
+      // Must be an authenticated API call (Authorization header) so the backend can
+      // bind the OAuth state to your user id.
+      const res = await apiGet('/oauth/twitch/start', { params: { mode: 'json' } });
+      if (!res?.ok || !res?.url) {
+        throw new Error(res?.message || res?.error || 'Failed to start Twitch connect');
+      }
+      window.location.assign(res.url);
+    } catch (e) {
+      const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
+      setError(serverMsg || e.message || `Failed to start Twitch connect (apiBase=${apiBase})`);
+    }
+  }
 
   async function handleCreate(e) {
     e.preventDefault();
@@ -154,9 +169,14 @@ export default function StreamsPage() {
           <button className="btn ghost" onClick={loadStreams} disabled={loading}>
             Refresh
           </button>
-          <a className="btn primary" href={twitchConnectUrl} title="Connect Twitch (OAuth)">
+          <button
+            className="btn primary"
+            type="button"
+            onClick={handleConnectTwitch}
+            title="Connect Twitch (OAuth)"
+          >
             Connect Twitch
-          </a>
+          </button>
           <button
             className="btn ghost"
             onClick={() => {
