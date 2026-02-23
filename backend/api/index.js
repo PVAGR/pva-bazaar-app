@@ -70,6 +70,15 @@ app.use((req, res, next) => {
   next();
 });
 
+// Raw body for webhooks (must run BEFORE json() so signature verification works)
+const webhookPaths = ['/webhooks/stripe', '/webhooks/twitch', '/api/webhooks/stripe', '/api/webhooks/twitch'];
+app.use((req, res, next) => {
+  if (webhookPaths.some(p => req.originalUrl === p || req.originalUrl.endsWith(p))) {
+    return express.raw({ type: 'application/json', limit: '1mb' })(req, res, next);
+  }
+  next();
+});
+
 // Body size limits (before routes)
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
@@ -114,15 +123,6 @@ if (process.env.SENTRY_DSN) {
   app.use(Sentry.Handlers.tracingHandler());
 }
 
-// Stripe webhook: use express.raw for signature verification (body limit handled by Stripe)
-const stripeWebhookPath = "/webhooks/stripe";
-app.use((req, res, next) => {
-  if (req.originalUrl === stripeWebhookPath) {
-    express.raw({ type: "application/json" })(req, res, next);
-  } else {
-    next();
-  }
-});
 
 // Apply stricter rate limiters to sensitive routes
 app.use('/admin', authLimiter);
@@ -140,9 +140,11 @@ app.use((req, res, next) => {
   next();
 });
 
-// Stripe webhook route (must come after raw body middleware)
+// Webhook routes
 const webhooksStripeRoutes = require('../routes/webhooksStripe');
+const webhooksTwitchRoutes = require('../routes/webhooksTwitch');
 app.use('/webhooks', webhooksStripeRoutes);
+app.use('/webhooks', webhooksTwitchRoutes);
 
 // Connect to MongoDB - optimized for serverless with global caching
 // Use global to persist connection across serverless function invocations
@@ -189,7 +191,7 @@ async function connectToDatabase() {
 // Middleware: Ensure DB connection for routes that need it
 app.use(async (req, res, next) => {
   // Skip DB connection for health/ping endpoints and explicit safe endpoints
-  const skipPaths = ['/health', '/ping', '/version', '/express-ping', '/dev/token', '/webhooks/stripe'];
+  const skipPaths = ['/health', '/ping', '/version', '/express-ping', '/dev/token', '/webhooks/stripe', '/webhooks/twitch', '/api/webhooks/stripe', '/api/webhooks/twitch'];
   const skipPath = skipPaths.some(p => req.path === p || req.path.startsWith(p));
   
   if (skipPath) {

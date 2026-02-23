@@ -4,6 +4,9 @@ import { apiDelete, apiGet, apiPost, apiPut } from '../lib/api';
 import { ENV } from '../config/env';
 import HelpTip from '../components/HelpTip.jsx';
 import AdminNav from '../components/AdminNav.jsx';
+import ErrorBanner from '../components/ErrorBanner.jsx';
+import LoadingSpinner from '../components/LoadingSpinner.jsx';
+import { getErrorMessage, withRetry } from '../lib/errorUtils';
 import { getToken } from '../lib/auth';
 import './StreamsPage.css';
 
@@ -59,7 +62,10 @@ export default function StreamsPage() {
     setLoading(true);
     setError('');
     try {
-      const res = await apiGet('/streams', { params: { limit: 50 } });
+      const res = await withRetry(() => apiGet('/streams', { params: { limit: 50 } }), {
+        retries: 1,
+        onRetry: () => {},
+      });
       if (res && res.ok && Array.isArray(res.items)) {
         setItems(res.items);
       } else {
@@ -68,9 +74,7 @@ export default function StreamsPage() {
       }
     } catch (e) {
       setItems([]);
-      // Axios errors often have server response payload in e.response.data
-      const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
-      setError(serverMsg || e.message || 'Failed to load streams');
+      setError(getErrorMessage(e, 'Failed to load streams. Check your connection and try again.'));
     } finally {
       setLoading(false);
     }
@@ -471,10 +475,37 @@ export default function StreamsPage() {
               </div>
               <div className="muted small">
                 YouTube live:{' '}
-                {youtubeLive?.connected ? <b>connected</b> : <b>not connected</b>}{' '}
+                {youtubeLive?.connected ? (
+                  youtubeLive.live ? (
+                    <b>LIVE{youtubeLive.viewerCount ? ` · ${youtubeLive.viewerCount} viewers` : ''}</b>
+                  ) : (
+                    <b>offline</b>
+                  )
+                ) : (
+                  <b>not connected</b>
+                )}{' '}
                 {youtubeLive?.channelTitle ? <span className="muted small">({youtubeLive.channelTitle})</span> : null}
               </div>
             </div>
+
+            {(twitchChannel || youtubeLive?.connected) ? (
+              <div className="goLive-cta">
+                <h3 className="goLive-cta__title">Go live</h3>
+                <p className="muted small">Start streaming on your platform, then create a session below to track it.</p>
+                <div className="row rowWrap">
+                  {twitchChannel ? (
+                    <a className="btn primary" href="https://dashboard.twitch.tv/u/me/stream-manager" target="_blank" rel="noreferrer">
+                      Open Twitch Stream Manager
+                    </a>
+                  ) : null}
+                  {youtubeLive?.connected ? (
+                    <a className="btn primary" href="https://studio.youtube.com/" target="_blank" rel="noreferrer">
+                      Open YouTube Studio
+                    </a>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
 
             {twitchChannel ? (
               <div className="streaming-embeds">
@@ -600,9 +631,7 @@ export default function StreamsPage() {
         ) : null}
 
         {error ? (
-          <div className="error" role="alert">
-            {error}
-          </div>
+          <ErrorBanner message={error} onRetry={loadStreams} onDismiss={() => setError('')} />
         ) : null}
 
         <section className="card">
@@ -719,7 +748,7 @@ export default function StreamsPage() {
 
         <section className="card">
           <h2>Your stream sessions</h2>
-          {loading ? <div className="muted">Loading…</div> : null}
+          {loading ? <LoadingSpinner label="Loading streams…" /> : null}
           {!loading && items.length === 0 ? <div className="muted">No stream sessions yet.</div> : null}
           <div className="streams-list">
             {items.map(s => (
@@ -733,6 +762,14 @@ export default function StreamsPage() {
                   <div className="muted">
                     created {formatDate(s.createdAt)}{s.startedAt ? ` · started ${formatDate(s.startedAt)}` : ''}
                   </div>
+                  {((s.webhookEvents && s.webhookEvents.length) || s.startedAt || s.endedAt) ? (
+                    <div className="stream-activity muted small">
+                      <strong>Activity:</strong>{' '}
+                      {s.startedAt ? `Went live ${formatDate(s.startedAt)}` : ''}
+                      {s.endedAt ? ` · Ended ${formatDate(s.endedAt)}` : ''}
+                      {s.webhookEvents?.length ? ` · ${s.webhookEvents.length} webhook event(s)` : ''}
+                    </div>
+                  ) : null}
                 </div>
 
                 <div className="stream-controls">

@@ -134,6 +134,12 @@ if (profile.res.status === 401) console.log("✅ users/profile route ok (401 una
 else if (profile.res.ok && profile.json?.ok) console.log("✅ users/profile ok");
 else fail(`/api/users/profile failed (${profile.res.status})`);
 
+// Uptime checks: streaming and deals routes
+const streams = await getJson(`${BACKEND}/api/streams`);
+if (streams.res.status === 401) console.log("✅ streams route ok (401 unauth as expected)");
+else if (streams.res.ok && (streams.json?.ok || Array.isArray(streams.json?.streams))) console.log("✅ streams ok");
+else softWarn(`/api/streams unavailable (${streams.res.status})`);
+
 const twitchStatus = await getJson(`${BACKEND}/api/oauth/twitch/status`);
 if (!twitchStatus.res.ok || twitchStatus.json?.ok !== true) {
   softWarn(`/api/oauth/twitch/status unavailable (${twitchStatus.res.status})`);

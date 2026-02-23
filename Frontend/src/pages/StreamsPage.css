@@ -160,6 +160,23 @@
   gap: 4px;
 }
 
+.goLive-cta {
+  margin-top: 12px;
+  padding: 16px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.goLive-cta__title {
+  margin: 0 0 8px;
+  font-size: 1.1em;
+}
+
+.rowWrap {
+  flex-wrap: wrap;
+}
+
 .streaming-embeds {
   margin-top: 12px;
   display: grid;

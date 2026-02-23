@@ -53,7 +53,20 @@ const root = document.getElementById('root');
 if (root) {
   createRoot(root).render(
     <HelmetProvider>
-      <Sentry.ErrorBoundary fallback={<div>Something went wrong.</div>}>
+      <Sentry.ErrorBoundary
+        fallback={({ error, resetError }) => (
+          <div style={{ padding: 24, textAlign: 'center', maxWidth: 480, margin: '40px auto' }}>
+            <h2 style={{ marginBottom: 12 }}>Something went wrong</h2>
+            <p style={{ color: '#666', marginBottom: 16 }}>We&apos;ve been notified. You can try again or go home.</p>
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button type="button" onClick={resetError} style={{ padding: '10px 20px', cursor: 'pointer' }}>
+                Try again
+              </button>
+              <a href="/#/" style={{ padding: '10px 20px' }}>Go home</a>
+            </div>
+          </div>
+        )}
+      >
         <App />
       </Sentry.ErrorBoundary>
     </HelmetProvider>

@@ -5,6 +5,12 @@ const jwt = require('jsonwebtoken');
 const Deal = require('../models/Deal');
 const User = require('../models/User');
 const { authMiddleware } = require('../middleware/auth');
+const {
+  buildDealMessageTypedData,
+  buildDealEvidenceTypedData,
+  verifyDealSignature,
+  normalizeAddress,
+} = require('../lib/eip712');
 
 function sanitize(str) {
   if (typeof str !== 'string') return str;
@@ -114,6 +120,21 @@ async function verifyDealActor(req, deal) {
 
   return { actor: isOwner ? 'owner' : 'mediator', decoded };
 }
+
+// POST /api/deals/verify-signature - verify EIP-712 signature and return recovered address
+router.post('/verify-signature', async (req, res) => {
+  try {
+    const { domain, types, primaryType, message, signature } = req.body || {};
+    if (!domain || !types || !primaryType || !message || !signature) {
+      return res.status(400).json({ ok: false, error: 'Missing domain, types, primaryType, message, or signature' });
+    }
+    const typedData = { domain, types: typeof types === 'object' ? types : { [primaryType]: types }, primaryType, message };
+    const recovered = verifyDealSignature(typedData, String(signature));
+    res.json({ ok: true, recoveredAddress: recovered });
+  } catch (err) {
+    res.status(400).json({ ok: false, error: err.message || 'Invalid signature' });
+  }
+});
 
 // GET /api/deals - list deals for current user
 router.get('/', authMiddleware, async (req, res) => {
@@ -308,6 +329,56 @@ router.get('/join', async (req, res) => {
   }
 });
 
+// POST /api/deals/:id/prepare-escrow - prepare deployment params for escrow on Base
+router.post('/:id/prepare-escrow', authMiddleware, async (req, res) => {
+  try {
+    const deal = await Deal.findOne({ _id: req.params.id, ownerId: req.user.id });
+    if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
+
+    const counterpartyWallet = (deal.counterparty?.walletAddress || '').trim();
+    const defaultPayer = counterpartyWallet || (deal.payments?.[0]?.payerWallet || '').trim();
+    const defaultPayee = counterpartyWallet || (deal.payments?.[0]?.payeeWallet || '').trim();
+    const ownerWallet = (req.body?.ownerWallet || '').trim();
+
+    const milestoneHashes = (deal.milestones || [])
+      .filter((m) => m?.title)
+      .map((m) => {
+        const base = `${deal._id}:${m._id || ''}:${m.title || ''}`;
+        return sha256Hex(base);
+      });
+
+    const payments = (deal.payments || [])
+      .filter((p) => p && Number.isFinite(p.amount) && p.amount > 0)
+      .map((p) => ({
+        label: p.label || '',
+        amount: p.amount,
+        currency: p.currency || deal.currency || 'USD',
+        payerWallet: (p.payerWallet || defaultPayer).trim(),
+        payeeWallet: (p.payeeWallet || defaultPayee).trim(),
+      }));
+
+    const chainId = deal.chainId || 8453;
+
+    res.json({
+      ok: true,
+      prepareEscrow: {
+        dealId: String(deal._id),
+        chainId,
+        ownerWallet,
+        counterpartyWallet,
+        totalAmount: deal.totalAmount || 0,
+        currency: deal.currency || 'USD',
+        payments,
+        milestoneHashes,
+        tokenAddress: (deal.tokenAddress || '').trim(),
+      },
+    });
+  } catch (err) {
+    console.error('Error preparing escrow:', err);
+    res.status(500).json({ ok: false, error: 'Failed to prepare escrow' });
+  }
+});
+
 // GET /api/deals/:id - get single deal
 router.get('/:id', authMiddleware, async (req, res) => {
   try {
@@ -326,10 +397,10 @@ router.put('/:id', authMiddleware, async (req, res) => {
     const deal = await Deal.findOne({ _id: req.params.id, ownerId: req.user.id });
     if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
 
-    const allowed = ['title', 'description', 'counterparty', 'totalAmount', 'currency', 'mediatorFeePct', 'chainId', 'tokenAddress', 'status'];
+    const allowed = ['title', 'description', 'counterparty', 'totalAmount', 'currency', 'mediatorFeePct', 'chainId', 'tokenAddress', 'contractAddress', 'status'];
     for (const key of allowed) {
       if (req.body?.[key] === undefined) continue;
-      if (key === 'title' || key === 'description' || key === 'currency' || key === 'tokenAddress' || key === 'status') {
+      if (key === 'title' || key === 'description' || key === 'currency' || key === 'tokenAddress' || key === 'contractAddress' || key === 'status') {
         deal[key] = sanitize(req.body[key]);
       } else if (key === 'counterparty') {
         const cp = req.body.counterparty || {};
@@ -394,12 +465,22 @@ router.post('/:id/messages', async (req, res) => {
     const { actor } = await verifyDealActor(req, deal);
     const text = sanitize(req.body?.text);
     if (!text) return res.status(400).json({ ok: false, error: 'Message text is required' });
-    deal.messages.push({
-      author: actor,
-      authorWallet: sanitize(req.body?.authorWallet || ''),
-      text,
-      signature: sanitize(req.body?.signature || ''),
-    });
+    let authorWallet = sanitize(req.body?.authorWallet || '');
+    let signature = sanitize(req.body?.signature || '');
+
+    if (signature && authorWallet && req.body?.typedData) {
+      try {
+        const td = req.body.typedData;
+        const recovered = verifyDealSignature(td, signature);
+        if (normalizeAddress(recovered) !== normalizeAddress(authorWallet)) {
+          return res.status(400).json({ ok: false, error: 'Signature does not match author wallet' });
+        }
+      } catch (e) {
+        return res.status(400).json({ ok: false, error: e.message || 'Invalid EIP-712 signature' });
+      }
+    }
+
+    deal.messages.push({ author: actor, authorWallet, text, signature });
     await deal.save();
     res.status(201).json({ ok: true, item: toPublicDeal(deal) });
   } catch (err) {
@@ -421,9 +502,24 @@ router.post('/:id/milestones/:milestoneId/evidence', async (req, res) => {
     const milestone = (deal.milestones || []).find((m) => String(m._id) === String(req.params.milestoneId));
     if (!milestone) return res.status(404).json({ ok: false, error: 'Milestone not found' });
 
+    let evidenceAuthorWallet = sanitize(req.body?.authorWallet || '');
+    let evidenceSignature = sanitize(req.body?.signature || '');
+
+    if (evidenceSignature && evidenceAuthorWallet && req.body?.typedData) {
+      try {
+        const td = req.body.typedData;
+        const recovered = verifyDealSignature(td, evidenceSignature);
+        if (normalizeAddress(recovered) !== normalizeAddress(evidenceAuthorWallet)) {
+          return res.status(400).json({ ok: false, error: 'Signature does not match author wallet' });
+        }
+      } catch (e) {
+        return res.status(400).json({ ok: false, error: e.message || 'Invalid EIP-712 signature' });
+      }
+    }
+
     milestone.evidenceValue = evidenceValue;
-    milestone.evidenceAuthorWallet = sanitize(req.body?.authorWallet || '');
-    milestone.evidenceSignature = sanitize(req.body?.signature || '');
+    milestone.evidenceAuthorWallet = evidenceAuthorWallet;
+    milestone.evidenceSignature = evidenceSignature;
     deal.messages.push({
       author: 'system',
       text: `${actor} submitted evidence for milestone: ${milestone.title}`,

@@ -2,6 +2,10 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import HelpTip from '../components/HelpTip.jsx';
 import { apiFetch } from '../lib/api';
+import { buildDealMessageTypedData, buildDealEvidenceTypedData, signTypedData } from '../lib/eip712';
+import { getErrorMessage } from '../lib/errorUtils';
+import ErrorBanner from '../components/ErrorBanner.jsx';
+import LoadingSpinner from '../components/LoadingSpinner.jsx';
 import '../styles/admin-common.css';
 import './DealJoinPage.css';
 
@@ -19,6 +23,7 @@ export default function DealJoinPage() {
   const [evidenceDrafts, setEvidenceDrafts] = useState({});
   const [wallet, setWallet] = useState({ address: '', chainId: '', connecting: false });
   const [requireSignature, setRequireSignature] = useState(true);
+  const [successMsg, setSuccessMsg] = useState('');
 
   function hasEthereum() {
     return typeof window !== 'undefined' && !!window.ethereum?.request;
@@ -42,14 +47,10 @@ export default function DealJoinPage() {
     }
   }
 
-  async function personalSign(messageToSign) {
-    if (!hasEthereum()) throw new Error('No wallet detected');
-    if (!wallet.address) throw new Error('Wallet not connected');
-    const sig = await window.ethereum.request({
-      method: 'personal_sign',
-      params: [String(messageToSign), String(wallet.address)],
-    });
-    return String(sig || '');
+  function parseChainId(cid) {
+    if (cid == null || cid === '') return 8453;
+    const n = typeof cid === 'string' && cid.startsWith('0x') ? parseInt(cid, 16) : Number(cid);
+    return Number.isFinite(n) ? n : 8453;
   }
 
   async function authedFetch(path, options = {}) {
@@ -76,7 +77,7 @@ export default function DealJoinPage() {
         if (!res.ok || !data?.ok || !data?.item) throw new Error(data?.error || 'Failed to load deal');
         setDeal(data.item);
       })
-      .catch((e) => setError(e.message || 'Failed to load deal'))
+      .catch((e) => setError(getErrorMessage(e, 'Failed to load deal')))
       .finally(() => setLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
@@ -88,21 +89,25 @@ export default function DealJoinPage() {
     try {
       let signature = '';
       let authorWallet = '';
+      let typedData = null;
       if (wallet.address && requireSignature) {
-        const payload = `PVA Bazaar Deal Message\nDealId: ${deal._id}\nText: ${text}\nTime: ${new Date().toISOString()}`;
-        signature = await personalSign(payload);
+        const ts = new Date().toISOString();
+        typedData = buildDealMessageTypedData(parseChainId(wallet.chainId), deal._id, text, ts);
+        signature = await signTypedData(typedData, wallet.address);
         authorWallet = wallet.address;
       }
       const res = await authedFetch(`/deals/${deal._id}/messages`, {
         method: 'POST',
-        body: JSON.stringify({ text, authorWallet, signature }),
+        body: JSON.stringify({ text, authorWallet, signature, typedData }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data?.ok || !data?.item) throw new Error(data?.error || 'Failed to send message');
       setDeal(data.item);
       setMessage('');
+      setSuccessMsg('Message sent.');
+      setTimeout(() => setSuccessMsg(''), 2500);
     } catch (e) {
-      setError(e.message || 'Failed to send message');
+      setError(getErrorMessage(e, 'Failed to send message'));
     }
   }
 
@@ -114,22 +119,39 @@ export default function DealJoinPage() {
     try {
       let signature = '';
       let authorWallet = '';
+      let typedData = null;
       if (wallet.address && requireSignature) {
-        const payload = `PVA Bazaar Deal Evidence\nDealId: ${deal._id}\nMilestoneId: ${milestoneId}\nEvidence: ${evidenceValue}\nTime: ${new Date().toISOString()}`;
-        signature = await personalSign(payload);
+        const ts = new Date().toISOString();
+        typedData = buildDealEvidenceTypedData(parseChainId(wallet.chainId), deal._id, milestoneId, evidenceValue, ts);
+        signature = await signTypedData(typedData, wallet.address);
         authorWallet = wallet.address;
       }
       const res = await authedFetch(`/deals/${deal._id}/milestones/${milestoneId}/evidence`, {
         method: 'POST',
-        body: JSON.stringify({ evidenceValue, authorWallet, signature }),
+        body: JSON.stringify({ evidenceValue, authorWallet, signature, typedData }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data?.ok || !data?.item) throw new Error(data?.error || 'Failed to submit evidence');
       setDeal(data.item);
       setEvidenceDrafts((prev) => ({ ...prev, [milestoneId]: '' }));
+      setSuccessMsg('Evidence submitted.');
+      setTimeout(() => setSuccessMsg(''), 2500);
     } catch (e) {
-      setError(e.message || 'Failed to submit evidence');
+      setError(getErrorMessage(e, 'Failed to submit evidence'));
     }
+  }
+
+  function retryLoad() {
+    setLoading(true);
+    setError('');
+    authedFetch('/deals/join', { method: 'GET' })
+      .then(async (res) => {
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data?.ok || !data?.item) throw new Error(data?.error || 'Failed to load deal');
+        setDeal(data.item);
+      })
+      .catch((e) => setError(getErrorMessage(e, 'Failed to load deal')))
+      .finally(() => setLoading(false));
   }
 
   return (
@@ -138,7 +160,7 @@ export default function DealJoinPage() {
         <div>
           <h1>🤝 Deal join</h1>
           <p className="muted">
-            You can message and submit milestone evidence using this invite link.
+            You’re viewing this deal as the counterparty. Add messages and submit milestone evidence below.
             <HelpTip
               title="Privacy note"
               body="This link acts like a key. Don’t post it publicly."
@@ -157,10 +179,11 @@ export default function DealJoinPage() {
       </header>
 
       <main className="dealJoinMain">
-        {loading ? <div className="muted">Loading…</div> : null}
-        {error ? (
-          <div className="error" role="alert">
-            {error}
+        {loading ? <LoadingSpinner label="Loading deal…" /> : null}
+        {error ? <ErrorBanner message={error} onRetry={retryLoad} onDismiss={() => setError('')} /> : null}
+        {successMsg ? (
+          <div className="success" role="status" style={{ padding: '0.5rem 1rem', background: 'rgba(0,180,0,0.15)', borderRadius: 4 }}>
+            {successMsg}
           </div>
         ) : null}
 

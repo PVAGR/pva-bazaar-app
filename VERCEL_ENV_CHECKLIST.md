@@ -22,6 +22,7 @@ Do not store real secret values in git.
 - `TWITCH_CLIENT_ID`
 - `TWITCH_CLIENT_SECRET`
 - `TWITCH_REDIRECT_URI` (recommended exact match for Twitch console; example: `https://api.pvabazaar.org/api/oauth/twitch/callback`)
+- `TWITCH_EVENTSUB_SECRET` (EventSub webhook secret; callback URL: `https://api.pvabazaar.org/api/webhooks/twitch`)
 - `YOUTUBE_CLIENT_ID`
 - `YOUTUBE_CLIENT_SECRET`
 - `YOUTUBE_REDIRECT_URI` (recommended exact match for Google console; example: `https://api.pvabazaar.org/api/oauth/youtube/callback`)
@@ -30,6 +31,7 @@ Do not store real secret values in git.
 - `SMTP_USER`
 - `SMTP_PASS`
 - `LEGACY_MODE` (recommended `false`)
+- `SENTRY_DSN` (error monitoring; optional but recommended for production)
 
 ## GitHub Actions Secrets (for backend deployment workflow)
 

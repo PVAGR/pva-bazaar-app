@@ -167,7 +167,7 @@ router.get('/youtube/callback', async (req, res) => {
   }
 });
 
-// GET /api/oauth/youtube/live-status (auth required) - foundation (best-effort)
+// GET /api/oauth/youtube/live-status (auth required) - real LiveBroadcast API
 router.get('/youtube/live-status', authMiddleware, async (req, res) => {
   try {
     mustEnv('OAUTH_TOKEN_ENC_KEY');
@@ -178,19 +178,63 @@ router.get('/youtube/live-status', authMiddleware, async (req, res) => {
     const tokens = decryptJson(stored);
     if (!tokens?.access_token) return res.json({ ok: true, connected: false, live: false });
 
-    // YouTube "is live" logic is non-trivial; keep this endpoint as a placeholder
-    // that proves token validity and can be expanded to LiveBroadcast API later.
-    const me = await axios.get('https://www.googleapis.com/youtube/v3/channels', {
-      headers: { Authorization: `Bearer ${tokens.access_token}` },
+    const headers = { Authorization: `Bearer ${tokens.access_token}` };
+
+    // 1. Get channel (for channelTitle)
+    const channelsRes = await axios.get('https://www.googleapis.com/youtube/v3/channels', {
+      headers,
       params: { part: 'snippet', mine: 'true' },
       timeout: 15000,
     });
-    const channel = me?.data?.items?.[0] || null;
+    const channel = channelsRes?.data?.items?.[0] || null;
+
+    // 2. LiveBroadcasts list with broadcastStatus=active = currently live
+    const liveRes = await axios.get('https://www.googleapis.com/youtube/v3/liveBroadcasts', {
+      headers,
+      params: {
+        part: 'snippet,status,contentDetails',
+        broadcastStatus: 'active',
+        maxResults: 1,
+      },
+      timeout: 15000,
+    });
+    const liveBroadcast = liveRes?.data?.items?.[0] || null;
+
+    if (!liveBroadcast) {
+      return res.json({
+        ok: true,
+        connected: true,
+        live: false,
+        channelTitle: channel?.snippet?.title || '',
+      });
+    }
+
+    // Fetch viewer count from liveStreams if we have a stream id
+    let viewerCount = 0;
+    const streamId = liveBroadcast?.contentDetails?.boundStreamId;
+    if (streamId) {
+      try {
+        const streamRes = await axios.get('https://www.googleapis.com/youtube/v3/liveStreams', {
+          headers,
+          params: { part: 'statistics', id: streamId },
+          timeout: 10000,
+        });
+        const ls = streamRes?.data?.items?.[0];
+        if (ls?.statistics?.concurrentViewers) viewerCount = parseInt(ls.statistics.concurrentViewers, 10) || 0;
+      } catch {
+        // best-effort
+      }
+    }
+
     return res.json({
       ok: true,
       connected: true,
-      live: false,
+      live: true,
+      title: liveBroadcast?.snippet?.title || '',
       channelTitle: channel?.snippet?.title || '',
+      viewerCount,
+      startedAt: liveBroadcast?.snippet?.publishedAt || null,
+      broadcastId: liveBroadcast?.id || '',
     });
   } catch (err) {
     console.error('YouTube live status error:', err.response?.data || err.message);

@@ -1,6 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { apiDelete, apiGet, apiPost, apiPut } from '../lib/api';
+import { buildDealMessageTypedData, buildDealEvidenceTypedData, signTypedData } from '../lib/eip712';
+import { getErrorMessage, withRetry } from '../lib/errorUtils';
+import ErrorBanner from '../components/ErrorBanner.jsx';
+import LoadingSpinner from '../components/LoadingSpinner.jsx';
 import HelpTip from '../components/HelpTip.jsx';
 import AdminNav from '../components/AdminNav.jsx';
 import './DealsPage.css';
@@ -48,6 +52,8 @@ export default function DealsPage() {
   const [inviteLoading, setInviteLoading] = useState(false);
   const [evidenceDrafts, setEvidenceDrafts] = useState({});
   const [milestoneHashes, setMilestoneHashes] = useState({});
+  const [escrowPrepare, setEscrowPrepare] = useState(null);
+  const [escrowLoading, setEscrowLoading] = useState(false);
   const [wallet, setWallet] = useState({ address: '', chainId: '', connecting: false });
   const [requireSignature, setRequireSignature] = useState(true);
 
@@ -109,6 +115,12 @@ export default function DealsPage() {
     return String(sig || '');
   }
 
+  function parseChainId(cid) {
+    if (cid == null || cid === '') return 8453;
+    const n = typeof cid === 'string' && cid.startsWith('0x') ? parseInt(cid, 16) : Number(cid);
+    return Number.isFinite(n) ? n : 8453;
+  }
+
   async function sha256Hex(input) {
     try {
       if (!window.crypto?.subtle) return '';
@@ -126,7 +138,7 @@ export default function DealsPage() {
     setLoading(true);
     setError('');
     try {
-      const res = await apiGet('/deals', { params: { limit: 50 } });
+      const res = await withRetry(() => apiGet('/deals', { params: { limit: 50 } }));
       if (res?.ok && Array.isArray(res.items)) {
         setItems(res.items);
       } else {
@@ -134,8 +146,7 @@ export default function DealsPage() {
         setError(res?.error || res?.message || 'Failed to load deals');
       }
     } catch (e) {
-      const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
-      setError(serverMsg || e.message || 'Failed to load deals');
+      setError(getErrorMessage(e, 'Failed to load deals. Check your connection and try again.'));
     } finally {
       setLoading(false);
     }
@@ -150,8 +161,7 @@ export default function DealsPage() {
       if (res?.ok && res.item) setSelected(res.item);
       else setError(res?.error || res?.message || 'Failed to load deal');
     } catch (e) {
-      const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
-      setError(serverMsg || e.message || 'Failed to load deal');
+      setError(getErrorMessage(e, 'Failed to load deal'));
     }
   }
 
@@ -397,12 +407,14 @@ export default function DealsPage() {
     try {
       let signature = '';
       let authorWallet = '';
+      let typedData = null;
       if (wallet.address && requireSignature) {
-        const payload = `PVA Bazaar Deal Message\nDealId: ${selected._id}\nText: ${text}\nTime: ${new Date().toISOString()}`;
-        signature = await personalSign(payload);
+        const ts = new Date().toISOString();
+        typedData = buildDealMessageTypedData(parseChainId(wallet.chainId), selected._id, text, ts);
+        signature = await signTypedData(typedData, wallet.address);
         authorWallet = wallet.address;
       }
-      const res = await apiPost(`/deals/${selected._id}/messages`, { text, authorWallet, signature });
+      const res = await apiPost(`/deals/${selected._id}/messages`, { text, authorWallet, signature, typedData });
       if (!res?.ok || !res.item) throw new Error(res?.error || res?.message || 'Failed to add message');
       setSelected(res.item);
       setNewMessage('');
@@ -442,15 +454,18 @@ export default function DealsPage() {
     try {
       let signature = '';
       let authorWallet = '';
+      let typedData = null;
       if (wallet.address && requireSignature) {
-        const payload = `PVA Bazaar Deal Evidence\nDealId: ${selected._id}\nMilestoneId: ${milestoneId}\nEvidence: ${evidenceValue}\nTime: ${new Date().toISOString()}`;
-        signature = await personalSign(payload);
+        const ts = new Date().toISOString();
+        typedData = buildDealEvidenceTypedData(parseChainId(wallet.chainId), selected._id, milestoneId, evidenceValue, ts);
+        signature = await signTypedData(typedData, wallet.address);
         authorWallet = wallet.address;
       }
       const res = await apiPost(`/deals/${selected._id}/milestones/${milestoneId}/evidence`, {
         evidenceValue,
         authorWallet,
         signature,
+        typedData,
       });
       if (!res?.ok || !res.item) throw new Error(res?.error || res?.message || 'Failed to submit evidence');
       setSelected(res.item);
@@ -509,7 +524,7 @@ export default function DealsPage() {
       <AdminNav />
 
       <main className="deals-main">
-        {error ? <div className="error" role="alert">{error}</div> : null}
+        {error ? <ErrorBanner message={error} onRetry={loadDeals} onDismiss={() => setError('')} /> : null}
 
         <section className="card">
           <h2>
@@ -823,7 +838,7 @@ export default function DealsPage() {
 
         <section className="card">
           <h2>Your deals</h2>
-          {loading ? <div className="muted">Loading…</div> : null}
+          {loading ? <LoadingSpinner label="Loading deals…" /> : null}
           {!loading && items.length === 0 ? <div className="muted">No deals yet.</div> : null}
           <div className="deals-list">
             {items.map((d) => (
@@ -842,6 +857,21 @@ export default function DealsPage() {
         {selected ? (
           <section className="card">
             <h2>Deal workspace</h2>
+            {selected.counterpartyAccess?.joinedAt ? (
+              <div
+                className="counterparty-joined"
+                role="status"
+                style={{
+                  padding: '0.75rem 1rem',
+                  background: 'rgba(0,180,0,0.12)',
+                  borderRadius: 6,
+                  marginBottom: '1rem',
+                  border: '1px solid rgba(0,180,0,0.3)',
+                }}
+              >
+                ✓ Counterparty joined {new Date(selected.counterpartyAccess.joinedAt).toLocaleString()}
+              </div>
+            ) : null}
             <div className="workspace">
               <div className="workspace-col">
                 <h3>
@@ -922,7 +952,14 @@ export default function DealsPage() {
               </div>
 
               <div className="workspace-col">
-                <h3>Notes / Messages</h3>
+                <h3>
+                  Activity log
+                  <HelpTip
+                    title="Activity log"
+                    body="All messages and system events (evidence, invites, status changes) appear here in order."
+                    example="Owner: tracking number submitted"
+                  />
+                </h3>
                 <div className="messages">
                   {(selected.messages || []).slice(-50).map((msg, idx) => (
                     <div key={msg._id || idx} className="message">
@@ -948,44 +985,61 @@ export default function DealsPage() {
                 </p>
 
                 <h3>
-                  Escrow contract draft (foundation){' '}
+                  Escrow on Base{' '}
                   <HelpTip
-                    title="Contract draft"
-                    body="This is a structured draft of what an escrow smart contract would need (payments + milestone hashes). It does not deploy anything yet."
-                    example="Base chainId 8453"
+                    title="Escrow deployment"
+                    body="Prepare deployment params (payments, milestone hashes) for an escrow contract. Deploy via your wallet on Base (chainId 8453), then link the contract address here."
+                    example="Use Prepare to fetch params, then deploy in Remix or another tool"
                   />
                 </h3>
-                <pre className="json">
-                  {JSON.stringify(
-                    {
-                      chainId: selected.chainId || 8453,
-                      tokenAddress: selected.tokenAddress || '',
-                      totalAmount: selected.totalAmount || 0,
-                      currency: selected.currency || 'USD',
-                      parties: {
-                        ownerId: selected.ownerId || '',
-                        mediatorId: selected.mediatorId || '',
-                        counterpartyWallet: selected.counterparty?.walletAddress || '',
-                      },
-                      payments: (selected.payments || []).map((p) => ({
-                        label: p.label || '',
-                        amount: p.amount || 0,
-                        currency: p.currency || selected.currency || 'USD',
-                        status: p.status || 'pending',
-                      })),
-                      milestones: (selected.milestones || []).map((m) => ({
-                        id: m._id || '',
-                        title: m.title || '',
-                        evidenceType: m.evidenceType || 'none',
-                        evidenceValue: m.evidenceValue || '',
-                        status: m.status || 'pending',
-                        sha256: milestoneHashes[String(m._id || m.title || '')] || '',
-                      })),
-                    },
-                    null,
-                    2
-                  )}
-                </pre>
+                {!escrowPrepare ? (
+                  <div>
+                    <p className="muted small">
+                      Connect a wallet and ensure you're on Base (chain 8453) for deployment.
+                    </p>
+                    <button
+                      className="btn primary"
+                      type="button"
+                      onClick={handlePrepareEscrow}
+                      disabled={escrowLoading}
+                    >
+                      {escrowLoading ? 'Preparing…' : 'Prepare escrow params'}
+                    </button>
+                  </div>
+                ) : (
+                  <div>
+                    <pre className="json">{JSON.stringify(escrowPrepare, null, 2)}</pre>
+                    {selected.contractAddress ? (
+                      <p className="muted small">
+                        Linked: <code>{selected.contractAddress}</code>
+                      </p>
+                    ) : (
+                      <div className="row" style={{ gap: '0.5rem', marginTop: '0.5rem' }}>
+                        <input
+                          placeholder="0x… deployed contract address"
+                          style={{ flex: 1 }}
+                          onBlur={(e) => {
+                            const v = e.target.value?.trim();
+                            if (v) handleLinkContract(v);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              const v = e.target.value?.trim();
+                              if (v) handleLinkContract(v);
+                            }
+                          }}
+                        />
+                        <button
+                          className="btn ghost"
+                          type="button"
+                          onClick={() => setEscrowPrepare(null)}
+                        >
+                          Clear
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </section>
