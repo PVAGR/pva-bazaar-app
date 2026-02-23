@@ -1,0 +1,18 @@
+.accountMain {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.accountHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.accountActions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+

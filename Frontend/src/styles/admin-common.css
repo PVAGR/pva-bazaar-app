@@ -1,0 +1,92 @@
+/* Shared admin-area UI primitives (used by Login/Account/etc.). */
+.admin-page .card {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  border-radius: 12px;
+  padding: 16px;
+  margin: 16px 0;
+}
+
+.admin-page .muted {
+  color: var(--text-secondary);
+}
+
+.admin-page .row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.admin-page .form {
+  display: grid;
+  gap: 12px;
+}
+
+.admin-page .form label {
+  display: grid;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.admin-page .form input,
+.admin-page .form textarea,
+.admin-page .form select {
+  font: inherit;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.admin-page .btn {
+  font: inherit;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.admin-page .btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.admin-page .btn.ghost {
+  background: transparent;
+}
+
+.admin-page .notice {
+  background: rgba(255, 193, 7, 0.12);
+  border: 1px solid rgba(255, 193, 7, 0.35);
+  padding: 12px;
+  border-radius: 8px;
+  margin: 12px 0;
+}
+
+.admin-page .error {
+  background: rgba(231, 76, 60, 0.12);
+  border: 1px solid rgba(231, 76, 60, 0.35);
+  color: var(--text-primary);
+  padding: 12px;
+  border-radius: 8px;
+  margin: 12px 0;
+}
+
+.admin-page .check {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.admin-page .small {
+  font-size: 0.85rem;
+}
+

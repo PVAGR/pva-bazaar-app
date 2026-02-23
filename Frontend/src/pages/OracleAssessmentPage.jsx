@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { apiPost, apiGet } from '../lib/api';
 import Layout from '../components/Layout';
 import HelpTip from '../components/HelpTip.jsx';
+import { getToken } from '../lib/auth';
 
 export default function OracleAssessmentPage() {
   const [step, setStep] = useState(1);
@@ -72,8 +73,7 @@ export default function OracleAssessmentPage() {
 
     try {
       // Get auth token from localStorage (same keys used across the app)
-      const token =
-        localStorage.getItem('token') || localStorage.getItem('authToken') || localStorage.getItem('jwt');
+      const token = getToken();
       if (!token) {
         throw new Error('Please log in to create an assessment');
       }

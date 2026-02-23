@@ -1,0 +1,29 @@
+.loginMain {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.loginHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.loginActions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.loginTabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.loginTabs .active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+

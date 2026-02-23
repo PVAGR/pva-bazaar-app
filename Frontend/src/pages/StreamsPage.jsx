@@ -4,6 +4,7 @@ import { apiDelete, apiGet, apiPost, apiPut } from '../lib/api';
 import { ENV } from '../config/env';
 import HelpTip from '../components/HelpTip.jsx';
 import AdminNav from '../components/AdminNav.jsx';
+import { getToken } from '../lib/auth';
 import './StreamsPage.css';
 
 const PLATFORM_OPTIONS = ['none', 'youtube', 'twitch', 'kick', 'facebook', 'custom'];
@@ -45,7 +46,7 @@ export default function StreamsPage() {
 
   const tokenPresent = useMemo(() => {
     if (typeof window === 'undefined') return false;
-    return !!(localStorage.getItem('token') || localStorage.getItem('authToken') || localStorage.getItem('jwt'));
+    return !!getToken();
   }, []);
   const apiBase = ENV.API_URL.replace(/\/+$/, '');
 
@@ -420,7 +421,7 @@ export default function StreamsPage() {
 
         {!tokenPresent ? (
           <div className="notice">
-            <b>Not authenticated for streams yet.</b> Login in <code>/admin</code> first.
+            <b>Not authenticated for streams yet.</b> Login in <code>/login</code> first.
           </div>
         ) : null}
 

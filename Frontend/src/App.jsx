@@ -1,6 +1,6 @@
 import AdminOrdersPage from './pages/AdminOrdersPage.jsx';
 import React from 'react';
-import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Layout from './components/Layout.jsx';
 
 import AboutPage from './pages/AboutPage.jsx';
@@ -14,13 +14,19 @@ import OracleAssessmentPage from './pages/OracleAssessmentPage.jsx';
 import ListItemPage from './pages/ListItemPage.jsx';
 import StreamsPage from './pages/StreamsPage.jsx';
 import DealsPage from './pages/DealsPage.jsx';
+import LoginPage from './pages/LoginPage.jsx';
+import RegisterPage from './pages/RegisterPage.jsx';
+import AccountPage from './pages/AccountPage.jsx';
+import { getToken } from './lib/auth.js';
 import './base.css';
 
 function ProtectedRoute({ children }) {
-  const token =
-    typeof window !== 'undefined' &&
-    (localStorage.getItem('token') || localStorage.getItem('authToken') || localStorage.getItem('jwt'));
-  if (!token) return <Navigate to="/admin" replace />;
+  const location = useLocation();
+  const token = getToken();
+  if (!token) {
+    const next = encodeURIComponent(`${location.pathname}${location.search}`);
+    return <Navigate to={`/login?next=${next}`} replace />;
+  }
   return children;
 }
 
@@ -33,6 +39,8 @@ export default function App() {
         <Route path="/about" element={<AboutPage />} />
         <Route path="/admin" element={<AdminPage />} />
         <Route path="/admin/orders" element={<AdminOrdersPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
         <Route path="/marketplace" element={<MarketplacePage />} />
         <Route path="/marketplace/:slugOrId" element={<MarketplaceItemPage />} />
         <Route
@@ -57,6 +65,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <DealsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/account"
+          element={
+            <ProtectedRoute>
+              <AccountPage />
             </ProtectedRoute>
           }
         />

@@ -1,0 +1,184 @@
+import React, { useMemo, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import HelpTip from '../components/HelpTip.jsx';
+import { apiFetch, apiPost } from '../lib/api';
+import { setToken } from '../lib/auth';
+import '../styles/admin-common.css';
+import './LoginPage.css';
+
+export default function LoginPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const next = useMemo(() => {
+    const params = new URLSearchParams(location.search || '');
+    return params.get('next') || '/admin';
+  }, [location.search]);
+
+  const [mode, setMode] = useState('admin'); // 'admin' | 'user'
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const [adminCreds, setAdminCreds] = useState({ username: '', password: '' });
+  const [userCreds, setUserCreds] = useState({ email: '', password: '' });
+
+  async function handleAdminLogin(e) {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    try {
+      const res = await apiFetch('/admin/login', {
+        method: 'POST',
+        body: JSON.stringify({
+          username: adminCreds.username.trim(),
+          password: adminCreds.password.trim(),
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data?.token) throw new Error(data?.message || 'Invalid username or password');
+      setToken(data.token);
+      sessionStorage.setItem('admin-auth', 'authenticated');
+      sessionStorage.setItem('admin-auth-version', 'v2');
+      navigate(next, { replace: true });
+    } catch (err) {
+      setError(err.message || 'Login failed');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleUserLogin(e) {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    try {
+      const res = await apiPost('/auth/login', {
+        email: userCreds.email.trim(),
+        password: userCreds.password,
+      });
+      if (!res?.ok || !res?.token) throw new Error(res?.message || 'Invalid email or password');
+      setToken(res.token);
+      navigate(next, { replace: true });
+    } catch (err) {
+      const serverMsg = err?.response?.data?.message || err?.response?.data?.error;
+      setError(serverMsg || err.message || 'Login failed');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="loginPage admin-page authenticated dark-theme">
+      <header className="admin-header loginHeader">
+        <div>
+          <h1>🔐 Sign in</h1>
+          <p className="muted">
+            Use Admin login for private playtesting, or User login for your personal account.
+          </p>
+        </div>
+        <div className="loginActions">
+          <Link to="/" className="btn ghost">
+            ← Home
+          </Link>
+          <Link to="/admin" className="btn ghost">
+            Archive Admin
+          </Link>
+        </div>
+      </header>
+
+      <main className="loginMain">
+        <section className="card">
+          <div className="loginTabs" role="tablist" aria-label="Login type">
+            <button
+              type="button"
+              className={`btn ghost ${mode === 'admin' ? 'active' : ''}`}
+              onClick={() => setMode('admin')}
+            >
+              Admin login
+            </button>
+            <button
+              type="button"
+              className={`btn ghost ${mode === 'user' ? 'active' : ''}`}
+              onClick={() => setMode('user')}
+            >
+              User login
+            </button>
+          </div>
+
+          {error ? (
+            <div className="error" role="alert">
+              {error}
+            </div>
+          ) : null}
+
+          {mode === 'admin' ? (
+            <form className="form" onSubmit={handleAdminLogin}>
+              <label>
+                <span>
+                  Username
+                  <HelpTip title="Admin username" body="Your private admin username (from env)." example="admin" />
+                </span>
+                <input
+                  value={adminCreds.username}
+                  onChange={(e) => setAdminCreds((p) => ({ ...p, username: e.target.value }))}
+                  autoComplete="username"
+                />
+              </label>
+              <label>
+                <span>
+                  Password
+                  <HelpTip title="Admin password" body="Your private admin password (from env)." example="********" />
+                </span>
+                <input
+                  type="password"
+                  value={adminCreds.password}
+                  onChange={(e) => setAdminCreds((p) => ({ ...p, password: e.target.value }))}
+                  autoComplete="current-password"
+                />
+              </label>
+              <div className="row">
+                <button className="btn primary" type="submit" disabled={loading}>
+                  {loading ? 'Signing in…' : 'Sign in (Admin)'}
+                </button>
+              </div>
+            </form>
+          ) : (
+            <form className="form" onSubmit={handleUserLogin}>
+              <label>
+                <span>
+                  Email
+                  <HelpTip title="Email" body="The email you registered with." example="you@example.com" />
+                </span>
+                <input
+                  value={userCreds.email}
+                  onChange={(e) => setUserCreds((p) => ({ ...p, email: e.target.value }))}
+                  autoComplete="email"
+                />
+              </label>
+              <label>
+                <span>
+                  Password
+                  <HelpTip title="Password" body="Your user account password." example="********" />
+                </span>
+                <input
+                  type="password"
+                  value={userCreds.password}
+                  onChange={(e) => setUserCreds((p) => ({ ...p, password: e.target.value }))}
+                  autoComplete="current-password"
+                />
+              </label>
+              <div className="row">
+                <button className="btn primary" type="submit" disabled={loading}>
+                  {loading ? 'Signing in…' : 'Sign in (User)'}
+                </button>
+                <Link to={`/register?next=${encodeURIComponent(next)}`} className="btn ghost">
+                  Create account
+                </Link>
+              </div>
+            </form>
+          )}
+        </section>
+      </main>
+    </div>
+  );
+}
+

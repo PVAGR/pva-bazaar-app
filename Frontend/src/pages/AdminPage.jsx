@@ -4,6 +4,7 @@ import { createArchiveEntry, fetchArchiveEntries, deleteArchiveEntry, apiGet, ap
 import { ENV } from '../config/env';
 import AdminNav from '../components/AdminNav.jsx';
 import HelpTip from '../components/HelpTip.jsx';
+import { clearToken, setToken } from '../lib/auth';
 import './AdminPage.css';
 
 export default function AdminPage() {
@@ -141,7 +142,7 @@ export default function AdminPage() {
           // can call authenticated endpoints using the shared axios interceptor.
           const data = await res.json().catch(() => ({}));
           if (data && data.token) {
-            localStorage.setItem('token', data.token);
+            setToken(data.token);
           }
           setIsAuthenticated(true);
           sessionStorage.setItem('admin-auth', 'authenticated');
@@ -165,9 +166,7 @@ export default function AdminPage() {
     setIsAuthenticated(false);
     sessionStorage.removeItem('admin-auth');
     sessionStorage.removeItem('admin-auth-version');
-    localStorage.removeItem('token');
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('jwt');
+    clearToken();
     setUsername('');
     setPassword('');
   };

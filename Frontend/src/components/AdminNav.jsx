@@ -13,6 +13,7 @@ export default function AdminNav() {
     { to: '/deals', label: 'Deals' },
     { to: '/items/new', label: 'Sell' },
     { to: '/admin/orders', label: 'Orders' },
+    { to: '/account', label: 'Account' },
   ];
 
   return (

@@ -1,0 +1,18 @@
+.registerMain {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.registerHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.registerActions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+

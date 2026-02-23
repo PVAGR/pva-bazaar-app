@@ -1,5 +1,6 @@
 import axios from "axios";
 import { ENV } from "../config/env";
+import { clearToken, getToken } from "./auth";
 
 // Internal backend-only Axios client
 const api = axios.create({
@@ -11,10 +12,7 @@ const api = axios.create({
 // --- Request: attach token (if present) ---
 api.interceptors.request.use(
   (config) => {
-    const token =
-      localStorage.getItem("token") ||
-      localStorage.getItem("authToken") ||
-      localStorage.getItem("jwt");
+    const token = getToken();
 
     if (token) {
       config.headers = config.headers || {};
@@ -47,10 +45,8 @@ api.interceptors.response.use(
 
     // 401: redirect to admin login
     if (status === 401) {
-      const loginPath = "/admin";
-      localStorage.removeItem("token");
-      localStorage.removeItem("authToken");
-      localStorage.removeItem("jwt");
+      const loginPath = "/#/login";
+      clearToken();
       window.location.assign(loginPath);
       return Promise.reject(error);
     }
