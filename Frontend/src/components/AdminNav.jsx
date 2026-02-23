@@ -8,10 +8,14 @@ import './AdminNav.css';
  */
 export default function AdminNav() {
   const items = [
+    { to: '/broker', label: 'Hub' },
+    { to: '/chat', label: 'Chat' },
     { to: '/admin', label: 'Admin' },
-    { to: '/onboarding', label: 'Guide' },
-    { to: '/streams', label: 'Streams' },
+    { to: '/commodities', label: 'Commodities' },
+    { to: '/contacts', label: 'Contacts' },
+    { to: '/templates', label: 'Templates' },
     { to: '/deals', label: 'Deals' },
+    { to: '/streams', label: 'Streams' },
     { to: '/items/new', label: 'Sell' },
     { to: '/admin/orders', label: 'Orders' },
     { to: '/account', label: 'Account' },

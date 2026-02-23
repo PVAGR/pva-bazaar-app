@@ -240,6 +240,10 @@ const journalRoutes = require('../routes/journal');
 const didRoutes = require('../routes/did');
 const databasesRoutes = require('../routes/databases');
 const dealsRoutes = require('../routes/deals');
+const commoditiesRoutes = require('../routes/commodities');
+const contactsRoutes = require('../routes/contacts');
+const templatesRoutes = require('../routes/templates');
+const chatRoutes = require('../routes/chat');
 const oauthTwitchRoutes = require('../routes/oauthTwitch');
 const oauthYouTubeRoutes = require('../routes/oauthYouTube');
 // Oracle Assessment routes
@@ -317,6 +321,10 @@ app.use('/api/journal', journalRoutes);
 app.use('/api/did', didRoutes);
 app.use('/api/databases', databasesRoutes);
 app.use('/api/deals', dealsRoutes);
+app.use('/api/commodities', commoditiesRoutes);
+app.use('/api/contacts', contactsRoutes);
+app.use('/api/templates', templatesRoutes);
+app.use('/api/chat', chatRoutes);
 app.use('/api/oauth', oauthTwitchRoutes);
 app.use('/api/oauth', oauthYouTubeRoutes);
 // ORACLE ASSESSMENT ROUTES

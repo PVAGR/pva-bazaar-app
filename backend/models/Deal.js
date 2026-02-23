@@ -77,6 +77,11 @@ const dealSchema = new mongoose.Schema(
 
     status: { type: String, enum: ['draft', 'active', 'completed', 'cancelled'], default: 'draft' },
 
+    // 4-step pipeline: Procurement → Payment → Shipping → Sale
+    stage: { type: String, enum: ['procurement', 'payment', 'shipping', 'sale'], default: 'procurement' },
+    commodityId: { type: mongoose.Schema.Types.ObjectId, ref: 'Commodity' },
+    contactIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Contact' }],
+
     // Counterparty access (foundation for "join link" flow).
     counterpartyAccess: {
       inviteJtiHash: { type: String, default: '' },

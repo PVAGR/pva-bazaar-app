@@ -146,7 +146,9 @@ router.get('/', authMiddleware, async (req, res) => {
     const items = await Deal.find(query)
       .sort({ createdAt: -1 })
       .limit(parseInt(limit, 10))
-      .skip(parseInt(skip, 10));
+      .skip(parseInt(skip, 10))
+      .populate('commodityId', 'name category')
+      .populate('contactIds', 'name company type');
 
     const total = await Deal.countDocuments(query);
 
@@ -184,6 +186,9 @@ router.post('/', authMiddleware, async (req, res) => {
       chainId: req.body?.chainId ? Number(req.body.chainId) : undefined,
       tokenAddress: sanitize(req.body?.tokenAddress || ''),
       status: sanitize(req.body?.status || 'draft') || 'draft',
+      stage: sanitize(req.body?.stage || 'procurement') || 'procurement',
+      commodityId: req.body?.commodityId || undefined,
+      contactIds: Array.isArray(req.body?.contactIds) ? req.body.contactIds : [],
       payments: payments
         .filter((p) => p && typeof p === 'object')
         .map((p) => ({
@@ -382,7 +387,9 @@ router.post('/:id/prepare-escrow', authMiddleware, async (req, res) => {
 // GET /api/deals/:id - get single deal
 router.get('/:id', authMiddleware, async (req, res) => {
   try {
-    const deal = await Deal.findOne({ _id: req.params.id, ownerId: req.user.id });
+    const deal = await Deal.findOne({ _id: req.params.id, ownerId: req.user.id })
+      .populate('commodityId', 'name category')
+      .populate('contactIds', 'name company type');
     if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
     res.json({ ok: true, item: toPublicDeal(deal) });
   } catch (err) {
@@ -397,10 +404,10 @@ router.put('/:id', authMiddleware, async (req, res) => {
     const deal = await Deal.findOne({ _id: req.params.id, ownerId: req.user.id });
     if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
 
-    const allowed = ['title', 'description', 'counterparty', 'totalAmount', 'currency', 'mediatorFeePct', 'chainId', 'tokenAddress', 'contractAddress', 'status'];
+    const allowed = ['title', 'description', 'counterparty', 'totalAmount', 'currency', 'mediatorFeePct', 'chainId', 'tokenAddress', 'contractAddress', 'status', 'stage', 'commodityId', 'contactIds'];
     for (const key of allowed) {
       if (req.body?.[key] === undefined) continue;
-      if (key === 'title' || key === 'description' || key === 'currency' || key === 'tokenAddress' || key === 'contractAddress' || key === 'status') {
+      if (key === 'title' || key === 'description' || key === 'currency' || key === 'tokenAddress' || key === 'contractAddress' || key === 'status' || key === 'stage') {
         deal[key] = sanitize(req.body[key]);
       } else if (key === 'counterparty') {
         const cp = req.body.counterparty || {};
@@ -412,6 +419,10 @@ router.put('/:id', authMiddleware, async (req, res) => {
         };
       } else if (key === 'chainId' || key === 'totalAmount' || key === 'mediatorFeePct') {
         deal[key] = Number(req.body[key]);
+      } else if (key === 'commodityId') {
+        deal.commodityId = req.body.commodityId || undefined;
+      } else if (key === 'contactIds') {
+        deal.contactIds = Array.isArray(req.body.contactIds) ? req.body.contactIds : [];
       } else {
         deal[key] = req.body[key];
       }

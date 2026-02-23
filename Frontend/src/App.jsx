@@ -15,6 +15,11 @@ import ListItemPage from './pages/ListItemPage.jsx';
 import StreamsPage from './pages/StreamsPage.jsx';
 import DealsPage from './pages/DealsPage.jsx';
 import DealJoinPage from './pages/DealJoinPage.jsx';
+import BrokerHubPage from './pages/BrokerHubPage.jsx';
+import CommoditiesPage from './pages/CommoditiesPage.jsx';
+import ContactsPage from './pages/ContactsPage.jsx';
+import TemplatesPage from './pages/TemplatesPage.jsx';
+import ChatPage from './pages/ChatPage.jsx';
 import LoginPage from './pages/LoginPage.jsx';
 import RegisterPage from './pages/RegisterPage.jsx';
 import AccountPage from './pages/AccountPage.jsx';
@@ -54,6 +59,7 @@ export default function App() {
           }
         />
         <Route path="/oracle" element={<OracleAssessmentPage />} />
+        <Route path="/chat" element={<ChatPage />} />
         <Route
           path="/streams"
           element={
@@ -71,6 +77,38 @@ export default function App() {
           }
         />
         <Route path="/deals/join" element={<DealJoinPage />} />
+        <Route
+          path="/broker"
+          element={
+            <ProtectedRoute>
+              <BrokerHubPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/commodities"
+          element={
+            <ProtectedRoute>
+              <CommoditiesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/contacts"
+          element={
+            <ProtectedRoute>
+              <ContactsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/templates"
+          element={
+            <ProtectedRoute>
+              <TemplatesPage />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/account"
           element={

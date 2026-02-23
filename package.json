@@ -32,6 +32,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "prepare": "node -e \"const fs=require('fs');const cp=require('child_process');if(fs.existsSync('.git')){try{cp.execSync('husky install',{stdio:'inherit'})}catch(e){console.warn('husky install skipped')}}\"",
+    "seed:templates": "node scripts/seed-templates.js",
     "qa:full": "./qa/scripts/orchestrator.sh full",
     "qa:quick": "./qa/scripts/orchestrator.sh quick",
     "qa:performance": "./qa/scripts/orchestrator.sh performance",

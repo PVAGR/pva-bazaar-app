@@ -30,6 +30,9 @@ export default function DealsPage() {
   const [draft, setDraft] = useState({
     title: '',
     description: '',
+    stage: 'procurement',
+    commodityId: '',
+    contactIds: [],
     counterpartyName: '',
     counterpartyCountry: '',
     counterpartyWallet: '',
@@ -56,6 +59,8 @@ export default function DealsPage() {
   const [escrowLoading, setEscrowLoading] = useState(false);
   const [wallet, setWallet] = useState({ address: '', chainId: '', connecting: false });
   const [requireSignature, setRequireSignature] = useState(true);
+  const [commodities, setCommodities] = useState([]);
+  const [contacts, setContacts] = useState([]);
 
   const CHAINS = [
     { id: 1, name: 'Ethereum', hex: '0x1' },
@@ -167,6 +172,11 @@ export default function DealsPage() {
 
   useEffect(() => {
     loadDeals();
+  }, []);
+
+  useEffect(() => {
+    apiGet('/commodities', { params: { limit: 100 } }).then((r) => r?.ok && Array.isArray(r.items) && setCommodities(r.items)).catch(() => {});
+    apiGet('/contacts', { params: { limit: 100 } }).then((r) => r?.ok && Array.isArray(r.items) && setContacts(r.items)).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -298,6 +308,9 @@ export default function DealsPage() {
       setDraft({
         title: '',
         description: '',
+        stage: 'procurement',
+        commodityId: '',
+        contactIds: [],
         counterpartyName: '',
         counterpartyCountry: profile?.preferences?.defaultCountry || '',
         counterpartyWallet: '',
@@ -359,6 +372,9 @@ export default function DealsPage() {
       const payload = {
         title: draft.title.trim(),
         description: draft.description.trim(),
+        stage: draft.stage || 'procurement',
+        commodityId: draft.commodityId || undefined,
+        contactIds: Array.isArray(draft.contactIds) ? draft.contactIds.filter(Boolean) : [],
         counterparty: {
           name: draft.counterpartyName.trim(),
           country: draft.counterpartyCountry.trim(),
@@ -659,6 +675,29 @@ export default function DealsPage() {
               <textarea rows={3} value={draft.description} onChange={(e) => setDraft((p) => ({ ...p, description: e.target.value }))} />
             </label>
 
+            <label>
+              <span className="labelRow">
+                Stage (4-step pipeline)
+                <HelpTip title="Pipeline stage" body="Procurement (find supplier) → Payment (buy items) → Shipping (items to you) → Sale (you sell)." example="procurement" />
+              </span>
+              <select value={draft.stage || 'procurement'} onChange={(e) => setDraft((p) => ({ ...p, stage: e.target.value }))}>
+                <option value="procurement">1. Procurement</option>
+                <option value="payment">2. Payment</option>
+                <option value="shipping">3. Shipping</option>
+                <option value="sale">4. Sale</option>
+              </select>
+            </label>
+
+            <label>
+              <span className="labelRow">Commodity (optional)</span>
+              <select value={draft.commodityId || ''} onChange={(e) => setDraft((p) => ({ ...p, commodityId: e.target.value || '' }))}>
+                <option value="">— None —</option>
+                {commodities.map((c) => (
+                  <option key={c._id} value={c._id}>{c.name} ({c.category || '—'})</option>
+                ))}
+              </select>
+            </label>
+
             <div className="grid2">
               <label>
                 <span className="labelRow">
@@ -848,7 +887,7 @@ export default function DealsPage() {
                 onClick={() => setSelectedId(d._id)}
               >
                 <div className="deal-title">{d.title}</div>
-                <div className="muted small">{d.status || 'draft'} · {d.counterparty?.country || '—'} · {d.currency || 'USD'} {d.totalAmount || 0}</div>
+                <div className="muted small">{d.stage || 'procurement'} · {d.status || 'draft'} · {d.counterparty?.country || '—'} · {d.currency || 'USD'} {d.totalAmount || 0}</div>
               </button>
             ))}
           </div>
@@ -872,6 +911,35 @@ export default function DealsPage() {
                 ✓ Counterparty joined {new Date(selected.counterpartyAccess.joinedAt).toLocaleString()}
               </div>
             ) : null}
+            <div className="subcard" style={{ marginBottom: '1rem' }}>
+              <div className="subcard__title">Pipeline</div>
+              <div className="row rowWrap">
+                <label>
+                  <span className="muted small">Stage</span>
+                  <select
+                    value={selected.stage || 'procurement'}
+                    onChange={async (e) => {
+                      const v = e.target.value;
+                      try {
+                        const res = await apiPut(`/deals/${selected._id}`, { stage: v });
+                        if (res?.ok && res.item) setSelected(res.item);
+                      } catch {}
+                    }}
+                  >
+                    <option value="procurement">1. Procurement</option>
+                    <option value="payment">2. Payment</option>
+                    <option value="shipping">3. Shipping</option>
+                    <option value="sale">4. Sale</option>
+                  </select>
+                </label>
+                {selected.commodityId?.name ? (
+                  <span className="muted small">Commodity: {selected.commodityId.name}</span>
+                ) : null}
+                {selected.contactIds?.length > 0 ? (
+                  <span className="muted small">Contacts: {selected.contactIds.map((c) => c.name).join(', ')}</span>
+                ) : null}
+              </div>
+            </div>
             <div className="workspace">
               <div className="workspace-col">
                 <h3>
