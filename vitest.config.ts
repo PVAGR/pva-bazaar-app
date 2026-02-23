@@ -7,7 +7,18 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./qa/config/vitest.setup.ts'],
     include: ['**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    exclude: ['node_modules', 'dist', 'build', 'out', '.next', 'qa/backstop', 'qa/reports'],
+    exclude: [
+      'node_modules',
+      'dist',
+      'build',
+      'out',
+      '.next',
+      'qa/backstop',
+      'qa/reports',
+      // Playwright specs are not Vitest tests
+      'tests/e2e*.spec.*',
+      'tests/**/*.e2e.*',
+    ],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],

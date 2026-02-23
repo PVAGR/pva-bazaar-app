@@ -20,11 +20,12 @@
       }
     ],
     "paths": {
+      "@pva/ui": ["./packages/ui/src/index.ts"],
       "@pva/ui/*": ["./packages/ui/*"],
       "@pva/config/*": ["./packages/config/*"],
       "@pva/emails/*": ["./packages/emails/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules", "demo/**"]
+  "exclude": ["node_modules", "demo/**", "pvabazaar-livestream/**"]
 }

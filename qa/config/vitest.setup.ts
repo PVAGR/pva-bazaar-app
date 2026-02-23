@@ -8,6 +8,14 @@ try {
   // testing library not installed; skip cleanup
 }
 
+// Optional: extend expect() with jest-dom matchers if installed
+try {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  require('@testing-library/jest-dom/vitest');
+} catch {
+  // jest-dom not installed; skip
+}
+
 // Global test setup for PVA Bazaar
 
 // Cleanup after each test

@@ -41,3 +41,6 @@ pva-bazaar-app.env
 *SUMMARY*.md
 *magnum-opus-organized.html
 Frontend/dist/
+
+# QA / test reports (generated)
+qa/reports/

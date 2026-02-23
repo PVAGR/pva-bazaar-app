@@ -123,6 +123,24 @@ const searchOk =
 if (!searchOk) fail(`/api/search/text failed (${search.res.status})`);
 else console.log("✅ search ok");
 
+// Auth-required endpoints: accept 401 as "route exists".
+const deals = await getJson(`${BACKEND}/api/deals`);
+if (deals.res.status === 401) console.log("✅ deals route ok (401 unauth as expected)");
+else if (deals.res.ok && deals.json?.ok) console.log("✅ deals ok");
+else fail(`/api/deals failed (${deals.res.status})`);
+
+const profile = await getJson(`${BACKEND}/api/users/profile`);
+if (profile.res.status === 401) console.log("✅ users/profile route ok (401 unauth as expected)");
+else if (profile.res.ok && profile.json?.ok) console.log("✅ users/profile ok");
+else fail(`/api/users/profile failed (${profile.res.status})`);
+
+const twitchStatus = await getJson(`${BACKEND}/api/oauth/twitch/status`);
+if (!twitchStatus.res.ok || twitchStatus.json?.ok !== true) {
+  softWarn(`/api/oauth/twitch/status unavailable (${twitchStatus.res.status})`);
+} else {
+  console.log("✅ twitch status ok");
+}
+
 const home = await get(`${FRONTEND}/`);
 if (!home.res.ok) fail(`frontend / failed (${home.res.status})`);
 else console.log("✅ frontend home ok");
