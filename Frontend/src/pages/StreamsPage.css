@@ -1,7 +1,16 @@
-.streams-page {
-  max-width: 980px;
-  margin: 0 auto;
-  padding: 24px 16px;
+.streams-shell {
+  min-height: 100vh;
+}
+
+/* Keep Streams page consistent with Admin theme variables */
+.streams-shell .card {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+}
+
+.streams-shell .muted {
+  color: var(--text-secondary);
 }
 
 .streams-header {
@@ -9,7 +18,7 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 16px;
+  margin: 0;
 }
 
 .streams-actions {
@@ -18,31 +27,24 @@
   align-items: center;
 }
 
-.muted {
-  color: #6b7280;
-  font-size: 0.95rem;
-}
-
 .notice {
-  background: #fff7ed;
-  border: 1px solid #fed7aa;
+  background: rgba(255, 193, 7, 0.12);
+  border: 1px solid rgba(255, 193, 7, 0.35);
   padding: 12px;
   border-radius: 8px;
   margin: 12px 0;
 }
 
 .error {
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  color: #991b1b;
+  background: rgba(231, 76, 60, 0.12);
+  border: 1px solid rgba(231, 76, 60, 0.35);
+  color: var(--text-primary);
   padding: 12px;
   border-radius: 8px;
   margin: 12px 0;
 }
 
 .card {
-  background: #fff;
-  border: 1px solid #e5e7eb;
   border-radius: 12px;
   padding: 16px;
   margin: 16px 0;
@@ -65,8 +67,9 @@
   font: inherit;
   padding: 10px 12px;
   border-radius: 8px;
-  border: 1px solid #d1d5db;
-  background: #fff;
+  border: 1px solid var(--border);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
 }
 
 .check {
@@ -85,14 +88,15 @@
   font: inherit;
   padding: 10px 12px;
   border-radius: 8px;
-  border: 1px solid #d1d5db;
-  background: #fff;
+  border: 1px solid var(--border);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
   cursor: pointer;
 }
 
 .btn.primary {
-  background: #111827;
-  border-color: #111827;
+  background: var(--accent);
+  border-color: var(--accent);
   color: #fff;
 }
 
@@ -109,7 +113,7 @@
   display: flex;
   justify-content: space-between;
   gap: 12px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border);
   border-radius: 10px;
   padding: 12px;
 }

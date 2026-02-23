@@ -5,6 +5,12 @@ const auth = require('../middleware/auth');
 const adminOnly = require('../middleware/adminOnly');
 const adminSession = require('../middleware/adminSession');
 
+function getAdminSubjectId() {
+  const fromEnv = process.env.ADMIN_USER_ID;
+  if (fromEnv && /^[a-f\d]{24}$/i.test(fromEnv)) return fromEnv;
+  return '000000000000000000000001';
+}
+
 // POST /api/admin/token - Production-safe admin auth via secret code
 router.post('/token', (req, res) => {
   const { secret } = req.body;
@@ -33,7 +39,7 @@ router.post('/token', (req, res) => {
   
   // Generate JWT with 12-hour expiration
   const token = jwt.sign(
-    { id: 'admin-user', role: 'admin' }, 
+    { id: getAdminSubjectId(), role: 'admin' }, 
     process.env.JWT_SECRET,
     { expiresIn: '12h' }
   );

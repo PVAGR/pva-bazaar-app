@@ -19,6 +19,10 @@ export default function StreamsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [items, setItems] = useState([]);
+  const [darkMode, setDarkMode] = useState(() => {
+    const saved = localStorage.getItem('archive-theme');
+    return saved ? saved === 'dark' : true;
+  });
 
   const [creating, setCreating] = useState(false);
   const [form, setForm] = useState({
@@ -44,11 +48,13 @@ export default function StreamsPage() {
         setItems(res.items);
       } else {
         setItems([]);
-        setError(res?.error || 'Failed to load streams');
+        setError(res?.error || res?.message || 'Failed to load streams');
       }
     } catch (e) {
       setItems([]);
-      setError(e.message || 'Failed to load streams');
+      // Axios errors often have server response payload in e.response.data
+      const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
+      setError(serverMsg || e.message || 'Failed to load streams');
     } finally {
       setLoading(false);
     }
@@ -76,12 +82,13 @@ export default function StreamsPage() {
       };
       const res = await apiPost('/streams', payload);
       if (!res?.ok || !res.item) {
-        throw new Error(res?.error || 'Create failed');
+        throw new Error(res?.error || res?.message || 'Create failed');
       }
       setForm({ title: '', platform: 'none', platformStreamUrl: '', description: '', tags: '', isPublic: true });
       await loadStreams();
     } catch (e2) {
-      setError(e2.message || 'Create failed');
+      const serverMsg = e2?.response?.data?.error || e2?.response?.data?.message;
+      setError(serverMsg || e2.message || 'Create failed');
     } finally {
       setCreating(false);
     }
@@ -92,11 +99,12 @@ export default function StreamsPage() {
     try {
       const res = await apiPut(`/streams/${id}`, patch);
       if (!res?.ok || !res.item) {
-        throw new Error(res?.error || 'Update failed');
+        throw new Error(res?.error || res?.message || 'Update failed');
       }
       setItems(prev => prev.map(s => (s._id === id ? res.item : s)));
     } catch (e) {
-      setError(e.message || 'Update failed');
+      const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
+      setError(serverMsg || e.message || 'Update failed');
     }
   }
 
@@ -107,17 +115,18 @@ export default function StreamsPage() {
     try {
       const res = await apiDelete(`/streams/${id}`);
       if (!res?.ok) {
-        throw new Error(res?.error || 'Delete failed');
+        throw new Error(res?.error || res?.message || 'Delete failed');
       }
       setItems(prev => prev.filter(s => s._id !== id));
     } catch (e) {
-      setError(e.message || 'Delete failed');
+      const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
+      setError(serverMsg || e.message || 'Delete failed');
     }
   }
 
   return (
-    <main className="streams-page">
-      <header className="streams-header">
+    <div className={`streams-shell admin-page authenticated ${darkMode ? 'dark-theme' : 'light-theme'}`}>
+      <header className="streams-header admin-header">
         <div>
           <h1>📺 Livestreams</h1>
           <p className="muted">
@@ -128,6 +137,18 @@ export default function StreamsPage() {
           <Link to="/admin" className="btn ghost">← Admin</Link>
           <button className="btn ghost" onClick={loadStreams} disabled={loading}>
             Refresh
+          </button>
+          <button
+            className="btn ghost"
+            onClick={() => {
+              const next = !darkMode;
+              setDarkMode(next);
+              localStorage.setItem('archive-theme', next ? 'dark' : 'light');
+            }}
+            title="Toggle theme"
+            aria-label="Toggle theme"
+          >
+            {darkMode ? '☀️' : '🌙'}
           </button>
         </div>
       </header>
@@ -252,7 +273,7 @@ export default function StreamsPage() {
           ))}
         </div>
       </section>
-    </main>
+    </div>
   );
 }
 
