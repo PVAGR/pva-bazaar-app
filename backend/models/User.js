@@ -12,6 +12,11 @@ const userSchema = new mongoose.Schema({
     displayName: { type: String, default: '' },
     connectedAt: { type: Date },
   },
+  preferences: {
+    defaultCountry: { type: String, default: '' },
+    defaultCurrency: { type: String, default: 'USD' },
+    defaultWalletAddress: { type: String, default: '' },
+  },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });

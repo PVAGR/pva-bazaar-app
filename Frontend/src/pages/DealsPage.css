@@ -60,6 +60,12 @@
   font-weight: 600;
 }
 
+.labelRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .form input,
 .form textarea {
   font: inherit;
@@ -70,20 +76,26 @@
   color: var(--text-primary);
 }
 
-.form details {
+.subcard {
   border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 8px 10px;
+  border-radius: 12px;
+  padding: 12px;
   background: rgba(0, 0, 0, 0.08);
+  display: grid;
+  gap: 10px;
 }
 
-.form summary {
-  cursor: pointer;
-  font-weight: 700;
+.subcard__title {
+  font-weight: 800;
+  color: var(--accent);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.json {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+.stack {
+  display: grid;
+  gap: 10px;
 }
 
 .grid2 {
@@ -96,6 +108,10 @@
   display: flex;
   gap: 8px;
   align-items: center;
+}
+
+.rowWrap {
+  flex-wrap: wrap;
 }
 
 .btn {
@@ -180,6 +196,24 @@
 
 .message-text {
   white-space: pre-wrap;
+}
+
+.defaults {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.08);
+  margin: 12px 0 16px;
+  display: grid;
+  gap: 10px;
+}
+
+.defaults__title {
+  font-weight: 800;
+  color: var(--accent);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 @media (max-width: 900px) {

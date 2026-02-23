@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { apiDelete, apiGet, apiPost, apiPut } from '../lib/api';
 import { ENV } from '../config/env';
+import HelpTip from '../components/HelpTip.jsx';
 import './StreamsPage.css';
 
 const PLATFORM_OPTIONS = ['none', 'youtube', 'twitch', 'kick', 'facebook', 'custom'];
@@ -34,6 +35,7 @@ export default function StreamsPage() {
     tags: '',
     isPublic: true,
   });
+  const [profile, setProfile] = useState(null);
 
   const tokenPresent = useMemo(() => {
     if (typeof window === 'undefined') return false;
@@ -65,6 +67,15 @@ export default function StreamsPage() {
 
   useEffect(() => {
     loadStreams();
+  }, []);
+
+  useEffect(() => {
+    // Best-effort: show who is signed in + connected services.
+    apiGet('/users/profile')
+      .then((res) => {
+        if (res?.ok && res.user) setProfile(res.user);
+      })
+      .catch(() => {});
   }, []);
 
   async function handleCreate(e) {
@@ -162,6 +173,23 @@ export default function StreamsPage() {
       </header>
 
       <main className="streams-main">
+        {profile?.email ? (
+          <section className="card streams-card--compact">
+            <h2>
+              Your account
+              <HelpTip
+                title="Why this matters"
+                body="Streams and deals are saved to your account in MongoDB, so you can come back later and everything is still here."
+                example="Signed in as you@example.com"
+              />
+            </h2>
+            <div className="muted">Signed in as <b>{profile.email}</b></div>
+            <div className="muted">
+              Twitch: {profile.twitch?.login ? <b>connected (@{profile.twitch.login})</b> : <b>not connected</b>}
+            </div>
+          </section>
+        ) : null}
+
         {!tokenPresent ? (
           <div className="notice">
             <b>Not authenticated for streams yet.</b> Login in <code>/admin</code> first.
@@ -178,7 +206,14 @@ export default function StreamsPage() {
           <h2>Create stream session</h2>
           <form className="form" onSubmit={handleCreate}>
           <label>
-            Title
+            <span>
+              Title
+              <HelpTip
+                title="Stream title"
+                body="A human-friendly name for your livestream session. This is what you’ll search/filter by later."
+                example="Friday Night Live: Coffee Auction"
+              />
+            </span>
             <input
               value={form.title}
               onChange={e => setForm(prev => ({ ...prev, title: e.target.value }))}
@@ -187,7 +222,14 @@ export default function StreamsPage() {
           </label>
 
           <label>
-            Platform
+            <span>
+              Platform
+              <HelpTip
+                title="Streaming platform"
+                body="Where your stream is hosted. If you connect Twitch, we can use your Twitch identity for automations later."
+                example="twitch"
+              />
+            </span>
             <select
               value={form.platform}
               onChange={e => setForm(prev => ({ ...prev, platform: e.target.value }))}
@@ -201,7 +243,14 @@ export default function StreamsPage() {
           </label>
 
           <label>
-            Platform stream URL (optional)
+            <span>
+              Platform stream URL (optional)
+              <HelpTip
+                title="Stream URL"
+                body="Link to the public stream page. Useful for sharing and for verifying you’re live."
+                example="https://twitch.tv/yourchannel"
+              />
+            </span>
             <input
               value={form.platformStreamUrl}
               onChange={e => setForm(prev => ({ ...prev, platformStreamUrl: e.target.value }))}
@@ -210,7 +259,14 @@ export default function StreamsPage() {
           </label>
 
           <label>
-            Description
+            <span>
+              Description
+              <HelpTip
+                title="What is this stream about?"
+                body="Optional notes: what you’re selling, what viewers can expect, and any rules or disclaimers."
+                example="Live sourcing update + Q&A"
+              />
+            </span>
             <textarea
               rows={3}
               value={form.description}
@@ -219,7 +275,14 @@ export default function StreamsPage() {
           </label>
 
           <label>
-            Tags (comma separated)
+            <span>
+              Tags (comma separated)
+              <HelpTip
+                title="Tags"
+                body="Helps you organize and search streams later. Separate tags with commas."
+                example="coffee, kenya, logistics"
+              />
+            </span>
             <input
               value={form.tags}
               onChange={e => setForm(prev => ({ ...prev, tags: e.target.value }))}
@@ -233,7 +296,14 @@ export default function StreamsPage() {
               checked={form.isPublic}
               onChange={e => setForm(prev => ({ ...prev, isPublic: e.target.checked }))}
             />
-            Public
+            <span>
+              Public
+              <HelpTip
+                title="Public visibility"
+                body="If unchecked, this stream session is private to your account (useful while testing)."
+                example="Public = on"
+              />
+            </span>
           </label>
 
           <div className="row">

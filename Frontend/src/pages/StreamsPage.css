@@ -8,6 +8,10 @@
   padding: 16px;
 }
 
+.streams-card--compact h2 {
+  margin-top: 0;
+}
+
 /* Keep Streams page consistent with Admin theme variables */
 .streams-shell .card {
   background: var(--bg-tertiary);
