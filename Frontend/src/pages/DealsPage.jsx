@@ -533,6 +533,7 @@ export default function DealsPage() {
             </p>
           </div>
           <div className="deals-actions">
+            <Link to="/broker" className="btn ghost">Hub</Link>
             <Link to="/admin" className="btn ghost">← Admin</Link>
             <button className="btn ghost" onClick={loadDeals} disabled={loading}>Refresh</button>
             <button
@@ -1086,7 +1087,16 @@ export default function DealsPage() {
                 </div>
                 {inviteLink ? (
                   <div className="subcard">
-                    <div className="muted small">Join URL (copied to clipboard if supported):</div>
+                    <div className="row rowWrap" style={{ marginBottom: 4 }}>
+                      <span className="muted small">Join URL (copied to clipboard if supported)</span>
+                      <button
+                        type="button"
+                        className="btn ghost"
+                        onClick={() => navigator.clipboard?.writeText(inviteLink).catch(() => {})}
+                      >
+                        Copy again
+                      </button>
+                    </div>
                     <div className="muted small" style={{ wordBreak: 'break-all' }}>
                       {inviteLink}
                     </div>
