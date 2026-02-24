@@ -142,7 +142,19 @@ export default function TemplatesPage() {
       .replace(/\{\{contactEmail\}\}/gi, contact.email || '');
   }
 
-  function sendViaWhatsApp(contact, body) {
+  async function logOutreach(contactId, templateId, channel) {
+    try {
+      await apiPost(`/contacts/${contactId}/outreach`, {
+        templateId: templateId || undefined,
+        status: 'sent',
+        response: channel,
+      });
+    } catch {
+      // best-effort; don't block user
+    }
+  }
+
+  function sendViaWhatsApp(contact, body, templateId) {
     const phone = (contact?.whatsapp || contact?.phone || '').replace(/\D/g, '');
     if (!phone) {
       setError('Contact has no WhatsApp/phone');
@@ -150,10 +162,11 @@ export default function TemplatesPage() {
     }
     const resolved = replaceTemplateVars(body, contact);
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(resolved)}`, '_blank');
+    logOutreach(contact._id, templateId, 'whatsapp');
     setUseWithContactModal(null);
   }
 
-  function sendViaEmail(contact, body) {
+  function sendViaEmail(contact, body, templateId) {
     const to = contact?.email || '';
     if (!to) {
       setError('Contact has no email');
@@ -161,6 +174,7 @@ export default function TemplatesPage() {
     }
     const resolved = replaceTemplateVars(body, contact);
     window.open(`mailto:${to}?subject=${encodeURIComponent('Supply inquiry')}&body=${encodeURIComponent(resolved)}`, '_blank');
+    logOutreach(contact._id, templateId, 'email');
     setUseWithContactModal(null);
   }
 
@@ -287,10 +301,10 @@ export default function TemplatesPage() {
                 <div key={c._id} className="row rowWrap">
                   <span>{c.name}</span>
                   {c.whatsapp || c.phone ? (
-                    <button className="btn ghost" onClick={() => sendViaWhatsApp(c, useWithContactModal.template?.body || '')}>WhatsApp</button>
+                    <button className="btn ghost" onClick={() => sendViaWhatsApp(c, useWithContactModal.template?.body || '', useWithContactModal.template?._id)}>WhatsApp</button>
                   ) : null}
                   {c.email ? (
-                    <button className="btn ghost" onClick={() => sendViaEmail(c, useWithContactModal.template?.body || '')}>Email</button>
+                    <button className="btn ghost" onClick={() => sendViaEmail(c, useWithContactModal.template?.body || '', useWithContactModal.template?._id)}>Email</button>
                   ) : null}
                 </div>
               ))}
