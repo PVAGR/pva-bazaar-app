@@ -1069,6 +1069,11 @@ export default function DealsPage() {
                   {' — '}{n.content ? `${n.content.slice(0, 60)}${n.content.length > 60 ? '…' : ''}` : '—'}
                 </div>
               ))}
+              {vaultNotes.length > 5 ? (
+                <Link to={`/vault?recordType=deal&recordId=${selected._id}`} className="muted small" style={{ display: 'inline-block', marginTop: 8 }}>
+                  View all {vaultNotes.length} in Vault →
+                </Link>
+              ) : null}
             </div>
             <div className="workspace">
               <div className="workspace-col">

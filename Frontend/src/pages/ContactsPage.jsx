@@ -381,6 +381,11 @@ What assumptions underlie their position?"
                     {' — '}{n.content ? `${n.content.slice(0, 60)}${n.content.length > 60 ? '…' : ''}` : '—'}
                   </div>
                 ))}
+                {vaultNotes.length > 5 ? (
+                  <Link to={`/vault?recordType=contact&recordId=${selected._id}`} className="muted small" style={{ display: 'inline-block', marginTop: 8 }}>
+                    View all {vaultNotes.length} in Vault →
+                  </Link>
+                ) : null}
               </div>
               {selected.outreachLog?.length > 0 ? (
                 <div className="subcard">

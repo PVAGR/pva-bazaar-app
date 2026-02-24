@@ -353,6 +353,11 @@ export default function CommoditiesPage() {
                     {' — '}{n.content ? `${n.content.slice(0, 60)}${n.content.length > 60 ? '…' : ''}` : '—'}
                   </div>
                 ))}
+                {vaultNotes.length > 5 ? (
+                  <Link to={`/vault?recordType=commodity&recordId=${selected._id}`} className="muted small" style={{ display: 'inline-block', marginTop: 8 }}>
+                    View all {vaultNotes.length} in Vault →
+                  </Link>
+                ) : null}
               </div>
               <div className="row">
                 <button className="btn primary" onClick={handleSave} disabled={saving}>{saving ? 'Saving…' : 'Save'}</button>
