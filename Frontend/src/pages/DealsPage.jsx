@@ -940,6 +940,85 @@ export default function DealsPage() {
                 ) : null}
               </div>
             </div>
+            <div className="subcard" style={{ marginBottom: '1rem' }}>
+              <div className="subcard__title">Escrow splits & payout</div>
+              <p className="muted small">Multi-party splits and payout preferences (M-Pesa, Airtel, BTC, USDC, ACH).</p>
+              <div className="row rowWrap" style={{ gap: '1rem', marginTop: '0.5rem' }}>
+                <label>
+                  <span className="muted small">Owner %</span>
+                  <input
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={(selected.escrowSplits?.find((s) => s.party === 'owner')?.pct ?? 50)}
+                    onChange={async (e) => {
+                      const pct = Math.min(100, Math.max(0, Number(e.target.value) || 0));
+                      const cpct = 100 - pct;
+                      try {
+                        const res = await apiPut(`/deals/${selected._id}`, {
+                          escrowSplits: [
+                            { party: 'owner', pct, payoutMethod: selected.payoutPreferences?.owner?.method || 'usdc', payoutDestination: selected.payoutPreferences?.owner?.destination || '' },
+                            { party: 'counterparty', pct: cpct, payoutMethod: selected.payoutPreferences?.counterparty?.method || 'usdc', payoutDestination: selected.payoutPreferences?.counterparty?.destination || '' },
+                          ],
+                        });
+                        if (res?.ok && res.item) setSelected(res.item);
+                      } catch {}
+                    }}
+                    style={{ width: 60 }}
+                  />
+                </label>
+                <label>
+                  <span className="muted small">Owner payout</span>
+                  <select
+                    value={selected.payoutPreferences?.owner?.method || 'usdc'}
+                    onChange={async (e) => {
+                      const method = e.target.value;
+                      try {
+                        const res = await apiPut(`/deals/${selected._id}`, {
+                          payoutPreferences: {
+                            owner: { method, destination: selected.payoutPreferences?.owner?.destination || '' },
+                            counterparty: selected.payoutPreferences?.counterparty || { method: 'usdc', destination: '' },
+                          },
+                        });
+                        if (res?.ok && res.item) setSelected(res.item);
+                      } catch {}
+                    }}
+                  >
+                    <option value="usdc">USDC</option>
+                    <option value="btc">BTC</option>
+                    <option value="ach">ACH</option>
+                    <option value="mpesa">M-Pesa</option>
+                    <option value="airtel">Airtel</option>
+                    <option value="wallet">Wallet</option>
+                  </select>
+                </label>
+                <label>
+                  <span className="muted small">Counterparty payout</span>
+                  <select
+                    value={selected.payoutPreferences?.counterparty?.method || 'usdc'}
+                    onChange={async (e) => {
+                      const method = e.target.value;
+                      try {
+                        const res = await apiPut(`/deals/${selected._id}`, {
+                          payoutPreferences: {
+                            owner: selected.payoutPreferences?.owner || { method: 'usdc', destination: '' },
+                            counterparty: { method, destination: selected.payoutPreferences?.counterparty?.destination || '' },
+                          },
+                        });
+                        if (res?.ok && res.item) setSelected(res.item);
+                      } catch {}
+                    }}
+                  >
+                    <option value="usdc">USDC</option>
+                    <option value="btc">BTC</option>
+                    <option value="ach">ACH</option>
+                    <option value="mpesa">M-Pesa</option>
+                    <option value="airtel">Airtel</option>
+                    <option value="wallet">Wallet</option>
+                  </select>
+                </label>
+              </div>
+            </div>
             <div className="workspace">
               <div className="workspace-col">
                 <h3>

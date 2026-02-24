@@ -31,6 +31,11 @@ export default function ContactsPage() {
     type: 'supplier',
     notes: '',
     commodities: [],
+    birthDate: '',
+    birthTime: '',
+    birthPlace: '',
+    ashaDrujNotes: '',
+    socraticPrompts: [],
   });
   const [commodities, setCommodities] = useState([]);
 
@@ -57,6 +62,7 @@ export default function ContactsPage() {
       const res = await apiGet(`/contacts/${id}`);
       if (res?.ok && res.item) {
         setSelected(res.item);
+        const bd = res.item.birthDate;
         setDraft({
           name: res.item.name || '',
           email: res.item.email || '',
@@ -69,6 +75,11 @@ export default function ContactsPage() {
           type: res.item.type || 'supplier',
           notes: res.item.notes || '',
           commodities: (res.item.commodities || []).map((c) => (typeof c === 'object' ? c._id : c)),
+          birthDate: bd ? new Date(bd).toISOString().slice(0, 10) : '',
+          birthTime: res.item.birthTime || '',
+          birthPlace: res.item.birthPlace || '',
+          ashaDrujNotes: res.item.ashaDrujNotes || '',
+          socraticPrompts: Array.isArray(res.item.socraticPrompts) ? [...res.item.socraticPrompts] : [],
         });
       }
     } catch (e) {
@@ -109,11 +120,16 @@ export default function ContactsPage() {
         type: draft.type,
         notes: draft.notes.trim(),
         commodities: draft.commodities || [],
+        birthDate: draft.birthDate || undefined,
+        birthTime: draft.birthTime.trim() || undefined,
+        birthPlace: draft.birthPlace.trim() || undefined,
+        ashaDrujNotes: draft.ashaDrujNotes.trim() || undefined,
+        socraticPrompts: draft.socraticPrompts || [],
       });
       if (!res?.ok || !res.item) throw new Error(res?.error || 'Create failed');
       await loadContacts();
       setSelectedId(res.item._id);
-      setDraft({ name: '', email: '', phone: '', whatsapp: '', telegram: '', company: '', country: '', city: '', type: 'supplier', notes: '', commodities: [] });
+      setDraft({ name: '', email: '', phone: '', whatsapp: '', telegram: '', company: '', country: '', city: '', type: 'supplier', notes: '', commodities: [], birthDate: '', birthTime: '', birthPlace: '', ashaDrujNotes: '', socraticPrompts: [] });
     } catch (e) {
       setError(getErrorMessage(e, 'Create failed'));
     } finally {
@@ -138,6 +154,11 @@ export default function ContactsPage() {
         type: draft.type,
         notes: draft.notes.trim(),
         commodities: draft.commodities || [],
+        birthDate: draft.birthDate || undefined,
+        birthTime: draft.birthTime.trim() || undefined,
+        birthPlace: draft.birthPlace.trim() || undefined,
+        ashaDrujNotes: draft.ashaDrujNotes.trim() || undefined,
+        socraticPrompts: draft.socraticPrompts || [],
       });
       if (!res?.ok) throw new Error(res?.error || 'Save failed');
       setSelected(res.item);
@@ -270,6 +291,48 @@ export default function ContactsPage() {
                     <span>{c.name}</span>
                   </label>
                 ))}
+              </div>
+              <div className="subcard hermeneutic">
+                <div className="subcard__title">Hermeneutic (birth chart)</div>
+                <p className="muted small">Birth date, time, place for chart interpretation.</p>
+                <div className="form">
+                  <label>Birth date</label>
+                  <input
+                    type="date"
+                    value={draft.birthDate}
+                    onChange={(e) => setDraft((p) => ({ ...p, birthDate: e.target.value }))}
+                  />
+                  <label>Birth time (e.g. 14:30)</label>
+                  <input
+                    type="text"
+                    value={draft.birthTime}
+                    onChange={(e) => setDraft((p) => ({ ...p, birthTime: e.target.value }))}
+                    placeholder="HH:MM or leave blank"
+                  />
+                  <label>Birth place</label>
+                  <input
+                    type="text"
+                    value={draft.birthPlace}
+                    onChange={(e) => setDraft((p) => ({ ...p, birthPlace: e.target.value }))}
+                    placeholder="City, country"
+                  />
+                  <label>Asha / Druj notes</label>
+                  <textarea
+                    rows={2}
+                    value={draft.ashaDrujNotes}
+                    onChange={(e) => setDraft((p) => ({ ...p, ashaDrujNotes: e.target.value }))}
+                    placeholder="Truth vs. falsehood, alignment notes..."
+                  />
+                  <label>Socratic prompts</label>
+                  <div className="muted small">One prompt per line</div>
+                  <textarea
+                    rows={3}
+                    value={(draft.socraticPrompts || []).join('\n')}
+                    onChange={(e) => setDraft((p) => ({ ...p, socraticPrompts: e.target.value.split('\n').filter(Boolean) }))}
+                    placeholder="What do they truly want?
+What assumptions underlie their position?"
+                  />
+                </div>
               </div>
               {selected.outreachLog?.length > 0 ? (
                 <div className="subcard">

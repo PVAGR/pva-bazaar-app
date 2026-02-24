@@ -35,6 +35,8 @@ const contactSchema = new mongoose.Schema(
     birthDate: { type: Date },
     birthTime: { type: String, default: '' },
     birthPlace: { type: String, default: '' },
+    ashaDrujNotes: { type: String, default: '' },
+    socraticPrompts: { type: [String], default: [] },
   },
   { timestamps: true }
 );

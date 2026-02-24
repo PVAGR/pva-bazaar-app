@@ -150,6 +150,35 @@ describe('Broker API (commodities, contacts, templates, chat)', () => {
     expect(res.status).toBe(401);
   });
 
+  it('vault-notes CRUD', async () => {
+    const token = await registerAndGetToken();
+
+    const create = await request(app)
+      .post('/api/vault-notes')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ recordType: 'general', title: 'Private thought', content: 'For my eyes only.' });
+    expect(create.status).toBe(201);
+    const id = create.body.item?._id;
+    expect(id).toBeTruthy();
+
+    const list = await request(app)
+      .get('/api/vault-notes')
+      .set('Authorization', `Bearer ${token}`);
+    expect(list.status).toBe(200);
+    expect(list.body?.items?.some((x) => x.title === 'Private thought')).toBe(true);
+
+    const get = await request(app)
+      .get(`/api/vault-notes/${id}`)
+      .set('Authorization', `Bearer ${token}`);
+    expect(get.status).toBe(200);
+    expect(get.body?.item?.content).toBe('For my eyes only.');
+  });
+
+  it('vault-notes require auth', async () => {
+    const res = await request(app).get('/api/vault-notes');
+    expect(res.status).toBe(401);
+  });
+
   it('chat returns 400 when messages array is missing', async () => {
     const res = await request(app)
       .post('/api/chat')

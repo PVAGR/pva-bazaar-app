@@ -19,6 +19,7 @@ import BrokerHubPage from './pages/BrokerHubPage.jsx';
 import CommoditiesPage from './pages/CommoditiesPage.jsx';
 import ContactsPage from './pages/ContactsPage.jsx';
 import TemplatesPage from './pages/TemplatesPage.jsx';
+import VaultPage from './pages/VaultPage.jsx';
 import ChatPage from './pages/ChatPage.jsx';
 import LoginPage from './pages/LoginPage.jsx';
 import RegisterPage from './pages/RegisterPage.jsx';
@@ -106,6 +107,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <TemplatesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/vault"
+          element={
+            <ProtectedRoute>
+              <VaultPage />
             </ProtectedRoute>
           }
         />

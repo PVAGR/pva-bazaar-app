@@ -95,6 +95,7 @@ export default function BrokerHubPage() {
                 <Link to="/contacts" className="btn primary">New contact</Link>
                 <Link to="/deals" className="btn primary">New deal</Link>
                 <Link to="/templates" className="btn primary">New template</Link>
+                <Link to="/vault" className="btn primary">Vault note</Link>
               </div>
             </section>
 

@@ -8,7 +8,7 @@ import ContactsPage from './ContactsPage.jsx';
 vi.mock('../lib/api', () => ({
   apiGet: vi.fn(async (path) => {
     if (path === '/contacts') return { ok: true, items: [{ _id: '1', name: 'Nairobi Co', type: 'supplier', country: 'Kenya' }] };
-    if (path === '/contacts/1') return { ok: true, item: { _id: '1', name: 'Nairobi Co', type: 'supplier', country: 'Kenya', email: '', commodities: [] } };
+    if (path === '/contacts/1') return { ok: true, item: { _id: '1', name: 'Nairobi Co', type: 'supplier', country: 'Kenya', email: '', commodities: [], birthDate: null, birthTime: '', birthPlace: '', ashaDrujNotes: '', socraticPrompts: [] } };
     if (path === '/commodities') return { ok: true, items: [] };
     return { ok: true, items: [] };
   }),

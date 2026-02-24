@@ -82,6 +82,18 @@ const dealSchema = new mongoose.Schema(
     commodityId: { type: mongoose.Schema.Types.ObjectId, ref: 'Commodity' },
     contactIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Contact' }],
 
+    // Smart escrow: multi-party splits and payout preferences (M-Pesa, Airtel, BTC, USDC, ACH)
+    escrowSplits: [{
+      party: { type: String, enum: ['owner', 'counterparty', 'mediator'] },
+      pct: { type: Number },
+      payoutMethod: { type: String, enum: ['usdc', 'btc', 'ach', 'mpesa', 'airtel', 'wallet'] },
+      payoutDestination: { type: String, default: '' },
+    }],
+    payoutPreferences: {
+      owner: { method: { type: String, default: 'usdc' }, destination: { type: String, default: '' } },
+      counterparty: { method: { type: String, default: 'usdc' }, destination: { type: String, default: '' } },
+    },
+
     // Counterparty access (foundation for "join link" flow).
     counterpartyAccess: {
       inviteJtiHash: { type: String, default: '' },

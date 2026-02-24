@@ -52,6 +52,8 @@ router.post('/', authMiddleware, async (req, res) => {
       birthDate: req.body?.birthDate ? new Date(req.body.birthDate) : undefined,
       birthTime: sanitize(req.body?.birthTime || ''),
       birthPlace: sanitize(req.body?.birthPlace || ''),
+      ashaDrujNotes: sanitize(req.body?.ashaDrujNotes || ''),
+      socraticPrompts: Array.isArray(req.body?.socraticPrompts) ? req.body.socraticPrompts.map(sanitize) : [],
     });
 
     await contact.save();
@@ -96,6 +98,8 @@ router.put('/:id', authMiddleware, async (req, res) => {
     if (body.birthDate !== undefined) contact.birthDate = body.birthDate ? new Date(body.birthDate) : undefined;
     if (body.birthTime !== undefined) contact.birthTime = sanitize(body.birthTime);
     if (body.birthPlace !== undefined) contact.birthPlace = sanitize(body.birthPlace);
+    if (body.ashaDrujNotes !== undefined) contact.ashaDrujNotes = sanitize(body.ashaDrujNotes);
+    if (Array.isArray(body.socraticPrompts)) contact.socraticPrompts = body.socraticPrompts.map(sanitize);
 
     await contact.save();
     res.json({ ok: true, item: contact });

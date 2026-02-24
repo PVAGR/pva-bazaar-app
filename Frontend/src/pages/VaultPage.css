@@ -1,0 +1,74 @@
+.vault-page {
+  min-height: 100vh;
+  background: var(--broker-bg, #f8fafc);
+}
+
+.vault-page .card {
+  background: var(--broker-surface, #fff);
+  border: 1px solid var(--broker-border, #e2e8f0);
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.vault-page .card h2 {
+  margin-top: 0;
+  font-size: 1.1rem;
+}
+
+.vault-main {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.vault-header__row {
+  max-width: 1600px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.vault-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.vault-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.vault-item {
+  text-align: left;
+  padding: 12px 16px;
+  border: 1px solid var(--broker-border, #e2e8f0);
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.vault-item:hover {
+  border-color: var(--broker-accent, #228b22);
+  background: rgba(34, 139, 34, 0.04);
+}
+
+.vault-item.active {
+  border-color: var(--broker-accent, #228b22);
+  background: rgba(34, 139, 34, 0.08);
+}
+
+.vault-item__title {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.vault-content {
+  font-family: inherit;
+  min-height: 200px;
+}

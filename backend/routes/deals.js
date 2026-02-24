@@ -364,6 +364,9 @@ router.post('/:id/prepare-escrow', authMiddleware, async (req, res) => {
 
     const chainId = deal.chainId || 8453;
 
+    const splits = (deal.escrowSplits || []).filter((s) => s?.party && Number.isFinite(s?.pct));
+    const prefs = deal.payoutPreferences || { owner: {}, counterparty: {} };
+
     res.json({
       ok: true,
       prepareEscrow: {
@@ -376,6 +379,11 @@ router.post('/:id/prepare-escrow', authMiddleware, async (req, res) => {
         payments,
         milestoneHashes,
         tokenAddress: (deal.tokenAddress || '').trim(),
+        splits: splits.length ? splits : [{ party: 'owner', pct: 50, payoutMethod: 'usdc' }, { party: 'counterparty', pct: 50, payoutMethod: 'usdc' }],
+        payoutPreferences: {
+          owner: prefs.owner || { method: 'usdc', destination: '' },
+          counterparty: prefs.counterparty || { method: 'usdc', destination: '' },
+        },
       },
     });
   } catch (err) {
@@ -404,7 +412,7 @@ router.put('/:id', authMiddleware, async (req, res) => {
     const deal = await Deal.findOne({ _id: req.params.id, ownerId: req.user.id });
     if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
 
-    const allowed = ['title', 'description', 'counterparty', 'totalAmount', 'currency', 'mediatorFeePct', 'chainId', 'tokenAddress', 'contractAddress', 'status', 'stage', 'commodityId', 'contactIds'];
+    const allowed = ['title', 'description', 'counterparty', 'totalAmount', 'currency', 'mediatorFeePct', 'chainId', 'tokenAddress', 'contractAddress', 'status', 'stage', 'commodityId', 'contactIds', 'escrowSplits', 'payoutPreferences'];
     for (const key of allowed) {
       if (req.body?.[key] === undefined) continue;
       if (key === 'title' || key === 'description' || key === 'currency' || key === 'tokenAddress' || key === 'contractAddress' || key === 'status' || key === 'stage') {
@@ -423,6 +431,30 @@ router.put('/:id', authMiddleware, async (req, res) => {
         deal.commodityId = req.body.commodityId || undefined;
       } else if (key === 'contactIds') {
         deal.contactIds = Array.isArray(req.body.contactIds) ? req.body.contactIds : [];
+      } else if (key === 'escrowSplits') {
+        deal.escrowSplits = Array.isArray(req.body.escrowSplits)
+          ? req.body.escrowSplits
+            .filter((s) => s && ['owner', 'counterparty', 'mediator'].includes(s.party) && Number.isFinite(s.pct))
+            .map((s) => ({
+              party: s.party,
+              pct: Math.min(100, Math.max(0, Number(s.pct))),
+              payoutMethod: ['usdc', 'btc', 'ach', 'mpesa', 'airtel', 'wallet'].includes(s.payoutMethod) ? s.payoutMethod : 'usdc',
+              payoutDestination: sanitize(s.payoutDestination || ''),
+            }))
+          : [];
+      } else if (key === 'payoutPreferences') {
+        const pp = req.body.payoutPreferences || {};
+        const methods = ['usdc', 'btc', 'ach', 'mpesa', 'airtel', 'wallet'];
+        deal.payoutPreferences = {
+          owner: {
+            method: methods.includes(pp.owner?.method) ? pp.owner.method : 'usdc',
+            destination: sanitize(pp.owner?.destination || ''),
+          },
+          counterparty: {
+            method: methods.includes(pp.counterparty?.method) ? pp.counterparty.method : 'usdc',
+            destination: sanitize(pp.counterparty?.destination || ''),
+          },
+        };
       } else {
         deal[key] = req.body[key];
       }

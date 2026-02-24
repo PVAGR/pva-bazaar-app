@@ -14,6 +14,7 @@ export default function AdminNav() {
     { to: '/commodities', label: 'Commodities' },
     { to: '/contacts', label: 'Contacts' },
     { to: '/templates', label: 'Templates' },
+    { to: '/vault', label: 'Vault' },
     { to: '/deals', label: 'Deals' },
     { to: '/streams', label: 'Streams' },
     { to: '/items/new', label: 'Sell' },
