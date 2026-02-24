@@ -126,6 +126,7 @@ export default function BrokerHubPage() {
                     </li>
                   ))}
                 </ul>
+                {filteredCommodities.length > 8 ? <Link to="/commodities" className="muted small" style={{ display: 'inline-block', marginTop: 6 }}>View all ({filteredCommodities.length}) →</Link> : null}
               </section>
 
               <section className="card">
@@ -142,6 +143,7 @@ export default function BrokerHubPage() {
                     </li>
                   ))}
                 </ul>
+                {filteredContacts.length > 8 ? <Link to="/contacts" className="muted small" style={{ display: 'inline-block', marginTop: 6 }}>View all ({filteredContacts.length}) →</Link> : null}
               </section>
 
               <section className="card">
@@ -158,6 +160,7 @@ export default function BrokerHubPage() {
                     </li>
                   ))}
                 </ul>
+                {filteredTemplates.length > 8 ? <Link to="/templates" className="muted small" style={{ display: 'inline-block', marginTop: 6 }}>View all ({filteredTemplates.length}) →</Link> : null}
               </section>
 
               <section className="card">
@@ -174,6 +177,7 @@ export default function BrokerHubPage() {
                     </li>
                   ))}
                 </ul>
+                {filteredDeals.length > 8 ? <Link to="/deals" className="muted small" style={{ display: 'inline-block', marginTop: 6 }}>View all ({filteredDeals.length}) →</Link> : null}
               </section>
 
               <section className="card">
@@ -190,6 +194,7 @@ export default function BrokerHubPage() {
                     </li>
                   ))}
                 </ul>
+                {filteredVaultNotes.length > 8 ? <Link to="/vault" className="muted small" style={{ display: 'inline-block', marginTop: 6 }}>View all ({filteredVaultNotes.length}) →</Link> : null}
               </section>
             </div>
           </>
