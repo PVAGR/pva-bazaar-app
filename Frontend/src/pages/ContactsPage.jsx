@@ -21,6 +21,7 @@ export default function ContactsPage() {
   const [saving, setSaving] = useState(false);
   const [creating, setCreating] = useState(false);
   const [filterType, setFilterType] = useState('');
+  const [searchContact, setSearchContact] = useState('');
   const [draft, setDraft] = useState({
     name: '',
     email: '',
@@ -234,7 +235,7 @@ export default function ContactsPage() {
 
         <section className="card">
           <h2>Your contacts</h2>
-          <div className="row">
+          <div className="row rowWrap" style={{ marginBottom: 8 }}>
             <span className="muted small">Filter:</span>
             <select value={filterType} onChange={(e) => setFilterType(e.target.value)}>
               <option value="">All</option>
@@ -242,11 +243,26 @@ export default function ContactsPage() {
                 <option key={t} value={t}>{t}</option>
               ))}
             </select>
+            <input
+              type="search"
+              value={searchContact}
+              onChange={(e) => setSearchContact(e.target.value)}
+              placeholder="Search by name, company..."
+              style={{ maxWidth: 200 }}
+            />
           </div>
           {loading ? <LoadingSpinner label="Loading…" /> : null}
           {!loading && items.length === 0 ? <div className="muted">No contacts yet.</div> : null}
           <div className="contacts-list">
-            {items.map((c) => (
+            {(searchContact.trim()
+              ? items.filter(
+                  (c) =>
+                    (c.name || '').toLowerCase().includes(searchContact.toLowerCase().trim()) ||
+                    (c.company || '').toLowerCase().includes(searchContact.toLowerCase().trim()) ||
+                    (c.country || '').toLowerCase().includes(searchContact.toLowerCase().trim())
+                )
+              : items
+            ).map((c) => (
               <button
                 key={c._id}
                 className={`contact-item ${selectedId === c._id ? 'active' : ''}`}

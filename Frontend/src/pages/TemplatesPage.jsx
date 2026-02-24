@@ -22,6 +22,7 @@ export default function TemplatesPage() {
   const [creating, setCreating] = useState(false);
   const [filterType, setFilterType] = useState('');
   const [filterCommodity, setFilterCommodity] = useState('');
+  const [searchTemplate, setSearchTemplate] = useState('');
   const [draft, setDraft] = useState({ name: '', type: 'vetting', body: '' });
   const [copiedId, setCopiedId] = useState('');
   const [contacts, setContacts] = useState([]);
@@ -244,7 +245,7 @@ export default function TemplatesPage() {
 
         <section className="card">
           <h2>Your templates</h2>
-          <div className="row rowWrap">
+          <div className="row rowWrap" style={{ marginBottom: 8 }}>
             <span className="muted small">Filter:</span>
             <select value={filterType} onChange={(e) => setFilterType(e.target.value)}>
               <option value="">All types</option>
@@ -258,11 +259,21 @@ export default function TemplatesPage() {
                 <option key={c._id} value={c._id}>{c.name}</option>
               ))}
             </select>
+            <input
+              type="search"
+              value={searchTemplate}
+              onChange={(e) => setSearchTemplate(e.target.value)}
+              placeholder="Search by name..."
+              style={{ maxWidth: 200 }}
+            />
           </div>
           {loading ? <LoadingSpinner label="Loading…" /> : null}
           {!loading && items.length === 0 ? <div className="muted">No templates yet. Run the seed script or create one.</div> : null}
           <div className="templates-list">
-            {items.map((t) => (
+            {(searchTemplate.trim()
+              ? items.filter((t) => (t.name || '').toLowerCase().includes(searchTemplate.toLowerCase().trim()))
+              : items
+            ).map((t) => (
               <div key={t._id} className={`template-item ${selectedId === t._id ? 'active' : ''}`}>
                 <button
                   className="template-item__btn"

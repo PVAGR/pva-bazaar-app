@@ -959,11 +959,21 @@ export default function DealsPage() {
                     <option value="sale">4. Sale</option>
                   </select>
                 </label>
-                {selected.commodityId?.name ? (
-                  <span className="muted small">Commodity: {selected.commodityId.name}</span>
+                {selected.commodityId ? (
+                  <Link to={`/commodities?selected=${selected.commodityId._id || selected.commodityId}`} className="muted small">
+                    Commodity: {selected.commodityId.name || '—'}
+                  </Link>
                 ) : null}
                 {selected.contactIds?.length > 0 ? (
-                  <span className="muted small">Contacts: {selected.contactIds.map((c) => c.name).join(', ')}</span>
+                  <span className="muted small">
+                    Contacts:{' '}
+                    {selected.contactIds.map((c, i) => (
+                      <React.Fragment key={c._id || i}>
+                        {i > 0 ? ', ' : ''}
+                        <Link to={`/contacts?selected=${c._id || c}`} className="muted">{c.name || c}</Link>
+                      </React.Fragment>
+                    ))}
+                  </span>
                 ) : null}
               </div>
             </div>
