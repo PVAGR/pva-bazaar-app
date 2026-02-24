@@ -92,6 +92,7 @@ export default function BrokerHubPage() {
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search commodities, contacts, templates, deals, vault notes..."
             className="search-input"
+            aria-label="Search commodities, contacts, templates, deals, vault notes"
           />
         </section>
 

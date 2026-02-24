@@ -896,7 +896,7 @@ export default function DealsPage() {
           <h2>Your deals</h2>
           <div className="row" style={{ marginBottom: 8 }}>
             <span className="muted small">Filter by stage:</span>
-            <select value={filterStage} onChange={(e) => setFilterStage(e.target.value)}>
+            <select value={filterStage} onChange={(e) => setFilterStage(e.target.value)} aria-label="Filter deals by pipeline stage">
               <option value="">All</option>
               <option value="procurement">1. Procurement</option>
               <option value="payment">2. Payment</option>

@@ -251,6 +251,7 @@ export default function ContactsPage() {
               onChange={(e) => setSearchContact(e.target.value)}
               placeholder="Search by name, company..."
               style={{ maxWidth: 200 }}
+              aria-label="Search contacts by name or company"
             />
           </div>
           {loading ? <LoadingSpinner label="Loading…" /> : null}

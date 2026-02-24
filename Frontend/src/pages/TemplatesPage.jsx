@@ -267,6 +267,7 @@ export default function TemplatesPage() {
               onChange={(e) => setSearchTemplate(e.target.value)}
               placeholder="Search by name..."
               style={{ maxWidth: 200 }}
+              aria-label="Search templates by name"
             />
           </div>
           {loading ? <LoadingSpinner label="Loading…" /> : null}

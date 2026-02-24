@@ -196,6 +196,7 @@ export default function VaultPage() {
             placeholder="Search by title or content..."
             className="search-input"
             style={{ marginBottom: 8, maxWidth: 280 }}
+            aria-label="Search vault notes by title or content"
           />
           {loading ? <LoadingSpinner label="Loading…" /> : null}
           {!loading && items.length === 0 ? <div className="muted">No vault notes yet.</div> : null}

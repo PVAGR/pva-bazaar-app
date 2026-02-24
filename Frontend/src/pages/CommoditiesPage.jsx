@@ -240,6 +240,7 @@ export default function CommoditiesPage() {
             placeholder="Search by name or category..."
             className="search-input"
             style={{ marginBottom: 8, maxWidth: 280 }}
+            aria-label="Search commodities by name or category"
           />
           {loading ? <LoadingSpinner label="Loading…" /> : null}
           {!loading && items.length === 0 ? <div className="muted">No commodities yet.</div> : null}
