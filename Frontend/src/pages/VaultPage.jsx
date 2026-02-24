@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { apiGet, apiPost, apiPut, apiDelete } from '../lib/api';
 import ErrorBanner from '../components/ErrorBanner.jsx';
 import LoadingSpinner from '../components/LoadingSpinner.jsx';
@@ -11,6 +11,10 @@ import './VaultPage.css';
 const RECORD_TYPES = ['general', 'contact', 'commodity', 'deal'];
 
 export default function VaultPage() {
+  const [searchParams] = useSearchParams();
+  const urlRecordType = searchParams.get('recordType') || '';
+  const urlRecordId = searchParams.get('recordId') || '';
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [items, setItems] = useState([]);
@@ -19,17 +23,26 @@ export default function VaultPage() {
   const [saving, setSaving] = useState(false);
   const [creating, setCreating] = useState(false);
   const [draft, setDraft] = useState({
-    recordType: 'general',
-    recordId: '',
+    recordType: urlRecordType && RECORD_TYPES.includes(urlRecordType) ? urlRecordType : 'general',
+    recordId: urlRecordId,
     title: '',
     content: '',
   });
+
+  useEffect(() => {
+    if (urlRecordType && RECORD_TYPES.includes(urlRecordType) && urlRecordId) {
+      setDraft((p) => ({ ...p, recordType: urlRecordType, recordId: urlRecordId }));
+    }
+  }, [urlRecordType, urlRecordId]);
 
   async function loadNotes() {
     setLoading(true);
     setError('');
     try {
-      const res = await apiGet('/vault-notes', { params: { limit: 100 } });
+      const params = { limit: 100 };
+      if (urlRecordType && RECORD_TYPES.includes(urlRecordType)) params.recordType = urlRecordType;
+      if (urlRecordId) params.recordId = urlRecordId;
+      const res = await apiGet('/vault-notes', { params });
       if (res?.ok && Array.isArray(res.items)) setItems(res.items);
       else setError(res?.error || 'Failed to load vault notes');
     } catch (e) {
@@ -60,7 +73,7 @@ export default function VaultPage() {
 
   useEffect(() => {
     loadNotes();
-  }, []);
+  }, [urlRecordType, urlRecordId]);
 
   useEffect(() => {
     if (selectedId) loadNote(selectedId);

@@ -38,6 +38,7 @@ export default function ContactsPage() {
     socraticPrompts: [],
   });
   const [commodities, setCommodities] = useState([]);
+  const [vaultNotes, setVaultNotes] = useState([]);
 
   async function loadContacts() {
     setLoading(true);
@@ -93,6 +94,13 @@ export default function ContactsPage() {
   useEffect(() => {
     apiGet('/commodities', { params: { limit: 100 } }).then((r) => r?.ok && Array.isArray(r.items) && setCommodities(r.items)).catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (!selected?._id) return;
+    apiGet('/vault-notes', { params: { recordType: 'contact', recordId: selected._id, limit: 20 } })
+      .then((r) => r?.ok && Array.isArray(r.items) && setVaultNotes(r.items))
+      .catch(() => setVaultNotes([]));
+  }, [selected?._id]);
 
   useEffect(() => {
     if (selectedId) loadContact(selectedId);
@@ -333,6 +341,18 @@ export default function ContactsPage() {
 What assumptions underlie their position?"
                   />
                 </div>
+              </div>
+              <div className="subcard">
+                <div className="subcard__title">Vault notes</div>
+                <Link to={`/vault?recordType=contact&recordId=${selected._id}`} className="btn ghost" style={{ marginBottom: 8 }}>
+                  + Add vault note for this contact
+                </Link>
+                {vaultNotes.length === 0 ? <div className="muted small">No vault notes for this contact.</div> : null}
+                {vaultNotes.slice(0, 5).map((n) => (
+                  <div key={n._id} className="muted small" style={{ marginTop: 4 }}>
+                    {n.title || 'Untitled'} — {n.content ? `${n.content.slice(0, 60)}${n.content.length > 60 ? '…' : ''}` : '—'}
+                  </div>
+                ))}
               </div>
               {selected.outreachLog?.length > 0 ? (
                 <div className="subcard">

@@ -29,6 +29,7 @@ export default function CommoditiesPage() {
   const [newFlag, setNewFlag] = useState({ red: '', green: '' });
   const [contacts, setContacts] = useState([]);
   const [templates, setTemplates] = useState([]);
+  const [vaultNotes, setVaultNotes] = useState([]);
 
   async function loadCommodities() {
     setLoading(true);
@@ -83,6 +84,13 @@ export default function CommoditiesPage() {
   useEffect(() => {
     if (selectedId) loadCommodity(selectedId);
   }, [selectedId]);
+
+  useEffect(() => {
+    if (!selected?._id) return;
+    apiGet('/vault-notes', { params: { recordType: 'commodity', recordId: selected._id, limit: 20 } })
+      .then((r) => r?.ok && Array.isArray(r.items) && setVaultNotes(r.items))
+      .catch(() => setVaultNotes([]));
+  }, [selected?._id]);
 
   async function handleCreate(e) {
     e.preventDefault();
@@ -310,6 +318,18 @@ export default function CommoditiesPage() {
                   <input value={newFlag.green} onChange={(e) => setNewFlag((n) => ({ ...n, green: e.target.value }))} placeholder="Add green flag" />
                   <button type="button" className="btn ghost" onClick={() => addFlag('green')}>Add</button>
                 </div>
+              </div>
+              <div className="subcard">
+                <div className="subcard__title">Vault notes</div>
+                <Link to={`/vault?recordType=commodity&recordId=${selected._id}`} className="btn ghost" style={{ marginBottom: 8 }}>
+                  + Add vault note for this commodity
+                </Link>
+                {vaultNotes.length === 0 ? <div className="muted small">No vault notes for this commodity.</div> : null}
+                {vaultNotes.slice(0, 5).map((n) => (
+                  <div key={n._id} className="muted small" style={{ marginTop: 4 }}>
+                    {n.title || 'Untitled'} — {n.content ? `${n.content.slice(0, 60)}${n.content.length > 60 ? '…' : ''}` : '—'}
+                  </div>
+                ))}
               </div>
               <div className="row">
                 <button className="btn primary" onClick={handleSave} disabled={saving}>{saving ? 'Saving…' : 'Save'}</button>

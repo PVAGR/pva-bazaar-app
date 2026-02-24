@@ -61,6 +61,7 @@ export default function DealsPage() {
   const [requireSignature, setRequireSignature] = useState(true);
   const [commodities, setCommodities] = useState([]);
   const [contacts, setContacts] = useState([]);
+  const [vaultNotes, setVaultNotes] = useState([]);
 
   const CHAINS = [
     { id: 1, name: 'Ethereum', hex: '0x1' },
@@ -178,6 +179,13 @@ export default function DealsPage() {
     apiGet('/commodities', { params: { limit: 100 } }).then((r) => r?.ok && Array.isArray(r.items) && setCommodities(r.items)).catch(() => {});
     apiGet('/contacts', { params: { limit: 100 } }).then((r) => r?.ok && Array.isArray(r.items) && setContacts(r.items)).catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (!selected?._id) return;
+    apiGet('/vault-notes', { params: { recordType: 'deal', recordId: selected._id, limit: 20 } })
+      .then((r) => r?.ok && Array.isArray(r.items) && setVaultNotes(r.items))
+      .catch(() => setVaultNotes([]));
+  }, [selected?._id]);
 
   useEffect(() => {
     if (selectedId) loadDeal(selectedId);
@@ -1018,6 +1026,18 @@ export default function DealsPage() {
                   </select>
                 </label>
               </div>
+            </div>
+            <div className="subcard" style={{ marginBottom: '1rem' }}>
+              <div className="subcard__title">Vault notes</div>
+              <Link to={`/vault?recordType=deal&recordId=${selected._id}`} className="btn ghost" style={{ marginBottom: 8 }}>
+                + Add vault note for this deal
+              </Link>
+              {vaultNotes.length === 0 ? <div className="muted small">No vault notes for this deal.</div> : null}
+              {vaultNotes.slice(0, 5).map((n) => (
+                <div key={n._id} className="muted small" style={{ marginTop: 4 }}>
+                  {n.title || 'Untitled'} — {n.content ? `${n.content.slice(0, 60)}${n.content.length > 60 ? '…' : ''}` : '—'}
+                </div>
+              ))}
             </div>
             <div className="workspace">
               <div className="workspace-col">
