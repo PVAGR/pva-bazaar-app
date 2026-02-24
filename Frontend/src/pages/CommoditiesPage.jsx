@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { Link, useSearchParams } from 'react-router-dom';
 import { apiGet, apiPost, apiPut, apiDelete } from '../lib/api';
 import ErrorBanner from '../components/ErrorBanner.jsx';
@@ -199,6 +200,7 @@ export default function CommoditiesPage() {
 
   return (
     <div className="commodities-shell admin-page authenticated">
+      <Helmet><title>Commodities | PVA Bazaar</title></Helmet>
       <header className="admin-header commodities-header">
         <div className="commodities-header__row">
           <div>

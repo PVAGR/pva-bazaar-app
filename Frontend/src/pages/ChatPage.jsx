@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import { apiPost } from '../lib/api';
 import { getToken } from '../lib/auth';
@@ -46,6 +47,7 @@ export default function ChatPage() {
 
   return (
     <div className="chat-page">
+      <Helmet><title>Chat with Richard | PVA Bazaar</title></Helmet>
       <header className="chat-header">
         <div className="chat-header-links">
           <Link to="/" className="chat-back-link">← pvabazaar.org</Link>

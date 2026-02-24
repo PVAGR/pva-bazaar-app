@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { Link, useSearchParams } from 'react-router-dom';
 import { apiGet, apiPost, apiPut, apiDelete } from '../lib/api';
 import ErrorBanner from '../components/ErrorBanner.jsx';
@@ -149,6 +150,7 @@ export default function VaultPage() {
 
   return (
     <div className="vault-page admin-page authenticated">
+      <Helmet><title>Vault | PVA Bazaar</title></Helmet>
       <header className="admin-header vault-header">
         <div className="vault-header__row">
           <div>

@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { Link, useSearchParams } from 'react-router-dom';
 import { apiDelete, apiGet, apiPost, apiPut } from '../lib/api';
 import { buildDealMessageTypedData, buildDealEvidenceTypedData, signTypedData } from '../lib/eip712';
@@ -524,6 +525,7 @@ export default function DealsPage() {
 
   return (
     <div className={`deals-shell admin-page authenticated ${darkMode ? 'dark-theme' : 'light-theme'}`}>
+      <Helmet><title>Deals | PVA Bazaar</title></Helmet>
       <header className="admin-header deals-header">
         <div className="deals-header__row">
           <div>

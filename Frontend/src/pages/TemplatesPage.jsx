@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { Link, useSearchParams } from 'react-router-dom';
 import { apiGet, apiPost, apiPut, apiDelete } from '../lib/api';
 import ErrorBanner from '../components/ErrorBanner.jsx';
@@ -206,6 +207,7 @@ export default function TemplatesPage() {
 
   return (
     <div className="templates-shell admin-page authenticated">
+      <Helmet><title>Templates | PVA Bazaar</title></Helmet>
       <header className="admin-header templates-header">
         <div className="templates-header__row">
           <div>

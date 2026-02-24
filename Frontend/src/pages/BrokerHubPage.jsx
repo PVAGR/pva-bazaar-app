@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import { apiGet } from '../lib/api';
 import ErrorBanner from '../components/ErrorBanner.jsx';
@@ -64,6 +65,7 @@ export default function BrokerHubPage() {
 
   return (
     <div className="broker-hub admin-page authenticated">
+      <Helmet><title>Broker Hub | PVA Bazaar</title></Helmet>
       <header className="admin-header broker-hub-header">
         <div className="broker-hub-header__row">
           <div>

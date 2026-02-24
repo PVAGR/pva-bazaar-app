@@ -1,4 +1,4 @@
-import { beforeAll, afterEach } from 'vitest';
+import { beforeAll, afterEach, vi } from 'vitest';
 // Optional dependency guard: only require testing-library if installed
 let cleanup: () => void = () => {};
 try {
@@ -17,6 +17,12 @@ try {
 }
 
 // Global test setup for PVA Bazaar
+
+// Mock react-helmet-async so Helmet renders nothing in tests (avoids HelmetProvider requirement)
+vi.mock('react-helmet-async', () => ({
+  Helmet: () => null,
+  HelmetProvider: ({ children }: { children: unknown }) => children,
+}));
 
 // Cleanup after each test
 afterEach(() => {
