@@ -7,6 +7,7 @@ function getCanonicalUrl(path = '') {
 }
 import { Link } from 'react-router-dom';
 import { fetchArchiveEntries } from '../lib/api';
+import { getToken } from '../lib/auth';
 import './ArchiveLibraryPage.css';
 
 const archiveEntries = [
@@ -329,6 +330,7 @@ export default function ArchiveLibraryPage() {
         <div className="header-content">
           <h1>📚 The Complete Archive</h1>
           <div className="header-actions">
+            {getToken() ? <Link to="/broker" className="admin-link">📋 Broker Hub</Link> : null}
             <Link to="/admin" className="admin-link">⚙️ Admin</Link>
             <button 
               className="theme-toggle" 

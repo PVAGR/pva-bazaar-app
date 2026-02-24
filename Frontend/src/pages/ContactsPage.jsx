@@ -253,7 +253,10 @@ export default function ContactsPage() {
                 onClick={() => setSelectedId(c._id)}
               >
                 <div className="contact-title">{c.name}</div>
-                <div className="muted small">{c.company || c.country || c.type || '—'}</div>
+                <div className="muted small">
+                  {c.company || c.country || c.type || '—'}
+                  {(c.outreachLog?.length || 0) > 0 ? ` · ${c.outreachLog.length} outreach` : ''}
+                </div>
               </button>
             ))}
           </div>
