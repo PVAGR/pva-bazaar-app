@@ -15,22 +15,25 @@ export default function BrokerHubPage() {
   const [contacts, setContacts] = useState([]);
   const [templates, setTemplates] = useState([]);
   const [deals, setDeals] = useState([]);
+  const [vaultNotes, setVaultNotes] = useState([]);
   const [search, setSearch] = useState('');
 
   async function loadAll() {
     setLoading(true);
     setError('');
     try {
-      const [cRes, ctRes, tRes, dRes] = await Promise.all([
+      const [cRes, ctRes, tRes, dRes, vRes] = await Promise.all([
         apiGet('/commodities', { params: { limit: 10 } }),
         apiGet('/contacts', { params: { limit: 10 } }),
         apiGet('/templates', { params: { limit: 10 } }),
         apiGet('/deals', { params: { limit: 10 } }),
+        apiGet('/vault-notes', { params: { limit: 10 } }),
       ]);
       if (cRes?.ok && Array.isArray(cRes.items)) setCommodities(cRes.items);
       if (ctRes?.ok && Array.isArray(ctRes.items)) setContacts(ctRes.items);
       if (tRes?.ok && Array.isArray(tRes.items)) setTemplates(tRes.items);
       if (dRes?.ok && Array.isArray(dRes.items)) setDeals(dRes.items);
+      if (vRes?.ok && Array.isArray(vRes.items)) setVaultNotes(vRes.items);
     } catch (e) {
       setError(getErrorMessage(e, 'Failed to load data'));
     } finally {
@@ -52,6 +55,9 @@ export default function BrokerHubPage() {
   const filteredTemplates = searchLower
     ? templates.filter((t) => (t.name || '').toLowerCase().includes(searchLower))
     : templates;
+  const filteredVaultNotes = searchLower
+    ? vaultNotes.filter((v) => (v.title || '').toLowerCase().includes(searchLower) || (v.content || '').toLowerCase().includes(searchLower))
+    : vaultNotes;
 
   return (
     <div className="broker-hub admin-page authenticated">
@@ -79,7 +85,7 @@ export default function BrokerHubPage() {
             type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search commodities, contacts, templates..."
+            placeholder="Search commodities, contacts, templates, vault notes..."
             className="search-input"
           />
         </section>
@@ -155,6 +161,21 @@ export default function BrokerHubPage() {
                     <li key={d._id}>
                       <Link to="/deals">{d.title}</Link>
                       <span className="muted small">{d.status} · {d.currency} {d.totalAmount || 0}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+
+              <section className="card">
+                <h2>
+                  <Link to="/vault">Vault notes</Link>
+                </h2>
+                {filteredVaultNotes.length === 0 ? <div className="muted">None yet</div> : null}
+                <ul className="hub-list">
+                  {filteredVaultNotes.slice(0, 8).map((v) => (
+                    <li key={v._id}>
+                      <Link to="/vault">{v.title || 'Untitled'}</Link>
+                      <span className="muted small">{v.recordType}</span>
                     </li>
                   ))}
                 </ul>

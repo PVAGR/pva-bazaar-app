@@ -11,6 +11,7 @@ vi.mock('../lib/api', () => ({
     if (path === '/contacts') return { ok: true, items: [{ _id: '2', name: 'Nairobi Co', type: 'supplier' }] };
     if (path === '/templates') return { ok: true, items: [{ _id: '3', name: 'Coffee Vetting', type: 'vetting' }] };
     if (path === '/deals') return { ok: true, items: [{ _id: '4', title: 'Deal 1', status: 'active', currency: 'USD', totalAmount: 1000 }] };
+    if (path === '/vault-notes') return { ok: true, items: [{ _id: '5', title: 'Private thought', recordType: 'general' }] };
     return { ok: true, items: [] };
   }),
 }));
@@ -51,5 +52,16 @@ describe('BrokerHubPage', () => {
     );
 
     expect(await screen.findByPlaceholderText(/Search commodities/i)).toBeInTheDocument();
+  });
+
+  it('loads and displays vault notes', async () => {
+    render(
+      <MemoryRouter>
+        <BrokerHubPage />
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByText('Private thought')).toBeInTheDocument();
+    expect(screen.getByText('Vault notes')).toBeInTheDocument();
   });
 });

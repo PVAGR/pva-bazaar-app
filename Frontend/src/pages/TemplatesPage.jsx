@@ -133,13 +133,23 @@ export default function TemplatesPage() {
     setUseWithContactModal({ template });
   }
 
+  function replaceTemplateVars(body, contact) {
+    if (!body || !contact) return body || '';
+    return String(body)
+      .replace(/\{\{contactName\}\}/gi, contact.name || '')
+      .replace(/\{\{contactCompany\}\}/gi, contact.company || '')
+      .replace(/\{\{contactCountry\}\}/gi, contact.country || '')
+      .replace(/\{\{contactEmail\}\}/gi, contact.email || '');
+  }
+
   function sendViaWhatsApp(contact, body) {
     const phone = (contact?.whatsapp || contact?.phone || '').replace(/\D/g, '');
     if (!phone) {
       setError('Contact has no WhatsApp/phone');
       return;
     }
-    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(body)}`, '_blank');
+    const resolved = replaceTemplateVars(body, contact);
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(resolved)}`, '_blank');
     setUseWithContactModal(null);
   }
 
@@ -149,7 +159,8 @@ export default function TemplatesPage() {
       setError('Contact has no email');
       return;
     }
-    window.open(`mailto:${to}?subject=${encodeURIComponent('Supply inquiry')}&body=${encodeURIComponent(body)}`, '_blank');
+    const resolved = replaceTemplateVars(body, contact);
+    window.open(`mailto:${to}?subject=${encodeURIComponent('Supply inquiry')}&body=${encodeURIComponent(resolved)}`, '_blank');
     setUseWithContactModal(null);
   }
 
@@ -195,6 +206,7 @@ export default function TemplatesPage() {
               ))}
             </select>
             <label>Body *</label>
+            <div className="muted small">Use with contact: {'{{contactName}}'}, {'{{contactCompany}}'}, {'{{contactCountry}}'}, {'{{contactEmail}}'}</div>
             <textarea rows={6} value={draft.body} onChange={(e) => setDraft((p) => ({ ...p, body: e.target.value }))} placeholder="Full text (copy-paste content)..." />
             <div className="row">
               <button className="btn primary" type="submit" disabled={creating}>{creating ? 'Creating…' : 'Create'}</button>
@@ -269,7 +281,7 @@ export default function TemplatesPage() {
         {useWithContactModal ? (
           <section className="card modal-overlay">
             <h2>Send template to contact</h2>
-            <p className="muted small">Pick a contact to open WhatsApp or email with the template pre-filled.</p>
+            <p className="muted small">Pick a contact to open WhatsApp or email. {'{{contactName}}'}, {'{{contactCompany}}'}, etc. are replaced with the contact&apos;s data.</p>
             <div className="templates-contact-picker">
               {contacts.map((c) => (
                 <div key={c._id} className="row rowWrap">
