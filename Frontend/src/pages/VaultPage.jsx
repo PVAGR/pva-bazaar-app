@@ -197,6 +197,9 @@ export default function VaultPage() {
           />
           {loading ? <LoadingSpinner label="Loading…" /> : null}
           {!loading && items.length === 0 ? <div className="muted">No vault notes yet.</div> : null}
+          {!loading && items.length > 0 && searchVault.trim() && !items.some((n) => (n.title || '').toLowerCase().includes(searchVault.toLowerCase().trim()) || (n.content || '').toLowerCase().includes(searchVault.toLowerCase().trim())) ? (
+            <div className="muted">No vault notes match &quot;{searchVault}&quot;.</div>
+          ) : null}
           <div className="vault-list">
             {(searchVault.trim()
               ? items.filter(

@@ -253,6 +253,9 @@ export default function ContactsPage() {
           </div>
           {loading ? <LoadingSpinner label="Loading…" /> : null}
           {!loading && items.length === 0 ? <div className="muted">No contacts yet.</div> : null}
+          {!loading && items.length > 0 && searchContact.trim() && !items.some((c) => (c.name || '').toLowerCase().includes(searchContact.toLowerCase().trim()) || (c.company || '').toLowerCase().includes(searchContact.toLowerCase().trim()) || (c.country || '').toLowerCase().includes(searchContact.toLowerCase().trim())) ? (
+            <div className="muted">No contacts match &quot;{searchContact}&quot;.</div>
+          ) : null}
           <div className="contacts-list">
             {(searchContact.trim()
               ? items.filter(

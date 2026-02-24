@@ -269,6 +269,9 @@ export default function TemplatesPage() {
           </div>
           {loading ? <LoadingSpinner label="Loading…" /> : null}
           {!loading && items.length === 0 ? <div className="muted">No templates yet. Run the seed script or create one.</div> : null}
+          {!loading && items.length > 0 && searchTemplate.trim() && !items.some((t) => (t.name || '').toLowerCase().includes(searchTemplate.toLowerCase().trim())) ? (
+            <div className="muted">No templates match &quot;{searchTemplate}&quot;.</div>
+          ) : null}
           <div className="templates-list">
             {(searchTemplate.trim()
               ? items.filter((t) => (t.name || '').toLowerCase().includes(searchTemplate.toLowerCase().trim()))
@@ -321,6 +324,7 @@ export default function TemplatesPage() {
           <section className="card modal-overlay">
             <h2>Send template to contact</h2>
             <p className="muted small">Pick a contact to open WhatsApp or email. {'{{contactName}}'}, {'{{contactCompany}}'}, etc. are replaced with the contact&apos;s data.</p>
+            {contacts.length === 0 ? <div className="muted small" style={{ marginBottom: 12 }}>No contacts yet. Add contacts first to send templates.</div> : null}
             <div className="templates-contact-picker">
               {contacts.map((c) => (
                 <div key={c._id} className="row rowWrap">
