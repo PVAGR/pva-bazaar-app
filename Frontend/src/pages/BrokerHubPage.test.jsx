@@ -64,4 +64,30 @@ describe('BrokerHubPage', () => {
     expect(await screen.findByText('Private thought')).toBeInTheDocument();
     expect(screen.getByText('Vault notes')).toBeInTheDocument();
   });
+
+  it('shows View all link when section has more than 8 items', async () => {
+    const manyCommodities = Array.from({ length: 10 }, (_, i) => ({
+      _id: `c${i}`,
+      name: `Commodity ${i}`,
+      category: 'Test',
+    }));
+    const { apiGet } = await import('../lib/api');
+    vi.mocked(apiGet).mockImplementation(async (path) => {
+      if (path === '/commodities') return { ok: true, items: manyCommodities };
+      if (path === '/contacts') return { ok: true, items: [] };
+      if (path === '/templates') return { ok: true, items: [] };
+      if (path === '/deals') return { ok: true, items: [] };
+      if (path === '/vault-notes') return { ok: true, items: [] };
+      return { ok: true, items: [] };
+    });
+
+    render(
+      <MemoryRouter>
+        <BrokerHubPage />
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByText('Commodity 0')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /View all \(10\)/ })).toBeInTheDocument();
+  });
 });
