@@ -23,6 +23,7 @@ export default function VaultPage() {
   const [selected, setSelected] = useState(null);
   const [saving, setSaving] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [searchVault, setSearchVault] = useState('');
   const [draft, setDraft] = useState({
     recordType: urlRecordType && RECORD_TYPES.includes(urlRecordType) ? urlRecordType : 'general',
     recordId: urlRecordId,
@@ -186,10 +187,25 @@ export default function VaultPage() {
 
         <section className="card">
           <h2>Your vault notes</h2>
+          <input
+            type="search"
+            value={searchVault}
+            onChange={(e) => setSearchVault(e.target.value)}
+            placeholder="Search by title or content..."
+            className="search-input"
+            style={{ marginBottom: 8, maxWidth: 280 }}
+          />
           {loading ? <LoadingSpinner label="Loading…" /> : null}
           {!loading && items.length === 0 ? <div className="muted">No vault notes yet.</div> : null}
           <div className="vault-list">
-            {items.map((n) => (
+            {(searchVault.trim()
+              ? items.filter(
+                  (n) =>
+                    (n.title || '').toLowerCase().includes(searchVault.toLowerCase().trim()) ||
+                    (n.content || '').toLowerCase().includes(searchVault.toLowerCase().trim())
+                )
+              : items
+            ).map((n) => (
               <button
                 key={n._id}
                 className={`vault-item ${selectedId === n._id ? 'active' : ''}`}

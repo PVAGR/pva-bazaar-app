@@ -47,7 +47,10 @@ export default function ChatPage() {
   return (
     <div className="chat-page">
       <header className="chat-header">
-        <Link to="/" className="chat-back-link">← pvabazaar.org</Link>
+        <div className="chat-header-links">
+          <Link to="/" className="chat-back-link">← pvabazaar.org</Link>
+          {isLoggedIn ? <Link to="/broker" className="chat-back-link">Broker Hub</Link> : null}
+        </div>
         <h1>Chat with Richard</h1>
         <p className="muted">
           Direct supply chain sourcer — Kenyan coffee, Congolese malachite, Kenyan soapstone, Afghan/Pakistani gemstones.
