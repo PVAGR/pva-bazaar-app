@@ -374,7 +374,8 @@ What assumptions underlie their position?"
                 {vaultNotes.length === 0 ? <div className="muted small">No vault notes for this contact.</div> : null}
                 {vaultNotes.slice(0, 5).map((n) => (
                   <div key={n._id} className="muted small" style={{ marginTop: 4 }}>
-                    {n.title || 'Untitled'} — {n.content ? `${n.content.slice(0, 60)}${n.content.length > 60 ? '…' : ''}` : '—'}
+                    <Link to={`/vault?selected=${n._id}`}>{n.title || 'Untitled'}</Link>
+                    {' — '}{n.content ? `${n.content.slice(0, 60)}${n.content.length > 60 ? '…' : ''}` : '—'}
                   </div>
                 ))}
               </div>

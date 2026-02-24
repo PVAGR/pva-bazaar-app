@@ -221,6 +221,18 @@ export default function VaultPage() {
         {selected ? (
           <section className="card">
             <h2>Edit: {selected.title || 'Untitled'}</h2>
+            {selected.recordType && selected.recordId && ['contact', 'commodity', 'deal'].includes(selected.recordType) ? (
+              <p className="muted small" style={{ marginBottom: 12 }}>
+                Linked to {selected.recordType}:{' '}
+                <Link to={
+                  selected.recordType === 'contact' ? `/contacts?selected=${selected.recordId}` :
+                  selected.recordType === 'commodity' ? `/commodities?selected=${selected.recordId}` :
+                  `/deals?selected=${selected.recordId}`
+                }>
+                  View {selected.recordType}
+                </Link>
+              </p>
+            ) : null}
             <div className="form">
               <label>Type</label>
               <select value={draft.recordType} onChange={(e) => setDraft((p) => ({ ...p, recordType: e.target.value }))}>
