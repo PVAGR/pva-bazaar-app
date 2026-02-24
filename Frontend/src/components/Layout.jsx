@@ -16,6 +16,7 @@ export default function Layout({ children }) {
         <nav className="layout__nav" aria-label="Primary">
           <NavLink to="/" end>📚 Archive Library</NavLink>
           <NavLink to="/marketplace">🛒 Marketplace</NavLink>
+          {token ? <NavLink to="/broker">📋 Broker Hub</NavLink> : null}
           {token ? <NavLink to="/items/new">📦 Sell Item</NavLink> : null}
           <NavLink to="/oracle">🔮 Oracle Assessment</NavLink>
           <NavLink to="/chat">💬 Chat with Richard</NavLink>

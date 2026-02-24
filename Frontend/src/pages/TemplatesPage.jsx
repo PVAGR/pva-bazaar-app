@@ -74,6 +74,15 @@ export default function TemplatesPage() {
     if (selectedId) loadTemplate(selectedId);
   }, [selectedId]);
 
+  useEffect(() => {
+    if (!useWithContactModal) return;
+    const onKey = (e) => {
+      if (e.key === 'Escape') setUseWithContactModal(null);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [useWithContactModal]);
+
   async function handleCreate(e) {
     e.preventDefault();
     const name = draft.name.trim();
