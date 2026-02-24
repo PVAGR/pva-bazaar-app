@@ -23,11 +23,11 @@ export default function BrokerHubPage() {
     setError('');
     try {
       const [cRes, ctRes, tRes, dRes, vRes] = await Promise.all([
-        apiGet('/commodities', { params: { limit: 10 } }),
-        apiGet('/contacts', { params: { limit: 10 } }),
-        apiGet('/templates', { params: { limit: 10 } }),
-        apiGet('/deals', { params: { limit: 10 } }),
-        apiGet('/vault-notes', { params: { limit: 10 } }),
+        apiGet('/commodities', { params: { limit: 25 } }),
+        apiGet('/contacts', { params: { limit: 25 } }),
+        apiGet('/templates', { params: { limit: 25 } }),
+        apiGet('/deals', { params: { limit: 25 } }),
+        apiGet('/vault-notes', { params: { limit: 25 } }),
       ]);
       if (cRes?.ok && Array.isArray(cRes.items)) setCommodities(cRes.items);
       if (ctRes?.ok && Array.isArray(ctRes.items)) setContacts(ctRes.items);
@@ -59,7 +59,7 @@ export default function BrokerHubPage() {
     ? vaultNotes.filter((v) => (v.title || '').toLowerCase().includes(searchLower) || (v.content || '').toLowerCase().includes(searchLower))
     : vaultNotes;
   const filteredDeals = searchLower
-    ? deals.filter((d) => (d.title || '').toLowerCase().includes(searchLower) || (d.counterpartyName || '').toLowerCase().includes(searchLower))
+    ? deals.filter((d) => (d.title || '').toLowerCase().includes(searchLower) || (d.counterparty?.name || '').toLowerCase().includes(searchLower))
     : deals;
 
   return (

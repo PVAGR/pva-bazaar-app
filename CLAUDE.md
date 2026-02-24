@@ -16,6 +16,7 @@ The project follows a traditional full-stack architecture with separate frontend
 - **Key Models**:
   - `Artifact.js`: Core artifact model with blockchain integration, fractionalization support, and ownership history
   - `User.js`: User authentication and management
+  - `Commodity.js`, `Contact.js`, `Template.js`, `Deal.js`, `VaultNote.js`: Broker platform models
 - **API Structure**: RESTful API with route modules in `/routes/`
 - **Blockchain Integration**: Web3.js integration for on-chain verification (`utils/blockchain.js`)
 - **Additional Services**: IPFS integration, vector database, and embedding services
@@ -77,6 +78,16 @@ The system supports:
 - `/api/health`: Health check endpoints
 - `/api/transactions`: Transaction handling
 - `/api/certificates`: Certificate management
+- `/api/commodities`, `/api/contacts`, `/api/templates`, `/api/deals`, `/api/vault-notes`: Broker CRUD
+- `/api/contacts/:id/outreach`: Log template outreach (WhatsApp/email)
+- `/api/chat`: Richard AI persona (OPENAI_API_KEY required)
+
+## Broker Platform (pvabazaar.org)
+
+Broker Hub at `/broker` unifies: commodities, contacts, templates, deals, vault notes. Deep links: `?selected=ID`.
+
+- **Seed scripts**: `npm run seed:templates`, `npm run seed:commodities` (requires admin user from `node seed.js`)
+- **Richard AI**: Chat at `/chat`; contact via pvaglobalreach@gmail.com or pvabazaar.com only
 
 ## Environment Variables Required
 
