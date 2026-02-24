@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { apiPost } from '../lib/api';
 import { getToken } from '../lib/auth';
 import '../styles/admin-common.css';
@@ -11,7 +12,10 @@ export default function ChatPage() {
   const [error, setError] = useState('');
   const messagesEndRef = useRef(null);
 
-  const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  const scrollToBottom = () => {
+    const el = messagesEndRef.current;
+    if (el && typeof el.scrollIntoView === 'function') el.scrollIntoView({ behavior: 'smooth' });
+  };
   useEffect(() => scrollToBottom(), [messages]);
 
   async function sendMessage(e) {
@@ -43,6 +47,7 @@ export default function ChatPage() {
   return (
     <div className="chat-page">
       <header className="chat-header">
+        <Link to="/" className="chat-back-link">← pvabazaar.org</Link>
         <h1>Chat with Richard</h1>
         <p className="muted">
           Direct supply chain sourcer — Kenyan coffee, Congolese malachite, Kenyan soapstone, Afghan/Pakistani gemstones.

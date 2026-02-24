@@ -11,11 +11,11 @@ async function globalSetup(config: FullConfig) {
     // Wait for development servers to be ready
     console.log('⏳ Waiting for development servers...');
 
-    // Check backend health
+    // Check backend health (port 5001)
     let backendReady = false;
     for (let i = 0; i < 30; i++) {
       try {
-        await page.goto('http://localhost:4000/health');
+        await page.goto('http://localhost:5001/health');
         backendReady = true;
         break;
       } catch {
@@ -27,11 +27,11 @@ async function globalSetup(config: FullConfig) {
       console.warn('⚠️  Backend not ready, some tests may fail');
     }
 
-    // Check frontend
+    // Check frontend (port 5173)
     let frontendReady = false;
     for (let i = 0; i < 30; i++) {
       try {
-        await page.goto('http://localhost:3000');
+        await page.goto('http://localhost:5173');
         frontendReady = true;
         break;
       } catch {
