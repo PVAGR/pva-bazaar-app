@@ -140,6 +140,34 @@ describe('Broker API (commodities, contacts, templates, chat)', () => {
     expect(res.status).toBe(401);
   });
 
+  it('contacts outreach log', async () => {
+    const token = await registerAndGetToken();
+    const contactRes = await request(app)
+      .post('/api/contacts')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Outreach Contact', email: 'out@test.com', country: 'Kenya' });
+    expect(contactRes.status).toBe(201);
+    const contactId = contactRes.body.item?._id;
+    expect(contactId).toBeTruthy();
+
+    const templateRes = await request(app)
+      .post('/api/templates')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Outreach Template', type: 'intro', body: 'Hello {{contactName}}' });
+    expect(templateRes.status).toBe(201);
+    const templateId = templateRes.body.item?._id;
+
+    const outreachRes = await request(app)
+      .post(`/api/contacts/${contactId}/outreach`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ templateId, status: 'sent', response: 'whatsapp' });
+    expect(outreachRes.status).toBe(200);
+    expect(outreachRes.body?.item?.outreachLog?.length).toBeGreaterThan(0);
+    const last = outreachRes.body.item.outreachLog[outreachRes.body.item.outreachLog.length - 1];
+    expect(last.status).toBe('sent');
+    expect(last.response).toBe('whatsapp');
+  });
+
   it('contacts require auth', async () => {
     const res = await request(app).post('/api/contacts').send({ name: 'Test' });
     expect(res.status).toBe(401);

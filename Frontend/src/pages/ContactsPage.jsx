@@ -357,9 +357,11 @@ What assumptions underlie their position?"
               {selected.outreachLog?.length > 0 ? (
                 <div className="subcard">
                   <div className="subcard__title">Outreach log</div>
+                  <p className="muted small">Templates sent via WhatsApp or Email.</p>
                   {selected.outreachLog.slice(-5).reverse().map((o, i) => (
-                    <div key={i} className="muted small">
+                    <div key={i} className="muted small" style={{ marginTop: 4 }}>
                       {o.date ? new Date(o.date).toLocaleDateString() : ''} · {o.status || 'sent'}
+                      {o.response ? ` · ${o.response}` : ''}
                     </div>
                   ))}
                 </div>

@@ -300,6 +300,18 @@ export default function TemplatesPage() {
               {contacts.map((c) => (
                 <div key={c._id} className="row rowWrap">
                   <span>{c.name}</span>
+                  <button
+                    className="btn ghost"
+                    onClick={() => {
+                      const resolved = replaceTemplateVars(useWithContactModal.template?.body || '', c);
+                      navigator.clipboard?.writeText(resolved).then(() => {
+                        setCopiedId(`resolved-${c._id}`);
+                        setTimeout(() => setCopiedId(''), 2000);
+                      }).catch(() => {});
+                    }}
+                  >
+                    {copiedId === `resolved-${c._id}` ? 'Copied!' : 'Copy resolved'}
+                  </button>
                   {c.whatsapp || c.phone ? (
                     <button className="btn ghost" onClick={() => sendViaWhatsApp(c, useWithContactModal.template?.body || '', useWithContactModal.template?._id)}>WhatsApp</button>
                   ) : null}
