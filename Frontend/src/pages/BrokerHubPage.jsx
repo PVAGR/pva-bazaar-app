@@ -88,7 +88,7 @@ export default function BrokerHubPage() {
             type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search commodities, contacts, templates, vault notes..."
+            placeholder="Search commodities, contacts, templates, deals, vault notes..."
             className="search-input"
           />
         </section>
@@ -112,8 +112,9 @@ export default function BrokerHubPage() {
               <section className="card">
                 <h2>
                   <Link to="/commodities">Commodities</Link>
+                  {filteredCommodities.length > 0 ? <span className="muted"> ({filteredCommodities.length})</span> : null}
                 </h2>
-                {filteredCommodities.length === 0 ? <div className="muted">None yet</div> : null}
+                {filteredCommodities.length === 0 ? <div className="muted">None yet. Run npm run seed:commodities</div> : null}
                 <ul className="hub-list">
                   {filteredCommodities.slice(0, 8).map((c) => (
                     <li key={c._id}>
@@ -127,6 +128,7 @@ export default function BrokerHubPage() {
               <section className="card">
                 <h2>
                   <Link to="/contacts">Contacts</Link>
+                  {filteredContacts.length > 0 ? <span className="muted"> ({filteredContacts.length})</span> : null}
                 </h2>
                 {filteredContacts.length === 0 ? <div className="muted">None yet</div> : null}
                 <ul className="hub-list">
@@ -142,8 +144,9 @@ export default function BrokerHubPage() {
               <section className="card">
                 <h2>
                   <Link to="/templates">Templates</Link>
+                  {filteredTemplates.length > 0 ? <span className="muted"> ({filteredTemplates.length})</span> : null}
                 </h2>
-                {filteredTemplates.length === 0 ? <div className="muted">None yet. Run seed or create one.</div> : null}
+                {filteredTemplates.length === 0 ? <div className="muted">None yet. Run npm run seed:templates</div> : null}
                 <ul className="hub-list">
                   {filteredTemplates.slice(0, 8).map((t) => (
                     <li key={t._id}>
@@ -157,6 +160,7 @@ export default function BrokerHubPage() {
               <section className="card">
                 <h2>
                   <Link to="/deals">Deals</Link>
+                  {filteredDeals.length > 0 ? <span className="muted"> ({filteredDeals.length})</span> : null}
                 </h2>
                 {filteredDeals.length === 0 ? <div className="muted">None yet</div> : null}
                 <ul className="hub-list">
@@ -172,6 +176,7 @@ export default function BrokerHubPage() {
               <section className="card">
                 <h2>
                   <Link to="/vault">Vault notes</Link>
+                  {filteredVaultNotes.length > 0 ? <span className="muted"> ({filteredVaultNotes.length})</span> : null}
                 </h2>
                 {filteredVaultNotes.length === 0 ? <div className="muted">None yet</div> : null}
                 <ul className="hub-list">

@@ -12,6 +12,7 @@ import './DealsPage.css';
 export default function DealsPage() {
   const [searchParams] = useSearchParams();
   const urlSelected = searchParams.get('selected') || '';
+  const [filterStage, setFilterStage] = useState('');
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem('archive-theme');
     return saved ? saved === 'dark' : true;
@@ -890,10 +891,23 @@ export default function DealsPage() {
 
         <section className="card">
           <h2>Your deals</h2>
+          <div className="row" style={{ marginBottom: 8 }}>
+            <span className="muted small">Filter by stage:</span>
+            <select value={filterStage} onChange={(e) => setFilterStage(e.target.value)}>
+              <option value="">All</option>
+              <option value="procurement">1. Procurement</option>
+              <option value="payment">2. Payment</option>
+              <option value="shipping">3. Shipping</option>
+              <option value="sale">4. Sale</option>
+            </select>
+          </div>
           {loading ? <LoadingSpinner label="Loading deals…" /> : null}
           {!loading && items.length === 0 ? <div className="muted">No deals yet.</div> : null}
+          {!loading && items.length > 0 && filterStage && items.filter((d) => (d.stage || 'procurement') === filterStage).length === 0 ? (
+            <div className="muted">No deals in {filterStage} stage.</div>
+          ) : null}
           <div className="deals-list">
-            {items.map((d) => (
+            {(filterStage ? items.filter((d) => (d.stage || 'procurement') === filterStage) : items).map((d) => (
               <button
                 key={d._id}
                 className={`deal-item ${selectedId === d._id ? 'active' : ''}`}
