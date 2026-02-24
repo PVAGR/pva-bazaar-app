@@ -29,6 +29,7 @@ export default function CommoditiesPage() {
     linkedContactIds: [],
   });
   const [newFlag, setNewFlag] = useState({ red: '', green: '' });
+  const [searchCommodity, setSearchCommodity] = useState('');
   const [contacts, setContacts] = useState([]);
   const [templates, setTemplates] = useState([]);
   const [vaultNotes, setVaultNotes] = useState([]);
@@ -191,6 +192,11 @@ export default function CommoditiesPage() {
     else setDraft((p) => ({ ...p, greenFlags: p.greenFlags.filter((_, i) => i !== idx) }));
   }
 
+  const searchLower = searchCommodity.toLowerCase().trim();
+  const filteredCommodities = searchLower
+    ? items.filter((c) => (c.name || '').toLowerCase().includes(searchLower) || (c.category || '').toLowerCase().includes(searchLower))
+    : items;
+
   return (
     <div className="commodities-shell admin-page authenticated">
       <header className="admin-header commodities-header">
@@ -225,10 +231,21 @@ export default function CommoditiesPage() {
 
         <section className="card">
           <h2>Your commodities</h2>
+          <input
+            type="search"
+            value={searchCommodity}
+            onChange={(e) => setSearchCommodity(e.target.value)}
+            placeholder="Search by name or category..."
+            className="search-input"
+            style={{ marginBottom: 8, maxWidth: 280 }}
+          />
           {loading ? <LoadingSpinner label="Loading…" /> : null}
           {!loading && items.length === 0 ? <div className="muted">No commodities yet.</div> : null}
+          {!loading && items.length > 0 && searchLower && filteredCommodities.length === 0 ? (
+            <div className="muted">No commodities match &quot;{searchCommodity}&quot;.</div>
+          ) : null}
           <div className="commodities-list">
-            {items.map((c) => (
+            {filteredCommodities.map((c) => (
               <button
                 key={c._id}
                 className={`commodity-item ${selectedId === c._id ? 'active' : ''}`}
@@ -281,7 +298,7 @@ export default function CommoditiesPage() {
                   const c = contacts.find((x) => x._id === id) || selected?.linkedContactIds?.find((x) => (x?._id || x) === id);
                   return (
                     <div key={id} className="row rowWrap">
-                      <Link to="/contacts" className="muted">{typeof c === 'object' ? c?.name : id}</Link>
+                      <Link to={`/contacts?selected=${id}`} className="muted">{typeof c === 'object' ? c?.name : id}</Link>
                       <button type="button" className="btn ghost" onClick={() => setDraft((p) => ({ ...p, linkedContactIds: (p.linkedContactIds || []).filter((x) => x !== id) }))}>Remove</button>
                     </div>
                   );
@@ -299,7 +316,7 @@ export default function CommoditiesPage() {
                   const t = templates.find((x) => x._id === id) || selected?.linkedTemplateIds?.find((x) => (x?._id || x) === id);
                   return (
                     <div key={id} className="row rowWrap">
-                      <Link to="/templates" className="muted">{typeof t === 'object' ? t?.name : id}</Link>
+                      <Link to={`/templates?selected=${id}`} className="muted">{typeof t === 'object' ? t?.name : id}</Link>
                       <button type="button" className="btn ghost" onClick={() => setDraft((p) => ({ ...p, linkedTemplateIds: (p.linkedTemplateIds || []).filter((x) => x !== id) }))}>Remove</button>
                     </div>
                   );
