@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { apiGet, apiPost, apiPut, apiDelete } from '../lib/api';
 import ErrorBanner from '../components/ErrorBanner.jsx';
 import LoadingSpinner from '../components/LoadingSpinner.jsx';
@@ -9,6 +9,8 @@ import '../styles/admin-common.css';
 import './CommoditiesPage.css';
 
 export default function CommoditiesPage() {
+  const [searchParams] = useSearchParams();
+  const urlSelected = searchParams.get('selected') || '';
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [items, setItems] = useState([]);
@@ -76,6 +78,9 @@ export default function CommoditiesPage() {
   useEffect(() => {
     loadCommodities();
   }, []);
+  useEffect(() => {
+    if (urlSelected) setSelectedId(urlSelected);
+  }, [urlSelected]);
   useEffect(() => {
     apiGet('/contacts', { params: { limit: 100 } }).then((r) => r?.ok && Array.isArray(r.items) && setContacts(r.items)).catch(() => {});
     apiGet('/templates', { params: { limit: 100 } }).then((r) => r?.ok && Array.isArray(r.items) && setTemplates(r.items)).catch(() => {});

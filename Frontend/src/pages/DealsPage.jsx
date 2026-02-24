@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { apiDelete, apiGet, apiPost, apiPut } from '../lib/api';
 import { buildDealMessageTypedData, buildDealEvidenceTypedData, signTypedData } from '../lib/eip712';
 import { getErrorMessage, withRetry } from '../lib/errorUtils';
@@ -10,6 +10,8 @@ import AdminNav from '../components/AdminNav.jsx';
 import './DealsPage.css';
 
 export default function DealsPage() {
+  const [searchParams] = useSearchParams();
+  const urlSelected = searchParams.get('selected') || '';
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem('archive-theme');
     return saved ? saved === 'dark' : true;
@@ -174,6 +176,9 @@ export default function DealsPage() {
   useEffect(() => {
     loadDeals();
   }, []);
+  useEffect(() => {
+    if (urlSelected) setSelectedId(urlSelected);
+  }, [urlSelected]);
 
   useEffect(() => {
     apiGet('/commodities', { params: { limit: 100 } }).then((r) => r?.ok && Array.isArray(r.items) && setCommodities(r.items)).catch(() => {});

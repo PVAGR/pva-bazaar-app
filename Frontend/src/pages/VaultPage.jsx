@@ -14,6 +14,7 @@ export default function VaultPage() {
   const [searchParams] = useSearchParams();
   const urlRecordType = searchParams.get('recordType') || '';
   const urlRecordId = searchParams.get('recordId') || '';
+  const urlSelected = searchParams.get('selected') || '';
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -34,6 +35,10 @@ export default function VaultPage() {
       setDraft((p) => ({ ...p, recordType: urlRecordType, recordId: urlRecordId }));
     }
   }, [urlRecordType, urlRecordId]);
+
+  useEffect(() => {
+    if (urlSelected) setSelectedId(urlSelected);
+  }, [urlSelected]);
 
   async function loadNotes() {
     setLoading(true);

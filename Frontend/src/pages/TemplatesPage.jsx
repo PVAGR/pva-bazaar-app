@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { apiGet, apiPost, apiPut, apiDelete } from '../lib/api';
 import ErrorBanner from '../components/ErrorBanner.jsx';
 import LoadingSpinner from '../components/LoadingSpinner.jsx';
@@ -11,6 +11,8 @@ import './TemplatesPage.css';
 const TYPES = ['vetting', 'intro', 'pitch'];
 
 export default function TemplatesPage() {
+  const [searchParams] = useSearchParams();
+  const urlSelected = searchParams.get('selected') || '';
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [items, setItems] = useState([]);
@@ -60,6 +62,9 @@ export default function TemplatesPage() {
   useEffect(() => {
     loadTemplates();
   }, [filterType, filterCommodity]);
+  useEffect(() => {
+    if (urlSelected) setSelectedId(urlSelected);
+  }, [urlSelected]);
   useEffect(() => {
     apiGet('/contacts', { params: { limit: 100 } }).then((r) => r?.ok && Array.isArray(r.items) && setContacts(r.items)).catch(() => {});
     apiGet('/commodities', { params: { limit: 100 } }).then((r) => r?.ok && Array.isArray(r.items) && setCommodities(r.items)).catch(() => {});

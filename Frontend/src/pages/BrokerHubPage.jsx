@@ -58,6 +58,9 @@ export default function BrokerHubPage() {
   const filteredVaultNotes = searchLower
     ? vaultNotes.filter((v) => (v.title || '').toLowerCase().includes(searchLower) || (v.content || '').toLowerCase().includes(searchLower))
     : vaultNotes;
+  const filteredDeals = searchLower
+    ? deals.filter((d) => (d.title || '').toLowerCase().includes(searchLower) || (d.counterpartyName || '').toLowerCase().includes(searchLower))
+    : deals;
 
   return (
     <div className="broker-hub admin-page authenticated">
@@ -114,7 +117,7 @@ export default function BrokerHubPage() {
                 <ul className="hub-list">
                   {filteredCommodities.slice(0, 8).map((c) => (
                     <li key={c._id}>
-                      <Link to="/commodities">{c.name}</Link>
+                      <Link to={`/commodities?selected=${c._id}`}>{c.name}</Link>
                       <span className="muted small">{c.category || ''}</span>
                     </li>
                   ))}
@@ -129,7 +132,7 @@ export default function BrokerHubPage() {
                 <ul className="hub-list">
                   {filteredContacts.slice(0, 8).map((c) => (
                     <li key={c._id}>
-                      <Link to="/contacts">{c.name}</Link>
+                      <Link to={`/contacts?selected=${c._id}`}>{c.name}</Link>
                       <span className="muted small">{c.type || c.company || ''}</span>
                     </li>
                   ))}
@@ -144,7 +147,7 @@ export default function BrokerHubPage() {
                 <ul className="hub-list">
                   {filteredTemplates.slice(0, 8).map((t) => (
                     <li key={t._id}>
-                      <Link to="/templates">{t.name}</Link>
+                      <Link to={`/templates?selected=${t._id}`}>{t.name}</Link>
                       <span className="muted small">{t.type}</span>
                     </li>
                   ))}
@@ -155,12 +158,12 @@ export default function BrokerHubPage() {
                 <h2>
                   <Link to="/deals">Deals</Link>
                 </h2>
-                {deals.length === 0 ? <div className="muted">None yet</div> : null}
+                {filteredDeals.length === 0 ? <div className="muted">None yet</div> : null}
                 <ul className="hub-list">
-                  {deals.slice(0, 8).map((d) => (
+                  {filteredDeals.slice(0, 8).map((d) => (
                     <li key={d._id}>
-                      <Link to="/deals">{d.title}</Link>
-                      <span className="muted small">{d.status} · {d.currency} {d.totalAmount || 0}</span>
+                      <Link to={`/deals?selected=${d._id}`}>{d.title}</Link>
+                      <span className="muted small">{d.stage || 'procurement'} · {d.currency} {d.totalAmount || 0}</span>
                     </li>
                   ))}
                 </ul>
@@ -174,7 +177,7 @@ export default function BrokerHubPage() {
                 <ul className="hub-list">
                   {filteredVaultNotes.slice(0, 8).map((v) => (
                     <li key={v._id}>
-                      <Link to="/vault">{v.title || 'Untitled'}</Link>
+                      <Link to={`/vault?selected=${v._id}`}>{v.title || 'Untitled'}</Link>
                       <span className="muted small">{v.recordType}</span>
                     </li>
                   ))}
