@@ -24,6 +24,7 @@ import LoginPage from './pages/LoginPage.jsx';
 import RegisterPage from './pages/RegisterPage.jsx';
 import AccountPage from './pages/AccountPage.jsx';
 import OnboardingPage from './pages/OnboardingPage.jsx';
+import NotFoundPage from './pages/NotFoundPage.jsx';
 import { getToken } from './lib/auth.js';
 import './base.css';
 
@@ -135,6 +136,7 @@ export default function App() {
         />
         <Route path="/checkout/success" element={<CheckoutSuccessPage />} />
         <Route path="/checkout/cancel" element={<CheckoutCancelPage />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </HashRouter>
   );

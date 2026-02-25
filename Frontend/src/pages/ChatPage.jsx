@@ -3,6 +3,7 @@ import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import { apiPost } from '../lib/api';
 import { getToken } from '../lib/auth';
+import SiteFooter from '../components/SiteFooter.jsx';
 import '../styles/admin-common.css';
 import './ChatPage.css';
 
@@ -109,15 +110,7 @@ export default function ChatPage() {
         </form>
       </main>
 
-      <footer className="chat-footer" style={{ padding: 16, textAlign: 'center', borderTop: '1px solid var(--chat-border, #333)' }}>
-        <Link to="/">Archive</Link>
-        <span style={{ margin: '0 8px' }}>·</span>
-        <Link to="/marketplace">Marketplace</Link>
-        <span style={{ margin: '0 8px' }}>·</span>
-        <Link to="/oracle">Oracle</Link>
-        <span style={{ margin: '0 8px' }}>·</span>
-        <Link to="/about">About</Link>
-      </footer>
+      <SiteFooter style={{ borderTopColor: 'var(--chat-border, #333)' }} />
     </div>
   );
 }
