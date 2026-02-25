@@ -57,14 +57,16 @@ describe('ChatPage', () => {
     expect(screen.getByRole('button', { name: /Send/i })).toBeDisabled();
   });
 
-  it('has back link to pvabazaar.org', () => {
+  it('has nav links including Archive and Marketplace', () => {
     render(
       <MemoryRouter>
         <ChatPage />
       </MemoryRouter>
     );
-    const backLink = screen.getByRole('link', { name: /pvabazaar\.org/i });
-    expect(backLink).toBeInTheDocument();
-    expect(backLink).toHaveAttribute('href', '/');
+    const links = screen.getAllByRole('link');
+    const archiveLink = links.find((l) => l.getAttribute('href') === '/' && l.textContent?.includes('Archive'));
+    expect(archiveLink).toBeTruthy();
+    const marketplaceLink = links.find((l) => l.getAttribute('href') === '/marketplace');
+    expect(marketplaceLink).toBeTruthy();
   });
 });

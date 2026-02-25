@@ -50,8 +50,10 @@ export default function ChatPage() {
       <Helmet><title>Chat with Richard | PVA Bazaar</title></Helmet>
       <header className="chat-header">
         <div className="chat-header-links">
-          <Link to="/" className="chat-back-link">← pvabazaar.org</Link>
-          {isLoggedIn ? <Link to="/broker" className="chat-back-link">Broker Hub</Link> : null}
+          <Link to="/">📚 Archive</Link>
+          <Link to="/marketplace">🛒 Marketplace</Link>
+          <Link to="/about">About</Link>
+          {isLoggedIn ? <Link to="/broker">📋 Broker Hub</Link> : null}
         </div>
         <h1>Chat with Richard</h1>
         <p className="muted">
@@ -99,12 +101,23 @@ export default function ChatPage() {
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask Richard..."
             disabled={loading}
+            aria-label="Message to Richard"
           />
           <button type="submit" className="btn primary" disabled={loading || !input.trim()}>
             Send
           </button>
         </form>
       </main>
+
+      <footer className="chat-footer" style={{ padding: 16, textAlign: 'center', borderTop: '1px solid var(--chat-border, #333)' }}>
+        <Link to="/">Archive</Link>
+        <span style={{ margin: '0 8px' }}>·</span>
+        <Link to="/marketplace">Marketplace</Link>
+        <span style={{ margin: '0 8px' }}>·</span>
+        <Link to="/oracle">Oracle</Link>
+        <span style={{ margin: '0 8px' }}>·</span>
+        <Link to="/about">About</Link>
+      </footer>
     </div>
   );
 }

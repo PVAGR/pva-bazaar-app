@@ -138,6 +138,16 @@ export default function MarketplacePage() {
         )}
         {error && <div className="error">{error}</div>}
       </section>
+
+      <footer className="marketplace-footer" style={{ padding: 24, textAlign: 'center', borderTop: '1px solid rgba(0,0,0,0.1)' }}>
+        <Link to="/">Archive</Link>
+        <span style={{ margin: '0 8px' }}>·</span>
+        <Link to="/chat">Chat with Richard</Link>
+        <span style={{ margin: '0 8px' }}>·</span>
+        <Link to="/oracle">Oracle</Link>
+        <span style={{ margin: '0 8px' }}>·</span>
+        <Link to="/about">About</Link>
+      </footer>
     </main>
   );
 }

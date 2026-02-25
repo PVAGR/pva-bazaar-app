@@ -26,6 +26,14 @@ export default function AboutPage() {
           <li><Link to="/">📚 Archive Library</Link> — 40+ works, 110,000+ words.</li>
         </ul>
 
+        <h2 style={{ marginTop: 32 }}>Contact</h2>
+        <p>
+          Richard Torres · pvaglobalreach@gmail.com · <a href="https://pvabazaar.com" target="_blank" rel="noopener noreferrer">pvabazaar.com</a>
+        </p>
+        <p className="muted small">
+          <Link to="/login">Log in</Link> or <Link to="/register">register</Link> to access Broker Hub, sell items, and manage deals.
+        </p>
+
         <p className="muted" style={{ marginTop: 32, fontSize: '0.9rem' }}>
           © {new Date().getFullYear()} pvabazaar.org
         </p>
