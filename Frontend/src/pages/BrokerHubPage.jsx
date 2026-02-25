@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import { apiGet } from '../lib/api';
@@ -18,6 +18,7 @@ export default function BrokerHubPage() {
   const [deals, setDeals] = useState([]);
   const [vaultNotes, setVaultNotes] = useState([]);
   const [search, setSearch] = useState('');
+  const searchInputRef = useRef(null);
 
   async function loadAll() {
     setLoading(true);
@@ -44,6 +45,18 @@ export default function BrokerHubPage() {
 
   useEffect(() => {
     loadAll();
+  }, []);
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey) return;
+      const active = document.activeElement;
+      if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable)) return;
+      e.preventDefault();
+      searchInputRef.current?.focus();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
   }, []);
 
   const searchLower = search.toLowerCase().trim();
@@ -87,10 +100,11 @@ export default function BrokerHubPage() {
         <section className="card">
           <h2>Quick search</h2>
           <input
+            ref={searchInputRef}
             type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search commodities, contacts, templates, deals, vault notes..."
+            placeholder="Search commodities, contacts, templates, deals, vault notes... (press / to focus)"
             className="search-input"
             aria-label="Search commodities, contacts, templates, deals, vault notes"
           />
