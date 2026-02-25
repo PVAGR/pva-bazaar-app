@@ -77,6 +77,7 @@ export default function MarketplacePage() {
         <meta property="og:description" content="Browse artifacts and crafts on the PVA Bazaar marketplace." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://pvabazaar.org/#/marketplace" />
+        <meta property="og:image" content="https://pvabazaar.org/og-default.jpg" />
       </Helmet>
       <section className="marketplace-header">
         <div className="marketplace-nav" style={{ display: 'flex', gap: 16, marginBottom: 12, flexWrap: 'wrap' }}>

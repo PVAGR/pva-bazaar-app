@@ -55,6 +55,7 @@ export default function ChatPage() {
         <meta property="og:description" content="Chat with Richard — direct supply chain sourcer. Ask about Kenyan coffee, malachite, soapstone, gemstones, vetting, and partnerships." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://pvabazaar.org/#/chat" />
+        <meta property="og:image" content="https://pvabazaar.org/og-default.jpg" />
       </Helmet>
       <header className="chat-header">
         <div className="chat-header-links">
