@@ -357,9 +357,11 @@ export default function ArchiveLibraryPage() {
           </div>
         </div>
         
-        <div className="view-mode-toggle">
+        <div className="view-mode-toggle" role="group" aria-label="View mode">
           <button 
+            type="button"
             className={`view-btn ${viewMode === 'archive' ? 'active' : ''}`}
+            aria-pressed={viewMode === 'archive'}
             onClick={() => {
               setViewMode('archive');
               setSelectedEntry(null);
@@ -369,7 +371,9 @@ export default function ArchiveLibraryPage() {
             📚 Original Archive ({archiveEntries.length})
           </button>
           <button 
+            type="button"
             className={`view-btn ${viewMode === 'blog' ? 'active' : ''}`}
+            aria-pressed={viewMode === 'blog'}
             onClick={() => {
               setViewMode('blog');
               setSelectedEntry(null);
