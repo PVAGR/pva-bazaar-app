@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { apiPost } from '../lib/api';
 import { getToken } from '../lib/auth';
 import SiteFooter from '../components/SiteFooter.jsx';
+import ShareButton from '../components/ShareButton.jsx';
 import '../styles/admin-common.css';
 import './ChatPage.css';
 
@@ -63,6 +64,7 @@ export default function ChatPage() {
           <Link to="/marketplace">🛒 Marketplace</Link>
           <Link to="/about">About</Link>
           {isLoggedIn ? <Link to="/broker">📋 Broker Hub</Link> : null}
+          <ShareButton url="https://pvabazaar.org/#/chat" title="Chat with Richard | PVA Bazaar" text="Chat with Richard — direct supply chain sourcer" />
         </div>
         <h1>Chat with Richard</h1>
         <p className="muted">

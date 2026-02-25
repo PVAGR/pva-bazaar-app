@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { fetchMarketplaceItems } from "../lib/api";
 import SiteFooter from "../components/SiteFooter.jsx";
+import ShareButton from "../components/ShareButton.jsx";
 import useDebounce from "../hooks/useDebounce";
 import "./MarketplacePage.css";
 
@@ -87,9 +88,12 @@ export default function MarketplacePage() {
         </div>
         <div className="marketplace-topbar">
           <h1>Marketplace</h1>
-          <Link to={isAuthed ? "/items/new" : "/admin"} className="create-listing-btn">
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <ShareButton url="https://pvabazaar.org/#/marketplace" title="Marketplace | PVA Bazaar" text="Browse artifacts and crafts" />
+            <Link to={isAuthed ? "/items/new" : "/admin"} className="create-listing-btn">
             {isAuthed ? "Create New Listing" : "Login to Sell"}
           </Link>
+          </div>
         </div>
         <input
           aria-label="Search items"
@@ -127,7 +131,7 @@ export default function MarketplacePage() {
               key={item.id || item._id}
             >
             <article className="item-card" tabIndex={0} aria-label={item.name || item.title}>
-              <img src={(item.media && item.media[0]) || item.image || "/placeholder.png"} alt={item.name || item.title} className="item-image" />
+              <img src={(item.media && item.media[0]) || item.image || "/placeholder.png"} alt={item.name || item.title} className="item-image" loading="lazy" />
               <div className="item-info">
                 <h2 className="item-title">{item.name || item.title}</h2>
                 <div className="item-meta">
