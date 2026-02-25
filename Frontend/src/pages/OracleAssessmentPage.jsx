@@ -150,7 +150,10 @@ export default function OracleAssessmentPage() {
 
   return (
     <Layout>
-      <Helmet><title>Oracle Assessment | PVA Bazaar</title></Helmet>
+      <Helmet>
+        <title>Oracle Assessment | PVA Bazaar</title>
+        <meta name="description" content="Explore AI-powered oracle assessments — personal data, spiritual profile, and cosmic insights." />
+      </Helmet>
       <div className="oracle-assessment" style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem' }}>
         <header style={{ textAlign: 'center', marginBottom: '3rem' }}>
           <h1 style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>

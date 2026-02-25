@@ -90,7 +90,7 @@ export default function ChatPage() {
             ))
           )}
           {loading ? (
-            <div className="chat-bubble assistant">
+            <div className="chat-bubble assistant" aria-live="polite" aria-busy="true">
               <div className="chat-bubble-label">Richard</div>
               <div className="chat-bubble-content typing">...</div>
             </div>
@@ -98,7 +98,7 @@ export default function ChatPage() {
           <div ref={messagesEndRef} />
         </div>
 
-        <form className="chat-input-form" onSubmit={sendMessage}>
+        <form className="chat-input-form" onSubmit={sendMessage} aria-busy={loading}>
           <input
             type="text"
             value={input}
