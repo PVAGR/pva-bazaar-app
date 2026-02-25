@@ -45,13 +45,18 @@ beforeAll(() => {
   }
 
   // Mock console methods in test environment
+  const originalWarn = console.warn;
   global.console = {
     ...console,
     // Suppress logs in tests unless debugging
     log: () => {},
     debug: () => {},
     info: () => {},
-    warn: console.warn,
+    warn: (...args: unknown[]) => {
+      const msg = String(args[0] ?? '');
+      if (msg.includes('React Router Future Flag') || msg.includes('v7_startTransition') || msg.includes('v7_relativeSplatPath')) return;
+      originalWarn.apply(console, args);
+    },
     error: console.error,
   };
 });
