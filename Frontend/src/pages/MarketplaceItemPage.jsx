@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
+import SiteFooter from "../components/SiteFooter.jsx";
 import { Helmet } from "react-helmet-async";
 import { fetchMarketplaceItem, createCheckoutSession } from "../lib/api";
 import "./MarketplaceItemPage.css";
@@ -129,6 +130,7 @@ export default function MarketplaceItemPage() {
           </button>
         </section>
       </div>
+      <SiteFooter style={{ marginTop: 24 }} />
     </div>
   );
 }

@@ -6,6 +6,7 @@ function getCanonicalUrl(path = '') {
   return `${base}${path.startsWith('/') ? path : `/${path}`}`;
 }
 import { Link } from 'react-router-dom';
+import SiteFooter from '../components/SiteFooter.jsx';
 import { fetchArchiveEntries } from '../lib/api';
 import { getToken } from '../lib/auth';
 import './ArchiveLibraryPage.css';
@@ -510,14 +511,9 @@ export default function ArchiveLibraryPage() {
         </main>
       </div>
 
-      <footer className="archive-footer" style={{ padding: '24px', textAlign: 'center', borderTop: '1px solid var(--archive-border, #333)', marginTop: 24 }}>
-        <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 8 }}>
-          <Link to="/chat">💬 Chat with Richard</Link>
-          <Link to="/marketplace">🛒 Marketplace</Link>
-          <Link to="/about">About</Link>
-          <Link to="/oracle">🔮 Oracle</Link>
-        </div>
-        <p className="muted" style={{ fontSize: '0.9rem' }}>© {new Date().getFullYear()} pvabazaar.org</p>
+      <footer className="archive-footer" style={{ padding: 24, textAlign: 'center', borderTop: '1px solid var(--archive-border, #333)', marginTop: 24 }}>
+        <SiteFooter style={{ borderTopColor: 'var(--archive-border, #333)', marginBottom: 8 }} />
+        <p className="muted" style={{ fontSize: '0.9rem', margin: 0 }}>© {new Date().getFullYear()} pvabazaar.org</p>
       </footer>
     </div>
     </>

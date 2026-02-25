@@ -1,5 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
+import SiteFooter from './SiteFooter.jsx';
 
 export default function Layout({ children }) {
   const token =
@@ -27,7 +28,8 @@ export default function Layout({ children }) {
         {children}
       </main>
       <footer className="layout__footer">
-        © {new Date().getFullYear()} · pvabazaar.org
+        <SiteFooter style={{ borderTop: 'none', padding: '8px 0' }} />
+        <p style={{ margin: 0, fontSize: '0.9rem' }}>© {new Date().getFullYear()} · pvabazaar.org</p>
       </footer>
     </div>
   );
