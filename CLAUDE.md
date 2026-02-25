@@ -80,7 +80,7 @@ The system supports:
 - `/api/certificates`: Certificate management
 - `/api/commodities`, `/api/contacts`, `/api/templates`, `/api/deals`, `/api/vault-notes`: Broker CRUD
 - `/api/contacts/:id/outreach`: Log template outreach (WhatsApp/email)
-- `/api/chat`: Richard AI persona (OPENAI_API_KEY required)
+- `/api/chat`: Richard AI persona (DEEPSEEK_API_KEY or OPENAI_API_KEY)
 
 ## Broker Platform (pvabazaar.org)
 
@@ -94,6 +94,7 @@ Broker Hub at `/broker` unifies: commodities, contacts, templates, deals, vault 
 - `MONGODB_URI`: MongoDB connection string
 - `ETHEREUM_RPC_URL`: Blockchain RPC endpoint
 - `NODE_ENV`: Environment (development/production)
+- `DEEPSEEK_API_KEY` or `OPENAI_API_KEY` for Chat + Oracle AI
 - Additional blockchain and service API keys as needed
 
 ## Testing Data
