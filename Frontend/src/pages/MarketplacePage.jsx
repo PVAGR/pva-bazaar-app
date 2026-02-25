@@ -70,7 +70,10 @@ export default function MarketplacePage() {
 
   return (
     <main className="marketplace-page">
-      <Helmet><title>Marketplace | PVA Bazaar</title></Helmet>
+      <Helmet>
+        <title>Marketplace | PVA Bazaar</title>
+        <meta name="description" content="Browse artifacts and crafts on the PVA Bazaar marketplace." />
+      </Helmet>
       <section className="marketplace-header">
         <div className="marketplace-nav" style={{ display: 'flex', gap: 16, marginBottom: 12, flexWrap: 'wrap' }}>
           <Link to="/">📚 Archive</Link>

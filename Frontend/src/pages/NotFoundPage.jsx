@@ -5,7 +5,10 @@ import SiteFooter from '../components/SiteFooter.jsx';
 export default function NotFoundPage() {
   return (
     <div className="not-found-page" style={{ maxWidth: 480, margin: '60px auto', padding: 24, textAlign: 'center' }}>
-      <Helmet><title>Page not found | PVA Bazaar</title></Helmet>
+      <Helmet>
+        <title>Page not found | PVA Bazaar</title>
+        <meta name="description" content="The page you requested could not be found." />
+      </Helmet>
       <h1>404</h1>
       <p>This page doesn&apos;t exist.</p>
       <div style={{ marginTop: 24 }}>

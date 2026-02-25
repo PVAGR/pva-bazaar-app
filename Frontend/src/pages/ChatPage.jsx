@@ -48,7 +48,10 @@ export default function ChatPage() {
 
   return (
     <div className="chat-page">
-      <Helmet><title>Chat with Richard | PVA Bazaar</title></Helmet>
+      <Helmet>
+        <title>Chat with Richard | PVA Bazaar</title>
+        <meta name="description" content="Chat with Richard — direct supply chain sourcer. Ask about Kenyan coffee, malachite, soapstone, gemstones, vetting, and partnerships." />
+      </Helmet>
       <header className="chat-header">
         <div className="chat-header-links">
           <Link to="/">📚 Archive</Link>

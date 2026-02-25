@@ -5,7 +5,10 @@ import { Helmet } from 'react-helmet-async';
 export default function AboutPage() {
   return (
     <>
-      <Helmet><title>About | PVA Bazaar</title></Helmet>
+      <Helmet>
+        <title>About | PVA Bazaar</title>
+        <meta name="description" content="About pvabazaar.org — journal, archive, marketplace. Chat with Richard, browse artifacts, explore the Oracle." />
+      </Helmet>
       <div className="about-page" style={{ maxWidth: 640, margin: '0 auto', padding: 24 }}>
         <p style={{ marginBottom: 24 }}><Link to="/">← Back to Archive</Link></p>
         <h1>About pvabazaar.org</h1>
