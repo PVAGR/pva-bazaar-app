@@ -1,6 +1,7 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import SiteFooter from '../components/SiteFooter.jsx';
+import ShareButton from '../components/ShareButton.jsx';
 
 export default function NotFoundPage() {
   return (
@@ -11,6 +12,9 @@ export default function NotFoundPage() {
       </Helmet>
       <h1>404</h1>
       <p>This page doesn&apos;t exist.</p>
+      <p style={{ marginTop: 16 }}>
+        <ShareButton url="https://pvabazaar.org/" title="PVA Bazaar" text="Archive, marketplace, chat with Richard" />
+      </p>
       <div style={{ marginTop: 24 }}>
         <SiteFooter style={{ borderTop: 'none', padding: 0 }} />
       </div>

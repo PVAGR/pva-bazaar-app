@@ -16,6 +16,8 @@ export default function SiteFooter({ style = {} }) {
       <Link to="/oracle">Oracle</Link>
       <span style={{ margin: '0 8px' }}>·</span>
       <Link to="/about">About</Link>
+      <span style={{ margin: '0 8px' }}>·</span>
+      <a href="mailto:pvaglobalreach@gmail.com">Contact</a>
     </footer>
   );
 }

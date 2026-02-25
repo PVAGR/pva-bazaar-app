@@ -326,6 +326,15 @@ export default function ArchiveLibraryPage() {
         <meta property="og:image" content={getCanonicalUrl('/og-default.jpg')} />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:image" content={getCanonicalUrl('/og-default.jpg')} />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'WebSite',
+            name: 'PVA Bazaar',
+            url: 'https://pvabazaar.org/',
+            description: 'Archive, marketplace, and chat. Direct supply chain sourcer — Kenyan coffee, malachite, soapstone, gemstones.',
+          })}
+        </script>
       </Helmet>
       <div className={`archive-library ${darkMode ? 'dark-theme' : 'light-theme'}`}>
         <header className="archive-header">
