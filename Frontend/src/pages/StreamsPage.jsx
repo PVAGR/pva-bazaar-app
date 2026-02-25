@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { apiDelete, apiGet, apiPost, apiPut } from '../lib/api';
 import { ENV } from '../config/env';
 import HelpTip from '../components/HelpTip.jsx';
@@ -351,6 +352,7 @@ export default function StreamsPage() {
 
   return (
     <div className={`streams-shell admin-page authenticated ${darkMode ? 'dark-theme' : 'light-theme'}`}>
+      <Helmet><title>Livestreams | PVA Bazaar</title></Helmet>
       <header className="streams-header admin-header">
         <div>
           <h1>📺 Livestreams</h1>

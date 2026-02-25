@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { createArchiveEntry, fetchArchiveEntries, deleteArchiveEntry, apiGet, apiFetch } from '../lib/api';
 import { ENV } from '../config/env';
 import { getErrorMessage } from '../lib/errorUtils';
@@ -357,6 +358,7 @@ export default function AdminPage() {
   if (!isAuthenticated) {
     return (
       <div className={`admin-page ${darkMode ? 'dark-theme' : 'light-theme'}`}>
+        <Helmet><title>Archive Admin | PVA Bazaar</title></Helmet>
         <button 
           className="theme-toggle login-theme-toggle" 
           onClick={() => {
@@ -410,6 +412,7 @@ export default function AdminPage() {
   // Admin panel
   return (
     <>
+      <Helmet><title>Archive Admin | PVA Bazaar</title></Helmet>
       <div className={`admin-page authenticated ${darkMode ? 'dark-theme' : 'light-theme'}`}>
         <div className="admin-header">
           <div className="header-content">

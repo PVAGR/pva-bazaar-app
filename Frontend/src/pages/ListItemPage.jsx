@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import Layout from '../components/Layout';
 import HelpTip from '../components/HelpTip.jsx';
 import { createMarketplaceItem } from '../lib/api';
@@ -149,6 +150,7 @@ export default function ListItemPage() {
 
   return (
     <Layout>
+      <Helmet><title>Create listing | PVA Bazaar</title></Helmet>
       <main className="list-item-page">
         <div className="list-item-header">
           <h1>Create New Listing</h1>

@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
+import { Helmet } from "react-helmet-async";
 import { fetchOrders, fetchOrder, refundOrder, updateOrder } from "../lib/api";
 import "./AdminOrdersPage.css";
 
@@ -147,6 +148,7 @@ export default function AdminOrdersPage() {
 
   return (
     <div className="admin-orders-page">
+      <Helmet><title>Orders | PVA Bazaar</title></Helmet>
       <h1>Orders</h1>
       <div role="status" className="status-msg">{statusMsg}</div>
       {errorMsg && <div className="error-msg" role="alert">{errorMsg}</div>}
