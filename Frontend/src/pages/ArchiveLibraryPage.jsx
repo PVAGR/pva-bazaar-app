@@ -251,7 +251,7 @@ export default function ArchiveLibraryPage() {
     if (type === 'image') {
       return (
         <div className="media-item" key={`${url}-${index}`}>
-          <img src={url} alt="Entry media" loading="lazy" />
+          <img src={url} alt="Entry media" loading="lazy" decoding="async" />
         </div>
       );
     }
@@ -290,7 +290,7 @@ export default function ArchiveLibraryPage() {
       // Italic
       .replace(/\*(.+?)\*/g, '<em>$1</em>')
       // Images
-      .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" />')
+      .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" decoding="async" />')
       // Links
       .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
       // Lists

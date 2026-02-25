@@ -74,7 +74,7 @@ export default function MarketplaceItemPage() {
       <div className="item-detail-layout">
         <section className="media-gallery" aria-label="Item media gallery">
           <div className="main-media">
-            <img src={mainImage} alt={item.name} className="main-image" />
+            <img src={mainImage} alt={item.name} className="main-image" decoding="async" />
           </div>
           <div className="thumbnails" role="list">
             {media.map((img, idx) => (
@@ -91,7 +91,7 @@ export default function MarketplaceItemPage() {
                   }
                 }}
               >
-                <img src={img} alt={`${item.name} thumbnail ${idx + 1}`} className="thumb-img" loading="lazy" />
+                <img src={img} alt={`${item.name} thumbnail ${idx + 1}`} className="thumb-img" loading="lazy" decoding="async" />
               </button>
             ))}
           </div>

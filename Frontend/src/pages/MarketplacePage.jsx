@@ -131,7 +131,7 @@ export default function MarketplacePage() {
               key={item.id || item._id}
             >
             <article className="item-card" tabIndex={0} aria-label={item.name || item.title}>
-              <img src={(item.media && item.media[0]) || item.image || "/placeholder.png"} alt={item.name || item.title} className="item-image" loading="lazy" />
+              <img src={(item.media && item.media[0]) || item.image || "/placeholder.png"} alt={item.name || item.title} className="item-image" loading="lazy" decoding="async" />
               <div className="item-info">
                 <h2 className="item-title">{item.name || item.title}</h2>
                 <div className="item-meta">

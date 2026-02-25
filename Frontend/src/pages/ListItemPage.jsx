@@ -307,7 +307,7 @@ export default function ListItemPage() {
               {imagePreviews.length > 0 && (
                 <div className="image-previews">
                   {imagePreviews.map((src, idx) => (
-                    <img key={idx} src={src} alt={`preview-${idx + 1}`} />
+                    <img key={idx} src={src} alt={`preview-${idx + 1}`} decoding="async" />
                   ))}
                 </div>
               )}
