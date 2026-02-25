@@ -416,7 +416,7 @@ export default function OnboardingPage() {
                 <button className="btn ghost" type="button" onClick={refreshLiveStatus}>
                   Check
                 </button>
-                <a className="btn ghost" href="https://studio.youtube.com/" target="_blank" rel="noreferrer">
+                <a className="btn ghost" href="https://studio.youtube.com/" target="_blank" rel="noopener noreferrer">
                   Open YouTube Studio
                 </a>
               </div>

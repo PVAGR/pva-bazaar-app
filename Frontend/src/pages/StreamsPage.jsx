@@ -450,11 +450,11 @@ export default function StreamsPage() {
               <button className="btn ghost" type="button" onClick={handleConnectYouTube} title="Connect YouTube (OAuth)">
                 Connect YouTube
               </button>
-              <a className="btn ghost" href="https://studio.youtube.com/channel/UC/livestreaming" target="_blank" rel="noreferrer">
+              <a className="btn ghost" href="https://studio.youtube.com/channel/UC/livestreaming" target="_blank" rel="noopener noreferrer">
                 YouTube Studio
               </a>
               {twitchChannel ? (
-                <a className="btn ghost" href="https://dashboard.twitch.tv/u/me/stream-manager" target="_blank" rel="noreferrer">
+                <a className="btn ghost" href="https://dashboard.twitch.tv/u/me/stream-manager" target="_blank" rel="noopener noreferrer">
                   Twitch Stream Manager
                 </a>
               ) : null}
@@ -496,12 +496,12 @@ export default function StreamsPage() {
                 <p className="muted small">Start streaming on your platform, then create a session below to track it.</p>
                 <div className="row rowWrap">
                   {twitchChannel ? (
-                    <a className="btn primary" href="https://dashboard.twitch.tv/u/me/stream-manager" target="_blank" rel="noreferrer">
+                    <a className="btn primary" href="https://dashboard.twitch.tv/u/me/stream-manager" target="_blank" rel="noopener noreferrer">
                       Open Twitch Stream Manager
                     </a>
                   ) : null}
                   {youtubeLive?.connected ? (
-                    <a className="btn primary" href="https://studio.youtube.com/" target="_blank" rel="noreferrer">
+                    <a className="btn primary" href="https://studio.youtube.com/" target="_blank" rel="noopener noreferrer">
                       Open YouTube Studio
                     </a>
                   ) : null}
