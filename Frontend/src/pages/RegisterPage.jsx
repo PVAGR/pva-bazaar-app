@@ -47,9 +47,8 @@ export default function RegisterPage() {
           <p className="muted">This creates a MongoDB-backed user account (separate from Admin login).</p>
         </div>
         <div className="registerActions">
-          <Link to="/login" className="btn ghost">
-            ← Back to login
-          </Link>
+          <Link to="/" className="btn ghost">← Home</Link>
+          <Link to="/login" className="btn ghost">Back to login</Link>
         </div>
       </header>
 

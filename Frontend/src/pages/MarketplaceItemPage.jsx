@@ -62,7 +62,12 @@ export default function MarketplaceItemPage() {
         <meta property="twitter:description" content={item.description || "Marketplace item on PVABazaar"} />
         <meta property="twitter:image" content={ogImage} />
       </Helmet>
-      <Link to="/marketplace" className="back-link">← Back to Marketplace</Link>
+      <div className="item-page-nav" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 16 }}>
+        <Link to="/marketplace">← Marketplace</Link>
+        <Link to="/">Archive</Link>
+        <Link to="/chat">Chat</Link>
+        <Link to="/about">About</Link>
+      </div>
       <div className="item-detail-layout">
         <section className="media-gallery" aria-label="Item media gallery">
           <div className="main-media">

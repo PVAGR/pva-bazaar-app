@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { fetchCheckoutSession } from "../lib/api";
 import "./CheckoutSuccessPage.css";
 
@@ -29,6 +30,7 @@ export default function CheckoutSuccessPage() {
 
   return (
     <div className="checkout-success-page">
+      <Helmet><title>Checkout Success | PVA Bazaar</title></Helmet>
       <h1>Checkout Success</h1>
       {status === "loading" && <div>Loading...</div>}
       {status === "error" && <div className="error">{error}</div>}
@@ -41,8 +43,11 @@ export default function CheckoutSuccessPage() {
           {session.customer_details?.email && (
             <div>Email: {session.customer_details.email}</div>
           )}
-          <div className="back-link">
-            <Link to="/marketplace">Back to Marketplace</Link>
+          <div className="back-links" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 16 }}>
+            <Link to="/marketplace">Marketplace</Link>
+            <Link to="/">Archive</Link>
+            <Link to="/chat">Chat</Link>
+            <Link to="/about">About</Link>
           </div>
         </div>
       )}

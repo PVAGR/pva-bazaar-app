@@ -92,12 +92,10 @@ export default function LoginPage() {
           </p>
         </div>
         <div className="loginActions">
-          <Link to="/" className="btn ghost">
-            ← Home
-          </Link>
-          <Link to="/admin" className="btn ghost">
-            Archive Admin
-          </Link>
+          <Link to="/" className="btn ghost">← Home</Link>
+          <Link to="/chat" className="btn ghost">Chat</Link>
+          <Link to="/marketplace" className="btn ghost">Marketplace</Link>
+          <Link to="/admin" className="btn ghost">Archive Admin</Link>
         </div>
       </header>
 

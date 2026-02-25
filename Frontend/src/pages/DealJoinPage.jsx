@@ -169,12 +169,10 @@ export default function DealJoinPage() {
           </p>
         </div>
         <div className="dealJoinActions">
-          <Link to="/" className="btn ghost">
-            Home
-          </Link>
-          <Link to="/login" className="btn ghost">
-            Login
-          </Link>
+          <Link to="/" className="btn ghost">Home</Link>
+          <Link to="/chat" className="btn ghost">Chat</Link>
+          <Link to="/marketplace" className="btn ghost">Marketplace</Link>
+          <Link to="/login" className="btn ghost">Login</Link>
         </div>
       </header>
 
