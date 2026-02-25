@@ -523,6 +523,9 @@ export default function ArchiveLibraryPage() {
       </div>
 
       <footer className="archive-footer" style={{ padding: 24, textAlign: 'center', borderTop: '1px solid var(--archive-border, #333)', marginTop: 24 }}>
+        <button type="button" className="btn ghost" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} style={{ marginBottom: 8 }} aria-label="Back to top">
+          ↑ Top
+        </button>
         <SiteFooter style={{ borderTopColor: 'var(--archive-border, #333)', marginBottom: 8 }} />
         <p className="muted" style={{ fontSize: '0.9rem', margin: 0 }}>© {new Date().getFullYear()} pvabazaar.org</p>
       </footer>
