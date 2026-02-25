@@ -31,7 +31,7 @@ export default function CheckoutSuccessPage() {
 
   return (
     <div className="checkout-success-page">
-      <Helmet><title>Checkout Success | PVA Bazaar</title></Helmet>
+      <Helmet><title>Checkout Success | PVA Bazaar</title><meta name="description" content="Your payment was completed successfully." /><meta name="robots" content="noindex, nofollow" /></Helmet>
       <h1>Checkout Success</h1>
       {status === "loading" && <div>Loading...</div>}
       {status === "error" && <div className="error">{error}</div>}

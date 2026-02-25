@@ -9,6 +9,7 @@ export default function NotFoundPage() {
       <Helmet>
         <title>Page not found | PVA Bazaar</title>
         <meta name="description" content="The page you requested could not be found." />
+        <meta name="robots" content="noindex, nofollow" />
       </Helmet>
       <h1>404</h1>
       <p>This page doesn&apos;t exist.</p>

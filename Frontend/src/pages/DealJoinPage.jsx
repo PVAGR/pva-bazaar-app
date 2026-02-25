@@ -157,7 +157,7 @@ export default function DealJoinPage() {
 
   return (
     <div className="dealJoin admin-page authenticated dark-theme">
-      <Helmet><title>Deal join | PVA Bazaar</title></Helmet>
+      <Helmet><title>Deal join | PVA Bazaar</title><meta name="robots" content="noindex, nofollow" /></Helmet>
       <header className="admin-header dealJoinHeader">
         <div>
           <h1>🤝 Deal join</h1>

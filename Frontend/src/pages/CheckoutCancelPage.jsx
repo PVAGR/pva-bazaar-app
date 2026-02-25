@@ -6,7 +6,7 @@ import "./CheckoutCancelPage.css";
 export default function CheckoutCancelPage() {
   return (
     <div className="checkout-cancel-page">
-      <Helmet><title>Checkout Canceled | PVA Bazaar</title></Helmet>
+      <Helmet><title>Checkout Canceled | PVA Bazaar</title><meta name="description" content="Your payment was canceled or not completed." /><meta name="robots" content="noindex, nofollow" /></Helmet>
       <h1>Checkout Canceled</h1>
       <p>Your payment was canceled or not completed.</p>
       <div style={{ marginTop: 16 }}>
