@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import HelpTip from '../components/HelpTip.jsx';
 import { apiFetch } from '../lib/api';
 import { buildDealMessageTypedData, buildDealEvidenceTypedData, signTypedData } from '../lib/eip712';
@@ -156,6 +157,7 @@ export default function DealJoinPage() {
 
   return (
     <div className="dealJoin admin-page authenticated dark-theme">
+      <Helmet><title>Deal join | PVA Bazaar</title></Helmet>
       <header className="admin-header dealJoinHeader">
         <div>
           <h1>🤝 Deal join</h1>

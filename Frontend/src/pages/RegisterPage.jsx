@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import HelpTip from '../components/HelpTip.jsx';
 import { apiPost } from '../lib/api';
 import { setToken } from '../lib/auth';
@@ -41,6 +42,7 @@ export default function RegisterPage() {
 
   return (
     <div className="registerPage admin-page authenticated dark-theme">
+      <Helmet><title>Create account | PVA Bazaar</title></Helmet>
       <header className="admin-header registerHeader">
         <div>
           <h1>🧾 Create account</h1>

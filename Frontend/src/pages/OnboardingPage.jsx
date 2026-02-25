@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import AdminNav from '../components/AdminNav.jsx';
 import HelpTip from '../components/HelpTip.jsx';
 import { apiGet, apiPut } from '../lib/api';
@@ -209,6 +210,7 @@ export default function OnboardingPage() {
 
   return (
     <div className={`onboardingPage admin-page authenticated ${darkMode ? 'dark-theme' : 'light-theme'}`}>
+      <Helmet><title>Guided setup | PVA Bazaar</title></Helmet>
       <header className="admin-header onboardingHeader">
         <div>
           <h1>🧭 Guided setup</h1>

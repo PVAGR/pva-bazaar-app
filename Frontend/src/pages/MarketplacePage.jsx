@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { fetchMarketplaceItems } from "../lib/api";
 import useDebounce from "../hooks/useDebounce";
 import "./MarketplacePage.css";
@@ -68,6 +69,7 @@ export default function MarketplacePage() {
 
   return (
     <main className="marketplace-page">
+      <Helmet><title>Marketplace | PVA Bazaar</title></Helmet>
       <section className="marketplace-header">
         <div className="marketplace-nav" style={{ display: 'flex', gap: 16, marginBottom: 12, flexWrap: 'wrap' }}>
           <Link to="/">📚 Archive</Link>

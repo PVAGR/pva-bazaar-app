@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { apiPost, apiGet } from '../lib/api';
 import Layout from '../components/Layout';
 import HelpTip from '../components/HelpTip.jsx';
@@ -149,6 +150,7 @@ export default function OracleAssessmentPage() {
 
   return (
     <Layout>
+      <Helmet><title>Oracle Assessment | PVA Bazaar</title></Helmet>
       <div className="oracle-assessment" style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem' }}>
         <header style={{ textAlign: 'center', marginBottom: '3rem' }}>
           <h1 style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>
