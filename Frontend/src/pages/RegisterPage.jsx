@@ -42,7 +42,10 @@ export default function RegisterPage() {
 
   return (
     <div className="registerPage admin-page authenticated dark-theme">
-      <Helmet><title>Create account | PVA Bazaar</title></Helmet>
+      <Helmet>
+        <title>Create account | PVA Bazaar</title>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       <header className="admin-header registerHeader">
         <div>
           <h1>🧾 Create account</h1>

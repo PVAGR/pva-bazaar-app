@@ -85,7 +85,10 @@ export default function LoginPage() {
 
   return (
     <div className="loginPage admin-page authenticated dark-theme">
-      <Helmet><title>Sign in | PVA Bazaar</title></Helmet>
+      <Helmet>
+        <title>Sign in | PVA Bazaar</title>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       <header className="admin-header loginHeader">
         <div>
           <h1>🔐 Sign in</h1>
