@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import SiteFooter from "../components/SiteFooter.jsx";
+import ShareButton from "../components/ShareButton.jsx";
 import { Helmet } from "react-helmet-async";
 import { fetchMarketplaceItem, createCheckoutSession } from "../lib/api";
 import "./MarketplaceItemPage.css";
@@ -63,11 +64,12 @@ export default function MarketplaceItemPage() {
         <meta property="twitter:description" content={item.description || "Marketplace item on PVABazaar"} />
         <meta property="twitter:image" content={ogImage} />
       </Helmet>
-      <div className="item-page-nav" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 16 }}>
+      <div className="item-page-nav" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 16, alignItems: 'center' }}>
         <Link to="/marketplace">← Marketplace</Link>
         <Link to="/">Archive</Link>
         <Link to="/chat">Chat</Link>
         <Link to="/about">About</Link>
+        <ShareButton url={`https://pvabazaar.org/#/marketplace/${encodeURIComponent(slugOrId)}`} title={title} text={item.description || item.name} />
       </div>
       <div className="item-detail-layout">
         <section className="media-gallery" aria-label="Item media gallery">
@@ -89,7 +91,7 @@ export default function MarketplaceItemPage() {
                   }
                 }}
               >
-                <img src={img} alt={`${item.name} thumbnail ${idx + 1}`} className="thumb-img" />
+                <img src={img} alt={`${item.name} thumbnail ${idx + 1}`} className="thumb-img" loading="lazy" />
               </button>
             ))}
           </div>

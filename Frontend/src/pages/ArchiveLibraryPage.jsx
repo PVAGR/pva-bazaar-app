@@ -7,6 +7,7 @@ function getCanonicalUrl(path = '') {
 }
 import { Link } from 'react-router-dom';
 import SiteFooter from '../components/SiteFooter.jsx';
+import ShareButton from '../components/ShareButton.jsx';
 import { fetchArchiveEntries } from '../lib/api';
 import { getToken } from '../lib/auth';
 import './ArchiveLibraryPage.css';
@@ -336,6 +337,7 @@ export default function ArchiveLibraryPage() {
             <Link to="/about" className="admin-link">About</Link>
             {getToken() ? <Link to="/broker" className="admin-link">📋 Broker Hub</Link> : null}
             <Link to="/admin" className="admin-link">⚙️ Admin</Link>
+            <ShareButton url="https://pvabazaar.org/#/" title="Archive Library | PVA Bazaar" text="Browse the complete PVA Bazaar Archive" />
             <button 
               className="theme-toggle" 
               onClick={() => setDarkMode(!darkMode)}
