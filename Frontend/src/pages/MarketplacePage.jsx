@@ -109,6 +109,7 @@ export default function MarketplacePage() {
           {categories.map(cat => (
             <button
               key={cat}
+              type="button"
               className={`category-chip${cat === selectedCategory ? ' selected' : ''}`}
               onClick={() => handleCategory(cat)}
               aria-pressed={cat === selectedCategory}
@@ -149,7 +150,7 @@ export default function MarketplacePage() {
           ))}
         </div>
         {nextCursor && (
-          <button className="load-more" onClick={handleLoadMore} disabled={loading}>
+          <button type="button" className="load-more" onClick={handleLoadMore} disabled={loading} aria-busy={loading}>
             {loading ? "Loading..." : "Load More"}
           </button>
         )}
