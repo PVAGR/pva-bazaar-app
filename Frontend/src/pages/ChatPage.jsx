@@ -57,6 +57,8 @@ export default function ChatPage() {
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://pvabazaar.org/#/chat" />
         <meta property="og:image" content="https://pvabazaar.org/og-default.svg" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Chat with Richard | PVA Bazaar" />
       </Helmet>
       <header className="chat-header">
         <div className="chat-header-links">

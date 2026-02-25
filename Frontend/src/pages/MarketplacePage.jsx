@@ -79,6 +79,8 @@ export default function MarketplacePage() {
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://pvabazaar.org/#/marketplace" />
         <meta property="og:image" content="https://pvabazaar.org/og-default.svg" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Marketplace | PVA Bazaar" />
       </Helmet>
       <section className="marketplace-header">
         <div className="marketplace-nav" style={{ display: 'flex', gap: 16, marginBottom: 12, flexWrap: 'wrap' }}>

@@ -158,6 +158,8 @@ export default function OracleAssessmentPage() {
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://pvabazaar.org/#/oracle" />
         <meta property="og:image" content="https://pvabazaar.org/og-default.svg" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Oracle Assessment | PVA Bazaar" />
       </Helmet>
       <div className="oracle-assessment" style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem' }}>
         <header style={{ textAlign: 'center', marginBottom: '3rem' }}>
