@@ -5,10 +5,9 @@
  */
 const express = require('express');
 const router = express.Router();
-const { authMiddleware } = require('../middleware/auth');
 const Commodity = require('../models/Commodity');
 const Template = require('../models/Template');
-const Contact = require('../models/Contact');
+const { getAIConfig, chatCompletions } = require('../service/aiProvider');
 
 const RICHARD_SYSTEM_PROMPT = `You are Richard Torres, 28, a direct supply chain sourcer based in Rancho Cordova, California, USA. You specialize in connecting global suppliers with US markets. Your products include: premium Kenyan coffee beans, Congolese malachite, Kenyan soapstone carvings, and colored gemstones from Pakistan and Afghanistan.
 
@@ -28,11 +27,11 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ ok: false, error: 'messages array required' });
     }
 
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) {
+    const config = getAIConfig();
+    if (!config) {
       return res.status(503).json({
         ok: false,
-        error: 'Richard AI is not configured. Set OPENAI_API_KEY.',
+        error: 'Richard AI is not configured. Set DEEPSEEK_API_KEY or OPENAI_API_KEY.',
       });
     }
 
@@ -64,47 +63,28 @@ router.post('/', async (req, res) => {
             ctx.push('\nYour templates (summaries):');
             templates.forEach((t) => ctx.push(`- ${t.name} (${t.type}): ${(t.body || '').slice(0, 150)}...`));
           }
-          if (ctx.length) systemContent += '\n\n[Your knowledge base]\n' + ctx.join('\n');
+          if (ctx.length) systemContent += `\n\n[Your knowledge base]\n${  ctx.join('\n')}`;
         }
       } catch {
         // auth failed, continue without RAG
       }
     }
 
-    const payload = {
-      model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
-      messages: [
-        { role: 'system', content: systemContent },
-        ...messages.map((m) => ({ role: m.role || 'user', content: String(m.content || '') })),
-      ],
-      max_tokens: 1024,
-    };
+    const chatMessages = [
+      { role: 'system', content: systemContent },
+      ...messages.map((m) => ({ role: m.role || 'user', content: String(m.content || '') })),
+    ];
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify(payload),
+    const reply = await chatCompletions({
+      messages: chatMessages,
+      maxTokens: 1024,
     });
-
-    if (!response.ok) {
-      const err = await response.text();
-      console.error('OpenAI error:', response.status, err);
-      return res.status(502).json({
-        ok: false,
-        error: 'AI service error. Check OPENAI_API_KEY and model.',
-      });
-    }
-
-    const data = await response.json();
-    const reply = data?.choices?.[0]?.message?.content || '';
 
     res.json({ ok: true, reply });
   } catch (err) {
     console.error('Chat error:', err);
-    res.status(500).json({ ok: false, error: err.message || 'Chat failed' });
+    const status = err.message?.includes('AI provider') ? 503 : 500;
+    res.status(status).json({ ok: false, error: err.message || 'Chat failed' });
   }
 });
 

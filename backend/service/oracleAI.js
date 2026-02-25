@@ -1,15 +1,13 @@
-const axios = require('axios');
+const { getAIConfig, chatCompletions } = require('./aiProvider');
 
 /**
- * Oracle AI Engine - Generates spiritual assessments using OpenAI
+ * Oracle AI Engine - Generates spiritual assessments using OpenAI or DeepSeek
  */
 class OracleAIEngine {
   constructor() {
-    this.apiKey = process.env.OPENAI_API_KEY;
-    this.apiUrl = 'https://api.openai.com/v1/chat/completions';
-    
-    if (!this.apiKey) {
-      console.warn('⚠️ OPENAI_API_KEY not set - Oracle AI features will be limited');
+    this.config = getAIConfig();
+    if (!this.config) {
+      console.warn('⚠️ DEEPSEEK_API_KEY / OPENAI_API_KEY not set - Oracle AI features will be limited');
     }
   }
 
@@ -20,48 +18,30 @@ class OracleAIEngine {
    * @returns {Promise<Object>} Oracle assessment results
    */
   async generateAssessment(personalData, spiritualProfile) {
-    if (!this.apiKey) {
-      // Return mock data if API key not configured
+    if (!this.config) {
       return this.generateMockAssessment(personalData, spiritualProfile);
     }
 
     try {
       const prompt = this.buildOraclePrompt(personalData, spiritualProfile);
-      
-      const response = await axios.post(
-        this.apiUrl,
-        {
-          model: 'gpt-4',
-          messages: [
-            {
-              role: 'system',
-              content: `You are a wise spiritual oracle with deep knowledge of astrology, numerology, ancient wisdom traditions, and holistic wellness. Provide profound, uplifting, and actionable guidance. Your responses should be deeply personal, spiritually meaningful, and practically applicable. Format your response as valid JSON.`,
-            },
-            {
-              role: 'user',
-              content: prompt,
-            },
-          ],
+      const systemPrompt = 'You are a wise spiritual oracle with deep knowledge of astrology, numerology, ancient wisdom traditions, and holistic wellness. Provide profound, uplifting, and actionable guidance. Your responses should be deeply personal, spiritually meaningful, and practically applicable. Format your response as valid JSON.';
+
+      const content = await chatCompletions({
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: prompt },
+        ],
+        maxTokens: 3000,
+        extra: {
           temperature: 0.7,
-          max_tokens: 3000,
           response_format: { type: 'json_object' },
         },
-        {
-          headers: {
-            'Authorization': `Bearer ${this.apiKey}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      });
 
-      const content = response.data.choices[0].message.content;
       const parsedResults = JSON.parse(content);
-      
       return this.formatResults(parsedResults);
     } catch (error) {
-      console.error('Oracle AI generation error:', error.response?.data || error.message);
-      
-      // Fallback to mock data on error
+      console.error('Oracle AI generation error:', error.message);
       console.warn('Falling back to mock assessment data');
       return this.generateMockAssessment(personalData, spiritualProfile);
     }

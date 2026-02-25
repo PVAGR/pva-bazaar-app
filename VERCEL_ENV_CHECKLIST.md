@@ -16,7 +16,8 @@ Do not store real secret values in git.
 
 ## Backend Project (Vercel) Optional / Feature-Based
 
-- `OPENAI_API_KEY` (Oracle AI assessments)
+- `DEEPSEEK_API_KEY` (preferred: Chat + Oracle AI; cost-effective)
+- `OPENAI_API_KEY` (alternative: Chat + Oracle AI; used if DEEPSEEK_API_KEY not set)
 - `OAUTH_TOKEN_ENC_KEY` (required for OAuth token storage; set a random value and keep it secret)
 - `OAUTH_FRONTEND_RETURN_URL` (default: `https://pvabazaar.org/#/streams`)
 - `TWITCH_CLIENT_ID`

@@ -222,14 +222,17 @@ describe('Broker API (commodities, contacts, templates, chat)', () => {
     expect(res.status).toBe(400);
   });
 
-  it('chat returns 503 when OPENAI_API_KEY is not set', async () => {
-    const orig = process.env.OPENAI_API_KEY;
+  it('chat returns 503 when no AI provider is configured', async () => {
+    const origDeepseek = process.env.DEEPSEEK_API_KEY;
+    const origOpenai = process.env.OPENAI_API_KEY;
+    delete process.env.DEEPSEEK_API_KEY;
     delete process.env.OPENAI_API_KEY;
     const res = await request(app)
       .post('/api/chat')
       .send({ messages: [{ role: 'user', content: 'Hello' }] });
-    if (orig !== undefined) process.env.OPENAI_API_KEY = orig;
+    if (origDeepseek !== undefined) process.env.DEEPSEEK_API_KEY = origDeepseek;
+    if (origOpenai !== undefined) process.env.OPENAI_API_KEY = origOpenai;
     expect(res.status).toBe(503);
-    expect(res.body?.error).toMatch(/OPENAI_API_KEY|not configured/i);
+    expect(res.body?.error).toMatch(/DEEPSEEK_API_KEY|OPENAI_API_KEY|not configured/i);
   });
 });
