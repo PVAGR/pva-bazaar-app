@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import SiteFooter from '../components/SiteFooter.jsx';
+import ShareButton from '../components/ShareButton.jsx';
 
 export default function AboutPage() {
   return (
@@ -16,7 +17,10 @@ export default function AboutPage() {
         <meta property="og:image" content="https://pvabazaar.org/og-default.jpg" />
       </Helmet>
       <div className="about-page" style={{ maxWidth: 640, margin: '0 auto', padding: 24 }}>
-        <p style={{ marginBottom: 24 }}><Link to="/">← Back to Archive</Link></p>
+        <p style={{ marginBottom: 24, display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+          <Link to="/">← Back to Archive</Link>
+          <ShareButton url="https://pvabazaar.org/#/about" title="About | PVA Bazaar" text="About pvabazaar.org" />
+        </p>
         <h1>About pvabazaar.org</h1>
         <p>
           A clean, non-commercial journal and archive of personal writings. Everything here is meant
