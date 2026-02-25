@@ -54,7 +54,7 @@ if (root) {
   createRoot(root).render(
     <HelmetProvider>
       <Sentry.ErrorBoundary
-        fallback={({ error, resetError }) => (
+        fallback={({ resetError }) => (
           <div style={{ padding: 24, textAlign: 'center', maxWidth: 480, margin: '40px auto' }}>
             <h2 style={{ marginBottom: 12 }}>Something went wrong</h2>
             <p style={{ color: '#666', marginBottom: 16 }}>We&apos;ve been notified. You can try again or go home.</p>

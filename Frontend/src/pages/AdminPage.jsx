@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { createArchiveEntry, fetchArchiveEntries, deleteArchiveEntry, apiGet, apiFetch } from '../lib/api';
 import { ENV } from '../config/env';
 import { getErrorMessage } from '../lib/errorUtils';
@@ -10,7 +10,6 @@ import { clearToken, setToken } from '../lib/auth';
 import './AdminPage.css';
 
 export default function AdminPage() {
-  const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -539,8 +538,11 @@ export default function AdminPage() {
                   {savedEntries.map(entry => (
                     <div 
                       key={entry.id} 
+                      role="button"
+                      tabIndex={0}
                       className={`entry-preview ${editingEntry?.id === entry.id ? 'active' : ''}`}
                       onClick={() => handleEdit(entry)}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleEdit(entry); } }}
                     >
                       <div className="entry-preview-header">
                         <strong>{entry.title}</strong>
@@ -681,11 +683,15 @@ export default function AdminPage() {
                   </small>
                   <div
                     className="media-uploader"
+                    role="button"
+                    tabIndex={0}
+                    aria-label="Drop zone for media files"
                     onDragOver={(e) => e.preventDefault()}
                     onDrop={(e) => {
                       e.preventDefault();
                       uploadMediaFiles(e.dataTransfer.files);
                     }}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') e.preventDefault(); }}
                   >
                     <div className="media-uploader__text">
                       Drag & drop files here, or select files to upload

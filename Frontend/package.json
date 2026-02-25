@@ -9,7 +9,8 @@
     "build": "npx vite build",
     "postbuild": "node scripts/copy-src-to-dist.cjs",
     "preview": "npx vite preview",
-    "test": "npx vitest run"
+    "test": "npx vitest run",
+    "lint": "eslint src --max-warnings 999"
   },
   "dependencies": {
     "@sentry/react": "^10.35.0",

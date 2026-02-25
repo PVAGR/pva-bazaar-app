@@ -72,7 +72,7 @@ export default function MarketplaceItemPage() {
             {media.map((img, idx) => (
               <button
                 key={img + idx}
-                className={"thumb-btn" + (idx === mainIdx ? " selected" : "")}
+                className={`thumb-btn${idx === mainIdx ? ' selected' : ''}`}
                 aria-label={`View image ${idx + 1}`}
                 aria-pressed={idx === mainIdx}
                 tabIndex={0}
@@ -83,7 +83,7 @@ export default function MarketplaceItemPage() {
                   }
                 }}
               >
-                <img src={img} alt={item.name + " thumbnail " + (idx + 1)} className="thumb-img" />
+                <img src={img} alt={`${item.name} thumbnail ${idx + 1}`} className="thumb-img" />
               </button>
             ))}
           </div>

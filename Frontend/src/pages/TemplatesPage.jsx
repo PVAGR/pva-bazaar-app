@@ -159,7 +159,7 @@ export default function TemplatesPage() {
     }
   }
 
-  function useWithContact(template) {
+  function openWithContactModal(template) {
     setUseWithContactModal({ template });
   }
 
@@ -306,7 +306,7 @@ export default function TemplatesPage() {
                 <button className="btn ghost template-copy" onClick={() => copyToClipboard(t)} title="Copy to clipboard">
                   {copiedId === t._id ? 'Copied!' : 'Copy'}
                 </button>
-                <button className="btn ghost" onClick={() => useWithContact(t)} title="Send via WhatsApp or email">
+                <button className="btn ghost" onClick={() => openWithContactModal(t)} title="Send via WhatsApp or email">
                   Use with contact
                 </button>
               </div>
@@ -330,7 +330,7 @@ export default function TemplatesPage() {
               <textarea rows={12} value={draft.body} onChange={(e) => setDraft((p) => ({ ...p, body: e.target.value }))} className="template-body" />
               <div className="row">
                 <button className="btn primary" onClick={() => copyToClipboard({ _id: selected._id, body: draft.body })}>Copy to clipboard</button>
-                <button className="btn primary" onClick={() => useWithContact({ _id: selected._id, body: draft.body })}>Use with contact</button>
+                <button className="btn primary" onClick={() => openWithContactModal({ _id: selected._id, body: draft.body })}>Use with contact</button>
                 <button className="btn primary" onClick={handleSave} disabled={saving}>{saving ? 'Saving…' : 'Save'}</button>
                 <button className="btn ghost" onClick={handleDelete}>Delete</button>
               </div>

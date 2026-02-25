@@ -2,7 +2,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
-import path from 'path';
 
 export default defineConfig({
   base: process.env.VITE_BASE_PATH || '/',
@@ -26,7 +25,7 @@ export default defineConfig({
     rollupOptions: {
       external: ['fsevents'],
       output: {
-        manualChunks(id, { getModuleInfo }) {
+        manualChunks(id) {
           if (id.includes('node_modules')) {
             return 'vendor';
           }

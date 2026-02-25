@@ -58,13 +58,12 @@ export default function DealsPage() {
   const [inviteExpiresAt, setInviteExpiresAt] = useState('');
   const [inviteLoading, setInviteLoading] = useState(false);
   const [evidenceDrafts, setEvidenceDrafts] = useState({});
-  const [milestoneHashes, setMilestoneHashes] = useState({});
+  const [, setMilestoneHashes] = useState({});
   const [escrowPrepare, setEscrowPrepare] = useState(null);
   const [escrowLoading, setEscrowLoading] = useState(false);
   const [wallet, setWallet] = useState({ address: '', chainId: '', connecting: false });
   const [requireSignature, setRequireSignature] = useState(true);
   const [commodities, setCommodities] = useState([]);
-  const [contacts, setContacts] = useState([]);
   const [vaultNotes, setVaultNotes] = useState([]);
 
   const CHAINS = [
@@ -115,6 +114,8 @@ export default function DealsPage() {
     }
   }
 
+  // Reserved for future EIP-191 signing
+  // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
   async function personalSign(message) {
     if (!hasEthereum()) throw new Error('No wallet detected');
     if (!wallet.address) throw new Error('Wallet not connected');
@@ -184,7 +185,6 @@ export default function DealsPage() {
 
   useEffect(() => {
     apiGet('/commodities', { params: { limit: 100 } }).then((r) => r?.ok && Array.isArray(r.items) && setCommodities(r.items)).catch(() => {});
-    apiGet('/contacts', { params: { limit: 100 } }).then((r) => r?.ok && Array.isArray(r.items) && setContacts(r.items)).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -520,6 +520,36 @@ export default function DealsPage() {
     } catch (e) {
       const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
       setError(serverMsg || e.message || 'Failed to update milestone');
+    }
+  }
+
+  async function handlePrepareEscrow() {
+    if (!selected?._id) return;
+    setEscrowLoading(true);
+    setError('');
+    try {
+      const res = await apiPost(`/deals/${selected._id}/prepare-escrow`, {
+        ownerWallet: wallet.address || '',
+      });
+      if (!res?.ok || !res?.prepareEscrow) throw new Error(res?.error || 'Failed to prepare escrow');
+      setEscrowPrepare(res.prepareEscrow);
+    } catch (e) {
+      const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
+      setError(serverMsg || e.message || 'Failed to prepare escrow');
+    } finally {
+      setEscrowLoading(false);
+    }
+  }
+
+  async function handleLinkContract(contractAddress) {
+    if (!selected?._id || !contractAddress) return;
+    setError('');
+    try {
+      const res = await apiPut(`/deals/${selected._id}`, { contractAddress: String(contractAddress).trim() });
+      if (res?.ok && res.item) setSelected(res.item);
+    } catch (e) {
+      const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
+      setError(serverMsg || e.message || 'Failed to link contract');
     }
   }
 
@@ -953,7 +983,7 @@ export default function DealsPage() {
                       try {
                         const res = await apiPut(`/deals/${selected._id}`, { stage: v });
                         if (res?.ok && res.item) setSelected(res.item);
-                      } catch {}
+                      } catch { /* ignore */ }
                     }}
                   >
                     <option value="procurement">1. Procurement</option>
@@ -1002,7 +1032,7 @@ export default function DealsPage() {
                           ],
                         });
                         if (res?.ok && res.item) setSelected(res.item);
-                      } catch {}
+                      } catch { /* ignore */ }
                     }}
                     style={{ width: 60 }}
                   />
@@ -1021,7 +1051,7 @@ export default function DealsPage() {
                           },
                         });
                         if (res?.ok && res.item) setSelected(res.item);
-                      } catch {}
+                      } catch { /* ignore */ }
                     }}
                   >
                     <option value="usdc">USDC</option>
@@ -1046,7 +1076,7 @@ export default function DealsPage() {
                           },
                         });
                         if (res?.ok && res.item) setSelected(res.item);
-                      } catch {}
+                      } catch { /* ignore */ }
                     }}
                   >
                     <option value="usdc">USDC</option>

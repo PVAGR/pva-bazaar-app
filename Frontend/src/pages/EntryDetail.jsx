@@ -7,7 +7,7 @@ import { fetchArchiveEntryById } from '../lib/archiveApi.js';
 // Helper to build canonical URLs
 function getCanonicalUrl(path = '') {
   const base = 'https://pvabazaar.org';
-  return base + (path.startsWith('/') ? path : '/' + path);
+  return `${base}${path.startsWith('/') ? path : `/${path}`}`;
 }
 
 export default function EntryDetail({ entries = [] }) {
@@ -121,7 +121,7 @@ export default function EntryDetail({ entries = [] }) {
             <div className="entry-page__meta">
               {new Date(displayEntry.date).toLocaleDateString()}
               {displayEntry.location ? ` · ${displayEntry.location}` : ''}
-              {displayEntry.tags?.length ? ' · ' + displayEntry.tags.join(', ') : ''}
+              {displayEntry.tags?.length ? ` · ${displayEntry.tags.join(', ')}` : ''}
             </div>
 
             {/* Table of Contents */}
@@ -143,32 +143,32 @@ export default function EntryDetail({ entries = [] }) {
               <ReactMarkdown
                 rehypePlugins={[rehypeSanitize]}
                 components={{
-                  h1: ({ node, ...props }) => {
+                  h1: ({ ...props }) => {
                     const text = String(props.children);
                     const id = toc.find((h) => h.text === text && h.level === 1)?.id || undefined;
                     return <h1 id={id} {...props} />;
                   },
-                  h2: ({ node, ...props }) => {
+                  h2: ({ ...props }) => {
                     const text = String(props.children);
                     const id = toc.find((h) => h.text === text && h.level === 2)?.id || undefined;
                     return <h2 id={id} {...props} />;
                   },
-                  h3: ({ node, ...props }) => {
+                  h3: ({ ...props }) => {
                     const text = String(props.children);
                     const id = toc.find((h) => h.text === text && h.level === 3)?.id || undefined;
                     return <h3 id={id} {...props} />;
                   },
-                  h4: ({ node, ...props }) => {
+                  h4: ({ ...props }) => {
                     const text = String(props.children);
                     const id = toc.find((h) => h.text === text && h.level === 4)?.id || undefined;
                     return <h4 id={id} {...props} />;
                   },
-                  h5: ({ node, ...props }) => {
+                  h5: ({ ...props }) => {
                     const text = String(props.children);
                     const id = toc.find((h) => h.text === text && h.level === 5)?.id || undefined;
                     return <h5 id={id} {...props} />;
                   },
-                  h6: ({ node, ...props }) => {
+                  h6: ({ ...props }) => {
                     const text = String(props.children);
                     const id = toc.find((h) => h.text === text && h.level === 6)?.id || undefined;
                     return <h6 id={id} {...props} />;

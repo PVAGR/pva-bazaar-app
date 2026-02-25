@@ -1,0 +1,22 @@
+# Build output
+dist/
+Frontend/dist/
+build/
+out/
+.next/
+coverage/
+*.min.js
+
+# Dependencies
+node_modules/
+
+# QA
+qa/backstop/
+qa/reports/
+
+# Config and generated
+*.config.js
+*.config.ts
+
+# API routes (Node env - URL, fetch, process are global)
+Frontend/api/

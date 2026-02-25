@@ -10,7 +10,6 @@ export default function HelpTip({ title, body, example }) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef(null);
   const hasContent = useMemo(() => !!(title || body || example), [title, body, example]);
-  if (!hasContent) return null;
 
   useEffect(() => {
     if (!open) return;
@@ -35,6 +34,8 @@ export default function HelpTip({ title, body, example }) {
       window.removeEventListener('touchstart', onPointerDown);
     };
   }, [open]);
+
+  if (!hasContent) return null;
 
   return (
     <span className="helpTip" ref={rootRef}>

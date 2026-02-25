@@ -69,6 +69,11 @@ export default function MarketplacePage() {
   return (
     <main className="marketplace-page">
       <section className="marketplace-header">
+        <div className="marketplace-nav" style={{ display: 'flex', gap: 16, marginBottom: 12, flexWrap: 'wrap' }}>
+          <Link to="/">📚 Archive</Link>
+          <Link to="/chat">💬 Chat with Richard</Link>
+          <Link to="/about">About</Link>
+        </div>
         <div className="marketplace-topbar">
           <h1>Marketplace</h1>
           <Link to={isAuthed ? "/items/new" : "/admin"} className="create-listing-btn">
@@ -87,7 +92,7 @@ export default function MarketplacePage() {
           {categories.map(cat => (
             <button
               key={cat}
-              className={"category-chip" + (cat === selectedCategory ? " selected" : "")}
+              className={`category-chip${cat === selectedCategory ? ' selected' : ''}`}
               onClick={() => handleCategory(cat)}
               aria-pressed={cat === selectedCategory}
             >

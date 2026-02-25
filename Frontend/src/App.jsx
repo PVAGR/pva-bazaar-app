@@ -1,7 +1,6 @@
 import AdminOrdersPage from './pages/AdminOrdersPage.jsx';
 import React from 'react';
 import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import Layout from './components/Layout.jsx';
 
 import AboutPage from './pages/AboutPage.jsx';
 import ArchiveLibraryPage from './pages/ArchiveLibraryPage.jsx';

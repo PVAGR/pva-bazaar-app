@@ -8,7 +8,7 @@ export default function OracleAssessmentPage() {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [assessmentId, setAssessmentId] = useState(null);
+  const [, setAssessmentId] = useState(null);
   const [results, setResults] = useState(null);
   
   const [formData, setFormData] = useState({

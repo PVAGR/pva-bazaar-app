@@ -130,7 +130,7 @@ export default function AdminOrdersPage() {
       }
       const res = await refundOrder(orderDetail._id, { amountCents, reason: refundReason });
       if (res.ok) {
-        setStatusMsg("Refund initiated. Status: " + res.status);
+        setStatusMsg(`Refund initiated. Status: ${res.status}`);
         setShowRefund(false);
         await openOrderDetail(orderDetail._id);
         // update list row
@@ -164,7 +164,7 @@ export default function AdminOrdersPage() {
           </thead>
           <tbody>
             {orders.map(order => (
-              <tr key={order._id} onClick={() => openOrderDetail(order._id)} className={order._id === selectedOrderId ? "selected" : ""}>
+              <tr key={order._id} role="button" tabIndex={0} onClick={() => openOrderDetail(order._id)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openOrderDetail(order._id); } }} className={order._id === selectedOrderId ? "selected" : ""}>
                 <td>{formatDate(order.createdAt)}</td>
                 <td>{order.itemSnapshot?.name}</td>
                 <td>{formatCents(order.amountTotal, order.currency)}</td>
@@ -182,8 +182,15 @@ export default function AdminOrdersPage() {
         )}
         {loading && <div className="loading">Loading...</div>}
       </div>
-      {selectedOrderId && (
-        <div className="order-detail-overlay" onClick={e => { if (e.target.classList.contains("order-detail-overlay")) setSelectedOrderId(null); }}>
+        {selectedOrderId && (
+        <div
+          className="order-detail-overlay"
+          role="button"
+          tabIndex={0}
+          aria-label="Close order detail"
+          onClick={e => { if (e.target.classList.contains("order-detail-overlay")) setSelectedOrderId(null); }}
+          onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (e.target.classList.contains("order-detail-overlay")) setSelectedOrderId(null); } }}
+        >
           <div className="order-detail-panel">
             {detailLoading ? <div className="loading">Loading...</div> : orderDetail && (
               <>

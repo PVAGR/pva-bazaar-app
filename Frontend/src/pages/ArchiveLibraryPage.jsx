@@ -3,7 +3,7 @@ import { Helmet } from 'react-helmet-async';
 // Helper to build canonical URLs
 function getCanonicalUrl(path = '') {
   const base = 'https://pvabazaar.org';
-  return base + (path.startsWith('/') ? path : '/' + path);
+  return `${base}${path.startsWith('/') ? path : `/${path}`}`;
 }
 import { Link } from 'react-router-dom';
 import { fetchArchiveEntries } from '../lib/api';
@@ -278,7 +278,7 @@ export default function ArchiveLibraryPage() {
   const renderMarkdown = (md) => {
     if (!md) return '';
     
-    let html = md
+    const html = md
       // Headers
       .replace(/^### (.*$)/gim, '<h3>$1</h3>')
       .replace(/^## (.*$)/gim, '<h2>$1</h2>')
@@ -292,7 +292,7 @@ export default function ArchiveLibraryPage() {
       // Links
       .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
       // Lists
-      .replace(/^\- (.+)$/gim, '<li>$1</li>')
+      .replace(/^- (.+)$/gim, '<li>$1</li>')
       .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>')
       // Paragraphs
       .split('\n\n')
@@ -330,6 +330,9 @@ export default function ArchiveLibraryPage() {
         <div className="header-content">
           <h1>📚 The Complete Archive</h1>
           <div className="header-actions">
+            <Link to="/chat" className="admin-link">💬 Chat with Richard</Link>
+            <Link to="/marketplace" className="admin-link">🛒 Marketplace</Link>
+            <Link to="/about" className="admin-link">About</Link>
             {getToken() ? <Link to="/broker" className="admin-link">📋 Broker Hub</Link> : null}
             <Link to="/admin" className="admin-link">⚙️ Admin</Link>
             <button 
@@ -506,6 +509,16 @@ export default function ArchiveLibraryPage() {
           )}
         </main>
       </div>
+
+      <footer className="archive-footer" style={{ padding: '24px', textAlign: 'center', borderTop: '1px solid var(--archive-border, #333)', marginTop: 24 }}>
+        <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 8 }}>
+          <Link to="/chat">💬 Chat with Richard</Link>
+          <Link to="/marketplace">🛒 Marketplace</Link>
+          <Link to="/about">About</Link>
+          <Link to="/oracle">🔮 Oracle</Link>
+        </div>
+        <p className="muted" style={{ fontSize: '0.9rem' }}>© {new Date().getFullYear()} pvabazaar.org</p>
+      </footer>
     </div>
     </>
   );

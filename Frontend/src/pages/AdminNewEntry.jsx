@@ -132,11 +132,15 @@ export default function AdminNewEntry({ onCreated }) {
         </label>
         <div
           className="media-uploader"
+          role="button"
+          tabIndex={0}
+          aria-label="Drop zone for media files"
           onDragOver={(e) => e.preventDefault()}
           onDrop={(e) => {
             e.preventDefault();
             uploadMediaFiles(e.dataTransfer.files);
           }}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') e.preventDefault(); }}
         >
           <div className="media-uploader__text">
             Drag & drop files here, or select files to upload
