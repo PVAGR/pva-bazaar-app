@@ -51,6 +51,10 @@ export default function ChatPage() {
       <Helmet>
         <title>Chat with Richard | PVA Bazaar</title>
         <meta name="description" content="Chat with Richard — direct supply chain sourcer. Ask about Kenyan coffee, malachite, soapstone, gemstones, vetting, and partnerships." />
+        <meta property="og:title" content="Chat with Richard | PVA Bazaar" />
+        <meta property="og:description" content="Chat with Richard — direct supply chain sourcer. Ask about Kenyan coffee, malachite, soapstone, gemstones, vetting, and partnerships." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://pvabazaar.org/#/chat" />
       </Helmet>
       <header className="chat-header">
         <div className="chat-header-links">

@@ -73,6 +73,10 @@ export default function MarketplacePage() {
       <Helmet>
         <title>Marketplace | PVA Bazaar</title>
         <meta name="description" content="Browse artifacts and crafts on the PVA Bazaar marketplace." />
+        <meta property="og:title" content="Marketplace | PVA Bazaar" />
+        <meta property="og:description" content="Browse artifacts and crafts on the PVA Bazaar marketplace." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://pvabazaar.org/#/marketplace" />
       </Helmet>
       <section className="marketplace-header">
         <div className="marketplace-nav" style={{ display: 'flex', gap: 16, marginBottom: 12, flexWrap: 'wrap' }}>

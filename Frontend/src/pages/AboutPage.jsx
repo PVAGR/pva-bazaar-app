@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
+import SiteFooter from '../components/SiteFooter.jsx';
 
 export default function AboutPage() {
   return (
@@ -8,6 +9,10 @@ export default function AboutPage() {
       <Helmet>
         <title>About | PVA Bazaar</title>
         <meta name="description" content="About pvabazaar.org — journal, archive, marketplace. Chat with Richard, browse artifacts, explore the Oracle." />
+        <meta property="og:title" content="About | PVA Bazaar" />
+        <meta property="og:description" content="About pvabazaar.org — journal, archive, marketplace. Chat with Richard, browse artifacts, explore the Oracle." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://pvabazaar.org/#/about" />
       </Helmet>
       <div className="about-page" style={{ maxWidth: 640, margin: '0 auto', padding: 24 }}>
         <p style={{ marginBottom: 24 }}><Link to="/">← Back to Archive</Link></p>
@@ -37,9 +42,10 @@ export default function AboutPage() {
           <Link to="/login">Log in</Link> or <Link to="/register">register</Link> to access Broker Hub, sell items, and manage deals.
         </p>
 
-        <p className="muted" style={{ marginTop: 32, fontSize: '0.9rem' }}>
-          © {new Date().getFullYear()} pvabazaar.org
-        </p>
+        <div style={{ marginTop: 32 }}>
+          <SiteFooter style={{ borderTop: 'none', padding: 0, marginBottom: 8 }} />
+          <p className="muted" style={{ fontSize: '0.9rem', margin: 0 }}>© {new Date().getFullYear()} pvabazaar.org</p>
+        </div>
       </div>
     </>
   );
