@@ -157,7 +157,7 @@ export default function OracleAssessmentPage() {
         <meta property="og:description" content="Explore AI-powered oracle assessments — personal data, spiritual profile, and cosmic insights." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://pvabazaar.org/#/oracle" />
-        <meta property="og:image" content="https://pvabazaar.org/og-default.jpg" />
+        <meta property="og:image" content="https://pvabazaar.org/og-default.svg" />
       </Helmet>
       <div className="oracle-assessment" style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem' }}>
         <header style={{ textAlign: 'center', marginBottom: '3rem' }}>

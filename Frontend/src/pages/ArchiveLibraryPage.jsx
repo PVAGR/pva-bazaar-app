@@ -323,9 +323,9 @@ export default function ArchiveLibraryPage() {
         <meta property="og:description" content="Browse the complete PVA Bazaar Archive: 40+ works, 12 categories, 110,000+ words." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content={getCanonicalUrl('/archive')} />
-        <meta property="og:image" content={getCanonicalUrl('/og-default.jpg')} />
+        <meta property="og:image" content={getCanonicalUrl('/og-default.svg')} />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:image" content={getCanonicalUrl('/og-default.jpg')} />
+        <meta name="twitter:image" content={getCanonicalUrl('/og-default.svg')} />
         <script type="application/ld+json">
           {JSON.stringify({
             '@context': 'https://schema.org',

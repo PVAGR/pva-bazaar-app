@@ -6,7 +6,7 @@ import { Helmet } from "react-helmet-async";
 import { fetchMarketplaceItem, createCheckoutSession } from "../lib/api";
 import "./MarketplaceItemPage.css";
 
-const PLACEHOLDER = "/placeholder.png";
+const PLACEHOLDER = "/placeholder.svg";
 
 function formatPrice(priceCents, currency = "USD") {
   if (typeof priceCents !== "number") return "";

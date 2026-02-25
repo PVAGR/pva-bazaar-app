@@ -14,7 +14,7 @@ export default function AboutPage() {
         <meta property="og:description" content="About pvabazaar.org — journal, archive, marketplace. Chat with Richard, browse artifacts, explore the Oracle." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://pvabazaar.org/#/about" />
-        <meta property="og:image" content="https://pvabazaar.org/og-default.jpg" />
+        <meta property="og:image" content="https://pvabazaar.org/og-default.svg" />
       </Helmet>
       <div className="about-page" style={{ maxWidth: 640, margin: '0 auto', padding: 24 }}>
         <p style={{ marginBottom: 24, display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>

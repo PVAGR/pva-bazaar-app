@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <rect width="1200" height="630" fill="#228b22"/>
+  <rect x="40" y="40" width="1120" height="550" rx="12" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2"/>
+  <text x="600" y="280" font-family="Georgia, serif" font-size="72" font-weight="bold" fill="white" text-anchor="middle">PVA Bazaar</text>
+  <text x="600" y="360" font-family="system-ui, sans-serif" font-size="28" fill="rgba(255,255,255,0.9)" text-anchor="middle">Archive · Marketplace · Chat</text>
+  <text x="600" y="420" font-family="system-ui, sans-serif" font-size="20" fill="rgba(255,255,255,0.7)" text-anchor="middle">pvabazaar.org</text>
+</svg>

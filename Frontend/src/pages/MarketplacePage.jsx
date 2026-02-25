@@ -78,7 +78,7 @@ export default function MarketplacePage() {
         <meta property="og:description" content="Browse artifacts and crafts on the PVA Bazaar marketplace." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://pvabazaar.org/#/marketplace" />
-        <meta property="og:image" content="https://pvabazaar.org/og-default.jpg" />
+        <meta property="og:image" content="https://pvabazaar.org/og-default.svg" />
       </Helmet>
       <section className="marketplace-header">
         <div className="marketplace-nav" style={{ display: 'flex', gap: 16, marginBottom: 12, flexWrap: 'wrap' }}>
@@ -131,7 +131,7 @@ export default function MarketplacePage() {
               key={item.id || item._id}
             >
             <article className="item-card" tabIndex={0} aria-label={item.name || item.title}>
-              <img src={(item.media && item.media[0]) || item.image || "/placeholder.png"} alt={item.name || item.title} className="item-image" loading="lazy" decoding="async" />
+              <img src={(item.media && item.media[0]) || item.image || "/placeholder.svg"} alt={item.name || item.title} className="item-image" loading="lazy" decoding="async" />
               <div className="item-info">
                 <h2 className="item-title">{item.name || item.title}</h2>
                 <div className="item-meta">

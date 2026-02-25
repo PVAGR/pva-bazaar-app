@@ -105,9 +105,9 @@ export default function EntryDetail({ entries = [] }) {
         <meta property="og:description" content={displayEntry.description || 'Read this archive entry on PVA Bazaar.'} />
         <meta property="og:type" content="article" />
         <meta property="og:url" content={getCanonicalUrl(`/archive/${displayEntry.id || id}`)} />
-        <meta property="og:image" content={displayEntry.media?.[0] || getCanonicalUrl('/og-default.jpg')} />
+        <meta property="og:image" content={displayEntry.media?.[0] || getCanonicalUrl('/og-default.svg')} />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:image" content={displayEntry.media?.[0] || getCanonicalUrl('/og-default.jpg')} />
+        <meta name="twitter:image" content={displayEntry.media?.[0] || getCanonicalUrl('/og-default.svg')} />
       </Helmet>
       <section className="entry-detail-container">
         <div className="entry-detail-header">
