@@ -210,7 +210,7 @@ export default function OnboardingPage() {
 
   return (
     <div className={`onboardingPage admin-page authenticated ${darkMode ? 'dark-theme' : 'light-theme'}`}>
-      <Helmet><title>Guided setup | PVA Bazaar</title></Helmet>
+      <Helmet><title>Guided setup | PVA Bazaar</title><meta name="robots" content="noindex, nofollow" /></Helmet>
       <header className="admin-header onboardingHeader">
         <div>
           <h1>🧭 Guided setup</h1>

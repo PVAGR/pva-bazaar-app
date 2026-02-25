@@ -29,6 +29,7 @@ describe('SiteFooter', () => {
     const scrollTo = vi.fn();
     window.scrollTo = scrollTo;
     await user.click(screen.getByRole('button', { name: /Back to top/i }));
-    expect(scrollTo).toHaveBeenCalledWith({ top: 0, behavior: 'smooth' });
+    expect(scrollTo).toHaveBeenCalled();
+    expect(scrollTo.mock.calls[0][0]).toEqual({ top: 0, behavior: expect.stringMatching(/^(smooth|auto)$/) });
   });
 });

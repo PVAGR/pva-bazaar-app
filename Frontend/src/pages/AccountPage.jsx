@@ -79,7 +79,7 @@ export default function AccountPage() {
 
   return (
     <div className={`accountPage admin-page authenticated ${darkMode ? 'dark-theme' : 'light-theme'}`}>
-      <Helmet><title>Account | PVA Bazaar</title></Helmet>
+      <Helmet><title>Account | PVA Bazaar</title><meta name="robots" content="noindex, nofollow" /></Helmet>
       <header className="admin-header accountHeader">
         <div>
           <h1>👤 Account</h1>

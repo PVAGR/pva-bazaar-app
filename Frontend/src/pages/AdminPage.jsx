@@ -358,7 +358,7 @@ export default function AdminPage() {
   if (!isAuthenticated) {
     return (
       <div className={`admin-page ${darkMode ? 'dark-theme' : 'light-theme'}`}>
-        <Helmet><title>Archive Admin | PVA Bazaar</title></Helmet>
+        <Helmet><title>Archive Admin | PVA Bazaar</title><meta name="robots" content="noindex, nofollow" /></Helmet>
         <button 
           className="theme-toggle login-theme-toggle" 
           onClick={() => {
@@ -412,7 +412,7 @@ export default function AdminPage() {
   // Admin panel
   return (
     <>
-      <Helmet><title>Archive Admin | PVA Bazaar</title></Helmet>
+      <Helmet><title>Archive Admin | PVA Bazaar</title><meta name="robots" content="noindex, nofollow" /></Helmet>
       <div className={`admin-page authenticated ${darkMode ? 'dark-theme' : 'light-theme'}`}>
         <div className="admin-header">
           <div className="header-content">
