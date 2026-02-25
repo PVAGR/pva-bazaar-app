@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link, useSearchParams } from 'react-router-dom';
 import { apiGet, apiPost, apiPut, apiDelete } from '../lib/api';
@@ -25,6 +25,7 @@ export default function VaultPage() {
   const [saving, setSaving] = useState(false);
   const [creating, setCreating] = useState(false);
   const [searchVault, setSearchVault] = useState('');
+  const searchRef = useRef(null);
   const [draft, setDraft] = useState({
     recordType: urlRecordType && RECORD_TYPES.includes(urlRecordType) ? urlRecordType : 'general',
     recordId: urlRecordId,
@@ -41,6 +42,18 @@ export default function VaultPage() {
   useEffect(() => {
     if (urlSelected) setSelectedId(urlSelected);
   }, [urlSelected]);
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey) return;
+      const active = document.activeElement;
+      if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable)) return;
+      e.preventDefault();
+      searchRef.current?.focus();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   async function loadNotes() {
     setLoading(true);
@@ -190,10 +203,11 @@ export default function VaultPage() {
         <section className="card">
           <h2>Your vault notes</h2>
           <input
+            ref={searchRef}
             type="search"
             value={searchVault}
             onChange={(e) => setSearchVault(e.target.value)}
-            placeholder="Search by title or content..."
+            placeholder="Search by title or content... (/)"
             className="search-input"
             style={{ marginBottom: 8, maxWidth: 280 }}
             aria-label="Search vault notes by title or content"

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link, useSearchParams } from 'react-router-dom';
 import { apiGet, apiPost, apiPut, apiDelete } from '../lib/api';
@@ -24,6 +24,7 @@ export default function TemplatesPage() {
   const [filterType, setFilterType] = useState('');
   const [filterCommodity, setFilterCommodity] = useState('');
   const [searchTemplate, setSearchTemplate] = useState('');
+  const searchRef = useRef(null);
   const [draft, setDraft] = useState({ name: '', type: 'vetting', body: '' });
   const [copiedId, setCopiedId] = useState('');
   const [contacts, setContacts] = useState([]);
@@ -67,6 +68,19 @@ export default function TemplatesPage() {
   useEffect(() => {
     if (urlSelected) setSelectedId(urlSelected);
   }, [urlSelected]);
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey) return;
+      const active = document.activeElement;
+      if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable)) return;
+      e.preventDefault();
+      searchRef.current?.focus();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
   useEffect(() => {
     apiGet('/contacts', { params: { limit: 100 } }).then((r) => r?.ok && Array.isArray(r.items) && setContacts(r.items)).catch(() => {});
     apiGet('/commodities', { params: { limit: 100 } }).then((r) => r?.ok && Array.isArray(r.items) && setCommodities(r.items)).catch(() => {});
@@ -262,10 +276,11 @@ export default function TemplatesPage() {
               ))}
             </select>
             <input
+              ref={searchRef}
               type="search"
               value={searchTemplate}
               onChange={(e) => setSearchTemplate(e.target.value)}
-              placeholder="Search by name..."
+              placeholder="Search by name... (/)"
               style={{ maxWidth: 200 }}
               aria-label="Search templates by name"
             />

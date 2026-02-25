@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link, useSearchParams } from 'react-router-dom';
 import { apiGet, apiPost, apiPut, apiDelete } from '../lib/api';
@@ -23,6 +23,7 @@ export default function ContactsPage() {
   const [creating, setCreating] = useState(false);
   const [filterType, setFilterType] = useState('');
   const [searchContact, setSearchContact] = useState('');
+  const searchRef = useRef(null);
   const [draft, setDraft] = useState({
     name: '',
     email: '',
@@ -98,6 +99,18 @@ export default function ContactsPage() {
   useEffect(() => {
     if (urlSelected) setSelectedId(urlSelected);
   }, [urlSelected]);
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey) return;
+      const active = document.activeElement;
+      if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable)) return;
+      e.preventDefault();
+      searchRef.current?.focus();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
   useEffect(() => {
     apiGet('/commodities', { params: { limit: 100 } }).then((r) => r?.ok && Array.isArray(r.items) && setCommodities(r.items)).catch(() => {});
   }, []);
@@ -246,10 +259,11 @@ export default function ContactsPage() {
               ))}
             </select>
             <input
+              ref={searchRef}
               type="search"
               value={searchContact}
               onChange={(e) => setSearchContact(e.target.value)}
-              placeholder="Search by name, company..."
+              placeholder="Search by name, company... (/)"
               style={{ maxWidth: 200 }}
               aria-label="Search contacts by name or company"
             />

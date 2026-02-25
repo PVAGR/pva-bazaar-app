@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link, useSearchParams } from 'react-router-dom';
 import { apiGet, apiPost, apiPut, apiDelete } from '../lib/api';
@@ -31,6 +31,7 @@ export default function CommoditiesPage() {
   });
   const [newFlag, setNewFlag] = useState({ red: '', green: '' });
   const [searchCommodity, setSearchCommodity] = useState('');
+  const searchRef = useRef(null);
   const [contacts, setContacts] = useState([]);
   const [templates, setTemplates] = useState([]);
   const [vaultNotes, setVaultNotes] = useState([]);
@@ -83,6 +84,18 @@ export default function CommoditiesPage() {
   useEffect(() => {
     if (urlSelected) setSelectedId(urlSelected);
   }, [urlSelected]);
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey) return;
+      const active = document.activeElement;
+      if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable)) return;
+      e.preventDefault();
+      searchRef.current?.focus();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
   useEffect(() => {
     apiGet('/contacts', { params: { limit: 100 } }).then((r) => r?.ok && Array.isArray(r.items) && setContacts(r.items)).catch(() => {});
     apiGet('/templates', { params: { limit: 100 } }).then((r) => r?.ok && Array.isArray(r.items) && setTemplates(r.items)).catch(() => {});
@@ -234,10 +247,11 @@ export default function CommoditiesPage() {
         <section className="card">
           <h2>Your commodities</h2>
           <input
+            ref={searchRef}
             type="search"
             value={searchCommodity}
             onChange={(e) => setSearchCommodity(e.target.value)}
-            placeholder="Search by name or category..."
+            placeholder="Search by name or category... (/)"
             className="search-input"
             style={{ marginBottom: 8, maxWidth: 280 }}
             aria-label="Search commodities by name or category"
