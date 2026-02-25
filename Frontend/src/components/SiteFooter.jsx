@@ -13,7 +13,8 @@ export default function SiteFooter({ style = {} }) {
       }} style={{ marginRight: 8 }} aria-label="Back to top">
         ↑ Top
       </button>
-      <Link to="/">Archive</Link>
+      <nav aria-label="Footer">
+        <Link to="/">Archive</Link>
       <span style={{ margin: '0 8px' }}>·</span>
       <Link to="/marketplace">Marketplace</Link>
       <span style={{ margin: '0 8px' }}>·</span>
@@ -24,6 +25,7 @@ export default function SiteFooter({ style = {} }) {
       <Link to="/about">About</Link>
       <span style={{ margin: '0 8px' }}>·</span>
       <a href="mailto:pvaglobalreach@gmail.com">Contact</a>
+      </nav>
     </footer>
   );
 }
