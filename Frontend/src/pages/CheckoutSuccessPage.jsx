@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { fetchCheckoutSession } from "../lib/api";
 import SiteFooter from "../components/SiteFooter.jsx";
@@ -44,6 +44,11 @@ export default function CheckoutSuccessPage() {
           {session.customer_details?.email && (
             <div>Email: {session.customer_details.email}</div>
           )}
+          <p style={{ marginTop: 12 }}>
+            <Link to="/marketplace" className="btn ghost">Continue shopping</Link>
+            <span style={{ margin: '0 8px' }}>&#183;</span>
+            <Link to="/" className="btn ghost">Back to Archive</Link>
+          </p>
           <div style={{ marginTop: 16 }}>
             <SiteFooter style={{ borderTop: 'none', padding: 0 }} />
           </div>

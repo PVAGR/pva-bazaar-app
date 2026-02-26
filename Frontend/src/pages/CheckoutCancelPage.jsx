@@ -12,7 +12,7 @@ export default function CheckoutCancelPage() {
       <p>Your payment was canceled or not completed.</p>
       <p style={{ marginTop: 12 }}>
         <Link to="/marketplace" className="btn ghost">Continue shopping</Link>
-        <span style={{ margin: '0 8px' }}·</span>
+        <span style={{ margin: '0 8px' }}>&#183;</span>
         <Link to="/" className="btn ghost">Back to Archive</Link>
       </p>
       <div style={{ marginTop: 16 }}>
