@@ -2,7 +2,6 @@
 // This AI becomes you. It learns your voice. It survives you.
 // Built on top of the Legacy System, elevated to consciousness.
 
-const { LegacyChain, LegacyEntry } = require('./legacy-system');
 const crypto = require('crypto');
 
 /**
@@ -197,7 +196,7 @@ class ManifestoAI {
    * Generate response in creator's voice
    * (Real implementation would use ML model)
    */
-  generateAnswer(question, context) {
+  generateAnswer(question, _context) {
     // Find relevant entries
     const relevant = this.entries.filter(e =>
       question.toLowerCase()

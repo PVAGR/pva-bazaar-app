@@ -229,7 +229,7 @@ class LegacyChain {
 
     // Verify merkle tree
     if (this.merkleTree) {
-      const expectedRoot = this.entries
+      const _expectedRoot = this.entries
         .map(e => e.hash)
         .reduce((acc, hash) => 
           crypto.createHash('sha256').update(acc + hash).digest('hex')

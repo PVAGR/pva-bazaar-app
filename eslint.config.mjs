@@ -62,7 +62,14 @@ export default [
     },
     rules: {
       // TypeScript rules
-      '@typescript-eslint/no-unused-vars': 'error',
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' },
+      ],
+      'no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' },
+      ],
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/consistent-type-definitions': ['error', 'interface'],
 
@@ -157,6 +164,7 @@ export default [
       'Frontend/scripts/*.cjs',
       'scripts/*.mjs',
       'scripts/*.js',
+      'backend/scripts/**',
       '.eslintrc.js',
       '_archive/',
       '**/legacy/**',

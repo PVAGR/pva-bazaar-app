@@ -1,4 +1,3 @@
-const mongoose = require('mongoose');
 const Artifact = require('../models/Artifact');
 const EmbeddingService = require('./embeddingService');
 const VectorDB = require('./vectorDB');
@@ -53,7 +52,7 @@ class VectorSearchService {
       // Update the artifact with the embedding
       const updatedArtifact = await Artifact.findByIdAndUpdate(
         artifact._id,
-        { embedding: embedding },
+        { embedding },
         { new: true },
       );
 

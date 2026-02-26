@@ -27,7 +27,7 @@ router.get('/:userId', auth, async (req, res) => {
     const portfolioGains = totalValue * 0.15; // 15% mock gain
 
     // Mock allocations (in real app, this would be from user's share holdings)
-    const allocations = userArtifacts.slice(0, 3).map((artifact, index) => ({
+    const allocations = userArtifacts.slice(0, 3).map((artifact) => ({
       name: artifact.name,
       value: artifact.price * (0.8 + Math.random() * 0.4), // Random value around the artifact price
       change: (Math.random() - 0.5) * 20, // Random change between -10% and +10%

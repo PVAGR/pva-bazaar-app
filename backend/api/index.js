@@ -3,10 +3,7 @@ const helmet = require('helmet');
 const Sentry = require('@sentry/node');
 const SentryTracing = require('@sentry/tracing');
 const mongoose = require('mongoose');
-const cors = require('cors');
 const dotenv = require('dotenv');
-const path = require('path');
-let MongoMemoryServer;
 
 // Load environment variables
 dotenv.config();
@@ -401,7 +398,7 @@ app.get('/api/health', async (req, res) => {
     ready: process.env.API_READY !== 'false' && mongoConnected,
     legacyMode: process.env.LEGACY_MODE === 'true',
     nodeEnv: process.env.NODE_ENV || 'development',
-    allowedOrigins: allowedOrigins,
+    allowedOrigins,
     timestamp: new Date().toISOString(),
     ...(dbError && { dbError }),
   });
@@ -413,7 +410,7 @@ if (process.env.SENTRY_DSN) {
 }
 
 // Error handling middleware (4-arg signature)
-app.use((err, req, res, next) => {
+app.use((err, req, res, _next) => {
   console.error('🚨 Error:', err.stack);
   // CORS headers already set by middleware above
   res.status(500).json({

@@ -13,7 +13,7 @@ function escapeRegExp(str) {
 (async () => {
   try {
     await vectorSearch.vectorDB.initialize();
-  } catch (_) {}
+  } catch (_) { /* vector DB init optional */ }
 })();
 
 // Vector search endpoint

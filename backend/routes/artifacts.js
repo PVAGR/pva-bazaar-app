@@ -7,12 +7,12 @@ const path = require('path');
 
 // Configure multer for image uploads
 const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
+  destination (req, file, cb) {
     cb(null, path.join(__dirname, '../../uploads/artifacts'));
   },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, uniqueSuffix + '-' + file.originalname.replace(/\s+/g, '_'));
+  filename (req, file, cb) {
+    const uniqueSuffix = `${Date.now()  }-${  Math.round(Math.random() * 1e9)}`;
+    cb(null, `${uniqueSuffix  }-${  file.originalname.replace(/\s+/g, '_')}`);
   },
 });
 const upload = multer({ storage });
@@ -23,7 +23,7 @@ async function getCryptoPrices() {
     // Use https module instead of fetch for better compatibility
     const https = require('https');
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve, _reject) => {
       const req = https.get(
         'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd',
         (res) => {
@@ -159,17 +159,17 @@ router.post('/', auth, upload.array('assetPhotos', 6), async (req, res) => {
       category,
       materials,
       artisan,
-      partnerName,
-      partnerCode,
-      businessLicense,
+      partnerName: _partnerName,
+      partnerCode: _partnerCode,
+      businessLicense: _businessLicense,
       partnerWallet,
-      partnerAddress,
+      partnerAddress: _partnerAddress,
       promoterName,
       promoterContact,
       artisanShare,
       pvaFee,
       partnerShare,
-      insuranceBond,
+      insuranceBond: _insuranceBond,
       artisanWallet,
       digitalSignature,
       agreeTerms,
@@ -179,7 +179,7 @@ router.post('/', auth, upload.array('assetPhotos', 6), async (req, res) => {
     // Handle images
     let imageUrls = [];
     if (req.files && req.files.length > 0) {
-      imageUrls = req.files.map((f) => '/uploads/artifacts/' + f.filename);
+      imageUrls = req.files.map((f) => `/uploads/artifacts/${  f.filename}`);
     }
 
     // Build payout and consignment info

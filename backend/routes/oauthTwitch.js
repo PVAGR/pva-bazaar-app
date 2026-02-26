@@ -27,7 +27,7 @@ function getRedirectUri(req) {
   return `${proto}://${host}/api/oauth/twitch/callback`;
 }
 
-function getFrontendReturnUrl(req) {
+function getFrontendReturnUrl(_req) {
   return process.env.OAUTH_FRONTEND_RETURN_URL || 'https://pvabazaar.org/#/streams';
 }
 
