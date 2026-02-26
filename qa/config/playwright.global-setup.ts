@@ -1,6 +1,6 @@
 import { chromium, FullConfig } from '@playwright/test';
 
-async function globalSetup(config: FullConfig) {
+async function globalSetup(_config: FullConfig) {
   console.log('🎭 Playwright Global Setup');
 
   // Start browser for setup tasks

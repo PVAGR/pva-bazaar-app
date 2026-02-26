@@ -34,6 +34,7 @@ export default [
         document: 'readonly',
         localStorage: 'readonly',
         fetch: 'readonly',
+        Response: 'readonly',
         URL: 'readonly',
         URLSearchParams: 'readonly',
         location: 'readonly',
@@ -132,9 +133,9 @@ export default [
     },
   },
   {
-    files: ['**/*.test.{js,jsx,ts,tsx}', '**/*.spec.{js,jsx,ts,tsx}'],
+    files: ['**/*.test.{js,jsx,ts,tsx}', '**/*.spec.{js,jsx,ts,tsx}', 'qa/config/**/*.ts'],
     rules: {
-      // Allow more flexible rules in tests
+      // Allow more flexible rules in tests and test config
       '@typescript-eslint/no-explicit-any': 'off',
       'no-restricted-syntax': 'off',
     },

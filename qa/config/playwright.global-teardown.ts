@@ -1,6 +1,6 @@
 import { FullConfig } from '@playwright/test';
 
-async function globalTeardown(config: FullConfig) {
+async function globalTeardown(_config: FullConfig) {
   console.log('🧹 Playwright Global Teardown');
 
   // Cleanup test data if needed
