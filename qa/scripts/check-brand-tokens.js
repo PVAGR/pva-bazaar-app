@@ -1,10 +1,11 @@
 #!/usr/bin/env node
+/* eslint-disable no-restricted-syntax -- script intentionally lists forbidden colors to detect them */
 
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const _dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // PVA Brand Colors (official palette)
 const PVA_COLORS = {
