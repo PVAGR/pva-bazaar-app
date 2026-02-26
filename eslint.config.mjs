@@ -164,6 +164,7 @@ export default [
       'Frontend/scripts/*.cjs',
       'scripts/*.mjs',
       'scripts/*.js',
+      'scripts/*.cjs',
       'backend/scripts/**',
       '.eslintrc.js',
       '_archive/',

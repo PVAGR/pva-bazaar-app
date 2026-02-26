@@ -12,6 +12,7 @@
     "build": "echo \"Serverless build\"",
     "seed": "node seed.js",
     "smoke:core": "node scripts/smoke-core-flows.js",
+    "lint": "eslint . --max-warnings 999",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
