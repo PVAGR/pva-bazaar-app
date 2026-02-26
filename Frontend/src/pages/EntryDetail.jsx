@@ -78,9 +78,9 @@ export default function EntryDetail({ entries = [] }) {
     return (
       <section className="entry-detail-container">
         <div className="entry-detail-header">
-          <Link to="#/journal" className="entry-close-btn">✕</Link>
+          <Link to="/" className="entry-close-btn" aria-label="Back to archive">✕</Link>
         </div>
-        <div className="entry-detail-content">Loading entry...</div>
+        <div className="entry-detail-content" role="status" aria-live="polite">Loading entry...</div>
       </section>
     );
   }
@@ -89,9 +89,9 @@ export default function EntryDetail({ entries = [] }) {
     return (
       <section className="entry-detail-container">
         <div className="entry-detail-header">
-          <Link to="#/journal" className="entry-close-btn">✕</Link>
+          <Link to="/" className="entry-close-btn" aria-label="Back to archive">✕</Link>
         </div>
-        <div className="entry-detail-content">Entry not found.</div>
+        <div className="entry-detail-content" role="status">Entry not found.</div>
       </section>
     );
   }
@@ -113,7 +113,7 @@ export default function EntryDetail({ entries = [] }) {
         <div className="entry-detail-header">
           <Link to="#/" className="entry-home-btn" aria-label="Home">🏠</Link>
           <h2 className="entry-detail-title">{displayEntry.title}</h2>
-          <Link to="#/journal" className="entry-close-btn" aria-label="Close">✕</Link>
+          <Link to="/" className="entry-close-btn" aria-label="Back to archive">✕</Link>
         </div>
 
         <div className="entry-detail-scrollable">
