@@ -15,6 +15,7 @@ describe('SiteFooter', () => {
     );
     expect(screen.getByRole('link', { name: /Archive/i })).toHaveAttribute('href', '/');
     expect(screen.getByRole('link', { name: /Marketplace/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Streams/i })).toHaveAttribute('href', '/streams');
     expect(screen.getByRole('link', { name: /About/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Back to top/i })).toBeInTheDocument();
   });
