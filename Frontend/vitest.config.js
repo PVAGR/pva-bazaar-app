@@ -1,3 +1,4 @@
+// eslint-disable-next-line import/no-unresolved -- vitest/config from vitest package
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 

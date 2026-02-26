@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import Layout from '../components/Layout';
+import Layout from '../components/Layout.jsx';
 import HelpTip from '../components/HelpTip.jsx';
 import { createMarketplaceItem } from '../lib/api';
 import './ListItemPage.css';

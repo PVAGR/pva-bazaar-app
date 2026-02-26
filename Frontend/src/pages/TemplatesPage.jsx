@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link, useSearchParams } from 'react-router-dom';
 import { apiGet, apiPost, apiPut, apiDelete } from '../lib/api';
@@ -31,7 +31,7 @@ export default function TemplatesPage() {
   const [commodities, setCommodities] = useState([]);
   const [useWithContactModal, setUseWithContactModal] = useState(null);
 
-  async function loadTemplates() {
+  const loadTemplates = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
@@ -46,7 +46,7 @@ export default function TemplatesPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [filterType, filterCommodity]);
 
   async function loadTemplate(id) {
     if (!id) return;
@@ -64,7 +64,7 @@ export default function TemplatesPage() {
 
   useEffect(() => {
     loadTemplates();
-  }, [filterType, filterCommodity]);
+  }, [loadTemplates]);
   useEffect(() => {
     if (urlSelected) setSelectedId(urlSelected);
   }, [urlSelected]);

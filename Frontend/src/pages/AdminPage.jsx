@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { createArchiveEntry, fetchArchiveEntries, deleteArchiveEntry, apiGet, apiFetch } from '../lib/api';
-import { ENV } from '../config/env';
+import { ENV } from '../config/env.ts';
 import { getErrorMessage } from '../lib/errorUtils';
 import ErrorBanner from '../components/ErrorBanner.jsx';
 import AdminNav from '../components/AdminNav.jsx';

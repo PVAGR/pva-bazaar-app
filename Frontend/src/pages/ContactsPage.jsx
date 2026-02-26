@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link, useSearchParams } from 'react-router-dom';
 import { apiGet, apiPost, apiPut, apiDelete } from '../lib/api';
@@ -45,7 +45,7 @@ export default function ContactsPage() {
   const [commodities, setCommodities] = useState([]);
   const [vaultNotes, setVaultNotes] = useState([]);
 
-  async function loadContacts() {
+  const loadContacts = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
@@ -59,7 +59,7 @@ export default function ContactsPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [filterType]);
 
   async function loadContact(id) {
     if (!id) return;
@@ -95,7 +95,7 @@ export default function ContactsPage() {
 
   useEffect(() => {
     loadContacts();
-  }, [filterType]);
+  }, [loadContacts]);
   useEffect(() => {
     if (urlSelected) setSelectedId(urlSelected);
   }, [urlSelected]);

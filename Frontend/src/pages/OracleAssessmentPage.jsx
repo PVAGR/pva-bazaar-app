@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { apiPost, apiGet } from '../lib/api';
-import Layout from '../components/Layout';
+import Layout from '../components/Layout.jsx';
 import HelpTip from '../components/HelpTip.jsx';
 import { getToken } from '../lib/auth';
 

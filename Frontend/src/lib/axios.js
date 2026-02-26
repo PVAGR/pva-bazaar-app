@@ -1,5 +1,5 @@
 import axios from "axios";
-import { ENV } from "../config/env";
+import { ENV } from "../config/env.ts";
 import { clearToken, getToken } from "./auth";
 
 // Internal backend-only Axios client

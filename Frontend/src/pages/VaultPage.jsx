@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link, useSearchParams } from 'react-router-dom';
 import { apiGet, apiPost, apiPut, apiDelete } from '../lib/api';
@@ -55,7 +55,7 @@ export default function VaultPage() {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
-  async function loadNotes() {
+  const loadNotes = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
@@ -70,7 +70,7 @@ export default function VaultPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [urlRecordType, urlRecordId]);
 
   async function loadNote(id) {
     if (!id) return;
@@ -93,7 +93,7 @@ export default function VaultPage() {
 
   useEffect(() => {
     loadNotes();
-  }, [urlRecordType, urlRecordId]);
+  }, [loadNotes]);
 
   useEffect(() => {
     if (selectedId) loadNote(selectedId);

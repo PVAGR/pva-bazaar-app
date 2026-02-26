@@ -1,5 +1,5 @@
 import api from "./axios";
-import { ENV } from "../config/env";
+import { ENV } from "../config/env.ts";
 
 export const apiGet = (path, config) => api.get(path, config).then(r => r.data);
 export const apiPost = (path, body, config) => api.post(path, body, config).then(r => r.data);
