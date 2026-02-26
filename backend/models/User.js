@@ -12,6 +12,10 @@ const userSchema = new mongoose.Schema({
     displayName: { type: String, default: '' },
     connectedAt: { type: Date },
   },
+  kick: {
+    slug: { type: String, default: '' },
+    connectedAt: { type: Date },
+  },
   oauthTokens: {
     // Encrypted provider tokens (never store raw tokens in plaintext).
     // Shape: { [providerKey]: { payload: {v,iv,tag,data}, updatedAt } }
@@ -25,6 +29,7 @@ const userSchema = new mongoose.Schema({
     defaultTags: { type: String, default: '' }, // comma-separated
     defaultStreamPlatform: { type: String, default: 'none' },
     defaultPublicVisibility: { type: Boolean, default: true },
+    enabledStreamPlatforms: { type: [String], default: [] },
     onboarding: {
       dismissedAt: { type: Date },
       completedAt: { type: Date },

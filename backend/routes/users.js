@@ -36,6 +36,15 @@ router.put('/profile', auth, async (req, res) => {
     if (req.body?.name !== undefined) patch.name = sanitize(req.body.name);
     if (req.body?.email !== undefined) patch.email = sanitize(req.body.email);
 
+    if (req.body?.kick !== undefined && typeof req.body.kick === 'object') {
+      const k = req.body.kick;
+      if (k.slug !== undefined) {
+        const slug = sanitize(String(k.slug || '').toLowerCase().replace(/[^a-z0-9_-]/g, ''));
+        patch['kick.slug'] = slug;
+        patch['kick.connectedAt'] = slug ? new Date() : null;
+      }
+    }
+
     // Store simple defaults so forms can auto-fill for this user later.
     if (req.body?.preferences && typeof req.body.preferences === 'object') {
       const prefs = req.body.preferences;
@@ -54,6 +63,11 @@ router.put('/profile', auth, async (req, res) => {
       }
       if (prefs.defaultPublicVisibility !== undefined) {
         patch['preferences.defaultPublicVisibility'] = !!prefs.defaultPublicVisibility;
+      }
+      if (prefs.enabledStreamPlatforms !== undefined && Array.isArray(prefs.enabledStreamPlatforms)) {
+        const allowed = ['twitch', 'kick', 'youtube', 'facebook', 'custom'];
+        const filtered = prefs.enabledStreamPlatforms.filter((p) => allowed.includes(String(p))).slice(0, 6);
+        patch['preferences.enabledStreamPlatforms'] = filtered;
       }
 
       // Guided onboarding metadata (optional).

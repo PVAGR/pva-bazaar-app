@@ -52,6 +52,10 @@ export default function StreamsPage() {
   const [liveLoading, setLiveLoading] = useState(false);
   const [twitchLive, setTwitchLive] = useState(null);
   const [youtubeLive, setYouTubeLive] = useState(null);
+  const [kickLive, setKickLive] = useState(null);
+  const [kickSlugDraft, setKickSlugDraft] = useState('');
+  const [kickSaving, setKickSaving] = useState(false);
+  const [shareExpanded, setShareExpanded] = useState(null);
 
   const tokenPresent = useMemo(() => {
     if (typeof window === 'undefined') return false;
@@ -91,6 +95,7 @@ export default function StreamsPage() {
       .then((res) => {
         if (res?.ok && res.user) {
           setProfile(res.user);
+          setKickSlugDraft(res.user?.kick?.slug || '');
 
           const prefs = res.user?.preferences || {};
           // Prefill defaults if the user hasn't typed anything yet.
@@ -137,15 +142,42 @@ export default function StreamsPage() {
     if (!tokenPresent) return;
     setLiveLoading(true);
     try {
-      const [tw, yt] = await Promise.allSettled([
+      const [tw, yt, kick] = await Promise.allSettled([
         apiGet('/oauth/twitch/live-status'),
         apiGet('/oauth/youtube/live-status'),
+        apiGet('/oauth/kick/live-status'),
       ]);
       if (tw.status === 'fulfilled' && tw.value?.ok) setTwitchLive(tw.value);
       if (yt.status === 'fulfilled' && yt.value?.ok) setYouTubeLive(yt.value);
+      if (kick.status === 'fulfilled' && kick.value?.ok) setKickLive(kick.value);
     } finally {
       setLiveLoading(false);
     }
+  }
+
+  async function saveKickChannel() {
+    const slug = kickSlugDraft.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
+    if (!slug) return;
+    setKickSaving(true);
+    setError('');
+    try {
+      const res = await apiPut('/users/profile', { kick: { slug } });
+      if (!res?.ok || !res.user) throw new Error(res?.message || 'Failed to save Kick channel');
+      setProfile(res.user);
+      await refreshLiveStatus();
+    } catch (e) {
+      const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
+      setError(serverMsg || e.message || 'Failed to save Kick channel');
+    } finally {
+      setKickSaving(false);
+    }
+  }
+
+  function copyToClipboard(text, label) {
+    navigator.clipboard?.writeText(text).then(() => {
+      setShareExpanded(label);
+      setTimeout(() => setShareExpanded(null), 1500);
+    });
   }
 
   useEffect(() => {
@@ -405,6 +437,9 @@ export default function StreamsPage() {
             <div className="muted">
               YouTube: {youtubeLive?.connected ? <b>connected</b> : <b>not connected</b>}
             </div>
+            <div className="muted">
+              Kick: {profile?.kick?.slug ? <b>@{profile.kick.slug}</b> : <b>not set</b>}
+            </div>
             {twitchStatus ? (
               <div className="muted small">
                 Twitch config:{' '}
@@ -450,6 +485,18 @@ export default function StreamsPage() {
               <button className="btn ghost" type="button" onClick={handleConnectYouTube} title="Connect YouTube (OAuth)">
                 Connect YouTube
               </button>
+              <div className="kick-channel-row">
+                <input
+                  type="text"
+                  value={kickSlugDraft}
+                  onChange={(e) => setKickSlugDraft(e.target.value)}
+                  placeholder="Kick channel slug"
+                  className="kick-slug-input"
+                />
+                <button className="btn ghost" type="button" onClick={saveKickChannel} disabled={kickSaving || !kickSlugDraft.trim()}>
+                  {kickSaving ? 'Saving…' : 'Save Kick'}
+                </button>
+              </div>
               <a className="btn ghost" href="https://studio.youtube.com/channel/UC/livestreaming" target="_blank" rel="noopener noreferrer">
                 YouTube Studio
               </a>
@@ -458,42 +505,84 @@ export default function StreamsPage() {
                   Twitch Stream Manager
                 </a>
               ) : null}
+              {profile?.kick?.slug ? (
+                <a className="btn ghost" href={`https://kick.com/${profile.kick.slug}`} target="_blank" rel="noopener noreferrer">
+                  Kick Dashboard
+                </a>
+              ) : null}
             </div>
 
-            <div className="streaming-status">
-              <div className="muted small">
-                Twitch live:{' '}
+            <div className="streaming-status platform-cards">
+              <div className="platform-card">
+                <span className="platform-label">Twitch</span>
                 {twitchLive?.connected ? (
                   twitchLive.live ? (
-                    <b>
-                      LIVE{typeof twitchLive.viewerCount === 'number' ? ` · ${twitchLive.viewerCount} viewers` : ''}
-                    </b>
+                    <b className="live-badge">LIVE · {typeof twitchLive.viewerCount === 'number' ? twitchLive.viewerCount : '—'} viewers</b>
                   ) : (
-                    <b>offline</b>
+                    <span className="muted small">offline</span>
                   )
                 ) : (
-                  <b>not connected</b>
+                  <span className="muted small">not connected</span>
                 )}
               </div>
-              <div className="muted small">
-                YouTube live:{' '}
+              <div className="platform-card">
+                <span className="platform-label">YouTube</span>
                 {youtubeLive?.connected ? (
                   youtubeLive.live ? (
-                    <b>LIVE{youtubeLive.viewerCount ? ` · ${youtubeLive.viewerCount} viewers` : ''}</b>
+                    <b className="live-badge">LIVE · {youtubeLive.viewerCount ?? '—'} viewers</b>
                   ) : (
-                    <b>offline</b>
+                    <span className="muted small">offline</span>
                   )
                 ) : (
-                  <b>not connected</b>
-                )}{' '}
+                  <span className="muted small">not connected</span>
+                )}
                 {youtubeLive?.channelTitle ? <span className="muted small">({youtubeLive.channelTitle})</span> : null}
+              </div>
+              <div className="platform-card">
+                <span className="platform-label">Kick</span>
+                {kickLive?.connected ? (
+                  kickLive.live ? (
+                    <b className="live-badge">LIVE · {kickLive.viewerCount ?? '—'} viewers</b>
+                  ) : (
+                    <span className="muted small">offline</span>
+                  )
+                ) : (
+                  <span className="muted small">not set</span>
+                )}
               </div>
             </div>
 
-            {(twitchChannel || youtubeLive?.connected) ? (
+            <div className="share-embed-panel">
+              <h3 className="share-panel-title">Share &amp; Embed</h3>
+              <p className="muted small">Copy links or embed codes for your streams. Real viewer counts only.</p>
+              <div className="share-buttons">
+                {twitchChannel ? (
+                  <>
+                    <button type="button" className="btn ghost small" onClick={() => copyToClipboard(`https://twitch.tv/${twitchChannel}`, 'twitch-url')}>
+                      {shareExpanded === 'twitch-url' ? '✓ Copied' : 'Copy Twitch URL'}
+                    </button>
+                    <button type="button" className="btn ghost small" onClick={() => copyToClipboard(`<iframe src="https://player.twitch.tv/?channel=${twitchChannel}&parent=${typeof window !== 'undefined' ? window.location.hostname : 'pvabazaar.org'}" frameborder="0" allowfullscreen></iframe>`, 'twitch-embed')}>
+                      {shareExpanded === 'twitch-embed' ? '✓ Copied' : 'Copy Twitch embed'}
+                    </button>
+                  </>
+                ) : null}
+                {profile?.kick?.slug ? (
+                  <button type="button" className="btn ghost small" onClick={() => copyToClipboard(`https://kick.com/${profile.kick.slug}`, 'kick-url')}>
+                    {shareExpanded === 'kick-url' ? '✓ Copied' : 'Copy Kick URL'}
+                  </button>
+                ) : null}
+                {youtubeLive?.connected && youtubeLive?.channelId ? (
+                  <button type="button" className="btn ghost small" onClick={() => copyToClipboard(`https://youtube.com/channel/${youtubeLive.channelId}`, 'yt-url')}>
+                    {shareExpanded === 'yt-url' ? '✓ Copied' : 'Copy YouTube URL'}
+                  </button>
+                ) : null}
+              </div>
+            </div>
+
+            {(twitchChannel || youtubeLive?.connected || profile?.kick?.slug) ? (
               <div className="goLive-cta">
                 <h3 className="goLive-cta__title">Go live</h3>
-                <p className="muted small">Start streaming on your platform, then create a session below to track it.</p>
+                <p className="muted small">Start streaming on your platform(s), then create a session below to track it. Use OBS or Meld Studio to multistream.</p>
                 <div className="row rowWrap">
                   {twitchChannel ? (
                     <a className="btn primary" href="https://dashboard.twitch.tv/u/me/stream-manager" target="_blank" rel="noopener noreferrer">
@@ -505,6 +594,14 @@ export default function StreamsPage() {
                       Open YouTube Studio
                     </a>
                   ) : null}
+                  {profile?.kick?.slug ? (
+                    <a className="btn primary" href={`https://kick.com/${profile.kick.slug}/dashboard`} target="_blank" rel="noopener noreferrer">
+                      Open Kick Dashboard
+                    </a>
+                  ) : null}
+                  <a className="btn ghost" href="https://meldstudio.co" target="_blank" rel="noopener noreferrer">
+                    Meld Studio (free multistream)
+                  </a>
                 </div>
               </div>
             ) : null}
@@ -592,6 +689,35 @@ export default function StreamsPage() {
                   />
                   Default: Public
                 </label>
+                <div className="enabled-platforms">
+                  <div className="muted small">Platforms to track (pick up to 5)</div>
+                  <div className="platform-checkboxes">
+                    {['twitch', 'kick', 'youtube', 'facebook', 'custom'].map((p) => {
+                      const enabled = profile.preferences.enabledStreamPlatforms || [];
+                      const checked = enabled.includes(p);
+                      const canAdd = checked || enabled.length < 5;
+                      return (
+                        <label key={p} className="platform-check">
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            disabled={!canAdd && !checked}
+                            onChange={(e) => {
+                              const next = e.target.checked
+                                ? [...enabled.filter((x) => x !== p), p].slice(0, 5)
+                                : enabled.filter((x) => x !== p);
+                              setProfile((prev) => ({
+                                ...prev,
+                                preferences: { ...(prev?.preferences || {}), enabledStreamPlatforms: next },
+                              }));
+                            }}
+                          />
+                          {p}
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
                 <div className="row">
                   <button
                     type="button"
@@ -605,6 +731,7 @@ export default function StreamsPage() {
                           typeof profile.preferences.defaultPublicVisibility === 'boolean'
                             ? profile.preferences.defaultPublicVisibility
                             : true,
+                        enabledStreamPlatforms: profile.preferences.enabledStreamPlatforms || [],
                       })
                     }
                   >

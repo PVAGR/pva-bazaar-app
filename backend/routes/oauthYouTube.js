@@ -206,6 +206,7 @@ router.get('/youtube/live-status', authMiddleware, async (req, res) => {
         connected: true,
         live: false,
         channelTitle: channel?.snippet?.title || '',
+        channelId: channel?.id || '',
       });
     }
 
@@ -232,6 +233,7 @@ router.get('/youtube/live-status', authMiddleware, async (req, res) => {
       live: true,
       title: liveBroadcast?.snippet?.title || '',
       channelTitle: channel?.snippet?.title || '',
+      channelId: channel?.id || '',
       viewerCount,
       startedAt: liveBroadcast?.snippet?.publishedAt || null,
       broadcastId: liveBroadcast?.id || '',

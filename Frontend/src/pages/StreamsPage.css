@@ -216,6 +216,94 @@
   border-radius: 8px;
 }
 
+.kick-channel-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.kick-slug-input {
+  font: inherit;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  min-width: 140px;
+}
+
+.platform-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.platform-card {
+  padding: 10px 14px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.platform-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+}
+
+.live-badge {
+  color: var(--accent);
+}
+
+.share-embed-panel {
+  margin-top: 16px;
+  padding: 16px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.share-panel-title {
+  margin: 0 0 8px;
+  font-size: 1rem;
+}
+
+.share-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.btn.small {
+  padding: 6px 10px;
+  font-size: 0.9rem;
+}
+
+.enabled-platforms {
+  margin-top: 10px;
+}
+
+.platform-checkboxes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.platform-check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
 @media (max-width: 900px) {
   .streaming-embeds {
     grid-template-columns: 1fr;
@@ -228,6 +316,12 @@
   }
   .stream-controls {
     justify-content: flex-start;
+  }
+  .kick-channel-row {
+    flex: 1 1 100%;
+  }
+  .platform-cards {
+    flex-direction: column;
   }
 }
 
