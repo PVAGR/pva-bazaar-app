@@ -121,8 +121,8 @@ export default function MarketplacePage() {
       </section>
       <section className="marketplace-items">
         {items.length === 0 && !loading && (
-          <div className="empty">
-            <p>No items found.</p>
+          <div className="empty" role="status">
+            <p>No items found.{(debouncedSearch || selectedCategory) && ' Try different search or filters.'}</p>
             {isAuthed ? <Link to="/items/new">Create your first listing</Link> : null}
           </div>
         )}
