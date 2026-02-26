@@ -14,7 +14,7 @@ describe('NotFoundPage', () => {
     );
     expect(screen.getByRole('heading', { name: '404' })).toBeInTheDocument();
     expect(screen.getByText(/This page doesn't exist/i)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Archive/i })).toHaveAttribute('href', '/');
+    expect(screen.getByRole('link', { name: /Back to Archive/i })).toHaveAttribute('href', '/');
     expect(screen.getByRole('link', { name: /Marketplace/i })).toBeInTheDocument();
   });
 });

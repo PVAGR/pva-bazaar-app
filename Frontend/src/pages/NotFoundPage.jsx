@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import SiteFooter from '../components/SiteFooter.jsx';
 import ShareButton from '../components/ShareButton.jsx';
@@ -13,6 +14,9 @@ export default function NotFoundPage() {
       </Helmet>
       <h1>404</h1>
       <p>This page doesn&apos;t exist.</p>
+      <p style={{ marginTop: 12 }}>
+        <Link to="/" className="btn ghost">← Back to Archive</Link>
+      </p>
       <p style={{ marginTop: 16 }}>
         <ShareButton url="https://pvabazaar.org/" title="PVA Bazaar" text="Archive, marketplace, chat with Richard" />
       </p>
