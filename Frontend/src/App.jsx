@@ -25,6 +25,7 @@ import OracleAssessmentPage from './pages/OracleAssessmentPage.jsx';
 import RegisterPage from './pages/RegisterPage.jsx';
 import StreamsPage from './pages/StreamsPage.jsx';
 import TemplatesPage from './pages/TemplatesPage.jsx';
+import TokenCreatorPage from './pages/TokenCreatorPage.jsx';
 import VaultPage from './pages/VaultPage.jsx';
 import './base.css';
 
@@ -66,6 +67,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <StreamsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/tokens"
+          element={
+            <ProtectedRoute>
+              <TokenCreatorPage />
             </ProtectedRoute>
           }
         />

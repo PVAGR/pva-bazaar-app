@@ -245,6 +245,7 @@ const vaultNotesRoutes = require('../routes/vaultNotes');
 const oauthTwitchRoutes = require('../routes/oauthTwitch');
 const oauthYouTubeRoutes = require('../routes/oauthYouTube');
 const oauthKickRoutes = require('../routes/oauthKick');
+const tokensRoutes = require('../routes/tokens');
 // Oracle Assessment routes
 const oracleRoutes = require('../routes/oracle');
 // Models for optional seeding
@@ -328,6 +329,7 @@ app.use('/api/vault-notes', vaultNotesRoutes);
 app.use('/api/oauth', oauthTwitchRoutes);
 app.use('/api/oauth', oauthYouTubeRoutes);
 app.use('/api/oauth', oauthKickRoutes);
+app.use('/api/tokens', tokensRoutes);
 // ORACLE ASSESSMENT ROUTES
 app.use('/api/oracle', oracleRoutes);
 

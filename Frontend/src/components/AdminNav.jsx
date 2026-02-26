@@ -17,6 +17,7 @@ export default function AdminNav() {
     { to: '/vault', label: 'Vault' },
     { to: '/deals', label: 'Deals' },
     { to: '/streams', label: 'Streams' },
+    { to: '/tokens', label: 'Tokens' },
     { to: '/items/new', label: 'Sell' },
     { to: '/admin/orders', label: 'Orders' },
     { to: '/account', label: 'Account' },
