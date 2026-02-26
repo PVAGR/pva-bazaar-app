@@ -384,7 +384,10 @@ export default function StreamsPage() {
 
   return (
     <div className={`streams-shell admin-page authenticated ${darkMode ? 'dark-theme' : 'light-theme'}`}>
-      <Helmet><title>Livestreams | PVA Bazaar</title></Helmet>
+      <Helmet>
+        <title>Livestreams | PVA Bazaar</title>
+        <meta name="description" content="Manage multi-platform livestreams: Twitch, Kick, YouTube. Track sessions, viewer counts, and share your streams." />
+      </Helmet>
       <header className="streams-header admin-header">
         <div>
           <h1>📺 Livestreams</h1>
@@ -396,10 +399,10 @@ export default function StreamsPage() {
           <Link to="/admin" className="btn ghost">← Admin</Link>
           <Link to="/deals" className="btn ghost">🤝 Deals</Link>
           <Link to="/items/new" className="btn ghost">📦 Sell</Link>
-          <button className="btn ghost" onClick={loadStreams} disabled={loading}>
+          <button className="btn ghost" onClick={loadStreams} disabled={loading} type="button" aria-label="Refresh stream list">
             Refresh
           </button>
-          <button className="btn ghost" type="button" onClick={refreshLiveStatus} disabled={liveLoading || !tokenPresent}>
+          <button className="btn ghost" type="button" onClick={refreshLiveStatus} disabled={liveLoading || !tokenPresent} aria-label="Check live status on all platforms">
             {liveLoading ? 'Checking live…' : 'Check live'}
           </button>
           <button
