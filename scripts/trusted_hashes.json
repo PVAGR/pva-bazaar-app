@@ -1,0 +1,15 @@
+{
+  "version": "1.0",
+  "description": "Trusted public-domain artifact hashes (e.g. from Archive.org). Anti-Druj: only auditable, known-good hashes.",
+  "source": "https://archive.org",
+  "entries": [
+    {
+      "id": "example-retro-game-usa",
+      "name": "Example Retro Game (USA)",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "filename_hint": "game.iso",
+      "source_url": "https://archive.org/details/example",
+      "notes": "Placeholder: replace with real SHA-256 from Archive.org or other PD source."
+    }
+  ]
+}

@@ -110,6 +110,20 @@ export async function fetchCheckoutSession(sessionId) {
     return { ok: false, error: err.message };
   }
 }
+// --- AI-Verified Artifact Verification (for VerificationBadge) ---
+export async function fetchVerificationByArtifact(idOrSlug) {
+  if (!idOrSlug) return { ok: false, verification: null };
+  try {
+    const response = await apiGet(`/verification/artifact/${encodeURIComponent(idOrSlug)}`);
+    if (response && response.ok) {
+      return { ok: true, verification: response.verification };
+    }
+    return { ok: false, verification: null };
+  } catch (err) {
+    return { ok: false, verification: null };
+  }
+}
+
 // fetchMarketplaceItem(slugOrId): fetches a single marketplace item by slug or id
 export async function fetchMarketplaceItem(slugOrId) {
   if (!slugOrId) return { ok: false, item: null, error: "Missing slug or id" };

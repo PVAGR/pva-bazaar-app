@@ -70,6 +70,9 @@ const artifactSchema = new mongoose.Schema({
   authenticationCode: String,
   lastVerification: Date,
 
+  /** Digital download URL (after purchase). Optional; used for fulfillment. */
+  downloadUrl: { type: String },
+
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });

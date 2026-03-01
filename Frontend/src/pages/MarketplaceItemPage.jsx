@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { fetchMarketplaceItem, createCheckoutSession } from "../lib/api";
+import VerificationBadge from "../components/VerificationBadge.jsx";
 import "./MarketplaceItemPage.css";
 
 const PLACEHOLDER = "/placeholder.png";
@@ -62,7 +63,12 @@ export default function MarketplaceItemPage() {
         <meta property="twitter:description" content={item.description || "Marketplace item on PVABazaar"} />
         <meta property="twitter:image" content={ogImage} />
       </Helmet>
-      <Link to="/marketplace" className="back-link">← Back to Marketplace</Link>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'center', marginBottom: '1rem' }}>
+        <Link to="/marketplace" className="back-link">← Back to Marketplace</Link>
+        <Link to={`/artifact/${item.slug || slugOrId}`} className="back-link" style={{ fontSize: '0.9rem' }}>
+          Preserve history →
+        </Link>
+      </div>
       <div className="item-detail-layout">
         <section className="media-gallery" aria-label="Item media gallery">
           <div className="main-media">
@@ -93,6 +99,7 @@ export default function MarketplaceItemPage() {
           <div className="item-meta">
             <span className="item-category">{item.category}</span>
             {price && <span className="item-price">{price}</span>}
+            <VerificationBadge artifactIdOrSlug={item.id || slugOrId} className="item-verification-badge" />
           </div>
           <div className="item-tags">
             {Array.isArray(item.tags) && item.tags.map(tag => (

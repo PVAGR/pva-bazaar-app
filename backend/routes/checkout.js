@@ -66,6 +66,7 @@ router.post("/create-session", async (req, res) => {
         orderId: order._id.toString(),
         itemId: item.id,
         itemSlug: item.slug || "",
+        itemName: item.name || "",
         reservationId,
       },
     });
@@ -96,6 +97,30 @@ router.get("/session", async (req, res) => {
         currency: session.currency,
         customer_details: session.customer_details,
       },
+    });
+  } catch (err) {
+    return res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// GET /api/checkout/download?order_id=...&token=...
+// Validates token and redirects to digital download URL (or returns JSON if no URL configured).
+router.get("/download", async (req, res) => {
+  try {
+    const { order_id, token } = req.query;
+    if (!order_id || !token) return res.status(400).json({ ok: false, error: "Missing order_id or token" });
+    const order = await Order.findOne({ _id: order_id, downloadToken: token });
+    if (!order) return res.status(404).json({ ok: false, error: "Invalid or expired download link" });
+    if (!order.downloadGrantedAt) return res.status(403).json({ ok: false, error: "Download not granted for this order" });
+    const artifact = await Artifact.findById(order.itemId).select("downloadUrl name").lean();
+    const downloadUrl = artifact?.downloadUrl;
+    if (downloadUrl) {
+      return res.redirect(302, downloadUrl);
+    }
+    return res.json({
+      ok: true,
+      message: "Download access confirmed. No file URL configured for this item; you may receive it by email or physical shipment.",
+      itemName: order.itemSnapshot?.name,
     });
   } catch (err) {
     return res.status(500).json({ ok: false, error: err.message });

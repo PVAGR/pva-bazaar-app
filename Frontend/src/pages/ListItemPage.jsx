@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import Layout from '../components/Layout';
 import HelpTip from '../components/HelpTip.jsx';
 import { createMarketplaceItem } from '../lib/api';
 import './ListItemPage.css';
@@ -148,8 +147,7 @@ export default function ListItemPage() {
   }
 
   return (
-    <Layout>
-      <main className="list-item-page">
+    <main className="list-item-page">
         <div className="list-item-header">
           <h1>Create New Listing</h1>
           <p>Submit your item for review and publication in the marketplace.</p>
@@ -356,8 +354,7 @@ export default function ListItemPage() {
             )}
           </div>
         </form>
-      </main>
-    </Layout>
+    </main>
   );
 }
 

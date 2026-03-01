@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { apiPost, apiGet } from '../lib/api';
-import Layout from '../components/Layout';
 import HelpTip from '../components/HelpTip.jsx';
 import { getToken } from '../lib/auth';
 
@@ -148,8 +147,7 @@ export default function OracleAssessmentPage() {
   };
 
   return (
-    <Layout>
-      <div className="oracle-assessment" style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem' }}>
+    <div className="oracle-assessment" style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem' }}>
         <header style={{ textAlign: 'center', marginBottom: '3rem' }}>
           <h1 style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>
             🔮 Your Personal Oracle Assessment
@@ -513,7 +511,6 @@ export default function OracleAssessmentPage() {
             </div>
           </div>
         )}
-      </div>
-    </Layout>
+    </div>
   );
 }

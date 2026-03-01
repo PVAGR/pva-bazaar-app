@@ -60,17 +60,21 @@ function toPublicItem(doc) {
   if (!slug && name) {
     slug = slugify(name, { lower: true, strict: true });
   }
+  const stockQty = doc.stockQty != null ? Number(doc.stockQty) : undefined;
+  const lore = doc.lore || doc.description || '';
   return {
     id: doc._id ? String(doc._id) : undefined,
     slug,
     name,
     category,
     description,
+    lore: typeof lore === 'string' ? lore : '',
     priceCents,
     currency,
     media: Array.isArray(media) ? media : [media],
     tags: Array.isArray(tags) ? tags : [tags],
     status,
+    stockQty,
     createdAt: doc.createdAt ? doc.createdAt.toISOString() : undefined,
     updatedAt: doc.updatedAt ? doc.updatedAt.toISOString() : undefined,
   };

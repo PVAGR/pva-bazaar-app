@@ -1,5 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
+import { SITE_TAGLINE } from '../lib/philosophy.js';
 
 export default function Layout({ children }) {
   const token =
@@ -11,11 +12,14 @@ export default function Layout({ children }) {
       <header className="layout__header">
         <div className="layout__brand">
           <div className="layout__title">pvabazaar.org</div>
-          <div className="layout__tagline">The Complete Archive</div>
+          <div className="layout__tagline">{SITE_TAGLINE}</div>
         </div>
         <nav className="layout__nav" aria-label="Primary">
-          <NavLink to="/" end>📚 Archive Library</NavLink>
+          <NavLink to="/" end>📚 Archive</NavLink>
+          <NavLink to="/verification">✓ Verification</NavLink>
+          <NavLink to="/manifesto">Manifesto</NavLink>
           <NavLink to="/marketplace">🛒 Marketplace</NavLink>
+          <NavLink to="/cart">Cart</NavLink>
           {token ? <NavLink to="/items/new">📦 Sell Item</NavLink> : null}
           <NavLink to="/oracle">🔮 Oracle Assessment</NavLink>
           <NavLink to="/about">About</NavLink>

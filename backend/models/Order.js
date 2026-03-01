@@ -39,6 +39,10 @@ const OrderSchema = new mongoose.Schema(
     trackingNumber: { type: String },
     carrier: { type: String },
     fulfilledAt: { type: Date },
+    reservationId: { type: String },
+    downloadGrantedAt: { type: Date },
+    downloadToken: { type: String },
+    certificateId: { type: String },
   },
   { timestamps: true }
 );

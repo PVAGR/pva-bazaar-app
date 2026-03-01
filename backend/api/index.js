@@ -170,13 +170,15 @@ async function connectToDatabase() {
 
     console.log('🔌 Connecting to MongoDB...');
 
-    // Set timeouts for serverless environment
+    // Set timeouts and pooling for serverless (Vercel)
     global._mongooseConn.promise = mongoose.connect(mongoUri, {
       serverSelectionTimeoutMS: 5000,
       connectTimeoutMS: 10000,
       socketTimeoutMS: 20000,
       maxPoolSize: 10,
-      autoIndex: process.env.NODE_ENV !== 'production', // Don't build indexes in prod
+      minPoolSize: 2,
+      maxIdleTimeMS: 60000,
+      autoIndex: process.env.NODE_ENV !== 'production',
     });
 
     global._mongooseConn.conn = await global._mongooseConn.promise;
@@ -306,6 +308,7 @@ app.use('/api/archive', archiveRoutes);
 app.use('/api/checkout', checkoutRoutes);
 app.use('/api/orders', ordersRoutes);
 app.use('/api/items', itemsRoutes);
+app.use('/api/verification', require('../routes/verification'));
 app.use('/api/contribute', contributeRoutes);
 app.use('/api/partners', partnersRoutes);
 app.use('/api/users', usersRoutes);
@@ -383,16 +386,20 @@ app.get('/api/health', async (req, res) => {
     allowedOrigins.push(...additionalOrigins);
   }
 
-  // Always return 200 with status info
-  res.json({
+  const stripeConfigured = !!(process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY.startsWith('sk_'));
+
+  res.status(200).json({
     ok: true,
     message: 'PVABazaar API is running',
-    mongo: mongoConnected,
+    timestamp: new Date().toISOString(),
+    env: process.env.NODE_ENV || 'development',
+    site: process.env.PUBLIC_SITE_URL || null,
+    mongodb: mongoConnected ? 'connected' : (dbError || 'disconnected'),
+    stripe: stripeConfigured ? 'configured' : 'not_configured',
     ready: process.env.API_READY !== 'false' && mongoConnected,
     legacyMode: process.env.LEGACY_MODE === 'true',
     nodeEnv: process.env.NODE_ENV || 'development',
-    allowedOrigins: allowedOrigins,
-    timestamp: new Date().toISOString(),
+    allowedOrigins,
     ...(dbError && { dbError }),
   });
 });

@@ -89,6 +89,10 @@
   font-size: 1.08rem;
   color: #666;
   align-items: center;
+  flex-wrap: wrap;
+}
+.item-meta .item-verification-badge {
+  flex-shrink: 0;
 }
 .item-category {
   background: #f0f4ff;

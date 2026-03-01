@@ -1,0 +1,133 @@
+# AI-Verified Artifact Hashing — runs when artifacts are added or changed.
+# Why (Anti-Druj): Verification must be automatic and auditable; no hidden gates.
+name: Verify Artifacts
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'artifacts/**'
+      - 'scripts/verify_artifact.py'
+      - 'scripts/trusted_hashes.json'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'artifacts/**'
+      - 'scripts/verify_artifact.py'
+      - 'scripts/trusted_hashes.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Hash verification
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Find artifact files
+        id: artifacts
+        run: |
+          # Supported extensions: ISO, bin, cue (Scarce Knowledge / retro media).
+          if [ -d artifacts ]; then
+            ARTIFACTS=$(find artifacts -type f \( -iname '*.iso' -o -iname '*.bin' -o -iname '*.cue' \) 2>/dev/null || true)
+            if [ -z "$ARTIFACTS" ]; then
+              echo "count=0" >> $GITHUB_OUTPUT
+            else
+              echo "paths<<EOF" >> $GITHUB_OUTPUT
+              echo "$ARTIFACTS" >> $GITHUB_OUTPUT
+              echo "EOF" >> $GITHUB_OUTPUT
+              echo "count=$(echo "$ARTIFACTS" | wc -l)" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "count=0" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Verify artifacts
+        id: verify
+        run: |
+          set -e
+          COUNT="${{ steps.artifacts.outputs.count }}"
+          if [ -z "$COUNT" ] || [ "$COUNT" = "0" ]; then
+            echo "No artifact files under artifacts/ — nothing to verify."
+            echo "verified_list=" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          FAILED=0
+          VERIFIED_LIST=""
+          while IFS= read -r path; do
+            [ -z "$path" ] && continue
+            echo "Verifying: $path"
+            if python3 scripts/verify_artifact.py "$path" --json > result.json 2>stderr.txt; then
+              echo "  OK: verified"
+              # artifactIdOrSlug = basename without extension (so marketplace item slug can match)
+              BASENAME=$(basename "$path" | sed 's/\.[^.]*$//')
+              VERIFIED_LIST="${VERIFIED_LIST}${path}::${BASENAME}"$'\n'
+            else
+              echo "  INTEGRITY COMPROMISED: $(python3 -c "import json; d=json.load(open('result.json')); print(d.get('message', d.get('status','')))" 2>/dev/null || cat stderr.txt)"
+              cat result.json
+              FAILED=$((FAILED + 1))
+            fi
+          done << ARTIFACTS_EOF
+          ${{ steps.artifacts.outputs.paths }}
+          ARTIFACTS_EOF
+
+          echo "verified_list<<EOF" >> $GITHUB_OUTPUT
+          echo -n "$VERIFIED_LIST" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          if [ "$FAILED" -gt 0 ]; then
+            echo "Integrity Compromised: $FAILED artifact(s) failed verification."
+            exit 1
+          fi
+          echo "All artifacts verified."
+
+      - name: Store verification results (optional)
+        if: steps.verify.outputs.verified_list != '' && secrets.VERIFY_API_URL != ''
+        env:
+          VERIFY_API_URL: ${{ secrets.VERIFY_API_URL }}
+          VERIFY_API_SECRET: ${{ secrets.VERIFY_API_SECRET }}
+        run: |
+          API_URL="${VERIFY_API_URL%/}"
+          while IFS= read -r line; do
+            [ -z "$line" ] && continue
+            FILE_PATH="${line%%::*}"
+            SLUG="${line#*::}"
+            [ -z "$FILE_PATH" ] && continue
+            python3 scripts/verify_artifact.py "$FILE_PATH" --json > result.json 2>/dev/null || true
+            BODY=$(SLUG="$SLUG" python3 -c "
+          import json, os
+          d = json.load(open('result.json'))
+          print(json.dumps({
+            'artifactIdOrSlug': os.environ.get('SLUG', ''),
+            'is_authentic': d.get('is_authentic', False),
+            'confidence_score': d.get('confidence_score', 0),
+            'computed_hash': d.get('computed_hash'),
+            'status': d.get('status', 'unknown'),
+            'message': d.get('message'),
+            'source': 'ci',
+            'matched_entry': d.get('matched_entry'),
+          }))
+          ")
+            CURL_OPTS=(-s -X POST "${API_URL}/api/verification" -H "Content-Type: application/json" -d "$BODY")
+            if [ -n "$VERIFY_API_SECRET" ]; then
+              CURL_OPTS+=(-H "X-Verify-Secret: $VERIFY_API_SECRET")
+            fi
+            RESP=$(curl "${CURL_OPTS[@]}")
+            if echo "$RESP" | grep -q '"ok":true'; then
+              echo "Stored verification for $SLUG: $(echo "$RESP" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('certificateId',''))")"
+            else
+              echo "Failed to store verification for $SLUG: $RESP"
+            fi
+          done << VERIFIED_EOF
+          ${{ steps.verify.outputs.verified_list }}
+          VERIFIED_EOF

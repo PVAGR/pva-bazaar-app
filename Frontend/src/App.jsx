@@ -19,6 +19,10 @@ import LoginPage from './pages/LoginPage.jsx';
 import RegisterPage from './pages/RegisterPage.jsx';
 import AccountPage from './pages/AccountPage.jsx';
 import OnboardingPage from './pages/OnboardingPage.jsx';
+import VerificationPage from './pages/VerificationPage.jsx';
+import ManifestoPage from './pages/ManifestoPage.jsx';
+import CartPage from './pages/CartPage.jsx';
+import ArtifactDetailPage from './pages/ArtifactDetailPage.jsx';
 import { getToken } from './lib/auth.js';
 import './base.css';
 
@@ -35,8 +39,9 @@ function ProtectedRoute({ children }) {
 export default function App() {
   return (
     <HashRouter>
-      <Routes>
-        <Route path="/" element={<ArchiveLibraryPage />} />
+      <Layout>
+        <Routes>
+          <Route path="/" element={<ArchiveLibraryPage />} />
         <Route path="/library" element={<ArchiveLibraryPage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/admin" element={<AdminPage />} />
@@ -45,6 +50,7 @@ export default function App() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/marketplace" element={<MarketplacePage />} />
         <Route path="/marketplace/:slugOrId" element={<MarketplaceItemPage />} />
+        <Route path="/artifact/:slug" element={<ArtifactDetailPage />} />
         <Route
           path="/items/new"
           element={
@@ -89,7 +95,11 @@ export default function App() {
         />
         <Route path="/checkout/success" element={<CheckoutSuccessPage />} />
         <Route path="/checkout/cancel" element={<CheckoutCancelPage />} />
-      </Routes>
+        <Route path="/verification" element={<VerificationPage />} />
+        <Route path="/manifesto" element={<ManifestoPage />} />
+        <Route path="/cart" element={<CartPage />} />
+        </Routes>
+      </Layout>
     </HashRouter>
   );
 }

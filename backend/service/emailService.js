@@ -202,7 +202,100 @@ async function sendAdminNotification({ itemData, userEmail }) {
   }
 }
 
+/**
+ * Send post-purchase fulfillment confirmation with download link and Certificate of Authenticity.
+ * Resilient: if email fails, we log and do not fail the webhook (order is already paid).
+ */
+async function sendFulfillmentConfirmationEmail({ to, orderId, downloadToken, itemName, certificateId, publicSiteUrl }) {
+  const emailTransporter = getTransporter();
+  if (!emailTransporter) {
+    console.warn('⚠️ Email not configured, skipping fulfillment confirmation');
+    return;
+  }
+  const downloadUrl = `${publicSiteUrl.replace(/\/$/, '')}/#/checkout/download?order_id=${encodeURIComponent(orderId)}&token=${encodeURIComponent(downloadToken)}`;
+  const certUrl = certificateId
+    ? `${publicSiteUrl.replace(/\/$/, '')}/api/verification/certificate/${encodeURIComponent(certificateId)}`
+    : null;
+  const subject = `Your purchase: ${itemName || 'Artifact'} — Download & Certificate`;
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head><meta charset="UTF-8"><title>${subject}</title></head>
+    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="background: #0c0d0f; color: #d4af37; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
+        <h1 style="margin: 0; font-size: 22px;">PVA Bazaar</h1>
+        <p style="margin: 8px 0 0 0; opacity: 0.9;">Fulfillment confirmation</p>
+      </div>
+      <div style="background: #f9f9f9; padding: 24px; border-radius: 0 0 8px 8px;">
+        <h2 style="color: #0f5132; margin-top: 0;">Thank you for your purchase</h2>
+        <p>Your order has been confirmed. Below are your digital access and certificate.</p>
+        <div style="background: #fff; padding: 16px; border-radius: 6px; margin: 16px 0; border-left: 4px solid #228b22;">
+          <p style="margin: 0 0 8px 0;"><strong>Digital download</strong></p>
+          <p style="margin: 0;"><a href="${downloadUrl}" style="color: #0077ff;">Access your download</a></p>
+        </div>
+        ${certUrl ? `
+        <div style="background: #fff; padding: 16px; border-radius: 6px; margin: 16px 0; border-left: 4px solid #d4af37;">
+          <p style="margin: 0 0 8px 0;"><strong>Certificate of Authenticity</strong></p>
+          <p style="margin: 0;"><a href="${certUrl}" style="color: #0077ff;">View certificate</a></p>
+        </div>
+        ` : ''}
+        <p style="font-size: 14px; color: #666;">If you ordered a physical disc, it will be prepared and shipped separately. You will receive tracking when it ships.</p>
+        <p style="font-size: 12px; color: #999;">Order reference: ${orderId}</p>
+      </div>
+    </body>
+    </html>
+  `;
+  try {
+    await emailTransporter.sendMail({
+      from: `"PVA Bazaar" <${process.env.SMTP_USER}>`,
+      to,
+      subject,
+      html,
+      text: `Thank you for your purchase. Digital download: ${downloadUrl}. ${certUrl ? `Certificate: ${certUrl}.` : ''} Order: ${orderId}`,
+    });
+  } catch (error) {
+    console.error('❌ Fulfillment confirmation email failed:', error);
+    throw error;
+  }
+}
+
+/**
+ * Notify user gracefully when payment fails (no hidden traps).
+ */
+async function sendPaymentFailedEmail({ to, itemName, publicSiteUrl }) {
+  const emailTransporter = getTransporter();
+  if (!emailTransporter || !to) return;
+  const subject = `Payment did not complete — ${itemName || 'PVA Bazaar'}`;
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head><meta charset="UTF-8"><title>${subject}</title></head>
+    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="background: #f9f9f9; padding: 24px; border-radius: 8px;">
+        <h2 style="color: #333;">Payment did not complete</h2>
+        <p>Your payment could not be processed. Your card was not charged.</p>
+        <p>You can try again from the <a href="${publicSiteUrl}">marketplace</a> when ready.</p>
+        <p style="font-size: 12px; color: #666;">If this was unexpected, please use a different payment method or contact support.</p>
+      </div>
+    </body>
+    </html>
+  `;
+  try {
+    await emailTransporter.sendMail({
+      from: `"PVA Bazaar" <${process.env.SMTP_USER}>`,
+      to,
+      subject,
+      html,
+      text: `Payment did not complete. You can try again at ${publicSiteUrl}.`,
+    });
+  } catch (error) {
+    console.error('Payment failed email error:', error);
+  }
+}
+
 module.exports = {
   sendConsignmentEmail,
   sendAdminNotification,
+  sendFulfillmentConfirmationEmail,
+  sendPaymentFailedEmail,
 };

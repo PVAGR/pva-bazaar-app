@@ -50,7 +50,8 @@
     "clean": "rm -rf node_modules dist build out .next coverage qa/reports",
     "clean:full": "npm run clean && rm -f pnpm-lock.yaml && rm -f package-lock.json && npm install",
     "setup": "npm install && npm run prepare && npm run build",
-    "ship": "turbo run lint typecheck test build"
+    "ship": "turbo run lint typecheck test build",
+    "health": "bash api-health-check.sh http://localhost:5001"
   },
   "dependencies": {
     "@pinata/sdk": "^2.1.0",

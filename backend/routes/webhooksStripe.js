@@ -1,11 +1,28 @@
+const crypto = require("crypto");
 const { finalizeSale, releaseReservation } = require("../lib/itemInventory");
 const express = require("express");
 const router = express.Router();
 const stripe = require("../lib/stripeClient");
 const Order = require("../models/Order");
 const StripeEventLog = require("../models/StripeEventLog");
+const PhysicalFulfillment = require("../models/PhysicalFulfillment");
+const FulfillmentTransactionLog = require("../models/FulfillmentTransactionLog");
+const VerificationResult = require("../models/VerificationResult");
+const { sendFulfillmentConfirmationEmail, sendPaymentFailedEmail } = require("../service/emailService");
 
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
+const PUBLIC_SITE_URL = process.env.PUBLIC_SITE_URL || "https://pvabazaar.org";
+
+function logFulfillment(eventId, orderId, action, payload, success = true, errorMessage = null) {
+  return FulfillmentTransactionLog.create({
+    eventId: eventId || `log-${Date.now()}-${crypto.randomBytes(4).toString("hex")}`,
+    orderId: orderId ? String(orderId) : undefined,
+    action,
+    payload,
+    success,
+    errorMessage: errorMessage || undefined,
+  }).catch((err) => console.error("FulfillmentTransactionLog create error:", err));
+}
 
 // Use express.raw in index.js for this route!
 router.post("/stripe", async (req, res) => {
@@ -27,6 +44,7 @@ router.post("/stripe", async (req, res) => {
     const session = event.data.object;
     const orderId = session.client_reference_id || session.metadata?.orderId;
     const reservationId = session.metadata?.reservationId;
+    const itemId = session.metadata?.itemId;
     if (orderId) {
       const order = await Order.findOne({ _id: orderId });
       if (order) {
@@ -37,8 +55,56 @@ router.post("/stripe", async (req, res) => {
         order.customerName = session.customer_details?.name;
         order.shipping = session.shipping_details || null;
         order.stripePaymentIntentId = session.payment_intent || null;
-        await order.save();
         if (reservationId) await finalizeSale(reservationId);
+        await order.save();
+
+        // Grant digital download access (resilient: failures logged, do not fail webhook)
+        const downloadToken = crypto.randomBytes(24).toString("hex");
+        order.downloadGrantedAt = new Date();
+        order.downloadToken = downloadToken;
+        let certificateId = null;
+        try {
+          const ver = await VerificationResult.findOne({ artifactIdOrSlug: order.itemId || itemId })
+            .sort({ verified_at: -1 })
+            .lean();
+          if (ver && ver.is_authentic) certificateId = ver.certificateId;
+        } catch (e) {
+          console.warn("Verification lookup for certificate:", e.message);
+        }
+        order.certificateId = certificateId || undefined;
+        await order.save();
+        await logFulfillment(event.id, orderId, "download_granted", { hasCertificate: !!certificateId });
+
+        // Physical fulfillment row (for disc burn)
+        try {
+          await PhysicalFulfillment.create({
+            orderId: order._id,
+            itemId: String(order.itemId),
+            itemName: order.itemSnapshot?.name,
+            customerEmail: order.customerEmail,
+            customerName: order.customerName,
+            status: "pending",
+          });
+          await logFulfillment(event.id, orderId, "physical_fulfillment_created", {});
+        } catch (pfErr) {
+          console.error("PhysicalFulfillment create error:", pfErr);
+          await logFulfillment(event.id, orderId, "physical_fulfillment_created", {}, false, pfErr.message);
+        }
+
+        // Confirmation email with download link and Certificate of Authenticity
+        if (order.customerEmail) {
+          sendFulfillmentConfirmationEmail({
+            to: order.customerEmail,
+            orderId: order._id.toString(),
+            downloadToken,
+            itemName: order.itemSnapshot?.name || "Artifact",
+            certificateId,
+            publicSiteUrl: PUBLIC_SITE_URL,
+          }).then(() => logFulfillment(event.id, orderId, "email_sent", {})).catch((emailErr) => {
+            console.error("Fulfillment confirmation email failed:", emailErr);
+            logFulfillment(event.id, orderId, "email_sent", {}, false, emailErr.message);
+          });
+        }
       }
     }
   }
@@ -47,6 +113,15 @@ router.post("/stripe", async (req, res) => {
     const session = event.data.object;
     const reservationId = session.metadata?.reservationId;
     if (reservationId) await releaseReservation(reservationId);
+    const email = session.customer_details?.email;
+    if (email && event.type === "checkout.session.async_payment_failed") {
+      sendPaymentFailedEmail({
+        to: email,
+        itemName: session.metadata?.itemName,
+        publicSiteUrl: PUBLIC_SITE_URL,
+      }).catch((e) => console.warn("Payment failed email:", e.message));
+    }
+    await logFulfillment(event.id, null, "payment_failed_or_expired", { type: event.type }).catch(() => {});
   }
 
   // Refund event handlers
