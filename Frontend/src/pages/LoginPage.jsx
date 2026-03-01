@@ -19,7 +19,7 @@ export default function LoginPage() {
   const [error, setError] = useState('');
 
   const [adminCreds, setAdminCreds] = useState({ username: '', password: '' });
-  const [userCreds, setUserCreds] = useState({ email: '', password: '' });
+  const [userCreds, setUserCreds] = useState({ usernameOrEmail: '', password: '' });
 
   async function handleAdminLogin(e) {
     e.preventDefault();
@@ -51,11 +51,11 @@ export default function LoginPage() {
     setLoading(true);
     setError('');
     try {
-      const res = await apiPost('/auth/login', {
-        email: userCreds.email.trim(),
-        password: userCreds.password,
-      });
-      if (!res?.ok || !res?.token) throw new Error(res?.message || 'Invalid email or password');
+      const loginId = userCreds.usernameOrEmail.trim();
+      const res = await apiPost('/auth/login', loginId.includes('@')
+        ? { email: loginId, password: userCreds.password }
+        : { username: loginId, password: userCreds.password });
+      if (!res?.ok || !res?.token) throw new Error(res?.message || 'Invalid username or password');
       setToken(res.token);
       if (nextFromUrl) {
         navigate(nextFromUrl, { replace: true });
@@ -161,13 +161,13 @@ export default function LoginPage() {
             <form className="form" onSubmit={handleUserLogin}>
               <label>
                 <span>
-                  Email
-                  <HelpTip title="Email" body="The email you registered with." example="you@example.com" />
+                  Username or email
+                  <HelpTip title="Username or email" body="Your username (e.g. richyrichaii) or the email you registered with." example="richyrichaii" />
                 </span>
                 <input
-                  value={userCreds.email}
-                  onChange={(e) => setUserCreds((p) => ({ ...p, email: e.target.value }))}
-                  autoComplete="email"
+                  value={userCreds.usernameOrEmail}
+                  onChange={(e) => setUserCreds((p) => ({ ...p, usernameOrEmail: e.target.value }))}
+                  autoComplete="username"
                 />
               </label>
               <label>

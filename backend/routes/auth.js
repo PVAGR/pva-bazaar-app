@@ -24,16 +24,31 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// Login
+// Login (accept username or email)
 router.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
-    const user = await User.findOne({ email });
+    const { username, email, password } = req.body;
+    const loginId = username || email;
+    if (!loginId || !password) {
+      return res.status(400).json({ ok: false, message: 'Username or email and password required' });
+    }
+    const user = await User.findOne(
+      loginId.includes('@') ? { email: loginId } : { username: loginId }
+    );
     if (!user || !(await user.comparePassword(password))) {
       return res.status(401).json({ ok: false, message: 'Invalid credentials' });
     }
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
-    res.json({ ok: true, token, user: { id: user._id, name: user.name, email: user.email } });
+    res.json({
+      ok: true,
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        username: user.username,
+      },
+    });
   } catch (error) {
     res.status(500).json({ ok: false, message: error.message });
   }

@@ -54,12 +54,12 @@ async function main() {
     if (names.includes('artifacts')) checks.artifacts = true;
 
     const User = require('../models/User');
-    const richy = await User.findOne({ email: 'richyrichaii@pvabazaar.org' });
+    const richy = await User.findOne({ username: 'richyrichaii' });
     if (richy) {
       checks.richy = true;
-      console.log('✅ User richyrichaii@pvabazaar.org found (login with password pva123zxc!)');
+      console.log('✅ User richyrichaii found (login: username richyrichaii, password pva123zxc!)');
     } else {
-      console.log('⚠️ User richyrichaii@pvabazaar.org not found. Run: node backend/seed.js');
+      console.log('⚠️ User richyrichaii not found. Run: node backend/seed.js');
     }
 
     const Artifact = require('../models/Artifact');

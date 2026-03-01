@@ -452,10 +452,10 @@ async function autoSeed() {
       await admin.save();
       console.log('✅ Admin user created: admin@pvabazaar.org / admin123');
     }
-    let richy = await User.findOne({ email: 'richyrichaii@pvabazaar.org' });
+    let richy = await User.findOne({ username: 'richyrichaii' });
     if (!richy) {
-      await new User({ name: 'Richy Rich', email: 'richyrichaii@pvabazaar.org', password: 'pva123zxc!' }).save();
-      console.log('✅ User created: richyrichaii@pvabazaar.org / pva123zxc!');
+      await new User({ name: 'Richy Rich', username: 'richyrichaii', email: 'richyrichaii@local', password: 'pva123zxc!' }).save();
+      console.log('✅ User created: richyrichaii / pva123zxc!');
     }
 
     const sampleArtifacts = [

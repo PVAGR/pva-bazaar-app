@@ -20,17 +20,18 @@ async function main() {
     console.log('ℹ️ Admin user already exists');
   }
 
-  // Primary app/admin user: richyrichaii (login at /api/auth/login with this email + password)
-  const richy = await User.findOne({ email: 'richyrichaii@pvabazaar.org' });
+  // Primary app/admin user: login with username richyrichaii + password pva123zxc!
+  const richy = await User.findOne({ username: 'richyrichaii' });
   if (!richy) {
     await new User({
       name: 'Richy Rich',
-      email: 'richyrichaii@pvabazaar.org',
+      username: 'richyrichaii',
+      email: 'richyrichaii@local',
       password: 'pva123zxc!',
     }).save();
-    console.log('✅ User ensured: richyrichaii@pvabazaar.org / pva123zxc!');
+    console.log('✅ User ensured: richyrichaii / pva123zxc!');
   } else {
-    console.log('ℹ️ User richyrichaii@pvabazaar.org already exists');
+    console.log('ℹ️ User richyrichaii already exists');
   }
 
   const count = await Artifact.estimatedDocumentCount();
