@@ -155,7 +155,15 @@ export default function AdminPage() {
           setError('');
         } else {
           const data = await res.json().catch(() => ({}));
-          setError(data.message || 'Invalid username or password. Access denied.');
+          const msg = data.message || 'Invalid username or password. Access denied.';
+          if (res.status === 503 && (msg === 'Database connection failed' || (data.error && String(data.error).toLowerCase().includes('mongo')))) {
+            setError(
+              'Database connection failed. The API cannot reach MongoDB. ' +
+              'If you deploy: set MONGODB_URI in Vercel (Project → Settings → Environment Variables) and in MongoDB Atlas set Network Access to allow 0.0.0.0/0. Then retry.'
+            );
+          } else {
+            setError(msg);
+          }
           setPassword('');
         }
       } catch (err) {

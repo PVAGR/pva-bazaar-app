@@ -115,6 +115,26 @@ Optional: `SMTP_*` (emails), `VERIFY_API_URL` / `VERIFY_API_SECRET`, `ETHEREUM_R
 - **Script:** `bash api-health-check.sh <API_BASE_URL>`  
   Example: `bash api-health-check.sh https://pvabazaar.org`
 
+## Troubleshooting: "Database connection failed"
+
+If the admin panel or API returns **"Database connection failed"** (503), the server cannot reach MongoDB. Fix in this order:
+
+1. **Vercel → Project → Settings → Environment Variables**
+   - Ensure **`MONGODB_URI`** is set for **Production** (and Preview if you use it).
+   - Value must be a full connection string, e.g.:
+     - Atlas: `mongodb+srv://USER:PASSWORD@CLUSTER.mongodb.net/pvabazaar`
+     - Encode special characters in the password: `!` → `%21`, `@` → `%40`, etc.
+
+2. **MongoDB Atlas → Network Access**
+   - Vercel serverless runs from many IPs. Add **0.0.0.0/0** (Allow access from anywhere) so the API can connect.
+   - Save and wait a minute, then retry.
+
+3. **Redeploy**
+   - After changing env vars in Vercel, trigger a new deployment (Redeploy from the Vercel dashboard or push a commit) so the runtime picks up `MONGODB_URI`.
+
+4. **Verify**
+   - `curl https://pvabazaar.org/api/health` (or your API URL) — response should show `"mongodb": "connected"`.
+
 ## Optional: GitHub Action (Vercel)
 
 If you prefer CI to trigger Vercel (e.g. with `vercel-action`), add secrets in GitHub:

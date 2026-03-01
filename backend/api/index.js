@@ -170,15 +170,16 @@ async function connectToDatabase() {
 
     console.log('🔌 Connecting to MongoDB...');
 
-    // Set timeouts and pooling for serverless (Vercel)
+    // Set timeouts and pooling for serverless (Vercel); longer timeout in prod for cold starts
+    const isProd = process.env.NODE_ENV === 'production';
     global._mongooseConn.promise = mongoose.connect(mongoUri, {
-      serverSelectionTimeoutMS: 5000,
-      connectTimeoutMS: 10000,
+      serverSelectionTimeoutMS: isProd ? 12000 : 5000,
+      connectTimeoutMS: isProd ? 15000 : 10000,
       socketTimeoutMS: 20000,
       maxPoolSize: 10,
       minPoolSize: 2,
       maxIdleTimeMS: 60000,
-      autoIndex: process.env.NODE_ENV !== 'production',
+      autoIndex: !isProd,
     });
 
     global._mongooseConn.conn = await global._mongooseConn.promise;
