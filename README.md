@@ -49,6 +49,8 @@ PVA Bazaar is now a **complete decentralized platform** for livestreaming and da
 | 📖 **Learn First** | [README_MASTER.md](./README_MASTER.md) | 5 min |
 | 🔧 **Build Custom** | [COMMUNITY_FORK_GUIDE.md](./COMMUNITY_FORK_GUIDE.md) | 4-8 hours |
 | 🐛 **Fix Issue** | [TROUBLESHOOTING_GUIDE.md](./TROUBLESHOOTING_GUIDE.md) | 5-30 min |
+| 📦 **Add Artifacts** | [docs/RITUAL-OF-ADDITION.md](./docs/RITUAL-OF-ADDITION.md) | 5 min |
+| 🚢 **Deploy / Webhooks** | [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md) | 10 min |
 
 ### ✅ What's Included
 
@@ -139,10 +141,13 @@ curl -X POST http://localhost:5001/api/blogs/quick-publish \
 # Open http://localhost:3000/public/blog.html?slug=welcome
 ```
 
-Environment setup:
+**Environment variables:** See [.env.example](.env.example) and [backend/.env.example](backend/.env.example) for required variables. Copy to `.env.local` or `backend/.env` for local dev; never commit real secrets. Production: [docs/PRODUCTION-ENV-SYNC.md](docs/PRODUCTION-ENV-SYNC.md).
 
-- Use [backend/.env.example](backend/.env.example) to create `backend/.env` for local dev.
-- In production, set secrets via deployment environment. Do not commit real secrets.
+**Architecture:** See [ARCHITECTURE.md](ARCHITECTURE.md).
+
+**Deployment:** See [DEPLOYMENT.md](DEPLOYMENT.md) (full guide) and [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) (Vercel + webhooks).
+
+**Health check:** `bash api-health-check.sh <API_BASE_URL>` (e.g. `http://localhost:5001` or `https://pvabazaar.org`). Or run `npm run health` for local API.
 
 ## 📱 Available Pages
 
