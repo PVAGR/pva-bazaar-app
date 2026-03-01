@@ -31,6 +31,19 @@
    ```
    Or: `curl http://localhost:5001/api/health`
 
+5. **Database: richyrichaii user and connection check**
+   - Ensure `backend/.env` has `MONGODB_URI` (for Atlas with user `richyrichaii`, encode password `!` as `%21`: `pva123zxc%21`).
+   - Set `ADMIN_USERNAME=richyrichaii` and `ADMIN_PASSWORD=pva123zxc!` in `backend/.env` for admin login.
+   - Seed the DB (creates user `richyrichaii@pvabazaar.org` / `pva123zxc!` and sample artifacts):
+     ```bash
+     npm run db:seed
+     ```
+   - Verify all vessels are connected:
+     ```bash
+     npm run db:check
+     ```
+   - **App login:** email `richyrichaii@pvabazaar.org`, password `pva123zxc!` (same as admin if you set ADMIN_* above).
+
 ## Environment Variables
 
 All names and purpose are documented in:

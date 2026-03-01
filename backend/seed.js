@@ -20,6 +20,19 @@ async function main() {
     console.log('ℹ️ Admin user already exists');
   }
 
+  // Primary app/admin user: richyrichaii (login at /api/auth/login with this email + password)
+  const richy = await User.findOne({ email: 'richyrichaii@pvabazaar.org' });
+  if (!richy) {
+    await new User({
+      name: 'Richy Rich',
+      email: 'richyrichaii@pvabazaar.org',
+      password: 'pva123zxc!',
+    }).save();
+    console.log('✅ User ensured: richyrichaii@pvabazaar.org / pva123zxc!');
+  } else {
+    console.log('ℹ️ User richyrichaii@pvabazaar.org already exists');
+  }
+
   const count = await Artifact.estimatedDocumentCount();
   if (count === 0) {
     const sampleArtifacts = [

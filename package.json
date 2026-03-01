@@ -51,7 +51,9 @@
     "clean:full": "npm run clean && rm -f pnpm-lock.yaml && rm -f package-lock.json && npm install",
     "setup": "npm install && npm run prepare && npm run build",
     "ship": "turbo run lint typecheck test build",
-    "health": "bash api-health-check.sh http://localhost:5001"
+    "health": "bash api-health-check.sh http://localhost:5001",
+    "db:check": "node backend/scripts/connect-check.js",
+    "db:seed": "node backend/seed.js"
   },
   "dependencies": {
     "@pinata/sdk": "^2.1.0",

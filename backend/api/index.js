@@ -166,7 +166,7 @@ async function connectToDatabase() {
     // Start new connection
     const mongoUri =
       process.env.MONGODB_URI ||
-      'mongodb://localhost:27017/pva-bazaar';
+      'mongodb://localhost:27017/pvabazaar';
 
     console.log('🔌 Connecting to MongoDB...');
 
@@ -451,6 +451,11 @@ async function autoSeed() {
       admin = new User({ name: 'PVA Admin', email: 'admin@pvabazaar.org', password: 'admin123' });
       await admin.save();
       console.log('✅ Admin user created: admin@pvabazaar.org / admin123');
+    }
+    let richy = await User.findOne({ email: 'richyrichaii@pvabazaar.org' });
+    if (!richy) {
+      await new User({ name: 'Richy Rich', email: 'richyrichaii@pvabazaar.org', password: 'pva123zxc!' }).save();
+      console.log('✅ User created: richyrichaii@pvabazaar.org / pva123zxc!');
     }
 
     const sampleArtifacts = [
