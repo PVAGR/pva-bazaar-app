@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { VerifyArtifactBlock } from "./VerifyArtifactBlock";
 
 export default function VerificationPage() {
   return (
@@ -15,6 +16,8 @@ export default function VerificationPage() {
           that evidence trustworthy and anti-Druj.
         </p>
       </header>
+
+      <VerifyArtifactBlock />
 
       <div className="space-y-6">
         <article className="rounded-xl border border-zinc-800/80 bg-zinc-950/60 p-5">
