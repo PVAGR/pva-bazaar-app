@@ -1,36 +1,45 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PVA Bazaar Web (Alchemical layer)
 
-## Getting Started
+Next.js 14 app that serves the **sanctuary** / alchemical layer for PVA Bazaar: archive, verification, manifesto, and cart. It sits alongside the main Vite frontend and backend; it can be deployed as a separate Vercel project or served under a subpath.
 
-First, run the development server:
+## Run locally
 
 ```bash
+cd apps/pva-bazaar-web
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000). The app works without a backend; the Verification page can call the main API when configured.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Copy `.env.example` to `.env.local` and set:
 
-## Learn More
+- **`NEXT_PUBLIC_VERIFICATION_API_URL`** (or **`NEXT_PUBLIC_API_URL`**) – Base URL of the backend (e.g. `https://your-api.vercel.app`). When set, the Verification page “Check verification for an artifact” block will call `GET /api/verification/artifact/:idOrSlug`.
 
-To learn more about Next.js, take a look at the following resources:
+## Pages
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Path | Purpose |
+|------|--------|
+| `/` | Home – preserve/verify/acquire, Phase One Kenyan + Anti-Druj |
+| `/archive` | Kenyan crafts as living artifacts; beadwork + soapstone; Pasha VII teaser |
+| `/verification` | How we verify; artifact lookup by ID/slug (uses API when URL set) |
+| `/manifesto` | Home Station Protocol (Pasha VII – Moon 3) |
+| `/cart` | Checkout via Etsy for now; future in-house cart |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Build
 
-## Deploy on Vercel
+```bash
+npm run build
+npm run start
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Deploy
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The repo root `vercel.json` currently deploys the API and the Vite **Frontend**. To deploy this Next app:
+
+- **Option A:** Add a second Vercel project pointing at `apps/pva-bazaar-web` (e.g. `sanctuary.pvabazaar.org`).
+- **Option B:** Later, adjust root config to build and route this app (e.g. under `/web` or as the default site).
+
+Ensure the deployed backend allows CORS from this app’s origin if you use the verification lookup.
