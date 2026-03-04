@@ -1,5 +1,5 @@
 module.exports = async (page, scenario, viewport) => {
-  console.log('SCENARIO > ' + scenario.label);
+  console.log(`SCENARIO > ${  scenario.label}`);
 
   // Wait for fonts to load
   await page.waitForLoadState('networkidle');

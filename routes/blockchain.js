@@ -19,7 +19,7 @@ router.get('/verify', async (req, res) => {
     res.json({
       ok: true,
       message: 'Blockchain verification successful',
-      data: data,
+      data,
     });
   } catch (error) {
     console.error('Blockchain verification error:', error);

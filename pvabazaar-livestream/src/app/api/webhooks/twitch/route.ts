@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
   const body = await req.text();
   const hmacMessage = messageId + timestamp + body;
 
-  const hmac = 'sha256=' + crypto.createHmac('sha256', TWITCH_WEBHOOK_SECRET).update(hmacMessage).digest('hex');
+  const hmac = `sha256=${  crypto.createHmac('sha256', TWITCH_WEBHOOK_SECRET).update(hmacMessage).digest('hex')}`;
 
   if (crypto.timingSafeEqual(Buffer.from(hmac), Buffer.from(signature))) {
     console.log("Signatures match!");

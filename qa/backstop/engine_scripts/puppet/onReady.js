@@ -1,5 +1,5 @@
 module.exports = async (page, scenario, viewport) => {
-  console.log('READY > ' + scenario.label);
+  console.log(`READY > ${  scenario.label}`);
 
   // Ensure all images are loaded
   await page.evaluate(() => {

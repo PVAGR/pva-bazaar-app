@@ -22,7 +22,7 @@ router.get('/vector', async (req, res) => {
     res.json({
       success: true,
       query: q,
-      results: results,
+      results,
       count: results.length,
     });
   } catch (error) {
@@ -56,7 +56,7 @@ router.get('/text', async (req, res) => {
     res.json({
       success: true,
       query: q,
-      results: results,
+      results,
       count: results.length,
     });
   } catch (error) {

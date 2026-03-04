@@ -62,16 +62,16 @@ async function runTests() {
   console.log('=== Testing PVA Bazaar Real-Time Data APIs ===\n');
 
   await testDashboardAPI();
-  console.log('\n' + '='.repeat(50) + '\n');
+  console.log(`\n${  '='.repeat(50)  }\n`);
 
   await testCryptoAPI();
-  console.log('\n' + '='.repeat(50) + '\n');
+  console.log(`\n${  '='.repeat(50)  }\n`);
 
   await testArtifactsAPI();
-  console.log('\n' + '='.repeat(50) + '\n');
+  console.log(`\n${  '='.repeat(50)  }\n`);
 
   await testBlogsAPI();
-  console.log('\n' + '='.repeat(50) + '\n');
+  console.log(`\n${  '='.repeat(50)  }\n`);
 
   console.log('=== Test Complete ===');
 }

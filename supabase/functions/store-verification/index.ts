@@ -68,8 +68,8 @@ serve(async (req) => {
     const { error } = await supabase.from("verification_results").insert({
       certificate_id: certificateId,
       artifact_id_or_slug: String(artifactIdOrSlug),
-      is_authentic: is_authentic,
-      confidence_score: confidence_score,
+      is_authentic,
+      confidence_score,
       computed_hash: computed_hash || null,
       status,
       message: message || null,
