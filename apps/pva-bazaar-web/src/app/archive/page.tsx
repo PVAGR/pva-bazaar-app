@@ -77,6 +77,21 @@ export default function ArchivePage() {
         </p>
       </div>
 
+      <div className="rounded-xl border border-zinc-700/80 bg-zinc-900/40 p-5">
+        <p className="text-xs uppercase tracking-[0.25em] text-zinc-500 mb-1">
+          Featured artifact
+        </p>
+        <h2 className="text-sm font-semibold text-zinc-100 mb-1">
+          Pasha VII – Moon 3 – Royal Amarr Institute School
+        </h2>
+        <p className="text-sm text-zinc-400">
+          A disc from the dorm alcove two bulkheads down from the main hangar.
+          Hash-matched, no cinematic upgrades. When you initiate acquisition,
+          you claim a teaching tool from a specific orbit in time. Full lore in{" "}
+          <code className="text-zinc-300">docs/PASHA-VII-HOME-STATION.mdx</code>.
+        </p>
+      </div>
+
       <p className="text-[11px] text-zinc-500">
         Internal note: the detailed SKU list and Etsy copy live in{" "}
         <code className="text-zinc-300">

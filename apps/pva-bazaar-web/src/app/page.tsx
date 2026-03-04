@@ -1,101 +1,71 @@
-import Image from "next/image";
+import Link from "next/link";
 
 export default function Home() {
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <section className="flex flex-col gap-14">
+      <header className="space-y-6 text-center md:text-left">
+        <p className="text-xs uppercase tracking-[0.35em] text-zinc-500">
+          Alchemical Digital · Sanctuary
+        </p>
+        <h1 className="text-3xl md:text-4xl font-semibold text-zinc-100 leading-tight">
+          Preserve scarce knowledge.
+          <br />
+          <span className="text-amber-300/90">Verify integrity. Acquire as a Conscious Player.</span>
+        </h1>
+        <p className="max-w-xl text-sm text-zinc-400">
+          PVA Bazaar is a ritual layer for artifacts: stories, hashes, and provenance.
+          We treat each object as evidence that a human hand was here.
+        </p>
+        <div className="flex flex-wrap gap-3 pt-2">
+          <Link
+            href="/archive"
+            className="rounded-lg border border-amber-300/50 bg-amber-300/10 px-4 py-2 text-sm font-medium text-amber-200 hover:bg-amber-300/20 transition-colors"
           >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            Enter the Archive
+          </Link>
+          <Link
+            href="/verification"
+            className="rounded-lg border border-zinc-600 bg-zinc-800/60 px-4 py-2 text-sm font-medium text-zinc-200 hover:bg-zinc-700/60 transition-colors"
           >
-            Read our docs
-          </a>
+            How verification works
+          </Link>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+      </header>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        <article className="rounded-xl border border-zinc-800/80 bg-zinc-950/60 p-5">
+          <h2 className="mb-2 text-sm font-semibold text-zinc-100">
+            Phase One · Kenyan crafts
+          </h2>
+          <p className="text-sm text-zinc-300">
+            Beadwork and Kisii soapstone: Maasai signal circuits, memory bowls, totems.
+            Each piece ships small and carries a long story. Checkout runs via Etsy
+            while we build the in-house cart and verification dashboard.
+          </p>
+          <Link href="/archive" className="mt-3 inline-block text-xs font-medium text-amber-300 hover:text-amber-200">
+            View archive →
+          </Link>
+        </article>
+
+        <article className="rounded-xl border border-zinc-800/80 bg-zinc-950/60 p-5">
+          <h2 className="mb-2 text-sm font-semibold text-zinc-100">
+            Anti-Druj
+          </h2>
+          <p className="text-sm text-zinc-300">
+            We aim to be auditable and kind to future readers. No cinematic
+            upgrades, no definitive edition, no DRM scarring. Hashes and
+            provenance stay on the record so you can verify what you hold.
+          </p>
+          <Link href="/verification" className="mt-3 inline-block text-xs font-medium text-amber-300 hover:text-amber-200">
+            Verification →
+          </Link>
+        </article>
+      </div>
+
+      <p className="text-[11px] text-zinc-500 max-w-xl">
+        All systems here are built to preserve history and support Conscious Players.
+        The manifesto and cart live in the nav when you are ready.
+      </p>
+    </section>
   );
 }
