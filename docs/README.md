@@ -18,6 +18,7 @@ Quick pointer to the main docs used for the venture and the app.
 | [OPS-INVENTORY-TEMPLATE.csv](./OPS-INVENTORY-TEMPLATE.csv) | Inventory template with the 8 SKUs and costing columns. |
 | [CYBER-CAFE-MODEL.md](./CYBER-CAFE-MODEL.md) | Phase 3: cyber café capex/opex, pricing; only when export profits fund it. |
 | [PVABAZAAR-MVP-WEB3.md](./PVABAZAAR-MVP-WEB3.md) | Phase 4: minimal verification MVP, reuse backend, dashboard slice. |
+| [PHASE1-EXECUTION.md](./PHASE1-EXECUTION.md) | Phase 1 checklist: SKUs, Etsy, OPS; weekly loop and doc links. |
 
 ## Lore & archive
 
@@ -29,6 +30,7 @@ Quick pointer to the main docs used for the venture and the app.
 
 | Doc | Purpose |
 |-----|--------|
+| [DEPLOY-SANCTUARY.md](./DEPLOY-SANCTUARY.md) | Deploy the Next sanctuary app as a separate Vercel project; env, CORS, checks. |
 | [DEPLOYMENT.md](./DEPLOYMENT.md) | Deployment and env. |
 | [VERIFICATION-SYSTEM.md](./VERIFICATION-SYSTEM.md) | Verification / badge system. |
 | [PRODUCTION-ENV-SYNC.md](./PRODUCTION-ENV-SYNC.md) | Production env sync. |
