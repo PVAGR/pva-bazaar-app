@@ -91,6 +91,7 @@ The system supports:
 - `/api/health`: Health check endpoints
 - `/api/transactions`: Transaction handling
 - `/api/certificates`: Certificate management
+- `/api/verification`: Store and retrieve verification results; `GET /api/verification/artifact/:idOrSlug` for badge/lookup
 
 ## Environment Variables Required
 
