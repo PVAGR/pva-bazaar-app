@@ -1,4 +1,11 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Manifesto – PVA Bazaar",
+  description:
+    "Home Station Protocol. Pasha VII – Moon 3 – Royal Amarr Institute School. Initiate acquisition; preserve evidence.",
+};
 
 export default function ManifestoPage() {
   return (

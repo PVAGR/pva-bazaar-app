@@ -1,5 +1,12 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { VerifyArtifactBlock } from "./VerifyArtifactBlock";
+
+export const metadata: Metadata = {
+  title: "Verification – PVA Bazaar",
+  description:
+    "How we verify artifact integrity: hashes, provenance, and anti-Druj. Look up verification by artifact ID or slug.",
+};
 
 export default function VerificationPage() {
   return (
