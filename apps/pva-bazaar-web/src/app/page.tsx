@@ -17,7 +17,7 @@ export default function Home() {
         <h1 className="text-3xl md:text-4xl font-semibold text-zinc-100 leading-tight">
           Preserve scarce knowledge.
           <br />
-          <span className="text-amber-300/90">Verify integrity. Acquire as a Conscious Player.</span>
+          <span className="text-sky-300/90">Verify integrity. Acquire as a Conscious Player.</span>
         </h1>
         <p className="max-w-xl text-sm text-zinc-400">
           PVA Bazaar is a ritual layer for artifacts: stories, hashes, and provenance.
@@ -26,7 +26,7 @@ export default function Home() {
         <div className="flex flex-wrap gap-3 pt-2">
           <Link
             href="/archive"
-            className="rounded-lg border border-amber-300/50 bg-amber-300/10 px-4 py-2 text-sm font-medium text-amber-200 hover:bg-amber-300/20 transition-colors"
+            className="rounded-lg border border-sky-400/60 bg-sky-500/10 px-4 py-2 text-sm font-medium text-sky-100 hover:bg-sky-500/20 transition-colors"
           >
             Enter the Archive
           </Link>
@@ -50,7 +50,7 @@ export default function Home() {
             while we build the in-house cart and verification dashboard.
           </p>
           <div className="mt-3 flex flex-wrap gap-3">
-            <Link href="/archive" className="inline-block text-xs font-medium text-amber-300 hover:text-amber-200">
+          <Link href="/archive" className="inline-block text-xs font-medium text-sky-300 hover:text-sky-200">
               View archive →
             </Link>
             {process.env.NEXT_PUBLIC_ETSY_SHOP_URL && (
@@ -58,7 +58,7 @@ export default function Home() {
                 href={process.env.NEXT_PUBLIC_ETSY_SHOP_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs font-medium text-amber-300 hover:text-amber-200"
+                className="text-xs font-medium text-sky-300 hover:text-sky-200"
               >
                 Shop on Etsy →
               </a>

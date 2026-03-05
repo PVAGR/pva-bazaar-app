@@ -38,7 +38,7 @@ export default function RootLayout({
       >
         <a
           href="#main-content"
-          className="absolute left-4 top-4 z-50 -translate-y-16 rounded border border-amber-300/60 bg-amber-300/20 px-3 py-2 text-sm font-medium text-amber-200 transition focus:translate-y-0 focus:outline-none focus:ring-2 focus:ring-amber-300/50"
+          className="absolute left-4 top-4 z-50 -translate-y-16 rounded border border-sky-400/60 bg-sky-500/20 px-3 py-2 text-sm font-medium text-sky-100 transition focus:translate-y-0 focus:outline-none focus:ring-2 focus:ring-sky-400/60"
         >
           Skip to main content
         </a>

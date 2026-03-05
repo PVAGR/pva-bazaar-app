@@ -54,8 +54,8 @@ export default function VerificationPage() {
           </p>
         </article>
 
-        <article className="rounded-xl border border-amber-300/40 bg-amber-300/5 p-5">
-          <h2 className="mb-2 text-sm font-semibold text-amber-200">
+        <article className="rounded-xl border border-sky-400/40 bg-sky-500/10 p-5">
+          <h2 className="mb-2 text-sm font-semibold text-sky-100">
             Anti-Druj
           </h2>
           <p className="text-sm text-zinc-300">
@@ -71,7 +71,7 @@ export default function VerificationPage() {
       <div className="flex flex-wrap gap-3">
         <Link
           href="/dashboard"
-          className="rounded-lg border border-amber-300/50 bg-amber-300/10 px-4 py-2 text-sm font-medium text-amber-200 hover:bg-amber-300/20 transition-colors"
+          className="rounded-lg border border-sky-400/60 bg-sky-500/10 px-4 py-2 text-sm font-medium text-sky-100 hover:bg-sky-500/20 transition-colors"
         >
           My artifacts
         </Link>
