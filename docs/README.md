@@ -2,7 +2,7 @@
 
 Quick pointer to the main docs used for the venture and the app.
 
-**What’s in this repo:** Venture docs (Phase 1–4), OPS workflow and templates, Next sanctuary app (home, archive, verification, manifesto, cart, 404/loading/error, sitemap, verification lookup). See [VENTURE-ROADMAP.md](./VENTURE-ROADMAP.md) and `apps/pva-bazaar-web/README.md`.
+**What’s in this repo:** Venture docs (Phase 1–4), OPS workflow and templates, Next sanctuary app (home, archive, verification, manifesto, dashboard, cart, 404/loading/error, sitemap, verification lookup). See [VENTURE-ROADMAP.md](./VENTURE-ROADMAP.md) and `apps/pva-bazaar-web/README.md`.
 
 **Run from repo root:** `npm run dev:web` (Next sanctuary app), `npm run dev:backend` (API).
 
