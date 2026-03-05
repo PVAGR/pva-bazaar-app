@@ -128,15 +128,13 @@ export default function ArchivePage() {
       </div>
 
       <p className="text-[11px] text-zinc-500">
-        Internal note: the detailed SKU list and Etsy copy live in{" "}
-        <code className="text-zinc-300">
-          docs/PRODUCT-SOURCING-KENYA.md
-        </code>{" "}
-        and{" "}
-        <code className="text-zinc-300">
-          docs/ETSY-LISTINGS-KENYA.md
-        </code>{" "}
-        inside the main monorepo.
+        Internal note: SKU list and Etsy copy in{" "}
+        <code className="text-zinc-300">docs/PRODUCT-SOURCING-KENYA.md</code> and{" "}
+        <code className="text-zinc-300">docs/ETSY-LISTINGS-KENYA.md</code>; order
+        workflow and canned messages in{" "}
+        <code className="text-zinc-300">docs/OPS-ORDER-WORKFLOW.md</code> and{" "}
+        <code className="text-zinc-300">docs/OPS-CUSTOMER-MESSAGES.md</code>; inventory
+        template in <code className="text-zinc-300">docs/OPS-INVENTORY-TEMPLATE.csv</code>.
       </p>
     </section>
   );

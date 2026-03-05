@@ -19,6 +19,11 @@ export const metadata: Metadata = {
   title: "PVA Bazaar – AI‑Verified Preservation",
   description:
     "A digital sanctuary for scarce knowledge artifacts. Preserve history, verify integrity, and acquire artifacts as a Conscious Player.",
+  openGraph: {
+    title: "PVA Bazaar – AI‑Verified Preservation",
+    description:
+      "A digital sanctuary for scarce knowledge artifacts. Preserve history, verify integrity, and acquire artifacts as a Conscious Player.",
+  },
 };
 
 export default function RootLayout({
