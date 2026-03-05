@@ -1,4 +1,11 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Archive – PVA Bazaar",
+  description:
+    "Kenyan crafts as living artifacts. Beadwork and Kisii soapstone; Phase One SKUs; Pasha VII. Checkout via Etsy for now.",
+};
 
 export default function ArchivePage() {
   return (

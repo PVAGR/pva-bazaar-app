@@ -1,4 +1,11 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Cart – PVA Bazaar",
+  description:
+    "Checkout for Phase One runs on Etsy. This site is the ritual layer; in-house cart and verification dashboard coming later.",
+};
 
 export default function CartPage() {
   return (
