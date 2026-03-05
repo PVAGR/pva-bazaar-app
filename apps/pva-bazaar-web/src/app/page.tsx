@@ -1,4 +1,11 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Home – PVA Bazaar",
+  description:
+    "Preserve scarce knowledge. Verify integrity. Acquire as a Conscious Player. Phase One Kenyan crafts; anti-Druj.",
+};
 
 export default function Home() {
   return (

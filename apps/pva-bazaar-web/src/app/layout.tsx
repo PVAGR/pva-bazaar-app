@@ -31,6 +31,12 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black text-zinc-100`}
       >
+        <a
+          href="#main-content"
+          className="absolute left-4 top-4 z-50 -translate-y-16 rounded border border-amber-300/60 bg-amber-300/20 px-3 py-2 text-sm font-medium text-amber-200 transition focus:translate-y-0 focus:outline-none focus:ring-2 focus:ring-amber-300/50"
+        >
+          Skip to main content
+        </a>
         <div className="min-h-screen bg-gradient-to-b from-black via-slate-950 to-black flex flex-col">
           <header className="border-b border-zinc-800/80 bg-black/70 backdrop-blur">
             <nav className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
@@ -59,7 +65,7 @@ export default function RootLayout({
             </nav>
           </header>
 
-          <main className="mx-auto flex w-full max-w-5xl flex-1 px-4 py-10">
+          <main id="main-content" className="mx-auto flex w-full max-w-5xl flex-1 px-4 py-10">
             {children}
           </main>
 
