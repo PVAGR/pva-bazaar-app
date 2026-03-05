@@ -35,7 +35,7 @@ The project follows a traditional full-stack architecture with separate frontend
 
 ### Venture docs
 
-- **Index**: `docs/README.md` lists venture/ops docs (product sourcing, Etsy listings, OPS workflow, cyber café, Web3 MVP), lore (Pasha VII), and technical docs.
+- **Index**: `docs/README.md` lists venture/ops docs (product sourcing, Etsy listings, OPS workflow, cyber café, Web3 MVP), lore (Pasha VII), and technical docs. Deploy sanctuary: `docs/DEPLOY-SANCTUARY.md`; Phase 1 execution checklist: `docs/PHASE1-EXECUTION.md`.
 
 ### Deployment
 
