@@ -7,6 +7,8 @@ Each listing has:
 - Short **Description blocks** (Story, Details, Shipping)
 - Suggested **Tags**
 
+**Related:** [PRODUCT-SOURCING-KENYA.md](./PRODUCT-SOURCING-KENYA.md) (SKU details), [OPS-ORDER-WORKFLOW.md](./OPS-ORDER-WORKFLOW.md) (order SOP).
+
 ---
 
 ### 1. Maasai Sunrise Beaded Bracelet

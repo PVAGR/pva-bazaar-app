@@ -2,6 +2,8 @@
 
 This file turns the research blueprint into a concrete, starting catalog you can act on with real artisans. It is written so you (or another LLM coder) can quickly generate Etsy listings, contracts, and ops docs from it.
 
+**Related:** [ETSY-LISTINGS-KENYA.md](./ETSY-LISTINGS-KENYA.md) (listing copy), [OPS-ORDER-WORKFLOW.md](./OPS-ORDER-WORKFLOW.md) (order SOP).
+
 ---
 
 ### 1. Primary Categories
