@@ -17,6 +17,7 @@ Open [http://localhost:3000](http://localhost:3000). The app works without a bac
 Copy `.env.example` to `.env.local` and set:
 
 - **`NEXT_PUBLIC_VERIFICATION_API_URL`** (or **`NEXT_PUBLIC_API_URL`**) – Base URL of the backend (e.g. `https://your-api.vercel.app`). When set, the Verification page “Check verification for an artifact” block will call `GET /api/verification/artifact/:idOrSlug`.
+- **`NEXT_PUBLIC_ETSY_SHOP_URL`** – Your Etsy shop URL (e.g. `https://www.etsy.com/shop/YourShop`). When set, the Archive page shows a “Shop on Etsy” link.
 
 ## Pages
 

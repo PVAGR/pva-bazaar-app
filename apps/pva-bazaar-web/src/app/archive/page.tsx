@@ -71,6 +71,18 @@ export default function ArchivePage() {
           <span className="font-semibold">pvabazaar.org</span> as the ritual
           layer: the place where stories, hashes, and provenance live.
         </p>
+        {process.env.NEXT_PUBLIC_ETSY_SHOP_URL && (
+          <p className="mb-2">
+            <a
+              href={process.env.NEXT_PUBLIC_ETSY_SHOP_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-amber-200 underline hover:text-amber-100"
+            >
+              Shop on Etsy →
+            </a>
+          </p>
+        )}
         <p>
           Later, the archive pages here will link directly into those listings,
           and eventually into an in‑house cart and verification dashboard.

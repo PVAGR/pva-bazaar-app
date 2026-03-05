@@ -11,6 +11,7 @@
     "dev": "turbo run dev --parallel",
     "dev:backend": "cd backend && npm run dev",
     "dev:frontend": "cd Frontend && npm run dev",
+    "dev:web": "npm run dev -w pva-bazaar-web",
     "build": "node -e \"console.log('skip build on vercel')\"",
     "build:backend": "cd backend && npm run build",
     "build:frontend": "cd Frontend && npm run build",
