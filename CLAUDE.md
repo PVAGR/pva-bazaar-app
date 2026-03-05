@@ -26,6 +26,17 @@ The project follows a traditional full-stack architecture with separate frontend
 - **Structure**: HTML pages in `/pages/` with shared assets in `/src/`
 - **Key Pages**: artifact viewer, portfolio, dashboard, checkout/mint, provenance tracking
 
+### Next app – sanctuary layer (`/apps/pva-bazaar-web/`)
+
+- **Framework**: Next.js 14 (App Router), TypeScript, Tailwind
+- **Purpose**: Alchemical/ritual layer: archive, verification, manifesto, cart. Phase One Kenyan crafts + Pasha VII lore.
+- **Run**: `npm run dev:web` from repo root, or `npm run dev` from `apps/pva-bazaar-web`
+- **Docs**: See `apps/pva-bazaar-web/README.md` for env (verification API URL, Etsy shop URL) and deploy options.
+
+### Venture docs
+
+- **Index**: `docs/README.md` lists venture/ops docs (product sourcing, Etsy listings, OPS workflow, cyber café, Web3 MVP), lore (Pasha VII), and technical docs.
+
 ### Deployment
 
 - **Platform**: Vercel (serverless functions)
@@ -37,8 +48,11 @@ The project follows a traditional full-stack architecture with separate frontend
 ## Development Commands
 
 ```bash
-# Development server (frontend)
-npm run dev          # Vite dev server on port 3000
+# Development servers
+npm run dev          # Turbo: parallel dev (if configured)
+npm run dev:frontend # Vite frontend (e.g. port 5173)
+npm run dev:backend  # Express backend
+npm run dev:web      # Next app – sanctuary layer (port 3000)
 
 # Build
 npm run build        # Build frontend for production
