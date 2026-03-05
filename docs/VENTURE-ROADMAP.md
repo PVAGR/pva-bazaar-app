@@ -30,6 +30,7 @@ Keep any sensitive numbers high level (ranges are fine). Do not put bank details
   - Code / backend: this repo (`pva-bazaar-app`), MongoDB Atlas (for live DB), Vercel (hosting).
   - Marketplaces: Etsy as primary; eBay/Amazon Handmade only after Etsy proof.
   - AI stack: Cursor (this assistant), GitHub Copilot, plus any lightweight note-taking tool you prefer.
+  - In-repo: venture docs index at `docs/README.md`; Next sanctuary app at `apps/pva-bazaar-web` (see its README for run, env, deploy).
 
 - **Decision log (append as you go)**
   - Use dated bullet points to record major decisions and why you made them.
