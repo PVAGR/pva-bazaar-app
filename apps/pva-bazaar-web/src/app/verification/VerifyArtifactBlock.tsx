@@ -2,7 +2,12 @@
 
 import { useState } from "react";
 
-const API_BASE = typeof window !== "undefined" ? (process.env.NEXT_PUBLIC_VERIFICATION_API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "") : "";
+const API_BASE =
+  typeof window !== "undefined"
+    ? (process.env.NEXT_PUBLIC_VERIFICATION_API_URL ??
+        process.env.NEXT_PUBLIC_API_URL ??
+        "")
+    : "";
 
 export function VerifyArtifactBlock() {
   const [idOrSlug, setIdOrSlug] = useState("");
@@ -20,13 +25,17 @@ export function VerifyArtifactBlock() {
     message?: string;
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const hasApiBase = Boolean(API_BASE);
 
   async function handleLookup(e: React.FormEvent) {
     e.preventDefault();
     if (!idOrSlug.trim()) return;
     setError(null);
     setResult(null);
-    if (!API_BASE) return;
+    if (!hasApiBase) {
+      setError("Verification service is not configured for this site yet.");
+      return;
+    }
     setLoading(true);
     try {
       const base = API_BASE.replace(/\/$/, "");
@@ -60,16 +69,17 @@ export function VerifyArtifactBlock() {
         />
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || !hasApiBase}
           className="rounded-lg border border-amber-300/50 bg-amber-300/10 px-4 py-2 text-sm font-medium text-amber-200 hover:bg-amber-300/20 disabled:opacity-50 transition-colors"
         >
           {loading ? "Looking up…" : "Look up"}
         </button>
       </form>
-      {!API_BASE && (
+      {!hasApiBase && (
         <p className="text-xs text-zinc-500 mb-2">
-          Set <code className="text-zinc-400">NEXT_PUBLIC_VERIFICATION_API_URL</code> or{" "}
-          <code className="text-zinc-400">NEXT_PUBLIC_API_URL</code> to enable live API lookup.
+          Verification lookup is not connected yet. Site operator: set{" "}
+          <code className="text-zinc-400">NEXT_PUBLIC_VERIFICATION_API_URL</code> or{" "}
+          <code className="text-zinc-400">NEXT_PUBLIC_API_URL</code> to enable live results.
         </p>
       )}
       {error && (

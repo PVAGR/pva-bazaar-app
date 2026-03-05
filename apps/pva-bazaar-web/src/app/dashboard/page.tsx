@@ -26,6 +26,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<{ id: string; data: VerificationResult }[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const hasApiBase = Boolean(API_BASE);
 
   function parseIds(raw: string): string[] {
     return raw
@@ -40,8 +41,8 @@ export default function DashboardPage() {
     if (ids.length === 0) return;
     setError(null);
     setResults([]);
-    if (!API_BASE) {
-      setError("Set NEXT_PUBLIC_VERIFICATION_API_URL to enable lookups.");
+    if (!hasApiBase) {
+      setError("Verification service is not configured for this site yet.");
       return;
     }
     setLoading(true);
@@ -90,16 +91,17 @@ export default function DashboardPage() {
         />
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || !hasApiBase}
           className="rounded-lg border border-amber-300/50 bg-amber-300/10 px-4 py-2 text-sm font-medium text-amber-200 hover:bg-amber-300/20 disabled:opacity-50 transition-colors"
         >
           {loading ? "Looking up…" : "Look up verification"}
         </button>
       </form>
 
-      {!API_BASE && (
+      {!hasApiBase && (
         <p className="text-xs text-zinc-500">
-          Set <code className="text-zinc-400">NEXT_PUBLIC_VERIFICATION_API_URL</code> or{" "}
+          Verification lookup is not connected yet. Site operator: set{" "}
+          <code className="text-zinc-400">NEXT_PUBLIC_VERIFICATION_API_URL</code> or{" "}
           <code className="text-zinc-400">NEXT_PUBLIC_API_URL</code> to enable lookups.
         </p>
       )}
