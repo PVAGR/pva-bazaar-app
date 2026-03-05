@@ -44,6 +44,7 @@ Keep any sensitive numbers high level (ranges are fine). Do not put bank details
 - Initial product thesis (what you will test first and why).
 - Short list of real artisans / co-ops you’re talking to and current status.
 - Chosen marketplace stack (e.g., “Etsy only until 20 sales, then consider DTC site”).
+- In-repo: product, Etsy, and OPS docs (see `docs/README.md`).
 
 ---
 
@@ -52,6 +53,7 @@ Keep any sensitive numbers high level (ranges are fine). Do not put bank details
 Use these sections to jot key ideas or constraints as they show up in your head; we’ll flesh them out when Phases 1–2 are humming.
 
 - **Phase 2 – Scale & light tech leverage**  
+  - In-repo: Next sanctuary app (home, archive, verification, manifesto, cart); run `npm run dev:web`.
   - Ideas for which artifacts deserve “hero” pages in this app.  
   - Thoughts on email list, repeat buyers, and simple automations you want.
 
