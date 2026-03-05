@@ -2,6 +2,8 @@
 
 This is the step-by-step SOP for fulfilling orders. Treat it as the “muscle memory” you and any helper can follow.
 
+**Related:** [OPS-CUSTOMER-MESSAGES.md](./OPS-CUSTOMER-MESSAGES.md) (canned messages), [OPS-INVENTORY-TEMPLATE.csv](./OPS-INVENTORY-TEMPLATE.csv) (inventory sheet).
+
 ---
 
 ### 1. When an Etsy order comes in

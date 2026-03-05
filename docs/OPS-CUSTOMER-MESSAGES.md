@@ -2,6 +2,8 @@
 
 These are short, neutral-toned messages you can paste into Etsy and personalize. Replace `[NAME]`, `[SKU]`, `[TRACKING]`, etc. as needed.
 
+**Use with:** [OPS-ORDER-WORKFLOW.md](./OPS-ORDER-WORKFLOW.md) (order SOP), [OPS-INVENTORY-TEMPLATE.csv](./OPS-INVENTORY-TEMPLATE.csv) (inventory).
+
 ---
 
 ### 1. Order confirmation (optional personal note)
