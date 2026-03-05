@@ -47,7 +47,7 @@ Create `src/app/your-page/page.tsx`, add a `<Link href="/your-page">` in `layout
 
 ## Deploy
 
-The repo root `vercel.json` currently deploys the API and the Vite **Frontend**. To deploy this Next app:
+Step-by-step: [docs/DEPLOY-SANCTUARY.md](../../docs/DEPLOY-SANCTUARY.md) in the monorepo. The repo root `vercel.json` currently deploys the API and the Vite **Frontend**. To deploy this Next app:
 
 - **Option A:** Add a second Vercel project pointing at `apps/pva-bazaar-web` (e.g. `sanctuary.pvabazaar.org`).
 - **Option B:** Later, adjust root config to build and route this app (e.g. under `/web` or as the default site).
