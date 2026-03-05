@@ -60,6 +60,22 @@ export default function ArchivePage() {
         </article>
       </div>
 
+      <div className="rounded-xl border border-zinc-700/80 bg-zinc-900/50 px-4 py-4">
+        <p className="text-xs uppercase tracking-[0.25em] text-zinc-500 mb-2">
+          Phase One SKUs (8)
+        </p>
+        <ul className="text-xs text-zinc-400 space-y-0.5 columns-1 sm:columns-2 gap-x-4">
+          <li>Maasai Sunrise Beaded Bracelet</li>
+          <li>Pamoja Pathways Necklace</li>
+          <li>Kisumu Waters Minimalist Anklet</li>
+          <li>Eldoret Ember Choker</li>
+          <li>Maasai Signal Earrings (Pair)</li>
+          <li>Tabaka Guardian Elephant – Mini</li>
+          <li>Kisii Memory Bowl – Etched Interior</li>
+          <li>Axis of Stories Totem</li>
+        </ul>
+      </div>
+
       <div className="rounded-xl border border-amber-300/60 bg-amber-300/5 px-4 py-4 text-xs text-amber-100">
         <p className="mb-2 font-semibold tracking-[0.18em] uppercase">
           How to actually claim an artifact (for now)
