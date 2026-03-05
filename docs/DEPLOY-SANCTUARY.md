@@ -31,4 +31,6 @@ In the **backend** project env, add the sanctuary origin to `ALLOWED_ORIGIN` (co
 - Check `/sitemap.xml` and `/robots.txt` use the right base URL.
 - On `/verification` or `/dashboard`, test with an artifact ID that has a verification record.
 
+**Related:** [PHASE1-EXECUTION.md](./PHASE1-EXECUTION.md) – Phase 1 checklist once the app is live.
+
 See `apps/pva-bazaar-web/README.md` for local run and `docs/README.md` for doc index.

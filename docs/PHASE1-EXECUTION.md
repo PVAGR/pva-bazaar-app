@@ -1,6 +1,6 @@
 # Phase 1 Execution Checklist
 
-Use this alongside `VENTURE-ROADMAP.md` and the product/Etsy/OPS docs. Tick or date items as you go.
+Use this alongside `VENTURE-ROADMAP.md` and the product/Etsy/OPS docs. Tick or date items as you go. To deploy the sanctuary app first, see [DEPLOY-SANCTUARY.md](./DEPLOY-SANCTUARY.md).
 
 ## Week 1 – Stand up product + Etsy
 
