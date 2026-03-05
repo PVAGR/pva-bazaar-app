@@ -71,6 +71,16 @@ export default function RootLayout({
                 </Link>
               </div>
             </nav>
+            <div className="border-t border-zinc-800/80 bg-zinc-950/80">
+              <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-2">
+                <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">
+                  Phase One · Kenyan exports
+                </p>
+                <p className="text-[10px] text-zinc-500">
+                  This layer: stories, hashes, verification.
+                </p>
+              </div>
+            </div>
           </header>
 
           <main id="main-content" className="mx-auto flex w-full max-w-5xl flex-1 px-4 py-10">
