@@ -70,6 +70,12 @@ export default function VerificationPage() {
 
       <div className="flex flex-wrap gap-3">
         <Link
+          href="/dashboard"
+          className="rounded-lg border border-amber-300/50 bg-amber-300/10 px-4 py-2 text-sm font-medium text-amber-200 hover:bg-amber-300/20 transition-colors"
+        >
+          My artifacts
+        </Link>
+        <Link
           href="/archive"
           className="rounded-lg border border-zinc-600 bg-zinc-800/60 px-4 py-2 text-sm font-medium text-zinc-200 hover:bg-zinc-700/60 transition-colors"
         >
