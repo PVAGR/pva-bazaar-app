@@ -30,3 +30,4 @@ Each week:
 - Canned messages: `OPS-CUSTOMER-MESSAGES.md`
 - Inventory template: `OPS-INVENTORY-TEMPLATE.csv`
 - Roadmap: `VENTURE-ROADMAP.md`
+- Deploy sanctuary: `DEPLOY-SANCTUARY.md`
