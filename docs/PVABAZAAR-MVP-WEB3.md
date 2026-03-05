@@ -45,8 +45,8 @@ This doc describes a **very small MVP** for pvabazaar.org that is verification-f
 
 ## Implementation notes
 
-- **Frontend:** Next app (`apps/pva-bazaar-web`) already has a Verification page (human-language explanation). Add a “My artifacts” or “Verify a hash” section that calls the backend.
-- **Backend:** Ensure `GET /api/artifacts` (or equivalent) can filter by user/holder and return hash + chain data; add a minimal `GET /api/verification/:artifactId` if helpful.
+- **Frontend:** Next app (`apps/pva-bazaar-web`) has a Verification page with a verification lookup block (GET /api/verification/artifact/:idOrSlug when API URL is set). Next steps: optional “My artifacts” or “Verify a hash” list.
+- **Backend:** `GET /api/verification/artifact/:idOrSlug` exists. Ensure `GET /api/artifacts` (or equivalent) can filter by user/holder and return hash + chain data when you add the dashboard.
 - **Auth:** Decide MVP auth (session, API key, or wallet signature) and keep it minimal so verification is the star.
 
 ---

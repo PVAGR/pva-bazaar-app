@@ -42,9 +42,21 @@ export default function Home() {
             Each piece ships small and carries a long story. Checkout runs via Etsy
             while we build the in-house cart and verification dashboard.
           </p>
-          <Link href="/archive" className="mt-3 inline-block text-xs font-medium text-amber-300 hover:text-amber-200">
-            View archive →
-          </Link>
+          <div className="mt-3 flex flex-wrap gap-3">
+            <Link href="/archive" className="inline-block text-xs font-medium text-amber-300 hover:text-amber-200">
+              View archive →
+            </Link>
+            {process.env.NEXT_PUBLIC_ETSY_SHOP_URL && (
+              <a
+                href={process.env.NEXT_PUBLIC_ETSY_SHOP_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs font-medium text-amber-300 hover:text-amber-200"
+              >
+                Shop on Etsy →
+              </a>
+            )}
+          </div>
         </article>
 
         <article className="rounded-xl border border-zinc-800/80 bg-zinc-950/60 p-5">
