@@ -2,6 +2,8 @@
 
 Quick pointer to the main docs used for the venture and the app.
 
+**Run from repo root:** `npm run dev:web` (Next sanctuary app), `npm run dev:backend` (API).
+
 ## Venture & ops (phased build)
 
 | Doc | Purpose |

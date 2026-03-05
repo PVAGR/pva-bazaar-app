@@ -30,6 +30,8 @@ Copy `.env.example` to `.env.local` and set:
 | `/cart` | Checkout via Etsy for now; future in-house cart |
 | (any other path) | Custom 404 – “This path is not in the archive” with links to Home / Archive |
 
+Root `loading.tsx` shows a spinner during route transitions; `error.tsx` shows an on-brand recovery UI (Try again, Home) when something throws.
+
 ## Build
 
 ```bash
