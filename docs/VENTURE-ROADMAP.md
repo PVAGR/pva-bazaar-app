@@ -58,9 +58,11 @@ Use these sections to jot key ideas or constraints as they show up in your head;
   - Thoughts on email list, repeat buyers, and simple automations you want.
 
 - **Phase 3 – Cyber café**  
+  - In-repo: `docs/CYBER-CAFE-MODEL.md` (capex/opex, pricing; only when export profits fund it).
   - Potential locations, partners, and pricing models.  
   - Early signals about local demand.
 
 - **Phase 4 – PVABazaar.org / Web3**  
+  - In-repo: `docs/PVABAZAAR-MVP-WEB3.md` (verification MVP, reuse backend).
   - Any concrete, *small* experiments you might want to try once the export business is stable.
 
