@@ -42,4 +42,4 @@ The repo root `vercel.json` currently deploys the API and the Vite **Frontend**.
 - **Option A:** Add a second Vercel project pointing at `apps/pva-bazaar-web` (e.g. `sanctuary.pvabazaar.org`).
 - **Option B:** Later, adjust root config to build and route this app (e.g. under `/web` or as the default site).
 
-Ensure the deployed backend allows CORS from this app’s origin if you use the verification lookup.
+**CORS:** The backend allowlist already includes `http://localhost:3000`. For a deployed Next app, add its origin to the backend env `ALLOWED_ORIGIN` (comma-separated) so the verification lookup can call the API.
