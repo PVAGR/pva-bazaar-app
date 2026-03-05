@@ -31,7 +31,7 @@ The project follows a traditional full-stack architecture with separate frontend
 - **Framework**: Next.js 14 (App Router), TypeScript, Tailwind
 - **Purpose**: Alchemical/ritual layer: archive, verification, manifesto, cart. Phase One Kenyan crafts + Pasha VII lore.
 - **Run**: `npm run dev:web` from repo root, or `npm run dev` from `apps/pva-bazaar-web`
-- **Docs**: See `apps/pva-bazaar-web/README.md` for env (verification API URL, Etsy shop URL) and deploy options. Serves `/sitemap.xml` and `/robots.txt` (base URL from env).
+- **Docs**: See `apps/pva-bazaar-web/README.md` for env (verification API URL, Etsy shop URL) and deploy options. Serves `/sitemap.xml`, `/robots.txt` (base URL from env), and `GET /api/health` for deployment checks.
 
 ### Venture docs
 

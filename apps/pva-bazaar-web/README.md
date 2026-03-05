@@ -40,6 +40,10 @@ npm run build
 npm run start
 ```
 
+## Adding a page
+
+Create `src/app/your-page/page.tsx`, add a `<Link href="/your-page">` in `layout.tsx` nav, and add `"/your-page"` to the routes array in `src/app/sitemap.ts`.
+
 ## Deploy
 
 The repo root `vercel.json` currently deploys the API and the Vite **Frontend**. To deploy this Next app:
