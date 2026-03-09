@@ -7,7 +7,7 @@
     "dev": "npx vite",
     "check:theme": "node scripts/check-theme-hardcoded.cjs",
     "audit:theme:static": "node scripts/audit-static-light-backgrounds.cjs",
-    "prebuild": "node scripts/vercel-info.cjs",
+    "prebuild": "npm run check:theme && npm run audit:theme:static && node scripts/vercel-info.cjs",
     "build": "npx vite build",
     "postbuild": "node scripts/copy-src-to-dist.cjs",
     "preview": "npx vite preview",
