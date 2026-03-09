@@ -5,11 +5,16 @@ import { ENV } from '../config/env';
 import { getErrorMessage } from '../lib/errorUtils';
 import ErrorBanner from '../components/ErrorBanner.jsx';
 import AdminNav from '../components/AdminNav.jsx';
+import AdminTabs from '../components/AdminTabs.jsx';
 import HelpTip from '../components/HelpTip.jsx';
 import { clearToken, setToken } from '../lib/auth';
 import { createLogger } from '../lib/logger';
 import { SkeletonList } from '../components/SkeletonLoader.jsx';
 import { LoadingDots } from '../components/LoadingSpinner.jsx';
+import MarketplaceTab from '../components/MarketplaceTab.jsx';
+import UsersTab from '../components/UsersTab.jsx';
+import HealthTab from '../components/HealthTab.jsx';
+import SettingsTab from '../components/SettingsTab.jsx';
 import './AdminPage.css';
 
 const logger = createLogger('AdminPage');
@@ -25,6 +30,7 @@ export default function AdminPage() {
   const [error, setError] = useState('');
   const [apiError, setApiError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [activeTab, setActiveTab] = useState('archive');
   // Use global theme system
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem('theme');
@@ -820,25 +826,29 @@ export default function AdminPage() {
           </div>
         </div>
         <AdminNav />
+        <AdminTabs activeTab={activeTab} onTabChange={setActiveTab} />
         <div className="admin-container">
-          <div className="admin-sidebar">
-            <div className="sidebar-section">
-              <h2>📊 Statistics</h2>
-              <div className="stat-item">
-                <span>Original Entries:</span>
-                <strong>17</strong>
-              </div>
-              <div className="stat-item">
-                <span>Custom Entries:</span>
-                <strong>{savedEntries.length}</strong>
-              </div>
-              <div className="stat-item">
-                <span>Total Entries:</span>
-                <strong>{17 + savedEntries.length}</strong>
-              </div>
-            </div>
-            <div className="sidebar-section">
-              <h2>📝 Your Entries</h2>
+          {/* Archive Tab - Original functionality */}
+          {activeTab === 'archive' && (
+            <>
+              <div className="admin-sidebar">
+                <div className="sidebar-section">
+                  <h2>📊 Statistics</h2>
+                  <div className="stat-item">
+                    <span>Original Entries:</span>
+                    <strong>17</strong>
+                  </div>
+                  <div className="stat-item">
+                    <span>Custom Entries:</span>
+                    <strong>{savedEntries.length}</strong>
+                  </div>
+                  <div className="stat-item">
+                    <span>Total Entries:</span>
+                    <strong>{17 + savedEntries.length}</strong>
+                  </div>
+                </div>
+                <div className="sidebar-section">
+                  <h2>📝 Your Entries</h2>
               {entriesLoading ? (
                 <SkeletonList count={5} />
               ) : savedEntries.length === 0 ? (
@@ -1033,6 +1043,20 @@ export default function AdminPage() {
               </form>
             </div>
           </div>
+            </>
+          )}
+
+          {/* Marketplace Tab */}
+          {activeTab === 'marketplace' && <MarketplaceTab />}
+
+          {/* Users Tab */}
+          {activeTab === 'users' && <UsersTab />}
+
+          {/* Health Tab */}
+          {activeTab === 'health' && <HealthTab />}
+
+          {/* Settings Tab */}
+          {activeTab === 'settings' && <SettingsTab />}
         </div>
       </div>
       {/* Delete Confirmation Modal */}
