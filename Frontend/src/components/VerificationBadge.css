@@ -30,15 +30,15 @@
 }
 
 .verification-badge--compromised {
-  background: #fee;
-  color: #b91c1c;
+  background: var(--site-danger-bg);
+  color: var(--site-danger-text);
   border-color: #dc2626;
 }
 
 .verification-badge--unknown {
-  background: #f5f5f5;
-  color: #555;
-  border-color: #ccc;
+  background: var(--site-panel-soft);
+  color: var(--site-text-muted);
+  border-color: var(--site-border);
 }
 
 /* Alchemical Digital theme: dark surface, gold accent, high contrast */

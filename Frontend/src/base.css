@@ -485,16 +485,16 @@ body {
 }
 
 .entry-detail-scrollable::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: var(--site-panel-soft);
 }
 
 .entry-detail-scrollable::-webkit-scrollbar-thumb {
-  background: #ccc;
+  background: var(--site-border);
   border-radius: 4px;
 }
 
 .entry-detail-scrollable::-webkit-scrollbar-thumb:hover {
-  background: #999;
+  background: var(--site-text-muted);
 }
 
 /* Mobile Responsiveness for Entry Detail */

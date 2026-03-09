@@ -929,23 +929,23 @@ a:hover {
 }
 
 .pva-entry-type.personal {
-  background: #fed7d7;
-  color: #9b2c2c;
+  background: var(--site-danger-bg);
+  color: var(--site-danger-text);
 }
 
 .pva-entry-type.research {
-  background: #c6f6d5;
-  color: #276749;
+  background: var(--site-accent-soft);
+  color: var(--site-accent-strong);
 }
 
 .pva-entry-type.reflection {
-  background: #bee3f8;
-  color: #2c5282;
+  background: var(--site-accent-soft);
+  color: var(--site-accent);
 }
 
 .pva-entry-type.philosophy {
-  background: #e9d5ff;
-  color: #6b21a8;
+  background: var(--site-panel-soft);
+  color: var(--site-text);
 }
 
 .pva-entry-content {

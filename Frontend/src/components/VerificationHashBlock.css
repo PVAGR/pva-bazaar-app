@@ -73,26 +73,26 @@
 
 /* Light / default theme variant */
 .verification-hash-block--default .verification-hash-block__label {
-  color: #555;
+  color: var(--site-text-muted);
 }
 
 .verification-hash-block--default .verification-hash-block__trigger {
-  background: #f5f5f5;
-  border-color: #ddd;
-  color: #222;
+  background: var(--site-panel-soft);
+  border-color: var(--site-border);
+  color: var(--site-text);
 }
 
 .verification-hash-block--default .verification-hash-block__trigger:hover,
 .verification-hash-block--default .verification-hash-block__trigger:focus {
   border-color: #228b22;
-  background: #f0f8f0;
+  background: var(--site-accent-soft);
 }
 
 .verification-hash-block--default .verification-hash-block__full {
-  background: #f9f9f9;
-  border-color: #e0e0e0;
+  background: var(--site-panel-soft);
+  border-color: var(--site-border);
 }
 
 .verification-hash-block--default .verification-hash-block__full-value {
-  color: #333;
+  color: var(--site-text);
 }
