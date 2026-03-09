@@ -3,6 +3,7 @@ const router = express.Router();
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const auth = require('../middleware/auth');
+const { createUserEvent, dispatchToOpenClaw } = require('../utils/openclaw-events');
 
 // Register
 router.post('/register', async (req, res) => {
@@ -16,6 +17,12 @@ router.post('/register', async (req, res) => {
     const user = new User({ name, email, password });
     await user.save();
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
+    
+    // Dispatch user registration event (non-blocking)
+    dispatchToOpenClaw(createUserEvent('registered', user, {
+      method: 'password',
+    }));
+    
     res
       .status(201)
       .json({ ok: true, token, user: { id: user._id, name: user.name, email: user.email } });
@@ -24,31 +31,22 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// Login (accept username or email)
+// Login
 router.post('/login', async (req, res) => {
   try {
-    const { username, email, password } = req.body;
-    const loginId = username || email;
-    if (!loginId || !password) {
-      return res.status(400).json({ ok: false, message: 'Username or email and password required' });
-    }
-    const user = await User.findOne(
-      loginId.includes('@') ? { email: loginId } : { username: loginId }
-    );
+    const { email, password } = req.body;
+    const user = await User.findOne({ email });
     if (!user || !(await user.comparePassword(password))) {
       return res.status(401).json({ ok: false, message: 'Invalid credentials' });
     }
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
-    res.json({
-      ok: true,
-      token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        username: user.username,
-      },
-    });
+    
+    // Dispatch user login event (non-blocking)
+    dispatchToOpenClaw(createUserEvent('authenticated', user, {
+      method: 'password',
+    }));
+    
+    res.json({ ok: true, token, user: { id: user._id, name: user.name, email: user.email } });
   } catch (error) {
     res.status(500).json({ ok: false, message: error.message });
   }

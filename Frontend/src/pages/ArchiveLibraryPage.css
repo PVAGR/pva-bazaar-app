@@ -1,33 +1,4 @@
-/* Theme Variables */
-.archive-library.dark-theme {
-  --bg-primary: linear-gradient(135deg, #0a0e27 0%, #1a1a3a 100%);
-  --bg-secondary: rgba(15, 15, 30, 0.8);
-  --bg-tertiary: rgba(20, 20, 40, 0.7);
-  --text-primary: #e0f2f1;
-  --text-secondary: #b2dfdb;
-  --text-muted: #80cbc4;
-  --accent: #26c6da;
-  --accent-hover: #4dd0e1;
-  --border: #00695c;
-  --border-accent: #26c6da;
-  --highlight: rgba(38, 198, 218, 0.15);
-  --highlight-strong: rgba(38, 198, 218, 0.25);
-}
-
-.archive-library.light-theme {
-  --bg-primary: linear-gradient(135deg, #1a4d2e 0%, #0f3a24 100%);
-  --bg-secondary: rgba(20, 60, 38, 0.95);
-  --bg-tertiary: rgba(26, 77, 46, 0.9);
-  --text-primary: #e8f5e9;
-  --text-secondary: #c8e6c9;
-  --text-muted: #a5d6a7;
-  --accent: #66bb6a;
-  --accent-hover: #81c784;
-  --border: #2e7d4e;
-  --border-accent: #66bb6a;
-  --highlight: rgba(102, 187, 106, 0.15);
-  --highlight-strong: rgba(102, 187, 106, 0.25);
-}
+/* Uses global theme from magnum-opus.css */
 
 .archive-library {
   min-height: 100vh;

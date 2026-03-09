@@ -7,6 +7,8 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const path = require('path');
 let MongoMemoryServer;
+const openClawRoutes = require('../routes/openclaw');
+const openClawMetricsRoutes = require('../routes/openclaw-metrics');
 
 // Load environment variables
 dotenv.config();
@@ -70,15 +72,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// Raw body for webhooks (must run BEFORE json() so signature verification works)
-const webhookPaths = ['/webhooks/stripe', '/webhooks/twitch', '/api/webhooks/stripe', '/api/webhooks/twitch'];
-app.use((req, res, next) => {
-  if (webhookPaths.some(p => req.originalUrl === p || req.originalUrl.endsWith(p))) {
-    return express.raw({ type: 'application/json', limit: '1mb' })(req, res, next);
-  }
-  next();
-});
-
 // Body size limits (before routes)
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
@@ -123,6 +116,15 @@ if (process.env.SENTRY_DSN) {
   app.use(Sentry.Handlers.tracingHandler());
 }
 
+// Stripe webhook: use express.raw for signature verification (body limit handled by Stripe)
+const stripeWebhookPath = "/webhooks/stripe";
+app.use((req, res, next) => {
+  if (req.originalUrl === stripeWebhookPath) {
+    express.raw({ type: "application/json" })(req, res, next);
+  } else {
+    next();
+  }
+});
 
 // Apply stricter rate limiters to sensitive routes
 app.use('/admin', authLimiter);
@@ -133,18 +135,16 @@ app.use('/webhooks', webhookLimiter);
 app.use((req, res, next) => {
   const apiNotReady = process.env.API_READY === 'false';
   const isProd = process.env.NODE_ENV === 'production';
-  const allowlist = ['/health', '/dev/token', '/ping', '/version', '/express-ping'];
+  const allowlist = ['/health', '/api/health', '/dev/token', '/api/dev/token', '/ping', '/api/ping', '/version', '/api/version', '/express-ping', '/api/express-ping', '/openclaw', '/api/openclaw'];
   if (apiNotReady && isProd && !allowlist.some(p => req.path.startsWith(p))) {
     return res.status(503).json({ ok: false, message: 'Service not configured. Missing environment secrets.' });
   }
   next();
 });
 
-// Webhook routes
+// Stripe webhook route (must come after raw body middleware)
 const webhooksStripeRoutes = require('../routes/webhooksStripe');
-const webhooksTwitchRoutes = require('../routes/webhooksTwitch');
 app.use('/webhooks', webhooksStripeRoutes);
-app.use('/webhooks', webhooksTwitchRoutes);
 
 // Connect to MongoDB - optimized for serverless with global caching
 // Use global to persist connection across serverless function invocations
@@ -166,20 +166,17 @@ async function connectToDatabase() {
     // Start new connection
     const mongoUri =
       process.env.MONGODB_URI ||
-      'mongodb://localhost:27017/pvabazaar';
+      'mongodb://localhost:27017/pva-bazaar';
 
     console.log('🔌 Connecting to MongoDB...');
 
-    // Set timeouts and pooling for serverless (Vercel); longer timeout in prod for cold starts
-    const isProd = process.env.NODE_ENV === 'production';
+    // Set timeouts for serverless environment
     global._mongooseConn.promise = mongoose.connect(mongoUri, {
-      serverSelectionTimeoutMS: isProd ? 12000 : 5000,
-      connectTimeoutMS: isProd ? 15000 : 10000,
+      serverSelectionTimeoutMS: 5000,
+      connectTimeoutMS: 10000,
       socketTimeoutMS: 20000,
       maxPoolSize: 10,
-      minPoolSize: 2,
-      maxIdleTimeMS: 60000,
-      autoIndex: !isProd,
+      autoIndex: process.env.NODE_ENV !== 'production', // Don't build indexes in prod
     });
 
     global._mongooseConn.conn = await global._mongooseConn.promise;
@@ -194,7 +191,7 @@ async function connectToDatabase() {
 // Middleware: Ensure DB connection for routes that need it
 app.use(async (req, res, next) => {
   // Skip DB connection for health/ping endpoints and explicit safe endpoints
-  const skipPaths = ['/health', '/ping', '/version', '/express-ping', '/dev/token', '/webhooks/stripe', '/webhooks/twitch', '/api/webhooks/stripe', '/api/webhooks/twitch'];
+  const skipPaths = ['/health', '/api/health', '/ping', '/api/ping', '/version', '/api/version', '/express-ping', '/api/express-ping', '/dev/token', '/api/dev/token', '/webhooks/stripe', '/api/webhooks/stripe', '/openclaw', '/api/openclaw'];
   const skipPath = skipPaths.some(p => req.path === p || req.path.startsWith(p));
   
   if (skipPath) {
@@ -242,11 +239,6 @@ const streamsRoutes = require('../routes/streams');
 const journalRoutes = require('../routes/journal');
 const didRoutes = require('../routes/did');
 const databasesRoutes = require('../routes/databases');
-const dealsRoutes = require('../routes/deals');
-const oauthTwitchRoutes = require('../routes/oauthTwitch');
-const oauthYouTubeRoutes = require('../routes/oauthYouTube');
-// Oracle Assessment routes
-const oracleRoutes = require('../routes/oracle');
 // Models for optional seeding
 const Artifact = require('../models/Artifact');
 const User = require('../models/User');
@@ -273,30 +265,13 @@ console.log('🔒 LEGACY_MODE:', process.env.LEGACY_MODE);
 // Use routes - JOURNAL/BLOG (always active)
 app.use('/api/health', healthRoutes);
 
-// Simple version/ping endpoints (no DB dependency)
+// Simple health check endpoints (no DB dependency)
 app.get('/api/ping', (req, res) => {
-  const sha = process.env.VERCEL_GIT_COMMIT_SHA || 'local';
-  const shortSha = sha === 'local' ? sha : sha.slice(0, 7);
-  res.setHeader('X-App-Version', shortSha);
-  res.status(200).json({
-    ok: true,
-    message: 'API is responding',
-    timestamp: new Date().toISOString(),
-    version: '1.0.1',
-    shortSha,
-  });
+  res.status(200).json({ ok: true, message: 'pong', timestamp: new Date().toISOString() });
 });
 
 app.get('/api/version', (req, res) => {
-  const sha = process.env.VERCEL_GIT_COMMIT_SHA || 'local';
-  const shortSha = sha === 'local' ? sha : sha.slice(0, 7);
-  res.status(200).json({
-    ok: true,
-    version: '1.0.1',
-    sha,
-    shortSha,
-    timestamp: new Date().toISOString(),
-  });
+  res.status(200).json({ ok: true, version: '1.0.0', timestamp: new Date().toISOString() });
 });
 
 app.use('/api/blogs', blogsRoutes);
@@ -309,7 +284,6 @@ app.use('/api/archive', archiveRoutes);
 app.use('/api/checkout', checkoutRoutes);
 app.use('/api/orders', ordersRoutes);
 app.use('/api/items', itemsRoutes);
-app.use('/api/verification', require('../routes/verification'));
 app.use('/api/contribute', contributeRoutes);
 app.use('/api/partners', partnersRoutes);
 app.use('/api/users', usersRoutes);
@@ -320,11 +294,8 @@ app.use('/api/streams', streamsRoutes);
 app.use('/api/journal', journalRoutes);
 app.use('/api/did', didRoutes);
 app.use('/api/databases', databasesRoutes);
-app.use('/api/deals', dealsRoutes);
-app.use('/api/oauth', oauthTwitchRoutes);
-app.use('/api/oauth', oauthYouTubeRoutes);
-// ORACLE ASSESSMENT ROUTES
-app.use('/api/oracle', oracleRoutes);
+app.use('/api/openclaw', openClawRoutes);
+app.use('/api/openclaw', openClawMetricsRoutes); // Prometheus metrics
 
 // LEGACY MARKETPLACE (gated by LEGACY_MODE flag)
 app.use('/api/artifacts', legacyGate, artifactsRoutes);
@@ -348,9 +319,31 @@ app.post('/api/dev/token', (req, res) => {
   res.json({ ok: true, token });
 });
 
+// Version endpoint - shows deployed git commit
+app.get('/api/version', (req, res) => {
+  res.json({
+    ok: true,
+    sha: '4f443b9b29d51e45eb4c5423ebfcfa1920873979',
+    shortSha: '4f443b9',
+    message: 'fix: Remove eager DB connection on module load, add /api/ping endpoint',
+    timestamp: new Date().toISOString(),
+  });
+});
+
 // Express ping - guaranteed fast, no DB
 app.get('/api/express-ping', (req, res) => {
   res.json({ ok: true, source: 'express' });
+});
+
+// Instant health check (no DB connection)
+app.get('/api/ping', (req, res) => {
+  res.setHeader('X-App-Version', '4f443b9');
+  res.json({
+    ok: true,
+    message: 'API is responding',
+    timestamp: new Date().toISOString(),
+    version: '1.0.1',
+  });
 });
 
 // Health endpoint - returns quickly even if DB is unreachable
@@ -387,20 +380,15 @@ app.get('/api/health', async (req, res) => {
     allowedOrigins.push(...additionalOrigins);
   }
 
-  const stripeConfigured = !!(process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY.startsWith('sk_'));
-
-  res.status(200).json({
+  // Always return 200 with status info
+  res.json({
     ok: true,
     message: 'PVABazaar API is running',
-    timestamp: new Date().toISOString(),
-    env: process.env.NODE_ENV || 'development',
-    site: process.env.PUBLIC_SITE_URL || null,
-    mongodb: mongoConnected ? 'connected' : (dbError || 'disconnected'),
-    stripe: stripeConfigured ? 'configured' : 'not_configured',
+    mongo: mongoConnected,
     ready: process.env.API_READY !== 'false' && mongoConnected,
-    legacyMode: process.env.LEGACY_MODE === 'true',
     nodeEnv: process.env.NODE_ENV || 'development',
-    allowedOrigins,
+    allowedOrigins: allowedOrigins,
+    timestamp: new Date().toISOString(),
     ...(dbError && { dbError }),
   });
 });
@@ -452,11 +440,6 @@ async function autoSeed() {
       admin = new User({ name: 'PVA Admin', email: 'admin@pvabazaar.org', password: 'admin123' });
       await admin.save();
       console.log('✅ Admin user created: admin@pvabazaar.org / admin123');
-    }
-    let richy = await User.findOne({ username: 'richyrichaii' });
-    if (!richy) {
-      await new User({ name: 'Richy Rich', username: 'richyrichaii', email: 'richyrichaii@local', password: 'pva123zxc!' }).save();
-      console.log('✅ User created: richyrichaii / pva123zxc!');
     }
 
     const sampleArtifacts = [

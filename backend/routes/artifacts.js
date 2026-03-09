@@ -4,6 +4,7 @@ const Artifact = require('../models/Artifact');
 const auth = require('../middleware/auth');
 const multer = require('multer');
 const path = require('path');
+const { createArtifactEvent, dispatchToOpenClaw } = require('../utils/openclaw-events');
 
 // Configure multer for image uploads
 const storage = multer.diskStorage({
@@ -214,6 +215,23 @@ router.post('/', auth, upload.array('assetPhotos', 6), async (req, res) => {
       blockchainDetails: { network: network || 'base' },
     });
     await artifact.save();
+    
+    // Dispatch event to OpenClaw (non-blocking)
+    try {
+      const event = createArtifactEvent('created', artifact, req.user, {
+        category: artifact.category,
+        materials: artifact.materials,
+        price: artifact.price,
+        artisan: artifact.artisan,
+      });
+      dispatchToOpenClaw(event).catch(err => {
+        console.error('[OpenClaw] Failed to dispatch artifact.created event:', err.message);
+      });
+    } catch (err) {
+      // Don't fail the request if OpenClaw dispatch fails
+      console.error('[OpenClaw] Error creating event:', err.message);
+    }
+    
     res.status(201).json({ ok: true, artifact });
   } catch (err) {
     res.status(400).json({ ok: false, message: err.message });

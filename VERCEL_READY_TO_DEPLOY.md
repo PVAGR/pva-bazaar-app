@@ -170,6 +170,9 @@ After backend is deployed, update the frontend environment file:
 **[Frontend/.env.production](Frontend/.env.production)**
 ```env
 VITE_API_URL=https://your-actual-backend-url.vercel.app/api
+
+# Optional: Admin panel connection status stale threshold (default: 120000ms = 2 minutes)
+# VITE_STATUS_STALE_MS=180000
 ```
 
 Replace `your-actual-backend-url` with the actual Vercel URL.

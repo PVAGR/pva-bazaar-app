@@ -6,6 +6,7 @@ const stripe = require("../lib/stripeClient");
 const Artifact = require("../models/Artifact");
 const { toPublicItem } = require("../lib/itemNormalize");
 const Order = require("../models/Order");
+const { createTransactionEvent, dispatchToOpenClaw } = require('../utils/openclaw-events');
 
 const PUBLIC_SITE_URL = process.env.PUBLIC_SITE_URL || "https://pvabazaar.org";
 
@@ -74,6 +75,21 @@ router.post("/create-session", async (req, res) => {
     // Update order with session id
     order.stripeSessionId = session.id;
     await order.save();
+
+    // Dispatch transaction created event (non-blocking)
+    dispatchToOpenClaw(createTransactionEvent('created', {
+      _id: order._id,
+      artifactId: item.id,
+      amount: item.priceCents,
+      currency: item.currency,
+      status: order.paymentStatus,
+    }, {
+      itemId: item.id,
+      itemName: item.name,
+      amountCents: item.priceCents,
+      currency: item.currency,
+      sessionId: session.id
+    }));
 
     return res.json({ ok: true, url: session.url, orderId: order._id.toString() });
   } catch (err) {

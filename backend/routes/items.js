@@ -8,6 +8,7 @@ const { normalizeItemInput, toPublicItem } = require('../lib/itemNormalize');
 const { encodeCursor, decodeCursor } = require('../lib/cursor');
 const { authMiddleware } = require('../middleware/auth');
 const mongoose = require('mongoose');
+const { createArtifactEvent, dispatchToOpenClaw } = require('../utils/openclaw-events');
 
 // GET /api/items
 router.get('/', async (req, res) => {
@@ -219,6 +220,12 @@ router.post('/', async (req, res) => {
     const input = normalizeItemInput(req.body);
     const artifact = new Artifact(input);
     await artifact.save();
+
+    dispatchToOpenClaw(createArtifactEvent('created', artifact, null, {
+      route: 'items',
+      actor: 'admin',
+    }));
+
     res.status(201).json({ ok: true, item: toPublicItem(artifact) });
   } catch (err) {
     res.status(400).json({ ok: false, error: err.message });
@@ -234,6 +241,12 @@ router.put('/:id', async (req, res) => {
     const input = normalizeItemInput(req.body);
     const artifact = await Artifact.findByIdAndUpdate(id, input, { new: true });
     if (!artifact) return res.status(404).json({ ok: false, error: 'Item not found' });
+
+    dispatchToOpenClaw(createArtifactEvent('updated', artifact, null, {
+      route: 'items',
+      actor: 'admin',
+    }));
+
     res.json({ ok: true, item: toPublicItem(artifact) });
   } catch (err) {
     res.status(400).json({ ok: false, error: err.message });
@@ -248,6 +261,12 @@ router.delete('/:id', async (req, res) => {
     const { id } = req.params;
     const artifact = await Artifact.findByIdAndDelete(id);
     if (!artifact) return res.status(404).json({ ok: false, error: 'Item not found' });
+
+    dispatchToOpenClaw(createArtifactEvent('deleted', artifact, null, {
+      route: 'items',
+      actor: 'admin',
+    }));
+
     res.json({ ok: true, item: toPublicItem(artifact) });
   } catch (err) {
     res.status(400).json({ ok: false, error: err.message });

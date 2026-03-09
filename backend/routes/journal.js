@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const JournalEntry = require('../models/JournalEntry');
 const { authMiddleware } = require('../middleware/auth');
+const { createSystemEvent, dispatchToOpenClaw } = require('../utils/openclaw-events');
 
 /**
  * @route   GET /api/journal
@@ -92,6 +93,14 @@ router.post('/', authMiddleware, async (req, res) => {
     });
     
     await entry.save();
+
+    dispatchToOpenClaw(createSystemEvent('info', 'Journal entry created', {
+      journalEntryId: entry._id?.toString(),
+      title: entry.title,
+      isPublic: entry.isPublic,
+      userId: req.user.id,
+      route: 'journal',
+    }));
     
     res.status(201).json({ ok: true, item: entry });
   } catch (error) {
@@ -138,6 +147,14 @@ router.put('/:id', authMiddleware, async (req, res) => {
     }
     
     await entry.save();
+
+    dispatchToOpenClaw(createSystemEvent('info', 'Journal entry updated', {
+      journalEntryId: entry._id?.toString(),
+      title: entry.title,
+      isPublic: entry.isPublic,
+      userId: req.user.id,
+      route: 'journal',
+    }));
     
     res.json({ ok: true, item: entry });
   } catch (error) {
@@ -161,6 +178,13 @@ router.delete('/:id', authMiddleware, async (req, res) => {
     if (!entry) {
       return res.status(404).json({ ok: false, error: 'Journal entry not found' });
     }
+
+    dispatchToOpenClaw(createSystemEvent('warning', 'Journal entry deleted', {
+      journalEntryId: entry._id?.toString(),
+      title: entry.title,
+      userId: req.user.id,
+      route: 'journal',
+    }));
     
     res.json({ ok: true, message: 'Journal entry deleted' });
   } catch (error) {

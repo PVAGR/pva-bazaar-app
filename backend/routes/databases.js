@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const CustomDatabase = require('../models/CustomDatabase');
 const { authMiddleware } = require('../middleware/auth');
+const { createSystemEvent, dispatchToOpenClaw } = require('../utils/openclaw-events');
 
 /**
  * @route   GET /api/databases
@@ -65,6 +66,13 @@ router.post('/', authMiddleware, async (req, res) => {
     });
     
     await database.save();
+
+    dispatchToOpenClaw(createSystemEvent('info', 'Custom database created', {
+      databaseId: database._id?.toString(),
+      databaseName: database.name,
+      userId: req.user.id,
+      route: 'databases',
+    }));
     
     res.status(201).json({ ok: true, item: database });
   } catch (error) {
@@ -98,6 +106,13 @@ router.put('/:id', authMiddleware, async (req, res) => {
     });
     
     await database.save();
+
+    dispatchToOpenClaw(createSystemEvent('info', 'Custom database updated', {
+      databaseId: database._id?.toString(),
+      databaseName: database.name,
+      userId: req.user.id,
+      route: 'databases',
+    }));
     
     res.json({ ok: true, item: database });
   } catch (error) {
@@ -121,6 +136,13 @@ router.delete('/:id', authMiddleware, async (req, res) => {
     if (!database) {
       return res.status(404).json({ ok: false, error: 'Database not found' });
     }
+
+    dispatchToOpenClaw(createSystemEvent('warning', 'Custom database deleted', {
+      databaseId: database._id?.toString(),
+      databaseName: database.name,
+      userId: req.user.id,
+      route: 'databases',
+    }));
     
     res.json({ ok: true, message: 'Database deleted' });
   } catch (error) {
@@ -176,6 +198,16 @@ router.post('/:id/entries', authMiddleware, async (req, res) => {
     
     database.updateStats();
     await database.save();
+
+    const addedEntry = database.entries[database.entries.length - 1];
+    dispatchToOpenClaw(createSystemEvent('info', 'Custom database entry added', {
+      databaseId: database._id?.toString(),
+      databaseName: database.name,
+      entryId: addedEntry?._id?.toString(),
+      entryTitle: addedEntry?.title,
+      userId: req.user.id,
+      route: 'databases',
+    }));
     
     res.status(201).json({ ok: true, item: database });
   } catch (error) {
@@ -206,6 +238,14 @@ router.delete('/:id/entries/:entryId', authMiddleware, async (req, res) => {
     
     database.updateStats();
     await database.save();
+
+    dispatchToOpenClaw(createSystemEvent('warning', 'Custom database entry removed', {
+      databaseId: database._id?.toString(),
+      databaseName: database.name,
+      entryId: req.params.entryId,
+      userId: req.user.id,
+      route: 'databases',
+    }));
     
     res.json({ ok: true, item: database });
   } catch (error) {

@@ -86,3 +86,45 @@ If the frontend shows “Failed to fetch”:
 - Sentry is initialized in `api/index.js` with release, environment, and beforeSend scrubber for PII/tokens/admin codes.
 - For full Release Health and tracing, set these env vars in CI/CD.
 - See also: Frontend/SENTRY.md for frontend setup and tracing propagation.
+
+## OpenClaw Bridge (Always-On Assistant)
+
+This backend now exposes OpenClaw bridge endpoints:
+
+- `GET /api/openclaw/status` – reports whether OpenClaw bridge is configured and reachable
+- `POST /api/openclaw/dispatch` – forwards events/messages from PVA Bazaar to OpenClaw
+- `GET /api/openclaw/watchdog-status` – summarizes recent watchdog health/error/alert state from logs
+- `GET /api/openclaw/recent-events?limit=30` – returns structured recent activity log (last N events)
+
+**Enhanced Health Endpoint:**
+- `GET /api/health` – now includes `openclaw` field with gateway status summary
+
+### Required env for bridge
+
+- `OPENCLAW_GATEWAY_URL` (optional but recommended)
+- `OPENCLAW_WEBHOOK_URL` (required for dispatch)
+- `OPENCLAW_HEALTH_URL` (optional override)
+- `OPENCLAW_API_KEY` (optional bearer token)
+- `OPENCLAW_BRIDGE_SECRET` (optional shared secret; pass via `X-OpenClaw-Secret`)
+- `OPENCLAW_WATCHDOG_LOG_PATH` (optional override for watchdog log file path)
+- `OPENCLAW_WATCHDOG_ALERT_PATH` (optional override for watchdog alert log file path)
+
+### Frontend Integration
+
+The admin panel includes:
+- **Connection status dropdown** with color-coded health badges and auto-refresh
+- **OpenClaw summary card** showing state, errors, alerts, and last event timestamp
+- **Test dispatch button** for on-demand connectivity verification
+- **Recent events viewer** showing last 15 watchdog activities with color-coded levels
+
+See `OPENCLAW_INTEGRATION.md` for complete setup and deployment guide.
+
+### Important architecture note
+
+Vercel serverless is not a persistent daemon host. For true behind-the-scenes always-on behavior, run OpenClaw on a persistent host (Linux VM, Docker host, or similar) and keep this backend as the secure bridge/API layer.
+
+Typical flow:
+
+1. OpenClaw runs continuously on a VM (`openclaw onboard --install-daemon`).
+2. PVA backend dispatches jobs/events to OpenClaw through `POST /api/openclaw/dispatch`.
+3. OpenClaw handles autonomous agent work via its own gateway/channels/webhooks.

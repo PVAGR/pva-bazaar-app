@@ -42,8 +42,11 @@ pva-bazaar-app.env
 *magnum-opus-organized.html
 Frontend/dist/
 
-# QA / test reports (generated)
-qa/reports/
+# Local temporary workspace artifacts
+.tmp/
 
-# Coverage output (generated)
-coverage/
+# OpenClaw watchdog logs
+infra/openclaw/logs/
+
+# Nested repository duplicate (do not commit)
+/pva-bazaar-app/
