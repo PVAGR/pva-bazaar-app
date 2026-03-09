@@ -10,7 +10,7 @@ export default function CartPage() {
     <section className="section-card">
       <h2>Cart</h2>
       <p>Your cart is empty. Browse the <Link to="/marketplace" className="link">Marketplace</Link> to add items.</p>
-      <p style={{ color: '#555', fontSize: '0.95rem' }}>
+      <p className="subtle-note">
         We will support both physical and digital products with Stripe checkout.
       </p>
     </section>

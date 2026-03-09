@@ -13,7 +13,7 @@ export default function ManifestoPage() {
       <p>{MISSION_STATEMENT}</p>
       <p>{ANTI_DRUJ}</p>
       <hr />
-      <p style={{ color: '#555', fontSize: '0.95rem' }}>
+      <p className="subtle-note">
         PVA Bazaar monetizes public-domain and scarce-knowledge artifacts through
         AI-verified preservation—starting with retro games and expanding to manuscripts
         and other at-risk cultural objects.
