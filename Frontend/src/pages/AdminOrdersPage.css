@@ -32,10 +32,10 @@
   text-align: left;
 }
 .orders-list tr.selected {
-  background: #e6f2ff;
+  background: var(--highlight, rgba(38, 198, 218, 0.15));
 }
 .orders-list tr:hover {
-  background: #f5faff;
+  background: var(--highlight, rgba(38, 198, 218, 0.1));
   cursor: pointer;
 }
 .load-more {
@@ -43,7 +43,7 @@
   display: block;
   padding: 0.6rem 2rem;
   font-size: 1rem;
-  background: #0077ff;
+  background: var(--accent, #26c6da);
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -70,15 +70,16 @@
   justify-content: center;
 }
 .order-detail-panel {
-  background: #fff;
+  background: var(--bg-secondary, rgba(15, 15, 30, 0.8));
   border-radius: 12px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.13);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.5);
   padding: 2rem 1.5rem 1.5rem 1.5rem;
   min-width: 320px;
   max-width: 95vw;
   max-height: 90vh;
   overflow-y: auto;
   position: relative;
+  color: var(--text-primary, #e0f2f1);
 }
 .order-detail-panel h2 {
   margin-top: 0;
@@ -122,12 +123,13 @@
   justify-content: center;
 }
 .refund-modal-content {
-  background: #fff;
+  background: var(--bg-secondary, rgba(15, 15, 30, 0.8));
   border-radius: 10px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.13);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.5);
   padding: 1.5rem 1.2rem;
   min-width: 260px;
   max-width: 95vw;
+  color: var(--text-primary, #e0f2f1);
 }
 .refund-modal-content label {
   display: block;
