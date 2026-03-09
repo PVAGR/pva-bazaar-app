@@ -45,13 +45,13 @@ export default function ManifestoPage() {
         </p>
       </article>
 
-      <div className="rounded-xl border border-sky-400/40 bg-sky-500/10 px-4 py-4 text-xs text-sky-100">
+      <div className="rounded-xl border border-amber-300/40 bg-amber-300/5 px-4 py-4 text-xs text-amber-100">
         <p className="font-semibold tracking-[0.18em] uppercase mb-2">
           Full lore artifact
         </p>
         <p className="text-zinc-300">
           The full disc narrative lives in{" "}
-          <code className="text-sky-200/90">docs/PASHA-VII-HOME-STATION.mdx</code>{" "}
+          <code className="text-amber-200/90">docs/PASHA-VII-HOME-STATION.mdx</code>{" "}
           in the repo – scarcity index, origin, and the full text of the
           preserved training simulation from that moon.
         </p>

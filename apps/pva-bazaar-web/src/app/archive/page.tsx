@@ -83,7 +83,7 @@ export default function ArchivePage() {
         </ul>
       </div>
 
-      <div className="rounded-xl border border-sky-400/60 bg-sky-500/10 px-4 py-4 text-xs text-sky-100">
+      <div className="rounded-xl border border-amber-300/60 bg-amber-300/5 px-4 py-4 text-xs text-amber-100">
         <p className="mb-2 font-semibold tracking-[0.18em] uppercase">
           How to actually claim an artifact (for now)
         </p>
@@ -100,7 +100,7 @@ export default function ArchivePage() {
               href={process.env.NEXT_PUBLIC_ETSY_SHOP_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="font-medium text-sky-200 underline hover:text-sky-100"
+              className="font-medium text-amber-200 underline hover:text-amber-100"
             >
               Shop on Etsy →
             </a>

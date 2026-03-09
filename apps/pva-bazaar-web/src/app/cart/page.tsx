@@ -23,19 +23,19 @@ export default function CartPage() {
         </p>
       </header>
 
-      <div className="rounded-xl border border-sky-400/60 bg-sky-500/10 px-4 py-5 text-sm text-zinc-300">
+      <div className="rounded-xl border border-amber-300/60 bg-amber-300/5 px-4 py-5 text-sm text-zinc-300">
         <p className="mb-3">
-          <strong className="text-sky-200/90">Right now:</strong> Checkout for
+          <strong className="text-amber-200/90">Right now:</strong> Checkout for
           Kenyan crafts (beadwork, Kisii soapstone) happens on Etsy and any
           linked storefronts. Payments, taxes, and shipping are handled there.
         </p>
         <p className="mb-3">
-          <strong className="text-sky-200/90">This site</strong> is the ritual
+          <strong className="text-amber-200/90">This site</strong> is the ritual
           layer: stories, hashes, provenance, and the archive. When you buy
           via Etsy, you’re still acquiring an artifact we’ve documented here.
         </p>
         <p className="mb-3">
-          <strong className="text-sky-200/90">Later:</strong> We’ll add an
+          <strong className="text-amber-200/90">Later:</strong> We’ll add an
           in-house cart and verification dashboard so you can complete
           acquisition and see your artifacts in one place. Until then, use the
           Archive to find what’s available and follow links to the current
@@ -47,7 +47,7 @@ export default function CartPage() {
               href={process.env.NEXT_PUBLIC_ETSY_SHOP_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="font-medium text-sky-200 underline hover:text-sky-100"
+              className="font-medium text-amber-200 underline hover:text-amber-100"
             >
               Shop on Etsy →
             </a>
@@ -58,7 +58,7 @@ export default function CartPage() {
       <div className="flex flex-wrap gap-3">
         <Link
           href="/archive"
-          className="rounded-lg border border-sky-400/60 bg-sky-500/10 px-4 py-2 text-sm font-medium text-sky-100 hover:bg-sky-500/20 transition-colors"
+          className="rounded-lg border border-amber-300/50 bg-amber-300/10 px-4 py-2 text-sm font-medium text-amber-200 hover:bg-amber-300/20 transition-colors"
         >
           Go to Archive
         </Link>
