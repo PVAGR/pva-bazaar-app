@@ -4,6 +4,15 @@
   padding: 1.5rem 1rem 3rem 1rem;
   font-family: var(--font-sans, sans-serif);
 }
+
+.item-top-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
 .back-link {
   display: inline-block;
   margin-bottom: 1.2rem;
@@ -17,6 +26,11 @@
   color: #0056b3;
   text-decoration: underline;
 }
+
+.artifact-link {
+  font-size: 0.9rem;
+}
+
 .item-detail-layout {
   display: flex;
   gap: 2.5rem;
