@@ -13,6 +13,7 @@ import './AdminTabs.css';
  */
 export default function AdminTabs({ activeTab, onTabChange }) {
   const tabs = [
+    { id: 'dashboard', label: '📊 Dashboard', title: 'Admin overview & metrics' },
     { id: 'archive', label: '📚 Archive', title: 'Manage archive entries' },
     { id: 'marketplace', label: '🛒 Marketplace', title: 'Manage marketplace items' },
     { id: 'users', label: '👥 Users', title: 'User management' },

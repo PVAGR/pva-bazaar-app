@@ -11,6 +11,7 @@ import { clearToken, setToken } from '../lib/auth';
 import { createLogger } from '../lib/logger';
 import { SkeletonList } from '../components/SkeletonLoader.jsx';
 import { LoadingDots } from '../components/LoadingSpinner.jsx';
+import DashboardTab from '../components/DashboardTab.jsx';
 import MarketplaceTab from '../components/MarketplaceTab.jsx';
 import UsersTab from '../components/UsersTab.jsx';
 import CloudStorageTab from '../components/CloudStorageTab.jsx';
@@ -32,7 +33,7 @@ export default function AdminPage() {
   const [error, setError] = useState('');
   const [apiError, setApiError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [activeTab, setActiveTab] = useState('archive');
+  const [activeTab, setActiveTab] = useState('dashboard');
   // Use global theme system
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem('theme');
@@ -830,6 +831,9 @@ export default function AdminPage() {
         <AdminNav />
         <AdminTabs activeTab={activeTab} onTabChange={setActiveTab} />
         <div className="admin-container">
+          {/* Dashboard Tab - Overview */}
+          {activeTab === 'dashboard' && <DashboardTab />}
+
           {/* Archive Tab - Original functionality */}
           {activeTab === 'archive' && (
             <>
