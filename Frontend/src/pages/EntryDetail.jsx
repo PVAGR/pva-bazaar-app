@@ -4,6 +4,9 @@ import rehypeSanitize from 'rehype-sanitize';
 import { Helmet } from 'react-helmet-async';
 import { useParams, Link } from 'react-router-dom';
 import { fetchArchiveEntryById } from '../lib/archiveApi.js';
+import { createLogger } from '../lib/logger';
+
+const logger = createLogger('EntryDetail');
 // Helper to build canonical URLs
 function getCanonicalUrl(path = '') {
   const base = 'https://pvabazaar.org';
@@ -36,7 +39,7 @@ export default function EntryDetail({ entries = [] }) {
         .catch((err) => {
           if (err?.name === 'AbortError') return;
           if (mounted) {
-            console.warn('Failed to fetch entry', err);
+            logger.warn('Failed to fetch entry', err);
             setLoading(false);
           }
         });

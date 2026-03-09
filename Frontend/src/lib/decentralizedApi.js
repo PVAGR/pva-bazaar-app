@@ -1,4 +1,7 @@
 import { apiGet, apiPost, apiPut, apiDelete } from './axios';
+import { createLogger } from './logger';
+
+const logger = createLogger('decentralizedApi');
 
 /**
  * Streams API
@@ -8,7 +11,7 @@ export const fetchStreams = async (params = {}) => {
     const response = await apiGet('/streams', { params });
     return response;
   } catch (error) {
-    console.error('Error fetching streams:', error);
+    logger.error('Error fetching streams', error);
     return { ok: false, error: error.message, items: [] };
   }
 };
@@ -18,7 +21,7 @@ export const fetchStream = async (id) => {
     const response = await apiGet(`/streams/${id}`);
     return response;
   } catch (error) {
-    console.error('Error fetching stream:', error);
+    logger.error('Error fetching stream', error);
     return { ok: false, error: error.message };
   }
 };
@@ -28,7 +31,7 @@ export const createStream = async (data) => {
     const response = await apiPost('/streams', data);
     return response;
   } catch (error) {
-    console.error('Error creating stream:', error);
+    logger.error('Error creating stream', error);
     return { ok: false, error: error.message };
   }
 };
@@ -38,7 +41,7 @@ export const updateStream = async (id, data) => {
     const response = await apiPut(`/streams/${id}`, data);
     return response;
   } catch (error) {
-    console.error('Error updating stream:', error);
+    logger.error('Error updating stream', error);
     return { ok: false, error: error.message };
   }
 };
@@ -48,7 +51,7 @@ export const deleteStream = async (id) => {
     const response = await apiDelete(`/streams/${id}`);
     return response;
   } catch (error) {
-    console.error('Error deleting stream:', error);
+    logger.error('Error deleting stream', error);
     return { ok: false, error: error.message };
   }
 };
@@ -61,7 +64,7 @@ export const fetchJournalEntries = async (params = {}) => {
     const response = await apiGet('/journal', { params });
     return response;
   } catch (error) {
-    console.error('Error fetching journal entries:', error);
+    logger.error('Error fetching journal entries', error);
     return { ok: false, error: error.message, items: [] };
   }
 };
@@ -71,7 +74,7 @@ export const fetchJournalEntry = async (id) => {
     const response = await apiGet(`/journal/${id}`);
     return response;
   } catch (error) {
-    console.error('Error fetching journal entry:', error);
+    logger.error('Error fetching journal entry', error);
     return { ok: false, error: error.message };
   }
 };
@@ -81,7 +84,7 @@ export const createJournalEntry = async (data) => {
     const response = await apiPost('/journal', data);
     return response;
   } catch (error) {
-    console.error('Error creating journal entry:', error);
+    logger.error('Error creating journal entry', error);
     return { ok: false, error: error.message };
   }
 };
@@ -91,7 +94,7 @@ export const updateJournalEntry = async (id, data) => {
     const response = await apiPut(`/journal/${id}`, data);
     return response;
   } catch (error) {
-    console.error('Error updating journal entry:', error);
+    logger.error('Error updating journal entry', error);
     return { ok: false, error: error.message };
   }
 };
@@ -101,7 +104,7 @@ export const deleteJournalEntry = async (id) => {
     const response = await apiDelete(`/journal/${id}`);
     return response;
   } catch (error) {
-    console.error('Error deleting journal entry:', error);
+    logger.error('Error deleting journal entry', error);
     return { ok: false, error: error.message };
   }
 };
@@ -114,7 +117,7 @@ export const fetchDID = async () => {
     const response = await apiGet('/did');
     return response;
   } catch (error) {
-    console.error('Error fetching DID:', error);
+    logger.error('Error fetching DID', error);
     return { ok: false, error: error.message };
   }
 };
@@ -124,7 +127,7 @@ export const createDID = async (data = {}) => {
     const response = await apiPost('/did', data);
     return response;
   } catch (error) {
-    console.error('Error creating DID:', error);
+    logger.error('Error creating DID', error);
     return { ok: false, error: error.message };
   }
 };
@@ -134,7 +137,7 @@ export const updateDID = async (data) => {
     const response = await apiPut('/did', data);
     return response;
   } catch (error) {
-    console.error('Error updating DID:', error);
+    logger.error('Error updating DID', error);
     return { ok: false, error: error.message };
   }
 };
@@ -147,7 +150,7 @@ export const fetchDatabases = async () => {
     const response = await apiGet('/databases');
     return response;
   } catch (error) {
-    console.error('Error fetching databases:', error);
+    logger.error('Error fetching databases', error);
     return { ok: false, error: error.message, items: [] };
   }
 };
@@ -157,7 +160,7 @@ export const fetchDatabase = async (id) => {
     const response = await apiGet(`/databases/${id}`);
     return response;
   } catch (error) {
-    console.error('Error fetching database:', error);
+    logger.error('Error fetching database', error);
     return { ok: false, error: error.message };
   }
 };
@@ -167,7 +170,7 @@ export const createDatabase = async (data) => {
     const response = await apiPost('/databases', data);
     return response;
   } catch (error) {
-    console.error('Error creating database:', error);
+    logger.error('Error creating database', error);
     return { ok: false, error: error.message };
   }
 };
@@ -177,7 +180,7 @@ export const updateDatabase = async (id, data) => {
     const response = await apiPut(`/databases/${id}`, data);
     return response;
   } catch (error) {
-    console.error('Error updating database:', error);
+    logger.error('Error updating database', error);
     return { ok: false, error: error.message };
   }
 };
@@ -187,7 +190,7 @@ export const deleteDatabase = async (id) => {
     const response = await apiDelete(`/databases/${id}`);
     return response;
   } catch (error) {
-    console.error('Error deleting database:', error);
+    logger.error('Error deleting database', error);
     return { ok: false, error: error.message };
   }
 };
@@ -197,7 +200,7 @@ export const addDatabaseEntry = async (databaseId, data) => {
     const response = await apiPost(`/databases/${databaseId}/entries`, data);
     return response;
   } catch (error) {
-    console.error('Error adding database entry:', error);
+    logger.error('Error adding database entry', error);
     return { ok: false, error: error.message };
   }
 };
@@ -207,7 +210,8 @@ export const deleteDatabaseEntry = async (databaseId, entryId) => {
     const response = await apiDelete(`/databases/${databaseId}/entries/${entryId}`);
     return response;
   } catch (error) {
-    console.error('Error deleting database entry:', error);
+    logger.error('Error deleting database entry', error);
     return { ok: false, error: error.message };
   }
 };
+

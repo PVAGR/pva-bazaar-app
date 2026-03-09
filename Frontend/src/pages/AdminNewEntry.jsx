@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createArchiveEntry, requestAdminToken } from '../lib/archiveApi.js';
 import { PromptModal, AlertModal } from '../components/ui/DialogModals.jsx';
+import { createLogger } from '../lib/logger';
+
+const logger = createLogger('AdminNewEntry');
 
 export default function AdminNewEntry({ onCreated }) {
   const navigate = useNavigate();
@@ -124,7 +127,7 @@ export default function AdminNewEntry({ onCreated }) {
       setStatus('Saved to backend');
       navigate(`/entry/${newId}`);
     } catch (err) {
-      console.error('Save failed', err);
+      logger.error('Save failed', err);
       setStatus('Failed to save');
       setAlertMsg(`Failed to save entry: ${err.message}\n\nPlease check your connection and try again.`);
     } finally {

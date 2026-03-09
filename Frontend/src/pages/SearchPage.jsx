@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { apiFetch } from '../lib/api';
+import { createLogger } from '../lib/logger';
+
+const logger = createLogger('SearchPage');
 
 export default function SearchPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -23,7 +26,7 @@ export default function SearchPage() {
         if (!res.ok) throw new Error(data.message || 'Search failed');
         setResults(data.results || []);
       } catch (err) {
-        console.error('Search error:', err);
+        logger.error('Search error', err);
         setError(err.message);
         setResults([]);
       } finally {

@@ -1,5 +1,7 @@
 import '../data/entries.js';
+import { createLogger } from './logger';
 
+const logger = createLogger('Entries');
 const CUSTOM_KEY = 'journal:customEntries';
 
 function normalize(raw) {
@@ -35,7 +37,7 @@ export function addLocalEntry(entry) {
     existing.unshift(entry);
     localStorage.setItem(CUSTOM_KEY, JSON.stringify(existing));
   } catch (err) {
-    console.warn('Failed to store local entry', err);
+    logger.warn('Failed to store local entry', err);
   }
 }
 

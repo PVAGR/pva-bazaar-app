@@ -1,6 +1,9 @@
 import axios from "axios";
 import { ENV } from "../config/env";
 import { clearToken, getToken } from "./auth";
+import { createLogger } from "./logger";
+
+const logger = createLogger('API');
 
 // Internal backend-only Axios client
 const api = axios.create({
@@ -34,11 +37,15 @@ api.interceptors.response.use(
 
     // Network/CORS errors often have no response/status
     if (!status) {
-      console.error("[API NETWORK ERROR]", {
-        message: error?.message,
-        code: error?.code,
-        config: error?.config,
-      });
+      logger.error(
+        'Network error',
+        error,
+        {
+          message: error?.message,
+          code: error?.code,
+          url: error?.config?.url,
+        }
+      );
       // Don't show alert for network errors - let components handle gracefully
       return Promise.reject(error);
     }
@@ -58,7 +65,10 @@ api.interceptors.response.use(
         error?.message ||
         `Server error (${status})`;
 
-      console.error("[API 500+]", msg, error?.response?.data);
+      logger.error(`Server error (${status})`, error, {
+        message: msg,
+        data: error?.response?.data,
+      });
     }
 
     return Promise.reject(error);
