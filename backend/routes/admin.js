@@ -65,4 +65,195 @@ router.get('/secure-status', adminSession, (req, res) => {
   res.json({ ok: true, status: 'admin-ok', user: req.admin, timestamp: new Date().toISOString() });
 });
 
+// ========================================
+// USER MANAGEMENT ENDPOINTS
+// ========================================
+
+const User = require('../models/User');
+
+/**
+ * GET /api/admin/users
+ * Fetch all users with pagination and filtering
+ */
+router.get('/users', adminSession, async (req, res) => {
+  try {
+    const { 
+      page = 1, 
+      limit = 50, 
+      search = '', 
+      role = '', 
+      sortBy = 'createdAt', 
+      order = 'desc' 
+    } = req.query;
+
+    // Build filter query
+    const filter = {};
+    
+    if (search) {
+      filter.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
+        { username: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    // Note: Role is not in User schema yet, but we can add it if needed
+    // For now, check if email matches admin pattern
+    
+    // Calculate pagination
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const sortOrder = order === 'asc' ? 1 : -1;
+    const sortOptions = { [sortBy]: sortOrder };
+
+    // Fetch users (exclude password)
+    const users = await User.find(filter)
+      .select('-password -oauthTokens')
+      .sort(sortOptions)
+      .skip(skip)
+      .limit(parseInt(limit))
+      .lean();
+
+    // Get total count for pagination
+    const total = await User.countDocuments(filter);
+
+    // Add computed fields
+    const enrichedUsers = users.map(user => ({
+      ...user,
+      role: user.email?.includes('admin') ? 'admin' : 'user',
+      status: 'active' // Add status logic later if needed
+    }));
+
+    res.json({
+      ok: true,
+      users: enrichedUsers,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / parseInt(limit))
+      }
+    });
+  } catch (error) {
+    console.error('Admin get users error:', error);
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+/**
+ * GET /api/admin/users/:id
+ * Get detailed user information
+ */
+router.get('/users/:id', adminSession, async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id)
+      .select('-password -oauthTokens')
+      .lean();
+
+    if (!user) {
+      return res.status(404).json({ ok: false, error: 'User not found' });
+    }
+
+    // Add computed fields
+    const enrichedUser = {
+      ...user,
+      role: user.email?.includes('admin') ? 'admin' : 'user',
+      status: 'active'
+    };
+
+    res.json({ ok: true, user: enrichedUser });
+  } catch (error) {
+    console.error('Admin get user error:', error);
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+/**
+ * PUT /api/admin/users/:id
+ * Update user information
+ */
+router.put('/users/:id', adminSession, async (req, res) => {
+  try {
+    const { name, email, username, profilePicture } = req.body;
+    
+    const updates = {};
+    if (name !== undefined) updates.name = name;
+    if (email !== undefined) updates.email = email;
+    if (username !== undefined) updates.username = username;
+    if (profilePicture !== undefined) updates.profilePicture = profilePicture;
+    updates.updatedAt = new Date();
+
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      { $set: updates },
+      { new: true, runValidators: true }
+    ).select('-password -oauthTokens');
+
+    if (!user) {
+      return res.status(404).json({ ok: false, error: 'User not found' });
+    }
+
+    res.json({ ok: true, user, message: 'User updated successfully' });
+  } catch (error) {
+    console.error('Admin update user error:', error);
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+/**
+ * DELETE /api/admin/users/:id
+ * Delete a user account
+ */
+router.delete('/users/:id', adminSession, async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    
+    if (!user) {
+      return res.status(404).json({ ok: false, error: 'User not found' });
+    }
+
+    // Prevent deleting admin users
+    if (user.email?.includes('admin')) {
+      return res.status(403).json({ ok: false, error: 'Cannot delete admin users' });
+    }
+
+    await User.findByIdAndDelete(req.params.id);
+
+    res.json({ ok: true, message: 'User deleted successfully' });
+  } catch (error) {
+    console.error('Admin delete user error:', error);
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+/**
+ * GET /api/admin/stats
+ * Get admin dashboard statistics
+ */
+router.get('/stats', adminSession, async (req, res) => {
+  try {
+    const totalUsers = await User.countDocuments();
+    const newUsersThisMonth = await User.countDocuments({
+      createdAt: { $gte: new Date(new Date().setDate(1)) }
+    });
+    
+    const users = await User.find().select('createdAt email').lean();
+    const activeUsers = users.length; // Simplified - add real activity tracking later
+    const adminUsers = users.filter(u => u.email?.includes('admin')).length;
+
+    res.json({
+      ok: true,
+      stats: {
+        totalUsers,
+        activeUsers,
+        adminUsers,
+        newUsersThisMonth,
+        growthRate: totalUsers > 0 ? ((newUsersThisMonth / totalUsers) * 100).toFixed(1) : 0
+      }
+    });
+  } catch (error) {
+    console.error('Admin stats error:', error);
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
 module.exports = router;
