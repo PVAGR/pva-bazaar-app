@@ -31,17 +31,13 @@
 
 .archive-library {
   min-height: 100vh;
-  height: 100vh;
+  height: auto;
   background: var(--bg-primary);
   color: var(--text-primary);
   margin: 0;
   padding: 0;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  overflow: hidden;
+  position: relative;
+  overflow: visible;
   transition: background 0.3s ease, color 0.3s ease;
 }
 
@@ -174,15 +170,15 @@
   display: grid;
   grid-template-columns: 350px 1fr;
   gap: 0;
-  height: calc(100vh - 180px);
-  overflow: hidden;
+  align-items: start;
 }
 
 .archive-sidebar {
   background: rgba(0, 0, 0, 0.4);
   border-right: 1px solid #333;
-  height: 100%;
-  max-height: calc(100vh - 200px);
+  position: sticky;
+  top: 0;
+  max-height: calc(100vh - 16px);
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
@@ -314,11 +310,9 @@
 
 .archive-content {
   padding: 2.5rem;
-  overflow-y: auto;
-  overflow-x: hidden;
-  height: 100%;
+  overflow: visible;
+  height: auto;
   scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
 }
 
 .archive-content::-webkit-scrollbar {
@@ -600,16 +594,17 @@
     position: relative;
     height: auto;
     min-height: 100vh;
-    overflow: auto;
+    overflow: visible;
   }
 
   .archive-layout {
     grid-template-columns: 1fr;
     height: auto;
-    min-height: calc(100vh - 160px);
+    min-height: 0;
   }
 
   .archive-sidebar {
+    position: static;
     max-height: 400px;
     height: auto;
     border-right: none;
