@@ -8,6 +8,8 @@ import AdminNav from '../components/AdminNav.jsx';
 import HelpTip from '../components/HelpTip.jsx';
 import { clearToken, setToken } from '../lib/auth';
 import { createLogger } from '../lib/logger';
+import { SkeletonList } from '../components/SkeletonLoader.jsx';
+import { LoadingDots } from '../components/LoadingSpinner.jsx';
 import './AdminPage.css';
 
 const logger = createLogger('AdminPage');
@@ -42,6 +44,7 @@ export default function AdminPage() {
   });
   
   const [savedEntries, setSavedEntries] = useState([]);
+  const [entriesLoading, setEntriesLoading] = useState(true);
   const [showSuccess, setShowSuccess] = useState(false);
   const [editingEntry, setEditingEntry] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null); // {id, title} for confirmation modal
@@ -269,6 +272,7 @@ export default function AdminPage() {
     return () => clearInterval(intervalId);
   }, [showConnectionStatus, runConnectionCheck]);
   const loadEntriesFromServer = async () => {
+    setEntriesLoading(true);
     try {
       const response = await fetchArchiveEntries({ limit: 100 });
       if (response.ok && Array.isArray(response.items)) {
@@ -279,6 +283,8 @@ export default function AdminPage() {
     } catch (err) {
       logger.error('Failed to load entries from server', err);
       setSavedEntries([]);
+    } finally {
+      setEntriesLoading(false);
     }
   };
   const handleLogin = async (e) => {
@@ -747,7 +753,9 @@ export default function AdminPage() {
                           </div>
                           
                           {recentEvents.loading && (
-                            <div className="openclaw-events__loading">Loading events...</div>
+                            <div className="openclaw-events__loading">
+                              <LoadingDots size="small" label="Loading events..." />
+                            </div>
                           )}
                           
                           {recentEvents.error && (
@@ -831,7 +839,9 @@ export default function AdminPage() {
             </div>
             <div className="sidebar-section">
               <h2>📝 Your Entries</h2>
-              {savedEntries.length === 0 ? (
+              {entriesLoading ? (
+                <SkeletonList count={5} />
+              ) : savedEntries.length === 0 ? (
                 <p className="empty-message">No custom entries yet</p>
               ) : (
                 <div className="entries-list">

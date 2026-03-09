@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { fetchMarketplaceItems } from "../lib/api";
+import { SkeletonGrid } from "../components/SkeletonLoader.jsx";
+import { LoadingDots } from "../components/LoadingSpinner.jsx";
 import useDebounce from "../hooks/useDebounce";
 import "./MarketplacePage.css";
 
@@ -66,6 +68,8 @@ export default function MarketplacePage() {
     if (!loading && nextCursor) fetchData();
   }
 
+  const isInitialLoading = loading && items.length === 0;
+
   return (
     <main className="marketplace-page">
       <section className="marketplace-header">
@@ -97,38 +101,41 @@ export default function MarketplacePage() {
         </div>
       </section>
       <section className="marketplace-items">
+        {isInitialLoading && <SkeletonGrid columns={3} rows={2} />}
         {items.length === 0 && !loading && (
           <div className="empty">
             <p>No items found.</p>
             {isAuthed ? <Link to="/items/new">Create your first listing</Link> : null}
           </div>
         )}
-        <div className="item-grid">
-          {items.map(item => (
-            <Link
-              to={`/marketplace/${encodeURIComponent(item.slug || item.id)}`}
-              className="item-card-link"
-              key={item.id || item._id}
-            >
-            <article className="item-card" tabIndex={0} aria-label={item.name || item.title}>
-              <img src={(item.media && item.media[0]) || item.image || "/placeholder.png"} alt={item.name || item.title} className="item-image" />
-              <div className="item-info">
-                <h2 className="item-title">{item.name || item.title}</h2>
-                <div className="item-meta">
-                  <span className="item-category">{item.category}</span>
-                  {typeof item.priceCents === "number" ? (
-                    <span className="item-price">${(item.priceCents / 100).toFixed(2)}</span>
-                  ) : null}
+        {items.length > 0 && (
+          <div className="item-grid">
+            {items.map(item => (
+              <Link
+                to={`/marketplace/${encodeURIComponent(item.slug || item.id)}`}
+                className="item-card-link"
+                key={item.id || item._id}
+              >
+              <article className="item-card" tabIndex={0} aria-label={item.name || item.title}>
+                <img src={(item.media && item.media[0]) || item.image || "/placeholder.png"} alt={item.name || item.title} className="item-image" />
+                <div className="item-info">
+                  <h2 className="item-title">{item.name || item.title}</h2>
+                  <div className="item-meta">
+                    <span className="item-category">{item.category}</span>
+                    {typeof item.priceCents === "number" ? (
+                      <span className="item-price">${(item.priceCents / 100).toFixed(2)}</span>
+                    ) : null}
+                  </div>
+                  <p className="item-desc">{item.description}</p>
                 </div>
-                <p className="item-desc">{item.description}</p>
-              </div>
-            </article>
-            </Link>
-          ))}
-        </div>
+              </article>
+              </Link>
+            ))}
+          </div>
+        )}
         {nextCursor && (
           <button className="load-more" onClick={handleLoadMore} disabled={loading}>
-            {loading ? "Loading..." : "Load More"}
+            {loading ? <LoadingDots size="small" label="Loading more" /> : "Load More"}
           </button>
         )}
         {error && <div className="error">{error}</div>}

@@ -7,7 +7,12 @@ function getCanonicalUrl(path = '') {
 }
 import { Link } from 'react-router-dom';
 import { fetchArchiveEntries } from '../lib/api';
+import { createLogger } from '../lib/logger';
+import { SkeletonArticle, SkeletonList } from '../components/SkeletonLoader.jsx';
+import LoadingSpinner from '../components/LoadingSpinner.jsx';
 import './ArchiveLibraryPage.css';
+
+const logger = createLogger('ArchiveLibrary');
 
 const archiveEntries = [
   {
@@ -171,6 +176,7 @@ export default function ArchiveLibraryPage() {
   const [markdown, setMarkdown] = useState('');
   const [loading, setLoading] = useState(false);
   const [customEntries, setCustomEntries] = useState([]);
+  const [customEntriesLoading, setCustomEntriesLoading] = useState(true);
   const [viewMode, setViewMode] = useState('archive'); // 'archive' or 'blog'
   // Use global theme system
   const [darkMode, setDarkMode] = useState(() => {
@@ -182,6 +188,7 @@ export default function ArchiveLibraryPage() {
 
   // Function to load custom entries from API
   const loadCustomEntries = async () => {
+    setCustomEntriesLoading(true);
     try {
       const result = await fetchArchiveEntries({ limit: 100 });
       if (result.ok && Array.isArray(result.items)) {
@@ -192,6 +199,8 @@ export default function ArchiveLibraryPage() {
     } catch (error) {
       logger.error('Failed to load custom entries', error);
       setCustomEntries([]);
+    } finally {
+      setCustomEntriesLoading(false);
     }
   };
 
@@ -233,7 +242,7 @@ export default function ArchiveLibraryPage() {
         setMarkdown(text);
       }
     } catch (error) {
-      console.error('Failed to load entry:', error);
+      logger.error('Failed to load archive entry', error, { entryId: entry?.id, entryFile: entry?.file });
       setMarkdown('# Error\n\nFailed to load this archive entry.');
     } finally {
       setLoading(false);
@@ -405,21 +414,25 @@ export default function ArchiveLibraryPage() {
 
           <div className="entry-list">
             <h3>Documents</h3>
-            {filteredEntries
-              .sort((a, b) => a.priority - b.priority)
-              .map((entry) => (
-                <button
-                  key={entry.id}
-                  className={`entry-item ${selectedEntry?.id === entry.id ? 'active' : ''}`}
-                  onClick={() => loadMarkdown(entry)}
-                >
-                  <div className="entry-title">{entry.title}</div>
-                  <div className="entry-meta">
-                    <span className="entry-category">{entry.category}</span>
-                    <span className="entry-words">{entry.wordCount} words</span>
-                  </div>
-                </button>
-              ))}
+            {viewMode === 'blog' && customEntriesLoading ? (
+              <SkeletonList count={5} />
+            ) : (
+              filteredEntries
+                .sort((a, b) => a.priority - b.priority)
+                .map((entry) => (
+                  <button
+                    key={entry.id}
+                    className={`entry-item ${selectedEntry?.id === entry.id ? 'active' : ''}`}
+                    onClick={() => loadMarkdown(entry)}
+                  >
+                    <div className="entry-title">{entry.title}</div>
+                    <div className="entry-meta">
+                      <span className="entry-category">{entry.category}</span>
+                      <span className="entry-words">{entry.wordCount} words</span>
+                    </div>
+                  </button>
+                ))
+            )}
           </div>
         </aside>
 
@@ -474,8 +487,8 @@ export default function ArchiveLibraryPage() {
 
           {loading && (
             <div className="archive-loading">
-              <div className="spinner"></div>
-              <p>Loading archive entry...</p>
+              <LoadingSpinner size="medium" label="Loading archive entry..." />
+              <SkeletonArticle />
             </div>
           )}
 
