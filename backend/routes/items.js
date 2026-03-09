@@ -8,15 +8,43 @@ const { normalizeItemInput, toPublicItem } = require('../lib/itemNormalize');
 const { encodeCursor, decodeCursor } = require('../lib/cursor');
 const { authMiddleware } = require('../middleware/auth');
 const mongoose = require('mongoose');
+const jwt = require('jsonwebtoken');
 const { createArtifactEvent, dispatchToOpenClaw } = require('../utils/openclaw-events');
+
+function hasAdminAccess(req) {
+  const adminCode = req.headers['x-admin-code'];
+  if (adminCode && adminCode === process.env.ADMIN_SECRET_CODE) {
+    return true;
+  }
+
+  const cookieToken = req.cookies && req.cookies.admin_token;
+  if (cookieToken) {
+    try {
+      const decoded = jwt.verify(cookieToken, process.env.JWT_SECRET);
+      if (decoded && decoded.role === 'admin') return true;
+    } catch (_) {
+    }
+  }
+
+  const authHeader = req.headers.authorization || '';
+  const bearerToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  if (bearerToken) {
+    try {
+      const decoded = jwt.verify(bearerToken, process.env.JWT_SECRET);
+      if (decoded && decoded.role === 'admin') return true;
+    } catch (_) {
+    }
+  }
+
+  return false;
+}
 
 // GET /api/items
 router.get('/', async (req, res) => {
   try {
     const limit = Math.max(1, Math.min(Number(req.query.limit) || 12, 50));
     const { cursor, category, tag, q, sort = 'new', includeDrafts } = req.query;
-    // Admin draft access (simple check: X-Admin-Code header or session)
-    const isAdmin = req.headers['x-admin-code'] === process.env.ADMIN_SECRET_CODE;
+    const isAdmin = hasAdminAccess(req);
     const filter = {};
     if (!isAdmin || includeDrafts !== 'true') {
       filter.status = 'published';
@@ -70,7 +98,7 @@ router.get('/', async (req, res) => {
 router.get('/:slugOrId', async (req, res) => {
   try {
     const { slugOrId } = req.params;
-    const isAdmin = req.headers['x-admin-code'] === process.env.ADMIN_SECRET_CODE;
+    const isAdmin = hasAdminAccess(req);
     let doc = null;
     if (mongoose.Types.ObjectId.isValid(slugOrId)) {
       doc = await Artifact.findById(slugOrId);
@@ -214,7 +242,7 @@ router.post('/register', authMiddleware, async (req, res) => {
 
 // POST /api/items (admin only)
 router.post('/', async (req, res) => {
-  const isAdmin = req.headers['x-admin-code'] === process.env.ADMIN_SECRET_CODE;
+  const isAdmin = hasAdminAccess(req);
   if (!isAdmin) return res.status(401).json({ ok: false, error: 'Unauthorized' });
   try {
     const input = normalizeItemInput(req.body);
@@ -234,7 +262,7 @@ router.post('/', async (req, res) => {
 
 // PUT /api/items/:id (admin only)
 router.put('/:id', async (req, res) => {
-  const isAdmin = req.headers['x-admin-code'] === process.env.ADMIN_SECRET_CODE;
+  const isAdmin = hasAdminAccess(req);
   if (!isAdmin) return res.status(401).json({ ok: false, error: 'Unauthorized' });
   try {
     const { id } = req.params;
@@ -255,7 +283,7 @@ router.put('/:id', async (req, res) => {
 
 // DELETE /api/items/:id (admin only)
 router.delete('/:id', async (req, res) => {
-  const isAdmin = req.headers['x-admin-code'] === process.env.ADMIN_SECRET_CODE;
+  const isAdmin = hasAdminAccess(req);
   if (!isAdmin) return res.status(401).json({ ok: false, error: 'Unauthorized' });
   try {
     const { id } = req.params;

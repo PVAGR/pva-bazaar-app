@@ -27,6 +27,8 @@ import './MarketplaceTab.css';
 
 const logger = createLogger('MarketplaceTab');
 
+const getItemId = (item) => item?._id || item?.id;
+
 export default function MarketplaceTab() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -35,6 +37,8 @@ export default function MarketplaceTab() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState('newest');
 
   const [formData, setFormData] = useState({
     title: '',
@@ -50,6 +54,34 @@ export default function MarketplaceTab() {
   useEffect(() => {
     loadItems();
   }, []);
+
+  const filteredItems = items
+    .filter((item) => {
+      if (!searchQuery.trim()) return true;
+      const q = searchQuery.toLowerCase();
+      return [
+        item.title,
+        item.description,
+        item.category,
+        item.origin,
+      ].some((field) => String(field || '').toLowerCase().includes(q));
+    })
+    .sort((a, b) => {
+      if (sortBy === 'price-asc') return (a.price || 0) - (b.price || 0);
+      if (sortBy === 'price-desc') return (b.price || 0) - (a.price || 0);
+      if (sortBy === 'stock-asc') return (a.stock || 0) - (b.stock || 0);
+      if (sortBy === 'stock-desc') return (b.stock || 0) - (a.stock || 0);
+      const aDate = new Date(a.updatedAt || a.createdAt || 0).getTime();
+      const bDate = new Date(b.updatedAt || b.createdAt || 0).getTime();
+      return bDate - aDate;
+    });
+
+  const stats = {
+    total: items.length,
+    outOfStock: items.filter((item) => Number(item.stock || 0) === 0).length,
+    lowStock: items.filter((item) => Number(item.stock || 0) > 0 && Number(item.stock || 0) < 5).length,
+    drafts: items.filter((item) => item.status === 'draft').length,
+  };
 
   const loadItems = async () => {
     setLoading(true);
@@ -89,7 +121,7 @@ export default function MarketplaceTab() {
 
       let response;
       if (isEditing && selectedItem) {
-        response = await apiPut(`/items/${selectedItem.id}`, itemData);
+        response = await apiPut(`/items/${getItemId(selectedItem)}`, itemData);
       } else {
         response = await apiPost('/items', itemData);
       }
@@ -134,10 +166,13 @@ export default function MarketplaceTab() {
     setSubmitting(true);
     setError('');
     try {
-      const response = await apiDelete(`/items/${item.id}`);
+      const response = await apiDelete(`/items/${getItemId(item)}`);
       if (response.ok) {
         setSuccess('Item deleted successfully!');
         setTimeout(() => setSuccess(''), 3000);
+        if (selectedItem && getItemId(selectedItem) === getItemId(item)) {
+          resetForm();
+        }
         await loadItems();
       } else {
         setError(response.error || 'Failed to delete item');
@@ -174,26 +209,72 @@ export default function MarketplaceTab() {
         </p>
       </div>
 
+      <div className="marketplace-stats">
+        <div className="market-stat">
+          <span>Total</span>
+          <strong>{stats.total}</strong>
+        </div>
+        <div className="market-stat">
+          <span>Out of stock</span>
+          <strong>{stats.outOfStock}</strong>
+        </div>
+        <div className="market-stat">
+          <span>Low stock</span>
+          <strong>{stats.lowStock}</strong>
+        </div>
+        <div className="market-stat">
+          <span>Drafts</span>
+          <strong>{stats.drafts}</strong>
+        </div>
+      </div>
+
       {error && <div className="error-message">❌ {error}</div>}
       {success && <div className="success-message">✅ {success}</div>}
 
       <div className="marketplace-layout">
         <div className="marketplace-sidebar">
-          <h3>Items ({items.length})</h3>
+          <div className="sidebar-controls">
+            <h3>Items ({filteredItems.length})</h3>
+            <input
+              type="text"
+              className="sidebar-search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search items..."
+            />
+            <select
+              className="sidebar-sort"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+            >
+              <option value="newest">Newest</option>
+              <option value="price-asc">Price: Low to High</option>
+              <option value="price-desc">Price: High to Low</option>
+              <option value="stock-asc">Stock: Low to High</option>
+              <option value="stock-desc">Stock: High to Low</option>
+            </select>
+          </div>
           {loading ? (
             <SkeletonList count={5} />
-          ) : items.length === 0 ? (
+          ) : filteredItems.length === 0 ? (
             <p className="empty-message">No items yet. Create your first item!</p>
           ) : (
             <div className="items-list">
-              {items.map(item => (
+              {filteredItems.map(item => (
                 <div
-                  key={item.id || item._id}
-                  className={`item-preview ${selectedItem?.id === item.id ? 'active' : ''}`}
+                  key={getItemId(item)}
+                  className={`item-preview ${getItemId(selectedItem) === getItemId(item) ? 'active' : ''}`}
                   onClick={() => handleEdit(item)}
                 >
                   {item.imageUrl && (
-                    <img src={item.imageUrl} alt={item.title} className="item-thumbnail" />
+                    <img
+                      src={item.imageUrl}
+                      alt={item.title}
+                      className="item-thumbnail"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
                   )}
                   <div className="item-info">
                     <strong>{item.title}</strong>
