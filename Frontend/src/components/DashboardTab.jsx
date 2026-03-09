@@ -12,7 +12,7 @@ import './DashboardTab.css';
 
 const logger = createLogger('DashboardTab');
 
-export default function DashboardTab() {
+export default function DashboardTab({ onNavigateTab }) {
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState({
     users: { total: 0, active: 0, admins: 0, newThisMonth: 0, loading: true },
@@ -196,7 +196,7 @@ export default function DashboardTab() {
             </div>
           </div>
           <div className="metric-footer">
-            <a href="#" onClick={(e) => { e.preventDefault(); /* Switch to users tab */ }}>
+            <a href="#" onClick={(e) => { e.preventDefault(); onNavigateTab?.('users'); }}>
               View Details →
             </a>
           </div>
@@ -225,7 +225,7 @@ export default function DashboardTab() {
             </div>
           </div>
           <div className="metric-footer">
-            <a href="#" onClick={(e) => { e.preventDefault(); /* Switch to marketplace tab */ }}>
+            <a href="#" onClick={(e) => { e.preventDefault(); onNavigateTab?.('marketplace'); }}>
               Manage Items →
             </a>
           </div>
@@ -254,7 +254,7 @@ export default function DashboardTab() {
             )}
           </div>
           <div className="metric-footer">
-            <a href="#" onClick={(e) => { e.preventDefault(); /* Switch to archive tab */ }}>
+            <a href="#" onClick={(e) => { e.preventDefault(); onNavigateTab?.('archive'); }}>
               View Archive →
             </a>
           </div>
@@ -279,7 +279,7 @@ export default function DashboardTab() {
             </div>
           </div>
           <div className="metric-footer">
-            <a href="#" onClick={(e) => { e.preventDefault(); /* Switch to cloud tab */ }}>
+            <a href="#" onClick={(e) => { e.preventDefault(); onNavigateTab?.('cloud'); }}>
               Manage Storage →
             </a>
           </div>
@@ -290,27 +290,27 @@ export default function DashboardTab() {
       <div className="quick-actions-panel">
         <h3>⚡ Quick Actions</h3>
         <div className="actions-grid">
-          <button className="action-card" onClick={() => { /* Navigate to users tab */ }}>
+          <button className="action-card" onClick={() => onNavigateTab?.('users')}>
             <span className="action-icon">👥</span>
             <span className="action-label">Manage Users</span>
           </button>
-          <button className="action-card" onClick={() => { /* Navigate to marketplace tab */ }}>
+          <button className="action-card" onClick={() => onNavigateTab?.('marketplace')}>
             <span className="action-icon">➕</span>
             <span className="action-label">Add Marketplace Item</span>
           </button>
-          <button className="action-card" onClick={() => { /* Navigate to archive tab */ }}>
+          <button className="action-card" onClick={() => onNavigateTab?.('archive')}>
             <span className="action-icon">📝</span>
             <span className="action-label">Create Archive Entry</span>
           </button>
-          <button className="action-card" onClick={() => { /* Navigate to health tab */ }}>
+          <button className="action-card" onClick={() => onNavigateTab?.('health')}>
             <span className="action-icon">💚</span>
             <span className="action-label">System Health</span>
           </button>
-          <button className="action-card" onClick={() => { /* Navigate to api docs tab */ }}>
+          <button className="action-card" onClick={() => onNavigateTab?.('api')}>
             <span className="action-icon">🔗</span>
             <span className="action-label">API Documentation</span>
           </button>
-          <button className="action-card" onClick={() => { /* Navigate to settings tab */ }}>
+          <button className="action-card" onClick={() => onNavigateTab?.('settings')}>
             <span className="action-icon">⚙️</span>
             <span className="action-label">Settings</span>
           </button>

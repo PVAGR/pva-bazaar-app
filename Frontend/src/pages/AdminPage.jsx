@@ -832,7 +832,7 @@ export default function AdminPage() {
         <AdminTabs activeTab={activeTab} onTabChange={setActiveTab} />
         <div className="admin-container">
           {/* Dashboard Tab - Overview */}
-          {activeTab === 'dashboard' && <DashboardTab />}
+          {activeTab === 'dashboard' && <DashboardTab onNavigateTab={setActiveTab} />}
 
           {/* Archive Tab - Original functionality */}
           {activeTab === 'archive' && (
