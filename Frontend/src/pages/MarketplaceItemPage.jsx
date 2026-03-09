@@ -63,9 +63,9 @@ export default function MarketplaceItemPage() {
         <meta property="twitter:description" content={item.description || "Marketplace item on PVABazaar"} />
         <meta property="twitter:image" content={ogImage} />
       </Helmet>
-      <div className="item-top-links">
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'center', marginBottom: '1rem' }}>
         <Link to="/marketplace" className="back-link">← Back to Marketplace</Link>
-        <Link to={`/artifact/${item.slug || slugOrId}`} className="back-link artifact-link">
+        <Link to={`/artifact/${item.slug || slugOrId}`} className="back-link" style={{ fontSize: '0.9rem' }}>
           Preserve history →
         </Link>
       </div>
