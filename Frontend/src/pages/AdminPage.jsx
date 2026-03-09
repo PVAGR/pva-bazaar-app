@@ -588,14 +588,7 @@ export default function AdminPage() {
                 </div>
               )}
               {apiError && (
-                <div className="error-message" style={{
-                  background: '#fee',
-                  color: '#c33',
-                  padding: '12px',
-                  borderRadius: '8px',
-                  marginBottom: '16px',
-                  border: '1px solid #fcc'
-                }}>
+                <div className="error-message api-error-message">
                   ❌ {apiError}
                 </div>
               )}
@@ -684,7 +677,7 @@ export default function AdminPage() {
                     placeholder="https://example.com/photo.jpg\nhttps://example.com/video.mp4"
                     rows="3"
                   />
-                  <small style={{ color: '#666', fontSize: '0.85em' }}>
+                  <small className="media-url-help">
                     Add one URL per line or separate with commas.
                   </small>
                   <div

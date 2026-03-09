@@ -2,6 +2,7 @@
   max-width: 860px;
   margin: 0 auto;
   padding: 1rem;
+  color: var(--site-text);
 }
 
 .list-item-header h1 {
@@ -10,7 +11,7 @@
 
 .list-item-header p {
   margin: 0 0 1rem 0;
-  color: #666;
+  color: var(--site-text-muted);
 }
 
 .list-progress {
@@ -21,7 +22,8 @@
 }
 
 .list-progress-step {
-  border: 1px solid #ddd;
+  border: 1px solid var(--site-border);
+  background: var(--site-panel-soft);
   border-radius: 8px;
   padding: 0.5rem;
   text-align: center;
@@ -35,16 +37,16 @@
 }
 
 .list-progress-step.active {
-  border-color: #2a7fff;
+  border-color: var(--site-accent);
 }
 
 .list-progress-step.done {
-  background: #eef6ff;
+  background: var(--site-accent-soft);
 }
 
 .list-form {
-  background: #fff;
-  border: 1px solid #e8e8e8;
+  background: var(--site-panel);
+  border: 1px solid var(--site-border);
   border-radius: 12px;
   padding: 1rem;
   display: flex;
@@ -68,7 +70,9 @@
 .list-form textarea,
 .list-form select {
   width: 100%;
-  border: 1px solid #d2d2d2;
+  border: 1px solid var(--site-border);
+  background: var(--site-panel-soft);
+  color: var(--site-text);
   border-radius: 8px;
   padding: 0.6rem;
   margin-top: 0.35rem;
@@ -76,7 +80,7 @@
 
 .hint {
   font-size: 0.9rem;
-  color: #666;
+  color: var(--site-text-muted);
 }
 
 .image-previews {
@@ -115,34 +119,35 @@
 .btn {
   border-radius: 8px;
   padding: 0.55rem 0.9rem;
-  border: 1px solid #d0d0d0;
+  border: 1px solid var(--site-border);
   text-decoration: none;
   cursor: pointer;
-  background: #fff;
+  background: var(--site-panel-soft);
+  color: var(--site-text);
 }
 
 .btn.primary {
-  border-color: #2a7fff;
-  background: #2a7fff;
+  border-color: var(--site-accent);
+  background: var(--site-accent);
   color: #fff;
 }
 
 .btn.ghost {
-  color: #333;
+  color: var(--site-text);
 }
 
 .form-error {
-  color: #b10000;
-  background: #fff2f2;
-  border: 1px solid #ffc7c7;
+  color: var(--site-danger-text);
+  background: var(--site-danger-bg);
+  border: 1px solid var(--site-danger-text);
   padding: 0.5rem;
   border-radius: 8px;
 }
 
 .form-success {
-  color: #0a6a1f;
-  background: #edfbed;
-  border: 1px solid #b8edbf;
+  color: var(--site-accent-strong);
+  background: var(--site-accent-soft);
+  border: 1px solid var(--site-border);
   padding: 0.5rem;
   border-radius: 8px;
 }

@@ -212,6 +212,20 @@
   font-size: 0.9rem;
 }
 
+.api-error-message {
+  background: var(--site-danger-bg);
+  color: var(--site-danger-text);
+  border-color: var(--site-danger-text);
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.media-url-help {
+  color: var(--site-text-muted);
+  font-size: 0.85em;
+}
+
 /* Authenticated Admin Panel */
 .admin-page.authenticated {
   padding: 0;
