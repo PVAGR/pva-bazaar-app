@@ -147,12 +147,12 @@ export default function OracleAssessmentPage() {
   };
 
   return (
-    <div className="oracle-assessment" style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem' }}>
+    <div className="oracle-assessment" style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem', color: 'var(--site-text)' }}>
         <header style={{ textAlign: 'center', marginBottom: '3rem' }}>
           <h1 style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>
             🔮 Your Personal Oracle Assessment
           </h1>
-          <p style={{ fontSize: '1.2rem', color: '#666' }}>
+          <p style={{ fontSize: '1.2rem', color: 'var(--site-text-muted)' }}>
             Discover your cosmic signature and spiritual path
           </p>
         </header>
@@ -160,11 +160,11 @@ export default function OracleAssessmentPage() {
         {error && (
           <div style={{ 
             padding: '1rem', 
-            background: '#fee', 
-            border: '1px solid #fcc', 
+            background: 'var(--site-danger-bg)', 
+            border: '1px solid var(--site-danger-text)', 
             borderRadius: '4px', 
             marginBottom: '1rem',
-            color: '#c00'
+            color: 'var(--site-danger-text)'
           }}>
             {error}
           </div>
@@ -380,7 +380,7 @@ export default function OracleAssessmentPage() {
               <button 
                 onClick={handleSubmit} 
                 disabled={loading}
-                style={{ background: '#4CAF50', color: 'white' }}
+                style={{ background: 'var(--site-accent)', color: '#fff' }}
               >
                 {loading ? 'Processing...' : 'Generate Assessment →'}
               </button>
@@ -397,8 +397,8 @@ export default function OracleAssessmentPage() {
             </p>
             <div style={{ marginTop: '2rem' }}>
               <div style={{ 
-                border: '4px solid #f3f3f3',
-                borderTop: '4px solid #4CAF50',
+                border: '4px solid var(--site-panel-soft)',
+                borderTop: '4px solid var(--site-accent)',
                 borderRadius: '50%',
                 width: '50px',
                 height: '50px',
@@ -420,7 +420,7 @@ export default function OracleAssessmentPage() {
           <div className="step results">
             <h2>✨ Your Oracle Assessment</h2>
             
-            <section style={{ marginTop: '2rem', padding: '1.5rem', background: '#f9f9f9', borderRadius: '8px' }}>
+            <section style={{ marginTop: '2rem', padding: '1.5rem', background: 'var(--site-panel-soft)', border: '1px solid var(--site-border)', borderRadius: '8px' }}>
               <h3>🌟 Cosmic Signature</h3>
               <div dangerouslySetInnerHTML={{ __html: results.cosmicSignature.synthesis }} />
               {results.cosmicSignature.astrological && (
@@ -441,7 +441,7 @@ export default function OracleAssessmentPage() {
               )}
             </section>
 
-            <section style={{ marginTop: '2rem', padding: '1.5rem', background: '#f0f8ff', borderRadius: '8px' }}>
+            <section style={{ marginTop: '2rem', padding: '1.5rem', background: 'var(--site-panel-soft)', border: '1px solid var(--site-border)', borderRadius: '8px' }}>
               <h3>💫 Body Blueprint</h3>
               {results.bodyBlueprint.dietRecommendations && results.bodyBlueprint.dietRecommendations.length > 0 && (
                 <div>
@@ -465,7 +465,7 @@ export default function OracleAssessmentPage() {
               )}
             </section>
 
-            <section style={{ marginTop: '2rem', padding: '1.5rem', background: '#fff8f0', borderRadius: '8px' }}>
+            <section style={{ marginTop: '2rem', padding: '1.5rem', background: 'var(--site-panel-soft)', border: '1px solid var(--site-border)', borderRadius: '8px' }}>
               <h3>🔮 Unique Revelation</h3>
               {results.uniqueRevelation.lifePURPOSE && (
                 <p style={{ fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '1rem' }}>
@@ -484,7 +484,7 @@ export default function OracleAssessmentPage() {
               )}
             </section>
 
-            <section style={{ marginTop: '2rem', padding: '1.5rem', background: '#f5f5f5', borderRadius: '8px' }}>
+            <section style={{ marginTop: '2rem', padding: '1.5rem', background: 'var(--site-panel-soft)', border: '1px solid var(--site-border)', borderRadius: '8px' }}>
               <h3>✨ Golden Path</h3>
               {results.goldenPath.immediateSteps && results.goldenPath.immediateSteps.length > 0 && (
                 <div>
