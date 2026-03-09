@@ -3,6 +3,7 @@
   margin: 0 auto;
   padding: 1.5rem 1rem 3rem 1rem;
   font-family: var(--font-sans, sans-serif);
+  color: var(--site-text);
 }
 
 .item-top-links {
@@ -16,14 +17,14 @@
 .back-link {
   display: inline-block;
   margin-bottom: 1.2rem;
-  color: #0077ff;
+  color: var(--site-accent);
   text-decoration: none;
   font-size: 1rem;
   font-weight: 500;
   transition: color 0.2s;
 }
 .back-link:hover, .back-link:focus {
-  color: #0056b3;
+  color: var(--site-accent-strong);
   text-decoration: underline;
 }
 
@@ -48,7 +49,7 @@
 .main-media {
   width: 100%;
   aspect-ratio: 1.2/1;
-  background: #f6f6f6;
+  background: var(--site-panel-soft);
   border-radius: 10px;
   overflow: hidden;
   display: flex;
@@ -76,14 +77,14 @@
   outline: none;
 }
 .thumb-btn.selected, .thumb-btn:focus {
-  border: 2px solid #0077ff;
+  border: 2px solid var(--site-accent);
 }
 .thumb-img {
   width: 54px;
   height: 54px;
   object-fit: cover;
   border-radius: 6px;
-  background: #f0f0f0;
+  background: var(--site-panel-soft);
 }
 .item-info {
   flex: 2 1 320px;
@@ -101,7 +102,7 @@
   display: flex;
   gap: 1.2rem;
   font-size: 1.08rem;
-  color: #666;
+  color: var(--site-text-muted);
   align-items: center;
   flex-wrap: wrap;
 }
@@ -109,15 +110,16 @@
   flex-shrink: 0;
 }
 .item-category {
-  background: #f0f4ff;
-  color: #0077ff;
+  background: var(--site-accent-soft);
+  color: var(--site-accent);
+  border: 1px solid var(--site-border);
   border-radius: 6px;
   padding: 0.1rem 0.7rem;
   font-size: 1rem;
 }
 .item-price {
   font-weight: 700;
-  color: #1a8a34;
+  color: var(--site-accent-strong);
   font-size: 1.1rem;
 }
 .item-tags {
@@ -126,22 +128,23 @@
   flex-wrap: wrap;
 }
 .item-tag {
-  background: #f2f2f2;
-  color: #444;
+  background: var(--site-panel-soft);
+  color: var(--site-text);
+  border: 1px solid var(--site-border);
   border-radius: 999px;
   padding: 0.2rem 0.9rem;
   font-size: 0.97rem;
 }
 .item-desc {
   font-size: 1.08rem;
-  color: #333;
+  color: var(--site-text);
   margin: 0.2rem 0 0 0;
 }
 .buy-btn {
   margin-top: 1.2rem;
   padding: 0.7rem 2.2rem;
   font-size: 1.1rem;
-  background: #0077ff;
+  background: var(--site-accent);
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -150,12 +153,12 @@
 }
 .loading {
   text-align: center;
-  color: #888;
+  color: var(--site-text-muted);
   font-size: 1.1rem;
   margin: 2rem 0;
 }
 .error {
-  color: #c00;
+  color: var(--site-danger-text);
   margin: 2rem 0 0 0;
   text-align: center;
 }
