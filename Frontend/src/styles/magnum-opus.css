@@ -91,14 +91,6 @@
   --z-modal: 500;
   --z-popover: 600;
   --z-tooltip: 700;
-  
-  /* Legacy/Alias Variables for compatibility */
-  --accent: var(--pva-primary);
-  --accent-hover: var(--pva-primary-dark);
-  --border: var(--border-medium);
-  --border-accent: var(--pva-primary);
-  --highlight: rgba(102, 126, 234, 0.1);
-  --highlight-strong: rgba(102, 126, 234, 0.2);
 }
 
 /* Dark Theme */
@@ -118,12 +110,6 @@
   --border-medium: #4a5568;
   
   --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.3);
-  
-  /* Legacy aliases for dark theme */
-  --border: var(--border-medium);
-  --border-accent: var(--pva-primary);
-  --highlight: rgba(102, 126, 234, 0.15);
-  --highlight-strong: rgba(102, 126, 234, 0.25);
 }
 
 /* ==========================================================================

@@ -18,12 +18,9 @@ export default function AdminPage() {
   const [error, setError] = useState('');
   const [apiError, setApiError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  // Use global theme system
   const [darkMode, setDarkMode] = useState(() => {
-    const saved = localStorage.getItem('theme');
-    const isDark = saved ? saved === 'dark' : false;
-    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
-    return isDark;
+    const saved = localStorage.getItem('archive-theme');
+    return saved ? saved === 'dark' : true;
   });
   
   // Form state for new archive entry
@@ -368,14 +365,12 @@ export default function AdminPage() {
   // Login screen
   if (!isAuthenticated) {
     return (
-      <div className="admin-page">
+      <div className={`admin-page ${darkMode ? 'dark-theme' : 'light-theme'}`}>
         <button 
           className="theme-toggle login-theme-toggle" 
           onClick={() => {
-            const newMode = !darkMode;
-            setDarkMode(newMode);
-            localStorage.setItem('theme', newMode ? 'dark' : 'light');
-            document.documentElement.setAttribute('data-theme', newMode ? 'dark' : 'light');
+            setDarkMode(!darkMode);
+            localStorage.setItem('archive-theme', !darkMode ? 'dark' : 'light');
           }}
           aria-label="Toggle theme"
           title="Toggle light/dark theme"
@@ -424,7 +419,7 @@ export default function AdminPage() {
   // Admin panel
   return (
     <>
-      <div className="admin-page authenticated">
+      <div className={`admin-page authenticated ${darkMode ? 'dark-theme' : 'light-theme'}`}>
         <div className="admin-header">
           <div className="header-content">
             <h1>⚙️ Archive Admin Panel</h1>
@@ -458,10 +453,8 @@ export default function AdminPage() {
               <button 
                 className="theme-toggle" 
                 onClick={() => {
-                  const newMode = !darkMode;
-                  setDarkMode(newMode);
-                  localStorage.setItem('theme', newMode ? 'dark' : 'light');
-                  document.documentElement.setAttribute('data-theme', newMode ? 'dark' : 'light');
+                  setDarkMode(!darkMode);
+                  localStorage.setItem('archive-theme', !darkMode ? 'dark' : 'light');
                 }}
                 aria-label="Toggle theme"
                 title="Toggle light/dark theme"

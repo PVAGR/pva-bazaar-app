@@ -1,18 +1,17 @@
-/* --- Connection Panel Popup --- */
 .connection-panel {
-  background: var(--bg-tertiary);
-  border: 1.5px solid var(--border);
-  border-radius: 10px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.18);
-  width: clamp(260px, 92vw, 360px);
-  max-height: 70vh;
-  overflow-y: auto;
-  padding: 10px;
-  margin: 0 auto;
+  width: clamp(240px, 34vw, 320px);
+  max-height: 60vh;
+  position: fixed;
+  top: 74px;
+  right: 16px;
+  z-index: 9999;
+  background: #fffbe9;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px #0001;
+  padding: 12px 10px;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  z-index: 1200;
 }
 
 .connection-list {
@@ -29,8 +28,7 @@
   padding: 6px 4px;
   margin-bottom: 2px;
   border-radius: 6px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
+  background: #fff;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -46,7 +44,7 @@
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: var(--text-muted);
+  background: #bbb;
   margin-right: 4px;
   display: inline-block;
 }
@@ -57,18 +55,17 @@
   flex: 1 1 auto;
   font-weight: 500;
   font-size: 0.98em;
-  color: var(--text-primary);
 }
 
 .connection-item__status {
   font-size: 0.93em;
   font-weight: 400;
-  color: var(--text-secondary);
+  color: #888;
 }
 
 .connection-item__message {
   font-size: 0.88em;
-  color: #e74c3c;
+  color: #b33;
   margin-left: 18px;
   margin-top: 2px;
 }
@@ -85,10 +82,54 @@
     display: none;
   }
 }
-/* Admin page uses the global theme system from magnum-opus.css */
+/* --- Connection Panel Popup --- */
+.connection-panel {
+  background: var(--bg-tertiary);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+  width: clamp(260px, 92vw, 360px);
+  max-height: 70vh;
+  overflow-y: auto;
+  padding: 10px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 1200;
+}
+/* Theme Variables */
+.admin-page.dark-theme {
+  --bg-primary: linear-gradient(135deg, #0a0a15 0%, #0d0f1a 100%);
+  --bg-secondary: rgba(0, 0, 0, 0.6);
+  --bg-tertiary: rgba(0, 0, 0, 0.5);
+  --text-primary: #e0e0e0;
+  --text-secondary: #b0b0b0;
+  --text-muted: #888;
+  --accent: #4a90e2;
+  --accent-hover: #5fa3e8;
+  --border: #333;
+  --border-accent: #4a90e2;
+  --highlight: rgba(74, 144, 226, 0.1);
+}
+
+.admin-page.light-theme {
+  --bg-primary: linear-gradient(135deg, #1a4d2e 0%, #0f3a24 100%);
+  --bg-secondary: rgba(20, 60, 38, 0.95);
+  --bg-tertiary: rgba(26, 77, 46, 0.9);
+  --text-primary: #e8f5e9;
+  --text-secondary: #c8e6c9;
+  --text-muted: #a5d6a7;
+  --accent: #66bb6a;
+  --accent-hover: #81c784;
+  --border: #2e7d4e;
+  --border-accent: #66bb6a;
+  --highlight: rgba(102, 187, 106, 0.15);
+}
+
 .admin-page {
   min-height: 100vh;
-  background: var(--bg-secondary);
+  background: var(--bg-primary);
   color: var(--text-primary);
   transition: background 0.3s ease, color 0.3s ease;
 }
@@ -1232,47 +1273,4 @@
   .apiConnList .apiConnSub {
     display: none;
   }
-}
-
-/* =============================================================================
-   ADMIN PAGE OVERRIDES
-   Ensure admin page uses the global magnum-opus theme, not base.css styles
-   ============================================================================= */
-
-/* Override any light/white backgrounds from base.css */
-.admin-page .layout,
-.admin-page .section-card,
-.admin-page .entry-card {
-  background: var(--bg-tertiary) !important;
-  color: var(--text-primary) !important;
-  border-color: var(--border-medium) !important;
-}
-
-/* Ensure form elements use theme colors */
-.admin-page input,
-.admin-page select,
-.admin-page textarea {
-  background: var(--bg-tertiary) !important;
-  color: var(--text-primary) !important;
-  border: 1px solid var(--border-medium) !important;
-}
-
-.admin-page input:focus,
-.admin-page select:focus,
-.admin-page textarea:focus {
-  outline: none;
-  border-color: var(--pva-primary) !important;
-}
-
-/* Ensure buttons use theme colors */
-.admin-page button:not(.login-btn):not(.submit-btn):not(.confirm-delete-btn) {
-  background: var(--bg-tertiary) !important;
-  color: var(--text-primary) !important;
-  border-color: var(--border-medium) !important;
-}
-
-.admin-page button:hover:not(.login-btn):not(.submit-btn):not(.confirm-delete-btn):not(:disabled) {
-  background: var(--bg-secondary) !important;
-  border-color: var(--pva-primary) !important;
-  color: var(--pva-primary) !important;
 }

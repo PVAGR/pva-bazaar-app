@@ -85,9 +85,9 @@ export default function AdminDashboard() {
       </div>
 
       {health && (
-        <div className="section-card" style={{ background: 'var(--bg-tertiary, rgba(20, 20, 40, 0.7))', color: 'var(--text-primary, #e0f2f1)' }}>
+        <div className="section-card" style={{ background: '#f9fbf9' }}>
           <strong>API Health:</strong> HTTP {health.status} · {health.ok ? 'OK' : 'Error'}
-          <pre style={{ whiteSpace: 'pre-wrap', color: 'inherit' }}>{JSON.stringify(health.json, null, 2)}</pre>
+          <pre style={{ whiteSpace: 'pre-wrap' }}>{JSON.stringify(health.json, null, 2)}</pre>
         </div>
       )}
     </section>
