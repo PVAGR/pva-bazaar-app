@@ -13,6 +13,7 @@ import { SkeletonList } from '../components/SkeletonLoader.jsx';
 import { LoadingDots } from '../components/LoadingSpinner.jsx';
 import MarketplaceTab from '../components/MarketplaceTab.jsx';
 import UsersTab from '../components/UsersTab.jsx';
+import CloudStorageTab from '../components/CloudStorageTab.jsx';
 import HealthTab from '../components/HealthTab.jsx';
 import SettingsTab from '../components/SettingsTab.jsx';
 import './AdminPage.css';
@@ -1051,6 +1052,9 @@ export default function AdminPage() {
 
           {/* Users Tab */}
           {activeTab === 'users' && <UsersTab />}
+
+          {/* Cloud Storage Tab */}
+          {activeTab === 'cloud' && <CloudStorageTab />}
 
           {/* Health Tab */}
           {activeTab === 'health' && <HealthTab />}

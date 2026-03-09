@@ -21,6 +21,7 @@
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.3",
     "chromadb": "^3.0.14",
+    "cloudinary": "^2.9.0",
     "cors": "^2.8.5",
     "depd": "^2.0.0",
     "dotenv": "^16.3.1",

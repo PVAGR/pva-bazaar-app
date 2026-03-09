@@ -234,6 +234,8 @@ const ordersRoutes = require('../routes/orders');
 const itemsRoutes = require('../routes/items');
 // Secure admin login endpoint
 const adminLoginRoutes = require('../routes/adminLogin');
+// Cloud storage management
+const cloudStorageRoutes = require('../routes/cloudStorage');
 // Decentralized platform routes
 const streamsRoutes = require('../routes/streams');
 const journalRoutes = require('../routes/journal');
@@ -288,6 +290,7 @@ app.use('/api/contribute', contributeRoutes);
 app.use('/api/partners', partnersRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/cloud-storage', cloudStorageRoutes);
 
 // DECENTRALIZED PLATFORM ROUTES (Blueprint v1)
 app.use('/api/streams', streamsRoutes);
