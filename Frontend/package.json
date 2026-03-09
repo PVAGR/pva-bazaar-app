@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "npx vite",
+    "check:theme": "node scripts/check-theme-hardcoded.cjs",
     "prebuild": "node scripts/vercel-info.cjs",
     "build": "npx vite build",
     "postbuild": "node scripts/copy-src-to-dist.cjs",
