@@ -172,9 +172,12 @@ export default function ArchiveLibraryPage() {
   const [loading, setLoading] = useState(false);
   const [customEntries, setCustomEntries] = useState([]);
   const [viewMode, setViewMode] = useState('archive'); // 'archive' or 'blog'
+  // Use global theme system
   const [darkMode, setDarkMode] = useState(() => {
-    const saved = localStorage.getItem('archive-theme');
-    return saved ? saved === 'dark' : true;
+    const saved = localStorage.getItem('theme');
+    const isDark = saved ? saved === 'dark' : false;
+    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+    return isDark;
   });
 
   // Function to load custom entries from API
@@ -200,8 +203,10 @@ export default function ArchiveLibraryPage() {
     return () => clearInterval(interval);
   }, []);
 
+  // Sync theme to global system
   useEffect(() => {
-    localStorage.setItem('archive-theme', darkMode ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : 'light');
+    localStorage.setItem('theme', darkMode ? 'dark' : 'light');
   }, [darkMode]);
 
   const categories = ['All', 'Index', 'Fiction', 'Spiritual', 'Technology', 'Business', 'Personal', 'Philosophy', 'Wisdom', 'Architecture', 'Strategic'];
@@ -324,7 +329,7 @@ export default function ArchiveLibraryPage() {
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:image" content={getCanonicalUrl('/og-default.jpg')} />
       </Helmet>
-      <div className={`archive-library ${darkMode ? 'dark-theme' : 'light-theme'}`}>
+      <div className="archive-library">
         <header className="archive-header">
         <div className="header-content">
           <h1>📚 The Complete Archive</h1>

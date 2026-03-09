@@ -1,87 +1,3 @@
-.connection-panel {
-  width: clamp(240px, 34vw, 320px);
-  max-height: 60vh;
-  position: fixed;
-  top: 74px;
-  right: 16px;
-  z-index: 9999;
-  background: #fffbe9;
-  border-radius: 12px;
-  box-shadow: 0 2px 12px #0001;
-  padding: 12px 10px;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-.connection-list {
-  flex: 1 1 auto;
-  overflow-y: auto;
-  max-height: calc(60vh - 110px);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.connection-item {
-  font-size: 0.97em;
-  padding: 6px 4px;
-  margin-bottom: 2px;
-  border-radius: 6px;
-  background: #fff;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.connection-item__row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.connection-item__status-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #bbb;
-  margin-right: 4px;
-  display: inline-block;
-}
-.connection-item.ok .connection-item__status-dot { background: #4caf50; }
-.connection-item.bad .connection-item__status-dot { background: #e53935; }
-
-.connection-item__name {
-  flex: 1 1 auto;
-  font-weight: 500;
-  font-size: 0.98em;
-}
-
-.connection-item__status {
-  font-size: 0.93em;
-  font-weight: 400;
-  color: #888;
-}
-
-.connection-item__message {
-  font-size: 0.88em;
-  color: #b33;
-  margin-left: 18px;
-  margin-top: 2px;
-}
-
-@media (max-width: 420px) {
-  .connection-panel {
-    width: 98vw;
-    max-width: 99vw;
-    min-width: 0;
-    padding: 7px 2vw;
-    right: 0;
-  }
-  .connection-item__message {
-    display: none;
-  }
-}
 /* --- Connection Panel Popup --- */
 .connection-panel {
   background: var(--bg-tertiary);
@@ -98,38 +14,81 @@
   gap: 8px;
   z-index: 1200;
 }
-/* Theme Variables */
-.admin-page.dark-theme {
-  --bg-primary: linear-gradient(135deg, #0a0a15 0%, #0d0f1a 100%);
-  --bg-secondary: rgba(0, 0, 0, 0.6);
-  --bg-tertiary: rgba(0, 0, 0, 0.5);
-  --text-primary: #e0e0e0;
-  --text-secondary: #b0b0b0;
-  --text-muted: #888;
-  --accent: #4a90e2;
-  --accent-hover: #5fa3e8;
-  --border: #333;
-  --border-accent: #4a90e2;
-  --highlight: rgba(74, 144, 226, 0.1);
+
+.connection-list {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  max-height: calc(60vh - 110px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
-.admin-page.light-theme {
-  --bg-primary: linear-gradient(135deg, #1a4d2e 0%, #0f3a24 100%);
-  --bg-secondary: rgba(20, 60, 38, 0.95);
-  --bg-tertiary: rgba(26, 77, 46, 0.9);
-  --text-primary: #e8f5e9;
-  --text-secondary: #c8e6c9;
-  --text-muted: #a5d6a7;
-  --accent: #66bb6a;
-  --accent-hover: #81c784;
-  --border: #2e7d4e;
-  --border-accent: #66bb6a;
-  --highlight: rgba(102, 187, 106, 0.15);
+.connection-item {
+  font-size: 0.97em;
+  padding: 6px 4px;
+  margin-bottom: 2px;
+  border-radius: 6px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
+.connection-item__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.connection-item__status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  margin-right: 4px;
+  display: inline-block;
+}
+.connection-item.ok .connection-item__status-dot { background: #4caf50; }
+.connection-item.bad .connection-item__status-dot { background: #e53935; }
+
+.connection-item__name {
+  flex: 1 1 auto;
+  font-weight: 500;
+  font-size: 0.98em;
+  color: var(--text-primary);
+}
+
+.connection-item__status {
+  font-size: 0.93em;
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+
+.connection-item__message {
+  font-size: 0.88em;
+  color: #e74c3c;
+  margin-left: 18px;
+  margin-top: 2px;
+}
+
+@media (max-width: 420px) {
+  .connection-panel {
+    width: 98vw;
+    max-width: 99vw;
+    min-width: 0;
+    padding: 7px 2vw;
+    right: 0;
+  }
+  .connection-item__message {
+    display: none;
+  }
+}
+/* Admin page uses the global theme system from magnum-opus.css */
 .admin-page {
   min-height: 100vh;
-  background: var(--bg-primary);
+  background: var(--bg-secondary);
   color: var(--text-primary);
   transition: background 0.3s ease, color 0.3s ease;
 }
@@ -1273,4 +1232,47 @@
   .apiConnList .apiConnSub {
     display: none;
   }
+}
+
+/* =============================================================================
+   ADMIN PAGE OVERRIDES
+   Ensure admin page uses the global magnum-opus theme, not base.css styles
+   ============================================================================= */
+
+/* Override any light/white backgrounds from base.css */
+.admin-page .layout,
+.admin-page .section-card,
+.admin-page .entry-card {
+  background: var(--bg-tertiary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-medium) !important;
+}
+
+/* Ensure form elements use theme colors */
+.admin-page input,
+.admin-page select,
+.admin-page textarea {
+  background: var(--bg-tertiary) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-medium) !important;
+}
+
+.admin-page input:focus,
+.admin-page select:focus,
+.admin-page textarea:focus {
+  outline: none;
+  border-color: var(--pva-primary) !important;
+}
+
+/* Ensure buttons use theme colors */
+.admin-page button:not(.login-btn):not(.submit-btn):not(.confirm-delete-btn) {
+  background: var(--bg-tertiary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-medium) !important;
+}
+
+.admin-page button:hover:not(.login-btn):not(.submit-btn):not(.confirm-delete-btn):not(:disabled) {
+  background: var(--bg-secondary) !important;
+  border-color: var(--pva-primary) !important;
+  color: var(--pva-primary) !important;
 }
