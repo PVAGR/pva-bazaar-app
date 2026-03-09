@@ -1,0 +1,35 @@
+/* Page Loader Styles */
+
+.page-loader {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+}
+
+.page-loader__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.page-loader__message {
+  font-size: 15px;
+  color: var(--site-text-muted, rgba(226, 232, 240, 0.7));
+  margin: 0;
+}
+
+/* Inline Loader */
+.inline-loader {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+}
+
+.inline-loader__message {
+  font-size: 14px;
+  color: var(--site-text-muted, rgba(226, 232, 240, 0.7));
+}
