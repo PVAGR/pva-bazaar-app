@@ -20,6 +20,10 @@
   --site-accent-soft: rgba(38, 198, 218, 0.15);
   --site-danger-bg: rgba(229, 57, 53, 0.18);
   --site-danger-text: #ff8a80;
+  --site-warning-bg: rgba(255, 193, 7, 0.18);
+  --site-warning-text: #ffd54f;
+  --site-success-bg: rgba(76, 175, 80, 0.18);
+  --site-success-text: #81c784;
 }
 
 [data-theme='light'] {
@@ -35,6 +39,10 @@
   --site-accent-soft: rgba(102, 187, 106, 0.15);
   --site-danger-bg: rgba(229, 57, 53, 0.2);
   --site-danger-text: #ffcdd2;
+  --site-warning-bg: rgba(255, 193, 7, 0.25);
+  --site-warning-text: #ffeb3b;
+  --site-success-bg: rgba(102, 187, 106, 0.25);
+  --site-success-text: #a5d6a7;
 }
 
 body {

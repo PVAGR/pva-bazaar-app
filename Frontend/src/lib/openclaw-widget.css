@@ -1,0 +1,224 @@
+/* OpenClaw Health Widget Styles */
+
+.openclaw-widget {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  border-radius: 8px;
+  padding: 1rem;
+  background: var(--site-panel, rgba(20, 20, 40, 0.74));
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  max-width: 400px;
+  transition: all 0.3s ease;
+}
+
+.openclaw-widget.loading {
+  text-align: center;
+  padding: 2rem;
+  color: #6c757d;
+}
+
+.openclaw-widget.healthy {
+  border-left: 4px solid #28a745;
+}
+
+.openclaw-widget.warning {
+  border-left: 4px solid #ffc107;
+}
+
+.openclaw-widget.degraded {
+  border-left: 4px solid #fd7e14;
+}
+
+.openclaw-widget.error {
+  border-left: 4px solid #dc3545;
+}
+
+.openclaw-widget.unknown {
+  border-left: 4px solid #6c757d;
+}
+
+.widget-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.widget-emoji {
+  font-size: 1.5rem;
+}
+
+.widget-header h4 {
+  margin: 0;
+  flex: 1;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #212529;
+}
+
+.widget-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.25rem 0.6rem;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.widget-badge.healthy {
+  background: #d4edda;
+  color: #155724;
+}
+
+.widget-badge.warning {
+  background: var(--site-warning-bg, rgba(255, 193, 7, 0.18));
+  color: var(--site-warning-text, #ffd54f);
+}
+
+.widget-badge.degraded {
+  background: var(--site-warning-bg, rgba(255, 193, 7, 0.18));
+  color: var(--site-warning-text, #ffd54f);
+}
+
+.widget-badge.error {
+  background: var(--site-danger-bg, rgba(229, 57, 53, 0.18));
+  color: var(--site-danger-text, #ff8a80);
+}
+
+.widget-badge.unknown {
+  background: #e2e3e5;
+  color: #383d41;
+}
+
+.widget-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.widget-metric {
+  display: flex;
+  flex-direction: column;
+  padding: 0.5rem;
+  background: var(--site-panel-soft, rgba(20, 20, 40, 0.74));
+  border-radius: 6px;
+  text-align: center;
+}
+
+.widget-metric--full {
+  grid-column: 1 / -1;
+}
+
+.metric-label {
+  font-size: 0.7rem;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-bottom: 0.25rem;
+}
+
+.metric-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #212529;
+}
+
+.widget-error,
+.widget-message {
+  padding: 0.75rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.widget-error {
+  background: var(--site-danger-bg, rgba(229, 57, 53, 0.18));
+  color: var(--site-danger-text, #ff8a80);
+  border: 1px solid var(--site-danger-text, #ff8a80);
+}
+
+.widget-message {
+  background: #e2e3e5;
+  color: #383d41;
+  border: 1px solid #d6d8db;
+  text-align: center;
+}
+
+.widget-footer {
+  font-size: 0.75rem;
+  color: #6c757d;
+  text-align: right;
+}
+
+.widget-timestamp {
+  font-style: italic;
+}
+
+/* Compact variant */
+.openclaw-widget--compact {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.8rem;
+  max-width: none;
+}
+
+.openclaw-widget--compact .widget-emoji {
+  font-size: 1.2rem;
+}
+
+.openclaw-widget--compact .widget-state {
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+/* Loading spinner */
+.spinner {
+  width: 40px;
+  height: 40px;
+  margin: 0 auto 1rem;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .openclaw-widget {
+    background: #212529;
+    color: #f8f9fa;
+  }
+  
+  .widget-header {
+    border-bottom-color: #495057;
+  }
+  
+  .widget-header h4 {
+    color: #f8f9fa;
+  }
+  
+  .widget-metric {
+    background: #343a40;
+  }
+  
+  .metric-label {
+    color: #adb5bd;
+  }
+  
+  .metric-value {
+    color: #f8f9fa;
+  }
+  
+  .widget-timestamp {
+    color: #adb5bd;
+  }
+}
