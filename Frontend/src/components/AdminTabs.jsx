@@ -17,6 +17,7 @@ export default function AdminTabs({ activeTab, onTabChange }) {
     { id: 'marketplace', label: '🛒 Marketplace', title: 'Manage marketplace items' },
     { id: 'users', label: '👥 Users', title: 'User management' },
     { id: 'cloud', label: '☁️ Cloud Storage', title: 'Cloud storage management' },
+    { id: 'api', label: '🔗 API Docs', title: 'API documentation & endpoints' },
     { id: 'health', label: '💚 Health', title: 'System health & monitoring' },
     { id: 'settings', label: '⚙️ Settings', title: 'Configuration' },
   ];

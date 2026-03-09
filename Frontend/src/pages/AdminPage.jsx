@@ -14,6 +14,7 @@ import { LoadingDots } from '../components/LoadingSpinner.jsx';
 import MarketplaceTab from '../components/MarketplaceTab.jsx';
 import UsersTab from '../components/UsersTab.jsx';
 import CloudStorageTab from '../components/CloudStorageTab.jsx';
+import ApiDocsTab from '../components/ApiDocsTab.jsx';
 import HealthTab from '../components/HealthTab.jsx';
 import SettingsTab from '../components/SettingsTab.jsx';
 import './AdminPage.css';
@@ -1055,6 +1056,9 @@ export default function AdminPage() {
 
           {/* Cloud Storage Tab */}
           {activeTab === 'cloud' && <CloudStorageTab />}
+
+          {/* API Documentation Tab */}
+          {activeTab === 'api' && <ApiDocsTab />}
 
           {/* Health Tab */}
           {activeTab === 'health' && <HealthTab />}
