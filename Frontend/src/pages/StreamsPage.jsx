@@ -6,6 +6,7 @@ import HelpTip from '../components/HelpTip.jsx';
 import AdminNav from '../components/AdminNav.jsx';
 import ErrorBanner from '../components/ErrorBanner.jsx';
 import LoadingSpinner from '../components/LoadingSpinner.jsx';
+import { ConfirmModal } from '../components/ui/DialogModals.jsx';
 import { getErrorMessage, withRetry } from '../lib/errorUtils';
 import { getToken } from '../lib/auth';
 import './StreamsPage.css';
@@ -49,8 +50,9 @@ export default function StreamsPage() {
   const [twitchStatus, setTwitchStatus] = useState(null);
   const [youtubeStatus, setYouTubeStatus] = useState(null);
   const [liveLoading, setLiveLoading] = useState(false);
-  const [twitchLive, setTwitchLive] = useState(null);
+ const [twitchLive, setTwitchLive] = useState(null);
   const [youtubeLive, setYouTubeLive] = useState(null);
+  const [deleteConfirm, setDeleteConfirm] = useState(null); // { id, title }
 
   const tokenPresent = useMemo(() => {
     if (typeof window === 'undefined') return false;
@@ -335,18 +337,22 @@ export default function StreamsPage() {
 
   async function handleDelete(id) {
     setError('');
-    // eslint-disable-next-line no-alert
-    if (!window.confirm('Delete this stream session?')) return;
     try {
       const res = await apiDelete(`/streams/${id}`);
       if (!res?.ok) {
         throw new Error(res?.error || res?.message || 'Delete failed');
       }
       setItems(prev => prev.filter(s => s._id !== id));
+      setDeleteConfirm(null);
     } catch (e) {
       const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
       setError(serverMsg || e.message || 'Delete failed');
+      setDeleteConfirm(null);
     }
+  }
+
+  function promptDelete(id, title) {
+    setDeleteConfirm({ id, title });
   }
 
   return (
@@ -784,7 +790,7 @@ export default function StreamsPage() {
                     ))}
                   </select>
 
-                  <button className="btn ghost" onClick={() => handleDelete(s._id)}>
+                  <button className="btn ghost" onClick={() => promptDelete(s._id, s.title)}>
                     Delete
                   </button>
                 </div>
@@ -793,6 +799,16 @@ export default function StreamsPage() {
           </div>
         </section>
       </main>
+      <ConfirmModal
+        isOpen={!!deleteConfirm}
+        onClose={() => setDeleteConfirm(null)}
+        onConfirm={() => deleteConfirm && handleDelete(deleteConfirm.id)}
+        title="Delete Stream"
+        message={`Are you sure you want to delete "${deleteConfirm?.title || 'this stream'}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+      />
     </div>
   );
 }

@@ -20,6 +20,23 @@
   color: #fff;
 }
 
+.uiBtn--secondary {
+  background: var(--bg-secondary);
+  border-color: var(--border);
+  color: var(--text-primary);
+}
+
+.uiBtn--danger {
+  background: #dc2626;
+  border-color: #dc2626;
+  color: #fff;
+}
+
+.uiBtn--danger:hover {
+  background: #b91c1c;
+  border-color: #b91c1c;
+}
+
 .uiBtn--ghost {
   background: transparent;
 }

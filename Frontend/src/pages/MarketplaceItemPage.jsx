@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { fetchMarketplaceItem, createCheckoutSession } from "../lib/api";
 import VerificationBadge from "../components/VerificationBadge.jsx";
+import { AlertModal } from "../components/ui/DialogModals.jsx";
 import "./MarketplaceItemPage.css";
 
 const PLACEHOLDER = "/placeholder.png";
@@ -23,6 +24,7 @@ export default function MarketplaceItemPage() {
   const [error, setError] = useState(null);
   const [mainIdx, setMainIdx] = useState(0);
   const [buying, setBuying] = useState(false);
+  const [alertMsg, setAlertMsg] = useState(null);
 
   useEffect(() => {
     let mounted = true;
@@ -118,10 +120,10 @@ export default function MarketplaceItemPage() {
                 if (res.ok && res.url) {
                   window.location.href = res.url;
                 } else {
-                  alert(res.error || "Failed to start checkout");
+                  setAlertMsg(res.error || "Failed to start checkout");
                 }
               } catch (e) {
-                alert(e.message || "Checkout error");
+                setAlertMsg(e.message || "Checkout error");
               } finally {
                 setBuying(false);
               }
@@ -131,6 +133,12 @@ export default function MarketplaceItemPage() {
           </button>
         </section>
       </div>
+      <AlertModal
+        isOpen={!!alertMsg}
+        onClose={() => setAlertMsg(null)}
+        title="Error"
+        message={alertMsg}
+      />
     </div>
   );
 }

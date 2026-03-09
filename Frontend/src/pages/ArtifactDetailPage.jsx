@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { fetchMarketplaceItem, fetchVerificationByArtifact, createCheckoutSession } from '../lib/api';
 import VerificationBadge from '../components/VerificationBadge.jsx';
 import VerificationHashBlock from '../components/VerificationHashBlock.jsx';
+import { AlertModal } from '../components/ui/DialogModals.jsx';
 import './ArtifactDetailPage.css';
 
 const PLACEHOLDER = '/placeholder.png';
@@ -38,6 +39,7 @@ export default function ArtifactDetailPage() {
   const [error, setError] = useState(null);
   const [mainIdx, setMainIdx] = useState(0);
   const [acquiring, setAcquiring] = useState(false);
+  const [alertMsg, setAlertMsg] = useState(null);
 
   useEffect(() => {
     let mounted = true;
@@ -200,9 +202,9 @@ export default function ArtifactDetailPage() {
                 try {
                   const res = await createCheckoutSession(item.id);
                   if (res.ok && res.url) window.location.href = res.url;
-                  else alert(res.error || 'Unable to initiate acquisition.');
+                  else setAlertMsg(res.error || 'Unable to initiate acquisition.');
                 } catch (e) {
-                  alert(e.message || 'Error');
+                  setAlertMsg(e.message || 'Error');
                 } finally {
                   setAcquiring(false);
                 }
@@ -217,6 +219,12 @@ export default function ArtifactDetailPage() {
           </motion.div>
         </div>
       </div>
+      <AlertModal
+        isOpen={!!alertMsg}
+        onClose={() => setAlertMsg(null)}
+        title="Error"
+        message={alertMsg}
+      />
     </motion.div>
   );
 }
