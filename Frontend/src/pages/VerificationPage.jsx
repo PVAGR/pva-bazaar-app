@@ -14,7 +14,7 @@ export default function VerificationPage() {
         Verification scripts run in CI (e.g. GitHub Actions) so results are reproducible.
         You can re-run checks locally or inspect hashes and proofs for any artifact.
       </p>
-      <p style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #e8ecef', color: '#555' }}>
+      <p className="verification-note">
         Product pages show an <strong>AI-Verified</strong> badge when a verification record exists for that item.
         For the full flow (scripts, CI, API, badge), see <code>docs/VERIFICATION-SYSTEM.md</code> and <code>scripts/README-verification.md</code> in the repo.
       </p>

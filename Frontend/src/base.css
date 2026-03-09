@@ -205,6 +205,35 @@ body {
   gap: 0.75rem;
 }
 
+.form-spaced {
+  margin-bottom: 1rem;
+}
+
+.journal-summary {
+  margin: 0;
+}
+
+.search-error-box {
+  padding: 1rem;
+  background: #fee;
+  color: #c33;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.search-empty-state {
+  text-align: center;
+  color: #666;
+  padding: 2rem;
+}
+
+.verification-note {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e8ecef;
+  color: #555;
+}
+
 .form label {
   display: grid;
   gap: 0.35rem;

@@ -40,7 +40,7 @@ export default function SearchPage() {
         <h2>Search Archive</h2>
         <span className="pill">{loading ? 'Searching...' : `${results.length} results`}</span>
       </div>
-      <div className="form" style={{ marginBottom: '1rem' }}>
+      <div className="form form-spaced">
         <input
           type="search"
           placeholder="Search entries by title, content, tags..."
@@ -50,7 +50,7 @@ export default function SearchPage() {
         />
       </div>
       {error && (
-        <div style={{ padding: '1rem', background: '#fee', color: '#c33', borderRadius: '4px', marginBottom: '1rem' }}>
+        <div className="search-error-box">
           Error: {error}
         </div>
       )}
@@ -73,7 +73,7 @@ export default function SearchPage() {
         ))}
       </div>
       {!loading && !error && searchTerm && results.length === 0 && (
-        <p style={{ textAlign: 'center', color: '#666', padding: '2rem' }}>
+        <p className="search-empty-state">
           No entries found for "{searchTerm}"
         </p>
       )}
