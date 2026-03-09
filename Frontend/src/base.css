@@ -1,5 +1,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Open+Sans:wght@400;700&display=swap');
 
+/*
+  Theme lock:
+  - Night mode (default) + day mode are defined only through --site-* tokens below.
+  - Do not reintroduce hardcoded white/light shell colors for shared page containers.
+  - New shared styles should reference --site-* variables to preserve full-page coverage.
+*/
+
 :root {
   --site-bg-primary: #0a0e27;
   --site-bg-secondary: #111a3a;
