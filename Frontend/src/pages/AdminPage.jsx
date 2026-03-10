@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { apiGet, apiFetch } from '../lib/api';
 import { ENV } from '../config/env';
 import { getErrorMessage } from '../lib/errorUtils';
 import ErrorBanner from '../components/ErrorBanner.jsx';
+import ErrorBoundary from '../components/ErrorBoundary.jsx';
 import AdminNav from '../components/AdminNav.jsx';
 import AdminTabs from '../components/AdminTabs.jsx';
 import { clearToken, setToken } from '../lib/auth';
@@ -22,15 +23,12 @@ import './AdminPage.css';
 const logger = createLogger('AdminPage');
 
 export default function AdminPage() {
-  const navigate = useNavigate();
   const staleThresholdMs = ENV.STATUS_STALE_MS || 120000;
   const staleThresholdMinutes = Math.round((staleThresholdMs / 60000) * 10) / 10;
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-    // Admin code state removed: now session-based only
   const [error, setError] = useState('');
-  const [apiError, setApiError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState('dashboard');
   // Use global theme system
@@ -637,28 +635,60 @@ export default function AdminPage() {
         <AdminTabs activeTab={activeTab} onTabChange={setActiveTab} />
         <div className="admin-container">
           {/* Dashboard Tab - Overview */}
-          {activeTab === 'dashboard' && <DashboardTab onNavigateTab={setActiveTab} />}
+          {activeTab === 'dashboard' && (
+            <ErrorBoundary>
+              <DashboardTab onNavigateTab={setActiveTab} />
+            </ErrorBoundary>
+          )}
 
           {/* Archive Tab */}
-          {activeTab === 'archive' && <ArchiveTab />}
+          {activeTab === 'archive' && (
+            <ErrorBoundary>
+              <ArchiveTab />
+            </ErrorBoundary>
+          )}
 
           {/* Marketplace Tab */}
-          {activeTab === 'marketplace' && <MarketplaceTab />}
+          {activeTab === 'marketplace' && (
+            <ErrorBoundary>
+              <MarketplaceTab />
+            </ErrorBoundary>
+          )}
 
           {/* Users Tab */}
-          {activeTab === 'users' && <UsersTab />}
+          {activeTab === 'users' && (
+            <ErrorBoundary>
+              <UsersTab />
+            </ErrorBoundary>
+          )}
 
           {/* Cloud Storage Tab */}
-          {activeTab === 'cloud' && <CloudStorageTab />}
+          {activeTab === 'cloud' && (
+            <ErrorBoundary>
+              <CloudStorageTab />
+            </ErrorBoundary>
+          )}
 
           {/* API Documentation Tab */}
-          {activeTab === 'api' && <ApiDocsTab />}
+          {activeTab === 'api' && (
+            <ErrorBoundary>
+              <ApiDocsTab />
+            </ErrorBoundary>
+          )}
 
           {/* Health Tab */}
-          {activeTab === 'health' && <HealthTab />}
+          {activeTab === 'health' && (
+            <ErrorBoundary>
+              <HealthTab />
+            </ErrorBoundary>
+          )}
 
           {/* Settings Tab */}
-          {activeTab === 'settings' && <SettingsTab />}
+          {activeTab === 'settings' && (
+            <ErrorBoundary>
+              <SettingsTab />
+            </ErrorBoundary>
+          )}
         </div>
       </div>
     </>

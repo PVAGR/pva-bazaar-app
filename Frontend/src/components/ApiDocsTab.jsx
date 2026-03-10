@@ -7,8 +7,9 @@ import './ApiDocsTab.css';
  * 
  * Comprehensive API documentation with direct links, examples, and contact info.
  * Shows all available endpoints with copy-to-clipboard functionality.
+ * Optimized with React.memo since it's mostly static content.
  */
-export default function ApiDocsTab() {
+const ApiDocsTab = React.memo(function ApiDocsTab() {
   const [copiedEndpoint, setCopiedEndpoint] = useState(null);
   const [expandedCategory, setExpandedCategory] = useState('artifacts');
 
@@ -485,4 +486,6 @@ export default function ApiDocsTab() {
       </div>
     </div>
   );
-}
+});
+
+export default ApiDocsTab;

@@ -5,13 +5,18 @@ import './AdminTabs.css';
  * AdminTabs
  * 
  * Internal tabs for the AdminPage to organize different admin functions:
+ * - Dashboard: Overview & metrics
  * - Archive: Create/edit/delete archive entries
  * - Marketplace: Manage marketplace items
  * - Users: User management
+ * - Cloud Storage: Cloud file management
+ * - API Docs: API documentation
  * - Health: System monitoring & OpenClaw
  * - Settings: Configuration
+ * 
+ * Optimized with React.memo to prevent re-renders when parent state changes
  */
-export default function AdminTabs({ activeTab, onTabChange }) {
+const AdminTabs = React.memo(function AdminTabs({ activeTab, onTabChange }) {
   const tabs = [
     { id: 'dashboard', label: '📊 Dashboard', title: 'Admin overview & metrics (Alt+1)', shortcut: '1' },
     { id: 'archive', label: '📚 Archive', title: 'Manage archive entries (Alt+2)', shortcut: '2' },
@@ -44,4 +49,6 @@ export default function AdminTabs({ activeTab, onTabChange }) {
       ))}
     </div>
   );
-}
+});
+
+export default AdminTabs;

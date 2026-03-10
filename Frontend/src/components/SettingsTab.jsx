@@ -13,6 +13,8 @@
  * - Session management
  * - Admin activity log
  * - Quick refresh actions
+ * 
+ * Optimized with React.memo to prevent unnecessary re-renders.
  */
 
 import React, { useState, useEffect } from 'react';
@@ -23,7 +25,7 @@ import './SettingsTab.css';
 
 const logger = createLogger('SettingsTab');
 
-export default function SettingsTab() {
+const SettingsTab = React.memo(function SettingsTab() {
   const [apiUrl, setApiUrl] = useState(getApiBase() || ENV.API_URL);
   const [sessionInfo, setSessionInfo] = useState({
     authenticated: false,
@@ -375,4 +377,6 @@ export default function SettingsTab() {
       </div>
     </div>
   );
-}
+});
+
+export default SettingsTab;
