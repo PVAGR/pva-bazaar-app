@@ -14,6 +14,8 @@ import DashboardTab from '../components/DashboardTab.jsx';
 import ArchiveTab from '../components/ArchiveTab.jsx';
 import MarketplaceTab from '../components/MarketplaceTab.jsx';
 import UsersTab from '../components/UsersTab.jsx';
+import AttributionTab from '../components/AttributionTab.jsx';
+import PayoutTab from '../components/PayoutTab.jsx';
 import CloudStorageTab from '../components/CloudStorageTab.jsx';
 import ApiDocsTab from '../components/ApiDocsTab.jsx';
 import HealthTab from '../components/HealthTab.jsx';
@@ -266,10 +268,12 @@ export default function AdminPage() {
       // Only trigger if Alt key is pressed (without Ctrl or Shift to avoid conflicts)
       if (!e.altKey || e.ctrlKey || e.shiftKey) return;
 
-      const tabs = ['dashboard', 'archive', 'marketplace', 'users', 'cloud', 'api', 'health', 'settings'];
-      const key = parseInt(e.key);
+      const tabs = ['dashboard', 'archive', 'marketplace', 'users', 'attribution', 'payouts', 'cloud', 'api', 'health', 'settings'];
+      let key = parseInt(e.key);
+      // Support Alt+0 for the last tab (settings)
+      if (e.key === '0') key = 9;
 
-      if (key >= 1 && key <= 8) {
+      if (key >= 1 && key <= 9) {
         e.preventDefault();
         setActiveTab(tabs[key - 1]);
       }
@@ -288,10 +292,11 @@ export default function AdminPage() {
       setIsSubmitting(true);
       setError('');
       try {
-        const res = await apiFetch('/admin/login', {
+        // Use regular auth login with email (username field is used as email)
+        const res = await apiFetch('/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: trimmedUsername, password: trimmedPassword }),
+          body: JSON.stringify({ email: trimmedUsername, password: trimmedPassword }),
           credentials: 'include',
         });
         if (res.ok) {
@@ -659,6 +664,20 @@ export default function AdminPage() {
           {activeTab === 'users' && (
             <ErrorBoundary>
               <UsersTab />
+            </ErrorBoundary>
+          )}
+
+          {/* Attribution Tab */}
+          {activeTab === 'attribution' && (
+            <ErrorBoundary>
+              <AttributionTab />
+            </ErrorBoundary>
+          )}
+
+          {/* Payouts Tab */}
+          {activeTab === 'payouts' && (
+            <ErrorBoundary>
+              <PayoutTab />
             </ErrorBoundary>
           )}
 

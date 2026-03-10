@@ -228,6 +228,128 @@ router.delete('/users/:id', adminSession, async (req, res) => {
 /**
  * GET /api/admin/stats
  * Get admin dashboard statistics
+// ========================================
+// ARTIFACT MANAGEMENT ENDPOINTS
+// ========================================
+
+const Artifact = require('../models/Artifact');
+
+/**
+ * GET /api/admin/artifacts
+ * List all artifacts (admin only)
+ */
+router.get('/artifacts', adminSession, async (req, res) => {
+  try {
+    const { page = 1, limit = 50, search = '', status = '' } = req.query;
+    const filter = {};
+    if (search) {
+      filter.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { title: { $regex: search, $options: 'i' } },
+        { artisan: { $regex: search, $options: 'i' } },
+        { category: { $regex: search, $options: 'i' } },
+      ];
+    }
+    if (status) filter.status = status;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const [artifacts, total] = await Promise.all([
+      Artifact.find(filter)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit))
+        .lean(),
+      Artifact.countDocuments(filter),
+    ]);
+    res.json({ ok: true, artifacts, total, page: parseInt(page), limit: parseInt(limit) });
+  } catch (error) {
+    console.error('Admin list artifacts error:', error);
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+/**
+ * POST /api/admin/artifacts
+ * Create a new artifact (JSON body, imageUrls as array)
+ */
+router.post('/artifacts', adminSession, async (req, res) => {
+  try {
+    const adminSubjectId = getAdminSubjectId();
+    const {
+      name, title, description, price, salePrice,
+      category, artisan, status = 'published',
+      imageUrls = [], materials = [],
+      stockQty = 0, isUnlimited = false,
+      tags = [],
+    } = req.body;
+    if (!name || !title || !description || !price || !category || !artisan) {
+      return res.status(400).json({ ok: false, error: 'Missing required fields: name, title, description, price, category, artisan' });
+    }
+    const artifact = new Artifact({
+      name, title, description,
+      price: Number(price),
+      salePrice: salePrice ? Number(salePrice) : undefined,
+      category, artisan, status,
+      imageUrls: Array.isArray(imageUrls) ? imageUrls : [imageUrls].filter(Boolean),
+      materials: Array.isArray(materials) ? materials : [materials].filter(Boolean),
+      stockQty: Number(stockQty),
+      isUnlimited,
+      tags: Array.isArray(tags) ? tags : [tags].filter(Boolean),
+      creator: adminSubjectId,
+      physicalSerial: `PVA-ADM-${Date.now()}`,
+    });
+    await artifact.save();
+    res.status(201).json({ ok: true, artifact });
+  } catch (error) {
+    console.error('Admin create artifact error:', error);
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+/**
+ * PUT /api/admin/artifacts/:id
+ * Update an artifact
+ */
+router.put('/artifacts/:id', adminSession, async (req, res) => {
+  try {
+    const allowed = [
+      'name', 'title', 'description', 'price', 'salePrice',
+      'category', 'artisan', 'status', 'imageUrls', 'materials',
+      'stockQty', 'isUnlimited', 'tags',
+    ];
+    const updates = {};
+    for (const key of allowed) {
+      if (req.body[key] !== undefined) updates[key] = req.body[key];
+    }
+    updates.updatedAt = new Date();
+    const artifact = await Artifact.findByIdAndUpdate(
+      req.params.id,
+      { $set: updates },
+      { new: true, runValidators: true }
+    ).lean();
+    if (!artifact) return res.status(404).json({ ok: false, error: 'Artifact not found' });
+    res.json({ ok: true, artifact });
+  } catch (error) {
+    console.error('Admin update artifact error:', error);
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+/**
+ * DELETE /api/admin/artifacts/:id
+ * Permanently delete an artifact
+ */
+router.delete('/artifacts/:id', adminSession, async (req, res) => {
+  try {
+    const artifact = await Artifact.findByIdAndDelete(req.params.id);
+    if (!artifact) return res.status(404).json({ ok: false, error: 'Artifact not found' });
+    res.json({ ok: true, message: 'Artifact deleted', id: req.params.id });
+  } catch (error) {
+    console.error('Admin delete artifact error:', error);
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+/**
  */
 router.get('/stats', adminSession, async (req, res) => {
   try {

@@ -16,7 +16,7 @@ router.post('/register', async (req, res) => {
     }
     const user = new User({ name, email, password });
     await user.save();
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
+    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET);
     
     // Dispatch user registration event (non-blocking)
     dispatchToOpenClaw(createUserEvent('registered', user, {
@@ -39,7 +39,7 @@ router.post('/login', async (req, res) => {
     if (!user || !(await user.comparePassword(password))) {
       return res.status(401).json({ ok: false, message: 'Invalid credentials' });
     }
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
+    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET);
     
     // Dispatch user login event (non-blocking)
     dispatchToOpenClaw(createUserEvent('authenticated', user, {

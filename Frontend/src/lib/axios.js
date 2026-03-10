@@ -52,7 +52,7 @@ api.interceptors.response.use(
 
     // 401: redirect to admin login
     if (status === 401) {
-      const loginPath = "/#/login";
+      const loginPath = "/#/admin";
       clearToken();
       window.location.assign(loginPath);
       return Promise.reject(error);

@@ -6,6 +6,7 @@ const userSchema = new mongoose.Schema({
   username: { type: String, unique: true, sparse: true }, // optional; login by username or email
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
+  role: { type: String, enum: ['user', 'admin'], default: 'user' },
   profilePicture: { type: String, default: '' },
   twitch: {
     id: { type: String, default: '' },

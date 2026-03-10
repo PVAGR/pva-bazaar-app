@@ -22,10 +22,12 @@ const AdminTabs = React.memo(function AdminTabs({ activeTab, onTabChange }) {
     { id: 'archive', label: '📚 Archive', title: 'Manage archive entries (Alt+2)', shortcut: '2' },
     { id: 'marketplace', label: '🛒 Marketplace', title: 'Manage marketplace items (Alt+3)', shortcut: '3' },
     { id: 'users', label: '👥 Users', title: 'User management (Alt+4)', shortcut: '4' },
-    { id: 'cloud', label: '☁️ Cloud Storage', title: 'Cloud storage management (Alt+5)', shortcut: '5' },
-    { id: 'api', label: '🔗 API Docs', title: 'API documentation & endpoints (Alt+6)', shortcut: '6' },
-    { id: 'health', label: '💚 Health', title: 'System health & monitoring (Alt+7)', shortcut: '7' },
-    { id: 'settings', label: '⚙️ Settings', title: 'Configuration (Alt+8)', shortcut: '8' },
+    { id: 'attribution', label: '💰 Attribution', title: 'Creator attribution & commissions (Alt+5)', shortcut: '5' },
+    { id: 'payouts', label: '📈 Payouts', title: 'Commission payouts & settlements (Alt+6)', shortcut: '6' },
+    { id: 'cloud', label: '☁️ Cloud Storage', title: 'Cloud storage management (Alt+7)', shortcut: '7' },
+    { id: 'api', label: '🔗 API Docs', title: 'API documentation & endpoints (Alt+8)', shortcut: '8' },
+    { id: 'health', label: '💚 Health', title: 'System health & monitoring (Alt+9)', shortcut: '9' },
+    { id: 'settings', label: '⚙️ Settings', title: 'Configuration (Alt+0)', shortcut: '0' },
   ];
 
   return (

@@ -21,6 +21,7 @@ Quick pointer to the main docs used for the venture and the app.
 | [CYBER-CAFE-MODEL.md](./CYBER-CAFE-MODEL.md) | Phase 3: cyber café capex/opex, pricing; only when export profits fund it. |
 | [PVABAZAAR-MVP-WEB3.md](./PVABAZAAR-MVP-WEB3.md) | Phase 4: minimal verification MVP, reuse backend, dashboard slice. |
 | [PHASE1-EXECUTION.md](./PHASE1-EXECUTION.md) | Phase 1 checklist: SKUs, Etsy, OPS; weekly loop and doc links. |
+| [TECH-STACK-TOOLS-BLUEPRINT.md](./TECH-STACK-TOOLS-BLUEPRINT.md) | Execution-ready stack/tools blueprint mapped to this repo and rollout phases. |
 
 ## Lore & archive
 

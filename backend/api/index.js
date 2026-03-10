@@ -149,6 +149,7 @@ app.use('/webhooks', webhooksStripeRoutes);
 // Connect to MongoDB - optimized for serverless with global caching
 // Use global to persist connection across serverless function invocations
 global._mongooseConn = global._mongooseConn || { conn: null, promise: null };
+global._mongoMemoryServer = global._mongoMemoryServer || null;
 
 async function connectToDatabase() {
   // Return cached connection if available
@@ -163,12 +164,21 @@ async function connectToDatabase() {
   }
 
   try {
-    // Start new connection
-    const mongoUri =
-      process.env.MONGODB_URI ||
-      'mongodb://localhost:27017/pva-bazaar';
+    const useMemoryDb = process.env.USE_MEMORY_DB === 'true';
+    let mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/pva-bazaar';
 
-    console.log('🔌 Connecting to MongoDB...');
+    if (useMemoryDb) {
+      if (!MongoMemoryServer) {
+        ({ MongoMemoryServer } = require('mongodb-memory-server'));
+      }
+      if (!global._mongoMemoryServer) {
+        global._mongoMemoryServer = await MongoMemoryServer.create();
+      }
+      mongoUri = global._mongoMemoryServer.getUri();
+      console.log('🧠 Using in-memory MongoDB for development');
+    } else {
+      console.log('🔌 Connecting to MongoDB...');
+    }
 
     // Set timeouts for serverless environment
     global._mongooseConn.promise = mongoose.connect(mongoUri, {
@@ -236,6 +246,9 @@ const itemsRoutes = require('../routes/items');
 const adminLoginRoutes = require('../routes/adminLogin');
 // Cloud storage management
 const cloudStorageRoutes = require('../routes/cloudStorage');
+// Attribution & creator analytics routes
+const attributionRoutes = require('../routes/attribution');
+const payoutsRoutes = require('../routes/payouts');
 // Decentralized platform routes
 const streamsRoutes = require('../routes/streams');
 const journalRoutes = require('../routes/journal');
@@ -244,6 +257,8 @@ const databasesRoutes = require('../routes/databases');
 // Models for optional seeding
 const Artifact = require('../models/Artifact');
 const User = require('../models/User');
+const Order = require('../models/Order');
+const Payout = require('../models/Payout');
 const jwt = require('jsonwebtoken');
 
 // Legacy gating middleware - returns 410 Gone when LEGACY_MODE !== 'true'
@@ -291,6 +306,8 @@ app.use('/api/partners', partnersRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/cloud-storage', cloudStorageRoutes);
+app.use('/api/attribution', attributionRoutes);
+app.use('/api/payouts', payoutsRoutes);
 
 // DECENTRALIZED PLATFORM ROUTES (Blueprint v1)
 app.use('/api/streams', streamsRoutes);
@@ -440,7 +457,7 @@ async function autoSeed() {
     console.log('🌱 Seeding dev database...');
     let admin = await User.findOne({ email: 'admin@pvabazaar.org' });
     if (!admin) {
-      admin = new User({ name: 'PVA Admin', email: 'admin@pvabazaar.org', password: 'admin123' });
+      admin = new User({ name: 'PVA Admin', email: 'admin@pvabazaar.org', password: 'admin123', role: 'admin' });
       await admin.save();
       console.log('✅ Admin user created: admin@pvabazaar.org / admin123');
     }
@@ -488,8 +505,104 @@ async function autoSeed() {
         },
       },
     ];
-    await Artifact.insertMany(sampleArtifacts);
-    console.log(`✅ Seeded ${sampleArtifacts.length} artifacts`);
+    const insertedArtifacts = await Artifact.insertMany(sampleArtifacts);
+    console.log(`✅ Seeded ${insertedArtifacts.length} artifacts`);
+
+    // Seed sample orders with attribution for dashboard demo
+    const sampleOrders = [
+      {
+        itemId: insertedArtifacts[0]._id,
+        itemSnapshot: {
+          name: insertedArtifacts[0].name,
+          slug: insertedArtifacts[0].name.toLowerCase().replace(/\s+/g, '-'),
+          priceCents: insertedArtifacts[0].price * 100,
+          currency: 'USD',
+        },
+        stripeSessionId: `demo_session_${Date.now()}_1`,
+        stripePaymentIntentId: `demo_pi_${Date.now()}_1`,
+        paymentStatus: 'paid',
+        refundStatus: 'none',
+        amountTotal: insertedArtifacts[0].price * 100,
+        currency: 'USD',
+        customerEmail: 'collector@example.com',
+        customerName: 'Art Collector',
+        fulfillmentStatus: 'unfulfilled',
+        attribution: {
+          utm_source: 'creator_zara_hussein',
+          utm_medium: 'instagram',
+          utm_campaign: 'spring_collection_2026',
+          utm_content: 'carousel_post',
+          creatorHandle: 'zara_hussein',
+          referralCode: 'ZARA_HUSSEIN_001',
+          commissionRate: 0.15,
+          commissionAmountCents: insertedArtifacts[0].price * 100 * 0.15,
+          attributionSource: 'utm_params',
+          attributedAt: new Date(),
+        },
+      },
+      {
+        itemId: insertedArtifacts[1]._id,
+        itemSnapshot: {
+          name: insertedArtifacts[1].name,
+          slug: insertedArtifacts[1].name.toLowerCase().replace(/\s+/g, '-'),
+          priceCents: insertedArtifacts[1].price * 100,
+          currency: 'USD',
+        },
+        stripeSessionId: `demo_session_${Date.now()}_2`,
+        stripePaymentIntentId: `demo_pi_${Date.now()}_2`,
+        paymentStatus: 'paid',
+        refundStatus: 'none',
+        amountTotal: insertedArtifacts[1].price * 100,
+        currency: 'USD',
+        customerEmail: 'enthusiast@example.com',
+        customerName: 'Art Enthusiast',
+        fulfillmentStatus: 'unfulfilled',
+        attribution: {
+          utm_source: 'creator_pasha_vii',
+          utm_medium: 'tiktok',
+          utm_campaign: 'heritage_series',
+          utm_content: 'video_tour',
+          creatorHandle: 'pasha_vii',
+          referralCode: 'PASHA_VII_001',
+          commissionRate: 0.1,
+          commissionAmountCents: insertedArtifacts[1].price * 100 * 0.1,
+          attributionSource: 'utm_params',
+          attributedAt: new Date(),
+        },
+      },
+      {
+        itemId: insertedArtifacts[0]._id,
+        itemSnapshot: {
+          name: insertedArtifacts[0].name,
+          slug: insertedArtifacts[0].name.toLowerCase().replace(/\s+/g, '-'),
+          priceCents: insertedArtifacts[0].price * 100,
+          currency: 'USD',
+        },
+        stripeSessionId: `demo_session_${Date.now()}_3`,
+        stripePaymentIntentId: `demo_pi_${Date.now()}_3`,
+        paymentStatus: 'paid',
+        refundStatus: 'none',
+        amountTotal: insertedArtifacts[0].price * 100 * 2,
+        currency: 'USD',
+        customerEmail: 'curator@example.com',
+        customerName: 'Museum Curator',
+        fulfillmentStatus: 'unfulfilled',
+        attribution: {
+          utm_source: 'creator_zara_hussein',
+          utm_medium: 'linkedin',
+          utm_campaign: 'institutional_outreach',
+          utm_content: 'partnership_post',
+          creatorHandle: 'zara_hussein',
+          referralCode: 'ZARA_HUSSEIN_002',
+          commissionRate: 0.15,
+          commissionAmountCents: insertedArtifacts[0].price * 100 * 2 * 0.15,
+          attributionSource: 'utm_params',
+          attributedAt: new Date(Date.now() - 86400000),
+        },
+      },
+    ];
+    await Order.insertMany(sampleOrders);
+    console.log(`✅ Seeded ${sampleOrders.length} attributed orders`);
   } catch (e) {
     console.warn('⚠️ Auto-seed skipped:', e?.message || e);
   }
