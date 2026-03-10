@@ -5,8 +5,11 @@
 
 import { useState, useEffect } from 'react';
 import { apiGet, apiPost, apiDelete } from '../lib/api';
+import { createLogger } from '../lib/logger';
 import LoadingSpinner, { LoadingDots } from './LoadingSpinner';
 import './CloudStorageTab.css';
+
+const logger = createLogger('CloudStorageTab');
 
 export default function CloudStorageTab() {
   const [providers, setProviders] = useState(null);
@@ -30,7 +33,7 @@ export default function CloudStorageTab() {
         setProviders(data.providers);
       }
     } catch (err) {
-      console.error('Load providers error:', err);
+      logger.error('Load providers error:', err);
     }
   };
 
@@ -41,7 +44,7 @@ export default function CloudStorageTab() {
         setFiles(data.files);
       }
     } catch (err) {
-      console.error('Load files error:', err);
+      logger.error('Load files error:', err);
     }
   };
 

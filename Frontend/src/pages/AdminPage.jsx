@@ -259,6 +259,27 @@ export default function AdminPage() {
 
     return () => clearInterval(intervalId);
   }, [showConnectionStatus, runConnectionCheck]);
+
+  // Keyboard shortcuts for tab navigation (Alt+1 through Alt+8)
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const handleKeyDown = (e) => {
+      // Only trigger if Alt key is pressed (without Ctrl or Shift to avoid conflicts)
+      if (!e.altKey || e.ctrlKey || e.shiftKey) return;
+
+      const tabs = ['dashboard', 'archive', 'marketplace', 'users', 'cloud', 'api', 'health', 'settings'];
+      const key = parseInt(e.key);
+
+      if (key >= 1 && key <= 8) {
+        e.preventDefault();
+        setActiveTab(tabs[key - 1]);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isAuthenticated]);
   
   const handleLogin = async (e) => {
     e.preventDefault();

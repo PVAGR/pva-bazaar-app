@@ -51,4 +51,32 @@
     padding: 8px 14px;
     font-size: 0.9rem;
   }
+
+  /* Hide shortcuts on mobile */
+  .tab-shortcut {
+    display: none;
+  }
+}
+
+/* Keyboard shortcut indicator */
+.tab-shortcut {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+  letter-spacing: 0.5px;
+}
+
+.admin-tab:hover .tab-shortcut {
+  opacity: 0.9;
+}
+
+.admin-tab.active .tab-shortcut {
+  background: rgba(0, 0, 0, 0.15);
+  opacity: 0.8;
 }

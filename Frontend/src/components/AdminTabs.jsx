@@ -13,14 +13,14 @@ import './AdminTabs.css';
  */
 export default function AdminTabs({ activeTab, onTabChange }) {
   const tabs = [
-    { id: 'dashboard', label: '📊 Dashboard', title: 'Admin overview & metrics' },
-    { id: 'archive', label: '📚 Archive', title: 'Manage archive entries' },
-    { id: 'marketplace', label: '🛒 Marketplace', title: 'Manage marketplace items' },
-    { id: 'users', label: '👥 Users', title: 'User management' },
-    { id: 'cloud', label: '☁️ Cloud Storage', title: 'Cloud storage management' },
-    { id: 'api', label: '🔗 API Docs', title: 'API documentation & endpoints' },
-    { id: 'health', label: '💚 Health', title: 'System health & monitoring' },
-    { id: 'settings', label: '⚙️ Settings', title: 'Configuration' },
+    { id: 'dashboard', label: '📊 Dashboard', title: 'Admin overview & metrics (Alt+1)', shortcut: '1' },
+    { id: 'archive', label: '📚 Archive', title: 'Manage archive entries (Alt+2)', shortcut: '2' },
+    { id: 'marketplace', label: '🛒 Marketplace', title: 'Manage marketplace items (Alt+3)', shortcut: '3' },
+    { id: 'users', label: '👥 Users', title: 'User management (Alt+4)', shortcut: '4' },
+    { id: 'cloud', label: '☁️ Cloud Storage', title: 'Cloud storage management (Alt+5)', shortcut: '5' },
+    { id: 'api', label: '🔗 API Docs', title: 'API documentation & endpoints (Alt+6)', shortcut: '6' },
+    { id: 'health', label: '💚 Health', title: 'System health & monitoring (Alt+7)', shortcut: '7' },
+    { id: 'settings', label: '⚙️ Settings', title: 'Configuration (Alt+8)', shortcut: '8' },
   ];
 
   return (
@@ -37,6 +37,9 @@ export default function AdminTabs({ activeTab, onTabChange }) {
           title={tab.title}
         >
           {tab.label}
+          <span className="tab-shortcut" aria-label={`Keyboard shortcut: Alt+${tab.shortcut}`}>
+            Alt+{tab.shortcut}
+          </span>
         </button>
       ))}
     </div>
