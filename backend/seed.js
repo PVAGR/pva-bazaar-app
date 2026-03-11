@@ -28,9 +28,15 @@ async function main() {
       username: 'richyrichaii',
       email: 'richyrichaii@local',
       password: 'pva123zxc!',
+      role: 'admin',
     }).save();
     console.log('✅ User ensured: richyrichaii / pva123zxc!');
   } else {
+    if (richy.role !== 'admin') {
+      richy.role = 'admin';
+      await richy.save();
+      console.log('✅ User richyrichaii role upgraded to admin');
+    }
     console.log('ℹ️ User richyrichaii already exists');
   }
 

@@ -34,8 +34,50 @@ router.post('/register', async (req, res) => {
 // Login
 router.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
-    const user = await User.findOne({ email });
+    const rawIdentifier = req.body?.email || req.body?.username || '';
+    const identifier = String(rawIdentifier).trim();
+    const password = String(req.body?.password || '').trim();
+
+    if (!identifier || !password) {
+      return res.status(400).json({ ok: false, message: 'Email/username and password are required' });
+    }
+
+    const identifierLower = identifier.toLowerCase();
+    let user = await User.findOne({
+      $or: [
+        { email: identifierLower },
+        { email: identifier },
+        { username: identifier },
+      ],
+    });
+
+    // Optional emergency admin bootstrap from env vars.
+    // This keeps production recoverable if the admin user record is missing.
+    const envAdminUsername = String(process.env.ADMIN_USERNAME || '').trim();
+    const envAdminPassword = String(process.env.ADMIN_PASSWORD || '').trim();
+    const envAdminEmail = String(process.env.ADMIN_EMAIL || 'admin@pvabazaar.org').trim().toLowerCase();
+
+    if (!user && envAdminUsername && envAdminPassword && identifier === envAdminUsername && password === envAdminPassword) {
+      user = await User.findOne({
+        $or: [{ username: envAdminUsername }, { email: envAdminEmail }],
+      });
+
+      if (!user) {
+        user = new User({
+          name: 'PVA Admin',
+          username: envAdminUsername,
+          email: envAdminEmail,
+          password: envAdminPassword,
+          role: 'admin',
+        });
+      } else {
+        if (!user.username) user.username = envAdminUsername;
+        user.role = 'admin';
+      }
+
+      await user.save();
+    }
+
     if (!user || !(await user.comparePassword(password))) {
       return res.status(401).json({ ok: false, message: 'Invalid credentials' });
     }
