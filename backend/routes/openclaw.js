@@ -1,5 +1,6 @@
 const express = require('express');
 const axios = require('axios');
+const jwt = require('jsonwebtoken');
 const fs = require('fs');
 const path = require('path');
 const dbConnect = require('../lib/dbConnect');
@@ -107,6 +108,23 @@ function isAuthorized(req, bridgeSecret) {
   if (!bridgeSecret) return true;
   const candidate = req.headers['x-openclaw-secret'];
   return typeof candidate === 'string' && candidate === bridgeSecret;
+}
+
+function isAdminAuthenticated(req) {
+  try {
+    const authHeader = req.headers.authorization || '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+    if (!token || !process.env.JWT_SECRET) return false;
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    return decoded && decoded.role === 'admin';
+  } catch (_err) {
+    return false;
+  }
+}
+
+function isBridgeOrAdminAuthorized(req, bridgeSecret) {
+  return isAuthorized(req, bridgeSecret) || isAdminAuthenticated(req);
 }
 
 async function saveMessage(payload) {
@@ -272,7 +290,7 @@ router.get('/recent-events', (req, res) => {
 router.post('/dispatch', async (req, res) => {
   const config = getConfig();
 
-  if (!isAuthorized(req, config.bridgeSecret)) {
+  if (!isBridgeOrAdminAuthorized(req, config.bridgeSecret)) {
     return res.status(401).json({
       ok: false,
       message: 'Unauthorized OpenClaw dispatch request',
@@ -347,6 +365,14 @@ router.post('/dispatch', async (req, res) => {
 });
 
 router.get('/messages', async (req, res) => {
+  const config = getConfig();
+  if (!isBridgeOrAdminAuthorized(req, config.bridgeSecret)) {
+    return res.status(401).json({
+      ok: false,
+      message: 'Unauthorized OpenClaw messages request',
+    });
+  }
+
   try {
     await dbConnect();
     const OpenClawMessage = require('../models/OpenClawMessage');
