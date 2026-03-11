@@ -1,0 +1,375 @@
+/* ── OpenClawTab.css ─────────────────────────────────────────────────────
+   Matches the Admin panel design system (site CSS tokens from base.css)
+   Dark blue night / green day, cyan/blue accents, compact glassy panels.
+──────────────────────────────────────────────────────────────────────── */
+
+.openclaw-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Generic panel ───────────────────────────────────────────────────── */
+.oc-panel {
+  background: var(--site-panel-soft, rgba(255, 255, 255, 0.03));
+  border: 1px solid var(--site-border, rgba(255, 255, 255, 0.08));
+  border-radius: 12px;
+  padding: 20px 24px;
+}
+
+.oc-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.oc-panel-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--site-text, #fff);
+}
+
+.oc-panel-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* ── Status cards ────────────────────────────────────────────────────── */
+.oc-status-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.oc-status-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  min-width: 150px;
+}
+
+.oc-ok {
+  background: rgba(0, 210, 100, 0.07);
+  border-color: rgba(0, 210, 100, 0.22);
+}
+
+.oc-bad {
+  background: rgba(255, 70, 70, 0.08);
+  border-color: rgba(255, 70, 70, 0.2);
+}
+
+.oc-warn {
+  background: rgba(255, 195, 40, 0.07);
+  border-color: rgba(255, 195, 40, 0.22);
+}
+
+.oc-info {
+  background: var(--site-panel, rgba(255, 255, 255, 0.04));
+  border-color: var(--site-border, rgba(255, 255, 255, 0.1));
+}
+
+.oc-url-card {
+  flex: 1;
+  min-width: 200px;
+}
+
+.oc-status-icon {
+  font-size: 1.25rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.oc-status-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--site-text-dim, #aaa);
+  margin-bottom: 2px;
+}
+
+.oc-status-value {
+  font-size: 0.9rem;
+  color: var(--site-text, #fff);
+  font-weight: 500;
+}
+
+.oc-url-value {
+  font-size: 0.78rem;
+  font-family: 'Courier New', monospace;
+  word-break: break-all;
+  opacity: 0.85;
+}
+
+/* ── Notice banner ───────────────────────────────────────────────────── */
+.oc-notice {
+  margin-top: 14px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.87rem;
+  line-height: 1.5;
+}
+
+.oc-notice--warn {
+  background: rgba(255, 195, 40, 0.08);
+  border: 1px solid rgba(255, 195, 40, 0.25);
+  color: #ffc832;
+}
+
+.oc-notice code {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9em;
+}
+
+/* ── Dispatch / chat input ───────────────────────────────────────────── */
+.oc-dispatch-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.oc-message-input {
+  flex: 1;
+  background: var(--site-panel, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--site-border, rgba(255, 255, 255, 0.12));
+  border-radius: 8px;
+  color: var(--site-text, #fff);
+  padding: 10px 14px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 72px;
+  transition: border-color 0.18s;
+}
+
+.oc-message-input:focus {
+  outline: none;
+  border-color: var(--site-accent, #00d9ff);
+  box-shadow: 0 0 0 2px rgba(0, 217, 255, 0.12);
+}
+
+.oc-message-input::placeholder {
+  color: var(--site-text-dim, #888);
+}
+
+.oc-message-input:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.oc-send-btn {
+  padding: 10px 22px;
+  align-self: flex-end;
+  white-space: nowrap;
+}
+
+/* ── Buttons ─────────────────────────────────────────────────────────── */
+.oc-btn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  font-size: 0.88rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.18s;
+  line-height: 1.4;
+}
+
+.oc-btn--primary {
+  background: var(--site-accent, #00d9ff);
+  color: var(--site-bg, #0a0e27);
+  border-color: var(--site-accent, #00d9ff);
+}
+
+.oc-btn--primary:hover:not(:disabled) {
+  filter: brightness(1.12);
+}
+
+.oc-btn--primary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.oc-btn--secondary {
+  background: var(--site-panel-soft, rgba(255, 255, 255, 0.04));
+  color: var(--site-text, #fff);
+  border-color: var(--site-border, rgba(255, 255, 255, 0.12));
+}
+
+.oc-btn--secondary:hover:not(:disabled) {
+  background: var(--site-panel, rgba(255, 255, 255, 0.08));
+  border-color: var(--site-accent, #00d9ff);
+}
+
+.oc-btn--secondary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── Auto-refresh label ──────────────────────────────────────────────── */
+.oc-auto-refresh-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: var(--site-text-dim, #aaa);
+  cursor: pointer;
+  user-select: none;
+}
+
+.oc-auto-refresh-label input {
+  accent-color: var(--site-accent, #00d9ff);
+  cursor: pointer;
+}
+
+/* ── Misc text helpers ───────────────────────────────────────────────── */
+.oc-hint {
+  font-size: 0.78rem;
+  color: var(--site-text-dim, #aaa);
+}
+
+/* ── Send result feedback ────────────────────────────────────────────── */
+.oc-send-result {
+  margin-top: 10px;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 0.88rem;
+  font-weight: 500;
+  animation: oc-fadein 0.2s ease;
+}
+
+.oc-send-result--ok {
+  background: rgba(0, 210, 100, 0.08);
+  color: #00e874;
+  border: 1px solid rgba(0, 210, 100, 0.22);
+}
+
+.oc-send-result--err {
+  background: rgba(255, 70, 70, 0.08);
+  color: #ff6b6b;
+  border: 1px solid rgba(255, 70, 70, 0.22);
+}
+
+@keyframes oc-fadein {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Events feed ─────────────────────────────────────────────────────── */
+.oc-events-empty {
+  color: var(--site-text-dim, #aaa);
+  font-size: 0.88rem;
+  padding: 18px 0;
+  text-align: center;
+}
+
+.oc-events-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 460px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.oc-events-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.oc-events-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.oc-events-list::-webkit-scrollbar-thumb {
+  background: var(--site-border, rgba(255, 255, 255, 0.15));
+  border-radius: 2px;
+}
+
+.oc-event {
+  padding: 9px 13px;
+  border-radius: 7px;
+  border-left: 3px solid transparent;
+  background: var(--site-panel-soft, rgba(255, 255, 255, 0.02));
+  word-break: break-word;
+}
+
+.oc-event--info    { border-left-color: var(--site-accent, #00d9ff); }
+.oc-event--success { border-left-color: #00e874; background: rgba(0, 210, 100, 0.04); }
+.oc-event--warn    { border-left-color: #ffc832; background: rgba(255, 195, 40, 0.04); }
+.oc-event--error   { border-left-color: #ff6b6b; background: rgba(255, 70, 70, 0.05); }
+.oc-event--alert   { border-left-color: #ff3d3d; background: rgba(255, 40, 40, 0.06); }
+
+.oc-event-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+
+.oc-event-level {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--site-text, #fff);
+}
+
+.oc-event-type {
+  font-size: 0.73rem;
+  color: var(--site-accent, #00d9ff);
+  opacity: 0.75;
+}
+
+.oc-event-time {
+  font-size: 0.72rem;
+  color: var(--site-text-dim, #888);
+  margin-left: auto;
+  font-family: 'Courier New', monospace;
+}
+
+.oc-event-msg {
+  font-size: 0.83rem;
+  color: rgba(255, 255, 255, 0.82);
+  font-family: 'Courier New', monospace;
+  white-space: pre-wrap;
+  line-height: 1.4;
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .oc-panel {
+    padding: 16px;
+  }
+
+  .oc-dispatch-row {
+    flex-direction: column;
+  }
+
+  .oc-send-btn {
+    width: 100%;
+    text-align: center;
+  }
+
+  .oc-status-grid {
+    flex-direction: column;
+  }
+
+  .oc-status-card {
+    min-width: unset;
+  }
+}

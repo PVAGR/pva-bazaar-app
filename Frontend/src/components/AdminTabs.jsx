@@ -28,6 +28,7 @@ const AdminTabs = React.memo(function AdminTabs({ activeTab, onTabChange }) {
     { id: 'api', label: '🔗 API Docs', title: 'API documentation & endpoints (Alt+8)', shortcut: '8' },
     { id: 'health', label: '💚 Health', title: 'System health & monitoring (Alt+9)', shortcut: '9' },
     { id: 'settings', label: '⚙️ Settings', title: 'Configuration (Alt+0)', shortcut: '0' },
+    { id: 'openclaw', label: '🦞 OpenClaw', title: 'OpenClaw gateway & agent interface', shortcut: null },
   ];
 
   return (
@@ -44,9 +45,11 @@ const AdminTabs = React.memo(function AdminTabs({ activeTab, onTabChange }) {
           title={tab.title}
         >
           {tab.label}
-          <span className="tab-shortcut" aria-label={`Keyboard shortcut: Alt+${tab.shortcut}`}>
-            Alt+{tab.shortcut}
-          </span>
+          {tab.shortcut && (
+            <span className="tab-shortcut" aria-label={`Keyboard shortcut: Alt+${tab.shortcut}`}>
+              Alt+{tab.shortcut}
+            </span>
+          )}
         </button>
       ))}
     </div>

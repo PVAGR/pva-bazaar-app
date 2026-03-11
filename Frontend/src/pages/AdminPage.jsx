@@ -20,6 +20,7 @@ import CloudStorageTab from '../components/CloudStorageTab.jsx';
 import ApiDocsTab from '../components/ApiDocsTab.jsx';
 import HealthTab from '../components/HealthTab.jsx';
 import SettingsTab from '../components/SettingsTab.jsx';
+import OpenClawTab from '../components/OpenClawTab.jsx';
 import './AdminPage.css';
 
 const logger = createLogger('AdminPage');
@@ -706,6 +707,13 @@ export default function AdminPage() {
           {activeTab === 'settings' && (
             <ErrorBoundary>
               <SettingsTab />
+            </ErrorBoundary>
+          )}
+
+          {/* OpenClaw Tab */}
+          {activeTab === 'openclaw' && (
+            <ErrorBoundary>
+              <OpenClawTab />
             </ErrorBoundary>
           )}
         </div>
