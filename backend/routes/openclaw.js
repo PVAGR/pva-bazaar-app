@@ -2,6 +2,7 @@ const express = require('express');
 const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
+const dbConnect = require('../lib/dbConnect');
 
 const router = express.Router();
 
@@ -104,6 +105,18 @@ function isAuthorized(req, bridgeSecret) {
   if (!bridgeSecret) return true;
   const candidate = req.headers['x-openclaw-secret'];
   return typeof candidate === 'string' && candidate === bridgeSecret;
+}
+
+async function saveMessage(payload) {
+  try {
+    await dbConnect();
+    const OpenClawMessage = require('../models/OpenClawMessage');
+    const doc = await OpenClawMessage.create(payload);
+    return doc;
+  } catch (_err) {
+    // Persistence is best-effort. OpenClaw bridge should still function if DB is unavailable.
+    return null;
+  }
 }
 
 router.get('/status', async (_req, res) => {
@@ -262,13 +275,6 @@ router.post('/dispatch', async (req, res) => {
     });
   }
 
-  if (!config.webhookUrl) {
-    return res.status(400).json({
-      ok: false,
-      message: 'OPENCLAW_WEBHOOK_URL is required for dispatch',
-    });
-  }
-
   const { message, event, metadata } = req.body || {};
 
   if (!message && !event) {
@@ -279,6 +285,26 @@ router.post('/dispatch', async (req, res) => {
   }
 
   try {
+    const storedOutbound = await saveMessage({
+      direction: 'outbound',
+      content: message || event,
+      event: event || 'pvabazaar.dispatch',
+      source: metadata?.source || 'openclaw-dispatch',
+      processed: false,
+      metadata: metadata || {},
+    });
+
+    if (!config.webhookUrl) {
+      return res.json({
+        ok: true,
+        forwarded: false,
+        queued: true,
+        message: 'Message queued in OpenClaw store; webhook not configured',
+        queuedMessageId: storedOutbound ? storedOutbound._id.toString() : null,
+        timestamp: new Date().toISOString(),
+      });
+    }
+
     const headers = {
       'Content-Type': 'application/json',
     };
@@ -300,7 +326,9 @@ router.post('/dispatch', async (req, res) => {
     return res.json({
       ok: true,
       forwarded: true,
+      queued: true,
       status: forward.status,
+      queuedMessageId: storedOutbound ? storedOutbound._id.toString() : null,
       timestamp: new Date().toISOString(),
     });
   } catch (err) {
@@ -310,6 +338,125 @@ router.post('/dispatch', async (req, res) => {
       forwarded: false,
       message: 'Failed to forward to OpenClaw webhook',
       detail: err?.response?.data || err.message,
+    });
+  }
+});
+
+router.get('/messages', async (req, res) => {
+  try {
+    await dbConnect();
+    const OpenClawMessage = require('../models/OpenClawMessage');
+
+    const limit = Math.min(parseInt(req.query.limit, 10) || 120, 300);
+    const query = {};
+
+    if (req.query.direction) {
+      query.direction = req.query.direction;
+    }
+
+    if (req.query.unprocessed === 'true') {
+      query.processed = false;
+    }
+
+    const messages = await OpenClawMessage.find(query)
+      .sort({ createdAt: 1 })
+      .limit(limit)
+      .lean();
+
+    return res.json({
+      ok: true,
+      messages,
+      count: messages.length,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err) {
+    return res.status(503).json({
+      ok: false,
+      message: 'Message store unavailable',
+      error: err.message,
+    });
+  }
+});
+
+router.post('/inbound', async (req, res) => {
+  const config = getConfig();
+  if (!isAuthorized(req, config.bridgeSecret)) {
+    return res.status(401).json({
+      ok: false,
+      message: 'Unauthorized inbound OpenClaw message',
+    });
+  }
+
+  const { content, event, metadata, respondingTo } = req.body || {};
+  if (!content || !String(content).trim()) {
+    return res.status(400).json({
+      ok: false,
+      message: 'content is required',
+    });
+  }
+
+  try {
+    await dbConnect();
+    const OpenClawMessage = require('../models/OpenClawMessage');
+    const doc = await OpenClawMessage.create({
+      direction: 'inbound',
+      content: String(content).trim(),
+      event: event || 'pvabazaar.agent.response',
+      source: metadata?.source || 'openclaw-inbound',
+      processed: true,
+      respondingTo: respondingTo || null,
+      metadata: metadata || {},
+    });
+
+    return res.json({
+      ok: true,
+      messageId: doc._id.toString(),
+      timestamp: doc.createdAt,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      ok: false,
+      message: 'Failed to store inbound message',
+      error: err.message,
+    });
+  }
+});
+
+router.post('/messages/:id/processed', async (req, res) => {
+  const config = getConfig();
+  if (!isAuthorized(req, config.bridgeSecret)) {
+    return res.status(401).json({
+      ok: false,
+      message: 'Unauthorized mark-processed request',
+    });
+  }
+
+  try {
+    await dbConnect();
+    const OpenClawMessage = require('../models/OpenClawMessage');
+    const updated = await OpenClawMessage.findByIdAndUpdate(
+      req.params.id,
+      { processed: true },
+      { new: true },
+    );
+
+    if (!updated) {
+      return res.status(404).json({
+        ok: false,
+        message: 'Message not found',
+      });
+    }
+
+    return res.json({
+      ok: true,
+      id: updated._id.toString(),
+      processed: updated.processed,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      ok: false,
+      message: 'Failed to update message state',
+      error: err.message,
     });
   }
 });

@@ -9,6 +9,54 @@
   gap: 20px;
 }
 
+.oc-chat-box {
+  margin-top: 14px;
+  background: var(--site-panel, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--site-border, rgba(255, 255, 255, 0.1));
+  border-radius: 10px;
+  padding: 12px;
+  max-height: 440px;
+  overflow-y: auto;
+}
+
+.oc-chat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.oc-chat-row {
+  border-radius: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--site-border, rgba(255, 255, 255, 0.1));
+  background: var(--site-panel-soft, rgba(255, 255, 255, 0.03));
+}
+
+.oc-chat-row.inbound {
+  border-left: 3px solid #00e874;
+}
+
+.oc-chat-row.outbound {
+  border-left: 3px solid var(--site-accent, #00d9ff);
+}
+
+.oc-chat-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 0.78rem;
+  color: var(--site-text-dim, #aaa);
+  margin-bottom: 6px;
+}
+
+.oc-chat-content {
+  color: var(--site-text, #fff);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
 /* ── Generic panel ───────────────────────────────────────────────────── */
 .oc-panel {
   background: var(--site-panel-soft, rgba(255, 255, 255, 0.03));

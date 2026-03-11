@@ -1,13 +1,4 @@
-/**
- * OpenClawTab
- *
- * Dedicated admin tab for interacting with the OpenClaw gateway:
- * - Live status / reachability of the gateway
- * - Message dispatch panel (send events / talk to OpenClaw)
- * - Real-time activity feed (watchdog + dispatch log)
- */
-
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { apiGet, apiPost } from '../lib/api';
 import { createLogger } from '../lib/logger';
 import { LoadingDots } from '../components/LoadingSpinner.jsx';
@@ -15,15 +6,25 @@ import './OpenClawTab.css';
 
 const logger = createLogger('OpenClawTab');
 
+function formatMessageTime(value) {
+  if (!value) return 'n/a';
+  try {
+    return new Date(value).toLocaleString();
+  } catch (_err) {
+    return String(value);
+  }
+}
+
 export default function OpenClawTab() {
   const [status, setStatus] = useState(null);
   const [statusLoading, setStatusLoading] = useState(true);
-  const [events, setEvents] = useState([]);
-  const [eventsLoading, setEventsLoading] = useState(false);
+  const [messages, setMessages] = useState([]);
+  const [messagesLoading, setMessagesLoading] = useState(true);
   const [messageInput, setMessageInput] = useState('');
   const [sending, setSending] = useState(false);
   const [sendResult, setSendResult] = useState(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
+
   const sendResultTimer = useRef(null);
 
   const loadStatus = useCallback(async () => {
@@ -39,17 +40,17 @@ export default function OpenClawTab() {
     }
   }, []);
 
-  const loadEvents = useCallback(async () => {
-    setEventsLoading(true);
+  const loadMessages = useCallback(async () => {
+    setMessagesLoading(true);
     try {
-      const data = await apiGet('/openclaw/recent-events?limit=40');
+      const data = await apiGet('/openclaw/messages?limit=120');
       if (data.ok) {
-        setEvents(data.events || []);
+        setMessages(Array.isArray(data.messages) ? data.messages : []);
       }
     } catch (err) {
-      logger.error('Failed to load events', err);
+      logger.error('Failed to load OpenClaw messages', err);
     } finally {
-      setEventsLoading(false);
+      setMessagesLoading(false);
     }
   }, []);
 
@@ -72,9 +73,14 @@ export default function OpenClawTab() {
       });
 
       if (data.ok) {
-        setSendResult({ ok: true, text: '✅ Dispatched to OpenClaw' });
+        setSendResult({
+          ok: true,
+          text: data.forwarded
+            ? 'Message sent to OpenClaw and queued for agent response'
+            : 'Message queued for agent response',
+        });
         setMessageInput('');
-        setTimeout(loadEvents, 1200);
+        setTimeout(loadMessages, 1000);
       } else {
         setSendResult({ ok: false, text: `❌ ${data.message || 'Dispatch failed'}` });
       }
@@ -82,58 +88,61 @@ export default function OpenClawTab() {
       setSendResult({ ok: false, text: `❌ ${err.message || 'Network error'}` });
     } finally {
       setSending(false);
-      sendResultTimer.current = setTimeout(() => setSendResult(null), 5000);
+      sendResultTimer.current = setTimeout(() => setSendResult(null), 6000);
     }
-  }, [messageInput, loadEvents]);
+  }, [messageInput, loadMessages]);
 
-  // Initial load
   useEffect(() => {
     loadStatus();
-    loadEvents();
+    loadMessages();
     return () => {
       if (sendResultTimer.current) clearTimeout(sendResultTimer.current);
     };
-  }, [loadStatus, loadEvents]);
+  }, [loadStatus, loadMessages]);
 
-  // Auto-refresh
   useEffect(() => {
     if (!autoRefresh) return undefined;
     const id = setInterval(() => {
       loadStatus();
-      loadEvents();
-    }, 30000);
+      loadMessages();
+    }, 15000);
     return () => clearInterval(id);
-  }, [autoRefresh, loadStatus, loadEvents]);
+  }, [autoRefresh, loadStatus, loadMessages]);
 
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
+  const handleKeyDown = (event) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
       sendMessage();
     }
   };
 
-  const canDispatch = Boolean(status?.configured) && !sending && messageInput.trim().length > 0;
+  const rows = useMemo(
+    () => [...messages].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)),
+    [messages],
+  );
 
   return (
     <div className="openclaw-tab">
-      {/* ── Status Panel ─────────────────────────── */}
       <div className="oc-panel">
         <div className="oc-panel-header">
-          <h2 className="oc-panel-title">🦞 OpenClaw Gateway</h2>
+          <h2 className="oc-panel-title">🦞 OpenClaw Live Console</h2>
           <div className="oc-panel-actions">
             <label className="oc-auto-refresh-label">
               <input
                 type="checkbox"
                 checked={autoRefresh}
-                onChange={(e) => setAutoRefresh(e.target.checked)}
+                onChange={(event) => setAutoRefresh(event.target.checked)}
               />
-              Auto (30s)
+              Poll every 15s
             </label>
             <button
               className="oc-btn oc-btn--secondary"
-              onClick={() => { loadStatus(); loadEvents(); }}
-              disabled={statusLoading || eventsLoading}
-              title="Refresh status and events"
+              onClick={() => {
+                loadStatus();
+                loadMessages();
+              }}
+              disabled={statusLoading || messagesLoading}
+              title="Refresh status and messages"
             >
               🔄 Refresh
             </button>
@@ -141,86 +150,85 @@ export default function OpenClawTab() {
         </div>
 
         {statusLoading ? (
-          <LoadingDots size="small" label="Checking gateway…" />
+          <LoadingDots size="small" label="Checking gateway..." />
         ) : (
           <div className="oc-status-grid">
             <div className={`oc-status-card ${status?.configured ? 'oc-ok' : 'oc-warn'}`}>
               <span className="oc-status-icon">{status?.configured ? '✅' : '⚠️'}</span>
               <div>
                 <div className="oc-status-label">Gateway</div>
-                <div className="oc-status-value">{status?.configured ? 'Configured' : 'Not Configured'}</div>
+                <div className="oc-status-value">{status?.configured ? 'Configured' : 'Not configured'}</div>
               </div>
             </div>
 
             <div className={`oc-status-card ${status?.reachable ? 'oc-ok' : 'oc-bad'}`}>
               <span className="oc-status-icon">{status?.reachable ? '🟢' : '🔴'}</span>
               <div>
-                <div className="oc-status-label">Reachable</div>
+                <div className="oc-status-label">Reachability</div>
                 <div className="oc-status-value">{status?.reachable ? 'Online' : 'Offline'}</div>
               </div>
             </div>
 
             <div className="oc-status-card oc-info">
-              <span className="oc-status-icon">🪝</span>
+              <span className="oc-status-icon">🤖</span>
               <div>
-                <div className="oc-status-label">Webhook</div>
-                <div className="oc-status-value">
-                  {status?.webhookUrlConfigured ? 'Configured' : 'Not Set'}
-                </div>
+                <div className="oc-status-label">Agent Mode</div>
+                <div className="oc-status-value">Autonomous queue responder</div>
               </div>
             </div>
-
-            {status?.gatewayUrl && (
-              <div className="oc-status-card oc-info oc-url-card">
-                <span className="oc-status-icon">🔗</span>
-                <div>
-                  <div className="oc-status-label">Endpoint</div>
-                  <div className="oc-status-value oc-url-value">{status.gatewayUrl}</div>
-                </div>
-              </div>
-            )}
           </div>
         )}
 
-        {status && !status.configured && (
-          <div className="oc-notice oc-notice--warn">
-            <strong>Not configured.</strong> Set{' '}
-            <code>OPENCLAW_WEBHOOK_URL</code> (and optionally{' '}
-            <code>OPENCLAW_GATEWAY_URL</code>) in Vercel environment variables, then redeploy the
-            backend.
-          </div>
-        )}
-      </div>
+        <div className="oc-chat-box" aria-label="OpenClaw chat">
+          {messagesLoading && !rows.length ? (
+            <LoadingDots size="small" label="Loading conversation..." />
+          ) : null}
 
-      {/* ── Dispatch / Chat Panel ─────────────────── */}
-      <div className="oc-panel">
-        <div className="oc-panel-header">
-          <h3 className="oc-panel-title">📡 Send to OpenClaw</h3>
-          <span className="oc-hint">Shift+Enter for newline · Enter to send</span>
+          {!messagesLoading && !rows.length ? (
+            <div className="oc-events-empty">
+              No messages yet. Send a message and the scheduled agent workflow will answer.
+            </div>
+          ) : null}
+
+          {!!rows.length && (
+            <div className="oc-chat-list">
+              {rows.map((row) => {
+                const inbound = row.direction === 'inbound';
+                return (
+                  <div
+                    key={row._id || `${row.direction}-${row.createdAt}-${row.content}`}
+                    className={`oc-chat-row ${inbound ? 'inbound' : 'outbound'}`}
+                  >
+                    <div className="oc-chat-meta">
+                      <strong>{inbound ? 'OpenClaw Agent' : 'You'}</strong>
+                      <span>{formatMessageTime(row.createdAt)}</span>
+                    </div>
+                    <div className="oc-chat-content">{row.content || '(empty)'}</div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         <div className="oc-dispatch-row">
           <textarea
             className="oc-message-input"
             value={messageInput}
-            onChange={(e) => setMessageInput(e.target.value)}
+            onChange={(event) => setMessageInput(event.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={
-              status?.configured
-                ? 'Type a message or command to dispatch to OpenClaw…'
-                : 'Configure OpenClaw gateway first (see notice above)'
-            }
+            placeholder="Type a message to OpenClaw. Enter sends, Shift+Enter adds newline."
             rows={3}
-            disabled={sending || !status?.configured}
+            disabled={sending}
             aria-label="OpenClaw message input"
           />
           <button
             className="oc-btn oc-btn--primary oc-send-btn"
             onClick={sendMessage}
-            disabled={!canDispatch}
+            disabled={sending || !messageInput.trim()}
             aria-label="Send to OpenClaw"
           >
-            {sending ? 'Sending…' : '📤 Send'}
+            {sending ? 'Sending...' : 'Send'}
           </button>
         </div>
 
@@ -231,55 +239,6 @@ export default function OpenClawTab() {
             aria-live="polite"
           >
             {sendResult.text}
-          </div>
-        )}
-      </div>
-
-      {/* ── Activity Feed ─────────────────────────── */}
-      <div className="oc-panel">
-        <div className="oc-panel-header">
-          <h3 className="oc-panel-title">📋 Activity Feed</h3>
-          <div className="oc-panel-actions">
-            <span className="oc-hint">{events.length} event{events.length !== 1 ? 's' : ''}</span>
-            <button
-              className="oc-btn oc-btn--secondary"
-              onClick={loadEvents}
-              disabled={eventsLoading}
-              title="Reload events"
-            >
-              {eventsLoading ? '…' : '🔄'}
-            </button>
-          </div>
-        </div>
-
-        {eventsLoading && events.length === 0 && (
-          <LoadingDots size="small" label="Loading activity…" />
-        )}
-
-        {!eventsLoading && events.length === 0 && (
-          <div className="oc-events-empty">
-            No watchdog activity yet. Events will appear here once the OpenClaw watchdog writes
-            logs.
-          </div>
-        )}
-
-        {events.length > 0 && (
-          <div className="oc-events-list" aria-label="OpenClaw event feed">
-            {events.map((ev) => (
-              <div
-                key={ev.id}
-                className={`oc-event oc-event--${ev.level ? ev.level.toLowerCase() : 'info'}`}
-              >
-                <div className="oc-event-meta">
-                  <span className="oc-event-level">{ev.level || 'INFO'}</span>
-                  {ev.type && ev.type !== 'general' && (
-                    <span className="oc-event-type">{ev.type}</span>
-                  )}
-                  <span className="oc-event-time">{ev.timestamp || '—'}</span>
-                </div>
-                <div className="oc-event-msg">{ev.message}</div>
-              </div>
-            ))}
           </div>
         )}
       </div>
