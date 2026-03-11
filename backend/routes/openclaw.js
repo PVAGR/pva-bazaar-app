@@ -90,6 +90,7 @@ function getConfig() {
     (gatewayUrl ? `${gatewayUrl.replace(/\/$/, '')}/health` : '');
   const apiKey = process.env.OPENCLAW_API_KEY || '';
   const bridgeSecret = process.env.OPENCLAW_BRIDGE_SECRET || '';
+  const queueEnabled = Boolean(bridgeSecret);
 
   return {
     gatewayUrl,
@@ -97,7 +98,8 @@ function getConfig() {
     healthUrl,
     apiKey,
     bridgeSecret,
-    configured: Boolean(webhookUrl || gatewayUrl),
+    queueEnabled,
+    configured: Boolean(webhookUrl || gatewayUrl || queueEnabled),
   };
 }
 
@@ -153,6 +155,8 @@ router.get('/status', async (_req, res) => {
     ok: true,
     configured: true,
     reachable,
+    queueEnabled: config.queueEnabled,
+    mode: config.webhookUrl ? 'webhook+queue' : 'queue-only',
     gatewayUrl: config.gatewayUrl || null,
     webhookUrlConfigured: Boolean(config.webhookUrl),
     timestamp: new Date().toISOString(),

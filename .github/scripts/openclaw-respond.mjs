@@ -6,8 +6,13 @@ const GITHUB_TOKEN = process.env.GITHUB_TOKEN || '';
 const REPO = process.env.GITHUB_REPOSITORY || 'PVAGR/pva-bazaar-app';
 
 if (!BACKEND_URL) {
-  console.log('OPENCLAW_BACKEND_URL is not set. Exiting.');
-  process.exit(0);
+  console.error('OPENCLAW_BACKEND_URL is not set. Failing run.');
+  process.exit(1);
+}
+
+if (!BRIDGE_SECRET) {
+  console.error('OPENCLAW_BRIDGE_SECRET is not set. Failing run.');
+  process.exit(1);
 }
 
 const SYSTEM_PROMPT = `You are PVA Magnum Opus, the autonomous OpenClaw assistant for PVAGR/pva-bazaar-app and pvabazaar.org.
@@ -90,6 +95,7 @@ async function generateReply(userText) {
 }
 
 async function main() {
+  console.log(`OpenClaw responder starting for ${REPO}`);
   const response = await fetch(`${BACKEND_URL}/api/openclaw/messages?unprocessed=true&direction=outbound&limit=25`, {
     headers: getHeaders(true),
   });
@@ -109,6 +115,9 @@ async function main() {
 
   console.log(`Processing ${messages.length} queued message(s)...`);
 
+  let processedCount = 0;
+  let failedCount = 0;
+
   for (const message of messages) {
     const text = message.content || message.event || 'Empty outbound event';
 
@@ -116,10 +125,18 @@ async function main() {
       const reply = await generateReply(text);
       await postInbound(reply, message._id);
       await markProcessed(message._id);
+      processedCount += 1;
       console.log(`Processed message ${message._id}`);
     } catch (err) {
+      failedCount += 1;
       console.error(`Failed message ${message._id}:`, err.message);
     }
+  }
+
+  console.log(`Responder finished. processed=${processedCount} failed=${failedCount}`);
+
+  if (processedCount === 0 && failedCount > 0) {
+    process.exit(1);
   }
 }
 
