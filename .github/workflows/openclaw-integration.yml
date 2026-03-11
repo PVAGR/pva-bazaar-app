@@ -43,7 +43,7 @@ jobs:
       - name: Install backend dependencies
         run: |
           cd backend
-          npm ci
+          npm ci || npm install --no-audit --no-fund
       
       - name: Create test environment file
         run: |
@@ -147,7 +147,7 @@ jobs:
       - name: Install frontend dependencies
         run: |
           cd Frontend
-          npm ci
+          npm ci || npm install --no-audit --no-fund
       
       - name: Build frontend with OpenClaw UI
         run: |
@@ -188,6 +188,10 @@ jobs:
         run: |
           cd backend
           npm ci
+          if ($LASTEXITCODE -ne 0) {
+            npm install --no-audit --no-fund
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
       
       - name: Create test environment
         shell: pwsh
