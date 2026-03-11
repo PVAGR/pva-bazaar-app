@@ -56,29 +56,48 @@ router.post('/login', async (req, res) => {
     const envAdminUsername = String(process.env.ADMIN_USERNAME || '').trim();
     const envAdminPassword = String(process.env.ADMIN_PASSWORD || '').trim();
     const envAdminEmail = String(process.env.ADMIN_EMAIL || 'admin@pvabazaar.org').trim().toLowerCase();
+    const envAdminUsernameLower = envAdminUsername.toLowerCase();
+    const adminIdentifierMatch = Boolean(envAdminUsername) && (
+      identifier === envAdminUsername ||
+      identifierLower === envAdminUsernameLower ||
+      identifierLower === envAdminEmail
+    );
 
-    if (!user && envAdminUsername && envAdminPassword && identifier === envAdminUsername && password === envAdminPassword) {
+    let envAdminAuthenticated = false;
+
+    if (envAdminPassword && adminIdentifierMatch && password === envAdminPassword) {
       user = await User.findOne({
-        $or: [{ username: envAdminUsername }, { email: envAdminEmail }],
+        $or: [
+          { username: envAdminUsername },
+          { email: envAdminEmail },
+          { email: envAdminUsernameLower },
+        ],
       });
 
       if (!user) {
         user = new User({
           name: 'PVA Admin',
           username: envAdminUsername,
-          email: envAdminEmail,
+          email: envAdminEmail || envAdminUsernameLower,
           password: envAdminPassword,
           role: 'admin',
         });
       } else {
         if (!user.username) user.username = envAdminUsername;
+        // Keep env-admin login deterministic: refresh password from env when override path is used.
+        user.password = envAdminPassword;
         user.role = 'admin';
       }
 
       await user.save();
+      envAdminAuthenticated = true;
     }
 
-    if (!user || !(await user.comparePassword(password))) {
+    if (!user) {
+      return res.status(401).json({ ok: false, message: 'Invalid credentials' });
+    }
+
+    if (!envAdminAuthenticated && !(await user.comparePassword(password))) {
       return res.status(401).json({ ok: false, message: 'Invalid credentials' });
     }
     const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET);
