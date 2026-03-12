@@ -54,6 +54,35 @@ function buildDispatchPrompt(topBounties, walletAddress) {
   ].join('\n');
 }
 
+function rankBountyCandidates(candidates, { limit = 10, minRewardRaw = 0 } = {}) {
+  const normalizedLimit = Math.min(Math.max(parseInt(limit, 10) || 10, 1), 25);
+  const normalizedMinReward = Math.max(0, Number(minRewardRaw) || 0);
+
+  return candidates
+    .filter(item => (Number(item.rewardRaw) || 0) >= normalizedMinReward)
+    .map(item => ({ ...item, priorityScore: computeBountyPriority(item) }))
+    .sort((a, b) => b.priorityScore - a.priorityScore)
+    .slice(0, normalizedLimit);
+}
+
+async function queueOpenClawDispatch({ ranked, walletAddress, event }) {
+  const OpenClawMessage = require('../models/OpenClawMessage');
+  const prompt = buildDispatchPrompt(ranked, walletAddress);
+  return OpenClawMessage.create({
+    direction: 'outbound',
+    content: prompt,
+    event,
+    source: 'bounty-hunter-admin',
+    processed: false,
+    metadata: {
+      walletAddress,
+      chain: process.env.BOUNTY_PAYOUT_CHAIN || 'base',
+      topBountyIds: ranked.map(b => String(b._id)),
+      generatedAt: new Date().toISOString(),
+    },
+  });
+}
+
 const router = express.Router();
 
 // ─── Auth Middleware ──────────────────────────────────────────────────────────
@@ -153,6 +182,7 @@ router.post('/dispatch-top', requireAdmin, async (req, res) => {
   try {
     await dbConnect();
     const limit = Math.min(Math.max(parseInt(req.body?.limit, 10) || 10, 1), 25);
+    const minRewardRaw = Math.max(0, Number(req.body?.minRewardRaw) || 0);
     const walletAddress = String(req.body?.walletAddress || process.env.BOUNTY_PAYOUT_WALLET || '').trim();
 
     const candidates = await Bounty.find({
@@ -166,26 +196,20 @@ router.post('/dispatch-top', requireAdmin, async (req, res) => {
       return res.json({ ok: true, queued: false, message: 'No bounty candidates available to dispatch' });
     }
 
-    const ranked = candidates
-      .map(item => ({ ...item, priorityScore: computeBountyPriority(item) }))
-      .sort((a, b) => b.priorityScore - a.priorityScore)
-      .slice(0, limit);
+    const ranked = rankBountyCandidates(candidates, { limit, minRewardRaw });
+    if (!ranked.length) {
+      return res.json({
+        ok: true,
+        queued: false,
+        message: `No candidates met min reward ${minRewardRaw}`,
+        minRewardRaw,
+      });
+    }
 
-    const OpenClawMessage = require('../models/OpenClawMessage');
-    const prompt = buildDispatchPrompt(ranked, walletAddress);
-
-    const queued = await OpenClawMessage.create({
-      direction: 'outbound',
-      content: prompt,
+    const queued = await queueOpenClawDispatch({
+      ranked,
+      walletAddress,
       event: 'pvabazaar.bounty.rank.dispatch',
-      source: 'bounty-hunter-admin',
-      processed: false,
-      metadata: {
-        walletAddress,
-        chain: process.env.BOUNTY_PAYOUT_CHAIN || 'base',
-        topBountyIds: ranked.map(b => String(b._id)),
-        generatedAt: new Date().toISOString(),
-      },
     });
 
     return res.json({
@@ -193,7 +217,66 @@ router.post('/dispatch-top', requireAdmin, async (req, res) => {
       queued: true,
       messageId: String(queued._id),
       walletAddress,
+      minRewardRaw,
       rankedCount: ranked.length,
+      top: ranked.map(b => ({ id: b._id, title: b.title, platform: b.platform, score: b.priorityScore })),
+    });
+  } catch (err) {
+    return res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+router.post('/money-run', requireAdmin, async (req, res) => {
+  try {
+    await dbConnect();
+    const limit = Math.min(Math.max(parseInt(req.body?.limit, 10) || 10, 1), 25);
+    const minRewardRaw = Math.max(0, Number(req.body?.minRewardRaw) || 0);
+    const walletAddress = String(req.body?.walletAddress || process.env.BOUNTY_PAYOUT_WALLET || '').trim();
+    const { platforms } = req.body || {};
+
+    const scanResults = await runScan({ platforms });
+
+    const candidates = await Bounty.find({
+      status: { $in: ['discovered', 'draft_ready', 'approved', 'pending_review'] },
+    })
+      .sort({ createdAt: -1 })
+      .limit(300)
+      .lean();
+
+    if (!candidates.length) {
+      return res.json({
+        ok: true,
+        queued: false,
+        message: 'Money run completed, but no bounty candidates are available yet.',
+        scanResults,
+      });
+    }
+
+    const ranked = rankBountyCandidates(candidates, { limit, minRewardRaw });
+    if (!ranked.length) {
+      return res.json({
+        ok: true,
+        queued: false,
+        message: `Money run completed, but no candidates met min reward ${minRewardRaw}.`,
+        scanResults,
+        minRewardRaw,
+      });
+    }
+
+    const queued = await queueOpenClawDispatch({
+      ranked,
+      walletAddress,
+      event: 'pvabazaar.bounty.money.run',
+    });
+
+    return res.json({
+      ok: true,
+      queued: true,
+      messageId: String(queued._id),
+      walletAddress,
+      minRewardRaw,
+      rankedCount: ranked.length,
+      scanResults,
       top: ranked.map(b => ({ id: b._id, title: b.title, platform: b.platform, score: b.priorityScore })),
     });
   } catch (err) {

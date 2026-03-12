@@ -59,6 +59,9 @@ export default function BountyHunterTab() {
   const [rankedMode, setRankedMode] = useState(false);
   const [dispatchingTop, setDispatchingTop] = useState(false);
   const [dispatchResult, setDispatchResult] = useState(null);
+  const [moneyRunning, setMoneyRunning] = useState(false);
+  const [moneyResult, setMoneyResult] = useState(null);
+  const [minRewardRaw, setMinRewardRaw] = useState('0');
   const [wallet, setWallet] = useState({ address: '', chainId: '', connecting: false });
   const [walletError, setWalletError] = useState('');
   const [payoutNativeAmount, setPayoutNativeAmount] = useState('');
@@ -395,6 +398,7 @@ export default function BountyHunterTab() {
       const data = await apiPost('/bounties/dispatch-top', {
         limit: 10,
         walletAddress,
+        minRewardRaw: Number(minRewardRaw) || 0,
       });
       if (data.ok) {
         setDispatchResult(data);
@@ -406,6 +410,35 @@ export default function BountyHunterTab() {
       logger.error('Dispatch top bounties failed', err);
     } finally {
       setDispatchingTop(false);
+    }
+  };
+
+  const handleMoneyRun = async () => {
+    setMoneyRunning(true);
+    setMoneyResult(null);
+    setScanResult(null);
+    setDispatchResult(null);
+    try {
+      const data = await apiPost('/bounties/money-run', {
+        limit: 10,
+        walletAddress,
+        minRewardRaw: Number(minRewardRaw) || 0,
+      });
+      setMoneyResult(data);
+      await loadBounties(1, filterStatus, filterPlatform);
+      await loadStats();
+      setPage(1);
+      if (data?.scanResults) {
+        setScanResult(data.scanResults);
+      }
+      if (data?.queued) {
+        setDispatchResult(data);
+      }
+    } catch (err) {
+      setMoneyResult({ ok: false, message: err.message || 'Money run failed' });
+      logger.error('Money run failed', err);
+    } finally {
+      setMoneyRunning(false);
     }
   };
 
@@ -455,6 +488,26 @@ export default function BountyHunterTab() {
           placeholder="Base wallet address for OpenClaw context"
         />
 
+        <input
+          className="bh-min-reward-input"
+          type="number"
+          min="0"
+          step="1"
+          value={minRewardRaw}
+          onChange={e => setMinRewardRaw(e.target.value)}
+          placeholder="Min reward"
+          title="Minimum numeric reward to include in dispatch"
+        />
+
+        <button
+          className="bh-money-btn"
+          onClick={handleMoneyRun}
+          disabled={moneyRunning}
+          title="Scan + rank + dispatch top bounties in one step"
+        >
+          {moneyRunning ? 'Running…' : '💸 Money Run'}
+        </button>
+
         <button
           className="bh-openclaw-btn"
           onClick={handleDispatchTop}
@@ -471,6 +524,14 @@ export default function BountyHunterTab() {
       </div>
 
       {walletError ? <div className="bh-scan-result error">❌ {walletError}</div> : null}
+
+      {moneyResult && (
+        <div className={`bh-scan-result ${moneyResult.ok ? 'ok' : 'error'}`}>
+          {moneyResult.ok
+            ? `✅ Money run: ${moneyResult.scanResults?.discovered || 0} discovered, ${moneyResult.rankedCount || 0} queued to OpenClaw`
+            : `❌ ${moneyResult.message || 'Money run failed'}`}
+        </div>
+      )}
 
       {dispatchResult && (
         <div className={`bh-scan-result ${dispatchResult.ok ? 'ok' : 'error'}`}>
