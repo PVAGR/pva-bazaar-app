@@ -247,23 +247,56 @@ router.get('/status', async (_req, res) => {
   });
 });
 
-router.get('/watchdog-status', (_req, res) => {
+router.get('/watchdog-status', async (_req, res) => {
   const { logPath, alertPath } = resolveWatchdogPaths();
 
   const logLines = readLastLines(logPath, 400);
   const alertLines = readLastLines(alertPath, 120);
 
   if (!logLines.length && !alertLines.length) {
-    return res.json({
-      ok: true,
-      available: false,
-      message: 'No watchdog logs found yet',
-      paths: {
-        logPath,
-        alertPath,
-      },
-      timestamp: new Date().toISOString(),
-    });
+    // In serverless deployments watchdog file logs may not exist.
+    // Fall back to queue-backed health signals so the admin UI remains useful.
+    try {
+      const queue = await getQueueStats();
+      const degraded = queue.staleOutbound > 0 || queue.pendingOutbound > 20;
+      return res.json({
+        ok: true,
+        available: true,
+        source: 'queue-store',
+        summary: {
+          state: degraded ? 'degraded' : 'ok',
+          latestStatus: null,
+          latestDispatch: queue.latestOutboundEvent || null,
+          latestError: null,
+          latestWarn: queue.staleOutbound > 0 ? `staleOutbound=${queue.staleOutbound}` : null,
+          latestRecovery: null,
+          latestAlert: null,
+          lastEventAt: queue.latestInboundAt || queue.latestOutboundAt || null,
+          errorCountWindow: 0,
+          warnCountWindow: queue.staleOutbound > 0 ? 1 : 0,
+          alertCountWindow: 0,
+          queue,
+        },
+        message: 'Watchdog file logs not found; using queue-store fallback',
+        paths: {
+          logPath,
+          alertPath,
+        },
+        timestamp: new Date().toISOString(),
+      });
+    } catch (_err) {
+      return res.json({
+        ok: true,
+        available: false,
+        source: 'none',
+        message: 'No watchdog logs found yet',
+        paths: {
+          logPath,
+          alertPath,
+        },
+        timestamp: new Date().toISOString(),
+      });
+    }
   }
 
   const summary = buildWatchdogSummary(logLines, alertLines);
