@@ -122,9 +122,9 @@ jobs:
           "
 
       - name: Send webhook alert
-        if: ${{ secrets.OPENCLAW_ALERT_WEBHOOK_URL != '' }}
         env:
           WEBHOOK_URL: ${{ secrets.OPENCLAW_ALERT_WEBHOOK_URL }}
+        if: env.WEBHOOK_URL != ''
         run: |
           SUMMARY=$(cat /tmp/alert_summary.txt 2>/dev/null || echo 'Money Run B complete')
           PAYLOAD=$(node -e "process.stdout.write(JSON.stringify({
