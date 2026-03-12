@@ -20,6 +20,7 @@ jobs:
 
     env:
       OPENCLAW_BACKEND_URL: ${{ secrets.OPENCLAW_BACKEND_URL }}
+      OPENCLAW_ADMIN_JWT: ${{ secrets.OPENCLAW_ADMIN_JWT }}
       OPENCLAW_ALERT_WEBHOOK_URL: ${{ secrets.OPENCLAW_ALERT_WEBHOOK_URL }}
 
     steps:
@@ -40,18 +41,18 @@ jobs:
           node -e "const fs=require('fs'); const payload=JSON.parse(fs.readFileSync('/tmp/openclaw-status.json','utf8')); if(!payload.ok){console.error('OpenClaw status endpoint returned !ok'); process.exit(1);} if(!payload.configured){console.error('OpenClaw is not configured'); process.exit(1);} if(!payload.reachable){console.error('OpenClaw is configured but not reachable'); process.exit(1);} console.log('OpenClaw status healthy');"
 
       - name: Check queue health (admin auth)
-        if: ${{ secrets.OPENCLAW_ADMIN_JWT != '' }}
+        if: env.OPENCLAW_ADMIN_JWT != ''
         run: |
           curl -sS -f "$OPENCLAW_BACKEND_URL/api/openclaw/queue-stats" \
-            -H "Authorization: Bearer ${{ secrets.OPENCLAW_ADMIN_JWT }}" > /tmp/openclaw-queue.json
+            -H "Authorization: Bearer $OPENCLAW_ADMIN_JWT" > /tmp/openclaw-queue.json
 
       - name: Validate queue thresholds
-        if: ${{ secrets.OPENCLAW_ADMIN_JWT != '' }}
+        if: env.OPENCLAW_ADMIN_JWT != ''
         run: |
           node -e "const fs=require('fs'); const q=JSON.parse(fs.readFileSync('/tmp/openclaw-queue.json','utf8')); const pending=q.pendingOutbound||0; const stale=q.staleOutbound||0; const maxPending=40; const maxStale=5; if(pending>maxPending){console.error('OpenClaw pending queue too high: '+pending); process.exit(1);} if(stale>maxStale){console.error('OpenClaw stale queue too high: '+stale); process.exit(1);} console.log('OpenClaw queue healthy: pending='+pending+', stale='+stale);"
 
       - name: Queue health skipped notice
-        if: ${{ secrets.OPENCLAW_ADMIN_JWT == '' }}
+        if: env.OPENCLAW_ADMIN_JWT == ''
         run: echo "OPENCLAW_ADMIN_JWT not set; queue-auth checks skipped"
 
       - name: Notify on failure
