@@ -1,9 +1,12 @@
-name: Bounty Hunter - Money Run
+name: Bounty Hunter - Money Run (B)
 
+# Staggered companion to bounty-money-run.yml.
+# Combined with the primary workflow this achieves an effective 5-minute cadence:
+#   A: :00 :10 :20 :30 :40 :50
+#   B: :05 :15 :25 :35 :45 :55
 on:
   schedule:
-    # Every 10 minutes for higher opportunity capture
-    - cron: '*/10 * * * *'
+    - cron: '5-59/10 * * * *'
   workflow_dispatch:
     inputs:
       platforms:
@@ -24,13 +27,13 @@ on:
         default: ''
 
 jobs:
-  money-run:
-    name: Trigger /api/bounties/money-run
+  money-run-b:
+    name: Trigger /api/bounties/money-run (B)
     runs-on: ubuntu-latest
     timeout-minutes: 6
 
     concurrency:
-      group: bounty-money-run
+      group: bounty-money-run-b
       cancel-in-progress: false
 
     env:
@@ -115,7 +118,7 @@ jobs:
             const top=(p.top||[]).slice(0,3).map(b=>'• '+b.title+' (score='+b.score+')').join('\n');
             console.log('queued='+Boolean(p.queued)+' ranked='+ranked);
             require('fs').writeFileSync('/tmp/alert_summary.txt',
-              'Money Run complete. Ranked: '+ranked+'\n'+(top||'(no top bounties)'));
+              'Money Run (B) complete. Ranked: '+ranked+'\n'+(top||'(no top bounties)'));
           "
 
       - name: Send webhook alert
@@ -123,9 +126,9 @@ jobs:
         env:
           WEBHOOK_URL: ${{ secrets.OPENCLAW_ALERT_WEBHOOK_URL }}
         run: |
-          SUMMARY=$(cat /tmp/alert_summary.txt 2>/dev/null || echo 'Money Run complete')
+          SUMMARY=$(cat /tmp/alert_summary.txt 2>/dev/null || echo 'Money Run B complete')
           PAYLOAD=$(node -e "process.stdout.write(JSON.stringify({
-            text: '💸 *Bounty Money Run* — ' + process.env.SUMMARY,
+            text: '💸 *Bounty Money Run (B)* — ' + process.env.SUMMARY,
             username: 'OpenClaw',
             icon_emoji: ':moneybag:'
           }))" SUMMARY="$SUMMARY")

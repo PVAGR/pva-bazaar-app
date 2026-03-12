@@ -33,7 +33,11 @@ const KEYWORDS = {
 };
 
 const ALL_KEYWORDS = Object.values(KEYWORDS).flat();
-const REDDIT_SUBREDDITS = ['CryptoCurrency', 'web3', 'ethdev', 'solana', 'forhire', 'jobs4bitcoins'];
+const REDDIT_SUBREDDITS = [
+  'CryptoCurrency', 'web3', 'ethdev', 'solana', 'forhire', 'jobs4bitcoins',
+  'defi', 'Ethereum', 'NFT', 'layer2', 'gitcoingrants', 'algodev',
+  'freelance', 'slavelabour', 'defiblockchain',
+];
 
 function scoreText(text) {
   if (!text) return { score: 0, matched: [] };
@@ -120,9 +124,15 @@ async function scanGitHub() {
   const searches = [
     'is:issue is:open label:bounty',
     'is:issue is:open label:reward',
+    'is:issue is:open label:"help wanted" (bounty OR reward)',
     'is:issue is:open (bounty OR reward) (USDC OR ETH OR DAI OR MATIC)',
     'is:issue is:open (web3 OR blockchain) (paid OR payment OR grant)',
     'is:issue is:open (smart contract OR solidity OR frontend OR react) (bounty OR reward)',
+    'is:issue is:open (gitcoin OR layer3 OR dework) bounty',
+    'is:issue is:open (100 USDC OR 200 USDC OR 500 USDC OR 1000 USDC)',
+    'is:issue is:open (hackathon OR grant) web3 2025',
+    'is:issue is:open label:bounty language:solidity',
+    'is:issue is:open label:bounty language:typescript',
   ];
 
   const headers = {
