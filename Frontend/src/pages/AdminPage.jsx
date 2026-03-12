@@ -715,11 +715,13 @@ export default function AdminPage() {
           {activeTab === 'openclaw' && (
             <ErrorBoundary>
               <OpenClawTab />
-                      {activeTab === 'bounty-hunter' && (
-                        <ErrorBoundary>
-                          <BountyHunterTab />
-                        </ErrorBoundary>
-                      )}
+            </ErrorBoundary>
+          )}
+
+          {/* Bounty Hunter Tab */}
+          {activeTab === 'bounty-hunter' && (
+            <ErrorBoundary>
+              <BountyHunterTab />
             </ErrorBoundary>
           )}
         </div>

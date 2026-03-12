@@ -1,8 +1,17 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { SITE_TAGLINE } from '../lib/philosophy.js';
 
 export default function Layout({ children }) {
+  const location = useLocation();
+  const pathname = location?.pathname || '/';
+  const isAdminRoute = pathname.startsWith('/admin');
+
+  if (isAdminRoute) {
+    // Admin has its own full-screen shell and controls.
+    return <>{children}</>;
+  }
+
   const token =
     typeof window !== 'undefined' &&
     (localStorage.getItem('token') || localStorage.getItem('authToken') || localStorage.getItem('jwt'));

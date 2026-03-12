@@ -476,11 +476,12 @@
 
 /* Admin Container */
 .admin-container {
+  width: min(1680px, calc(100vw - 32px));
   max-width: 1600px;
   margin: 0 auto;
-  display: grid;
-  grid-template-columns: 300px 1fr;
-  gap: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
   padding: 2rem;
   min-height: calc(100vh - 100px);
 }
@@ -1438,7 +1439,7 @@
 /* Responsive */
 @media (max-width: 1024px) {
   .admin-container {
-    grid-template-columns: 1fr;
+    width: calc(100vw - 24px);
   }
 
   .admin-sidebar {
@@ -1455,6 +1456,7 @@
 
   .admin-container {
     padding: 1rem;
+    width: calc(100vw - 12px);
   }
 
   .form-card {
