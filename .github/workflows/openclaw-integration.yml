@@ -114,6 +114,8 @@ jobs:
         run: |
           cd backend
           node scripts/smoke-openclaw.js
+        env:
+          BACKEND_BASE_URL: http://localhost:5000
       
       - name: Stop backend server
         if: always()
