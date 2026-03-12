@@ -214,7 +214,8 @@ jobs:
         shell: pwsh
         run: |
           cd backend
-          $proc = Start-Process -FilePath "npm.cmd" -ArgumentList "run","dev" -PassThru
+          $backendDir = (Get-Location).Path
+          $proc = Start-Process -FilePath "npm.cmd" -ArgumentList "run","dev" -WorkingDirectory $backendDir -PassThru
           $proc.Id | Out-File -FilePath backend.pid -Encoding ascii
 
           $ready = $false
@@ -260,9 +261,9 @@ jobs:
         run: |
           cd backend
           if (Test-Path backend.pid) {
-            $pid = Get-Content backend.pid | Select-Object -First 1
-            if ($pid) {
-              Stop-Process -Id $pid -Force -ErrorAction SilentlyContinue
+            $backendPid = Get-Content backend.pid | Select-Object -First 1
+            if ($backendPid) {
+              Stop-Process -Id $backendPid -Force -ErrorAction SilentlyContinue
             }
             Remove-Item backend.pid -ErrorAction SilentlyContinue
           }
