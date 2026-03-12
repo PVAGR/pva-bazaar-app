@@ -214,8 +214,28 @@ jobs:
         shell: pwsh
         run: |
           cd backend
-          Start-Process -FilePath "npm" -ArgumentList "run","dev" -NoNewWindow
-          Start-Sleep -Seconds 10
+          $proc = Start-Process -FilePath "npm.cmd" -ArgumentList "run","dev" -PassThru
+          $proc.Id | Out-File -FilePath backend.pid -Encoding ascii
+
+          $ready = $false
+          for ($i = 1; $i -le 30; $i++) {
+            try {
+              $resp = Invoke-RestMethod -Uri "http://localhost:5000/api/health" -Method GET -TimeoutSec 2
+              if ($resp.ok -eq $true) {
+                $ready = $true
+                Write-Host "Backend is ready"
+                break
+              }
+            } catch {
+              Write-Host "Waiting for backend... ($i/30)"
+              Start-Sleep -Seconds 2
+            }
+          }
+
+          if (-not $ready) {
+            Write-Error "Backend failed to become ready on port 5000"
+            exit 1
+          }
       
       - name: Run PowerShell integration tests
         shell: pwsh
@@ -233,3 +253,16 @@ jobs:
             -Metadata @{ source = "ci"; runner = "windows-latest" } `
             -AdminToken $adminToken `
             -BackendUrl "http://localhost:5000"
+
+      - name: Stop backend
+        if: always()
+        shell: pwsh
+        run: |
+          cd backend
+          if (Test-Path backend.pid) {
+            $pid = Get-Content backend.pid | Select-Object -First 1
+            if ($pid) {
+              Stop-Process -Id $pid -Force -ErrorAction SilentlyContinue
+            }
+            Remove-Item backend.pid -ErrorAction SilentlyContinue
+          }
