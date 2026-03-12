@@ -25,7 +25,7 @@ jobs:
 
     env:
       OPENCLAW_BACKEND_URL: ${{ secrets.OPENCLAW_BACKEND_URL }}
-      OPENCLAW_ADMIN_JWT: ${{ secrets.OPENCLAW_ADMIN_JWT }}
+      OPENCLAW_ADMIN_JWT: ${{ secrets.OPENCLAW_ADMIN_JWT || secrets.BOUNTY_SCAN_JWT }}
 
     steps:
       - name: Validate required secrets
