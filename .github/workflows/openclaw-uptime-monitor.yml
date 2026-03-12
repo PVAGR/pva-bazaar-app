@@ -20,6 +20,7 @@ jobs:
 
     env:
       OPENCLAW_BACKEND_URL: ${{ secrets.OPENCLAW_BACKEND_URL }}
+      OPENCLAW_ALERT_WEBHOOK_URL: ${{ secrets.OPENCLAW_ALERT_WEBHOOK_URL }}
 
     steps:
       - name: Validate required config
@@ -52,3 +53,12 @@ jobs:
       - name: Queue health skipped notice
         if: ${{ secrets.OPENCLAW_ADMIN_JWT == '' }}
         run: echo "OPENCLAW_ADMIN_JWT not set; queue-auth checks skipped"
+
+      - name: Notify on failure
+        if: failure() && env.OPENCLAW_ALERT_WEBHOOK_URL != ''
+        run: |
+          PAYLOAD=$(printf '{"text":"OpenClaw uptime monitor failed for %s at %s. Run: %s/%s/actions/runs/%s"}' "$GITHUB_REPOSITORY" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID")
+          curl -sS -X POST "$OPENCLAW_ALERT_WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            --data "$PAYLOAD" \
+            --max-time 15

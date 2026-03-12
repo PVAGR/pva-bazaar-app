@@ -1,0 +1,59 @@
+name: OpenClaw Self Heal
+
+on:
+  schedule:
+    # Every 15 minutes
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: openclaw-self-heal
+  cancel-in-progress: true
+
+jobs:
+  heal:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+
+    env:
+      OPENCLAW_BACKEND_URL: ${{ secrets.OPENCLAW_BACKEND_URL }}
+      OPENCLAW_ADMIN_JWT: ${{ secrets.OPENCLAW_ADMIN_JWT }}
+
+    steps:
+      - name: Validate required secrets
+        run: |
+          if [ -z "$OPENCLAW_BACKEND_URL" ]; then
+            echo "OPENCLAW_BACKEND_URL is required"
+            exit 1
+          fi
+          if [ -z "$OPENCLAW_ADMIN_JWT" ]; then
+            echo "OPENCLAW_ADMIN_JWT is required"
+            exit 1
+          fi
+
+      - name: Read queue stats
+        run: |
+          curl -sS -f "$OPENCLAW_BACKEND_URL/api/openclaw/queue-stats" \
+            -H "Authorization: Bearer $OPENCLAW_ADMIN_JWT" > /tmp/queue.json
+          cat /tmp/queue.json
+
+      - name: Decide whether to replay
+        id: decide
+        run: |
+          node -e "const fs=require('fs'); const q=JSON.parse(fs.readFileSync('/tmp/queue.json','utf8')); const pending=q.pendingOutbound||0; const stale=q.staleOutbound||0; const replay=(stale>0)||(pending>20); console.log('pending='+pending+' stale='+stale+' replay='+replay); fs.appendFileSync(process.env.GITHUB_OUTPUT, 'replay='+replay+'\n');"
+
+      - name: Replay queued webhook messages
+        if: steps.decide.outputs.replay == 'true'
+        run: |
+          curl -sS -f -X POST "$OPENCLAW_BACKEND_URL/api/openclaw/replay-webhook" \
+            -H "Authorization: Bearer $OPENCLAW_ADMIN_JWT" \
+            -H "Content-Type: application/json" \
+            --data '{"limit":25}' > /tmp/replay.json
+          cat /tmp/replay.json
+
+      - name: No action needed
+        if: steps.decide.outputs.replay != 'true'
+        run: echo "Queue healthy; no replay performed"

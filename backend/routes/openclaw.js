@@ -607,6 +607,45 @@ router.post('/replay-webhook', async (req, res) => {
   }
 });
 
+router.post('/maintenance/cleanup', async (req, res) => {
+  const config = getConfig();
+  if (!requireBridgeOrAdmin(req, res, config, 'Unauthorized OpenClaw cleanup request')) return;
+
+  const retainDays = Math.min(Math.max(parseInt(req.body?.retainDays, 10) || 30, 1), 365);
+  const deleteProcessedOnly = req.body?.deleteProcessedOnly !== false;
+  const cutoff = new Date(Date.now() - retainDays * 24 * 60 * 60 * 1000);
+
+  try {
+    await dbConnect();
+    const OpenClawMessage = require('../models/OpenClawMessage');
+
+    const query = {
+      createdAt: { $lt: cutoff },
+    };
+
+    if (deleteProcessedOnly) {
+      query.processed = true;
+    }
+
+    const result = await OpenClawMessage.deleteMany(query);
+
+    return res.json({
+      ok: true,
+      retainDays,
+      deleteProcessedOnly,
+      cutoff,
+      deletedCount: result.deletedCount || 0,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err) {
+    return res.status(500).json({
+      ok: false,
+      message: 'Failed to cleanup OpenClaw messages',
+      error: err.message,
+    });
+  }
+});
+
 router.post('/inbound', async (req, res) => {
   const config = getConfig();
   if (!isAuthorized(req, config.bridgeSecret)) {

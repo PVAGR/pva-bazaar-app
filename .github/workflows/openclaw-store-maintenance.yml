@@ -1,0 +1,52 @@
+name: OpenClaw Store Maintenance
+
+on:
+  schedule:
+    # Daily at 03:20 UTC
+    - cron: '20 3 * * *'
+  workflow_dispatch:
+    inputs:
+      retainDays:
+        description: 'How many days of messages to keep'
+        required: false
+        default: '30'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: openclaw-store-maintenance
+  cancel-in-progress: true
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    env:
+      OPENCLAW_BACKEND_URL: ${{ secrets.OPENCLAW_BACKEND_URL }}
+      OPENCLAW_ADMIN_JWT: ${{ secrets.OPENCLAW_ADMIN_JWT }}
+
+    steps:
+      - name: Validate required secrets
+        run: |
+          if [ -z "$OPENCLAW_BACKEND_URL" ]; then
+            echo "OPENCLAW_BACKEND_URL is required"
+            exit 1
+          fi
+          if [ -z "$OPENCLAW_ADMIN_JWT" ]; then
+            echo "OPENCLAW_ADMIN_JWT is required"
+            exit 1
+          fi
+
+      - name: Cleanup old processed messages
+        run: |
+          RETAIN="${{ github.event.inputs.retainDays }}"
+          if [ -z "$RETAIN" ]; then RETAIN=30; fi
+
+          curl -sS -f -X POST "$OPENCLAW_BACKEND_URL/api/openclaw/maintenance/cleanup" \
+            -H "Authorization: Bearer $OPENCLAW_ADMIN_JWT" \
+            -H "Content-Type: application/json" \
+            --data "{\"retainDays\":$RETAIN,\"deleteProcessedOnly\":true}" > /tmp/cleanup.json
+
+          cat /tmp/cleanup.json
