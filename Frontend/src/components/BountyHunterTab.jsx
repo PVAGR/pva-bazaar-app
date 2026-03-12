@@ -55,6 +55,10 @@ export default function BountyHunterTab() {
   const [actionLoading, setActionLoading] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
   const [payoutTxHash, setPayoutTxHash] = useState('');
+  const [walletAddress, setWalletAddress] = useState('');
+  const [rankedMode, setRankedMode] = useState(false);
+  const [dispatchingTop, setDispatchingTop] = useState(false);
+  const [dispatchResult, setDispatchResult] = useState(null);
   const scanResultTimer = useRef(null);
 
   const PER_PAGE = 20;
@@ -80,11 +84,16 @@ export default function BountyHunterTab() {
   const loadStats = useCallback(async () => {
     try {
       const data = await apiGet('/bounties/stats');
-      if (data.ok) setStats(data);
+      if (data.ok) {
+        setStats(data);
+        if (!walletAddress && data.defaultPayoutWallet) {
+          setWalletAddress(data.defaultPayoutWallet);
+        }
+      }
     } catch (err) {
       logger.error('Failed to load stats', err);
     }
-  }, []);
+  }, [walletAddress]);
 
   useEffect(() => {
     loadBounties(1, filterStatus, filterPlatform);
@@ -199,6 +208,34 @@ export default function BountyHunterTab() {
   };
 
   const totalPages = Math.ceil(total / PER_PAGE);
+  const displayBounties = rankedMode
+    ? [...bounties].sort((a, b) => {
+      const scoreA = (Array.isArray(a.keywords) ? a.keywords.length : 0) * 2 + (a.rewardRaw || 0) / 25;
+      const scoreB = (Array.isArray(b.keywords) ? b.keywords.length : 0) * 2 + (b.rewardRaw || 0) / 25;
+      return scoreB - scoreA;
+    })
+    : bounties;
+
+  const handleDispatchTop = async () => {
+    setDispatchingTop(true);
+    setDispatchResult(null);
+    try {
+      const data = await apiPost('/bounties/dispatch-top', {
+        limit: 10,
+        walletAddress,
+      });
+      if (data.ok) {
+        setDispatchResult(data);
+      } else {
+        setDispatchResult({ ok: false, message: data.message || 'Dispatch failed' });
+      }
+    } catch (err) {
+      setDispatchResult({ ok: false, message: err.message || 'Dispatch failed' });
+      logger.error('Dispatch top bounties failed', err);
+    } finally {
+      setDispatchingTop(false);
+    }
+  };
 
   return (
     <div className="bh-tab">
@@ -216,6 +253,38 @@ export default function BountyHunterTab() {
           {scanning ? <><LoadingDots />Scanning…</> : '⚡ Scan Now'}
         </button>
       </div>
+
+      <div className="bh-controls-row">
+        <button
+          className={`bh-rank-btn ${rankedMode ? 'active' : ''}`}
+          onClick={() => setRankedMode(v => !v)}
+        >
+          {rankedMode ? '🏅 Ranked View On' : '🏅 Rank Best'}
+        </button>
+
+        <input
+          className="bh-wallet-input"
+          value={walletAddress}
+          onChange={e => setWalletAddress(e.target.value)}
+          placeholder="Base wallet address for OpenClaw context"
+        />
+
+        <button
+          className="bh-openclaw-btn"
+          onClick={handleDispatchTop}
+          disabled={dispatchingTop}
+        >
+          {dispatchingTop ? 'Dispatching…' : '🤖 Send Top 10 to OpenClaw'}
+        </button>
+      </div>
+
+      {dispatchResult && (
+        <div className={`bh-scan-result ${dispatchResult.ok ? 'ok' : 'error'}`}>
+          {dispatchResult.ok
+            ? `✅ OpenClaw queued (${dispatchResult.rankedCount || 0} opportunities) · Wallet: ${dispatchResult.walletAddress || 'n/a'}`
+            : `❌ ${dispatchResult.message || 'OpenClaw dispatch failed'}`}
+        </div>
+      )}
 
       {/* ── Scan result banner ─────────────────────────────────── */}
       {scanResult && (
@@ -295,7 +364,7 @@ export default function BountyHunterTab() {
         </div>
       ) : (
         <div className="bh-list">
-          {bounties.map(b => (
+          {displayBounties.map(b => (
             <div
               key={b._id}
               className={`bh-card ${STATUS_CLASS[b.status]}`}

@@ -35,6 +35,59 @@
   color: var(--site-text-muted, rgba(200, 220, 240, 0.55));
 }
 
+.bh-controls-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.bh-rank-btn,
+.bh-openclaw-btn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--site-border, rgba(255,255,255,0.12));
+  background: var(--site-panel, rgba(255,255,255,0.05));
+  color: var(--site-text, #e8f4f8);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.bh-rank-btn.active {
+  border-color: #00b4d8;
+  background: rgba(0, 180, 216, 0.15);
+  color: #7dd3fc;
+}
+
+.bh-rank-btn:hover,
+.bh-openclaw-btn:hover {
+  border-color: #00b4d8;
+}
+
+.bh-openclaw-btn {
+  background: rgba(76, 222, 126, 0.14);
+  border-color: rgba(76, 222, 126, 0.28);
+  color: #4cde7e;
+}
+
+.bh-openclaw-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.bh-wallet-input {
+  flex: 1;
+  min-width: 300px;
+  padding: 8px 11px;
+  border-radius: 8px;
+  border: 1px solid var(--site-border, rgba(255,255,255,0.12));
+  background: var(--site-panel, rgba(255,255,255,0.04));
+  color: var(--site-text, #e8f4f8);
+  font-size: 0.82rem;
+}
+
 .bh-scan-btn {
   padding: 9px 22px;
   background: var(--site-accent, #00b4d8);

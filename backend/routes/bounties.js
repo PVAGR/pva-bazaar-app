@@ -22,6 +22,38 @@ const dbConnect = require('../lib/dbConnect');
 const Bounty = require('../models/Bounty');
 const { runScan, generateDraft } = require('../service/bountyHunter');
 
+function computeBountyPriority(bounty) {
+  const keywordScore = Array.isArray(bounty.keywords) ? bounty.keywords.length * 2 : 0;
+  const rewardScore = Number.isFinite(bounty.rewardRaw) ? Math.min(bounty.rewardRaw, 5000) / 25 : 0;
+  const statusBoost = bounty.status === 'approved' ? 10 : bounty.status === 'draft_ready' ? 6 : 0;
+  const freshnessHours = Math.max(1, (Date.now() - new Date(bounty.createdAt || Date.now()).getTime()) / 3600000);
+  const freshnessScore = Math.max(0, 12 - Math.log2(freshnessHours + 1) * 2);
+  return Math.round((keywordScore + rewardScore + statusBoost + freshnessScore) * 100) / 100;
+}
+
+function buildDispatchPrompt(topBounties, walletAddress) {
+  const lines = topBounties.map((b, index) => {
+    return [
+      `${index + 1}. [${b.platform}] ${b.title}`,
+      `   status=${b.status} priority=${computeBountyPriority(b)}`,
+      `   reward=${b.rewardAmount || 'unknown'} chain=${b.chain || 'base'}`,
+      `   url=${b.platformUrl || 'n/a'}`,
+    ].join('\n');
+  });
+
+  return [
+    'OpenClaw mission: prioritize and act on top bounty candidates.',
+    `Target payout wallet (Base): ${walletAddress || 'not configured'}`,
+    'Tasks:',
+    '- Review these ranked opportunities.',
+    '- Recommend top 3 immediate actions with rationale.',
+    '- Draft first submission approach for the #1 candidate.',
+    '',
+    'Ranked opportunities:',
+    ...lines,
+  ].join('\n');
+}
+
 const router = express.Router();
 
 // ─── Auth Middleware ──────────────────────────────────────────────────────────
@@ -80,7 +112,90 @@ router.get('/stats', requireAdmin, async (req, res) => {
     const won = await Bounty.find({ status: 'won' }).lean();
     const totalEarned = won.reduce((acc, b) => acc + (b.rewardRaw || 0), 0);
 
-    return res.json({ ok: true, stats, totalEarned, wonCount: won.length });
+    return res.json({
+      ok: true,
+      stats,
+      totalEarned,
+      wonCount: won.length,
+      defaultPayoutWallet: process.env.BOUNTY_PAYOUT_WALLET || '',
+      defaultPayoutChain: process.env.BOUNTY_PAYOUT_CHAIN || 'base',
+    });
+  } catch (err) {
+    return res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+router.get('/ranked', requireAdmin, async (req, res) => {
+  try {
+    await dbConnect();
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 25, 1), 100);
+    const statusFilter = req.query.status
+      ? req.query.status.split(',').map(s => s.trim()).filter(Boolean)
+      : ['discovered', 'draft_ready', 'approved', 'pending_review'];
+
+    const rows = await Bounty.find({ status: { $in: statusFilter } })
+      .sort({ createdAt: -1 })
+      .limit(250)
+      .lean();
+
+    const ranked = rows
+      .map(item => ({ ...item, priorityScore: computeBountyPriority(item) }))
+      .sort((a, b) => b.priorityScore - a.priorityScore)
+      .slice(0, limit);
+
+    return res.json({ ok: true, ranked, count: ranked.length });
+  } catch (err) {
+    return res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+router.post('/dispatch-top', requireAdmin, async (req, res) => {
+  try {
+    await dbConnect();
+    const limit = Math.min(Math.max(parseInt(req.body?.limit, 10) || 10, 1), 25);
+    const walletAddress = String(req.body?.walletAddress || process.env.BOUNTY_PAYOUT_WALLET || '').trim();
+
+    const candidates = await Bounty.find({
+      status: { $in: ['discovered', 'draft_ready', 'approved', 'pending_review'] },
+    })
+      .sort({ createdAt: -1 })
+      .limit(300)
+      .lean();
+
+    if (!candidates.length) {
+      return res.json({ ok: true, queued: false, message: 'No bounty candidates available to dispatch' });
+    }
+
+    const ranked = candidates
+      .map(item => ({ ...item, priorityScore: computeBountyPriority(item) }))
+      .sort((a, b) => b.priorityScore - a.priorityScore)
+      .slice(0, limit);
+
+    const OpenClawMessage = require('../models/OpenClawMessage');
+    const prompt = buildDispatchPrompt(ranked, walletAddress);
+
+    const queued = await OpenClawMessage.create({
+      direction: 'outbound',
+      content: prompt,
+      event: 'pvabazaar.bounty.rank.dispatch',
+      source: 'bounty-hunter-admin',
+      processed: false,
+      metadata: {
+        walletAddress,
+        chain: process.env.BOUNTY_PAYOUT_CHAIN || 'base',
+        topBountyIds: ranked.map(b => String(b._id)),
+        generatedAt: new Date().toISOString(),
+      },
+    });
+
+    return res.json({
+      ok: true,
+      queued: true,
+      messageId: String(queued._id),
+      walletAddress,
+      rankedCount: ranked.length,
+      top: ranked.map(b => ({ id: b._id, title: b.title, platform: b.platform, score: b.priorityScore })),
+    });
   } catch (err) {
     return res.status(500).json({ ok: false, message: err.message });
   }
