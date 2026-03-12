@@ -1,0 +1,89 @@
+name: Bounty Hunter - Money Run
+
+on:
+  schedule:
+    # Every 30 minutes
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+    inputs:
+      platforms:
+        description: 'Comma-separated platforms to scan (blank = all)'
+        required: false
+        default: ''
+      minRewardRaw:
+        description: 'Minimum numeric reward filter (e.g., 50)'
+        required: false
+        default: '50'
+      limit:
+        description: 'How many top opportunities to queue (1-25)'
+        required: false
+        default: '10'
+      walletAddress:
+        description: 'Override payout wallet address (optional)'
+        required: false
+        default: ''
+
+jobs:
+  money-run:
+    name: Trigger /api/bounties/money-run
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+
+    env:
+      API_BASE_URL: ${{ secrets.API_BASE_URL }}
+      API_AUTH_TOKEN: ${{ secrets.BOUNTY_SCAN_JWT }}
+      DEFAULT_WALLET_ADDRESS: ${{ secrets.BOUNTY_PAYOUT_WALLET }}
+
+    steps:
+      - name: Validate required secrets
+        run: |
+          if [ -z "$API_BASE_URL" ]; then
+            echo "Missing API_BASE_URL secret"
+            exit 1
+          fi
+          if [ -z "$API_AUTH_TOKEN" ]; then
+            echo "Missing BOUNTY_SCAN_JWT secret"
+            exit 1
+          fi
+
+      - name: Build request payload
+        id: payload
+        run: |
+          INPUT_LIMIT='${{ github.event.inputs.limit }}'
+          INPUT_MIN='${{ github.event.inputs.minRewardRaw }}'
+          INPUT_PLATFORMS='${{ github.event.inputs.platforms }}'
+          INPUT_WALLET='${{ github.event.inputs.walletAddress }}'
+
+          LIMIT=${INPUT_LIMIT:-10}
+          MIN_REWARD=${INPUT_MIN:-50}
+          PLATFORMS=${INPUT_PLATFORMS:-}
+          WALLET_ADDRESS=${INPUT_WALLET:-$DEFAULT_WALLET_ADDRESS}
+
+          if [ -n "$PLATFORMS" ]; then
+            PAYLOAD=$(printf '{"limit":%s,"minRewardRaw":%s,"walletAddress":"%s","platforms":"%s"}' "$LIMIT" "$MIN_REWARD" "$WALLET_ADDRESS" "$PLATFORMS")
+          else
+            PAYLOAD=$(printf '{"limit":%s,"minRewardRaw":%s,"walletAddress":"%s"}' "$LIMIT" "$MIN_REWARD" "$WALLET_ADDRESS")
+          fi
+
+          echo "payload=$PAYLOAD" >> "$GITHUB_OUTPUT"
+
+      - name: Execute money run
+        run: |
+          HTTP_STATUS=$(curl -s -o /tmp/money_run_response.json -w "%{http_code}" \
+            -X POST "$API_BASE_URL/api/bounties/money-run" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $API_AUTH_TOKEN" \
+            --data '${{ steps.payload.outputs.payload }}' \
+            --max-time 120)
+
+          echo "HTTP status: $HTTP_STATUS"
+          cat /tmp/money_run_response.json || true
+
+          if [ "$HTTP_STATUS" -ne 200 ]; then
+            echo "Money run endpoint returned non-200: $HTTP_STATUS"
+            exit 1
+          fi
+
+      - name: Validate response
+        run: |
+          node -e "const fs=require('fs'); const p=JSON.parse(fs.readFileSync('/tmp/money_run_response.json','utf8')); if(!p.ok){console.error('money-run response !ok'); process.exit(1);} console.log('queued='+Boolean(p.queued)+' ranked='+(p.rankedCount||0));"
