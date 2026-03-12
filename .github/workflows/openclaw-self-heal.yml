@@ -29,18 +29,20 @@ jobs:
             echo "OPENCLAW_BACKEND_URL is required"
             exit 1
           fi
-          if [ -z "$OPENCLAW_ADMIN_JWT" ]; then
-            echo "OPENCLAW_ADMIN_JWT is required"
-            exit 1
-          fi
+
+      - name: Skip notice when admin JWT is missing
+        if: env.OPENCLAW_ADMIN_JWT == ''
+        run: echo "OPENCLAW_ADMIN_JWT not set; self-heal replay is skipped"
 
       - name: Read queue stats
+        if: env.OPENCLAW_ADMIN_JWT != ''
         run: |
           curl -sS -f "$OPENCLAW_BACKEND_URL/api/openclaw/queue-stats" \
             -H "Authorization: Bearer $OPENCLAW_ADMIN_JWT" > /tmp/queue.json
           cat /tmp/queue.json
 
       - name: Decide whether to replay
+        if: env.OPENCLAW_ADMIN_JWT != ''
         id: decide
         run: |
           node -e "const fs=require('fs'); const q=JSON.parse(fs.readFileSync('/tmp/queue.json','utf8')); const pending=q.pendingOutbound||0; const stale=q.staleOutbound||0; const replay=(stale>0)||(pending>20); console.log('pending='+pending+' stale='+stale+' replay='+replay); fs.appendFileSync(process.env.GITHUB_OUTPUT, 'replay='+replay+'\n');"

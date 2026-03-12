@@ -34,12 +34,13 @@ jobs:
             echo "OPENCLAW_BACKEND_URL is required"
             exit 1
           fi
-          if [ -z "$OPENCLAW_ADMIN_JWT" ]; then
-            echo "OPENCLAW_ADMIN_JWT is required"
-            exit 1
-          fi
+
+      - name: Skip notice when admin JWT is missing
+        if: env.OPENCLAW_ADMIN_JWT == ''
+        run: echo "OPENCLAW_ADMIN_JWT not set; store maintenance cleanup is skipped"
 
       - name: Cleanup old processed messages
+        if: env.OPENCLAW_ADMIN_JWT != ''
         run: |
           RETAIN="${{ github.event.inputs.retainDays }}"
           if [ -z "$RETAIN" ]; then RETAIN=30; fi
