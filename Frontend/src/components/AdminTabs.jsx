@@ -29,6 +29,7 @@ const AdminTabs = React.memo(function AdminTabs({ activeTab, onTabChange }) {
     { id: 'health', label: '💚 Health', title: 'System health & monitoring (Alt+9)', shortcut: '9' },
     { id: 'settings', label: '⚙️ Settings', title: 'Configuration (Alt+0)', shortcut: '0' },
     { id: 'openclaw', label: '🦞 OpenClaw', title: 'OpenClaw gateway & agent interface', shortcut: null },
+    { id: 'bounty-hunter', label: '🤖 Bounty Hunter', title: 'AI crypto bounty scanner & HITL review', shortcut: null },
   ];
 
   return (

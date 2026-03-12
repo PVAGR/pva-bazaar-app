@@ -316,6 +316,8 @@ app.use('/api/did', didRoutes);
 app.use('/api/databases', databasesRoutes);
 app.use('/api/openclaw', openClawRoutes);
 app.use('/api/openclaw', openClawMetricsRoutes); // Prometheus metrics
+const bountiesRoutes = require('../routes/bounties');
+app.use('/api/bounties', bountiesRoutes);
 
 // LEGACY MARKETPLACE (gated by LEGACY_MODE flag)
 app.use('/api/artifacts', legacyGate, artifactsRoutes);

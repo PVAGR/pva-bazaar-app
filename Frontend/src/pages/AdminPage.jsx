@@ -21,6 +21,7 @@ import ApiDocsTab from '../components/ApiDocsTab.jsx';
 import HealthTab from '../components/HealthTab.jsx';
 import SettingsTab from '../components/SettingsTab.jsx';
 import OpenClawTab from '../components/OpenClawTab.jsx';
+import BountyHunterTab from '../components/BountyHunterTab.jsx';
 import './AdminPage.css';
 
 const logger = createLogger('AdminPage');
@@ -714,6 +715,11 @@ export default function AdminPage() {
           {activeTab === 'openclaw' && (
             <ErrorBoundary>
               <OpenClawTab />
+                      {activeTab === 'bounty-hunter' && (
+                        <ErrorBoundary>
+                          <BountyHunterTab />
+                        </ErrorBoundary>
+                      )}
             </ErrorBoundary>
           )}
         </div>

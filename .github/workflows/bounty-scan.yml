@@ -1,0 +1,41 @@
+name: Bounty Hunter – Scheduled Scan
+
+on:
+  schedule:
+    # Every 6 hours: 00:00, 06:00, 12:00, 18:00 UTC
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      platforms:
+        description: 'Comma-separated platforms to scan (leave blank for all)'
+        required: false
+        default: ''
+
+jobs:
+  scan:
+    name: Trigger bounty scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Trigger /api/bounties/scan
+        run: |
+          PAYLOAD='{}'
+          if [ -n "${{ github.event.inputs.platforms }}" ]; then
+            PAYLOAD=$(printf '{"platforms":"%s"}' "${{ github.event.inputs.platforms }}")
+          fi
+
+          HTTP_STATUS=$(curl -s -o /tmp/scan_response.json -w "%{http_code}" \
+            -X POST "${{ secrets.API_BASE_URL }}/api/bounties/scan" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${{ secrets.BOUNTY_SCAN_JWT }}" \
+            --data "$PAYLOAD" \
+            --max-time 90)
+
+          echo "HTTP status: $HTTP_STATUS"
+          cat /tmp/scan_response.json || true
+
+          if [ "$HTTP_STATUS" -ne 200 ]; then
+            echo "Scan endpoint returned non-200: $HTTP_STATUS"
+            exit 1
+          fi
