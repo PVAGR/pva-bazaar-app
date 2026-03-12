@@ -2,8 +2,8 @@ name: Bounty Hunter - Money Run
 
 on:
   schedule:
-    # Every 30 minutes
-    - cron: '*/30 * * * *'
+    # Every 10 minutes for higher opportunity capture
+    - cron: '*/10 * * * *'
   workflow_dispatch:
     inputs:
       platforms:
@@ -11,13 +11,13 @@ on:
         required: false
         default: ''
       minRewardRaw:
-        description: 'Minimum numeric reward filter (e.g., 50)'
+        description: 'Minimum numeric reward filter (e.g., 0)'
         required: false
-        default: '50'
+        default: '0'
       limit:
         description: 'How many top opportunities to queue (1-25)'
         required: false
-        default: '10'
+        default: '25'
       walletAddress:
         description: 'Override payout wallet address (optional)'
         required: false
@@ -28,6 +28,10 @@ jobs:
     name: Trigger /api/bounties/money-run
     runs-on: ubuntu-latest
     timeout-minutes: 6
+
+    concurrency:
+      group: bounty-money-run
+      cancel-in-progress: false
 
     env:
       API_BASE_URL: ${{ secrets.API_BASE_URL }}
@@ -54,10 +58,16 @@ jobs:
           INPUT_PLATFORMS='${{ github.event.inputs.platforms }}'
           INPUT_WALLET='${{ github.event.inputs.walletAddress }}'
 
-          LIMIT=${INPUT_LIMIT:-10}
-          MIN_REWARD=${INPUT_MIN:-50}
+          LIMIT=${INPUT_LIMIT:-25}
+          MIN_REWARD=${INPUT_MIN:-0}
           PLATFORMS=${INPUT_PLATFORMS:-}
           WALLET_ADDRESS=${INPUT_WALLET:-$DEFAULT_WALLET_ADDRESS}
+
+          if ! [[ "$LIMIT" =~ ^[0-9]+$ ]]; then LIMIT=25; fi
+          if ! [[ "$MIN_REWARD" =~ ^[0-9]+$ ]]; then MIN_REWARD=0; fi
+
+          if [ "$LIMIT" -lt 1 ]; then LIMIT=1; fi
+          if [ "$LIMIT" -gt 25 ]; then LIMIT=25; fi
 
           if [ -n "$PLATFORMS" ]; then
             PAYLOAD=$(printf '{"limit":%s,"minRewardRaw":%s,"walletAddress":"%s","platforms":"%s"}' "$LIMIT" "$MIN_REWARD" "$WALLET_ADDRESS" "$PLATFORMS")
@@ -69,12 +79,22 @@ jobs:
 
       - name: Execute money run
         run: |
-          HTTP_STATUS=$(curl -s -o /tmp/money_run_response.json -w "%{http_code}" \
-            -X POST "$API_BASE_URL/api/bounties/money-run" \
-            -H "Content-Type: application/json" \
-            -H "Authorization: Bearer $API_AUTH_TOKEN" \
-            --data '${{ steps.payload.outputs.payload }}' \
-            --max-time 120)
+          HTTP_STATUS=000
+          for ATTEMPT in 1 2 3; do
+            HTTP_STATUS=$(curl -s -o /tmp/money_run_response.json -w "%{http_code}" \
+              -X POST "$API_BASE_URL/api/bounties/money-run" \
+              -H "Content-Type: application/json" \
+              -H "Authorization: Bearer $API_AUTH_TOKEN" \
+              --data '${{ steps.payload.outputs.payload }}' \
+              --max-time 120)
+
+            if [ "$HTTP_STATUS" -eq 200 ]; then
+              break
+            fi
+
+            echo "Attempt $ATTEMPT failed with HTTP $HTTP_STATUS"
+            sleep $((ATTEMPT * 10))
+          done
 
           echo "HTTP status: $HTTP_STATUS"
           cat /tmp/money_run_response.json || true
