@@ -33,16 +33,17 @@ const KEYWORDS = {
 };
 
 const ALL_KEYWORDS = Object.values(KEYWORDS).flat();
+const REDDIT_SUBREDDITS = ['CryptoCurrency', 'web3', 'ethdev', 'solana', 'forhire', 'jobs4bitcoins'];
 
 function scoreText(text) {
   if (!text) return { score: 0, matched: [] };
   const lower = text.toLowerCase();
-  const matched = ALL_KEYWORDS.filter(kw => lower.includes(kw));
+  const matched = [...new Set(ALL_KEYWORDS.filter(kw => lower.includes(kw)))];
   return { score: matched.length, matched };
 }
 
 // Minimum keyword score to consider a bounty viable
-const MIN_SCORE = 2;
+const MIN_SCORE = 1;
 
 // ─── Platform: Dework ────────────────────────────────────────────────────────
 
@@ -117,10 +118,11 @@ async function scanGitHub() {
 
   // Also scan public "good-first-issue" + "bounty" labeled issues via search
   const searches = [
-    'label:bounty+state:open+type:Issues',
-    'label:reward+state:open+type:Issues',
-    '"bounty"+"USDC"+state:open+type:Issues',
-    '"bounty"+"ETH"+state:open+type:Issues',
+    'is:issue is:open label:bounty',
+    'is:issue is:open label:reward',
+    'is:issue is:open (bounty OR reward) (USDC OR ETH OR DAI OR MATIC)',
+    'is:issue is:open (web3 OR blockchain) (paid OR payment OR grant)',
+    'is:issue is:open (smart contract OR solidity OR frontend OR react) (bounty OR reward)',
   ];
 
   const headers = {
@@ -134,14 +136,29 @@ async function scanGitHub() {
   // Scan specific repos
   for (const repo of repos) {
     try {
-      const url = `https://api.github.com/repos/${repo}/issues?state=open&per_page=30&labels=bounty`;
-      const { data } = await axios.get(url, { headers, timeout: 10000 });
+      // Keep both a label-focused pass and a generic pass to avoid missing opportunities.
+      const [labelPass, genericPass] = await Promise.all([
+        axios.get(`https://api.github.com/repos/${repo}/issues?state=open&per_page=30&labels=bounty,reward`, {
+          headers,
+          timeout: 10000,
+        }).catch(() => ({ data: [] })),
+        axios.get(`https://api.github.com/repos/${repo}/issues?state=open&per_page=30`, {
+          headers,
+          timeout: 10000,
+        }).catch(() => ({ data: [] })),
+      ]);
 
-      for (const issue of data) {
+      const data = [...(labelPass.data || []), ...(genericPass.data || [])];
+      const uniqueById = new Map();
+      for (const issue of data) uniqueById.set(issue.id, issue);
+
+      for (const issue of uniqueById.values()) {
         if (issue.pull_request) continue; // skip PRs
         const text = `${issue.title} ${issue.body || ''}`;
         const { score, matched } = scoreText(text);
         if (score < MIN_SCORE) continue;
+
+        const rewardInfo = extractRewardFromText(issue.body || issue.title);
 
         found.push({
           platform: 'github',
@@ -151,9 +168,9 @@ async function scanGitHub() {
           description: (issue.body || '').substring(0, 2000),
           tags: (issue.labels || []).map(l => l.name),
           keywords: matched,
-          rewardAmount: extractRewardFromText(issue.body || issue.title),
-          rewardToken: extractTokenFromText(issue.body || issue.title),
-          rewardRaw: 0,
+          rewardAmount: rewardInfo.amountText,
+          rewardToken: rewardInfo.token,
+          rewardRaw: rewardInfo.raw,
           chain: process.env.BOUNTY_PAYOUT_CHAIN || 'base',
           rawData: { id: issue.id, number: issue.number, repo },
         });
@@ -166,7 +183,7 @@ async function scanGitHub() {
   // Public search for bounties
   for (const q of searches) {
     try {
-      const url = `https://api.github.com/search/issues?q=${q}&per_page=20&sort=created&order=desc`;
+      const url = `https://api.github.com/search/issues?q=${encodeURIComponent(q)}&per_page=30&sort=created&order=desc`;
       const { data } = await axios.get(url, { headers, timeout: 10000 });
 
       for (const issue of (data.items || [])) {
@@ -174,6 +191,8 @@ async function scanGitHub() {
         const text = `${issue.title} ${issue.body || ''}`;
         const { score, matched } = scoreText(text);
         if (score < MIN_SCORE) continue;
+
+        const rewardInfo = extractRewardFromText(issue.body || issue.title);
 
         found.push({
           platform: 'github',
@@ -183,9 +202,9 @@ async function scanGitHub() {
           description: (issue.body || '').substring(0, 2000),
           tags: (issue.labels || []).map(l => l.name),
           keywords: matched,
-          rewardAmount: extractRewardFromText(issue.body || issue.title),
-          rewardToken: extractTokenFromText(issue.body || issue.title),
-          rewardRaw: 0,
+          rewardAmount: rewardInfo.amountText,
+          rewardToken: rewardInfo.token,
+          rewardRaw: rewardInfo.raw,
           chain: process.env.BOUNTY_PAYOUT_CHAIN || 'base',
           rawData: { id: issue.id, repo: issue.repository_url?.split('/').slice(-2).join('/') },
         });
@@ -198,12 +217,81 @@ async function scanGitHub() {
   return found;
 }
 
+// ─── Platform: Reddit (public JSON feed) ────────────────────────────────────
+
+async function scanReddit() {
+  const found = [];
+  const subreddits = (process.env.REDDIT_BOUNTY_SUBREDDITS || REDDIT_SUBREDDITS.join(','))
+    .split(',')
+    .map(s => s.trim())
+    .filter(Boolean);
+
+  for (const subreddit of subreddits) {
+    try {
+      const url = `https://www.reddit.com/r/${subreddit}/new.json?limit=50`;
+      const { data } = await axios.get(url, {
+        timeout: 10000,
+        headers: {
+          'User-Agent': 'pva-bazaar-bounty-scanner/1.0',
+        },
+      });
+
+      const posts = data?.data?.children || [];
+      for (const item of posts) {
+        const p = item?.data;
+        if (!p || p.stickied) continue;
+
+        const text = `${p.title || ''} ${p.selftext || ''}`;
+        const { score, matched } = scoreText(text);
+        if (score < MIN_SCORE) continue;
+
+        const rewardInfo = extractRewardFromText(text);
+
+        found.push({
+          platform: 'reddit',
+          platformId: p.id,
+          platformUrl: p.permalink ? `https://www.reddit.com${p.permalink}` : '',
+          title: p.title || '(untitled)',
+          description: (p.selftext || '').substring(0, 2000),
+          tags: [`r/${subreddit}`],
+          keywords: matched,
+          rewardAmount: rewardInfo.amountText,
+          rewardToken: rewardInfo.token,
+          rewardRaw: rewardInfo.raw,
+          chain: process.env.BOUNTY_PAYOUT_CHAIN || 'base',
+          rawData: {
+            id: p.id,
+            subreddit,
+            createdUtc: p.created_utc,
+            author: p.author,
+          },
+        });
+      }
+    } catch (err) {
+      console.warn(`[BountyHunter] Reddit scan failed for r/${subreddit}:`, err.message);
+    }
+  }
+
+  return found;
+}
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function extractRewardFromText(text) {
   if (!text) return '';
-  const match = text.match(/(\d[\d,\.]*)\s*(USDC|ETH|DAI|MATIC|USDT|USD)/i);
-  return match ? `${match[1]} ${match[2].toUpperCase()}` : '';
+  const normalized = String(text).replace(/\$/g, ' USD ');
+  const match = normalized.match(/(\d[\d,\.]*)\s*(USDC|ETH|DAI|MATIC|USDT|USD)/i);
+  if (!match) {
+    return { amountText: '', token: '', raw: 0 };
+  }
+
+  const value = parseFloat(String(match[1]).replace(/,/g, '')) || 0;
+  const token = String(match[2] || '').toUpperCase();
+  return {
+    amountText: `${match[1]} ${token}`,
+    token,
+    raw: value,
+  };
 }
 
 function extractTokenFromText(text) {
@@ -282,7 +370,7 @@ async function upsertBounty(raw) {
 // ─── Main Scan Entry Point ────────────────────────────────────────────────────
 
 async function runScan(options = {}) {
-  const { platforms = ['dework', 'github'] } = options;
+  const { platforms = ['dework', 'github', 'reddit'] } = options;
   const results = { discovered: 0, skipped: 0, errors: [] };
 
   console.log('[BountyHunter] Starting scan for platforms:', platforms.join(', '));
@@ -293,6 +381,7 @@ async function runScan(options = {}) {
     try {
       if (platform === 'dework') rawBounties = rawBounties.concat(await scanDework());
       if (platform === 'github') rawBounties = rawBounties.concat(await scanGitHub());
+      if (platform === 'reddit') rawBounties = rawBounties.concat(await scanReddit());
     } catch (err) {
       results.errors.push({ platform, message: err.message });
     }
