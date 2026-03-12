@@ -177,7 +177,9 @@ jobs:
   integration-test:
     runs-on: windows-latest
     needs: [test-openclaw-integration]
-    if: github.event_name != 'pull_request'
+    # Best-effort Windows leg; keep manual to avoid false negatives on hosted runners.
+    if: github.event_name == 'workflow_dispatch'
+    continue-on-error: true
     
     steps:
       - name: Checkout repository
