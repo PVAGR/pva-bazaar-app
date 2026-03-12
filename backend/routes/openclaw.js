@@ -127,6 +127,71 @@ function isBridgeOrAdminAuthorized(req, bridgeSecret) {
   return isAuthorized(req, bridgeSecret) || isAdminAuthenticated(req);
 }
 
+function requireBridgeOrAdmin(req, res, config, unauthorizedMessage) {
+  if (isBridgeOrAdminAuthorized(req, config.bridgeSecret)) {
+    return true;
+  }
+
+  res.status(401).json({
+    ok: false,
+    message: unauthorizedMessage,
+  });
+  return false;
+}
+
+async function getQueueStats() {
+  await dbConnect();
+  const OpenClawMessage = require('../models/OpenClawMessage');
+
+  const staleMinutes = Math.max(parseInt(process.env.OPENCLAW_STALE_MINUTES || '30', 10), 1);
+  const staleCutoff = new Date(Date.now() - staleMinutes * 60 * 1000);
+
+  const [
+    pendingOutbound,
+    processedOutbound,
+    inboundCount,
+    staleOutbound,
+    oldestPending,
+    latestInbound,
+    latestOutbound,
+  ] = await Promise.all([
+    OpenClawMessage.countDocuments({ direction: 'outbound', processed: false }),
+    OpenClawMessage.countDocuments({ direction: 'outbound', processed: true }),
+    OpenClawMessage.countDocuments({ direction: 'inbound' }),
+    OpenClawMessage.countDocuments({
+      direction: 'outbound',
+      processed: false,
+      createdAt: { $lt: staleCutoff },
+    }),
+    OpenClawMessage.findOne({ direction: 'outbound', processed: false })
+      .sort({ createdAt: 1 })
+      .select({ _id: 1, createdAt: 1, event: 1 })
+      .lean(),
+    OpenClawMessage.findOne({ direction: 'inbound' })
+      .sort({ createdAt: -1 })
+      .select({ _id: 1, createdAt: 1, event: 1 })
+      .lean(),
+    OpenClawMessage.findOne({ direction: 'outbound' })
+      .sort({ createdAt: -1 })
+      .select({ _id: 1, createdAt: 1, event: 1 })
+      .lean(),
+  ]);
+
+  return {
+    pendingOutbound,
+    processedOutbound,
+    inboundCount,
+    staleOutbound,
+    staleMinutes,
+    oldestPendingAt: oldestPending?.createdAt || null,
+    oldestPendingEvent: oldestPending?.event || null,
+    latestInboundAt: latestInbound?.createdAt || null,
+    latestInboundEvent: latestInbound?.event || null,
+    latestOutboundAt: latestOutbound?.createdAt || null,
+    latestOutboundEvent: latestOutbound?.event || null,
+  };
+}
+
 async function saveMessage(payload) {
   try {
     await dbConnect();
@@ -366,12 +431,7 @@ router.post('/dispatch', async (req, res) => {
 
 router.get('/messages', async (req, res) => {
   const config = getConfig();
-  if (!isBridgeOrAdminAuthorized(req, config.bridgeSecret)) {
-    return res.status(401).json({
-      ok: false,
-      message: 'Unauthorized OpenClaw messages request',
-    });
-  }
+  if (!requireBridgeOrAdmin(req, res, config, 'Unauthorized OpenClaw messages request')) return;
 
   try {
     await dbConnect();
@@ -403,6 +463,145 @@ router.get('/messages', async (req, res) => {
     return res.status(503).json({
       ok: false,
       message: 'Message store unavailable',
+      error: err.message,
+    });
+  }
+});
+
+router.get('/queue-stats', async (req, res) => {
+  const config = getConfig();
+  if (!requireBridgeOrAdmin(req, res, config, 'Unauthorized OpenClaw queue stats request')) return;
+
+  try {
+    const stats = await getQueueStats();
+
+    return res.json({
+      ok: true,
+      ...stats,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err) {
+    return res.status(503).json({
+      ok: false,
+      message: 'Failed to load OpenClaw queue stats',
+      error: err.message,
+    });
+  }
+});
+
+router.post('/replay-webhook', async (req, res) => {
+  const config = getConfig();
+  if (!requireBridgeOrAdmin(req, res, config, 'Unauthorized OpenClaw replay request')) return;
+
+  if (!config.webhookUrl) {
+    return res.status(400).json({
+      ok: false,
+      message: 'OpenClaw webhook is not configured',
+    });
+  }
+
+  const limit = Math.min(Math.max(parseInt(req.body?.limit, 10) || 15, 1), 100);
+  const dryRun = req.body?.dryRun === true;
+
+  try {
+    await dbConnect();
+    const OpenClawMessage = require('../models/OpenClawMessage');
+    const headers = { 'Content-Type': 'application/json' };
+    if (config.apiKey) headers.Authorization = `Bearer ${config.apiKey}`;
+
+    const pending = await OpenClawMessage.find({ direction: 'outbound', processed: false })
+      .sort({ createdAt: 1 })
+      .limit(limit)
+      .lean();
+
+    if (!pending.length) {
+      return res.json({
+        ok: true,
+        dryRun,
+        attempted: 0,
+        forwarded: 0,
+        failed: 0,
+        message: 'No pending outbound OpenClaw messages to replay',
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    if (dryRun) {
+      return res.json({
+        ok: true,
+        dryRun: true,
+        attempted: pending.length,
+        forwarded: 0,
+        failed: 0,
+        candidateIds: pending.map(item => item._id.toString()),
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    let forwarded = 0;
+    let failed = 0;
+    const failures = [];
+
+    for (const entry of pending) {
+      const payload = {
+        source: 'pvabazaar-openclaw-replay',
+        message: entry.content || null,
+        event: entry.event || 'pvabazaar.dispatch.replay',
+        metadata: {
+          ...(entry.metadata || {}),
+          replayed: true,
+          replayedAt: new Date().toISOString(),
+          replayedMessageId: entry._id.toString(),
+        },
+        timestamp: new Date().toISOString(),
+      };
+
+      try {
+        await axios.post(config.webhookUrl, payload, { headers, timeout: 12000 });
+        forwarded += 1;
+        await OpenClawMessage.updateOne(
+          { _id: entry._id },
+          {
+            $set: {
+              'metadata.lastWebhookReplayAt': new Date().toISOString(),
+              'metadata.lastWebhookReplayStatus': 'ok',
+            },
+          },
+        );
+      } catch (err) {
+        failed += 1;
+        const detail = err?.response?.data || err.message || 'Unknown replay error';
+        failures.push({
+          id: entry._id.toString(),
+          status: err?.response?.status || null,
+          detail,
+        });
+        await OpenClawMessage.updateOne(
+          { _id: entry._id },
+          {
+            $set: {
+              'metadata.lastWebhookReplayAt': new Date().toISOString(),
+              'metadata.lastWebhookReplayStatus': 'failed',
+              'metadata.lastWebhookReplayError': typeof detail === 'string' ? detail.slice(0, 300) : JSON.stringify(detail).slice(0, 300),
+            },
+          },
+        );
+      }
+    }
+
+    return res.json({
+      ok: true,
+      dryRun: false,
+      attempted: pending.length,
+      forwarded,
+      failed,
+      failures: failures.slice(0, 20),
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err) {
+    return res.status(500).json({
+      ok: false,
+      message: 'Failed to replay queued OpenClaw messages',
       error: err.message,
     });
   }

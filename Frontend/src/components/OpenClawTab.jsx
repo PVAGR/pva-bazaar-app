@@ -18,6 +18,10 @@ function formatMessageTime(value) {
 export default function OpenClawTab() {
   const [status, setStatus] = useState(null);
   const [statusLoading, setStatusLoading] = useState(true);
+  const [queueStats, setQueueStats] = useState(null);
+  const [queueLoading, setQueueLoading] = useState(true);
+  const [queueActionLoading, setQueueActionLoading] = useState(false);
+  const [queueActionResult, setQueueActionResult] = useState(null);
   const [messages, setMessages] = useState([]);
   const [messagesLoading, setMessagesLoading] = useState(true);
   const [messagesError, setMessagesError] = useState(null);
@@ -27,6 +31,21 @@ export default function OpenClawTab() {
   const [autoRefresh, setAutoRefresh] = useState(true);
 
   const sendResultTimer = useRef(null);
+
+  const loadQueueStats = useCallback(async () => {
+    setQueueLoading(true);
+    try {
+      const data = await apiGet('/openclaw/queue-stats');
+      if (data?.ok) {
+        setQueueStats(data);
+      }
+    } catch (err) {
+      logger.error('Failed to load OpenClaw queue stats', err);
+      setQueueStats(null);
+    } finally {
+      setQueueLoading(false);
+    }
+  }, []);
 
   const loadStatus = useCallback(async () => {
     setStatusLoading(true);
@@ -100,22 +119,47 @@ export default function OpenClawTab() {
     }
   }, [messageInput, loadMessages]);
 
+  const replayWebhook = useCallback(async () => {
+    setQueueActionLoading(true);
+    setQueueActionResult(null);
+
+    try {
+      const data = await apiPost('/openclaw/replay-webhook', { limit: 10 });
+      if (data?.ok) {
+        setQueueActionResult({
+          ok: true,
+          text: `Replay complete: forwarded ${data.forwarded}/${data.attempted}, failed ${data.failed}`,
+        });
+        loadQueueStats();
+      } else {
+        setQueueActionResult({ ok: false, text: data?.message || 'Replay failed' });
+      }
+    } catch (err) {
+      setQueueActionResult({ ok: false, text: err?.response?.data?.message || err.message || 'Replay failed' });
+      logger.error('Failed to replay webhook messages', err);
+    } finally {
+      setQueueActionLoading(false);
+    }
+  }, [loadQueueStats]);
+
   useEffect(() => {
     loadStatus();
     loadMessages();
+    loadQueueStats();
     return () => {
       if (sendResultTimer.current) clearTimeout(sendResultTimer.current);
     };
-  }, [loadStatus, loadMessages]);
+  }, [loadStatus, loadMessages, loadQueueStats]);
 
   useEffect(() => {
     if (!autoRefresh) return undefined;
     const id = setInterval(() => {
       loadStatus();
       loadMessages();
+      loadQueueStats();
     }, 15000);
     return () => clearInterval(id);
-  }, [autoRefresh, loadStatus, loadMessages]);
+  }, [autoRefresh, loadStatus, loadMessages, loadQueueStats]);
 
   const handleKeyDown = (event) => {
     if (event.key === 'Enter' && !event.shiftKey) {
@@ -148,11 +192,20 @@ export default function OpenClawTab() {
               onClick={() => {
                 loadStatus();
                 loadMessages();
+                loadQueueStats();
               }}
-              disabled={statusLoading || messagesLoading}
+              disabled={statusLoading || messagesLoading || queueLoading}
               title="Refresh status and messages"
             >
               🔄 Refresh
+            </button>
+            <button
+              className="oc-btn oc-btn--secondary"
+              onClick={replayWebhook}
+              disabled={queueActionLoading}
+              title="Replay pending outbound messages to OpenClaw webhook"
+            >
+              {queueActionLoading ? 'Replaying...' : '🔁 Replay Webhook'}
             </button>
           </div>
         </div>
@@ -184,6 +237,38 @@ export default function OpenClawTab() {
                 <div className="oc-status-value">Autonomous queue responder</div>
               </div>
             </div>
+
+            <div className={`oc-status-card ${queueStats?.staleOutbound > 0 ? 'oc-warn' : 'oc-ok'}`}>
+              <span className="oc-status-icon">📬</span>
+              <div>
+                <div className="oc-status-label">Pending Queue</div>
+                <div className="oc-status-value">
+                  {queueLoading ? 'Loading...' : `${queueStats?.pendingOutbound ?? 0} pending`}
+                </div>
+              </div>
+            </div>
+
+            <div className={`oc-status-card ${queueStats?.staleOutbound > 0 ? 'oc-bad' : 'oc-info'}`}>
+              <span className="oc-status-icon">⏱️</span>
+              <div>
+                <div className="oc-status-label">Stale Queue</div>
+                <div className="oc-status-value">
+                  {queueLoading
+                    ? 'Loading...'
+                    : `${queueStats?.staleOutbound ?? 0} older than ${queueStats?.staleMinutes ?? 30}m`}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {queueActionResult && (
+          <div
+            className={`oc-send-result ${queueActionResult.ok ? 'oc-send-result--ok' : 'oc-send-result--err'}`}
+            role="status"
+            aria-live="polite"
+          >
+            {queueActionResult.text}
           </div>
         )}
 
