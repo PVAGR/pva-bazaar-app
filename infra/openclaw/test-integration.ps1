@@ -3,6 +3,7 @@
 
 param(
     [string]$BackendUrl = "http://localhost:5000",
+    [string]$AdminToken,
     [switch]$Production,
     [switch]$Verbose
 )
@@ -46,6 +47,10 @@ function Test-Endpoint {
             Method = $Method
             ContentType = "application/json"
             ErrorAction = "Stop"
+        }
+
+        if ($Endpoint -like "/api/openclaw/dispatch*" -and $AdminToken) {
+            $params.Headers = @{ Authorization = "Bearer $AdminToken" }
         }
         
         if ($Body) {
@@ -174,24 +179,28 @@ Test-Endpoint `
 
 # Test 7: OpenClaw dispatch (if not production)
 if (-not $Production) {
-    Test-Endpoint `
-        -Name "OpenClaw dispatch (test event)" `
-        -Method "POST" `
-        -Endpoint "/api/openclaw/dispatch" `
-        -Body @{
-            event = "pvabazaar.integration_test"
-            message = "Test event from integration test suite"
-            metadata = @{
-                source = "test-integration.ps1"
-                timestamp = (Get-Date).ToString("o")
-                testId = [guid]::NewGuid().ToString()
+    if ($AdminToken) {
+        Test-Endpoint `
+            -Name "OpenClaw dispatch (test event)" `
+            -Method "POST" `
+            -Endpoint "/api/openclaw/dispatch" `
+            -Body @{
+                event = "pvabazaar.integration_test"
+                message = "Test event from integration test suite"
+                metadata = @{
+                    source = "test-integration.ps1"
+                    timestamp = (Get-Date).ToString("o")
+                    testId = [guid]::NewGuid().ToString()
+                }
+            } `
+            -Validator {
+                param($r)
+                # Accept either successful forward or "not configured" error
+                return $r.ok -eq $true -or $r.message -like "*not configured*"
             }
-        } `
-        -Validator {
-            param($r)
-            # Accept either successful forward or "not configured" error
-            return $r.ok -eq $true -or $r.message -like "*not configured*"
-        }
+    } else {
+        Write-Host "[Skipped] OpenClaw dispatch test (no AdminToken provided)" -ForegroundColor Yellow
+    }
 } else {
     Write-Host "[Skipped] OpenClaw dispatch (production mode)" -ForegroundColor Yellow
 }

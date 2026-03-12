@@ -90,6 +90,8 @@ jobs:
       
       - name: Test OpenClaw endpoints
         run: |
+          ADMIN_TOKEN=$(node -e "console.log(require('jsonwebtoken').sign({role:'admin',email:'ci@pvabazaar.org'}, 'test-secret-key-for-ci', {expiresIn:'1h'}))")
+
           echo "Testing /api/health with OpenClaw integration..."
           curl -f http://localhost:5000/api/health | jq '.openclaw'
           
@@ -104,6 +106,7 @@ jobs:
           
           echo "Testing /api/openclaw/dispatch..."
           curl -f -X POST http://localhost:5000/api/openclaw/dispatch \
+            -H "Authorization: Bearer $ADMIN_TOKEN" \
             -H "Content-Type: application/json" \
             -d '{"event":"test.ci","message":"Test from GitHub Actions","metadata":{"source":"github-actions"}}'
       
@@ -215,13 +218,16 @@ jobs:
       - name: Run PowerShell integration tests
         shell: pwsh
         run: |
-          .\infra\openclaw\test-integration.ps1 -BackendUrl "http://localhost:5000" -Verbose
+          $adminToken = node -e "console.log(require('jsonwebtoken').sign({role:'admin',email:'ci@pvabazaar.org'}, 'test-secret', {expiresIn:'1h'}))"
+          .\infra\openclaw\test-integration.ps1 -BackendUrl "http://localhost:5000" -AdminToken $adminToken -Verbose
       
       - name: Test event dispatch
         shell: pwsh
         run: |
+          $adminToken = node -e "console.log(require('jsonwebtoken').sign({role:'admin',email:'ci@pvabazaar.org'}, 'test-secret', {expiresIn:'1h'}))"
           .\infra\openclaw\dispatch-event.ps1 `
             -Event "test.github_actions" `
             -Message "Test from GitHub Actions" `
             -Metadata @{ source = "ci"; runner = "windows-latest" } `
+            -AdminToken $adminToken `
             -BackendUrl "http://localhost:5000"

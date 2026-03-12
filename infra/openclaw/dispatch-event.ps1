@@ -11,6 +11,7 @@ param(
     [hashtable]$Metadata = @{},
     
     [string]$BackendUrl = "http://localhost:5000",
+    [string]$AdminToken,
     [switch]$Production
 )
 
@@ -54,10 +55,16 @@ Write-Host "Dispatching to: $BackendUrl/api/openclaw/dispatch" -ForegroundColor 
 Write-Host ""
 
 try {
+    $headers = @{}
+    if ($AdminToken) {
+        $headers["Authorization"] = "Bearer $AdminToken"
+    }
+
     $response = Invoke-RestMethod `
         -Uri "$BackendUrl/api/openclaw/dispatch" `
         -Method POST `
         -ContentType "application/json" `
+        -Headers $headers `
         -Body ($payload | ConvertTo-Json -Depth 10)
     
     if ($response.ok -and $response.forwarded) {
