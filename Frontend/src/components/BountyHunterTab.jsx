@@ -59,7 +59,13 @@ export default function BountyHunterTab() {
   const [rankedMode, setRankedMode] = useState(false);
   const [dispatchingTop, setDispatchingTop] = useState(false);
   const [dispatchResult, setDispatchResult] = useState(null);
+  const [wallet, setWallet] = useState({ address: '', chainId: '', connecting: false });
+  const [walletError, setWalletError] = useState('');
+  const [payoutNativeAmount, setPayoutNativeAmount] = useState('');
+  const [payingWithWallet, setPayingWithWallet] = useState(false);
   const scanResultTimer = useRef(null);
+  const BASE_CHAIN_ID_DEC = 8453;
+  const BASE_CHAIN_ID_HEX = '0x2105';
 
   const PER_PAGE = 20;
 
@@ -104,6 +110,105 @@ export default function BountyHunterTab() {
   useEffect(() => {
     loadBounties(page, filterStatus, filterPlatform);
   }, [page]);
+
+  useEffect(() => {
+    const eth = typeof window !== 'undefined' ? window.ethereum : null;
+    if (!eth?.on) return undefined;
+
+    const onAccountsChanged = (accounts) => {
+      const next = String(accounts?.[0] || '');
+      setWallet((w) => ({ ...w, address: next }));
+      if (next) setWalletAddress(next);
+    };
+    const onChainChanged = (nextChainId) => {
+      setWallet((w) => ({ ...w, chainId: String(nextChainId || '') }));
+    };
+
+    eth.on('accountsChanged', onAccountsChanged);
+    eth.on('chainChanged', onChainChanged);
+
+    return () => {
+      if (eth.removeListener) {
+        eth.removeListener('accountsChanged', onAccountsChanged);
+        eth.removeListener('chainChanged', onChainChanged);
+      }
+    };
+  }, []);
+
+  const hasEthereum = () => typeof window !== 'undefined' && !!window.ethereum?.request;
+
+  const isBaseChain = (chainId) => {
+    const chain = String(chainId || '').toLowerCase();
+    return chain === String(BASE_CHAIN_ID_DEC) || chain === BASE_CHAIN_ID_HEX;
+  };
+
+  const isWalletAddress = (addr) => /^0x[a-fA-F0-9]{40}$/.test(String(addr || '').trim());
+
+  const toWeiHex = (amount) => {
+    const input = String(amount || '').trim();
+    if (!/^\d+(\.\d{1,18})?$/.test(input)) {
+      throw new Error('Enter amount like 0.01 (up to 18 decimals)');
+    }
+    const [whole, fraction = ''] = input.split('.');
+    const wei = BigInt(whole) * 10n ** 18n + BigInt((fraction + '0'.repeat(18)).slice(0, 18));
+    if (wei <= 0n) throw new Error('Amount must be greater than 0');
+    return `0x${wei.toString(16)}`;
+  };
+
+  const connectWallet = async () => {
+    setWalletError('');
+    if (!hasEthereum()) {
+      setWalletError('No wallet detected. Install MetaMask or use a wallet-enabled browser.');
+      return;
+    }
+
+    setWallet((w) => ({ ...w, connecting: true }));
+    try {
+      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      const address = String(accounts?.[0] || '');
+      const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+      setWallet({ address, chainId: String(chainId || ''), connecting: false });
+      if (address) setWalletAddress(address);
+    } catch (err) {
+      setWallet((w) => ({ ...w, connecting: false }));
+      setWalletError(err?.message || 'Failed to connect wallet');
+    }
+  };
+
+  const switchToBase = async () => {
+    setWalletError('');
+    if (!hasEthereum()) {
+      setWalletError('No wallet detected. Install MetaMask first.');
+      return;
+    }
+
+    try {
+      await window.ethereum.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: BASE_CHAIN_ID_HEX }],
+      });
+      const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+      setWallet((w) => ({ ...w, chainId: String(chainId || '') }));
+    } catch (err) {
+      // If Base is not present, ask wallet to add it.
+      if (err?.code === 4902) {
+        await window.ethereum.request({
+          method: 'wallet_addEthereumChain',
+          params: [{
+            chainId: BASE_CHAIN_ID_HEX,
+            chainName: 'Base Mainnet',
+            nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+            rpcUrls: ['https://mainnet.base.org'],
+            blockExplorerUrls: ['https://basescan.org'],
+          }],
+        });
+        const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+        setWallet((w) => ({ ...w, chainId: String(chainId || '') }));
+        return;
+      }
+      setWalletError(err?.message || 'Failed to switch to Base');
+    }
+  };
 
   const handleScan = async () => {
     setScanning(true);
@@ -194,6 +299,7 @@ export default function BountyHunterTab() {
       const data = await apiPost(`/bounties/${selected._id}/payout`, {
         txHash: payoutTxHash,
         amount: selected.rewardAmount,
+        wallet: walletAddress,
       });
       if (data.ok) {
         setSelected(data.bounty);
@@ -204,6 +310,58 @@ export default function BountyHunterTab() {
       logger.error('Payout record failed', err);
     } finally {
       setActionLoading(false);
+    }
+  };
+
+  const handleMetaMaskPayout = async () => {
+    if (!selected) return;
+    setWalletError('');
+    if (!hasEthereum()) {
+      setWalletError('No wallet detected. Install MetaMask first.');
+      return;
+    }
+    if (!wallet.address) {
+      setWalletError('Connect MetaMask first.');
+      return;
+    }
+    if (!isWalletAddress(walletAddress)) {
+      setWalletError('Enter a valid recipient wallet address (0x...).');
+      return;
+    }
+
+    setPayingWithWallet(true);
+    try {
+      if (!isBaseChain(wallet.chainId)) {
+        await switchToBase();
+      }
+
+      const value = toWeiHex(payoutNativeAmount);
+      const txHash = await window.ethereum.request({
+        method: 'eth_sendTransaction',
+        params: [{
+          from: wallet.address,
+          to: walletAddress,
+          value,
+        }],
+      });
+
+      const data = await apiPost(`/bounties/${selected._id}/payout`, {
+        txHash,
+        amount: selected.rewardAmount,
+        wallet: walletAddress,
+      });
+
+      if (data.ok) {
+        setPayoutTxHash(txHash);
+        setSelected(data.bounty);
+        await loadBounties(page, filterStatus, filterPlatform);
+        await loadStats();
+      }
+    } catch (err) {
+      setWalletError(err?.message || 'MetaMask payout failed');
+      logger.error('MetaMask payout failed', err);
+    } finally {
+      setPayingWithWallet(false);
     }
   };
 
@@ -256,6 +414,20 @@ export default function BountyHunterTab() {
 
       <div className="bh-controls-row">
         <button
+          className="bh-wallet-connect-btn"
+          onClick={connectWallet}
+          disabled={wallet.connecting}
+        >
+          {wallet.address ? 'Wallet connected' : wallet.connecting ? 'Connecting…' : 'Connect MetaMask'}
+        </button>
+
+        {wallet.address && !isBaseChain(wallet.chainId) && (
+          <button className="bh-base-btn" onClick={switchToBase}>
+            Switch to Base
+          </button>
+        )}
+
+        <button
           className={`bh-rank-btn ${rankedMode ? 'active' : ''}`}
           onClick={() => setRankedMode(v => !v)}
         >
@@ -276,7 +448,15 @@ export default function BountyHunterTab() {
         >
           {dispatchingTop ? 'Dispatching…' : '🤖 Send Top 10 to OpenClaw'}
         </button>
+
+        {wallet.address && (
+          <span className="bh-wallet-chip">
+            {wallet.address.slice(0, 6)}...{wallet.address.slice(-4)} {wallet.chainId ? `· ${isBaseChain(wallet.chainId) ? 'Base' : wallet.chainId}` : ''}
+          </span>
+        )}
       </div>
+
+      {walletError ? <div className="bh-scan-result error">❌ {walletError}</div> : null}
 
       {dispatchResult && (
         <div className={`bh-scan-result ${dispatchResult.ok ? 'ok' : 'error'}`}>
@@ -511,6 +691,30 @@ export default function BountyHunterTab() {
             {(selected.status === 'submitted' || selected.status === 'won') && (
               <div className="bh-payout-section">
                 <div className="bh-section-label">Record Payout (when you win)</div>
+                <div className="bh-payout-row">
+                  <input
+                    className="bh-notes-input"
+                    value={walletAddress}
+                    onChange={e => setWalletAddress(e.target.value)}
+                    placeholder="Recipient wallet (0x...)"
+                  />
+                </div>
+                <div className="bh-payout-row">
+                  <input
+                    className="bh-notes-input bh-amount-input"
+                    value={payoutNativeAmount}
+                    onChange={e => setPayoutNativeAmount(e.target.value)}
+                    placeholder="Amount in ETH on Base (e.g. 0.01)"
+                  />
+                  <button
+                    className="bh-action-btn submit"
+                    onClick={handleMetaMaskPayout}
+                    disabled={payingWithWallet || !wallet.address}
+                    title="Send payout on Base with MetaMask and auto-mark won"
+                  >
+                    {payingWithWallet ? 'Paying…' : 'Pay with MetaMask + Mark Won'}
+                  </button>
+                </div>
                 <div className="bh-payout-row">
                   <input
                     className="bh-notes-input"

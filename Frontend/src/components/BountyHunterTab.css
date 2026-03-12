@@ -43,7 +43,9 @@
 }
 
 .bh-rank-btn,
-.bh-openclaw-btn {
+.bh-openclaw-btn,
+.bh-wallet-connect-btn,
+.bh-base-btn {
   padding: 8px 14px;
   border-radius: 8px;
   border: 1px solid var(--site-border, rgba(255,255,255,0.12));
@@ -62,8 +64,22 @@
 }
 
 .bh-rank-btn:hover,
-.bh-openclaw-btn:hover {
+.bh-openclaw-btn:hover,
+.bh-wallet-connect-btn:hover,
+.bh-base-btn:hover {
   border-color: #00b4d8;
+}
+
+.bh-wallet-connect-btn {
+  background: rgba(0, 180, 216, 0.12);
+  border-color: rgba(0, 180, 216, 0.3);
+  color: #7dd3fc;
+}
+
+.bh-base-btn {
+  background: rgba(251, 191, 36, 0.12);
+  border-color: rgba(251, 191, 36, 0.28);
+  color: #fbbf24;
 }
 
 .bh-openclaw-btn {
@@ -75,6 +91,16 @@
 .bh-openclaw-btn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
+}
+
+.bh-wallet-chip {
+  padding: 6px 10px;
+  border-radius: 20px;
+  border: 1px solid rgba(0, 180, 216, 0.22);
+  background: rgba(0, 180, 216, 0.08);
+  color: #7dd3fc;
+  font-size: 0.76rem;
+  white-space: nowrap;
 }
 
 .bh-wallet-input {
@@ -517,6 +543,10 @@
 
 .bh-payout-row { display: flex; gap: 8px; align-items: center; }
 
+.bh-amount-input {
+  max-width: 260px;
+}
+
 .bh-notes-input {
   flex: 1;
   padding: 7px 11px;
@@ -531,3 +561,19 @@
 .bh-tx { font-size: 0.78rem; color: #7dd3fc; }
 .bh-tx a { color: #4cde7e; text-decoration: none; }
 .bh-tx a:hover { text-decoration: underline; }
+
+@media (max-width: 680px) {
+  .bh-wallet-input {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .bh-payout-row {
+    flex-wrap: wrap;
+  }
+
+  .bh-amount-input {
+    max-width: none;
+    width: 100%;
+  }
+}
