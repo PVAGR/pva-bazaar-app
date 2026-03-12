@@ -9,8 +9,11 @@
  *   OPENAI_API_KEY           – For AI draft generation (optional but recommended)
  *   BOUNTY_PAYOUT_WALLET     – Your Base wallet address (just the address, not the key)
  *   BOUNTY_PAYOUT_CHAIN      – Default: "base"
+ *   BOUNTY_SKILLS            – Comma-separated skill labels (e.g. "solidity,react,docs")
  *   DEWORK_API_URL           – Optional: Dework GraphQL endpoint
  *   GITHUB_BOUNTY_REPOS      – Comma-separated list of "owner/repo" to scan for issues
+ *   GITHUB_TOKEN             – (Recommended) For higher GitHub search rate limits
+ *   REDDIT_BOUNTY_SUBREDDITS – Override default subreddit list
  */
 
 'use strict';
@@ -22,13 +25,14 @@ const Bounty = require('../models/Bounty');
 // ─── Keyword Strategy ────────────────────────────────────────────────────────
 
 const KEYWORDS = {
-  compensation: ['bounty', 'reward', 'prize', 'pay', 'payment', 'paid', 'contest', 'hackathon', 'grant'],
-  crypto: ['crypto', 'eth', 'usdc', 'dai', 'matic', 'base', 'stablecoin', 'token', 'blockchain', 'web3'],
-  task: ['task', 'quest', 'job', 'project', 'contract', 'freelance', 'remote', 'issue', 'open to work'],
+  compensation: ['bounty', 'reward', 'prize', 'pay', 'payment', 'paid', 'contest', 'hackathon', 'grant', 'earn', 'income', 'compensation', 'win', 'payout'],
+  crypto: ['crypto', 'eth', 'usdc', 'dai', 'matic', 'base', 'stablecoin', 'token', 'blockchain', 'web3', 'defi', 'nft', 'sol', 'solana', 'layer2', 'l2', 'onchain'],
+  task: ['task', 'quest', 'job', 'project', 'contract', 'freelance', 'remote', 'issue', 'open to work', 'gig', 'listing', 'opportunity'],
   aiExecutable: [
     'code', 'script', 'solidity', 'smart contract', 'frontend', 'backend', 'api',
     'write', 'document', 'tutorial', 'review', 'audit', 'readme', 'docs',
     'react', 'node', 'python', 'typescript', 'data label', 'annotate', 'classify',
+    'test', 'deploy', 'integration', 'openai', 'llm', 'ai', 'prompt', 'bug', 'fix',
   ],
 };
 
@@ -285,6 +289,150 @@ async function scanReddit() {
   return found;
 }
 
+// ─── Platform: Superteam Earn ────────────────────────────────────────────────
+
+async function scanSuperteam() {
+  const found = [];
+  try {
+    const { data } = await axios.get(
+      'https://earn.superteam.fun/api/listings/?type=BOUNTY&take=50',
+      { timeout: 15000, headers: { Accept: 'application/json' } }
+    );
+    const items = Array.isArray(data?.data) ? data.data
+      : Array.isArray(data?.bounties) ? data.bounties
+      : Array.isArray(data) ? data : [];
+
+    for (const item of items) {
+      if (!item || (item.status && item.status !== 'OPEN')) continue;
+      const text = `${item.title || ''} ${item.description || ''}`;
+      const { score, matched } = scoreText(text);
+      if (score < MIN_SCORE) continue;
+
+      const rewardRaw = parseFloat(item.rewardAmount || item.usdValue || 0) || 0;
+      const token = item.token || 'USDC';
+      const skillTags = (item.skills || [])
+        .flatMap(s => (typeof s === 'string' ? s : s.skills || s.skill || ''))
+        .filter(s => typeof s === 'string' && s);
+
+      found.push({
+        platform: 'superteam',
+        platformId: String(item.id || item.slug || Math.random()),
+        platformUrl: item.slug ? `https://earn.superteam.fun/listings/bounties/${item.slug}` : '',
+        title: item.title || '(untitled)',
+        description: (item.description || '').substring(0, 2000),
+        tags: skillTags,
+        keywords: matched,
+        rewardAmount: rewardRaw ? `${rewardRaw} ${token}` : '',
+        rewardToken: token,
+        rewardRaw,
+        chain: 'solana',
+        expiresAt: item.deadline ? new Date(item.deadline) : null,
+        rawData: { id: item.id, slug: item.slug },
+      });
+    }
+  } catch (err) {
+    console.warn('[BountyHunter] Superteam scan failed:', err.message);
+  }
+  return found;
+}
+
+// ─── Platform: Code4rena (public contest data via GitHub) ────────────────────
+
+async function scanCode4rena() {
+  const found = [];
+  try {
+    const headers = {
+      Accept: 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+    };
+    if (process.env.GITHUB_TOKEN) headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
+
+    const { data: files } = await axios.get(
+      'https://api.github.com/repos/code-423n4/code423n4.com/contents/_data/contests',
+      { headers, timeout: 12000 }
+    );
+
+    // Take the 15 most recent contest files
+    const recent = (Array.isArray(files) ? files : []).slice(-15).reverse();
+
+    for (const file of recent.slice(0, 12)) {
+      try {
+        const { data: contest } = await axios.get(file.download_url, { timeout: 6000 });
+        const c = typeof contest === 'string' ? JSON.parse(contest) : contest;
+        if (!c || c.hide) continue;
+
+        const endDate = c.end_time ? new Date(c.end_time * 1000) : null;
+        if (endDate && endDate < new Date()) continue;
+
+        const totalPrize = parseFloat(c.total_prize) || 0;
+        const { score, matched } = scoreText(
+          `${c.title || ''} ${c.details || ''} audit solidity smart contract bounty`
+        );
+
+        found.push({
+          platform: 'code4rena',
+          platformId: String(c.contest_id || file.sha),
+          platformUrl: c.contest_id ? `https://code4rena.com/contests/${c.contest_id}` : '',
+          title: c.title || '(untitled)',
+          description: (c.details || '').substring(0, 2000),
+          tags: ['audit', 'solidity', 'smart contract'],
+          keywords: matched.length ? matched : ['audit', 'code', 'bounty'],
+          rewardAmount: totalPrize ? `${totalPrize} USDC` : '',
+          rewardToken: 'USDC',
+          rewardRaw: totalPrize,
+          chain: 'ethereum',
+          expiresAt: endDate,
+          rawData: { id: c.contest_id, repo: c.repo },
+        });
+      } catch (_e) {
+        // skip malformed contest files silently
+      }
+    }
+  } catch (err) {
+    console.warn('[BountyHunter] Code4rena scan failed:', err.message);
+  }
+  return found;
+}
+
+// ─── Platform: ImmuneFi (bug bounty programs via public sitemap JSON) ────────
+
+async function scanImmuneFi() {
+  const found = [];
+  try {
+    const { data } = await axios.get(
+      'https://immunefi.com/explore.json',
+      { timeout: 15000, headers: { Accept: 'application/json', 'User-Agent': 'pva-bazaar-bounty-scanner/1.0' } }
+    );
+    const programs = Array.isArray(data) ? data : (data?.programs || data?.bounties || []);
+
+    for (const prog of programs.slice(0, 50)) {
+      if (!prog || prog.status === 'Inactive') continue;
+      const text = `${prog.project || prog.name || ''} ${prog.description || ''}`;
+      const { score, matched } = scoreText(text + ' bug bounty security audit');
+
+      const maxBounty = parseFloat(prog.maxBounty || prog.maxReward || 0) || 0;
+
+      found.push({
+        platform: 'immunefi',
+        platformId: String(prog.id || prog.slug || prog.project),
+        platformUrl: prog.slug ? `https://immunefi.com/bug-bounty/${prog.slug}/` : 'https://immunefi.com/explore/',
+        title: `[Bug Bounty] ${prog.project || prog.name || 'Unknown'}`,
+        description: (prog.description || '').substring(0, 2000),
+        tags: ['bug-bounty', 'security', ...(prog.technologies || [])],
+        keywords: matched.length ? matched : ['bug', 'bounty', 'audit'],
+        rewardAmount: maxBounty ? `up to ${maxBounty} USD` : '',
+        rewardToken: 'USDC',
+        rewardRaw: maxBounty,
+        chain: (prog.chain || process.env.BOUNTY_PAYOUT_CHAIN || 'ethereum').toLowerCase(),
+        rawData: { slug: prog.slug, ecosystem: prog.ecosystem },
+      });
+    }
+  } catch (err) {
+    console.warn('[BountyHunter] ImmuneFi scan failed:', err.message);
+  }
+  return found;
+}
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function extractRewardFromText(text) {
@@ -380,7 +528,7 @@ async function upsertBounty(raw) {
 // ─── Main Scan Entry Point ────────────────────────────────────────────────────
 
 async function runScan(options = {}) {
-  const { platforms = ['dework', 'github', 'reddit'] } = options;
+  const { platforms = ['dework', 'github', 'reddit', 'superteam', 'code4rena', 'immunefi'] } = options;
   const results = { discovered: 0, skipped: 0, errors: [] };
 
   console.log('[BountyHunter] Starting scan for platforms:', platforms.join(', '));
@@ -392,6 +540,9 @@ async function runScan(options = {}) {
       if (platform === 'dework') rawBounties = rawBounties.concat(await scanDework());
       if (platform === 'github') rawBounties = rawBounties.concat(await scanGitHub());
       if (platform === 'reddit') rawBounties = rawBounties.concat(await scanReddit());
+      if (platform === 'superteam') rawBounties = rawBounties.concat(await scanSuperteam());
+      if (platform === 'code4rena') rawBounties = rawBounties.concat(await scanCode4rena());
+      if (platform === 'immunefi') rawBounties = rawBounties.concat(await scanImmuneFi());
     } catch (err) {
       results.errors.push({ platform, message: err.message });
     }

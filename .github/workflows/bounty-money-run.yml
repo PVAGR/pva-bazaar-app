@@ -37,6 +37,7 @@ jobs:
       API_BASE_URL: ${{ secrets.API_BASE_URL }}
       API_AUTH_TOKEN: ${{ secrets.BOUNTY_SCAN_JWT }}
       DEFAULT_WALLET_ADDRESS: ${{ secrets.BOUNTY_PAYOUT_WALLET }}
+      BOUNTY_SKILLS: ${{ secrets.BOUNTY_SKILLS }}
 
     steps:
       - name: Validate required secrets

@@ -32,9 +32,11 @@ function computeBountyPriority(bounty) {
 }
 
 function buildDispatchPrompt(topBounties, walletAddress) {
+  const skills = process.env.BOUNTY_SKILLS || 'web3 development, smart contracts, JavaScript/TypeScript, React, Node.js, Solidity, technical writing';
   const lines = topBounties.map((b, index) => {
+    const highValue = (b.rewardRaw || 0) >= 100 ? ' ⭐ HIGH VALUE' : '';
     return [
-      `${index + 1}. [${b.platform}] ${b.title}`,
+      `${index + 1}. [${b.platform}] ${b.title}${highValue}`,
       `   status=${b.status} priority=${computeBountyPriority(b)}`,
       `   reward=${b.rewardAmount || 'unknown'} chain=${b.chain || 'base'}`,
       `   url=${b.platformUrl || 'n/a'}`,
@@ -44,10 +46,12 @@ function buildDispatchPrompt(topBounties, walletAddress) {
   return [
     'OpenClaw mission: prioritize and act on top bounty candidates.',
     `Target payout wallet (Base): ${walletAddress || 'not configured'}`,
+    `Operator skills: ${skills}`,
     'Tasks:',
-    '- Review these ranked opportunities.',
-    '- Recommend top 3 immediate actions with rationale.',
+    '- Review these ranked opportunities. Items marked ⭐ HIGH VALUE are priority.',
+    '- Recommend top 3 immediate actions with rationale, matching operator skills.',
     '- Draft first submission approach for the #1 candidate.',
+    '- For HIGH VALUE items, provide a full execution plan.',
     '',
     'Ranked opportunities:',
     ...lines,
