@@ -178,8 +178,9 @@ export default function BountyHunterTab() {
   const switchToBase = async () => {
     setWalletError('');
     if (!hasEthereum()) {
-      setWalletError('No wallet detected. Install MetaMask first.');
-      return;
+      const msg = 'No wallet detected. Install MetaMask first.';
+      setWalletError(msg);
+      throw new Error(msg);
     }
 
     try {
@@ -189,6 +190,9 @@ export default function BountyHunterTab() {
       });
       const chainId = await window.ethereum.request({ method: 'eth_chainId' });
       setWallet((w) => ({ ...w, chainId: String(chainId || '') }));
+      if (!isBaseChain(chainId)) {
+        throw new Error('Wallet is not on Base chain after switch');
+      }
     } catch (err) {
       // If Base is not present, ask wallet to add it.
       if (err?.code === 4902) {
@@ -204,9 +208,14 @@ export default function BountyHunterTab() {
         });
         const chainId = await window.ethereum.request({ method: 'eth_chainId' });
         setWallet((w) => ({ ...w, chainId: String(chainId || '') }));
+        if (!isBaseChain(chainId)) {
+          throw new Error('Wallet is not on Base chain after adding network');
+        }
         return;
       }
-      setWalletError(err?.message || 'Failed to switch to Base');
+      const message = err?.message || 'Failed to switch to Base';
+      setWalletError(message);
+      throw err;
     }
   };
 
@@ -333,6 +342,11 @@ export default function BountyHunterTab() {
     try {
       if (!isBaseChain(wallet.chainId)) {
         await switchToBase();
+      }
+
+      const activeChain = await window.ethereum.request({ method: 'eth_chainId' });
+      if (!isBaseChain(activeChain)) {
+        throw new Error('Please switch MetaMask to Base before paying.');
       }
 
       const value = toWeiHex(payoutNativeAmount);
