@@ -20,6 +20,7 @@ export default function OpenClawTab() {
   const [statusLoading, setStatusLoading] = useState(true);
   const [messages, setMessages] = useState([]);
   const [messagesLoading, setMessagesLoading] = useState(true);
+  const [messagesError, setMessagesError] = useState(null);
   const [messageInput, setMessageInput] = useState('');
   const [sending, setSending] = useState(false);
   const [sendResult, setSendResult] = useState(null);
@@ -42,12 +43,19 @@ export default function OpenClawTab() {
 
   const loadMessages = useCallback(async () => {
     setMessagesLoading(true);
+    setMessagesError(null);
     try {
       const data = await apiGet('/openclaw/messages?limit=120');
       if (data.ok) {
         setMessages(Array.isArray(data.messages) ? data.messages : []);
       }
     } catch (err) {
+      const status = err?.response?.status;
+      if (status === 401) {
+        setMessagesError('Message history requires authentication. Send a message to get started.');
+      } else {
+        setMessagesError(`Failed to load messages: ${err.message || 'Network error'}`);
+      }
       logger.error('Failed to load OpenClaw messages', err);
     } finally {
       setMessagesLoading(false);
@@ -184,7 +192,13 @@ export default function OpenClawTab() {
             <LoadingDots size="small" label="Loading conversation..." />
           ) : null}
 
-          {!messagesLoading && !rows.length ? (
+          {!messagesLoading && messagesError ? (
+            <div className="oc-events-empty oc-messages-notice">
+              {messagesError}
+            </div>
+          ) : null}
+
+          {!messagesLoading && !messagesError && !rows.length ? (
             <div className="oc-events-empty">
               No messages yet. Send a message and the scheduled agent workflow will answer.
             </div>

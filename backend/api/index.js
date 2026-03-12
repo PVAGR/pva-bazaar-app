@@ -343,9 +343,9 @@ app.post('/api/dev/token', (req, res) => {
 app.get('/api/version', (req, res) => {
   res.json({
     ok: true,
-    sha: '4f443b9b29d51e45eb4c5423ebfcfa1920873979',
-    shortSha: '4f443b9',
-    message: 'fix: Remove eager DB connection on module load, add /api/ping endpoint',
+    sha: '9024d6e',
+    shortSha: '9024d6e',
+    message: 'fix(openclaw): allow admin JWT for console dispatch and message reads',
     timestamp: new Date().toISOString(),
   });
 });

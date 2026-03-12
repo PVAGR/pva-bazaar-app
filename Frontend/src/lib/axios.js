@@ -50,11 +50,16 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // 401: redirect to admin login
+    // 401: only redirect to login when the request itself was an auth/session check.
+    // Do NOT redirect when auth-gated internal endpoints (like openclaw/messages) return 401
+    // because the logged-in token may simply not be recognized yet on stale deploy.
     if (status === 401) {
-      const loginPath = "/#/admin";
-      clearToken();
-      window.location.assign(loginPath);
+      const url = error?.config?.url || '';
+      const isAuthEndpoint = /\/(auth|login|me|session)\b/i.test(url);
+      if (isAuthEndpoint) {
+        clearToken();
+        window.location.assign('/#/admin');
+      }
       return Promise.reject(error);
     }
 
