@@ -6,6 +6,12 @@ import './OpenClawTab.css';
 
 const logger = createLogger('OpenClawTab');
 
+function formatModeLabel(mode) {
+  if (mode === 'webhook+queue') return 'Webhook + Queue';
+  if (mode === 'queue-only') return 'Queue Only';
+  return 'Unknown';
+}
+
 function formatMessageTime(value) {
   if (!value) return 'n/a';
   try {
@@ -71,7 +77,7 @@ export default function OpenClawTab() {
     } catch (err) {
       const status = err?.response?.status;
       if (status === 401) {
-        setMessagesError('Message history requires authentication. Send a message to get started.');
+        setMessagesError('Message history requires admin authentication.');
       } else {
         setMessagesError(`Failed to load messages: ${err.message || 'Network error'}`);
       }
@@ -103,8 +109,8 @@ export default function OpenClawTab() {
         setSendResult({
           ok: true,
           text: data.forwarded
-            ? 'Message sent to OpenClaw and queued for agent response'
-            : 'Message queued for agent response',
+            ? 'Message sent and queued for the agent'
+            : 'Message queued for the agent',
         });
         setMessageInput('');
         setTimeout(loadMessages, 1000);
@@ -128,7 +134,7 @@ export default function OpenClawTab() {
       if (data?.ok) {
         setQueueActionResult({
           ok: true,
-          text: `Replay complete: forwarded ${data.forwarded}/${data.attempted}, failed ${data.failed}`,
+          text: `Replay finished: ${data.forwarded}/${data.attempted} forwarded, ${data.failed} failed`,
         });
         loadQueueStats();
       } else {
@@ -185,7 +191,7 @@ export default function OpenClawTab() {
                 checked={autoRefresh}
                 onChange={(event) => setAutoRefresh(event.target.checked)}
               />
-              Poll every 15s
+              Auto-refresh every 15s
             </label>
             <button
               className="oc-btn oc-btn--secondary"
@@ -195,7 +201,7 @@ export default function OpenClawTab() {
                 loadQueueStats();
               }}
               disabled={statusLoading || messagesLoading || queueLoading}
-              title="Refresh status and messages"
+              title="Refresh status, queue, and messages"
             >
               🔄 Refresh
             </button>
@@ -203,15 +209,15 @@ export default function OpenClawTab() {
               className="oc-btn oc-btn--secondary"
               onClick={replayWebhook}
               disabled={queueActionLoading}
-              title="Replay pending outbound messages to OpenClaw webhook"
+              title="Replay pending outbound messages to the configured webhook"
             >
-              {queueActionLoading ? 'Replaying...' : '🔁 Replay Webhook'}
+              {queueActionLoading ? 'Replaying...' : '🔁 Replay Queue'}
             </button>
           </div>
         </div>
 
         {statusLoading ? (
-          <LoadingDots size="small" label="Checking gateway..." />
+          <LoadingDots size="small" label="Checking OpenClaw status..." />
         ) : (
           <div className="oc-status-grid">
             <div className={`oc-status-card ${status?.configured ? 'oc-ok' : 'oc-warn'}`}>
@@ -233,15 +239,15 @@ export default function OpenClawTab() {
             <div className="oc-status-card oc-info">
               <span className="oc-status-icon">🤖</span>
               <div>
-                <div className="oc-status-label">Agent Mode</div>
-                <div className="oc-status-value">Autonomous queue responder</div>
+                <div className="oc-status-label">Operating Mode</div>
+                <div className="oc-status-value">{formatModeLabel(status?.mode)}</div>
               </div>
             </div>
 
             <div className={`oc-status-card ${queueStats?.staleOutbound > 0 ? 'oc-warn' : 'oc-ok'}`}>
               <span className="oc-status-icon">📬</span>
               <div>
-                <div className="oc-status-label">Pending Queue</div>
+                <div className="oc-status-label">Queued Outbound</div>
                 <div className="oc-status-value">
                   {queueLoading ? 'Loading...' : `${queueStats?.pendingOutbound ?? 0} pending`}
                 </div>
@@ -251,7 +257,7 @@ export default function OpenClawTab() {
             <div className={`oc-status-card ${queueStats?.staleOutbound > 0 ? 'oc-bad' : 'oc-info'}`}>
               <span className="oc-status-icon">⏱️</span>
               <div>
-                <div className="oc-status-label">Stale Queue</div>
+                <div className="oc-status-label">Stale Outbound</div>
                 <div className="oc-status-value">
                   {queueLoading
                     ? 'Loading...'
@@ -285,7 +291,7 @@ export default function OpenClawTab() {
 
           {!messagesLoading && !messagesError && !rows.length ? (
             <div className="oc-events-empty">
-              No messages yet. Send a message and the scheduled agent workflow will answer.
+              No messages yet. Send a message to queue a request for the agent.
             </div>
           ) : null}
 
@@ -316,7 +322,7 @@ export default function OpenClawTab() {
             value={messageInput}
             onChange={(event) => setMessageInput(event.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Type a message to OpenClaw. Enter sends, Shift+Enter adds newline."
+            placeholder="Write a message to OpenClaw. Press Enter to send; Shift+Enter for a new line."
             rows={3}
             disabled={sending}
             aria-label="OpenClaw message input"
