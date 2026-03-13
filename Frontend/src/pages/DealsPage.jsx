@@ -497,9 +497,9 @@ export default function DealsPage() {
       <header className="admin-header deals-header">
         <div className="deals-header__row">
           <div>
-            <h1>🤝 Deals (Smart Contract Foundation)</h1>
+            <h1>🤝 Deals</h1>
             <p className="muted">
-              Draft real-world deals (parties, wallets, milestones, payment schedule) with an audit trail. On-chain contract deployment comes next.
+              Draft agreements with parties, wallets, milestones, and payment schedules. Signatures create a verifiable audit trail.
             </p>
           </div>
           <div className="deals-actions">

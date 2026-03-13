@@ -83,7 +83,7 @@ export default function MarketplacePage() {
           aria-label="Search items"
           className="marketplace-search"
           type="search"
-          placeholder="Search items..."
+          placeholder="Search listings"
           value={search}
           onChange={e => setSearch(e.target.value)}
         />
