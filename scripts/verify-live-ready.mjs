@@ -7,6 +7,7 @@ const WAIT_TIMEOUT_MS = Number(process.env.WAIT_TIMEOUT_MS || 60000);
 const WAIT_POLL_MS = Number(process.env.WAIT_POLL_MS || 10000);
 const STRICT = process.env.STRICT === "true";
 const PARITY_REQUIRED = process.env.PARITY_REQUIRED === "true";
+const REQUIRE_ADMIN = process.env.REQUIRE_ADMIN === "true";
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "";
 let softIssues = 0;
@@ -231,6 +232,8 @@ if (ADMIN_USERNAME && ADMIN_PASSWORD) {
       console.log(`✅ bounty stats ok (won=${bountyStats.json.wonCount ?? 0})`);
     }
   }
+} else if (REQUIRE_ADMIN) {
+  fail('admin checks required, but ADMIN_USERNAME/ADMIN_PASSWORD were not provided');
 } else {
   console.log('ℹ️ admin checks skipped: ADMIN_USERNAME/ADMIN_PASSWORD not provided');
 }
