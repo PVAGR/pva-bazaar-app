@@ -13,7 +13,6 @@ import CheckoutSuccessPage from './pages/CheckoutSuccessPage.jsx';
 import CheckoutCancelPage from './pages/CheckoutCancelPage.jsx';
 import VerificationPage from './pages/VerificationPage.jsx';
 import ManifestoPage from './pages/ManifestoPage.jsx';
-import CartPage from './pages/CartPage.jsx';
 import ListItemPage from './pages/ListItemPage.jsx';
 import OracleAssessmentPage from './pages/OracleAssessmentPage.jsx';
 import LoginPage from './pages/LoginPage.jsx';
@@ -44,7 +43,6 @@ export default function App() {
           <Route path="/checkout/cancel" element={<RouteErrorBoundary><CheckoutCancelPage /></RouteErrorBoundary>} />
           <Route path="/verification" element={<RouteErrorBoundary><VerificationPage /></RouteErrorBoundary>} />
           <Route path="/manifesto" element={<RouteErrorBoundary><ManifestoPage /></RouteErrorBoundary>} />
-          <Route path="/cart" element={<RouteErrorBoundary><CartPage /></RouteErrorBoundary>} />
           <Route path="/items/new" element={<RouteErrorBoundary><ListItemPage /></RouteErrorBoundary>} />
           <Route path="/oracle" element={<RouteErrorBoundary><OracleAssessmentPage /></RouteErrorBoundary>} />
           <Route path="/login" element={<RouteErrorBoundary><LoginPage /></RouteErrorBoundary>} />
