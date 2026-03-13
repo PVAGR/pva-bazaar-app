@@ -154,7 +154,7 @@ export default function UsersTab() {
       <div className="tab-header">
         <h2>👥 User Management</h2>
         <p className="tab-description">
-          Manage accounts, review activity, and monitor user statistics.
+          Manage user accounts, view activity, and monitor user statistics
         </p>
       </div>
 
@@ -210,7 +210,7 @@ export default function UsersTab() {
         <div className="search-box">
           <input
             type="search"
-            placeholder="🔍 Search by name, email, or username"
+            placeholder="🔍 Search users by name, email, or username..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="search-input"
@@ -223,7 +223,7 @@ export default function UsersTab() {
 
       {users.length === 0 ? (
         <div className="empty-state">
-          <p>No users found{searchQuery && ` for "${searchQuery}"`}.</p>
+          <p>No users found{searchQuery && ` matching "${searchQuery}"`}</p>
         </div>
       ) : (
         <>
@@ -273,7 +273,7 @@ export default function UsersTab() {
                         <button
                           onClick={() => handleViewUser(user._id)}
                           className="btn-icon"
-                          title="View user details"
+                          title="View details"
                         >
                           👁️
                         </button>
@@ -370,7 +370,7 @@ export default function UsersTab() {
                   value={editingUser.profilePicture || ''}
                   onChange={(e) => setEditingUser({ ...editingUser, profilePicture: e.target.value })}
                   className="form-input"
-                  placeholder="https://example.com/avatar.jpg"
+                  placeholder="https://..."
                 />
               </div>
             </div>

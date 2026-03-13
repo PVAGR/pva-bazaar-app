@@ -249,18 +249,6 @@ export async function createArchiveEntry(entry) {
   }
 }
 
-export async function updateArchiveEntry(id, entry) {
-  try {
-    const response = await apiPut(`/archive/${encodeURIComponent(id)}`, entry);
-    if (response && response.ok && response.item) {
-      return { ok: true, item: response.item };
-    }
-    return { ok: false, error: response?.error || response?.message || 'Failed to update entry' };
-  } catch (err) {
-    return { ok: false, error: err.message };
-  }
-}
-
 export async function deleteArchiveEntry(id) {
   try {
     const response = await apiDelete(`/archive/${id}`);

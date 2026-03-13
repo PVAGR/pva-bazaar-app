@@ -312,7 +312,7 @@ export default function ListItemPage() {
 
           {step === 4 && (
             <section>
-              <p className="hint">Select external marketplaces to record your syndication intent. Your preferences are saved with this listing.</p>
+              <p className="hint">Choose external marketplaces for future syndication automation.</p>
               {Object.keys(form.syndication).map(platform => (
                 <label key={platform} className="check">
                   <input
@@ -321,6 +321,11 @@ export default function ListItemPage() {
                     onChange={() => updateSyndication(platform)}
                   />
                   {platform}
+                  <HelpTip
+                    title="Syndication (future)"
+                    body="This is a placeholder for automation. Selecting a platform won’t publish yet, but we save your intent for later integrations."
+                    example="ebay"
+                  />
                 </label>
               ))}
             </section>

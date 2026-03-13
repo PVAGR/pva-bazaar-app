@@ -334,33 +334,7 @@
   </div>
 
   <script>
-    function normalizeBackendBase(raw) {
-      const fallback = 'https://api.pvabazaar.org';
-      if (!raw || typeof raw !== 'string') return fallback;
-      const trimmed = raw.trim().replace(/\/+$/, '');
-      if (!trimmed) return fallback;
-      return trimmed.endsWith('/api') ? trimmed.slice(0, -4) : trimmed;
-    }
-
-    const queryBackend = new URLSearchParams(window.location.search).get('backend');
-    const storedBackend = (() => {
-      try {
-        return localStorage.getItem('backendUrl');
-      } catch {
-        return null;
-      }
-    })();
-    const API_BASE = normalizeBackendBase(queryBackend || storedBackend);
-
-    async function legacyRequest(path, options = {}) {
-      const url = `${API_BASE}/api${path}`;
-      const response = await fetch(url, options);
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data?.error || `Request failed (${response.status})`);
-      }
-      return data;
-    }
+    const API_BASE = 'https://api.pvabazaar.org/api';
 
     async function createEntry() {
       const title = document.getElementById('entryTitle').value;
@@ -373,7 +347,7 @@
       }
 
       try {
-        const data = await legacyRequest('/legacy/entry', {
+        const response = await fetch(`${API_BASE}/api/legacy/entry`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -384,6 +358,8 @@
             }
           })
         });
+
+        const data = await response.json();
         if (data.ok) {
           showStatus('createStatus', `✅ Entry immortalized!\nHash: ${data.entry.hash.substring(0, 16)}...`, 'success');
           document.getElementById('entryTitle').value = '';
@@ -399,7 +375,8 @@
 
     async function loadEntries() {
       try {
-        const data = await legacyRequest('/legacy/chain');
+        const response = await fetch(`${API_BASE}/api/legacy/chain`);
+        const data = await response.json();
 
         if (data.ok && data.chain.entries.length > 0) {
           const html = data.chain.entries
@@ -436,7 +413,8 @@
 
     async function viewEntry(hash) {
       try {
-        const data = await legacyRequest(`/legacy/entry/${hash}`);
+        const response = await fetch(`${API_BASE}/api/legacy/entry/${hash}`);
+        const data = await response.json();
 
         if (data.ok) {
           alert(`Entry: ${data.entry.metadata.title}\n\n${data.entry.content}\n\nHash: ${hash}`);
@@ -448,7 +426,8 @@
 
     async function verifyChain() {
       try {
-        const data = await legacyRequest('/legacy/verify');
+        const response = await fetch(`${API_BASE}/api/legacy/verify`);
+        const data = await response.json();
 
         if (data.ok) {
           showStatus(
@@ -464,7 +443,8 @@
 
     async function checkResurrection() {
       try {
-        const data = await legacyRequest('/legacy/resurrection-status');
+        const response = await fetch(`${API_BASE}/api/legacy/resurrection-status`);
+        const data = await response.json();
 
         if (data.ok) {
           const status = data.status.locked ? '🔒 LOCKED' : '🔓 UNLOCKED';

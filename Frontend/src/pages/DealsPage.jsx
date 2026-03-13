@@ -497,9 +497,9 @@ export default function DealsPage() {
       <header className="admin-header deals-header">
         <div className="deals-header__row">
           <div>
-            <h1>🤝 Deals</h1>
+            <h1>🤝 Deals (Smart Contract Foundation)</h1>
             <p className="muted">
-              Draft agreements with parties, wallets, milestones, and payment schedules. Signatures create a verifiable audit trail.
+              Draft real-world deals (parties, wallets, milestones, payment schedule) with an audit trail. On-chain contract deployment comes next.
             </p>
           </div>
           <div className="deals-actions">
@@ -612,7 +612,7 @@ export default function DealsPage() {
               <label>
                 <span className="labelRow">
                   Default wallet (optional)
-                  <HelpTip title="Default wallet" body="Optional. Your preferred wallet address for agreement reference and payment details." example="0xabc123..." />
+                  <HelpTip title="Default wallet" body="Optional. Your preferred wallet address for reference and future on-chain escrow." example="0xabc123..." />
                 </span>
                 <input
                   value={preferencesDraft.defaultWalletAddress}
@@ -687,7 +687,7 @@ export default function DealsPage() {
               <label>
                 <span className="labelRow">
                   Total amount
-                  <HelpTip title="Total amount" body="Total value of the agreement used for review and payment scheduling." example="1000" />
+                  <HelpTip title="Total amount" body="Total value of the deal (informational + future escrow amount)." example="1000" />
                 </span>
                 <input value={draft.totalAmount} onChange={(e) => setDraft((p) => ({ ...p, totalAmount: e.target.value }))} placeholder="1000" />
               </label>

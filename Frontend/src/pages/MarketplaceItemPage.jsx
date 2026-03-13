@@ -6,6 +6,8 @@ import VerificationBadge from "../components/VerificationBadge.jsx";
 import { AlertModal } from "../components/ui/DialogModals.jsx";
 import "./MarketplaceItemPage.css";
 
+const PLACEHOLDER = "/placeholder.png";
+
 function formatPrice(priceCents, currency = "USD") {
   if (typeof priceCents !== "number") return "";
   return new Intl.NumberFormat(undefined, {
@@ -44,11 +46,10 @@ export default function MarketplaceItemPage() {
   if (loading) return <div className="marketplace-item-page"><div className="loading">Loading...</div></div>;
   if (error || !item) return <div className="marketplace-item-page"><div className="error">{error || "Item not found"}</div></div>;
 
-  const media = Array.isArray(item.media) ? item.media.filter(Boolean) : [];
-  const hasMedia = media.length > 0;
-  const mainImage = hasMedia ? media[mainIdx] || media[0] : null;
+  const media = Array.isArray(item.media) && item.media.length > 0 ? item.media : [PLACEHOLDER];
+  const mainImage = media[mainIdx] || PLACEHOLDER;
   const title = item.name ? `${item.name} | PVABazaar` : "Marketplace Item | PVABazaar";
-  const ogImage = hasMedia ? media[0] : null;
+  const ogImage = media[0] || PLACEHOLDER;
   const price = formatPrice(item.priceCents, item.currency);
 
   return (
@@ -58,11 +59,11 @@ export default function MarketplaceItemPage() {
         <meta name="description" content={item.description || "Marketplace item on PVABazaar"} />
         <meta property="og:title" content={item.name || "Marketplace Item"} />
         <meta property="og:description" content={item.description || "Marketplace item on PVABazaar"} />
-        {ogImage ? <meta property="og:image" content={ogImage} /> : null}
+        <meta property="og:image" content={ogImage} />
         <meta property="twitter:card" content="summary_large_image" />
         <meta property="twitter:title" content={item.name || "Marketplace Item"} />
         <meta property="twitter:description" content={item.description || "Marketplace item on PVABazaar"} />
-        {ogImage ? <meta property="twitter:image" content={ogImage} /> : null}
+        <meta property="twitter:image" content={ogImage} />
       </Helmet>
       <div className="item-top-links">
         <Link to="/marketplace" className="back-link">← Back to Marketplace</Link>
@@ -73,35 +74,27 @@ export default function MarketplaceItemPage() {
       <div className="item-detail-layout">
         <section className="media-gallery" aria-label="Item media gallery">
           <div className="main-media">
-            {hasMedia ? (
-              <img src={mainImage} alt={item.name} className="main-image" />
-            ) : (
-              <div className="main-image" role="img" aria-label="No media uploaded">
-                No media uploaded
-              </div>
-            )}
+            <img src={mainImage} alt={item.name} className="main-image" />
           </div>
-          {hasMedia ? (
-            <div className="thumbnails" role="list">
-              {media.map((img, idx) => (
-                <button
-                  key={img + idx}
-                  className={"thumb-btn" + (idx === mainIdx ? " selected" : "")}
-                  aria-label={`View image ${idx + 1}`}
-                  aria-pressed={idx === mainIdx}
-                  tabIndex={0}
-                  onClick={() => setMainIdx(idx)}
-                  onKeyDown={e => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      setMainIdx(idx);
-                    }
-                  }}
-                >
-                  <img src={img} alt={item.name + " thumbnail " + (idx + 1)} className="thumb-img" />
-                </button>
-              ))}
-            </div>
-          ) : null}
+          <div className="thumbnails" role="list">
+            {media.map((img, idx) => (
+              <button
+                key={img + idx}
+                className={"thumb-btn" + (idx === mainIdx ? " selected" : "")}
+                aria-label={`View image ${idx + 1}`}
+                aria-pressed={idx === mainIdx}
+                tabIndex={0}
+                onClick={() => setMainIdx(idx)}
+                onKeyDown={e => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    setMainIdx(idx);
+                  }
+                }}
+              >
+                <img src={img} alt={item.name + " thumbnail " + (idx + 1)} className="thumb-img" />
+              </button>
+            ))}
+          </div>
         </section>
         <section className="item-info">
           <h1 className="item-title">{item.name}</h1>

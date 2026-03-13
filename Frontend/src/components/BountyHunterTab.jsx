@@ -448,14 +448,14 @@ export default function BountyHunterTab() {
       <div className="bh-header">
         <div className="bh-header-left">
           <h2 className="bh-title">🤖 Bounty Hunter</h2>
-          <p className="bh-subtitle">Discovery, review, and payout workflow for bounty opportunities.</p>
+          <p className="bh-subtitle">AI-powered crypto task discovery · HITL review · 24/7 scanning</p>
         </div>
         <button
           className={`bh-scan-btn ${scanning ? 'scanning' : ''}`}
           onClick={handleScan}
           disabled={scanning}
         >
-          {scanning ? <><LoadingDots />Scanning…</> : '⚡ Run Scan'}
+          {scanning ? <><LoadingDots />Scanning…</> : '⚡ Scan Now'}
         </button>
       </div>
 
@@ -465,7 +465,7 @@ export default function BountyHunterTab() {
           onClick={connectWallet}
           disabled={wallet.connecting}
         >
-          {wallet.address ? 'Wallet Connected' : wallet.connecting ? 'Connecting…' : 'Connect MetaMask'}
+          {wallet.address ? 'Wallet connected' : wallet.connecting ? 'Connecting…' : 'Connect MetaMask'}
         </button>
 
         {wallet.address && !isBaseChain(wallet.chainId) && (
@@ -478,14 +478,14 @@ export default function BountyHunterTab() {
           className={`bh-rank-btn ${rankedMode ? 'active' : ''}`}
           onClick={() => setRankedMode(v => !v)}
         >
-          {rankedMode ? '🏅 Priority View On' : '🏅 Sort by Priority'}
+          {rankedMode ? '🏅 Ranked View On' : '🏅 Rank Best'}
         </button>
 
         <input
           className="bh-wallet-input"
           value={walletAddress}
           onChange={e => setWalletAddress(e.target.value)}
-          placeholder="Base payout wallet for OpenClaw context"
+          placeholder="Base wallet address for OpenClaw context"
         />
 
         <input
@@ -495,7 +495,7 @@ export default function BountyHunterTab() {
           step="1"
           value={minRewardRaw}
           onChange={e => setMinRewardRaw(e.target.value)}
-          placeholder="Minimum reward"
+          placeholder="Min reward"
           title="Minimum numeric reward to include in dispatch"
         />
 
@@ -503,9 +503,9 @@ export default function BountyHunterTab() {
           className="bh-money-btn"
           onClick={handleMoneyRun}
           disabled={moneyRunning}
-          title="Scan, rank, and dispatch top opportunities in one step"
+          title="Scan + rank + dispatch top bounties in one step"
         >
-          {moneyRunning ? 'Running…' : '💸 Run Full Pass'}
+          {moneyRunning ? 'Running…' : '💸 Money Run'}
         </button>
 
         <button
@@ -513,7 +513,7 @@ export default function BountyHunterTab() {
           onClick={handleDispatchTop}
           disabled={dispatchingTop}
         >
-          {dispatchingTop ? 'Dispatching…' : '🤖 Send Top Opportunities'}
+          {dispatchingTop ? 'Dispatching…' : '🤖 Send Top 10 to OpenClaw'}
         </button>
 
         {wallet.address && (
@@ -528,15 +528,15 @@ export default function BountyHunterTab() {
       {moneyResult && (
         <div className={`bh-scan-result ${moneyResult.ok ? 'ok' : 'error'}`}>
           {moneyResult.ok
-            ? `✅ Full pass complete: ${moneyResult.scanResults?.discovered || 0} discovered, ${moneyResult.rankedCount || 0} queued for OpenClaw`
-            : `❌ ${moneyResult.message || 'Full pass failed'}`}
+            ? `✅ Money run: ${moneyResult.scanResults?.discovered || 0} discovered, ${moneyResult.rankedCount || 0} queued to OpenClaw`
+            : `❌ ${moneyResult.message || 'Money run failed'}`}
         </div>
       )}
 
       {dispatchResult && (
         <div className={`bh-scan-result ${dispatchResult.ok ? 'ok' : 'error'}`}>
           {dispatchResult.ok
-            ? `✅ ${dispatchResult.rankedCount || 0} opportunities queued for OpenClaw · Wallet: ${dispatchResult.walletAddress || 'n/a'}`
+            ? `✅ OpenClaw queued (${dispatchResult.rankedCount || 0} opportunities) · Wallet: ${dispatchResult.walletAddress || 'n/a'}`
             : `❌ ${dispatchResult.message || 'OpenClaw dispatch failed'}`}
         </div>
       )}
@@ -546,7 +546,7 @@ export default function BountyHunterTab() {
         <div className={`bh-scan-result ${scanResult.error ? 'error' : 'ok'}`}>
           {scanResult.error
             ? `❌ Scan error: ${scanResult.error}`
-            : `✅ Scan complete: ${scanResult.discovered} new opportunities found, ${scanResult.skipped} already known`
+            : `✅ Scan complete: ${scanResult.discovered} new bounties discovered, ${scanResult.skipped} already known`
           }
           {scanResult.errors?.length > 0 && (
             <span className="bh-scan-warnings"> · {scanResult.errors.length} platform warnings</span>
@@ -611,10 +611,10 @@ export default function BountyHunterTab() {
         <div className="bh-loading"><LoadingDots /> Loading bounties…</div>
       ) : bounties.length === 0 ? (
         <div className="bh-empty">
-          <p>No bounties found. Click <strong>⚡ Run Scan</strong> to discover opportunities.</p>
+          <p>No bounties found. Click <strong>⚡ Scan Now</strong> to discover opportunities.</p>
           <p className="bh-empty-note">
-            The scanner checks Dework, GitHub, Reddit, and manual entries against your keyword profile.
-            Matching opportunities appear here for review.
+            The scanner checks Dework, GitHub, and more for tasks matching your keyword profile.
+            Results are stored here for your review.
           </p>
         </div>
       ) : (
@@ -640,7 +640,7 @@ export default function BountyHunterTab() {
                 </div>
               )}
               {b.draftContent && (
-                <div className="bh-draft-indicator">✍️ Draft ready</div>
+                <div className="bh-draft-indicator">✍️ AI draft ready</div>
               )}
             </div>
           ))}
@@ -693,14 +693,14 @@ export default function BountyHunterTab() {
             {/* Draft editor */}
             <div className="bh-section">
               <div className="bh-section-label">
-                AI Draft
+                AI-Generated Draft
                 <button
                   className="bh-regen-btn"
                   onClick={handleRegenDraft}
                   disabled={regenerating}
-                  title="Generate a fresh draft using AI"
+                  title="Regenerate draft using AI"
                 >
-                  {regenerating ? '↻ Generating…' : '↻ Generate'}
+                  {regenerating ? '↻ Regenerating…' : '↻ Regen'}
                 </button>
               </div>
               {editingDraft ? (
@@ -709,11 +709,11 @@ export default function BountyHunterTab() {
                   value={editingDraft}
                   onChange={e => setEditingDraft(e.target.value)}
                   rows={14}
-                  placeholder="The AI draft appears here. Review and edit it before submission."
+                  placeholder="AI-generated draft will appear here. Edit before submitting."
                 />
               ) : (
                 <div className="bh-draft-empty">
-                  No draft is available yet. Click <strong>↻ Generate</strong> to create one with AI.
+                  No draft yet. Click <strong>↻ Regen</strong> to generate one with AI.
                   <br /><small>Requires OPENAI_API_KEY in backend env.</small>
                 </div>
               )}
@@ -726,7 +726,7 @@ export default function BountyHunterTab() {
                 className="bh-notes-input"
                 value={reviewNotes}
                 onChange={e => setReviewNotes(e.target.value)}
-                placeholder="Internal notes for this opportunity"
+                placeholder="Optional notes for this bounty…"
               />
             </div>
 
@@ -765,7 +765,7 @@ export default function BountyHunterTab() {
             {/* Won / Payout recording */}
             {(selected.status === 'submitted' || selected.status === 'won') && (
               <div className="bh-payout-section">
-                <div className="bh-section-label">Record Payout</div>
+                <div className="bh-section-label">Record Payout (when you win)</div>
                 <div className="bh-payout-row">
                   <input
                     className="bh-notes-input"
@@ -785,9 +785,9 @@ export default function BountyHunterTab() {
                     className="bh-action-btn submit"
                     onClick={handleMetaMaskPayout}
                     disabled={payingWithWallet || !wallet.address}
-                    title="Send the payout on Base with MetaMask and mark the opportunity as won"
+                    title="Send payout on Base with MetaMask and auto-mark won"
                   >
-                    {payingWithWallet ? 'Paying…' : 'Pay via MetaMask'}
+                    {payingWithWallet ? 'Paying…' : 'Pay with MetaMask + Mark Won'}
                   </button>
                 </div>
                 <div className="bh-payout-row">

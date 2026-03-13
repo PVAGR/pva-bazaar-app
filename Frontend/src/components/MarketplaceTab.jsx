@@ -205,7 +205,7 @@ export default function MarketplaceTab() {
       <div className="tab-header">
         <h2>🛒 Marketplace Management</h2>
         <p className="tab-description">
-          Manage marketplace listings. Published items appear on the marketplace page for purchase.
+          Create and manage marketplace items. Items appear on the marketplace page for customers to purchase.
         </p>
       </div>
 
@@ -240,7 +240,7 @@ export default function MarketplaceTab() {
               className="sidebar-search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search items"
+              placeholder="Search items..."
             />
             <select
               className="sidebar-sort"
@@ -257,7 +257,7 @@ export default function MarketplaceTab() {
           {loading ? (
             <SkeletonList count={5} />
           ) : filteredItems.length === 0 ? (
-            <p className="empty-message">No items yet. Use the form to add your first listing.</p>
+            <p className="empty-message">No items yet. Create your first item!</p>
           ) : (
             <div className="items-list">
               {filteredItems.map(item => (

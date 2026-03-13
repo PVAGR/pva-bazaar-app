@@ -83,7 +83,7 @@ export default function MarketplacePage() {
           aria-label="Search items"
           className="marketplace-search"
           type="search"
-          placeholder="Search listings"
+          placeholder="Search items..."
           value={search}
           onChange={e => setSearch(e.target.value)}
         />
@@ -117,13 +117,7 @@ export default function MarketplacePage() {
                 key={item.id || item._id}
               >
               <article className="item-card" tabIndex={0} aria-label={item.name || item.title}>
-                {(item.media && item.media[0]) || item.image ? (
-                  <img src={(item.media && item.media[0]) || item.image} alt={item.name || item.title} className="item-image" />
-                ) : (
-                  <div className="item-image item-image-empty" role="img" aria-label="No media uploaded">
-                    No media uploaded
-                  </div>
-                )}
+                <img src={(item.media && item.media[0]) || item.image || "/placeholder.png"} alt={item.name || item.title} className="item-image" />
                 <div className="item-info">
                   <h2 className="item-title">{item.name || item.title}</h2>
                   <div className="item-meta">

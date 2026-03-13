@@ -314,13 +314,16 @@
       <!-- Journal View (Default) -->
       <div id="view-journal" class="view">
         <section>
-          <h2>Publishing</h2>
+          <h2>New Entry</h2>
           <div class="new-entry">
-            <h3>Publish through Archive Admin</h3>
-            <p style="margin-bottom: 16px; color: var(--text-muted);">
-              This page displays live published entries only. Create, edit, and delete entries in the admin archive tools.
-            </p>
-            <button onclick="window.location.href='/#/admin'">Open Archive Admin</button>
+            <h3>Write something new</h3>
+            <label for="entry-title">Title</label>
+            <input type="text" id="entry-title" placeholder="Entry title...">
+            <label for="entry-content">Content</label>
+            <textarea id="entry-content" placeholder="Write your thoughts here..."></textarea>
+            <label for="entry-tags">Tags (comma separated)</label>
+            <input type="text" id="entry-tags" placeholder="journal, reflection, thoughts">
+            <button onclick="saveEntry()">Save Entry</button>
           </div>
         </section>
 
@@ -453,81 +456,48 @@
   </div>
 
   <script>
-    function normalizeBackendBase(raw) {
-      const fallback = 'https://api.pvabazaar.org';
-      if (!raw || typeof raw !== 'string') return fallback;
-      const trimmed = raw.trim().replace(/\/+$/, '');
-      if (!trimmed) return fallback;
-      return trimmed.endsWith('/api') ? trimmed.slice(0, -4) : trimmed;
+    // Simple local storage for entries
+    const STORAGE_KEY = 'pvabazaar_journal_entries';
+
+    // Get entries from localStorage
+    function getEntries() {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        return JSON.parse(stored);
+      }
+      // Default entries
+      return [
+        {
+          id: 1,
+          title: 'Welcome to the Journal',
+          content: 'This is your personal space for words. Add new entries, archive your thoughts, and keep a chronicle of your journey.',
+          date: '2026-01-01',
+          tags: ['welcome', 'journal']
+        }
+      ];
     }
 
-    const queryBackend = new URLSearchParams(window.location.search).get('backend');
-    const storedBackend = (() => {
-      try {
-        return localStorage.getItem('backendUrl');
-      } catch {
-        return null;
-      }
-    })();
-    const BACKEND_BASE = normalizeBackendBase(queryBackend || storedBackend);
-    const API_BASE = `${BACKEND_BASE}/api`;
-
-    const state = {
-      entries: [],
-      loading: true,
-      error: null,
-    };
-
-    async function loadEntries() {
-      state.loading = true;
-      state.error = null;
-      renderEntries();
-      try {
-        const response = await fetch(`${API_BASE}/archive?limit=100&sort=new`);
-        const data = await response.json();
-        if (!response.ok || !data?.ok || !Array.isArray(data.items)) {
-          throw new Error(data?.error || `Failed to load entries (${response.status})`);
-        }
-        state.entries = data.items.map((entry) => ({
-          id: entry.id,
-          title: entry.title || 'Untitled',
-          content: entry.content || '',
-          date: entry.createdAt ? String(entry.createdAt).slice(0, 10) : '',
-          tags: Array.isArray(entry.tags) ? entry.tags : [],
-        }));
-      } catch (err) {
-        state.error = err.message || 'Failed to load entries';
-        state.entries = [];
-      } finally {
-        state.loading = false;
-        renderEntries();
-      }
+    // Save entries to localStorage
+    function saveEntries(entries) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
     }
 
     // Render entries list
     function renderEntries() {
-      const entries = state.entries;
+      const entries = getEntries();
       const list = document.getElementById('entries-list');
-      if (state.loading) {
-        list.innerHTML = '<li style="color: var(--text-muted); padding: 20px 0;">Loading live entries...</li>';
-        return;
-      }
-      if (state.error) {
-        list.innerHTML = `<li style="color: #b00020; padding: 20px 0;">${escapeHtml(state.error)}</li>`;
-        return;
-      }
       
       if (entries.length === 0) {
-        list.innerHTML = '<li style="color: var(--text-muted); padding: 20px 0;">No entries published yet.</li>';
+        list.innerHTML = '<li style="color: var(--text-muted); padding: 20px 0;">No entries yet. Write your first one above.</li>';
         return;
       }
 
       list.innerHTML = entries.map(entry => `
         <li>
-          <a href="#" onclick="viewEntry(${JSON.stringify(String(entry.id || ''))}); return false;">
+          <a href="#" onclick="viewEntry(${entry.id}); return false;">
             <h3>${escapeHtml(entry.title)}</h3>
             <span class="meta">${entry.date}</span>
-            <p class="excerpt">${escapeHtml(stripHtml(entry.content).substring(0, 150))}${stripHtml(entry.content).length > 150 ? '...' : ''}</p>
+            <p class="excerpt">${escapeHtml(entry.content.substring(0, 150))}${entry.content.length > 150 ? '...' : ''}</p>
             ${entry.tags && entry.tags.length ? `
               <div class="tags">
                 ${entry.tags.map(tag => `<span class="tag">${escapeHtml(tag)}</span>`).join('')}
@@ -538,10 +508,41 @@
       `).join('');
     }
 
+    // Save new entry
+    function saveEntry() {
+      const title = document.getElementById('entry-title').value.trim();
+      const content = document.getElementById('entry-content').value.trim();
+      const tagsInput = document.getElementById('entry-tags').value.trim();
+
+      if (!title || !content) {
+        alert('Please enter both a title and content.');
+        return;
+      }
+
+      const entries = getEntries();
+      const newEntry = {
+        id: Date.now(),
+        title: title,
+        content: content,
+        date: new Date().toISOString().split('T')[0],
+        tags: tagsInput ? tagsInput.split(',').map(t => t.trim()).filter(t => t) : []
+      };
+
+      entries.unshift(newEntry);
+      saveEntries(entries);
+
+      // Clear form
+      document.getElementById('entry-title').value = '';
+      document.getElementById('entry-content').value = '';
+      document.getElementById('entry-tags').value = '';
+
+      renderEntries();
+    }
+
     // View single entry
     function viewEntry(id) {
-      const entries = state.entries;
-      const entry = entries.find(e => String(e.id) === String(id));
+      const entries = getEntries();
+      const entry = entries.find(e => e.id === id);
       
       if (!entry) return;
 
@@ -554,7 +555,12 @@
 
     // Delete entry (optional utility)
     function deleteEntry(id) {
-      alert('Deletion is only available through the archive admin tools.');
+      if (!confirm('Delete this entry?')) return;
+      
+      let entries = getEntries();
+      entries = entries.filter(e => e.id !== id);
+      saveEntries(entries);
+      renderEntries();
     }
 
     // View switching
@@ -583,12 +589,8 @@
       return div.innerHTML;
     }
 
-    function stripHtml(text) {
-      return String(text || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-    }
-
     // Initialize
-    loadEntries();
+    renderEntries();
   </script>
 </body>
 </html>

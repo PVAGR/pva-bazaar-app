@@ -28,8 +28,8 @@ const AdminTabs = React.memo(function AdminTabs({ activeTab, onTabChange }) {
     { id: 'api', label: '🔗 API Docs', title: 'API documentation & endpoints (Alt+8)', shortcut: '8' },
     { id: 'health', label: '💚 Health', title: 'System health & monitoring (Alt+9)', shortcut: '9' },
     { id: 'settings', label: '⚙️ Settings', title: 'Configuration (Alt+0)', shortcut: '0' },
-    { id: 'openclaw', label: '🦞 OpenClaw', title: 'OpenClaw gateway, queue, and agent operations', shortcut: null },
-    { id: 'bounty-hunter', label: '🤖 Bounty Hunter', title: 'Bounty discovery, review, and payout operations', shortcut: null },
+    { id: 'openclaw', label: '🦞 OpenClaw', title: 'OpenClaw gateway & agent interface', shortcut: null },
+    { id: 'bounty-hunter', label: '🤖 Bounty Hunter', title: 'AI crypto bounty scanner & HITL review', shortcut: null },
   ];
 
   return (

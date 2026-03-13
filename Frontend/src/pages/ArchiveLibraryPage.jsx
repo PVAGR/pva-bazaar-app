@@ -235,12 +235,12 @@ export default function ArchiveLibraryPage() {
       // Check if it's a custom entry (has content field)
       if (entry.content) {
         setMarkdown(entry.content);
-      } else {
+            } else {
         // Load from file for original entries
-        const response = await fetch(`/archive/${entry.file}`);
+        const response = await fetch(`${import.meta.env.BASE_URL}archive/${entry.file}`);
         const text = await response.text();
         setMarkdown(text);
-      }
+            }
     } catch (error) {
       logger.error('Failed to load archive entry', error, { entryId: entry?.id, entryFile: entry?.file });
       setMarkdown('# Error\n\nFailed to load this archive entry.');
@@ -469,7 +469,11 @@ export default function ArchiveLibraryPage() {
                     No blog posts yet. This section will display new writings created from 2026 onwards.
                   </p>
                   <p>
+<<<<<<< HEAD
                     Visit the <a href="#/admin" style={{color: 'var(--accent)', textDecoration: 'underline'}}>Admin Panel</a> to create your first blog post.
+=======
+                    Visit the <Link to="/admin" style={{color: 'var(--accent)', textDecoration: 'underline'}}>Admin Panel</Link> to create your first blog post.
+>>>>>>> 4dd6189 (revert(frontend): restore archive and static content from pre-regression snapshot)
                   </p>
                 </>
               ) : (
