@@ -333,7 +333,7 @@ export default function AdminPage() {
         <div className="admin-login">
           <div className="login-card">
             <h1>🔒 Admin Access</h1>
-            <p>Enter your credentials to access the admin panel</p>
+            <p>Sign in to access archive and operations controls.</p>
             <form onSubmit={handleLogin}>
               <input
                 type="text"
@@ -360,7 +360,7 @@ export default function AdminPage() {
                 />
               ) : null}
               <button type="submit" className="login-btn" disabled={isSubmitting}>
-                {isSubmitting ? 'Signing in…' : 'Access Admin Panel'}
+                {isSubmitting ? 'Signing in…' : 'Sign In'}
               </button>
             </form>
           </div>
@@ -375,7 +375,7 @@ export default function AdminPage() {
       <div className="admin-page authenticated">
         <div className="admin-header">
           <div className="header-content">
-            <h1>⚙️ Archive Admin Panel</h1>
+            <h1>⚙️ Archive Operations</h1>
             <div className="header-actions">
               <Link to="/" className="home-btn">
                 🏠 Home
@@ -431,26 +431,26 @@ export default function AdminPage() {
               <div className="connection-status-dropdown">
                 <div className="sidebar-section connection-panel">
                   <div className="connection-header">
-                    <h2>Connection Status</h2>
+                    <h2>System Connectivity</h2>
                   </div>
                   <div className="connection-base">
                     API: <span>{connectionStatus.apiBase}</span>
                   </div>
                   {connectionStatus.checkedAt && (
                     <div className="connection-updated">
-                      Last check: {connectionStatus.checkedAt}
+                      Last checked: {connectionStatus.checkedAt}
                     </div>
                   )}
                   {isConnectionStatusStale && (
                     <div className="connection-updated" role="status" aria-live="polite">
-                      ⚠️ Data may be stale (older than {staleThresholdMinutes} min)
+                      ⚠️ Status may be stale (older than {staleThresholdMinutes} min)
                     </div>
                   )}
                   <div className="connection-updated">
                     Auto-refresh: every 60s while open
                   </div>
                   <div className="connection-token">
-                    <label htmlFor="adminToken">Admin token (optional)</label>
+                    <label htmlFor="adminToken">Admin token for protected checks (optional)</label>
                     <input
                       id="adminToken"
                       type="password"
@@ -458,7 +458,7 @@ export default function AdminPage() {
                       onChange={(e) => setAdminTokenInput(e.target.value)}
                       placeholder="Paste admin JWT token"
                     />
-                    <small>Used only for /api/admin/status check.</small>
+                    <small>Used only for the /api/admin/status check.</small>
                   </div>
 
                   {/* OpenClaw Summary Section */}
@@ -467,7 +467,7 @@ export default function AdminPage() {
                       <div className="openclaw-summary__header">
                         <h3>🔗 OpenClaw Gateway</h3>
                         <span className={`openclaw-summary__status ${connectionStatus.results.openclawWatchdog.ok ? 'ok' : 'bad'}`}>
-                          {connectionStatus.results.openclawWatchdog.ok ? '✓ Active' : '✗ Issue'}
+                          {connectionStatus.results.openclawWatchdog.ok ? '✓ Healthy' : '✗ Needs Attention'}
                         </span>
                       </div>
                       <div className="openclaw-summary__details">
@@ -513,13 +513,13 @@ export default function AdminPage() {
                           onClick={handleTestDispatch}
                           disabled={dispatchTestState.loading}
                         >
-                          {dispatchTestState.loading ? 'Testing...' : 'Test Dispatch'}
+                          {dispatchTestState.loading ? 'Testing…' : 'Send Test Event'}
                         </button>
                         <button
                           className="openclaw-test-button openclaw-test-button--secondary"
                           onClick={toggleRecentEvents}
                         >
-                          {showRecentEvents ? '📋 Hide Activity' : '📋 View Activity'}
+                          {showRecentEvents ? '📋 Hide Activity' : '📋 Show Activity'}
                         </button>
                         {dispatchTestState.message && (
                           <span className="openclaw-test-message">{dispatchTestState.message}</span>
@@ -543,7 +543,7 @@ export default function AdminPage() {
                           
                           {recentEvents.loading && (
                             <div className="openclaw-events__loading">
-                              <LoadingDots size="small" label="Loading events..." />
+                              <LoadingDots size="small" label="Loading activity..." />
                             </div>
                           )}
                           
@@ -555,7 +555,7 @@ export default function AdminPage() {
                           
                           {recentEvents.data && recentEvents.data.length === 0 && (
                             <div className="openclaw-events__empty">
-                              No recent events found
+                              No recent activity recorded
                             </div>
                           )}
                           
@@ -593,7 +593,7 @@ export default function AdminPage() {
                             <span className="connection-item__status-dot" aria-hidden="true"></span>
                             <span className="connection-item__name">{item?.label || `/api/${key}`}</span>
                             <span className="connection-item__status">
-                              {item ? (item.ok ? 'OK' : `Fail (${item.status})`) : '—'}
+                              {item ? (item.ok ? 'Healthy' : `Error (${item.status})`) : '—'}
                             </span>
                           </div>
                           {item?.message && (

@@ -182,13 +182,13 @@ export default function HealthTab() {
       <div className="tab-header">
         <h2>💚 System Health</h2>
         <p className="tab-description">
-          Monitor system health, API connectivity, and OpenClaw event dispatching.
+          Monitor API health, OpenClaw status, and recent event flow.
         </p>
       </div>
 
       <div className="health-controls">
         <button onClick={runHealthCheck} className="refresh-btn" disabled={connectionStatus.loading}>
-          {connectionStatus.loading ? '⏳ Checking...' : '🔄 Refresh'}
+          {connectionStatus.loading ? '⏳ Checking…' : '🔄 Refresh'}
         </button>
         <label className="auto-refresh-toggle">
           <input
@@ -196,7 +196,7 @@ export default function HealthTab() {
             checked={autoRefresh}
             onChange={(e) => setAutoRefresh(e.target.checked)}
           />
-          <span>Auto-refresh (60s)</span>
+          <span>Auto-refresh every 60s</span>
         </label>
       </div>
 
@@ -211,9 +211,9 @@ export default function HealthTab() {
         <div className="health-status">
           <h3>
             {overallStatus === 'healthy' && 'All Systems Operational'}
-            {overallStatus === 'degraded' && 'Some Systems Degraded'}
+            {overallStatus === 'degraded' && 'Partial Degradation'}
             {overallStatus === 'error' && 'System Error'}
-            {overallStatus === 'loading' && 'Checking...'}
+            {overallStatus === 'loading' && 'Checking…'}
             {overallStatus === 'unknown' && 'Status Unknown'}
           </h3>
           {connectionStatus.checkedAt && (
@@ -244,14 +244,14 @@ export default function HealthTab() {
         <div className="health-card">
           <h3>🧪 Test Dispatch</h3>
           <p className="card-description">
-            Manually dispatch a test event to OpenClaw to verify event processing.
+            Send a manual test event to OpenClaw and confirm it is processed.
           </p>
           <button
             onClick={handleTestDispatch}
             className="test-dispatch-btn"
             disabled={dispatchTest.loading}
           >
-            {dispatchTest.loading ? <LoadingDots inline={true} label="Dispatching..." /> : '🚀 Dispatch Test Event'}
+            {dispatchTest.loading ? <LoadingDots inline={true} label="Dispatching…" /> : '🚀 Send Test Event'}
           </button>
           {dispatchTest.message && (
             <div className={`dispatch-message ${dispatchTest.message.includes('✅') ? 'success' : 'error'}`}>
@@ -283,7 +283,7 @@ export default function HealthTab() {
               ))}
             </div>
           ) : (
-            <p className="empty-message">No recent events.</p>
+            <p className="empty-message">No recent activity.</p>
           )}
         </div>
       </div>
@@ -291,14 +291,14 @@ export default function HealthTab() {
       <div className="info-box">
         <h3>📖 About Health Monitoring</h3>
         <p>
-          This tab monitors system health and OpenClaw event dispatching. OpenClaw is a watchdog
-          system that monitors events, logs alerts, and provides automation hooks.
+          This tab monitors system health and OpenClaw event flow. OpenClaw manages webhook delivery,
+          queue processing, and operational alerts.
         </p>
         <ul className="info-list">
-          <li><strong>Health Check</strong>: Verifies API connectivity and database status</li>
-          <li><strong>OpenClaw Status</strong>: Shows watchdog state, errors, and alerts</li>
-          <li><strong>Recent Events</strong>: Displays last 10 dispatched events</li>
-          <li><strong>Test Dispatch</strong>: Manually trigger a test event</li>
+          <li><strong>Health Check</strong>: Verifies API connectivity and service availability</li>
+          <li><strong>OpenClaw Status</strong>: Shows queue mode, errors, and alerts</li>
+          <li><strong>Recent Events</strong>: Displays the latest dispatch activity</li>
+          <li><strong>Test Dispatch</strong>: Sends a manual event through the OpenClaw flow</li>
         </ul>
       </div>
     </div>
