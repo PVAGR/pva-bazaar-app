@@ -331,7 +331,8 @@ app.use('/api/bounties', bountiesRoutes);
 // ORACLE, VERIFICATION, DEALS, MANIFESTO AI
 mountOptionalRoute('/api/oracle', '../routes/oracle', 'oracle');
 mountOptionalRoute('/api/verification', '../routes/verification', 'verification');
-mountOptionalRoute('/api/deals', '../routes/deals', 'deals');
+const dealsRoutes = require('../routes/deals');
+app.use('/api/deals', dealsRoutes);
 mountOptionalRoute('/api/manifesto', '../routes/manifesto-ai-routes', 'manifesto-ai');
 
 // OAUTH (Twitch & YouTube) - status, live-status, start, callback
