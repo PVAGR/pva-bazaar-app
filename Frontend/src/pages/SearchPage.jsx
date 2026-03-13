@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { apiGet } from '../lib/api';
 import { createLogger } from '../lib/logger';
+import './SearchPage.css';
 
 const logger = createLogger('SearchPage');
 
@@ -37,13 +38,20 @@ export default function SearchPage() {
   }, [searchTerm]);
 
   return (
-    <section className="section-card">
+    <section className="section-card search-page">
       <div className="section-heading">
-        <h2>Search Archive</h2>
+        <div>
+          <p className="search-page__eyebrow">Discovery</p>
+          <h2>Search Archive</h2>
+        </div>
         <span className="pill">{loading ? 'Searching...' : `${results.length} results`}</span>
       </div>
+      <p className="search-page__lead">
+        Explore entries by title, body, tags, and themes. Start with at least two characters.
+      </p>
       <div className="form form-spaced">
         <input
+          className="search-page__input"
           type="search"
           placeholder="Search entries by title, content, tags..."
           value={searchTerm}
@@ -56,9 +64,9 @@ export default function SearchPage() {
           Error: {error}
         </div>
       )}
-      <div className="entry-list">
+      <div className="entry-list search-page__results">
         {results.map((entry) => (
-          <article className="entry-card" key={entry._id || entry.id}>
+          <article className="entry-card search-page__result" key={entry._id || entry.id}>
             <h3><Link to={`/entry/${entry._id || entry.id}`}>{entry.title}</Link></h3>
             <div className="entry-meta">
               {new Date(entry.date || entry.createdAt).toLocaleDateString()} · {entry.category || 'entry'}

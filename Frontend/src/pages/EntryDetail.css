@@ -1,0 +1,77 @@
+.entry-detail-page .entry-detail-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  backdrop-filter: blur(8px);
+}
+
+.entry-detail-page .entry-detail-content {
+  max-width: 940px;
+  padding: clamp(1rem, 1.8vw, 1.5rem);
+}
+
+.entry-detail-page .entry-page__meta--enhanced {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  border: 1px solid color-mix(in srgb, var(--site-border) 82%, transparent);
+  border-radius: 999px;
+  padding: 0.35rem 0.8rem;
+  background: color-mix(in srgb, var(--site-panel-soft) 84%, transparent);
+  margin-bottom: 1rem;
+  color: var(--site-text-muted);
+}
+
+.entry-detail-page .entry-page__body {
+  border: 1px solid color-mix(in srgb, var(--site-border) 78%, transparent);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--site-panel-soft) 84%, transparent) 0%, var(--site-panel) 100%);
+  border-radius: 14px;
+  padding: clamp(0.9rem, 1.4vw, 1.2rem);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.14);
+}
+
+.entry-detail-page .entry-page__body h1,
+.entry-detail-page .entry-page__body h2,
+.entry-detail-page .entry-page__body h3,
+.entry-detail-page .entry-page__body h4 {
+  color: var(--site-accent-strong);
+  line-height: 1.2;
+}
+
+.entry-detail-page .entry-page__body p,
+.entry-detail-page .entry-page__body li {
+  line-height: 1.68;
+}
+
+.entry-detail-page .entry-toc--card,
+.entry-detail-page .entry-payouts--card {
+  margin-bottom: 1rem;
+  border: 1px solid color-mix(in srgb, var(--site-border) 82%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--site-panel-soft) 86%, transparent);
+  padding: 0.75rem 0.9rem;
+}
+
+.entry-detail-page .entry-toc--card strong,
+.entry-detail-page .entry-payouts--card h3 {
+  color: var(--site-accent-strong);
+}
+
+.entry-detail-page .entry-toc--card ul,
+.entry-detail-page .entry-payouts--card ul {
+  margin: 0.55rem 0 0;
+  padding-left: 1.1rem;
+}
+
+.entry-detail-page .entry-detail-nav {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  backdrop-filter: blur(8px);
+}
+
+@media (max-width: 760px) {
+  .entry-detail-page .entry-page__meta--enhanced {
+    border-radius: 12px;
+  }
+}

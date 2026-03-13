@@ -6,6 +6,7 @@ import { useParams, Link } from 'react-router-dom';
 import { fetchArchiveEntryById } from '../lib/archiveApi.js';
 import { apiGet } from '../lib/api';
 import { createLogger } from '../lib/logger';
+import './EntryDetail.css';
 
 const logger = createLogger('EntryDetail');
 // Helper to build canonical URLs
@@ -110,7 +111,7 @@ export default function EntryDetail({ entries = [] }) {
 
   if (loading) {
     return (
-      <section className="entry-detail-container">
+      <section className="entry-detail-container entry-detail-page">
         <div className="entry-detail-header">
           <Link to="/library" className="entry-close-btn">✕</Link>
         </div>
@@ -121,7 +122,7 @@ export default function EntryDetail({ entries = [] }) {
 
   if (!displayEntry) {
     return (
-      <section className="entry-detail-container">
+      <section className="entry-detail-container entry-detail-page">
         <div className="entry-detail-header">
           <Link to="/library" className="entry-close-btn">✕</Link>
         </div>
@@ -143,7 +144,7 @@ export default function EntryDetail({ entries = [] }) {
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:image" content={displayEntry.media?.[0] || getCanonicalUrl('/og-default.jpg')} />
       </Helmet>
-      <section className="entry-detail-container">
+      <section className="entry-detail-container entry-detail-page">
         <div className="entry-detail-header">
           <Link to="/" className="entry-home-btn" aria-label="Home">🏠</Link>
           <h2 className="entry-detail-title">{displayEntry.title}</h2>
@@ -152,7 +153,7 @@ export default function EntryDetail({ entries = [] }) {
 
         <div className="entry-detail-scrollable">
           <article className="entry-detail-content">
-            <div className="entry-page__meta">
+            <div className="entry-page__meta entry-page__meta--enhanced">
               {new Date(displayEntry.date).toLocaleDateString()}
               {displayEntry.location ? ` · ${displayEntry.location}` : ''}
               {displayEntry.tags?.length ? ' · ' + displayEntry.tags.join(', ') : ''}
@@ -160,7 +161,7 @@ export default function EntryDetail({ entries = [] }) {
 
             {/* Economic provenance: recent Solana rituals tied to this entry */}
             {payouts.length > 0 && (
-              <div className="entry-payouts">
+              <div className="entry-payouts entry-payouts--card">
                 <h3>💰 Revenue rituals linked to this entry</h3>
                 <ul>
                   {payouts.slice(0, 5).map((p) => (
@@ -192,7 +193,7 @@ export default function EntryDetail({ entries = [] }) {
 
             {/* Table of Contents */}
             {toc.length > 1 && (
-              <nav className="entry-toc">
+              <nav className="entry-toc entry-toc--card">
                 <strong>Table of Contents</strong>
                 <ul>
                   {toc.map((h) => (
