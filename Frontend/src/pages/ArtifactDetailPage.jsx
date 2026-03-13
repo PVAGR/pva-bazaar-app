@@ -8,8 +8,6 @@ import VerificationHashBlock from '../components/VerificationHashBlock.jsx';
 import { AlertModal } from '../components/ui/DialogModals.jsx';
 import './ArtifactDetailPage.css';
 
-const PLACEHOLDER = '/placeholder.png';
-
 function formatPrice(priceCents, currency = 'USD') {
   if (typeof priceCents !== 'number') return '';
   return new Intl.NumberFormat(undefined, {
@@ -87,8 +85,9 @@ export default function ArtifactDetailPage() {
     );
   }
 
-  const media = Array.isArray(item.media) && item.media.length > 0 ? item.media : [PLACEHOLDER];
-  const mainImage = media[mainIdx] || PLACEHOLDER;
+  const media = Array.isArray(item.media) ? item.media.filter(Boolean) : [];
+  const hasMedia = media.length > 0;
+  const mainImage = hasMedia ? media[mainIdx] || media[0] : null;
   const price = formatPrice(item.priceCents, item.currency);
   const scarcityCount = item.stockQty != null && item.stockQty !== '' ? Number(item.stockQty) : null;
   const scarcityText = scarcityCount != null && scarcityCount >= 0
@@ -124,13 +123,19 @@ export default function ArtifactDetailPage() {
             whileHover={{ scale: 1.01 }}
             transition={{ type: 'spring', stiffness: 300, damping: 20 }}
           >
-            <img
-              src={mainImage}
-              alt={item.name}
-              className="artifact-detail__image"
-            />
+            {hasMedia ? (
+              <img
+                src={mainImage}
+                alt={item.name}
+                className="artifact-detail__image"
+              />
+            ) : (
+              <div className="artifact-detail__image" role="img" aria-label="No media uploaded">
+                No media uploaded
+              </div>
+            )}
           </motion.div>
-          {media.length > 1 && (
+          {hasMedia && media.length > 1 && (
             <div className="artifact-detail__thumbs" role="list">
               {media.map((img, idx) => (
                 <button
