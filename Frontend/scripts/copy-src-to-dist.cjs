@@ -84,6 +84,18 @@ if (fs.existsSync(magnumOpusSrc)) {
   console.warn('WARNING: magnum-opus.html not found at', magnumOpusSrc);
 }
 
+// Copy legacy top-level static pages to preserve direct URL entrypoints
+['journal.html', 'home.html', 'dashboard.html', 'archive.html', 'test-blog.html'].forEach((name) => {
+  const src = path.join(projectRoot, name);
+  const dest = path.join(projectRoot, 'dist', name);
+  if (fs.existsSync(src)) {
+    fs.copyFileSync(src, dest);
+    console.log(`COPIED ${name} to dist`);
+  } else {
+    console.warn(`WARNING: ${name} not found at`, src);
+  }
+});
+
 // Ensure SPA routing works on GitHub Pages by providing a 404 fallback
 const fallback404Src = path.join(projectRoot, '404.html');
 const fallback404Dest = path.join(projectRoot, 'dist', '404.html');
