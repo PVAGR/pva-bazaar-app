@@ -1,7 +1,8 @@
 const axios = require('axios');
 
 async function main() {
-  const backendBaseUrl = (process.env.BACKEND_BASE_URL || 'http://localhost:5001').replace(/\/$/, '');
+  // Default to production so smoke checks work even when no local backend is running.
+  const backendBaseUrl = (process.env.BACKEND_BASE_URL || 'https://api.pvabazaar.org').replace(/\/$/, '');
   const bridgeSecret = process.env.OPENCLAW_BRIDGE_SECRET || '';
   const doDispatch = process.env.OPENCLAW_TEST_DISPATCH === 'true';
   const message = process.env.OPENCLAW_TEST_MESSAGE || 'PVA Bazaar OpenClaw bridge connectivity test';

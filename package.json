@@ -20,7 +20,7 @@
     "test": "vitest",
     "test:ci": "vitest run --coverage",
     "test:staged": "vitest related --run",
-    "test:smoke": "npm run smoke:core --workspace backend",
+    "test:smoke": "npm run smoke:openclaw --workspace backend",
     "verify:prod": "node scripts/verify-prod.mjs",
     "verify:prod:wait": "node scripts/wait-prod-deploy.mjs",
     "verify:live": "node scripts/verify-live-ready.mjs",
