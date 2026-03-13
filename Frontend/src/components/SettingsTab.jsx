@@ -140,9 +140,9 @@ const SettingsTab = React.memo(function SettingsTab() {
   return (
     <div className="settings-tab" role="tabpanel" id="settings-panel">
       <div className="tab-header">
-        <h2>⚙️ Settings & Administration</h2>
+          <h2>⚙️ Settings</h2>
         <p className="tab-description">
-          Configure application settings, monitor system health, and manage your admin session.
+          Configure application settings, monitor backend health, and manage your admin session.
         </p>
         <button onClick={handleRefreshAll} className="refresh-all-btn" title="Refresh all data">
           🔄 Refresh All
@@ -191,7 +191,7 @@ const SettingsTab = React.memo(function SettingsTab() {
             Check the status of the backend API and database connection.
           </p>
           {backendHealth.loading ? (
-            <div className="loading-state">⏳ Checking...</div>
+            <div className="loading-state">⏳ Checking…</div>
           ) : backendHealth.status ? (
             <>
               <dl className="info-list">

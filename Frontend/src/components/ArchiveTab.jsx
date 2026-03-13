@@ -271,7 +271,7 @@ export default function ArchiveTab() {
           {entriesLoading ? (
             <SkeletonList count={5} />
           ) : savedEntries.length === 0 ? (
-            <p className="empty-message">No custom entries yet</p>
+            <p className="empty-message">No custom entries added yet.</p>
           ) : (
             <div className="entries-list">
               {savedEntries.map(entry => (

@@ -284,7 +284,7 @@ export default function CloudStorageTab() {
 
         {files.length === 0 ? (
           <div className="empty-state">
-            <p>No files uploaded yet. Upload your first file above! 📤</p>
+            <p>No files uploaded yet. Use the upload buttons above to add files.</p>
           </div>
         ) : (
           <div className="files-grid">
@@ -378,7 +378,7 @@ export default function CloudStorageTab() {
             <div className="step-number">4</div>
             <div className="step-content">
               <h4>Test & Upload</h4>
-              <p>Click "Test Connection" to verify your credentials, then start uploading files with the one-click buttons above!</p>
+              <p>Click "Test Connection" to verify your credentials, then upload files using the buttons above.</p>
             </div>
           </div>
         </div>
