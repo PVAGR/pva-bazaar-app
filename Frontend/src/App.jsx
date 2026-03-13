@@ -25,6 +25,7 @@ import DealsPage from './pages/DealsPage.jsx';
 import DealJoinPage from './pages/DealJoinPage.jsx';
 import StreamsPage from './pages/StreamsPage.jsx';
 import EntryDetail from './pages/EntryDetail.jsx';
+import SolanaRitualPage from './pages/SolanaRitualPage.jsx';
 import './base.css';
 
 export default function App() {
@@ -55,6 +56,7 @@ export default function App() {
           <Route path="/deals/join" element={<RouteErrorBoundary><DealJoinPage /></RouteErrorBoundary>} />
           <Route path="/streams" element={<RouteErrorBoundary><StreamsPage /></RouteErrorBoundary>} />
           <Route path="/entry/:id" element={<RouteErrorBoundary><EntryDetail /></RouteErrorBoundary>} />
+          <Route path="/rituals/solana" element={<RouteErrorBoundary><SolanaRitualPage /></RouteErrorBoundary>} />
         </Routes>
       </Layout>
     </HashRouter>

@@ -8,7 +8,7 @@ function getCanonicalUrl(path = '') {
   return base + (path.startsWith('/') ? path : '/' + path);
 }
 import { Link } from 'react-router-dom';
-import { fetchArchiveEntries } from '../lib/api';
+import { fetchArchiveEntries, apiGet } from '../lib/api';
 import { createLogger } from '../lib/logger';
 import { SkeletonArticle, SkeletonList } from '../components/SkeletonLoader.jsx';
 import LoadingSpinner from '../components/LoadingSpinner.jsx';
@@ -23,6 +23,12 @@ export default function ArchiveLibraryPage() {
   const [loading, setLoading] = useState(false);
   const [entries, setEntries] = useState([]);
   const [entriesLoading, setEntriesLoading] = useState(true);
+  const [liveStats, setLiveStats] = useState({
+    count: 0,
+    categories: 0,
+    lastUpdated: null,
+  });
+  const [aiEvents, setAiEvents] = useState([]);
   // Use global theme system
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem('theme');
@@ -37,13 +43,45 @@ export default function ArchiveLibraryPage() {
     try {
       const result = await fetchArchiveEntries({ limit: 100 });
       if (result.ok && Array.isArray(result.items)) {
-        setEntries(result.items);
+        const items = result.items;
+        setEntries(items);
+
+        // Derive live stats from API-backed entries
+        const categorySet = new Set();
+        let latestTs = null;
+        for (const entry of items) {
+          if (entry.category) {
+            categorySet.add(entry.category);
+          }
+          const ts = entry.updatedAt || entry.createdAt;
+          if (ts) {
+            const time = new Date(ts).getTime();
+            if (!Number.isNaN(time) && (!latestTs || time > latestTs)) {
+              latestTs = time;
+            }
+          }
+        }
+        setLiveStats({
+          count: items.length,
+          categories: categorySet.size,
+          lastUpdated: latestTs ? new Date(latestTs).toISOString() : null,
+        });
       } else {
         setEntries([]);
+        setLiveStats({
+          count: 0,
+          categories: 0,
+          lastUpdated: null,
+        });
       }
     } catch (error) {
       logger.error('Failed to load archive entries', error);
       setEntries([]);
+      setLiveStats({
+        count: 0,
+        categories: 0,
+        lastUpdated: null,
+      });
     } finally {
       setEntriesLoading(false);
     }
@@ -51,10 +89,33 @@ export default function ArchiveLibraryPage() {
 
   useEffect(() => {
     loadEntries();
-    
+
     // Keep archive listings live without a hard refresh.
     const interval = setInterval(loadEntries, 30000);
     return () => clearInterval(interval);
+  }, []);
+
+  // Load recent AI / OpenClaw events for a small activity ticker
+  useEffect(() => {
+    let cancelled = false;
+    const loadEvents = async () => {
+      try {
+        const res = await apiGet('/openclaw/recent-events', { params: { limit: 5 } });
+        if (!cancelled && res?.ok && Array.isArray(res.events)) {
+          setAiEvents(res.events);
+        }
+      } catch {
+        if (!cancelled) {
+          setAiEvents([]);
+        }
+      }
+    };
+    loadEvents();
+    const interval = setInterval(loadEvents, 60000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
   }, []);
 
   // Sync theme to global system
@@ -121,8 +182,6 @@ export default function ArchiveLibraryPage() {
     );
   };
 
-
-
   return (
     <>
       <Helmet>
@@ -156,12 +215,31 @@ export default function ArchiveLibraryPage() {
           Live archive feed backed by the API.
         </p>
         <div className="archive-stats">
-          <span>{entries.length} Documents</span>
+          <span>{liveStats.count} Documents</span>
           <span>•</span>
-          <span>{Math.max(categories.length - 1, 0)} Categories</span>
+          <span>{liveStats.categories} Categories</span>
           <span>•</span>
-          <span>Updated live</span>
+          <span>
+            {liveStats.lastUpdated
+              ? `Updated ${new Date(liveStats.lastUpdated).toLocaleString()}`
+              : 'Updated live'}
+          </span>
         </div>
+        {aiEvents.length > 0 && (
+          <div className="archive-ai-ticker">
+            <span className="archive-ai-label">AI activity:</span>
+            <ul className="archive-ai-list">
+              {aiEvents.map((ev) => (
+                <li key={ev.id} className="archive-ai-item">
+                  <span className="archive-ai-time">
+                    {ev.timestamp ? new Date(ev.timestamp).toLocaleTimeString() : ''}
+                  </span>
+                  <span className="archive-ai-message">{ev.message || ev.event}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </header>
 
       <div className="archive-layout">

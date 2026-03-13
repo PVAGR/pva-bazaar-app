@@ -4,6 +4,7 @@ import rehypeSanitize from 'rehype-sanitize';
 import { Helmet } from 'react-helmet-async';
 import { useParams, Link } from 'react-router-dom';
 import { fetchArchiveEntryById } from '../lib/archiveApi.js';
+import { apiGet } from '../lib/api';
 import { createLogger } from '../lib/logger';
 
 const logger = createLogger('EntryDetail');
@@ -23,6 +24,7 @@ export default function EntryDetail({ entries = [] }) {
 
   const [fetchedEntry, setFetchedEntry] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [payouts, setPayouts] = useState([]);
 
   useEffect(() => {
     let mounted = true;
@@ -51,6 +53,35 @@ export default function EntryDetail({ entries = [] }) {
   }, [id, entry]);
 
   const displayEntry = entry || fetchedEntry;
+
+  // Load Solana payout history linked to this entry (by id)
+  useEffect(() => {
+    if (!displayEntry?.id) {
+      setPayouts([]);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await apiGet('/solana/payouts', {
+          params: { artifactId: displayEntry.id },
+        });
+        if (!cancelled && res?.ok && Array.isArray(res.payouts)) {
+          setPayouts(res.payouts);
+        } else if (!cancelled) {
+          setPayouts([]);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          logger.warn('Failed to load Solana payouts for entry', err);
+          setPayouts([]);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [displayEntry?.id]);
 
   // Extract headings for TOC
   const [toc, setToc] = useState([]);
@@ -126,6 +157,38 @@ export default function EntryDetail({ entries = [] }) {
               {displayEntry.location ? ` · ${displayEntry.location}` : ''}
               {displayEntry.tags?.length ? ' · ' + displayEntry.tags.join(', ') : ''}
             </div>
+
+            {/* Economic provenance: recent Solana rituals tied to this entry */}
+            {payouts.length > 0 && (
+              <div className="entry-payouts">
+                <h3>💰 Revenue rituals linked to this entry</h3>
+                <ul>
+                  {payouts.slice(0, 5).map((p) => (
+                    <li key={p.id}>
+                      <span>
+                        {p.amountSol} SOL · {p.status} · {p.network}
+                      </span>
+                      {' · '}
+                      <span>
+                        {p.createdAt ? new Date(p.createdAt).toLocaleString() : 'n/a'}
+                      </span>
+                      {p.txSignature && (
+                        <>
+                          {' · '}
+                          <a
+                            href={`https://explorer.solana.com/tx/${p.txSignature}?cluster=${p.network === 'mainnet-beta' ? 'mainnet' : p.network}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            View on Solana explorer
+                          </a>
+                        </>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             {/* Table of Contents */}
             {toc.length > 1 && (
