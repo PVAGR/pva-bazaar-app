@@ -123,11 +123,47 @@ const searchOk =
 if (!searchOk) fail(`/api/search/text failed (${search.res.status})`);
 else console.log("✅ search ok");
 
+const openclawStatus = await getJson(`${BACKEND}/api/openclaw/status`);
+const openclawStatusOk =
+  openclawStatus.res.ok &&
+  openclawStatus.json?.ok === true &&
+  openclawStatus.json?.configured === true &&
+  typeof openclawStatus.json?.mode === 'string';
+if (!openclawStatusOk) {
+  fail(`/api/openclaw/status failed (${openclawStatus.res.status})`);
+} else {
+  const queue = openclawStatus.json?.queue || {};
+  const stale = Number(queue.stale || 0);
+  if (stale > 0) {
+    softWarn(`/api/openclaw/status reports stale queue items (${stale})`);
+  }
+  console.log(`✅ openclaw status ok (${openclawStatus.json.mode}, pending=${queue.pending ?? 0}, stale=${stale})`);
+}
+
+const openclawWatchdog = await getJson(`${BACKEND}/api/openclaw/watchdog-status`);
+const openclawWatchdogOk =
+  openclawWatchdog.res.ok &&
+  openclawWatchdog.json?.ok === true &&
+  typeof openclawWatchdog.json?.available === 'boolean';
+if (!openclawWatchdogOk) {
+  fail(`/api/openclaw/watchdog-status failed (${openclawWatchdog.res.status})`);
+} else if (openclawWatchdog.json?.summary?.state && openclawWatchdog.json.summary.state !== 'ok') {
+  softWarn(`/api/openclaw/watchdog-status degraded (${openclawWatchdog.json.summary.state})`);
+  console.log(`✅ openclaw watchdog reachable (${openclawWatchdog.json.summary.state})`);
+} else {
+  console.log('✅ openclaw watchdog ok');
+}
+
 // Auth-required endpoints: accept 401 as "route exists".
 const deals = await getJson(`${BACKEND}/api/deals`);
 if (deals.res.status === 401) console.log("✅ deals route ok (401 unauth as expected)");
 else if (deals.res.ok && deals.json?.ok) console.log("✅ deals ok");
 else fail(`/api/deals failed (${deals.res.status})`);
+
+const bounties = await getJson(`${BACKEND}/api/bounties`);
+if (bounties.res.status === 401) console.log('✅ bounties route ok (401 unauth as expected)');
+else if (bounties.res.ok && bounties.json?.ok) console.log('✅ bounties ok');
+else fail(`/api/bounties failed (${bounties.res.status})`);
 
 const profile = await getJson(`${BACKEND}/api/users/profile`);
 if (profile.res.status === 401) console.log("✅ users/profile route ok (401 unauth as expected)");
