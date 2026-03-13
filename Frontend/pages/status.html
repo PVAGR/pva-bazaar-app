@@ -171,10 +171,10 @@
     </header>
 
     <!-- OpenClaw Health Widget -->
-    <div 
-      class="openclaw-widget-container" 
-      data-openclaw-widget
-      data-api-url="/api"
+    <div
+      id="openclaw-health-widget"
+      class="openclaw-widget-container"
+      data-auto-init="true"
       data-refresh-interval="30000"
     ></div>
 
@@ -212,10 +212,34 @@
 
   <script src="../src/lib/openclaw-widget.js"></script>
   <script>
+    function normalizeBackendBase(raw) {
+      const fallback = 'https://api.pvabazaar.org';
+      if (!raw || typeof raw !== 'string') return fallback;
+      const trimmed = raw.trim().replace(/\/+$/, '');
+      if (!trimmed) return fallback;
+      return trimmed.endsWith('/api') ? trimmed.slice(0, -4) : trimmed;
+    }
+
+    const queryBackend = new URLSearchParams(window.location.search).get('backend');
+    const storedBackend = (() => {
+      try {
+        return localStorage.getItem('backendUrl');
+      } catch {
+        return null;
+      }
+    })();
+    const BACKEND_BASE = normalizeBackendBase(queryBackend || storedBackend);
+    const API_BASE = `${BACKEND_BASE}/api`;
+
+    const widget = document.getElementById('openclaw-health-widget');
+    if (widget) {
+      widget.dataset.apiUrl = BACKEND_BASE;
+    }
+
     // Fetch and display additional status information
     async function fetchStatus() {
       try {
-        const response = await fetch('/api/health');
+        const response = await fetch(`${API_BASE}/health`);
         const data = await response.json();
 
         // Update API Status
@@ -276,7 +300,7 @@
 
     async function fetchRecentEvents() {
       try {
-        const response = await fetch('/api/openclaw/recent-events?limit=5');
+        const response = await fetch(`${API_BASE}/openclaw/recent-events?limit=5`);
         const data = await response.json();
         
         const eventsContainer = document.getElementById('recent-events');
