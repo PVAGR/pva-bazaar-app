@@ -16,170 +16,13 @@ import './ArchiveLibraryPage.css';
 
 const logger = createLogger('ArchiveLibrary');
 
-const archiveEntries = [
-  {
-    id: 'master-index',
-    title: 'Archive Master Index',
-    file: 'ARCHIVE_MASTER_INDEX.md',
-    category: 'Index',
-    description: 'Complete catalog of all 40+ works across 12 categories',
-    wordCount: '2,000',
-    priority: 1,
-  },
-  {
-    id: 'man-from-taured-1',
-    title: 'The Man from Taured - Part 1',
-    file: 'Archive-Entry-001-Man-From-Taured-Part-1.md',
-    category: 'Fiction',
-    description: 'Science fiction novel - Chapters 1-6',
-    wordCount: '18,000',
-    priority: 2,
-  },
-  {
-    id: 'man-from-taured-2',
-    title: 'The Man from Taured - Part 2',
-    file: 'Archive-Entry-002-Man-From-Taured-Part-2.md',
-    category: 'Fiction',
-    description: 'Science fiction novel - Chapters 7-12',
-    wordCount: '15,000',
-    priority: 2,
-  },
-  {
-    id: 'asha-vs-druj',
-    title: 'Spiritual Core: Asha vs Druj',
-    file: 'Archive-Entry-003-Spiritual-Core-Asha-vs-Druj.md',
-    category: 'Spiritual',
-    description: 'Fundamental philosophy and duality framework',
-    wordCount: '4,000',
-    priority: 3,
-  },
-  {
-    id: 'divine-connection',
-    title: 'Divine Connection & Consciousness',
-    file: 'Archive-Entry-004-Divine-Connection-Consciousness.md',
-    category: 'Spiritual',
-    description: 'Mystical practices and consciousness access',
-    wordCount: '4,000',
-    priority: 3,
-  },
-  {
-    id: 'distributed-flame',
-    title: 'The Distributed Flame',
-    file: 'Archive-Entry-005-The-Distributed-Flame.md',
-    category: 'Spiritual',
-    description: 'Distributed enlightenment and soul groups',
-    wordCount: '5,000',
-    priority: 3,
-  },
-  {
-    id: 'religious-texts',
-    title: 'Religious Texts Manipulation',
-    file: 'Archive-Entry-006-Religious-Texts-Manipulation.md',
-    category: 'Spiritual',
-    description: 'Analysis of how sacred texts were corrupted',
-    wordCount: '4,500',
-    priority: 3,
-  },
-  {
-    id: 'unsettled-soul',
-    title: 'The Unsettled Soul & Demiurge',
-    file: 'Archive-Entry-007-Unsettled-Soul-Demiurge.md',
-    category: 'Spiritual',
-    description: 'Demiurge reinterpretation and governance',
-    wordCount: '5,500',
-    priority: 3,
-  },
-  {
-    id: 'dharmic-quest',
-    title: 'The Dharmic Quest',
-    file: 'Archive-Entry-008-Dharmic-Quest.md',
-    category: 'Spiritual',
-    description: 'Life purpose and reincarnation teachings',
-    wordCount: '3,500',
-    priority: 3,
-  },
-  {
-    id: 'bioharmonic-suit',
-    title: 'The Bioharmonic Suit',
-    file: 'Archive-Entry-009-Bioharmonic-Suit.md',
-    category: 'Technology',
-    description: 'Wearable technology for human enhancement',
-    wordCount: '6,500',
-    priority: 4,
-  },
-  {
-    id: 'vimana-technology',
-    title: 'Vimana Technology',
-    file: 'Archive-Entry-010-Vimana-Technology.md',
-    category: 'Technology',
-    description: 'Ancient airship technology reinterpreted',
-    wordCount: '6,000',
-    priority: 4,
-  },
-  {
-    id: 'pva-bazaar',
-    title: 'PVA Bazaar Business Model',
-    file: 'Archive-Entry-011-PVA-Bazaar-Business-Model.md',
-    category: 'Business',
-    description: 'Complete ethical marketplace blueprint',
-    wordCount: '7,500',
-    priority: 5,
-  },
-  {
-    id: 'hermit-journey',
-    title: "The Hermit's Journey",
-    file: 'Archive-Entry-012-Hermit-Journey.md',
-    category: 'Personal',
-    description: 'Personal transformation and awakening',
-    wordCount: '5,500',
-    priority: 5,
-  },
-  {
-    id: 'simulation-reality',
-    title: 'Simulation, Reality & Consciousness',
-    file: 'Archive-Entry-013-Simulation-Reality-Consciousness.md',
-    category: 'Philosophy',
-    description: 'Metaphysical framework and reality nature',
-    wordCount: '6,500',
-    priority: 5,
-  },
-  {
-    id: 'essays-reflections',
-    title: 'Essays & Reflections',
-    file: 'Archive-Entry-014-Essays-Reflections.md',
-    category: 'Wisdom',
-    description: 'Collection of personal growth essays',
-    wordCount: '5,500',
-    priority: 5,
-  },
-  {
-    id: 'ziggurat-hub',
-    title: 'Ziggurat Hub Architecture',
-    file: 'Archive-Entry-015-Ziggurat-Hub-Architecture.md',
-    category: 'Architecture',
-    description: 'Sacred community space blueprint',
-    wordCount: '6,500',
-    priority: 5,
-  },
-  {
-    id: 'master-integration',
-    title: 'Master Integration',
-    file: 'Archive-Entry-016-Master-Integration.md',
-    category: 'Strategic',
-    description: 'Complete vision synthesis and 10-year roadmap',
-    wordCount: '10,000',
-    priority: 1,
-  },
-];
-
 export default function ArchiveLibraryPage() {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedEntry, setSelectedEntry] = useState(null);
   const [markdown, setMarkdown] = useState('');
   const [loading, setLoading] = useState(false);
-  const [customEntries, setCustomEntries] = useState([]);
-  const [customEntriesLoading, setCustomEntriesLoading] = useState(true);
-  const [viewMode, setViewMode] = useState('archive'); // 'archive' or 'blog'
+  const [entries, setEntries] = useState([]);
+  const [entriesLoading, setEntriesLoading] = useState(true);
   // Use global theme system
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem('theme');
@@ -188,29 +31,29 @@ export default function ArchiveLibraryPage() {
     return isDark;
   });
 
-  // Function to load custom entries from API
-  const loadCustomEntries = async () => {
-    setCustomEntriesLoading(true);
+  // Load live archive entries from API
+  const loadEntries = async () => {
+    setEntriesLoading(true);
     try {
       const result = await fetchArchiveEntries({ limit: 100 });
       if (result.ok && Array.isArray(result.items)) {
-        setCustomEntries(result.items);
+        setEntries(result.items);
       } else {
-        setCustomEntries([]);
+        setEntries([]);
       }
     } catch (error) {
-      logger.error('Failed to load custom entries', error);
-      setCustomEntries([]);
+      logger.error('Failed to load archive entries', error);
+      setEntries([]);
     } finally {
-      setCustomEntriesLoading(false);
+      setEntriesLoading(false);
     }
   };
 
   useEffect(() => {
-    loadCustomEntries();
+    loadEntries();
     
-    // Refresh entries every 30 seconds to show new posts
-    const interval = setInterval(loadCustomEntries, 30000);
+    // Keep archive listings live without a hard refresh.
+    const interval = setInterval(loadEntries, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -220,29 +63,18 @@ export default function ArchiveLibraryPage() {
     localStorage.setItem('theme', darkMode ? 'dark' : 'light');
   }, [darkMode]);
 
-  const categories = ['All', 'Index', 'Fiction', 'Spiritual', 'Technology', 'Business', 'Personal', 'Philosophy', 'Wisdom', 'Architecture', 'Strategic'];
-
-  // Get entries based on view mode
-  const currentEntries = viewMode === 'archive' ? archiveEntries : customEntries;
+  const categories = ['All', ...Array.from(new Set(entries.map((e) => e.category).filter(Boolean)))];
   
   const filteredEntries =
     selectedCategory === 'All'
-      ? currentEntries
-      : currentEntries.filter((e) => e.category === selectedCategory);
+      ? entries
+      : entries.filter((e) => e.category === selectedCategory);
 
   const loadMarkdown = async (entry) => {
     setLoading(true);
     setSelectedEntry(entry);
     try {
-      // Check if it's a custom entry (has content field)
-      if (entry.content) {
-        setMarkdown(entry.content);
-      } else {
-        // Load from file for original entries
-        const response = await fetch(`${import.meta.env.BASE_URL}archive/${entry.file}`);
-        const text = await response.text();
-        setMarkdown(text);
-      }
+      setMarkdown(entry.content || '# Entry unavailable\n\nThis entry does not include readable content yet.');
     } catch (error) {
       logger.error('Failed to load archive entry', error, { entryId: entry?.id, entryFile: entry?.file });
       setMarkdown('# Error\n\nFailed to load this archive entry.');
@@ -295,9 +127,9 @@ export default function ArchiveLibraryPage() {
     <>
       <Helmet>
         <title>Archive Library | PVA Bazaar</title>
-        <meta name="description" content="Browse the complete PVA Bazaar Archive: 40+ works, 12 categories, 110,000+ words." />
+        <meta name="description" content="Browse the live PVA Bazaar archive: entries, categories, and updates served directly from the API." />
         <meta property="og:title" content="Archive Library | PVA Bazaar" />
-        <meta property="og:description" content="Browse the complete PVA Bazaar Archive: 40+ works, 12 categories, 110,000+ words." />
+        <meta property="og:description" content="Browse the live PVA Bazaar archive: entries, categories, and updates served directly from the API." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content={getCanonicalUrl('/archive')} />
         <meta property="og:image" content={getCanonicalUrl('/og-default.jpg')} />
@@ -319,42 +151,16 @@ export default function ArchiveLibraryPage() {
             </button>
           </div>
         </div>
-        
-        <div className="view-mode-toggle">
-          <button 
-            className={`view-btn ${viewMode === 'archive' ? 'active' : ''}`}
-            onClick={() => {
-              setViewMode('archive');
-              setSelectedEntry(null);
-              setMarkdown('');
-            }}
-          >
-            📚 Original Archive ({archiveEntries.length})
-          </button>
-          <button 
-            className={`view-btn ${viewMode === 'blog' ? 'active' : ''}`}
-            onClick={() => {
-              setViewMode('blog');
-              setSelectedEntry(null);
-              setMarkdown('');
-              setSelectedCategory('All');
-            }}
-          >
-            ✍️ New Blog Posts ({customEntries.length})
-          </button>
-        </div>
 
         <p className="archive-subtitle">
-          {viewMode === 'archive' 
-            ? '110,000+ words • Ages 24-28 (2020-2026) • Every line preserved'
-            : 'Fresh perspectives and new stories starting 2026'}
+          Live archive feed backed by the API.
         </p>
         <div className="archive-stats">
-          <span>{currentEntries.length} {viewMode === 'archive' ? 'Documents' : 'Posts'}</span>
+          <span>{entries.length} Documents</span>
           <span>•</span>
-          <span>12 Categories</span>
+          <span>{Math.max(categories.length - 1, 0)} Categories</span>
           <span>•</span>
-          <span>{viewMode === 'archive' ? '40+ Distinct Works' : 'Updated Regularly'}</span>
+          <span>Updated live</span>
         </div>
       </header>
 
@@ -371,8 +177,8 @@ export default function ArchiveLibraryPage() {
                 {cat}
                 <span className="count">
                   {cat === 'All'
-                    ? archiveEntries.length
-                    : archiveEntries.filter((e) => e.category === cat).length}
+                    ? entries.length
+                    : entries.filter((e) => e.category === cat).length}
                 </span>
               </button>
             ))}
@@ -380,11 +186,15 @@ export default function ArchiveLibraryPage() {
 
           <div className="entry-list">
             <h3>Documents</h3>
-            {viewMode === 'blog' && customEntriesLoading ? (
+            {entriesLoading ? (
               <SkeletonList count={5} />
             ) : (
               filteredEntries
-                .sort((a, b) => a.priority - b.priority)
+                .sort((a, b) => {
+                  const dateA = a?.createdAt ? new Date(a.createdAt).getTime() : 0;
+                  const dateB = b?.createdAt ? new Date(b.createdAt).getTime() : 0;
+                  return dateB - dateA;
+                })
                 .map((entry) => (
                   <button
                     key={entry.id}
@@ -403,51 +213,18 @@ export default function ArchiveLibraryPage() {
         </aside>
 
         <main className="archive-content">
-          {!selectedEntry && viewMode === 'archive' && (
+          {!selectedEntry && (
             <div className="archive-welcome">
               <h2>Welcome to the Archive</h2>
               <p>
-                This is the complete preservation of writings from ages 24-28, spanning 2020 to 2026.
-                Every single line and letter preserved per directive.
+                Browse and open live entries from the archive database.
               </p>
               <p>Select a document from the sidebar to begin reading.</p>
-              <div className="quick-links">
-                <h3>Recommended Starting Points:</h3>
-                <button onClick={() => loadMarkdown(archiveEntries[0])} className="quick-link">
-                  📋 Start with the Master Index
-                </button>
-                <button onClick={() => loadMarkdown(archiveEntries[16])} className="quick-link">
-                  🎯 See the Master Integration & Roadmap
-                </button>
-                <button onClick={() => loadMarkdown(archiveEntries[1])} className="quick-link">
-                  📖 Read the Novel (The Man from Taured)
-                </button>
-              </div>
-            </div>
-          )}
-
-          {!selectedEntry && viewMode === 'blog' && (
-            <div className="archive-welcome">
-              <h2>New Blog Posts</h2>
-              {customEntries.length === 0 ? (
-                <>
-                  <p>
-                    No blog posts yet. This section will display new writings created from 2026 onwards.
-                  </p>
-                  <p>
-                    Visit the <Link to="/admin" style={{color: 'var(--accent)', textDecoration: 'underline'}}>Admin Panel</Link> to create your first blog post.
-                  </p>
-                </>
-              ) : (
-                <>
-                  <p>
-                    Fresh perspectives and evolving thoughts starting 2026. Select a post from the sidebar to read.
-                  </p>
-                  <p className="blog-count">
-                    {customEntries.length} {customEntries.length === 1 ? 'post' : 'posts'} published
-                  </p>
-                </>
-              )}
+              {entries.length === 0 && !entriesLoading ? (
+                <p>
+                  No entries are available yet. Visit the <Link to="/admin" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>Admin Panel</Link> to publish one.
+                </p>
+              ) : null}
             </div>
           )}
 
