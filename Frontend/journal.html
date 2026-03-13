@@ -314,16 +314,13 @@
       <!-- Journal View (Default) -->
       <div id="view-journal" class="view">
         <section>
-          <h2>New Entry</h2>
+          <h2>Publishing</h2>
           <div class="new-entry">
-            <h3>Write something new</h3>
-            <label for="entry-title">Title</label>
-            <input type="text" id="entry-title" placeholder="Entry title...">
-            <label for="entry-content">Content</label>
-            <textarea id="entry-content" placeholder="Write your thoughts here..."></textarea>
-            <label for="entry-tags">Tags (comma separated)</label>
-            <input type="text" id="entry-tags" placeholder="journal, reflection, thoughts">
-            <button onclick="saveEntry()">Save Entry</button>
+            <h3>Publish through Archive Admin</h3>
+            <p style="margin-bottom: 16px; color: var(--text-muted);">
+              This page displays live published entries only. Create, edit, and delete entries in the admin archive tools.
+            </p>
+            <button onclick="window.location.href='/#/admin'">Open Archive Admin</button>
           </div>
         </section>
 
@@ -527,10 +524,10 @@
 
       list.innerHTML = entries.map(entry => `
         <li>
-          <a href="#" onclick="viewEntry(${entry.id}); return false;">
+          <a href="#" onclick="viewEntry(${JSON.stringify(String(entry.id || ''))}); return false;">
             <h3>${escapeHtml(entry.title)}</h3>
             <span class="meta">${entry.date}</span>
-            <p class="excerpt">${escapeHtml(entry.content.substring(0, 150))}${entry.content.length > 150 ? '...' : ''}</p>
+            <p class="excerpt">${escapeHtml(stripHtml(entry.content).substring(0, 150))}${stripHtml(entry.content).length > 150 ? '...' : ''}</p>
             ${entry.tags && entry.tags.length ? `
               <div class="tags">
                 ${entry.tags.map(tag => `<span class="tag">${escapeHtml(tag)}</span>`).join('')}
@@ -541,15 +538,10 @@
       `).join('');
     }
 
-    // Save new entry
-    function saveEntry() {
-      alert('Journal publishing is managed through the live archive admin tools.');
-    }
-
     // View single entry
     function viewEntry(id) {
       const entries = state.entries;
-      const entry = entries.find(e => e.id === id);
+      const entry = entries.find(e => String(e.id) === String(id));
       
       if (!entry) return;
 
@@ -589,6 +581,10 @@
       const div = document.createElement('div');
       div.textContent = text;
       return div.innerHTML;
+    }
+
+    function stripHtml(text) {
+      return String(text || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
     }
 
     // Initialize
