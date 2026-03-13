@@ -9,6 +9,7 @@ const express = require('express');
 const router = express.Router();
 const fs = require('fs');
 const path = require('path');
+const adminSession = require('../middleware/adminSession');
 
 function resolveWatchdogPaths() {
   const defaultLog = path.join(process.cwd(), 'infra', 'openclaw', 'logs', 'watchdog.log');
@@ -98,7 +99,7 @@ function getOpenClawMetrics() {
 }
 
 // Prometheus metrics endpoint
-router.get('/metrics', (req, res) => {
+router.get('/metrics', adminSession, (req, res) => {
   try {
     const metrics = getOpenClawMetrics();
     

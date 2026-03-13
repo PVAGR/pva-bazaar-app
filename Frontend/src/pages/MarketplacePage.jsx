@@ -75,7 +75,7 @@ export default function MarketplacePage() {
       <section className="marketplace-header">
         <div className="marketplace-topbar">
           <h1>Marketplace</h1>
-          <Link to={isAuthed ? "/items/new" : "/admin"} className="create-listing-btn">
+          <Link to={isAuthed ? "/items/new" : "/login?next=/items/new"} className="create-listing-btn">
             {isAuthed ? "Create New Listing" : "Login to Sell"}
           </Link>
         </div>

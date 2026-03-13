@@ -13,7 +13,7 @@ async function main() {
 
   let admin = await User.findOne({ email: 'admin@pvabazaar.org' });
   if (!admin) {
-    admin = new User({ name: 'PVA Admin', email: 'admin@pvabazaar.org', password: 'admin123' });
+    admin = new User({ name: 'PVA Admin', email: 'admin@pvabazaar.org', password: 'admin123', role: 'admin' });
     await admin.save();
     console.log('✅ Admin user ensured: admin@pvabazaar.org / admin123');
   } else {

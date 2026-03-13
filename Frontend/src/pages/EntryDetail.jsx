@@ -81,7 +81,7 @@ export default function EntryDetail({ entries = [] }) {
     return (
       <section className="entry-detail-container">
         <div className="entry-detail-header">
-          <Link to="#/journal" className="entry-close-btn">✕</Link>
+          <Link to="/library" className="entry-close-btn">✕</Link>
         </div>
         <div className="entry-detail-content">Loading entry...</div>
       </section>
@@ -92,7 +92,7 @@ export default function EntryDetail({ entries = [] }) {
     return (
       <section className="entry-detail-container">
         <div className="entry-detail-header">
-          <Link to="#/journal" className="entry-close-btn">✕</Link>
+          <Link to="/library" className="entry-close-btn">✕</Link>
         </div>
         <div className="entry-detail-content">Entry not found.</div>
       </section>
@@ -114,9 +114,9 @@ export default function EntryDetail({ entries = [] }) {
       </Helmet>
       <section className="entry-detail-container">
         <div className="entry-detail-header">
-          <Link to="#/" className="entry-home-btn" aria-label="Home">🏠</Link>
+          <Link to="/" className="entry-home-btn" aria-label="Home">🏠</Link>
           <h2 className="entry-detail-title">{displayEntry.title}</h2>
-          <Link to="#/journal" className="entry-close-btn" aria-label="Close">✕</Link>
+          <Link to="/library" className="entry-close-btn" aria-label="Close">✕</Link>
         </div>
 
         <div className="entry-detail-scrollable">
@@ -185,9 +185,9 @@ export default function EntryDetail({ entries = [] }) {
         </div>
 
         <nav className="entry-detail-nav">
-          {prev && <Link to={`#/entry/${prev.id}`} className="nav-link nav-prev">← Previous</Link>}
-          <Link to="#/" className="nav-link nav-back">Back to Home</Link>
-          {next && <Link to={`#/entry/${next.id}`} className="nav-link nav-next">Next →</Link>}
+          {prev && <Link to={`/entry/${prev.id}`} className="nav-link nav-prev">← Previous</Link>}
+          <Link to="/" className="nav-link nav-back">Back to Home</Link>
+          {next && <Link to={`/entry/${next.id}`} className="nav-link nav-next">Next →</Link>}
         </nav>
       </section>
     </>

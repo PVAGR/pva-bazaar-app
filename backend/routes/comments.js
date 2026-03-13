@@ -95,12 +95,15 @@ router.post('/:slug/add', commentsLimiter, async (req, res) => {
     const { authorName, body } = req.body || {};
     if (!body || body.trim().length < 2)
       return res.status(400).json({ ok: false, message: 'Comment body too short' });
+    if (body.length > 5000)
+      return res.status(400).json({ ok: false, message: 'Comment body too long (max 5000 characters)' });
+    const safeAuthorName = (authorName || 'Anonymous').toString().slice(0, 100);
     const blogExists = await Blog.findOne({ slug, status: 'published' }).select('_id');
     if (!blogExists) return res.status(404).json({ ok: false, message: 'Blog not found' });
     const comment = new Comment({
       blogSlug: slug,
-      authorName: (authorName || 'Anonymous').toString(),
-      body: body.toString(),
+      authorName: safeAuthorName,
+      body: body.toString().slice(0, 5000),
       approved: false,
     });
     await comment.save();

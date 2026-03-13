@@ -16,7 +16,7 @@ router.post('/register', async (req, res) => {
     }
     const user = new User({ name, email, password });
     await user.save();
-    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET);
+    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '7d' });
     
     // Dispatch user registration event (non-blocking)
     dispatchToOpenClaw(createUserEvent('registered', user, {
@@ -100,14 +100,14 @@ router.post('/login', async (req, res) => {
     if (!envAdminAuthenticated && !(await user.comparePassword(password))) {
       return res.status(401).json({ ok: false, message: 'Invalid credentials' });
     }
-    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET);
+    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '7d' });
     
     // Dispatch user login event (non-blocking)
     dispatchToOpenClaw(createUserEvent('authenticated', user, {
       method: 'password',
     }));
     
-    res.json({ ok: true, token, user: { id: user._id, name: user.name, email: user.email } });
+    res.json({ ok: true, token, user: { id: user._id, name: user.name, email: user.email, role: user.role } });
   } catch (error) {
     res.status(500).json({ ok: false, message: error.message });
   }

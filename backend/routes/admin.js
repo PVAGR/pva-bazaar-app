@@ -5,6 +5,12 @@ const auth = require('../middleware/auth');
 const adminOnly = require('../middleware/adminOnly');
 const adminSession = require('../middleware/adminSession');
 
+const ALLOWED_USER_SORT_FIELDS = new Set(['createdAt', 'updatedAt', 'name', 'email', 'username', 'role']);
+
+function escapeRegExp(str) {
+  return String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 function getAdminSubjectId() {
   const fromEnv = process.env.ADMIN_USER_ID;
   if (fromEnv && /^[a-f\d]{24}$/i.test(fromEnv)) return fromEnv;
@@ -90,20 +96,19 @@ router.get('/users', adminSession, async (req, res) => {
     const filter = {};
     
     if (search) {
+      const searchSafe = escapeRegExp(String(search).slice(0, 100));
       filter.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { email: { $regex: search, $options: 'i' } },
-        { username: { $regex: search, $options: 'i' } }
+        { name: { $regex: searchSafe, $options: 'i' } },
+        { email: { $regex: searchSafe, $options: 'i' } },
+        { username: { $regex: searchSafe, $options: 'i' } }
       ];
     }
 
-    // Note: Role is not in User schema yet, but we can add it if needed
-    // For now, check if email matches admin pattern
-    
     // Calculate pagination
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const sortOrder = order === 'asc' ? 1 : -1;
-    const sortOptions = { [sortBy]: sortOrder };
+    const safeSortBy = ALLOWED_USER_SORT_FIELDS.has(sortBy) ? sortBy : 'createdAt';
+    const sortOptions = { [safeSortBy]: sortOrder };
 
     // Fetch users (exclude password)
     const users = await User.find(filter)
@@ -119,7 +124,7 @@ router.get('/users', adminSession, async (req, res) => {
     // Add computed fields
     const enrichedUsers = users.map(user => ({
       ...user,
-      role: user.email?.includes('admin') ? 'admin' : 'user',
+      role: user.role || 'user',
       status: 'active' // Add status logic later if needed
     }));
 
@@ -156,7 +161,7 @@ router.get('/users/:id', adminSession, async (req, res) => {
     // Add computed fields
     const enrichedUser = {
       ...user,
-      role: user.email?.includes('admin') ? 'admin' : 'user',
+      role: user.role || 'user',
       status: 'active'
     };
 
@@ -212,7 +217,7 @@ router.delete('/users/:id', adminSession, async (req, res) => {
     }
 
     // Prevent deleting admin users
-    if (user.email?.includes('admin')) {
+    if (user.role === 'admin') {
       return res.status(403).json({ ok: false, error: 'Cannot delete admin users' });
     }
 
@@ -243,11 +248,12 @@ router.get('/artifacts', adminSession, async (req, res) => {
     const { page = 1, limit = 50, search = '', status = '' } = req.query;
     const filter = {};
     if (search) {
+      const searchSafe = escapeRegExp(String(search).slice(0, 100));
       filter.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { title: { $regex: search, $options: 'i' } },
-        { artisan: { $regex: search, $options: 'i' } },
-        { category: { $regex: search, $options: 'i' } },
+        { name: { $regex: searchSafe, $options: 'i' } },
+        { title: { $regex: searchSafe, $options: 'i' } },
+        { artisan: { $regex: searchSafe, $options: 'i' } },
+        { category: { $regex: searchSafe, $options: 'i' } },
       ];
     }
     if (status) filter.status = status;
@@ -353,14 +359,19 @@ router.delete('/artifacts/:id', adminSession, async (req, res) => {
  */
 router.get('/stats', adminSession, async (req, res) => {
   try {
-    const totalUsers = await User.countDocuments();
-    const newUsersThisMonth = await User.countDocuments({
-      createdAt: { $gte: new Date(new Date().setDate(1)) }
+    const [totalUsers, newUsersThisMonth, adminUsers, totalArtifacts, publishedArtifacts, draftArtifacts] = await Promise.all([
+      User.countDocuments(),
+      User.countDocuments({ createdAt: { $gte: new Date(new Date().setDate(1)) } }),
+      User.countDocuments({ role: 'admin' }),
+      Artifact.countDocuments(),
+      Artifact.countDocuments({ status: 'published' }),
+      Artifact.countDocuments({ status: 'draft' }),
+    ]);
+
+    // Active = registered in the last 30 days (proxy for activity until event tracking is built)
+    const activeUsers = await User.countDocuments({
+      createdAt: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
     });
-    
-    const users = await User.find().select('createdAt email').lean();
-    const activeUsers = users.length; // Simplified - add real activity tracking later
-    const adminUsers = users.filter(u => u.email?.includes('admin')).length;
 
     res.json({
       ok: true,
@@ -369,11 +380,56 @@ router.get('/stats', adminSession, async (req, res) => {
         activeUsers,
         adminUsers,
         newUsersThisMonth,
-        growthRate: totalUsers > 0 ? ((newUsersThisMonth / totalUsers) * 100).toFixed(1) : 0
-      }
+        growthRate: totalUsers > 0 ? ((newUsersThisMonth / totalUsers) * 100).toFixed(1) : 0,
+        totalArtifacts,
+        publishedArtifacts,
+        draftArtifacts,
+      },
     });
   } catch (error) {
     console.error('Admin stats error:', error);
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+/**
+ * GET /api/admin/cloud-storage
+ * Summary of configured cloud storage providers for the dashboard widget.
+ */
+router.get('/cloud-storage', adminSession, async (req, res) => {
+  try {
+    const providers = [
+      {
+        name: 'Cloudinary',
+        key: 'cloudinary',
+        configured: !!(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET),
+        status: (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY) ? 'connected' : 'disconnected',
+      },
+      {
+        name: 'Pinata IPFS',
+        key: 'pinata',
+        configured: !!(process.env.PINATA_API_KEY && process.env.PINATA_API_SECRET),
+        status: process.env.PINATA_API_KEY ? 'connected' : 'disconnected',
+      },
+      {
+        name: 'AWS S3',
+        key: 'aws',
+        configured: !!(process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY && process.env.AWS_BUCKET_NAME),
+        status: process.env.AWS_BUCKET_NAME ? 'connected' : 'disconnected',
+      },
+    ];
+
+    const configuredCount = providers.filter(p => p.configured).length;
+
+    res.json({
+      ok: true,
+      files: 0,       // live file counts require per-provider API calls; use CloudStorageTab for detail
+      totalSize: 0,
+      configuredProviders: configuredCount,
+      providers,
+    });
+  } catch (error) {
+    console.error('Admin cloud-storage error:', error);
     res.status(500).json({ ok: false, error: error.message });
   }
 });

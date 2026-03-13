@@ -60,8 +60,8 @@ router.post("/create-session", async (req, res) => {
           quantity: 1,
         },
       ],
-      success_url: `${PUBLIC_SITE_URL}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${PUBLIC_SITE_URL}/checkout/cancel`,
+      success_url: `${PUBLIC_SITE_URL}/#/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${PUBLIC_SITE_URL}/#/checkout/cancel`,
       client_reference_id: order._id.toString(),
       metadata: {
         orderId: order._id.toString(),

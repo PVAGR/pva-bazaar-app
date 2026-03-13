@@ -4,6 +4,10 @@ const Payout = require('../models/Payout');
 const Order = require('../models/Order');
 const adminSession = require('../middleware/adminSession');
 
+function escapeRegExp(str) {
+  return String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 // Middleware: protect all payout routes with admin authentication
 router.use(adminSession);
 
@@ -18,7 +22,7 @@ router.get('/', async (req, res) => {
     const filter = {};
 
     if (status) filter.status = status;
-    if (creator) filter.creatorHandle = new RegExp(creator, 'i');
+    if (creator) filter.creatorHandle = new RegExp(escapeRegExp(String(creator).slice(0, 100)), 'i');
 
     const payouts = await Payout.find(filter)
       .sort({ createdAt: -1 })
@@ -98,6 +102,35 @@ router.get('/summary', async (req, res) => {
         },
       },
     });
+  } catch (err) {
+    res.status(500).json({ ok: false, message: err.message });
+  }
+});
+
+/**
+ * GET /api/payouts/creator/:handle
+ * Get all payouts for a specific creator
+ */
+router.get('/creator/:handle', async (req, res) => {
+  try {
+    const { handle } = req.params;
+    const payouts = await Payout.find({ creatorHandle: handle })
+      .sort({ 'payoutPeriod.endDate': -1 })
+      .lean();
+
+    // Summary stats
+    const stats = {
+      totalEarned: payouts.reduce((sum, p) => sum + p.netPayoutCents, 0),
+      totalCompleted: payouts
+        .filter((p) => p.status === 'completed')
+        .reduce((sum, p) => sum + p.netPayoutCents, 0),
+      totalPending: payouts
+        .filter((p) => ['draft', 'ready'].includes(p.status))
+        .reduce((sum, p) => sum + p.netPayoutCents, 0),
+      payoutCount: payouts.length,
+    };
+
+    res.json({ ok: true, payouts, stats });
   } catch (err) {
     res.status(500).json({ ok: false, message: err.message });
   }
@@ -249,35 +282,6 @@ router.post('/:id/process', async (req, res) => {
       message: `Payout marked as ${payout.status}`,
       payout,
     });
-  } catch (err) {
-    res.status(500).json({ ok: false, message: err.message });
-  }
-});
-
-/**
- * GET /api/payouts/creator/:handle
- * Get all payouts for a specific creator
- */
-router.get('/creator/:handle', async (req, res) => {
-  try {
-    const { handle } = req.params;
-    const payouts = await Payout.find({ creatorHandle: handle })
-      .sort({ 'payoutPeriod.endDate': -1 })
-      .lean();
-
-    // Summary stats
-    const stats = {
-      totalEarned: payouts.reduce((sum, p) => sum + p.netPayoutCents, 0),
-      totalCompleted: payouts
-        .filter((p) => p.status === 'completed')
-        .reduce((sum, p) => sum + p.netPayoutCents, 0),
-      totalPending: payouts
-        .filter((p) => ['draft', 'ready'].includes(p.status))
-        .reduce((sum, p) => sum + p.netPayoutCents, 0),
-      payoutCount: payouts.length,
-    };
-
-    res.json({ ok: true, payouts, stats });
   } catch (err) {
     res.status(500).json({ ok: false, message: err.message });
   }

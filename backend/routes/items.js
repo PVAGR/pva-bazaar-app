@@ -49,7 +49,7 @@ router.get('/', async (req, res) => {
     if (!isAdmin || includeDrafts !== 'true') {
       filter.status = 'published';
     }
-    if (category) filter.category = category;
+    if (category) filter.category = String(category);
     if (tag) filter.tags = tag;
     // Search
     if (q) {

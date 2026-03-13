@@ -14,7 +14,8 @@ const {
 
 function sanitize(str) {
   if (typeof str !== 'string') return str;
-  return str.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '').trim();
+  // Strip all HTML tags to prevent injection — simple and ReDoS-safe.
+  return str.replace(/<[^>]*>/g, '').trim();
 }
 
 function sanitizeDeep(v) {

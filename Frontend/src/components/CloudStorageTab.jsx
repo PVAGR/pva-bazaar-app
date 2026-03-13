@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { apiGet, apiPost, apiDelete } from '../lib/api';
+import { apiGet, apiPost, apiDelete, apiUpload } from '../lib/api';
 import { createLogger } from '../lib/logger';
 import LoadingSpinner, { LoadingDots } from './LoadingSpinner';
 import './CloudStorageTab.css';
@@ -71,13 +71,7 @@ export default function CloudStorageTab() {
       const formData = new FormData();
       formData.append('file', selectedFile);
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/cloud-storage/upload/${provider}`, {
-        method: 'POST',
-        body: formData,
-        credentials: 'include'
-      });
-
-      const data = await response.json();
+      const data = await apiUpload(`/api/cloud-storage/upload/${provider}`, formData);
 
       if (data.ok) {
         setSuccess(`✅ Uploaded to ${provider.toUpperCase()}: ${data.url}`);

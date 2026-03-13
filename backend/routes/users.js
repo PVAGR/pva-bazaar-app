@@ -17,16 +17,30 @@ router.get('/profile', auth, async (req, res) => {
 // Update user profile
 router.put('/profile', auth, async (req, res) => {
   try {
-    const { name, email } = req.body;
+    const { name, email, preferences } = req.body;
+    const update = { updatedAt: Date.now() };
+    if (name !== undefined) update.name = name;
+    if (email !== undefined) update.email = email;
+
+    // Merge top-level preference keys (dot-notation to avoid clobbering nested fields)
+    if (preferences && typeof preferences === 'object') {
+      const allowed = ['defaultCountry', 'defaultCurrency', 'defaultWalletAddress', 'defaultTags', 'defaultStreamPlatform', 'defaultPublicVisibility', 'onboarding', 'drafts'];
+      for (const key of allowed) {
+        if (key in preferences) {
+          update[`preferences.${key}`] = preferences[key];
+        }
+      }
+    }
+
     const user = await User.findByIdAndUpdate(
       req.user.id,
-      { name, email, updatedAt: Date.now() },
+      { $set: update },
       { new: true },
     ).select('-password');
 
     if (user) {
       dispatchToOpenClaw(createUserEvent('updated', user, {
-        updatedFields: ['name', 'email'],
+        updatedFields: Object.keys(update).filter(k => k !== 'updatedAt'),
       }));
     }
 

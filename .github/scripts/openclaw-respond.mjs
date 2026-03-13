@@ -6,13 +6,13 @@ const GITHUB_TOKEN = process.env.GITHUB_TOKEN || '';
 const REPO = process.env.GITHUB_REPOSITORY || 'PVAGR/pva-bazaar-app';
 
 if (!BACKEND_URL) {
-  console.error('OPENCLAW_BACKEND_URL is not set. Failing run.');
-  process.exit(1);
+  console.warn('OPENCLAW_BACKEND_URL is not set — skipping agent run.');
+  process.exit(0);
 }
 
 if (!BRIDGE_SECRET) {
-  console.error('OPENCLAW_BRIDGE_SECRET is not set. Failing run.');
-  process.exit(1);
+  console.warn('OPENCLAW_BRIDGE_SECRET is not set — skipping agent run (queue auth required).');
+  process.exit(0);
 }
 
 const SYSTEM_PROMPT = `You are PVA Magnum Opus, the autonomous OpenClaw assistant for PVAGR/pva-bazaar-app and pvabazaar.org.

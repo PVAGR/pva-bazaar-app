@@ -3,6 +3,7 @@ const router = express.Router();
 const Order = require("../models/Order");
 const stripe = require("../lib/stripeClient");
 const { requireAdmin } = require("../middleware/adminOnly");
+const { createTransactionEvent, dispatchToOpenClaw } = require('../utils/openclaw-events');
 
 // POST /api/orders/:id/refund (admin only)
 router.post("/:id/refund", requireAdmin, async (req, res) => {
@@ -71,6 +72,21 @@ router.put('/:id', requireAdmin, async (req, res) => {
     }
     if (!dirty) return res.json({ ok: true, item: order });
     await order.save();
+
+    // Dispatch fulfillment update event (non-blocking)
+    dispatchToOpenClaw(createTransactionEvent('updated', {
+      _id: order._id,
+      artifactId: order.itemId,
+      amount: order.amountTotal,
+      currency: order.currency,
+      status: order.paymentStatus,
+    }, {
+      fulfillmentStatus: order.fulfillmentStatus,
+      trackingNumber: order.trackingNumber || null,
+      carrier: order.carrier || null,
+      updatedByAdmin: true,
+    })).catch(() => {});
+
     return res.json({ ok: true, item: order });
   } catch (err) {
     return res.status(500).json({ ok: false, error: err.message });

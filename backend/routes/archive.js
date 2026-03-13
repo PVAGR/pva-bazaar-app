@@ -8,6 +8,11 @@ const adminSession = require('../middleware/adminSession');
 
 // Cursor-based pagination, filtering, and search
 const { encodeCursor, decodeCursor } = require('../lib/cursor');
+
+function escapeRegExp(str) {
+  return String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 router.get('/', async (req, res) => {
   try {
     // Parse query params
@@ -20,7 +25,7 @@ router.get('/', async (req, res) => {
 
     // Build filter
     const filter = {};
-    if (category) filter.category = new RegExp('^' + category + '$', 'i');
+    if (category) filter.category = new RegExp('^' + escapeRegExp(category) + '$', 'i');
     if (tag) filter.tags = tag;
 
     // Search

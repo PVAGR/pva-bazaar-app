@@ -6,6 +6,7 @@ const express = require('express');
 const router = express.Router();
 const VerificationResult = require('../models/VerificationResult');
 const crypto = require('crypto');
+const { createProvenanceEvent, dispatchToOpenClaw } = require('../utils/openclaw-events');
 
 function generateCertificateId() {
   const hex = crypto.randomBytes(8).toString('hex').toUpperCase();
@@ -67,6 +68,18 @@ router.post('/', verifySecret, async (req, res) => {
       id: doc._id,
       verified_at: doc.verified_at,
     });
+
+    // Dispatch provenance event (non-blocking, after response sent)
+    dispatchToOpenClaw(createProvenanceEvent(
+      is_authentic ? 'verified' : 'attestation_added',
+      { _id: artifactIdOrSlug, title: artifactIdOrSlug },
+      {
+        chainOfCustody: [],
+        attestations: matched_entry ? [matched_entry] : [],
+        verificationStatus: status,
+      },
+      { certificateId: doc.certificateId, confidence_score, source }
+    )).catch(() => {});
   } catch (err) {
     console.error('Verification store error:', err);
     res.status(500).json({ ok: false, error: err.message });

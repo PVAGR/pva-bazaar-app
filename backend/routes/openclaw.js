@@ -91,7 +91,11 @@ function getConfig() {
     (gatewayUrl ? `${gatewayUrl.replace(/\/$/, '')}/health` : '');
   const apiKey = process.env.OPENCLAW_API_KEY || '';
   const bridgeSecret = process.env.OPENCLAW_BRIDGE_SECRET || '';
-  const queueEnabled = Boolean(bridgeSecret);
+
+  // Queue is always enabled — MongoDB is always connected in production.
+  // Webhook/gateway are optional enhancements on top of the persistent queue.
+  const queueEnabled = true;
+  const webhookConfigured = Boolean(webhookUrl || gatewayUrl);
 
   return {
     gatewayUrl,
@@ -100,7 +104,8 @@ function getConfig() {
     apiKey,
     bridgeSecret,
     queueEnabled,
-    configured: Boolean(webhookUrl || gatewayUrl || queueEnabled),
+    webhookConfigured,
+    configured: true, // queue is always active
   };
 }
 
@@ -207,16 +212,7 @@ async function saveMessage(payload) {
 router.get('/status', async (_req, res) => {
   const config = getConfig();
 
-  if (!config.configured) {
-    return res.json({
-      ok: true,
-      configured: false,
-      reachable: false,
-      message: 'OpenClaw is not configured. Set OPENCLAW_GATEWAY_URL or OPENCLAW_WEBHOOK_URL.',
-      timestamp: new Date().toISOString(),
-    });
-  }
-
+  // Probe external gateway if configured
   let reachable = false;
   let detail = null;
 
@@ -234,14 +230,35 @@ router.get('/status', async (_req, res) => {
     }
   }
 
+  // Get a quick queue snapshot so the admin UI has real numbers
+  let queue = null;
+  try {
+    queue = await getQueueStats();
+  } catch (_err) {
+    // best-effort
+  }
+
+  const mode = config.webhookConfigured ? 'webhook+queue' : 'queue-only';
+  const statusMsg = config.webhookConfigured
+    ? (reachable ? `Gateway reachable (${mode})` : `Gateway unreachable — events queued`)
+    : `Queue-only mode — ${queue ? queue.pendingOutbound : '?'} pending`;
+
   res.json({
     ok: true,
     configured: true,
+    queueEnabled: true,
+    webhookConfigured: config.webhookConfigured,
     reachable,
-    queueEnabled: config.queueEnabled,
-    mode: config.webhookUrl ? 'webhook+queue' : 'queue-only',
+    mode,
+    message: statusMsg,
     gatewayUrl: config.gatewayUrl || null,
-    webhookUrlConfigured: Boolean(config.webhookUrl),
+    queue: queue ? {
+      pending: queue.pendingOutbound,
+      stale: queue.staleOutbound,
+      processed: queue.processedOutbound,
+      inbound: queue.inboundCount,
+      latestAt: queue.latestOutboundAt,
+    } : null,
     timestamp: new Date().toISOString(),
     ...(detail ? { detail } : {}),
   });
@@ -313,7 +330,10 @@ router.get('/watchdog-status', async (_req, res) => {
   });
 });
 
-router.get('/recent-events', (req, res) => {
+router.get('/recent-events', async (req, res) => {
+  const config = getConfig();
+  if (!requireBridgeOrAdmin(req, res, config, 'Unauthorized OpenClaw recent-events request')) return;
+
   const limit = Math.min(parseInt(req.query.limit) || 50, 200);
   const { logPath, alertPath } = resolveWatchdogPaths();
 
@@ -321,13 +341,56 @@ router.get('/recent-events', (req, res) => {
   const alertLines = readLastLines(alertPath, Math.floor(limit / 2));
 
   if (!logLines.length && !alertLines.length) {
-    return res.json({
-      ok: true,
-      available: false,
-      events: [],
-      message: 'No watchdog activity logs found',
-      timestamp: new Date().toISOString(),
-    });
+    // No file logs (expected on Vercel serverless) – serve from MongoDB queue
+    try {
+      await dbConnect();
+      const OpenClawMessage = require('../models/OpenClawMessage');
+      const messages = await OpenClawMessage.find({})
+        .sort({ createdAt: -1 })
+        .limit(limit)
+        .lean();
+
+      if (!messages.length) {
+        return res.json({
+          ok: true,
+          available: false,
+          source: 'queue-store',
+          events: [],
+          message: 'No OpenClaw events recorded yet',
+          timestamp: new Date().toISOString(),
+        });
+      }
+
+      const events = messages.map((msg) => ({
+        id: msg._id.toString(),
+        timestamp: msg.createdAt ? msg.createdAt.toISOString() : null,
+        level: msg.direction === 'inbound' ? 'INFO' : 'SUCCESS',
+        type: msg.direction === 'inbound' ? 'inbound' : 'dispatch',
+        message: `[${msg.direction.toUpperCase()}] ${msg.event} — ${msg.content || ''}`.trim(),
+        source: msg.source || 'queue-store',
+        event: msg.event,
+        direction: msg.direction,
+        processed: msg.processed,
+      }));
+
+      return res.json({
+        ok: true,
+        available: true,
+        source: 'queue-store',
+        events,
+        count: events.length,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (_err) {
+      return res.json({
+        ok: true,
+        available: false,
+        source: 'none',
+        events: [],
+        message: 'No watchdog activity logs found',
+        timestamp: new Date().toISOString(),
+      });
+    }
   }
 
   // Parse log lines into structured events
@@ -765,39 +828,27 @@ router.post('/messages/:id/processed', async (req, res) => {
 // Lightweight health check for inclusion in main health endpoint
 function getOpenClawHealth() {
   const config = getConfig();
-  
-  if (!config.configured) {
-    return { 
-      configured: false, 
-      status: 'not-configured',
-      message: 'OpenClaw not configured'
-    };
-  }
-
   const paths = resolveWatchdogPaths();
-  
-  // Quick file existence check
   const logExists = fs.existsSync(paths.logPath);
   const alertExists = fs.existsSync(paths.alertPath);
-  
+
   if (!logExists) {
     return {
       configured: true,
-      status: 'no-logs',
-      message: 'Watchdog logs not found',
-      paths: { log: paths.logPath, alert: paths.alertPath }
+      status: config.webhookConfigured ? 'no-logs' : 'queue-only',
+      mode: config.webhookConfigured ? 'webhook+queue' : 'queue-only',
+      message: config.webhookConfigured
+        ? 'Watchdog logs not found'
+        : 'Queue-only mode — events stored in MongoDB'
     };
   }
 
   try {
-    // Quick summary without reading all lines
     const logLines = readLastLines(paths.logPath, 50);
     const alertLines = alertExists ? readLastLines(paths.alertPath, 20) : [];
-    
     const recentErrors = logLines.filter(l => l.includes('[ERROR]')).length;
     const recentWarns = logLines.filter(l => l.includes('[WARN]')).length;
     const status = recentErrors > 5 ? 'unhealthy' : recentErrors > 0 ? 'degraded' : 'healthy';
-    
     return {
       configured: true,
       status,

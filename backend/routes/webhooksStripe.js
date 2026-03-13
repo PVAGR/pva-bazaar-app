@@ -9,6 +9,7 @@ const PhysicalFulfillment = require("../models/PhysicalFulfillment");
 const FulfillmentTransactionLog = require("../models/FulfillmentTransactionLog");
 const VerificationResult = require("../models/VerificationResult");
 const { sendFulfillmentConfirmationEmail, sendPaymentFailedEmail } = require("../service/emailService");
+const { createTransactionEvent, dispatchToOpenClaw } = require('../utils/openclaw-events');
 
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
 const PUBLIC_SITE_URL = process.env.PUBLIC_SITE_URL || "https://pvabazaar.org";
@@ -74,6 +75,19 @@ router.post("/stripe", async (req, res) => {
         order.certificateId = certificateId || undefined;
         await order.save();
         await logFulfillment(event.id, orderId, "download_granted", { hasCertificate: !!certificateId });
+
+        // Dispatch payment confirmed event to OpenClaw (non-blocking)
+        dispatchToOpenClaw(createTransactionEvent('confirmed', {
+          _id: order._id,
+          artifactId: order.itemId,
+          amount: order.amountTotal,
+          currency: order.currency,
+          status: 'paid',
+        }, {
+          stripeSessionId: session.id,
+          customerEmail: order.customerEmail,
+          hasCertificate: !!certificateId,
+        })).catch(() => {});
 
         // Physical fulfillment row (for disc burn)
         try {

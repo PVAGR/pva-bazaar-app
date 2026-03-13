@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
+import rehypeSanitize from 'rehype-sanitize';
 import { Helmet } from 'react-helmet-async';
 // Helper to build canonical URLs
 function getCanonicalUrl(path = '') {
@@ -237,7 +239,7 @@ export default function ArchiveLibraryPage() {
         setMarkdown(entry.content);
       } else {
         // Load from file for original entries
-        const response = await fetch(`/archive/${entry.file}`);
+        const response = await fetch(`${import.meta.env.BASE_URL}archive/${entry.file}`);
         const text = await response.text();
         setMarkdown(text);
       }
@@ -287,43 +289,7 @@ export default function ArchiveLibraryPage() {
     );
   };
 
-  // Convert markdown to simple HTML (basic parser)
-  const renderMarkdown = (md) => {
-    if (!md) return '';
-    
-    let html = md
-      // Headers
-      .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-      .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-      .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-      // Bold
-      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      // Italic
-      .replace(/\*(.+?)\*/g, '<em>$1</em>')
-      // Images
-      .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" />')
-      // Links
-      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
-      // Lists
-      .replace(/^\- (.+)$/gim, '<li>$1</li>')
-      .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>')
-      // Paragraphs
-      .split('\n\n')
-      .map((para) => {
-        if (
-          para.startsWith('<h') ||
-          para.startsWith('<ul') ||
-          para.startsWith('```') ||
-          para.trim() === ''
-        ) {
-          return para;
-        }
-        return `<p>${para}</p>`;
-      })
-      .join('\n');
 
-    return html;
-  };
 
   return (
     <>
@@ -469,7 +435,7 @@ export default function ArchiveLibraryPage() {
                     No blog posts yet. This section will display new writings created from 2026 onwards.
                   </p>
                   <p>
-                    Visit the <a href="#/admin" style={{color: 'var(--accent)', textDecoration: 'underline'}}>Admin Panel</a> to create your first blog post.
+                    Visit the <Link to="/admin" style={{color: 'var(--accent)', textDecoration: 'underline'}}>Admin Panel</Link> to create your first blog post.
                   </p>
                 </>
               ) : (
@@ -506,10 +472,11 @@ export default function ArchiveLibraryPage() {
                   {selectedEntry.file && <span>📄 {selectedEntry.file}</span>}
                 </div>
               </div>
-              <div
-                className="markdown-content"
-                dangerouslySetInnerHTML={{ __html: renderMarkdown(markdown) }}
-              />
+              <div className="markdown-content">
+                <ReactMarkdown rehypePlugins={[rehypeSanitize]}>
+                  {markdown || ''}
+                </ReactMarkdown>
+              </div>
               {Array.isArray(selectedEntry.media) && selectedEntry.media.length > 0 && (
                 <div className="entry-media">
                   <h3>Media</h3>

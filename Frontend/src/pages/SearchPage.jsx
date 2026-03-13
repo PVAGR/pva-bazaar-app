@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { apiFetch } from '../lib/api';
+import { Link } from 'react-router-dom';
+import { apiGet } from '../lib/api';
 import { createLogger } from '../lib/logger';
 
 const logger = createLogger('SearchPage');
@@ -21,13 +22,11 @@ export default function SearchPage() {
       setLoading(true);
       setError(null);
       try {
-        const res = await apiFetch(`/api/search/text?q=${encodeURIComponent(searchTerm)}`);
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message || 'Search failed');
+        const data = await apiGet(`/search/text?q=${encodeURIComponent(searchTerm)}`);
         setResults(data.results || []);
       } catch (err) {
         logger.error('Search error', err);
-        setError(err.message);
+        setError(err?.response?.data?.error || err?.response?.data?.message || err.message || 'Search failed');
         setResults([]);
       } finally {
         setLoading(false);
@@ -60,7 +59,7 @@ export default function SearchPage() {
       <div className="entry-list">
         {results.map((entry) => (
           <article className="entry-card" key={entry._id || entry.id}>
-            <h3><a href={`#/entry/${entry._id || entry.id}`}>{entry.title}</a></h3>
+            <h3><Link to={`/entry/${entry._id || entry.id}`}>{entry.title}</Link></h3>
             <div className="entry-meta">
               {new Date(entry.date || entry.createdAt).toLocaleDateString()} · {entry.category || 'entry'}
             </div>

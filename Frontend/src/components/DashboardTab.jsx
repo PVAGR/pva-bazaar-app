@@ -66,8 +66,8 @@ export default function DashboardTab({ onNavigateTab }) {
       // Process archive data
       const archiveData = archiveResponse.status === 'fulfilled' && archiveResponse.value.ok
         ? {
-            total: archiveResponse.value.entries?.length || 0,
-            categories: archiveResponse.value.entries?.reduce((acc, entry) => {
+            total: archiveResponse.value.items?.length || 0,
+            categories: archiveResponse.value.items?.reduce((acc, entry) => {
               acc[entry.category] = (acc[entry.category] || 0) + 1;
               return acc;
             }, {}) || {},
@@ -87,15 +87,22 @@ export default function DashboardTab({ onNavigateTab }) {
       // Process cloud storage data
       const cloudData = cloudResponse.status === 'fulfilled' && cloudResponse.value.ok
         ? {
-            files: cloudResponse.value.files?.length || 0,
+            files: cloudResponse.value.files || 0,
             totalSize: cloudResponse.value.totalSize || 0,
+            configuredProviders: cloudResponse.value.configuredProviders || 0,
             loading: false,
           }
-        : { files: 0, totalSize: 0, loading: false };
+        : { files: 0, totalSize: 0, configuredProviders: 0, loading: false };
 
       setDashboardData({
         users: usersData,
-        items: itemsData,
+        items: {
+          ...itemsData,
+          // Prefer artifact counts from stats endpoint (avoids loading all items)
+          total: usersResponse.value?.stats?.totalArtifacts ?? itemsData.total,
+          published: usersResponse.value?.stats?.publishedArtifacts ?? itemsData.published,
+          draft: usersResponse.value?.stats?.draftArtifacts ?? itemsData.draft,
+        },
         archive: archiveData,
         health: healthData,
         cloudStorage: cloudData,
@@ -272,6 +279,10 @@ export default function DashboardTab({ onNavigateTab }) {
               <span className="metric-label">Files Stored</span>
             </div>
             <div className="metric-stats">
+              <div className="stat-item">
+                <span className="stat-label">Providers</span>
+                <span className="stat-value">{dashboardData.cloudStorage.configuredProviders} active</span>
+              </div>
               <div className="stat-item">
                 <span className="stat-label">Total Size</span>
                 <span className="stat-value">{formatBytes(dashboardData.cloudStorage.totalSize)}</span>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { apiGet, apiFetch } from '../lib/api';
+import { apiGet, apiPost } from '../lib/api';
 import { ENV } from '../config/env';
 import { getErrorMessage } from '../lib/errorUtils';
 import ErrorBanner from '../components/ErrorBanner.jsx';
@@ -93,24 +93,16 @@ export default function AdminPage() {
   const handleTestDispatch = useCallback(async () => {
     setDispatchTestState({ loading: true, message: '' });
     try {
-      const response = await apiFetch('/openclaw/dispatch', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const data = await apiPost('/openclaw/dispatch', {
+        event: 'pvabazaar.admin_test',
+        message: 'Test dispatch from PVA Bazaar admin panel',
+        metadata: {
+          source: 'admin-panel',
+          timestamp: new Date().toISOString(),
         },
-        body: JSON.stringify({
-          event: 'pvabazaar.admin_test',
-          message: 'Test dispatch from PVA Bazaar admin panel',
-          metadata: {
-            source: 'admin-panel',
-            timestamp: new Date().toISOString(),
-          },
-        }),
       });
 
-      const data = await response.json();
-
-      if (response.ok && data.ok) {
+      if (data.ok) {
         setDispatchTestState({ loading: false, message: '✅ Dispatch successful' });
       } else {
         setDispatchTestState({ loading: false, message: `❌ ${data.message || 'Dispatch failed'}` });
@@ -127,16 +119,14 @@ export default function AdminPage() {
   const fetchRecentEvents = useCallback(async () => {
     setRecentEvents({ loading: true, data: null, error: null });
     try {
-      const response = await apiFetch('/openclaw/recent-events?limit=30');
-      const data = await response.json();
-      
-      if (response.ok && data.ok) {
+      const data = await apiGet('/openclaw/recent-events?limit=30');
+      if (data.ok) {
         setRecentEvents({ loading: false, data: data.events || [], error: null });
       } else {
         setRecentEvents({ loading: false, data: null, error: data.message || 'Failed to fetch events' });
       }
     } catch (err) {
-      setRecentEvents({ loading: false, data: null, error: err.message || 'Network error' });
+      setRecentEvents({ loading: false, data: null, error: err?.response?.data?.message || err.message || 'Network error' });
     }
   }, []);
 
@@ -270,12 +260,12 @@ export default function AdminPage() {
       // Only trigger if Alt key is pressed (without Ctrl or Shift to avoid conflicts)
       if (!e.altKey || e.ctrlKey || e.shiftKey) return;
 
-      const tabs = ['dashboard', 'archive', 'marketplace', 'users', 'attribution', 'payouts', 'cloud', 'api', 'health', 'settings'];
+      const tabs = ['dashboard', 'archive', 'marketplace', 'users', 'attribution', 'payouts', 'cloud', 'api', 'health', 'openclaw', 'bounty-hunter', 'settings'];
       let key = parseInt(e.key);
       // Support Alt+0 for the last tab (settings)
-      if (e.key === '0') key = 9;
+      if (e.key === '0') key = tabs.length;
 
-      if (key >= 1 && key <= 9) {
+      if (key >= 1 && key <= tabs.length) {
         e.preventDefault();
         setActiveTab(tabs[key - 1]);
       }
@@ -294,41 +284,21 @@ export default function AdminPage() {
       setIsSubmitting(true);
       setError('');
       try {
-        // Use regular auth login with email (username field is used as email)
-        const res = await apiFetch('/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: trimmedUsername, password: trimmedPassword }),
-          credentials: 'include',
-        });
-        if (res.ok) {
-          // Admin login returns a JWT token. Store it so other protected pages (streams/items)
-          // can call authenticated endpoints using the shared axios interceptor.
-          const data = await res.json().catch(() => ({}));
-          if (data && data.token) {
-            setToken(data.token);
-          }
-          setIsAuthenticated(true);
-          sessionStorage.setItem('admin-auth', 'authenticated');
-          sessionStorage.setItem('admin-auth-version', 'v2');
-          setUsername('');
-          setPassword('');
-          setError('');
-        } else {
-          const data = await res.json().catch(() => ({}));
-          const msg = data.message || 'Invalid username or password. Access denied.';
-          if (res.status === 503 && (msg === 'Database connection failed' || (data.error && String(data.error).toLowerCase().includes('mongo')))) {
-            setError(
-              'Database connection failed. The API cannot reach MongoDB. ' +
-              'If you deploy: set MONGODB_URI in Vercel (Project → Settings → Environment Variables) and in MongoDB Atlas set Network Access to allow 0.0.0.0/0. Then retry.'
-            );
-          } else {
-            setError(msg);
-          }
-          setPassword('');
-        }
+        // Use the dedicated admin/login endpoint which validates ADMIN_USERNAME/ADMIN_PASSWORD env vars.
+        // This is DB-independent and always returns a token with role:'admin' embedded.
+        const data = await apiPost('/admin/login', { username: trimmedUsername, password: trimmedPassword });
+        if (!data?.ok || !data?.token) throw new Error(data?.message || 'Invalid credentials');
+        setToken(data.token);
+        setIsAuthenticated(true);
+        sessionStorage.setItem('admin-auth', 'authenticated');
+        sessionStorage.setItem('admin-auth-version', 'v2');
+        setUsername('');
+        setPassword('');
+        setError('');
       } catch (err) {
-        setError(getErrorMessage(err, 'Network error. Check your connection and that the API is reachable, then try again.'));
+        const msg = err?.response?.data?.message || err.message || 'Invalid username or password. Access denied.';
+        setError(msg);
+        setPassword('');
       } finally {
         setIsSubmitting(false);
       }

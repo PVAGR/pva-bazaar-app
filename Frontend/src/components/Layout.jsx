@@ -32,6 +32,9 @@ export default function Layout({ children }) {
           {token ? <NavLink to="/items/new">📦 Sell Item</NavLink> : null}
           <NavLink to="/oracle">🔮 Oracle Assessment</NavLink>
           <NavLink to="/about">About</NavLink>
+          {token
+            ? <NavLink to="/account">Account</NavLink>
+            : <><NavLink to="/login">Login</NavLink><NavLink to="/register">Register</NavLink></>}
         </nav>
       </header>
       <main id="content" className="layout__main">

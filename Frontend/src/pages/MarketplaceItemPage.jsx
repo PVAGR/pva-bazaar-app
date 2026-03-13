@@ -67,7 +67,7 @@ export default function MarketplaceItemPage() {
       </Helmet>
       <div className="item-top-links">
         <Link to="/marketplace" className="back-link">← Back to Marketplace</Link>
-        <Link to={`/artifact/${item.slug || slugOrId}`} className="back-link artifact-link">
+        <Link to={`/artifacts/${item.slug || slugOrId}`} className="back-link artifact-link">
           Preserve history →
         </Link>
       </div>

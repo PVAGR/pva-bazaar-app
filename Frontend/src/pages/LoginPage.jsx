@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import HelpTip from '../components/HelpTip.jsx';
-import { apiFetch, apiGet, apiPost } from '../lib/api';
+import { apiGet, apiPost } from '../lib/api';
 import { setToken } from '../lib/auth';
 import '../styles/admin-common.css';
 import './LoginPage.css';
@@ -26,21 +26,17 @@ export default function LoginPage() {
     setLoading(true);
     setError('');
     try {
-      const res = await apiFetch('/admin/login', {
-        method: 'POST',
-        body: JSON.stringify({
-          username: adminCreds.username.trim(),
-          password: adminCreds.password.trim(),
-        }),
+      const data = await apiPost('/admin/login', {
+        username: adminCreds.username.trim(),
+        password: adminCreds.password.trim(),
       });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data?.token) throw new Error(data?.message || 'Invalid username or password');
+      if (!data?.ok || !data?.token) throw new Error(data?.message || 'Invalid username or password');
       setToken(data.token);
       sessionStorage.setItem('admin-auth', 'authenticated');
       sessionStorage.setItem('admin-auth-version', 'v2');
       navigate(nextFromUrl || '/admin', { replace: true });
     } catch (err) {
-      setError(err.message || 'Login failed');
+      setError(err?.response?.data?.message || err.message || 'Login failed');
     } finally {
       setLoading(false);
     }

@@ -1,10 +1,47 @@
 import api from "./axios";
 import { ENV } from "../config/env";
+import { getToken } from "./auth";
 
 export const apiGet = (path, config) => api.get(path, config).then(r => r.data);
 export const apiPost = (path, body, config) => api.post(path, body, config).then(r => r.data);
 export const apiPut = (path, body, config) => api.put(path, body, config).then(r => r.data);
 export const apiDelete = (path, config) => api.delete(path, config).then(r => r.data);
+
+/**
+ * Upload a FormData payload (multipart/form-data).
+ * Uses native fetch so the browser can set the correct Content-Type boundary.
+ * Attaches the auth token automatically.
+ */
+export async function apiUpload(path, formData) {
+  const API_BASE = ENV.API_URL.replace(/\/+$/, '');
+  const normalizedPath = API_BASE.endsWith('/api') && path.startsWith('/api/')
+    ? path.slice(4)
+    : path;
+  const url = normalizedPath.startsWith('http') ? normalizedPath : `${API_BASE}${normalizedPath}`;
+
+  const headers = {};
+  const token = getToken();
+  if (token) {
+    headers.Authorization = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+  }
+  // Do NOT set Content-Type — browser sets it with the boundary for multipart
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers,
+    body: formData,
+    credentials: 'omit',
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    const err = new Error(data?.error || data?.message || `Upload failed (${response.status})`);
+    err.status = response.status;
+    err.data = data;
+    throw err;
+  }
+  return data;
+}
 
 // Helper for native fetch (with proper base URL handling)
 export async function apiFetch(path, options = {}) {
@@ -202,18 +239,11 @@ export async function fetchArchiveEntries({ limit = 12, cursor = null, category 
 
 export async function createArchiveEntry(entry) {
   try {
-    const response = await apiFetch('/archive', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(entry),
-    });
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.error || `HTTP ${response.status}`);
+    const response = await apiPost('/archive', entry);
+    if (response && response.ok && response.item) {
+      return { ok: true, item: response.item };
     }
-    return { ok: true, item: data.item };
+    return { ok: false, error: response?.error || response?.message || 'Failed to create entry' };
   } catch (err) {
     return { ok: false, error: err.message };
   }
@@ -221,17 +251,8 @@ export async function createArchiveEntry(entry) {
 
 export async function deleteArchiveEntry(id) {
   try {
-    const response = await apiFetch(`/archive/${id}`, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.message || data.error || `HTTP ${response.status}`);
-    }
-    return { ok: true, message: data.message };
+    const response = await apiDelete(`/archive/${id}`);
+    return { ok: true, message: response?.message || 'Deleted' };
   } catch (err) {
     return { ok: false, error: err.message };
   }

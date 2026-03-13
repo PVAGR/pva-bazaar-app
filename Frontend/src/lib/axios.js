@@ -53,12 +53,14 @@ api.interceptors.response.use(
     // 401: only redirect to login when the request itself was an auth/session check.
     // Do NOT redirect when auth-gated internal endpoints (like openclaw/messages) return 401
     // because the logged-in token may simply not be recognized yet on stale deploy.
+    // Do NOT redirect for POST /auth/login or /auth/register — a 401 there is bad credentials,
+    // not an expired session, and the component should show the error message itself.
     if (status === 401) {
       const url = error?.config?.url || '';
-      const isAuthEndpoint = /\/(auth|login|me|session)\b/i.test(url);
-      if (isAuthEndpoint) {
+      const isSessionCheck = /\/(?:auth\/me|users\/me|me|session)\b/i.test(url);
+      if (isSessionCheck) {
         clearToken();
-        window.location.assign('/#/admin');
+        window.location.assign('/#/login');
       }
       return Promise.reject(error);
     }

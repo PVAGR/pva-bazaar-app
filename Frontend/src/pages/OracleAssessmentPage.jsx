@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import ReactMarkdown from 'react-markdown';
+import rehypeSanitize from 'rehype-sanitize';
 import { apiPost, apiGet } from '../lib/api';
 import HelpTip from '../components/HelpTip.jsx';
 import { getToken } from '../lib/auth';
@@ -79,12 +81,7 @@ export default function OracleAssessmentPage() {
 
       const response = await apiPost(
         '/oracle/assessment',
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        formData
       );
 
       if (response.ok) {
@@ -92,7 +89,7 @@ export default function OracleAssessmentPage() {
         setStep(4); // Show processing step
         
         // Poll for results
-        pollForResults(response.assessment.id, token);
+        pollForResults(response.assessment.id);
       } else {
         throw new Error(response.error || 'Failed to create assessment');
       }
@@ -102,7 +99,7 @@ export default function OracleAssessmentPage() {
     }
   };
 
-  const pollForResults = async (id, token, attempts = 0) => {
+  const pollForResults = async (id, attempts = 0) => {
     if (attempts > 20) {
       setError('Assessment is taking longer than expected. Please check back later.');
       setLoading(false);
@@ -110,11 +107,7 @@ export default function OracleAssessmentPage() {
     }
 
     try {
-      const response = await apiGet(`/oracle/assessment/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await apiGet(`/oracle/assessment/${id}`);
 
       if (response.ok && response.assessment.status === 'completed') {
         setResults(response.assessment.results);
@@ -125,11 +118,11 @@ export default function OracleAssessmentPage() {
         setLoading(false);
       } else {
         // Still processing, poll again
-        setTimeout(() => pollForResults(id, token, attempts + 1), 2000);
+        setTimeout(() => pollForResults(id, attempts + 1), 2000);
       }
     } catch (err) {
       console.error('Error polling for results:', err);
-      setTimeout(() => pollForResults(id, token, attempts + 1), 2000);
+      setTimeout(() => pollForResults(id, attempts + 1), 2000);
     }
   };
 
@@ -422,7 +415,7 @@ export default function OracleAssessmentPage() {
             
             <section style={{ marginTop: '2rem', padding: '1.5rem', background: 'var(--site-panel-soft)', border: '1px solid var(--site-border)', borderRadius: '8px' }}>
               <h3>🌟 Cosmic Signature</h3>
-              <div dangerouslySetInnerHTML={{ __html: results.cosmicSignature.synthesis }} />
+              <ReactMarkdown rehypePlugins={[rehypeSanitize]}>{results.cosmicSignature.synthesis}</ReactMarkdown>
               {results.cosmicSignature.astrological && (
                 <div style={{ marginTop: '1rem' }}>
                   <h4>Astrological Insights</h4>

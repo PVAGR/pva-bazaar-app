@@ -142,12 +142,18 @@ router.post('/verify', async (req, res) => {
       return res.status(404).json({ ok: false, error: 'DID not found' });
     }
     
-    // Verify signature using public key
-    const verify = crypto.createVerify('SHA256');
-    verify.update(message);
-    verify.end();
-    
-    const isValid = verify.verify(didRecord.publicKey, signature, 'base64');
+    // Verify Ed25519 signature — must use crypto.verify with null algorithm
+    let isValid = false;
+    try {
+      isValid = crypto.verify(
+        null,
+        Buffer.from(message),
+        didRecord.publicKey,
+        Buffer.from(signature, 'base64')
+      );
+    } catch (_) {
+      isValid = false;
+    }
     
     res.json({ ok: true, isValid });
   } catch (error) {

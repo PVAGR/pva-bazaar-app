@@ -10,6 +10,7 @@ const axios = require('axios');
 const FormData = require('form-data');
 const fs = require('fs').promises;
 const path = require('path');
+const adminSession = require('../middleware/adminSession');
 
 // Configure multer for memory storage
 const upload = multer({ 
@@ -21,7 +22,7 @@ const upload = multer({
  * GET /api/cloud-storage/providers
  * Get status of all configured cloud providers
  */
-router.get('/providers', async (req, res) => {
+router.get('/providers', adminSession, async (req, res) => {
   try {
     const providers = {
       cloudinary: {
@@ -82,7 +83,7 @@ router.get('/providers', async (req, res) => {
  * POST /api/cloud-storage/upload/cloudinary
  * Upload file to Cloudinary
  */
-router.post('/upload/cloudinary', upload.single('file'), async (req, res) => {
+router.post('/upload/cloudinary', adminSession, upload.single('file'), async (req, res) => {
   try {
     if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
       return res.status(400).json({ 
@@ -138,7 +139,7 @@ router.post('/upload/cloudinary', upload.single('file'), async (req, res) => {
  * POST /api/cloud-storage/upload/pinata
  * Upload file to Pinata IPFS
  */
-router.post('/upload/pinata', upload.single('file'), async (req, res) => {
+router.post('/upload/pinata', adminSession, upload.single('file'), async (req, res) => {
   try {
     if (!process.env.PINATA_API_KEY || !process.env.PINATA_API_SECRET) {
       return res.status(400).json({ 
@@ -189,7 +190,7 @@ router.post('/upload/pinata', upload.single('file'), async (req, res) => {
  * POST /api/cloud-storage/upload/local
  * Upload file to local server storage
  */
-router.post('/upload/local', upload.single('file'), async (req, res) => {
+router.post('/upload/local', adminSession, upload.single('file'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ ok: false, error: 'No file provided' });
@@ -198,7 +199,9 @@ router.post('/upload/local', upload.single('file'), async (req, res) => {
     const uploadsDir = path.join(__dirname, '../uploads');
     await fs.mkdir(uploadsDir, { recursive: true });
 
-    const filename = `${Date.now()}-${req.file.originalname}`;
+    // Strip any path components from the original filename to prevent path traversal.
+    const safeName = path.basename(req.file.originalname).replace(/[^a-zA-Z0-9._-]/g, '_');
+    const filename = `${Date.now()}-${safeName}`;
     const filepath = path.join(uploadsDir, filename);
     
     await fs.writeFile(filepath, req.file.buffer);
@@ -222,7 +225,7 @@ router.post('/upload/local', upload.single('file'), async (req, res) => {
  * GET /api/cloud-storage/files
  * List uploaded files across all providers
  */
-router.get('/files', async (req, res) => {
+router.get('/files', adminSession, async (req, res) => {
   try {
     const files = [];
 
@@ -280,12 +283,14 @@ router.get('/files', async (req, res) => {
  * DELETE /api/cloud-storage/delete/:provider/:id
  * Delete file from specific provider
  */
-router.delete('/delete/:provider/:id', async (req, res) => {
+router.delete('/delete/:provider/:id', adminSession, async (req, res) => {
   try {
     const { provider, id } = req.params;
 
     if (provider === 'local') {
-      const filepath = path.join(__dirname, '../uploads', id);
+      // Use basename to prevent path traversal via the id parameter.
+      const uploadsDir = path.join(__dirname, '../uploads');
+      const filepath = path.join(uploadsDir, path.basename(id));
       await fs.unlink(filepath);
       return res.json({ ok: true, message: 'File deleted' });
     }
@@ -332,7 +337,7 @@ router.delete('/delete/:provider/:id', async (req, res) => {
  * POST /api/cloud-storage/test-connection/:provider
  * Test connection to a cloud provider
  */
-router.post('/test-connection/:provider', async (req, res) => {
+router.post('/test-connection/:provider', adminSession, async (req, res) => {
   try {
     const { provider } = req.params;
 

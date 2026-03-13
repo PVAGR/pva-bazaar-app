@@ -116,10 +116,11 @@ if (process.env.SENTRY_DSN) {
   app.use(Sentry.Handlers.tracingHandler());
 }
 
-// Stripe webhook: use express.raw for signature verification (body limit handled by Stripe)
+// Stripe/Twitch webhooks: use express.raw for HMAC signature verification
 const stripeWebhookPath = "/webhooks/stripe";
+const twitchWebhookPath = "/webhooks/twitch";
 app.use((req, res, next) => {
-  if (req.originalUrl === stripeWebhookPath) {
+  if (req.originalUrl === stripeWebhookPath || req.originalUrl === twitchWebhookPath) {
     express.raw({ type: "application/json" })(req, res, next);
   } else {
     next();
@@ -128,6 +129,8 @@ app.use((req, res, next) => {
 
 // Apply stricter rate limiters to sensitive routes
 app.use('/admin', authLimiter);
+app.use('/api/auth', authLimiter);
+app.use('/api/oracle', authLimiter);
 app.use('/orders', authLimiter);
 app.use('/checkout', checkoutLimiter);
 app.use('/webhooks', webhookLimiter);
@@ -142,9 +145,11 @@ app.use((req, res, next) => {
   next();
 });
 
-// Stripe webhook route (must come after raw body middleware)
+// Webhook routes (must come after raw body middleware)
 const webhooksStripeRoutes = require('../routes/webhooksStripe');
+const webhooksTwitchRoutes = require('../routes/webhooksTwitch');
 app.use('/webhooks', webhooksStripeRoutes);
+app.use('/webhooks', webhooksTwitchRoutes);
 
 // Connect to MongoDB - optimized for serverless with global caching
 // Use global to persist connection across serverless function invocations
@@ -318,6 +323,22 @@ app.use('/api/openclaw', openClawRoutes);
 app.use('/api/openclaw', openClawMetricsRoutes); // Prometheus metrics
 const bountiesRoutes = require('../routes/bounties');
 app.use('/api/bounties', bountiesRoutes);
+
+// ORACLE, VERIFICATION, DEALS, MANIFESTO AI
+const oracleRoutes = require('../routes/oracle');
+const verificationRoutes = require('../routes/verification');
+const dealsRoutes = require('../routes/deals');
+const manifestoAiRoutes = require('../routes/manifesto-ai-routes');
+app.use('/api/oracle', oracleRoutes);
+app.use('/api/verification', verificationRoutes);
+app.use('/api/deals', dealsRoutes);
+app.use('/api/manifesto', manifestoAiRoutes);
+
+// OAUTH (Twitch & YouTube) - status, live-status, start, callback
+const oauthTwitchRoutes = require('../routes/oauthTwitch');
+const oauthYouTubeRoutes = require('../routes/oauthYouTube');
+app.use('/api/oauth', oauthTwitchRoutes);
+app.use('/api/oauth', oauthYouTubeRoutes);
 
 // LEGACY MARKETPLACE (gated by LEGACY_MODE flag)
 app.use('/api/artifacts', legacyGate, artifactsRoutes);

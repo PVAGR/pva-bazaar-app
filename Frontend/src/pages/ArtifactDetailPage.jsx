@@ -32,7 +32,7 @@ const stagger = {
 };
 
 export default function ArtifactDetailPage() {
-  const { slug } = useParams();
+  const { slugOrId: slug } = useParams();
   const [item, setItem] = useState(null);
   const [verification, setVerification] = useState(null);
   const [loading, setLoading] = useState(true);

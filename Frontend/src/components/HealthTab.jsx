@@ -20,7 +20,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { apiGet, apiPost, apiFetch } from '../lib/api';
+import { apiGet, apiPost } from '../lib/api';
 import { ENV } from '../config/env';
 import { createLogger } from '../lib/logger';
 import LoadingSpinner, { LoadingDots } from '../components/LoadingSpinner.jsx';
@@ -41,8 +41,17 @@ export default function HealthTab() {
 
   const formatWatchdogMessage = useCallback((response) => {
     if (!response || response.ok === false) {
-      return 'Watchdog request failed';
+      return 'OpenClaw request failed';
     }
+    // /status response shape: { configured, mode, message, queue }
+    if (response.mode || response.queue !== undefined) {
+      const mode = response.mode || 'queue-only';
+      const pending = response.queue?.pending ?? '?';
+      const stale = response.queue?.stale ?? 0;
+      const detail = stale > 0 ? `, stale=${stale}` : '';
+      return `${mode} — pending=${pending}${detail}${response.message ? ' · ' + response.message : ''}`;
+    }
+    // /watchdog-status response shape: { available, summary }
     if (!response.available) {
       return response.message || 'No watchdog logs found';
     }

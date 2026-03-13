@@ -149,42 +149,54 @@ function createSystemEvent(level, message, context = {}) {
 }
 
 /**
- * Dispatches an event to OpenClaw via the bridge
+ * Dispatches an event to OpenClaw via the bridge.
+ * Always persists to the MongoDB queue so events are visible in the admin UI
+ * even when the external webhook is not configured.
+ *
  * @param {Object} eventPayload - Event object created by event helpers
  * @param {Function} logger - Optional logger function (console.log by default)
  * @returns {Promise<boolean>} - Success status
  */
 async function dispatchToOpenClaw(eventPayload, logger = console.log) {
+  // Persist to MongoDB queue (best-effort – never blocks the caller)
   try {
-    // Import dynamically to avoid circular dependencies
+    const dbConnect = require('../lib/dbConnect');
+    const OpenClawMessage = require('../models/OpenClawMessage');
+    await dbConnect();
+    await OpenClawMessage.create({
+      direction: 'outbound',
+      content: eventPayload.message || eventPayload.event,
+      event: eventPayload.event || 'pvabazaar.dispatch',
+      source: eventPayload.metadata?.source || 'pva-bazaar-backend',
+      processed: false,
+      metadata: eventPayload.metadata || {},
+    });
+  } catch (dbErr) {
+    logger(`[OpenClaw] Failed to persist event to queue: ${dbErr.message}`);
+  }
+
+  // Forward to external webhook if configured
+  const openclawWebhookUrl = process.env.OPENCLAW_WEBHOOK_URL;
+  if (!openclawWebhookUrl) {
+    logger(`[OpenClaw] Event queued (no webhook configured): ${eventPayload.event}`);
+    return true;
+  }
+
+  try {
     const axios = require('axios');
-    
-    const openclawWebhookUrl = process.env.OPENCLAW_WEBHOOK_URL;
     const openclawApiKey = process.env.OPENCLAW_API_KEY;
-    
-    if (!openclawWebhookUrl) {
-      logger('[OpenClaw] Webhook URL not configured, skipping dispatch');
-      return false;
-    }
-    
-    const headers = {
-      'Content-Type': 'application/json',
-    };
-    
-    if (openclawApiKey) {
-      headers['Authorization'] = `Bearer ${openclawApiKey}`;
-    }
-    
+    const headers = { 'Content-Type': 'application/json' };
+    if (openclawApiKey) headers['Authorization'] = `Bearer ${openclawApiKey}`;
+
     const response = await axios.post(openclawWebhookUrl, eventPayload, {
       headers,
       timeout: 5000,
     });
-    
+
     logger(`[OpenClaw] Event dispatched: ${eventPayload.event} - Status: ${response.status}`);
     return response.status >= 200 && response.status < 300;
-    
   } catch (err) {
-    logger(`[OpenClaw] Failed to dispatch event: ${err.message}`);
+    logger(`[OpenClaw] Failed to forward to webhook: ${err.message}`);
     return false;
   }
 }
