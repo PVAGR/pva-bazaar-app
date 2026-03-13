@@ -334,7 +334,17 @@
   </div>
 
   <script>
-    const API_BASE = 'https://api.pvabazaar.org/api';
+    const API_BASE = 'https://api.pvabazaar.org';
+
+    async function legacyRequest(path, options = {}) {
+      const url = `${API_BASE}/api${path}`;
+      const response = await fetch(url, options);
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data?.error || `Request failed (${response.status})`);
+      }
+      return data;
+    }
 
     async function createEntry() {
       const title = document.getElementById('entryTitle').value;
@@ -347,7 +357,7 @@
       }
 
       try {
-        const response = await fetch(`${API_BASE}/api/legacy/entry`, {
+        const data = await legacyRequest('/legacy/entry', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -358,8 +368,6 @@
             }
           })
         });
-
-        const data = await response.json();
         if (data.ok) {
           showStatus('createStatus', `✅ Entry immortalized!\nHash: ${data.entry.hash.substring(0, 16)}...`, 'success');
           document.getElementById('entryTitle').value = '';
@@ -375,8 +383,7 @@
 
     async function loadEntries() {
       try {
-        const response = await fetch(`${API_BASE}/api/legacy/chain`);
-        const data = await response.json();
+        const data = await legacyRequest('/legacy/chain');
 
         if (data.ok && data.chain.entries.length > 0) {
           const html = data.chain.entries
@@ -413,8 +420,7 @@
 
     async function viewEntry(hash) {
       try {
-        const response = await fetch(`${API_BASE}/api/legacy/entry/${hash}`);
-        const data = await response.json();
+        const data = await legacyRequest(`/legacy/entry/${hash}`);
 
         if (data.ok) {
           alert(`Entry: ${data.entry.metadata.title}\n\n${data.entry.content}\n\nHash: ${hash}`);
@@ -426,8 +432,7 @@
 
     async function verifyChain() {
       try {
-        const response = await fetch(`${API_BASE}/api/legacy/verify`);
-        const data = await response.json();
+        const data = await legacyRequest('/legacy/verify');
 
         if (data.ok) {
           showStatus(
@@ -443,8 +448,7 @@
 
     async function checkResurrection() {
       try {
-        const response = await fetch(`${API_BASE}/api/legacy/resurrection-status`);
-        const data = await response.json();
+        const data = await legacyRequest('/legacy/resurrection-status');
 
         if (data.ok) {
           const status = data.status.locked ? '🔒 LOCKED' : '🔓 UNLOCKED';

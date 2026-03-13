@@ -19,7 +19,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { createArchiveEntry, fetchArchiveEntries, deleteArchiveEntry } from '../lib/api';
+import { createArchiveEntry, fetchArchiveEntries, updateArchiveEntry, deleteArchiveEntry } from '../lib/api';
 import { createLogger } from '../lib/logger';
 import HelpTip from './HelpTip';
 import { SkeletonList } from './SkeletonLoader';
@@ -136,22 +136,23 @@ export default function ArchiveTab() {
     setIsSubmitting(true);
     
     try {
-      if (editingEntry) {
-        // For now, editing is not supported via API - show message
-        setApiError('Editing existing entries is not yet supported. Please create a new entry.');
-        setIsSubmitting(false);
-        return;
-      } else {
-        // Create new entry via API
-        const entryData = {
-          title: formData.title,
-          category: formData.category,
-          description: formData.description,
-          content: formData.content,
-          wordCount: formData.wordCount,
-          media: parseMediaUrls(formData.mediaUrls),
-        };
+      const entryData = {
+        title: formData.title,
+        category: formData.category,
+        description: formData.description,
+        content: formData.content,
+        wordCount: formData.wordCount,
+        media: parseMediaUrls(formData.mediaUrls),
+      };
 
+      if (editingEntry) {
+        const result = await updateArchiveEntry(editingEntry.id || editingEntry._id, entryData);
+        if (!result.ok) {
+          setApiError(`Failed to update entry: ${result.error}`);
+          setIsSubmitting(false);
+          return;
+        }
+      } else {
         const result = await createArchiveEntry(entryData);
         
         if (!result.ok) {
@@ -159,10 +160,11 @@ export default function ArchiveTab() {
           setIsSubmitting(false);
           return;
         }
-
-        // Success - refresh entries
-        await loadEntriesFromServer();
       }
+
+      // Success - refresh entries for both create and edit flows.
+      await loadEntriesFromServer();
+      setEditingEntry(null);
 
       // Show success message
       setShowSuccess(true);
@@ -254,16 +256,8 @@ export default function ArchiveTab() {
         <div className="sidebar-section">
           <h2>📊 Statistics</h2>
           <div className="stat-item">
-            <span>Original Entries:</span>
-            <strong>17</strong>
-          </div>
-          <div className="stat-item">
-            <span>Custom Entries:</span>
+            <span>Archive Entries:</span>
             <strong>{savedEntries.length}</strong>
-          </div>
-          <div className="stat-item">
-            <span>Total Entries:</span>
-            <strong>{17 + savedEntries.length}</strong>
           </div>
         </div>
         <div className="sidebar-section">
