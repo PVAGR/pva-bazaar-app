@@ -138,22 +138,22 @@ export default function DashboardTab({ onNavigateTab }) {
     <div className="dashboard-tab">
       <div className="dashboard-header">
         <div className="header-content">
-          <h2>📊 Admin Dashboard</h2>
-          <p>Real-time overview of PVA Bazaar system status and metrics</p>
+          <h2>📊 Operations Dashboard</h2>
+          <p>Live overview of platform health, content, and admin activity.</p>
         </div>
         <div className="header-actions">
           <span className="last-refresh">
             Last refreshed: {lastRefresh.toLocaleTimeString()}
           </span>
           <button onClick={loadDashboardData} className="btn-refresh" disabled={loading}>
-            {loading ? '⏳ Loading...' : '🔄 Refresh'}
+            {loading ? '⏳ Loading…' : '🔄 Refresh'}
           </button>
         </div>
       </div>
 
       {error && (
         <div className="error-banner">
-          ⚠️ Error loading dashboard: {error}
+          ⚠️ Unable to load dashboard data: {error}
         </div>
       )}
 
@@ -164,7 +164,7 @@ export default function DashboardTab({ onNavigateTab }) {
             {dashboardData.health.status === 'healthy' ? '✅' : dashboardData.health.status === 'error' ? '❌' : '⚠️'}
           </span>
           <div className="health-text">
-            <strong>System Status: {dashboardData.health.status}</strong>
+            <strong>System status: {dashboardData.health.status}</strong>
             {dashboardData.health.timestamp && (
               <span className="health-time">
                 Checked: {new Date(dashboardData.health.timestamp).toLocaleString()}
@@ -204,7 +204,7 @@ export default function DashboardTab({ onNavigateTab }) {
           </div>
           <div className="metric-footer">
             <a href="#" onClick={(e) => { e.preventDefault(); onNavigateTab?.('users'); }}>
-              View Details →
+              Open Users →
             </a>
           </div>
         </div>
@@ -233,7 +233,7 @@ export default function DashboardTab({ onNavigateTab }) {
           </div>
           <div className="metric-footer">
             <a href="#" onClick={(e) => { e.preventDefault(); onNavigateTab?.('marketplace'); }}>
-              Manage Items →
+              Open Marketplace →
             </a>
           </div>
         </div>
@@ -262,7 +262,7 @@ export default function DashboardTab({ onNavigateTab }) {
           </div>
           <div className="metric-footer">
             <a href="#" onClick={(e) => { e.preventDefault(); onNavigateTab?.('archive'); }}>
-              View Archive →
+              Open Archive →
             </a>
           </div>
         </div>
@@ -291,7 +291,7 @@ export default function DashboardTab({ onNavigateTab }) {
           </div>
           <div className="metric-footer">
             <a href="#" onClick={(e) => { e.preventDefault(); onNavigateTab?.('cloud'); }}>
-              Manage Storage →
+              Open Storage →
             </a>
           </div>
         </div>
@@ -303,7 +303,7 @@ export default function DashboardTab({ onNavigateTab }) {
         <div className="actions-grid">
           <button className="action-card" onClick={() => onNavigateTab?.('users')}>
             <span className="action-icon">👥</span>
-            <span className="action-label">Manage Users</span>
+            <span className="action-label">Open Users</span>
           </button>
           <button className="action-card" onClick={() => onNavigateTab?.('marketplace')}>
             <span className="action-icon">➕</span>
