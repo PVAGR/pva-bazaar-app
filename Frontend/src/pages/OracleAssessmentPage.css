@@ -1,0 +1,200 @@
+.oracle-assessment {
+  width: min(1080px, calc(100vw - 24px));
+  margin: 0 auto;
+  padding: 1.2rem 0.2rem 2rem;
+  color: var(--site-text);
+}
+
+.oracle-assessment__header {
+  text-align: center;
+  margin-bottom: 1.6rem;
+}
+
+.oracle-assessment__header h1 {
+  margin: 0;
+  line-height: 1.08;
+  font-size: clamp(1.9rem, 3.2vw, 2.7rem);
+  color: var(--site-accent-strong);
+}
+
+.oracle-assessment__header p {
+  margin: 0.8rem 0 0;
+  color: var(--site-text-muted);
+  font-size: clamp(1rem, 1.6vw, 1.2rem);
+}
+
+.oracle-assessment__error {
+  padding: 0.9rem 1rem;
+  background: var(--site-danger-bg);
+  border: 1px solid var(--site-danger-text);
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  color: var(--site-danger-text);
+}
+
+.oracle-assessment .step {
+  border: 1px solid color-mix(in srgb, var(--site-border) 84%, transparent);
+  border-radius: 14px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--site-panel-soft) 90%, transparent) 0%, var(--site-panel) 100%);
+  padding: 1rem;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.14);
+}
+
+.oracle-assessment .step h2 {
+  margin-top: 0;
+}
+
+.oracle-assessment__fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.95rem;
+}
+
+.oracle-assessment__fields--wide {
+  gap: 1.2rem;
+}
+
+.oracle-assessment label {
+  display: grid;
+  gap: 6px;
+  font-weight: 600;
+  color: var(--site-text);
+}
+
+.oracle-assessment input,
+.oracle-assessment textarea,
+.oracle-assessment select {
+  font: inherit;
+  border: 1px solid color-mix(in srgb, var(--site-border) 84%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--site-panel-soft) 90%, transparent);
+  color: var(--site-text);
+  padding: 10px 12px;
+  min-height: 42px;
+}
+
+.oracle-assessment input:focus,
+.oracle-assessment textarea:focus,
+.oracle-assessment select:focus {
+  outline: none;
+  border-color: var(--site-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--site-accent) 40%, transparent);
+}
+
+.oracle-assessment__grid2 {
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: repeat(2, minmax(220px, 1fr));
+}
+
+.oracle-assessment__check-option {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+  margin-top: 0.45rem;
+  font-weight: 500;
+}
+
+.oracle-assessment__check-option input {
+  min-height: 0;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--site-accent);
+}
+
+.oracle-assessment__actions {
+  margin-top: 1.35rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.oracle-assessment__actions--right {
+  justify-content: flex-end;
+}
+
+.oracle-assessment__actions--center {
+  justify-content: center;
+}
+
+.oracle-assessment button {
+  border: 1px solid color-mix(in srgb, var(--site-border) 86%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--site-panel-soft) 88%, transparent);
+  color: var(--site-text);
+  padding: 10px 14px;
+  min-height: 42px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.oracle-assessment button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.oracle-assessment button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.oracle-assessment__actions button:last-child {
+  background: var(--site-accent);
+  border-color: var(--site-accent);
+  color: #fff;
+}
+
+.oracle-assessment__processing {
+  text-align: center;
+  padding: 2.4rem 1rem !important;
+}
+
+.oracle-assessment__processing-note {
+  margin-top: 0.8rem;
+  font-size: 1.08rem;
+  color: var(--site-text-muted);
+}
+
+.oracle-assessment__spinner {
+  margin: 1.3rem auto 0;
+  border: 4px solid color-mix(in srgb, var(--site-panel-soft) 86%, transparent);
+  border-top: 4px solid var(--site-accent);
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  animation: oracle-spin 1s linear infinite;
+}
+
+@keyframes oracle-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.oracle-assessment__result-card {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid color-mix(in srgb, var(--site-border) 84%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--site-panel-soft) 88%, transparent);
+}
+
+.oracle-assessment__subsection {
+  margin-top: 0.8rem;
+}
+
+.oracle-assessment__purpose {
+  font-size: 1.16rem;
+  font-weight: 700;
+  margin-bottom: 0.8rem;
+}
+
+@media (max-width: 760px) {
+  .oracle-assessment {
+    width: calc(100vw - 10px);
+    padding-top: 0.8rem;
+  }
+
+  .oracle-assessment__grid2 {
+    grid-template-columns: 1fr;
+  }
+}

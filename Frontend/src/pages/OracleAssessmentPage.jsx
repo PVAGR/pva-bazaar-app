@@ -4,6 +4,7 @@ import rehypeSanitize from 'rehype-sanitize';
 import { apiPost, apiGet } from '../lib/api';
 import HelpTip from '../components/HelpTip.jsx';
 import { getToken } from '../lib/auth';
+import './OracleAssessmentPage.css';
 
 export default function OracleAssessmentPage() {
   const [step, setStep] = useState(1);
@@ -140,25 +141,18 @@ export default function OracleAssessmentPage() {
   };
 
   return (
-    <div className="oracle-assessment" style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem', color: 'var(--site-text)' }}>
-        <header style={{ textAlign: 'center', marginBottom: '3rem' }}>
-          <h1 style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>
+    <div className="oracle-assessment">
+        <header className="oracle-assessment__header">
+          <h1>
             🔮 Your Personal Oracle Assessment
           </h1>
-          <p style={{ fontSize: '1.2rem', color: 'var(--site-text-muted)' }}>
+          <p>
             Discover your cosmic signature and spiritual path
           </p>
         </header>
 
         {error && (
-          <div style={{ 
-            padding: '1rem', 
-            background: 'var(--site-danger-bg)', 
-            border: '1px solid var(--site-danger-text)', 
-            borderRadius: '4px', 
-            marginBottom: '1rem',
-            color: 'var(--site-danger-text)'
-          }}>
+          <div className="oracle-assessment__error">
             {error}
           </div>
         )}
@@ -167,7 +161,7 @@ export default function OracleAssessmentPage() {
         {step === 1 && (
           <div className="step">
             <h2>Step 1: Basic Information</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div className="oracle-assessment__fields">
               <div>
                 <label>
                   Full Name *
@@ -194,11 +188,10 @@ export default function OracleAssessmentPage() {
                 />
               </div>
             </div>
-            <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end' }}>
+            <div className="oracle-assessment__actions oracle-assessment__actions--right">
               <button 
                 onClick={() => setStep(2)} 
                 disabled={!canProceed()}
-                style={{ padding: '0.75rem 2rem', fontSize: '1rem' }}
               >
                 Next →
               </button>
@@ -210,7 +203,7 @@ export default function OracleAssessmentPage() {
         {step === 2 && (
           <div className="step">
             <h2>Step 2: Birth Details</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div className="oracle-assessment__fields">
               <div>
                 <label>
                   Birth Time *
@@ -237,7 +230,7 @@ export default function OracleAssessmentPage() {
                   required
                 />
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="oracle-assessment__grid2">
                 <div>
                   <label>Height (cm)</label>
                   <input
@@ -257,7 +250,7 @@ export default function OracleAssessmentPage() {
                   />
                 </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="oracle-assessment__grid2">
                 <div>
                   <label>Eye Color</label>
                   <input
@@ -278,7 +271,7 @@ export default function OracleAssessmentPage() {
                 </div>
               </div>
             </div>
-            <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'space-between' }}>
+            <div className="oracle-assessment__actions">
               <button onClick={() => setStep(1)}>← Back</button>
               <button 
                 onClick={() => setStep(3)} 
@@ -294,7 +287,7 @@ export default function OracleAssessmentPage() {
         {step === 3 && (
           <div className="step">
             <h2>Step 3: Spiritual Profile</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <div className="oracle-assessment__fields oracle-assessment__fields--wide">
               <div>
                 <label>
                   <input
@@ -309,7 +302,7 @@ export default function OracleAssessmentPage() {
               <div>
                 <label>Spiritual Practices (select all that apply)</label>
                 {['Yoga', 'Prayer', 'Ritual', 'Nature Connection', 'Energy Work', 'Astrology', 'Tarot', 'Crystals'].map((practice) => (
-                  <label key={practice} style={{ display: 'block', marginTop: '0.5rem' }}>
+                  <label key={practice} className="oracle-assessment__check-option">
                     <input
                       type="checkbox"
                       checked={formData.spiritualProfile.spiritualPractices.includes(practice)}
@@ -368,12 +361,11 @@ export default function OracleAssessmentPage() {
                 />
               </div>
             </div>
-            <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'space-between' }}>
+            <div className="oracle-assessment__actions">
               <button onClick={() => setStep(2)}>← Back</button>
               <button 
                 onClick={handleSubmit} 
                 disabled={loading}
-                style={{ background: 'var(--site-accent)', color: '#fff' }}
               >
                 {loading ? 'Processing...' : 'Generate Assessment →'}
               </button>
@@ -383,28 +375,12 @@ export default function OracleAssessmentPage() {
 
         {/* Step 4: Processing */}
         {step === 4 && (
-          <div className="step" style={{ textAlign: 'center', padding: '3rem' }}>
+          <div className="step oracle-assessment__processing">
             <h2>🔮 Generating Your Oracle Assessment</h2>
-            <p style={{ marginTop: '1rem', fontSize: '1.1rem' }}>
+            <p className="oracle-assessment__processing-note">
               Our AI oracle is analyzing your cosmic signature...
             </p>
-            <div style={{ marginTop: '2rem' }}>
-              <div style={{ 
-                border: '4px solid var(--site-panel-soft)',
-                borderTop: '4px solid var(--site-accent)',
-                borderRadius: '50%',
-                width: '50px',
-                height: '50px',
-                animation: 'spin 1s linear infinite',
-                margin: '0 auto'
-              }}></div>
-            </div>
-            <style>{`
-              @keyframes spin {
-                0% { transform: rotate(0deg); }
-                100% { transform: rotate(360deg); }
-              }
-            `}</style>
+            <div className="oracle-assessment__spinner" aria-hidden="true" />
           </div>
         )}
 
@@ -413,11 +389,11 @@ export default function OracleAssessmentPage() {
           <div className="step results">
             <h2>✨ Your Oracle Assessment</h2>
             
-            <section style={{ marginTop: '2rem', padding: '1.5rem', background: 'var(--site-panel-soft)', border: '1px solid var(--site-border)', borderRadius: '8px' }}>
+            <section className="oracle-assessment__result-card">
               <h3>🌟 Cosmic Signature</h3>
               <ReactMarkdown rehypePlugins={[rehypeSanitize]}>{results.cosmicSignature.synthesis}</ReactMarkdown>
               {results.cosmicSignature.astrological && (
-                <div style={{ marginTop: '1rem' }}>
+                <div className="oracle-assessment__subsection">
                   <h4>Astrological Insights</h4>
                   <p><strong>Sun Sign:</strong> {results.cosmicSignature.astrological.sunSign}</p>
                   {results.cosmicSignature.astrological.strengths && (
@@ -434,7 +410,7 @@ export default function OracleAssessmentPage() {
               )}
             </section>
 
-            <section style={{ marginTop: '2rem', padding: '1.5rem', background: 'var(--site-panel-soft)', border: '1px solid var(--site-border)', borderRadius: '8px' }}>
+            <section className="oracle-assessment__result-card">
               <h3>💫 Body Blueprint</h3>
               {results.bodyBlueprint.dietRecommendations && results.bodyBlueprint.dietRecommendations.length > 0 && (
                 <div>
@@ -447,7 +423,7 @@ export default function OracleAssessmentPage() {
                 </div>
               )}
               {results.bodyBlueprint.wellnessRituals && results.bodyBlueprint.wellnessRituals.length > 0 && (
-                <div style={{ marginTop: '1rem' }}>
+                <div className="oracle-assessment__subsection">
                   <h4>Wellness Rituals</h4>
                   <ul>
                     {results.bodyBlueprint.wellnessRituals.map((ritual, i) => (
@@ -458,10 +434,10 @@ export default function OracleAssessmentPage() {
               )}
             </section>
 
-            <section style={{ marginTop: '2rem', padding: '1.5rem', background: 'var(--site-panel-soft)', border: '1px solid var(--site-border)', borderRadius: '8px' }}>
+            <section className="oracle-assessment__result-card">
               <h3>🔮 Unique Revelation</h3>
               {results.uniqueRevelation.lifePURPOSE && (
-                <p style={{ fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '1rem' }}>
+                <p className="oracle-assessment__purpose">
                   {results.uniqueRevelation.lifePURPOSE}
                 </p>
               )}
@@ -477,7 +453,7 @@ export default function OracleAssessmentPage() {
               )}
             </section>
 
-            <section style={{ marginTop: '2rem', padding: '1.5rem', background: 'var(--site-panel-soft)', border: '1px solid var(--site-border)', borderRadius: '8px' }}>
+            <section className="oracle-assessment__result-card">
               <h3>✨ Golden Path</h3>
               {results.goldenPath.immediateSteps && results.goldenPath.immediateSteps.length > 0 && (
                 <div>
@@ -490,14 +466,14 @@ export default function OracleAssessmentPage() {
                 </div>
               )}
               {results.goldenPath.yearlyVision && (
-                <div style={{ marginTop: '1rem' }}>
+                <div className="oracle-assessment__subsection">
                   <h4>Yearly Vision</h4>
                   <p>{results.goldenPath.yearlyVision}</p>
                 </div>
               )}
             </section>
 
-            <div style={{ marginTop: '2rem', textAlign: 'center' }}>
+            <div className="oracle-assessment__actions oracle-assessment__actions--center">
               <button onClick={() => { setStep(1); setResults(null); setAssessmentId(null); }}>
                 Create New Assessment
               </button>
