@@ -456,39 +456,72 @@
   </div>
 
   <script>
-    // Simple local storage for entries
-    const STORAGE_KEY = 'pvabazaar_journal_entries';
-
-    // Get entries from localStorage
-    function getEntries() {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        return JSON.parse(stored);
-      }
-      // Default entries
-      return [
-        {
-          id: 1,
-          title: 'Welcome to the Journal',
-          content: 'This is your personal space for words. Add new entries, archive your thoughts, and keep a chronicle of your journey.',
-          date: '2026-01-01',
-          tags: ['welcome', 'journal']
-        }
-      ];
+    function normalizeBackendBase(raw) {
+      const fallback = 'https://api.pvabazaar.org';
+      if (!raw || typeof raw !== 'string') return fallback;
+      const trimmed = raw.trim().replace(/\/+$/, '');
+      if (!trimmed) return fallback;
+      return trimmed.endsWith('/api') ? trimmed.slice(0, -4) : trimmed;
     }
 
-    // Save entries to localStorage
-    function saveEntries(entries) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+    const queryBackend = new URLSearchParams(window.location.search).get('backend');
+    const storedBackend = (() => {
+      try {
+        return localStorage.getItem('backendUrl');
+      } catch {
+        return null;
+      }
+    })();
+    const BACKEND_BASE = normalizeBackendBase(queryBackend || storedBackend);
+    const API_BASE = `${BACKEND_BASE}/api`;
+
+    const state = {
+      entries: [],
+      loading: true,
+      error: null,
+    };
+
+    async function loadEntries() {
+      state.loading = true;
+      state.error = null;
+      renderEntries();
+      try {
+        const response = await fetch(`${API_BASE}/archive?limit=100&sort=new`);
+        const data = await response.json();
+        if (!response.ok || !data?.ok || !Array.isArray(data.items)) {
+          throw new Error(data?.error || `Failed to load entries (${response.status})`);
+        }
+        state.entries = data.items.map((entry) => ({
+          id: entry.id,
+          title: entry.title || 'Untitled',
+          content: entry.content || '',
+          date: entry.createdAt ? String(entry.createdAt).slice(0, 10) : '',
+          tags: Array.isArray(entry.tags) ? entry.tags : [],
+        }));
+      } catch (err) {
+        state.error = err.message || 'Failed to load entries';
+        state.entries = [];
+      } finally {
+        state.loading = false;
+        renderEntries();
+      }
     }
 
     // Render entries list
     function renderEntries() {
-      const entries = getEntries();
+      const entries = state.entries;
       const list = document.getElementById('entries-list');
+      if (state.loading) {
+        list.innerHTML = '<li style="color: var(--text-muted); padding: 20px 0;">Loading live entries...</li>';
+        return;
+      }
+      if (state.error) {
+        list.innerHTML = `<li style="color: #b00020; padding: 20px 0;">${escapeHtml(state.error)}</li>`;
+        return;
+      }
       
       if (entries.length === 0) {
-        list.innerHTML = '<li style="color: var(--text-muted); padding: 20px 0;">No entries yet. Write your first one above.</li>';
+        list.innerHTML = '<li style="color: var(--text-muted); padding: 20px 0;">No entries published yet.</li>';
         return;
       }
 
@@ -510,38 +543,12 @@
 
     // Save new entry
     function saveEntry() {
-      const title = document.getElementById('entry-title').value.trim();
-      const content = document.getElementById('entry-content').value.trim();
-      const tagsInput = document.getElementById('entry-tags').value.trim();
-
-      if (!title || !content) {
-        alert('Please enter both a title and content.');
-        return;
-      }
-
-      const entries = getEntries();
-      const newEntry = {
-        id: Date.now(),
-        title: title,
-        content: content,
-        date: new Date().toISOString().split('T')[0],
-        tags: tagsInput ? tagsInput.split(',').map(t => t.trim()).filter(t => t) : []
-      };
-
-      entries.unshift(newEntry);
-      saveEntries(entries);
-
-      // Clear form
-      document.getElementById('entry-title').value = '';
-      document.getElementById('entry-content').value = '';
-      document.getElementById('entry-tags').value = '';
-
-      renderEntries();
+      alert('Journal publishing is managed through the live archive admin tools.');
     }
 
     // View single entry
     function viewEntry(id) {
-      const entries = getEntries();
+      const entries = state.entries;
       const entry = entries.find(e => e.id === id);
       
       if (!entry) return;
@@ -555,12 +562,7 @@
 
     // Delete entry (optional utility)
     function deleteEntry(id) {
-      if (!confirm('Delete this entry?')) return;
-      
-      let entries = getEntries();
-      entries = entries.filter(e => e.id !== id);
-      saveEntries(entries);
-      renderEntries();
+      alert('Deletion is only available through the archive admin tools.');
     }
 
     // View switching
@@ -590,7 +592,7 @@
     }
 
     // Initialize
-    renderEntries();
+    loadEntries();
   </script>
 </body>
 </html>
