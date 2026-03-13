@@ -7,6 +7,8 @@ const WAIT_TIMEOUT_MS = Number(process.env.WAIT_TIMEOUT_MS || 60000);
 const WAIT_POLL_MS = Number(process.env.WAIT_POLL_MS || 10000);
 const STRICT = process.env.STRICT === "true";
 const PARITY_REQUIRED = process.env.PARITY_REQUIRED === "true";
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "";
 let softIssues = 0;
 
 function normalizeBase(url) {
@@ -67,6 +69,34 @@ async function get(url) {
 
 async function getJson(url) {
   const { res, text } = await get(url);
+  let json = null;
+  try {
+    json = JSON.parse(text);
+  } catch {}
+  return { res, json, text };
+}
+
+async function getJsonWithHeaders(url, headers = {}) {
+  const res = await fetch(url, { headers, redirect: "follow" });
+  const text = await res.text();
+  let json = null;
+  try {
+    json = JSON.parse(text);
+  } catch {}
+  return { res, json, text };
+}
+
+async function postJson(url, body, headers = {}) {
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...headers,
+    },
+    body: JSON.stringify(body ?? {}),
+    redirect: "follow",
+  });
+  const text = await res.text();
   let json = null;
   try {
     json = JSON.parse(text);
@@ -164,6 +194,46 @@ const bounties = await getJson(`${BACKEND}/api/bounties`);
 if (bounties.res.status === 401) console.log('✅ bounties route ok (401 unauth as expected)');
 else if (bounties.res.ok && bounties.json?.ok) console.log('✅ bounties ok');
 else fail(`/api/bounties failed (${bounties.res.status})`);
+
+if (ADMIN_USERNAME && ADMIN_PASSWORD) {
+  const adminLogin = await postJson(`${BACKEND}/api/admin/login`, {
+    username: ADMIN_USERNAME,
+    password: ADMIN_PASSWORD,
+  });
+
+  if (!adminLogin.res.ok || adminLogin.json?.ok !== true || !adminLogin.json?.token) {
+    fail(`/api/admin/login failed (${adminLogin.res.status})`);
+  } else {
+    console.log('✅ admin login ok');
+
+    const authHeaders = {
+      Authorization: `Bearer ${adminLogin.json.token}`,
+    };
+
+    const queueStats = await getJsonWithHeaders(`${BACKEND}/api/openclaw/queue-stats`, authHeaders);
+    if (!queueStats.res.ok || queueStats.json?.ok !== true) {
+      fail(`/api/openclaw/queue-stats failed (${queueStats.res.status})`);
+    } else {
+      console.log(`✅ openclaw queue-stats ok (pending=${queueStats.json.pendingOutbound ?? 0}, stale=${queueStats.json.staleOutbound ?? 0})`);
+    }
+
+    const replayDryRun = await postJson(`${BACKEND}/api/openclaw/replay-webhook`, { dryRun: true, limit: 1 }, authHeaders);
+    if (!replayDryRun.res.ok || replayDryRun.json?.ok !== true) {
+      softWarn(`/api/openclaw/replay-webhook dry-run failed (${replayDryRun.res.status})`);
+    } else {
+      console.log('✅ openclaw replay dry-run ok');
+    }
+
+    const bountyStats = await getJsonWithHeaders(`${BACKEND}/api/bounties/stats`, authHeaders);
+    if (!bountyStats.res.ok || bountyStats.json?.ok !== true) {
+      fail(`/api/bounties/stats failed (${bountyStats.res.status})`);
+    } else {
+      console.log(`✅ bounty stats ok (won=${bountyStats.json.wonCount ?? 0})`);
+    }
+  }
+} else {
+  console.log('ℹ️ admin checks skipped: ADMIN_USERNAME/ADMIN_PASSWORD not provided');
+}
 
 const profile = await getJson(`${BACKEND}/api/users/profile`);
 if (profile.res.status === 401) console.log("✅ users/profile route ok (401 unauth as expected)");
