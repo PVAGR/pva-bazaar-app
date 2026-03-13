@@ -10,43 +10,51 @@
     
     body {
       font-family: Georgia, 'Times New Roman', serif;
-      background: #e8eef2;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.65) 0%, rgba(255, 255, 255, 0) 45%),
+        linear-gradient(145deg, #d7e5ef 0%, #e8eef2 45%, #d5e0e8 100%);
       color: #1a1a1a;
       line-height: 1.7;
       min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: grid;
+      place-items: center;
+      padding: 40px 24px 96px;
     }
 
     .landing {
+      width: min(1120px, 100%);
       text-align: center;
-      padding: 48px 24px;
-      max-width: 480px;
+      padding: clamp(40px, 7vw, 84px) clamp(24px, 5vw, 72px);
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid rgba(26, 26, 26, 0.14);
+      box-shadow: 0 16px 40px rgba(16, 27, 36, 0.12);
     }
 
     h1 {
-      font-size: 32px;
+      font-size: clamp(40px, 7vw, 86px);
       font-weight: normal;
-      letter-spacing: -0.5px;
-      margin-bottom: 16px;
+      letter-spacing: -1.5px;
+      margin-bottom: 14px;
+      line-height: 1.05;
     }
 
     p {
       color: #666;
-      font-size: 18px;
+      font-size: clamp(18px, 2vw, 28px);
       font-style: italic;
-      margin-bottom: 48px;
+      margin-bottom: clamp(28px, 4vw, 52px);
     }
 
     a.enter {
       display: inline-block;
       color: #1a1a1a;
       text-decoration: none;
-      font-size: 16px;
-      padding: 14px 40px;
+      font-size: clamp(16px, 1.5vw, 22px);
+      padding: clamp(14px, 1.6vw, 20px) clamp(30px, 3vw, 54px);
       border: 1px solid #1a1a1a;
       transition: all 0.2s;
+      letter-spacing: 0.4px;
     }
 
     a.enter:hover {
@@ -60,8 +68,19 @@
       left: 0;
       right: 0;
       text-align: center;
-      font-size: 13px;
+      font-size: 14px;
       color: #999;
+      padding: 0 16px;
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 20px 12px 80px;
+      }
+
+      .landing {
+        border-radius: 14px;
+      }
     }
   </style>
 </head>
