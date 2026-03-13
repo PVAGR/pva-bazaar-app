@@ -9,6 +9,7 @@ const path = require('path');
 let MongoMemoryServer;
 const openClawRoutes = require('../routes/openclaw');
 const openClawMetricsRoutes = require('../routes/openclaw-metrics');
+const { getBuildInfo } = require('../lib/buildInfo');
 
 // Load environment variables
 dotenv.config();
@@ -293,11 +294,15 @@ app.use('/api/health', healthRoutes);
 
 // Simple health check endpoints (no DB dependency)
 app.get('/api/ping', (req, res) => {
-  res.status(200).json({ ok: true, message: 'pong', timestamp: new Date().toISOString() });
+  const build = getBuildInfo();
+  res.setHeader('X-App-Version', build.shortSha);
+  res.status(200).json({ ok: true, message: 'pong', timestamp: new Date().toISOString(), ...build });
 });
 
 app.get('/api/version', (req, res) => {
-  res.status(200).json({ ok: true, version: '1.0.0', timestamp: new Date().toISOString() });
+  const build = getBuildInfo();
+  res.setHeader('X-App-Version', build.shortSha);
+  res.status(200).json({ ok: true, timestamp: new Date().toISOString(), ...build });
 });
 
 app.use('/api/blogs', blogsRoutes);
@@ -370,37 +375,16 @@ app.post('/api/dev/token', (req, res) => {
   res.json({ ok: true, token });
 });
 
-// Version endpoint - shows deployed git commit
-app.get('/api/version', (req, res) => {
-  res.json({
-    ok: true,
-    sha: '9024d6e',
-    shortSha: '9024d6e',
-    message: 'fix(openclaw): allow admin JWT for console dispatch and message reads',
-    timestamp: new Date().toISOString(),
-  });
-});
-
 // Express ping - guaranteed fast, no DB
 app.get('/api/express-ping', (req, res) => {
   res.json({ ok: true, source: 'express' });
-});
-
-// Instant health check (no DB connection)
-app.get('/api/ping', (req, res) => {
-  res.setHeader('X-App-Version', '4f443b9');
-  res.json({
-    ok: true,
-    message: 'API is responding',
-    timestamp: new Date().toISOString(),
-    version: '1.0.1',
-  });
 });
 
 // Health endpoint - returns quickly even if DB is unreachable
 app.get('/api/health', async (req, res) => {
   let mongoConnected = false;
   let dbError = null;
+  const build = getBuildInfo();
 
   try {
     // Attempt to connect with timeout protection
@@ -438,6 +422,10 @@ app.get('/api/health', async (req, res) => {
     mongo: mongoConnected,
     ready: process.env.API_READY !== 'false' && mongoConnected,
     nodeEnv: process.env.NODE_ENV || 'development',
+    version: build.version,
+    sha: build.sha,
+    shortSha: build.shortSha,
+    deploymentId: build.deploymentId,
     allowedOrigins: allowedOrigins,
     timestamp: new Date().toISOString(),
     ...(dbError && { dbError }),

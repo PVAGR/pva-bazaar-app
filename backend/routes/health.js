@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { getBuildInfo } = require('../lib/buildInfo');
 
 // Import OpenClaw health check (optional dependency)
 let getOpenClawHealth;
@@ -12,12 +13,16 @@ try {
 
 router.get('/', (req, res) => {
   // Health check: simple, no DB dependency
+  const build = getBuildInfo();
   const response = { 
     ok: true, 
     message: 'PVA Bazaar API is healthy!', 
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || 'development',
+    version: build.version,
+    sha: build.sha,
+    shortSha: build.shortSha,
   };
 
   // Add OpenClaw status if available
@@ -37,12 +42,15 @@ router.get('/', (req, res) => {
 
 router.get('/ping', (req, res) => {
   // Simple ping endpoint for monitoring
-  res.status(200).json({ ok: true, message: 'pong', timestamp: new Date().toISOString() });
+  const build = getBuildInfo();
+  res.setHeader('X-App-Version', build.shortSha);
+  res.status(200).json({ ok: true, message: 'pong', timestamp: new Date().toISOString(), version: build.version, sha: build.sha, shortSha: build.shortSha });
 });
 
 router.get('/version', (req, res) => {
-  // Version endpoint
-  res.status(200).json({ ok: true, version: '1.0.0', timestamp: new Date().toISOString() });
+  const build = getBuildInfo();
+  res.setHeader('X-App-Version', build.shortSha);
+  res.status(200).json({ ok: true, ...build, timestamp: new Date().toISOString() });
 });
 
 module.exports = router;
