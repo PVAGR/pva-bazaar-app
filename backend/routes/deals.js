@@ -5,12 +5,27 @@ const jwt = require('jsonwebtoken');
 const Deal = require('../models/Deal');
 const User = require('../models/User');
 const { authMiddleware } = require('../middleware/auth');
-const {
-  buildDealMessageTypedData,
-  buildDealEvidenceTypedData,
-  verifyDealSignature,
-  normalizeAddress,
-} = require('../lib/eip712');
+
+let buildDealMessageTypedData;
+let buildDealEvidenceTypedData;
+let verifyDealSignature;
+let normalizeAddress;
+
+try {
+  ({
+    buildDealMessageTypedData,
+    buildDealEvidenceTypedData,
+    verifyDealSignature,
+    normalizeAddress,
+  } = require('../lib/eip712'));
+} catch (err) {
+  // Keep /api/deals mounted even if optional EIP-712 helpers are unavailable.
+  console.warn('⚠️ deals route: eip712 helper unavailable; signature endpoints limited', err?.message || err);
+  buildDealMessageTypedData = () => { throw new Error('EIP-712 helpers unavailable'); };
+  buildDealEvidenceTypedData = () => { throw new Error('EIP-712 helpers unavailable'); };
+  verifyDealSignature = () => { throw new Error('EIP-712 helpers unavailable'); };
+  normalizeAddress = (v) => (typeof v === 'string' ? v.toLowerCase() : '');
+}
 
 function sanitize(str) {
   if (typeof str !== 'string') return str;
