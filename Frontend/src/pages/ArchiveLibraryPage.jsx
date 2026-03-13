@@ -469,11 +469,7 @@ export default function ArchiveLibraryPage() {
                     No blog posts yet. This section will display new writings created from 2026 onwards.
                   </p>
                   <p>
-<<<<<<< HEAD
-                    Visit the <a href="#/admin" style={{color: 'var(--accent)', textDecoration: 'underline'}}>Admin Panel</a> to create your first blog post.
-=======
                     Visit the <Link to="/admin" style={{color: 'var(--accent)', textDecoration: 'underline'}}>Admin Panel</Link> to create your first blog post.
->>>>>>> 4dd6189 (revert(frontend): restore archive and static content from pre-regression snapshot)
                   </p>
                 </>
               ) : (
