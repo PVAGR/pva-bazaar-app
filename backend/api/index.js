@@ -147,9 +147,13 @@ app.use((req, res, next) => {
 
 // Webhook routes (must come after raw body middleware)
 const webhooksStripeRoutes = require('../routes/webhooksStripe');
-const webhooksTwitchRoutes = require('../routes/webhooksTwitch');
 app.use('/webhooks', webhooksStripeRoutes);
-app.use('/webhooks', webhooksTwitchRoutes);
+try {
+  const webhooksTwitchRoutes = require('../routes/webhooksTwitch');
+  app.use('/webhooks', webhooksTwitchRoutes);
+} catch (err) {
+  console.warn('⚠️ Optional route disabled: webhooksTwitch', err?.message || err);
+}
 
 // Connect to MongoDB - optimized for serverless with global caching
 // Use global to persist connection across serverless function invocations
@@ -325,20 +329,14 @@ const bountiesRoutes = require('../routes/bounties');
 app.use('/api/bounties', bountiesRoutes);
 
 // ORACLE, VERIFICATION, DEALS, MANIFESTO AI
-const oracleRoutes = require('../routes/oracle');
-const verificationRoutes = require('../routes/verification');
-const dealsRoutes = require('../routes/deals');
-const manifestoAiRoutes = require('../routes/manifesto-ai-routes');
-app.use('/api/oracle', oracleRoutes);
-app.use('/api/verification', verificationRoutes);
-app.use('/api/deals', dealsRoutes);
-app.use('/api/manifesto', manifestoAiRoutes);
+mountOptionalRoute('/api/oracle', '../routes/oracle', 'oracle');
+mountOptionalRoute('/api/verification', '../routes/verification', 'verification');
+mountOptionalRoute('/api/deals', '../routes/deals', 'deals');
+mountOptionalRoute('/api/manifesto', '../routes/manifesto-ai-routes', 'manifesto-ai');
 
 // OAUTH (Twitch & YouTube) - status, live-status, start, callback
-const oauthTwitchRoutes = require('../routes/oauthTwitch');
-const oauthYouTubeRoutes = require('../routes/oauthYouTube');
-app.use('/api/oauth', oauthTwitchRoutes);
-app.use('/api/oauth', oauthYouTubeRoutes);
+mountOptionalRoute('/api/oauth', '../routes/oauthTwitch', 'oauth-twitch');
+mountOptionalRoute('/api/oauth', '../routes/oauthYouTube', 'oauth-youtube');
 
 // LEGACY MARKETPLACE (gated by LEGACY_MODE flag)
 app.use('/api/artifacts', legacyGate, artifactsRoutes);
@@ -351,6 +349,15 @@ app.use('/blockchain', legacyGate, blockchainRoutes);
 app.use('/api/certificates', legacyGate, certificatesRoutes);
 app.use('/api/dashboard', legacyGate, dashboardRoutes);
 app.use('/api/activity', legacyGate, activityRoutes);
+
+function mountOptionalRoute(mountPath, requirePath, label) {
+  try {
+    const route = require(requirePath);
+    app.use(mountPath, route);
+  } catch (err) {
+    console.warn(`⚠️ Optional route disabled: ${label}`, err?.message || err);
+  }
+}
 
 // Dev-only: issue a token for quick testing
 app.post('/api/dev/token', (req, res) => {
