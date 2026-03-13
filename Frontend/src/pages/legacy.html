@@ -334,7 +334,23 @@
   </div>
 
   <script>
-    const API_BASE = 'https://api.pvabazaar.org';
+    function normalizeBackendBase(raw) {
+      const fallback = 'https://api.pvabazaar.org';
+      if (!raw || typeof raw !== 'string') return fallback;
+      const trimmed = raw.trim().replace(/\/+$/, '');
+      if (!trimmed) return fallback;
+      return trimmed.endsWith('/api') ? trimmed.slice(0, -4) : trimmed;
+    }
+
+    const queryBackend = new URLSearchParams(window.location.search).get('backend');
+    const storedBackend = (() => {
+      try {
+        return localStorage.getItem('backendUrl');
+      } catch {
+        return null;
+      }
+    })();
+    const API_BASE = normalizeBackendBase(queryBackend || storedBackend);
 
     async function legacyRequest(path, options = {}) {
       const url = `${API_BASE}/api${path}`;
