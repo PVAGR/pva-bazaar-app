@@ -1,10 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-/**
- * Cart placeholder: future Stripe-backed cart for physical + digital products.
- * Why: E-commerce engine is part of the roadmap; this keeps the nav meaningful.
- */
 export default function CartPage() {
   return (
     <section className="section-card">

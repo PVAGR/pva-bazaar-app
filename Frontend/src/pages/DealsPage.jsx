@@ -612,7 +612,7 @@ export default function DealsPage() {
               <label>
                 <span className="labelRow">
                   Default wallet (optional)
-                  <HelpTip title="Default wallet" body="Optional. Your preferred wallet address for reference and future on-chain escrow." example="0xabc123..." />
+                  <HelpTip title="Default wallet" body="Optional. Your preferred wallet address for agreement reference and payment details." example="0xabc123..." />
                 </span>
                 <input
                   value={preferencesDraft.defaultWalletAddress}
@@ -687,7 +687,7 @@ export default function DealsPage() {
               <label>
                 <span className="labelRow">
                   Total amount
-                  <HelpTip title="Total amount" body="Total value of the deal (informational + future escrow amount)." example="1000" />
+                  <HelpTip title="Total amount" body="Total value of the agreement used for review and payment scheduling." example="1000" />
                 </span>
                 <input value={draft.totalAmount} onChange={(e) => setDraft((p) => ({ ...p, totalAmount: e.target.value }))} placeholder="1000" />
               </label>
