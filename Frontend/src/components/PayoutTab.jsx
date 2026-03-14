@@ -365,6 +365,41 @@ export default function PayoutTab() {
     }
   };
 
+  const failedChecks = Array.isArray(readiness?.data?.checks)
+    ? readiness.data.checks.filter((check) => !check?.ok)
+    : [];
+
+  const readinessState = readiness.loading
+    ? 'checking'
+    : (readiness?.data?.ready ? 'ready' : (readiness?.data ? 'blocked' : 'unknown'));
+
+  const latestReceipt = Array.isArray(recentTransfers.rows) && recentTransfers.rows.length > 0
+    ? recentTransfers.rows[0]
+    : null;
+
+  const lastTransferSignature =
+    guidedFlow?.result?.flow?.transfer?.signature
+    || directResult?.signature
+    || latestReceipt?.txSignature
+    || '';
+
+  const quickRepairTips = [];
+  if (failedChecks.some((check) => check.key === 'hotWalletKey')) {
+    quickRepairTips.push('Add SOLANA_HOT_WALLET_PRIVATE_KEY in Vercel and redeploy backend.');
+  }
+  if (failedChecks.some((check) => check.key === 'hotWalletBalance')) {
+    quickRepairTips.push('Fund hot wallet first: use Request Devnet Airdrop (devnet) or deposit SOL manually.');
+  }
+  if (failedChecks.some((check) => check.key === 'policyRange')) {
+    quickRepairTips.push('Fix policy min/max values and click Save Policy First.');
+  }
+  if (failedChecks.some((check) => check.key === 'allowlistReady')) {
+    quickRepairTips.push('Either disable allowlist or add wallet addresses to allowlist.');
+  }
+  if (failedChecks.some((check) => check.key === 'rpcReachable')) {
+    quickRepairTips.push('Verify SOLANA_RPC_URL or cluster connectivity, then run readiness again.');
+  }
+
   if (loading && !summary) {
     return <div className="payout-tab loading">Loading payout data...</div>;
   }
@@ -697,6 +732,55 @@ export default function PayoutTab() {
 
       {tab === 'policy-test' && (
         <div className="payout-policy-test">
+          <div className="policy-ribbon" role="status" aria-live="polite">
+            <div className="policy-ribbon-header">
+              <h3>Control Ribbon</h3>
+              <span className={`ribbon-pill ribbon-pill--${readinessState}`}>
+                {readinessState === 'ready' ? 'READY' : readinessState === 'blocked' ? 'BLOCKED' : readinessState === 'checking' ? 'CHECKING' : 'UNKNOWN'}
+              </span>
+            </div>
+
+            <div className="policy-ribbon-grid">
+              <div className="ribbon-metric">
+                <span className="ribbon-label">Safe Mode</span>
+                <strong>{safeMode ? 'ON' : 'OFF'}</strong>
+              </div>
+              <div className="ribbon-metric">
+                <span className="ribbon-label">Wallet Balance</span>
+                <strong>{hotWallet.balanceSol !== null && hotWallet.balanceSol !== undefined ? `${hotWallet.balanceSol} SOL` : 'unknown'}</strong>
+              </div>
+              <div className="ribbon-metric">
+                <span className="ribbon-label">Failed Checks</span>
+                <strong>{failedChecks.length}</strong>
+              </div>
+              <div className="ribbon-metric">
+                <span className="ribbon-label">Last Signature</span>
+                <strong className="ribbon-signature">{lastTransferSignature || 'none yet'}</strong>
+              </div>
+            </div>
+
+            <div className="policy-actions">
+              <button className="btn-secondary" onClick={runReadinessCheck} disabled={readiness.loading}>
+                {readiness.loading ? 'Checking...' : 'Run Readiness'}
+              </button>
+              <button className="btn-secondary" onClick={loadHotWalletBalance} disabled={hotWallet.loading}>
+                {hotWallet.loading ? 'Checking wallet...' : 'Check Wallet'}
+              </button>
+              <button className="btn-secondary" onClick={loadRecentTransfers} disabled={recentTransfers.loading}>
+                {recentTransfers.loading ? 'Refreshing receipts...' : 'Refresh Receipts'}
+              </button>
+            </div>
+
+            {quickRepairTips.length > 0 && (
+              <div className="ribbon-repairs">
+                <div className="ribbon-repairs-title">Quick Repair Suggestions</div>
+                {quickRepairTips.map((tip) => (
+                  <div key={tip}>• {tip}</div>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div className="policy-card">
             <h3>⚡ Launch Readiness Check</h3>
             <p>

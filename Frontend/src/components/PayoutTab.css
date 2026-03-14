@@ -494,6 +494,93 @@
   flex-wrap: wrap;
 }
 
+.policy-ribbon {
+  border: 1px solid color-mix(in srgb, var(--site-accent, #22d3ee) 40%, var(--site-border));
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--site-panel-soft) 82%, transparent);
+  padding: 0.8rem;
+}
+
+.policy-ribbon-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.policy-ribbon-header h3 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.ribbon-pill {
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 0.22rem 0.55rem;
+  border: 1px solid transparent;
+}
+
+.ribbon-pill--ready {
+  background: rgba(0, 200, 120, 0.14);
+  border-color: rgba(0, 200, 120, 0.32);
+}
+
+.ribbon-pill--blocked {
+  background: rgba(255, 136, 0, 0.14);
+  border-color: rgba(255, 136, 0, 0.35);
+}
+
+.ribbon-pill--checking,
+.ribbon-pill--unknown {
+  background: rgba(96, 165, 250, 0.14);
+  border-color: rgba(96, 165, 250, 0.35);
+}
+
+.policy-ribbon-grid {
+  margin-top: 0.65rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.ribbon-metric {
+  border: 1px solid color-mix(in srgb, var(--site-border) 70%, transparent);
+  border-radius: 8px;
+  padding: 0.5rem;
+  background: color-mix(in srgb, var(--site-panel) 88%, transparent);
+}
+
+.ribbon-label {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--site-text-muted);
+  margin-bottom: 0.2rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.ribbon-signature {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ribbon-repairs {
+  margin-top: 0.65rem;
+  border-top: 1px dashed color-mix(in srgb, var(--site-border) 65%, transparent);
+  padding-top: 0.5rem;
+  font-size: 0.82rem;
+}
+
+.ribbon-repairs-title {
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
 .policy-msg {
   margin-top: 0.6rem;
   border: 1px solid var(--site-border);
@@ -607,6 +694,10 @@
 }
 
 @media (max-width: 700px) {
+  .policy-ribbon-grid {
+    grid-template-columns: 1fr;
+  }
+
   .policy-span-2 {
     grid-column: span 1;
   }
