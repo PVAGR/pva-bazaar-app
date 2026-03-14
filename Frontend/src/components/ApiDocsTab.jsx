@@ -298,6 +298,20 @@ const ApiDocsTab = React.memo(function ApiDocsTab() {
           description: 'Refresh recorded transfer status against current chain data',
           auth: 'Required (JWT)',
           example: `${apiBase}/api/blockchain/transfers/67cfe8d5e6.../reverify`
+        },
+        {
+          method: 'GET',
+          path: '/api/blockchain/transfers/:id/contract',
+          description: 'Get settlement contract payload (JSON) for archival and compliance',
+          auth: 'Required (JWT)',
+          example: `${apiBase}/api/blockchain/transfers/67cfe8d5e6.../contract`
+        },
+        {
+          method: 'GET',
+          path: '/api/blockchain/transfers/:id/contract/render',
+          description: 'Get printable settlement contract HTML for print/PDF workflows',
+          auth: 'Required (JWT)',
+          example: `${apiBase}/api/blockchain/transfers/67cfe8d5e6.../contract/render`
         }
       ]
     },

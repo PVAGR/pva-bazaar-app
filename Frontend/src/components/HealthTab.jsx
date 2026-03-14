@@ -28,6 +28,34 @@ import HelpTip from './HelpTip.jsx';
 import './HealthTab.css';
 
 const logger = createLogger('HealthTab');
+const BASE_CHAIN_ID_DEC = 8453;
+const BASE_CHAIN_ID_HEX = '0x2105';
+
+function isWalletAddress(addr) {
+  return /^0x[a-fA-F0-9]{40}$/.test(String(addr || '').trim());
+}
+
+function isBaseChain(chainId) {
+  if (!chainId) return false;
+  const value = String(chainId).toLowerCase();
+  return value === BASE_CHAIN_ID_HEX || value === String(BASE_CHAIN_ID_DEC);
+}
+
+function toWeiHex(nativeAmount) {
+  const input = String(nativeAmount || '').trim();
+  if (!input || Number(input) <= 0) {
+    throw new Error('Native amount must be greater than zero');
+  }
+
+  const [wholeRaw, fractionRaw = ''] = input.split('.');
+  const whole = wholeRaw.replace(/[^\d]/g, '') || '0';
+  const fraction = fractionRaw.replace(/[^\d]/g, '').slice(0, 18).padEnd(18, '0');
+  const wei = (BigInt(whole) * (10n ** 18n)) + BigInt(fraction || '0');
+  if (wei <= 0n) {
+    throw new Error('Native amount is too small');
+  }
+  return `0x${wei.toString(16)}`;
+}
 
 export default function HealthTab() {
   const [connectionStatus, setConnectionStatus] = useState({
@@ -42,16 +70,74 @@ export default function HealthTab() {
   const [blockchainRecords, setBlockchainRecords] = useState({ data: [], loading: false, error: null });
   const [recordingTransfer, setRecordingTransfer] = useState(false);
   const [reverifyId, setReverifyId] = useState('');
+  const [wallet, setWallet] = useState({ address: '', chainId: '', connecting: false, sending: false });
+  const [walletMessage, setWalletMessage] = useState('');
   const [transferForm, setTransferForm] = useState({
     network: 'base',
     txHash: '',
+    recipientWallet: '',
+    nativeAmount: '0.0003',
     amountUsd: '1.00',
     tokenSymbol: 'USDC',
     tokenAmount: '',
+    artifactId: '',
     note: '',
     mediaUrl: '',
     referenceUrl: '',
   });
+
+  const hasEthereum = () => typeof window !== 'undefined' && !!window.ethereum?.request;
+
+  const connectWallet = async () => {
+    setWalletMessage('');
+    if (!hasEthereum()) {
+      setWalletMessage('No wallet detected. Install MetaMask or use a wallet-enabled browser.');
+      return;
+    }
+
+    setWallet((prev) => ({ ...prev, connecting: true }));
+    try {
+      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+      const address = String(accounts?.[0] || '');
+      setWallet({ address, chainId: String(chainId || ''), connecting: false, sending: false });
+      setWalletMessage('Wallet connected.');
+    } catch (err) {
+      setWallet((prev) => ({ ...prev, connecting: false }));
+      setWalletMessage(err?.message || 'Failed to connect wallet');
+    }
+  };
+
+  const ensureBaseChain = async () => {
+    if (!hasEthereum()) throw new Error('No wallet provider found');
+    if (isBaseChain(wallet.chainId)) return;
+    try {
+      await window.ethereum.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: BASE_CHAIN_ID_HEX }],
+      });
+    } catch (switchErr) {
+      if (switchErr?.code === 4902) {
+        await window.ethereum.request({
+          method: 'wallet_addEthereumChain',
+          params: [{
+            chainId: BASE_CHAIN_ID_HEX,
+            chainName: 'Base',
+            nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+            rpcUrls: ['https://mainnet.base.org'],
+            blockExplorerUrls: ['https://basescan.org'],
+          }],
+        });
+      } else {
+        throw switchErr;
+      }
+    }
+    const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+    setWallet((prev) => ({ ...prev, chainId: String(chainId || '') }));
+    if (!isBaseChain(chainId)) {
+      throw new Error('Wallet is not on Base chain');
+    }
+  };
 
   const formatWatchdogMessage = useCallback((response) => {
     if (!response || response.ok === false) {
@@ -193,9 +279,11 @@ export default function HealthTab() {
         amountUsd: Number(transferForm.amountUsd || 0),
         tokenSymbol: transferForm.tokenSymbol.trim() || 'USDC',
         tokenAmount: transferForm.tokenAmount.trim(),
+        artifactId: transferForm.artifactId.trim(),
         note: transferForm.note.trim(),
         mediaUrl: transferForm.mediaUrl.trim(),
         referenceUrl: transferForm.referenceUrl.trim(),
+        toAddress: transferForm.recipientWallet.trim(),
       };
 
       const response = await apiPost('/blockchain/transfers/record', payload);
@@ -209,6 +297,7 @@ export default function HealthTab() {
         ...prev,
         txHash: '',
         tokenAmount: '',
+        artifactId: '',
         note: '',
         mediaUrl: '',
         referenceUrl: '',
@@ -220,6 +309,66 @@ export default function HealthTab() {
     } finally {
       setRecordingTransfer(false);
       setTimeout(() => setDispatchTest({ loading: false, message: '' }), 5000);
+    }
+  };
+
+  const handleSendWalletTransfer = async () => {
+    setWalletMessage('');
+    setDispatchTest({ loading: false, message: '' });
+
+    if (!hasEthereum()) {
+      setWalletMessage('No wallet provider detected.');
+      return;
+    }
+    if (!wallet.address) {
+      setWalletMessage('Connect wallet first.');
+      return;
+    }
+    if (!isWalletAddress(transferForm.recipientWallet)) {
+      setWalletMessage('Enter a valid recipient wallet address.');
+      return;
+    }
+
+    try {
+      setWallet((prev) => ({ ...prev, sending: true }));
+      await ensureBaseChain();
+      const value = toWeiHex(transferForm.nativeAmount);
+      const txHash = await window.ethereum.request({
+        method: 'eth_sendTransaction',
+        params: [{
+          from: wallet.address,
+          to: transferForm.recipientWallet.trim(),
+          value,
+        }],
+      });
+
+      setTransferForm((prev) => ({ ...prev, txHash: txHash || '' }));
+
+      const payload = {
+        network: 'base',
+        txHash: String(txHash || '').trim(),
+        amountUsd: Number(transferForm.amountUsd || 0),
+        tokenSymbol: transferForm.tokenSymbol.trim() || 'ETH',
+        tokenAmount: transferForm.tokenAmount.trim() || transferForm.nativeAmount.trim(),
+        artifactId: transferForm.artifactId.trim(),
+        note: transferForm.note.trim(),
+        mediaUrl: transferForm.mediaUrl.trim(),
+        referenceUrl: transferForm.referenceUrl.trim(),
+        toAddress: transferForm.recipientWallet.trim(),
+      };
+
+      const response = await apiPost('/blockchain/transfers/record', payload);
+      if (!response?.ok) {
+        setDispatchTest({ loading: false, message: `⚠️ Wallet transfer sent, but record failed: ${response?.message || 'unknown error'}` });
+      } else {
+        setDispatchTest({ loading: false, message: '✅ Wallet transfer sent and recorded with on-chain tracking' });
+      }
+      await loadBlockchainTransfers();
+    } catch (err) {
+      logger.error('Wallet transfer failed', err);
+      setWalletMessage(err?.message || 'Wallet transfer failed');
+    } finally {
+      setWallet((prev) => ({ ...prev, sending: false }));
     }
   };
 
@@ -239,6 +388,54 @@ export default function HealthTab() {
     } finally {
       setReverifyId('');
       setTimeout(() => setDispatchTest({ loading: false, message: '' }), 4000);
+    }
+  };
+
+  const handleViewContract = async (id, autoPrint = false) => {
+    try {
+      const response = await apiGet(`/blockchain/transfers/${id}/contract/render`);
+      if (!response?.ok || !response?.html) {
+        setDispatchTest({ loading: false, message: `❌ ${response?.message || 'Failed to render contract'}` });
+        return;
+      }
+
+      const printWindow = window.open('', '_blank', 'noopener,noreferrer');
+      if (!printWindow) {
+        setDispatchTest({ loading: false, message: '❌ Pop-up blocked. Allow pop-ups to view/print contract.' });
+        return;
+      }
+      printWindow.document.open();
+      printWindow.document.write(response.html);
+      printWindow.document.close();
+      if (autoPrint) {
+        setTimeout(() => {
+          printWindow.focus();
+          printWindow.print();
+        }, 400);
+      }
+    } catch (err) {
+      logger.error('Contract render failed', err);
+      setDispatchTest({ loading: false, message: `❌ ${err.message || 'Failed to render contract'}` });
+    }
+  };
+
+  const handleExportContractJson = async (id) => {
+    try {
+      const response = await apiGet(`/blockchain/transfers/${id}/contract`);
+      if (!response?.ok || !response?.contract) {
+        setDispatchTest({ loading: false, message: `❌ ${response?.message || 'Failed to export contract'}` });
+        return;
+      }
+      const blob = new Blob([JSON.stringify(response.contract, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `settlement-contract-${id}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      logger.error('Contract export failed', err);
+      setDispatchTest({ loading: false, message: `❌ ${err.message || 'Failed to export contract'}` });
     }
   };
 
@@ -392,6 +589,17 @@ export default function HealthTab() {
         </div>
 
         <form className="blockchain-form" onSubmit={handleRecordTransfer}>
+          <div className="wallet-row full-row">
+            <button type="button" className="refresh-btn" onClick={connectWallet} disabled={wallet.connecting || wallet.sending}>
+              {wallet.connecting ? 'Connecting...' : wallet.address ? 'Wallet Connected' : 'Connect Wallet'}
+            </button>
+            <button type="button" className="test-dispatch-btn wallet-send-btn" onClick={handleSendWalletTransfer} disabled={wallet.sending || !wallet.address}>
+              {wallet.sending ? 'Sending...' : 'Send On Base + Auto Record'}
+            </button>
+            {wallet.address ? <span className="wallet-chip">{wallet.address.slice(0, 6)}...{wallet.address.slice(-4)} {wallet.chainId ? `· ${wallet.chainId}` : ''}</span> : null}
+          </div>
+          {walletMessage ? <div className="wallet-message full-row">{walletMessage}</div> : null}
+
           <label>
             Network
             <select
@@ -416,6 +624,26 @@ export default function HealthTab() {
               value={transferForm.txHash}
               onChange={(e) => setTransferForm((prev) => ({ ...prev, txHash: e.target.value }))}
               required
+            />
+          </label>
+
+          <label>
+            Recipient Wallet
+            <input
+              type="text"
+              placeholder="0x..."
+              value={transferForm.recipientWallet}
+              onChange={(e) => setTransferForm((prev) => ({ ...prev, recipientWallet: e.target.value }))}
+            />
+          </label>
+
+          <label>
+            Native Amount (ETH)
+            <input
+              type="text"
+              placeholder="0.0003"
+              value={transferForm.nativeAmount}
+              onChange={(e) => setTransferForm((prev) => ({ ...prev, nativeAmount: e.target.value }))}
             />
           </label>
 
@@ -446,6 +674,16 @@ export default function HealthTab() {
               placeholder="1.0"
               value={transferForm.tokenAmount}
               onChange={(e) => setTransferForm((prev) => ({ ...prev, tokenAmount: e.target.value }))}
+            />
+          </label>
+
+          <label>
+            Artifact ID (optional)
+            <input
+              type="text"
+              placeholder="Mongo ObjectId"
+              value={transferForm.artifactId}
+              onChange={(e) => setTransferForm((prev) => ({ ...prev, artifactId: e.target.value }))}
             />
           </label>
 
@@ -511,6 +749,7 @@ export default function HealthTab() {
                   <span><strong>Amount:</strong> ${Number(item.amountUsd || 0).toFixed(2)} {item.tokenSymbol}</span>
                   {item.tokenAmount ? <span><strong>Token Qty:</strong> {item.tokenAmount}</span> : null}
                   {item.blockNumber ? <span><strong>Block:</strong> {item.blockNumber}</span> : null}
+                  {item.artifactTitle ? <span><strong>Artifact:</strong> {item.artifactTitle}</span> : null}
                 </div>
 
                 <div className="transfer-links">
@@ -529,6 +768,15 @@ export default function HealthTab() {
                       Reference Link
                     </a>
                   ) : null}
+                  <button type="button" className="link-btn" onClick={() => handleViewContract(item.id, false)}>
+                    View Contract
+                  </button>
+                  <button type="button" className="link-btn" onClick={() => handleViewContract(item.id, true)}>
+                    Print / Save PDF
+                  </button>
+                  <button type="button" className="link-btn" onClick={() => handleExportContractJson(item.id)}>
+                    Export JSON
+                  </button>
                 </div>
 
                 {item.note ? <p className="transfer-note">{item.note}</p> : null}

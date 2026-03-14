@@ -3,6 +3,9 @@ const mongoose = require('mongoose');
 const blockchainTransferSchema = new mongoose.Schema(
   {
     submittedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+    artifactId: { type: mongoose.Schema.Types.ObjectId, ref: 'Artifact', index: true, default: null },
+    artifactSlug: { type: String, default: '' },
+    artifactTitle: { type: String, default: '' },
     network: {
       type: String,
       enum: ['base', 'base-sepolia', 'ethereum', 'sepolia', 'polygon', 'arbitrum', 'optimism'],
@@ -29,6 +32,7 @@ const blockchainTransferSchema = new mongoose.Schema(
     explorerUrl: { type: String, default: '' },
     txTimestamp: { type: Date, default: null },
     lastCheckedAt: { type: Date, default: null },
+    contractVersion: { type: String, default: 'v1' },
     rawError: { type: String, default: '' },
   },
   { timestamps: true }
