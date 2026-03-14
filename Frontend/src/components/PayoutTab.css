@@ -581,6 +581,23 @@
   margin-bottom: 0.25rem;
 }
 
+.autopilot-log {
+  margin-top: 0.6rem;
+  border-top: 1px dashed color-mix(in srgb, var(--site-border) 65%, transparent);
+  padding-top: 0.5rem;
+  font-size: 0.8rem;
+}
+
+.autopilot-log-title {
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.autopilot-log-step {
+  opacity: 0.95;
+  margin-bottom: 0.14rem;
+}
+
 .policy-msg {
   margin-top: 0.6rem;
   border: 1px solid var(--site-border);

@@ -63,6 +63,7 @@ export default function PayoutTab() {
   const [directResult, setDirectResult] = useState(null);
   const [directSending, setDirectSending] = useState(false);
   const [guidedFlow, setGuidedFlow] = useState({ loading: false, result: null, error: '' });
+  const [autopilot, setAutopilot] = useState({ running: false, steps: [], error: '', result: null });
   const [safeMode, setSafeMode] = useState(true);
   const [recentTransfers, setRecentTransfers] = useState({ loading: false, rows: [], error: '' });
 
@@ -329,6 +330,103 @@ export default function PayoutTab() {
       setRecentTransfers({ loading: false, rows, error: '' });
     } catch (err) {
       setRecentTransfers({ loading: false, rows: [], error: err.message || 'Failed to load transfer history' });
+    }
+  };
+
+  const runAutopilot = async () => {
+    if (!directForm.recipientAddress) {
+      setAutopilot({ running: false, steps: [], error: 'Enter recipient wallet first.', result: null });
+      return;
+    }
+
+    const appendStep = (text) => {
+      setAutopilot((prev) => ({ ...prev, steps: [...prev.steps, text] }));
+    };
+
+    setAutopilot({ running: true, steps: ['Starting autopilot...'], error: '', result: null });
+
+    try {
+      appendStep('Saving payout policy...');
+      const policyPayload = {
+        minUsd: Number(policyForm.minUsd || 5),
+        maxUsd: Number(policyForm.maxUsd || 50000),
+        minSol: Number(policyForm.minSol || 0.001),
+        maxSol: Number(policyForm.maxSol || 50),
+        requireAllowlist: policyForm.requireAllowlist,
+        walletAllowlist: policyForm.walletAllowlist
+          .split(/\r?\n|,/)
+          .map((v) => v.trim())
+          .filter(Boolean),
+        network: policyForm.network,
+        treasuryWallet: policyForm.treasuryWallet,
+        notes: policyForm.notes,
+      };
+      const saved = await updatePayoutRuntimePolicy(policyPayload);
+      if (!saved?.ok) {
+        throw new Error(saved?.error || 'Policy save failed');
+      }
+
+      appendStep('Running readiness check...');
+      let readinessData = await getDirectTransferReadiness();
+      if (!readinessData?.ok) {
+        throw new Error(readinessData?.error || 'Readiness check failed');
+      }
+      setReadiness({ loading: false, data: readinessData, error: '' });
+
+      const failed = Array.isArray(readinessData.checks)
+        ? readinessData.checks.filter((check) => !check?.ok).map((check) => check.key)
+        : [];
+
+      if (!readinessData.ready && readinessData.network === 'devnet' && failed.includes('hotWalletBalance') && !failed.includes('hotWalletKey')) {
+        appendStep('Hot wallet low on devnet, requesting airdrop...');
+        const airdropData = await requestDevnetAirdropHotWallet({ amountSol: 1 });
+        if (airdropData?.ok) {
+          setAirdrop({ loading: false, result: airdropData, error: '' });
+          appendStep(`Airdrop success (${airdropData.airdropAmountSol} SOL).`);
+        } else {
+          appendStep(`Airdrop failed: ${airdropData?.error || 'unknown error'}`);
+        }
+
+        appendStep('Re-running readiness check...');
+        readinessData = await getDirectTransferReadiness();
+        if (readinessData?.ok) {
+          setReadiness({ loading: false, data: readinessData, error: '' });
+        }
+      }
+
+      if (safeMode && !readinessData?.ready) {
+        throw new Error('Safe mode blocked transfer: readiness is not green after fixes.');
+      }
+
+      appendStep('Executing guided transfer...');
+      const flowPayload = {
+        recipientAddress: directForm.recipientAddress,
+        amountSol: Number(directForm.amountSol),
+        amountUsd: Number(directForm.amountUsd) || null,
+        memo: directForm.memo,
+        autoAirdropOnDevnet: true,
+      };
+      const flowData = await executeSolanaTestFlow(flowPayload);
+      if (!flowData?.ok) {
+        throw new Error(flowData?.error || 'Guided transfer failed');
+      }
+
+      setGuidedFlow({ loading: false, result: flowData, error: '' });
+      if (flowData?.flow?.transfer?.signature) {
+        setConfirmForm((prev) => ({ ...prev, txSignature: flowData.flow.transfer.signature }));
+      }
+
+      appendStep('Refreshing wallet + receipts...');
+      await Promise.all([loadHotWalletBalance(), loadRecentTransfers()]);
+
+      appendStep('Autopilot completed successfully.');
+      setAutopilot((prev) => ({ ...prev, running: false, result: flowData }));
+    } catch (err) {
+      setAutopilot((prev) => ({
+        ...prev,
+        running: false,
+        error: err?.message || 'Autopilot failed',
+      }));
     }
   };
 
@@ -769,6 +867,9 @@ export default function PayoutTab() {
               <button className="btn-secondary" onClick={loadRecentTransfers} disabled={recentTransfers.loading}>
                 {recentTransfers.loading ? 'Refreshing receipts...' : 'Refresh Receipts'}
               </button>
+              <button className="btn-primary" onClick={runAutopilot} disabled={autopilot.running || !directForm.recipientAddress}>
+                {autopilot.running ? 'Autopilot Running...' : 'Autopilot Execute'}
+              </button>
             </div>
 
             {quickRepairTips.length > 0 && (
@@ -779,6 +880,21 @@ export default function PayoutTab() {
                 ))}
               </div>
             )}
+
+            {autopilot.error ? (
+              <div className="policy-msg">❌ {autopilot.error}</div>
+            ) : null}
+
+            {autopilot.steps.length > 0 ? (
+              <div className="autopilot-log">
+                <div className="autopilot-log-title">Autopilot Log</div>
+                {autopilot.steps.map((step, index) => (
+                  <div key={`${step}-${index}`} className="autopilot-log-step">
+                    {index + 1}. {step}
+                  </div>
+                ))}
+              </div>
+            ) : null}
           </div>
 
           <div className="policy-card">
