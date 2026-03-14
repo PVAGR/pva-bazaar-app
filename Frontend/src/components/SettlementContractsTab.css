@@ -138,6 +138,25 @@
   gap: 0.4rem;
 }
 
+.timeline-filters {
+  margin-top: 0.55rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  align-items: flex-end;
+}
+
+.timeline-filters label {
+  display: grid;
+  gap: 0.2rem;
+  color: var(--site-text);
+  font-size: 0.76rem;
+}
+
+.timeline-filters select {
+  min-width: 9.5rem;
+}
+
 .timeline-item {
   border: 1px solid var(--site-border);
   border-radius: 8px;
@@ -163,6 +182,22 @@
   margin-top: 0.25rem;
   color: var(--site-muted);
   font-size: 0.72rem;
+}
+
+.timeline-item-role {
+  margin-top: 0.2rem;
+  color: var(--site-muted);
+  font-size: 0.72rem;
+  text-transform: capitalize;
+}
+
+.timeline-empty {
+  border: 1px dashed var(--site-border);
+  border-radius: 8px;
+  padding: 0.45rem 0.55rem;
+  color: var(--site-muted);
+  background: var(--site-panel-soft);
+  font-size: 0.76rem;
 }
 
 .checklist-card {

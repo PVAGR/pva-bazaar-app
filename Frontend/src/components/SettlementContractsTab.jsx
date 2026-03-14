@@ -74,6 +74,8 @@ export default function SettlementContractsTab() {
   const [pendingDraft, setPendingDraft] = useState(null);
   const [draftDecisionMade, setDraftDecisionMade] = useState(false);
   const [auditLog, setAuditLog] = useState({ loading: false, targetId: '', events: [] });
+  const [timelineRoleFilter, setTimelineRoleFilter] = useState('all');
+  const [timelineTypeFilter, setTimelineTypeFilter] = useState('all');
   const [signingRole, setSigningRole] = useState('partyOne');
   const [signingWallet, setSigningWallet] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -179,11 +181,35 @@ export default function SettlementContractsTab() {
       .sort((a, b) => new Date(b.eventAt || 0).getTime() - new Date(a.eventAt || 0).getTime())
       .map((event, index) => ({
         key: `${event.eventType || 'event'}-${event.eventAt || index}`,
+        eventType: event.eventType || 'audit-event',
+        actorRole: String(event.actorRole || '').trim().toLowerCase() || 'system',
         title: AUDIT_EVENT_LABELS[event.eventType] || event.eventType || 'Audit event',
         when: event.eventAt,
         details: event.details || null,
       }));
   }, [auditLog.events, latestRecord]);
+  const timelineRoleOptions = useMemo(() => {
+    const set = new Set();
+    timelineEntries.forEach((entry) => {
+      set.add(entry.actorRole || 'system');
+    });
+    return Array.from(set).sort();
+  }, [timelineEntries]);
+  const timelineTypeOptions = useMemo(() => {
+    const set = new Set();
+    timelineEntries.forEach((entry) => {
+      set.add(entry.eventType || 'audit-event');
+    });
+    return Array.from(set).sort();
+  }, [timelineEntries]);
+  const filteredTimelineEntries = useMemo(
+    () => timelineEntries.filter((entry) => {
+      const rolePass = timelineRoleFilter === 'all' || entry.actorRole === timelineRoleFilter;
+      const typePass = timelineTypeFilter === 'all' || entry.eventType === timelineTypeFilter;
+      return rolePass && typePass;
+    }),
+    [timelineEntries, timelineRoleFilter, timelineTypeFilter]
+  );
   const showWizardStep = (step) => !wizardMode || wizardStep === step;
   const wizardSteps = [
     {
@@ -407,6 +433,11 @@ export default function SettlementContractsTab() {
     if (!records.data?.length) return;
     loadAuditLog(records.data[0].id);
   }, [records.data, loadAuditLog]);
+
+  useEffect(() => {
+    setTimelineRoleFilter('all');
+    setTimelineTypeFilter('all');
+  }, [latestRecord?.id]);
 
   useEffect(() => {
     try {
@@ -1138,15 +1169,46 @@ export default function SettlementContractsTab() {
             <div><strong>Recorded:</strong> {latestRecord?.createdAt ? new Date(latestRecord.createdAt).toLocaleString() : 'N/A'}</div>
             <div><strong>Finalized:</strong> {latestRecord?.finalizedAt ? new Date(latestRecord.finalizedAt).toLocaleString() : 'Not finalized'}</div>
             <div><strong>Chain Refresh:</strong> {latestRecord?.lastCheckedAt ? new Date(latestRecord.lastCheckedAt).toLocaleString() : 'N/A'}</div>
-            <div><strong>Audit Feed:</strong> {auditLog.loading ? 'Refreshing…' : `${timelineEntries.length} events`}</div>
+            <div><strong>Audit Feed:</strong> {auditLog.loading ? 'Refreshing...' : `${filteredTimelineEntries.length}/${timelineEntries.length} events`}</div>
+          </div>
+          <div className="timeline-filters" aria-label="Audit timeline filters">
+            <label>
+              Role
+              <select value={timelineRoleFilter} onChange={(e) => setTimelineRoleFilter(e.target.value)}>
+                <option value="all">All roles</option>
+                {timelineRoleOptions.map((role) => (
+                  <option key={role} value={role}>{role}</option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Event Type
+              <select value={timelineTypeFilter} onChange={(e) => setTimelineTypeFilter(e.target.value)}>
+                <option value="all">All event types</option>
+                {timelineTypeOptions.map((type) => (
+                  <option key={type} value={type}>{AUDIT_EVENT_LABELS[type] || type}</option>
+                ))}
+              </select>
+            </label>
+            <button
+              className="btn ghost tiny"
+              type="button"
+              onClick={() => {
+                setTimelineRoleFilter('all');
+                setTimelineTypeFilter('all');
+              }}
+            >
+              Clear Filters
+            </button>
           </div>
           <div className="timeline-list" role="list" aria-label="Settlement audit events">
-            {timelineEntries.slice(0, 8).map((entry) => (
+            {filteredTimelineEntries.slice(0, 8).map((entry) => (
               <div key={entry.key} className="timeline-item" role="listitem">
                 <div className="timeline-item-head">
                   <strong>{entry.title}</strong>
                   <span>{entry.when ? new Date(entry.when).toLocaleString() : 'No timestamp'}</span>
                 </div>
+                <div className="timeline-item-role">Role: {entry.actorRole || 'system'}</div>
                 {entry.details && typeof entry.details === 'object' ? (
                   <div className="timeline-item-meta">
                     {Object.entries(entry.details)
@@ -1157,6 +1219,9 @@ export default function SettlementContractsTab() {
                 ) : null}
               </div>
             ))}
+            {!auditLog.loading && filteredTimelineEntries.length === 0 ? (
+              <div className="timeline-empty">No events match current filters.</div>
+            ) : null}
           </div>
         </div>
       ) : null}
