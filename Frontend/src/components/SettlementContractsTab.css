@@ -240,6 +240,27 @@
   font-weight: 500;
 }
 
+.required-badge {
+  display: inline-block;
+  margin-left: 0.35rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--site-danger-text) 48%, var(--site-border));
+  background: color-mix(in srgb, var(--site-danger-bg) 78%, var(--site-panel));
+  color: var(--site-danger-text);
+  font-size: 0.66rem;
+  font-weight: 800;
+  padding: 0.12rem 0.42rem;
+  vertical-align: middle;
+}
+
+.settlement-grid input.field-required-error,
+.settlement-grid textarea.field-required-error,
+.settlement-grid select.field-required-error {
+  border-color: color-mix(in srgb, var(--site-danger-text) 70%, var(--site-border));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--site-danger-text) 18%, transparent);
+  background: color-mix(in srgb, var(--site-danger-bg) 26%, var(--site-panel-soft));
+}
+
 .settlement-grid input:focus,
 .settlement-grid select:focus,
 .settlement-grid textarea:focus {

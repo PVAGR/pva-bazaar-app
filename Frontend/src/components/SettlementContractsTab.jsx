@@ -46,6 +46,7 @@ export default function SettlementContractsTab() {
   const [finalizingId, setFinalizingId] = useState('');
   const [verifyingId, setVerifyingId] = useState('');
   const [integrityStatusById, setIntegrityStatusById] = useState({});
+  const [requiredErrors, setRequiredErrors] = useState({});
   const [beginnerMode, setBeginnerMode] = useState(true);
   const [signingRole, setSigningRole] = useState('partyOne');
   const [signingWallet, setSigningWallet] = useState(false);
@@ -135,6 +136,7 @@ export default function SettlementContractsTab() {
   const nextChecklistItem = checklist.find((item) => !item.done);
 
   const focusRequiredField = (fieldKey, messageText) => {
+    setRequiredErrors((prev) => ({ ...prev, [fieldKey]: true }));
     const refMap = {
       txHash: txHashRef,
       partyOneSignerName: partyOneSignerNameRef,
@@ -661,6 +663,31 @@ export default function SettlementContractsTab() {
     setMessage('Demo values applied. Replace tx hash and names with real values before production finalization.');
   };
 
+  const copyHandoffSummary = async (item) => {
+    const integrityStatus = integrityStatusById[item.id] || (item.finalizedAt ? 'not-verified-yet' : 'not-finalized');
+    const lines = [
+      'PVA Bazaar Settlement Handoff Summary',
+      `Transfer ID: ${item.id}`,
+      `Status: ${item.status}`,
+      `Network: ${item.network}`,
+      `Transaction: ${item.txHash}`,
+      `Finalized: ${item.finalizedAt ? new Date(item.finalizedAt).toLocaleString() : 'No'}`,
+      `Integrity: ${integrityStatus}`,
+      `USD Amount: ${Number(item.amountUsd || 0).toFixed(2)}`,
+      `Token: ${item.tokenSymbol || ''} ${item.tokenAmount || ''}`,
+      `Artifact: ${item.artifactTitle || 'Not linked'}`,
+      `Explorer: ${item.explorerUrl || 'N/A'}`,
+      'Operator Next Steps: 1) Verify digest. 2) Print contract/report. 3) Archive JSON + signed PDF.',
+    ];
+
+    try {
+      await navigator.clipboard.writeText(lines.join('\n'));
+      setMessage('Handoff summary copied for ops team.');
+    } catch {
+      setMessage('Could not copy handoff summary. Please copy manually.');
+    }
+  };
+
   return (
     <div className="settlement-contracts-tab" role="tabpanel" id="settlements-panel">
       <div className="tab-header">
@@ -797,8 +824,20 @@ export default function SettlementContractsTab() {
           ) : null}
 
           <label className="full-row">
-            Tx Hash (Required)
-            <input ref={txHashRef} value={form.txHash} onChange={(e) => setForm((prev) => ({ ...prev, txHash: e.target.value }))} placeholder="0x..." />
+            Tx Hash <span className="required-badge">Required</span>
+            <input
+              ref={txHashRef}
+              className={requiredErrors.txHash ? 'field-required-error' : ''}
+              value={form.txHash}
+              onChange={(e) => {
+                const value = e.target.value;
+                setForm((prev) => ({ ...prev, txHash: value }));
+                if (requiredErrors.txHash && String(value || '').trim()) {
+                  setRequiredErrors((prev) => ({ ...prev, txHash: false }));
+                }
+              }}
+              placeholder="0x..."
+            />
             <small>Why required: anchors the settlement to a specific on-chain transaction for traceability.</small>
           </label>
 
@@ -875,8 +914,20 @@ export default function SettlementContractsTab() {
           ) : null}
 
           <label>
-            Party One Signer Name (Required)
-            <input ref={partyOneSignerNameRef} value={form.partyOneSignerName} onChange={(e) => setForm((prev) => ({ ...prev, partyOneSignerName: e.target.value }))} placeholder="Signer full name" />
+            Party One Signer Name <span className="required-badge">Required</span>
+            <input
+              ref={partyOneSignerNameRef}
+              className={requiredErrors.partyOneSignerName ? 'field-required-error' : ''}
+              value={form.partyOneSignerName}
+              onChange={(e) => {
+                const value = e.target.value;
+                setForm((prev) => ({ ...prev, partyOneSignerName: value }));
+                if (requiredErrors.partyOneSignerName && String(value || '').trim()) {
+                  setRequiredErrors((prev) => ({ ...prev, partyOneSignerName: false }));
+                }
+              }}
+              placeholder="Signer full name"
+            />
             <small>Why required: identifies who approved terms for party one.</small>
           </label>
 
@@ -895,8 +946,20 @@ export default function SettlementContractsTab() {
           ) : null}
 
           <label>
-            Party Two Signer Name (Required)
-            <input ref={partyTwoSignerNameRef} value={form.partyTwoSignerName} onChange={(e) => setForm((prev) => ({ ...prev, partyTwoSignerName: e.target.value }))} placeholder="Signer full name" />
+            Party Two Signer Name <span className="required-badge">Required</span>
+            <input
+              ref={partyTwoSignerNameRef}
+              className={requiredErrors.partyTwoSignerName ? 'field-required-error' : ''}
+              value={form.partyTwoSignerName}
+              onChange={(e) => {
+                const value = e.target.value;
+                setForm((prev) => ({ ...prev, partyTwoSignerName: value }));
+                if (requiredErrors.partyTwoSignerName && String(value || '').trim()) {
+                  setRequiredErrors((prev) => ({ ...prev, partyTwoSignerName: false }));
+                }
+              }}
+              placeholder="Signer full name"
+            />
             <small>Why required: identifies who approved terms for party two.</small>
           </label>
 
@@ -1051,6 +1114,7 @@ export default function SettlementContractsTab() {
                   <button className="btn ghost tiny" type="button" onClick={() => exportContractJson(item.id)}>Export JSON</button>
                   <button className="btn ghost tiny" type="button" onClick={() => exportVerificationReportJson(item.id)}>Export Verification JSON</button>
                   <button className="btn ghost tiny" type="button" onClick={() => openVerificationReport(item.id, true)}>Print Verification Report</button>
+                  <button className="btn ghost tiny" type="button" onClick={() => copyHandoffSummary(item)}>Copy Handoff Summary</button>
                 </div>
 
                 {item.note ? <p className="record-note">{item.note}</p> : null}
