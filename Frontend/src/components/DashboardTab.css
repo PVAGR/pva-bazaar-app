@@ -19,7 +19,7 @@
 .header-content h2 {
   margin: 0 0 0.5rem 0;
   color: var(--site-text-primary, #e0e0e0);
-  font-size: 2.5rem;
+  font-size: clamp(1.75rem, 2.2vw, 2.5rem);
 }
 
 .header-content p {
@@ -112,9 +112,23 @@
 /* Metrics Grid */
 .metrics-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
+}
+
+@media (min-width: 1500px) {
+  .metrics-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .actions-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .info-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 }
 
 .metric-card {
@@ -162,7 +176,7 @@
 }
 
 .metric-value {
-  font-size: 3rem;
+  font-size: clamp(2.2rem, 2.8vw, 3rem);
   font-weight: 700;
   color: var(--site-accent, #00d9ff);
   line-height: 1;

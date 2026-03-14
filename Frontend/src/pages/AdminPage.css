@@ -216,7 +216,8 @@
 }
 
 .admin-header .header-content {
-  max-width: 1600px;
+  max-width: none;
+  width: calc(100vw - 8px);
   margin: 0 auto;
   display: flex;
   justify-content: space-between;
