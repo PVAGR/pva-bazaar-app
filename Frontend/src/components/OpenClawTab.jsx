@@ -60,6 +60,19 @@ export default function OpenClawTab() {
     }
   }, []);
 
+  const loadStatus = useCallback(async () => {
+    setStatusLoading(true);
+    try {
+      const data = await apiGet('/openclaw/status');
+      setStatus(data);
+    } catch (err) {
+      logger.error('Failed to load OpenClaw status', err);
+      setStatus({ ok: false, configured: false, reachable: false, error: err.message });
+    } finally {
+      setStatusLoading(false);
+    }
+  }, []);
+
   const loadRuntimeConfig = useCallback(async () => {
     setConfigLoading(true);
     try {
@@ -112,19 +125,6 @@ export default function OpenClawTab() {
       setConfigSaving(false);
     }
   }, [openclawConfig, loadStatus, loadQueueStats]);
-
-  const loadStatus = useCallback(async () => {
-    setStatusLoading(true);
-    try {
-      const data = await apiGet('/openclaw/status');
-      setStatus(data);
-    } catch (err) {
-      logger.error('Failed to load OpenClaw status', err);
-      setStatus({ ok: false, configured: false, reachable: false, error: err.message });
-    } finally {
-      setStatusLoading(false);
-    }
-  }, []);
 
   const loadMessages = useCallback(async () => {
     setMessagesLoading(true);
