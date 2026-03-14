@@ -8,6 +8,7 @@ import './SettlementContractsTab.css';
 const logger = createLogger('SettlementContractsTab');
 const BASE_CHAIN_ID_DEC = 8453;
 const BASE_CHAIN_ID_HEX = '0x2105';
+const DRAFT_STORAGE_KEY = 'pva:settlement:draft:v1';
 
 function isWalletAddress(addr) {
   return /^0x[a-fA-F0-9]{40}$/.test(String(addr || '').trim());
@@ -50,6 +51,8 @@ export default function SettlementContractsTab() {
   const [beginnerMode, setBeginnerMode] = useState(true);
   const [wizardMode, setWizardMode] = useState(false);
   const [wizardStep, setWizardStep] = useState(0);
+  const [pendingDraft, setPendingDraft] = useState(null);
+  const [draftDecisionMade, setDraftDecisionMade] = useState(false);
   const [signingRole, setSigningRole] = useState('partyOne');
   const [signingWallet, setSigningWallet] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -136,6 +139,7 @@ export default function SettlementContractsTab() {
   ];
 
   const nextChecklistItem = checklist.find((item) => !item.done);
+  const showWizardStep = (step) => !wizardMode || wizardStep === step;
   const wizardSteps = [
     {
       id: 'tx',
@@ -297,11 +301,71 @@ export default function SettlementContractsTab() {
   }, [loadTransfers, loadArtifacts, loadTemplates]);
 
   useEffect(() => {
+    try {
+      const raw = localStorage.getItem(DRAFT_STORAGE_KEY);
+      if (!raw) {
+        setDraftDecisionMade(true);
+        return;
+      }
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') {
+        setPendingDraft(parsed);
+      } else {
+        setDraftDecisionMade(true);
+      }
+    } catch {
+      setDraftDecisionMade(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!draftDecisionMade) return;
+    const payload = {
+      updatedAt: new Date().toISOString(),
+      form,
+      beginnerMode,
+      wizardMode,
+      wizardStep,
+    };
+    try {
+      localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(payload));
+    } catch {
+      // Ignore storage quota errors and continue without blocking workflow.
+    }
+  }, [form, beginnerMode, wizardMode, wizardStep, draftDecisionMade]);
+
+  useEffect(() => {
     const id = setTimeout(() => {
       loadArtifacts(artifactQuery);
     }, 250);
     return () => clearTimeout(id);
   }, [artifactQuery, loadArtifacts]);
+
+  const restoreDraft = () => {
+    if (!pendingDraft?.form) {
+      setDraftDecisionMade(true);
+      setPendingDraft(null);
+      return;
+    }
+    setForm((prev) => ({ ...prev, ...pendingDraft.form }));
+    setBeginnerMode(typeof pendingDraft.beginnerMode === 'boolean' ? pendingDraft.beginnerMode : true);
+    setWizardMode(!!pendingDraft.wizardMode);
+    setWizardStep(Number.isInteger(pendingDraft.wizardStep) ? pendingDraft.wizardStep : 0);
+    setDraftDecisionMade(true);
+    setPendingDraft(null);
+    setMessage('Draft restored. Continue from your last saved state.');
+  };
+
+  const discardDraft = () => {
+    try {
+      localStorage.removeItem(DRAFT_STORAGE_KEY);
+    } catch {
+      // Ignore storage errors.
+    }
+    setPendingDraft(null);
+    setDraftDecisionMade(true);
+    setMessage('Saved draft discarded.');
+  };
 
   const connectWallet = async () => {
     setMessage('');
@@ -825,6 +889,18 @@ export default function SettlementContractsTab() {
         </p>
       </div>
 
+      {pendingDraft && !draftDecisionMade ? (
+        <div className="draft-banner" role="alert">
+          <div>
+            Found a saved draft from {pendingDraft.updatedAt ? new Date(pendingDraft.updatedAt).toLocaleString() : 'earlier session'}.
+          </div>
+          <div className="draft-actions">
+            <button className="btn ghost tiny" type="button" onClick={restoreDraft}>Restore Draft</button>
+            <button className="btn ghost tiny" type="button" onClick={discardDraft}>Discard Draft</button>
+          </div>
+        </div>
+      ) : null}
+
       <div className="settlements-help-row">
         <HelpTip
           title="Workflow"
@@ -863,6 +939,7 @@ export default function SettlementContractsTab() {
           {wizardMode ? 'Wizard On' : 'Wizard Off'}
         </button>
         <button className="btn ghost tiny" type="button" onClick={openRunbookCard}>Print Runbook Card</button>
+        <button className="btn ghost tiny" type="button" onClick={discardDraft}>Clear Saved Draft</button>
       </div>
 
       {wizardMode ? (
@@ -929,30 +1006,36 @@ export default function SettlementContractsTab() {
             {templates.error ? <small className="error-text">{templates.error}</small> : null}
           </label>
 
-          <label>
-            Network
-            <select value={form.network} onChange={(e) => setForm((prev) => ({ ...prev, network: e.target.value }))}>
-              <option value="base">Base</option>
-              <option value="base-sepolia">Base Sepolia</option>
-              <option value="ethereum">Ethereum</option>
-              <option value="sepolia">Sepolia</option>
-              <option value="polygon">Polygon</option>
-              <option value="arbitrum">Arbitrum</option>
-              <option value="optimism">Optimism</option>
-            </select>
-          </label>
+          {showWizardStep(0) ? (
+            <label>
+              Network
+              <select value={form.network} onChange={(e) => setForm((prev) => ({ ...prev, network: e.target.value }))}>
+                <option value="base">Base</option>
+                <option value="base-sepolia">Base Sepolia</option>
+                <option value="ethereum">Ethereum</option>
+                <option value="sepolia">Sepolia</option>
+                <option value="polygon">Polygon</option>
+                <option value="arbitrum">Arbitrum</option>
+                <option value="optimism">Optimism</option>
+              </select>
+            </label>
+          ) : null}
 
-          <label>
-            Recipient Wallet
-            <input value={form.recipientWallet} onChange={(e) => setForm((prev) => ({ ...prev, recipientWallet: e.target.value }))} placeholder="0x..." />
-          </label>
+          {showWizardStep(0) ? (
+            <label>
+              Recipient Wallet
+              <input value={form.recipientWallet} onChange={(e) => setForm((prev) => ({ ...prev, recipientWallet: e.target.value }))} placeholder="0x..." />
+            </label>
+          ) : null}
 
-          <label>
-            Native Amount (ETH)
-            <input value={form.nativeAmount} onChange={(e) => setForm((prev) => ({ ...prev, nativeAmount: e.target.value }))} placeholder="0.0003" />
-          </label>
+          {showWizardStep(0) ? (
+            <label>
+              Native Amount (ETH)
+              <input value={form.nativeAmount} onChange={(e) => setForm((prev) => ({ ...prev, nativeAmount: e.target.value }))} placeholder="0.0003" />
+            </label>
+          ) : null}
 
-          {showAdvanced ? (
+          {showAdvanced && showWizardStep(0) ? (
             <>
               <label>
                 USD Amount
@@ -971,7 +1054,8 @@ export default function SettlementContractsTab() {
             </>
           ) : null}
 
-          <label className="full-row">
+          {showWizardStep(0) ? (
+            <label className="full-row">
             Tx Hash <span className="required-badge">Required</span>
             <input
               ref={txHashRef}
@@ -987,9 +1071,10 @@ export default function SettlementContractsTab() {
               placeholder="0x..."
             />
             <small>Why required: anchors the settlement to a specific on-chain transaction for traceability.</small>
-          </label>
+            </label>
+          ) : null}
 
-          {showAdvanced ? (
+          {showAdvanced && showWizardStep(2) ? (
             <>
               <label className="full-row">
                 Artifact Search
@@ -1025,24 +1110,28 @@ export default function SettlementContractsTab() {
             </>
           ) : null}
 
-          <label>
+          {showWizardStep(1) ? (
+            <label>
             Party One Name
             <input value={form.partyOneName} onChange={(e) => setForm((prev) => ({ ...prev, partyOneName: e.target.value }))} placeholder="PVA Bazaar" />
-          </label>
+            </label>
+          ) : null}
 
-          {showAdvanced ? (
+          {showAdvanced && showWizardStep(2) ? (
             <label>
               Party One Role
               <input value={form.partyOneRole} onChange={(e) => setForm((prev) => ({ ...prev, partyOneRole: e.target.value }))} placeholder="Operator" />
             </label>
           ) : null}
 
-          <label>
+          {showWizardStep(1) ? (
+            <label>
             Party Two Name
             <input value={form.partyTwoName} onChange={(e) => setForm((prev) => ({ ...prev, partyTwoName: e.target.value }))} placeholder="Counterparty Name" />
-          </label>
+            </label>
+          ) : null}
 
-          {showAdvanced ? (
+          {showAdvanced && showWizardStep(2) ? (
             <>
               <label>
                 Party Two Role
@@ -1061,7 +1150,8 @@ export default function SettlementContractsTab() {
             </>
           ) : null}
 
-          <label>
+          {showWizardStep(1) ? (
+            <label>
             Party One Signer Name <span className="required-badge">Required</span>
             <input
               ref={partyOneSignerNameRef}
@@ -1077,23 +1167,25 @@ export default function SettlementContractsTab() {
               placeholder="Signer full name"
             />
             <small>Why required: identifies who approved terms for party one.</small>
-          </label>
+            </label>
+          ) : null}
 
-          {showAdvanced ? (
+          {showAdvanced && showWizardStep(2) ? (
             <label>
               Party One Signer Wallet (Optional)
               <input value={form.partyOneSignerWallet} onChange={(e) => setForm((prev) => ({ ...prev, partyOneSignerWallet: e.target.value }))} placeholder="0x..." />
             </label>
           ) : null}
 
-          {showAdvanced ? (
+          {showAdvanced && showWizardStep(2) ? (
             <label>
               Party One Signed At
               <input type="datetime-local" value={form.partyOneSignedAt} onChange={(e) => setForm((prev) => ({ ...prev, partyOneSignedAt: e.target.value }))} />
             </label>
           ) : null}
 
-          <label>
+          {showWizardStep(1) ? (
+            <label>
             Party Two Signer Name <span className="required-badge">Required</span>
             <input
               ref={partyTwoSignerNameRef}
@@ -1109,9 +1201,10 @@ export default function SettlementContractsTab() {
               placeholder="Signer full name"
             />
             <small>Why required: identifies who approved terms for party two.</small>
-          </label>
+            </label>
+          ) : null}
 
-          {showAdvanced ? (
+          {showAdvanced && showWizardStep(2) ? (
             <>
               <label>
                 Party Two Signer Wallet (Optional)
