@@ -45,6 +45,7 @@ export default function SettlementContractsTab() {
   const [reverifyId, setReverifyId] = useState('');
   const [finalizingId, setFinalizingId] = useState('');
   const [verifyingId, setVerifyingId] = useState('');
+  const [beginnerMode, setBeginnerMode] = useState(true);
   const [signingRole, setSigningRole] = useState('partyOne');
   const [signingWallet, setSigningWallet] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -86,6 +87,7 @@ export default function SettlementContractsTab() {
     () => artifacts.data.find((item) => String(item._id) === String(form.artifactId)),
     [artifacts.data, form.artifactId]
   );
+  const showAdvanced = !beginnerMode;
 
   const hasEthereum = () => typeof window !== 'undefined' && !!window.ethereum?.request;
 
@@ -567,6 +569,26 @@ export default function SettlementContractsTab() {
         <p><strong>Optional context:</strong> artifact link, media URL, reference URL, witness info. These improve audit readability but do not block settlement lock.</p>
       </div>
 
+      <div className="mode-toggle-row" role="group" aria-label="Entry mode">
+        <button
+          className={`btn tiny ${beginnerMode ? 'accent' : 'ghost'}`}
+          type="button"
+          onClick={() => setBeginnerMode(true)}
+        >
+          Beginner Mode
+        </button>
+        <button
+          className={`btn tiny ${showAdvanced ? 'accent' : 'ghost'}`}
+          type="button"
+          onClick={() => setBeginnerMode(false)}
+        >
+          Advanced Mode
+        </button>
+        <span className="mode-hint">
+          {beginnerMode ? 'Showing only core required inputs + wallet send basics.' : 'Showing full optional legal and attestation controls.'}
+        </span>
+      </div>
+
       <div className="settlement-form-card">
         <div className="wallet-actions-row">
           <button className="btn primary" type="button" onClick={connectWallet} disabled={wallet.connecting || wallet.sending}>
@@ -623,185 +645,207 @@ export default function SettlementContractsTab() {
             <input value={form.nativeAmount} onChange={(e) => setForm((prev) => ({ ...prev, nativeAmount: e.target.value }))} placeholder="0.0003" />
           </label>
 
-          <label>
-            USD Amount
-            <input type="number" min="0" step="0.01" value={form.amountUsd} onChange={(e) => setForm((prev) => ({ ...prev, amountUsd: e.target.value }))} />
-          </label>
+          {showAdvanced ? (
+            <>
+              <label>
+                USD Amount
+                <input type="number" min="0" step="0.01" value={form.amountUsd} onChange={(e) => setForm((prev) => ({ ...prev, amountUsd: e.target.value }))} />
+              </label>
 
-          <label>
-            Token Symbol
-            <input value={form.tokenSymbol} onChange={(e) => setForm((prev) => ({ ...prev, tokenSymbol: e.target.value }))} />
-          </label>
+              <label>
+                Token Symbol
+                <input value={form.tokenSymbol} onChange={(e) => setForm((prev) => ({ ...prev, tokenSymbol: e.target.value }))} />
+              </label>
 
-          <label>
-            Token Amount
-            <input value={form.tokenAmount} onChange={(e) => setForm((prev) => ({ ...prev, tokenAmount: e.target.value }))} placeholder="1.0" />
-          </label>
+              <label>
+                Token Amount
+                <input value={form.tokenAmount} onChange={(e) => setForm((prev) => ({ ...prev, tokenAmount: e.target.value }))} placeholder="1.0" />
+              </label>
+            </>
+          ) : null}
 
           <label className="full-row">
             Tx Hash (Required)
             <input value={form.txHash} onChange={(e) => setForm((prev) => ({ ...prev, txHash: e.target.value }))} placeholder="0x..." />
           </label>
 
-          <label className="full-row">
-            Artifact Search
-            <input value={artifactQuery} onChange={(e) => setArtifactQuery(e.target.value)} placeholder="Search artifact by title/slug" />
-          </label>
+          {showAdvanced ? (
+            <>
+              <label className="full-row">
+                Artifact Search
+                <input value={artifactQuery} onChange={(e) => setArtifactQuery(e.target.value)} placeholder="Search artifact by title/slug" />
+              </label>
 
-          <label className="full-row">
-            Link Artifact
-            <select value={form.artifactId} onChange={(e) => setForm((prev) => ({ ...prev, artifactId: e.target.value }))}>
-              <option value="">No artifact linked</option>
-              {artifacts.data.map((item) => (
-                <option key={item._id} value={item._id}>{item.title || item.name} {item.slug ? `(${item.slug})` : ''}</option>
-              ))}
-            </select>
-            {artifacts.loading ? <small>Loading artifacts...</small> : null}
-            {selectedArtifact ? <small>Linked: {selectedArtifact.title || selectedArtifact.name}</small> : null}
-          </label>
+              <label className="full-row">
+                Link Artifact
+                <select value={form.artifactId} onChange={(e) => setForm((prev) => ({ ...prev, artifactId: e.target.value }))}>
+                  <option value="">No artifact linked</option>
+                  {artifacts.data.map((item) => (
+                    <option key={item._id} value={item._id}>{item.title || item.name} {item.slug ? `(${item.slug})` : ''}</option>
+                  ))}
+                </select>
+                {artifacts.loading ? <small>Loading artifacts...</small> : null}
+                {selectedArtifact ? <small>Linked: {selectedArtifact.title || selectedArtifact.name}</small> : null}
+              </label>
 
-          <label className="full-row">
-            Settlement Note
-            <textarea rows="2" value={form.note} onChange={(e) => setForm((prev) => ({ ...prev, note: e.target.value }))} placeholder="Describe what this settlement covers" />
-          </label>
+              <label className="full-row">
+                Settlement Note
+                <textarea rows="2" value={form.note} onChange={(e) => setForm((prev) => ({ ...prev, note: e.target.value }))} placeholder="Describe what this settlement covers" />
+              </label>
 
-          <label className="full-row">
-            Media URL
-            <input value={form.mediaUrl} onChange={(e) => setForm((prev) => ({ ...prev, mediaUrl: e.target.value }))} placeholder="https://..." />
-          </label>
+              <label className="full-row">
+                Media URL
+                <input value={form.mediaUrl} onChange={(e) => setForm((prev) => ({ ...prev, mediaUrl: e.target.value }))} placeholder="https://..." />
+              </label>
 
-          <label className="full-row">
-            Reference URL
-            <input value={form.referenceUrl} onChange={(e) => setForm((prev) => ({ ...prev, referenceUrl: e.target.value }))} placeholder="https://..." />
-          </label>
+              <label className="full-row">
+                Reference URL
+                <input value={form.referenceUrl} onChange={(e) => setForm((prev) => ({ ...prev, referenceUrl: e.target.value }))} placeholder="https://..." />
+              </label>
+            </>
+          ) : null}
 
           <label>
             Party One Name
             <input value={form.partyOneName} onChange={(e) => setForm((prev) => ({ ...prev, partyOneName: e.target.value }))} placeholder="PVA Bazaar" />
           </label>
 
-          <label>
-            Party One Role
-            <input value={form.partyOneRole} onChange={(e) => setForm((prev) => ({ ...prev, partyOneRole: e.target.value }))} placeholder="Operator" />
-          </label>
+          {showAdvanced ? (
+            <label>
+              Party One Role
+              <input value={form.partyOneRole} onChange={(e) => setForm((prev) => ({ ...prev, partyOneRole: e.target.value }))} placeholder="Operator" />
+            </label>
+          ) : null}
 
           <label>
             Party Two Name
             <input value={form.partyTwoName} onChange={(e) => setForm((prev) => ({ ...prev, partyTwoName: e.target.value }))} placeholder="Counterparty Name" />
           </label>
 
-          <label>
-            Party Two Role
-            <input value={form.partyTwoRole} onChange={(e) => setForm((prev) => ({ ...prev, partyTwoRole: e.target.value }))} placeholder="Creator / Buyer / Seller" />
-          </label>
+          {showAdvanced ? (
+            <>
+              <label>
+                Party Two Role
+                <input value={form.partyTwoRole} onChange={(e) => setForm((prev) => ({ ...prev, partyTwoRole: e.target.value }))} placeholder="Creator / Buyer / Seller" />
+              </label>
 
-          <label className="full-row">
-            Additional Clauses (Contract v2)
-            <textarea
-              rows="4"
-              value={form.additionalClauses}
-              onChange={(e) => setForm((prev) => ({ ...prev, additionalClauses: e.target.value }))}
-              placeholder="Write any additional terms to appear on the printable contract"
-            />
-          </label>
+              <label className="full-row">
+                Additional Clauses (Contract v2)
+                <textarea
+                  rows="4"
+                  value={form.additionalClauses}
+                  onChange={(e) => setForm((prev) => ({ ...prev, additionalClauses: e.target.value }))}
+                  placeholder="Write any additional terms to appear on the printable contract"
+                />
+              </label>
+            </>
+          ) : null}
 
           <label>
             Party One Signer Name (Required)
             <input value={form.partyOneSignerName} onChange={(e) => setForm((prev) => ({ ...prev, partyOneSignerName: e.target.value }))} placeholder="Signer full name" />
           </label>
 
-          <label>
-            Party One Signer Wallet (Optional)
-            <input value={form.partyOneSignerWallet} onChange={(e) => setForm((prev) => ({ ...prev, partyOneSignerWallet: e.target.value }))} placeholder="0x..." />
-          </label>
+          {showAdvanced ? (
+            <label>
+              Party One Signer Wallet (Optional)
+              <input value={form.partyOneSignerWallet} onChange={(e) => setForm((prev) => ({ ...prev, partyOneSignerWallet: e.target.value }))} placeholder="0x..." />
+            </label>
+          ) : null}
 
-          <label>
-            Party One Signed At
-            <input type="datetime-local" value={form.partyOneSignedAt} onChange={(e) => setForm((prev) => ({ ...prev, partyOneSignedAt: e.target.value }))} />
-          </label>
+          {showAdvanced ? (
+            <label>
+              Party One Signed At
+              <input type="datetime-local" value={form.partyOneSignedAt} onChange={(e) => setForm((prev) => ({ ...prev, partyOneSignedAt: e.target.value }))} />
+            </label>
+          ) : null}
 
           <label>
             Party Two Signer Name (Required)
             <input value={form.partyTwoSignerName} onChange={(e) => setForm((prev) => ({ ...prev, partyTwoSignerName: e.target.value }))} placeholder="Signer full name" />
           </label>
 
-          <label>
-            Party Two Signer Wallet (Optional)
-            <input value={form.partyTwoSignerWallet} onChange={(e) => setForm((prev) => ({ ...prev, partyTwoSignerWallet: e.target.value }))} placeholder="0x..." />
-          </label>
+          {showAdvanced ? (
+            <>
+              <label>
+                Party Two Signer Wallet (Optional)
+                <input value={form.partyTwoSignerWallet} onChange={(e) => setForm((prev) => ({ ...prev, partyTwoSignerWallet: e.target.value }))} placeholder="0x..." />
+              </label>
 
-          <label>
-            Party Two Signed At
-            <input type="datetime-local" value={form.partyTwoSignedAt} onChange={(e) => setForm((prev) => ({ ...prev, partyTwoSignedAt: e.target.value }))} />
-          </label>
+              <label>
+                Party Two Signed At
+                <input type="datetime-local" value={form.partyTwoSignedAt} onChange={(e) => setForm((prev) => ({ ...prev, partyTwoSignedAt: e.target.value }))} />
+              </label>
 
-          <label>
-            Witness Name (optional)
-            <input value={form.witnessName} onChange={(e) => setForm((prev) => ({ ...prev, witnessName: e.target.value }))} placeholder="Witness full name" />
-          </label>
+              <label>
+                Witness Name (optional)
+                <input value={form.witnessName} onChange={(e) => setForm((prev) => ({ ...prev, witnessName: e.target.value }))} placeholder="Witness full name" />
+              </label>
 
-          <label>
-            Witness Wallet (Optional)
-            <input value={form.witnessWallet} onChange={(e) => setForm((prev) => ({ ...prev, witnessWallet: e.target.value }))} placeholder="0x..." />
-          </label>
+              <label>
+                Witness Wallet (Optional)
+                <input value={form.witnessWallet} onChange={(e) => setForm((prev) => ({ ...prev, witnessWallet: e.target.value }))} placeholder="0x..." />
+              </label>
 
-          <label>
-            Witness Signed At (optional)
-            <input type="datetime-local" value={form.witnessSignedAt} onChange={(e) => setForm((prev) => ({ ...prev, witnessSignedAt: e.target.value }))} />
-          </label>
+              <label>
+                Witness Signed At (optional)
+                <input type="datetime-local" value={form.witnessSignedAt} onChange={(e) => setForm((prev) => ({ ...prev, witnessSignedAt: e.target.value }))} />
+              </label>
 
-          <label className="full-row">
-            Finalization Note
-            <textarea
-              rows="2"
-              value={form.finalizationNote}
-              onChange={(e) => setForm((prev) => ({ ...prev, finalizationNote: e.target.value }))}
-              placeholder="Optional note recorded when contract is finalized"
-            />
-          </label>
+              <label className="full-row">
+                Finalization Note
+                <textarea
+                  rows="2"
+                  value={form.finalizationNote}
+                  onChange={(e) => setForm((prev) => ({ ...prev, finalizationNote: e.target.value }))}
+                  placeholder="Optional note recorded when contract is finalized"
+                />
+              </label>
 
-          <label className="full-row">
-            EIP-191 Attestation Message (Optional but recommended)
-            <textarea
-              rows="3"
-              value={form.attestationMessage}
-              onChange={(e) => setForm((prev) => ({ ...prev, attestationMessage: e.target.value }))}
-              placeholder="If empty, the app auto-generates a standard message during finalization"
-            />
-          </label>
+              <label className="full-row">
+                EIP-191 Attestation Message (Optional but recommended)
+                <textarea
+                  rows="3"
+                  value={form.attestationMessage}
+                  onChange={(e) => setForm((prev) => ({ ...prev, attestationMessage: e.target.value }))}
+                  placeholder="If empty, the app auto-generates a standard message during finalization"
+                />
+              </label>
 
-          <label className="full-row">
-            Wallet Attestation Signatures (Optional)
-            <div className="attestation-actions">
-              <select value={signingRole} onChange={(e) => setSigningRole(e.target.value)}>
-                <option value="partyOne">Sign as Party One</option>
-                <option value="partyTwo">Sign as Party Two</option>
-                <option value="witness">Sign as Witness</option>
-              </select>
-              <button className="btn ghost tiny" type="button" onClick={() => setForm((prev) => ({ ...prev, attestationMessage: buildDefaultAttestationMessage() }))}>
-                Generate Suggested Message
-              </button>
-              <button className="btn ghost tiny" type="button" onClick={signConnectedWallet} disabled={!wallet.address || signingWallet}>
-                {signingWallet ? 'Signing...' : 'Sign With Connected Wallet'}
-              </button>
-            </div>
-            <small>Why this helps: signatures let auditors cryptographically verify wallet-holder consent, not just typed names.</small>
-          </label>
+              <label className="full-row">
+                Wallet Attestation Signatures (Optional)
+                <div className="attestation-actions">
+                  <select value={signingRole} onChange={(e) => setSigningRole(e.target.value)}>
+                    <option value="partyOne">Sign as Party One</option>
+                    <option value="partyTwo">Sign as Party Two</option>
+                    <option value="witness">Sign as Witness</option>
+                  </select>
+                  <button className="btn ghost tiny" type="button" onClick={() => setForm((prev) => ({ ...prev, attestationMessage: buildDefaultAttestationMessage() }))}>
+                    Generate Suggested Message
+                  </button>
+                  <button className="btn ghost tiny" type="button" onClick={signConnectedWallet} disabled={!wallet.address || signingWallet}>
+                    {signingWallet ? 'Signing...' : 'Sign With Connected Wallet'}
+                  </button>
+                </div>
+                <small>Why this helps: signatures let auditors cryptographically verify wallet-holder consent, not just typed names.</small>
+              </label>
 
-          <label className="full-row">
-            Party One EIP-191 Signature (Optional)
-            <textarea rows="2" value={form.partyOneSignature} onChange={(e) => setForm((prev) => ({ ...prev, partyOneSignature: e.target.value }))} placeholder="0x..." />
-          </label>
+              <label className="full-row">
+                Party One EIP-191 Signature (Optional)
+                <textarea rows="2" value={form.partyOneSignature} onChange={(e) => setForm((prev) => ({ ...prev, partyOneSignature: e.target.value }))} placeholder="0x..." />
+              </label>
 
-          <label className="full-row">
-            Party Two EIP-191 Signature (Optional)
-            <textarea rows="2" value={form.partyTwoSignature} onChange={(e) => setForm((prev) => ({ ...prev, partyTwoSignature: e.target.value }))} placeholder="0x..." />
-          </label>
+              <label className="full-row">
+                Party Two EIP-191 Signature (Optional)
+                <textarea rows="2" value={form.partyTwoSignature} onChange={(e) => setForm((prev) => ({ ...prev, partyTwoSignature: e.target.value }))} placeholder="0x..." />
+              </label>
 
-          <label className="full-row">
-            Witness EIP-191 Signature (Optional)
-            <textarea rows="2" value={form.witnessSignature} onChange={(e) => setForm((prev) => ({ ...prev, witnessSignature: e.target.value }))} placeholder="0x..." />
-          </label>
+              <label className="full-row">
+                Witness EIP-191 Signature (Optional)
+                <textarea rows="2" value={form.witnessSignature} onChange={(e) => setForm((prev) => ({ ...prev, witnessSignature: e.target.value }))} placeholder="0x..." />
+              </label>
+            </>
+          ) : null}
         </div>
 
         <div className="manual-submit-row">

@@ -33,6 +33,18 @@
   line-height: 1.42;
 }
 
+.mode-toggle-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.mode-hint {
+  color: var(--site-text-muted);
+  font-size: 0.8rem;
+}
+
 .settlement-form-card,
 .records-card {
   background: var(--site-panel);
