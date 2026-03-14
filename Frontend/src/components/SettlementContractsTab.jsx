@@ -45,6 +45,7 @@ export default function SettlementContractsTab() {
   const [reverifyId, setReverifyId] = useState('');
   const [finalizingId, setFinalizingId] = useState('');
   const [verifyingId, setVerifyingId] = useState('');
+  const [integrityStatusById, setIntegrityStatusById] = useState({});
   const [beginnerMode, setBeginnerMode] = useState(true);
   const [signingRole, setSigningRole] = useState('partyOne');
   const [signingWallet, setSigningWallet] = useState(false);
@@ -88,6 +89,47 @@ export default function SettlementContractsTab() {
     [artifacts.data, form.artifactId]
   );
   const showAdvanced = !beginnerMode;
+  const hasConnectedWallet = !!wallet.address;
+  const hasTxHash = String(form.txHash || '').trim().startsWith('0x') && String(form.txHash || '').trim().length >= 10;
+  const hasRequiredSignerNames =
+    String(form.partyOneSignerName || '').trim().length > 0 && String(form.partyTwoSignerName || '').trim().length > 0;
+  const anyFinalizedRecord = records.data.some((item) => !!item.isFinalized);
+  const anyVerifiedDigest = Object.values(integrityStatusById).some((status) => status === 'verified');
+
+  const checklist = [
+    {
+      id: 'connect',
+      label: 'Connect wallet',
+      done: hasConnectedWallet,
+      hint: 'Use Connect Wallet to enable chain send/sign actions.',
+    },
+    {
+      id: 'tx',
+      label: 'Provide tx hash',
+      done: hasTxHash,
+      hint: 'Send on Base or paste an existing 0x transaction hash.',
+    },
+    {
+      id: 'signers',
+      label: 'Fill required signer names',
+      done: hasRequiredSignerNames,
+      hint: 'Party One and Party Two signer names are mandatory for finalization.',
+    },
+    {
+      id: 'finalize',
+      label: 'Finalize and lock a settlement',
+      done: anyFinalizedRecord,
+      hint: 'Click Finalize & Lock on a tracked record once required fields are complete.',
+    },
+    {
+      id: 'verify',
+      label: 'Verify integrity digest',
+      done: anyVerifiedDigest,
+      hint: 'Click Verify Digest and confirm status is verified before audit export.',
+    },
+  ];
+
+  const nextChecklistItem = checklist.find((item) => !item.done);
 
   const hasEthereum = () => typeof window !== 'undefined' && !!window.ethereum?.request;
 
@@ -432,6 +474,7 @@ export default function SettlementContractsTab() {
         return;
       }
       const status = response.integrity?.status || 'unknown';
+      setIntegrityStatusById((prev) => ({ ...prev, [id]: status }));
       setMessage(`Integrity check complete: ${status}.`);
       await loadTransfers();
     } catch (err) {
@@ -587,6 +630,21 @@ export default function SettlementContractsTab() {
         <span className="mode-hint">
           {beginnerMode ? 'Showing only core required inputs + wallet send basics.' : 'Showing full optional legal and attestation controls.'}
         </span>
+      </div>
+
+      <div className="checklist-card" role="region" aria-label="Live settlement checklist">
+        <h4>Live Checklist</h4>
+        <div className="checklist-items">
+          {checklist.map((item, index) => (
+            <div key={item.id} className={`checklist-item ${item.done ? 'done' : 'pending'}`}>
+              <span className={`check-badge ${item.done ? 'done' : 'pending'}`}>{item.done ? 'Done' : 'Pending'}</span>
+              <span className="check-step">Step {index + 1}: {item.label}</span>
+            </div>
+          ))}
+        </div>
+        <p className="checklist-next">
+          <strong>Next action:</strong> {nextChecklistItem ? nextChecklistItem.hint : 'All steps complete. Export/print verification reports for archive.'}
+        </p>
       </div>
 
       <div className="settlement-form-card">
@@ -876,6 +934,7 @@ export default function SettlementContractsTab() {
                   <span className={`chip status-${item.status}`}>{item.status}</span>
                   <span className="chip network">{item.network}</span>
                   {item.isFinalized ? <span className="chip finalized">Finalized</span> : null}
+                  {integrityStatusById[item.id] ? <span className={`chip integrity-${integrityStatusById[item.id]}`}>Digest: {integrityStatusById[item.id]}</span> : null}
                   <button className="btn ghost tiny" type="button" onClick={() => handleReverify(item.id)} disabled={reverifyId === item.id}>
                     {reverifyId === item.id ? 'Checking...' : 'Re-verify'}
                   </button>
