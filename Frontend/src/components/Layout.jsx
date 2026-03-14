@@ -30,6 +30,7 @@ export default function Layout({ children }) {
           <NavLink to="/marketplace">🛒 Marketplace</NavLink>
           <NavLink to="/cart">Cart</NavLink>
           {token ? <NavLink to="/items/new">📦 Sell Item</NavLink> : null}
+          {token ? <NavLink to="/items/mine">My Listings</NavLink> : null}
           <NavLink to="/oracle">🔮 Oracle Assessment</NavLink>
           <NavLink to="/about">About</NavLink>
           {token

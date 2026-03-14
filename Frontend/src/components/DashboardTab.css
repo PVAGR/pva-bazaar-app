@@ -1,8 +1,8 @@
 /* DashboardTab.css - Archive baseline theme */
 
 .dashboard-tab {
-  padding: 2rem;
-  max-width: 1600px;
+  padding: 1rem 0.5rem;
+  max-width: none;
   margin: 0 auto;
 }
 

@@ -152,3 +152,84 @@
   border-radius: 8px;
 }
 
+.syndication-jobs {
+  margin-top: 0.65rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.syndication-job-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: stretch;
+  border: 1px solid var(--site-border);
+  border-radius: 8px;
+  padding: 0.45rem 0.55rem;
+  background: var(--site-panel-soft);
+}
+
+.syndication-job-main {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.syndication-job-channel {
+  text-transform: capitalize;
+  font-weight: 700;
+  color: var(--site-text);
+}
+
+.syndication-job-status {
+  width: fit-content;
+  border: 1px solid var(--site-border);
+  border-radius: 999px;
+  padding: 0.1rem 0.5rem;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.syndication-job-status.is-success {
+  color: var(--site-accent-strong);
+  border-color: var(--site-accent);
+}
+
+.syndication-job-status.is-failed,
+.syndication-job-status.is-manual_required {
+  color: var(--site-danger-text);
+  border-color: var(--site-danger-text);
+}
+
+.syndication-job-status.is-skipped {
+  color: var(--site-text-muted);
+}
+
+.syndication-job-message {
+  color: var(--site-text-muted);
+  font-size: 0.88rem;
+}
+
+.syndication-job-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.syndication-link {
+  text-decoration: none;
+}
+
+.syndication-actions {
+  margin-top: 0.65rem;
+}
+
+@media (max-width: 640px) {
+  .syndication-job-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+

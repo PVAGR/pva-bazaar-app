@@ -10,6 +10,10 @@ const { authMiddleware } = require('../middleware/auth');
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const { createArtifactEvent, dispatchToOpenClaw } = require('../utils/openclaw-events');
+const {
+  normalizeSyndicationInput,
+  dispatchSyndication,
+} = require('../service/marketplaceSyndicationService');
 
 function hasAdminAccess(req) {
   const adminCode = req.headers['x-admin-code'];
@@ -37,6 +41,13 @@ function hasAdminAccess(req) {
   }
 
   return false;
+}
+
+function canManageArtifact(req, artifact) {
+  if (!artifact) return false;
+  if (hasAdminAccess(req)) return true;
+  if (!req.user?.id) return false;
+  return String(artifact.creator) === String(req.user.id);
 }
 
 // GET /api/items
@@ -95,6 +106,97 @@ router.get('/', async (req, res) => {
 });
 
 // GET /api/items/:slugOrId
+router.get('/mine', authMiddleware, async (req, res) => {
+  try {
+    const docs = await Artifact.find({ creator: req.user.id })
+      .sort({ createdAt: -1, _id: -1 })
+      .limit(200)
+      .exec();
+
+    res.json({
+      ok: true,
+      items: docs.map(toPublicItem),
+    });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// POST /api/items/syndication/retry-bulk - admin bulk retry for failed/manual jobs
+router.post('/syndication/retry-bulk', async (req, res) => {
+  if (!hasAdminAccess(req)) {
+    return res.status(401).json({ ok: false, error: 'Unauthorized' });
+  }
+
+  try {
+    const requestedChannels = Array.isArray(req.body?.channels)
+      ? req.body.channels.filter((channel) => typeof channel === 'string')
+      : [];
+    const limit = Math.max(1, Math.min(Number(req.body?.limit) || 50, 200));
+
+    const candidates = await Artifact.find({
+      'syndication.jobs.status': { $in: ['failed', 'manual_required'] },
+    })
+      .sort({ updatedAt: -1, createdAt: -1, _id: -1 })
+      .limit(limit)
+      .exec();
+
+    const results = [];
+    for (const artifact of candidates) {
+      const fallbackChannels = (artifact?.syndication?.jobs || [])
+        .filter((job) => ['failed', 'manual_required'].includes(job.status))
+        .map((job) => job.channel);
+      const channels = requestedChannels.length > 0 ? requestedChannels : fallbackChannels;
+      if (!channels.length) continue;
+
+      const syndicationResult = await dispatchSyndication({
+        artifact,
+        user: null,
+        requestedChannels: channels,
+      });
+      artifact.syndication = {
+        requestedChannels: syndicationResult.requestedChannels,
+        jobs: syndicationResult.jobs,
+        lastDispatchAt: new Date(),
+      };
+      await artifact.save();
+
+      results.push({
+        itemId: String(artifact._id),
+        itemSlug: artifact.slug || '',
+        itemTitle: artifact.title || artifact.name || 'Untitled',
+        summary: syndicationResult.summary,
+      });
+    }
+
+    const aggregate = results.reduce(
+      (acc, row) => {
+        acc.items += 1;
+        acc.success += Number(row.summary?.success || 0);
+        acc.failed += Number(row.summary?.failed || 0);
+        acc.skipped += Number(row.summary?.skipped || 0);
+        acc.manualRequired += Number(row.summary?.manualRequired || 0);
+        return acc;
+      },
+      { items: 0, success: 0, failed: 0, skipped: 0, manualRequired: 0 },
+    );
+
+    return res.json({
+      ok: true,
+      aggregate,
+      results,
+      message: `Processed ${aggregate.items} listings for syndication retry`,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      ok: false,
+      error: 'Failed to run bulk syndication retry',
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined,
+    });
+  }
+});
+
+// GET /api/items/:slugOrId
 router.get('/:slugOrId', async (req, res) => {
   try {
     const { slugOrId } = req.params;
@@ -119,7 +221,20 @@ router.get('/:slugOrId', async (req, res) => {
 // Requires authentication via JWT token
 router.post('/register', authMiddleware, async (req, res) => {
   try {
-    const { title, name, description, price, category, condition, materials, images, imageUrls, brand, measurements } = req.body;
+    const {
+      title,
+      name,
+      description,
+      price,
+      category,
+      condition,
+      materials,
+      images,
+      imageUrls,
+      brand,
+      measurements,
+      syndication,
+    } = req.body;
 
     // Validation
     if (!title && !name) {
@@ -151,6 +266,7 @@ router.post('/register', authMiddleware, async (req, res) => {
     }
 
     const user = await User.findById(req.user.id).select('name email');
+    const requestedSyndication = normalizeSyndicationInput(syndication);
 
     // Prepare artifact data
     const artifactData = {
@@ -180,9 +296,35 @@ router.post('/register', authMiddleware, async (req, res) => {
       agreed: false,
     };
 
+    artifactData.syndication = {
+      requestedChannels: requestedSyndication.requestedChannels,
+      jobs: requestedSyndication.requestedChannels.map((channel) => ({
+        channel,
+        status: 'queued',
+        message: 'Queued for dispatch',
+        attemptedAt: new Date(),
+      })),
+      lastDispatchAt: requestedSyndication.hasAny ? new Date() : undefined,
+    };
+
     // Create artifact
     const artifact = new Artifact(artifactData);
     await artifact.save();
+
+    let syndicationResult = null;
+    if (requestedSyndication.hasAny) {
+      syndicationResult = await dispatchSyndication({
+        artifact,
+        user,
+        requestedChannels: requestedSyndication.requestedChannels,
+      });
+      artifact.syndication = {
+        requestedChannels: syndicationResult.requestedChannels,
+        jobs: syndicationResult.jobs,
+        lastDispatchAt: new Date(),
+      };
+      await artifact.save();
+    }
 
     // Send confirmation email to user (non-blocking)
     try {
@@ -213,6 +355,7 @@ router.post('/register', authMiddleware, async (req, res) => {
     res.status(201).json({
       ok: true,
       item: toPublicItem(artifact),
+      syndication: syndicationResult,
       message: 'Item registered successfully. It will be reviewed before publishing.',
     });
   } catch (err) {
@@ -235,6 +378,64 @@ router.post('/register', authMiddleware, async (req, res) => {
     res.status(500).json({
       ok: false,
       error: 'Failed to register item',
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined,
+    });
+  }
+});
+
+// POST /api/items/:id/syndication/retry - retry selected channel dispatches for owner/admin
+router.post('/:id/syndication/retry', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ ok: false, error: 'Invalid item id' });
+    }
+
+    const artifact = await Artifact.findById(id);
+    if (!artifact) {
+      return res.status(404).json({ ok: false, error: 'Item not found' });
+    }
+    if (!canManageArtifact(req, artifact)) {
+      return res.status(403).json({ ok: false, error: 'Forbidden' });
+    }
+
+    const requestedByBody = Array.isArray(req.body?.channels)
+      ? req.body.channels.filter((channel) => typeof channel === 'string')
+      : [];
+    const channels = requestedByBody.length > 0
+      ? requestedByBody
+      : Array.isArray(artifact?.syndication?.requestedChannels)
+        ? artifact.syndication.requestedChannels
+        : [];
+
+    if (!channels.length) {
+      return res.status(400).json({ ok: false, error: 'No syndication channels selected for retry' });
+    }
+
+    const user = await User.findById(req.user.id).select('name email');
+    const syndicationResult = await dispatchSyndication({
+      artifact,
+      user,
+      requestedChannels: channels,
+    });
+
+    artifact.syndication = {
+      requestedChannels: syndicationResult.requestedChannels,
+      jobs: syndicationResult.jobs,
+      lastDispatchAt: new Date(),
+    };
+    await artifact.save();
+
+    res.json({
+      ok: true,
+      item: toPublicItem(artifact),
+      syndication: syndicationResult,
+      message: 'Syndication retry completed',
+    });
+  } catch (err) {
+    res.status(500).json({
+      ok: false,
+      error: 'Failed to retry syndication',
       details: process.env.NODE_ENV === 'development' ? err.message : undefined,
     });
   }

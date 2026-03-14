@@ -201,14 +201,51 @@ export async function fetchMarketplaceItems({ limit = 12, cursor = null, categor
   }
 }
 
+export async function fetchMyMarketplaceItems() {
+  try {
+    const response = await apiGet('/items/mine');
+    if (response && response.ok && Array.isArray(response.items)) {
+      return { ok: true, items: response.items };
+    }
+    return { ok: false, items: [], error: response?.error || response?.message || 'Failed to fetch your listings' };
+  } catch (err) {
+    return { ok: false, items: [], error: err.message };
+  }
+}
+
 // Create a new marketplace item (authenticated user flow)
 export async function createMarketplaceItem(payload) {
   try {
     const response = await apiPost('/items/register', payload);
     if (response && response.ok && response.item) {
-      return { ok: true, item: response.item, message: response.message || 'Item created' };
+      return {
+        ok: true,
+        item: response.item,
+        message: response.message || 'Item created',
+        syndication: response.syndication || null,
+      };
     }
     return { ok: false, error: response?.error || response?.message || 'Failed to create item' };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+}
+
+export async function retryMarketplaceSyndication(itemId, channels = []) {
+  if (!itemId) return { ok: false, error: 'Missing item id' };
+  try {
+    const response = await apiPost(`/items/${encodeURIComponent(itemId)}/syndication/retry`, {
+      channels,
+    });
+    if (response && response.ok) {
+      return {
+        ok: true,
+        item: response.item || null,
+        syndication: response.syndication || null,
+        message: response.message || 'Syndication retry completed',
+      };
+    }
+    return { ok: false, error: response?.error || response?.message || 'Failed to retry syndication' };
   } catch (err) {
     return { ok: false, error: err.message };
   }

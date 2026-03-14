@@ -73,6 +73,26 @@ const artifactSchema = new mongoose.Schema({
   /** Digital download URL (after purchase). Optional; used for fulfillment. */
   downloadUrl: { type: String },
 
+  // Optional cross-marketplace syndication tracking
+  syndication: {
+    requestedChannels: [{ type: String, enum: ['facebook', 'etsy', 'ebay'] }],
+    jobs: [
+      {
+        channel: { type: String, enum: ['facebook', 'etsy', 'ebay'], required: true },
+        status: {
+          type: String,
+          enum: ['queued', 'success', 'failed', 'skipped', 'manual_required'],
+          default: 'queued',
+        },
+        message: { type: String, default: '' },
+        externalListingId: { type: String, default: '' },
+        externalUrl: { type: String, default: '' },
+        attemptedAt: { type: Date, default: Date.now },
+      },
+    ],
+    lastDispatchAt: Date,
+  },
+
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });

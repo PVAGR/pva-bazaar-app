@@ -3,9 +3,12 @@ import { Link, useNavigate } from 'react-router-dom';
 import AdminNav from '../components/AdminNav.jsx';
 import HelpTip from '../components/HelpTip.jsx';
 import { apiGet, apiPut } from '../lib/api';
+import { fetchMyMarketplaceItems } from '../lib/api';
 import { clearToken } from '../lib/auth';
 import '../styles/admin-common.css';
 import './AccountPage.css';
+
+const NEEDS_ATTENTION_STATUSES = new Set(['failed', 'manual_required']);
 
 export default function AccountPage() {
   const navigate = useNavigate();
@@ -18,6 +21,12 @@ export default function AccountPage() {
   const [error, setError] = useState('');
   const [okMsg, setOkMsg] = useState('');
   const [profile, setProfile] = useState(null);
+  const [listingsHealth, setListingsHealth] = useState({
+    loading: true,
+    total: 0,
+    needsAttention: 0,
+    withSyndication: 0,
+  });
 
   const preferencesDraft = useMemo(() => {
     const prefs = profile?.preferences || {};
@@ -45,6 +54,40 @@ export default function AccountPage() {
         setError(serverMsg || e.message || 'Failed to load profile');
       })
       .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadListingsHealth() {
+      const result = await fetchMyMarketplaceItems();
+      if (cancelled) return;
+      if (!result.ok) {
+        setListingsHealth({ loading: false, total: 0, needsAttention: 0, withSyndication: 0 });
+        return;
+      }
+
+      const items = Array.isArray(result.items) ? result.items : [];
+      let needsAttention = 0;
+      let withSyndication = 0;
+      for (const item of items) {
+        const jobs = item?.syndication?.jobs || [];
+        if (jobs.length > 0) withSyndication += 1;
+        if (jobs.some((job) => NEEDS_ATTENTION_STATUSES.has(job.status))) {
+          needsAttention += 1;
+        }
+      }
+      setListingsHealth({
+        loading: false,
+        total: items.length,
+        needsAttention,
+        withSyndication,
+      });
+    }
+
+    loadListingsHealth();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   async function handleSave() {
@@ -139,6 +182,45 @@ export default function AccountPage() {
                   autoComplete="email"
                 />
               </label>
+            </div>
+          </section>
+        ) : null}
+
+        {profile ? (
+          <section className="card accountListingsHealth">
+            <h2>
+              Seller Syndication Health{' '}
+              <HelpTip
+                title="Syndication health"
+                body="Shows how many of your listings need marketplace syndication follow-up."
+                example="Retry failed channels"
+              />
+            </h2>
+            {listingsHealth.loading ? (
+              <div className="muted">Loading listing health...</div>
+            ) : (
+              <div className="accountListingsHealthGrid">
+                <div className="healthTile">
+                  <span>Total listings</span>
+                  <strong>{listingsHealth.total}</strong>
+                </div>
+                <div className="healthTile">
+                  <span>With syndication</span>
+                  <strong>{listingsHealth.withSyndication}</strong>
+                </div>
+                <div className="healthTile warning">
+                  <span>Need attention</span>
+                  <strong>{listingsHealth.needsAttention}</strong>
+                </div>
+              </div>
+            )}
+            <div className="accountListingsHealthActions">
+              <Link className="btn ghost" to="/items/mine">
+                Open My Listings
+              </Link>
+              <Link className="btn primary" to="/items/mine?filter=attention">
+                Review Attention Queue
+              </Link>
             </div>
           </section>
         ) : null}

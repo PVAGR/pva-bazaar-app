@@ -26,6 +26,7 @@ import { LoadingDots } from '../components/LoadingSpinner.jsx';
 import './MarketplaceTab.css';
 
 const logger = createLogger('MarketplaceTab');
+const CHANNELS = ['facebook', 'etsy', 'ebay'];
 
 const getItemId = (item) => item?._id || item?.id;
 
@@ -39,6 +40,13 @@ export default function MarketplaceTab() {
   const [submitting, setSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('newest');
+  const [bulkRetrying, setBulkRetrying] = useState(false);
+  const [bulkRetryLimit, setBulkRetryLimit] = useState('80');
+  const [selectedBulkChannels, setSelectedBulkChannels] = useState({
+    facebook: true,
+    etsy: true,
+    ebay: true,
+  });
 
   const [formData, setFormData] = useState({
     title: '',
@@ -81,13 +89,19 @@ export default function MarketplaceTab() {
     outOfStock: items.filter((item) => Number(item.stock || 0) === 0).length,
     lowStock: items.filter((item) => Number(item.stock || 0) > 0 && Number(item.stock || 0) < 5).length,
     drafts: items.filter((item) => item.status === 'draft').length,
+    syndicationAttention: items.filter((item) => {
+      const jobs = item?.syndication?.jobs || [];
+      return jobs.some((job) => ['failed', 'manual_required'].includes(job.status));
+    }).length,
   };
+
+  const bulkChannels = CHANNELS.filter((channel) => selectedBulkChannels[channel]);
 
   const loadItems = async () => {
     setLoading(true);
     setError('');
     try {
-      const response = await apiGet('/items');
+      const response = await apiGet('/items?includeDrafts=true&limit=200');
       if (response.ok && Array.isArray(response.items)) {
         setItems(response.items);
       } else {
@@ -99,6 +113,46 @@ export default function MarketplaceTab() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleBulkRetrySyndication = async () => {
+    if (!bulkChannels.length) {
+      setError('Select at least one syndication channel to retry.');
+      return;
+    }
+    if (!confirm('Retry syndication for listings with failed/manual-required jobs?')) {
+      return;
+    }
+    setBulkRetrying(true);
+    setError('');
+    setSuccess('');
+    try {
+      const response = await apiPost('/items/syndication/retry-bulk', {
+        limit: Number(bulkRetryLimit) || 80,
+        channels: bulkChannels,
+      });
+      if (!response?.ok) {
+        setError(response?.error || 'Bulk retry failed');
+        return;
+      }
+      const aggregate = response.aggregate || {};
+      setSuccess(
+        `Bulk retry (${bulkChannels.join(', ')}) complete: ${aggregate.items || 0} listings, ${aggregate.success || 0} success, ${aggregate.failed || 0} failed, ${aggregate.manualRequired || 0} manual required.`,
+      );
+      await loadItems();
+    } catch (err) {
+      logger.error('Bulk syndication retry failed', err);
+      setError(err.message || 'Bulk retry failed');
+    } finally {
+      setBulkRetrying(false);
+    }
+  };
+
+  const toggleBulkChannel = (channel) => {
+    setSelectedBulkChannels((prev) => ({
+      ...prev,
+      [channel]: !prev[channel],
+    }));
   };
 
   const handleInputChange = (e) => {
@@ -226,6 +280,47 @@ export default function MarketplaceTab() {
           <span>Drafts</span>
           <strong>{stats.drafts}</strong>
         </div>
+        <div className="market-stat warning">
+          <span>Syndication queue</span>
+          <strong>{stats.syndicationAttention}</strong>
+        </div>
+      </div>
+
+      <div className="marketplace-ops-row">
+        <div className="ops-controls">
+          <label className="ops-limit">
+            Queue limit
+            <input
+              type="number"
+              min="1"
+              max="200"
+              value={bulkRetryLimit}
+              onChange={(e) => setBulkRetryLimit(e.target.value)}
+            />
+          </label>
+
+          <div className="ops-channels" aria-label="Syndication retry channels">
+            {CHANNELS.map((channel) => (
+              <label key={channel} className="ops-check">
+                <input
+                  type="checkbox"
+                  checked={selectedBulkChannels[channel]}
+                  onChange={() => toggleBulkChannel(channel)}
+                />
+                {channel}
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <button
+          type="button"
+          className="submit-btn"
+          onClick={handleBulkRetrySyndication}
+          disabled={bulkRetrying}
+        >
+          {bulkRetrying ? 'Retrying Syndication Queue...' : 'Retry Syndication Queue'}
+        </button>
       </div>
 
       {error && <div className="error-message">❌ {error}</div>}

@@ -62,6 +62,24 @@ function toPublicItem(doc) {
   }
   const stockQty = doc.stockQty != null ? Number(doc.stockQty) : undefined;
   const lore = doc.lore || doc.description || '';
+  const syndication = {
+    requestedChannels: Array.isArray(doc?.syndication?.requestedChannels)
+      ? doc.syndication.requestedChannels
+      : [],
+    jobs: Array.isArray(doc?.syndication?.jobs)
+      ? doc.syndication.jobs.map((job) => ({
+          channel: job.channel,
+          status: job.status,
+          message: job.message || '',
+          externalListingId: job.externalListingId || '',
+          externalUrl: job.externalUrl || '',
+          attemptedAt: job.attemptedAt ? new Date(job.attemptedAt).toISOString() : undefined,
+        }))
+      : [],
+    lastDispatchAt: doc?.syndication?.lastDispatchAt
+      ? new Date(doc.syndication.lastDispatchAt).toISOString()
+      : undefined,
+  };
   return {
     id: doc._id ? String(doc._id) : undefined,
     slug,
@@ -75,6 +93,7 @@ function toPublicItem(doc) {
     tags: Array.isArray(tags) ? tags : [tags],
     status,
     stockQty,
+    syndication,
     createdAt: doc.createdAt ? doc.createdAt.toISOString() : undefined,
     updatedAt: doc.updatedAt ? doc.updatedAt.toISOString() : undefined,
   };

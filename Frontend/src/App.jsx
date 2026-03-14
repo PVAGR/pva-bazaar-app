@@ -15,6 +15,7 @@ import VerificationPage from './pages/VerificationPage.jsx';
 import ManifestoPage from './pages/ManifestoPage.jsx';
 import CartPage from './pages/CartPage.jsx';
 import ListItemPage from './pages/ListItemPage.jsx';
+import MyListingsPage from './pages/MyListingsPage.jsx';
 import OracleAssessmentPage from './pages/OracleAssessmentPage.jsx';
 import LoginPage from './pages/LoginPage.jsx';
 import RegisterPage from './pages/RegisterPage.jsx';
@@ -47,6 +48,7 @@ export default function App() {
           <Route path="/manifesto" element={<RouteErrorBoundary><ManifestoPage /></RouteErrorBoundary>} />
           <Route path="/cart" element={<RouteErrorBoundary><CartPage /></RouteErrorBoundary>} />
           <Route path="/items/new" element={<RouteErrorBoundary><ListItemPage /></RouteErrorBoundary>} />
+          <Route path="/items/mine" element={<RouteErrorBoundary><MyListingsPage /></RouteErrorBoundary>} />
           <Route path="/oracle" element={<RouteErrorBoundary><OracleAssessmentPage /></RouteErrorBoundary>} />
           <Route path="/login" element={<RouteErrorBoundary><LoginPage /></RouteErrorBoundary>} />
           <Route path="/register" element={<RouteErrorBoundary><RegisterPage /></RouteErrorBoundary>} />

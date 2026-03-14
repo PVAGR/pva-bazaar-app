@@ -1,10 +1,12 @@
 import React, { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import HelpTip from '../components/HelpTip.jsx';
-import { createMarketplaceItem } from '../lib/api';
+import { createMarketplaceItem, retryMarketplaceSyndication } from '../lib/api';
 import './ListItemPage.css';
 
 const STEPS = ['Basic Info', 'Pricing', 'Images', 'Syndication'];
+const SYNDICATION_CHANNELS = ['facebook', 'etsy', 'ebay'];
+const NEEDS_ATTENTION_STATUSES = new Set(['failed', 'manual_required']);
 
 const CATEGORY_OPTIONS = ['clothing', 'electronics', 'home', 'art', 'jewelry', 'other'];
 const CONDITION_OPTIONS = ['new', 'like-new', 'used', 'used-fair', 'vintage'];
@@ -13,8 +15,10 @@ export default function ListItemPage() {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
+  const [retrying, setRetrying] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [createdItemId, setCreatedItemId] = useState('');
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -27,11 +31,11 @@ export default function ListItemPage() {
     images: [],
     syndication: {
       ebay: false,
-      amazon: false,
+      etsy: false,
       facebook: false,
-      offerup: false,
     },
   });
+  const [syndicationSummary, setSyndicationSummary] = useState(null);
 
   const imagePreviews = useMemo(() => form.images.slice(0, 6), [form.images]);
 
@@ -117,6 +121,7 @@ export default function ListItemPage() {
     }
     setError('');
     setSubmitting(true);
+    setSyndicationSummary(null);
 
     const payload = {
       title: form.title.trim(),
@@ -142,8 +147,54 @@ export default function ListItemPage() {
       return;
     }
 
-    setSuccess('Listing submitted successfully. It is now pending review.');
+    if (res.syndication) {
+      setSyndicationSummary(res.syndication);
+    }
+    setCreatedItemId(res.item?.id || '');
+
+    const requiresAttention = Boolean(
+      res.syndication?.jobs?.some(job => NEEDS_ATTENTION_STATUSES.has(job.status)),
+    );
+    if (requiresAttention) {
+      setSuccess('Listing submitted. Review syndication results below and retry channels that need attention.');
+      return;
+    }
+
+    setSuccess('Listing submitted successfully. It is now pending review. Redirecting to marketplace...');
     setTimeout(() => navigate('/marketplace'), 1200);
+  }
+
+  async function retrySyndicationChannels(channels) {
+    if (!createdItemId || !Array.isArray(channels) || !channels.length) return;
+
+    setRetrying(true);
+    setError('');
+    const retry = await retryMarketplaceSyndication(createdItemId, channels);
+    setRetrying(false);
+
+    if (!retry.ok) {
+      setError(retry.error || 'Syndication retry failed');
+      return;
+    }
+
+    if (retry.syndication) {
+      setSyndicationSummary(retry.syndication);
+    }
+    setSuccess('Syndication retry completed.');
+  }
+
+  async function handleRetryFailedSyndication() {
+    if (!syndicationSummary?.jobs?.length) return;
+    const retryChannels = syndicationSummary.jobs
+      .filter(job => NEEDS_ATTENTION_STATUSES.has(job.status))
+      .map(job => job.channel);
+    if (!retryChannels.length) return;
+    await retrySyndicationChannels(retryChannels);
+  }
+
+  async function handleRetrySingleChannel(channel) {
+    if (!channel) return;
+    await retrySyndicationChannels([channel]);
   }
 
   return (
@@ -312,8 +363,8 @@ export default function ListItemPage() {
 
           {step === 4 && (
             <section>
-              <p className="hint">Choose external marketplaces for future syndication automation.</p>
-              {Object.keys(form.syndication).map(platform => (
+              <p className="hint">Choose marketplaces to publish in parallel during submission.</p>
+              {SYNDICATION_CHANNELS.map(platform => (
                 <label key={platform} className="check">
                   <input
                     type="checkbox"
@@ -322,8 +373,8 @@ export default function ListItemPage() {
                   />
                   {platform}
                   <HelpTip
-                    title="Syndication (future)"
-                    body="This is a placeholder for automation. Selecting a platform won’t publish yet, but we save your intent for later integrations."
+                    title="Syndication"
+                    body="When enabled, PVA dispatches this listing to the configured connector for the selected channel at submit time."
                     example="ebay"
                   />
                 </label>
@@ -333,6 +384,63 @@ export default function ListItemPage() {
 
           {error && <div className="form-error">{error}</div>}
           {success && <div className="form-success">{success}</div>}
+          {syndicationSummary && (
+            <div className="form-success" role="status" aria-live="polite">
+              Syndication dispatched: {syndicationSummary.summary?.success || 0} success,{' '}
+              {syndicationSummary.summary?.failed || 0} failed,{' '}
+              {syndicationSummary.summary?.skipped || 0} skipped,{' '}
+              {syndicationSummary.summary?.manualRequired || 0} manual required.
+
+              {!!syndicationSummary.jobs?.length && (
+                <div className="syndication-jobs">
+                  {syndicationSummary.jobs.map(job => (
+                    <div key={job.channel} className="syndication-job-row">
+                      <div className="syndication-job-main">
+                        <span className="syndication-job-channel">{job.channel}</span>
+                        <span className={`syndication-job-status is-${job.status}`}>{job.status}</span>
+                      </div>
+                      <span className="syndication-job-message">{job.message || 'No details'}</span>
+                      <div className="syndication-job-actions">
+                        {job.externalUrl ? (
+                          <a
+                            className="btn ghost syndication-link"
+                            href={job.externalUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            Open Listing
+                          </a>
+                        ) : null}
+                        {NEEDS_ATTENTION_STATUSES.has(job.status) ? (
+                          <button
+                            type="button"
+                            className="btn ghost"
+                            onClick={() => handleRetrySingleChannel(job.channel)}
+                            disabled={retrying}
+                          >
+                            {retrying ? 'Retrying...' : `Retry ${job.channel}`}
+                          </button>
+                        ) : null}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {!!syndicationSummary.jobs?.some(job => ['failed', 'manual_required'].includes(job.status)) && (
+                <div className="syndication-actions">
+                  <button
+                    type="button"
+                    className="btn ghost"
+                    onClick={handleRetryFailedSyndication}
+                    disabled={retrying}
+                  >
+                    {retrying ? 'Retrying...' : 'Retry Failed Channels'}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="form-actions">
             <Link to="/marketplace" className="btn ghost">

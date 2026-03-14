@@ -128,3 +128,88 @@ Typical flow:
 1. OpenClaw runs continuously on a VM (`openclaw onboard --install-daemon`).
 2. PVA backend dispatches jobs/events to OpenClaw through `POST /api/openclaw/dispatch`.
 3. OpenClaw handles autonomous agent work via its own gateway/channels/webhooks.
+
+## Marketplace Syndication (eBay / Etsy / Facebook)
+
+The items API supports one-submit multi-channel syndication for seller listings.
+
+### Endpoints
+
+- `POST /api/items/register` (auth required)
+	- Accepts `syndication` object in request body:
+		- `syndication.facebook` (boolean)
+		- `syndication.etsy` (boolean)
+		- `syndication.ebay` (boolean)
+	- Dispatches selected channels in parallel when connectors are configured.
+	- Returns channel job results in `syndication.jobs` and aggregate counts in `syndication.summary`.
+
+- `POST /api/items/:id/syndication/retry` (auth required, creator or admin)
+	- Retries channels passed in body:
+		- `{ "channels": ["facebook", "etsy", "ebay"] }`
+	- If omitted, retries previously requested channels.
+	- Updates persisted syndication status on the artifact.
+
+- `POST /api/items/syndication/retry-bulk` (admin)
+	- Retries listings currently containing `failed` or `manual_required` jobs.
+	- Optional body fields:
+		- `limit` (default 50, max 200)
+		- `channels` (optional override list)
+	- Returns aggregate queue results for operational dashboards.
+
+### Connector env vars
+
+Set these in the backend environment to enable automatic posting:
+
+- `FACEBOOK_MARKETPLACE_WEBHOOK_URL`
+- `FACEBOOK_MARKETPLACE_WEBHOOK_TOKEN`
+- `ETSY_LISTING_WEBHOOK_URL`
+- `ETSY_LISTING_WEBHOOK_TOKEN`
+- `EBAY_LISTING_WEBHOOK_URL`
+- `EBAY_LISTING_WEBHOOK_TOKEN`
+
+If a connector URL is missing:
+- Facebook returns `manual_required`.
+- Etsy/eBay return `skipped`.
+
+### Webhook payload contract (outbound)
+
+Each connector receives:
+
+```json
+{
+	"channel": "etsy",
+	"item": {
+		"id": "<artifact-id>",
+		"slug": "<item-slug>",
+		"title": "<title>",
+		"description": "<description>",
+		"category": "<category>",
+		"price": 49.99,
+		"currency": "USD",
+		"imageUrls": [],
+		"materials": [],
+		"artisan": "<seller name>",
+		"tags": [],
+		"condition": "used",
+		"measurements": ""
+	},
+	"seller": {
+		"id": "<user-id>",
+		"name": "<seller name>",
+		"email": "<seller email>"
+	},
+	"source": "pvabazaar",
+	"createdAt": "<iso timestamp>"
+}
+```
+
+### Connector response contract (inbound)
+
+Connector should return JSON with optional fields:
+
+- `status`: `success | failed | skipped | manual_required`
+- `message`: human-readable status detail
+- `listingId`: external listing id
+- `listingUrl`: external listing URL
+
+If omitted, the backend treats a successful HTTP response as `success`.
