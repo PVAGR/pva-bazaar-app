@@ -235,10 +235,17 @@ export default function OpenClawTab() {
     }
   };
 
-  const rows = useMemo(
-    () => [...messages].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)),
-    [messages],
-  );
+  const rows = useMemo(() => {
+    const safe = Array.isArray(messages)
+      ? messages.filter((item) => item && typeof item === 'object')
+      : [];
+
+    return safe.sort((a, b) => {
+      const aTime = Date.parse(a.createdAt || 0) || 0;
+      const bTime = Date.parse(b.createdAt || 0) || 0;
+      return aTime - bTime;
+    });
+  }, [messages]);
 
   return (
     <div className="openclaw-tab">
@@ -464,18 +471,21 @@ export default function OpenClawTab() {
 
           {!!rows.length && (
             <div className="oc-chat-list">
-              {rows.map((row) => {
+              {rows.map((row, index) => {
                 const inbound = row.direction === 'inbound';
+                const content = typeof row.content === 'string'
+                  ? row.content
+                  : (row.content == null ? '(empty)' : JSON.stringify(row.content));
                 return (
                   <div
-                    key={row._id || `${row.direction}-${row.createdAt}-${row.content}`}
+                    key={row._id || `${row.direction || 'unknown'}-${row.createdAt || index}-${index}`}
                     className={`oc-chat-row ${inbound ? 'inbound' : 'outbound'}`}
                   >
                     <div className="oc-chat-meta">
                       <strong>{inbound ? 'OpenClaw Agent' : 'You'}</strong>
                       <span>{formatMessageTime(row.createdAt)}</span>
                     </div>
-                    <div className="oc-chat-content">{row.content || '(empty)'}</div>
+                    <div className="oc-chat-content">{content}</div>
                   </div>
                 );
               })}
