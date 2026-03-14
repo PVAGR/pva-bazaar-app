@@ -38,6 +38,10 @@ export default function OpenClawTab() {
     healthUrl: '',
     apiKey: '',
     bridgeSecret: '',
+    autonomousEnabled: true,
+    autonomousBountyScanMinutes: 30,
+    autonomousKeepaliveMinutes: 10,
+    autonomousMoneyRunEnabled: false,
     workerName: 'openclaw-queue-dispatcher',
     workerPollMs: 10000,
     workerBatchSize: 15,
@@ -84,6 +88,10 @@ export default function OpenClawTab() {
           gatewayUrl: cfg.gatewayUrl || '',
           webhookUrl: cfg.webhookUrl || '',
           healthUrl: cfg.healthUrl || '',
+          autonomousEnabled: cfg.autonomousEnabled !== false,
+          autonomousBountyScanMinutes: cfg.autonomousBountyScanMinutes || 30,
+          autonomousKeepaliveMinutes: cfg.autonomousKeepaliveMinutes || 10,
+          autonomousMoneyRunEnabled: cfg.autonomousMoneyRunEnabled === true,
           workerName: cfg.workerName || 'openclaw-queue-dispatcher',
           workerPollMs: cfg.workerPollMs || 10000,
           workerBatchSize: cfg.workerBatchSize || 15,
@@ -106,6 +114,10 @@ export default function OpenClawTab() {
         healthUrl: openclawConfig.healthUrl,
         apiKey: openclawConfig.apiKey,
         bridgeSecret: openclawConfig.bridgeSecret,
+        autonomousEnabled: openclawConfig.autonomousEnabled,
+        autonomousBountyScanMinutes: Number(openclawConfig.autonomousBountyScanMinutes || 30),
+        autonomousKeepaliveMinutes: Number(openclawConfig.autonomousKeepaliveMinutes || 10),
+        autonomousMoneyRunEnabled: openclawConfig.autonomousMoneyRunEnabled,
         workerName: openclawConfig.workerName,
         workerPollMs: Number(openclawConfig.workerPollMs || 10000),
         workerBatchSize: Number(openclawConfig.workerBatchSize || 15),
@@ -409,6 +421,28 @@ export default function OpenClawTab() {
               />
             </label>
             <label>
+              Autonomous Scan (minutes)
+              <input
+                type="number"
+                min="5"
+                max="1440"
+                step="1"
+                value={openclawConfig.autonomousBountyScanMinutes}
+                onChange={(event) => setOpenclawConfig(prev => ({ ...prev, autonomousBountyScanMinutes: event.target.value }))}
+              />
+            </label>
+            <label>
+              Keepalive Ping (minutes)
+              <input
+                type="number"
+                min="1"
+                max="240"
+                step="1"
+                value={openclawConfig.autonomousKeepaliveMinutes}
+                onChange={(event) => setOpenclawConfig(prev => ({ ...prev, autonomousKeepaliveMinutes: event.target.value }))}
+              />
+            </label>
+            <label>
               API Key (optional)
               <input
                 type="password"
@@ -425,6 +459,22 @@ export default function OpenClawTab() {
                 onChange={(event) => setOpenclawConfig(prev => ({ ...prev, bridgeSecret: event.target.value }))}
                 placeholder="Leave blank to keep existing secret"
               />
+            </label>
+            <label className="oc-config-toggle">
+              <input
+                type="checkbox"
+                checked={openclawConfig.autonomousEnabled}
+                onChange={(event) => setOpenclawConfig(prev => ({ ...prev, autonomousEnabled: event.target.checked }))}
+              />
+              Autonomous OpenClaw mode enabled
+            </label>
+            <label className="oc-config-toggle">
+              <input
+                type="checkbox"
+                checked={openclawConfig.autonomousMoneyRunEnabled}
+                onChange={(event) => setOpenclawConfig(prev => ({ ...prev, autonomousMoneyRunEnabled: event.target.checked }))}
+              />
+              Autonomous money-run workflows enabled
             </label>
           </div>
 

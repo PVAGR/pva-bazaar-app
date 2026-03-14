@@ -88,6 +88,10 @@ function sanitizeRuntimeConfig(doc) {
       healthUrl: doc.openclaw?.healthUrl || '',
       apiKeySet: Boolean(doc.openclaw?.apiKey),
       bridgeSecretSet: Boolean(doc.openclaw?.bridgeSecret),
+      autonomousEnabled: doc.openclaw?.autonomousEnabled !== false,
+      autonomousBountyScanMinutes: doc.openclaw?.autonomousBountyScanMinutes || 30,
+      autonomousKeepaliveMinutes: doc.openclaw?.autonomousKeepaliveMinutes || 10,
+      autonomousMoneyRunEnabled: doc.openclaw?.autonomousMoneyRunEnabled === true,
       workerName: doc.openclaw?.workerName || 'openclaw-queue-dispatcher',
       workerPollMs: doc.openclaw?.workerPollMs || 10000,
       workerBatchSize: doc.openclaw?.workerBatchSize || 15,
@@ -138,6 +142,10 @@ router.put('/runtime-config/openclaw', adminSession, async (req, res) => {
       gatewayUrl: String(body.gatewayUrl || '').trim(),
       webhookUrl: String(body.webhookUrl || '').trim(),
       healthUrl: String(body.healthUrl || '').trim(),
+      autonomousEnabled: body.autonomousEnabled !== false,
+      autonomousBountyScanMinutes: Math.min(Math.max(parseInt(body.autonomousBountyScanMinutes ?? '30', 10), 5), 1440),
+      autonomousKeepaliveMinutes: Math.min(Math.max(parseInt(body.autonomousKeepaliveMinutes ?? '10', 10), 1), 240),
+      autonomousMoneyRunEnabled: body.autonomousMoneyRunEnabled === true,
       workerName: String(body.workerName || 'openclaw-queue-dispatcher').trim() || 'openclaw-queue-dispatcher',
       workerPollMs: Math.max(parseInt(body.workerPollMs || '10000', 10), 2000),
       workerBatchSize: Math.min(Math.max(parseInt(body.workerBatchSize || '15', 10), 1), 100),
@@ -161,6 +169,10 @@ router.put('/runtime-config/openclaw', adminSession, async (req, res) => {
     process.env.OPENCLAW_HEALTH_URL = nextOpenclaw.healthUrl || '';
     process.env.OPENCLAW_API_KEY = nextOpenclaw.apiKey || '';
     process.env.OPENCLAW_BRIDGE_SECRET = nextOpenclaw.bridgeSecret || '';
+    process.env.OPENCLAW_AUTONOMOUS_ENABLED = nextOpenclaw.autonomousEnabled ? 'true' : 'false';
+    process.env.OPENCLAW_AUTONOMOUS_BOUNTY_SCAN_MINUTES = String(nextOpenclaw.autonomousBountyScanMinutes || 30);
+    process.env.OPENCLAW_AUTONOMOUS_KEEPALIVE_MINUTES = String(nextOpenclaw.autonomousKeepaliveMinutes || 10);
+    process.env.OPENCLAW_AUTONOMOUS_MONEY_RUN_ENABLED = nextOpenclaw.autonomousMoneyRunEnabled ? 'true' : 'false';
     process.env.OPENCLAW_WORKER_NAME = nextOpenclaw.workerName || 'openclaw-queue-dispatcher';
     process.env.OPENCLAW_WORKER_POLL_MS = String(nextOpenclaw.workerPollMs || 10000);
     process.env.OPENCLAW_WORKER_BATCH_SIZE = String(nextOpenclaw.workerBatchSize || 15);
@@ -171,6 +183,10 @@ router.put('/runtime-config/openclaw', adminSession, async (req, res) => {
       workerName: nextOpenclaw.workerName,
       workerPollMs: nextOpenclaw.workerPollMs,
       workerBatchSize: nextOpenclaw.workerBatchSize,
+      autonomousEnabled: nextOpenclaw.autonomousEnabled,
+      autonomousBountyScanMinutes: nextOpenclaw.autonomousBountyScanMinutes,
+      autonomousKeepaliveMinutes: nextOpenclaw.autonomousKeepaliveMinutes,
+      autonomousMoneyRunEnabled: nextOpenclaw.autonomousMoneyRunEnabled,
     });
     dispatchToOpenClaw(event, console.log).catch(() => {});
 

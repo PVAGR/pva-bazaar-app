@@ -343,6 +343,21 @@
   color: var(--site-text-dim, #aaa);
 }
 
+.oc-config-grid label.oc-config-toggle {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  background: var(--site-panel, rgba(255,255,255,0.04));
+  border: 1px solid var(--site-border, rgba(255,255,255,0.1));
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: var(--site-text, #eaf4ff);
+}
+
+.oc-config-grid label.oc-config-toggle input[type='checkbox'] {
+  margin: 0;
+}
+
 .oc-config-grid input {
   border: 1px solid var(--site-border, rgba(255, 255, 255, 0.12));
   border-radius: 8px;
