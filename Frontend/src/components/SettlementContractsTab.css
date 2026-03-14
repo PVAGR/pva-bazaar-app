@@ -169,6 +169,21 @@
   text-decoration: underline;
 }
 
+.digest-row {
+  margin-top: 0.4rem;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.digest-text {
+  font-family: Consolas, 'Courier New', monospace;
+  font-size: 0.74rem;
+  color: var(--site-text-muted);
+  word-break: break-all;
+}
+
 .record-meta {
   margin-top: 0.4rem;
   color: var(--site-text-muted);

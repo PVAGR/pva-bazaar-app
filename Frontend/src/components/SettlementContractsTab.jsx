@@ -373,6 +373,20 @@ export default function SettlementContractsTab() {
     }
   };
 
+  const copyDigest = async (digest) => {
+    const value = String(digest || '').trim();
+    if (!value) {
+      setMessage('No digest available to copy for this settlement.');
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(value);
+      setMessage('Finalization digest copied.');
+    } catch {
+      setMessage('Could not copy digest. Please copy manually.');
+    }
+  };
+
   return (
     <div className="settlement-contracts-tab" role="tabpanel" id="settlements-panel">
       <div className="tab-header">
@@ -616,6 +630,13 @@ export default function SettlementContractsTab() {
                   {item.artifactTitle ? <span><strong>Artifact:</strong> {item.artifactTitle}</span> : null}
                   {item.finalizedAt ? <span><strong>Finalized:</strong> {new Date(item.finalizedAt).toLocaleString()}</span> : null}
                 </div>
+
+                {item.finalizationDigest ? (
+                  <div className="digest-row">
+                    <span className="digest-text"><strong>Digest:</strong> {item.finalizationDigest}</span>
+                    <button className="btn ghost tiny" type="button" onClick={() => copyDigest(item.finalizationDigest)}>Copy Digest</button>
+                  </div>
+                ) : null}
 
                 <div className="record-links">
                   {item.explorerUrl ? <a href={item.explorerUrl} target="_blank" rel="noopener noreferrer">Explorer</a> : null}

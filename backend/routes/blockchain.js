@@ -1,4 +1,5 @@
 const express = require('express');
+const crypto = require('crypto');
 const router = express.Router();
 const auth = require('../middleware/auth');
 const BlockchainTransfer = require('../models/BlockchainTransfer');
@@ -51,6 +52,7 @@ function toPublicTransfer(transfer) {
     },
     finalizationNote: item.finalizationNote || '',
     finalizedAt: item.finalizedAt || null,
+    finalizationDigest: item.finalizationDigest || '',
     isFinalized: !!item.finalizedAt,
     createdAt: item.createdAt,
     updatedAt: item.updatedAt,
@@ -90,6 +92,42 @@ function toQrUrl(raw) {
   const value = String(raw || '').trim();
   if (!value) return '';
   return `https://quickchart.io/qr?size=180&text=${encodeURIComponent(value)}`;
+}
+
+function buildFinalizationSnapshot(record) {
+  return {
+    transferId: String(record._id),
+    txHash: record.txHash,
+    network: record.network,
+    chainId: record.chainId || null,
+    amountUsd: Number(record.amountUsd || 0),
+    tokenSymbol: record.tokenSymbol || 'USDC',
+    tokenAmount: record.tokenAmount || '',
+    artifactId: record.artifactId ? String(record.artifactId) : null,
+    artifactSlug: record.artifactSlug || '',
+    artifactTitle: record.artifactTitle || '',
+    contractTerms: {
+      partyOneName: record.contractTerms?.partyOneName || '',
+      partyOneRole: record.contractTerms?.partyOneRole || 'Operator',
+      partyTwoName: record.contractTerms?.partyTwoName || '',
+      partyTwoRole: record.contractTerms?.partyTwoRole || 'Counterparty',
+      additionalClauses: record.contractTerms?.additionalClauses || '',
+    },
+    signatures: {
+      partyOneSignerName: record.signatures?.partyOneSignerName || '',
+      partyOneSignedAt: record.signatures?.partyOneSignedAt || null,
+      partyTwoSignerName: record.signatures?.partyTwoSignerName || '',
+      partyTwoSignedAt: record.signatures?.partyTwoSignedAt || null,
+      witnessName: record.signatures?.witnessName || '',
+      witnessSignedAt: record.signatures?.witnessSignedAt || null,
+    },
+    finalizationNote: record.finalizationNote || '',
+    finalizedAt: record.finalizedAt || null,
+  };
+}
+
+function computeFinalizationDigest(snapshot) {
+  return crypto.createHash('sha256').update(JSON.stringify(snapshot)).digest('hex');
 }
 
 function buildContractPayload(record, req) {
@@ -149,6 +187,7 @@ function buildContractPayload(record, req) {
     finalization: {
       finalizedAt: record.finalizedAt || null,
       finalizationNote: record.finalizationNote || '',
+      digest: record.finalizationDigest || '',
       isFinalized: !!record.finalizedAt,
     },
     traceUrls: {
@@ -196,6 +235,9 @@ function buildContractHtml(payload) {
     : '<div class="pending">Draft contract: not finalized</div>';
   const finalizationNote = payload.finalization?.finalizationNote
     ? `<h2>Finalization Note</h2><div class="declaration">${escapeHtml(payload.finalization.finalizationNote)}</div>`
+    : '';
+  const finalizationDigest = payload.finalization?.digest
+    ? `<h2>Integrity Digest (SHA-256)</h2><div class="declaration">${escapeHtml(payload.finalization.digest)}</div>`
     : '';
   const partyOneSigner = payload.signatures?.partyOneSignerName || partyOneName;
   const partyOneSignedAt = payload.signatures?.partyOneSignedAt || '';
@@ -264,6 +306,7 @@ function buildContractHtml(payload) {
     <div class="declaration">${escapeHtml(payload.declaration)}</div>
     ${finalizedBanner}
     ${finalizationNote}
+    ${finalizationDigest}
     ${additionalClauses}
     <h2>Traceability</h2>
     <table>
@@ -332,6 +375,7 @@ router.get('/transfers/public/:id', async (req, res) => {
         artifact: payload.artifact,
         traceUrls: payload.traceUrls,
         finalization: payload.finalization,
+        finalizationDigest: payload.finalization?.digest || '',
         generatedAt: payload.generatedAt,
       },
     });
@@ -534,6 +578,8 @@ router.post('/transfers/:id/finalize', auth, async (req, res) => {
     item.finalizedAt = new Date();
     item.finalizedBy = req.user.id;
     item.contractVersion = item.contractVersion || 'v3';
+    item.finalizationSnapshot = buildFinalizationSnapshot(item);
+    item.finalizationDigest = computeFinalizationDigest(item.finalizationSnapshot);
     await item.save();
 
     res.json({ ok: true, message: 'Settlement finalized and locked', item: toPublicTransfer(item) });

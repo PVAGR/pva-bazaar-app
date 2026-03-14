@@ -51,6 +51,8 @@ const blockchainTransferSchema = new mongoose.Schema(
     finalizationNote: { type: String, default: '' },
     finalizedAt: { type: Date, default: null, index: true },
     finalizedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+    finalizationDigest: { type: String, default: '', index: true },
+    finalizationSnapshot: { type: mongoose.Schema.Types.Mixed, default: null },
     rawError: { type: String, default: '' },
   },
   { timestamps: true }

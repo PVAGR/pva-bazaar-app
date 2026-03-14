@@ -320,7 +320,7 @@ const ApiDocsTab = React.memo(function ApiDocsTab() {
         {
           method: 'POST',
           path: '/api/blockchain/transfers/:id/finalize',
-          description: 'Finalize and lock settlement terms/signatures to prevent future edits',
+          description: 'Finalize and lock settlement terms/signatures to prevent future edits; server stores SHA-256 finalization digest',
           auth: 'Required (JWT)',
           body: {
             signatures: {
@@ -336,7 +336,7 @@ const ApiDocsTab = React.memo(function ApiDocsTab() {
         {
           method: 'GET',
           path: '/api/blockchain/transfers/:id/contract',
-          description: 'Get settlement contract payload (JSON), including trace URLs and QR links',
+          description: 'Get settlement contract payload (JSON), including trace URLs, QR links, and finalization digest',
           auth: 'Required (JWT)',
           example: `${apiBase}/api/blockchain/transfers/67cfe8d5e6.../contract`
         },
