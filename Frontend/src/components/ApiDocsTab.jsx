@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ENV } from '../config/env';
+import HelpTip from './HelpTip.jsx';
 import './ApiDocsTab.css';
 
 /**
@@ -296,11 +297,19 @@ const ApiDocsTab = React.memo(function ApiDocsTab() {
     <div className="api-docs-tab">
       <div className="api-docs-header">
         <h2>🔗 API Documentation</h2>
-        <p>Complete reference for PVA Bazaar API endpoints with direct links</p>
+        <p>Readable endpoint reference with operational guidance for teams moving from standard commerce to blockchain-aware workflows.</p>
       </div>
 
       {/* Quick Info Panel */}
       <div className="quick-info-panel">
+        <div className="panel-heading-row">
+          <h3>Quick Environment Snapshot</h3>
+          <HelpTip
+            title="What this snapshot is for"
+            body="This top panel confirms the exact API base and request conventions your team should use before testing any endpoint."
+            example="If base URL shows production, avoid running create or delete actions with test payloads."
+          />
+        </div>
         <div className="info-item">
           <span className="info-label">Base URL:</span>
           <code className="api-base-url">{apiBase}</code>
@@ -324,6 +333,14 @@ const ApiDocsTab = React.memo(function ApiDocsTab() {
 
       {/* API Categories */}
       <div className="api-categories">
+        <div className="panel-heading-row">
+          <h3>Endpoint Catalog</h3>
+          <HelpTip
+            title="How to read categories"
+            body="Expand one category at a time. Start with Auth, then the domain area you need, and copy example URLs to reduce request formatting errors."
+            example="Login first, then use the returned JWT for protected Artifact and Admin operations."
+          />
+        </div>
         {apiCategories.map((category) => (
           <div key={category.id} className="api-category">
             <button
@@ -410,7 +427,14 @@ const ApiDocsTab = React.memo(function ApiDocsTab() {
 
       {/* Contact Information */}
       <div className="contact-section">
-        <h3>📞 Contact & Resources</h3>
+        <div className="panel-heading-row">
+          <h3>📞 Contact & Resources</h3>
+          <HelpTip
+            title="When to escalate"
+            body="Use support for user issues, technical for integration/debugging, and partnerships for commercial workflows or B2B onboarding."
+            example="A failing auth token flow should be sent to technical with endpoint, payload, and timestamp."
+          />
+        </div>
         <div className="contact-grid">
           <div className="contact-item">
             <span className="contact-icon">📧</span>
@@ -456,7 +480,14 @@ const ApiDocsTab = React.memo(function ApiDocsTab() {
 
       {/* Usage Guide */}
       <div className="usage-guide">
-        <h3>🚀 Quick Start Guide</h3>
+        <div className="panel-heading-row">
+          <h3>🚀 API Quick Start Guide</h3>
+          <HelpTip
+            title="Why this sequence matters"
+            body="Following these steps in order prevents most integration failures caused by missing authentication or malformed payloads."
+            example="Authenticate, then call GET endpoints first, then only move to POST/PUT actions after response checks pass."
+          />
+        </div>
         <div className="guide-steps">
           <div className="guide-step">
             <span className="step-number">1</span>
@@ -480,6 +511,59 @@ const ApiDocsTab = React.memo(function ApiDocsTab() {
               <strong>Handle Responses</strong>
               <p>All responses are JSON. Check the <code>ok</code> field for success:</p>
               <code>{`{ok: true, data: {...}}`}</code>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="usage-guide contract-onboarding">
+        <div className="panel-heading-row">
+          <h3>🧭 Smart Contract Onboarding For New Teams</h3>
+          <HelpTip
+            title="What this onboarding covers"
+            body="This is the operational bridge from normal business payouts to blockchain-linked consignment evidence and split settlement discipline."
+            example="A new seller can stay on fiat first, then progressively adopt wallet-based proof and contract-linked settlement records."
+          />
+        </div>
+        <div className="guide-steps">
+          <div className="guide-step">
+            <span className="step-number">1</span>
+            <div className="step-content">
+              <strong>Readiness & Wallet Setup</strong>
+              <p>Assign one wallet owner per operating team and create a backup policy before handling live-value transfers.</p>
+              <code>Checklist: wallet owner, recovery policy, small test budget</code>
+            </div>
+          </div>
+          <div className="guide-step">
+            <span className="step-number">2</span>
+            <div className="step-content">
+              <strong>Run Test-Only Verification</strong>
+              <p>Execute low-risk verification requests and store every resulting reference so the team learns the full cycle safely.</p>
+              <code>{`POST /api/verification/submit with non-critical artifact evidence`}</code>
+            </div>
+          </div>
+          <div className="guide-step">
+            <span className="step-number">3</span>
+            <div className="step-content">
+              <strong>Link Evidence To Payout Decisions</strong>
+              <p>Before any split settlement, confirm the artifact record, verification state, and beneficiary handles match your payout batch.</p>
+              <code>Rule: no payout completion without matching verification evidence</code>
+            </div>
+          </div>
+          <div className="guide-step">
+            <span className="step-number">4</span>
+            <div className="step-content">
+              <strong>Capture Transaction Proof</strong>
+              <p>When crypto transfers are used, record transaction hash and final state in payout notes for audit and creator trust.</p>
+              <code>Store tx hash + settlement date + operator initials</code>
+            </div>
+          </div>
+          <div className="guide-step">
+            <span className="step-number">5</span>
+            <div className="step-content">
+              <strong>Scale Gradually With Controls</strong>
+              <p>Move from pilot creators to wider rollout only after at least two full successful cycles with no reconciliation gaps.</p>
+              <code>{'Pilot -> controlled expansion -> full program'}</code>
             </div>
           </div>
         </div>
