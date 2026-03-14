@@ -556,6 +556,15 @@
   gap: 0.2rem;
 }
 
+.readiness-button {
+  cursor: pointer;
+  text-align: left;
+}
+
+.readiness-button:hover {
+  border-color: var(--site-accent, #00d9ff);
+}
+
 .readiness-item span {
   font-size: 0.75rem;
   color: var(--site-text-secondary, rgba(255, 255, 255, 0.72));
@@ -636,6 +645,14 @@
   line-height: 1.3;
 }
 
+.incident-link-title {
+  text-decoration: none;
+}
+
+.incident-link-title strong {
+  color: var(--site-accent, #00d9ff);
+}
+
 .incident-level {
   width: fit-content;
   border-radius: 999px;
@@ -658,6 +675,28 @@
   color: var(--site-text-secondary, rgba(255, 255, 255, 0.62));
   font-size: 0.74rem;
   white-space: nowrap;
+}
+
+.incident-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.4rem;
+}
+
+.incident-dismiss-btn {
+  border: 1px solid var(--site-border, rgba(0, 255, 255, 0.24));
+  background: transparent;
+  color: var(--site-text-secondary, rgba(255, 255, 255, 0.78));
+  border-radius: 999px;
+  padding: 0.18rem 0.55rem;
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+
+.incident-dismiss-btn:hover {
+  border-color: var(--site-accent, #00d9ff);
+  color: var(--site-accent, #00d9ff);
 }
 
 .info-grid {

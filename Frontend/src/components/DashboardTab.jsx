@@ -11,6 +11,7 @@ import './DashboardTab.css';
  */
 
 const logger = createLogger('DashboardTab');
+const INCIDENT_DISMISS_STORAGE_KEY = 'admin-dashboard-dismissed-incidents-v1';
 
 export default function DashboardTab({ onNavigateTab }) {
   const [loading, setLoading] = useState(true);
@@ -48,6 +49,15 @@ export default function DashboardTab({ onNavigateTab }) {
     items: [],
   });
   const [criticalOnlyIncidents, setCriticalOnlyIncidents] = useState(false);
+  const [dismissedIncidentIds, setDismissedIncidentIds] = useState(() => {
+    try {
+      const raw = localStorage.getItem(INCIDENT_DISMISS_STORAGE_KEY);
+      const parsed = raw ? JSON.parse(raw) : [];
+      return new Set(Array.isArray(parsed) ? parsed : []);
+    } catch (_err) {
+      return new Set();
+    }
+  });
 
   useEffect(() => {
     loadDashboardData();
@@ -389,7 +399,21 @@ export default function DashboardTab({ onNavigateTab }) {
   const visibleIncidents = (criticalOnlyIncidents
     ? incidentFeed.items.filter((item) => item.level === 'error' || item.level === 'alert')
     : incidentFeed.items
-  );
+  ).filter((item) => !dismissedIncidentIds.has(item.id));
+
+  const dismissIncident = (incidentId) => {
+    setDismissedIncidentIds((prev) => {
+      const next = new Set(prev);
+      next.add(incidentId);
+      localStorage.setItem(INCIDENT_DISMISS_STORAGE_KEY, JSON.stringify(Array.from(next)));
+      return next;
+    });
+  };
+
+  const clearDismissedIncidents = () => {
+    setDismissedIncidentIds(new Set());
+    localStorage.removeItem(INCIDENT_DISMISS_STORAGE_KEY);
+  };
 
   const runOpsRecovery = async () => {
     setRecovering(true);
@@ -785,18 +809,30 @@ export default function DashboardTab({ onNavigateTab }) {
           {operatorReady ? 'READY FOR OPERATIONS' : 'BLOCKED - INVESTIGATE INCIDENTS'}
         </div>
         <div className="readiness-grid">
-          <div className={`readiness-item ${deployPipelinesHealthy ? 'ok' : 'bad'}`}>
+          <button
+            type="button"
+            className={`readiness-item readiness-button ${deployPipelinesHealthy ? 'ok' : 'bad'}`}
+            onClick={() => onNavigateTab?.('health')}
+          >
             <span>Deploy Pipelines</span>
             <strong>{deployPipelinesHealthy ? 'Green' : 'Not Green'}</strong>
-          </div>
-          <div className={`readiness-item ${openclawHealthy ? 'ok' : 'bad'}`}>
+          </button>
+          <button
+            type="button"
+            className={`readiness-item readiness-button ${openclawHealthy ? 'ok' : 'bad'}`}
+            onClick={() => onNavigateTab?.('openclaw')}
+          >
             <span>OpenClaw Health</span>
             <strong>{openclawHealthy ? 'Healthy' : 'Needs Recovery'}</strong>
-          </div>
-          <div className={`readiness-item ${solanaReadyForOps ? 'ok' : 'bad'}`}>
+          </button>
+          <button
+            type="button"
+            className={`readiness-item readiness-button ${solanaReadyForOps ? 'ok' : 'bad'}`}
+            onClick={() => onNavigateTab?.('payouts')}
+          >
             <span>Solana Readiness</span>
             <strong>{solanaReadyForOps ? 'Ready' : 'Not Ready'}</strong>
-          </div>
+          </button>
         </div>
       </div>
 
@@ -820,6 +856,14 @@ export default function DashboardTab({ onNavigateTab }) {
             >
               {incidentFeed.loading ? 'Refreshing...' : 'Refresh Timeline'}
             </button>
+            <button
+              type="button"
+              className="btn-refresh deploy-refresh"
+              onClick={clearDismissedIncidents}
+              disabled={dismissedIncidentIds.size === 0}
+            >
+              Restore Dismissed
+            </button>
           </div>
         </div>
         <p className="deploy-status-subtitle">
@@ -838,30 +882,31 @@ export default function DashboardTab({ onNavigateTab }) {
         {!!visibleIncidents.length && (
           <div className="incident-list">
             {visibleIncidents.map((item) => {
-              const row = (
-                <>
+              return (
+                <div key={item.id} className="incident-row">
                   <div className="incident-main">
                     <span className={`incident-level ${item.level === 'error' || item.level === 'alert' ? 'high' : 'info'}`}>
                       {item.source}
                     </span>
-                    <strong>{item.title}</strong>
+                    {item.href ? (
+                      <a href={item.href} target="_blank" rel="noreferrer" className="incident-link-title">
+                        <strong>{item.title}</strong>
+                      </a>
+                    ) : (
+                      <strong>{item.title}</strong>
+                    )}
                     <p>{item.detail}</p>
                   </div>
-                  <span className="incident-time">{item.at ? new Date(item.at).toLocaleString() : 'n/a'}</span>
-                </>
-              );
-
-              if (item.href) {
-                return (
-                  <a key={item.id} className="incident-row" href={item.href} target="_blank" rel="noreferrer">
-                    {row}
-                  </a>
-                );
-              }
-
-              return (
-                <div key={item.id} className="incident-row">
-                  {row}
+                  <div className="incident-side">
+                    <span className="incident-time">{item.at ? new Date(item.at).toLocaleString() : 'n/a'}</span>
+                    <button
+                      type="button"
+                      className="incident-dismiss-btn"
+                      onClick={() => dismissIncident(item.id)}
+                    >
+                      Dismiss
+                    </button>
+                  </div>
                 </div>
               );
             })}
