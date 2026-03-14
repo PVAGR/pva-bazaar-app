@@ -429,10 +429,10 @@
 }
 
 .home-btn {
-  height: 30px;
+  height: 36px;
   min-width: 32px;
-  padding: 6px 10px;
-  font-size: 12px;
+  padding: 7px 11px;
+  font-size: 13px;
   border-radius: 6px;
   display: flex;
   align-items: center;
@@ -453,10 +453,10 @@
 }
 
 .logout-btn {
-  height: 30px;
+  height: 36px;
   min-width: 32px;
-  padding: 6px 10px;
-  font-size: 12px;
+  padding: 7px 11px;
+  font-size: 13px;
   border-radius: 6px;
   display: flex;
   align-items: center;

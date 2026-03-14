@@ -1,10 +1,13 @@
 .adminNav {
-  max-width: 1200px;
+  width: calc(100vw - 8px);
+  max-width: none;
   margin: 14px auto 0;
-  padding: 0 16px;
+  padding: 0 8px;
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .adminNav__tab {
@@ -15,6 +18,8 @@
   padding: 10px 12px;
   border-radius: 10px;
   transition: transform 0.15s ease, border-color 0.15s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .adminNav__tab:hover {
@@ -25,5 +30,19 @@
 .adminNav__tab.active {
   border-color: var(--accent);
   box-shadow: 0 0 0 1px var(--accent);
+}
+
+@media (max-width: 768px) {
+  .adminNav {
+    width: calc(100vw - 6px);
+    padding: 0 4px;
+    gap: 6px;
+  }
+
+  .adminNav__tab {
+    padding: 8px 10px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+  }
 }
 
