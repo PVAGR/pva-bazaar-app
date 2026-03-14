@@ -947,6 +947,56 @@ router.post('/direct-transfer', adminSession, async (req, res) => {
   }
 });
 
+// GET /api/solana/autopilot-runs
+// Lists recent guided/autopilot transfer runs for admin audit visibility.
+router.get('/autopilot-runs', adminSession, async (req, res) => {
+  try {
+    const limit = Math.min(Math.max(parseInt(req.query.limit || '30', 10), 1), 100);
+    const docs = await SolanaPayout.find({
+      'metadata.isGuidedFlow': true,
+    })
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .lean();
+
+    const runs = docs.map((p) => {
+      const network = p.network || 'devnet';
+      const cluster = network === 'mainnet-beta' ? '' : `?cluster=${network}`;
+      const explorerUrl = p.txSignature
+        ? `https://explorer.solana.com/tx/${p.txSignature}${cluster}`
+        : '';
+
+      return {
+        id: p._id.toString(),
+        createdAt: p.createdAt,
+        updatedAt: p.updatedAt,
+        status: p.status,
+        network,
+        walletAddress: p.walletAddress,
+        amountSol: p.amountSol,
+        amountUsd: p.metadata?.amountUsd ?? null,
+        txSignature: p.txSignature || '',
+        explorerUrl,
+        requestedByAdmin: p.metadata?.requestedByAdmin || 'unknown-admin',
+        memo: p.metadata?.memo || '',
+        confirmationStatus: p.metadata?.confirmationStatus || null,
+        airdrop: p.metadata?.airdrop || null,
+      };
+    });
+
+    return res.json({
+      ok: true,
+      runs,
+      count: runs.length,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      ok: false,
+      error: err.message || 'Failed to load autopilot runs',
+    });
+  }
+});
+
 // GET /api/solana/payouts - list payouts (optionally filtered by artifactId)
 router.get('/payouts', async (req, res) => {
   try {

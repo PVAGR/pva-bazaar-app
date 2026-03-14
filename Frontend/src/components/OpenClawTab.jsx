@@ -15,6 +15,13 @@ function formatMessageTime(value) {
   }
 }
 
+function formatAgeMinutes(value) {
+  if (!value) return null;
+  const then = new Date(value).getTime();
+  if (!Number.isFinite(then)) return null;
+  return Math.max(Math.round((Date.now() - then) / 60000), 0);
+}
+
 export default function OpenClawTab() {
   const [status, setStatus] = useState(null);
   const [statusLoading, setStatusLoading] = useState(true);
@@ -259,6 +266,10 @@ export default function OpenClawTab() {
     });
   }, [messages]);
 
+  const heartbeatAgeMinutes = formatAgeMinutes(status?.worker?.heartbeatAt);
+  const heartbeatHealthy = heartbeatAgeMinutes !== null && heartbeatAgeMinutes <= 2;
+  const leaseActive = status?.worker?.active === true;
+
   return (
     <div className="openclaw-tab">
       <div className="oc-panel">
@@ -342,6 +353,26 @@ export default function OpenClawTab() {
                   {queueLoading
                     ? 'Loading...'
                     : `${queueStats?.staleOutbound ?? 0} older than ${queueStats?.staleMinutes ?? 30}m`}
+                </div>
+              </div>
+            </div>
+
+            <div className={`oc-status-card ${leaseActive ? 'oc-ok' : 'oc-warn'}`}>
+              <span className="oc-status-icon">🧭</span>
+              <div>
+                <div className="oc-status-label">Worker Lease</div>
+                <div className="oc-status-value">{leaseActive ? 'Active' : 'Inactive / expired'}</div>
+              </div>
+            </div>
+
+            <div className={`oc-status-card ${heartbeatHealthy ? 'oc-ok' : 'oc-warn'}`}>
+              <span className="oc-status-icon">💓</span>
+              <div>
+                <div className="oc-status-label">Heartbeat Freshness</div>
+                <div className="oc-status-value">
+                  {heartbeatAgeMinutes === null
+                    ? 'No heartbeat yet'
+                    : `${heartbeatAgeMinutes}m ago`}
                 </div>
               </div>
             </div>

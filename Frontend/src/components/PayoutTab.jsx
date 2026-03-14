@@ -11,6 +11,7 @@ import {
   requestDevnetAirdropHotWallet,
   executeSolanaTestFlow,
   directSolanaTransfer,
+  fetchAutopilotRuns,
 } from '../lib/api';
 import './PayoutTab.css';
 
@@ -66,6 +67,7 @@ export default function PayoutTab() {
   const [autopilot, setAutopilot] = useState({ running: false, steps: [], error: '', result: null });
   const [safeMode, setSafeMode] = useState(true);
   const [recentTransfers, setRecentTransfers] = useState({ loading: false, rows: [], error: '' });
+  const [autopilotRuns, setAutopilotRuns] = useState({ loading: false, rows: [], error: '' });
 
   useEffect(() => {
     fetchSummary();
@@ -303,6 +305,7 @@ export default function PayoutTab() {
         loadHotWalletBalance();
         runReadinessCheck();
         loadRecentTransfers();
+        loadAutopilotRuns();
         if (data?.flow?.transfer?.signature) {
           setConfirmForm((prev) => ({ ...prev, txSignature: data.flow.transfer.signature }));
         }
@@ -330,6 +333,24 @@ export default function PayoutTab() {
       setRecentTransfers({ loading: false, rows, error: '' });
     } catch (err) {
       setRecentTransfers({ loading: false, rows: [], error: err.message || 'Failed to load transfer history' });
+    }
+  };
+
+  const loadAutopilotRuns = async () => {
+    setAutopilotRuns((prev) => ({ ...prev, loading: true, error: '' }));
+    try {
+      const data = await fetchAutopilotRuns(25);
+      setAutopilotRuns({
+        loading: false,
+        rows: Array.isArray(data?.runs) ? data.runs : [],
+        error: '',
+      });
+    } catch (err) {
+      setAutopilotRuns({
+        loading: false,
+        rows: [],
+        error: err.message || 'Failed to load autopilot run history',
+      });
     }
   };
 
@@ -417,7 +438,7 @@ export default function PayoutTab() {
       }
 
       appendStep('Refreshing wallet + receipts...');
-      await Promise.all([loadHotWalletBalance(), loadRecentTransfers()]);
+      await Promise.all([loadHotWalletBalance(), loadRecentTransfers(), loadAutopilotRuns()]);
 
       appendStep('Autopilot completed successfully.');
       setAutopilot((prev) => ({ ...prev, running: false, result: flowData }));
@@ -433,6 +454,7 @@ export default function PayoutTab() {
   useEffect(() => {
     if (tab === 'policy-test') {
       loadRecentTransfers();
+      loadAutopilotRuns();
     }
   }, [tab]);
 
@@ -867,6 +889,9 @@ export default function PayoutTab() {
               <button className="btn-secondary" onClick={loadRecentTransfers} disabled={recentTransfers.loading}>
                 {recentTransfers.loading ? 'Refreshing receipts...' : 'Refresh Receipts'}
               </button>
+              <button className="btn-secondary" onClick={loadAutopilotRuns} disabled={autopilotRuns.loading}>
+                {autopilotRuns.loading ? 'Refreshing runs...' : 'Refresh Runs'}
+              </button>
               <button className="btn-primary" onClick={runAutopilot} disabled={autopilot.running || !directForm.recipientAddress}>
                 {autopilot.running ? 'Autopilot Running...' : 'Autopilot Execute'}
               </button>
@@ -1254,6 +1279,54 @@ export default function PayoutTab() {
                         </tr>
                       );
                     })}
+                  </tbody>
+                </table>
+              </div>
+            ) : null}
+          </div>
+
+          <div className="policy-card">
+            <h3>🛰️ Autopilot Run History</h3>
+            <p>Persistent audit feed of guided one-click runs and their on-chain outcomes.</p>
+
+            {autopilotRuns.error ? <div className="policy-msg">❌ {autopilotRuns.error}</div> : null}
+
+            {!autopilotRuns.loading && autopilotRuns.rows.length === 0 ? (
+              <div className="policy-msg">No autopilot runs recorded yet.</div>
+            ) : null}
+
+            {autopilotRuns.rows.length > 0 ? (
+              <div className="receipts-table-wrap">
+                <table className="receipts-table">
+                  <thead>
+                    <tr>
+                      <th>When</th>
+                      <th>Status</th>
+                      <th>Admin</th>
+                      <th>Amount</th>
+                      <th>Network</th>
+                      <th>Tx</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {autopilotRuns.rows.map((run) => (
+                      <tr key={run.id}>
+                        <td>{run.createdAt ? new Date(run.createdAt).toLocaleString() : 'n/a'}</td>
+                        <td>{run.status || 'pending'}</td>
+                        <td>{run.requestedByAdmin || 'unknown-admin'}</td>
+                        <td>{run.amountSol} SOL</td>
+                        <td>{run.network || 'devnet'}</td>
+                        <td>
+                          {run.explorerUrl ? (
+                            <a href={run.explorerUrl} target="_blank" rel="noopener noreferrer" className="explorer-link">
+                              View ↗
+                            </a>
+                          ) : (
+                            'n/a'
+                          )}
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>
