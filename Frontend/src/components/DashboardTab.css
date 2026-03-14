@@ -381,6 +381,44 @@
   font-size: 0.9rem;
 }
 
+.deploy-badges {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 0.65rem;
+  margin-bottom: 1rem;
+}
+
+.deploy-badge {
+  border-radius: 9px;
+  border: 1px solid var(--site-border, rgba(0, 255, 255, 0.22));
+  background: var(--site-bg-dark, rgba(0, 0, 0, 0.25));
+  padding: 0.65rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.28rem;
+}
+
+.deploy-badge-label {
+  font-size: 0.75rem;
+  color: var(--site-text-secondary, rgba(255, 255, 255, 0.7));
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.deploy-badge strong {
+  color: var(--site-text-primary, #e0e0e0);
+  font-size: 0.84rem;
+  line-height: 1.3;
+}
+
+.deploy-badge.success {
+  border-color: rgba(76, 175, 80, 0.4);
+}
+
+.deploy-badge.failure {
+  border-color: rgba(255, 82, 82, 0.42);
+}
+
 .deploy-status-error,
 .deploy-status-empty {
   border: 1px solid var(--site-border, rgba(0, 255, 255, 0.2));
@@ -471,6 +509,74 @@
 
 .run-tone-neutral .deploy-run-badge {
   color: var(--site-text-secondary, rgba(255, 255, 255, 0.72));
+}
+
+.incident-timeline-panel {
+  margin-top: 1.5rem;
+}
+
+.incident-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.incident-row {
+  border: 1px solid var(--site-border, rgba(0, 255, 255, 0.2));
+  border-radius: 9px;
+  background: var(--site-bg-dark, rgba(0, 0, 0, 0.22));
+  padding: 0.7rem 0.85rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  text-decoration: none;
+}
+
+.incident-row:hover {
+  border-color: var(--site-accent, #00d9ff);
+}
+
+.incident-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.incident-main strong {
+  color: var(--site-text-primary, #e0e0e0);
+  font-size: 0.88rem;
+}
+
+.incident-main p {
+  margin: 0;
+  color: var(--site-text-secondary, rgba(255, 255, 255, 0.72));
+  font-size: 0.78rem;
+  line-height: 1.3;
+}
+
+.incident-level {
+  width: fit-content;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  padding: 0.1rem 0.45rem;
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.incident-level.high {
+  color: #ff9e9e;
+}
+
+.incident-level.info {
+  color: #9edfff;
+}
+
+.incident-time {
+  color: var(--site-text-secondary, rgba(255, 255, 255, 0.62));
+  font-size: 0.74rem;
+  white-space: nowrap;
 }
 
 .info-grid {

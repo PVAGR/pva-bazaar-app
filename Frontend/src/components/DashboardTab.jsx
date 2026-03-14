@@ -38,6 +38,14 @@ export default function DashboardTab({ onNavigateTab }) {
     error: '',
     updatedAt: null,
     runs: [],
+    lastSuccessfulDeploy: null,
+    latestFailure: null,
+  });
+  const [incidentFeed, setIncidentFeed] = useState({
+    loading: true,
+    error: '',
+    updatedAt: null,
+    items: [],
   });
 
   useEffect(() => {
@@ -222,19 +230,101 @@ export default function DashboardTab({ onNavigateTab }) {
           htmlUrl: run.html_url,
           headSha: run.head_sha,
           updatedAt: run.updated_at,
+          displayTitle: run.display_title || '',
+          headCommitMessage: String(run?.head_commit?.message || '').split('\n')[0],
         }));
+
+      const latestSuccessfulDeploy = [...mapped]
+        .filter((run) => run.name.toLowerCase().includes('deploy') && run.conclusion === 'success')
+        .sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0))[0] || null;
+
+      const latestFailure = [...mapped]
+        .filter((run) => run.conclusion === 'failure')
+        .sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0))[0] || null;
 
       setDeployStatus({
         loading: false,
         error: '',
         updatedAt: new Date().toISOString(),
         runs: mapped,
+        lastSuccessfulDeploy: latestSuccessfulDeploy,
+        latestFailure,
       });
+
+      await loadIncidentFeed(mapped);
     } catch (err) {
       setDeployStatus((prev) => ({
         ...prev,
         loading: false,
         error: err.message || 'Failed to load workflow status',
+      }));
+      setIncidentFeed((prev) => ({
+        ...prev,
+        loading: false,
+        error: err.message || 'Failed to load incident feed',
+      }));
+    }
+  };
+
+  const loadIncidentFeed = async (workflowRuns = []) => {
+    setIncidentFeed((prev) => ({ ...prev, loading: true, error: '' }));
+    try {
+      const eventsData = await apiGet('/openclaw/recent-events?limit=25').catch(() => ({ ok: false, events: [] }));
+      const openclawEvents = Array.isArray(eventsData?.events) ? eventsData.events : [];
+
+      const openclawIncidents = openclawEvents
+        .filter((evt) => {
+          const level = String(evt?.level || '').toLowerCase();
+          const type = String(evt?.type || '').toLowerCase();
+          const msg = String(evt?.message || '').toLowerCase();
+          return (
+            level === 'error'
+            || level === 'alert'
+            || type.includes('recovery')
+            || type.includes('health-failure')
+            || msg.includes('recover')
+            || msg.includes('health check failed')
+          );
+        })
+        .map((evt, idx) => ({
+          id: `oc-${evt.id || idx}`,
+          source: 'openclaw',
+          title: evt.type || 'OpenClaw event',
+          detail: evt.message || 'OpenClaw event',
+          level: String(evt.level || 'INFO').toLowerCase(),
+          at: evt.timestamp || null,
+          href: null,
+        }));
+
+      const workflowIncidents = workflowRuns
+        .filter((run) => run.conclusion === 'failure' || run.status === 'in_progress' || run.status === 'queued')
+        .map((run) => ({
+          id: `wf-${run.id}`,
+          source: 'workflow',
+          title: run.name,
+          detail: run.conclusion === 'failure'
+            ? (run.displayTitle || run.headCommitMessage || 'Workflow failed')
+            : `Workflow ${run.status}`,
+          level: run.conclusion === 'failure' ? 'error' : 'info',
+          at: run.updatedAt || null,
+          href: run.htmlUrl,
+        }));
+
+      const merged = [...workflowIncidents, ...openclawIncidents]
+        .sort((a, b) => new Date(b.at || 0) - new Date(a.at || 0))
+        .slice(0, 12);
+
+      setIncidentFeed({
+        loading: false,
+        error: '',
+        updatedAt: new Date().toISOString(),
+        items: merged,
+      });
+    } catch (err) {
+      setIncidentFeed((prev) => ({
+        ...prev,
+        loading: false,
+        error: err.message || 'Failed to load incident feed',
       }));
     }
   };
@@ -367,21 +457,6 @@ export default function DashboardTab({ onNavigateTab }) {
               </div>
             </div>
 
-            <div className="ops-actions-row">
-              <button
-                className="btn-refresh ops-recover-btn"
-                type="button"
-                onClick={runOpsRecovery}
-                disabled={recovering}
-              >
-                {recovering ? '🛠️ Recovering...' : '🛠️ Run Recovery'}
-              </button>
-              {opsActionResult && (
-                <span className={`ops-action-result ${opsActionResult.ok ? 'ok' : 'err'}`}>
-                  {opsActionResult.text}
-                </span>
-              )}
-            </div>
           </div>
           <div className="metric-footer">
             <a href="#" onClick={(e) => { e.preventDefault(); onNavigateTab?.('users'); }}>
@@ -410,6 +485,21 @@ export default function DashboardTab({ onNavigateTab }) {
                 <span className="stat-label">Draft</span>
                 <span className="stat-value">{dashboardData.items.draft}</span>
               </div>
+            </div>
+            <div className="ops-actions-row">
+              <button
+                className="btn-refresh ops-recover-btn"
+                type="button"
+                onClick={runOpsRecovery}
+                disabled={recovering}
+              >
+                {recovering ? '🛠️ Recovering...' : '🛠️ Run Recovery'}
+              </button>
+              {opsActionResult && (
+                <span className={`ops-action-result ${opsActionResult.ok ? 'ok' : 'err'}`}>
+                  {opsActionResult.text}
+                </span>
+              )}
             </div>
           </div>
           <div className="metric-footer">
@@ -609,6 +699,25 @@ export default function DashboardTab({ onNavigateTab }) {
           {deployStatus.updatedAt ? ` Updated ${new Date(deployStatus.updatedAt).toLocaleTimeString()}.` : ''}
         </p>
 
+        <div className="deploy-badges">
+          <div className="deploy-badge success">
+            <span className="deploy-badge-label">Last Successful Deploy</span>
+            <strong>
+              {deployStatus.lastSuccessfulDeploy
+                ? `${deployStatus.lastSuccessfulDeploy.name} · ${new Date(deployStatus.lastSuccessfulDeploy.updatedAt).toLocaleTimeString()}`
+                : 'No successful deploy in current window'}
+            </strong>
+          </div>
+          <div className="deploy-badge failure">
+            <span className="deploy-badge-label">Latest Failure Excerpt</span>
+            <strong>
+              {deployStatus.latestFailure
+                ? `${deployStatus.latestFailure.name} · ${deployStatus.latestFailure.displayTitle || deployStatus.latestFailure.headCommitMessage || 'No details'}`
+                : 'No failure detected in tracked workflows'}
+            </strong>
+          </div>
+        </div>
+
         {deployStatus.error && (
           <div className="deploy-status-error">
             {deployStatus.error}
@@ -638,6 +747,65 @@ export default function DashboardTab({ onNavigateTab }) {
                 </span>
               </a>
             ))}
+          </div>
+        )}
+      </div>
+
+      <div className="system-info-panel incident-timeline-panel">
+        <div className="deploy-status-head">
+          <h3>🧭 Incident Timeline</h3>
+          <button
+            type="button"
+            className="btn-refresh deploy-refresh"
+            onClick={() => loadIncidentFeed(deployStatus.runs)}
+            disabled={incidentFeed.loading}
+          >
+            {incidentFeed.loading ? 'Refreshing...' : 'Refresh Timeline'}
+          </button>
+        </div>
+        <p className="deploy-status-subtitle">
+          Combined stream: workflow failures/progress + OpenClaw recoveries and alerts.
+          {incidentFeed.updatedAt ? ` Updated ${new Date(incidentFeed.updatedAt).toLocaleTimeString()}.` : ''}
+        </p>
+
+        {incidentFeed.error && (
+          <div className="deploy-status-error">{incidentFeed.error}</div>
+        )}
+
+        {!incidentFeed.error && !incidentFeed.loading && incidentFeed.items.length === 0 && (
+          <div className="deploy-status-empty">No incidents in the current activity window.</div>
+        )}
+
+        {!!incidentFeed.items.length && (
+          <div className="incident-list">
+            {incidentFeed.items.map((item) => {
+              const row = (
+                <>
+                  <div className="incident-main">
+                    <span className={`incident-level ${item.level === 'error' || item.level === 'alert' ? 'high' : 'info'}`}>
+                      {item.source}
+                    </span>
+                    <strong>{item.title}</strong>
+                    <p>{item.detail}</p>
+                  </div>
+                  <span className="incident-time">{item.at ? new Date(item.at).toLocaleString() : 'n/a'}</span>
+                </>
+              );
+
+              if (item.href) {
+                return (
+                  <a key={item.id} className="incident-row" href={item.href} target="_blank" rel="noreferrer">
+                    {row}
+                  </a>
+                );
+              }
+
+              return (
+                <div key={item.id} className="incident-row">
+                  {row}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
