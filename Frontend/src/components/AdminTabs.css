@@ -7,10 +7,11 @@
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   position: sticky;
-  top: var(--admin-sticky-offset, 96px);
+  top: var(--admin-tabs-offset, 150px);
   z-index: 95;
   background: color-mix(in srgb, var(--bg-primary) 88%, transparent);
   backdrop-filter: blur(6px);
+  scroll-snap-type: x proximity;
 }
 
 .admin-tab {
@@ -25,6 +26,7 @@
   transition: all 0.2s ease;
   white-space: nowrap;
   flex-shrink: 0;
+  scroll-snap-align: start;
 }
 
 .admin-tab:hover {

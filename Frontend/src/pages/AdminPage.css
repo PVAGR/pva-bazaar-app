@@ -202,6 +202,7 @@
 /* Authenticated Admin Panel */
 .admin-page.authenticated {
   --admin-sticky-offset: 96px;
+  --admin-tabs-offset: 152px;
   padding: 0;
   margin: 0;
 }
@@ -1454,6 +1455,7 @@
 @media (max-width: 768px) {
   .admin-page.authenticated {
     --admin-sticky-offset: 126px;
+    --admin-tabs-offset: 186px;
   }
 
   .admin-sidebar {

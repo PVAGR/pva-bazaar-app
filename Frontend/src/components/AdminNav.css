@@ -8,6 +8,12 @@
   gap: 8px;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  position: sticky;
+  top: var(--admin-sticky-offset, 96px);
+  z-index: 96;
+  background: color-mix(in srgb, var(--bg-primary) 88%, transparent);
+  backdrop-filter: blur(6px);
+  scroll-snap-type: x proximity;
 }
 
 .adminNav__tab {
@@ -20,6 +26,7 @@
   transition: transform 0.15s ease, border-color 0.15s ease;
   white-space: nowrap;
   flex-shrink: 0;
+  scroll-snap-align: start;
 }
 
 .adminNav__tab:hover {
