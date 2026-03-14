@@ -35,10 +35,14 @@ function getWalletAllowlist() {
 
 function getTestPolicy() {
   return {
-    maxUsd: Math.max(parseFloat(process.env.SOLANA_TEST_MAX_USD || '5'), 0.01),
-    maxSol: Math.max(parseFloat(process.env.SOLANA_TEST_MAX_SOL || '0.05'), 0.000001),
+    minUsd: Math.max(parseFloat(process.env.SOLANA_TEST_MIN_USD || '5'), 0.01),
+    maxUsd: Math.max(parseFloat(process.env.SOLANA_TEST_MAX_USD || '50000'), 0.01),
+    minSol: Math.max(parseFloat(process.env.SOLANA_TEST_MIN_SOL || '0.001'), 0.000001),
+    maxSol: Math.max(parseFloat(process.env.SOLANA_TEST_MAX_SOL || '50'), 0.000001),
     requireAllowlist: process.env.SOLANA_TEST_REQUIRE_ALLOWLIST === 'true',
     walletAllowlist: getWalletAllowlist(),
+    network: String(process.env.SOLANA_CLUSTER || 'devnet').trim() || 'devnet',
+    treasuryWallet: String(process.env.SOLANA_TREASURY_WALLET || '').trim(),
   };
 }
 
@@ -51,8 +55,8 @@ async function getEffectiveTestPolicy() {
 
     const maxUsd = Math.max(Number(configured.maxUsd ?? fromEnv.maxUsd), 0.01);
     const maxSol = Math.max(Number(configured.maxSol ?? fromEnv.maxSol), 0.000001);
-    const minUsd = Math.max(Number(configured.minUsd ?? 0), 0);
-    const minSol = Math.max(Number(configured.minSol ?? 0), 0);
+    const minUsd = Math.max(Number(configured.minUsd ?? fromEnv.minUsd), 0.01);
+    const minSol = Math.max(Number(configured.minSol ?? fromEnv.minSol), 0.000001);
 
     return {
       maxUsd,
