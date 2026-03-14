@@ -3,10 +3,11 @@
  * Universal cloud storage management with one-click buttons
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { apiGet, apiPost, apiDelete, apiUpload } from '../lib/api';
 import { createLogger } from '../lib/logger';
 import LoadingSpinner, { LoadingDots } from './LoadingSpinner';
+import HelpTip from './HelpTip.jsx';
 import './CloudStorageTab.css';
 
 const logger = createLogger('CloudStorageTab');
@@ -19,7 +20,7 @@ export default function CloudStorageTab() {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
-  const [activeProvider, setActiveProvider] = useState('local');
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     loadProviders();
@@ -76,7 +77,9 @@ export default function CloudStorageTab() {
       if (data.ok) {
         setSuccess(`✅ Uploaded to ${provider.toUpperCase()}: ${data.url}`);
         setSelectedFile(null);
-        document.getElementById('file-input').value = '';
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
         loadFiles();
       } else {
         setError(data.error || 'Upload failed');
@@ -142,7 +145,7 @@ export default function CloudStorageTab() {
     <div className="cloud-storage-tab">
       <div className="tab-header">
         <h2>☁️ Cloud Storage Management</h2>
-        <p>Connect and manage files across multiple cloud providers with one-click buttons</p>
+        <p>Connect providers, upload assets, and manage storage evidence with a consistent operator workflow.</p>
       </div>
 
       {/* Alert Messages */}
@@ -161,11 +164,19 @@ export default function CloudStorageTab() {
 
       {/* Upload Section */}
       <section className="upload-section">
-        <h3>📤 Upload Files</h3>
+        <div className="section-title-row">
+          <h3>📤 Upload Files</h3>
+          <HelpTip
+            title="What this section is for"
+            body="Upload once to the provider that matches your delivery need. Local is fastest for draft work, Cloudinary is ideal for storefront media, and IPFS is best when you need immutable references."
+            example="A product photo can go to Cloudinary for fast page rendering, while final certificate media can also be pinned to IPFS."
+          />
+        </div>
         <div className="upload-box">
           <input 
             type="file" 
             id="file-input"
+            ref={fileInputRef}
             onChange={handleFileSelect}
             className="file-input"
           />
@@ -207,7 +218,14 @@ export default function CloudStorageTab() {
 
       {/* Providers Grid */}
       <section className="providers-section">
-        <h3>🔌 Cloud Providers</h3>
+        <div className="section-title-row">
+          <h3>🔌 Cloud Providers</h3>
+          <HelpTip
+            title="How provider status works"
+            body="Connected means environment credentials are present and available to the backend. Not configured means uploads are blocked until keys are added."
+            example="If Pinata is not configured, add PINATA_API_KEY and PINATA_API_SECRET, then retest connection."
+          />
+        </div>
         <div className="providers-grid">
           {Object.entries(providers).map(([key, provider]) => (
             <div key={key} className={`provider-card ${provider.status}`}>
@@ -276,7 +294,14 @@ export default function CloudStorageTab() {
       {/* Files List */}
       <section className="files-section">
         <div className="section-header">
-          <h3>📂 Uploaded Files ({files.length})</h3>
+          <div className="section-title-row">
+            <h3>📂 Uploaded Files ({files.length})</h3>
+            <HelpTip
+              title="How to use this file list"
+              body="Use Open to verify content, Copy URL to attach assets to listings or records, and Delete only when the file is no longer referenced anywhere."
+              example="Copy a Cloudinary URL into a listing image field, or store an IPFS URL in verification metadata."
+            />
+          </div>
           <button onClick={loadFiles} className="btn btn-refresh" disabled={loading}>
             {loading ? <LoadingDots /> : '🔄 Refresh'}
           </button>
@@ -339,7 +364,14 @@ export default function CloudStorageTab() {
 
       {/* Setup Guide */}
       <section className="setup-guide">
-        <h3>⚙️ Quick Setup Guide</h3>
+        <div className="section-title-row">
+          <h3>⚙️ Quick Setup Guide</h3>
+          <HelpTip
+            title="Why this setup matters"
+            body="This checklist keeps media operations reliable for teams moving from traditional workflows into blockchain-backed commerce. It prevents missing credentials and broken file references."
+            example="Before launch day, complete all four steps and run Test Connection for every provider marked in your deployment plan."
+          />
+        </div>
         <div className="guide-steps">
           <div className="guide-step">
             <div className="step-number">1</div>
