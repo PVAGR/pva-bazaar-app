@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { apiGet, apiPost } from '../lib/api';
 import { createLogger } from '../lib/logger';
 import HelpTip from './HelpTip.jsx';
@@ -50,6 +50,9 @@ export default function SettlementContractsTab() {
   const [signingRole, setSigningRole] = useState('partyOne');
   const [signingWallet, setSigningWallet] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const txHashRef = useRef(null);
+  const partyOneSignerNameRef = useRef(null);
+  const partyTwoSignerNameRef = useRef(null);
 
   const [form, setForm] = useState({
     network: 'base',
@@ -130,6 +133,49 @@ export default function SettlementContractsTab() {
   ];
 
   const nextChecklistItem = checklist.find((item) => !item.done);
+
+  const focusRequiredField = (fieldKey, messageText) => {
+    const refMap = {
+      txHash: txHashRef,
+      partyOneSignerName: partyOneSignerNameRef,
+      partyTwoSignerName: partyTwoSignerNameRef,
+    };
+    const target = refMap[fieldKey]?.current;
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTimeout(() => target.focus(), 120);
+    }
+    setMessage(messageText);
+  };
+
+  const validateCoreRequired = ({ requireTxHash = false } = {}) => {
+    const txHash = String(form.txHash || '').trim();
+    if (requireTxHash && (!txHash || !txHash.startsWith('0x'))) {
+      return {
+        ok: false,
+        fieldKey: 'txHash',
+        message: 'Tx Hash is required and should start with 0x.',
+      };
+    }
+
+    if (!String(form.partyOneSignerName || '').trim()) {
+      return {
+        ok: false,
+        fieldKey: 'partyOneSignerName',
+        message: 'Party One Signer Name is required for contract finalization.',
+      };
+    }
+
+    if (!String(form.partyTwoSignerName || '').trim()) {
+      return {
+        ok: false,
+        fieldKey: 'partyTwoSignerName',
+        message: 'Party Two Signer Name is required for contract finalization.',
+      };
+    }
+
+    return { ok: true };
+  };
 
   const hasEthereum = () => typeof window !== 'undefined' && !!window.ethereum?.request;
 
@@ -366,6 +412,12 @@ export default function SettlementContractsTab() {
   };
 
   const submitRecord = async (txHashOverride = '') => {
+    const validation = validateCoreRequired({ requireTxHash: true });
+    if (!validation.ok) {
+      focusRequiredField(validation.fieldKey, validation.message);
+      return;
+    }
+
     setSubmitting(true);
     try {
       const response = await apiPost('/blockchain/transfers/record', buildRecordPayload(txHashOverride));
@@ -430,6 +482,12 @@ export default function SettlementContractsTab() {
   };
 
   const finalizeTransfer = async (id) => {
+    const validation = validateCoreRequired({ requireTxHash: false });
+    if (!validation.ok) {
+      focusRequiredField(validation.fieldKey, validation.message);
+      return;
+    }
+
     setFinalizingId(id);
     try {
       const response = await apiPost(`/blockchain/transfers/${id}/finalize`, {
@@ -588,6 +646,21 @@ export default function SettlementContractsTab() {
     }
   };
 
+  const applyQuickFillDemo = () => {
+    setForm((prev) => ({
+      ...prev,
+      txHash: prev.txHash || '0xDEMO_SETTLEMENT_HASH_REPLACE_WITH_REAL_TX',
+      amountUsd: prev.amountUsd || '1.00',
+      partyOneName: prev.partyOneName || 'PVA Bazaar',
+      partyOneSignerName: prev.partyOneSignerName || 'Operator Signer',
+      partyTwoName: prev.partyTwoName || 'Counterparty',
+      partyTwoSignerName: prev.partyTwoSignerName || 'Counterparty Signer',
+      note: prev.note || 'Demo settlement workflow record',
+      finalizationNote: prev.finalizationNote || 'Demo finalization note for training.',
+    }));
+    setMessage('Demo values applied. Replace tx hash and names with real values before production finalization.');
+  };
+
   return (
     <div className="settlement-contracts-tab" role="tabpanel" id="settlements-panel">
       <div className="tab-header">
@@ -630,6 +703,7 @@ export default function SettlementContractsTab() {
         <span className="mode-hint">
           {beginnerMode ? 'Showing only core required inputs + wallet send basics.' : 'Showing full optional legal and attestation controls.'}
         </span>
+        <button className="btn ghost tiny" type="button" onClick={applyQuickFillDemo}>Quick Fill Demo</button>
       </div>
 
       <div className="checklist-card" role="region" aria-label="Live settlement checklist">
@@ -724,7 +798,8 @@ export default function SettlementContractsTab() {
 
           <label className="full-row">
             Tx Hash (Required)
-            <input value={form.txHash} onChange={(e) => setForm((prev) => ({ ...prev, txHash: e.target.value }))} placeholder="0x..." />
+            <input ref={txHashRef} value={form.txHash} onChange={(e) => setForm((prev) => ({ ...prev, txHash: e.target.value }))} placeholder="0x..." />
+            <small>Why required: anchors the settlement to a specific on-chain transaction for traceability.</small>
           </label>
 
           {showAdvanced ? (
@@ -801,7 +876,8 @@ export default function SettlementContractsTab() {
 
           <label>
             Party One Signer Name (Required)
-            <input value={form.partyOneSignerName} onChange={(e) => setForm((prev) => ({ ...prev, partyOneSignerName: e.target.value }))} placeholder="Signer full name" />
+            <input ref={partyOneSignerNameRef} value={form.partyOneSignerName} onChange={(e) => setForm((prev) => ({ ...prev, partyOneSignerName: e.target.value }))} placeholder="Signer full name" />
+            <small>Why required: identifies who approved terms for party one.</small>
           </label>
 
           {showAdvanced ? (
@@ -820,7 +896,8 @@ export default function SettlementContractsTab() {
 
           <label>
             Party Two Signer Name (Required)
-            <input value={form.partyTwoSignerName} onChange={(e) => setForm((prev) => ({ ...prev, partyTwoSignerName: e.target.value }))} placeholder="Signer full name" />
+            <input ref={partyTwoSignerNameRef} value={form.partyTwoSignerName} onChange={(e) => setForm((prev) => ({ ...prev, partyTwoSignerName: e.target.value }))} placeholder="Signer full name" />
+            <small>Why required: identifies who approved terms for party two.</small>
           </label>
 
           {showAdvanced ? (
