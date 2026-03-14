@@ -33,9 +33,23 @@ export default function DashboardTab({ onNavigateTab }) {
   const [lastRefresh, setLastRefresh] = useState(new Date());
   const [recovering, setRecovering] = useState(false);
   const [opsActionResult, setOpsActionResult] = useState(null);
+  const [deployStatus, setDeployStatus] = useState({
+    loading: true,
+    error: '',
+    updatedAt: null,
+    runs: [],
+  });
 
   useEffect(() => {
     loadDashboardData();
+    loadDeploymentStatus();
+  }, []);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      loadDeploymentStatus();
+    }, 30000);
+    return () => clearInterval(id);
   }, []);
 
   const loadDashboardData = async () => {
@@ -171,6 +185,67 @@ export default function DashboardTab({ onNavigateTab }) {
     }
   };
 
+  const loadDeploymentStatus = async () => {
+    setDeployStatus((prev) => ({ ...prev, loading: true, error: '' }));
+    try {
+      const res = await fetch('https://api.github.com/repos/PVAGR/pva-bazaar-app/actions/runs?branch=main&per_page=20', {
+        method: 'GET',
+        headers: {
+          Accept: 'application/vnd.github+json',
+        },
+      });
+
+      if (!res.ok) {
+        throw new Error(`GitHub API ${res.status}`);
+      }
+
+      const payload = await res.json();
+      const runs = Array.isArray(payload?.workflow_runs) ? payload.workflow_runs : [];
+
+      const importantNames = [
+        'Deploy Frontend to GitHub Pages',
+        'Deploy Backend Live',
+        'Frontend Tests & Deploy',
+        'Backend Tests & Security',
+        'Live Readiness Check',
+        'OpenClaw Integration Test',
+      ];
+
+      const mapped = runs
+        .filter((run) => importantNames.includes(run?.name))
+        .slice(0, 8)
+        .map((run) => ({
+          id: run.id,
+          name: run.name,
+          status: run.status,
+          conclusion: run.conclusion,
+          htmlUrl: run.html_url,
+          headSha: run.head_sha,
+          updatedAt: run.updated_at,
+        }));
+
+      setDeployStatus({
+        loading: false,
+        error: '',
+        updatedAt: new Date().toISOString(),
+        runs: mapped,
+      });
+    } catch (err) {
+      setDeployStatus((prev) => ({
+        ...prev,
+        loading: false,
+        error: err.message || 'Failed to load workflow status',
+      }));
+    }
+  };
+
+  const refreshAll = async () => {
+    await Promise.allSettled([
+      loadDashboardData(),
+      loadDeploymentStatus(),
+    ]);
+  };
+
   const formatBytes = (bytes) => {
     if (bytes === 0) return '0 B';
     const k = 1024;
@@ -186,6 +261,19 @@ export default function DashboardTab({ onNavigateTab }) {
       case 'error': return '#f44336';
       default: return '#9e9e9e';
     }
+  };
+
+  const getRunTone = (run) => {
+    if (run?.status === 'in_progress' || run?.status === 'queued' || run?.status === 'waiting') {
+      return 'run-tone-progress';
+    }
+    if (run?.conclusion === 'success') {
+      return 'run-tone-success';
+    }
+    if (run?.conclusion === 'failure' || run?.conclusion === 'cancelled' || run?.conclusion === 'timed_out') {
+      return 'run-tone-failure';
+    }
+    return 'run-tone-neutral';
   };
 
   const runOpsRecovery = async () => {
@@ -222,8 +310,8 @@ export default function DashboardTab({ onNavigateTab }) {
           <span className="last-refresh">
             Last refreshed: {lastRefresh.toLocaleTimeString()}
           </span>
-          <button onClick={loadDashboardData} className="btn-refresh" disabled={loading}>
-            {loading ? '⏳ Loading...' : '🔄 Refresh'}
+          <button onClick={refreshAll} className="btn-refresh" disabled={loading || deployStatus.loading}>
+            {loading || deployStatus.loading ? '⏳ Loading...' : '🔄 Refresh'}
           </button>
         </div>
       </div>
@@ -502,6 +590,56 @@ export default function DashboardTab({ onNavigateTab }) {
             <span className="info-value">{lastRefresh.toLocaleTimeString()}</span>
           </div>
         </div>
+      </div>
+
+      <div className="system-info-panel deploy-status-panel">
+        <div className="deploy-status-head">
+          <h3>🚀 Deployment Status</h3>
+          <button
+            type="button"
+            className="btn-refresh deploy-refresh"
+            onClick={loadDeploymentStatus}
+            disabled={deployStatus.loading}
+          >
+            {deployStatus.loading ? 'Refreshing...' : 'Refresh Deploy'}
+          </button>
+        </div>
+        <p className="deploy-status-subtitle">
+          Live view of key GitHub Actions workflows for branch main.
+          {deployStatus.updatedAt ? ` Updated ${new Date(deployStatus.updatedAt).toLocaleTimeString()}.` : ''}
+        </p>
+
+        {deployStatus.error && (
+          <div className="deploy-status-error">
+            {deployStatus.error}
+          </div>
+        )}
+
+        {!deployStatus.error && deployStatus.runs.length === 0 && !deployStatus.loading && (
+          <div className="deploy-status-empty">No tracked workflows found.</div>
+        )}
+
+        {!!deployStatus.runs.length && (
+          <div className="deploy-run-list">
+            {deployStatus.runs.map((run) => (
+              <a
+                key={run.id}
+                className={`deploy-run-row ${getRunTone(run)}`}
+                href={run.htmlUrl}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <div className="deploy-run-main">
+                  <strong>{run.name}</strong>
+                  <span className="deploy-run-meta">SHA {String(run.headSha || '').slice(0, 7)} · {run.updatedAt ? new Date(run.updatedAt).toLocaleTimeString() : 'n/a'}</span>
+                </div>
+                <span className="deploy-run-badge">
+                  {run.status === 'completed' ? (run.conclusion || 'completed') : run.status}
+                </span>
+              </a>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
