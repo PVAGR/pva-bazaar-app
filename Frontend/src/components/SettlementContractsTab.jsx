@@ -51,8 +51,10 @@ export default function SettlementContractsTab() {
   const [beginnerMode, setBeginnerMode] = useState(true);
   const [wizardMode, setWizardMode] = useState(false);
   const [wizardStep, setWizardStep] = useState(0);
+  const [operationRole, setOperationRole] = useState('operator');
   const [pendingDraft, setPendingDraft] = useState(null);
   const [draftDecisionMade, setDraftDecisionMade] = useState(false);
+  const [auditTrail, setAuditTrail] = useState({});
   const [signingRole, setSigningRole] = useState('partyOne');
   const [signingWallet, setSigningWallet] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -162,6 +164,30 @@ export default function SettlementContractsTab() {
       description: 'Finalize settlement then verify digest before report export.',
     },
   ];
+  const roleCapabilities = {
+    operator: {
+      canWalletSend: true,
+      canRecord: true,
+      canFinalize: true,
+      canVerify: true,
+      label: 'Operator',
+    },
+    reviewer: {
+      canWalletSend: false,
+      canRecord: false,
+      canFinalize: false,
+      canVerify: true,
+      label: 'Reviewer',
+    },
+    auditor: {
+      canWalletSend: false,
+      canRecord: false,
+      canFinalize: false,
+      canVerify: true,
+      label: 'Auditor',
+    },
+  };
+  const activeRole = roleCapabilities[operationRole] || roleCapabilities.operator;
 
   const focusRequiredField = (fieldKey, messageText) => {
     setRequiredErrors((prev) => ({ ...prev, [fieldKey]: true }));
@@ -326,13 +352,14 @@ export default function SettlementContractsTab() {
       beginnerMode,
       wizardMode,
       wizardStep,
+      operationRole,
     };
     try {
       localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(payload));
     } catch {
       // Ignore storage quota errors and continue without blocking workflow.
     }
-  }, [form, beginnerMode, wizardMode, wizardStep, draftDecisionMade]);
+  }, [form, beginnerMode, wizardMode, wizardStep, operationRole, draftDecisionMade]);
 
   useEffect(() => {
     const id = setTimeout(() => {
@@ -351,6 +378,7 @@ export default function SettlementContractsTab() {
     setBeginnerMode(typeof pendingDraft.beginnerMode === 'boolean' ? pendingDraft.beginnerMode : true);
     setWizardMode(!!pendingDraft.wizardMode);
     setWizardStep(Number.isInteger(pendingDraft.wizardStep) ? pendingDraft.wizardStep : 0);
+    setOperationRole(typeof pendingDraft.operationRole === 'string' ? pendingDraft.operationRole : 'operator');
     setDraftDecisionMade(true);
     setPendingDraft(null);
     setMessage('Draft restored. Continue from your last saved state.');
@@ -543,6 +571,15 @@ export default function SettlementContractsTab() {
   };
 
   const submitRecord = async (txHashOverride = '') => {
+    if (!activeRole.canRecord) {
+      setMessage(`${activeRole.label} role is read-only for recording. Switch to Operator to record transfers.`);
+      return;
+    }
+    if (wizardMode && wizardStep < 1) {
+      setMessage('Wizard lock: complete Step 1 and Step 2 before recording transfer.');
+      return;
+    }
+
     const validation = validateCoreRequired({ requireTxHash: true });
     if (!validation.ok) {
       focusRequiredField(validation.fieldKey, validation.message);
@@ -568,6 +605,10 @@ export default function SettlementContractsTab() {
 
   const handleWalletSendAndRecord = async () => {
     setMessage('');
+    if (!activeRole.canWalletSend) {
+      setMessage(`${activeRole.label} role cannot send wallet transactions.`);
+      return;
+    }
     if (!wallet.address) {
       setMessage('Connect wallet first.');
       return;
@@ -613,6 +654,15 @@ export default function SettlementContractsTab() {
   };
 
   const finalizeTransfer = async (id) => {
+    if (!activeRole.canFinalize) {
+      setMessage(`${activeRole.label} role is read-only for finalization. Switch to Operator.`);
+      return;
+    }
+    if (wizardMode && wizardStep < 3) {
+      setMessage('Wizard lock: move to Step 4 before finalization.');
+      return;
+    }
+
     const validation = validateCoreRequired({ requireTxHash: false });
     if (!validation.ok) {
       focusRequiredField(validation.fieldKey, validation.message);
@@ -655,6 +705,10 @@ export default function SettlementContractsTab() {
   };
 
   const verifyIntegrity = async (id) => {
+    if (!activeRole.canVerify) {
+      setMessage(`${activeRole.label} role cannot verify digest integrity.`);
+      return;
+    }
     setVerifyingId(id);
     try {
       const response = await apiGet(`/blockchain/transfers/${id}/verify-integrity`);
@@ -664,6 +718,7 @@ export default function SettlementContractsTab() {
       }
       const status = response.integrity?.status || 'unknown';
       setIntegrityStatusById((prev) => ({ ...prev, [id]: status }));
+      setAuditTrail((prev) => ({ ...prev, [id]: { ...(prev[id] || {}), verifiedAt: new Date().toISOString(), status } }));
       setMessage(`Integrity check complete: ${status}.`);
       await loadTransfers();
     } catch (err) {
@@ -940,6 +995,15 @@ export default function SettlementContractsTab() {
         </button>
         <button className="btn ghost tiny" type="button" onClick={openRunbookCard}>Print Runbook Card</button>
         <button className="btn ghost tiny" type="button" onClick={discardDraft}>Clear Saved Draft</button>
+        <label className="role-picker">
+          Role
+          <select value={operationRole} onChange={(e) => setOperationRole(e.target.value)}>
+            <option value="operator">Operator</option>
+            <option value="reviewer">Reviewer</option>
+            <option value="auditor">Auditor</option>
+          </select>
+        </label>
+        <span className="mode-hint">Active role: {activeRole.label}</span>
       </div>
 
       {wizardMode ? (
@@ -973,12 +1037,28 @@ export default function SettlementContractsTab() {
         </p>
       </div>
 
+      {records.data[0] ? (
+        <div className="timeline-card" role="region" aria-label="Settlement audit timeline">
+          <h4>Audit Timeline</h4>
+          <div className="timeline-grid">
+            <div><strong>Recorded:</strong> {records.data[0]?.createdAt ? new Date(records.data[0].createdAt).toLocaleString() : 'N/A'}</div>
+            <div><strong>Finalized:</strong> {records.data[0]?.finalizedAt ? new Date(records.data[0].finalizedAt).toLocaleString() : 'Not finalized'}</div>
+            <div><strong>Chain Refresh:</strong> {records.data[0]?.lastCheckedAt ? new Date(records.data[0].lastCheckedAt).toLocaleString() : 'N/A'}</div>
+            <div>
+              <strong>Digest Verified:</strong> {auditTrail[records.data[0].id]?.verifiedAt
+                ? `${new Date(auditTrail[records.data[0].id].verifiedAt).toLocaleString()} (${auditTrail[records.data[0].id].status})`
+                : 'Not yet'}
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       <div className="settlement-form-card">
         <div className="wallet-actions-row">
           <button className="btn primary" type="button" onClick={connectWallet} disabled={wallet.connecting || wallet.sending}>
             {wallet.connecting ? 'Connecting...' : wallet.address ? 'Wallet Connected' : 'Connect Wallet'}
           </button>
-          <button className="btn accent" type="button" onClick={handleWalletSendAndRecord} disabled={wallet.sending || !wallet.address}>
+          <button className="btn accent" type="button" onClick={handleWalletSendAndRecord} disabled={wallet.sending || !wallet.address || !activeRole.canWalletSend}>
             {wallet.sending ? 'Sending...' : 'Send On Base + Record'}
           </button>
           {wallet.address ? <span className="wallet-chip">{wallet.address.slice(0, 6)}...{wallet.address.slice(-4)} {wallet.chainId ? `· ${wallet.chainId}` : ''}</span> : null}
@@ -1288,7 +1368,7 @@ export default function SettlementContractsTab() {
         </div>
 
         <div className="manual-submit-row">
-          <button className="btn secondary" type="button" onClick={() => submitRecord()} disabled={submitting}>
+          <button className="btn secondary" type="button" onClick={() => submitRecord()} disabled={submitting || !activeRole.canRecord || (wizardMode && wizardStep < 1)}>
             {submitting ? <LoadingDots inline={true} label="Recording..." /> : 'Record Existing Tx Hash'}
           </button>
         </div>
@@ -1326,7 +1406,7 @@ export default function SettlementContractsTab() {
                     className="btn ghost tiny"
                     type="button"
                     onClick={() => finalizeTransfer(item.id)}
-                    disabled={item.isFinalized || finalizingId === item.id}
+                    disabled={item.isFinalized || finalizingId === item.id || !activeRole.canFinalize || (wizardMode && wizardStep < 3)}
                   >
                     {item.isFinalized ? 'Locked' : finalizingId === item.id ? 'Finalizing...' : 'Finalize & Lock'}
                   </button>

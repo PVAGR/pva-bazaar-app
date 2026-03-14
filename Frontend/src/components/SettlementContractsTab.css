@@ -64,6 +64,23 @@
   font-size: 0.8rem;
 }
 
+.role-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--site-text);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.role-picker select {
+  border: 1px solid var(--site-border);
+  border-radius: 8px;
+  background: var(--site-panel-soft);
+  color: var(--site-text);
+  padding: 0.28rem 0.45rem;
+}
+
 .wizard-card {
   border: 1px solid var(--site-border);
   border-radius: 10px;
@@ -93,6 +110,26 @@
   margin-top: 0.55rem;
   display: flex;
   gap: 0.45rem;
+}
+
+.timeline-card {
+  border: 1px solid var(--site-border);
+  border-radius: 10px;
+  padding: 0.8rem;
+  background: var(--site-panel);
+  color: var(--site-text);
+}
+
+.timeline-card h4 {
+  margin: 0 0 0.45rem;
+}
+
+.timeline-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem;
+  color: var(--site-text);
+  font-size: 0.82rem;
 }
 
 .checklist-card {
@@ -438,6 +475,10 @@
 }
 
 @media (max-width: 700px) {
+  .timeline-grid {
+    grid-template-columns: 1fr;
+  }
+
   .checklist-items {
     grid-template-columns: 1fr;
   }
