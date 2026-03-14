@@ -6,6 +6,7 @@ import {
   updatePayoutRuntimePolicy,
   requestSolanaTestPayout,
   confirmSolanaTestPayout,
+  getDirectTransferReadiness,
   getHotWalletBalance,
   directSolanaTransfer,
 } from '../lib/api';
@@ -53,6 +54,7 @@ export default function PayoutTab() {
   const [testResult, setTestResult] = useState(null);
   const [confirmForm, setConfirmForm] = useState({ payoutId: '', txSignature: '' });
   const [confirmResult, setConfirmResult] = useState(null);
+  const [readiness, setReadiness] = useState({ loading: false, data: null, error: '' });
   const [hotWallet, setHotWallet] = useState({ loading: false, publicKey: null, balanceSol: null, error: null, notConfigured: false });
   const [directForm, setDirectForm] = useState({ recipientAddress: '', amountSol: '0.01', amountUsd: '5', memo: '' });
   const [directResult, setDirectResult] = useState(null);
@@ -240,6 +242,20 @@ export default function PayoutTab() {
     } catch (err) {
       const msg = err?.response?.data?.error || err.message || 'Failed';
       setHotWallet({ loading: false, publicKey: null, balanceSol: null, error: msg, notConfigured: Boolean(err?.response?.data?.notConfigured) });
+    }
+  };
+
+  const runReadinessCheck = async () => {
+    setReadiness({ loading: true, data: null, error: '' });
+    try {
+      const data = await getDirectTransferReadiness();
+      if (data?.ok) {
+        setReadiness({ loading: false, data, error: '' });
+      } else {
+        setReadiness({ loading: false, data: null, error: data?.error || 'Readiness check failed' });
+      }
+    } catch (err) {
+      setReadiness({ loading: false, data: null, error: err?.response?.data?.error || err.message || 'Readiness check failed' });
     }
   };
 
@@ -594,6 +610,46 @@ export default function PayoutTab() {
 
       {tab === 'policy-test' && (
         <div className="payout-policy-test">
+          <div className="policy-card">
+            <h3>⚡ Launch Readiness Check</h3>
+            <p>
+              Run this before any one-click send. It verifies policy range, wallet key setup, wallet balance,
+              and RPC connectivity from the live backend environment.
+            </p>
+            <div className="policy-actions">
+              <button className="btn-primary" onClick={runReadinessCheck} disabled={readiness.loading}>
+                {readiness.loading ? 'Running checks...' : 'Run Readiness Check'}
+              </button>
+            </div>
+
+            {readiness.error ? (
+              <div className="policy-msg">❌ {readiness.error}</div>
+            ) : null}
+
+            {readiness.data ? (
+              <div className={`policy-msg ${readiness.data.ready ? 'direct-success' : ''}`}>
+                <div>
+                  {readiness.data.ready ? '✅ Ready for one-click sends' : '⚠️ Not ready yet'}
+                </div>
+                <div>Network: <strong>{readiness.data.network}</strong></div>
+                <div>RPC: <span>{readiness.data.rpcUrl}</span></div>
+                {Array.isArray(readiness.data.checks) && readiness.data.checks.map((check) => (
+                  <div key={check.key} className="readiness-item">
+                    <strong>{check.ok ? '✅' : '❌'} {check.label}</strong>
+                    <div className="readiness-detail">{check.detail}</div>
+                  </div>
+                ))}
+                {Array.isArray(readiness.data.notes) && readiness.data.notes.length > 0 && (
+                  <div className="readiness-notes">
+                    {readiness.data.notes.map((note) => (
+                      <div key={note}>• {note}</div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : null}
+          </div>
+
           <div className="policy-card">
             <h3>Runtime Payout Policy</h3>
             <p>

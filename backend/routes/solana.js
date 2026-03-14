@@ -400,6 +400,126 @@ router.get('/hot-wallet-balance', adminSession, async (req, res) => {
   }
 });
 
+// GET /api/solana/direct-transfer-readiness
+// Returns a practical readiness report for one-click direct transfers.
+router.get('/direct-transfer-readiness', adminSession, async (req, res) => {
+  const checks = [];
+  const notes = [];
+
+  const policy = await getEffectiveTestPolicy();
+  const network = policy.network || process.env.SOLANA_CLUSTER || 'devnet';
+  const rpcUrl = getSolanaRpcUrl();
+
+  const policyRangeOk = Number.isFinite(policy.minSol)
+    && Number.isFinite(policy.maxSol)
+    && Number.isFinite(policy.minUsd)
+    && Number.isFinite(policy.maxUsd)
+    && policy.minSol >= 0
+    && policy.maxSol > 0
+    && policy.minUsd >= 0
+    && policy.maxUsd > 0
+    && policy.minSol <= policy.maxSol
+    && policy.minUsd <= policy.maxUsd;
+
+  checks.push({
+    key: 'policyRange',
+    ok: policyRangeOk,
+    label: 'Payout policy range is valid',
+    detail: `USD ${policy.minUsd} - ${policy.maxUsd}; SOL ${policy.minSol} - ${policy.maxSol}`,
+  });
+
+  const allowlistReady = !policy.requireAllowlist || policy.walletAllowlist.length > 0;
+  checks.push({
+    key: 'allowlistReady',
+    ok: allowlistReady,
+    label: 'Allowlist settings are usable',
+    detail: policy.requireAllowlist
+      ? `Require allowlist is ON (${policy.walletAllowlist.length} entries)`
+      : 'Require allowlist is OFF',
+  });
+
+  let hotWalletPublicKey = null;
+  let balanceLamports = 0;
+
+  try {
+    const { Connection, LAMPORTS_PER_SOL } = require('@solana/web3.js');
+    const keypair = parseHotWalletKeypair();
+    hotWalletPublicKey = keypair.publicKey.toBase58();
+
+    checks.push({
+      key: 'hotWalletKey',
+      ok: true,
+      label: 'Server hot wallet private key is configured',
+      detail: hotWalletPublicKey,
+    });
+
+    const connection = new Connection(rpcUrl, 'confirmed');
+    balanceLamports = await connection.getBalance(keypair.publicKey);
+    const hasBalance = balanceLamports > 0;
+
+    checks.push({
+      key: 'hotWalletBalance',
+      ok: hasBalance,
+      label: 'Hot wallet has spendable SOL',
+      detail: `${balanceLamports / LAMPORTS_PER_SOL} SOL`,
+    });
+
+    const latest = await connection.getLatestBlockhash('confirmed');
+    checks.push({
+      key: 'rpcReachable',
+      ok: Boolean(latest?.blockhash),
+      label: 'Solana RPC is reachable',
+      detail: latest?.blockhash || rpcUrl,
+    });
+  } catch (err) {
+    const notConfigured = Boolean(err?.notConfigured);
+    checks.push({
+      key: 'hotWalletKey',
+      ok: false,
+      label: 'Server hot wallet private key is configured',
+      detail: notConfigured ? 'SOLANA_HOT_WALLET_PRIVATE_KEY is missing' : (err.message || 'Invalid key configuration'),
+    });
+
+    checks.push({
+      key: 'rpcReachable',
+      ok: false,
+      label: 'Solana RPC is reachable',
+      detail: notConfigured ? 'Skipped until hot wallet is configured' : (err.message || rpcUrl),
+    });
+  }
+
+  const ready = checks.every((check) => check.ok === true);
+
+  if (!ready) {
+    notes.push('Complete failed checks before using one-click direct transfer.');
+  }
+  if (network !== 'devnet') {
+    notes.push('You are not on devnet. Ensure real funds and policy are intentional before sending.');
+  }
+
+  return res.json({
+    ok: true,
+    ready,
+    network,
+    rpcUrl,
+    policy: {
+      minUsd: policy.minUsd,
+      maxUsd: policy.maxUsd,
+      minSol: policy.minSol,
+      maxSol: policy.maxSol,
+      requireAllowlist: policy.requireAllowlist,
+      allowlistSize: policy.walletAllowlist.length,
+    },
+    hotWallet: {
+      publicKey: hotWalletPublicKey,
+      balanceLamports,
+      balanceSol: balanceLamports / 1000000000,
+    },
+    checks,
+    notes,
+  });
+});
+
 // POST /api/solana/direct-transfer
 // Signs and broadcasts a SOL transfer directly from the server hot wallet.
 // Enforces all policy limits. Private key is read from env only — never stored.

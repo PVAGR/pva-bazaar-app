@@ -12,6 +12,7 @@ export const updateOpenClawRuntimeConfig = (payload) => apiPut('/admin/runtime-c
 export const updatePayoutRuntimePolicy = (payload) => apiPut('/admin/runtime-config/payout-policy', payload);
 export const requestSolanaTestPayout = (payload) => apiPost('/solana/test-payout', payload);
 export const confirmSolanaTestPayout = (payload) => apiPost('/solana/confirm-test-payout', payload);
+export const getDirectTransferReadiness = () => apiGet('/solana/direct-transfer-readiness');
 export const getHotWalletBalance = () => apiGet('/solana/hot-wallet-balance');
 export const directSolanaTransfer = (payload) => apiPost('/solana/direct-transfer', payload);
 
