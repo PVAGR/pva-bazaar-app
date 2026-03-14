@@ -47,6 +47,7 @@ export default function DashboardTab({ onNavigateTab }) {
     updatedAt: null,
     items: [],
   });
+  const [criticalOnlyIncidents, setCriticalOnlyIncidents] = useState(false);
 
   useEffect(() => {
     loadDashboardData();
@@ -365,6 +366,30 @@ export default function DashboardTab({ onNavigateTab }) {
     }
     return 'run-tone-neutral';
   };
+
+  const latestFrontendDeploy = deployStatus.runs
+    .filter((run) => run.name === 'Deploy Frontend to GitHub Pages')
+    .sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0))[0] || null;
+
+  const latestBackendDeploy = deployStatus.runs
+    .filter((run) => run.name === 'Deploy Backend Live')
+    .sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0))[0] || null;
+
+  const deployPipelinesHealthy = [latestFrontendDeploy, latestBackendDeploy]
+    .filter(Boolean)
+    .every((run) => run.conclusion === 'success' || run.status === 'in_progress');
+
+  const openclawHealthy = dashboardData.ops.openclawReachable
+    && dashboardData.ops.staleQueue === 0
+    && ((dashboardData.ops.heartbeatAgeMinutes ?? 0) <= 4);
+
+  const solanaReadyForOps = dashboardData.ops.solanaReady;
+  const operatorReady = deployPipelinesHealthy && openclawHealthy && solanaReadyForOps;
+
+  const visibleIncidents = (criticalOnlyIncidents
+    ? incidentFeed.items.filter((item) => item.level === 'error' || item.level === 'alert')
+    : incidentFeed.items
+  );
 
   const runOpsRecovery = async () => {
     setRecovering(true);
@@ -751,17 +776,51 @@ export default function DashboardTab({ onNavigateTab }) {
         )}
       </div>
 
+      <div className="system-info-panel readiness-panel">
+        <h3>✅ Operator Checklist</h3>
+        <p className="deploy-status-subtitle">
+          Proceed with money-run and payout operations only when all gates are green.
+        </p>
+        <div className={`readiness-overall ${operatorReady ? 'ready' : 'blocked'}`}>
+          {operatorReady ? 'READY FOR OPERATIONS' : 'BLOCKED - INVESTIGATE INCIDENTS'}
+        </div>
+        <div className="readiness-grid">
+          <div className={`readiness-item ${deployPipelinesHealthy ? 'ok' : 'bad'}`}>
+            <span>Deploy Pipelines</span>
+            <strong>{deployPipelinesHealthy ? 'Green' : 'Not Green'}</strong>
+          </div>
+          <div className={`readiness-item ${openclawHealthy ? 'ok' : 'bad'}`}>
+            <span>OpenClaw Health</span>
+            <strong>{openclawHealthy ? 'Healthy' : 'Needs Recovery'}</strong>
+          </div>
+          <div className={`readiness-item ${solanaReadyForOps ? 'ok' : 'bad'}`}>
+            <span>Solana Readiness</span>
+            <strong>{solanaReadyForOps ? 'Ready' : 'Not Ready'}</strong>
+          </div>
+        </div>
+      </div>
+
       <div className="system-info-panel incident-timeline-panel">
         <div className="deploy-status-head">
           <h3>🧭 Incident Timeline</h3>
-          <button
-            type="button"
-            className="btn-refresh deploy-refresh"
-            onClick={() => loadIncidentFeed(deployStatus.runs)}
-            disabled={incidentFeed.loading}
-          >
-            {incidentFeed.loading ? 'Refreshing...' : 'Refresh Timeline'}
-          </button>
+          <div className="incident-head-actions">
+            <label className="incident-filter-toggle">
+              <input
+                type="checkbox"
+                checked={criticalOnlyIncidents}
+                onChange={(event) => setCriticalOnlyIncidents(event.target.checked)}
+              />
+              Critical only
+            </label>
+            <button
+              type="button"
+              className="btn-refresh deploy-refresh"
+              onClick={() => loadIncidentFeed(deployStatus.runs)}
+              disabled={incidentFeed.loading}
+            >
+              {incidentFeed.loading ? 'Refreshing...' : 'Refresh Timeline'}
+            </button>
+          </div>
         </div>
         <p className="deploy-status-subtitle">
           Combined stream: workflow failures/progress + OpenClaw recoveries and alerts.
@@ -772,13 +831,13 @@ export default function DashboardTab({ onNavigateTab }) {
           <div className="deploy-status-error">{incidentFeed.error}</div>
         )}
 
-        {!incidentFeed.error && !incidentFeed.loading && incidentFeed.items.length === 0 && (
+        {!incidentFeed.error && !incidentFeed.loading && visibleIncidents.length === 0 && (
           <div className="deploy-status-empty">No incidents in the current activity window.</div>
         )}
 
-        {!!incidentFeed.items.length && (
+        {!!visibleIncidents.length && (
           <div className="incident-list">
-            {incidentFeed.items.map((item) => {
+            {visibleIncidents.map((item) => {
               const row = (
                 <>
                   <div className="incident-main">
