@@ -321,6 +321,56 @@ export default function PayoutTab() {
     }
   };
 
+  const quickSendFiveUsd = async () => {
+    if (!directForm.recipientAddress) {
+      setGuidedFlow({ loading: false, result: null, error: 'Enter recipient wallet first.' });
+      return;
+    }
+
+    if (safeMode && !readiness?.data?.ready) {
+      setGuidedFlow({ loading: false, result: null, error: 'Safe mode is ON. Run Readiness Check and resolve failures before quick send.' });
+      return;
+    }
+
+    const quickPayload = {
+      recipientAddress: directForm.recipientAddress,
+      amountSol: Number(directForm.amountSol || 0.01),
+      amountUsd: 5,
+      memo: directForm.memo || 'Quick $5 wallet test',
+      autoAirdropOnDevnet: true,
+    };
+
+    setDirectForm((prev) => ({
+      ...prev,
+      amountUsd: '5',
+      amountSol: String(quickPayload.amountSol),
+      memo: quickPayload.memo,
+    }));
+
+    setGuidedFlow({ loading: true, result: null, error: '' });
+    try {
+      const data = await executeSolanaTestFlow(quickPayload);
+      if (data?.ok) {
+        setGuidedFlow({ loading: false, result: data, error: '' });
+        loadHotWalletBalance();
+        runReadinessCheck();
+        loadRecentTransfers();
+        loadAutopilotRuns();
+        if (data?.flow?.transfer?.signature) {
+          setConfirmForm((prev) => ({ ...prev, txSignature: data.flow.transfer.signature }));
+        }
+      } else {
+        setGuidedFlow({ loading: false, result: null, error: data?.error || 'Quick send failed' });
+      }
+    } catch (err) {
+      setGuidedFlow({
+        loading: false,
+        result: err?.response?.data || null,
+        error: err?.response?.data?.error || err.message || 'Quick send failed',
+      });
+    }
+  };
+
   const loadRecentTransfers = async () => {
     setRecentTransfers((prev) => ({ ...prev, loading: true, error: '' }));
     try {
@@ -1205,6 +1255,13 @@ export default function PayoutTab() {
             <div className="policy-actions">
               <button className="btn-primary btn-send" onClick={handleDirectTransfer} disabled={directSending || !directForm.recipientAddress}>
                 {directSending ? '⏳ Sending...' : '🚀 Send SOL Now'}
+              </button>
+              <button
+                className="btn-primary"
+                onClick={quickSendFiveUsd}
+                disabled={guidedFlow.loading || directSending || !directForm.recipientAddress}
+              >
+                {guidedFlow.loading ? 'Running $5 quick send...' : '💸 Quick $5 Test Send'}
               </button>
               <button className="btn-secondary" onClick={executeGuidedFlow} disabled={guidedFlow.loading || !directForm.recipientAddress}>
                 {guidedFlow.loading ? 'Running guided flow...' : '⚡ Execute One-Click Test Flow'}
