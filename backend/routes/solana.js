@@ -351,6 +351,187 @@ router.post('/ritual', async (req, res) => {
   }
 });
 
+// ---------------------------------------------------------------------------
+// Hot-wallet helpers – private key stays in env, never in DB or responses
+// ---------------------------------------------------------------------------
+
+function parseHotWalletKeypair() {
+  const raw = (process.env.SOLANA_HOT_WALLET_PRIVATE_KEY || '').trim();
+  if (!raw) {
+    const err = new Error('SOLANA_HOT_WALLET_PRIVATE_KEY is not set. Add it to Vercel environment variables.');
+    err.notConfigured = true;
+    throw err;
+  }
+  const { Keypair } = require('@solana/web3.js');
+  // Support Phantom JSON-array export: [1,2,...,64]
+  if (raw.startsWith('[')) {
+    const bytes = JSON.parse(raw);
+    return Keypair.fromSecretKey(Uint8Array.from(bytes));
+  }
+  // Support base58-encoded 64-byte secret key
+  const bs58 = require('bs58');
+  return Keypair.fromSecretKey(bs58.decode(raw));
+}
+
+// GET /api/solana/hot-wallet-balance
+// Returns public key + SOL balance of the configured server hot wallet.
+router.get('/hot-wallet-balance', adminSession, async (req, res) => {
+  try {
+    const { Connection, LAMPORTS_PER_SOL } = require('@solana/web3.js');
+    const keypair = parseHotWalletKeypair();
+    const rpcUrl = getSolanaRpcUrl();
+    const connection = new Connection(rpcUrl, 'confirmed');
+    const balanceLamports = await connection.getBalance(keypair.publicKey);
+    const network = process.env.SOLANA_CLUSTER || 'devnet';
+    res.json({
+      ok: true,
+      publicKey: keypair.publicKey.toBase58(),
+      balanceSol: balanceLamports / LAMPORTS_PER_SOL,
+      balanceLamports,
+      network,
+      rpcUrl,
+    });
+  } catch (err) {
+    res.status(err.notConfigured ? 400 : 500).json({
+      ok: false,
+      error: err.message || 'Failed to fetch hot wallet balance',
+      notConfigured: Boolean(err.notConfigured),
+    });
+  }
+});
+
+// POST /api/solana/direct-transfer
+// Signs and broadcasts a SOL transfer directly from the server hot wallet.
+// Enforces all policy limits. Private key is read from env only — never stored.
+router.post('/direct-transfer', adminSession, async (req, res) => {
+  try {
+    const { recipientAddress, amountSol, amountUsd = null, memo = '' } = req.body || {};
+
+    const policy = await getEffectiveTestPolicy();
+    const trimmedRecipient = String(recipientAddress || '').trim();
+    const numericSol = Number(amountSol);
+    const numericUsd = Number(amountUsd);
+    const hasUsd = Number.isFinite(numericUsd) && numericUsd > 0;
+
+    if (!isLikelySolanaAddress(trimmedRecipient)) {
+      return res.status(400).json({ ok: false, error: 'recipientAddress must be a valid Solana address' });
+    }
+    if (!Number.isFinite(numericSol) || numericSol <= 0) {
+      return res.status(400).json({ ok: false, error: 'amountSol must be a positive number' });
+    }
+    if (hasUsd && Number.isFinite(policy.minUsd) && numericUsd < policy.minUsd) {
+      return res.status(400).json({ ok: false, error: `amountUsd is below minimum of $${policy.minUsd}` });
+    }
+    if (hasUsd && numericUsd > policy.maxUsd) {
+      return res.status(400).json({ ok: false, error: `amountUsd exceeds maximum of $${policy.maxUsd}` });
+    }
+    if (Number.isFinite(policy.minSol) && numericSol < policy.minSol) {
+      return res.status(400).json({ ok: false, error: `amountSol is below minimum of ${policy.minSol} SOL` });
+    }
+    if (numericSol > policy.maxSol) {
+      return res.status(400).json({ ok: false, error: `amountSol exceeds maximum of ${policy.maxSol} SOL` });
+    }
+    const inAllowlist = policy.walletAllowlist.length === 0 || policy.walletAllowlist.includes(trimmedRecipient);
+    if (policy.requireAllowlist && !inAllowlist) {
+      return res.status(403).json({ ok: false, error: 'recipientAddress is not in the wallet allowlist' });
+    }
+
+    const {
+      Connection, Transaction, SystemProgram, PublicKey, LAMPORTS_PER_SOL,
+    } = require('@solana/web3.js');
+    const keypair = parseHotWalletKeypair();
+    const rpcUrl = getSolanaRpcUrl();
+    const connection = new Connection(rpcUrl, 'confirmed');
+
+    const lamports = Math.round(numericSol * LAMPORTS_PER_SOL);
+    const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed');
+
+    const tx = new Transaction({
+      recentBlockhash: blockhash,
+      feePayer: keypair.publicKey,
+    }).add(
+      SystemProgram.transfer({
+        fromPubkey: keypair.publicKey,
+        toPubkey: new PublicKey(trimmedRecipient),
+        lamports,
+      })
+    );
+    tx.sign(keypair);
+
+    const rawTx = tx.serialize();
+    const signature = await connection.sendRawTransaction(rawTx, { skipPreflight: false });
+
+    // Wait briefly then check status (non-blocking: return sig even if not yet confirmed)
+    await new Promise((r) => setTimeout(r, 4000));
+    const { rpcUrl: rUrl, status: sigStatus } = await fetchSignatureStatus(signature);
+    const confirmationStatus = sigStatus?.confirmationStatus || 'submitted';
+    const rpcError = sigStatus?.err || null;
+    const confirmed = !rpcError && (confirmationStatus === 'confirmed' || confirmationStatus === 'finalized');
+
+    const network = policy.network || process.env.SOLANA_CLUSTER || 'devnet';
+    const explorerCluster = network === 'mainnet-beta' ? '' : `?cluster=${network}`;
+    const explorerUrl = `https://explorer.solana.com/tx/${signature}${explorerCluster}`;
+
+    const payout = new SolanaPayout({
+      walletAddress: trimmedRecipient,
+      amountSol: numericSol,
+      network,
+      txSignature: signature,
+      status: confirmed ? 'confirmed' : 'pending',
+      metadata: {
+        isDirectTransfer: true,
+        requestedByAdmin: req.admin?.email || 'unknown-admin',
+        memo: String(memo || '').slice(0, 200),
+        amountUsd: hasUsd ? numericUsd : null,
+        hotWalletPublicKey: keypair.publicKey.toBase58(),
+        confirmationStatus,
+        policySnapshot: {
+          minUsd: Number.isFinite(policy.minUsd) ? policy.minUsd : null,
+          maxUsd: policy.maxUsd,
+          minSol: Number.isFinite(policy.minSol) ? policy.minSol : null,
+          maxSol: policy.maxSol,
+        },
+      },
+    });
+    await payout.save();
+
+    const event = createSystemEvent('info', 'OpenClaw payout.direct-transfer', {
+      payoutId: payout._id.toString(),
+      signature,
+      recipientAddress: trimmedRecipient,
+      amountSol: numericSol,
+      amountUsd: hasUsd ? numericUsd : null,
+      network,
+      confirmationStatus,
+      requestedByAdmin: req.admin?.email || 'unknown-admin',
+    });
+    dispatchToOpenClaw(event, console.log).catch(() => {});
+
+    res.json({
+      ok: true,
+      signature,
+      explorerUrl,
+      confirmationStatus,
+      confirmed,
+      payout: {
+        id: payout._id.toString(),
+        walletAddress: trimmedRecipient,
+        amountSol: numericSol,
+        amountUsd: hasUsd ? numericUsd : null,
+        network,
+        status: payout.status,
+      },
+    });
+  } catch (err) {
+    console.error('Solana direct-transfer error:', err);
+    res.status(err.notConfigured ? 400 : 500).json({
+      ok: false,
+      error: err.message || 'Transfer failed',
+      notConfigured: Boolean(err.notConfigured),
+    });
+  }
+});
+
 // GET /api/solana/payouts - list payouts (optionally filtered by artifactId)
 router.get('/payouts', async (req, res) => {
   try {

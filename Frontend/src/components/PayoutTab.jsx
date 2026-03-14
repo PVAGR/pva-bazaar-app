@@ -6,6 +6,8 @@ import {
   updatePayoutRuntimePolicy,
   requestSolanaTestPayout,
   confirmSolanaTestPayout,
+  getHotWalletBalance,
+  directSolanaTransfer,
 } from '../lib/api';
 import './PayoutTab.css';
 
@@ -51,6 +53,10 @@ export default function PayoutTab() {
   const [testResult, setTestResult] = useState(null);
   const [confirmForm, setConfirmForm] = useState({ payoutId: '', txSignature: '' });
   const [confirmResult, setConfirmResult] = useState(null);
+  const [hotWallet, setHotWallet] = useState({ loading: false, publicKey: null, balanceSol: null, error: null, notConfigured: false });
+  const [directForm, setDirectForm] = useState({ recipientAddress: '', amountSol: '0.01', amountUsd: '5', memo: '' });
+  const [directResult, setDirectResult] = useState(null);
+  const [directSending, setDirectSending] = useState(false);
 
   useEffect(() => {
     fetchSummary();
@@ -219,6 +225,40 @@ export default function PayoutTab() {
       setConfirmResult(data);
     } catch (err) {
       setConfirmResult({ ok: false, error: err?.response?.data?.error || err.message || 'Confirmation failed' });
+    }
+  };
+
+  const loadHotWalletBalance = async () => {
+    setHotWallet((prev) => ({ ...prev, loading: true, error: null }));
+    try {
+      const data = await getHotWalletBalance();
+      if (data?.ok) {
+        setHotWallet({ loading: false, publicKey: data.publicKey, balanceSol: data.balanceSol, network: data.network, error: null, notConfigured: false });
+      } else {
+        setHotWallet({ loading: false, publicKey: null, balanceSol: null, error: data?.error || 'Failed', notConfigured: Boolean(data?.notConfigured) });
+      }
+    } catch (err) {
+      const msg = err?.response?.data?.error || err.message || 'Failed';
+      setHotWallet({ loading: false, publicKey: null, balanceSol: null, error: msg, notConfigured: Boolean(err?.response?.data?.notConfigured) });
+    }
+  };
+
+  const handleDirectTransfer = async () => {
+    setDirectSending(true);
+    setDirectResult(null);
+    try {
+      const payload = {
+        recipientAddress: directForm.recipientAddress,
+        amountSol: Number(directForm.amountSol),
+        amountUsd: Number(directForm.amountUsd) || null,
+        memo: directForm.memo,
+      };
+      const data = await directSolanaTransfer(payload);
+      setDirectResult(data);
+    } catch (err) {
+      setDirectResult({ ok: false, error: err?.response?.data?.error || err.message || 'Transfer failed', notConfigured: Boolean(err?.response?.data?.notConfigured) });
+    } finally {
+      setDirectSending(false);
     }
   };
 
@@ -652,6 +692,110 @@ export default function PayoutTab() {
                 {testResult.ok
                   ? `✅ Requested. Payout ID: ${testResult?.payout?.id || 'n/a'}`
                   : `❌ ${testResult.error || 'Request failed'}`}
+              </div>
+            )}
+          </div>
+
+          <div className="policy-card">
+            <h3>🔑 Hot Wallet Status</h3>
+            <p>
+              The server holds a Solana keypair whose private key you store as <strong>SOLANA_HOT_WALLET_PRIVATE_KEY</strong> in
+              your Vercel environment variables. Once set and the wallet is funded, one click sends SOL directly to any address.
+            </p>
+            {hotWallet.notConfigured && (
+              <div className="policy-msg">
+                ⚠️ Hot wallet key not set. Add <strong>SOLANA_HOT_WALLET_PRIVATE_KEY</strong> to Vercel → Project → Settings → Environment Variables,
+                then redeploy. Paste your Phantom JSON export array or base58 private key.
+              </div>
+            )}
+            {hotWallet.publicKey && (
+              <div className="direct-balance-row">
+                <span className="direct-balance-label">Address:</span>
+                <code className="direct-balance-val">{hotWallet.publicKey}</code>
+                <span className="direct-balance-label">Balance:</span>
+                <strong className="direct-balance-val">{hotWallet.balanceSol !== null ? `${hotWallet.balanceSol} SOL` : '—'}</strong>
+                <span className="direct-balance-label">Network:</span>
+                <span className="direct-balance-val">{hotWallet.network}</span>
+              </div>
+            )}
+            {hotWallet.error && !hotWallet.notConfigured && (
+              <div className="policy-msg">❌ {hotWallet.error}</div>
+            )}
+            <div className="policy-actions">
+              <button className="btn-secondary" onClick={loadHotWalletBalance} disabled={hotWallet.loading}>
+                {hotWallet.loading ? 'Checking...' : 'Check Wallet Balance'}
+              </button>
+            </div>
+          </div>
+
+          <div className="policy-card">
+            <h3>🚀 Send SOL Directly to Wallet</h3>
+            <p>
+              Signs and broadcasts instantly from the server hot wallet — no manual wallet step needed.
+              All policy limits apply. Start on <strong>devnet</strong> to test, then switch to <strong>mainnet-beta</strong>.
+            </p>
+            <div className="policy-grid">
+              <label className="policy-span-2">
+                Recipient Wallet Address (your Phantom)
+                <input
+                  type="text"
+                  placeholder="e.g. 7xKXtg2CW87d97TXJSDpbD..."
+                  value={directForm.recipientAddress}
+                  onChange={(e) => setDirectForm((prev) => ({ ...prev, recipientAddress: e.target.value }))}
+                />
+              </label>
+              <label>
+                Amount SOL
+                <input
+                  type="number"
+                  step="0.000001"
+                  min="0"
+                  value={directForm.amountSol}
+                  onChange={(e) => setDirectForm((prev) => ({ ...prev, amountSol: e.target.value }))}
+                />
+              </label>
+              <label>
+                Approx USD (for records)
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={directForm.amountUsd}
+                  onChange={(e) => setDirectForm((prev) => ({ ...prev, amountUsd: e.target.value }))}
+                />
+              </label>
+              <label className="policy-span-2">
+                Memo (optional)
+                <input
+                  type="text"
+                  placeholder="e.g. PVA ritual payment"
+                  value={directForm.memo}
+                  onChange={(e) => setDirectForm((prev) => ({ ...prev, memo: e.target.value }))}
+                />
+              </label>
+            </div>
+            <div className="policy-actions">
+              <button className="btn-primary btn-send" onClick={handleDirectTransfer} disabled={directSending || !directForm.recipientAddress}>
+                {directSending ? '⏳ Sending...' : '🚀 Send SOL Now'}
+              </button>
+            </div>
+            {directResult && directResult.ok && (
+              <div className="policy-msg direct-success">
+                <div>✅ Sent! Status: <strong>{directResult.confirmationStatus}</strong></div>
+                <div>Signature: <code>{directResult.signature}</code></div>
+                <div>
+                  <a href={directResult.explorerUrl} target="_blank" rel="noopener noreferrer" className="explorer-link">
+                    View on Solana Explorer ↗
+                  </a>
+                </div>
+              </div>
+            )}
+            {directResult && !directResult.ok && (
+              <div className="policy-msg">
+                ❌ {directResult.error}
+                {directResult.notConfigured && (
+                  <span> — Add <strong>SOLANA_HOT_WALLET_PRIVATE_KEY</strong> to Vercel env vars and redeploy.</span>
+                )}
               </div>
             )}
           </div>
