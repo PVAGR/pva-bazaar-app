@@ -1,0 +1,221 @@
+.settlement-contracts-tab {
+  padding: 1.2rem;
+  border: 1px solid var(--site-border);
+  border-radius: 14px;
+  background: var(--site-panel-soft);
+  color: var(--site-text);
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.settlements-help-row {
+  display: flex;
+  align-items: center;
+}
+
+.settlement-form-card,
+.records-card {
+  background: var(--site-panel);
+  border: 1px solid var(--site-border);
+  border-radius: 10px;
+  padding: 0.9rem;
+}
+
+.wallet-actions-row,
+.manual-submit-row,
+.records-header,
+.record-top,
+.record-links,
+.record-meta {
+  display: flex;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.records-header {
+  justify-content: space-between;
+  margin-bottom: 0.65rem;
+}
+
+.records-header h3 {
+  margin: 0;
+  color: var(--site-accent-strong);
+}
+
+.wallet-chip,
+.chip {
+  border-radius: 999px;
+  padding: 0.2rem 0.52rem;
+  font-size: 0.72rem;
+  border: 1px solid var(--site-border);
+  background: var(--site-panel-soft);
+  color: var(--site-text-muted);
+}
+
+.chip.status-confirmed {
+  background: var(--site-success-bg);
+  color: var(--site-success-text);
+}
+
+.chip.status-pending {
+  background: var(--site-warning-bg);
+  color: var(--site-warning-text);
+}
+
+.chip.status-failed,
+.chip.status-unknown {
+  background: var(--site-danger-bg);
+  color: var(--site-danger-text);
+}
+
+.chip.network {
+  background: color-mix(in srgb, var(--site-accent-soft) 70%, var(--site-panel));
+  color: var(--site-accent-strong);
+}
+
+.settlement-grid {
+  margin-top: 0.75rem;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.62rem;
+}
+
+.settlement-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  color: var(--site-text-muted);
+  font-size: 0.82rem;
+}
+
+.settlement-grid .full-row {
+  grid-column: 1 / -1;
+}
+
+.settlement-grid input,
+.settlement-grid select,
+.settlement-grid textarea {
+  border-radius: 8px;
+  border: 1px solid var(--site-border);
+  background: var(--site-panel-soft);
+  color: var(--site-text);
+  padding: 0.52rem 0.65rem;
+}
+
+.settlement-grid input:focus,
+.settlement-grid select:focus,
+.settlement-grid textarea:focus {
+  outline: none;
+  border-color: var(--site-accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--site-accent) 25%, transparent);
+}
+
+.status-message {
+  border: 1px solid var(--site-border);
+  border-radius: 8px;
+  background: var(--site-panel);
+  padding: 0.6rem 0.75rem;
+  color: var(--site-text);
+}
+
+.status-message.error {
+  border-color: color-mix(in srgb, var(--site-danger-text) 55%, var(--site-border));
+  color: var(--site-danger-text);
+  background: var(--site-danger-bg);
+}
+
+.records-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.58rem;
+}
+
+.record-item {
+  border: 1px solid var(--site-border);
+  background: var(--site-panel-soft);
+  border-radius: 8px;
+  padding: 0.62rem;
+}
+
+.record-links a {
+  color: var(--site-accent-strong);
+  text-decoration: none;
+  font-size: 0.82rem;
+}
+
+.record-links a:hover {
+  text-decoration: underline;
+}
+
+.record-meta {
+  margin-top: 0.4rem;
+  color: var(--site-text-muted);
+  font-size: 0.82rem;
+}
+
+.record-note {
+  margin: 0.4rem 0 0;
+  color: var(--site-text);
+}
+
+.hash {
+  margin: 0.35rem 0 0;
+  font-family: Consolas, 'Courier New', monospace;
+  font-size: 0.75rem;
+  color: var(--site-text-muted);
+  word-break: break-all;
+}
+
+.empty {
+  color: var(--site-text-muted);
+}
+
+.btn {
+  border: 1px solid var(--site-border);
+  border-radius: 8px;
+  padding: 0.45rem 0.72rem;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.btn.primary {
+  background: var(--site-panel-soft);
+  color: var(--site-text);
+}
+
+.btn.accent {
+  background: color-mix(in srgb, var(--site-accent-soft) 72%, var(--site-panel));
+  color: var(--site-text);
+  border-color: color-mix(in srgb, var(--site-accent) 72%, var(--site-border));
+}
+
+.btn.secondary,
+.btn.ghost {
+  background: var(--site-panel-soft);
+  color: var(--site-text);
+}
+
+.btn.tiny {
+  font-size: 0.75rem;
+  padding: 0.3rem 0.5rem;
+}
+
+@media (max-width: 1100px) {
+  .settlement-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .settlement-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .wallet-actions-row,
+  .record-links {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

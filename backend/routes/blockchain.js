@@ -34,6 +34,13 @@ function toPublicTransfer(transfer) {
     explorerUrl: item.explorerUrl,
     txTimestamp: item.txTimestamp,
     lastCheckedAt: item.lastCheckedAt,
+    contractTerms: item.contractTerms || {
+      partyOneName: '',
+      partyOneRole: 'Operator',
+      partyTwoName: '',
+      partyTwoRole: 'Counterparty',
+      additionalClauses: '',
+    },
     createdAt: item.createdAt,
     updatedAt: item.updatedAt,
   };
@@ -89,6 +96,13 @@ function buildContractPayload(record) {
     },
     declaration:
       'This receipt links web records and blockchain transaction data. Parties should validate tx hash and explorer details before final settlement acknowledgement.',
+    contractTerms: {
+      partyOneName: record.contractTerms?.partyOneName || '',
+      partyOneRole: record.contractTerms?.partyOneRole || 'Operator',
+      partyTwoName: record.contractTerms?.partyTwoName || '',
+      partyTwoRole: record.contractTerms?.partyTwoRole || 'Counterparty',
+      additionalClauses: record.contractTerms?.additionalClauses || '',
+    },
   };
 }
 
@@ -112,6 +126,13 @@ function buildContractHtml(payload) {
   const explorerLink = payload.explorerUrl
     ? `<a href="${escapeHtml(payload.explorerUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(payload.explorerUrl)}</a>`
     : 'N/A';
+  const partyOneName = payload.contractTerms?.partyOneName || '________________';
+  const partyOneRole = payload.contractTerms?.partyOneRole || 'Operator';
+  const partyTwoName = payload.contractTerms?.partyTwoName || '________________';
+  const partyTwoRole = payload.contractTerms?.partyTwoRole || 'Counterparty';
+  const additionalClauses = payload.contractTerms?.additionalClauses
+    ? `<h2>Additional Clauses</h2><div class="declaration">${escapeHtml(payload.contractTerms.additionalClauses)}</div>`
+    : '';
 
   return `<!doctype html>
 <html>
@@ -126,7 +147,7 @@ function buildContractHtml(payload) {
       table { width: 100%; border-collapse: collapse; font-size: 13px; }
       th, td { border: 1px solid #cfd8dc; padding: 8px; text-align: left; vertical-align: top; }
       th { background: #f2f7fa; width: 26%; }
-      .declaration { margin-top: 16px; border: 1px solid #cfd8dc; border-radius: 8px; padding: 12px; background: #f8fbfd; font-size: 13px; }
+      .declaration { margin-top: 16px; border: 1px solid #cfd8dc; border-radius: 8px; padding: 12px; background: #f8fbfd; font-size: 13px; white-space: pre-wrap; }
       .signatures { margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
       .sig-box { border-top: 1px solid #6d7d87; padding-top: 8px; font-size: 12px; color: #455a64; }
       @media print { a { color: inherit; text-decoration: none; } }
@@ -160,9 +181,10 @@ function buildContractHtml(payload) {
     </table>
 
     <div class="declaration">${escapeHtml(payload.declaration)}</div>
+    ${additionalClauses}
     <div class="signatures">
-      <div class="sig-box">Operator Signature / Date</div>
-      <div class="sig-box">Counterparty Signature / Date</div>
+      <div class="sig-box">${escapeHtml(partyOneRole)}: ${escapeHtml(partyOneName)}<br/>Signature / Date</div>
+      <div class="sig-box">${escapeHtml(partyTwoRole)}: ${escapeHtml(partyTwoName)}<br/>Signature / Date</div>
     </div>
   </body>
 </html>`;
@@ -238,6 +260,13 @@ router.post('/transfers/record', auth, async (req, res) => {
     const requestedNetwork = normalizeNetwork(req.body?.network || 'base');
     const mediaUrl = parseOptionalUrl(req.body?.mediaUrl);
     const referenceUrl = parseOptionalUrl(req.body?.referenceUrl);
+    const contractTerms = {
+      partyOneName: String(req.body?.contractTerms?.partyOneName || '').trim().slice(0, 120),
+      partyOneRole: String(req.body?.contractTerms?.partyOneRole || 'Operator').trim().slice(0, 80),
+      partyTwoName: String(req.body?.contractTerms?.partyTwoName || '').trim().slice(0, 120),
+      partyTwoRole: String(req.body?.contractTerms?.partyTwoRole || 'Counterparty').trim().slice(0, 80),
+      additionalClauses: String(req.body?.contractTerms?.additionalClauses || '').trim().slice(0, 4000),
+    };
     const artifactId = isObjectIdHex(req.body?.artifactId) ? String(req.body.artifactId) : '';
     let artifact = null;
     if (artifactId) {
@@ -272,6 +301,8 @@ router.post('/transfers/record', auth, async (req, res) => {
       explorerUrl,
       txTimestamp: chainResult.txTimestamp || null,
       lastCheckedAt: new Date(),
+      contractVersion: 'v2',
+      contractTerms,
       rawError: chainResult.found ? '' : 'Transaction not found on configured RPC',
     };
 

@@ -16,6 +16,7 @@ import MarketplaceTab from '../components/MarketplaceTab.jsx';
 import UsersTab from '../components/UsersTab.jsx';
 import AttributionTab from '../components/AttributionTab.jsx';
 import PayoutTab from '../components/PayoutTab.jsx';
+import SettlementContractsTab from '../components/SettlementContractsTab.jsx';
 import CloudStorageTab from '../components/CloudStorageTab.jsx';
 import ApiDocsTab from '../components/ApiDocsTab.jsx';
 import HealthTab from '../components/HealthTab.jsx';
@@ -260,14 +261,23 @@ export default function AdminPage() {
       // Only trigger if Alt key is pressed (without Ctrl or Shift to avoid conflicts)
       if (!e.altKey || e.ctrlKey || e.shiftKey) return;
 
-      const tabs = ['dashboard', 'archive', 'marketplace', 'users', 'attribution', 'payouts', 'cloud', 'api', 'health', 'openclaw', 'bounty-hunter', 'settings'];
-      let key = parseInt(e.key);
-      // Support Alt+0 for the last tab (settings)
-      if (e.key === '0') key = tabs.length;
+      const shortcutMap = {
+        '1': 'dashboard',
+        '2': 'archive',
+        '3': 'marketplace',
+        '4': 'users',
+        '5': 'attribution',
+        '6': 'payouts',
+        '7': 'cloud',
+        '8': 'api',
+        '9': 'health',
+        '0': 'settings',
+      };
 
-      if (key >= 1 && key <= tabs.length) {
+      const targetTab = shortcutMap[e.key];
+      if (targetTab) {
         e.preventDefault();
-        setActiveTab(tabs[key - 1]);
+        setActiveTab(targetTab);
       }
     };
 
@@ -650,6 +660,13 @@ export default function AdminPage() {
           {activeTab === 'payouts' && (
             <ErrorBoundary>
               <PayoutTab />
+            </ErrorBoundary>
+          )}
+
+          {/* Settlement Contracts Tab */}
+          {activeTab === 'settlements' && (
+            <ErrorBoundary>
+              <SettlementContractsTab />
             </ErrorBoundary>
           )}
 

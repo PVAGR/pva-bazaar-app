@@ -33,6 +33,13 @@ const blockchainTransferSchema = new mongoose.Schema(
     txTimestamp: { type: Date, default: null },
     lastCheckedAt: { type: Date, default: null },
     contractVersion: { type: String, default: 'v1' },
+    contractTerms: {
+      partyOneName: { type: String, default: '' },
+      partyOneRole: { type: String, default: 'Operator' },
+      partyTwoName: { type: String, default: '' },
+      partyTwoRole: { type: String, default: 'Counterparty' },
+      additionalClauses: { type: String, default: '' },
+    },
     rawError: { type: String, default: '' },
   },
   { timestamps: true }
