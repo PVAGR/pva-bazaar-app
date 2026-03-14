@@ -8,6 +8,7 @@ import {
   confirmSolanaTestPayout,
   getDirectTransferReadiness,
   getHotWalletBalance,
+  requestDevnetAirdropHotWallet,
   directSolanaTransfer,
 } from '../lib/api';
 import './PayoutTab.css';
@@ -56,6 +57,7 @@ export default function PayoutTab() {
   const [confirmResult, setConfirmResult] = useState(null);
   const [readiness, setReadiness] = useState({ loading: false, data: null, error: '' });
   const [hotWallet, setHotWallet] = useState({ loading: false, publicKey: null, balanceSol: null, error: null, notConfigured: false });
+  const [airdrop, setAirdrop] = useState({ loading: false, result: null, error: '' });
   const [directForm, setDirectForm] = useState({ recipientAddress: '', amountSol: '0.01', amountUsd: '5', memo: '' });
   const [directResult, setDirectResult] = useState(null);
   const [directSending, setDirectSending] = useState(false);
@@ -256,6 +258,22 @@ export default function PayoutTab() {
       }
     } catch (err) {
       setReadiness({ loading: false, data: null, error: err?.response?.data?.error || err.message || 'Readiness check failed' });
+    }
+  };
+
+  const requestDevnetAirdrop = async () => {
+    setAirdrop({ loading: true, result: null, error: '' });
+    try {
+      const data = await requestDevnetAirdropHotWallet({ amountSol: 1 });
+      if (data?.ok) {
+        setAirdrop({ loading: false, result: data, error: '' });
+        loadHotWalletBalance();
+        runReadinessCheck();
+      } else {
+        setAirdrop({ loading: false, result: null, error: data?.error || 'Airdrop request failed' });
+      }
+    } catch (err) {
+      setAirdrop({ loading: false, result: null, error: err?.response?.data?.error || err.message || 'Airdrop request failed' });
     }
   };
 
@@ -617,9 +635,20 @@ export default function PayoutTab() {
               and RPC connectivity from the live backend environment.
             </p>
             <div className="policy-actions">
+              <button className="btn-secondary" onClick={handleSavePolicy} disabled={policySaving}>
+                {policySaving ? 'Saving policy...' : 'Save Policy First'}
+              </button>
               <button className="btn-primary" onClick={runReadinessCheck} disabled={readiness.loading}>
                 {readiness.loading ? 'Running checks...' : 'Run Readiness Check'}
               </button>
+              <button className="btn-secondary" onClick={loadHotWalletBalance} disabled={hotWallet.loading}>
+                {hotWallet.loading ? 'Checking wallet...' : 'Check Wallet Balance'}
+              </button>
+              {policyForm.network === 'devnet' ? (
+                <button className="btn-secondary" onClick={requestDevnetAirdrop} disabled={airdrop.loading}>
+                  {airdrop.loading ? 'Requesting airdrop...' : 'Request Devnet Airdrop'}
+                </button>
+              ) : null}
             </div>
 
             {readiness.error ? (
@@ -646,6 +675,23 @@ export default function PayoutTab() {
                     ))}
                   </div>
                 )}
+              </div>
+            ) : null}
+
+            {airdrop.error ? (
+              <div className="policy-msg">❌ {airdrop.error}</div>
+            ) : null}
+
+            {airdrop.result?.ok ? (
+              <div className="policy-msg direct-success">
+                <div>✅ Devnet airdrop received: {airdrop.result.airdropAmountSol} SOL</div>
+                <div>Wallet: <code>{airdrop.result.hotWalletPublicKey}</code></div>
+                <div>Balance: <strong>{airdrop.result.balanceSol} SOL</strong></div>
+                <div>
+                  <a href={airdrop.result.explorerUrl} target="_blank" rel="noopener noreferrer" className="explorer-link">
+                    View Airdrop Transaction ↗
+                  </a>
+                </div>
               </div>
             ) : null}
           </div>

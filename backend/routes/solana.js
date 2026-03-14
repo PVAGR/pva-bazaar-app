@@ -520,6 +520,68 @@ router.get('/direct-transfer-readiness', adminSession, async (req, res) => {
   });
 });
 
+// POST /api/solana/devnet-airdrop-hot-wallet
+// Requests devnet airdrop directly to the configured hot wallet for quick testing.
+router.post('/devnet-airdrop-hot-wallet', adminSession, async (req, res) => {
+  try {
+    const policy = await getEffectiveTestPolicy();
+    const network = policy.network || process.env.SOLANA_CLUSTER || 'devnet';
+    if (network !== 'devnet') {
+      return res.status(400).json({
+        ok: false,
+        error: 'Airdrop endpoint is only available on devnet policy/network.',
+      });
+    }
+
+    const requested = Number(req.body?.amountSol);
+    const amountSol = Number.isFinite(requested) ? requested : 1;
+    if (amountSol <= 0 || amountSol > 2) {
+      return res.status(400).json({
+        ok: false,
+        error: 'amountSol must be between 0.000001 and 2 on devnet.',
+      });
+    }
+
+    const { Connection, LAMPORTS_PER_SOL } = require('@solana/web3.js');
+    const keypair = parseHotWalletKeypair();
+    const rpcUrl = getSolanaRpcUrl();
+    const connection = new Connection(rpcUrl, 'confirmed');
+    const lamports = Math.round(amountSol * LAMPORTS_PER_SOL);
+
+    const signature = await connection.requestAirdrop(keypair.publicKey, lamports);
+    await connection.confirmTransaction(signature, 'confirmed');
+
+    const balanceLamports = await connection.getBalance(keypair.publicKey);
+    const explorerUrl = `https://explorer.solana.com/tx/${signature}?cluster=devnet`;
+
+    const event = createSystemEvent('info', 'OpenClaw payout.devnet-airdrop', {
+      hotWalletPublicKey: keypair.publicKey.toBase58(),
+      amountSol,
+      signature,
+      requestedByAdmin: req.admin?.email || 'unknown-admin',
+      rpcUrl,
+    });
+    dispatchToOpenClaw(event, console.log).catch(() => {});
+
+    return res.json({
+      ok: true,
+      network,
+      hotWalletPublicKey: keypair.publicKey.toBase58(),
+      airdropAmountSol: amountSol,
+      signature,
+      explorerUrl,
+      balanceSol: balanceLamports / LAMPORTS_PER_SOL,
+      balanceLamports,
+    });
+  } catch (err) {
+    return res.status(err.notConfigured ? 400 : 500).json({
+      ok: false,
+      error: err.message || 'Devnet airdrop failed',
+      notConfigured: Boolean(err.notConfigured),
+    });
+  }
+});
+
 // POST /api/solana/direct-transfer
 // Signs and broadcasts a SOL transfer directly from the server hot wallet.
 // Enforces all policy limits. Private key is read from env only — never stored.
