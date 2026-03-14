@@ -48,6 +48,8 @@ export default function SettlementContractsTab() {
   const [integrityStatusById, setIntegrityStatusById] = useState({});
   const [requiredErrors, setRequiredErrors] = useState({});
   const [beginnerMode, setBeginnerMode] = useState(true);
+  const [wizardMode, setWizardMode] = useState(false);
+  const [wizardStep, setWizardStep] = useState(0);
   const [signingRole, setSigningRole] = useState('partyOne');
   const [signingWallet, setSigningWallet] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -134,6 +136,28 @@ export default function SettlementContractsTab() {
   ];
 
   const nextChecklistItem = checklist.find((item) => !item.done);
+  const wizardSteps = [
+    {
+      id: 'tx',
+      title: 'Step 1: Tx Setup',
+      description: 'Capture chain transaction details and payout amount.',
+    },
+    {
+      id: 'signers',
+      title: 'Step 2: Required Signers',
+      description: 'Collect the mandatory signer identities.',
+    },
+    {
+      id: 'context',
+      title: 'Step 3: Optional Context',
+      description: 'Add evidence links, clauses, and attestation data if available.',
+    },
+    {
+      id: 'finalize',
+      title: 'Step 4: Lock + Verify',
+      description: 'Finalize settlement then verify digest before report export.',
+    },
+  ];
 
   const focusRequiredField = (fieldKey, messageText) => {
     setRequiredErrors((prev) => ({ ...prev, [fieldKey]: true }));
@@ -177,6 +201,47 @@ export default function SettlementContractsTab() {
     }
 
     return { ok: true };
+  };
+
+  const canCompleteStep = (stepIndex) => {
+    if (stepIndex === 0) {
+      return String(form.txHash || '').trim().startsWith('0x');
+    }
+    if (stepIndex === 1) {
+      return (
+        String(form.partyOneSignerName || '').trim().length > 0
+        && String(form.partyTwoSignerName || '').trim().length > 0
+      );
+    }
+    if (stepIndex === 2) {
+      return true;
+    }
+    if (stepIndex === 3) {
+      return anyFinalizedRecord;
+    }
+    return true;
+  };
+
+  const goWizardNext = () => {
+    if (!canCompleteStep(wizardStep)) {
+      if (wizardStep === 0) {
+        focusRequiredField('txHash', 'Complete tx hash in Step 1 before continuing.');
+      } else if (wizardStep === 1) {
+        if (!String(form.partyOneSignerName || '').trim()) {
+          focusRequiredField('partyOneSignerName', 'Complete Party One signer name before continuing.');
+        } else {
+          focusRequiredField('partyTwoSignerName', 'Complete Party Two signer name before continuing.');
+        }
+      } else {
+        setMessage('Complete this step before continuing.');
+      }
+      return;
+    }
+    setWizardStep((prev) => Math.min(prev + 1, wizardSteps.length - 1));
+  };
+
+  const goWizardBack = () => {
+    setWizardStep((prev) => Math.max(prev - 1, 0));
   };
 
   const hasEthereum = () => typeof window !== 'undefined' && !!window.ethereum?.request;
@@ -688,6 +753,69 @@ export default function SettlementContractsTab() {
     }
   };
 
+  const openRunbookCard = () => {
+    const html = `<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>PVA Operator Runbook Card</title>
+    <style>
+      body { font-family: Georgia, 'Times New Roman', serif; color: #102028; padding: 28px; }
+      h1 { margin: 0 0 8px; }
+      .meta { color: #4c616d; margin-bottom: 12px; font-size: 13px; }
+      .panel { border: 1px solid #cfd8dc; border-radius: 8px; padding: 12px; margin-top: 10px; }
+      ol, ul { margin: 8px 0 0 20px; }
+      li { margin: 4px 0; }
+      @media print { body { padding: 16px; } }
+    </style>
+  </head>
+  <body>
+    <h1>PVA Bazaar Settlement Runbook Card</h1>
+    <div class="meta">Generated ${new Date().toISOString()}</div>
+
+    <div class="panel req">
+      <strong>Mandatory Inputs</strong>
+      <ul>
+        <li>Transaction Hash (0x...)</li>
+        <li>Party One Signer Name</li>
+        <li>Party Two Signer Name</li>
+      </ul>
+      <div>Why mandatory: These anchor legal accountability to the on-chain settlement evidence.</div>
+    </div>
+
+    <div class="panel opt">
+      <strong>Optional But Recommended</strong>
+      <ul>
+        <li>Signer Wallet Addresses + EIP-191 Signatures</li>
+        <li>Artifact linkage, media, reference URL</li>
+        <li>Witness details and finalization note</li>
+      </ul>
+      <div>Why optional: Improves audit confidence and documentation quality but does not block lock.</div>
+    </div>
+
+    <div class="panel">
+      <strong>Execution Steps</strong>
+      <ol>
+        <li>Connect wallet and submit/send transaction.</li>
+        <li>Record settlement with mandatory fields.</li>
+        <li>Finalize and lock record.</li>
+        <li>Verify digest integrity.</li>
+        <li>Export verification JSON + print report for archive binder.</li>
+      </ol>
+    </div>
+  </body>
+</html>`;
+
+    const child = window.open('', '_blank', 'noopener,noreferrer');
+    if (!child) {
+      setMessage('Pop-up blocked. Allow pop-ups to open runbook card.');
+      return;
+    }
+    child.document.open();
+    child.document.write(html);
+    child.document.close();
+  };
+
   return (
     <div className="settlement-contracts-tab" role="tabpanel" id="settlements-panel">
       <div className="tab-header">
@@ -731,7 +859,27 @@ export default function SettlementContractsTab() {
           {beginnerMode ? 'Showing only core required inputs + wallet send basics.' : 'Showing full optional legal and attestation controls.'}
         </span>
         <button className="btn ghost tiny" type="button" onClick={applyQuickFillDemo}>Quick Fill Demo</button>
+        <button className={`btn tiny ${wizardMode ? 'accent' : 'ghost'}`} type="button" onClick={() => setWizardMode((prev) => !prev)}>
+          {wizardMode ? 'Wizard On' : 'Wizard Off'}
+        </button>
+        <button className="btn ghost tiny" type="button" onClick={openRunbookCard}>Print Runbook Card</button>
       </div>
+
+      {wizardMode ? (
+        <div className="wizard-card" role="region" aria-label="Guided wizard mode">
+          <div className="wizard-header">
+            <h4>{wizardSteps[wizardStep].title}</h4>
+            <span className={`check-badge ${canCompleteStep(wizardStep) ? 'done' : 'pending'}`}>
+              {canCompleteStep(wizardStep) ? 'Ready' : 'Needs Input'}
+            </span>
+          </div>
+          <p>{wizardSteps[wizardStep].description}</p>
+          <div className="wizard-actions">
+            <button className="btn ghost tiny" type="button" onClick={goWizardBack} disabled={wizardStep === 0}>Back</button>
+            <button className="btn ghost tiny" type="button" onClick={goWizardNext} disabled={wizardStep === wizardSteps.length - 1}>Next</button>
+          </div>
+        </div>
+      ) : null}
 
       <div className="checklist-card" role="region" aria-label="Live settlement checklist">
         <h4>Live Checklist</h4>

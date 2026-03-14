@@ -45,6 +45,37 @@
   font-size: 0.8rem;
 }
 
+.wizard-card {
+  border: 1px solid var(--site-border);
+  border-radius: 10px;
+  padding: 0.8rem;
+  background: color-mix(in srgb, var(--site-accent-soft) 16%, var(--site-panel));
+  color: var(--site-text);
+}
+
+.wizard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.wizard-header h4 {
+  margin: 0;
+  color: var(--site-text);
+}
+
+.wizard-card p {
+  margin: 0.45rem 0 0;
+  color: var(--site-text);
+}
+
+.wizard-actions {
+  margin-top: 0.55rem;
+  display: flex;
+  gap: 0.45rem;
+}
+
 .checklist-card {
   border: 1px solid var(--site-border);
   border-radius: 10px;
