@@ -546,6 +546,45 @@
   letter-spacing: 0.01em;
 }
 
+.policy-safe-mode {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.86rem;
+  color: var(--site-text);
+}
+
+.receipts-table-wrap {
+  margin-top: 0.7rem;
+  overflow-x: auto;
+}
+
+.receipts-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.receipts-table th,
+.receipts-table td {
+  border-bottom: 1px solid color-mix(in srgb, var(--site-border) 65%, transparent);
+  padding: 0.48rem 0.5rem;
+  text-align: left;
+}
+
+.receipts-table th {
+  font-size: 0.74rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--site-text-muted);
+}
+
+.receipt-wallet {
+  max-width: 250px;
+  word-break: break-all;
+  opacity: 0.9;
+}
+
 .readiness-item {
   margin-top: 0.45rem;
   padding-top: 0.45rem;

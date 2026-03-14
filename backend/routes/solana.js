@@ -92,6 +92,47 @@ async function fetchSignatureStatus(signature) {
   };
 }
 
+function isRetryableSendError(err) {
+  const text = String(err?.message || '').toLowerCase();
+  return text.includes('blockhash not found')
+    || text.includes('node is behind')
+    || text.includes('timed out')
+    || text.includes('429')
+    || text.includes('too many requests');
+}
+
+async function sendSolTransferWithRetry({ connection, keypair, recipientAddress, lamports, maxAttempts = 2 }) {
+  const { Transaction, SystemProgram, PublicKey } = require('@solana/web3.js');
+  let lastErr = null;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      const { blockhash } = await connection.getLatestBlockhash('confirmed');
+      const tx = new Transaction({
+        recentBlockhash: blockhash,
+        feePayer: keypair.publicKey,
+      }).add(
+        SystemProgram.transfer({
+          fromPubkey: keypair.publicKey,
+          toPubkey: new PublicKey(recipientAddress),
+          lamports,
+        })
+      );
+      tx.sign(keypair);
+      const signature = await connection.sendRawTransaction(tx.serialize(), { skipPreflight: false });
+      return { signature, attempts: attempt };
+    } catch (err) {
+      lastErr = err;
+      if (attempt >= maxAttempts || !isRetryableSendError(err)) {
+        throw err;
+      }
+      await new Promise((r) => setTimeout(r, 1200 * attempt));
+    }
+  }
+
+  throw lastErr || new Error('Failed to send transfer');
+}
+
 // POST /api/solana/test-payout
 // Creates an admin-approved test payout request with strict limits.
 router.post('/test-payout', adminSession, async (req, res) => {
@@ -626,7 +667,7 @@ router.post('/execute-test-flow', adminSession, async (req, res) => {
     }
 
     const {
-      Connection, Transaction, SystemProgram, PublicKey, LAMPORTS_PER_SOL,
+      Connection, LAMPORTS_PER_SOL,
     } = require('@solana/web3.js');
     const keypair = parseHotWalletKeypair();
     const rpcUrl = getSolanaRpcUrl();
@@ -694,20 +735,14 @@ router.post('/execute-test-flow', adminSession, async (req, res) => {
       });
     }
 
-    const { blockhash } = await connection.getLatestBlockhash('confirmed');
-    const tx = new Transaction({
-      recentBlockhash: blockhash,
-      feePayer: keypair.publicKey,
-    }).add(
-      SystemProgram.transfer({
-        fromPubkey: keypair.publicKey,
-        toPubkey: new PublicKey(trimmedRecipient),
-        lamports,
-      })
-    );
-    tx.sign(keypair);
-
-    const signature = await connection.sendRawTransaction(tx.serialize(), { skipPreflight: false });
+    const sent = await sendSolTransferWithRetry({
+      connection,
+      keypair,
+      recipientAddress: trimmedRecipient,
+      lamports,
+      maxAttempts: 2,
+    });
+    const signature = sent.signature;
     await new Promise((r) => setTimeout(r, 4000));
     const { status: sigStatus } = await fetchSignatureStatus(signature);
     const confirmationStatus = sigStatus?.confirmationStatus || 'submitted';
@@ -759,6 +794,7 @@ router.post('/execute-test-flow', adminSession, async (req, res) => {
         network,
         rpcUrl,
         hotWalletPublicKey: keypair.publicKey.toBase58(),
+        sendAttempts: sent.attempts,
         preBalanceSol: preBalanceLamports / LAMPORTS_PER_SOL,
         postAirdropBalanceSol: postAirdropBalanceLamports / LAMPORTS_PER_SOL,
         airdrop,
@@ -823,33 +859,25 @@ router.post('/direct-transfer', adminSession, async (req, res) => {
     }
 
     const {
-      Connection, Transaction, SystemProgram, PublicKey, LAMPORTS_PER_SOL,
+      Connection, LAMPORTS_PER_SOL,
     } = require('@solana/web3.js');
     const keypair = parseHotWalletKeypair();
     const rpcUrl = getSolanaRpcUrl();
     const connection = new Connection(rpcUrl, 'confirmed');
 
     const lamports = Math.round(numericSol * LAMPORTS_PER_SOL);
-    const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed');
-
-    const tx = new Transaction({
-      recentBlockhash: blockhash,
-      feePayer: keypair.publicKey,
-    }).add(
-      SystemProgram.transfer({
-        fromPubkey: keypair.publicKey,
-        toPubkey: new PublicKey(trimmedRecipient),
-        lamports,
-      })
-    );
-    tx.sign(keypair);
-
-    const rawTx = tx.serialize();
-    const signature = await connection.sendRawTransaction(rawTx, { skipPreflight: false });
+    const sent = await sendSolTransferWithRetry({
+      connection,
+      keypair,
+      recipientAddress: trimmedRecipient,
+      lamports,
+      maxAttempts: 2,
+    });
+    const signature = sent.signature;
 
     // Wait briefly then check status (non-blocking: return sig even if not yet confirmed)
     await new Promise((r) => setTimeout(r, 4000));
-    const { rpcUrl: rUrl, status: sigStatus } = await fetchSignatureStatus(signature);
+    const { status: sigStatus } = await fetchSignatureStatus(signature);
     const confirmationStatus = sigStatus?.confirmationStatus || 'submitted';
     const rpcError = sigStatus?.err || null;
     const confirmed = !rpcError && (confirmationStatus === 'confirmed' || confirmationStatus === 'finalized');
@@ -899,6 +927,7 @@ router.post('/direct-transfer', adminSession, async (req, res) => {
       explorerUrl,
       confirmationStatus,
       confirmed,
+      sendAttempts: sent.attempts,
       payout: {
         id: payout._id.toString(),
         walletAddress: trimmedRecipient,

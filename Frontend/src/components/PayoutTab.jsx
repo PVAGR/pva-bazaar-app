@@ -63,6 +63,8 @@ export default function PayoutTab() {
   const [directResult, setDirectResult] = useState(null);
   const [directSending, setDirectSending] = useState(false);
   const [guidedFlow, setGuidedFlow] = useState({ loading: false, result: null, error: '' });
+  const [safeMode, setSafeMode] = useState(true);
+  const [recentTransfers, setRecentTransfers] = useState({ loading: false, rows: [], error: '' });
 
   useEffect(() => {
     fetchSummary();
@@ -280,6 +282,11 @@ export default function PayoutTab() {
   };
 
   const executeGuidedFlow = async () => {
+    if (safeMode && !readiness?.data?.ready) {
+      setGuidedFlow({ loading: false, result: null, error: 'Safe mode is ON. Run Readiness Check and resolve failures before executing guided flow.' });
+      return;
+    }
+
     setGuidedFlow({ loading: true, result: null, error: '' });
     try {
       const payload = {
@@ -294,6 +301,7 @@ export default function PayoutTab() {
         setGuidedFlow({ loading: false, result: data, error: '' });
         loadHotWalletBalance();
         runReadinessCheck();
+        loadRecentTransfers();
         if (data?.flow?.transfer?.signature) {
           setConfirmForm((prev) => ({ ...prev, txSignature: data.flow.transfer.signature }));
         }
@@ -309,7 +317,33 @@ export default function PayoutTab() {
     }
   };
 
+  const loadRecentTransfers = async () => {
+    setRecentTransfers((prev) => ({ ...prev, loading: true, error: '' }));
+    try {
+      const data = await apiGet('/solana/payouts');
+      const rows = Array.isArray(data?.payouts)
+        ? data.payouts
+            .filter((row) => row && row.txSignature)
+            .slice(0, 15)
+        : [];
+      setRecentTransfers({ loading: false, rows, error: '' });
+    } catch (err) {
+      setRecentTransfers({ loading: false, rows: [], error: err.message || 'Failed to load transfer history' });
+    }
+  };
+
+  useEffect(() => {
+    if (tab === 'policy-test') {
+      loadRecentTransfers();
+    }
+  }, [tab]);
+
   const handleDirectTransfer = async () => {
+    if (safeMode && !readiness?.data?.ready) {
+      setDirectResult({ ok: false, error: 'Safe mode is ON. Run Readiness Check and resolve failures before direct send.' });
+      return;
+    }
+
     setDirectSending(true);
     setDirectResult(null);
     try {
@@ -321,6 +355,9 @@ export default function PayoutTab() {
       };
       const data = await directSolanaTransfer(payload);
       setDirectResult(data);
+      if (data?.ok) {
+        loadRecentTransfers();
+      }
     } catch (err) {
       setDirectResult({ ok: false, error: err?.response?.data?.error || err.message || 'Transfer failed', notConfigured: Boolean(err?.response?.data?.notConfigured) });
     } finally {
@@ -868,6 +905,12 @@ export default function PayoutTab() {
               Signs and broadcasts instantly from the server hot wallet — no manual wallet step needed.
               All policy limits apply. Start on <strong>devnet</strong> to test, then switch to <strong>mainnet-beta</strong>.
             </p>
+            <div className="policy-actions">
+              <label className="policy-safe-mode">
+                <input type="checkbox" checked={safeMode} onChange={(e) => setSafeMode(e.target.checked)} />
+                Safe mode: block send unless readiness is green
+              </label>
+            </div>
             <div className="policy-grid">
               <label className="policy-span-2">
                 Recipient Wallet Address (your Phantom)
@@ -962,6 +1005,57 @@ export default function PayoutTab() {
                     Airdrop: {guidedFlow.result?.flow?.airdrop?.ok ? '✅ success' : '⚠️ attempted but failed'}
                   </div>
                 ) : null}
+              </div>
+            ) : null}
+          </div>
+
+          <div className="policy-card">
+            <h3>📜 Recent Transfer Receipts</h3>
+            <p>Latest on-chain payout records from this backend, with direct explorer links.</p>
+            <div className="policy-actions">
+              <button className="btn-secondary" onClick={loadRecentTransfers} disabled={recentTransfers.loading}>
+                {recentTransfers.loading ? 'Refreshing...' : 'Refresh Receipts'}
+              </button>
+            </div>
+
+            {recentTransfers.error ? <div className="policy-msg">❌ {recentTransfers.error}</div> : null}
+
+            {!recentTransfers.loading && recentTransfers.rows.length === 0 ? (
+              <div className="policy-msg">No transfer receipts yet.</div>
+            ) : null}
+
+            {recentTransfers.rows.length > 0 ? (
+              <div className="receipts-table-wrap">
+                <table className="receipts-table">
+                  <thead>
+                    <tr>
+                      <th>When</th>
+                      <th>Status</th>
+                      <th>Amount (SOL)</th>
+                      <th>Wallet</th>
+                      <th>Tx</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {recentTransfers.rows.map((row) => {
+                      const cluster = row.network === 'mainnet-beta' ? '' : `?cluster=${row.network || 'devnet'}`;
+                      const txUrl = `https://explorer.solana.com/tx/${row.txSignature}${cluster}`;
+                      return (
+                        <tr key={row.id}>
+                          <td>{row.createdAt ? new Date(row.createdAt).toLocaleString() : 'n/a'}</td>
+                          <td>{row.status || 'pending'}</td>
+                          <td>{row.amountSol}</td>
+                          <td className="receipt-wallet">{row.walletAddress}</td>
+                          <td>
+                            <a href={txUrl} target="_blank" rel="noopener noreferrer" className="explorer-link">
+                              View ↗
+                            </a>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
             ) : null}
           </div>
