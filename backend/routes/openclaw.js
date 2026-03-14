@@ -378,9 +378,11 @@ router.get('/watchdog-status', async (_req, res) => {
 
 router.get('/recent-events', async (req, res) => {
   const config = getConfig();
-  if (!requireBridgeOrAdmin(req, res, config, 'Unauthorized OpenClaw recent-events request')) return;
+  const requesterAuthorized = isBridgeOrAdminAuthorized(req, config.bridgeSecret);
 
-  const limit = Math.min(parseInt(req.query.limit) || 50, 200);
+  const limit = requesterAuthorized
+    ? Math.min(parseInt(req.query.limit) || 50, 200)
+    : Math.min(parseInt(req.query.limit) || 20, 25);
   const { logPath, alertPath } = resolveWatchdogPaths();
 
   const logLines = readLastLines(logPath, limit);
@@ -412,7 +414,9 @@ router.get('/recent-events', async (req, res) => {
         timestamp: msg.createdAt ? msg.createdAt.toISOString() : null,
         level: msg.direction === 'inbound' ? 'INFO' : 'SUCCESS',
         type: msg.direction === 'inbound' ? 'inbound' : 'dispatch',
-        message: `[${msg.direction.toUpperCase()}] ${msg.event} — ${msg.content || ''}`.trim(),
+        message: requesterAuthorized
+          ? `[${msg.direction.toUpperCase()}] ${msg.event} — ${msg.content || ''}`.trim()
+          : `[${msg.direction.toUpperCase()}] ${msg.event}`,
         source: msg.source || 'queue-store',
         event: msg.event,
         direction: msg.direction,
@@ -460,7 +464,7 @@ router.get('/recent-events', async (req, res) => {
       timestamp,
       level,
       type,
-      message: line,
+      message: requesterAuthorized ? line : `[${level}] ${type}`,
       source: 'watchdog-log'
     };
   });
@@ -473,7 +477,7 @@ router.get('/recent-events', async (req, res) => {
       timestamp: timestampMatch ? timestampMatch[1] : null,
       level: 'ALERT',
       type: 'alert',
-      message: line,
+      message: requesterAuthorized ? line : '[ALERT] watchdog alert',
       source: 'alert-log'
     });
   });
