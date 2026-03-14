@@ -29,6 +29,7 @@ export default function OpenClawTab() {
   const [queueLoading, setQueueLoading] = useState(true);
   const [queueActionLoading, setQueueActionLoading] = useState(false);
   const [queueActionResult, setQueueActionResult] = useState(null);
+  const [recoverLoading, setRecoverLoading] = useState(false);
   const [messages, setMessages] = useState([]);
   const [messagesLoading, setMessagesLoading] = useState(true);
   const [messagesError, setMessagesError] = useState(null);
@@ -227,6 +228,33 @@ export default function OpenClawTab() {
     }
   }, [loadQueueStats]);
 
+  const runRecovery = useCallback(async () => {
+    setRecoverLoading(true);
+    setQueueActionResult(null);
+
+    try {
+      const data = await apiPost('/openclaw/recover', {});
+      if (data?.ok) {
+        const replaySummary = data?.replay
+          ? ` replay ${data.replay.forwarded}/${data.replay.attempted}`
+          : '';
+        setQueueActionResult({
+          ok: true,
+          text: `${data.message || 'Recovery completed'}; stale ${data?.queue?.before?.staleOutbound ?? 0} -> ${data?.queue?.after?.staleOutbound ?? 0}.${replaySummary}`,
+        });
+        loadStatus();
+        loadQueueStats();
+      } else {
+        setQueueActionResult({ ok: false, text: data?.message || 'Recovery failed' });
+      }
+    } catch (err) {
+      setQueueActionResult({ ok: false, text: err?.response?.data?.message || err.message || 'Recovery failed' });
+      logger.error('Failed to run OpenClaw recovery', err);
+    } finally {
+      setRecoverLoading(false);
+    }
+  }, [loadStatus, loadQueueStats]);
+
   useEffect(() => {
     loadStatus();
     loadMessages();
@@ -303,6 +331,14 @@ export default function OpenClawTab() {
               title="Replay pending outbound messages to OpenClaw webhook"
             >
               {queueActionLoading ? 'Replaying...' : '🔁 Replay Webhook'}
+            </button>
+            <button
+              className="oc-btn oc-btn--secondary"
+              onClick={runRecovery}
+              disabled={recoverLoading}
+              title="Run automatic recovery checks and replay stale queue items"
+            >
+              {recoverLoading ? 'Recovering...' : '🛠️ Self-Heal'}
             </button>
           </div>
         </div>

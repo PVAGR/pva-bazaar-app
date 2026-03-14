@@ -790,6 +790,96 @@ router.post('/replay-webhook', async (req, res) => {
   }
 });
 
+// POST /api/openclaw/recover
+// Attempts light-weight self-heal actions for stale queue conditions.
+router.post('/recover', async (req, res) => {
+  const config = getConfig();
+  if (!requireBridgeOrAdmin(req, res, config, 'Unauthorized OpenClaw recover request')) return;
+
+  try {
+    const statsBefore = await getQueueStats();
+    const worker = await getWorkerStatus();
+    const staleThreshold = Math.max(parseInt(process.env.OPENCLAW_RECOVER_STALE_MIN || '2', 10), 1);
+    const heartbeatAt = worker?.heartbeatAt ? new Date(worker.heartbeatAt).getTime() : null;
+    const heartbeatAgeMin = heartbeatAt ? Math.max(Math.round((Date.now() - heartbeatAt) / 60000), 0) : null;
+    const workerStale = heartbeatAgeMin !== null && heartbeatAgeMin > staleThreshold;
+
+    const actions = [];
+    let replay = null;
+
+    // If stale outbound items exist and webhook is configured, replay a small batch.
+    if (config.webhookUrl && statsBefore.staleOutbound > 0) {
+      actions.push('replay-webhook');
+
+      await dbConnect();
+      const OpenClawMessage = require('../models/OpenClawMessage');
+      const headers = { 'Content-Type': 'application/json' };
+      if (config.apiKey) headers.Authorization = `Bearer ${config.apiKey}`;
+
+      const pending = await OpenClawMessage.find({ direction: 'outbound', processed: false })
+        .sort({ createdAt: 1 })
+        .limit(10)
+        .lean();
+
+      let forwarded = 0;
+      let failed = 0;
+      for (const entry of pending) {
+        const payload = {
+          source: 'pvabazaar-openclaw-recover',
+          message: entry.content || null,
+          event: entry.event || 'pvabazaar.dispatch.recover',
+          metadata: {
+            ...(entry.metadata || {}),
+            recovered: true,
+            recoveredAt: new Date().toISOString(),
+            recoveredMessageId: entry._id.toString(),
+          },
+          timestamp: new Date().toISOString(),
+        };
+
+        try {
+          await axios.post(config.webhookUrl, payload, { headers, timeout: 12000 });
+          forwarded += 1;
+        } catch (_err) {
+          failed += 1;
+        }
+      }
+
+      replay = {
+        attempted: pending.length,
+        forwarded,
+        failed,
+      };
+    }
+
+    const statsAfter = await getQueueStats();
+    return res.json({
+      ok: true,
+      worker: {
+        active: Boolean(worker?.active),
+        heartbeatAgeMin,
+        stale: workerStale,
+      },
+      queue: {
+        before: statsBefore,
+        after: statsAfter,
+      },
+      actions,
+      replay,
+      message: actions.length
+        ? 'Recovery actions executed'
+        : 'No recovery actions required',
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err) {
+    return res.status(500).json({
+      ok: false,
+      message: 'Failed to run OpenClaw recovery',
+      error: err.message,
+    });
+  }
+});
+
 router.post('/maintenance/cleanup', async (req, res) => {
   const config = getConfig();
   if (!requireBridgeOrAdmin(req, res, config, 'Unauthorized OpenClaw cleanup request')) return;

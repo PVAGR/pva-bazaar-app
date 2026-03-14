@@ -520,6 +520,23 @@ export default function PayoutTab() {
     quickRepairTips.push('Verify SOLANA_RPC_URL or cluster connectivity, then run readiness again.');
   }
 
+  const anomalyAlerts = [];
+  if (failedChecks.length > 0) {
+    anomalyAlerts.push(`${failedChecks.length} readiness checks are currently failing.`);
+  }
+  if (typeof hotWallet.balanceSol === 'number' && hotWallet.balanceSol < 0.01) {
+    anomalyAlerts.push('Hot wallet balance is very low (< 0.01 SOL).');
+  }
+  const recentFailedRuns = Array.isArray(autopilotRuns.rows)
+    ? autopilotRuns.rows.slice(0, 10).filter((run) => run.status === 'failed').length
+    : 0;
+  if (recentFailedRuns >= 2) {
+    anomalyAlerts.push(`${recentFailedRuns} of last 10 autopilot runs failed.`);
+  }
+  if (safeMode === false) {
+    anomalyAlerts.push('Safe mode is OFF. Risk of unsafe sends is higher.');
+  }
+
   if (loading && !summary) {
     return <div className="payout-tab loading">Loading payout data...</div>;
   }
@@ -902,6 +919,15 @@ export default function PayoutTab() {
                 <div className="ribbon-repairs-title">Quick Repair Suggestions</div>
                 {quickRepairTips.map((tip) => (
                   <div key={tip}>• {tip}</div>
+                ))}
+              </div>
+            )}
+
+            {anomalyAlerts.length > 0 && (
+              <div className="ribbon-anomalies">
+                <div className="ribbon-anomalies-title">Anomaly Alerts</div>
+                {anomalyAlerts.map((item) => (
+                  <div key={item}>⚠ {item}</div>
                 ))}
               </div>
             )}

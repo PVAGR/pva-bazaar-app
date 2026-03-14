@@ -581,6 +581,19 @@
   margin-bottom: 0.25rem;
 }
 
+.ribbon-anomalies {
+  margin-top: 0.6rem;
+  border-top: 1px dashed color-mix(in srgb, var(--site-border) 65%, transparent);
+  padding-top: 0.5rem;
+  font-size: 0.8rem;
+  color: color-mix(in srgb, var(--site-danger-text) 75%, var(--site-text));
+}
+
+.ribbon-anomalies-title {
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
 .autopilot-log {
   margin-top: 0.6rem;
   border-top: 1px dashed color-mix(in srgb, var(--site-border) 65%, transparent);
