@@ -15,6 +15,7 @@ export const confirmSolanaTestPayout = (payload) => apiPost('/solana/confirm-tes
 export const getDirectTransferReadiness = () => apiGet('/solana/direct-transfer-readiness');
 export const getHotWalletBalance = () => apiGet('/solana/hot-wallet-balance');
 export const requestDevnetAirdropHotWallet = (payload) => apiPost('/solana/devnet-airdrop-hot-wallet', payload);
+export const executeSolanaTestFlow = (payload) => apiPost('/solana/execute-test-flow', payload);
 export const directSolanaTransfer = (payload) => apiPost('/solana/direct-transfer', payload);
 
 /**

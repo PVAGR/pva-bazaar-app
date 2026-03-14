@@ -582,6 +582,210 @@ router.post('/devnet-airdrop-hot-wallet', adminSession, async (req, res) => {
   }
 });
 
+// POST /api/solana/execute-test-flow
+// One-click guided flow for admin UX:
+// 1) Validate limits and wallet, 2) optional devnet top-up, 3) sign + send transfer.
+router.post('/execute-test-flow', adminSession, async (req, res) => {
+  try {
+    const {
+      recipientAddress,
+      amountSol,
+      amountUsd = null,
+      memo = '',
+      autoAirdropOnDevnet = true,
+    } = req.body || {};
+
+    const policy = await getEffectiveTestPolicy();
+    const network = policy.network || process.env.SOLANA_CLUSTER || 'devnet';
+    const trimmedRecipient = String(recipientAddress || '').trim();
+    const numericSol = Number(amountSol);
+    const numericUsd = Number(amountUsd);
+    const hasUsd = Number.isFinite(numericUsd) && numericUsd > 0;
+
+    if (!isLikelySolanaAddress(trimmedRecipient)) {
+      return res.status(400).json({ ok: false, error: 'recipientAddress must be a valid Solana address' });
+    }
+    if (!Number.isFinite(numericSol) || numericSol <= 0) {
+      return res.status(400).json({ ok: false, error: 'amountSol must be a positive number' });
+    }
+    if (hasUsd && Number.isFinite(policy.minUsd) && numericUsd < policy.minUsd) {
+      return res.status(400).json({ ok: false, error: `amountUsd is below minimum of $${policy.minUsd}` });
+    }
+    if (hasUsd && Number.isFinite(policy.maxUsd) && numericUsd > policy.maxUsd) {
+      return res.status(400).json({ ok: false, error: `amountUsd exceeds maximum of $${policy.maxUsd}` });
+    }
+    if (Number.isFinite(policy.minSol) && numericSol < policy.minSol) {
+      return res.status(400).json({ ok: false, error: `amountSol is below minimum of ${policy.minSol} SOL` });
+    }
+    if (Number.isFinite(policy.maxSol) && numericSol > policy.maxSol) {
+      return res.status(400).json({ ok: false, error: `amountSol exceeds maximum of ${policy.maxSol} SOL` });
+    }
+    const inAllowlist = policy.walletAllowlist.length === 0 || policy.walletAllowlist.includes(trimmedRecipient);
+    if (policy.requireAllowlist && !inAllowlist) {
+      return res.status(403).json({ ok: false, error: 'recipientAddress is not in the wallet allowlist' });
+    }
+
+    const {
+      Connection, Transaction, SystemProgram, PublicKey, LAMPORTS_PER_SOL,
+    } = require('@solana/web3.js');
+    const keypair = parseHotWalletKeypair();
+    const rpcUrl = getSolanaRpcUrl();
+    const connection = new Connection(rpcUrl, 'confirmed');
+
+    const lamports = Math.round(numericSol * LAMPORTS_PER_SOL);
+    const feeBufferLamports = 20000; // conservative fee/headroom buffer
+
+    let preBalanceLamports = await connection.getBalance(keypair.publicKey);
+    let postAirdropBalanceLamports = preBalanceLamports;
+    let airdrop = {
+      attempted: false,
+      ok: false,
+      amountSol: 0,
+      signature: '',
+      explorerUrl: '',
+      error: '',
+    };
+
+    const needsTopUp = preBalanceLamports < (lamports + feeBufferLamports);
+    if (network === 'devnet' && autoAirdropOnDevnet && needsTopUp) {
+      try {
+        const targetLamports = lamports + feeBufferLamports;
+        const deficit = Math.max(targetLamports - preBalanceLamports, 0);
+        const requestedLamports = Math.min(Math.max(deficit, Math.round(0.2 * LAMPORTS_PER_SOL)), 2 * LAMPORTS_PER_SOL);
+        const airdropSig = await connection.requestAirdrop(keypair.publicKey, requestedLamports);
+        await connection.confirmTransaction(airdropSig, 'confirmed');
+        postAirdropBalanceLamports = await connection.getBalance(keypair.publicKey);
+
+        airdrop = {
+          attempted: true,
+          ok: true,
+          amountSol: requestedLamports / LAMPORTS_PER_SOL,
+          signature: airdropSig,
+          explorerUrl: `https://explorer.solana.com/tx/${airdropSig}?cluster=devnet`,
+          error: '',
+        };
+      } catch (airdropErr) {
+        postAirdropBalanceLamports = await connection.getBalance(keypair.publicKey);
+        airdrop = {
+          attempted: true,
+          ok: false,
+          amountSol: 0,
+          signature: '',
+          explorerUrl: '',
+          error: airdropErr.message || 'Airdrop attempt failed',
+        };
+      }
+    }
+
+    const effectiveBalanceLamports = postAirdropBalanceLamports;
+    if (effectiveBalanceLamports < (lamports + feeBufferLamports)) {
+      return res.status(400).json({
+        ok: false,
+        error: 'Insufficient hot wallet balance for transfer + fees',
+        flow: {
+          network,
+          rpcUrl,
+          hotWalletPublicKey: keypair.publicKey.toBase58(),
+          preBalanceSol: preBalanceLamports / LAMPORTS_PER_SOL,
+          postAirdropBalanceSol: postAirdropBalanceLamports / LAMPORTS_PER_SOL,
+          requiredSolApprox: (lamports + feeBufferLamports) / LAMPORTS_PER_SOL,
+          airdrop,
+        },
+      });
+    }
+
+    const { blockhash } = await connection.getLatestBlockhash('confirmed');
+    const tx = new Transaction({
+      recentBlockhash: blockhash,
+      feePayer: keypair.publicKey,
+    }).add(
+      SystemProgram.transfer({
+        fromPubkey: keypair.publicKey,
+        toPubkey: new PublicKey(trimmedRecipient),
+        lamports,
+      })
+    );
+    tx.sign(keypair);
+
+    const signature = await connection.sendRawTransaction(tx.serialize(), { skipPreflight: false });
+    await new Promise((r) => setTimeout(r, 4000));
+    const { status: sigStatus } = await fetchSignatureStatus(signature);
+    const confirmationStatus = sigStatus?.confirmationStatus || 'submitted';
+    const rpcError = sigStatus?.err || null;
+    const confirmed = !rpcError && (confirmationStatus === 'confirmed' || confirmationStatus === 'finalized');
+
+    const explorerCluster = network === 'mainnet-beta' ? '' : `?cluster=${network}`;
+    const explorerUrl = `https://explorer.solana.com/tx/${signature}${explorerCluster}`;
+
+    const payout = new SolanaPayout({
+      walletAddress: trimmedRecipient,
+      amountSol: numericSol,
+      network,
+      txSignature: signature,
+      status: confirmed ? 'confirmed' : 'pending',
+      metadata: {
+        isDirectTransfer: true,
+        isGuidedFlow: true,
+        requestedByAdmin: req.admin?.email || 'unknown-admin',
+        memo: String(memo || '').slice(0, 200),
+        amountUsd: hasUsd ? numericUsd : null,
+        hotWalletPublicKey: keypair.publicKey.toBase58(),
+        confirmationStatus,
+        airdrop,
+      },
+    });
+    await payout.save();
+
+    const event = createSystemEvent('info', 'OpenClaw payout.execute-test-flow', {
+      payoutId: payout._id.toString(),
+      signature,
+      recipientAddress: trimmedRecipient,
+      amountSol: numericSol,
+      amountUsd: hasUsd ? numericUsd : null,
+      network,
+      confirmationStatus,
+      requestedByAdmin: req.admin?.email || 'unknown-admin',
+      flow: {
+        guided: true,
+        autoAirdropOnDevnet: Boolean(autoAirdropOnDevnet),
+      },
+    });
+    dispatchToOpenClaw(event, console.log).catch(() => {});
+
+    return res.json({
+      ok: true,
+      message: 'Guided flow complete',
+      flow: {
+        network,
+        rpcUrl,
+        hotWalletPublicKey: keypair.publicKey.toBase58(),
+        preBalanceSol: preBalanceLamports / LAMPORTS_PER_SOL,
+        postAirdropBalanceSol: postAirdropBalanceLamports / LAMPORTS_PER_SOL,
+        airdrop,
+        transfer: {
+          signature,
+          explorerUrl,
+          confirmationStatus,
+          confirmed,
+          amountSol: numericSol,
+          recipientAddress: trimmedRecipient,
+        },
+      },
+      payout: {
+        id: payout._id.toString(),
+        status: payout.status,
+        txSignature: payout.txSignature,
+      },
+    });
+  } catch (err) {
+    return res.status(err.notConfigured ? 400 : 500).json({
+      ok: false,
+      error: err.message || 'Guided flow failed',
+      notConfigured: Boolean(err.notConfigured),
+    });
+  }
+});
+
 // POST /api/solana/direct-transfer
 // Signs and broadcasts a SOL transfer directly from the server hot wallet.
 // Enforces all policy limits. Private key is read from env only — never stored.

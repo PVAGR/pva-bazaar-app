@@ -9,6 +9,7 @@ import {
   getDirectTransferReadiness,
   getHotWalletBalance,
   requestDevnetAirdropHotWallet,
+  executeSolanaTestFlow,
   directSolanaTransfer,
 } from '../lib/api';
 import './PayoutTab.css';
@@ -61,6 +62,7 @@ export default function PayoutTab() {
   const [directForm, setDirectForm] = useState({ recipientAddress: '', amountSol: '0.01', amountUsd: '5', memo: '' });
   const [directResult, setDirectResult] = useState(null);
   const [directSending, setDirectSending] = useState(false);
+  const [guidedFlow, setGuidedFlow] = useState({ loading: false, result: null, error: '' });
 
   useEffect(() => {
     fetchSummary();
@@ -274,6 +276,36 @@ export default function PayoutTab() {
       }
     } catch (err) {
       setAirdrop({ loading: false, result: null, error: err?.response?.data?.error || err.message || 'Airdrop request failed' });
+    }
+  };
+
+  const executeGuidedFlow = async () => {
+    setGuidedFlow({ loading: true, result: null, error: '' });
+    try {
+      const payload = {
+        recipientAddress: directForm.recipientAddress,
+        amountSol: Number(directForm.amountSol),
+        amountUsd: Number(directForm.amountUsd) || null,
+        memo: directForm.memo,
+        autoAirdropOnDevnet: true,
+      };
+      const data = await executeSolanaTestFlow(payload);
+      if (data?.ok) {
+        setGuidedFlow({ loading: false, result: data, error: '' });
+        loadHotWalletBalance();
+        runReadinessCheck();
+        if (data?.flow?.transfer?.signature) {
+          setConfirmForm((prev) => ({ ...prev, txSignature: data.flow.transfer.signature }));
+        }
+      } else {
+        setGuidedFlow({ loading: false, result: null, error: data?.error || 'Guided flow failed' });
+      }
+    } catch (err) {
+      setGuidedFlow({
+        loading: false,
+        result: err?.response?.data || null,
+        error: err?.response?.data?.error || err.message || 'Guided flow failed',
+      });
     }
   };
 
@@ -880,6 +912,9 @@ export default function PayoutTab() {
               <button className="btn-primary btn-send" onClick={handleDirectTransfer} disabled={directSending || !directForm.recipientAddress}>
                 {directSending ? '⏳ Sending...' : '🚀 Send SOL Now'}
               </button>
+              <button className="btn-secondary" onClick={executeGuidedFlow} disabled={guidedFlow.loading || !directForm.recipientAddress}>
+                {guidedFlow.loading ? 'Running guided flow...' : '⚡ Execute One-Click Test Flow'}
+              </button>
             </div>
             {directResult && directResult.ok && (
               <div className="policy-msg direct-success">
@@ -900,6 +935,35 @@ export default function PayoutTab() {
                 )}
               </div>
             )}
+
+            {guidedFlow.error ? (
+              <div className="policy-msg">❌ {guidedFlow.error}</div>
+            ) : null}
+
+            {guidedFlow.result?.ok ? (
+              <div className="policy-msg direct-success">
+                <div>✅ Guided flow completed</div>
+                <div>Network: <strong>{guidedFlow.result?.flow?.network}</strong></div>
+                <div>
+                  Transfer Signature: <code>{guidedFlow.result?.flow?.transfer?.signature}</code>
+                </div>
+                <div>
+                  <a
+                    href={guidedFlow.result?.flow?.transfer?.explorerUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="explorer-link"
+                  >
+                    View Transfer on Solana Explorer ↗
+                  </a>
+                </div>
+                {guidedFlow.result?.flow?.airdrop?.attempted ? (
+                  <div>
+                    Airdrop: {guidedFlow.result?.flow?.airdrop?.ok ? '✅ success' : '⚠️ attempted but failed'}
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
           </div>
 
           <div className="policy-card">
