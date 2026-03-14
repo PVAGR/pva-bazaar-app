@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { apiGet } from '../lib/api';
+import { apiGet, apiPost } from '../lib/api';
 import { createLogger } from '../lib/logger';
 import './DashboardTab.css';
 
@@ -31,6 +31,8 @@ export default function DashboardTab({ onNavigateTab }) {
   });
   const [error, setError] = useState(null);
   const [lastRefresh, setLastRefresh] = useState(new Date());
+  const [recovering, setRecovering] = useState(false);
+  const [opsActionResult, setOpsActionResult] = useState(null);
 
   useEffect(() => {
     loadDashboardData();
@@ -186,6 +188,29 @@ export default function DashboardTab({ onNavigateTab }) {
     }
   };
 
+  const runOpsRecovery = async () => {
+    setRecovering(true);
+    setOpsActionResult(null);
+    try {
+      const result = await apiPost('/openclaw/recover', {});
+      if (result?.ok) {
+        const staleBefore = result?.queue?.before?.staleOutbound ?? 0;
+        const staleAfter = result?.queue?.after?.staleOutbound ?? 0;
+        setOpsActionResult({
+          ok: true,
+          text: `${result.message || 'Recovery complete'} · stale ${staleBefore} -> ${staleAfter}`,
+        });
+      } else {
+        setOpsActionResult({ ok: false, text: result?.message || 'Recovery failed' });
+      }
+      await loadDashboardData();
+    } catch (err) {
+      setOpsActionResult({ ok: false, text: err?.response?.data?.message || err.message || 'Recovery failed' });
+    } finally {
+      setRecovering(false);
+    }
+  };
+
   return (
     <div className="dashboard-tab">
       <div className="dashboard-header">
@@ -252,6 +277,22 @@ export default function DashboardTab({ onNavigateTab }) {
                 <span className="stat-label">New (30d)</span>
                 <span className="stat-value stat-highlight">{dashboardData.users.newThisMonth}</span>
               </div>
+            </div>
+
+            <div className="ops-actions-row">
+              <button
+                className="btn-refresh ops-recover-btn"
+                type="button"
+                onClick={runOpsRecovery}
+                disabled={recovering}
+              >
+                {recovering ? '🛠️ Recovering...' : '🛠️ Run Recovery'}
+              </button>
+              {opsActionResult && (
+                <span className={`ops-action-result ${opsActionResult.ok ? 'ok' : 'err'}`}>
+                  {opsActionResult.text}
+                </span>
+              )}
             </div>
           </div>
           <div className="metric-footer">

@@ -43,6 +43,8 @@ export default function OpenClawTab() {
   const [configLoading, setConfigLoading] = useState(false);
   const [configSaving, setConfigSaving] = useState(false);
   const [configResult, setConfigResult] = useState(null);
+  const [recoveryHistory, setRecoveryHistory] = useState([]);
+  const [recoveryHistoryLoading, setRecoveryHistoryLoading] = useState(true);
   const [openclawConfig, setOpenclawConfig] = useState({
     gatewayUrl: '',
     webhookUrl: '',
@@ -171,6 +173,32 @@ export default function OpenClawTab() {
     }
   }, []);
 
+  const loadRecoveryHistory = useCallback(async () => {
+    setRecoveryHistoryLoading(true);
+    try {
+      const data = await apiGet('/openclaw/recent-events?limit=60');
+      const events = Array.isArray(data?.events) ? data.events : [];
+      const filtered = events.filter((event) => {
+        const type = String(event?.type || '').toLowerCase();
+        const msg = String(event?.message || '').toLowerCase();
+        return (
+          type.includes('recovery')
+          || type.includes('alert')
+          || type.includes('health-failure')
+          || msg.includes('recover')
+          || msg.includes('replay')
+          || msg.includes('health check failed')
+        );
+      });
+      setRecoveryHistory(filtered.slice(0, 20));
+    } catch (err) {
+      logger.error('Failed to load OpenClaw recovery history', err);
+      setRecoveryHistory([]);
+    } finally {
+      setRecoveryHistoryLoading(false);
+    }
+  }, []);
+
   const sendMessage = useCallback(async () => {
     const trimmed = messageInput.trim();
     if (!trimmed) return;
@@ -221,6 +249,7 @@ export default function OpenClawTab() {
           text: `Replay complete: forwarded ${data.forwarded}/${data.attempted}, failed ${data.failed}`,
         });
         loadQueueStats();
+        loadRecoveryHistory();
       } else {
         setQueueActionResult({ ok: false, text: data?.message || 'Replay failed' });
       }
@@ -248,6 +277,7 @@ export default function OpenClawTab() {
         });
         loadStatus();
         loadQueueStats();
+        loadRecoveryHistory();
       } else {
         setQueueActionResult({ ok: false, text: data?.message || 'Recovery failed' });
       }
@@ -264,10 +294,11 @@ export default function OpenClawTab() {
     loadMessages();
     loadQueueStats();
     loadRuntimeConfig();
+    loadRecoveryHistory();
     return () => {
       if (sendResultTimer.current) clearTimeout(sendResultTimer.current);
     };
-  }, [loadStatus, loadMessages, loadQueueStats, loadRuntimeConfig]);
+  }, [loadStatus, loadMessages, loadQueueStats, loadRuntimeConfig, loadRecoveryHistory]);
 
   useEffect(() => {
     if (!autoRefresh) return undefined;
@@ -275,9 +306,10 @@ export default function OpenClawTab() {
       loadStatus();
       loadMessages();
       loadQueueStats();
+      loadRecoveryHistory();
     }, 15000);
     return () => clearInterval(id);
-  }, [autoRefresh, loadStatus, loadMessages, loadQueueStats]);
+  }, [autoRefresh, loadStatus, loadMessages, loadQueueStats, loadRecoveryHistory]);
 
   const shouldAutoHeal = useMemo(() => {
     if (!autoHealEnabled || statusLoading || queueLoading) {
@@ -421,6 +453,41 @@ export default function OpenClawTab() {
             ? `armed${shouldAutoHeal.reason ? ` · anomaly: ${shouldAutoHeal.reason}` : ' · monitoring'}`
             : 'disabled'}
           {autoHealLastRunAt ? ` · last run ${formatMessageTime(autoHealLastRunAt)}` : ''}
+        </div>
+
+        <div className="oc-recovery-history" aria-label="OpenClaw recovery history">
+          <div className="oc-recovery-history-head">
+            <h3>Recovery History</h3>
+            <button
+              className="oc-btn oc-btn--secondary"
+              type="button"
+              onClick={loadRecoveryHistory}
+              disabled={recoveryHistoryLoading}
+            >
+              {recoveryHistoryLoading ? 'Loading...' : 'Refresh History'}
+            </button>
+          </div>
+
+          {recoveryHistoryLoading ? (
+            <div className="oc-events-empty">Loading recovery events...</div>
+          ) : recoveryHistory.length === 0 ? (
+            <div className="oc-events-empty">No recovery or alert events yet.</div>
+          ) : (
+            <div className="oc-recovery-list">
+              {recoveryHistory.map((event, index) => (
+                <div key={event.id || `${event.timestamp || 'no-ts'}-${index}`} className="oc-recovery-row">
+                  <div className="oc-recovery-meta">
+                    <span className={`oc-recovery-level oc-recovery-level-${String(event.level || 'info').toLowerCase()}`}>
+                      {event.level || 'INFO'}
+                    </span>
+                    <span>{event.type || 'event'}</span>
+                    <span>{formatMessageTime(event.timestamp)}</span>
+                  </div>
+                  <div className="oc-recovery-message">{event.message || 'No message'}</div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {statusLoading ? (
