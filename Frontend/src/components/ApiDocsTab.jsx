@@ -279,7 +279,7 @@ const ApiDocsTab = React.memo(function ApiDocsTab() {
         {
           method: 'POST',
           path: '/api/blockchain/transfers/record',
-          description: 'Record and verify transfer with tx hash, amount, note, and links',
+          description: 'Record and verify transfer with tx hash, artifact link, terms, and signer metadata (blocked once finalized)',
           auth: 'Required (JWT)',
           body: {
             network: 'base',
@@ -289,8 +289,26 @@ const ApiDocsTab = React.memo(function ApiDocsTab() {
             tokenAmount: '1.0',
             note: 'Pilot payout',
             mediaUrl: 'https://example.com/proof-image.jpg',
-            referenceUrl: 'https://pvabazaar.org/#/verification/example'
+            referenceUrl: 'https://pvabazaar.org/#/verification/example',
+            contractTerms: {
+              partyOneName: 'PVA Bazaar',
+              partyOneRole: 'Operator',
+              partyTwoName: 'Counterparty Name',
+              partyTwoRole: 'Creator',
+              additionalClauses: 'Delivery and provenance scope...'
+            },
+            signatures: {
+              partyOneSignerName: 'Operator Signer',
+              partyTwoSignerName: 'Counterparty Signer'
+            }
           }
+        },
+        {
+          method: 'GET',
+          path: '/api/blockchain/settlement-templates?limit=20',
+          description: 'List reusable settlement term templates from your recent records',
+          auth: 'Required (JWT)',
+          example: `${apiBase}/api/blockchain/settlement-templates?limit=20`
         },
         {
           method: 'POST',
@@ -300,18 +318,41 @@ const ApiDocsTab = React.memo(function ApiDocsTab() {
           example: `${apiBase}/api/blockchain/transfers/67cfe8d5e6.../reverify`
         },
         {
+          method: 'POST',
+          path: '/api/blockchain/transfers/:id/finalize',
+          description: 'Finalize and lock settlement terms/signatures to prevent future edits',
+          auth: 'Required (JWT)',
+          body: {
+            signatures: {
+              partyOneSignerName: 'Operator Signer',
+              partyOneSignedAt: '2026-03-13T14:30:00Z',
+              partyTwoSignerName: 'Counterparty Signer',
+              partyTwoSignedAt: '2026-03-13T14:35:00Z',
+              witnessName: 'Witness Name'
+            },
+            finalizationNote: 'Final settlement acknowledged by both parties.'
+          }
+        },
+        {
           method: 'GET',
           path: '/api/blockchain/transfers/:id/contract',
-          description: 'Get settlement contract payload (JSON) for archival and compliance',
+          description: 'Get settlement contract payload (JSON), including trace URLs and QR links',
           auth: 'Required (JWT)',
           example: `${apiBase}/api/blockchain/transfers/67cfe8d5e6.../contract`
         },
         {
           method: 'GET',
           path: '/api/blockchain/transfers/:id/contract/render',
-          description: 'Get printable settlement contract HTML for print/PDF workflows',
+          description: 'Get printable settlement contract HTML with explorer/public-record QR trace blocks',
           auth: 'Required (JWT)',
           example: `${apiBase}/api/blockchain/transfers/67cfe8d5e6.../contract/render`
+        },
+        {
+          method: 'GET',
+          path: '/api/blockchain/transfers/public/:id',
+          description: 'Public trace payload used by QR scans for physical contract validation',
+          auth: 'None',
+          example: `${apiBase}/api/blockchain/transfers/public/67cfe8d5e6...`
         }
       ]
     },

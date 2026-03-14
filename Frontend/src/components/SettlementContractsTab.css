@@ -54,6 +54,11 @@
   color: var(--site-text-muted);
 }
 
+.chip.finalized {
+  background: color-mix(in srgb, var(--site-success-bg) 82%, var(--site-panel));
+  color: var(--site-success-text);
+}
+
 .chip.status-confirmed {
   background: var(--site-success-bg);
   color: var(--site-success-text);
@@ -92,6 +97,21 @@
 
 .settlement-grid .full-row {
   grid-column: 1 / -1;
+}
+
+.template-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.template-row select {
+  min-width: min(460px, 100%);
+}
+
+.error-text {
+  color: var(--site-danger-text);
 }
 
 .settlement-grid input,

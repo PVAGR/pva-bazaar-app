@@ -40,6 +40,17 @@ const blockchainTransferSchema = new mongoose.Schema(
       partyTwoRole: { type: String, default: 'Counterparty' },
       additionalClauses: { type: String, default: '' },
     },
+    signatures: {
+      partyOneSignerName: { type: String, default: '' },
+      partyOneSignedAt: { type: Date, default: null },
+      partyTwoSignerName: { type: String, default: '' },
+      partyTwoSignedAt: { type: Date, default: null },
+      witnessName: { type: String, default: '' },
+      witnessSignedAt: { type: Date, default: null },
+    },
+    finalizationNote: { type: String, default: '' },
+    finalizedAt: { type: Date, default: null, index: true },
+    finalizedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
     rawError: { type: String, default: '' },
   },
   { timestamps: true }

@@ -38,9 +38,12 @@ export default function SettlementContractsTab() {
   const [wallet, setWallet] = useState({ address: '', chainId: '', connecting: false, sending: false });
   const [message, setMessage] = useState('');
   const [records, setRecords] = useState({ loading: true, data: [], error: null });
+  const [templates, setTemplates] = useState({ loading: false, data: [], error: null });
+  const [selectedTemplateId, setSelectedTemplateId] = useState('');
   const [artifacts, setArtifacts] = useState({ loading: false, data: [], error: null });
   const [artifactQuery, setArtifactQuery] = useState('');
   const [reverifyId, setReverifyId] = useState('');
+  const [finalizingId, setFinalizingId] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   const [form, setForm] = useState({
@@ -60,6 +63,13 @@ export default function SettlementContractsTab() {
     partyTwoName: '',
     partyTwoRole: 'Counterparty',
     additionalClauses: '',
+    partyOneSignerName: '',
+    partyOneSignedAt: '',
+    partyTwoSignerName: '',
+    partyTwoSignedAt: '',
+    witnessName: '',
+    witnessSignedAt: '',
+    finalizationNote: '',
   });
 
   const selectedArtifact = useMemo(
@@ -98,10 +108,26 @@ export default function SettlementContractsTab() {
     }
   }, []);
 
+  const loadTemplates = useCallback(async () => {
+    setTemplates({ loading: true, data: [], error: null });
+    try {
+      const response = await apiGet('/blockchain/settlement-templates?limit=20');
+      if (response?.ok && Array.isArray(response.templates)) {
+        setTemplates({ loading: false, data: response.templates, error: null });
+      } else {
+        setTemplates({ loading: false, data: [], error: response?.message || 'Failed to load templates' });
+      }
+    } catch (err) {
+      logger.error('Failed to load templates', err);
+      setTemplates({ loading: false, data: [], error: err.message || 'Failed to load templates' });
+    }
+  }, []);
+
   useEffect(() => {
     loadTransfers();
     loadArtifacts();
-  }, [loadTransfers, loadArtifacts]);
+    loadTemplates();
+  }, [loadTransfers, loadArtifacts, loadTemplates]);
 
   useEffect(() => {
     const id = setTimeout(() => {
@@ -183,7 +209,33 @@ export default function SettlementContractsTab() {
       partyTwoRole: form.partyTwoRole.trim() || 'Counterparty',
       additionalClauses: form.additionalClauses.trim(),
     },
+    signatures: {
+      partyOneSignerName: form.partyOneSignerName.trim(),
+      partyOneSignedAt: form.partyOneSignedAt || '',
+      partyTwoSignerName: form.partyTwoSignerName.trim(),
+      partyTwoSignedAt: form.partyTwoSignedAt || '',
+      witnessName: form.witnessName.trim(),
+      witnessSignedAt: form.witnessSignedAt || '',
+    },
   });
+
+  const applyTemplate = () => {
+    const selected = templates.data.find((item) => String(item.id) === String(selectedTemplateId));
+    if (!selected?.terms) {
+      setMessage('Pick a template before applying.');
+      return;
+    }
+
+    setForm((prev) => ({
+      ...prev,
+      partyOneName: selected.terms.partyOneName || prev.partyOneName,
+      partyOneRole: selected.terms.partyOneRole || prev.partyOneRole,
+      partyTwoName: selected.terms.partyTwoName || prev.partyTwoName,
+      partyTwoRole: selected.terms.partyTwoRole || prev.partyTwoRole,
+      additionalClauses: selected.terms.additionalClauses || prev.additionalClauses,
+    }));
+    setMessage('Template applied to contract terms.');
+  };
 
   const submitRecord = async (txHashOverride = '') => {
     setSubmitting(true);
@@ -249,6 +301,33 @@ export default function SettlementContractsTab() {
     }
   };
 
+  const finalizeTransfer = async (id) => {
+    setFinalizingId(id);
+    try {
+      const response = await apiPost(`/blockchain/transfers/${id}/finalize`, {
+        signatures: {
+          partyOneSignerName: form.partyOneSignerName.trim(),
+          partyOneSignedAt: form.partyOneSignedAt || '',
+          partyTwoSignerName: form.partyTwoSignerName.trim(),
+          partyTwoSignedAt: form.partyTwoSignedAt || '',
+          witnessName: form.witnessName.trim(),
+          witnessSignedAt: form.witnessSignedAt || '',
+        },
+        finalizationNote: form.finalizationNote.trim(),
+      });
+      if (!response?.ok) {
+        setMessage(response?.message || 'Failed to finalize settlement');
+      } else {
+        setMessage('Settlement finalized and locked. Future edits are blocked for this transfer.');
+        await loadTransfers();
+      }
+    } catch (err) {
+      setMessage(err.message || 'Failed to finalize settlement');
+    } finally {
+      setFinalizingId('');
+    }
+  };
+
   const openContract = async (id, autoPrint = false) => {
     try {
       const response = await apiGet(`/blockchain/transfers/${id}/contract/render`);
@@ -306,8 +385,8 @@ export default function SettlementContractsTab() {
       <div className="settlements-help-row">
         <HelpTip
           title="Workflow"
-          body="1) Connect wallet and send transfer on Base. 2) Record with metadata and artifact linkage. 3) Open contract and print/save PDF. 4) Re-verify anytime from chain."
-          example="Pilot payout: $1.00, media proof URL, artifact linked, signed print copy in operations binder."
+          body="1) Connect wallet and send transfer on Base. 2) Reuse a previous terms template or enter new terms. 3) Record with metadata and artifact linkage. 4) Finalize to lock signer details. 5) Print/save PDF with QR trace links."
+          example="Pilot payout: $1.00, artifact linked, finalize with both signer names, print a QR-enabled contract for archive binder."
         />
       </div>
 
@@ -323,6 +402,27 @@ export default function SettlementContractsTab() {
         </div>
 
         <div className="settlement-grid">
+          <label className="full-row">
+            Reuse Prior Terms Template
+            <div className="template-row">
+              <select value={selectedTemplateId} onChange={(e) => setSelectedTemplateId(e.target.value)}>
+                <option value="">Select template</option>
+                {templates.data.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.label}
+                  </option>
+                ))}
+              </select>
+              <button className="btn ghost tiny" type="button" onClick={applyTemplate} disabled={!selectedTemplateId || templates.loading}>
+                Apply
+              </button>
+              <button className="btn ghost tiny" type="button" onClick={loadTemplates} disabled={templates.loading}>
+                {templates.loading ? 'Loading...' : 'Refresh Templates'}
+              </button>
+            </div>
+            {templates.error ? <small className="error-text">{templates.error}</small> : null}
+          </label>
+
           <label>
             Network
             <select value={form.network} onChange={(e) => setForm((prev) => ({ ...prev, network: e.target.value }))}>
@@ -427,6 +527,46 @@ export default function SettlementContractsTab() {
               placeholder="Write any additional terms to appear on the printable contract"
             />
           </label>
+
+          <label>
+            Party One Signer Name
+            <input value={form.partyOneSignerName} onChange={(e) => setForm((prev) => ({ ...prev, partyOneSignerName: e.target.value }))} placeholder="Signer full name" />
+          </label>
+
+          <label>
+            Party One Signed At
+            <input type="datetime-local" value={form.partyOneSignedAt} onChange={(e) => setForm((prev) => ({ ...prev, partyOneSignedAt: e.target.value }))} />
+          </label>
+
+          <label>
+            Party Two Signer Name
+            <input value={form.partyTwoSignerName} onChange={(e) => setForm((prev) => ({ ...prev, partyTwoSignerName: e.target.value }))} placeholder="Signer full name" />
+          </label>
+
+          <label>
+            Party Two Signed At
+            <input type="datetime-local" value={form.partyTwoSignedAt} onChange={(e) => setForm((prev) => ({ ...prev, partyTwoSignedAt: e.target.value }))} />
+          </label>
+
+          <label>
+            Witness Name (optional)
+            <input value={form.witnessName} onChange={(e) => setForm((prev) => ({ ...prev, witnessName: e.target.value }))} placeholder="Witness full name" />
+          </label>
+
+          <label>
+            Witness Signed At (optional)
+            <input type="datetime-local" value={form.witnessSignedAt} onChange={(e) => setForm((prev) => ({ ...prev, witnessSignedAt: e.target.value }))} />
+          </label>
+
+          <label className="full-row">
+            Finalization Note
+            <textarea
+              rows="2"
+              value={form.finalizationNote}
+              onChange={(e) => setForm((prev) => ({ ...prev, finalizationNote: e.target.value }))}
+              placeholder="Optional note recorded when contract is finalized"
+            />
+          </label>
         </div>
 
         <div className="manual-submit-row">
@@ -456,8 +596,17 @@ export default function SettlementContractsTab() {
                 <div className="record-top">
                   <span className={`chip status-${item.status}`}>{item.status}</span>
                   <span className="chip network">{item.network}</span>
+                  {item.isFinalized ? <span className="chip finalized">Finalized</span> : null}
                   <button className="btn ghost tiny" type="button" onClick={() => handleReverify(item.id)} disabled={reverifyId === item.id}>
                     {reverifyId === item.id ? 'Checking...' : 'Re-verify'}
+                  </button>
+                  <button
+                    className="btn ghost tiny"
+                    type="button"
+                    onClick={() => finalizeTransfer(item.id)}
+                    disabled={item.isFinalized || finalizingId === item.id}
+                  >
+                    {item.isFinalized ? 'Locked' : finalizingId === item.id ? 'Finalizing...' : 'Finalize & Lock'}
                   </button>
                 </div>
 
@@ -465,6 +614,7 @@ export default function SettlementContractsTab() {
                   <span><strong>USD:</strong> ${Number(item.amountUsd || 0).toFixed(2)}</span>
                   <span><strong>Token:</strong> {item.tokenSymbol} {item.tokenAmount || ''}</span>
                   {item.artifactTitle ? <span><strong>Artifact:</strong> {item.artifactTitle}</span> : null}
+                  {item.finalizedAt ? <span><strong>Finalized:</strong> {new Date(item.finalizedAt).toLocaleString()}</span> : null}
                 </div>
 
                 <div className="record-links">

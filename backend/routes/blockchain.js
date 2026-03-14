@@ -41,6 +41,17 @@ function toPublicTransfer(transfer) {
       partyTwoRole: 'Counterparty',
       additionalClauses: '',
     },
+    signatures: item.signatures || {
+      partyOneSignerName: '',
+      partyOneSignedAt: null,
+      partyTwoSignerName: '',
+      partyTwoSignedAt: null,
+      witnessName: '',
+      witnessSignedAt: null,
+    },
+    finalizationNote: item.finalizationNote || '',
+    finalizedAt: item.finalizedAt || null,
+    isFinalized: !!item.finalizedAt,
     createdAt: item.createdAt,
     updatedAt: item.updatedAt,
   };
@@ -62,7 +73,31 @@ function isObjectIdHex(v) {
   return typeof v === 'string' && /^[a-f\d]{24}$/i.test(v);
 }
 
-function buildContractPayload(record) {
+function parseOptionalDate(value) {
+  if (!value) return null;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return parsed;
+}
+
+function getBaseUrl(req) {
+  const host = req.get('host') || '';
+  const proto = req.get('x-forwarded-proto') || req.protocol || 'https';
+  return `${proto}://${host}`;
+}
+
+function toQrUrl(raw) {
+  const value = String(raw || '').trim();
+  if (!value) return '';
+  return `https://quickchart.io/qr?size=180&text=${encodeURIComponent(value)}`;
+}
+
+function buildContractPayload(record, req) {
+  const baseUrl = getBaseUrl(req);
+  const publicRecordUrl = `${baseUrl}/api/blockchain/transfers/public/${record._id}`;
+  const contractPayloadUrl = `${baseUrl}/api/blockchain/transfers/${record._id}/contract`;
+  const contractRenderUrl = `${baseUrl}/api/blockchain/transfers/${record._id}/contract/render`;
+
   return {
     contractType: 'Blockchain Settlement Receipt',
     version: record.contractVersion || 'v1',
@@ -103,6 +138,29 @@ function buildContractPayload(record) {
       partyTwoRole: record.contractTerms?.partyTwoRole || 'Counterparty',
       additionalClauses: record.contractTerms?.additionalClauses || '',
     },
+    signatures: {
+      partyOneSignerName: record.signatures?.partyOneSignerName || '',
+      partyOneSignedAt: record.signatures?.partyOneSignedAt || null,
+      partyTwoSignerName: record.signatures?.partyTwoSignerName || '',
+      partyTwoSignedAt: record.signatures?.partyTwoSignedAt || null,
+      witnessName: record.signatures?.witnessName || '',
+      witnessSignedAt: record.signatures?.witnessSignedAt || null,
+    },
+    finalization: {
+      finalizedAt: record.finalizedAt || null,
+      finalizationNote: record.finalizationNote || '',
+      isFinalized: !!record.finalizedAt,
+    },
+    traceUrls: {
+      explorer: record.explorerUrl || '',
+      publicRecord: publicRecordUrl,
+      contractPayload: contractPayloadUrl,
+      contractRender: contractRenderUrl,
+    },
+    qrUrls: {
+      explorer: toQrUrl(record.explorerUrl || ''),
+      publicRecord: toQrUrl(publicRecordUrl),
+    },
   };
 }
 
@@ -133,6 +191,24 @@ function buildContractHtml(payload) {
   const additionalClauses = payload.contractTerms?.additionalClauses
     ? `<h2>Additional Clauses</h2><div class="declaration">${escapeHtml(payload.contractTerms.additionalClauses)}</div>`
     : '';
+  const finalizedBanner = payload.finalization?.isFinalized
+    ? `<div class="finalized">Finalized at ${escapeHtml(payload.finalization.finalizedAt || 'N/A')}</div>`
+    : '<div class="pending">Draft contract: not finalized</div>';
+  const finalizationNote = payload.finalization?.finalizationNote
+    ? `<h2>Finalization Note</h2><div class="declaration">${escapeHtml(payload.finalization.finalizationNote)}</div>`
+    : '';
+  const partyOneSigner = payload.signatures?.partyOneSignerName || partyOneName;
+  const partyOneSignedAt = payload.signatures?.partyOneSignedAt || '';
+  const partyTwoSigner = payload.signatures?.partyTwoSignerName || partyTwoName;
+  const partyTwoSignedAt = payload.signatures?.partyTwoSignedAt || '';
+  const witnessName = payload.signatures?.witnessName || '________________';
+  const witnessSignedAt = payload.signatures?.witnessSignedAt || '';
+  const qrExplorer = payload.qrUrls?.explorer
+    ? `<div class="qr-card"><div>Explorer QR</div><img src="${escapeHtml(payload.qrUrls.explorer)}" alt="Explorer QR" /></div>`
+    : '';
+  const qrRecord = payload.qrUrls?.publicRecord
+    ? `<div class="qr-card"><div>Record QR</div><img src="${escapeHtml(payload.qrUrls.publicRecord)}" alt="Record QR" /></div>`
+    : '';
 
   return `<!doctype html>
 <html>
@@ -148,8 +224,13 @@ function buildContractHtml(payload) {
       th, td { border: 1px solid #cfd8dc; padding: 8px; text-align: left; vertical-align: top; }
       th { background: #f2f7fa; width: 26%; }
       .declaration { margin-top: 16px; border: 1px solid #cfd8dc; border-radius: 8px; padding: 12px; background: #f8fbfd; font-size: 13px; white-space: pre-wrap; }
+      .finalized { margin-top: 12px; border: 1px solid #8da890; border-radius: 8px; padding: 10px; background: #eef7ef; color: #1f4b25; font-size: 13px; }
+      .pending { margin-top: 12px; border: 1px solid #ccb87a; border-radius: 8px; padding: 10px; background: #fff7e2; color: #5a450e; font-size: 13px; }
       .signatures { margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
       .sig-box { border-top: 1px solid #6d7d87; padding-top: 8px; font-size: 12px; color: #455a64; }
+      .trace { margin-top: 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+      .qr-card { border: 1px solid #cfd8dc; border-radius: 8px; padding: 10px; text-align: center; font-size: 12px; color: #455a64; }
+      .qr-card img { width: 160px; height: 160px; margin-top: 8px; }
       @media print { a { color: inherit; text-decoration: none; } }
     </style>
   </head>
@@ -181,10 +262,22 @@ function buildContractHtml(payload) {
     </table>
 
     <div class="declaration">${escapeHtml(payload.declaration)}</div>
+    ${finalizedBanner}
+    ${finalizationNote}
     ${additionalClauses}
+    <h2>Traceability</h2>
+    <table>
+      <tr><th>Public Record</th><td>${escapeHtml(payload.traceUrls?.publicRecord || 'N/A')}</td></tr>
+      <tr><th>Explorer URL</th><td>${escapeHtml(payload.traceUrls?.explorer || 'N/A')}</td></tr>
+    </table>
+    <div class="trace">
+      ${qrExplorer}
+      ${qrRecord}
+    </div>
     <div class="signatures">
-      <div class="sig-box">${escapeHtml(partyOneRole)}: ${escapeHtml(partyOneName)}<br/>Signature / Date</div>
-      <div class="sig-box">${escapeHtml(partyTwoRole)}: ${escapeHtml(partyTwoName)}<br/>Signature / Date</div>
+      <div class="sig-box">${escapeHtml(partyOneRole)}: ${escapeHtml(partyOneSigner)}<br/>Signed At: ${escapeHtml(partyOneSignedAt || '________________')}<br/>Signature</div>
+      <div class="sig-box">${escapeHtml(partyTwoRole)}: ${escapeHtml(partyTwoSigner)}<br/>Signed At: ${escapeHtml(partyTwoSignedAt || '________________')}<br/>Signature</div>
+      <div class="sig-box">Witness: ${escapeHtml(witnessName)}<br/>Signed At: ${escapeHtml(witnessSignedAt || '________________')}<br/>Signature</div>
     </div>
   </body>
 </html>`;
@@ -219,6 +312,35 @@ router.get('/health', (_req, res) => {
   });
 });
 
+// GET /api/blockchain/transfers/public/:id - public transfer trace payload for QR links
+router.get('/transfers/public/:id', async (req, res) => {
+  try {
+    const item = await BlockchainTransfer.findById(req.params.id);
+    if (!item) {
+      return res.status(404).json({ ok: false, message: 'Transfer record not found' });
+    }
+
+    const payload = buildContractPayload(item, req);
+    res.json({
+      ok: true,
+      trace: {
+        transferId: payload.transferId,
+        txHash: payload.txHash,
+        status: payload.status,
+        network: payload.network,
+        chainId: payload.chainId,
+        artifact: payload.artifact,
+        traceUrls: payload.traceUrls,
+        finalization: payload.finalization,
+        generatedAt: payload.generatedAt,
+      },
+    });
+  } catch (error) {
+    console.error('Blockchain public transfer trace error:', error);
+    res.status(500).json({ ok: false, message: 'Failed to load public transfer trace' });
+  }
+});
+
 // GET /api/blockchain/transfers - list tracked transfer records
 router.get('/transfers', auth, async (req, res) => {
   try {
@@ -245,6 +367,47 @@ router.get('/transfers', auth, async (req, res) => {
   }
 });
 
+// GET /api/blockchain/settlement-templates - reusable terms from recent records
+router.get('/settlement-templates', auth, async (req, res) => {
+  try {
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 20, 1), 100);
+    const items = await BlockchainTransfer.find({ submittedBy: req.user.id })
+      .sort({ createdAt: -1 })
+      .limit(250)
+      .select('contractTerms createdAt txHash artifactTitle finalizedAt signatures');
+
+    const seen = new Set();
+    const templates = [];
+    for (const item of items) {
+      const terms = item.contractTerms || {};
+      const fingerprint = JSON.stringify({
+        partyOneName: terms.partyOneName || '',
+        partyOneRole: terms.partyOneRole || 'Operator',
+        partyTwoName: terms.partyTwoName || '',
+        partyTwoRole: terms.partyTwoRole || 'Counterparty',
+        additionalClauses: terms.additionalClauses || '',
+      });
+      if (seen.has(fingerprint)) continue;
+      seen.add(fingerprint);
+
+      templates.push({
+        id: String(item._id),
+        label: `${item.artifactTitle || 'Settlement'} · ${String(item.txHash || '').slice(0, 10)}...`,
+        createdAt: item.createdAt,
+        finalizedAt: item.finalizedAt || null,
+        terms,
+      });
+
+      if (templates.length >= limit) break;
+    }
+
+    res.json({ ok: true, templates });
+  } catch (error) {
+    console.error('Blockchain settlement templates error:', error);
+    res.status(500).json({ ok: false, message: 'Failed to load settlement templates' });
+  }
+});
+
 // POST /api/blockchain/transfers/record - record and verify an on-chain transfer
 router.post('/transfers/record', auth, async (req, res) => {
   try {
@@ -267,6 +430,14 @@ router.post('/transfers/record', auth, async (req, res) => {
       partyTwoRole: String(req.body?.contractTerms?.partyTwoRole || 'Counterparty').trim().slice(0, 80),
       additionalClauses: String(req.body?.contractTerms?.additionalClauses || '').trim().slice(0, 4000),
     };
+    const signatures = {
+      partyOneSignerName: String(req.body?.signatures?.partyOneSignerName || '').trim().slice(0, 120),
+      partyOneSignedAt: parseOptionalDate(req.body?.signatures?.partyOneSignedAt),
+      partyTwoSignerName: String(req.body?.signatures?.partyTwoSignerName || '').trim().slice(0, 120),
+      partyTwoSignedAt: parseOptionalDate(req.body?.signatures?.partyTwoSignedAt),
+      witnessName: String(req.body?.signatures?.witnessName || '').trim().slice(0, 120),
+      witnessSignedAt: parseOptionalDate(req.body?.signatures?.witnessSignedAt),
+    };
     const artifactId = isObjectIdHex(req.body?.artifactId) ? String(req.body.artifactId) : '';
     let artifact = null;
     if (artifactId) {
@@ -279,6 +450,13 @@ router.post('/transfers/record', auth, async (req, res) => {
     const chainResult = await inspectTransaction(txHash);
     const network = requestedNetwork;
     const explorerUrl = getExplorerTxUrl(network, txHash);
+    const existing = await BlockchainTransfer.findOne({ txHash }).select('_id finalizedAt');
+    if (existing?.finalizedAt) {
+      return res.status(409).json({
+        ok: false,
+        message: 'Transfer is finalized and cannot be modified. Create a new transfer for amendments.',
+      });
+    }
 
     const updateDoc = {
       submittedBy: req.user.id,
@@ -301,8 +479,9 @@ router.post('/transfers/record', auth, async (req, res) => {
       explorerUrl,
       txTimestamp: chainResult.txTimestamp || null,
       lastCheckedAt: new Date(),
-      contractVersion: 'v2',
+      contractVersion: 'v3',
       contractTerms,
+      signatures,
       rawError: chainResult.found ? '' : 'Transaction not found on configured RPC',
     };
 
@@ -320,6 +499,47 @@ router.post('/transfers/record', auth, async (req, res) => {
   } catch (error) {
     console.error('Blockchain transfer record error:', error);
     res.status(500).json({ ok: false, message: 'Failed to record blockchain transfer', error: error.message });
+  }
+});
+
+// POST /api/blockchain/transfers/:id/finalize - lock settlement terms/signatures
+router.post('/transfers/:id/finalize', auth, async (req, res) => {
+  try {
+    const item = await BlockchainTransfer.findById(req.params.id);
+    if (!item) {
+      return res.status(404).json({ ok: false, message: 'Transfer record not found' });
+    }
+    if (item.finalizedAt) {
+      return res.status(409).json({ ok: false, message: 'Transfer is already finalized' });
+    }
+
+    const partyOneSignerName = String(req.body?.signatures?.partyOneSignerName || '').trim().slice(0, 120);
+    const partyTwoSignerName = String(req.body?.signatures?.partyTwoSignerName || '').trim().slice(0, 120);
+    if (!partyOneSignerName || !partyTwoSignerName) {
+      return res.status(400).json({
+        ok: false,
+        message: 'Both party signer names are required to finalize settlement',
+      });
+    }
+
+    item.signatures = {
+      partyOneSignerName,
+      partyOneSignedAt: parseOptionalDate(req.body?.signatures?.partyOneSignedAt) || new Date(),
+      partyTwoSignerName,
+      partyTwoSignedAt: parseOptionalDate(req.body?.signatures?.partyTwoSignedAt) || new Date(),
+      witnessName: String(req.body?.signatures?.witnessName || '').trim().slice(0, 120),
+      witnessSignedAt: parseOptionalDate(req.body?.signatures?.witnessSignedAt),
+    };
+    item.finalizationNote = String(req.body?.finalizationNote || '').trim().slice(0, 2000);
+    item.finalizedAt = new Date();
+    item.finalizedBy = req.user.id;
+    item.contractVersion = item.contractVersion || 'v3';
+    await item.save();
+
+    res.json({ ok: true, message: 'Settlement finalized and locked', item: toPublicTransfer(item) });
+  } catch (error) {
+    console.error('Blockchain transfer finalize error:', error);
+    res.status(500).json({ ok: false, message: 'Failed to finalize transfer', error: error.message });
   }
 });
 
@@ -358,7 +578,7 @@ router.get('/transfers/:id/contract', auth, async (req, res) => {
       return res.status(404).json({ ok: false, message: 'Transfer record not found' });
     }
 
-    const payload = buildContractPayload(item);
+    const payload = buildContractPayload(item, req);
     res.json({ ok: true, contract: payload });
   } catch (error) {
     console.error('Blockchain transfer contract payload error:', error);
@@ -374,7 +594,7 @@ router.get('/transfers/:id/contract/render', auth, async (req, res) => {
       return res.status(404).json({ ok: false, message: 'Transfer record not found' });
     }
 
-    const payload = buildContractPayload(item);
+    const payload = buildContractPayload(item, req);
     const html = buildContractHtml(payload);
     res.json({ ok: true, html, contract: payload });
   } catch (error) {
