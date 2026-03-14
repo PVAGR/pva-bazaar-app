@@ -9,6 +9,25 @@ const logger = createLogger('SettlementContractsTab');
 const BASE_CHAIN_ID_DEC = 8453;
 const BASE_CHAIN_ID_HEX = '0x2105';
 const DRAFT_STORAGE_KEY = 'pva:settlement:draft:v1';
+const AUDIT_EVENT_LABELS = {
+  'transfer-recorded': 'Transfer recorded',
+  'transfer-record-updated': 'Transfer record updated',
+  'transfer-finalized': 'Settlement finalized',
+  'contract-finalized': 'Settlement finalized',
+  'contract-exported': 'Contract JSON exported',
+  'contract-exported-json': 'Contract JSON exported',
+  'contract-rendered': 'Contract print rendered',
+  'contract-rendered-print': 'Contract print rendered',
+  'integrity-verified': 'Integrity verified',
+  'verification-report-exported': 'Verification report JSON exported',
+  'verification-report-exported-json': 'Verification report JSON exported',
+  'verification-report-rendered': 'Verification report print rendered',
+  'verification-report-rendered-print': 'Verification report print rendered',
+  'transfer-reverified': 'Re-verified on chain',
+  'reverified-on-chain': 'Re-verified on chain',
+  'handoff-summary-copied': 'Handoff summary copied',
+  'audit-event': 'Audit event',
+};
 
 function isWalletAddress(addr) {
   return /^0x[a-fA-F0-9]{40}$/.test(String(addr || '').trim());
@@ -54,7 +73,7 @@ export default function SettlementContractsTab() {
   const [operationRole, setOperationRole] = useState('operator');
   const [pendingDraft, setPendingDraft] = useState(null);
   const [draftDecisionMade, setDraftDecisionMade] = useState(false);
-  const [auditTrail, setAuditTrail] = useState({});
+  const [auditLog, setAuditLog] = useState({ loading: false, targetId: '', events: [] });
   const [signingRole, setSigningRole] = useState('partyOne');
   const [signingWallet, setSigningWallet] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -141,6 +160,30 @@ export default function SettlementContractsTab() {
   ];
 
   const nextChecklistItem = checklist.find((item) => !item.done);
+  const latestRecord = records.data[0] || null;
+  const timelineEntries = useMemo(() => {
+    if (!latestRecord) return [];
+    const events = Array.isArray(auditLog.events) ? [...auditLog.events] : [];
+    if (!events.length) {
+      return [
+        {
+          key: `recorded-${latestRecord.id}`,
+          title: 'Transfer recorded',
+          when: latestRecord.createdAt,
+          details: null,
+        },
+      ];
+    }
+    return events
+      .slice()
+      .sort((a, b) => new Date(b.eventAt || 0).getTime() - new Date(a.eventAt || 0).getTime())
+      .map((event, index) => ({
+        key: `${event.eventType || 'event'}-${event.eventAt || index}`,
+        title: AUDIT_EVENT_LABELS[event.eventType] || event.eventType || 'Audit event',
+        when: event.eventAt,
+        details: event.details || null,
+      }));
+  }, [auditLog.events, latestRecord]);
   const showWizardStep = (step) => !wizardMode || wizardStep === step;
   const wizardSteps = [
     {
@@ -320,11 +363,50 @@ export default function SettlementContractsTab() {
     }
   }, []);
 
+  const loadAuditLog = useCallback(async (transferId) => {
+    const id = String(transferId || '').trim();
+    if (!id) {
+      setAuditLog({ loading: false, targetId: '', events: [] });
+      return;
+    }
+    setAuditLog((prev) => ({ ...prev, loading: true, targetId: id }));
+    try {
+      const response = await apiGet(`/blockchain/transfers/${id}/audit-log`);
+      if (response?.ok) {
+        setAuditLog({ loading: false, targetId: id, events: Array.isArray(response.events) ? response.events : [] });
+      } else {
+        setAuditLog({ loading: false, targetId: id, events: [] });
+      }
+    } catch {
+      setAuditLog({ loading: false, targetId: id, events: [] });
+    }
+  }, []);
+
+  const appendAuditEvent = useCallback(async (transferId, eventType, details = null) => {
+    const id = String(transferId || '').trim();
+    if (!id || !eventType) return;
+    try {
+      await apiPost(`/blockchain/transfers/${id}/audit-log`, {
+        eventType,
+        actorRole: operationRole,
+        details,
+      });
+      await loadAuditLog(id);
+    } catch {
+      // Ignore non-critical logging failures so core workflow is not blocked.
+    }
+  }, [loadAuditLog, operationRole]);
+
   useEffect(() => {
     loadTransfers();
     loadArtifacts();
     loadTemplates();
   }, [loadTransfers, loadArtifacts, loadTemplates]);
+
+  useEffect(() => {
+    if (!records.data?.length) return;
+    loadAuditLog(records.data[0].id);
+  }, [records.data, loadAuditLog]);
 
   useEffect(() => {
     try {
@@ -593,6 +675,9 @@ export default function SettlementContractsTab() {
         setMessage(`Failed to record transfer: ${response?.message || 'unknown error'}`);
       } else {
         setMessage('Transfer recorded and verified. Contract links are ready.');
+        if (response?.item?.id) {
+          await loadAuditLog(response.item.id);
+        }
         await loadTransfers();
       }
     } catch (err) {
@@ -695,6 +780,7 @@ export default function SettlementContractsTab() {
         setMessage(response?.message || 'Failed to finalize settlement');
       } else {
         setMessage('Settlement finalized and locked. Future edits are blocked for this transfer.');
+        await loadAuditLog(id);
         await loadTransfers();
       }
     } catch (err) {
@@ -718,7 +804,7 @@ export default function SettlementContractsTab() {
       }
       const status = response.integrity?.status || 'unknown';
       setIntegrityStatusById((prev) => ({ ...prev, [id]: status }));
-      setAuditTrail((prev) => ({ ...prev, [id]: { ...(prev[id] || {}), verifiedAt: new Date().toISOString(), status } }));
+      await loadAuditLog(id);
       setMessage(`Integrity check complete: ${status}.`);
       await loadTransfers();
     } catch (err) {
@@ -749,6 +835,7 @@ export default function SettlementContractsTab() {
           child.print();
         }, 350);
       }
+      await loadAuditLog(id);
     } catch (err) {
       setMessage(err.message || 'Failed to render contract');
     }
@@ -768,6 +855,7 @@ export default function SettlementContractsTab() {
       a.download = `settlement-contract-${id}.json`;
       a.click();
       URL.revokeObjectURL(url);
+      await loadAuditLog(id);
     } catch (err) {
       setMessage(err.message || 'Failed to export contract JSON');
     }
@@ -787,6 +875,7 @@ export default function SettlementContractsTab() {
       a.download = `settlement-verification-${id}.json`;
       a.click();
       URL.revokeObjectURL(url);
+      await loadAuditLog(id);
     } catch (err) {
       setMessage(err.message || 'Failed to export verification report');
     }
@@ -813,6 +902,7 @@ export default function SettlementContractsTab() {
           child.print();
         }, 350);
       }
+      await loadAuditLog(id);
     } catch (err) {
       setMessage(err.message || 'Failed to render verification report');
     }
@@ -866,6 +956,10 @@ export default function SettlementContractsTab() {
 
     try {
       await navigator.clipboard.writeText(lines.join('\n'));
+      await appendAuditEvent(item.id, 'handoff-summary-copied', {
+        status: item.status,
+        finalizedAt: item.finalizedAt || null,
+      });
       setMessage('Handoff summary copied for ops team.');
     } catch {
       setMessage('Could not copy handoff summary. Please copy manually.');
@@ -1037,18 +1131,32 @@ export default function SettlementContractsTab() {
         </p>
       </div>
 
-      {records.data[0] ? (
+      {latestRecord ? (
         <div className="timeline-card" role="region" aria-label="Settlement audit timeline">
           <h4>Audit Timeline</h4>
           <div className="timeline-grid">
-            <div><strong>Recorded:</strong> {records.data[0]?.createdAt ? new Date(records.data[0].createdAt).toLocaleString() : 'N/A'}</div>
-            <div><strong>Finalized:</strong> {records.data[0]?.finalizedAt ? new Date(records.data[0].finalizedAt).toLocaleString() : 'Not finalized'}</div>
-            <div><strong>Chain Refresh:</strong> {records.data[0]?.lastCheckedAt ? new Date(records.data[0].lastCheckedAt).toLocaleString() : 'N/A'}</div>
-            <div>
-              <strong>Digest Verified:</strong> {auditTrail[records.data[0].id]?.verifiedAt
-                ? `${new Date(auditTrail[records.data[0].id].verifiedAt).toLocaleString()} (${auditTrail[records.data[0].id].status})`
-                : 'Not yet'}
-            </div>
+            <div><strong>Recorded:</strong> {latestRecord?.createdAt ? new Date(latestRecord.createdAt).toLocaleString() : 'N/A'}</div>
+            <div><strong>Finalized:</strong> {latestRecord?.finalizedAt ? new Date(latestRecord.finalizedAt).toLocaleString() : 'Not finalized'}</div>
+            <div><strong>Chain Refresh:</strong> {latestRecord?.lastCheckedAt ? new Date(latestRecord.lastCheckedAt).toLocaleString() : 'N/A'}</div>
+            <div><strong>Audit Feed:</strong> {auditLog.loading ? 'Refreshing…' : `${timelineEntries.length} events`}</div>
+          </div>
+          <div className="timeline-list" role="list" aria-label="Settlement audit events">
+            {timelineEntries.slice(0, 8).map((entry) => (
+              <div key={entry.key} className="timeline-item" role="listitem">
+                <div className="timeline-item-head">
+                  <strong>{entry.title}</strong>
+                  <span>{entry.when ? new Date(entry.when).toLocaleString() : 'No timestamp'}</span>
+                </div>
+                {entry.details && typeof entry.details === 'object' ? (
+                  <div className="timeline-item-meta">
+                    {Object.entries(entry.details)
+                      .slice(0, 3)
+                      .map(([key, value]) => `${key}: ${String(value)}`)
+                      .join(' | ')}
+                  </div>
+                ) : null}
+              </div>
+            ))}
           </div>
         </div>
       ) : null}

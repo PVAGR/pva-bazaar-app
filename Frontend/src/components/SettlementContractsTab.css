@@ -132,6 +132,39 @@
   font-size: 0.82rem;
 }
 
+.timeline-list {
+  margin-top: 0.6rem;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.timeline-item {
+  border: 1px solid var(--site-border);
+  border-radius: 8px;
+  padding: 0.4rem 0.55rem;
+  background: var(--site-panel-soft);
+}
+
+.timeline-item-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--site-text);
+  font-size: 0.78rem;
+}
+
+.timeline-item-head span {
+  color: var(--site-muted);
+  font-size: 0.72rem;
+}
+
+.timeline-item-meta {
+  margin-top: 0.25rem;
+  color: var(--site-muted);
+  font-size: 0.72rem;
+}
+
 .checklist-card {
   border: 1px solid var(--site-border);
   border-radius: 10px;

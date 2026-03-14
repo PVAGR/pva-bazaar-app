@@ -67,10 +67,31 @@ function toPublicTransfer(transfer) {
     finalizationNote: item.finalizationNote || '',
     finalizedAt: item.finalizedAt || null,
     finalizationDigest: item.finalizationDigest || '',
+    auditEvents: Array.isArray(item.auditEvents) ? item.auditEvents.slice(-30) : [],
+    auditEventCount: Array.isArray(item.auditEvents) ? item.auditEvents.length : 0,
+    lastAuditAt: Array.isArray(item.auditEvents) && item.auditEvents.length
+      ? item.auditEvents[item.auditEvents.length - 1].eventAt
+      : null,
     isFinalized: !!item.finalizedAt,
     createdAt: item.createdAt,
     updatedAt: item.updatedAt,
   };
+}
+
+function appendAuditEvent(record, { eventType, actorId, actorRole, details }) {
+  if (!record || !eventType) return;
+  const cleanType = String(eventType).trim().slice(0, 80);
+  if (!cleanType) return;
+
+  const event = {
+    eventType: cleanType,
+    eventAt: new Date(),
+    actorId: actorId || null,
+    actorRole: String(actorRole || '').trim().slice(0, 60),
+    details: details || null,
+  };
+  const prior = Array.isArray(record.auditEvents) ? record.auditEvents : [];
+  record.auditEvents = [...prior, event].slice(-150);
 }
 
 function parseOptionalUrl(value) {
@@ -552,6 +573,12 @@ router.get('/transfers/public/:id', async (req, res) => {
           partyTwoValid: !!payload.attestation?.partyTwoValid,
           witnessValid: !!payload.attestation?.witnessValid,
         },
+        audit: {
+          eventCount: Array.isArray(item.auditEvents) ? item.auditEvents.length : 0,
+          lastEventAt: Array.isArray(item.auditEvents) && item.auditEvents.length
+            ? item.auditEvents[item.auditEvents.length - 1].eventAt
+            : null,
+        },
         generatedAt: payload.generatedAt,
       },
     });
@@ -584,6 +611,59 @@ router.get('/transfers', auth, async (req, res) => {
   } catch (error) {
     console.error('Blockchain transfers list error:', error);
     res.status(500).json({ ok: false, message: 'Failed to load blockchain transfers' });
+  }
+});
+
+// GET /api/blockchain/transfers/:id/audit-log - persistent audit events for a transfer
+router.get('/transfers/:id/audit-log', auth, async (req, res) => {
+  try {
+    const item = await BlockchainTransfer.findById(req.params.id).select('auditEvents txHash finalizedAt status createdAt updatedAt');
+    if (!item) {
+      return res.status(404).json({ ok: false, message: 'Transfer record not found' });
+    }
+    const events = Array.isArray(item.auditEvents) ? item.auditEvents.slice(-100) : [];
+    res.json({
+      ok: true,
+      transferId: String(item._id),
+      txHash: item.txHash,
+      status: item.status,
+      finalizedAt: item.finalizedAt || null,
+      events,
+    });
+  } catch (error) {
+    console.error('Blockchain transfer audit log error:', error);
+    res.status(500).json({ ok: false, message: 'Failed to load audit log', error: error.message });
+  }
+});
+
+// POST /api/blockchain/transfers/:id/audit-log - append operational audit event
+router.post('/transfers/:id/audit-log', auth, async (req, res) => {
+  try {
+    const item = await BlockchainTransfer.findById(req.params.id);
+    if (!item) {
+      return res.status(404).json({ ok: false, message: 'Transfer record not found' });
+    }
+    const eventType = String(req.body?.eventType || '').trim();
+    if (!eventType) {
+      return res.status(400).json({ ok: false, message: 'eventType is required' });
+    }
+
+    appendAuditEvent(item, {
+      eventType,
+      actorId: req.user.id,
+      actorRole: String(req.body?.actorRole || 'operator'),
+      details: req.body?.details || null,
+    });
+    await item.save();
+
+    res.json({
+      ok: true,
+      message: 'Audit event recorded',
+      events: Array.isArray(item.auditEvents) ? item.auditEvents.slice(-100) : [],
+    });
+  } catch (error) {
+    console.error('Blockchain transfer audit append error:', error);
+    res.status(500).json({ ok: false, message: 'Failed to append audit event', error: error.message });
   }
 });
 
@@ -725,6 +805,18 @@ router.post('/transfers/record', auth, async (req, res) => {
       { upsert: true, new: true }
     );
 
+    appendAuditEvent(item, {
+      eventType: existing ? 'transfer-record-updated' : 'transfer-recorded',
+      actorId: req.user.id,
+      actorRole: 'operator',
+      details: {
+        status: item.status,
+        amountUsd: item.amountUsd,
+        artifactId: item.artifactId || null,
+      },
+    });
+    await item.save();
+
     res.json({
       ok: true,
       message: 'Blockchain transfer record saved',
@@ -787,6 +879,16 @@ router.post('/transfers/:id/finalize', auth, async (req, res) => {
     item.contractVersion = item.contractVersion || 'v3';
     item.finalizationSnapshot = buildFinalizationSnapshot(item);
     item.finalizationDigest = computeFinalizationDigest(item.finalizationSnapshot);
+    appendAuditEvent(item, {
+      eventType: 'transfer-finalized',
+      actorId: req.user.id,
+      actorRole: 'operator',
+      details: {
+        digest: item.finalizationDigest,
+        partyOneSignerName: item.signatures.partyOneSignerName,
+        partyTwoSignerName: item.signatures.partyTwoSignerName,
+      },
+    });
     await item.save();
 
     res.json({ ok: true, message: 'Settlement finalized and locked', item: toPublicTransfer(item) });
@@ -804,6 +906,13 @@ router.get('/transfers/:id/verify-integrity', auth, async (req, res) => {
       return res.status(404).json({ ok: false, message: 'Transfer record not found' });
     }
     const integrity = buildIntegrityCheck(item);
+    appendAuditEvent(item, {
+      eventType: 'integrity-verified',
+      actorId: req.user.id,
+      actorRole: 'reviewer',
+      details: { status: integrity.status },
+    });
+    await item.save();
     res.json({ ok: true, integrity, item: toPublicTransfer(item) });
   } catch (error) {
     console.error('Blockchain transfer integrity verify error:', error);
@@ -819,6 +928,13 @@ router.get('/transfers/:id/verification-report', auth, async (req, res) => {
       return res.status(404).json({ ok: false, message: 'Transfer record not found' });
     }
     const report = buildVerificationReport(item, req);
+    appendAuditEvent(item, {
+      eventType: 'verification-report-exported',
+      actorId: req.user.id,
+      actorRole: 'reviewer',
+      details: { format: 'json' },
+    });
+    await item.save();
     res.json({ ok: true, report });
   } catch (error) {
     console.error('Blockchain transfer verification report error:', error);
@@ -835,6 +951,13 @@ router.get('/transfers/:id/verification-report/render', auth, async (req, res) =
     }
     const report = buildVerificationReport(item, req);
     const html = buildVerificationReportHtml(report);
+    appendAuditEvent(item, {
+      eventType: 'verification-report-rendered',
+      actorId: req.user.id,
+      actorRole: 'reviewer',
+      details: { format: 'html' },
+    });
+    await item.save();
     res.json({ ok: true, report, html });
   } catch (error) {
     console.error('Blockchain transfer verification render error:', error);
@@ -860,6 +983,12 @@ router.post('/transfers/:id/reverify', auth, async (req, res) => {
     item.explorerUrl = getExplorerTxUrl(item.network, item.txHash);
     item.lastCheckedAt = new Date();
     item.rawError = chainResult.found ? '' : 'Transaction not found on configured RPC';
+    appendAuditEvent(item, {
+      eventType: 'transfer-reverified',
+      actorId: req.user.id,
+      actorRole: 'reviewer',
+      details: { status: item.status, blockNumber: item.blockNumber || null },
+    });
     await item.save();
 
     res.json({ ok: true, message: 'Transfer status refreshed', item: toPublicTransfer(item) });
@@ -878,6 +1007,13 @@ router.get('/transfers/:id/contract', auth, async (req, res) => {
     }
 
     const payload = buildContractPayload(item, req);
+    appendAuditEvent(item, {
+      eventType: 'contract-exported',
+      actorId: req.user.id,
+      actorRole: 'operator',
+      details: { format: 'json' },
+    });
+    await item.save();
     res.json({ ok: true, contract: payload });
   } catch (error) {
     console.error('Blockchain transfer contract payload error:', error);
@@ -895,6 +1031,13 @@ router.get('/transfers/:id/contract/render', auth, async (req, res) => {
 
     const payload = buildContractPayload(item, req);
     const html = buildContractHtml(payload);
+    appendAuditEvent(item, {
+      eventType: 'contract-rendered',
+      actorId: req.user.id,
+      actorRole: 'operator',
+      details: { format: 'html' },
+    });
+    await item.save();
     res.json({ ok: true, html, contract: payload });
   } catch (error) {
     console.error('Blockchain transfer contract render error:', error);

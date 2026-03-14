@@ -358,6 +358,27 @@ const ApiDocsTab = React.memo(function ApiDocsTab() {
         },
         {
           method: 'GET',
+          path: '/api/blockchain/transfers/:id/audit-log',
+          description: 'Get persistent, server-backed settlement audit events for timeline and compliance review',
+          auth: 'Required (JWT)',
+          example: `${apiBase}/api/blockchain/transfers/67cfe8d5e6.../audit-log`
+        },
+        {
+          method: 'POST',
+          path: '/api/blockchain/transfers/:id/audit-log',
+          description: 'Append a custom audit event (operator/reviewer/auditor actions not auto-captured by core endpoints)',
+          auth: 'Required (JWT)',
+          body: {
+            eventType: 'handoff-summary-copied',
+            actorRole: 'operator',
+            details: {
+              status: 'verified',
+              note: 'Copied for off-platform compliance handoff.'
+            }
+          }
+        },
+        {
+          method: 'GET',
           path: '/api/blockchain/transfers/:id/contract',
           description: 'Get settlement contract payload (JSON), including trace URLs, QR links, and finalization digest',
           auth: 'Required (JWT)',
