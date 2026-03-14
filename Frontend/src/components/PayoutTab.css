@@ -421,6 +421,95 @@
   border-color: color-mix(in srgb, var(--site-success-text) 45%, transparent);
 }
 
+.payout-policy-test {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.policy-card {
+  border: 1px solid var(--site-border);
+  border-radius: 10px;
+  background: var(--site-panel);
+  padding: 0.9rem;
+}
+
+.policy-card h3 {
+  margin: 0 0 0.45rem;
+  color: var(--site-accent-strong);
+  font-size: 1rem;
+}
+
+.policy-card p {
+  margin: 0 0 0.7rem;
+  color: var(--site-text-muted);
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.policy-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.55rem;
+}
+
+.policy-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  color: var(--site-text-muted);
+  font-size: 0.8rem;
+}
+
+.policy-grid input,
+.policy-grid select,
+.policy-grid textarea {
+  border: 1px solid var(--site-border);
+  border-radius: 8px;
+  background: var(--site-panel-soft);
+  color: var(--site-text);
+  padding: 0.5rem 0.62rem;
+  font-size: 0.85rem;
+}
+
+.policy-grid textarea {
+  resize: vertical;
+}
+
+.policy-checkbox {
+  justify-content: center;
+}
+
+.policy-checkbox input {
+  margin-right: 0.35rem;
+}
+
+.policy-span-2 {
+  grid-column: span 2;
+}
+
+.policy-actions {
+  margin-top: 0.7rem;
+  display: flex;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.policy-msg {
+  margin-top: 0.6rem;
+  border: 1px solid var(--site-border);
+  border-radius: 8px;
+  background: var(--site-panel-soft);
+  color: var(--site-text);
+  padding: 0.55rem 0.65rem;
+  font-size: 0.84rem;
+}
+
+@media (max-width: 700px) {
+  .policy-span-2 {
+    grid-column: span 1;
+  }
+}
+
 .btn-action.fail {
   background: var(--site-danger-bg);
   color: var(--site-danger-text);

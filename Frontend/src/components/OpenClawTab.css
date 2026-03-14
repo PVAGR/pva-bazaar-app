@@ -309,6 +309,60 @@
   border: 1px solid rgba(255, 70, 70, 0.22);
 }
 
+.oc-config-box {
+  margin-top: 14px;
+  padding: 12px;
+  border: 1px solid var(--site-border, rgba(255, 255, 255, 0.12));
+  border-radius: 10px;
+  background: var(--site-panel, rgba(255, 255, 255, 0.04));
+}
+
+.oc-config-title {
+  margin: 0;
+  font-size: 0.96rem;
+  color: var(--site-text, #fff);
+}
+
+.oc-config-note {
+  margin: 8px 0 10px;
+  font-size: 0.82rem;
+  color: var(--site-text-dim, #aaa);
+}
+
+.oc-config-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.oc-config-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: var(--site-text-dim, #aaa);
+}
+
+.oc-config-grid input {
+  border: 1px solid var(--site-border, rgba(255, 255, 255, 0.12));
+  border-radius: 8px;
+  background: var(--site-panel-soft, rgba(255, 255, 255, 0.02));
+  color: var(--site-text, #fff);
+  padding: 8px 10px;
+}
+
+.oc-config-grid input:focus {
+  outline: none;
+  border-color: var(--site-accent, #00d9ff);
+}
+
+.oc-config-actions {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 @keyframes oc-fadein {
   from { opacity: 0; transform: translateY(-4px); }
   to   { opacity: 1; transform: translateY(0); }

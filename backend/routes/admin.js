@@ -1,9 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const auth = require('../middleware/auth');
 const adminOnly = require('../middleware/adminOnly');
 const adminSession = require('../middleware/adminSession');
+const AdminRuntimeConfig = require('../models/AdminRuntimeConfig');
+const { createSystemEvent, dispatchToOpenClaw } = require('../utils/openclaw-events');
 
 const ALLOWED_USER_SORT_FIELDS = new Set(['createdAt', 'updatedAt', 'name', 'email', 'username', 'role']);
 
@@ -69,6 +72,172 @@ router.get('/status', (req, res, next) => {
 // GET /api/admin/secure-status - Check admin session via cookie
 router.get('/secure-status', adminSession, (req, res) => {
   res.json({ ok: true, status: 'admin-ok', user: req.admin, timestamp: new Date().toISOString() });
+});
+
+function buildDigest(payload) {
+  return crypto.createHash('sha256').update(JSON.stringify(payload)).digest('hex');
+}
+
+function sanitizeRuntimeConfig(doc) {
+  if (!doc) return null;
+  return {
+    key: doc.key,
+    openclaw: {
+      gatewayUrl: doc.openclaw?.gatewayUrl || '',
+      webhookUrl: doc.openclaw?.webhookUrl || '',
+      healthUrl: doc.openclaw?.healthUrl || '',
+      apiKeySet: Boolean(doc.openclaw?.apiKey),
+      bridgeSecretSet: Boolean(doc.openclaw?.bridgeSecret),
+      workerName: doc.openclaw?.workerName || 'openclaw-queue-dispatcher',
+      workerPollMs: doc.openclaw?.workerPollMs || 10000,
+      workerBatchSize: doc.openclaw?.workerBatchSize || 15,
+    },
+    payoutPolicy: {
+      minUsd: doc.payoutPolicy?.minUsd ?? 5,
+      maxUsd: doc.payoutPolicy?.maxUsd ?? 50000,
+      minSol: doc.payoutPolicy?.minSol ?? 0.001,
+      maxSol: doc.payoutPolicy?.maxSol ?? 50,
+      requireAllowlist: Boolean(doc.payoutPolicy?.requireAllowlist),
+      walletAllowlist: Array.isArray(doc.payoutPolicy?.walletAllowlist)
+        ? doc.payoutPolicy.walletAllowlist
+        : [],
+      network: doc.payoutPolicy?.network || 'devnet',
+      treasuryWallet: doc.payoutPolicy?.treasuryWallet || '',
+      notes: doc.payoutPolicy?.notes || '',
+    },
+    auditTrail: Array.isArray(doc.auditTrail) ? doc.auditTrail.slice(-20) : [],
+    updatedAt: doc.updatedAt || null,
+    createdAt: doc.createdAt || null,
+  };
+}
+
+async function getOrCreateRuntimeConfig() {
+  let doc = await AdminRuntimeConfig.findOne({ key: 'default' });
+  if (!doc) {
+    doc = await AdminRuntimeConfig.create({ key: 'default' });
+  }
+  return doc;
+}
+
+router.get('/runtime-config', adminSession, async (req, res) => {
+  try {
+    const doc = await getOrCreateRuntimeConfig();
+    return res.json({ ok: true, config: sanitizeRuntimeConfig(doc) });
+  } catch (error) {
+    console.error('Admin runtime-config GET error:', error);
+    return res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.put('/runtime-config/openclaw', adminSession, async (req, res) => {
+  try {
+    const doc = await getOrCreateRuntimeConfig();
+    const body = req.body || {};
+    const nextOpenclaw = {
+      ...doc.openclaw?.toObject?.(),
+      gatewayUrl: String(body.gatewayUrl || '').trim(),
+      webhookUrl: String(body.webhookUrl || '').trim(),
+      healthUrl: String(body.healthUrl || '').trim(),
+      workerName: String(body.workerName || 'openclaw-queue-dispatcher').trim() || 'openclaw-queue-dispatcher',
+      workerPollMs: Math.max(parseInt(body.workerPollMs || '10000', 10), 2000),
+      workerBatchSize: Math.min(Math.max(parseInt(body.workerBatchSize || '15', 10), 1), 100),
+      apiKey: typeof body.apiKey === 'string' ? body.apiKey.trim() : (doc.openclaw?.apiKey || ''),
+      bridgeSecret: typeof body.bridgeSecret === 'string' ? body.bridgeSecret.trim() : (doc.openclaw?.bridgeSecret || ''),
+    };
+
+    doc.openclaw = nextOpenclaw;
+    const digest = buildDigest({ openclaw: { ...nextOpenclaw, apiKey: Boolean(nextOpenclaw.apiKey), bridgeSecret: Boolean(nextOpenclaw.bridgeSecret) } });
+    doc.auditTrail.push({
+      at: new Date(),
+      actor: req.admin?.email || req.admin?.id || 'unknown-admin',
+      action: 'openclaw-config-update',
+      digest,
+    });
+    await doc.save();
+
+    // Apply runtime overrides immediately for this process.
+    process.env.OPENCLAW_GATEWAY_URL = nextOpenclaw.gatewayUrl || '';
+    process.env.OPENCLAW_WEBHOOK_URL = nextOpenclaw.webhookUrl || '';
+    process.env.OPENCLAW_HEALTH_URL = nextOpenclaw.healthUrl || '';
+    process.env.OPENCLAW_API_KEY = nextOpenclaw.apiKey || '';
+    process.env.OPENCLAW_BRIDGE_SECRET = nextOpenclaw.bridgeSecret || '';
+    process.env.OPENCLAW_WORKER_NAME = nextOpenclaw.workerName || 'openclaw-queue-dispatcher';
+    process.env.OPENCLAW_WORKER_POLL_MS = String(nextOpenclaw.workerPollMs || 10000);
+    process.env.OPENCLAW_WORKER_BATCH_SIZE = String(nextOpenclaw.workerBatchSize || 15);
+
+    const event = createSystemEvent('info', 'OpenClaw config updated in admin runtime-config', {
+      actor: req.admin?.email || req.admin?.id || 'unknown-admin',
+      digest,
+      workerName: nextOpenclaw.workerName,
+      workerPollMs: nextOpenclaw.workerPollMs,
+      workerBatchSize: nextOpenclaw.workerBatchSize,
+    });
+    dispatchToOpenClaw(event, console.log).catch(() => {});
+
+    return res.json({ ok: true, config: sanitizeRuntimeConfig(doc) });
+  } catch (error) {
+    console.error('Admin runtime-config openclaw PUT error:', error);
+    return res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.put('/runtime-config/payout-policy', adminSession, async (req, res) => {
+  try {
+    const doc = await getOrCreateRuntimeConfig();
+    const body = req.body || {};
+    const wallets = Array.isArray(body.walletAllowlist)
+      ? body.walletAllowlist.map(v => String(v || '').trim()).filter(Boolean)
+      : [];
+
+    const minUsd = Math.max(parseFloat(body.minUsd ?? 5), 0.01);
+    const maxUsd = Math.max(parseFloat(body.maxUsd ?? 50000), minUsd);
+    const minSol = Math.max(parseFloat(body.minSol ?? 0.001), 0.000001);
+    const maxSol = Math.max(parseFloat(body.maxSol ?? 50), minSol);
+
+    doc.payoutPolicy = {
+      minUsd,
+      maxUsd,
+      minSol,
+      maxSol,
+      requireAllowlist: body.requireAllowlist === true,
+      walletAllowlist: wallets,
+      network: String(body.network || 'devnet').trim() || 'devnet',
+      treasuryWallet: String(body.treasuryWallet || '').trim(),
+      notes: String(body.notes || '').trim(),
+    };
+
+    const digest = buildDigest({ payoutPolicy: doc.payoutPolicy });
+    doc.auditTrail.push({
+      at: new Date(),
+      actor: req.admin?.email || req.admin?.id || 'unknown-admin',
+      action: 'payout-policy-update',
+      digest,
+    });
+    await doc.save();
+
+    // Apply compatible runtime overrides immediately for this process.
+    process.env.SOLANA_TEST_MAX_USD = String(maxUsd);
+    process.env.SOLANA_TEST_MAX_SOL = String(maxSol);
+    process.env.SOLANA_CLUSTER = doc.payoutPolicy.network || process.env.SOLANA_CLUSTER || 'devnet';
+    process.env.SOLANA_TEST_REQUIRE_ALLOWLIST = doc.payoutPolicy.requireAllowlist ? 'true' : 'false';
+    process.env.SOLANA_TEST_WALLET_ALLOWLIST = (doc.payoutPolicy.walletAllowlist || []).join(',');
+
+    const event = createSystemEvent('info', 'OpenClaw payout policy updated in admin runtime-config', {
+      actor: req.admin?.email || req.admin?.id || 'unknown-admin',
+      digest,
+      minUsd,
+      maxUsd,
+      minSol,
+      maxSol,
+      allowlistSize: wallets.length,
+    });
+    dispatchToOpenClaw(event, console.log).catch(() => {});
+
+    return res.json({ ok: true, config: sanitizeRuntimeConfig(doc) });
+  } catch (error) {
+    console.error('Admin runtime-config payout-policy PUT error:', error);
+    return res.status(500).json({ ok: false, error: error.message });
+  }
 });
 
 // ========================================

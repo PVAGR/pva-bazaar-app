@@ -9,6 +9,8 @@
   "scripts": {
     "start": "node api/index.js",
     "dev": "nodemon api/index.js",
+    "openclaw:worker": "node scripts/openclaw-queue-worker.js",
+    "openclaw:worker:dev": "nodemon scripts/openclaw-queue-worker.js",
     "build": "echo \"Serverless build\"",
     "seed": "node seed.js",
     "smoke:openclaw": "node scripts/smoke-openclaw.js",

@@ -7,6 +7,12 @@ export const apiPost = (path, body, config) => api.post(path, body, config).then
 export const apiPut = (path, body, config) => api.put(path, body, config).then(r => r.data);
 export const apiDelete = (path, config) => api.delete(path, config).then(r => r.data);
 
+export const fetchAdminRuntimeConfig = () => apiGet('/admin/runtime-config');
+export const updateOpenClawRuntimeConfig = (payload) => apiPut('/admin/runtime-config/openclaw', payload);
+export const updatePayoutRuntimePolicy = (payload) => apiPut('/admin/runtime-config/payout-policy', payload);
+export const requestSolanaTestPayout = (payload) => apiPost('/solana/test-payout', payload);
+export const confirmSolanaTestPayout = (payload) => apiPost('/solana/confirm-test-payout', payload);
+
 /**
  * Upload a FormData payload (multipart/form-data).
  * Uses native fetch so the browser can set the correct Content-Type boundary.

@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { apiGet, apiPost } from '../lib/api';
+import {
+  apiGet,
+  apiPost,
+  fetchAdminRuntimeConfig,
+  updatePayoutRuntimePolicy,
+  requestSolanaTestPayout,
+  confirmSolanaTestPayout,
+} from '../lib/api';
 import './PayoutTab.css';
 
 export default function PayoutTab() {
@@ -8,7 +15,7 @@ export default function PayoutTab() {
   const [selectedPayout, setSelectedPayout] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [tab, setTab] = useState('summary'); // summary, list, generate, creator-history
+  const [tab, setTab] = useState('summary'); // summary, list, generate, creator-history, policy-test
   const [filter, setFilter] = useState({ status: 'all' });
 
   // For generating new payouts
@@ -20,11 +27,58 @@ export default function PayoutTab() {
 
   const [creatorHandle, setCreatorHandle] = useState('');
   const [creatorPayouts, setCreatorPayouts] = useState([]);
+  const [policySaving, setPolicySaving] = useState(false);
+  const [policyMessage, setPolicyMessage] = useState('');
+  const [policyForm, setPolicyForm] = useState({
+    minUsd: 5,
+    maxUsd: 50000,
+    minSol: 0.001,
+    maxSol: 50,
+    requireAllowlist: false,
+    walletAllowlist: '',
+    network: 'devnet',
+    treasuryWallet: '',
+    notes: '',
+  });
+  const [testForm, setTestForm] = useState({
+    walletAddress: '',
+    amountSol: '0.01',
+    amountUsd: '5',
+    artifactId: '',
+    artifactTitle: '',
+    ritualId: '',
+  });
+  const [testResult, setTestResult] = useState(null);
+  const [confirmForm, setConfirmForm] = useState({ payoutId: '', txSignature: '' });
+  const [confirmResult, setConfirmResult] = useState(null);
 
   useEffect(() => {
     fetchSummary();
     fetchPayouts();
+    loadRuntimePolicy();
   }, []);
+
+  const loadRuntimePolicy = async () => {
+    try {
+      const data = await fetchAdminRuntimeConfig();
+      const policy = data?.config?.payoutPolicy;
+      if (data?.ok && policy) {
+        setPolicyForm({
+          minUsd: policy.minUsd ?? 5,
+          maxUsd: policy.maxUsd ?? 50000,
+          minSol: policy.minSol ?? 0.001,
+          maxSol: policy.maxSol ?? 50,
+          requireAllowlist: Boolean(policy.requireAllowlist),
+          walletAllowlist: Array.isArray(policy.walletAllowlist) ? policy.walletAllowlist.join('\n') : '',
+          network: policy.network || 'devnet',
+          treasuryWallet: policy.treasuryWallet || '',
+          notes: policy.notes || '',
+        });
+      }
+    } catch (err) {
+      console.error('Error loading runtime payout policy:', err);
+    }
+  };
 
   const fetchSummary = async () => {
     try {
@@ -100,6 +154,74 @@ export default function PayoutTab() {
 
   const formatCurrency = (cents) => `$${(cents / 100).toFixed(2)}`;
 
+  const handleSavePolicy = async () => {
+    setPolicySaving(true);
+    setPolicyMessage('');
+    try {
+      const payload = {
+        minUsd: Number(policyForm.minUsd || 5),
+        maxUsd: Number(policyForm.maxUsd || 50000),
+        minSol: Number(policyForm.minSol || 0.001),
+        maxSol: Number(policyForm.maxSol || 50),
+        requireAllowlist: policyForm.requireAllowlist,
+        walletAllowlist: policyForm.walletAllowlist
+          .split(/\r?\n|,/)
+          .map((v) => v.trim())
+          .filter(Boolean),
+        network: policyForm.network,
+        treasuryWallet: policyForm.treasuryWallet,
+        notes: policyForm.notes,
+      };
+      const data = await updatePayoutRuntimePolicy(payload);
+      if (data?.ok) {
+        setPolicyMessage('✅ Runtime payout policy saved.');
+      } else {
+        setPolicyMessage(`❌ ${data?.error || 'Failed to save payout policy.'}`);
+      }
+    } catch (err) {
+      setPolicyMessage(`❌ ${err?.response?.data?.error || err.message || 'Failed to save payout policy.'}`);
+    } finally {
+      setPolicySaving(false);
+    }
+  };
+
+  const handleRequestTestPayout = async () => {
+    try {
+      const payload = {
+        walletAddress: testForm.walletAddress,
+        amountSol: Number(testForm.amountSol),
+        amountUsd: Number(testForm.amountUsd),
+        artifactId: testForm.artifactId,
+        artifactTitle: testForm.artifactTitle,
+        ritualId: testForm.ritualId,
+      };
+      const data = await requestSolanaTestPayout(payload);
+      if (data?.ok) {
+        setTestResult(data);
+        if (data?.payout?.id) {
+          setConfirmForm((prev) => ({ ...prev, payoutId: data.payout.id }));
+        }
+      } else {
+        setTestResult({ ok: false, error: data?.error || 'Request failed' });
+      }
+    } catch (err) {
+      setTestResult({ ok: false, error: err?.response?.data?.error || err.message || 'Request failed' });
+    }
+  };
+
+  const handleConfirmTestPayout = async () => {
+    try {
+      const payload = {
+        payoutId: confirmForm.payoutId,
+        txSignature: confirmForm.txSignature,
+      };
+      const data = await confirmSolanaTestPayout(payload);
+      setConfirmResult(data);
+    } catch (err) {
+      setConfirmResult({ ok: false, error: err?.response?.data?.error || err.message || 'Confirmation failed' });
+    }
+  };
+
   if (loading && !summary) {
     return <div className="payout-tab loading">Loading payout data...</div>;
   }
@@ -161,6 +283,9 @@ export default function PayoutTab() {
         </button>
         <button className={tab === 'creator-history' ? 'active' : ''} onClick={() => setTab('creator-history')}>
           👤 Creator History
+        </button>
+        <button className={tab === 'policy-test' ? 'active' : ''} onClick={() => setTab('policy-test')}>
+          🧪 Policy + Test Transfer
         </button>
       </div>
 
@@ -424,6 +549,136 @@ export default function PayoutTab() {
               </table>
             </div>
           )}
+        </div>
+      )}
+
+      {tab === 'policy-test' && (
+        <div className="payout-policy-test">
+          <div className="policy-card">
+            <h3>Runtime Payout Policy</h3>
+            <p>
+              Set the allowed transfer range. Current intended range can be configured from $5 up to $50,000,
+              but transfers are only from funded treasury wallets and still require valid on-chain signatures.
+            </p>
+            <div className="policy-grid">
+              <label>
+                Min USD
+                <input type="number" value={policyForm.minUsd} onChange={(e) => setPolicyForm((prev) => ({ ...prev, minUsd: e.target.value }))} />
+              </label>
+              <label>
+                Max USD
+                <input type="number" value={policyForm.maxUsd} onChange={(e) => setPolicyForm((prev) => ({ ...prev, maxUsd: e.target.value }))} />
+              </label>
+              <label>
+                Min SOL
+                <input type="number" step="0.000001" value={policyForm.minSol} onChange={(e) => setPolicyForm((prev) => ({ ...prev, minSol: e.target.value }))} />
+              </label>
+              <label>
+                Max SOL
+                <input type="number" step="0.000001" value={policyForm.maxSol} onChange={(e) => setPolicyForm((prev) => ({ ...prev, maxSol: e.target.value }))} />
+              </label>
+              <label>
+                Network
+                <select value={policyForm.network} onChange={(e) => setPolicyForm((prev) => ({ ...prev, network: e.target.value }))}>
+                  <option value="devnet">devnet</option>
+                  <option value="testnet">testnet</option>
+                  <option value="mainnet-beta">mainnet-beta</option>
+                </select>
+              </label>
+              <label>
+                Treasury Wallet
+                <input type="text" value={policyForm.treasuryWallet} onChange={(e) => setPolicyForm((prev) => ({ ...prev, treasuryWallet: e.target.value }))} />
+              </label>
+              <label className="policy-checkbox">
+                <input
+                  type="checkbox"
+                  checked={policyForm.requireAllowlist}
+                  onChange={(e) => setPolicyForm((prev) => ({ ...prev, requireAllowlist: e.target.checked }))}
+                />
+                Require allowlist
+              </label>
+              <label className="policy-span-2">
+                Wallet Allowlist (comma or newline separated)
+                <textarea rows="3" value={policyForm.walletAllowlist} onChange={(e) => setPolicyForm((prev) => ({ ...prev, walletAllowlist: e.target.value }))} />
+              </label>
+              <label className="policy-span-2">
+                Notes
+                <textarea rows="2" value={policyForm.notes} onChange={(e) => setPolicyForm((prev) => ({ ...prev, notes: e.target.value }))} />
+              </label>
+            </div>
+            <div className="policy-actions">
+              <button className="btn-secondary" onClick={loadRuntimePolicy}>Reload Policy</button>
+              <button className="btn-primary" onClick={handleSavePolicy} disabled={policySaving}>
+                {policySaving ? 'Saving...' : 'Save Policy'}
+              </button>
+            </div>
+            {policyMessage ? <div className="policy-msg">{policyMessage}</div> : null}
+          </div>
+
+          <div className="policy-card">
+            <h3>Request Test Transfer</h3>
+            <p>Create a test payout request, then confirm it with the blockchain tx signature.</p>
+            <div className="policy-grid">
+              <label>
+                Recipient Wallet
+                <input type="text" value={testForm.walletAddress} onChange={(e) => setTestForm((prev) => ({ ...prev, walletAddress: e.target.value }))} />
+              </label>
+              <label>
+                Amount USD
+                <input type="number" value={testForm.amountUsd} onChange={(e) => setTestForm((prev) => ({ ...prev, amountUsd: e.target.value }))} />
+              </label>
+              <label>
+                Amount SOL
+                <input type="number" step="0.000001" value={testForm.amountSol} onChange={(e) => setTestForm((prev) => ({ ...prev, amountSol: e.target.value }))} />
+              </label>
+              <label>
+                Artifact ID
+                <input type="text" value={testForm.artifactId} onChange={(e) => setTestForm((prev) => ({ ...prev, artifactId: e.target.value }))} />
+              </label>
+              <label>
+                Artifact Title
+                <input type="text" value={testForm.artifactTitle} onChange={(e) => setTestForm((prev) => ({ ...prev, artifactTitle: e.target.value }))} />
+              </label>
+              <label>
+                Ritual ID
+                <input type="text" value={testForm.ritualId} onChange={(e) => setTestForm((prev) => ({ ...prev, ritualId: e.target.value }))} />
+              </label>
+            </div>
+            <div className="policy-actions">
+              <button className="btn-primary" onClick={handleRequestTestPayout}>Request Test Payout</button>
+            </div>
+            {testResult && (
+              <div className="policy-msg">
+                {testResult.ok
+                  ? `✅ Requested. Payout ID: ${testResult?.payout?.id || 'n/a'}`
+                  : `❌ ${testResult.error || 'Request failed'}`}
+              </div>
+            )}
+          </div>
+
+          <div className="policy-card">
+            <h3>Confirm Test Transfer</h3>
+            <div className="policy-grid">
+              <label>
+                Payout ID
+                <input type="text" value={confirmForm.payoutId} onChange={(e) => setConfirmForm((prev) => ({ ...prev, payoutId: e.target.value }))} />
+              </label>
+              <label className="policy-span-2">
+                Transaction Signature
+                <input type="text" value={confirmForm.txSignature} onChange={(e) => setConfirmForm((prev) => ({ ...prev, txSignature: e.target.value }))} />
+              </label>
+            </div>
+            <div className="policy-actions">
+              <button className="btn-primary" onClick={handleConfirmTestPayout}>Confirm On-Chain Status</button>
+            </div>
+            {confirmResult && (
+              <div className="policy-msg">
+                {confirmResult.ok
+                  ? `✅ Status: ${confirmResult?.payout?.status || 'unknown'} (${confirmResult?.rpc?.confirmationStatus || 'n/a'})`
+                  : `❌ ${confirmResult.error || 'Confirmation failed'}`}
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

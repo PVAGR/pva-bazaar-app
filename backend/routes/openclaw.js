@@ -197,6 +197,44 @@ async function getQueueStats() {
   };
 }
 
+async function getWorkerStatus() {
+  try {
+    await dbConnect();
+    const OpenClawWorkerLease = require('../models/OpenClawWorkerLease');
+    const workerName = process.env.OPENCLAW_WORKER_NAME || 'openclaw-queue-dispatcher';
+    const lease = await OpenClawWorkerLease.findOne({ name: workerName }).lean();
+
+    if (!lease) {
+      return {
+        configured: true,
+        name: workerName,
+        active: false,
+        holderId: null,
+        leaseUntil: null,
+        heartbeatAt: null,
+      };
+    }
+
+    const now = Date.now();
+    const leaseUntilMs = lease.leaseUntil ? new Date(lease.leaseUntil).getTime() : 0;
+
+    return {
+      configured: true,
+      name: lease.name,
+      active: leaseUntilMs > now,
+      holderId: lease.holderId || null,
+      leaseUntil: lease.leaseUntil || null,
+      heartbeatAt: lease.heartbeatAt || null,
+    };
+  } catch (_err) {
+    return {
+      configured: true,
+      active: false,
+      error: 'worker status unavailable',
+    };
+  }
+}
+
 async function saveMessage(payload) {
   try {
     await dbConnect();
@@ -238,6 +276,13 @@ router.get('/status', async (_req, res) => {
     // best-effort
   }
 
+  let worker = null;
+  try {
+    worker = await getWorkerStatus();
+  } catch (_err) {
+    // best-effort
+  }
+
   const mode = config.webhookConfigured ? 'webhook+queue' : 'queue-only';
   const statusMsg = config.webhookConfigured
     ? (reachable ? `Gateway reachable (${mode})` : `Gateway unreachable — events queued`)
@@ -259,6 +304,7 @@ router.get('/status', async (_req, res) => {
       inbound: queue.inboundCount,
       latestAt: queue.latestOutboundAt,
     } : null,
+    worker,
     timestamp: new Date().toISOString(),
     ...(detail ? { detail } : {}),
   });
@@ -467,8 +513,10 @@ router.post('/dispatch', async (req, res) => {
     });
   }
 
+  let storedOutbound = null;
+
   try {
-    const storedOutbound = await saveMessage({
+    storedOutbound = await saveMessage({
       direction: 'outbound',
       content: message || event,
       event: event || 'pvabazaar.dispatch',
@@ -506,6 +554,23 @@ router.post('/dispatch', async (req, res) => {
       timeout: 12000,
     });
 
+    if (storedOutbound) {
+      await dbConnect();
+      const OpenClawMessage = require('../models/OpenClawMessage');
+      await OpenClawMessage.updateOne(
+        { _id: storedOutbound._id },
+        {
+          $set: {
+            'metadata.webhookForwardedAt': new Date().toISOString(),
+            'metadata.webhookForwardStatus': 'ok',
+            'metadata.lastWebhookHttpStatus': forward.status,
+            'metadata.lastWebhookAttemptAt': new Date().toISOString(),
+            'metadata.webhookAttemptCount': 1,
+          },
+        },
+      );
+    }
+
     return res.json({
       ok: true,
       forwarded: true,
@@ -515,6 +580,28 @@ router.post('/dispatch', async (req, res) => {
       timestamp: new Date().toISOString(),
     });
   } catch (err) {
+    if (storedOutbound) {
+      try {
+        await dbConnect();
+        const OpenClawMessage = require('../models/OpenClawMessage');
+        const detail = err?.response?.data || err.message || 'Unknown dispatch error';
+        await OpenClawMessage.updateOne(
+          { _id: storedOutbound._id },
+          {
+            $set: {
+              'metadata.webhookForwardStatus': 'failed',
+              'metadata.lastWebhookAttemptAt': new Date().toISOString(),
+              'metadata.webhookAttemptCount': 1,
+              'metadata.lastWebhookError': typeof detail === 'string' ? detail.slice(0, 300) : JSON.stringify(detail).slice(0, 300),
+              'metadata.nextWebhookAttemptAt': new Date().toISOString(),
+            },
+          },
+        );
+      } catch (_persistErr) {
+        // best-effort metadata update
+      }
+    }
+
     const status = err?.response?.status || 502;
     return res.status(status).json({
       ok: false,

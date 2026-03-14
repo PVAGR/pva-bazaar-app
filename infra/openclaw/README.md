@@ -26,9 +26,24 @@ cp .env.example .env
 docker compose up -d
 ```
 
+This compose stack now starts both:
+
+- `openclaw-gateway` (OpenClaw service)
+- `pva-openclaw-worker` (PVA outbound queue dispatcher)
+
 OpenClaw health should be live at:
 
 - `http://<your-openclaw-host>:18789/healthz`
+
+You can verify worker runtime from backend status:
+
+- `GET /api/openclaw/status` → includes `worker.active`, `worker.holderId`, `worker.heartbeatAt`
+
+If Docker is running and worker is not active, check container logs:
+
+```bash
+docker compose logs -f pva-openclaw-worker
+```
 
 ## 2) Complete OpenClaw onboarding once
 
@@ -165,3 +180,4 @@ Logs are written to `infra/openclaw/logs/watchdog.log`.
 - Keep OpenClaw on a persistent host (not serverless).
 - Put HTTPS + firewall in front of the OpenClaw host.
 - Keep `OPENCLAW_BRIDGE_SECRET` enabled and rotate it periodically.
+- Keep backend `.env` present on host for worker runtime (MongoDB URI, OpenClaw webhook URL, and worker tuning vars).

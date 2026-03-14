@@ -19,3 +19,18 @@ services:
       timeout: 10s
       retries: 5
       start_period: 40s
+
+  pva-openclaw-worker:
+    build:
+      context: ../../backend
+      dockerfile: Dockerfile
+    container_name: pva-openclaw-worker
+    restart: unless-stopped
+    command: ["node", "scripts/openclaw-queue-worker.js"]
+    env_file:
+      - ../../backend/.env
+    environment:
+      NODE_ENV: production
+    depends_on:
+      openclaw-gateway:
+        condition: service_healthy
