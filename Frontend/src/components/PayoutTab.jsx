@@ -106,11 +106,46 @@ export default function PayoutTab() {
 
   return (
     <div className="payout-tab">
-      <style>{`
-        .payout-tabs { display: flex; gap: 8px; margin-bottom: 24px; border-bottom: 2px solid var(--border-color); }
-        .payout-tabs button { padding: 10px 16px; background: none; border: none; color: var(--text-secondary); cursor: pointer; font-weight: 500; }
-        .payout-tabs button.active { color: var(--accent-color); border-bottom: 3px solid var(--accent-color); }
-      `}</style>
+      <header className="payout-header">
+        <h2>Payout Operations</h2>
+        <p>
+          Manage creator commissions with a clear lifecycle from draft to completed while maintaining audit-ready records for both
+          traditional and crypto-enabled settlements.
+        </p>
+      </header>
+
+      <section className="payout-playbook" aria-label="Crypto transition playbook">
+        <h3>Step-by-Step: Business to Crypto Consignment Splits</h3>
+        <p className="playbook-intro">
+          Use this sequence every cycle so new team members can run payouts safely without skipping controls.
+        </p>
+        <ol className="playbook-steps">
+          <li>
+            <strong>Step 1 - Confirm split rules</strong>
+            <span>Verify creator handles, commission percentages, and settlement method before generating any payout batch.</span>
+          </li>
+          <li>
+            <strong>Step 2 - Choose settlement rail</strong>
+            <span>Decide per creator if this cycle is fiat, crypto wallet transfer, or hybrid. Keep one method per payout record.</span>
+          </li>
+          <li>
+            <strong>Step 3 - Generate draft payouts</strong>
+            <span>Run Generate Payouts for the target date window, then review totals and creator history before processing.</span>
+          </li>
+          <li>
+            <strong>Step 4 - Validate transaction evidence</strong>
+            <span>For crypto transfers, capture the chain transaction hash and store it in payout notes for downstream verification.</span>
+          </li>
+          <li>
+            <strong>Step 5 - Process then complete</strong>
+            <span>Move records from Ready to Processing only when payment execution starts, then mark Completed after confirmation.</span>
+          </li>
+          <li>
+            <strong>Step 6 - Reconcile and communicate</strong>
+            <span>Refresh creator history, reconcile totals with accounting, and share payout confirmations with creators.</span>
+          </li>
+        </ol>
+      </section>
 
       {error && <div className="error-banner">{error}</div>}
 
