@@ -20,6 +20,14 @@ export default function DashboardTab({ onNavigateTab }) {
     archive: { total: 0, categories: {}, loading: true },
     health: { status: 'unknown', timestamp: null, loading: true },
     cloudStorage: { files: 0, totalSize: 0, loading: true },
+    ops: {
+      openclawReachable: false,
+      staleQueue: 0,
+      heartbeatAgeMinutes: null,
+      solanaReady: false,
+      anomalyCount: 0,
+      loading: true,
+    },
   });
   const [error, setError] = useState(null);
   const [lastRefresh, setLastRefresh] = useState(new Date());
@@ -34,12 +42,24 @@ export default function DashboardTab({ onNavigateTab }) {
     
     try {
       // Load data from all endpoints in parallel
-      const [usersResponse, itemsResponse, archiveResponse, healthResponse, cloudResponse] = await Promise.allSettled([
+      const [
+        usersResponse,
+        itemsResponse,
+        archiveResponse,
+        healthResponse,
+        cloudResponse,
+        openclawStatusResponse,
+        openclawQueueResponse,
+        solanaReadinessResponse,
+      ] = await Promise.allSettled([
         apiGet('/admin/stats'),
         apiGet('/items').catch(() => ({ ok: false })),
         apiGet('/archive').catch(() => ({ ok: false })),
         apiGet('/health').catch(() => ({ ok: false })),
         apiGet('/admin/cloud-storage').catch(() => ({ ok: false })),
+        apiGet('/openclaw/status').catch(() => ({ ok: false })),
+        apiGet('/openclaw/queue-stats').catch(() => ({ ok: false })),
+        apiGet('/solana/direct-transfer-readiness').catch(() => ({ ok: false })),
       ]);
 
       // Process users data
@@ -94,6 +114,37 @@ export default function DashboardTab({ onNavigateTab }) {
           }
         : { files: 0, totalSize: 0, configuredProviders: 0, loading: false };
 
+      const heartbeatAt = openclawStatusResponse.status === 'fulfilled'
+        ? openclawStatusResponse.value?.worker?.heartbeatAt
+        : null;
+      const heartbeatAgeMinutes = heartbeatAt
+        ? Math.max(Math.round((Date.now() - new Date(heartbeatAt).getTime()) / 60000), 0)
+        : null;
+
+      const openclawReachable = openclawStatusResponse.status === 'fulfilled'
+        && openclawStatusResponse.value?.reachable === true;
+      const staleQueue = openclawQueueResponse.status === 'fulfilled'
+        ? Number(openclawQueueResponse.value?.staleOutbound || 0)
+        : 0;
+      const solanaReady = solanaReadinessResponse.status === 'fulfilled'
+        && solanaReadinessResponse.value?.readiness?.ready === true;
+
+      const anomalyCount = [
+        !openclawReachable,
+        staleQueue > 0,
+        heartbeatAgeMinutes !== null && heartbeatAgeMinutes > 4,
+        !solanaReady,
+      ].filter(Boolean).length;
+
+      const opsData = {
+        openclawReachable,
+        staleQueue,
+        heartbeatAgeMinutes,
+        solanaReady,
+        anomalyCount,
+        loading: false,
+      };
+
       setDashboardData({
         users: usersData,
         items: {
@@ -106,6 +157,7 @@ export default function DashboardTab({ onNavigateTab }) {
         archive: archiveData,
         health: healthData,
         cloudStorage: cloudData,
+        ops: opsData,
       });
 
       setLastRefresh(new Date());
@@ -295,6 +347,54 @@ export default function DashboardTab({ onNavigateTab }) {
             </a>
           </div>
         </div>
+
+        {/* Ops Cockpit */}
+        <div className="metric-card">
+          <div className="metric-header">
+            <span className="metric-icon">🛡️</span>
+            <h3>Ops Cockpit</h3>
+          </div>
+          <div className="metric-body">
+            <div className="metric-primary">
+              <span className="metric-value">{dashboardData.ops.anomalyCount}</span>
+              <span className="metric-label">Active Alerts</span>
+            </div>
+            <div className="metric-stats">
+              <div className="stat-item">
+                <span className="stat-label">OpenClaw</span>
+                <span className={`stat-value ${dashboardData.ops.openclawReachable ? 'stat-success' : 'stat-danger'}`}>
+                  {dashboardData.ops.openclawReachable ? 'Online' : 'Offline'}
+                </span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-label">Stale Queue</span>
+                <span className={`stat-value ${dashboardData.ops.staleQueue > 0 ? 'stat-danger' : 'stat-success'}`}>
+                  {dashboardData.ops.staleQueue}
+                </span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-label">Heartbeat</span>
+                <span className={`stat-value ${(dashboardData.ops.heartbeatAgeMinutes ?? 0) > 4 ? 'stat-danger' : 'stat-success'}`}>
+                  {dashboardData.ops.heartbeatAgeMinutes == null ? 'n/a' : `${dashboardData.ops.heartbeatAgeMinutes}m`}
+                </span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-label">Solana Ready</span>
+                <span className={`stat-value ${dashboardData.ops.solanaReady ? 'stat-success' : 'stat-danger'}`}>
+                  {dashboardData.ops.solanaReady ? 'Yes' : 'No'}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div className="metric-footer metric-footer-links">
+            <a href="#" onClick={(e) => { e.preventDefault(); onNavigateTab?.('openclaw'); }}>
+              OpenClaw →
+            </a>
+            <a href="#" onClick={(e) => { e.preventDefault(); onNavigateTab?.('payouts'); }}>
+              Payout Ops →
+            </a>
+          </div>
+        </div>
       </div>
 
       {/* Quick Actions */}
@@ -316,6 +416,14 @@ export default function DashboardTab({ onNavigateTab }) {
           <button className="action-card" onClick={() => onNavigateTab?.('health')}>
             <span className="action-icon">💚</span>
             <span className="action-label">System Health</span>
+          </button>
+          <button className="action-card" onClick={() => onNavigateTab?.('openclaw')}>
+            <span className="action-icon">🦞</span>
+            <span className="action-label">OpenClaw Console</span>
+          </button>
+          <button className="action-card" onClick={() => onNavigateTab?.('payouts')}>
+            <span className="action-icon">💸</span>
+            <span className="action-label">Payout Operations</span>
           </button>
           <button className="action-card" onClick={() => onNavigateTab?.('api')}>
             <span className="action-icon">🔗</span>

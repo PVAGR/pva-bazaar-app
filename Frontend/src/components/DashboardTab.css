@@ -227,6 +227,10 @@
   color: #4caf50;
 }
 
+.stat-danger {
+  color: var(--site-danger, #ff5252);
+}
+
 .stat-highlight {
   color: var(--site-accent, #00d9ff);
 }
@@ -243,6 +247,13 @@
   text-decoration: none;
   font-weight: 600;
   transition: color 0.2s ease;
+}
+
+.metric-footer.metric-footer-links {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
 }
 
 .metric-footer a:hover {

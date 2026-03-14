@@ -37,6 +37,9 @@ export default function OpenClawTab() {
   const [sending, setSending] = useState(false);
   const [sendResult, setSendResult] = useState(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
+  const [autoHealEnabled, setAutoHealEnabled] = useState(true);
+  const [autoHealCooldownMinutes, setAutoHealCooldownMinutes] = useState(8);
+  const [autoHealLastRunAt, setAutoHealLastRunAt] = useState(null);
   const [configLoading, setConfigLoading] = useState(false);
   const [configSaving, setConfigSaving] = useState(false);
   const [configResult, setConfigResult] = useState(null);
@@ -56,6 +59,7 @@ export default function OpenClawTab() {
   });
 
   const sendResultTimer = useRef(null);
+  const autoHealRunningRef = useRef(false);
 
   const loadQueueStats = useCallback(async () => {
     setQueueLoading(true);
@@ -275,6 +279,54 @@ export default function OpenClawTab() {
     return () => clearInterval(id);
   }, [autoRefresh, loadStatus, loadMessages, loadQueueStats]);
 
+  const shouldAutoHeal = useMemo(() => {
+    if (!autoHealEnabled || statusLoading || queueLoading) {
+      return { run: false, reason: '' };
+    }
+
+    const reasons = [];
+
+    if (!status?.reachable) reasons.push('gateway offline');
+    const heartbeatAge = formatAgeMinutes(status?.worker?.heartbeatAt);
+    if (status?.worker?.active === false) reasons.push('worker lease inactive');
+    if (heartbeatAge !== null && heartbeatAge > 4) reasons.push(`heartbeat stale (${heartbeatAge}m)`);
+    if ((queueStats?.staleOutbound || 0) > 0) reasons.push(`stale queue (${queueStats?.staleOutbound})`);
+
+    if (!reasons.length) {
+      return { run: false, reason: '' };
+    }
+
+    const cooldownMs = Math.max(Number(autoHealCooldownMinutes || 8), 1) * 60 * 1000;
+    const last = autoHealLastRunAt ? new Date(autoHealLastRunAt).getTime() : 0;
+    const cooldownPassed = !last || (Date.now() - last) >= cooldownMs;
+
+    return {
+      run: cooldownPassed,
+      reason: reasons.join(', '),
+    };
+  }, [
+    autoHealEnabled,
+    autoHealCooldownMinutes,
+    autoHealLastRunAt,
+    queueLoading,
+    queueStats,
+    status,
+    statusLoading,
+  ]);
+
+  useEffect(() => {
+    if (!shouldAutoHeal.run || autoHealRunningRef.current || recoverLoading) return;
+
+    autoHealRunningRef.current = true;
+    setQueueActionResult({ ok: true, text: `Auto-heal triggered: ${shouldAutoHeal.reason}` });
+
+    runRecovery()
+      .finally(() => {
+        setAutoHealLastRunAt(new Date().toISOString());
+        autoHealRunningRef.current = false;
+      });
+  }, [recoverLoading, runRecovery, shouldAutoHeal]);
+
   const handleKeyDown = (event) => {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
@@ -312,6 +364,26 @@ export default function OpenClawTab() {
               />
               Poll every 15s
             </label>
+            <label className="oc-auto-refresh-label">
+              <input
+                type="checkbox"
+                checked={autoHealEnabled}
+                onChange={(event) => setAutoHealEnabled(event.target.checked)}
+              />
+              Auto-heal on anomalies
+            </label>
+            <label className="oc-auto-heal-cooldown">
+              Cooldown (min)
+              <input
+                type="number"
+                min="1"
+                max="60"
+                step="1"
+                value={autoHealCooldownMinutes}
+                onChange={(event) => setAutoHealCooldownMinutes(event.target.value)}
+                disabled={!autoHealEnabled}
+              />
+            </label>
             <button
               className="oc-btn oc-btn--secondary"
               onClick={() => {
@@ -341,6 +413,14 @@ export default function OpenClawTab() {
               {recoverLoading ? 'Recovering...' : '🛠️ Self-Heal'}
             </button>
           </div>
+        </div>
+
+        <div className={`oc-auto-heal-banner ${autoHealEnabled ? 'enabled' : 'disabled'}`}>
+          <strong>Auto-heal:</strong>{' '}
+          {autoHealEnabled
+            ? `armed${shouldAutoHeal.reason ? ` · anomaly: ${shouldAutoHeal.reason}` : ' · monitoring'}`
+            : 'disabled'}
+          {autoHealLastRunAt ? ` · last run ${formatMessageTime(autoHealLastRunAt)}` : ''}
         </div>
 
         {statusLoading ? (
