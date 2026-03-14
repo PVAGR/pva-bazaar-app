@@ -2,6 +2,12 @@
   width: 100%;
 }
 
+.section-heading-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
 .health-controls {
   display: flex;
   gap: 16px;
@@ -300,6 +306,155 @@
   line-height: 1.5;
 }
 
+.blockchain-tracker-card {
+  margin-bottom: 24px;
+}
+
+.blockchain-form {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.blockchain-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--site-text-dim, #aaa);
+  font-size: 0.86rem;
+}
+
+.blockchain-form .full-row {
+  grid-column: 1 / -1;
+}
+
+.blockchain-form input,
+.blockchain-form select,
+.blockchain-form textarea {
+  border-radius: 8px;
+  border: 1px solid var(--site-border, rgba(255, 255, 255, 0.1));
+  background: var(--site-panel, rgba(255, 255, 255, 0.04));
+  color: var(--site-text, #fff);
+  padding: 10px;
+  font-size: 0.9rem;
+}
+
+.blockchain-form input:focus,
+.blockchain-form select:focus,
+.blockchain-form textarea:focus {
+  outline: none;
+  border-color: var(--site-accent, #00d9ff);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--site-accent, #00d9ff) 30%, transparent);
+}
+
+.transfer-list {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.transfer-item {
+  border: 1px solid var(--site-border, rgba(255, 255, 255, 0.1));
+  border-radius: 10px;
+  background: var(--site-panel, rgba(255, 255, 255, 0.04));
+  padding: 12px;
+}
+
+.transfer-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.transfer-status,
+.transfer-network {
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.transfer-status.status-confirmed {
+  background: var(--site-success-bg, rgba(76, 175, 80, 0.15));
+  color: var(--site-success-text, #81c784);
+}
+
+.transfer-status.status-pending {
+  background: var(--site-warning-bg, rgba(255, 193, 7, 0.15));
+  color: var(--site-warning-text, #ffd54f);
+}
+
+.transfer-status.status-failed,
+.transfer-status.status-unknown {
+  background: var(--site-danger-bg, rgba(255, 82, 82, 0.15));
+  color: var(--site-danger-text, #ff8a80);
+}
+
+.transfer-network {
+  background: var(--site-accent-soft, rgba(0, 217, 255, 0.15));
+  color: var(--site-accent, #00d9ff);
+}
+
+.btn-reverify {
+  margin-left: auto;
+  border: 1px solid var(--site-border, rgba(255, 255, 255, 0.1));
+  border-radius: 8px;
+  background: var(--site-panel-soft, rgba(255, 255, 255, 0.03));
+  color: var(--site-text, #fff);
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.btn-reverify:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.transfer-meta {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  color: var(--site-text-dim, #aaa);
+  font-size: 0.85rem;
+}
+
+.transfer-links {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.transfer-links a {
+  color: var(--site-accent, #00d9ff);
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+
+.transfer-links a:hover {
+  text-decoration: underline;
+}
+
+.transfer-note {
+  margin: 8px 0 0;
+  color: var(--site-text, #fff);
+  font-size: 0.88rem;
+}
+
+.transfer-hash {
+  margin: 8px 0 0;
+  color: var(--site-text-dim, #aaa);
+  font-size: 0.78rem;
+  font-family: 'Courier New', monospace;
+  word-break: break-all;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .health-grid {
@@ -314,5 +469,9 @@
   .health-controls {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .blockchain-form {
+    grid-template-columns: 1fr;
   }
 }

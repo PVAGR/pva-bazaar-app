@@ -332,6 +332,7 @@ app.use('/api/did', didRoutes);
 app.use('/api/databases', databasesRoutes);
 app.use('/api/openclaw', openClawRoutes);
 app.use('/api/openclaw', openClawMetricsRoutes); // Prometheus metrics
+app.use('/api/blockchain', blockchainRoutes);
 const bountiesRoutes = require('../routes/bounties');
 app.use('/api/bounties', bountiesRoutes);
 

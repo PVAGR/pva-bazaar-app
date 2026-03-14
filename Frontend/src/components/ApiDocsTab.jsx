@@ -251,6 +251,57 @@ const ApiDocsTab = React.memo(function ApiDocsTab() {
       ]
     },
     {
+      id: 'blockchain',
+      name: '⛓️ Blockchain Tracking API',
+      description: 'On-chain transfer recording, verification, and explorer links',
+      endpoints: [
+        {
+          method: 'GET',
+          path: '/api/blockchain/health',
+          description: 'Get blockchain service health and RPC availability',
+          auth: 'None',
+          example: `${apiBase}/api/blockchain/health`
+        },
+        {
+          method: 'GET',
+          path: '/api/blockchain/verify?contract=...&tokenId=...',
+          description: 'Verify ERC-721 token ownership and metadata pointers',
+          auth: 'None',
+          example: `${apiBase}/api/blockchain/verify?contract=0xabc...&tokenId=1`
+        },
+        {
+          method: 'GET',
+          path: '/api/blockchain/transfers?limit=20',
+          description: 'List tracked transfer settlement records',
+          auth: 'Required (JWT)',
+          example: `${apiBase}/api/blockchain/transfers?limit=20`
+        },
+        {
+          method: 'POST',
+          path: '/api/blockchain/transfers/record',
+          description: 'Record and verify transfer with tx hash, amount, note, and links',
+          auth: 'Required (JWT)',
+          body: {
+            network: 'base',
+            txHash: '0x...',
+            amountUsd: 1.0,
+            tokenSymbol: 'USDC',
+            tokenAmount: '1.0',
+            note: 'Pilot payout',
+            mediaUrl: 'https://example.com/proof-image.jpg',
+            referenceUrl: 'https://pvabazaar.org/#/verification/example'
+          }
+        },
+        {
+          method: 'POST',
+          path: '/api/blockchain/transfers/:id/reverify',
+          description: 'Refresh recorded transfer status against current chain data',
+          auth: 'Required (JWT)',
+          example: `${apiBase}/api/blockchain/transfers/67cfe8d5e6.../reverify`
+        }
+      ]
+    },
+    {
       id: 'health',
       name: '💚 Health & Monitoring',
       description: 'System health checks and monitoring',
