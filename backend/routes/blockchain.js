@@ -1,5 +1,6 @@
 const express = require('express');
 const crypto = require('crypto');
+const { verifyMessage, getAddress, isAddress } = require('ethers');
 const router = express.Router();
 const auth = require('../middleware/auth');
 const BlockchainTransfer = require('../models/BlockchainTransfer');
@@ -44,11 +45,24 @@ function toPublicTransfer(transfer) {
     },
     signatures: item.signatures || {
       partyOneSignerName: '',
+      partyOneSignerWallet: '',
       partyOneSignedAt: null,
       partyTwoSignerName: '',
+      partyTwoSignerWallet: '',
       partyTwoSignedAt: null,
       witnessName: '',
+      witnessWallet: '',
       witnessSignedAt: null,
+    },
+    attestation: item.attestation || {
+      message: '',
+      partyOneSignature: '',
+      partyTwoSignature: '',
+      witnessSignature: '',
+      partyOneValid: false,
+      partyTwoValid: false,
+      witnessValid: false,
+      verifiedAt: null,
     },
     finalizationNote: item.finalizationNote || '',
     finalizedAt: item.finalizedAt || null,
@@ -80,6 +94,12 @@ function parseOptionalDate(value) {
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return null;
   return parsed;
+}
+
+function normalizeAddress(value) {
+  const raw = String(value || '').trim();
+  if (!raw || !isAddress(raw)) return '';
+  return getAddress(raw);
 }
 
 function getBaseUrl(req) {
@@ -115,11 +135,24 @@ function buildFinalizationSnapshot(record) {
     },
     signatures: {
       partyOneSignerName: record.signatures?.partyOneSignerName || '',
+      partyOneSignerWallet: record.signatures?.partyOneSignerWallet || '',
       partyOneSignedAt: record.signatures?.partyOneSignedAt || null,
       partyTwoSignerName: record.signatures?.partyTwoSignerName || '',
+      partyTwoSignerWallet: record.signatures?.partyTwoSignerWallet || '',
       partyTwoSignedAt: record.signatures?.partyTwoSignedAt || null,
       witnessName: record.signatures?.witnessName || '',
+      witnessWallet: record.signatures?.witnessWallet || '',
       witnessSignedAt: record.signatures?.witnessSignedAt || null,
+    },
+    attestation: {
+      message: record.attestation?.message || '',
+      partyOneSignature: record.attestation?.partyOneSignature || '',
+      partyTwoSignature: record.attestation?.partyTwoSignature || '',
+      witnessSignature: record.attestation?.witnessSignature || '',
+      partyOneValid: !!record.attestation?.partyOneValid,
+      partyTwoValid: !!record.attestation?.partyTwoValid,
+      witnessValid: !!record.attestation?.witnessValid,
+      verifiedAt: record.attestation?.verifiedAt || null,
     },
     finalizationNote: record.finalizationNote || '',
     finalizedAt: record.finalizedAt || null,
@@ -128,6 +161,130 @@ function buildFinalizationSnapshot(record) {
 
 function computeFinalizationDigest(snapshot) {
   return crypto.createHash('sha256').update(JSON.stringify(snapshot)).digest('hex');
+}
+
+function buildAttestationMessage(record) {
+  return [
+    'PVA Bazaar Settlement Attestation',
+    `Transfer: ${String(record._id)}`,
+    `TxHash: ${record.txHash}`,
+    `Network: ${record.network}`,
+    `ChainId: ${record.chainId || 'N/A'}`,
+  ].join('\n');
+}
+
+function verifyAttestationSignature(message, signature, wallet) {
+  const cleanMessage = String(message || '').trim();
+  const cleanSignature = String(signature || '').trim();
+  const expectedWallet = normalizeAddress(wallet);
+  if (!cleanMessage || !cleanSignature || !expectedWallet) return false;
+  try {
+    const recovered = verifyMessage(cleanMessage, cleanSignature);
+    return normalizeAddress(recovered) === expectedWallet;
+  } catch {
+    return false;
+  }
+}
+
+function buildIntegrityCheck(record) {
+  const hasSnapshot = !!record.finalizationSnapshot;
+  const storedDigest = String(record.finalizationDigest || '').trim();
+  const recomputedFromSnapshot = hasSnapshot ? computeFinalizationDigest(record.finalizationSnapshot) : '';
+  const digestMatchesSnapshot = !!storedDigest && !!recomputedFromSnapshot && storedDigest === recomputedFromSnapshot;
+  const currentSnapshot = buildFinalizationSnapshot(record);
+  const currentDigest = computeFinalizationDigest(currentSnapshot);
+  const currentMatchesStored = !!storedDigest && storedDigest === currentDigest;
+
+  return {
+    isFinalized: !!record.finalizedAt,
+    hasSnapshot,
+    storedDigest,
+    recomputedFromSnapshot,
+    digestMatchesSnapshot,
+    currentDigest,
+    currentMatchesStored,
+    status:
+      !record.finalizedAt
+        ? 'not-finalized'
+        : digestMatchesSnapshot && currentMatchesStored
+          ? 'verified'
+          : 'mismatch',
+  };
+}
+
+function buildVerificationReport(record, req) {
+  const payload = buildContractPayload(record, req);
+  const integrity = buildIntegrityCheck(record);
+  return {
+    reportType: 'Settlement Verification Report',
+    generatedAt: new Date().toISOString(),
+    transferId: String(record._id),
+    txHash: record.txHash,
+    network: record.network,
+    status: record.status,
+    finalizedAt: record.finalizedAt || null,
+    integrity,
+    attestation: {
+      message: payload.attestation?.message || '',
+      partyOneWallet: payload.signatures?.partyOneSignerWallet || '',
+      partyTwoWallet: payload.signatures?.partyTwoSignerWallet || '',
+      witnessWallet: payload.signatures?.witnessWallet || '',
+      partyOneValid: !!payload.attestation?.partyOneValid,
+      partyTwoValid: !!payload.attestation?.partyTwoValid,
+      witnessValid: !!payload.attestation?.witnessValid,
+      verifiedAt: payload.attestation?.verifiedAt || null,
+    },
+    traceUrls: payload.traceUrls,
+    qrUrls: payload.qrUrls,
+    contractDigest: payload.finalization?.digest || '',
+  };
+}
+
+function buildVerificationReportHtml(report) {
+  const statusClass = report.integrity.status === 'verified' ? 'ok' : report.integrity.status === 'mismatch' ? 'bad' : 'warn';
+  return `<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Verification Report ${escapeHtml(report.transferId)}</title>
+    <style>
+      body { font-family: Georgia, 'Times New Roman', serif; color: #14212a; padding: 28px; }
+      h1 { margin: 0 0 10px; }
+      table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+      th, td { border: 1px solid #cfd8dc; padding: 8px; text-align: left; vertical-align: top; }
+      th { width: 32%; background: #f2f7fa; }
+      .chip { display: inline-block; padding: 4px 8px; border-radius: 999px; font-size: 12px; border: 1px solid #cfd8dc; }
+      .chip.ok { background: #e8f5e9; color: #1b5e20; }
+      .chip.bad { background: #ffebee; color: #b71c1c; }
+      .chip.warn { background: #fff8e1; color: #7a5a00; }
+      .mono { font-family: Consolas, 'Courier New', monospace; font-size: 12px; word-break: break-all; }
+      .block { margin-top: 16px; }
+      @media print { a { color: inherit; text-decoration: none; } }
+    </style>
+  </head>
+  <body>
+    <h1>Settlement Verification Report</h1>
+    <div>Generated: ${escapeHtml(report.generatedAt)}</div>
+
+    <div class="block">
+      <span class="chip ${statusClass}">${escapeHtml(report.integrity.status)}</span>
+    </div>
+
+    <table>
+      <tr><th>Transfer ID</th><td>${escapeHtml(report.transferId)}</td></tr>
+      <tr><th>Tx Hash</th><td class="mono">${escapeHtml(report.txHash)}</td></tr>
+      <tr><th>Network</th><td>${escapeHtml(report.network)}</td></tr>
+      <tr><th>Finalized At</th><td>${escapeHtml(report.finalizedAt || 'N/A')}</td></tr>
+      <tr><th>Stored Digest</th><td class="mono">${escapeHtml(report.integrity.storedDigest || '')}</td></tr>
+      <tr><th>Recomputed Digest</th><td class="mono">${escapeHtml(report.integrity.recomputedFromSnapshot || '')}</td></tr>
+      <tr><th>Current Digest</th><td class="mono">${escapeHtml(report.integrity.currentDigest || '')}</td></tr>
+      <tr><th>Party One Signature Valid</th><td>${escapeHtml(String(!!report.attestation.partyOneValid))}</td></tr>
+      <tr><th>Party Two Signature Valid</th><td>${escapeHtml(String(!!report.attestation.partyTwoValid))}</td></tr>
+      <tr><th>Witness Signature Valid</th><td>${escapeHtml(String(!!report.attestation.witnessValid))}</td></tr>
+      <tr><th>Public Trace URL</th><td class="mono">${escapeHtml(report.traceUrls?.publicRecord || '')}</td></tr>
+    </table>
+  </body>
+</html>`;
 }
 
 function buildContractPayload(record, req) {
@@ -178,11 +335,24 @@ function buildContractPayload(record, req) {
     },
     signatures: {
       partyOneSignerName: record.signatures?.partyOneSignerName || '',
+      partyOneSignerWallet: record.signatures?.partyOneSignerWallet || '',
       partyOneSignedAt: record.signatures?.partyOneSignedAt || null,
       partyTwoSignerName: record.signatures?.partyTwoSignerName || '',
+      partyTwoSignerWallet: record.signatures?.partyTwoSignerWallet || '',
       partyTwoSignedAt: record.signatures?.partyTwoSignedAt || null,
       witnessName: record.signatures?.witnessName || '',
+      witnessWallet: record.signatures?.witnessWallet || '',
       witnessSignedAt: record.signatures?.witnessSignedAt || null,
+    },
+    attestation: {
+      message: record.attestation?.message || '',
+      partyOneSignature: record.attestation?.partyOneSignature || '',
+      partyTwoSignature: record.attestation?.partyTwoSignature || '',
+      witnessSignature: record.attestation?.witnessSignature || '',
+      partyOneValid: !!record.attestation?.partyOneValid,
+      partyTwoValid: !!record.attestation?.partyTwoValid,
+      witnessValid: !!record.attestation?.witnessValid,
+      verifiedAt: record.attestation?.verifiedAt || null,
     },
     finalization: {
       finalizedAt: record.finalizedAt || null,
@@ -376,6 +546,12 @@ router.get('/transfers/public/:id', async (req, res) => {
         traceUrls: payload.traceUrls,
         finalization: payload.finalization,
         finalizationDigest: payload.finalization?.digest || '',
+        integrity: buildIntegrityCheck(item),
+        attestation: {
+          partyOneValid: !!payload.attestation?.partyOneValid,
+          partyTwoValid: !!payload.attestation?.partyTwoValid,
+          witnessValid: !!payload.attestation?.witnessValid,
+        },
         generatedAt: payload.generatedAt,
       },
     });
@@ -476,11 +652,24 @@ router.post('/transfers/record', auth, async (req, res) => {
     };
     const signatures = {
       partyOneSignerName: String(req.body?.signatures?.partyOneSignerName || '').trim().slice(0, 120),
+      partyOneSignerWallet: normalizeAddress(req.body?.signatures?.partyOneSignerWallet),
       partyOneSignedAt: parseOptionalDate(req.body?.signatures?.partyOneSignedAt),
       partyTwoSignerName: String(req.body?.signatures?.partyTwoSignerName || '').trim().slice(0, 120),
+      partyTwoSignerWallet: normalizeAddress(req.body?.signatures?.partyTwoSignerWallet),
       partyTwoSignedAt: parseOptionalDate(req.body?.signatures?.partyTwoSignedAt),
       witnessName: String(req.body?.signatures?.witnessName || '').trim().slice(0, 120),
+      witnessWallet: normalizeAddress(req.body?.signatures?.witnessWallet),
       witnessSignedAt: parseOptionalDate(req.body?.signatures?.witnessSignedAt),
+    };
+    const attestation = {
+      message: String(req.body?.attestation?.message || '').trim().slice(0, 2000),
+      partyOneSignature: String(req.body?.attestation?.partyOneSignature || '').trim().slice(0, 800),
+      partyTwoSignature: String(req.body?.attestation?.partyTwoSignature || '').trim().slice(0, 800),
+      witnessSignature: String(req.body?.attestation?.witnessSignature || '').trim().slice(0, 800),
+      partyOneValid: false,
+      partyTwoValid: false,
+      witnessValid: false,
+      verifiedAt: null,
     };
     const artifactId = isObjectIdHex(req.body?.artifactId) ? String(req.body.artifactId) : '';
     let artifact = null;
@@ -526,6 +715,7 @@ router.post('/transfers/record', auth, async (req, res) => {
       contractVersion: 'v3',
       contractTerms,
       signatures,
+      attestation,
       rawError: chainResult.found ? '' : 'Transaction not found on configured RPC',
     };
 
@@ -568,11 +758,28 @@ router.post('/transfers/:id/finalize', auth, async (req, res) => {
 
     item.signatures = {
       partyOneSignerName,
+      partyOneSignerWallet: normalizeAddress(req.body?.signatures?.partyOneSignerWallet),
       partyOneSignedAt: parseOptionalDate(req.body?.signatures?.partyOneSignedAt) || new Date(),
       partyTwoSignerName,
+      partyTwoSignerWallet: normalizeAddress(req.body?.signatures?.partyTwoSignerWallet),
       partyTwoSignedAt: parseOptionalDate(req.body?.signatures?.partyTwoSignedAt) || new Date(),
       witnessName: String(req.body?.signatures?.witnessName || '').trim().slice(0, 120),
+      witnessWallet: normalizeAddress(req.body?.signatures?.witnessWallet),
       witnessSignedAt: parseOptionalDate(req.body?.signatures?.witnessSignedAt),
+    };
+    const attestationMessage = String(req.body?.attestation?.message || '').trim().slice(0, 2000) || buildAttestationMessage(item);
+    const partyOneSignature = String(req.body?.attestation?.partyOneSignature || '').trim().slice(0, 800);
+    const partyTwoSignature = String(req.body?.attestation?.partyTwoSignature || '').trim().slice(0, 800);
+    const witnessSignature = String(req.body?.attestation?.witnessSignature || '').trim().slice(0, 800);
+    item.attestation = {
+      message: attestationMessage,
+      partyOneSignature,
+      partyTwoSignature,
+      witnessSignature,
+      partyOneValid: verifyAttestationSignature(attestationMessage, partyOneSignature, item.signatures.partyOneSignerWallet),
+      partyTwoValid: verifyAttestationSignature(attestationMessage, partyTwoSignature, item.signatures.partyTwoSignerWallet),
+      witnessValid: verifyAttestationSignature(attestationMessage, witnessSignature, item.signatures.witnessWallet),
+      verifiedAt: new Date(),
     };
     item.finalizationNote = String(req.body?.finalizationNote || '').trim().slice(0, 2000);
     item.finalizedAt = new Date();
@@ -586,6 +793,52 @@ router.post('/transfers/:id/finalize', auth, async (req, res) => {
   } catch (error) {
     console.error('Blockchain transfer finalize error:', error);
     res.status(500).json({ ok: false, message: 'Failed to finalize transfer', error: error.message });
+  }
+});
+
+// GET /api/blockchain/transfers/:id/verify-integrity - recompute digest and verify lock integrity
+router.get('/transfers/:id/verify-integrity', auth, async (req, res) => {
+  try {
+    const item = await BlockchainTransfer.findById(req.params.id);
+    if (!item) {
+      return res.status(404).json({ ok: false, message: 'Transfer record not found' });
+    }
+    const integrity = buildIntegrityCheck(item);
+    res.json({ ok: true, integrity, item: toPublicTransfer(item) });
+  } catch (error) {
+    console.error('Blockchain transfer integrity verify error:', error);
+    res.status(500).json({ ok: false, message: 'Failed to verify integrity', error: error.message });
+  }
+});
+
+// GET /api/blockchain/transfers/:id/verification-report - audit report JSON
+router.get('/transfers/:id/verification-report', auth, async (req, res) => {
+  try {
+    const item = await BlockchainTransfer.findById(req.params.id);
+    if (!item) {
+      return res.status(404).json({ ok: false, message: 'Transfer record not found' });
+    }
+    const report = buildVerificationReport(item, req);
+    res.json({ ok: true, report });
+  } catch (error) {
+    console.error('Blockchain transfer verification report error:', error);
+    res.status(500).json({ ok: false, message: 'Failed to generate verification report', error: error.message });
+  }
+});
+
+// GET /api/blockchain/transfers/:id/verification-report/render - printable audit report HTML
+router.get('/transfers/:id/verification-report/render', auth, async (req, res) => {
+  try {
+    const item = await BlockchainTransfer.findById(req.params.id);
+    if (!item) {
+      return res.status(404).json({ ok: false, message: 'Transfer record not found' });
+    }
+    const report = buildVerificationReport(item, req);
+    const html = buildVerificationReportHtml(report);
+    res.json({ ok: true, report, html });
+  } catch (error) {
+    console.error('Blockchain transfer verification render error:', error);
+    res.status(500).json({ ok: false, message: 'Failed to render verification report', error: error.message });
   }
 });
 

@@ -299,7 +299,14 @@ const ApiDocsTab = React.memo(function ApiDocsTab() {
             },
             signatures: {
               partyOneSignerName: 'Operator Signer',
-              partyTwoSignerName: 'Counterparty Signer'
+              partyOneSignerWallet: '0xabc...',
+              partyTwoSignerName: 'Counterparty Signer',
+              partyTwoSignerWallet: '0xdef...'
+            },
+            attestation: {
+              message: 'PVA Bazaar Settlement Attestation\nTransfer: ...',
+              partyOneSignature: '0x...',
+              partyTwoSignature: '0x...'
             }
           }
         },
@@ -325,13 +332,29 @@ const ApiDocsTab = React.memo(function ApiDocsTab() {
           body: {
             signatures: {
               partyOneSignerName: 'Operator Signer',
+              partyOneSignerWallet: '0xabc...',
               partyOneSignedAt: '2026-03-13T14:30:00Z',
               partyTwoSignerName: 'Counterparty Signer',
+              partyTwoSignerWallet: '0xdef...',
               partyTwoSignedAt: '2026-03-13T14:35:00Z',
-              witnessName: 'Witness Name'
+              witnessName: 'Witness Name',
+              witnessWallet: '0x123...'
+            },
+            attestation: {
+              message: 'PVA Bazaar Settlement Attestation\nTransfer: ...',
+              partyOneSignature: '0x...',
+              partyTwoSignature: '0x...',
+              witnessSignature: '0x...'
             },
             finalizationNote: 'Final settlement acknowledged by both parties.'
           }
+        },
+        {
+          method: 'GET',
+          path: '/api/blockchain/transfers/:id/verify-integrity',
+          description: 'Recompute finalization digest and return pass/fail integrity status',
+          auth: 'Required (JWT)',
+          example: `${apiBase}/api/blockchain/transfers/67cfe8d5e6.../verify-integrity`
         },
         {
           method: 'GET',
@@ -353,6 +376,20 @@ const ApiDocsTab = React.memo(function ApiDocsTab() {
           description: 'Public trace payload used by QR scans for physical contract validation',
           auth: 'None',
           example: `${apiBase}/api/blockchain/transfers/public/67cfe8d5e6...`
+        },
+        {
+          method: 'GET',
+          path: '/api/blockchain/transfers/:id/verification-report',
+          description: 'Export audit verification report JSON with digest and attestation checks',
+          auth: 'Required (JWT)',
+          example: `${apiBase}/api/blockchain/transfers/67cfe8d5e6.../verification-report`
+        },
+        {
+          method: 'GET',
+          path: '/api/blockchain/transfers/:id/verification-report/render',
+          description: 'Get printable verification report HTML for audit binders/PDF',
+          auth: 'Required (JWT)',
+          example: `${apiBase}/api/blockchain/transfers/67cfe8d5e6.../verification-report/render`
         }
       ]
     },

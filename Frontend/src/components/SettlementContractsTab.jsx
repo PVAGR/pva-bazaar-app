@@ -44,6 +44,9 @@ export default function SettlementContractsTab() {
   const [artifactQuery, setArtifactQuery] = useState('');
   const [reverifyId, setReverifyId] = useState('');
   const [finalizingId, setFinalizingId] = useState('');
+  const [verifyingId, setVerifyingId] = useState('');
+  const [signingRole, setSigningRole] = useState('partyOne');
+  const [signingWallet, setSigningWallet] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const [form, setForm] = useState({
@@ -70,6 +73,13 @@ export default function SettlementContractsTab() {
     witnessName: '',
     witnessSignedAt: '',
     finalizationNote: '',
+    partyOneSignerWallet: '',
+    partyTwoSignerWallet: '',
+    witnessWallet: '',
+    attestationMessage: '',
+    partyOneSignature: '',
+    partyTwoSignature: '',
+    witnessSignature: '',
   });
 
   const selectedArtifact = useMemo(
@@ -211,13 +221,87 @@ export default function SettlementContractsTab() {
     },
     signatures: {
       partyOneSignerName: form.partyOneSignerName.trim(),
+      partyOneSignerWallet: form.partyOneSignerWallet.trim(),
       partyOneSignedAt: form.partyOneSignedAt || '',
       partyTwoSignerName: form.partyTwoSignerName.trim(),
+      partyTwoSignerWallet: form.partyTwoSignerWallet.trim(),
       partyTwoSignedAt: form.partyTwoSignedAt || '',
       witnessName: form.witnessName.trim(),
+      witnessWallet: form.witnessWallet.trim(),
       witnessSignedAt: form.witnessSignedAt || '',
     },
+    attestation: {
+      message: form.attestationMessage.trim(),
+      partyOneSignature: form.partyOneSignature.trim(),
+      partyTwoSignature: form.partyTwoSignature.trim(),
+      witnessSignature: form.witnessSignature.trim(),
+    },
   });
+
+  const buildDefaultAttestationMessage = useCallback(() => {
+    const hash = String(form.txHash || '').trim() || '<pending-tx-hash>';
+    return [
+      'PVA Bazaar Settlement Attestation',
+      `TxHash: ${hash}`,
+      `Network: ${form.network}`,
+      `Artifact: ${selectedArtifact?.title || selectedArtifact?.name || 'Unlinked'}`,
+      `USD: ${Number(form.amountUsd || 0).toFixed(2)}`,
+    ].join('\n');
+  }, [form.txHash, form.network, form.amountUsd, selectedArtifact]);
+
+  const ensureAttestationMessage = () => {
+    if (form.attestationMessage.trim()) return form.attestationMessage.trim();
+    const generated = buildDefaultAttestationMessage();
+    setForm((prev) => ({ ...prev, attestationMessage: generated }));
+    return generated;
+  };
+
+  const signConnectedWallet = async () => {
+    if (!wallet.address) {
+      setMessage('Connect wallet first to sign attestation.');
+      return;
+    }
+    if (!hasEthereum()) {
+      setMessage('No wallet provider found.');
+      return;
+    }
+
+    const msg = ensureAttestationMessage();
+    try {
+      setSigningWallet(true);
+      const signature = await window.ethereum.request({
+        method: 'personal_sign',
+        params: [msg, wallet.address],
+      });
+
+      setForm((prev) => {
+        if (signingRole === 'partyTwo') {
+          return {
+            ...prev,
+            partyTwoSignerWallet: wallet.address,
+            partyTwoSignature: signature || '',
+          };
+        }
+        if (signingRole === 'witness') {
+          return {
+            ...prev,
+            witnessWallet: wallet.address,
+            witnessSignature: signature || '',
+          };
+        }
+        return {
+          ...prev,
+          partyOneSignerWallet: wallet.address,
+          partyOneSignature: signature || '',
+        };
+      });
+      setMessage('Attestation signature captured from connected wallet.');
+    } catch (err) {
+      setMessage(err?.message || 'Failed to sign attestation message');
+    } finally {
+      setSigningWallet(false);
+    }
+  };
 
   const applyTemplate = () => {
     const selected = templates.data.find((item) => String(item.id) === String(selectedTemplateId));
@@ -307,11 +391,20 @@ export default function SettlementContractsTab() {
       const response = await apiPost(`/blockchain/transfers/${id}/finalize`, {
         signatures: {
           partyOneSignerName: form.partyOneSignerName.trim(),
+          partyOneSignerWallet: form.partyOneSignerWallet.trim(),
           partyOneSignedAt: form.partyOneSignedAt || '',
           partyTwoSignerName: form.partyTwoSignerName.trim(),
+          partyTwoSignerWallet: form.partyTwoSignerWallet.trim(),
           partyTwoSignedAt: form.partyTwoSignedAt || '',
           witnessName: form.witnessName.trim(),
+          witnessWallet: form.witnessWallet.trim(),
           witnessSignedAt: form.witnessSignedAt || '',
+        },
+        attestation: {
+          message: ensureAttestationMessage(),
+          partyOneSignature: form.partyOneSignature.trim(),
+          partyTwoSignature: form.partyTwoSignature.trim(),
+          witnessSignature: form.witnessSignature.trim(),
         },
         finalizationNote: form.finalizationNote.trim(),
       });
@@ -325,6 +418,24 @@ export default function SettlementContractsTab() {
       setMessage(err.message || 'Failed to finalize settlement');
     } finally {
       setFinalizingId('');
+    }
+  };
+
+  const verifyIntegrity = async (id) => {
+    setVerifyingId(id);
+    try {
+      const response = await apiGet(`/blockchain/transfers/${id}/verify-integrity`);
+      if (!response?.ok) {
+        setMessage(response?.message || 'Failed to verify digest integrity');
+        return;
+      }
+      const status = response.integrity?.status || 'unknown';
+      setMessage(`Integrity check complete: ${status}.`);
+      await loadTransfers();
+    } catch (err) {
+      setMessage(err.message || 'Failed to verify digest integrity');
+    } finally {
+      setVerifyingId('');
     }
   };
 
@@ -373,6 +484,51 @@ export default function SettlementContractsTab() {
     }
   };
 
+  const exportVerificationReportJson = async (id) => {
+    try {
+      const response = await apiGet(`/blockchain/transfers/${id}/verification-report`);
+      if (!response?.ok || !response?.report) {
+        setMessage(response?.message || 'Failed to export verification report');
+        return;
+      }
+      const blob = new Blob([JSON.stringify(response.report, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `settlement-verification-${id}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setMessage(err.message || 'Failed to export verification report');
+    }
+  };
+
+  const openVerificationReport = async (id, autoPrint = false) => {
+    try {
+      const response = await apiGet(`/blockchain/transfers/${id}/verification-report/render`);
+      if (!response?.ok || !response?.html) {
+        setMessage(response?.message || 'Failed to render verification report');
+        return;
+      }
+      const child = window.open('', '_blank', 'noopener,noreferrer');
+      if (!child) {
+        setMessage('Pop-up blocked. Allow pop-ups to view report.');
+        return;
+      }
+      child.document.open();
+      child.document.write(response.html);
+      child.document.close();
+      if (autoPrint) {
+        setTimeout(() => {
+          child.focus();
+          child.print();
+        }, 350);
+      }
+    } catch (err) {
+      setMessage(err.message || 'Failed to render verification report');
+    }
+  };
+
   const copyDigest = async (digest) => {
     const value = String(digest || '').trim();
     if (!value) {
@@ -402,6 +558,13 @@ export default function SettlementContractsTab() {
           body="1) Connect wallet and send transfer on Base. 2) Reuse a previous terms template or enter new terms. 3) Record with metadata and artifact linkage. 4) Finalize to lock signer details. 5) Print/save PDF with QR trace links."
           example="Pilot payout: $1.00, artifact linked, finalize with both signer names, print a QR-enabled contract for archive binder."
         />
+      </div>
+
+      <div className="workflow-card" role="note" aria-label="Required and optional fields">
+        <h4>Before You Submit</h4>
+        <p><strong>Required now:</strong> Tx Hash, Party One Signer Name, Party Two Signer Name. These lock legal intent and chain evidence.</p>
+        <p><strong>Optional but recommended:</strong> signer wallets + EIP-191 signatures. These prove a wallet attested the text message.</p>
+        <p><strong>Optional context:</strong> artifact link, media URL, reference URL, witness info. These improve audit readability but do not block settlement lock.</p>
       </div>
 
       <div className="settlement-form-card">
@@ -476,7 +639,7 @@ export default function SettlementContractsTab() {
           </label>
 
           <label className="full-row">
-            Tx Hash (manual or auto from wallet send)
+            Tx Hash (Required)
             <input value={form.txHash} onChange={(e) => setForm((prev) => ({ ...prev, txHash: e.target.value }))} placeholder="0x..." />
           </label>
 
@@ -543,8 +706,13 @@ export default function SettlementContractsTab() {
           </label>
 
           <label>
-            Party One Signer Name
+            Party One Signer Name (Required)
             <input value={form.partyOneSignerName} onChange={(e) => setForm((prev) => ({ ...prev, partyOneSignerName: e.target.value }))} placeholder="Signer full name" />
+          </label>
+
+          <label>
+            Party One Signer Wallet (Optional)
+            <input value={form.partyOneSignerWallet} onChange={(e) => setForm((prev) => ({ ...prev, partyOneSignerWallet: e.target.value }))} placeholder="0x..." />
           </label>
 
           <label>
@@ -553,8 +721,13 @@ export default function SettlementContractsTab() {
           </label>
 
           <label>
-            Party Two Signer Name
+            Party Two Signer Name (Required)
             <input value={form.partyTwoSignerName} onChange={(e) => setForm((prev) => ({ ...prev, partyTwoSignerName: e.target.value }))} placeholder="Signer full name" />
+          </label>
+
+          <label>
+            Party Two Signer Wallet (Optional)
+            <input value={form.partyTwoSignerWallet} onChange={(e) => setForm((prev) => ({ ...prev, partyTwoSignerWallet: e.target.value }))} placeholder="0x..." />
           </label>
 
           <label>
@@ -565,6 +738,11 @@ export default function SettlementContractsTab() {
           <label>
             Witness Name (optional)
             <input value={form.witnessName} onChange={(e) => setForm((prev) => ({ ...prev, witnessName: e.target.value }))} placeholder="Witness full name" />
+          </label>
+
+          <label>
+            Witness Wallet (Optional)
+            <input value={form.witnessWallet} onChange={(e) => setForm((prev) => ({ ...prev, witnessWallet: e.target.value }))} placeholder="0x..." />
           </label>
 
           <label>
@@ -580,6 +758,49 @@ export default function SettlementContractsTab() {
               onChange={(e) => setForm((prev) => ({ ...prev, finalizationNote: e.target.value }))}
               placeholder="Optional note recorded when contract is finalized"
             />
+          </label>
+
+          <label className="full-row">
+            EIP-191 Attestation Message (Optional but recommended)
+            <textarea
+              rows="3"
+              value={form.attestationMessage}
+              onChange={(e) => setForm((prev) => ({ ...prev, attestationMessage: e.target.value }))}
+              placeholder="If empty, the app auto-generates a standard message during finalization"
+            />
+          </label>
+
+          <label className="full-row">
+            Wallet Attestation Signatures (Optional)
+            <div className="attestation-actions">
+              <select value={signingRole} onChange={(e) => setSigningRole(e.target.value)}>
+                <option value="partyOne">Sign as Party One</option>
+                <option value="partyTwo">Sign as Party Two</option>
+                <option value="witness">Sign as Witness</option>
+              </select>
+              <button className="btn ghost tiny" type="button" onClick={() => setForm((prev) => ({ ...prev, attestationMessage: buildDefaultAttestationMessage() }))}>
+                Generate Suggested Message
+              </button>
+              <button className="btn ghost tiny" type="button" onClick={signConnectedWallet} disabled={!wallet.address || signingWallet}>
+                {signingWallet ? 'Signing...' : 'Sign With Connected Wallet'}
+              </button>
+            </div>
+            <small>Why this helps: signatures let auditors cryptographically verify wallet-holder consent, not just typed names.</small>
+          </label>
+
+          <label className="full-row">
+            Party One EIP-191 Signature (Optional)
+            <textarea rows="2" value={form.partyOneSignature} onChange={(e) => setForm((prev) => ({ ...prev, partyOneSignature: e.target.value }))} placeholder="0x..." />
+          </label>
+
+          <label className="full-row">
+            Party Two EIP-191 Signature (Optional)
+            <textarea rows="2" value={form.partyTwoSignature} onChange={(e) => setForm((prev) => ({ ...prev, partyTwoSignature: e.target.value }))} placeholder="0x..." />
+          </label>
+
+          <label className="full-row">
+            Witness EIP-191 Signature (Optional)
+            <textarea rows="2" value={form.witnessSignature} onChange={(e) => setForm((prev) => ({ ...prev, witnessSignature: e.target.value }))} placeholder="0x..." />
           </label>
         </div>
 
@@ -614,6 +835,9 @@ export default function SettlementContractsTab() {
                   <button className="btn ghost tiny" type="button" onClick={() => handleReverify(item.id)} disabled={reverifyId === item.id}>
                     {reverifyId === item.id ? 'Checking...' : 'Re-verify'}
                   </button>
+                  <button className="btn ghost tiny" type="button" onClick={() => verifyIntegrity(item.id)} disabled={verifyingId === item.id}>
+                    {verifyingId === item.id ? 'Verifying...' : 'Verify Digest'}
+                  </button>
                   <button
                     className="btn ghost tiny"
                     type="button"
@@ -645,6 +869,8 @@ export default function SettlementContractsTab() {
                   <button className="btn ghost tiny" type="button" onClick={() => openContract(item.id, false)}>View Contract</button>
                   <button className="btn ghost tiny" type="button" onClick={() => openContract(item.id, true)}>Print / Save PDF</button>
                   <button className="btn ghost tiny" type="button" onClick={() => exportContractJson(item.id)}>Export JSON</button>
+                  <button className="btn ghost tiny" type="button" onClick={() => exportVerificationReportJson(item.id)}>Export Verification JSON</button>
+                  <button className="btn ghost tiny" type="button" onClick={() => openVerificationReport(item.id, true)}>Print Verification Report</button>
                 </div>
 
                 {item.note ? <p className="record-note">{item.note}</p> : null}

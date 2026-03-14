@@ -14,6 +14,25 @@
   align-items: center;
 }
 
+.workflow-card {
+  border: 1px solid var(--site-border);
+  border-radius: 10px;
+  padding: 0.8rem;
+  background: color-mix(in srgb, var(--site-accent-soft) 20%, var(--site-panel));
+  color: var(--site-text);
+}
+
+.workflow-card h4 {
+  margin: 0 0 0.45rem;
+  color: var(--site-text);
+}
+
+.workflow-card p {
+  margin: 0.28rem 0;
+  color: var(--site-text);
+  line-height: 1.42;
+}
+
 .settlement-form-card,
 .records-card {
   background: var(--site-panel);
@@ -91,8 +110,9 @@
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
-  color: var(--site-text-muted);
+  color: var(--site-text);
   font-size: 0.82rem;
+  font-weight: 600;
 }
 
 .settlement-grid .full-row {
@@ -122,6 +142,12 @@
   background: var(--site-panel-soft);
   color: var(--site-text);
   padding: 0.52rem 0.65rem;
+  font-weight: 500;
+}
+
+.settlement-grid small {
+  color: var(--site-text-muted);
+  font-weight: 500;
 }
 
 .settlement-grid input:focus,
@@ -235,6 +261,13 @@
 .btn.tiny {
   font-size: 0.75rem;
   padding: 0.3rem 0.5rem;
+}
+
+.attestation-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
 }
 
 @media (max-width: 1100px) {
