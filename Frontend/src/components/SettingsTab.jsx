@@ -20,6 +20,7 @@
 import React, { useState, useEffect } from 'react';
 import { getApiBase, setApiBase, apiGet } from '../lib/api';
 import { ENV } from '../config/env';
+import { clearToken, getToken } from '../lib/auth';
 import { createLogger } from '../lib/logger';
 import './SettingsTab.css';
 
@@ -42,9 +43,10 @@ const SettingsTab = React.memo(function SettingsTab() {
     const auth = sessionStorage.getItem('admin-auth');
     const authVersion = sessionStorage.getItem('admin-auth-version');
     const loginTime = sessionStorage.getItem('admin-login-time');
+    const token = getToken();
     
     setSessionInfo({
-      authenticated: auth === 'authenticated',
+      authenticated: auth === 'authenticated' && Boolean(token),
       version: authVersion || 'unknown',
       loginTime: loginTime || null,
     });
@@ -81,7 +83,10 @@ const SettingsTab = React.memo(function SettingsTab() {
 
   const handleLogout = () => {
     if (confirm('Are you sure you want to logout?')) {
-      sessionStorage.clear();
+      clearToken();
+      sessionStorage.removeItem('admin-auth');
+      sessionStorage.removeItem('admin-auth-version');
+      sessionStorage.removeItem('admin-login-time');
       window.location.reload();
     }
   };

@@ -34,6 +34,7 @@ export default function LoginPage() {
       setToken(data.token);
       sessionStorage.setItem('admin-auth', 'authenticated');
       sessionStorage.setItem('admin-auth-version', 'v2');
+      sessionStorage.setItem('admin-login-time', new Date().toISOString());
       navigate(nextFromUrl || '/admin', { replace: true });
     } catch (err) {
       setError(err?.response?.data?.message || err.message || 'Login failed');
@@ -52,6 +53,9 @@ export default function LoginPage() {
         ? { email: loginId, password: userCreds.password }
         : { username: loginId, password: userCreds.password });
       if (!res?.ok || !res?.token) throw new Error(res?.message || 'Invalid username or password');
+      sessionStorage.removeItem('admin-auth');
+      sessionStorage.removeItem('admin-auth-version');
+      sessionStorage.removeItem('admin-login-time');
       setToken(res.token);
       if (nextFromUrl) {
         navigate(nextFromUrl, { replace: true });

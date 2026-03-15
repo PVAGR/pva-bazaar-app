@@ -5,6 +5,13 @@ import { createLogger } from "./logger";
 
 const logger = createLogger('API');
 
+function isAdminProtectedRequest(url = '') {
+  const normalized = String(url || '').toLowerCase();
+  if (!normalized) return false;
+  if (normalized.includes('/admin/login') || normalized.includes('/admin/token')) return false;
+  return normalized.includes('/admin/') || normalized.includes('/solana/') || normalized.includes('/openclaw/');
+}
+
 // Internal backend-only Axios client
 const api = axios.create({
   baseURL: ENV.API_URL,
@@ -58,9 +65,20 @@ api.interceptors.response.use(
     if (status === 401) {
       const url = error?.config?.url || '';
       const isSessionCheck = /\/(?:auth\/me|users\/me|me|session)\b/i.test(url);
+      const isAdminProtected = isAdminProtectedRequest(url);
       if (isSessionCheck) {
         clearToken();
         window.location.assign('/#/login');
+      }
+      if (isAdminProtected) {
+        clearToken();
+        try {
+          window.dispatchEvent(new CustomEvent('admin-session-expired', {
+            detail: { url, status },
+          }));
+        } catch (_) {
+          // Non-fatal in older environments where CustomEvent can fail.
+        }
       }
       return Promise.reject(error);
     }

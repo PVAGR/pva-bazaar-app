@@ -29,6 +29,9 @@ export default function RegisterPage() {
         password: form.password,
       });
       if (!res?.ok || !res?.token) throw new Error(res?.message || 'Registration failed');
+      sessionStorage.removeItem('admin-auth');
+      sessionStorage.removeItem('admin-auth-version');
+      sessionStorage.removeItem('admin-login-time');
       setToken(res.token);
       navigate(next, { replace: true });
     } catch (err) {

@@ -7,7 +7,7 @@ import ErrorBanner from '../components/ErrorBanner.jsx';
 import ErrorBoundary from '../components/ErrorBoundary.jsx';
 import AdminNav from '../components/AdminNav.jsx';
 import AdminTabs from '../components/AdminTabs.jsx';
-import { clearToken, setToken } from '../lib/auth';
+import { clearToken, getToken, setToken } from '../lib/auth';
 import { createLogger } from '../lib/logger';
 import { LoadingDots } from '../components/LoadingSpinner.jsx';
 import DashboardTab from '../components/DashboardTab.jsx';
@@ -57,21 +57,60 @@ export default function AdminPage() {
     results: {},
   });
 
-  // Check if already authenticated with NEW credentials system
+  // Check if already authenticated with NEW credentials system and a stored token.
   useEffect(() => {
     const auth = sessionStorage.getItem('admin-auth');
     const authVersion = sessionStorage.getItem('admin-auth-version');
+    const token = getToken();
     
     // Only accept sessions with v2 (username+password) - invalidate old password-only sessions
-    if (auth === 'authenticated' && authVersion === 'v2') {
+    if (auth === 'authenticated' && authVersion === 'v2' && token) {
       setIsAuthenticated(true);
     } else {
       // Clear old sessions
       sessionStorage.removeItem('admin-auth');
       sessionStorage.removeItem('admin-auth-version');
+      clearToken();
       setIsAuthenticated(false);
     }
   }, []);
+
+  // Keep admin UI auth state in sync with API 401 handling.
+  useEffect(() => {
+    const handleAdminSessionExpired = () => {
+      setIsAuthenticated(false);
+      sessionStorage.removeItem('admin-auth');
+      sessionStorage.removeItem('admin-auth-version');
+      clearToken();
+      setError('Your admin session expired. Please sign in again.');
+    };
+
+    window.addEventListener('admin-session-expired', handleAdminSessionExpired);
+    return () => window.removeEventListener('admin-session-expired', handleAdminSessionExpired);
+  }, []);
+
+  // Validate active session server-side whenever admin panel is opened.
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        await apiGet('/admin/secure-status');
+      } catch (_) {
+        if (cancelled) return;
+        setIsAuthenticated(false);
+        sessionStorage.removeItem('admin-auth');
+        sessionStorage.removeItem('admin-auth-version');
+        clearToken();
+        setError('Your admin session expired. Please sign in again.');
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated]);
 
   const formatWatchdogMessage = useCallback((response) => {
     if (!response || response.ok === false) {
@@ -302,6 +341,7 @@ export default function AdminPage() {
         setIsAuthenticated(true);
         sessionStorage.setItem('admin-auth', 'authenticated');
         sessionStorage.setItem('admin-auth-version', 'v2');
+        sessionStorage.setItem('admin-login-time', new Date().toISOString());
         setUsername('');
         setPassword('');
         setError('');
@@ -318,6 +358,7 @@ export default function AdminPage() {
     setIsAuthenticated(false);
     sessionStorage.removeItem('admin-auth');
     sessionStorage.removeItem('admin-auth-version');
+    sessionStorage.removeItem('admin-login-time');
     clearToken();
     setUsername('');
     setPassword('');
