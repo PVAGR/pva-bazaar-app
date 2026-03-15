@@ -6,16 +6,26 @@ const AdminRuntimeConfig = require('../models/AdminRuntimeConfig');
 const adminSession = require('../middleware/adminSession');
 const { createSystemEvent, dispatchToOpenClaw } = require('../utils/openclaw-events');
 
-function getSolanaRpcUrl() {
+function getSolanaRpcUrl(preferredNetwork) {
+  const network = String(preferredNetwork || process.env.SOLANA_CLUSTER || 'devnet').trim() || 'devnet';
+
+  if (network === 'mainnet-beta' && process.env.SOLANA_RPC_URL_MAINNET) {
+    return process.env.SOLANA_RPC_URL_MAINNET;
+  }
+  if (network === 'testnet' && process.env.SOLANA_RPC_URL_TESTNET) {
+    return process.env.SOLANA_RPC_URL_TESTNET;
+  }
+  if (network === 'devnet' && process.env.SOLANA_RPC_URL_DEVNET) {
+    return process.env.SOLANA_RPC_URL_DEVNET;
+  }
   if (process.env.SOLANA_RPC_URL) {
     return process.env.SOLANA_RPC_URL;
   }
 
-  const cluster = process.env.SOLANA_CLUSTER || 'devnet';
-  if (cluster === 'mainnet-beta') {
+  if (network === 'mainnet-beta') {
     return 'https://api.mainnet-beta.solana.com';
   }
-  if (cluster === 'testnet') {
+  if (network === 'testnet') {
     return 'https://api.testnet.solana.com';
   }
   return 'https://api.devnet.solana.com';
@@ -76,7 +86,9 @@ async function getEffectiveTestPolicy() {
 }
 
 async function fetchSignatureStatus(signature) {
-  const rpcUrl = getSolanaRpcUrl();
+  const policy = await getEffectiveTestPolicy();
+  const network = policy.network || process.env.SOLANA_CLUSTER || 'devnet';
+  const rpcUrl = getSolanaRpcUrl(network);
   const payload = {
     jsonrpc: '2.0',
     id: 1,
@@ -423,11 +435,12 @@ function parseHotWalletKeypair() {
 router.get('/hot-wallet-balance', adminSession, async (req, res) => {
   try {
     const { Connection, LAMPORTS_PER_SOL } = require('@solana/web3.js');
+    const policy = await getEffectiveTestPolicy();
+    const network = policy.network || process.env.SOLANA_CLUSTER || 'devnet';
     const keypair = parseHotWalletKeypair();
-    const rpcUrl = getSolanaRpcUrl();
+    const rpcUrl = getSolanaRpcUrl(network);
     const connection = new Connection(rpcUrl, 'confirmed');
     const balanceLamports = await connection.getBalance(keypair.publicKey);
-    const network = process.env.SOLANA_CLUSTER || 'devnet';
     res.json({
       ok: true,
       publicKey: keypair.publicKey.toBase58(),
@@ -453,7 +466,7 @@ router.get('/direct-transfer-readiness', adminSession, async (req, res) => {
 
   const policy = await getEffectiveTestPolicy();
   const network = policy.network || process.env.SOLANA_CLUSTER || 'devnet';
-  const rpcUrl = getSolanaRpcUrl();
+  const rpcUrl = getSolanaRpcUrl(network);
 
   const policyRangeOk = Number.isFinite(policy.minSol)
     && Number.isFinite(policy.maxSol)
@@ -589,7 +602,7 @@ router.post('/devnet-airdrop-hot-wallet', adminSession, async (req, res) => {
 
     const { Connection, LAMPORTS_PER_SOL } = require('@solana/web3.js');
     const keypair = parseHotWalletKeypair();
-    const rpcUrl = getSolanaRpcUrl();
+    const rpcUrl = getSolanaRpcUrl(network);
     const connection = new Connection(rpcUrl, 'confirmed');
     const lamports = Math.round(amountSol * LAMPORTS_PER_SOL);
 
@@ -674,7 +687,7 @@ router.post('/execute-test-flow', adminSession, async (req, res) => {
       Connection, LAMPORTS_PER_SOL,
     } = require('@solana/web3.js');
     const keypair = parseHotWalletKeypair();
-    const rpcUrl = getSolanaRpcUrl();
+    const rpcUrl = getSolanaRpcUrl(network);
     const connection = new Connection(rpcUrl, 'confirmed');
 
     const lamports = Math.round(numericSol * LAMPORTS_PER_SOL);
@@ -866,7 +879,7 @@ router.post('/direct-transfer', adminSession, async (req, res) => {
       Connection, LAMPORTS_PER_SOL,
     } = require('@solana/web3.js');
     const keypair = parseHotWalletKeypair();
-    const rpcUrl = getSolanaRpcUrl();
+    const rpcUrl = getSolanaRpcUrl(network);
     const connection = new Connection(rpcUrl, 'confirmed');
 
     const lamports = Math.round(numericSol * LAMPORTS_PER_SOL);
