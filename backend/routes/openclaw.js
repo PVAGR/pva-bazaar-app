@@ -3,6 +3,7 @@ const axios = require('axios');
 const jwt = require('jsonwebtoken');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const dbConnect = require('../lib/dbConnect');
 
 const router = express.Router();
@@ -245,6 +246,137 @@ async function saveMessage(payload) {
     // Persistence is best-effort. OpenClaw bridge should still function if DB is unavailable.
     return null;
   }
+}
+
+async function markOutboundForwardSuccess(messageId, statusCode) {
+  await dbConnect();
+  const OpenClawMessage = require('../models/OpenClawMessage');
+  await OpenClawMessage.updateOne(
+    { _id: messageId },
+    {
+      $set: {
+        'metadata.webhookForwardedAt': new Date().toISOString(),
+        'metadata.webhookForwardStatus': 'ok',
+        'metadata.lastWebhookHttpStatus': statusCode,
+        'metadata.lastWebhookAttemptAt': new Date().toISOString(),
+        'metadata.webhookAttemptCount': 1,
+      },
+    },
+  );
+}
+
+async function markOutboundForwardFailure(messageId, detail) {
+  await dbConnect();
+  const OpenClawMessage = require('../models/OpenClawMessage');
+  const safeDetail = typeof detail === 'string' ? detail.slice(0, 300) : JSON.stringify(detail).slice(0, 300);
+  await OpenClawMessage.updateOne(
+    { _id: messageId },
+    {
+      $set: {
+        'metadata.webhookForwardStatus': 'failed',
+        'metadata.lastWebhookAttemptAt': new Date().toISOString(),
+        'metadata.webhookAttemptCount': 1,
+        'metadata.lastWebhookError': safeDetail,
+        'metadata.nextWebhookAttemptAt': new Date().toISOString(),
+      },
+    },
+  );
+}
+
+function buildForwardHeaders(config) {
+  const headers = {
+    'Content-Type': 'application/json',
+  };
+  if (config.apiKey) headers.Authorization = `Bearer ${config.apiKey}`;
+  return headers;
+}
+
+async function forwardOutboundMessage(config, storedOutbound, payload) {
+  if (!config.webhookUrl) {
+    return {
+      ok: true,
+      forwarded: false,
+      queued: true,
+      message: 'Message queued in OpenClaw store; webhook not configured',
+      queuedMessageId: storedOutbound ? storedOutbound._id.toString() : null,
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  try {
+    const forward = await axios.post(config.webhookUrl, payload, {
+      headers: buildForwardHeaders(config),
+      timeout: 12000,
+    });
+
+    if (storedOutbound) {
+      await markOutboundForwardSuccess(storedOutbound._id, forward.status);
+    }
+
+    return {
+      ok: true,
+      forwarded: true,
+      queued: true,
+      status: forward.status,
+      queuedMessageId: storedOutbound ? storedOutbound._id.toString() : null,
+      timestamp: new Date().toISOString(),
+    };
+  } catch (err) {
+    if (storedOutbound) {
+      try {
+        await markOutboundForwardFailure(storedOutbound._id, err?.response?.data || err.message || 'Unknown dispatch error');
+      } catch (_persistErr) {
+        // best-effort metadata update
+      }
+    }
+
+    const status = err?.response?.status || 502;
+    return {
+      ok: false,
+      status,
+      forwarded: false,
+      message: 'Failed to forward to OpenClaw webhook',
+      detail: err?.response?.data || err.message,
+    };
+  }
+}
+
+async function waitForInboundReply(outboundId, requestId, waitMs) {
+  await dbConnect();
+  const OpenClawMessage = require('../models/OpenClawMessage');
+
+  const startedAt = Date.now();
+  const timeoutMs = Math.min(Math.max(parseInt(waitMs, 10) || 15000, 2000), 25000);
+  const pollIntervalMs = 1000;
+
+  while ((Date.now() - startedAt) < timeoutMs) {
+    const inbound = await OpenClawMessage.findOne({
+      direction: 'inbound',
+      $or: [
+        { respondingTo: outboundId },
+        { 'metadata.respondingToMessageId': String(outboundId) },
+        { 'metadata.replyToRequestId': requestId },
+        { 'metadata.chatRequestId': requestId },
+      ],
+    })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    if (inbound) {
+      return {
+        ok: true,
+        messageId: inbound._id.toString(),
+        content: inbound.content,
+        event: inbound.event,
+        source: inbound.source,
+        createdAt: inbound.createdAt,
+      };
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
+  }
+
+  return { ok: false };
 }
 
 router.get('/status', async (_req, res) => {
@@ -529,22 +661,6 @@ router.post('/dispatch', async (req, res) => {
       metadata: metadata || {},
     });
 
-    if (!config.webhookUrl) {
-      return res.json({
-        ok: true,
-        forwarded: false,
-        queued: true,
-        message: 'Message queued in OpenClaw store; webhook not configured',
-        queuedMessageId: storedOutbound ? storedOutbound._id.toString() : null,
-        timestamp: new Date().toISOString(),
-      });
-    }
-
-    const headers = {
-      'Content-Type': 'application/json',
-    };
-    if (config.apiKey) headers.Authorization = `Bearer ${config.apiKey}`;
-
     const payload = {
       source: 'pvabazaar-backend',
       message: message || null,
@@ -552,66 +668,127 @@ router.post('/dispatch', async (req, res) => {
       metadata: metadata || {},
       timestamp: new Date().toISOString(),
     };
+    const result = await forwardOutboundMessage(config, storedOutbound, payload);
+    if (!result.ok) {
+      return res.status(result.status || 502).json(result);
+    }
+    return res.json(result);
+  } catch (err) {
+    return res.status(500).json({
+      ok: false,
+      message: 'Failed to dispatch OpenClaw message',
+      detail: err.message,
+    });
+  }
+});
 
-    const forward = await axios.post(config.webhookUrl, payload, {
-      headers,
-      timeout: 12000,
+router.post('/chat', async (req, res) => {
+  const config = getConfig();
+
+  if (!isBridgeOrAdminAuthorized(req, config.bridgeSecret)) {
+    return res.status(401).json({
+      ok: false,
+      message: 'Unauthorized OpenClaw chat request',
+    });
+  }
+
+  const text = String(req.body?.message || '').trim();
+  const waitForReplyMs = req.body?.waitForReplyMs;
+  const source = String(req.body?.source || 'admin-openclaw-chat').trim() || 'admin-openclaw-chat';
+
+  if (!text) {
+    return res.status(400).json({
+      ok: false,
+      message: 'message is required',
+    });
+  }
+
+  const chatRequestId = crypto.randomUUID();
+  const outboundEvent = 'pvabazaar.admin.chat';
+  const metadata = {
+    source,
+    chatRequestId,
+    timestamp: new Date().toISOString(),
+  };
+
+  try {
+    const outbound = await saveMessage({
+      direction: 'outbound',
+      content: text,
+      event: outboundEvent,
+      source,
+      processed: false,
+      metadata,
     });
 
-    if (storedOutbound) {
-      await dbConnect();
-      const OpenClawMessage = require('../models/OpenClawMessage');
-      await OpenClawMessage.updateOne(
-        { _id: storedOutbound._id },
-        {
-          $set: {
-            'metadata.webhookForwardedAt': new Date().toISOString(),
-            'metadata.webhookForwardStatus': 'ok',
-            'metadata.lastWebhookHttpStatus': forward.status,
-            'metadata.lastWebhookAttemptAt': new Date().toISOString(),
-            'metadata.webhookAttemptCount': 1,
-          },
-        },
-      );
+    const payload = {
+      source: 'pvabazaar-backend',
+      message: text,
+      event: outboundEvent,
+      metadata: {
+        ...metadata,
+        outboundMessageId: outbound ? outbound._id.toString() : null,
+      },
+      timestamp: new Date().toISOString(),
+    };
+
+    const forward = await forwardOutboundMessage(config, outbound, payload);
+    if (!forward.ok) {
+      return res.status(forward.status || 502).json(forward);
+    }
+
+    if (!forward.forwarded) {
+      return res.json({
+        ok: true,
+        queued: true,
+        forwarded: false,
+        waiting: true,
+        chatRequestId,
+        message: 'Message queued. Configure webhook/gateway for live replies.',
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    const outboundId = outbound ? outbound._id : null;
+    if (!outboundId) {
+      return res.json({
+        ok: true,
+        queued: true,
+        forwarded: forward.forwarded,
+        waiting: false,
+        message: 'Chat message accepted, but response matching is unavailable without message persistence.',
+        chatRequestId,
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    const reply = await waitForInboundReply(outboundId, chatRequestId, waitForReplyMs);
+    if (reply.ok) {
+      return res.json({
+        ok: true,
+        queued: true,
+        forwarded: forward.forwarded,
+        waiting: false,
+        chatRequestId,
+        reply,
+        timestamp: new Date().toISOString(),
+      });
     }
 
     return res.json({
       ok: true,
-      forwarded: true,
       queued: true,
-      status: forward.status,
-      queuedMessageId: storedOutbound ? storedOutbound._id.toString() : null,
+      forwarded: forward.forwarded,
+      waiting: true,
+      chatRequestId,
+      message: 'Message sent. Waiting timed out; poll messages for agent reply.',
       timestamp: new Date().toISOString(),
     });
   } catch (err) {
-    if (storedOutbound) {
-      try {
-        await dbConnect();
-        const OpenClawMessage = require('../models/OpenClawMessage');
-        const detail = err?.response?.data || err.message || 'Unknown dispatch error';
-        await OpenClawMessage.updateOne(
-          { _id: storedOutbound._id },
-          {
-            $set: {
-              'metadata.webhookForwardStatus': 'failed',
-              'metadata.lastWebhookAttemptAt': new Date().toISOString(),
-              'metadata.webhookAttemptCount': 1,
-              'metadata.lastWebhookError': typeof detail === 'string' ? detail.slice(0, 300) : JSON.stringify(detail).slice(0, 300),
-              'metadata.nextWebhookAttemptAt': new Date().toISOString(),
-            },
-          },
-        );
-      } catch (_persistErr) {
-        // best-effort metadata update
-      }
-    }
-
-    const status = err?.response?.status || 502;
-    return res.status(status).json({
+    return res.status(500).json({
       ok: false,
-      forwarded: false,
-      message: 'Failed to forward to OpenClaw webhook',
-      detail: err?.response?.data || err.message,
+      message: 'Failed to process OpenClaw chat request',
+      detail: err.message,
     });
   }
 });

@@ -150,6 +150,12 @@
   font-weight: 500;
 }
 
+.oc-status-subvalue {
+  margin-top: 2px;
+  font-size: 0.75rem;
+  color: var(--site-text-dim, #9db2c8);
+}
+
 .oc-url-value {
   font-size: 0.78rem;
   font-family: 'Courier New', monospace;
@@ -451,6 +457,131 @@
   font-size: 0.88rem;
   background: rgba(0, 217, 255, 0.08);
   border: 1px solid rgba(0, 217, 255, 0.25);
+}
+
+.oc-mission-rack {
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid var(--site-border, rgba(255, 255, 255, 0.12));
+  border-radius: 12px;
+  background:
+    linear-gradient(135deg, rgba(0, 217, 255, 0.05), rgba(18, 30, 63, 0.08)),
+    var(--site-panel, rgba(255, 255, 255, 0.04));
+}
+
+.oc-mission-rack-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.oc-mission-posture {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.oc-mission-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.oc-mission-badge.oc-ok,
+.oc-mission-badge.oc-bad,
+.oc-mission-badge.oc-warn,
+.oc-mission-badge.oc-info {
+  background: transparent;
+}
+
+.oc-mission-controls {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+.oc-mission-controls label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: var(--site-text-dim, #aaa);
+}
+
+.oc-mission-controls input {
+  border: 1px solid var(--site-border, rgba(255, 255, 255, 0.12));
+  border-radius: 8px;
+  background: var(--site-panel-soft, rgba(255, 255, 255, 0.02));
+  color: var(--site-text, #fff);
+  padding: 8px 10px;
+}
+
+.oc-mission-controls input:focus {
+  outline: none;
+  border-color: var(--site-accent, #00d9ff);
+}
+
+.oc-mission-grid {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.oc-mission-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid var(--site-border, rgba(255, 255, 255, 0.12));
+  background: var(--site-panel-soft, rgba(255, 255, 255, 0.03));
+  color: var(--site-text, #fff);
+  cursor: pointer;
+  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+}
+
+.oc-mission-card:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: rgba(0, 217, 255, 0.32);
+  background: rgba(0, 217, 255, 0.06);
+}
+
+.oc-mission-card:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.oc-mission-icon {
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.oc-mission-title {
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.oc-mission-copy {
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--site-text-dim, #abc2d8);
+}
+
+.oc-mission-cta {
+  margin-top: auto;
+  font-size: 0.8rem;
+  font-weight: 600;
   color: var(--site-accent, #00d9ff);
 }
 
@@ -549,6 +680,20 @@
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+@media (max-width: 720px) {
+  .oc-mission-posture {
+    align-items: flex-start;
+  }
+
+  .oc-dispatch-row {
+    flex-direction: column;
+  }
+
+  .oc-send-btn {
+    align-self: stretch;
+  }
 }
 
 @keyframes oc-fadein {

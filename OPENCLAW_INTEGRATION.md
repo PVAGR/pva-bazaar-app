@@ -81,6 +81,8 @@ OPENCLAW_WATCHDOG_ALERT_PATH=./infra/openclaw/logs/watchdog.alert.log
 **`backend/routes/openclaw.js`** - Bridge endpoints:
 - `GET /api/openclaw/status` - Gateway configuration and reachability
 - `POST /api/openclaw/dispatch` - Forward events to OpenClaw webhook
+- `POST /api/openclaw/chat` - Live chat request with short wait for correlated inbound reply
+- `POST /api/openclaw/inbound` - Store OpenClaw replies/events back into website message store
 - `GET /api/openclaw/watchdog-status` - Detailed watchdog summary with log parsing
 - `GET /api/openclaw/recent-events` - Structured recent activity (limit: 30-200)
 
@@ -249,6 +251,80 @@ $webhookUrl = "https://..."   # Slack/Discord webhook
 
 ---
 
+### `POST /api/openclaw/chat`
+
+**Description:** Send a chat message to OpenClaw and wait briefly for a correlated inbound response.
+
+**Request:**
+```json
+{
+  "message": "Run an ops status check and summarize queue health",
+  "source": "admin-openclaw-tab",
+  "waitForReplyMs": 14000
+}
+```
+
+**Response (live reply):**
+```json
+{
+  "ok": true,
+  "queued": true,
+  "forwarded": true,
+  "waiting": false,
+  "chatRequestId": "f4f37a66-xxxx-xxxx-xxxx-3f4f6f25f5f2",
+  "reply": {
+    "messageId": "67cb0d5d...",
+    "content": "Gateway healthy. Pending queue is 2, stale is 0.",
+    "event": "pvabazaar.agent.response",
+    "source": "openclaw-inbound",
+    "createdAt": "2026-03-14T10:20:00.000Z"
+  }
+}
+```
+
+**Response (timed out waiting):**
+```json
+{
+  "ok": true,
+  "queued": true,
+  "forwarded": true,
+  "waiting": true,
+  "chatRequestId": "f4f37a66-xxxx-xxxx-xxxx-3f4f6f25f5f2",
+  "message": "Message sent. Waiting timed out; poll messages for agent reply."
+}
+```
+
+---
+
+### `POST /api/openclaw/inbound`
+
+**Description:** OpenClaw posts replies/events back to PVA Bazaar.
+
+**Critical for threaded live chat:** include one or more correlation fields in `metadata`.
+
+**Recommended inbound payload contract:**
+```json
+{
+  "content": "Gateway healthy. No recovery action required.",
+  "event": "pvabazaar.agent.response",
+  "respondingTo": "67cb0d5d...",
+  "metadata": {
+    "source": "openclaw-gateway",
+    "chatRequestId": "f4f37a66-xxxx-xxxx-xxxx-3f4f6f25f5f2",
+    "replyToRequestId": "f4f37a66-xxxx-xxxx-xxxx-3f4f6f25f5f2",
+    "respondingToMessageId": "67cb0d5d..."
+  }
+}
+```
+
+Any of these currently correlate a reply to a chat request:
+- `respondingTo` (ObjectId of outbound message)
+- `metadata.respondingToMessageId` (string outbound message id)
+- `metadata.replyToRequestId` (chat request UUID)
+- `metadata.chatRequestId` (chat request UUID)
+
+---
+
 ### `GET /api/openclaw/watchdog-status`
 
 **Description:** Detailed watchdog summary with log parsing.
@@ -407,6 +483,20 @@ curl -X POST https://your-openclaw-gateway.com/webhook \
 ```bash
 # Ensure OPENCLAW_API_KEY matches gateway expectations
 ```
+
+---
+
+### Chat Sends But No Reply Appears
+
+1. Confirm webhook forwarding is enabled (`OPENCLAW_WEBHOOK_URL` or runtime OpenClaw webhook URL).
+2. Confirm OpenClaw posts to `/api/openclaw/inbound` after processing.
+3. Ensure inbound payload includes at least one correlation field:
+  - `respondingTo`
+  - `metadata.respondingToMessageId`
+  - `metadata.replyToRequestId`
+  - `metadata.chatRequestId`
+
+Without correlation fields, replies are stored but cannot be matched for immediate live chat response.
 
 ---
 

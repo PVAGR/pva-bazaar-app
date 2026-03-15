@@ -36,6 +36,8 @@ export default function OpenClawTab() {
   const [messageInput, setMessageInput] = useState('');
   const [sending, setSending] = useState(false);
   const [sendResult, setSendResult] = useState(null);
+  const [liveReplyEnabled, setLiveReplyEnabled] = useState(true);
+  const [replyWaitMs, setReplyWaitMs] = useState(14000);
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [autoHealEnabled, setAutoHealEnabled] = useState(true);
   const [autoHealCooldownMinutes, setAutoHealCooldownMinutes] = useState(8);
@@ -45,6 +47,11 @@ export default function OpenClawTab() {
   const [configResult, setConfigResult] = useState(null);
   const [recoveryHistory, setRecoveryHistory] = useState([]);
   const [recoveryHistoryLoading, setRecoveryHistoryLoading] = useState(true);
+  const [missionWalletAddress, setMissionWalletAddress] = useState('');
+  const [missionMinRewardRaw, setMissionMinRewardRaw] = useState('0');
+  const [missionLimit, setMissionLimit] = useState('10');
+  const [missionLoading, setMissionLoading] = useState('');
+  const [missionResult, setMissionResult] = useState(null);
   const [openclawConfig, setOpenclawConfig] = useState({
     gatewayUrl: '',
     webhookUrl: '',
@@ -72,6 +79,17 @@ export default function OpenClawTab() {
   const autoHealRunningRef = useRef(false);
   const chatEndRef = useRef(null);
   const messageInputRef = useRef(null);
+
+  const loadBountyDefaults = useCallback(async () => {
+    try {
+      const data = await apiGet('/bounties/stats');
+      if (data?.ok && !missionWalletAddress && data.defaultPayoutWallet) {
+        setMissionWalletAddress(data.defaultPayoutWallet);
+      }
+    } catch (err) {
+      logger.error('Failed to load bounty defaults for OpenClaw', err);
+    }
+  }, [missionWalletAddress]);
 
   const loadQueueStats = useCallback(async () => {
     setQueueLoading(true);
@@ -297,9 +315,11 @@ export default function OpenClawTab() {
     if (sendResultTimer.current) clearTimeout(sendResultTimer.current);
 
     try {
-      const data = await apiPost('/openclaw/dispatch', {
+      const data = await apiPost(liveReplyEnabled ? '/openclaw/chat' : '/openclaw/dispatch', {
         event: 'pvabazaar.admin.message',
         message: trimmed,
+        waitForReplyMs: Math.min(Math.max(Number(replyWaitMs) || 14000, 2000), 25000),
+        source: 'admin-openclaw-tab',
         metadata: {
           source: 'admin-openclaw-tab',
           timestamp: new Date().toISOString(),
@@ -307,14 +327,19 @@ export default function OpenClawTab() {
       });
 
       if (data.ok) {
+        const hasLiveReply = liveReplyEnabled && data?.reply?.content;
         setSendResult({
           ok: true,
-          text: data.forwarded
-            ? 'Message sent to OpenClaw and queued for agent response'
-            : 'Message queued for agent response',
+          text: hasLiveReply
+            ? 'Live reply received from OpenClaw.'
+            : (data.waiting
+              ? 'Message sent. OpenClaw is still working; poll will pick up the reply shortly.'
+              : (data.forwarded
+                ? 'Message sent to OpenClaw and queued for agent response'
+                : 'Message queued for agent response')),
         });
         setMessageInput('');
-        setTimeout(loadMessages, 1000);
+        setTimeout(loadMessages, hasLiveReply ? 250 : 1000);
         messageInputRef.current?.focus();
       } else {
         setSendResult({ ok: false, text: `❌ ${data.message || 'Dispatch failed'}` });
@@ -325,7 +350,7 @@ export default function OpenClawTab() {
       setSending(false);
       sendResultTimer.current = setTimeout(() => setSendResult(null), 6000);
     }
-  }, [messageInput, loadMessages]);
+  }, [liveReplyEnabled, loadMessages, messageInput, replyWaitMs]);
 
   const replayWebhook = useCallback(async () => {
     setQueueActionLoading(true);
@@ -379,18 +404,92 @@ export default function OpenClawTab() {
     }
   }, [loadStatus, loadQueueStats]);
 
+  const runMission = useCallback(async (type) => {
+    setMissionLoading(type);
+    setMissionResult(null);
+
+    const payload = {
+      limit: Math.min(Math.max(parseInt(missionLimit, 10) || 10, 1), 25),
+      walletAddress: missionWalletAddress.trim(),
+      minRewardRaw: Math.max(0, Number(missionMinRewardRaw) || 0),
+    };
+
+    try {
+      let data;
+      if (type === 'scan') {
+        data = await apiPost('/bounties/scan', {});
+        setMissionResult({
+          ok: true,
+          text: `Scan completed. Sources refreshed: ${Array.isArray(data?.results) ? data.results.length : 0}.`,
+        });
+      } else if (type === 'dispatch') {
+        data = await apiPost('/bounties/dispatch-top', payload);
+        setMissionResult({
+          ok: data?.ok !== false,
+          text: data?.queued
+            ? `Queued ${data.rankedCount || 0} ranked opportunities to OpenClaw for ${data.walletAddress || 'default payout wallet'}.`
+            : (data?.message || 'No dispatch candidates available.'),
+        });
+      } else if (type === 'money-run') {
+        data = await apiPost('/bounties/money-run', payload);
+        setMissionResult({
+          ok: data?.ok !== false,
+          text: data?.queued
+            ? `Money run queued ${data.rankedCount || 0} opportunities for ${data.walletAddress || 'default payout wallet'}.`
+            : (data?.message || 'Money run completed with no qualifying opportunities.'),
+        });
+      } else if (type === 'ops-brief') {
+        data = await apiPost('/openclaw/dispatch', {
+          event: 'pvabazaar.admin.ops.brief',
+          message: [
+            'Maintain website uptime and queue hygiene.',
+            'Prioritize stalled deliveries, stale outbound queue items, and gateway reachability issues.',
+            'If bounty workflows are enabled, prefer high-confidence opportunities above the configured minimum reward.',
+            `Target payout wallet: ${missionWalletAddress.trim() || 'default payout wallet'}.`,
+          ].join(' '),
+          metadata: {
+            source: 'admin-openclaw-mission-rack',
+            minRewardRaw: Math.max(0, Number(missionMinRewardRaw) || 0),
+            limit: Math.min(Math.max(parseInt(missionLimit, 10) || 10, 1), 25),
+            timestamp: new Date().toISOString(),
+          },
+        });
+        setMissionResult({
+          ok: data?.ok !== false,
+          text: data?.forwarded
+            ? 'Operations brief sent to OpenClaw and forwarded to the active gateway.'
+            : 'Operations brief queued for OpenClaw.',
+        });
+      }
+
+      loadStatus();
+      loadMessages();
+      loadQueueStats();
+      loadRecoveryHistory();
+    } catch (err) {
+      setMissionResult({
+        ok: false,
+        text: err?.response?.data?.message || err.message || 'Mission failed',
+      });
+      logger.error(`OpenClaw mission failed: ${type}`, err);
+    } finally {
+      setMissionLoading('');
+    }
+  }, [loadMessages, loadQueueStats, loadRecoveryHistory, loadStatus, missionLimit, missionMinRewardRaw, missionWalletAddress]);
+
   useEffect(() => {
     loadStatus();
     loadMessages();
     loadQueueStats();
     loadRuntimeConfig();
     loadRecoveryHistory();
+    loadBountyDefaults();
     loadAgentConfig();
     loadMemory();
     return () => {
       if (sendResultTimer.current) clearTimeout(sendResultTimer.current);
     };
-  }, [loadStatus, loadMessages, loadQueueStats, loadRuntimeConfig, loadRecoveryHistory, loadAgentConfig, loadMemory]);
+  }, [loadStatus, loadMessages, loadQueueStats, loadRuntimeConfig, loadRecoveryHistory, loadBountyDefaults, loadAgentConfig, loadMemory]);
 
   const pendingOutbound = queueStats?.pendingOutbound ?? 0;
   const waitingForAgent = pendingOutbound > 0;
@@ -478,6 +577,19 @@ export default function OpenClawTab() {
   const heartbeatAgeMinutes = formatAgeMinutes(status?.worker?.heartbeatAt);
   const heartbeatHealthy = heartbeatAgeMinutes !== null && heartbeatAgeMinutes <= 2;
   const leaseActive = status?.worker?.active === true;
+  const staleOutbound = queueStats?.staleOutbound ?? 0;
+  const autonomyPosture = useMemo(() => {
+    if (!openclawConfig.autonomousEnabled) {
+      return { tone: 'oc-warn', icon: '🧷', label: 'Manual hold', detail: 'Autonomous mode is disabled' };
+    }
+    if (!status?.reachable || !leaseActive || staleOutbound > 0) {
+      return { tone: 'oc-bad', icon: '🚨', label: 'Recovery pressure', detail: 'Operator attention required' };
+    }
+    if (openclawConfig.autonomousMoneyRunEnabled) {
+      return { tone: 'oc-ok', icon: '🟢', label: 'Live bounty posture', detail: 'Autonomous ops and money-run are armed' };
+    }
+    return { tone: 'oc-info', icon: '🧭', label: 'Operator-guided', detail: 'Autonomous ops active, money-run held' };
+  }, [leaseActive, openclawConfig.autonomousEnabled, openclawConfig.autonomousMoneyRunEnabled, staleOutbound, status?.reachable]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -507,6 +619,26 @@ export default function OpenClawTab() {
                 onChange={(event) => setAutoHealEnabled(event.target.checked)}
               />
               Auto-heal on anomalies
+            </label>
+            <label className="oc-auto-refresh-label">
+              <input
+                type="checkbox"
+                checked={liveReplyEnabled}
+                onChange={(event) => setLiveReplyEnabled(event.target.checked)}
+              />
+              Live reply mode
+            </label>
+            <label className="oc-auto-heal-cooldown">
+              Reply wait (ms)
+              <input
+                type="number"
+                min="2000"
+                max="25000"
+                step="500"
+                value={replyWaitMs}
+                onChange={(event) => setReplyWaitMs(event.target.value)}
+                disabled={!liveReplyEnabled}
+              />
             </label>
             <label className="oc-auto-heal-cooldown">
               Cooldown (min)
@@ -711,25 +843,26 @@ export default function OpenClawTab() {
               </div>
             </div>
 
-            <div className="oc-status-card oc-info">
-              <span className="oc-status-icon">🤖</span>
+            <div className={`oc-status-card ${autonomyPosture.tone}`}>
+              <span className="oc-status-icon">{autonomyPosture.icon}</span>
               <div>
-                <div className="oc-status-label">Agent Mode</div>
-                <div className="oc-status-value">Autonomous queue responder</div>
+                <div className="oc-status-label">Autonomy Posture</div>
+                <div className="oc-status-value">{autonomyPosture.label}</div>
+                <div className="oc-status-subvalue">{autonomyPosture.detail}</div>
               </div>
             </div>
 
-            <div className={`oc-status-card ${queueStats?.staleOutbound > 0 ? 'oc-warn' : 'oc-ok'}`}>
+            <div className={`oc-status-card ${staleOutbound > 0 ? 'oc-warn' : 'oc-ok'}`}>
               <span className="oc-status-icon">📬</span>
               <div>
                 <div className="oc-status-label">Pending Queue</div>
                 <div className="oc-status-value">
-                  {queueLoading ? 'Loading...' : `${queueStats?.pendingOutbound ?? 0} pending`}
+                  {queueLoading ? 'Loading...' : `${pendingOutbound} pending`}
                 </div>
               </div>
             </div>
 
-            <div className={`oc-status-card ${queueStats?.staleOutbound > 0 ? 'oc-bad' : 'oc-info'}`}>
+            <div className={`oc-status-card ${staleOutbound > 0 ? 'oc-bad' : 'oc-info'}`}>
               <span className="oc-status-icon">⏱️</span>
               <div>
                 <div className="oc-status-label">Stale Queue</div>
@@ -762,6 +895,110 @@ export default function OpenClawTab() {
             </div>
           </div>
         )}
+
+        <div className="oc-mission-rack" aria-label="OpenClaw mission rack">
+          <div className="oc-mission-rack-head">
+            <div>
+              <h3 className="oc-config-title">Mission Rack</h3>
+              <p className="oc-config-note">
+                Operator-approved actions for keeping OpenClaw active, ranking opportunities, and dispatching work without blind wallet autonomy.
+              </p>
+            </div>
+            <div className="oc-mission-posture">
+              <span className={`oc-mission-badge ${autonomyPosture.tone}`}>{autonomyPosture.label}</span>
+              <span className="oc-hint">Queue {pendingOutbound} pending · {staleOutbound} stale</span>
+            </div>
+          </div>
+
+          <div className="oc-mission-controls">
+            <label>
+              Payout Wallet (Base)
+              <input
+                type="text"
+                value={missionWalletAddress}
+                onChange={(event) => setMissionWalletAddress(event.target.value)}
+                placeholder="Uses backend default if left blank"
+              />
+            </label>
+            <label>
+              Minimum Reward
+              <input
+                type="number"
+                min="0"
+                step="1"
+                value={missionMinRewardRaw}
+                onChange={(event) => setMissionMinRewardRaw(event.target.value)}
+              />
+            </label>
+            <label>
+              Dispatch Limit
+              <input
+                type="number"
+                min="1"
+                max="25"
+                step="1"
+                value={missionLimit}
+                onChange={(event) => setMissionLimit(event.target.value)}
+              />
+            </label>
+          </div>
+
+          <div className="oc-mission-grid">
+            <button
+              className="oc-mission-card"
+              type="button"
+              onClick={() => runMission('ops-brief')}
+              disabled={missionLoading === 'ops-brief'}
+            >
+              <span className="oc-mission-icon">🛰️</span>
+              <span className="oc-mission-title">Send Ops Brief</span>
+              <span className="oc-mission-copy">Push a standing directive to prioritize uptime, queue hygiene, and recovery pressure.</span>
+              <span className="oc-mission-cta">{missionLoading === 'ops-brief' ? 'Dispatching...' : 'Queue mission'}</span>
+            </button>
+
+            <button
+              className="oc-mission-card"
+              type="button"
+              onClick={() => runMission('scan')}
+              disabled={missionLoading === 'scan'}
+            >
+              <span className="oc-mission-icon">⚡</span>
+              <span className="oc-mission-title">Run Fresh Scan</span>
+              <span className="oc-mission-copy">Refresh the bounty field so OpenClaw is working from current opportunities instead of stale inventory.</span>
+              <span className="oc-mission-cta">{missionLoading === 'scan' ? 'Scanning...' : 'Refresh sources'}</span>
+            </button>
+
+            <button
+              className="oc-mission-card"
+              type="button"
+              onClick={() => runMission('dispatch')}
+              disabled={missionLoading === 'dispatch'}
+            >
+              <span className="oc-mission-icon">🎯</span>
+              <span className="oc-mission-title">Dispatch Top Ranked</span>
+              <span className="oc-mission-copy">Queue the best currently known opportunities to OpenClaw with your payout target and minimum reward filter.</span>
+              <span className="oc-mission-cta">{missionLoading === 'dispatch' ? 'Dispatching...' : 'Send ranked set'}</span>
+            </button>
+
+            <button
+              className="oc-mission-card"
+              type="button"
+              onClick={() => runMission('money-run')}
+              disabled={missionLoading === 'money-run'}
+            >
+              <span className="oc-mission-icon">💸</span>
+              <span className="oc-mission-title">Money Run</span>
+              <span className="oc-mission-copy">Perform the full admin-safe cycle: scan, rank, and queue qualified opportunities for OpenClaw to work.</span>
+              <span className="oc-mission-cta">{missionLoading === 'money-run' ? 'Running...' : 'Start cycle'}</span>
+            </button>
+          </div>
+
+          {missionResult && (
+            <div className={`oc-send-result ${missionResult.ok ? 'oc-send-result--ok' : 'oc-send-result--err'}`}>
+              {missionResult.text}
+            </div>
+          )}
+        </div>
 
         {queueActionResult && (
           <div
