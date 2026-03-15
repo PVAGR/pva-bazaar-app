@@ -113,6 +113,74 @@
   background: color-mix(in srgb, var(--site-accent-soft) 64%, var(--site-panel));
 }
 
+.network-switcher {
+  display: flex;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+  margin-top: 0.9rem;
+}
+
+.network-chip {
+  min-width: 132px;
+  padding: 0.75rem 1rem;
+  border-radius: 999px;
+  border: 1px solid var(--site-border);
+  background: color-mix(in srgb, var(--site-panel) 86%, transparent);
+  color: var(--site-text);
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+}
+
+.network-chip:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: var(--site-accent);
+}
+
+.network-chip:disabled {
+  opacity: 0.65;
+  cursor: default;
+}
+
+.network-chip.active {
+  border-color: var(--site-accent);
+  background: color-mix(in srgb, var(--site-accent-soft) 68%, var(--site-panel));
+}
+
+.network-chip-live {
+  border-color: color-mix(in srgb, var(--site-warning-text) 45%, var(--site-border));
+}
+
+.network-status-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.9rem;
+  padding: 0.8rem 0.95rem;
+  border-radius: 10px;
+  border: 1px solid var(--site-border);
+  background: color-mix(in srgb, var(--site-panel) 82%, transparent);
+}
+
+.network-status-label {
+  color: var(--site-text-muted);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.network-status-separator {
+  color: var(--site-text-muted);
+}
+
+.network-guidance {
+  margin-top: 0.75rem;
+  color: var(--site-text-muted);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
 /* Metrics Grid */
 .payout-summary {
   display: flex;

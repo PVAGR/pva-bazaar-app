@@ -34,6 +34,7 @@ export default function PayoutTab() {
   const [creatorHandle, setCreatorHandle] = useState('');
   const [creatorPayouts, setCreatorPayouts] = useState([]);
   const [policySaving, setPolicySaving] = useState(false);
+  const [networkSwitching, setNetworkSwitching] = useState('');
   const [policyMessage, setPolicyMessage] = useState('');
   const [policyForm, setPolicyForm] = useState({
     minUsd: 5,
@@ -172,33 +173,74 @@ export default function PayoutTab() {
   const formatCurrency = (cents) => `$${(cents / 100).toFixed(2)}`;
 
   const handleSavePolicy = async () => {
+    return savePolicy();
+  };
+
+  const buildPolicyPayload = (overrides = {}) => {
+    const nextPolicy = {
+      ...policyForm,
+      ...overrides,
+    };
+
+    return {
+      minUsd: Number(nextPolicy.minUsd || 5),
+      maxUsd: Number(nextPolicy.maxUsd || 50000),
+      minSol: Number(nextPolicy.minSol || 0.001),
+      maxSol: Number(nextPolicy.maxSol || 50),
+      requireAllowlist: nextPolicy.requireAllowlist,
+      walletAllowlist: String(nextPolicy.walletAllowlist || '')
+        .split(/\r?\n|,/) 
+        .map((v) => v.trim())
+        .filter(Boolean),
+      network: nextPolicy.network,
+      treasuryWallet: nextPolicy.treasuryWallet,
+      notes: nextPolicy.notes,
+    };
+  };
+
+  const savePolicy = async (overrides = {}, successMessage = '✅ Runtime payout policy saved.') => {
     setPolicySaving(true);
     setPolicyMessage('');
     try {
-      const payload = {
-        minUsd: Number(policyForm.minUsd || 5),
-        maxUsd: Number(policyForm.maxUsd || 50000),
-        minSol: Number(policyForm.minSol || 0.001),
-        maxSol: Number(policyForm.maxSol || 50),
-        requireAllowlist: policyForm.requireAllowlist,
-        walletAllowlist: policyForm.walletAllowlist
-          .split(/\r?\n|,/)
-          .map((v) => v.trim())
-          .filter(Boolean),
-        network: policyForm.network,
-        treasuryWallet: policyForm.treasuryWallet,
-        notes: policyForm.notes,
-      };
+      const nextPolicy = { ...policyForm, ...overrides };
+      if (Object.keys(overrides).length > 0) {
+        setPolicyForm(nextPolicy);
+      }
+
+      const payload = buildPolicyPayload(overrides);
       const data = await updatePayoutRuntimePolicy(payload);
       if (data?.ok) {
-        setPolicyMessage('✅ Runtime payout policy saved.');
+        setPolicyMessage(successMessage);
+        await loadRuntimePolicy();
+        return { ok: true, data };
       } else {
         setPolicyMessage(`❌ ${data?.error || 'Failed to save payout policy.'}`);
+        return { ok: false, data };
       }
     } catch (err) {
       setPolicyMessage(`❌ ${err?.response?.data?.error || err.message || 'Failed to save payout policy.'}`);
+      return { ok: false, error: err };
     } finally {
       setPolicySaving(false);
+    }
+  };
+
+  const handleQuickNetworkSwitch = async (targetNetwork) => {
+    if (!targetNetwork || targetNetwork === policyForm.network) {
+      return;
+    }
+
+    setNetworkSwitching(targetNetwork);
+    setPolicyMessage('');
+    try {
+      const saveResult = await savePolicy(
+        { network: targetNetwork },
+        `✅ Runtime network switched to ${targetNetwork}. Refreshing live checks...`
+      );
+      if (!saveResult?.ok) return;
+      await Promise.all([runReadinessCheck(), loadHotWalletBalance()]);
+    } finally {
+      setNetworkSwitching('');
     }
   };
 
@@ -996,6 +1038,47 @@ export default function PayoutTab() {
                 ))}
               </div>
             ) : null}
+          </div>
+
+          <div className="policy-card">
+            <h3>Network Rail</h3>
+            <p>
+              Switch the live settlement rail in one click. This saves the runtime policy, then refreshes readiness and
+              wallet status against the selected network.
+            </p>
+            <div className="network-switcher" role="group" aria-label="Settlement network switcher">
+              {['devnet', 'testnet', 'mainnet-beta'].map((network) => {
+                const isActive = policyForm.network === network;
+                const isWorking = networkSwitching === network;
+                return (
+                  <button
+                    key={network}
+                    type="button"
+                    className={`network-chip ${isActive ? 'active' : ''} ${network === 'mainnet-beta' ? 'network-chip-live' : ''}`}
+                    onClick={() => handleQuickNetworkSwitch(network)}
+                    disabled={policySaving || Boolean(networkSwitching) || isActive}
+                  >
+                    {isWorking ? 'Switching...' : (network === 'mainnet-beta' ? 'Mainnet Live' : network)}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="network-status-strip">
+              <span className="network-status-label">Current policy network</span>
+              <strong>{policyForm.network}</strong>
+              {readiness?.data?.network ? (
+                <>
+                  <span className="network-status-separator">•</span>
+                  <span className="network-status-label">Last readiness network</span>
+                  <strong>{readiness.data.network}</strong>
+                </>
+              ) : null}
+            </div>
+            <div className="network-guidance">
+              {policyForm.network === 'mainnet-beta'
+                ? 'Mainnet mode is intended for live transfers using real SOL.'
+                : 'Non-mainnet modes are for testing and dry runs.'}
+            </div>
           </div>
 
           <div className="policy-card">

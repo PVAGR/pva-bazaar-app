@@ -8,6 +8,7 @@ const { createSystemEvent, dispatchToOpenClaw } = require('../utils/openclaw-eve
 
 function getSolanaRpcUrl(preferredNetwork) {
   const network = String(preferredNetwork || process.env.SOLANA_CLUSTER || 'devnet').trim() || 'devnet';
+  const hasExplicitNetwork = typeof preferredNetwork === 'string' && preferredNetwork.trim().length > 0;
 
   if (network === 'mainnet-beta' && process.env.SOLANA_RPC_URL_MAINNET) {
     return process.env.SOLANA_RPC_URL_MAINNET;
@@ -18,7 +19,11 @@ function getSolanaRpcUrl(preferredNetwork) {
   if (network === 'devnet' && process.env.SOLANA_RPC_URL_DEVNET) {
     return process.env.SOLANA_RPC_URL_DEVNET;
   }
-  if (process.env.SOLANA_RPC_URL) {
+
+  // Legacy fallback only when no explicit runtime network was requested.
+  // This prevents a stale generic env var from pinning the app to devnet
+  // after the operator switches the payout policy to mainnet/testnet.
+  if (!hasExplicitNetwork && process.env.SOLANA_RPC_URL) {
     return process.env.SOLANA_RPC_URL;
   }
 
