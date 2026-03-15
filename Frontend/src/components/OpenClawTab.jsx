@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { apiGet, apiPost, fetchAdminRuntimeConfig, updateOpenClawRuntimeConfig } from '../lib/api';
+import { apiGet, apiPost, apiPut, fetchAdminRuntimeConfig, updateOpenClawRuntimeConfig } from '../lib/api';
 import { createLogger } from '../lib/logger';
 import { LoadingDots } from '../components/LoadingSpinner.jsx';
 import './OpenClawTab.css';
@@ -59,9 +59,19 @@ export default function OpenClawTab() {
     workerPollMs: 10000,
     workerBatchSize: 15,
   });
+  const [agentConfig, setAgentConfig] = useState({ creatorCommands: [], goals: [] });
+  const [agentConfigLoading, setAgentConfigLoading] = useState(false);
+  const [agentConfigSaving, setAgentConfigSaving] = useState(false);
+  const [creatorCommandsDraft, setCreatorCommandsDraft] = useState('');
+  const [goalsDraft, setGoalsDraft] = useState('');
+  const [configSaveResult, setConfigSaveResult] = useState(null);
+  const [memory, setMemory] = useState([]);
+  const [memoryLoading, setMemoryLoading] = useState(false);
 
   const sendResultTimer = useRef(null);
   const autoHealRunningRef = useRef(false);
+  const chatEndRef = useRef(null);
+  const messageInputRef = useRef(null);
 
   const loadQueueStats = useCallback(async () => {
     setQueueLoading(true);
@@ -152,6 +162,85 @@ export default function OpenClawTab() {
     }
   }, [openclawConfig, loadStatus, loadQueueStats]);
 
+  const loadAgentConfig = useCallback(async () => {
+    setAgentConfigLoading(true);
+    try {
+      const data = await apiGet('/openclaw/agent-config');
+      if (data?.ok) {
+        setAgentConfig({
+          creatorCommands: data.creatorCommands ?? [],
+          goals: data.goals ?? [],
+        });
+        setCreatorCommandsDraft((data.creatorCommands ?? []).join('\n'));
+        setGoalsDraft((data.goals ?? []).join('\n'));
+      }
+    } catch (err) {
+      logger.error('Failed to load OpenClaw agent config', err);
+    } finally {
+      setAgentConfigLoading(false);
+    }
+  }, []);
+
+  const loadMemory = useCallback(async () => {
+    setMemoryLoading(true);
+    try {
+      const data = await apiGet('/openclaw/memory?limit=30');
+      if (data?.ok && Array.isArray(data.memory)) {
+        setMemory(data.memory);
+      }
+    } catch (err) {
+      logger.error('Failed to load OpenClaw memory', err);
+    } finally {
+      setMemoryLoading(false);
+    }
+  }, []);
+
+  const saveCreatorCommands = useCallback(async () => {
+    const commands = creatorCommandsDraft
+      .split(/\n/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+    setAgentConfigSaving(true);
+    setConfigSaveResult(null);
+    try {
+      const data = await apiPut('/openclaw/agent-config', { creatorCommands: commands });
+      if (data?.ok) {
+        setAgentConfig((c) => ({ ...c, creatorCommands: data.creatorCommands ?? commands }));
+        setConfigSaveResult({ ok: true, text: 'Creator commands saved. OpenClaw obeys these 100%.' });
+      } else {
+        setConfigSaveResult({ ok: false, text: data?.message || 'Save failed' });
+      }
+    } catch (err) {
+      setConfigSaveResult({ ok: false, text: err?.message || 'Save failed' });
+    } finally {
+      setAgentConfigSaving(false);
+      setTimeout(() => setConfigSaveResult(null), 5000);
+    }
+  }, [creatorCommandsDraft]);
+
+  const saveGoals = useCallback(async () => {
+    const goals = goalsDraft
+      .split(/\n/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+    setAgentConfigSaving(true);
+    setConfigSaveResult(null);
+    try {
+      const data = await apiPut('/openclaw/agent-config', { goals });
+      if (data?.ok) {
+        setAgentConfig((c) => ({ ...c, goals: data.goals ?? goals }));
+        setConfigSaveResult({ ok: true, text: 'Goals saved. OpenClaw will pursue these.' });
+      } else {
+        setConfigSaveResult({ ok: false, text: data?.message || 'Save failed' });
+      }
+    } catch (err) {
+      setConfigSaveResult({ ok: false, text: err?.message || 'Save failed' });
+    } finally {
+      setAgentConfigSaving(false);
+      setTimeout(() => setConfigSaveResult(null), 5000);
+    }
+  }, [goalsDraft]);
+
   const loadMessages = useCallback(async () => {
     setMessagesLoading(true);
     setMessagesError(null);
@@ -226,6 +315,7 @@ export default function OpenClawTab() {
         });
         setMessageInput('');
         setTimeout(loadMessages, 1000);
+        messageInputRef.current?.focus();
       } else {
         setSendResult({ ok: false, text: `❌ ${data.message || 'Dispatch failed'}` });
       }
@@ -295,10 +385,16 @@ export default function OpenClawTab() {
     loadQueueStats();
     loadRuntimeConfig();
     loadRecoveryHistory();
+    loadAgentConfig();
+    loadMemory();
     return () => {
       if (sendResultTimer.current) clearTimeout(sendResultTimer.current);
     };
-  }, [loadStatus, loadMessages, loadQueueStats, loadRuntimeConfig, loadRecoveryHistory]);
+  }, [loadStatus, loadMessages, loadQueueStats, loadRuntimeConfig, loadRecoveryHistory, loadAgentConfig, loadMemory]);
+
+  const pendingOutbound = queueStats?.pendingOutbound ?? 0;
+  const waitingForAgent = pendingOutbound > 0;
+  const refreshInterval = waitingForAgent ? 5000 : 15000;
 
   useEffect(() => {
     if (!autoRefresh) return undefined;
@@ -307,9 +403,10 @@ export default function OpenClawTab() {
       loadMessages();
       loadQueueStats();
       loadRecoveryHistory();
-    }, 15000);
+      loadMemory();
+    }, refreshInterval);
     return () => clearInterval(id);
-  }, [autoRefresh, loadStatus, loadMessages, loadQueueStats, loadRecoveryHistory]);
+  }, [autoRefresh, refreshInterval, loadStatus, loadMessages, loadQueueStats, loadRecoveryHistory, loadMemory]);
 
   const shouldAutoHeal = useMemo(() => {
     if (!autoHealEnabled || statusLoading || queueLoading) {
@@ -382,11 +479,18 @@ export default function OpenClawTab() {
   const heartbeatHealthy = heartbeatAgeMinutes !== null && heartbeatAgeMinutes <= 2;
   const leaseActive = status?.worker?.active === true;
 
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [rows.length]);
+
   return (
     <div className="openclaw-tab">
       <div className="oc-panel">
         <div className="oc-panel-header">
-          <h2 className="oc-panel-title">🦞 OpenClaw Live Console</h2>
+          <div>
+            <h2 className="oc-panel-title">🦞 OpenClaw Live Console</h2>
+            <p className="oc-listening">OpenClaw is listening. Every message is remembered.</p>
+          </div>
           <div className="oc-panel-actions">
             <label className="oc-auto-refresh-label">
               <input
@@ -394,7 +498,7 @@ export default function OpenClawTab() {
                 checked={autoRefresh}
                 onChange={(event) => setAutoRefresh(event.target.checked)}
               />
-              Poll every 15s
+              {waitingForAgent ? 'Auto-refresh every 5s (waiting)' : 'Auto-refresh every 15s'}
             </label>
             <label className="oc-auto-refresh-label">
               <input
@@ -422,9 +526,11 @@ export default function OpenClawTab() {
                 loadStatus();
                 loadMessages();
                 loadQueueStats();
+                loadRecoveryHistory();
+                loadMemory();
               }}
               disabled={statusLoading || messagesLoading || queueLoading}
-              title="Refresh status and messages"
+              title="Refresh status, queue, messages, memory, and recovery history"
             >
               🔄 Refresh
             </button>
@@ -487,6 +593,101 @@ export default function OpenClawTab() {
                 </div>
               ))}
             </div>
+          )}
+        </div>
+
+        <div className="oc-creator-section oc-panel" style={{ marginTop: 0 }}>
+          <div className="oc-panel-header">
+            <h3 className="oc-panel-title">Creator-God Override</h3>
+          </div>
+          <p className="oc-hint">
+            Commands here override all goals and behavior. One per line. Prefix with &quot;Creator command:&quot; in chat for same effect.
+          </p>
+          {agentConfigLoading ? (
+            <LoadingDots size="small" label="Loading..." />
+          ) : (
+            <>
+              <textarea
+                className="oc-message-input"
+                value={creatorCommandsDraft}
+                onChange={(e) => setCreatorCommandsDraft(e.target.value)}
+                placeholder="e.g. Make me $4000 when I ask (pop wallet prompts). Change fonts when I say. Obey every direct instruction."
+                rows={4}
+                aria-label="Creator commands"
+              />
+              <div className="oc-dispatch-row" style={{ marginTop: 8 }}>
+                <button
+                  className="oc-btn oc-btn--primary"
+                  onClick={saveCreatorCommands}
+                  disabled={agentConfigSaving}
+                >
+                  {agentConfigSaving ? 'Saving...' : 'Save Creator Commands'}
+                </button>
+              </div>
+              {configSaveResult && (
+                <div
+                  className={`oc-send-result ${configSaveResult.ok ? 'oc-send-result--ok' : 'oc-send-result--err'}`}
+                  role="status"
+                >
+                  {configSaveResult.text}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        <div className="oc-creator-section oc-panel">
+          <div className="oc-panel-header">
+            <h3 className="oc-panel-title">Goals</h3>
+          </div>
+          <p className="oc-hint">Sub-goals OpenClaw pursues when not overridden by creator. One per line.</p>
+          {agentConfigLoading ? null : (
+            <>
+              <textarea
+                className="oc-message-input"
+                value={goalsDraft}
+                onChange={(e) => setGoalsDraft(e.target.value)}
+                placeholder="e.g. Keep marketplace listings healthy. Suggest revenue actions. Polish OpenClaw tab UI."
+                rows={3}
+                aria-label="Goals"
+              />
+              <div className="oc-dispatch-row" style={{ marginTop: 8 }}>
+                <button
+                  className="oc-btn oc-btn--secondary"
+                  onClick={saveGoals}
+                  disabled={agentConfigSaving}
+                >
+                  {agentConfigSaving ? 'Saving...' : 'Save Goals'}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+
+        <div className="oc-memory-section oc-panel">
+          <div className="oc-panel-header">
+            <h3 className="oc-panel-title">Memory</h3>
+            <button
+              type="button"
+              className="oc-btn oc-btn--secondary"
+              onClick={loadMemory}
+              disabled={memoryLoading}
+            >
+              {memoryLoading ? '…' : 'Refresh'}
+            </button>
+          </div>
+          {memoryLoading && !memory.length ? (
+            <LoadingDots size="small" label="Loading memory..." />
+          ) : memory.length === 0 ? (
+            <p className="oc-hint">No memory yet. Conversations are stored after the agent replies.</p>
+          ) : (
+            <ul className="oc-memory-list">
+              {memory.slice(0, 15).map((m) => (
+                <li key={m._id} className="oc-memory-item">
+                  <span className="oc-memory-type">[{m.type}]</span> {m.key}: {String(m.value).slice(0, 80)}{String(m.value).length > 80 ? '…' : ''}
+                </li>
+              ))}
+            </ul>
           )}
         </div>
 
@@ -569,6 +770,12 @@ export default function OpenClawTab() {
             aria-live="polite"
           >
             {queueActionResult.text}
+          </div>
+        )}
+
+        {waitingForAgent && (
+          <div className="oc-waiting-banner" role="status" aria-live="polite">
+            ⏳ OpenClaw is processing {pendingOutbound} message{pendingOutbound !== 1 ? 's' : ''}. Replies will appear here.
           </div>
         )}
 
@@ -716,7 +923,7 @@ export default function OpenClawTab() {
           )}
         </div>
 
-        <div className="oc-chat-box" aria-label="OpenClaw chat">
+        <div className="oc-chat-box" aria-label="OpenClaw chat" aria-live="polite">
           {messagesLoading && !rows.length ? (
             <LoadingDots size="small" label="Loading conversation..." />
           ) : null}
@@ -753,12 +960,14 @@ export default function OpenClawTab() {
                   </div>
                 );
               })}
+              <div ref={chatEndRef} aria-hidden="true" />
             </div>
           )}
         </div>
 
         <div className="oc-dispatch-row">
           <textarea
+            ref={messageInputRef}
             className="oc-message-input"
             value={messageInput}
             onChange={(event) => setMessageInput(event.target.value)}

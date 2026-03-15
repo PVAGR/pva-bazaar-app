@@ -1006,6 +1006,190 @@ router.post('/messages/:id/processed', async (req, res) => {
   }
 });
 
+router.get('/agent-config', async (req, res) => {
+  const config = getConfig();
+  if (!requireBridgeOrAdmin(req, res, config, 'Unauthorized OpenClaw agent-config request')) return;
+
+  try {
+    await dbConnect();
+    const OpenClawAgentConfig = require('../models/OpenClawAgentConfig');
+    const doc = await OpenClawAgentConfig.findOne().sort({ updatedAt: -1 }).lean();
+    return res.json({
+      ok: true,
+      creatorCommands: doc?.creatorCommands ?? [],
+      goals: doc?.goals ?? [],
+      updatedAt: doc?.updatedAt ?? null,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err) {
+    return res.status(503).json({
+      ok: false,
+      message: 'Agent config store unavailable',
+      error: err.message,
+    });
+  }
+});
+
+router.put('/agent-config', async (req, res) => {
+  const config = getConfig();
+  if (!requireBridgeOrAdmin(req, res, config, 'Unauthorized OpenClaw agent-config update')) return;
+
+  const { creatorCommands, goals } = req.body || {};
+  try {
+    await dbConnect();
+    const OpenClawAgentConfig = require('../models/OpenClawAgentConfig');
+    const update = {
+      updatedAt: new Date(),
+    };
+    if (Array.isArray(creatorCommands)) update.creatorCommands = creatorCommands;
+    if (Array.isArray(goals)) update.goals = goals;
+
+    const doc = await OpenClawAgentConfig.findOneAndUpdate(
+      {},
+      { $set: update },
+      { new: true, upsert: true },
+    ).lean();
+
+    return res.json({
+      ok: true,
+      creatorCommands: doc.creatorCommands ?? [],
+      goals: doc.goals ?? [],
+      updatedAt: doc.updatedAt,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err) {
+    return res.status(500).json({
+      ok: false,
+      message: 'Failed to update agent config',
+      error: err.message,
+    });
+  }
+});
+
+router.get('/memory', async (req, res) => {
+  const config = getConfig();
+  if (!requireBridgeOrAdmin(req, res, config, 'Unauthorized OpenClaw memory request')) return;
+
+  const limit = Math.min(parseInt(req.query.limit, 10) || 50, 200);
+  const type = req.query.type;
+
+  try {
+    await dbConnect();
+    const OpenClawMemory = require('../models/OpenClawMemory');
+    const query = type ? { type } : {};
+    const items = await OpenClawMemory.find(query).sort({ createdAt: -1 }).limit(limit).lean();
+    return res.json({
+      ok: true,
+      memory: items,
+      count: items.length,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err) {
+    return res.status(503).json({
+      ok: false,
+      message: 'Memory store unavailable',
+      error: err.message,
+    });
+  }
+});
+
+router.post('/memory', async (req, res) => {
+  const config = getConfig();
+  if (!requireBridgeOrAdmin(req, res, config, 'Unauthorized OpenClaw memory write')) return;
+
+  const { key, value, type } = req.body || {};
+  if (!key || value === undefined) {
+    return res.status(400).json({
+      ok: false,
+      message: 'key and value are required',
+    });
+  }
+
+  try {
+    await dbConnect();
+    const OpenClawMemory = require('../models/OpenClawMemory');
+    const doc = await OpenClawMemory.create({
+      key: String(key).slice(0, 500),
+      value: String(value).slice(0, 10000),
+      type: ['fact', 'goal', 'reflection', 'preference'].includes(type) ? type : 'fact',
+      source: req.body?.source || 'api',
+    });
+    return res.json({
+      ok: true,
+      id: doc._id.toString(),
+      key: doc.key,
+      type: doc.type,
+      createdAt: doc.createdAt,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err) {
+    return res.status(500).json({
+      ok: false,
+      message: 'Failed to write memory',
+      error: err.message,
+    });
+  }
+});
+
+router.delete('/memory/:id', async (req, res) => {
+  const config = getConfig();
+  if (!requireBridgeOrAdmin(req, res, config, 'Unauthorized OpenClaw memory delete')) return;
+
+  try {
+    await dbConnect();
+    const OpenClawMemory = require('../models/OpenClawMemory');
+    const result = await OpenClawMemory.findByIdAndDelete(req.params.id);
+    if (!result) {
+      return res.status(404).json({ ok: false, message: 'Memory not found' });
+    }
+    return res.json({
+      ok: true,
+      id: req.params.id,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err) {
+    return res.status(500).json({
+      ok: false,
+      message: 'Failed to delete memory',
+      error: err.message,
+    });
+  }
+});
+
+router.get('/snapshot/marketplace', async (req, res) => {
+  const config = getConfig();
+  if (!requireBridgeOrAdmin(req, res, config, 'Unauthorized OpenClaw snapshot request')) return;
+
+  const limit = Math.min(parseInt(req.query.limit, 10) || 10, 50);
+  try {
+    await dbConnect();
+    const Artifact = require('../models/Artifact');
+    const [count, recent] = await Promise.all([
+      Artifact.countDocuments().catch(() => 0),
+      Artifact.find().sort({ createdAt: -1 }).limit(limit).select('title slug category createdAt').lean().catch(() => []),
+    ]);
+    return res.json({
+      ok: true,
+      marketplace: {
+        totalArtifacts: count,
+        recent: (recent || []).map((a) => ({
+          title: a.title || a.name,
+          slug: a.slug,
+          category: a.category,
+          createdAt: a.createdAt,
+        })),
+      },
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err) {
+    return res.status(503).json({
+      ok: false,
+      message: 'Marketplace snapshot unavailable',
+      error: err.message,
+    });
+  }
+});
+
 // Lightweight health check for inclusion in main health endpoint
 function getOpenClawHealth() {
   const config = getConfig();
