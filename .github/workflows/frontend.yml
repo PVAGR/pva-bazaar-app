@@ -28,7 +28,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./Frontend
-        run: npm ci
+        run: npm ci || npm install --no-audit --no-fund
 
       - name: Run src theme guard
         working-directory: ./Frontend

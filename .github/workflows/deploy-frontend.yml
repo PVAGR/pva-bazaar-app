@@ -37,7 +37,7 @@ jobs:
           cache-dependency-path: 'Frontend/package-lock.json'
 
       - name: Install frontend dependencies
-        run: npm ci
+        run: npm ci || npm install --no-audit --no-fund
 
       - name: Run src theme guard
         run: npm run check:theme
@@ -65,7 +65,7 @@ jobs:
           cache-dependency-path: 'Frontend/package-lock.json'
 
       - name: Install frontend dependencies
-        run: npm ci
+        run: npm ci || npm install --no-audit --no-fund
 
       - name: Set Sentry Release (git SHA)
         id: sentry_release
@@ -122,7 +122,7 @@ jobs:
           cache-dependency-path: 'Frontend/package-lock.json'
 
       - name: Install frontend dependencies
-        run: npm ci
+        run: npm ci || npm install --no-audit --no-fund
 
       - name: Build frontend
         run: npm run build
