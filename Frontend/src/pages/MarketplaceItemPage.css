@@ -225,6 +225,151 @@
   line-height: 1;
   padding: 0.14rem 0.4rem;
 }
+
+.item-fraction-panel {
+  border: 1px solid var(--site-border);
+  border-radius: 10px;
+  background: var(--site-panel-soft);
+  padding: 0.65rem;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.item-fraction-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.55rem;
+}
+
+.item-fraction-header h2 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.item-fraction-status {
+  text-transform: uppercase;
+  font-size: 0.68rem;
+  border-radius: 999px;
+  border: 1px solid var(--site-border);
+  padding: 0.08rem 0.45rem;
+}
+
+.item-fraction-status.enabled {
+  color: var(--site-accent-strong);
+  background: var(--site-accent-soft);
+}
+
+.item-fraction-status.disabled {
+  color: var(--site-text-muted);
+  background: var(--site-panel);
+}
+
+.item-fraction-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.45rem;
+}
+
+.item-fraction-kpi {
+  border: 1px solid var(--site-border);
+  border-radius: 8px;
+  background: var(--site-panel);
+  padding: 0.42rem 0.5rem;
+  display: grid;
+  gap: 0.2rem;
+}
+
+.item-fraction-kpi span {
+  color: var(--site-text-muted);
+  font-size: 0.74rem;
+}
+
+.item-fraction-kpi strong {
+  font-size: 0.9rem;
+}
+
+.item-fraction-buy {
+  border: 1px solid var(--site-border);
+  border-radius: 8px;
+  background: var(--site-panel);
+  padding: 0.45rem 0.55rem;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.item-fraction-buy label {
+  color: var(--site-text-muted);
+  font-size: 0.82rem;
+}
+
+.item-fraction-buy-row {
+  display: grid;
+  grid-template-columns: 88px 1fr auto;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.item-fraction-buy-row input {
+  border: 1px solid var(--site-border);
+  border-radius: 8px;
+  background: var(--site-panel-soft);
+  color: var(--site-text);
+  padding: 0.35rem 0.45rem;
+  min-height: 34px;
+}
+
+.item-fraction-buy-price {
+  color: var(--site-text-muted);
+  font-size: 0.82rem;
+}
+
+.item-fraction-buy-price strong {
+  color: var(--site-text);
+}
+
+.item-fraction-buy-btn {
+  border: 1px solid var(--site-border);
+  border-radius: 8px;
+  background: var(--site-accent-soft);
+  color: var(--site-accent-strong);
+  padding: 0.42rem 0.7rem;
+  font-size: 0.82rem;
+}
+
+.item-fraction-ledger h3 {
+  margin: 0 0 0.35rem;
+  font-size: 0.88rem;
+}
+
+.item-fraction-ledger-empty,
+.item-fraction-note {
+  margin: 0;
+  color: var(--site-text-muted);
+  font-size: 0.84rem;
+}
+
+.item-fraction-ledger-table-wrap {
+  overflow-x: auto;
+}
+
+.item-fraction-ledger table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.item-fraction-ledger th,
+.item-fraction-ledger td {
+  border-bottom: 1px solid var(--site-border);
+  padding: 0.35rem 0.4rem;
+  text-align: left;
+}
+
+.item-fraction-ledger th {
+  color: var(--site-text-muted);
+  font-size: 0.72rem;
+}
 .buy-btn {
   margin-top: 1.2rem;
   padding: 0.7rem 2.2rem;
@@ -287,5 +432,10 @@
 
   .item-provenance-row {
     grid-template-columns: 1fr;
+  }
+
+  .item-fraction-buy-row {
+    grid-template-columns: 1fr;
+    align-items: stretch;
   }
 }

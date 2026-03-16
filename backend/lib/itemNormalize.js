@@ -141,6 +141,20 @@ function toPublicItem(doc) {
       reviewedBy: doc?.provenance?.review?.reviewedBy || '',
     },
   };
+  const fractionalization = {
+    enabled: Boolean(doc?.fractionalization?.enabled),
+    totalShares: Number(doc?.fractionalization?.totalShares || 0),
+    soldShares: Number(doc?.fractionalization?.soldShares || 0),
+    sharePrice: Number(doc?.fractionalization?.sharePrice || 0),
+    majorityThreshold: Number(doc?.fractionalization?.majorityThreshold || 0),
+  };
+  const ownershipHistory = Array.isArray(doc?.ownershipHistory)
+    ? doc.ownershipHistory.map((entry) => ({
+        owner: String(entry?.owner || ''),
+        date: entry?.date ? new Date(entry.date).toISOString() : undefined,
+        transactionHash: String(entry?.transactionHash || ''),
+      }))
+    : [];
   return {
     id: doc._id ? String(doc._id) : undefined,
     slug,
@@ -157,6 +171,8 @@ function toPublicItem(doc) {
     syndication,
     omnichannel,
     provenance,
+    fractionalization,
+    ownershipHistory,
     createdAt: doc.createdAt ? doc.createdAt.toISOString() : undefined,
     updatedAt: doc.updatedAt ? doc.updatedAt.toISOString() : undefined,
   };

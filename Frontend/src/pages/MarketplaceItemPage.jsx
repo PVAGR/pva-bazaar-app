@@ -45,6 +45,7 @@ export default function MarketplaceItemPage() {
   const [provenanceLoading, setProvenanceLoading] = useState(false);
   const [provenanceError, setProvenanceError] = useState("");
   const [copied, setCopied] = useState("");
+  const [shareQty, setShareQty] = useState(1);
 
   useEffect(() => {
     let mounted = true;
@@ -104,6 +105,22 @@ export default function MarketplaceItemPage() {
   const payload = provenanceFeed?.payload || null;
   const signature = provenanceFeed?.signature || "";
   const verify = provenanceVerification || null;
+  const frac = item?.fractionalization || {};
+  const fractionalEnabled = Boolean(frac.enabled);
+  const totalShares = Math.max(0, Number(frac.totalShares || 0));
+  const soldShares = Math.max(0, Number(frac.soldShares || 0));
+  const availableShares = Math.max(0, totalShares - soldShares);
+  const sharePrice = Math.max(0, Number(frac.sharePrice || 0));
+  const ownershipRows = Array.isArray(item?.ownershipHistory) ? item.ownershipHistory : [];
+  const normalizedShareQty = Math.min(Math.max(1, Number(shareQty || 1)), Math.max(1, availableShares || 1));
+  const shareSubtotal = sharePrice * normalizedShareQty;
+
+  function formatIsoDate(value) {
+    if (!value) return 'n/a';
+    const dt = new Date(value);
+    if (Number.isNaN(dt.getTime())) return String(value);
+    return dt.toLocaleString();
+  }
 
   async function copyValue(label, value) {
     const text = String(value || "").trim();
@@ -294,6 +311,94 @@ export default function MarketplaceItemPage() {
                 ) : null}
               </div>
             ) : null}
+          </section>
+
+          <section className="item-fraction-panel" aria-label="Fractional ownership">
+            <div className="item-fraction-header">
+              <h2>Fractional Ownership</h2>
+              <span className={`item-fraction-status ${fractionalEnabled ? 'enabled' : 'disabled'}`}>
+                {fractionalEnabled ? 'Enabled' : 'Not enabled'}
+              </span>
+            </div>
+
+            {fractionalEnabled ? (
+              <>
+                <div className="item-fraction-grid">
+                  <div className="item-fraction-kpi">
+                    <span>Total shares</span>
+                    <strong>{totalShares}</strong>
+                  </div>
+                  <div className="item-fraction-kpi">
+                    <span>Sold shares</span>
+                    <strong>{soldShares}</strong>
+                  </div>
+                  <div className="item-fraction-kpi">
+                    <span>Available shares</span>
+                    <strong>{availableShares}</strong>
+                  </div>
+                  <div className="item-fraction-kpi">
+                    <span>Share price</span>
+                    <strong>{formatPrice(Math.round(sharePrice * 100), item.currency || 'USD')}</strong>
+                  </div>
+                </div>
+
+                <div className="item-fraction-buy">
+                  <label htmlFor="shareQty">Buy shares</label>
+                  <div className="item-fraction-buy-row">
+                    <input
+                      id="shareQty"
+                      type="number"
+                      min={1}
+                      max={Math.max(1, availableShares || 1)}
+                      value={normalizedShareQty}
+                      onChange={(e) => setShareQty(Number(e.target.value || 1))}
+                      disabled={availableShares <= 0}
+                    />
+                    <div className="item-fraction-buy-price">
+                      Est. total: <strong>{formatPrice(Math.round(shareSubtotal * 100), item.currency || 'USD')}</strong>
+                    </div>
+                    <button
+                      type="button"
+                      className="item-fraction-buy-btn"
+                      disabled={availableShares <= 0 || isSold}
+                      onClick={() => setAlertMsg('Share purchase flow is queued for the next release. Your quantity and estimate are ready.')}
+                    >
+                      Buy Shares (Preview)
+                    </button>
+                  </div>
+                </div>
+
+                <div className="item-fraction-ledger">
+                  <h3>Ownership Ledger</h3>
+                  {ownershipRows.length === 0 ? (
+                    <p className="item-fraction-ledger-empty">No ownership transfers recorded yet.</p>
+                  ) : (
+                    <div className="item-fraction-ledger-table-wrap">
+                      <table>
+                        <thead>
+                          <tr>
+                            <th>Owner</th>
+                            <th>Date</th>
+                            <th>Tx Hash</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {ownershipRows.map((row, idx) => (
+                            <tr key={`${row.owner}-${row.transactionHash}-${idx}`}>
+                              <td>{shortHash(row.owner, 12, 8) || 'n/a'}</td>
+                              <td>{formatIsoDate(row.date)}</td>
+                              <td>{shortHash(row.transactionHash, 10, 8) || 'n/a'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : (
+              <p className="item-fraction-note">This artifact is currently sold as a single whole ownership unit.</p>
+            )}
           </section>
 
           <div className="buy-actions">
