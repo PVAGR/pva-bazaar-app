@@ -1072,9 +1072,6 @@ router.delete('/:id', async (req, res) => {
 
 // POST /api/items/:id/shares/buy  — create Stripe checkout session for fractional share purchase
 router.post('/:id/shares/buy', async (req, res) => {
-  let purchase = null;
-  let reservedArtifactId = null;
-  let reservedQty = 0;
   try {
     const { id } = req.params;
     const qty = Math.max(1, parseInt(req.body.qty || 1, 10));
@@ -1108,13 +1105,11 @@ router.post('/:id/shares/buy', async (req, res) => {
       { new: true }
     );
     if (!updated) return res.status(409).json({ ok: false, error: 'Shares no longer available — please refresh' });
-    reservedArtifactId = artifact._id;
-    reservedQty = qty;
 
     const PUBLIC_SITE_URL = process.env.PUBLIC_SITE_URL || 'https://pvabazaar.org';
 
     // Create pending SharePurchase record
-    purchase = await SharePurchase.create({
+    const purchase = await SharePurchase.create({
       artifactId: artifact._id,
       artifactSlug: artifact.slug || '',
       quantity: qty,
@@ -1171,22 +1166,6 @@ router.post('/:id/shares/buy', async (req, res) => {
     });
   } catch (err) {
     console.error('[items] share buy error:', err);
-    if (reservedArtifactId && reservedQty > 0) {
-      try {
-        await Artifact.findByIdAndUpdate(reservedArtifactId, {
-          $inc: { 'fractionalization.soldShares': -reservedQty },
-        });
-      } catch (rollbackErr) {
-        console.error('[items] share reservation rollback failed:', rollbackErr);
-      }
-    }
-    if (purchase?._id) {
-      try {
-        await SharePurchase.findByIdAndDelete(purchase._id);
-      } catch (cleanupErr) {
-        console.error('[items] share purchase cleanup failed:', cleanupErr);
-      }
-    }
     res.status(500).json({ ok: false, error: err.message });
   }
 });
