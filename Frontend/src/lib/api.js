@@ -281,6 +281,30 @@ export async function fetchCheckoutSession(sessionId) {
     return { ok: false, error: err.message };
   }
 }
+
+export async function finalizeCheckoutSession(sessionId) {
+  if (!sessionId) return { ok: false, error: 'Missing session id' };
+  try {
+    const response = await apiPost('/checkout/finalize-session', { session_id: sessionId });
+    if (response && response.ok) {
+      return {
+        ok: true,
+        pending: Boolean(response.pending),
+        finalized: Boolean(response.finalized),
+        orderId: response.orderId || '',
+        paymentStatus: response.paymentStatus || '',
+        certificateId: response.certificateId || '',
+        downloadUrl: response.downloadUrl || '',
+        blockchainReceipt: response.blockchainReceipt || null,
+        delistResults: Array.isArray(response.delistResults) ? response.delistResults : [],
+        duplicate: Boolean(response.duplicate),
+      };
+    }
+    return { ok: false, error: response?.error || 'Failed to finalize checkout session' };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+}
 // --- AI-Verified Artifact Verification (for VerificationBadge) ---
 export async function fetchVerificationByArtifact(idOrSlug) {
   if (!idOrSlug) return { ok: false, verification: null };

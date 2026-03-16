@@ -92,7 +92,7 @@ router.post("/stripe", async (req, res) => {
               buyerWallet: '',
               amountCents: order.amountTotal || session.amount_total || 0,
               currency: order.currency || session.currency || 'usd',
-              idempotencyKey: `stripe:${event.id}`,
+              idempotencyKey: `stripe_session:${session.id}`,
             });
           }
         } catch (syncErr) {

@@ -1,11 +1,13 @@
 const { reserveOne, finalizeSale, releaseReservation } = require("../lib/itemInventory");
 const { v4: uuidv4 } = require("uuid");
+const crypto = require('crypto');
 const express = require("express");
 const router = express.Router();
 const stripe = require("../lib/stripeClient");
 const Artifact = require("../models/Artifact");
 const { toPublicItem } = require("../lib/itemNormalize");
 const Order = require("../models/Order");
+const VerificationResult = require('../models/VerificationResult');
 const { createTransactionEvent, dispatchToOpenClaw } = require('../utils/openclaw-events');
 const { inspectTransaction, getExplorerTxUrl, normalizeNetwork } = require('../utils/blockchain');
 const { completeSaleAcrossChannels } = require('../service/omnichannelSyncService');
@@ -145,6 +147,110 @@ router.get("/session", async (req, res) => {
         currency: session.currency,
         customer_details: session.customer_details,
       },
+    });
+  } catch (err) {
+    return res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// POST /api/checkout/finalize-session
+// Idempotent fallback finalize path for success page (webhook-safe).
+router.post('/finalize-session', async (req, res) => {
+  try {
+    const { session_id } = req.body || {};
+    if (!session_id) return res.status(400).json({ ok: false, error: 'Missing session_id' });
+
+    const session = await stripe.checkout.sessions.retrieve(session_id);
+    if (!session) return res.status(404).json({ ok: false, error: 'Session not found' });
+    if (session.payment_status !== 'paid') {
+      return res.json({
+        ok: true,
+        pending: true,
+        message: 'Payment is not settled yet',
+        session: {
+          id: session.id,
+          payment_status: session.payment_status,
+          amount_total: session.amount_total,
+          currency: session.currency,
+        },
+      });
+    }
+
+    const orderId = session.client_reference_id || session.metadata?.orderId;
+    const order = await Order.findOne({
+      $or: [
+        ...(orderId ? [{ _id: orderId }] : []),
+        { stripeSessionId: session.id },
+      ],
+    });
+
+    if (!order) return res.status(404).json({ ok: false, error: 'Order not found for session' });
+
+    // Ensure base paid fields are present (safe/idempotent updates).
+    order.paymentStatus = 'paid';
+    order.amountTotal = session.amount_total || order.amountTotal;
+    order.currency = session.currency || order.currency;
+    order.customerEmail = session.customer_details?.email || order.customerEmail;
+    order.customerName = session.customer_details?.name || order.customerName;
+    order.shipping = session.shipping_details || order.shipping || null;
+    order.stripePaymentIntentId = session.payment_intent || order.stripePaymentIntentId || null;
+
+    if (order.reservationId) {
+      await finalizeSale(order.reservationId);
+    }
+
+    // Keep download entitlement aligned with webhook behavior.
+    if (!order.downloadGrantedAt) {
+      order.downloadGrantedAt = new Date();
+    }
+    if (!order.downloadToken) {
+      order.downloadToken = crypto.randomBytes(24).toString('hex');
+    }
+
+    // Resolve certificate when available.
+    if (!order.certificateId) {
+      try {
+        const ver = await VerificationResult.findOne({ artifactIdOrSlug: order.itemId })
+          .sort({ verified_at: -1 })
+          .lean();
+        if (ver && ver.is_authentic) {
+          order.certificateId = ver.certificateId;
+        }
+      } catch (_) {
+        // no-op
+      }
+    }
+
+    await order.save();
+
+    let syncResult = null;
+    const itemDoc = await Artifact.findById(order.itemId);
+    if (itemDoc) {
+      syncResult = await completeSaleAcrossChannels({
+        item: itemDoc,
+        orderId: order._id,
+        saleSource: 'pva',
+        externalSaleId: session.id,
+        paymentMethod: 'card',
+        buyerEmail: order.customerEmail || '',
+        buyerWallet: '',
+        amountCents: order.amountTotal || session.amount_total || 0,
+        currency: order.currency || session.currency || 'usd',
+        idempotencyKey: `stripe_session:${session.id}`,
+      });
+    }
+
+    const downloadUrl = `${PUBLIC_SITE_URL.replace(/\/$/, '')}/#/checkout/download?order_id=${encodeURIComponent(order._id)}&token=${encodeURIComponent(order.downloadToken)}`;
+    return res.json({
+      ok: true,
+      finalized: true,
+      orderId: String(order._id),
+      paymentStatus: order.paymentStatus,
+      certificateId: order.certificateId || '',
+      downloadUrl,
+      blockchainReceipt: syncResult?.blockchainReceipt || null,
+      delistResults: syncResult?.delistResults || [],
+      duplicate: Boolean(syncResult?.duplicate),
     });
   } catch (err) {
     return res.status(500).json({ ok: false, error: err.message });
