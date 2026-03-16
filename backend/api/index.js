@@ -14,6 +14,30 @@ const { getBuildInfo } = require('../lib/buildInfo');
 // Load environment variables
 dotenv.config();
 
+const CLOUD_ONLY_MODE = process.env.CLOUD_ONLY_MODE !== 'false';
+
+function isLoopbackOrigin(origin) {
+  return /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(String(origin || '').trim());
+}
+
+function getAllowedOrigins() {
+  const base = [
+    'https://pvabazaar.org',
+    'https://www.pvabazaar.org',
+  ];
+
+  if (process.env.ALLOWED_ORIGIN) {
+    const extras = process.env.ALLOWED_ORIGIN
+      .split(',')
+      .map(o => o.trim())
+      .filter(Boolean)
+      .filter(o => !(CLOUD_ONLY_MODE && isLoopbackOrigin(o)));
+    base.push(...extras);
+  }
+
+  return Array.from(new Set(base));
+}
+
 // Validate critical env and mark API readiness (fail-safe in production)
 function validateEnv() {
   const isProd = process.env.NODE_ENV === 'production';
@@ -42,12 +66,7 @@ app.use(helmet({
 }));
 
 // --- UNCONDITIONAL CORS (runs before everything, even on errors) ---
-const allowedOrigins = new Set([
-  'https://pvabazaar.org',
-  'https://www.pvabazaar.org',
-  'http://localhost:3000',
-  'http://localhost:5173',
-]);
+const allowedOrigins = new Set(getAllowedOrigins());
 
 app.use((req, res, next) => {
   const origin = req.headers.origin;
@@ -175,7 +194,13 @@ async function connectToDatabase() {
 
   try {
     const useMemoryDb = process.env.USE_MEMORY_DB === 'true';
-    let mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/pva-bazaar';
+    const mongoUriFromEnv = process.env.MONGODB_URI;
+
+    if (!mongoUriFromEnv && (process.env.NODE_ENV === 'production' || CLOUD_ONLY_MODE) && !useMemoryDb) {
+      throw new Error('MONGODB_URI is required when CLOUD_ONLY_MODE is enabled');
+    }
+
+    let mongoUri = mongoUriFromEnv;
 
     if (useMemoryDb) {
       if (!MongoMemoryServer) {
@@ -385,6 +410,30 @@ app.get('/api/express-ping', (req, res) => {
   res.json({ ok: true, source: 'express' });
 });
 
+// Decentralized stack status (cloud + web3/IPFS/OpenClaw readiness)
+app.get('/api/decentralized/status', (req, res) => {
+  const rpcUrl = process.env.ETHEREUM_RPC_URL || process.env.RPC_URL || '';
+  const ipfsGateway = process.env.PINATA_GATEWAY_URL || '';
+  const ipfsProviderConfigured = Boolean(
+    process.env.PINATA_API_KEY || process.env.WEB3_STORAGE_TOKEN || process.env.IPFS_NODE_URL,
+  );
+  const openclawConfigured = Boolean(
+    process.env.OPENCLAW_WEBHOOK_URL || process.env.OPENCLAW_GATEWAY_URL,
+  );
+
+  res.json({
+    ok: true,
+    cloudOnlyMode: CLOUD_ONLY_MODE,
+    decentralized: {
+      rpcConfigured: Boolean(rpcUrl),
+      ipfsConfigured: ipfsProviderConfigured,
+      ipfsGateway: ipfsGateway || null,
+      openclawBridgeConfigured: openclawConfigured,
+    },
+    timestamp: new Date().toISOString(),
+  });
+});
+
 // Health endpoint - returns quickly even if DB is unreachable
 app.get('/api/health', async (req, res) => {
   let mongoConnected = false;
@@ -406,19 +455,7 @@ app.get('/api/health', async (req, res) => {
   }
 
   // Prepare allowed origins for display (safe - no secrets)
-  const allowedOrigins = [
-    'http://localhost:3000',
-    'http://localhost:5173',
-    'https://pvabazaar.org',
-    'https://www.pvabazaar.org',
-  ];
-  if (process.env.ALLOWED_ORIGIN) {
-    const additionalOrigins = process.env.ALLOWED_ORIGIN
-      .split(',')
-      .map(o => o.trim())
-      .filter(o => o.length > 0);
-    allowedOrigins.push(...additionalOrigins);
-  }
+  const allowedOrigins = getAllowedOrigins();
 
   // Always return 200 with status info
   res.json({
@@ -641,11 +678,12 @@ module.exports.connectToDatabase = connectToDatabase;
 // Start the server only when run directly (local dev)
 if (require.main === module) {
   const PORT = process.env.PORT || 5001;
+  const advertisedBase = process.env.PUBLIC_API_URL || 'https://api.pvabazaar.org';
   connectToDatabase()
     .then(() => autoSeed())
     .finally(() => {
       app.listen(PORT, () => {
-        console.log(`🚀 Server running on http://localhost:${PORT}`);
+        console.log(`🚀 Server running on ${advertisedBase}`);
       });
     });
 }

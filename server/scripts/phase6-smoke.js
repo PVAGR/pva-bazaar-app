@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 
-const BASE_URL = process.env.PHASE6_BASE_URL || 'http://localhost:3001';
+const BASE_URL = process.env.PHASE6_BASE_URL || 'https://api.pvabazaar.org';
 const CREATOR_ADDRESS = process.env.PHASE6_CREATOR || `0xPhase6Smoke${Date.now()}`;
 const SALE_PRICE = Number(process.env.PHASE6_SALE_PRICE || 321.45);
 const ROYALTY_RATE = Number(process.env.PHASE6_ROYALTY_RATE || 10);
