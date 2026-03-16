@@ -44,5 +44,8 @@ export default defineConfig({
         rewrite: (p) => p.replace(/^\/api/, '')
       }
     }
+  },
+  test: {
+    environment: 'jsdom'
   }
 });
