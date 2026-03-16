@@ -91,6 +91,14 @@
   --z-modal: 500;
   --z-popover: 600;
   --z-tooltip: 700;
+  
+  /* Legacy/Alias Variables for compatibility */
+  --accent: var(--pva-primary);
+  --accent-hover: var(--pva-primary-dark);
+  --border: var(--border-medium);
+  --border-accent: var(--pva-primary);
+  --highlight: rgba(102, 126, 234, 0.1);
+  --highlight-strong: rgba(102, 126, 234, 0.2);
 }
 
 /* Dark Theme */
@@ -110,6 +118,12 @@
   --border-medium: #4a5568;
   
   --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.3);
+  
+  /* Legacy aliases for dark theme */
+  --border: var(--border-medium);
+  --border-accent: var(--pva-primary);
+  --highlight: rgba(102, 126, 234, 0.15);
+  --highlight-strong: rgba(102, 126, 234, 0.25);
 }
 
 /* ==========================================================================
@@ -929,23 +943,23 @@ a:hover {
 }
 
 .pva-entry-type.personal {
-  background: #fed7d7;
-  color: #9b2c2c;
+  background: var(--site-danger-bg);
+  color: var(--site-danger-text);
 }
 
 .pva-entry-type.research {
-  background: #c6f6d5;
-  color: #276749;
+  background: var(--site-accent-soft);
+  color: var(--site-accent-strong);
 }
 
 .pva-entry-type.reflection {
-  background: #bee3f8;
-  color: #2c5282;
+  background: var(--site-accent-soft);
+  color: var(--site-accent);
 }
 
 .pva-entry-type.philosophy {
-  background: #e9d5ff;
-  color: #6b21a8;
+  background: var(--site-panel-soft);
+  color: var(--site-text);
 }
 
 .pva-entry-content {

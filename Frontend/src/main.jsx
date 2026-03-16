@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client';
 import App from './App.jsx';
 import { HelmetProvider } from 'react-helmet-async';
 import * as Sentry from '@sentry/react';
+import ErrorFallback from './components/ErrorFallback.jsx';
 import './base.css';
 
 Sentry.init({
@@ -53,7 +54,7 @@ const root = document.getElementById('root');
 if (root) {
   createRoot(root).render(
     <HelmetProvider>
-      <Sentry.ErrorBoundary fallback={<div>Something went wrong.</div>}>
+      <Sentry.ErrorBoundary fallback={ErrorFallback}>
         <App />
       </Sentry.ErrorBoundary>
     </HelmetProvider>

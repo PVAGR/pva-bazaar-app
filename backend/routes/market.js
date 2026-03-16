@@ -7,13 +7,25 @@ const Order = require('../models/Order');
 // GET /api/marketplace/stats - Marketplace stats for dashboard
 router.get('/stats', async (req, res) => {
   try {
-    const activeListings = await Artifact.countDocuments({ status: 'active' });
+    // Artifact schema uses draft|published, not active
+    const activeListings = await Artifact.countDocuments({ status: 'published' });
     // Get real metrics from database
     const totalTransactions = (await Order.countDocuments({ paymentStatus: 'paid' })) || 0;
-    const satisfactionRate = 95; // Default to 95%, would be calculated from reviews/ratings
-    // TODO: Implement actual satisfaction rate calculation from Order reviews
+    const refundedTransactions = (await Order.countDocuments({ paymentStatus: 'refunded' })) || 0;
+    const successfulTransactions = Math.max(totalTransactions - refundedTransactions, 0);
+    // Approximate satisfaction from successful transaction ratio until review model exists
+    const satisfactionRate = totalTransactions > 0
+      ? Math.round((successfulTransactions / totalTransactions) * 100)
+      : 95;
     const totalSellers = await User.countDocuments({ role: 'seller' });
-    res.json({ ok: true, activeListings, totalTransactions, satisfactionRate, totalSellers });
+    res.json({
+      ok: true,
+      activeListings,
+      totalTransactions,
+      refundedTransactions,
+      satisfactionRate,
+      totalSellers,
+    });
   } catch (e) {
     res.status(500).json({ ok: false, error: e.message });
   }
@@ -27,7 +39,7 @@ router.get('/categories/counts', async (req, res) => {
     for (const cat of categories) {
       data[cat] = await Artifact.countDocuments({
         category: new RegExp('^' + cat + '$', 'i'),
-        status: 'active',
+        status: 'published',
       });
     }
     res.json({ ok: true, data });

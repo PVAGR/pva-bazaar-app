@@ -17,9 +17,6 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: Frontend
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -29,15 +26,20 @@ jobs:
         with:
           node-version: "20"
           cache: npm
-          cache-dependency-path: Frontend/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install
-        run: npm ci
+        run: npm install --no-audit --no-fund
 
       - name: Build
-        run: npm run build
-        env:
-          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+        run: |
+          API_URL=$(node -pe "JSON.parse(require('fs').readFileSync('Frontend/public/api-base.json','utf8')).apiUrl || ''")
+          if [ -z "$API_URL" ]; then
+            echo "Frontend/public/api-base.json missing apiUrl"
+            exit 1
+          fi
+          echo "Building frontend with VITE_API_URL=$API_URL"
+          VITE_API_URL="$API_URL" npm run build --workspace Frontend
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

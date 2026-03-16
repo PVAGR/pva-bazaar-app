@@ -83,7 +83,7 @@ jobs:
         run: pnpm dlx playwright test --project=${{ matrix.project }}
 
       - name: Upload Playwright report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: playwright-report-${{ matrix.project }}
@@ -126,7 +126,7 @@ jobs:
         run: pnpm qa:brand:check
 
       - name: Upload visual diff artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: backstop-report
@@ -166,7 +166,7 @@ jobs:
         run: pnpm qa:pa11y
 
       - name: Upload accessibility reports
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: accessibility-reports
@@ -206,7 +206,7 @@ jobs:
         run: pnpm qa:lighthouse
 
       - name: Upload Lighthouse reports
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: lighthouse-reports
           path: .lighthouseci/
@@ -243,7 +243,7 @@ jobs:
         run: pnpm qa:artillery
 
       - name: Upload load test reports
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: load-test-reports
           path: qa/reports/artillery/
@@ -295,7 +295,7 @@ jobs:
             zap-baseline.py -t http://host.docker.internal:3000 -J zap-report.json
 
       - name: Upload security reports
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: security-reports
@@ -342,7 +342,7 @@ jobs:
           forge test --gas-report > gas-report.txt
 
       - name: Upload contract test reports
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: contract-reports
           path: |

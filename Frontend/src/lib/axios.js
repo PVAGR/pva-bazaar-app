@@ -1,5 +1,16 @@
 import axios from "axios";
 import { ENV } from "../config/env";
+import { clearToken, getToken } from "./auth";
+import { createLogger } from "./logger";
+
+const logger = createLogger('API');
+
+function isAdminProtectedRequest(url = '') {
+  const normalized = String(url || '').toLowerCase();
+  if (!normalized) return false;
+  if (normalized.includes('/admin/login') || normalized.includes('/admin/token')) return false;
+  return normalized.includes('/admin/') || normalized.includes('/solana/') || normalized.includes('/openclaw/');
+}
 
 // Internal backend-only Axios client
 const api = axios.create({
@@ -11,10 +22,7 @@ const api = axios.create({
 // --- Request: attach token (if present) ---
 api.interceptors.request.use(
   (config) => {
-    const token =
-      localStorage.getItem("token") ||
-      localStorage.getItem("authToken") ||
-      localStorage.getItem("jwt");
+    const token = getToken();
 
     if (token) {
       config.headers = config.headers || {};
@@ -36,22 +44,42 @@ api.interceptors.response.use(
 
     // Network/CORS errors often have no response/status
     if (!status) {
-      console.error("[API NETWORK ERROR]", {
-        message: error?.message,
-        code: error?.code,
-        config: error?.config,
-      });
+      logger.error(
+        'Network error',
+        error,
+        {
+          message: error?.message,
+          code: error?.code,
+          url: error?.config?.url,
+        }
+      );
       // Don't show alert for network errors - let components handle gracefully
       return Promise.reject(error);
     }
 
-    // 401: redirect to login
+    // 401: only redirect to login when the request itself was an auth/session check.
+    // Do NOT redirect when auth-gated internal endpoints (like openclaw/messages) return 401
+    // because the logged-in token may simply not be recognized yet on stale deploy.
+    // Do NOT redirect for POST /auth/login or /auth/register — a 401 there is bad credentials,
+    // not an expired session, and the component should show the error message itself.
     if (status === 401) {
-      const loginPath = "/admin/login";
-      localStorage.removeItem("token");
-      localStorage.removeItem("authToken");
-      localStorage.removeItem("jwt");
-      window.location.assign(loginPath);
+      const url = error?.config?.url || '';
+      const isSessionCheck = /\/(?:auth\/me|users\/me|me|session)\b/i.test(url);
+      const isAdminProtected = isAdminProtectedRequest(url);
+      if (isSessionCheck) {
+        clearToken();
+        window.location.assign('/#/login');
+      }
+      if (isAdminProtected) {
+        clearToken();
+        try {
+          window.dispatchEvent(new CustomEvent('admin-session-expired', {
+            detail: { url, status },
+          }));
+        } catch (_) {
+          // Non-fatal in older environments where CustomEvent can fail.
+        }
+      }
       return Promise.reject(error);
     }
 
@@ -62,7 +90,10 @@ api.interceptors.response.use(
         error?.message ||
         `Server error (${status})`;
 
-      console.error("[API 500+]", msg, error?.response?.data);
+      logger.error(`Server error (${status})`, error, {
+        message: msg,
+        data: error?.response?.data,
+      });
     }
 
     return Promise.reject(error);

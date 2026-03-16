@@ -2,9 +2,10 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 const Artifact = require('../models/Artifact');
+const adminSession = require('../middleware/adminSession');
 
 // GET /api/dashboard/stats - Get dashboard statistics
-router.get('/stats', async (req, res) => {
+router.get('/stats', adminSession, async (req, res) => {
   try {
     // Get user count
     const totalUsers = await User.countDocuments();
@@ -44,7 +45,7 @@ router.get('/stats', async (req, res) => {
 });
 
 // GET /api/dashboard/recent-activity - Get recent activity
-router.get('/recent-activity', async (req, res) => {
+router.get('/recent-activity', adminSession, async (req, res) => {
   try {
     // Get recent artifacts (last 10)
     const recentArtifacts = await Artifact.find()

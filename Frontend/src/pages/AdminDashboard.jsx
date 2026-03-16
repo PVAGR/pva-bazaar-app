@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import { apiFetch, getApiBase, setApiBase } from '../lib/api.js';
 import { fetchAdminStatus, requestDevToken } from '../lib/archiveApi.js';
+import { PromptModal } from '../components/ui/DialogModals.jsx';
 
 export default function AdminDashboard() {
   const [apiBase, setBase] = useState(getApiBase());
   const [status, setStatus] = useState('');
   const [health, setHealth] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [showPrompt, setShowPrompt] = useState(false);
+  const [pendingPromise, setPendingPromise] = useState(null);
 
   const saveBase = () => {
     setApiBase(apiBase);
@@ -22,11 +25,28 @@ export default function AdminDashboard() {
   const ensureToken = async () => {
     let token = localStorage.getItem('admin:token') || '';
     if (token) return token;
-    const secret = prompt('Enter dev admin secret');
-    if (!secret) throw new Error('No secret provided');
-    token = await requestDevToken(secret);
-    localStorage.setItem('admin:token', token);
-    return token;
+    
+    return new Promise((resolve, reject) => {
+      setPendingPromise({ resolve, reject });
+      setShowPrompt(true);
+    });
+  };
+
+  const handleSecretSubmit = async (secret) => {
+    try {
+      const token = await requestDevToken(secret);
+      localStorage.setItem('admin:token', token);
+      if (pendingPromise) {
+        pendingPromise.resolve(token);
+        setPendingPromise(null);
+      }
+    } catch (err) {
+      setStatus(`Auth failed: ${err.message}`);
+      if (pendingPromise) {
+        pendingPromise.reject(err);
+        setPendingPromise(null);
+      }
+    }
   };
 
   const checkStatus = async () => {
@@ -85,11 +105,26 @@ export default function AdminDashboard() {
       </div>
 
       {health && (
-        <div className="section-card" style={{ background: '#f9fbf9' }}>
+        <div className="section-card" style={{ background: 'var(--site-panel-soft)' }}>
           <strong>API Health:</strong> HTTP {health.status} · {health.ok ? 'OK' : 'Error'}
           <pre style={{ whiteSpace: 'pre-wrap' }}>{JSON.stringify(health.json, null, 2)}</pre>
         </div>
       )}
+      <PromptModal
+        isOpen={showPrompt}
+        onClose={() => {
+          setShowPrompt(false);
+          if (pendingPromise) {
+            pendingPromise.reject(new Error('Cancelled'));
+            setPendingPromise(null);
+          }
+        }}
+        onSubmit={handleSecretSubmit}
+        title="Admin Authentication"
+        message="Enter your dev admin secret:"
+        placeholder="Admin secret"
+        inputType="password"
+      />
     </section>
   );
 }

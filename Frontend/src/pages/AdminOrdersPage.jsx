@@ -1,5 +1,15 @@
 import React, { useEffect, useState, useRef } from "react";
-import { fetchOrders, fetchOrder, refundOrder, updateOrder } from "../lib/api";
+import {
+  fetchOrders,
+  fetchOrder,
+  refundOrder,
+  updateOrder,
+  fetchOmnichannelOpsSnapshot,
+  fetchProvenanceOpsSnapshot,
+  fetchItemProvenanceVerification,
+  updateItemProvenanceReview,
+  triggerOmnichannelPollingRun,
+} from "../lib/api";
 import "./AdminOrdersPage.css";
 
 function formatDate(dt) {
@@ -35,12 +45,144 @@ export default function AdminOrdersPage() {
   const [refundReason, setRefundReason] = useState("");
   const [edit, setEdit] = useState({});
   const [saveLoading, setSaveLoading] = useState(false);
+  const [opsLoading, setOpsLoading] = useState(false);
+  const [pollRunLoading, setPollRunLoading] = useState(false);
+  const [reviewingByItem, setReviewingByItem] = useState({});
+  const [verifyingByItem, setVerifyingByItem] = useState({});
+  const [verifyResultsByItem, setVerifyResultsByItem] = useState({});
+  const [opsSnapshot, setOpsSnapshot] = useState({
+    summary: {},
+    sales: [],
+    pendingCryptoOrders: [],
+  });
+  const [provenanceOpsSnapshot, setProvenanceOpsSnapshot] = useState({
+    summary: {},
+    duplicateFingerprintRows: [],
+    recentReverseImageRisks: [],
+    recentRoyaltySales: [],
+    recentReviewLogs: [],
+  });
   const abortRef = useRef();
 
   useEffect(() => {
     loadOrders(true);
+    loadOpsSnapshot();
     // eslint-disable-next-line
   }, []);
+
+  async function loadOpsSnapshot() {
+    setOpsLoading(true);
+    try {
+      const [omniRes, provenanceRes] = await Promise.all([
+        fetchOmnichannelOpsSnapshot({ limit: 15 }),
+        fetchProvenanceOpsSnapshot({ limit: 15 }),
+      ]);
+
+      if (omniRes.ok) {
+        setOpsSnapshot({
+          summary: omniRes.summary || {},
+          sales: Array.isArray(omniRes.sales) ? omniRes.sales : [],
+          pendingCryptoOrders: Array.isArray(omniRes.pendingCryptoOrders) ? omniRes.pendingCryptoOrders : [],
+        });
+      }
+
+      if (provenanceRes.ok) {
+        setProvenanceOpsSnapshot({
+          summary: provenanceRes.summary || {},
+          duplicateFingerprintRows: Array.isArray(provenanceRes.duplicateFingerprintRows)
+            ? provenanceRes.duplicateFingerprintRows
+            : [],
+          recentReverseImageRisks: Array.isArray(provenanceRes.recentReverseImageRisks)
+            ? provenanceRes.recentReverseImageRisks
+            : [],
+          recentRoyaltySales: Array.isArray(provenanceRes.recentRoyaltySales)
+            ? provenanceRes.recentRoyaltySales
+            : [],
+          recentReviewLogs: Array.isArray(provenanceRes.recentReviewLogs)
+            ? provenanceRes.recentReviewLogs
+            : [],
+        });
+      }
+    } finally {
+      setOpsLoading(false);
+    }
+  }
+
+  async function runPollingNow() {
+    setPollRunLoading(true);
+    setStatusMsg("");
+    setErrorMsg("");
+    try {
+      const res = await triggerOmnichannelPollingRun({ limit: 50 });
+      if (!res.ok) {
+        setErrorMsg(res.error || "Polling run failed");
+        return;
+      }
+      setStatusMsg(
+        `Polling sync completed. Checked ${res.summary?.checkedListings || 0} listing(s), detected ${res.summary?.soldDetected || 0} sold listing(s).`
+      );
+      await loadOpsSnapshot();
+      await loadOrders(true);
+    } finally {
+      setPollRunLoading(false);
+    }
+  }
+
+  async function handleProvenanceReview(itemId, verificationStatus) {
+    if (!itemId || !verificationStatus) return;
+    const note = window.prompt(
+      verificationStatus === 'flagged'
+        ? 'Optional reviewer note for flagged provenance:'
+        : 'Optional reviewer note for clearing provenance risk:',
+      ''
+    );
+
+    setReviewingByItem((prev) => ({ ...prev, [itemId]: true }));
+    setStatusMsg('');
+    setErrorMsg('');
+    try {
+      const res = await updateItemProvenanceReview(itemId, {
+        verificationStatus,
+        reviewNotes: note || '',
+      });
+      if (!res.ok) {
+        setErrorMsg(res.error || 'Failed to update provenance review');
+        return;
+      }
+      setStatusMsg(`Provenance status updated to ${verificationStatus}.`);
+      await loadOpsSnapshot();
+    } finally {
+      setReviewingByItem((prev) => ({ ...prev, [itemId]: false }));
+    }
+  }
+
+  async function handleQuickVerify(itemId) {
+    if (!itemId) return;
+    setVerifyingByItem((prev) => ({ ...prev, [itemId]: true }));
+    try {
+      const res = await fetchItemProvenanceVerification(itemId, { live: false });
+      if (!res.ok) {
+        setVerifyResultsByItem((prev) => ({
+          ...prev,
+          [itemId]: { ok: false, error: res.error || 'Verification failed' },
+        }));
+        return;
+      }
+      const verify = res.verification || {};
+      setVerifyResultsByItem((prev) => ({
+        ...prev,
+        [itemId]: {
+          ok: true,
+          verdict: verify.verdict || 'partial',
+          signatureValid: Boolean(verify.signatureValid),
+          blockchainConsistent: Boolean(verify?.chain?.blockchainConsistent),
+          checkedAt: verify.verifiedAt || new Date().toISOString(),
+        },
+      }));
+    } finally {
+      setVerifyingByItem((prev) => ({ ...prev, [itemId]: false }));
+    }
+  }
 
   async function loadOrders(reset = false) {
     setLoading(true);
@@ -148,6 +290,214 @@ export default function AdminOrdersPage() {
   return (
     <div className="admin-orders-page">
       <h1>Orders</h1>
+      <section className="ops-panel" aria-label="Omnichannel and crypto operations monitor">
+        <div className="ops-panel__header">
+          <h2>Omnichannel + Crypto Operations</h2>
+          <div className="ops-panel__actions">
+            <button className="load-more" type="button" onClick={runPollingNow} disabled={pollRunLoading || opsLoading}>
+              {pollRunLoading ? "Running Poll Sync..." : "Run Polling Sync"}
+            </button>
+            <button className="load-more" type="button" onClick={loadOpsSnapshot} disabled={opsLoading || pollRunLoading}>
+              {opsLoading ? "Refreshing..." : "Refresh Ops"}
+            </button>
+          </div>
+        </div>
+
+        <div className="ops-summary-grid">
+          <article className="ops-card">
+            <span>Recent synced sales</span>
+            <strong>{opsSnapshot.summary.totalSales || 0}</strong>
+          </article>
+          <article className="ops-card">
+            <span>Receipt NFTs minted</span>
+            <strong>{opsSnapshot.summary.receiptMinted || 0}</strong>
+          </article>
+          <article className="ops-card ops-card--danger">
+            <span>Receipt mint failures</span>
+            <strong>{opsSnapshot.summary.receiptFailed || 0}</strong>
+          </article>
+          <article className="ops-card ops-card--warning">
+            <span>External sync failures</span>
+            <strong>{opsSnapshot.summary.syncFailures || 0}</strong>
+          </article>
+          <article className="ops-card ops-card--warning">
+            <span>Pending crypto intents</span>
+            <strong>{opsSnapshot.summary.pendingCryptoIntents || 0}</strong>
+          </article>
+          <article className="ops-card">
+            <span>Artifacts with provenance</span>
+            <strong>{provenanceOpsSnapshot.summary.withProvenance || 0}</strong>
+          </article>
+          <article className="ops-card ops-card--warning">
+            <span>Duplicate fingerprint groups</span>
+            <strong>{provenanceOpsSnapshot.summary.duplicateFingerprintGroups || 0}</strong>
+          </article>
+          <article className="ops-card ops-card--danger">
+            <span>Reverse-image risk artifacts</span>
+            <strong>{provenanceOpsSnapshot.summary.reverseImageLikelyDuplicateCount || 0}</strong>
+          </article>
+          <article className="ops-card">
+            <span>Creator royalties tracked</span>
+            <strong>{formatCents(provenanceOpsSnapshot.summary.creatorRoyaltyCents || 0, 'USD')}</strong>
+          </article>
+          <article className="ops-card">
+            <span>PVA resale fee tracked</span>
+            <strong>{formatCents(provenanceOpsSnapshot.summary.platformFeeCents || 0, 'USD')}</strong>
+          </article>
+        </div>
+
+        <div className="ops-grid">
+          <div className="ops-list">
+            <h3>Pending Crypto Intents</h3>
+            {opsSnapshot.pendingCryptoOrders.length === 0 ? (
+              <p className="ops-empty">No pending crypto intents.</p>
+            ) : (
+              <ul>
+                {opsSnapshot.pendingCryptoOrders.map((row) => (
+                  <li key={`pending-${row._id}`}>
+                    <button type="button" onClick={() => openOrderDetail(row._id)}>
+                      {row.itemSnapshot?.name || 'Untitled'} • {row.customerEmail || 'No email'}
+                    </button>
+                    <span>{formatDate(row.createdAt)}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          <div className="ops-list">
+            <h3>Recent Omnichannel Sales</h3>
+            {opsSnapshot.sales.length === 0 ? (
+              <p className="ops-empty">No synced sales yet.</p>
+            ) : (
+              <ul>
+                {opsSnapshot.sales.map((sale) => (
+                  <li key={`sale-${sale._id}`}>
+                    <button type="button" onClick={() => sale.orderId && openOrderDetail(sale.orderId)}>
+                      {sale.saleSource || 'unknown'} • {sale.paymentMethod || 'manual'}
+                    </button>
+                    <span>{sale.blockchainReceipt?.status || 'no_receipt'} • {formatDate(sale.createdAt)}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          <div className="ops-list">
+            <h3>Recent Royalty Settlements</h3>
+            {provenanceOpsSnapshot.recentRoyaltySales.length === 0 ? (
+              <p className="ops-empty">No royalty settlements recorded yet.</p>
+            ) : (
+              <ul>
+                {provenanceOpsSnapshot.recentRoyaltySales.map((sale) => (
+                  <li key={`royalty-${sale._id}`}>
+                    <button type="button" onClick={() => sale.orderId && openOrderDetail(sale.orderId)}>
+                      {sale.saleSource || 'unknown'} • {sale.paymentMethod || 'manual'}
+                    </button>
+                    <span>
+                      creator {formatCents(sale.royaltySettlement?.creatorRoyaltyCents || 0, 'USD')} •
+                      {' '}pva {formatCents(sale.royaltySettlement?.platformFeeCents || 0, 'USD')}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          <div className="ops-list">
+            <h3>Duplicate Fingerprint Groups</h3>
+            {provenanceOpsSnapshot.duplicateFingerprintRows.length === 0 ? (
+              <p className="ops-empty">No duplicate fingerprint groups detected.</p>
+            ) : (
+              <ul>
+                {provenanceOpsSnapshot.duplicateFingerprintRows.map((row) => (
+                  <li key={`dup-${row._id}`}>
+                    <button type="button">
+                      {String(row._id || '').slice(0, 12)}...
+                    </button>
+                    <span>{row.count} item(s)</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          <div className="ops-list">
+            <h3>Recent Reverse-Image Risks</h3>
+            {provenanceOpsSnapshot.recentReverseImageRisks.length === 0 ? (
+              <p className="ops-empty">No reverse-image risks in recent artifacts.</p>
+            ) : (
+              <ul>
+                {provenanceOpsSnapshot.recentReverseImageRisks.map((row) => (
+                  <li key={`revimg-${row._id}`}>
+                    <button type="button">
+                      {(row.title || row.name || 'Untitled').slice(0, 36)}
+                    </button>
+                    <span>
+                      score {Number(row?.provenance?.reverseImage?.score || 0).toFixed(2)} •
+                      {' '}matches {Array.isArray(row?.provenance?.reverseImage?.matches) ? row.provenance.reverseImage.matches.length : 0}
+                    </span>
+                    <div className="ops-row-actions">
+                      <button
+                        type="button"
+                        className="load-more"
+                        onClick={() => handleQuickVerify(row._id)}
+                        disabled={!!verifyingByItem[row._id]}
+                      >
+                        {verifyingByItem[row._id] ? 'Verifying...' : 'Quick Verify'}
+                      </button>
+                      <button
+                        type="button"
+                        className="load-more"
+                        onClick={() => handleProvenanceReview(row._id, 'flagged')}
+                        disabled={!!reviewingByItem[row._id]}
+                      >
+                        {reviewingByItem[row._id] ? 'Saving...' : 'Flag'}
+                      </button>
+                      <button
+                        type="button"
+                        className="load-more"
+                        onClick={() => handleProvenanceReview(row._id, 'hash_verified')}
+                        disabled={!!reviewingByItem[row._id]}
+                      >
+                        {reviewingByItem[row._id] ? 'Saving...' : 'Clear'}
+                      </button>
+                    </div>
+                    {verifyResultsByItem[row._id] ? (
+                      <span className="ops-verify-status">
+                        {verifyResultsByItem[row._id].ok
+                          ? `verdict ${verifyResultsByItem[row._id].verdict} • signature ${verifyResultsByItem[row._id].signatureValid ? 'ok' : 'fail'} • chain ${verifyResultsByItem[row._id].blockchainConsistent ? 'consistent' : 'mismatch'}`
+                          : (verifyResultsByItem[row._id].error || 'Verification failed')}
+                      </span>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          <div className="ops-list">
+            <h3>Recent Provenance Reviews</h3>
+            {provenanceOpsSnapshot.recentReviewLogs.length === 0 ? (
+              <p className="ops-empty">No provenance review actions recorded yet.</p>
+            ) : (
+              <ul>
+                {provenanceOpsSnapshot.recentReviewLogs.map((row) => (
+                  <li key={`review-${row._id}`}>
+                    <button type="button">
+                      {row.previousStatus || 'pending'} → {row.nextStatus || 'pending'}
+                    </button>
+                    <span>
+                      {row?.actor?.label || 'admin'} • {formatDate(row.createdAt)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      </section>
+
       <div role="status" className="status-msg">{statusMsg}</div>
       {errorMsg && <div className="error-msg" role="alert">{errorMsg}</div>}
       <div className="orders-list">
@@ -197,6 +547,20 @@ export default function AdminOrdersPage() {
                 <div><b>Customer:</b> {orderDetail.customerEmail} {orderDetail.customerName && `(${orderDetail.customerName})`}</div>
                 <div><b>Stripe Session:</b> {orderDetail.stripeSessionId}</div>
                 <div><b>Payment Intent:</b> {orderDetail.stripePaymentIntentId}</div>
+                {orderDetail.crypto?.txHash && <div><b>Crypto Tx:</b> {orderDetail.crypto.txHash}</div>}
+                {orderDetail.crypto?.network && <div><b>Crypto Network:</b> {orderDetail.crypto.network} {orderDetail.crypto.chainId ? `(${orderDetail.crypto.chainId})` : ''}</div>}
+                {orderDetail.crypto?.expectedAmountWei && <div><b>Expected Amount (wei):</b> {orderDetail.crypto.expectedAmountWei}</div>}
+                {orderDetail.crypto?.paidAmountWei && <div><b>Paid Amount (wei):</b> {orderDetail.crypto.paidAmountWei}</div>}
+                {orderDetail.crypto?.recipientAddress && <div><b>Treasury Wallet:</b> {orderDetail.crypto.recipientAddress}</div>}
+                {orderDetail.crypto?.buyerWallet && <div><b>Buyer Wallet:</b> {orderDetail.crypto.buyerWallet}</div>}
+                {orderDetail.crypto?.explorerUrl && (
+                  <div>
+                    <b>Explorer:</b>{' '}
+                    <a href={orderDetail.crypto.explorerUrl} target="_blank" rel="noreferrer">
+                      {orderDetail.crypto.explorerUrl}
+                    </a>
+                  </div>
+                )}
                 {orderDetail.stripeRefundId && <div><b>Refund ID:</b> {orderDetail.stripeRefundId}</div>}
                 {orderDetail.refundAmountCents && <div><b>Refunded:</b> {formatCents(orderDetail.refundAmountCents, orderDetail.currency)}</div>}
                 {orderDetail.refundedAt && <div><b>Refunded At:</b> {formatDate(orderDetail.refundedAt)}</div>}

@@ -1,7 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { fetchMarketplaceItem, createCheckoutSession } from "../lib/api";
+import {
+  fetchMarketplaceItem,
+  fetchItemProvenanceFeed,
+  fetchItemProvenanceVerification,
+  createCheckoutSession,
+  prepareCryptoCheckout,
+  confirmCryptoCheckoutPayment,
+} from "../lib/api";
+import VerificationBadge from "../components/VerificationBadge.jsx";
+import { AlertModal } from "../components/ui/DialogModals.jsx";
 import "./MarketplaceItemPage.css";
 
 const PLACEHOLDER = "/placeholder.png";
@@ -15,13 +24,28 @@ function formatPrice(priceCents, currency = "USD") {
   }).format(priceCents / 100);
 }
 
+function shortHash(value, left = 10, right = 8) {
+  const text = String(value || "");
+  if (!text) return "";
+  if (text.length <= left + right + 3) return text;
+  return `${text.slice(0, left)}...${text.slice(-right)}`;
+}
+
 export default function MarketplaceItemPage() {
   const { slugOrId } = useParams();
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [mainIdx, setMainIdx] = useState(0);
-  const [buying, setBuying] = useState(false);
+  const [cardBuying, setCardBuying] = useState(false);
+  const [cryptoBuying, setCryptoBuying] = useState(false);
+  const [alertMsg, setAlertMsg] = useState(null);
+  const [provenanceFeed, setProvenanceFeed] = useState(null);
+  const [provenanceVerification, setProvenanceVerification] = useState(null);
+  const [provenanceLoading, setProvenanceLoading] = useState(false);
+  const [provenanceError, setProvenanceError] = useState("");
+  const [copied, setCopied] = useState("");
+  const [shareQty, setShareQty] = useState(1);
 
   useEffect(() => {
     let mounted = true;
@@ -32,12 +56,40 @@ export default function MarketplaceItemPage() {
       if (res.ok) {
         setItem(res.item);
         setMainIdx(0);
+        setProvenanceLoading(true);
+        setProvenanceError("");
+        const targetId = res.item?.slug || res.item?.id || slugOrId;
+        Promise.all([
+          fetchItemProvenanceFeed(targetId),
+          fetchItemProvenanceVerification(targetId, { live: true }),
+        ]).then(([feedRes, verifyRes]) => {
+          if (!mounted) return;
+          if (feedRes.ok) {
+            setProvenanceFeed(feedRes);
+          } else {
+            setProvenanceFeed(null);
+            setProvenanceError(feedRes.error || "Provenance feed unavailable");
+          }
+
+          if (verifyRes.ok) {
+            setProvenanceVerification(verifyRes.verification || null);
+          } else {
+            setProvenanceVerification(null);
+            if (!feedRes.ok) {
+              setProvenanceError(verifyRes.error || "Provenance verification unavailable");
+            }
+          }
+          setProvenanceLoading(false);
+        });
       } else {
         setError(res.error || "Item not found");
       }
       setLoading(false);
     });
-    return () => { mounted = false; };
+
+    return () => {
+      mounted = false;
+    };
   }, [slugOrId]);
 
   if (loading) return <div className="marketplace-item-page"><div className="loading">Loading...</div></div>;
@@ -48,6 +100,40 @@ export default function MarketplaceItemPage() {
   const title = item.name ? `${item.name} | PVABazaar` : "Marketplace Item | PVABazaar";
   const ogImage = media[0] || PLACEHOLDER;
   const price = formatPrice(item.priceCents, item.currency);
+  const isSold = Boolean(item?.omnichannel?.soldState?.isSold);
+
+  const payload = provenanceFeed?.payload || null;
+  const signature = provenanceFeed?.signature || "";
+  const verify = provenanceVerification || null;
+  const frac = item?.fractionalization || {};
+  const fractionalEnabled = Boolean(frac.enabled);
+  const totalShares = Math.max(0, Number(frac.totalShares || 0));
+  const soldShares = Math.max(0, Number(frac.soldShares || 0));
+  const availableShares = Math.max(0, totalShares - soldShares);
+  const sharePrice = Math.max(0, Number(frac.sharePrice || 0));
+  const ownershipRows = Array.isArray(item?.ownershipHistory) ? item.ownershipHistory : [];
+  const normalizedShareQty = Math.min(Math.max(1, Number(shareQty || 1)), Math.max(1, availableShares || 1));
+  const shareSubtotal = sharePrice * normalizedShareQty;
+
+  function formatIsoDate(value) {
+    if (!value) return 'n/a';
+    const dt = new Date(value);
+    if (Number.isNaN(dt.getTime())) return String(value);
+    return dt.toLocaleString();
+  }
+
+  async function copyValue(label, value) {
+    const text = String(value || "").trim();
+    if (!text) return;
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+        setCopied(label);
+        setTimeout(() => setCopied(prev => (prev === label ? "" : prev)), 1200);
+      }
+    } catch (_) {
+    }
+  }
 
   return (
     <div className="marketplace-item-page">
@@ -62,7 +148,12 @@ export default function MarketplaceItemPage() {
         <meta property="twitter:description" content={item.description || "Marketplace item on PVABazaar"} />
         <meta property="twitter:image" content={ogImage} />
       </Helmet>
-      <Link to="/marketplace" className="back-link">← Back to Marketplace</Link>
+      <div className="item-top-links">
+        <Link to="/marketplace" className="back-link">← Back to Marketplace</Link>
+        <Link to={`/artifacts/${item.slug || slugOrId}`} className="back-link artifact-link">
+          Preserve history →
+        </Link>
+      </div>
       <div className="item-detail-layout">
         <section className="media-gallery" aria-label="Item media gallery">
           <div className="main-media">
@@ -93,37 +184,326 @@ export default function MarketplaceItemPage() {
           <div className="item-meta">
             <span className="item-category">{item.category}</span>
             {price && <span className="item-price">{price}</span>}
+            <VerificationBadge artifactIdOrSlug={item.id || slugOrId} className="item-verification-badge" />
           </div>
           <div className="item-tags">
             {Array.isArray(item.tags) && item.tags.map(tag => (
               <span className="item-tag" key={tag}>{tag}</span>
             ))}
           </div>
+          {isSold ? (
+            <p className="item-sold-note">
+              This artifact is already sold{item?.omnichannel?.soldState?.soldSource ? ` via ${item.omnichannel.soldState.soldSource}` : ''}.
+            </p>
+          ) : null}
           <p className="item-desc">{item.description}</p>
-          <button
-            className="buy-btn"
-            disabled={buying || !item.priceCents || !item.id}
-            onClick={async () => {
-              if (buying) return;
-              setBuying(true);
-              try {
-                const res = await createCheckoutSession(item.id);
-                if (res.ok && res.url) {
-                  window.location.href = res.url;
-                } else {
-                  alert(res.error || "Failed to start checkout");
+
+          <section className="item-provenance-panel" aria-label="Artifact provenance verification">
+            <div className="item-provenance-header">
+              <h2>Provenance Verification</h2>
+              {payload?.provenance?.verificationStatus ? (
+                <span className="item-provenance-status">{payload.provenance.verificationStatus}</span>
+              ) : null}
+            </div>
+
+            {provenanceLoading ? <p className="item-provenance-note">Loading signed provenance feed...</p> : null}
+            {provenanceError ? <p className="item-provenance-note error">{provenanceError}</p> : null}
+
+            {!provenanceLoading && payload ? (
+              <div className="item-provenance-grid">
+                <div className="item-provenance-row">
+                  <span>Unique code</span>
+                  <strong>{payload.provenance?.uniqueCode || "n/a"}</strong>
+                </div>
+                <div className="item-provenance-row">
+                  <span>Combined hash</span>
+                  <strong>{shortHash(payload.provenance?.combinedHash) || "n/a"}</strong>
+                  {payload.provenance?.combinedHash ? (
+                    <button
+                      type="button"
+                      className="item-copy-btn"
+                      onClick={() => copyValue("combinedHash", payload.provenance.combinedHash)}
+                    >
+                      {copied === "combinedHash" ? "Copied" : "Copy"}
+                    </button>
+                  ) : null}
+                </div>
+                <div className="item-provenance-row">
+                  <span>Royalty</span>
+                  <strong>{Number(payload.provenance?.royalty?.percent || 0)}%</strong>
+                </div>
+                <div className="item-provenance-row">
+                  <span>Verification verdict</span>
+                  <strong>{verify?.verdict || "n/a"}</strong>
+                </div>
+                <div className="item-provenance-row">
+                  <span>Signature valid</span>
+                  <strong>{verify?.signatureValid ? "yes" : "no"}</strong>
+                </div>
+                <div className="item-provenance-row">
+                  <span>Feed signature</span>
+                  <strong>{shortHash(signature) || "n/a"}</strong>
+                  {signature ? (
+                    <button
+                      type="button"
+                      className="item-copy-btn"
+                      onClick={() => copyValue("signature", signature)}
+                    >
+                      {copied === "signature" ? "Copied" : "Copy"}
+                    </button>
+                  ) : null}
+                </div>
+                <div className="item-provenance-row">
+                  <span>Chain network</span>
+                  <strong>{payload.provenance?.chain?.network || "n/a"}</strong>
+                </div>
+                <div className="item-provenance-row">
+                  <span>Contract</span>
+                  <strong>{shortHash(payload.provenance?.chain?.contractAddress) || "n/a"}</strong>
+                  {payload.provenance?.chain?.contractAddress ? (
+                    <button
+                      type="button"
+                      className="item-copy-btn"
+                      onClick={() => copyValue("contractAddress", payload.provenance.chain.contractAddress)}
+                    >
+                      {copied === "contractAddress" ? "Copied" : "Copy"}
+                    </button>
+                  ) : null}
+                </div>
+                <div className="item-provenance-row">
+                  <span>Token ID</span>
+                  <strong>{payload.provenance?.chain?.tokenId || "n/a"}</strong>
+                </div>
+                <div className="item-provenance-row">
+                  <span>Ownership events</span>
+                  <strong>{Number(verify?.ownershipEvents || 0)}</strong>
+                </div>
+                <div className="item-provenance-row">
+                  <span>On-chain check</span>
+                  <strong>{verify?.onChain?.verified ? "confirmed" : (verify?.onChain?.available ? "failed" : "unavailable")}</strong>
+                </div>
+                <div className="item-provenance-row">
+                  <span>Current owner</span>
+                  <strong>{shortHash(verify?.onChain?.currentOwner) || "n/a"}</strong>
+                  {verify?.onChain?.currentOwner ? (
+                    <button
+                      type="button"
+                      className="item-copy-btn"
+                      onClick={() => copyValue("currentOwner", verify.onChain.currentOwner)}
+                    >
+                      {copied === "currentOwner" ? "Copied" : "Copy"}
+                    </button>
+                  ) : null}
+                </div>
+                <div className="item-provenance-row">
+                  <span>Owner matches timeline</span>
+                  <strong>
+                    {verify?.ownerMatchesTimeline === null
+                      ? "n/a"
+                      : (verify?.ownerMatchesTimeline ? "yes" : "no")}
+                  </strong>
+                </div>
+                {!verify?.onChain?.available && verify?.onChain?.reason ? (
+                  <div className="item-provenance-row">
+                    <span>On-chain note</span>
+                    <strong>{verify.onChain.reason}</strong>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+          </section>
+
+          <section className="item-fraction-panel" aria-label="Fractional ownership">
+            <div className="item-fraction-header">
+              <h2>Fractional Ownership</h2>
+              <span className={`item-fraction-status ${fractionalEnabled ? 'enabled' : 'disabled'}`}>
+                {fractionalEnabled ? 'Enabled' : 'Not enabled'}
+              </span>
+            </div>
+
+            {fractionalEnabled ? (
+              <>
+                <div className="item-fraction-grid">
+                  <div className="item-fraction-kpi">
+                    <span>Total shares</span>
+                    <strong>{totalShares}</strong>
+                  </div>
+                  <div className="item-fraction-kpi">
+                    <span>Sold shares</span>
+                    <strong>{soldShares}</strong>
+                  </div>
+                  <div className="item-fraction-kpi">
+                    <span>Available shares</span>
+                    <strong>{availableShares}</strong>
+                  </div>
+                  <div className="item-fraction-kpi">
+                    <span>Share price</span>
+                    <strong>{formatPrice(Math.round(sharePrice * 100), item.currency || 'USD')}</strong>
+                  </div>
+                </div>
+
+                <div className="item-fraction-buy">
+                  <label htmlFor="shareQty">Buy shares</label>
+                  <div className="item-fraction-buy-row">
+                    <input
+                      id="shareQty"
+                      type="number"
+                      min={1}
+                      max={Math.max(1, availableShares || 1)}
+                      value={normalizedShareQty}
+                      onChange={(e) => setShareQty(Number(e.target.value || 1))}
+                      disabled={availableShares <= 0}
+                    />
+                    <div className="item-fraction-buy-price">
+                      Est. total: <strong>{formatPrice(Math.round(shareSubtotal * 100), item.currency || 'USD')}</strong>
+                    </div>
+                    <button
+                      type="button"
+                      className="item-fraction-buy-btn"
+                      disabled={availableShares <= 0 || isSold}
+                      onClick={() => setAlertMsg('Share purchase flow is queued for the next release. Your quantity and estimate are ready.')}
+                    >
+                      Buy Shares (Preview)
+                    </button>
+                  </div>
+                </div>
+
+                <div className="item-fraction-ledger">
+                  <h3>Ownership Ledger</h3>
+                  {ownershipRows.length === 0 ? (
+                    <p className="item-fraction-ledger-empty">No ownership transfers recorded yet.</p>
+                  ) : (
+                    <div className="item-fraction-ledger-table-wrap">
+                      <table>
+                        <thead>
+                          <tr>
+                            <th>Owner</th>
+                            <th>Date</th>
+                            <th>Tx Hash</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {ownershipRows.map((row, idx) => (
+                            <tr key={`${row.owner}-${row.transactionHash}-${idx}`}>
+                              <td>{shortHash(row.owner, 12, 8) || 'n/a'}</td>
+                              <td>{formatIsoDate(row.date)}</td>
+                              <td>{shortHash(row.transactionHash, 10, 8) || 'n/a'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : (
+              <p className="item-fraction-note">This artifact is currently sold as a single whole ownership unit.</p>
+            )}
+          </section>
+
+          <div className="buy-actions">
+            <button
+              className="buy-btn"
+              disabled={isSold || cardBuying || cryptoBuying || !item.priceCents || !item.id}
+              onClick={async () => {
+                if (cardBuying || cryptoBuying) return;
+                setCardBuying(true);
+                try {
+                  const res = await createCheckoutSession(item.id);
+                  if (res.ok && res.url) {
+                    window.location.href = res.url;
+                  } else {
+                    setAlertMsg(res.error || "Failed to start checkout");
+                  }
+                } catch (e) {
+                  setAlertMsg(e.message || "Checkout error");
+                } finally {
+                  setCardBuying(false);
                 }
-              } catch (e) {
-                alert(e.message || "Checkout error");
-              } finally {
-                setBuying(false);
-              }
-            }}
-          >
-            {buying ? "Redirecting..." : "Buy"}
-          </button>
+              }}
+            >
+              {cardBuying ? "Redirecting..." : "Buy with Card"}
+            </button>
+
+            <button
+              className="buy-btn buy-btn-crypto"
+              disabled={isSold || cardBuying || cryptoBuying || !item.priceCents || !item.id}
+              onClick={async () => {
+                if (cardBuying || cryptoBuying) return;
+                if (!window?.ethereum) {
+                  setAlertMsg("No crypto wallet detected. Please install MetaMask.");
+                  return;
+                }
+
+                setCryptoBuying(true);
+                try {
+                  const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+                  const buyerWallet = Array.isArray(accounts) && accounts.length ? accounts[0] : "";
+                  if (!buyerWallet) {
+                    throw new Error("Wallet connection failed");
+                  }
+
+                  const intent = await prepareCryptoCheckout({
+                    itemId: item.id,
+                    buyerWallet,
+                  });
+                  if (!intent.ok) {
+                    throw new Error(intent.error || "Failed to prepare crypto checkout");
+                  }
+
+                  const targetChainHex = `0x${Number(intent.chainId || 8453).toString(16)}`;
+                  try {
+                    await window.ethereum.request({
+                      method: "wallet_switchEthereumChain",
+                      params: [{ chainId: targetChainHex }],
+                    });
+                  } catch (_) {
+                    // If chain switching fails, wallet may still submit on current chain.
+                  }
+
+                  const txHash = await window.ethereum.request({
+                    method: "eth_sendTransaction",
+                    params: [
+                      {
+                        from: buyerWallet,
+                        to: intent.recipientAddress,
+                        value: `0x${BigInt(intent.amountWei).toString(16)}`,
+                      },
+                    ],
+                  });
+
+                  const confirm = await confirmCryptoCheckoutPayment({
+                    orderId: intent.orderId,
+                    txHash,
+                    buyerWallet,
+                  });
+
+                  if (!confirm.ok) {
+                    throw new Error(confirm.error || "Crypto payment confirmation failed");
+                  }
+
+                  const linkText = confirm.explorerUrl
+                    ? `\nExplorer: ${confirm.explorerUrl}`
+                    : "";
+                  setAlertMsg(`Crypto payment confirmed and synced.${linkText}`);
+                } catch (e) {
+                  setAlertMsg(e.message || "Crypto checkout failed");
+                } finally {
+                  setCryptoBuying(false);
+                }
+              }}
+            >
+              {cryptoBuying ? "Confirming..." : "Buy with Crypto"}
+            </button>
+          </div>
         </section>
       </div>
+      <AlertModal
+        isOpen={!!alertMsg}
+        onClose={() => setAlertMsg(null)}
+        title="Error"
+        message={alertMsg}
+      />
     </div>
   );
 }

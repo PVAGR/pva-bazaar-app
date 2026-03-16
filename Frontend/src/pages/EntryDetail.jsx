@@ -4,6 +4,11 @@ import rehypeSanitize from 'rehype-sanitize';
 import { Helmet } from 'react-helmet-async';
 import { useParams, Link } from 'react-router-dom';
 import { fetchArchiveEntryById } from '../lib/archiveApi.js';
+import { apiGet } from '../lib/api';
+import { createLogger } from '../lib/logger';
+import './EntryDetail.css';
+
+const logger = createLogger('EntryDetail');
 // Helper to build canonical URLs
 function getCanonicalUrl(path = '') {
   const base = 'https://pvabazaar.org';
@@ -20,6 +25,7 @@ export default function EntryDetail({ entries = [] }) {
 
   const [fetchedEntry, setFetchedEntry] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [payouts, setPayouts] = useState([]);
 
   useEffect(() => {
     let mounted = true;
@@ -36,7 +42,7 @@ export default function EntryDetail({ entries = [] }) {
         .catch((err) => {
           if (err?.name === 'AbortError') return;
           if (mounted) {
-            console.warn('Failed to fetch entry', err);
+            logger.warn('Failed to fetch entry', err);
             setLoading(false);
           }
         });
@@ -48,6 +54,35 @@ export default function EntryDetail({ entries = [] }) {
   }, [id, entry]);
 
   const displayEntry = entry || fetchedEntry;
+
+  // Load Solana payout history linked to this entry (by id)
+  useEffect(() => {
+    if (!displayEntry?.id) {
+      setPayouts([]);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await apiGet('/solana/payouts', {
+          params: { artifactId: displayEntry.id },
+        });
+        if (!cancelled && res?.ok && Array.isArray(res.payouts)) {
+          setPayouts(res.payouts);
+        } else if (!cancelled) {
+          setPayouts([]);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          logger.warn('Failed to load Solana payouts for entry', err);
+          setPayouts([]);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [displayEntry?.id]);
 
   // Extract headings for TOC
   const [toc, setToc] = useState([]);
@@ -76,9 +111,9 @@ export default function EntryDetail({ entries = [] }) {
 
   if (loading) {
     return (
-      <section className="entry-detail-container">
+      <section className="entry-detail-container entry-detail-page">
         <div className="entry-detail-header">
-          <Link to="#/journal" className="entry-close-btn">✕</Link>
+          <Link to="/library" className="entry-close-btn">✕</Link>
         </div>
         <div className="entry-detail-content">Loading entry...</div>
       </section>
@@ -87,9 +122,9 @@ export default function EntryDetail({ entries = [] }) {
 
   if (!displayEntry) {
     return (
-      <section className="entry-detail-container">
+      <section className="entry-detail-container entry-detail-page">
         <div className="entry-detail-header">
-          <Link to="#/journal" className="entry-close-btn">✕</Link>
+          <Link to="/library" className="entry-close-btn">✕</Link>
         </div>
         <div className="entry-detail-content">Entry not found.</div>
       </section>
@@ -109,24 +144,56 @@ export default function EntryDetail({ entries = [] }) {
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:image" content={displayEntry.media?.[0] || getCanonicalUrl('/og-default.jpg')} />
       </Helmet>
-      <section className="entry-detail-container">
+      <section className="entry-detail-container entry-detail-page">
         <div className="entry-detail-header">
-          <Link to="#/" className="entry-home-btn" aria-label="Home">🏠</Link>
+          <Link to="/" className="entry-home-btn" aria-label="Home">🏠</Link>
           <h2 className="entry-detail-title">{displayEntry.title}</h2>
-          <Link to="#/journal" className="entry-close-btn" aria-label="Close">✕</Link>
+          <Link to="/library" className="entry-close-btn" aria-label="Close">✕</Link>
         </div>
 
         <div className="entry-detail-scrollable">
           <article className="entry-detail-content">
-            <div className="entry-page__meta">
+            <div className="entry-page__meta entry-page__meta--enhanced">
               {new Date(displayEntry.date).toLocaleDateString()}
               {displayEntry.location ? ` · ${displayEntry.location}` : ''}
               {displayEntry.tags?.length ? ' · ' + displayEntry.tags.join(', ') : ''}
             </div>
 
+            {/* Economic provenance: recent Solana rituals tied to this entry */}
+            {payouts.length > 0 && (
+              <div className="entry-payouts entry-payouts--card">
+                <h3>💰 Revenue rituals linked to this entry</h3>
+                <ul>
+                  {payouts.slice(0, 5).map((p) => (
+                    <li key={p.id}>
+                      <span>
+                        {p.amountSol} SOL · {p.status} · {p.network}
+                      </span>
+                      {' · '}
+                      <span>
+                        {p.createdAt ? new Date(p.createdAt).toLocaleString() : 'n/a'}
+                      </span>
+                      {p.txSignature && (
+                        <>
+                          {' · '}
+                          <a
+                            href={`https://explorer.solana.com/tx/${p.txSignature}?cluster=${p.network === 'mainnet-beta' ? 'mainnet' : p.network}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            View on Solana explorer
+                          </a>
+                        </>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             {/* Table of Contents */}
             {toc.length > 1 && (
-              <nav className="entry-toc">
+              <nav className="entry-toc entry-toc--card">
                 <strong>Table of Contents</strong>
                 <ul>
                   {toc.map((h) => (
@@ -182,9 +249,9 @@ export default function EntryDetail({ entries = [] }) {
         </div>
 
         <nav className="entry-detail-nav">
-          {prev && <Link to={`#/entry/${prev.id}`} className="nav-link nav-prev">← Previous</Link>}
-          <Link to="#/" className="nav-link nav-back">Back to Home</Link>
-          {next && <Link to={`#/entry/${next.id}`} className="nav-link nav-next">Next →</Link>}
+          {prev && <Link to={`/entry/${prev.id}`} className="nav-link nav-prev">← Previous</Link>}
+          <Link to="/" className="nav-link nav-back">Back to Home</Link>
+          {next && <Link to={`/entry/${next.id}`} className="nav-link nav-next">Next →</Link>}
         </nav>
       </section>
     </>
