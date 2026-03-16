@@ -31,6 +31,7 @@ const AdminTabs = React.memo(function AdminTabs({ activeTab, onTabChange }) {
     { id: 'settings', label: '⚙️ Settings', title: 'Configuration (Alt+0)', shortcut: '0' },
     { id: 'openclaw', label: '🦞 OpenClaw', title: 'OpenClaw gateway & agent interface', shortcut: null },
     { id: 'bounty-hunter', label: '🤖 Bounty Hunter', title: 'AI crypto bounty scanner & HITL review', shortcut: null },
+    { id: 'royalty-analytics', label: '💹 Royalty Analytics', title: 'Cross-creator royalty & sales event log', shortcut: null },
   ];
 
   return (

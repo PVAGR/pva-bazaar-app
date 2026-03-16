@@ -667,3 +667,19 @@ export async function exportCreatorRoyaltyCsv(creatorAddress) {
     return { ok: false, error: err.message, csv: '' };
   }
 }
+
+export async function fetchAllRoyaltyEvents({ limit = 200, offset = 0, platform = '' } = {}) {
+  try {
+    const params = new URLSearchParams();
+    params.set('limit', String(limit));
+    params.set('offset', String(offset));
+    if (platform) params.set('platform', String(platform));
+    const response = await apiGet(`/analytics/all-events?${params.toString()}`);
+    if (response && response.ok && response.data) {
+      return { ok: true, events: response.data.events || [], total: response.data.total || 0 };
+    }
+    return { ok: false, error: response?.error || 'Failed to load events', events: [], total: 0 };
+  } catch (err) {
+    return { ok: false, error: err.message, events: [], total: 0 };
+  }
+}
