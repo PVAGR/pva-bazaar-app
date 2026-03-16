@@ -31,22 +31,22 @@ const ApiDocsTab = React.memo(function ApiDocsTab() {
       endpoints: [
         {
           method: 'GET',
-          path: '/api/artifacts',
+          path: '/api/items',
           description: 'Get all artifacts (with optional filters)',
           auth: 'None',
           params: 'category, origin, minPrice, maxPrice',
-          example: `${apiBase}/api/artifacts?category=textiles&origin=Kenya`
+          example: `${apiBase}/api/items?category=textiles&origin=Kenya`
         },
         {
           method: 'GET',
-          path: '/api/artifacts/:id',
+          path: '/api/items/:id',
           description: 'Get a specific artifact by ID',
           auth: 'None',
-          example: `${apiBase}/api/artifacts/507f1f77bcf86cd799439011`
+          example: `${apiBase}/api/items/507f1f77bcf86cd799439011`
         },
         {
           method: 'POST',
-          path: '/api/artifacts',
+          path: '/api/items',
           description: 'Create a new artifact',
           auth: 'Required (JWT)',
           body: {
@@ -59,14 +59,14 @@ const ApiDocsTab = React.memo(function ApiDocsTab() {
         },
         {
           method: 'PUT',
-          path: '/api/artifacts/:id',
+          path: '/api/items/:id',
           description: 'Update an artifact',
           auth: 'Required (JWT)',
           body: { price: 175 }
         },
         {
           method: 'DELETE',
-          path: '/api/artifacts/:id',
+          path: '/api/items/:id',
           description: 'Delete an artifact',
           auth: 'Required (JWT)'
         }
@@ -666,7 +666,7 @@ const ApiDocsTab = React.memo(function ApiDocsTab() {
             <div className="step-content">
               <strong>Make Requests</strong>
               <p>Use fetch or axios with the base URL and endpoint path:</p>
-              <code>fetch('{apiBase}/api/artifacts')</code>
+              <code>fetch('{apiBase}/api/items')</code>
             </div>
           </div>
           <div className="guide-step">
