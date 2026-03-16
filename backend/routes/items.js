@@ -28,7 +28,6 @@ const {
   shouldBlockOnReverseImage,
   buildReverseImageSnapshot,
 } = require('../service/reverseImageLookupService');
-const { findStaticArtifact, listStaticArtifacts } = require('../lib/staticContent');
 
 function hasAdminAccess(req) {
   const adminCode = req.headers['x-admin-code'];
@@ -172,21 +171,6 @@ async function getLiveOnChainState({ contractAddress, tokenId }) {
   }
 }
 
-async function findArtifactBySlugOrId(slugOrId, { lean = false } = {}) {
-  let doc = null;
-  if (mongoose.Types.ObjectId.isValid(String(slugOrId))) {
-    doc = lean
-      ? await Artifact.findById(String(slugOrId)).lean()
-      : await Artifact.findById(String(slugOrId));
-  }
-  if (!doc) {
-    doc = lean
-      ? await Artifact.findOne({ slug: String(slugOrId) }).lean()
-      : await Artifact.findOne({ slug: String(slugOrId) });
-  }
-  return doc || findStaticArtifact(slugOrId);
-}
-
 // GET /api/items
 router.get('/', async (req, res) => {
   try {
@@ -230,37 +214,6 @@ router.get('/', async (req, res) => {
       .sort(sortOrder)
       .limit(limit + 1);
     const docs = await query.exec();
-
-    if (docs.length === 0) {
-      let fallbackDocs = listStaticArtifacts({
-        category,
-        tag,
-        q,
-        sort,
-        includeDrafts: isAdmin && includeDrafts === 'true',
-      });
-      if (cursor) {
-        const c = decodeCursor(cursor);
-        if (c && c.createdAt && c.id) {
-          const cursorTime = new Date(c.createdAt).getTime();
-          fallbackDocs = fallbackDocs.filter((item) => {
-            const itemTime = new Date(item.createdAt).getTime();
-            if (sort === 'old') {
-              return itemTime > cursorTime || (itemTime === cursorTime && String(item._id) > String(c.id));
-            }
-            return itemTime < cursorTime || (itemTime === cursorTime && String(item._id) < String(c.id));
-          });
-        }
-      }
-
-      const items = fallbackDocs.slice(0, limit).map(toPublicItem);
-      const last = fallbackDocs[limit - 1];
-      const nextCursor = fallbackDocs.length > limit && last
-        ? encodeCursor({ createdAt: last.createdAt, id: last._id })
-        : null;
-      return res.json({ ok: true, items, nextCursor });
-    }
-
     const items = docs.slice(0, limit).map(toPublicItem);
     let nextCursor = null;
     if (docs.length > limit) {
@@ -522,7 +475,13 @@ router.get('/:slugOrId', async (req, res) => {
   try {
     const { slugOrId } = req.params;
     const isAdmin = hasAdminAccess(req);
-    const doc = await findArtifactBySlugOrId(slugOrId);
+    let doc = null;
+    if (mongoose.Types.ObjectId.isValid(slugOrId)) {
+      doc = await Artifact.findById(slugOrId);
+    }
+    if (!doc) {
+      doc = await Artifact.findOne({ slug: slugOrId });
+    }
     if (!doc || (!isAdmin && doc.status !== 'published')) {
       return res.status(404).json({ ok: false, error: 'Item not found' });
     }
@@ -537,7 +496,14 @@ router.get('/:slugOrId/provenance-feed', async (req, res) => {
   try {
     const { slugOrId } = req.params;
     const isAdmin = hasAdminAccess(req);
-    const doc = await findArtifactBySlugOrId(slugOrId, { lean: true });
+    let doc = null;
+
+    if (mongoose.Types.ObjectId.isValid(slugOrId)) {
+      doc = await Artifact.findById(slugOrId).lean();
+    }
+    if (!doc) {
+      doc = await Artifact.findOne({ slug: slugOrId }).lean();
+    }
 
     if (!doc || (!isAdmin && doc.status !== 'published')) {
       return res.status(404).json({ ok: false, error: 'Item not found' });
@@ -564,7 +530,14 @@ router.get('/:slugOrId/provenance/verify', async (req, res) => {
     const liveParam = String(req.query.live || 'true').toLowerCase();
     const includeLiveOnChain = liveParam !== 'false' && liveParam !== '0' && liveParam !== 'no';
     const isAdmin = hasAdminAccess(req);
-    const doc = await findArtifactBySlugOrId(slugOrId, { lean: true });
+    let doc = null;
+
+    if (mongoose.Types.ObjectId.isValid(slugOrId)) {
+      doc = await Artifact.findById(slugOrId).lean();
+    }
+    if (!doc) {
+      doc = await Artifact.findOne({ slug: slugOrId }).lean();
+    }
 
     if (!doc || (!isAdmin && doc.status !== 'published')) {
       return res.status(404).json({ ok: false, error: 'Item not found' });
