@@ -3,9 +3,23 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Page Not Found — PVA Bazaar</title>
-    <link rel="canonical" href="https://pvabazaar.org/404.html" />
-    <meta name="description" content="404 — The page you requested could not be found." />
+    <title>Redirecting…</title>
+    <meta name="robots" content="noindex" />
+    <meta name="description" content="Redirecting to the requested page." />
+    <script>
+      (function () {
+        var pathname = window.location.pathname || '/';
+        var normalized = pathname.replace(/\/+$/, '') || '/';
+
+        if (normalized === '/404.html') {
+          window.location.replace('/');
+          return;
+        }
+
+        var target = '/#' + normalized + (window.location.search || '');
+        window.location.replace(target);
+      })();
+    </script>
     <style>
       body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; background:#0f1419; color:#e1e8ed; display:flex; align-items:center; justify-content:center; min-height:100vh; margin:0; }
       .box { max-width: 640px; padding: 2rem; border:1px solid #2a3f5f; border-radius:8px; background:#11161b; }
@@ -15,9 +29,9 @@
   </head>
   <body>
     <div class="box">
-      <h1>404 — Page Not Found</h1>
-      <p>The page you’re looking for doesn’t exist or may have moved.</p>
-      <p><a href="/">Go back to Home</a></p>
+      <h1>Redirecting…</h1>
+      <p>Sending you to the matching page in the live app.</p>
+      <p><a href="/">Go to Home now</a></p>
     </div>
   </body>
 </html>
