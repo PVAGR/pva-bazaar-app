@@ -12,7 +12,6 @@ const VerificationResult = require('../models/VerificationResult');
 const { createTransactionEvent, dispatchToOpenClaw } = require('../utils/openclaw-events');
 const { inspectTransaction, getExplorerTxUrl, normalizeNetwork } = require('../utils/blockchain');
 const { completeSaleAcrossChannels } = require('../service/omnichannelSyncService');
-const { appendLifecycleEventForArtifact } = require('../service/dppLifecycleService');
 
 const PUBLIC_SITE_URL = process.env.PUBLIC_SITE_URL || "https://pvabazaar.org";
 
@@ -211,24 +210,6 @@ router.post('/finalize-session', async (req, res) => {
               },
             },
           });
-
-          await appendLifecycleEventForArtifact({
-            artifactId: purchase.artifactId,
-            artifactSlug: purchase.artifactSlug || '',
-            type: 'resold',
-            notes: `Fractional share purchase confirmed (${purchase.quantity} share(s))`,
-            txHash: session.payment_intent || '',
-            externalRef: `stripe_share:${session.id}`,
-            metadata: {
-              orderType: 'share_purchase',
-              sessionId: session.id,
-              purchaseId: String(purchase._id),
-              quantity: Number(purchase.quantity || 0),
-              totalAmountCents: Number(purchase.totalAmountCents || 0),
-              currency: purchase.currency || 'USD',
-            },
-            occurredAt: new Date(),
-          }).catch(() => {});
         }
       }
 
@@ -308,24 +289,6 @@ router.post('/finalize-session', async (req, res) => {
         currency: order.currency || session.currency || 'usd',
         idempotencyKey: `stripe_session:${session.id}`,
       });
-
-      await appendLifecycleEventForArtifact({
-        artifactId: itemDoc._id,
-        artifactSlug: itemDoc.slug || '',
-        type: 'sold',
-        notes: 'Checkout payment confirmed',
-        txHash: session.payment_intent || '',
-        externalRef: `stripe_order:${session.id}`,
-        metadata: {
-          orderType: 'full_purchase',
-          sessionId: session.id,
-          orderId: String(order._id),
-          amountCents: Number(order.amountTotal || session.amount_total || 0),
-          currency: order.currency || session.currency || 'usd',
-          paymentMethod: 'card',
-        },
-        occurredAt: new Date(),
-      }).catch(() => {});
     }
 
     const downloadUrl = `${PUBLIC_SITE_URL.replace(/\/$/, '')}/#/checkout/download?order_id=${encodeURIComponent(order._id)}&token=${encodeURIComponent(order.downloadToken)}`;
