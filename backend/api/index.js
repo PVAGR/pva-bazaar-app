@@ -265,7 +265,6 @@ const payoutsRoutes = require('../routes/payouts');
 const streamsRoutes = require('../routes/streams');
 const journalRoutes = require('../routes/journal');
 const didRoutes = require('../routes/did');
-const dppRoutes = require('../routes/dpp');
 const databasesRoutes = require('../routes/databases');
 // Models for optional seeding
 const Artifact = require('../models/Artifact');
@@ -332,7 +331,6 @@ app.use('/api/payouts', payoutsRoutes);
 app.use('/api/streams', streamsRoutes);
 app.use('/api/journal', journalRoutes);
 app.use('/api/did', didRoutes);
-app.use('/api/dpp', dppRoutes);
 app.use('/api/databases', databasesRoutes);
 app.use('/api/openclaw', openClawRoutes);
 app.use('/api/openclaw', openClawMetricsRoutes); // Prometheus metrics
