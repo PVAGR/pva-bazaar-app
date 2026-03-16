@@ -3,6 +3,7 @@ const router = express.Router();
 const VectorSearchService = require('../utils/vectorSearchService');
 const Artifact = require('../models/Artifact');
 const ArchiveEntry = require('../models/ArchiveEntry');
+const { searchStaticArchive, searchStaticArtifacts } = require('../lib/staticContent');
 
 const vectorSearch = new VectorSearchService();
 
@@ -57,7 +58,9 @@ router.get('/text', async (req, res) => {
       .limit(lim)
       .lean();
 
-    const normalized = results.map((e) => ({ ...e, id: e._id || e.id }));
+    const normalized = results.length > 0
+      ? results.map((e) => ({ ...e, id: e._id || e.id }))
+      : searchStaticArchive(qSafe, lim);
     res.json({ success: true, query: qSafe, results: normalized, count: normalized.length });
   } catch (error) {
     console.error('Text search error:', error);
@@ -93,11 +96,13 @@ router.get('/artifacts', async (req, res) => {
       .limit(lim)
       .lean();
 
-    const normalized = items.map((item) => ({
-      ...item,
-      id: item._id || item.id,
-      type: 'artifact',
-    }));
+    const normalized = items.length > 0
+      ? items.map((item) => ({
+          ...item,
+          id: item._id || item.id,
+          type: 'artifact',
+        }))
+      : searchStaticArtifacts(qSafe, lim);
 
     return res.json({ success: true, query: qSafe, results: normalized, count: normalized.length });
   } catch (error) {
@@ -160,7 +165,14 @@ router.get('/all', async (req, res) => {
       type: 'artifact',
     }));
 
-    const merged = [...normalizedEntries, ...normalizedItems]
+    const finalEntries = normalizedEntries.length > 0
+      ? normalizedEntries
+      : searchStaticArchive(qSafe, lim).map((entry) => ({ ...entry, type: 'entry' }));
+    const finalItems = normalizedItems.length > 0
+      ? normalizedItems
+      : searchStaticArtifacts(qSafe, lim);
+
+    const merged = [...finalEntries, ...finalItems]
       .sort((a, b) => {
         const aTs = new Date(a.updatedAt || a.date || a.createdAt || 0).getTime();
         const bTs = new Date(b.updatedAt || b.date || b.createdAt || 0).getTime();
@@ -174,8 +186,8 @@ router.get('/all', async (req, res) => {
       results: merged,
       count: merged.length,
       breakdown: {
-        entries: normalizedEntries.length,
-        artifacts: normalizedItems.length,
+        entries: finalEntries.length,
+        artifacts: finalItems.length,
       },
     });
   } catch (error) {

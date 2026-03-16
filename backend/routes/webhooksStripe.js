@@ -4,7 +4,6 @@ const express = require("express");
 const router = express.Router();
 const stripe = require("../lib/stripeClient");
 const Order = require("../models/Order");
-const SharePurchase = require("../models/SharePurchase");
 const StripeEventLog = require("../models/StripeEventLog");
 const PhysicalFulfillment = require("../models/PhysicalFulfillment");
 const FulfillmentTransactionLog = require("../models/FulfillmentTransactionLog");
@@ -13,7 +12,6 @@ const Artifact = require('../models/Artifact');
 const { sendFulfillmentConfirmationEmail, sendPaymentFailedEmail } = require("../service/emailService");
 const { createTransactionEvent, dispatchToOpenClaw } = require('../utils/openclaw-events');
 const { completeSaleAcrossChannels } = require('../service/omnichannelSyncService');
-const { appendLifecycleEventForArtifact } = require('../service/dppLifecycleService');
 
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
 const PUBLIC_SITE_URL = process.env.PUBLIC_SITE_URL || "https://pvabazaar.org";
@@ -47,62 +45,6 @@ router.post("/stripe", async (req, res) => {
   // Handle event types
   if (event.type === "checkout.session.completed") {
     const session = event.data.object;
-
-    // --- Share purchase webhook branch ---
-    if (session.metadata?.order_type === 'share_purchase') {
-      const purchaseId = session.metadata?.share_purchase_id || session.client_reference_id;
-      if (purchaseId) {
-        const purchase = await SharePurchase.findOne({
-          $or: [{ _id: purchaseId }, { stripeSessionId: session.id }],
-        });
-        if (purchase && purchase.paymentStatus !== 'paid') {
-          purchase.paymentStatus = 'paid';
-          purchase.stripePaymentIntentId = session.payment_intent || '';
-          purchase.buyerEmail = purchase.buyerEmail || session.customer_details?.email || '';
-          purchase.buyerName = purchase.buyerName || session.customer_details?.name || '';
-          purchase.idempotencyKey = `stripe_session:${session.id}`;
-          purchase.finalizedAt = new Date();
-          await purchase.save();
-
-          await Artifact.findByIdAndUpdate(purchase.artifactId, {
-            $push: {
-              ownershipHistory: {
-                owner: purchase.buyerEmail || 'unknown',
-                date: new Date(),
-                transactionHash: session.payment_intent || '',
-              },
-            },
-          });
-
-          await appendLifecycleEventForArtifact({
-            artifactId: purchase.artifactId,
-            artifactSlug: purchase.artifactSlug || '',
-            type: 'resold',
-            notes: `Fractional share purchase paid (${purchase.quantity} share(s))`,
-            txHash: session.payment_intent || '',
-            externalRef: `stripe_share:${session.id}`,
-            metadata: {
-              orderType: 'share_purchase',
-              sessionId: session.id,
-              purchaseId: String(purchase._id),
-              quantity: Number(purchase.quantity || 0),
-              totalAmountCents: Number(purchase.totalAmountCents || 0),
-              currency: purchase.currency || 'USD',
-            },
-            occurredAt: new Date(),
-          }).catch(() => {});
-
-          await logFulfillment(event.id, null, 'share_purchase_paid', {
-            purchaseId: String(purchase._id),
-            qty: purchase.quantity,
-            artifactId: String(purchase.artifactId),
-          });
-        }
-      }
-      return res.json({ received: true });
-    }
-    // --- End share purchase webhook branch ---
-
     const orderId = session.client_reference_id || session.metadata?.orderId;
     const reservationId = session.metadata?.reservationId;
     const itemId = session.metadata?.itemId;
@@ -152,24 +94,6 @@ router.post("/stripe", async (req, res) => {
               currency: order.currency || session.currency || 'usd',
               idempotencyKey: `stripe_session:${session.id}`,
             });
-
-            await appendLifecycleEventForArtifact({
-              artifactId: itemDoc._id,
-              artifactSlug: itemDoc.slug || '',
-              type: 'sold',
-              notes: 'Stripe checkout.session.completed payment confirmed',
-              txHash: session.payment_intent || '',
-              externalRef: `stripe_order:${session.id}`,
-              metadata: {
-                orderType: 'full_purchase',
-                sessionId: session.id,
-                orderId: String(order._id),
-                amountCents: Number(order.amountTotal || session.amount_total || 0),
-                currency: order.currency || session.currency || 'usd',
-                paymentMethod: 'card',
-              },
-              occurredAt: new Date(),
-            }).catch(() => {});
           }
         } catch (syncErr) {
           console.warn('Omnichannel sync skipped:', syncErr?.message || syncErr);
@@ -224,36 +148,6 @@ router.post("/stripe", async (req, res) => {
 
   if (event.type === "checkout.session.expired" || event.type === "checkout.session.async_payment_failed") {
     const session = event.data.object;
-
-    // Release fractional share reservations for unpaid share purchases.
-    if (session.metadata?.order_type === 'share_purchase') {
-      const purchaseId = session.metadata?.share_purchase_id || session.client_reference_id;
-      const purchase = purchaseId
-        ? await SharePurchase.findOne({
-          $or: [{ _id: purchaseId }, { stripeSessionId: session.id }],
-        })
-        : null;
-
-      if (purchase && purchase.paymentStatus === 'pending') {
-        purchase.paymentStatus = 'failed';
-        purchase.idempotencyKey = purchase.idempotencyKey || `stripe_session:${session.id}`;
-        await purchase.save();
-
-        await Artifact.findByIdAndUpdate(purchase.artifactId, {
-          $inc: { 'fractionalization.soldShares': -Math.max(0, Number(purchase.quantity || 0)) },
-        });
-
-        await logFulfillment(event.id, null, 'share_purchase_released', {
-          purchaseId: String(purchase._id),
-          artifactId: String(purchase.artifactId),
-          qty: purchase.quantity,
-          eventType: event.type,
-        }).catch(() => {});
-      }
-
-      return res.json({ received: true });
-    }
-
     const reservationId = session.metadata?.reservationId;
     if (reservationId) await releaseReservation(reservationId);
     const email = session.customer_details?.email;

@@ -8,8 +8,7 @@
     "node": "20.x"
   },
   "scripts": {
-    "dev": "concurrently -n backend,frontend \"npm run dev:backend\" \"npm run dev:frontend\"",
-    "dev:all": "turbo run dev --parallel",
+    "dev": "turbo run dev --parallel",
     "dev:backend": "cd backend && npm run dev",
     "dev:frontend": "cd Frontend && npm run dev",
     "dev:web": "npm run dev -w pva-bazaar-web",

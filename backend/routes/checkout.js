@@ -7,12 +7,10 @@ const stripe = require("../lib/stripeClient");
 const Artifact = require("../models/Artifact");
 const { toPublicItem } = require("../lib/itemNormalize");
 const Order = require("../models/Order");
-const SharePurchase = require('../models/SharePurchase');
 const VerificationResult = require('../models/VerificationResult');
 const { createTransactionEvent, dispatchToOpenClaw } = require('../utils/openclaw-events');
 const { inspectTransaction, getExplorerTxUrl, normalizeNetwork } = require('../utils/blockchain');
 const { completeSaleAcrossChannels } = require('../service/omnichannelSyncService');
-const { appendLifecycleEventForArtifact } = require('../service/dppLifecycleService');
 
 const PUBLIC_SITE_URL = process.env.PUBLIC_SITE_URL || "https://pvabazaar.org";
 
@@ -178,74 +176,6 @@ router.post('/finalize-session', async (req, res) => {
       });
     }
 
-    // --- Share purchase fast-path ---
-    if (session.metadata?.order_type === 'share_purchase') {
-      const purchaseId = session.metadata?.share_purchase_id || session.client_reference_id;
-      const purchase = await SharePurchase.findOne({
-        $or: [
-          ...(purchaseId ? [{ _id: purchaseId }] : []),
-          { stripeSessionId: session.id },
-        ],
-      });
-      if (!purchase) return res.status(404).json({ ok: false, error: 'Share purchase record not found' });
-
-      if (purchase.paymentStatus !== 'paid') {
-        const idKey = `stripe_session:${session.id}`;
-        // Only finalize once
-        if (purchase.idempotencyKey !== idKey || !purchase.finalizedAt) {
-          purchase.paymentStatus = 'paid';
-          purchase.stripePaymentIntentId = session.payment_intent || '';
-          purchase.buyerEmail = purchase.buyerEmail || session.customer_details?.email || '';
-          purchase.buyerName = purchase.buyerName || session.customer_details?.name || '';
-          purchase.idempotencyKey = idKey;
-          purchase.finalizedAt = new Date();
-          await purchase.save();
-
-          // Add ownership ledger entry on the artifact
-          await Artifact.findByIdAndUpdate(purchase.artifactId, {
-            $push: {
-              ownershipHistory: {
-                owner: purchase.buyerEmail || purchase.ownerAddress || 'unknown',
-                date: new Date(),
-                transactionHash: session.payment_intent || '',
-              },
-            },
-          });
-
-          await appendLifecycleEventForArtifact({
-            artifactId: purchase.artifactId,
-            artifactSlug: purchase.artifactSlug || '',
-            type: 'resold',
-            notes: `Fractional share purchase confirmed (${purchase.quantity} share(s))`,
-            txHash: session.payment_intent || '',
-            externalRef: `stripe_share:${session.id}`,
-            metadata: {
-              orderType: 'share_purchase',
-              sessionId: session.id,
-              purchaseId: String(purchase._id),
-              quantity: Number(purchase.quantity || 0),
-              totalAmountCents: Number(purchase.totalAmountCents || 0),
-              currency: purchase.currency || 'USD',
-            },
-            occurredAt: new Date(),
-          }).catch(() => {});
-        }
-      }
-
-      return res.json({
-        ok: true,
-        finalized: true,
-        orderType: 'share_purchase',
-        sharePurchaseId: String(purchase._id),
-        paymentStatus: purchase.paymentStatus,
-        quantity: purchase.quantity,
-        totalAmountCents: purchase.totalAmountCents,
-        currency: purchase.currency,
-        artifactSlug: purchase.artifactSlug || '',
-      });
-    }
-    // --- End share purchase fast-path ---
-
     const orderId = session.client_reference_id || session.metadata?.orderId;
     const order = await Order.findOne({
       $or: [
@@ -308,24 +238,6 @@ router.post('/finalize-session', async (req, res) => {
         currency: order.currency || session.currency || 'usd',
         idempotencyKey: `stripe_session:${session.id}`,
       });
-
-      await appendLifecycleEventForArtifact({
-        artifactId: itemDoc._id,
-        artifactSlug: itemDoc.slug || '',
-        type: 'sold',
-        notes: 'Checkout payment confirmed',
-        txHash: session.payment_intent || '',
-        externalRef: `stripe_order:${session.id}`,
-        metadata: {
-          orderType: 'full_purchase',
-          sessionId: session.id,
-          orderId: String(order._id),
-          amountCents: Number(order.amountTotal || session.amount_total || 0),
-          currency: order.currency || session.currency || 'usd',
-          paymentMethod: 'card',
-        },
-        occurredAt: new Date(),
-      }).catch(() => {});
     }
 
     const downloadUrl = `${PUBLIC_SITE_URL.replace(/\/$/, '')}/#/checkout/download?order_id=${encodeURIComponent(order._id)}&token=${encodeURIComponent(order.downloadToken)}`;
