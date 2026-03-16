@@ -24,12 +24,14 @@ const AdminTabs = React.memo(function AdminTabs({ activeTab, onTabChange }) {
     { id: 'users', label: '👥 Users', title: 'User management (Alt+4)', shortcut: '4' },
     { id: 'attribution', label: '💰 Attribution', title: 'Creator attribution & commissions (Alt+5)', shortcut: '5' },
     { id: 'payouts', label: '📈 Payouts', title: 'Commission payouts & settlements (Alt+6)', shortcut: '6' },
+    { id: 'settlements', label: '📣 Settlements', title: 'Blockchain transfer contracts & receipts', shortcut: null },
     { id: 'cloud', label: '☁️ Cloud Storage', title: 'Cloud storage management (Alt+7)', shortcut: '7' },
     { id: 'api', label: '🔗 API Docs', title: 'API documentation & endpoints (Alt+8)', shortcut: '8' },
     { id: 'health', label: '💚 Health', title: 'System health & monitoring (Alt+9)', shortcut: '9' },
     { id: 'settings', label: '⚙️ Settings', title: 'Configuration (Alt+0)', shortcut: '0' },
     { id: 'openclaw', label: '🦞 OpenClaw', title: 'OpenClaw gateway & agent interface', shortcut: null },
     { id: 'bounty-hunter', label: '🤖 Bounty Hunter', title: 'AI crypto bounty scanner & HITL review', shortcut: null },
+    { id: 'royalty-analytics', label: '🎹 Royalty Analytics', title: 'Cross-creator royalty & sales event log', shortcut: null },
   ];
 
   return (

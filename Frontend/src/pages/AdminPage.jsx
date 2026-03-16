@@ -16,12 +16,14 @@ import MarketplaceTab from '../components/MarketplaceTab.jsx';
 import UsersTab from '../components/UsersTab.jsx';
 import AttributionTab from '../components/AttributionTab.jsx';
 import PayoutTab from '../components/PayoutTab.jsx';
+import SettlementContractsTab from '../components/SettlementContractsTab.jsx';
 import CloudStorageTab from '../components/CloudStorageTab.jsx';
 import ApiDocsTab from '../components/ApiDocsTab.jsx';
 import HealthTab from '../components/HealthTab.jsx';
 import SettingsTab from '../components/SettingsTab.jsx';
 import OpenClawTab from '../components/OpenClawTab.jsx';
 import BountyHunterTab from '../components/BountyHunterTab.jsx';
+import RoyaltyAnalyticsTab from '../components/RoyaltyAnalyticsTab.jsx';
 import './AdminPage.css';
 
 const logger = createLogger('AdminPage');
@@ -260,7 +262,7 @@ export default function AdminPage() {
       // Only trigger if Alt key is pressed (without Ctrl or Shift to avoid conflicts)
       if (!e.altKey || e.ctrlKey || e.shiftKey) return;
 
-      const tabs = ['dashboard', 'archive', 'marketplace', 'users', 'attribution', 'payouts', 'cloud', 'api', 'health', 'openclaw', 'bounty-hunter', 'settings'];
+      const tabs = ['dashboard', 'archive', 'marketplace', 'users', 'attribution', 'payouts', 'settlements', 'cloud', 'api', 'health', 'openclaw', 'bounty-hunter', 'royalty-analytics', 'settings'];
       let key = parseInt(e.key);
       // Support Alt+0 for the last tab (settings)
       if (e.key === '0') key = tabs.length;
@@ -653,6 +655,13 @@ export default function AdminPage() {
             </ErrorBoundary>
           )}
 
+          {/* Settlement Contracts Tab */}
+          {activeTab === 'settlements' && (
+            <ErrorBoundary>
+              <SettlementContractsTab />
+            </ErrorBoundary>
+          )}
+
           {/* Cloud Storage Tab */}
           {activeTab === 'cloud' && (
             <ErrorBoundary>
@@ -692,6 +701,13 @@ export default function AdminPage() {
           {activeTab === 'bounty-hunter' && (
             <ErrorBoundary>
               <BountyHunterTab />
+            </ErrorBoundary>
+          )}
+
+          {/* Royalty Analytics Tab */}
+          {activeTab === 'royalty-analytics' && (
+            <ErrorBoundary>
+              <RoyaltyAnalyticsTab />
             </ErrorBoundary>
           )}
         </div>
