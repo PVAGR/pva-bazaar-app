@@ -43,6 +43,19 @@ const OrderSchema = new mongoose.Schema(
     downloadGrantedAt: { type: Date },
     downloadToken: { type: String },
     certificateId: { type: String },
+    crypto: {
+      network: { type: String, default: '' },
+      chainId: { type: Number },
+      recipientAddress: { type: String, default: '' },
+      buyerWallet: { type: String, default: '' },
+      expectedAmountWei: { type: String, default: '' },
+      quoteUsdPerEth: { type: Number },
+      quoteGeneratedAt: { type: Date },
+      txHash: { type: String, default: '' },
+      paidAmountWei: { type: String, default: '' },
+      explorerUrl: { type: String, default: '' },
+      confirmedAt: { type: Date },
+    },
     // Attribution & influence economy tracking
     attribution: {
       // UTM parameters from referral link

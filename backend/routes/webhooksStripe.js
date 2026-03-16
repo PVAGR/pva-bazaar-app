@@ -8,8 +8,10 @@ const StripeEventLog = require("../models/StripeEventLog");
 const PhysicalFulfillment = require("../models/PhysicalFulfillment");
 const FulfillmentTransactionLog = require("../models/FulfillmentTransactionLog");
 const VerificationResult = require("../models/VerificationResult");
+const Artifact = require('../models/Artifact');
 const { sendFulfillmentConfirmationEmail, sendPaymentFailedEmail } = require("../service/emailService");
 const { createTransactionEvent, dispatchToOpenClaw } = require('../utils/openclaw-events');
+const { completeSaleAcrossChannels } = require('../service/omnichannelSyncService');
 
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
 const PUBLIC_SITE_URL = process.env.PUBLIC_SITE_URL || "https://pvabazaar.org";
@@ -75,6 +77,27 @@ router.post("/stripe", async (req, res) => {
         order.certificateId = certificateId || undefined;
         await order.save();
         await logFulfillment(event.id, orderId, "download_granted", { hasCertificate: !!certificateId });
+
+        // Mark item sold across external channels after successful checkout.
+        try {
+          const itemDoc = await Artifact.findById(order.itemId);
+          if (itemDoc) {
+            await completeSaleAcrossChannels({
+              item: itemDoc,
+              orderId: order._id,
+              saleSource: 'pva',
+              externalSaleId: session.id,
+              paymentMethod: 'card',
+              buyerEmail: order.customerEmail || '',
+              buyerWallet: '',
+              amountCents: order.amountTotal || session.amount_total || 0,
+              currency: order.currency || session.currency || 'usd',
+              idempotencyKey: `stripe:${event.id}`,
+            });
+          }
+        } catch (syncErr) {
+          console.warn('Omnichannel sync skipped:', syncErr?.message || syncErr);
+        }
 
         // Dispatch payment confirmed event to OpenClaw (non-blocking)
         dispatchToOpenClaw(createTransactionEvent('confirmed', {

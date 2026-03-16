@@ -1,0 +1,21 @@
+{
+  "name": "contracts",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "node ./scripts/run-hardhat.js test",
+    "compile": "node ./scripts/run-hardhat.js compile",
+    "node": "node ./scripts/run-hardhat.js node",
+    "deploy:local": "node ./scripts/run-hardhat.js run scripts/deploy.js --network localhost"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^6.1.2",
+    "@openzeppelin/contracts": "^5.6.1",
+    "hardhat": "^2.26.3"
+  }
+}

@@ -99,15 +99,86 @@ export async function updateOrder(id, patch) {
   }
 }
 // Admin Orders API helpers
-export async function fetchOrders({ limit = 25, cursor = null } = {}) {
+export async function fetchOrders({ limit = 25, cursor = null, signal = null } = {}) {
   try {
-    const response = await apiGet("/orders", { params: { limit, cursor } });
+    const config = { params: { limit, cursor } };
+    if (signal) config.signal = signal;
+    const response = await apiGet("/orders", config);
     if (response && response.ok && Array.isArray(response.items)) {
       return { ok: true, items: response.items, nextCursor: response.nextCursor || null };
     }
     return { ok: false, items: [], nextCursor: null };
   } catch (err) {
     return { ok: false, items: [], nextCursor: null, error: err.message };
+  }
+}
+
+export async function fetchOmnichannelOpsSnapshot({ limit = 25, source = '' } = {}) {
+  try {
+    const params = new URLSearchParams();
+    params.append('limit', String(limit));
+    if (source) params.append('source', source);
+    const response = await apiGet(`/orders/ops/omnichannel?${params.toString()}`);
+    if (response && response.ok) {
+      return {
+        ok: true,
+        summary: response.summary || {},
+        sales: Array.isArray(response.sales) ? response.sales : [],
+        pendingCryptoOrders: Array.isArray(response.pendingCryptoOrders) ? response.pendingCryptoOrders : [],
+      };
+    }
+    return { ok: false, error: response?.error || response?.message || 'Failed to load ops snapshot' };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+}
+
+export async function fetchProvenanceOpsSnapshot({ limit = 20 } = {}) {
+  const params = new URLSearchParams();
+  params.set('limit', String(limit));
+  try {
+    const response = await apiGet(`/orders/ops/provenance?${params.toString()}`);
+    if (response && response.ok) {
+      return {
+        ok: true,
+        summary: response.summary || {},
+        duplicateFingerprintRows: Array.isArray(response.duplicateFingerprintRows)
+          ? response.duplicateFingerprintRows
+          : [],
+        recentReverseImageRisks: Array.isArray(response.recentReverseImageRisks)
+          ? response.recentReverseImageRisks
+          : [],
+        recentRoyaltySales: Array.isArray(response.recentRoyaltySales)
+          ? response.recentRoyaltySales
+          : [],
+        recentReviewLogs: Array.isArray(response.recentReviewLogs)
+          ? response.recentReviewLogs
+          : [],
+      };
+    }
+    return { ok: false, error: response?.error || response?.message || 'Failed to load provenance ops snapshot' };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+}
+
+export async function updateItemProvenanceReview(itemId, { verificationStatus, reviewNotes = '' } = {}) {
+  if (!itemId) return { ok: false, error: 'Missing item id' };
+  try {
+    const response = await apiPost(`/items/${encodeURIComponent(itemId)}/provenance/review`, {
+      verificationStatus,
+      reviewNotes,
+    });
+    if (response && response.ok) {
+      return {
+        ok: true,
+        item: response.item || null,
+        message: response.message || 'Provenance review updated',
+      };
+    }
+    return { ok: false, error: response?.error || response?.message || 'Failed to update provenance review' };
+  } catch (err) {
+    return { ok: false, error: err.message };
   }
 }
 
@@ -142,6 +213,57 @@ export async function createCheckoutSession(itemId) {
       return { ok: true, url: response.url };
     }
     return { ok: false, error: response?.error || "Failed to create session" };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+}
+
+export async function prepareCryptoCheckout({ itemId, buyerWallet = '', buyerEmail = '' } = {}) {
+  if (!itemId) return { ok: false, error: 'Missing item id' };
+  try {
+    const response = await apiPost('/checkout/crypto/prepare', {
+      itemId,
+      buyerWallet,
+      buyerEmail,
+    });
+    if (response && response.ok) {
+      return {
+        ok: true,
+        orderId: response.orderId,
+        network: response.network,
+        chainId: response.chainId,
+        recipientAddress: response.recipientAddress,
+        amountWei: response.amountWei,
+        quoteUsdPerEth: response.quoteUsdPerEth,
+        quoteGeneratedAt: response.quoteGeneratedAt,
+        memo: response.memo,
+      };
+    }
+    return { ok: false, error: response?.error || response?.message || 'Failed to prepare crypto checkout' };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+}
+
+export async function confirmCryptoCheckoutPayment({ orderId, txHash, buyerWallet = '' } = {}) {
+  if (!orderId || !txHash) return { ok: false, error: 'Missing order id or tx hash' };
+  try {
+    const response = await apiPost('/checkout/crypto/confirm', {
+      orderId,
+      txHash,
+      buyerWallet,
+    });
+    if (response && response.ok) {
+      return {
+        ok: true,
+        orderId: response.orderId,
+        txHash: response.txHash,
+        explorerUrl: response.explorerUrl,
+        blockchainReceipt: response.blockchainReceipt || null,
+        delistResults: Array.isArray(response.delistResults) ? response.delistResults : [],
+      };
+    }
+    return { ok: false, error: response?.error || response?.message || 'Failed to confirm crypto checkout' };
   } catch (err) {
     return { ok: false, error: err.message };
   }
@@ -185,6 +307,47 @@ export async function fetchMarketplaceItem(slugOrId) {
     return { ok: false, item: null };
   } catch (err) {
     return { ok: false, item: null, error: err.message };
+  }
+}
+
+export async function fetchItemProvenanceFeed(slugOrId) {
+  if (!slugOrId) return { ok: false, error: 'Missing item id' };
+  try {
+    const response = await apiGet(`/items/${encodeURIComponent(slugOrId)}/provenance-feed`);
+    if (response && response.ok) {
+      return {
+        ok: true,
+        payload: response.payload || null,
+        signature: response.signature || '',
+        algorithm: response.algorithm || 'none',
+      };
+    }
+    return { ok: false, error: response?.error || response?.message || 'Failed to fetch provenance feed' };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+}
+
+export async function fetchItemProvenanceVerification(slugOrId, { live = true } = {}) {
+  if (!slugOrId) return { ok: false, error: 'Missing item id' };
+  try {
+    const params = new URLSearchParams();
+    params.set('live', live ? 'true' : 'false');
+    const response = await apiGet(`/items/${encodeURIComponent(slugOrId)}/provenance/verify?${params.toString()}`);
+    if (response && response.ok) {
+      return {
+        ok: true,
+        itemId: response.itemId || '',
+        slug: response.slug || '',
+        verification: response.verification || null,
+        onChain: response?.verification?.onChain || null,
+        payload: response.payload || null,
+        signature: response.signature || '',
+      };
+    }
+    return { ok: false, error: response?.error || response?.message || 'Failed to verify provenance' };
+  } catch (err) {
+    return { ok: false, error: err.message };
   }
 }
 // Marketplace API functions
@@ -243,6 +406,38 @@ export async function createMarketplaceItem(payload) {
   }
 }
 
+export async function checkMarketplaceItemProvenance(payload) {
+  try {
+    const response = await apiPost('/items/provenance/check', payload);
+    if (response && response.ok) {
+      return {
+        ok: true,
+        candidate: response.candidate || null,
+        duplicates: Array.isArray(response.duplicates) ? response.duplicates : [],
+        reverseImage: response.reverseImage || null,
+        isDuplicateLikely: Boolean(response.isDuplicateLikely),
+      };
+    }
+    return {
+      ok: false,
+      candidate: null,
+      duplicates: [],
+      reverseImage: null,
+      isDuplicateLikely: false,
+      error: response?.error || response?.message || 'Failed to run provenance check',
+    };
+  } catch (err) {
+    return {
+      ok: false,
+      candidate: null,
+      duplicates: [],
+      reverseImage: null,
+      isDuplicateLikely: false,
+      error: err.message,
+    };
+  }
+}
+
 export async function retryMarketplaceSyndication(itemId, channels = []) {
   if (!itemId) return { ok: false, error: 'Missing item id' };
   try {
@@ -258,6 +453,117 @@ export async function retryMarketplaceSyndication(itemId, channels = []) {
       };
     }
     return { ok: false, error: response?.error || response?.message || 'Failed to retry syndication' };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+}
+
+export async function fetchOmnichannelStatus(itemId) {
+  if (!itemId) return { ok: false, error: 'Missing item id' };
+  try {
+    const response = await apiGet(`/omnichannel/${encodeURIComponent(itemId)}`);
+    if (response && response.ok) {
+      return {
+        ok: true,
+        itemId: response.itemId,
+        soldState: response.soldState || { isSold: false },
+        channels: Array.isArray(response.channels) ? response.channels : [],
+        lastSyncAt: response.lastSyncAt || null,
+      };
+    }
+    return { ok: false, error: response?.error || response?.message || 'Failed to fetch omnichannel status' };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+}
+
+export async function fetchOmnichannelSaleHistory(itemId, { limit = 10 } = {}) {
+  if (!itemId) return { ok: false, error: 'Missing item id', sales: [] };
+  try {
+    const response = await apiGet(`/omnichannel/${encodeURIComponent(itemId)}/sales?limit=${encodeURIComponent(limit)}`);
+    if (response && response.ok) {
+      return {
+        ok: true,
+        itemId: response.itemId,
+        sales: Array.isArray(response.sales) ? response.sales : [],
+      };
+    }
+    return { ok: false, sales: [], error: response?.error || response?.message || 'Failed to fetch sale history' };
+  } catch (err) {
+    return { ok: false, sales: [], error: err.message };
+  }
+}
+
+export async function saveOmnichannelListings(itemId, channels = []) {
+  if (!itemId) return { ok: false, error: 'Missing item id' };
+  try {
+    const response = await apiPut(`/omnichannel/${encodeURIComponent(itemId)}/listings`, { channels });
+    if (response && response.ok) {
+      return {
+        ok: true,
+        channels: Array.isArray(response.channels) ? response.channels : [],
+        soldState: response.soldState || { isSold: false },
+        message: response.message || 'Marketplace listings saved',
+      };
+    }
+    return { ok: false, error: response?.error || response?.message || 'Failed to save marketplace listings' };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+}
+
+export async function completeOmnichannelSale(payload = {}) {
+  try {
+    const response = await apiPost('/omnichannel/sales/complete', payload);
+    if (response && response.ok) {
+      return {
+        ok: true,
+        duplicate: !!response.duplicate,
+        alreadySold: !!response.alreadySold,
+        soldState: response.soldState || { isSold: false },
+        delistResults: Array.isArray(response.delistResults) ? response.delistResults : [],
+        blockchainReceipt: response.blockchainReceipt || null,
+        saleId: response.saleId || null,
+      };
+    }
+    return { ok: false, error: response?.error || response?.message || 'Failed to complete sale sync' };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+}
+
+export async function markListingSoldManually(itemId, payload = {}) {
+  if (!itemId) return { ok: false, error: 'Missing item id' };
+  try {
+    const response = await apiPost(`/omnichannel/${encodeURIComponent(itemId)}/mark-sold`, payload);
+    if (response && response.ok) {
+      return {
+        ok: true,
+        duplicate: !!response.duplicate,
+        alreadySold: !!response.alreadySold,
+        soldState: response.soldState || { isSold: false },
+        delistResults: Array.isArray(response.delistResults) ? response.delistResults : [],
+        blockchainReceipt: response.blockchainReceipt || null,
+        saleId: response.saleId || null,
+      };
+    }
+    return { ok: false, error: response?.error || response?.message || 'Failed to mark listing sold' };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+}
+
+export async function triggerOmnichannelPollingRun({ limit = 25 } = {}) {
+  try {
+    const response = await apiPost('/omnichannel/sync/poll-run', { limit });
+    if (response && response.ok) {
+      return {
+        ok: true,
+        summary: response.summary || {},
+        results: Array.isArray(response.results) ? response.results : [],
+      };
+    }
+    return { ok: false, error: response?.error || response?.message || 'Failed to run polling sync' };
   } catch (err) {
     return { ok: false, error: err.message };
   }

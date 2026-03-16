@@ -2,18 +2,32 @@
 const express = require('express');
 const router = express.Router();
 const Artifact = require('../models/Artifact');
+const ProvenanceReviewLog = require('../models/ProvenanceReviewLog');
 const User = require('../models/User');
 const { sendConsignmentEmail, sendAdminNotification } = require('../service/emailService');
 const { normalizeItemInput, toPublicItem } = require('../lib/itemNormalize');
 const { encodeCursor, decodeCursor } = require('../lib/cursor');
 const { authMiddleware } = require('../middleware/auth');
+const adminSession = require('../middleware/adminSession');
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const { createArtifactEvent, dispatchToOpenClaw } = require('../utils/openclaw-events');
+const { verifyOnChain } = require('../utils/blockchain');
 const {
   normalizeSyndicationInput,
   dispatchSyndication,
 } = require('../service/marketplaceSyndicationService');
+const {
+  buildProvenanceRecord,
+  buildArtifactProvenance,
+  findDuplicateCandidates,
+} = require('../service/provenanceService');
+const {
+  lookupReverseImageSignals,
+  shouldBlockOnReverseImage,
+  buildReverseImageSnapshot,
+} = require('../service/reverseImageLookupService');
 
 function hasAdminAccess(req) {
   const adminCode = req.headers['x-admin-code'];
@@ -43,11 +57,118 @@ function hasAdminAccess(req) {
   return false;
 }
 
+function hasRegistrarSyncAccess(req) {
+  const inbound = String(req.headers['x-registrar-sync-secret'] || '').trim();
+  const expected = String(process.env.REGISTRAR_SYNC_SECRET || '').trim();
+  return Boolean(expected) && inbound && inbound === expected;
+}
+
 function canManageArtifact(req, artifact) {
   if (!artifact) return false;
   if (hasAdminAccess(req)) return true;
   if (!req.user?.id) return false;
   return String(artifact.creator) === String(req.user.id);
+}
+
+function signFeedPayload(payload) {
+  const key = String(process.env.PROVENANCE_FEED_SIGNING_KEY || process.env.JWT_SECRET || '');
+  if (!key) return '';
+  return crypto.createHmac('sha256', key).update(JSON.stringify(payload)).digest('hex');
+}
+
+function buildProvenanceFeedPayload(doc) {
+  return {
+    itemId: String(doc._id),
+    slug: doc.slug || '',
+    title: doc.title || doc.name || '',
+    category: doc.category || '',
+    createdAt: doc.createdAt || null,
+    updatedAt: doc.updatedAt || null,
+    provenance: {
+      uniqueCode: doc?.provenance?.uniqueCode || '',
+      imageHash: doc?.provenance?.imageHash || '',
+      metadataHash: doc?.provenance?.metadataHash || '',
+      combinedHash: doc?.provenance?.combinedHash || '',
+      verificationStatus: doc?.provenance?.verificationStatus || '',
+      classification: doc?.provenance?.classification || '',
+      era: doc?.provenance?.era || '',
+      authenticityScore: Number(doc?.provenance?.authenticityScore || 0),
+      royalty: {
+        bps: Number(doc?.provenance?.royalty?.bps || 0),
+        percent: Number(doc?.provenance?.royalty?.percent || 0),
+        beneficiaryType: doc?.provenance?.royalty?.beneficiaryType || '',
+        beneficiaryWallet: doc?.provenance?.royalty?.beneficiaryWallet || '',
+      },
+      chain: {
+        network: doc?.provenance?.chain?.network || doc?.blockchainDetails?.network || '',
+        contractAddress: doc?.provenance?.chain?.contractAddress || doc?.blockchainDetails?.contractAddress || '',
+        tokenStandard: doc?.provenance?.chain?.tokenStandard || doc?.blockchainDetails?.tokenStandard || '',
+        tokenId: doc?.provenance?.chain?.tokenId || doc?.blockchainDetails?.tokenId || '',
+      },
+      ownershipTimeline: Array.isArray(doc?.provenance?.ownershipTimeline) ? doc.provenance.ownershipTimeline : [],
+      documentation: doc?.provenance?.documentation || {},
+    },
+    issuedAt: new Date().toISOString(),
+    version: 1,
+  };
+}
+
+function safeCompare(a, b) {
+  const left = String(a || '').trim().toLowerCase();
+  const right = String(b || '').trim().toLowerCase();
+  if (!left || !right) return null;
+  return left === right;
+}
+
+function verifyFeedSignature(payload, signature) {
+  const expected = signFeedPayload(payload);
+  if (!signature || !expected) {
+    return {
+      expected,
+      valid: false,
+    };
+  }
+  const expectedBuffer = Buffer.from(expected, 'utf8');
+  const providedBuffer = Buffer.from(String(signature), 'utf8');
+  if (expectedBuffer.length !== providedBuffer.length) {
+    return {
+      expected,
+      valid: false,
+    };
+  }
+  return {
+    expected,
+    valid: crypto.timingSafeEqual(expectedBuffer, providedBuffer),
+  };
+}
+
+async function getLiveOnChainState({ contractAddress, tokenId }) {
+  const normalizedContract = String(contractAddress || '').trim();
+  const normalizedTokenId = String(tokenId || '').trim();
+  if (!normalizedContract || !normalizedTokenId) {
+    return {
+      available: false,
+      verified: false,
+      reason: 'Missing contract address or token id',
+    };
+  }
+
+  try {
+    const chainState = await verifyOnChain(normalizedContract, normalizedTokenId);
+    return {
+      available: true,
+      verified: Boolean(chainState?.verified),
+      currentOwner: chainState?.currentOwner || '',
+      tokenURI: chainState?.tokenURI || '',
+      checkedAt: chainState?.timestamp || new Date().toISOString(),
+    };
+  } catch (err) {
+    return {
+      available: false,
+      verified: false,
+      reason: err?.message || 'On-chain verification failed',
+    };
+  }
 }
 
 // GET /api/items
@@ -119,6 +240,64 @@ router.get('/mine', authMiddleware, async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// POST /api/items/provenance/check - preflight duplicate check before mint/listing
+router.post('/provenance/check', authMiddleware, async (req, res) => {
+  try {
+    const {
+      title,
+      name,
+      description,
+      price,
+      category,
+      materials,
+      images,
+      imageUrls,
+      artisan,
+      network,
+      royaltyBps,
+      royaltyWallet,
+    } = req.body || {};
+
+    const imageList = Array.isArray(imageUrls) ? imageUrls : Array.isArray(images) ? images : [];
+    const payload = {
+      title: title || name,
+      name: name || title,
+      description,
+      price: Number(price || 0),
+      category,
+      materials: Array.isArray(materials) ? materials : [],
+      imageUrls: imageList,
+      artisan,
+      creator: req.user.id,
+      network,
+      royaltyBps,
+      royaltyWallet,
+    };
+
+    const candidate = buildArtifactProvenance(payload);
+    const duplicates = await findDuplicateCandidates(Artifact, {
+      combinedHash: candidate.combinedHash,
+      imageHash: candidate.imageHash,
+      metadataHash: candidate.metadataHash,
+    });
+    const reverseImage = await lookupReverseImageSignals({
+      imageUrls: imageList,
+      title: payload.title,
+      category: payload.category,
+    });
+
+    return res.json({
+      ok: true,
+      candidate,
+      duplicates,
+      reverseImage,
+      isDuplicateLikely: duplicates.some((row) => row.matchType === 'exact') || Boolean(reverseImage?.likelyDuplicate),
+    });
+  } catch (err) {
+    return res.status(500).json({ ok: false, error: err.message });
   }
 });
 
@@ -196,6 +375,101 @@ router.post('/syndication/retry-bulk', async (req, res) => {
   }
 });
 
+// POST /api/items/provenance/sync-mint - registrar service webhook
+router.post('/provenance/sync-mint', async (req, res) => {
+  try {
+    if (!hasRegistrarSyncAccess(req) && !hasAdminAccess(req)) {
+      return res.status(401).json({ ok: false, error: 'Unauthorized' });
+    }
+
+    const {
+      itemIdOrSlug,
+      contractAddress,
+      tokenId,
+      network,
+      tokenStandard,
+      txHash,
+      metadataUri,
+      ownerWallet,
+    } = req.body || {};
+
+    if (!itemIdOrSlug) {
+      return res.status(400).json({ ok: false, error: 'itemIdOrSlug is required' });
+    }
+    if (!contractAddress || tokenId == null) {
+      return res.status(400).json({ ok: false, error: 'contractAddress and tokenId are required' });
+    }
+
+    let artifact = null;
+    if (mongoose.Types.ObjectId.isValid(String(itemIdOrSlug))) {
+      artifact = await Artifact.findById(String(itemIdOrSlug));
+    }
+    if (!artifact) {
+      artifact = await Artifact.findOne({ slug: String(itemIdOrSlug) });
+    }
+    if (!artifact) {
+      return res.status(404).json({ ok: false, error: 'Item not found' });
+    }
+
+    artifact.blockchainDetails = artifact.blockchainDetails || {};
+    artifact.provenance = artifact.provenance || {};
+    artifact.provenance.chain = artifact.provenance.chain || {};
+
+    artifact.blockchainDetails.network = String(network || artifact.blockchainDetails.network || 'base');
+    artifact.blockchainDetails.contractAddress = String(contractAddress || artifact.blockchainDetails.contractAddress || '');
+    artifact.blockchainDetails.tokenStandard = String(tokenStandard || artifact.blockchainDetails.tokenStandard || 'ERC-721');
+    artifact.blockchainDetails.tokenId = String(tokenId);
+
+    artifact.provenance.chain.network = String(network || artifact.provenance.chain.network || artifact.blockchainDetails.network || 'base');
+    artifact.provenance.chain.contractAddress = String(contractAddress || artifact.provenance.chain.contractAddress || artifact.blockchainDetails.contractAddress || '');
+    artifact.provenance.chain.tokenStandard = String(tokenStandard || artifact.provenance.chain.tokenStandard || artifact.blockchainDetails.tokenStandard || 'ERC-721');
+    artifact.provenance.chain.tokenId = String(tokenId);
+
+    if (metadataUri) {
+      artifact.provenance.documentation = {
+        ...(artifact.provenance.documentation || {}),
+        metadataUri: String(metadataUri),
+      };
+    }
+
+    if (txHash) {
+      const timeline = Array.isArray(artifact.provenance.ownershipTimeline)
+        ? artifact.provenance.ownershipTimeline
+        : [];
+      const hasTx = timeline.some((entry) => String(entry?.txHash || '').toLowerCase() === String(txHash).toLowerCase());
+      if (!hasTx) {
+        timeline.push({
+          ownerType: 'owner',
+          ownerRef: String(ownerWallet || ''),
+          ownerWallet: String(ownerWallet || ''),
+          acquiredAt: new Date(),
+          transferType: 'minted-onchain',
+          txHash: String(txHash),
+          platform: 'pva-registrar',
+        });
+      }
+      artifact.provenance.ownershipTimeline = timeline;
+    }
+
+    await artifact.save();
+
+    return res.json({
+      ok: true,
+      itemId: String(artifact._id),
+      slug: artifact.slug || '',
+      chain: {
+        network: artifact.provenance?.chain?.network || '',
+        contractAddress: artifact.provenance?.chain?.contractAddress || '',
+        tokenStandard: artifact.provenance?.chain?.tokenStandard || '',
+        tokenId: artifact.provenance?.chain?.tokenId || '',
+      },
+      message: 'On-chain provenance synced',
+    });
+  } catch (err) {
+    return res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
 // GET /api/items/:slugOrId
 router.get('/:slugOrId', async (req, res) => {
   try {
@@ -214,6 +488,145 @@ router.get('/:slugOrId', async (req, res) => {
     res.json({ ok: true, item: toPublicItem(doc) });
   } catch (err) {
     res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// GET /api/items/:slugOrId/provenance-feed - public signed provenance payload
+router.get('/:slugOrId/provenance-feed', async (req, res) => {
+  try {
+    const { slugOrId } = req.params;
+    const isAdmin = hasAdminAccess(req);
+    let doc = null;
+
+    if (mongoose.Types.ObjectId.isValid(slugOrId)) {
+      doc = await Artifact.findById(slugOrId).lean();
+    }
+    if (!doc) {
+      doc = await Artifact.findOne({ slug: slugOrId }).lean();
+    }
+
+    if (!doc || (!isAdmin && doc.status !== 'published')) {
+      return res.status(404).json({ ok: false, error: 'Item not found' });
+    }
+
+    const payload = buildProvenanceFeedPayload(doc);
+
+    const signature = signFeedPayload(payload);
+    return res.json({
+      ok: true,
+      payload,
+      signature,
+      algorithm: signature ? 'HMAC-SHA256' : 'none',
+    });
+  } catch (err) {
+    return res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// GET /api/items/:slugOrId/provenance/verify - validates signed payload and chain binding fields
+router.get('/:slugOrId/provenance/verify', async (req, res) => {
+  try {
+    const { slugOrId } = req.params;
+    const liveParam = String(req.query.live || 'true').toLowerCase();
+    const includeLiveOnChain = liveParam !== 'false' && liveParam !== '0' && liveParam !== 'no';
+    const isAdmin = hasAdminAccess(req);
+    let doc = null;
+
+    if (mongoose.Types.ObjectId.isValid(slugOrId)) {
+      doc = await Artifact.findById(slugOrId).lean();
+    }
+    if (!doc) {
+      doc = await Artifact.findOne({ slug: slugOrId }).lean();
+    }
+
+    if (!doc || (!isAdmin && doc.status !== 'published')) {
+      return res.status(404).json({ ok: false, error: 'Item not found' });
+    }
+
+    const payload = buildProvenanceFeedPayload(doc);
+    const signature = signFeedPayload(payload);
+    const signatureCheck = verifyFeedSignature(payload, signature);
+    const chain = payload?.provenance?.chain || {};
+    const docChain = doc?.provenance?.chain || {};
+    const blockchainDetails = doc?.blockchainDetails || {};
+    const hasOnChainBinding = Boolean(chain.network && chain.contractAddress && chain.tokenId);
+
+    const compareNetwork = safeCompare(docChain.network || chain.network, blockchainDetails.network);
+    const compareAddress = safeCompare(docChain.contractAddress || chain.contractAddress, blockchainDetails.contractAddress);
+    const compareTokenId = safeCompare(docChain.tokenId || chain.tokenId, blockchainDetails.tokenId);
+    const liveOnChain = includeLiveOnChain
+      ? await getLiveOnChainState({
+          contractAddress: chain.contractAddress,
+          tokenId: chain.tokenId,
+        })
+      : {
+          available: false,
+          verified: false,
+          reason: 'Live on-chain check skipped by request',
+        };
+
+    const consistencyChecks = [compareNetwork, compareAddress, compareTokenId].filter((v) => v !== null);
+    const blockchainConsistent = consistencyChecks.length > 0
+      ? consistencyChecks.every(Boolean)
+      : true;
+
+    const timeline = Array.isArray(payload?.provenance?.ownershipTimeline)
+      ? payload.provenance.ownershipTimeline
+      : [];
+    const latestTimelineOwner = timeline.length > 0
+      ? String(timeline[timeline.length - 1]?.ownerWallet || '').toLowerCase()
+      : '';
+    const liveOwner = String(liveOnChain?.currentOwner || '').toLowerCase();
+    const ownerMatchesTimeline = Boolean(latestTimelineOwner && liveOwner)
+      ? latestTimelineOwner === liveOwner
+      : null;
+
+    const isFullyVerified = Boolean(
+      signatureCheck.valid
+      && hasOnChainBinding
+      && blockchainConsistent
+      && (!includeLiveOnChain || (liveOnChain.available && liveOnChain.verified)),
+    );
+
+    const verification = {
+      verdict: isFullyVerified ? 'verified' : 'partial',
+      feedSigned: Boolean(signature),
+      signatureValid: Boolean(signatureCheck.valid),
+      algorithm: signature ? 'HMAC-SHA256' : 'none',
+      provenanceStatus: payload?.provenance?.verificationStatus || 'unknown',
+      chain: {
+        network: chain.network || '',
+        contractAddress: chain.contractAddress || '',
+        tokenStandard: chain.tokenStandard || '',
+        tokenId: chain.tokenId || '',
+        hasOnChainBinding,
+        blockchainConsistent,
+      },
+      ownershipEvents: timeline.length,
+      ownerMatchesTimeline,
+      onChain: {
+        mode: includeLiveOnChain ? 'live' : 'skipped',
+        available: Boolean(liveOnChain.available),
+        verified: Boolean(liveOnChain.verified),
+        currentOwner: liveOnChain.currentOwner || '',
+        tokenURI: liveOnChain.tokenURI || '',
+        checkedAt: liveOnChain.checkedAt || null,
+        reason: liveOnChain.reason || '',
+      },
+      verifiedAt: new Date().toISOString(),
+    };
+
+    return res.json({
+      ok: true,
+      itemId: String(doc._id),
+      slug: doc.slug || '',
+      verification,
+      payload,
+      signature,
+      expectedSignature: signatureCheck.expected,
+    });
+  } catch (err) {
+    return res.status(500).json({ ok: false, error: err.message });
   }
 });
 
@@ -283,6 +696,49 @@ router.post('/register', authMiddleware, async (req, res) => {
       tags: condition ? [condition] : [],
     };
 
+    artifactData.provenance = buildProvenanceRecord({
+      title: artifactData.title,
+      name: artifactData.name,
+      description: artifactData.description,
+      price: artifactData.price,
+      category: artifactData.category,
+      materials: artifactData.materials,
+      imageUrls: artifactData.imageUrls,
+      artisan: artifactData.artisan,
+      creator: req.user.id,
+      network: 'base',
+      royaltyBps: Number(req.body?.royaltyBps || 1000),
+      royaltyWallet: req.body?.royaltyWallet || '',
+      artisanWallet: req.body?.artisanWallet || '',
+    });
+
+    const duplicates = await findDuplicateCandidates(Artifact, artifactData.provenance, 1);
+    if (duplicates.some((row) => row.matchType === 'exact')) {
+      return res.status(409).json({
+        ok: false,
+        error: 'Duplicate artifact fingerprint detected',
+        duplicates,
+      });
+    }
+
+    const reverseImage = await lookupReverseImageSignals({
+      imageUrls: artifactData.imageUrls,
+      title: artifactData.title,
+      category: artifactData.category,
+    });
+    if (shouldBlockOnReverseImage(reverseImage)) {
+      return res.status(409).json({
+        ok: false,
+        error: 'Reverse image lookup detected a likely duplicate',
+        reverseImage,
+      });
+    }
+
+    artifactData.provenance = {
+      ...(artifactData.provenance || {}),
+      reverseImage: buildReverseImageSnapshot(reverseImage),
+    };
+
     // Add optional fields if provided
     if (measurements) {
       artifactData.description += `\n\nMeasurements: ${sanitize(measurements)}`;
@@ -309,6 +765,12 @@ router.post('/register', authMiddleware, async (req, res) => {
 
     // Create artifact
     const artifact = new Artifact(artifactData);
+    await artifact.save();
+
+    artifact.provenance = {
+      ...(artifact.provenance || {}),
+      feedPath: `/marketplace/${encodeURIComponent(artifact.slug || String(artifact._id))}`,
+    };
     await artifact.save();
 
     let syndicationResult = null;
@@ -355,6 +817,8 @@ router.post('/register', authMiddleware, async (req, res) => {
     res.status(201).json({
       ok: true,
       item: toPublicItem(artifact),
+      provenance: artifact.provenance,
+      reverseImage,
       syndication: syndicationResult,
       message: 'Item registered successfully. It will be reviewed before publishing.',
     });
@@ -447,7 +911,56 @@ router.post('/', async (req, res) => {
   if (!isAdmin) return res.status(401).json({ ok: false, error: 'Unauthorized' });
   try {
     const input = normalizeItemInput(req.body);
+    input.provenance = buildProvenanceRecord({
+      title: input.title,
+      name: input.name,
+      description: input.description,
+      price: input.price,
+      category: input.category,
+      materials: input.materials,
+      imageUrls: input.imageUrls,
+      artisan: input.artisan,
+      creator: input.creator,
+      network: input?.blockchainDetails?.network || 'base',
+      royaltyBps: Number(req.body?.royaltyBps || 1000),
+      royaltyWallet: req.body?.royaltyWallet || '',
+      artisanWallet: req.body?.artisanWallet || '',
+    });
+
+    const duplicates = await findDuplicateCandidates(Artifact, input.provenance, 1);
+    if (duplicates.some((row) => row.matchType === 'exact')) {
+      return res.status(409).json({
+        ok: false,
+        error: 'Duplicate artifact fingerprint detected',
+        duplicates,
+      });
+    }
+
+    const reverseImage = await lookupReverseImageSignals({
+      imageUrls: input.imageUrls,
+      title: input.title,
+      category: input.category,
+    });
+    if (shouldBlockOnReverseImage(reverseImage)) {
+      return res.status(409).json({
+        ok: false,
+        error: 'Reverse image lookup detected a likely duplicate',
+        reverseImage,
+      });
+    }
+
+    input.provenance = {
+      ...(input.provenance || {}),
+      reverseImage: buildReverseImageSnapshot(reverseImage),
+    };
+
     const artifact = new Artifact(input);
+    await artifact.save();
+
+    artifact.provenance = {
+      ...(artifact.provenance || {}),
+      feedPath: `/marketplace/${encodeURIComponent(artifact.slug || String(artifact._id))}`,
+    };
     await artifact.save();
 
     dispatchToOpenClaw(createArtifactEvent('created', artifact, null, {
@@ -455,9 +968,62 @@ router.post('/', async (req, res) => {
       actor: 'admin',
     }));
 
-    res.status(201).json({ ok: true, item: toPublicItem(artifact) });
+    res.status(201).json({ ok: true, item: toPublicItem(artifact), reverseImage });
   } catch (err) {
     res.status(400).json({ ok: false, error: err.message });
+  }
+});
+
+// POST /api/items/:id/provenance/review (admin only)
+router.post('/:id/provenance/review', adminSession, async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ ok: false, error: 'Invalid item id' });
+    }
+
+    const nextStatus = String(req.body?.verificationStatus || '').trim().toLowerCase();
+    const allowedStatus = ['hash_verified', 'pending', 'flagged'];
+    if (!allowedStatus.includes(nextStatus)) {
+      return res.status(400).json({ ok: false, error: 'Invalid verificationStatus' });
+    }
+
+    const artifact = await Artifact.findById(id);
+    if (!artifact) return res.status(404).json({ ok: false, error: 'Item not found' });
+
+    artifact.provenance = artifact.provenance || {};
+    const previousStatus = String(artifact.provenance.verificationStatus || 'pending').toLowerCase();
+    artifact.provenance.verificationStatus = nextStatus;
+    artifact.provenance.review = {
+      ...(artifact.provenance.review || {}),
+      reviewNotes: String(req.body?.reviewNotes || '').trim(),
+      reviewedAt: new Date(),
+      reviewedBy: String(req.admin?.email || req.admin?.id || 'admin').trim(),
+    };
+
+    await artifact.save();
+
+    await ProvenanceReviewLog.create({
+      artifactId: artifact._id,
+      previousStatus: ['hash_verified', 'pending', 'flagged'].includes(previousStatus)
+        ? previousStatus
+        : 'pending',
+      nextStatus,
+      reviewNotes: artifact.provenance.review.reviewNotes || '',
+      actor: {
+        id: String(req.admin?.id || ''),
+        role: String(req.admin?.role || 'admin'),
+        label: String(req.admin?.email || req.admin?.id || 'admin'),
+      },
+    });
+
+    return res.json({
+      ok: true,
+      item: toPublicItem(artifact),
+      message: 'Provenance review updated',
+    });
+  } catch (err) {
+    return res.status(500).json({ ok: false, error: err.message });
   }
 });
 

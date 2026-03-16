@@ -56,7 +56,10 @@
     "ship": "turbo run lint typecheck test build",
     "health": "bash api-health-check.sh http://localhost:5001",
     "db:check": "node backend/scripts/connect-check.js",
-    "db:seed": "node backend/seed.js"
+    "db:seed": "node backend/seed.js",
+    "contracts:compile": "npm --prefix contracts run compile",
+    "contracts:node": "npm --prefix contracts run node",
+    "contracts:deploy:local": "npm --prefix contracts run deploy:local"
   },
   "dependencies": {
     "@pinata/sdk": "^2.1.0",
@@ -80,6 +83,7 @@
     "@commitlint/config-conventional": "^18.4.3",
     "@eslint/js": "^9.0.0",
     "@lhci/cli": "^0.12.0",
+    "@nomicfoundation/hardhat-toolbox": "^6.1.2",
     "@playwright/test": "^1.57.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",

@@ -5,6 +5,12 @@ const auth = require('../middleware/auth');
 const multer = require('multer');
 const path = require('path');
 const { createArtifactEvent, dispatchToOpenClaw } = require('../utils/openclaw-events');
+const { buildProvenanceRecord, findDuplicateCandidates } = require('../service/provenanceService');
+const {
+  lookupReverseImageSignals,
+  shouldBlockOnReverseImage,
+  buildReverseImageSnapshot,
+} = require('../service/reverseImageLookupService');
 
 // Configure multer for image uploads
 const storage = multer.diskStorage({
@@ -213,7 +219,56 @@ router.post('/', auth, upload.array('assetPhotos', 6), async (req, res) => {
       payoutInfo,
       consignment,
       blockchainDetails: { network: network || 'base' },
+      provenance: buildProvenanceRecord({
+        title,
+        name,
+        description,
+        price: Number(price || 0),
+        category,
+        materials: materials ? (Array.isArray(materials) ? materials : [materials]) : [],
+        imageUrls,
+        artisan,
+        creator: req.user.id,
+        network: network || 'base',
+        royaltyBps: Number(req.body?.royaltyBps || 1000),
+        royaltyWallet: req.body?.royaltyWallet || artisanWallet || '',
+        artisanWallet,
+      }),
     });
+
+    const duplicates = await findDuplicateCandidates(Artifact, artifact.provenance, 1);
+    if (duplicates.some((row) => row.matchType === 'exact')) {
+      return res.status(409).json({
+        ok: false,
+        message: 'Duplicate artifact fingerprint detected',
+        duplicates,
+      });
+    }
+
+    const reverseImage = await lookupReverseImageSignals({
+      imageUrls,
+      title: title || name,
+      category,
+    });
+    if (shouldBlockOnReverseImage(reverseImage)) {
+      return res.status(409).json({
+        ok: false,
+        message: 'Reverse image lookup detected a likely duplicate',
+        reverseImage,
+      });
+    }
+
+    artifact.provenance = {
+      ...(artifact.provenance || {}),
+      reverseImage: buildReverseImageSnapshot(reverseImage),
+    };
+
+    await artifact.save();
+
+    artifact.provenance = {
+      ...(artifact.provenance || {}),
+      feedPath: `/marketplace/${encodeURIComponent(artifact.slug || String(artifact._id))}`,
+    };
     await artifact.save();
     
     // Dispatch event to OpenClaw (non-blocking)
@@ -232,7 +287,7 @@ router.post('/', auth, upload.array('assetPhotos', 6), async (req, res) => {
       console.error('[OpenClaw] Error creating event:', err.message);
     }
     
-    res.status(201).json({ ok: true, artifact });
+    res.status(201).json({ ok: true, artifact, reverseImage });
   } catch (err) {
     res.status(400).json({ ok: false, message: err.message });
   }

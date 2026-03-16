@@ -49,6 +49,78 @@ const artifactSchema = new mongoose.Schema({
     tokenStandard: { type: String, default: 'ERC-721' },
   },
 
+  // Digital provenance and perpetual creator royalty metadata
+  provenance: {
+    uniqueCode: { type: String, index: true, sparse: true },
+    imageHash: { type: String, index: true, sparse: true },
+    metadataHash: { type: String, index: true, sparse: true },
+    combinedHash: { type: String, index: true, sparse: true },
+    verificationStatus: {
+      type: String,
+      enum: ['hash_verified', 'pending', 'flagged'],
+      default: 'pending',
+    },
+    classification: { type: String, default: 'Modern Digital Artifact (2026)' },
+    era: { type: String, default: 'Web3 Integration Period' },
+    authenticityScore: { type: Number, default: 100 },
+    sourceRecordVersion: { type: Number, default: 1 },
+    metadataSnapshot: { type: Object, default: {} },
+    feedPath: { type: String, default: '' },
+    royalty: {
+      bps: { type: Number, default: 1000 },
+      percent: { type: Number, default: 10 },
+      beneficiaryType: { type: String, default: 'creator' },
+      beneficiaryWallet: { type: String, default: '' },
+    },
+    chain: {
+      network: { type: String, default: 'base' },
+      contractAddress: { type: String, default: '' },
+      tokenStandard: { type: String, default: 'ERC-721' },
+      tokenId: { type: String, default: '' },
+    },
+    ownershipTimeline: [
+      {
+        ownerType: { type: String, default: 'creator' },
+        ownerRef: { type: String, default: '' },
+        acquiredAt: Date,
+        transferType: { type: String, default: 'minted-offchain' },
+        txHash: { type: String, default: '' },
+        platform: { type: String, default: 'pva-bazaar' },
+      },
+    ],
+    documentation: {
+      headline: { type: String, default: '' },
+      historicalSignificance: { type: String, default: '' },
+    },
+    review: {
+      reviewNotes: { type: String, default: '' },
+      reviewedAt: Date,
+      reviewedBy: { type: String, default: '' },
+    },
+    reverseImage: {
+      enabled: { type: Boolean, default: false },
+      checked: { type: Boolean, default: false },
+      provider: { type: String, default: '' },
+      likelyDuplicate: { type: Boolean, default: false, index: true },
+      score: { type: Number, default: 0 },
+      threshold: { type: Number, default: 0 },
+      message: { type: String, default: '' },
+      checkedAt: Date,
+      matches: [
+        {
+          source: { type: String, default: '' },
+          url: { type: String, default: '' },
+          imageUrl: { type: String, default: '' },
+          title: { type: String, default: '' },
+          similarity: { type: Number, default: 0 },
+          confidence: { type: Number, default: 0 },
+          externalId: { type: String, default: '' },
+          firstSeenAt: Date,
+        },
+      ],
+    },
+  },
+
   // Fractionalization for shares
   fractionalization: {
     enabled: { type: Boolean, default: false },
@@ -93,6 +165,28 @@ const artifactSchema = new mongoose.Schema({
     lastDispatchAt: Date,
   },
 
+  // Omnichannel sale synchronization and listing linkage
+  omnichannel: {
+    channels: [
+      {
+        channel: { type: String, enum: ['ebay', 'etsy', 'amazon', 'facebook', 'shopify'] },
+        externalListingId: { type: String, default: '' },
+        externalUrl: { type: String, default: '' },
+        syncMode: { type: String, enum: ['webhook', 'polling', 'manual'], default: 'manual' },
+        status: { type: String, enum: ['listed', 'sold', 'delisted', 'error'], default: 'listed' },
+        lastSyncedAt: Date,
+        lastSyncMessage: { type: String, default: '' },
+      },
+    ],
+    soldState: {
+      isSold: { type: Boolean, default: false },
+      soldAt: Date,
+      soldSource: { type: String, default: '' },
+      soldReference: { type: String, default: '' },
+    },
+    lastSyncAt: Date,
+  },
+
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });
@@ -109,5 +203,7 @@ artifactSchema.index({
   materials: 'text',
   artisan: 'text',
 });
+artifactSchema.index({ 'provenance.uniqueCode': 1 }, { unique: true, sparse: true });
+artifactSchema.index({ 'provenance.combinedHash': 1 }, { unique: true, sparse: true });
 
 module.exports = mongoose.model('Artifact', artifactSchema);

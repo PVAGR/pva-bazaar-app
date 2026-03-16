@@ -110,27 +110,39 @@ export default function MarketplacePage() {
         )}
         {items.length > 0 && (
           <div className="item-grid">
-            {items.map(item => (
-              <Link
-                to={`/marketplace/${encodeURIComponent(item.slug || item.id)}`}
-                className="item-card-link"
-                key={item.id || item._id}
-              >
-              <article className="item-card" tabIndex={0} aria-label={item.name || item.title}>
-                <img src={(item.media && item.media[0]) || item.image || "/placeholder.png"} alt={item.name || item.title} className="item-image" />
-                <div className="item-info">
-                  <h2 className="item-title">{item.name || item.title}</h2>
-                  <div className="item-meta">
-                    <span className="item-category">{item.category}</span>
-                    {typeof item.priceCents === "number" ? (
-                      <span className="item-price">${(item.priceCents / 100).toFixed(2)}</span>
-                    ) : null}
+            {items.map(item => {
+              const isSold = Boolean(item?.omnichannel?.soldState?.isSold);
+              const card = (
+                <article className={`item-card${isSold ? " is-sold" : ""}`} tabIndex={0} aria-label={item.name || item.title}>
+                  <img src={(item.media && item.media[0]) || item.image || "/placeholder.png"} alt={item.name || item.title} className="item-image" />
+                  <div className="item-info">
+                    <h2 className="item-title">{item.name || item.title}</h2>
+                    <div className="item-meta">
+                      <span className="item-category">{item.category}</span>
+                      {typeof item.priceCents === "number" ? (
+                        <span className="item-price">${(item.priceCents / 100).toFixed(2)}</span>
+                      ) : null}
+                      {isSold ? <span className="item-sold-pill">Sold</span> : null}
+                    </div>
+                    <p className="item-desc">{item.description}</p>
                   </div>
-                  <p className="item-desc">{item.description}</p>
-                </div>
-              </article>
-              </Link>
-            ))}
+                </article>
+              );
+
+              if (isSold) {
+                return <div className="item-card-link" key={item.id || item._id}>{card}</div>;
+              }
+
+              return (
+                <Link
+                  to={`/marketplace/${encodeURIComponent(item.slug || item.id)}`}
+                  className="item-card-link"
+                  key={item.id || item._id}
+                >
+                  {card}
+                </Link>
+              );
+            })}
           </div>
         )}
         {nextCursor && (

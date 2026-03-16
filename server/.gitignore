@@ -1,0 +1,7 @@
+.env
+node_modules/
+artifact_registry.db
+uploads/
+elephant.jpg
+elephant2.jpg
+elephant2.png

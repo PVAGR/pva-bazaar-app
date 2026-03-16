@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PVA Artifact Registrar | Phase 5 Dashboard</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0f1c;
+      --panel: #111827;
+      --border: #1e2d45;
+      --accent: #38bdf8;
+      --accent2: #22d3ee;
+      --text: #e2e8f0;
+      --muted: #64748b;
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --radius: 10px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 15px;
+      min-height: 100vh;
+      padding: 0 0 3rem;
+    }
+
+    header {
+      background: linear-gradient(135deg, #0d1829 0%, #13243d 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 1.2rem 1.6rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    header h1 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    header .subtitle {
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1.4rem 1rem;
+      display: grid;
+      gap: 1.4rem;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.2rem 1.4rem;
+    }
+
+    .panel h2 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 1rem;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+    }
+
+    @media (max-width: 600px) {
+      .form-grid { grid-template-columns: 1fr; }
+    }
+
+    .form-field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .form-field label {
+      font-size: 0.82rem;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .form-field input,
+    .form-field textarea {
+      background: #0d1829;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      color: var(--text);
+      font-size: 0.9rem;
+      padding: 0.5rem 0.7rem;
+      width: 100%;
+      transition: border-color 0.15s;
+    }
+
+    .form-field input:focus,
+    .form-field textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .form-field.full { grid-column: 1 / -1; }
+
+    .form-actions {
+      margin-top: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    button {
+      background: var(--accent);
+      border: none;
+      border-radius: 7px;
+      color: #0a0f1c;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 700;
+      padding: 0.55rem 1.4rem;
+      transition: filter 0.15s, transform 0.12s;
+    }
+
+    button:hover:not(:disabled) {
+      filter: brightness(1.1);
+      transform: translateY(-1px);
+    }
+
+    button:disabled {
+      background: var(--border);
+      color: var(--muted);
+      cursor: not-allowed;
+    }
+
+    button.secondary {
+      background: transparent;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+    }
+
+    button.mint-btn {
+      background: linear-gradient(90deg, #7c3aed, #4f46e5);
+      color: #fff;
+    }
+
+    button.mint-btn:hover:not(:disabled) {
+      filter: brightness(1.15);
+    }
+
+    .status-bar {
+      min-height: 1.6rem;
+      font-size: 0.85rem;
+    }
+
+    .status-bar.success { color: var(--success); }
+    .status-bar.error { color: var(--danger); }
+    .status-bar.info { color: var(--accent); }
+
+    .artifacts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1rem;
+    }
+
+    .artifact-card {
+      background: #0d1829;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: border-color 0.18s;
+    }
+
+    .artifact-card:hover { border-color: var(--accent); }
+
+    .artifact-card img {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+      background: #111827;
+    }
+
+    .artifact-card .card-body {
+      padding: 0.9rem 1rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .artifact-card .card-name {
+      font-weight: 700;
+      font-size: 0.97rem;
+      color: var(--text);
+    }
+
+    .artifact-card .card-desc {
+      font-size: 0.82rem;
+      color: var(--muted);
+      flex: 1;
+    }
+
+    .artifact-card .card-hash {
+      font-family: monospace;
+      font-size: 0.75rem;
+      color: var(--accent2);
+      word-break: break-all;
+    }
+
+    .badge {
+      display: inline-block;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 0.18rem 0.7rem;
+    }
+
+    .badge-pending { background: #1e2d45; color: var(--warning); }
+    .badge-minted { background: #052e16; color: var(--success); }
+    .badge-sold { background: #27272a; color: var(--accent); }
+      .badge-ipfs { background: #1c1040; color: #a78bfa; }
+
+    .card-footer {
+      padding: 0.6rem 1rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+
+      .card-steps {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      button.ipfs-btn {
+        background: linear-gradient(90deg, #4f46e5, #7c3aed);
+        color: #fff;
+        font-size: 0.78rem;
+        padding: 0.28rem 0.75rem;
+      }
+
+      button.ipfs-btn:hover:not(:disabled) {
+        filter: brightness(1.12);
+      }
+
+      .ipfs-cid {
+        font-family: monospace;
+        font-size: 0.72rem;
+        color: #a78bfa;
+      }
+
+    .card-footer .token-id {
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    .empty-state {
+      grid-column: 1 / -1;
+      text-align: center;
+      color: var(--muted);
+      padding: 2rem 0;
+      font-size: 0.95rem;
+    }
+
+    .hash-result {
+      background: #071120;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 0.8rem;
+      margin-top: 0.75rem;
+      overflow-x: auto;
+      padding: 0.9rem 1rem;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+
+    .section-header h2 { margin: 0; }
+
+    .refresh-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.8rem;
+      padding: 0.3rem 0.8rem;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      max-width: 500px;
+      padding: 1.6rem;
+      width: 95vw;
+    }
+
+    .modal h3 {
+      color: var(--accent);
+      font-size: 1.1rem;
+      margin-bottom: 0.8rem;
+    }
+
+    .modal .modal-field {
+      margin-bottom: 0.75rem;
+    }
+
+    .modal .modal-field label {
+      color: var(--muted);
+      display: block;
+      font-size: 0.8rem;
+      margin-bottom: 0.3rem;
+    }
+
+    .modal .modal-field input {
+      background: #0d1829;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      color: var(--text);
+      font-size: 0.9rem;
+      padding: 0.5rem 0.7rem;
+      width: 100%;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>PVA Artifact Registrar</h1>
+      <p class="subtitle">Phase 5 Dashboard &mdash; Register, pin to IPFS, mint, and sync external marketplaces</p>
+    </div>
+  </header>
+
+  <div class="container">
+
+    <!-- Register Form -->
+    <div class="panel">
+      <h2>Register New Artifact</h2>
+      <form id="registerForm" autocomplete="off">
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="name">Artifact Name</label>
+            <input id="name" name="name" placeholder="Blue Elephant #001" required />
+          </div>
+          <div class="form-field">
+            <label for="creatorAddress">Creator Wallet Address</label>
+            <input id="creatorAddress" name="creatorAddress" placeholder="0x..." />
+          </div>
+          <div class="form-field full">
+            <label for="description">Description</label>
+            <textarea id="description" name="description" rows="2" placeholder="A rare modern artifact from 2026..."></textarea>
+          </div>
+          <div class="form-field full">
+            <label for="imageFile">Image File</label>
+            <input id="imageFile" name="image" type="file" accept="image/*" required />
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="submit" id="registerBtn">Register Artifact</button>
+          <span id="registerStatus" class="status-bar"></span>
+        </div>
+      </form>
+      <pre id="registerResult" class="hash-result" style="display:none;"></pre>
+    </div>
+
+    <!-- Artifacts Gallery -->
+    <div class="panel">
+      <div class="section-header">
+        <h2>Artifact Registry</h2>
+        <button class="refresh-btn secondary" onclick="loadArtifacts()">&#8635; Refresh</button>
+      </div>
+      <div id="artifactsGrid" class="artifacts-grid">
+        <p class="empty-state">Loading registry...</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Mint Modal -->
+  <div id="mintModal" class="modal-overlay" style="display:none;">
+    <div class="modal">
+      <h3>Mint to Blockchain</h3>
+      <p style="color:var(--muted);font-size:0.85rem;margin-bottom:1rem;">
+        This will call <code style="color:var(--accent2)">mintArtifact</code> on your deployed <strong>ModernArtifact</strong> contract.
+      </p>
+      <div class="modal-field">
+        <label>Artifact</label>
+        <input id="mintArtifactName" disabled />
+      </div>
+      <div class="modal-field">
+        <label>Unique Hash</label>
+        <input id="mintUniqueHash" disabled style="font-family:monospace;font-size:0.78rem;" />
+      </div>
+      <div class="modal-field">
+        <label>Recipient Wallet (leave blank for server signer)</label>
+        <input id="mintRecipient" placeholder="0x..." />
+      </div>
+      <div class="modal-field">
+        <label>Main App Item ID or Slug (optional sync target)</label>
+        <input id="mintMainItemIdOrSlug" placeholder="65f... or woven-elephant-001" />
+      </div>
+      <div class="modal-field">
+        <label>Metadata / IPFS URI (optional)</label>
+        <input id="mintMetadataURI" placeholder="ipfs://..." />
+      </div>
+        <div id="mintIpfsNote" class="modal-field" style="display:none;">
+          <span style="font-size:0.8rem;color:#a78bfa;">&#10003; IPFS metadata URI pre-filled from registry.</span>
+        </div>
+      <div id="mintStatus" class="status-bar" style="margin-top:0.5rem;"></div>
+      <div class="modal-actions">
+        <button class="mint-btn" id="mintConfirmBtn" onclick="confirmMint()">Confirm Mint</button>
+        <button class="secondary" onclick="closeMintModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API = 'http://localhost:3001';
+    let mintingArtifactId = null;
+
+    // ── Register Form ─────────────────────────────────────────────────────────
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('registerBtn');
+      const status = document.getElementById('registerStatus');
+      const result = document.getElementById('registerResult');
+
+      btn.disabled = true;
+      status.textContent = 'Generating hash and checking for duplicates...';
+      status.className = 'status-bar info';
+      result.style.display = 'none';
+
+      const formData = new FormData(e.target);
+
+      try {
+        const res = await fetch(`${API}/api/register`, { method: 'POST', body: formData });
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          status.textContent = '✓ Artifact registered. Ready for minting.';
+          status.className = 'status-bar success';
+          result.textContent = JSON.stringify(data, null, 2);
+          result.style.display = 'block';
+          e.target.reset();
+          await loadArtifacts();
+        } else {
+          status.textContent = data.error || data.message || 'Registration failed';
+          status.className = 'status-bar error';
+          if (data.similarItems) {
+            result.textContent = JSON.stringify(data, null, 2);
+            result.style.display = 'block';
+          }
+        }
+      } catch (err) {
+        status.textContent = 'Network error: ' + err.message;
+        status.className = 'status-bar error';
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    // ── Load Artifacts ────────────────────────────────────────────────────────
+    async function loadArtifacts() {
+      const grid = document.getElementById('artifactsGrid');
+      grid.innerHTML = '<p class="empty-state">Loading...</p>';
+      try {
+        const res = await fetch(`${API}/api/artifacts`);
+        const artifacts = await res.json();
+
+        if (!Array.isArray(artifacts) || artifacts.length === 0) {
+          grid.innerHTML = '<p class="empty-state">No artifacts registered yet. Register your first one above.</p>';
+          return;
+        }
+
+        grid.innerHTML = artifacts.map(a => buildCard(a)).join('');
+      } catch (err) {
+        grid.innerHTML = `<p class="empty-state" style="color:var(--danger)">Failed to load: ${err.message}</p>`;
+      }
+    }
+
+    function buildCard(a) {
+      const imageUrl = a.image_path ? `${API}/${a.image_path}` : '';
+      const imgTag = imageUrl
+        ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(a.name || '')}" onerror="this.style.display='none'" />`
+        : `<div style="height:160px;background:#0d1829;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:0.8rem;">No image</div>`;
+
+      const badgeClass = a.status === 'MINTED' ? 'badge-minted' : a.status === 'SOLD' ? 'badge-sold' : 'badge-pending';
+      const tokenLine = a.blockchain_token_id != null
+        ? `<span class="token-id">Token #${a.blockchain_token_id}</span>`
+        : `<span class="token-id">${formatDate(a.created_at)}</span>`;
+
+      const ipfsLinks = [];
+      if (a.ipfs_image_url) {
+        ipfsLinks.push(`<a href="${escapeHtml(a.ipfs_image_url)}" target="_blank" rel="noreferrer" style="font-size:0.74rem;color:#a78bfa;">IPFS Image</a>`);
+      }
+      if (a.ipfs_doc_url) {
+        ipfsLinks.push(`<a href="${escapeHtml(a.ipfs_doc_url)}" target="_blank" rel="noreferrer" style="font-size:0.74rem;color:#a78bfa;">IPFS Doc</a>`);
+      }
+
+      const externalSync = a.external_sync_status
+        ? `<div style="font-size:0.74rem;color:var(--muted);">Sync: ${escapeHtml(a.external_sync_status)}</div>`
+        : '';
+
+        // Build two-step footer: [IPFS step] [Mint step]
+        let footerSteps = '';
+        if (a.status === 'PENDING') {
+          if (a.ipfs_doc_hash || a.ipfs_metadata_uri) {
+            // IPFS done — show CID badge + Mint button
+            const cidSource = a.ipfs_image_hash || a.ipfs_image_cid || '';
+            const cidShort = cidSource ? `${cidSource.slice(0, 12)}…` : 'ready';
+            const mintUri = a.ipfs_metadata_uri || (a.ipfs_doc_hash ? `ipfs://${a.ipfs_doc_hash}` : '');
+            footerSteps = `
+              <span class="badge badge-ipfs" title="${escapeHtml(a.ipfs_metadata_uri)}">&#10003; IPFS ${cidShort}</span>
+              <button class="mint-btn" style="font-size:0.8rem;padding:0.3rem 0.9rem;"
+                onclick="openMintModal(${a.id}, '${escapeHtml(a.name || '')}', '${a.unique_hash}', '${escapeHtml(mintUri)}')">
+                Mint &#9654;
+              </button>`;
+          } else {
+            // Not yet on IPFS — show Upload button + greyed Mint
+            footerSteps = `
+              <button class="ipfs-btn" id="ipfsBtn-${a.id}"
+                onclick="ipfsUpload(${a.id}, this)">&#8679; Upload to IPFS</button>
+              <button class="mint-btn" style="font-size:0.8rem;padding:0.3rem 0.9rem;"
+                onclick="openMintModal(${a.id}, '${escapeHtml(a.name || '')}', '${a.unique_hash}', '')">
+                Mint &#9654;
+              </button>`;
+          }
+        } else if (a.status === 'MINTED') {
+          footerSteps = `
+            <span style="font-size:0.78rem;color:var(--success);">&#10003; On-chain</span>
+            <button class="secondary" style="font-size:0.75rem;padding:0.25rem 0.65rem;"
+              onclick="listExternal(${a.id}, this)">List External</button>`;
+        } else {
+          footerSteps = `<span style="font-size:0.78rem;color:var(--muted);">${a.status}</span>`;
+        }
+
+      return `
+        <div class="artifact-card">
+          ${imgTag}
+          <div class="card-body">
+            <div class="card-name">${escapeHtml(a.name || 'Untitled')}</div>
+            <div class="card-desc">${escapeHtml((a.description || '').slice(0, 80))}${(a.description || '').length > 80 ? '…' : ''}</div>
+            <div class="card-hash">${(a.unique_hash || '').slice(0, 20)}…</div>
+            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">${ipfsLinks.join('')}</div>
+            ${externalSync}
+            <span class="badge ${badgeClass}">${a.status}</span>
+          </div>
+          <div class="card-footer">
+            ${tokenLine}
+              <div class="card-steps">${footerSteps}</div>
+          </div>
+        </div>`;
+    }
+
+    // ── Mint Modal ────────────────────────────────────────────────────────────
+    function openMintModal(id, name, uniqueHash, ipfsUri) {
+      mintingArtifactId = id;
+      document.getElementById('mintArtifactName').value = name;
+      document.getElementById('mintUniqueHash').value = uniqueHash;
+      document.getElementById('mintRecipient').value = '';
+      document.getElementById('mintMainItemIdOrSlug').value = '';
+      const uriInput = document.getElementById('mintMetadataURI');
+      const ipfsNote = document.getElementById('mintIpfsNote');
+      if (ipfsUri) {
+        uriInput.value = ipfsUri;
+        uriInput.style.color = '#a78bfa';
+        ipfsNote.style.display = 'block';
+      } else {
+        uriInput.value = '';
+        uriInput.style.color = '';
+        ipfsNote.style.display = 'none';
+      }
+      const status = document.getElementById('mintStatus');
+      status.textContent = '';
+      status.className = 'status-bar';
+      document.getElementById('mintConfirmBtn').disabled = false;
+      document.getElementById('mintModal').style.display = 'flex';
+    }
+
+    function closeMintModal() {
+      document.getElementById('mintModal').style.display = 'none';
+      mintingArtifactId = null;
+    }
+
+    async function confirmMint() {
+      if (!mintingArtifactId) return;
+      const btn = document.getElementById('mintConfirmBtn');
+      const status = document.getElementById('mintStatus');
+      btn.disabled = true;
+      status.textContent = 'Sending mint transaction...';
+      status.className = 'status-bar info';
+
+      try {
+        const res = await fetch(`${API}/api/mint`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            artifactId: mintingArtifactId,
+            recipientAddress: document.getElementById('mintRecipient').value.trim() || undefined,
+            mainItemIdOrSlug: document.getElementById('mintMainItemIdOrSlug').value.trim() || undefined,
+            metadataURI: document.getElementById('mintMetadataURI').value.trim() || undefined,
+          }),
+        });
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          const sync = data.mainAppSync || {};
+          const syncNote = sync.attempted
+            ? (sync.ok ? ' | Main app synced' : ' | Main app sync failed')
+            : ' | Main app sync skipped';
+          status.textContent = `✓ Minted! Token #${data.tokenId} — Tx: ${(data.txHash || '').slice(0, 18)}…${syncNote}`;
+          status.className = 'status-bar success';
+          await loadArtifacts();
+          setTimeout(closeMintModal, 2800);
+        } else if (res.status === 503) {
+          status.textContent = data.message || data.error || 'Blockchain not configured in .env';
+          status.className = 'status-bar error';
+          btn.disabled = false;
+        } else {
+          status.textContent = data.error || data.details || 'Mint failed';
+          status.className = 'status-bar error';
+          btn.disabled = false;
+        }
+      } catch (err) {
+        status.textContent = 'Network error: ' + err.message;
+        status.className = 'status-bar error';
+        btn.disabled = false;
+      }
+    }
+
+    // Close modal on overlay click
+    document.getElementById('mintModal').addEventListener('click', (e) => {
+      if (e.target.id === 'mintModal') closeMintModal();
+    });
+
+      // ── IPFS Upload ───────────────────────────────────────────────────────────
+      async function ipfsUpload(artifactId, btn) {
+        const origText = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = 'Uploading…';
+
+        try {
+          const res = await fetch(`${API}/api/ipfs-upload`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ artifactId }),
+          });
+          const data = await res.json();
+
+          if (res.ok && (data.success || data.alreadyUploaded)) {
+            await loadArtifacts();   // Refresh cards — card will now show IPFS badge
+          } else if (res.status === 503) {
+            alert('IPFS not configured.\n\n' + (data.message || 'Add PINATA_JWT to .env'));
+            btn.disabled = false;
+            btn.textContent = origText;
+          } else {
+            alert('IPFS upload failed: ' + (data.details || data.error || 'Unknown error'));
+            btn.disabled = false;
+            btn.textContent = origText;
+          }
+        } catch (err) {
+          alert('Network error: ' + err.message);
+          btn.disabled = false;
+          btn.textContent = origText;
+        }
+      }
+
+      async function listExternal(artifactId, btn) {
+        const oldText = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = 'Listing...';
+
+        try {
+          const res = await fetch(`${API}/api/artifacts/${artifactId}/list-external`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({}),
+          });
+          const data = await res.json();
+
+          if (res.ok && data.success) {
+            const resultText = JSON.stringify(data.results || {}, null, 2);
+            alert(`External listing completed.\n\n${resultText}`);
+            await loadArtifacts();
+          } else {
+            alert('External listing failed: ' + (data.details || data.error || 'Unknown error'));
+          }
+        } catch (err) {
+          alert('Network error: ' + err.message);
+        } finally {
+          btn.disabled = false;
+          btn.textContent = oldText;
+        }
+      }
+
+      // ── Utilities ─────────────────────────────────────────────────────────────
+    function escapeHtml(str) {
+      return String(str || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    function formatDate(dt) {
+      if (!dt) return '';
+      return new Date(dt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+    }
+
+    // Initial load
+    loadArtifacts();
+  </script>
+</body>
+</html>

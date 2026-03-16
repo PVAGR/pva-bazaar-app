@@ -1,6 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const Order = require("../models/Order");
+const Artifact = require('../models/Artifact');
+const OmnichannelSale = require('../models/OmnichannelSale');
+const ProvenanceReviewLog = require('../models/ProvenanceReviewLog');
 const stripe = require("../lib/stripeClient");
 const { requireAdmin } = require("../middleware/adminOnly");
 const { createTransactionEvent, dispatchToOpenClaw } = require('../utils/openclaw-events');
@@ -123,6 +126,137 @@ router.get("/", requireAdmin, async (req, res) => {
     }
     
     return res.json({ ok: true, items, nextCursor });
+  } catch (err) {
+    return res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// GET /api/orders/ops/omnichannel (admin only)
+// Operational snapshot for omnichannel + crypto settlement health.
+router.get('/ops/omnichannel', requireAdmin, async (req, res) => {
+  try {
+    const limit = Math.max(1, Math.min(Number(req.query.limit) || 25, 100));
+    const source = String(req.query.source || '').trim().toLowerCase();
+
+    const saleFilter = {};
+    if (source) saleFilter.saleSource = source;
+
+    const [sales, pendingCryptoOrders] = await Promise.all([
+      OmnichannelSale.find(saleFilter)
+        .sort({ createdAt: -1, _id: -1 })
+        .limit(limit)
+        .lean(),
+      Order.find({
+        paymentStatus: 'pending',
+        stripeSessionId: { $regex: '^crypto_intent_' },
+      })
+        .sort({ createdAt: -1, _id: -1 })
+        .limit(limit)
+        .lean(),
+    ]);
+
+    const summary = {
+      totalSales: sales.length,
+      receiptMinted: sales.filter((sale) => sale?.blockchainReceipt?.status === 'minted').length,
+      receiptFailed: sales.filter((sale) => sale?.blockchainReceipt?.status === 'failed').length,
+      syncFailures: sales.filter((sale) =>
+        Array.isArray(sale?.sync?.delistResults) &&
+        sale.sync.delistResults.some((row) => row.status === 'failed')
+      ).length,
+      pendingCryptoIntents: pendingCryptoOrders.length,
+    };
+
+    return res.json({
+      ok: true,
+      summary,
+      sales,
+      pendingCryptoOrders,
+    });
+  } catch (err) {
+    return res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// GET /api/orders/ops/provenance (admin only)
+// Snapshot of provenance coverage, duplicate fingerprints, and royalty economics.
+router.get('/ops/provenance', requireAdmin, async (req, res) => {
+  try {
+    const limit = Math.max(1, Math.min(Number(req.query.limit) || 20, 100));
+
+    const [
+      totalArtifacts,
+      withProvenance,
+      flaggedProvenance,
+      duplicateFingerprintRows,
+      reverseImageLikelyDuplicateCount,
+      recentReverseImageRisks,
+      royaltyAgg,
+      recentRoyaltySales,
+      recentReviewLogs,
+    ] = await Promise.all([
+      Artifact.countDocuments({}),
+      Artifact.countDocuments({ 'provenance.combinedHash': { $exists: true, $ne: '' } }),
+      Artifact.countDocuments({ 'provenance.verificationStatus': 'flagged' }),
+      Artifact.aggregate([
+        { $match: { 'provenance.combinedHash': { $exists: true, $ne: '' } } },
+        { $group: { _id: '$provenance.combinedHash', count: { $sum: 1 } } },
+        { $match: { count: { $gt: 1 } } },
+        { $limit: 50 },
+      ]),
+      Artifact.countDocuments({ 'provenance.reverseImage.likelyDuplicate': true }),
+      Artifact.find({ 'provenance.reverseImage.likelyDuplicate': true })
+        .sort({ updatedAt: -1, createdAt: -1, _id: -1 })
+        .limit(limit)
+        .select('name title slug provenance.reverseImage createdAt updatedAt')
+        .lean(),
+      OmnichannelSale.aggregate([
+        {
+          $group: {
+            _id: null,
+            totalSales: { $sum: 1 },
+            creatorRoyaltyCents: { $sum: { $ifNull: ['$royaltySettlement.creatorRoyaltyCents', 0] } },
+            platformFeeCents: { $sum: { $ifNull: ['$royaltySettlement.platformFeeCents', 0] } },
+            sellerNetCents: { $sum: { $ifNull: ['$royaltySettlement.sellerNetCents', 0] } },
+          },
+        },
+      ]),
+      OmnichannelSale.find({ 'royaltySettlement.amountCents': { $gt: 0 } })
+        .sort({ createdAt: -1, _id: -1 })
+        .limit(limit)
+        .select('itemId saleSource paymentMethod royaltySettlement createdAt blockchainReceipt')
+        .lean(),
+      ProvenanceReviewLog.find({})
+        .sort({ createdAt: -1, _id: -1 })
+        .limit(limit)
+        .lean(),
+    ]);
+
+    const royalty = royaltyAgg[0] || {
+      totalSales: 0,
+      creatorRoyaltyCents: 0,
+      platformFeeCents: 0,
+      sellerNetCents: 0,
+    };
+
+    return res.json({
+      ok: true,
+      summary: {
+        totalArtifacts,
+        withProvenance,
+        missingProvenance: Math.max(totalArtifacts - withProvenance, 0),
+        flaggedProvenance,
+        duplicateFingerprintGroups: duplicateFingerprintRows.length,
+        reverseImageLikelyDuplicateCount,
+        totalSales: royalty.totalSales,
+        creatorRoyaltyCents: royalty.creatorRoyaltyCents,
+        platformFeeCents: royalty.platformFeeCents,
+        sellerNetCents: royalty.sellerNetCents,
+      },
+      duplicateFingerprintRows,
+      recentReverseImageRisks,
+      recentRoyaltySales,
+      recentReviewLogs,
+    });
   } catch (err) {
     return res.status(500).json({ ok: false, error: err.message });
   }

@@ -1,7 +1,11 @@
 import React, { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import HelpTip from '../components/HelpTip.jsx';
-import { createMarketplaceItem, retryMarketplaceSyndication } from '../lib/api';
+import {
+  checkMarketplaceItemProvenance,
+  createMarketplaceItem,
+  retryMarketplaceSyndication,
+} from '../lib/api';
 import './ListItemPage.css';
 
 const STEPS = ['Basic Info', 'Pricing', 'Images', 'Syndication'];
@@ -19,6 +23,9 @@ export default function ListItemPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [createdItemId, setCreatedItemId] = useState('');
+  const [provenanceChecking, setProvenanceChecking] = useState(false);
+  const [provenanceSignature, setProvenanceSignature] = useState('');
+  const [provenanceResult, setProvenanceResult] = useState(null);
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -40,10 +47,14 @@ export default function ListItemPage() {
   const imagePreviews = useMemo(() => form.images.slice(0, 6), [form.images]);
 
   function updateField(name, value) {
+    setProvenanceResult(null);
+    setProvenanceSignature('');
     setForm(prev => ({ ...prev, [name]: value }));
   }
 
   function updateSyndication(platform) {
+    setProvenanceResult(null);
+    setProvenanceSignature('');
     setForm(prev => ({
       ...prev,
       syndication: {
@@ -77,10 +88,67 @@ export default function ListItemPage() {
       ),
     );
     setError('');
+    setProvenanceResult(null);
+    setProvenanceSignature('');
     setForm(prev => ({
       ...prev,
       images: [...prev.images, ...asDataUrls.filter(Boolean)],
     }));
+  }
+
+  function buildListingPayload() {
+    return {
+      title: form.title.trim(),
+      description: form.description.trim(),
+      category: form.category,
+      price: Number(form.price),
+      condition: form.condition,
+      brand: form.brand.trim(),
+      measurements: form.measurements.trim(),
+      materials: form.materials
+        .split(',')
+        .map(s => s.trim())
+        .filter(Boolean),
+      images: form.images,
+      syndication: form.syndication,
+    };
+  }
+
+  function buildProvenanceSignature(payload) {
+    return JSON.stringify({
+      title: payload.title,
+      description: payload.description,
+      category: payload.category,
+      price: payload.price,
+      materials: payload.materials,
+      images: payload.images,
+    });
+  }
+
+  async function runProvenanceCheck(payload) {
+    const signature = buildProvenanceSignature(payload);
+    setError('');
+    setProvenanceChecking(true);
+    const check = await checkMarketplaceItemProvenance(payload);
+    setProvenanceChecking(false);
+
+    if (!check.ok) {
+      setError(check.error || 'Failed to run provenance check');
+      setProvenanceResult(null);
+      setProvenanceSignature('');
+      return { ok: false, signature, blocked: false };
+    }
+
+    setProvenanceResult(check);
+    setProvenanceSignature(signature);
+
+    if (check.isDuplicateLikely) {
+      setError('Potential duplicate detected by provenance checks. Review before submitting.');
+      return { ok: true, signature, blocked: true };
+    }
+
+    setSuccess('Provenance check passed: no strong duplicate signal detected.');
+    return { ok: true, signature, blocked: false };
   }
 
   function validateCurrentStep() {
@@ -123,21 +191,20 @@ export default function ListItemPage() {
     setSubmitting(true);
     setSyndicationSummary(null);
 
-    const payload = {
-      title: form.title.trim(),
-      description: form.description.trim(),
-      category: form.category,
-      price: Number(form.price),
-      condition: form.condition,
-      brand: form.brand.trim(),
-      measurements: form.measurements.trim(),
-      materials: form.materials
-        .split(',')
-        .map(s => s.trim())
-        .filter(Boolean),
-      images: form.images,
-      syndication: form.syndication,
-    };
+    const payload = buildListingPayload();
+    const signature = buildProvenanceSignature(payload);
+
+    if (provenanceSignature !== signature) {
+      const checkRun = await runProvenanceCheck(payload);
+      if (!checkRun.ok || checkRun.blocked) {
+        setSubmitting(false);
+        return;
+      }
+    } else if (provenanceResult?.isDuplicateLikely) {
+      setSubmitting(false);
+      setError('Potential duplicate detected by provenance checks. Resolve before submitting.');
+      return;
+    }
 
     const res = await createMarketplaceItem(payload);
     setSubmitting(false);
@@ -379,6 +446,58 @@ export default function ListItemPage() {
                   />
                 </label>
               ))}
+
+              <div className="provenance-preflight">
+                <div className="provenance-preflight-header">
+                  <h3>Provenance Preflight</h3>
+                  <button
+                    type="button"
+                    className="btn ghost"
+                    onClick={() => runProvenanceCheck(buildListingPayload())}
+                    disabled={provenanceChecking}
+                  >
+                    {provenanceChecking ? 'Checking...' : 'Run Duplicate Check'}
+                  </button>
+                </div>
+
+                {!provenanceResult ? (
+                  <p className="hint">Run a preflight check to scan internal hashes and reverse-image duplicate signals.</p>
+                ) : (
+                  <div className={`provenance-result ${provenanceResult.isDuplicateLikely ? 'is-risk' : 'is-safe'}`}>
+                    <div className="provenance-result-top">
+                      <span className="provenance-badge">
+                        {provenanceResult.isDuplicateLikely ? 'Risk detected' : 'No strong duplicate signal'}
+                      </span>
+                      <span className="provenance-hash">
+                        {provenanceResult?.candidate?.combinedHash
+                          ? `${provenanceResult.candidate.combinedHash.slice(0, 14)}...`
+                          : 'no hash'}
+                      </span>
+                    </div>
+
+                    {Array.isArray(provenanceResult.duplicates) && provenanceResult.duplicates.length > 0 ? (
+                      <div className="provenance-list">
+                        {provenanceResult.duplicates.map((row) => (
+                          <div key={`${row.itemId}-${row.matchType}`} className="provenance-row">
+                            <strong>{row.title || 'Untitled'}</strong>
+                            <span className="provenance-type">{row.matchType}</span>
+                            <span className="provenance-score">score {row.score}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
+
+                    {provenanceResult?.reverseImage?.enabled ? (
+                      <p className="hint">
+                        Reverse image: {provenanceResult.reverseImage.checked ? 'checked' : 'not checked'};
+                        {' '}top score {Number(provenanceResult.reverseImage.score || 0).toFixed(2)}
+                      </p>
+                    ) : (
+                      <p className="hint">Reverse image provider not configured; internal hash checks still ran.</p>
+                    )}
+                  </div>
+                )}
+              </div>
             </section>
           )}
 
