@@ -423,6 +423,7 @@ router.delete('/users/:id', adminSession, async (req, res) => {
 // ========================================
 
 const Artifact = require('../models/Artifact');
+const SharePurchase = require('../models/SharePurchase');
 
 /**
  * GET /api/admin/artifacts
@@ -541,16 +542,151 @@ router.delete('/artifacts/:id', adminSession, async (req, res) => {
 });
 
 /**
+ * GET /api/admin/share-purchases
+ * Operations view for fractional share purchases.
+ */
+router.get('/share-purchases', adminSession, async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 50,
+      status = '',
+      artifactId = '',
+      search = '',
+      sortBy = 'createdAt',
+      order = 'desc',
+    } = req.query;
+
+    const safePage = Math.max(parseInt(page, 10) || 1, 1);
+    const safeLimit = Math.min(Math.max(parseInt(limit, 10) || 50, 1), 200);
+    const skip = (safePage - 1) * safeLimit;
+
+    const allowedStatuses = new Set(['pending', 'paid', 'failed', 'refunded']);
+    const allowedSortFields = new Set(['createdAt', 'updatedAt', 'totalAmountCents', 'quantity', 'paymentStatus']);
+    const sortOrder = String(order).toLowerCase() === 'asc' ? 1 : -1;
+    const safeSortBy = allowedSortFields.has(String(sortBy)) ? String(sortBy) : 'createdAt';
+
+    const filter = {};
+    if (status && allowedStatuses.has(String(status))) {
+      filter.paymentStatus = String(status);
+    }
+    if (artifactId) {
+      filter.$or = [
+        ...(filter.$or || []),
+        { artifactSlug: String(artifactId).trim() },
+      ];
+      if (/^[a-f\d]{24}$/i.test(String(artifactId).trim())) {
+        filter.$or.push({ artifactId: String(artifactId).trim() });
+      }
+    }
+    if (search) {
+      const searchSafe = escapeRegExp(String(search).slice(0, 120));
+      filter.$or = [
+        ...(filter.$or || []),
+        { buyerEmail: { $regex: searchSafe, $options: 'i' } },
+        { buyerName: { $regex: searchSafe, $options: 'i' } },
+        { artifactSlug: { $regex: searchSafe, $options: 'i' } },
+        { stripeSessionId: { $regex: searchSafe, $options: 'i' } },
+      ];
+    }
+
+    const [rows, total, statusCounts, grossTotals] = await Promise.all([
+      SharePurchase.find(filter)
+        .sort({ [safeSortBy]: sortOrder })
+        .skip(skip)
+        .limit(safeLimit)
+        .lean(),
+      SharePurchase.countDocuments(filter),
+      SharePurchase.aggregate([
+        { $match: filter },
+        { $group: { _id: '$paymentStatus', count: { $sum: 1 }, qty: { $sum: '$quantity' } } },
+      ]),
+      SharePurchase.aggregate([
+        { $match: filter },
+        { $group: { _id: '$paymentStatus', totalAmountCents: { $sum: '$totalAmountCents' } } },
+      ]),
+    ]);
+
+    const stats = {
+      pending: { count: 0, qty: 0, grossCents: 0 },
+      paid: { count: 0, qty: 0, grossCents: 0 },
+      failed: { count: 0, qty: 0, grossCents: 0 },
+      refunded: { count: 0, qty: 0, grossCents: 0 },
+    };
+    for (const row of statusCounts) {
+      if (stats[row._id]) {
+        stats[row._id].count = Number(row.count || 0);
+        stats[row._id].qty = Number(row.qty || 0);
+      }
+    }
+    for (const row of grossTotals) {
+      if (stats[row._id]) {
+        stats[row._id].grossCents = Number(row.totalAmountCents || 0);
+      }
+    }
+
+    const purchases = rows.map((row) => ({
+      id: String(row._id),
+      artifactId: row.artifactId ? String(row.artifactId) : '',
+      artifactSlug: row.artifactSlug || '',
+      paymentStatus: row.paymentStatus || 'pending',
+      quantity: Number(row.quantity || 0),
+      pricePerShareCents: Number(row.pricePerShareCents || 0),
+      totalAmountCents: Number(row.totalAmountCents || 0),
+      currency: row.currency || 'USD',
+      buyerEmail: row.buyerEmail || '',
+      buyerName: row.buyerName || '',
+      stripeSessionId: row.stripeSessionId || '',
+      stripePaymentIntentId: row.stripePaymentIntentId || '',
+      transactionHash: row.transactionHash || '',
+      finalizedAt: row.finalizedAt || null,
+      createdAt: row.createdAt || null,
+      updatedAt: row.updatedAt || null,
+    }));
+
+    return res.json({
+      ok: true,
+      purchases,
+      stats,
+      pagination: {
+        page: safePage,
+        limit: safeLimit,
+        total,
+        pages: Math.ceil(total / safeLimit),
+      },
+    });
+  } catch (error) {
+    console.error('Admin share-purchases error:', error);
+    return res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+/**
  */
 router.get('/stats', adminSession, async (req, res) => {
   try {
-    const [totalUsers, newUsersThisMonth, adminUsers, totalArtifacts, publishedArtifacts, draftArtifacts] = await Promise.all([
+    const [
+      totalUsers,
+      newUsersThisMonth,
+      adminUsers,
+      totalArtifacts,
+      publishedArtifacts,
+      draftArtifacts,
+      totalSharePurchases,
+      pendingSharePurchases,
+      paidSharePurchases,
+      failedSharePurchases,
+    ] = await Promise.all([
       User.countDocuments(),
       User.countDocuments({ createdAt: { $gte: new Date(new Date().setDate(1)) } }),
       User.countDocuments({ role: 'admin' }),
       Artifact.countDocuments(),
       Artifact.countDocuments({ status: 'published' }),
       Artifact.countDocuments({ status: 'draft' }),
+      SharePurchase.countDocuments(),
+      SharePurchase.countDocuments({ paymentStatus: 'pending' }),
+      SharePurchase.countDocuments({ paymentStatus: 'paid' }),
+      SharePurchase.countDocuments({ paymentStatus: 'failed' }),
     ]);
 
     // Active = registered in the last 30 days (proxy for activity until event tracking is built)
@@ -569,6 +705,10 @@ router.get('/stats', adminSession, async (req, res) => {
         totalArtifacts,
         publishedArtifacts,
         draftArtifacts,
+        totalSharePurchases,
+        pendingSharePurchases,
+        paidSharePurchases,
+        failedSharePurchases,
       },
     });
   } catch (error) {

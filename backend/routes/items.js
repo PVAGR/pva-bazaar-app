@@ -2,8 +2,10 @@
 const express = require('express');
 const router = express.Router();
 const Artifact = require('../models/Artifact');
+const SharePurchase = require('../models/SharePurchase');
 const ProvenanceReviewLog = require('../models/ProvenanceReviewLog');
 const User = require('../models/User');
+const stripe = require('../lib/stripeClient');
 const { sendConsignmentEmail, sendAdminNotification } = require('../service/emailService');
 const { normalizeItemInput, toPublicItem } = require('../lib/itemNormalize');
 const { encodeCursor, decodeCursor } = require('../lib/cursor');
@@ -28,7 +30,6 @@ const {
   shouldBlockOnReverseImage,
   buildReverseImageSnapshot,
 } = require('../service/reverseImageLookupService');
-const { findStaticArtifact, listStaticArtifacts } = require('../lib/staticContent');
 
 function hasAdminAccess(req) {
   const adminCode = req.headers['x-admin-code'];
@@ -172,21 +173,6 @@ async function getLiveOnChainState({ contractAddress, tokenId }) {
   }
 }
 
-async function findArtifactBySlugOrId(slugOrId, { lean = false } = {}) {
-  let doc = null;
-  if (mongoose.Types.ObjectId.isValid(String(slugOrId))) {
-    doc = lean
-      ? await Artifact.findById(String(slugOrId)).lean()
-      : await Artifact.findById(String(slugOrId));
-  }
-  if (!doc) {
-    doc = lean
-      ? await Artifact.findOne({ slug: String(slugOrId) }).lean()
-      : await Artifact.findOne({ slug: String(slugOrId) });
-  }
-  return doc || findStaticArtifact(slugOrId);
-}
-
 // GET /api/items
 router.get('/', async (req, res) => {
   try {
@@ -230,37 +216,6 @@ router.get('/', async (req, res) => {
       .sort(sortOrder)
       .limit(limit + 1);
     const docs = await query.exec();
-
-    if (docs.length === 0) {
-      let fallbackDocs = listStaticArtifacts({
-        category,
-        tag,
-        q,
-        sort,
-        includeDrafts: isAdmin && includeDrafts === 'true',
-      });
-      if (cursor) {
-        const c = decodeCursor(cursor);
-        if (c && c.createdAt && c.id) {
-          const cursorTime = new Date(c.createdAt).getTime();
-          fallbackDocs = fallbackDocs.filter((item) => {
-            const itemTime = new Date(item.createdAt).getTime();
-            if (sort === 'old') {
-              return itemTime > cursorTime || (itemTime === cursorTime && String(item._id) > String(c.id));
-            }
-            return itemTime < cursorTime || (itemTime === cursorTime && String(item._id) < String(c.id));
-          });
-        }
-      }
-
-      const items = fallbackDocs.slice(0, limit).map(toPublicItem);
-      const last = fallbackDocs[limit - 1];
-      const nextCursor = fallbackDocs.length > limit && last
-        ? encodeCursor({ createdAt: last.createdAt, id: last._id })
-        : null;
-      return res.json({ ok: true, items, nextCursor });
-    }
-
     const items = docs.slice(0, limit).map(toPublicItem);
     let nextCursor = null;
     if (docs.length > limit) {
@@ -522,7 +477,13 @@ router.get('/:slugOrId', async (req, res) => {
   try {
     const { slugOrId } = req.params;
     const isAdmin = hasAdminAccess(req);
-    const doc = await findArtifactBySlugOrId(slugOrId);
+    let doc = null;
+    if (mongoose.Types.ObjectId.isValid(slugOrId)) {
+      doc = await Artifact.findById(slugOrId);
+    }
+    if (!doc) {
+      doc = await Artifact.findOne({ slug: slugOrId });
+    }
     if (!doc || (!isAdmin && doc.status !== 'published')) {
       return res.status(404).json({ ok: false, error: 'Item not found' });
     }
@@ -537,7 +498,14 @@ router.get('/:slugOrId/provenance-feed', async (req, res) => {
   try {
     const { slugOrId } = req.params;
     const isAdmin = hasAdminAccess(req);
-    const doc = await findArtifactBySlugOrId(slugOrId, { lean: true });
+    let doc = null;
+
+    if (mongoose.Types.ObjectId.isValid(slugOrId)) {
+      doc = await Artifact.findById(slugOrId).lean();
+    }
+    if (!doc) {
+      doc = await Artifact.findOne({ slug: slugOrId }).lean();
+    }
 
     if (!doc || (!isAdmin && doc.status !== 'published')) {
       return res.status(404).json({ ok: false, error: 'Item not found' });
@@ -564,7 +532,14 @@ router.get('/:slugOrId/provenance/verify', async (req, res) => {
     const liveParam = String(req.query.live || 'true').toLowerCase();
     const includeLiveOnChain = liveParam !== 'false' && liveParam !== '0' && liveParam !== 'no';
     const isAdmin = hasAdminAccess(req);
-    const doc = await findArtifactBySlugOrId(slugOrId, { lean: true });
+    let doc = null;
+
+    if (mongoose.Types.ObjectId.isValid(slugOrId)) {
+      doc = await Artifact.findById(slugOrId).lean();
+    }
+    if (!doc) {
+      doc = await Artifact.findOne({ slug: slugOrId }).lean();
+    }
 
     if (!doc || (!isAdmin && doc.status !== 'published')) {
       return res.status(404).json({ ok: false, error: 'Item not found' });
@@ -1092,6 +1067,153 @@ router.delete('/:id', async (req, res) => {
     res.json({ ok: true, item: toPublicItem(artifact) });
   } catch (err) {
     res.status(400).json({ ok: false, error: err.message });
+  }
+});
+
+// POST /api/items/:id/shares/buy  — create Stripe checkout session for fractional share purchase
+router.post('/:id/shares/buy', async (req, res) => {
+  let purchase = null;
+  let reservedArtifactId = null;
+  let reservedQty = 0;
+  try {
+    const { id } = req.params;
+    const qty = Math.max(1, parseInt(req.body.qty || 1, 10));
+    const buyerEmail = String(req.body.buyerEmail || '').trim();
+
+    const artifact = await Artifact.findOne({ $or: [{ _id: mongoose.isValidObjectId(id) ? id : null }, { slug: id }] });
+    if (!artifact) return res.status(404).json({ ok: false, error: 'Item not found' });
+    if (artifact.status !== 'published') return res.status(403).json({ ok: false, error: 'Item not available' });
+
+    const frac = artifact.fractionalization || {};
+    if (!frac.enabled) return res.status(400).json({ ok: false, error: 'Fractional ownership not enabled for this item' });
+
+    const total = Number(frac.totalShares || 0);
+    const sold = Number(frac.soldShares || 0);
+    const available = total - sold;
+    if (available <= 0) return res.status(409).json({ ok: false, error: 'No shares available' });
+    if (qty > available) return res.status(409).json({ ok: false, error: `Only ${available} share(s) available` });
+
+    const sharePriceCents = Math.round(Number(frac.sharePrice || 0) * 100);
+    if (!sharePriceCents) return res.status(400).json({ ok: false, error: 'Share price not configured' });
+    const totalCents = sharePriceCents * qty;
+    const currency = String(artifact.currency || 'USD').toLowerCase();
+
+    // Optimistically reserve shares via atomic update (prevents double-selling)
+    const updated = await Artifact.findOneAndUpdate(
+      {
+        _id: artifact._id,
+        $expr: { $lte: [{ $add: ['$fractionalization.soldShares', qty] }, '$fractionalization.totalShares'] },
+      },
+      { $inc: { 'fractionalization.soldShares': qty } },
+      { new: true }
+    );
+    if (!updated) return res.status(409).json({ ok: false, error: 'Shares no longer available — please refresh' });
+    reservedArtifactId = artifact._id;
+    reservedQty = qty;
+
+    const PUBLIC_SITE_URL = process.env.PUBLIC_SITE_URL || 'https://pvabazaar.org';
+
+    // Create pending SharePurchase record
+    purchase = await SharePurchase.create({
+      artifactId: artifact._id,
+      artifactSlug: artifact.slug || '',
+      quantity: qty,
+      pricePerShareCents: sharePriceCents,
+      totalAmountCents: totalCents,
+      currency: currency.toUpperCase(),
+      buyerEmail,
+      paymentStatus: 'pending',
+    });
+
+    const session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      payment_method_types: ['card'],
+      customer_email: buyerEmail || undefined,
+      line_items: [
+        {
+          price_data: {
+            currency,
+            unit_amount: sharePriceCents,
+            product_data: {
+              name: `${artifact.title || artifact.name} — ${qty} share(s)`,
+              description: `Fractional ownership: ${qty} of ${total} total shares`,
+              images: artifact.imageUrls && artifact.imageUrls.length ? [artifact.imageUrls[0]] : undefined,
+            },
+          },
+          quantity: qty,
+        },
+      ],
+      success_url: `${PUBLIC_SITE_URL}/#/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${PUBLIC_SITE_URL}/#/marketplace/${artifact.slug || artifact._id}`,
+      client_reference_id: purchase._id.toString(),
+      metadata: {
+        order_type: 'share_purchase',
+        share_purchase_id: purchase._id.toString(),
+        artifact_id: artifact._id.toString(),
+        artifact_slug: artifact.slug || '',
+        quantity: String(qty),
+      },
+    });
+
+    // Attach session ID to purchase record
+    purchase.stripeSessionId = session.id;
+    purchase.idempotencyKey = `stripe_session:${session.id}`;
+    await purchase.save();
+
+    return res.json({
+      ok: true,
+      url: session.url,
+      sessionId: session.id,
+      sharePurchaseId: purchase._id.toString(),
+      quantity: qty,
+      totalAmountCents: totalCents,
+      currency: currency.toUpperCase(),
+    });
+  } catch (err) {
+    console.error('[items] share buy error:', err);
+    if (reservedArtifactId && reservedQty > 0) {
+      try {
+        await Artifact.findByIdAndUpdate(reservedArtifactId, {
+          $inc: { 'fractionalization.soldShares': -reservedQty },
+        });
+      } catch (rollbackErr) {
+        console.error('[items] share reservation rollback failed:', rollbackErr);
+      }
+    }
+    if (purchase?._id) {
+      try {
+        await SharePurchase.findByIdAndDelete(purchase._id);
+      } catch (cleanupErr) {
+        console.error('[items] share purchase cleanup failed:', cleanupErr);
+      }
+    }
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// GET /api/items/:id/shares  — public summary of fractional share state
+router.get('/:id/shares', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const artifact = await Artifact.findOne(
+      { $or: [{ _id: mongoose.isValidObjectId(id) ? id : null }, { slug: id }] },
+      'fractionalization ownershipHistory title name slug status'
+    );
+    if (!artifact) return res.status(404).json({ ok: false, error: 'Item not found' });
+    const frac = artifact.fractionalization || {};
+    const total = Number(frac.totalShares || 0);
+    const sold = Number(frac.soldShares || 0);
+    return res.json({
+      ok: true,
+      fractionalEnabled: Boolean(frac.enabled),
+      totalShares: total,
+      soldShares: sold,
+      availableShares: Math.max(0, total - sold),
+      sharePrice: Number(frac.sharePrice || 0),
+      majorityThreshold: Number(frac.majorityThreshold || 0),
+    });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
   }
 });
 
