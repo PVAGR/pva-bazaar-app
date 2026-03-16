@@ -9,6 +9,20 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Open+Sans:wght@400;700&display=swap" rel="stylesheet" />
+    <script>
+      (function () {
+        var pathname = window.location.pathname || '/';
+        if (window.location.hash || pathname === '/') return;
+        if (/\.html$/i.test(pathname)) return;
+        if (pathname.indexOf('/assets/') === 0) return;
+        if (pathname.indexOf('/public/') === 0) return;
+        if (pathname.indexOf('/api/') === 0) return;
+
+        var normalized = pathname.replace(/\/+$/, '') || '/';
+        if (normalized === '/') return;
+        window.location.replace('/#' + normalized + (window.location.search || ''));
+      })();
+    </script>
   </head>
   <body>
     <div id="root" role="main"></div>
