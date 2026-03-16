@@ -9,6 +9,7 @@ const {
   findItemByChannelOrId,
 } = require('../service/omnichannelSyncService');
 const { runPollingSync } = require('../service/omnichannelPollingService');
+const { appendLifecycleEventForArtifact } = require('../service/dppLifecycleService');
 
 const router = express.Router();
 const SUPPORTED = ['pva', 'ebay', 'etsy', 'amazon', 'facebook', 'shopify', 'manual'];
@@ -338,6 +339,66 @@ router.post('/webhooks/:channel/sale', async (req, res) => {
       alreadySold: !!result.alreadySold,
       delistResults: result.delistResults || [],
       blockchainReceipt: result.blockchainReceipt || null,
+    });
+  } catch (error) {
+    return res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.post('/webhooks/:channel/shipment', async (req, res) => {
+  try {
+    const { channel } = req.params;
+    const normalizedChannel = String(channel || '').toLowerCase();
+    if (!LISTING_CHANNELS.includes(normalizedChannel)) {
+      return res.status(400).json({ ok: false, error: 'Unsupported channel' });
+    }
+
+    const incomingToken = req.headers['x-omni-webhook-token'];
+    const expectedToken = process.env.OMNICHANNEL_WEBHOOK_TOKEN || '';
+    if (expectedToken && incomingToken !== expectedToken) {
+      return res.status(401).json({ ok: false, error: 'Invalid webhook token' });
+    }
+
+    const payload = req.body || {};
+    const item = await findItemByChannelOrId({
+      itemId: payload.itemId,
+      channel: normalizedChannel,
+      externalListingId: payload.externalListingId,
+    });
+
+    if (!item) {
+      return res.status(404).json({ ok: false, error: 'Mapped item not found for webhook shipment' });
+    }
+
+    const shipmentRef = String(
+      payload.idempotencyKey || payload.shipmentId || payload.externalShipmentId || payload.externalOrderId || ''
+    );
+
+    const event = await appendLifecycleEventForArtifact({
+      artifactId: item._id,
+      artifactSlug: item.slug || '',
+      type: 'shipped',
+      notes: `Shipment update received from ${normalizedChannel}`,
+      txHash: String(payload.txHash || ''),
+      externalRef: `omni_ship:${normalizedChannel}:${shipmentRef}`,
+      metadata: {
+        channel: normalizedChannel,
+        shipmentId: String(payload.shipmentId || payload.externalShipmentId || ''),
+        externalOrderId: String(payload.externalOrderId || payload.orderId || ''),
+        carrier: String(payload.carrier || ''),
+        trackingNumber: String(payload.trackingNumber || ''),
+        shippedAt: payload.shippedAt || null,
+        estimatedDeliveryAt: payload.estimatedDeliveryAt || null,
+        raw: payload,
+      },
+      occurredAt: payload.shippedAt || new Date(),
+    });
+
+    return res.json({
+      ok: true,
+      itemId: String(item._id),
+      channel: normalizedChannel,
+      event,
     });
   } catch (error) {
     return res.status(500).json({ ok: false, error: error.message });
