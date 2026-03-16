@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { apiGet } from '../lib/api';
+import { searchArchiveText, searchArtifacts, searchAll } from '../lib/api';
 import { createLogger } from '../lib/logger';
 import './SearchPage.css';
 
@@ -8,7 +8,9 @@ const logger = createLogger('SearchPage');
 
 export default function SearchPage() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [scope, setScope] = useState('all');
   const [results, setResults] = useState([]);
+  const [breakdown, setBreakdown] = useState({ entries: 0, artifacts: 0 });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -23,19 +25,35 @@ export default function SearchPage() {
       setLoading(true);
       setError(null);
       try {
-        const data = await apiGet(`/search/text?q=${encodeURIComponent(searchTerm)}`);
-        setResults(data.results || []);
+        const term = searchTerm.trim();
+        let payload;
+        if (scope === 'entries') {
+          payload = await searchArchiveText(term, { limit: 16 });
+          setBreakdown({ entries: payload.count || 0, artifacts: 0 });
+        } else if (scope === 'artifacts') {
+          payload = await searchArtifacts(term, { limit: 16 });
+          setBreakdown({ entries: 0, artifacts: payload.count || 0 });
+        } else {
+          payload = await searchAll(term, { limit: 12 });
+          setBreakdown(payload.breakdown || { entries: 0, artifacts: 0 });
+        }
+
+        if (!payload.ok) {
+          throw new Error(payload.error || 'Search failed');
+        }
+        setResults(payload.results || []);
       } catch (err) {
         logger.error('Search error', err);
         setError(err?.response?.data?.error || err?.response?.data?.message || err.message || 'Search failed');
         setResults([]);
+        setBreakdown({ entries: 0, artifacts: 0 });
       } finally {
         setLoading(false);
       }
     }, 400);
 
     return () => clearTimeout(timer);
-  }, [searchTerm]);
+  }, [searchTerm, scope]);
 
   return (
     <section className="section-card search-page">
@@ -47,18 +65,31 @@ export default function SearchPage() {
         <span className="pill">{loading ? 'Searching...' : `${results.length} results`}</span>
       </div>
       <p className="search-page__lead">
-        Explore entries by title, body, tags, and themes. Start with at least two characters.
+        Explore archive entries and marketplace artifacts by title, content, tags, artisan, and themes.
       </p>
-      <div className="form form-spaced">
+      <div className="form form-spaced search-page__controls">
         <input
           className="search-page__input"
           type="search"
-          placeholder="Search entries by title, content, tags..."
+          placeholder="Search by title, content, tags, artisan..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           autoFocus
         />
+        <label className="search-page__scope">
+          <span>Scope</span>
+          <select value={scope} onChange={(e) => setScope(e.target.value)}>
+            <option value="all">All</option>
+            <option value="entries">Archive Entries</option>
+            <option value="artifacts">Artifacts</option>
+          </select>
+        </label>
       </div>
+      {scope === 'all' && searchTerm.trim().length >= 2 && !loading && (
+        <p className="search-page__breakdown">
+          {breakdown.entries} entries • {breakdown.artifacts} artifacts
+        </p>
+      )}
       {error && (
         <div className="search-error-box">
           Error: {error}
@@ -67,11 +98,18 @@ export default function SearchPage() {
       <div className="entry-list search-page__results">
         {results.map((entry) => (
           <article className="entry-card search-page__result" key={entry._id || entry.id}>
-            <h3><Link to={`/entry/${entry._id || entry.id}`}>{entry.title}</Link></h3>
+            <h3>
+              {entry.type === 'artifact'
+                ? <Link to={`/marketplace/${entry.slug || entry._id || entry.id}`}>{entry.title || entry.name}</Link>
+                : <Link to={`/entry/${entry._id || entry.id}`}>{entry.title}</Link>}
+            </h3>
             <div className="entry-meta">
-              {new Date(entry.date || entry.createdAt).toLocaleDateString()} · {entry.category || 'entry'}
+              {new Date(entry.date || entry.updatedAt || entry.createdAt).toLocaleDateString()}
+              {' · '}
+              {entry.type === 'artifact' ? 'artifact' : (entry.category || 'entry')}
+              {entry.type === 'artifact' && typeof entry.price === 'number' ? ` · $${entry.price}` : ''}
             </div>
-            <p className="entry-excerpt">{entry.excerpt || entry.content?.substring(0, 200)}</p>
+            <p className="entry-excerpt">{entry.excerpt || entry.description || entry.content?.substring(0, 200)}</p>
             {entry.tags && entry.tags.length > 0 && (
               <div className="entry-tags">
                 {entry.tags.slice(0, 5).map((tag, i) => (
@@ -84,7 +122,7 @@ export default function SearchPage() {
       </div>
       {!loading && !error && searchTerm && results.length === 0 && (
         <p className="search-empty-state">
-          No entries found for "{searchTerm}"
+          No results found for "{searchTerm}"
         </p>
       )}
     </section>

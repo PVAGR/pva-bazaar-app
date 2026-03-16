@@ -739,3 +739,67 @@ export async function deleteNotification(recipientAddress, id) {
     return { ok: false, error: err.message };
   }
 }
+
+// --- Search helpers ---
+
+export async function searchArchiveText(q, { limit = 10 } = {}) {
+  try {
+    const params = new URLSearchParams();
+    params.set('q', String(q || ''));
+    params.set('limit', String(limit));
+    const response = await apiGet(`/search/text?${params.toString()}`);
+    if (response && response.success) {
+      return { ok: true, results: response.results || [], count: response.count || 0 };
+    }
+    return { ok: false, error: response?.error || 'Search failed', results: [], count: 0 };
+  } catch (err) {
+    return { ok: false, error: err.message, results: [], count: 0 };
+  }
+}
+
+export async function searchArtifacts(q, { limit = 10 } = {}) {
+  try {
+    const params = new URLSearchParams();
+    params.set('q', String(q || ''));
+    params.set('limit', String(limit));
+    const response = await apiGet(`/search/artifacts?${params.toString()}`);
+    if (response && response.success) {
+      return { ok: true, results: response.results || [], count: response.count || 0 };
+    }
+    return { ok: false, error: response?.error || 'Artifact search failed', results: [], count: 0 };
+  } catch (err) {
+    return { ok: false, error: err.message, results: [], count: 0 };
+  }
+}
+
+export async function searchAll(q, { limit = 12 } = {}) {
+  try {
+    const params = new URLSearchParams();
+    params.set('q', String(q || ''));
+    params.set('limit', String(limit));
+    const response = await apiGet(`/search/all?${params.toString()}`);
+    if (response && response.success) {
+      return {
+        ok: true,
+        results: response.results || [],
+        count: response.count || 0,
+        breakdown: response.breakdown || { entries: 0, artifacts: 0 },
+      };
+    }
+    return {
+      ok: false,
+      error: response?.error || 'Combined search failed',
+      results: [],
+      count: 0,
+      breakdown: { entries: 0, artifacts: 0 },
+    };
+  } catch (err) {
+    return {
+      ok: false,
+      error: err.message,
+      results: [],
+      count: 0,
+      breakdown: { entries: 0, artifacts: 0 },
+    };
+  }
+}
