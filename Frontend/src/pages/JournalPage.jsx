@@ -21,7 +21,7 @@ export default function JournalPage({ entries = [], searchTerm = '' }) {
         <a className="button" href="#/admin/new-journal">Add entry</a>
       </div>
 
-      <div className="form" style={{ marginBottom: '1rem' }}>
+      <div className="form form-spaced">
         <label>
           Filter by category
           <select value={category} onChange={(e) => setCategory(e.target.value)}>
@@ -30,7 +30,7 @@ export default function JournalPage({ entries = [], searchTerm = '' }) {
             ))}
           </select>
         </label>
-        <p style={{ margin: 0 }}>
+        <p className="journal-summary">
           Showing {list.length} of {entries.length} · search term: “{searchTerm || '—'}”
         </p>
       </div>

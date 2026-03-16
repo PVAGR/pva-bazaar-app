@@ -22,8 +22,8 @@ export default function ArchivePage({ entries = [], searchTerm = '' }) {
         <span className="pill">Search: {searchTerm || '—'}</span>
       </div>
       {grouped.map(([category, list]) => (
-        <div key={category} style={{ marginBottom: '1.25rem' }}>
-          <h3 style={{ margin: '0 0 0.5rem', color: '#0f5132' }}>{category}</h3>
+        <div key={category} className="archive-group">
+          <h3 className="archive-group-title">{category}</h3>
           <div className="entry-list">
             {list.map((entry) => (
               <article className="entry-card" key={entry.id}>
