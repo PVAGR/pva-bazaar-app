@@ -15,62 +15,6 @@ function clampBasisPoints(raw, fallback = 1000) {
   return Math.max(0, Math.min(10000, Math.round(v)));
 }
 
-function parsePositiveInt(raw, fallback, max) {
-  const n = Number.parseInt(raw, 10);
-  if (!Number.isFinite(n) || n <= 0) return fallback;
-  return Math.min(n, max);
-}
-
-function normalizeDateOrNull(raw) {
-  if (!raw) return null;
-  const dt = new Date(raw);
-  return Number.isNaN(dt.getTime()) ? null : dt;
-}
-
-function projectFilteredEvents(events, { type, from, to }) {
-  const typeFilter = String(type || '').trim().toLowerCase();
-  const fromDate = normalizeDateOrNull(from);
-  const toDate = normalizeDateOrNull(to);
-
-  return (Array.isArray(events) ? events : []).filter((event) => {
-    if (typeFilter && String(event?.type || '').toLowerCase() !== typeFilter) return false;
-
-    const occurredAt = normalizeDateOrNull(event?.occurredAt);
-    if (fromDate && (!occurredAt || occurredAt < fromDate)) return false;
-    if (toDate && (!occurredAt || occurredAt > toDate)) return false;
-
-    return true;
-  });
-}
-
-function buildEventStats(events) {
-  const byType = {};
-  let latest = null;
-  for (const event of Array.isArray(events) ? events : []) {
-    const type = String(event?.type || 'custom');
-    byType[type] = (byType[type] || 0) + 1;
-    const dt = normalizeDateOrNull(event?.occurredAt);
-    if (dt && (!latest || dt > latest)) latest = dt;
-  }
-
-  return {
-    total: Array.isArray(events) ? events.length : 0,
-    byType,
-    latestEventAt: latest ? latest.toISOString() : null,
-  };
-}
-
-async function findPassportByArtifactKey(key) {
-  const clean = String(key || '').trim();
-  const filter = {
-    $or: [
-      { artifactSlug: clean },
-      ...(isObjectId(clean) ? [{ artifactId: clean }] : []),
-    ],
-  };
-  return DigitalProductPassport.findOne(filter).lean();
-}
-
 function toSafePassport(doc) {
   if (!doc) return null;
   return {
@@ -102,131 +46,16 @@ function toSafePassport(doc) {
 // GET /api/dpp/by-artifact/:artifactIdOrSlug
 router.get('/by-artifact/:artifactIdOrSlug', async (req, res) => {
   try {
-    const doc = await findPassportByArtifactKey(req.params.artifactIdOrSlug);
+    const key = String(req.params.artifactIdOrSlug || '').trim();
+    const filter = {
+      $or: [
+        { artifactSlug: key },
+        ...(isObjectId(key) ? [{ artifactId: key }] : []),
+      ],
+    };
+    const doc = await DigitalProductPassport.findOne(filter).lean();
     if (!doc) return res.status(404).json({ ok: false, error: 'Passport not found for artifact' });
     return res.json({ ok: true, passport: toSafePassport(doc) });
-  } catch (error) {
-    return res.status(500).json({ ok: false, error: error.message });
-  }
-});
-
-// GET /api/dpp/:passportDid/events
-// Returns filtered + paginated lifecycle events without full passport payload.
-router.get('/:passportDid/events', async (req, res) => {
-  try {
-    const passportDid = String(req.params.passportDid || '').trim();
-    const page = parsePositiveInt(req.query.page, 1, 100000);
-    const limit = parsePositiveInt(req.query.limit, 25, 200);
-    const type = String(req.query.type || '');
-    const from = req.query.from;
-    const to = req.query.to;
-
-    const doc = await DigitalProductPassport.findOne({ passportDid }).lean();
-    if (!doc) return res.status(404).json({ ok: false, error: 'Passport not found' });
-
-    const filtered = projectFilteredEvents(doc.lifecycleEvents, { type, from, to });
-    const sorted = filtered
-      .slice()
-      .sort((a, b) => new Date(b?.occurredAt || 0).getTime() - new Date(a?.occurredAt || 0).getTime());
-
-    const total = sorted.length;
-    const start = (page - 1) * limit;
-    const events = sorted.slice(start, start + limit);
-
-    return res.json({
-      ok: true,
-      passportDid,
-      events,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit),
-      },
-      filters: {
-        type: type || '',
-        from: from || null,
-        to: to || null,
-      },
-    });
-  } catch (error) {
-    return res.status(500).json({ ok: false, error: error.message });
-  }
-});
-
-// GET /api/dpp/:passportDid/stats
-// Returns lightweight event statistics for dashboards.
-router.get('/:passportDid/stats', async (req, res) => {
-  try {
-    const passportDid = String(req.params.passportDid || '').trim();
-    const doc = await DigitalProductPassport.findOne({ passportDid }).lean();
-    if (!doc) return res.status(404).json({ ok: false, error: 'Passport not found' });
-
-    const stats = buildEventStats(doc.lifecycleEvents);
-    return res.json({
-      ok: true,
-      passportDid,
-      stats,
-    });
-  } catch (error) {
-    return res.status(500).json({ ok: false, error: error.message });
-  }
-});
-
-// GET /api/dpp/by-artifact/:artifactIdOrSlug/events
-router.get('/by-artifact/:artifactIdOrSlug/events', async (req, res) => {
-  try {
-    const doc = await findPassportByArtifactKey(req.params.artifactIdOrSlug);
-    if (!doc) return res.status(404).json({ ok: false, error: 'Passport not found for artifact' });
-
-    const page = parsePositiveInt(req.query.page, 1, 100000);
-    const limit = parsePositiveInt(req.query.limit, 25, 200);
-    const type = String(req.query.type || '');
-    const from = req.query.from;
-    const to = req.query.to;
-
-    const filtered = projectFilteredEvents(doc.lifecycleEvents, { type, from, to });
-    const sorted = filtered
-      .slice()
-      .sort((a, b) => new Date(b?.occurredAt || 0).getTime() - new Date(a?.occurredAt || 0).getTime());
-
-    const total = sorted.length;
-    const start = (page - 1) * limit;
-    const events = sorted.slice(start, start + limit);
-
-    return res.json({
-      ok: true,
-      passportDid: doc.passportDid,
-      events,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit),
-      },
-      filters: {
-        type: type || '',
-        from: from || null,
-        to: to || null,
-      },
-    });
-  } catch (error) {
-    return res.status(500).json({ ok: false, error: error.message });
-  }
-});
-
-// GET /api/dpp/by-artifact/:artifactIdOrSlug/stats
-router.get('/by-artifact/:artifactIdOrSlug/stats', async (req, res) => {
-  try {
-    const doc = await findPassportByArtifactKey(req.params.artifactIdOrSlug);
-    if (!doc) return res.status(404).json({ ok: false, error: 'Passport not found for artifact' });
-
-    const stats = buildEventStats(doc.lifecycleEvents);
-    return res.json({
-      ok: true,
-      passportDid: doc.passportDid,
-      stats,
-    });
   } catch (error) {
     return res.status(500).json({ ok: false, error: error.message });
   }
