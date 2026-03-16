@@ -220,8 +220,13 @@ export default function ArchiveLibraryPage() {
 
   const categories = ['All', 'Index', 'Fiction', 'Spiritual', 'Technology', 'Business', 'Personal', 'Philosophy', 'Wisdom', 'Architecture', 'Strategic'];
 
+  const archiveKeyword = /(archive\s+entry|archive\s+master\s+index|man\s+from\s+taured)/i;
+  const archiveApiEntries = customEntries.filter((entry) => archiveKeyword.test(String(entry?.title || '')));
+  const blogEntries = customEntries.filter((entry) => !archiveKeyword.test(String(entry?.title || '')));
+  const archiveSourceEntries = archiveApiEntries.length > 0 ? archiveApiEntries : archiveEntries;
+
   // Get entries based on view mode
-  const currentEntries = viewMode === 'archive' ? archiveEntries : customEntries;
+  const currentEntries = viewMode === 'archive' ? archiveSourceEntries : blogEntries;
   
   const filteredEntries =
     selectedCategory === 'All'
@@ -363,7 +368,7 @@ export default function ArchiveLibraryPage() {
               setMarkdown('');
             }}
           >
-            📚 Original Archive ({archiveEntries.length})
+            📚 Original Archive ({archiveSourceEntries.length})
           </button>
           <button 
             className={`view-btn ${viewMode === 'blog' ? 'active' : ''}`}
@@ -374,7 +379,7 @@ export default function ArchiveLibraryPage() {
               setSelectedCategory('All');
             }}
           >
-            ✍️ New Blog Posts ({customEntries.length})
+            ✍️ New Blog Posts ({blogEntries.length})
           </button>
         </div>
 
@@ -405,8 +410,8 @@ export default function ArchiveLibraryPage() {
                 {cat}
                 <span className="count">
                   {cat === 'All'
-                    ? archiveEntries.length
-                    : archiveEntries.filter((e) => e.category === cat).length}
+                    ? currentEntries.length
+                    : currentEntries.filter((e) => e.category === cat).length}
                 </span>
               </button>
             ))}
@@ -447,13 +452,31 @@ export default function ArchiveLibraryPage() {
               <p>Select a document from the sidebar to begin reading.</p>
               <div className="quick-links">
                 <h3>Recommended Starting Points:</h3>
-                <button onClick={() => loadMarkdown(archiveEntries[0])} className="quick-link">
+                <button onClick={() => loadMarkdown(archiveSourceEntries[0] || archiveEntries[0])} className="quick-link">
                   📋 Start with the Master Index
                 </button>
-                <button onClick={() => loadMarkdown(archiveEntries[16])} className="quick-link">
+                <button
+                  onClick={() =>
+                    loadMarkdown(
+                      archiveSourceEntries.find((entry) => /master integration/i.test(String(entry?.title || '')))
+                      || archiveSourceEntries[16]
+                      || archiveEntries[16]
+                    )
+                  }
+                  className="quick-link"
+                >
                   🎯 See the Master Integration & Roadmap
                 </button>
-                <button onClick={() => loadMarkdown(archiveEntries[1])} className="quick-link">
+                <button
+                  onClick={() =>
+                    loadMarkdown(
+                      archiveSourceEntries.find((entry) => /man from taured/i.test(String(entry?.title || '')))
+                      || archiveSourceEntries[1]
+                      || archiveEntries[1]
+                    )
+                  }
+                  className="quick-link"
+                >
                   📖 Read the Novel (The Man from Taured)
                 </button>
               </div>
@@ -463,7 +486,7 @@ export default function ArchiveLibraryPage() {
           {!selectedEntry && viewMode === 'blog' && (
             <div className="archive-welcome">
               <h2>New Blog Posts</h2>
-              {customEntries.length === 0 ? (
+              {blogEntries.length === 0 ? (
                 <>
                   <p>
                     No blog posts yet. This section will display new writings created from 2026 onwards.
@@ -478,7 +501,7 @@ export default function ArchiveLibraryPage() {
                     Fresh perspectives and evolving thoughts starting 2026. Select a post from the sidebar to read.
                   </p>
                   <p className="blog-count">
-                    {customEntries.length} {customEntries.length === 1 ? 'post' : 'posts'} published
+                    {blogEntries.length} {blogEntries.length === 1 ? 'post' : 'posts'} published
                   </p>
                 </>
               )}
