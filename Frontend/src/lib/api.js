@@ -291,16 +291,47 @@ export async function finalizeCheckoutSession(sessionId) {
         ok: true,
         pending: Boolean(response.pending),
         finalized: Boolean(response.finalized),
+        orderType: response.orderType || 'standard',
         orderId: response.orderId || '',
+        sharePurchaseId: response.sharePurchaseId || '',
         paymentStatus: response.paymentStatus || '',
         certificateId: response.certificateId || '',
         downloadUrl: response.downloadUrl || '',
         blockchainReceipt: response.blockchainReceipt || null,
         delistResults: Array.isArray(response.delistResults) ? response.delistResults : [],
         duplicate: Boolean(response.duplicate),
+        // share purchase fields
+        quantity: response.quantity || null,
+        totalAmountCents: response.totalAmountCents || null,
+        currency: response.currency || '',
+        artifactSlug: response.artifactSlug || '',
       };
     }
     return { ok: false, error: response?.error || 'Failed to finalize checkout session' };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+}
+
+export async function buyShares(itemId, { qty = 1, buyerEmail = '' } = {}) {
+  if (!itemId) return { ok: false, error: 'Missing itemId' };
+  try {
+    const response = await apiPost(`/items/${encodeURIComponent(itemId)}/shares/buy`, {
+      qty: Math.max(1, Number(qty)),
+      buyerEmail: String(buyerEmail || '').trim(),
+    });
+    if (response && response.ok) {
+      return {
+        ok: true,
+        url: response.url || '',
+        sessionId: response.sessionId || '',
+        sharePurchaseId: response.sharePurchaseId || '',
+        quantity: response.quantity || qty,
+        totalAmountCents: response.totalAmountCents || 0,
+        currency: response.currency || 'USD',
+      };
+    }
+    return { ok: false, error: response?.error || 'Failed to start share purchase' };
   } catch (err) {
     return { ok: false, error: err.message };
   }
