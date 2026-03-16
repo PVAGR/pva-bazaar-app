@@ -4,7 +4,6 @@ const express = require("express");
 const router = express.Router();
 const stripe = require("../lib/stripeClient");
 const Order = require("../models/Order");
-const SharePurchase = require("../models/SharePurchase");
 const StripeEventLog = require("../models/StripeEventLog");
 const PhysicalFulfillment = require("../models/PhysicalFulfillment");
 const FulfillmentTransactionLog = require("../models/FulfillmentTransactionLog");
@@ -46,44 +45,6 @@ router.post("/stripe", async (req, res) => {
   // Handle event types
   if (event.type === "checkout.session.completed") {
     const session = event.data.object;
-
-    // --- Share purchase webhook branch ---
-    if (session.metadata?.order_type === 'share_purchase') {
-      const purchaseId = session.metadata?.share_purchase_id || session.client_reference_id;
-      if (purchaseId) {
-        const purchase = await SharePurchase.findOne({
-          $or: [{ _id: purchaseId }, { stripeSessionId: session.id }],
-        });
-        if (purchase && purchase.paymentStatus !== 'paid') {
-          purchase.paymentStatus = 'paid';
-          purchase.stripePaymentIntentId = session.payment_intent || '';
-          purchase.buyerEmail = purchase.buyerEmail || session.customer_details?.email || '';
-          purchase.buyerName = purchase.buyerName || session.customer_details?.name || '';
-          purchase.idempotencyKey = `stripe_session:${session.id}`;
-          purchase.finalizedAt = new Date();
-          await purchase.save();
-
-          await Artifact.findByIdAndUpdate(purchase.artifactId, {
-            $push: {
-              ownershipHistory: {
-                owner: purchase.buyerEmail || 'unknown',
-                date: new Date(),
-                transactionHash: session.payment_intent || '',
-              },
-            },
-          });
-
-          await logFulfillment(event.id, null, 'share_purchase_paid', {
-            purchaseId: String(purchase._id),
-            qty: purchase.quantity,
-            artifactId: String(purchase.artifactId),
-          });
-        }
-      }
-      return res.json({ received: true });
-    }
-    // --- End share purchase webhook branch ---
-
     const orderId = session.client_reference_id || session.metadata?.orderId;
     const reservationId = session.metadata?.reservationId;
     const itemId = session.metadata?.itemId;

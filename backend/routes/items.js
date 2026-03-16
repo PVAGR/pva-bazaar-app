@@ -2,10 +2,8 @@
 const express = require('express');
 const router = express.Router();
 const Artifact = require('../models/Artifact');
-const SharePurchase = require('../models/SharePurchase');
 const ProvenanceReviewLog = require('../models/ProvenanceReviewLog');
 const User = require('../models/User');
-const stripe = require('../lib/stripeClient');
 const { sendConsignmentEmail, sendAdminNotification } = require('../service/emailService');
 const { normalizeItemInput, toPublicItem } = require('../lib/itemNormalize');
 const { encodeCursor, decodeCursor } = require('../lib/cursor');
@@ -1067,132 +1065,6 @@ router.delete('/:id', async (req, res) => {
     res.json({ ok: true, item: toPublicItem(artifact) });
   } catch (err) {
     res.status(400).json({ ok: false, error: err.message });
-  }
-});
-
-// POST /api/items/:id/shares/buy  — create Stripe checkout session for fractional share purchase
-router.post('/:id/shares/buy', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const qty = Math.max(1, parseInt(req.body.qty || 1, 10));
-    const buyerEmail = String(req.body.buyerEmail || '').trim();
-
-    const artifact = await Artifact.findOne({ $or: [{ _id: mongoose.isValidObjectId(id) ? id : null }, { slug: id }] });
-    if (!artifact) return res.status(404).json({ ok: false, error: 'Item not found' });
-    if (artifact.status !== 'published') return res.status(403).json({ ok: false, error: 'Item not available' });
-
-    const frac = artifact.fractionalization || {};
-    if (!frac.enabled) return res.status(400).json({ ok: false, error: 'Fractional ownership not enabled for this item' });
-
-    const total = Number(frac.totalShares || 0);
-    const sold = Number(frac.soldShares || 0);
-    const available = total - sold;
-    if (available <= 0) return res.status(409).json({ ok: false, error: 'No shares available' });
-    if (qty > available) return res.status(409).json({ ok: false, error: `Only ${available} share(s) available` });
-
-    const sharePriceCents = Math.round(Number(frac.sharePrice || 0) * 100);
-    if (!sharePriceCents) return res.status(400).json({ ok: false, error: 'Share price not configured' });
-    const totalCents = sharePriceCents * qty;
-    const currency = String(artifact.currency || 'USD').toLowerCase();
-
-    // Optimistically reserve shares via atomic update (prevents double-selling)
-    const updated = await Artifact.findOneAndUpdate(
-      {
-        _id: artifact._id,
-        $expr: { $lte: [{ $add: ['$fractionalization.soldShares', qty] }, '$fractionalization.totalShares'] },
-      },
-      { $inc: { 'fractionalization.soldShares': qty } },
-      { new: true }
-    );
-    if (!updated) return res.status(409).json({ ok: false, error: 'Shares no longer available — please refresh' });
-
-    const PUBLIC_SITE_URL = process.env.PUBLIC_SITE_URL || 'https://pvabazaar.org';
-
-    // Create pending SharePurchase record
-    const purchase = await SharePurchase.create({
-      artifactId: artifact._id,
-      artifactSlug: artifact.slug || '',
-      quantity: qty,
-      pricePerShareCents: sharePriceCents,
-      totalAmountCents: totalCents,
-      currency: currency.toUpperCase(),
-      buyerEmail,
-      paymentStatus: 'pending',
-    });
-
-    const session = await stripe.checkout.sessions.create({
-      mode: 'payment',
-      payment_method_types: ['card'],
-      customer_email: buyerEmail || undefined,
-      line_items: [
-        {
-          price_data: {
-            currency,
-            unit_amount: sharePriceCents,
-            product_data: {
-              name: `${artifact.title || artifact.name} — ${qty} share(s)`,
-              description: `Fractional ownership: ${qty} of ${total} total shares`,
-              images: artifact.imageUrls && artifact.imageUrls.length ? [artifact.imageUrls[0]] : undefined,
-            },
-          },
-          quantity: qty,
-        },
-      ],
-      success_url: `${PUBLIC_SITE_URL}/#/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${PUBLIC_SITE_URL}/#/marketplace/${artifact.slug || artifact._id}`,
-      client_reference_id: purchase._id.toString(),
-      metadata: {
-        order_type: 'share_purchase',
-        share_purchase_id: purchase._id.toString(),
-        artifact_id: artifact._id.toString(),
-        artifact_slug: artifact.slug || '',
-        quantity: String(qty),
-      },
-    });
-
-    // Attach session ID to purchase record
-    purchase.stripeSessionId = session.id;
-    purchase.idempotencyKey = `stripe_session:${session.id}`;
-    await purchase.save();
-
-    return res.json({
-      ok: true,
-      url: session.url,
-      sessionId: session.id,
-      sharePurchaseId: purchase._id.toString(),
-      quantity: qty,
-      totalAmountCents: totalCents,
-      currency: currency.toUpperCase(),
-    });
-  } catch (err) {
-    console.error('[items] share buy error:', err);
-    res.status(500).json({ ok: false, error: err.message });
-  }
-});
-
-// GET /api/items/:id/shares  — public summary of fractional share state
-router.get('/:id/shares', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const artifact = await Artifact.findOne(
-      { $or: [{ _id: mongoose.isValidObjectId(id) ? id : null }, { slug: id }] },
-      'fractionalization ownershipHistory title name slug status'
-    );
-    if (!artifact) return res.status(404).json({ ok: false, error: 'Item not found' });
-    const frac = artifact.fractionalization || {};
-    const total = Number(frac.totalShares || 0);
-    const sold = Number(frac.soldShares || 0);
-    return res.json({
-      ok: true,
-      fractionalEnabled: Boolean(frac.enabled),
-      totalShares: total,
-      soldShares: sold,
-      availableShares: Math.max(0, total - sold),
-      sharePrice: Number(frac.sharePrice || 0),
-      majorityThreshold: Number(frac.majorityThreshold || 0),
-    });
-  } catch (err) {
-    res.status(500).json({ ok: false, error: err.message });
   }
 });
 

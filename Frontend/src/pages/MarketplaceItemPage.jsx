@@ -8,7 +8,6 @@ import {
   createCheckoutSession,
   prepareCryptoCheckout,
   confirmCryptoCheckoutPayment,
-  buyShares,
 } from "../lib/api";
 import VerificationBadge from "../components/VerificationBadge.jsx";
 import { AlertModal } from "../components/ui/DialogModals.jsx";
@@ -47,7 +46,6 @@ export default function MarketplaceItemPage() {
   const [provenanceError, setProvenanceError] = useState("");
   const [copied, setCopied] = useState("");
   const [shareQty, setShareQty] = useState(1);
-  const [sharesBuying, setSharesBuying] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -362,27 +360,10 @@ export default function MarketplaceItemPage() {
                     <button
                       type="button"
                       className="item-fraction-buy-btn"
-                      disabled={availableShares <= 0 || isSold || sharesBuying}
-                      onClick={async () => {
-                        if (sharesBuying) return;
-                        setSharesBuying(true);
-                        try {
-                          const res = await buyShares(item.id || item.slug, {
-                            qty: normalizedShareQty,
-                          });
-                          if (res.ok && res.url) {
-                            window.location.href = res.url;
-                          } else {
-                            setAlertMsg(res.error || 'Failed to start share purchase');
-                          }
-                        } catch (e) {
-                          setAlertMsg(e.message || 'Share purchase failed');
-                        } finally {
-                          setSharesBuying(false);
-                        }
-                      }}
+                      disabled={availableShares <= 0 || isSold}
+                      onClick={() => setAlertMsg('Share purchase flow is queued for the next release. Your quantity and estimate are ready.')}
                     >
-                      {sharesBuying ? 'Redirecting...' : `Buy ${normalizedShareQty} Share${normalizedShareQty !== 1 ? 's' : ''}`}
+                      Buy Shares (Preview)
                     </button>
                   </div>
                 </div>

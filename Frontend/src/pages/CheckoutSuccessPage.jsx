@@ -52,18 +52,6 @@ export default function CheckoutSuccessPage() {
           {finalize?.finalized && (
             <>
               <div>Order ID: {finalize.orderId}</div>
-              {finalize.orderType === 'share_purchase' ? (
-                <>
-                  <div>Share Purchase ID: {finalize.sharePurchaseId}</div>
-                  <div>Shares acquired: <b>{finalize.quantity}</b></div>
-                  {finalize.artifactSlug && (
-                    <div className="back-link">
-                      <Link to={`/marketplace/${finalize.artifactSlug}`}>View Artifact</Link>
-                    </div>
-                  )}
-                </>
-              ) : (
-              <>
               {finalize.blockchainReceipt?.status && (
                 <div>
                   Receipt Mint: <b>{finalize.blockchainReceipt.status}</b>
@@ -75,8 +63,6 @@ export default function CheckoutSuccessPage() {
                 <div className="back-link">
                   <a href={finalize.downloadUrl}>Download Purchase Asset</a>
                 </div>
-              )}
-              </>
               )}
             </>
           )}
