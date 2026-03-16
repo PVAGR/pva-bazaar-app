@@ -1,44 +1,57 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { createArchiveEntry, fetchArchiveEntries, deleteArchiveEntry, apiGet, apiFetch } from '../lib/api';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
+import { apiGet, apiPost } from '../lib/api';
 import { ENV } from '../config/env';
+import { getErrorMessage } from '../lib/errorUtils';
+import ErrorBanner from '../components/ErrorBanner.jsx';
+import ErrorBoundary from '../components/ErrorBoundary.jsx';
+import AdminNav from '../components/AdminNav.jsx';
+import AdminTabs from '../components/AdminTabs.jsx';
+import { clearToken, setToken } from '../lib/auth';
+import { createLogger } from '../lib/logger';
+import { LoadingDots } from '../components/LoadingSpinner.jsx';
+import DashboardTab from '../components/DashboardTab.jsx';
+import ArchiveTab from '../components/ArchiveTab.jsx';
+import MarketplaceTab from '../components/MarketplaceTab.jsx';
+import UsersTab from '../components/UsersTab.jsx';
+import AttributionTab from '../components/AttributionTab.jsx';
+import PayoutTab from '../components/PayoutTab.jsx';
+import CloudStorageTab from '../components/CloudStorageTab.jsx';
+import ApiDocsTab from '../components/ApiDocsTab.jsx';
+import HealthTab from '../components/HealthTab.jsx';
+import SettingsTab from '../components/SettingsTab.jsx';
+import OpenClawTab from '../components/OpenClawTab.jsx';
+import BountyHunterTab from '../components/BountyHunterTab.jsx';
 import './AdminPage.css';
 
+const logger = createLogger('AdminPage');
+
 export default function AdminPage() {
-  const navigate = useNavigate();
+  const staleThresholdMs = ENV.STATUS_STALE_MS || 120000;
+  const staleThresholdMinutes = Math.round((staleThresholdMs / 60000) * 10) / 10;
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-    // Admin code state removed: now session-based only
   const [error, setError] = useState('');
-  const [apiError, setApiError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [activeTab, setActiveTab] = useState('dashboard');
+  // Use global theme system
   const [darkMode, setDarkMode] = useState(() => {
-    const saved = localStorage.getItem('archive-theme');
-    return saved ? saved === 'dark' : true;
+    const saved = localStorage.getItem('theme');
+    const isDark = saved ? saved === 'dark' : false;
+    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+    return isDark;
   });
   
-  // Form state for new archive entry
-  const [formData, setFormData] = useState({
-    title: '',
-    category: 'Personal',
-    description: '',
-    content: '',
-    wordCount: '0',
-    mediaUrls: ''
-  });
-  
-  const [savedEntries, setSavedEntries] = useState([]);
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [editingEntry, setEditingEntry] = useState(null);
-  const [deleteConfirm, setDeleteConfirm] = useState(null); // {id, title} for confirmation modal
-  const [uploadingMedia, setUploadingMedia] = useState(false);
-  const [mediaError, setMediaError] = useState('');
   const [adminTokenInput, setAdminTokenInput] = useState('');
   const [showConnectionStatus, setShowConnectionStatus] = useState(false);
+  const [dispatchTestState, setDispatchTestState] = useState({ loading: false, message: '' });
+  const [showRecentEvents, setShowRecentEvents] = useState(false);
+  const [recentEvents, setRecentEvents] = useState({ loading: false, data: null, error: null });
   const [connectionStatus, setConnectionStatus] = useState({
     loading: true,
     checkedAt: null,
+    checkedAtMs: null,
     apiBase: ENV.API_URL,
     results: {},
   });
@@ -57,18 +70,90 @@ export default function AdminPage() {
       sessionStorage.removeItem('admin-auth-version');
       setIsAuthenticated(false);
     }
-    
-    // Load saved entries from server
-    loadEntriesFromServer();
   }, []);
 
-  const runConnectionCheck = async () => {
+  const formatWatchdogMessage = useCallback((response) => {
+    if (!response || response.ok === false) {
+      return 'Watchdog request failed';
+    }
+
+    if (!response.available) {
+      return response.message || 'No watchdog logs found';
+    }
+
+    const summary = response.summary || {};
+    const state = summary.state || 'unknown';
+    const errors = Number.isFinite(summary.errorCountWindow) ? summary.errorCountWindow : 0;
+    const alerts = Number.isFinite(summary.alertCountWindow) ? summary.alertCountWindow : 0;
+    const lastEventAt = summary.lastEventAt || 'n/a';
+
+    return `state=${state}, errors=${errors}, alerts=${alerts}, last=${lastEventAt}`;
+  }, []);
+
+  const handleTestDispatch = useCallback(async () => {
+    setDispatchTestState({ loading: true, message: '' });
+    try {
+      const data = await apiPost('/openclaw/dispatch', {
+        event: 'pvabazaar.admin_test',
+        message: 'Test dispatch from PVA Bazaar admin panel',
+        metadata: {
+          source: 'admin-panel',
+          timestamp: new Date().toISOString(),
+        },
+      });
+
+      if (data.ok) {
+        setDispatchTestState({ loading: false, message: '✅ Dispatch successful' });
+      } else {
+        setDispatchTestState({ loading: false, message: `❌ ${data.message || 'Dispatch failed'}` });
+      }
+    } catch (err) {
+      setDispatchTestState({ loading: false, message: `❌ ${err.message || 'Network error'}` });
+    }
+
+    setTimeout(() => {
+      setDispatchTestState({ loading: false, message: '' });
+    }, 5000);
+  }, []);
+
+  const fetchRecentEvents = useCallback(async () => {
+    setRecentEvents({ loading: true, data: null, error: null });
+    try {
+      const data = await apiGet('/openclaw/recent-events?limit=30');
+      if (data.ok) {
+        setRecentEvents({ loading: false, data: data.events || [], error: null });
+      } else {
+        setRecentEvents({ loading: false, data: null, error: data.message || 'Failed to fetch events' });
+      }
+    } catch (err) {
+      setRecentEvents({ loading: false, data: null, error: err?.response?.data?.message || err.message || 'Network error' });
+    }
+  }, []);
+
+  const toggleRecentEvents = useCallback(() => {
+    const newState = !showRecentEvents;
+    setShowRecentEvents(newState);
+    
+    // Fetch events when opening
+    if (newState && !recentEvents.data) {
+      fetchRecentEvents();
+    }
+  }, [showRecentEvents, recentEvents.data, fetchRecentEvents]);
+
+  const runConnectionCheck = useCallback(async () => {
     const endpoints = [
-      { key: 'health', path: '/health' },
-      { key: 'ping', path: '/ping' },
-      { key: 'version', path: '/version' },
-      { key: 'archive', path: '/archive' },
-      { key: 'items', path: '/items' },
+      { key: 'health', path: '/health', label: '/api/health' },
+      { key: 'ping', path: '/ping', label: '/api/ping' },
+      { key: 'version', path: '/version', label: '/api/version' },
+      { key: 'archive', path: '/archive', label: '/api/archive' },
+      { key: 'items', path: '/items', label: '/api/items' },
+      {
+        key: 'openclawWatchdog',
+        path: '/openclaw/watchdog-status',
+        label: '/api/openclaw/watchdog-status',
+        deriveOk: (response) => Boolean(response?.available) && response?.summary?.state !== 'degraded',
+        deriveMessage: formatWatchdogMessage,
+      },
     ];
 
     setConnectionStatus((prev) => ({
@@ -82,44 +167,114 @@ export default function AdminPage() {
     for (const endpoint of endpoints) {
       try {
         const res = await apiGet(endpoint.path);
+        const derivedOk = typeof endpoint.deriveOk === 'function'
+          ? endpoint.deriveOk(res)
+          : res.ok !== false;
+        const derivedMessage = typeof endpoint.deriveMessage === 'function'
+          ? endpoint.deriveMessage(res)
+          : (res.message || res.status || res.error || '');
+
         results[endpoint.key] = {
-          ok: res.ok !== false,
+          ok: derivedOk,
           status: res.status || 200,
-          message: res.message || res.status || res.error || '',
+          message: derivedMessage,
+          label: endpoint.label,
         };
       } catch (err) {
         results[endpoint.key] = {
           ok: false,
           status: 'error',
           message: err.message || 'Request failed',
+          label: endpoint.label,
         };
       }
     }
 
+    const now = Date.now();
     setConnectionStatus({
       loading: false,
-      checkedAt: new Date().toLocaleString(),
+      checkedAt: new Date(now).toLocaleString(),
+      checkedAtMs: now,
       apiBase: ENV.API_URL,
       results,
     });
+  }, [formatWatchdogMessage]);
+
+  const isConnectionStatusStale =
+    Boolean(connectionStatus.checkedAtMs) &&
+    Date.now() - connectionStatus.checkedAtMs > staleThresholdMs;
+
+  const getOverallHealthStatus = () => {
+    if (connectionStatus.loading) return 'loading';
+    if (!connectionStatus.checkedAtMs) return 'unknown';
+    if (isConnectionStatusStale) return 'stale';
+    
+    const results = Object.values(connectionStatus.results || {});
+    if (!results.length) return 'unknown';
+    
+    const failedCount = results.filter(r => !r.ok).length;
+    const totalCount = results.length;
+    
+    if (failedCount === 0) return 'healthy';
+    if (failedCount === totalCount) return 'error';
+    return 'degraded';
+  };
+
+  const overallHealth = getOverallHealthStatus();
+
+  const getHealthTooltip = () => {
+    const baseText = 'Connection status';
+    const statusMap = {
+      healthy: '✅ All systems healthy',
+      degraded: '⚠️ Some endpoints failing',
+      error: '❌ All endpoints failing',
+      stale: '⏳ Data is stale',
+      loading: '⏳ Checking...',
+      unknown: '❓ Status unknown'
+    };
+    return `${baseText} • ${statusMap[overallHealth] || statusMap.unknown}`;
   };
 
   useEffect(() => {
     runConnectionCheck();
-  }, []);
-  const loadEntriesFromServer = async () => {
-    try {
-      const response = await fetchArchiveEntries({ limit: 100 });
-      if (response.ok && Array.isArray(response.items)) {
-        setSavedEntries(response.items);
-      } else {
-        setSavedEntries([]);
-      }
-    } catch (err) {
-      console.error('Failed to load entries from server:', err);
-      setSavedEntries([]);
+  }, [runConnectionCheck]);
+
+  useEffect(() => {
+    if (!showConnectionStatus) {
+      return undefined;
     }
-  };
+
+    runConnectionCheck();
+    const intervalId = setInterval(() => {
+      runConnectionCheck();
+    }, 60000);
+
+    return () => clearInterval(intervalId);
+  }, [showConnectionStatus, runConnectionCheck]);
+
+  // Keyboard shortcuts for tab navigation (Alt+1 through Alt+8)
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const handleKeyDown = (e) => {
+      // Only trigger if Alt key is pressed (without Ctrl or Shift to avoid conflicts)
+      if (!e.altKey || e.ctrlKey || e.shiftKey) return;
+
+      const tabs = ['dashboard', 'archive', 'marketplace', 'users', 'attribution', 'payouts', 'cloud', 'api', 'health', 'openclaw', 'bounty-hunter', 'settings'];
+      let key = parseInt(e.key);
+      // Support Alt+0 for the last tab (settings)
+      if (e.key === '0') key = tabs.length;
+
+      if (key >= 1 && key <= tabs.length) {
+        e.preventDefault();
+        setActiveTab(tabs[key - 1]);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isAuthenticated]);
+  
   const handleLogin = async (e) => {
     e.preventDefault();
     // Trim whitespace from inputs
@@ -129,25 +284,21 @@ export default function AdminPage() {
       setIsSubmitting(true);
       setError('');
       try {
-        const res = await apiFetch('/admin/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: trimmedUsername, password: trimmedPassword })
-        });
-        if (res.ok) {
-          setIsAuthenticated(true);
-          sessionStorage.setItem('admin-auth', 'authenticated');
-          sessionStorage.setItem('admin-auth-version', 'v2');
-          setUsername('');
-          setPassword('');
-          setError('');
-        } else {
-          const data = await res.json().catch(() => ({}));
-          setError(data.message || 'Invalid username or password. Access denied.');
-          setPassword('');
-        }
+        // Use the dedicated admin/login endpoint which validates ADMIN_USERNAME/ADMIN_PASSWORD env vars.
+        // This is DB-independent and always returns a token with role:'admin' embedded.
+        const data = await apiPost('/admin/login', { username: trimmedUsername, password: trimmedPassword });
+        if (!data?.ok || !data?.token) throw new Error(data?.message || 'Invalid credentials');
+        setToken(data.token);
+        setIsAuthenticated(true);
+        sessionStorage.setItem('admin-auth', 'authenticated');
+        sessionStorage.setItem('admin-auth-version', 'v2');
+        setUsername('');
+        setPassword('');
+        setError('');
       } catch (err) {
-        setError('Network error. Please try again.');
+        const msg = err?.response?.data?.message || err.message || 'Invalid username or password. Access denied.';
+        setError(msg);
+        setPassword('');
       } finally {
         setIsSubmitting(false);
       }
@@ -157,199 +308,22 @@ export default function AdminPage() {
     setIsAuthenticated(false);
     sessionStorage.removeItem('admin-auth');
     sessionStorage.removeItem('admin-auth-version');
+    clearToken();
     setUsername('');
     setPassword('');
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value,
-      // Auto-calculate word count for content
-      ...(name === 'content' ? { wordCount: value.trim().split(/\s+/).length.toString() } : {})
-    }));
-  };
-
-  const parseMediaUrls = (value) =>
-    value
-      .split(/[\n,]+/)
-      .map((item) => item.trim())
-      .filter(Boolean);
-
-  const getCloudinaryConfig = () => {
-    const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
-    const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
-    return { cloudName, uploadPreset };
-  };
-
-  const uploadMediaFiles = async (files) => {
-    const { cloudName, uploadPreset } = getCloudinaryConfig();
-    if (!cloudName || !uploadPreset) {
-      setMediaError('Missing Cloudinary config. Set VITE_CLOUDINARY_CLOUD_NAME and VITE_CLOUDINARY_UPLOAD_PRESET.');
-      return;
-    }
-    if (!files?.length) return;
-
-    setMediaError('');
-    setUploadingMedia(true);
-
-    try {
-      const uploads = await Promise.all(
-        Array.from(files).map(async (file) => {
-          const form = new FormData();
-          form.append('file', file);
-          form.append('upload_preset', uploadPreset);
-          const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
-            method: 'POST',
-            body: form,
-          });
-          const data = await res.json();
-          if (!res.ok) {
-            throw new Error(data?.error?.message || 'Upload failed');
-          }
-          return data.secure_url;
-        })
-      );
-
-      setFormData((prev) => {
-        const existing = prev.mediaUrls ? `${prev.mediaUrls}\n` : '';
-        return { ...prev, mediaUrls: `${existing}${uploads.join('\n')}`.trim() };
-      });
-    } catch (err) {
-      setMediaError(err.message || 'Upload failed');
-    } finally {
-      setUploadingMedia(false);
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setApiError('');
-    setIsSubmitting(true);
-    
-    try {
-      if (editingEntry) {
-        // For now, editing is not supported via API - show message
-        setApiError('Editing existing entries is not yet supported. Please create a new entry.');
-        setIsSubmitting(false);
-        return;
-      } else {
-        // Create new entry via API
-        const entryData = {
-          title: formData.title,
-          category: formData.category,
-          description: formData.description,
-          content: formData.content,
-          wordCount: formData.wordCount,
-          media: parseMediaUrls(formData.mediaUrls),
-        };
-
-        const result = await createArchiveEntry(entryData);
-        
-        if (!result.ok) {
-          setApiError(`Failed to create entry: ${result.error}`);
-          setIsSubmitting(false);
-          return;
-        }
-
-        // Success - refresh entries
-        await loadEntriesFromServer();
-      }
-
-      // Show success message
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 3000);
-
-      // Reset form
-      setFormData({
-        title: '',
-        category: 'Personal',
-        description: '',
-        content: '',
-        wordCount: '0',
-        mediaUrls: ''
-      });
-      setApiError('');
-    } catch (err) {
-      setApiError(`Error: ${err.message}`);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleEdit = (entry) => {
-    setEditingEntry(entry);
-    setFormData({
-      title: entry.title,
-      category: entry.category,
-      description: entry.description,
-      content: entry.content,
-      wordCount: entry.wordCount,
-      mediaUrls: Array.isArray(entry.media) ? entry.media.join('\n') : ''
-    });
-    // Scroll to form
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleCancelEdit = () => {
-    setEditingEntry(null);
-    setFormData({
-      title: '',
-      category: 'Personal',
-      description: '',
-      content: '',
-      wordCount: '0',
-      mediaUrls: ''
-    });
-  };
-
-  const handleDelete = async (id, title) => {
-    // Show custom confirmation modal
-    setDeleteConfirm({ id, title });
-  };
-
-  const confirmDeleteAction = async () => {
-    if (!deleteConfirm) return;
-    
-    const { id } = deleteConfirm;
-    
-    try {
-      setIsSubmitting(true);
-      const result = await deleteArchiveEntry(id);
-      
-      if (result.ok) {
-        setSavedEntries(prev => prev.filter(entry => entry._id !== id && entry.id !== id));
-        setShowSuccess(true);
-        setTimeout(() => setShowSuccess(false), 3000);
-        setDeleteConfirm(null);
-      } else {
-        setApiError(result.error || 'Failed to delete entry');
-        setTimeout(() => setApiError(''), 5000);
-        setDeleteConfirm(null);
-      }
-    } catch (err) {
-      setApiError(err.message || 'Error deleting entry');
-      setTimeout(() => setApiError(''), 5000);
-      setDeleteConfirm(null);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const cancelDelete = () => {
-    setDeleteConfirm(null);
   };
 
   // Login screen
   if (!isAuthenticated) {
     return (
-      <div className={`admin-page ${darkMode ? 'dark-theme' : 'light-theme'}`}>
+      <div className="admin-page">
         <button 
           className="theme-toggle login-theme-toggle" 
           onClick={() => {
-            setDarkMode(!darkMode);
-            localStorage.setItem('archive-theme', !darkMode ? 'dark' : 'light');
+            const newMode = !darkMode;
+            setDarkMode(newMode);
+            localStorage.setItem('theme', newMode ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', newMode ? 'dark' : 'light');
           }}
           aria-label="Toggle theme"
           title="Toggle light/dark theme"
@@ -378,9 +352,15 @@ export default function AdminPage() {
                 className="login-input"
                 required
               />
-              {error && <div className="error-message">{error}</div>}
-              <button type="submit" className="login-btn">
-                Access Admin Panel
+              {error ? (
+                <ErrorBanner
+                  message={error}
+                  onRetry={() => setError('')}
+                  onDismiss={() => setError('')}
+                />
+              ) : null}
+              <button type="submit" className="login-btn" disabled={isSubmitting}>
+                {isSubmitting ? 'Signing in…' : 'Access Admin Panel'}
               </button>
             </form>
           </div>
@@ -392,13 +372,19 @@ export default function AdminPage() {
   // Admin panel
   return (
     <>
-      <div className={`admin-page authenticated ${darkMode ? 'dark-theme' : 'light-theme'}`}>
+      <div className="admin-page authenticated">
         <div className="admin-header">
           <div className="header-content">
             <h1>⚙️ Archive Admin Panel</h1>
             <div className="header-actions">
               <Link to="/" className="home-btn">
                 🏠 Home
+              </Link>
+              <Link to="/streams" className="header-btn" title="Livestreams">
+                📺 Streams
+              </Link>
+              <Link to="/deals" className="header-btn" title="Deals">
+                🤝 Deals
               </Link>
               <button 
                 className="header-btn refresh-btn"
@@ -420,8 +406,10 @@ export default function AdminPage() {
               <button 
                 className="theme-toggle" 
                 onClick={() => {
-                  setDarkMode(!darkMode);
-                  localStorage.setItem('archive-theme', !darkMode ? 'dark' : 'light');
+                  const newMode = !darkMode;
+                  setDarkMode(newMode);
+                  localStorage.setItem('theme', newMode ? 'dark' : 'light');
+                  document.documentElement.setAttribute('data-theme', newMode ? 'dark' : 'light');
                 }}
                 aria-label="Toggle theme"
                 title="Toggle light/dark theme"
@@ -432,9 +420,10 @@ export default function AdminPage() {
                 className="connection-status-toggle" 
                 onClick={() => setShowConnectionStatus(!showConnectionStatus)}
                 aria-label="Toggle connection status"
-                title="Connection status"
+                title={getHealthTooltip()}
               >
                 🔌
+                <span className={`health-indicator health-indicator--${overallHealth}`} aria-hidden="true"></span>
               </button>
             </div>
             {/* Connection Status Dropdown */}
@@ -452,6 +441,14 @@ export default function AdminPage() {
                       Last check: {connectionStatus.checkedAt}
                     </div>
                   )}
+                  {isConnectionStatusStale && (
+                    <div className="connection-updated" role="status" aria-live="polite">
+                      ⚠️ Data may be stale (older than {staleThresholdMinutes} min)
+                    </div>
+                  )}
+                  <div className="connection-updated">
+                    Auto-refresh: every 60s while open
+                  </div>
                   <div className="connection-token">
                     <label htmlFor="adminToken">Admin token (optional)</label>
                     <input
@@ -463,6 +460,130 @@ export default function AdminPage() {
                     />
                     <small>Used only for /api/admin/status check.</small>
                   </div>
+
+                  {/* OpenClaw Summary Section */}
+                  {connectionStatus.results?.openclawWatchdog && (
+                    <div className="openclaw-summary">
+                      <div className="openclaw-summary__header">
+                        <h3>🔗 OpenClaw Gateway</h3>
+                        <span className={`openclaw-summary__status ${connectionStatus.results.openclawWatchdog.ok ? 'ok' : 'bad'}`}>
+                          {connectionStatus.results.openclawWatchdog.ok ? '✓ Active' : '✗ Issue'}
+                        </span>
+                      </div>
+                      <div className="openclaw-summary__details">
+                        {connectionStatus.results.openclawWatchdog.message && (
+                          <p className="openclaw-summary__message">
+                            {connectionStatus.results.openclawWatchdog.message}
+                          </p>
+                        )}
+                        {connectionStatus.results.openclawWatchdog.data?.summary && (
+                          <div className="openclaw-summary__metrics">
+                            <div className="openclaw-metric">
+                              <span className="openclaw-metric__label">State:</span>
+                              <span className="openclaw-metric__value">
+                                {connectionStatus.results.openclawWatchdog.data.summary.state || 'unknown'}
+                              </span>
+                            </div>
+                            <div className="openclaw-metric">
+                              <span className="openclaw-metric__label">Errors:</span>
+                              <span className="openclaw-metric__value">
+                                {connectionStatus.results.openclawWatchdog.data.summary.errorCountWindow ?? 0}
+                              </span>
+                            </div>
+                            <div className="openclaw-metric">
+                              <span className="openclaw-metric__label">Alerts:</span>
+                              <span className="openclaw-metric__value">
+                                {connectionStatus.results.openclawWatchdog.data.summary.alertCountWindow ?? 0}
+                              </span>
+                            </div>
+                            {connectionStatus.results.openclawWatchdog.data.summary.lastEventAt && (
+                              <div className="openclaw-metric">
+                                <span className="openclaw-metric__label">Last Event:</span>
+                                <span className="openclaw-metric__value">
+                                  {connectionStatus.results.openclawWatchdog.data.summary.lastEventAt}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      <div className="openclaw-summary__actions">
+                        <button
+                          className="openclaw-test-button"
+                          onClick={handleTestDispatch}
+                          disabled={dispatchTestState.loading}
+                        >
+                          {dispatchTestState.loading ? 'Testing...' : 'Test Dispatch'}
+                        </button>
+                        <button
+                          className="openclaw-test-button openclaw-test-button--secondary"
+                          onClick={toggleRecentEvents}
+                        >
+                          {showRecentEvents ? '📋 Hide Activity' : '📋 View Activity'}
+                        </button>
+                        {dispatchTestState.message && (
+                          <span className="openclaw-test-message">{dispatchTestState.message}</span>
+                        )}
+                      </div>
+
+                      {/* Recent Events Viewer */}
+                      {showRecentEvents && (
+                        <div className="openclaw-events">
+                          <div className="openclaw-events__header">
+                            <h4>Recent Activity</h4>
+                            <button 
+                              className="openclaw-events__refresh"
+                              onClick={fetchRecentEvents}
+                              disabled={recentEvents.loading}
+                              title="Refresh events"
+                            >
+                              🔄
+                            </button>
+                          </div>
+                          
+                          {recentEvents.loading && (
+                            <div className="openclaw-events__loading">
+                              <LoadingDots size="small" label="Loading events..." />
+                            </div>
+                          )}
+                          
+                          {recentEvents.error && (
+                            <div className="openclaw-events__error">
+                              ⚠️ {recentEvents.error}
+                            </div>
+                          )}
+                          
+                          {recentEvents.data && recentEvents.data.length === 0 && (
+                            <div className="openclaw-events__empty">
+                              No recent events found
+                            </div>
+                          )}
+                          
+                          {recentEvents.data && recentEvents.data.length > 0 && (
+                            <div className="openclaw-events__list">
+                              {recentEvents.data.slice(0, 15).map((event) => (
+                                <div 
+                                  key={event.id} 
+                                  className={`openclaw-event openclaw-event--${event.level.toLowerCase()}`}
+                                >
+                                  <div className="openclaw-event__meta">
+                                    <span className="openclaw-event__level">{event.level}</span>
+                                    <span className="openclaw-event__time">
+                                      {event.timestamp || 'n/a'}
+                                    </span>
+                                  </div>
+                                  <div className="openclaw-event__message">
+                                    {event.message}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   <ul className="connection-list">
                     {['health', 'ping', 'version', 'archive', 'items'].map((key) => {
                       const item = connectionStatus.results[key];
@@ -470,7 +591,7 @@ export default function AdminPage() {
                         <li key={key} className={`connection-item ${item?.ok ? 'ok' : 'bad'}`}>
                           <div className="connection-item__row">
                             <span className="connection-item__status-dot" aria-hidden="true"></span>
-                            <span className="connection-item__name">/api/{key}</span>
+                            <span className="connection-item__name">{item?.label || `/api/${key}`}</span>
                             <span className="connection-item__status">
                               {item ? (item.ok ? 'OK' : `Fail (${item.status})`) : '—'}
                             </span>
@@ -487,217 +608,94 @@ export default function AdminPage() {
             )}
           </div>
         </div>
+        <AdminNav />
+        <AdminTabs activeTab={activeTab} onTabChange={setActiveTab} />
         <div className="admin-container">
-          <div className="admin-sidebar">
-            <div className="sidebar-section">
-              <h2>📊 Statistics</h2>
-              <div className="stat-item">
-                <span>Original Entries:</span>
-                <strong>17</strong>
-              </div>
-              <div className="stat-item">
-                <span>Custom Entries:</span>
-                <strong>{savedEntries.length}</strong>
-              </div>
-              <div className="stat-item">
-                <span>Total Entries:</span>
-                <strong>{17 + savedEntries.length}</strong>
-              </div>
-            </div>
-            <div className="sidebar-section">
-              <h2>📝 Your Entries</h2>
-              {savedEntries.length === 0 ? (
-                <p className="empty-message">No custom entries yet</p>
-              ) : (
-                <div className="entries-list">
-                  {savedEntries.map(entry => (
-                    <div 
-                      key={entry.id} 
-                      className={`entry-preview ${editingEntry?.id === entry.id ? 'active' : ''}`}
-                      onClick={() => handleEdit(entry)}
-                    >
-                      <div className="entry-preview-header">
-                        <strong>{entry.title}</strong>
-                        <div className="entry-actions">
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDelete(entry._id || entry.id, entry.title);
-                            }}
-                            className="delete-btn"
-                            title="Delete entry"
-                          >
-                            🗑️
-                          </button>
-                        </div>
-                      </div>
-                      <span className="entry-category">{entry.category}</span>
-                      <span className="entry-words">{entry.wordCount} words</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-          <div className="admin-main">
-            <div className="form-card">
-              <h2>{editingEntry ? '✏️ Edit Archive Entry' : '✍️ Create New Archive Entry'}</h2>
-              {editingEntry && (
-                <div className="info-message">
-                  📝 Editing: <strong>{editingEntry.title}</strong>
-                  <button onClick={handleCancelEdit} className="cancel-edit-btn">✕ Cancel</button>
-                </div>
-              )}
-              {showSuccess && (
-                <div className="success-message">
-                  ✅ Entry {editingEntry ? 'updated' : 'saved'} successfully! It will appear in the archive library.
-                </div>
-              )}
-              {apiError && (
-                <div className="error-message" style={{
-                  background: '#fee',
-                  color: '#c33',
-                  padding: '12px',
-                  borderRadius: '8px',
-                  marginBottom: '16px',
-                  border: '1px solid #fcc'
-                }}>
-                  ❌ {apiError}
-                </div>
-              )}
-              <form onSubmit={handleSubmit}>
-                {/* Admin code input removed: session-based auth only */}
-                <div className="form-group">
-                  <label htmlFor="title">Title *</label>
-                  <input
-                    type="text"
-                    id="title"
-                    name="title"
-                    value={formData.title}
-                    onChange={handleInputChange}
-                    placeholder="Archive Entry 018: My New Story"
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="category">Category *</label>
-                  <select
-                    id="category"
-                    name="category"
-                    value={formData.category}
-                    onChange={handleInputChange}
-                    required
-                  >
-                    <option value="Fiction">Fiction</option>
-                    <option value="Spiritual">Spiritual</option>
-                    <option value="Technology">Technology</option>
-                    <option value="Business">Business</option>
-                    <option value="Personal">Personal</option>
-                    <option value="Philosophy">Philosophy</option>
-                    <option value="Wisdom">Wisdom</option>
-                    <option value="Architecture">Architecture</option>
-                    <option value="Strategic">Strategic</option>
-                    <option value="Index">Index</option>
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label htmlFor="description">Description *</label>
-                  <textarea
-                    id="description"
-                    name="description"
-                    value={formData.description}
-                    onChange={handleInputChange}
-                    placeholder="A brief description of this archive entry..."
-                    rows="2"
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="mediaUrls">Media URLs (optional)</label>
-                  <textarea
-                    id="mediaUrls"
-                    name="mediaUrls"
-                    value={formData.mediaUrls}
-                    onChange={handleInputChange}
-                    placeholder="https://example.com/photo.jpg\nhttps://example.com/video.mp4"
-                    rows="3"
-                  />
-                  <small style={{ color: '#666', fontSize: '0.85em' }}>
-                    Add one URL per line or separate with commas.
-                  </small>
-                  <div
-                    className="media-uploader"
-                    onDragOver={(e) => e.preventDefault()}
-                    onDrop={(e) => {
-                      e.preventDefault();
-                      uploadMediaFiles(e.dataTransfer.files);
-                    }}
-                  >
-                    <div className="media-uploader__text">
-                      Drag & drop files here, or select files to upload
-                    </div>
-                    <label className="media-uploader__button">
-                      {uploadingMedia ? 'Uploading…' : 'Choose files'}
-                      <input
-                        type="file"
-                        accept="image/*,video/*,audio/*"
-                        multiple
-                        disabled={uploadingMedia}
-                        onChange={(e) => uploadMediaFiles(e.target.files)}
-                      />
-                    </label>
-                    {mediaError && <div className="media-uploader__error">{mediaError}</div>}
-                  </div>
-                </div>
-                <div className="form-group">
-                  <label htmlFor="content">Content * (Markdown supported)</label>
-                  <textarea
-                    id="content"
-                    name="content"
-                    value={formData.content}
-                    onChange={handleInputChange}
-                    placeholder="# Your Title Here\n\nWrite your content here...\n\n## Section\nYour text...\n\n- Bullet points\n- Are supported\n\n**Bold** and *italic* text work too."
-                    rows="15"
-                    required
-                  />
-                  <div className="word-count">
-                    Word count: {formData.wordCount}
-                  </div>
-                </div>
-                <button type="submit" className="submit-btn" disabled={isSubmitting}>
-                  {isSubmitting ? '⏳ Publishing...' : (editingEntry ? '✅ Update Entry' : '💾 Publish to Live Site')}
-                </button>
-              </form>
-            </div>
-          </div>
+          {/* Dashboard Tab - Overview */}
+          {activeTab === 'dashboard' && (
+            <ErrorBoundary>
+              <DashboardTab onNavigateTab={setActiveTab} />
+            </ErrorBoundary>
+          )}
+
+          {/* Archive Tab */}
+          {activeTab === 'archive' && (
+            <ErrorBoundary>
+              <ArchiveTab />
+            </ErrorBoundary>
+          )}
+
+          {/* Marketplace Tab */}
+          {activeTab === 'marketplace' && (
+            <ErrorBoundary>
+              <MarketplaceTab />
+            </ErrorBoundary>
+          )}
+
+          {/* Users Tab */}
+          {activeTab === 'users' && (
+            <ErrorBoundary>
+              <UsersTab />
+            </ErrorBoundary>
+          )}
+
+          {/* Attribution Tab */}
+          {activeTab === 'attribution' && (
+            <ErrorBoundary>
+              <AttributionTab />
+            </ErrorBoundary>
+          )}
+
+          {/* Payouts Tab */}
+          {activeTab === 'payouts' && (
+            <ErrorBoundary>
+              <PayoutTab />
+            </ErrorBoundary>
+          )}
+
+          {/* Cloud Storage Tab */}
+          {activeTab === 'cloud' && (
+            <ErrorBoundary>
+              <CloudStorageTab />
+            </ErrorBoundary>
+          )}
+
+          {/* API Documentation Tab */}
+          {activeTab === 'api' && (
+            <ErrorBoundary>
+              <ApiDocsTab />
+            </ErrorBoundary>
+          )}
+
+          {/* Health Tab */}
+          {activeTab === 'health' && (
+            <ErrorBoundary>
+              <HealthTab />
+            </ErrorBoundary>
+          )}
+
+          {/* Settings Tab */}
+          {activeTab === 'settings' && (
+            <ErrorBoundary>
+              <SettingsTab />
+            </ErrorBoundary>
+          )}
+
+          {/* OpenClaw Tab */}
+          {activeTab === 'openclaw' && (
+            <ErrorBoundary>
+              <OpenClawTab />
+            </ErrorBoundary>
+          )}
+
+          {/* Bounty Hunter Tab */}
+          {activeTab === 'bounty-hunter' && (
+            <ErrorBoundary>
+              <BountyHunterTab />
+            </ErrorBoundary>
+          )}
         </div>
       </div>
-      {/* Delete Confirmation Modal */}
-      {deleteConfirm && (
-        <div className="modal-overlay">
-          <div className="delete-confirmation-bubble">
-            <div className="bubble-icon">⚠️</div>
-            <h3>Delete Entry?</h3>
-            <p className="entry-title-confirm">{deleteConfirm.title}</p>
-            <p className="warning-text">This action cannot be undone.</p>
-            <div className="button-group">
-              <button 
-                onClick={cancelDelete}
-                className="cancel-btn"
-              >
-                Cancel
-              </button>
-              <button 
-                onClick={confirmDeleteAction}
-                className="confirm-delete-btn"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? '⏳ Deleting...' : '🗑️ Delete'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }
