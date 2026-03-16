@@ -59,7 +59,12 @@
     "db:seed": "node backend/seed.js",
     "contracts:compile": "npm --prefix contracts run compile",
     "contracts:node": "npm --prefix contracts run node",
-    "contracts:deploy:local": "npm --prefix contracts run deploy:local"
+    "contracts:deploy:local": "npm --prefix contracts run deploy:local",
+    "contracts:deploy:amoy": "npm --prefix contracts run deploy:amoy",
+    "contracts:deploy:sepolia": "npm --prefix contracts run deploy:sepolia",
+    "contracts:deploy:polygon": "npm --prefix contracts run deploy:polygon",
+    "deploy:production": "node scripts/deploy-production.mjs",
+    "deploy:production:dry": "node scripts/deploy-production.mjs --dry-run"
   },
   "dependencies": {
     "@pinata/sdk": "^2.1.0",

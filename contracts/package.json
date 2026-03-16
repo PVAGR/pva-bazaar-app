@@ -7,7 +7,13 @@
     "test": "node ./scripts/run-hardhat.js test",
     "compile": "node ./scripts/run-hardhat.js compile",
     "node": "node ./scripts/run-hardhat.js node",
-    "deploy:local": "node ./scripts/run-hardhat.js run scripts/deploy.js --network localhost"
+    "deploy:local": "node ./scripts/run-hardhat.js run scripts/deploy.js --network localhost",
+    "deploy:sepolia": "node ./scripts/run-hardhat.js run scripts/deploy.js --network sepolia",
+    "deploy:amoy": "node ./scripts/run-hardhat.js run scripts/deploy.js --network polygonAmoy",
+    "deploy:polygon": "node ./scripts/run-hardhat.js run scripts/deploy.js --network polygon",
+    "verify:sepolia": "node ./scripts/run-hardhat.js verify --network sepolia",
+    "verify:amoy": "node ./scripts/run-hardhat.js verify --network polygonAmoy",
+    "verify:polygon": "node ./scripts/run-hardhat.js verify --network polygon"
   },
   "keywords": [],
   "author": "",
