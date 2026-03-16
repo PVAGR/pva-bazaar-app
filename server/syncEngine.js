@@ -1,5 +1,6 @@
 const cron = require('node-cron');
 const db = require('./db');
+const royaltyTracker = require('./royaltyTracker');
 const EBayAdapter = require('./adapters/eBayAdapter');
 const AmazonAdapter = require('./adapters/AmazonAdapter');
 const EtsyAdapter = require('./adapters/EtsyAdapter');
@@ -79,6 +80,29 @@ class SyncEngine {
         Number(saleDetails.price || 0),
         Number(artifactId),
       );
+
+      try {
+        const saleType = String(
+          saleDetails.saleType || (String(saleDetails.platform || '').toUpperCase() === 'WEBSITE' ? 'PRIMARY' : 'SECONDARY'),
+        ).toUpperCase();
+
+        royaltyTracker.recordRoyaltyEvent({
+          artifactId: Number(artifactId),
+          saleType,
+          platform: String(saleDetails.platform || 'UNKNOWN').toUpperCase(),
+          salePrice: Number(saleDetails.price || 0),
+          royaltyRate: saleDetails.royaltyRate,
+          creatorAddress: artifact.creator_address || '',
+          buyerAddress: String(saleDetails.buyerAddress || ''),
+          txHash: String(saleDetails.txHash || ''),
+          metadata: {
+            syncSource: 'syncEngine',
+            soldAt: new Date().toISOString(),
+          },
+        });
+      } catch (royaltyError) {
+        console.warn(`Royalty tracking failed for artifact ${artifactId}: ${royaltyError.message}`);
+      }
 
       const sku = `ARTIFACT-${artifactId}`;
       const results = {

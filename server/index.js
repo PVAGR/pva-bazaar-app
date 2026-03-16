@@ -12,6 +12,7 @@ const db = require('./db');
 const imageProcessor = require('./imageProcessor');
 const ipfsService = require('./ipfsService');
 const syncEngine = require('./syncEngine');
+const royaltyTracker = require('./royaltyTracker');
 
 async function syncMintToMainApp({
   itemIdOrSlug,
@@ -257,6 +258,100 @@ app.get('/api/artifacts/:id', (req, res) => {
   return res.json(addArtifactGatewayUrls(artifact));
 });
 
+app.get('/api/analytics/dashboard/:creatorAddress', (req, res) => {
+  try {
+    const { creatorAddress } = req.params;
+    const days = Number(req.query.days || 365);
+    const payload = royaltyTracker.getCreatorDashboard(creatorAddress, { days });
+    return res.json({ ok: true, dashboard: payload });
+  } catch (error) {
+    return res.status(400).json({ ok: false, error: error.message });
+  }
+});
+
+app.get('/api/analytics/royalty-history/:creatorAddress', (req, res) => {
+  try {
+    const { creatorAddress } = req.params;
+    const limit = Number(req.query.limit || 100);
+    const offset = Number(req.query.offset || 0);
+    const payload = royaltyTracker.getRoyaltyHistory(creatorAddress, { limit, offset });
+    return res.json({ ok: true, history: payload });
+  } catch (error) {
+    return res.status(400).json({ ok: false, error: error.message });
+  }
+});
+
+app.get('/api/analytics/all-events', (req, res) => {
+  try {
+    const limit = Number(req.query.limit || 200);
+    const offset = Number(req.query.offset || 0);
+    const platform = String(req.query.platform || '');
+    const payload = royaltyTracker.getAllEvents({ limit, offset, platform });
+    return res.json({ ok: true, data: payload });
+  } catch (error) {
+    return res.status(400).json({ ok: false, error: error.message });
+  }
+});
+
+app.post('/api/analytics/record-sale', (req, res) => {
+  try {
+    const {
+      artifactId,
+      saleType = 'SECONDARY',
+      platform = 'UNKNOWN',
+      salePrice = 0,
+      royaltyRate,
+      creatorAddress = '',
+      buyerAddress = '',
+      txHash = '',
+      metadata = {},
+    } = req.body || {};
+
+    if (!creatorAddress && !artifactId) {
+      return res.status(400).json({ ok: false, error: 'artifactId or creatorAddress is required' });
+    }
+
+    let finalCreatorAddress = String(creatorAddress || '').trim();
+    if (!finalCreatorAddress && artifactId) {
+      const artifact = db.prepare('SELECT creator_address FROM artifacts WHERE id = ?').get(Number(artifactId));
+      finalCreatorAddress = String(artifact?.creator_address || '').trim();
+    }
+
+    if (!finalCreatorAddress) {
+      return res.status(400).json({ ok: false, error: 'Unable to resolve creator address' });
+    }
+
+    const event = royaltyTracker.recordRoyaltyEvent({
+      artifactId,
+      saleType,
+      platform,
+      salePrice,
+      royaltyRate,
+      creatorAddress: finalCreatorAddress,
+      buyerAddress,
+      txHash,
+      metadata,
+    });
+
+    return res.json({ ok: true, event });
+  } catch (error) {
+    return res.status(400).json({ ok: false, error: error.message });
+  }
+});
+
+app.get('/api/analytics/export/:creatorAddress', (req, res) => {
+  try {
+    const { creatorAddress } = req.params;
+    const csv = royaltyTracker.exportCreatorCsv(creatorAddress);
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="royalty-history-${creatorAddress}.csv"`);
+    return res.status(200).send(csv);
+  } catch (error) {
+    return res.status(400).json({ ok: false, error: error.message });
+  }
+});
+
 app.post('/api/artifacts/:id/list-external', async (req, res) => {
   try {
     const artifact = db.prepare('SELECT * FROM artifacts WHERE id = ?').get(Number(req.params.id));
@@ -397,6 +492,7 @@ app.post('/api/webhooks/website', async (req, res) => {
 
     const syncResult = await syncEngine.syncAllPlatforms(artifactId, {
       platform: 'WEBSITE',
+      saleType: 'PRIMARY',
       buyerAddress,
       txHash,
       price,
@@ -508,6 +604,7 @@ app.post('/api/mint', async (req, res) => {
 });
 
 syncEngine.startScheduledSync();
+royaltyTracker.initializeRoyaltyTables();
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {

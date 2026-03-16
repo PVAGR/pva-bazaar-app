@@ -26,6 +26,53 @@ db.exec(`
   )
 `);
 
+db.exec(`
+  CREATE TABLE IF NOT EXISTS royalty_events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    artifact_id INTEGER,
+    sale_type TEXT NOT NULL,
+    platform TEXT NOT NULL,
+    sale_price REAL NOT NULL DEFAULT 0,
+    royalty_rate REAL NOT NULL DEFAULT 0,
+    royalty_amount REAL NOT NULL DEFAULT 0,
+    creator_earning_amount REAL NOT NULL DEFAULT 0,
+    creator_address TEXT NOT NULL,
+    buyer_address TEXT,
+    tx_hash TEXT,
+    sale_timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+    metadata TEXT,
+    FOREIGN KEY (artifact_id) REFERENCES artifacts (id)
+  );
+
+  CREATE TABLE IF NOT EXISTS creator_earnings (
+    creator_address TEXT PRIMARY KEY,
+    total_earnings REAL NOT NULL DEFAULT 0,
+    total_royalties REAL NOT NULL DEFAULT 0,
+    total_primary_sales REAL NOT NULL DEFAULT 0,
+    total_secondary_sales REAL NOT NULL DEFAULT 0,
+    total_sales_count INTEGER NOT NULL DEFAULT 0,
+    last_sale_at DATETIME,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS platform_analytics (
+    platform TEXT PRIMARY KEY,
+    total_volume REAL NOT NULL DEFAULT 0,
+    total_royalties REAL NOT NULL DEFAULT 0,
+    total_creator_earnings REAL NOT NULL DEFAULT 0,
+    total_sales_count INTEGER NOT NULL DEFAULT 0,
+    last_sale_at DATETIME,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_royalty_events_creator_address
+    ON royalty_events (creator_address);
+  CREATE INDEX IF NOT EXISTS idx_royalty_events_sale_timestamp
+    ON royalty_events (sale_timestamp);
+  CREATE INDEX IF NOT EXISTS idx_royalty_events_platform
+    ON royalty_events (platform);
+`);
+
 // SQLite doesn't support IF NOT EXISTS on ADD COLUMN, so duplicate-column
 // errors are expected and safe to ignore in migration backfills.
 const migrations = [

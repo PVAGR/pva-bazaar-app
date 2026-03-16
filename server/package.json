@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
+    "smoke:phase6": "node scripts/phase6-smoke.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

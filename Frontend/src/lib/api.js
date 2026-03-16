@@ -612,3 +612,58 @@ export async function deleteArchiveEntry(id) {
     return { ok: false, error: err.message };
   }
 }
+
+export async function fetchCreatorRoyaltyDashboard(creatorAddress, { days = 365 } = {}) {
+  if (!creatorAddress) return { ok: false, error: 'Missing creator address' };
+  try {
+    const response = await apiGet(`/analytics/dashboard/${encodeURIComponent(creatorAddress)}?days=${encodeURIComponent(days)}`);
+    if (response && response.ok && response.dashboard) {
+      return { ok: true, dashboard: response.dashboard };
+    }
+    return { ok: false, error: response?.error || response?.message || 'Failed to load dashboard' };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+}
+
+export async function fetchCreatorRoyaltyHistory(creatorAddress, { limit = 100, offset = 0 } = {}) {
+  if (!creatorAddress) return { ok: false, error: 'Missing creator address', history: null };
+  try {
+    const params = new URLSearchParams();
+    params.set('limit', String(limit));
+    params.set('offset', String(offset));
+    const response = await apiGet(`/analytics/royalty-history/${encodeURIComponent(creatorAddress)}?${params.toString()}`);
+    if (response && response.ok && response.history) {
+      return { ok: true, history: response.history };
+    }
+    return { ok: false, error: response?.error || response?.message || 'Failed to load royalty history', history: null };
+  } catch (err) {
+    return { ok: false, error: err.message, history: null };
+  }
+}
+
+export async function recordRoyaltySale(payload = {}) {
+  try {
+    const response = await apiPost('/analytics/record-sale', payload);
+    if (response && response.ok) {
+      return { ok: true, event: response.event || null };
+    }
+    return { ok: false, error: response?.error || response?.message || 'Failed to record sale' };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+}
+
+export async function exportCreatorRoyaltyCsv(creatorAddress) {
+  if (!creatorAddress) return { ok: false, error: 'Missing creator address', csv: '' };
+  try {
+    const response = await api.get(`/analytics/export/${encodeURIComponent(creatorAddress)}`, {
+      responseType: 'text',
+      headers: { Accept: 'text/csv' },
+    });
+
+    return { ok: true, csv: String(response?.data || '') };
+  } catch (err) {
+    return { ok: false, error: err.message, csv: '' };
+  }
+}
