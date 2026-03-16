@@ -1,6 +1,8 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { SITE_TAGLINE } from '../lib/philosophy.js';
+import { useEffect, useState } from 'react';
+import NotificationBell from './NotificationBell.jsx';
 
 export default function Layout({ children }) {
   const location = useLocation();
@@ -15,6 +17,23 @@ export default function Layout({ children }) {
   const token =
     typeof window !== 'undefined' &&
     (localStorage.getItem('token') || localStorage.getItem('authToken') || localStorage.getItem('jwt'));
+
+    const [walletAddress, setWalletAddress] = useState(() => {
+      if (typeof window === 'undefined') return '';
+      return localStorage.getItem('walletAddress') || localStorage.getItem('defaultWalletAddress') || '';
+    });
+
+    useEffect(() => {
+      if (!token) { setWalletAddress(''); return; }
+      // Attempt to read wallet from stored profile preferences
+      try {
+        const raw = localStorage.getItem('userProfile');
+        const profile = raw ? JSON.parse(raw) : null;
+        const addr = profile?.preferences?.defaultWalletAddress || profile?.walletAddress || '';
+        if (addr) setWalletAddress(addr);
+      } catch { /* ignore */ }
+    }, [token]);
+
   return (
     <div className="layout">
       <a className="sr-only" href="#content">Skip to content</a>
@@ -37,6 +56,7 @@ export default function Layout({ children }) {
           {token
             ? <NavLink to="/account">Account</NavLink>
             : <><NavLink to="/login">Login</NavLink><NavLink to="/register">Register</NavLink></>}
+                  {token && walletAddress ? <NotificationBell recipientAddress={walletAddress} /> : null}
         </nav>
       </header>
       <main id="content" className="layout__main">

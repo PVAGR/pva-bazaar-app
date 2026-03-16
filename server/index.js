@@ -13,6 +13,7 @@ const imageProcessor = require('./imageProcessor');
 const ipfsService = require('./ipfsService');
 const syncEngine = require('./syncEngine');
 const royaltyTracker = require('./royaltyTracker');
+const notificationService = require('./notificationService');
 
 async function syncMintToMainApp({
   itemIdOrSlug,
@@ -333,6 +334,25 @@ app.post('/api/analytics/record-sale', (req, res) => {
       metadata,
     });
 
+    // Auto-notify creator
+    try {
+      const royaltyAmt = event?.royalty_amount ?? 0;
+      const salePriceNum = Number(salePrice || 0);
+      notificationService.createNotification({
+        recipientAddress: finalCreatorAddress,
+        type: saleType === 'PRIMARY' ? 'SALE' : 'ROYALTY',
+        title: saleType === 'PRIMARY' ? '🎉 Primary Sale Recorded' : '💰 Royalty Earned',
+        message: saleType === 'PRIMARY'
+          ? `Your artifact sold for $${salePriceNum.toFixed(2)} on ${platform}.`
+          : `Royalty of $${Number(royaltyAmt).toFixed(2)} earned on a $${salePriceNum.toFixed(2)} secondary sale via ${platform}.`,
+        referenceId: event?.id ?? null,
+        referenceType: 'royalty_event',
+      });
+    } catch (_notifErr) {
+      // Non-blocking — log but don't fail the response
+      console.warn('[notifications] Failed to create sale notification:', _notifErr?.message);
+    }
+
     return res.json({ ok: true, event });
   } catch (error) {
     return res.status(400).json({ ok: false, error: error.message });
@@ -600,6 +620,72 @@ app.post('/api/mint', async (req, res) => {
     });
   } catch (error) {
     return res.status(500).json({ error: 'Mint failed', details: error.message });
+  }
+});
+
+// ─── Notification endpoints ─────────────────────────────────────────────────
+
+// GET /api/notifications?recipientAddress=&limit=&offset=&unreadOnly=
+app.get('/api/notifications', (req, res) => {
+  try {
+    const recipientAddress = String(req.query.recipientAddress || '').trim();
+    if (!recipientAddress) return res.status(400).json({ ok: false, error: 'recipientAddress is required' });
+    const limit = Math.min(Number(req.query.limit || 50), 200);
+    const offset = Number(req.query.offset || 0);
+    const unreadOnly = req.query.unreadOnly === 'true' || req.query.unreadOnly === '1';
+    const result = notificationService.getNotifications(recipientAddress, { limit, offset, unreadOnly });
+    return res.json({ ok: true, ...result });
+  } catch (error) {
+    return res.status(400).json({ ok: false, error: error.message });
+  }
+});
+
+// GET /api/notifications/badge?recipientAddress= (fast unread-count only)
+app.get('/api/notifications/badge', (req, res) => {
+  try {
+    const recipientAddress = String(req.query.recipientAddress || '').trim();
+    if (!recipientAddress) return res.json({ ok: true, unreadCount: 0 });
+    const unreadCount = notificationService.getUnreadCount(recipientAddress);
+    return res.json({ ok: true, unreadCount });
+  } catch (error) {
+    return res.status(400).json({ ok: false, error: error.message });
+  }
+});
+
+// POST /api/notifications/mark-read  body: { recipientAddress, ids: [1,2,3] }
+app.post('/api/notifications/mark-read', (req, res) => {
+  try {
+    const { recipientAddress, ids = [] } = req.body || {};
+    if (!recipientAddress) return res.status(400).json({ ok: false, error: 'recipientAddress is required' });
+    notificationService.markRead(recipientAddress, ids);
+    return res.json({ ok: true });
+  } catch (error) {
+    return res.status(400).json({ ok: false, error: error.message });
+  }
+});
+
+// POST /api/notifications/mark-all-read  body: { recipientAddress }
+app.post('/api/notifications/mark-all-read', (req, res) => {
+  try {
+    const { recipientAddress } = req.body || {};
+    if (!recipientAddress) return res.status(400).json({ ok: false, error: 'recipientAddress is required' });
+    notificationService.markAllRead(recipientAddress);
+    return res.json({ ok: true });
+  } catch (error) {
+    return res.status(400).json({ ok: false, error: error.message });
+  }
+});
+
+// DELETE /api/notifications/:id?recipientAddress=
+app.delete('/api/notifications/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    const recipientAddress = String(req.query.recipientAddress || '').trim();
+    if (!recipientAddress) return res.status(400).json({ ok: false, error: 'recipientAddress is required' });
+    notificationService.deleteNotification(recipientAddress, id);
+    return res.json({ ok: true });
+  } catch (error) {
+    return res.status(400).json({ ok: false, error: error.message });
   }
 });
 

@@ -1,4 +1,4 @@
-import api from "./axios";
+﻿import api from "./axios";
 import { ENV } from "../config/env";
 import { getToken } from "./auth";
 
@@ -36,7 +36,7 @@ export async function apiUpload(path, formData) {
   if (token) {
     headers.Authorization = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
   }
-  // Do NOT set Content-Type — browser sets it with the boundary for multipart
+  // Do NOT set Content-Type â€” browser sets it with the boundary for multipart
 
   const response = await fetch(url, {
     method: 'POST',
@@ -668,6 +668,7 @@ export async function exportCreatorRoyaltyCsv(creatorAddress) {
   }
 }
 
+
 export async function fetchAllRoyaltyEvents({ limit = 200, offset = 0, platform = '' } = {}) {
   try {
     const params = new URLSearchParams();
@@ -681,5 +682,60 @@ export async function fetchAllRoyaltyEvents({ limit = 200, offset = 0, platform 
     return { ok: false, error: response?.error || 'Failed to load events', events: [], total: 0 };
   } catch (err) {
     return { ok: false, error: err.message, events: [], total: 0 };
+  }
+}
+
+// --- Notification helpers ---
+
+export async function fetchNotificationBadge(recipientAddress) {
+  try {
+    const response = await apiGet(`/notifications/badge?recipientAddress=${encodeURIComponent(recipientAddress)}`);
+    return { ok: true, unreadCount: response?.unreadCount ?? 0 };
+  } catch (err) {
+    return { ok: false, unreadCount: 0, error: err.message };
+  }
+}
+
+export async function fetchNotifications(recipientAddress, { limit = 50, offset = 0, unreadOnly = false } = {}) {
+  try {
+    const params = new URLSearchParams();
+    params.set('recipientAddress', recipientAddress);
+    params.set('limit', String(limit));
+    params.set('offset', String(offset));
+    if (unreadOnly) params.set('unreadOnly', '1');
+    const response = await apiGet(`/notifications?${params.toString()}`);
+    if (response && response.ok) {
+      return { ok: true, notifications: response.notifications || [], total: response.total || 0, unreadCount: response.unreadCount ?? 0 };
+    }
+    return { ok: false, notifications: [], total: 0, unreadCount: 0, error: response?.error };
+  } catch (err) {
+    return { ok: false, notifications: [], total: 0, unreadCount: 0, error: err.message };
+  }
+}
+
+export async function markNotificationsRead(recipientAddress, ids = []) {
+  try {
+    await apiPost('/notifications/mark-read', { recipientAddress, ids });
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+}
+
+export async function markAllNotificationsRead(recipientAddress) {
+  try {
+    await apiPost('/notifications/mark-all-read', { recipientAddress });
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+}
+
+export async function deleteNotification(recipientAddress, id) {
+  try {
+    await apiDelete(`/notifications/${encodeURIComponent(id)}?recipientAddress=${encodeURIComponent(recipientAddress)}`);
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err.message };
   }
 }

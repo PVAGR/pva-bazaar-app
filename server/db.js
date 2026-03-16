@@ -73,6 +73,23 @@ db.exec(`
     ON royalty_events (platform);
 `);
 
+db.exec(`
+  CREATE TABLE IF NOT EXISTS notifications (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    recipient_address TEXT NOT NULL,
+    type TEXT NOT NULL DEFAULT 'INFO',
+    title TEXT NOT NULL,
+    message TEXT NOT NULL,
+    reference_id INTEGER,
+    reference_type TEXT,
+    read INTEGER NOT NULL DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_notifications_recipient
+    ON notifications (recipient_address, read, created_at);
+`);
+
 // SQLite doesn't support IF NOT EXISTS on ADD COLUMN, so duplicate-column
 // errors are expected and safe to ignore in migration backfills.
 const migrations = [
