@@ -3,40 +3,9 @@ const bcrypt = require('bcryptjs');
 
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  username: { type: String, unique: true, sparse: true }, // optional; login by username or email
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  role: { type: String, enum: ['user', 'admin'], default: 'user' },
   profilePicture: { type: String, default: '' },
-  twitch: {
-    id: { type: String, default: '' },
-    login: { type: String, default: '' },
-    displayName: { type: String, default: '' },
-    connectedAt: { type: Date },
-  },
-  oauthTokens: {
-    // Encrypted provider tokens (never store raw tokens in plaintext).
-    // Shape: { [providerKey]: { payload: {v,iv,tag,data}, updatedAt } }
-    type: mongoose.Schema.Types.Mixed,
-    default: {},
-  },
-  preferences: {
-    defaultCountry: { type: String, default: '' },
-    defaultCurrency: { type: String, default: 'USD' },
-    defaultWalletAddress: { type: String, default: '' },
-    defaultTags: { type: String, default: '' }, // comma-separated
-    defaultStreamPlatform: { type: String, default: 'none' },
-    defaultPublicVisibility: { type: Boolean, default: true },
-    onboarding: {
-      dismissedAt: { type: Date },
-      completedAt: { type: Date },
-      lastSeenAt: { type: Date },
-    },
-    drafts: {
-      streams: { type: mongoose.Schema.Types.Mixed, default: null },
-      deals: { type: mongoose.Schema.Types.Mixed, default: null },
-    },
-  },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });

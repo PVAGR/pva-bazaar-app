@@ -1,14 +1,47 @@
-/* Uses global theme from magnum-opus.css */
+/* Theme Variables */
+.archive-library.dark-theme {
+  --bg-primary: linear-gradient(135deg, #0a0e27 0%, #1a1a3a 100%);
+  --bg-secondary: rgba(15, 15, 30, 0.8);
+  --bg-tertiary: rgba(20, 20, 40, 0.7);
+  --text-primary: #e0f2f1;
+  --text-secondary: #b2dfdb;
+  --text-muted: #80cbc4;
+  --accent: #26c6da;
+  --accent-hover: #4dd0e1;
+  --border: #00695c;
+  --border-accent: #26c6da;
+  --highlight: rgba(38, 198, 218, 0.15);
+  --highlight-strong: rgba(38, 198, 218, 0.25);
+}
+
+.archive-library.light-theme {
+  --bg-primary: linear-gradient(135deg, #1a4d2e 0%, #0f3a24 100%);
+  --bg-secondary: rgba(20, 60, 38, 0.95);
+  --bg-tertiary: rgba(26, 77, 46, 0.9);
+  --text-primary: #e8f5e9;
+  --text-secondary: #c8e6c9;
+  --text-muted: #a5d6a7;
+  --accent: #66bb6a;
+  --accent-hover: #81c784;
+  --border: #2e7d4e;
+  --border-accent: #66bb6a;
+  --highlight: rgba(102, 187, 106, 0.15);
+  --highlight-strong: rgba(102, 187, 106, 0.25);
+}
 
 .archive-library {
   min-height: 100vh;
-  height: auto;
+  height: 100vh;
   background: var(--bg-primary);
   color: var(--text-primary);
   margin: 0;
   padding: 0;
-  position: relative;
-  overflow: visible;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
   transition: background 0.3s ease, color 0.3s ease;
 }
 
@@ -141,15 +174,15 @@
   display: grid;
   grid-template-columns: 350px 1fr;
   gap: 0;
-  align-items: start;
+  height: calc(100vh - 180px);
+  overflow: hidden;
 }
 
 .archive-sidebar {
   background: rgba(0, 0, 0, 0.4);
   border-right: 1px solid #333;
-  position: sticky;
-  top: 0;
-  max-height: calc(100vh - 16px);
+  height: 100%;
+  max-height: calc(100vh - 200px);
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
@@ -182,7 +215,7 @@
   font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 1px;
-  color: var(--text-muted);
+  color: #888;
 }
 
 .category-btn {
@@ -231,7 +264,7 @@
   font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 1px;
-  color: var(--text-muted);
+  color: #888;
 }
 
 .entry-item {
@@ -272,7 +305,7 @@
   display: flex;
   gap: 0.75rem;
   font-size: 0.85rem;
-  color: var(--text-muted);
+  color: #888;
 }
 
 .entry-category {
@@ -281,9 +314,11 @@
 
 .archive-content {
   padding: 2.5rem;
-  overflow: visible;
-  height: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  height: 100%;
   scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
 }
 
 .archive-content::-webkit-scrollbar {
@@ -422,7 +457,7 @@
   display: flex;
   gap: 0.75rem;
   font-size: 0.9rem;
-  color: var(--text-muted);
+  color: #888;
   margin-top: 1rem;
 }
 
@@ -433,8 +468,7 @@
   max-width: 900px;
   letter-spacing: 0.01em;
 }
-.markdown-content h1 {
-  font-size: 2rem;
+.2rem;
   margin: 2.5rem 0 1.5rem;
   color: var(--accent);
   border-bottom: 2px solid var(--border);
@@ -565,17 +599,16 @@
     position: relative;
     height: auto;
     min-height: 100vh;
-    overflow: visible;
+    overflow: auto;
   }
 
   .archive-layout {
     grid-template-columns: 1fr;
     height: auto;
-    min-height: 0;
+    min-height: calc(100vh - 160px);
   }
 
   .archive-sidebar {
-    position: static;
     max-height: 400px;
     height: auto;
     border-right: none;

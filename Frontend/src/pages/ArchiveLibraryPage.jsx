@@ -7,12 +7,7 @@ function getCanonicalUrl(path = '') {
 }
 import { Link } from 'react-router-dom';
 import { fetchArchiveEntries } from '../lib/api';
-import { createLogger } from '../lib/logger';
-import { SkeletonArticle, SkeletonList } from '../components/SkeletonLoader.jsx';
-import LoadingSpinner from '../components/LoadingSpinner.jsx';
 import './ArchiveLibraryPage.css';
-
-const logger = createLogger('ArchiveLibrary');
 
 const archiveEntries = [
   {
@@ -176,19 +171,14 @@ export default function ArchiveLibraryPage() {
   const [markdown, setMarkdown] = useState('');
   const [loading, setLoading] = useState(false);
   const [customEntries, setCustomEntries] = useState([]);
-  const [customEntriesLoading, setCustomEntriesLoading] = useState(true);
   const [viewMode, setViewMode] = useState('archive'); // 'archive' or 'blog'
-  // Use global theme system
   const [darkMode, setDarkMode] = useState(() => {
-    const saved = localStorage.getItem('theme');
-    const isDark = saved ? saved === 'dark' : false;
-    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
-    return isDark;
+    const saved = localStorage.getItem('archive-theme');
+    return saved ? saved === 'dark' : true;
   });
 
   // Function to load custom entries from API
   const loadCustomEntries = async () => {
-    setCustomEntriesLoading(true);
     try {
       const result = await fetchArchiveEntries({ limit: 100 });
       if (result.ok && Array.isArray(result.items)) {
@@ -197,10 +187,8 @@ export default function ArchiveLibraryPage() {
         setCustomEntries([]);
       }
     } catch (error) {
-      logger.error('Failed to load custom entries', error);
+      console.error('Failed to load custom entries:', error);
       setCustomEntries([]);
-    } finally {
-      setCustomEntriesLoading(false);
     }
   };
 
@@ -212,21 +200,14 @@ export default function ArchiveLibraryPage() {
     return () => clearInterval(interval);
   }, []);
 
-  // Sync theme to global system
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : 'light');
-    localStorage.setItem('theme', darkMode ? 'dark' : 'light');
+    localStorage.setItem('archive-theme', darkMode ? 'dark' : 'light');
   }, [darkMode]);
 
   const categories = ['All', 'Index', 'Fiction', 'Spiritual', 'Technology', 'Business', 'Personal', 'Philosophy', 'Wisdom', 'Architecture', 'Strategic'];
 
-  const archiveKeyword = /(archive\s+entry|archive\s+master\s+index|man\s+from\s+taured)/i;
-  const archiveApiEntries = customEntries.filter((entry) => archiveKeyword.test(String(entry?.title || '')));
-  const blogEntries = customEntries.filter((entry) => !archiveKeyword.test(String(entry?.title || '')));
-  const archiveSourceEntries = archiveApiEntries.length > 0 ? archiveApiEntries : archiveEntries;
-
   // Get entries based on view mode
-  const currentEntries = viewMode === 'archive' ? archiveSourceEntries : blogEntries;
+  const currentEntries = viewMode === 'archive' ? archiveEntries : customEntries;
   
   const filteredEntries =
     selectedCategory === 'All'
@@ -240,14 +221,14 @@ export default function ArchiveLibraryPage() {
       // Check if it's a custom entry (has content field)
       if (entry.content) {
         setMarkdown(entry.content);
-            } else {
+      } else {
         // Load from file for original entries
-        const response = await fetch(`${import.meta.env.BASE_URL}archive/${entry.file}`);
+        const response = await fetch(`/archive/${entry.file}`);
         const text = await response.text();
         setMarkdown(text);
-            }
+      }
     } catch (error) {
-      logger.error('Failed to load archive entry', error, { entryId: entry?.id, entryFile: entry?.file });
+      console.error('Failed to load entry:', error);
       setMarkdown('# Error\n\nFailed to load this archive entry.');
     } finally {
       setLoading(false);
@@ -343,7 +324,7 @@ export default function ArchiveLibraryPage() {
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:image" content={getCanonicalUrl('/og-default.jpg')} />
       </Helmet>
-      <div className="archive-library">
+      <div className={`archive-library ${darkMode ? 'dark-theme' : 'light-theme'}`}>
         <header className="archive-header">
         <div className="header-content">
           <h1>📚 The Complete Archive</h1>
@@ -368,7 +349,7 @@ export default function ArchiveLibraryPage() {
               setMarkdown('');
             }}
           >
-            📚 Original Archive ({archiveSourceEntries.length})
+            📚 Original Archive ({archiveEntries.length})
           </button>
           <button 
             className={`view-btn ${viewMode === 'blog' ? 'active' : ''}`}
@@ -379,7 +360,7 @@ export default function ArchiveLibraryPage() {
               setSelectedCategory('All');
             }}
           >
-            ✍️ New Blog Posts ({blogEntries.length})
+            ✍️ New Blog Posts ({customEntries.length})
           </button>
         </div>
 
@@ -410,8 +391,8 @@ export default function ArchiveLibraryPage() {
                 {cat}
                 <span className="count">
                   {cat === 'All'
-                    ? currentEntries.length
-                    : currentEntries.filter((e) => e.category === cat).length}
+                    ? archiveEntries.length
+                    : archiveEntries.filter((e) => e.category === cat).length}
                 </span>
               </button>
             ))}
@@ -419,25 +400,21 @@ export default function ArchiveLibraryPage() {
 
           <div className="entry-list">
             <h3>Documents</h3>
-            {viewMode === 'blog' && customEntriesLoading ? (
-              <SkeletonList count={5} />
-            ) : (
-              filteredEntries
-                .sort((a, b) => a.priority - b.priority)
-                .map((entry) => (
-                  <button
-                    key={entry.id}
-                    className={`entry-item ${selectedEntry?.id === entry.id ? 'active' : ''}`}
-                    onClick={() => loadMarkdown(entry)}
-                  >
-                    <div className="entry-title">{entry.title}</div>
-                    <div className="entry-meta">
-                      <span className="entry-category">{entry.category}</span>
-                      <span className="entry-words">{entry.wordCount} words</span>
-                    </div>
-                  </button>
-                ))
-            )}
+            {filteredEntries
+              .sort((a, b) => a.priority - b.priority)
+              .map((entry) => (
+                <button
+                  key={entry.id}
+                  className={`entry-item ${selectedEntry?.id === entry.id ? 'active' : ''}`}
+                  onClick={() => loadMarkdown(entry)}
+                >
+                  <div className="entry-title">{entry.title}</div>
+                  <div className="entry-meta">
+                    <span className="entry-category">{entry.category}</span>
+                    <span className="entry-words">{entry.wordCount} words</span>
+                  </div>
+                </button>
+              ))}
           </div>
         </aside>
 
@@ -452,31 +429,13 @@ export default function ArchiveLibraryPage() {
               <p>Select a document from the sidebar to begin reading.</p>
               <div className="quick-links">
                 <h3>Recommended Starting Points:</h3>
-                <button onClick={() => loadMarkdown(archiveSourceEntries[0] || archiveEntries[0])} className="quick-link">
+                <button onClick={() => loadMarkdown(archiveEntries[0])} className="quick-link">
                   📋 Start with the Master Index
                 </button>
-                <button
-                  onClick={() =>
-                    loadMarkdown(
-                      archiveSourceEntries.find((entry) => /master integration/i.test(String(entry?.title || '')))
-                      || archiveSourceEntries[16]
-                      || archiveEntries[16]
-                    )
-                  }
-                  className="quick-link"
-                >
+                <button onClick={() => loadMarkdown(archiveEntries[16])} className="quick-link">
                   🎯 See the Master Integration & Roadmap
                 </button>
-                <button
-                  onClick={() =>
-                    loadMarkdown(
-                      archiveSourceEntries.find((entry) => /man from taured/i.test(String(entry?.title || '')))
-                      || archiveSourceEntries[1]
-                      || archiveEntries[1]
-                    )
-                  }
-                  className="quick-link"
-                >
+                <button onClick={() => loadMarkdown(archiveEntries[1])} className="quick-link">
                   📖 Read the Novel (The Man from Taured)
                 </button>
               </div>
@@ -486,13 +445,13 @@ export default function ArchiveLibraryPage() {
           {!selectedEntry && viewMode === 'blog' && (
             <div className="archive-welcome">
               <h2>New Blog Posts</h2>
-              {blogEntries.length === 0 ? (
+              {customEntries.length === 0 ? (
                 <>
                   <p>
                     No blog posts yet. This section will display new writings created from 2026 onwards.
                   </p>
                   <p>
-                    Visit the <Link to="/admin" style={{color: 'var(--accent)', textDecoration: 'underline'}}>Admin Panel</Link> to create your first blog post.
+                    Visit the <a href="#/admin" style={{color: 'var(--accent)', textDecoration: 'underline'}}>Admin Panel</a> to create your first blog post.
                   </p>
                 </>
               ) : (
@@ -501,7 +460,7 @@ export default function ArchiveLibraryPage() {
                     Fresh perspectives and evolving thoughts starting 2026. Select a post from the sidebar to read.
                   </p>
                   <p className="blog-count">
-                    {blogEntries.length} {blogEntries.length === 1 ? 'post' : 'posts'} published
+                    {customEntries.length} {customEntries.length === 1 ? 'post' : 'posts'} published
                   </p>
                 </>
               )}
@@ -510,8 +469,8 @@ export default function ArchiveLibraryPage() {
 
           {loading && (
             <div className="archive-loading">
-              <LoadingSpinner size="medium" label="Loading archive entry..." />
-              <SkeletonArticle />
+              <div className="spinner"></div>
+              <p>Loading archive entry...</p>
             </div>
           )}
 

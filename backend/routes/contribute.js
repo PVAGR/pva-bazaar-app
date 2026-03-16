@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const Blog = require('../models/Blog');
-const { createSystemEvent, dispatchToOpenClaw } = require('../utils/openclaw-events');
 
 // Public: submit a contribution (creates a pending blog without edit secret)
 router.post('/submit', async (req, res) => {
@@ -32,16 +31,6 @@ router.post('/submit', async (req, res) => {
       editHashHashed: null,
     });
     await blog.save();
-
-    dispatchToOpenClaw(createSystemEvent('info', 'Contribution submitted', {
-      blogId: blog._id?.toString(),
-      slug: blog.slug,
-      title: blog.title,
-      status: blog.status,
-      route: 'contribute',
-      actor: 'public',
-    }));
-
     res.json({ ok: true, message: 'Contribution submitted for review', slug });
   } catch (err) {
     res.status(500).json({ ok: false, message: err.message });

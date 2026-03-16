@@ -1,8 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
 import { fetchMarketplaceItems } from "../lib/api";
-import { SkeletonGrid } from "../components/SkeletonLoader.jsx";
-import { LoadingDots } from "../components/LoadingSpinner.jsx";
 import useDebounce from "../hooks/useDebounce";
 import "./MarketplacePage.css";
 
@@ -16,11 +13,6 @@ export default function MarketplacePage() {
   const [error, setError] = useState(null);
   const debouncedSearch = useDebounce(search, 400);
   const abortRef = useRef();
-  const isAuthed = !!(
-    localStorage.getItem("token") ||
-    localStorage.getItem("authToken") ||
-    localStorage.getItem("jwt")
-  );
 
   useEffect(() => {
     setItems([]);
@@ -46,10 +38,7 @@ export default function MarketplacePage() {
       if (res.ok) {
         setItems(reset ? res.items : prev => [...prev, ...res.items]);
         setNextCursor(res.nextCursor || null);
-        if (reset) {
-          const derived = Array.from(new Set((res.items || []).map(i => i.category).filter(Boolean)));
-          setCategories(Array.isArray(res.categories) && res.categories.length ? res.categories : derived);
-        }
+        if (reset && res.categories) setCategories(res.categories);
       } else {
         setError(res.error || "Failed to load items");
       }
@@ -68,17 +57,10 @@ export default function MarketplacePage() {
     if (!loading && nextCursor) fetchData();
   }
 
-  const isInitialLoading = loading && items.length === 0;
-
   return (
     <main className="marketplace-page">
       <section className="marketplace-header">
-        <div className="marketplace-topbar">
-          <h1>Marketplace</h1>
-          <Link to={isAuthed ? "/items/new" : "/login?next=/items/new"} className="create-listing-btn">
-            {isAuthed ? "Create New Listing" : "Login to Sell"}
-          </Link>
-        </div>
+        <h1>Marketplace</h1>
         <input
           aria-label="Search items"
           className="marketplace-search"
@@ -101,53 +83,25 @@ export default function MarketplacePage() {
         </div>
       </section>
       <section className="marketplace-items">
-        {isInitialLoading && <SkeletonGrid columns={3} rows={2} />}
-        {items.length === 0 && !loading && (
-          <div className="empty">
-            <p>No items found.</p>
-            {isAuthed ? <Link to="/items/new">Create your first listing</Link> : null}
-          </div>
-        )}
-        {items.length > 0 && (
-          <div className="item-grid">
-            {items.map(item => {
-              const isSold = Boolean(item?.omnichannel?.soldState?.isSold);
-              const card = (
-                <article className={`item-card${isSold ? " is-sold" : ""}`} tabIndex={0} aria-label={item.name || item.title}>
-                  <img src={(item.media && item.media[0]) || item.image || "/placeholder.png"} alt={item.name || item.title} className="item-image" />
-                  <div className="item-info">
-                    <h2 className="item-title">{item.name || item.title}</h2>
-                    <div className="item-meta">
-                      <span className="item-category">{item.category}</span>
-                      {typeof item.priceCents === "number" ? (
-                        <span className="item-price">${(item.priceCents / 100).toFixed(2)}</span>
-                      ) : null}
-                      {isSold ? <span className="item-sold-pill">Sold</span> : null}
-                    </div>
-                    <p className="item-desc">{item.description}</p>
-                  </div>
-                </article>
-              );
-
-              if (isSold) {
-                return <div className="item-card-link" key={item.id || item._id}>{card}</div>;
-              }
-
-              return (
-                <Link
-                  to={`/marketplace/${encodeURIComponent(item.slug || item.id)}`}
-                  className="item-card-link"
-                  key={item.id || item._id}
-                >
-                  {card}
-                </Link>
-              );
-            })}
-          </div>
-        )}
+        {items.length === 0 && !loading && <div className="empty">No items found.</div>}
+        <div className="item-grid">
+          {items.map(item => (
+            <article className="item-card" key={item._id || item.id} tabIndex={0} aria-label={item.title}>
+              <img src={item.image || "/placeholder.png"} alt={item.title} className="item-image" />
+              <div className="item-info">
+                <h2 className="item-title">{item.title}</h2>
+                <div className="item-meta">
+                  <span className="item-category">{item.category}</span>
+                  {item.price && <span className="item-price">${item.price}</span>}
+                </div>
+                <p className="item-desc">{item.description}</p>
+              </div>
+            </article>
+          ))}
+        </div>
         {nextCursor && (
           <button className="load-more" onClick={handleLoadMore} disabled={loading}>
-            {loading ? <LoadingDots size="small" label="Loading more" /> : "Load More"}
+            {loading ? "Loading..." : "Load More"}
           </button>
         )}
         {error && <div className="error">{error}</div>}

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
-import { fetchCheckoutSession, finalizeCheckoutSession } from "../lib/api";
+import { fetchCheckoutSession } from "../lib/api";
 import "./CheckoutSuccessPage.css";
 
 export default function CheckoutSuccessPage() {
@@ -8,7 +8,6 @@ export default function CheckoutSuccessPage() {
   const sessionId = searchParams.get("session_id");
   const [status, setStatus] = useState("loading");
   const [session, setSession] = useState(null);
-  const [finalize, setFinalize] = useState(null);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -17,17 +16,10 @@ export default function CheckoutSuccessPage() {
       setStatus("error");
       return;
     }
-    fetchCheckoutSession(sessionId).then(async (res) => {
+    fetchCheckoutSession(sessionId).then(res => {
       if (res.ok) {
         setSession(res.session);
         setStatus(res.session.payment_status);
-
-        if (res.session.payment_status === "paid") {
-          const finalized = await finalizeCheckoutSession(sessionId);
-          if (finalized.ok) {
-            setFinalize(finalized);
-          }
-        }
       } else {
         setError(res.error || "Session not found");
         setStatus("error");
@@ -48,23 +40,6 @@ export default function CheckoutSuccessPage() {
           </div>
           {session.customer_details?.email && (
             <div>Email: {session.customer_details.email}</div>
-          )}
-          {finalize?.finalized && (
-            <>
-              <div>Order ID: {finalize.orderId}</div>
-              {finalize.blockchainReceipt?.status && (
-                <div>
-                  Receipt Mint: <b>{finalize.blockchainReceipt.status}</b>
-                  {finalize.blockchainReceipt.tokenId ? ` (Token #${finalize.blockchainReceipt.tokenId})` : ""}
-                </div>
-              )}
-              {finalize.certificateId && <div>Certificate: {finalize.certificateId}</div>}
-              {finalize.downloadUrl && (
-                <div className="back-link">
-                  <a href={finalize.downloadUrl}>Download Purchase Asset</a>
-                </div>
-              )}
-            </>
           )}
           <div className="back-link">
             <Link to="/marketplace">Back to Marketplace</Link>
