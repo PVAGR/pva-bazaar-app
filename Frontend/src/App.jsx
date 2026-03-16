@@ -1,68 +1,42 @@
-import AdminOrdersPage from './pages/AdminOrdersPage.jsx';
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { HashRouter, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout.jsx';
-import RouteErrorBoundary from './components/RouteErrorBoundary.jsx';
-
-import AboutPage from './pages/AboutPage.jsx';
-import ArchiveLibraryPage from './pages/ArchiveLibraryPage.jsx';
-import AdminPage from './pages/AdminPage.jsx';
-import MarketplacePage from './pages/MarketplacePage.jsx';
-import MarketplaceItemPage from './pages/MarketplaceItemPage.jsx';
-import CheckoutSuccessPage from './pages/CheckoutSuccessPage.jsx';
-import CheckoutCancelPage from './pages/CheckoutCancelPage.jsx';
-import VerificationPage from './pages/VerificationPage.jsx';
-import ManifestoPage from './pages/ManifestoPage.jsx';
-import CartPage from './pages/CartPage.jsx';
-import ListItemPage from './pages/ListItemPage.jsx';
-import MyListingsPage from './pages/MyListingsPage.jsx';
-import OracleAssessmentPage from './pages/OracleAssessmentPage.jsx';
-import LoginPage from './pages/LoginPage.jsx';
-import RegisterPage from './pages/RegisterPage.jsx';
-import AccountPage from './pages/AccountPage.jsx';
-import OnboardingPage from './pages/OnboardingPage.jsx';
-import ArtifactDetailPage from './pages/ArtifactDetailPage.jsx';
-import SearchPage from './pages/SearchPage.jsx';
-import DealsPage from './pages/DealsPage.jsx';
-import DealJoinPage from './pages/DealJoinPage.jsx';
-import StreamsPage from './pages/StreamsPage.jsx';
+import HomePage from './pages/HomePage.jsx';
+import JournalPage from './pages/JournalPage.jsx';
 import EntryDetail from './pages/EntryDetail.jsx';
-import SolanaRitualPage from './pages/SolanaRitualPage.jsx';
-import CreatorDashboard from './pages/CreatorDashboard.jsx';
-import './base.css';
+import AboutPage from './pages/AboutPage.jsx';
+import SearchPage from './pages/SearchPage.jsx';
+import ArchivePage from './pages/ArchivePage.jsx';
+import AdminDashboard from './pages/AdminDashboard.jsx';
+import AdminNewEntry from './pages/AdminNewEntry.jsx';
+import { filterEntries, getEntries } from './lib/entries.js';
 
 export default function App() {
+  const [entries, setEntries] = useState(() => getEntries());
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const filtered = useMemo(
+    () => filterEntries(entries, searchTerm),
+    [entries, searchTerm],
+  );
+
+  const handleNewEntry = () => {
+    // Reload from storage to include any newly added entry
+    setEntries(getEntries());
+  };
+
   return (
     <HashRouter>
-      <Layout>
+      <Layout onSearch={setSearchTerm} searchTerm={searchTerm}>
         <Routes>
-          <Route path="/" element={<RouteErrorBoundary><ArchiveLibraryPage /></RouteErrorBoundary>} />
-          <Route path="/library" element={<RouteErrorBoundary><ArchiveLibraryPage /></RouteErrorBoundary>} />
-          <Route path="/about" element={<RouteErrorBoundary><AboutPage /></RouteErrorBoundary>} />
-          <Route path="/admin" element={<RouteErrorBoundary><AdminPage /></RouteErrorBoundary>} />
-          <Route path="/admin/orders" element={<RouteErrorBoundary><AdminOrdersPage /></RouteErrorBoundary>} />
-          <Route path="/marketplace" element={<RouteErrorBoundary><MarketplacePage /></RouteErrorBoundary>} />
-          <Route path="/marketplace/:slugOrId" element={<RouteErrorBoundary><MarketplaceItemPage /></RouteErrorBoundary>} />
-          <Route path="/checkout/success" element={<RouteErrorBoundary><CheckoutSuccessPage /></RouteErrorBoundary>} />
-          <Route path="/checkout/cancel" element={<RouteErrorBoundary><CheckoutCancelPage /></RouteErrorBoundary>} />
-          <Route path="/verification" element={<RouteErrorBoundary><VerificationPage /></RouteErrorBoundary>} />
-          <Route path="/manifesto" element={<RouteErrorBoundary><ManifestoPage /></RouteErrorBoundary>} />
-          <Route path="/cart" element={<RouteErrorBoundary><CartPage /></RouteErrorBoundary>} />
-          <Route path="/items/new" element={<RouteErrorBoundary><ListItemPage /></RouteErrorBoundary>} />
-          <Route path="/items/mine" element={<RouteErrorBoundary><MyListingsPage /></RouteErrorBoundary>} />
-          <Route path="/oracle" element={<RouteErrorBoundary><OracleAssessmentPage /></RouteErrorBoundary>} />
-          <Route path="/login" element={<RouteErrorBoundary><LoginPage /></RouteErrorBoundary>} />
-          <Route path="/register" element={<RouteErrorBoundary><RegisterPage /></RouteErrorBoundary>} />
-          <Route path="/account" element={<RouteErrorBoundary><AccountPage /></RouteErrorBoundary>} />
-          <Route path="/onboarding" element={<RouteErrorBoundary><OnboardingPage /></RouteErrorBoundary>} />
-          <Route path="/artifacts/:slugOrId" element={<RouteErrorBoundary><ArtifactDetailPage /></RouteErrorBoundary>} />
-          <Route path="/search" element={<RouteErrorBoundary><SearchPage /></RouteErrorBoundary>} />
-          <Route path="/deals" element={<RouteErrorBoundary><DealsPage /></RouteErrorBoundary>} />
-          <Route path="/deals/join" element={<RouteErrorBoundary><DealJoinPage /></RouteErrorBoundary>} />
-          <Route path="/streams" element={<RouteErrorBoundary><StreamsPage /></RouteErrorBoundary>} />
-          <Route path="/entry/:id" element={<RouteErrorBoundary><EntryDetail /></RouteErrorBoundary>} />
-          <Route path="/rituals/solana" element={<RouteErrorBoundary><SolanaRitualPage /></RouteErrorBoundary>} />
-          <Route path="/dashboard" element={<RouteErrorBoundary><CreatorDashboard /></RouteErrorBoundary>} />
+          <Route path="/" element={<HomePage entries={entries} />} />
+          <Route path="/journal" element={<JournalPage entries={filtered} searchTerm={searchTerm} />} />
+          <Route path="/archive" element={<ArchivePage entries={filtered} searchTerm={searchTerm} />} />
+          <Route path="/entry/:id" element={<EntryDetail entries={entries} />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/search" element={<SearchPage entries={filtered} searchTerm={searchTerm} />} />
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/new-journal" element={<AdminNewEntry onCreated={handleNewEntry} />} />
         </Routes>
       </Layout>
     </HashRouter>
