@@ -5,6 +5,7 @@
 const express = require('express');
 const router = express.Router();
 const { ManifestoAI } = require('../manifesto-ai');
+const adminSession = require('../middleware/adminSession');
 
 // Initialize global AI
 let manifestoAI = null;
@@ -13,7 +14,7 @@ let manifestoAI = null;
  * POST /api/manifesto/init
  * Initialize the Manifesto AI
  */
-router.post('/init', (req, res) => {
+router.post('/init', adminSession, (req, res) => {
   try {
     const { creatorName, philosophy } = req.body;
 
@@ -44,7 +45,7 @@ router.post('/init', (req, res) => {
  * POST /api/manifesto/train
  * Train AI on legacy entries
  */
-router.post('/train', (req, res) => {
+router.post('/train', adminSession, (req, res) => {
   try {
     if (!manifestoAI) {
       return res.status(400).json({
@@ -206,7 +207,7 @@ router.get('/decisions', (req, res) => {
  * POST /api/manifesto/resurrect
  * Creator has passed - AI becomes fully autonomous
  */
-router.post('/resurrect', async (req, res) => {
+router.post('/resurrect', adminSession, async (req, res) => {
   try {
     if (!manifestoAI) {
       return res.status(400).json({
@@ -243,7 +244,7 @@ router.post('/resurrect', async (req, res) => {
  * After death: AI learns from new entries
  * Can improve and evolve
  */
-router.post('/learn', async (req, res) => {
+router.post('/learn', adminSession, async (req, res) => {
   try {
     if (!manifestoAI) {
       return res.status(400).json({
@@ -316,7 +317,7 @@ router.get('/status', (req, res) => {
  * GET /api/manifesto/export
  * Export complete AI state
  */
-router.get('/export', (req, res) => {
+router.get('/export', adminSession, (req, res) => {
   try {
     if (!manifestoAI) {
       return res.status(400).json({
