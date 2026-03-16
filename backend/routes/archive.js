@@ -4,6 +4,8 @@ const router = express.Router();
 const ArchiveEntry = require('../models/ArchiveEntry');
 const { normalizeArchiveInput, toPublicArchiveEntry } = require('../lib/archiveNormalize');
 const adminSession = require('../middleware/adminSession');
+const mongoose = require('mongoose');
+const { findStaticArchiveEntry, listStaticArchiveEntries } = require('../lib/staticContent');
 
 
 // Cursor-based pagination, filtering, and search
@@ -53,6 +55,28 @@ router.get('/', async (req, res) => {
     if (q) query = query.sort({ score: { $meta: 'textScore' }, ...sortOrder });
     const docs = await query.lean();
 
+    if (docs.length === 0) {
+      let fallbackDocs = listStaticArchiveEntries({ category, tag, q, sort });
+      if (cursor && cursor.createdAt && cursor.id) {
+        const cursorTime = new Date(cursor.createdAt).getTime();
+        fallbackDocs = fallbackDocs.filter((entry) => {
+          const entryTime = new Date(entry.createdAt).getTime();
+          if (sort === 'old') {
+            return entryTime > cursorTime || (entryTime === cursorTime && String(entry.id) > String(cursor.id));
+          }
+          return entryTime < cursorTime || (entryTime === cursorTime && String(entry.id) < String(cursor.id));
+        });
+      }
+
+      const items = fallbackDocs.slice(0, limit).map(toPublicArchiveEntry);
+      const last = fallbackDocs[limit - 1];
+      const nextCursor = fallbackDocs.length > limit && last
+        ? encodeCursor({ createdAt: last.createdAt, id: last.id || last.externalId })
+        : null;
+
+      return res.json({ ok: true, items, nextCursor });
+    }
+
     // Prepare items and nextCursor
     const items = docs.slice(0, limit).map(toPublicArchiveEntry);
     let nextCursor = null;
@@ -71,9 +95,16 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const entry =
-      (await ArchiveEntry.findById(id).lean()) ||
-      (await ArchiveEntry.findOne({ externalId: id }).lean());
+    let entry = null;
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      entry = await ArchiveEntry.findById(id).lean();
+    }
+    if (!entry) {
+      entry = await ArchiveEntry.findOne({ externalId: id }).lean();
+    }
+    if (!entry) {
+      entry = findStaticArchiveEntry(id);
+    }
     if (!entry) return res.status(404).json({ ok: false, error: 'Entry not found' });
     res.json({ ok: true, item: toPublicArchiveEntry(entry) });
   } catch (err) {
