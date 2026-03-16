@@ -1,10 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createArchiveEntry, requestAdminToken } from '../lib/archiveApi.js';
-import { PromptModal, AlertModal } from '../components/ui/DialogModals.jsx';
-import { createLogger } from '../lib/logger';
-
-const logger = createLogger('AdminNewEntry');
 
 export default function AdminNewEntry({ onCreated }) {
   const navigate = useNavigate();
@@ -19,9 +15,6 @@ export default function AdminNewEntry({ onCreated }) {
   const [mediaError, setMediaError] = useState('');
   const [status, setStatus] = useState('');
   const [saving, setSaving] = useState(false);
-  const [showPrompt, setShowPrompt] = useState(false);
-  const [alertMsg, setAlertMsg] = useState(null);
-  const [pendingSubmit, setPendingSubmit] = useState(null);
 
   const parseMediaUrls = (value) =>
     value
@@ -78,29 +71,11 @@ export default function AdminNewEntry({ onCreated }) {
   const ensureToken = async () => {
     let token = localStorage.getItem('admin:token') || '';
     if (token) return token;
-    
-    // Show prompt modal and wait for user input
-    return new Promise((resolve, reject) => {
-      setPendingSubmit({ resolve, reject });
-      setShowPrompt(true);
-    });
-  };
-
-  const handleSecretSubmit = async (secret) => {
-    try {
-      const token = await requestAdminToken(secret);
-      localStorage.setItem('admin:token', token);
-      if (pendingSubmit) {
-        pendingSubmit.resolve(token);
-        setPendingSubmit(null);
-      }
-    } catch (err) {
-      setAlertMsg(`Authentication failed: ${err.message}`);
-      if (pendingSubmit) {
-        pendingSubmit.reject(err);
-        setPendingSubmit(null);
-      }
-    }
+    const secret = prompt('Enter admin secret');
+    if (!secret) throw new Error('No secret provided');
+    token = await requestAdminToken(secret);
+    localStorage.setItem('admin:token', token);
+    return token;
   };
 
   const handleSubmit = async (e) => {
@@ -127,9 +102,9 @@ export default function AdminNewEntry({ onCreated }) {
       setStatus('Saved to backend');
       navigate(`/entry/${newId}`);
     } catch (err) {
-      logger.error('Save failed', err);
+      console.error('Save failed', err);
       setStatus('Failed to save');
-      setAlertMsg(`Failed to save entry: ${err.message}\n\nPlease check your connection and try again.`);
+      alert(`Failed to save entry: ${err.message}\n\nPlease check your connection and try again.`);
     } finally {
       setSaving(false);
     }
@@ -184,27 +159,6 @@ export default function AdminNewEntry({ onCreated }) {
           <a className="button ghost" href="#/journal">Cancel</a>
         </div>
       </form>
-      <PromptModal
-        isOpen={showPrompt}
-        onClose={() => {
-          setShowPrompt(false);
-          if (pendingSubmit) {
-            pendingSubmit.reject(new Error('Cancelled'));
-            setPendingSubmit(null);
-          }
-        }}
-        onSubmit={handleSecretSubmit}
-        title="Admin Authentication"
-        message="Enter your admin secret to continue:"
-        placeholder="Admin secret"
-        inputType="password"
-      />
-      <AlertModal
-        isOpen={!!alertMsg}
-        onClose={() => setAlertMsg(null)}
-        title="Error"
-        message={alertMsg}
-      />
     </section>
   );
 }

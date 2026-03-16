@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const Artifact = require('../models/Artifact');
-const { createProvenanceEvent, dispatchToOpenClaw } = require('../utils/openclaw-events');
 
 // GET /api/certificates/:id - Get certificate data
 router.get('/:id', async (req, res) => {
@@ -44,14 +43,6 @@ router.post('/verify/:id', async (req, res) => {
     }
     artifact.lastVerification = new Date();
     await artifact.save();
-
-    // Dispatch provenance verified event (non-blocking)
-    dispatchToOpenClaw(createProvenanceEvent('verified', artifact, {
-      chainOfCustody: artifact.ownershipHistory || [],
-      attestations: [],
-      verificationStatus: 'verified',
-    })).catch(() => {});
-
     res.json({
       ok: true,
       message: 'Artifact verified successfully',

@@ -23,30 +23,12 @@ export default defineConfig({
     outDir: 'dist',
     emptyOutDir: true,
     sourcemap: true,
-    chunkSizeWarningLimit: 600,
     rollupOptions: {
       external: ['fsevents'],
       output: {
-        manualChunks(id) {
+        manualChunks(id, { getModuleInfo }) {
           if (id.includes('node_modules')) {
-            // Split vendor into smaller, cacheable chunks
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
-              return 'vendor-react';
-            }
-            if (id.includes('@sentry')) {
-              return 'vendor-sentry';
-            }
-            if (id.includes('axios')) {
-              return 'vendor-axios';
-            }
-            if (id.includes('framer-motion')) {
-              return 'vendor-framer';
-            }
-            if (id.includes('mermaid')) {
-              return 'vendor-mermaid';
-            }
-            // All other vendor code
-            return 'vendor-misc';
+            return 'vendor';
           }
         }
       }

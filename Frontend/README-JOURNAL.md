@@ -17,11 +17,6 @@ npm run build
 # Output: Frontend/dist/
 ```
 
-## Theme Guardrails
-- `npm run check:theme` scans `Frontend/src` for hardcoded light `background`/`background-color` values.
-- `npm run audit:theme:static` scans static HTML content (`home`, `novel`, `research`, `writings`) for the same pattern.
-- `npm run build` now runs both checks in `prebuild` and fails early on regressions.
-
 ## Project Structure (added files)
 - Frontend/index.html — SPA shell (CDN React + Router)
 - Frontend/public/app.js — App with routes and components
