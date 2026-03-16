@@ -8,7 +8,10 @@ const User = require('./models/User');
 const Artifact = require('./models/Artifact');
 
 async function main() {
-  const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/pvabazaar';
+  const uri = process.env.MONGODB_URI;
+  if (!uri) {
+    throw new Error('MONGODB_URI is required for seeding');
+  }
   await mongoose.connect(uri, { dbName: 'pvabazaar', autoIndex: true });
 
   let admin = await User.findOne({ email: 'admin@pvabazaar.org' });

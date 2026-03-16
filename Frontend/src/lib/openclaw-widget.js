@@ -10,7 +10,7 @@
   'use strict';
 
   const DEFAULT_CONFIG = {
-    apiUrl: 'http://localhost:5000',
+    apiUrl: 'https://api.pvabazaar.org',
     refreshInterval: 60000, // 60 seconds
     showDetails: true,
     compact: false,
@@ -213,7 +213,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const widgetEl = document.getElementById('openclaw-health-widget');
   if (widgetEl && widgetEl.dataset.autoInit !== 'false') {
     const config = {
-      apiUrl: widgetEl.dataset.apiUrl || 'http://localhost:5000',
+      apiUrl: widgetEl.dataset.apiUrl || 'https://api.pvabazaar.org',
       refreshInterval: parseInt(widgetEl.dataset.refreshInterval) || 60000,
       showDetails: widgetEl.dataset.showDetails !== 'false',
       compact: widgetEl.dataset.compact === 'true',
