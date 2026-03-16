@@ -3,7 +3,6 @@ const Artifact = require('../models/Artifact');
 const OmnichannelSale = require('../models/OmnichannelSale');
 const { delistExternalListing } = require('./omnichannelAdapters');
 const { buildItemHash, mintReceiptOnChain } = require('./blockchainReceiptService');
-const { appendLifecycleEventForArtifact } = require('./dppLifecycleService');
 
 function applyOnChainProvenanceUpdate({ artifact, blockchainReceipt, buyerWallet, saleSource }) {
   if (!artifact || !blockchainReceipt || blockchainReceipt.status !== 'minted') return;
@@ -259,54 +258,6 @@ async function completeSaleAcrossChannels({
     },
     blockchainReceipt,
   });
-
-  const safeExternalSaleRef = externalSaleId || String(orderId || '');
-
-  // External channel sale provenance (checkout/webhook pva events are already handled upstream).
-  if (saleSource && saleSource !== 'pva') {
-    await appendLifecycleEventForArtifact({
-      artifactId: artifact._id,
-      artifactSlug: artifact.slug || '',
-      type: 'resold',
-      notes: `Omnichannel sale captured from ${saleSource}`,
-      txHash: blockchainReceipt?.txHash || '',
-      externalRef: `omni_sale:${safeIdempotencyKey}`,
-      metadata: {
-        saleSource,
-        externalSaleId: safeExternalSaleRef,
-        orderId: orderId ? String(orderId) : '',
-        amountCents: Number(amountCents || 0),
-        currency: String(currency || 'usd').toLowerCase(),
-        paymentMethod: String(paymentMethod || 'manual').toLowerCase(),
-        buyerEmail: String(buyerEmail || ''),
-        buyerWallet: String(buyerWallet || ''),
-      },
-      occurredAt: new Date(),
-    }).catch(() => {});
-  }
-
-  await appendLifecycleEventForArtifact({
-    artifactId: artifact._id,
-    artifactSlug: artifact.slug || '',
-    type: 'transformed',
-    notes: `Omnichannel synchronization completed for source ${saleSource}`,
-    txHash: blockchainReceipt?.txHash || '',
-    externalRef: `omni_sync:${safeIdempotencyKey}`,
-    metadata: {
-      saleSource,
-      externalSaleId: safeExternalSaleRef,
-      delistedChannels: delistResults
-        .filter((result) => result.status === 'success')
-        .map((result) => result.channel),
-      delistResults,
-      blockchainReceipt: {
-        status: blockchainReceipt?.status || 'skipped',
-        network: blockchainReceipt?.network || '',
-        tokenId: blockchainReceipt?.tokenId || '',
-      },
-    },
-    occurredAt: new Date(),
-  }).catch(() => {});
 
   return {
     ok: true,
