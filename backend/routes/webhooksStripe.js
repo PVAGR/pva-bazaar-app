@@ -187,6 +187,36 @@ router.post("/stripe", async (req, res) => {
 
   if (event.type === "checkout.session.expired" || event.type === "checkout.session.async_payment_failed") {
     const session = event.data.object;
+
+    // Release fractional share reservations for unpaid share purchases.
+    if (session.metadata?.order_type === 'share_purchase') {
+      const purchaseId = session.metadata?.share_purchase_id || session.client_reference_id;
+      const purchase = purchaseId
+        ? await SharePurchase.findOne({
+          $or: [{ _id: purchaseId }, { stripeSessionId: session.id }],
+        })
+        : null;
+
+      if (purchase && purchase.paymentStatus === 'pending') {
+        purchase.paymentStatus = 'failed';
+        purchase.idempotencyKey = purchase.idempotencyKey || `stripe_session:${session.id}`;
+        await purchase.save();
+
+        await Artifact.findByIdAndUpdate(purchase.artifactId, {
+          $inc: { 'fractionalization.soldShares': -Math.max(0, Number(purchase.quantity || 0)) },
+        });
+
+        await logFulfillment(event.id, null, 'share_purchase_released', {
+          purchaseId: String(purchase._id),
+          artifactId: String(purchase.artifactId),
+          qty: purchase.quantity,
+          eventType: event.type,
+        }).catch(() => {});
+      }
+
+      return res.json({ received: true });
+    }
+
     const reservationId = session.metadata?.reservationId;
     if (reservationId) await releaseReservation(reservationId);
     const email = session.customer_details?.email;
