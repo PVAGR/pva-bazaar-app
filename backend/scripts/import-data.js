@@ -23,10 +23,7 @@ async function importData() {
     const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
 
     // Connect to MongoDB
-    if (!process.env.MONGODB_URI) {
-      throw new Error('MONGODB_URI is required for import');
-    }
-    await mongoose.connect(process.env.MONGODB_URI);
+    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/pvabazaar');
 
     // Import users (need to rehash passwords)
     if (data.users && data.users.length) {

@@ -72,13 +72,13 @@
         <p>Uses data attributes for configuration:</p>
         <div class="code-block">
 &lt;div id="openclaw-health-widget"
-  data-api-url="https://api.pvabazaar.org"
+  data-api-url="http://localhost:5000"
   data-refresh-interval="60000"
   data-show-details="true"&gt;
 &lt;/div&gt;
         </div>
         <div id="openclaw-health-widget" 
-          data-api-url="https://api.pvabazaar.org"
+          data-api-url="http://localhost:5000"
           data-refresh-interval="60000"
           data-show-details="true">
         </div>
@@ -97,7 +97,7 @@
         <div class="inline-widget">
           <span>System Status:</span>
           <div id="openclaw-compact" 
-            data-api-url="https://api.pvabazaar.org"
+            data-api-url="http://localhost:5000"
             data-compact="true"
             data-show-details="false"
             data-auto-init="false">
@@ -114,7 +114,7 @@
 
 &lt;script&gt;
 OpenClawWidget.init({
-  apiUrl: 'https://api.pvabazaar.org',
+  apiUrl: 'http://localhost:5000',
   refreshInterval: 30000,
   showDetails: true
 });
@@ -129,7 +129,7 @@ OpenClawWidget.init({
       <p>Programmatic control examples:</p>
       <div class="code-block">
 // Initialize widget
-OpenClawWidget.init({ apiUrl: 'https://api.pvabazaar.org' });
+OpenClawWidget.init({ apiUrl: 'http://localhost:5000' });
 
 // Manual refresh
 OpenClawWidget.refresh();
@@ -159,7 +159,7 @@ OpenClawWidget.destroy();
       const compactEl = document.getElementById('openclaw-compact');
       if (compactEl) {
         window.OpenClawWidget.init({
-          apiUrl: 'https://api.pvabazaar.org',
+          apiUrl: 'http://localhost:5000',
           refreshInterval: 60000,
           showDetails: false,
           compact: true
@@ -174,7 +174,7 @@ OpenClawWidget.destroy();
         const originalEl = widgetElement;
         widgetElement = manualEl;
         window.OpenClawWidget.init({
-          apiUrl: 'https://api.pvabazaar.org',
+          apiUrl: 'http://localhost:5000',
           refreshInterval: 60000,
           showDetails: true
         });

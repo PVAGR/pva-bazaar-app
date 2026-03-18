@@ -92,15 +92,11 @@ jobs:
           echo "All artifacts verified."
 
       - name: Store verification results (optional)
-        if: steps.verify.outputs.verified_list != ''
+        if: steps.verify.outputs.verified_list != '' && secrets.VERIFY_API_URL != ''
         env:
           VERIFY_API_URL: ${{ secrets.VERIFY_API_URL }}
           VERIFY_API_SECRET: ${{ secrets.VERIFY_API_SECRET }}
         run: |
-          if [ -z "$VERIFY_API_URL" ]; then
-            echo "VERIFY_API_URL not configured; skipping result storage."
-            exit 0
-          fi
           API_URL="${VERIFY_API_URL%/}"
           while IFS= read -r line; do
             [ -z "$line" ] && continue

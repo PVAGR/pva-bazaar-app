@@ -69,13 +69,13 @@ jobs:
 
       - name: Set Sentry Release (git SHA)
         id: sentry_release
-        run: echo "release=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+        run: echo "RELEASE=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
       - name: Build frontend
         run: npm run build
         env:
           VITE_API_URL: ${{ secrets.VITE_API_URL || 'https://api.pvabazaar.org/api' }}
-          VITE_SENTRY_RELEASE: ${{ steps.sentry_release.outputs.release }}
+          VITE_SENTRY_RELEASE: ${{ env.RELEASE }}
 
       - name: Validate dist output
         run: |
@@ -139,31 +139,11 @@ jobs:
           .git
           EOF
 
-      - name: Check Vercel secrets
-        id: vercel_gate
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_FRONTEND_PROJECT_ID: ${{ secrets.VERCEL_FRONTEND_PROJECT_ID }}
-        run: |
-          if [ -n "$VERCEL_TOKEN" ] && [ -n "$VERCEL_ORG_ID" ] && [ -n "$VERCEL_FRONTEND_PROJECT_ID" ]; then
-            echo "enabled=true" >> "$GITHUB_OUTPUT"
-            echo "Vercel deploy enabled."
-          else
-            echo "enabled=false" >> "$GITHUB_OUTPUT"
-            echo "Vercel deploy skipped: missing one or more required secrets."
-          fi
-
       - name: Deploy Frontend Preview to Vercel
-        if: steps.vercel_gate.outputs.enabled == 'true'
         uses: amondnet/vercel-action@v25
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           working-directory: ./Frontend
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_FRONTEND_PROJECT_ID }}
-
-      - name: Vercel deploy skipped
-        if: steps.vercel_gate.outputs.enabled != 'true'
-        run: echo "Skipping Vercel preview deploy because required secrets are not configured."
 

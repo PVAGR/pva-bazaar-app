@@ -14,7 +14,7 @@ const ApiDocsTab = React.memo(function ApiDocsTab() {
   const [copiedEndpoint, setCopiedEndpoint] = useState(null);
   const [expandedCategory, setExpandedCategory] = useState('artifacts');
 
-  const apiBase = ENV.API_URL || 'https://api.pvabazaar.org/api';
+  const apiBase = ENV.API_URL || 'http://localhost:5001';
 
   const copyToClipboard = (text, endpoint) => {
     navigator.clipboard.writeText(text).then(() => {

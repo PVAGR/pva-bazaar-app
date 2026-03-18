@@ -7,36 +7,9 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const path = require('path');
 let MongoMemoryServer;
-const openClawRoutes = require('../routes/openclaw');
-const openClawMetricsRoutes = require('../routes/openclaw-metrics');
-const { getBuildInfo } = require('../lib/buildInfo');
 
 // Load environment variables
 dotenv.config();
-
-const CLOUD_ONLY_MODE = process.env.CLOUD_ONLY_MODE !== 'false';
-
-function isLoopbackOrigin(origin) {
-  return /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(String(origin || '').trim());
-}
-
-function getAllowedOrigins() {
-  const base = [
-    'https://pvabazaar.org',
-    'https://www.pvabazaar.org',
-  ];
-
-  if (process.env.ALLOWED_ORIGIN) {
-    const extras = process.env.ALLOWED_ORIGIN
-      .split(',')
-      .map(o => o.trim())
-      .filter(Boolean)
-      .filter(o => !(CLOUD_ONLY_MODE && isLoopbackOrigin(o)));
-    base.push(...extras);
-  }
-
-  return Array.from(new Set(base));
-}
 
 // Validate critical env and mark API readiness (fail-safe in production)
 function validateEnv() {
@@ -66,7 +39,12 @@ app.use(helmet({
 }));
 
 // --- UNCONDITIONAL CORS (runs before everything, even on errors) ---
-const allowedOrigins = new Set(getAllowedOrigins());
+const allowedOrigins = new Set([
+  'https://pvabazaar.org',
+  'https://www.pvabazaar.org',
+  'http://localhost:3000',
+  'http://localhost:5173',
+]);
 
 app.use((req, res, next) => {
   const origin = req.headers.origin;
@@ -136,11 +114,10 @@ if (process.env.SENTRY_DSN) {
   app.use(Sentry.Handlers.tracingHandler());
 }
 
-// Stripe/Twitch webhooks: use express.raw for HMAC signature verification
+// Stripe webhook: use express.raw for signature verification (body limit handled by Stripe)
 const stripeWebhookPath = "/webhooks/stripe";
-const twitchWebhookPath = "/webhooks/twitch";
 app.use((req, res, next) => {
-  if (req.originalUrl === stripeWebhookPath || req.originalUrl === twitchWebhookPath) {
+  if (req.originalUrl === stripeWebhookPath) {
     express.raw({ type: "application/json" })(req, res, next);
   } else {
     next();
@@ -149,8 +126,6 @@ app.use((req, res, next) => {
 
 // Apply stricter rate limiters to sensitive routes
 app.use('/admin', authLimiter);
-app.use('/api/auth', authLimiter);
-app.use('/api/oracle', authLimiter);
 app.use('/orders', authLimiter);
 app.use('/checkout', checkoutLimiter);
 app.use('/webhooks', webhookLimiter);
@@ -158,27 +133,20 @@ app.use('/webhooks', webhookLimiter);
 app.use((req, res, next) => {
   const apiNotReady = process.env.API_READY === 'false';
   const isProd = process.env.NODE_ENV === 'production';
-  const allowlist = ['/health', '/api/health', '/dev/token', '/api/dev/token', '/ping', '/api/ping', '/version', '/api/version', '/express-ping', '/api/express-ping', '/openclaw', '/api/openclaw'];
+  const allowlist = ['/health', '/dev/token', '/ping', '/version', '/express-ping'];
   if (apiNotReady && isProd && !allowlist.some(p => req.path.startsWith(p))) {
     return res.status(503).json({ ok: false, message: 'Service not configured. Missing environment secrets.' });
   }
   next();
 });
 
-// Webhook routes (must come after raw body middleware)
+// Stripe webhook route (must come after raw body middleware)
 const webhooksStripeRoutes = require('../routes/webhooksStripe');
 app.use('/webhooks', webhooksStripeRoutes);
-try {
-  const webhooksTwitchRoutes = require('../routes/webhooksTwitch');
-  app.use('/webhooks', webhooksTwitchRoutes);
-} catch (err) {
-  console.warn('⚠️ Optional route disabled: webhooksTwitch', err?.message || err);
-}
 
 // Connect to MongoDB - optimized for serverless with global caching
 // Use global to persist connection across serverless function invocations
 global._mongooseConn = global._mongooseConn || { conn: null, promise: null };
-global._mongoMemoryServer = global._mongoMemoryServer || null;
 
 async function connectToDatabase() {
   // Return cached connection if available
@@ -193,27 +161,12 @@ async function connectToDatabase() {
   }
 
   try {
-    const useMemoryDb = process.env.USE_MEMORY_DB === 'true';
-    const mongoUriFromEnv = process.env.MONGODB_URI;
+    // Start new connection
+    const mongoUri =
+      process.env.MONGODB_URI ||
+      'mongodb://localhost:27017/pva-bazaar';
 
-    if (!mongoUriFromEnv && (process.env.NODE_ENV === 'production' || CLOUD_ONLY_MODE) && !useMemoryDb) {
-      throw new Error('MONGODB_URI is required when CLOUD_ONLY_MODE is enabled');
-    }
-
-    let mongoUri = mongoUriFromEnv;
-
-    if (useMemoryDb) {
-      if (!MongoMemoryServer) {
-        ({ MongoMemoryServer } = require('mongodb-memory-server'));
-      }
-      if (!global._mongoMemoryServer) {
-        global._mongoMemoryServer = await MongoMemoryServer.create();
-      }
-      mongoUri = global._mongoMemoryServer.getUri();
-      console.log('🧠 Using in-memory MongoDB for development');
-    } else {
-      console.log('🔌 Connecting to MongoDB...');
-    }
+    console.log('🔌 Connecting to MongoDB...');
 
     // Set timeouts for serverless environment
     global._mongooseConn.promise = mongoose.connect(mongoUri, {
@@ -236,7 +189,7 @@ async function connectToDatabase() {
 // Middleware: Ensure DB connection for routes that need it
 app.use(async (req, res, next) => {
   // Skip DB connection for health/ping endpoints and explicit safe endpoints
-  const skipPaths = ['/health', '/api/health', '/ping', '/api/ping', '/version', '/api/version', '/express-ping', '/api/express-ping', '/dev/token', '/api/dev/token', '/webhooks/stripe', '/api/webhooks/stripe', '/openclaw', '/api/openclaw'];
+  const skipPaths = ['/health', '/ping', '/version', '/express-ping', '/dev/token', '/webhooks/stripe'];
   const skipPath = skipPaths.some(p => req.path === p || req.path.startsWith(p));
   
   if (skipPath) {
@@ -277,25 +230,11 @@ const archiveRoutes = require('../routes/archive');
 const checkoutRoutes = require('../routes/checkout');
 const ordersRoutes = require('../routes/orders');
 const itemsRoutes = require('../routes/items');
-const omnichannelRoutes = require('../routes/omnichannel');
-const solanaRoutes = require('../routes/solana');
 // Secure admin login endpoint
 const adminLoginRoutes = require('../routes/adminLogin');
-// Cloud storage management
-const cloudStorageRoutes = require('../routes/cloudStorage');
-// Attribution & creator analytics routes
-const attributionRoutes = require('../routes/attribution');
-const payoutsRoutes = require('../routes/payouts');
-// Decentralized platform routes
-const streamsRoutes = require('../routes/streams');
-const journalRoutes = require('../routes/journal');
-const didRoutes = require('../routes/did');
-const databasesRoutes = require('../routes/databases');
 // Models for optional seeding
 const Artifact = require('../models/Artifact');
 const User = require('../models/User');
-const Order = require('../models/Order');
-const Payout = require('../models/Payout');
 const jwt = require('jsonwebtoken');
 
 // Legacy gating middleware - returns 410 Gone when LEGACY_MODE !== 'true'
@@ -321,15 +260,11 @@ app.use('/api/health', healthRoutes);
 
 // Simple health check endpoints (no DB dependency)
 app.get('/api/ping', (req, res) => {
-  const build = getBuildInfo();
-  res.setHeader('X-App-Version', build.shortSha);
-  res.status(200).json({ ok: true, message: 'pong', timestamp: new Date().toISOString(), ...build });
+  res.status(200).json({ ok: true, message: 'pong', timestamp: new Date().toISOString() });
 });
 
 app.get('/api/version', (req, res) => {
-  const build = getBuildInfo();
-  res.setHeader('X-App-Version', build.shortSha);
-  res.status(200).json({ ok: true, timestamp: new Date().toISOString(), ...build });
+  res.status(200).json({ ok: true, version: '1.0.0', timestamp: new Date().toISOString() });
 });
 
 app.use('/api/blogs', blogsRoutes);
@@ -342,37 +277,10 @@ app.use('/api/archive', archiveRoutes);
 app.use('/api/checkout', checkoutRoutes);
 app.use('/api/orders', ordersRoutes);
 app.use('/api/items', itemsRoutes);
-app.use('/api/omnichannel', omnichannelRoutes);
-app.use('/api/solana', solanaRoutes);
 app.use('/api/contribute', contributeRoutes);
 app.use('/api/partners', partnersRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/auth', authRoutes);
-app.use('/api/cloud-storage', cloudStorageRoutes);
-app.use('/api/attribution', attributionRoutes);
-app.use('/api/payouts', payoutsRoutes);
-
-// DECENTRALIZED PLATFORM ROUTES (Blueprint v1)
-app.use('/api/streams', streamsRoutes);
-app.use('/api/journal', journalRoutes);
-app.use('/api/did', didRoutes);
-app.use('/api/databases', databasesRoutes);
-app.use('/api/openclaw', openClawRoutes);
-app.use('/api/openclaw', openClawMetricsRoutes); // Prometheus metrics
-app.use('/api/blockchain', blockchainRoutes);
-const bountiesRoutes = require('../routes/bounties');
-app.use('/api/bounties', bountiesRoutes);
-
-// ORACLE, VERIFICATION, DEALS, MANIFESTO AI
-mountOptionalRoute('/api/oracle', '../routes/oracle', 'oracle');
-mountOptionalRoute('/api/verification', '../routes/verification', 'verification');
-const dealsRoutes = require('../routes/deals');
-app.use('/api/deals', dealsRoutes);
-mountOptionalRoute('/api/manifesto', '../routes/manifesto-ai-routes', 'manifesto-ai');
-
-// OAUTH (Twitch & YouTube) - status, live-status, start, callback
-mountOptionalRoute('/api/oauth', '../routes/oauthTwitch', 'oauth-twitch');
-mountOptionalRoute('/api/oauth', '../routes/oauthYouTube', 'oauth-youtube');
 
 // LEGACY MARKETPLACE (gated by LEGACY_MODE flag)
 app.use('/api/artifacts', legacyGate, artifactsRoutes);
@@ -386,15 +294,6 @@ app.use('/api/certificates', legacyGate, certificatesRoutes);
 app.use('/api/dashboard', legacyGate, dashboardRoutes);
 app.use('/api/activity', legacyGate, activityRoutes);
 
-function mountOptionalRoute(mountPath, requirePath, label) {
-  try {
-    const route = require(requirePath);
-    app.use(mountPath, route);
-  } catch (err) {
-    console.warn(`⚠️ Optional route disabled: ${label}`, err?.message || err);
-  }
-}
-
 // Dev-only: issue a token for quick testing
 app.post('/api/dev/token', (req, res) => {
   if (process.env.NODE_ENV !== 'development') return res.status(404).end();
@@ -405,32 +304,30 @@ app.post('/api/dev/token', (req, res) => {
   res.json({ ok: true, token });
 });
 
+// Version endpoint - shows deployed git commit
+app.get('/api/version', (req, res) => {
+  res.json({
+    ok: true,
+    sha: '4f443b9b29d51e45eb4c5423ebfcfa1920873979',
+    shortSha: '4f443b9',
+    message: 'fix: Remove eager DB connection on module load, add /api/ping endpoint',
+    timestamp: new Date().toISOString(),
+  });
+});
+
 // Express ping - guaranteed fast, no DB
 app.get('/api/express-ping', (req, res) => {
   res.json({ ok: true, source: 'express' });
 });
 
-// Decentralized stack status (cloud + web3/IPFS/OpenClaw readiness)
-app.get('/api/decentralized/status', (req, res) => {
-  const rpcUrl = process.env.ETHEREUM_RPC_URL || process.env.RPC_URL || '';
-  const ipfsGateway = process.env.PINATA_GATEWAY_URL || '';
-  const ipfsProviderConfigured = Boolean(
-    process.env.PINATA_API_KEY || process.env.WEB3_STORAGE_TOKEN || process.env.IPFS_NODE_URL,
-  );
-  const openclawConfigured = Boolean(
-    process.env.OPENCLAW_WEBHOOK_URL || process.env.OPENCLAW_GATEWAY_URL,
-  );
-
+// Instant health check (no DB connection)
+app.get('/api/ping', (req, res) => {
+  res.setHeader('X-App-Version', '4f443b9');
   res.json({
     ok: true,
-    cloudOnlyMode: CLOUD_ONLY_MODE,
-    decentralized: {
-      rpcConfigured: Boolean(rpcUrl),
-      ipfsConfigured: ipfsProviderConfigured,
-      ipfsGateway: ipfsGateway || null,
-      openclawBridgeConfigured: openclawConfigured,
-    },
+    message: 'API is responding',
     timestamp: new Date().toISOString(),
+    version: '1.0.1',
   });
 });
 
@@ -438,7 +335,6 @@ app.get('/api/decentralized/status', (req, res) => {
 app.get('/api/health', async (req, res) => {
   let mongoConnected = false;
   let dbError = null;
-  const build = getBuildInfo();
 
   try {
     // Attempt to connect with timeout protection
@@ -455,7 +351,19 @@ app.get('/api/health', async (req, res) => {
   }
 
   // Prepare allowed origins for display (safe - no secrets)
-  const allowedOrigins = getAllowedOrigins();
+  const allowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'https://pvabazaar.org',
+    'https://www.pvabazaar.org',
+  ];
+  if (process.env.ALLOWED_ORIGIN) {
+    const additionalOrigins = process.env.ALLOWED_ORIGIN
+      .split(',')
+      .map(o => o.trim())
+      .filter(o => o.length > 0);
+    allowedOrigins.push(...additionalOrigins);
+  }
 
   // Always return 200 with status info
   res.json({
@@ -464,10 +372,6 @@ app.get('/api/health', async (req, res) => {
     mongo: mongoConnected,
     ready: process.env.API_READY !== 'false' && mongoConnected,
     nodeEnv: process.env.NODE_ENV || 'development',
-    version: build.version,
-    sha: build.sha,
-    shortSha: build.shortSha,
-    deploymentId: build.deploymentId,
     allowedOrigins: allowedOrigins,
     timestamp: new Date().toISOString(),
     ...(dbError && { dbError }),
@@ -518,7 +422,7 @@ async function autoSeed() {
     console.log('🌱 Seeding dev database...');
     let admin = await User.findOne({ email: 'admin@pvabazaar.org' });
     if (!admin) {
-      admin = new User({ name: 'PVA Admin', email: 'admin@pvabazaar.org', password: 'admin123', role: 'admin' });
+      admin = new User({ name: 'PVA Admin', email: 'admin@pvabazaar.org', password: 'admin123' });
       await admin.save();
       console.log('✅ Admin user created: admin@pvabazaar.org / admin123');
     }
@@ -566,104 +470,8 @@ async function autoSeed() {
         },
       },
     ];
-    const insertedArtifacts = await Artifact.insertMany(sampleArtifacts);
-    console.log(`✅ Seeded ${insertedArtifacts.length} artifacts`);
-
-    // Seed sample orders with attribution for dashboard demo
-    const sampleOrders = [
-      {
-        itemId: insertedArtifacts[0]._id,
-        itemSnapshot: {
-          name: insertedArtifacts[0].name,
-          slug: insertedArtifacts[0].name.toLowerCase().replace(/\s+/g, '-'),
-          priceCents: insertedArtifacts[0].price * 100,
-          currency: 'USD',
-        },
-        stripeSessionId: `demo_session_${Date.now()}_1`,
-        stripePaymentIntentId: `demo_pi_${Date.now()}_1`,
-        paymentStatus: 'paid',
-        refundStatus: 'none',
-        amountTotal: insertedArtifacts[0].price * 100,
-        currency: 'USD',
-        customerEmail: 'collector@example.com',
-        customerName: 'Art Collector',
-        fulfillmentStatus: 'unfulfilled',
-        attribution: {
-          utm_source: 'creator_zara_hussein',
-          utm_medium: 'instagram',
-          utm_campaign: 'spring_collection_2026',
-          utm_content: 'carousel_post',
-          creatorHandle: 'zara_hussein',
-          referralCode: 'ZARA_HUSSEIN_001',
-          commissionRate: 0.15,
-          commissionAmountCents: insertedArtifacts[0].price * 100 * 0.15,
-          attributionSource: 'utm_params',
-          attributedAt: new Date(),
-        },
-      },
-      {
-        itemId: insertedArtifacts[1]._id,
-        itemSnapshot: {
-          name: insertedArtifacts[1].name,
-          slug: insertedArtifacts[1].name.toLowerCase().replace(/\s+/g, '-'),
-          priceCents: insertedArtifacts[1].price * 100,
-          currency: 'USD',
-        },
-        stripeSessionId: `demo_session_${Date.now()}_2`,
-        stripePaymentIntentId: `demo_pi_${Date.now()}_2`,
-        paymentStatus: 'paid',
-        refundStatus: 'none',
-        amountTotal: insertedArtifacts[1].price * 100,
-        currency: 'USD',
-        customerEmail: 'enthusiast@example.com',
-        customerName: 'Art Enthusiast',
-        fulfillmentStatus: 'unfulfilled',
-        attribution: {
-          utm_source: 'creator_pasha_vii',
-          utm_medium: 'tiktok',
-          utm_campaign: 'heritage_series',
-          utm_content: 'video_tour',
-          creatorHandle: 'pasha_vii',
-          referralCode: 'PASHA_VII_001',
-          commissionRate: 0.1,
-          commissionAmountCents: insertedArtifacts[1].price * 100 * 0.1,
-          attributionSource: 'utm_params',
-          attributedAt: new Date(),
-        },
-      },
-      {
-        itemId: insertedArtifacts[0]._id,
-        itemSnapshot: {
-          name: insertedArtifacts[0].name,
-          slug: insertedArtifacts[0].name.toLowerCase().replace(/\s+/g, '-'),
-          priceCents: insertedArtifacts[0].price * 100,
-          currency: 'USD',
-        },
-        stripeSessionId: `demo_session_${Date.now()}_3`,
-        stripePaymentIntentId: `demo_pi_${Date.now()}_3`,
-        paymentStatus: 'paid',
-        refundStatus: 'none',
-        amountTotal: insertedArtifacts[0].price * 100 * 2,
-        currency: 'USD',
-        customerEmail: 'curator@example.com',
-        customerName: 'Museum Curator',
-        fulfillmentStatus: 'unfulfilled',
-        attribution: {
-          utm_source: 'creator_zara_hussein',
-          utm_medium: 'linkedin',
-          utm_campaign: 'institutional_outreach',
-          utm_content: 'partnership_post',
-          creatorHandle: 'zara_hussein',
-          referralCode: 'ZARA_HUSSEIN_002',
-          commissionRate: 0.15,
-          commissionAmountCents: insertedArtifacts[0].price * 100 * 2 * 0.15,
-          attributionSource: 'utm_params',
-          attributedAt: new Date(Date.now() - 86400000),
-        },
-      },
-    ];
-    await Order.insertMany(sampleOrders);
-    console.log(`✅ Seeded ${sampleOrders.length} attributed orders`);
+    await Artifact.insertMany(sampleArtifacts);
+    console.log(`✅ Seeded ${sampleArtifacts.length} artifacts`);
   } catch (e) {
     console.warn('⚠️ Auto-seed skipped:', e?.message || e);
   }
@@ -678,12 +486,11 @@ module.exports.connectToDatabase = connectToDatabase;
 // Start the server only when run directly (local dev)
 if (require.main === module) {
   const PORT = process.env.PORT || 5001;
-  const advertisedBase = process.env.PUBLIC_API_URL || 'https://api.pvabazaar.org';
   connectToDatabase()
     .then(() => autoSeed())
     .finally(() => {
       app.listen(PORT, () => {
-        console.log(`🚀 Server running on ${advertisedBase}`);
+        console.log(`🚀 Server running on http://localhost:${PORT}`);
       });
     });
 }

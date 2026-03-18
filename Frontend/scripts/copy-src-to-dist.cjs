@@ -29,8 +29,8 @@ console.log('Copying', pagesSrc, '->', pagesDest);
 copyRecursive(pagesSrc, pagesDest);
 console.log('Pages copy complete');
 
-// Copy only the active long-form content that still belongs in production.
-['writings'].forEach((dir) => {
+// Copy all static HTML directories (CRITICAL FOR WRITINGS!)
+['writings', 'biography', 'novel', 'research'].forEach((dir) => {
   const s = path.join(projectRoot, dir);
   const d = path.join(projectRoot, 'dist', dir);
   if (fs.existsSync(s)) {

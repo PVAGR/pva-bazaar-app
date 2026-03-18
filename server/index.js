@@ -225,7 +225,7 @@ app.post('/api/register', upload.single('image'), async (req, res) => {
 
     const documentation = {
       ...historicalRecord,
-      external_url: `${process.env.SERVER_BASE_URL || 'https://api.pvabazaar.org'}/artifact/${info.lastInsertRowid}`,
+      external_url: `${process.env.SERVER_BASE_URL || 'http://localhost:3001'}/artifact/${info.lastInsertRowid}`,
     };
 
     return res.json({
@@ -694,15 +694,14 @@ royaltyTracker.initializeRoyaltyTables();
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
-  const baseUrl = process.env.SERVER_BASE_URL || 'https://api.pvabazaar.org';
-  console.log(`Artifact Server running on ${baseUrl}`);
-  console.log(`  Dashboard -> ${baseUrl}/dashboard`);
-  console.log(`  Register  -> POST ${baseUrl}/api/register`);
-  console.log(`  Artifacts -> GET  ${baseUrl}/api/artifacts`);
-  console.log(`  Artifact  -> GET  ${baseUrl}/api/artifacts/:id`);
-  console.log(`  External  -> POST ${baseUrl}/api/artifacts/:id/list-external`);
-  console.log(`  IPFS      -> POST ${baseUrl}/api/ipfs-upload`);
-  console.log(`  Mint      -> POST ${baseUrl}/api/mint`);
+  console.log(`Artifact Server running on http://localhost:${PORT}`);
+  console.log(`  Dashboard -> http://localhost:${PORT}/dashboard`);
+  console.log(`  Register  -> POST http://localhost:${PORT}/api/register`);
+  console.log(`  Artifacts -> GET  http://localhost:${PORT}/api/artifacts`);
+  console.log(`  Artifact  -> GET  http://localhost:${PORT}/api/artifacts/:id`);
+  console.log(`  External  -> POST http://localhost:${PORT}/api/artifacts/:id/list-external`);
+  console.log(`  IPFS      -> POST http://localhost:${PORT}/api/ipfs-upload`);
+  console.log(`  Mint      -> POST http://localhost:${PORT}/api/mint`);
   console.log('  Webhooks  -> POST /api/webhooks/ebay|amazon|website');
   console.log(`  Webhook auth -> ${process.env.WEBHOOK_SHARED_SECRET ? 'enabled' : 'disabled (set WEBHOOK_SHARED_SECRET)'}`);
 });

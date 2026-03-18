@@ -11,10 +11,7 @@ require('dotenv').config();
 async function exportData() {
   try {
     // Connect to MongoDB
-    if (!process.env.MONGODB_URI) {
-      throw new Error('MONGODB_URI is required for export');
-    }
-    await mongoose.connect(process.env.MONGODB_URI);
+    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/pvabazaar');
 
     // Get all users (excluding passwords)
     const users = await User.find({}).select('-password').lean();

@@ -2,12 +2,11 @@ const express = require('express');
 const router = express.Router();
 const Artifact = require('../models/Artifact');
 const auth = require('../middleware/auth');
-const { createFractionalEvent, dispatchToOpenClaw } = require('../utils/openclaw-events');
 
 // GET /api/transactions?limit=5 - Recent transactions (mocked for now)
-router.get('/', auth, async (req, res) => {
+router.get('/', async (req, res) => {
 	try {
-		const limit = Math.min(parseInt(req.query.limit, 10) || 5, 100);
+		const limit = parseInt(req.query.limit, 10) || 5;
 		// In a real app, fetch from a Transaction model/log
 		// For now, mock with recent artifacts and users
 		const User = require('../models/User');
@@ -33,9 +32,8 @@ router.get('/', auth, async (req, res) => {
 router.post('/shares/buy', auth, async (req, res) => {
 	try {
 		const { artifactId, wallet, amountUSD, shares } = req.body || {};
-		const sharesNum = parseInt(shares, 10);
-		if (!artifactId || !wallet || !sharesNum || sharesNum < 1) {
-			return res.status(400).json({ ok: false, message: 'Artifact ID, wallet, and a positive integer share count are required' });
+		if (!artifactId || !wallet || !shares) {
+			return res.status(400).json({ ok: false, message: 'Artifact ID, wallet, and shares are required' });
 		}
 		const artifact = await Artifact.findById(artifactId);
 		if (!artifact) {
@@ -46,20 +44,11 @@ router.post('/shares/buy', auth, async (req, res) => {
 		}
 		const current = artifact.fractionalization.soldShares || 0;
 		const total = artifact.fractionalization.totalShares || 0;
-		if (current + sharesNum > total) {
+		if (current + shares > total) {
 			return res.status(400).json({ ok: false, message: 'Not enough shares available' });
 		}
-		artifact.fractionalization.soldShares = current + sharesNum;
+		artifact.fractionalization.soldShares = current + shares;
 		await artifact.save();
-
-		// Dispatch fractional purchase event (non-blocking)
-		dispatchToOpenClaw(createFractionalEvent('share_purchased', artifact, {
-			totalShares: total,
-			sharesPurchased: sharesNum,
-			sharePrice: artifact.fractionalization.sharePrice || 0,
-			buyerId: wallet,
-		}, { amountUSD: amountUSD || 0, wallet })).catch(() => {});
-
 		res.json({ ok: true, message: 'Shares purchased successfully', data: { artifactId, newSoldShares: artifact.fractionalization.soldShares, amountUSD: amountUSD || 0, buyer: wallet } });
 	} catch (error) {
 		console.error('Share purchase error:', error);

@@ -18,8 +18,8 @@ class IPFSService {
     // Web3.Storage (alternative)
     this.web3StorageToken = process.env.WEB3_STORAGE_TOKEN;
     
-    // Cloud IPFS API endpoint (fallback)
-    this.ipfsNodeUrl = process.env.IPFS_NODE_URL || 'https://ipfs.infura.io:5001';
+    // Local IPFS node (fallback)
+    this.ipfsNodeUrl = process.env.IPFS_NODE_URL || 'http://localhost:5001';
   }
 
   /**

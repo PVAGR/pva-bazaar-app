@@ -111,7 +111,7 @@ class IPFSService {
         { trait_type: 'Royalty', value: '10%' },
         { trait_type: 'Type', value: 'Physical-Digital Hybrid' },
       ],
-      external_url: `${process.env.SERVER_BASE_URL || 'https://api.pvabazaar.org'}/artifact/${artifact.id || ''}`,
+      external_url: `${process.env.SERVER_BASE_URL || 'http://localhost:3001'}/artifact/${artifact.id || ''}`,
       documentation_version: '1.0',
     };
   }

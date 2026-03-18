@@ -7,7 +7,7 @@ dotenv.config({ path: path.join(__dirname, '..', '.env') });
 
 dotenv.config();
 
-const CLOUD_ONLY_MODE = process.env.CLOUD_ONLY_MODE !== 'false';
+const DEFAULT_URI = 'mongodb://localhost:27017/pvabazaar';
 const POLL_INTERVAL_MS = Math.max(10000, Number(process.env.OMNICHANNEL_POLL_INTERVAL_MS || 300000));
 const POLL_LIMIT = Math.max(1, Math.min(Number(process.env.OMNICHANNEL_POLL_LIMIT || 50), 500));
 
@@ -16,10 +16,7 @@ let running = false;
 let shuttingDown = false;
 
 async function connectDb() {
-  const uri = process.env.MONGODB_URI || '';
-  if (!uri) {
-    throw new Error(`MONGODB_URI is required${CLOUD_ONLY_MODE ? ' when CLOUD_ONLY_MODE is enabled' : ''}`);
-  }
+  const uri = process.env.MONGODB_URI || DEFAULT_URI;
   await mongoose.connect(uri, {
     dbName: process.env.MONGODB_DB_NAME || 'pvabazaar',
     serverSelectionTimeoutMS: 10000,
