@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "check:theme": "node scripts/check-theme-hardcoded.cjs",
+    "audit:theme:static": "node scripts/audit-static-light-backgrounds.cjs",
     "prebuild": "node scripts/vercel-info.cjs",
     "build": "vite build",
     "postbuild": "node scripts/copy-src-to-dist.cjs",
