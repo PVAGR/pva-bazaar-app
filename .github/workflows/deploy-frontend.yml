@@ -14,7 +14,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: "pages"
+  group: "deploy-frontend-pages-vercel-${{ github.ref }}"
   cancel-in-progress: true
 
 jobs:
@@ -117,7 +117,28 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Validate Vercel frontend secrets
+        id: vercel_secrets
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN || secrets.VERCEL_API_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID || vars.VERCEL_ORG_ID }}
+          VERCEL_FRONTEND_PROJECT_ID: ${{ secrets.VERCEL_FRONTEND_PROJECT_ID || vars.VERCEL_FRONTEND_PROJECT_ID || secrets.VERCEL_PROJECT_ID || vars.VERCEL_PROJECT_ID }}
+        run: |
+          missing=0
+          for name in VERCEL_TOKEN VERCEL_ORG_ID VERCEL_FRONTEND_PROJECT_ID; do
+            if [ -z "${!name}" ]; then
+              echo "::warning title=Missing Vercel config::${name} is not configured; skipping preview deploy"
+              missing=1
+            fi
+          done
+          if [ "$missing" -eq 0 ]; then
+            echo "ready=true" >> $GITHUB_OUTPUT
+          else
+            echo "ready=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Setup Node
+        if: steps.vercel_secrets.outputs.ready == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -125,14 +146,17 @@ jobs:
           cache-dependency-path: 'Frontend/package-lock.json'
 
       - name: Install frontend dependencies
+        if: steps.vercel_secrets.outputs.ready == 'true'
         run: npm ci || npm install --no-audit --no-fund
 
       - name: Build frontend
+        if: steps.vercel_secrets.outputs.ready == 'true'
         run: npm run build
         env:
           VITE_API_URL: ${{ secrets.VITE_API_URL || 'https://api.pvabazaar.org/api' }}
 
       - name: Create .vercelignore
+        if: steps.vercel_secrets.outputs.ready == 'true'
         run: |
           cat > .vercelignore <<EOF
           node_modules
@@ -143,10 +167,11 @@ jobs:
           EOF
 
       - name: Deploy Frontend Preview to Vercel
+        if: steps.vercel_secrets.outputs.ready == 'true'
         uses: amondnet/vercel-action@v25
         with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-token: ${{ secrets.VERCEL_TOKEN || secrets.VERCEL_API_TOKEN }}
           working-directory: ./Frontend
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_FRONTEND_PROJECT_ID }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID || vars.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_FRONTEND_PROJECT_ID || vars.VERCEL_FRONTEND_PROJECT_ID || secrets.VERCEL_PROJECT_ID || vars.VERCEL_PROJECT_ID }}
 

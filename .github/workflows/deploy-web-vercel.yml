@@ -2,8 +2,10 @@ name: Deploy Web to Vercel
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
+    paths:
+      - 'Frontend/**'
+      - '.github/workflows/deploy-web-vercel.yml'
   workflow_dispatch:
 
 jobs:
@@ -12,8 +14,8 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID || vars.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_FRONTEND_PROJECT_ID || vars.VERCEL_FRONTEND_PROJECT_ID || secrets.VERCEL_PROJECT_ID || vars.VERCEL_PROJECT_ID }}
 
     defaults:
       run:
@@ -31,14 +33,31 @@ jobs:
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
 
+      - name: Validate Vercel production secrets
+        run: |
+          missing=0
+          for name in VERCEL_ORG_ID VERCEL_PROJECT_ID; do
+            if [ -z "${!name}" ]; then
+              echo "::error title=Missing required Vercel setting::${name} is not configured"
+              missing=1
+            fi
+          done
+          if [ -z "${{ secrets.VERCEL_TOKEN || secrets.VERCEL_API_TOKEN }}" ]; then
+            echo "::error title=Missing required Vercel setting::VERCEL_TOKEN/VERCEL_API_TOKEN is not configured"
+            missing=1
+          fi
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+
       - name: Pull Vercel env (Production)
-        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN || secrets.VERCEL_API_TOKEN }}
 
       - name: Build (prebuilt)
-        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN || secrets.VERCEL_API_TOKEN }}
 
       - name: Deploy to Production
-        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN || secrets.VERCEL_API_TOKEN }}
 
       - name: Verify backend health (direct)
         run: |

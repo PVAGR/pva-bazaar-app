@@ -45,9 +45,21 @@ jobs:
           fi
 
       - name: Deploy backend project to Vercel
+        id: vercel_action
         uses: amondnet/vercel-action@v25
+        continue-on-error: true
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN || secrets.VERCEL_API_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID || vars.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_BACKEND_PROJECT_ID || secrets.VERCEL_PROJECT_ID || vars.VERCEL_BACKEND_PROJECT_ID || vars.VERCEL_PROJECT_ID }}
+          working-directory: ./backend
           vercel-args: "--prod"
+
+      - name: Fallback backend deploy via Vercel CLI
+        if: steps.vercel_action.outcome != 'success'
+        run: |
+          npm i -g vercel@latest
+          cd backend
+          vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN || secrets.VERCEL_API_TOKEN }}
+          vercel build --prod --token=${{ secrets.VERCEL_TOKEN || secrets.VERCEL_API_TOKEN }}
+          vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN || secrets.VERCEL_API_TOKEN }}
