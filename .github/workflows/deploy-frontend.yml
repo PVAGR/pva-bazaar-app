@@ -78,6 +78,8 @@ jobs:
         run: npm run build
         env:
           VITE_API_URL: ${{ secrets.VITE_API_URL || 'https://api.pvabazaar.org/api' }}
+          VITE_CLOUDINARY_CLOUD_NAME: ${{ secrets.VITE_CLOUDINARY_CLOUD_NAME || vars.VITE_CLOUDINARY_CLOUD_NAME || '' }}
+          VITE_CLOUDINARY_UPLOAD_PRESET: ${{ secrets.VITE_CLOUDINARY_UPLOAD_PRESET || vars.VITE_CLOUDINARY_UPLOAD_PRESET || '' }}
           VITE_SENTRY_RELEASE: ${{ env.RELEASE }}
 
       - name: Validate dist output
@@ -154,6 +156,8 @@ jobs:
         run: npm run build
         env:
           VITE_API_URL: ${{ secrets.VITE_API_URL || 'https://api.pvabazaar.org/api' }}
+          VITE_CLOUDINARY_CLOUD_NAME: ${{ secrets.VITE_CLOUDINARY_CLOUD_NAME || vars.VITE_CLOUDINARY_CLOUD_NAME || '' }}
+          VITE_CLOUDINARY_UPLOAD_PRESET: ${{ secrets.VITE_CLOUDINARY_UPLOAD_PRESET || vars.VITE_CLOUDINARY_UPLOAD_PRESET || '' }}
 
       - name: Create .vercelignore
         if: steps.vercel_secrets.outputs.ready == 'true'

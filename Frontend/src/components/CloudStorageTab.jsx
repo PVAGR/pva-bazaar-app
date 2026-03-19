@@ -13,6 +13,7 @@ const logger = createLogger('CloudStorageTab');
 
 export default function CloudStorageTab() {
   const [providers, setProviders] = useState(null);
+  const [cloudinaryStatus, setCloudinaryStatus] = useState(null);
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [uploadingTo, setUploadingTo] = useState(null);
@@ -23,6 +24,7 @@ export default function CloudStorageTab() {
 
   useEffect(() => {
     loadProviders();
+    loadCloudinaryStatus();
     loadFiles();
   }, []);
 
@@ -45,6 +47,17 @@ export default function CloudStorageTab() {
       }
     } catch (err) {
       logger.error('Load files error:', err);
+    }
+  };
+
+  const loadCloudinaryStatus = async () => {
+    try {
+      const data = await apiGet('/cloud-storage/status');
+      if (data.ok && data.cloudinary) {
+        setCloudinaryStatus(data.cloudinary);
+      }
+    } catch (err) {
+      logger.error('Load Cloudinary status error:', err);
     }
   };
 
@@ -77,6 +90,7 @@ export default function CloudStorageTab() {
         setSuccess(`✅ Uploaded to ${provider.toUpperCase()}: ${data.url}`);
         setSelectedFile(null);
         document.getElementById('file-input').value = '';
+        loadCloudinaryStatus();
         loadFiles();
       } else {
         setError(data.error || 'Upload failed');
@@ -115,6 +129,7 @@ export default function CloudStorageTab() {
       const data = await apiPost(`/cloud-storage/test-connection/${provider}`);
       if (data.connected) {
         setSuccess(`✅ ${providers[provider].name} is connected and working!`);
+        loadCloudinaryStatus();
       } else {
         setError(`❌ ${providers[provider].name} connection failed: ${data.message}`);
       }
@@ -156,6 +171,15 @@ export default function CloudStorageTab() {
         <div className="alert alert-success">
           {success}
           <button onClick={() => setSuccess(null)}>×</button>
+        </div>
+      )}
+
+      {cloudinaryStatus && (
+        <div className={`alert ${cloudinaryStatus.configured ? 'alert-success' : 'alert-error'}`}>
+          {cloudinaryStatus.configured
+            ? '☁️ Cloudinary backend is connected.'
+            : `☁️ Cloudinary backend is not configured. Missing: ${cloudinaryStatus.missingVars.join(', ')}`}
+          <button onClick={loadCloudinaryStatus}>↻</button>
         </div>
       )}
 

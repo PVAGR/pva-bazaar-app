@@ -158,7 +158,7 @@ app.use('/webhooks', webhookLimiter);
 app.use((req, res, next) => {
   const apiNotReady = process.env.API_READY === 'false';
   const isProd = process.env.NODE_ENV === 'production';
-  const allowlist = ['/health', '/api/health', '/dev/token', '/api/dev/token', '/ping', '/api/ping', '/version', '/api/version', '/express-ping', '/api/express-ping', '/openclaw', '/api/openclaw'];
+  const allowlist = ['/health', '/api/health', '/dev/token', '/api/dev/token', '/ping', '/api/ping', '/version', '/api/version', '/express-ping', '/api/express-ping', '/openclaw', '/api/openclaw', '/decentralized/status', '/api/decentralized/status', '/blockchain/health', '/api/blockchain/health'];
   if (apiNotReady && isProd && !allowlist.some(p => req.path.startsWith(p))) {
     return res.status(503).json({ ok: false, message: 'Service not configured. Missing environment secrets.' });
   }
@@ -236,7 +236,7 @@ async function connectToDatabase() {
 // Middleware: Ensure DB connection for routes that need it
 app.use(async (req, res, next) => {
   // Skip DB connection for health/ping endpoints and explicit safe endpoints
-  const skipPaths = ['/health', '/api/health', '/ping', '/api/ping', '/version', '/api/version', '/express-ping', '/api/express-ping', '/dev/token', '/api/dev/token', '/webhooks/stripe', '/api/webhooks/stripe', '/openclaw', '/api/openclaw'];
+  const skipPaths = ['/health', '/api/health', '/ping', '/api/ping', '/version', '/api/version', '/express-ping', '/api/express-ping', '/dev/token', '/api/dev/token', '/webhooks/stripe', '/api/webhooks/stripe', '/openclaw', '/api/openclaw', '/decentralized/status', '/api/decentralized/status', '/blockchain/health', '/api/blockchain/health'];
   const skipPath = skipPaths.some(p => req.path === p || req.path.startsWith(p));
   
   if (skipPath) {
@@ -290,6 +290,7 @@ const payoutsRoutes = require('../routes/payouts');
 const streamsRoutes = require('../routes/streams');
 const journalRoutes = require('../routes/journal');
 const didRoutes = require('../routes/did');
+const dppRoutes = require('../routes/dpp');
 const databasesRoutes = require('../routes/databases');
 // Models for optional seeding
 const Artifact = require('../models/Artifact');
@@ -356,6 +357,7 @@ app.use('/api/payouts', payoutsRoutes);
 app.use('/api/streams', streamsRoutes);
 app.use('/api/journal', journalRoutes);
 app.use('/api/did', didRoutes);
+app.use('/api/dpp', dppRoutes);
 app.use('/api/databases', databasesRoutes);
 app.use('/api/openclaw', openClawRoutes);
 app.use('/api/openclaw', openClawMetricsRoutes); // Prometheus metrics

@@ -12,6 +12,22 @@ const fs = require('fs').promises;
 const path = require('path');
 const adminSession = require('../middleware/adminSession');
 
+const isCloudinaryConfigured = () =>
+  Boolean(
+    process.env.CLOUDINARY_CLOUD_NAME &&
+      process.env.CLOUDINARY_API_KEY &&
+      process.env.CLOUDINARY_API_SECRET
+  );
+
+const getMissingCloudinaryVars = () => {
+  const required = [
+    'CLOUDINARY_CLOUD_NAME',
+    'CLOUDINARY_API_KEY',
+    'CLOUDINARY_API_SECRET',
+  ];
+  return required.filter((name) => !process.env[name]);
+};
+
 // Configure multer for memory storage
 const upload = multer({ 
   storage: multer.memoryStorage(),
@@ -24,15 +40,16 @@ const upload = multer({
  */
 router.get('/providers', adminSession, async (req, res) => {
   try {
+    const cloudinaryConfigured = isCloudinaryConfigured();
     const providers = {
       cloudinary: {
         name: 'Cloudinary',
-        configured: !!(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY),
+        configured: cloudinaryConfigured,
         signupUrl: 'https://cloudinary.com/users/register/free',
         dashboardUrl: 'https://cloudinary.com/console',
         docsUrl: 'https://cloudinary.com/documentation',
         features: ['Images', 'Videos', 'CDN', 'Transformations'],
-        status: process.env.CLOUDINARY_CLOUD_NAME ? 'connected' : 'disconnected'
+        status: cloudinaryConfigured ? 'connected' : 'disconnected'
       },
       pinata: {
         name: 'Pinata IPFS',
@@ -80,12 +97,35 @@ router.get('/providers', adminSession, async (req, res) => {
 });
 
 /**
+ * GET /api/cloud-storage/status
+ * Returns a focused readiness check for Cloudinary.
+ */
+router.get('/status', adminSession, async (req, res) => {
+  try {
+    const configured = isCloudinaryConfigured();
+    const missingVars = getMissingCloudinaryVars();
+
+    return res.json({
+      ok: true,
+      cloudinary: {
+        configured,
+        status: configured ? 'connected' : 'disconnected',
+        missingVars,
+      },
+    });
+  } catch (error) {
+    console.error('Cloud storage status error:', error);
+    return res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+/**
  * POST /api/cloud-storage/upload/cloudinary
  * Upload file to Cloudinary
  */
 router.post('/upload/cloudinary', adminSession, upload.single('file'), async (req, res) => {
   try {
-    if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+    if (!isCloudinaryConfigured()) {
       return res.status(400).json({ 
         ok: false, 
         error: 'Cloudinary not configured. Add CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET to environment variables.' 
@@ -311,7 +351,7 @@ router.delete('/delete/:provider/:id', adminSession, async (req, res) => {
     }
 
     if (provider === 'cloudinary') {
-      if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+      if (!isCloudinaryConfigured()) {
         return res.status(400).json({ ok: false, error: 'Cloudinary not configured' });
       }
 
@@ -342,7 +382,7 @@ router.post('/test-connection/:provider', adminSession, async (req, res) => {
     const { provider } = req.params;
 
     if (provider === 'cloudinary') {
-      if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY) {
+      if (!isCloudinaryConfigured()) {
         return res.json({ ok: false, connected: false, message: 'Cloudinary credentials not configured' });
       }
 

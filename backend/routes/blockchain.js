@@ -542,7 +542,7 @@ router.get('/health', (_req, res) => {
     ok: true,
     message: 'Blockchain service is operational',
     network: 'base',
-    rpc: !!process.env.ETHEREUM_RPC_URL,
+    rpc: !!(process.env.ETHEREUM_RPC_URL || process.env.RPC_URL),
   });
 });
 

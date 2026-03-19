@@ -2,8 +2,25 @@ const { Web3 } = require('web3');
 const path = require('path');
 const fs = require('fs');
 
-// Initialize Web3
-const web3 = new Web3(process.env.ETHEREUM_RPC_URL);
+function getRpcUrl() {
+  return String(process.env.ETHEREUM_RPC_URL || process.env.RPC_URL || '').trim();
+}
+
+let web3 = null;
+
+function getWeb3() {
+  if (web3) return web3;
+  const rpcUrl = getRpcUrl();
+  if (!rpcUrl) return null;
+
+  try {
+    web3 = new Web3(rpcUrl);
+    return web3;
+  } catch (error) {
+    console.warn('Web3 initialization failed:', error.message);
+    return null;
+  }
+}
 
 // Load ABI
 const ABI_PATH = path.join(__dirname, 'abi', 'PVAUniversal721.min.abi.json');
@@ -27,11 +44,16 @@ try {
  */
 async function verifyOnChain(contractAddress, tokenId) {
   try {
-    if (!web3.utils.isAddress(contractAddress)) {
+    const web3Client = getWeb3();
+    if (!web3Client) {
+      throw new Error('Blockchain RPC is not configured. Set ETHEREUM_RPC_URL or RPC_URL');
+    }
+
+    if (!web3Client.utils.isAddress(contractAddress)) {
       throw new Error('Invalid contract address');
     }
 
-    const contract = new web3.eth.Contract(ABI, contractAddress);
+    const contract = new web3Client.eth.Contract(ABI, contractAddress);
 
     const [owner, uri, baseURI] = await Promise.all([
       contract.methods.ownerOf(tokenId).call(),
@@ -86,9 +108,19 @@ async function inspectTransaction(txHash) {
     throw new Error('Invalid transaction hash format');
   }
 
+  const web3Client = getWeb3();
+  if (!web3Client) {
+    return {
+      found: false,
+      status: 'rpc_not_configured',
+      txHash: hash,
+      rawError: 'Blockchain RPC is not configured. Set ETHEREUM_RPC_URL or RPC_URL',
+    };
+  }
+
   const [tx, receipt] = await Promise.all([
-    web3.eth.getTransaction(hash),
-    web3.eth.getTransactionReceipt(hash),
+    web3Client.eth.getTransaction(hash),
+    web3Client.eth.getTransactionReceipt(hash),
   ]);
 
   if (!tx) {
@@ -113,7 +145,7 @@ async function inspectTransaction(txHash) {
     };
   }
 
-  const block = await web3.eth.getBlock(receipt.blockNumber).catch(() => null);
+  const block = await web3Client.eth.getBlock(receipt.blockNumber).catch(() => null);
   const txStatus = receipt.status === true || receipt.status === '0x1' ? 'confirmed' : 'failed';
 
   return {
@@ -130,7 +162,9 @@ async function inspectTransaction(txHash) {
 }
 
 module.exports = {
-  web3,
+  web3: getWeb3(),
+  getWeb3,
+  getRpcUrl,
   verifyOnChain,
   normalizeNetwork,
   getExplorerTxUrl,
