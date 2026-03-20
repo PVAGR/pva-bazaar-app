@@ -6,15 +6,52 @@
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://pvabazaar.org/public/blogs.html</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://pvabazaar.org/status.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
+  <url>
+    <loc>https://pvabazaar.org/magnum-opus.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://pvabazaar.org/novel/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://pvabazaar.org/biography/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://pvabazaar.org/research/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://pvabazaar.org/writings/pva-archive.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url><loc>https://pvabazaar.org/writings/aetherzamin.html</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://pvabazaar.org/writings/amnesia-consciousness.html</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://pvabazaar.org/writings/balance.html</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://pvabazaar.org/writings/eden-theory.html</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://pvabazaar.org/writings/eternal-renewal.html</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://pvabazaar.org/writings/kenya-initiative.html</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://pvabazaar.org/writings/oracle-assessment.html</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://pvabazaar.org/writings/personal-chronicle.html</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://pvabazaar.org/writings/personal-reflections.html</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://pvabazaar.org/writings/pilgrimage.html</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://pvabazaar.org/writings/pura-vida.html</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://pvabazaar.org/writings/pva-business-model.html</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://pvabazaar.org/writings/pva-food.html</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://pvabazaar.org/writings/sacred-cannabis.html</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://pvabazaar.org/writings/sacred-texts.html</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://pvabazaar.org/writings/stream.html</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://pvabazaar.org/writings/this-or-that.html</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
   <url>
     <loc>https://pvabazaar.org/novel/</loc>
     <changefreq>weekly</changefreq>

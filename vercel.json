@@ -16,6 +16,13 @@
   ],
   "routes": [
     { "src": "/api/(.*)", "dest": "/api/[...path].js" },
+    { "src": "^/writings/akashic-records(?:\\.html)?/?$", "status": 308, "dest": "/writings/pva-archive.html" },
+    { "src": "^/writings/?$", "status": 308, "dest": "/#/library" },
+    { "src": "^/writings/([^/.]+)/?$", "status": 308, "dest": "/writings/$1.html" },
+    { "src": "^/pages/(?:admin|pvadashboard)\\.html$", "status": 308, "dest": "/#/admin" },
+    { "src": "^/pages/(?:portfolio|productshowcase|market|pvashares|assetcreate|checkoutmint|artifact|provenance|provtrack|provtracker)\\.html$", "status": 308, "dest": "/#/marketplace" },
+    { "src": "^/pages/(?:home|welcome|contact)\\.html$", "status": 308, "dest": "/" },
+    { "src": "^/pages/.*\\.html$", "status": 308, "dest": "/#/library" },
     { "handle": "filesystem" },
     { "src": "/(.*)", "dest": "/Frontend/dist/index.html" }
   ]
