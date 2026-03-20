@@ -7,6 +7,8 @@ const adminOnly = require('../middleware/adminOnly');
 const adminSession = require('../middleware/adminSession');
 const AdminRuntimeConfig = require('../models/AdminRuntimeConfig');
 const { createSystemEvent, dispatchToOpenClaw } = require('../utils/openclaw-events');
+const { getBuildInfo } = require('../lib/buildInfo');
+const { getRpcDiagnostics } = require('../utils/blockchain');
 
 const ALLOWED_USER_SORT_FIELDS = new Set(['createdAt', 'updatedAt', 'name', 'email', 'username', 'role']);
 
@@ -19,6 +21,62 @@ function getAdminSubjectId() {
   if (fromEnv && /^[a-f\d]{24}$/i.test(fromEnv)) return fromEnv;
   return '000000000000000000000001';
 }
+
+// GET /api/admin/panel-report - lightweight, public readiness snapshot for the Archive Admin Panel shell.
+router.get('/panel-report', async (_req, res) => {
+  try {
+    const build = getBuildInfo();
+    const rpc = await getRpcDiagnostics({ timeoutMs: 3000 });
+
+    const report = {
+      ok: true,
+      app: {
+        name: 'Archive Admin Panel',
+        mode: process.env.NODE_ENV || 'development',
+        cloudOnlyMode: process.env.CLOUD_ONLY_MODE !== 'false',
+        legacyMode: process.env.LEGACY_MODE === 'true',
+      },
+      build: {
+        shortSha: build.shortSha,
+        sha: build.sha,
+        version: build.version,
+      },
+      decentralized: {
+        rpcConfigured: rpc.configured,
+        rpcReachable: rpc.reachable,
+        chainId: rpc.chainId,
+        blockNumber: rpc.blockNumber,
+        latencyMs: rpc.latencyMs,
+        rpcError: rpc.error,
+      },
+      integrations: {
+        openclawBridgeConfigured: Boolean(
+          process.env.OPENCLAW_WEBHOOK_URL || process.env.OPENCLAW_GATEWAY_URL
+        ),
+        cloudinaryConfigured: Boolean(
+          process.env.CLOUDINARY_CLOUD_NAME &&
+            process.env.CLOUDINARY_API_KEY &&
+            process.env.CLOUDINARY_API_SECRET
+        ),
+        ipfsConfigured: Boolean(
+          process.env.PINATA_API_KEY || process.env.WEB3_STORAGE_TOKEN || process.env.IPFS_NODE_URL
+        ),
+      },
+      links: {
+        adminUi: 'https://pvabazaar.org/#/admin',
+        adminOrdersUi: 'https://pvabazaar.org/#/admin/orders',
+        apiHealth: '/api/health',
+        decentralizedReport: '/api/decentralized/report',
+      },
+      timestamp: new Date().toISOString(),
+    };
+
+    return res.json(report);
+  } catch (error) {
+    console.error('Admin panel-report error:', error);
+    return res.status(500).json({ ok: false, error: error.message });
+  }
+});
 
 // POST /api/admin/token - Production-safe admin auth via secret code
 router.post('/token', (req, res) => {

@@ -53,6 +53,17 @@ const checks = [
       typeof json?.quickLinks?.health === "string",
   },
   {
+    name: "admin panel report",
+    path: "/api/admin/panel-report",
+    expectStatus: 200,
+    validate: (json) =>
+      json?.ok === true &&
+      typeof json?.build?.shortSha === "string" &&
+      typeof json?.decentralized?.rpcConfigured === "boolean" &&
+      typeof json?.decentralized?.rpcReachable === "boolean" &&
+      typeof json?.links?.adminUi === "string",
+  },
+  {
     name: "dpp route mounted",
     path: "/api/dpp/non-existent-passport",
     expectStatus: 404,
