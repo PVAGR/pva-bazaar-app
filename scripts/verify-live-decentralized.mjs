@@ -41,6 +41,18 @@ const checks = [
       typeof json?.checks?.rpcReachable === "boolean",
   },
   {
+    name: "decentralized report",
+    path: "/api/decentralized/report",
+    expectStatus: 200,
+    validate: (json) =>
+      json?.ok === true &&
+      typeof json?.passed === "boolean" &&
+      typeof json?.build?.shortSha === "string" &&
+      typeof json?.checks?.rpcConfigured === "boolean" &&
+      typeof json?.checks?.rpcReachable === "boolean" &&
+      typeof json?.quickLinks?.health === "string",
+  },
+  {
     name: "dpp route mounted",
     path: "/api/dpp/non-existent-passport",
     expectStatus: 404,

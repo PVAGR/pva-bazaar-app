@@ -159,7 +159,7 @@ app.use('/webhooks', webhookLimiter);
 app.use((req, res, next) => {
   const apiNotReady = process.env.API_READY === 'false';
   const isProd = process.env.NODE_ENV === 'production';
-  const allowlist = ['/health', '/api/health', '/dev/token', '/api/dev/token', '/ping', '/api/ping', '/version', '/api/version', '/express-ping', '/api/express-ping', '/openclaw', '/api/openclaw', '/decentralized/status', '/api/decentralized/status', '/decentralized/ready', '/api/decentralized/ready', '/blockchain/health', '/api/blockchain/health'];
+  const allowlist = ['/health', '/api/health', '/dev/token', '/api/dev/token', '/ping', '/api/ping', '/version', '/api/version', '/express-ping', '/api/express-ping', '/openclaw', '/api/openclaw', '/decentralized/status', '/api/decentralized/status', '/decentralized/ready', '/api/decentralized/ready', '/decentralized/report', '/api/decentralized/report', '/blockchain/health', '/api/blockchain/health'];
   if (apiNotReady && isProd && !allowlist.some(p => req.path.startsWith(p))) {
     return res.status(503).json({ ok: false, message: 'Service not configured. Missing environment secrets.' });
   }
@@ -237,7 +237,7 @@ async function connectToDatabase() {
 // Middleware: Ensure DB connection for routes that need it
 app.use(async (req, res, next) => {
   // Skip DB connection for health/ping endpoints and explicit safe endpoints
-  const skipPaths = ['/health', '/api/health', '/ping', '/api/ping', '/version', '/api/version', '/express-ping', '/api/express-ping', '/dev/token', '/api/dev/token', '/webhooks/stripe', '/api/webhooks/stripe', '/openclaw', '/api/openclaw', '/decentralized/status', '/api/decentralized/status', '/decentralized/ready', '/api/decentralized/ready', '/blockchain/health', '/api/blockchain/health'];
+  const skipPaths = ['/health', '/api/health', '/ping', '/api/ping', '/version', '/api/version', '/express-ping', '/api/express-ping', '/dev/token', '/api/dev/token', '/webhooks/stripe', '/api/webhooks/stripe', '/openclaw', '/api/openclaw', '/decentralized/status', '/api/decentralized/status', '/decentralized/ready', '/api/decentralized/ready', '/decentralized/report', '/api/decentralized/report', '/blockchain/health', '/api/blockchain/health'];
   const skipPath = skipPaths.some(p => req.path === p || req.path.startsWith(p));
   
   if (skipPath) {
@@ -464,6 +464,47 @@ app.get('/api/decentralized/ready', async (req, res) => {
       blockNumber: rpcDiagnostics.blockNumber,
       latencyMs: rpcDiagnostics.latencyMs,
       rpcError: rpcDiagnostics.error,
+    },
+    timestamp: new Date().toISOString(),
+  });
+});
+
+// Single-pane report for manual human checks during rollout.
+app.get('/api/decentralized/report', async (req, res) => {
+  const rpcDiagnostics = await getRpcDiagnostics({ timeoutMs: 3000 });
+  const build = getBuildInfo();
+
+  const checks = {
+    rpcConfigured: rpcDiagnostics.configured,
+    rpcReachable: rpcDiagnostics.reachable,
+    chainIdPresent: Number.isFinite(rpcDiagnostics.chainId),
+    blockNumberPresent: Number.isFinite(rpcDiagnostics.blockNumber),
+    latencyMeasured: Number.isFinite(rpcDiagnostics.latencyMs),
+  };
+
+  const passed = Object.values(checks).every(Boolean);
+
+  res.json({
+    ok: true,
+    passed,
+    build: {
+      shortSha: build.shortSha,
+      sha: build.sha,
+      version: build.version,
+    },
+    checks,
+    diagnostics: {
+      chainId: rpcDiagnostics.chainId,
+      blockNumber: rpcDiagnostics.blockNumber,
+      latencyMs: rpcDiagnostics.latencyMs,
+      rpcError: rpcDiagnostics.error,
+    },
+    quickLinks: {
+      health: '/api/health',
+      decentralizedStatus: '/api/decentralized/status',
+      blockchainHealth: '/api/blockchain/health',
+      decentralizedReady: '/api/decentralized/ready',
+      dppMountCheck: '/api/dpp/non-existent-passport',
     },
     timestamp: new Date().toISOString(),
   });
