@@ -43,6 +43,8 @@ export default function AdminPage() {
   const [bootstrapStatus, setBootstrapStatus] = useState({
     loading: false,
     needsBootstrap: false,
+    signupAllowed: true,
+    selfSignupEnabled: true,
     bootstrapCodeRequired: false,
   });
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -92,12 +94,16 @@ export default function AdminPage() {
       try {
         const data = await apiGet('/admin/bootstrap-status');
         if (!cancelled && data?.ok) {
-          setBootstrapStatus({
+          const nextStatus = {
             loading: false,
             needsBootstrap: Boolean(data.needsBootstrap),
+            signupAllowed: data.signupAllowed !== false,
+            selfSignupEnabled: data.selfSignupEnabled !== false,
             bootstrapCodeRequired: Boolean(data.bootstrapCodeRequired),
-          });
-          if (data.needsBootstrap) {
+          };
+
+          setBootstrapStatus(nextStatus);
+          if (nextStatus.needsBootstrap || nextStatus.signupAllowed) {
             setAuthMode('signup');
           }
         }
@@ -332,6 +338,10 @@ export default function AdminPage() {
       let data;
 
       if (authMode === 'signup') {
+        if (!bootstrapStatus.signupAllowed) {
+          throw new Error('Admin signup is currently disabled. Use login or contact an existing admin.');
+        }
+
         data = await apiPost('/admin/signup', {
           name: trimmedName,
           username: trimmedUsername,
@@ -412,11 +422,26 @@ export default function AdminPage() {
                   setAuthMode(authMode === 'signup' ? 'login' : 'signup');
                   setError('');
                 }}
-                disabled={isSubmitting || bootstrapStatus.loading || bootstrapStatus.needsBootstrap}
+                disabled={
+                  isSubmitting ||
+                  bootstrapStatus.loading ||
+                  (authMode !== 'signup' && !bootstrapStatus.signupAllowed)
+                }
               >
                 {authMode === 'signup' ? 'Switch to Login' : 'Create Admin Account'}
               </button>
             </div>
+            {authMode === 'signup' && (
+              <p className="auth-hint" style={{ marginBottom: '10px' }}>
+                {bootstrapStatus.signupAllowed
+                  ? bootstrapStatus.bootstrapCodeRequired
+                    ? 'Signup is enabled with bootstrap code verification.'
+                    : bootstrapStatus.selfSignupEnabled
+                      ? 'Self-signup is enabled for admin onboarding.'
+                      : 'Signup is enabled.'
+                  : 'Signup is disabled. Use login or contact an existing admin.'}
+              </p>
+            )}
             <form onSubmit={handleLogin}>
               {authMode === 'signup' && (
                 <input
@@ -472,11 +497,15 @@ export default function AdminPage() {
                   onDismiss={() => setError('')}
                 />
               ) : null}
-              <button type="submit" className="login-btn" disabled={isSubmitting}>
+              <button
+                type="submit"
+                className="login-btn"
+                disabled={isSubmitting || (authMode === 'signup' && !bootstrapStatus.signupAllowed)}
+              >
                 {isSubmitting
                   ? authMode === 'signup'
-                    ? 'Creating account…'
-                    : 'Signing in…'
+                    ? 'Creating account...'
+                    : 'Signing in...'
                   : authMode === 'signup'
                     ? 'Create Admin Account'
                     : 'Access Admin Panel'}

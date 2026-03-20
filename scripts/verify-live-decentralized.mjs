@@ -64,6 +64,17 @@ const checks = [
       typeof json?.links?.adminUi === "string",
   },
   {
+    name: "admin bootstrap status",
+    path: "/api/admin/bootstrap-status",
+    expectStatus: 200,
+    validate: (json) =>
+      json?.ok === true &&
+      typeof json?.adminCount === "number" &&
+      typeof json?.signupAllowed === "boolean" &&
+      typeof json?.selfSignupEnabled === "boolean" &&
+      typeof json?.bootstrapCodeRequired === "boolean",
+  },
+  {
     name: "dpp route mounted",
     path: "/api/dpp/non-existent-passport",
     expectStatus: 404,

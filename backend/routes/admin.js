@@ -61,6 +61,10 @@ router.get('/panel-report', async (_req, res) => {
         ipfsConfigured: Boolean(
           process.env.PINATA_API_KEY || process.env.WEB3_STORAGE_TOKEN || process.env.IPFS_NODE_URL
         ),
+        adminSelfSignupEnabled: String(process.env.ADMIN_SELF_SIGNUP_ENABLED || 'true').trim().toLowerCase() !== 'false',
+        bootstrapCodeConfigured: Boolean(
+          process.env.ADMIN_BOOTSTRAP_CODE || process.env.ADMIN_SECRET_CODE
+        ),
       },
       links: {
         adminUi: 'https://pvabazaar.org/#/admin',

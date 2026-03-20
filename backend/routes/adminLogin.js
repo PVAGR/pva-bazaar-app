@@ -25,21 +25,39 @@ function getAdminBootstrapCode() {
   return String(process.env.ADMIN_BOOTSTRAP_CODE || process.env.ADMIN_SECRET_CODE || '').trim();
 }
 
+function isAdminSelfSignupEnabled() {
+  const raw = String(process.env.ADMIN_SELF_SIGNUP_ENABLED || 'true').trim().toLowerCase();
+  return raw !== 'false';
+}
+
 async function countAdminUsers() {
   return User.countDocuments({ role: 'admin' });
+}
+
+function buildBootstrapStatus(adminCount) {
+  const needsBootstrap = adminCount === 0;
+  const selfSignupEnabled = isAdminSelfSignupEnabled();
+  const configuredBootstrapCode = getAdminBootstrapCode();
+  const bootstrapCodeRequired = adminCount > 0 && !selfSignupEnabled;
+  const signupAllowed = needsBootstrap || selfSignupEnabled || Boolean(configuredBootstrapCode);
+
+  return {
+    adminCount,
+    needsBootstrap,
+    selfSignupEnabled,
+    signupAllowed,
+    bootstrapCodeRequired,
+    bootstrapCodeConfigured: Boolean(configuredBootstrapCode),
+  };
 }
 
 // GET /api/admin/bootstrap-status - determines if first-time admin signup is allowed.
 router.get('/bootstrap-status', async (_req, res) => {
   try {
     const adminCount = await countAdminUsers();
-    const configuredBootstrapCode = getAdminBootstrapCode();
     return res.json({
       ok: true,
-      adminCount,
-      needsBootstrap: adminCount === 0,
-      bootstrapCodeRequired: adminCount > 0,
-      bootstrapCodeConfigured: Boolean(configuredBootstrapCode),
+      ...buildBootstrapStatus(adminCount),
     });
   } catch (error) {
     console.error('Admin bootstrap-status error:', error);
@@ -69,7 +87,12 @@ router.post('/signup', async (req, res) => {
     }
 
     const adminCount = await countAdminUsers();
-    if (adminCount > 0) {
+    const status = buildBootstrapStatus(adminCount);
+    if (!status.signupAllowed) {
+      return res.status(403).json({ ok: false, message: 'Admin signup is disabled. Contact an existing admin.' });
+    }
+
+    if (status.bootstrapCodeRequired) {
       const configuredCode = getAdminBootstrapCode();
       if (!configuredCode) {
         return res.status(403).json({ ok: false, message: 'Admin bootstrap is locked. Contact an existing admin.' });
