@@ -63,3 +63,21 @@ jobs:
           vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN || secrets.VERCEL_API_TOKEN }}
           vercel build --prod --token=${{ secrets.VERCEL_TOKEN || secrets.VERCEL_API_TOKEN }}
           vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN || secrets.VERCEL_API_TOKEN }}
+
+      - name: Verify decentralized live endpoints
+        env:
+          BACKEND_URL: https://api.pvabazaar.org
+        run: |
+          set -euo pipefail
+          for i in {1..18}; do
+            echo "[verify-live-decentralized] attempt ${i}/18"
+            if npm run verify:live:decentralized; then
+              echo "decentralized live verification passed"
+              exit 0
+            fi
+            echo "verification not ready yet, waiting 10s"
+            sleep 10
+          done
+
+          echo "decentralized live verification failed after retries"
+          exit 1

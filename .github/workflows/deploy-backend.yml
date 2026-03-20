@@ -54,6 +54,24 @@ jobs:
           # Extract backend URL from Vercel deployment
           echo "Backend deployment completed"
 
+      - name: Verify decentralized live endpoints
+        env:
+          BACKEND_URL: https://api.pvabazaar.org
+        run: |
+          set -euo pipefail
+          for i in {1..18}; do
+            echo "[verify-live-decentralized] attempt ${i}/18"
+            if npm run verify:live:decentralized; then
+              echo "decentralized live verification passed"
+              exit 0
+            fi
+            echo "verification not ready yet, waiting 10s"
+            sleep 10
+          done
+
+          echo "decentralized live verification failed after retries"
+          exit 1
+
       - name: Update GitHub Deployment Status
         if: always()
         uses: actions/github-script@v7
