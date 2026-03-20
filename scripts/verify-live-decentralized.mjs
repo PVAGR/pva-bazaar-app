@@ -17,13 +17,17 @@ const checks = [
     validate: (json) =>
       json?.ok === true &&
       typeof json?.cloudOnlyMode === "boolean" &&
-      typeof json?.decentralized?.rpcConfigured === "boolean",
+      typeof json?.decentralized?.rpcConfigured === "boolean" &&
+      typeof json?.decentralized?.rpcReachable === "boolean",
   },
   {
     name: "blockchain health",
     path: "/api/blockchain/health",
     expectStatus: 200,
-    validate: (json) => json?.ok === true && typeof json?.rpc === "boolean",
+    validate: (json) =>
+      json?.ok === true &&
+      typeof json?.rpc === "boolean" &&
+      typeof json?.rpcReachable === "boolean",
   },
   {
     name: "dpp route mounted",

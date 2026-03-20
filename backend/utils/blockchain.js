@@ -102,6 +102,76 @@ function isValidTxHash(txHash) {
   return typeof txHash === 'string' && /^0x[a-fA-F0-9]{64}$/.test(txHash.trim());
 }
 
+function withTimeout(promise, timeoutMs, timeoutError = 'rpc_timeout') {
+  if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) {
+    return promise;
+  }
+
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => {
+      setTimeout(() => reject(new Error(timeoutError)), timeoutMs);
+    }),
+  ]);
+}
+
+async function getRpcDiagnostics(options = {}) {
+  const timeoutMs = Number(options.timeoutMs || 3000);
+  const rpcUrl = getRpcUrl();
+  const configured = Boolean(rpcUrl);
+
+  if (!configured) {
+    return {
+      configured: false,
+      reachable: false,
+      chainId: null,
+      blockNumber: null,
+      latencyMs: null,
+      error: 'rpc_not_configured',
+    };
+  }
+
+  const web3Client = getWeb3();
+  if (!web3Client) {
+    return {
+      configured: true,
+      reachable: false,
+      chainId: null,
+      blockNumber: null,
+      latencyMs: null,
+      error: 'rpc_init_failed',
+    };
+  }
+
+  const startedAt = Date.now();
+
+  try {
+    const [chainIdRaw, blockNumberRaw] = await withTimeout(
+      Promise.all([web3Client.eth.getChainId(), web3Client.eth.getBlockNumber()]),
+      timeoutMs,
+      'rpc_timeout'
+    );
+
+    return {
+      configured: true,
+      reachable: true,
+      chainId: Number(chainIdRaw),
+      blockNumber: Number(blockNumberRaw),
+      latencyMs: Date.now() - startedAt,
+      error: null,
+    };
+  } catch (error) {
+    return {
+      configured: true,
+      reachable: false,
+      chainId: null,
+      blockNumber: null,
+      latencyMs: Date.now() - startedAt,
+      error: String(error?.message || 'rpc_check_failed'),
+    };
+  }
+}
+
 async function inspectTransaction(txHash) {
   const hash = String(txHash || '').trim();
   if (!isValidTxHash(hash)) {
@@ -165,6 +235,7 @@ module.exports = {
   web3: getWeb3(),
   getWeb3,
   getRpcUrl,
+  getRpcDiagnostics,
   verifyOnChain,
   normalizeNetwork,
   getExplorerTxUrl,

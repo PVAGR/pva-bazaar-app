@@ -10,6 +10,7 @@ let MongoMemoryServer;
 const openClawRoutes = require('../routes/openclaw');
 const openClawMetricsRoutes = require('../routes/openclaw-metrics');
 const { getBuildInfo } = require('../lib/buildInfo');
+const { getRpcDiagnostics } = require('../utils/blockchain');
 
 // Load environment variables
 dotenv.config();
@@ -413,8 +414,8 @@ app.get('/api/express-ping', (req, res) => {
 });
 
 // Decentralized stack status (cloud + web3/IPFS/OpenClaw readiness)
-app.get('/api/decentralized/status', (req, res) => {
-  const rpcUrl = process.env.ETHEREUM_RPC_URL || process.env.RPC_URL || '';
+app.get('/api/decentralized/status', async (req, res) => {
+  const rpcDiagnostics = await getRpcDiagnostics({ timeoutMs: 3000 });
   const ipfsGateway = process.env.PINATA_GATEWAY_URL || '';
   const ipfsProviderConfigured = Boolean(
     process.env.PINATA_API_KEY || process.env.WEB3_STORAGE_TOKEN || process.env.IPFS_NODE_URL,
@@ -427,7 +428,12 @@ app.get('/api/decentralized/status', (req, res) => {
     ok: true,
     cloudOnlyMode: CLOUD_ONLY_MODE,
     decentralized: {
-      rpcConfigured: Boolean(rpcUrl),
+      rpcConfigured: rpcDiagnostics.configured,
+      rpcReachable: rpcDiagnostics.reachable,
+      rpcChainId: rpcDiagnostics.chainId,
+      rpcBlockNumber: rpcDiagnostics.blockNumber,
+      rpcLatencyMs: rpcDiagnostics.latencyMs,
+      rpcError: rpcDiagnostics.error,
       ipfsConfigured: ipfsProviderConfigured,
       ipfsGateway: ipfsGateway || null,
       openclawBridgeConfigured: openclawConfigured,

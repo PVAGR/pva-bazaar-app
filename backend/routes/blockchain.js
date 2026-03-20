@@ -11,6 +11,7 @@ const {
   getExplorerTxUrl,
   isValidTxHash,
   inspectTransaction,
+  getRpcDiagnostics,
 } = require('../utils/blockchain');
 
 function toPublicTransfer(transfer) {
@@ -537,12 +538,19 @@ router.get('/verify', async (req, res) => {
 });
 
 // GET /api/blockchain/health - Blockchain health check
-router.get('/health', (_req, res) => {
+router.get('/health', async (_req, res) => {
+  const rpcDiagnostics = await getRpcDiagnostics({ timeoutMs: 3000 });
+
   res.json({
     ok: true,
     message: 'Blockchain service is operational',
     network: 'base',
-    rpc: !!(process.env.ETHEREUM_RPC_URL || process.env.RPC_URL),
+    rpc: rpcDiagnostics.configured,
+    rpcReachable: rpcDiagnostics.reachable,
+    chainId: rpcDiagnostics.chainId,
+    blockNumber: rpcDiagnostics.blockNumber,
+    latencyMs: rpcDiagnostics.latencyMs,
+    rpcError: rpcDiagnostics.error,
   });
 });
 
