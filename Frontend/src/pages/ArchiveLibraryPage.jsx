@@ -171,7 +171,9 @@ export default function ArchiveLibraryPage() {
   const [markdown, setMarkdown] = useState('');
   const [loading, setLoading] = useState(false);
   const [customEntries, setCustomEntries] = useState([]);
+  const [entriesError, setEntriesError] = useState('');
   const [viewMode, setViewMode] = useState('archive'); // 'archive' or 'blog'
+  const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth > 1024);
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem('archive-theme');
     return saved ? saved === 'dark' : true;
@@ -179,16 +181,19 @@ export default function ArchiveLibraryPage() {
 
   // Function to load custom entries from API
   const loadCustomEntries = async () => {
+    setEntriesError('');
     try {
       const result = await fetchArchiveEntries({ limit: 100 });
       if (result.ok && Array.isArray(result.items)) {
         setCustomEntries(result.items);
       } else {
         setCustomEntries([]);
+        setEntriesError('Unable to load new posts right now. Please try again.');
       }
     } catch (error) {
       console.error('Failed to load custom entries:', error);
       setCustomEntries([]);
+      setEntriesError('Connection issue while loading new posts. Please retry.');
     }
   };
 
@@ -204,6 +209,16 @@ export default function ArchiveLibraryPage() {
     localStorage.setItem('archive-theme', darkMode ? 'dark' : 'light');
   }, [darkMode]);
 
+  useEffect(() => {
+    const onResize = () => {
+      if (window.innerWidth > 1024) {
+        setSidebarOpen(true);
+      }
+    };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
   const categories = ['All', 'Index', 'Fiction', 'Spiritual', 'Technology', 'Business', 'Personal', 'Philosophy', 'Wisdom', 'Architecture', 'Strategic'];
 
   // Get entries based on view mode
@@ -214,9 +229,19 @@ export default function ArchiveLibraryPage() {
       ? currentEntries
       : currentEntries.filter((e) => e.category === selectedCategory);
 
+  const sortedFilteredEntries = [...filteredEntries].sort((a, b) => {
+    const ap = Number.isFinite(a.priority) ? a.priority : 999;
+    const bp = Number.isFinite(b.priority) ? b.priority : 999;
+    if (ap !== bp) return ap - bp;
+    return String(a.title || '').localeCompare(String(b.title || ''));
+  });
+
   const loadMarkdown = async (entry) => {
     setLoading(true);
     setSelectedEntry(entry);
+    if (window.innerWidth <= 1024) {
+      setSidebarOpen(false);
+    }
     try {
       // Check if it's a custom entry (has content field)
       if (entry.content) {
@@ -327,7 +352,7 @@ export default function ArchiveLibraryPage() {
       <div className={`archive-library ${darkMode ? 'dark-theme' : 'light-theme'}`}>
         <header className="archive-header">
         <div className="header-content">
-          <h1>📚 The Complete Archive</h1>
+          <h1>PVA Bazaar Archive Library</h1>
           <div className="header-actions">
             <Link to="/admin" className="admin-link">⚙️ Admin</Link>
             <button 
@@ -339,6 +364,29 @@ export default function ArchiveLibraryPage() {
             </button>
           </div>
         </div>
+
+        <p className="hero-headline">A curated archive of long-form writings, research, and worldbuilding from PVA Bazaar.</p>
+        <p className="hero-subheadline">Use one navigation model: choose a mode, choose a category, then open a document.</p>
+
+        <div className="hero-actions">
+          <button
+            onClick={() => loadMarkdown(archiveEntries[0])}
+            className="hero-cta"
+          >
+            Read Master Index
+          </button>
+          <button
+            onClick={() => {
+              setSelectedCategory('All');
+              if (window.innerWidth <= 1024) {
+                setSidebarOpen(true);
+              }
+            }}
+            className="hero-cta hero-cta-secondary"
+          >
+            Browse All Categories
+          </button>
+        </div>
         
         <div className="view-mode-toggle">
           <button 
@@ -347,9 +395,10 @@ export default function ArchiveLibraryPage() {
               setViewMode('archive');
               setSelectedEntry(null);
               setMarkdown('');
+              setSelectedCategory('All');
             }}
           >
-            📚 Original Archive ({archiveEntries.length})
+            Archive Collection ({archiveEntries.length})
           </button>
           <button 
             className={`view-btn ${viewMode === 'blog' ? 'active' : ''}`}
@@ -360,7 +409,7 @@ export default function ArchiveLibraryPage() {
               setSelectedCategory('All');
             }}
           >
-            ✍️ New Blog Posts ({customEntries.length})
+            Recent Posts ({customEntries.length})
           </button>
         </div>
 
@@ -371,17 +420,17 @@ export default function ArchiveLibraryPage() {
         </p>
         <div className="archive-stats">
           <span>{currentEntries.length} {viewMode === 'archive' ? 'Documents' : 'Posts'}</span>
-          <span>•</span>
+          <span className="stat-separator">•</span>
           <span>12 Categories</span>
-          <span>•</span>
+          <span className="stat-separator">•</span>
           <span>{viewMode === 'archive' ? '40+ Distinct Works' : 'Updated Regularly'}</span>
         </div>
       </header>
 
       <div className="archive-layout">
-        <aside className="archive-sidebar">
+        <aside className={`archive-sidebar ${sidebarOpen ? 'is-open' : 'is-collapsed'}`}>
           <div className="category-filter">
-            <h3>Categories</h3>
+            <h3>{viewMode === 'archive' ? 'Archive Categories' : 'Post Categories'}</h3>
             {categories.map((cat) => (
               <button
                 key={cat}
@@ -391,18 +440,21 @@ export default function ArchiveLibraryPage() {
                 {cat}
                 <span className="count">
                   {cat === 'All'
-                    ? archiveEntries.length
-                    : archiveEntries.filter((e) => e.category === cat).length}
+                    ? currentEntries.length
+                    : currentEntries.filter((e) => e.category === cat).length}
                 </span>
               </button>
             ))}
           </div>
 
           <div className="entry-list">
-            <h3>Documents</h3>
-            {filteredEntries
-              .sort((a, b) => a.priority - b.priority)
-              .map((entry) => (
+            <h3>{viewMode === 'archive' ? 'Documents' : 'Posts'}</h3>
+            {sortedFilteredEntries.length === 0 ? (
+              <div className="sidebar-empty-state">
+                No items in this category yet.
+              </div>
+            ) : (
+              sortedFilteredEntries.map((entry) => (
                 <button
                   key={entry.id}
                   className={`entry-item ${selectedEntry?.id === entry.id ? 'active' : ''}`}
@@ -414,29 +466,37 @@ export default function ArchiveLibraryPage() {
                     <span className="entry-words">{entry.wordCount} words</span>
                   </div>
                 </button>
-              ))}
+              ))
+            )}
           </div>
         </aside>
 
         <main className="archive-content">
+          <button
+            className="mobile-sidebar-toggle"
+            onClick={() => setSidebarOpen((prev) => !prev)}
+            aria-expanded={sidebarOpen}
+          >
+            {sidebarOpen ? 'Hide Navigation' : 'Show Navigation'}
+          </button>
+
           {!selectedEntry && viewMode === 'archive' && (
             <div className="archive-welcome">
-              <h2>Welcome to the Archive</h2>
+              <h2>Start with the Archive Master Index</h2>
               <p>
-                This is the complete preservation of writings from ages 24-28, spanning 2020 to 2026.
-                Every single line and letter preserved per directive.
+                The homepage is intentionally archive-first: this is the canonical reading shell for the full PVA Bazaar writing archive.
               </p>
-              <p>Select a document from the sidebar to begin reading.</p>
+              <p>Select a category on the left, then open a document. If you want one best first click, open the Master Index.</p>
               <div className="quick-links">
-                <h3>Recommended Starting Points:</h3>
+                <h3>Recommended First Reads</h3>
                 <button onClick={() => loadMarkdown(archiveEntries[0])} className="quick-link">
-                  📋 Start with the Master Index
+                  Read Master Index
                 </button>
                 <button onClick={() => loadMarkdown(archiveEntries[16])} className="quick-link">
-                  🎯 See the Master Integration & Roadmap
+                  Read Master Integration and Roadmap
                 </button>
                 <button onClick={() => loadMarkdown(archiveEntries[1])} className="quick-link">
-                  📖 Read the Novel (The Man from Taured)
+                  Read The Man from Taured, Part 1
                 </button>
               </div>
             </div>
@@ -444,20 +504,26 @@ export default function ArchiveLibraryPage() {
 
           {!selectedEntry && viewMode === 'blog' && (
             <div className="archive-welcome">
-              <h2>New Blog Posts</h2>
+              <h2>Recent Posts</h2>
+              {entriesError && (
+                <div className="archive-error-box" role="status">
+                  <p>{entriesError}</p>
+                  <button className="quick-link retry-link" onClick={loadCustomEntries}>Retry Loading Posts</button>
+                </div>
+              )}
               {customEntries.length === 0 ? (
                 <>
                   <p>
-                    No blog posts yet. This section will display new writings created from 2026 onwards.
+                    No posts are published yet. This section will display new writings created from 2026 onward.
                   </p>
                   <p>
-                    Visit the <a href="#/admin" style={{color: 'var(--accent)', textDecoration: 'underline'}}>Admin Panel</a> to create your first blog post.
+                    Visit the <a href="#/admin" style={{color: 'var(--accent)', textDecoration: 'underline'}}>Admin Panel</a> to publish the first post.
                   </p>
                 </>
               ) : (
                 <>
                   <p>
-                    Fresh perspectives and evolving thoughts starting 2026. Select a post from the sidebar to read.
+                    Fresh perspectives and evolving thoughts from 2026 onward. Select a post from the sidebar to read.
                   </p>
                   <p className="blog-count">
                     {customEntries.length} {customEntries.length === 1 ? 'post' : 'posts'} published
@@ -470,7 +536,7 @@ export default function ArchiveLibraryPage() {
           {loading && (
             <div className="archive-loading">
               <div className="spinner"></div>
-              <p>Loading archive entry...</p>
+              <p>Loading document...</p>
             </div>
           )}
 
