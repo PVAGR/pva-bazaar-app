@@ -1,0 +1,79 @@
+/* eslint-env node */
+/* global fetch */
+
+const BASE = (globalThis.process?.env?.BACKEND_URL || "https://api.pvabazaar.org").replace(/\/+$/, "");
+
+const checks = [
+  {
+    name: "api health",
+    path: "/api/health",
+    expectStatus: 200,
+    validate: (json) => json?.ok === true && typeof json?.shortSha === "string",
+  },
+  {
+    name: "decentralized status",
+    path: "/api/decentralized/status",
+    expectStatus: 200,
+    validate: (json) =>
+      json?.ok === true &&
+      typeof json?.cloudOnlyMode === "boolean" &&
+      typeof json?.decentralized?.rpcConfigured === "boolean",
+  },
+  {
+    name: "blockchain health",
+    path: "/api/blockchain/health",
+    expectStatus: 200,
+    validate: (json) => json?.ok === true && typeof json?.rpc === "boolean",
+  },
+  {
+    name: "dpp route mounted",
+    path: "/api/dpp/non-existent-passport",
+    expectStatus: 404,
+    validate: (json) => json?.ok === false && /passport not found/i.test(String(json?.error || "")),
+  },
+];
+
+async function getJson(url) {
+  const response = await fetch(url, { redirect: "follow" });
+  const text = await response.text();
+  let json = null;
+
+  try {
+    json = JSON.parse(text);
+  } catch {
+    json = null;
+  }
+
+  return { response, json, text };
+}
+
+let failed = false;
+globalThis.console.log(`Verifying decentralized live endpoints at ${BASE}`);
+
+for (const check of checks) {
+  const url = `${BASE}${check.path}`;
+  try {
+    const { response, json, text } = await getJson(url);
+    const statusOk = response.status === check.expectStatus;
+    const bodyOk = check.validate(json);
+
+    if (!statusOk || !bodyOk) {
+      failed = true;
+      globalThis.console.error(`FAIL ${check.name}: status=${response.status} expected=${check.expectStatus}`);
+      globalThis.console.error(`URL: ${url}`);
+      globalThis.console.error(`BODY: ${text.slice(0, 500)}`);
+    } else {
+      globalThis.console.log(`OK   ${check.name}: status=${response.status}`);
+    }
+  } catch (error) {
+    failed = true;
+    globalThis.console.error(`FAIL ${check.name}: ${error.message}`);
+    globalThis.console.error(`URL: ${url}`);
+  }
+}
+
+if (failed) {
+  globalThis.process.exit(1);
+}
+
+globalThis.console.log("All decentralized live checks passed.");
