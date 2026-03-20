@@ -33,9 +33,18 @@ export default function AdminPage() {
   const staleThresholdMinutes = Math.round((staleThresholdMs / 60000) * 10) / 10;
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [fullName, setFullName] = useState('');
   const [password, setPassword] = useState('');
+  const [bootstrapCode, setBootstrapCode] = useState('');
+  const [authMode, setAuthMode] = useState('login');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [bootstrapStatus, setBootstrapStatus] = useState({
+    loading: false,
+    needsBootstrap: false,
+    bootstrapCodeRequired: false,
+  });
   const [activeTab, setActiveTab] = useState('dashboard');
   // Use global theme system
   const [darkMode, setDarkMode] = useState(() => {
@@ -73,6 +82,37 @@ export default function AdminPage() {
       setIsAuthenticated(false);
     }
   }, []);
+
+  useEffect(() => {
+    if (isAuthenticated) return;
+
+    let cancelled = false;
+    const loadBootstrapStatus = async () => {
+      setBootstrapStatus((prev) => ({ ...prev, loading: true }));
+      try {
+        const data = await apiGet('/admin/bootstrap-status');
+        if (!cancelled && data?.ok) {
+          setBootstrapStatus({
+            loading: false,
+            needsBootstrap: Boolean(data.needsBootstrap),
+            bootstrapCodeRequired: Boolean(data.bootstrapCodeRequired),
+          });
+          if (data.needsBootstrap) {
+            setAuthMode('signup');
+          }
+        }
+      } catch (_err) {
+        if (!cancelled) {
+          setBootstrapStatus((prev) => ({ ...prev, loading: false }));
+        }
+      }
+    };
+
+    loadBootstrapStatus();
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated]);
 
   const formatWatchdogMessage = useCallback((response) => {
     if (!response || response.ok === false) {
@@ -279,31 +319,55 @@ export default function AdminPage() {
   
   const handleLogin = async (e) => {
     e.preventDefault();
-    // Trim whitespace from inputs
     const trimmedUsername = username.trim();
+    const trimmedEmail = email.trim();
     const trimmedPassword = password.trim();
-    
-      setIsSubmitting(true);
-      setError('');
-      try {
-        // Use the dedicated admin/login endpoint which validates ADMIN_USERNAME/ADMIN_PASSWORD env vars.
-        // This is DB-independent and always returns a token with role:'admin' embedded.
-        const data = await apiPost('/admin/login', { username: trimmedUsername, password: trimmedPassword });
-        if (!data?.ok || !data?.token) throw new Error(data?.message || 'Invalid credentials');
-        setToken(data.token);
-        setIsAuthenticated(true);
-        sessionStorage.setItem('admin-auth', 'authenticated');
-        sessionStorage.setItem('admin-auth-version', 'v2');
-        setUsername('');
-        setPassword('');
-        setError('');
-      } catch (err) {
-        const msg = err?.response?.data?.message || err.message || 'Invalid username or password. Access denied.';
-        setError(msg);
-        setPassword('');
-      } finally {
-        setIsSubmitting(false);
+    const trimmedName = fullName.trim();
+    const trimmedBootstrapCode = bootstrapCode.trim();
+
+    setIsSubmitting(true);
+    setError('');
+
+    try {
+      let data;
+
+      if (authMode === 'signup') {
+        data = await apiPost('/admin/signup', {
+          name: trimmedName,
+          username: trimmedUsername,
+          email: trimmedEmail,
+          password: trimmedPassword,
+          bootstrapCode: trimmedBootstrapCode,
+        });
+      } else {
+        data = await apiPost('/admin/login', {
+          username: trimmedUsername || trimmedEmail,
+          email: trimmedEmail,
+          password: trimmedPassword,
+        });
       }
+
+      if (!data?.ok || !data?.token) {
+        throw new Error(data?.message || 'Authentication failed');
+      }
+
+      setToken(data.token);
+      setIsAuthenticated(true);
+      sessionStorage.setItem('admin-auth', 'authenticated');
+      sessionStorage.setItem('admin-auth-version', 'v2');
+      setUsername('');
+      setEmail('');
+      setFullName('');
+      setBootstrapCode('');
+      setPassword('');
+      setError('');
+    } catch (err) {
+      const msg = err?.response?.data?.message || err.message || 'Authentication failed.';
+      setError(msg);
+      setPassword('');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleLogout = () => {
@@ -335,25 +399,72 @@ export default function AdminPage() {
         <div className="admin-login">
           <div className="login-card">
             <h1>🔒 Admin Access</h1>
-            <p>Enter your credentials to access the admin panel</p>
+            <p>
+              {authMode === 'signup'
+                ? 'Create your admin account to initialize the panel.'
+                : 'Enter your credentials to access the admin panel.'}
+            </p>
+            <div style={{ marginBottom: '12px' }}>
+              <button
+                type="button"
+                className="login-btn"
+                onClick={() => {
+                  setAuthMode(authMode === 'signup' ? 'login' : 'signup');
+                  setError('');
+                }}
+                disabled={isSubmitting || bootstrapStatus.loading || bootstrapStatus.needsBootstrap}
+              >
+                {authMode === 'signup' ? 'Switch to Login' : 'Create Admin Account'}
+              </button>
+            </div>
             <form onSubmit={handleLogin}>
+              {authMode === 'signup' && (
+                <input
+                  type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="Full Name"
+                  className="login-input"
+                  required
+                />
+              )}
               <input
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="Username"
+                placeholder={authMode === 'signup' ? 'Username (optional)' : 'Username or Email'}
                 className="login-input"
                 autoFocus
-                required
+                required={authMode !== 'signup'}
               />
+              {authMode === 'signup' && (
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Email"
+                  className="login-input"
+                  required
+                />
+              )}
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Password"
+                placeholder={authMode === 'signup' ? 'Password (min 8 chars)' : 'Password'}
                 className="login-input"
                 required
               />
+              {authMode === 'signup' && bootstrapStatus.bootstrapCodeRequired && (
+                <input
+                  type="password"
+                  value={bootstrapCode}
+                  onChange={(e) => setBootstrapCode(e.target.value)}
+                  placeholder="Bootstrap Code"
+                  className="login-input"
+                  required
+                />
+              )}
               {error ? (
                 <ErrorBanner
                   message={error}
@@ -362,7 +473,13 @@ export default function AdminPage() {
                 />
               ) : null}
               <button type="submit" className="login-btn" disabled={isSubmitting}>
-                {isSubmitting ? 'Signing in…' : 'Access Admin Panel'}
+                {isSubmitting
+                  ? authMode === 'signup'
+                    ? 'Creating account…'
+                    : 'Signing in…'
+                  : authMode === 'signup'
+                    ? 'Create Admin Account'
+                    : 'Access Admin Panel'}
               </button>
             </form>
           </div>
