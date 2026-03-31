@@ -284,6 +284,8 @@ const solanaRoutes = require('../routes/solana');
 const adminLoginRoutes = require('../routes/adminLogin');
 // Cloud storage management
 const cloudStorageRoutes = require('../routes/cloudStorage');
+const adminLibraryRoutes = require('../routes/adminLibrary');
+const libraryRoutes = require('../routes/library');
 // Attribution & creator analytics routes
 const attributionRoutes = require('../routes/attribution');
 const payoutsRoutes = require('../routes/payouts');
@@ -293,6 +295,9 @@ const journalRoutes = require('../routes/journal');
 const didRoutes = require('../routes/did');
 const dppRoutes = require('../routes/dpp');
 const databasesRoutes = require('../routes/databases');
+const careerQuizRoutes = require('../routes/careerQuiz');
+const libraryTaxonomyRoutes = require('../routes/libraryTaxonomy');
+const libraryIntelligenceRoutes = require('../routes/libraryIntelligence');
 // Models for optional seeding
 const Artifact = require('../models/Artifact');
 const User = require('../models/User');
@@ -351,6 +356,10 @@ app.use('/api/partners', partnersRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/cloud-storage', cloudStorageRoutes);
+app.use('/api/admin/library', adminLibraryRoutes);
+app.use('/api/library', libraryRoutes);
+app.use('/api/library-taxonomy', libraryTaxonomyRoutes);
+app.use('/api/admin/library-intelligence', libraryIntelligenceRoutes);
 app.use('/api/attribution', attributionRoutes);
 app.use('/api/payouts', payoutsRoutes);
 
@@ -360,6 +369,7 @@ app.use('/api/journal', journalRoutes);
 app.use('/api/did', didRoutes);
 app.use('/api/dpp', dppRoutes);
 app.use('/api/databases', databasesRoutes);
+app.use('/api/career-quiz', careerQuizRoutes);
 app.use('/api/openclaw', openClawRoutes);
 app.use('/api/openclaw', openClawMetricsRoutes); // Prometheus metrics
 app.use('/api/blockchain', blockchainRoutes);

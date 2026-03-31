@@ -18,6 +18,7 @@ import AttributionTab from '../components/AttributionTab.jsx';
 import PayoutTab from '../components/PayoutTab.jsx';
 import SettlementContractsTab from '../components/SettlementContractsTab.jsx';
 import CloudStorageTab from '../components/CloudStorageTab.jsx';
+import LibraryTab from '../components/LibraryTab.jsx';
 import ApiDocsTab from '../components/ApiDocsTab.jsx';
 import HealthTab from '../components/HealthTab.jsx';
 import SettingsTab from '../components/SettingsTab.jsx';
@@ -308,7 +309,7 @@ export default function AdminPage() {
       // Only trigger if Alt key is pressed (without Ctrl or Shift to avoid conflicts)
       if (!e.altKey || e.ctrlKey || e.shiftKey) return;
 
-      const tabs = ['dashboard', 'archive', 'marketplace', 'users', 'attribution', 'payouts', 'settlements', 'cloud', 'api', 'health', 'openclaw', 'bounty-hunter', 'royalty-analytics', 'settings'];
+      const tabs = ['dashboard', 'archive', 'marketplace', 'users', 'attribution', 'payouts', 'settlements', 'cloud', 'library', 'api', 'health', 'openclaw', 'bounty-hunter', 'royalty-analytics', 'settings'];
       let key = parseInt(e.key);
       // Support Alt+0 for the last tab (settings)
       if (e.key === '0') key = tabs.length;
@@ -812,6 +813,13 @@ export default function AdminPage() {
           {activeTab === 'cloud' && (
             <ErrorBoundary>
               <CloudStorageTab />
+            </ErrorBoundary>
+          )}
+
+          {/* Library Tab */}
+          {activeTab === 'library' && (
+            <ErrorBoundary>
+              <LibraryTab />
             </ErrorBoundary>
           )}
 

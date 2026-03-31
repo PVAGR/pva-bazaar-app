@@ -5,7 +5,9 @@ import Layout from './components/Layout.jsx';
 
 import AboutPage from './pages/AboutPage.jsx';
 import ArchiveLibraryPage from './pages/ArchiveLibraryPage.jsx';
+import CivilizationLibraryPage from './pages/CivilizationLibraryPage.jsx';
 import AdminPage from './pages/AdminPage.jsx';
+import CareerQuizPage from './pages/CareerQuizPage.jsx';
 import MarketplacePage from './pages/MarketplacePage.jsx';
 import MarketplaceItemPage from './pages/MarketplaceItemPage.jsx';
 import CheckoutSuccessPage from './pages/CheckoutSuccessPage.jsx';
@@ -18,6 +20,8 @@ export default function App() {
       <Routes>
         <Route path="/" element={<ArchiveLibraryPage />} />
         <Route path="/library" element={<ArchiveLibraryPage />} />
+        <Route path="/civilization-library" element={<CivilizationLibraryPage />} />
+        <Route path="/career-quiz" element={<CareerQuizPage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/admin" element={<AdminPage />} />
         <Route path="/admin/orders" element={<AdminOrdersPage />} />

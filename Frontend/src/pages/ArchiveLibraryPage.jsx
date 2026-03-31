@@ -386,6 +386,12 @@ export default function ArchiveLibraryPage() {
           >
             Browse All Categories
           </button>
+          <Link to="/civilization-library" className="hero-cta hero-cta-secondary">
+            Civilization Library
+          </Link>
+          <Link to="/career-quiz" className="hero-cta hero-cta-secondary">
+            Career Quiz
+          </Link>
         </div>
         
         <div className="view-mode-toggle">
