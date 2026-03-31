@@ -195,12 +195,94 @@ export default function CareerQuizPage() {
               <span key={domain}>{domain}</span>
             ))}
           </div>
+          {(result.topInterests || []).length > 0 ? (
+            <>
+              <p>Top interest profile (RIASEC):</p>
+              <div className="career-pills">
+                {(result.topInterests || []).map((code) => (
+                  <span key={`interest-${code}`}>{code}</span>
+                ))}
+              </div>
+            </>
+          ) : null}
+          {result.riasecScores ? (
+            <>
+              <p>Interest score detail:</p>
+              <div className="career-pills">
+                {Object.entries(result.riasecScores).map(([code, score]) => (
+                  <span key={`riasec-${code}`}>{code}:{score}</span>
+                ))}
+              </div>
+            </>
+          ) : null}
+          {result.confidence ? (
+            <>
+              <p>Match confidence:</p>
+              <div className="career-pills">
+                <span>score: {result.confidence.score}%</span>
+                <span>band: {result.confidence.band}</span>
+                <span>completion: {result.confidence.completion}%</span>
+                <span>signal: {result.confidence.signalStrength}%</span>
+                <span>clarity: {result.confidence.axisClarity}%</span>
+              </div>
+              {result.confidence.sectionBreakdown ? (
+                <div className="career-section-confidence">
+                  <p style={{ fontSize: '0.9em', marginTop: '1rem' }}>Per-section confidence:</p>
+                  {Object.entries(result.confidence.sectionBreakdown).map(([section, data]) => (
+                    <div key={`section-${section}`} style={{ fontSize: '0.85em', marginLeft: '1rem', marginTop: '0.5rem' }}>
+                      <strong>{section}:</strong> score {data.score}% ({data.band}) - {data.answered}/{data.total} answered, signal {data.signalStrength}%
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+            </>
+          ) : null}
           <p>Recommended occupation tracks:</p>
           <ul>
             {(result.topCareers || []).map((career) => (
               <li key={career}>{career}</li>
             ))}
           </ul>
+          {(result.majorRoles || []).length > 0 ? (
+            <>
+              <p>Major civilization-fit roles:</p>
+              <ul>
+                {(result.majorRoles || []).map((role) => {
+                  const rationale = (result.roleRationale || []).find(r => r.role === role && r.category === 'major');
+                  return (
+                    <li key={`major-${role}`}>
+                      <strong>{role}</strong>
+                      {rationale && rationale.explanation ? (
+                        <div style={{ fontSize: '0.9em', marginTop: '0.25rem', opacity: 0.8 }}>
+                          {rationale.explanation}
+                        </div>
+                      ) : null}
+                    </li>
+                  );
+                })}
+              </ul>
+            </>
+          ) : null}
+          {(result.supportingRoles || []).length > 0 ? (
+            <>
+              <p>Supporting and mission-critical roles:</p>
+              <ul>
+                {(result.supportingRoles || []).map((role) => {
+                  const rationale = (result.roleRationale || []).find(r => r.role === role && r.category === 'supporting');
+                  return (
+                    <li key={`support-${role}`}>
+                      <strong>{role}</strong>
+                      {rationale && rationale.explanation ? (
+                        <div style={{ fontSize: '0.9em', marginTop: '0.25rem', opacity: 0.8 }}>
+                          {rationale.explanation}
+                        </div>
+                      ) : null}
+                    </li>
+                  );
+                })}
+              </ul>
+            </>
+          ) : null}
           <div className="career-actions">
             <Link to="/civilization-library">Find Matching Manuals</Link>
             <button onClick={() => {
