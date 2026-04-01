@@ -188,7 +188,22 @@ export default function CareerQuizPage() {
 
       {result ? (
         <section className="career-result-card">
-          <h2>Your Profile: {result.personalityType}</h2>
+          {result.archetypeName ? (
+            <div className="career-archetype-hero">
+              <h2>{result.archetypeName}</h2>
+              <p className="career-archetype-subheader">
+                Your unique career personality and growth path
+              </p>
+              <div className="career-archetype-intro">
+                <p>
+                  {result.archetypeDescription || 'You embody a distinctive professional archetype.'}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <h2>Your Profile: {result.personalityType}</h2>
+          )}
+          
           <p>Suggested domains for contribution and training:</p>
           <div className="career-pills">
             {(result.topDomains || []).map((domain) => (

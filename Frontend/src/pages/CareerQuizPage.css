@@ -211,3 +211,38 @@
   margin-bottom: 0.35rem;
   color: var(--site-text);
 }
+
+/* Archetype Hero Section */
+.career-archetype-hero {
+  margin-bottom: 1.2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--site-accent);
+}
+
+.career-archetype-hero h2 {
+  margin: 0 0 0.35rem;
+  font-size: 1.6rem;
+  color: var(--site-accent-strong);
+}
+
+.career-archetype-subheader {
+  margin: 0 0 0.6rem;
+  color: var(--site-text-muted);
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.career-archetype-intro {
+  background: color-mix(in srgb, var(--site-accent-soft) 40%, transparent);
+  border-left: 3px solid var(--site-accent);
+  border-radius: 6px;
+  padding: 0.7rem 0.85rem;
+  margin-top: 0.6rem;
+}
+
+.career-archetype-intro p {
+  margin: 0;
+  color: var(--site-text);
+  line-height: 1.5;
+  font-size: 0.96rem;
+}

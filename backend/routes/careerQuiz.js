@@ -579,6 +579,7 @@ function buildRecommendations(personalityType, riasecScores) {
     roleRationale: rationale,
     archetypeId: primaryArchetype ? primaryArchetype.id : null,
     archetypeName: primaryArchetype ? primaryArchetype.archetype.name : null,
+    archetypeDescription: primaryArchetype ? primaryArchetype.archetype.longDescription : null,
   };
 }
 
