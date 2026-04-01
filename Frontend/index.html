@@ -9,9 +9,94 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Open+Sans:wght@400;700&display=swap" rel="stylesheet" />
+    <style>
+      body {
+        margin: 0;
+        font-family: 'Open Sans', Arial, sans-serif;
+        background: linear-gradient(135deg, #0a0e27 0%, #111a3a 100%);
+        color: #e0f2f1;
+      }
+
+      #app-shell-fallback {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+
+      .fallback-panel {
+        width: min(620px, 100%);
+        background: rgba(15, 15, 30, 0.9);
+        border: 1px solid #00695c;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+      }
+
+      .fallback-title {
+        margin: 0 0 10px;
+        color: #26c6da;
+        font-family: 'Merriweather', serif;
+        font-size: 1.35rem;
+      }
+
+      .fallback-copy {
+        margin: 0 0 16px;
+        color: #b2dfdb;
+        line-height: 1.5;
+      }
+
+      .fallback-links {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .fallback-link {
+        text-decoration: none;
+        border: 1px solid #00695c;
+        border-radius: 10px;
+        padding: 10px 12px;
+        color: #e0f2f1;
+        background: rgba(20, 20, 40, 0.75);
+        font-weight: 700;
+      }
+
+      .fallback-link:hover {
+        border-color: #26c6da;
+        color: #26c6da;
+      }
+
+      body[data-app-mounted='true'] #app-shell-fallback {
+        display: none;
+      }
+    </style>
+    <script>
+      window.setTimeout(function () {
+        var root = document.getElementById('root');
+        var mounted = document.body && document.body.dataset && document.body.dataset.appMounted === 'true';
+        if (!mounted && (!root || root.childElementCount === 0)) {
+          var fallback = document.getElementById('app-shell-fallback');
+          if (fallback) fallback.hidden = false;
+        }
+      }, 3500);
+    </script>
   </head>
   <body>
     <div id="root" role="main"></div>
+    <div id="app-shell-fallback" hidden>
+      <div class="fallback-panel">
+        <h1 class="fallback-title">PVA Bazaar is loading</h1>
+        <p class="fallback-copy">If the page appears blank after refresh, use one of these direct links and the site will recover without losing any built pages.</p>
+        <div class="fallback-links">
+          <a class="fallback-link" href="/#/library">Archive Library</a>
+          <a class="fallback-link" href="/#/marketplace">Marketplace</a>
+          <a class="fallback-link" href="/#/showroom">Showroom</a>
+          <a class="fallback-link" href="/#/civilization-library">Civilization Library</a>
+        </div>
+      </div>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
     <!-- api-test.js excluded from production builds -->
   </body>

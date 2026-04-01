@@ -6,6 +6,24 @@ import { HelmetProvider } from 'react-helmet-async';
 import * as Sentry from '@sentry/react';
 import './base.css';
 
+function AppCrashFallback() {
+  return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', background: 'linear-gradient(135deg, var(--site-bg-primary) 0%, var(--site-bg-secondary) 100%)' }}>
+      <div style={{ width: 'min(620px, 100%)', background: 'var(--site-panel)', border: '1px solid var(--site-border)', borderRadius: '16px', padding: '24px' }}>
+        <h2 style={{ margin: '0 0 10px', color: 'var(--site-accent)' }}>The page hit an error</h2>
+        <p style={{ margin: '0 0 16px', color: 'var(--site-text-muted)' }}>
+          Please refresh, or use a direct destination below.
+        </p>
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+          <a href="/#/library" style={{ color: 'var(--site-text)', textDecoration: 'none', border: '1px solid var(--site-border)', borderRadius: '10px', padding: '10px 12px', background: 'var(--site-panel-soft)', fontWeight: 700 }}>Archive Library</a>
+          <a href="/#/marketplace" style={{ color: 'var(--site-text)', textDecoration: 'none', border: '1px solid var(--site-border)', borderRadius: '10px', padding: '10px 12px', background: 'var(--site-panel-soft)', fontWeight: 700 }}>Marketplace</a>
+          <a href="/#/showroom" style={{ color: 'var(--site-text)', textDecoration: 'none', border: '1px solid var(--site-border)', borderRadius: '10px', padding: '10px 12px', background: 'var(--site-panel-soft)', fontWeight: 700 }}>Showroom</a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 Sentry.init({
   dsn: import.meta.env.VITE_SENTRY_DSN,
   release: import.meta.env.VITE_SENTRY_RELEASE,
@@ -51,9 +69,10 @@ Sentry.init({
 
 const root = document.getElementById('root');
 if (root) {
+  document.body.dataset.appMounted = 'true';
   createRoot(root).render(
     <HelmetProvider>
-      <Sentry.ErrorBoundary fallback={<div>Something went wrong.</div>}>
+      <Sentry.ErrorBoundary fallback={<AppCrashFallback />}>
         <App />
       </Sentry.ErrorBoundary>
     </HelmetProvider>
