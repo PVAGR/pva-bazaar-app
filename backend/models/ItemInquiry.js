@@ -18,6 +18,7 @@ const itemInquirySchema = new mongoose.Schema({
   },
   reservationRequested: { type: Boolean, default: false },
   reservationApplied: { type: Boolean, default: false },
+  reservationReleasedAt: { type: Date },
   status: {
     type: String,
     enum: ['new', 'contacted', 'reserved', 'closed'],

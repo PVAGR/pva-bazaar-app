@@ -411,6 +411,7 @@
   display: flex;
   gap: 8px;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .inquiries-controls .submit-btn {
@@ -481,6 +482,7 @@
   justify-content: space-between;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .inquiry-actions select {
@@ -493,6 +495,15 @@
 
 .inquiry-time {
   color: var(--site-text-dim, #aaa);
+  font-size: 0.78rem;
+}
+
+.release-btn {
+  border: 1px solid var(--site-warning-text, #ffcc80);
+  border-radius: 8px;
+  background: var(--site-warning-bg, rgba(255, 193, 7, 0.15));
+  color: var(--site-warning-text, #ffcc80);
+  padding: 6px 10px;
   font-size: 0.78rem;
 }
 

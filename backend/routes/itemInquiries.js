@@ -53,6 +53,31 @@ async function applyReservation(artifact, quantityRequested) {
   return true;
 }
 
+async function releaseReservation(artifact, quantityRequested) {
+  if (!artifact) return false;
+
+  if (artifact.isUnique) {
+    if (artifact.availabilityStatus === 'reserved') {
+      artifact.availabilityStatus = 'available';
+      await artifact.save();
+      return true;
+    }
+    return false;
+  }
+
+  const releaseQty = Math.max(1, Number(quantityRequested) || 1);
+  const currentReserved = Math.max(0, Number(artifact.reservedQty || 0));
+  if (currentReserved <= 0) return false;
+
+  const released = Math.min(releaseQty, currentReserved);
+  artifact.reservedQty = Math.max(0, currentReserved - released);
+  const stockQty = Math.max(0, Number(artifact.stockQty || 0));
+  artifact.bulkQuantity = Math.max(0, stockQty - artifact.reservedQty);
+  artifact.availabilityStatus = artifact.bulkQuantity > 0 ? 'available' : 'reserved';
+  await artifact.save();
+  return true;
+}
+
 // POST /api/item-inquiries
 router.post('/', generalLimiter, async (req, res) => {
   try {
@@ -117,9 +142,21 @@ router.get('/', adminSession, async (req, res) => {
   try {
     const limit = Math.max(1, Math.min(Number(req.query.limit) || 30, 100));
     const status = toSafeText(req.query.status, 30).toLowerCase();
+    const q = toSafeText(req.query.q, 120);
     const filter = {};
     if (status && ['new', 'contacted', 'reserved', 'closed'].includes(status)) {
       filter.status = status;
+    }
+    if (q) {
+      const rx = new RegExp(q, 'i');
+      filter.$or = [
+        { itemName: rx },
+        { itemSku: rx },
+        { requesterName: rx },
+        { requesterEmail: rx },
+        { requesterCompany: rx },
+        { message: rx },
+      ];
     }
 
     const rows = await ItemInquiry.find(filter)
@@ -131,6 +168,7 @@ router.get('/', adminSession, async (req, res) => {
       ok: true,
       items: rows.map((row) => ({
         id: String(row._id),
+        artifactId: row.artifact ? String(row.artifact) : '',
         itemSlug: row.itemSlug,
         itemName: row.itemName,
         itemSku: row.itemSku,
@@ -142,6 +180,7 @@ router.get('/', adminSession, async (req, res) => {
         requestType: row.requestType,
         reservationRequested: Boolean(row.reservationRequested),
         reservationApplied: Boolean(row.reservationApplied),
+        reservationReleasedAt: row.reservationReleasedAt || null,
         status: row.status,
         createdAt: row.createdAt,
       })),
@@ -170,6 +209,54 @@ router.patch('/:id/status', adminSession, async (req, res) => {
     await inquiry.save();
 
     return res.json({ ok: true, inquiry: { id: String(inquiry._id), status: inquiry.status } });
+  } catch (err) {
+    return res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// POST /api/item-inquiries/:id/release-reservation (admin only)
+router.post('/:id/release-reservation', adminSession, async (req, res) => {
+  try {
+    const id = String(req.params.id || '');
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ ok: false, error: 'Invalid inquiry id' });
+    }
+
+    const inquiry = await ItemInquiry.findById(id);
+    if (!inquiry) return res.status(404).json({ ok: false, error: 'Inquiry not found' });
+    if (!inquiry.reservationApplied) {
+      return res.status(400).json({ ok: false, error: 'No active reservation on this inquiry' });
+    }
+
+    const artifact = inquiry.artifact ? await Artifact.findById(inquiry.artifact) : null;
+    if (!artifact) {
+      return res.status(404).json({ ok: false, error: 'Associated artifact not found' });
+    }
+
+    const released = await releaseReservation(artifact, inquiry.quantityRequested);
+    if (!released) {
+      return res.status(400).json({ ok: false, error: 'Reservation could not be released' });
+    }
+
+    inquiry.reservationApplied = false;
+    inquiry.reservationReleasedAt = new Date();
+    if (inquiry.status === 'reserved') inquiry.status = 'contacted';
+    await inquiry.save();
+
+    return res.json({
+      ok: true,
+      inquiry: {
+        id: String(inquiry._id),
+        status: inquiry.status,
+        reservationApplied: false,
+      },
+      artifact: {
+        id: String(artifact._id),
+        availabilityStatus: artifact.availabilityStatus,
+        reservedQty: Number(artifact.reservedQty || 0),
+        bulkQuantity: Number(artifact.bulkQuantity || 0),
+      },
+    });
   } catch (err) {
     return res.status(500).json({ ok: false, error: err.message });
   }

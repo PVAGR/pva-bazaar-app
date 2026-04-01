@@ -460,11 +460,12 @@ export async function createMarketplaceInquiry(payload) {
   }
 }
 
-export async function fetchItemInquiries({ limit = 30, status = '' } = {}) {
+export async function fetchItemInquiries({ limit = 30, status = '', q = '' } = {}) {
   try {
     const params = new URLSearchParams();
     params.append('limit', String(limit));
     if (status) params.append('status', status);
+    if (q) params.append('q', q);
     const response = await apiGet(`/item-inquiries?${params.toString()}`);
     if (response && response.ok && Array.isArray(response.items)) {
       return { ok: true, items: response.items };
@@ -486,6 +487,23 @@ export async function updateItemInquiryStatus(inquiryId, { status, notes = '' } 
       return { ok: true, inquiry: response.inquiry || null };
     }
     return { ok: false, error: response?.error || response?.message || 'Failed to update inquiry' };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+}
+
+export async function releaseItemInquiryReservation(inquiryId) {
+  if (!inquiryId) return { ok: false, error: 'Missing inquiry id' };
+  try {
+    const response = await apiPost(`/item-inquiries/${encodeURIComponent(inquiryId)}/release-reservation`, {});
+    if (response && response.ok) {
+      return {
+        ok: true,
+        inquiry: response.inquiry || null,
+        artifact: response.artifact || null,
+      };
+    }
+    return { ok: false, error: response?.error || response?.message || 'Failed to release reservation' };
   } catch (err) {
     return { ok: false, error: err.message };
   }

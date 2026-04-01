@@ -25,6 +25,7 @@ import {
   apiPut,
   apiDelete,
   fetchItemInquiries,
+  releaseItemInquiryReservation,
   updateItemInquiryStatus,
 } from '../lib/api';
 import { createLogger } from '../lib/logger';
@@ -52,6 +53,7 @@ export default function MarketplaceTab() {
   const [inquiries, setInquiries] = useState([]);
   const [inquiriesLoading, setInquiriesLoading] = useState(false);
   const [inquiryFilter, setInquiryFilter] = useState('');
+  const [inquirySearchQuery, setInquirySearchQuery] = useState('');
   const [updatingInquiryId, setUpdatingInquiryId] = useState('');
   const [selectedBulkChannels, setSelectedBulkChannels] = useState({
     facebook: true,
@@ -145,6 +147,7 @@ export default function MarketplaceTab() {
       const response = await fetchItemInquiries({
         limit: 60,
         status: inquiryFilter || '',
+        q: inquirySearchQuery || '',
       });
       if (response.ok) {
         setInquiries(response.items);
@@ -156,7 +159,7 @@ export default function MarketplaceTab() {
     } finally {
       if (!silent) setInquiriesLoading(false);
     }
-  }, [inquiryFilter]);
+  }, [inquiryFilter, inquirySearchQuery]);
 
   const handleUpdateInquiryStatus = async (inquiryId, status) => {
     if (!inquiryId || !status) return;
@@ -171,6 +174,22 @@ export default function MarketplaceTab() {
     }
     setSuccess(`Inquiry updated to ${status}.`);
     loadInquiries({ silent: true });
+  };
+
+  const handleReleaseInquiryReservation = async (inquiryId) => {
+    if (!inquiryId) return;
+    setUpdatingInquiryId(inquiryId);
+    setError('');
+    setSuccess('');
+    const response = await releaseItemInquiryReservation(inquiryId);
+    setUpdatingInquiryId('');
+    if (!response.ok) {
+      setError(response.error || 'Failed to release reservation');
+      return;
+    }
+    setSuccess('Reservation released and inquiry updated.');
+    loadInquiries({ silent: true });
+    loadItems();
   };
 
   const handleBulkRetrySyndication = async () => {
@@ -393,6 +412,13 @@ export default function MarketplaceTab() {
         <div className="inquiries-header-row">
           <h3>B2B Inquiries</h3>
           <div className="inquiries-controls">
+            <input
+              type="text"
+              className="sidebar-search"
+              placeholder="Search email, SKU, name..."
+              value={inquirySearchQuery}
+              onChange={(e) => setInquirySearchQuery(e.target.value)}
+            />
             <select
               className="sidebar-sort"
               value={inquiryFilter}
@@ -442,6 +468,16 @@ export default function MarketplaceTab() {
                     <option value="reserved">reserved</option>
                     <option value="closed">closed</option>
                   </select>
+                  {row.reservationApplied ? (
+                    <button
+                      type="button"
+                      className="release-btn"
+                      onClick={() => handleReleaseInquiryReservation(row.id)}
+                      disabled={updatingInquiryId === row.id}
+                    >
+                      Release reservation
+                    </button>
+                  ) : null}
                   <span className="inquiry-time">{new Date(row.createdAt).toLocaleString()}</span>
                 </div>
               </article>
