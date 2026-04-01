@@ -385,6 +385,117 @@
   color: var(--site-success-text, #81c784);
 }
 
+.marketplace-inquiries-panel {
+  background: var(--site-panel-soft, rgba(255, 255, 255, 0.03));
+  border: 1px solid var(--site-border, rgba(255, 255, 255, 0.1));
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.inquiries-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.inquiries-header-row h3 {
+  margin: 0;
+  color: var(--site-text, #fff);
+}
+
+.inquiries-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.inquiries-controls .submit-btn {
+  margin-top: 0;
+  padding: 10px 14px;
+}
+
+.inquiries-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 10px;
+}
+
+.inquiry-card {
+  border: 1px solid var(--site-border, rgba(255, 255, 255, 0.1));
+  border-radius: 10px;
+  background: var(--site-panel, rgba(255, 255, 255, 0.06));
+  padding: 10px;
+  display: grid;
+  gap: 6px;
+}
+
+.inquiry-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.inquiry-status {
+  text-transform: uppercase;
+  font-size: 0.68rem;
+  border-radius: 999px;
+  padding: 2px 8px;
+  border: 1px solid var(--site-border, rgba(255, 255, 255, 0.1));
+}
+
+.inquiry-status.status-new {
+  color: var(--site-accent, #00d9ff);
+}
+
+.inquiry-status.status-contacted {
+  color: var(--site-warning-text, #ffcc80);
+}
+
+.inquiry-status.status-reserved {
+  color: var(--site-warning-text, #ffcc80);
+}
+
+.inquiry-status.status-closed {
+  color: var(--site-success-text, #81c784);
+}
+
+.inquiry-meta {
+  margin: 0;
+  color: var(--site-text-dim, #aaa);
+  font-size: 0.82rem;
+}
+
+.inquiry-message {
+  margin: 0;
+  color: var(--site-text, #fff);
+  font-size: 0.9rem;
+}
+
+.inquiry-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.inquiry-actions select {
+  background: var(--site-panel-soft, rgba(255, 255, 255, 0.03));
+  color: var(--site-text, #fff);
+  border: 1px solid var(--site-border, rgba(255, 255, 255, 0.1));
+  border-radius: 8px;
+  padding: 6px 8px;
+}
+
+.inquiry-time {
+  color: var(--site-text-dim, #aaa);
+  font-size: 0.78rem;
+}
+
 /* Responsive */
 @media (max-width: 992px) {
   .marketplace-layout {

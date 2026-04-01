@@ -18,8 +18,15 @@
  * - DELETE /api/items/:id - Delete item
  */
 
-import React, { useState, useEffect } from 'react';
-import { apiGet, apiPost, apiPut, apiDelete } from '../lib/api';
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  apiGet,
+  apiPost,
+  apiPut,
+  apiDelete,
+  fetchItemInquiries,
+  updateItemInquiryStatus,
+} from '../lib/api';
 import { createLogger } from '../lib/logger';
 import { SkeletonList } from '../components/SkeletonLoader.jsx';
 import { LoadingDots } from '../components/LoadingSpinner.jsx';
@@ -42,6 +49,10 @@ export default function MarketplaceTab() {
   const [sortBy, setSortBy] = useState('newest');
   const [bulkRetrying, setBulkRetrying] = useState(false);
   const [bulkRetryLimit, setBulkRetryLimit] = useState('80');
+  const [inquiries, setInquiries] = useState([]);
+  const [inquiriesLoading, setInquiriesLoading] = useState(false);
+  const [inquiryFilter, setInquiryFilter] = useState('');
+  const [updatingInquiryId, setUpdatingInquiryId] = useState('');
   const [selectedBulkChannels, setSelectedBulkChannels] = useState({
     facebook: true,
     etsy: true,
@@ -62,6 +73,19 @@ export default function MarketplaceTab() {
   useEffect(() => {
     loadItems();
   }, []);
+
+  useEffect(() => {
+    loadInquiries();
+    const timerApi = typeof globalThis !== 'undefined' ? globalThis : null;
+    const id = timerApi?.setInterval
+      ? timerApi.setInterval(() => {
+          loadInquiries({ silent: true });
+        }, 30000)
+      : null;
+    return () => {
+      if (id && timerApi?.clearInterval) timerApi.clearInterval(id);
+    };
+  }, [loadInquiries]);
 
   const filteredItems = items
     .filter((item) => {
@@ -115,12 +139,46 @@ export default function MarketplaceTab() {
     }
   };
 
+  const loadInquiries = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) setInquiriesLoading(true);
+    try {
+      const response = await fetchItemInquiries({
+        limit: 60,
+        status: inquiryFilter || '',
+      });
+      if (response.ok) {
+        setInquiries(response.items);
+      } else if (!silent) {
+        setError(response.error || 'Failed to load inquiries');
+      }
+    } catch (err) {
+      if (!silent) setError(err.message || 'Failed to load inquiries');
+    } finally {
+      if (!silent) setInquiriesLoading(false);
+    }
+  }, [inquiryFilter]);
+
+  const handleUpdateInquiryStatus = async (inquiryId, status) => {
+    if (!inquiryId || !status) return;
+    setUpdatingInquiryId(inquiryId);
+    setError('');
+    setSuccess('');
+    const response = await updateItemInquiryStatus(inquiryId, { status });
+    setUpdatingInquiryId('');
+    if (!response.ok) {
+      setError(response.error || 'Failed to update inquiry status');
+      return;
+    }
+    setSuccess(`Inquiry updated to ${status}.`);
+    loadInquiries({ silent: true });
+  };
+
   const handleBulkRetrySyndication = async () => {
     if (!bulkChannels.length) {
       setError('Select at least one syndication channel to retry.');
       return;
     }
-    if (!confirm('Retry syndication for listings with failed/manual-required jobs?')) {
+    if (!(typeof globalThis !== 'undefined' && globalThis.confirm && globalThis.confirm('Retry syndication for listings with failed/manual-required jobs?'))) {
       return;
     }
     setBulkRetrying(true);
@@ -182,7 +240,8 @@ export default function MarketplaceTab() {
 
       if (response.ok) {
         setSuccess(isEditing ? 'Item updated successfully!' : 'Item created successfully!');
-        setTimeout(() => setSuccess(''), 3000);
+        const timerApi = typeof globalThis !== 'undefined' ? globalThis : null;
+        if (timerApi?.setTimeout) timerApi.setTimeout(() => setSuccess(''), 3000);
         resetForm();
         await loadItems();
       } else {
@@ -209,11 +268,14 @@ export default function MarketplaceTab() {
       stock: item.stock?.toString() || '1',
       condition: item.condition || 'New',
     });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    const browserApi = typeof globalThis !== 'undefined' ? globalThis : null;
+    if (browserApi?.scrollTo) {
+      browserApi.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   const handleDelete = async (item) => {
-    if (!confirm(`Delete "${item.title}"? This action cannot be undone.`)) {
+    if (!(typeof globalThis !== 'undefined' && globalThis.confirm && globalThis.confirm(`Delete "${item.title}"? This action cannot be undone.`))) {
       return;
     }
 
@@ -223,7 +285,8 @@ export default function MarketplaceTab() {
       const response = await apiDelete(`/items/${getItemId(item)}`);
       if (response.ok) {
         setSuccess('Item deleted successfully!');
-        setTimeout(() => setSuccess(''), 3000);
+        const timerApi = typeof globalThis !== 'undefined' ? globalThis : null;
+        if (timerApi?.setTimeout) timerApi.setTimeout(() => setSuccess(''), 3000);
         if (selectedItem && getItemId(selectedItem) === getItemId(item)) {
           resetForm();
         }
@@ -326,6 +389,67 @@ export default function MarketplaceTab() {
       {error && <div className="error-message">❌ {error}</div>}
       {success && <div className="success-message">✅ {success}</div>}
 
+      <section className="marketplace-inquiries-panel">
+        <div className="inquiries-header-row">
+          <h3>B2B Inquiries</h3>
+          <div className="inquiries-controls">
+            <select
+              className="sidebar-sort"
+              value={inquiryFilter}
+              onChange={(e) => setInquiryFilter(e.target.value)}
+            >
+              <option value="">All statuses</option>
+              <option value="new">New</option>
+              <option value="contacted">Contacted</option>
+              <option value="reserved">Reserved</option>
+              <option value="closed">Closed</option>
+            </select>
+            <button type="button" className="submit-btn" onClick={() => loadInquiries()} disabled={inquiriesLoading}>
+              {inquiriesLoading ? 'Refreshing...' : 'Refresh Inquiries'}
+            </button>
+          </div>
+        </div>
+
+        {inquiriesLoading ? <SkeletonList count={3} /> : null}
+        {!inquiriesLoading && inquiries.length === 0 ? (
+          <p className="empty-message">No inquiries yet.</p>
+        ) : null}
+
+        {!inquiriesLoading && inquiries.length > 0 ? (
+          <div className="inquiries-list">
+            {inquiries.map((row) => (
+              <article className="inquiry-card" key={row.id}>
+                <div className="inquiry-top">
+                  <strong>{row.itemName || 'Unnamed item'}</strong>
+                  <span className={`inquiry-status status-${row.status}`}>{row.status}</span>
+                </div>
+                <p className="inquiry-meta">
+                  SKU: {row.itemSku || 'n/a'} | {row.requestType} | Qty: {row.quantityRequested}
+                </p>
+                <p className="inquiry-meta">
+                  {row.requesterName} ({row.requesterEmail})
+                  {row.requesterCompany ? ` - ${row.requesterCompany}` : ''}
+                </p>
+                <p className="inquiry-message">{row.message}</p>
+                <div className="inquiry-actions">
+                  <select
+                    value={row.status}
+                    onChange={(e) => handleUpdateInquiryStatus(row.id, e.target.value)}
+                    disabled={updatingInquiryId === row.id}
+                  >
+                    <option value="new">new</option>
+                    <option value="contacted">contacted</option>
+                    <option value="reserved">reserved</option>
+                    <option value="closed">closed</option>
+                  </select>
+                  <span className="inquiry-time">{new Date(row.createdAt).toLocaleString()}</span>
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : null}
+      </section>
+
       <div className="marketplace-layout">
         <div className="marketplace-sidebar">
           <div className="sidebar-controls">
@@ -360,6 +484,14 @@ export default function MarketplaceTab() {
                   key={getItemId(item)}
                   className={`item-preview ${getItemId(selectedItem) === getItemId(item) ? 'active' : ''}`}
                   onClick={() => handleEdit(item)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleEdit(item);
+                    }
+                  }}
                 >
                   {item.imageUrl && (
                     <img

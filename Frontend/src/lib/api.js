@@ -5,6 +5,7 @@ import { getToken } from "./auth";
 export const apiGet = (path, config) => api.get(path, config).then(r => r.data);
 export const apiPost = (path, body, config) => api.post(path, body, config).then(r => r.data);
 export const apiPut = (path, body, config) => api.put(path, body, config).then(r => r.data);
+export const apiPatch = (path, body, config) => api.patch(path, body, config).then(r => r.data);
 export const apiDelete = (path, config) => api.delete(path, config).then(r => r.data);
 
 export const fetchAdminRuntimeConfig = () => apiGet('/admin/runtime-config');
@@ -454,6 +455,37 @@ export async function createMarketplaceInquiry(payload) {
       };
     }
     return { ok: false, error: response?.error || response?.message || 'Failed to send inquiry' };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+}
+
+export async function fetchItemInquiries({ limit = 30, status = '' } = {}) {
+  try {
+    const params = new URLSearchParams();
+    params.append('limit', String(limit));
+    if (status) params.append('status', status);
+    const response = await apiGet(`/item-inquiries?${params.toString()}`);
+    if (response && response.ok && Array.isArray(response.items)) {
+      return { ok: true, items: response.items };
+    }
+    return { ok: false, items: [], error: response?.error || response?.message || 'Failed to fetch inquiries' };
+  } catch (err) {
+    return { ok: false, items: [], error: err.message };
+  }
+}
+
+export async function updateItemInquiryStatus(inquiryId, { status, notes = '' } = {}) {
+  if (!inquiryId) return { ok: false, error: 'Missing inquiry id' };
+  try {
+    const response = await apiPatch(`/item-inquiries/${encodeURIComponent(inquiryId)}/status`, {
+      status,
+      notes,
+    });
+    if (response && response.ok) {
+      return { ok: true, inquiry: response.inquiry || null };
+    }
+    return { ok: false, error: response?.error || response?.message || 'Failed to update inquiry' };
   } catch (err) {
     return { ok: false, error: err.message };
   }
