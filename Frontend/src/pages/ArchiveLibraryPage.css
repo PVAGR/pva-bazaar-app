@@ -134,6 +134,34 @@
   line-height: 1.5;
 }
 
+.top-destination-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  margin: 0.15rem 0 0.65rem;
+  flex-wrap: wrap;
+}
+
+.destination-tab {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.58rem 1rem;
+  text-decoration: none;
+  font-size: 0.94rem;
+  font-weight: 700;
+  line-height: 1;
+  transition: all 0.2s ease;
+}
+
+.destination-tab:hover {
+  background: var(--highlight);
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: translateY(-1px);
+}
+
 .hero-actions {
   display: flex;
   justify-content: center;

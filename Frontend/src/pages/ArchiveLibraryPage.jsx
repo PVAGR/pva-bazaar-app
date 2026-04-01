@@ -368,6 +368,21 @@ export default function ArchiveLibraryPage() {
         <p className="hero-headline">A curated archive of long-form writings, research, and worldbuilding from PVA Bazaar.</p>
         <p className="hero-subheadline">Use one navigation model: choose a mode, choose a category, then open a document.</p>
 
+        <div className="top-destination-tabs" aria-label="Top destinations">
+          <Link to="/civilization-library" className="destination-tab">
+            Civilization Library
+          </Link>
+          <Link to="/career-quiz" className="destination-tab">
+            Career Quiz
+          </Link>
+          <Link to="/marketplace" className="destination-tab">
+            Marketplace
+          </Link>
+          <Link to="/showroom" className="destination-tab">
+            Showroom
+          </Link>
+        </div>
+
         <div className="hero-actions">
           <button
             onClick={() => loadMarkdown(archiveEntries[0])}
@@ -375,12 +390,6 @@ export default function ArchiveLibraryPage() {
           >
             Read Master Index
           </button>
-          <Link to="/marketplace" className="hero-cta hero-cta-secondary">
-            Marketplace
-          </Link>
-          <Link to="/showroom" className="hero-cta hero-cta-secondary">
-            Showroom
-          </Link>
           <button
             onClick={() => {
               setSelectedCategory('All');
@@ -392,12 +401,6 @@ export default function ArchiveLibraryPage() {
           >
             Browse All Categories
           </button>
-          <Link to="/civilization-library" className="hero-cta hero-cta-secondary">
-            Civilization Library
-          </Link>
-          <Link to="/career-quiz" className="hero-cta hero-cta-secondary">
-            Career Quiz
-          </Link>
         </div>
         
         <div className="view-mode-toggle">
