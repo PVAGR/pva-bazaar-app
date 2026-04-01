@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { fetchMarketplaceItem, createCheckoutSession } from "../lib/api";
+import { fetchMarketplaceItem, createCheckoutSession, createMarketplaceInquiry } from "../lib/api";
 import "./MarketplaceItemPage.css";
 
 const PLACEHOLDER = "/placeholder.png";
@@ -22,6 +22,18 @@ export default function MarketplaceItemPage() {
   const [error, setError] = useState(null);
   const [mainIdx, setMainIdx] = useState(0);
   const [buying, setBuying] = useState(false);
+  const [sendingInquiry, setSendingInquiry] = useState(false);
+  const [inquiryResult, setInquiryResult] = useState("");
+  const [inquiryError, setInquiryError] = useState("");
+  const [inquiryForm, setInquiryForm] = useState({
+    requesterName: "",
+    requesterEmail: "",
+    requesterCompany: "",
+    quantityRequested: 1,
+    requestType: "sample",
+    reservationRequested: false,
+    message: "",
+  });
 
   useEffect(() => {
     let mounted = true;
@@ -57,6 +69,39 @@ export default function MarketplaceItemPage() {
     `- Page: https://pvabazaar.org/#/marketplace/${item.slug || item.id}%0D%0A%0D%0A` +
     `Please share availability details and sample/consignment options.%0D%0A`
   );
+
+  const submitInquiry = async (event) => {
+    event.preventDefault();
+    setInquiryResult("");
+    setInquiryError("");
+    if (!inquiryForm.requesterName || !inquiryForm.requesterEmail || !inquiryForm.message) {
+      setInquiryError("Name, email, and message are required.");
+      return;
+    }
+
+    setSendingInquiry(true);
+    const response = await createMarketplaceInquiry({
+      slugOrId: item.slug || item.id,
+      ...inquiryForm,
+      quantityRequested: Number(inquiryForm.quantityRequested) || 1,
+    });
+    setSendingInquiry(false);
+
+    if (!response.ok) {
+      setInquiryError(response.error || "Failed to send inquiry.");
+      return;
+    }
+
+    setInquiryResult(
+      response?.inquiry?.reservationApplied
+        ? "Inquiry sent and reservation applied. We will contact you shortly."
+        : "Inquiry sent successfully. We will contact you shortly."
+    );
+    setInquiryForm((prev) => ({
+      ...prev,
+      message: "",
+    }));
+  };
 
   return (
     <div className="marketplace-item-page">
@@ -142,6 +187,67 @@ export default function MarketplaceItemPage() {
               Request Sample / Inquire
             </a>
           </div>
+          <form className="item-inquiry-form" onSubmit={submitInquiry}>
+            <h2>Send Inquiry</h2>
+            <div className="item-inquiry-grid">
+              <input
+                type="text"
+                placeholder="Your name"
+                value={inquiryForm.requesterName}
+                onChange={(e) => setInquiryForm((prev) => ({ ...prev, requesterName: e.target.value }))}
+                required
+              />
+              <input
+                type="email"
+                placeholder="Your email"
+                value={inquiryForm.requesterEmail}
+                onChange={(e) => setInquiryForm((prev) => ({ ...prev, requesterEmail: e.target.value }))}
+                required
+              />
+              <input
+                type="text"
+                placeholder="Company (optional)"
+                value={inquiryForm.requesterCompany}
+                onChange={(e) => setInquiryForm((prev) => ({ ...prev, requesterCompany: e.target.value }))}
+              />
+              <input
+                type="number"
+                min="1"
+                placeholder="Quantity"
+                value={inquiryForm.quantityRequested}
+                onChange={(e) => setInquiryForm((prev) => ({ ...prev, quantityRequested: e.target.value }))}
+              />
+              <select
+                value={inquiryForm.requestType}
+                onChange={(e) => setInquiryForm((prev) => ({ ...prev, requestType: e.target.value }))}
+              >
+                <option value="sample">Sample Request</option>
+                <option value="availability">Availability Check</option>
+                <option value="bulk">Bulk Request</option>
+                <option value="custom">Custom Requirement</option>
+              </select>
+              <label className="item-inquiry-checkbox">
+                <input
+                  type="checkbox"
+                  checked={inquiryForm.reservationRequested}
+                  onChange={(e) => setInquiryForm((prev) => ({ ...prev, reservationRequested: e.target.checked }))}
+                />
+                Reserve this item while we discuss
+              </label>
+            </div>
+            <textarea
+              placeholder="Tell us what you need"
+              value={inquiryForm.message}
+              onChange={(e) => setInquiryForm((prev) => ({ ...prev, message: e.target.value }))}
+              rows={4}
+              required
+            />
+            {inquiryError ? <div className="item-inquiry-error">{inquiryError}</div> : null}
+            {inquiryResult ? <div className="item-inquiry-success">{inquiryResult}</div> : null}
+            <button className="inquiry-submit-btn" type="submit" disabled={sendingInquiry}>
+              {sendingInquiry ? "Sending..." : "Submit Inquiry"}
+            </button>
+          </form>
           <button
             className="buy-btn"
             disabled={buying || !item.priceCents || !item.id}

@@ -278,6 +278,7 @@ const archiveRoutes = require('../routes/archive');
 const checkoutRoutes = require('../routes/checkout');
 const ordersRoutes = require('../routes/orders');
 const itemsRoutes = require('../routes/items');
+const itemInquiriesRoutes = require('../routes/itemInquiries');
 const omnichannelRoutes = require('../routes/omnichannel');
 const solanaRoutes = require('../routes/solana');
 // Secure admin login endpoint
@@ -349,6 +350,7 @@ app.use('/api/archive', archiveRoutes);
 app.use('/api/checkout', checkoutRoutes);
 app.use('/api/orders', ordersRoutes);
 app.use('/api/items', itemsRoutes);
+app.use('/api/item-inquiries', itemInquiriesRoutes);
 app.use('/api/omnichannel', omnichannelRoutes);
 app.use('/api/solana', solanaRoutes);
 app.use('/api/contribute', contributeRoutes);

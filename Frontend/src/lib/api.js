@@ -444,6 +444,21 @@ export async function createMarketplaceItem(payload) {
   }
 }
 
+export async function createMarketplaceInquiry(payload) {
+  try {
+    const response = await apiPost('/item-inquiries', payload);
+    if (response && response.ok && response.inquiry) {
+      return {
+        ok: true,
+        inquiry: response.inquiry,
+      };
+    }
+    return { ok: false, error: response?.error || response?.message || 'Failed to send inquiry' };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+}
+
 export async function checkMarketplaceItemProvenance(payload) {
   try {
     const response = await apiPost('/items/provenance/check', payload);
