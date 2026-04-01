@@ -1,6 +1,6 @@
 import AdminOrdersPage from './pages/AdminOrdersPage.jsx';
 import React from 'react';
-import { HashRouter, Routes, Route } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout.jsx';
 
 import AboutPage from './pages/AboutPage.jsx';
@@ -24,6 +24,7 @@ export default function App() {
         <Route path="/admin/orders" element={<AdminOrdersPage />} />
         <Route path="/" element={<Layout><ArchiveLibraryPage /></Layout>} />
         <Route path="/library" element={<Layout><ArchiveLibraryPage /></Layout>} />
+        <Route path="/archive" element={<Layout><ArchiveLibraryPage /></Layout>} />
         <Route path="/civilization-library" element={<Layout><CivilizationLibraryPage /></Layout>} />
         <Route path="/career-quiz" element={<Layout><CareerQuizPage /></Layout>} />
         <Route path="/about" element={<Layout><AboutPage /></Layout>} />
@@ -33,6 +34,7 @@ export default function App() {
         <Route path="/showroom/:slugOrId" element={<Layout><ShowroomItemPage /></Layout>} />
         <Route path="/checkout/success" element={<Layout><CheckoutSuccessPage /></Layout>} />
         <Route path="/checkout/cancel" element={<Layout><CheckoutCancelPage /></Layout>} />
+        <Route path="*" element={<Navigate to="/library" replace />} />
       </Routes>
     </HashRouter>
   );
