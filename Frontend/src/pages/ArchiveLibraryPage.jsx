@@ -368,15 +368,6 @@ export default function ArchiveLibraryPage() {
         <p className="hero-headline">A curated archive of long-form writings, research, and worldbuilding from PVA Bazaar.</p>
         <p className="hero-subheadline">Use one navigation model: choose a mode, choose a category, then open a document.</p>
 
-        <div className="home-nav-tabs" role="navigation" aria-label="Home section tabs">
-          <Link to="/library" className="home-nav-tab">Home</Link>
-          <Link to="/marketplace" className="home-nav-tab">Marketplace</Link>
-          <Link to="/showroom" className="home-nav-tab">Showroom</Link>
-          <Link to="/civilization-library" className="home-nav-tab">Civilization Library</Link>
-          <Link to="/career-quiz" className="home-nav-tab">Career Quiz</Link>
-          <Link to="/about" className="home-nav-tab">About</Link>
-        </div>
-
         <div className="hero-actions">
           <button
             onClick={() => loadMarkdown(archiveEntries[0])}

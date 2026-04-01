@@ -19,23 +19,21 @@ import './base.css';
 export default function App() {
   return (
     <HashRouter>
-      <Layout>
-        <Routes>
-          <Route path="/" element={<ArchiveLibraryPage />} />
-          <Route path="/library" element={<ArchiveLibraryPage />} />
-          <Route path="/civilization-library" element={<CivilizationLibraryPage />} />
-          <Route path="/career-quiz" element={<CareerQuizPage />} />
-          <Route path="/about" element={<AboutPage />} />
-          <Route path="/admin" element={<AdminPage />} />
-          <Route path="/admin/orders" element={<AdminOrdersPage />} />
-          <Route path="/marketplace" element={<MarketplacePage />} />
-          <Route path="/marketplace/:slugOrId" element={<MarketplaceItemPage />} />
-          <Route path="/showroom" element={<ShowroomPage />} />
-          <Route path="/showroom/:slugOrId" element={<ShowroomItemPage />} />
-          <Route path="/checkout/success" element={<CheckoutSuccessPage />} />
-          <Route path="/checkout/cancel" element={<CheckoutCancelPage />} />
-        </Routes>
-      </Layout>
+      <Routes>
+        <Route path="/admin" element={<AdminPage />} />
+        <Route path="/admin/orders" element={<AdminOrdersPage />} />
+        <Route path="/" element={<Layout><ArchiveLibraryPage /></Layout>} />
+        <Route path="/library" element={<Layout><ArchiveLibraryPage /></Layout>} />
+        <Route path="/civilization-library" element={<Layout><CivilizationLibraryPage /></Layout>} />
+        <Route path="/career-quiz" element={<Layout><CareerQuizPage /></Layout>} />
+        <Route path="/about" element={<Layout><AboutPage /></Layout>} />
+        <Route path="/marketplace" element={<Layout><MarketplacePage /></Layout>} />
+        <Route path="/marketplace/:slugOrId" element={<Layout><MarketplaceItemPage /></Layout>} />
+        <Route path="/showroom" element={<Layout><ShowroomPage /></Layout>} />
+        <Route path="/showroom/:slugOrId" element={<Layout><ShowroomItemPage /></Layout>} />
+        <Route path="/checkout/success" element={<Layout><CheckoutSuccessPage /></Layout>} />
+        <Route path="/checkout/cancel" element={<Layout><CheckoutCancelPage /></Layout>} />
+      </Routes>
     </HashRouter>
   );
 }

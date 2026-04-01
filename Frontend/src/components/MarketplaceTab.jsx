@@ -72,6 +72,26 @@ export default function MarketplaceTab() {
     condition: 'New',
   });
 
+  const loadInquiries = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) setInquiriesLoading(true);
+    try {
+      const response = await fetchItemInquiries({
+        limit: 60,
+        status: inquiryFilter || '',
+        q: inquirySearchQuery || '',
+      });
+      if (response.ok) {
+        setInquiries(response.items);
+      } else if (!silent) {
+        setError(response.error || 'Failed to load inquiries');
+      }
+    } catch (err) {
+      if (!silent) setError(err.message || 'Failed to load inquiries');
+    } finally {
+      if (!silent) setInquiriesLoading(false);
+    }
+  }, [inquiryFilter, inquirySearchQuery]);
+
   useEffect(() => {
     loadItems();
   }, []);
@@ -140,26 +160,6 @@ export default function MarketplaceTab() {
       setLoading(false);
     }
   };
-
-  const loadInquiries = useCallback(async ({ silent = false } = {}) => {
-    if (!silent) setInquiriesLoading(true);
-    try {
-      const response = await fetchItemInquiries({
-        limit: 60,
-        status: inquiryFilter || '',
-        q: inquirySearchQuery || '',
-      });
-      if (response.ok) {
-        setInquiries(response.items);
-      } else if (!silent) {
-        setError(response.error || 'Failed to load inquiries');
-      }
-    } catch (err) {
-      if (!silent) setError(err.message || 'Failed to load inquiries');
-    } finally {
-      if (!silent) setInquiriesLoading(false);
-    }
-  }, [inquiryFilter, inquirySearchQuery]);
 
   const handleUpdateInquiryStatus = async (inquiryId, status) => {
     if (!inquiryId || !status) return;
