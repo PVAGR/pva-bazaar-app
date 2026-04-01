@@ -443,7 +443,7 @@ export default function BountyHunterTab() {
   };
 
   return (
-    <div className="bh-tab">
+    <div className="bh-tab" role="tabpanel" id="bounty-hunter-panel">
       {/* ── Header ─────────────────────────────────────────────── */}
       <div className="bh-header">
         <div className="bh-header-left">

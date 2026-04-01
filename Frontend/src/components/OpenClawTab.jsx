@@ -596,7 +596,7 @@ export default function OpenClawTab() {
   }, [rows.length]);
 
   return (
-    <div className="openclaw-tab">
+    <div className="openclaw-tab" role="tabpanel" id="openclaw-panel">
       <div className="oc-panel">
         <div className="oc-panel-header">
           <div>

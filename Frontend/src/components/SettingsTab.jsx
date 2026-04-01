@@ -28,6 +28,13 @@ const logger = createLogger('SettingsTab');
 
 const SettingsTab = React.memo(function SettingsTab() {
   const [apiUrl, setApiUrl] = useState(getApiBase() || ENV.API_URL);
+  const [message, setMessage] = useState('');
+  const [backendHealth, setBackendHealth] = useState({
+    loading: false,
+    status: null,
+    error: null,
+    data: null,
+  });
   const [sessionInfo, setSessionInfo] = useState({
     authenticated: false,
     version: 'v2',

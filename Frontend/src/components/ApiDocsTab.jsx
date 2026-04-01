@@ -458,7 +458,7 @@ const ApiDocsTab = React.memo(function ApiDocsTab() {
   };
 
   return (
-    <div className="api-docs-tab">
+    <div className="api-docs-tab" role="tabpanel" id="api-panel">
       <div className="api-docs-header">
         <h2>🔗 API Documentation</h2>
         <p>Readable endpoint reference with operational guidance for teams moving from standard commerce to blockchain-aware workflows.</p>

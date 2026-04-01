@@ -249,7 +249,7 @@ export default function ArchiveTab() {
   };
 
   return (
-    <>
+    <div className="archive-tab" role="tabpanel" id="archive-panel">
       <div className="admin-sidebar">
         <div className="sidebar-section">
           <h2>📊 Statistics</h2>
@@ -481,6 +481,6 @@ export default function ArchiveTab() {
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }

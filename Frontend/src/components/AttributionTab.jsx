@@ -69,7 +69,7 @@ export default function AttributionTab() {
 
   if (loading) {
     return (
-      <div className="attribution-tab">
+      <div className="attribution-tab" role="tabpanel" id="attribution-panel">
         <div className="loading">Loading attribution data...</div>
       </div>
     );
@@ -79,7 +79,7 @@ export default function AttributionTab() {
   const topCreators = summary?.topCreators || [];
 
   return (
-    <div className="attribution-tab">
+    <div className="attribution-tab" role="tabpanel" id="attribution-panel">
       <h2>💰 Creator Attribution & Commissions</h2>
       <p>Track influencer-driven sales and commission payouts</p>
 

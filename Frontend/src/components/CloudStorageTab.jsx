@@ -150,11 +150,11 @@ export default function CloudStorageTab() {
   };
 
   if (!providers) {
-    return <div className="cloud-storage-tab"><LoadingSpinner /></div>;
+    return <div className="cloud-storage-tab" role="tabpanel" id="cloud-panel"><LoadingSpinner /></div>;
   }
 
   return (
-    <div className="cloud-storage-tab">
+    <div className="cloud-storage-tab" role="tabpanel" id="cloud-panel">
       <div className="tab-header">
         <h2>☁️ Cloud Storage Management</h2>
         <p>Connect and manage files across multiple cloud providers with one-click buttons</p>

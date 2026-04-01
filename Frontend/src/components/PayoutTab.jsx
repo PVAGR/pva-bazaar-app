@@ -630,11 +630,11 @@ export default function PayoutTab() {
   }
 
   if (loading && !summary) {
-    return <div className="payout-tab loading">Loading payout data...</div>;
+    return <div className="payout-tab loading" role="tabpanel" id="payouts-panel">Loading payout data...</div>;
   }
 
   return (
-    <div className="payout-tab">
+    <div className="payout-tab" role="tabpanel" id="payouts-panel">
       <header className="payout-header">
         <h2>Payout Operations</h2>
         <p>

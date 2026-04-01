@@ -135,7 +135,7 @@ export default function DashboardTab({ onNavigateTab }) {
   };
 
   return (
-    <div className="dashboard-tab">
+    <div className="dashboard-tab" role="tabpanel" id="dashboard-panel">
       <div className="dashboard-header">
         <div className="header-content">
           <h2>📊 Admin Dashboard</h2>

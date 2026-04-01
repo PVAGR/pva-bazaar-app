@@ -110,7 +110,7 @@ export default function RoyaltyAnalyticsTab() {
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
   return (
-    <div className="royalty-analytics">
+    <div className="royalty-analytics" role="tabpanel" id="royalty-analytics-panel">
       {/* Header */}
       <div className="royalty-analytics__header">
         <h2>Royalty Analytics — All Events</h2>
