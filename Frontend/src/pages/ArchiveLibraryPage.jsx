@@ -375,6 +375,12 @@ export default function ArchiveLibraryPage() {
           >
             Read Master Index
           </button>
+          <Link to="/marketplace" className="hero-cta hero-cta-secondary">
+            Marketplace
+          </Link>
+          <Link to="/showroom" className="hero-cta hero-cta-secondary">
+            Showroom
+          </Link>
           <button
             onClick={() => {
               setSelectedCategory('All');
