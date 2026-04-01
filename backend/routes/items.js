@@ -191,7 +191,18 @@ async function findArtifactBySlugOrId(slugOrId, { lean = false } = {}) {
 router.get('/', async (req, res) => {
   try {
     const limit = Math.max(1, Math.min(Number(req.query.limit) || 12, 50));
-    const { cursor, category, tag, q, sort = 'new', includeDrafts } = req.query;
+    const {
+      cursor,
+      category,
+      tag,
+      q,
+      sort = 'new',
+      includeDrafts,
+      availabilityStatus,
+      isUnique,
+      originCountry,
+      color,
+    } = req.query;
     const isAdmin = hasAdminAccess(req);
     const filter = {};
     if (!isAdmin || includeDrafts !== 'true') {
@@ -199,6 +210,11 @@ router.get('/', async (req, res) => {
     }
     if (category) filter.category = String(category);
     if (tag) filter.tags = tag;
+    if (availabilityStatus) filter.availabilityStatus = String(availabilityStatus).trim().toLowerCase();
+    if (isUnique === 'true') filter.isUnique = true;
+    if (isUnique === 'false') filter.isUnique = false;
+    if (originCountry) filter['origin.country'] = new RegExp(`^${String(originCountry).trim()}$`, 'i');
+    if (color) filter['gemProperties.color'] = new RegExp(String(color).trim(), 'i');
     // Search
     if (q) {
       filter.$text = { $search: q };

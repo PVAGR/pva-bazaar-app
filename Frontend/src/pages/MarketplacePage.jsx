@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
 import { fetchMarketplaceItems } from "../lib/api";
 import useDebounce from "../hooks/useDebounce";
 import "./MarketplacePage.css";
@@ -7,6 +8,10 @@ export default function MarketplacePage() {
   const [items, setItems] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("");
+  const [availabilityStatus, setAvailabilityStatus] = useState("");
+  const [uniquenessMode, setUniquenessMode] = useState("all");
+  const [originCountry, setOriginCountry] = useState("");
+  const [colorFilter, setColorFilter] = useState("");
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
   const [nextCursor, setNextCursor] = useState(null);
@@ -19,7 +24,7 @@ export default function MarketplacePage() {
     setNextCursor(null);
     fetchData(true);
     // eslint-disable-next-line
-  }, [debouncedSearch, selectedCategory]);
+  }, [debouncedSearch, selectedCategory, availabilityStatus, uniquenessMode, originCountry, colorFilter]);
 
   async function fetchData(reset = false) {
     setLoading(true);
@@ -33,6 +38,10 @@ export default function MarketplacePage() {
         cursor: reset ? null : nextCursor,
         category: selectedCategory || null,
         q: debouncedSearch || null,
+        availabilityStatus: availabilityStatus || null,
+        isUnique: uniquenessMode === "all" ? null : uniquenessMode === "unique",
+        originCountry: originCountry || null,
+        color: colorFilter || null,
         signal: controller.signal,
       });
       if (res.ok) {
@@ -69,6 +78,46 @@ export default function MarketplacePage() {
           value={search}
           onChange={e => setSearch(e.target.value)}
         />
+        <div className="marketplace-filters">
+          <select
+            className="marketplace-filter"
+            aria-label="Filter by availability"
+            value={availabilityStatus}
+            onChange={e => setAvailabilityStatus(e.target.value)}
+          >
+            <option value="">All Statuses</option>
+            <option value="available">Available</option>
+            <option value="reserved">Reserved</option>
+            <option value="sold">Sold</option>
+            <option value="backorder">Backorder</option>
+          </select>
+          <select
+            className="marketplace-filter"
+            aria-label="Filter by uniqueness"
+            value={uniquenessMode}
+            onChange={e => setUniquenessMode(e.target.value)}
+          >
+            <option value="all">All Pieces</option>
+            <option value="unique">One-of-One</option>
+            <option value="bulk">Bulk Inventory</option>
+          </select>
+          <input
+            className="marketplace-filter"
+            type="text"
+            aria-label="Filter by origin country"
+            placeholder="Origin country"
+            value={originCountry}
+            onChange={e => setOriginCountry(e.target.value)}
+          />
+          <input
+            className="marketplace-filter"
+            type="text"
+            aria-label="Filter by color"
+            placeholder="Color"
+            value={colorFilter}
+            onChange={e => setColorFilter(e.target.value)}
+          />
+        </div>
         <div className="marketplace-categories" role="list">
           {categories.map(cat => (
             <button
@@ -86,17 +135,32 @@ export default function MarketplacePage() {
         {items.length === 0 && !loading && <div className="empty">No items found.</div>}
         <div className="item-grid">
           {items.map(item => (
-            <article className="item-card" key={item._id || item.id} tabIndex={0} aria-label={item.title}>
-              <img src={item.image || "/placeholder.png"} alt={item.title} className="item-image" />
-              <div className="item-info">
-                <h2 className="item-title">{item.title}</h2>
-                <div className="item-meta">
-                  <span className="item-category">{item.category}</span>
-                  {item.price && <span className="item-price">${item.price}</span>}
+            <Link
+              className="item-card-link"
+              to={`/marketplace/${encodeURIComponent(item.slug || item.id)}`}
+              key={item._id || item.id}
+            >
+              <article className="item-card" tabIndex={0} aria-label={item.name || item.title}>
+                <img
+                  src={item.media?.[0] || "/placeholder.png"}
+                  alt={item.name || item.title}
+                  className="item-image"
+                />
+                <div className="item-info">
+                  <h2 className="item-title">{item.name || item.title}</h2>
+                  <div className="item-meta">
+                    <span className="item-category">{item.category}</span>
+                    <span className={`item-status-pill status-${item?.catalog?.availabilityStatus || "available"}`}>
+                      {item?.catalog?.availabilityStatus || "available"}
+                    </span>
+                    <span className="item-uniqueness-pill">
+                      {item?.catalog?.isUnique ? "One-of-One" : `Bulk: ${item?.catalog?.bulkQuantity || 0}`}
+                    </span>
+                  </div>
+                  <p className="item-desc">{item.description}</p>
                 </div>
-                <p className="item-desc">{item.description}</p>
-              </div>
-            </article>
+              </article>
+            </Link>
           ))}
         </div>
         {nextCursor && (

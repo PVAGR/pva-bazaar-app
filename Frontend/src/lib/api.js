@@ -375,14 +375,28 @@ export async function fetchItemProvenanceVerification(slugOrId, { live = true } 
   }
 }
 // Marketplace API functions
-// fetchMarketplaceItems({ limit=12, cursor=null, category=null, q=null, signal=null })
-export async function fetchMarketplaceItems({ limit = 12, cursor = null, category = null, q = null, signal = null } = {}) {
+// fetchMarketplaceItems({ limit=12, cursor=null, category=null, q=null, signal=null, availabilityStatus=null, isUnique=null, originCountry=null, color=null })
+export async function fetchMarketplaceItems({
+  limit = 12,
+  cursor = null,
+  category = null,
+  q = null,
+  signal = null,
+  availabilityStatus = null,
+  isUnique = null,
+  originCountry = null,
+  color = null,
+} = {}) {
   try {
     const params = new URLSearchParams();
     if (limit) params.append('limit', limit);
     if (cursor) params.append('cursor', cursor);
     if (category) params.append('category', category);
     if (q) params.append('q', q);
+    if (availabilityStatus) params.append('availabilityStatus', availabilityStatus);
+    if (isUnique === true || isUnique === false) params.append('isUnique', String(isUnique));
+    if (originCountry) params.append('originCountry', originCountry);
+    if (color) params.append('color', color);
     const url = `/items?${params.toString()}`;
     const config = signal ? { signal } : undefined;
     const response = await apiGet(url, config);

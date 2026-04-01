@@ -58,6 +58,22 @@
   flex-wrap: wrap;
   gap: 0.5rem;
 }
+
+.marketplace-filters {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.55rem;
+}
+
+.marketplace-filter {
+  border: 1px solid var(--site-border);
+  border-radius: 8px;
+  background: var(--site-panel-soft);
+  color: var(--site-text);
+  padding: 0.5rem 0.7rem;
+  min-height: 40px;
+}
 .category-chip {
   background: var(--site-panel-soft);
   color: var(--site-text);
@@ -147,6 +163,37 @@
 .item-price {
   font-weight: 700;
   color: var(--site-accent-strong);
+}
+
+.item-status-pill,
+.item-uniqueness-pill {
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  font-size: 0.68rem;
+  border-radius: 999px;
+  border: 1px solid var(--site-border);
+  padding: 0.12rem 0.45rem;
+}
+
+.item-status-pill.status-available {
+  color: var(--site-accent-strong);
+  background: color-mix(in srgb, var(--site-accent-soft) 55%, transparent);
+}
+
+.item-status-pill.status-reserved {
+  color: var(--site-warning-text);
+  background: var(--site-warning-bg);
+}
+
+.item-status-pill.status-sold {
+  color: var(--site-danger-text);
+  background: var(--site-danger-bg);
+}
+
+.item-status-pill.status-backorder,
+.item-status-pill.status-unavailable {
+  color: var(--site-text-muted);
+  background: var(--site-panel-soft);
 }
 
 .item-sold-pill {

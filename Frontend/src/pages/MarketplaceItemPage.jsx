@@ -48,6 +48,15 @@ export default function MarketplaceItemPage() {
   const title = item.name ? `${item.name} | PVABazaar` : "Marketplace Item | PVABazaar";
   const ogImage = media[0] || PLACEHOLDER;
   const price = formatPrice(item.priceCents, item.currency);
+  const catalog = item.catalog || {};
+  const inquirySubject = encodeURIComponent(`Sample Request: ${catalog.sku || item.id}`);
+  const inquiryBody = encodeURIComponent(
+    `Hello PVA Bazaar,%0D%0A%0D%0AI would like to inquire about this item:%0D%0A` +
+    `- SKU/ID: ${catalog.sku || item.id}%0D%0A` +
+    `- Name: ${item.name || ''}%0D%0A` +
+    `- Page: https://pvabazaar.org/#/marketplace/${item.slug || item.id}%0D%0A%0D%0A` +
+    `Please share availability details and sample/consignment options.%0D%0A`
+  );
 
   return (
     <div className="marketplace-item-page">
@@ -93,6 +102,12 @@ export default function MarketplaceItemPage() {
           <div className="item-meta">
             <span className="item-category">{item.category}</span>
             {price && <span className="item-price">{price}</span>}
+            <span className={`item-status-pill status-${catalog.availabilityStatus || "available"}`}>
+              {catalog.availabilityStatus || "available"}
+            </span>
+            <span className="item-uniqueness-pill">
+              {catalog.isUnique ? "One-of-One" : `Bulk: ${catalog.bulkQuantity || 0}`}
+            </span>
           </div>
           <div className="item-tags">
             {Array.isArray(item.tags) && item.tags.map(tag => (
@@ -100,6 +115,33 @@ export default function MarketplaceItemPage() {
             ))}
           </div>
           <p className="item-desc">{item.description}</p>
+          <div className="item-specs-panel">
+            <h2>Specifications</h2>
+            <div className="item-specs-grid">
+              <div><span>SKU</span><strong>{catalog.sku || item.id}</strong></div>
+              <div><span>Origin</span><strong>{catalog?.origin?.country || 'N/A'}</strong></div>
+              <div><span>Region</span><strong>{catalog?.origin?.region || 'N/A'}</strong></div>
+              <div><span>Hardness (Mohs)</span><strong>{catalog?.gemProperties?.hardnessMohs || 'N/A'}</strong></div>
+              <div><span>Color</span><strong>{catalog?.gemProperties?.color || 'N/A'}</strong></div>
+              <div><span>Treatment</span><strong>{catalog?.gemProperties?.treatmentStatus || 'N/A'}</strong></div>
+              <div><span>Dimensions</span><strong>{`${catalog?.dimensions?.length || 0} x ${catalog?.dimensions?.width || 0} x ${catalog?.dimensions?.height || 0} ${catalog?.dimensions?.unit || 'mm'}`}</strong></div>
+              <div><span>Weight</span><strong>{`${catalog?.weight?.value || 0} ${catalog?.weight?.unit || 'ct'}`}</strong></div>
+            </div>
+          </div>
+          {catalog?.mediaAssets?.videoUrl ? (
+            <div className="item-video-block">
+              <h2>Video Preview</h2>
+              <video controls preload="metadata" src={catalog.mediaAssets.videoUrl} />
+            </div>
+          ) : null}
+          <div className="item-inquiry-sticky">
+            <a
+              className="inquiry-btn"
+              href={`mailto:contact@pvabazaar.org?subject=${inquirySubject}&body=${inquiryBody}`}
+            >
+              Request Sample / Inquire
+            </a>
+          </div>
           <button
             className="buy-btn"
             disabled={buying || !item.priceCents || !item.id}

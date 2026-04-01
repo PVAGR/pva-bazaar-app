@@ -19,6 +19,45 @@ const artifactSchema = new mongoose.Schema({
   status: { type: String, enum: ['draft', 'published'], default: 'published' },
   tags: [{ type: String }],
 
+  // B2B showroom metadata
+  sku: { type: String, trim: true, index: true, sparse: true },
+  isUnique: { type: Boolean, default: true },
+  bulkQuantity: { type: Number, default: 0 },
+  availabilityStatus: {
+    type: String,
+    enum: ['available', 'reserved', 'sold', 'backorder', 'unavailable'],
+    default: 'available',
+    index: true,
+  },
+  dimensions: {
+    length: { type: Number, default: 0 },
+    width: { type: Number, default: 0 },
+    height: { type: Number, default: 0 },
+    unit: { type: String, default: 'mm' },
+  },
+  weight: {
+    value: { type: Number, default: 0 },
+    unit: { type: String, default: 'ct' },
+  },
+  origin: {
+    country: { type: String, default: '', index: true },
+    region: { type: String, default: '' },
+    sourceType: { type: String, default: '' },
+  },
+  gemProperties: {
+    hardnessMohs: { type: Number, default: 0 },
+    clarity: { type: String, default: '' },
+    color: { type: String, default: '', index: true },
+    cutShape: { type: String, default: '' },
+    treatmentStatus: { type: String, default: '' },
+  },
+  mediaAssets: {
+    videoUrl: { type: String, default: '' },
+    angleImages: [{ type: String }],
+    macroImages: [{ type: String }],
+    contextImages: [{ type: String }],
+  },
+
   // Inventory fields
   stockQty: { type: Number, default: 0 },
   reservedQty: { type: Number, default: 0 },
@@ -205,5 +244,6 @@ artifactSchema.index({
 });
 artifactSchema.index({ 'provenance.uniqueCode': 1 }, { unique: true, sparse: true });
 artifactSchema.index({ 'provenance.combinedHash': 1 }, { unique: true, sparse: true });
+artifactSchema.index({ isUnique: 1, availabilityStatus: 1, createdAt: -1 });
 
 module.exports = mongoose.model('Artifact', artifactSchema);

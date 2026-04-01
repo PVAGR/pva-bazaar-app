@@ -1,6 +1,16 @@
 // backend/lib/itemNormalize.js
 const slugify = require('slugify');
 
+function toNumber(input, fallback = 0) {
+  const value = Number(input);
+  return Number.isFinite(value) ? value : fallback;
+}
+
+function toArray(input) {
+  if (Array.isArray(input)) return input.filter(Boolean);
+  return input ? [input] : [];
+}
+
 function normalizeItemInput(body = {}) {
   // Accept legacy and canonical inputs and map to Artifact schema.
   const name = body.name || body.title || '';
@@ -25,6 +35,13 @@ function normalizeItemInput(body = {}) {
     slug = slugify(name, { lower: true, strict: true });
   }
   const imageUrls = Array.isArray(rawMedia) ? rawMedia : [rawMedia];
+
+  const dimensions = body.dimensions || {};
+  const weight = body.weight || {};
+  const origin = body.origin || {};
+  const gemProperties = body.gemProperties || {};
+  const mediaAssets = body.mediaAssets || {};
+
   const normalized = {
     name,
     title,
@@ -38,6 +55,38 @@ function normalizeItemInput(body = {}) {
     salePrice,
     slug,
     artisan: body.artisan || 'PVA Artisan',
+    sku: String(body.sku || '').trim(),
+    isUnique: body.isUnique !== undefined ? Boolean(body.isUnique) : true,
+    bulkQuantity: toNumber(body.bulkQuantity, 0),
+    availabilityStatus: String(body.availabilityStatus || 'available').trim().toLowerCase(),
+    dimensions: {
+      length: toNumber(dimensions.length, 0),
+      width: toNumber(dimensions.width, 0),
+      height: toNumber(dimensions.height, 0),
+      unit: String(dimensions.unit || 'mm').trim(),
+    },
+    weight: {
+      value: toNumber(weight.value, 0),
+      unit: String(weight.unit || 'ct').trim(),
+    },
+    origin: {
+      country: String(origin.country || '').trim(),
+      region: String(origin.region || '').trim(),
+      sourceType: String(origin.sourceType || '').trim(),
+    },
+    gemProperties: {
+      hardnessMohs: toNumber(gemProperties.hardnessMohs, 0),
+      clarity: String(gemProperties.clarity || '').trim(),
+      color: String(gemProperties.color || '').trim(),
+      cutShape: String(gemProperties.cutShape || '').trim(),
+      treatmentStatus: String(gemProperties.treatmentStatus || '').trim(),
+    },
+    mediaAssets: {
+      videoUrl: String(mediaAssets.videoUrl || '').trim(),
+      angleImages: toArray(mediaAssets.angleImages),
+      macroImages: toArray(mediaAssets.macroImages),
+      contextImages: toArray(mediaAssets.contextImages),
+    },
   };
   if (body.creator) {
     normalized.creator = body.creator;
@@ -155,6 +204,42 @@ function toPublicItem(doc) {
         transactionHash: String(entry?.transactionHash || ''),
       }))
     : [];
+
+  const catalog = {
+    sku: doc?.sku || '',
+    isUnique: doc?.isUnique !== undefined ? Boolean(doc.isUnique) : true,
+    bulkQuantity: Number(doc?.bulkQuantity || 0),
+    availabilityStatus: doc?.availabilityStatus || 'available',
+    dimensions: {
+      length: Number(doc?.dimensions?.length || 0),
+      width: Number(doc?.dimensions?.width || 0),
+      height: Number(doc?.dimensions?.height || 0),
+      unit: doc?.dimensions?.unit || 'mm',
+    },
+    weight: {
+      value: Number(doc?.weight?.value || 0),
+      unit: doc?.weight?.unit || 'ct',
+    },
+    origin: {
+      country: doc?.origin?.country || '',
+      region: doc?.origin?.region || '',
+      sourceType: doc?.origin?.sourceType || '',
+    },
+    gemProperties: {
+      hardnessMohs: Number(doc?.gemProperties?.hardnessMohs || 0),
+      clarity: doc?.gemProperties?.clarity || '',
+      color: doc?.gemProperties?.color || '',
+      cutShape: doc?.gemProperties?.cutShape || '',
+      treatmentStatus: doc?.gemProperties?.treatmentStatus || '',
+    },
+    mediaAssets: {
+      videoUrl: doc?.mediaAssets?.videoUrl || '',
+      angleImages: toArray(doc?.mediaAssets?.angleImages),
+      macroImages: toArray(doc?.mediaAssets?.macroImages),
+      contextImages: toArray(doc?.mediaAssets?.contextImages),
+    },
+  };
+
   return {
     id: doc._id ? String(doc._id) : undefined,
     slug,
@@ -173,6 +258,7 @@ function toPublicItem(doc) {
     provenance,
     fractionalization,
     ownershipHistory,
+    catalog,
     createdAt: doc.createdAt ? doc.createdAt.toISOString() : undefined,
     updatedAt: doc.updatedAt ? doc.updatedAt.toISOString() : undefined,
   };
