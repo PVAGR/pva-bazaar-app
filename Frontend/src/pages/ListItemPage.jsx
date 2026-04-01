@@ -1,11 +1,10 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import HelpTip from '../components/HelpTip.jsx';
-import {
-  checkMarketplaceItemProvenance,
-  createMarketplaceItem,
-  retryMarketplaceSyndication,
-} from '../lib/api';
+import PrePublishChecklist from '../components/PrePublishChecklist.jsx';
+import SetupReminder from '../components/SetupReminder.jsx';
+import { apiGet, checkMarketplaceItemProvenance, createMarketplaceItem, retryMarketplaceSyndication } from '../lib/api';
+import { getMissingProfileSteps } from '../utils/sellerProfileUtils.js';
 import './ListItemPage.css';
 
 const STEPS = ['Basic Info', 'Pricing', 'Images', 'Syndication'];
@@ -17,6 +16,8 @@ const CONDITION_OPTIONS = ['new', 'like-new', 'used', 'used-fair', 'vintage'];
 
 export default function ListItemPage() {
   const navigate = useNavigate();
+  const [profile, setProfile] = useState(null);
+  const [dismissedReminder, setDismissedReminder] = useState(false);
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [retrying, setRetrying] = useState(false);
@@ -43,6 +44,16 @@ export default function ListItemPage() {
     },
   });
   const [syndicationSummary, setSyndicationSummary] = useState(null);
+
+  useEffect(() => {
+    apiGet('/users/profile')
+      .then(res => {
+        if (res?.ok && res.user) setProfile(res.user);
+      })
+      .catch(() => {
+        // silent fallback
+      });
+  }, []);
 
   const imagePreviews = useMemo(() => form.images.slice(0, 6), [form.images]);
 
@@ -284,6 +295,15 @@ export default function ListItemPage() {
             );
           })}
         </div>
+
+        {!dismissedReminder && profile && (
+          <SetupReminder
+            missingSteps={getMissingProfileSteps(profile)}
+            onDismiss={() => setDismissedReminder(true)}
+          />
+        )}
+
+        <PrePublishChecklist form={form} />
 
         <form className="list-form" onSubmit={handleSubmit}>
           {step === 1 && (

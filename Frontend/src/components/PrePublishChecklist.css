@@ -1,0 +1,128 @@
+.pre-publish-checklist {
+  background: var(--site-panel-bg, rgba(0, 0, 0, 0.4));
+  border: 1px solid var(--site-border, rgba(0, 255, 200, 0.3));
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  font-size: 0.95rem;
+  max-width: 600px;
+}
+
+.checklist-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  gap: 1rem;
+}
+
+.checklist-title {
+  font-weight: 600;
+  color: var(--site-text, #ccc);
+}
+
+.checklist-status {
+  font-size: 0.85rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.checklist-status.pending {
+  background: rgba(255, 200, 0, 0.2);
+  color: #ffb800;
+}
+
+.checklist-status.ready {
+  background: rgba(0, 255, 100, 0.2);
+  color: #00ff64;
+}
+
+.checklist-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.checklist-item {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  padding: 0.75rem;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+}
+
+.checklist-item.satisfied {
+  background: rgba(0, 255, 100, 0.1);
+}
+
+.checklist-item.pending {
+  background: rgba(255, 200, 0, 0.1);
+}
+
+.checklist-icon {
+  flex-shrink: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+.checklist-item.satisfied .checklist-icon {
+  background: rgba(0, 255, 100, 0.3);
+  color: #00ff64;
+}
+
+.checklist-item.pending .checklist-icon {
+  background: rgba(255, 200, 0, 0.3);
+  color: #ffb800;
+}
+
+.checklist-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.checklist-label {
+  color: var(--site-text, #ccc);
+  font-weight: 500;
+}
+
+.checklist-hint {
+  color: var(--site-text-muted, rgba(255, 255, 255, 0.5));
+  font-size: 0.85rem;
+}
+
+.checklist-success {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(0, 255, 100, 0.15);
+  border: 1px solid rgba(0, 255, 100, 0.4);
+  border-radius: 4px;
+  color: #00ff64;
+  text-align: center;
+  font-weight: 500;
+}
+
+@media (max-width: 640px) {
+  .pre-publish-checklist {
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .checklist-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .checklist-item {
+    padding: 0.5rem;
+  }
+}

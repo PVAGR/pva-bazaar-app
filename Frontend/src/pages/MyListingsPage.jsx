@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import SellerQuickStats from '../components/SellerQuickStats.jsx';
 import {
   fetchMyMarketplaceItems,
   fetchOmnichannelSaleHistory,
@@ -352,6 +353,22 @@ export default function MyListingsPage() {
         <h1>My Listings</h1>
         <p>Manage your submitted listings and re-run marketplace syndication where needed.</p>
       </header>
+
+      <SellerQuickStats
+        stats={{
+          total: items.length,
+          published: items.filter(item => item.status === 'published' || item.status === 'active').length,
+          needsAttention: items.filter(item => {
+            const jobs = item?.syndication?.jobs || [];
+            return jobs.some(job => NEEDS_ATTENTION_STATUSES.has(job.status));
+          }).length,
+          withSyndication: items.filter(item => {
+            const jobs = item?.syndication?.jobs || [];
+            return jobs.length > 0;
+          }).length,
+          loading: loading,
+        }}
+      />
 
       <section className="my-listings-actions">
         <Link className="btn primary" to="/items/new">

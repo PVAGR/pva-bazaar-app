@@ -2,9 +2,11 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import CreatorNav from '../components/CreatorNav.jsx';
 import HelpTip from '../components/HelpTip.jsx';
+import SetupReminder from '../components/SetupReminder.jsx';
 import { apiGet, apiPut } from '../lib/api';
 import { fetchMyMarketplaceItems } from '../lib/api';
 import { clearToken } from '../lib/auth';
+import { getMissingProfileSteps } from '../utils/sellerProfileUtils.js';
 import '../styles/admin-common.css';
 import './AccountPage.css';
 
@@ -158,6 +160,8 @@ export default function AccountPage() {
           </div>
         ) : null}
         {okMsg ? <div className="notice">{okMsg}</div> : null}
+
+        {profile ? <SetupReminder missingSteps={getMissingProfileSteps(profile)} /> : null}
 
         {profile ? (
           <section className="card">

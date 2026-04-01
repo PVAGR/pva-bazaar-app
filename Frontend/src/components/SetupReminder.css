@@ -1,0 +1,119 @@
+.setup-reminder {
+  background: linear-gradient(135deg, rgba(0, 255, 150, 0.15), rgba(0, 200, 255, 0.15));
+  border: 1px solid rgba(0, 255, 150, 0.4);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.reminder-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  position: relative;
+}
+
+.reminder-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.reminder-title {
+  font-weight: 600;
+  color: var(--site-text, #ccc);
+  font-size: 1rem;
+  flex: 1;
+}
+
+.reminder-close {
+  position: absolute;
+  right: 0;
+  top: 0;
+  background: transparent;
+  border: none;
+  color: var(--site-text-muted, rgba(255, 255, 255, 0.6));
+  cursor: pointer;
+  padding: 0.25rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  font-size: 1rem;
+}
+
+.reminder-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--site-text, #ccc);
+}
+
+.reminder-intro {
+  color: var(--site-text, #ccc);
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+}
+
+.reminder-steps {
+  list-style: none;
+  margin: 1rem 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.reminder-step {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  border-left: 3px solid rgba(0, 255, 150, 0.6);
+}
+
+.step-label {
+  color: var(--site-text, #ccc);
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.step-hint {
+  color: var(--site-text-muted, rgba(255, 255, 255, 0.6));
+  font-size: 0.8rem;
+}
+
+.reminder-note {
+  color: var(--site-text-muted, rgba(255, 255, 255, 0.7));
+  font-size: 0.85rem;
+  margin: 1rem 0 0 0;
+  line-height: 1.5;
+}
+
+@media (max-width: 640px) {
+  .setup-reminder {
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .reminder-header {
+    margin-bottom: 0.75rem;
+  }
+
+  .reminder-close {
+    width: 1.25rem;
+    height: 1.25rem;
+    font-size: 0.9rem;
+  }
+
+  .reminder-steps {
+    gap: 0.4rem;
+  }
+
+  .reminder-step {
+    padding: 0.4rem 0.6rem;
+  }
+}

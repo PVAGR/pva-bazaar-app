@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { getToken } from '../lib/auth';
+import SellerFAQ from '../components/SellerFAQ.jsx';
 import './CreatorPortalPage.css';
 
 export default function CreatorPortalPage() {
@@ -52,6 +53,8 @@ export default function CreatorPortalPage() {
           </Link>
         </article>
       </div>
+
+      <SellerFAQ />
     </section>
   );
 }
