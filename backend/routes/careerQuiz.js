@@ -3,11 +3,13 @@ const router = express.Router();
 const CareerQuizResult = require('../models/CareerQuizResult');
 const CareerQuizDefinition = require('../models/CareerQuizDefinition');
 const adminSession = require('../middleware/adminSession');
+const { DEFAULT_NARRATIVE_QUESTIONS } = require('../data/narrativeQuestions');
+const { ARCHETYPES, findMatchingArchetypes } = require('../data/careerArchetypes');
 
-const QUIZ_VERSION = 1;
+const QUIZ_VERSION = 2;
 const QUIZ_TITLE = 'Civilization Career Compass';
 const QUIZ_INTRO =
-  'Rate each activity from 1 to 5 based on genuine enjoyment. This produces a detailed MBTI + RIASEC fit profile and career path suggestions for real civilizational roles.';
+  'Discover your unique career archetype through thoughtful personal reflection. Your answers reveal not just how you think, but how you come alive. Over 1,200 personalized career paths await.';
 
 const RIASEC_CODES = new Set(['R', 'I', 'A', 'S', 'E', 'C']);
 const LIKERT_OPTIONS = [
@@ -100,7 +102,7 @@ const INTROSPECTION_QUESTIONS = [
   buildLikertQuestion('i30', 'You are strongly motivated to align your life with a clear personal calling or purpose.', 'TF', 'T', 'F', ['I', 'C'], ['S', 'E'], 'introspection', 1),
 ];
 
-const DEFAULT_QUESTIONS = [...ENJOYMENT_QUESTIONS, ...INTROSPECTION_QUESTIONS];
+const DEFAULT_QUESTIONS = DEFAULT_NARRATIVE_QUESTIONS;
 
 const TYPE_TO_RECOMMENDATIONS = {
   ISTJ: {
@@ -546,6 +548,10 @@ function buildRoleRationale(majorRoles, supportingRoles, topRiasec, riasecScores
 }
 
 function buildRecommendations(personalityType, riasecScores) {
+  // Find matching archetype(s)
+  const archetypeMatches = findMatchingArchetypes(personalityType, riasecScores, 'builder');
+  const primaryArchetype = archetypeMatches.length > 0 ? archetypeMatches[0] : null;
+
   const base = TYPE_TO_RECOMMENDATIONS[personalityType] || {
     domains: ['general-operations', 'community-support', 'technical-foundations'],
     careers: ['Operations Generalist', 'Community Support Specialist', 'Technical Apprentice'],
@@ -571,6 +577,8 @@ function buildRecommendations(personalityType, riasecScores) {
     majorRoles: roles.majorRoles,
     supportingRoles: roles.supportingRoles,
     roleRationale: rationale,
+    archetypeId: primaryArchetype ? primaryArchetype.id : null,
+    archetypeName: primaryArchetype ? primaryArchetype.archetype.name : null,
   };
 }
 
