@@ -468,11 +468,25 @@ export async function fetchItemInquiries({ limit = 30, status = '', q = '' } = {
     if (q) params.append('q', q);
     const response = await apiGet(`/item-inquiries?${params.toString()}`);
     if (response && response.ok && Array.isArray(response.items)) {
-      return { ok: true, items: response.items };
+      return {
+        ok: true,
+        items: response.items,
+        summary: response.summary || { new: 0, contacted: 0, reserved: 0, closed: 0, total: 0 },
+      };
     }
-    return { ok: false, items: [], error: response?.error || response?.message || 'Failed to fetch inquiries' };
+    return {
+      ok: false,
+      items: [],
+      summary: { new: 0, contacted: 0, reserved: 0, closed: 0, total: 0 },
+      error: response?.error || response?.message || 'Failed to fetch inquiries',
+    };
   } catch (err) {
-    return { ok: false, items: [], error: err.message };
+    return {
+      ok: false,
+      items: [],
+      summary: { new: 0, contacted: 0, reserved: 0, closed: 0, total: 0 },
+      error: err.message,
+    };
   }
 }
 

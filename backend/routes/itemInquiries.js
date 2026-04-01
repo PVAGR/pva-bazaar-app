@@ -164,8 +164,31 @@ router.get('/', adminSession, async (req, res) => {
       .limit(limit)
       .lean();
 
+    const summaryBase = await ItemInquiry.aggregate([
+      {
+        $group: {
+          _id: '$status',
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+    const summary = {
+      new: 0,
+      contacted: 0,
+      reserved: 0,
+      closed: 0,
+      total: 0,
+    };
+    for (const row of summaryBase) {
+      const statusKey = String(row?._id || '').toLowerCase();
+      const count = Number(row?.count || 0);
+      if (summary[statusKey] !== undefined) summary[statusKey] = count;
+      summary.total += count;
+    }
+
     return res.json({
       ok: true,
+      summary,
       items: rows.map((row) => ({
         id: String(row._id),
         artifactId: row.artifact ? String(row.artifact) : '',

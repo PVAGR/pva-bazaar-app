@@ -16,11 +16,13 @@ import './AdminTabs.css';
  * 
  * Optimized with React.memo to prevent re-renders when parent state changes
  */
-const AdminTabs = React.memo(function AdminTabs({ activeTab, onTabChange }) {
+const AdminTabs = React.memo(function AdminTabs({ activeTab, onTabChange, inquiryCounts }) {
+  const newInquiryCount = Number(inquiryCounts?.new || 0);
   const tabs = [
     { id: 'dashboard', label: '📊 Dashboard', title: 'Admin overview & metrics (Alt+1)', shortcut: '1' },
     { id: 'archive', label: '📚 Archive', title: 'Manage archive entries (Alt+2)', shortcut: '2' },
     { id: 'marketplace', label: '🛒 Marketplace', title: 'Manage marketplace items (Alt+3)', shortcut: '3' },
+    { id: 'inquiries', label: `📥 Inquiries${newInquiryCount > 0 ? ` (${newInquiryCount})` : ''}`, title: 'Manage B2B item inquiries', shortcut: null },
     { id: 'users', label: '👥 Users', title: 'User management (Alt+4)', shortcut: '4' },
     { id: 'attribution', label: '💰 Attribution', title: 'Creator attribution & commissions (Alt+5)', shortcut: '5' },
     { id: 'payouts', label: '📈 Payouts', title: 'Commission payouts & settlements (Alt+6)', shortcut: '6' },

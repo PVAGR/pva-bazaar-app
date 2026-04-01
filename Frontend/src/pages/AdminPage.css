@@ -82,6 +82,152 @@
     display: none;
   }
 }
+
+/* Inquiries tab */
+.inquiries-tab {
+  width: 100%;
+}
+
+.inquiry-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.inquiry-kpi {
+  border: 1px solid var(--site-border);
+  border-radius: 10px;
+  background: var(--site-panel-soft);
+  padding: 10px;
+  display: grid;
+  gap: 4px;
+}
+
+.inquiry-kpi span {
+  color: var(--site-text-muted);
+  font-size: 0.8rem;
+}
+
+.inquiry-kpi strong {
+  color: var(--site-text);
+  font-size: 1.15rem;
+}
+
+.inquiry-toolbar {
+  display: grid;
+  grid-template-columns: minmax(220px, 2fr) minmax(140px, 1fr) auto;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.inquiry-toolbar input,
+.inquiry-toolbar select,
+.inquiry-toolbar button {
+  border: 1px solid var(--site-border);
+  border-radius: 8px;
+  background: var(--site-panel);
+  color: var(--site-text);
+  padding: 10px;
+}
+
+.inquiry-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 10px;
+}
+
+.inquiry-card {
+  border: 1px solid var(--site-border);
+  border-radius: 10px;
+  background: var(--site-panel-soft);
+  padding: 10px;
+  display: grid;
+  gap: 6px;
+}
+
+.inquiry-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.inquiry-status {
+  text-transform: uppercase;
+  font-size: 0.68rem;
+  border-radius: 999px;
+  border: 1px solid var(--site-border);
+  padding: 2px 8px;
+}
+
+.inquiry-status.status-new {
+  color: var(--site-accent-strong);
+}
+
+.inquiry-status.status-contacted,
+.inquiry-status.status-reserved {
+  color: var(--site-warning-text);
+}
+
+.inquiry-status.status-closed {
+  color: var(--site-success-text);
+}
+
+.inquiry-meta {
+  margin: 0;
+  color: var(--site-text-muted);
+  font-size: 0.84rem;
+}
+
+.inquiry-message {
+  margin: 0;
+  color: var(--site-text);
+}
+
+.inquiry-links {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.inquiry-links a,
+.inquiry-links button,
+.inquiry-actions button {
+  border: 1px solid var(--site-border);
+  border-radius: 8px;
+  background: var(--site-panel);
+  color: var(--site-text);
+  padding: 6px 8px;
+  text-decoration: none;
+}
+
+.inquiry-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.inquiry-actions select {
+  border: 1px solid var(--site-border);
+  border-radius: 8px;
+  background: var(--site-panel);
+  color: var(--site-text);
+  padding: 6px 8px;
+}
+
+.inquiry-time {
+  color: var(--site-text-muted);
+  font-size: 0.78rem;
+}
+
+@media (max-width: 768px) {
+  .inquiry-toolbar {
+    grid-template-columns: 1fr;
+  }
+}
 /* --- Connection Panel Popup --- */
 .connection-panel {
   background: var(--bg-tertiary);

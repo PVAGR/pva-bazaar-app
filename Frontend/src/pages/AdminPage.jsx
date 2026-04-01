@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { apiGet, apiPost } from '../lib/api';
+import { apiGet, apiPost, fetchItemInquiries } from '../lib/api';
 import { ENV } from '../config/env';
 import { getErrorMessage } from '../lib/errorUtils';
 import ErrorBanner from '../components/ErrorBanner.jsx';
@@ -13,6 +13,7 @@ import { LoadingDots } from '../components/LoadingSpinner.jsx';
 import DashboardTab from '../components/DashboardTab.jsx';
 import ArchiveTab from '../components/ArchiveTab.jsx';
 import MarketplaceTab from '../components/MarketplaceTab.jsx';
+import InquiriesTab from '../components/InquiriesTab.jsx';
 import UsersTab from '../components/UsersTab.jsx';
 import AttributionTab from '../components/AttributionTab.jsx';
 import PayoutTab from '../components/PayoutTab.jsx';
@@ -69,6 +70,7 @@ export default function AdminPage() {
     apiBase: ENV.API_URL,
     results: {},
   });
+  const [inquiryCounts, setInquiryCounts] = useState({ new: 0, contacted: 0, reserved: 0, closed: 0, total: 0 });
 
   // Check if already authenticated with NEW credentials system
   useEffect(() => {
@@ -309,7 +311,7 @@ export default function AdminPage() {
       // Only trigger if Alt key is pressed (without Ctrl or Shift to avoid conflicts)
       if (!e.altKey || e.ctrlKey || e.shiftKey) return;
 
-      const tabs = ['dashboard', 'archive', 'marketplace', 'users', 'attribution', 'payouts', 'settlements', 'cloud', 'library', 'api', 'health', 'openclaw', 'bounty-hunter', 'royalty-analytics', 'settings'];
+      const tabs = ['dashboard', 'archive', 'marketplace', 'inquiries', 'users', 'attribution', 'payouts', 'settlements', 'cloud', 'library', 'api', 'health', 'openclaw', 'bounty-hunter', 'royalty-analytics', 'settings'];
       let key = parseInt(e.key);
       // Support Alt+0 for the last tab (settings)
       if (e.key === '0') key = tabs.length;
@@ -322,6 +324,26 @@ export default function AdminPage() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return undefined;
+
+    let cancelled = false;
+    const pullInquiryCounts = async () => {
+      const response = await fetchItemInquiries({ limit: 1 });
+      if (!cancelled && response?.ok && response?.summary) {
+        setInquiryCounts(response.summary);
+      }
+    };
+
+    pullInquiryCounts();
+    const timerApi = typeof globalThis !== 'undefined' ? globalThis : null;
+    const id = timerApi?.setInterval ? timerApi.setInterval(pullInquiryCounts, 30000) : null;
+    return () => {
+      cancelled = true;
+      if (id && timerApi?.clearInterval) timerApi.clearInterval(id);
+    };
   }, [isAuthenticated]);
   
   const handleLogin = async (e) => {
@@ -758,7 +780,7 @@ export default function AdminPage() {
           </div>
         </div>
         <AdminNav />
-        <AdminTabs activeTab={activeTab} onTabChange={setActiveTab} />
+        <AdminTabs activeTab={activeTab} onTabChange={setActiveTab} inquiryCounts={inquiryCounts} />
         <div className="admin-container">
           {/* Dashboard Tab - Overview */}
           {activeTab === 'dashboard' && (
@@ -778,6 +800,13 @@ export default function AdminPage() {
           {activeTab === 'marketplace' && (
             <ErrorBoundary>
               <MarketplaceTab />
+            </ErrorBoundary>
+          )}
+
+          {/* Inquiries Tab */}
+          {activeTab === 'inquiries' && (
+            <ErrorBoundary>
+              <InquiriesTab onNavigateTab={setActiveTab} />
             </ErrorBoundary>
           )}
 
