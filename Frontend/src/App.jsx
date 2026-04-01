@@ -1,7 +1,8 @@
 import AdminOrdersPage from './pages/AdminOrdersPage.jsx';
 import React from 'react';
-import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Layout from './components/Layout.jsx';
+import { getToken } from './lib/auth';
 
 import AboutPage from './pages/AboutPage.jsx';
 import ArchiveLibraryPage from './pages/ArchiveLibraryPage.jsx';
@@ -12,9 +13,26 @@ import MarketplacePage from './pages/MarketplacePage.jsx';
 import MarketplaceItemPage from './pages/MarketplaceItemPage.jsx';
 import ShowroomPage from './pages/ShowroomPage.jsx';
 import ShowroomItemPage from './pages/ShowroomItemPage.jsx';
+import CreatorPortalPage from './pages/CreatorPortalPage.jsx';
+import RegisterPage from './pages/RegisterPage.jsx';
+import LoginPage from './pages/LoginPage.jsx';
+import AccountPage from './pages/AccountPage.jsx';
+import OnboardingPage from './pages/OnboardingPage.jsx';
+import ListItemPage from './pages/ListItemPage.jsx';
+import MyListingsPage from './pages/MyListingsPage.jsx';
 import CheckoutSuccessPage from './pages/CheckoutSuccessPage.jsx';
 import CheckoutCancelPage from './pages/CheckoutCancelPage.jsx';
 import './base.css';
+
+function RequireUserAuth({ children }) {
+  const location = useLocation();
+  const token = getToken();
+  if (!token) {
+    const next = `${location.pathname || '/account'}${location.search || ''}`;
+    return <Navigate to={`/login?next=${encodeURIComponent(next)}`} replace />;
+  }
+  return children;
+}
 
 export default function App() {
   return (
@@ -22,9 +40,18 @@ export default function App() {
       <Routes>
         <Route path="/admin" element={<AdminPage />} />
         <Route path="/admin/orders" element={<AdminOrdersPage />} />
+
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/onboarding" element={<RequireUserAuth><OnboardingPage /></RequireUserAuth>} />
+        <Route path="/account" element={<RequireUserAuth><AccountPage /></RequireUserAuth>} />
+        <Route path="/items/new" element={<RequireUserAuth><ListItemPage /></RequireUserAuth>} />
+        <Route path="/items/mine" element={<RequireUserAuth><MyListingsPage /></RequireUserAuth>} />
+
         <Route path="/" element={<Layout><ArchiveLibraryPage /></Layout>} />
         <Route path="/library" element={<Layout><ArchiveLibraryPage /></Layout>} />
         <Route path="/archive" element={<Layout><ArchiveLibraryPage /></Layout>} />
+        <Route path="/creator" element={<Layout><CreatorPortalPage /></Layout>} />
         <Route path="/civilization-library" element={<Layout><CivilizationLibraryPage /></Layout>} />
         <Route path="/career-quiz" element={<Layout><CareerQuizPage /></Layout>} />
         <Route path="/about" element={<Layout><AboutPage /></Layout>} />

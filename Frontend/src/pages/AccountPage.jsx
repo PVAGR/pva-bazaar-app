@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import AdminNav from '../components/AdminNav.jsx';
+import CreatorNav from '../components/CreatorNav.jsx';
 import HelpTip from '../components/HelpTip.jsx';
 import { apiGet, apiPut } from '../lib/api';
 import { fetchMyMarketplaceItems } from '../lib/api';
@@ -148,7 +148,7 @@ export default function AccountPage() {
         </div>
       </header>
 
-      <AdminNav />
+      <CreatorNav />
 
       <main className="accountMain">
         {loading ? <div className="muted">Loading…</div> : null}

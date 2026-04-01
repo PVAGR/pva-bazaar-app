@@ -381,6 +381,9 @@ export default function ArchiveLibraryPage() {
           <Link to="/showroom" className="destination-tab">
             Showroom
           </Link>
+          <Link to="/creator" className="destination-tab">
+            Creator Sign Up
+          </Link>
         </div>
 
         <div className="hero-actions">

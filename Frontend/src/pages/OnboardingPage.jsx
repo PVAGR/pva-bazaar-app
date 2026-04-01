@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import AdminNav from '../components/AdminNav.jsx';
+import CreatorNav from '../components/CreatorNav.jsx';
 import HelpTip from '../components/HelpTip.jsx';
 import { apiGet, apiPut } from '../lib/api';
 import '../styles/admin-common.css';
@@ -243,7 +243,7 @@ export default function OnboardingPage() {
         </div>
       </header>
 
-      <AdminNav />
+      <CreatorNav />
 
       <main className="onboardingMain">
         {loading ? <div className="muted">Loading…</div> : null}

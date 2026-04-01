@@ -1,0 +1,91 @@
+.creator-portal {
+  display: grid;
+  gap: 1rem;
+  color: var(--site-text);
+}
+
+.creator-portal__hero {
+  border: 1px solid var(--site-border);
+  border-radius: 14px;
+  padding: 1rem;
+  background: var(--site-panel);
+}
+
+.creator-portal__hero h1 {
+  margin: 0 0 0.4rem;
+  color: var(--site-accent);
+}
+
+.creator-portal__hero p {
+  margin: 0.35rem 0;
+  color: var(--site-text-muted);
+  line-height: 1.5;
+}
+
+.creator-portal__note {
+  color: var(--site-text);
+  font-weight: 700;
+}
+
+.creator-portal__cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.8rem;
+}
+
+.creator-card {
+  border: 1px solid var(--site-border);
+  border-radius: 12px;
+  background: var(--site-panel-soft);
+  padding: 0.9rem;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.creator-card h2 {
+  margin: 0;
+  font-size: 1.02rem;
+  color: var(--site-accent-strong);
+}
+
+.creator-card p {
+  margin: 0;
+  color: var(--site-text-muted);
+  line-height: 1.45;
+}
+
+.creator-btn {
+  width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--site-border);
+  border-radius: 10px;
+  padding: 0.55rem 0.8rem;
+  text-decoration: none;
+  color: var(--site-text);
+  background: var(--site-panel);
+  font-weight: 700;
+}
+
+.creator-btn:hover {
+  border-color: var(--site-accent);
+  color: var(--site-accent-strong);
+}
+
+.creator-btn--primary {
+  background: var(--site-accent);
+  border-color: var(--site-accent);
+  color: #fff;
+}
+
+@media (max-width: 640px) {
+  .creator-portal__hero,
+  .creator-card {
+    padding: 0.8rem;
+  }
+
+  .creator-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
