@@ -19,21 +19,23 @@ import './base.css';
 export default function App() {
   return (
     <HashRouter>
-      <Routes>
-        <Route path="/" element={<ArchiveLibraryPage />} />
-        <Route path="/library" element={<ArchiveLibraryPage />} />
-        <Route path="/civilization-library" element={<CivilizationLibraryPage />} />
-        <Route path="/career-quiz" element={<CareerQuizPage />} />
-        <Route path="/about" element={<AboutPage />} />
-        <Route path="/admin" element={<AdminPage />} />
-        <Route path="/admin/orders" element={<AdminOrdersPage />} />
-        <Route path="/marketplace" element={<MarketplacePage />} />
-        <Route path="/marketplace/:slugOrId" element={<MarketplaceItemPage />} />
-        <Route path="/showroom" element={<ShowroomPage />} />
-        <Route path="/showroom/:slugOrId" element={<ShowroomItemPage />} />
-        <Route path="/checkout/success" element={<CheckoutSuccessPage />} />
-        <Route path="/checkout/cancel" element={<CheckoutCancelPage />} />
-      </Routes>
+      <Layout>
+        <Routes>
+          <Route path="/" element={<ArchiveLibraryPage />} />
+          <Route path="/library" element={<ArchiveLibraryPage />} />
+          <Route path="/civilization-library" element={<CivilizationLibraryPage />} />
+          <Route path="/career-quiz" element={<CareerQuizPage />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/admin" element={<AdminPage />} />
+          <Route path="/admin/orders" element={<AdminOrdersPage />} />
+          <Route path="/marketplace" element={<MarketplacePage />} />
+          <Route path="/marketplace/:slugOrId" element={<MarketplaceItemPage />} />
+          <Route path="/showroom" element={<ShowroomPage />} />
+          <Route path="/showroom/:slugOrId" element={<ShowroomItemPage />} />
+          <Route path="/checkout/success" element={<CheckoutSuccessPage />} />
+          <Route path="/checkout/cancel" element={<CheckoutCancelPage />} />
+        </Routes>
+      </Layout>
     </HashRouter>
   );
 }
