@@ -1,0 +1,317 @@
+.showroom-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem 1rem;
+  font-family: var(--font-sans, sans-serif);
+  color: var(--site-text);
+}
+
+.showroom-header {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+}
+
+.showroom-header-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.showroom-header h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--site-accent-strong);
+}
+
+.showroom-tagline {
+  font-size: 1.05rem;
+  color: var(--site-text-muted);
+  margin: 0;
+  max-width: 600px;
+  line-height: 1.4;
+}
+
+.showroom-search {
+  width: 100%;
+  max-width: 400px;
+  padding: 0.7rem 1rem;
+  font-size: 1rem;
+  border: 1px solid var(--site-border);
+  border-radius: 8px;
+  outline: none;
+  transition: border 0.2s, box-shadow 0.2s;
+  background: var(--site-panel-soft);
+  color: var(--site-text);
+}
+.showroom-search:focus {
+  border-color: var(--site-accent);
+  box-shadow: 0 0 0 2px var(--site-accent-soft);
+}
+
+.showroom-categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.showroom-filters {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.7rem;
+}
+
+.showroom-filter {
+  border: 1px solid var(--site-border);
+  border-radius: 8px;
+  background: var(--site-panel-soft);
+  color: var(--site-text);
+  padding: 0.6rem 0.8rem;
+  min-height: 40px;
+  font-size: 0.95rem;
+  transition: border 0.2s;
+  cursor: pointer;
+}
+
+.showroom-filter:focus {
+  border-color: var(--site-accent);
+  outline: none;
+}
+
+.category-chip {
+  background: var(--site-panel-soft);
+  color: var(--site-text);
+  border: 1px solid var(--site-border);
+  border-radius: 999px;
+  padding: 0.5rem 1.2rem;
+  font-size: 0.98rem;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border 0.2s;
+  font-weight: 500;
+}
+.category-chip.selected,
+.category-chip:hover {
+  background: var(--site-accent);
+  color: #000;
+  border-color: var(--site-accent);
+}
+
+.category-chip:active {
+  background: var(--site-accent-strong);
+}
+
+.showroom-items {
+  margin-top: 1.5rem;
+}
+
+.item-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.item-card-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.item-card {
+  background: var(--site-panel);
+  border: 1px solid var(--site-border);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  transition: box-shadow 0.2s, transform 0.2s;
+  cursor: pointer;
+  outline: none;
+}
+
+.item-card:focus,
+.item-card:hover {
+  box-shadow: 0 4px 16px var(--site-accent-soft);
+  transform: translateY(-2px);
+}
+
+.item-card.is-sold {
+  opacity: 0.75;
+  cursor: not-allowed;
+}
+
+.item-card.is-sold:focus,
+.item-card.is-sold:hover {
+  transform: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.item-image {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 8px;
+  background: var(--site-panel-soft);
+}
+
+.item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.item-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--site-text);
+}
+
+.item-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  font-size: 0.85rem;
+  color: var(--site-text-muted);
+}
+
+.item-category {
+  background: var(--site-accent-soft);
+  color: var(--site-accent);
+  border: 1px solid var(--site-border);
+  border-radius: 6px;
+  padding: 0.15rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.item-status-pill,
+.item-uniqueness-pill {
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  font-size: 0.65rem;
+  border-radius: 999px;
+  border: 1px solid var(--site-border);
+  padding: 0.15rem 0.5rem;
+  font-weight: 600;
+}
+
+.item-status-pill.status-available {
+  color: var(--site-accent-strong);
+  background: color-mix(in srgb, var(--site-accent-soft) 55%, transparent);
+}
+
+.item-status-pill.status-reserved {
+  color: var(--site-warning-text);
+  background: var(--site-warning-bg);
+}
+
+.item-status-pill.status-sold {
+  color: var(--site-danger-text);
+  background: var(--site-danger-bg);
+}
+
+.item-status-pill.status-backorder,
+.item-status-pill.status-unavailable {
+  color: var(--site-text-muted);
+  background: var(--site-panel-soft);
+}
+
+.item-uniqueness-pill {
+  background: var(--site-panel-soft);
+  color: var(--site-text);
+  border-color: var(--site-border);
+}
+
+.item-desc {
+  font-size: 0.9rem;
+  line-height: 1.4;
+  margin: 0;
+  color: var(--site-text-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.load-more {
+  display: block;
+  margin: 2rem auto;
+  padding: 0.75rem 2rem;
+  background: var(--site-accent);
+  color: #000;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, opacity 0.2s;
+}
+
+.load-more:hover:not(:disabled) {
+  background: var(--site-accent-strong);
+}
+
+.load-more:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.empty {
+  text-align: center;
+  padding: 2rem;
+  color: var(--site-text-muted);
+  font-size: 1.1rem;
+}
+
+.error {
+  background: var(--site-danger-bg);
+  color: var(--site-danger-text);
+  border: 1px solid var(--site-danger-text);
+  padding: 1rem;
+  border-radius: 8px;
+  margin-top: 1rem;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .showroom-page {
+    padding: 1rem 0.75rem 2rem 0.75rem;
+  }
+
+  .showroom-header h1 {
+    font-size: 1.8rem;
+  }
+
+  .showroom-tagline {
+    font-size: 0.95rem;
+  }
+
+  .showroom-search {
+    max-width: 100%;
+  }
+
+  .showroom-filters {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.5rem;
+  }
+
+  .item-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 1rem;
+  }
+
+  .item-image {
+    height: 140px;
+  }
+
+  .item-title {
+    font-size: 0.95rem;
+  }
+}
