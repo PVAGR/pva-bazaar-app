@@ -70,6 +70,10 @@ export default function MarketplacePage() {
     <main className="marketplace-page">
       <section className="marketplace-header">
         <h1>Marketplace</h1>
+        <div className="marketplace-nav-links">
+          <Link to="/library" className="marketplace-nav-link">Back to Home</Link>
+          <Link to="/showroom" className="marketplace-nav-link">Go to Showroom</Link>
+        </div>
         <input
           aria-label="Search items"
           className="marketplace-search"

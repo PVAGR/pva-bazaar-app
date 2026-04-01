@@ -73,6 +73,10 @@ export default function ShowroomPage() {
           <h1>Professional Showroom</h1>
           <p className="showroom-tagline">Discover premium materials, gemstones, and artisanal pieces curated for creative professionals.</p>
         </div>
+        <div className="showroom-nav-links">
+          <Link to="/library" className="showroom-nav-link">Back to Home</Link>
+          <Link to="/marketplace" className="showroom-nav-link">Go to Marketplace</Link>
+        </div>
         <input
           aria-label="Search items"
           className="showroom-search"

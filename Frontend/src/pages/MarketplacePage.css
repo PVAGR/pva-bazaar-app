@@ -20,6 +20,30 @@
   margin: 0;
 }
 
+.marketplace-nav-links {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.marketplace-nav-link {
+  text-decoration: none;
+  border: 1px solid var(--site-border);
+  background: var(--site-panel-soft);
+  color: var(--site-text);
+  border-radius: 999px;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.marketplace-nav-link:hover {
+  border-color: var(--site-accent);
+  color: var(--site-accent);
+  background: var(--site-accent-soft);
+}
+
 .marketplace-topbar {
   width: 100%;
   display: flex;
