@@ -1,6 +1,7 @@
 ﻿import api from "./axios";
 import { ENV } from "../config/env";
 import { getToken } from "./auth";
+import { FEATURED_INVENTORY, findFeaturedItem } from "./featuredInventory";
 
 export const apiGet = (path, config) => api.get(path, config).then(r => r.data);
 export const apiPost = (path, body, config) => api.post(path, body, config).then(r => r.data);
@@ -329,8 +330,16 @@ export async function fetchMarketplaceItem(slugOrId) {
     if (response && response.ok && response.item) {
       return { ok: true, item: response.item };
     }
+    const fallbackItem = findFeaturedItem(slugOrId);
+    if (fallbackItem) {
+      return { ok: true, item: fallbackItem, fallback: true };
+    }
     return { ok: false, item: null };
   } catch (err) {
+    const fallbackItem = findFeaturedItem(slugOrId);
+    if (fallbackItem) {
+      return { ok: true, item: fallbackItem, fallback: true };
+    }
     return { ok: false, item: null, error: err.message };
   }
 }
@@ -402,6 +411,16 @@ export async function fetchMarketplaceItems({
     const config = signal ? { signal } : undefined;
     const response = await apiGet(url, config);
     if (response && response.ok && Array.isArray(response.items)) {
+      const hasFilters = Boolean(category || q || availabilityStatus || isUnique === true || isUnique === false || originCountry || color);
+      if (!hasFilters && response.items.length === 0) {
+        return {
+          ok: true,
+          items: FEATURED_INVENTORY.slice(0, limit),
+          nextCursor: null,
+          categories: [...new Set(FEATURED_INVENTORY.map((item) => item.category).filter(Boolean))],
+          fallback: true,
+        };
+      }
       return {
         ok: true,
         items: response.items,
@@ -409,8 +428,28 @@ export async function fetchMarketplaceItems({
         categories: response.categories || [],
       };
     }
+    const hasFilters = Boolean(category || q || availabilityStatus || isUnique === true || isUnique === false || originCountry || color);
+    if (!hasFilters) {
+      return {
+        ok: true,
+        items: FEATURED_INVENTORY.slice(0, limit),
+        nextCursor: null,
+        categories: [...new Set(FEATURED_INVENTORY.map((item) => item.category).filter(Boolean))],
+        fallback: true,
+      };
+    }
     return { ok: false, items: [], nextCursor: null, categories: [] };
   } catch (err) {
+    const hasFilters = Boolean(category || q || availabilityStatus || isUnique === true || isUnique === false || originCountry || color);
+    if (!hasFilters) {
+      return {
+        ok: true,
+        items: FEATURED_INVENTORY.slice(0, limit),
+        nextCursor: null,
+        categories: [...new Set(FEATURED_INVENTORY.map((item) => item.category).filter(Boolean))],
+        fallback: true,
+      };
+    }
     return { ok: false, items: [], nextCursor: null, categories: [], error: err.message };
   }
 }
