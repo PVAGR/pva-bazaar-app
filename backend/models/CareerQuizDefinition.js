@@ -4,7 +4,8 @@ const optionSchema = new mongoose.Schema(
   {
     key: { type: String, required: true },
     text: { type: String, required: true },
-    pole: { type: String, required: true },
+    pole: { type: String, default: '' },
+    value: { type: Number },
   },
   { _id: false },
 );
@@ -14,6 +15,11 @@ const questionSchema = new mongoose.Schema(
     id: { type: String, required: true },
     prompt: { type: String, required: true },
     axis: { type: String, required: true },
+    scale: { type: String, default: 'binary' },
+    lowPole: { type: String, default: '' },
+    highPole: { type: String, default: '' },
+    riasecLow: [{ type: String }],
+    riasecHigh: [{ type: String }],
     options: [optionSchema],
   },
   { _id: false },

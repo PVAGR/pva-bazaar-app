@@ -176,6 +176,7 @@ function validateQuestions(questions) {
   }
 
   const allowedAxis = new Set(['EI', 'SN', 'TF', 'JP']);
+  const riasecCodes = new Set(['R', 'I', 'A', 'S', 'E', 'C']);
   const ids = new Set();
 
   for (const question of questions) {
@@ -194,15 +195,49 @@ function validateQuestions(questions) {
     if (options.length < 2) return `Question ${id} must have at least two options`;
 
     const poles = new Set(axis.split(''));
-    for (const option of options) {
-      const key = String(option?.key || '').trim();
-      const text = String(option?.text || '').trim();
-      const pole = String(option?.pole || '').trim();
-      if (!key || !text || !pole) {
-        return `Question ${id} has an option missing key/text/pole`;
+    const isLikert = question.scale === 'likert';
+    if (isLikert) {
+      const lowPole = String(question?.lowPole || '').trim();
+      const highPole = String(question?.highPole || '').trim();
+      if (!poles.has(lowPole) || !poles.has(highPole) || lowPole === highPole) {
+        return `Question ${id} must define valid lowPole/highPole values`;
       }
-      if (!poles.has(pole)) {
-        return `Question ${id} option ${key} has invalid pole ${pole}`;
+
+      const seenValues = new Set();
+      for (const option of options) {
+        const key = String(option?.key || '').trim();
+        const text = String(option?.text || '').trim();
+        const value = Number(option?.value);
+        if (!key || !text || !Number.isFinite(value)) {
+          return `Question ${id} likert options must include key/text/value`;
+        }
+        if (value < 1 || value > 5) {
+          return `Question ${id} likert option value must be between 1 and 5`;
+        }
+        if (seenValues.has(value)) {
+          return `Question ${id} has duplicate likert option value ${value}`;
+        }
+        seenValues.add(value);
+      }
+
+      const riasecLow = Array.isArray(question?.riasecLow) ? question.riasecLow : [];
+      const riasecHigh = Array.isArray(question?.riasecHigh) ? question.riasecHigh : [];
+      for (const code of [...riasecLow, ...riasecHigh]) {
+        if (!riasecCodes.has(String(code || '').trim())) {
+          return `Question ${id} has invalid RIASEC code ${code}`;
+        }
+      }
+    } else {
+      for (const option of options) {
+        const key = String(option?.key || '').trim();
+        const text = String(option?.text || '').trim();
+        const pole = String(option?.pole || '').trim();
+        if (!key || !text || !pole) {
+          return `Question ${id} has an option missing key/text/pole`;
+        }
+        if (!poles.has(pole)) {
+          return `Question ${id} option ${key} has invalid pole ${pole}`;
+        }
       }
     }
   }
