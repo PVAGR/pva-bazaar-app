@@ -161,6 +161,12 @@ export default function DashboardPage() {
         >
           Archive
         </Link>
+        <Link
+          href="/deals"
+          className="rounded-lg border border-zinc-600 bg-zinc-800/60 px-4 py-2 text-sm font-medium text-zinc-200 hover:bg-zinc-700/60 transition-colors"
+        >
+          Deals
+        </Link>
       </div>
     </section>
   );

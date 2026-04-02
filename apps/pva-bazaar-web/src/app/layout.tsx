@@ -66,6 +66,9 @@ export default function RootLayout({
                 <Link href="/dashboard" className="hover:text-amber-300">
                   Dashboard
                 </Link>
+                <Link href="/deals" className="hover:text-amber-300">
+                  Deals
+                </Link>
                 <Link href="/cart" className="hover:text-amber-300">
                   Cart
                 </Link>

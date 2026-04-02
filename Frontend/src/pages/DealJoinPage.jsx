@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import HelpTip from '../components/HelpTip.jsx';
-import { apiFetch } from '../lib/api';
+import { joinDealAuthenticated, postDealMessage, submitDealEvidence } from '../lib/api';
 import { buildDealMessageTypedData, buildDealEvidenceTypedData, signTypedData } from '../lib/eip712';
 import { getErrorMessage } from '../lib/errorUtils';
 import ErrorBanner from '../components/ErrorBanner.jsx';
@@ -53,16 +53,6 @@ export default function DealJoinPage() {
     return Number.isFinite(n) ? n : 8453;
   }
 
-  async function authedFetch(path, options = {}) {
-    return apiFetch(path, {
-      ...options,
-      headers: {
-        ...(options.headers || {}),
-        Authorization: `Bearer ${token}`,
-      },
-    });
-  }
-
   useEffect(() => {
     if (!token) {
       setLoading(false);
@@ -71,15 +61,13 @@ export default function DealJoinPage() {
     }
     setLoading(true);
     setError('');
-    authedFetch('/deals/join', { method: 'GET' })
-      .then(async (res) => {
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok || !data?.ok || !data?.item) throw new Error(data?.error || 'Failed to load deal');
+    joinDealAuthenticated(token)
+      .then((data) => {
+        if (!data?.ok || !data?.item) throw new Error(data?.error || 'Failed to join deal');
         setDeal(data.item);
       })
-      .catch((e) => setError(getErrorMessage(e, 'Failed to load deal')))
+      .catch((e) => setError(getErrorMessage(e, 'Failed to join deal')))
       .finally(() => setLoading(false));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   async function sendMessage() {
@@ -96,12 +84,8 @@ export default function DealJoinPage() {
         signature = await signTypedData(typedData, wallet.address);
         authorWallet = wallet.address;
       }
-      const res = await authedFetch(`/deals/${deal._id}/messages`, {
-        method: 'POST',
-        body: JSON.stringify({ text, authorWallet, signature, typedData }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data?.ok || !data?.item) throw new Error(data?.error || 'Failed to send message');
+      const data = await postDealMessage(deal._id, { text, authorWallet, signature, typedData });
+      if (!data?.ok || !data?.item) throw new Error(data?.error || 'Failed to send message');
       setDeal(data.item);
       setMessage('');
       setSuccessMsg('Message sent.');
@@ -126,12 +110,8 @@ export default function DealJoinPage() {
         signature = await signTypedData(typedData, wallet.address);
         authorWallet = wallet.address;
       }
-      const res = await authedFetch(`/deals/${deal._id}/milestones/${milestoneId}/evidence`, {
-        method: 'POST',
-        body: JSON.stringify({ evidenceValue, authorWallet, signature, typedData }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data?.ok || !data?.item) throw new Error(data?.error || 'Failed to submit evidence');
+      const data = await submitDealEvidence(deal._id, milestoneId, { evidenceValue, authorWallet, signature, typedData });
+      if (!data?.ok || !data?.item) throw new Error(data?.error || 'Failed to submit evidence');
       setDeal(data.item);
       setEvidenceDrafts((prev) => ({ ...prev, [milestoneId]: '' }));
       setSuccessMsg('Evidence submitted.');
@@ -142,15 +122,18 @@ export default function DealJoinPage() {
   }
 
   function retryLoad() {
+    if (!token) {
+      setError('Missing join token.');
+      return;
+    }
     setLoading(true);
     setError('');
-    authedFetch('/deals/join', { method: 'GET' })
-      .then(async (res) => {
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok || !data?.ok || !data?.item) throw new Error(data?.error || 'Failed to load deal');
+    joinDealAuthenticated(token)
+      .then((data) => {
+        if (!data?.ok || !data?.item) throw new Error(data?.error || 'Failed to join deal');
         setDeal(data.item);
       })
-      .catch((e) => setError(getErrorMessage(e, 'Failed to load deal')))
+      .catch((e) => setError(getErrorMessage(e, 'Failed to join deal')))
       .finally(() => setLoading(false));
   }
 
@@ -172,8 +155,8 @@ export default function DealJoinPage() {
           <Link to="/" className="btn ghost">
             Home
           </Link>
-          <Link to="/login" className="btn ghost">
-            Login
+          <Link to="/deals" className="btn ghost">
+            Deals
           </Link>
         </div>
       </header>

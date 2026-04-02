@@ -57,6 +57,29 @@ function sha256Hex(v) {
   return crypto.createHash('sha256').update(String(v)).digest('hex');
 }
 
+function nextDealDispatchBackoffMs(attemptCount) {
+  const base = Math.max(parseInt(process.env.DEAL_OUTBOUND_RETRY_BASE_MS || '15000', 10), 1000);
+  const max = Math.max(parseInt(process.env.DEAL_OUTBOUND_RETRY_MAX_MS || '300000', 10), base);
+  const exponential = base * Math.pow(2, Math.max(Number(attemptCount || 1) - 1, 0));
+  return Math.min(exponential, max);
+}
+
+const DISPUTE_REASON_CODES = {
+  release: [
+    'BUYER_CONFIRMED_AUTHENTIC',
+    'MUTUAL_SETTLEMENT',
+    'EVIDENCE_FAVORS_SELLER',
+    'ADMIN_OVERRIDE_COMPLIANCE',
+  ],
+  refund: [
+    'COUNTERFEIT_OR_MISREPRESENTED',
+    'NON_DELIVERY',
+    'MATERIAL_BREACH',
+    'EVIDENCE_FAVORS_BUYER',
+    'ADMIN_OVERRIDE_COMPLIANCE',
+  ],
+};
+
 function toPublicDeal(deal) {
   if (!deal) return null;
   const d = deal.toObject ? deal.toObject() : deal;
@@ -74,6 +97,35 @@ function toJoinDeal(deal) {
     };
   }
   return d;
+}
+
+function dealRoleForUser(deal, userId) {
+  if (!deal || !userId) return 'none';
+  const subjectId = String(userId);
+  if (String(deal.ownerId || '') === subjectId) return 'seller';
+  if (String(deal.counterparty?.userId || '') === subjectId) return 'buyer';
+  if (deal.mediatorId && String(deal.mediatorId) === subjectId) return 'mediator';
+  return 'none';
+}
+
+function canResolveDispute(req, deal) {
+  const role = dealRoleForUser(deal, req.user?.id);
+  if (role === 'mediator') return true;
+  if (req.user?.role === 'admin') return true;
+  return role === 'seller';
+}
+
+function isEscrowFinalized(deal) {
+  const status = String(deal?.escrow?.status || 'draft');
+  return status === 'released' || status === 'refunded';
+}
+
+async function resolvePlatformMediatorUser(preferredAdminUserId = '') {
+  if (preferredAdminUserId && isObjectIdHex(String(preferredAdminUserId))) {
+    const preferred = await User.findOne({ _id: preferredAdminUserId, role: 'admin' }).select('_id role');
+    if (preferred) return preferred;
+  }
+  return User.findOne({ role: 'admin' }).sort({ createdAt: 1 }).select('_id role');
 }
 
 async function verifyDealActor(req, deal) {
@@ -127,14 +179,17 @@ async function verifyDealActor(req, deal) {
   }
 
   const isOwner = String(deal.ownerId) === subjectId;
+  const isCounterpartyUser = deal.counterparty?.userId && String(deal.counterparty.userId) === subjectId;
   const isMediator = deal.mediatorId && String(deal.mediatorId) === subjectId;
-  if (!isOwner && !isMediator) {
+  if (!isOwner && !isCounterpartyUser && !isMediator) {
     const err = new Error('Forbidden');
     err.status = 403;
     throw err;
   }
 
-  return { actor: isOwner ? 'owner' : 'mediator', decoded };
+  if (isOwner) return { actor: 'owner', decoded };
+  if (isCounterpartyUser) return { actor: 'counterparty', decoded };
+  return { actor: 'mediator', decoded };
 }
 
 // POST /api/deals/verify-signature - verify EIP-712 signature and return recovered address
@@ -156,7 +211,13 @@ router.post('/verify-signature', async (req, res) => {
 router.get('/', authMiddleware, async (req, res) => {
   try {
     const { limit = 50, skip = 0, status } = req.query;
-    const query = { ownerId: req.user.id };
+    const query = {
+      $or: [
+        { ownerId: req.user.id },
+        { 'counterparty.userId': req.user.id },
+        { mediatorId: req.user.id },
+      ],
+    };
     if (status) query.status = status;
 
     const items = await Deal.find(query)
@@ -230,6 +291,21 @@ router.post('/', authMiddleware, async (req, res) => {
           text: 'Deal created',
         },
       ],
+      escrow: {
+        fundingMode: 'mock',
+        status: 'draft',
+        fundedAmount: Number(req.body?.totalAmount || 0),
+        fundedCurrency: sanitize(req.body?.currency || 'USD') || 'USD',
+        mockTransferProofs: [],
+      },
+      dispute: {
+        status: 'none',
+        evidence: [],
+      },
+      mediation: {
+        mode: 'none',
+        status: 'none',
+      },
     });
 
     await deal.save();
@@ -345,6 +421,57 @@ router.get('/join', async (req, res) => {
   }
 });
 
+// POST /api/deals/join-authenticated - link invite token to logged-in account
+router.post('/join-authenticated', authMiddleware, async (req, res) => {
+  try {
+    const token = sanitize(req.body?.inviteToken || req.query?.inviteToken || '');
+    if (!token) return res.status(400).json({ ok: false, error: 'inviteToken is required' });
+
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch {
+      return res.status(401).json({ ok: false, error: 'Invalid invite token' });
+    }
+    if (decoded?.role !== 'deal_counterparty' || !decoded?.dealId) {
+      return res.status(401).json({ ok: false, error: 'Invalid deal access token' });
+    }
+
+    const deal = await Deal.findById(decoded.dealId);
+    if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
+
+    if (deal.counterparty?.userId && String(deal.counterparty.userId) !== String(req.user.id)) {
+      return res.status(409).json({ ok: false, error: 'This invite is already linked to another account' });
+    }
+
+    // Re-validate invite token hash/expiry against the deal before linking user.
+    const jti = decoded?.jti ? String(decoded.jti) : '';
+    const stored = deal?.counterpartyAccess?.inviteJtiHash || '';
+    const expiresAt = deal?.counterpartyAccess?.inviteExpiresAt ? new Date(deal.counterpartyAccess.inviteExpiresAt) : null;
+    if (!jti || !stored || sha256Hex(jti) !== stored) {
+      return res.status(401).json({ ok: false, error: 'Invite token no longer valid' });
+    }
+    if (expiresAt && expiresAt.getTime() < Date.now()) {
+      return res.status(401).json({ ok: false, error: 'Invite token has expired' });
+    }
+
+    deal.counterparty = {
+      ...(deal.counterparty || {}),
+      userId: req.user.id,
+    };
+    if (!deal.counterpartyAccess?.joinedAt) {
+      deal.counterpartyAccess = { ...(deal.counterpartyAccess || {}), joinedAt: new Date() };
+    }
+    deal.messages.push({ author: 'system', text: 'Counterparty linked to authenticated user account' });
+    await deal.save();
+
+    res.json({ ok: true, item: toPublicDeal(deal), role: dealRoleForUser(deal, req.user.id) });
+  } catch (err) {
+    console.error('Error linking deal to authenticated counterparty:', err);
+    res.status(500).json({ ok: false, error: 'Failed to join deal as authenticated user' });
+  }
+});
+
 // POST /api/deals/:id/prepare-escrow - prepare deployment params for escrow on Base
 router.post('/:id/prepare-escrow', authMiddleware, async (req, res) => {
   try {
@@ -398,7 +525,14 @@ router.post('/:id/prepare-escrow', authMiddleware, async (req, res) => {
 // GET /api/deals/:id - get single deal
 router.get('/:id', authMiddleware, async (req, res) => {
   try {
-    const deal = await Deal.findOne({ _id: req.params.id, ownerId: req.user.id });
+    const deal = await Deal.findOne({
+      _id: req.params.id,
+      $or: [
+        { ownerId: req.user.id },
+        { 'counterparty.userId': req.user.id },
+        { mediatorId: req.user.id },
+      ],
+    });
     if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
     res.json({ ok: true, item: toPublicDeal(deal) });
   } catch (err) {
@@ -545,6 +679,825 @@ router.post('/:id/milestones/:milestoneId/evidence', async (req, res) => {
   } catch (err) {
     console.error('Error submitting milestone evidence:', err);
     res.status(err.status || 500).json({ ok: false, error: err.message || 'Failed to submit evidence' });
+  }
+});
+
+// GET /api/deals/:id/messages - fetch audit-friendly message log
+router.get('/:id/messages', authMiddleware, async (req, res) => {
+  try {
+    const deal = await Deal.findById(req.params.id);
+    if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
+    const role = dealRoleForUser(deal, req.user.id);
+    if (role === 'none' && req.user?.role !== 'admin') return res.status(403).json({ ok: false, error: 'Forbidden' });
+    res.json({ ok: true, messages: Array.isArray(deal.messages) ? deal.messages : [] });
+  } catch (err) {
+    console.error('Error fetching deal messages:', err);
+    res.status(500).json({ ok: false, error: 'Failed to fetch messages' });
+  }
+});
+
+// POST /api/deals/:id/escrow/mock-fund - create mock funded state with party confirmation proof
+router.post('/:id/escrow/mock-fund', authMiddleware, async (req, res) => {
+  try {
+    const deal = await Deal.findById(req.params.id);
+    if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
+
+    const role = dealRoleForUser(deal, req.user.id);
+    if (!['seller', 'buyer', 'mediator'].includes(role) && req.user?.role !== 'admin') {
+      return res.status(403).json({ ok: false, error: 'Forbidden' });
+    }
+
+    if (isEscrowFinalized(deal)) {
+      return res.status(409).json({ ok: false, error: 'Escrow already finalized' });
+    }
+
+    const current = String(deal.escrow?.status || 'draft');
+    if (!['draft', 'funded_mock', 'funded_live', 'awaiting_receipt', 'disputed'].includes(current)) {
+      return res.status(400).json({ ok: false, error: `Mock funding not allowed from ${current}` });
+    }
+
+    const amount = Number(req.body?.amount ?? deal.totalAmount ?? 0);
+    const currency = sanitize(req.body?.currency || deal.currency || 'USD') || 'USD';
+    if (!Number.isFinite(amount) || amount <= 0) {
+      return res.status(400).json({ ok: false, error: 'A valid amount is required' });
+    }
+
+    const proofNote = sanitize(req.body?.proofNote || 'Mock transfer confirmed by party');
+    const screenshotUrl = sanitize(req.body?.screenshotUrl || '');
+
+    deal.escrow = {
+      ...(deal.escrow || {}),
+      fundingMode: 'mock',
+      status: 'funded_mock',
+      fundedAmount: amount,
+      fundedCurrency: currency,
+      fundedAt: new Date(),
+      mockTransferProofs: [
+        ...((deal.escrow && Array.isArray(deal.escrow.mockTransferProofs)) ? deal.escrow.mockTransferProofs : []),
+        {
+          actor: role === 'none' ? 'system' : role,
+          userId: req.user.id,
+          note: proofNote,
+          screenshotUrl,
+          confirmedAt: new Date(),
+        },
+      ],
+    };
+    if (deal.status === 'draft') deal.status = 'active';
+
+    deal.messages.push({ author: 'system', text: `Escrow mock-funded: ${currency} ${amount}` });
+    await deal.save();
+    res.json({ ok: true, item: toPublicDeal(deal) });
+  } catch (err) {
+    console.error('Error mock-funding escrow:', err);
+    res.status(500).json({ ok: false, error: 'Failed to mock-fund escrow' });
+  }
+});
+
+// POST /api/deals/:id/escrow/confirm-receipt - buyer confirms receipt/authenticity
+router.post('/:id/escrow/confirm-receipt', authMiddleware, async (req, res) => {
+  try {
+    const deal = await Deal.findById(req.params.id);
+    if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
+
+    const role = dealRoleForUser(deal, req.user.id);
+    if (role !== 'buyer' && req.user?.role !== 'admin') {
+      return res.status(403).json({ ok: false, error: 'Only buyer can confirm receipt' });
+    }
+
+    const current = String(deal.escrow?.status || 'draft');
+    if (!['funded_mock', 'funded_live', 'awaiting_receipt'].includes(current)) {
+      return res.status(400).json({ ok: false, error: `Receipt confirmation not allowed from ${current}` });
+    }
+
+    if (String(deal.dispute?.status || 'none') === 'open') {
+      return res.status(409).json({ ok: false, error: 'Cannot confirm receipt while dispute is open' });
+    }
+
+    deal.escrow = {
+      ...(deal.escrow || {}),
+      status: 'buyer_confirmed',
+    };
+    deal.messages.push({ author: 'system', text: 'Buyer confirmed receipt and authenticity' });
+    await deal.save();
+    res.json({ ok: true, item: toPublicDeal(deal) });
+  } catch (err) {
+    console.error('Error confirming receipt:', err);
+    res.status(500).json({ ok: false, error: 'Failed to confirm receipt' });
+  }
+});
+
+// POST /api/deals/:id/escrow/release - release escrow (seller/mediator/admin after buyer confirmation)
+router.post('/:id/escrow/release', authMiddleware, async (req, res) => {
+  try {
+    const deal = await Deal.findById(req.params.id);
+    if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
+
+    const role = dealRoleForUser(deal, req.user.id);
+    if (!['seller', 'mediator'].includes(role) && req.user?.role !== 'admin') {
+      return res.status(403).json({ ok: false, error: 'Forbidden' });
+    }
+
+    if (isEscrowFinalized(deal)) {
+      return res.status(409).json({ ok: false, error: 'Escrow already finalized' });
+    }
+
+    const current = String(deal.escrow?.status || 'draft');
+    if (!['buyer_confirmed', 'disputed', 'funded_mock', 'funded_live', 'awaiting_receipt'].includes(current)) {
+      return res.status(400).json({ ok: false, error: `Release not allowed from ${current}` });
+    }
+
+    if (String(deal.dispute?.status || 'none') === 'open' && req.user?.role !== 'admin' && role !== 'mediator') {
+      return res.status(409).json({ ok: false, error: 'Cannot release while dispute is open' });
+    }
+
+    if (String(deal.escrow?.status || 'draft') !== 'buyer_confirmed' && req.user?.role !== 'admin' && role !== 'mediator') {
+      return res.status(400).json({ ok: false, error: 'Buyer confirmation required before release' });
+    }
+
+    deal.escrow = {
+      ...(deal.escrow || {}),
+      status: 'released',
+      releasedAt: new Date(),
+      releasedBy: req.user.id,
+    };
+    if (deal.status !== 'completed') deal.status = 'completed';
+    deal.messages.push({ author: 'system', text: 'Escrow released to seller' });
+    await deal.save();
+
+    res.json({ ok: true, item: toPublicDeal(deal) });
+  } catch (err) {
+    console.error('Error releasing escrow:', err);
+    res.status(500).json({ ok: false, error: 'Failed to release escrow' });
+  }
+});
+
+// POST /api/deals/:id/escrow/refund - refund escrow (seller/mediator/admin)
+router.post('/:id/escrow/refund', authMiddleware, async (req, res) => {
+  try {
+    const deal = await Deal.findById(req.params.id);
+    if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
+
+    const role = dealRoleForUser(deal, req.user.id);
+    if (!['seller', 'mediator'].includes(role) && req.user?.role !== 'admin') {
+      return res.status(403).json({ ok: false, error: 'Forbidden' });
+    }
+
+    if (isEscrowFinalized(deal)) {
+      return res.status(409).json({ ok: false, error: 'Escrow already finalized' });
+    }
+
+    const current = String(deal.escrow?.status || 'draft');
+    if (!['funded_mock', 'funded_live', 'awaiting_receipt', 'buyer_confirmed', 'disputed'].includes(current)) {
+      return res.status(400).json({ ok: false, error: `Refund not allowed from ${current}` });
+    }
+
+    deal.escrow = {
+      ...(deal.escrow || {}),
+      status: 'refunded',
+      refundedAt: new Date(),
+      refundedBy: req.user.id,
+    };
+    deal.status = 'cancelled';
+    deal.messages.push({ author: 'system', text: 'Escrow refunded to buyer' });
+    await deal.save();
+
+    res.json({ ok: true, item: toPublicDeal(deal) });
+  } catch (err) {
+    console.error('Error refunding escrow:', err);
+    res.status(500).json({ ok: false, error: 'Failed to refund escrow' });
+  }
+});
+
+// POST /api/deals/:id/dispute - open dispute and attach initial evidence
+router.post('/:id/dispute', authMiddleware, async (req, res) => {
+  try {
+    const deal = await Deal.findById(req.params.id);
+    if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
+
+    const role = dealRoleForUser(deal, req.user.id);
+    if (!['buyer', 'seller', 'mediator'].includes(role) && req.user?.role !== 'admin') {
+      return res.status(403).json({ ok: false, error: 'Forbidden' });
+    }
+
+    if (String(deal.dispute?.status || 'none') === 'open') {
+      return res.status(409).json({ ok: false, error: 'A dispute is already open for this deal' });
+    }
+
+    const escrowStatus = String(deal.escrow?.status || 'draft');
+    if (escrowStatus === 'draft') {
+      return res.status(400).json({ ok: false, error: 'Escrow must be funded before opening a dispute' });
+    }
+
+    const reason = sanitize(req.body?.reason || 'Unspecified dispute');
+    const details = sanitize(req.body?.details || '');
+    const attachmentUrl = sanitize(req.body?.attachmentUrl || '');
+
+    if (!deal.mediatorId) {
+      const mediatorUser = await resolvePlatformMediatorUser(req.user?.role === 'admin' ? req.user.id : '');
+      if (mediatorUser?._id) {
+        deal.mediatorId = mediatorUser._id;
+        deal.mediation = {
+          ...(deal.mediation || {}),
+          mode: 'platform',
+          status: 'assigned',
+          assignedBy: req.user.id,
+          assignedAt: new Date(),
+        };
+      }
+    }
+
+    deal.dispute = {
+      ...(deal.dispute || {}),
+      status: 'open',
+      openedBy: req.user.id,
+      openedAt: new Date(),
+      reason,
+      details,
+      evidence: [
+        ...((deal.dispute && Array.isArray(deal.dispute.evidence)) ? deal.dispute.evidence : []),
+        {
+          authorId: req.user.id,
+          role: role === 'none' ? 'system' : role,
+          note: details || reason,
+          attachmentUrl,
+          createdAt: new Date(),
+        },
+      ],
+    };
+    deal.escrow = { ...(deal.escrow || {}), status: 'disputed' };
+    deal.messages.push({ author: 'system', text: `Dispute opened: ${reason}` });
+    if (deal.mediatorId) {
+      deal.messages.push({ author: 'system', text: `Mediator assigned: ${String(deal.mediatorId)}` });
+    }
+    await deal.save();
+
+    res.status(201).json({ ok: true, item: toPublicDeal(deal) });
+  } catch (err) {
+    console.error('Error opening dispute:', err);
+    res.status(500).json({ ok: false, error: 'Failed to open dispute' });
+  }
+});
+
+// POST /api/deals/:id/mediator/auto-assign - assign platform mediator (admin preferred)
+router.post('/:id/mediator/auto-assign', authMiddleware, async (req, res) => {
+  try {
+    const deal = await Deal.findById(req.params.id);
+    if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
+
+    const role = dealRoleForUser(deal, req.user.id);
+    if (!['seller', 'mediator'].includes(role) && req.user?.role !== 'admin') {
+      return res.status(403).json({ ok: false, error: 'Forbidden' });
+    }
+
+    const requestedAdminId = sanitize(req.body?.adminUserId || '');
+    const mediatorUser = await resolvePlatformMediatorUser(req.user?.role === 'admin' ? (requestedAdminId || req.user.id) : '');
+    if (!mediatorUser?._id) {
+      return res.status(404).json({ ok: false, error: 'No admin mediator account is currently available' });
+    }
+
+    deal.mediatorId = mediatorUser._id;
+    deal.mediation = {
+      ...(deal.mediation || {}),
+      mode: 'platform',
+      status: 'assigned',
+      assignedBy: req.user.id,
+      assignedAt: new Date(),
+      approvalNote: sanitize(req.body?.note || 'Platform mediator assigned'),
+    };
+    deal.messages.push({ author: 'system', text: `Platform mediator assigned: ${String(mediatorUser._id)}` });
+    await deal.save();
+
+    res.json({ ok: true, item: toPublicDeal(deal) });
+  } catch (err) {
+    console.error('Error auto-assigning mediator:', err);
+    res.status(500).json({ ok: false, error: 'Failed to auto-assign mediator' });
+  }
+});
+
+// POST /api/deals/:id/mediator/request-custom - parties can request a trusted third-party mediator
+router.post('/:id/mediator/request-custom', authMiddleware, async (req, res) => {
+  try {
+    const deal = await Deal.findById(req.params.id);
+    if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
+
+    const role = dealRoleForUser(deal, req.user.id);
+    if (!['buyer', 'seller', 'mediator'].includes(role) && req.user?.role !== 'admin') {
+      return res.status(403).json({ ok: false, error: 'Forbidden' });
+    }
+
+    const name = sanitize(req.body?.name || '');
+    const email = sanitize(req.body?.email || '');
+    const contact = sanitize(req.body?.contact || '');
+    const notes = sanitize(req.body?.notes || '');
+    const userId = sanitize(req.body?.userId || '');
+
+    if (!name && !email && !contact && !userId) {
+      return res.status(400).json({ ok: false, error: 'Provide at least one mediator identifier (name, email, contact, or userId)' });
+    }
+
+    deal.mediation = {
+      ...(deal.mediation || {}),
+      mode: 'custom',
+      status: 'requested',
+      requestedBy: req.user.id,
+      requestedAt: new Date(),
+      customRequest: {
+        name,
+        email,
+        contact,
+        userId: isObjectIdHex(userId) ? userId : undefined,
+        notes,
+      },
+      approvalNote: '',
+    };
+    deal.messages.push({ author: 'system', text: `Custom mediator requested by ${role}` });
+    await deal.save();
+
+    res.status(201).json({ ok: true, item: toPublicDeal(deal) });
+  } catch (err) {
+    console.error('Error requesting custom mediator:', err);
+    res.status(500).json({ ok: false, error: 'Failed to request custom mediator' });
+  }
+});
+
+// PUT /api/deals/:id/mediator/approve - admin approves or declines mediator request
+router.put('/:id/mediator/approve', authMiddleware, async (req, res) => {
+  try {
+    if (req.user?.role !== 'admin') {
+      return res.status(403).json({ ok: false, error: 'Admin approval required' });
+    }
+
+    const deal = await Deal.findById(req.params.id);
+    if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
+
+    const action = sanitize(req.body?.action || 'approve').toLowerCase();
+    const note = sanitize(req.body?.note || '');
+    if (!['approve', 'decline'].includes(action)) {
+      return res.status(400).json({ ok: false, error: 'action must be approve or decline' });
+    }
+
+    if (String(deal.mediation?.status || 'none') !== 'requested') {
+      return res.status(409).json({ ok: false, error: 'No pending mediator request to process' });
+    }
+
+    if (action === 'decline') {
+      if (!deal.mediation) deal.mediation = {};
+      deal.mediation.status = 'declined';
+      deal.mediation.assignedBy = req.user.id;
+      deal.mediation.assignedAt = new Date();
+      deal.mediation.approvalNote = note || 'Mediator request declined by admin';
+      deal.messages.push({ author: 'system', text: 'Mediator request declined by admin' });
+      await deal.save();
+      return res.json({ ok: true, item: toPublicDeal(deal) });
+    }
+
+    const mediatorUserId = sanitize(req.body?.mediatorUserId || '');
+    let mediatorUser = null;
+    if (mediatorUserId && isObjectIdHex(mediatorUserId)) {
+      mediatorUser = await User.findById(mediatorUserId).select('_id');
+      if (!mediatorUser) return res.status(404).json({ ok: false, error: 'Requested mediator user not found' });
+    }
+
+    if (!mediatorUser && isObjectIdHex(String(deal.mediation?.customRequest?.userId || ''))) {
+      mediatorUser = await User.findById(String(deal.mediation.customRequest.userId)).select('_id');
+    }
+
+    if (!mediatorUser) {
+      mediatorUser = await resolvePlatformMediatorUser(req.user.id);
+    }
+
+    if (!mediatorUser?._id) {
+      return res.status(404).json({ ok: false, error: 'No eligible mediator user found for approval' });
+    }
+
+    deal.mediatorId = mediatorUser._id;
+    if (!deal.mediation) deal.mediation = {};
+    deal.mediation.status = 'approved';
+    deal.mediation.assignedBy = req.user.id;
+    deal.mediation.assignedAt = new Date();
+    deal.mediation.approvalNote = note || 'Mediator request approved by admin';
+    deal.messages.push({ author: 'system', text: `Mediator approved by admin: ${String(mediatorUser._id)}` });
+    await deal.save();
+
+    res.json({ ok: true, item: toPublicDeal(deal) });
+  } catch (err) {
+    console.error('Error approving mediator request:', err);
+    res.status(500).json({ ok: false, error: 'Failed to approve mediator request' });
+  }
+});
+
+// PUT /api/deals/:id/dispute/resolve - mediator/admin resolution
+router.put('/:id/dispute/resolve', authMiddleware, async (req, res) => {
+  try {
+    const deal = await Deal.findById(req.params.id);
+    if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
+    if (String(deal.dispute?.status || 'none') !== 'open') {
+      return res.status(400).json({ ok: false, error: 'No open dispute to resolve' });
+    }
+    if (!canResolveDispute(req, deal)) {
+      return res.status(403).json({ ok: false, error: 'Mediator/admin privileges required' });
+    }
+
+    const decision = sanitize(req.body?.decision || 'refund').toLowerCase();
+    const note = sanitize(req.body?.note || '');
+    if (!['release', 'refund'].includes(decision)) {
+      return res.status(400).json({ ok: false, error: 'decision must be release or refund' });
+    }
+    const resolutionCode = sanitize(req.body?.resolutionCode || '').toUpperCase();
+    const allowedResolutionCodes = DISPUTE_REASON_CODES[decision] || [];
+    if (!resolutionCode || !allowedResolutionCodes.includes(resolutionCode)) {
+      return res.status(400).json({
+        ok: false,
+        error: `resolutionCode is required and must be one of: ${allowedResolutionCodes.join(', ')}`,
+      });
+    }
+
+    const resolvedAt = new Date();
+    const resolutionHash = sha256Hex(
+      JSON.stringify({
+        dealId: String(deal._id),
+        decision,
+        resolutionCode,
+        note,
+        resolvedBy: String(req.user.id || ''),
+        resolvedAt: resolvedAt.toISOString(),
+      })
+    );
+
+    deal.dispute = {
+      ...(deal.dispute || {}),
+      status: decision === 'release' ? 'resolved_release' : 'resolved_refund',
+      resolvedBy: req.user.id,
+      resolvedAt,
+      resolutionCode,
+      resolutionNote: note,
+      resolutionHash,
+    };
+    deal.escrow = {
+      ...(deal.escrow || {}),
+      status: decision === 'release' ? 'released' : 'refunded',
+      releasedAt: decision === 'release' ? new Date() : deal.escrow?.releasedAt,
+      refundedAt: decision === 'refund' ? new Date() : deal.escrow?.refundedAt,
+      releasedBy: decision === 'release' ? req.user.id : deal.escrow?.releasedBy,
+      refundedBy: decision === 'refund' ? req.user.id : deal.escrow?.refundedBy,
+    };
+    if (decision === 'release') deal.status = 'completed';
+    if (decision === 'refund') deal.status = 'cancelled';
+    deal.messages.push({ author: 'system', text: `Dispute resolved: ${decision} (${resolutionCode})` });
+    await deal.save();
+
+    res.json({ ok: true, item: toPublicDeal(deal) });
+  } catch (err) {
+    console.error('Error resolving dispute:', err);
+    res.status(500).json({ ok: false, error: 'Failed to resolve dispute' });
+  }
+});
+
+// GET /api/deals/:id/reports/resolution-certificate - export compact signed-ish certificate for a resolved dispute
+router.get('/:id/reports/resolution-certificate', authMiddleware, async (req, res) => {
+  try {
+    const deal = await Deal.findById(req.params.id);
+    if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
+
+    const role = dealRoleForUser(deal, req.user.id);
+    if (role === 'none' && req.user?.role !== 'admin') {
+      return res.status(403).json({ ok: false, error: 'Forbidden' });
+    }
+
+    if (String(deal.dispute?.status || 'none') !== 'resolved_release' && String(deal.dispute?.status || 'none') !== 'resolved_refund') {
+      return res.status(409).json({ ok: false, error: 'Resolution certificate is only available after a dispute is resolved' });
+    }
+
+    const certificate = {
+      certificateType: 'deal-resolution-certificate-v1',
+      certificateId: `cert_${Date.now()}_${crypto.randomBytes(5).toString('hex')}`,
+      generatedAt: new Date().toISOString(),
+      generatedBy: req.user.id,
+      dealId: String(deal._id),
+      decision: deal.dispute?.status === 'resolved_release' ? 'release' : 'refund',
+      resolutionCode: deal.dispute?.resolutionCode || '',
+      resolutionHash: deal.dispute?.resolutionHash || '',
+      resolutionNote: deal.dispute?.resolutionNote || '',
+      resolvedAt: deal.dispute?.resolvedAt || null,
+      resolvedBy: String(deal.dispute?.resolvedBy || ''),
+      mediatorId: String(deal.mediatorId || ''),
+      escrowStatus: deal.escrow?.status || 'draft',
+      disputeStatus: deal.dispute?.status || 'none',
+    };
+    certificate.certificateHash = sha256Hex(JSON.stringify(certificate));
+
+    deal.messages.push({ author: 'system', text: `Resolution certificate generated: ${certificate.certificateId}` });
+    await deal.save();
+
+    res.json({ ok: true, certificate });
+  } catch (err) {
+    console.error('Error generating resolution certificate:', err);
+    res.status(500).json({ ok: false, error: 'Failed to generate resolution certificate' });
+  }
+});
+
+// GET /api/deals/:id/reports/export-bundle - combined dispute/certificate/export artifact
+router.get('/:id/reports/export-bundle', authMiddleware, async (req, res) => {
+  try {
+    const deal = await Deal.findById(req.params.id);
+    if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
+
+    const role = dealRoleForUser(deal, req.user.id);
+    if (role === 'none' && req.user?.role !== 'admin') {
+      return res.status(403).json({ ok: false, error: 'Forbidden' });
+    }
+
+    const statusFilter = sanitize(req.query?.queueStatus || '').toLowerCase();
+    const queue = Array.isArray(deal.outboundDispatchQueue) ? deal.outboundDispatchQueue : [];
+    const filteredQueue = statusFilter && ['queued', 'sent', 'failed'].includes(statusFilter)
+      ? queue.filter((item) => String(item.status || '').toLowerCase() === statusFilter)
+      : queue;
+
+    const certificate = ['resolved_release', 'resolved_refund'].includes(String(deal.dispute?.status || 'none'))
+      ? {
+          certificateType: 'deal-resolution-certificate-v1',
+          decision: deal.dispute?.status === 'resolved_release' ? 'release' : 'refund',
+          resolutionCode: deal.dispute?.resolutionCode || '',
+          resolutionHash: deal.dispute?.resolutionHash || '',
+          resolutionNote: deal.dispute?.resolutionNote || '',
+          resolvedAt: deal.dispute?.resolvedAt || null,
+          resolvedBy: String(deal.dispute?.resolvedBy || ''),
+          mediatorId: String(deal.mediatorId || ''),
+          escrowStatus: deal.escrow?.status || 'draft',
+          disputeStatus: deal.dispute?.status || 'none',
+        }
+      : null;
+
+    const bundle = {
+      bundleType: 'deal-dispute-export-bundle-v1',
+      bundleId: `bundle_${Date.now()}_${crypto.randomBytes(5).toString('hex')}`,
+      generatedAt: new Date().toISOString(),
+      generatedBy: req.user.id,
+      deal: {
+        id: String(deal._id),
+        title: deal.title || '',
+        status: deal.status || 'draft',
+        escrowStatus: deal.escrow?.status || 'draft',
+        disputeStatus: deal.dispute?.status || 'none',
+        mediatorId: String(deal.mediatorId || ''),
+      },
+      certificate,
+      packet: ['resolved_release', 'resolved_refund'].includes(String(deal.dispute?.status || 'none'))
+        ? {
+            packetType: 'fraud-response-v1',
+            packetId: `packet_export_${String(deal._id)}`,
+            dealId: String(deal._id),
+            dispute: deal.dispute || { status: 'none' },
+            timeline: (deal.messages || []).slice(-100).map((m) => ({
+              at: m.createdAt || null,
+              author: m.author || 'system',
+              text: m.text || '',
+            })),
+            outboundTargets: filteredQueue.flatMap((q) => Array.isArray(q.targets) ? q.targets : []),
+          }
+        : null,
+      queue: filteredQueue.map((item) => ({
+        packetId: item.packetId,
+        packetHash: item.packetHash || '',
+        status: item.status || 'queued',
+        attempts: Number(item.attempts || 0),
+        nextAttemptAt: item.nextAttemptAt || null,
+        sentAt: item.sentAt || null,
+        lastStatusCode: item.lastStatusCode || null,
+        lastError: item.lastError || '',
+        targets: Array.isArray(item.targets) ? item.targets : [],
+      })),
+      summary: {
+        messages: Array.isArray(deal.messages) ? deal.messages.length : 0,
+        evidence: Array.isArray(deal.dispute?.evidence) ? deal.dispute.evidence.length : 0,
+        queueItems: filteredQueue.length,
+        failedQueueItems: queue.filter((item) => String(item.status || '').toLowerCase() === 'failed').length,
+      },
+    };
+    bundle.bundleHash = sha256Hex(JSON.stringify(bundle));
+
+    deal.messages.push({ author: 'system', text: `Export bundle generated: ${bundle.bundleId}` });
+    await deal.save();
+
+    res.json({ ok: true, bundle });
+  } catch (err) {
+    console.error('Error generating export bundle:', err);
+    res.status(500).json({ ok: false, error: 'Failed to generate export bundle' });
+  }
+});
+
+// GET /api/deals/:id/dispute - fetch dispute details for deal participants
+router.get('/:id/dispute', authMiddleware, async (req, res) => {
+  try {
+    const deal = await Deal.findById(req.params.id);
+    if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
+    const role = dealRoleForUser(deal, req.user.id);
+    if (role === 'none' && req.user?.role !== 'admin') {
+      return res.status(403).json({ ok: false, error: 'Forbidden' });
+    }
+    res.json({ ok: true, dispute: deal.dispute || { status: 'none' } });
+  } catch (err) {
+    console.error('Error fetching dispute:', err);
+    res.status(500).json({ ok: false, error: 'Failed to fetch dispute' });
+  }
+});
+
+// POST /api/deals/:id/dispute/evidence - append dispute evidence from a participant
+router.post('/:id/dispute/evidence', authMiddleware, async (req, res) => {
+  try {
+    const deal = await Deal.findById(req.params.id);
+    if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
+
+    const role = dealRoleForUser(deal, req.user.id);
+    if (!['buyer', 'seller', 'mediator'].includes(role) && req.user?.role !== 'admin') {
+      return res.status(403).json({ ok: false, error: 'Forbidden' });
+    }
+
+    if (String(deal.dispute?.status || 'none') !== 'open') {
+      return res.status(400).json({ ok: false, error: 'Dispute is not open' });
+    }
+
+    const note = sanitize(req.body?.note || '');
+    const attachmentUrl = sanitize(req.body?.attachmentUrl || '');
+    if (!note && !attachmentUrl) {
+      return res.status(400).json({ ok: false, error: 'note or attachmentUrl is required' });
+    }
+
+    const currentEvidence = Array.isArray(deal.dispute?.evidence) ? deal.dispute.evidence : [];
+    deal.dispute = {
+      ...(deal.dispute || {}),
+      evidence: [
+        ...currentEvidence,
+        {
+          authorId: req.user.id,
+          role: role === 'none' ? 'system' : role,
+          note,
+          attachmentUrl,
+          createdAt: new Date(),
+        },
+      ],
+    };
+    deal.messages.push({ author: 'system', text: `Dispute evidence added by ${role}` });
+    await deal.save();
+
+    res.status(201).json({ ok: true, item: toPublicDeal(deal), dispute: deal.dispute });
+  } catch (err) {
+    console.error('Error adding dispute evidence:', err);
+    res.status(500).json({ ok: false, error: 'Failed to add dispute evidence' });
+  }
+});
+
+// POST /api/deals/:id/reports/fraud-packet - generate packet and optionally record outbound dispatch targets
+router.post('/:id/reports/fraud-packet', authMiddleware, async (req, res) => {
+  try {
+    const deal = await Deal.findById(req.params.id);
+    if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
+
+    const role = dealRoleForUser(deal, req.user.id);
+    if (role === 'none' && req.user?.role !== 'admin') {
+      return res.status(403).json({ ok: false, error: 'Forbidden' });
+    }
+
+    const outbound = req.body?.outbound && typeof req.body.outbound === 'object' ? req.body.outbound : {};
+    const nowIso = new Date().toISOString();
+    const packet = {
+      packetType: 'fraud-response-v1',
+      packetId: `packet_${Date.now()}_${crypto.randomBytes(6).toString('hex')}`,
+      generatedAt: nowIso,
+      generatedBy: req.user.id,
+      deal: {
+        id: String(deal._id),
+        title: deal.title || '',
+        status: deal.status || 'draft',
+        escrowStatus: deal.escrow?.status || 'draft',
+        currency: deal.currency || 'USD',
+        totalAmount: deal.totalAmount || 0,
+      },
+      parties: {
+        sellerUserId: String(deal.ownerId || ''),
+        buyerUserId: String(deal.counterparty?.userId || ''),
+        mediatorUserId: String(deal.mediatorId || ''),
+      },
+      dispute: deal.dispute || { status: 'none' },
+      timeline: (deal.messages || []).slice(-100).map((m) => ({
+        at: m.createdAt || null,
+        author: m.author || 'system',
+        text: m.text || '',
+      })),
+      outbound: {
+        sendRequested: Boolean(outbound.sendRequested),
+        approvedByAdmin: Boolean(outbound.approvedByAdmin),
+        targets: Array.isArray(outbound.targets) ? outbound.targets : [],
+      },
+    };
+
+    if (packet.outbound.sendRequested && req.user?.role !== 'admin') {
+      return res.status(403).json({ ok: false, error: 'Only admin can enqueue outbound fraud packet dispatch' });
+    }
+
+    if (packet.outbound.sendRequested) {
+      const packetHash = sha256Hex(JSON.stringify(packet));
+      const queueItem = {
+        packetId: packet.packetId,
+        packetHash,
+        requestedBy: req.user.id,
+        approvedBy: req.user.id,
+        targets: packet.outbound.targets,
+        status: 'queued',
+        attempts: 0,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      deal.outboundDispatchQueue = [...(Array.isArray(deal.outboundDispatchQueue) ? deal.outboundDispatchQueue : []), queueItem];
+      packet.outbound.queue = {
+        packetId: queueItem.packetId,
+        status: queueItem.status,
+        targets: queueItem.targets,
+        packetHash: queueItem.packetHash,
+      };
+    }
+
+    deal.messages.push({
+      author: 'system',
+      text: outbound?.sendRequested
+        ? 'Fraud response packet generated with outbound delivery request'
+        : 'Fraud response packet generated (download mode)',
+    });
+    await deal.save();
+
+    res.json({ ok: true, packet });
+  } catch (err) {
+    console.error('Error generating fraud packet:', err);
+    res.status(500).json({ ok: false, error: 'Failed to generate fraud packet' });
+  }
+});
+
+// GET /api/deals/:id/reports/outbound-queue - fetch outbound dispatch queue
+router.get('/:id/reports/outbound-queue', authMiddleware, async (req, res) => {
+  try {
+    const deal = await Deal.findById(req.params.id);
+    if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
+
+    const role = dealRoleForUser(deal, req.user.id);
+    if (role === 'none' && req.user?.role !== 'admin') {
+      return res.status(403).json({ ok: false, error: 'Forbidden' });
+    }
+
+    const statusFilter = sanitize(req.query?.status || '').toLowerCase();
+    const queue = Array.isArray(deal.outboundDispatchQueue) ? deal.outboundDispatchQueue : [];
+    const filtered = statusFilter && ['queued', 'sent', 'failed'].includes(statusFilter)
+      ? queue.filter((item) => String(item.status || '').toLowerCase() === statusFilter)
+      : queue;
+    res.json({ ok: true, queue: filtered, total: queue.length });
+  } catch (err) {
+    console.error('Error fetching outbound queue:', err);
+    res.status(500).json({ ok: false, error: 'Failed to fetch outbound queue' });
+  }
+});
+
+// PUT /api/deals/:id/reports/outbound/:packetId/status - admin marks dispatch status
+router.put('/:id/reports/outbound/:packetId/status', authMiddleware, async (req, res) => {
+  try {
+    if (req.user?.role !== 'admin') {
+      return res.status(403).json({ ok: false, error: 'Admin privileges required' });
+    }
+
+    const deal = await Deal.findById(req.params.id);
+    if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
+
+    const packetId = sanitize(req.params.packetId || '');
+    const status = sanitize(req.body?.status || '').toLowerCase();
+    const lastError = sanitize(req.body?.lastError || '');
+    if (!packetId) return res.status(400).json({ ok: false, error: 'packetId is required' });
+    if (!['queued', 'sent', 'failed'].includes(status)) {
+      return res.status(400).json({ ok: false, error: 'status must be queued, sent, or failed' });
+    }
+
+    const queue = Array.isArray(deal.outboundDispatchQueue) ? deal.outboundDispatchQueue : [];
+    const item = queue.find((q) => String(q.packetId) === String(packetId));
+    if (!item) return res.status(404).json({ ok: false, error: 'Dispatch queue item not found' });
+
+    item.status = status;
+    item.updatedAt = new Date();
+    item.lastAttemptAt = new Date();
+    item.attempts = Number(item.attempts || 0) + 1;
+    item.lastError = status === 'failed' ? (lastError || 'Dispatch failed') : '';
+    if (status === 'sent') {
+      item.sentAt = new Date();
+      item.nextAttemptAt = null;
+    }
+    if (status === 'failed') {
+      item.nextAttemptAt = new Date(Date.now() + nextDealDispatchBackoffMs(item.attempts));
+    }
+
+    deal.messages.push({ author: 'system', text: `Outbound packet ${packetId} marked as ${status}` });
+    await deal.save();
+
+    res.json({ ok: true, item: toPublicDeal(deal), queue });
+  } catch (err) {
+    console.error('Error updating outbound queue status:', err);
+    res.status(500).json({ ok: false, error: 'Failed to update outbound queue status' });
   }
 });
 

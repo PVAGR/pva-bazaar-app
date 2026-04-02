@@ -20,6 +20,8 @@ import AccountPage from './pages/AccountPage.jsx';
 import OnboardingPage from './pages/OnboardingPage.jsx';
 import ListItemPage from './pages/ListItemPage.jsx';
 import MyListingsPage from './pages/MyListingsPage.jsx';
+import DealsPage from './pages/DealsPage.jsx';
+import DealJoinPage from './pages/DealJoinPage.jsx';
 import CheckoutSuccessPage from './pages/CheckoutSuccessPage.jsx';
 import CheckoutCancelPage from './pages/CheckoutCancelPage.jsx';
 import './base.css';
@@ -47,6 +49,8 @@ export default function App() {
         <Route path="/account" element={<RequireUserAuth><AccountPage /></RequireUserAuth>} />
         <Route path="/items/new" element={<RequireUserAuth><ListItemPage /></RequireUserAuth>} />
         <Route path="/items/mine" element={<RequireUserAuth><MyListingsPage /></RequireUserAuth>} />
+        <Route path="/deals" element={<RequireUserAuth><DealsPage /></RequireUserAuth>} />
+        <Route path="/deals/join" element={<RequireUserAuth><DealJoinPage /></RequireUserAuth>} />
 
         <Route path="/" element={<Layout><ArchiveLibraryPage /></Layout>} />
         <Route path="/library" element={<Layout><ArchiveLibraryPage /></Layout>} />

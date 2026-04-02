@@ -1,6 +1,31 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { apiDelete, apiGet, apiPost, apiPut } from '../lib/api';
+import {
+  apiDelete,
+  apiGet,
+  apiPost,
+  apiPut,
+  createDealInvite,
+  fetchDeals,
+  fetchDealById,
+  generateDealFraudPacket,
+  fetchDealResolutionCertificate,
+  fetchDealExportBundle,
+  mockFundDealEscrow,
+  fetchDealDispute,
+  addDealDisputeEvidence,
+  fetchDealOutboundQueue,
+  updateDealOutboundQueueStatus,
+  autoAssignDealMediator,
+  requestDealCustomMediator,
+  approveDealMediator,
+  openDealDispute,
+  prepareDealEscrow,
+  refundDealEscrow,
+  releaseDealEscrow,
+  resolveDealDispute,
+  confirmDealReceipt,
+} from '../lib/api';
 import { buildDealMessageTypedData, buildDealEvidenceTypedData, signTypedData } from '../lib/eip712';
 import { getErrorMessage, withRetry } from '../lib/errorUtils';
 import ErrorBanner from '../components/ErrorBanner.jsx';
@@ -56,6 +81,119 @@ export default function DealsPage() {
   const [escrowLoading, setEscrowLoading] = useState(false);
   const [wallet, setWallet] = useState({ address: '', chainId: '', connecting: false });
   const [requireSignature, setRequireSignature] = useState(true);
+  const [actionBusy, setActionBusy] = useState(false);
+  const [disputeReason, setDisputeReason] = useState('');
+  const [disputeDetails, setDisputeDetails] = useState('');
+  const [reportPacket, setReportPacket] = useState(null);
+  const [mockProofNote, setMockProofNote] = useState('Parties confirmed mock transfer via screenshots');
+  const [mockProofUrl, setMockProofUrl] = useState('');
+  const [disputeData, setDisputeData] = useState(null);
+  const [disputeEvidenceNote, setDisputeEvidenceNote] = useState('');
+  const [disputeEvidenceUrl, setDisputeEvidenceUrl] = useState('');
+  const [resolutionCode, setResolutionCode] = useState('');
+  const [resolutionCertificate, setResolutionCertificate] = useState(null);
+  const [exportBundle, setExportBundle] = useState(null);
+  const [queueStatusFilter, setQueueStatusFilter] = useState('all');
+  const [outboundQueue, setOutboundQueue] = useState([]);
+  const [queueStatusDrafts, setQueueStatusDrafts] = useState({});
+  const [mediatorRequest, setMediatorRequest] = useState({ name: '', email: '', contact: '', notes: '' });
+  const [mediatorApproval, setMediatorApproval] = useState({ mediatorUserId: '', note: '' });
+
+  const viewerId = useMemo(() => String(profile?._id || profile?.id || ''), [profile?._id, profile?.id]);
+
+  const viewerRole = useMemo(() => {
+    if (!selected) return 'none';
+    if (profile?.role === 'admin') return 'admin';
+    if (!viewerId) return 'none';
+    if (String(selected.ownerId || '') === viewerId) return 'seller';
+    if (String(selected.counterparty?.userId || '') === viewerId) return 'buyer';
+    if (String(selected.mediatorId || '') === viewerId) return 'mediator';
+    return 'none';
+  }, [selected, profile?.role, viewerId]);
+
+  const escrowStatus = String(selected?.escrow?.status || 'draft');
+  const disputeStatus = String(disputeData?.status || selected?.dispute?.status || 'none');
+  const isEscrowFinalized = escrowStatus === 'released' || escrowStatus === 'refunded';
+
+  const canMockFund = useMemo(() => {
+    if (!selected) return false;
+    if (isEscrowFinalized) return false;
+    const roleAllowed = ['buyer', 'seller', 'mediator', 'admin'].includes(viewerRole);
+    const statusAllowed = ['draft', 'funded_mock', 'funded_live', 'awaiting_receipt', 'disputed'].includes(escrowStatus);
+    return roleAllowed && statusAllowed;
+  }, [selected, isEscrowFinalized, viewerRole, escrowStatus]);
+
+  const canConfirmReceipt = useMemo(() => {
+    if (!selected) return false;
+    const roleAllowed = ['buyer', 'admin'].includes(viewerRole);
+    const statusAllowed = ['funded_mock', 'funded_live', 'awaiting_receipt'].includes(escrowStatus);
+    return roleAllowed && statusAllowed && disputeStatus !== 'open';
+  }, [selected, viewerRole, escrowStatus, disputeStatus]);
+
+  const canRelease = useMemo(() => {
+    if (!selected || isEscrowFinalized) return false;
+    const roleAllowed = ['seller', 'mediator', 'admin'].includes(viewerRole);
+    const statusAllowed = ['buyer_confirmed', 'disputed', 'funded_mock', 'funded_live', 'awaiting_receipt'].includes(escrowStatus);
+    if (!roleAllowed || !statusAllowed) return false;
+    if (disputeStatus === 'open' && !['mediator', 'admin'].includes(viewerRole)) return false;
+    return true;
+  }, [selected, isEscrowFinalized, viewerRole, escrowStatus, disputeStatus]);
+
+  const canRefund = useMemo(() => {
+    if (!selected || isEscrowFinalized) return false;
+    const roleAllowed = ['seller', 'mediator', 'admin'].includes(viewerRole);
+    const statusAllowed = ['funded_mock', 'funded_live', 'awaiting_receipt', 'buyer_confirmed', 'disputed'].includes(escrowStatus);
+    return roleAllowed && statusAllowed;
+  }, [selected, isEscrowFinalized, viewerRole, escrowStatus]);
+
+  const canOpenDispute = useMemo(() => {
+    if (!selected) return false;
+    const roleAllowed = ['buyer', 'seller', 'mediator', 'admin'].includes(viewerRole);
+    return roleAllowed && disputeStatus !== 'open' && escrowStatus !== 'draft';
+  }, [selected, viewerRole, disputeStatus, escrowStatus]);
+
+  const canResolveDisputeUi = useMemo(() => {
+    if (!selected) return false;
+    const roleAllowed = ['seller', 'mediator', 'admin'].includes(viewerRole);
+    return roleAllowed && disputeStatus === 'open';
+  }, [selected, viewerRole, disputeStatus]);
+
+  const canAddDisputeEvidenceUi = useMemo(() => {
+    if (!selected) return false;
+    const roleAllowed = ['buyer', 'seller', 'mediator', 'admin'].includes(viewerRole);
+    return roleAllowed && disputeStatus === 'open';
+  }, [selected, viewerRole, disputeStatus]);
+
+  const canAssignPlatformMediator = useMemo(() => {
+    if (!selected) return false;
+    return ['seller', 'admin'].includes(viewerRole);
+  }, [selected, viewerRole]);
+
+  const canRequestCustomMediator = useMemo(() => {
+    if (!selected) return false;
+    return ['buyer', 'seller', 'mediator', 'admin'].includes(viewerRole);
+  }, [selected, viewerRole]);
+
+  const canApproveMediator = useMemo(() => {
+    if (!selected) return false;
+    return viewerRole === 'admin';
+  }, [selected, viewerRole]);
+
+  const RESOLUTION_REASON_CODES = {
+    release: [
+      'BUYER_CONFIRMED_AUTHENTIC',
+      'MUTUAL_SETTLEMENT',
+      'EVIDENCE_FAVORS_SELLER',
+      'ADMIN_OVERRIDE_COMPLIANCE',
+    ],
+    refund: [
+      'COUNTERFEIT_OR_MISREPRESENTED',
+      'NON_DELIVERY',
+      'MATERIAL_BREACH',
+      'EVIDENCE_FAVORS_BUYER',
+      'ADMIN_OVERRIDE_COMPLIANCE',
+    ],
+  };
 
   const CHAINS = [
     { id: 1, name: 'Ethereum', hex: '0x1' },
@@ -138,7 +276,7 @@ export default function DealsPage() {
     setLoading(true);
     setError('');
     try {
-      const res = await withRetry(() => apiGet('/deals', { params: { limit: 50 } }));
+      const res = await withRetry(() => fetchDeals({ limit: 50 }));
       if (res?.ok && Array.isArray(res.items)) {
         setItems(res.items);
       } else {
@@ -157,7 +295,7 @@ export default function DealsPage() {
     setError('');
     setSelected(null);
     try {
-      const res = await apiGet(`/deals/${id}`);
+      const res = await fetchDealById(id);
       if (res?.ok && res.item) setSelected(res.item);
       else setError(res?.error || res?.message || 'Failed to load deal');
     } catch (e) {
@@ -172,6 +310,33 @@ export default function DealsPage() {
   useEffect(() => {
     if (selectedId) loadDeal(selectedId);
   }, [selectedId]);
+
+  useEffect(() => {
+    if (!selected?._id) {
+      setDisputeData(null);
+      setOutboundQueue([]);
+      return;
+    }
+    fetchDealDispute(selected._id)
+      .then((res) => {
+        if (res?.ok) setDisputeData(res.dispute || null);
+      })
+      .catch(() => {});
+
+    fetchDealOutboundQueue(selected._id, queueStatusFilter && queueStatusFilter !== 'all' ? { status: queueStatusFilter } : {})
+      .then((res) => {
+        if (res?.ok && Array.isArray(res.queue)) setOutboundQueue(res.queue);
+      })
+      .catch(() => {});
+  }, [selected?._id, selected?.dispute?.status, queueStatusFilter]);
+
+  useEffect(() => {
+    if (!selected?._id) return undefined;
+    const timer = window.setInterval(() => {
+      refreshSelected().catch(() => {});
+    }, 20000);
+    return () => window.clearInterval(timer);
+  }, [selected?._id, queueStatusFilter]);
 
   useEffect(() => {
     // Derive milestone hashes for the "contract draft" section (best-effort).
@@ -429,7 +594,7 @@ export default function DealsPage() {
     setInviteLoading(true);
     setError('');
     try {
-      const res = await apiPost(`/deals/${selected._id}/invite`, {});
+      const res = await createDealInvite(selected._id);
       if (!res?.ok || !res?.joinUrl) throw new Error(res?.error || res?.message || 'Failed to generate invite');
       setInviteLink(res.joinUrl);
       setInviteExpiresAt(res.expiresAt || '');
@@ -489,6 +654,411 @@ export default function DealsPage() {
     } catch (e) {
       const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
       setError(serverMsg || e.message || 'Failed to update milestone');
+    }
+  }
+
+  async function handlePrepareEscrow() {
+    if (!selected?._id) return;
+    setEscrowLoading(true);
+    setError('');
+    try {
+      const res = await prepareDealEscrow(selected._id, { ownerWallet: wallet.address || '' });
+      if (!res?.ok || !res.prepareEscrow) throw new Error(res?.error || res?.message || 'Failed to prepare escrow');
+      setEscrowPrepare(res.prepareEscrow);
+    } catch (e) {
+      const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
+      setError(serverMsg || e.message || 'Failed to prepare escrow');
+    } finally {
+      setEscrowLoading(false);
+    }
+  }
+
+  async function handleLinkContract(contractAddress) {
+    if (!selected?._id || !contractAddress) return;
+    setActionBusy(true);
+    setError('');
+    try {
+      const res = await apiPut(`/deals/${selected._id}`, { contractAddress });
+      if (!res?.ok || !res.item) throw new Error(res?.error || res?.message || 'Failed to link contract');
+      setSelected(res.item);
+    } catch (e) {
+      const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
+      setError(serverMsg || e.message || 'Failed to link contract');
+    } finally {
+      setActionBusy(false);
+    }
+  }
+
+  async function refreshSelected() {
+    if (!selected?._id) return;
+    const res = await fetchDealById(selected._id);
+    if (res?.ok && res?.item) setSelected(res.item);
+    const q = await fetchDealOutboundQueue(selected._id, queueStatusFilter && queueStatusFilter !== 'all' ? { status: queueStatusFilter } : {});
+    if (q?.ok && Array.isArray(q.queue)) setOutboundQueue(q.queue);
+  }
+
+  async function handleMockFundEscrow() {
+    if (!selected?._id) return;
+    if (!canMockFund) {
+      setError('Mock funding is not allowed for your role or current escrow state');
+      return;
+    }
+    setActionBusy(true);
+    setError('');
+    try {
+      const res = await mockFundDealEscrow(selected._id, {
+        amount: Number(selected.totalAmount || 0),
+        currency: selected.currency || 'USD',
+        proofNote: mockProofNote,
+        screenshotUrl: mockProofUrl,
+      });
+      if (!res?.ok || !res?.item) throw new Error(res?.error || res?.message || 'Failed to mock-fund escrow');
+      setSelected(res.item);
+    } catch (e) {
+      const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
+      setError(serverMsg || e.message || 'Failed to mock-fund escrow');
+    } finally {
+      setActionBusy(false);
+    }
+  }
+
+  async function handleConfirmReceipt() {
+    if (!selected?._id) return;
+    if (!canConfirmReceipt) {
+      setError('Receipt confirmation is not allowed for your role or current escrow state');
+      return;
+    }
+    setActionBusy(true);
+    setError('');
+    try {
+      const res = await confirmDealReceipt(selected._id);
+      if (!res?.ok || !res?.item) throw new Error(res?.error || res?.message || 'Failed to confirm receipt');
+      setSelected(res.item);
+    } catch (e) {
+      const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
+      setError(serverMsg || e.message || 'Failed to confirm receipt');
+    } finally {
+      setActionBusy(false);
+    }
+  }
+
+  async function handleReleaseEscrow() {
+    if (!selected?._id) return;
+    if (!canRelease) {
+      setError('Release is not allowed for your role or current escrow/dispute state');
+      return;
+    }
+    setActionBusy(true);
+    setError('');
+    try {
+      const res = await releaseDealEscrow(selected._id);
+      if (!res?.ok || !res?.item) throw new Error(res?.error || res?.message || 'Failed to release escrow');
+      setSelected(res.item);
+    } catch (e) {
+      const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
+      setError(serverMsg || e.message || 'Failed to release escrow');
+    } finally {
+      setActionBusy(false);
+    }
+  }
+
+  async function handleRefundEscrow() {
+    if (!selected?._id) return;
+    if (!canRefund) {
+      setError('Refund is not allowed for your role or current escrow state');
+      return;
+    }
+    setActionBusy(true);
+    setError('');
+    try {
+      const res = await refundDealEscrow(selected._id);
+      if (!res?.ok || !res?.item) throw new Error(res?.error || res?.message || 'Failed to refund escrow');
+      setSelected(res.item);
+    } catch (e) {
+      const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
+      setError(serverMsg || e.message || 'Failed to refund escrow');
+    } finally {
+      setActionBusy(false);
+    }
+  }
+
+  async function handleOpenDispute() {
+    if (!selected?._id) return;
+    if (!canOpenDispute) {
+      setError('Dispute opening is not allowed for your role or current escrow/dispute state');
+      return;
+    }
+    if (!disputeReason.trim()) {
+      setError('Dispute reason is required');
+      return;
+    }
+    setActionBusy(true);
+    setError('');
+    try {
+      const res = await openDealDispute(selected._id, {
+        reason: disputeReason,
+        details: disputeDetails,
+      });
+      if (!res?.ok || !res?.item) throw new Error(res?.error || res?.message || 'Failed to open dispute');
+      setSelected(res.item);
+      setDisputeData(res.item?.dispute || null);
+      setDisputeReason('');
+      setDisputeDetails('');
+    } catch (e) {
+      const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
+      setError(serverMsg || e.message || 'Failed to open dispute');
+    } finally {
+      setActionBusy(false);
+    }
+  }
+
+  async function handleResolveDispute(decision) {
+    if (!selected?._id) return;
+    if (!canResolveDisputeUi) {
+      setError('Dispute resolution is not allowed for your role or current dispute state');
+      return;
+    }
+    const validCodes = RESOLUTION_REASON_CODES[decision] || [];
+    if (!resolutionCode || !validCodes.includes(resolutionCode)) {
+      setError(`Pick a valid ${decision} reason code before resolving`);
+      return;
+    }
+    setActionBusy(true);
+    setError('');
+    try {
+      const res = await resolveDealDispute(selected._id, {
+        decision,
+        resolutionCode,
+        note: 'Resolved from deals workspace',
+      });
+      if (!res?.ok || !res?.item) throw new Error(res?.error || res?.message || 'Failed to resolve dispute');
+      setSelected(res.item);
+      setDisputeData(res.item?.dispute || null);
+      setResolutionCode('');
+    } catch (e) {
+      const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
+      setError(serverMsg || e.message || 'Failed to resolve dispute');
+    } finally {
+      setActionBusy(false);
+    }
+  }
+
+  async function handleAddDisputeEvidence() {
+    if (!selected?._id) return;
+    if (!canAddDisputeEvidenceUi) {
+      setError('Adding dispute evidence is not allowed right now');
+      return;
+    }
+    if (!disputeEvidenceNote.trim() && !disputeEvidenceUrl.trim()) {
+      setError('Add a dispute note or evidence URL first');
+      return;
+    }
+    setActionBusy(true);
+    setError('');
+    try {
+      const res = await addDealDisputeEvidence(selected._id, {
+        note: disputeEvidenceNote,
+        attachmentUrl: disputeEvidenceUrl,
+      });
+      if (!res?.ok || !res?.item) throw new Error(res?.error || res?.message || 'Failed to add dispute evidence');
+      setSelected(res.item);
+      setDisputeData(res.dispute || res.item?.dispute || null);
+      setDisputeEvidenceNote('');
+      setDisputeEvidenceUrl('');
+    } catch (e) {
+      const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
+      setError(serverMsg || e.message || 'Failed to add dispute evidence');
+    } finally {
+      setActionBusy(false);
+    }
+  }
+
+  async function handleAssignPlatformMediator() {
+    if (!selected?._id) return;
+    if (!canAssignPlatformMediator) {
+      setError('Only seller/admin can assign platform mediator');
+      return;
+    }
+    setActionBusy(true);
+    setError('');
+    try {
+      const res = await autoAssignDealMediator(selected._id, { note: 'Platform mediator assignment requested from workspace' });
+      if (!res?.ok || !res?.item) throw new Error(res?.error || res?.message || 'Failed to assign mediator');
+      setSelected(res.item);
+    } catch (e) {
+      const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
+      setError(serverMsg || e.message || 'Failed to assign mediator');
+    } finally {
+      setActionBusy(false);
+    }
+  }
+
+  async function handleRequestCustomMediator() {
+    if (!selected?._id) return;
+    if (!canRequestCustomMediator) {
+      setError('You are not allowed to request a custom mediator on this deal');
+      return;
+    }
+    if (!mediatorRequest.name.trim() && !mediatorRequest.email.trim() && !mediatorRequest.contact.trim()) {
+      setError('Provide mediator name, email, or contact');
+      return;
+    }
+    setActionBusy(true);
+    setError('');
+    try {
+      const res = await requestDealCustomMediator(selected._id, {
+        name: mediatorRequest.name,
+        email: mediatorRequest.email,
+        contact: mediatorRequest.contact,
+        notes: mediatorRequest.notes,
+      });
+      if (!res?.ok || !res?.item) throw new Error(res?.error || res?.message || 'Failed to request custom mediator');
+      setSelected(res.item);
+      setMediatorRequest({ name: '', email: '', contact: '', notes: '' });
+    } catch (e) {
+      const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
+      setError(serverMsg || e.message || 'Failed to request custom mediator');
+    } finally {
+      setActionBusy(false);
+    }
+  }
+
+  async function handleApproveMediator(action) {
+    if (!selected?._id) return;
+    if (!canApproveMediator) {
+      setError('Only admin can approve or decline mediator requests');
+      return;
+    }
+    setActionBusy(true);
+    setError('');
+    try {
+      const res = await approveDealMediator(selected._id, {
+        action,
+        mediatorUserId: mediatorApproval.mediatorUserId,
+        note: mediatorApproval.note,
+      });
+      if (!res?.ok || !res?.item) throw new Error(res?.error || res?.message || 'Failed to process mediator approval');
+      setSelected(res.item);
+      setMediatorApproval({ mediatorUserId: '', note: '' });
+    } catch (e) {
+      const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
+      setError(serverMsg || e.message || 'Failed to process mediator approval');
+    } finally {
+      setActionBusy(false);
+    }
+  }
+
+  async function handleGenerateFraudPacket(sendRequested) {
+    if (!selected?._id) return;
+    setActionBusy(true);
+    setError('');
+    try {
+      const res = await generateDealFraudPacket(selected._id, {
+        outbound: {
+          sendRequested,
+          approvedByAdmin: viewerRole === 'admin',
+          targets: ['FTC', 'FIA Pakistan', 'FBI IC3', 'PGMA Compliance Desk'],
+        },
+      });
+      if (!res?.ok || !res?.packet) throw new Error(res?.error || res?.message || 'Failed to generate packet');
+      setReportPacket(res.packet);
+      await refreshSelected();
+    } catch (e) {
+      const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
+      setError(serverMsg || e.message || 'Failed to generate packet');
+    } finally {
+      setActionBusy(false);
+    }
+  }
+
+  async function handleGenerateResolutionCertificate() {
+    if (!selected?._id) return;
+    if (!['resolved_release', 'resolved_refund'].includes(disputeStatus)) {
+      setError('Resolution certificate is only available after the dispute is resolved');
+      return;
+    }
+    setActionBusy(true);
+    setError('');
+    try {
+      const res = await fetchDealResolutionCertificate(selected._id);
+      if (!res?.ok || !res?.certificate) throw new Error(res?.error || res?.message || 'Failed to generate resolution certificate');
+      setResolutionCertificate(res.certificate);
+      await refreshSelected();
+    } catch (e) {
+      const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
+      setError(serverMsg || e.message || 'Failed to generate resolution certificate');
+    } finally {
+      setActionBusy(false);
+    }
+  }
+
+  async function handleCopyResolutionCertificate() {
+    if (!resolutionCertificate) return;
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(resolutionCertificate, null, 2));
+    } catch (e) {
+      setError(e?.message || 'Failed to copy certificate');
+    }
+  }
+
+  async function handleDownloadResolutionCertificate() {
+    if (!resolutionCertificate) return;
+    const blob = new Blob([JSON.stringify(resolutionCertificate, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `deal-resolution-certificate-${resolutionCertificate.certificateId || selected?._id || 'export'}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  async function handleGenerateExportBundle() {
+    if (!selected?._id) return;
+    setActionBusy(true);
+    setError('');
+    try {
+      const res = await fetchDealExportBundle(selected._id, queueStatusFilter && queueStatusFilter !== 'all' ? { queueStatus: queueStatusFilter } : {});
+      if (!res?.ok || !res?.bundle) throw new Error(res?.error || res?.message || 'Failed to generate export bundle');
+      setExportBundle(res.bundle);
+      await refreshSelected();
+    } catch (e) {
+      const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
+      setError(serverMsg || e.message || 'Failed to generate export bundle');
+    } finally {
+      setActionBusy(false);
+    }
+  }
+
+  async function handleQueueStatusUpdate(packetId) {
+    if (!selected?._id || !packetId) return;
+    if (viewerRole !== 'admin') {
+      setError('Only admin can update outbound queue status');
+      return;
+    }
+    const draft = queueStatusDrafts[packetId] || { status: 'queued', lastError: '' };
+    if (!draft?.status) {
+      setError('Select a queue status first');
+      return;
+    }
+
+    setActionBusy(true);
+    setError('');
+    try {
+      const res = await updateDealOutboundQueueStatus(selected._id, packetId, {
+        status: draft.status,
+        lastError: draft.lastError,
+      });
+      if (!res?.ok) throw new Error(res?.error || res?.message || 'Failed to update outbound status');
+      const q = await fetchDealOutboundQueue(selected._id, queueStatusFilter && queueStatusFilter !== 'all' ? { status: queueStatusFilter } : {});
+      if (q?.ok && Array.isArray(q.queue)) setOutboundQueue(q.queue);
+      if (res?.item) setSelected(res.item);
+    } catch (e) {
+      const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
+      setError(serverMsg || e.message || 'Failed to update outbound status');
+    } finally {
+      setActionBusy(false);
     }
   }
 
@@ -949,6 +1519,205 @@ export default function DealsPage() {
                 ) : (
                   <div className="muted">No payments.</div>
                 )}
+
+                <h3>Escrow controls (live API + mock transfer lane)</h3>
+                <div className="subcard">
+                  <div className="muted small">
+                    Role: <strong>{viewerRole}</strong> · Escrow status: <strong>{selected.escrow?.status || 'draft'}</strong> · mode: <strong>{selected.escrow?.fundingMode || 'mock'}</strong>
+                  </div>
+                  <div className="row rowWrap" style={{ marginTop: '0.5rem' }}>
+                    <input
+                      value={mockProofNote}
+                      onChange={(e) => setMockProofNote(e.target.value)}
+                      placeholder="Mock transfer confirmation note"
+                    />
+                    <input
+                      value={mockProofUrl}
+                      onChange={(e) => setMockProofUrl(e.target.value)}
+                      placeholder="Screenshot URL (optional)"
+                    />
+                  </div>
+                  <div className="row rowWrap" style={{ marginTop: '0.5rem' }}>
+                    <button className="btn primary" type="button" disabled={actionBusy || !canMockFund} onClick={handleMockFundEscrow}>
+                      Mock fund escrow
+                    </button>
+                    <button className="btn ghost" type="button" disabled={actionBusy || !canConfirmReceipt} onClick={handleConfirmReceipt}>
+                      Buyer confirms receipt
+                    </button>
+                    <button className="btn ghost" type="button" disabled={actionBusy || !canRelease} onClick={handleReleaseEscrow}>
+                      Release funds
+                    </button>
+                    <button className="btn ghost" type="button" disabled={actionBusy || !canRefund} onClick={handleRefundEscrow}>
+                      Refund buyer
+                    </button>
+                  </div>
+                </div>
+
+                <h3>Dispute desk</h3>
+                <div className="subcard">
+                  <div className="muted small">
+                    Dispute status: <strong>{disputeStatus}</strong>
+                  </div>
+                  {disputeData?.resolutionCode ? (
+                    <div className="muted small" style={{ marginTop: '0.35rem' }}>
+                      Resolution code: <strong>{disputeData.resolutionCode}</strong>
+                    </div>
+                  ) : null}
+                  {disputeData?.resolutionHash ? (
+                    <div className="muted small" style={{ marginTop: '0.2rem', wordBreak: 'break-all' }}>
+                      Decision hash: <strong>{disputeData.resolutionHash}</strong>
+                    </div>
+                  ) : null}
+                  <div className="row rowWrap" style={{ marginTop: '0.5rem' }}>
+                    <button
+                      className="btn ghost"
+                      type="button"
+                      disabled={actionBusy || !['resolved_release', 'resolved_refund'].includes(disputeStatus)}
+                      onClick={handleGenerateResolutionCertificate}
+                    >
+                      Generate resolution certificate
+                    </button>
+                  </div>
+                  {resolutionCertificate ? (
+                    <div style={{ marginTop: '0.5rem' }}>
+                      <div className="row rowWrap" style={{ marginBottom: '0.5rem' }}>
+                        <button className="btn ghost" type="button" onClick={handleCopyResolutionCertificate}>
+                          Copy certificate
+                        </button>
+                        <button className="btn ghost" type="button" onClick={handleDownloadResolutionCertificate}>
+                          Download certificate
+                        </button>
+                      </div>
+                      <pre className="json">{JSON.stringify(resolutionCertificate, null, 2)}</pre>
+                    </div>
+                  ) : null}
+                  <div className="row rowWrap" style={{ marginTop: '0.5rem' }}>
+                    <input
+                      value={disputeReason}
+                      onChange={(e) => setDisputeReason(e.target.value)}
+                      placeholder="Reason (required to open dispute)"
+                    />
+                    <input
+                      value={disputeDetails}
+                      onChange={(e) => setDisputeDetails(e.target.value)}
+                      placeholder="Details"
+                    />
+                  </div>
+                  <div className="row rowWrap" style={{ marginTop: '0.5rem' }}>
+                    <select value={resolutionCode} onChange={(e) => setResolutionCode(e.target.value)}>
+                      <option value="">Select resolution code</option>
+                      {Object.entries(RESOLUTION_REASON_CODES).flatMap(([decision, codes]) =>
+                        codes.map((code) => (
+                          <option key={`${decision}-${code}`} value={code}>{decision}: {code}</option>
+                        ))
+                      )}
+                    </select>
+                    <button className="btn ghost" type="button" disabled={actionBusy || !canOpenDispute} onClick={handleOpenDispute}>
+                      Open dispute
+                    </button>
+                    <button className="btn ghost" type="button" disabled={actionBusy || !canResolveDisputeUi} onClick={() => handleResolveDispute('release')}>
+                      Resolve: release
+                    </button>
+                    <button className="btn ghost" type="button" disabled={actionBusy || !canResolveDisputeUi} onClick={() => handleResolveDispute('refund')}>
+                      Resolve: refund
+                    </button>
+                  </div>
+                  <div className="row rowWrap" style={{ marginTop: '0.5rem' }}>
+                    <input
+                      value={disputeEvidenceNote}
+                      onChange={(e) => setDisputeEvidenceNote(e.target.value)}
+                      placeholder="Dispute evidence note"
+                    />
+                    <input
+                      value={disputeEvidenceUrl}
+                      onChange={(e) => setDisputeEvidenceUrl(e.target.value)}
+                      placeholder="Attachment URL (optional)"
+                    />
+                    <button className="btn ghost" type="button" disabled={actionBusy || !canAddDisputeEvidenceUi} onClick={handleAddDisputeEvidence}>
+                      Add evidence
+                    </button>
+                  </div>
+                  {Array.isArray(disputeData?.evidence) && disputeData.evidence.length ? (
+                    <div className="stack" style={{ marginTop: '0.5rem' }}>
+                      {disputeData.evidence.slice(-10).map((ev) => (
+                        <div key={ev._id || `${ev.createdAt}-${ev.note}`} className="muted small">
+                          <strong>{ev.role || 'party'}</strong> · {ev.createdAt ? new Date(ev.createdAt).toLocaleString() : ''}
+                          {ev.note ? ` · ${ev.note}` : ''}
+                          {ev.attachmentUrl ? ` · ${ev.attachmentUrl}` : ''}
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+
+                <h3>Mediator controls</h3>
+                <div className="subcard">
+                  <div className="muted small">
+                    Mediator role: <strong>{viewerRole}</strong> · Current mediator: <strong>{selected.mediatorId || 'none'}</strong>
+                  </div>
+                  <div className="muted small" style={{ marginTop: '0.35rem' }}>
+                    Mediation mode: <strong>{selected.mediation?.mode || 'none'}</strong> · status: <strong>{selected.mediation?.status || 'none'}</strong>
+                  </div>
+
+                  <div className="row rowWrap" style={{ marginTop: '0.6rem' }}>
+                    <button className="btn ghost" type="button" disabled={actionBusy || !canAssignPlatformMediator} onClick={handleAssignPlatformMediator}>
+                      Assign platform mediator (admin)
+                    </button>
+                  </div>
+
+                  <div className="row rowWrap" style={{ marginTop: '0.6rem' }}>
+                    <input
+                      value={mediatorRequest.name}
+                      onChange={(e) => setMediatorRequest((p) => ({ ...p, name: e.target.value }))}
+                      placeholder="Trusted mediator name"
+                    />
+                    <input
+                      value={mediatorRequest.email}
+                      onChange={(e) => setMediatorRequest((p) => ({ ...p, email: e.target.value }))}
+                      placeholder="Trusted mediator email"
+                    />
+                    <input
+                      value={mediatorRequest.contact}
+                      onChange={(e) => setMediatorRequest((p) => ({ ...p, contact: e.target.value }))}
+                      placeholder="Contact/telegram/phone"
+                    />
+                    <input
+                      value={mediatorRequest.notes}
+                      onChange={(e) => setMediatorRequest((p) => ({ ...p, notes: e.target.value }))}
+                      placeholder="Request notes"
+                    />
+                    <button className="btn ghost" type="button" disabled={actionBusy || !canRequestCustomMediator} onClick={handleRequestCustomMediator}>
+                      Request trusted mediator
+                    </button>
+                  </div>
+
+                  {canApproveMediator ? (
+                    <div className="row rowWrap" style={{ marginTop: '0.6rem' }}>
+                      <input
+                        value={mediatorApproval.mediatorUserId}
+                        onChange={(e) => setMediatorApproval((p) => ({ ...p, mediatorUserId: e.target.value }))}
+                        placeholder="Optional approved mediator userId"
+                      />
+                      <input
+                        value={mediatorApproval.note}
+                        onChange={(e) => setMediatorApproval((p) => ({ ...p, note: e.target.value }))}
+                        placeholder="Admin approval note"
+                      />
+                      <button className="btn ghost" type="button" disabled={actionBusy} onClick={() => handleApproveMediator('approve')}>
+                        Approve mediator request
+                      </button>
+                      <button className="btn ghost" type="button" disabled={actionBusy} onClick={() => handleApproveMediator('decline')}>
+                        Decline mediator request
+                      </button>
+                    </div>
+                  ) : null}
+
+                  {selected.mediation?.customRequest ? (
+                    <div className="muted small" style={{ marginTop: '0.6rem' }}>
+                      Custom request: {selected.mediation.customRequest.name || 'n/a'} · {selected.mediation.customRequest.email || 'n/a'} · {selected.mediation.customRequest.contact || 'n/a'}
+                    </div>
+                  ) : null}
+                </div>
               </div>
 
               <div className="workspace-col">
@@ -1040,6 +1809,85 @@ export default function DealsPage() {
                     )}
                   </div>
                 )}
+
+                <h3>Global fraud response packet</h3>
+                <div className="subcard">
+                  <div className="row rowWrap">
+                    <button className="btn ghost" type="button" disabled={actionBusy} onClick={() => handleGenerateFraudPacket(false)}>
+                      Generate packet (download mode)
+                    </button>
+                    <button className="btn ghost" type="button" disabled={actionBusy || viewerRole !== 'admin'} onClick={() => handleGenerateFraudPacket(true)}>
+                      Generate + outbound request
+                    </button>
+                  </div>
+                  <div className="muted small" style={{ marginTop: '0.4rem' }}>
+                    Outbound dispatch enqueue is admin-only and tracked in queue states: queued, sent, failed.
+                  </div>
+                  <div className="row rowWrap" style={{ marginTop: '0.45rem' }}>
+                    <select value={queueStatusFilter} onChange={(e) => setQueueStatusFilter(e.target.value)}>
+                      <option value="all">All queue items</option>
+                      <option value="queued">Queued</option>
+                      <option value="sent">Sent</option>
+                      <option value="failed">Dead letters</option>
+                    </select>
+                    <button className="btn ghost" type="button" disabled={actionBusy} onClick={handleGenerateExportBundle}>
+                      Generate export bundle
+                    </button>
+                  </div>
+                  {exportBundle ? <pre className="json" style={{ marginTop: '0.5rem' }}>{JSON.stringify(exportBundle, null, 2)}</pre> : null}
+                  {reportPacket ? <pre className="json">{JSON.stringify(reportPacket, null, 2)}</pre> : null}
+                  {Array.isArray(outboundQueue) && outboundQueue.length ? (
+                    <div className="stack" style={{ marginTop: '0.7rem' }}>
+                      {outboundQueue.slice().reverse().map((q) => {
+                        const draftState = queueStatusDrafts[q.packetId] || { status: q.status || 'queued', lastError: q.lastError || '' };
+                        return (
+                          <div key={q._id || q.packetId} className="subcard">
+                            <div className="muted small">
+                              Packet <strong>{q.packetId}</strong> · status <strong>{q.status}</strong> · targets {Array.isArray(q.targets) ? q.targets.join(', ') : 'none'}
+                            </div>
+                            {q.status === 'failed' ? (
+                              <div className="muted small" style={{ marginTop: '0.25rem' }}>
+                                Dead letter · next attempt {q.nextAttemptAt ? new Date(q.nextAttemptAt).toLocaleString() : 'n/a'} · last error {q.lastError || 'n/a'}
+                              </div>
+                            ) : null}
+                            {viewerRole === 'admin' ? (
+                              <div className="row rowWrap" style={{ marginTop: '0.4rem' }}>
+                                <select
+                                  value={draftState.status}
+                                  onChange={(e) => setQueueStatusDrafts((prev) => ({
+                                    ...prev,
+                                    [q.packetId]: {
+                                      ...(prev[q.packetId] || draftState),
+                                      status: e.target.value,
+                                    },
+                                  }))}
+                                >
+                                  <option value="queued">queued</option>
+                                  <option value="sent">sent</option>
+                                  <option value="failed">failed</option>
+                                </select>
+                                <input
+                                  value={draftState.lastError || ''}
+                                  onChange={(e) => setQueueStatusDrafts((prev) => ({
+                                    ...prev,
+                                    [q.packetId]: {
+                                      ...(prev[q.packetId] || draftState),
+                                      lastError: e.target.value,
+                                    },
+                                  }))}
+                                  placeholder="Failure note (if failed)"
+                                />
+                                <button className="btn ghost" type="button" disabled={actionBusy} onClick={() => handleQueueStatusUpdate(q.packetId)}>
+                                  Update queue status
+                                </button>
+                              </div>
+                            ) : null}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : null}
+                </div>
               </div>
             </div>
           </section>

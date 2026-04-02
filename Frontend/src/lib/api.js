@@ -9,6 +9,33 @@ export const apiPut = (path, body, config) => api.put(path, body, config).then(r
 export const apiPatch = (path, body, config) => api.patch(path, body, config).then(r => r.data);
 export const apiDelete = (path, config) => api.delete(path, config).then(r => r.data);
 
+export const fetchDeals = (params = {}) => apiGet('/deals', { params });
+export const fetchDealById = (dealId) => apiGet(`/deals/${encodeURIComponent(dealId)}`);
+export const createDeal = (payload) => apiPost('/deals', payload);
+export const createDealInvite = (dealId) => apiPost(`/deals/${encodeURIComponent(dealId)}/invite`, {});
+export const joinDealAuthenticated = (inviteToken) => apiPost('/deals/join-authenticated', { inviteToken });
+export const postDealMessage = (dealId, payload) => apiPost(`/deals/${encodeURIComponent(dealId)}/messages`, payload);
+export const submitDealEvidence = (dealId, milestoneId, payload) =>
+  apiPost(`/deals/${encodeURIComponent(dealId)}/milestones/${encodeURIComponent(milestoneId)}/evidence`, payload);
+export const prepareDealEscrow = (dealId, payload = {}) => apiPost(`/deals/${encodeURIComponent(dealId)}/prepare-escrow`, payload);
+export const mockFundDealEscrow = (dealId, payload) => apiPost(`/deals/${encodeURIComponent(dealId)}/escrow/mock-fund`, payload);
+export const confirmDealReceipt = (dealId) => apiPost(`/deals/${encodeURIComponent(dealId)}/escrow/confirm-receipt`, {});
+export const releaseDealEscrow = (dealId) => apiPost(`/deals/${encodeURIComponent(dealId)}/escrow/release`, {});
+export const refundDealEscrow = (dealId) => apiPost(`/deals/${encodeURIComponent(dealId)}/escrow/refund`, {});
+export const openDealDispute = (dealId, payload) => apiPost(`/deals/${encodeURIComponent(dealId)}/dispute`, payload);
+export const fetchDealDispute = (dealId) => apiGet(`/deals/${encodeURIComponent(dealId)}/dispute`);
+export const addDealDisputeEvidence = (dealId, payload) => apiPost(`/deals/${encodeURIComponent(dealId)}/dispute/evidence`, payload);
+export const resolveDealDispute = (dealId, payload) => apiPut(`/deals/${encodeURIComponent(dealId)}/dispute/resolve`, payload);
+export const autoAssignDealMediator = (dealId, payload = {}) => apiPost(`/deals/${encodeURIComponent(dealId)}/mediator/auto-assign`, payload);
+export const requestDealCustomMediator = (dealId, payload) => apiPost(`/deals/${encodeURIComponent(dealId)}/mediator/request-custom`, payload);
+export const approveDealMediator = (dealId, payload) => apiPut(`/deals/${encodeURIComponent(dealId)}/mediator/approve`, payload);
+export const generateDealFraudPacket = (dealId, payload) => apiPost(`/deals/${encodeURIComponent(dealId)}/reports/fraud-packet`, payload);
+export const fetchDealResolutionCertificate = (dealId) => apiGet(`/deals/${encodeURIComponent(dealId)}/reports/resolution-certificate`);
+export const fetchDealExportBundle = (dealId, params = {}) => apiGet(`/deals/${encodeURIComponent(dealId)}/reports/export-bundle`, { params });
+export const fetchDealOutboundQueue = (dealId, params = {}) => apiGet(`/deals/${encodeURIComponent(dealId)}/reports/outbound-queue`, { params });
+export const updateDealOutboundQueueStatus = (dealId, packetId, payload) =>
+  apiPut(`/deals/${encodeURIComponent(dealId)}/reports/outbound/${encodeURIComponent(packetId)}/status`, payload);
+
 export const fetchAdminRuntimeConfig = () => apiGet('/admin/runtime-config');
 export const updateOpenClawRuntimeConfig = (payload) => apiPut('/admin/runtime-config/openclaw', payload);
 export const updatePayoutRuntimePolicy = (payload) => apiPut('/admin/runtime-config/payout-policy', payload);

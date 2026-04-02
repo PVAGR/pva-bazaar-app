@@ -23,6 +23,10 @@
   align-items: center;
 }
 
+.deals-actions .btn {
+  white-space: nowrap;
+}
+
 .muted {
   color: var(--text-secondary);
 }
@@ -119,6 +123,16 @@
   display: flex;
   gap: 8px;
   align-items: center;
+}
+
+.row > * {
+  min-width: 0;
+}
+
+.row > input,
+.row > select,
+.row > textarea {
+  flex: 1 1 180px;
 }
 
 .rowWrap {
@@ -228,11 +242,84 @@
 }
 
 @media (max-width: 900px) {
+  .deals-main {
+    padding: 12px;
+  }
+
+  .deals-header__row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .deals-actions {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+
   .grid2 {
     grid-template-columns: 1fr;
   }
   .workspace {
     grid-template-columns: 1fr;
+  }
+
+  .card,
+  .subcard,
+  .defaults {
+    padding: 12px;
+  }
+
+  .row {
+    align-items: stretch;
+  }
+
+  .row > input,
+  .row > select,
+  .row > textarea,
+  .row > .btn {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+
+  .deals-list,
+  .messages,
+  .stack {
+    gap: 8px;
+  }
+
+  .json {
+    font-size: 0.82rem;
+  }
+}
+
+@media (max-width: 560px) {
+  .deals-main {
+    padding: 10px;
+  }
+
+  .card {
+    margin: 12px 0;
+  }
+
+  .btn {
+    padding: 9px 10px;
+    font-size: 0.92rem;
+  }
+
+  .subcard,
+  .card,
+  .defaults,
+  .milestone,
+  .payment,
+  .message,
+  .deal-item {
+    border-radius: 10px;
+  }
+
+  .workspace-col h3,
+  .card h2,
+  .card h3 {
+    font-size: 1rem;
   }
 }
 
