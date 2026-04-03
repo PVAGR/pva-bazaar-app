@@ -12,7 +12,7 @@ import './DashboardTab.css';
 
 const logger = createLogger('DashboardTab');
 
-export default function DashboardTab({ onNavigateTab, onMakeOrder }) {
+export default function DashboardTab({ onNavigateTab }) {
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState({
     users: { total: 0, active: 0, admins: 0, newThisMonth: 0, loading: true },
@@ -348,10 +348,6 @@ export default function DashboardTab({ onNavigateTab, onMakeOrder }) {
           <button className="action-card" onClick={() => onNavigateTab?.('orders')}>
             <span className="action-icon">📦</span>
             <span className="action-label">Review Orders</span>
-          </button>
-          <button className="action-card" onClick={() => onMakeOrder?.()}>
-            <span className="action-icon">💼</span>
-            <span className="action-label">Make Order</span>
           </button>
           <button className="action-card" onClick={() => onNavigateTab?.('transactions')}>
             <span className="action-icon">💱</span>
