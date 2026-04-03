@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { apiGet, fetchTransactions } from '../lib/api';
+import { apiGet, fetchAdminTransactions } from '../lib/api';
 import { createLogger } from '../lib/logger';
 import './DashboardTab.css';
 
@@ -41,7 +41,7 @@ export default function DashboardTab({ onNavigateTab }) {
         apiGet('/archive').catch(() => ({ ok: false })),
         apiGet('/health').catch(() => ({ ok: false })),
         apiGet('/admin/cloud-storage').catch(() => ({ ok: false })),
-        fetchTransactions(6).catch(() => ({ ok: false })),
+        fetchAdminTransactions(6).catch(() => ({ ok: false })),
       ]);
 
       // Process users data

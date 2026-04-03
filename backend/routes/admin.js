@@ -6,6 +6,7 @@ const auth = require('../middleware/auth');
 const adminOnly = require('../middleware/adminOnly');
 const adminSession = require('../middleware/adminSession');
 const AdminRuntimeConfig = require('../models/AdminRuntimeConfig');
+const Order = require('../models/Order');
 const { createSystemEvent, dispatchToOpenClaw } = require('../utils/openclaw-events');
 const { getBuildInfo } = require('../lib/buildInfo');
 const { getRpcDiagnostics } = require('../utils/blockchain');
@@ -606,13 +607,24 @@ router.delete('/artifacts/:id', adminSession, async (req, res) => {
  */
 router.get('/stats', adminSession, async (req, res) => {
   try {
-    const [totalUsers, newUsersThisMonth, adminUsers, totalArtifacts, publishedArtifacts, draftArtifacts] = await Promise.all([
+    const [
+      totalUsers,
+      newUsersThisMonth,
+      adminUsers,
+      totalArtifacts,
+      publishedArtifacts,
+      draftArtifacts,
+      totalOrders,
+      paidOrders,
+    ] = await Promise.all([
       User.countDocuments(),
       User.countDocuments({ createdAt: { $gte: new Date(new Date().setDate(1)) } }),
       User.countDocuments({ role: 'admin' }),
       Artifact.countDocuments(),
       Artifact.countDocuments({ status: 'published' }),
       Artifact.countDocuments({ status: 'draft' }),
+      Order.countDocuments(),
+      Order.countDocuments({ paymentStatus: 'paid' }),
     ]);
 
     // Active = registered in the last 30 days (proxy for activity until event tracking is built)
@@ -631,6 +643,8 @@ router.get('/stats', adminSession, async (req, res) => {
         totalArtifacts,
         publishedArtifacts,
         draftArtifacts,
+        totalOrders,
+        paidOrders,
       },
     });
   } catch (error) {
@@ -678,6 +692,43 @@ router.get('/cloud-storage', adminSession, async (req, res) => {
   } catch (error) {
     console.error('Admin cloud-storage error:', error);
     res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+/**
+ * GET /api/admin/transactions/recent
+ * Admin-only recent transaction feed for dashboard and transactions tab.
+ */
+router.get('/transactions/recent', adminSession, async (req, res) => {
+  try {
+    const limit = Math.max(1, Math.min(Number(req.query.limit) || 25, 100));
+
+    const orders = await Order.find({})
+      .sort({ createdAt: -1, _id: -1 })
+      .limit(limit)
+      .select('_id itemSnapshot amountTotal currency createdAt paymentStatus customerEmail customerName buyerId attribution.creatorId')
+      .lean();
+
+    const items = orders.map((order) => ({
+      id: String(order._id),
+      type: order.attribution?.creatorId ? 'sale' : 'order',
+      title: order.itemSnapshot?.name || 'Order',
+      amountCents: Number(order.amountTotal || 0),
+      amount: Number(order.amountTotal || 0) / 100,
+      currency: order.currency || 'USD',
+      paymentStatus: order.paymentStatus || 'pending',
+      user: order.customerName || order.customerEmail || 'Unknown',
+      userEmail: order.customerEmail || '',
+      date: order.createdAt,
+      time: order.createdAt,
+      buyerId: order.buyerId ? String(order.buyerId) : null,
+      sellerId: order.attribution?.creatorId ? String(order.attribution.creatorId) : null,
+    }));
+
+    return res.json({ ok: true, items });
+  } catch (error) {
+    console.error('Admin recent transactions error:', error);
+    return res.status(500).json({ ok: false, error: error.message });
   }
 });
 

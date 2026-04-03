@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { fetchTransactions } from '../lib/api';
+import { fetchAdminTransactions } from '../lib/api';
 import { createLogger } from '../lib/logger';
 
 const logger = createLogger('TransactionsTab');
@@ -22,13 +22,13 @@ export default function TransactionsTab() {
       setLoading(true);
       setError('');
       try {
-        const data = await fetchTransactions(12);
+        const data = await fetchAdminTransactions(25);
         if (cancelled) return;
 
         if (Array.isArray(data)) {
           setTransactions(data);
-        } else if (data?.ok && Array.isArray(data.transactions)) {
-          setTransactions(data.transactions);
+        } else if (data?.ok && Array.isArray(data.items)) {
+          setTransactions(data.items);
         } else {
           setTransactions([]);
           setError(data?.message || 'No transactions found');
@@ -76,14 +76,19 @@ export default function TransactionsTab() {
             <article className="entry-card" key={`${tx.title || tx.user || 'tx'}-${index}`}>
               <div className="entry-meta" style={{ display: 'flex', justifyContent: 'space-between', gap: '0.75rem' }}>
                 <span className="pill">{tx.type || 'transaction'}</span>
-                <span>{formatTime(tx.time)}</span>
+                <span>{formatTime(tx.time || tx.date)}</span>
               </div>
               <h3 style={{ marginTop: '0.5rem' }}>{tx.title || 'Unnamed transaction'}</h3>
               <p className="entry-excerpt" style={{ marginBottom: '0.5rem' }}>
-                {tx.user ? `User: ${tx.user}` : 'User unavailable'}
+                {tx.user ? `User: ${tx.user}` : tx.userEmail ? `User: ${tx.userEmail}` : 'User unavailable'}
               </p>
               <div className="entry-tags">
-                {tx.amount && <span className="pill">{tx.amount}</span>}
+                {(tx.amount || tx.amount === 0) && (
+                  <span className="pill">
+                    {`${tx.currency || 'USD'} ${(Number(tx.amount || 0)).toFixed(2)}`}
+                  </span>
+                )}
+                {tx.paymentStatus && <span className="pill">{tx.paymentStatus}</span>}
               </div>
             </article>
           ))}

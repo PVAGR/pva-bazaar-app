@@ -48,6 +48,8 @@ export const executeSolanaTestFlow = (payload) => apiPost('/solana/execute-test-
 export const directSolanaTransfer = (payload) => apiPost('/solana/direct-transfer', payload);
 export const fetchAutopilotRuns = (limit = 30) => apiGet(`/solana/autopilot-runs?limit=${limit}`);
 export const fetchTransactions = (limit = 10) => apiGet('/transactions', { params: { limit } });
+export const fetchAdminTransactions = (limit = 25) =>
+  apiGet('/admin/transactions/recent', { params: { limit } });
 
 /**
  * Upload a FormData payload (multipart/form-data).

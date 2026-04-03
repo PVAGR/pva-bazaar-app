@@ -34,6 +34,11 @@ import './AdminPage.css';
 const logger = createLogger('AdminPage');
 
 export default function AdminPage() {
+  const availableTabs = new Set([
+    'dashboard', 'orders', 'transactions', 'archive', 'marketplace', 'inquiries',
+    'users', 'attribution', 'payouts', 'settlements', 'cloud', 'library', 'api',
+    'health', 'settings', 'openclaw', 'bounty-hunter', 'royalty-analytics', 'overview',
+  ]);
   const staleThresholdMs = ENV.STATUS_STALE_MS || 120000;
   const staleThresholdMinutes = Math.round((staleThresholdMs / 60000) * 10) / 10;
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -354,6 +359,32 @@ export default function AdminPage() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isAuthenticated]);
+
+  useEffect(() => {
+    const applyTabFromHash = () => {
+      const hash = window.location.hash || '';
+      const query = hash.includes('?') ? hash.split('?')[1] : '';
+      const params = new URLSearchParams(query);
+      const tab = params.get('tab');
+      if (tab && availableTabs.has(tab)) {
+        setActiveTab(tab);
+      }
+    };
+
+    applyTabFromHash();
+    window.addEventListener('hashchange', applyTabFromHash);
+    return () => window.removeEventListener('hashchange', applyTabFromHash);
+  }, []);
+
+  const handleTabChange = useCallback((nextTab) => {
+    setActiveTab(nextTab);
+    const hash = window.location.hash || '#/admin';
+    const base = hash.split('?')[0] || '#/admin';
+    const nextHash = `${base}?tab=${encodeURIComponent(nextTab)}`;
+    if (window.location.hash !== nextHash) {
+      window.history.replaceState(null, '', nextHash);
+    }
+  }, []);
 
   useEffect(() => {
     if (!isAuthenticated) return undefined;
@@ -809,12 +840,12 @@ export default function AdminPage() {
           </div>
         </div>
         <AdminNav />
-        <AdminTabs activeTab={activeTab} onTabChange={setActiveTab} inquiryCounts={inquiryCounts} />
+        <AdminTabs activeTab={activeTab} onTabChange={handleTabChange} inquiryCounts={inquiryCounts} />
         <div className="admin-container">
           {/* Dashboard Tab - Overview */}
           {activeTab === 'dashboard' && (
             <ErrorBoundary>
-              <DashboardTab onNavigateTab={setActiveTab} />
+              <DashboardTab onNavigateTab={handleTabChange} />
             </ErrorBoundary>
           )}
 
@@ -849,7 +880,7 @@ export default function AdminPage() {
           {/* Inquiries Tab */}
           {activeTab === 'inquiries' && (
             <ErrorBoundary>
-              <InquiriesTab onNavigateTab={setActiveTab} />
+              <InquiriesTab onNavigateTab={handleTabChange} />
             </ErrorBoundary>
           )}
 
@@ -940,7 +971,7 @@ export default function AdminPage() {
           {/* Overview Tab */}
           {activeTab === 'overview' && (
             <ErrorBoundary>
-              <OverviewTab />
+              <OverviewTab onNavigateTab={handleTabChange} />
             </ErrorBoundary>
           )}
         </div>

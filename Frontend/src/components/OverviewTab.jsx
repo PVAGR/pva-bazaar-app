@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
-import { apiGet, fetchTransactions } from '../lib/api';
+import { apiGet, fetchAdminTransactions, fetchOrders } from '../lib/api';
 import { createLogger } from '../lib/logger';
 import './OverviewTab.css';
 
 const logger = createLogger('OverviewTab');
 
-export default function OverviewTab() {
+export default function OverviewTab({ onNavigateTab }) {
   const [metrics, setMetrics] = useState({
     admins: 0,
     users: 0,
@@ -24,18 +24,25 @@ export default function OverviewTab() {
       // Fetch all metrics in parallel
       const [adminResp, usersResp, artifactsResp, ordersResp, txResp] = await Promise.all([
         apiGet('/admin/stats').catch(() => ({})),
-        apiGet('/users').catch(() => ({})),
+        apiGet('/admin/users?limit=1').catch(() => ({})),
         apiGet('/items').catch(() => ({})),
-        apiGet('/orders').catch(() => ({})),
-        fetchTransactions(100).catch(() => []),
+        fetchOrders({ limit: 25 }).catch(() => ({})),
+        fetchAdminTransactions(100).catch(() => ({})),
       ]);
 
+      const stats = adminResp?.stats || {};
+      const txItems = Array.isArray(txResp?.items)
+        ? txResp.items
+        : Array.isArray(txResp)
+          ? txResp
+          : [];
+
       setMetrics({
-        admins: adminResp?.adminCount || 0,
-        users: Array.isArray(usersResp?.users) ? usersResp.users.length : usersResp?.count || 0,
+        admins: stats?.adminUsers || 0,
+        users: Number(stats?.totalUsers || 0) || (Array.isArray(usersResp?.users) ? usersResp.users.length : 0),
         artifacts: Array.isArray(artifactsResp?.items) ? artifactsResp.items.length : artifactsResp?.count || 0,
-        orders: Array.isArray(ordersResp?.orders) ? ordersResp.orders.length : ordersResp?.count || 0,
-        transactions: Array.isArray(txResp) ? txResp.length : 0,
+        orders: Number(stats?.totalOrders || 0) || (Array.isArray(ordersResp?.items) ? ordersResp.items.length : 0),
+        transactions: txItems.length,
         loading: false,
       });
     } catch (error) {
@@ -50,7 +57,7 @@ export default function OverviewTab() {
       title: '📦 Orders Management',
       description: 'View and manage all marketplace orders in one place',
       status: metrics.orders > 0 ? 'active' : 'ready',
-      link: '#/admin?tab=orders',
+      tab: 'orders',
       statsLabel: `${metrics.orders} orders`,
     },
     {
@@ -58,7 +65,7 @@ export default function OverviewTab() {
       title: '💱 Transaction Feed',
       description: 'Track all buy/sell activity and marketplace transactions',
       status: metrics.transactions > 0 ? 'active' : 'ready',
-      link: '#/admin?tab=transactions',
+      tab: 'transactions',
       statsLabel: `${metrics.transactions} transactions`,
     },
     {
@@ -66,7 +73,7 @@ export default function OverviewTab() {
       title: '📊 Dashboard',
       description: 'Business oversight with metrics and recent activity',
       status: 'active',
-      link: '#/admin?tab=dashboard',
+      tab: 'dashboard',
       statsLabel: 'Quick overview',
     },
     {
@@ -74,7 +81,7 @@ export default function OverviewTab() {
       title: '👥 Users Management',
       description: 'View and manage all registered users',
       status: metrics.users > 0 ? 'active' : 'ready',
-      link: '#/admin?tab=users',
+      tab: 'users',
       statsLabel: `${metrics.users} users`,
     },
     {
@@ -82,7 +89,7 @@ export default function OverviewTab() {
       title: '📚 Archive Library',
       description: 'Access the archive and lore entries',
       status: 'active',
-      link: '#/admin?tab=archive',
+      tab: 'archive',
       statsLabel: 'Content vault',
     },
     {
@@ -90,7 +97,7 @@ export default function OverviewTab() {
       title: '🛍️ Marketplace',
       description: 'Monitor marketplace activity and listings',
       status: 'active',
-      link: '#/admin?tab=marketplace',
+      tab: 'marketplace',
       statsLabel: `${metrics.artifacts} artifacts`,
     },
   ];
@@ -160,14 +167,19 @@ export default function OverviewTab() {
         <p className="section-description">All new admin tools are ready to use. Click any to jump there.</p>
         <div className="features-grid">
           {features.map(feature => (
-            <a key={feature.id} href={feature.link} className="feature-card">
+            <button
+              key={feature.id}
+              type="button"
+              className="feature-card"
+              onClick={() => onNavigateTab?.(feature.tab)}
+            >
               <div className="feature-header">
                 <h3>{feature.title}</h3>
                 <span className={`feature-status ${feature.status}`}>{feature.status}</span>
               </div>
               <p>{feature.description}</p>
               <div className="feature-stats">{feature.statsLabel}</div>
-            </a>
+            </button>
           ))}
         </div>
       </section>
@@ -189,30 +201,30 @@ export default function OverviewTab() {
       <section className="overview-section">
         <h2>⚙️ Admin Tools</h2>
         <div className="tools-grid">
-          <a href="#/admin?tab=users" className="tool-button">
+          <button type="button" className="tool-button" onClick={() => onNavigateTab?.('users')}>
             <span>👥 Manage Users</span>
             <small>View and manage all registered users</small>
-          </a>
-          <a href="#/admin?tab=marketplace" className="tool-button">
+          </button>
+          <button type="button" className="tool-button" onClick={() => onNavigateTab?.('marketplace')}>
             <span>🛍️ View Marketplace</span>
             <small>Monitor all artifacts and listings</small>
-          </a>
-          <a href="#/admin?tab=orders" className="tool-button">
+          </button>
+          <button type="button" className="tool-button" onClick={() => onNavigateTab?.('orders')}>
             <span>📦 View Orders</span>
             <small>Check order status and history</small>
-          </a>
-          <a href="#/admin?tab=transactions" className="tool-button">
+          </button>
+          <button type="button" className="tool-button" onClick={() => onNavigateTab?.('transactions')}>
             <span>💱 View Transactions</span>
             <small>Monitor all marketplace transactions</small>
-          </a>
-          <a href="#/admin?tab=payouts" className="tool-button">
+          </button>
+          <button type="button" className="tool-button" onClick={() => onNavigateTab?.('payouts')}>
             <span>💰 Payout Settings</span>
             <small>Configure payout preferences</small>
-          </a>
-          <a href="#/admin?tab=settings" className="tool-button">
+          </button>
+          <button type="button" className="tool-button" onClick={() => onNavigateTab?.('settings')}>
             <span>⚙️ Admin Settings</span>
             <small>Configure admin preferences</small>
-          </a>
+          </button>
         </div>
       </section>
 

@@ -9,8 +9,8 @@ const { requireAdmin } = require("../middleware/adminOnly");
 const { createTransactionEvent, dispatchToOpenClaw } = require('../utils/openclaw-events');
 const { authMiddleware } = require('../middleware/auth');
 
-// GET /api/orders (authenticated user - user's own orders)
-router.get('/', authMiddleware, async (req, res) => {
+// GET /api/orders/mine (authenticated user - user's own orders)
+router.get('/mine', authMiddleware, async (req, res) => {
   try {
     const limit = Math.min(Number(req.query.limit) || 25, 100);
     const cursor = req.query.cursor;

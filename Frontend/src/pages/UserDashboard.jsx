@@ -55,7 +55,7 @@ export default function UserDashboard() {
   async function loadDashboardData() {
     try {
       const results = await Promise.allSettled([
-        apiGet('/orders').catch(() => ({ error: 'Error loading orders' })),
+        apiGet('/orders/mine').catch(() => ({ error: 'Error loading orders' })),
         apiGet('/items/mine').catch(() => ({ error: 'Error loading items' })),
         apiGet('/transactions?limit=10').catch(() => []),
         apiGet('/items?limit=100').catch(() => ({})),
@@ -64,13 +64,28 @@ export default function UserDashboard() {
       ]);
 
       const [ordersR, itemsR, txR, mpR, escrowR, salesR] = results;
+      const orderItems = Array.isArray(ordersR.value?.items)
+        ? ordersR.value.items
+        : Array.isArray(ordersR.value?.orders)
+          ? ordersR.value.orders
+          : [];
+      const txItems = Array.isArray(txR.value)
+        ? txR.value
+        : Array.isArray(txR.value?.items)
+          ? txR.value.items
+          : [];
+      const escrowItems = Array.isArray(escrowR.value?.items)
+        ? escrowR.value.items
+        : Array.isArray(escrowR.value)
+          ? escrowR.value
+          : [];
 
       setDashboardData({
-        userOrders: ordersR.status === 'fulfilled' ? (Array.isArray(ordersR.value?.orders) ? ordersR.value.orders : []) : [],
+        userOrders: ordersR.status === 'fulfilled' ? orderItems : [],
         userItems: itemsR.status === 'fulfilled' ? (Array.isArray(itemsR.value?.items) ? itemsR.value.items : []) : [],
-        userTransactions: txR.status === 'fulfilled' ? txR.value : [],
+        userTransactions: txR.status === 'fulfilled' ? txItems : [],
         marketplaceStats: mpR.status === 'fulfilled' ? mpR.value : { totalItems: 0, totalSales: 0 },
-        escrowStatus: escrowR.status === 'fulfilled' ? escrowR.value : [],
+        escrowStatus: escrowR.status === 'fulfilled' ? escrowItems : [],
         salesMetrics: salesR.status === 'fulfilled' ? salesR.value : { totalSales: 0, thisMonth: 0, thisWeek: 0 },
         loading: false,
         error: null,
@@ -104,6 +119,40 @@ export default function UserDashboard() {
     { id: 'sales', label: '💰 Sales', icon: '💰' },
     { id: 'analytics', label: '📈 Analytics', icon: '📈' },
   ];
+
+  const toAmount = (value) => {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return 0;
+    if (Math.abs(numeric) >= 1000 && Number.isInteger(numeric)) {
+      return numeric / 100;
+    }
+    return numeric;
+  };
+
+  const now = Date.now();
+  const thirtyDaysAgo = now - (30 * 24 * 60 * 60 * 1000);
+  const transactionCount = dashboardData.userTransactions.length;
+  const transactionVolume = dashboardData.userTransactions.reduce(
+    (sum, tx) => sum + Math.abs(toAmount(tx.amount)),
+    0,
+  );
+  const recentTransactionCount = dashboardData.userTransactions.filter((tx) => {
+    const when = new Date(tx.createdAt || tx.date || 0).getTime();
+    return Number.isFinite(when) && when >= thirtyDaysAgo;
+  }).length;
+
+  const orderPerformanceMap = dashboardData.userOrders.reduce((acc, order) => {
+    const name = order.itemName || order.itemSnapshot?.name || 'Unknown Item';
+    const amount = toAmount(order.totalPrice ?? (Number(order.amountTotal || 0) / 100));
+    const current = acc[name] || { name, count: 0, revenue: 0 };
+    current.count += 1;
+    current.revenue += amount;
+    acc[name] = current;
+    return acc;
+  }, {});
+  const topOrderItems = Object.values(orderPerformanceMap)
+    .sort((a, b) => b.revenue - a.revenue)
+    .slice(0, 5);
 
   return (
     <Layout>
@@ -169,8 +218,8 @@ export default function UserDashboard() {
                       {dashboardData.userTransactions.slice(0, 5).map((tx, i) => (
                         <div key={i} className="activity-item">
                           <span className="activity-type">{tx.type || 'Transaction'}</span>
-                          <span className="activity-date">{new Date(tx.createdAt || Date.now()).toLocaleDateString()}</span>
-                          <span className="activity-amount">${tx.amount?.toFixed(2) || '0.00'}</span>
+                          <span className="activity-date">{new Date(tx.createdAt || tx.date || Date.now()).toLocaleDateString()}</span>
+                          <span className="activity-amount">${(Number(tx.amount || 0)).toFixed(2)}</span>
                         </div>
                       ))}
                     </div>
@@ -205,13 +254,13 @@ export default function UserDashboard() {
                       <div key={i} className="order-card">
                         <div className="order-header">
                           <span className="order-id">Order #{order._id?.slice(-8) || i}</span>
-                          <span className={`order-status status-${order.status?.toLowerCase() || 'pending'}`}>
-                            {order.status || 'Pending'}
+                          <span className={`order-status status-${(order.status || order.paymentStatus || 'pending').toLowerCase()}`}>
+                            {order.status || order.paymentStatus || 'Pending'}
                           </span>
                         </div>
                         <div className="order-details">
-                          <p><strong>Item:</strong> {order.itemName || 'Unknown'}</p>
-                          <p><strong>Amount:</strong> ${order.totalPrice?.toFixed(2) || '0.00'}</p>
+                          <p><strong>Item:</strong> {order.itemName || order.itemSnapshot?.name || 'Unknown'}</p>
+                          <p><strong>Amount:</strong> ${((order.totalPrice ?? Number(order.amountTotal || 0) / 100) || 0).toFixed(2)}</p>
                           <p><strong>Date:</strong> {new Date(order.createdAt || Date.now()).toLocaleDateString()}</p>
                         </div>
                       </div>
@@ -260,11 +309,11 @@ export default function UserDashboard() {
                     {dashboardData.userTransactions.map((tx, i) => (
                       <div key={i} className="transaction-card">
                         <span className="tx-type">{tx.type || 'Transaction'}</span>
-                        <span className="tx-item">{tx.itemName || 'Unknown Item'}</span>
+                        <span className="tx-item">{tx.itemName || tx.title || 'Unknown Item'}</span>
                         <span className="tx-user">{tx.user?.name || 'User'}</span>
-                        <span className="tx-date">{new Date(tx.createdAt || Date.now()).toLocaleDateString()}</span>
+                        <span className="tx-date">{new Date(tx.createdAt || tx.date || Date.now()).toLocaleDateString()}</span>
                         <span className={`tx-amount ${tx.type?.toLowerCase() === 'sale' ? 'income' : 'expense'}`}>
-                          {tx.type?.toLowerCase() === 'sale' ? '+' : '-'} ${tx.amount?.toFixed(2) || '0.00'}
+                          {tx.type?.toLowerCase() === 'sale' ? '+' : '-'} ${(Number(tx.amount || 0)).toFixed(2)}
                         </span>
                       </div>
                     ))}
@@ -290,7 +339,7 @@ export default function UserDashboard() {
                         </div>
                         <div className="escrow-details">
                           <p><strong>Item:</strong> {escrow.itemName || 'Unknown'}</p>
-                          <p><strong>Amount:</strong> ${escrow.totalPrice?.toFixed(2) || '0.00'}</p>
+                          <p><strong>Amount:</strong> ${(Number((escrow.totalPrice ?? escrow.amount) || 0) / (Number((escrow.totalPrice ?? escrow.amount) || 0) > 1000 ? 100 : 1)).toFixed(2)}</p>
                           <p><strong>Release Date:</strong> {new Date(escrow.releaseDate || Date.now()).toLocaleDateString()}</p>
                           <p className="escrow-desc">{escrow.status === 'held' ? '🔒 Funds protected in escrow' : escrow.status === 'released' ? '✅ Transaction complete' : '⏳ Pending'}</p>
                         </div>
@@ -345,22 +394,30 @@ export default function UserDashboard() {
               <section className="tab-content analytics-content">
                 <h2>Analytics Preview</h2>
                 <div className="analytics-summary">
-                  <div className="chart-placeholder">
-                    <p>Sales Over Time</p>
-                    <div className="placeholder-bar" style={{ width: '40%' }} />
-                    <div className="placeholder-bar" style={{ width: '60%' }} />
-                    <div className="placeholder-bar" style={{ width: '45%' }} />
-                    <small>Chart will display when you have sales data</small>
+                  <div className="analytics-card">
+                    <p>Activity Snapshot</p>
+                    <div className="top-item">
+                      <span>Total Transactions</span>
+                      <span className="item-sales">{transactionCount}</span>
+                    </div>
+                    <div className="top-item">
+                      <span>30-Day Activity</span>
+                      <span className="item-sales">{recentTransactionCount}</span>
+                    </div>
+                    <div className="top-item">
+                      <span>Transaction Volume</span>
+                      <span className="item-sales">${transactionVolume.toFixed(2)}</span>
+                    </div>
                   </div>
-                  <div className="chart-placeholder">
-                    <p>Top Items by Sales</p>
-                    {dashboardData.userItems.slice(0, 3).map((item, i) => (
-                      <div key={i} className="top-item">
+                  <div className="analytics-card">
+                    <p>Top Items by Completed Orders</p>
+                    {topOrderItems.map((item) => (
+                      <div key={item.name} className="top-item">
                         <span>{item.name}</span>
-                        <span className="item-sales">~${item.price?.toFixed(2) || '0.00'}</span>
+                        <span className="item-sales">${item.revenue.toFixed(2)} ({item.count})</span>
                       </div>
                     ))}
-                    {dashboardData.userItems.length === 0 && <small>No items to show yet</small>}
+                    {topOrderItems.length === 0 && <small>No order data available yet</small>}
                   </div>
                 </div>
               </section>

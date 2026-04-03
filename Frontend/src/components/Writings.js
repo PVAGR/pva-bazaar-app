@@ -1,32 +1,48 @@
-import React from 'react';
-
-const writings = [
-  {
-    title: 'On the Nature of Change',
-    content: `Change is the only constant. To resist is to suffer; to accept is to grow. The archive is a living testament to the flux of thought and being.`,
-  },
-  {
-    title: 'Fragments on Identity',
-    content: `Identity is not a fixed point, but a constellation of moments, choices, and memories. Each entry is a star in the night sky of the self.`,
-  },
-  {
-    title: 'Notes on Belonging',
-    content: `To belong is not to fit, but to be accepted in one's wholeness. The archive is a home for every fragment.`,
-  },
-];
+import React, { useEffect, useState } from 'react';
+import { fetchArchiveEntries } from '../lib/api';
 
 export default function Writings() {
+  const [loading, setLoading] = useState(true);
+  const [items, setItems] = useState([]);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      setLoading(true);
+      setError('');
+      const response = await fetchArchiveEntries({ q: 'writing essay reflection', limit: 10, sort: 'new' });
+      if (cancelled) return;
+      if (response.ok) {
+        setItems(response.items || []);
+      } else {
+        setError(response.error || 'Unable to load writings');
+      }
+      setLoading(false);
+    };
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
     <section>
       <h2>Writings</h2>
-      <div>
-        {writings.map((w, i) => (
-          <article key={i} className="writing-entry">
-            <h3>{w.title}</h3>
-            <p>{w.content}</p>
-          </article>
-        ))}
-      </div>
+      {loading && <p>Loading writings...</p>}
+      {!loading && error && <p>{error}</p>}
+      {!loading && !error && items.length === 0 && <p>No writings were returned by the archive API.</p>}
+      {!loading && items.length > 0 && (
+        <div>
+          {items.map((entry) => (
+            <article key={entry.id || entry.externalId || entry._id} className="writing-entry">
+              <h3>{entry.title}</h3>
+              <p>{entry.excerpt || 'No summary available.'}</p>
+            </article>
+          ))}
+        </div>
+      )}
     </section>
   );
 }
