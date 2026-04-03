@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const express = require("express");
 const router = express.Router();
 const stripe = require("../lib/stripeClient");
+const jwt = require('jsonwebtoken');
 const Artifact = require("../models/Artifact");
 const { toPublicItem } = require("../lib/itemNormalize");
 const Order = require("../models/Order");
@@ -13,6 +14,18 @@ const { inspectTransaction, getExplorerTxUrl, normalizeNetwork } = require('../u
 const { completeSaleAcrossChannels } = require('../service/omnichannelSyncService');
 
 const PUBLIC_SITE_URL = process.env.PUBLIC_SITE_URL || "https://pvabazaar.org";
+
+function extractUserIdFromAuth(req) {
+  try {
+    const authHeader = req.headers.authorization || '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+    if (!token) return null;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    return decoded?.id || null;
+  } catch (_) {
+    return null;
+  }
+}
 
 function getCryptoQuoteRateUsdPerEth() {
   const raw = Number(process.env.CRYPTO_USD_PER_ETH || 3000);
@@ -46,6 +59,7 @@ function isMarkedSold(artifact) {
 // POST /api/checkout/create-session
 router.post("/create-session", async (req, res) => {
   try {
+    const buyerId = extractUserIdFromAuth(req);
     const { itemId } = req.body;
     if (!itemId) return res.status(400).json({ ok: false, error: "Missing itemId" });
     const artifact = await Artifact.findOne({ $or: [{ _id: itemId }, { slug: itemId }] });
@@ -62,6 +76,7 @@ router.post("/create-session", async (req, res) => {
 
     // Create Order (pending)
     const order = await Order.create({
+      buyerId,
       itemId: item.id,
       itemSnapshot: {
         name: item.name,

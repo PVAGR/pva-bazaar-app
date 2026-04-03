@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { apiGet } from '../lib/api';
+import { apiGet, fetchTransactions } from '../lib/api';
 import { createLogger } from '../lib/logger';
 import './DashboardTab.css';
 
@@ -20,6 +20,7 @@ export default function DashboardTab({ onNavigateTab }) {
     archive: { total: 0, categories: {}, loading: true },
     health: { status: 'unknown', timestamp: null, loading: true },
     cloudStorage: { files: 0, totalSize: 0, loading: true },
+    recentTransactions: { loading: true, items: [] },
   });
   const [error, setError] = useState(null);
   const [lastRefresh, setLastRefresh] = useState(new Date());
@@ -34,12 +35,13 @@ export default function DashboardTab({ onNavigateTab }) {
     
     try {
       // Load data from all endpoints in parallel
-      const [usersResponse, itemsResponse, archiveResponse, healthResponse, cloudResponse] = await Promise.allSettled([
+      const [usersResponse, itemsResponse, archiveResponse, healthResponse, cloudResponse, transactionsResponse] = await Promise.allSettled([
         apiGet('/admin/stats'),
         apiGet('/items').catch(() => ({ ok: false })),
         apiGet('/archive').catch(() => ({ ok: false })),
         apiGet('/health').catch(() => ({ ok: false })),
         apiGet('/admin/cloud-storage').catch(() => ({ ok: false })),
+        fetchTransactions(6).catch(() => ({ ok: false })),
       ]);
 
       // Process users data
@@ -94,6 +96,14 @@ export default function DashboardTab({ onNavigateTab }) {
           }
         : { files: 0, totalSize: 0, configuredProviders: 0, loading: false };
 
+      const txData = transactionsResponse.status === 'fulfilled' && (
+        Array.isArray(transactionsResponse.value)
+          ? transactionsResponse.value
+          : Array.isArray(transactionsResponse.value?.transactions)
+            ? transactionsResponse.value.transactions
+            : []
+      );
+
       setDashboardData({
         users: usersData,
         items: {
@@ -106,6 +116,7 @@ export default function DashboardTab({ onNavigateTab }) {
         archive: archiveData,
         health: healthData,
         cloudStorage: cloudData,
+        recentTransactions: { loading: false, items: txData },
       });
 
       setLastRefresh(new Date());
@@ -122,7 +133,7 @@ export default function DashboardTab({ onNavigateTab }) {
     const k = 1024;
     const sizes = ['B', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    return `${Math.round((bytes / Math.pow(k, i)) * 100) / 100} ${sizes[i]}`;
   };
 
   const getStatusColor = (status) => {
@@ -203,9 +214,9 @@ export default function DashboardTab({ onNavigateTab }) {
             </div>
           </div>
           <div className="metric-footer">
-            <a href="#" onClick={(e) => { e.preventDefault(); onNavigateTab?.('users'); }}>
+            <button type="button" className="button" onClick={() => onNavigateTab?.('users')}>
               View Details →
-            </a>
+            </button>
           </div>
         </div>
 
@@ -232,9 +243,9 @@ export default function DashboardTab({ onNavigateTab }) {
             </div>
           </div>
           <div className="metric-footer">
-            <a href="#" onClick={(e) => { e.preventDefault(); onNavigateTab?.('marketplace'); }}>
+            <button type="button" className="button" onClick={() => onNavigateTab?.('marketplace')}>
               Manage Items →
-            </a>
+            </button>
           </div>
         </div>
 
@@ -261,9 +272,9 @@ export default function DashboardTab({ onNavigateTab }) {
             )}
           </div>
           <div className="metric-footer">
-            <a href="#" onClick={(e) => { e.preventDefault(); onNavigateTab?.('archive'); }}>
+            <button type="button" className="button" onClick={() => onNavigateTab?.('archive')}>
               View Archive →
-            </a>
+            </button>
           </div>
         </div>
 
@@ -290,17 +301,58 @@ export default function DashboardTab({ onNavigateTab }) {
             </div>
           </div>
           <div className="metric-footer">
-            <a href="#" onClick={(e) => { e.preventDefault(); onNavigateTab?.('cloud'); }}>
+            <button type="button" className="button" onClick={() => onNavigateTab?.('cloud')}>
               Manage Storage →
-            </a>
+            </button>
           </div>
         </div>
+      </div>
+
+      {/* Business Activity */}
+      <div className="section-card" style={{ marginTop: '1rem' }}>
+        <div className="section-heading">
+          <div>
+            <div className="pill">Business Activity</div>
+            <h3>Recent Transactions</h3>
+          </div>
+          <button className="button" type="button" onClick={() => onNavigateTab?.('transactions')}>
+            Open Transactions
+          </button>
+        </div>
+        {dashboardData.recentTransactions.loading ? (
+          <p>Loading recent transaction activity…</p>
+        ) : dashboardData.recentTransactions.items.length > 0 ? (
+          <div className="entry-list">
+            {dashboardData.recentTransactions.items.slice(0, 4).map((tx, index) => (
+              <article className="entry-card" key={`${tx.title || tx.user || 'tx'}-${index}`}>
+                <div className="entry-meta" style={{ display: 'flex', justifyContent: 'space-between', gap: '0.75rem' }}>
+                  <span className="pill">{tx.type || 'transaction'}</span>
+                  <span>{tx.time || 'n/a'}</span>
+                </div>
+                <h4 style={{ margin: '0.5rem 0 0.25rem' }}>{tx.title || 'Unnamed transaction'}</h4>
+                <p className="entry-excerpt" style={{ margin: 0 }}>
+                  {tx.user ? `${tx.user}` : 'User unavailable'} {tx.amount ? `· ${tx.amount}` : ''}
+                </p>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <p>No transaction activity available yet.</p>
+        )}
       </div>
 
       {/* Quick Actions */}
       <div className="quick-actions-panel">
         <h3>⚡ Quick Actions</h3>
         <div className="actions-grid">
+          <button className="action-card" onClick={() => onNavigateTab?.('orders')}>
+            <span className="action-icon">📦</span>
+            <span className="action-label">Review Orders</span>
+          </button>
+          <button className="action-card" onClick={() => onNavigateTab?.('transactions')}>
+            <span className="action-icon">💱</span>
+            <span className="action-label">Review Transactions</span>
+          </button>
           <button className="action-card" onClick={() => onNavigateTab?.('users')}>
             <span className="action-icon">👥</span>
             <span className="action-label">Manage Users</span>

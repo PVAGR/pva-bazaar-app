@@ -47,11 +47,31 @@ api.interceptors.response.use(
 
     // 401: redirect to login
     if (status === 401) {
-      const loginPath = "/admin/login";
-      localStorage.removeItem("token");
-      localStorage.removeItem("authToken");
-      localStorage.removeItem("jwt");
-      window.location.assign(loginPath);
+      const requestUrl = String(error?.config?.url || '');
+      const isAdminAuthRequest = /\/admin\/(login|signup|bootstrap-status)$/i.test(requestUrl);
+      if (isAdminAuthRequest) {
+        return Promise.reject(error);
+      }
+
+      try {
+        localStorage.removeItem("token");
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("jwt");
+        sessionStorage.removeItem("admin-auth");
+        sessionStorage.removeItem("admin-auth-version");
+        sessionStorage.removeItem("admin-login-time");
+      } catch (_err) {
+        // Ignore storage failures and continue with the forced session reset.
+      }
+
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event('admin-session-expired'));
+        const currentHash = window.location.hash || '';
+        const onAdminShell = currentHash.startsWith('#/admin');
+        if (!onAdminShell) {
+          window.location.assign('/#/admin');
+        }
+      }
       return Promise.reject(error);
     }
 

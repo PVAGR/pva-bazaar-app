@@ -26,6 +26,9 @@ import SettingsTab from '../components/SettingsTab.jsx';
 import OpenClawTab from '../components/OpenClawTab.jsx';
 import BountyHunterTab from '../components/BountyHunterTab.jsx';
 import RoyaltyAnalyticsTab from '../components/RoyaltyAnalyticsTab.jsx';
+import OverviewTab from '../components/OverviewTab.jsx';
+import AdminOrdersPage from './AdminOrdersPage.jsx';
+import TransactionsTab from '../components/TransactionsTab.jsx';
 import './AdminPage.css';
 
 const logger = createLogger('AdminPage');
@@ -86,6 +89,23 @@ export default function AdminPage() {
       sessionStorage.removeItem('admin-auth-version');
       setIsAuthenticated(false);
     }
+  }, []);
+
+  useEffect(() => {
+    const handleSessionExpired = () => {
+      setIsAuthenticated(false);
+      setUsername('');
+      setEmail('');
+      setFullName('');
+      setBootstrapCode('');
+      setPassword('');
+      setError('Your admin session expired. Please sign in again.');
+      sessionStorage.removeItem('admin-auth');
+      sessionStorage.removeItem('admin-auth-version');
+    };
+
+    window.addEventListener('admin-session-expired', handleSessionExpired);
+    return () => window.removeEventListener('admin-session-expired', handleSessionExpired);
   }, []);
 
   useEffect(() => {
@@ -311,14 +331,23 @@ export default function AdminPage() {
       // Only trigger if Alt key is pressed (without Ctrl or Shift to avoid conflicts)
       if (!e.altKey || e.ctrlKey || e.shiftKey) return;
 
-      const tabs = ['dashboard', 'archive', 'marketplace', 'inquiries', 'users', 'attribution', 'payouts', 'settlements', 'cloud', 'library', 'api', 'health', 'openclaw', 'bounty-hunter', 'royalty-analytics', 'settings'];
-      let key = parseInt(e.key);
-      // Support Alt+0 for the last tab (settings)
-      if (e.key === '0') key = tabs.length;
+      const shortcutTabs = {
+        1: 'dashboard',
+        2: 'orders',
+        3: 'transactions',
+        4: 'archive',
+        5: 'marketplace',
+        6: 'users',
+        7: 'attribution',
+        8: 'payouts',
+        9: 'cloud',
+        0: 'settings',
+      };
 
-      if (key >= 1 && key <= tabs.length) {
+      const nextTab = shortcutTabs[e.key];
+      if (nextTab) {
         e.preventDefault();
-        setActiveTab(tabs[key - 1]);
+        setActiveTab(nextTab);
       }
     };
 
@@ -789,6 +818,20 @@ export default function AdminPage() {
             </ErrorBoundary>
           )}
 
+          {/* Orders Tab */}
+          {activeTab === 'orders' && (
+            <ErrorBoundary>
+              <AdminOrdersPage />
+            </ErrorBoundary>
+          )}
+
+          {/* Transactions Tab */}
+          {activeTab === 'transactions' && (
+            <ErrorBoundary>
+              <TransactionsTab />
+            </ErrorBoundary>
+          )}
+
           {/* Archive Tab */}
           {activeTab === 'archive' && (
             <ErrorBoundary>
@@ -891,6 +934,13 @@ export default function AdminPage() {
           {activeTab === 'royalty-analytics' && (
             <ErrorBoundary>
               <RoyaltyAnalyticsTab />
+            </ErrorBoundary>
+          )}
+
+          {/* Overview Tab */}
+          {activeTab === 'overview' && (
+            <ErrorBoundary>
+              <OverviewTab />
             </ErrorBoundary>
           )}
         </div>

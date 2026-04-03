@@ -7,6 +7,76 @@ const ProvenanceReviewLog = require('../models/ProvenanceReviewLog');
 const stripe = require("../lib/stripeClient");
 const { requireAdmin } = require("../middleware/adminOnly");
 const { createTransactionEvent, dispatchToOpenClaw } = require('../utils/openclaw-events');
+const { authMiddleware } = require('../middleware/auth');
+
+// GET /api/orders (authenticated user - user's own orders)
+router.get('/', authMiddleware, async (req, res) => {
+  try {
+    const limit = Math.min(Number(req.query.limit) || 25, 100);
+    const cursor = req.query.cursor;
+
+    const filter = { buyerId: req.user.id };
+    if (cursor) {
+      const decoded = Buffer.from(cursor, 'base64').toString('utf-8');
+      const [timestamp, id] = decoded.split('_');
+      filter.$or = [
+        { createdAt: { $lt: new Date(timestamp) } },
+        { createdAt: new Date(timestamp), _id: { $lt: id } },
+      ];
+    }
+
+    const orders = await Order.find(filter)
+      .sort({ createdAt: -1, _id: -1 })
+      .limit(limit + 1);
+
+    const hasMore = orders.length > limit;
+    const items = hasMore ? orders.slice(0, limit) : orders;
+
+    let nextCursor = null;
+    if (hasMore) {
+      const last = items[items.length - 1];
+      nextCursor = Buffer.from(`${last.createdAt.toISOString()}_${last._id}`).toString('base64');
+    }
+
+    return res.json({ ok: true, items, nextCursor });
+  } catch (err) {
+    return res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// GET /api/orders/escrow (authenticated user - user's escrow transactions)
+router.get('/escrow', authMiddleware, async (req, res) => {
+  try {
+    const limit = Math.min(Number(req.query.limit) || 25, 100);
+
+    const orders = await Order.find({
+      $or: [
+        { buyerId: req.user.id },
+        { 'attribution.creatorId': req.user.id },
+      ],
+    })
+      .sort({ createdAt: -1, _id: -1 })
+      .limit(limit)
+      .lean();
+
+    const escrow = orders.map((order) => ({
+      orderId: order._id,
+      itemId: order.itemId,
+      itemName: order.itemSnapshot?.name || 'Unknown',
+      amount: order.amountTotal,
+      currency: order.currency,
+      status: order.paymentStatus === 'paid' ? 'held' : order.paymentStatus === 'refunded' ? 'released' : 'draft',
+      isBuyer: String(order.buyerId) === String(req.user.id),
+      isSeller: String(order.attribution?.creatorId) === String(req.user.id),
+      createdAt: order.createdAt,
+      updatedAt: order.updatedAt,
+    }));
+
+    return res.json({ ok: true, items: escrow });
+  } catch (err) {
+    return res.status(500).json({ ok: false, error: err.message });
+  }
+});
 
 // POST /api/orders/:id/refund (admin only)
 router.post("/:id/refund", requireAdmin, async (req, res) => {

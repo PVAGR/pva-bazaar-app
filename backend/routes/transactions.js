@@ -2,27 +2,51 @@ const express = require('express');
 const router = express.Router();
 const Artifact = require('../models/Artifact');
 const auth = require('../middleware/auth');
+const Order = require('../models/Order');
+const { authMiddleware } = auth;
 const { createFractionalEvent, dispatchToOpenClaw } = require('../utils/openclaw-events');
 
 // GET /api/transactions?limit=5 - Recent transactions (mocked for now)
-router.get('/', auth, async (req, res) => {
+router.get('/', authMiddleware, async (req, res) => {
 	try {
 		const limit = Math.min(parseInt(req.query.limit, 10) || 5, 100);
-		// In a real app, fetch from a Transaction model/log
-		// For now, mock with recent artifacts and users
-		const User = require('../models/User');
-		const artifacts = await Artifact.find().sort({ createdAt: -1 }).limit(limit);
-		const users = await User.find().sort({ createdAt: -1 }).limit(limit);
-		const txs = [];
-		for (let i = 0; i < limit; i++) {
-			txs.push({
-				type: i % 2 === 0 ? 'buy' : 'sell',
-				title: artifacts[i % artifacts.length]?.title || 'Artifact',
-				user: users[i % users.length]?.name || 'User',
-				time: artifacts[i % artifacts.length]?.createdAt?.toLocaleString() || '',
-				amount: '$' + (artifacts[i % artifacts.length]?.price || 0)
-			});
-		}
+		
+		// Get user's orders (as buyer)
+		const buyOrders = await Order.find({ buyerId: req.user.id })
+			.sort({ createdAt: -1 })
+			.limit(limit)
+			.select('_id itemSnapshot amountTotal currency createdAt paymentStatus')
+			.lean();
+		
+		// Get user's sales (as seller/creator)
+		const sellOrders = await Order.find({ 'attribution.creatorId': req.user.id })
+			.sort({ createdAt: -1 })
+			.limit(limit)
+			.select('_id itemSnapshot amountTotal currency createdAt paymentStatus')
+			.lean();
+		
+		// Combine and sort by date
+		const txs = [
+			...buyOrders.map(order => ({
+				_id: order._id,
+				type: 'buy',
+				title: order.itemSnapshot?.name || 'Purchase',
+				amount: order.amountTotal,
+				currency: order.currency,
+				date: order.createdAt,
+				status: order.paymentStatus
+			})),
+			...sellOrders.map(order => ({
+				_id: order._id,
+				type: 'sell',
+				title: order.itemSnapshot?.name || 'Sale',
+				amount: order.amountTotal,
+				currency: order.currency,
+				date: order.createdAt,
+				status: order.paymentStatus
+			}))
+		].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, limit);
+		
 		res.json(txs);
 	} catch (err) {
 		res.status(500).json({ ok: false, message: err.message });

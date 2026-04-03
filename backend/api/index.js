@@ -9,6 +9,7 @@ const path = require('path');
 let MongoMemoryServer;
 const openClawRoutes = require('../routes/openclaw');
 const openClawMetricsRoutes = require('../routes/openclaw-metrics');
+const salesRoutes = require('../routes/sales');
 const { getBuildInfo } = require('../lib/buildInfo');
 const { getRpcDiagnostics } = require('../utils/blockchain');
 
@@ -364,6 +365,7 @@ app.use('/api/library-taxonomy', libraryTaxonomyRoutes);
 app.use('/api/admin/library-intelligence', libraryIntelligenceRoutes);
 app.use('/api/attribution', attributionRoutes);
 app.use('/api/payouts', payoutsRoutes);
+app.use('/api/sales', salesRoutes);
 
 // DECENTRALIZED PLATFORM ROUTES (Blueprint v1)
 app.use('/api/streams', streamsRoutes);

@@ -2,6 +2,7 @@ import AdminOrdersPage from './pages/AdminOrdersPage.jsx';
 import React from 'react';
 import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Layout from './components/Layout.jsx';
+import RequireAdminAuth from './components/RequireAdminAuth.jsx';
 import { getToken } from './lib/auth';
 
 import AboutPage from './pages/AboutPage.jsx';
@@ -24,6 +25,7 @@ import DealsPage from './pages/DealsPage.jsx';
 import DealJoinPage from './pages/DealJoinPage.jsx';
 import CheckoutSuccessPage from './pages/CheckoutSuccessPage.jsx';
 import CheckoutCancelPage from './pages/CheckoutCancelPage.jsx';
+import UserDashboard from './pages/UserDashboard.jsx';
 import './base.css';
 
 function RequireUserAuth({ children }) {
@@ -40,8 +42,12 @@ export default function App() {
   return (
     <HashRouter>
       <Routes>
-        <Route path="/admin" element={<AdminPage />} />
-        <Route path="/admin/orders" element={<AdminOrdersPage />} />
+        {/* Admin Routes - Protected */}
+        <Route path="/admin" element={<RequireAdminAuth><AdminPage /></RequireAdminAuth>} />
+        <Route path="/admin/orders" element={<RequireAdminAuth><AdminOrdersPage /></RequireAdminAuth>} />
+
+        {/* User Dashboard - Protected */}
+        <Route path="/dashboard" element={<RequireUserAuth><UserDashboard /></RequireUserAuth>} />
 
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />

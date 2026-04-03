@@ -2,6 +2,8 @@ const mongoose = require("mongoose");
 
 const OrderSchema = new mongoose.Schema(
   {
+    // Buyer identification
+    buyerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true, default: null },
     itemId: { type: mongoose.Schema.Types.Mixed, required: true },
     itemSnapshot: {
       name: String,
@@ -79,7 +81,9 @@ const OrderSchema = new mongoose.Schema(
 );
 
 // Indexes for attribution reporting
+// Indexes for filtering & reporting
 OrderSchema.index({ createdAt: -1 });
+OrderSchema.index({ buyerId: 1, createdAt: -1 });
 OrderSchema.index({ 'attribution.creatorHandle': 1, createdAt: -1 });
 OrderSchema.index({ 'attribution.creatorId': 1, createdAt: -1 });
 OrderSchema.index({ 'attribution.referralCode': 1, createdAt: -1 });

@@ -47,6 +47,7 @@ export const requestDevnetAirdropHotWallet = (payload) => apiPost('/solana/devne
 export const executeSolanaTestFlow = (payload) => apiPost('/solana/execute-test-flow', payload);
 export const directSolanaTransfer = (payload) => apiPost('/solana/direct-transfer', payload);
 export const fetchAutopilotRuns = (limit = 30) => apiGet(`/solana/autopilot-runs?limit=${limit}`);
+export const fetchTransactions = (limit = 10) => apiGet('/transactions', { params: { limit } });
 
 /**
  * Upload a FormData payload (multipart/form-data).
