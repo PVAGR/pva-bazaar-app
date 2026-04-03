@@ -3,10 +3,12 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import HelpTip from '../components/HelpTip.jsx';
 import { apiPost } from '../lib/api';
 import { setToken } from '../lib/auth';
+import useArchiveTheme from '../hooks/useArchiveTheme.js';
 import '../styles/admin-common.css';
 import './RegisterPage.css';
 
 export default function RegisterPage() {
+  const { darkMode, toggleTheme } = useArchiveTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const next = useMemo(() => {
@@ -43,7 +45,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="registerPage admin-page authenticated dark-theme">
+    <div className={`registerPage admin-page authenticated ${darkMode ? 'dark-theme' : 'light-theme'}`}>
       <header className="admin-header registerHeader">
         <div>
           <h1>🧾 Create account</h1>
@@ -53,6 +55,9 @@ export default function RegisterPage() {
           <Link to="/login" className="btn ghost">
             ← Back to login
           </Link>
+          <button className="btn ghost" onClick={toggleTheme} title="Toggle theme" aria-label="Toggle theme">
+            {darkMode ? '☀️' : '🌙'}
+          </button>
         </div>
       </header>
 

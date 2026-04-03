@@ -26,6 +26,7 @@ import DealJoinPage from './pages/DealJoinPage.jsx';
 import CheckoutSuccessPage from './pages/CheckoutSuccessPage.jsx';
 import CheckoutCancelPage from './pages/CheckoutCancelPage.jsx';
 import UserDashboard from './pages/UserDashboard.jsx';
+import useArchiveTheme from './hooks/useArchiveTheme.js';
 import './base.css';
 
 function RequireUserAuth({ children }) {
@@ -39,6 +40,8 @@ function RequireUserAuth({ children }) {
 }
 
 export default function App() {
+  useArchiveTheme();
+
   return (
     <HashRouter>
       <Routes>

@@ -32,13 +32,11 @@ import ErrorBanner from '../components/ErrorBanner.jsx';
 import LoadingSpinner from '../components/LoadingSpinner.jsx';
 import HelpTip from '../components/HelpTip.jsx';
 import AdminNav from '../components/AdminNav.jsx';
+import useArchiveTheme from '../hooks/useArchiveTheme.js';
 import './DealsPage.css';
 
 export default function DealsPage() {
-  const [darkMode, setDarkMode] = useState(() => {
-    const saved = localStorage.getItem('archive-theme');
-    return saved ? saved === 'dark' : true;
-  });
+  const { darkMode, toggleTheme } = useArchiveTheme();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [items, setItems] = useState([]);
@@ -1077,11 +1075,7 @@ export default function DealsPage() {
             <button className="btn ghost" onClick={loadDeals} disabled={loading}>Refresh</button>
             <button
               className="btn ghost"
-              onClick={() => {
-                const next = !darkMode;
-                setDarkMode(next);
-                localStorage.setItem('archive-theme', next ? 'dark' : 'light');
-              }}
+              onClick={toggleTheme}
               title="Toggle theme"
               aria-label="Toggle theme"
             >
@@ -1428,17 +1422,7 @@ export default function DealsPage() {
           <section className="card">
             <h2>Deal workspace</h2>
             {selected.counterpartyAccess?.joinedAt ? (
-              <div
-                className="counterparty-joined"
-                role="status"
-                style={{
-                  padding: '0.75rem 1rem',
-                  background: 'rgba(0,180,0,0.12)',
-                  borderRadius: 6,
-                  marginBottom: '1rem',
-                  border: '1px solid rgba(0,180,0,0.3)',
-                }}
-              >
+              <div className="counterparty-joined" role="status">
                 ✓ Counterparty joined {new Date(selected.counterpartyAccess.joinedAt).toLocaleString()}
               </div>
             ) : null}

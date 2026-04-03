@@ -3,10 +3,12 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import HelpTip from '../components/HelpTip.jsx';
 import { apiGet, apiPost } from '../lib/api';
 import { setToken } from '../lib/auth';
+import useArchiveTheme from '../hooks/useArchiveTheme.js';
 import '../styles/admin-common.css';
 import './LoginPage.css';
 
 export default function LoginPage() {
+  const { darkMode, toggleTheme } = useArchiveTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const nextFromUrl = useMemo(() => {
@@ -83,7 +85,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="loginPage admin-page authenticated dark-theme">
+    <div className={`loginPage admin-page authenticated ${darkMode ? 'dark-theme' : 'light-theme'}`}>
       <header className="admin-header loginHeader">
         <div>
           <h1>🔐 Sign in</h1>
@@ -98,6 +100,9 @@ export default function LoginPage() {
           <Link to="/admin" className="btn ghost">
             Archive Admin
           </Link>
+          <button className="btn ghost" onClick={toggleTheme} title="Toggle theme" aria-label="Toggle theme">
+            {darkMode ? '☀️' : '🌙'}
+          </button>
         </div>
       </header>
 

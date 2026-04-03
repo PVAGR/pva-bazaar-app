@@ -7,6 +7,7 @@ function getCanonicalUrl(path = '') {
 }
 import { Link } from 'react-router-dom';
 import { fetchArchiveEntries } from '../lib/api';
+import useArchiveTheme from '../hooks/useArchiveTheme.js';
 import './ArchiveLibraryPage.css';
 
 const archiveEntries = [
@@ -166,6 +167,7 @@ const archiveEntries = [
 ];
 
 export default function ArchiveLibraryPage() {
+  const { darkMode, toggleTheme } = useArchiveTheme();
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedEntry, setSelectedEntry] = useState(null);
   const [markdown, setMarkdown] = useState('');
@@ -174,10 +176,6 @@ export default function ArchiveLibraryPage() {
   const [entriesError, setEntriesError] = useState('');
   const [viewMode, setViewMode] = useState('archive'); // 'archive' or 'blog'
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth > 1024);
-  const [darkMode, setDarkMode] = useState(() => {
-    const saved = localStorage.getItem('archive-theme');
-    return saved ? saved === 'dark' : true;
-  });
 
   // Function to load custom entries from API
   const loadCustomEntries = async () => {
@@ -204,10 +202,6 @@ export default function ArchiveLibraryPage() {
     const interval = setInterval(loadCustomEntries, 30000);
     return () => clearInterval(interval);
   }, []);
-
-  useEffect(() => {
-    localStorage.setItem('archive-theme', darkMode ? 'dark' : 'light');
-  }, [darkMode]);
 
   useEffect(() => {
     const onResize = () => {
@@ -357,7 +351,7 @@ export default function ArchiveLibraryPage() {
             <Link to="/admin" className="admin-link">⚙️ Admin</Link>
             <button 
               className="theme-toggle" 
-              onClick={() => setDarkMode(!darkMode)}
+              onClick={toggleTheme}
               aria-label="Toggle theme"
             >
               {darkMode ? '☀️' : '🌙'}

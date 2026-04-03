@@ -6,10 +6,12 @@ import { buildDealMessageTypedData, buildDealEvidenceTypedData, signTypedData } 
 import { getErrorMessage } from '../lib/errorUtils';
 import ErrorBanner from '../components/ErrorBanner.jsx';
 import LoadingSpinner from '../components/LoadingSpinner.jsx';
+import useArchiveTheme from '../hooks/useArchiveTheme.js';
 import '../styles/admin-common.css';
 import './DealJoinPage.css';
 
 export default function DealJoinPage() {
+  const { darkMode, toggleTheme } = useArchiveTheme();
   const location = useLocation();
   const token = useMemo(() => {
     const params = new URLSearchParams(location.search || '');
@@ -138,7 +140,7 @@ export default function DealJoinPage() {
   }
 
   return (
-    <div className="dealJoin admin-page authenticated dark-theme">
+    <div className={`dealJoin admin-page authenticated ${darkMode ? 'dark-theme' : 'light-theme'}`}>
       <header className="admin-header dealJoinHeader">
         <div>
           <h1>🤝 Deal join</h1>
@@ -158,6 +160,9 @@ export default function DealJoinPage() {
           <Link to="/deals" className="btn ghost">
             Deals
           </Link>
+          <button className="btn ghost" onClick={toggleTheme} title="Toggle theme" aria-label="Toggle theme">
+            {darkMode ? '☀️' : '🌙'}
+          </button>
         </div>
       </header>
 

@@ -1,11 +1,16 @@
 .deals-shell {
+  --deals-accent-warm: color-mix(in srgb, var(--accent) 72%, #d1a84f 28%);
+  --deals-accent-warm-soft: color-mix(in srgb, var(--deals-accent-warm) 22%, transparent);
+  --deals-panel-soft: color-mix(in srgb, var(--bg-tertiary) 88%, transparent);
   min-height: 100vh;
 }
 
 .deals-main {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 16px;
+  padding: 20px 16px 26px;
+  display: grid;
+  gap: 14px;
 }
 
 .deals-header__row {
@@ -19,7 +24,7 @@
 
 .deals-actions {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   align-items: center;
 }
 
@@ -45,17 +50,39 @@
 }
 
 .card {
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 16px;
-  margin: 16px 0;
+  background:
+    linear-gradient(
+      160deg,
+      color-mix(in srgb, var(--bg-tertiary) 90%, transparent),
+      color-mix(in srgb, var(--bg-secondary) 84%, transparent)
+    );
+  border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+  border-left: 3px solid var(--deals-accent-warm);
+  border-radius: 14px;
+  padding: 18px;
+  margin: 6px 0;
   color: var(--text-primary);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
+}
+
+.card h2 {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 0;
+  margin-bottom: 12px;
+  color: var(--deals-accent-warm);
+}
+
+.card h3 {
+  margin-top: 6px;
+  color: color-mix(in srgb, var(--deals-accent-warm) 75%, var(--text-primary));
 }
 
 .form {
   display: grid;
-  gap: 12px;
+  gap: 14px;
 }
 
 .form label {
@@ -74,17 +101,41 @@
 .form textarea {
   font: inherit;
   padding: 10px 12px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  background: var(--bg-secondary);
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+  background: color-mix(in srgb, var(--bg-secondary) 90%, transparent);
+  color: var(--text-primary);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.form select {
+  font: inherit;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+  background: color-mix(in srgb, var(--bg-secondary) 90%, transparent);
   color: var(--text-primary);
 }
 
+.form input:focus,
+.form textarea:focus,
+.form select:focus {
+  outline: none;
+  border-color: var(--deals-accent-warm);
+  box-shadow: 0 0 0 3px var(--deals-accent-warm-soft);
+}
+
 .subcard {
-  border: 1px solid var(--border);
+  border: 1px solid color-mix(in srgb, var(--deals-accent-warm) 46%, var(--border));
+  border-left: 3px solid color-mix(in srgb, var(--deals-accent-warm) 72%, transparent);
   border-radius: 12px;
   padding: 12px;
-  background: rgba(0, 0, 0, 0.08);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--deals-accent-warm) 8%, var(--bg-secondary)),
+      color-mix(in srgb, var(--bg-secondary) 90%, transparent)
+    );
   display: grid;
   gap: 10px;
 }
@@ -100,6 +151,13 @@
 .stack {
   display: grid;
   gap: 10px;
+}
+
+.stack > .row {
+  padding: 10px;
+  border: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--deals-panel-soft) 68%, transparent);
 }
 
 .json {
@@ -121,7 +179,7 @@
 
 .row {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   align-items: center;
 }
 
@@ -142,21 +200,38 @@
 .btn {
   font: inherit;
   padding: 10px 12px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  background: var(--bg-secondary);
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+  background: color-mix(in srgb, var(--bg-secondary) 90%, transparent);
   color: var(--text-primary);
   cursor: pointer;
+  transition: transform 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease, background 0.14s ease;
 }
 
 .btn.primary {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
+  background: linear-gradient(120deg, var(--deals-accent-warm), color-mix(in srgb, var(--deals-accent-warm) 66%, var(--accent)));
+  border-color: var(--deals-accent-warm);
+  color: var(--bg-primary);
 }
 
 .btn.ghost {
   background: transparent;
+}
+
+.btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: var(--deals-accent-warm);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.18);
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--deals-accent-warm);
+  outline-offset: 2px;
+}
+
+.btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 .deals-list {
@@ -168,15 +243,21 @@
   text-align: left;
   padding: 12px;
   border-radius: 10px;
-  border: 1px solid var(--border);
-  background: var(--bg-secondary);
+  border: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
+  background: color-mix(in srgb, var(--bg-secondary) 92%, transparent);
   color: var(--text-primary);
   cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.deal-item:hover {
+  border-color: var(--deals-accent-warm);
+  transform: translateY(-1px);
 }
 
 .deal-item.active {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 1px var(--accent);
+  border-color: var(--deals-accent-warm);
+  box-shadow: 0 0 0 1px var(--deals-accent-warm), 0 8px 18px rgba(0, 0, 0, 0.18);
 }
 
 .deal-title {
@@ -190,17 +271,20 @@
 }
 
 .workspace-col h3 {
-  margin: 8px 0;
-  color: var(--accent);
+  margin: 10px 0;
+  padding-bottom: 6px;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+  color: var(--deals-accent-warm);
 }
 
 .milestone,
 .payment,
 .message {
-  border: 1px solid var(--border);
+  border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+  border-left: 3px solid color-mix(in srgb, var(--deals-accent-warm) 64%, transparent);
   border-radius: 10px;
   padding: 10px;
-  background: rgba(0, 0, 0, 0.08);
+  background: color-mix(in srgb, var(--bg-secondary) 92%, transparent);
   margin-bottom: 10px;
 }
 
@@ -224,10 +308,11 @@
 }
 
 .defaults {
-  border: 1px solid var(--border);
+  border: 1px solid color-mix(in srgb, var(--deals-accent-warm) 44%, var(--border));
+  border-left: 3px solid var(--deals-accent-warm);
   border-radius: 12px;
   padding: 12px;
-  background: rgba(0, 0, 0, 0.08);
+  background: color-mix(in srgb, var(--deals-accent-warm) 9%, var(--bg-secondary));
   margin: 12px 0 16px;
   display: grid;
   gap: 10px;
@@ -235,7 +320,22 @@
 
 .defaults__title {
   font-weight: 800;
-  color: var(--accent);
+  color: var(--deals-accent-warm);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.counterparty-joined {
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  border: 1px solid color-mix(in srgb, var(--deals-accent-warm) 55%, #2dbf70);
+  background: color-mix(in srgb, #2dbf70 18%, transparent);
+  color: var(--text-primary);
+}
+
+.check {
   display: inline-flex;
   align-items: center;
   gap: 6px;

@@ -1,7 +1,10 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
+import useArchiveTheme from '../hooks/useArchiveTheme.js';
 
 export default function Layout({ children }) {
+  const { darkMode, toggleTheme } = useArchiveTheme();
+
   return (
     <div className="layout">
       <a className="sr-only" href="#content">Skip to content</a>
@@ -19,6 +22,15 @@ export default function Layout({ children }) {
           <NavLink to="/creator">✨ Creator Sign Up</NavLink>
           <NavLink to="/about">About</NavLink>
         </nav>
+        <button
+          type="button"
+          className="layout__themeToggle"
+          onClick={toggleTheme}
+          aria-label="Toggle theme"
+          title="Toggle theme"
+        >
+          {darkMode ? '☀️ Light' : '🌙 Dark'}
+        </button>
       </header>
       <main id="content" className="layout__main">
         {children}

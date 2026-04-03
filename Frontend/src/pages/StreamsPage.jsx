@@ -9,6 +9,7 @@ import LoadingSpinner from '../components/LoadingSpinner.jsx';
 import { ConfirmModal } from '../components/ui/DialogModals.jsx';
 import { getErrorMessage, withRetry } from '../lib/errorUtils';
 import { getToken } from '../lib/auth';
+import useArchiveTheme from '../hooks/useArchiveTheme.js';
 import './StreamsPage.css';
 
 const PLATFORM_OPTIONS = ['none', 'youtube', 'twitch', 'kick', 'facebook', 'custom'];
@@ -24,13 +25,10 @@ function formatDate(value) {
 }
 
 export default function StreamsPage() {
+  const { darkMode, toggleTheme } = useArchiveTheme();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [items, setItems] = useState([]);
-  const [darkMode, setDarkMode] = useState(() => {
-    const saved = localStorage.getItem('archive-theme');
-    return saved ? saved === 'dark' : true;
-  });
 
   const [creating, setCreating] = useState(false);
   const [form, setForm] = useState({
@@ -376,11 +374,7 @@ export default function StreamsPage() {
           </button>
           <button
             className="btn ghost"
-            onClick={() => {
-              const next = !darkMode;
-              setDarkMode(next);
-              localStorage.setItem('archive-theme', next ? 'dark' : 'light');
-            }}
+            onClick={toggleTheme}
             title="Toggle theme"
             aria-label="Toggle theme"
           >

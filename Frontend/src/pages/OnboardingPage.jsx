@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import CreatorNav from '../components/CreatorNav.jsx';
 import HelpTip from '../components/HelpTip.jsx';
 import { apiGet, apiPut } from '../lib/api';
+import useArchiveTheme from '../hooks/useArchiveTheme.js';
 import '../styles/admin-common.css';
 import './OnboardingPage.css';
 
@@ -16,10 +17,7 @@ function hasEthereum() {
 
 export default function OnboardingPage() {
   const navigate = useNavigate();
-  const [darkMode, setDarkMode] = useState(() => {
-    const saved = localStorage.getItem('archive-theme');
-    return saved ? saved === 'dark' : true;
-  });
+  const { darkMode, toggleTheme } = useArchiveTheme();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -224,11 +222,7 @@ export default function OnboardingPage() {
         <div className="onboardingActions">
           <button
             className="btn ghost"
-            onClick={() => {
-              const next = !darkMode;
-              setDarkMode(next);
-              localStorage.setItem('archive-theme', next ? 'dark' : 'light');
-            }}
+            onClick={toggleTheme}
             title="Toggle theme"
             aria-label="Toggle theme"
           >

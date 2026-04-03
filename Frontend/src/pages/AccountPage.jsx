@@ -7,6 +7,7 @@ import { apiGet, apiPut } from '../lib/api';
 import { fetchMyMarketplaceItems } from '../lib/api';
 import { clearToken } from '../lib/auth';
 import { getMissingProfileSteps } from '../utils/sellerProfileUtils.js';
+import useArchiveTheme from '../hooks/useArchiveTheme.js';
 import '../styles/admin-common.css';
 import './AccountPage.css';
 
@@ -14,10 +15,7 @@ const NEEDS_ATTENTION_STATUSES = new Set(['failed', 'manual_required']);
 
 export default function AccountPage() {
   const navigate = useNavigate();
-  const [darkMode, setDarkMode] = useState(() => {
-    const saved = localStorage.getItem('archive-theme');
-    return saved ? saved === 'dark' : true;
-  });
+  const { darkMode, toggleTheme } = useArchiveTheme();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -134,11 +132,7 @@ export default function AccountPage() {
           </Link>
           <button
             className="btn ghost"
-            onClick={() => {
-              const next = !darkMode;
-              setDarkMode(next);
-              localStorage.setItem('archive-theme', next ? 'dark' : 'light');
-            }}
+            onClick={toggleTheme}
             title="Toggle theme"
             aria-label="Toggle theme"
           >
