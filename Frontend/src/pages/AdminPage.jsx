@@ -11,6 +11,7 @@ import { clearToken, setToken } from '../lib/auth';
 import { createLogger } from '../lib/logger';
 import { LoadingDots } from '../components/LoadingSpinner.jsx';
 import DashboardTab from '../components/DashboardTab.jsx';
+import MakeOrderModal from '../components/MakeOrderModal.jsx';
 import ArchiveTab from '../components/ArchiveTab.jsx';
 import MarketplaceTab from '../components/MarketplaceTab.jsx';
 import InquiriesTab from '../components/InquiriesTab.jsx';
@@ -79,6 +80,7 @@ export default function AdminPage() {
     results: {},
   });
   const [inquiryCounts, setInquiryCounts] = useState({ new: 0, contacted: 0, reserved: 0, closed: 0, total: 0 });
+  const [makeOrderModalOpen, setMakeOrderModalOpen] = useState(false);
 
   // Check if already authenticated with NEW credentials system
   useEffect(() => {
@@ -845,7 +847,7 @@ export default function AdminPage() {
           {/* Dashboard Tab - Overview */}
           {activeTab === 'dashboard' && (
             <ErrorBoundary>
-              <DashboardTab onNavigateTab={handleTabChange} />
+              <DashboardTab onNavigateTab={handleTabChange} onMakeOrder={() => setMakeOrderModalOpen(true)} />
             </ErrorBoundary>
           )}
 
@@ -975,6 +977,16 @@ export default function AdminPage() {
             </ErrorBoundary>
           )}
         </div>
+
+        {/* Make Order Modal */}
+        <MakeOrderModal
+          isOpen={makeOrderModalOpen}
+          onClose={() => setMakeOrderModalOpen(false)}
+          onSuccess={(dealId, deal) => {
+            console.log('Order created:', dealId);
+            // Could optionally navigate to deals tab or show notification
+          }}
+        />
       </div>
     </>
   );
