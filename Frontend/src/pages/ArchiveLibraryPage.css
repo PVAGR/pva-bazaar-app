@@ -354,6 +354,33 @@
   font-size: 0.92rem;
 }
 
+.logic-sidebar-note {
+  margin: 1.5rem;
+  padding: 1rem;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.logic-sidebar-note h3 {
+  margin: 0 0 0.75rem;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.85rem;
+}
+
+.logic-sidebar-note p {
+  margin: 0 0 0.75rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  font-size: 0.92rem;
+}
+
+.logic-sidebar-note p:last-child {
+  margin-bottom: 0;
+}
+
 .entry-item {
   display: block;
   width: 100%;
@@ -529,6 +556,48 @@
   border: 1px solid var(--border);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
   margin-bottom: 3rem;
+}
+
+.logic-document {
+  max-width: 980px;
+}
+
+.logic-disclaimer {
+  margin: 0 0 1.5rem;
+  padding: 1rem;
+  border-radius: 10px;
+  border: 1px solid #d1ac5f;
+  background: rgba(160, 124, 46, 0.18);
+  color: var(--text-primary);
+  line-height: 1.7;
+}
+
+.logic-sections {
+  display: grid;
+  gap: 1rem;
+}
+
+.logic-section {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1rem 1.1rem;
+  background: var(--bg-secondary);
+}
+
+.logic-section h2 {
+  margin: 0 0 0.75rem;
+  color: var(--accent);
+  font-size: 1.12rem;
+}
+
+.logic-section ul {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.logic-section li {
+  margin: 0.45rem 0;
+  line-height: 1.65;
 }
 
 .document-header {
@@ -808,6 +877,14 @@
 
   .archive-content {
     padding: 1.5rem 1.25rem;
+  }
+
+  .logic-disclaimer {
+    font-size: 0.92rem;
+  }
+
+  .logic-section h2 {
+    font-size: 1rem;
   }
 }
 

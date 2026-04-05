@@ -8,7 +8,7 @@ const Comment = require('../models/Comment');
 
 // Temporary: allow quick publish without admin secret when enabled
 if (process.env.ENABLE_QUICK_PUBLISH === 'true') {
-  router.post('/quick-publish', async (req, res) => {
+  router.post('/quick-publish', adminSession, async (req, res) => {
     try {
       const slug = (req.body?.slug || '').trim().toLowerCase();
       const title = (req.body?.title || '').trim();

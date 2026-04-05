@@ -16,9 +16,10 @@ const OrderSchema = new mongoose.Schema(
     stripePaymentIntentId: { type: String },
     paymentStatus: {
       type: String,
-      enum: ["pending", "paid", "failed", "refunded"],
+      enum: ["pending", "paid", "failed", "refunded", "cancelled"],
       default: "pending",
     },
+    isLocked: { type: Boolean, default: false },
     refundStatus: {
       type: String,
       enum: ["none", "pending", "refunded", "failed"],

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Helmet } from 'react-helmet-async';
 // Helper to build canonical URLs
 function getCanonicalUrl(path = '') {
@@ -166,6 +166,105 @@ const archiveEntries = [
   },
 ];
 
+const logicSections = [
+  {
+    id: 'math-properties',
+    title: 'Mathematical Properties',
+    content: [
+      'Integer: 1637',
+      'Type: Prime Number (divisible only by 1 and itself)',
+      'Binary: 11001100101',
+      'Hexadecimal: 665',
+      'Factorization: 1637 (Prime)',
+      'Significance: No inherent mathematical constant association (e.g., not Pi, e, or Phi derived)',
+    ],
+  },
+  {
+    id: 'gematria-analysis',
+    title: 'Gematria System Analysis',
+    content: [
+      'Definition: Gematria assigns numerical values to letters.',
+      'Constraint: Multiple phrases can equal the same sum (Hash Collision).',
+      'Uniqueness: LOW. A value of 1637 does not map to a single unique word.',
+      'Common Cipher Estimates for Value 1637:',
+      'Simple Gematria (A=1): Requires phrase length ~15-25 letters (avg value 7-10 per letter).',
+      'English Gematria (A=6): 1637 is NOT divisible by 6 (1+6+3+7=17). Result: impossible in standard sixfold English Gematria without non-letter characters.',
+      'Atbash Cipher (A<->Z): Values inverted. Sum potential remains similar to Simple/Ordinal.',
+      'Hebrew Gematria: 1637 = תשלז (Tav-Shin-Lamed-Zayin). Semantic Meaning: NULL (No standard word formation).',
+    ],
+  },
+  {
+    id: 'database-correlation',
+    title: 'Database Correlation (Public Registry)',
+    content: [
+      'Search Query: 1637 Gematria Meaning',
+      'Common associations (user-submitted / unverified): THE GREAT RESET, CORONA VIRUS, THE PLANDEMIC (cipher-variant dependent).',
+      'Verification Status: LOW CONFIDENCE.',
+      'Reason: These associations depend on selective cipher switching (e.g., Atbash + Ordinal + skip codes) to force a match.',
+      'Logical Fallacy: Confirmation Bias. Any number can be matched to many phrases with enough variation.',
+    ],
+  },
+  {
+    id: 'atbash-logic',
+    title: 'Atbash Combined Logic',
+    content: [
+      'Method: Substitute letters (A=Z, B=Y...) then sum values.',
+      'Example: EXAMPLE -> VCZNKOV -> 22+3+26+14+11+15+22 = 113 (Not 1637).',
+      'To reach 1637: Requires long phrase length or repeated high-value letters under the chosen mapping.',
+    ],
+  },
+  {
+    id: 'risk-assessment',
+    title: 'Risk Assessment',
+    content: [
+      'Assigning singular meaning to 1637 is logically unsound.',
+      'Numerology/Gematria is not deterministic science.',
+      'Correlation does not imply causation.',
+      'Online communities often retrofit meaning to support existing narratives.',
+    ],
+  },
+  {
+    id: 'numerology-conclusion',
+    title: 'Numerology Conclusion',
+    content: [
+      '1637 is a prime integer.',
+      'In Gematria/Atbash, it is a sum, not a unique identifier.',
+      'Many phrases can equal 1637 depending on selected cipher rules.',
+      'No canonical or universal meaning is established.',
+      'Recommendation: treat as arbitrary numerical data unless a specific key and context are provided.',
+    ],
+  },
+  {
+    id: 'fasting-model',
+    title: 'Fasting Model (Input-Based Calculation)',
+    content: [
+      'Current mass: 170 lbs | Target mass: 145 lbs | Delta: -25 lbs',
+      'Energy model: 25 x 3,500 = 87,500 kcal deficit.',
+      'Theoretical minimum duration: 87,500 / 2,200 = ~40 days.',
+      'Adapted duration estimate: ~50-60 days due to metabolic adaptation and lean-mass losses.',
+      'Safe-rate benchmark: 1-2 lbs/week; at 1.5 lbs/week, timeline is ~117 days.',
+    ],
+  },
+  {
+    id: 'constraints',
+    title: 'Constraint Protocols and Safety Notes',
+    content: [
+      'Extended fasting is medically risky without supervision.',
+      'Electrolyte monitoring and refeeding management become critical in prolonged zero-intake scenarios.',
+      'Rebound and complications are likely without structured refeed and maintenance planning.',
+    ],
+  },
+  {
+    id: 'optimization',
+    title: 'Optimal Path Recommendation',
+    content: [
+      'Higher-probability path: time-restricted eating (e.g., 16:8 or 18:6) with moderate caloric deficit and protein prioritization.',
+      'Expected timeline: ~14-20 weeks for the same target shift, with better functional preservation.',
+      'Risk-adjusted efficiency from provided model: fasting-only 2.1/10 vs controlled deficit protocol 8.7/10.',
+    ],
+  },
+];
+
 export default function ArchiveLibraryPage() {
   const { darkMode, toggleTheme } = useArchiveTheme();
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -174,11 +273,15 @@ export default function ArchiveLibraryPage() {
   const [loading, setLoading] = useState(false);
   const [customEntries, setCustomEntries] = useState([]);
   const [entriesError, setEntriesError] = useState('');
-  const [viewMode, setViewMode] = useState('archive'); // 'archive' or 'blog'
-  const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth > 1024);
+  const [viewMode, setViewMode] = useState('archive'); // 'archive' | 'blog' | 'logic'
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    const saved = localStorage.getItem('archive-sidebar-open');
+    if (saved === 'true' || saved === 'false') return saved === 'true';
+    return window.innerWidth > 1024;
+  });
 
   // Function to load custom entries from API
-  const loadCustomEntries = async () => {
+  const loadCustomEntries = useCallback(async () => {
     setEntriesError('');
     try {
       const result = await fetchArchiveEntries({ limit: 100 });
@@ -193,15 +296,22 @@ export default function ArchiveLibraryPage() {
       setCustomEntries([]);
       setEntriesError('Connection issue while loading new posts. Please retry.');
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadCustomEntries();
-    
-    // Refresh entries every 30 seconds to show new posts
+  }, [loadCustomEntries]);
+
+  useEffect(() => {
+    if (viewMode !== 'blog') return undefined;
+
     const interval = setInterval(loadCustomEntries, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [viewMode, loadCustomEntries]);
+
+  useEffect(() => {
+    localStorage.setItem('archive-sidebar-open', String(sidebarOpen));
+  }, [sidebarOpen]);
 
   useEffect(() => {
     const onResize = () => {
@@ -214,12 +324,15 @@ export default function ArchiveLibraryPage() {
   }, []);
 
   const categories = ['All', 'Index', 'Fiction', 'Spiritual', 'Technology', 'Business', 'Personal', 'Philosophy', 'Wisdom', 'Architecture', 'Strategic'];
+  const isEntryMode = viewMode === 'archive' || viewMode === 'blog';
 
   // Get entries based on view mode
   const currentEntries = viewMode === 'archive' ? archiveEntries : customEntries;
   
   const filteredEntries =
-    selectedCategory === 'All'
+    !isEntryMode
+      ? []
+      : selectedCategory === 'All'
       ? currentEntries
       : currentEntries.filter((e) => e.category === selectedCategory);
 
@@ -230,7 +343,7 @@ export default function ArchiveLibraryPage() {
     return String(a.title || '').localeCompare(String(b.title || ''));
   });
 
-  const loadMarkdown = async (entry) => {
+  const loadMarkdown = useCallback(async (entry) => {
     setLoading(true);
     setSelectedEntry(entry);
     if (window.innerWidth <= 1024) {
@@ -252,7 +365,7 @@ export default function ArchiveLibraryPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const getMediaType = (url) => {
     const lower = url.toLowerCase();
@@ -423,64 +536,101 @@ export default function ArchiveLibraryPage() {
           >
             Recent Posts ({customEntries.length})
           </button>
+          <button
+            className={`view-btn ${viewMode === 'logic' ? 'active' : ''}`}
+            onClick={() => {
+              setViewMode('logic');
+              setSelectedEntry(null);
+              setMarkdown('');
+              setSelectedCategory('All');
+            }}
+          >
+            Logic Mode
+          </button>
         </div>
 
         <p className="archive-subtitle">
-          {viewMode === 'archive' 
+          {viewMode === 'archive'
             ? '110,000+ words • Ages 24-28 (2020-2026) • Every line preserved'
-            : 'Fresh perspectives and new stories starting 2026'}
+            : viewMode === 'blog'
+              ? 'Fresh perspectives and new stories starting 2026'
+              : 'Structured analytical transmission across numerology and risk-adjusted weight-loss modeling'}
         </p>
         <div className="archive-stats">
-          <span>{currentEntries.length} {viewMode === 'archive' ? 'Documents' : 'Posts'}</span>
+          <span>
+            {viewMode === 'logic'
+              ? `${logicSections.length} Analysis Sections`
+              : `${currentEntries.length} ${viewMode === 'archive' ? 'Documents' : 'Posts'}`}
+          </span>
           <span className="stat-separator">•</span>
-          <span>12 Categories</span>
+          <span>{viewMode === 'logic' ? 'Dual-Domain Analysis' : '12 Categories'}</span>
           <span className="stat-separator">•</span>
-          <span>{viewMode === 'archive' ? '40+ Distinct Works' : 'Updated Regularly'}</span>
+          <span>
+            {viewMode === 'archive'
+              ? '40+ Distinct Works'
+              : viewMode === 'blog'
+                ? 'Updated Regularly'
+                : 'No Canonical Meaning Claims'}
+          </span>
         </div>
       </header>
 
       <div className="archive-layout">
         <aside className={`archive-sidebar ${sidebarOpen ? 'is-open' : 'is-collapsed'}`}>
-          <div className="category-filter">
-            <h3>{viewMode === 'archive' ? 'Archive Categories' : 'Post Categories'}</h3>
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                className={`category-btn ${selectedCategory === cat ? 'active' : ''}`}
-                onClick={() => setSelectedCategory(cat)}
-              >
-                {cat}
-                <span className="count">
-                  {cat === 'All'
-                    ? currentEntries.length
-                    : currentEntries.filter((e) => e.category === cat).length}
-                </span>
-              </button>
-            ))}
-          </div>
-
-          <div className="entry-list">
-            <h3>{viewMode === 'archive' ? 'Documents' : 'Posts'}</h3>
-            {sortedFilteredEntries.length === 0 ? (
-              <div className="sidebar-empty-state">
-                No items in this category yet.
+          {isEntryMode ? (
+            <>
+              <div className="category-filter">
+                <h3>{viewMode === 'archive' ? 'Archive Categories' : 'Post Categories'}</h3>
+                {categories.map((cat) => (
+                  <button
+                    key={cat}
+                    className={`category-btn ${selectedCategory === cat ? 'active' : ''}`}
+                    onClick={() => setSelectedCategory(cat)}
+                  >
+                    {cat}
+                    <span className="count">
+                      {cat === 'All'
+                        ? currentEntries.length
+                        : currentEntries.filter((e) => e.category === cat).length}
+                    </span>
+                  </button>
+                ))}
               </div>
-            ) : (
-              sortedFilteredEntries.map((entry) => (
-                <button
-                  key={entry.id}
-                  className={`entry-item ${selectedEntry?.id === entry.id ? 'active' : ''}`}
-                  onClick={() => loadMarkdown(entry)}
-                >
-                  <div className="entry-title">{entry.title}</div>
-                  <div className="entry-meta">
-                    <span className="entry-category">{entry.category}</span>
-                    <span className="entry-words">{entry.wordCount} words</span>
+
+              <div className="entry-list">
+                <h3>{viewMode === 'archive' ? 'Documents' : 'Posts'}</h3>
+                {sortedFilteredEntries.length === 0 ? (
+                  <div className="sidebar-empty-state">
+                    No items in this category yet.
                   </div>
-                </button>
-              ))
-            )}
-          </div>
+                ) : (
+                  sortedFilteredEntries.map((entry) => (
+                    <button
+                      key={entry.id}
+                      className={`entry-item ${selectedEntry?.id === entry.id ? 'active' : ''}`}
+                      onClick={() => loadMarkdown(entry)}
+                    >
+                      <div className="entry-title">{entry.title}</div>
+                      <div className="entry-meta">
+                        <span className="entry-category">{entry.category}</span>
+                        <span className="entry-words">{entry.wordCount} words</span>
+                      </div>
+                    </button>
+                  ))
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="logic-sidebar-note">
+              <h3>Logic Mode</h3>
+              <p>
+                This transmission view is fixed-reference content, not user-submitted archive material.
+              </p>
+              <p>
+                Use Archive Collection or Recent Posts to return to document navigation.
+              </p>
+            </div>
+          )}
         </aside>
 
         <main className="archive-content">
@@ -543,6 +693,35 @@ export default function ArchiveLibraryPage() {
                 </>
               )}
             </div>
+          )}
+
+          {!selectedEntry && viewMode === 'logic' && (
+            <article className="archive-document logic-document">
+              <div className="document-header">
+                <span className="document-category">Logic Mode</span>
+                <h1>Query Analysis Transmission</h1>
+                <p className="document-description">
+                  Prime-number numerology context and constrained fasting math presented as structured analytical output.
+                </p>
+              </div>
+
+              <div className="logic-disclaimer" role="note" aria-live="polite">
+                <strong>Medical note:</strong> the fasting section is a theoretical calculation summary only and not clinical advice. Any extended fasting requires medical supervision.
+              </div>
+
+              <div className="logic-sections">
+                {logicSections.map((section) => (
+                  <section key={section.id} className="logic-section">
+                    <h2>{section.title}</h2>
+                    <ul>
+                      {section.content.map((line, index) => (
+                        <li key={`${section.id}-${index}`}>{line}</li>
+                      ))}
+                    </ul>
+                  </section>
+                ))}
+              </div>
+            </article>
           )}
 
           {loading && (

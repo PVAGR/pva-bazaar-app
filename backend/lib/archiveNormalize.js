@@ -2,9 +2,13 @@
 // Canonical ArchiveEntry normalization and serialization
 
 function normalizeArchiveInput(body = {}) {
+  const rawStatus = typeof body.status === 'string' ? body.status.trim().toLowerCase() : '';
+  const status = rawStatus === 'draft' ? 'draft' : 'published';
+
   // Accept legacy and new field names, normalize to canonical
   return {
     title: body.title || 'Untitled',
+    status,
     category: body.category || 'journal',
     description: body.description || body.excerpt || '',
     content: body.content || body.contentHtml || '',
@@ -22,6 +26,7 @@ function toPublicArchiveEntry(doc) {
   return {
     id: doc._id ? doc._id.toString() : doc.id || '',
     title: doc.title || '',
+    status: doc.status || 'published',
     category: doc.category || 'journal',
     description: doc.description || doc.excerpt || '',
     content: doc.content || doc.contentHtml || '',

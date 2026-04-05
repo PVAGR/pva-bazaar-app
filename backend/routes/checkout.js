@@ -87,42 +87,56 @@ router.post("/create-session", async (req, res) => {
       },
       stripeSessionId: null, // will update after session creation
       paymentStatus: "pending",
+      isLocked: false,
       amountTotal: item.priceCents,
       currency: item.currency,
       reservationId,
     });
 
-    const session = await stripe.checkout.sessions.create({
-      mode: "payment",
-      payment_method_types: ["card"],
-      line_items: [
-        {
-          price_data: {
-            currency: item.currency.toLowerCase(),
-            unit_amount: item.priceCents,
-            product_data: {
-              name: item.name,
-              description: item.description || undefined,
-              images: item.media && item.media.length ? [item.media[0]] : undefined,
+    let session;
+    try {
+      session = await stripe.checkout.sessions.create({
+        mode: "payment",
+        payment_method_types: ["card"],
+        line_items: [
+          {
+            price_data: {
+              currency: item.currency.toLowerCase(),
+              unit_amount: item.priceCents,
+              product_data: {
+                name: item.name,
+                description: item.description || undefined,
+                images: item.media && item.media.length ? [item.media[0]] : undefined,
+              },
             },
+            quantity: 1,
           },
-          quantity: 1,
+        ],
+        success_url: `${PUBLIC_SITE_URL}/#/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${PUBLIC_SITE_URL}/#/checkout/cancel?session_id={CHECKOUT_SESSION_ID}`,
+        client_reference_id: order._id.toString(),
+        metadata: {
+          orderId: order._id.toString(),
+          itemId: item.id,
+          itemSlug: item.slug || "",
+          itemName: item.name || "",
+          reservationId,
         },
-      ],
-      success_url: `${PUBLIC_SITE_URL}/#/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${PUBLIC_SITE_URL}/#/checkout/cancel`,
-      client_reference_id: order._id.toString(),
-      metadata: {
-        orderId: order._id.toString(),
-        itemId: item.id,
-        itemSlug: item.slug || "",
-        itemName: item.name || "",
-        reservationId,
-      },
-    });
+      });
+    } catch (stripeError) {
+      if (order.reservationId) {
+        await releaseReservation(order.reservationId).catch(() => {});
+      }
+      order.paymentStatus = 'cancelled';
+      order.isLocked = false;
+      order.adminNotes = `${order.adminNotes || ''}\nstripe_session_create_failed`.trim();
+      await order.save().catch(() => {});
+      throw stripeError;
+    }
 
     // Update order with session id
     order.stripeSessionId = session.id;
+    order.isLocked = true;
     await order.save();
 
     // Dispatch transaction created event (non-blocking)
@@ -141,6 +155,53 @@ router.post("/create-session", async (req, res) => {
     }));
 
     return res.json({ ok: true, url: session.url, orderId: order._id.toString() });
+  } catch (err) {
+    return res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// POST /api/checkout/cancel-session
+// Cancels a pending checkout session and releases any inventory reservation.
+router.post('/cancel-session', async (req, res) => {
+  try {
+    const { session_id } = req.body || {};
+    if (!session_id) return res.status(400).json({ ok: false, error: 'Missing session_id' });
+
+    const session = await stripe.checkout.sessions.retrieve(session_id);
+    if (!session) return res.status(404).json({ ok: false, error: 'Session not found' });
+
+    const orderId = session.client_reference_id || session.metadata?.orderId;
+    const reservationId = session.metadata?.reservationId;
+    const order = orderId
+      ? await Order.findOne({ _id: orderId })
+      : await Order.findOne({ stripeSessionId: session.id });
+
+    if (!order) {
+      if (reservationId) {
+        await releaseReservation(reservationId).catch(() => {});
+      }
+      return res.json({ ok: true, cancelled: true, released: Boolean(reservationId), orderId: null });
+    }
+
+    if (order.paymentStatus === 'paid' || order.paymentStatus === 'refunded') {
+      return res.json({ ok: true, cancelled: false, alreadyFinalized: true, orderId: String(order._id) });
+    }
+
+    if (order.reservationId) {
+      await releaseReservation(order.reservationId).catch(() => {});
+    }
+
+    order.paymentStatus = 'cancelled';
+    order.isLocked = false;
+    order.adminNotes = `${order.adminNotes || ''}\ncheckout_cancelled session=${session.id}`.trim();
+    await order.save();
+
+    return res.json({
+      ok: true,
+      cancelled: true,
+      released: Boolean(order.reservationId || reservationId),
+      orderId: String(order._id),
+    });
   } catch (err) {
     return res.status(500).json({ ok: false, error: err.message });
   }

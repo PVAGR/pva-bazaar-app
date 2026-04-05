@@ -58,7 +58,13 @@ export default function AdminPage() {
     selfSignupEnabled: true,
     bootstrapCodeRequired: false,
   });
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState(() => {
+    const savedTab = localStorage.getItem('admin-active-tab');
+    if (savedTab && availableTabs.has(savedTab)) {
+      return savedTab;
+    }
+    return 'dashboard';
+  });
   // Use global theme system
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem('theme');
@@ -114,6 +120,50 @@ export default function AdminPage() {
     window.addEventListener('admin-session-expired', handleSessionExpired);
     return () => window.removeEventListener('admin-session-expired', handleSessionExpired);
   }, []);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    localStorage.setItem('admin-active-tab', activeTab);
+  }, [isAuthenticated, activeTab]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return undefined;
+
+    let validating = false;
+
+    const validateSession = async () => {
+      if (validating) return;
+      validating = true;
+      try {
+        await apiGet('/admin/status');
+      } catch (err) {
+        const statusCode = err?.response?.status;
+        if (statusCode === 401 || statusCode === 403) {
+          window.dispatchEvent(new CustomEvent('admin-session-expired'));
+        }
+      } finally {
+        validating = false;
+      }
+    };
+
+    const handleFocus = () => {
+      validateSession();
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        validateSession();
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [isAuthenticated]);
 
   useEffect(() => {
     if (isAuthenticated) return;

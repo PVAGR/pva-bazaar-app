@@ -337,6 +337,25 @@ export async function finalizeCheckoutSession(sessionId) {
     return { ok: false, error: err.message };
   }
 }
+
+export async function cancelCheckoutSession(sessionId) {
+  if (!sessionId) return { ok: false, error: 'Missing session id' };
+  try {
+    const response = await apiPost('/checkout/cancel-session', { session_id: sessionId });
+    if (response && response.ok) {
+      return {
+        ok: true,
+        cancelled: Boolean(response.cancelled),
+        released: Boolean(response.released),
+        alreadyFinalized: Boolean(response.alreadyFinalized),
+        orderId: response.orderId || '',
+      };
+    }
+    return { ok: false, error: response?.error || 'Failed to cancel checkout session' };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+}
 // --- AI-Verified Artifact Verification (for VerificationBadge) ---
 export async function fetchVerificationByArtifact(idOrSlug) {
   if (!idOrSlug) return { ok: false, verification: null };

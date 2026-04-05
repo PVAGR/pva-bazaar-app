@@ -5,6 +5,7 @@ const ArchiveEntry = require('../models/ArchiveEntry');
 const { normalizeArchiveInput, toPublicArchiveEntry } = require('../lib/archiveNormalize');
 const adminSession = require('../middleware/adminSession');
 const mongoose = require('mongoose');
+const jwt = require('jsonwebtoken');
 const { findStaticArchiveEntry, listStaticArchiveEntries } = require('../lib/staticContent');
 
 
@@ -15,8 +16,22 @@ function escapeRegExp(str) {
   return String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+function isAdminRequest(req) {
+  const authHeader = req.headers.authorization || '';
+  const bearerToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
+  if (!bearerToken || !process.env.JWT_SECRET) return false;
+
+  try {
+    const decoded = jwt.verify(bearerToken, process.env.JWT_SECRET);
+    return decoded?.role === 'admin';
+  } catch (_err) {
+    return false;
+  }
+}
+
 router.get('/', async (req, res) => {
   try {
+    const adminRequest = isAdminRequest(req);
     // Parse query params
     const limit = Math.max(1, Math.min(parseInt(req.query.limit, 10) || 12, 50));
     const cursor = req.query.cursor ? decodeCursor(req.query.cursor) : null;
@@ -26,7 +41,7 @@ router.get('/', async (req, res) => {
     const sort = req.query.sort === 'old' ? 'old' : 'new';
 
     // Build filter
-    const filter = {};
+    const filter = adminRequest ? {} : { status: 'published' };
     if (category) filter.category = new RegExp('^' + escapeRegExp(category) + '$', 'i');
     if (tag) filter.tags = tag;
 
@@ -95,12 +110,14 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
+    const adminRequest = isAdminRequest(req);
+    const statusFilter = adminRequest ? {} : { status: 'published' };
     let entry = null;
     if (mongoose.Types.ObjectId.isValid(id)) {
-      entry = await ArchiveEntry.findById(id).lean();
+      entry = await ArchiveEntry.findOne({ _id: id, ...statusFilter }).lean();
     }
     if (!entry) {
-      entry = await ArchiveEntry.findOne({ externalId: id }).lean();
+      entry = await ArchiveEntry.findOne({ externalId: id, ...statusFilter }).lean();
     }
     if (!entry) {
       entry = findStaticArchiveEntry(id);

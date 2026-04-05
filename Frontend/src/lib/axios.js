@@ -1,6 +1,49 @@
 import axios from "axios";
 import { ENV } from "../config/env";
 
+let refreshPromise = null;
+
+async function tryRefreshAdminToken() {
+  if (refreshPromise) {
+    return refreshPromise;
+  }
+
+  const token =
+    localStorage.getItem("token") ||
+    localStorage.getItem("authToken") ||
+    localStorage.getItem("jwt");
+
+  if (!token) {
+    return null;
+  }
+
+  refreshPromise = axios
+    .post(
+      `${ENV.API_URL}/admin/token-refresh`,
+      {},
+      {
+        headers: {
+          Authorization: token.startsWith("Bearer ") ? token : `Bearer ${token}`,
+        },
+        withCredentials: false,
+      }
+    )
+    .then((res) => {
+      const nextToken = res?.data?.token;
+      if (!nextToken) return null;
+      localStorage.setItem("token", nextToken);
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("jwt");
+      return nextToken;
+    })
+    .catch(() => null)
+    .finally(() => {
+      refreshPromise = null;
+    });
+
+  return refreshPromise;
+}
+
 // Internal backend-only Axios client
 const api = axios.create({
   baseURL: ENV.API_URL,
@@ -31,7 +74,7 @@ api.interceptors.request.use(
 // --- Response: global error handling ---
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
     const status = error?.response?.status;
 
     // Network/CORS errors often have no response/status
@@ -47,10 +90,25 @@ api.interceptors.response.use(
 
     // 401: redirect to login
     if (status === 401) {
+      const originalRequest = error?.config || {};
       const requestUrl = String(error?.config?.url || '');
       const isAdminAuthRequest = /\/admin\/(login|signup|bootstrap-status)$/i.test(requestUrl);
+      const isTokenRefreshRequest = /\/admin\/token-refresh$/i.test(requestUrl);
       if (isAdminAuthRequest) {
         return Promise.reject(error);
+      }
+
+      const hasTriedRefresh = Boolean(originalRequest?._retryAfterRefresh);
+      if (!hasTriedRefresh && !isTokenRefreshRequest) {
+        const refreshedToken = await tryRefreshAdminToken();
+        if (refreshedToken) {
+          originalRequest._retryAfterRefresh = true;
+          originalRequest.headers = originalRequest.headers || {};
+          originalRequest.headers.Authorization = refreshedToken.startsWith("Bearer ")
+            ? refreshedToken
+            : `Bearer ${refreshedToken}`;
+          return api.request(originalRequest);
+        }
       }
 
       try {

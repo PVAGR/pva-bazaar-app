@@ -150,6 +150,18 @@ router.post("/stripe", async (req, res) => {
     const session = event.data.object;
     const reservationId = session.metadata?.reservationId;
     if (reservationId) await releaseReservation(reservationId);
+
+    const orderId = session.client_reference_id || session.metadata?.orderId;
+    if (orderId) {
+      const order = await Order.findOne({ _id: orderId });
+      if (order && order.paymentStatus !== 'paid' && order.paymentStatus !== 'refunded') {
+        order.paymentStatus = 'cancelled';
+        order.isLocked = false;
+        order.adminNotes = `${order.adminNotes || ''}\nstripe_${event.type}`.trim();
+        await order.save();
+      }
+    }
+
     const email = session.customer_details?.email;
     if (email && event.type === "checkout.session.async_payment_failed") {
       sendPaymentFailedEmail({

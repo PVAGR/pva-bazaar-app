@@ -119,6 +119,40 @@ router.post('/token', (req, res) => {
   res.json({ ok: true, token });
 });
 
+// POST /api/admin/token-refresh - Refresh authenticated admin token
+router.post('/token-refresh', (req, res, next) => {
+  if (process.env.NODE_ENV !== 'production') {
+    if (!process.env.JWT_SECRET) {
+      return res.status(503).json({ ok: false, message: 'JWT secret is not configured' });
+    }
+
+    const token = jwt.sign(
+      { id: getAdminSubjectId(), role: 'admin' },
+      process.env.JWT_SECRET,
+      { expiresIn: '12h' }
+    );
+
+    return res.json({ ok: true, token, refreshed: true, mode: 'development' });
+  }
+
+  return auth(req, res, (err) => {
+    if (err) return next(err);
+    return adminOnly(req, res, () => {
+      if (!process.env.JWT_SECRET) {
+        return res.status(503).json({ ok: false, message: 'JWT secret is not configured' });
+      }
+
+      const token = jwt.sign(
+        { id: req.user?.id || getAdminSubjectId(), role: 'admin' },
+        process.env.JWT_SECRET,
+        { expiresIn: '12h' }
+      );
+
+      return res.json({ ok: true, token, refreshed: true });
+    });
+  });
+});
+
 // GET /api/admin/status - Check if user is authenticated admin
 router.get('/status', (req, res, next) => {
   if (process.env.NODE_ENV !== 'production') {

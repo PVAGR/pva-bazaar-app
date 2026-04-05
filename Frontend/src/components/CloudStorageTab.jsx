@@ -18,6 +18,7 @@ export default function CloudStorageTab() {
   const [loading, setLoading] = useState(false);
   const [uploadingTo, setUploadingTo] = useState(null);
   const [error, setError] = useState(null);
+  const [providerError, setProviderError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
   const [activeProvider, setActiveProvider] = useState('local');
@@ -29,13 +30,17 @@ export default function CloudStorageTab() {
   }, []);
 
   const loadProviders = async () => {
+    setProviderError(null);
     try {
       const data = await apiGet('/cloud-storage/providers');
       if (data.ok) {
         setProviders(data.providers);
+      } else {
+        setProviderError(data?.message || 'Unable to load storage provider configuration.');
       }
     } catch (err) {
       logger.error('Load providers error:', err);
+      setProviderError('Unable to load storage provider configuration. Please retry.');
     }
   };
 
@@ -150,7 +155,18 @@ export default function CloudStorageTab() {
   };
 
   if (!providers) {
-    return <div className="cloud-storage-tab" role="tabpanel" id="cloud-panel"><LoadingSpinner /></div>;
+    return (
+      <div className="cloud-storage-tab" role="tabpanel" id="cloud-panel">
+        {providerError ? (
+          <div className="alert alert-error">
+            ❌ {providerError}
+            <button onClick={loadProviders}>↻</button>
+          </div>
+        ) : (
+          <LoadingSpinner />
+        )}
+      </div>
+    );
   }
 
   return (
@@ -171,6 +187,12 @@ export default function CloudStorageTab() {
         <div className="alert alert-success">
           {success}
           <button onClick={() => setSuccess(null)}>×</button>
+        </div>
+      )}
+      {providerError && (
+        <div className="alert alert-error">
+          ⚠️ {providerError}
+          <button onClick={loadProviders}>↻</button>
         </div>
       )}
 
