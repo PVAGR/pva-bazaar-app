@@ -45,8 +45,9 @@ export default function App() {
   return (
     <HashRouter>
       <Routes>
-        {/* Admin Routes - Protected */}
-        <Route path="/admin" element={<RequireAdminAuth><AdminPage /></RequireAdminAuth>} />
+        {/* Admin entry route must remain reachable so login/bootstrap UI can render */}
+        <Route path="/admin" element={<AdminPage />} />
+        {/* Protected admin sub-routes */}
         <Route path="/admin/orders" element={<RequireAdminAuth><AdminOrdersPage /></RequireAdminAuth>} />
 
         {/* User Dashboard - Protected */}

@@ -14,13 +14,10 @@ const logger = createLogger('RequireAdminAuth');
  */
 export default function RequireAdminAuth({ children }) {
   const token = getToken();
-  const adminSession = sessionStorage.getItem('admin-auth');
-  const adminSessionVersion = sessionStorage.getItem('admin-auth-version');
-
-  if (!token || adminSession !== 'authenticated' || adminSessionVersion !== 'v2') {
+  if (!token) {
     logger.warn('Unauthorized access attempt to admin dashboard');
-    // Redirect to home, not login (admin signup is at /admin login page)
-    return <Navigate to="/" replace />;
+    // Route to /admin so the admin login/bootstrap form is available.
+    return <Navigate to="/admin" replace />;
   }
 
   // Token exists - allow access
