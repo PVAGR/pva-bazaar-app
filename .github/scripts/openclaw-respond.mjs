@@ -403,6 +403,21 @@ async function main() {
 
   if (!messages.length) {
     console.log('No unprocessed outbound messages.');
+    await recordResponderSuccess({
+      processedCount: 0,
+      failedCount: 0,
+      sources: [],
+      phase: 'idle',
+    });
+    await writeHeartbeat(OLLAMA_BASE_URL ? 'ollama' : 'github-models', {
+      processedCount: 0,
+      failedCount: 0,
+      repo: REPO,
+      phase: 'idle',
+      ollamaBaseUrl: OLLAMA_BASE_URL || null,
+      ollamaModel: OLLAMA_MODEL || null,
+      sources: [],
+    });
     return;
   }
 
