@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+/* eslint-env node */
+/* global fetch, console, process */
 
 const BACKEND_URL = (process.env.OPENCLAW_BACKEND_URL || '').replace(/\/$/, '');
 const BRIDGE_SECRET = process.env.OPENCLAW_BRIDGE_SECRET || '';
@@ -118,6 +120,15 @@ async function setLastUpdateId(value) {
   await writeMemory(TELEGRAM_STATE_KEY, String(value), 'fact');
 }
 
+async function writeHeartbeat(details = {}) {
+  const timestamp = new Date().toISOString();
+  await Promise.allSettled([
+    writeMemory('ecosystem:telegram-bridge:lastHeartbeat', timestamp, 'fact'),
+    writeMemory('telegram:lastHeartbeat', timestamp, 'fact'),
+    writeMemory('telegram:lastStatus', JSON.stringify({ timestamp, ...details }), 'reflection'),
+  ]);
+}
+
 async function openclawChat(message, sourceMeta = {}) {
   const response = await fetch(`${BACKEND_URL}/api/openclaw/chat`, {
     method: 'POST',
@@ -156,6 +167,7 @@ function helpText() {
     '/start - confirm bridge status',
     '/help - show this message',
     '/status - show OpenClaw bridge status',
+    '/ecosystem - show website, OpenClaw, Ollama, and Telegram status',
     '',
     'Any other text is sent to OpenClaw chat and the AI reply is returned here.',
   ].join('\n');
@@ -177,6 +189,22 @@ async function openclawStatusSummary() {
     `Gateway reachable: ${reachable}`,
     `Queue pending: ${pending}`,
     `Queue processed: ${processed}`,
+  ].join('\n');
+}
+
+function ecosystemSummary(status) {
+  const services = status?.ecosystem?.services || {};
+  const website = services.website || {};
+  const openclaw = services.openclaw || {};
+  const ollama = services.ollama || {};
+  const telegram = services.telegram || {};
+
+  return [
+    `Ecosystem: ${status?.ecosystem?.status || 'unknown'}`,
+    `Website: ${website.status || 'unknown'}${website.url ? ` (${website.url})` : ''}`,
+    `OpenClaw: ${openclaw.status || 'unknown'}${typeof openclaw.queuePending === 'number' ? ` · pending=${openclaw.queuePending}` : ''}`,
+    `Ollama: ${ollama.status || 'unknown'}${ollama.model ? ` · model=${ollama.model}` : ''}`,
+    `Telegram: ${telegram.status || 'unknown'}${telegram.lastHeartbeatAt ? ` · heartbeat=${telegram.lastHeartbeatAt}` : ''}`,
   ].join('\n');
 }
 
@@ -211,6 +239,18 @@ async function handleMessage(update) {
     return true;
   }
 
+  if (lower === '/ecosystem') {
+    const response = await fetch(`${BACKEND_URL}/api/openclaw/status`);
+    if (!response.ok) {
+      await sendTelegramMessage(chatId, `Ecosystem check failed (${response.status}).`);
+      return true;
+    }
+
+    const status = await response.json();
+    await sendTelegramMessage(chatId, ecosystemSummary(status));
+    return true;
+  }
+
   try {
     const reply = await openclawChat(text, {
       telegramChatId: String(chatId),
@@ -231,6 +271,7 @@ async function handleMessage(update) {
 
 async function main() {
   console.log('OpenClaw Telegram bridge starting...');
+  await writeHeartbeat({ phase: 'starting' });
   const lastUpdateId = await getLastUpdateId();
   const offset = Math.max(lastUpdateId + 1, 0);
 
@@ -259,6 +300,8 @@ async function main() {
   if (maxUpdateId > lastUpdateId) {
     await setLastUpdateId(maxUpdateId);
   }
+
+  await writeHeartbeat({ phase: 'finished', processed, updates: updates.length, maxUpdateId });
 
   console.log(`OpenClaw Telegram bridge finished. updates=${updates.length} handled=${processed}`);
 }

@@ -45,6 +45,160 @@ function parseTimestamp(line) {
   return match ? match[1] : null;
 }
 
+function normalizeUrl(value) {
+  return String(value || '').trim().replace(/\/$/, '');
+}
+
+function isRecentTimestamp(value, maxAgeMinutes = 10) {
+  if (!value) return false;
+  const parsed = new Date(value).getTime();
+  if (!Number.isFinite(parsed)) return false;
+  return (Date.now() - parsed) <= maxAgeMinutes * 60 * 1000;
+}
+
+async function probeUrl(url, timeoutMs = 6000, headers = {}) {
+  if (!url) {
+    return {
+      configured: false,
+      reachable: false,
+      url: '',
+      message: 'Not configured',
+    };
+  }
+
+  try {
+    const response = await axios.get(url, {
+      headers,
+      timeout: timeoutMs,
+    });
+
+    return {
+      configured: true,
+      reachable: response.status >= 200 && response.status < 500,
+      status: response.status,
+      url,
+      message: 'Reachable',
+      detail: response.data || null,
+    };
+  } catch (err) {
+    return {
+      configured: true,
+      reachable: false,
+      status: err?.response?.status || null,
+      url,
+      message: err?.response?.data?.message || err.message || 'Request failed',
+      detail: err?.response?.data || null,
+    };
+  }
+}
+
+async function loadMemoryEntries(keys = [], limit = 60) {
+  await dbConnect();
+  const OpenClawMemory = require('../models/OpenClawMemory');
+  const query = Array.isArray(keys) && keys.length ? { key: { $in: keys } } : {};
+  return OpenClawMemory.find(query).sort({ createdAt: -1 }).limit(limit).lean();
+}
+
+async function buildEcosystemSnapshot({ queue, worker } = {}) {
+  const websiteUrl = normalizeUrl(process.env.OPENCLAW_WEBSITE_URL || process.env.PUBLIC_WEBSITE_URL || 'https://pvabazaar.org');
+  const websiteHealthUrl = normalizeUrl(process.env.OPENCLAW_WEBSITE_HEALTH_URL || `${websiteUrl}/api/health`);
+  const ollamaBaseUrl = normalizeUrl(process.env.OLLAMA_BASE_URL || process.env.OPENCLAW_OLLAMA_BASE_URL || '');
+  const ollamaModel = String(process.env.OLLAMA_MODEL || process.env.OPENCLAW_OLLAMA_MODEL || '').trim();
+
+  const memoryKeys = [
+    'ecosystem:openclaw-responder:lastHeartbeat',
+    'ecosystem:openclaw-responder:brain',
+    'ecosystem:telegram-bridge:lastHeartbeat',
+    'telegram:lastHeartbeat',
+    'telegram:lastUpdateId',
+  ];
+
+  let memory = [];
+  try {
+    memory = await loadMemoryEntries(memoryKeys, 80);
+  } catch (_err) {
+    memory = [];
+  }
+
+  const latestByKey = new Map();
+  for (const item of memory) {
+    if (!latestByKey.has(item.key)) {
+      latestByKey.set(item.key, item);
+    }
+  }
+
+  const openclawHeartbeat = latestByKey.get('ecosystem:openclaw-responder:lastHeartbeat') || null;
+  const brainState = latestByKey.get('ecosystem:openclaw-responder:brain') || null;
+  const telegramHeartbeat = latestByKey.get('ecosystem:telegram-bridge:lastHeartbeat') || latestByKey.get('telegram:lastHeartbeat') || null;
+  const telegramUpdate = latestByKey.get('telegram:lastUpdateId') || null;
+
+  const [websiteProbe, ollamaProbe] = await Promise.all([
+    probeUrl(websiteHealthUrl, 6000),
+    ollamaBaseUrl
+      ? probeUrl(`${ollamaBaseUrl}/api/version`, 6000)
+      : Promise.resolve({ configured: false, reachable: false, url: '', message: 'Not configured' }),
+  ]);
+
+  const telegramConfigured = Boolean(telegramHeartbeat || telegramUpdate || process.env.TELEGRAM_BOT_TOKEN || process.env.TELEGRAM_ALLOWED_CHAT_IDS);
+  const telegramLive = isRecentTimestamp(telegramHeartbeat?.createdAt, 10);
+  const responderLive = isRecentTimestamp(openclawHeartbeat?.createdAt, 15);
+
+  const services = {
+    website: {
+      configured: true,
+      url: websiteUrl,
+      healthUrl: websiteHealthUrl,
+      reachable: websiteProbe.reachable,
+      message: websiteProbe.message,
+      status: websiteProbe.reachable ? 'online' : 'degraded',
+    },
+    openclaw: {
+      configured: true,
+      reachable: Boolean(queue || worker),
+      queuePending: queue?.pendingOutbound ?? null,
+      staleOutbound: queue?.staleOutbound ?? null,
+      workerActive: worker?.active === true,
+      workerHeartbeatAt: worker?.heartbeatAt || null,
+      message: queue && worker
+        ? `${queue.pendingOutbound} pending · ${queue.staleOutbound} stale`
+        : 'Queue metadata unavailable',
+      status: (queue?.staleOutbound ?? 0) > 0 || worker?.active === false ? 'degraded' : 'online',
+    },
+    ollama: {
+      configured: Boolean(ollamaBaseUrl),
+      baseUrl: ollamaBaseUrl || null,
+      model: ollamaModel || null,
+      reachable: Boolean(ollamaBaseUrl && ollamaProbe.reachable),
+      version: ollamaProbe?.detail?.version || ollamaProbe?.detail?.name || null,
+      message: ollamaBaseUrl
+        ? (ollamaProbe.reachable ? 'Reachable' : ollamaProbe.message)
+        : 'Not configured',
+      status: ollamaBaseUrl ? (ollamaProbe.reachable ? 'online' : 'degraded') : 'offline',
+    },
+    telegram: {
+      configured: telegramConfigured,
+      reachable: telegramLive,
+      lastHeartbeatAt: telegramHeartbeat?.createdAt || null,
+      lastUpdateId: telegramUpdate?.value || null,
+      brain: brainState?.value || null,
+      message: telegramLive
+        ? 'Bridge heartbeat is fresh'
+        : (telegramConfigured ? 'Bridge heartbeat is stale or missing' : 'Not configured'),
+      status: telegramLive ? 'online' : (telegramConfigured ? 'degraded' : 'offline'),
+    },
+  };
+
+  const allOnline = Object.values(services).every((service) => service.status === 'online');
+  const anyOnline = Object.values(services).some((service) => service.status === 'online');
+
+  return {
+    status: allOnline ? 'healthy' : (anyOnline ? 'degraded' : 'offline'),
+    services,
+    snapshotAt: new Date().toISOString(),
+    responderLive,
+  };
+}
+
 function buildWatchdogSummary(logLines, alertLines) {
   const latestError = extractLatestLine(logLines, '[ERROR]');
   const latestWarn = extractLatestLine(logLines, '[WARN]');
@@ -415,6 +569,13 @@ router.get('/status', async (_req, res) => {
     // best-effort
   }
 
+  let ecosystem = null;
+  try {
+    ecosystem = await buildEcosystemSnapshot({ queue, worker });
+  } catch (_err) {
+    ecosystem = null;
+  }
+
   const mode = config.webhookConfigured ? 'webhook+queue' : 'queue-only';
   const statusMsg = config.webhookConfigured
     ? (reachable ? `Gateway reachable (${mode})` : `Gateway unreachable — events queued`)
@@ -437,6 +598,7 @@ router.get('/status', async (_req, res) => {
       latestAt: queue.latestOutboundAt,
     } : null,
     worker,
+    ecosystem,
     timestamp: new Date().toISOString(),
     ...(detail ? { detail } : {}),
   });

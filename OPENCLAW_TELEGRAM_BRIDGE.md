@@ -8,6 +8,7 @@ Use Telegram on your phone to send instructions into the live OpenClaw chat loop
 - Forwards incoming text to `POST /api/openclaw/chat`.
 - Returns the agent response back to your Telegram chat.
 - Restricts usage to approved chat IDs when configured.
+- Writes a bridge heartbeat into OpenClaw memory so the website can see live status.
 
 ## Files
 
@@ -51,6 +52,7 @@ Use Telegram on your phone to send instructions into the live OpenClaw chat loop
 - `/start` confirms bridge status.
 - `/help` lists commands.
 - `/status` checks OpenClaw status summary.
+- `/ecosystem` shows the combined website, OpenClaw, Ollama, and Telegram snapshot.
 - Any other text is sent to OpenClaw chat.
 
 ## Security notes

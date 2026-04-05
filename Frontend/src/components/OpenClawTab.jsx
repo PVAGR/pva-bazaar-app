@@ -1,3 +1,5 @@
+/* global setTimeout, clearTimeout, setInterval, clearInterval */
+
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { apiGet, apiPost, apiPut, fetchAdminRuntimeConfig, updateOpenClawRuntimeConfig } from '../lib/api';
 import { createLogger } from '../lib/logger';
@@ -374,7 +376,7 @@ export default function OpenClawTab() {
     } finally {
       setQueueActionLoading(false);
     }
-  }, [loadQueueStats]);
+  }, [loadQueueStats, loadRecoveryHistory]);
 
   const runRecovery = useCallback(async () => {
     setRecoverLoading(true);
@@ -402,7 +404,7 @@ export default function OpenClawTab() {
     } finally {
       setRecoverLoading(false);
     }
-  }, [loadStatus, loadQueueStats]);
+  }, [loadStatus, loadQueueStats, loadRecoveryHistory]);
 
   const runMission = useCallback(async (type) => {
     setMissionLoading(type);
@@ -578,6 +580,8 @@ export default function OpenClawTab() {
   const heartbeatHealthy = heartbeatAgeMinutes !== null && heartbeatAgeMinutes <= 2;
   const leaseActive = status?.worker?.active === true;
   const staleOutbound = queueStats?.staleOutbound ?? 0;
+  const ecosystem = status?.ecosystem?.services || {};
+  const ecosystemState = status?.ecosystem?.status || 'unknown';
   const autonomyPosture = useMemo(() => {
     if (!openclawConfig.autonomousEnabled) {
       return { tone: 'oc-warn', icon: '🧷', label: 'Manual hold', detail: 'Autonomous mode is disabled' };
@@ -734,6 +738,9 @@ export default function OpenClawTab() {
           </div>
           <p className="oc-hint">
             Commands here override all goals and behavior. One per line. Prefix with &quot;Creator command:&quot; in chat for same effect.
+          </p>
+          <p className="oc-hint">
+            Stored commands: {agentConfig.creatorCommands.length} · goals: {agentConfig.goals.length}
           </p>
           {agentConfigLoading ? (
             <LoadingDots size="small" label="Loading..." />
@@ -895,6 +902,68 @@ export default function OpenClawTab() {
             </div>
           </div>
         )}
+
+        <div className="oc-ecosystem-panel oc-panel">
+          <div className="oc-panel-header">
+            <div>
+              <h3 className="oc-config-title">Ecosystem Keystones</h3>
+              <p className="oc-config-note">
+                One live snapshot for the website, OpenClaw, Ollama, and Telegram bridge.
+              </p>
+            </div>
+            <span className={`oc-mission-badge ${ecosystemState === 'healthy' ? 'oc-ok' : ecosystemState === 'degraded' ? 'oc-warn' : 'oc-bad'}`}>
+              {ecosystemState.toUpperCase()}
+            </span>
+          </div>
+
+          <div className="oc-status-grid">
+            <div className={`oc-status-card ${ecosystem.website?.reachable ? 'oc-ok' : 'oc-warn'} oc-url-card`}>
+              <span className="oc-status-icon">🌐</span>
+              <div>
+                <div className="oc-status-label">Website</div>
+                <div className="oc-status-value">{ecosystem.website?.status || 'unknown'}</div>
+                <div className="oc-status-subvalue">{ecosystem.website?.url || 'Not configured'}</div>
+              </div>
+            </div>
+
+            <div className={`oc-status-card ${ecosystem.openclaw?.status === 'online' ? 'oc-ok' : 'oc-warn'} oc-url-card`}>
+              <span className="oc-status-icon">🦞</span>
+              <div>
+                <div className="oc-status-label">OpenClaw</div>
+                <div className="oc-status-value">{ecosystem.openclaw?.status || 'unknown'}</div>
+                <div className="oc-status-subvalue">
+                  {typeof ecosystem.openclaw?.queuePending === 'number'
+                    ? `${ecosystem.openclaw.queuePending} pending · ${ecosystem.openclaw.staleOutbound ?? 0} stale`
+                    : ecosystem.openclaw?.message || 'Queue snapshot unavailable'}
+                </div>
+              </div>
+            </div>
+
+            <div className={`oc-status-card ${ecosystem.ollama?.reachable ? 'oc-ok' : ecosystem.ollama?.configured ? 'oc-warn' : 'oc-info'} oc-url-card`}>
+              <span className="oc-status-icon">🧠</span>
+              <div>
+                <div className="oc-status-label">Ollama</div>
+                <div className="oc-status-value">{ecosystem.ollama?.status || 'unknown'}</div>
+                <div className="oc-status-subvalue">
+                  {ecosystem.ollama?.model ? `Model: ${ecosystem.ollama.model}` : ecosystem.ollama?.message || 'Not configured'}
+                </div>
+              </div>
+            </div>
+
+            <div className={`oc-status-card ${ecosystem.telegram?.reachable ? 'oc-ok' : ecosystem.telegram?.configured ? 'oc-warn' : 'oc-info'} oc-url-card`}>
+              <span className="oc-status-icon">📱</span>
+              <div>
+                <div className="oc-status-label">Telegram</div>
+                <div className="oc-status-value">{ecosystem.telegram?.status || 'unknown'}</div>
+                <div className="oc-status-subvalue">
+                  {ecosystem.telegram?.lastHeartbeatAt
+                    ? `Heartbeat ${formatMessageTime(ecosystem.telegram.lastHeartbeatAt)}`
+                    : ecosystem.telegram?.message || 'Bridge not reporting yet'}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <div className="oc-mission-rack" aria-label="OpenClaw mission rack">
           <div className="oc-mission-rack-head">

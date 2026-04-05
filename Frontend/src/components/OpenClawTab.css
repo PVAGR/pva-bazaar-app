@@ -65,6 +65,14 @@
   padding: 20px 24px;
 }
 
+.oc-ecosystem-panel {
+  margin-top: 2px;
+}
+
+.oc-ecosystem-panel .oc-status-card {
+  flex: 1 1 220px;
+}
+
 .oc-panel-header {
   display: flex;
   align-items: center;

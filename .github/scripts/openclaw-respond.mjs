@@ -1,8 +1,13 @@
 #!/usr/bin/env node
+/* eslint-env node */
+/* global fetch, console, process */
 
 const BACKEND_URL = (process.env.OPENCLAW_BACKEND_URL || '').replace(/\/$/, '');
 const BRIDGE_SECRET = process.env.OPENCLAW_BRIDGE_SECRET || '';
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || '';
+const OLLAMA_BASE_URL = (process.env.OLLAMA_BASE_URL || process.env.OPENCLAW_OLLAMA_BASE_URL || '').replace(/\/$/, '');
+const OLLAMA_MODEL = process.env.OLLAMA_MODEL || process.env.OPENCLAW_OLLAMA_MODEL || 'llama3.1';
+const OLLAMA_TEMPERATURE = Math.min(Math.max(parseFloat(process.env.OLLAMA_TEMPERATURE || '0.35'), 0), 2);
 const REPO = process.env.GITHUB_REPOSITORY || 'PVAGR/pva-bazaar-app';
 
 if (!BACKEND_URL) {
@@ -85,6 +90,15 @@ async function writeMemory(key, value, type = 'fact') {
   } catch (_err) {
     // non-fatal
   }
+}
+
+async function writeHeartbeat(source, details = {}) {
+  const timestamp = new Date().toISOString();
+  await Promise.allSettled([
+    writeMemory('ecosystem:openclaw-responder:lastHeartbeat', timestamp, 'fact'),
+    writeMemory('ecosystem:openclaw-responder:brain', source, 'fact'),
+    writeMemory('ecosystem:openclaw-responder:details', JSON.stringify({ source, timestamp, ...details }), 'reflection'),
+  ]);
 }
 
 function isCreatorMessage(message, metadata = {}) {
@@ -206,10 +220,6 @@ async function generateReply(message) {
   const metadata = message.metadata || {};
   const isCreator = isCreatorMessage(message, metadata);
 
-  if (!GITHUB_TOKEN) {
-    return 'OpenClaw agent is online, but GITHUB_TOKEN was not available for model inference.';
-  }
-
   const [agentConfig, memory, snapshot] = await Promise.all([
     getAgentConfig(),
     getMemorySnapshot(30),
@@ -218,6 +228,44 @@ async function generateReply(message) {
 
   const systemPrompt = buildSystemPrompt(agentConfig, isCreator);
   const userPrompt = buildUserPrompt(userText, snapshot, memory);
+
+  if (OLLAMA_BASE_URL) {
+    try {
+      const response = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: OLLAMA_MODEL,
+          stream: false,
+          options: {
+            temperature: OLLAMA_TEMPERATURE,
+          },
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt },
+          ],
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const text = data?.message?.content?.trim() || data?.response?.trim();
+        if (text) {
+          return text;
+        }
+      }
+    } catch (_err) {
+      // Fall through to GitHub Models when Ollama is unavailable.
+    }
+  }
+
+  if (!GITHUB_TOKEN) {
+    return OLLAMA_BASE_URL
+      ? 'OpenClaw agent could not reach Ollama, and GITHUB_TOKEN was not available for fallback inference.'
+      : 'OpenClaw agent is online, but GITHUB_TOKEN was not available for model inference.';
+  }
 
   const response = await fetch('https://models.inference.ai.azure.com/chat/completions', {
     method: 'POST',
@@ -247,6 +295,12 @@ async function generateReply(message) {
 
 async function main() {
   console.log(`OpenClaw responder starting for ${REPO}`);
+  await writeHeartbeat(OLLAMA_BASE_URL ? 'ollama' : 'github-models', {
+    repo: REPO,
+    ollamaBaseUrl: OLLAMA_BASE_URL || null,
+    ollamaModel: OLLAMA_MODEL || null,
+  });
+
   const response = await fetch(`${BACKEND_URL}/api/openclaw/messages?unprocessed=true&direction=outbound&limit=25`, {
     headers: getHeaders(true),
   });
@@ -289,6 +343,14 @@ async function main() {
   }
 
   console.log(`Responder finished. processed=${processedCount} failed=${failedCount}`);
+
+  await writeHeartbeat(OLLAMA_BASE_URL ? 'ollama' : 'github-models', {
+    processedCount,
+    failedCount,
+    repo: REPO,
+    ollamaBaseUrl: OLLAMA_BASE_URL || null,
+    ollamaModel: OLLAMA_MODEL || null,
+  });
 
   if (processedCount === 0 && failedCount > 0) {
     process.exit(1);
