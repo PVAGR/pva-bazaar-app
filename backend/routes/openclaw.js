@@ -144,8 +144,11 @@ async function buildEcosystemSnapshot({ queue, worker } = {}) {
   const telegramLastError = latestByKey.get('ecosystem:telegram-bridge:lastError') || null;
   const telegramUpdate = latestByKey.get('telegram:lastUpdateId') || null;
 
-  const [websiteProbe, ollamaProbe] = await Promise.all([
+  const [websiteProbe, websiteRootProbe, ollamaProbe] = await Promise.all([
     probeUrl(websiteHealthUrl, 6000),
+    websiteUrl && websiteUrl !== websiteHealthUrl
+      ? probeUrl(websiteUrl, 6000)
+      : Promise.resolve({ configured: true, reachable: false, url: websiteUrl, message: 'Not checked' }),
     ollamaBaseUrl
       ? probeUrl(`${ollamaBaseUrl}/api/version`, 6000)
       : Promise.resolve({ configured: false, reachable: false, url: '', message: 'Not configured' }),
@@ -158,21 +161,30 @@ async function buildEcosystemSnapshot({ queue, worker } = {}) {
   const telegramStateValue = String(telegramState?.value || 'unknown');
   const responderInError = responderStateValue.startsWith('error:');
   const telegramInError = telegramStateValue.startsWith('error:');
+  const queuePending = queue?.pendingOutbound ?? 0;
+  const staleOutbound = queue?.staleOutbound ?? 0;
+  const workerInactiveWithQueuePressure = worker?.active === false && (queuePending > 0 || staleOutbound > 0);
+  const websiteReachable = Boolean(websiteProbe.reachable || websiteRootProbe.reachable);
+  const websiteMessage = websiteProbe.reachable
+    ? websiteProbe.message
+    : (websiteRootProbe.reachable
+      ? `Health endpoint not reachable; root reachable (${websiteRootProbe.status || 'ok'})`
+      : websiteProbe.message);
 
   const services = {
     website: {
       configured: true,
       url: websiteUrl,
       healthUrl: websiteHealthUrl,
-      reachable: websiteProbe.reachable,
-      message: websiteProbe.message,
-      status: websiteProbe.reachable ? 'online' : 'degraded',
+      reachable: websiteReachable,
+      message: websiteMessage,
+      status: websiteReachable ? 'online' : 'degraded',
     },
     openclaw: {
       configured: true,
       reachable: Boolean(queue || worker),
-      queuePending: queue?.pendingOutbound ?? null,
-      staleOutbound: queue?.staleOutbound ?? null,
+      queuePending,
+      staleOutbound,
       workerActive: worker?.active === true,
       workerHeartbeatAt: worker?.heartbeatAt || null,
       responderLive,
@@ -183,7 +195,7 @@ async function buildEcosystemSnapshot({ queue, worker } = {}) {
       message: queue && worker
         ? `${queue.pendingOutbound} pending · ${queue.staleOutbound} stale`
         : 'Queue metadata unavailable',
-      status: (queue?.staleOutbound ?? 0) > 0 || worker?.active === false || !responderLive || responderInError
+      status: staleOutbound > 0 || workerInactiveWithQueuePressure || !responderLive || responderInError
         ? 'degraded'
         : 'online',
     },
@@ -213,11 +225,13 @@ async function buildEcosystemSnapshot({ queue, worker } = {}) {
     },
   };
 
-  const allOnline = Object.values(services).every((service) => service.status === 'online');
-  const anyOnline = Object.values(services).some((service) => service.status === 'online');
+  const serviceList = Object.values(services);
+  const relevantServices = serviceList.filter((service) => service.configured !== false);
+  const degradedRelevantServices = relevantServices.filter((service) => service.status !== 'online');
+  const anyOnline = relevantServices.some((service) => service.status === 'online');
 
   return {
-    status: allOnline ? 'healthy' : (anyOnline ? 'degraded' : 'offline'),
+    status: degradedRelevantServices.length === 0 ? 'healthy' : (anyOnline ? 'degraded' : 'offline'),
     services,
     snapshotAt: new Date().toISOString(),
     responderLive,
