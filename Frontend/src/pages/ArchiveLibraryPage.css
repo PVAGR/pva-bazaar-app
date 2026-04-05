@@ -45,6 +45,15 @@
   transition: background 0.3s ease, color 0.3s ease;
 }
 
+.archive-library a {
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.archive-library a:hover {
+  color: var(--accent);
+}
+
 .archive-header {
   padding: 1.5rem 2rem 1.25rem;
   background: var(--bg-tertiary);
@@ -113,6 +122,7 @@
   margin: 0 0 0.75rem;
   color: var(--accent);
   font-weight: 700;
+  letter-spacing: 0.01em;
 }
 
 .hero-headline {
@@ -145,21 +155,23 @@
 .destination-tab {
   background: var(--bg-secondary);
   color: var(--text-primary);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 0.58rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border));
+  border-radius: 999px;
+  padding: 0.6rem 1.05rem;
   text-decoration: none;
-  font-size: 0.94rem;
+  font-size: 0.92rem;
   font-weight: 700;
   line-height: 1;
   transition: all 0.2s ease;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
 }
 
 .destination-tab:hover {
-  background: var(--highlight);
+  background: color-mix(in srgb, var(--highlight) 70%, var(--accent) 30%);
   border-color: var(--accent);
   color: var(--accent);
   transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.28);
 }
 
 .hero-actions {
@@ -173,7 +185,7 @@
 .hero-cta {
   background: var(--accent);
   border: 2px solid var(--accent);
-  border-radius: 10px;
+  border-radius: 999px;
   padding: 0.62rem 1.1rem;
   color: #fff;
   font-size: 0.95rem;
@@ -191,6 +203,11 @@
   background: var(--bg-secondary);
   color: var(--text-primary);
   border-color: var(--border);
+}
+
+.hero-cta-secondary:hover {
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .archive-subtitle {
@@ -219,7 +236,7 @@
 .view-btn {
   background: var(--bg-secondary);
   border: 2px solid var(--border);
-  border-radius: 10px;
+  border-radius: 999px;
   padding: 0.75rem 1.5rem;
   font-size: 1.05rem;
   color: var(--text-primary);
@@ -232,19 +249,19 @@
 }
 
 .view-btn:hover {
-  background: var(--highlight);
+  background: color-mix(in srgb, var(--highlight) 75%, var(--accent) 25%);
   border-color: var(--accent);
   color: var(--accent);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.28);
 }
 
 .view-btn.active {
-  background: var(--accent);
+  background: color-mix(in srgb, var(--accent) 90%, #ffffff 10%);
   border-color: var(--accent);
   color: #fff;
   font-weight: 600;
-  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.4);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.28);
 }
 
 
@@ -257,8 +274,8 @@
 }
 
 .archive-sidebar {
-  background: rgba(0, 0, 0, 0.4);
-  border-right: 1px solid #333;
+  background: color-mix(in srgb, var(--bg-secondary) 82%, #000 18%);
+  border-right: 1px solid color-mix(in srgb, var(--border) 75%, #000 25%);
   height: 100%;
   max-height: calc(100vh - 200px);
   overflow-y: auto;
@@ -285,7 +302,7 @@
 
 .category-filter {
   padding: 1.5rem;
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 65%, #000 35%);
 }
 
 .category-filter h3 {
@@ -305,7 +322,7 @@
   margin-bottom: 0.4rem;
   background: transparent;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 999px;
   color: var(--text-primary);
   cursor: pointer;
   transition: all 0.2s;
@@ -313,17 +330,17 @@
 }
 
 .category-btn:hover {
-  background: var(--highlight);
+  background: color-mix(in srgb, var(--highlight) 75%, var(--accent) 25%);
   border-color: var(--accent);
   transform: translateX(2px);
 }
 
 .category-btn.active {
-  background: var(--accent);
+  background: color-mix(in srgb, var(--accent) 90%, #ffffff 10%);
   border-color: var(--accent);
   color: #fff;
   font-weight: 600;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.24);
 }
 
 .category-btn .count {
@@ -388,7 +405,7 @@
   margin-bottom: 0.45rem;
   background: var(--bg-tertiary);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 14px;
   color: var(--text-primary);
   cursor: pointer;
   transition: all 0.2s;
@@ -396,17 +413,17 @@
 }
 
 .entry-item:hover {
-  background: var(--highlight);
+  background: color-mix(in srgb, var(--highlight) 75%, var(--accent) 25%);
   border-color: var(--accent);
   transform: translateX(4px);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.24);
 }
 
 .entry-item.active {
-  background: var(--highlight-strong);
+  background: color-mix(in srgb, var(--highlight-strong) 70%, var(--accent) 30%);
   border-color: var(--accent);
   border-left: 4px solid var(--accent);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.24);
 }
 
 .entry-title {
@@ -427,7 +444,7 @@
 }
 
 .archive-content {
-  padding: 2.5rem;
+  padding: 2.1rem 1.9rem 2.5rem;
   overflow-y: auto;
   overflow-x: hidden;
   height: 100%;
@@ -457,6 +474,10 @@
   margin: 0 auto;
   padding: 3rem 2rem;
   margin-bottom: 3rem;
+  background: color-mix(in srgb, var(--bg-tertiary) 82%, #000 18%);
+  border: 1px solid color-mix(in srgb, var(--border) 72%, #000 28%);
+  border-radius: 18px;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.28);
 }
 
 .archive-welcome h2 {
@@ -490,7 +511,7 @@
   margin-bottom: 0.75rem;
   background: var(--bg-secondary);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 999px;
   color: var(--text-primary);
   cursor: pointer;
   transition: all 0.2s;
@@ -500,9 +521,10 @@
 }
 
 .quick-link:hover {
-  background: var(--highlight-strong);
+  background: color-mix(in srgb, var(--highlight-strong) 70%, var(--accent) 30%);
   border-color: var(--accent);
   transform: translateX(6px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.24);
 }
 
 .archive-error-box {
@@ -551,10 +573,10 @@
   max-width: 950px;
   margin: 0 auto;
   padding: 2.5rem;
-  background: var(--bg-tertiary);
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  background: color-mix(in srgb, var(--bg-tertiary) 82%, #000 18%);
+  border-radius: 18px;
+  border: 1px solid color-mix(in srgb, var(--border) 72%, #000 28%);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.28);
   margin-bottom: 3rem;
 }
 
