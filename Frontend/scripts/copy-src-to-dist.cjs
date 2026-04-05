@@ -29,6 +29,17 @@ console.log('Copying', pagesSrc, '->', pagesDest);
 copyRecursive(pagesSrc, pagesDest);
 console.log('Pages copy complete');
 
+// Copy additional top-level HTML entry pages used outside SPA routes.
+const topLevelHtmlFiles = ['archive.html', 'dashboard.html', 'home.html', 'journal.html'];
+for (const fileName of topLevelHtmlFiles) {
+  const srcPath = path.join(projectRoot, fileName);
+  const destPath = path.join(projectRoot, 'dist', fileName);
+  if (fs.existsSync(srcPath)) {
+    fs.copyFileSync(srcPath, destPath);
+    console.log(`COPIED ${fileName} to dist`);
+  }
+}
+
 // Copy only the active long-form content that still belongs in production.
 ['writings'].forEach((dir) => {
   const s = path.join(projectRoot, dir);
