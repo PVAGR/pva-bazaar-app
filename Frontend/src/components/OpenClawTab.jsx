@@ -58,6 +58,8 @@ export default function OpenClawTab() {
     gatewayUrl: '',
     webhookUrl: '',
     healthUrl: '',
+    ollamaBaseUrl: '',
+    ollamaModel: '',
     apiKey: '',
     bridgeSecret: '',
     autonomousEnabled: true,
@@ -132,6 +134,8 @@ export default function OpenClawTab() {
           gatewayUrl: cfg.gatewayUrl || '',
           webhookUrl: cfg.webhookUrl || '',
           healthUrl: cfg.healthUrl || '',
+          ollamaBaseUrl: cfg.ollamaBaseUrl || '',
+          ollamaModel: cfg.ollamaModel || '',
           autonomousEnabled: cfg.autonomousEnabled !== false,
           autonomousBountyScanMinutes: cfg.autonomousBountyScanMinutes || 30,
           autonomousKeepaliveMinutes: cfg.autonomousKeepaliveMinutes || 10,
@@ -156,6 +160,8 @@ export default function OpenClawTab() {
         gatewayUrl: openclawConfig.gatewayUrl,
         webhookUrl: openclawConfig.webhookUrl,
         healthUrl: openclawConfig.healthUrl,
+        ollamaBaseUrl: openclawConfig.ollamaBaseUrl,
+        ollamaModel: openclawConfig.ollamaModel,
         apiKey: openclawConfig.apiKey,
         bridgeSecret: openclawConfig.bridgeSecret,
         autonomousEnabled: openclawConfig.autonomousEnabled,
@@ -1127,6 +1133,24 @@ export default function OpenClawTab() {
                 value={openclawConfig.healthUrl}
                 onChange={(event) => setOpenclawConfig(prev => ({ ...prev, healthUrl: event.target.value }))}
                 placeholder="https://openclaw.yourdomain.com/healthz"
+              />
+            </label>
+            <label>
+              Ollama Base URL
+              <input
+                type="url"
+                value={openclawConfig.ollamaBaseUrl}
+                onChange={(event) => setOpenclawConfig(prev => ({ ...prev, ollamaBaseUrl: event.target.value }))}
+                placeholder="https://ollama.yourdomain.com"
+              />
+            </label>
+            <label>
+              Ollama Model
+              <input
+                type="text"
+                value={openclawConfig.ollamaModel}
+                onChange={(event) => setOpenclawConfig(prev => ({ ...prev, ollamaModel: event.target.value }))}
+                placeholder="llama3.1"
               />
             </label>
             <label>

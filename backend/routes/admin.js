@@ -183,6 +183,8 @@ function sanitizeRuntimeConfig(doc) {
       gatewayUrl: doc.openclaw?.gatewayUrl || '',
       webhookUrl: doc.openclaw?.webhookUrl || '',
       healthUrl: doc.openclaw?.healthUrl || '',
+      ollamaBaseUrl: doc.openclaw?.ollamaBaseUrl || '',
+      ollamaModel: doc.openclaw?.ollamaModel || '',
       apiKeySet: Boolean(doc.openclaw?.apiKey),
       bridgeSecretSet: Boolean(doc.openclaw?.bridgeSecret),
       autonomousEnabled: doc.openclaw?.autonomousEnabled !== false,
@@ -239,6 +241,8 @@ router.put('/runtime-config/openclaw', adminSession, async (req, res) => {
       gatewayUrl: String(body.gatewayUrl || '').trim(),
       webhookUrl: String(body.webhookUrl || '').trim(),
       healthUrl: String(body.healthUrl || '').trim(),
+      ollamaBaseUrl: String(body.ollamaBaseUrl || '').trim(),
+      ollamaModel: String(body.ollamaModel || '').trim(),
       autonomousEnabled: body.autonomousEnabled !== false,
       autonomousBountyScanMinutes: Math.min(Math.max(parseInt(body.autonomousBountyScanMinutes ?? '30', 10), 5), 1440),
       autonomousKeepaliveMinutes: Math.min(Math.max(parseInt(body.autonomousKeepaliveMinutes ?? '10', 10), 1), 240),
@@ -264,6 +268,10 @@ router.put('/runtime-config/openclaw', adminSession, async (req, res) => {
     process.env.OPENCLAW_GATEWAY_URL = nextOpenclaw.gatewayUrl || '';
     process.env.OPENCLAW_WEBHOOK_URL = nextOpenclaw.webhookUrl || '';
     process.env.OPENCLAW_HEALTH_URL = nextOpenclaw.healthUrl || '';
+    process.env.OPENCLAW_OLLAMA_BASE_URL = nextOpenclaw.ollamaBaseUrl || '';
+    process.env.OLLAMA_BASE_URL = nextOpenclaw.ollamaBaseUrl || '';
+    process.env.OPENCLAW_OLLAMA_MODEL = nextOpenclaw.ollamaModel || '';
+    process.env.OLLAMA_MODEL = nextOpenclaw.ollamaModel || '';
     process.env.OPENCLAW_API_KEY = nextOpenclaw.apiKey || '';
     process.env.OPENCLAW_BRIDGE_SECRET = nextOpenclaw.bridgeSecret || '';
     process.env.OPENCLAW_AUTONOMOUS_ENABLED = nextOpenclaw.autonomousEnabled ? 'true' : 'false';
@@ -280,6 +288,8 @@ router.put('/runtime-config/openclaw', adminSession, async (req, res) => {
       workerName: nextOpenclaw.workerName,
       workerPollMs: nextOpenclaw.workerPollMs,
       workerBatchSize: nextOpenclaw.workerBatchSize,
+      ollamaConfigured: Boolean(nextOpenclaw.ollamaBaseUrl),
+      ollamaModel: nextOpenclaw.ollamaModel || null,
       autonomousEnabled: nextOpenclaw.autonomousEnabled,
       autonomousBountyScanMinutes: nextOpenclaw.autonomousBountyScanMinutes,
       autonomousKeepaliveMinutes: nextOpenclaw.autonomousKeepaliveMinutes,

@@ -6,6 +6,8 @@ const adminRuntimeConfigSchema = new mongoose.Schema({
     gatewayUrl: { type: String, default: '' },
     webhookUrl: { type: String, default: '' },
     healthUrl: { type: String, default: '' },
+    ollamaBaseUrl: { type: String, default: '' },
+    ollamaModel: { type: String, default: '' },
     apiKey: { type: String, default: '' },
     bridgeSecret: { type: String, default: '' },
     autonomousEnabled: { type: Boolean, default: true },
