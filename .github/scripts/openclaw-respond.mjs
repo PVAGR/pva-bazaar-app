@@ -177,6 +177,17 @@ async function getOperationalSnapshot() {
   return snapshot;
 }
 
+function resolveOllamaRuntime(snapshot) {
+  const snapshotOllama = snapshot?.openclaw?.ecosystem?.services?.ollama || {};
+  const baseUrl = (OLLAMA_BASE_URL || snapshotOllama.baseUrl || '').replace(/\/$/, '');
+  const model = OLLAMA_MODEL || snapshotOllama.model || 'llama3.1';
+  return {
+    baseUrl,
+    model,
+    temperature: OLLAMA_TEMPERATURE,
+  };
+}
+
 function buildSystemPrompt(agentConfig, isCreator) {
   const parts = [BASE_SYSTEM_PROMPT];
   if (agentConfig.creatorCommands?.length) {
@@ -228,19 +239,20 @@ async function generateReply(message) {
 
   const systemPrompt = buildSystemPrompt(agentConfig, isCreator);
   const userPrompt = buildUserPrompt(userText, snapshot, memory);
+  const ollamaRuntime = resolveOllamaRuntime(snapshot);
 
-  if (OLLAMA_BASE_URL) {
+  if (ollamaRuntime.baseUrl) {
     try {
-      const response = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
+      const response = await fetch(`${ollamaRuntime.baseUrl}/api/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: OLLAMA_MODEL,
+          model: ollamaRuntime.model,
           stream: false,
           options: {
-            temperature: OLLAMA_TEMPERATURE,
+            temperature: ollamaRuntime.temperature,
           },
           messages: [
             { role: 'system', content: systemPrompt },
@@ -262,7 +274,7 @@ async function generateReply(message) {
   }
 
   if (!GITHUB_TOKEN) {
-    return OLLAMA_BASE_URL
+    return ollamaRuntime.baseUrl
       ? 'OpenClaw agent could not reach Ollama, and GITHUB_TOKEN was not available for fallback inference.'
       : 'OpenClaw agent is online, but GITHUB_TOKEN was not available for model inference.';
   }

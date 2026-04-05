@@ -33,5 +33,3 @@ jobs:
           OPENCLAW_BACKEND_URL: ${{ secrets.OPENCLAW_BACKEND_URL }}
           OPENCLAW_BRIDGE_SECRET: ${{ secrets.OPENCLAW_BRIDGE_SECRET }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          OLLAMA_BASE_URL: ${{ vars.OLLAMA_BASE_URL }}
-          OLLAMA_MODEL: ${{ vars.OLLAMA_MODEL }}
