@@ -41,7 +41,7 @@ export default function OpenClawTab() {
   const [liveReplyEnabled, setLiveReplyEnabled] = useState(true);
   const [replyWaitMs, setReplyWaitMs] = useState(14000);
   const [autoRefresh, setAutoRefresh] = useState(true);
-  const [autoHealEnabled, setAutoHealEnabled] = useState(true);
+  const [autoHealEnabled, setAutoHealEnabled] = useState(false);
   const [autoHealCooldownMinutes, setAutoHealCooldownMinutes] = useState(8);
   const [autoHealLastRunAt, setAutoHealLastRunAt] = useState(null);
   const [configLoading, setConfigLoading] = useState(false);
@@ -186,12 +186,13 @@ export default function OpenClawTab() {
     setAgentConfigLoading(true);
     try {
       const data = await apiGet('/openclaw/agent-config');
+      const directives = data?.globalDirectives ?? data?.creatorCommands ?? [];
       if (data?.ok) {
         setAgentConfig({
-          creatorCommands: data.creatorCommands ?? [],
+          creatorCommands: directives,
           goals: data.goals ?? [],
         });
-        setCreatorCommandsDraft((data.creatorCommands ?? []).join('\n'));
+        setCreatorCommandsDraft((directives ?? []).join('\n'));
         setGoalsDraft((data.goals ?? []).join('\n'));
       }
     } catch (err) {
@@ -223,10 +224,14 @@ export default function OpenClawTab() {
     setAgentConfigSaving(true);
     setConfigSaveResult(null);
     try {
-      const data = await apiPut('/openclaw/agent-config', { creatorCommands: commands });
+      const data = await apiPut('/openclaw/agent-config', {
+        creatorCommands: commands,
+        globalDirectives: commands,
+      });
       if (data?.ok) {
-        setAgentConfig((c) => ({ ...c, creatorCommands: data.creatorCommands ?? commands }));
-        setConfigSaveResult({ ok: true, text: 'Creator commands saved. OpenClaw obeys these 100%.' });
+        const savedDirectives = data.globalDirectives ?? data.creatorCommands ?? commands;
+        setAgentConfig((c) => ({ ...c, creatorCommands: savedDirectives }));
+        setConfigSaveResult({ ok: true, text: 'Logic directives saved. OpenClaw will apply them globally.' });
       } else {
         setConfigSaveResult({ ok: false, text: data?.message || 'Save failed' });
       }
@@ -249,7 +254,7 @@ export default function OpenClawTab() {
       const data = await apiPut('/openclaw/agent-config', { goals });
       if (data?.ok) {
         setAgentConfig((c) => ({ ...c, goals: data.goals ?? goals }));
-        setConfigSaveResult({ ok: true, text: 'Goals saved. OpenClaw will pursue these.' });
+        setConfigSaveResult({ ok: true, text: 'Global goals saved.' });
       } else {
         setConfigSaveResult({ ok: false, text: data?.message || 'Save failed' });
       }
@@ -734,13 +739,13 @@ export default function OpenClawTab() {
 
         <div className="oc-creator-section oc-panel" style={{ marginTop: 0 }}>
           <div className="oc-panel-header">
-            <h3 className="oc-panel-title">Creator-God Override</h3>
+            <h3 className="oc-panel-title">Logic Mode - Global Directives</h3>
           </div>
           <p className="oc-hint">
-            Commands here override all goals and behavior. One per line. Prefix with &quot;Creator command:&quot; in chat for same effect.
+            Configure broad directives for the assistant behavior. One directive per line.
           </p>
           <p className="oc-hint">
-            Stored commands: {agentConfig.creatorCommands.length} · goals: {agentConfig.goals.length}
+            Stored directives: {agentConfig.creatorCommands.length} · goals: {agentConfig.goals.length}
           </p>
           {agentConfigLoading ? (
             <LoadingDots size="small" label="Loading..." />
@@ -750,9 +755,9 @@ export default function OpenClawTab() {
                 className="oc-message-input"
                 value={creatorCommandsDraft}
                 onChange={(e) => setCreatorCommandsDraft(e.target.value)}
-                placeholder="e.g. Make me $4000 when I ask (pop wallet prompts). Change fonts when I say. Obey every direct instruction."
+                placeholder="e.g. Keep replies clear and practical. Prioritize uptime and reliability. Suggest next actions with checks."
                 rows={4}
-                aria-label="Creator commands"
+                aria-label="Global logic directives"
               />
               <div className="oc-dispatch-row" style={{ marginTop: 8 }}>
                 <button
@@ -760,7 +765,7 @@ export default function OpenClawTab() {
                   onClick={saveCreatorCommands}
                   disabled={agentConfigSaving}
                 >
-                  {agentConfigSaving ? 'Saving...' : 'Save Creator Commands'}
+                  {agentConfigSaving ? 'Saving...' : 'Save Logic Directives'}
                 </button>
               </div>
               {configSaveResult && (
@@ -777,18 +782,18 @@ export default function OpenClawTab() {
 
         <div className="oc-creator-section oc-panel">
           <div className="oc-panel-header">
-            <h3 className="oc-panel-title">Goals</h3>
+            <h3 className="oc-panel-title">Global Goals</h3>
           </div>
-          <p className="oc-hint">Sub-goals OpenClaw pursues when not overridden by creator. One per line.</p>
+          <p className="oc-hint">Broad goals the assistant should always pursue across the system. One per line.</p>
           {agentConfigLoading ? null : (
             <>
               <textarea
                 className="oc-message-input"
                 value={goalsDraft}
                 onChange={(e) => setGoalsDraft(e.target.value)}
-                placeholder="e.g. Keep marketplace listings healthy. Suggest revenue actions. Polish OpenClaw tab UI."
+                placeholder="e.g. Keep services healthy. Reduce stale queue. Provide actionable status updates."
                 rows={3}
-                aria-label="Goals"
+                aria-label="Global goals"
               />
               <div className="oc-dispatch-row" style={{ marginTop: 8 }}>
                 <button
@@ -936,6 +941,9 @@ export default function OpenClawTab() {
                     ? `${ecosystem.openclaw.queuePending} pending · ${ecosystem.openclaw.staleOutbound ?? 0} stale`
                     : ecosystem.openclaw?.message || 'Queue snapshot unavailable'}
                 </div>
+                <div className="oc-status-subvalue">
+                  {`Responder ${ecosystem.openclaw?.responderState || 'unknown'} · failures ${ecosystem.openclaw?.responderFailures ?? 0}`}
+                </div>
               </div>
             </div>
 
@@ -959,6 +967,9 @@ export default function OpenClawTab() {
                   {ecosystem.telegram?.lastHeartbeatAt
                     ? `Heartbeat ${formatMessageTime(ecosystem.telegram.lastHeartbeatAt)}`
                     : ecosystem.telegram?.message || 'Bridge not reporting yet'}
+                </div>
+                <div className="oc-status-subvalue">
+                  {`Bridge ${ecosystem.telegram?.connectionState || 'unknown'} · failures ${ecosystem.telegram?.consecutiveFailures ?? 0}`}
                 </div>
               </div>
             </div>
@@ -1242,7 +1253,7 @@ export default function OpenClawTab() {
 
           {!messagesLoading && !messagesError && !rows.length ? (
             <div className="oc-events-empty">
-              No messages yet. Send a message and the scheduled agent workflow will answer.
+              No messages yet. Use the chat box below to start a global OpenClaw conversation.
             </div>
           ) : null}
 
@@ -1278,7 +1289,7 @@ export default function OpenClawTab() {
             value={messageInput}
             onChange={(event) => setMessageInput(event.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Type a message to OpenClaw. Enter sends, Shift+Enter adds newline."
+            placeholder="Type a message for global OpenClaw chat. Enter sends, Shift+Enter adds newline."
             rows={3}
             disabled={sending}
             aria-label="OpenClaw message input"

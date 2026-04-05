@@ -108,7 +108,13 @@ async function buildEcosystemSnapshot({ queue, worker } = {}) {
   const memoryKeys = [
     'ecosystem:openclaw-responder:lastHeartbeat',
     'ecosystem:openclaw-responder:brain',
+    'ecosystem:openclaw-responder:connectionState',
+    'ecosystem:openclaw-responder:consecutiveFailures',
+    'ecosystem:openclaw-responder:lastError',
     'ecosystem:telegram-bridge:lastHeartbeat',
+    'ecosystem:telegram-bridge:connectionState',
+    'ecosystem:telegram-bridge:consecutiveFailures',
+    'ecosystem:telegram-bridge:lastError',
     'telegram:lastHeartbeat',
     'telegram:lastUpdateId',
   ];
@@ -129,7 +135,13 @@ async function buildEcosystemSnapshot({ queue, worker } = {}) {
 
   const openclawHeartbeat = latestByKey.get('ecosystem:openclaw-responder:lastHeartbeat') || null;
   const brainState = latestByKey.get('ecosystem:openclaw-responder:brain') || null;
+  const responderState = latestByKey.get('ecosystem:openclaw-responder:connectionState') || null;
+  const responderFailureCount = latestByKey.get('ecosystem:openclaw-responder:consecutiveFailures') || null;
+  const responderLastError = latestByKey.get('ecosystem:openclaw-responder:lastError') || null;
   const telegramHeartbeat = latestByKey.get('ecosystem:telegram-bridge:lastHeartbeat') || latestByKey.get('telegram:lastHeartbeat') || null;
+  const telegramState = latestByKey.get('ecosystem:telegram-bridge:connectionState') || null;
+  const telegramFailureCount = latestByKey.get('ecosystem:telegram-bridge:consecutiveFailures') || null;
+  const telegramLastError = latestByKey.get('ecosystem:telegram-bridge:lastError') || null;
   const telegramUpdate = latestByKey.get('telegram:lastUpdateId') || null;
 
   const [websiteProbe, ollamaProbe] = await Promise.all([
@@ -142,6 +154,10 @@ async function buildEcosystemSnapshot({ queue, worker } = {}) {
   const telegramConfigured = Boolean(telegramHeartbeat || telegramUpdate || process.env.TELEGRAM_BOT_TOKEN || process.env.TELEGRAM_ALLOWED_CHAT_IDS);
   const telegramLive = isRecentTimestamp(telegramHeartbeat?.createdAt, 10);
   const responderLive = isRecentTimestamp(openclawHeartbeat?.createdAt, 15);
+  const responderStateValue = String(responderState?.value || 'unknown');
+  const telegramStateValue = String(telegramState?.value || 'unknown');
+  const responderInError = responderStateValue.startsWith('error:');
+  const telegramInError = telegramStateValue.startsWith('error:');
 
   const services = {
     website: {
@@ -159,10 +175,17 @@ async function buildEcosystemSnapshot({ queue, worker } = {}) {
       staleOutbound: queue?.staleOutbound ?? null,
       workerActive: worker?.active === true,
       workerHeartbeatAt: worker?.heartbeatAt || null,
+      responderLive,
+      responderState: responderStateValue,
+      responderFailures: Number.parseInt(String(responderFailureCount?.value || '0'), 10) || 0,
+      responderLastError: responderLastError?.value || null,
+      brain: brainState?.value || null,
       message: queue && worker
         ? `${queue.pendingOutbound} pending · ${queue.staleOutbound} stale`
         : 'Queue metadata unavailable',
-      status: (queue?.staleOutbound ?? 0) > 0 || worker?.active === false ? 'degraded' : 'online',
+      status: (queue?.staleOutbound ?? 0) > 0 || worker?.active === false || !responderLive || responderInError
+        ? 'degraded'
+        : 'online',
     },
     ollama: {
       configured: Boolean(ollamaBaseUrl),
@@ -180,11 +203,13 @@ async function buildEcosystemSnapshot({ queue, worker } = {}) {
       reachable: telegramLive,
       lastHeartbeatAt: telegramHeartbeat?.createdAt || null,
       lastUpdateId: telegramUpdate?.value || null,
-      brain: brainState?.value || null,
+      connectionState: telegramStateValue,
+      consecutiveFailures: Number.parseInt(String(telegramFailureCount?.value || '0'), 10) || 0,
+      lastError: telegramLastError?.value || null,
       message: telegramLive
         ? 'Bridge heartbeat is fresh'
         : (telegramConfigured ? 'Bridge heartbeat is stale or missing' : 'Not configured'),
-      status: telegramLive ? 'online' : (telegramConfigured ? 'degraded' : 'offline'),
+      status: telegramLive && !telegramInError ? 'online' : (telegramConfigured ? 'degraded' : 'offline'),
     },
   };
 
@@ -1353,9 +1378,11 @@ router.get('/agent-config', async (req, res) => {
     await dbConnect();
     const OpenClawAgentConfig = require('../models/OpenClawAgentConfig');
     const doc = await OpenClawAgentConfig.findOne().sort({ updatedAt: -1 }).lean();
+    const directives = doc?.creatorCommands ?? [];
     return res.json({
       ok: true,
-      creatorCommands: doc?.creatorCommands ?? [],
+      creatorCommands: directives,
+      globalDirectives: directives,
       goals: doc?.goals ?? [],
       updatedAt: doc?.updatedAt ?? null,
       timestamp: new Date().toISOString(),
@@ -1373,14 +1400,18 @@ router.put('/agent-config', async (req, res) => {
   const config = getConfig();
   if (!requireBridgeOrAdmin(req, res, config, 'Unauthorized OpenClaw agent-config update')) return;
 
-  const { creatorCommands, goals } = req.body || {};
+  const { creatorCommands, globalDirectives, goals } = req.body || {};
   try {
     await dbConnect();
     const OpenClawAgentConfig = require('../models/OpenClawAgentConfig');
     const update = {
       updatedAt: new Date(),
     };
-    if (Array.isArray(creatorCommands)) update.creatorCommands = creatorCommands;
+    if (Array.isArray(globalDirectives)) {
+      update.creatorCommands = globalDirectives;
+    } else if (Array.isArray(creatorCommands)) {
+      update.creatorCommands = creatorCommands;
+    }
     if (Array.isArray(goals)) update.goals = goals;
 
     const doc = await OpenClawAgentConfig.findOneAndUpdate(
@@ -1392,6 +1423,7 @@ router.put('/agent-config', async (req, res) => {
     return res.json({
       ok: true,
       creatorCommands: doc.creatorCommands ?? [],
+      globalDirectives: doc.creatorCommands ?? [],
       goals: doc.goals ?? [],
       updatedAt: doc.updatedAt,
       timestamp: new Date().toISOString(),

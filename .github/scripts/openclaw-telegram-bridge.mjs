@@ -13,6 +13,7 @@ const TELEGRAM_STATE_KEY = process.env.TELEGRAM_STATE_KEY || 'telegram:lastUpdat
 const TELEGRAM_POLL_LIMIT = Math.min(Math.max(parseInt(process.env.TELEGRAM_POLL_LIMIT || '15', 10), 1), 100);
 const OPENCLAW_CHAT_TIMEOUT_MS = Math.min(Math.max(parseInt(process.env.OPENCLAW_CHAT_TIMEOUT_MS || '14000', 10), 2000), 25000);
 const OPENCLAW_CHAT_SOURCE = process.env.OPENCLAW_TELEGRAM_SOURCE || 'telegram-openclaw-bridge';
+const TELEGRAM_CONSECUTIVE_FAILURES_KEY = 'ecosystem:telegram-bridge:consecutiveFailures';
 
 if (!BACKEND_URL) {
   console.warn('OPENCLAW_BACKEND_URL is not set - skipping Telegram bridge run.');
@@ -104,6 +105,44 @@ async function writeMemory(key, value, type = 'fact') {
   }
 }
 
+async function readMemoryValue(key) {
+  try {
+    const items = await getMemory(120);
+    const hit = items.find((item) => item.key === key);
+    return hit ? String(hit.value || '') : null;
+  } catch (_err) {
+    return null;
+  }
+}
+
+async function writeBridgeState(state, details = {}) {
+  const timestamp = new Date().toISOString();
+  await Promise.allSettled([
+    writeMemory('ecosystem:telegram-bridge:connectionState', state, 'fact'),
+    writeMemory('ecosystem:telegram-bridge:lastStatus', JSON.stringify({ state, timestamp, ...details }), 'reflection'),
+  ]);
+}
+
+async function recordBridgeSuccess(details = {}) {
+  await Promise.allSettled([
+    writeMemory(TELEGRAM_CONSECUTIVE_FAILURES_KEY, '0', 'fact'),
+    writeBridgeState('online', details),
+  ]);
+}
+
+async function recordBridgeFailure(errorMessage, details = {}) {
+  const previous = parseInt((await readMemoryValue(TELEGRAM_CONSECUTIVE_FAILURES_KEY)) || '0', 10);
+  const next = Number.isFinite(previous) ? previous + 1 : 1;
+  await Promise.allSettled([
+    writeMemory(TELEGRAM_CONSECUTIVE_FAILURES_KEY, String(next), 'fact'),
+    writeMemory('ecosystem:telegram-bridge:lastError', String(errorMessage || 'unknown error').slice(0, 1200), 'reflection'),
+    writeBridgeState(`error:${String(errorMessage || 'unknown').slice(0, 160)}`, {
+      consecutiveFailures: next,
+      ...details,
+    }),
+  ]);
+}
+
 async function getLastUpdateId() {
   try {
     const items = await getMemory(200);
@@ -167,6 +206,8 @@ function helpText() {
     '/start - confirm bridge status',
     '/help - show this message',
     '/status - show OpenClaw bridge status',
+    '/queue - show queue and worker health',
+    '/recover - trigger OpenClaw recovery/replay',
     '/ecosystem - show website, OpenClaw, Ollama, and Telegram status',
     '',
     'Any other text is sent to OpenClaw chat and the AI reply is returned here.',
@@ -189,6 +230,51 @@ async function openclawStatusSummary() {
     `Gateway reachable: ${reachable}`,
     `Queue pending: ${pending}`,
     `Queue processed: ${processed}`,
+  ].join('\n');
+}
+
+async function openclawQueueSummary() {
+  const [queueRes, statusRes] = await Promise.all([
+    fetch(`${BACKEND_URL}/api/openclaw/queue-stats`, { headers: backendHeaders() }),
+    fetch(`${BACKEND_URL}/api/openclaw/status`),
+  ]);
+
+  if (!queueRes.ok) {
+    return `Queue check failed (${queueRes.status}).`;
+  }
+
+  const queue = await queueRes.json();
+  const status = statusRes.ok ? await statusRes.json().catch(() => ({})) : {};
+  const worker = status?.worker || {};
+
+  return [
+    `Queue pending: ${queue?.pendingOutbound ?? 'n/a'}`,
+    `Queue stale: ${queue?.staleOutbound ?? 'n/a'}`,
+    `Queue processed: ${queue?.processedOutbound ?? 'n/a'}`,
+    `Inbound count: ${queue?.inboundCount ?? 'n/a'}`,
+    `Worker active: ${worker?.active === true ? 'yes' : 'no'}`,
+    `Worker heartbeat: ${worker?.heartbeatAt || 'n/a'}`,
+  ].join('\n');
+}
+
+async function openclawRecoverSummary() {
+  const response = await fetch(`${BACKEND_URL}/api/openclaw/recover`, {
+    method: 'POST',
+    headers: backendHeaders(),
+    body: JSON.stringify({ reason: 'telegram-manual-recover', source: OPENCLAW_CHAT_SOURCE }),
+  });
+
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    return `Recover failed (${response.status}): ${String(payload?.message || 'unknown error').slice(0, 300)}`;
+  }
+
+  const replayed = payload?.replayed ?? payload?.result?.replayed ?? 'n/a';
+  const stale = payload?.staleBefore ?? payload?.result?.staleBefore ?? 'n/a';
+  return [
+    'Recovery trigger sent.',
+    `Replayed: ${replayed}`,
+    `Stale before: ${stale}`,
   ].join('\n');
 }
 
@@ -239,6 +325,18 @@ async function handleMessage(update) {
     return true;
   }
 
+  if (lower === '/queue') {
+    const summary = await openclawQueueSummary();
+    await sendTelegramMessage(chatId, summary);
+    return true;
+  }
+
+  if (lower === '/recover') {
+    const summary = await openclawRecoverSummary();
+    await sendTelegramMessage(chatId, summary);
+    return true;
+  }
+
   if (lower === '/ecosystem') {
     const response = await fetch(`${BACKEND_URL}/api/openclaw/status`);
     if (!response.ok) {
@@ -271,6 +369,7 @@ async function handleMessage(update) {
 
 async function main() {
   console.log('OpenClaw Telegram bridge starting...');
+  await writeBridgeState('starting', { source: OPENCLAW_CHAT_SOURCE });
   await writeHeartbeat({ phase: 'starting' });
   const lastUpdateId = await getLastUpdateId();
   const offset = Math.max(lastUpdateId + 1, 0);
@@ -282,6 +381,7 @@ async function main() {
 
   if (!Array.isArray(updates) || updates.length === 0) {
     console.log('No Telegram updates.');
+    await recordBridgeSuccess({ phase: 'idle', updates: 0, source: OPENCLAW_CHAT_SOURCE });
     return;
   }
 
@@ -302,11 +402,22 @@ async function main() {
   }
 
   await writeHeartbeat({ phase: 'finished', processed, updates: updates.length, maxUpdateId });
+  await recordBridgeSuccess({
+    phase: 'finished',
+    processed,
+    updates: updates.length,
+    maxUpdateId,
+    source: OPENCLAW_CHAT_SOURCE,
+  });
 
   console.log(`OpenClaw Telegram bridge finished. updates=${updates.length} handled=${processed}`);
 }
 
-main().catch((err) => {
+main().catch(async (err) => {
   console.error('OpenClaw Telegram bridge failed:', err.message);
+  await recordBridgeFailure(err.message || 'fatal telegram bridge failure', {
+    fatal: true,
+    source: OPENCLAW_CHAT_SOURCE,
+  });
   process.exit(1);
 });

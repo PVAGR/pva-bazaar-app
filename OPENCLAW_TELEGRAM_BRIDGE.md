@@ -9,6 +9,7 @@ Use Telegram on your phone to send instructions into the live OpenClaw chat loop
 - Returns the agent response back to your Telegram chat.
 - Restricts usage to approved chat IDs when configured.
 - Writes a bridge heartbeat into OpenClaw memory so the website can see live status.
+- Tracks connection state, consecutive failures, and last error in OpenClaw memory for autonomous monitoring.
 
 ## Files
 
@@ -52,8 +53,18 @@ Use Telegram on your phone to send instructions into the live OpenClaw chat loop
 - `/start` confirms bridge status.
 - `/help` lists commands.
 - `/status` checks OpenClaw status summary.
+- `/queue` shows OpenClaw queue and worker health.
+- `/recover` triggers OpenClaw recovery/replay from Telegram.
 - `/ecosystem` shows the combined website, OpenClaw, Ollama, and Telegram snapshot.
 - Any other text is sent to OpenClaw chat.
+
+## Bridge state memory keys
+
+- `ecosystem:telegram-bridge:lastHeartbeat`
+- `ecosystem:telegram-bridge:connectionState`
+- `ecosystem:telegram-bridge:consecutiveFailures`
+- `ecosystem:telegram-bridge:lastError`
+- `telegram:lastUpdateId`
 
 ## Security notes
 
