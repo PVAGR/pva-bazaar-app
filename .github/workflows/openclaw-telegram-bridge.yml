@@ -1,0 +1,39 @@
+name: OpenClaw Telegram Bridge
+
+on:
+  schedule:
+    - cron: '*/2 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: openclaw-telegram-bridge
+  cancel-in-progress: false
+
+jobs:
+  bridge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
+
+      - name: Run Telegram Bridge Worker
+        run: node .github/scripts/openclaw-telegram-bridge.mjs
+        env:
+          OPENCLAW_BACKEND_URL: ${{ secrets.OPENCLAW_BACKEND_URL }}
+          OPENCLAW_BRIDGE_SECRET: ${{ secrets.OPENCLAW_BRIDGE_SECRET }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_ALLOWED_CHAT_IDS: ${{ secrets.TELEGRAM_ALLOWED_CHAT_IDS }}
+          TELEGRAM_STATE_KEY: ${{ secrets.TELEGRAM_STATE_KEY }}
+          TELEGRAM_POLL_LIMIT: ${{ secrets.TELEGRAM_POLL_LIMIT }}
+          OPENCLAW_CHAT_TIMEOUT_MS: ${{ secrets.OPENCLAW_CHAT_TIMEOUT_MS }}
+          OPENCLAW_TELEGRAM_SOURCE: ${{ secrets.OPENCLAW_TELEGRAM_SOURCE }}
