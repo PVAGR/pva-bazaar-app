@@ -284,7 +284,8 @@ function getConfig() {
   const healthUrl = process.env.OPENCLAW_HEALTH_URL ||
     (gatewayUrl ? `${gatewayUrl.replace(/\/$/, '')}/health` : '');
   const apiKey = process.env.OPENCLAW_API_KEY || '';
-  const bridgeSecret = process.env.OPENCLAW_BRIDGE_SECRET || '';
+  const publicMode = process.env.OPENCLAW_PUBLIC_MODE === 'true';
+  const bridgeSecret = publicMode ? '' : (process.env.OPENCLAW_BRIDGE_SECRET || '');
 
   // Queue is always enabled — MongoDB is always connected in production.
   // Webhook/gateway are optional enhancements on top of the persistent queue.
@@ -297,6 +298,7 @@ function getConfig() {
     healthUrl,
     apiKey,
     bridgeSecret,
+    publicMode,
     queueEnabled,
     webhookConfigured,
     configured: true, // queue is always active
