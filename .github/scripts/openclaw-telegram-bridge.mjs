@@ -9,6 +9,7 @@ const TELEGRAM_ALLOWED_CHAT_IDS = (process.env.TELEGRAM_ALLOWED_CHAT_IDS || '')
   .split(',')
   .map((x) => x.trim())
   .filter(Boolean);
+const TELEGRAM_PUBLIC_MODE = process.env.TELEGRAM_PUBLIC_MODE === 'true';
 const TELEGRAM_STATE_KEY = process.env.TELEGRAM_STATE_KEY || 'telegram:lastUpdateId';
 const TELEGRAM_POLL_LIMIT = Math.min(Math.max(parseInt(process.env.TELEGRAM_POLL_LIMIT || '15', 10), 1), 100);
 const OPENCLAW_CHAT_TIMEOUT_MS = Math.min(Math.max(parseInt(process.env.OPENCLAW_CHAT_TIMEOUT_MS || '14000', 10), 2000), 25000);
@@ -40,6 +41,7 @@ function backendHeaders() {
 }
 
 function isAllowedChat(chatId) {
+  if (TELEGRAM_PUBLIC_MODE) return true;
   if (!TELEGRAM_ALLOWED_CHAT_IDS.length) return true;
   return TELEGRAM_ALLOWED_CHAT_IDS.includes(String(chatId));
 }

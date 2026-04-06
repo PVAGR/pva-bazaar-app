@@ -41,6 +41,9 @@ Use Telegram on your phone to send instructions into the live OpenClaw chat loop
   - Default: `14000`
 - `OPENCLAW_TELEGRAM_SOURCE`
   - Default: `telegram-openclaw-bridge`
+- `TELEGRAM_PUBLIC_MODE`
+  - Default: `false`
+  - Set `true` to allow any Telegram chat ID (internet public mode).
 
 ## Queue worker workflow secrets
 
@@ -68,7 +71,8 @@ Workflow `OpenClaw Realtime Online` keeps the Telegram bridge + responder + queu
 worker running continuously for ~55 minutes per run, then restarts on the next
 hourly schedule.
 
-For public access from anyone, leave `TELEGRAM_ALLOWED_CHAT_IDS` empty.
+For public access from anyone, set `TELEGRAM_PUBLIC_MODE=true`.
+Leaving `TELEGRAM_ALLOWED_CHAT_IDS` empty also permits public access.
 If you want private access, set `TELEGRAM_ALLOWED_CHAT_IDS` to explicit IDs.
 
 ## Commands in Telegram
