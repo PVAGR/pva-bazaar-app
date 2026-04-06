@@ -29,17 +29,17 @@ jobs:
       - name: Run Telegram Bridge Worker
         run: node .github/scripts/openclaw-telegram-bridge.mjs
         env:
-          OPENCLAW_BACKEND_URL: ${{ secrets.OPENCLAW_BACKEND_URL }}
+          OPENCLAW_BACKEND_URL: https://api.pvabazaar.org
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_ALLOWED_CHAT_IDS: ''
           TELEGRAM_PUBLIC_MODE: 'true'
-          TELEGRAM_STATE_KEY: ${{ secrets.TELEGRAM_STATE_KEY }}
-          TELEGRAM_POLL_LIMIT: ${{ secrets.TELEGRAM_POLL_LIMIT }}
-          OPENCLAW_CHAT_TIMEOUT_MS: ${{ secrets.OPENCLAW_CHAT_TIMEOUT_MS }}
-          OPENCLAW_TELEGRAM_SOURCE: ${{ secrets.OPENCLAW_TELEGRAM_SOURCE }}
+          TELEGRAM_STATE_KEY: telegram:lastUpdateId
+          TELEGRAM_POLL_LIMIT: '25'
+          OPENCLAW_CHAT_TIMEOUT_MS: '18000'
+          OPENCLAW_TELEGRAM_SOURCE: telegram-openclaw-bridge
           OPENCLAW_DIRECT_MODEL_TIMEOUT_MS: 20000
           GITHUB_TOKEN: ${{ github.token }}
           GITHUB_REPOSITORY: ${{ github.repository }}
-          OLLAMA_BASE_URL: ${{ secrets.OLLAMA_BASE_URL }}
-          OLLAMA_MODEL: ${{ secrets.OLLAMA_MODEL }}
-          OLLAMA_TEMPERATURE: ${{ secrets.OLLAMA_TEMPERATURE }}
+          OLLAMA_BASE_URL: https://api.pvabazaar.org
+          OLLAMA_MODEL: llama3.1
+          OLLAMA_TEMPERATURE: '0.35'

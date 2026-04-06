@@ -34,18 +34,18 @@ jobs:
       - name: Run realtime loop
         shell: bash
         env:
-          OPENCLAW_BACKEND_URL: ${{ secrets.OPENCLAW_BACKEND_URL || vars.OPENCLAW_BACKEND_URL || 'https://api.pvabazaar.org' }}
+          OPENCLAW_BACKEND_URL: https://api.pvabazaar.org
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_ALLOWED_CHAT_IDS: ''
           TELEGRAM_PUBLIC_MODE: 'true'
-          TELEGRAM_STATE_KEY: ${{ secrets.TELEGRAM_STATE_KEY || vars.TELEGRAM_STATE_KEY }}
-          TELEGRAM_POLL_LIMIT: ${{ secrets.TELEGRAM_POLL_LIMIT || vars.TELEGRAM_POLL_LIMIT || '25' }}
-          OPENCLAW_CHAT_TIMEOUT_MS: ${{ secrets.OPENCLAW_CHAT_TIMEOUT_MS || vars.OPENCLAW_CHAT_TIMEOUT_MS || '18000' }}
-          OPENCLAW_TELEGRAM_SOURCE: ${{ secrets.OPENCLAW_TELEGRAM_SOURCE || vars.OPENCLAW_TELEGRAM_SOURCE || 'telegram-openclaw-realtime' }}
+          TELEGRAM_STATE_KEY: telegram:lastUpdateId
+          TELEGRAM_POLL_LIMIT: '25'
+          OPENCLAW_CHAT_TIMEOUT_MS: '18000'
+          OPENCLAW_TELEGRAM_SOURCE: telegram-openclaw-realtime
           GITHUB_TOKEN: ${{ github.token }}
-          OLLAMA_BASE_URL: ${{ secrets.OLLAMA_BASE_URL || vars.OLLAMA_BASE_URL }}
-          OLLAMA_MODEL: ${{ secrets.OLLAMA_MODEL || vars.OLLAMA_MODEL || 'llama3.1' }}
-          OLLAMA_TEMPERATURE: ${{ secrets.OLLAMA_TEMPERATURE || vars.OLLAMA_TEMPERATURE || '0.35' }}
+          OLLAMA_BASE_URL: https://api.pvabazaar.org
+          OLLAMA_MODEL: llama3.1
+          OLLAMA_TEMPERATURE: '0.35'
         run: |
           end=$((SECONDS + 3300))
           cycle=0
