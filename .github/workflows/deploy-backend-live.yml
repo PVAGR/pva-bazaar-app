@@ -17,10 +17,10 @@ jobs:
       contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: "20"
           cache: npm
@@ -43,6 +43,77 @@ jobs:
           if [ "$missing" -ne 0 ]; then
             exit 1
           fi
+
+      - name: Sync Telegram webhook env to Vercel
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN || secrets.VERCEL_API_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID || vars.VERCEL_ORG_ID }}
+          VERCEL_BACKEND_PROJECT_ID: ${{ secrets.VERCEL_BACKEND_PROJECT_ID || secrets.VERCEL_PROJECT_ID || vars.VERCEL_BACKEND_PROJECT_ID || vars.VERCEL_PROJECT_ID }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_WEBHOOK_SECRET: ${{ secrets.TELEGRAM_WEBHOOK_SECRET }}
+          TELEGRAM_WEBHOOK_URL: https://api.pvabazaar.org/webhooks/telegram/updates
+        run: |
+          set -euo pipefail
+          if [ -z "${TELEGRAM_BOT_TOKEN:-}" ]; then
+            echo "::error title=Missing Telegram secret::TELEGRAM_BOT_TOKEN is required for webhook runtime"
+            exit 1
+          fi
+
+          node - <<'NODE'
+          const token = process.env.VERCEL_TOKEN;
+          const teamId = process.env.VERCEL_ORG_ID;
+          const projectId = process.env.VERCEL_BACKEND_PROJECT_ID;
+
+          const values = {
+            TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN || '',
+            TELEGRAM_WEBHOOK_URL: process.env.TELEGRAM_WEBHOOK_URL || '',
+            TELEGRAM_WEBHOOK_SECRET: process.env.TELEGRAM_WEBHOOK_SECRET || '',
+            TELEGRAM_PUBLIC_MODE: 'true',
+            OPENCLAW_TELEGRAM_SOURCE: 'telegram-openclaw-webhook',
+            OPENCLAW_CHAT_TIMEOUT_MS: '12000',
+          };
+
+          const endpoint = new URL(`https://api.vercel.com/v10/projects/${projectId}/env`);
+          endpoint.searchParams.set('upsert', 'true');
+          if (teamId) endpoint.searchParams.set('teamId', teamId);
+
+          async function upsert(key, value) {
+            if (!String(value || '').trim()) {
+              return;
+            }
+
+            const response = await fetch(endpoint, {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                key,
+                value,
+                type: 'encrypted',
+                target: ['production'],
+              }),
+            });
+
+            if (!response.ok) {
+              const detail = await response.text();
+              throw new Error(`Failed to upsert ${key}: ${response.status} ${detail}`);
+            }
+          }
+
+          async function main() {
+            for (const [key, value] of Object.entries(values)) {
+              await upsert(key, value);
+              console.log(`synced ${key}`);
+            }
+          }
+
+          main().catch((err) => {
+            console.error(err.message || err);
+            process.exit(1);
+          });
+          NODE
 
       - name: Deploy backend project to Vercel
         id: vercel_action
