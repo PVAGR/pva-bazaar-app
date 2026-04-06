@@ -178,6 +178,7 @@ async function buildEcosystemSnapshot({ queue, worker } = {}) {
   const telegramOperational = telegramLive || (telegramWebhookConfigured && !telegramInError && telegramFailureValue === 0);
   const queuePending = queue?.pendingOutbound ?? 0;
   const staleOutbound = queue?.staleOutbound ?? 0;
+  const queuePressure = queuePending > 0 || staleOutbound > 0;
   const workerInactiveWithQueuePressure = worker?.active === false && (queuePending > 0 || staleOutbound > 0);
   const websiteReachable = Boolean(websiteProbe.reachable || websiteRootProbe.reachable);
   const websiteMessage = websiteProbe.reachable
@@ -212,7 +213,12 @@ async function buildEcosystemSnapshot({ queue, worker } = {}) {
       message: queue && worker
         ? `${queue.pendingOutbound} pending · ${queue.staleOutbound} stale`
         : 'Queue metadata unavailable',
-      status: staleOutbound > 0 || workerInactiveWithQueuePressure || !responderLive || responderInError || workerInError || !workerLive
+      status: staleOutbound > 0
+        || workerInactiveWithQueuePressure
+        || !responderLive
+        || responderInError
+        || workerInError
+        || (queuePressure && !workerLive)
         ? 'degraded'
         : 'online',
     },
