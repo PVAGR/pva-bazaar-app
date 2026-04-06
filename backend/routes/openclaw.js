@@ -671,6 +671,74 @@ router.get('/status', async (_req, res) => {
   });
 });
 
+router.post('/telegram/register-webhook', async (req, res) => {
+  const config = getConfig();
+  if (!requireBridgeOrAdmin(req, res, config, 'Unauthorized Telegram webhook registration request')) return;
+
+  const botToken = String(process.env.TELEGRAM_BOT_TOKEN || '').trim();
+  const configuredUrl = String(process.env.TELEGRAM_WEBHOOK_URL || '').trim();
+  const webhookUrl = String(req.body?.url || configuredUrl).trim();
+  const secretToken = String(req.body?.secretToken || process.env.TELEGRAM_WEBHOOK_SECRET || '').trim();
+  const maxConnections = Math.min(
+    Math.max(parseInt(String(req.body?.maxConnections || process.env.TELEGRAM_WEBHOOK_MAX_CONNECTIONS || '15'), 10), 1),
+    100,
+  );
+  const allowedUpdatesInput = req.body?.allowedUpdates || process.env.TELEGRAM_WEBHOOK_ALLOWED_UPDATES || 'message,edited_message';
+  const allowedUpdates = Array.isArray(allowedUpdatesInput)
+    ? allowedUpdatesInput.map((item) => String(item || '').trim()).filter(Boolean)
+    : String(allowedUpdatesInput)
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean);
+
+  if (!botToken) {
+    return res.status(400).json({
+      ok: false,
+      message: 'TELEGRAM_BOT_TOKEN is not configured',
+    });
+  }
+
+  if (!webhookUrl) {
+    return res.status(400).json({
+      ok: false,
+      message: 'webhook URL is required (set TELEGRAM_WEBHOOK_URL or pass body.url)',
+    });
+  }
+
+  try {
+    const setWebhookResult = await axios.post(
+      `https://api.telegram.org/bot${botToken}/setWebhook`,
+      {
+        url: webhookUrl,
+        ...(secretToken ? { secret_token: secretToken } : {}),
+        max_connections: maxConnections,
+        allowed_updates: allowedUpdates,
+      },
+      { timeout: 12000 },
+    );
+
+    const webhookInfoResult = await axios.get(
+      `https://api.telegram.org/bot${botToken}/getWebhookInfo`,
+      { timeout: 12000 },
+    );
+
+    return res.json({
+      ok: true,
+      message: 'Telegram webhook registration complete',
+      setWebhook: setWebhookResult.data || null,
+      webhookInfo: webhookInfoResult.data || null,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err) {
+    return res.status(502).json({
+      ok: false,
+      message: 'Failed to register Telegram webhook',
+      detail: err?.response?.data || err.message,
+      timestamp: new Date().toISOString(),
+    });
+  }
+});
+
 router.get('/watchdog-status', async (_req, res) => {
   const { logPath, alertPath } = resolveWatchdogPaths();
 
@@ -934,7 +1002,11 @@ router.post('/chat', async (req, res) => {
 
   const chatRequestId = crypto.randomUUID();
   const outboundEvent = 'pvabazaar.admin.chat';
+  const rawMetadata = (req.body && typeof req.body.metadata === 'object' && !Array.isArray(req.body.metadata))
+    ? req.body.metadata
+    : {};
   const metadata = {
+    ...rawMetadata,
     source,
     chatRequestId,
     timestamp: new Date().toISOString(),

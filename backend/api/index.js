@@ -176,6 +176,12 @@ try {
 } catch (err) {
   console.warn('⚠️ Optional route disabled: webhooksTwitch', err?.message || err);
 }
+try {
+  const webhooksTelegramRoutes = require('../routes/webhooksTelegram');
+  app.use('/webhooks', webhooksTelegramRoutes);
+} catch (err) {
+  console.warn('⚠️ Optional route disabled: webhooksTelegram', err?.message || err);
+}
 
 // Connect to MongoDB - optimized for serverless with global caching
 // Use global to persist connection across serverless function invocations

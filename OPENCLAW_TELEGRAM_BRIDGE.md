@@ -4,11 +4,10 @@ Use Telegram on your phone to send instructions into the live OpenClaw chat loop
 
 ## What this does
 
-- Polls Telegram updates every 2 minutes via GitHub Actions.
+- Receives Telegram updates instantly through backend webhook route `POST /webhooks/telegram/updates`.
 - Forwards incoming text to `POST /api/openclaw/chat`.
 - Returns the agent response back to your Telegram chat.
-- Falls back to direct model reply (Ollama if configured, otherwise GitHub Models)
-  when queue/webhook reply is delayed, so users still receive immediate responses.
+- Falls back to direct Ollama reply when queue/webhook reply is delayed, so users still receive immediate responses.
 - Restricts usage to approved chat IDs when configured.
 - Writes a bridge heartbeat into OpenClaw memory so the website can see live status.
 - Tracks connection state, consecutive failures, and last error in OpenClaw memory for autonomous monitoring.
@@ -17,31 +16,44 @@ Use Telegram on your phone to send instructions into the live OpenClaw chat loop
 
 - `.github/scripts/openclaw-telegram-bridge.mjs`
 - `.github/workflows/openclaw-telegram-bridge.yml`
+- `backend/routes/webhooksTelegram.js`
+- `backend/routes/openclaw.js`
+- `backend/api/index.js`
 - `.github/workflows/openclaw-queue-worker.yml`
 - `.github/workflows/openclaw-realtime-online.yml`
 - `backend/scripts/openclaw-queue-worker.js`
 
-## Required GitHub repository secrets
+## Required backend environment variables
 
-- `OPENCLAW_BACKEND_URL`
-  - Example: `https://api.pvabazaar.org`
 - `TELEGRAM_BOT_TOKEN`
   - Created with BotFather.
 - `TELEGRAM_PUBLIC_MODE`
   - Set to `true` for public access.
+- `TELEGRAM_WEBHOOK_URL`
+  - Example: `https://api.pvabazaar.org/webhooks/telegram/updates`
+- `TELEGRAM_WEBHOOK_SECRET`
+  - Shared secret token set during webhook registration.
 
-## Optional GitHub repository secrets
+## Optional backend environment variables
 
-- `TELEGRAM_STATE_KEY`
-  - Default: `telegram:lastUpdateId`
-- `TELEGRAM_POLL_LIMIT`
-  - Default: `15`
 - `OPENCLAW_CHAT_TIMEOUT_MS`
-  - Default: `14000`
+  - Default: `12000`
 - `OPENCLAW_TELEGRAM_SOURCE`
-  - Default: `telegram-openclaw-bridge`
+  - Default: `telegram-openclaw-webhook`
 - `TELEGRAM_ALLOWED_CHAT_IDS`
   - Optional private allowlist. Leave empty for public mode.
+
+## Webhook registration
+
+Use OpenClaw API endpoint to register Telegram webhook after deploy:
+
+- `POST /api/openclaw/telegram/register-webhook`
+- Auth: admin JWT or `X-OpenClaw-Secret`
+- Request body options:
+  - `url`
+  - `secretToken`
+  - `maxConnections`
+  - `allowedUpdates`
 
 ## Queue worker workflow secrets (optional)
 
@@ -58,16 +70,17 @@ This workflow is manual (`workflow_dispatch`) and executes one dispatch cycle.
 
 1. Create a Telegram bot with BotFather and copy the bot token.
 2. Send one message to the bot from your Telegram account.
-3. Get your Telegram chat ID.
-4. Add all required secrets in GitHub repository settings.
-5. Run workflow `OpenClaw Realtime Online` manually once.
+3. Configure required backend env variables (token, webhook URL, webhook secret).
+4. Call `POST /api/openclaw/telegram/register-webhook`.
+5. Confirm with Telegram `getWebhookInfo` that URL is live.
 6. Message your bot: `/start`, `/status`, then normal text.
 
-## Realtime internet mode
+## Polling fallback mode
 
-Workflow `OpenClaw Realtime Online` keeps the Telegram bridge + responder + queue
-worker running continuously for ~55 minutes per run, then restarts on the next
-hourly schedule.
+Workflow `OpenClaw Telegram Bridge` is now manual only (`workflow_dispatch`) and
+serves as emergency polling fallback if webhook transport is unavailable.
+
+Workflow `OpenClaw Realtime Online` can still be used as redundancy path.
 
 For public access from anyone, set `TELEGRAM_PUBLIC_MODE=true`.
 Leaving `TELEGRAM_ALLOWED_CHAT_IDS` empty also permits public access.
