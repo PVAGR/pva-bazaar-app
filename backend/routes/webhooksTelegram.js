@@ -70,6 +70,20 @@ function validateWebhookSecret(req) {
   return timingSafeEqualString(provided, TELEGRAM_WEBHOOK_SECRET);
 }
 
+function validateOpsAccess(req) {
+  const bridgeSecret = String(process.env.OPENCLAW_BRIDGE_SECRET || '').trim();
+  const providedBridgeSecret = String(req.get('x-openclaw-secret') || '');
+  if (bridgeSecret && timingSafeEqualString(providedBridgeSecret, bridgeSecret)) {
+    return true;
+  }
+
+  if (TELEGRAM_WEBHOOK_SECRET) {
+    return validateWebhookSecret(req);
+  }
+
+  return false;
+}
+
 function sanitizeIncomingText(text) {
   return String(text || '').trim().slice(0, 4000);
 }
@@ -164,12 +178,70 @@ async function sendTelegramMessage(chatId, text) {
   );
 }
 
+async function telegramApiGet(method, params = {}) {
+  if (!TELEGRAM_BOT_TOKEN) {
+    return { ok: false, error: 'TELEGRAM_BOT_TOKEN is not configured' };
+  }
+
+  try {
+    const response = await axios.get(
+      `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/${method}`,
+      {
+        params,
+        timeout: 15000,
+      },
+    );
+    return response.data || { ok: false, error: 'Empty Telegram response' };
+  } catch (err) {
+    return {
+      ok: false,
+      error: err?.response?.data || err.message || 'Telegram API error',
+    };
+  }
+}
+
+async function fetchTelegramDiagnostics() {
+  const [me, webhookInfo] = await Promise.all([
+    telegramApiGet('getMe'),
+    telegramApiGet('getWebhookInfo'),
+  ]);
+
+  const meResult = me?.result || null;
+  const webhookResult = webhookInfo?.result || null;
+
+  return {
+    configured: Boolean(TELEGRAM_BOT_TOKEN),
+    publicMode: TELEGRAM_PUBLIC_MODE,
+    allowedChatIdsCount: TELEGRAM_ALLOWED_CHAT_IDS.length,
+    source: OPENCLAW_TELEGRAM_SOURCE,
+    apiReachable: Boolean(me?.ok || webhookInfo?.ok),
+    bot: meResult
+      ? {
+        id: meResult.id,
+        username: meResult.username,
+        firstName: meResult.first_name,
+      }
+      : null,
+    webhook: webhookResult
+      ? {
+        url: webhookResult.url || null,
+        hasCustomCertificate: Boolean(webhookResult.has_custom_certificate),
+        pendingUpdateCount: webhookResult.pending_update_count ?? null,
+        lastErrorDate: webhookResult.last_error_date || null,
+        lastErrorMessage: webhookResult.last_error_message || null,
+        maxConnections: webhookResult.max_connections ?? null,
+      }
+      : null,
+  };
+}
+
 function helpText() {
   return [
     'Commands:',
     '/start - confirm bridge status',
     '/help - show this message',
     '/chatid - show this chat ID (for notify-ready routing)',
+    '/diag - show Telegram bot + webhook diagnostics',
     '/identity <text> - set your core identity signal for this chat',
     '/voice <text> - set speaking style and tone for this chat',
     '/imprint <text> - store a high-priority memory for the AI self',
@@ -523,6 +595,19 @@ router.get('/telegram/health', async (_req, res) => {
   });
 });
 
+router.get('/telegram/diagnostics', async (req, res) => {
+  if (!validateOpsAccess(req)) {
+    return res.status(401).json({ ok: false, message: 'Unauthorized Telegram diagnostics request' });
+  }
+
+  const diagnostics = await fetchTelegramDiagnostics();
+  return res.json({
+    ok: true,
+    diagnostics,
+    timestamp: new Date().toISOString(),
+  });
+});
+
 router.post('/telegram/updates', async (req, res) => {
   if (!validateWebhookSecret(req)) {
     return res.status(401).json({ ok: false, message: 'Invalid Telegram webhook secret token' });
@@ -580,6 +665,22 @@ router.post('/telegram/updates', async (req, res) => {
     if (lower === '/help') {
       await sendTelegramMessage(chatId, helpText());
       await recordBridgeSuccess({ phase: 'command:help', updateId }).catch(() => {});
+      return res.json({ ok: true, handled: true });
+    }
+
+    if (lower === '/diag') {
+      const diagnostics = await fetchTelegramDiagnostics();
+      const lines = [
+        `Bot configured: ${diagnostics.configured ? 'yes' : 'no'}`,
+        `Telegram API reachable: ${diagnostics.apiReachable ? 'yes' : 'no'}`,
+        `Bot username: ${diagnostics.bot?.username || 'n/a'}`,
+        `Webhook URL: ${diagnostics.webhook?.url || 'n/a'}`,
+        `Webhook pending updates: ${diagnostics.webhook?.pendingUpdateCount ?? 'n/a'}`,
+        `Webhook last error: ${diagnostics.webhook?.lastErrorMessage || 'none'}`,
+        `This chatId: ${String(chatId)}`,
+      ];
+      await sendTelegramMessage(chatId, lines.join('\n'));
+      await recordBridgeSuccess({ phase: 'command:diag', updateId }).catch(() => {});
       return res.json({ ok: true, handled: true });
     }
 

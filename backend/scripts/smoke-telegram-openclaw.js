@@ -64,6 +64,26 @@ async function checkTelegramWebhookHealth(baseUrl) {
   return health;
 }
 
+async function checkTelegramDiagnostics(baseUrl, headers) {
+  const diagnosticsUrl = `${baseUrl}/api/webhooks/telegram/diagnostics`;
+  try {
+    const response = await axios.get(diagnosticsUrl, { timeout: 12000, headers });
+    const diagnostics = response.data?.diagnostics || {};
+    console.log(`telegramDiagnostics=ok apiReachable=${boolLabel(Boolean(diagnostics.apiReachable))} bot=${diagnostics?.bot?.username || 'n/a'} webhookPending=${diagnostics?.webhook?.pendingUpdateCount ?? 'n/a'}`);
+  } catch (err) {
+    const status = err?.response?.status || null;
+    if (status === 401) {
+      console.log('telegramDiagnostics=skipped (missing/invalid OPENCLAW_BRIDGE_SECRET for diagnostics endpoint)');
+      return;
+    }
+    if (status === 404) {
+      console.log('telegramDiagnostics=skipped (diagnostics endpoint not deployed yet)');
+      return;
+    }
+    throw err;
+  }
+}
+
 async function registerWebhookIfRequested(baseUrl, headers) {
   if (process.env.TELEGRAM_REGISTER_WEBHOOK !== 'true') {
     return;
@@ -117,6 +137,7 @@ async function main() {
   try {
     const status = await checkOpenClawStatus(baseUrl, headers);
     await checkTelegramWebhookHealth(baseUrl);
+    await checkTelegramDiagnostics(baseUrl, headers);
     await registerWebhookIfRequested(baseUrl, headers);
     await checkOllamaDirect();
 
