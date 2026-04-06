@@ -100,6 +100,10 @@ async function getEffectiveWorkerConfig() {
     apiKey: process.env.OPENCLAW_API_KEY || '',
   };
 
+  if (PUBLIC_MODE) {
+    return fallback;
+  }
+
   try {
     const runtime = await AdminRuntimeConfig.findOne({ key: 'default' }).lean();
     const openclaw = runtime?.openclaw;
@@ -351,7 +355,9 @@ async function processLoop() {
 async function main() {
   console.log(`[OpenClawWorker] starting worker=${WORKER_NAME} workerId=${WORKER_ID} runOnce=${RUN_ONCE}`);
 
-  await dbConnect();
+  if (!PUBLIC_MODE) {
+    await dbConnect();
+  }
 
   if (RUN_ONCE) {
     try {
