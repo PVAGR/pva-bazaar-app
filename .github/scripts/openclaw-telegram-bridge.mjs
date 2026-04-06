@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* eslint-env node */
-/* global fetch, console, process */
+/* global fetch, console, process, AbortController, setTimeout, clearTimeout */
 
 const BACKEND_URL = (process.env.OPENCLAW_BACKEND_URL || '').replace(/\/$/, '');
 const BRIDGE_SECRET = process.env.OPENCLAW_BRIDGE_SECRET || '';
@@ -15,6 +15,15 @@ const TELEGRAM_POLL_LIMIT = Math.min(Math.max(parseInt(process.env.TELEGRAM_POLL
 const OPENCLAW_CHAT_TIMEOUT_MS = Math.min(Math.max(parseInt(process.env.OPENCLAW_CHAT_TIMEOUT_MS || '14000', 10), 2000), 25000);
 const OPENCLAW_CHAT_SOURCE = process.env.OPENCLAW_TELEGRAM_SOURCE || 'telegram-openclaw-bridge';
 const TELEGRAM_CONSECUTIVE_FAILURES_KEY = 'ecosystem:telegram-bridge:consecutiveFailures';
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN || '';
+const GITHUB_REPOSITORY = process.env.GITHUB_REPOSITORY || 'PVAGR/pva-bazaar-app';
+const OLLAMA_BASE_URL = (process.env.OLLAMA_BASE_URL || '').replace(/\/$/, '');
+const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'llama3.1';
+const OLLAMA_TEMPERATURE = Math.min(Math.max(parseFloat(process.env.OLLAMA_TEMPERATURE || '0.35'), 0), 2);
+const DIRECT_MODEL_TIMEOUT_MS = Math.min(
+  Math.max(parseInt(process.env.OPENCLAW_DIRECT_MODEL_TIMEOUT_MS || '20000', 10), 5000),
+  60000,
+);
 
 if (!BACKEND_URL) {
   console.warn('OPENCLAW_BACKEND_URL is not set - skipping Telegram bridge run.');
@@ -190,6 +199,160 @@ async function openclawChat(message, sourceMeta = {}) {
   return payload;
 }
 
+async function fetchJsonWithTimeout(url, options = {}, timeoutMs = DIRECT_MODEL_TIMEOUT_MS) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+    });
+    const payload = await response.json().catch(() => ({}));
+    return { response, payload };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function getDirectContext() {
+  const context = {
+    at: new Date().toISOString(),
+    repository: GITHUB_REPOSITORY,
+    ecosystem: null,
+    githubRepo: null,
+    website: null,
+  };
+
+  try {
+    const status = await fetch(`${BACKEND_URL}/api/openclaw/status`, { headers: backendHeaders() });
+    if (status.ok) {
+      context.ecosystem = await status.json();
+    }
+  } catch (_err) {
+    // best-effort context
+  }
+
+  try {
+    const website = await fetch('https://pvabazaar.org', { method: 'GET' });
+    context.website = {
+      reachable: website.ok,
+      status: website.status,
+    };
+  } catch (_err) {
+    context.website = {
+      reachable: false,
+      status: null,
+    };
+  }
+
+  try {
+    const headers = GITHUB_TOKEN
+      ? {
+          Accept: 'application/vnd.github+json',
+          Authorization: `Bearer ${GITHUB_TOKEN}`,
+        }
+      : { Accept: 'application/vnd.github+json' };
+    const repoResponse = await fetch(`https://api.github.com/repos/${GITHUB_REPOSITORY}`, { headers });
+    if (repoResponse.ok) {
+      const repo = await repoResponse.json();
+      context.githubRepo = {
+        full_name: repo.full_name,
+        default_branch: repo.default_branch,
+        pushed_at: repo.pushed_at,
+        open_issues_count: repo.open_issues_count,
+      };
+    }
+  } catch (_err) {
+    // best-effort context
+  }
+
+  return context;
+}
+
+async function generateDirectReply(userText) {
+  const context = await getDirectContext();
+  const systemPrompt = [
+    'You are PVA Magnum Opus, the Telegram assistant for PVA Bazaar.',
+    'Respond clearly, directly, and actionably.',
+    'Use live context provided (website, OpenClaw ecosystem, GitHub repo state).',
+    'If Ollama is offline, continue with available model and say what is online/offline briefly.',
+  ].join('\n');
+
+  const userPrompt = [
+    `User message: ${String(userText || '').slice(0, 3000)}`,
+    '',
+    'Live context JSON:',
+    JSON.stringify(context).slice(0, 12000),
+  ].join('\n');
+
+  if (OLLAMA_BASE_URL) {
+    try {
+      const { response, payload } = await fetchJsonWithTimeout(
+        `${OLLAMA_BASE_URL}/api/chat`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: OLLAMA_MODEL,
+            stream: false,
+            options: { temperature: OLLAMA_TEMPERATURE },
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: userPrompt },
+            ],
+          }),
+        },
+      );
+
+      if (response.ok) {
+        const text = payload?.message?.content?.trim() || payload?.response?.trim();
+        if (text) return text.slice(0, 3500);
+      }
+    } catch (_err) {
+      // fallback below
+    }
+  }
+
+  if (GITHUB_TOKEN) {
+    try {
+      const { response, payload } = await fetchJsonWithTimeout(
+        'https://models.inference.ai.azure.com/chat/completions',
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${GITHUB_TOKEN}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o-mini',
+            temperature: 0.4,
+            max_tokens: 700,
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: userPrompt },
+            ],
+          }),
+        },
+      );
+
+      if (response.ok) {
+        const text = payload?.choices?.[0]?.message?.content?.trim();
+        if (text) return text.slice(0, 3500);
+      }
+    } catch (_err) {
+      // fallback below
+    }
+  }
+
+  return null;
+}
+
+function needsDirectFallback(payload) {
+  if (payload?.reply?.content) return false;
+  const msg = String(payload?.message || '').toLowerCase();
+  return msg.includes('queued') || msg.includes('waiting') || msg.includes('configure webhook') || !msg;
+}
+
 function sanitizeIncoming(text) {
   return String(text || '').trim().slice(0, 4000);
 }
@@ -358,12 +521,25 @@ async function handleMessage(update) {
       telegramUpdateId: String(update.update_id),
     });
 
-    const replyText = reply?.reply?.content
+    let replyText = reply?.reply?.content
       ? String(reply.reply.content).slice(0, 3500)
       : (reply?.message || 'Message queued. Reply will follow shortly.').slice(0, 3500);
+
+    if (needsDirectFallback(reply)) {
+      const direct = await generateDirectReply(text);
+      if (direct) {
+        replyText = direct;
+      }
+    }
+
     await sendTelegramMessage(chatId, replyText);
   } catch (err) {
-    await sendTelegramMessage(chatId, `Bridge error: ${String(err.message || 'unknown error').slice(0, 500)}`);
+    const direct = await generateDirectReply(text).catch(() => null);
+    if (direct) {
+      await sendTelegramMessage(chatId, direct);
+    } else {
+      await sendTelegramMessage(chatId, `Bridge error: ${String(err.message || 'unknown error').slice(0, 500)}`);
+    }
   }
 
   return true;

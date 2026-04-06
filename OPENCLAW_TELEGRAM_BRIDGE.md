@@ -7,6 +7,8 @@ Use Telegram on your phone to send instructions into the live OpenClaw chat loop
 - Polls Telegram updates every 2 minutes via GitHub Actions.
 - Forwards incoming text to `POST /api/openclaw/chat`.
 - Returns the agent response back to your Telegram chat.
+- Falls back to direct model reply (Ollama if configured, otherwise GitHub Models)
+  when queue/webhook reply is delayed, so users still receive immediate responses.
 - Restricts usage to approved chat IDs when configured.
 - Writes a bridge heartbeat into OpenClaw memory so the website can see live status.
 - Tracks connection state, consecutive failures, and last error in OpenClaw memory for autonomous monitoring.

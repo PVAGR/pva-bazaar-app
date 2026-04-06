@@ -37,3 +37,6 @@ jobs:
           TELEGRAM_POLL_LIMIT: ${{ secrets.TELEGRAM_POLL_LIMIT }}
           OPENCLAW_CHAT_TIMEOUT_MS: ${{ secrets.OPENCLAW_CHAT_TIMEOUT_MS }}
           OPENCLAW_TELEGRAM_SOURCE: ${{ secrets.OPENCLAW_TELEGRAM_SOURCE }}
+          OPENCLAW_DIRECT_MODEL_TIMEOUT_MS: 20000
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
