@@ -359,13 +359,12 @@ async function main() {
     try {
       await dbConnect();
     } catch (err) {
-      if (BACKEND_URL) {
-        console.warn('[OpenClawWorker] db connect failed; switching to public mode using OPENCLAW_BACKEND_URL');
-        console.warn(`[OpenClawWorker] db error: ${err?.message || err}`);
-        PUBLIC_MODE = true;
-      } else {
-        throw err;
+      console.warn('[OpenClawWorker] db connect failed; switching to public-mode fallback');
+      console.warn(`[OpenClawWorker] db error: ${err?.message || err}`);
+      if (!BACKEND_URL) {
+        console.warn('[OpenClawWorker] OPENCLAW_BACKEND_URL not set; running as safe no-op until DB/backing API is reachable');
       }
+      PUBLIC_MODE = true;
     }
   }
 
