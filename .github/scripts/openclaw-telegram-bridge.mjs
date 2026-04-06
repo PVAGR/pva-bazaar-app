@@ -179,6 +179,14 @@ async function writeHeartbeat(details = {}) {
   ]);
 }
 
+async function writeLastChatId(chatId) {
+  if (!chatId) return;
+  await Promise.allSettled([
+    writeMemory('telegram:lastChatId', String(chatId), 'fact'),
+    writeMemory('ecosystem:telegram-bridge:lastChatId', String(chatId), 'fact'),
+  ]);
+}
+
 async function openclawChat(message, sourceMeta = {}) {
   const response = await fetch(`${BACKEND_URL}/api/openclaw/chat`, {
     method: 'POST',
@@ -467,6 +475,8 @@ async function handleMessage(update) {
   const text = sanitizeIncoming(message?.text);
 
   if (!chatId || !text) return false;
+
+  await writeLastChatId(chatId);
 
   if (!isAllowedChat(chatId)) {
     await sendTelegramMessage(chatId, 'Unauthorized chat for this bot.');
