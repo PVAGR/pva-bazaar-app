@@ -251,6 +251,9 @@ function helpText() {
     '/profile <name> - switch active identity profile for this chat',
     '/mode <name> - switch active behavior mode for this chat',
     '/self - view current identity + recent imprints',
+    '/plan <title> | <step 1>; <step 2>; ... - store a structured workflow',
+    '/continue - advance one workflow step',
+    '/workflow - show the active workflow',
     '/email <to | subject | body> - send an email through the assistant',
     '/task <text> - store a task in assistant memory',
     '/tasks - list recent tasks from assistant memory',
@@ -286,6 +289,10 @@ function chatModeKey(chatId) {
 
 function assistantTaskKey(chatId) {
   return `assistant:task:chat:${String(chatId)}`;
+}
+
+function assistantWorkflowKey(chatId) {
+  return `assistant:workflow:chat:${String(chatId)}`;
 }
 
 function parseEmailCommand(text) {
@@ -334,6 +341,118 @@ async function fetchRecentTasks(chatId, limit = 8) {
     const timestamp = doc?.createdAt ? new Date(doc.createdAt).toISOString() : 'unknown time';
     return `${index + 1}. ${String(doc?.value || '').slice(0, 220)} (${timestamp})`;
   });
+}
+
+function splitPlanSteps(rawSteps) {
+  return String(rawSteps || '')
+    .split(/\n|;/)
+    .map((step) => step.replace(/^[-*\d.)\s]+/, '').trim())
+    .filter(Boolean)
+    .slice(0, 20);
+}
+
+async function readLatestWorkflowState(chatId) {
+  await dbConnect();
+  const doc = await OpenClawMemory.findOne({
+    key: assistantWorkflowKey(chatId),
+    source: OPENCLAW_TELEGRAM_SOURCE,
+  }).sort({ createdAt: -1 }).lean();
+
+  if (!doc?.value) return null;
+
+  try {
+    const state = JSON.parse(String(doc.value));
+    return state && typeof state === 'object' ? state : null;
+  } catch (_err) {
+    return null;
+  }
+}
+
+async function writeWorkflowState(chatId, state) {
+  const payload = JSON.stringify({
+    ...state,
+    chatId: String(chatId),
+    updatedAt: new Date().toISOString(),
+  });
+
+  await writeMemory(assistantWorkflowKey(chatId), payload, 'goal');
+  return state;
+}
+
+async function createWorkflowState(chatId, title, rawSteps) {
+  const steps = splitPlanSteps(rawSteps);
+  if (!steps.length) return null;
+
+  return writeWorkflowState(chatId, {
+    title: String(title || 'Untitled plan').trim().slice(0, 120) || 'Untitled plan',
+    steps,
+    currentStepIndex: 0,
+    status: 'active',
+    createdAt: new Date().toISOString(),
+    history: [],
+  });
+}
+
+async function advanceWorkflowState(chatId) {
+  const state = await readLatestWorkflowState(chatId);
+  if (!state || !Array.isArray(state.steps) || !state.steps.length) {
+    return { state: null, message: 'No active workflow found.' };
+  }
+
+  const currentStepIndex = Math.max(parseInt(String(state.currentStepIndex || 0), 10), 0);
+  if (currentStepIndex >= state.steps.length) {
+    return {
+      state,
+      message: `Workflow already complete: ${state.title || 'Untitled plan'}`,
+    };
+  }
+
+  const history = Array.isArray(state.history) ? state.history.slice(0, 20) : [];
+  const completedStep = state.steps[currentStepIndex] || null;
+  if (completedStep) {
+    history.unshift({
+      step: completedStep,
+      completedAt: new Date().toISOString(),
+    });
+  }
+
+  const nextIndex = currentStepIndex + 1;
+  const nextState = {
+    ...state,
+    currentStepIndex: nextIndex,
+    history,
+    status: nextIndex >= state.steps.length ? 'complete' : 'active',
+  };
+  await writeWorkflowState(chatId, nextState);
+
+  if (nextIndex >= state.steps.length) {
+    return {
+      state: nextState,
+      message: `Workflow complete: ${state.title || 'Untitled plan'}`,
+    };
+  }
+
+  return {
+    state: nextState,
+    message: `Next step: ${state.steps[nextIndex]}`,
+  };
+}
+
+function formatWorkflowState(state) {
+  if (!state || !Array.isArray(state.steps) || !state.steps.length) {
+    return 'No active workflow.';
+  }
+
+  const currentStepIndex = Math.max(parseInt(String(state.currentStepIndex || 0), 10), 0);
+  const currentStep = currentStepIndex < state.steps.length ? state.steps[currentStepIndex] : null;
+  const remaining = Math.max(state.steps.length - currentStepIndex, 0);
+
+  return [
+    `Workflow: ${state.title || 'Untitled plan'}`,
+    `Status: ${state.status || 'active'}`,
+    `Current step: ${currentStep ? `${currentStepIndex + 1}/${state.steps.length} - ${currentStep}` : 'complete'}`,
+    `Remaining steps: ${remaining}`,
+  ].join('\n');
 }
 
 async function readLatestAgentPersonaRuntime() {
@@ -845,6 +964,46 @@ router.post('/telegram/updates', async (req, res) => {
 
       await sendTelegramMessage(chatId, summary);
       await recordBridgeSuccess({ phase: 'command:self', updateId }).catch(() => {});
+      return res.json({ ok: true, handled: true });
+    }
+
+    if (lower === '/workflow') {
+      const state = await readLatestWorkflowState(chatId).catch(() => null);
+      await sendTelegramMessage(chatId, formatWorkflowState(state));
+      await recordBridgeSuccess({ phase: 'command:workflow', updateId }).catch(() => {});
+      return res.json({ ok: true, handled: true });
+    }
+
+    if (lower.startsWith('/plan')) {
+      const payload = commandPayload(userText, 'plan');
+      if (!payload || !payload.includes('|')) {
+        await sendTelegramMessage(chatId, 'Usage: /plan <title> | <step 1>; <step 2>; <step 3>');
+        await recordBridgeSuccess({ phase: 'command:plan:missing', updateId }).catch(() => {});
+        return res.json({ ok: true, handled: true });
+      }
+
+      const [title, ...stepParts] = payload.split('|');
+      const stepsRaw = stepParts.join('|');
+      const workflow = await createWorkflowState(chatId, title, stepsRaw).catch(() => null);
+      if (!workflow) {
+        await sendTelegramMessage(chatId, 'No valid steps found. Use semicolons or new lines to separate actions.');
+        await recordBridgeSuccess({ phase: 'command:plan:invalid', updateId }).catch(() => {});
+        return res.json({ ok: true, handled: true });
+      }
+
+      await sendTelegramMessage(chatId, [
+        `Workflow stored: ${workflow.title}`,
+        `First step: ${workflow.steps[0]}`,
+        `Use /continue to advance after each step completes.`,
+      ].join('\n'));
+      await recordBridgeSuccess({ phase: 'command:plan', updateId }).catch(() => {});
+      return res.json({ ok: true, handled: true });
+    }
+
+    if (lower === '/continue') {
+      const result = await advanceWorkflowState(chatId).catch(() => ({ state: null, message: 'No active workflow found.' }));
+      await sendTelegramMessage(chatId, result.message);
+      await recordBridgeSuccess({ phase: 'command:continue', updateId }).catch(() => {});
       return res.json({ ok: true, handled: true });
     }
 
