@@ -47,12 +47,6 @@ jobs:
           OLLAMA_BASE_URL: ${{ secrets.OLLAMA_BASE_URL || vars.OLLAMA_BASE_URL }}
           OLLAMA_MODEL: ${{ secrets.OLLAMA_MODEL || vars.OLLAMA_MODEL || 'llama3.1' }}
           OLLAMA_TEMPERATURE: ${{ secrets.OLLAMA_TEMPERATURE || vars.OLLAMA_TEMPERATURE || '0.35' }}
-          OPENCLAW_WEBHOOK_URL: ${{ secrets.OPENCLAW_WEBHOOK_URL || vars.OPENCLAW_WEBHOOK_URL }}
-          OPENCLAW_API_KEY: ${{ secrets.OPENCLAW_API_KEY || vars.OPENCLAW_API_KEY }}
-          MONGODB_URI: ${{ secrets.MONGODB_URI }}
-          OPENCLAW_WORKER_RUN_ONCE: 'true'
-          OPENCLAW_WORKER_NAME: openclaw-queue-dispatcher-realtime
-          OPENCLAW_WORKER_BATCH_SIZE: '50'
         run: |
           end=$((SECONDS + 3300))
           cycle=0
@@ -62,7 +56,6 @@ jobs:
 
             node .github/scripts/openclaw-telegram-bridge.mjs || true
             node .github/scripts/openclaw-respond.mjs || true
-            (cd backend && npm run openclaw:worker:once) || true
 
             echo "[Realtime] Cycle $cycle complete"
             sleep 1

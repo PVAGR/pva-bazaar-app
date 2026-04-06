@@ -45,16 +45,16 @@ Use Telegram on your phone to send instructions into the live OpenClaw chat loop
   - Default: `false`
   - Set `true` to allow any Telegram chat ID (internet public mode).
 
-## Queue worker workflow secrets
+## Queue worker workflow secrets (optional)
 
-To keep Telegram replies dynamic without a dedicated VPS worker, enable workflow
-`OpenClaw Queue Worker Tick` and configure these secrets:
+Workflow `OpenClaw Queue Worker Tick` is optional for manual queue replay and
+advanced webhook dispatch. Configure these secrets only if you use it:
 
 - `MONGODB_URI`
 - `OPENCLAW_WEBHOOK_URL`
 - `OPENCLAW_API_KEY` (optional when webhook does not require bearer auth)
 
-The queue worker workflow runs every 5 minutes and executes one dispatch cycle.
+This workflow is manual (`workflow_dispatch`) and executes one dispatch cycle.
 
 ## Setup steps (basic)
 

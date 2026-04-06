@@ -1,8 +1,6 @@
 name: OpenClaw Queue Worker Tick
 
 on:
-  schedule:
-    - cron: '*/5 * * * *'
   workflow_dispatch:
 
 permissions:
