@@ -11,7 +11,7 @@ dotenv.config();
 
 const WORKER_NAME = process.env.OPENCLAW_WORKER_NAME || 'openclaw-queue-dispatcher';
 const BACKEND_URL = (process.env.OPENCLAW_BACKEND_URL || '').replace(/\/$/, '');
-const PUBLIC_MODE = process.env.OPENCLAW_PUBLIC_MODE === 'true' || !process.env.MONGODB_URI;
+let PUBLIC_MODE = process.env.OPENCLAW_PUBLIC_MODE === 'true' || !process.env.MONGODB_URI;
 const POLL_MS = Math.max(parseInt(process.env.OPENCLAW_WORKER_POLL_MS || '10000', 10), 2000);
 const LEASE_MS = Math.max(parseInt(process.env.OPENCLAW_WORKER_LEASE_MS || '45000', 10), 10000);
 const BATCH_SIZE = Math.min(
@@ -356,7 +356,17 @@ async function main() {
   console.log(`[OpenClawWorker] starting worker=${WORKER_NAME} workerId=${WORKER_ID} runOnce=${RUN_ONCE}`);
 
   if (!PUBLIC_MODE) {
-    await dbConnect();
+    try {
+      await dbConnect();
+    } catch (err) {
+      if (BACKEND_URL) {
+        console.warn('[OpenClawWorker] db connect failed; switching to public mode using OPENCLAW_BACKEND_URL');
+        console.warn(`[OpenClawWorker] db error: ${err?.message || err}`);
+        PUBLIC_MODE = true;
+      } else {
+        throw err;
+      }
+    }
   }
 
   if (RUN_ONCE) {
