@@ -40,3 +40,6 @@ jobs:
           OPENCLAW_DIRECT_MODEL_TIMEOUT_MS: 20000
           GITHUB_TOKEN: ${{ github.token }}
           GITHUB_REPOSITORY: ${{ github.repository }}
+          OLLAMA_BASE_URL: ${{ secrets.OLLAMA_BASE_URL }}
+          OLLAMA_MODEL: ${{ secrets.OLLAMA_MODEL }}
+          OLLAMA_TEMPERATURE: ${{ secrets.OLLAMA_TEMPERATURE }}
