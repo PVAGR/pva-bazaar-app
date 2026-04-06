@@ -10,6 +10,10 @@ const OLLAMA_MODEL = process.env.OLLAMA_MODEL || process.env.OPENCLAW_OLLAMA_MOD
 const OLLAMA_TEMPERATURE = Math.min(Math.max(parseFloat(process.env.OLLAMA_TEMPERATURE || '0.35'), 0), 2);
 const OLLAMA_TIMEOUT_MS = Math.min(Math.max(parseInt(process.env.OPENCLAW_OLLAMA_TIMEOUT_MS || '30000', 10), 5000), 120000);
 const GITHUB_MODELS_TIMEOUT_MS = Math.min(Math.max(parseInt(process.env.OPENCLAW_GITHUB_MODELS_TIMEOUT_MS || '35000', 10), 5000), 120000);
+const QUEUE_FETCH_TIMEOUT_MS = Math.min(Math.max(parseInt(process.env.OPENCLAW_QUEUE_FETCH_TIMEOUT_MS || '12000', 10), 3000), 60000);
+const QUEUE_FETCH_MAX_RETRIES = Math.min(Math.max(parseInt(process.env.OPENCLAW_QUEUE_FETCH_MAX_RETRIES || '5', 10), 0), 10);
+const QUEUE_FETCH_BASE_DELAY_MS = Math.min(Math.max(parseInt(process.env.OPENCLAW_QUEUE_FETCH_BASE_DELAY_MS || '1000', 10), 250), 10000);
+const QUEUE_FETCH_MAX_DELAY_MS = Math.min(Math.max(parseInt(process.env.OPENCLAW_QUEUE_FETCH_MAX_DELAY_MS || '60000', 10), 1000), 120000);
 const REPO = process.env.GITHUB_REPOSITORY || 'PVAGR/pva-bazaar-app';
 
 if (!BACKEND_URL) {
@@ -147,6 +151,83 @@ async function fetchJsonWithTimeout(url, options = {}, timeoutMs = 15000) {
   } finally {
     clearTimeout(timer);
   }
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function parseRetryAfterMs(retryAfterHeader) {
+  if (!retryAfterHeader) return null;
+  const trimmed = String(retryAfterHeader).trim();
+  const seconds = Number.parseInt(trimmed, 10);
+  if (Number.isFinite(seconds)) {
+    return Math.max(seconds * 1000, 0);
+  }
+
+  const retryDate = new Date(trimmed).getTime();
+  if (Number.isFinite(retryDate)) {
+    return Math.max(retryDate - Date.now(), 0);
+  }
+
+  return null;
+}
+
+function computeBackoffMs(attempt) {
+  const exponential = QUEUE_FETCH_BASE_DELAY_MS * Math.pow(2, Math.max(attempt - 1, 0));
+  const jitter = Math.floor(Math.random() * 500);
+  return Math.min(exponential + jitter, QUEUE_FETCH_MAX_DELAY_MS);
+}
+
+async function fetchOutboundQueueWithRetry() {
+  const queueUrl = `${BACKEND_URL}/api/openclaw/messages?unprocessed=true&direction=outbound&limit=25`;
+
+  for (let attempt = 1; attempt <= QUEUE_FETCH_MAX_RETRIES + 1; attempt += 1) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), QUEUE_FETCH_TIMEOUT_MS);
+
+    try {
+      const response = await fetch(queueUrl, {
+        headers: getHeaders(true),
+        signal: controller.signal,
+      });
+
+      if (response.ok) {
+        const payload = await response.json();
+        return {
+          payload,
+          attempts: attempt,
+        };
+      }
+
+      const detail = await response.text();
+      const retryable = response.status === 429 || response.status >= 500;
+      if (!retryable || attempt > QUEUE_FETCH_MAX_RETRIES) {
+        throw new Error(`Failed to fetch outbound queue (${response.status}): ${detail}`);
+      }
+
+      const retryAfterMs = parseRetryAfterMs(response.headers.get('retry-after'));
+      const delayMs = Number.isFinite(retryAfterMs) ? retryAfterMs : computeBackoffMs(attempt);
+      await writeMemory(
+        'ecosystem:openclaw-responder:lastRateLimit',
+        JSON.stringify({ status: response.status, delayMs, attempt, at: new Date().toISOString() }).slice(0, 4000),
+        'reflection',
+      );
+      await sleep(delayMs);
+    } catch (err) {
+      const retryable = err?.name === 'AbortError' || /network|timeout|fetch/i.test(String(err?.message || ''));
+      if (!retryable || attempt > QUEUE_FETCH_MAX_RETRIES) {
+        throw err;
+      }
+
+      const delayMs = computeBackoffMs(attempt);
+      await sleep(delayMs);
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  throw new Error('Failed to fetch outbound queue after retries');
 }
 
 async function writeHeartbeat(source, details = {}) {
@@ -384,16 +465,7 @@ async function main() {
     ollamaModel: OLLAMA_MODEL || null,
   });
 
-  const response = await fetch(`${BACKEND_URL}/api/openclaw/messages?unprocessed=true&direction=outbound&limit=25`, {
-    headers: getHeaders(true),
-  });
-
-  if (!response.ok) {
-    const detail = await response.text();
-    throw new Error(`Failed to fetch outbound queue (${response.status}): ${detail}`);
-  }
-
-  const payload = await response.json();
+  const { payload, attempts } = await fetchOutboundQueueWithRetry();
   const messages = Array.isArray(payload.messages) ? payload.messages : [];
 
   if (!messages.length) {
@@ -403,6 +475,7 @@ async function main() {
       failedCount: 0,
       sources: [],
       phase: 'idle',
+      fetchAttempts: attempts,
     });
     await writeHeartbeat(OLLAMA_BASE_URL ? 'ollama' : 'github-models', {
       processedCount: 0,
@@ -412,6 +485,7 @@ async function main() {
       ollamaBaseUrl: OLLAMA_BASE_URL || null,
       ollamaModel: OLLAMA_MODEL || null,
       sources: [],
+      fetchAttempts: attempts,
     });
     return;
   }
@@ -453,6 +527,7 @@ async function main() {
   await writeHeartbeat(sourceSummary, {
     processedCount,
     failedCount,
+    fetchAttempts: attempts,
     repo: REPO,
     ollamaBaseUrl: OLLAMA_BASE_URL || null,
     ollamaModel: OLLAMA_MODEL || null,
@@ -463,12 +538,14 @@ async function main() {
     await recordResponderFailure(`${failedCount} message(s) failed in batch`, {
       processedCount,
       failedCount,
+      fetchAttempts: attempts,
       sources: Array.from(usedSources),
     });
   } else {
     await recordResponderSuccess({
       processedCount,
       failedCount,
+      fetchAttempts: attempts,
       sources: Array.from(usedSources),
     });
   }

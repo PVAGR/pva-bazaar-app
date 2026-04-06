@@ -164,9 +164,11 @@ async function buildEcosystemSnapshot({ queue, worker } = {}) {
   const telegramConfigured = Boolean(telegramHeartbeat || telegramUpdate || process.env.TELEGRAM_BOT_TOKEN || process.env.TELEGRAM_ALLOWED_CHAT_IDS);
   const telegramLive = isRecentTimestamp(telegramHeartbeat?.createdAt, 10);
   const responderLive = isRecentTimestamp(openclawHeartbeat?.createdAt, 15);
-  const workerLive = isRecentTimestamp(workerHeartbeat?.createdAt, 10);
+  const workerLive = isRecentTimestamp(workerHeartbeat?.createdAt, 10)
+    || isRecentTimestamp(worker?.heartbeatAt, 10)
+    || worker?.active === true;
   const responderStateValue = String(responderState?.value || 'unknown');
-  const workerStateValue = String(workerState?.value || 'unknown');
+  const workerStateValue = String(workerState?.value || worker?.state || (worker?.active ? 'online' : 'unknown'));
   const telegramStateValue = String(telegramState?.value || 'unknown');
   const responderInError = responderStateValue.startsWith('error:');
   const workerInError = workerStateValue.startsWith('error:');
@@ -447,6 +449,8 @@ async function getWorkerStatus() {
       holderId: lease.holderId || null,
       leaseUntil: lease.leaseUntil || null,
       heartbeatAt: lease.heartbeatAt || null,
+      state: leaseUntilMs > now ? 'online' : 'idle',
+      failures: Number.parseInt(String(workerFailures?.value || '0'), 10) || 0,
     };
   } catch (_err) {
     return {
