@@ -24,6 +24,22 @@ function formatAgeMinutes(value) {
   return Math.max(Math.round((Date.now() - then) / 60000), 0);
 }
 
+function coerceInteger(value, fallback, min, max) {
+  const parsed = Number.parseInt(String(value), 10);
+  if (!Number.isFinite(parsed)) return fallback;
+  if (Number.isFinite(min) && parsed < min) return min;
+  if (Number.isFinite(max) && parsed > max) return max;
+  return parsed;
+}
+
+function coerceNumber(value, fallback, min, max) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return fallback;
+  if (Number.isFinite(min) && parsed < min) return min;
+  if (Number.isFinite(max) && parsed > max) return max;
+  return parsed;
+}
+
 export default function OpenClawTab() {
   const [status, setStatus] = useState(null);
   const [statusLoading, setStatusLoading] = useState(true);
@@ -165,12 +181,12 @@ export default function OpenClawTab() {
         apiKey: openclawConfig.apiKey,
         bridgeSecret: openclawConfig.bridgeSecret,
         autonomousEnabled: openclawConfig.autonomousEnabled,
-        autonomousBountyScanMinutes: Number(openclawConfig.autonomousBountyScanMinutes || 30),
-        autonomousKeepaliveMinutes: Number(openclawConfig.autonomousKeepaliveMinutes || 10),
+        autonomousBountyScanMinutes: coerceInteger(openclawConfig.autonomousBountyScanMinutes, 30, 5, 1440),
+        autonomousKeepaliveMinutes: coerceInteger(openclawConfig.autonomousKeepaliveMinutes, 10, 1, 240),
         autonomousMoneyRunEnabled: openclawConfig.autonomousMoneyRunEnabled,
         workerName: openclawConfig.workerName,
-        workerPollMs: Number(openclawConfig.workerPollMs || 10000),
-        workerBatchSize: Number(openclawConfig.workerBatchSize || 15),
+        workerPollMs: coerceInteger(openclawConfig.workerPollMs, 10000, 2000),
+        workerBatchSize: coerceInteger(openclawConfig.workerBatchSize, 15, 1, 100),
       };
       const data = await updateOpenClawRuntimeConfig(payload);
       if (data?.ok) {
@@ -328,7 +344,7 @@ export default function OpenClawTab() {
     if (sendResultTimer.current) clearTimeout(sendResultTimer.current);
 
     try {
-      const data = await apiPost(liveReplyEnabled ? '/openclaw/chat' : '/openclaw/dispatch', {
+      const data = await apiPost(effectiveLiveReplyEnabled ? '/openclaw/chat' : '/openclaw/dispatch', {
         event: 'pvabazaar.admin.message',
         message: trimmed,
         waitForReplyMs: Math.min(Math.max(Number(replyWaitMs) || 14000, 2000), 25000),
@@ -340,7 +356,7 @@ export default function OpenClawTab() {
       });
 
       if (data.ok) {
-        const hasLiveReply = liveReplyEnabled && data?.reply?.content;
+        const hasLiveReply = effectiveLiveReplyEnabled && data?.reply?.content;
         setSendResult({
           ok: true,
           text: hasLiveReply
@@ -363,7 +379,7 @@ export default function OpenClawTab() {
       setSending(false);
       sendResultTimer.current = setTimeout(() => setSendResult(null), 6000);
     }
-  }, [liveReplyEnabled, loadMessages, messageInput, replyWaitMs]);
+  }, [effectiveLiveReplyEnabled, loadMessages, messageInput, replyWaitMs]);
 
   const replayWebhook = useCallback(async () => {
     setQueueActionLoading(true);
@@ -422,18 +438,20 @@ export default function OpenClawTab() {
     setMissionResult(null);
 
     const payload = {
-      limit: Math.min(Math.max(parseInt(missionLimit, 10) || 10, 1), 25),
+      limit: coerceInteger(missionLimit, 10, 1, 25),
       walletAddress: missionWalletAddress.trim(),
-      minRewardRaw: Math.max(0, Number(missionMinRewardRaw) || 0),
+      minRewardRaw: coerceNumber(missionMinRewardRaw, 0, 0),
     };
 
     try {
       let data;
       if (type === 'scan') {
-        data = await apiPost('/bounties/scan', {});
+        data = await apiPost('/bounties/scan', { quick: true }, { timeout: 45000 });
         setMissionResult({
-          ok: true,
-          text: `Scan completed. Sources refreshed: ${Array.isArray(data?.results) ? data.results.length : 0}.`,
+          ok: data?.ok !== false,
+          text: data?.ok === false
+            ? (data?.message || 'Scan did not complete successfully.')
+            : `Scan completed. Sources refreshed: ${Array.isArray(data?.results) ? data.results.length : 0}.`,
         });
       } else if (type === 'dispatch') {
         data = await apiPost('/bounties/dispatch-top', payload);
@@ -444,7 +462,7 @@ export default function OpenClawTab() {
             : (data?.message || 'No dispatch candidates available.'),
         });
       } else if (type === 'money-run') {
-        data = await apiPost('/bounties/money-run', payload);
+        data = await apiPost('/bounties/money-run', payload, { timeout: 60000 });
         setMissionResult({
           ok: data?.ok !== false,
           text: data?.queued
@@ -462,8 +480,8 @@ export default function OpenClawTab() {
           ].join(' '),
           metadata: {
             source: 'admin-openclaw-mission-rack',
-            minRewardRaw: Math.max(0, Number(missionMinRewardRaw) || 0),
-            limit: Math.min(Math.max(parseInt(missionLimit, 10) || 10, 1), 25),
+            minRewardRaw: coerceNumber(missionMinRewardRaw, 0, 0),
+            limit: coerceInteger(missionLimit, 10, 1, 25),
             timestamp: new Date().toISOString(),
           },
         });
@@ -480,9 +498,12 @@ export default function OpenClawTab() {
       loadQueueStats();
       loadRecoveryHistory();
     } catch (err) {
+      const isTimeout = err?.code === 'ECONNABORTED' || String(err?.message || '').toLowerCase().includes('timeout');
       setMissionResult({
         ok: false,
-        text: err?.response?.data?.message || err.message || 'Mission failed',
+        text: isTimeout
+          ? 'Mission timed out. Try again or reduce scan breadth.'
+          : (err?.response?.data?.message || err.message || 'Mission failed'),
       });
       logger.error(`OpenClaw mission failed: ${type}`, err);
     } finally {
@@ -507,6 +528,8 @@ export default function OpenClawTab() {
   const pendingOutbound = queueStats?.pendingOutbound ?? 0;
   const waitingForAgent = pendingOutbound > 0;
   const refreshInterval = waitingForAgent ? 5000 : 15000;
+  const queueOnlyMode = status?.webhookConfigured === false || status?.mode === 'queue-only';
+  const effectiveLiveReplyEnabled = liveReplyEnabled && !queueOnlyMode;
 
   useEffect(() => {
     if (!autoRefresh) return undefined;
@@ -527,7 +550,7 @@ export default function OpenClawTab() {
 
     const reasons = [];
 
-    if (!status?.reachable) reasons.push('gateway offline');
+    if (!queueOnlyMode && !status?.reachable) reasons.push('gateway offline');
     const heartbeatAge = formatAgeMinutes(status?.worker?.heartbeatAt);
     if (status?.worker?.active === false) reasons.push('worker lease inactive');
     if (heartbeatAge !== null && heartbeatAge > 4) reasons.push(`heartbeat stale (${heartbeatAge}m)`);
@@ -549,6 +572,7 @@ export default function OpenClawTab() {
     autoHealEnabled,
     autoHealCooldownMinutes,
     autoHealLastRunAt,
+    queueOnlyMode,
     queueLoading,
     queueStats,
     status,
@@ -597,14 +621,29 @@ export default function OpenClawTab() {
     if (!openclawConfig.autonomousEnabled) {
       return { tone: 'oc-warn', icon: '🧷', label: 'Manual hold', detail: 'Autonomous mode is disabled' };
     }
-    if (!status?.reachable || !leaseActive || staleOutbound > 0) {
+    if ((!queueOnlyMode && !status?.reachable) || !leaseActive || staleOutbound > 0) {
       return { tone: 'oc-bad', icon: '🚨', label: 'Recovery pressure', detail: 'Operator attention required' };
     }
     if (openclawConfig.autonomousMoneyRunEnabled) {
       return { tone: 'oc-ok', icon: '🟢', label: 'Live bounty posture', detail: 'Autonomous ops and money-run are armed' };
     }
     return { tone: 'oc-info', icon: '🧭', label: 'Operator-guided', detail: 'Autonomous ops active, money-run held' };
-  }, [leaseActive, openclawConfig.autonomousEnabled, openclawConfig.autonomousMoneyRunEnabled, staleOutbound, status?.reachable]);
+  }, [leaseActive, openclawConfig.autonomousEnabled, openclawConfig.autonomousMoneyRunEnabled, queueOnlyMode, staleOutbound, status?.reachable]);
+
+  const reachabilityCard = useMemo(() => {
+    if (queueOnlyMode) {
+      return {
+        tone: 'oc-info',
+        icon: '📦',
+        label: 'Queue-only',
+      };
+    }
+    return {
+      tone: status?.reachable ? 'oc-ok' : 'oc-bad',
+      icon: status?.reachable ? '🟢' : '🔴',
+      label: status?.reachable ? 'Online' : 'Offline',
+    };
+  }, [queueOnlyMode, status?.reachable]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -640,8 +679,9 @@ export default function OpenClawTab() {
                 type="checkbox"
                 checked={liveReplyEnabled}
                 onChange={(event) => setLiveReplyEnabled(event.target.checked)}
+                disabled={queueOnlyMode}
               />
-              Live reply mode
+              {queueOnlyMode ? 'Live reply mode (needs gateway)' : 'Live reply mode'}
             </label>
             <label className="oc-auto-heal-cooldown">
               Reply wait (ms)
@@ -652,7 +692,7 @@ export default function OpenClawTab() {
                 step="500"
                 value={replyWaitMs}
                 onChange={(event) => setReplyWaitMs(event.target.value)}
-                disabled={!liveReplyEnabled}
+                disabled={!effectiveLiveReplyEnabled}
               />
             </label>
             <label className="oc-auto-heal-cooldown">
@@ -684,10 +724,12 @@ export default function OpenClawTab() {
             <button
               className="oc-btn oc-btn--secondary"
               onClick={replayWebhook}
-              disabled={queueActionLoading}
+              disabled={queueActionLoading || queueOnlyMode}
               title="Replay pending outbound messages to OpenClaw webhook"
             >
-              {queueActionLoading ? 'Replaying...' : '🔁 Replay Webhook'}
+              {queueActionLoading
+                ? 'Replaying...'
+                : (queueOnlyMode ? '🔁 Replay Webhook (needs gateway)' : '🔁 Replay Webhook')}
             </button>
             <button
               className="oc-btn oc-btn--secondary"
@@ -853,11 +895,11 @@ export default function OpenClawTab() {
               </div>
             </div>
 
-            <div className={`oc-status-card ${status?.reachable ? 'oc-ok' : 'oc-bad'}`}>
-              <span className="oc-status-icon">{status?.reachable ? '🟢' : '🔴'}</span>
+            <div className={`oc-status-card ${reachabilityCard.tone}`}>
+              <span className="oc-status-icon">{reachabilityCard.icon}</span>
               <div>
                 <div className="oc-status-label">Reachability</div>
-                <div className="oc-status-value">{status?.reachable ? 'Online' : 'Offline'}</div>
+                <div className="oc-status-value">{reachabilityCard.label}</div>
               </div>
             </div>
 
@@ -1044,9 +1086,9 @@ export default function OpenClawTab() {
 
             <button
               className="oc-mission-card"
+              disabled={missionLoading === 'scan'}
               type="button"
               onClick={() => runMission('scan')}
-              disabled={missionLoading === 'scan'}
             >
               <span className="oc-mission-icon">⚡</span>
               <span className="oc-mission-title">Run Fresh Scan</span>

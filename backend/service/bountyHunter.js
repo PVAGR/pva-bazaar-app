@@ -502,7 +502,8 @@ Start directly with the deliverable, no preamble.`;
 
 // ─── Deduplication & Persistence ─────────────────────────────────────────────
 
-async function upsertBounty(raw) {
+async function upsertBounty(raw, options = {}) {
+  const { generateDrafts = true } = options;
   await dbConnect();
 
   // Check if already stored (by platform + platformId)
@@ -511,8 +512,8 @@ async function upsertBounty(raw) {
     if (existing) return { bounty: existing, isNew: false };
   }
 
-  // Generate AI draft while we have the data
-  const draftContent = await generateDraft(raw);
+  // Quick scans can skip draft generation to keep response times predictable.
+  const draftContent = generateDrafts ? await generateDraft(raw) : '';
 
   const bounty = await Bounty.create({
     ...raw,
@@ -528,7 +529,10 @@ async function upsertBounty(raw) {
 // ─── Main Scan Entry Point ────────────────────────────────────────────────────
 
 async function runScan(options = {}) {
-  const { platforms = ['dework', 'github', 'reddit', 'superteam', 'code4rena', 'immunefi'] } = options;
+  const {
+    platforms = ['dework', 'github', 'reddit', 'superteam', 'code4rena', 'immunefi'],
+    generateDrafts = true,
+  } = options;
   const results = { discovered: 0, skipped: 0, errors: [] };
 
   console.log('[BountyHunter] Starting scan for platforms:', platforms.join(', '));
@@ -552,7 +556,7 @@ async function runScan(options = {}) {
 
   for (const raw of rawBounties) {
     try {
-      const { isNew } = await upsertBounty(raw);
+      const { isNew } = await upsertBounty(raw, { generateDrafts });
       if (isNew) {
         results.discovered += 1;
       } else {

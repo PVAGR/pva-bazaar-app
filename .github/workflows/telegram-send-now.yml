@@ -1,0 +1,38 @@
+name: Telegram Send Now
+
+on:
+  workflow_dispatch:
+    inputs:
+      message:
+        description: Message to send
+        required: true
+        type: string
+      chat_id:
+        description: Optional specific chat ID override
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
+
+      - name: Send Telegram message
+        run: node .github/scripts/telegram-send-now.mjs
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_ALLOWED_CHAT_IDS: ${{ secrets.TELEGRAM_ALLOWED_CHAT_IDS }}
+          TELEGRAM_CHAT_ID: ${{ github.event.inputs.chat_id }}
+          TELEGRAM_MESSAGE: ${{ github.event.inputs.message }}

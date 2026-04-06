@@ -238,7 +238,7 @@ router.post('/money-run', requireAdmin, async (req, res) => {
     const walletAddress = String(req.body?.walletAddress || process.env.BOUNTY_PAYOUT_WALLET || '').trim();
     const { platforms } = req.body || {};
 
-    const scanResults = await runScan({ platforms });
+    const scanResults = await runScan({ platforms, generateDrafts: false });
 
     const candidates = await Bounty.find({
       status: { $in: ['discovered', 'draft_ready', 'approved', 'pending_review'] },
@@ -276,6 +276,7 @@ router.post('/money-run', requireAdmin, async (req, res) => {
     return res.json({
       ok: true,
       queued: true,
+      mode: 'quick',
       messageId: String(queued._id),
       walletAddress,
       minRewardRaw,
@@ -293,8 +294,9 @@ router.post('/money-run', requireAdmin, async (req, res) => {
 router.post('/scan', requireAdmin, async (req, res) => {
   try {
     const { platforms } = req.body || {};
-    const results = await runScan({ platforms });
-    return res.json({ ok: true, results });
+    const quick = req.body?.quick !== false;
+    const results = await runScan({ platforms, generateDrafts: !quick });
+    return res.json({ ok: true, results, mode: quick ? 'quick' : 'full' });
   } catch (err) {
     return res.status(500).json({ ok: false, message: err.message });
   }
