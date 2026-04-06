@@ -163,6 +163,7 @@ async function buildEcosystemSnapshot({ queue, worker } = {}) {
 
   const telegramConfigured = Boolean(telegramHeartbeat || telegramUpdate || process.env.TELEGRAM_BOT_TOKEN || process.env.TELEGRAM_ALLOWED_CHAT_IDS);
   const telegramLive = isRecentTimestamp(telegramHeartbeat?.createdAt, 10);
+  const telegramWebhookConfigured = Boolean(process.env.TELEGRAM_WEBHOOK_URL || process.env.TELEGRAM_WEBHOOK_ENABLED === 'true');
   const responderLive = isRecentTimestamp(openclawHeartbeat?.createdAt, 15);
   const workerLive = isRecentTimestamp(workerHeartbeat?.createdAt, 10)
     || isRecentTimestamp(worker?.heartbeatAt, 10)
@@ -173,6 +174,8 @@ async function buildEcosystemSnapshot({ queue, worker } = {}) {
   const responderInError = responderStateValue.startsWith('error:');
   const workerInError = workerStateValue.startsWith('error:');
   const telegramInError = telegramStateValue.startsWith('error:');
+  const telegramFailureValue = Number.parseInt(String(telegramFailureCount?.value || '0'), 10) || 0;
+  const telegramOperational = telegramLive || (telegramWebhookConfigured && !telegramInError && telegramFailureValue === 0);
   const queuePending = queue?.pendingOutbound ?? 0;
   const staleOutbound = queue?.staleOutbound ?? 0;
   const workerInactiveWithQueuePressure = worker?.active === false && (queuePending > 0 || staleOutbound > 0);
@@ -226,16 +229,18 @@ async function buildEcosystemSnapshot({ queue, worker } = {}) {
     },
     telegram: {
       configured: telegramConfigured,
-      reachable: telegramLive,
+      reachable: telegramOperational,
       lastHeartbeatAt: telegramHeartbeat?.createdAt || null,
       lastUpdateId: telegramUpdate?.value || null,
       connectionState: telegramStateValue,
-      consecutiveFailures: Number.parseInt(String(telegramFailureCount?.value || '0'), 10) || 0,
+      consecutiveFailures: telegramFailureValue,
       lastError: telegramLastError?.value || null,
       message: telegramLive
         ? 'Bridge heartbeat is fresh'
-        : (telegramConfigured ? 'Bridge heartbeat is stale or missing' : 'Not configured'),
-      status: telegramLive && !telegramInError ? 'online' : (telegramConfigured ? 'degraded' : 'offline'),
+        : (telegramWebhookConfigured
+          ? 'Webhook mode active'
+          : (telegramConfigured ? 'Bridge heartbeat is stale or missing' : 'Not configured')),
+      status: telegramOperational ? 'online' : (telegramConfigured ? 'degraded' : 'offline'),
     },
   };
 
