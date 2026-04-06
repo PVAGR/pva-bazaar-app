@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const dbConnect = require('../lib/dbConnect');
 const OpenClawMessage = require('../models/OpenClawMessage');
 const OpenClawMemory = require('../models/OpenClawMemory');
+const OpenClawAgentConfig = require('../models/OpenClawAgentConfig');
 
 const router = express.Router();
 
@@ -22,6 +23,16 @@ const OPENCLAW_TELEGRAM_SOURCE = String(process.env.OPENCLAW_TELEGRAM_SOURCE || 
 const OLLAMA_BASE_URL = String(process.env.OLLAMA_BASE_URL || process.env.OPENCLAW_OLLAMA_BASE_URL || '').trim().replace(/\/$/, '');
 const OLLAMA_MODEL = String(process.env.OLLAMA_MODEL || process.env.OPENCLAW_OLLAMA_MODEL || 'llama3.1').trim();
 const OLLAMA_TEMPERATURE = Math.min(Math.max(parseFloat(process.env.OLLAMA_TEMPERATURE || '0.35'), 0), 2);
+const OLLAMA_TIMEOUT_MS = Math.min(
+  Math.max(parseInt(process.env.OLLAMA_TIMEOUT_MS || process.env.OPENCLAW_OLLAMA_TIMEOUT_MS || '20000', 10), 3000),
+  45000,
+);
+const PERSONA_AUTO_LEARN = process.env.OPENCLAW_PERSONA_AUTO_LEARN !== 'false';
+const PERSONA_CONTEXT_LIMIT = Math.min(
+  Math.max(parseInt(process.env.OPENCLAW_PERSONA_CONTEXT_LIMIT || '10', 10), 4),
+  24,
+);
+const DEFAULT_PERSONA_PROFILE_ID = String(process.env.OPENCLAW_PERSONA_PROFILE_ID || 'default').trim().toLowerCase() || 'default';
 
 function backendHeaders() {
   const headers = { 'Content-Type': 'application/json' };
@@ -61,6 +72,14 @@ function validateWebhookSecret(req) {
 
 function sanitizeIncomingText(text) {
   return String(text || '').trim().slice(0, 4000);
+}
+
+function normalizeLabel(value, fallback = 'default', maxLen = 80) {
+  const normalized = String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9:_-]/g, '-');
+  return normalized.slice(0, maxLen) || fallback;
 }
 
 async function writeMemory(key, value, type = 'fact') {
@@ -150,12 +169,19 @@ function helpText() {
     'Commands:',
     '/start - confirm bridge status',
     '/help - show this message',
+    '/identity <text> - set your core identity signal for this chat',
+    '/voice <text> - set speaking style and tone for this chat',
+    '/imprint <text> - store a high-priority memory for the AI self',
+    '/remember <text> - alias for /imprint',
+    '/profile <name> - switch active identity profile for this chat',
+    '/mode <name> - switch active behavior mode for this chat',
+    '/self - view current identity + recent imprints',
     '/status - show OpenClaw bridge status',
     '/queue - show queue and worker health',
     '/recover - trigger OpenClaw recovery/replay',
     '/ecosystem - show website, OpenClaw, Ollama, and Telegram status',
     '',
-    'Any other text is sent to OpenClaw chat and the AI reply is returned here.',
+    'Any other text is sent to OpenClaw chat and also journaled for persona learning.',
   ].join('\n');
 }
 
@@ -164,7 +190,127 @@ function startText() {
     'OpenClaw Telegram webhook online.',
     'Send your instruction and I will route it into the live PVA agent loop.',
     'Use /help to see commands.',
+    'Use /identity and /voice to shape your living AI profile.',
   ].join('\n');
+}
+
+function personaKey(kind, chatId) {
+  return `persona:${kind}:chat:${String(chatId)}`;
+}
+
+function chatProfileKey(chatId) {
+  return `persona:profile:chat:${String(chatId)}`;
+}
+
+function chatModeKey(chatId) {
+  return `persona:mode:chat:${String(chatId)}`;
+}
+
+async function readLatestAgentPersonaRuntime() {
+  await dbConnect();
+  const doc = await OpenClawAgentConfig.findOne().sort({ updatedAt: -1 }).lean();
+  return {
+    activeMode: normalizeLabel(doc?.activeMode || 'default', 'default', 80),
+    profileId: normalizeLabel(doc?.personaProfileId || DEFAULT_PERSONA_PROFILE_ID, 'default', 120),
+  };
+}
+
+async function resolvePersonaRuntime(chatId) {
+  const defaults = await readLatestAgentPersonaRuntime().catch(() => ({
+    activeMode: 'default',
+    profileId: DEFAULT_PERSONA_PROFILE_ID,
+  }));
+
+  const [chatProfile, chatMode] = await Promise.all([
+    readLatestMemoryValue(chatProfileKey(chatId)).catch(() => null),
+    readLatestMemoryValue(chatModeKey(chatId)).catch(() => null),
+  ]);
+
+  return {
+    profileId: normalizeLabel(chatProfile || defaults.profileId || DEFAULT_PERSONA_PROFILE_ID, 'default', 120),
+    activeMode: normalizeLabel(chatMode || defaults.activeMode || 'default', 'default', 80),
+  };
+}
+
+function commandPayload(rawText, commandName) {
+  const normalized = String(rawText || '').trim();
+  const lower = normalized.toLowerCase();
+  const prefix = `/${commandName.toLowerCase()}`;
+  if (!lower.startsWith(prefix)) return null;
+  return normalized.slice(prefix.length).trim();
+}
+
+async function storePersonaEntry(kind, chatId, value, type = 'reflection') {
+  const safeValue = String(value || '').trim().slice(0, 3500);
+  if (!safeValue) return null;
+
+  await writeMemory(personaKey(kind, chatId), safeValue, type);
+  return safeValue;
+}
+
+async function fetchPersonaContext(chatId, limit = PERSONA_CONTEXT_LIMIT) {
+  await dbConnect();
+  const keyPrefix = `persona:`;
+  const chatSuffix = `:chat:${String(chatId)}`;
+
+  const docs = await OpenClawMemory.find({
+    key: { $regex: `^${keyPrefix}` },
+    source: OPENCLAW_TELEGRAM_SOURCE,
+  })
+    .sort({ createdAt: -1 })
+    .limit(200)
+    .lean();
+
+  const filtered = docs.filter((doc) => String(doc?.key || '').endsWith(chatSuffix));
+  if (!filtered.length) {
+    return {
+      lines: [],
+      summary: 'No persona context stored yet.',
+      identity: null,
+      voice: null,
+      imprintCount: 0,
+      journalCount: 0,
+    };
+  }
+
+  const latestIdentity = filtered.find((item) => String(item.key).startsWith('persona:identity:')) || null;
+  const latestVoice = filtered.find((item) => String(item.key).startsWith('persona:voice:')) || null;
+  const imprints = filtered.filter((item) => String(item.key).startsWith('persona:imprint:'));
+  const journals = filtered.filter((item) => String(item.key).startsWith('persona:journal:'));
+
+  const selected = [];
+  if (latestIdentity?.value) selected.push(`Identity: ${String(latestIdentity.value).slice(0, 700)}`);
+  if (latestVoice?.value) selected.push(`Voice: ${String(latestVoice.value).slice(0, 700)}`);
+
+  const recentDynamic = filtered
+    .filter((item) => String(item.key).startsWith('persona:imprint:') || String(item.key).startsWith('persona:journal:'))
+    .slice(0, Math.max(limit - selected.length, 0))
+    .map((item) => {
+      const kind = String(item.key).startsWith('persona:imprint:') ? 'Imprint' : 'Journal';
+      return `${kind}: ${String(item.value || '').slice(0, 500)}`;
+    });
+
+  const lines = [...selected, ...recentDynamic].slice(0, limit);
+  const summary = [
+    latestIdentity?.value ? `Identity set` : 'Identity not set',
+    latestVoice?.value ? `voice set` : 'voice not set',
+    `imprints=${imprints.length}`,
+    `journals=${journals.length}`,
+  ].join(' · ');
+
+  return {
+    lines,
+    summary,
+    identity: latestIdentity?.value || null,
+    voice: latestVoice?.value || null,
+    imprintCount: imprints.length,
+    journalCount: journals.length,
+  };
+}
+
+function personaBlock(context) {
+  if (!context?.lines?.length) return 'Persona context: none';
+  return ['Persona context:', ...context.lines].join('\n');
 }
 
 async function fetchOpenClawStatus(apiBaseUrl) {
@@ -270,18 +416,8 @@ function needsDirectFallback(payload) {
   return msg.includes('queued') || msg.includes('waiting') || !msg;
 }
 
-async function generateOllamaFallbackReply(userText, apiBaseUrl) {
-  if (!OLLAMA_BASE_URL) return null;
-
-  const status = await fetchOpenClawStatus(apiBaseUrl).catch(() => null);
-  const prompt = [
-    'You are PVA Magnum Opus, the Telegram assistant for PVA Bazaar.',
-    'Respond clearly and actionably.',
-    `User message: ${String(userText || '').slice(0, 3000)}`,
-    `Live status: ${status ? JSON.stringify(status).slice(0, 5000) : 'unavailable'}`,
-  ].join('\n\n');
-
-  const response = await axios.post(
+async function requestOllamaChat(userPrompt) {
+  return axios.post(
     `${OLLAMA_BASE_URL}/api/chat`,
     {
       model: OLLAMA_MODEL,
@@ -294,18 +430,68 @@ async function generateOllamaFallbackReply(userText, apiBaseUrl) {
         },
         {
           role: 'user',
-          content: prompt,
+          content: userPrompt,
         },
       ],
     },
     {
-      timeout: 20000,
+      timeout: OLLAMA_TIMEOUT_MS,
       headers: { 'Content-Type': 'application/json' },
     },
   );
+}
 
-  const text = response.data?.message?.content || response.data?.response || null;
-  return text ? String(text).trim().slice(0, 3500) : null;
+async function requestOllamaGenerate(userPrompt) {
+  return axios.post(
+    `${OLLAMA_BASE_URL}/api/generate`,
+    {
+      model: OLLAMA_MODEL,
+      stream: false,
+      options: { temperature: OLLAMA_TEMPERATURE },
+      prompt: userPrompt,
+      system: 'You are PVA Magnum Opus. Keep answers concise and operational.',
+    },
+    {
+      timeout: OLLAMA_TIMEOUT_MS,
+      headers: { 'Content-Type': 'application/json' },
+    },
+  );
+}
+
+async function generateOllamaFallbackReply(userText, apiBaseUrl, personaContext = null, personaRuntime = null) {
+  if (!OLLAMA_BASE_URL) return null;
+
+  const status = await fetchOpenClawStatus(apiBaseUrl).catch(() => null);
+  const prompt = [
+    'You are PVA Magnum Opus, the Telegram assistant for PVA Bazaar.',
+    'You are a continuity agent that should feel like the same evolving identity over time.',
+    'Use persona context as the highest-priority style and identity guidance.',
+    `Active profile: ${personaRuntime?.profileId || 'default'}`,
+    `Active mode: ${personaRuntime?.activeMode || 'default'}`,
+    'Respond clearly and actionably.',
+    personaBlock(personaContext),
+    `User message: ${String(userText || '').slice(0, 3000)}`,
+    `Live status: ${status ? JSON.stringify(status).slice(0, 5000) : 'unavailable'}`,
+  ].join('\n\n');
+
+  try {
+    const response = await requestOllamaChat(prompt);
+    const text = response.data?.message?.content || response.data?.response || null;
+    return text ? String(text).trim().slice(0, 3500) : null;
+  } catch (err) {
+    const status = err?.response?.status || 0;
+    if (status && status < 500) {
+      return null;
+    }
+  }
+
+  try {
+    const response = await requestOllamaGenerate(prompt);
+    const text = response.data?.response || response.data?.message?.content || null;
+    return text ? String(text).trim().slice(0, 3500) : null;
+  } catch (_err) {
+    return null;
+  }
 }
 
 async function hasProcessedUpdate(updateId) {
@@ -314,6 +500,15 @@ async function hasProcessedUpdate(updateId) {
     .select({ _id: 1 })
     .lean();
   return Boolean(existing);
+}
+
+async function safeHasProcessedUpdate(updateId) {
+  try {
+    return await hasProcessedUpdate(updateId);
+  } catch (_err) {
+    // Duplicate protection should not block Telegram processing if persistence has a transient issue.
+    return false;
+  }
 }
 
 router.get('/telegram/health', async (_req, res) => {
@@ -364,7 +559,7 @@ router.post('/telegram/updates', async (req, res) => {
     return res.json({ ok: true, blocked: true });
   }
 
-  if (await hasProcessedUpdate(updateId)) {
+  if (await safeHasProcessedUpdate(updateId)) {
     await recordBridgeSuccess({ phase: 'duplicate', updateId }).catch(() => {});
     return res.json({ ok: true, duplicate: true });
   }
@@ -384,6 +579,101 @@ router.post('/telegram/updates', async (req, res) => {
     if (lower === '/help') {
       await sendTelegramMessage(chatId, helpText());
       await recordBridgeSuccess({ phase: 'command:help', updateId }).catch(() => {});
+      return res.json({ ok: true, handled: true });
+    }
+
+    if (lower.startsWith('/identity')) {
+      const payload = commandPayload(userText, 'identity');
+      if (!payload) {
+        await sendTelegramMessage(chatId, 'Usage: /identity <who you are, your mission, your values>');
+        await recordBridgeSuccess({ phase: 'command:identity:missing', updateId }).catch(() => {});
+        return res.json({ ok: true, handled: true });
+      }
+
+      await storePersonaEntry('identity', chatId, payload, 'fact').catch(() => {});
+      await sendTelegramMessage(chatId, 'Identity imprint stored. I will align future responses to this core self.');
+      await recordBridgeSuccess({ phase: 'command:identity', updateId }).catch(() => {});
+      return res.json({ ok: true, handled: true });
+    }
+
+    if (lower.startsWith('/voice')) {
+      const payload = commandPayload(userText, 'voice');
+      if (!payload) {
+        await sendTelegramMessage(chatId, 'Usage: /voice <tone, cadence, style, personality cues>');
+        await recordBridgeSuccess({ phase: 'command:voice:missing', updateId }).catch(() => {});
+        return res.json({ ok: true, handled: true });
+      }
+
+      await storePersonaEntry('voice', chatId, payload, 'preference').catch(() => {});
+      await sendTelegramMessage(chatId, 'Voice profile stored. I will speak in this style moving forward.');
+      await recordBridgeSuccess({ phase: 'command:voice', updateId }).catch(() => {});
+      return res.json({ ok: true, handled: true });
+    }
+
+    if (lower.startsWith('/imprint') || lower.startsWith('/remember')) {
+      const payload = lower.startsWith('/imprint')
+        ? commandPayload(userText, 'imprint')
+        : commandPayload(userText, 'remember');
+
+      if (!payload) {
+        await sendTelegramMessage(chatId, 'Usage: /imprint <memory to preserve as part of your AI self>');
+        await recordBridgeSuccess({ phase: 'command:imprint:missing', updateId }).catch(() => {});
+        return res.json({ ok: true, handled: true });
+      }
+
+      await storePersonaEntry('imprint', chatId, payload, 'reflection').catch(() => {});
+      await sendTelegramMessage(chatId, 'Imprint stored. This is now part of your long-form AI memory stream.');
+      await recordBridgeSuccess({ phase: 'command:imprint', updateId }).catch(() => {});
+      return res.json({ ok: true, handled: true });
+    }
+
+    if (lower.startsWith('/profile')) {
+      const payload = commandPayload(userText, 'profile');
+      if (!payload) {
+        await sendTelegramMessage(chatId, 'Usage: /profile <name>');
+        await recordBridgeSuccess({ phase: 'command:profile:missing', updateId }).catch(() => {});
+        return res.json({ ok: true, handled: true });
+      }
+
+      const profileId = normalizeLabel(payload, 'default', 120);
+      await writeMemory(chatProfileKey(chatId), profileId, 'preference').catch(() => {});
+      await sendTelegramMessage(chatId, `Profile switched to ${profileId}. Future replies will align with this identity stream.`);
+      await recordBridgeSuccess({ phase: 'command:profile', updateId, profileId }).catch(() => {});
+      return res.json({ ok: true, handled: true });
+    }
+
+    if (lower.startsWith('/mode')) {
+      const payload = commandPayload(userText, 'mode');
+      if (!payload) {
+        await sendTelegramMessage(chatId, 'Usage: /mode <name>');
+        await recordBridgeSuccess({ phase: 'command:mode:missing', updateId }).catch(() => {});
+        return res.json({ ok: true, handled: true });
+      }
+
+      const mode = normalizeLabel(payload, 'default', 80);
+      await writeMemory(chatModeKey(chatId), mode, 'preference').catch(() => {});
+      await sendTelegramMessage(chatId, `Mode switched to ${mode}.`);
+      await recordBridgeSuccess({ phase: 'command:mode', updateId, mode }).catch(() => {});
+      return res.json({ ok: true, handled: true });
+    }
+
+    if (lower === '/self') {
+      const personaRuntime = await resolvePersonaRuntime(chatId).catch(() => ({
+        profileId: DEFAULT_PERSONA_PROFILE_ID,
+        activeMode: 'default',
+      }));
+      const context = await fetchPersonaContext(chatId).catch(() => null);
+      const summary = context
+        ? [
+          `Runtime: profile=${personaRuntime.profileId} mode=${personaRuntime.activeMode}`,
+          `Self profile: ${context.summary}`,
+          '',
+          ...(context.lines.slice(0, 8).map((line) => `- ${line}`)),
+        ].join('\n')
+        : 'Self profile unavailable right now.';
+
+      await sendTelegramMessage(chatId, summary);
+      await recordBridgeSuccess({ phase: 'command:self', updateId }).catch(() => {});
       return res.json({ ok: true, handled: true });
     }
 
@@ -415,10 +705,23 @@ router.post('/telegram/updates', async (req, res) => {
       return res.json({ ok: true, handled: true });
     }
 
+    if (PERSONA_AUTO_LEARN && !lower.startsWith('/')) {
+      await storePersonaEntry('journal', chatId, userText, 'reflection').catch(() => {});
+    }
+
+    const personaRuntime = await resolvePersonaRuntime(chatId).catch(() => ({
+      profileId: DEFAULT_PERSONA_PROFILE_ID,
+      activeMode: 'default',
+    }));
+    const personaContext = await fetchPersonaContext(chatId).catch(() => null);
     const reply = await openclawChat(apiBaseUrl, userText, {
       telegramChatId: String(chatId),
       telegramUserId: String(message?.from?.id || ''),
       telegramUpdateId: String(updateId),
+      personaContext: personaContext?.lines || [],
+      personaSummary: personaContext?.summary || null,
+      personaProfileId: personaRuntime.profileId,
+      personaMode: personaRuntime.activeMode,
     });
 
     let replyText = reply?.reply?.content
@@ -426,7 +729,7 @@ router.post('/telegram/updates', async (req, res) => {
       : String(reply?.message || 'Message queued. Reply will follow shortly.').slice(0, 3500);
 
     if (needsDirectFallback(reply)) {
-      const direct = await generateOllamaFallbackReply(userText, apiBaseUrl).catch(() => null);
+      const direct = await generateOllamaFallbackReply(userText, apiBaseUrl, personaContext, personaRuntime).catch(() => null);
       if (direct) replyText = direct;
     }
 
@@ -435,7 +738,12 @@ router.post('/telegram/updates', async (req, res) => {
     return res.json({ ok: true, handled: true });
   } catch (err) {
     await recordBridgeFailure(err?.message || 'telegram webhook failure', { updateId }).catch(() => {});
-    const fallback = await generateOllamaFallbackReply(userText, apiBaseUrl).catch(() => null);
+    const personaRuntime = await resolvePersonaRuntime(chatId).catch(() => ({
+      profileId: DEFAULT_PERSONA_PROFILE_ID,
+      activeMode: 'default',
+    }));
+    const personaContext = await fetchPersonaContext(chatId).catch(() => null);
+    const fallback = await generateOllamaFallbackReply(userText, apiBaseUrl, personaContext, personaRuntime).catch(() => null);
     if (fallback) {
       await sendTelegramMessage(chatId, fallback).catch(() => {});
       return res.json({ ok: true, handled: true, fallback: true });

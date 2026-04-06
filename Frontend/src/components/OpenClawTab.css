@@ -457,6 +457,136 @@
   margin-right: 6px;
 }
 
+.oc-persona-shell {
+  margin-top: 14px;
+  border-color: rgba(0, 217, 255, 0.28);
+  background:
+    radial-gradient(circle at 12% 10%, rgba(0, 217, 255, 0.12), transparent 48%),
+    radial-gradient(circle at 92% 8%, rgba(0, 210, 100, 0.1), transparent 42%),
+    var(--site-panel, rgba(255, 255, 255, 0.04));
+}
+
+.oc-persona-controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.oc-persona-controls label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: var(--site-text-dim, #aaa);
+}
+
+.oc-persona-controls input {
+  border: 1px solid var(--site-border, rgba(255, 255, 255, 0.12));
+  border-radius: 8px;
+  background: var(--site-panel-soft, rgba(255, 255, 255, 0.02));
+  color: var(--site-text, #fff);
+  padding: 8px 10px;
+}
+
+.oc-persona-mode-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+  color: var(--site-text, #eaf4ff);
+  font-size: 0.82rem;
+}
+
+.oc-persona-ingest {
+  border: 1px solid var(--site-border, rgba(255, 255, 255, 0.12));
+  border-radius: 10px;
+  padding: 10px;
+  background: var(--site-panel-soft, rgba(255, 255, 255, 0.03));
+}
+
+.oc-persona-ingest-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.oc-persona-ingest-head select {
+  border: 1px solid var(--site-border, rgba(255, 255, 255, 0.12));
+  border-radius: 8px;
+  background: var(--site-panel, rgba(255, 255, 255, 0.04));
+  color: var(--site-text, #fff);
+  padding: 6px 10px;
+}
+
+.oc-persona-context {
+  margin-top: 12px;
+}
+
+.oc-persona-context-summary {
+  font-size: 0.78rem;
+  color: var(--site-text-dim, #9fb5c8);
+  margin-bottom: 8px;
+}
+
+.oc-persona-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 260px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.oc-persona-item {
+  border: 1px solid var(--site-border, rgba(255, 255, 255, 0.12));
+  border-radius: 10px;
+  background: var(--site-panel-soft, rgba(255, 255, 255, 0.02));
+  padding: 10px;
+}
+
+.oc-persona-item-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 0.75rem;
+  color: var(--site-text-dim, #a3b9cc);
+  margin-bottom: 6px;
+}
+
+.oc-persona-pin {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgba(0, 210, 100, 0.45);
+  background: rgba(0, 210, 100, 0.12);
+  color: #93e6b4;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 0.68rem;
+  letter-spacing: 0.05em;
+}
+
+.oc-persona-item-text {
+  color: var(--site-text, #eaf4ff);
+  font-size: 0.82rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  margin-bottom: 8px;
+}
+
+.oc-persona-item-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
 /* Waiting-for-agent banner */
 .oc-waiting-banner {
   padding: 10px 14px;

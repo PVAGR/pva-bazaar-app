@@ -1513,6 +1513,9 @@ router.get('/agent-config', async (req, res) => {
       creatorCommands: directives,
       globalDirectives: directives,
       goals: doc?.goals ?? [],
+      activeMode: doc?.activeMode || 'default',
+      personaProfileId: doc?.personaProfileId || 'default',
+      modeProfiles: doc?.modeProfiles ?? [],
       updatedAt: doc?.updatedAt ?? null,
       timestamp: new Date().toISOString(),
     });
@@ -1529,7 +1532,7 @@ router.put('/agent-config', async (req, res) => {
   const config = getConfig();
   if (!requireBridgeOrAdmin(req, res, config, 'Unauthorized OpenClaw agent-config update')) return;
 
-  const { creatorCommands, globalDirectives, goals } = req.body || {};
+  const { creatorCommands, globalDirectives, goals, activeMode, personaProfileId, modeProfiles } = req.body || {};
   try {
     await dbConnect();
     const OpenClawAgentConfig = require('../models/OpenClawAgentConfig');
@@ -1542,6 +1545,24 @@ router.put('/agent-config', async (req, res) => {
       update.creatorCommands = creatorCommands;
     }
     if (Array.isArray(goals)) update.goals = goals;
+    if (typeof activeMode === 'string') update.activeMode = String(activeMode).trim().slice(0, 80) || 'default';
+    if (typeof personaProfileId === 'string') update.personaProfileId = String(personaProfileId).trim().slice(0, 120) || 'default';
+    if (Array.isArray(modeProfiles)) {
+      update.modeProfiles = modeProfiles
+        .map((profile) => ({
+          name: String(profile?.name || '').trim().slice(0, 80),
+          directives: Array.isArray(profile?.directives)
+            ? profile.directives.map((item) => String(item || '').trim()).filter(Boolean).slice(0, 40)
+            : [],
+          goals: Array.isArray(profile?.goals)
+            ? profile.goals.map((item) => String(item || '').trim()).filter(Boolean).slice(0, 30)
+            : [],
+          style: String(profile?.style || '').trim().slice(0, 1000),
+          updatedAt: new Date(),
+        }))
+        .filter((profile) => profile.name)
+        .slice(0, 12);
+    }
 
     const doc = await OpenClawAgentConfig.findOneAndUpdate(
       {},
@@ -1554,6 +1575,9 @@ router.put('/agent-config', async (req, res) => {
       creatorCommands: doc.creatorCommands ?? [],
       globalDirectives: doc.creatorCommands ?? [],
       goals: doc.goals ?? [],
+      activeMode: doc.activeMode || 'default',
+      personaProfileId: doc.personaProfileId || 'default',
+      modeProfiles: doc.modeProfiles ?? [],
       updatedAt: doc.updatedAt,
       timestamp: new Date().toISOString(),
     });
@@ -1613,6 +1637,13 @@ router.post('/memory', async (req, res) => {
       value: String(value).slice(0, 10000),
       type: ['fact', 'goal', 'reflection', 'preference'].includes(type) ? type : 'fact',
       source: req.body?.source || 'api',
+      channel: String(req.body?.channel || '').trim().slice(0, 80),
+      profileId: String(req.body?.profileId || 'default').trim().slice(0, 120),
+      pinned: Boolean(req.body?.pinned),
+      score: Number.isFinite(Number(req.body?.score)) ? Number(req.body.score) : 1,
+      tags: Array.isArray(req.body?.tags)
+        ? req.body.tags.map((item) => String(item || '').trim()).filter(Boolean).slice(0, 20)
+        : [],
     });
     return res.json({
       ok: true,
@@ -1653,6 +1684,251 @@ router.delete('/memory/:id', async (req, res) => {
       message: 'Failed to delete memory',
       error: err.message,
     });
+  }
+});
+
+function normalizeProfileId(value) {
+  const normalized = String(value || 'default').trim().toLowerCase().replace(/[^a-z0-9:_-]/g, '-');
+  return normalized.slice(0, 120) || 'default';
+}
+
+function normalizeChannel(value) {
+  const normalized = String(value || '').trim().toLowerCase().replace(/[^a-z0-9:_-]/g, '-');
+  return normalized.slice(0, 80);
+}
+
+function clampScore(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return 1;
+  return Math.max(0, Math.min(numeric, 100));
+}
+
+router.post('/persona/ingest', async (req, res) => {
+  const config = getConfig();
+  if (!requireBridgeOrAdmin(req, res, config, 'Unauthorized persona ingest request')) return;
+
+  const text = String(req.body?.text || req.body?.value || '').trim();
+  const kind = String(req.body?.kind || 'journal').trim().toLowerCase();
+  const profileId = normalizeProfileId(req.body?.profileId || 'default');
+  const channel = normalizeChannel(req.body?.channel || '');
+  const source = String(req.body?.source || 'persona-ingest').trim().slice(0, 120);
+  const type = ['fact', 'goal', 'reflection', 'preference'].includes(req.body?.type) ? req.body.type : 'reflection';
+
+  if (!text) {
+    return res.status(400).json({ ok: false, message: 'text is required' });
+  }
+
+  const allowedKinds = new Set(['identity', 'voice', 'imprint', 'journal', 'goal', 'principle', 'memory']);
+  const safeKind = allowedKinds.has(kind) ? kind : 'journal';
+  const key = `persona:${safeKind}:profile:${profileId}`;
+  const now = new Date();
+
+  try {
+    await dbConnect();
+    const OpenClawMemory = require('../models/OpenClawMemory');
+
+    const pinned = Boolean(req.body?.pinned) || safeKind === 'identity' || safeKind === 'voice';
+    const reinforcement = clampScore(req.body?.reinforcement || 1);
+    const baseScore = safeKind === 'identity' || safeKind === 'voice' ? 6 : (safeKind === 'imprint' ? 4 : 1);
+    const score = Math.max(1, Math.min(100, baseScore + reinforcement));
+
+    const doc = await OpenClawMemory.create({
+      key,
+      value: text.slice(0, 10000),
+      type,
+      source,
+      channel,
+      profileId,
+      pinned,
+      score,
+      tags: Array.isArray(req.body?.tags)
+        ? req.body.tags.map((item) => String(item || '').trim()).filter(Boolean).slice(0, 20)
+        : [],
+      lastAccessedAt: now,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    return res.json({
+      ok: true,
+      id: doc._id.toString(),
+      key: doc.key,
+      kind: safeKind,
+      profileId,
+      channel,
+      pinned: doc.pinned,
+      score: doc.score,
+      createdAt: doc.createdAt,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err) {
+    return res.status(500).json({ ok: false, message: 'Failed to ingest persona memory', error: err.message });
+  }
+});
+
+router.get('/persona/context', async (req, res) => {
+  const config = getConfig();
+  if (!requireBridgeOrAdmin(req, res, config, 'Unauthorized persona context request')) return;
+
+  const profileId = normalizeProfileId(req.query.profileId || 'default');
+  const channel = normalizeChannel(req.query.channel || '');
+  const includeJournal = String(req.query.includeJournal || 'true') !== 'false';
+  const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 20, 1), 80);
+
+  try {
+    await dbConnect();
+    const OpenClawMemory = require('../models/OpenClawMemory');
+    const query = {
+      key: { $regex: '^persona:' },
+      profileId,
+      ...(channel ? { $or: [{ channel }, { channel: '' }] } : {}),
+    };
+
+    const docs = await OpenClawMemory.find(query)
+      .sort({ pinned: -1, score: -1, createdAt: -1 })
+      .limit(200)
+      .lean();
+
+    const filtered = includeJournal ? docs : docs.filter((item) => !String(item.key).includes('persona:journal:'));
+    const context = filtered.slice(0, limit).map((item) => {
+      const key = String(item.key || '');
+      const kind = key.split(':')[1] || 'memory';
+      return {
+        id: item._id.toString(),
+        kind,
+        key,
+        text: String(item.value || '').slice(0, 1000),
+        score: Number(item.score || 0),
+        pinned: Boolean(item.pinned),
+        channel: item.channel || '',
+        source: item.source || '',
+        createdAt: item.createdAt,
+      };
+    });
+
+    const ids = context.map((item) => item.id);
+    if (ids.length) {
+      await OpenClawMemory.updateMany(
+        { _id: { $in: ids } },
+        { $set: { lastAccessedAt: new Date() } },
+      ).catch(() => {});
+    }
+
+    const summary = {
+      profileId,
+      channel: channel || null,
+      total: context.length,
+      pinned: context.filter((item) => item.pinned).length,
+      averageScore: context.length
+        ? Math.round((context.reduce((sum, item) => sum + (item.score || 0), 0) / context.length) * 100) / 100
+        : 0,
+    };
+
+    return res.json({
+      ok: true,
+      summary,
+      context,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err) {
+    return res.status(500).json({ ok: false, message: 'Failed to load persona context', error: err.message });
+  }
+});
+
+router.put('/persona/memory/:id/reinforce', async (req, res) => {
+  const config = getConfig();
+  if (!requireBridgeOrAdmin(req, res, config, 'Unauthorized persona reinforce request')) return;
+
+  const delta = Math.max(-10, Math.min(20, Number(req.body?.delta ?? 1)));
+  const pin = req.body?.pin;
+
+  try {
+    await dbConnect();
+    const OpenClawMemory = require('../models/OpenClawMemory');
+    const current = await OpenClawMemory.findById(req.params.id);
+    if (!current) {
+      return res.status(404).json({ ok: false, message: 'Persona memory not found' });
+    }
+
+    const nextScore = Math.max(0, Math.min((Number(current.score || 1) + delta), 100));
+    current.score = nextScore;
+    current.lastAccessedAt = new Date();
+    current.updatedAt = new Date();
+    if (typeof pin === 'boolean') {
+      current.pinned = pin;
+    }
+    await current.save();
+
+    return res.json({
+      ok: true,
+      id: current._id.toString(),
+      score: current.score,
+      pinned: current.pinned,
+      updatedAt: current.updatedAt,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err) {
+    return res.status(500).json({ ok: false, message: 'Failed to reinforce persona memory', error: err.message });
+  }
+});
+
+router.get('/persona/modes', async (req, res) => {
+  const config = getConfig();
+  if (!requireBridgeOrAdmin(req, res, config, 'Unauthorized persona modes request')) return;
+
+  try {
+    await dbConnect();
+    const OpenClawAgentConfig = require('../models/OpenClawAgentConfig');
+    const doc = await OpenClawAgentConfig.findOne().sort({ updatedAt: -1 }).lean();
+
+    return res.json({
+      ok: true,
+      activeMode: doc?.activeMode || 'default',
+      personaProfileId: doc?.personaProfileId || 'default',
+      modeProfiles: doc?.modeProfiles || [],
+      updatedAt: doc?.updatedAt || null,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err) {
+    return res.status(500).json({ ok: false, message: 'Failed to load persona modes', error: err.message });
+  }
+});
+
+router.put('/persona/mode', async (req, res) => {
+  const config = getConfig();
+  if (!requireBridgeOrAdmin(req, res, config, 'Unauthorized persona mode update')) return;
+
+  const activeMode = String(req.body?.activeMode || '').trim().slice(0, 80);
+  const personaProfileId = normalizeProfileId(req.body?.personaProfileId || 'default');
+
+  if (!activeMode) {
+    return res.status(400).json({ ok: false, message: 'activeMode is required' });
+  }
+
+  try {
+    await dbConnect();
+    const OpenClawAgentConfig = require('../models/OpenClawAgentConfig');
+    const doc = await OpenClawAgentConfig.findOneAndUpdate(
+      {},
+      {
+        $set: {
+          activeMode,
+          personaProfileId,
+          updatedAt: new Date(),
+        },
+      },
+      { new: true, upsert: true },
+    ).lean();
+
+    return res.json({
+      ok: true,
+      activeMode: doc.activeMode,
+      personaProfileId: doc.personaProfileId,
+      updatedAt: doc.updatedAt,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err) {
+    return res.status(500).json({ ok: false, message: 'Failed to set persona mode', error: err.message });
   }
 });
 

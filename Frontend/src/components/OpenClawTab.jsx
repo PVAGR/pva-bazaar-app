@@ -94,11 +94,26 @@ export default function OpenClawTab() {
   const [configSaveResult, setConfigSaveResult] = useState(null);
   const [memory, setMemory] = useState([]);
   const [memoryLoading, setMemoryLoading] = useState(false);
+  const [personaProfileId, setPersonaProfileId] = useState('default');
+  const [personaChannel, setPersonaChannel] = useState('telegram');
+  const [personaIncludeJournal, setPersonaIncludeJournal] = useState(true);
+  const [personaContext, setPersonaContext] = useState([]);
+  const [personaContextSummary, setPersonaContextSummary] = useState(null);
+  const [personaContextLoading, setPersonaContextLoading] = useState(false);
+  const [personaIngestKind, setPersonaIngestKind] = useState('journal');
+  const [personaIngestText, setPersonaIngestText] = useState('');
+  const [personaIngestPinned, setPersonaIngestPinned] = useState(false);
+  const [personaActionResult, setPersonaActionResult] = useState(null);
+  const [modeSaving, setModeSaving] = useState(false);
 
   const sendResultTimer = useRef(null);
   const autoHealRunningRef = useRef(false);
   const chatEndRef = useRef(null);
   const messageInputRef = useRef(null);
+
+  const pendingOutbound = queueStats?.pendingOutbound ?? 0;
+  const queueOnlyMode = status?.webhookConfigured === false || status?.mode === 'queue-only';
+  const effectiveLiveReplyEnabled = liveReplyEnabled && !queueOnlyMode;
 
   const loadBountyDefaults = useCallback(async () => {
     try {
@@ -213,7 +228,11 @@ export default function OpenClawTab() {
         setAgentConfig({
           creatorCommands: directives,
           goals: data.goals ?? [],
+          activeMode: data.activeMode || 'default',
+          personaProfileId: data.personaProfileId || 'default',
+          modeProfiles: Array.isArray(data.modeProfiles) ? data.modeProfiles : [],
         });
+        setPersonaProfileId(data.personaProfileId || 'default');
         setCreatorCommandsDraft((directives ?? []).join('\n'));
         setGoalsDraft((data.goals ?? []).join('\n'));
       }
@@ -237,6 +256,100 @@ export default function OpenClawTab() {
       setMemoryLoading(false);
     }
   }, []);
+
+  const loadPersonaContext = useCallback(async () => {
+    setPersonaContextLoading(true);
+    try {
+      const profile = encodeURIComponent(personaProfileId || 'default');
+      const channel = encodeURIComponent(personaChannel || '');
+      const includeJournal = personaIncludeJournal ? 'true' : 'false';
+      const data = await apiGet(`/openclaw/persona/context?profileId=${profile}&channel=${channel}&includeJournal=${includeJournal}&limit=24`);
+      if (data?.ok) {
+        setPersonaContext(Array.isArray(data.context) ? data.context : []);
+        setPersonaContextSummary(data.summary || null);
+      }
+    } catch (err) {
+      logger.error('Failed to load persona context', err);
+      setPersonaContext([]);
+      setPersonaContextSummary(null);
+    } finally {
+      setPersonaContextLoading(false);
+    }
+  }, [personaChannel, personaIncludeJournal, personaProfileId]);
+
+  const ingestPersonaMemory = useCallback(async () => {
+    const text = personaIngestText.trim();
+    if (!text) {
+      setPersonaActionResult({ ok: false, text: 'Enter memory text before ingesting.' });
+      return;
+    }
+
+    try {
+      const data = await apiPost('/openclaw/persona/ingest', {
+        text,
+        kind: personaIngestKind,
+        profileId: personaProfileId || 'default',
+        channel: personaChannel || 'telegram',
+        pinned: personaIngestPinned,
+        source: 'admin-openclaw-tab',
+      });
+
+      if (data?.ok) {
+        setPersonaActionResult({ ok: true, text: `Memory absorbed as ${data.kind} (score ${data.score}).` });
+        setPersonaIngestText('');
+        setPersonaIngestPinned(false);
+        loadPersonaContext();
+      } else {
+        setPersonaActionResult({ ok: false, text: data?.message || 'Persona ingest failed.' });
+      }
+    } catch (err) {
+      setPersonaActionResult({ ok: false, text: err?.response?.data?.message || err.message || 'Persona ingest failed.' });
+    }
+  }, [loadPersonaContext, personaChannel, personaIngestKind, personaIngestPinned, personaIngestText, personaProfileId]);
+
+  const setPersonaMode = useCallback(async (modeName) => {
+    const mode = String(modeName || '').trim();
+    if (!mode) {
+      setPersonaActionResult({ ok: false, text: 'Mode name is required.' });
+      return;
+    }
+
+    setModeSaving(true);
+    try {
+      const data = await apiPut('/openclaw/persona/mode', {
+        activeMode: mode,
+        personaProfileId: personaProfileId || 'default',
+      });
+      if (data?.ok) {
+        setAgentConfig((prev) => ({ ...prev, activeMode: data.activeMode, personaProfileId: data.personaProfileId }));
+        setPersonaActionResult({ ok: true, text: `Mode switched to ${data.activeMode} for profile ${data.personaProfileId}.` });
+      } else {
+        setPersonaActionResult({ ok: false, text: data?.message || 'Failed to set mode.' });
+      }
+    } catch (err) {
+      setPersonaActionResult({ ok: false, text: err?.response?.data?.message || err.message || 'Failed to set mode.' });
+    } finally {
+      setModeSaving(false);
+    }
+  }, [personaProfileId]);
+
+  const reinforcePersonaMemory = useCallback(async (id, delta, pin) => {
+    try {
+      const data = await apiPut(`/openclaw/persona/memory/${id}/reinforce`, {
+        delta,
+        ...(typeof pin === 'boolean' ? { pin } : {}),
+      });
+
+      if (data?.ok) {
+        setPersonaActionResult({ ok: true, text: `Memory updated · score ${data.score}${data.pinned ? ' · pinned' : ''}` });
+        loadPersonaContext();
+      } else {
+        setPersonaActionResult({ ok: false, text: data?.message || 'Memory update failed.' });
+      }
+    } catch (err) {
+      setPersonaActionResult({ ok: false, text: err?.response?.data?.message || err.message || 'Memory update failed.' });
+    }
+  }, [loadPersonaContext]);
 
   const saveCreatorCommands = useCallback(async () => {
     const commands = creatorCommandsDraft
@@ -520,16 +633,14 @@ export default function OpenClawTab() {
     loadBountyDefaults();
     loadAgentConfig();
     loadMemory();
+    loadPersonaContext();
     return () => {
       if (sendResultTimer.current) clearTimeout(sendResultTimer.current);
     };
-  }, [loadStatus, loadMessages, loadQueueStats, loadRuntimeConfig, loadRecoveryHistory, loadBountyDefaults, loadAgentConfig, loadMemory]);
+  }, [loadStatus, loadMessages, loadQueueStats, loadRuntimeConfig, loadRecoveryHistory, loadBountyDefaults, loadAgentConfig, loadMemory, loadPersonaContext]);
 
-  const pendingOutbound = queueStats?.pendingOutbound ?? 0;
   const waitingForAgent = pendingOutbound > 0;
   const refreshInterval = waitingForAgent ? 5000 : 15000;
-  const queueOnlyMode = status?.webhookConfigured === false || status?.mode === 'queue-only';
-  const effectiveLiveReplyEnabled = liveReplyEnabled && !queueOnlyMode;
 
   useEffect(() => {
     if (!autoRefresh) return undefined;
@@ -539,9 +650,10 @@ export default function OpenClawTab() {
       loadQueueStats();
       loadRecoveryHistory();
       loadMemory();
+      loadPersonaContext();
     }, refreshInterval);
     return () => clearInterval(id);
-  }, [autoRefresh, refreshInterval, loadStatus, loadMessages, loadQueueStats, loadRecoveryHistory, loadMemory]);
+  }, [autoRefresh, refreshInterval, loadStatus, loadMessages, loadQueueStats, loadRecoveryHistory, loadMemory, loadPersonaContext]);
 
   const shouldAutoHeal = useMemo(() => {
     if (!autoHealEnabled || statusLoading || queueLoading) {
@@ -655,7 +767,7 @@ export default function OpenClawTab() {
         <div className="oc-panel-header">
           <div>
             <h2 className="oc-panel-title">🦞 OpenClaw Live Console</h2>
-            <p className="oc-listening">OpenClaw is listening. Every message is remembered.</p>
+            <p className="oc-listening">Rick Taur neural cockpit is live. OpenClaw listens, remembers, and adapts in real time.</p>
           </div>
           <div className="oc-panel-actions">
             <label className="oc-auto-refresh-label">
@@ -715,6 +827,7 @@ export default function OpenClawTab() {
                 loadQueueStats();
                 loadRecoveryHistory();
                 loadMemory();
+                loadPersonaContext();
               }}
               disabled={statusLoading || messagesLoading || queueLoading}
               title="Refresh status, queue, messages, memory, and recovery history"
@@ -880,6 +993,162 @@ export default function OpenClawTab() {
                 </li>
               ))}
             </ul>
+          )}
+        </div>
+
+        <div className="oc-persona-shell oc-panel" aria-label="Rick Taur inner cortex">
+          <div className="oc-panel-header">
+            <div>
+              <h3 className="oc-panel-title">Rick Taur - Inner Cortex</h3>
+              <p className="oc-config-note">
+                This is the human-facing interior of the evolving AI self. Profile and mode shape identity, while ingested memories tune voice and intent.
+              </p>
+            </div>
+            <button
+              type="button"
+              className="oc-btn oc-btn--secondary"
+              onClick={loadPersonaContext}
+              disabled={personaContextLoading}
+            >
+              {personaContextLoading ? 'Syncing...' : 'Sync Cortex'}
+            </button>
+          </div>
+
+          <div className="oc-persona-controls">
+            <label>
+              Active Profile
+              <input
+                type="text"
+                value={personaProfileId}
+                onChange={(event) => setPersonaProfileId(event.target.value)}
+                placeholder="default"
+              />
+            </label>
+            <label>
+              Channel
+              <input
+                type="text"
+                value={personaChannel}
+                onChange={(event) => setPersonaChannel(event.target.value)}
+                placeholder="telegram"
+              />
+            </label>
+            <label className="oc-config-toggle">
+              <input
+                type="checkbox"
+                checked={personaIncludeJournal}
+                onChange={(event) => setPersonaIncludeJournal(event.target.checked)}
+              />
+              Include journal memory
+            </label>
+          </div>
+
+          <div className="oc-persona-mode-row">
+            <strong>Active mode:</strong> {agentConfig.activeMode || 'default'}
+            <button
+              type="button"
+              className="oc-btn oc-btn--secondary"
+              onClick={() => setPersonaMode('default')}
+              disabled={modeSaving}
+            >
+              {modeSaving ? 'Switching...' : 'Switch to Default'}
+            </button>
+            {(agentConfig.modeProfiles || []).slice(0, 6).map((profile) => (
+              <button
+                key={profile.name}
+                type="button"
+                className="oc-btn oc-btn--secondary"
+                onClick={() => setPersonaMode(profile.name)}
+                disabled={modeSaving}
+              >
+                {profile.name}
+              </button>
+            ))}
+          </div>
+
+          <div className="oc-persona-ingest">
+            <div className="oc-persona-ingest-head">
+              <strong>Absorb Memory</strong>
+              <select
+                value={personaIngestKind}
+                onChange={(event) => setPersonaIngestKind(event.target.value)}
+              >
+                <option value="identity">identity</option>
+                <option value="voice">voice</option>
+                <option value="imprint">imprint</option>
+                <option value="journal">journal</option>
+                <option value="goal">goal</option>
+                <option value="principle">principle</option>
+                <option value="memory">memory</option>
+              </select>
+              <label className="oc-config-toggle">
+                <input
+                  type="checkbox"
+                  checked={personaIngestPinned}
+                  onChange={(event) => setPersonaIngestPinned(event.target.checked)}
+                />
+                Pin
+              </label>
+            </div>
+            <textarea
+              className="oc-message-input"
+              value={personaIngestText}
+              onChange={(event) => setPersonaIngestText(event.target.value)}
+              placeholder="Write a core memory, directive, belief, or personal signal to absorb into Rick Taur."
+              rows={3}
+            />
+            <div className="oc-dispatch-row" style={{ marginTop: 8 }}>
+              <button
+                type="button"
+                className="oc-btn oc-btn--primary"
+                onClick={ingestPersonaMemory}
+              >
+                Absorb Memory
+              </button>
+            </div>
+          </div>
+
+          <div className="oc-persona-context">
+            <div className="oc-persona-context-summary">
+              {personaContextSummary
+                ? `${personaContextSummary.profileId} · ${personaContextSummary.total} memories · pinned ${personaContextSummary.pinned} · avg score ${personaContextSummary.averageScore}`
+                : 'No context summary yet.'}
+            </div>
+            {personaContextLoading && !personaContext.length ? (
+              <LoadingDots size="small" label="Syncing cortex..." />
+            ) : personaContext.length === 0 ? (
+              <p className="oc-hint">No persona context loaded yet for this profile/channel.</p>
+            ) : (
+              <ul className="oc-persona-list">
+                {personaContext.slice(0, 12).map((entry) => (
+                  <li key={entry.id} className="oc-persona-item">
+                    <div className="oc-persona-item-head">
+                      <span className="oc-memory-type">[{entry.kind}]</span>
+                      <span>score {entry.score}</span>
+                      {entry.pinned ? <span className="oc-persona-pin">PINNED</span> : null}
+                    </div>
+                    <div className="oc-persona-item-text">{entry.text}</div>
+                    <div className="oc-persona-item-actions">
+                      <button type="button" className="oc-btn oc-btn--secondary" onClick={() => reinforcePersonaMemory(entry.id, 1)}>
+                        + Reinforce
+                      </button>
+                      <button type="button" className="oc-btn oc-btn--secondary" onClick={() => reinforcePersonaMemory(entry.id, -1)}>
+                        - Decay
+                      </button>
+                      <button type="button" className="oc-btn oc-btn--secondary" onClick={() => reinforcePersonaMemory(entry.id, 0, !entry.pinned)}>
+                        {entry.pinned ? 'Unpin' : 'Pin'}
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {personaActionResult && (
+            <div className={`oc-send-result ${personaActionResult.ok ? 'oc-send-result--ok' : 'oc-send-result--err'}`}>
+              {personaActionResult.text}
+            </div>
           )}
         </div>
 
