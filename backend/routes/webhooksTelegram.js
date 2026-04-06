@@ -5,6 +5,7 @@ const dbConnect = require('../lib/dbConnect');
 const OpenClawMessage = require('../models/OpenClawMessage');
 const OpenClawMemory = require('../models/OpenClawMemory');
 const OpenClawAgentConfig = require('../models/OpenClawAgentConfig');
+const { sendCustomEmail } = require('../service/emailService');
 
 const router = express.Router();
 
@@ -33,6 +34,7 @@ const PERSONA_CONTEXT_LIMIT = Math.min(
   24,
 );
 const DEFAULT_PERSONA_PROFILE_ID = String(process.env.OPENCLAW_PERSONA_PROFILE_ID || 'default').trim().toLowerCase() || 'default';
+const DEFAULT_EMAIL_TO = String(process.env.OPENCLAW_TELEGRAM_DEFAULT_EMAIL_TO || process.env.ADMIN_EMAIL || process.env.SMTP_USER || '').trim();
 
 function backendHeaders() {
   const headers = { 'Content-Type': 'application/json' };
@@ -249,6 +251,9 @@ function helpText() {
     '/profile <name> - switch active identity profile for this chat',
     '/mode <name> - switch active behavior mode for this chat',
     '/self - view current identity + recent imprints',
+    '/email <to | subject | body> - send an email through the assistant',
+    '/task <text> - store a task in assistant memory',
+    '/tasks - list recent tasks from assistant memory',
     '/status - show OpenClaw bridge status',
     '/queue - show queue and worker health',
     '/recover - trigger OpenClaw recovery/replay',
@@ -277,6 +282,58 @@ function chatProfileKey(chatId) {
 
 function chatModeKey(chatId) {
   return `persona:mode:chat:${String(chatId)}`;
+}
+
+function assistantTaskKey(chatId) {
+  return `assistant:task:chat:${String(chatId)}`;
+}
+
+function parseEmailCommand(text) {
+  const payload = String(text || '').replace(/^\/email\s*/i, '').trim();
+  if (!payload) return null;
+
+  const parts = payload.split('|').map((item) => item.trim()).filter(Boolean);
+  if (parts.length >= 3) {
+    return {
+      to: parts[0],
+      subject: parts[1],
+      body: parts.slice(2).join(' | '),
+    };
+  }
+
+  if (parts.length === 2) {
+    return {
+      to: DEFAULT_EMAIL_TO,
+      subject: parts[0],
+      body: parts[1],
+    };
+  }
+
+  return null;
+}
+
+async function storeTask(chatId, value, type = 'task') {
+  const safeValue = String(value || '').trim().slice(0, 3500);
+  if (!safeValue) return null;
+
+  await writeMemory(assistantTaskKey(chatId), safeValue, type);
+  return safeValue;
+}
+
+async function fetchRecentTasks(chatId, limit = 8) {
+  await dbConnect();
+  const docs = await OpenClawMemory.find({
+    key: assistantTaskKey(chatId),
+    source: OPENCLAW_TELEGRAM_SOURCE,
+  })
+    .sort({ createdAt: -1 })
+    .limit(limit)
+    .lean();
+
+  return docs.map((doc, index) => {
+    const timestamp = doc?.createdAt ? new Date(doc.createdAt).toISOString() : 'unknown time';
+    return `${index + 1}. ${String(doc?.value || '').slice(0, 220)} (${timestamp})`;
+  });
 }
 
 async function readLatestAgentPersonaRuntime() {
@@ -677,6 +734,7 @@ router.post('/telegram/updates', async (req, res) => {
         `Webhook URL: ${diagnostics.webhook?.url || 'n/a'}`,
         `Webhook pending updates: ${diagnostics.webhook?.pendingUpdateCount ?? 'n/a'}`,
         `Webhook last error: ${diagnostics.webhook?.lastErrorMessage || 'none'}`,
+        `Default email target: ${DEFAULT_EMAIL_TO || 'n/a'}`,
         `This chatId: ${String(chatId)}`,
       ];
       await sendTelegramMessage(chatId, lines.join('\n'));
@@ -787,6 +845,70 @@ router.post('/telegram/updates', async (req, res) => {
 
       await sendTelegramMessage(chatId, summary);
       await recordBridgeSuccess({ phase: 'command:self', updateId }).catch(() => {});
+      return res.json({ ok: true, handled: true });
+    }
+
+    if (lower === '/tasks') {
+      const tasks = await fetchRecentTasks(chatId).catch(() => []);
+      const output = tasks.length ? ['Recent tasks:', ...tasks.map((line) => `- ${line}`)].join('\n') : 'No tasks stored yet.';
+      await sendTelegramMessage(chatId, output);
+      await recordBridgeSuccess({ phase: 'command:tasks', updateId }).catch(() => {});
+      return res.json({ ok: true, handled: true });
+    }
+
+    if (lower.startsWith('/task')) {
+      const payload = commandPayload(userText, 'task');
+      if (!payload) {
+        await sendTelegramMessage(chatId, 'Usage: /task <task description>');
+        await recordBridgeSuccess({ phase: 'command:task:missing', updateId }).catch(() => {});
+        return res.json({ ok: true, handled: true });
+      }
+
+      const stored = await storeTask(chatId, payload, 'task').catch(() => null);
+      await sendTelegramMessage(chatId, stored ? 'Task stored in assistant memory.' : 'Task could not be stored right now.');
+      await recordBridgeSuccess({ phase: 'command:task', updateId }).catch(() => {});
+      return res.json({ ok: true, handled: true });
+    }
+
+    if (lower.startsWith('/email')) {
+      const payload = parseEmailCommand(userText);
+      if (!payload || !payload.subject || !payload.body) {
+        const defaultHint = DEFAULT_EMAIL_TO ? ` Default recipient is ${DEFAULT_EMAIL_TO}.` : '';
+        await sendTelegramMessage(chatId, `Usage: /email to | subject | body${defaultHint}`);
+        await recordBridgeSuccess({ phase: 'command:email:missing', updateId }).catch(() => {});
+        return res.json({ ok: true, handled: true });
+      }
+
+      if (!payload.to) {
+        await sendTelegramMessage(chatId, 'No recipient configured. Set OPENCLAW_TELEGRAM_DEFAULT_EMAIL_TO or include the recipient in the command.');
+        await recordBridgeSuccess({ phase: 'command:email:recipient-missing', updateId }).catch(() => {});
+        return res.json({ ok: true, handled: true });
+      }
+
+      let emailResult = null;
+      try {
+        emailResult = await sendCustomEmail({
+          to: payload.to,
+          subject: payload.subject,
+          text: [
+            payload.body,
+            '',
+            `Sent from Telegram chat ${String(chatId)}`,
+            `User ID: ${String(message?.from?.id || '')}`,
+          ].join('\n'),
+          html: `<p>${String(payload.body).replace(/\n/g, '<br>')}</p><p><small>Sent from Telegram chat ${String(chatId)}</small></p>`,
+          fromName: 'PVA Bazaar Assistant',
+        });
+      } catch (emailError) {
+        await sendTelegramMessage(chatId, `Email failed for ${payload.to}: ${String(emailError?.message || 'unknown error').slice(0, 180)}`);
+        await recordBridgeSuccess({ phase: 'command:email:error', updateId, to: payload.to }).catch(() => {});
+        return res.json({ ok: true, handled: true });
+      }
+
+      await sendTelegramMessage(chatId, emailResult?.success
+        ? `Email sent to ${payload.to}.`
+        : `Email request skipped for ${payload.to}.`);
+      await recordBridgeSuccess({ phase: 'command:email', updateId, to: payload.to }).catch(() => {});
       return res.json({ ok: true, handled: true });
     }
 

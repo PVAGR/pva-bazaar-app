@@ -31,6 +31,32 @@ function getTransporter() {
   return transporter;
 }
 
+async function sendCustomEmail({ to, subject, text, html, fromName = 'PVA Bazaar Assistant' }) {
+  const emailTransporter = getTransporter();
+
+  if (!emailTransporter || !to || !subject) {
+    console.warn('⚠️ Email not configured or incomplete email request, skipping custom email send');
+    return { success: false, skipped: true };
+  }
+
+  const message = {
+    from: `"${fromName}" <${process.env.SMTP_USER}>`,
+    to,
+    subject,
+    ...(text ? { text } : {}),
+    ...(html ? { html } : {}),
+  };
+
+  try {
+    const info = await emailTransporter.sendMail(message);
+    console.log('✅ Custom email sent successfully:', info.messageId);
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error('❌ Custom email failed:', error);
+    throw error;
+  }
+}
+
 /**
  * Send consignment confirmation email to user
  * @param {Object} options - Email options
@@ -574,6 +600,7 @@ async function sendMockConfirmationEmail({ to, recipientName, dealId, amount, cu
 }
 
 module.exports = {
+  sendCustomEmail,
   sendConsignmentEmail,
   sendAdminNotification,
   sendFulfillmentConfirmationEmail,
