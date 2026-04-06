@@ -23,6 +23,7 @@ const REQUEST_TIMEOUT_MS = Math.max(
 const RETRY_BASE_MS = Math.max(parseInt(process.env.OPENCLAW_WORKER_RETRY_BASE_MS || '15000', 10), 1000);
 const RETRY_MAX_MS = Math.max(parseInt(process.env.OPENCLAW_WORKER_RETRY_MAX_MS || '300000', 10), RETRY_BASE_MS);
 const MAX_RETRIES = Math.max(parseInt(process.env.OPENCLAW_WORKER_MAX_RETRIES || '12', 10), 1);
+const RUN_ONCE = process.env.OPENCLAW_WORKER_RUN_ONCE === 'true';
 
 const WORKER_ID = `${os.hostname()}-${process.pid}-${crypto.randomUUID().slice(0, 8)}`;
 
@@ -254,9 +255,33 @@ async function processLoop() {
 }
 
 async function main() {
-  console.log(`[OpenClawWorker] starting worker=${WORKER_NAME} workerId=${WORKER_ID}`);
+  console.log(`[OpenClawWorker] starting worker=${WORKER_NAME} workerId=${WORKER_ID} runOnce=${RUN_ONCE}`);
 
   await dbConnect();
+
+  if (RUN_ONCE) {
+    try {
+      const hasLease = await acquireLease();
+      if (!hasLease) {
+        console.log('[OpenClawWorker] lease unavailable; run-once invocation exiting');
+        return;
+      }
+
+      await processLoop();
+    } catch (err) {
+      console.error('[OpenClawWorker] run-once error:', err?.message || err);
+      throw err;
+    } finally {
+      try {
+        await releaseLease();
+      } catch (_err) {
+        // best-effort lease release for one-shot mode
+      }
+    }
+
+    console.log('[OpenClawWorker] run-once completed');
+    return;
+  }
 
   while (!shuttingDown) {
     try {

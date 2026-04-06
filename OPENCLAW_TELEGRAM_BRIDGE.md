@@ -15,6 +15,9 @@ Use Telegram on your phone to send instructions into the live OpenClaw chat loop
 
 - `.github/scripts/openclaw-telegram-bridge.mjs`
 - `.github/workflows/openclaw-telegram-bridge.yml`
+- `.github/workflows/openclaw-queue-worker.yml`
+- `.github/workflows/openclaw-realtime-online.yml`
+- `backend/scripts/openclaw-queue-worker.js`
 
 ## Required GitHub repository secrets
 
@@ -39,14 +42,34 @@ Use Telegram on your phone to send instructions into the live OpenClaw chat loop
 - `OPENCLAW_TELEGRAM_SOURCE`
   - Default: `telegram-openclaw-bridge`
 
+## Queue worker workflow secrets
+
+To keep Telegram replies dynamic without a dedicated VPS worker, enable workflow
+`OpenClaw Queue Worker Tick` and configure these secrets:
+
+- `MONGODB_URI`
+- `OPENCLAW_WEBHOOK_URL`
+- `OPENCLAW_API_KEY` (optional when webhook does not require bearer auth)
+
+The queue worker workflow runs every 5 minutes and executes one dispatch cycle.
+
 ## Setup steps (basic)
 
 1. Create a Telegram bot with BotFather and copy the bot token.
 2. Send one message to the bot from your Telegram account.
 3. Get your Telegram chat ID.
 4. Add all required secrets in GitHub repository settings.
-5. Run workflow `OpenClaw Telegram Bridge` manually once.
+5. Run workflow `OpenClaw Realtime Online` manually once.
 6. Message your bot: `/start`, `/status`, then normal text.
+
+## Realtime internet mode
+
+Workflow `OpenClaw Realtime Online` keeps the Telegram bridge + responder + queue
+worker running continuously for ~55 minutes per run, then restarts on the next
+hourly schedule.
+
+For public access from anyone, leave `TELEGRAM_ALLOWED_CHAT_IDS` empty.
+If you want private access, set `TELEGRAM_ALLOWED_CHAT_IDS` to explicit IDs.
 
 ## Commands in Telegram
 

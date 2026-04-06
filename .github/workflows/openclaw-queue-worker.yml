@@ -1,0 +1,49 @@
+name: OpenClaw Queue Worker Tick
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: openclaw-queue-worker-tick
+  cancel-in-progress: true
+
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Run one-shot queue worker
+        working-directory: backend
+        env:
+          NODE_ENV: production
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          OPENCLAW_WEBHOOK_URL: ${{ secrets.OPENCLAW_WEBHOOK_URL }}
+          OPENCLAW_API_KEY: ${{ secrets.OPENCLAW_API_KEY }}
+          OPENCLAW_WORKER_NAME: openclaw-queue-dispatcher-gha
+          OPENCLAW_WORKER_BATCH_SIZE: 25
+          OPENCLAW_WORKER_POLL_MS: 10000
+          OPENCLAW_WORKER_LEASE_MS: 45000
+          OPENCLAW_WORKER_REQUEST_TIMEOUT_MS: 12000
+          OPENCLAW_WORKER_RETRY_BASE_MS: 15000
+          OPENCLAW_WORKER_RETRY_MAX_MS: 300000
+          OPENCLAW_WORKER_MAX_RETRIES: 12
+          OPENCLAW_WORKER_RUN_ONCE: 'true'
+        run: npm run openclaw:worker:once

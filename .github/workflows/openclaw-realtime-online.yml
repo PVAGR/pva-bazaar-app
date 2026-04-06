@@ -1,0 +1,68 @@
+name: OpenClaw Realtime Online
+
+on:
+  schedule:
+    - cron: '0 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  models: read
+
+concurrency:
+  group: openclaw-realtime-online
+  cancel-in-progress: false
+
+jobs:
+  realtime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 58
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Run realtime loop
+        shell: bash
+        env:
+          OPENCLAW_BACKEND_URL: ${{ secrets.OPENCLAW_BACKEND_URL || vars.OPENCLAW_BACKEND_URL || 'https://api.pvabazaar.org' }}
+          OPENCLAW_BRIDGE_SECRET: ${{ secrets.OPENCLAW_BRIDGE_SECRET || vars.OPENCLAW_BRIDGE_SECRET }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_ALLOWED_CHAT_IDS: ${{ secrets.TELEGRAM_ALLOWED_CHAT_IDS || vars.TELEGRAM_ALLOWED_CHAT_IDS }}
+          TELEGRAM_STATE_KEY: ${{ secrets.TELEGRAM_STATE_KEY || vars.TELEGRAM_STATE_KEY }}
+          TELEGRAM_POLL_LIMIT: ${{ secrets.TELEGRAM_POLL_LIMIT || vars.TELEGRAM_POLL_LIMIT || '25' }}
+          OPENCLAW_CHAT_TIMEOUT_MS: ${{ secrets.OPENCLAW_CHAT_TIMEOUT_MS || vars.OPENCLAW_CHAT_TIMEOUT_MS || '18000' }}
+          OPENCLAW_TELEGRAM_SOURCE: ${{ secrets.OPENCLAW_TELEGRAM_SOURCE || vars.OPENCLAW_TELEGRAM_SOURCE || 'telegram-openclaw-realtime' }}
+          GITHUB_TOKEN: ${{ github.token }}
+          OLLAMA_BASE_URL: ${{ secrets.OLLAMA_BASE_URL || vars.OLLAMA_BASE_URL }}
+          OLLAMA_MODEL: ${{ secrets.OLLAMA_MODEL || vars.OLLAMA_MODEL || 'llama3.1' }}
+          OLLAMA_TEMPERATURE: ${{ secrets.OLLAMA_TEMPERATURE || vars.OLLAMA_TEMPERATURE || '0.35' }}
+          OPENCLAW_WEBHOOK_URL: ${{ secrets.OPENCLAW_WEBHOOK_URL || vars.OPENCLAW_WEBHOOK_URL }}
+          OPENCLAW_API_KEY: ${{ secrets.OPENCLAW_API_KEY || vars.OPENCLAW_API_KEY }}
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          OPENCLAW_WORKER_RUN_ONCE: 'true'
+          OPENCLAW_WORKER_NAME: openclaw-queue-dispatcher-realtime
+          OPENCLAW_WORKER_BATCH_SIZE: '50'
+        run: |
+          end=$((SECONDS + 3300))
+          cycle=0
+          while [ $SECONDS -lt $end ]; do
+            cycle=$((cycle + 1))
+            echo "[Realtime] Cycle $cycle starting"
+
+            node .github/scripts/openclaw-telegram-bridge.mjs || true
+            node .github/scripts/openclaw-respond.mjs || true
+            (cd backend && npm run openclaw:worker:once) || true
+
+            echo "[Realtime] Cycle $cycle complete"
+            sleep 1
+          done

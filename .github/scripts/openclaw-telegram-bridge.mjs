@@ -20,11 +20,6 @@ if (!BACKEND_URL) {
   process.exit(0);
 }
 
-if (!BRIDGE_SECRET) {
-  console.warn('OPENCLAW_BRIDGE_SECRET is not set - skipping Telegram bridge run.');
-  process.exit(0);
-}
-
 if (!TELEGRAM_BOT_TOKEN) {
   console.warn('TELEGRAM_BOT_TOKEN is not set - skipping Telegram bridge run.');
   process.exit(0);
@@ -33,10 +28,15 @@ if (!TELEGRAM_BOT_TOKEN) {
 const TELEGRAM_API = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}`;
 
 function backendHeaders() {
-  return {
+  const headers = {
     'Content-Type': 'application/json',
-    'X-OpenClaw-Secret': BRIDGE_SECRET,
   };
+
+  if (BRIDGE_SECRET) {
+    headers['X-OpenClaw-Secret'] = BRIDGE_SECRET;
+  }
+
+  return headers;
 }
 
 function isAllowedChat(chatId) {
