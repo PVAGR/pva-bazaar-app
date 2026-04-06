@@ -12,6 +12,8 @@
     "openclaw:worker": "node scripts/openclaw-queue-worker.js",
     "openclaw:worker:dev": "nodemon scripts/openclaw-queue-worker.js",
     "openclaw:worker:once": "node -e \"process.env.OPENCLAW_WORKER_RUN_ONCE='true'; require('./scripts/openclaw-queue-worker.js');\"",
+    "openclaw:workers": "node scripts/openclaw-multi-worker.js",
+    "openclaw:workers:5": "node -e \"process.env.OPENCLAW_WORKER_COUNT='5'; require('./scripts/openclaw-multi-worker.js');\"",
     "deals:outbound-worker": "node scripts/deal-outbound-dispatch-worker.js",
     "deals:outbound-worker:dev": "nodemon scripts/deal-outbound-dispatch-worker.js",
     "omnichannel:poll:worker": "node scripts/omnichannel-poll-worker.js",

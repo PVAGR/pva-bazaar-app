@@ -169,6 +169,7 @@ function helpText() {
     'Commands:',
     '/start - confirm bridge status',
     '/help - show this message',
+    '/chatid - show this chat ID (for notify-ready routing)',
     '/identity <text> - set your core identity signal for this chat',
     '/voice <text> - set speaking style and tone for this chat',
     '/imprint <text> - store a high-priority memory for the AI self',
@@ -579,6 +580,17 @@ router.post('/telegram/updates', async (req, res) => {
     if (lower === '/help') {
       await sendTelegramMessage(chatId, helpText());
       await recordBridgeSuccess({ phase: 'command:help', updateId }).catch(() => {});
+      return res.json({ ok: true, handled: true });
+    }
+
+    if (lower === '/chatid' || lower === '/id') {
+      const payload = [
+        `chatId: ${String(chatId)}`,
+        `userId: ${String(message?.from?.id || '')}`,
+        'Use this chatId with POST /api/openclaw/telegram/notify-ready',
+      ].join('\n');
+      await sendTelegramMessage(chatId, payload);
+      await recordBridgeSuccess({ phase: 'command:chatid', updateId, chatId: String(chatId) }).catch(() => {});
       return res.json({ ok: true, handled: true });
     }
 
