@@ -35,13 +35,6 @@ jobs:
         shell: bash
         env:
           OPENCLAW_BACKEND_URL: https://api.pvabazaar.org
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_ALLOWED_CHAT_IDS: ''
-          TELEGRAM_PUBLIC_MODE: 'true'
-          TELEGRAM_STATE_KEY: telegram:lastUpdateId
-          TELEGRAM_POLL_LIMIT: '25'
-          OPENCLAW_CHAT_TIMEOUT_MS: '18000'
-          OPENCLAW_TELEGRAM_SOURCE: telegram-openclaw-realtime
           GITHUB_TOKEN: ${{ github.token }}
           OLLAMA_BASE_URL: https://api.pvabazaar.org
           OLLAMA_MODEL: llama3.1
@@ -53,7 +46,6 @@ jobs:
             cycle=$((cycle + 1))
             echo "[Realtime] Cycle $cycle starting"
 
-            node .github/scripts/openclaw-telegram-bridge.mjs || true
             node .github/scripts/openclaw-respond.mjs || true
 
             echo "[Realtime] Cycle $cycle complete"
