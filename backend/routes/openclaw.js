@@ -49,6 +49,63 @@ function normalizeUrl(value) {
   return String(value || '').trim().replace(/\/$/, '');
 }
 
+function getRequestBaseUrl(req) {
+  const configured = normalizeUrl(process.env.OPENCLAW_BACKEND_URL || process.env.PUBLIC_BACKEND_URL || '');
+  if (configured) return configured;
+
+  const proto = String(req.headers['x-forwarded-proto'] || req.protocol || 'https');
+  const host = req.get('host');
+  return `${proto}://${host}`;
+}
+
+function parseChatIds(value) {
+  return String(value || '')
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+async function sendTelegramMessage(chatId, text) {
+  const botToken = String(process.env.TELEGRAM_BOT_TOKEN || '').trim();
+  if (!botToken) {
+    throw new Error('TELEGRAM_BOT_TOKEN is not configured');
+  }
+
+  return axios.post(
+    `https://api.telegram.org/bot${botToken}/sendMessage`,
+    {
+      chat_id: chatId,
+      text: String(text || '').slice(0, 3500),
+      disable_web_page_preview: true,
+    },
+    {
+      timeout: 15000,
+      headers: { 'Content-Type': 'application/json' },
+    },
+  );
+}
+
+async function loadTelegramReadyRecipients(requestedChatIds = []) {
+  const envChatIds = parseChatIds(process.env.TELEGRAM_ALLOWED_CHAT_IDS || '');
+  const candidates = [...new Set([...requestedChatIds, ...envChatIds])].filter(Boolean);
+
+  if (candidates.length) {
+    return candidates;
+  }
+
+  await dbConnect();
+  const OpenClawMemory = require('../models/OpenClawMemory');
+  const latest = await OpenClawMemory.findOne({
+    key: { $in: ['telegram:lastChatId', 'ecosystem:telegram-bridge:lastChatId'] },
+  }).sort({ createdAt: -1 }).lean();
+
+  if (latest?.value) {
+    return [String(latest.value).trim()].filter(Boolean);
+  }
+
+  return [];
+}
+
 function isRecentTimestamp(value, maxAgeMinutes = 10) {
   if (!value) return false;
   const parsed = new Date(value).getTime();
@@ -752,6 +809,75 @@ router.post('/telegram/register-webhook', async (req, res) => {
       timestamp: new Date().toISOString(),
     });
   }
+});
+
+router.post('/telegram/notify-ready', async (req, res) => {
+  const config = getConfig();
+  if (!requireBridgeOrAdmin(req, res, config, 'Unauthorized Telegram readiness notification request')) return;
+
+  const requestedChatIds = Array.isArray(req.body?.chatIds)
+    ? req.body.chatIds.map((item) => String(item || '').trim()).filter(Boolean)
+    : req.body?.chatId
+      ? [String(req.body.chatId).trim()].filter(Boolean)
+      : [];
+
+  const recipients = await loadTelegramReadyRecipients(requestedChatIds);
+  if (!recipients.length) {
+    return res.status(404).json({
+      ok: false,
+      message: 'No Telegram recipient chat IDs found. Send a Telegram message once, or pass chatId/chatIds in the request body.',
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  const apiBaseUrl = getRequestBaseUrl(req);
+  const status = await axios.get(`${apiBaseUrl}/api/openclaw/status`, { timeout: 12000 }).then((response) => response.data).catch(() => null);
+  const build = await axios.get(`${apiBaseUrl}/api/version`, { timeout: 12000 }).then((response) => response.data).catch(() => null);
+
+  if (!status?.ecosystem?.services?.telegram || status.ecosystem.services.telegram.status !== 'online') {
+    return res.status(409).json({
+      ok: false,
+      message: 'Telegram service is not online yet. Not sending readiness text.',
+      status: status?.ecosystem?.services?.telegram || null,
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  const message = [
+    'PVA Bazaar assistant is ready.',
+    `Build: ${build?.shortSha || build?.sha || 'unknown'}`,
+    `OpenClaw: ${status?.mode || 'unknown'} · ${status?.ecosystem?.services?.openclaw?.status || 'unknown'}`,
+    `Ollama: ${status?.ecosystem?.services?.ollama?.status || 'unknown'}`,
+    'You can message me now with identity, memory, email, or task instructions and I will recall them when available.',
+  ].join('\n');
+
+  const results = [];
+  for (const chatId of recipients) {
+    try {
+      const response = await sendTelegramMessage(chatId, message);
+      const payload = response.data || {};
+      results.push({ chatId, ok: Boolean(payload.ok), messageId: payload?.result?.message_id || null });
+    } catch (err) {
+      results.push({
+        chatId,
+        ok: false,
+        error: err?.response?.data || err.message || 'send failed',
+      });
+    }
+  }
+
+  const sentCount = results.filter((item) => item.ok).length;
+  const failedCount = results.length - sentCount;
+
+  return res.json({
+    ok: failedCount === 0,
+    message: failedCount === 0 ? 'Ready notification sent.' : 'Ready notification partially sent.',
+    recipients,
+    results,
+    sentCount,
+    failedCount,
+    timestamp: new Date().toISOString(),
+  });
 });
 
 router.get('/watchdog-status', async (_req, res) => {
