@@ -28,7 +28,7 @@ jobs:
 
       - name: Install backend dependencies
         working-directory: backend
-        run: npm ci
+        run: npm install
 
       - name: Run one-shot queue worker
         working-directory: backend

@@ -416,7 +416,20 @@ async function main() {
 }
 
 main().catch(async (err) => {
-  console.error('OpenClaw Telegram bridge failed:', err.message);
+  const message = String(err?.message || 'fatal telegram bridge failure');
+  const isPollingConflict = message.includes('error_code":409') || message.includes('terminated by other getUpdates request');
+
+  if (isPollingConflict) {
+    console.warn('OpenClaw Telegram bridge detected another active poller; exiting this run without failure.');
+    await recordBridgeSuccess({
+      phase: 'poll-conflict',
+      message: 'another poller active',
+      source: OPENCLAW_CHAT_SOURCE,
+    });
+    process.exit(0);
+  }
+
+  console.error('OpenClaw Telegram bridge failed:', message);
   await recordBridgeFailure(err.message || 'fatal telegram bridge failure', {
     fatal: true,
     source: OPENCLAW_CHAT_SOURCE,
