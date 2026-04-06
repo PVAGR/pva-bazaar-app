@@ -10,6 +10,8 @@ const AdminRuntimeConfig = require('../models/AdminRuntimeConfig');
 dotenv.config();
 
 const WORKER_NAME = process.env.OPENCLAW_WORKER_NAME || 'openclaw-queue-dispatcher';
+const BACKEND_URL = (process.env.OPENCLAW_BACKEND_URL || '').replace(/\/$/, '');
+const PUBLIC_MODE = process.env.OPENCLAW_PUBLIC_MODE === 'true' || !process.env.MONGODB_URI;
 const POLL_MS = Math.max(parseInt(process.env.OPENCLAW_WORKER_POLL_MS || '10000', 10), 2000);
 const LEASE_MS = Math.max(parseInt(process.env.OPENCLAW_WORKER_LEASE_MS || '45000', 10), 10000);
 const BATCH_SIZE = Math.min(
@@ -52,6 +54,46 @@ function buildHeaders() {
   return headers;
 }
 
+function backendHeaders() {
+  const headers = { 'Content-Type': 'application/json' };
+  if (process.env.OPENCLAW_API_KEY) {
+    headers.Authorization = `Bearer ${process.env.OPENCLAW_API_KEY}`;
+  }
+  return headers;
+}
+
+async function writeMemory(key, value, type = 'fact') {
+  if (!BACKEND_URL) return;
+
+  try {
+    await axios.post(
+      `${BACKEND_URL}/api/openclaw/memory`,
+      {
+        key,
+        value: String(value),
+        type,
+        source: 'openclaw-queue-worker',
+      },
+      {
+        headers: backendHeaders(),
+        timeout: REQUEST_TIMEOUT_MS,
+      },
+    );
+  } catch (_err) {
+    // non-fatal telemetry
+  }
+}
+
+async function writeWorkerHeartbeat(state, details = {}) {
+  const timestamp = new Date().toISOString();
+  await Promise.allSettled([
+    writeMemory('ecosystem:openclaw-worker:lastHeartbeat', timestamp, 'fact'),
+    writeMemory('ecosystem:openclaw-worker:connectionState', state, 'fact'),
+    writeMemory('ecosystem:openclaw-worker:lastStatus', JSON.stringify({ state, timestamp, ...details }), 'reflection'),
+    writeMemory('ecosystem:openclaw-worker:consecutiveFailures', String(details.consecutiveFailures || 0), 'fact'),
+  ]);
+}
+
 async function getEffectiveWorkerConfig() {
   const fallback = {
     webhookUrl: process.env.OPENCLAW_WEBHOOK_URL || '',
@@ -75,6 +117,10 @@ async function getEffectiveWorkerConfig() {
 }
 
 async function acquireLease() {
+  if (PUBLIC_MODE) {
+    return true;
+  }
+
   const now = new Date();
   const leaseUntil = new Date(now.getTime() + LEASE_MS);
 
@@ -107,6 +153,11 @@ async function acquireLease() {
 }
 
 async function releaseLease() {
+  if (PUBLIC_MODE) {
+    await writeWorkerHeartbeat('idle', { workerId: WORKER_ID });
+    return;
+  }
+
   const now = new Date();
   await OpenClawWorkerLease.updateOne(
     { name: WORKER_NAME, holderId: WORKER_ID },
@@ -120,6 +171,22 @@ async function releaseLease() {
 }
 
 async function fetchQueueBatch() {
+  if (PUBLIC_MODE) {
+    if (!BACKEND_URL) return [];
+
+    const response = await axios.get(`${BACKEND_URL}/api/openclaw/messages`, {
+      params: {
+        unprocessed: 'true',
+        direction: 'outbound',
+        limit: BATCH_SIZE,
+      },
+      headers: backendHeaders(),
+      timeout: REQUEST_TIMEOUT_MS,
+    });
+
+    return Array.isArray(response.data?.messages) ? response.data.messages : [];
+  }
+
   const now = new Date();
 
   return OpenClawMessage.find({
@@ -163,6 +230,16 @@ function buildOutboundPayload(message) {
 }
 
 async function markSuccess(messageId, attemptCount, statusCode) {
+  if (PUBLIC_MODE) {
+    if (!BACKEND_URL) return;
+    await axios.post(
+      `${BACKEND_URL}/api/openclaw/messages/${messageId}/processed`,
+      {},
+      { headers: backendHeaders(), timeout: REQUEST_TIMEOUT_MS },
+    );
+    return;
+  }
+
   await OpenClawMessage.updateOne(
     { _id: messageId },
     {
@@ -183,6 +260,15 @@ async function markSuccess(messageId, attemptCount, statusCode) {
 }
 
 async function markFailure(messageId, attemptCount, err) {
+  if (PUBLIC_MODE) {
+    await writeWorkerHeartbeat('error', {
+      workerId: WORKER_ID,
+      consecutiveFailures: attemptCount,
+      lastError: clipError(err),
+    });
+    return;
+  }
+
   const now = Date.now();
   const delay = nextBackoffMs(attemptCount);
   const nextAttempt = new Date(now + delay).toISOString();
@@ -233,6 +319,7 @@ async function processLoop() {
   if (effective.apiKey) {
     headers.Authorization = `Bearer ${effective.apiKey}`;
   }
+  await writeWorkerHeartbeat('online', { workerId: WORKER_ID });
   const batch = await fetchQueueBatch();
 
   if (!batch.length) {
@@ -252,6 +339,13 @@ async function processLoop() {
   }
 
   console.log(`[OpenClawWorker] cycle processed=${batch.length} forwarded=${okCount} failed=${failedCount}`);
+  await writeWorkerHeartbeat(failedCount > 0 ? 'degraded' : 'online', {
+    workerId: WORKER_ID,
+    processed: batch.length,
+    forwarded: okCount,
+    failed: failedCount,
+    consecutiveFailures: failedCount,
+  });
 }
 
 async function main() {

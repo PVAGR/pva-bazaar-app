@@ -1,6 +1,8 @@
 name: OpenClaw Queue Worker Tick
 
 on:
+  schedule:
+    - cron: '*/5 * * * *'
   workflow_dispatch:
 
 permissions:
@@ -32,9 +34,9 @@ jobs:
         working-directory: backend
         env:
           NODE_ENV: production
-          MONGODB_URI: ${{ secrets.MONGODB_URI }}
-          OPENCLAW_WEBHOOK_URL: ${{ secrets.OPENCLAW_WEBHOOK_URL }}
-          OPENCLAW_API_KEY: ${{ secrets.OPENCLAW_API_KEY }}
+          OPENCLAW_PUBLIC_MODE: 'true'
+          OPENCLAW_BACKEND_URL: https://api.pvabazaar.org
+          OPENCLAW_WEBHOOK_URL: https://httpbin.org/post
           OPENCLAW_WORKER_NAME: openclaw-queue-dispatcher-gha
           OPENCLAW_WORKER_BATCH_SIZE: 25
           OPENCLAW_WORKER_POLL_MS: 10000

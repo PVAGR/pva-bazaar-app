@@ -111,6 +111,10 @@ async function buildEcosystemSnapshot({ queue, worker } = {}) {
     'ecosystem:openclaw-responder:connectionState',
     'ecosystem:openclaw-responder:consecutiveFailures',
     'ecosystem:openclaw-responder:lastError',
+    'ecosystem:openclaw-worker:lastHeartbeat',
+    'ecosystem:openclaw-worker:connectionState',
+    'ecosystem:openclaw-worker:consecutiveFailures',
+    'ecosystem:openclaw-worker:lastStatus',
     'ecosystem:telegram-bridge:lastHeartbeat',
     'ecosystem:telegram-bridge:connectionState',
     'ecosystem:telegram-bridge:consecutiveFailures',
@@ -138,6 +142,9 @@ async function buildEcosystemSnapshot({ queue, worker } = {}) {
   const responderState = latestByKey.get('ecosystem:openclaw-responder:connectionState') || null;
   const responderFailureCount = latestByKey.get('ecosystem:openclaw-responder:consecutiveFailures') || null;
   const responderLastError = latestByKey.get('ecosystem:openclaw-responder:lastError') || null;
+  const workerHeartbeat = latestByKey.get('ecosystem:openclaw-worker:lastHeartbeat') || null;
+  const workerState = latestByKey.get('ecosystem:openclaw-worker:connectionState') || null;
+  const workerFailureCount = latestByKey.get('ecosystem:openclaw-worker:consecutiveFailures') || null;
   const telegramHeartbeat = latestByKey.get('ecosystem:telegram-bridge:lastHeartbeat') || latestByKey.get('telegram:lastHeartbeat') || null;
   const telegramState = latestByKey.get('ecosystem:telegram-bridge:connectionState') || null;
   const telegramFailureCount = latestByKey.get('ecosystem:telegram-bridge:consecutiveFailures') || null;
@@ -157,9 +164,12 @@ async function buildEcosystemSnapshot({ queue, worker } = {}) {
   const telegramConfigured = Boolean(telegramHeartbeat || telegramUpdate || process.env.TELEGRAM_BOT_TOKEN || process.env.TELEGRAM_ALLOWED_CHAT_IDS);
   const telegramLive = isRecentTimestamp(telegramHeartbeat?.createdAt, 10);
   const responderLive = isRecentTimestamp(openclawHeartbeat?.createdAt, 15);
+  const workerLive = isRecentTimestamp(workerHeartbeat?.createdAt, 10);
   const responderStateValue = String(responderState?.value || 'unknown');
+  const workerStateValue = String(workerState?.value || 'unknown');
   const telegramStateValue = String(telegramState?.value || 'unknown');
   const responderInError = responderStateValue.startsWith('error:');
+  const workerInError = workerStateValue.startsWith('error:');
   const telegramInError = telegramStateValue.startsWith('error:');
   const queuePending = queue?.pendingOutbound ?? 0;
   const staleOutbound = queue?.staleOutbound ?? 0;
@@ -185,17 +195,19 @@ async function buildEcosystemSnapshot({ queue, worker } = {}) {
       reachable: Boolean(queue || worker),
       queuePending,
       staleOutbound,
-      workerActive: worker?.active === true,
-      workerHeartbeatAt: worker?.heartbeatAt || null,
+      workerActive: worker?.active === true || workerLive,
+      workerHeartbeatAt: worker?.heartbeatAt || workerHeartbeat?.createdAt || null,
       responderLive,
       responderState: responderStateValue,
+      workerState: workerStateValue,
+      workerFailures: Number.parseInt(String(workerFailureCount?.value || '0'), 10) || 0,
       responderFailures: Number.parseInt(String(responderFailureCount?.value || '0'), 10) || 0,
       responderLastError: responderLastError?.value || null,
       brain: brainState?.value || null,
       message: queue && worker
         ? `${queue.pendingOutbound} pending · ${queue.staleOutbound} stale`
         : 'Queue metadata unavailable',
-      status: staleOutbound > 0 || workerInactiveWithQueuePressure || !responderLive || responderInError
+      status: staleOutbound > 0 || workerInactiveWithQueuePressure || !responderLive || responderInError || workerInError || !workerLive
         ? 'degraded'
         : 'online',
     },
@@ -399,15 +411,29 @@ async function getWorkerStatus() {
     const OpenClawWorkerLease = require('../models/OpenClawWorkerLease');
     const workerName = process.env.OPENCLAW_WORKER_NAME || 'openclaw-queue-dispatcher';
     const lease = await OpenClawWorkerLease.findOne({ name: workerName }).lean();
+    const memory = await loadMemoryEntries([
+      'ecosystem:openclaw-worker:lastHeartbeat',
+      'ecosystem:openclaw-worker:connectionState',
+      'ecosystem:openclaw-worker:consecutiveFailures',
+      'ecosystem:openclaw-worker:lastStatus',
+    ], 10);
+    const workerHeartbeat = memory.find((item) => item.key === 'ecosystem:openclaw-worker:lastHeartbeat') || null;
+    const workerState = memory.find((item) => item.key === 'ecosystem:openclaw-worker:connectionState') || null;
+    const workerFailures = memory.find((item) => item.key === 'ecosystem:openclaw-worker:consecutiveFailures') || null;
+
+    const heartbeatAt = workerHeartbeat?.createdAt || null;
+    const heartbeatFresh = isRecentTimestamp(heartbeatAt, 10);
 
     if (!lease) {
       return {
         configured: true,
-        name: workerName,
-        active: false,
+        name: workerState?.value ? `openclaw-queue-dispatcher-${String(workerState.value).toLowerCase()}` : workerName,
+        active: heartbeatFresh,
         holderId: null,
         leaseUntil: null,
-        heartbeatAt: null,
+        heartbeatAt,
+        state: workerState?.value || 'unknown',
+        failures: Number.parseInt(String(workerFailures?.value || '0'), 10) || 0,
       };
     }
 
