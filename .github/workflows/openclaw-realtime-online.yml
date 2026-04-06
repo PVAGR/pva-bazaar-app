@@ -11,7 +11,7 @@ permissions:
 
 concurrency:
   group: openclaw-realtime-online
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   realtime:
