@@ -17,11 +17,6 @@ if (!BACKEND_URL) {
   process.exit(0);
 }
 
-if (!BRIDGE_SECRET) {
-  console.warn('OPENCLAW_BRIDGE_SECRET is not set — skipping agent run (queue auth required).');
-  process.exit(0);
-}
-
 const BASE_SYSTEM_PROMPT = `You are PVA Magnum Opus, the autonomous OpenClaw assistant for PVAGR/pva-bazaar-app and pvabazaar.org.
 You operate as a broad, global operations assistant for website, Telegram, GitHub workflows, and OpenClaw automation.
 

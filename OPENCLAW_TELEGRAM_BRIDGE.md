@@ -25,13 +25,10 @@ Use Telegram on your phone to send instructions into the live OpenClaw chat loop
 
 - `OPENCLAW_BACKEND_URL`
   - Example: `https://api.pvabazaar.org`
-- `OPENCLAW_BRIDGE_SECRET`
-  - Must match backend `OPENCLAW_BRIDGE_SECRET`.
 - `TELEGRAM_BOT_TOKEN`
   - Created with BotFather.
-- `TELEGRAM_ALLOWED_CHAT_IDS`
-  - Comma-separated chat IDs allowed to use the bot.
-  - Example: `123456789,-1002223334445`
+- `TELEGRAM_PUBLIC_MODE`
+  - Set to `true` for public access.
 
 ## Optional GitHub repository secrets
 
@@ -43,9 +40,8 @@ Use Telegram on your phone to send instructions into the live OpenClaw chat loop
   - Default: `14000`
 - `OPENCLAW_TELEGRAM_SOURCE`
   - Default: `telegram-openclaw-bridge`
-- `TELEGRAM_PUBLIC_MODE`
-  - Default: `false`
-  - Set `true` to allow any Telegram chat ID (internet public mode).
+- `TELEGRAM_ALLOWED_CHAT_IDS`
+  - Optional private allowlist. Leave empty for public mode.
 
 ## Queue worker workflow secrets (optional)
 
@@ -98,5 +94,5 @@ If you want private access, set `TELEGRAM_ALLOWED_CHAT_IDS` to explicit IDs.
 ## Security notes
 
 - Never commit bot tokens or bridge secrets in code.
-- Keep `TELEGRAM_ALLOWED_CHAT_IDS` set; do not leave it open in production.
+- Public mode is intentional here; only set `TELEGRAM_ALLOWED_CHAT_IDS` if you want to lock it down later.
 - Rotate secrets immediately if exposed.

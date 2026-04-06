@@ -31,5 +31,4 @@ jobs:
         run: node .github/scripts/openclaw-respond.mjs
         env:
           OPENCLAW_BACKEND_URL: ${{ secrets.OPENCLAW_BACKEND_URL }}
-          OPENCLAW_BRIDGE_SECRET: ${{ secrets.OPENCLAW_BRIDGE_SECRET }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

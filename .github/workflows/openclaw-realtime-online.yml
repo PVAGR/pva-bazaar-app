@@ -35,7 +35,6 @@ jobs:
         shell: bash
         env:
           OPENCLAW_BACKEND_URL: ${{ secrets.OPENCLAW_BACKEND_URL || vars.OPENCLAW_BACKEND_URL || 'https://api.pvabazaar.org' }}
-          OPENCLAW_BRIDGE_SECRET: ${{ secrets.OPENCLAW_BRIDGE_SECRET || vars.OPENCLAW_BRIDGE_SECRET }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_ALLOWED_CHAT_IDS: ''
           TELEGRAM_PUBLIC_MODE: 'true'
