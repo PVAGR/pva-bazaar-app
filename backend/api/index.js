@@ -139,10 +139,10 @@ if (process.env.SENTRY_DSN) {
 }
 
 // Stripe/Twitch webhooks: use express.raw for HMAC signature verification
-const stripeWebhookPath = "/webhooks/stripe";
-const twitchWebhookPath = "/webhooks/twitch";
+const stripeWebhookPaths = new Set(['/webhooks/stripe', '/api/webhooks/stripe']);
+const twitchWebhookPaths = new Set(['/webhooks/twitch', '/api/webhooks/twitch']);
 app.use((req, res, next) => {
-  if (req.originalUrl === stripeWebhookPath || req.originalUrl === twitchWebhookPath) {
+  if (stripeWebhookPaths.has(req.originalUrl) || twitchWebhookPaths.has(req.originalUrl)) {
     express.raw({ type: "application/json" })(req, res, next);
   } else {
     next();
@@ -156,6 +156,7 @@ app.use('/api/oracle', authLimiter);
 app.use('/orders', authLimiter);
 app.use('/checkout', checkoutLimiter);
 app.use('/webhooks', webhookLimiter);
+app.use('/api/webhooks', webhookLimiter);
 // If API is not ready (e.g., missing secrets in production), return 503 for most endpoints
 app.use((req, res, next) => {
   const apiNotReady = process.env.API_READY === 'false';
@@ -170,15 +171,18 @@ app.use((req, res, next) => {
 // Webhook routes (must come after raw body middleware)
 const webhooksStripeRoutes = require('../routes/webhooksStripe');
 app.use('/webhooks', webhooksStripeRoutes);
+app.use('/api/webhooks', webhooksStripeRoutes);
 try {
   const webhooksTwitchRoutes = require('../routes/webhooksTwitch');
   app.use('/webhooks', webhooksTwitchRoutes);
+  app.use('/api/webhooks', webhooksTwitchRoutes);
 } catch (err) {
   console.warn('⚠️ Optional route disabled: webhooksTwitch', err?.message || err);
 }
 try {
   const webhooksTelegramRoutes = require('../routes/webhooksTelegram');
   app.use('/webhooks', webhooksTelegramRoutes);
+  app.use('/api/webhooks', webhooksTelegramRoutes);
 } catch (err) {
   console.warn('⚠️ Optional route disabled: webhooksTelegram', err?.message || err);
 }
