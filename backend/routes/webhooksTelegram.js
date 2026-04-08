@@ -28,6 +28,17 @@ const OLLAMA_TIMEOUT_MS = Math.min(
   Math.max(parseInt(process.env.OLLAMA_TIMEOUT_MS || process.env.OPENCLAW_OLLAMA_TIMEOUT_MS || '20000', 10), 3000),
   45000,
 );
+const OPENAI_API_KEY = String(process.env.OPENAI_API_KEY || '').trim();
+const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
+const OPENAI_MODEL = String(process.env.OPENAI_MODEL || 'gpt-4o-mini').trim() || 'gpt-4o-mini';
+const OPENAI_TEMPERATURE = Math.min(
+  Math.max(parseFloat(process.env.OPENAI_TEMPERATURE || process.env.OLLAMA_TEMPERATURE || '0.35'), 0),
+  2,
+);
+const OPENAI_TIMEOUT_MS = Math.min(
+  Math.max(parseInt(process.env.OPENAI_TIMEOUT_MS || process.env.OPENCLAW_OPENAI_TIMEOUT_MS || String(OLLAMA_TIMEOUT_MS), 10), 5000),
+  60000,
+);
 const PERSONA_AUTO_LEARN = process.env.OPENCLAW_PERSONA_AUTO_LEARN !== 'false';
 const PERSONA_CONTEXT_LIMIT = Math.min(
   Math.max(parseInt(process.env.OPENCLAW_PERSONA_CONTEXT_LIMIT || '10', 10), 4),
@@ -659,10 +670,58 @@ async function openclawChat(apiBaseUrl, message, sourceMeta = {}) {
   return response.data || {};
 }
 
-function needsDirectFallback(payload) {
-  if (payload?.reply?.content) return false;
+function needsDirectFallback(payload, userText = '') {
+  const replyText = String(payload?.reply?.content || '').trim();
+  const normalizedUser = String(userText || '').trim();
+
+  // Self-gateway mode can echo the original prompt as a synthetic inbound reply.
+  // Treat that as non-final and force direct model fallback.
+  if (replyText && normalizedUser && replyText.toLowerCase() === normalizedUser.toLowerCase()) {
+    return true;
+  }
+
+  if (replyText.toLowerCase().startsWith('echo:')) {
+    return true;
+  }
+
+  if (replyText) return false;
   const msg = String(payload?.message || '').toLowerCase();
+  if (normalizedUser && msg.includes(normalizedUser.toLowerCase())) {
+    return true;
+  }
+  if (msg.startsWith('echo:')) {
+    return true;
+  }
   return msg.includes('queued') || msg.includes('waiting') || !msg;
+}
+
+async function requestOpenAIChat(userPrompt) {
+  if (!OPENAI_API_KEY) return null;
+
+  return axios.post(
+    OPENAI_API_URL,
+    {
+      model: OPENAI_MODEL,
+      messages: [
+        {
+          role: 'system',
+          content: 'You are PVA Magnum Opus. Keep answers concise, operational, and actionable.',
+        },
+        {
+          role: 'user',
+          content: userPrompt,
+        },
+      ],
+      temperature: OPENAI_TEMPERATURE,
+    },
+    {
+      timeout: OPENAI_TIMEOUT_MS,
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
+      },
+    },
+  );
 }
 
 async function requestOllamaChat(userPrompt) {
@@ -708,9 +767,7 @@ async function requestOllamaGenerate(userPrompt) {
 }
 
 async function generateOllamaFallbackReply(userText, apiBaseUrl, personaContext = null, personaRuntime = null) {
-  if (!OLLAMA_BASE_URL) return null;
-
-  const status = await fetchOpenClawStatus(apiBaseUrl).catch(() => null);
+  const openclawStatus = await fetchOpenClawStatus(apiBaseUrl).catch(() => null);
   const prompt = [
     'You are PVA Magnum Opus, the Telegram assistant for PVA Bazaar.',
     'You are a continuity agent that should feel like the same evolving identity over time.',
@@ -720,11 +777,38 @@ async function generateOllamaFallbackReply(userText, apiBaseUrl, personaContext 
     'Respond clearly and actionably.',
     personaBlock(personaContext),
     `User message: ${String(userText || '').slice(0, 3000)}`,
-    `Live status: ${status ? JSON.stringify(status).slice(0, 5000) : 'unavailable'}`,
+    `Live status: ${openclawStatus ? JSON.stringify(openclawStatus).slice(0, 5000) : 'unavailable'}`,
+  ].join('\n\n');
+
+  if (OPENAI_API_KEY) {
+    try {
+      const response = await requestOpenAIChat(prompt);
+      const text = response?.data?.choices?.[0]?.message?.content || null;
+      if (text) {
+        return String(text).trim().slice(0, 3500);
+      }
+    } catch (_err) {
+      // fall back to Ollama if available
+    }
+  }
+
+  if (!OLLAMA_BASE_URL) return null;
+
+  const ollamaStatus = await fetchOpenClawStatus(apiBaseUrl).catch(() => null);
+  const ollamaPrompt = [
+    'You are PVA Magnum Opus, the Telegram assistant for PVA Bazaar.',
+    'You are a continuity agent that should feel like the same evolving identity over time.',
+    'Use persona context as the highest-priority style and identity guidance.',
+    `Active profile: ${personaRuntime?.profileId || 'default'}`,
+    `Active mode: ${personaRuntime?.activeMode || 'default'}`,
+    'Respond clearly and actionably.',
+    personaBlock(personaContext),
+    `User message: ${String(userText || '').slice(0, 3000)}`,
+    `Live status: ${ollamaStatus ? JSON.stringify(ollamaStatus).slice(0, 5000) : 'unavailable'}`,
   ].join('\n\n');
 
   try {
-    const response = await requestOllamaChat(prompt);
+    const response = await requestOllamaChat(ollamaPrompt);
     const text = response.data?.message?.content || response.data?.response || null;
     return text ? String(text).trim().slice(0, 3500) : null;
   } catch (err) {
@@ -735,7 +819,7 @@ async function generateOllamaFallbackReply(userText, apiBaseUrl, personaContext 
   }
 
   try {
-    const response = await requestOllamaGenerate(prompt);
+    const response = await requestOllamaGenerate(ollamaPrompt);
     const text = response.data?.response || response.data?.message?.content || null;
     return text ? String(text).trim().slice(0, 3500) : null;
   } catch (_err) {
@@ -1120,11 +1204,15 @@ router.post('/telegram/updates', async (req, res) => {
 
     let replyText = reply?.reply?.content
       ? String(reply.reply.content).slice(0, 3500)
-      : String(reply?.message || 'Message queued. Reply will follow shortly.').slice(0, 3500);
+      : '';
 
-    if (needsDirectFallback(reply)) {
+    if (needsDirectFallback(reply, userText) || !replyText) {
       const direct = await generateOllamaFallbackReply(userText, apiBaseUrl, personaContext, personaRuntime).catch(() => null);
       if (direct) replyText = direct;
+    }
+
+    if (!replyText) {
+      replyText = 'AI response is temporarily unavailable. Please try again in a moment.';
     }
 
     await sendTelegramMessage(chatId, replyText);

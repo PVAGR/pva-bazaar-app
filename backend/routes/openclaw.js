@@ -6,6 +6,18 @@ const path = require('path');
 const crypto = require('crypto');
 const dbConnect = require('../lib/dbConnect');
 
+const OPENAI_API_KEY = String(process.env.OPENAI_API_KEY || '').trim();
+const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
+const OPENAI_MODEL = String(process.env.OPENAI_MODEL || 'gpt-4o-mini').trim() || 'gpt-4o-mini';
+const OPENAI_TEMPERATURE = Math.min(
+  Math.max(parseFloat(process.env.OPENAI_TEMPERATURE || '0.35'), 0),
+  2,
+);
+const OPENAI_TIMEOUT_MS = Math.min(
+  Math.max(parseInt(process.env.OPENAI_TIMEOUT_MS || process.env.OPENCLAW_OPENAI_TIMEOUT_MS || '20000', 10), 5000),
+  60000,
+);
+
 const router = express.Router();
 
 function readLastLines(filePath, maxLines = 200) {
@@ -582,6 +594,46 @@ function buildForwardHeaders(config) {
   };
   if (config.apiKey) headers.Authorization = `Bearer ${config.apiKey}`;
   return headers;
+}
+
+function buildOpenAIPrompt(messageText) {
+  return [
+    'You are PVA Magnum Opus, the OpenClaw assistant for PVA Bazaar.',
+    'Answer clearly, directly, and operationally.',
+    `User message: ${String(messageText || '').slice(0, 4000)}`,
+  ].join('\n\n');
+}
+
+async function requestOpenAIReply(messageText) {
+  if (!OPENAI_API_KEY) return null;
+
+  const response = await axios.post(
+    OPENAI_API_URL,
+    {
+      model: OPENAI_MODEL,
+      messages: [
+        {
+          role: 'system',
+          content: 'You are PVA Magnum Opus. Keep answers concise and operational.',
+        },
+        {
+          role: 'user',
+          content: buildOpenAIPrompt(messageText),
+        },
+      ],
+      temperature: OPENAI_TEMPERATURE,
+    },
+    {
+      timeout: OPENAI_TIMEOUT_MS,
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
+      },
+    },
+  );
+
+  const text = response.data?.choices?.[0]?.message?.content || null;
+  return text ? String(text).trim().slice(0, 3500) : null;
 }
 
 async function forwardOutboundMessage(config, storedOutbound, payload) {
@@ -1176,6 +1228,27 @@ router.post('/chat', async (req, res) => {
 
     const forward = await forwardOutboundMessage(config, outbound, payload);
     if (!forward.ok) {
+      if (OPENAI_API_KEY) {
+        const directReply = await requestOpenAIReply(text).catch(() => null);
+        if (directReply) {
+          return res.json({
+            ok: true,
+            queued: true,
+            forwarded: false,
+            waiting: false,
+            reply: {
+              ok: true,
+              content: directReply,
+              source: 'openai',
+              model: OPENAI_MODEL,
+            },
+            chatRequestId,
+            message: 'Cloud fallback reply generated.',
+            timestamp: new Date().toISOString(),
+          });
+        }
+      }
+
       return res.status(forward.status || 502).json(forward);
     }
 
@@ -1215,6 +1288,27 @@ router.post('/chat', async (req, res) => {
         reply,
         timestamp: new Date().toISOString(),
       });
+    }
+
+    if (OPENAI_API_KEY) {
+      const directReply = await requestOpenAIReply(text).catch(() => null);
+      if (directReply) {
+        return res.json({
+          ok: true,
+          queued: true,
+          forwarded: forward.forwarded,
+          waiting: false,
+          chatRequestId,
+          reply: {
+            ok: true,
+            content: directReply,
+            source: 'openai',
+            model: OPENAI_MODEL,
+          },
+          message: 'Cloud fallback reply generated.',
+          timestamp: new Date().toISOString(),
+        });
+      }
     }
 
     return res.json({
@@ -1551,11 +1645,13 @@ router.post('/inbound', async (req, res) => {
     });
   }
 
-  const { content, event, metadata, respondingTo } = req.body || {};
-  if (!content || !String(content).trim()) {
+  const { content, message, event, metadata, respondingTo } = req.body || {};
+  const inboundContent = String(content || message || '').trim();
+
+  if (!inboundContent) {
     return res.status(400).json({
       ok: false,
-      message: 'content is required',
+      message: 'content (or message) is required',
     });
   }
 
@@ -1564,7 +1660,7 @@ router.post('/inbound', async (req, res) => {
     const OpenClawMessage = require('../models/OpenClawMessage');
     const doc = await OpenClawMessage.create({
       direction: 'inbound',
-      content: String(content).trim(),
+      content: inboundContent,
       event: event || 'pvabazaar.agent.response',
       source: metadata?.source || 'openclaw-inbound',
       processed: true,
