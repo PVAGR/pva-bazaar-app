@@ -636,6 +636,17 @@ async function requestOpenAIReply(messageText) {
   return text ? String(text).trim().slice(0, 3500) : null;
 }
 
+function isEchoLikeReplyContent(replyContent, userText) {
+  const replyText = String(replyContent || '').trim();
+  const promptText = String(userText || '').trim();
+
+  if (!replyText) return false;
+  if (promptText && replyText.toLowerCase() === promptText.toLowerCase()) return true;
+  if (replyText.toLowerCase().startsWith('echo:')) return true;
+  if (promptText && replyText.toLowerCase().includes(promptText.toLowerCase())) return true;
+  return false;
+}
+
 async function forwardOutboundMessage(config, storedOutbound, payload) {
   if (!config.webhookUrl) {
     return {
@@ -1278,6 +1289,29 @@ router.post('/chat', async (req, res) => {
     }
 
     const reply = await waitForInboundReply(outboundId, chatRequestId, waitForReplyMs);
+    if (reply.ok && isEchoLikeReplyContent(reply.content, text)) {
+      if (OPENAI_API_KEY) {
+        const directReply = await requestOpenAIReply(text).catch(() => null);
+        if (directReply) {
+          return res.json({
+            ok: true,
+            queued: true,
+            forwarded: forward.forwarded,
+            waiting: false,
+            chatRequestId,
+            reply: {
+              ok: true,
+              content: directReply,
+              source: 'openai',
+              model: OPENAI_MODEL,
+            },
+            message: 'Cloud fallback reply generated.',
+            timestamp: new Date().toISOString(),
+          });
+        }
+      }
+    }
+
     if (reply.ok) {
       return res.json({
         ok: true,
