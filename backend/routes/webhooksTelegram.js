@@ -270,7 +270,13 @@ function helpText() {
     '/plan <title> | <step 1>; <step 2>; ... - store a structured workflow',
     '/continue - advance one workflow step',
     '/workflow - show the active workflow',
+    '/setemail <address> - store your preferred email address for this chat',
+    '/myemail - show your saved preferred email address',
     '/email <to | subject | body> - send an email through the assistant',
+    '/note <text> - store a note in assistant memory',
+    '/notes - list recent notes from assistant memory',
+    '/recall - show recent notes + tasks + persona summary',
+    '/flight <from> | <to> | <YYYY-MM-DD> - get a cheapest-flight search link',
     '/task <text> - store a task in assistant memory',
     '/tasks - list recent tasks from assistant memory',
     '/status - show OpenClaw bridge status',
@@ -307,6 +313,14 @@ function assistantTaskKey(chatId) {
   return `assistant:task:chat:${String(chatId)}`;
 }
 
+function assistantNoteKey(chatId) {
+  return `assistant:note:chat:${String(chatId)}`;
+}
+
+function assistantEmailKey(chatId) {
+  return `assistant:email:chat:${String(chatId)}`;
+}
+
 function assistantWorkflowKey(chatId) {
   return `assistant:workflow:chat:${String(chatId)}`;
 }
@@ -326,7 +340,7 @@ function parseEmailCommand(text) {
 
   if (parts.length === 2) {
     return {
-      to: DEFAULT_EMAIL_TO,
+      to: null,
       subject: parts[0],
       body: parts[1],
     };
@@ -343,6 +357,28 @@ async function storeTask(chatId, value, type = 'task') {
   return safeValue;
 }
 
+async function storeNote(chatId, value, type = 'note') {
+  const safeValue = String(value || '').trim().slice(0, 3500);
+  if (!safeValue) return null;
+
+  await writeMemory(assistantNoteKey(chatId), safeValue, type);
+  return safeValue;
+}
+
+async function storePreferredEmail(chatId, value) {
+  const normalized = String(value || '').trim().toLowerCase();
+  if (!normalized || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized)) {
+    return null;
+  }
+
+  await writeMemory(assistantEmailKey(chatId), normalized, 'preference');
+  return normalized;
+}
+
+async function fetchPreferredEmail(chatId) {
+  return readLatestMemoryValue(assistantEmailKey(chatId));
+}
+
 async function fetchRecentTasks(chatId, limit = 8) {
   await dbConnect();
   const docs = await OpenClawMemory.find({
@@ -357,6 +393,63 @@ async function fetchRecentTasks(chatId, limit = 8) {
     const timestamp = doc?.createdAt ? new Date(doc.createdAt).toISOString() : 'unknown time';
     return `${index + 1}. ${String(doc?.value || '').slice(0, 220)} (${timestamp})`;
   });
+}
+
+async function fetchRecentNotes(chatId, limit = 8) {
+  await dbConnect();
+  const docs = await OpenClawMemory.find({
+    key: assistantNoteKey(chatId),
+    source: OPENCLAW_TELEGRAM_SOURCE,
+  })
+    .sort({ createdAt: -1 })
+    .limit(limit)
+    .lean();
+
+  return docs.map((doc, index) => {
+    const timestamp = doc?.createdAt ? new Date(doc.createdAt).toISOString() : 'unknown time';
+    return `${index + 1}. ${String(doc?.value || '').slice(0, 220)} (${timestamp})`;
+  });
+}
+
+function parseSetEmailCommand(text) {
+  const payload = String(text || '').replace(/^\/setemail\s*/i, '').trim();
+  if (!payload) return null;
+
+  const match = payload.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i);
+  return match ? match[0].toLowerCase() : null;
+}
+
+function parseInlineEmail(text) {
+  const normalized = String(text || '').trim();
+  const match = normalized.match(/\b(?:my\s+email\s+is|email\s*[:=-]?)\s+([A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,})\b/i);
+  return match?.[1] ? match[1].toLowerCase() : null;
+}
+
+function parseFlightRequest(text) {
+  const input = String(text || '').trim();
+  const lower = input.toLowerCase();
+  if (!/(cheapest\s+flight|cheap\s+flight|find\s+flight|book\s+flight|flight\s+from)/i.test(lower)) {
+    return null;
+  }
+
+  const fromToMatch = input.match(/from\s+([a-zA-Z\s]{2,40}?)\s+to\s+([a-zA-Z\s]{2,40})(?:\s+on\s+([^,.\n]+))?/i);
+  const destinationOnly = input.match(/to\s+([a-zA-Z\s]{2,40})(?:\s+on\s+([^,.\n]+))?/i);
+  const dateMatch = input.match(/\b(\d{4}-\d{2}-\d{2})\b/);
+
+  const from = fromToMatch?.[1]?.trim() || null;
+  const to = (fromToMatch?.[2] || destinationOnly?.[1] || '').trim() || null;
+  const date = (dateMatch?.[1] || fromToMatch?.[3] || destinationOnly?.[2] || '').trim() || null;
+
+  return { from, to, date };
+}
+
+function buildFlightLink({ from, to, date }) {
+  const parts = ['Flights'];
+  if (from) parts.push(`from ${from}`);
+  if (to) parts.push(`to ${to}`);
+  if (date) parts.push(`on ${date}`);
+  const q = parts.join(' ');
+  return `https://www.google.com/travel/flights?q=${encodeURIComponent(q)}`;
 }
 
 function splitPlanSteps(rawSteps) {
@@ -1151,16 +1244,106 @@ router.post('/telegram/updates', async (req, res) => {
       return res.json({ ok: true, handled: true });
     }
 
+    if (lower.startsWith('/note')) {
+      const payload = commandPayload(userText, 'note');
+      if (!payload) {
+        await sendTelegramMessage(chatId, 'Usage: /note <text to remember>');
+        await recordBridgeSuccess({ phase: 'command:note:missing', updateId }).catch(() => {});
+        return res.json({ ok: true, handled: true });
+      }
+
+      const stored = await storeNote(chatId, payload, 'note').catch(() => null);
+      await sendTelegramMessage(chatId, stored ? 'Note stored in assistant memory.' : 'Note could not be stored right now.');
+      await recordBridgeSuccess({ phase: 'command:note', updateId }).catch(() => {});
+      return res.json({ ok: true, handled: true });
+    }
+
+    if (lower === '/notes') {
+      const notes = await fetchRecentNotes(chatId).catch(() => []);
+      const output = notes.length ? ['Recent notes:', ...notes.map((line) => `- ${line}`)].join('\n') : 'No notes stored yet.';
+      await sendTelegramMessage(chatId, output);
+      await recordBridgeSuccess({ phase: 'command:notes', updateId }).catch(() => {});
+      return res.json({ ok: true, handled: true });
+    }
+
+    if (lower === '/recall') {
+      const [notes, tasks, context] = await Promise.all([
+        fetchRecentNotes(chatId, 4).catch(() => []),
+        fetchRecentTasks(chatId, 4).catch(() => []),
+        fetchPersonaContext(chatId, 6).catch(() => null),
+      ]);
+      const lines = [
+        `Recall summary: ${context?.summary || 'persona unavailable'}`,
+        '',
+        notes.length ? 'Notes:' : 'Notes: none',
+        ...(notes.length ? notes.map((line) => `- ${line}`) : []),
+        '',
+        tasks.length ? 'Tasks:' : 'Tasks: none',
+        ...(tasks.length ? tasks.map((line) => `- ${line}`) : []),
+      ];
+      await sendTelegramMessage(chatId, lines.join('\n'));
+      await recordBridgeSuccess({ phase: 'command:recall', updateId }).catch(() => {});
+      return res.json({ ok: true, handled: true });
+    }
+
+    if (lower.startsWith('/setemail')) {
+      const extracted = parseSetEmailCommand(userText);
+      if (!extracted) {
+        await sendTelegramMessage(chatId, 'Usage: /setemail you@example.com');
+        await recordBridgeSuccess({ phase: 'command:setemail:missing', updateId }).catch(() => {});
+        return res.json({ ok: true, handled: true });
+      }
+
+      const saved = await storePreferredEmail(chatId, extracted).catch(() => null);
+      await sendTelegramMessage(chatId, saved ? `Saved preferred email: ${saved}` : 'Could not save that email address.');
+      await recordBridgeSuccess({ phase: 'command:setemail', updateId }).catch(() => {});
+      return res.json({ ok: true, handled: true });
+    }
+
+    if (lower === '/myemail') {
+      const preferred = await fetchPreferredEmail(chatId).catch(() => null);
+      const email = preferred || DEFAULT_EMAIL_TO || null;
+      await sendTelegramMessage(chatId, email
+        ? `Preferred email: ${email}`
+        : 'No preferred email saved yet. Use /setemail you@example.com');
+      await recordBridgeSuccess({ phase: 'command:myemail', updateId }).catch(() => {});
+      return res.json({ ok: true, handled: true });
+    }
+
+    if (lower.startsWith('/flight')) {
+      const payload = commandPayload(userText, 'flight');
+      if (!payload || !payload.includes('|')) {
+        await sendTelegramMessage(chatId, 'Usage: /flight <from> | <to> | <YYYY-MM-DD>');
+        await recordBridgeSuccess({ phase: 'command:flight:missing', updateId }).catch(() => {});
+        return res.json({ ok: true, handled: true });
+      }
+
+      const [fromRaw, toRaw, dateRaw] = payload.split('|').map((item) => String(item || '').trim());
+      if (!toRaw) {
+        await sendTelegramMessage(chatId, 'Please include at least a destination: /flight <from> | <to> | <YYYY-MM-DD>');
+        await recordBridgeSuccess({ phase: 'command:flight:destination-missing', updateId }).catch(() => {});
+        return res.json({ ok: true, handled: true });
+      }
+
+      const url = buildFlightLink({ from: fromRaw || null, to: toRaw, date: dateRaw || null });
+      await sendTelegramMessage(chatId, `Cheapest-flight lookup link:\n${url}`);
+      await recordBridgeSuccess({ phase: 'command:flight', updateId }).catch(() => {});
+      return res.json({ ok: true, handled: true });
+    }
+
     if (lower.startsWith('/email')) {
       const payload = parseEmailCommand(userText);
       if (!payload || !payload.subject || !payload.body) {
         const defaultHint = DEFAULT_EMAIL_TO ? ` Default recipient is ${DEFAULT_EMAIL_TO}.` : '';
-        await sendTelegramMessage(chatId, `Usage: /email to | subject | body${defaultHint}`);
+        await sendTelegramMessage(chatId, `Usage: /email to | subject | body (or /email subject | body after /setemail)${defaultHint}`);
         await recordBridgeSuccess({ phase: 'command:email:missing', updateId }).catch(() => {});
         return res.json({ ok: true, handled: true });
       }
 
-      if (!payload.to) {
+      const preferredEmail = await fetchPreferredEmail(chatId).catch(() => null);
+      const recipient = String(payload.to || preferredEmail || DEFAULT_EMAIL_TO || '').trim();
+
+      if (!recipient) {
         await sendTelegramMessage(chatId, 'No recipient configured. Set OPENCLAW_TELEGRAM_DEFAULT_EMAIL_TO or include the recipient in the command.');
         await recordBridgeSuccess({ phase: 'command:email:recipient-missing', updateId }).catch(() => {});
         return res.json({ ok: true, handled: true });
@@ -1169,7 +1352,7 @@ router.post('/telegram/updates', async (req, res) => {
       let emailResult = null;
       try {
         emailResult = await sendCustomEmail({
-          to: payload.to,
+          to: recipient,
           subject: payload.subject,
           text: [
             payload.body,
@@ -1181,16 +1364,54 @@ router.post('/telegram/updates', async (req, res) => {
           fromName: 'PVA Bazaar Assistant',
         });
       } catch (emailError) {
-        await sendTelegramMessage(chatId, `Email failed for ${payload.to}: ${String(emailError?.message || 'unknown error').slice(0, 180)}`);
-        await recordBridgeSuccess({ phase: 'command:email:error', updateId, to: payload.to }).catch(() => {});
+        await sendTelegramMessage(chatId, `Email failed for ${recipient}: ${String(emailError?.message || 'unknown error').slice(0, 180)}`);
+        await recordBridgeSuccess({ phase: 'command:email:error', updateId, to: recipient }).catch(() => {});
         return res.json({ ok: true, handled: true });
       }
 
       await sendTelegramMessage(chatId, emailResult?.success
-        ? `Email sent to ${payload.to}.`
-        : `Email request skipped for ${payload.to}.`);
-      await recordBridgeSuccess({ phase: 'command:email', updateId, to: payload.to }).catch(() => {});
+        ? `Email sent to ${recipient}.`
+        : `Email request skipped for ${recipient}.`);
+      await recordBridgeSuccess({ phase: 'command:email', updateId, to: recipient }).catch(() => {});
       return res.json({ ok: true, handled: true });
+    }
+
+    if (!lower.startsWith('/')) {
+      const inlineEmail = parseInlineEmail(userText);
+      if (inlineEmail) {
+        const saved = await storePreferredEmail(chatId, inlineEmail).catch(() => null);
+        if (saved) {
+          await sendTelegramMessage(chatId, `Saved your email as ${saved}. You can now use /email subject | body.`);
+          await recordBridgeSuccess({ phase: 'chat:inline-email', updateId, email: saved }).catch(() => {});
+          return res.json({ ok: true, handled: true });
+        }
+      }
+
+      if (/(remember this|save note|take note)/i.test(userText)) {
+        const stored = await storeNote(chatId, userText, 'note').catch(() => null);
+        if (stored) {
+          await sendTelegramMessage(chatId, 'Saved that note to your memory.');
+          await recordBridgeSuccess({ phase: 'chat:inline-note', updateId }).catch(() => {});
+          return res.json({ ok: true, handled: true });
+        }
+      }
+
+      const flightRequest = parseFlightRequest(userText);
+      if (flightRequest) {
+        if (!flightRequest.to) {
+          await sendTelegramMessage(
+            chatId,
+            'I can build a cheapest-flight link. Tell me destination (and optional origin/date), for example: cheapest flight from Kabul to Nairobi on 2026-06-15.',
+          );
+          await recordBridgeSuccess({ phase: 'chat:flight:follow-up', updateId }).catch(() => {});
+          return res.json({ ok: true, handled: true });
+        }
+
+        const url = buildFlightLink(flightRequest);
+        await sendTelegramMessage(chatId, `Cheapest-flight lookup link:\n${url}`);
+        await recordBridgeSuccess({ phase: 'chat:flight', updateId }).catch(() => {});
+        return res.json({ ok: true, handled: true });
+      }
     }
 
     if (lower === '/status') {
