@@ -21,13 +21,6 @@ const OPENCLAW_CHAT_TIMEOUT_MS = Math.min(
   25000,
 );
 const OPENCLAW_TELEGRAM_SOURCE = String(process.env.OPENCLAW_TELEGRAM_SOURCE || 'telegram-openclaw-webhook').trim();
-const OLLAMA_BASE_URL = String(process.env.OLLAMA_BASE_URL || process.env.OPENCLAW_OLLAMA_BASE_URL || '').trim().replace(/\/$/, '');
-const OLLAMA_MODEL = String(process.env.OLLAMA_MODEL || process.env.OPENCLAW_OLLAMA_MODEL || 'llama3.1').trim();
-const OLLAMA_TEMPERATURE = Math.min(Math.max(parseFloat(process.env.OLLAMA_TEMPERATURE || '0.35'), 0), 2);
-const OLLAMA_TIMEOUT_MS = Math.min(
-  Math.max(parseInt(process.env.OLLAMA_TIMEOUT_MS || process.env.OPENCLAW_OLLAMA_TIMEOUT_MS || '20000', 10), 3000),
-  45000,
-);
 const OPENAI_API_KEY = String(process.env.OPENAI_API_KEY || '').trim();
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 const OPENAI_MODEL = String(process.env.OPENAI_MODEL || 'gpt-4o-mini').trim() || 'gpt-4o-mini';
@@ -36,7 +29,7 @@ const OPENAI_TEMPERATURE = Math.min(
   2,
 );
 const OPENAI_TIMEOUT_MS = Math.min(
-  Math.max(parseInt(process.env.OPENAI_TIMEOUT_MS || process.env.OPENCLAW_OPENAI_TIMEOUT_MS || String(OLLAMA_TIMEOUT_MS), 10), 5000),
+  Math.max(parseInt(process.env.OPENAI_TIMEOUT_MS || process.env.OPENCLAW_OPENAI_TIMEOUT_MS || '20000', 10), 5000),
   60000,
 );
 const POLLINATIONS_API_URL = String(process.env.POLLINATIONS_API_URL || 'https://text.pollinations.ai').trim().replace(/\/$/, '');
@@ -854,48 +847,6 @@ async function requestPollinationsReply(userText, personaContext = null, persona
   return text ? String(text).trim().slice(0, 3500) : null;
 }
 
-async function requestOllamaChat(userPrompt) {
-  return axios.post(
-    `${OLLAMA_BASE_URL}/api/chat`,
-    {
-      model: OLLAMA_MODEL,
-      stream: false,
-      options: { temperature: OLLAMA_TEMPERATURE },
-      messages: [
-        {
-          role: 'system',
-          content: 'You are PVA Magnum Opus. Keep answers concise and operational.',
-        },
-        {
-          role: 'user',
-          content: userPrompt,
-        },
-      ],
-    },
-    {
-      timeout: OLLAMA_TIMEOUT_MS,
-      headers: { 'Content-Type': 'application/json' },
-    },
-  );
-}
-
-async function requestOllamaGenerate(userPrompt) {
-  return axios.post(
-    `${OLLAMA_BASE_URL}/api/generate`,
-    {
-      model: OLLAMA_MODEL,
-      stream: false,
-      options: { temperature: OLLAMA_TEMPERATURE },
-      prompt: userPrompt,
-      system: 'You are PVA Magnum Opus. Keep answers concise and operational.',
-    },
-    {
-      timeout: OLLAMA_TIMEOUT_MS,
-      headers: { 'Content-Type': 'application/json' },
-    },
-  );
-}
-
 async function generateOllamaFallbackReply(userText, apiBaseUrl, personaContext = null, personaRuntime = null) {
   const openclawStatus = await fetchOpenClawStatus(apiBaseUrl).catch(() => null);
   const prompt = [
@@ -918,44 +869,12 @@ async function generateOllamaFallbackReply(userText, apiBaseUrl, personaContext 
         return String(text).trim().slice(0, 3500);
       }
     } catch (_err) {
-      // fall back to Ollama if available
+      // fall through to online no-key provider
     }
   }
 
-  if (!OLLAMA_BASE_URL) return null;
-
-  const ollamaStatus = await fetchOpenClawStatus(apiBaseUrl).catch(() => null);
-  const ollamaPrompt = [
-    'You are PVA Magnum Opus, the Telegram assistant for PVA Bazaar.',
-    'You are a continuity agent that should feel like the same evolving identity over time.',
-    'Use persona context as the highest-priority style and identity guidance.',
-    `Active profile: ${personaRuntime?.profileId || 'default'}`,
-    `Active mode: ${personaRuntime?.activeMode || 'default'}`,
-    'Respond clearly and actionably.',
-    personaBlock(personaContext),
-    `User message: ${String(userText || '').slice(0, 3000)}`,
-    `Live status: ${ollamaStatus ? JSON.stringify(ollamaStatus).slice(0, 5000) : 'unavailable'}`,
-  ].join('\n\n');
-
-  try {
-    const response = await requestOllamaChat(ollamaPrompt);
-    const text = response.data?.message?.content || response.data?.response || null;
-    return text ? String(text).trim().slice(0, 3500) : null;
-  } catch (err) {
-    const status = err?.response?.status || 0;
-    if (status && status < 500) {
-      return null;
-    }
-  }
-
-  try {
-    const response = await requestOllamaGenerate(ollamaPrompt);
-    const text = response.data?.response || response.data?.message?.content || null;
-    return text ? String(text).trim().slice(0, 3500) : null;
-  } catch (_err) {
-    const onlineFallback = await requestPollinationsReply(userText, personaContext, personaRuntime).catch(() => null);
-    return onlineFallback ? String(onlineFallback).slice(0, 3500) : null;
-  }
+  const onlineFallback = await requestPollinationsReply(userText, personaContext, personaRuntime).catch(() => null);
+  return onlineFallback ? String(onlineFallback).slice(0, 3500) : null;
 }
 
 async function hasProcessedUpdate(updateId) {
