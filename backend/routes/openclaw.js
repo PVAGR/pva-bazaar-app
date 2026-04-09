@@ -1283,31 +1283,64 @@ router.post('/chat', async (req, res) => {
         }
       }
 
-      return res.json({
-        ok: true,
-        queued: true,
-        forwarded: false,
-        waiting: false,
-        reply: {
-          ok: true,
-          content: buildLocalAssistantReply(text),
-          source: 'local-fallback',
-          model: 'local-template-v1',
-        },
-        chatRequestId,
-        message: 'Local fallback reply generated.',
-        timestamp: new Date().toISOString(),
-      });
+      return res.status(forward.status || 502).json(forward);
     }
 
     if (!forward.forwarded) {
+      const outboundId = outbound ? outbound._id : null;
+      if (!outboundId) {
+        return res.json({
+          ok: true,
+          queued: true,
+          forwarded: false,
+          waiting: true,
+          chatRequestId,
+          message: 'Message queued. Waiting for remote responder output.',
+          timestamp: new Date().toISOString(),
+        });
+      }
+
+      const queuedReply = await waitForInboundReply(outboundId, chatRequestId, waitForReplyMs);
+      if (queuedReply.ok && !isEchoLikeReplyContent(queuedReply.content, text)) {
+        return res.json({
+          ok: true,
+          queued: true,
+          forwarded: false,
+          waiting: false,
+          chatRequestId,
+          reply: queuedReply,
+          timestamp: new Date().toISOString(),
+        });
+      }
+
+      if (OPENAI_API_KEY) {
+        const directReply = await requestOpenAIReply(text).catch(() => null);
+        if (directReply) {
+          return res.json({
+            ok: true,
+            queued: true,
+            forwarded: false,
+            waiting: false,
+            chatRequestId,
+            reply: {
+              ok: true,
+              content: directReply,
+              source: 'openai',
+              model: OPENAI_MODEL,
+            },
+            message: 'Cloud fallback reply generated.',
+            timestamp: new Date().toISOString(),
+          });
+        }
+      }
+
       return res.json({
         ok: true,
         queued: true,
         forwarded: false,
         waiting: true,
         chatRequestId,
-        message: 'Message queued. Configure webhook/gateway for live replies.',
+        message: 'Message queued. Waiting for remote responder output.',
         timestamp: new Date().toISOString(),
       });
     }
@@ -1352,15 +1385,9 @@ router.post('/chat', async (req, res) => {
         ok: true,
         queued: true,
         forwarded: forward.forwarded,
-        waiting: false,
+        waiting: true,
         chatRequestId,
-        reply: {
-          ok: true,
-          content: buildLocalAssistantReply(text),
-          source: 'local-fallback',
-          model: 'local-template-v1',
-        },
-        message: 'Local fallback reply generated.',
+        message: 'Responder returned placeholder output; waiting for final response.',
         timestamp: new Date().toISOString(),
       });
     }
@@ -1402,15 +1429,9 @@ router.post('/chat', async (req, res) => {
       ok: true,
       queued: true,
       forwarded: forward.forwarded,
-      waiting: false,
+      waiting: true,
       chatRequestId,
-      reply: {
-        ok: true,
-        content: buildLocalAssistantReply(text),
-        source: 'local-fallback',
-        model: 'local-template-v1',
-      },
-      message: 'Local fallback reply generated.',
+      message: 'Message sent. Waiting timed out; poll messages for agent reply.',
       timestamp: new Date().toISOString(),
     });
   } catch (err) {
