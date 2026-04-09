@@ -36,3 +36,17 @@ Backend:
 ## PR checks
 - No secrets in git history (Mongo URI, JWT, admin code)
 - Frontend builds successfully with production env
+
+## Debugging workflow
+When a debugging request is filed (issue template: `debugging_request.md`) or a user pastes broken code and asks for help, follow these steps in order:
+
+1. **Read the code carefully** — understand what the code is supposed to do before looking for errors.
+2. **Pinpoint the failure** — identify the exact line(s), function(s), or logic block(s) that are wrong. Be specific.
+3. **Explain the root cause** — describe in plain language *why* it fails (wrong type, off-by-one, missing await, incorrect scope, race condition, etc.). No vague answers.
+4. **Show the fixed code** — provide a corrected diff or full replacement that addresses the root cause. Keep changes minimal and surgical; do not rewrite unrelated code.
+5. **Explain the fix** — briefly state what changed and why that change solves the problem.
+
+Additional guidelines:
+- Point out any secondary issues or code smells discovered along the way, but distinguish them from the primary bug.
+- If the root cause cannot be determined from the snippet alone, state exactly what additional information or context is needed (stack trace, env vars, test input, etc.).
+- Do not sugarcoat; be direct about mistakes while remaining constructive.
