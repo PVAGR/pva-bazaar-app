@@ -17,6 +17,11 @@ const OPENAI_TIMEOUT_MS = Math.min(
   Math.max(parseInt(process.env.OPENAI_TIMEOUT_MS || process.env.OPENCLAW_OPENAI_TIMEOUT_MS || '20000', 10), 5000),
   60000,
 );
+const POLLINATIONS_API_URL = String(process.env.POLLINATIONS_API_URL || 'https://text.pollinations.ai').trim().replace(/\/$/, '');
+const POLLINATIONS_TIMEOUT_MS = Math.min(
+  Math.max(parseInt(process.env.POLLINATIONS_TIMEOUT_MS || '20000', 10), 5000),
+  60000,
+);
 
 const router = express.Router();
 
@@ -604,29 +609,6 @@ function buildOpenAIPrompt(messageText) {
   ].join('\n\n');
 }
 
-function buildLocalAssistantReply(messageText) {
-  const text = String(messageText || '').trim();
-  if (!text) {
-    return 'PVA assistant is online in local fallback mode. Send a prompt and I will respond directly.';
-  }
-
-  const lower = text.toLowerCase();
-  if (lower.includes('short story') || lower.includes('story')) {
-    return [
-      'In a quiet digital archive, a red kite icon blinked beside an unlabeled file.',
-      'An old curator script opened it and found a map of forgotten makers, each entry tied to a place and a promise.',
-      'By dawn, the archive had stitched those fragments into a living catalog that people could finally search and trust.',
-      'The red kite remained in the corner, a reminder that even lost records can find their way home.',
-    ].join(' ');
-  }
-
-  return [
-    'PVA assistant is running in local fallback mode right now.',
-    `You said: "${text.slice(0, 220)}".`,
-    'OpenAI/Ollama can be re-enabled later, but commands and chat are online now.',
-  ].join(' ');
-}
-
 async function requestOpenAIReply(messageText) {
   if (!OPENAI_API_KEY) return null;
 
@@ -657,6 +639,59 @@ async function requestOpenAIReply(messageText) {
 
   const text = response.data?.choices?.[0]?.message?.content || null;
   return text ? String(text).trim().slice(0, 3500) : null;
+}
+
+function buildPollinationsPrompt(messageText) {
+  return [
+    'You are PVA Magnum Opus, the assistant for PVA Bazaar.',
+    'Reply clearly and directly. Keep responses practical and concise.',
+    `User message: ${String(messageText || '').slice(0, 2000)}`,
+  ].join('\n\n');
+}
+
+async function requestPollinationsReply(messageText) {
+  if (!POLLINATIONS_API_URL) return null;
+
+  const prompt = buildPollinationsPrompt(messageText);
+  const response = await axios.get(
+    `${POLLINATIONS_API_URL}/${encodeURIComponent(prompt)}`,
+    {
+      timeout: POLLINATIONS_TIMEOUT_MS,
+      headers: {
+        Accept: 'text/plain, application/json;q=0.9, */*;q=0.8',
+      },
+    },
+  );
+
+  const data = response.data;
+  const text = typeof data === 'string'
+    ? data
+    : (data?.text || data?.output || data?.response || null);
+  return text ? String(text).trim().slice(0, 3500) : null;
+}
+
+async function requestOnlineFallbackReply(messageText) {
+  if (OPENAI_API_KEY) {
+    const openaiText = await requestOpenAIReply(messageText).catch(() => null);
+    if (openaiText) {
+      return {
+        content: openaiText,
+        source: 'openai',
+        model: OPENAI_MODEL,
+      };
+    }
+  }
+
+  const pollinationsText = await requestPollinationsReply(messageText).catch(() => null);
+  if (pollinationsText) {
+    return {
+      content: pollinationsText,
+      source: 'pollinations',
+      model: 'pollinations-text',
+    };
+  }
+
+  return null;
 }
 
 function isEchoLikeReplyContent(replyContent, userText) {
@@ -1262,25 +1297,23 @@ router.post('/chat', async (req, res) => {
 
     const forward = await forwardOutboundMessage(config, outbound, payload);
     if (!forward.ok) {
-      if (OPENAI_API_KEY) {
-        const directReply = await requestOpenAIReply(text).catch(() => null);
-        if (directReply) {
-          return res.json({
+      const onlineReply = await requestOnlineFallbackReply(text).catch(() => null);
+      if (onlineReply) {
+        return res.json({
+          ok: true,
+          queued: true,
+          forwarded: false,
+          waiting: false,
+          reply: {
             ok: true,
-            queued: true,
-            forwarded: false,
-            waiting: false,
-            reply: {
-              ok: true,
-              content: directReply,
-              source: 'openai',
-              model: OPENAI_MODEL,
-            },
-            chatRequestId,
-            message: 'Cloud fallback reply generated.',
-            timestamp: new Date().toISOString(),
-          });
-        }
+            content: onlineReply.content,
+            source: onlineReply.source,
+            model: onlineReply.model,
+          },
+          chatRequestId,
+          message: 'Online fallback reply generated.',
+          timestamp: new Date().toISOString(),
+        });
       }
 
       return res.status(forward.status || 502).json(forward);
@@ -1313,25 +1346,23 @@ router.post('/chat', async (req, res) => {
         });
       }
 
-      if (OPENAI_API_KEY) {
-        const directReply = await requestOpenAIReply(text).catch(() => null);
-        if (directReply) {
-          return res.json({
+      const onlineReply = await requestOnlineFallbackReply(text).catch(() => null);
+      if (onlineReply) {
+        return res.json({
+          ok: true,
+          queued: true,
+          forwarded: false,
+          waiting: false,
+          chatRequestId,
+          reply: {
             ok: true,
-            queued: true,
-            forwarded: false,
-            waiting: false,
-            chatRequestId,
-            reply: {
-              ok: true,
-              content: directReply,
-              source: 'openai',
-              model: OPENAI_MODEL,
-            },
-            message: 'Cloud fallback reply generated.',
-            timestamp: new Date().toISOString(),
-          });
-        }
+            content: onlineReply.content,
+            source: onlineReply.source,
+            model: onlineReply.model,
+          },
+          message: 'Online fallback reply generated.',
+          timestamp: new Date().toISOString(),
+        });
       }
 
       return res.json({
@@ -1360,25 +1391,23 @@ router.post('/chat', async (req, res) => {
 
     const reply = await waitForInboundReply(outboundId, chatRequestId, waitForReplyMs);
     if (reply.ok && isEchoLikeReplyContent(reply.content, text)) {
-      if (OPENAI_API_KEY) {
-        const directReply = await requestOpenAIReply(text).catch(() => null);
-        if (directReply) {
-          return res.json({
+      const onlineReply = await requestOnlineFallbackReply(text).catch(() => null);
+      if (onlineReply) {
+        return res.json({
+          ok: true,
+          queued: true,
+          forwarded: forward.forwarded,
+          waiting: false,
+          chatRequestId,
+          reply: {
             ok: true,
-            queued: true,
-            forwarded: forward.forwarded,
-            waiting: false,
-            chatRequestId,
-            reply: {
-              ok: true,
-              content: directReply,
-              source: 'openai',
-              model: OPENAI_MODEL,
-            },
-            message: 'Cloud fallback reply generated.',
-            timestamp: new Date().toISOString(),
-          });
-        }
+            content: onlineReply.content,
+            source: onlineReply.source,
+            model: onlineReply.model,
+          },
+          message: 'Online fallback reply generated.',
+          timestamp: new Date().toISOString(),
+        });
       }
 
       return res.json({
@@ -1404,25 +1433,23 @@ router.post('/chat', async (req, res) => {
       });
     }
 
-    if (OPENAI_API_KEY) {
-      const directReply = await requestOpenAIReply(text).catch(() => null);
-      if (directReply) {
-        return res.json({
+    const onlineReply = await requestOnlineFallbackReply(text).catch(() => null);
+    if (onlineReply) {
+      return res.json({
+        ok: true,
+        queued: true,
+        forwarded: forward.forwarded,
+        waiting: false,
+        chatRequestId,
+        reply: {
           ok: true,
-          queued: true,
-          forwarded: forward.forwarded,
-          waiting: false,
-          chatRequestId,
-          reply: {
-            ok: true,
-            content: directReply,
-            source: 'openai',
-            model: OPENAI_MODEL,
-          },
-          message: 'Cloud fallback reply generated.',
-          timestamp: new Date().toISOString(),
-        });
-      }
+          content: onlineReply.content,
+          source: onlineReply.source,
+          model: onlineReply.model,
+        },
+        message: 'Online fallback reply generated.',
+        timestamp: new Date().toISOString(),
+      });
     }
 
     return res.json({

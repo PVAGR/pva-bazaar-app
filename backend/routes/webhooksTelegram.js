@@ -39,6 +39,11 @@ const OPENAI_TIMEOUT_MS = Math.min(
   Math.max(parseInt(process.env.OPENAI_TIMEOUT_MS || process.env.OPENCLAW_OPENAI_TIMEOUT_MS || String(OLLAMA_TIMEOUT_MS), 10), 5000),
   60000,
 );
+const POLLINATIONS_API_URL = String(process.env.POLLINATIONS_API_URL || 'https://text.pollinations.ai').trim().replace(/\/$/, '');
+const POLLINATIONS_TIMEOUT_MS = Math.min(
+  Math.max(parseInt(process.env.POLLINATIONS_TIMEOUT_MS || '20000', 10), 5000),
+  60000,
+);
 const PERSONA_AUTO_LEARN = process.env.OPENCLAW_PERSONA_AUTO_LEARN !== 'false';
 const PERSONA_CONTEXT_LIMIT = Math.min(
   Math.max(parseInt(process.env.OPENCLAW_PERSONA_CONTEXT_LIMIT || '10', 10), 4),
@@ -724,6 +729,38 @@ async function requestOpenAIChat(userPrompt) {
   );
 }
 
+function buildPollinationsPrompt(userText, personaContext = null, personaRuntime = null) {
+  return [
+    'You are PVA Magnum Opus, the Telegram assistant for PVA Bazaar.',
+    `Active profile: ${personaRuntime?.profileId || 'default'}`,
+    `Active mode: ${personaRuntime?.activeMode || 'default'}`,
+    'Respond clearly and practically.',
+    personaBlock(personaContext),
+    `User message: ${String(userText || '').slice(0, 2000)}`,
+  ].join('\n\n');
+}
+
+async function requestPollinationsReply(userText, personaContext = null, personaRuntime = null) {
+  if (!POLLINATIONS_API_URL) return null;
+
+  const prompt = buildPollinationsPrompt(userText, personaContext, personaRuntime);
+  const response = await axios.get(
+    `${POLLINATIONS_API_URL}/${encodeURIComponent(prompt)}`,
+    {
+      timeout: POLLINATIONS_TIMEOUT_MS,
+      headers: {
+        Accept: 'text/plain, application/json;q=0.9, */*;q=0.8',
+      },
+    },
+  );
+
+  const data = response.data;
+  const text = typeof data === 'string'
+    ? data
+    : (data?.text || data?.output || data?.response || null);
+  return text ? String(text).trim().slice(0, 3500) : null;
+}
+
 async function requestOllamaChat(userPrompt) {
   return axios.post(
     `${OLLAMA_BASE_URL}/api/chat`,
@@ -823,7 +860,8 @@ async function generateOllamaFallbackReply(userText, apiBaseUrl, personaContext 
     const text = response.data?.response || response.data?.message?.content || null;
     return text ? String(text).trim().slice(0, 3500) : null;
   } catch (_err) {
-    return null;
+    const onlineFallback = await requestPollinationsReply(userText, personaContext, personaRuntime).catch(() => null);
+    return onlineFallback ? String(onlineFallback).slice(0, 3500) : null;
   }
 }
 
