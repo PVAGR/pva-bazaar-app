@@ -1322,6 +1322,25 @@ router.post('/chat', async (req, res) => {
     if (!forward.forwarded) {
       const outboundId = outbound ? outbound._id : null;
       if (!outboundId) {
+        const onlineReply = await requestOnlineFallbackReply(text).catch(() => null);
+        if (onlineReply) {
+          return res.json({
+            ok: true,
+            queued: true,
+            forwarded: false,
+            waiting: false,
+            chatRequestId,
+            reply: {
+              ok: true,
+              content: onlineReply.content,
+              source: onlineReply.source,
+              model: onlineReply.model,
+            },
+            message: 'Online fallback reply generated.',
+            timestamp: new Date().toISOString(),
+          });
+        }
+
         return res.json({
           ok: true,
           queued: true,
@@ -1378,6 +1397,25 @@ router.post('/chat', async (req, res) => {
 
     const outboundId = outbound ? outbound._id : null;
     if (!outboundId) {
+      const onlineReply = await requestOnlineFallbackReply(text).catch(() => null);
+      if (onlineReply) {
+        return res.json({
+          ok: true,
+          queued: true,
+          forwarded: forward.forwarded,
+          waiting: false,
+          chatRequestId,
+          reply: {
+            ok: true,
+            content: onlineReply.content,
+            source: onlineReply.source,
+            model: onlineReply.model,
+          },
+          message: 'Online fallback reply generated.',
+          timestamp: new Date().toISOString(),
+        });
+      }
+
       return res.json({
         ok: true,
         queued: true,
