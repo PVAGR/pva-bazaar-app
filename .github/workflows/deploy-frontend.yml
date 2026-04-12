@@ -95,8 +95,8 @@ jobs:
       - name: Capture asset manifest
         id: asset_manifest
         run: |
-          MAIN_JS=$(grep -o '/assets/[^"'"']*\.js' dist/index.html | head -n 1)
-          MAIN_CSS=$(grep -o '/assets/[^"'"']*\.css' dist/index.html | head -n 1)
+          MAIN_JS=$(node -e "const fs=require('fs');const html=fs.readFileSync('dist/index.html','utf8');const m=html.match(/\/assets\/[^\"']+\.js/);if(!m){process.exit(1)};process.stdout.write(m[0])")
+          MAIN_CSS=$(node -e "const fs=require('fs');const html=fs.readFileSync('dist/index.html','utf8');const m=html.match(/\/assets\/[^\"']+\.css/);if(!m){process.exit(1)};process.stdout.write(m[0])")
           if [ -z "$MAIN_JS" ] || [ -z "$MAIN_CSS" ]; then
             echo "Failed to parse main asset filenames from dist/index.html"
             exit 1
