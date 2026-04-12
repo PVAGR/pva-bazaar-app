@@ -102,27 +102,7 @@ jobs:
 
             python3 scripts/verify_artifact.py "$FILE_PATH" --json > /tmp/result.json 2>/dev/null || true
 
-            BODY=$(SLUG="$SLUG" python3 - <<'PY'
-      import json
-      import os
-
-      data = json.load(open('/tmp/result.json'))
-      print(
-        json.dumps(
-          {
-            'artifactIdOrSlug': os.environ.get('SLUG', ''),
-            'is_authentic': data.get('is_authentic', False),
-            'confidence_score': data.get('confidence_score', 0),
-            'computed_hash': data.get('computed_hash'),
-            'status': data.get('status', 'unknown'),
-            'message': data.get('message'),
-            'source': 'ci',
-            'matched_entry': data.get('matched_entry'),
-          }
-        )
-      )
-      PY
-      )
+            BODY=$(SLUG="$SLUG" python3 -c "import json, os; data = json.load(open('/tmp/result.json')); print(json.dumps({'artifactIdOrSlug': os.environ.get('SLUG', ''), 'is_authentic': data.get('is_authentic', False), 'confidence_score': data.get('confidence_score', 0), 'computed_hash': data.get('computed_hash'), 'status': data.get('status', 'unknown'), 'message': data.get('message'), 'source': 'ci', 'matched_entry': data.get('matched_entry')}))")
 
             CURL_OPTS=(-s -X POST "${API_URL}/api/verification" -H "Content-Type: application/json" -d "$BODY")
             if [ -n "$VERIFY_API_SECRET" ]; then
