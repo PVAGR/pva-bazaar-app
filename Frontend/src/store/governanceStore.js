@@ -484,6 +484,56 @@ export const useGovernanceStore = create(
         return true
       },
 
+      hydrateAdminResponses: (items = []) => {
+        if (!Array.isArray(items) || !items.length) return false
+
+        set((s) => {
+          const byProposal = new Map(
+            items
+              .filter((item) => item && item.proposalId)
+              .map((item) => [String(item.proposalId), item])
+          )
+
+          const proposals = s.proposals.map((proposal) => {
+            const response = byProposal.get(String(proposal.id))
+            if (!response) return proposal
+
+            let next = {
+              ...proposal,
+              status: normalizeDecisionStatus(response.decision) || proposal.status,
+              adminDecision: normalizeDecisionStatus(response.decision) || proposal.adminDecision || '',
+              adminReason: response.reason || proposal.adminReason || '',
+              nextStep: response.nextStep || proposal.nextStep || '',
+              targetTimeline: response.targetTimeline || proposal.targetTimeline || '',
+            }
+
+            if (response.executionBlock) {
+              next = {
+                ...next,
+                executionProject: {
+                  owner: response.executionBlock.owner || proposal.executionProject?.owner || '',
+                  milestones: Array.isArray(response.executionBlock.milestones)
+                    ? response.executionBlock.milestones
+                    : proposal.executionProject?.milestones || [],
+                  progressPercent: Number(response.executionBlock.progressPercent || 0),
+                  latestUpdate: response.executionBlock.latestUpdate || proposal.executionProject?.latestUpdate || '',
+                  completed: Boolean(response.executionBlock.completed),
+                },
+              }
+            }
+
+            return withDerivedFields(next)
+          })
+
+          return refreshStats({
+            ...s,
+            proposals,
+          })
+        })
+
+        return true
+      },
+
       setExecutionProject: (proposalId, payload = {}) => {
         set((s) => ({
           proposals: s.proposals.map((proposal) => {

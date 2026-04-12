@@ -1,5 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useGovernanceStore } from '../store/governanceStore';
+import { fetchGovernanceAdminResponses, upsertGovernanceAdminResponse } from '../lib/api';
 
 function parseMilestones(text) {
   return String(text || '')
@@ -14,10 +15,35 @@ export default function AdminGovernancePage() {
   const setAdminDecision = useGovernanceStore((state) => state.setAdminDecision);
   const setExecutionProject = useGovernanceStore((state) => state.setExecutionProject);
   const removeProposal = useGovernanceStore((state) => state.removeProposal);
+  const hydrateAdminResponses = useGovernanceStore((state) => state.hydrateAdminResponses);
 
   const [filter, setFilter] = useState('active');
   const [decisionForms, setDecisionForms] = useState({});
   const [executionForms, setExecutionForms] = useState({});
+  const [syncError, setSyncError] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadAdminResponses = async () => {
+      try {
+        const data = await fetchGovernanceAdminResponses();
+        if (cancelled) return;
+        if (data?.ok && Array.isArray(data.items) && data.items.length) {
+          hydrateAdminResponses(data.items);
+        }
+      } catch (_err) {
+        if (!cancelled) {
+          setSyncError('Unable to sync saved admin governance responses right now.');
+        }
+      }
+    };
+
+    loadAdminResponses();
+    return () => {
+      cancelled = true;
+    };
+  }, [hydrateAdminResponses]);
 
   const filteredProposals = useMemo(() => {
     if (filter === 'all') return proposals;
@@ -65,8 +91,22 @@ export default function AdminGovernancePage() {
     }));
   };
 
-  const applyDecision = (proposal) => {
+  const applyDecision = async (proposal) => {
     const form = getDecisionForm(proposal);
+    setSyncError('');
+
+    try {
+      await upsertGovernanceAdminResponse(proposal.id, {
+        decision: form.decision,
+        reason: form.reason,
+        nextStep: form.nextStep,
+        targetTimeline: form.targetTimeline,
+      });
+    } catch (_err) {
+      setSyncError('Failed to save decision to backend. Please retry.');
+      return;
+    }
+
     setAdminDecision(proposal.id, {
       decision: form.decision,
       reason: form.reason,
@@ -75,14 +115,33 @@ export default function AdminGovernancePage() {
     });
   };
 
-  const applyExecution = (proposal) => {
+  const applyExecution = async (proposal) => {
     const form = getExecutionForm(proposal);
-    setExecutionProject(proposal.id, {
+    setSyncError('');
+
+    const executionBlock = {
       owner: form.owner,
       milestones: parseMilestones(form.milestonesText),
       progressPercent: Number(form.progressPercent || 0),
       latestUpdate: form.latestUpdate,
       completed: Boolean(form.completed),
+    };
+
+    try {
+      await upsertGovernanceAdminResponse(proposal.id, {
+        executionBlock,
+      });
+    } catch (_err) {
+      setSyncError('Failed to save execution block to backend. Please retry.');
+      return;
+    }
+
+    setExecutionProject(proposal.id, {
+      owner: executionBlock.owner,
+      milestones: executionBlock.milestones,
+      progressPercent: executionBlock.progressPercent,
+      latestUpdate: executionBlock.latestUpdate,
+      completed: executionBlock.completed,
     });
   };
 
@@ -129,6 +188,22 @@ export default function AdminGovernancePage() {
           </button>
         ))}
       </div>
+
+      {syncError ? (
+        <div
+          role="alert"
+          style={{
+            marginBottom: '12px',
+            border: '1px solid var(--site-border)',
+            borderRadius: '10px',
+            background: 'var(--site-panel-soft)',
+            color: 'var(--site-text)',
+            padding: '10px 12px',
+          }}
+        >
+          {syncError}
+        </div>
+      ) : null}
 
       <div style={{ display: 'grid', gap: '14px' }}>
         {filteredProposals.map((proposal) => {

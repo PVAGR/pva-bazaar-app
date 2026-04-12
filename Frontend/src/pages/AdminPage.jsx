@@ -536,7 +536,16 @@ export default function AdminPage() {
       }
     } catch (err) {
       const msg = err?.response?.data?.message || err.message || 'Authentication failed.';
-      setError(msg);
+      const statusCode = err?.response?.status;
+      const maybeCapacityIssue = /quota|capacity|storage|space quota|disk full|enospc/i.test(String(msg || ''));
+      const isSignupCapacityFailure = authMode === 'signup' && (statusCode === 507 || maybeCapacityIssue);
+
+      if (isSignupCapacityFailure) {
+        setError('Admin self-signup is temporarily unavailable due to backend storage capacity. Existing admins can sign in now. Use "Create Admin Account" again later when capacity is restored.');
+        setAuthMode('login');
+      } else {
+        setError(msg);
+      }
       setPassword('');
     } finally {
       setIsSubmitting(false);

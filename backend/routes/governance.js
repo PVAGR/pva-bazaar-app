@@ -2,7 +2,9 @@ const express = require('express');
 const crypto = require('crypto');
 const { Web3 } = require('web3');
 const { authMiddleware } = require('../middleware/auth');
+const adminOnly = require('../middleware/adminOnly');
 const GovernanceProposal = require('../models/GovernanceProposal');
+const GovernanceAdminResponse = require('../models/GovernanceAdminResponse');
 const GovernanceProposalSupport = require('../models/GovernanceProposalSupport');
 const GovernanceVote = require('../models/GovernanceVote');
 const GovernanceWalletChallenge = require('../models/GovernanceWalletChallenge');
@@ -14,6 +16,7 @@ const web3 = new Web3();
 
 const ALLOWED_OUTCOMES = new Set(['accepted', 'planned', 'deferred', 'rejected']);
 const ALLOWED_VOTE_CHOICES = new Set(['yes', 'no', 'abstain']);
+const ALLOWED_ADMIN_DECISIONS = new Set(['public', 'conference_queue', 'accepted', 'rejected', 'needs_revision', 'in_execution', 'completed']);
 
 function sanitize(value) {
   if (typeof value !== 'string') return '';
@@ -43,6 +46,37 @@ function normalizeWalletAddress(value) {
 function normalizeTxHash(value) {
   const clean = String(value || '').trim().toLowerCase();
   return /^0x[a-f0-9]{64}$/.test(clean) ? clean : '';
+}
+
+function normalizeAdminDecision(value) {
+  const clean = sanitize(value).toLowerCase();
+  return ALLOWED_ADMIN_DECISIONS.has(clean) ? clean : '';
+}
+
+function sanitizeExecutionBlock(input) {
+  if (!input || typeof input !== 'object') return null;
+
+  const owner = sanitize(input.owner);
+  const latestUpdate = sanitize(input.latestUpdate);
+  const completed = Boolean(input.completed);
+  const progressPercent = Math.min(Math.max(Number(input.progressPercent || 0), 0), 100);
+  const milestones = Array.isArray(input.milestones)
+    ? input.milestones
+      .map((milestone, idx) => ({
+        id: sanitize(milestone?.id) || `M-${idx + 1}`,
+        title: sanitize(milestone?.title),
+        done: Boolean(milestone?.done),
+      }))
+      .filter((milestone) => Boolean(milestone.title))
+    : [];
+
+  return {
+    owner,
+    milestones,
+    progressPercent,
+    latestUpdate,
+    completed,
+  };
 }
 
 async function getVerifiedWalletForUser(userId) {
@@ -99,6 +133,72 @@ router.get('/proposals', async (req, res) => {
   } catch (error) {
     console.error('Error listing proposals:', error);
     return res.status(500).json({ ok: false, error: 'Failed to list proposals' });
+  }
+});
+
+router.get('/admin-responses', async (_req, res) => {
+  try {
+    const items = await GovernanceAdminResponse.find({})
+      .sort({ updatedAt: -1 })
+      .populate('updatedBy', 'name email role');
+    return res.json({ ok: true, items });
+  } catch (error) {
+    console.error('Error listing governance admin responses:', error);
+    return res.status(500).json({ ok: false, error: 'Failed to list governance admin responses' });
+  }
+});
+
+router.put('/admin-responses/:proposalId', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const proposalId = sanitize(req.params?.proposalId);
+    if (!proposalId) {
+      return res.status(400).json({ ok: false, error: 'proposalId is required' });
+    }
+
+    const update = {
+      updatedBy: req.user.id,
+    };
+
+    if (req.body?.decision !== undefined) {
+      const decision = normalizeAdminDecision(req.body.decision);
+      if (!decision) {
+        return res.status(400).json({ ok: false, error: 'Invalid admin decision value' });
+      }
+      update.decision = decision;
+    }
+
+    if (req.body?.reason !== undefined) {
+      update.reason = sanitize(req.body.reason);
+    }
+    if (req.body?.nextStep !== undefined) {
+      update.nextStep = sanitize(req.body.nextStep);
+    }
+    if (req.body?.targetTimeline !== undefined) {
+      update.targetTimeline = sanitize(req.body.targetTimeline);
+    }
+    if (req.body?.executionBlock !== undefined) {
+      update.executionBlock = sanitizeExecutionBlock(req.body.executionBlock);
+    }
+
+    const item = await GovernanceAdminResponse.findOneAndUpdate(
+      { proposalId },
+      {
+        $set: update,
+        $setOnInsert: {
+          proposalId,
+        },
+      },
+      {
+        upsert: true,
+        new: true,
+        runValidators: true,
+      }
+    ).populate('updatedBy', 'name email role');
+
+    return res.json({ ok: true, item });
+  } catch (error) {
+    console.error('Error saving governance admin response:', error);
+    return res.status(500).json({ ok: false, error: 'Failed to save governance admin response' });
   }
 });
 

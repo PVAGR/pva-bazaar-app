@@ -69,6 +69,9 @@ export const submitGovernanceOnChainVote = (proposalId, payload) =>
   apiPost(`/governance/proposals/${encodeURIComponent(proposalId)}/votes/onchain`, payload);
 export const fetchGovernanceVoteSummary = (proposalId) =>
   apiGet(`/governance/proposals/${encodeURIComponent(proposalId)}/votes/summary`);
+export const fetchGovernanceAdminResponses = () => apiGet('/governance/admin-responses');
+export const upsertGovernanceAdminResponse = (proposalId, payload) =>
+  apiPut(`/governance/admin-responses/${encodeURIComponent(proposalId)}`, payload);
 
 /**
  * Upload a FormData payload (multipart/form-data).

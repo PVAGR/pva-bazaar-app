@@ -82,6 +82,15 @@ router.post('/signup', async (req, res) => {
     if (!name || !email || !password) {
       return res.status(400).json({ ok: false, message: 'Name, email, and password are required' });
     }
+
+    if (String(process.env.ADMIN_SIGNUP_SIMULATE_CAPACITY_ERROR || '').toLowerCase() === 'true') {
+      return res.status(503).json({
+        ok: false,
+        message: 'Admin signup is temporarily unavailable due to backend capacity limits',
+        code: 'SIGNUP_CAPACITY_LIMIT',
+      });
+    }
+
     if (password.length < 8) {
       return res.status(400).json({ ok: false, message: 'Password must be at least 8 characters' });
     }

@@ -1,7 +1,8 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import ProposalForm from '../components/governance/ProposalForm.jsx';
 import ProposalCard from '../components/governance/ProposalCard.jsx';
 import { useGovernanceStore } from '../store/governanceStore';
+import { fetchGovernanceAdminResponses } from '../lib/api';
 import '../styles/governance.css';
 
 function useWallet() {
@@ -48,12 +49,34 @@ export default function PopularConferencePage() {
   const supportProposal = useGovernanceStore((state) => state.supportProposal);
   const addProposalComment = useGovernanceStore((state) => state.addProposalComment);
   const ensureCitizenMembership = useGovernanceStore((state) => state.ensureCitizenMembership);
+  const hydrateAdminResponses = useGovernanceStore((state) => state.hydrateAdminResponses);
 
   const { address, connect, isConnected } = useWallet();
 
   const [showForm, setShowForm] = useState(true);
   const [commentDrafts, setCommentDrafts] = useState({});
   const [filter, setFilter] = useState('all');
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadPersistedResponses = async () => {
+      try {
+        const data = await fetchGovernanceAdminResponses();
+        if (cancelled) return;
+        if (data?.ok && Array.isArray(data.items) && data.items.length) {
+          hydrateAdminResponses(data.items);
+        }
+      } catch (_err) {
+        // Keep conference available even if backend sync fails.
+      }
+    };
+
+    loadPersistedResponses();
+    return () => {
+      cancelled = true;
+    };
+  }, [hydrateAdminResponses]);
 
   const sortedProposals = useMemo(() => {
     return [...proposals]
