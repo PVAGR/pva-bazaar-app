@@ -103,8 +103,7 @@ export default function AdminGovernancePage() {
         targetTimeline: form.targetTimeline,
       });
     } catch (_err) {
-      setSyncError('Failed to save decision to backend. Please retry.');
-      return;
+      setSyncError('Backend persistence is unavailable right now. Decision was applied locally for continuity but is not yet authoritative across devices.');
     }
 
     setAdminDecision(proposal.id, {
@@ -132,8 +131,7 @@ export default function AdminGovernancePage() {
         executionBlock,
       });
     } catch (_err) {
-      setSyncError('Failed to save execution block to backend. Please retry.');
-      return;
+      setSyncError('Backend persistence is unavailable right now. Execution updates were saved locally for continuity but are not yet authoritative across devices.');
     }
 
     setExecutionProject(proposal.id, {
