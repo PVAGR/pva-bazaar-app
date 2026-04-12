@@ -27,6 +27,7 @@ import CheckoutSuccessPage from './pages/CheckoutSuccessPage.jsx';
 import CheckoutCancelPage from './pages/CheckoutCancelPage.jsx';
 import UserDashboard from './pages/UserDashboard.jsx';
 import PopularConferencePage from './pages/PopularConferencePage.jsx';
+import DownloadAppPage from './pages/DownloadAppPage.jsx';
 import useArchiveTheme from './hooks/useArchiveTheme.js';
 import './base.css';
 
@@ -75,6 +76,7 @@ export default function App() {
         <Route path="/marketplace/:slugOrId" element={<Layout><MarketplaceItemPage /></Layout>} />
         <Route path="/showroom" element={<Layout><ShowroomPage /></Layout>} />
         <Route path="/showroom/:slugOrId" element={<Layout><ShowroomItemPage /></Layout>} />
+        <Route path="/download-app" element={<Layout><DownloadAppPage /></Layout>} />
         <Route path="/checkout/success" element={<Layout><CheckoutSuccessPage /></Layout>} />
         <Route path="/checkout/cancel" element={<Layout><CheckoutCancelPage /></Layout>} />
         <Route path="*" element={<Navigate to="/library" replace />} />

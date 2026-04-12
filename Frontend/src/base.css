@@ -319,6 +319,73 @@ body {
   font-size: 0.95rem;
 }
 
+.download-app-card {
+  display: grid;
+  gap: 1rem;
+}
+
+.download-app-card h2 {
+  margin: 0;
+  color: var(--site-accent);
+  font-family: 'Merriweather', serif;
+}
+
+.download-app-card p {
+  margin: 0;
+}
+
+.download-status {
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  border: 1px solid var(--site-border);
+  background: var(--site-panel-soft);
+  color: var(--site-text);
+}
+
+.download-status--success {
+  border-color: var(--site-success-text);
+  background: var(--site-success-bg);
+  color: var(--site-success-text);
+}
+
+.download-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.download-actions .button:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.download-help-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 0.9rem;
+}
+
+.download-help-panel {
+  border: 1px solid var(--site-border);
+  border-radius: 12px;
+  background: var(--site-panel-soft);
+  padding: 0.9rem 1rem;
+}
+
+.download-help-panel h3 {
+  margin-top: 0;
+  margin-bottom: 0.65rem;
+  color: var(--site-accent);
+}
+
+.download-help-panel ol {
+  margin: 0;
+  padding-left: 1.15rem;
+  color: var(--site-text);
+  display: grid;
+  gap: 0.4rem;
+}
+
 .archive-group {
   margin-bottom: 1.25rem;
 }

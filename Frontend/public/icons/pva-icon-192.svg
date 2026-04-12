@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192" role="img" aria-label="PVA Bazaar app icon">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0a0e27" />
+      <stop offset="100%" stop-color="#111a3a" />
+    </linearGradient>
+  </defs>
+  <rect x="4" y="4" width="184" height="184" rx="40" fill="url(#bg)" />
+  <circle cx="96" cy="96" r="52" fill="none" stroke="#26c6da" stroke-width="10" />
+  <path d="M69 122V70h31c15 0 24 8 24 21s-9 21-24 21H82v10zM82 101h17c7 0 11-3 11-10s-4-10-11-10H82z" fill="#e0f2f1" />
+</svg>
