@@ -1,6 +1,6 @@
 const express = require('express');
 const crypto = require('crypto');
-const { verifyMessage } = require('ethers');
+const { Web3 } = require('web3');
 const { authMiddleware } = require('../middleware/auth');
 const GovernanceProposal = require('../models/GovernanceProposal');
 const GovernanceProposalSupport = require('../models/GovernanceProposalSupport');
@@ -10,6 +10,7 @@ const User = require('../models/User');
 const { createSystemEvent, dispatchToOpenClaw } = require('../utils/openclaw-events');
 
 const router = express.Router();
+const web3 = new Web3();
 
 const ALLOWED_OUTCOMES = new Set(['accepted', 'planned', 'deferred', 'rejected']);
 const ALLOWED_VOTE_CHOICES = new Set(['yes', 'no', 'abstain']);
@@ -366,7 +367,7 @@ router.post('/wallet/verify', authMiddleware, async (req, res) => {
       return res.status(400).json({ ok: false, error: 'Challenge expired' });
     }
 
-    const recoveredAddress = normalizeWalletAddress(verifyMessage(challenge.message, signature));
+    const recoveredAddress = normalizeWalletAddress(web3.eth.accounts.recover(challenge.message, signature));
     if (!recoveredAddress || recoveredAddress !== walletAddress) {
       return res.status(401).json({ ok: false, error: 'Signature verification failed' });
     }
