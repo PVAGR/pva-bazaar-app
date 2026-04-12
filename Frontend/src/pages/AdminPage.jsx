@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { apiGet, apiPost, fetchItemInquiries } from '../lib/api';
 import { ENV } from '../config/env';
 import { getErrorMessage } from '../lib/errorUtils';
@@ -35,6 +35,8 @@ import './AdminPage.css';
 const logger = createLogger('AdminPage');
 
 export default function AdminPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const availableTabs = new Set([
     'dashboard', 'orders', 'transactions', 'archive', 'marketplace', 'inquiries',
     'users', 'attribution', 'payouts', 'settlements', 'cloud', 'library', 'api',
@@ -88,6 +90,18 @@ export default function AdminPage() {
   const [inquiryCounts, setInquiryCounts] = useState({ new: 0, contacted: 0, reserved: 0, closed: 0, total: 0 });
   const [makeOrderModalOpen, setMakeOrderModalOpen] = useState(false);
 
+  const nextPath = useCallback(() => {
+    const params = new URLSearchParams(location.search || '');
+    const next = params.get('next') || '';
+
+    // Only allow internal admin sub-route redirects.
+    if (next.startsWith('/admin/') && !next.startsWith('/admin?')) {
+      return next;
+    }
+
+    return '';
+  }, [location.search]);
+
   // Check if already authenticated with NEW credentials system
   useEffect(() => {
     const auth = sessionStorage.getItem('admin-auth');
@@ -125,6 +139,13 @@ export default function AdminPage() {
     if (!isAuthenticated) return;
     localStorage.setItem('admin-active-tab', activeTab);
   }, [isAuthenticated, activeTab]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const target = nextPath();
+    if (!target) return;
+    navigate(target, { replace: true });
+  }, [isAuthenticated, navigate, nextPath]);
 
   useEffect(() => {
     if (!isAuthenticated) return undefined;
@@ -506,6 +527,11 @@ export default function AdminPage() {
       setBootstrapCode('');
       setPassword('');
       setError('');
+
+      const target = nextPath();
+      if (target) {
+        navigate(target, { replace: true });
+      }
     } catch (err) {
       const msg = err?.response?.data?.message || err.message || 'Authentication failed.';
       setError(msg);

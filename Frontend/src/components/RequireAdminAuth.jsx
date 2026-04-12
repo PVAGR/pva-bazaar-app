@@ -1,5 +1,5 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { getToken } from '../lib/auth';
 import { createLogger } from '../lib/logger';
 
@@ -13,11 +13,13 @@ const logger = createLogger('RequireAdminAuth');
  * Redirects unauthorized users to home page
  */
 export default function RequireAdminAuth({ children }) {
+  const location = useLocation();
   const token = getToken();
   if (!token) {
     logger.warn('Unauthorized access attempt to admin dashboard');
-    // Route to /admin so the admin login/bootstrap form is available.
-    return <Navigate to="/admin" replace />;
+    // Preserve the intended destination so successful admin login can resume navigation.
+    const requestedPath = `${location.pathname || '/admin'}${location.search || ''}`;
+    return <Navigate to={`/admin?next=${encodeURIComponent(requestedPath)}`} replace />;
   }
 
   // Token exists - allow access
