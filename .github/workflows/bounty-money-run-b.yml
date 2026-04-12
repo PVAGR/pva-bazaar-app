@@ -82,6 +82,7 @@ jobs:
           echo "payload=$PAYLOAD" >> "$GITHUB_OUTPUT"
 
       - name: Execute money run
+        id: execute
         run: |
           HTTP_STATUS=000
           for ATTEMPT in 1 2 3; do
@@ -104,11 +105,20 @@ jobs:
           cat /tmp/money_run_response.json || true
 
           if [ "$HTTP_STATUS" -ne 200 ]; then
+            RESPONSE_BODY=$(cat /tmp/money_run_response.json 2>/dev/null || true)
+            if echo "$RESPONSE_BODY" | grep -qi 'over your space quota'; then
+              echo "Quota-limited backend detected; marking as non-fatal skip."
+              echo "MONEY_RUN_SKIPPED=true" >> "$GITHUB_ENV"
+              exit 0
+            fi
             echo "Money run endpoint returned non-200: $HTTP_STATUS"
             exit 1
           fi
 
+          echo "MONEY_RUN_SKIPPED=false" >> "$GITHUB_ENV"
+
       - name: Validate response
+        if: env.MONEY_RUN_SKIPPED != 'true'
         id: validate
         run: |
           node -e "
@@ -127,7 +137,11 @@ jobs:
           WEBHOOK_URL: ${{ secrets.OPENCLAW_ALERT_WEBHOOK_URL }}
         if: env.WEBHOOK_URL != ''
         run: |
-          SUMMARY=$(cat /tmp/alert_summary.txt 2>/dev/null || echo 'Money Run B complete')
+          if [ "${MONEY_RUN_SKIPPED}" = "true" ]; then
+            SUMMARY="Money Run (B) skipped: backend storage quota is full"
+          else
+            SUMMARY=$(cat /tmp/alert_summary.txt 2>/dev/null || echo 'Money Run B complete')
+          fi
           PAYLOAD=$(node -e "process.stdout.write(JSON.stringify({
             text: '💸 *Bounty Money Run (B)* — ' + process.env.SUMMARY,
             username: 'OpenClaw',
