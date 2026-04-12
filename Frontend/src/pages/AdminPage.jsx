@@ -204,8 +204,10 @@ export default function AdminPage() {
           };
 
           setBootstrapStatus(nextStatus);
-          if (nextStatus.needsBootstrap || nextStatus.signupAllowed) {
+          if (nextStatus.needsBootstrap) {
             setAuthMode('signup');
+          } else {
+            setAuthMode('login');
           }
         }
       } catch (_err) {
