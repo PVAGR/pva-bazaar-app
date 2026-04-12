@@ -11,6 +11,7 @@ import {
 import { CHAIN_CONFIG, GOVERNANCE_ABI, ensureCorrectChain, getContract } from '../lib/contracts.js';
 import { OfflineSync } from '../lib/offlineSync.js';
 import ProofOfPersonhood from '../components/governance/ProofOfPersonhood.jsx';
+import { bindLanguageSync, getStoredLanguage, translate } from '../lib/i18n.js';
 import '../styles/governance.css';
 
 function useWallet() {
@@ -106,6 +107,11 @@ export default function PopularConferencePage() {
   const [txByProposalId, setTxByProposalId] = useState({});
   const [proposalFilter, setProposalFilter] = useState('all');
   const [proofOfPersonhood, setProofOfPersonhood] = useState(null);
+  const [lang, setLang] = useState(getStoredLanguage());
+
+  useEffect(() => bindLanguageSync(setLang), []);
+
+  const t = useMemo(() => (key) => translate(lang, key), [lang]);
 
   useEffect(() => {
     let cancelled = false;
@@ -421,15 +427,15 @@ export default function PopularConferencePage() {
           <div>
             <div className="gov-section-label">Civic Navigation</div>
             <div className="gov-nav-list">
-              <button type="button" className="active">🗳️ Popular Conference</button>
+              <button type="button" className="active">🗳️ {t('conference')}</button>
               <button type="button" onClick={() => setShowForm((current) => !current)}>
-                {showForm ? 'Hide proposal form' : 'Show proposal form'}
+                {showForm ? t('hideProposalForm') : t('showProposalForm')}
               </button>
             </div>
           </div>
 
           <div>
-            <div className="gov-section-label">Local Storage</div>
+            <div className="gov-section-label">{t('localStorage')}</div>
             <div className="gov-card">
               <div className="gov-detail-body">
                 Proposals are persisted in the browser with the pva-governance-store state key, so refreshes keep submitted items.
@@ -438,7 +444,7 @@ export default function PopularConferencePage() {
           </div>
 
           <div>
-            <div className="gov-section-label">Community Pulse</div>
+            <div className="gov-section-label">{t('communityPulse')}</div>
             <div className="gov-stats-grid">
               {statCards.map((card) => (
                 <div key={card.label} className="gov-stat-card">
@@ -453,7 +459,7 @@ export default function PopularConferencePage() {
         <main className="gov-main">
           <section className="gov-hero">
             <div className="gov-hero-eyebrow">Public governance forum</div>
-            <h1 className="gov-hero-title">🗳️ Popular Conference</h1>
+            <h1 className="gov-hero-title">🗳️ {t('conference')}</h1>
             <p className="gov-hero-sub">
               Submit civic proposals, gather upvotes, advance them through status badges, and keep the proposal board in browser storage across refreshes.
             </p>
@@ -464,13 +470,13 @@ export default function PopularConferencePage() {
                   onClick={handleConnectWallet}
                   className="gov-btn gov-btn-primary"
                 >
-                  🔗 Connect Wallet
+                  🔗 {t('connectWallet')}
                 </button>
               ) : (
-                <span>Connected: {truncateAddress(address)}</span>
+                <span>{t('connected')}: {truncateAddress(address)}</span>
               )}
               <button type="button" className="gov-btn gov-btn-primary" onClick={() => setShowForm((current) => !current)}>
-                {showForm ? 'Hide Proposal Form' : 'New Proposal'}
+                {showForm ? t('hideProposalForm') : t('newProposal')}
               </button>
               <button
                 type="button"
@@ -480,7 +486,7 @@ export default function PopularConferencePage() {
                 }}
                 disabled={!liveProposal}
               >
-                Upvote Featured Proposal
+                {t('upvoteFeatured')}
               </button>
               <button
                 type="button"
@@ -488,18 +494,18 @@ export default function PopularConferencePage() {
                 onClick={() => setProposalFilter('committee')}
                 style={proposalFilter === 'committee' ? { borderColor: 'var(--site-accent)' } : undefined}
               >
-                Committee Queue
+                {t('committeeQueue')}
               </button>
               {proposalFilter === 'committee' ? (
                 <button type="button" className="gov-btn gov-btn-ghost" onClick={() => setProposalFilter('all')}>
-                  Show All
+                  {t('showAll')}
                 </button>
               ) : null}
             </div>
             {feedbackMessage ? <p className="gov-hero-sub" style={{ marginTop: '0.65rem' }}>{feedbackMessage}</p> : null}
             {errorMessage ? <p className="gov-hero-sub" style={{ marginTop: '0.65rem', color: 'var(--site-danger-text)' }}>{errorMessage}</p> : null}
             <p className="gov-hero-sub" style={{ marginTop: '0.65rem' }}>
-              Role: {citizenRole} · Committee assignments: {committeeAssignments.length}
+              {t('role')}: {citizenRole} · {t('committeeAssignments')}: {committeeAssignments.length}
             </p>
           </section>
 
@@ -509,8 +515,8 @@ export default function PopularConferencePage() {
 
           {proofOfPersonhood ? (
             <div className="gov-card" style={{ marginBottom: '1rem' }}>
-              <div className="gov-detail-title">Proof of Personhood</div>
-              <div className="gov-detail-body">Verified via {proofOfPersonhood.method}.</div>
+              <div className="gov-detail-title">{t('proofOfPersonhood')}</div>
+              <div className="gov-detail-body">{t('verifiedVia')} {proofOfPersonhood.method}.</div>
             </div>
           ) : null}
 
@@ -531,7 +537,7 @@ export default function PopularConferencePage() {
           ) : null}
 
           <div className="gov-section-header">
-            <div className="gov-section-title">Proposal Board</div>
+            <div className="gov-section-title">{t('proposalBoard')}</div>
             <div className="gov-section-meta">{displayedProposals.length} proposals saved locally</div>
           </div>
 
@@ -544,7 +550,7 @@ export default function PopularConferencePage() {
             </div>
           </div>
 
-          <div className="gov-section-title" style={{ marginBottom: '0.75rem' }}>All proposals</div>
+          <div className="gov-section-title" style={{ marginBottom: '0.75rem' }}>{t('allProposals')}</div>
           <div className="gov-card" style={{ display: 'grid', gap: '0.9rem' }}>
             {filteredProposals.map((proposal) => (
               <div
@@ -595,7 +601,7 @@ export default function PopularConferencePage() {
           <section className="gov-live-widget">
             <div className="gov-live-badge">
               <span className="gov-live-dot" />
-              Live proposal
+              {t('liveProposal')}
             </div>
             {liveProposal ? (
               <>
@@ -606,12 +612,12 @@ export default function PopularConferencePage() {
                 <div className="gov-vote-tally">{liveProposal.endorsements.toLocaleString()} endorsements</div>
               </>
             ) : (
-              <div className="gov-widget-desc">No proposals are currently loaded.</div>
+              <div className="gov-widget-desc">{t('noProposalsLoaded')}</div>
             )}
           </section>
 
           <section className="gov-card">
-            <div className="gov-section-title" style={{ marginBottom: '0.75rem' }}>Status badges</div>
+            <div className="gov-section-title" style={{ marginBottom: '0.75rem' }}>{t('statusBadges')}</div>
             <div className="gov-card-meta">
               <span className="gov-tag gov-tag-draft">Draft {stageCounts.draft}</span>
               <span className="gov-tag gov-tag-endorsed">Endorsed {stageCounts.endorsed}</span>

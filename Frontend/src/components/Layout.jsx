@@ -1,42 +1,61 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import useArchiveTheme from '../hooks/useArchiveTheme.js';
 import OpenClawFloatingAssistant from './OpenClawFloatingAssistant.jsx';
 import { PUBLIC_ROUTES } from '../config/publicRoutes';
+import { getToken } from '../lib/auth';
+import { LANGUAGE_OPTIONS, bindLanguageSync, getStoredLanguage, setStoredLanguage, translate } from '../lib/i18n.js';
 
-const translations = {
-  en: {
-    conference: 'Popular Conference',
-    propose: 'Submit a Proposal',
-    problem: 'What problem does this solve?',
-    solution: 'What is your proposed solution?',
-    outcome: 'What outcome do you expect?',
-    connectWallet: 'Connect Wallet',
-    treasury: 'Treasury',
-  },
-  sw: {
-    conference: 'Mkutano Maarufu',
-    propose: 'Wasilisha Pendekezo',
-    problem: 'Tatizo gani hili linatatua?',
-    solution: 'Suluhisho lako ni lipi?',
-    outcome: 'Matokeo gani unatarajia?',
-    connectWallet: 'Unganisha Poketi',
-    treasury: 'Hazina',
-  },
+const ROUTE_LABEL_KEYS = {
+  home: 'home',
+  archive: 'archive',
+  'civilization-library': 'civilization',
+  'career-quiz': 'careerQuiz',
+  marketplace: 'marketplace',
+  showroom: 'showroom',
+  conference: 'conference',
+  forum: 'forum',
+  'governance-conference': 'govConference',
+  'governance-treasury': 'treasury',
+  'download-app': 'downloadApp',
+  creator: 'creator',
+  about: 'about',
+  deploy: 'deploy',
+  'admin-governance': 'admin',
+};
+
+const iconPrefix = (label) => {
+  const firstToken = String(label || '').trim().split(' ')[0] || '';
+  return /[\u{1F300}-\u{1FAFF}\u2600-\u27BF]/u.test(firstToken) ? `${firstToken} ` : '';
 };
 
 export default function Layout({ children }) {
   const { darkMode, toggleTheme } = useArchiveTheme();
   const location = useLocation();
-  const defaultLang = import.meta.env.VITE_DEFAULT_LANG === 'sw' ? 'sw' : 'en';
-  const [lang, setLang] = useState(globalThis.localStorage?.getItem('pva-lang') || defaultLang);
-  const t = useMemo(() => translations[lang] || translations.en, [lang]);
+  const hasAdminAccess = Boolean(getToken());
+  const [lang, setLang] = useState(getStoredLanguage());
 
-  const toggleLang = () => {
-    const next = lang === 'en' ? 'sw' : 'en';
+  useEffect(() => {
+    globalThis.document?.documentElement?.setAttribute('lang', lang);
+  }, [lang]);
+
+  useEffect(() => bindLanguageSync(setLang), []);
+
+  const t = useMemo(() => (key) => translate(lang, key), [lang]);
+
+  const navRoutes = useMemo(() => {
+    const routes = [
+      ...PUBLIC_ROUTES,
+      { key: 'deploy', to: '/deploy', navLabel: '🚀 Deploy' },
+      { key: 'admin-governance', to: '/admin/governance', navLabel: '🛡️ Admin', protected: true, adminOnly: true },
+    ];
+
+    return routes.filter((route) => !(route.adminOnly && !hasAdminAccess));
+  }, [hasAdminAccess]);
+
+  const handleLanguageChange = (event) => {
+    const next = setStoredLanguage(event.target.value);
     setLang(next);
-    globalThis.localStorage?.setItem('pva-lang', next);
-    globalThis.document?.documentElement?.setAttribute('lang', next);
   };
 
   return (
@@ -45,15 +64,14 @@ export default function Layout({ children }) {
       <header className="layout__header">
         <NavLink to="/" end className="layout__brand layout__brandLink" aria-label="PVA Bazaar home">
           <div className="layout__title">pvabazaar.org</div>
-          <div className="layout__tagline">Archive · Commerce · Governance · {t.conference}</div>
+          <div className="layout__tagline">{t('siteTagline')}</div>
         </NavLink>
         <nav className="layout__nav" aria-label="Primary">
-          {PUBLIC_ROUTES.map((route) => (
+          {navRoutes.map((route) => (
             <NavLink key={route.key} to={route.to} end={route.to === '/'}>
-              {route.navLabel}
+              {iconPrefix(route.navLabel)}{t(ROUTE_LABEL_KEYS[route.key] || route.navLabel)}
             </NavLink>
           ))}
-          <NavLink to="/deploy">🚀 Deploy</NavLink>
         </nav>
         <button
           type="button"
@@ -62,24 +80,37 @@ export default function Layout({ children }) {
           aria-label="Toggle theme"
           title="Toggle theme"
         >
-          {darkMode ? '☀️ Light' : '🌙 Dark'}
+          {darkMode ? `☀️ ${t('themeLight')}` : `🌙 ${t('themeDark')}`}
         </button>
-        <button
-          type="button"
-          onClick={toggleLang}
+        <label
           style={{
-            background: 'transparent',
-            border: '1px solid var(--site-border)',
-            color: 'var(--site-text-primary)',
-            padding: '6px 12px',
-            borderRadius: '6px',
-            cursor: 'pointer',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
             fontSize: '14px',
           }}
-          title="Toggle language"
         >
-          {lang === 'en' ? 'Kiswahili' : 'English'}
-        </button>
+          <span>{t('language')}:</span>
+          <select
+            value={lang}
+            onChange={handleLanguageChange}
+            title="Select language"
+            style={{
+              background: 'var(--site-panel-soft)',
+              border: '1px solid var(--site-border)',
+              color: 'var(--site-text)',
+              padding: '6px 8px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+            }}
+          >
+            {LANGUAGE_OPTIONS.map((option) => (
+              <option key={option.code} value={option.code}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
       </header>
       <main id="content" className="layout__main">
         {children}

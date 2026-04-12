@@ -318,6 +318,38 @@ export const useGovernanceStore = create(
         set((s) => ({ citizen: { ...s.citizen, votes: s.citizen.votes + 1 } }))
       },
 
+      setProposalStatus: (id, status) => {
+        const toStage = (nextStatus) => {
+          if (nextStatus === 'conference') return 'panel'
+          return nextStatus
+        }
+
+        set((s) => ({
+          proposals: s.proposals.map((p) => {
+            if (p.id !== id) return p
+            return {
+              ...p,
+              stage: toStage(status),
+              lifecycle:
+                status === 'draft' ? 1
+                  : status === 'endorsed' ? 2
+                    : status === 'conference' || status === 'panel' ? 3
+                      : status === 'vote' ? 4
+                        : status === 'passed' || status === 'rejected' ? 5
+                          : p.lifecycle,
+            }
+          }),
+        }))
+
+        get().addTicker(`Moderation update · ${id} → ${status}`)
+      },
+
+      removeProposal: (id) => {
+        set((s) => ({ proposals: s.proposals.filter((p) => p.id !== id) }))
+        get().addTicker(`Proposal removed · ${id}`)
+        get().showToast(`Removed proposal ${id}`)
+      },
+
       // ── UI helpers
       addTicker: (msg) => {
         const hash = `0x${Math.random().toString(16).substr(2, 4)}`
@@ -344,3 +376,5 @@ export const useGovernanceStore = create(
     }
   )
 )
+
+export const useStore = useGovernanceStore

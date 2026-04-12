@@ -1,9 +1,10 @@
 import AdminOrdersPage from './pages/AdminOrdersPage.jsx';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Layout from './components/Layout.jsx';
 import RequireAdminAuth from './components/RequireAdminAuth.jsx';
 import { getToken } from './lib/auth';
+import { Telemetry } from './lib/telemetry';
 
 import AboutPage from './pages/AboutPage.jsx';
 import ArchiveLibraryPage from './pages/ArchiveLibraryPage.jsx';
@@ -30,6 +31,7 @@ import UserDashboard from './pages/UserDashboard.jsx';
 import PopularConferencePage from './pages/PopularConferencePage.jsx';
 import TreasuryPage from './pages/TreasuryPage.jsx';
 import DeployPage from './pages/DeployPage.jsx';
+import AdminGovernancePage from './pages/AdminGovernancePage.jsx';
 import DownloadAppPage from './pages/DownloadAppPage.jsx';
 import ForumPage from './pages/Forum.jsx';
 import { GovernanceConferencePage, GovernanceTreasuryPage } from './pages/OtherPages.jsx';
@@ -50,6 +52,10 @@ function RequireUserAuth({ children }) {
 export default function App() {
   useArchiveTheme();
 
+  useEffect(() => {
+    Telemetry.trackPageView(globalThis.location?.hash || '#/');
+  }, []);
+
   return (
     <HashRouter>
       <Routes>
@@ -57,6 +63,7 @@ export default function App() {
         <Route path="/admin" element={<AdminPage />} />
         {/* Protected admin sub-routes */}
         <Route path="/admin/orders" element={<RequireAdminAuth><AdminOrdersPage /></RequireAdminAuth>} />
+        <Route path="/admin/governance" element={<RequireAdminAuth><AdminGovernancePage /></RequireAdminAuth>} />
 
         {/* User Dashboard - Protected */}
         <Route path="/dashboard" element={<RequireUserAuth><UserDashboard /></RequireUserAuth>} />
