@@ -119,12 +119,14 @@ jobs:
       
       - name: Install dependencies
         working-directory: ./Frontend
-        run: npm install --no-audit --no-fund
+        run: npm ci || npm install --no-audit --no-fund
       
       - name: Build frontend
         working-directory: ./Frontend
         env:
-          VITE_API_URL: ${{ secrets.VITE_API_URL_STAGING }}
+          VITE_API_URL: ${{ secrets.VITE_API_URL_STAGING || 'https://api.pvabazaar.org/api' }}
+          VITE_CLOUDINARY_CLOUD_NAME: ${{ secrets.VITE_CLOUDINARY_CLOUD_NAME || vars.VITE_CLOUDINARY_CLOUD_NAME || '' }}
+          VITE_CLOUDINARY_UPLOAD_PRESET: ${{ secrets.VITE_CLOUDINARY_UPLOAD_PRESET || vars.VITE_CLOUDINARY_UPLOAD_PRESET || '' }}
         run: npm run build
       
       - name: Upload build artifacts
