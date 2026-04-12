@@ -10,6 +10,9 @@
     <link rel="canonical" href="https://pvabazaar.org/" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <meta name="description" content="pvabazaar.org — A Life in Words. A modern personal journal and archive of entries across places and time." />
+    <meta name="llm:readable" content="true" />
+    <meta name="llm:content-url" content="https://pvabazaar.org/llms.txt" />
+    <meta name="llm:snapshot-url" content="https://pvabazaar.org/readable-site.json" />
     <title>pvabazaar.org — Personal Journal</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -87,8 +90,57 @@
         }
       }, 3500);
     </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "PVA Bazaar",
+        "url": "https://pvabazaar.org/",
+        "description": "PVA Bazaar archive, marketplace, showroom, and civilization library.",
+        "hasPart": [
+          {
+            "@type": "WebPage",
+            "name": "Archive Library",
+            "url": "https://pvabazaar.org/#/library"
+          },
+          {
+            "@type": "WebPage",
+            "name": "Marketplace",
+            "url": "https://pvabazaar.org/#/marketplace"
+          },
+          {
+            "@type": "WebPage",
+            "name": "Showroom",
+            "url": "https://pvabazaar.org/#/showroom"
+          },
+          {
+            "@type": "WebPage",
+            "name": "Civilization Library",
+            "url": "https://pvabazaar.org/#/civilization-library"
+          }
+        ]
+      }
+    </script>
   </head>
   <body>
+    <article id="llm-readable-content" aria-label="PVA Bazaar readable summary" style="display:block;max-width:980px;margin:0 auto;padding:1rem 1.2rem;color:#e0f2f1;line-height:1.5;">
+      <h1 style="font-family:'Merriweather',serif;color:#26c6da;margin:0 0 0.55rem;">PVA Bazaar Readable Site Summary</h1>
+      <p style="margin:0 0 0.75rem;color:#b2dfdb;">This website is a client-side single-page app. The live interactive UI is rendered by JavaScript, but this section is intentionally static so crawlers and AI fetch tools can read core structure without JS.</p>
+      <h2 style="font-family:'Merriweather',serif;color:#26c6da;font-size:1.1rem;margin:0.7rem 0 0.4rem;">Primary Routes</h2>
+      <ul style="margin:0 0 0.75rem 1.1rem;padding:0;color:#e0f2f1;">
+        <li>Archive Library: https://pvabazaar.org/#/library</li>
+        <li>Marketplace: https://pvabazaar.org/#/marketplace</li>
+        <li>Showroom: https://pvabazaar.org/#/showroom</li>
+        <li>Civilization Library: https://pvabazaar.org/#/civilization-library</li>
+      </ul>
+      <h2 style="font-family:'Merriweather',serif;color:#26c6da;font-size:1.1rem;margin:0.7rem 0 0.4rem;">Machine-Readable Endpoints</h2>
+      <ul style="margin:0 0 0.75rem 1.1rem;padding:0;color:#e0f2f1;">
+        <li>LLM index: https://pvabazaar.org/llms.txt</li>
+        <li>Readable snapshot JSON: https://pvabazaar.org/readable-site.json</li>
+        <li>Sitemap: https://pvabazaar.org/sitemap.xml</li>
+      </ul>
+      <p style="margin:0 0 0.9rem;color:#b2dfdb;">If a fetch tool only sees a loading shell, it should parse llms.txt or readable-site.json for stable content and route mapping.</p>
+    </article>
     <div id="root" role="main"></div>
     <div id="app-shell-fallback" hidden>
       <div class="fallback-panel">

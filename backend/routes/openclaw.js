@@ -558,6 +558,71 @@ async function saveMessage(payload) {
   }
 }
 
+function normalizeSessionId(value) {
+  const raw = String(value || '').trim().toLowerCase();
+  if (!raw) return '';
+  return raw.replace(/[^a-z0-9:_-]/g, '-').slice(0, 120);
+}
+
+function coerceMemoryText(value, max = 10000) {
+  if (value === undefined || value === null) return '';
+  return String(value).trim().slice(0, max);
+}
+
+async function writeWebsiteSessionMemory({ sessionId, key, value, type = 'reflection', source = 'website-openclaw' }) {
+  if (!sessionId || !key || value === undefined || value === null) return null;
+
+  await dbConnect();
+  const OpenClawMemory = require('../models/OpenClawMemory');
+  return OpenClawMemory.create({
+    key: String(key).slice(0, 500),
+    value: coerceMemoryText(value, 10000),
+    type: ['fact', 'goal', 'reflection', 'preference'].includes(type) ? type : 'reflection',
+    source: String(source || 'website-openclaw').trim().slice(0, 120),
+    channel: 'website-openclaw',
+    profileId: sessionId,
+    pinned: false,
+    score: 1,
+    tags: ['website', 'session-memory'],
+  });
+}
+
+async function persistWebsiteConversationMemory({ sessionId, message, reply, pathName = '', source = 'website-openclaw-chat' }) {
+  if (!sessionId) return;
+
+  const trimmedPath = String(pathName || '').trim().slice(0, 180);
+  const nowIso = new Date().toISOString();
+  const writes = [];
+
+  if (message) {
+    writes.push(
+      writeWebsiteSessionMemory({
+        sessionId,
+        key: `website:session:${sessionId}:user-message`,
+        value: JSON.stringify({ text: String(message).slice(0, 3000), path: trimmedPath || null, timestamp: nowIso }),
+        type: 'reflection',
+        source,
+      }),
+    );
+  }
+
+  if (reply) {
+    writes.push(
+      writeWebsiteSessionMemory({
+        sessionId,
+        key: `website:session:${sessionId}:assistant-reply`,
+        value: JSON.stringify({ text: String(reply).slice(0, 3000), path: trimmedPath || null, timestamp: nowIso }),
+        type: 'reflection',
+        source,
+      }),
+    );
+  }
+
+  if (writes.length) {
+    await Promise.allSettled(writes);
+  }
+}
+
 async function markOutboundForwardSuccess(messageId, statusCode) {
   await dbConnect();
   const OpenClawMessage = require('../models/OpenClawMessage');
@@ -1503,6 +1568,356 @@ router.post('/chat', async (req, res) => {
     return res.status(500).json({
       ok: false,
       message: 'Failed to process OpenClaw chat request',
+      detail: err.message,
+    });
+  }
+});
+
+router.post('/public/pulse', async (req, res) => {
+  const sessionId = normalizeSessionId(req.body?.sessionId);
+  if (!sessionId) {
+    return res.status(400).json({
+      ok: false,
+      message: 'sessionId is required',
+    });
+  }
+
+  const pathName = String(req.body?.path || '').trim().slice(0, 180);
+  const pageTitle = String(req.body?.title || '').trim().slice(0, 180);
+  const referrer = String(req.body?.referrer || '').trim().slice(0, 220);
+
+  try {
+    await writeWebsiteSessionMemory({
+      sessionId,
+      key: `website:session:${sessionId}:presence`,
+      value: JSON.stringify({
+        path: pathName || null,
+        title: pageTitle || null,
+        referrer: referrer || null,
+        timestamp: new Date().toISOString(),
+      }),
+      type: 'fact',
+      source: 'website-openclaw-pulse',
+    });
+
+    return res.json({
+      ok: true,
+      sessionId,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err) {
+    return res.status(500).json({
+      ok: false,
+      message: 'Failed to record website pulse',
+      error: err.message,
+    });
+  }
+});
+
+router.get('/public/memory', async (req, res) => {
+  const sessionId = normalizeSessionId(req.query.sessionId);
+  if (!sessionId) {
+    return res.status(400).json({
+      ok: false,
+      message: 'sessionId is required',
+    });
+  }
+
+  const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 25, 1), 60);
+  try {
+    await dbConnect();
+    const OpenClawMemory = require('../models/OpenClawMemory');
+
+    const docs = await OpenClawMemory.find({
+      profileId: sessionId,
+      channel: 'website-openclaw',
+      key: { $regex: '^website:session:' },
+    })
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .lean();
+
+    return res.json({
+      ok: true,
+      sessionId,
+      memory: docs.map((item) => ({
+        id: item._id.toString(),
+        key: item.key,
+        value: String(item.value || '').slice(0, 1200),
+        type: item.type,
+        source: item.source,
+        createdAt: item.createdAt,
+      })),
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err) {
+    return res.status(500).json({
+      ok: false,
+      message: 'Failed to load website memory',
+      error: err.message,
+    });
+  }
+});
+
+router.post('/public-chat', async (req, res) => {
+  const config = getConfig();
+  const sessionId = normalizeSessionId(req.body?.sessionId);
+  const text = String(req.body?.message || '').trim().slice(0, 1200);
+  const waitForReplyMs = req.body?.waitForReplyMs;
+  const pathName = String(req.body?.path || '').trim().slice(0, 180);
+  const source = String(req.body?.source || 'website-openclaw-widget').trim().slice(0, 120) || 'website-openclaw-widget';
+
+  if (!sessionId) {
+    return res.status(400).json({ ok: false, message: 'sessionId is required' });
+  }
+  if (!text) {
+    return res.status(400).json({ ok: false, message: 'message is required' });
+  }
+
+  const chatRequestId = crypto.randomUUID();
+  const outboundEvent = 'pvabazaar.website.chat';
+  const rawMetadata = (req.body && typeof req.body.metadata === 'object' && !Array.isArray(req.body.metadata))
+    ? req.body.metadata
+    : {};
+  const metadata = {
+    ...rawMetadata,
+    source,
+    sessionId,
+    path: pathName || null,
+    chatRequestId,
+    timestamp: new Date().toISOString(),
+  };
+
+  try {
+    const outbound = await saveMessage({
+      direction: 'outbound',
+      content: text,
+      event: outboundEvent,
+      source,
+      processed: false,
+      metadata,
+    });
+
+    const payload = {
+      source: 'pvabazaar-backend',
+      message: text,
+      event: outboundEvent,
+      metadata: {
+        ...metadata,
+        outboundMessageId: outbound ? outbound._id.toString() : null,
+      },
+      timestamp: new Date().toISOString(),
+    };
+
+    const forward = await forwardOutboundMessage(config, outbound, payload);
+    if (!forward.ok) {
+      const onlineReply = await requestOnlineFallbackReply(text).catch(() => null);
+      if (onlineReply) {
+        await persistWebsiteConversationMemory({
+          sessionId,
+          message: text,
+          reply: onlineReply.content,
+          pathName,
+          source,
+        });
+
+        return res.json({
+          ok: true,
+          queued: true,
+          forwarded: false,
+          waiting: false,
+          reply: {
+            ok: true,
+            content: onlineReply.content,
+            source: onlineReply.source,
+            model: onlineReply.model,
+          },
+          chatRequestId,
+          sessionId,
+          message: 'Online fallback reply generated.',
+          timestamp: new Date().toISOString(),
+        });
+      }
+
+      await persistWebsiteConversationMemory({ sessionId, message: text, pathName, source });
+      return res.status(forward.status || 502).json(forward);
+    }
+
+    if (!forward.forwarded) {
+      const outboundId = outbound ? outbound._id : null;
+      if (!outboundId) {
+        const onlineReply = await requestOnlineFallbackReply(text).catch(() => null);
+        if (onlineReply) {
+          await persistWebsiteConversationMemory({
+            sessionId,
+            message: text,
+            reply: onlineReply.content,
+            pathName,
+            source,
+          });
+
+          return res.json({
+            ok: true,
+            queued: true,
+            forwarded: false,
+            waiting: false,
+            sessionId,
+            chatRequestId,
+            reply: {
+              ok: true,
+              content: onlineReply.content,
+              source: onlineReply.source,
+              model: onlineReply.model,
+            },
+            message: 'Online fallback reply generated.',
+            timestamp: new Date().toISOString(),
+          });
+        }
+
+        await persistWebsiteConversationMemory({ sessionId, message: text, pathName, source });
+        return res.json({
+          ok: true,
+          queued: true,
+          forwarded: false,
+          waiting: true,
+          sessionId,
+          chatRequestId,
+          message: 'Message queued. Waiting for remote responder output.',
+          timestamp: new Date().toISOString(),
+        });
+      }
+
+      const queuedReply = await waitForInboundReply(outboundId, chatRequestId, waitForReplyMs);
+      if (queuedReply.ok && !isEchoLikeReplyContent(queuedReply.content, text)) {
+        await persistWebsiteConversationMemory({
+          sessionId,
+          message: text,
+          reply: queuedReply.content,
+          pathName,
+          source,
+        });
+
+        return res.json({
+          ok: true,
+          queued: true,
+          forwarded: false,
+          waiting: false,
+          sessionId,
+          chatRequestId,
+          reply: queuedReply,
+          timestamp: new Date().toISOString(),
+        });
+      }
+
+      const onlineReply = await requestOnlineFallbackReply(text).catch(() => null);
+      if (onlineReply) {
+        await persistWebsiteConversationMemory({
+          sessionId,
+          message: text,
+          reply: onlineReply.content,
+          pathName,
+          source,
+        });
+
+        return res.json({
+          ok: true,
+          queued: true,
+          forwarded: false,
+          waiting: false,
+          sessionId,
+          chatRequestId,
+          reply: {
+            ok: true,
+            content: onlineReply.content,
+            source: onlineReply.source,
+            model: onlineReply.model,
+          },
+          message: 'Online fallback reply generated.',
+          timestamp: new Date().toISOString(),
+        });
+      }
+
+      await persistWebsiteConversationMemory({ sessionId, message: text, pathName, source });
+      return res.json({
+        ok: true,
+        queued: true,
+        forwarded: false,
+        waiting: true,
+        sessionId,
+        chatRequestId,
+        message: 'Message queued. Waiting for remote responder output.',
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    const outboundId = outbound ? outbound._id : null;
+    if (outboundId) {
+      const reply = await waitForInboundReply(outboundId, chatRequestId, waitForReplyMs);
+      if (reply.ok && !isEchoLikeReplyContent(reply.content, text)) {
+        await persistWebsiteConversationMemory({
+          sessionId,
+          message: text,
+          reply: reply.content,
+          pathName,
+          source,
+        });
+
+        return res.json({
+          ok: true,
+          queued: true,
+          forwarded: true,
+          waiting: false,
+          sessionId,
+          chatRequestId,
+          reply,
+          timestamp: new Date().toISOString(),
+        });
+      }
+
+      const onlineReply = await requestOnlineFallbackReply(text).catch(() => null);
+      if (onlineReply) {
+        await persistWebsiteConversationMemory({
+          sessionId,
+          message: text,
+          reply: onlineReply.content,
+          pathName,
+          source,
+        });
+
+        return res.json({
+          ok: true,
+          queued: true,
+          forwarded: true,
+          waiting: false,
+          sessionId,
+          chatRequestId,
+          reply: {
+            ok: true,
+            content: onlineReply.content,
+            source: onlineReply.source,
+            model: onlineReply.model,
+          },
+          message: 'Online fallback reply generated.',
+          timestamp: new Date().toISOString(),
+        });
+      }
+    }
+
+    await persistWebsiteConversationMemory({ sessionId, message: text, pathName, source });
+    return res.json({
+      ok: true,
+      queued: true,
+      forwarded: forward.forwarded,
+      waiting: true,
+      sessionId,
+      chatRequestId,
+      message: 'Message sent. Waiting timed out; try again in a few seconds.',
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err) {
+    return res.status(500).json({
+      ok: false,
+      message: 'Failed to process public OpenClaw chat request',
       detail: err.message,
     });
   }

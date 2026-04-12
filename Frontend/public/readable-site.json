@@ -1,0 +1,46 @@
+{
+  "site": {
+    "name": "PVA Bazaar",
+    "url": "https://pvabazaar.org",
+    "type": "spa",
+    "framework": "react-vite",
+    "router": "hash"
+  },
+  "machineReadable": {
+    "llms": "https://pvabazaar.org/llms.txt",
+    "sitemap": "https://pvabazaar.org/sitemap.xml",
+    "status": "https://pvabazaar.org/status.html"
+  },
+  "sections": [
+    {
+      "name": "Archive Library",
+      "path": "#/library",
+      "url": "https://pvabazaar.org/#/library",
+      "description": "Archive entries and long-form content library."
+    },
+    {
+      "name": "Marketplace",
+      "path": "#/marketplace",
+      "url": "https://pvabazaar.org/#/marketplace",
+      "description": "Artifacts, listings, and commerce pages."
+    },
+    {
+      "name": "Showroom",
+      "path": "#/showroom",
+      "url": "https://pvabazaar.org/#/showroom",
+      "description": "Curated display surfaces and item showcases."
+    },
+    {
+      "name": "Civilization Library",
+      "path": "#/civilization-library",
+      "url": "https://pvabazaar.org/#/civilization-library",
+      "description": "Knowledge and civilization-focused content hub."
+    }
+  ],
+  "guidanceForFetchers": [
+    "If the root page appears as a loading shell, parse llms.txt and readable-site.json.",
+    "Use hash route URLs exactly as listed for section intent.",
+    "Use sitemap.xml for static standalone pages under /writings and status routes."
+  ],
+  "updatedAt": "2026-04-12T00:00:00Z"
+}

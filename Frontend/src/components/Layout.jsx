@@ -1,9 +1,11 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import useArchiveTheme from '../hooks/useArchiveTheme.js';
+import OpenClawFloatingAssistant from './OpenClawFloatingAssistant.jsx';
 
 export default function Layout({ children }) {
   const { darkMode, toggleTheme } = useArchiveTheme();
+  const location = useLocation();
 
   return (
     <div className="layout">
@@ -37,6 +39,7 @@ export default function Layout({ children }) {
       <main id="content" className="layout__main">
         {children}
       </main>
+      <OpenClawFloatingAssistant routePath={location.pathname || '/'} />
       <footer className="layout__footer">
         © {new Date().getFullYear()} · pvabazaar.org
       </footer>
