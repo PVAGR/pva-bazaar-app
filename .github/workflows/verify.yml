@@ -77,11 +77,16 @@ jobs:
           echo "All artifacts verified."
 
       - name: Store verification results (optional)
-        if: env.artifact_count != '0' && secrets.VERIFY_API_URL != ''
+        if: env.artifact_count != '0'
         env:
           VERIFY_API_URL: ${{ secrets.VERIFY_API_URL }}
           VERIFY_API_SECRET: ${{ secrets.VERIFY_API_SECRET }}
         run: |
+          if [ -z "$VERIFY_API_URL" ]; then
+            echo "VERIFY_API_URL is not set; skipping result storage."
+            exit 0
+          fi
+
           if [ ! -s /tmp/verified.txt ]; then
             echo "No verified artifacts to store."
             exit 0
