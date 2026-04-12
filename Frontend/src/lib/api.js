@@ -51,6 +51,25 @@ export const fetchTransactions = (limit = 10) => apiGet('/transactions', { param
 export const fetchAdminTransactions = (limit = 25) =>
   apiGet('/admin/transactions/recent', { params: { limit } });
 
+export const fetchGovernanceProposals = (params = {}) => apiGet('/governance/proposals', { params });
+export const fetchGovernanceProposalById = (proposalId) =>
+  apiGet(`/governance/proposals/${encodeURIComponent(proposalId)}`);
+export const createGovernanceProposal = (payload) => apiPost('/governance/proposals', payload);
+export const toggleGovernanceProposalSupport = (proposalId) =>
+  apiPost(`/governance/proposals/${encodeURIComponent(proposalId)}/support`, {});
+export const queueGovernanceProposal = (proposalId, payload) =>
+  apiPost(`/governance/proposals/${encodeURIComponent(proposalId)}/queue`, payload);
+export const publishGovernanceProposalOutcome = (proposalId, payload) =>
+  apiPost(`/governance/proposals/${encodeURIComponent(proposalId)}/outcome`, payload);
+export const createGovernanceWalletChallenge = (walletAddress) =>
+  apiPost('/governance/wallet/challenge', { walletAddress });
+export const verifyGovernanceWalletChallenge = (payload) =>
+  apiPost('/governance/wallet/verify', payload);
+export const submitGovernanceOnChainVote = (proposalId, payload) =>
+  apiPost(`/governance/proposals/${encodeURIComponent(proposalId)}/votes/onchain`, payload);
+export const fetchGovernanceVoteSummary = (proposalId) =>
+  apiGet(`/governance/proposals/${encodeURIComponent(proposalId)}/votes/summary`);
+
 /**
  * Upload a FormData payload (multipart/form-data).
  * Uses native fetch so the browser can set the correct Content-Type boundary.

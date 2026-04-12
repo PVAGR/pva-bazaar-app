@@ -1,0 +1,163 @@
+.popular-conference {
+  display: grid;
+  gap: 1rem;
+}
+
+.pc-hero {
+  border: 1px solid var(--site-border);
+  border-radius: 14px;
+  padding: 1rem 1.1rem;
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--site-accent) 18%, transparent), transparent 52%),
+    linear-gradient(160deg, color-mix(in srgb, var(--site-panel-soft) 92%, transparent), color-mix(in srgb, var(--site-panel) 96%, transparent));
+}
+
+.pc-hero h1 {
+  margin: 0;
+  color: var(--site-accent);
+  font-family: 'Merriweather', serif;
+}
+
+.pc-hero p {
+  margin: 0.45rem 0 0;
+  color: var(--site-text-muted);
+}
+
+.pc-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 1rem;
+}
+
+.pc-card {
+  border: 1px solid var(--site-border);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--site-panel) 96%, transparent);
+  padding: 0.95rem;
+}
+
+.pc-card h2 {
+  margin: 0 0 0.75rem;
+  color: var(--site-accent);
+  font-size: 1.15rem;
+}
+
+.pc-form {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.pc-form label {
+  color: var(--site-text-muted);
+  font-size: 0.9rem;
+}
+
+.pc-form input,
+.pc-form textarea,
+.pc-form select {
+  font: inherit;
+  border-radius: 10px;
+  border: 1px solid var(--site-border);
+  padding: 0.55rem 0.65rem;
+  background: color-mix(in srgb, var(--site-panel-soft) 88%, transparent);
+  color: var(--site-text);
+}
+
+.pc-form textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+
+.pc-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 0.35rem;
+}
+
+.pc-btn {
+  border: 1px solid var(--site-border);
+  border-radius: 10px;
+  padding: 0.45rem 0.75rem;
+  background: color-mix(in srgb, var(--site-panel-soft) 92%, transparent);
+  color: var(--site-text);
+  cursor: pointer;
+}
+
+.pc-btn:hover:not(:disabled) {
+  border-color: var(--site-accent);
+  background: color-mix(in srgb, var(--site-accent) 14%, transparent);
+}
+
+.pc-btn.primary {
+  background: var(--site-accent);
+  color: #03171d;
+  border-color: color-mix(in srgb, var(--site-accent) 80%, var(--site-border));
+  font-weight: 700;
+}
+
+.pc-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.pc-list {
+  display: grid;
+  gap: 0.6rem;
+  max-height: 650px;
+  overflow: auto;
+  padding-right: 0.25rem;
+}
+
+.pc-item {
+  border: 1px solid var(--site-border);
+  border-radius: 12px;
+  padding: 0.75rem;
+  background: color-mix(in srgb, var(--site-panel-soft) 92%, transparent);
+}
+
+.pc-item h3 {
+  margin: 0;
+  color: var(--site-text);
+  font-size: 1rem;
+}
+
+.pc-meta {
+  margin-top: 0.2rem;
+  color: var(--site-text-muted);
+  font-size: 0.85rem;
+}
+
+.pc-pill {
+  display: inline-flex;
+  border: 1px solid var(--site-border);
+  border-radius: 999px;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.78rem;
+  color: var(--site-text-muted);
+  background: color-mix(in srgb, var(--site-panel-soft) 82%, transparent);
+}
+
+.pc-error {
+  border: 1px solid color-mix(in srgb, var(--site-danger-text) 55%, var(--site-border));
+  background: var(--site-danger-bg);
+  color: var(--site-danger-text);
+  border-radius: 10px;
+  padding: 0.6rem 0.7rem;
+  font-size: 0.9rem;
+}
+
+.pc-success {
+  border: 1px solid color-mix(in srgb, var(--site-success-text) 55%, var(--site-border));
+  background: var(--site-success-bg);
+  color: var(--site-success-text);
+  border-radius: 10px;
+  padding: 0.6rem 0.7rem;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 980px) {
+  .pc-grid {
+    grid-template-columns: 1fr;
+  }
+}

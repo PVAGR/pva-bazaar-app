@@ -1,0 +1,42 @@
+name: Web App CI
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - "apps/pva-bazaar-web/**"
+      - ".github/workflows/web-next.yml"
+      - "package-lock.json"
+      - "package.json"
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - "apps/pva-bazaar-web/**"
+      - ".github/workflows/web-next.yml"
+      - "package-lock.json"
+      - "package.json"
+
+jobs:
+  build-next-web:
+    name: Build Next Web App
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: "package-lock.json"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck web app
+        run: npm run typecheck:web
+
+      - name: Build web app
+        run: npm run build:web
