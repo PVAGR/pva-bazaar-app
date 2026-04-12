@@ -28,6 +28,8 @@ import CheckoutCancelPage from './pages/CheckoutCancelPage.jsx';
 import UserDashboard from './pages/UserDashboard.jsx';
 import PopularConferencePage from './pages/PopularConferencePage.jsx';
 import DownloadAppPage from './pages/DownloadAppPage.jsx';
+import ForumPage from './pages/Forum.jsx';
+import { GovernanceConferencePage, GovernanceTreasuryPage } from './pages/OtherPages.jsx';
 import useArchiveTheme from './hooks/useArchiveTheme.js';
 import './base.css';
 
@@ -72,6 +74,9 @@ export default function App() {
         <Route path="/civilization-library" element={<Layout><CivilizationLibraryPage /></Layout>} />
         <Route path="/career-quiz" element={<Layout><CareerQuizPage /></Layout>} />
         <Route path="/about" element={<Layout><AboutPage /></Layout>} />
+        <Route path="/forum" element={<Layout><ForumPage /></Layout>} />
+        <Route path="/governance/conference" element={<Layout><GovernanceConferencePage /></Layout>} />
+        <Route path="/governance/treasury" element={<Layout><GovernanceTreasuryPage /></Layout>} />
         <Route path="/marketplace" element={<Layout><MarketplacePage /></Layout>} />
         <Route path="/marketplace/:slugOrId" element={<Layout><MarketplaceItemPage /></Layout>} />
         <Route path="/showroom" element={<Layout><ShowroomPage /></Layout>} />
