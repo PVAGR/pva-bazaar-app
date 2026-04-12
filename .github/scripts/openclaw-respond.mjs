@@ -15,6 +15,16 @@ const QUEUE_FETCH_MAX_RETRIES = Math.min(Math.max(parseInt(process.env.OPENCLAW_
 const QUEUE_FETCH_BASE_DELAY_MS = Math.min(Math.max(parseInt(process.env.OPENCLAW_QUEUE_FETCH_BASE_DELAY_MS || '1000', 10), 250), 10000);
 const QUEUE_FETCH_MAX_DELAY_MS = Math.min(Math.max(parseInt(process.env.OPENCLAW_QUEUE_FETCH_MAX_DELAY_MS || '60000', 10), 1000), 120000);
 const REPO = process.env.GITHUB_REPOSITORY || 'PVAGR/pva-bazaar-app';
+const LOGIC_MODE_ALIASES = new Set(['logic', 'logic-mode', 'logical', 'analysis']);
+
+const LOGIC_KNOWLEDGE_PACK = [
+  'Logic knowledge pack (public, non-personal):',
+  '- Atbash cipher: map A<->Z, B<->Y ... and preserve non-letters.',
+  '- Gematria (Hebrew standard): common letter values include א=1, ב=2, ג=3 ... י=10, כ=20 ... ק=100, ר=200, ש=300, ת=400.',
+  '- Gematria (Latin adaptation): if user requests Latin, default A1Z26 unless they specify another table.',
+  '- Cipher workflow: normalize text, state alphabet/table assumptions, show steps, then provide final interpretation.',
+  '- Keep objective transforms (cipher/math) separate from speculative interpretation.',
+].join('\n');
 
 if (!BACKEND_URL) {
   console.warn('OPENCLAW_BACKEND_URL is not set — skipping agent run.');
@@ -242,17 +252,84 @@ async function writeHeartbeat(source, details = {}) {
 async function getAgentConfig() {
   try {
     const response = await fetch(`${BACKEND_URL}/api/openclaw/agent-config`, { headers: getHeaders(true) });
-    if (!response.ok) return { globalDirectives: [], goals: [] };
+    if (!response.ok) {
+      return {
+        globalDirectives: [],
+        goals: [],
+        activeMode: 'default',
+        personaProfileId: 'default',
+        modeProfiles: [],
+      };
+    }
     const data = await response.json();
     return {
       globalDirectives: Array.isArray(data.globalDirectives)
         ? data.globalDirectives
         : (Array.isArray(data.creatorCommands) ? data.creatorCommands : []),
       goals: Array.isArray(data.goals) ? data.goals : [],
+      activeMode: String(data.activeMode || 'default').trim().toLowerCase(),
+      personaProfileId: String(data.personaProfileId || 'default').trim().toLowerCase() || 'default',
+      modeProfiles: Array.isArray(data.modeProfiles) ? data.modeProfiles : [],
     };
   } catch (_err) {
-    return { globalDirectives: [], goals: [] };
+    return {
+      globalDirectives: [],
+      goals: [],
+      activeMode: 'default',
+      personaProfileId: 'default',
+      modeProfiles: [],
+    };
   }
+}
+
+function normalizeModeName(value) {
+  return String(value || 'default').trim().toLowerCase();
+}
+
+function resolveModeRuntime(agentConfig) {
+  const activeMode = normalizeModeName(agentConfig?.activeMode);
+  const profileId = String(agentConfig?.personaProfileId || 'default').trim().toLowerCase() || 'default';
+  const modeProfiles = Array.isArray(agentConfig?.modeProfiles) ? agentConfig.modeProfiles : [];
+  const profile = modeProfiles.find((item) => normalizeModeName(item?.name) === activeMode) || null;
+
+  const modeDirectives = Array.isArray(profile?.directives)
+    ? profile.directives.map((item) => String(item || '').trim()).filter(Boolean)
+    : [];
+  const modeGoals = Array.isArray(profile?.goals)
+    ? profile.goals.map((item) => String(item || '').trim()).filter(Boolean)
+    : [];
+
+  return {
+    activeMode,
+    profileId,
+    isLogicMode: LOGIC_MODE_ALIASES.has(activeMode),
+    modeStyle: String(profile?.style || '').trim(),
+    modeDirectives,
+    modeGoals,
+  };
+}
+
+function filterMemoryForMode(memory, modeRuntime) {
+  const items = Array.isArray(memory) ? memory : [];
+  const profileId = String(modeRuntime?.profileId || 'default').toLowerCase();
+
+  return items
+    .filter((item) => {
+      const key = String(item?.key || '').toLowerCase();
+      const itemProfileId = String(item?.profileId || '').toLowerCase();
+
+      if (key.startsWith('conversation_') || key.startsWith('conversation_error_')) return false;
+
+      if (modeRuntime?.isLogicMode) {
+        if (key.startsWith('persona:')) return false;
+        if (itemProfileId) return false;
+      }
+
+      if (key.startsWith('persona:') && itemProfileId && itemProfileId !== profileId) return false;
+
+      return true;
+    })
+    .slice(0, 25);
 }
 
 async function getMemorySnapshot(limit = 30) {
@@ -320,23 +397,51 @@ function resolveOllamaRuntime(snapshot) {
   };
 }
 
-function buildSystemPrompt(agentConfig) {
+function buildSystemPrompt(agentConfig, modeRuntime) {
   const parts = [BASE_SYSTEM_PROMPT];
-  if (agentConfig.globalDirectives?.length) {
+  const mergedDirectives = [
+    ...(Array.isArray(agentConfig?.globalDirectives) ? agentConfig.globalDirectives : []),
+    ...(Array.isArray(modeRuntime?.modeDirectives) ? modeRuntime.modeDirectives : []),
+  ];
+  const mergedGoals = [
+    ...(Array.isArray(agentConfig?.goals) ? agentConfig.goals : []),
+    ...(Array.isArray(modeRuntime?.modeGoals) ? modeRuntime.modeGoals : []),
+  ];
+
+  parts.push('');
+  parts.push(`Active mode: ${modeRuntime?.activeMode || 'default'}`);
+
+  if (modeRuntime?.isLogicMode) {
+    parts.push('');
+    parts.push('Logic mode policy:');
+    parts.push('- Never reveal or infer private creator/persona history.');
+    parts.push('- Use only the current user message for personal context.');
+    parts.push('- Prioritize explicit reasoning, assumptions, and step-by-step transforms.');
+    parts.push('- For ciphers/symbolic systems, show method first, conclusion second.');
+    parts.push(LOGIC_KNOWLEDGE_PACK);
+  }
+
+  if (modeRuntime?.modeStyle) {
+    parts.push('');
+    parts.push('Mode style:');
+    parts.push(modeRuntime.modeStyle);
+  }
+
+  if (mergedDirectives.length) {
     parts.push('');
     parts.push('Global directives:');
-    parts.push(...agentConfig.globalDirectives.map((c) => `- ${c}`));
+    parts.push(...mergedDirectives.map((c) => `- ${c}`));
     parts.push('---');
   }
-  if (agentConfig.goals?.length) {
+  if (mergedGoals.length) {
     parts.push('');
     parts.push('Current goals to pursue:');
-    parts.push(...agentConfig.goals.map((g) => `- ${g}`));
+    parts.push(...mergedGoals.map((g) => `- ${g}`));
   }
   return parts.join('\n');
 }
 
-function buildUserPrompt(userText, snapshot, memory) {
+function buildUserPrompt(userText, snapshot, memory, modeRuntime) {
   const lines = [
     'User message:',
     userText,
@@ -349,6 +454,11 @@ function buildUserPrompt(userText, snapshot, memory) {
     memory.slice(0, 25).forEach((m) => {
       lines.push(`- [${m.type}] ${m.key}: ${m.value}`);
     });
+  }
+  if (modeRuntime?.isLogicMode) {
+    lines.push('');
+    lines.push('Logic mode reminder: Do not reference private persona memories.');
+    lines.push('If personal details are needed, ask the user to provide them now.');
   }
   lines.push('', 'Use snapshot and memory when answering. Be concrete and current.');
   return lines.join('\n');
@@ -363,8 +473,10 @@ async function generateReply(message) {
     getOperationalSnapshot(),
   ]);
 
-  const systemPrompt = buildSystemPrompt(agentConfig);
-  const userPrompt = buildUserPrompt(userText, snapshot, memory);
+  const modeRuntime = resolveModeRuntime(agentConfig);
+  const filteredMemory = filterMemoryForMode(memory, modeRuntime);
+  const systemPrompt = buildSystemPrompt(agentConfig, modeRuntime);
+  const userPrompt = buildUserPrompt(userText, snapshot, filteredMemory, modeRuntime);
   const ollamaRuntime = resolveOllamaRuntime(snapshot);
 
   if (ollamaRuntime.baseUrl) {

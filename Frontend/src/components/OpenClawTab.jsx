@@ -1053,6 +1053,14 @@ export default function OpenClawTab() {
             >
               {modeSaving ? 'Switching...' : 'Switch to Default'}
             </button>
+            <button
+              type="button"
+              className="oc-btn oc-btn--secondary"
+              onClick={() => setPersonaMode('logic')}
+              disabled={modeSaving}
+            >
+              {modeSaving ? 'Switching...' : 'Switch to Logic'}
+            </button>
             {(agentConfig.modeProfiles || []).slice(0, 6).map((profile) => (
               <button
                 key={profile.name}
@@ -1094,7 +1102,7 @@ export default function OpenClawTab() {
               className="oc-message-input"
               value={personaIngestText}
               onChange={(event) => setPersonaIngestText(event.target.value)}
-              placeholder="Write a core memory, directive, belief, or personal signal to absorb into Rick Taur."
+              placeholder="Write shared directives or user-provided context. Avoid storing private creator-only details."
               rows={3}
             />
             <div className="oc-dispatch-row" style={{ marginTop: 8 }}>
