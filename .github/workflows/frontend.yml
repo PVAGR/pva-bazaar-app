@@ -128,6 +128,23 @@ jobs:
           VITE_CLOUDINARY_CLOUD_NAME: ${{ secrets.VITE_CLOUDINARY_CLOUD_NAME || vars.VITE_CLOUDINARY_CLOUD_NAME || '' }}
           VITE_CLOUDINARY_UPLOAD_PRESET: ${{ secrets.VITE_CLOUDINARY_UPLOAD_PRESET || vars.VITE_CLOUDINARY_UPLOAD_PRESET || '' }}
         run: npm run build
+
+      - name: Verify build output
+        working-directory: ./Frontend
+        run: |
+          if [ ! -d "dist" ]; then
+            echo "ERROR: dist directory not created"
+            ls -la
+            exit 1
+          fi
+          if [ ! -f "dist/index.html" ]; then
+            echo "ERROR: dist/index.html not found"
+            ls -la dist/ | head -20
+            exit 1
+          fi
+          echo "✓ Build output verified"
+          echo "dist/ contains:"
+          ls -la dist/ | head -20
       
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
