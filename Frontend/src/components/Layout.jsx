@@ -34,6 +34,11 @@ export default function Layout({ children }) {
   const location = useLocation();
   const hasAdminAccess = Boolean(getToken());
   const [lang, setLang] = useState(getStoredLanguage());
+  const pathname = useMemo(() => {
+    const raw = (location?.pathname || '/').trim();
+    const normalized = raw.replace(/\/+$/, '');
+    return normalized || '/';
+  }, [location?.pathname]);
 
   useEffect(() => {
     globalThis.document?.documentElement?.setAttribute('lang', lang);
@@ -42,6 +47,47 @@ export default function Layout({ children }) {
   useEffect(() => bindLanguageSync(setLang), []);
 
   const t = useMemo(() => (key) => translate(lang, key), [lang]);
+
+  const routeIdentity = useMemo(() => {
+    const route = PUBLIC_ROUTES.find((item) => item.to === pathname);
+    if (route) {
+      const routeKey = ROUTE_LABEL_KEYS[route.key] || route.navLabel;
+      return {
+        section: route.group === 'core' ? 'Core route' : route.group === 'support' ? 'Support route' : 'Route',
+        title: t(routeKey),
+        description: route.description || '',
+      };
+    }
+
+    if (pathname === '/deploy') {
+      return {
+        section: 'Governance tools',
+        title: t('deploy'),
+        description: t('deploySubtitle'),
+      };
+    }
+
+    if (pathname === '/admin/governance') {
+      return {
+        section: 'Admin route',
+        title: t('admin'),
+        description: 'Governance administration controls.',
+      };
+    }
+
+    return {
+      section: 'Route',
+      title: pathname === '/' ? t('home') : pathname,
+      description: '',
+    };
+  }, [pathname, t]);
+
+  useEffect(() => {
+    const baseTitle = 'pvabazaar.org';
+    if (routeIdentity?.title) {
+      globalThis.document.title = `${routeIdentity.title} · ${baseTitle}`;
+    }
+  }, [routeIdentity]);
 
   const navRoutes = useMemo(() => {
     const routes = [
@@ -113,6 +159,17 @@ export default function Layout({ children }) {
         </label>
       </header>
       <main id="content" className="layout__main">
+        <section className="section-card" data-route-identity="true" aria-label="Current route identity" style={{ padding: '0.9rem 1rem' }}>
+          <div className="pill" data-route-label="section">{routeIdentity.section}</div>
+          <h1 data-route-label="title" style={{ margin: '0.55rem 0 0.35rem', fontSize: '1.35rem', color: 'var(--site-accent)' }}>
+            {routeIdentity.title}
+          </h1>
+          {routeIdentity.description ? (
+            <p data-route-label="description" style={{ margin: 0, color: 'var(--site-text-muted)' }}>
+              {routeIdentity.description}
+            </p>
+          ) : null}
+        </section>
         {children}
       </main>
       <OpenClawFloatingAssistant routePath={location.pathname || '/'} />
