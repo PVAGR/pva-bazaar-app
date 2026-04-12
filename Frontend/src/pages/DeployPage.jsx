@@ -28,6 +28,9 @@ export default function DeployPage() {
 
   return (
     <div
+      data-federation-enabled={import.meta.env.VITE_FEDERATION_ENABLED === 'true'}
+      data-community-id={import.meta.env.VITE_COMMUNITY_ID}
+      data-federation-hub={import.meta.env.VITE_FEDERATION_HUB_URL}
       style={{
         maxWidth: '900px',
         margin: '0 auto',

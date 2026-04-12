@@ -623,6 +623,11 @@ export default function PopularConferencePage() {
           </section>
         </aside>
       </div>
+      {import.meta.env.VITE_FEDERATION_ENABLED === 'true' ? (
+        <div style={{ display: 'none' }} data-crawlable="true">
+          Federation Protocol Active • Community: {import.meta.env.VITE_COMMUNITY_ID} • Hub: {import.meta.env.VITE_FEDERATION_HUB_URL} • Share proposals to global PVA network
+        </div>
+      ) : null}
     </div>
   );
 }
