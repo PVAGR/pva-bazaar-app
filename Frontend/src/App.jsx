@@ -28,6 +28,8 @@ import CheckoutSuccessPage from './pages/CheckoutSuccessPage.jsx';
 import CheckoutCancelPage from './pages/CheckoutCancelPage.jsx';
 import UserDashboard from './pages/UserDashboard.jsx';
 import PopularConferencePage from './pages/PopularConferencePage.jsx';
+import TreasuryPage from './pages/TreasuryPage.jsx';
+import DeployPage from './pages/DeployPage.jsx';
 import DownloadAppPage from './pages/DownloadAppPage.jsx';
 import ForumPage from './pages/Forum.jsx';
 import { GovernanceConferencePage, GovernanceTreasuryPage } from './pages/OtherPages.jsx';
@@ -68,6 +70,8 @@ export default function App() {
         <Route path="/deals" element={<RequireUserAuth><DealsPage /></RequireUserAuth>} />
         <Route path="/deals/join" element={<RequireUserAuth><DealJoinPage /></RequireUserAuth>} />
         <Route path="/conference" element={<Layout><PopularConferencePage /></Layout>} />
+        <Route path="/treasury" element={<Layout><TreasuryPage /></Layout>} />
+        <Route path="/deploy" element={<Layout><DeployPage /></Layout>} />
 
         <Route path="/" element={<Layout><HomePage /></Layout>} />
         <Route path="/home" element={<Layout><HomePage /></Layout>} />
