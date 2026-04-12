@@ -226,9 +226,21 @@ export const useGovernanceStore = create(
       citizen: SEED_CITIZEN,
       treasury: SEED_TREASURY,
       conference: SEED_CONFERENCE,
+      citizenRole: 'member',
+      committeeAssignments: ['PROP-039'],
       communityStats: { citizens: 2847, proposals: 143, activeVotes: 12, participation: 68 },
       tickerEvents: [],
       toasts: [],
+
+      setCitizenRole: (role) => set({ citizenRole: role }),
+      assignToCommittee: (proposalId) => set((state) => ({
+        committeeAssignments: state.committeeAssignments.includes(proposalId)
+          ? state.committeeAssignments
+          : [...state.committeeAssignments, proposalId],
+      })),
+      removeFromCommittee: (proposalId) => set((state) => ({
+        committeeAssignments: state.committeeAssignments.filter((id) => id !== proposalId),
+      })),
 
       // ── Proposals
       addProposal: (data) => {
@@ -323,7 +335,12 @@ export const useGovernanceStore = create(
     }),
     {
       name: 'pva-governance-store',
-      partialize: (s) => ({ proposals: s.proposals, citizen: s.citizen }),
+      partialize: (s) => ({
+        proposals: s.proposals,
+        citizen: s.citizen,
+        citizenRole: s.citizenRole,
+        committeeAssignments: s.committeeAssignments,
+      }),
     }
   )
 )

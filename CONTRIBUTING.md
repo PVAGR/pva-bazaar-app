@@ -2,6 +2,29 @@
 
 Thank you for your interest in contributing to PVA Bazaar! We appreciate your help in making this project better.
 
+## Open-Source Release Workflow
+
+Thank you for helping build the frontier of direct democracy.
+
+### Getting Started
+1. Fork the repo.
+2. Create a feature branch: `git checkout -b feat/your-feature`.
+3. Run `npm install` in root and `Frontend/`.
+4. Start dev servers with `npm run dev`.
+5. Submit a PR with clear description and test coverage.
+
+### Code Standards
+- Follow existing patterns in governance components.
+- Use CSS variables for theming: `var(--site-*)`.
+- Add eslint-disable only with justification.
+- Write tests for new logic in `Frontend/src/__tests__/`.
+
+### Kenya Pilot Contributions
+If contributing features for Kenya deployment:
+- Add Swahili translations to localization maps.
+- Test offline behavior with browser offline mode.
+- Ensure Proof-of-Personhood component works on low-end Android devices.
+
 ## Code of Conduct
 
 - Be respectful and inclusive

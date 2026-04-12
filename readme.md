@@ -156,6 +156,21 @@ curl -X POST http://localhost:5001/api/blogs/quick-publish \
 - Provenance: http://localhost:3000/pages/provenance.html?id=[artifact_id]
 - Dashboard: http://localhost:3000/pages/pvadashboard.html
 
+## 🌍 Deploy Your Own Instance
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/pvabazaar/pva-bazaar)
+[![Deploy with Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/pvabazaar/pva-bazaar)
+
+### Federation Protocol
+
+PVA Bazaar instances can federate to share proposals and coordinate across communities.
+See [docs/federation-protocol.md](./docs/federation-protocol.md) for technical details.
+
+### Kenya Pilot
+
+This codebase powers the PVA Bazaar Kenya pilot at pvabazaar.org.
+Features include Swahili localization, offline-first sync, and Peoples Committee roles.
+
 ## 👤 Dev Login
 
 - Email: admin@pvabazaar.org

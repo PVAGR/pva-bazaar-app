@@ -8,6 +8,9 @@ import {
   toggleGovernanceProposalSupport as apiSupportGovernanceProposal,
   queueGovernanceProposal as apiQueueGovernanceProposal,
 } from '../lib/api.js';
+import { CHAIN_CONFIG, GOVERNANCE_ABI, ensureCorrectChain, getContract } from '../lib/contracts.js';
+import { OfflineSync } from '../lib/offlineSync.js';
+import ProofOfPersonhood from '../components/governance/ProofOfPersonhood.jsx';
 import '../styles/governance.css';
 
 function useWallet() {
@@ -91,6 +94,8 @@ export default function PopularConferencePage() {
   const addProposal = useGovernanceStore((state) => state.addProposal);
   const endorseProposal = useGovernanceStore((state) => state.endorseProposal);
   const castVote = useGovernanceStore((state) => state.castVote);
+  const citizenRole = useGovernanceStore((state) => state.citizenRole);
+  const committeeAssignments = useGovernanceStore((state) => state.committeeAssignments);
   const { address, connect, isConnected, signMessage } = useWallet();
 
   const [showForm, setShowForm] = useState(true);
@@ -98,6 +103,9 @@ export default function PopularConferencePage() {
   const [errorMessage, setErrorMessage] = useState('');
   const [apiProposals, setApiProposals] = useState([]);
   const [pendingProposalSync, setPendingProposalSync] = useState(null);
+  const [txByProposalId, setTxByProposalId] = useState({});
+  const [proposalFilter, setProposalFilter] = useState('all');
+  const [proofOfPersonhood, setProofOfPersonhood] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -116,6 +124,19 @@ export default function PopularConferencePage() {
     return () => {
       cancelled = true;
     };
+  }, []);
+
+  useEffect(() => {
+    if (import.meta.env.VITE_OFFLINE_SYNC_ENABLED !== 'true') return;
+
+    OfflineSync.setSyncHandler(async (action, payload) => {
+      if (action === 'createProposal') {
+        await apiCreateGovernanceProposal(payload);
+      }
+      if (action === 'supportProposal') {
+        await apiSupportGovernanceProposal(payload.proposalId, payload.walletAddress, payload.meta || {});
+      }
+    });
   }, []);
 
   const displayedProposals = useMemo(() => {
@@ -159,6 +180,11 @@ export default function PopularConferencePage() {
     [displayedProposals]
   );
 
+  const filteredProposals = useMemo(() => {
+    if (proposalFilter !== 'committee') return displayedProposals;
+    return displayedProposals.filter((proposal) => committeeAssignments.includes(proposal.id));
+  }, [displayedProposals, proposalFilter, committeeAssignments]);
+
   const stageCounts = useMemo(() => {
     const counts = displayedProposals.reduce((accumulator, proposal) => {
       accumulator[proposal.stage] = (accumulator[proposal.stage] || 0) + 1;
@@ -201,11 +227,56 @@ export default function PopularConferencePage() {
     });
   };
 
+  const castOnChainVote = async (proposalId, support, walletAddress, signature) => {
+    const ethereum = globalThis?.ethereum;
+    const ethersLib = globalThis?.ethers;
+
+    if (!ethereum) {
+      return { success: false, error: 'No wallet found' };
+    }
+
+    try {
+      await ensureCorrectChain(ethereum);
+      if (!ethersLib?.BrowserProvider) {
+        return { success: false, error: 'ethers not available in window' };
+      }
+
+      const provider = new ethersLib.BrowserProvider(ethereum);
+      const signer = await provider.getSigner();
+      const contractAddress = import.meta.env.VITE_GOVERNANCE_CONTRACT_ADDRESS;
+      const contract = getContract(contractAddress, GOVERNANCE_ABI, signer);
+      const numericId = Number(String(proposalId).replace(/[^0-9]/g, '') || 0);
+
+      const tx = await contract.vote(numericId, Boolean(support), signature || '0x0');
+      await tx.wait();
+      return { success: true, txHash: tx.hash, walletAddress, chainId: CHAIN_CONFIG.chainId };
+    } catch (error) {
+      console.error('On-chain vote failed:', error);
+      return { success: false, error: error?.message || 'On-chain vote failed' };
+    }
+  };
+
   const handleNewProposal = async (proposal) => {
     const formData = proposal;
     console.log('handleNewProposal called, formData:', formData, 'isConnected:', isConnected);
     setFeedbackMessage('');
     setErrorMessage('');
+
+    const offlineSyncEnabled = import.meta.env.VITE_OFFLINE_SYNC_ENABLED === 'true';
+    if (offlineSyncEnabled && globalThis.navigator && !globalThis.navigator.onLine) {
+      OfflineSync.enqueue('createProposal', {
+        title: formData.title,
+        summary: formData.solution || formData.problem || formData.title,
+        problem: formData.problem || '',
+        solution: formData.solution || '',
+        expectedOutcome: formData.outcome || '',
+        proposerWallet: address || '',
+      });
+      setFeedbackMessage('Offline - proposal queued for sync');
+      addProposal(formData);
+      setShowForm(false);
+      return;
+    }
 
     if (isConnected && address) {
       try {
@@ -218,7 +289,19 @@ export default function PopularConferencePage() {
         } else if (status === 400) {
           setErrorMessage('Invalid proposal data');
         } else {
-          setErrorMessage('Offline mode - saved locally');
+          if (offlineSyncEnabled) {
+            OfflineSync.enqueue('createProposal', {
+              title: formData.title,
+              summary: formData.solution || formData.problem || formData.title,
+              problem: formData.problem || '',
+              solution: formData.solution || '',
+              expectedOutcome: formData.outcome || '',
+              proposerWallet: address,
+            });
+            setErrorMessage('Connection failed - queued for retry');
+          } else {
+            setErrorMessage('Offline mode - saved locally');
+          }
         }
       }
     } else {
@@ -230,7 +313,7 @@ export default function PopularConferencePage() {
     setShowForm(false);
   };
 
-  const handleUpvote = async (proposalId) => {
+  const handleUpvote = async (proposalId, support = true) => {
     setFeedbackMessage('');
     setErrorMessage('');
 
@@ -239,9 +322,28 @@ export default function PopularConferencePage() {
 
     if (isConnected && address && backendProposalId) {
       try {
-        const response = await apiSupportGovernanceProposal(backendProposalId, address);
+        const nonce = Date.now().toString();
+        const message = `I vote ${support ? 'YES' : 'NO'} on proposal ${proposalId}\nNonce: ${nonce}`;
+        const signature = await signMessage(message, address);
+        const onChainResult = await castOnChainVote(proposalId, support, address, signature);
+
+        if (onChainResult.success && onChainResult.txHash) {
+          setTxByProposalId((prev) => ({
+            ...prev,
+            [proposalId]: onChainResult.txHash,
+          }));
+          setFeedbackMessage(`Vote recorded on-chain: ${onChainResult.txHash.slice(0, 10)}...`);
+        }
+
+        const response = await apiSupportGovernanceProposal(backendProposalId, address, {
+          signature,
+          nonce,
+          chainTx: onChainResult.txHash,
+        });
         endorseProposal(proposalId);
-        setFeedbackMessage('Support recorded via governance API.');
+        if (!onChainResult.success) {
+          setFeedbackMessage('Support recorded via governance API.');
+        }
 
         if (response?.status === 'threshold_reached') {
           try {
@@ -260,6 +362,13 @@ export default function PopularConferencePage() {
         } else if (status === 400) {
           setErrorMessage('Invalid proposal data');
         } else {
+          if (import.meta.env.VITE_OFFLINE_SYNC_ENABLED === 'true') {
+            OfflineSync.enqueue('supportProposal', {
+              proposalId: backendProposalId,
+              walletAddress: address,
+              meta: { support },
+            });
+          }
           setErrorMessage('Offline mode - saved locally');
         }
         return;
@@ -353,7 +462,7 @@ export default function PopularConferencePage() {
                 <button
                   type="button"
                   onClick={handleConnectWallet}
-                  style={{ background: '#2563eb', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer' }}
+                  className="gov-btn gov-btn-primary"
                 >
                   🔗 Connect Wallet
                 </button>
@@ -373,10 +482,37 @@ export default function PopularConferencePage() {
               >
                 Upvote Featured Proposal
               </button>
+              <button
+                type="button"
+                className="gov-btn gov-btn-ghost"
+                onClick={() => setProposalFilter('committee')}
+                style={proposalFilter === 'committee' ? { borderColor: 'var(--site-accent)' } : undefined}
+              >
+                Committee Queue
+              </button>
+              {proposalFilter === 'committee' ? (
+                <button type="button" className="gov-btn gov-btn-ghost" onClick={() => setProposalFilter('all')}>
+                  Show All
+                </button>
+              ) : null}
             </div>
             {feedbackMessage ? <p className="gov-hero-sub" style={{ marginTop: '0.65rem' }}>{feedbackMessage}</p> : null}
-            {errorMessage ? <p className="gov-hero-sub" style={{ marginTop: '0.65rem', color: '#ff8a8a' }}>{errorMessage}</p> : null}
+            {errorMessage ? <p className="gov-hero-sub" style={{ marginTop: '0.65rem', color: 'var(--site-danger-text)' }}>{errorMessage}</p> : null}
+            <p className="gov-hero-sub" style={{ marginTop: '0.65rem' }}>
+              Role: {citizenRole} · Committee assignments: {committeeAssignments.length}
+            </p>
           </section>
+
+          {import.meta.env.VITE_PROOF_OF_PERSONHOOD_ENABLED === 'true' && isConnected ? (
+            <ProofOfPersonhood walletAddress={address} onVerified={setProofOfPersonhood} />
+          ) : null}
+
+          {proofOfPersonhood ? (
+            <div className="gov-card" style={{ marginBottom: '1rem' }}>
+              <div className="gov-detail-title">Proof of Personhood</div>
+              <div className="gov-detail-body">Verified via {proofOfPersonhood.method}.</div>
+            </div>
+          ) : null}
 
           {showForm ? (
             <ProposalForm
@@ -410,18 +546,46 @@ export default function PopularConferencePage() {
 
           <div className="gov-section-title" style={{ marginBottom: '0.75rem' }}>All proposals</div>
           <div className="gov-card" style={{ display: 'grid', gap: '0.9rem' }}>
-            {displayedProposals.map((proposal) => (
+            {filteredProposals.map((proposal) => (
               <div
                 key={proposal.id}
                 id={`prop_${proposal._id || proposal.id}`}
                 className="proposal-card"
                 data-proposal-id={proposal._id || proposal.id}
               >
+                {committeeAssignments.includes(proposal.id) ? (
+                  <span
+                    style={{
+                      background: 'var(--site-accent-soft)',
+                      color: 'var(--site-accent-strong)',
+                      border: '1px solid var(--site-border)',
+                      padding: '4px 8px',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      display: 'inline-block',
+                      marginBottom: '0.5rem',
+                    }}
+                  >
+                    Peoples Committee
+                  </span>
+                ) : null}
                 <ProposalCard
                   proposal={proposal}
                   onUpvote={handleUpvote}
                   onVote={castVote}
                 />
+                {txByProposalId[proposal.id] ? (
+                  <div style={{ marginTop: '0.4rem' }}>
+                    <a
+                      href={`https://amoy.polygonscan.com/tx/${txByProposalId[proposal.id]}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ color: 'var(--site-accent)', textDecoration: 'none', fontSize: '0.85rem' }}
+                    >
+                      View on PolygonScan
+                    </a>
+                  </div>
+                ) : null}
               </div>
             ))}
           </div>

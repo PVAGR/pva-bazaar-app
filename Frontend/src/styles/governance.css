@@ -1,4 +1,4 @@
-/* src/styles/governance.css */
+﻿/* src/styles/governance.css */
 /* PVA Bazaar Governance System - Design Tokens & Component Styles */
 /* Import in your main App.jsx or index.css: import './styles/governance.css' */
 
@@ -6,20 +6,20 @@
 
 /* -- TOKENS --------------------------------------------------------------- */
 :root {
-  --gov-earth:   #1a1208;
-  --gov-soil:    #2d1f0a;
-  --gov-bark:    #3d2b10;
-  --gov-amber:   #c97d2e;
-  --gov-gold:    #e8a83e;
-  --gov-sun:     #f5c842;
-  --gov-cream:   #f2e8d0;
-  --gov-ivory:   #faf5ea;
-  --gov-sky:     #4a90a4;
-  --gov-leaf:    #5a8a3c;
-  --gov-pulse:   #e05a2b;
-  --gov-muted:   #8a7a60;
-  --gov-glass:   rgba(255, 248, 220, 0.05);
-  --gov-border:  rgba(200, 160, 80, 0.18);
+  --gov-earth:   var(--site-bg-primary);
+  --gov-soil:    var(--site-bg-secondary);
+  --gov-bark:    var(--site-panel);
+  --gov-amber:   var(--site-accent);
+  --gov-gold:    var(--site-accent-strong);
+  --gov-sun:     var(--site-accent-strong);
+  --gov-cream:   var(--site-text);
+  --gov-ivory:   var(--site-text);
+  --gov-sky:     var(--site-accent);
+  --gov-leaf:    var(--site-success-text);
+  --gov-pulse:   var(--site-danger-text);
+  --gov-muted:   var(--site-text-muted);
+  --gov-glass:   var(--site-panel-soft);
+  --gov-border:  rgba(38, 198, 218, 0.26);
   --gov-font-display: 'Syne', sans-serif;
   --gov-font-mono:    'Space Mono', monospace;
   --gov-font-serif:   'Instrument Serif', serif;
@@ -39,8 +39,8 @@
   position: fixed;
   inset: 0;
   background:
-    radial-gradient(ellipse 80% 40% at 20% 10%, rgba(201,125,46,0.10) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 50% at 80% 80%, rgba(74,144,164,0.07) 0%, transparent 60%);
+    radial-gradient(ellipse 80% 40% at 20% 10%, rgba(38,198,218,0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 80%, rgba(77,208,225,0.10) 0%, transparent 60%);
   pointer-events: none;
   z-index: 0;
 }
@@ -50,7 +50,7 @@
   z-index: 1;
   display: grid;
   grid-template-columns: 250px 1fr 290px;
-  min-height: 100vh;
+  min-height: 100%;
   gap: 0;
 }
 
@@ -61,6 +61,12 @@
 @media (max-width: 768px) {
   .gov-layout { grid-template-columns: 1fr; }
   .gov-sidebar { display: none; }
+  .gov-main { padding: 1rem; }
+  .gov-right-panel {
+    border-left: none;
+    border-top: 1px solid var(--gov-border);
+    padding: 1rem;
+  }
 }
 
 /* -- SIDEBAR -------------------------------------------------------------- */
@@ -70,10 +76,10 @@
   display: flex;
   flex-direction: column;
   gap: 1.75rem;
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  overflow-y: auto;
+  position: relative;
+  top: auto;
+  height: auto;
+  overflow: visible;
 }
 
 .gov-sidebar::-webkit-scrollbar { width: 2px; }
@@ -124,7 +130,7 @@
 
 .gov-nav-list a.active,
 .gov-nav-list button.active {
-  background: rgba(201,125,46,0.12);
+  background: rgba(38,198,218,0.18);
   color: var(--gov-gold);
   border-left: 2px solid var(--gov-amber);
   padding-left: 8px;
@@ -164,8 +170,8 @@
 /* -- MAIN FEED ------------------------------------------------------------- */
 .gov-main {
   padding: 1.75rem;
-  overflow-y: auto;
-  max-height: 100vh;
+  overflow: visible;
+  max-height: none;
 }
 
 .gov-main::-webkit-scrollbar { width: 2px; }
@@ -177,7 +183,7 @@
   padding: 2.25rem;
   border: 1px solid var(--gov-border);
   border-radius: 14px;
-  background: linear-gradient(135deg, rgba(45,31,10,0.85) 0%, rgba(26,18,8,0.95) 100%);
+  background: linear-gradient(135deg, rgba(17,26,58,0.86) 0%, rgba(10,14,39,0.95) 100%);
   position: relative;
   overflow: hidden;
 }
@@ -189,7 +195,7 @@
   right: -15%;
   width: 350px;
   height: 350px;
-  background: radial-gradient(circle, rgba(232,168,62,0.10) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(77,208,225,0.14) 0%, transparent 70%);
   pointer-events: none;
 }
 
@@ -198,7 +204,7 @@
   align-items: center;
   gap: 7px;
   padding: 3px 11px;
-  border: 1px solid rgba(201,125,46,0.35);
+  border: 1px solid rgba(38,198,218,0.35);
   border-radius: 100px;
   font-size: 0.58rem;
   letter-spacing: 0.15em;
@@ -261,7 +267,7 @@
 .gov-btn-primary:hover {
   background: var(--gov-gold);
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(201,125,46,0.28);
+  box-shadow: 0 6px 20px rgba(38,198,218,0.28);
 }
 
 .gov-btn-ghost {
@@ -393,14 +399,14 @@
   font-weight: 700;
 }
 
-.gov-tag-vote     { background: rgba(224,90,43,0.14); color: var(--gov-pulse); border: 1px solid rgba(224,90,43,0.22); }
+.gov-tag-vote     { background: rgba(229,57,53,0.14); color: var(--gov-pulse); border: 1px solid rgba(229,57,53,0.22); }
 .gov-tag-panel    { background: rgba(74,144,164,0.14); color: var(--gov-sky);   border: 1px solid rgba(74,144,164,0.22); }
 .gov-tag-endorsed { background: rgba(90,138,60,0.14);  color: var(--gov-leaf);  border: 1px solid rgba(90,138,60,0.22); }
 .gov-tag-draft    { background: rgba(138,122,96,0.14); color: var(--gov-muted); border: 1px solid var(--gov-border); }
-.gov-tag-passed   { background: rgba(245,200,66,0.14); color: var(--gov-sun);   border: 1px solid rgba(245,200,66,0.22); }
-.gov-tag-rejected { background: rgba(224,90,43,0.10);  color: var(--gov-pulse); border: 1px solid rgba(224,90,43,0.15); }
+.gov-tag-passed   { background: rgba(77,208,225,0.16); color: var(--gov-sun);   border: 1px solid rgba(77,208,225,0.28); }
+.gov-tag-rejected { background: rgba(229,57,53,0.10);  color: var(--gov-pulse); border: 1px solid rgba(229,57,53,0.15); }
 .gov-tag-cat      { background: var(--gov-glass); color: var(--gov-muted); border: 1px solid var(--gov-border); }
-.gov-pill-urgent  { background: rgba(224,90,43,0.1); color: var(--gov-pulse); border: 1px solid rgba(224,90,43,0.2); border-radius: 100px; padding: 2px 7px; font-size: 0.55rem; }
+.gov-pill-urgent  { background: rgba(229,57,53,0.1); color: var(--gov-pulse); border: 1px solid rgba(229,57,53,0.2); border-radius: 100px; padding: 2px 7px; font-size: 0.55rem; }
 
 /* -- PROPOSAL CARD --------------------------------------------------------- */
 .gov-card {
@@ -425,7 +431,7 @@
   transition: opacity 0.18s;
 }
 
-.gov-card:hover { border-color: rgba(200,160,80,0.38); background: rgba(255,248,220,0.04); transform: translateX(2px); }
+.gov-card:hover { border-color: rgba(38,198,218,0.38); background: rgba(38,198,218,0.07); transform: translateX(2px); }
 .gov-card:hover::before { opacity: 1; }
 
 .gov-card.stage-vote::before     { background: var(--gov-pulse); opacity: 1; }
@@ -501,7 +507,7 @@
 .gov-action-btn:hover { border-color: var(--gov-amber); color: var(--gov-gold); }
 .gov-action-btn.liked { border-color: var(--gov-leaf); color: var(--gov-leaf); background: rgba(90,138,60,0.1); }
 .gov-action-btn.voted-yes { border-color: var(--gov-leaf); color: var(--gov-leaf); background: rgba(90,138,60,0.1); }
-.gov-action-btn.voted-no  { border-color: var(--gov-pulse); color: var(--gov-pulse); background: rgba(224,90,43,0.1); }
+.gov-action-btn.voted-no  { border-color: var(--gov-pulse); color: var(--gov-pulse); background: rgba(229,57,53,0.1); }
 
 /* -- VOTE BAR -------------------------------------------------------------- */
 .gov-vote-bar-wrap { margin-top: 0.7rem; }
@@ -587,10 +593,10 @@
 .gov-right-panel {
   border-left: 1px solid var(--gov-border);
   padding: 1.75rem 1.25rem;
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  overflow-y: auto;
+  position: relative;
+  top: auto;
+  height: auto;
+  overflow: visible;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
@@ -601,10 +607,10 @@
 
 /* -- LIVE VOTE WIDGET ------------------------------------------------------ */
 .gov-live-widget {
-  border: 1px solid rgba(224,90,43,0.28);
+  border: 1px solid rgba(229,57,53,0.28);
   border-radius: 11px;
   padding: 1.1rem;
-  background: rgba(224,90,43,0.05);
+  background: rgba(229,57,53,0.08);
   position: relative;
   overflow: hidden;
 }
@@ -666,9 +672,9 @@
 .gov-vote-yes:hover,
 .gov-vote-yes.selected { background: rgba(90,138,60,0.28); transform: scale(1.02); }
 
-.gov-vote-no  { background: rgba(224,90,43,0.14); color: var(--gov-pulse); border-color: rgba(224,90,43,0.28); }
+.gov-vote-no  { background: rgba(229,57,53,0.14); color: var(--gov-pulse); border-color: rgba(229,57,53,0.28); }
 .gov-vote-no:hover,
-.gov-vote-no.selected  { background: rgba(224,90,43,0.28); transform: scale(1.02); }
+.gov-vote-no.selected  { background: rgba(229,57,53,0.28); transform: scale(1.02); }
 
 .gov-vr-row { display: flex; align-items: center; gap: 7px; margin-bottom: 5px; font-size: 0.6rem; }
 .gov-vr-label { width: 28px; color: var(--gov-muted); letter-spacing: 0.05em; }
@@ -714,7 +720,7 @@
   border: 1px solid var(--gov-border);
   border-radius: 11px;
   padding: 1.1rem;
-  background: linear-gradient(135deg, rgba(45,31,10,0.85), rgba(26,18,8,0.95));
+  background: linear-gradient(135deg, rgba(17,26,58,0.85), rgba(10,14,39,0.95));
   position: relative;
   overflow: hidden;
 }
@@ -760,10 +766,10 @@
 
 /* -- NEW PROPOSAL FORM ----------------------------------------------------- */
 .gov-form-wrap {
-  border: 1px solid rgba(201,125,46,0.28);
+  border: 1px solid rgba(38,198,218,0.30);
   border-radius: 11px;
   padding: 1.35rem;
-  background: rgba(45,31,10,0.55);
+  background: rgba(17,26,58,0.60);
   margin-bottom: 1.5rem;
   animation: gov-slide-down 0.28s ease;
 }
@@ -828,7 +834,7 @@
 
 .gov-modal {
   background: var(--gov-soil);
-  border: 1px solid rgba(200,160,80,0.28);
+  border: 1px solid rgba(38,198,218,0.28);
   border-radius: 14px;
   padding: 1.75rem;
   max-width: 580px;
@@ -924,8 +930,8 @@
 }
 
 @keyframes gov-pulse-step {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(201,125,46,0.4); }
-  50%       { box-shadow: 0 0 0 7px rgba(201,125,46,0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(38,198,218,0.4); }
+  50%       { box-shadow: 0 0 0 7px rgba(38,198,218,0); }
 }
 
 .gov-stage-label { font-size: 0.52rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--gov-muted); }
