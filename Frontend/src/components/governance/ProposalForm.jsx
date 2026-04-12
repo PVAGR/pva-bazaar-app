@@ -3,10 +3,14 @@ import React, { useState } from 'react';
 export default function ProposalForm({ onSubmit, onCancel }) {
   const [title, setTitle] = useState('');
   const [problem, setProblem] = useState('');
-  const [solution, setSolution] = useState('');
-  const [outcome, setOutcome] = useState('');
+  const [proposal, setProposal] = useState('');
+  const [expectedOutcome, setExpectedOutcome] = useState('');
+  const [costResources, setCostResources] = useState('');
+  const [urgency, setUrgency] = useState('standard');
+  const [committeeCategory, setCommitteeCategory] = useState('governance');
+  const [targetTimeline, setTargetTimeline] = useState('');
 
-  const canSubmit = title.trim() && problem.trim() && solution.trim() && outcome.trim();
+  const canSubmit = title.trim() && problem.trim() && proposal.trim() && expectedOutcome.trim();
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -15,16 +19,20 @@ export default function ProposalForm({ onSubmit, onCancel }) {
     onSubmit({
       title: title.trim(),
       problem: problem.trim(),
-      solution: solution.trim(),
-      outcome: outcome.trim(),
-      category: 'Governance',
-      urgency: 'Standard',
+      proposal: proposal.trim(),
+      expectedOutcome: expectedOutcome.trim(),
+      costResources: costResources.trim(),
+      urgency,
+      committeeCategory,
+      targetTimeline: targetTimeline.trim(),
     });
 
     setTitle('');
     setProblem('');
-    setSolution('');
-    setOutcome('');
+    setProposal('');
+    setExpectedOutcome('');
+    setCostResources('');
+    setTargetTimeline('');
   };
 
   return (
@@ -51,25 +59,77 @@ export default function ProposalForm({ onSubmit, onCancel }) {
         />
       </div>
 
+      <div className="gov-form-row">
+        <div className="gov-form-group">
+          <label className="gov-form-label" htmlFor="gov-category">Committee Category</label>
+          <select
+            id="gov-category"
+            className="gov-form-select"
+            value={committeeCategory}
+            onChange={(event) => setCommitteeCategory(event.target.value)}
+          >
+            <option value="governance">Governance</option>
+            <option value="infrastructure">Infrastructure</option>
+            <option value="health">Health</option>
+            <option value="economy">Economy</option>
+            <option value="education">Education</option>
+          </select>
+        </div>
+        <div className="gov-form-group">
+          <label className="gov-form-label" htmlFor="gov-urgency">Urgency</label>
+          <select
+            id="gov-urgency"
+            className="gov-form-select"
+            value={urgency}
+            onChange={(event) => setUrgency(event.target.value)}
+          >
+            <option value="standard">Standard</option>
+            <option value="high">High</option>
+          </select>
+        </div>
+      </div>
+
       <div className="gov-form-group">
-        <label className="gov-form-label" htmlFor="gov-solution">Solution</label>
+        <label className="gov-form-label" htmlFor="gov-proposal">Proposal</label>
         <textarea
-          id="gov-solution"
+          id="gov-proposal"
           className="gov-form-textarea"
-          value={solution}
-          onChange={(event) => setSolution(event.target.value)}
+          value={proposal}
+          onChange={(event) => setProposal(event.target.value)}
           placeholder="What should be done?"
         />
       </div>
 
       <div className="gov-form-group">
-        <label className="gov-form-label" htmlFor="gov-outcome">Outcome</label>
+        <label className="gov-form-label" htmlFor="gov-outcome">Expected Outcome</label>
         <textarea
           id="gov-outcome"
           className="gov-form-textarea"
-          value={outcome}
-          onChange={(event) => setOutcome(event.target.value)}
+          value={expectedOutcome}
+          onChange={(event) => setExpectedOutcome(event.target.value)}
           placeholder="What measurable result should happen?"
+        />
+      </div>
+
+      <div className="gov-form-group">
+        <label className="gov-form-label" htmlFor="gov-cost">Cost / Resources</label>
+        <textarea
+          id="gov-cost"
+          className="gov-form-textarea"
+          value={costResources}
+          onChange={(event) => setCostResources(event.target.value)}
+          placeholder="Budget, people, equipment, or resource assumptions"
+        />
+      </div>
+
+      <div className="gov-form-group">
+        <label className="gov-form-label" htmlFor="gov-timeline">Target Timeline (optional)</label>
+        <input
+          id="gov-timeline"
+          className="gov-form-input"
+          value={targetTimeline}
+          onChange={(event) => setTargetTimeline(event.target.value)}
+          placeholder="Example: Pilot in 30 days"
         />
       </div>
 

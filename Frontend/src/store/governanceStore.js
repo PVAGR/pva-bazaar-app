@@ -1,180 +1,172 @@
-// src/store/governanceStore.js
-// Central state store for the PVA Bazaar governance system.
-// Uses Zustand. Install with: npm install zustand
-
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-// ── SEED DATA ──────────────────────────────────────────────────────────────────
+const STATUS_TO_STAGE = {
+  draft: 'draft',
+  public: 'draft',
+  threshold_reached: 'endorsed',
+  conference_queue: 'panel',
+  accepted: 'passed',
+  rejected: 'rejected',
+  needs_revision: 'draft',
+  in_execution: 'panel',
+  completed: 'passed',
+}
+
+const STAGE_LIFECYCLE = {
+  draft: 1,
+  endorsed: 2,
+  panel: 3,
+  vote: 4,
+  passed: 5,
+  rejected: 5,
+}
+
+const toStage = (status) => STATUS_TO_STAGE[status] || 'draft'
+
+const toLifecycle = (status) => STAGE_LIFECYCLE[toStage(status)] || 1
+
+const makeSupporters = (seedCount, seedLabel) => Array.from({ length: seedCount }).map((_, idx) => `${seedLabel}-${idx + 1}`)
+
+const createProposalModel = (raw) => {
+  const comments = Array.isArray(raw.comments) ? raw.comments : []
+  const supporters = Array.isArray(raw.supporters) ? raw.supporters : []
+  const supportCount = Number(raw.supportCount ?? raw.endorsements ?? supporters.length ?? 0)
+  const status = raw.status || 'public'
+
+  return {
+    id: raw.id,
+    title: raw.title,
+    problem: raw.problem || '',
+    proposal: raw.proposal || raw.solution || '',
+    expectedOutcome: raw.expectedOutcome || raw.outcome || '',
+    costResources: raw.costResources || '',
+    urgency: raw.urgency || 'standard',
+    committeeCategory: raw.committeeCategory || raw.category || 'governance',
+    createdBy: raw.createdBy || raw.author || 'Citizen',
+    createdAt: raw.createdAt || new Date().toISOString(),
+    supportCount,
+    supporters,
+    comments,
+    status,
+    adminDecision: raw.adminDecision || '',
+    adminReason: raw.adminReason || '',
+    nextStep: raw.nextStep || '',
+    targetTimeline: raw.targetTimeline || '',
+    executionProject: raw.executionProject || null,
+    thresholdReachedAt: raw.thresholdReachedAt || null,
+    conferenceQueuedAt: raw.conferenceQueuedAt || null,
+
+    // Backward-compatible fields used in existing components
+    stage: raw.stage || toStage(status),
+    lifecycle: raw.lifecycle || toLifecycle(status),
+    category: raw.category || raw.committeeCategory || 'Governance',
+    excerpt: raw.excerpt || raw.proposal || raw.solution || '',
+    solution: raw.solution || raw.proposal || '',
+    outcome: raw.outcome || raw.expectedOutcome || '',
+    endorsements: supportCount,
+    author: raw.author || raw.createdBy || 'Citizen',
+    authorInitial: raw.authorInitial || String((raw.createdBy || raw.author || 'C')[0] || 'C').toUpperCase(),
+    authorColor: raw.authorColor || '#4a90a4',
+    panelStatement: raw.panelStatement || '',
+    yesVotes: Number(raw.yesVotes || 0),
+    noVotes: Number(raw.noVotes || 0),
+    userVote: raw.userVote || null,
+    userEndorsed: Boolean(raw.userEndorsed),
+    daysLeft: raw.daysLeft ?? null,
+  }
+}
+
 const SEED_PROPOSALS = [
-  {
-    id: 'PROP-041',
-    stage: 'vote',           // draft | endorsed | panel | vote | passed | rejected
-    category: 'Infrastructure',
-    urgency: 'High',
+  createProposalModel({
+    id: 'PROP-101',
     title: 'Solar Micro-Grid Expansion — Kibera District',
-    excerpt:
-      'Install a 40kW solar micro-grid to provide clean, affordable electricity to 1,200 households. Estimated cost: 180,000 PVA tokens. Operational within 90 days.',
-    problem:
-      'Over 4,200 residents in Kibera Block C lack reliable electricity. Kerosene lanterns cause respiratory illness and fire risk. Children cannot study after dark.',
-    solution:
-      'Install a 40kW solar micro-grid with battery storage. A community-owned cooperative manages distribution. Revenue recycles to community treasury.',
-    outcome:
-      '1,200 households receive 12hr/day electricity. Estimated 40% reduction in energy costs. 3 local technicians employed full-time.',
-    panelStatement:
-      "The Citizens' Panel (47 members) reviewed this over 14 days. 41 recommend YES. Key concern: ensure maintenance training is locally delivered.",
-    author: 'Wanjiru M.',
-    authorInitial: 'W',
-    authorColor: '#c97d2e',
-    endorsements: 412,
-    comments: 87,
-    yesVotes: 1306,
-    noVotes: 618,
-    daysLeft: 7,
-    createdAt: '2026-04-05',
-    lifecycle: 4,
-    userEndorsed: false,
-    userVote: null,
-  },
-  {
-    id: 'PROP-044',
-    stage: 'endorsed',
-    category: 'Health',
-    urgency: 'Standard',
+    problem: 'Households still rely on unsafe kerosene lighting after sunset.',
+    proposal: 'Install a 40kW solar micro-grid managed by a local citizen cooperative.',
+    expectedOutcome: 'Reliable energy access for 1,200 homes and lower monthly energy costs.',
+    costResources: 'Budget: 180,000 PVA; 3 trained technicians; 90-day rollout.',
+    urgency: 'high',
+    committeeCategory: 'infrastructure',
+    createdBy: 'Wanjiru M.',
+    createdAt: '2026-04-05T08:00:00.000Z',
+    supportCount: 4,
+    supporters: makeSupporters(4, 'seed-citizen'),
+    comments: [
+      { id: 'COM-1001', authorId: 'seed-citizen-1', authorName: 'Omondi K.', body: 'Please include local maintenance training in phase one.', createdAt: '2026-04-06T10:12:00.000Z' },
+      { id: 'COM-1002', authorId: 'seed-citizen-2', authorName: 'Achieng A.', body: 'Strong support from Block C residents.', createdAt: '2026-04-07T09:20:00.000Z' },
+    ],
+    status: 'conference_queue',
+    thresholdReachedAt: '2026-04-07T09:20:00.000Z',
+    conferenceQueuedAt: '2026-04-07T09:21:00.000Z',
+    nextStep: 'Scheduled for Conference Session 7 deliberation.',
+    targetTimeline: 'Deliberation: 2026-04-20',
+  }),
+  createProposalModel({
+    id: 'PROP-102',
     title: 'Community Water Filtration & Testing Network',
-    excerpt:
-      'Deploy 12 gravity-fed ceramic filtration stations with monthly water quality testing and public reporting via the PVA dashboard.',
-    problem:
-      'Waterborne illness accounts for 23% of clinic visits. Nearest clean water is 2km away. Women and children spend 3hrs/day collecting water.',
-    solution:
-      '12 filtration stations from local ceramic manufacturers. Community-trained monitors test quality monthly. Results published on PVA platform.',
-    outcome: 'Reduce waterborne illness by 60%. Save 3hrs/day per household. Create 12 part-time water monitor roles.',
-    panelStatement: null,
-    author: 'Omondi K.',
-    authorInitial: 'O',
-    authorColor: '#5a8a3c',
-    endorsements: 287,
-    comments: 54,
-    yesVotes: 0,
-    noVotes: 0,
-    daysLeft: null,
-    createdAt: '2026-04-08',
-    lifecycle: 2,
-    userEndorsed: false,
-    userVote: null,
-  },
-  {
-    id: 'PROP-039',
-    stage: 'panel',
-    category: 'Economy',
-    urgency: 'Standard',
-    title: 'Establish a Weekly Open Market — Digital & Physical',
-    excerpt:
-      "Create a combined physical and digital marketplace where citizens trade goods and services using PVA tokens. Anchor the community's internal economy.",
-    problem: 'Citizens lack a structured venue for economic exchange. PVA token utility is limited, reducing participation incentives.',
-    solution:
-      'Weekly physical market on Saturdays matched by digital storefront on pvabazaar.org. Merchant registration requires verified citizen ID. Fees: 1% to community treasury.',
-    outcome: 'Circulate 50,000+ PVA tokens weekly. Provide income to 200+ vendors. Build proof-of-concept for PVA economic model.',
-    panelStatement:
-      'Panel deliberation ongoing. 31 of 50 members completed review. Preliminary vote: 27 YES, 4 NO. Full statement expected in 5 days.',
-    author: 'Fatuma A.',
-    authorInitial: 'F',
-    authorColor: '#4a90a4',
-    endorsements: 334,
-    comments: 102,
-    yesVotes: 0,
-    noVotes: 0,
-    daysLeft: null,
-    createdAt: '2026-04-01',
-    lifecycle: 3,
-    userEndorsed: false,
-    userVote: null,
-  },
-  {
-    id: 'PROP-046',
-    stage: 'draft',
-    category: 'Education',
-    urgency: 'Standard',
-    title: 'Mobile Library & After-School Learning Stations',
-    excerpt:
-      'Repurpose two donated vehicles as mobile libraries with tablets, offline learning software, and trained facilitators for ages 5–17.',
-    problem: '68% of children lack access to books or digital learning tools outside school hours. Drop-out rates peak at age 14.',
-    solution: 'Two mobile learning stations rotating across 4 zones. Offline-first software. Weekly schedule published on PVA platform.',
-    outcome: '800 children served weekly. 30% improvement in literacy metrics over 12 months.',
-    panelStatement: null,
-    author: 'Amara K.',
-    authorInitial: 'A',
-    authorColor: '#e8a83e',
-    endorsements: 47,
-    comments: 12,
-    yesVotes: 0,
-    noVotes: 0,
-    daysLeft: null,
-    createdAt: '2026-04-11',
-    lifecycle: 1,
-    userEndorsed: false,
-    userVote: null,
-  },
-  {
-    id: 'PROP-038',
-    stage: 'passed',
-    category: 'Health',
-    urgency: 'High',
-    title: 'Mobile Health Clinic — Monthly Rotation',
-    excerpt:
-      'Fund and operate a monthly mobile clinic providing basic healthcare, vaccinations, and reproductive health services across 6 community zones.',
-    problem: 'Nearest public clinic is 5km away. 40% of community members have not received basic preventive care in the past year.',
-    solution:
-      'Monthly clinic visiting 6 zones on a published schedule. Staffed by 2 nurses + 1 doctor. Funded by community treasury (60,000 PVA/year).',
-    outcome: '2,400 citizens served annually. Vaccination coverage increased from 34% to 85%.',
-    panelStatement:
-      "Citizens' Panel voted 45–5 YES. The proposal is well-evidenced, cost-effective, and addresses a critical need. Panel recommends quarterly reporting.",
-    author: 'Dr. Njoroge P.',
-    authorInitial: 'N',
-    authorColor: '#5a8a3c',
-    endorsements: 589,
-    comments: 143,
-    yesVotes: 1956,
-    noVotes: 801,
-    daysLeft: null,
-    createdAt: '2026-03-20',
-    lifecycle: 5,
-    userEndorsed: true,
-    userVote: 'yes',
-  },
-  {
-    id: 'PROP-047',
-    stage: 'draft',
-    category: 'Governance',
-    urgency: 'Standard',
-    title: "Citizens' Oversight Committee — Quarterly Audit",
-    excerpt:
-      'Establish a randomly selected 15-member Oversight Committee to audit all treasury spending every quarter and publish full reports on-chain.',
-    problem: 'No formal mechanism for citizens to audit treasury expenditures. Trust requires radical transparency.',
-    solution:
-      '15 citizens selected at random each quarter. Full access to treasury records. Findings published on-chain and via PVA website within 30 days.',
-    outcome: 'Complete financial transparency. Early detection of misuse. Strengthen citizen trust.',
-    panelStatement: null,
-    author: 'Kibera Node',
-    authorInitial: 'K',
-    authorColor: '#e05a2b',
-    endorsements: 19,
-    comments: 6,
-    yesVotes: 0,
-    noVotes: 0,
-    daysLeft: null,
-    createdAt: '2026-04-12',
-    lifecycle: 1,
-    userEndorsed: false,
-    userVote: null,
-  },
+    problem: 'Unsafe water sources drive avoidable illness and high clinic load.',
+    proposal: 'Deploy 12 ceramic filtration stations with transparent monthly water testing.',
+    expectedOutcome: 'Reduce waterborne illness and cut daily water collection time.',
+    costResources: 'Budget: 95,000 PVA; 12 volunteer monitors; testing kits every 30 days.',
+    urgency: 'high',
+    committeeCategory: 'health',
+    createdBy: 'Fatuma A.',
+    createdAt: '2026-04-03T10:00:00.000Z',
+    supportCount: 6,
+    supporters: makeSupporters(6, 'seed-citizen-a'),
+    comments: [
+      { id: 'COM-1003', authorId: 'seed-citizen-a-2', authorName: 'Nia K.', body: 'Can we prioritize zones with the highest reported cases first?', createdAt: '2026-04-04T11:00:00.000Z' },
+    ],
+    status: 'accepted',
+    adminDecision: 'accepted',
+    adminReason: 'Meets urgent health need, validated by committee and public support.',
+    nextStep: 'Begin procurement and station placement.',
+    targetTimeline: 'Launch pilot within 30 days.',
+    executionProject: {
+      owner: 'Health Committee Node',
+      milestones: [
+        { id: 'M-1', title: 'Procure filtration units', done: true },
+        { id: 'M-2', title: 'Install first 6 stations', done: false },
+        { id: 'M-3', title: 'Publish month-1 quality report', done: false },
+      ],
+      progressPercent: 35,
+      latestUpdate: 'Vendor contracts signed. Site prep started in 2 zones.',
+      completed: false,
+    },
+  }),
+  createProposalModel({
+    id: 'PROP-103',
+    title: 'Weekly Open Market — Digital + Physical',
+    problem: 'Local vendors need predictable trade channels and token utility.',
+    proposal: 'Launch weekly market day and mirrored digital listings under PVA civic marketplace.',
+    expectedOutcome: 'Increase household trade activity and improve PVA token circulation.',
+    costResources: 'Budget: 40,000 PVA; 2 market coordinators; stall equipment.',
+    urgency: 'standard',
+    committeeCategory: 'economy',
+    createdBy: 'Kibera Node',
+    createdAt: '2026-04-10T09:00:00.000Z',
+    supportCount: 2,
+    supporters: makeSupporters(2, 'seed-citizen-b'),
+    comments: [],
+    status: 'public',
+  }),
 ]
+
+const SEED_PASSPORT = {
+  citizenId: 'citizen-0047',
+  name: 'Amara Kamau',
+  node: 'Nairobi Node · Kenya',
+  memberActive: true,
+  walletAddress: '',
+  joinedAt: '2025-02-01',
+  mock: true,
+}
 
 const SEED_CITIZEN = {
   name: 'Amara Kamau',
   initial: 'A',
   id: '0047',
-  did: '0x4f2a8b3c9e1d7f05…8c91',
+  did: 'mock:citizen:0047',
   node: 'Nairobi Node · Kenya',
   joinedAt: 'Feb 2025',
   votes: 23,
@@ -192,186 +184,406 @@ const SEED_TREASURY = {
   communityFund: 182400,
   proposalReserve: 45000,
   recentTransactions: [
-    { id: 'TX-8821', type: 'payout', amount: 60000, desc: 'Mobile Health Clinic — monthly operating budget', date: '2026-04-01' },
-    { id: 'TX-8720', type: 'deposit', amount: 12400, desc: 'Market fee collection — March', date: '2026-03-31' },
-    { id: 'TX-8611', type: 'payout', amount: 8000, desc: "Citizens' Panel honorarium — Q1", date: '2026-03-28' },
-    { id: 'TX-8504', type: 'deposit', amount: 5000, desc: 'New citizen enrollment fees', date: '2026-03-25' },
+    { id: 'TX-8821', type: 'payout', amount: 60000, desc: 'Water filtration pilot tranche 1', date: '2026-04-10' },
+    { id: 'TX-8720', type: 'deposit', amount: 12400, desc: 'Market fee collection', date: '2026-04-08' },
   ],
 }
 
 const SEED_CONFERENCE = {
   number: 7,
   date: '2026-04-20',
-  location: 'Kibera Community Hall + pvabazaar.org (livestream)',
+  location: 'Kibera Community Hall + pvabazaar.org livestream',
   agenda: [
-    { time: '09:00', item: 'Opening & Attendance Verification' },
-    { time: '09:30', item: "PROP-041: Solar Micro-Grid (Panel Statement + Q&A)" },
-    { time: '10:30', item: "PROP-039: Open Market System (Panel Statement + Q&A)" },
-    { time: '11:30', item: 'PROP-044: Water Filtration Network' },
-    { time: '13:00', item: 'Break + Open Deliberation' },
-    { time: '14:00', item: 'Open Floor — Citizen Questions (5 min each)' },
-    { time: '15:00', item: 'LIVE VOTING SESSION — all eligible citizens' },
-    { time: '16:00', item: 'Results Announced & Recorded On-Chain' },
-    { time: '16:30', item: 'New Proposals from the Floor' },
+    { time: '09:00', item: 'Opening & citizen attendance verification' },
+    { time: '09:30', item: 'Conference queue deliberation block' },
+    { time: '11:00', item: 'Public comments and moderator response' },
+    { time: '14:00', item: 'Decision publication and execution handoff' },
   ],
-  targetDate: new Date('2026-04-20T09:00:00').getTime(),
+  targetDate: new Date('2026-04-20T09:00:00Z').getTime(),
 }
 
-// ── STORE ──────────────────────────────────────────────────────────────────────
+const SUPPORT_THRESHOLD = 3
+
+const normalizeUrgency = (value) => {
+  const v = String(value || 'standard').toLowerCase()
+  if (v === 'high' || v === 'critical') return 'high'
+  return 'standard'
+}
+
+const normalizeDecisionStatus = (value) => {
+  const next = String(value || '').toLowerCase().trim()
+  if (next === 'accepted') return 'accepted'
+  if (next === 'rejected') return 'rejected'
+  if (next === 'needs_revision') return 'needs_revision'
+  if (next === 'conference_queue') return 'conference_queue'
+  if (next === 'public') return 'public'
+  if (next === 'in_execution') return 'in_execution'
+  if (next === 'completed') return 'completed'
+  return ''
+}
+
+const makeProposalId = (proposals) => {
+  const maxNum = proposals.reduce((acc, p) => {
+    const parsed = Number(String(p.id || '').replace(/[^0-9]/g, '')) || 0
+    return Math.max(acc, parsed)
+  }, 100)
+  return `PROP-${String(maxNum + 1).padStart(3, '0')}`
+}
+
+const withDerivedFields = (proposal) => {
+  const supportCount = Number(proposal.supportCount ?? proposal.endorsements ?? 0)
+  return {
+    ...proposal,
+    supportCount,
+    endorsements: supportCount,
+    stage: toStage(proposal.status),
+    lifecycle: toLifecycle(proposal.status),
+    solution: proposal.proposal,
+    outcome: proposal.expectedOutcome,
+    comments: Array.isArray(proposal.comments) ? proposal.comments : [],
+    userEndorsed: false,
+  }
+}
+
+const refreshStats = (state) => {
+  const proposals = state.proposals || []
+  const queueOrVoting = proposals.filter((p) => ['threshold_reached', 'conference_queue', 'in_execution'].includes(p.status))
+  return {
+    ...state,
+    communityStats: {
+      ...state.communityStats,
+      proposals: proposals.length,
+      activeVotes: queueOrVoting.length,
+    },
+  }
+}
+
 export const useGovernanceStore = create(
   persist(
     (set, get) => ({
-      // State
       proposals: SEED_PROPOSALS,
+      citizenPassport: SEED_PASSPORT,
+      supportThreshold: SUPPORT_THRESHOLD,
+
+      // Legacy-friendly state
       citizen: SEED_CITIZEN,
       treasury: SEED_TREASURY,
       conference: SEED_CONFERENCE,
       citizenRole: 'member',
-      committeeAssignments: ['PROP-039'],
-      communityStats: { citizens: 2847, proposals: 143, activeVotes: 12, participation: 68 },
+      committeeAssignments: ['PROP-101'],
+      communityStats: { citizens: 2847, proposals: SEED_PROPOSALS.length, activeVotes: 2, participation: 68 },
       tickerEvents: [],
       toasts: [],
 
-      setCitizenRole: (role) => set({ citizenRole: role }),
+      setCitizenRole: (role) => set({ citizenRole: role || 'member' }),
+
+      setCitizenMembership: (payload = {}) => {
+        set((state) => {
+          const nextPassport = {
+            ...state.citizenPassport,
+            ...payload,
+            memberActive: payload.memberActive ?? true,
+          }
+
+          const nextCitizen = {
+            ...state.citizen,
+            name: nextPassport.name || state.citizen.name,
+            id: String(nextPassport.citizenId || state.citizen.id).replace('citizen-', ''),
+            verified: Boolean(nextPassport.memberActive),
+            did: nextPassport.walletAddress ? `mock:wallet:${nextPassport.walletAddress}` : state.citizen.did,
+          }
+
+          return {
+            citizenPassport: nextPassport,
+            citizen: nextCitizen,
+          }
+        })
+      },
+
+      ensureCitizenMembership: (walletAddress = '') => {
+        const state = get()
+        const passport = state.citizenPassport
+        if (passport?.memberActive && (!walletAddress || passport.walletAddress === walletAddress)) {
+          return passport
+        }
+
+        const short = walletAddress ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}` : 'Mock Citizen'
+        const nextPassport = {
+          ...passport,
+          citizenId: walletAddress ? `citizen-${walletAddress.slice(-6)}` : passport.citizenId,
+          name: walletAddress ? `Citizen ${short}` : passport.name,
+          walletAddress,
+          memberActive: true,
+          mock: !walletAddress,
+        }
+        get().setCitizenMembership(nextPassport)
+        return nextPassport
+      },
+
       assignToCommittee: (proposalId) => set((state) => ({
         committeeAssignments: state.committeeAssignments.includes(proposalId)
           ? state.committeeAssignments
           : [...state.committeeAssignments, proposalId],
       })),
+
       removeFromCommittee: (proposalId) => set((state) => ({
         committeeAssignments: state.committeeAssignments.filter((id) => id !== proposalId),
       })),
 
-      // ── Proposals
-      addProposal: (data) => {
-        const proposals = get().proposals
-        const nextNum = 48 + proposals.length
-        const newProposal = {
-          id: `PROP-0${nextNum}`,
-          stage: 'draft',
-          category: data.category || 'Governance',
-          urgency: data.urgency || 'Standard',
-          title: data.title,
-          excerpt: data.solution || 'Draft proposal — details pending.',
-          problem: data.problem || '',
-          solution: data.solution || '',
-          outcome: data.outcome || '',
-          panelStatement: null,
-          author: 'Amara K.',
-          authorInitial: 'A',
-          authorColor: '#e8a83e',
-          endorsements: 0,
-          comments: 0,
-          yesVotes: 0,
-          noVotes: 0,
-          daysLeft: null,
-          createdAt: new Date().toISOString().split('T')[0],
-          lifecycle: 1,
-          userEndorsed: false,
-          userVote: null,
-        }
-        set({ proposals: [newProposal, ...proposals] })
-        get().addTicker(`New proposal · ${newProposal.id}`)
-        get().showToast(`📝 ${newProposal.id} submitted! Needs 5% endorsements to advance.`)
-        // Update citizen proposal count
-        set((s) => ({ citizen: { ...s.citizen, proposals: s.citizen.proposals + 1 } }))
-      },
+      addProposal: (input = {}) => {
+        const state = get()
+        const passport = state.ensureCitizenMembership(state.citizenPassport?.walletAddress || '')
+        const now = new Date().toISOString()
+        const proposalId = makeProposalId(state.proposals)
+        const createdBy = passport.name || state.citizen.name || 'Citizen'
 
-      endorseProposal: (id) => {
-        set((s) => ({
-          proposals: s.proposals.map((p) => {
-            if (p.id !== id) return p
-            if (p.userEndorsed) return p
-            const newEndorsements = p.endorsements + 1
-            // Auto-advance draft→endorsed at 100 endorsements (represents ~5% threshold)
-            const newStage = p.stage === 'draft' && newEndorsements >= 100 ? 'endorsed' : p.stage
-            const newLifecycle = newStage === 'endorsed' ? 2 : p.lifecycle
-            return { ...p, endorsements: newEndorsements, userEndorsed: true, stage: newStage, lifecycle: newLifecycle }
-          }),
+        const proposal = withDerivedFields(createProposalModel({
+          id: proposalId,
+          title: input.title || 'Untitled Proposal',
+          problem: input.problem || '',
+          proposal: input.proposal || input.solution || '',
+          expectedOutcome: input.expectedOutcome || input.outcome || '',
+          costResources: input.costResources || '',
+          urgency: normalizeUrgency(input.urgency),
+          committeeCategory: input.committeeCategory || input.category || 'governance',
+          createdBy,
+          createdAt: now,
+          supportCount: 0,
+          supporters: [],
+          comments: [],
+          status: 'public',
+          adminDecision: '',
+          adminReason: '',
+          nextStep: 'Awaiting public support threshold.',
+          targetTimeline: input.targetTimeline || '',
+          executionProject: null,
+          author: createdBy,
+          authorInitial: String(createdBy[0] || 'C').toUpperCase(),
+          authorColor: '#4a90a4',
+          category: input.committeeCategory || input.category || 'Governance',
         }))
-        const p = get().proposals.find((x) => x.id === id)
-        get().addTicker(`Endorsed · ${id}`)
-        if (p?.stage === 'endorsed') {
-          get().showToast(`✅ ${id} reached endorsement threshold!`)
-        } else {
-          get().showToast(`⬆ Endorsed · ${p?.endorsements} total`)
-        }
-      },
 
-      castVote: (id, choice) => {
-        set((s) => ({
-          proposals: s.proposals.map((p) => {
-            if (p.id !== id || p.stage !== 'vote') return p
-            if (p.userVote === choice) return p
-            let yes = p.yesVotes
-            let no = p.noVotes
-            // Remove previous vote if switching
-            if (p.userVote === 'yes') yes--
-            if (p.userVote === 'no') no--
-            if (choice === 'yes') yes++
-            else no++
-            return { ...p, yesVotes: yes, noVotes: no, userVote: choice }
-          }),
+        set((s) => refreshStats({
+          ...s,
+          proposals: [proposal, ...s.proposals],
+          citizen: { ...s.citizen, proposals: Number(s.citizen.proposals || 0) + 1 },
         }))
-        get().addTicker(`Vote cast · ${id}`)
-        get().showToast(`🗳 ${choice.toUpperCase()} vote cast · ZK proof generated · Recorded on-chain`)
-        set((s) => ({ citizen: { ...s.citizen, votes: s.citizen.votes + 1 } }))
+
+        get().addTicker(`Proposal published · ${proposalId}`)
+        get().showToast(`📝 ${proposalId} is live for public support.`)
+        return proposal
       },
 
-      setProposalStatus: (id, status) => {
-        const toStage = (nextStatus) => {
-          if (nextStatus === 'conference') return 'panel'
-          return nextStatus
-        }
+      supportProposal: (proposalId, supporter = {}) => {
+        const state = get()
+        const passport = state.ensureCitizenMembership(supporter.walletAddress || state.citizenPassport?.walletAddress || '')
+        const supporterId = supporter.citizenId || passport.citizenId
 
-        set((s) => ({
-          proposals: s.proposals.map((p) => {
-            if (p.id !== id) return p
-            return {
-              ...p,
-              stage: toStage(status),
-              lifecycle:
-                status === 'draft' ? 1
-                  : status === 'endorsed' ? 2
-                    : status === 'conference' || status === 'panel' ? 3
-                      : status === 'vote' ? 4
-                        : status === 'passed' || status === 'rejected' ? 5
-                          : p.lifecycle,
+        let alreadySupported = false
+        let reachedThreshold = false
+
+        set((s) => {
+          const proposals = s.proposals.map((proposal) => {
+            if (proposal.id !== proposalId) return proposal
+
+            const supporters = Array.isArray(proposal.supporters) ? proposal.supporters : []
+            if (supporters.includes(supporterId)) {
+              alreadySupported = true
+              return proposal
             }
+
+            const supportCount = Number(proposal.supportCount || 0) + 1
+            let status = proposal.status
+            let thresholdReachedAt = proposal.thresholdReachedAt
+            let conferenceQueuedAt = proposal.conferenceQueuedAt
+            let nextStep = proposal.nextStep
+
+            if (supportCount >= (s.supportThreshold || SUPPORT_THRESHOLD) && ['public', 'draft', 'threshold_reached'].includes(status)) {
+              reachedThreshold = true
+              status = 'conference_queue'
+              thresholdReachedAt = thresholdReachedAt || new Date().toISOString()
+              conferenceQueuedAt = new Date().toISOString()
+              nextStep = 'Added to conference agenda queue for moderation and public decision.'
+            }
+
+            return withDerivedFields({
+              ...proposal,
+              supporters: [...supporters, supporterId],
+              supportCount,
+              status,
+              thresholdReachedAt,
+              conferenceQueuedAt,
+              nextStep,
+            })
+          })
+
+          return refreshStats({ ...s, proposals })
+        })
+
+        if (alreadySupported) {
+          get().showToast('You already supported this proposal with your citizen passport.')
+          return false
+        }
+
+        get().addTicker(`Support recorded · ${proposalId}`)
+        if (reachedThreshold) {
+          get().showToast(`✅ ${proposalId} reached threshold and entered the conference queue.`)
+        }
+        return true
+      },
+
+      addProposalComment: (proposalId, payload = {}) => {
+        const state = get()
+        const passport = state.ensureCitizenMembership(payload.walletAddress || state.citizenPassport?.walletAddress || '')
+        const body = String(payload.body || '').trim()
+        if (!body) return false
+
+        const comment = {
+          id: `COM-${Date.now()}`,
+          authorId: payload.authorId || passport.citizenId,
+          authorName: payload.authorName || passport.name || 'Citizen',
+          body,
+          createdAt: new Date().toISOString(),
+        }
+
+        set((s) => ({
+          proposals: s.proposals.map((proposal) => {
+            if (proposal.id !== proposalId) return proposal
+            return withDerivedFields({
+              ...proposal,
+              comments: [...(proposal.comments || []), comment],
+            })
           }),
         }))
 
-        get().addTicker(`Moderation update · ${id} → ${status}`)
+        get().addTicker(`Comment added · ${proposalId}`)
+        return true
       },
 
-      removeProposal: (id) => {
-        set((s) => ({ proposals: s.proposals.filter((p) => p.id !== id) }))
-        get().addTicker(`Proposal removed · ${id}`)
-        get().showToast(`Removed proposal ${id}`)
+      setAdminDecision: (proposalId, payload = {}) => {
+        const nextStatus = normalizeDecisionStatus(payload.decision)
+        if (!nextStatus) return false
+
+        set((s) => ({
+          proposals: s.proposals.map((proposal) => {
+            if (proposal.id !== proposalId) return proposal
+
+            return withDerivedFields({
+              ...proposal,
+              status: nextStatus,
+              adminDecision: nextStatus,
+              adminReason: payload.reason || proposal.adminReason || '',
+              nextStep: payload.nextStep || proposal.nextStep || '',
+              targetTimeline: payload.targetTimeline || proposal.targetTimeline || '',
+            })
+          }),
+        }))
+
+        get().addTicker(`Decision published · ${proposalId} → ${nextStatus}`)
+        get().showToast(`Moderator decision saved for ${proposalId}.`)
+        return true
       },
 
-      // ── UI helpers
+      setExecutionProject: (proposalId, payload = {}) => {
+        set((s) => ({
+          proposals: s.proposals.map((proposal) => {
+            if (proposal.id !== proposalId) return proposal
+
+            const milestones = Array.isArray(payload.milestones)
+              ? payload.milestones.map((milestone, idx) => ({
+                  id: milestone.id || `M-${idx + 1}`,
+                  title: milestone.title || `Milestone ${idx + 1}`,
+                  done: Boolean(milestone.done),
+                }))
+              : []
+
+            const progressPercent = Number(payload.progressPercent || 0)
+            const completed = Boolean(payload.completed)
+            const status = completed ? 'completed' : progressPercent > 0 ? 'in_execution' : 'accepted'
+
+            return withDerivedFields({
+              ...proposal,
+              status,
+              executionProject: {
+                owner: payload.owner || proposal.executionProject?.owner || '',
+                milestones,
+                progressPercent,
+                latestUpdate: payload.latestUpdate || proposal.executionProject?.latestUpdate || '',
+                completed,
+              },
+            })
+          }),
+        }))
+
+        get().addTicker(`Execution tracker updated · ${proposalId}`)
+        return true
+      },
+
+      castVote: (proposalId, choice) => {
+        set((s) => ({
+          proposals: s.proposals.map((proposal) => {
+            if (proposal.id !== proposalId) return proposal
+            let yes = Number(proposal.yesVotes || 0)
+            let no = Number(proposal.noVotes || 0)
+            if (proposal.userVote === 'yes') yes -= 1
+            if (proposal.userVote === 'no') no -= 1
+            if (choice === 'yes') yes += 1
+            if (choice === 'no') no += 1
+            return withDerivedFields({ ...proposal, yesVotes: Math.max(0, yes), noVotes: Math.max(0, no), userVote: choice })
+          }),
+          citizen: { ...s.citizen, votes: Number(s.citizen.votes || 0) + 1 },
+        }))
+
+        get().addTicker(`Vote cast · ${proposalId}`)
+      },
+
+      setProposalStatus: (proposalId, status) => {
+        const statusMap = {
+          draft: 'draft',
+          endorsed: 'threshold_reached',
+          conference: 'conference_queue',
+          panel: 'conference_queue',
+          vote: 'conference_queue',
+          passed: 'accepted',
+          rejected: 'rejected',
+          public: 'public',
+        }
+        const mapped = statusMap[String(status || '').toLowerCase()] || normalizeDecisionStatus(status) || 'public'
+        return get().setAdminDecision(proposalId, { decision: mapped })
+      },
+
+      endorseProposal: (proposalId) => {
+        const passport = get().citizenPassport
+        return get().supportProposal(proposalId, { citizenId: passport.citizenId, walletAddress: passport.walletAddress })
+      },
+
+      removeProposal: (proposalId) => {
+        set((s) => refreshStats({ ...s, proposals: s.proposals.filter((proposal) => proposal.id !== proposalId) }))
+        get().addTicker(`Proposal removed · ${proposalId}`)
+      },
+
       addTicker: (msg) => {
-        const hash = `0x${Math.random().toString(16).substr(2, 4)}`
+        const hash = `0x${Math.random().toString(16).slice(2, 6)}`
         const event = { hash, msg, id: Date.now() }
-        set((s) => ({ tickerEvents: [event, ...s.tickerEvents].slice(0, 8) }))
+        set((s) => ({ tickerEvents: [event, ...s.tickerEvents].slice(0, 10) }))
       },
 
       showToast: (msg) => {
         const id = Date.now()
         set((s) => ({ toasts: [...s.toasts, { id, msg }] }))
-        globalThis.setTimeout(() => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })), 3200)
+        globalThis.setTimeout(() => set((s) => ({ toasts: s.toasts.filter((item) => item.id !== id) })), 3200)
       },
 
-      dismissToast: (id) => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })),
+      dismissToast: (id) => set((s) => ({ toasts: s.toasts.filter((toast) => toast.id !== id) })),
     }),
     {
       name: 'pva-governance-store',
-      partialize: (s) => ({
-        proposals: s.proposals,
-        citizen: s.citizen,
-        citizenRole: s.citizenRole,
-        committeeAssignments: s.committeeAssignments,
+      partialize: (state) => ({
+        proposals: state.proposals,
+        citizenPassport: state.citizenPassport,
+        citizen: state.citizen,
+        citizenRole: state.citizenRole,
+        committeeAssignments: state.committeeAssignments,
       }),
     }
   )
