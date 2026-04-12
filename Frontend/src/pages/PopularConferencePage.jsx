@@ -354,7 +354,7 @@ export default function PopularConferencePage() {
 
         <div className="pc-card">
           <h2>Proposal Board</h2>
-          {!items.length && !loading ? <p className="pc-meta">No live proposals yet. Create the first one from the left panel.</p> : null}
+          {!items.length && !busy ? <p className="pc-meta">No live proposals yet. Create the first one from the left panel.</p> : null}
           <div className="pc-list">
             {items.map((item) => (
               <article key={item._id} className="pc-item">

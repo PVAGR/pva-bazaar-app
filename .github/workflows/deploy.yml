@@ -1,9 +1,11 @@
-name: Deploy Frontend to GitHub Pages
+name: Deploy Frontend to GitHub Pages (Legacy Manual)
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
+
+# Canonical GitHub Pages deployment is handled by deploy-frontend.yml.
+# This legacy workflow remains manual-only to avoid duplicate deployments
+# that can publish inconsistent artifacts.
 
 permissions:
   contents: read
@@ -49,6 +51,8 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    # Disabled: canonical Pages deploy is handled by deploy-frontend.yml
+    if: false
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

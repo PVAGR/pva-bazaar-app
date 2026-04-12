@@ -7,6 +7,7 @@ import { getToken } from './lib/auth';
 
 import AboutPage from './pages/AboutPage.jsx';
 import ArchiveLibraryPage from './pages/ArchiveLibraryPage.jsx';
+import HomePage from './pages/HomePage.jsx';
 import CivilizationLibraryPage from './pages/CivilizationLibraryPage.jsx';
 import AdminPage from './pages/AdminPage.jsx';
 import CareerQuizPage from './pages/CareerQuizPage.jsx';
@@ -31,6 +32,7 @@ import DownloadAppPage from './pages/DownloadAppPage.jsx';
 import ForumPage from './pages/Forum.jsx';
 import { GovernanceConferencePage, GovernanceTreasuryPage } from './pages/OtherPages.jsx';
 import useArchiveTheme from './hooks/useArchiveTheme.js';
+import './pages/HomePage.css';
 import './base.css';
 
 function RequireUserAuth({ children }) {
@@ -65,9 +67,10 @@ export default function App() {
         <Route path="/items/mine" element={<RequireUserAuth><MyListingsPage /></RequireUserAuth>} />
         <Route path="/deals" element={<RequireUserAuth><DealsPage /></RequireUserAuth>} />
         <Route path="/deals/join" element={<RequireUserAuth><DealJoinPage /></RequireUserAuth>} />
-        <Route path="/conference" element={<RequireUserAuth><Layout><PopularConferencePage /></Layout></RequireUserAuth>} />
+        <Route path="/conference" element={<Layout><PopularConferencePage /></Layout>} />
 
-        <Route path="/" element={<Layout><ArchiveLibraryPage /></Layout>} />
+        <Route path="/" element={<Layout><HomePage /></Layout>} />
+        <Route path="/home" element={<Layout><HomePage /></Layout>} />
         <Route path="/library" element={<Layout><ArchiveLibraryPage /></Layout>} />
         <Route path="/archive" element={<Layout><ArchiveLibraryPage /></Layout>} />
         <Route path="/creator" element={<Layout><CreatorPortalPage /></Layout>} />

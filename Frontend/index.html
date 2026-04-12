@@ -50,34 +50,34 @@
       }
 
       .fallback-copy {
-        margin: 0 0 16px;
+        margin: 0;
         color: #b2dfdb;
         line-height: 1.5;
       }
 
-      .fallback-links {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-      }
-
-      .fallback-link {
-        text-decoration: none;
-        border: 1px solid #00695c;
-        border-radius: 10px;
-        padding: 10px 12px;
-        color: #e0f2f1;
-        background: rgba(20, 20, 40, 0.75);
-        font-weight: 700;
-      }
-
-      .fallback-link:hover {
-        border-color: #26c6da;
-        color: #26c6da;
-      }
-
       body[data-app-mounted='true'] #app-shell-fallback {
         display: none;
+      }
+
+      noscript .noscript-panel {
+        max-width: 760px;
+        margin: 40px auto;
+        border: 1px solid #00695c;
+        border-radius: 12px;
+        padding: 18px 20px;
+        background: rgba(15, 15, 30, 0.9);
+      }
+
+      noscript h1 {
+        margin: 0 0 8px;
+        color: #26c6da;
+        font-family: 'Merriweather', serif;
+      }
+
+      noscript p,
+      noscript li,
+      noscript a {
+        color: #e0f2f1;
       }
     </style>
     <script>
@@ -96,7 +96,7 @@
         "@type": "WebSite",
         "name": "PVA Bazaar",
         "url": "https://pvabazaar.org/",
-        "description": "PVA Bazaar archive, marketplace, showroom, and civilization library.",
+        "description": "PVA Bazaar archive, marketplace, showroom, civic conference, and civilization library.",
         "hasPart": [
           {
             "@type": "WebPage",
@@ -117,41 +117,69 @@
             "@type": "WebPage",
             "name": "Civilization Library",
             "url": "https://pvabazaar.org/#/civilization-library"
+          },
+          {
+            "@type": "WebPage",
+            "name": "Popular Conference",
+            "url": "https://pvabazaar.org/#/conference"
+          },
+          {
+            "@type": "WebPage",
+            "name": "Forum",
+            "url": "https://pvabazaar.org/#/forum"
+          },
+          {
+            "@type": "WebPage",
+            "name": "Governance Conference",
+            "url": "https://pvabazaar.org/#/governance/conference"
+          },
+          {
+            "@type": "WebPage",
+            "name": "Governance Treasury",
+            "url": "https://pvabazaar.org/#/governance/treasury"
+          },
+          {
+            "@type": "WebPage",
+            "name": "Career Quiz",
+            "url": "https://pvabazaar.org/#/career-quiz"
+          },
+          {
+            "@type": "WebPage",
+            "name": "Creator Portal",
+            "url": "https://pvabazaar.org/#/creator"
+          },
+          {
+            "@type": "WebPage",
+            "name": "About",
+            "url": "https://pvabazaar.org/#/about"
+          },
+          {
+            "@type": "WebPage",
+            "name": "Download App",
+            "url": "https://pvabazaar.org/#/download-app"
           }
         ]
       }
     </script>
   </head>
   <body>
-    <article id="llm-readable-content" aria-label="PVA Bazaar readable summary" style="display:block;max-width:980px;margin:0 auto;padding:1rem 1.2rem;color:#e0f2f1;line-height:1.5;">
-      <h1 style="font-family:'Merriweather',serif;color:#26c6da;margin:0 0 0.55rem;">PVA Bazaar Readable Site Summary</h1>
-      <p style="margin:0 0 0.75rem;color:#b2dfdb;">This website is a client-side single-page app. The live interactive UI is rendered by JavaScript, but this section is intentionally static so crawlers and AI fetch tools can read core structure without JS.</p>
-      <h2 style="font-family:'Merriweather',serif;color:#26c6da;font-size:1.1rem;margin:0.7rem 0 0.4rem;">Primary Routes</h2>
-      <ul style="margin:0 0 0.75rem 1.1rem;padding:0;color:#e0f2f1;">
-        <li>Archive Library: https://pvabazaar.org/#/library</li>
-        <li>Marketplace: https://pvabazaar.org/#/marketplace</li>
-        <li>Showroom: https://pvabazaar.org/#/showroom</li>
-        <li>Civilization Library: https://pvabazaar.org/#/civilization-library</li>
-      </ul>
-      <h2 style="font-family:'Merriweather',serif;color:#26c6da;font-size:1.1rem;margin:0.7rem 0 0.4rem;">Machine-Readable Endpoints</h2>
-      <ul style="margin:0 0 0.75rem 1.1rem;padding:0;color:#e0f2f1;">
-        <li>LLM index: https://pvabazaar.org/llms.txt</li>
-        <li>Readable snapshot JSON: https://pvabazaar.org/readable-site.json</li>
-        <li>Sitemap: https://pvabazaar.org/sitemap.xml</li>
-      </ul>
-      <p style="margin:0 0 0.9rem;color:#b2dfdb;">If a fetch tool only sees a loading shell, it should parse llms.txt or readable-site.json for stable content and route mapping.</p>
-    </article>
     <div id="root" role="main"></div>
+    <noscript>
+      <section class="noscript-panel" aria-label="PVA Bazaar no-script guidance">
+        <h1>PVA Bazaar</h1>
+        <p>This site requires JavaScript for the full app experience.</p>
+        <p>Machine-readable resources for crawlers and AI tools:</p>
+        <ul>
+          <li><a href="/llms.txt">llms.txt</a></li>
+          <li><a href="/readable-site.json">readable-site.json</a></li>
+          <li><a href="/sitemap.xml">sitemap.xml</a></li>
+        </ul>
+      </section>
+    </noscript>
     <div id="app-shell-fallback" hidden>
       <div class="fallback-panel">
-        <h1 class="fallback-title">PVA Bazaar is loading</h1>
-        <p class="fallback-copy">If the page appears blank after refresh, use one of these direct links and the site will recover without losing any built pages.</p>
-        <div class="fallback-links">
-          <a class="fallback-link" href="/#/library">Archive Library</a>
-          <a class="fallback-link" href="/#/marketplace">Marketplace</a>
-          <a class="fallback-link" href="/#/showroom">Showroom</a>
-          <a class="fallback-link" href="/#/civilization-library">Civilization Library</a>
-        </div>
+        <h1 class="fallback-title">Loading PVA Bazaar...</h1>
+        <p class="fallback-copy">If this takes unusually long, refresh the page once. If the issue persists, check <a href="/status.html">status</a>.</p>
       </div>
     </div>
     <script type="module" src="/src/main.jsx"></script>

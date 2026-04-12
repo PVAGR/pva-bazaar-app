@@ -92,6 +92,11 @@ body {
   flex-direction: column;
 }
 
+.layout__brandLink {
+  text-decoration: none;
+  color: inherit;
+}
+
 .layout__title {
   font-family: 'Merriweather', serif;
   color: var(--site-accent);

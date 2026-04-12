@@ -6,7 +6,7 @@ function getCanonicalUrl(path = '') {
   return base + (path.startsWith('/') ? path : '/' + path);
 }
 import { Link } from 'react-router-dom';
-import { fetchArchiveEntries } from '../lib/api';
+import { fetchArchiveEntriesSafe } from '../lib/archiveFeed';
 import useArchiveTheme from '../hooks/useArchiveTheme.js';
 import './ArchiveLibraryPage.css';
 
@@ -283,18 +283,12 @@ export default function ArchiveLibraryPage() {
   // Function to load custom entries from API
   const loadCustomEntries = useCallback(async () => {
     setEntriesError('');
-    try {
-      const result = await fetchArchiveEntries({ limit: 100 });
-      if (result.ok && Array.isArray(result.items)) {
-        setCustomEntries(result.items);
-      } else {
-        setCustomEntries([]);
-        setEntriesError('Unable to load new posts right now. Please try again.');
-      }
-    } catch (error) {
-      console.error('Failed to load custom entries:', error);
+    const result = await fetchArchiveEntriesSafe({ limit: 100 });
+    if (result.ok && Array.isArray(result.items)) {
+      setCustomEntries(result.items);
+    } else {
       setCustomEntries([]);
-      setEntriesError('Connection issue while loading new posts. Please retry.');
+      setEntriesError('Unable to load new posts right now. Please try again.');
     }
   }, []);
 

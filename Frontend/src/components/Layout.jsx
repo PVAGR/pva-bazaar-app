@@ -2,6 +2,7 @@ import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import useArchiveTheme from '../hooks/useArchiveTheme.js';
 import OpenClawFloatingAssistant from './OpenClawFloatingAssistant.jsx';
+import { PUBLIC_ROUTES } from '../config/publicRoutes';
 
 export default function Layout({ children }) {
   const { darkMode, toggleTheme } = useArchiveTheme();
@@ -11,20 +12,16 @@ export default function Layout({ children }) {
     <div className="layout">
       <a className="sr-only" href="#content">Skip to content</a>
       <header className="layout__header">
-        <div className="layout__brand">
+        <NavLink to="/" end className="layout__brand layout__brandLink" aria-label="PVA Bazaar home">
           <div className="layout__title">pvabazaar.org</div>
-          <div className="layout__tagline">The Complete Archive</div>
-        </div>
+          <div className="layout__tagline">Archive · Commerce · Governance</div>
+        </NavLink>
         <nav className="layout__nav" aria-label="Primary">
-          <NavLink to="/" end>📚 Archive Library</NavLink>
-          <NavLink to="/civilization-library">🧠 Civilization Library</NavLink>
-          <NavLink to="/career-quiz">🧭 Career Quiz</NavLink>
-          <NavLink to="/marketplace">🛒 Marketplace</NavLink>
-          <NavLink to="/showroom">🏪 Showroom</NavLink>
-          <NavLink to="/conference">🗳️ Popular Conference</NavLink>
-          <NavLink to="/download-app">📲 Download App</NavLink>
-          <NavLink to="/creator">✨ Creator Sign Up</NavLink>
-          <NavLink to="/about">About</NavLink>
+          {PUBLIC_ROUTES.map((route) => (
+            <NavLink key={route.key} to={route.to} end={route.to === '/'}>
+              {route.navLabel}
+            </NavLink>
+          ))}
         </nav>
         <button
           type="button"

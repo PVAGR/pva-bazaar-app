@@ -48,7 +48,8 @@ jobs:
     name: Deploy to GitHub Pages
     needs: build
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    # Disabled: canonical Pages deploy is handled by deploy-frontend.yml
+    if: false
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
