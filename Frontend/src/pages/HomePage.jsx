@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchArchiveEntriesSafe } from '../lib/archiveFeed'
+import { fetchProposals } from '../lib/api'
 import { HOME_CORE_ROUTES, HOME_SUPPORT_ROUTES } from '../config/publicRoutes'
 
 const MAX_LATEST = 6
@@ -9,6 +10,8 @@ export default function HomePage({ entries = [] }) {
   const [liveEntries, setLiveEntries] = useState([])
   const [liveEntriesError, setLiveEntriesError] = useState('')
   const [liveEntriesLoading, setLiveEntriesLoading] = useState(true)
+  const [latestProposals, setLatestProposals] = useState([])
+  const [proposalsLoading, setProposalsLoading] = useState(true)
 
   useEffect(() => {
     let cancelled = false
@@ -28,6 +31,32 @@ export default function HomePage({ entries = [] }) {
     }
 
     loadLatestEntries()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+
+    const loadLatestProposals = async () => {
+      setProposalsLoading(true)
+      try {
+        const response = await fetchProposals({ status: 'open', sort: 'recent', page: 1, limit: 3 })
+        if (cancelled) return
+        if (response?.ok && Array.isArray(response.items)) {
+          setLatestProposals(response.items.slice(0, 3))
+        } else {
+          setLatestProposals([])
+        }
+      } catch (_error) {
+        if (!cancelled) setLatestProposals([])
+      } finally {
+        if (!cancelled) setProposalsLoading(false)
+      }
+    }
+
+    loadLatestProposals()
     return () => {
       cancelled = true
     }
@@ -58,15 +87,16 @@ export default function HomePage({ entries = [] }) {
       <section className="home-hero section-card">
         <div className="home-hero__copy">
           <div className="pill home-hero__kicker">PVA Bazaar · Full Site Overview</div>
-          <h1>One site, three layers: archive, commerce, and civic governance.</h1>
+          <h1>A public civilization platform for memory, trade, and accountable decisions.</h1>
           <p>
-            Start here to move between the living archive, the marketplace, the showroom, and the public
-            governance spaces without losing the thread of the site.
+            PVA Bazaar combines a living knowledge library, an ethical marketplace, and a governance engine.
+            The Popular Conference is where citizens submit proposals, build support, receive official responses,
+            and track execution openly.
           </p>
           <div className="home-hero__actions">
-            <Link className="button" to="/archive">Enter archive</Link>
-            <Link className="button ghost" to="/forum">Open forum</Link>
-            <Link className="button secondary" to="/conference">Visit conference</Link>
+            <Link className="button" to="/conference">Enter Popular Conference</Link>
+            <Link className="button ghost" to="/archive">Open Library</Link>
+            <Link className="button secondary" to="/marketplace">Open Marketplace</Link>
           </div>
         </div>
 
@@ -81,8 +111,8 @@ export default function HomePage({ entries = [] }) {
             ))}
           </div>
           <p className="home-hero__panel-copy">
-            The Forum is the featured civic hub. Governance pages are public, and the route map is visible from the
-            top navigation.
+            Governance is centered in the Popular Conference. Public navigation is intentionally reduced so first-time
+            visitors can orient quickly.
           </p>
         </aside>
       </section>
@@ -118,9 +148,9 @@ export default function HomePage({ entries = [] }) {
         <div className="section-heading">
           <div>
             <div className="pill">Navigation shell</div>
-            <h2 style={{ margin: '0.35rem 0 0' }}>All public routes</h2>
+            <h2 style={{ margin: '0.35rem 0 0' }}>Secondary navigation</h2>
           </div>
-          <Link className="button ghost" to="/download-app">Get app link</Link>
+          <Link className="button ghost" to="/conference">Open conference lifecycle</Link>
         </div>
         <div className="home-section-grid home-section-grid--support">
           {HOME_SUPPORT_ROUTES.map((route) => (
@@ -130,6 +160,44 @@ export default function HomePage({ entries = [] }) {
             </Link>
           ))}
         </div>
+      </section>
+
+      <section className="section-card home-section-shell">
+        <div className="section-heading">
+          <div>
+            <div className="pill">Governance</div>
+            <h2 style={{ margin: '0.35rem 0 0' }}>Latest Proposals</h2>
+          </div>
+          <Link className="button ghost" to="/proposals">See All Proposals</Link>
+        </div>
+        {proposalsLoading ? <p className="home-state-copy">Loading latest proposals...</p> : null}
+        {!proposalsLoading && latestProposals.length === 0 ? (
+          <p className="home-state-copy">No open proposals available right now.</p>
+        ) : null}
+        {!proposalsLoading && latestProposals.length > 0 ? (
+          <div className="home-proposal-grid">
+            {latestProposals.map((proposal) => {
+              const threshold = Number(proposal.endorsementThreshold || 10)
+              const count = Number(proposal.endorsementCount || 0)
+              return (
+                <article key={proposal.proposalId || proposal._id} className="entry-card home-proposal-card">
+                  <div className="proposal-card-head">
+                    <span className="proposal-badge">{proposal.category}</span>
+                    <span className={`proposal-badge status-${proposal.status}`}>{proposal.status}</span>
+                  </div>
+                  <h3>
+                    <Link to={`/proposals/${encodeURIComponent(proposal.proposalId)}`}>{proposal.title}</Link>
+                  </h3>
+                  <p className="entry-meta">
+                    By {proposal?.submittedBy?.name || 'Unknown citizen'} · {proposal?.createdAt ? new Date(proposal.createdAt).toLocaleDateString() : 'Unknown date'}
+                  </p>
+                  <p className="entry-excerpt">{String(proposal.problem || '').slice(0, 140)}{String(proposal.problem || '').length > 140 ? '…' : ''}</p>
+                  <p className="entry-meta">{count}/{threshold} endorsements</p>
+                </article>
+              )
+            })}
+          </div>
+        ) : null}
       </section>
 
       <section className="section-card home-section-shell">

@@ -20,6 +20,8 @@ import CreatorPortalPage from './pages/CreatorPortalPage.jsx';
 import RegisterPage from './pages/RegisterPage.jsx';
 import LoginPage from './pages/LoginPage.jsx';
 import AccountPage from './pages/AccountPage.jsx';
+import PassportPage from './pages/PassportPage.jsx';
+import CitizenDirectoryPage from './pages/CitizenDirectoryPage.jsx';
 import OnboardingPage from './pages/OnboardingPage.jsx';
 import ListItemPage from './pages/ListItemPage.jsx';
 import MyListingsPage from './pages/MyListingsPage.jsx';
@@ -34,6 +36,9 @@ import DeployPage from './pages/DeployPage.jsx';
 import AdminGovernancePage from './pages/AdminGovernancePage.jsx';
 import DownloadAppPage from './pages/DownloadAppPage.jsx';
 import ForumPage from './pages/Forum.jsx';
+import ProposalsPage from './pages/ProposalsPage.jsx';
+import ProposalDetailPage from './pages/ProposalDetailPage.jsx';
+import SubmitProposalPage from './pages/SubmitProposalPage.jsx';
 import { GovernanceConferencePage, GovernanceTreasuryPage } from './pages/OtherPages.jsx';
 import useArchiveTheme from './hooks/useArchiveTheme.js';
 import './pages/HomePage.css';
@@ -72,11 +77,18 @@ export default function App() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/onboarding" element={<RequireUserAuth><OnboardingPage /></RequireUserAuth>} />
         <Route path="/account" element={<RequireUserAuth><AccountPage /></RequireUserAuth>} />
+        <Route path="/identity-center" element={<RequireUserAuth><Layout><PassportPage /></Layout></RequireUserAuth>} />
+        <Route path="/passport" element={<RequireUserAuth><Layout><PassportPage /></Layout></RequireUserAuth>} />
+        <Route path="/passport/me" element={<RequireUserAuth><Layout><PassportPage /></Layout></RequireUserAuth>} />
         <Route path="/items/new" element={<RequireUserAuth><ListItemPage /></RequireUserAuth>} />
         <Route path="/items/mine" element={<RequireUserAuth><MyListingsPage /></RequireUserAuth>} />
         <Route path="/deals" element={<RequireUserAuth><DealsPage /></RequireUserAuth>} />
         <Route path="/deals/join" element={<RequireUserAuth><DealJoinPage /></RequireUserAuth>} />
         <Route path="/conference" element={<Layout><PopularConferencePage /></Layout>} />
+        <Route path="/proposals" element={<Layout><ProposalsPage /></Layout>} />
+        <Route path="/proposals/submit" element={<RequireUserAuth><Layout><SubmitProposalPage /></Layout></RequireUserAuth>} />
+        <Route path="/proposals/my" element={<RequireUserAuth><Layout><ProposalsPage mode="mine" /></Layout></RequireUserAuth>} />
+        <Route path="/proposals/:proposalId" element={<Layout><ProposalDetailPage /></Layout>} />
         <Route path="/treasury" element={<Layout><TreasuryPage /></Layout>} />
         <Route path="/deploy" element={<Layout><DeployPage /></Layout>} />
 
@@ -88,7 +100,9 @@ export default function App() {
         <Route path="/civilization-library" element={<Layout><CivilizationLibraryPage /></Layout>} />
         <Route path="/career-quiz" element={<Layout><CareerQuizPage /></Layout>} />
         <Route path="/about" element={<Layout><AboutPage /></Layout>} />
+        <Route path="/citizens" element={<Layout><CitizenDirectoryPage /></Layout>} />
         <Route path="/forum" element={<Layout><ForumPage /></Layout>} />
+        <Route path="/passport/:userId" element={<Layout><PassportPage /></Layout>} />
         <Route path="/governance/conference" element={<Layout><GovernanceConferencePage /></Layout>} />
         <Route path="/governance/treasury" element={<Layout><GovernanceTreasuryPage /></Layout>} />
         <Route path="/marketplace" element={<Layout><MarketplacePage /></Layout>} />

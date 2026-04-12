@@ -1,0 +1,213 @@
+.proposal-page {
+  display: grid;
+  gap: 1rem;
+}
+
+.proposal-header h1 {
+  margin: 0.35rem 0 0.5rem;
+  color: var(--site-accent);
+  font-family: 'Merriweather', serif;
+}
+
+.proposal-header p {
+  margin: 0;
+  color: var(--site-text-muted);
+}
+
+.proposal-filters {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.proposal-pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.proposal-pill {
+  border: 1px solid var(--site-border);
+  background: var(--site-panel-soft);
+  color: var(--site-text);
+  border-radius: 999px;
+  padding: 0.35rem 0.65rem;
+  cursor: pointer;
+}
+
+.proposal-pill.is-active {
+  border-color: var(--site-accent);
+  background: var(--site-accent-soft);
+  color: var(--site-accent-strong);
+}
+
+.proposal-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.proposal-filter-grid select,
+.proposal-filter-grid input,
+.proposal-form input,
+.proposal-form textarea,
+.proposal-form select {
+  border: 1px solid var(--site-border);
+  background: var(--site-panel);
+  color: var(--site-text);
+  border-radius: 10px;
+  padding: 0.55rem 0.65rem;
+  font: inherit;
+}
+
+.proposal-grid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.proposal-card {
+  border: 1px solid var(--site-border);
+  background: var(--site-panel-soft);
+  border-radius: 14px;
+  padding: 0.9rem;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.proposal-card-head {
+  display: flex;
+  gap: 0.55rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.proposal-card h3 {
+  margin: 0;
+  color: var(--site-accent);
+}
+
+.proposal-card h3 a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.proposal-card h3 a:hover {
+  color: var(--site-accent-strong);
+}
+
+.proposal-meta {
+  margin: 0;
+  color: var(--site-text-muted);
+  font-size: 0.9rem;
+}
+
+.proposal-badge {
+  border: 1px solid var(--site-border);
+  border-radius: 999px;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.status-draft { color: #c4c4c4; border-color: #8d8d8d; }
+.status-open { color: #6ec1ff; border-color: #4e9ad8; }
+.status-endorsed { color: #ffbf66; border-color: #db9a36; }
+.status-in_deliberation { color: #c48dff; border-color: #9b67d2; }
+.status-voting { color: #ff9c4a; border-color: #d98238; }
+.status-accepted { color: #6fd58d; border-color: #4bb66d; }
+.status-rejected { color: #ff8585; border-color: #d36363; }
+.status-needs_revision { color: #ffd28f; border-color: #d5a85c; }
+.status-archived { color: #a5a5a5; border-color: #7c7c7c; }
+
+.proposal-progress-track {
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--site-panel) 75%, var(--site-border));
+  overflow: hidden;
+}
+
+.proposal-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--site-accent) 0%, var(--site-accent-strong) 100%);
+}
+
+.proposal-pagination {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.proposal-timeline {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.proposal-stage {
+  border: 1px solid var(--site-border);
+  border-radius: 10px;
+  padding: 0.55rem;
+  background: var(--site-panel-soft);
+  color: var(--site-text-muted);
+  font-size: 0.86rem;
+}
+
+.proposal-stage.active {
+  border-color: var(--site-accent);
+  color: var(--site-accent-strong);
+  background: var(--site-accent-soft);
+}
+
+.proposal-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.proposal-detail-grid article {
+  border: 1px solid var(--site-border);
+  border-radius: 12px;
+  background: var(--site-panel-soft);
+  padding: 0.8rem;
+}
+
+.proposal-category-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.proposal-category-card {
+  border: 1px solid var(--site-border);
+  border-radius: 12px;
+  background: var(--site-panel-soft);
+  padding: 0.8rem;
+  cursor: pointer;
+  text-align: left;
+}
+
+.proposal-category-card.active {
+  border-color: var(--site-accent);
+  background: var(--site-accent-soft);
+}
+
+.proposal-form {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.proposal-form label {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--site-text-muted);
+}
+
+@media (max-width: 900px) {
+  .proposal-filter-grid,
+  .proposal-detail-grid,
+  .proposal-category-grid,
+  .proposal-timeline {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,5 +1,7 @@
 {
   "version": 2,
+  "framework": "vite",
+  "outputDirectory": "Frontend/dist",
   "headers": [
     {
       "source": "/(.*)",
@@ -36,6 +38,6 @@
     { "src": "^/pages/(?:home|welcome|contact)\\.html$", "status": 308, "dest": "/" },
     { "src": "^/pages/.*\\.html$", "status": 308, "dest": "/#/library" },
     { "handle": "filesystem" },
-    { "src": "/(.*)", "dest": "/Frontend/dist/index.html" }
+    { "src": "/(.*)", "dest": "/index.html" }
   ]
 }

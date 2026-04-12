@@ -12,11 +12,15 @@ const ROUTE_LABEL_KEYS = {
   'civilization-library': 'civilization',
   'career-quiz': 'careerQuiz',
   marketplace: 'marketplace',
+  governance: 'conference',
   showroom: 'showroom',
   conference: 'conference',
   forum: 'forum',
   'governance-conference': 'govConference',
   'governance-treasury': 'treasury',
+  passport: 'My Passport',
+  citizens: 'Citizens',
+  'identity-center': 'Citizen Passport',
   'download-app': 'downloadApp',
   creator: 'creator',
   about: 'about',
@@ -24,15 +28,10 @@ const ROUTE_LABEL_KEYS = {
   'admin-governance': 'admin',
 };
 
-const iconPrefix = (label) => {
-  const firstToken = String(label || '').trim().split(' ')[0] || '';
-  return /[\u{1F300}-\u{1FAFF}\u2600-\u27BF]/u.test(firstToken) ? `${firstToken} ` : '';
-};
-
 export default function Layout({ children }) {
   const { darkMode, toggleTheme } = useArchiveTheme();
   const location = useLocation();
-  const hasAdminAccess = Boolean(getToken());
+  const hasUserAccess = Boolean(getToken());
   const [lang, setLang] = useState(getStoredLanguage());
   const pathname = useMemo(() => {
     const raw = (location?.pathname || '/').trim();
@@ -89,15 +88,38 @@ export default function Layout({ children }) {
     }
   }, [routeIdentity]);
 
-  const navRoutes = useMemo(() => {
-    const routes = [
-      ...PUBLIC_ROUTES,
-      { key: 'deploy', to: '/deploy', navLabel: '🚀 Deploy' },
-      { key: 'admin-governance', to: '/admin/governance', navLabel: '🛡️ Admin', protected: true, adminOnly: true },
-    ];
+  const primaryNavRoutes = useMemo(() => (
+    PUBLIC_ROUTES.filter((route) => route.navPlacement === 'primary' && route.access === 'public')
+  ), []);
 
-    return routes.filter((route) => !(route.adminOnly && !hasAdminAccess));
-  }, [hasAdminAccess]);
+  const secondaryRoutes = useMemo(() => (
+    PUBLIC_ROUTES.filter((route) => route.navPlacement === 'secondary' && route.access === 'public')
+  ), []);
+
+  const conferenceSystemRoutes = useMemo(() => [
+    { key: 'proposal-board', to: '/proposals', title: 'Proposal Board' },
+    { key: 'conference-hub', to: '/conference', title: 'Popular Conference' },
+    { key: 'vote-session', to: '/forum', title: 'Vote Session' },
+  ], []);
+
+  const citizenRoutes = useMemo(() => [
+    { key: 'citizen-passport', to: '/passport', title: 'Citizen Passport' },
+    { key: 'conference-queue', to: '/governance/conference', title: 'Governance Conference' },
+    { key: 'treasury-execution', to: '/governance/treasury', title: 'Governance Treasury' },
+    { key: 'my-passport', to: '/passport#identity', title: 'My Passport' },
+    { key: 'my-wallet', to: '/passport#wallet', title: 'My Wallet' },
+    { key: 'my-proposals', to: '/passport#governance', title: 'My Proposals' },
+    { key: 'my-votes', to: '/passport#governance', title: 'My Votes' },
+    { key: 'my-group', to: '/passport#governance', title: 'My Group / Committee' },
+  ], []);
+
+  const adminRoutes = useMemo(() => [
+    { key: 'admin-governance', to: '/admin/governance', title: 'Admin Governance' },
+    { key: 'moderation-queue', to: '/admin/governance', title: 'Moderation Queue' },
+    { key: 'treasury-controls', to: '/governance/treasury', title: 'Treasury Controls' },
+    { key: 'creator-approvals', to: '/creator', title: 'Creator Approvals' },
+    { key: 'site-ops', to: '/deploy', title: 'Site Ops / Diagnostics' },
+  ], []);
 
   const handleLanguageChange = (event) => {
     const next = setStoredLanguage(event.target.value);
@@ -113,9 +135,9 @@ export default function Layout({ children }) {
           <div className="layout__tagline">{t('siteTagline')}</div>
         </NavLink>
         <nav className="layout__nav" aria-label="Primary">
-          {navRoutes.map((route) => (
+          {primaryNavRoutes.map((route) => (
             <NavLink key={route.key} to={route.to} end={route.to === '/'}>
-              {iconPrefix(route.navLabel)}{t(ROUTE_LABEL_KEYS[route.key] || route.navLabel)}
+              {route.navLabel}
             </NavLink>
           ))}
         </nav>
@@ -174,7 +196,56 @@ export default function Layout({ children }) {
       </main>
       <OpenClawFloatingAssistant routePath={location.pathname || '/'} />
       <footer className="layout__footer">
-        © {new Date().getFullYear()} · pvabazaar.org
+        <div className="layout__footerGrid">
+          <section className="layout__footerSection" aria-label="Secondary routes">
+            <h2>Secondary</h2>
+            <div className="layout__footerLinks">
+              {secondaryRoutes.map((route) => (
+                <NavLink key={route.key} to={route.to} end={route.to === '/'}>
+                  {route.title}
+                </NavLink>
+              ))}
+            </div>
+          </section>
+
+          <section className="layout__footerSection" aria-label="Popular Conference navigation">
+            <h2>Popular Conference System</h2>
+            <div className="layout__footerLinks">
+              {conferenceSystemRoutes.map((route) => (
+                <NavLink key={route.key} to={route.to} end={route.to === '/'}>
+                  {route.title}
+                </NavLink>
+              ))}
+            </div>
+          </section>
+
+          {hasUserAccess ? (
+            <section className="layout__footerSection" aria-label="Citizen account routes">
+              <h2>Citizen Account</h2>
+              <div className="layout__footerLinks">
+                {citizenRoutes.map((route) => (
+                  <NavLink key={route.key} to={route.to} end={route.to === '/'}>
+                    {route.title}
+                  </NavLink>
+                ))}
+              </div>
+            </section>
+          ) : null}
+
+          {hasUserAccess && pathname.startsWith('/admin') ? (
+            <section className="layout__footerSection" aria-label="Admin routes">
+              <h2>Admin / Secretariat</h2>
+              <div className="layout__footerLinks">
+                {adminRoutes.map((route) => (
+                  <NavLink key={route.key} to={route.to} end={route.to === '/'}>
+                    {route.title}
+                  </NavLink>
+                ))}
+              </div>
+            </section>
+          ) : null}
+        </div>
+        <div className="layout__footerMeta">© {new Date().getFullYear()} · pvabazaar.org</div>
       </footer>
     </div>
   );

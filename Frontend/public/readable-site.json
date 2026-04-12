@@ -49,6 +49,30 @@
       "description": "Public governance proposal workflow and wallet-verified conference pages."
     },
     {
+      "name": "Governance Proposal Board",
+      "path": "#/proposals",
+      "url": "https://pvabazaar.org/#/proposals",
+      "description": "The People's Proposal Board with endorsement and decision lifecycle."
+    },
+    {
+      "name": "Submit Proposal",
+      "path": "#/proposals/submit",
+      "url": "https://pvabazaar.org/#/proposals/submit",
+      "description": "Verified citizen three-step proposal submission flow."
+    },
+    {
+      "name": "Citizen Passport",
+      "path": "#/passport",
+      "url": "https://pvabazaar.org/#/passport",
+      "description": "Citizen identity, credential, and eligibility passport panel."
+    },
+    {
+      "name": "Citizens Directory",
+      "path": "#/citizens",
+      "url": "https://pvabazaar.org/#/citizens",
+      "description": "Public directory of citizen profiles."
+    },
+    {
       "name": "Forum",
       "path": "#/forum",
       "url": "https://pvabazaar.org/#/forum",

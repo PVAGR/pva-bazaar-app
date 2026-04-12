@@ -14,6 +14,10 @@ Primary routes (hash SPA):
 - Showroom: https://pvabazaar.org/#/showroom
 - Civilization Library: https://pvabazaar.org/#/civilization-library
 - Popular Conference: https://pvabazaar.org/#/conference
+- Governance Proposal Board: https://pvabazaar.org/#/proposals
+- Submit Proposal: https://pvabazaar.org/#/proposals/submit
+- Citizen Passport: https://pvabazaar.org/#/passport
+- Citizens Directory: https://pvabazaar.org/#/citizens
 - Forum: https://pvabazaar.org/#/forum
 - Governance Conference: https://pvabazaar.org/#/governance/conference
 - Governance Treasury: https://pvabazaar.org/#/governance/treasury
@@ -29,6 +33,10 @@ Route purpose:
 - Showroom: Curated presentation pages and item detail viewing.
 - Civilization Library: Knowledge and civilization-oriented writing index.
 - Popular Conference: Public governance and proposal workflow with wallet verification.
+- Governance Proposal Board: Public proposal lifecycle board with status and endorsement progress.
+- Submit Proposal: Verified citizen submission flow for new proposals.
+- Citizen Passport: Identity and credential dashboard for citizens.
+- Citizens Directory: Public listing of citizen profiles.
 - Forum: Civic governance forum and proposal board.
 - Governance Conference: Governance agenda and conference session view.
 - Governance Treasury: Governance treasury and ledger view.

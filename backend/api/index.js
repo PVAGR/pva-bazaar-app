@@ -322,6 +322,8 @@ const didRoutes = require('../routes/did');
 const dppRoutes = require('../routes/dpp');
 const databasesRoutes = require('../routes/databases');
 const careerQuizRoutes = require('../routes/careerQuiz');
+const passportRoutes = require('../routes/passport');
+const proposalsRoutes = require('../routes/proposals');
 const libraryTaxonomyRoutes = require('../routes/libraryTaxonomy');
 const libraryIntelligenceRoutes = require('../routes/libraryIntelligence');
 // Models for optional seeding
@@ -382,6 +384,9 @@ app.use('/api/contribute', contributeRoutes);
 app.use('/api/partners', partnersRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/passport', passportRoutes);
+app.use('/api/admin/passport', passportRoutes);
+app.use('/api', proposalsRoutes);
 app.use('/api/cloud-storage', cloudStorageRoutes);
 app.use('/api/admin/library', adminLibraryRoutes);
 app.use('/api/library', libraryRoutes);

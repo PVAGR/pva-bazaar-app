@@ -1,4 +1,7 @@
-const CACHE_NAME = 'pva-bazaar-shell-v1';
+/* eslint-env serviceworker */
+/* global self, caches, URL, fetch, Response */
+
+const CACHE_NAME = 'pva-bazaar-shell-v2';
 const APP_SHELL = ['/', '/index.html', '/manifest.webmanifest'];
 
 self.addEventListener('install', (event) => {
@@ -52,7 +55,7 @@ self.addEventListener('fetch', (event) => {
 
           return response;
         })
-        .catch(() => caches.match('/index.html'));
+        .catch(() => Response.error());
     })
   );
 });

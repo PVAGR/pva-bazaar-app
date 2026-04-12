@@ -209,11 +209,47 @@
   gap: 0.7rem;
 }
 
+.home-proposal-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.home-proposal-card {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.proposal-card-head {
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.proposal-badge {
+  border: 1px solid var(--site-border);
+  border-radius: 999px;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.status-draft { color: #c4c4c4; border-color: #8d8d8d; }
+.status-open { color: #6ec1ff; border-color: #4e9ad8; }
+.status-endorsed { color: #ffbf66; border-color: #db9a36; }
+.status-in_deliberation { color: #c48dff; border-color: #9b67d2; }
+.status-voting { color: #ff9c4a; border-color: #d98238; }
+.status-accepted { color: #6fd58d; border-color: #4bb66d; }
+.status-rejected { color: #ff8585; border-color: #d36363; }
+.status-needs_revision { color: #ffd28f; border-color: #d5a85c; }
+.status-archived { color: #a5a5a5; border-color: #7c7c7c; }
+
 @media (max-width: 1100px) {
   .home-hero,
   .home-section-grid--core,
   .home-section-grid--support,
-  .home-spotlight-grid {
+  .home-spotlight-grid,
+  .home-proposal-grid {
     grid-template-columns: 1fr 1fr;
   }
 }
@@ -222,7 +258,8 @@
   .home-hero,
   .home-section-grid--core,
   .home-section-grid--support,
-  .home-spotlight-grid {
+  .home-spotlight-grid,
+  .home-proposal-grid {
     grid-template-columns: 1fr;
   }
 

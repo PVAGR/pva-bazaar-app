@@ -73,6 +73,37 @@ export const fetchGovernanceAdminResponses = () => apiGet('/governance/admin-res
 export const upsertGovernanceAdminResponse = (proposalId, payload) =>
   apiPut(`/governance/admin-responses/${encodeURIComponent(proposalId)}`, payload);
 
+export const fetchCurrentUser = () => apiGet('/auth/me');
+export const fetchProposals = (params = {}) => apiGet('/proposals', { params });
+export const fetchProposalById = (proposalId) => apiGet(`/proposals/${encodeURIComponent(proposalId)}`);
+export const createProposal = (payload) => apiPost('/proposals', payload);
+export const publishProposal = (proposalId) => apiPost(`/proposals/${encodeURIComponent(proposalId)}/publish`, {});
+export const endorseProposal = (proposalId) => apiPost(`/proposals/${encodeURIComponent(proposalId)}/endorse`, {});
+export const unendorseProposal = (proposalId) => apiDelete(`/proposals/${encodeURIComponent(proposalId)}/endorse`);
+export const fetchMyProposals = () => apiGet('/proposals/my/submissions');
+export const fetchAdminEndorsedProposals = () => apiGet('/admin/proposals/endorsed');
+export const respondToProposal = (proposalId, payload) => apiPost(`/admin/proposals/${encodeURIComponent(proposalId)}/respond`, payload);
+export const setProposalStatus = (proposalId, payload) => apiPut(`/admin/proposals/${encodeURIComponent(proposalId)}/status`, payload);
+export const setProposalExecutionProject = (proposalId, payload) => apiPost(`/admin/proposals/${encodeURIComponent(proposalId)}/execution`, payload);
+
+export const fetchMyPassport = () => apiGet('/passport/me');
+export const fetchPassportByUserId = (userId) => apiGet(`/passport/${encodeURIComponent(userId)}`);
+export const updatePassportProfile = (payload) => apiPut('/passport/profile', payload);
+export const requestPassportVerification = () => apiPost('/passport/verify-request', {});
+export const requestPassportWalletChallenge = () => apiPost('/passport/challenge/request', {});
+export const verifyPassportWalletChallenge = (payload) => apiPost('/passport/challenge/verify', payload);
+export const verifyPassportCredential = (params = {}) => apiGet('/passport/verify', { params });
+export const fetchPassportAudit = (userId) => apiGet(`/passport/audit/${encodeURIComponent(userId)}`);
+export const fetchCitizenDirectory = (params = {}) => apiGet('/passport/citizens', { params });
+export const fetchPendingPassports = () => apiGet('/admin/passport/pending');
+export const approvePassport = (userId) => apiPost(`/admin/passport/approve/${encodeURIComponent(userId)}`, {});
+export const issuePassportCredential = (userId, payload = {}) =>
+  apiPost(`/admin/passport/credential/issue/${encodeURIComponent(userId)}`, payload);
+export const refreshPassportCredential = (userId) =>
+  apiPost(`/admin/passport/credential/refresh/${encodeURIComponent(userId)}`, {});
+export const updatePassportClaims = (userId, payload = {}) =>
+  apiPost(`/admin/passport/claims/${encodeURIComponent(userId)}`, payload);
+
 /**
  * Upload a FormData payload (multipart/form-data).
  * Uses native fetch so the browser can set the correct Content-Type boundary.
