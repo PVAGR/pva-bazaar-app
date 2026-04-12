@@ -65,6 +65,15 @@ export default function PopularConferencePage() {
     setError(res?.error || res?.message || 'Failed to load proposals');
   }, []);
 
+  async function handleRetryLoad() {
+    setBusy(true);
+    try {
+      await loadProposals();
+    } finally {
+      setBusy(false);
+    }
+  }
+
   useEffect(() => {
     loadProposals().catch((e) => setError(e?.message || 'Failed to load proposals'));
   }, [loadProposals]);
@@ -271,7 +280,14 @@ export default function PopularConferencePage() {
         </p>
       </div>
 
-      {error ? <div className="pc-error" role="alert">{error}</div> : null}
+      {error ? (
+        <div className="pc-error" role="alert">
+          <div>{error}</div>
+          <button type="button" className="pc-btn pc-btn-inline" onClick={handleRetryLoad} disabled={busy}>
+            Retry load
+          </button>
+        </div>
+      ) : null}
       {success ? <div className="pc-success" role="status">{success}</div> : null}
 
       <div className="pc-grid">
@@ -338,6 +354,7 @@ export default function PopularConferencePage() {
 
         <div className="pc-card">
           <h2>Proposal Board</h2>
+          {!items.length && !loading ? <p className="pc-meta">No live proposals yet. Create the first one from the left panel.</p> : null}
           <div className="pc-list">
             {items.map((item) => (
               <article key={item._id} className="pc-item">
@@ -373,7 +390,7 @@ export default function PopularConferencePage() {
 
       <div className="pc-card">
         <h2>Vote Submission (On-Chain Reference)</h2>
-        {!selected ? <p>Select a proposal first.</p> : null}
+        {!selected ? <p className="pc-meta">Select a proposal first. This section becomes active after you open one from the board.</p> : null}
         {selected ? (
           <>
             <p>
