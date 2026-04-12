@@ -14,6 +14,7 @@ const { getBuildInfo } = require('../lib/buildInfo');
 const { getRpcDiagnostics } = require('../utils/blockchain');
 const GovernanceProposal = require('../models/GovernanceProposal');
 const GovernanceVote = require('../models/GovernanceVote');
+const governanceRoutes = require('../routes/governance');
 
 // Load environment variables
 dotenv.config();
@@ -30,8 +31,16 @@ function getAllowedOrigins() {
     'https://www.pvabazaar.org',
   ];
 
-  if (process.env.ALLOWED_ORIGIN) {
-    const extras = process.env.ALLOWED_ORIGIN
+  const originEnv = [
+    process.env.ALLOWED_ORIGIN,
+    process.env.CORS_ORIGIN,
+    process.env.FRONTEND_URL,
+  ]
+    .filter(Boolean)
+    .join(',');
+
+  if (originEnv) {
+    const extras = originEnv
       .split(',')
       .map(o => o.trim())
       .filter(Boolean)
@@ -239,6 +248,9 @@ async function connectToDatabase() {
     });
 
     global._mongooseConn.conn = await global._mongooseConn.promise;
+    mongoose.connection.on('error', (err) => {
+      console.error('MongoDB error:', err?.message || err);
+    });
     console.log('✅ MongoDB connected');
     return global._mongooseConn.conn;
   } catch (err) {
@@ -469,7 +481,7 @@ mountOptionalRoute('/api/oracle', '../routes/oracle', 'oracle');
 mountOptionalRoute('/api/verification', '../routes/verification', 'verification');
 const dealsRoutes = require('../routes/deals');
 app.use('/api/deals', dealsRoutes);
-mountOptionalRoute('/api/governance', '../routes/governance', 'governance');
+app.use('/api/governance', governanceRoutes);
 mountOptionalRoute('/api/manifesto', '../routes/manifesto-ai-routes', 'manifesto-ai');
 
 // OAUTH (Twitch & YouTube) - status, live-status, start, callback
