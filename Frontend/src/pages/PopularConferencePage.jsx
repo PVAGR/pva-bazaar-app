@@ -59,9 +59,21 @@ function useWallet() {
     return first;
   };
 
+  const signMessage = async (message, signerAddress = address) => {
+    const eth = globalThis?.ethereum;
+    if (!eth) throw new Error('No wallet found');
+    if (!signerAddress) throw new Error('Wallet is not connected');
+
+    return eth.request({
+      method: 'personal_sign',
+      params: [message, signerAddress],
+    });
+  };
+
   return {
     address,
     connect,
+    signMessage,
     isConnected: Boolean(address),
   };
 }
@@ -79,12 +91,13 @@ export default function PopularConferencePage() {
   const addProposal = useGovernanceStore((state) => state.addProposal);
   const endorseProposal = useGovernanceStore((state) => state.endorseProposal);
   const castVote = useGovernanceStore((state) => state.castVote);
-  const { address, connect, isConnected } = useWallet();
+  const { address, connect, isConnected, signMessage } = useWallet();
 
   const [showForm, setShowForm] = useState(true);
   const [feedbackMessage, setFeedbackMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [apiProposals, setApiProposals] = useState([]);
+  const [pendingProposalSync, setPendingProposalSync] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -169,27 +182,51 @@ export default function PopularConferencePage() {
     { label: 'Passport votes', value: citizen.votes.toLocaleString() },
   ];
 
+  const getApiErrorStatus = (error) => error?.status || error?.response?.status || 0;
+
+  const syncProposalToApi = async (proposal, signerAddress) => {
+    const nonce = Date.now().toString();
+    const message = `I propose: ${proposal.title}\nNonce: ${nonce}`;
+    const signature = await signMessage(message, signerAddress);
+
+    return apiCreateGovernanceProposal({
+      title: proposal.title,
+      summary: proposal.solution || proposal.problem || proposal.title,
+      problem: proposal.problem || '',
+      solution: proposal.solution || '',
+      expectedOutcome: proposal.outcome || '',
+      proposerWallet: signerAddress,
+      nonce,
+      signature,
+    });
+  };
+
   const handleNewProposal = async (proposal) => {
+    const formData = proposal;
+    console.log('handleNewProposal called, formData:', formData, 'isConnected:', isConnected);
     setFeedbackMessage('');
     setErrorMessage('');
 
     if (isConnected && address) {
       try {
-        await apiCreateGovernanceProposal({
-          title: proposal.title,
-          summary: proposal.solution || proposal.problem || proposal.title,
-          problem: proposal.problem || '',
-          solution: proposal.solution || '',
-          expectedOutcome: proposal.outcome || '',
-          proposerWallet: address,
-        });
+        await syncProposalToApi(formData, address);
         setFeedbackMessage('Proposal submitted to governance API and saved locally.');
       } catch (error) {
-        setErrorMessage(error?.message || 'Failed to submit proposal to governance API. Saved locally instead.');
+        const status = getApiErrorStatus(error);
+        if (status === 401) {
+          setErrorMessage('Connect wallet to submit proposals');
+        } else if (status === 400) {
+          setErrorMessage('Invalid proposal data');
+        } else {
+          setErrorMessage('Offline mode - saved locally');
+        }
       }
+    } else {
+      setPendingProposalSync(formData);
+      setFeedbackMessage('Saved locally. Connect wallet to sync proposal to API.');
     }
 
-    addProposal(proposal);
+    addProposal(formData);
     setShowForm(false);
   };
 
@@ -217,7 +254,14 @@ export default function PopularConferencePage() {
         }
         return;
       } catch (error) {
-        setErrorMessage(error?.message || 'Failed to record support on governance API.');
+        const status = getApiErrorStatus(error);
+        if (status === 401) {
+          setErrorMessage('Connect wallet to submit proposals');
+        } else if (status === 400) {
+          setErrorMessage('Invalid proposal data');
+        } else {
+          setErrorMessage('Offline mode - saved locally');
+        }
         return;
       }
     }
@@ -229,12 +273,32 @@ export default function PopularConferencePage() {
   };
 
   const handleConnectWallet = async () => {
+    console.log('Wallet connect clicked, isConnected:', isConnected, 'address:', address);
     setFeedbackMessage('');
     setErrorMessage('');
     try {
       const connectedAddress = await connect();
       if (connectedAddress) {
-        setFeedbackMessage(`Wallet connected: ${truncateAddress(connectedAddress)}`);
+        if (pendingProposalSync) {
+          try {
+            await syncProposalToApi(pendingProposalSync, connectedAddress);
+            setPendingProposalSync(null);
+            setFeedbackMessage(`Connected: ${truncateAddress(connectedAddress)} · pending proposal synced`);
+            return;
+          } catch (error) {
+            const status = getApiErrorStatus(error);
+            if (status === 401) {
+              setErrorMessage('Connect wallet to submit proposals');
+            } else if (status === 400) {
+              setErrorMessage('Invalid proposal data');
+            } else {
+              setErrorMessage('Offline mode - saved locally');
+            }
+            return;
+          }
+        }
+
+        setFeedbackMessage(`Connected: ${truncateAddress(connectedAddress)}`);
       }
     } catch (error) {
       setErrorMessage(error?.message || 'Failed to connect wallet.');
