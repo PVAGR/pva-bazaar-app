@@ -2,6 +2,10 @@ name: PVA Quality Gates
 on:
   pull_request:
     branches: [develop, main]
+    paths:
+      - 'qa/**'
+      - 'apps/contracts/**'
+      - '.github/workflows/quality-gates.yml'
   workflow_dispatch:
 
 env:
@@ -13,6 +17,7 @@ jobs:
   unit_integration:
     name: Unit & Integration Tests
     runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'qa-full')
     strategy:
       matrix:
         test-suite: [web-com, web-org, api-tests, contracts]
@@ -50,6 +55,7 @@ jobs:
   e2e_playwright:
     name: E2E Tests (Playwright)
     runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'qa-full')
     strategy:
       matrix:
         project: [chromium, firefox, webkit, mobile]
@@ -93,6 +99,7 @@ jobs:
   visual_brand_checks:
     name: Visual & Brand Consistency
     runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'qa-full')
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -136,6 +143,7 @@ jobs:
   accessibility_audit:
     name: Accessibility Testing
     runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'qa-full')
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -176,6 +184,7 @@ jobs:
   performance_audit:
     name: Performance Testing
     runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'qa-full')
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -252,6 +261,7 @@ jobs:
   security_audit:
     name: Security Testing
     runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'qa-full')
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -305,6 +315,7 @@ jobs:
   blockchain_tests:
     name: Blockchain & Smart Contract Tests
     runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'qa-full')
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -353,6 +364,7 @@ jobs:
   quality_gate_summary:
     name: Quality Gate Summary
     runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'qa-full')
     needs:
       [
         unit_integration,
@@ -363,7 +375,6 @@ jobs:
         security_audit,
         blockchain_tests,
       ]
-    if: always()
     steps:
       - name: Check quality gates
         run: |

@@ -19,6 +19,7 @@ export default function Layout({ children }) {
           <NavLink to="/career-quiz">🧭 Career Quiz</NavLink>
           <NavLink to="/marketplace">🛒 Marketplace</NavLink>
           <NavLink to="/showroom">🏪 Showroom</NavLink>
+          <NavLink to="/conference">🗳️ Popular Conference</NavLink>
           <NavLink to="/creator">✨ Creator Sign Up</NavLink>
           <NavLink to="/about">About</NavLink>
         </nav>
