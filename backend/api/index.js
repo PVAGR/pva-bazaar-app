@@ -12,6 +12,8 @@ const openClawMetricsRoutes = require('../routes/openclaw-metrics');
 const salesRoutes = require('../routes/sales');
 const { getBuildInfo } = require('../lib/buildInfo');
 const { getRpcDiagnostics } = require('../utils/blockchain');
+const GovernanceProposal = require('../models/GovernanceProposal');
+const GovernanceVote = require('../models/GovernanceVote');
 
 // Load environment variables
 dotenv.config();
@@ -376,6 +378,78 @@ app.use('/api/admin/library-intelligence', libraryIntelligenceRoutes);
 app.use('/api/attribution', attributionRoutes);
 app.use('/api/payouts', payoutsRoutes);
 app.use('/api/sales', salesRoutes);
+
+app.get('/api/governance/proposals', async (req, res) => {
+  try {
+    const { status = '', cycleKey = '', limit = '30', skip = '0' } = req.query;
+    const query = {};
+
+    if (status) query.status = status;
+    if (cycleKey) query.cycleKey = cycleKey;
+
+    const parsedLimit = Math.min(Math.max(parseInt(limit, 10) || 30, 1), 100);
+    const parsedSkip = Math.max(parseInt(skip, 10) || 0, 0);
+
+    const items = await GovernanceProposal.find(query)
+      .sort({ updatedAt: -1 })
+      .limit(parsedLimit)
+      .skip(parsedSkip)
+      .populate('createdBy', 'name email role')
+      .populate('queuedBy', 'name email role')
+      .populate('decidedBy', 'name email role');
+
+    const total = await GovernanceProposal.countDocuments(query);
+    res.json({ ok: true, items, total });
+  } catch (error) {
+    console.error('Error listing governance proposals:', error);
+    res.status(500).json({ ok: false, error: 'Failed to list proposals' });
+  }
+});
+
+app.get('/api/governance/proposals/:proposalId', async (req, res) => {
+  try {
+    const item = await GovernanceProposal.findById(req.params.proposalId)
+      .populate('createdBy', 'name email role')
+      .populate('queuedBy', 'name email role')
+      .populate('decidedBy', 'name email role');
+
+    if (!item) {
+      return res.status(404).json({ ok: false, error: 'Proposal not found' });
+    }
+
+    res.json({ ok: true, item });
+  } catch (error) {
+    console.error('Error fetching governance proposal:', error);
+    res.status(500).json({ ok: false, error: 'Failed to fetch proposal' });
+  }
+});
+
+app.get('/api/governance/proposals/:proposalId/votes/summary', async (req, res) => {
+  try {
+    const item = await GovernanceProposal.findById(req.params.proposalId).select('_id outcome status');
+    if (!item) {
+      return res.status(404).json({ ok: false, error: 'Proposal not found' });
+    }
+
+    const grouped = await GovernanceVote.aggregate([
+      { $match: { proposalId: item._id } },
+      { $group: { _id: '$choice', count: { $sum: 1 } } },
+    ]);
+
+    const voteCounts = { yes: 0, no: 0, abstain: 0 };
+    for (const row of grouped) {
+      if (row && row._id && voteCounts[row._id] !== undefined) {
+        voteCounts[row._id] = row.count;
+      }
+    }
+
+    const totalVotes = voteCounts.yes + voteCounts.no + voteCounts.abstain;
+    res.json({ ok: true, proposalId: item._id, voteCounts, totalVotes, outcome: item.outcome, status: item.status });
+  } catch (error) {
+    console.error('Error fetching governance vote summary:', error);
+    res.status(500).json({ ok: false, error: 'Failed to fetch vote summary' });
+  }
+});
 
 // DECENTRALIZED PLATFORM ROUTES (Blueprint v1)
 app.use('/api/streams', streamsRoutes);
