@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import {
   endorseProposal,
   fetchCurrentUser,
+  fetchGovernanceExecutionTimeline,
   fetchMyPassport,
   fetchProposalById,
   unendorseProposal,
@@ -22,6 +23,8 @@ export default function ProposalDetailPage() {
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
+  const [timelineData, setTimelineData] = useState(null);
+  const [timelineLoading, setTimelineLoading] = useState(true);
   const [userId, setUserId] = useState('');
   const [verifiedCitizen, setVerifiedCitizen] = useState(false);
 
@@ -62,8 +65,27 @@ export default function ProposalDetailPage() {
       }
     }
 
+    async function loadExecutionTimeline() {
+      setTimelineLoading(true);
+      try {
+        const response = await fetchGovernanceExecutionTimeline(proposalId);
+        if (!active) return;
+        if (response?.ok) {
+          setTimelineData(response.execution || null);
+        } else {
+          setTimelineData(null);
+        }
+      } catch (_error) {
+        if (!active) return;
+        setTimelineData(null);
+      } finally {
+        if (active) setTimelineLoading(false);
+      }
+    }
+
     loadDetail();
     loadViewer();
+    loadExecutionTimeline();
 
     return () => {
       active = false;
@@ -192,6 +214,27 @@ export default function ProposalDetailPage() {
           <ul>
             {(item.executionProject.milestones || []).map((milestone, index) => <li key={`${milestone}-${index}`}>{milestone}</li>)}
           </ul>
+        </section>
+      ) : null}
+
+      {!timelineLoading && timelineData?.executionBlock ? (
+        <section className="section-card">
+          <h2>Public Execution Timeline</h2>
+          <p><strong>Decision:</strong> {timelineData.decision || 'public'}</p>
+          <p><strong>Progress:</strong> {Number(timelineData.executionBlock.progressPercent || 0)}%</p>
+          <p><strong>Latest update:</strong> {timelineData.executionBlock.latestUpdate || 'No update yet'}</p>
+
+          {(timelineData.updates || []).length ? (
+            <ul>
+              {timelineData.updates.slice(-8).reverse().map((entry, idx) => (
+                <li key={`timeline-update-${idx}`}>
+                  <strong>{entry.createdAt ? new Date(entry.createdAt).toLocaleString() : 'Update'}</strong>: {entry.message}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p>No timeline entries published yet.</p>
+          )}
         </section>
       ) : null}
 

@@ -3,10 +3,12 @@ import { NavLink, useLocation } from 'react-router-dom';
 import OpenClawFloatingAssistant from './OpenClawFloatingAssistant.jsx';
 import { PUBLIC_ROUTES } from '../config/publicRoutes';
 import { getToken } from '../lib/auth';
+import useArchiveTheme from '../hooks/useArchiveTheme.js';
 
 const FEDERATION_SNIPPET = "Welcome to the New Federation. We are God's children, building a future where efficiency meets spirit.";
 
 export default function Layout({ children }) {
+  const { darkMode, toggleTheme } = useArchiveTheme();
   const location = useLocation();
   const hasUserAccess = Boolean(getToken());
   const pathname = useMemo(() => {
@@ -33,7 +35,7 @@ export default function Layout({ children }) {
   }, [pathname]);
 
   useEffect(() => {
-    const baseTitle = 'pvabazaar.org | New Federation';
+    const baseTitle = 'pvabazaar.org';
     if (routeIdentity?.title) {
       globalThis.document.title = `${routeIdentity.title} · ${baseTitle}`;
     }
@@ -69,7 +71,7 @@ export default function Layout({ children }) {
       <header className="layout__header">
         <NavLink to="/" end className="layout__brand layout__brandLink" aria-label="PVA Bazaar home">
           <div className="layout__title">pvabazaar.org</div>
-          <div className="layout__tagline">New Federation Interface</div>
+          <div className="layout__tagline">Archive · Marketplace · Governance</div>
         </NavLink>
         <nav className="layout__nav" aria-label="Primary">
           {primaryNavRoutes.map((route) => (
@@ -84,6 +86,15 @@ export default function Layout({ children }) {
             {hasUserAccess ? 'Authenticated' : 'Guest'}
           </NavLink>
         </div>
+        <button
+          type="button"
+          className="layout__themeToggle"
+          onClick={toggleTheme}
+          aria-label="Toggle theme"
+          title="Toggle theme"
+        >
+          {darkMode ? '☀ Day' : '🌙 Night'}
+        </button>
       </header>
       <main id="content" className="layout__main">
         <section className="section-card layout__routeIdentity" data-route-identity="true" aria-label="Current route identity">
