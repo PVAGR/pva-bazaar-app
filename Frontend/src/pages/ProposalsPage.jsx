@@ -1,6 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { fetchMyPassport, fetchMyProposals, fetchProposals } from '../lib/api';
+import {
+  fetchGovernanceExecutionTimeline,
+  fetchMyPassport,
+  fetchMyProposals,
+  fetchProposals,
+} from '../lib/api';
 import { getToken } from '../lib/auth';
 import './ProposalEngine.css';
 
@@ -30,6 +35,8 @@ export default function ProposalsPage({ mode = 'public' }) {
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0, limit: 20 });
   const [verifiedCitizen, setVerifiedCitizen] = useState(false);
+  const [timelineById, setTimelineById] = useState({});
+  const [timelineLoadingById, setTimelineLoadingById] = useState({});
 
   useEffect(() => {
     let active = true;
@@ -109,6 +116,22 @@ export default function ProposalsPage({ mode = 'public' }) {
     return `Page ${pagination.page} of ${Math.max(1, pagination.pages)} · ${pagination.total} total`;
   }, [isMine, pagination.page, pagination.pages, pagination.total]);
 
+  const loadTimeline = async (proposalKey) => {
+    if (!proposalKey) return;
+    setTimelineLoadingById((state) => ({ ...state, [proposalKey]: true }));
+    try {
+      const response = await fetchGovernanceExecutionTimeline(proposalKey);
+      setTimelineById((state) => ({
+        ...state,
+        [proposalKey]: response?.ok ? response.execution : null,
+      }));
+    } catch (_error) {
+      setTimelineById((state) => ({ ...state, [proposalKey]: null }));
+    } finally {
+      setTimelineLoadingById((state) => ({ ...state, [proposalKey]: false }));
+    }
+  };
+
   return (
     <div className="proposal-page">
       <section className="section-card proposal-header">
@@ -165,15 +188,20 @@ export default function ProposalsPage({ mode = 'public' }) {
         {!loading && !error && items.length === 0 ? <p>No proposals found for this filter.</p> : null}
 
         {!loading && !error ? items.map((proposal) => {
+          const proposalKey = proposal.proposalId || proposal._id;
           const progress = Math.min(100, Math.round((Number(proposal.endorsementCount || 0) / Number(proposal.endorsementThreshold || 10)) * 100));
+          const timeline = timelineById[proposalKey];
+          const updates = Array.isArray(timeline?.updates) ? timeline.updates : [];
+          const showExecutionTimeline = ['accepted', 'in_execution', 'completed', 'outcome_published'].includes(String(proposal.status || '').toLowerCase());
+
           return (
-            <article key={proposal.proposalId || proposal._id} className="proposal-card">
+            <article key={proposalKey} className="proposal-card">
               <div className="proposal-card-head">
                 <span className="proposal-badge">{proposal.category}</span>
                 <span className={`proposal-badge status-${proposal.status}`}>{proposal.status}</span>
               </div>
               <h3>
-                <Link to={`/proposals/${encodeURIComponent(proposal.proposalId)}`}>
+                <Link to={`/proposals/${encodeURIComponent(proposalKey)}`}>
                   {proposal.title}
                 </Link>
               </h3>
@@ -187,6 +215,38 @@ export default function ProposalsPage({ mode = 'public' }) {
                 </div>
               </div>
               <p>{String(proposal.problem || '').slice(0, 220)}{String(proposal.problem || '').length > 220 ? '…' : ''}</p>
+
+              {showExecutionTimeline ? (
+                <div className="proposal-execution-panel">
+                  <div className="proposal-execution-head">
+                    <span>Execution Timeline</span>
+                    <button
+                      type="button"
+                      className="button ghost"
+                      onClick={() => loadTimeline(proposalKey)}
+                      disabled={Boolean(timelineLoadingById[proposalKey])}
+                    >
+                      {timelineLoadingById[proposalKey] ? 'Loading…' : 'Load Updates'}
+                    </button>
+                  </div>
+
+                  {timeline?.executionBlock ? (
+                    <p className="proposal-meta">
+                      Progress {Number(timeline.executionBlock.progressPercent || 0)}% · {timeline.executionBlock.latestUpdate || 'No latest update posted'}
+                    </p>
+                  ) : null}
+
+                  {updates.length ? (
+                    <ul className="proposal-execution-list">
+                      {updates.slice(-3).reverse().map((entry, idx) => (
+                        <li key={`${proposalKey}-timeline-${idx}`}>
+                          <strong>{entry.createdAt ? new Date(entry.createdAt).toLocaleDateString() : 'Update'}:</strong> {entry.message}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </div>
+              ) : null}
             </article>
           );
         }) : null}

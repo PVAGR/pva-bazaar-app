@@ -73,6 +73,30 @@
   gap: 0.55rem;
 }
 
+.proposal-execution-panel {
+  margin-top: 0.4rem;
+  border: 1px dashed var(--site-border);
+  border-radius: 10px;
+  background: var(--site-panel);
+  padding: 0.6rem;
+}
+
+.proposal-execution-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  color: var(--site-accent);
+  font-weight: 700;
+}
+
+.proposal-execution-list {
+  margin: 0.45rem 0 0;
+  padding-left: 1rem;
+  color: var(--site-text-muted);
+}
+
 .proposal-card-head {
   display: flex;
   gap: 0.55rem;
