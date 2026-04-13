@@ -1,23 +1,26 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import FederationManifesto from '../components/FederationManifesto.jsx';
 import './AboutPage.css';
 
 export default function AboutPage() {
   const [activeTab, setActiveTab] = useState('overview');
 
   const tabs = [
-    { id: 'overview', label: '📖 Overview' },
-    { id: 'mission', label: '🎯 Mission' },
-    { id: 'how-it-works', label: '⚙️ How It Works' },
-    { id: 'features', label: '✨ Features' },
+    { id: 'overview', label: 'Overview' },
+    { id: 'mission', label: 'Mission' },
+    { id: 'how-it-works', label: 'How It Works' },
+    { id: 'features', label: 'Features' },
   ];
 
   return (
     <section className="about-page section-card">
       <header className="about-header">
         <h1>About PVA Bazaar</h1>
-        <p className="about-tagline">A platform for memory, trade, and accountable decisions</p>
+        <p className="about-tagline">A sovereign platform for memory, trade, and accountable decisions</p>
       </header>
+
+      <FederationManifesto title="Why The Federation Exists" compact />
 
       <div className="about-tabs" role="tablist">
         {tabs.map((tab) => (
@@ -145,8 +148,8 @@ export default function AboutPage() {
 
       <div className="about-actions">
         <Link to="/" className="button primary">Start Exploring</Link>
-        <Link to="/search" className="button ghost">Search Archive</Link>
-        <Link to="/manifesto" className="button ghost">Read Our Manifesto</Link>
+        <Link to="/archive" className="button ghost">Open Archive</Link>
+        <Link to="/proposals" className="button ghost">Open Governance</Link>
       </div>
     </section>
   );

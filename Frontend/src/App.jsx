@@ -1,28 +1,18 @@
 import AdminOrdersPage from './pages/AdminOrdersPage.jsx';
-import React, { useEffect } from 'react';
+import React, { Suspense, lazy, useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Layout from './components/Layout.jsx';
 import RequireAdminAuth from './components/RequireAdminAuth.jsx';
 import { getToken } from './lib/auth';
 import { Telemetry } from './lib/telemetry';
 
-import AboutPage from './pages/AboutPage.jsx';
-import AgentPage from './pages/AgentPage.jsx';
 import ArchiveLibraryPage from './pages/ArchiveLibraryPage.jsx';
 import HomePage from './pages/HomePage.jsx';
-import CivilizationLibraryPage from './pages/CivilizationLibraryPage.jsx';
 import AdminPage from './pages/AdminPage.jsx';
-import CareerQuizPage from './pages/CareerQuizPage.jsx';
-import MarketplacePage from './pages/MarketplacePage.jsx';
-import MarketplaceItemPage from './pages/MarketplaceItemPage.jsx';
-import ShowroomPage from './pages/ShowroomPage.jsx';
-import ShowroomItemPage from './pages/ShowroomItemPage.jsx';
-import CreatorPortalPage from './pages/CreatorPortalPage.jsx';
 import RegisterPage from './pages/RegisterPage.jsx';
 import LoginPage from './pages/LoginPage.jsx';
 import AccountPage from './pages/AccountPage.jsx';
 import PassportPage from './pages/PassportPage.jsx';
-import CitizenDirectoryPage from './pages/CitizenDirectoryPage.jsx';
 import OnboardingPage from './pages/OnboardingPage.jsx';
 import ListItemPage from './pages/ListItemPage.jsx';
 import MyListingsPage from './pages/MyListingsPage.jsx';
@@ -31,19 +21,30 @@ import DealJoinPage from './pages/DealJoinPage.jsx';
 import CheckoutSuccessPage from './pages/CheckoutSuccessPage.jsx';
 import CheckoutCancelPage from './pages/CheckoutCancelPage.jsx';
 import UserDashboard from './pages/UserDashboard.jsx';
-import PopularConferencePage from './pages/PopularConferencePage.jsx';
-import TreasuryPage from './pages/TreasuryPage.jsx';
-import DeployPage from './pages/DeployPage.jsx';
 import AdminGovernancePage from './pages/AdminGovernancePage.jsx';
-import DownloadAppPage from './pages/DownloadAppPage.jsx';
-import ForumPage from './pages/Forum.jsx';
-import ProposalsPage from './pages/ProposalsPage.jsx';
-import ProposalDetailPage from './pages/ProposalDetailPage.jsx';
-import SubmitProposalPage from './pages/SubmitProposalPage.jsx';
 import { GovernanceConferencePage, GovernanceTreasuryPage } from './pages/OtherPages.jsx';
 import useArchiveTheme from './hooks/useArchiveTheme.js';
 import './pages/HomePage.css';
 import './base.css';
+
+const AboutPage = lazy(() => import('./pages/AboutPage.jsx'));
+const AgentPage = lazy(() => import('./pages/AgentPage.jsx'));
+const CivilizationLibraryPage = lazy(() => import('./pages/CivilizationLibraryPage.jsx'));
+const CareerQuizPage = lazy(() => import('./pages/CareerQuizPage.jsx'));
+const MarketplacePage = lazy(() => import('./pages/MarketplacePage.jsx'));
+const MarketplaceItemPage = lazy(() => import('./pages/MarketplaceItemPage.jsx'));
+const ShowroomPage = lazy(() => import('./pages/ShowroomPage.jsx'));
+const ShowroomItemPage = lazy(() => import('./pages/ShowroomItemPage.jsx'));
+const CreatorPortalPage = lazy(() => import('./pages/CreatorPortalPage.jsx'));
+const CitizenDirectoryPage = lazy(() => import('./pages/CitizenDirectoryPage.jsx'));
+const PopularConferencePage = lazy(() => import('./pages/PopularConferencePage.jsx'));
+const ProposalsPage = lazy(() => import('./pages/ProposalsPage.jsx'));
+const ProposalDetailPage = lazy(() => import('./pages/ProposalDetailPage.jsx'));
+const SubmitProposalPage = lazy(() => import('./pages/SubmitProposalPage.jsx'));
+const TreasuryPage = lazy(() => import('./pages/TreasuryPage.jsx'));
+const DeployPage = lazy(() => import('./pages/DeployPage.jsx'));
+const DownloadAppPage = lazy(() => import('./pages/DownloadAppPage.jsx'));
+const ForumPage = lazy(() => import('./pages/Forum.jsx'));
 
 function RequireUserAuth({ children }) {
   const location = useLocation();
@@ -64,6 +65,7 @@ export default function App() {
 
   return (
     <HashRouter>
+      <Suspense fallback={<div className="section-card">Loading federation module...</div>}>
       <Routes>
         {/* Admin entry route must remain reachable so login/bootstrap UI can render */}
         <Route path="/admin" element={<AdminPage />} />
@@ -72,19 +74,19 @@ export default function App() {
         <Route path="/admin/governance" element={<RequireAdminAuth><AdminGovernancePage /></RequireAdminAuth>} />
 
         {/* User Dashboard - Protected */}
-        <Route path="/dashboard" element={<RequireUserAuth><UserDashboard /></RequireUserAuth>} />
+        <Route path="/dashboard" element={<RequireUserAuth><Layout><UserDashboard /></Layout></RequireUserAuth>} />
 
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/onboarding" element={<RequireUserAuth><OnboardingPage /></RequireUserAuth>} />
-        <Route path="/account" element={<RequireUserAuth><AccountPage /></RequireUserAuth>} />
+        <Route path="/login" element={<Layout><LoginPage /></Layout>} />
+        <Route path="/register" element={<Layout><RegisterPage /></Layout>} />
+        <Route path="/onboarding" element={<RequireUserAuth><Layout><OnboardingPage /></Layout></RequireUserAuth>} />
+        <Route path="/account" element={<RequireUserAuth><Layout><AccountPage /></Layout></RequireUserAuth>} />
         <Route path="/identity-center" element={<RequireUserAuth><Layout><PassportPage /></Layout></RequireUserAuth>} />
         <Route path="/passport" element={<RequireUserAuth><Layout><PassportPage /></Layout></RequireUserAuth>} />
         <Route path="/passport/me" element={<RequireUserAuth><Layout><PassportPage /></Layout></RequireUserAuth>} />
-        <Route path="/items/new" element={<RequireUserAuth><ListItemPage /></RequireUserAuth>} />
-        <Route path="/items/mine" element={<RequireUserAuth><MyListingsPage /></RequireUserAuth>} />
-        <Route path="/deals" element={<RequireUserAuth><DealsPage /></RequireUserAuth>} />
-        <Route path="/deals/join" element={<RequireUserAuth><DealJoinPage /></RequireUserAuth>} />
+        <Route path="/items/new" element={<RequireUserAuth><Layout><ListItemPage /></Layout></RequireUserAuth>} />
+        <Route path="/items/mine" element={<RequireUserAuth><Layout><MyListingsPage /></Layout></RequireUserAuth>} />
+        <Route path="/deals" element={<RequireUserAuth><Layout><DealsPage /></Layout></RequireUserAuth>} />
+        <Route path="/deals/join" element={<RequireUserAuth><Layout><DealJoinPage /></Layout></RequireUserAuth>} />
         <Route path="/conference" element={<Layout><PopularConferencePage /></Layout>} />
         <Route path="/proposals" element={<Layout><ProposalsPage /></Layout>} />
         <Route path="/proposals/submit" element={<RequireUserAuth><Layout><SubmitProposalPage /></Layout></RequireUserAuth>} />
@@ -116,6 +118,7 @@ export default function App() {
         <Route path="/checkout/cancel" element={<Layout><CheckoutCancelPage /></Layout>} />
         <Route path="*" element={<Navigate to="/library" replace />} />
       </Routes>
+      </Suspense>
     </HashRouter>
   );
 }

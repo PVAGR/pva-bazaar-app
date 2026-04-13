@@ -32,7 +32,7 @@
 .home-hero__copy h1 {
   margin: 0.5rem 0 0.7rem;
   color: var(--site-accent);
-  font-family: 'Merriweather', serif;
+  font-family: var(--site-font);
   font-size: clamp(2rem, 4vw, 3.25rem);
   line-height: 1.05;
 }
@@ -66,7 +66,7 @@
 }
 
 .home-hero__panel-title {
-  font-family: 'Merriweather', serif;
+  font-family: var(--site-font);
   color: var(--site-accent);
   font-size: 1.1rem;
 }
@@ -85,7 +85,7 @@
 }
 
 .home-stat__value {
-  font-family: 'Merriweather', serif;
+  font-family: var(--site-font);
   color: var(--site-accent);
   font-size: 1.55rem;
   line-height: 1;

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { fetchArchiveEntriesSafe } from '../lib/archiveFeed'
 import { fetchProposals } from '../lib/api'
 import { HOME_CORE_ROUTES, HOME_SUPPORT_ROUTES } from '../config/publicRoutes'
+import FederationManifesto from '../components/FederationManifesto.jsx'
 
 const MAX_LATEST = 6
 
@@ -116,6 +117,8 @@ export default function HomePage({ entries = [] }) {
           </p>
         </aside>
       </section>
+
+      <FederationManifesto title="Federation Manifesto" />
 
       <section className="section-card home-section-shell">
         <div className="section-heading">

@@ -1,127 +1,67 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import useArchiveTheme from '../hooks/useArchiveTheme.js';
 import OpenClawFloatingAssistant from './OpenClawFloatingAssistant.jsx';
 import { PUBLIC_ROUTES } from '../config/publicRoutes';
 import { getToken } from '../lib/auth';
-import { LANGUAGE_OPTIONS, bindLanguageSync, getStoredLanguage, setStoredLanguage, translate } from '../lib/i18n.js';
 
-const ROUTE_LABEL_KEYS = {
-  home: 'home',
-  archive: 'archive',
-  'civilization-library': 'civilization',
-  'career-quiz': 'careerQuiz',
-  marketplace: 'marketplace',
-  governance: 'conference',
-  showroom: 'showroom',
-  conference: 'conference',
-  forum: 'forum',
-  'governance-conference': 'govConference',
-  'governance-treasury': 'treasury',
-  passport: 'My Passport',
-  citizens: 'Citizens',
-  'identity-center': 'Citizen Passport',
-  'download-app': 'downloadApp',
-  creator: 'creator',
-  about: 'about',
-  deploy: 'deploy',
-  'admin-governance': 'admin',
-};
+const FEDERATION_SNIPPET = "Welcome to the New Federation. We are God's children, building a future where efficiency meets spirit.";
 
 export default function Layout({ children }) {
-  const { darkMode, toggleTheme } = useArchiveTheme();
   const location = useLocation();
   const hasUserAccess = Boolean(getToken());
-  const [lang, setLang] = useState(getStoredLanguage());
   const pathname = useMemo(() => {
     const raw = (location?.pathname || '/').trim();
     const normalized = raw.replace(/\/+$/, '');
     return normalized || '/';
   }, [location?.pathname]);
 
-  useEffect(() => {
-    globalThis.document?.documentElement?.setAttribute('lang', lang);
-  }, [lang]);
-
-  useEffect(() => bindLanguageSync(setLang), []);
-
-  const t = useMemo(() => (key) => translate(lang, key), [lang]);
-
   const routeIdentity = useMemo(() => {
     const route = PUBLIC_ROUTES.find((item) => item.to === pathname);
     if (route) {
-      const routeKey = ROUTE_LABEL_KEYS[route.key] || route.navLabel;
       return {
-        section: route.group === 'core' ? 'Core route' : route.group === 'support' ? 'Support route' : 'Route',
-        title: t(routeKey),
+        section: route.group === 'core' ? 'Core Route' : route.group === 'support' ? 'Support Route' : 'Route',
+        title: route.title,
         description: route.description || '',
-      };
-    }
-
-    if (pathname === '/deploy') {
-      return {
-        section: 'Governance tools',
-        title: t('deploy'),
-        description: t('deploySubtitle'),
-      };
-    }
-
-    if (pathname === '/admin/governance') {
-      return {
-        section: 'Admin route',
-        title: t('admin'),
-        description: 'Governance administration controls.',
       };
     }
 
     return {
       section: 'Route',
-      title: pathname === '/' ? t('home') : pathname,
+      title: pathname === '/' ? 'Home' : pathname,
       description: '',
     };
-  }, [pathname, t]);
+  }, [pathname]);
 
   useEffect(() => {
-    const baseTitle = 'pvabazaar.org';
+    const baseTitle = 'pvabazaar.org | New Federation';
     if (routeIdentity?.title) {
       globalThis.document.title = `${routeIdentity.title} · ${baseTitle}`;
     }
   }, [routeIdentity]);
 
   const primaryNavRoutes = useMemo(() => (
-    PUBLIC_ROUTES.filter((route) => route.navPlacement === 'primary' && route.access === 'public')
+    PUBLIC_ROUTES.filter((route) => route.navPlacement === 'primary' && route.access === 'public').slice(0, 5)
   ), []);
 
-  const secondaryRoutes = useMemo(() => (
-    PUBLIC_ROUTES.filter((route) => route.navPlacement === 'secondary' && route.access === 'public')
+  const footerExploreRoutes = useMemo(() => (
+    PUBLIC_ROUTES.filter((route) => route.access === 'public').slice(0, 8)
   ), []);
 
-  const conferenceSystemRoutes = useMemo(() => [
-    { key: 'proposal-board', to: '/proposals', title: 'Proposal Board' },
-    { key: 'conference-hub', to: '/conference', title: 'Popular Conference' },
-    { key: 'vote-session', to: '/forum', title: 'Vote Session' },
+  const footerCitizenRoutes = useMemo(() => [
+    { key: 'citizens', to: '/citizens', title: 'Citizens' },
+    { key: 'passport', to: '/passport', title: 'Citizen Passport' },
+    { key: 'conference', to: '/conference', title: 'Conference' },
+    { key: 'treasury', to: '/treasury', title: 'Treasury' },
+    { key: 'proposals', to: '/proposals', title: 'Proposals' },
   ], []);
 
-  const citizenRoutes = useMemo(() => [
-    { key: 'citizen-passport', to: '/passport', title: 'Citizen Passport' },
-    { key: 'conference-queue', to: '/governance/conference', title: 'Governance Conference' },
-    { key: 'treasury-execution', to: '/governance/treasury', title: 'Governance Treasury' },
-    { key: 'my-wallet', to: '/passport#wallet', title: 'My Wallet' },
-    { key: 'my-proposals', to: '/passport#governance', title: 'My Proposals / Votes' },
+  const footerEssentialRoutes = useMemo(() => [
+    { key: 'home', to: '/', title: 'Home' },
+    { key: 'about', to: '/about', title: 'About' },
+    { key: 'marketplace', to: '/marketplace', title: 'Marketplace' },
+    { key: 'archive', to: '/archive', title: 'Archive Library' },
+    { key: 'download', to: '/download-app', title: 'Download App' },
   ], []);
-
-  const adminRoutes = useMemo(() => [
-    { key: 'admin-governance', to: '/admin/governance', title: 'Admin Governance' },
-    { key: 'moderation-queue', to: '/admin/governance', title: 'Moderation Queue' },
-    { key: 'treasury-controls', to: '/governance/treasury', title: 'Treasury Controls' },
-    { key: 'creator-approvals', to: '/creator', title: 'Creator Approvals' },
-    { key: 'site-ops', to: '/deploy', title: 'Site Ops / Diagnostics' },
-  ], []);
-
-  const handleLanguageChange = (event) => {
-    const next = setStoredLanguage(event.target.value);
-    setLang(next);
-  };
 
   return (
     <div className="layout">
@@ -129,7 +69,7 @@ export default function Layout({ children }) {
       <header className="layout__header">
         <NavLink to="/" end className="layout__brand layout__brandLink" aria-label="PVA Bazaar home">
           <div className="layout__title">pvabazaar.org</div>
-          <div className="layout__tagline">{t('siteTagline')}</div>
+          <div className="layout__tagline">New Federation Interface</div>
         </NavLink>
         <nav className="layout__nav" aria-label="Primary">
           {primaryNavRoutes.map((route) => (
@@ -138,30 +78,12 @@ export default function Layout({ children }) {
             </NavLink>
           ))}
         </nav>
-        <button
-          type="button"
-          className="layout__themeToggle"
-          onClick={toggleTheme}
-          aria-label="Toggle theme"
-          title="Toggle theme"
-        >
-          {darkMode ? `☀️ ${t('themeLight')}` : `🌙 ${t('themeDark')}`}
-        </button>
-        <label className="layout__languageControl">
-          <span>{t('language')}:</span>
-          <select
-            value={lang}
-            onChange={handleLanguageChange}
-            title="Select language"
-            className="layout__languageSelect"
-          >
-            {LANGUAGE_OPTIONS.map((option) => (
-              <option key={option.code} value={option.code}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className="layout__status" aria-live="polite">
+          <span className="layout__statusLabel">User Status</span>
+          <NavLink className="layout__statusAction" to={hasUserAccess ? '/dashboard' : '/login'}>
+            {hasUserAccess ? 'Authenticated' : 'Guest'}
+          </NavLink>
+        </div>
       </header>
       <main id="content" className="layout__main">
         <section className="section-card layout__routeIdentity" data-route-identity="true" aria-label="Current route identity">
@@ -180,10 +102,10 @@ export default function Layout({ children }) {
       <OpenClawFloatingAssistant routePath={location.pathname || '/'} />
       <footer className="layout__footer">
         <div className="layout__footerGrid">
-          <section className="layout__footerSection" aria-label="Secondary routes">
-            <h2>Secondary</h2>
+          <section className="layout__footerSection" aria-label="Essential routes">
+            <h2>Essential</h2>
             <div className="layout__footerLinks">
-              {secondaryRoutes.map((route) => (
+              {footerEssentialRoutes.map((route) => (
                 <NavLink key={route.key} to={route.to} end={route.to === '/'}>
                   {route.title}
                 </NavLink>
@@ -191,10 +113,10 @@ export default function Layout({ children }) {
             </div>
           </section>
 
-          <section className="layout__footerSection" aria-label="Popular Conference navigation">
-            <h2>Popular Conference System</h2>
+          <section className="layout__footerSection" aria-label="Explore routes">
+            <h2>Explore</h2>
             <div className="layout__footerLinks">
-              {conferenceSystemRoutes.map((route) => (
+              {footerExploreRoutes.map((route) => (
                 <NavLink key={route.key} to={route.to} end={route.to === '/'}>
                   {route.title}
                 </NavLink>
@@ -202,31 +124,17 @@ export default function Layout({ children }) {
             </div>
           </section>
 
-          {hasUserAccess ? (
-            <section className="layout__footerSection" aria-label="Citizen account routes">
-              <h2>Citizen Account</h2>
-              <div className="layout__footerLinks">
-                {citizenRoutes.map((route) => (
-                  <NavLink key={route.key} to={route.to} end={route.to === '/'}>
-                    {route.title}
-                  </NavLink>
-                ))}
-              </div>
-            </section>
-          ) : null}
-
-          {hasUserAccess && pathname.startsWith('/admin') ? (
-            <section className="layout__footerSection" aria-label="Admin routes">
-              <h2>Admin / Secretariat</h2>
-              <div className="layout__footerLinks">
-                {adminRoutes.map((route) => (
-                  <NavLink key={route.key} to={route.to} end={route.to === '/'}>
-                    {route.title}
-                  </NavLink>
-                ))}
-              </div>
-            </section>
-          ) : null}
+          <section className="layout__footerSection" aria-label="Federation manifesto snippet">
+            <h2>Manifesto</h2>
+            <p style={{ margin: 0, lineHeight: 1.65 }}>{FEDERATION_SNIPPET}</p>
+            <div className="layout__footerLinks" style={{ marginTop: '0.65rem' }}>
+              {footerCitizenRoutes.map((route) => (
+                <NavLink key={route.key} to={route.to} end={route.to === '/'}>
+                  {route.title}
+                </NavLink>
+              ))}
+            </div>
+          </section>
         </div>
         <div className="layout__footerMeta">© {new Date().getFullYear()} · pvabazaar.org</div>
       </footer>
