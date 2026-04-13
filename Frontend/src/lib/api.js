@@ -59,6 +59,8 @@ export const toggleGovernanceProposalSupport = (proposalId) =>
   apiPost(`/governance/proposals/${encodeURIComponent(proposalId)}/support`, {});
 export const queueGovernanceProposal = (proposalId, payload) =>
   apiPost(`/governance/proposals/${encodeURIComponent(proposalId)}/queue`, payload);
+export const updateGovernanceProposalLifecycleStatus = (proposalId, payload) =>
+  apiPost(`/governance/proposals/${encodeURIComponent(proposalId)}/status`, payload);
 export const publishGovernanceProposalOutcome = (proposalId, payload) =>
   apiPost(`/governance/proposals/${encodeURIComponent(proposalId)}/outcome`, payload);
 export const createGovernanceWalletChallenge = (walletAddress) =>

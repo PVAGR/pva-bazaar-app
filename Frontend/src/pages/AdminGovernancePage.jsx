@@ -4,6 +4,7 @@ import {
   fetchGovernanceAdminResponses,
   fetchGovernanceExecutionTimeline,
   postGovernanceExecutionUpdate,
+  updateGovernanceProposalLifecycleStatus,
   upsertGovernanceAdminResponse,
 } from '../lib/api';
 
@@ -13,6 +14,20 @@ function parseMilestones(text) {
     .map((line) => line.trim())
     .filter(Boolean)
     .map((line, idx) => ({ id: `M-${idx + 1}`, title: line.replace(/^[-*]\s*/, ''), done: false }));
+}
+
+function toLifecycleStatus(decision) {
+  const normalized = String(decision || '').trim().toLowerCase();
+  if (normalized === 'public') return 'public_discussion';
+  if (normalized === 'conference_queue') return 'conference_queue';
+  if (['accepted', 'rejected', 'needs_revision', 'in_execution', 'completed'].includes(normalized)) {
+    return 'outcome_published';
+  }
+  return '';
+}
+
+function isMongoObjectId(value) {
+  return /^[a-f\d]{24}$/i.test(String(value || ''));
 }
 
 export default function AdminGovernancePage() {
@@ -27,6 +42,7 @@ export default function AdminGovernancePage() {
   const [executionForms, setExecutionForms] = useState({});
   const [timelines, setTimelines] = useState({});
   const [timelineLoading, setTimelineLoading] = useState({});
+  const [lifecycleSyncById, setLifecycleSyncById] = useState({});
   const [syncError, setSyncError] = useState('');
 
   useEffect(() => {
@@ -101,6 +117,7 @@ export default function AdminGovernancePage() {
   const applyDecision = async (proposal) => {
     const form = getDecisionForm(proposal);
     setSyncError('');
+    setLifecycleSyncById((state) => ({ ...state, [proposal.id]: '' }));
 
     try {
       await upsertGovernanceAdminResponse(proposal.id, {
@@ -109,8 +126,27 @@ export default function AdminGovernancePage() {
         nextStep: form.nextStep,
         targetTimeline: form.targetTimeline,
       });
+
+      const lifecycleId = isMongoObjectId(proposal._id) ? proposal._id : '';
+      const lifecycleStatus = toLifecycleStatus(form.decision);
+
+      if (lifecycleId && lifecycleStatus) {
+        await updateGovernanceProposalLifecycleStatus(lifecycleId, {
+          status: lifecycleStatus,
+        });
+        setLifecycleSyncById((state) => ({
+          ...state,
+          [proposal.id]: `Lifecycle synced to ${lifecycleStatus}`,
+        }));
+      } else if (!lifecycleId) {
+        setLifecycleSyncById((state) => ({
+          ...state,
+          [proposal.id]: 'Lifecycle sync skipped (local-only proposal id)',
+        }));
+      }
     } catch (_err) {
       setSyncError('Backend persistence is unavailable right now. Decision was applied locally for continuity but is not yet authoritative across devices.');
+      setLifecycleSyncById((state) => ({ ...state, [proposal.id]: 'Lifecycle sync failed' }));
     }
 
     setAdminDecision(proposal.id, {
@@ -319,6 +355,12 @@ export default function AdminGovernancePage() {
                   Remove
                 </button>
               </div>
+
+              {lifecycleSyncById[proposal.id] ? (
+                <p style={{ margin: '0 0 12px', color: 'var(--site-text-muted)', fontSize: '12px' }}>
+                  {lifecycleSyncById[proposal.id]}
+                </p>
+              ) : null}
 
               {['accepted', 'in_execution', 'completed'].includes(proposal.status) || proposal.executionProject ? (
                 <div style={{ borderTop: '1px dashed var(--site-border)', paddingTop: '12px' }}>
