@@ -138,8 +138,9 @@ jobs:
           VITE_CLOUDINARY_CLOUD_NAME: ''
           VITE_CLOUDINARY_UPLOAD_PRESET: ''
           VITE_FEDERATION_ENABLED: 'false'
-        run: |
-          npm run build || { echo "Build failed with exit code $?"; ls -la dist/ 2>&1; echo "---"; pwd; echo "---"; echo "Checking package.json build script:"; cat package.json | grep -A 5 '"build"'; exit 1; }
+          VITE_COMMUNITY_ID: pvabazaar-kenya-pilot
+          VITE_FEDERATION_HUB_URL: https://federation.pvabazaar.org
+        run: npm run build
 
       - name: Verify build output
         working-directory: ./Frontend
