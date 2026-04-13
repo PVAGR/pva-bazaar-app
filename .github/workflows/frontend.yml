@@ -137,6 +137,7 @@ jobs:
           VITE_API_URL: ${{ secrets.VITE_API_URL_STAGING || 'https://api.pvabazaar.org/api' }}
           VITE_CLOUDINARY_CLOUD_NAME: ${{ secrets.VITE_CLOUDINARY_CLOUD_NAME || vars.VITE_CLOUDINARY_CLOUD_NAME || '' }}
           VITE_CLOUDINARY_UPLOAD_PRESET: ${{ secrets.VITE_CLOUDINARY_UPLOAD_PRESET || vars.VITE_CLOUDINARY_UPLOAD_PRESET || '' }}
+          VITE_FEDERATION_ENABLED: 'false'
         run: npm run build 2>&1
 
       - name: Verify build output
