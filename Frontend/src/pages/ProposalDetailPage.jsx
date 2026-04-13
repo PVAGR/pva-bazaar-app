@@ -19,6 +19,17 @@ function stageState(status) {
   return status;
 }
 
+function formatMsDuration(ms) {
+  const total = Math.max(Number(ms || 0), 0);
+  const totalSeconds = Math.floor(total / 1000);
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  if (days > 0) return `${days}d ${hours}h`;
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  return `${minutes}m`;
+}
+
 export default function ProposalDetailPage() {
   const { proposalId } = useParams();
   const [item, setItem] = useState(null);
@@ -230,6 +241,19 @@ export default function ProposalDetailPage() {
           <p>
             <strong>Quorum:</strong> {Number(voteSummary.quorum?.participationPct || 0)}% participation (required {Number(voteSummary.quorum?.requiredPct || 0)}%) · {voteSummary.quorum?.met ? 'met' : 'not met'}
           </p>
+
+          {voteSummary.voteWindow ? (
+            <p>
+              <strong>Vote Window:</strong>{' '}
+              {voteSummary.voteWindow.isOpen
+                ? `Open · closes in ${formatMsDuration(voteSummary.voteWindow.closesInMs)}`
+                : voteSummary.voteWindow.isScheduled
+                  ? `Scheduled · opens in ${formatMsDuration(voteSummary.voteWindow.opensInMs)}`
+                  : voteSummary.voteWindow.hasEnded
+                    ? 'Closed'
+                    : 'Not scheduled'}
+            </p>
+          ) : null}
         </section>
       ) : null}
 

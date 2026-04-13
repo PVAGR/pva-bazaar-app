@@ -916,6 +916,19 @@ router.get('/proposals/:proposalId/votes/summary', async (req, res) => {
     const totalVotes = voteCounts.yes + voteCounts.no + voteCounts.abstain;
     const eligibleVoterCount = await getEligibleVoterCount();
     const quorum = buildQuorumMeta(totalVotes, eligibleVoterCount);
+    const now = Date.now();
+    const startsAtMs = proposal.voteWindow?.startsAt ? new Date(proposal.voteWindow.startsAt).getTime() : null;
+    const endsAtMs = proposal.voteWindow?.endsAt ? new Date(proposal.voteWindow.endsAt).getTime() : null;
+
+    const voteWindow = {
+      startsAt: proposal.voteWindow?.startsAt || null,
+      endsAt: proposal.voteWindow?.endsAt || null,
+      opensInMs: startsAtMs && startsAtMs > now ? startsAtMs - now : 0,
+      closesInMs: endsAtMs && endsAtMs > now ? endsAtMs - now : 0,
+      isOpen: Boolean(startsAtMs && endsAtMs && now >= startsAtMs && now <= endsAtMs),
+      isScheduled: Boolean(startsAtMs && startsAtMs > now),
+      hasEnded: Boolean(endsAtMs && endsAtMs < now),
+    };
 
     return res.json({
       ok: true,
@@ -923,6 +936,7 @@ router.get('/proposals/:proposalId/votes/summary', async (req, res) => {
       voteCounts,
       totalVotes,
       quorum,
+      voteWindow,
       outcome: proposal.outcome,
       status: proposal.status,
     });
