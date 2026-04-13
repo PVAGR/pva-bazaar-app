@@ -131,19 +131,12 @@ jobs:
           echo "Frontend directory contents:"
           ls -la Frontend/ | head -20
       
-      - name: Set build environment variables
-        id: build-env
-        run: |
-          echo "api_url=${{ secrets.VITE_API_URL_STAGING || 'https://api.pvabazaar.org/api' }}" >> $GITHUB_OUTPUT
-          echo "cloudinary_name=${{ secrets.VITE_CLOUDINARY_CLOUD_NAME || vars.VITE_CLOUDINARY_CLOUD_NAME || '' }}" >> $GITHUB_OUTPUT
-          echo "cloudinary_preset=${{ secrets.VITE_CLOUDINARY_UPLOAD_PRESET || vars.VITE_CLOUDINARY_UPLOAD_PRESET || '' }}" >> $GITHUB_OUTPUT
-      
       - name: Build frontend
         working-directory: ./Frontend
         env:
-          VITE_API_URL: ${{ steps.build-env.outputs.api_url }}
-          VITE_CLOUDINARY_CLOUD_NAME: ${{ steps.build-env.outputs.cloudinary_name }}
-          VITE_CLOUDINARY_UPLOAD_PRESET: ${{ steps.build-env.outputs.cloudinary_preset }}
+          VITE_API_URL: https://api.pvabazaar.org/api
+          VITE_CLOUDINARY_CLOUD_NAME: ''
+          VITE_CLOUDINARY_UPLOAD_PRESET: ''
           VITE_FEDERATION_ENABLED: 'false'
         run: npm run build 2>&1
 
