@@ -4,6 +4,7 @@ import {
   endorseProposal,
   fetchCurrentUser,
   fetchGovernanceExecutionTimeline,
+  fetchGovernanceVoteSummary,
   fetchMyPassport,
   fetchProposalById,
   unendorseProposal,
@@ -25,6 +26,8 @@ export default function ProposalDetailPage() {
   const [message, setMessage] = useState('');
   const [timelineData, setTimelineData] = useState(null);
   const [timelineLoading, setTimelineLoading] = useState(true);
+  const [voteSummary, setVoteSummary] = useState(null);
+  const [voteSummaryLoading, setVoteSummaryLoading] = useState(true);
   const [userId, setUserId] = useState('');
   const [verifiedCitizen, setVerifiedCitizen] = useState(false);
 
@@ -83,9 +86,28 @@ export default function ProposalDetailPage() {
       }
     }
 
+    async function loadVoteSummary() {
+      setVoteSummaryLoading(true);
+      try {
+        const response = await fetchGovernanceVoteSummary(proposalId);
+        if (!active) return;
+        if (response?.ok) {
+          setVoteSummary(response);
+        } else {
+          setVoteSummary(null);
+        }
+      } catch (_error) {
+        if (!active) return;
+        setVoteSummary(null);
+      } finally {
+        if (active) setVoteSummaryLoading(false);
+      }
+    }
+
     loadDetail();
     loadViewer();
     loadExecutionTimeline();
+    loadVoteSummary();
 
     return () => {
       active = false;
@@ -195,6 +217,21 @@ export default function ProposalDetailPage() {
           ))}
         </div>
       </section>
+
+      {!voteSummaryLoading && voteSummary ? (
+        <section className="section-card">
+          <h2>Governance Vote Summary</h2>
+          <p>
+            <strong>Status:</strong> {voteSummary.status || 'unknown'} · <strong>Outcome:</strong> {voteSummary.outcome || 'pending'}
+          </p>
+          <p>
+            <strong>Votes:</strong> yes {Number(voteSummary.voteCounts?.yes || 0)} / no {Number(voteSummary.voteCounts?.no || 0)} / abstain {Number(voteSummary.voteCounts?.abstain || 0)}
+          </p>
+          <p>
+            <strong>Quorum:</strong> {Number(voteSummary.quorum?.participationPct || 0)}% participation (required {Number(voteSummary.quorum?.requiredPct || 0)}%) · {voteSummary.quorum?.met ? 'met' : 'not met'}
+          </p>
+        </section>
+      ) : null}
 
       {item.officialResponse?.decision ? (
         <section className="section-card">
