@@ -17,6 +17,62 @@ const web3 = new Web3();
 const ALLOWED_OUTCOMES = new Set(['accepted', 'planned', 'deferred', 'rejected']);
 const ALLOWED_VOTE_CHOICES = new Set(['yes', 'no', 'abstain']);
 const ALLOWED_ADMIN_DECISIONS = new Set(['public', 'conference_queue', 'accepted', 'rejected', 'needs_revision', 'in_execution', 'completed']);
+const ALLOWED_VOTE_STATUSES = new Set(['agenda_published', 'vote_window']);
+const STATUS_ORDER = {
+  draft: 0,
+  public_discussion: 1,
+  threshold_reached: 2,
+  conference_queue: 3,
+  agenda_published: 4,
+  vote_window: 5,
+  outcome_published: 6,
+  archived: 7,
+};
+
+function parsePercentEnv(name, fallbackValue) {
+  const raw = Number(process.env[name]);
+  if (!Number.isFinite(raw)) return fallbackValue;
+  return Math.min(Math.max(raw, 0), 100);
+}
+
+async function getEligibleVoterCount() {
+  const verifiedCitizens = await User.countDocuments({ passportStatus: 'verified' });
+  if (verifiedCitizens > 0) return verifiedCitizens;
+  return User.countDocuments({});
+}
+
+function buildQuorumMeta(totalVotes, eligibleVoterCount) {
+  const requiredPct = parsePercentEnv('GOVERNANCE_VOTE_QUORUM_PCT', 30);
+  const participationPct = eligibleVoterCount > 0 ? (totalVotes / eligibleVoterCount) * 100 : 0;
+  return {
+    requiredPct,
+    participationPct: Number(participationPct.toFixed(2)),
+    met: participationPct >= requiredPct,
+    eligibleVoterCount,
+  };
+}
+
+function isForwardStatusTransition(currentStatus, nextStatus) {
+  const current = STATUS_ORDER[currentStatus];
+  const next = STATUS_ORDER[nextStatus];
+  if (current === undefined || next === undefined) return false;
+  return next >= current;
+}
+
+function validateVoteWindow(voteWindow) {
+  const startsAt = voteWindow?.startsAt ? new Date(voteWindow.startsAt) : null;
+  const endsAt = voteWindow?.endsAt ? new Date(voteWindow.endsAt) : null;
+
+  if (!startsAt || !endsAt || Number.isNaN(startsAt.getTime()) || Number.isNaN(endsAt.getTime())) {
+    return { ok: false, error: 'voteWindow.startsAt and voteWindow.endsAt are required and must be valid dates' };
+  }
+
+  if (endsAt.getTime() <= startsAt.getTime()) {
+    return { ok: false, error: 'voteWindow.endsAt must be later than voteWindow.startsAt' };
+  }
+
+  return { ok: true, startsAt, endsAt };
+}
 
 function sanitize(value) {
   if (typeof value !== 'string') return '';
@@ -358,6 +414,94 @@ router.post('/proposals/:proposalId/queue', authMiddleware, async (req, res) => 
   }
 });
 
+router.post('/proposals/:proposalId/status', authMiddleware, async (req, res) => {
+  try {
+    if (!isCommitteeMember(req)) {
+      return res.status(403).json({ ok: false, error: 'Only committee members can change proposal status' });
+    }
+
+    const proposal = await GovernanceProposal.findById(req.params.proposalId);
+    if (!proposal) {
+      return res.status(404).json({ ok: false, error: 'Proposal not found' });
+    }
+
+    const nextStatus = sanitize(req.body?.status).toLowerCase();
+    if (!nextStatus || STATUS_ORDER[nextStatus] === undefined) {
+      return res.status(400).json({ ok: false, error: 'Invalid status value' });
+    }
+
+    if (!isForwardStatusTransition(proposal.status, nextStatus)) {
+      return res.status(400).json({
+        ok: false,
+        error: `Cannot move status backward from ${proposal.status} to ${nextStatus}`,
+      });
+    }
+
+    if (nextStatus === 'agenda_published' || nextStatus === 'vote_window') {
+      const maybeWindow = req.body?.voteWindow || proposal.voteWindow;
+      const check = validateVoteWindow(maybeWindow);
+      if (!check.ok) {
+        return res.status(400).json({ ok: false, error: check.error });
+      }
+
+      proposal.voteWindow = {
+        startsAt: check.startsAt,
+        endsAt: check.endsAt,
+      };
+    }
+
+    if (nextStatus === 'vote_window') {
+      const startsAtMs = proposal.voteWindow?.startsAt ? new Date(proposal.voteWindow.startsAt).getTime() : null;
+      const endsAtMs = proposal.voteWindow?.endsAt ? new Date(proposal.voteWindow.endsAt).getTime() : null;
+      const now = Date.now();
+      if (!startsAtMs || !endsAtMs || now < startsAtMs || now > endsAtMs) {
+        return res.status(400).json({ ok: false, error: 'Current time must be inside the configured vote window' });
+      }
+    }
+
+    if (nextStatus === 'outcome_published') {
+      const voteCounts = await refreshVoteCounts(proposal._id);
+      const totalVotes = voteCounts.yes + voteCounts.no + voteCounts.abstain;
+      const eligibleVoterCount = await getEligibleVoterCount();
+      const quorum = buildQuorumMeta(totalVotes, eligibleVoterCount);
+
+      if (totalVotes < 1) {
+        return res.status(400).json({ ok: false, error: 'Cannot publish outcome before any votes are recorded' });
+      }
+
+      if (!quorum.met) {
+        return res.status(400).json({
+          ok: false,
+          error: 'Cannot publish outcome before quorum is met',
+          quorum,
+        });
+      }
+    }
+
+    proposal.status = nextStatus;
+
+    if (req.body?.cycleKey !== undefined) {
+      proposal.cycleKey = sanitize(req.body.cycleKey);
+    }
+
+    if (req.body?.voteWindow?.startsAt || req.body?.voteWindow?.endsAt) {
+      const existingStartsAt = proposal.voteWindow?.startsAt;
+      const existingEndsAt = proposal.voteWindow?.endsAt;
+      proposal.voteWindow = {
+        startsAt: req.body?.voteWindow?.startsAt ? new Date(req.body.voteWindow.startsAt) : existingStartsAt,
+        endsAt: req.body?.voteWindow?.endsAt ? new Date(req.body.voteWindow.endsAt) : existingEndsAt,
+      };
+    }
+
+    await proposal.save();
+
+    return res.json({ ok: true, item: proposal });
+  } catch (error) {
+    console.error('Error updating proposal status:', error);
+    return res.status(500).json({ ok: false, error: 'Failed to update proposal status' });
+  }
+});
+
 router.post('/proposals/:proposalId/outcome', authMiddleware, async (req, res) => {
   try {
     if (!isCommitteeMember(req)) {
@@ -502,6 +646,14 @@ router.post('/proposals/:proposalId/votes/onchain', authMiddleware, async (req, 
       return res.status(404).json({ ok: false, error: 'Proposal not found' });
     }
 
+    if (!ALLOWED_VOTE_STATUSES.has(proposal.status)) {
+      return res.status(400).json({
+        ok: false,
+        error: 'Proposal is not in an active voting state',
+        status: proposal.status,
+      });
+    }
+
     const now = Date.now();
     if (proposal.voteWindow?.startsAt && new Date(proposal.voteWindow.startsAt).getTime() > now) {
       return res.status(400).json({ ok: false, error: 'Vote window has not started' });
@@ -532,6 +684,14 @@ router.post('/proposals/:proposalId/votes/onchain', authMiddleware, async (req, 
       return res.status(409).json({ ok: false, error: 'User has already submitted a vote for this proposal' });
     }
 
+    const existingWalletVote = await GovernanceVote.findOne({
+      proposalId: proposal._id,
+      walletAddress,
+    });
+    if (existingWalletVote) {
+      return res.status(409).json({ ok: false, error: 'Wallet has already submitted a vote for this proposal' });
+    }
+
     const vote = await GovernanceVote.create({
       proposalId: proposal._id,
       userId: req.user.id,
@@ -544,6 +704,9 @@ router.post('/proposals/:proposalId/votes/onchain', authMiddleware, async (req, 
     });
 
     const voteCounts = await refreshVoteCounts(proposal._id);
+    const totalVotes = voteCounts.yes + voteCounts.no + voteCounts.abstain;
+    const eligibleVoterCount = await getEligibleVoterCount();
+    const quorum = buildQuorumMeta(totalVotes, eligibleVoterCount);
 
     if (proposal.status !== 'vote_window') {
       proposal.status = 'vote_window';
@@ -560,7 +723,7 @@ router.post('/proposals/:proposalId/votes/onchain', authMiddleware, async (req, 
       console.warn('OpenClaw dispatch failed (vote submitted):', err?.message || err);
     });
 
-    return res.status(201).json({ ok: true, item: vote, voteCounts });
+    return res.status(201).json({ ok: true, item: vote, voteCounts, totalVotes, quorum });
   } catch (error) {
     console.error('Error submitting on-chain vote:', error);
     if (error?.code === 11000) {
@@ -579,12 +742,15 @@ router.get('/proposals/:proposalId/votes/summary', async (req, res) => {
 
     const voteCounts = await refreshVoteCounts(proposal._id);
     const totalVotes = voteCounts.yes + voteCounts.no + voteCounts.abstain;
+    const eligibleVoterCount = await getEligibleVoterCount();
+    const quorum = buildQuorumMeta(totalVotes, eligibleVoterCount);
 
     return res.json({
       ok: true,
       proposalId: proposal._id,
       voteCounts,
       totalVotes,
+      quorum,
       outcome: proposal.outcome,
       status: proposal.status,
     });
