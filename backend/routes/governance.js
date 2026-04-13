@@ -18,6 +18,7 @@ const ALLOWED_OUTCOMES = new Set(['accepted', 'planned', 'deferred', 'rejected']
 const ALLOWED_VOTE_CHOICES = new Set(['yes', 'no', 'abstain']);
 const ALLOWED_ADMIN_DECISIONS = new Set(['public', 'conference_queue', 'accepted', 'rejected', 'needs_revision', 'in_execution', 'completed']);
 const ALLOWED_VOTE_STATUSES = new Set(['agenda_published', 'vote_window']);
+const EXECUTION_ELIGIBLE_DECISIONS = new Set(['accepted', 'in_execution', 'completed']);
 const STATUS_ORDER = {
   draft: 0,
   public_discussion: 1,
@@ -132,6 +133,35 @@ function sanitizeExecutionBlock(input) {
     progressPercent,
     latestUpdate,
     completed,
+  };
+}
+
+function sanitizeExecutionUpdate(input) {
+  if (!input || typeof input !== 'object') return null;
+  const message = sanitize(input.message);
+  if (!message) return null;
+
+  const progressCandidate = Number(input.progressPercent);
+  const progressPercent = Number.isFinite(progressCandidate)
+    ? Math.min(Math.max(progressCandidate, 0), 100)
+    : undefined;
+
+  let milestone;
+  if (input.milestone && typeof input.milestone === 'object') {
+    const title = sanitize(input.milestone.title);
+    if (title) {
+      milestone = {
+        id: sanitize(input.milestone.id),
+        title,
+        done: Boolean(input.milestone.done),
+      };
+    }
+  }
+
+  return {
+    message,
+    progressPercent,
+    milestone,
   };
 }
 
@@ -255,6 +285,152 @@ router.put('/admin-responses/:proposalId', authMiddleware, adminOnly, async (req
   } catch (error) {
     console.error('Error saving governance admin response:', error);
     return res.status(500).json({ ok: false, error: 'Failed to save governance admin response' });
+  }
+});
+
+router.get('/proposals/:proposalId/execution/timeline', async (req, res) => {
+  try {
+    const proposalId = sanitize(req.params?.proposalId);
+    if (!proposalId) {
+      return res.status(400).json({ ok: false, error: 'proposalId is required' });
+    }
+
+    const proposal = await GovernanceProposal.findById(proposalId)
+      .select('_id title status outcome outcomeRationale plannedTargetDate voteCounts')
+      .lean();
+    if (!proposal) {
+      return res.status(404).json({ ok: false, error: 'Proposal not found' });
+    }
+
+    const item = await GovernanceAdminResponse.findOne({ proposalId })
+      .populate('updatedBy', 'name email role')
+      .populate('executionUpdates.updatedBy', 'name email role');
+
+    return res.json({
+      ok: true,
+      proposal,
+      execution: {
+        decision: item?.decision || 'public',
+        reason: item?.reason || '',
+        nextStep: item?.nextStep || '',
+        targetTimeline: item?.targetTimeline || '',
+        executionBlock: item?.executionBlock || null,
+        updates: item?.executionUpdates || [],
+        updatedAt: item?.updatedAt || null,
+        updatedBy: item?.updatedBy || null,
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching governance execution timeline:', error);
+    return res.status(500).json({ ok: false, error: 'Failed to fetch execution timeline' });
+  }
+});
+
+router.post('/proposals/:proposalId/execution/updates', authMiddleware, async (req, res) => {
+  try {
+    if (!isCommitteeMember(req)) {
+      return res.status(403).json({ ok: false, error: 'Only committee members can post execution updates' });
+    }
+
+    const proposalId = sanitize(req.params?.proposalId);
+    if (!proposalId) {
+      return res.status(400).json({ ok: false, error: 'proposalId is required' });
+    }
+
+    const proposal = await GovernanceProposal.findById(proposalId).select('_id status outcome');
+    if (!proposal) {
+      return res.status(404).json({ ok: false, error: 'Proposal not found' });
+    }
+
+    const updateEntry = sanitizeExecutionUpdate(req.body || {});
+    if (!updateEntry) {
+      return res.status(400).json({ ok: false, error: 'A non-empty message is required for execution updates' });
+    }
+
+    const item = await GovernanceAdminResponse.findOne({ proposalId });
+    if (!item) {
+      return res.status(409).json({ ok: false, error: 'Admin response not initialized for this proposal' });
+    }
+
+    if (!EXECUTION_ELIGIBLE_DECISIONS.has(item.decision)) {
+      return res.status(409).json({
+        ok: false,
+        error: `Execution updates require decision in: ${Array.from(EXECUTION_ELIGIBLE_DECISIONS).join(', ')}`,
+      });
+    }
+
+    const now = new Date();
+    const nextUpdate = {
+      message: updateEntry.message,
+      progressPercent: updateEntry.progressPercent,
+      milestone: updateEntry.milestone || null,
+      updatedBy: req.user.id,
+      createdAt: now,
+    };
+
+    const currentBlock = item.executionBlock || {
+      owner: '',
+      milestones: [],
+      progressPercent: 0,
+      latestUpdate: '',
+      completed: false,
+    };
+
+    const nextMilestones = Array.isArray(currentBlock.milestones) ? [...currentBlock.milestones] : [];
+    if (nextUpdate.milestone?.title) {
+      const milestoneId = nextUpdate.milestone.id || `M-${nextMilestones.length + 1}`;
+      const existingIndex = nextMilestones.findIndex((m) => sanitize(m?.id) === milestoneId);
+      const milestonePayload = {
+        id: milestoneId,
+        title: nextUpdate.milestone.title,
+        done: Boolean(nextUpdate.milestone.done),
+      };
+      if (existingIndex >= 0) {
+        nextMilestones[existingIndex] = milestonePayload;
+      } else {
+        nextMilestones.push(milestonePayload);
+      }
+    }
+
+    const nextProgress = Number.isFinite(nextUpdate.progressPercent)
+      ? nextUpdate.progressPercent
+      : Number(currentBlock.progressPercent || 0);
+
+    item.executionBlock = {
+      owner: currentBlock.owner || '',
+      milestones: nextMilestones,
+      progressPercent: Math.min(Math.max(nextProgress, 0), 100),
+      latestUpdate: nextUpdate.message,
+      completed: nextProgress >= 100 || item.decision === 'completed',
+    };
+
+    item.executionUpdates = Array.isArray(item.executionUpdates) ? item.executionUpdates : [];
+    item.executionUpdates.push(nextUpdate);
+    item.updatedBy = req.user.id;
+
+    await item.save();
+
+    const populated = await GovernanceAdminResponse.findById(item._id)
+      .populate('updatedBy', 'name email role')
+      .populate('executionUpdates.updatedBy', 'name email role');
+
+    dispatchToOpenClaw(createSystemEvent('info', 'Governance execution update posted', {
+      proposalId,
+      byUser: req.user.id,
+      progressPercent: item.executionBlock.progressPercent,
+    })).catch((err) => {
+      console.warn('OpenClaw dispatch failed (execution update):', err?.message || err);
+    });
+
+    return res.status(201).json({
+      ok: true,
+      executionBlock: populated.executionBlock,
+      latestUpdate: populated.executionUpdates[populated.executionUpdates.length - 1],
+      updatesCount: populated.executionUpdates.length,
+    });
+  } catch (error) {
+    console.error('Error posting governance execution update:', error);
+    return res.status(500).json({ ok: false, error: 'Failed to post execution update' });
   }
 });
 

@@ -14,6 +14,17 @@ const governanceExecutionBlockSchema = new mongoose.Schema({
   completed: { type: Boolean, default: false },
 }, { _id: false });
 
+const governanceExecutionUpdateSchema = new mongoose.Schema({
+  message: { type: String, default: '', trim: true, maxlength: 4000 },
+  progressPercent: { type: Number, min: 0, max: 100 },
+  milestone: { type: governanceExecutionMilestoneSchema, default: null },
+  updatedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  },
+  createdAt: { type: Date, default: Date.now },
+}, { _id: false });
+
 const governanceAdminResponseSchema = new mongoose.Schema({
   proposalId: {
     type: String,
@@ -32,6 +43,7 @@ const governanceAdminResponseSchema = new mongoose.Schema({
   nextStep: { type: String, default: '', trim: true, maxlength: 4000 },
   targetTimeline: { type: String, default: '', trim: true, maxlength: 200 },
   executionBlock: { type: governanceExecutionBlockSchema, default: null },
+  executionUpdates: { type: [governanceExecutionUpdateSchema], default: [] },
   updatedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
