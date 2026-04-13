@@ -1,6 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useGovernanceStore } from '../store/governanceStore';
-import { fetchGovernanceAdminResponses, upsertGovernanceAdminResponse } from '../lib/api';
+import {
+  fetchGovernanceAdminResponses,
+  fetchGovernanceExecutionTimeline,
+  postGovernanceExecutionUpdate,
+  upsertGovernanceAdminResponse,
+} from '../lib/api';
 
 function parseMilestones(text) {
   return String(text || '')
@@ -20,6 +25,8 @@ export default function AdminGovernancePage() {
   const [filter, setFilter] = useState('active');
   const [decisionForms, setDecisionForms] = useState({});
   const [executionForms, setExecutionForms] = useState({});
+  const [timelines, setTimelines] = useState({});
+  const [timelineLoading, setTimelineLoading] = useState({});
   const [syncError, setSyncError] = useState('');
 
   useEffect(() => {
@@ -130,6 +137,13 @@ export default function AdminGovernancePage() {
       await upsertGovernanceAdminResponse(proposal.id, {
         executionBlock,
       });
+
+      if (executionBlock.latestUpdate) {
+        await postGovernanceExecutionUpdate(proposal.id, {
+          message: executionBlock.latestUpdate,
+          progressPercent: executionBlock.progressPercent,
+        });
+      }
     } catch (_err) {
       setSyncError('Backend persistence is unavailable right now. Execution updates were saved locally for continuity but are not yet authoritative across devices.');
     }
@@ -141,6 +155,25 @@ export default function AdminGovernancePage() {
       latestUpdate: executionBlock.latestUpdate,
       completed: executionBlock.completed,
     });
+
+    loadTimeline(proposal.id);
+  };
+
+  const loadTimeline = async (proposalId) => {
+    setTimelineLoading((state) => ({ ...state, [proposalId]: true }));
+    try {
+      const response = await fetchGovernanceExecutionTimeline(proposalId);
+      if (response?.ok) {
+        setTimelines((state) => ({
+          ...state,
+          [proposalId]: response.execution,
+        }));
+      }
+    } catch (_error) {
+      // Keep admin page functional even if timeline endpoint is unavailable.
+    } finally {
+      setTimelineLoading((state) => ({ ...state, [proposalId]: false }));
+    }
   };
 
   return (
@@ -344,6 +377,29 @@ export default function AdminGovernancePage() {
                   >
                     Save Execution Block
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => loadTimeline(proposal.id)}
+                    style={{ marginTop: '10px', marginLeft: '8px', padding: '8px 14px', border: '1px solid var(--site-border)', borderRadius: '8px', background: 'var(--site-panel-soft)', color: 'var(--site-text)', fontWeight: 700, cursor: 'pointer' }}
+                  >
+                    {timelineLoading[proposal.id] ? 'Loading…' : 'Load Timeline'}
+                  </button>
+
+                  {(timelines[proposal.id]?.updates || []).length ? (
+                    <div style={{ marginTop: '12px', borderTop: '1px dashed var(--site-border)', paddingTop: '10px' }}>
+                      <h4 style={{ margin: '0 0 8px', fontSize: '14px' }}>Execution History</h4>
+                      <div style={{ display: 'grid', gap: '8px' }}>
+                        {timelines[proposal.id].updates.slice(-5).reverse().map((entry, idx) => (
+                          <div key={`${proposal.id}-update-${idx}`} className="gov-detail-body" style={{ background: 'var(--site-panel-soft)', border: '1px solid var(--site-border)', borderRadius: '8px', padding: '8px' }}>
+                            <div style={{ marginBottom: '4px' }}>{entry.message}</div>
+                            <div style={{ color: 'var(--site-text-muted)', fontSize: '12px' }}>
+                              Progress: {Number(entry.progressPercent || 0)}% · {entry.createdAt ? new Date(entry.createdAt).toLocaleString() : 'timestamp unavailable'}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
                 </div>
               ) : null}
             </section>

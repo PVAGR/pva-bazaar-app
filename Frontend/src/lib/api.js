@@ -72,6 +72,10 @@ export const fetchGovernanceVoteSummary = (proposalId) =>
 export const fetchGovernanceAdminResponses = () => apiGet('/governance/admin-responses');
 export const upsertGovernanceAdminResponse = (proposalId, payload) =>
   apiPut(`/governance/admin-responses/${encodeURIComponent(proposalId)}`, payload);
+export const fetchGovernanceExecutionTimeline = (proposalId) =>
+  apiGet(`/governance/proposals/${encodeURIComponent(proposalId)}/execution/timeline`);
+export const postGovernanceExecutionUpdate = (proposalId, payload) =>
+  apiPost(`/governance/proposals/${encodeURIComponent(proposalId)}/execution/updates`, payload);
 
 export const fetchCurrentUser = () => apiGet('/auth/me');
 export const fetchProposals = (params = {}) => apiGet('/proposals', { params });
@@ -163,7 +167,7 @@ export async function apiFetch(path, options = {}) {
 
 // API base URL management (for AdminDashboard)
 export function getApiBase() {
-  return localStorage.getItem('api-base-url') || '';
+  return localStorage.getItem('api-base-url') || ENV.API_URL;
 }
 
 export function setApiBase(url) {

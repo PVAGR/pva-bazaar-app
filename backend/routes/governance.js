@@ -1,6 +1,7 @@
 const express = require('express');
 const crypto = require('crypto');
 const { Web3 } = require('web3');
+const mongoose = require('mongoose');
 const { authMiddleware } = require('../middleware/auth');
 const adminOnly = require('../middleware/adminOnly');
 const GovernanceProposal = require('../models/GovernanceProposal');
@@ -295,11 +296,11 @@ router.get('/proposals/:proposalId/execution/timeline', async (req, res) => {
       return res.status(400).json({ ok: false, error: 'proposalId is required' });
     }
 
-    const proposal = await GovernanceProposal.findById(proposalId)
-      .select('_id title status outcome outcomeRationale plannedTargetDate voteCounts')
-      .lean();
-    if (!proposal) {
-      return res.status(404).json({ ok: false, error: 'Proposal not found' });
+    let proposal = null;
+    if (mongoose.Types.ObjectId.isValid(proposalId)) {
+      proposal = await GovernanceProposal.findById(proposalId)
+        .select('_id title status outcome outcomeRationale plannedTargetDate voteCounts')
+        .lean();
     }
 
     const item = await GovernanceAdminResponse.findOne({ proposalId })
@@ -335,11 +336,6 @@ router.post('/proposals/:proposalId/execution/updates', authMiddleware, async (r
     const proposalId = sanitize(req.params?.proposalId);
     if (!proposalId) {
       return res.status(400).json({ ok: false, error: 'proposalId is required' });
-    }
-
-    const proposal = await GovernanceProposal.findById(proposalId).select('_id status outcome');
-    if (!proposal) {
-      return res.status(404).json({ ok: false, error: 'Proposal not found' });
     }
 
     const updateEntry = sanitizeExecutionUpdate(req.body || {});
