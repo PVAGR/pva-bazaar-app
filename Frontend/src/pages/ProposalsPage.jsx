@@ -37,6 +37,8 @@ export default function ProposalsPage({ mode = 'public' }) {
   const [verifiedCitizen, setVerifiedCitizen] = useState(false);
   const [timelineById, setTimelineById] = useState({});
   const [timelineLoadingById, setTimelineLoadingById] = useState({});
+  const [timelineFetchedAtById, setTimelineFetchedAtById] = useState({});
+  const [timelineErrorById, setTimelineErrorById] = useState({});
 
   useEffect(() => {
     let active = true;
@@ -116,17 +118,29 @@ export default function ProposalsPage({ mode = 'public' }) {
     return `Page ${pagination.page} of ${Math.max(1, pagination.pages)} · ${pagination.total} total`;
   }, [isMine, pagination.page, pagination.pages, pagination.total]);
 
-  const loadTimeline = async (proposalKey) => {
+  const loadTimeline = async (proposalKey, { force = false } = {}) => {
     if (!proposalKey) return;
+
+    const fetchedAt = timelineFetchedAtById[proposalKey];
+    if (!force && fetchedAt && Date.now() - fetchedAt < 30000) {
+      return;
+    }
+
     setTimelineLoadingById((state) => ({ ...state, [proposalKey]: true }));
+    setTimelineErrorById((state) => ({ ...state, [proposalKey]: '' }));
     try {
       const response = await fetchGovernanceExecutionTimeline(proposalKey);
       setTimelineById((state) => ({
         ...state,
         [proposalKey]: response?.ok ? response.execution : null,
       }));
+      setTimelineFetchedAtById((state) => ({ ...state, [proposalKey]: Date.now() }));
+      if (!response?.ok) {
+        setTimelineErrorById((state) => ({ ...state, [proposalKey]: 'Timeline is currently unavailable.' }));
+      }
     } catch (_error) {
       setTimelineById((state) => ({ ...state, [proposalKey]: null }));
+      setTimelineErrorById((state) => ({ ...state, [proposalKey]: 'Failed to load execution timeline.' }));
     } finally {
       setTimelineLoadingById((state) => ({ ...state, [proposalKey]: false }));
     }
@@ -191,6 +205,8 @@ export default function ProposalsPage({ mode = 'public' }) {
           const proposalKey = proposal.proposalId || proposal._id;
           const progress = Math.min(100, Math.round((Number(proposal.endorsementCount || 0) / Number(proposal.endorsementThreshold || 10)) * 100));
           const timeline = timelineById[proposalKey];
+          const timelineFetchedAt = timelineFetchedAtById[proposalKey];
+          const timelineError = timelineErrorById[proposalKey];
           const updates = Array.isArray(timeline?.updates) ? timeline.updates : [];
           const showExecutionTimeline = ['accepted', 'in_execution', 'completed', 'outcome_published'].includes(String(proposal.status || '').toLowerCase());
 
@@ -223,18 +239,24 @@ export default function ProposalsPage({ mode = 'public' }) {
                     <button
                       type="button"
                       className="button ghost"
-                      onClick={() => loadTimeline(proposalKey)}
+                      onClick={() => loadTimeline(proposalKey, { force: true })}
                       disabled={Boolean(timelineLoadingById[proposalKey])}
                     >
-                      {timelineLoadingById[proposalKey] ? 'Loading…' : 'Load Updates'}
+                      {timelineLoadingById[proposalKey] ? 'Loading…' : updates.length ? 'Refresh Updates' : 'Load Updates'}
                     </button>
                   </div>
+
+                  {timelineFetchedAt ? (
+                    <p className="proposal-meta">Last synced {new Date(timelineFetchedAt).toLocaleTimeString()}</p>
+                  ) : null}
 
                   {timeline?.executionBlock ? (
                     <p className="proposal-meta">
                       Progress {Number(timeline.executionBlock.progressPercent || 0)}% · {timeline.executionBlock.latestUpdate || 'No latest update posted'}
                     </p>
                   ) : null}
+
+                  {timelineError ? <p className="proposal-meta">{timelineError}</p> : null}
 
                   {updates.length ? (
                     <ul className="proposal-execution-list">
