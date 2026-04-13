@@ -68,10 +68,10 @@ export default function App() {
       <Suspense fallback={<div className="section-card">Loading federation module...</div>}>
       <Routes>
         {/* Admin entry route must remain reachable so login/bootstrap UI can render */}
-        <Route path="/admin" element={<AdminPage />} />
+        <Route path="/admin" element={<Layout><AdminPage /></Layout>} />
         {/* Protected admin sub-routes */}
-        <Route path="/admin/orders" element={<RequireAdminAuth><AdminOrdersPage /></RequireAdminAuth>} />
-        <Route path="/admin/governance" element={<RequireAdminAuth><AdminGovernancePage /></RequireAdminAuth>} />
+        <Route path="/admin/orders" element={<RequireAdminAuth><Layout><AdminOrdersPage /></Layout></RequireAdminAuth>} />
+        <Route path="/admin/governance" element={<RequireAdminAuth><Layout><AdminGovernancePage /></Layout></RequireAdminAuth>} />
 
         {/* User Dashboard - Protected */}
         <Route path="/dashboard" element={<RequireUserAuth><Layout><UserDashboard /></Layout></RequireUserAuth>} />
