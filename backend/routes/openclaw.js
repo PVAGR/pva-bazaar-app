@@ -2823,5 +2823,49 @@ function getOpenClawHealth() {
   }
 }
 
+// Webhook endpoint for receiving forwarded events from OpenClaw worker
+router.post('/webhook', async (req, res) => {
+  try {
+    await dbConnect();
+    const OpenClawMessage = require('../models/OpenClawMessage');
+
+    const { event, message, content, metadata = {}, timestamp } = req.body || {};
+
+    if (!message && !content) {
+      return res.status(400).json({
+        ok: false,
+        message: 'message or content is required',
+      });
+    }
+
+    const doc = await OpenClawMessage.create({
+      direction: 'inbound',
+      content: String(content || message || '').trim(),
+      event: String(event || 'pvabazaar.openclaw.webhook').trim(),
+      source: metadata?.source || 'openclaw-webhook',
+      processed: true,
+      metadata: {
+        ...metadata,
+        receivedAt: new Date().toISOString(),
+        webhookReceived: true,
+      },
+    });
+
+    return res.json({
+      ok: true,
+      messageId: doc._id.toString(),
+      received: true,
+      timestamp: doc.createdAt,
+    });
+  } catch (err) {
+    console.error('[OpenClaw Webhook] Error:', err.message);
+    return res.status(500).json({
+      ok: false,
+      message: 'Failed to store webhook message',
+      error: err.message,
+    });
+  }
+});
+
 module.exports = router;
 module.exports.getOpenClawHealth = getOpenClawHealth;
