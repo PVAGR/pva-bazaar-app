@@ -1,0 +1,154 @@
+{
+  "environment": {
+    "tool": "Playwright",
+    "browser": "chromium",
+    "headless": true,
+    "viewport": "1440x900"
+  },
+  "results": [
+    {
+      "key": "root",
+      "requestedUrl": "https://pvabazaar.org/",
+      "finalUrl": "https://pvabazaar.org/",
+      "title": "pvabazaar.org — Personal Journal",
+      "escapedLoadingShell": true,
+      "sampleText": [
+        "Skip to content",
+        "pvabazaar.org",
+        "Archive · Commerce · Governance · Popular Conference",
+        "🏠 Home",
+        "📚 Archive Library",
+        "🧠 Civilization Library",
+        "🧭 Career Quiz",
+        "🛒 Marketplace",
+        "🏪 Showroom",
+        "🗳️ Popular Conference",
+        "🗣️ Forum",
+        "🏛️ Gov Conference",
+        "💰 Treasury",
+        "📲 Download App",
+        "✨ Creator Sign Up"
+      ],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "[API 500+] Failed to record website pulse {ok: false, message: Failed to record website pulse, error: you are over your space quota, using 512 MB of 512 MB}",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "[API 500+] Failed to record website pulse {ok: false, message: Failed to record website pulse, error: you are over your space quota, using 512 MB of 512 MB}"
+      ],
+      "jsAssets": [
+        "https://pvabazaar.org/assets/index-DyUjJgPz.js",
+        "https://pvabazaar.org/assets/vendor-BAjNCFKh.js"
+      ],
+      "screenshotPath": "C:\\Users\\user\\pvabazaarapp\\pva-bazaar-app\\tmp-browser-audit\\root.png"
+    },
+    {
+      "key": "conference",
+      "requestedUrl": "https://pvabazaar.org/#/conference",
+      "finalUrl": "https://pvabazaar.org/#/conference",
+      "title": "pvabazaar.org — Personal Journal",
+      "escapedLoadingShell": true,
+      "sampleText": [
+        "Skip to content",
+        "pvabazaar.org",
+        "Archive · Commerce · Governance · Popular Conference",
+        "🏠 Home",
+        "📚 Archive Library",
+        "🧠 Civilization Library",
+        "🧭 Career Quiz",
+        "🛒 Marketplace",
+        "🏪 Showroom",
+        "🗳️ Popular Conference",
+        "🗣️ Forum",
+        "🏛️ Gov Conference",
+        "💰 Treasury",
+        "📲 Download App",
+        "✨ Creator Sign Up"
+      ],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "[API 500+] Failed to record website pulse {ok: false, message: Failed to record website pulse, error: you are over your space quota, using 512 MB of 512 MB}",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "[API 500+] Failed to record website pulse {ok: false, message: Failed to record website pulse, error: you are over your space quota, using 512 MB of 512 MB}"
+      ],
+      "jsAssets": [
+        "https://pvabazaar.org/assets/index-DyUjJgPz.js",
+        "https://pvabazaar.org/assets/vendor-BAjNCFKh.js"
+      ],
+      "screenshotPath": "C:\\Users\\user\\pvabazaarapp\\pva-bazaar-app\\tmp-browser-audit\\conference.png"
+    },
+    {
+      "key": "treasury",
+      "requestedUrl": "https://pvabazaar.org/#/governance/treasury",
+      "finalUrl": "https://pvabazaar.org/#/governance/treasury",
+      "title": "pvabazaar.org — Personal Journal",
+      "escapedLoadingShell": true,
+      "sampleText": [
+        "Skip to content",
+        "pvabazaar.org",
+        "Archive · Commerce · Governance · Popular Conference",
+        "🏠 Home",
+        "📚 Archive Library",
+        "🧠 Civilization Library",
+        "🧭 Career Quiz",
+        "🛒 Marketplace",
+        "🏪 Showroom",
+        "🗳️ Popular Conference",
+        "🗣️ Forum",
+        "🏛️ Gov Conference",
+        "💰 Treasury",
+        "📲 Download App",
+        "✨ Creator Sign Up"
+      ],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "[API 500+] Failed to record website pulse {ok: false, message: Failed to record website pulse, error: you are over your space quota, using 512 MB of 512 MB}",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "[API 500+] Failed to record website pulse {ok: false, message: Failed to record website pulse, error: you are over your space quota, using 512 MB of 512 MB}"
+      ],
+      "jsAssets": [
+        "https://pvabazaar.org/assets/index-DyUjJgPz.js",
+        "https://pvabazaar.org/assets/vendor-BAjNCFKh.js"
+      ],
+      "screenshotPath": "C:\\Users\\user\\pvabazaarapp\\pva-bazaar-app\\tmp-browser-audit\\treasury.png"
+    },
+    {
+      "key": "deploy",
+      "requestedUrl": "https://pvabazaar.org/#/deploy",
+      "finalUrl": "https://pvabazaar.org/#/deploy",
+      "title": "pvabazaar.org — Personal Journal",
+      "escapedLoadingShell": true,
+      "sampleText": [
+        "Skip to content",
+        "pvabazaar.org",
+        "Archive · Commerce · Governance · Popular Conference",
+        "🏠 Home",
+        "📚 Archive Library",
+        "🧠 Civilization Library",
+        "🧭 Career Quiz",
+        "🛒 Marketplace",
+        "🏪 Showroom",
+        "🗳️ Popular Conference",
+        "🗣️ Forum",
+        "🏛️ Gov Conference",
+        "💰 Treasury",
+        "📲 Download App",
+        "✨ Creator Sign Up"
+      ],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "[API 500+] Failed to record website pulse {ok: false, message: Failed to record website pulse, error: you are over your space quota, using 512 MB of 512 MB}",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "[API 500+] Failed to record website pulse {ok: false, message: Failed to record website pulse, error: you are over your space quota, using 512 MB of 512 MB}"
+      ],
+      "jsAssets": [
+        "https://pvabazaar.org/assets/index-DyUjJgPz.js",
+        "https://pvabazaar.org/assets/vendor-BAjNCFKh.js"
+      ],
+      "screenshotPath": "C:\\Users\\user\\pvabazaarapp\\pva-bazaar-app\\tmp-browser-audit\\deploy.png"
+    }
+  ],
+  "allJsAssets": [
+    "https://pvabazaar.org/assets/index-DyUjJgPz.js",
+    "https://pvabazaar.org/assets/vendor-BAjNCFKh.js"
+  ]
+}

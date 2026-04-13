@@ -1,0 +1,23 @@
+{
+  "startedAt": "2026-04-12T19:39:04.749Z",
+  "proposalId": "PROP-101",
+  "reason": "Prod persisted decision proof 1776022744663",
+  "frontend": "https://pvabazaar.org",
+  "apiBase": "https://api.pvabazaar.org/api",
+  "login": {
+    "governanceVisible": true,
+    "finalUrl": "https://pvabazaar.org/#/admin/governance",
+    "hasToken": true,
+    "alertText": []
+  },
+  "persistence": {
+    "status": 200,
+    "found": false
+  },
+  "conference": {
+    "proposalVisible": true,
+    "reasonVisible": false,
+    "acceptedVisible": false
+  },
+  "finishedAt": "2026-04-12T19:39:13.455Z"
+}

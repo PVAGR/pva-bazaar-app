@@ -1,0 +1,33 @@
+{
+  "baseUrl": "http://localhost:5173",
+  "startedAt": "2026-04-12T19:28:15.964Z",
+  "proposalTitle": "LOCAL PROOF 1776022095964",
+  "loginAttempts": [
+    {
+      "label": "seed-admin",
+      "user": "admin@pvabazaar.org",
+      "finalUrl": "http://localhost:5173/#/admin/governance",
+      "governanceVisible": true,
+      "hasToken": true,
+      "alertText": []
+    }
+  ],
+  "proposalCreated": true,
+  "redirect": {
+    "finalUrl": "http://localhost:5173/#/admin?next=%2Fadmin%2Fgovernance",
+    "preservedNext": true,
+    "loginModeVisible": true,
+    "signupModeVisible": false
+  },
+  "loginSuccess": {
+    "label": "seed-admin",
+    "user": "admin@pvabazaar.org",
+    "finalUrl": "http://localhost:5173/#/admin/governance"
+  },
+  "conferenceReflection": {
+    "proposalVisible": true,
+    "acceptedVisible": true,
+    "reasonVisible": true
+  },
+  "finishedAt": "2026-04-12T19:28:20.472Z"
+}

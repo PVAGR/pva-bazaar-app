@@ -1,0 +1,89 @@
+{
+  "generatedAt": "2026-04-12T18:17:16.881Z",
+  "results": [
+    {
+      "key": "root",
+      "requestedUrl": "https://pvabazaar.org/",
+      "finalUrl": "https://pvabazaar.org/",
+      "documentTitle": "Home · pvabazaar.org",
+      "identitySection": "Route",
+      "identityTitle": "Home",
+      "identityDescription": "Full landing page and site overview.",
+      "clearlyDistinguishable": true,
+      "jsAssets": [
+        "https://pvabazaar.org/assets/index-Do7m__qG.js",
+        "https://pvabazaar.org/assets/vendor-BpTKeH3q.js"
+      ],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "[API 500+] Failed to record website pulse {ok: false, message: Failed to record website pulse, error: you are over your space quota, using 512 MB of 512 MB}",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "[API 500+] Failed to record website pulse {ok: false, message: Failed to record website pulse, error: you are over your space quota, using 512 MB of 512 MB}"
+      ],
+      "screenshotPath": "C:\\Users\\user\\pvabazaarapp\\pva-bazaar-app\\tmp-production-route-identity-audit-rerun\\root.png"
+    },
+    {
+      "key": "conference",
+      "requestedUrl": "https://pvabazaar.org/#/conference",
+      "finalUrl": "https://pvabazaar.org/#/conference",
+      "documentTitle": "Popular Conference · pvabazaar.org",
+      "identitySection": "Core route",
+      "identityTitle": "Popular Conference",
+      "identityDescription": "Public proposal and wallet-verified conference workflow.",
+      "clearlyDistinguishable": true,
+      "jsAssets": [
+        "https://pvabazaar.org/assets/index-Do7m__qG.js",
+        "https://pvabazaar.org/assets/vendor-BpTKeH3q.js"
+      ],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "[API 500+] Failed to record website pulse {ok: false, message: Failed to record website pulse, error: you are over your space quota, using 512 MB of 512 MB}",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "[API 500+] Failed to record website pulse {ok: false, message: Failed to record website pulse, error: you are over your space quota, using 512 MB of 512 MB}"
+      ],
+      "screenshotPath": "C:\\Users\\user\\pvabazaarapp\\pva-bazaar-app\\tmp-production-route-identity-audit-rerun\\conference.png"
+    },
+    {
+      "key": "treasury",
+      "requestedUrl": "https://pvabazaar.org/#/governance/treasury",
+      "finalUrl": "https://pvabazaar.org/#/governance/treasury",
+      "documentTitle": "Treasury · pvabazaar.org",
+      "identitySection": "Support route",
+      "identityTitle": "Treasury",
+      "identityDescription": "Treasury balances and transparency ledger.",
+      "clearlyDistinguishable": true,
+      "jsAssets": [
+        "https://pvabazaar.org/assets/index-Do7m__qG.js",
+        "https://pvabazaar.org/assets/vendor-BpTKeH3q.js"
+      ],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "[API 500+] Failed to record website pulse {ok: false, message: Failed to record website pulse, error: you are over your space quota, using 512 MB of 512 MB}",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "[API 500+] Failed to record website pulse {ok: false, message: Failed to record website pulse, error: you are over your space quota, using 512 MB of 512 MB}"
+      ],
+      "screenshotPath": "C:\\Users\\user\\pvabazaarapp\\pva-bazaar-app\\tmp-production-route-identity-audit-rerun\\treasury.png"
+    },
+    {
+      "key": "deploy",
+      "requestedUrl": "https://pvabazaar.org/#/deploy",
+      "finalUrl": "https://pvabazaar.org/#/deploy",
+      "documentTitle": "Deploy · pvabazaar.org",
+      "identitySection": "Governance tools",
+      "identityTitle": "Deploy",
+      "identityDescription": "Launch a self-governing community instance in minutes with no code required.",
+      "clearlyDistinguishable": true,
+      "jsAssets": [
+        "https://pvabazaar.org/assets/index-Do7m__qG.js",
+        "https://pvabazaar.org/assets/vendor-BpTKeH3q.js"
+      ],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "[API 500+] Failed to record website pulse {ok: false, message: Failed to record website pulse, error: you are over your space quota, using 512 MB of 512 MB}",
+        "Failed to load resource: the server responded with a status of 500 ()",
+        "[API 500+] Failed to record website pulse {ok: false, message: Failed to record website pulse, error: you are over your space quota, using 512 MB of 512 MB}"
+      ],
+      "screenshotPath": "C:\\Users\\user\\pvabazaarapp\\pva-bazaar-app\\tmp-production-route-identity-audit-rerun\\deploy.png"
+    }
+  ]
+}

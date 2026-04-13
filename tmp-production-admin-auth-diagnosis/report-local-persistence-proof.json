@@ -1,0 +1,22 @@
+{
+  "frontend": "http://localhost:5173",
+  "apiBase": "http://localhost:5001/api",
+  "startedAt": "2026-04-12T19:39:46.196Z",
+  "proposalId": "PROP-101",
+  "reason": "Backend persisted decision proof 1776022786112",
+  "adminLogin": {
+    "governanceVisible": true,
+    "finalUrl": "http://localhost:5173/#/admin/governance",
+    "hasToken": true
+  },
+  "backendPersistence": {
+    "status": 200,
+    "found": true
+  },
+  "conferenceHydration": {
+    "proposalVisible": true,
+    "acceptedVisible": true,
+    "reasonVisible": true
+  },
+  "finishedAt": "2026-04-12T19:39:52.482Z"
+}
