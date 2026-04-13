@@ -140,11 +140,10 @@ jobs:
           VITE_FEDERATION_ENABLED: 'false'
         run: |
           set -x
+          node scripts/vercel-info.cjs
           npx vite build
           node scripts/copy-src-to-dist.cjs
-          BUILD_EXIT=$?
-          echo "Build exit code: $BUILD_EXIT"
-          exit $BUILD_EXIT
+          echo "All build steps completed successfully"
 
       - name: Verify build output
         working-directory: ./Frontend
