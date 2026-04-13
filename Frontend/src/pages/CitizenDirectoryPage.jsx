@@ -89,27 +89,31 @@ export default function CitizenDirectoryPage() {
         </label>
       </div>
 
-      {loading ? <p>Loading verified citizens...</p> : null}
-      {error ? <p>{error}</p> : null}
+      {loading ? <p className="directory-status">Loading verified citizens...</p> : null}
+      {error ? <p className="directory-status directory-status--error">{error}</p> : null}
 
       {!loading && !error ? (
-        <div className="directory-grid">
-          {filtered.map((citizen) => (
-            <Link key={citizen.id} to={`/passport/${citizen.id}`} className="directory-card">
-              <div className="directory-avatar">
-                {citizen.avatarUrl ? (
-                  <img src={citizen.avatarUrl} alt={`${citizen.name} avatar`} className="passport-avatar" />
-                ) : (
-                  <div className="passport-avatar-placeholder">{String(citizen.name || '?').slice(0, 1).toUpperCase()}</div>
-                )}
-              </div>
-              <h3>{citizen.name || 'Unknown Citizen'}</h3>
-              <p className="directory-id">{citizen.societalId || 'Societal ID pending'}</p>
-              <p className="passport-role-badge">{roleLabel(citizen.citizenRole)}</p>
-              <p>Reputation: {Number(citizen.pvaReputation || 0)}</p>
-            </Link>
-          ))}
-        </div>
+        filtered.length ? (
+          <div className="directory-grid">
+            {filtered.map((citizen) => (
+              <Link key={citizen.id} to={`/passport/${citizen.id}`} className="directory-card">
+                <div className="directory-avatar">
+                  {citizen.avatarUrl ? (
+                    <img src={citizen.avatarUrl} alt={`${citizen.name} avatar`} className="passport-avatar" />
+                  ) : (
+                    <div className="passport-avatar-placeholder">{String(citizen.name || '?').slice(0, 1).toUpperCase()}</div>
+                  )}
+                </div>
+                <h3>{citizen.name || 'Unknown Citizen'}</h3>
+                <p className="directory-id">{citizen.societalId || 'Societal ID pending'}</p>
+                <p className="passport-role-badge">{roleLabel(citizen.citizenRole)}</p>
+                <p>Reputation: {Number(citizen.pvaReputation || 0)}</p>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <p className="directory-status">No citizens match your current filters.</p>
+        )
       ) : null}
     </section>
   );

@@ -106,11 +106,8 @@ export default function Layout({ children }) {
     { key: 'citizen-passport', to: '/passport', title: 'Citizen Passport' },
     { key: 'conference-queue', to: '/governance/conference', title: 'Governance Conference' },
     { key: 'treasury-execution', to: '/governance/treasury', title: 'Governance Treasury' },
-    { key: 'my-passport', to: '/passport#identity', title: 'My Passport' },
     { key: 'my-wallet', to: '/passport#wallet', title: 'My Wallet' },
-    { key: 'my-proposals', to: '/passport#governance', title: 'My Proposals' },
-    { key: 'my-votes', to: '/passport#governance', title: 'My Votes' },
-    { key: 'my-group', to: '/passport#governance', title: 'My Group / Committee' },
+    { key: 'my-proposals', to: '/passport#governance', title: 'My Proposals / Votes' },
   ], []);
 
   const adminRoutes = useMemo(() => [
@@ -150,27 +147,13 @@ export default function Layout({ children }) {
         >
           {darkMode ? `☀️ ${t('themeLight')}` : `🌙 ${t('themeDark')}`}
         </button>
-        <label
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '8px',
-            fontSize: '14px',
-          }}
-        >
+        <label className="layout__languageControl">
           <span>{t('language')}:</span>
           <select
             value={lang}
             onChange={handleLanguageChange}
             title="Select language"
-            style={{
-              background: 'var(--site-panel-soft)',
-              border: '1px solid var(--site-border)',
-              color: 'var(--site-text)',
-              padding: '6px 8px',
-              borderRadius: '6px',
-              cursor: 'pointer',
-            }}
+            className="layout__languageSelect"
           >
             {LANGUAGE_OPTIONS.map((option) => (
               <option key={option.code} value={option.code}>
@@ -181,13 +164,13 @@ export default function Layout({ children }) {
         </label>
       </header>
       <main id="content" className="layout__main">
-        <section className="section-card" data-route-identity="true" aria-label="Current route identity" style={{ padding: '0.9rem 1rem' }}>
+        <section className="section-card layout__routeIdentity" data-route-identity="true" aria-label="Current route identity">
           <div className="pill" data-route-label="section">{routeIdentity.section}</div>
-          <h1 data-route-label="title" style={{ margin: '0.55rem 0 0.35rem', fontSize: '1.35rem', color: 'var(--site-accent)' }}>
+          <h2 data-route-label="title" className="layout__routeTitle">
             {routeIdentity.title}
-          </h1>
+          </h2>
           {routeIdentity.description ? (
-            <p data-route-label="description" style={{ margin: 0, color: 'var(--site-text-muted)' }}>
+            <p data-route-label="description" className="layout__routeDescription">
               {routeIdentity.description}
             </p>
           ) : null}

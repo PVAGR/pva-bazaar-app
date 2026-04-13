@@ -359,6 +359,21 @@
   font-size: 0.9rem;
 }
 
+.directory-status {
+  margin: 0;
+  border: 1px solid var(--site-border);
+  border-radius: 10px;
+  background: var(--site-panel-soft);
+  color: var(--site-text-muted);
+  padding: 0.7rem 0.8rem;
+}
+
+.directory-status--error {
+  border-color: var(--site-danger-text);
+  background: var(--site-danger-bg);
+  color: var(--site-danger-text);
+}
+
 .directory-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
