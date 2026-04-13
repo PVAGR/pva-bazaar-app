@@ -388,7 +388,9 @@ function getConfig() {
   const gatewayUrl = process.env.OPENCLAW_GATEWAY_URL || (defaultApiBase ? `${defaultApiBase}/api/openclaw` : '');
   const webhookUrl = process.env.OPENCLAW_WEBHOOK_URL || (defaultApiBase ? `${defaultApiBase}/api/openclaw/webhook` : '');
   const healthUrl = process.env.OPENCLAW_HEALTH_URL ||
-    (gatewayUrl ? `${gatewayUrl.replace(/\/$/, '')}/health` : '');
+    (defaultApiBase
+      ? `${defaultApiBase}/api/health`
+      : (gatewayUrl ? `${gatewayUrl.replace(/\/$/, '')}/health` : ''));
   const apiKey = process.env.OPENCLAW_API_KEY || '';
   const publicMode = process.env.OPENCLAW_PUBLIC_MODE === 'true';
   const bridgeSecret = publicMode ? '' : (process.env.OPENCLAW_BRIDGE_SECRET || '');
