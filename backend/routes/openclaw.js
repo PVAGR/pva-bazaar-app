@@ -378,8 +378,15 @@ function resolveWatchdogPaths() {
 }
 
 function getConfig() {
-  const gatewayUrl = process.env.OPENCLAW_GATEWAY_URL || '';
-  const webhookUrl = process.env.OPENCLAW_WEBHOOK_URL || '';
+  const defaultApiBase = String(
+    process.env.OPENCLAW_DEFAULT_API_BASE ||
+    (process.env.NODE_ENV === 'production' ? 'https://api.pvabazaar.org' : ''),
+  )
+    .trim()
+    .replace(/\/$/, '');
+
+  const gatewayUrl = process.env.OPENCLAW_GATEWAY_URL || (defaultApiBase ? `${defaultApiBase}/api/openclaw` : '');
+  const webhookUrl = process.env.OPENCLAW_WEBHOOK_URL || (defaultApiBase ? `${defaultApiBase}/api/openclaw/webhook` : '');
   const healthUrl = process.env.OPENCLAW_HEALTH_URL ||
     (gatewayUrl ? `${gatewayUrl.replace(/\/$/, '')}/health` : '');
   const apiKey = process.env.OPENCLAW_API_KEY || '';
