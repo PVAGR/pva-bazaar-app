@@ -7,6 +7,7 @@ import { getToken } from './lib/auth';
 import { Telemetry } from './lib/telemetry';
 
 import AboutPage from './pages/AboutPage.jsx';
+import AgentPage from './pages/AgentPage.jsx';
 import ArchiveLibraryPage from './pages/ArchiveLibraryPage.jsx';
 import HomePage from './pages/HomePage.jsx';
 import CivilizationLibraryPage from './pages/CivilizationLibraryPage.jsx';
@@ -100,6 +101,7 @@ export default function App() {
         <Route path="/civilization-library" element={<Layout><CivilizationLibraryPage /></Layout>} />
         <Route path="/career-quiz" element={<Layout><CareerQuizPage /></Layout>} />
         <Route path="/about" element={<Layout><AboutPage /></Layout>} />
+        <Route path="/agent" element={<Layout><AgentPage /></Layout>} />
         <Route path="/citizens" element={<Layout><CitizenDirectoryPage /></Layout>} />
         <Route path="/forum" element={<Layout><ForumPage /></Layout>} />
         <Route path="/passport/:userId" element={<Layout><PassportPage /></Layout>} />

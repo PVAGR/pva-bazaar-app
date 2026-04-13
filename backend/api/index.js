@@ -323,6 +323,7 @@ const dppRoutes = require('../routes/dpp');
 const databasesRoutes = require('../routes/databases');
 const careerQuizRoutes = require('../routes/careerQuiz');
 const passportRoutes = require('../routes/passport');
+const agentRoutes = require('../routes/agent');
 const proposalsRoutes = require('../routes/proposals');
 const libraryTaxonomyRoutes = require('../routes/libraryTaxonomy');
 const libraryIntelligenceRoutes = require('../routes/libraryIntelligence');
@@ -477,6 +478,7 @@ app.use('/api/databases', databasesRoutes);
 app.use('/api/career-quiz', careerQuizRoutes);
 app.use('/api/openclaw', openClawRoutes);
 app.use('/api/openclaw', openClawMetricsRoutes); // Prometheus metrics
+app.use('/api/agent', agentRoutes); // AI Agent with persistent memory
 app.use('/api/blockchain', blockchainRoutes);
 const bountiesRoutes = require('../routes/bounties');
 app.use('/api/bounties', bountiesRoutes);
