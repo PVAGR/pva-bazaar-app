@@ -3,7 +3,12 @@ const axios = require('axios');
 const dbConnect = require('../lib/dbConnect');
 const ConversationThread = require('../models/ConversationThread');
 const OpenClawMemory = require('../models/OpenClawMemory');
+const PendingChange = require('../models/PendingChange');
 const User = require('../models/User');
+
+// Services
+const llmProvider = require('../services/llmProvider');
+const githubService = require('../services/gitHubService');
 
 const router = express.Router();
 
@@ -66,36 +71,24 @@ Keep responses:
 }
 
 /**
- * Generate AI response using Ollama
+ * Generate AI response using multi-model LLM provider
+ * Uses the best available model: Claude > GPT-4 > Ollama
  */
-async function generateAIResponse(messages, temperature = 0.35, maxTokens = 2000) {
+async function generateAIResponse(messages, temperature = 0.35, maxTokens = 2000, taskType = 'general') {
   try {
-    const response = await axios.post(
-      `${OLLAMA_BASE_URL}/api/chat`,
-      {
-        model: OLLAMA_MODEL,
-        messages: messages.map((msg) => ({
-          role: msg.role,
-          content: msg.content,
-        })),
-        stream: false,
-        options: {
-          temperature,
-          num_predict: maxTokens,
-        },
-      },
-      {
-        timeout: OLLAMA_TIMEOUT_MS,
-        validateStatus: () => true, // Don't throw on any status
-      }
-    );
+    const response = await llmProvider.generateResponse(messages, {
+      taskType,
+      temperature,
+      maxTokens,
+    });
 
-    if (response.status === 200 && response.data.message) {
+    if (response.success) {
       return {
         success: true,
-        content: response.data.message.content,
+        content: response.content,
         metadata: {
-          model: OLLAMA_MODEL,
+          model: response.model,
+          provider: response.provider,
           temperature,
           timestamp: new Date(),
         },
@@ -104,12 +97,14 @@ async function generateAIResponse(messages, temperature = 0.35, maxTokens = 2000
 
     return {
       success: false,
-      error: `Ollama returned ${response.status}: ${response.data.error || 'Unknown error'}`,
+      error: response.error,
+      provider: response.provider,
     };
   } catch (err) {
+    console.error('❌ AI Response Generation Error:', err);
     return {
       success: false,
-      error: `Failed to connect to Ollama: ${err.message}`,
+      error: `Failed to generate response: ${err.message}`,
     };
   }
 }
@@ -405,6 +400,395 @@ router.get('/status', async (req, res) => {
         conversationCount: threadCount,
       },
       timestamp: new Date().toISOString(),
+    });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+/**
+ * POST /api/agent/code-analysis - AI analyzes code
+ */
+router.post('/code-analysis', async (req, res) => {
+  try {
+    const { userId, code, filePath, context } = req.body;
+
+    if (!userId || !code) {
+      return res.status(400).json({ ok: false, error: 'userId and code required' });
+    }
+
+    await dbConnect();
+
+    // Build analysis prompt
+    const prompt = `You are a senior software engineer reviewing this code:
+
+File: ${filePath || 'unknown'}
+Context: ${context || 'No additional context provided'}
+
+Code:
+\`\`\`
+${code}
+\`\`\`
+
+Provide a thorough analysis covering:
+1. Code quality and best practices
+2. Potential bugs or issues
+3. Performance considerations
+4. Security concerns
+5. Suggestions for improvement
+
+Be specific and actionable in your feedback.`;
+
+    const messages = [
+      {
+        role: 'user',
+        content: prompt,
+      },
+    ];
+
+    const aiResponse = await generateAIResponse(messages, 0.3, 3000, 'coding');
+
+    if (!aiResponse.success) {
+      return res.status(503).json({
+        ok: false,
+        error: aiResponse.error,
+      });
+    }
+
+    // Store analysis in conversation history
+    const threadData = {
+      creatorId: CREATOR_ID,
+      participantId: userId,
+      title: `Code Analysis: ${filePath || 'Untitled'}`,
+      tags: ['code-analysis', 'ai-review'],
+      messages: [
+        {
+          id: `msg-${Date.now()}`,
+          role: 'user',
+          content: prompt,
+          timestamp: new Date(),
+        },
+        {
+          id: `msg-${Date.now()}-ai`,
+          role: 'assistant',
+          content: aiResponse.content,
+          timestamp: new Date(),
+          metadata: {
+            model: aiResponse.metadata.model,
+            provider: aiResponse.metadata.provider,
+          },
+        },
+      ],
+    };
+
+    const thread = new ConversationThread(threadData);
+    await thread.save();
+
+    res.json({
+      ok: true,
+      analysis: aiResponse.content,
+      model: aiResponse.metadata.model,
+      provider: aiResponse.metadata.provider,
+      threadId: thread._id,
+    });
+  } catch (err) {
+    console.error('❌ Code Analysis Error:', err);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+/**
+ * POST /api/agent/code-generate - Generate code for requirements
+ */
+router.post('/code-generate', async (req, res) => {
+  try {
+    const { userId, requirements, language = 'javascript', style } = req.body;
+
+    if (!userId || !requirements) {
+      return res.status(400).json({ ok: false, error: 'userId and requirements required' });
+    }
+
+    await dbConnect();
+
+    const prompt = `You are an expert ${language} software engineer.
+
+Generate production-ready ${language} code for the following requirements:
+
+${requirements}
+
+${style ? `Code style/conventions: ${style}` : ''}
+
+Requirements:
+- Include inline comments explaining complex logic
+- Add error handling
+- Follow best practices
+- Include necessary imports/dependencies
+- Make it maintainable and testable
+
+Provide the complete, runnable code.`;
+
+    const messages = [
+      {
+        role: 'user',
+        content: prompt,
+      },
+    ];
+
+    const aiResponse = await generateAIResponse(messages, 0.2, 4000, 'coding');
+
+    if (!aiResponse.success) {
+      return res.status(503).json({
+        ok: false,
+        error: aiResponse.error,
+      });
+    }
+
+    // Save to conversation
+    const threadData = {
+      creatorId: CREATOR_ID,
+      participantId: userId,
+      title: `Code Generation: ${requirements.substring(0, 50)}...`,
+      tags: ['code-generation', 'ai-generated'],
+      messages: [
+        {
+          id: `msg-${Date.now()}`,
+          role: 'user',
+          content: requirements,
+          timestamp: new Date(),
+        },
+        {
+          id: `msg-${Date.now()}-ai`,
+          role: 'assistant',
+          content: aiResponse.content,
+          timestamp: new Date(),
+          metadata: {
+            model: aiResponse.metadata.model,
+            provider: aiResponse.metadata.provider,
+            language,
+          },
+        },
+      ],
+    };
+
+    const thread = new ConversationThread(threadData);
+    await thread.save();
+
+    res.json({
+      ok: true,
+      code: aiResponse.content,
+      model: aiResponse.metadata.model,
+      provider: aiResponse.metadata.provider,
+      threadId: thread._id,
+    });
+  } catch (err) {
+    console.error('❌ Code Generation Error:', err);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+/**
+ * GET /api/agent/pending-changes - List pending changes awaiting approval
+ */
+router.get('/pending-changes', async (req, res) => {
+  try {
+    const { userId, status = 'pending' } = req.query;
+
+    await dbConnect();
+
+    const query = { status };
+    if (userId) query['requestedBy.userId'] = userId;
+
+    const changes = await PendingChange.find(query)
+      .sort({ createdAt: -1 })
+      .limit(50);
+
+    res.json({
+      ok: true,
+      count: changes.length,
+      changes: changes.map((c) => ({
+        changeId: c.changeId,
+        title: c.title,
+        description: c.description,
+        changeType: c.changeType,
+        status: c.status,
+        priority: c.priority,
+        filePath: c.filePath,
+        createdAt: c.createdAt,
+        reasoning: c.reasoning,
+      })),
+    });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+/**
+ * POST /api/agent/pending-changes/:changeId/approve - Approve a pending change
+ */
+router.post('/pending-changes/:changeId/approve', async (req, res) => {
+  try {
+    const { changeId } = req.params;
+    const { userId, notes } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ ok: false, error: 'userId required' });
+    }
+
+    await dbConnect();
+
+    const change = await PendingChange.findOne({ changeId });
+    if (!change) {
+      return res.status(404).json({ ok: false, error: 'Change not found' });
+    }
+
+    // Update approval
+    change.status = 'approved';
+    change.approvedBy = {
+      userId,
+      timestamp: new Date(),
+      notes,
+    };
+
+    await change.save();
+
+    // TODO: Execute the change on GitHub
+    res.json({
+      ok: true,
+      message: 'Change approved',
+      changeId,
+      status: 'approved',
+    });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+/**
+ * POST /api/agent/pending-changes/:changeId/reject - Reject a pending change
+ */
+router.post('/pending-changes/:changeId/reject', async (req, res) => {
+  try {
+    const { changeId } = req.params;
+    const { userId, reason } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ ok: false, error: 'userId required' });
+    }
+
+    await dbConnect();
+
+    const change = await PendingChange.findOne({ changeId });
+    if (!change) {
+      return res.status(404).json({ ok: false, error: 'Change not found' });
+    }
+
+    change.status = 'rejected';
+    change.rejectedBy = {
+      userId,
+      timestamp: new Date(),
+      reason,
+    };
+
+    await change.save();
+
+    res.json({
+      ok: true,
+      message: 'Change rejected',
+      changeId,
+      status: 'rejected',
+    });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+/**
+ * POST /api/agent/github/propose-change - Propose a code change (creates PendingChange)
+ */
+router.post('/github/propose-change', async (req, res) => {
+  try {
+    const { userId, filePath, newContent, description, priority = 'medium' } = req.body;
+
+    if (!userId || !filePath || newContent === undefined) {
+      return res.status(400).json({
+        ok: false,
+        error: 'userId, filePath, and newContent required',
+      });
+    }
+
+    await dbConnect();
+
+    // Get current content from GitHub
+    const current = await githubService.getFileContent(filePath);
+    const currentContent = current.success ? current.content : '';
+
+    // Generate reasoning using AI
+    const analysisMessages = [
+      {
+        role: 'user',
+        content: `Explain why this code change is beneficial:
+
+OLD:
+\`\`\`
+${currentContent || '(file does not exist)'}
+\`\`\`
+
+NEW:
+\`\`\`
+${newContent}
+\`\`\`
+
+Keep it brief (2-3 sentences).`,
+      },
+    ];
+
+    const reasoning = await generateAIResponse(analysisMessages, 0.3, 500, 'coding');
+
+    // Create pending change
+    const change = new PendingChange({
+      title: `Update ${filePath}`,
+      description: description || 'Code change proposed by agent',
+      changeType: current.success ? 'file-update' : 'file-create',
+      filePath,
+      currentContent,
+      proposedContent: newContent,
+      priority,
+      requestedBy: {
+        userId,
+        channel: 'api',
+      },
+      reasoning: {
+        reasoning: reasoning.success ? reasoning.content : 'No reasoning available',
+        model: reasoning.metadata?.model,
+        provider: reasoning.metadata?.provider,
+        confidence: 0.8,
+      },
+    });
+
+    await change.save();
+
+    res.json({
+      ok: true,
+      changeId: change.changeId,
+      status: 'pending',
+      reasoning: change.reasoning.reasoning,
+    });
+  } catch (err) {
+    console.error('❌ GitHub Propose Change Error:', err);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+/**
+ * GET /api/agent/providers - List available LLM providers
+ */
+router.get('/providers', async (req, res) => {
+  try {
+    const status = await llmProvider.getProviderStatus();
+
+    res.json({
+      ok: true,
+      ...status,
     });
   } catch (err) {
     res.status(500).json({ ok: false, error: err.message });
