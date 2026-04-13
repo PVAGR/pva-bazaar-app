@@ -131,20 +131,20 @@ jobs:
           echo "Frontend directory contents:"
           ls -la Frontend/ | head -20
       
-      - name: Set build environment
+      - name: Set build environment variables
+        id: build-env
         run: |
-          echo "VITE_API_URL=${{ secrets.VITE_API_URL_STAGING || 'https://api.pvabazaar.org/api' }}" >> $GITHUB_ENV
-          echo "VITE_CLOUDINARY_CLOUD_NAME=${{ secrets.VITE_CLOUDINARY_CLOUD_NAME || vars.VITE_CLOUDINARY_CLOUD_NAME || '' }}" >> $GITHUB_ENV
-          echo "VITE_CLOUDINARY_UPLOAD_PRESET=${{ secrets.VITE_CLOUDINARY_UPLOAD_PRESET || vars.VITE_CLOUDINARY_UPLOAD_PRESET || '' }}" >> $GITHUB_ENV
-          echo "VITE_FEDERATION_ENABLED=false" >> $GITHUB_ENV
+          echo "api_url=${{ secrets.VITE_API_URL_STAGING || 'https://api.pvabazaar.org/api' }}" >> $GITHUB_OUTPUT
+          echo "cloudinary_name=${{ secrets.VITE_CLOUDINARY_CLOUD_NAME || vars.VITE_CLOUDINARY_CLOUD_NAME || '' }}" >> $GITHUB_OUTPUT
+          echo "cloudinary_preset=${{ secrets.VITE_CLOUDINARY_UPLOAD_PRESET || vars.VITE_CLOUDINARY_UPLOAD_PRESET || '' }}" >> $GITHUB_OUTPUT
       
       - name: Build frontend
         working-directory: ./Frontend
         env:
-          VITE_API_URL: ${{ env.VITE_API_URL }}
-          VITE_CLOUDINARY_CLOUD_NAME: ${{ env.VITE_CLOUDINARY_CLOUD_NAME }}
-          VITE_CLOUDINARY_UPLOAD_PRESET: ${{ env.VITE_CLOUDINARY_UPLOAD_PRESET }}
-          VITE_FEDERATION_ENABLED: ${{ env.VITE_FEDERATION_ENABLED }}
+          VITE_API_URL: ${{ steps.build-env.outputs.api_url }}
+          VITE_CLOUDINARY_CLOUD_NAME: ${{ steps.build-env.outputs.cloudinary_name }}
+          VITE_CLOUDINARY_UPLOAD_PRESET: ${{ steps.build-env.outputs.cloudinary_preset }}
+          VITE_FEDERATION_ENABLED: 'false'
         run: npm run build 2>&1
 
       - name: Verify build output
