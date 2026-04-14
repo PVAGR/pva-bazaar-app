@@ -542,6 +542,21 @@ try {
   console.warn('⚠️ Optional route disabled: pricingLookup', err?.message || err);
 }
 
+// PHASE 2: SHOP BUILDER & SELLER DASHBOARD
+try {
+  const shopsRoutes = require('../routes/shops');
+  app.use('/api/shops', shopsRoutes);
+} catch (err) {
+  console.warn('⚠️ Optional route disabled: shops', err?.message || err);
+}
+
+try {
+  const sellerRoutes = require('../routes/seller');
+  app.use('/api/seller', sellerRoutes);
+} catch (err) {
+  console.warn('⚠️ Optional route disabled: seller', err?.message || err);
+}
+
 // OAUTH (Twitch & YouTube) - status, live-status, start, callback
 mountOptionalRoute('/api/oauth', '../routes/oauthTwitch', 'oauth-twitch');
 mountOptionalRoute('/api/oauth', '../routes/oauthYouTube', 'oauth-youtube');
