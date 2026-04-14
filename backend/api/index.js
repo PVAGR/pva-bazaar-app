@@ -411,6 +411,35 @@ app.use('/api/attribution', attributionRoutes);
 app.use('/api/payouts', payoutsRoutes);
 app.use('/api/sales', salesRoutes);
 
+// Phase 3: Multi-product support (optional routes)
+try {
+  const productsRoutes = require('../routes/products');
+  app.use('/api/products', productsRoutes);
+} catch (err) {
+  console.warn('⚠️ Optional route disabled: products', err?.message || err);
+}
+
+try {
+  const coursesRoutes = require('../routes/courses');
+  app.use('/api/courses', coursesRoutes);
+} catch (err) {
+  console.warn('⚠️ Optional route disabled: courses', err?.message || err);
+}
+
+try {
+  const expertiseRoutes = require('../routes/expertise');
+  app.use('/api/expertise', expertiseRoutes);
+} catch (err) {
+  console.warn('⚠️ Optional route disabled: expertise', err?.message || err);
+}
+
+try {
+  const digitalRoutes = require('../routes/digital');
+  app.use('/api/digital', digitalRoutes);
+} catch (err) {
+  console.warn('⚠️ Optional route disabled: digital', err?.message || err);
+}
+
 app.get('/api/governance/proposals', async (req, res) => {
   try {
     const { status = '', cycleKey = '', limit = '30', skip = '0' } = req.query;
