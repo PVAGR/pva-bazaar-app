@@ -469,6 +469,28 @@ try {
   console.warn('⚠️ Optional route disabled: analytics', err?.message || err);
 }
 
+// Phase 5: Community platform (optional routes)
+try {
+  const forumsRoutes = require('../routes/forums');
+  app.use('/api/forums', forumsRoutes);
+} catch (err) {
+  console.warn('⚠️ Optional route disabled: forums', err?.message || err);
+}
+
+try {
+  const eventsRoutes = require('../routes/events');
+  app.use('/api/events', eventsRoutes);
+} catch (err) {
+  console.warn('⚠️ Optional route disabled: events', err?.message || err);
+}
+
+try {
+  const articlesRoutes = require('../routes/articles');
+  app.use('/api/articles', articlesRoutes);
+} catch (err) {
+  console.warn('⚠️ Optional route disabled: articles', err?.message || err);
+}
+
 app.get('/api/governance/proposals', async (req, res) => {
   try {
     const { status = '', cycleKey = '', limit = '30', skip = '0' } = req.query;
