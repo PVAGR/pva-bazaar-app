@@ -21,7 +21,11 @@
     "seed": "node seed.js",
     "smoke:openclaw": "node scripts/smoke-openclaw.js",
     "smoke:telegram": "node scripts/smoke-telegram-openclaw.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "test:phases-6-8": "vitest __tests__/phases-6-8.test.js",
+    "seed:db": "node scripts/seedDatabase.js",
+    "monitor:prod": "node scripts/monitor-production.js",
+    "deploy:verify": "bash scripts/deploy-verify.sh"
   },
   "dependencies": {
     "@sentry/node": "^7.100.0",
@@ -53,7 +57,8 @@
     "web3": "^4.16.0"
   },
   "devDependencies": {
-    "nodemon": "^3.0.1"
+    "nodemon": "^3.0.1",
+    "vitest": "^1.0.0"
   },
   "keywords": [
     "blockchain",
