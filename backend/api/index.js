@@ -440,6 +440,35 @@ try {
   console.warn('⚠️ Optional route disabled: digital', err?.message || err);
 }
 
+// Phase 4: Seller features & community (optional routes)
+try {
+  const reviewsRoutes = require('../routes/reviews');
+  app.use('/api/reviews', reviewsRoutes);
+} catch (err) {
+  console.warn('⚠️ Optional route disabled: reviews', err?.message || err);
+}
+
+try {
+  const messagesRoutes = require('../routes/messages');
+  app.use('/api/messages', messagesRoutes);
+} catch (err) {
+  console.warn('⚠️ Optional route disabled: messages', err?.message || err);
+}
+
+try {
+  const testimonialsRoutes = require('../routes/testimonials');
+  app.use('/api/testimonials', testimonialsRoutes);
+} catch (err) {
+  console.warn('⚠️ Optional route disabled: testimonials', err?.message || err);
+}
+
+try {
+  const analyticsRoutes = require('../routes/analytics');
+  app.use('/api/analytics', analyticsRoutes);
+} catch (err) {
+  console.warn('⚠️ Optional route disabled: analytics', err?.message || err);
+}
+
 app.get('/api/governance/proposals', async (req, res) => {
   try {
     const { status = '', cycleKey = '', limit = '30', skip = '0' } = req.query;
