@@ -399,6 +399,9 @@ app.use('/api/provenance', require('../routes/provenance'));
 // Admin Dashboard
 app.use('/api/admin/dashboard', require('../routes/admin-dashboard'));
 
+// Autonomous Agent Management (for self-maintaining platform)
+app.use('/api/admin/autonomous-agent', require('../routes/autonomousAgent'));
+
 app.use('/api/blogs', blogsRoutes);
 app.use('/api/pages', pagesRoutes);
 app.use('/api/comments', commentsRoutes);
@@ -1130,11 +1133,22 @@ module.exports.connectToDatabase = connectToDatabase;
 if (require.main === module) {
   const PORT = process.env.PORT || 5001;
   const advertisedBase = process.env.PUBLIC_API_URL || 'https://api.pvabazaar.org';
+
   connectToDatabase()
     .then(() => autoSeed())
+    .then(async () => {
+      // Initialize autonomous maintenance scheduler
+      try {
+        const { initializeGlobalScheduler } = require('../services/autonomousMaintenanceScheduler');
+        await initializeGlobalScheduler();
+      } catch (error) {
+        console.warn('⚠️ Autonomous scheduler initialization skipped:', error.message);
+      }
+    })
     .finally(() => {
       app.listen(PORT, () => {
         console.log(`🚀 Server running on ${advertisedBase}`);
+        console.log(`✅ Autonomous agent scheduler active`);
       });
     });
 }
