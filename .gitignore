@@ -45,6 +45,10 @@ Frontend/dist/
 # Local temporary workspace artifacts
 .tmp/
 
+# Vercel CLI exports and Render bulk-import bundles (secrets)
+.tmp-vercel*/
+render-dashboard.env
+
 # OpenClaw watchdog logs
 infra/openclaw/logs/
 

@@ -15,7 +15,11 @@ services:
       - key: NODE_ENV
         value: production
       - key: ETHEREUM_RPC_URL
-        value: https://polygon-amoy-rpc.publicnode.com
+        value: https://mainnet.base.org
+      - key: ALLOWED_ORIGIN
+        value: https://pvabazaar.org,https://www.pvabazaar.org
+      - key: PUBLIC_SITE_URL
+        value: https://pvabazaar.org
       - key: MONGODB_URI
         sync: false
       - key: JWT_SECRET
@@ -31,4 +35,34 @@ services:
       - key: OLLAMA_BASE_URL
         sync: false
       - key: OLLAMA_MODEL
+        sync: false
+      - key: OPENCLAW_BACKEND_URL
+        sync: false
+      - key: OPENCLAW_PUBLIC_MODE
+        value: "true"
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_USERNAME
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: ADMIN_SECRET_CODE
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_WEBHOOK_URL
+        sync: false
+      - key: TELEGRAM_WEBHOOK_SECRET
+        sync: false
+      - key: SOLANA_HOT_WALLET_PRIVATE_KEY
+        sync: false
+      - key: BOUNTY_PAYOUT_WALLET
+        sync: false
+      - key: BOUNTY_PAYOUT_CHAIN
+        value: base
+      - key: GITHUB_TOKEN
         sync: false
