@@ -2,8 +2,8 @@ name: Bounty Hunter - Money Run
 
 on:
   schedule:
-    # Every 10 minutes for higher opportunity capture
-    - cron: '*/10 * * * *'
+    # Every 30 minutes — easier on free API / hosting quotas
+    - cron: '*/30 * * * *'
   workflow_dispatch:
     inputs:
       platforms:

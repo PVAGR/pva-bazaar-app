@@ -1,5 +1,20 @@
 # 🚀 PVA BAZAAR - FREE DEPLOYMENT (No $20/month Vercel!)
 
+## If Vercel shows “Paused” / `DEPLOYMENT_DISABLED`
+
+Your **frontend** can stay on **GitHub Pages** (`pvabazaar.org`). Move the **API** to **Render free** so `api.pvabazaar.org` works again:
+
+1. In [Render](https://dashboard.render.com): **New +** → **Blueprint** → connect **PVAGR/pva-bazaar-app** (or **New Web Service** from the same repo).
+2. Render reads [`render.yaml`](./render.yaml): service runs from **`backend/`** (`npm ci` + `npm start`). **Health check:** `/api/health-check`.
+3. In the Render dashboard, set **Environment** variables marked `sync: false` (at minimum **`MONGODB_URI`** and **`JWT_SECRET`**). Copy the rest from [`backend/.env.example`](./backend/.env.example) / your old Vercel env as needed.
+4. **Custom domain:** Render service → **Settings** → **Custom Domains** → add **`api.pvabazaar.org`** and apply the **CNAME** they show (at your DNS host, point `api` to Render, not Vercel).
+5. After traffic is on Render, **disable or delete** the old Vercel `pva-backend-api` project so nothing keeps calling the paused deployment.
+6. **Security:** An older `render.yaml` once contained a Mongo connection string in git. **Rotate that database user password** in MongoDB Atlas even if you pick a new password in Render.
+
+Repo cron schedules for GitHub Actions were slowed (e.g. every **30 minutes** instead of **5–10**) to reduce load on whatever API URL you use.
+
+---
+
 You won't pay a dime. Pick your platform and go live in 10 minutes.
 
 ## ⚡ 10-Minute Quick Start

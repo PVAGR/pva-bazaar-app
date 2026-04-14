@@ -1,19 +1,34 @@
+# Render free web service for the Express API (replaces paused Vercel backend).
+# Set secrets in the Render dashboard (never commit real URIs/passwords).
+# After deploy: attach custom domain api.pvabazaar.org per Render docs.
 services:
   - type: web
-    name: pva-bazaar-api-prod
+    name: pva-bazaar-api
     env: node
     region: oregon
     plan: free
-    buildCommand: npm install
+    rootDir: backend
+    buildCommand: npm ci
     startCommand: npm start
+    healthCheckPath: /api/health-check
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 5001
-      - key: JWT_SECRET
-        value: pva_jwt_secret_key_change_this_to_something_longer_32_chars_minimum
-      - key: MONGODB_URI
-        value: mongodb+srv://pva_admin:pva_bazaar_2024@pvabazaar.mongodb.net/pvabazaar?retryWrites=true&w=majority
       - key: ETHEREUM_RPC_URL
         value: https://polygon-amoy-rpc.publicnode.com
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: OPENCLAW_GATEWAY_URL
+        sync: false
+      - key: OPENCLAW_WEBHOOK_URL
+        sync: false
+      - key: OPENCLAW_API_KEY
+        sync: false
+      - key: OPENCLAW_BRIDGE_SECRET
+        sync: false
+      - key: OLLAMA_BASE_URL
+        sync: false
+      - key: OLLAMA_MODEL
+        sync: false

@@ -1,8 +1,9 @@
 name: OpenClaw Queue Worker Tick
 
 on:
+  # Free tiers: avoid hammering the API every 5m (was burning Vercel/GitHub budgets).
   schedule:
-    - cron: '*/5 * * * *'
+    - cron: '*/30 * * * *'
   workflow_dispatch:
 
 permissions:

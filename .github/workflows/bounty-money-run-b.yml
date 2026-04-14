@@ -6,7 +6,7 @@ name: Bounty Hunter - Money Run (B)
 #   B: :05 :15 :25 :35 :45 :55
 on:
   schedule:
-    - cron: '5-59/10 * * * *'
+    - cron: '15,45 * * * *'
   workflow_dispatch:
     inputs:
       platforms:
