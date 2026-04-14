@@ -506,6 +506,31 @@ try {
   console.warn('⚠️ Optional route disabled: admin-intelligence', err?.message || err);
 }
 
+// Phase 6b: Global fulfillment & shipping (optional routes)
+try {
+  const fulfillmentRoutes = require('../routes/fulfillment');
+  app.use('/api/fulfillment', fulfillmentRoutes);
+} catch (err) {
+  console.warn('⚠️ Optional route disabled: fulfillment', err?.message || err);
+}
+
+// Phase 7: AI helper & advanced dashboards (optional routes)
+try {
+  const aiHelpRoutes = require('../routes/ai-help');
+  app.use('/api/ai-help', aiHelpRoutes);
+} catch (err) {
+  console.warn('⚠️ Optional route disabled: ai-help', err?.message || err);
+}
+
+// Phase 8: Open API & partner integrations (optional routes)
+try {
+  const integrationsRoutes = require('../routes/integrations');
+  app.use('/api/integrations', integrationsRoutes);
+  app.use('/api/v1', integrationsRoutes);
+} catch (err) {
+  console.warn('⚠️ Optional route disabled: integrations', err?.message || err);
+}
+
 app.get('/api/governance/proposals', async (req, res) => {
   try {
     const { status = '', cycleKey = '', limit = '30', skip = '0' } = req.query;
