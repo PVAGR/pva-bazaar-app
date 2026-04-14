@@ -1,5 +1,5 @@
 // Frontend/src/config/env.ts
-const rawApiUrl = (import.meta.env.VITE_API_URL || "https://pvabazaar.org/api").replace(
+const rawApiUrl = (import.meta.env.VITE_API_URL || "https://pva-bazaar-api-prod.onrender.com/api").replace(
   /\/$/, ""
 );
 const isProdBuild = import.meta.env.MODE === "production";
