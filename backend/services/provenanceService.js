@@ -2,7 +2,7 @@
 const ProvenanceSubmission = require('../models/ProvenanceSubmission');
 const ProductType = require('../models/ProductType');
 const Shop = require('../models/Shop');
-const Web3 = require('web3');
+const { Web3 } = require('web3');
 
 const web3 = new Web3(process.env.ETHEREUM_RPC_URL);
 

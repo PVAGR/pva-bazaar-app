@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const Artifact = require('../models/Artifact');
 const OmnichannelSale = require('../models/OmnichannelSale');
-const authMiddleware = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
 const {
   completeSaleAcrossChannels,
   findItemByChannelOrId,
@@ -58,7 +58,7 @@ function ensureOmnichannelShape(item) {
   }
 }
 
-router.get('/:itemId', authMiddleware, async (req, res) => {
+router.get('/:itemId', authenticateToken, async (req, res) => {
   try {
     const { itemId } = req.params;
     const item = await findItemByChannelOrId({ itemId });
@@ -79,7 +79,7 @@ router.get('/:itemId', authMiddleware, async (req, res) => {
   }
 });
 
-router.get('/:itemId/sales', authMiddleware, async (req, res) => {
+router.get('/:itemId/sales', authenticateToken, async (req, res) => {
   try {
     const { itemId } = req.params;
     const limit = Math.max(1, Math.min(Number(req.query.limit) || 10, 50));
@@ -102,7 +102,7 @@ router.get('/:itemId/sales', authMiddleware, async (req, res) => {
   }
 });
 
-router.put('/:itemId/listings', authMiddleware, async (req, res) => {
+router.put('/:itemId/listings', authenticateToken, async (req, res) => {
   try {
     const { itemId } = req.params;
     const channels = Array.isArray(req.body?.channels) ? req.body.channels : [];
@@ -219,7 +219,7 @@ router.post('/sales/complete', async (req, res) => {
   }
 });
 
-router.post('/:itemId/mark-sold', authMiddleware, async (req, res) => {
+router.post('/:itemId/mark-sold', authenticateToken, async (req, res) => {
   try {
     const { itemId } = req.params;
     const {

@@ -3,7 +3,7 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const axios = require('axios');
 const User = require('../models/User');
-const { authMiddleware } = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
 const { decryptJson, encryptJson } = require('../utils/cryptoVault');
 
 function mustEnv(key) {
@@ -168,7 +168,7 @@ router.get('/youtube/callback', async (req, res) => {
 });
 
 // GET /api/oauth/youtube/live-status (auth required) - real LiveBroadcast API
-router.get('/youtube/live-status', authMiddleware, async (req, res) => {
+router.get('/youtube/live-status', authenticateToken, async (req, res) => {
   try {
     mustEnv('OAUTH_TOKEN_ENC_KEY');
     const user = await User.findById(req.user.id);

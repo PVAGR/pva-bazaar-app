@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Artifact = require('../models/Artifact');
-const auth = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
 const multer = require('multer');
 const path = require('path');
 const { createArtifactEvent, dispatchToOpenClaw } = require('../utils/openclaw-events');
@@ -154,7 +154,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Create new artifact (requires authentication)
-router.post('/', auth, upload.array('assetPhotos', 6), async (req, res) => {
+router.post('/', authenticateToken, upload.array('assetPhotos', 6), async (req, res) => {
   try {
     // Parse fields from form-data
     const {

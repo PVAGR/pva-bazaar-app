@@ -1,6 +1,6 @@
 const express = require('express');
 const crypto = require('crypto');
-const auth = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
 const requireAdmin = require('../middleware/adminOnly');
 const User = require('../models/User');
 
@@ -151,7 +151,7 @@ router.get('/citizens', async (req, res) => {
 });
 
 // Authenticated full profile for current user
-router.get('/me', auth, async (req, res) => {
+router.get('/me', authenticateToken, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select(PRIVATE_FIELDS);
     if (!user) {
@@ -168,7 +168,7 @@ router.get('/me', auth, async (req, res) => {
 });
 
 // Update own passport profile fields
-router.put('/profile', auth, async (req, res) => {
+router.put('/profile', authenticateToken, async (req, res) => {
   try {
     const update = { updatedAt: new Date() };
     const bio = req.body?.bio;
@@ -216,7 +216,7 @@ router.put('/profile', auth, async (req, res) => {
 });
 
 // Request passport verification
-router.post('/verify-request', auth, async (req, res) => {
+router.post('/verify-request', authenticateToken, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('passportStatus verificationStatus updatedAt auditHistory approvalHistory');
     if (!user) {
@@ -248,7 +248,7 @@ router.post('/verify-request', auth, async (req, res) => {
 });
 
 // Admin: list pending passport verification requests
-router.get('/pending', auth, requireAdmin, async (req, res) => {
+router.get('/pending', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const users = await User.find({ passportStatus: 'pending' })
       .select(PRIVATE_FIELDS)
@@ -267,7 +267,7 @@ router.get('/pending', auth, requireAdmin, async (req, res) => {
 });
 
 // Admin: approve passport verification
-router.post('/approve/:userId', auth, requireAdmin, async (req, res) => {
+router.post('/approve/:userId', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const user = await User.findById(req.params.userId).select(PRIVATE_FIELDS);
     if (!user) {
@@ -308,7 +308,7 @@ router.post('/approve/:userId', auth, requireAdmin, async (req, res) => {
 });
 
 // Authenticated: request wallet-binding challenge
-router.post('/challenge/request', auth, async (req, res) => {
+router.post('/challenge/request', authenticateToken, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select(PRIVATE_FIELDS);
     if (!user) {
@@ -352,7 +352,7 @@ router.post('/challenge/request', auth, async (req, res) => {
 });
 
 // Authenticated: submit wallet binding proof (simulated verification rail)
-router.post('/challenge/verify', auth, async (req, res) => {
+router.post('/challenge/verify', authenticateToken, async (req, res) => {
   try {
     const walletAddress = String(req.body?.walletAddress || '').trim();
     const signature = String(req.body?.signature || '').trim();
@@ -453,7 +453,7 @@ router.get('/verify', async (req, res) => {
 });
 
 // Authenticated: fetch audit history (self or admin)
-router.get('/audit/:userId', auth, async (req, res) => {
+router.get('/audit/:userId', authenticateToken, async (req, res) => {
   try {
     const targetId = String(req.params.userId || '');
     const isSelf = String(req.user.id) === targetId;
@@ -484,7 +484,7 @@ router.get('/audit/:userId', auth, async (req, res) => {
 });
 
 // Admin/secretariat: issue credential record
-router.post('/credential/issue/:userId', auth, requireAdmin, async (req, res) => {
+router.post('/credential/issue/:userId', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const target = await User.findById(req.params.userId).select(PRIVATE_FIELDS);
     if (!target) {
@@ -525,7 +525,7 @@ router.post('/credential/issue/:userId', auth, requireAdmin, async (req, res) =>
 });
 
 // Admin/secretariat: refresh existing credential version
-router.post('/credential/refresh/:userId', auth, requireAdmin, async (req, res) => {
+router.post('/credential/refresh/:userId', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const target = await User.findById(req.params.userId).select(PRIVATE_FIELDS);
     if (!target) {
@@ -556,7 +556,7 @@ router.post('/credential/refresh/:userId', auth, requireAdmin, async (req, res) 
 });
 
 // Admin/secretariat: assign/revoke claims
-router.post('/claims/:userId', auth, requireAdmin, async (req, res) => {
+router.post('/claims/:userId', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const target = await User.findById(req.params.userId).select(PRIVATE_FIELDS);
     if (!target) {

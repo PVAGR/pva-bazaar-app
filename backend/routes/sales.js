@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const Order = require('../models/Order');
-const { authMiddleware } = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
 
 // GET /api/sales/metrics - Get seller's sales metrics
-router.get('/metrics', authMiddleware, async (req, res) => {
+router.get('/metrics', authenticateToken, async (req, res) => {
   try {
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);

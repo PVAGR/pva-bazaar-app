@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const JournalEntry = require('../models/JournalEntry');
-const { authMiddleware } = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
 const { createSystemEvent, dispatchToOpenClaw } = require('../utils/openclaw-events');
 
 /**
@@ -9,7 +9,7 @@ const { createSystemEvent, dispatchToOpenClaw } = require('../utils/openclaw-eve
  * @desc    Get all journal entries for authenticated user
  * @access  Private
  */
-router.get('/', authMiddleware, async (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
   try {
     const { limit = 50, skip = 0, tags, isPublic } = req.query;
     
@@ -42,7 +42,7 @@ router.get('/', authMiddleware, async (req, res) => {
  * @desc    Get single journal entry
  * @access  Private
  */
-router.get('/:id', authMiddleware, async (req, res) => {
+router.get('/:id', authenticateToken, async (req, res) => {
   try {
     const entry = await JournalEntry.findOne({
       _id: req.params.id,
@@ -65,7 +65,7 @@ router.get('/:id', authMiddleware, async (req, res) => {
  * @desc    Create new journal entry
  * @access  Private
  */
-router.post('/', authMiddleware, async (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
   try {
     const {
       title,
@@ -114,7 +114,7 @@ router.post('/', authMiddleware, async (req, res) => {
  * @desc    Update journal entry
  * @access  Private
  */
-router.put('/:id', authMiddleware, async (req, res) => {
+router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const entry = await JournalEntry.findOne({
       _id: req.params.id,
@@ -168,7 +168,7 @@ router.put('/:id', authMiddleware, async (req, res) => {
  * @desc    Delete journal entry
  * @access  Private
  */
-router.delete('/:id', authMiddleware, async (req, res) => {
+router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     const entry = await JournalEntry.findOneAndDelete({
       _id: req.params.id,

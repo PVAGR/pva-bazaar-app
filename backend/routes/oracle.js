@@ -2,14 +2,14 @@ const express = require('express');
 const router = express.Router();
 const OracleAssessment = require('../models/OracleAssessment');
 const oracleAI = require('../service/oracleAI');
-const { authMiddleware } = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
 
 /**
  * @route   POST /api/oracle/assessment
  * @desc    Create a new Oracle Assessment
  * @access  Private
  */
-router.post('/assessment', authMiddleware, async (req, res) => {
+router.post('/assessment', authenticateToken, async (req, res) => {
   try {
     const { personalData, spiritualProfile } = req.body;
 
@@ -70,7 +70,7 @@ router.post('/assessment', authMiddleware, async (req, res) => {
  * @desc    Get a specific Oracle Assessment
  * @access  Private
  */
-router.get('/assessment/:id', authMiddleware, async (req, res) => {
+router.get('/assessment/:id', authenticateToken, async (req, res) => {
   try {
     const assessment = await OracleAssessment.findOne({
       _id: req.params.id,
@@ -102,7 +102,7 @@ router.get('/assessment/:id', authMiddleware, async (req, res) => {
  * @desc    Get all Oracle Assessments for authenticated user
  * @access  Private
  */
-router.get('/assessments', authMiddleware, async (req, res) => {
+router.get('/assessments', authenticateToken, async (req, res) => {
   try {
     const { limit = 50, skip = 0, status } = req.query;
 
@@ -140,7 +140,7 @@ router.get('/assessments', authMiddleware, async (req, res) => {
  * @desc    Regenerate results for an existing assessment
  * @access  Private
  */
-router.post('/assessment/:id/regenerate', authMiddleware, async (req, res) => {
+router.post('/assessment/:id/regenerate', authenticateToken, async (req, res) => {
   try {
     const assessment = await OracleAssessment.findOne({
       _id: req.params.id,
@@ -193,7 +193,7 @@ router.post('/assessment/:id/regenerate', authMiddleware, async (req, res) => {
  * @desc    Delete an Oracle Assessment
  * @access  Private
  */
-router.delete('/assessment/:id', authMiddleware, async (req, res) => {
+router.delete('/assessment/:id', authenticateToken, async (req, res) => {
   try {
     const assessment = await OracleAssessment.findOneAndDelete({
       _id: req.params.id,

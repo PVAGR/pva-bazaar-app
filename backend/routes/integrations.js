@@ -2,7 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const crypto = require('crypto');
-const authenticateToken = require('../middleware/authenticateToken');
+const { authenticateToken } = require('../middleware/auth');
 const APIKey = require('../models/APIKey');
 const PartnerIntegration = require('../models/PartnerIntegration');
 const ProductType = require('../models/ProductType');

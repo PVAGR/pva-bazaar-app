@@ -7,7 +7,7 @@ const User = require('../models/User');
 const { sendConsignmentEmail, sendAdminNotification } = require('../service/emailService');
 const { normalizeItemInput, toPublicItem } = require('../lib/itemNormalize');
 const { encodeCursor, decodeCursor } = require('../lib/cursor');
-const { authMiddleware } = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
 const adminSession = require('../middleware/adminSession');
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
@@ -290,7 +290,7 @@ router.get('/', async (req, res) => {
 });
 
 // GET /api/items/:slugOrId
-router.get('/mine', authMiddleware, async (req, res) => {
+router.get('/mine', authenticateToken, async (req, res) => {
   try {
     const docs = await Artifact.find({ creator: req.user.id })
       .sort({ createdAt: -1, _id: -1 })
@@ -307,7 +307,7 @@ router.get('/mine', authMiddleware, async (req, res) => {
 });
 
 // POST /api/items/provenance/check - preflight duplicate check before mint/listing
-router.post('/provenance/check', authMiddleware, async (req, res) => {
+router.post('/provenance/check', authenticateToken, async (req, res) => {
   try {
     const {
       title,
@@ -675,7 +675,7 @@ router.get('/:slugOrId/provenance/verify', async (req, res) => {
 
 // POST /api/items/register - User-facing item registration
 // Requires authentication via JWT token
-router.post('/register', authMiddleware, async (req, res) => {
+router.post('/register', authenticateToken, async (req, res) => {
   try {
     const {
       title,
@@ -891,7 +891,7 @@ router.post('/register', authMiddleware, async (req, res) => {
 });
 
 // POST /api/items/:id/syndication/retry - retry selected channel dispatches for owner/admin
-router.post('/:id/syndication/retry', authMiddleware, async (req, res) => {
+router.post('/:id/syndication/retry', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {

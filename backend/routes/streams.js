@@ -3,7 +3,7 @@ const router = express.Router();
 const crypto = require('crypto');
 const StreamSession = require('../models/StreamSession');
 const User = require('../models/User');
-const { authMiddleware } = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
 
 function sanitize(str) {
   if (typeof str !== 'string') return str;
@@ -26,7 +26,7 @@ function sanitizeDeep(v) {
  * @desc    Get all stream sessions for authenticated user
  * @access  Private
  */
-router.get('/', authMiddleware, async (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
   try {
     const { status, limit = 50, skip = 0 } = req.query;
     
@@ -57,7 +57,7 @@ router.get('/', authMiddleware, async (req, res) => {
  * @desc    Fetch the saved create-stream draft for the current user
  * @access  Private
  */
-router.get('/drafts', authMiddleware, async (req, res) => {
+router.get('/drafts', authenticateToken, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('preferences');
     const draft = user?.preferences?.drafts?.streams || null;
@@ -73,7 +73,7 @@ router.get('/drafts', authMiddleware, async (req, res) => {
  * @desc    Save the create-stream draft for the current user (Mongo-backed)
  * @access  Private
  */
-router.put('/drafts', authMiddleware, async (req, res) => {
+router.put('/drafts', authenticateToken, async (req, res) => {
   try {
     const incoming = req.body?.draft !== undefined ? req.body.draft : req.body;
     const draft = sanitizeDeep(incoming || null);
@@ -99,7 +99,7 @@ router.put('/drafts', authMiddleware, async (req, res) => {
  * @desc    Clear the saved stream draft
  * @access  Private
  */
-router.delete('/drafts', authMiddleware, async (req, res) => {
+router.delete('/drafts', authenticateToken, async (req, res) => {
   try {
     await User.findByIdAndUpdate(
       req.user.id,
@@ -119,7 +119,7 @@ router.delete('/drafts', authMiddleware, async (req, res) => {
  * @desc    Get single stream session
  * @access  Private
  */
-router.get('/:id', authMiddleware, async (req, res) => {
+router.get('/:id', authenticateToken, async (req, res) => {
   try {
     const stream = await StreamSession.findOne({
       _id: req.params.id,
@@ -142,7 +142,7 @@ router.get('/:id', authMiddleware, async (req, res) => {
  * @desc    Create new stream session
  * @access  Private
  */
-router.post('/', authMiddleware, async (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
   try {
     const {
       title,
@@ -177,7 +177,7 @@ router.post('/', authMiddleware, async (req, res) => {
  * @desc    Update stream session
  * @access  Private
  */
-router.put('/:id', authMiddleware, async (req, res) => {
+router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const stream = await StreamSession.findOne({
       _id: req.params.id,
@@ -230,7 +230,7 @@ router.put('/:id', authMiddleware, async (req, res) => {
  * @desc    Delete stream session
  * @access  Private
  */
-router.delete('/:id', authMiddleware, async (req, res) => {
+router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     const stream = await StreamSession.findOneAndDelete({
       _id: req.params.id,

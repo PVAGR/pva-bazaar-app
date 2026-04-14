@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
-const auth = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
 const adminOnly = require('../middleware/adminOnly');
 const adminSession = require('../middleware/adminSession');
 const AdminRuntimeConfig = require('../models/AdminRuntimeConfig');
@@ -83,7 +83,7 @@ router.get('/panel-report', async (_req, res) => {
   }
 });
 
-// POST /api/admin/token - Production-safe admin auth via secret code
+// POST /api/admin/token - Production-safe admin authenticateToken via secret code
 router.post('/token', (req, res) => {
   const { secret } = req.body;
   

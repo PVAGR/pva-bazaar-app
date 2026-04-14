@@ -2,7 +2,7 @@
 const path = require('path');
 require('dotenv').config();
 
-const { app } = require(path.join(__dirname, 'backend', 'api', 'index'));
+const app = require(path.join(__dirname, 'backend', 'api', 'index'));
 
 const PORT = process.env.PORT || 5001;
 const NODE_ENV = process.env.NODE_ENV || 'development';

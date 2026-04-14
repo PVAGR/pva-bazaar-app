@@ -1,7 +1,7 @@
 // backend/routes/ai-help.js - AI-powered assistance for sellers and buyers
 const express = require('express');
 const router = express.Router();
-const authenticateToken = require('../middleware/authenticateToken');
+const { authenticateToken } = require('../middleware/auth');
 const AIAgentBot = require('../models/AIAgentBot');
 const Shop = require('../models/Shop');
 const SellerAnalytics = require('../models/SellerAnalytics');

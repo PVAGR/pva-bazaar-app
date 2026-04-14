@@ -1,13 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const Artifact = require('../models/Artifact');
-const auth = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
 const Order = require('../models/Order');
-const { authMiddleware } = auth;
 const { createFractionalEvent, dispatchToOpenClaw } = require('../utils/openclaw-events');
 
 // GET /api/transactions?limit=5 - Recent transactions (mocked for now)
-router.get('/', authMiddleware, async (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
 	try {
 		const limit = Math.min(parseInt(req.query.limit, 10) || 5, 100);
 		
@@ -54,7 +53,7 @@ router.get('/', authMiddleware, async (req, res) => {
 });
 
 // POST /api/transactions/shares/buy - Buy shares
-router.post('/shares/buy', auth, async (req, res) => {
+router.post('/shares/buy', authenticateToken, async (req, res) => {
 	try {
 		const { artifactId, wallet, amountUSD, shares } = req.body || {};
 		const sharesNum = parseInt(shares, 10);

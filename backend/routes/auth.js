@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
-const auth = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
 const { createUserEvent, dispatchToOpenClaw } = require('../utils/openclaw-events');
 
 // Register
@@ -114,7 +114,7 @@ router.post('/login', async (req, res) => {
 });
 
 // Get current user
-router.get('/me', auth, async (req, res) => {
+router.get('/me', authenticateToken, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('-password');
     res.json({ ok: true, user });

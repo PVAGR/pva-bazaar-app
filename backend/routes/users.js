@@ -1,11 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
-const auth = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
 const { createUserEvent, dispatchToOpenClaw } = require('../utils/openclaw-events');
 
 // Get user profile
-router.get('/profile', auth, async (req, res) => {
+router.get('/profile', authenticateToken, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('-password');
     res.json({ ok: true, user });
@@ -15,7 +15,7 @@ router.get('/profile', auth, async (req, res) => {
 });
 
 // Update user profile
-router.put('/profile', auth, async (req, res) => {
+router.put('/profile', authenticateToken, async (req, res) => {
   try {
     const { name, email, preferences } = req.body;
     const update = { updatedAt: Date.now() };

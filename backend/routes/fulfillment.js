@@ -1,7 +1,7 @@
 // backend/routes/fulfillment.js - Global fulfillment and shipping operations
 const express = require('express');
 const router = express.Router();
-const authenticateToken = require('../middleware/authenticateToken');
+const { authenticateToken } = require('../middleware/auth');
 const fulfillmentService = require('../services/fulfillmentService');
 const Order = require('../models/Order');
 const ShipmentTracking = require('../models/ShipmentTracking');

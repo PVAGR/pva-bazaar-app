@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const DecentralizedIdentity = require('../models/DecentralizedIdentity');
-const authMiddleware = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
 const crypto = require('crypto');
 
 /**
@@ -9,7 +9,7 @@ const crypto = require('crypto');
  * @desc    Get user's DID information
  * @access  Private
  */
-router.get('/', authMiddleware, async (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
   try {
     const did = await DecentralizedIdentity.findOne({ userId: req.user.id });
     
@@ -29,7 +29,7 @@ router.get('/', authMiddleware, async (req, res) => {
  * @desc    Create new DID for user
  * @access  Private
  */
-router.post('/', authMiddleware, async (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
   try {
     // Check if user already has a DID
     const existing = await DecentralizedIdentity.findOne({ userId: req.user.id });
@@ -97,7 +97,7 @@ router.post('/', authMiddleware, async (req, res) => {
  * @desc    Update DID document
  * @access  Private
  */
-router.put('/', authMiddleware, async (req, res) => {
+router.put('/', authenticateToken, async (req, res) => {
   try {
     const did = await DecentralizedIdentity.findOne({ userId: req.user.id });
     

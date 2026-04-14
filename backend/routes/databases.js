@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const CustomDatabase = require('../models/CustomDatabase');
-const { authMiddleware } = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
 const { createSystemEvent, dispatchToOpenClaw } = require('../utils/openclaw-events');
 
 /**
@@ -9,7 +9,7 @@ const { createSystemEvent, dispatchToOpenClaw } = require('../utils/openclaw-eve
  * @desc    Get all custom databases for authenticated user
  * @access  Private
  */
-router.get('/', authMiddleware, async (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
   try {
     const databases = await CustomDatabase.find({ userId: req.user.id })
       .sort({ createdAt: -1 });
@@ -26,7 +26,7 @@ router.get('/', authMiddleware, async (req, res) => {
  * @desc    Get single custom database
  * @access  Private
  */
-router.get('/:id', authMiddleware, async (req, res) => {
+router.get('/:id', authenticateToken, async (req, res) => {
   try {
     const database = await CustomDatabase.findOne({
       _id: req.params.id,
@@ -49,7 +49,7 @@ router.get('/:id', authMiddleware, async (req, res) => {
  * @desc    Create new custom database
  * @access  Private
  */
-router.post('/', authMiddleware, async (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
   try {
     const { name, description, type, isPublic } = req.body;
     
@@ -86,7 +86,7 @@ router.post('/', authMiddleware, async (req, res) => {
  * @desc    Update custom database
  * @access  Private
  */
-router.put('/:id', authMiddleware, async (req, res) => {
+router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const database = await CustomDatabase.findOne({
       _id: req.params.id,
@@ -126,7 +126,7 @@ router.put('/:id', authMiddleware, async (req, res) => {
  * @desc    Delete custom database
  * @access  Private
  */
-router.delete('/:id', authMiddleware, async (req, res) => {
+router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     const database = await CustomDatabase.findOneAndDelete({
       _id: req.params.id,
@@ -156,7 +156,7 @@ router.delete('/:id', authMiddleware, async (req, res) => {
  * @desc    Add entry to custom database
  * @access  Private
  */
-router.post('/:id/entries', authMiddleware, async (req, res) => {
+router.post('/:id/entries', authenticateToken, async (req, res) => {
   try {
     const database = await CustomDatabase.findOne({
       _id: req.params.id,
@@ -221,7 +221,7 @@ router.post('/:id/entries', authMiddleware, async (req, res) => {
  * @desc    Remove entry from custom database
  * @access  Private
  */
-router.delete('/:id/entries/:entryId', authMiddleware, async (req, res) => {
+router.delete('/:id/entries/:entryId', authenticateToken, async (req, res) => {
   try {
     const database = await CustomDatabase.findOne({
       _id: req.params.id,

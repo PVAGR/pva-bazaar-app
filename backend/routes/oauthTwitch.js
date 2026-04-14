@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 const axios = require('axios');
 const User = require('../models/User');
 const { decryptJson, encryptJson } = require('../utils/cryptoVault');
-const { authMiddleware } = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
 
 function mustEnv(key) {
   const v = process.env[key];
@@ -71,7 +71,7 @@ router.get('/twitch/status', (req, res) => {
 });
 
 // GET /api/oauth/twitch/live-status (auth required)
-router.get('/twitch/live-status', authMiddleware, async (req, res) => {
+router.get('/twitch/live-status', authenticateToken, async (req, res) => {
   try {
     const clientId = mustEnv('TWITCH_CLIENT_ID');
     const clientSecret = mustEnv('TWITCH_CLIENT_SECRET');

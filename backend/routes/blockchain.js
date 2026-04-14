@@ -2,7 +2,7 @@ const express = require('express');
 const crypto = require('crypto');
 const { verifyMessage, getAddress, isAddress } = require('ethers');
 const router = express.Router();
-const auth = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
 const BlockchainTransfer = require('../models/BlockchainTransfer');
 const Artifact = require('../models/Artifact');
 const {
@@ -597,7 +597,7 @@ router.get('/transfers/public/:id', async (req, res) => {
 });
 
 // GET /api/blockchain/transfers - list tracked transfer records
-router.get('/transfers', auth, async (req, res) => {
+router.get('/transfers', authenticateToken, async (req, res) => {
   try {
     const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 20, 1), 200);
     const query = {};
@@ -623,7 +623,7 @@ router.get('/transfers', auth, async (req, res) => {
 });
 
 // GET /api/blockchain/transfers/:id/audit-log - persistent audit events for a transfer
-router.get('/transfers/:id/audit-log', auth, async (req, res) => {
+router.get('/transfers/:id/audit-log', authenticateToken, async (req, res) => {
   try {
     const item = await BlockchainTransfer.findById(req.params.id).select('auditEvents txHash finalizedAt status createdAt updatedAt');
     if (!item) {
@@ -645,7 +645,7 @@ router.get('/transfers/:id/audit-log', auth, async (req, res) => {
 });
 
 // POST /api/blockchain/transfers/:id/audit-log - append operational audit event
-router.post('/transfers/:id/audit-log', auth, async (req, res) => {
+router.post('/transfers/:id/audit-log', authenticateToken, async (req, res) => {
   try {
     const item = await BlockchainTransfer.findById(req.params.id);
     if (!item) {
@@ -676,7 +676,7 @@ router.post('/transfers/:id/audit-log', auth, async (req, res) => {
 });
 
 // GET /api/blockchain/settlement-templates - reusable terms from recent records
-router.get('/settlement-templates', auth, async (req, res) => {
+router.get('/settlement-templates', authenticateToken, async (req, res) => {
   try {
     const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 20, 1), 100);
     const items = await BlockchainTransfer.find({ submittedBy: req.user.id })
@@ -717,7 +717,7 @@ router.get('/settlement-templates', auth, async (req, res) => {
 });
 
 // POST /api/blockchain/transfers/record - record and verify an on-chain transfer
-router.post('/transfers/record', auth, async (req, res) => {
+router.post('/transfers/record', authenticateToken, async (req, res) => {
   try {
     const txHash = String(req.body?.txHash || '').trim();
     if (!isValidTxHash(txHash)) {
@@ -837,7 +837,7 @@ router.post('/transfers/record', auth, async (req, res) => {
 });
 
 // POST /api/blockchain/transfers/:id/finalize - lock settlement terms/signatures
-router.post('/transfers/:id/finalize', auth, async (req, res) => {
+router.post('/transfers/:id/finalize', authenticateToken, async (req, res) => {
   try {
     const item = await BlockchainTransfer.findById(req.params.id);
     if (!item) {
@@ -907,7 +907,7 @@ router.post('/transfers/:id/finalize', auth, async (req, res) => {
 });
 
 // GET /api/blockchain/transfers/:id/verify-integrity - recompute digest and verify lock integrity
-router.get('/transfers/:id/verify-integrity', auth, async (req, res) => {
+router.get('/transfers/:id/verify-integrity', authenticateToken, async (req, res) => {
   try {
     const item = await BlockchainTransfer.findById(req.params.id);
     if (!item) {
@@ -929,7 +929,7 @@ router.get('/transfers/:id/verify-integrity', auth, async (req, res) => {
 });
 
 // GET /api/blockchain/transfers/:id/verification-report - audit report JSON
-router.get('/transfers/:id/verification-report', auth, async (req, res) => {
+router.get('/transfers/:id/verification-report', authenticateToken, async (req, res) => {
   try {
     const item = await BlockchainTransfer.findById(req.params.id);
     if (!item) {
@@ -951,7 +951,7 @@ router.get('/transfers/:id/verification-report', auth, async (req, res) => {
 });
 
 // GET /api/blockchain/transfers/:id/verification-report/render - printable audit report HTML
-router.get('/transfers/:id/verification-report/render', auth, async (req, res) => {
+router.get('/transfers/:id/verification-report/render', authenticateToken, async (req, res) => {
   try {
     const item = await BlockchainTransfer.findById(req.params.id);
     if (!item) {
@@ -974,7 +974,7 @@ router.get('/transfers/:id/verification-report/render', auth, async (req, res) =
 });
 
 // POST /api/blockchain/transfers/:id/reverify - refresh tx status from chain
-router.post('/transfers/:id/reverify', auth, async (req, res) => {
+router.post('/transfers/:id/reverify', authenticateToken, async (req, res) => {
   try {
     const item = await BlockchainTransfer.findById(req.params.id);
     if (!item) {
@@ -1007,7 +1007,7 @@ router.post('/transfers/:id/reverify', auth, async (req, res) => {
 });
 
 // GET /api/blockchain/transfers/:id/contract - settlement contract payload
-router.get('/transfers/:id/contract', auth, async (req, res) => {
+router.get('/transfers/:id/contract', authenticateToken, async (req, res) => {
   try {
     const item = await BlockchainTransfer.findById(req.params.id);
     if (!item) {
@@ -1030,7 +1030,7 @@ router.get('/transfers/:id/contract', auth, async (req, res) => {
 });
 
 // GET /api/blockchain/transfers/:id/contract/render - settlement contract HTML for print/PDF
-router.get('/transfers/:id/contract/render', auth, async (req, res) => {
+router.get('/transfers/:id/contract/render', authenticateToken, async (req, res) => {
   try {
     const item = await BlockchainTransfer.findById(req.params.id);
     if (!item) {

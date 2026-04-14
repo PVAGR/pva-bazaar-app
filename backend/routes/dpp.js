@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const router = express.Router();
 const DigitalProductPassport = require('../models/DigitalProductPassport');
 const Artifact = require('../models/Artifact');
-const { authMiddleware } = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
 
 function isObjectId(value) {
   return mongoose.isValidObjectId(value);
@@ -246,7 +246,7 @@ router.get('/:passportDid', async (req, res) => {
 
 // POST /api/dpp
 // Create a DPP record (authenticated creator/admin path)
-router.post('/', authMiddleware, async (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
   try {
     const {
       artifactId,
@@ -350,7 +350,7 @@ router.post('/', authMiddleware, async (req, res) => {
 
 // POST /api/dpp/:passportDid/events
 // Append lifecycle events (shipments, transforms, retail sales, etc.)
-router.post('/:passportDid/events', authMiddleware, async (req, res) => {
+router.post('/:passportDid/events', authenticateToken, async (req, res) => {
   try {
     const passportDid = String(req.params.passportDid || '').trim();
     const {
@@ -390,7 +390,7 @@ router.post('/:passportDid/events', authMiddleware, async (req, res) => {
 });
 
 // PUT /api/dpp/:passportDid/royalty-policy
-router.put('/:passportDid/royalty-policy', authMiddleware, async (req, res) => {
+router.put('/:passportDid/royalty-policy', authenticateToken, async (req, res) => {
   try {
     const passportDid = String(req.params.passportDid || '').trim();
     const doc = await DigitalProductPassport.findOne({ passportDid });

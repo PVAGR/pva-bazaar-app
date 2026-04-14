@@ -4,7 +4,7 @@ const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const Deal = require('../models/Deal');
 const User = require('../models/User');
-const { authMiddleware } = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
 
 let buildDealMessageTypedData;
 let buildDealEvidenceTypedData;
@@ -208,7 +208,7 @@ router.post('/verify-signature', async (req, res) => {
 });
 
 // GET /api/deals - list deals for current user
-router.get('/', authMiddleware, async (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
   try {
     const { limit = 50, skip = 0, status } = req.query;
     const query = {
@@ -235,7 +235,7 @@ router.get('/', authMiddleware, async (req, res) => {
 });
 
 // POST /api/deals - create deal (owner-only)
-router.post('/', authMiddleware, async (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
   try {
     const title = sanitize(req.body?.title);
     const description = sanitize(req.body?.description || '');
@@ -317,7 +317,7 @@ router.post('/', authMiddleware, async (req, res) => {
 });
 
 // GET /api/deals/drafts - fetch create-deal draft for current user
-router.get('/drafts', authMiddleware, async (req, res) => {
+router.get('/drafts', authenticateToken, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('preferences');
     const draft = user?.preferences?.drafts?.deals || null;
@@ -329,7 +329,7 @@ router.get('/drafts', authMiddleware, async (req, res) => {
 });
 
 // PUT /api/deals/drafts - save create-deal draft for current user
-router.put('/drafts', authMiddleware, async (req, res) => {
+router.put('/drafts', authenticateToken, async (req, res) => {
   try {
     const incoming = req.body?.draft !== undefined ? req.body.draft : req.body;
     const draft = sanitizeDeep(incoming || null);
@@ -346,7 +346,7 @@ router.put('/drafts', authMiddleware, async (req, res) => {
 });
 
 // DELETE /api/deals/drafts - clear create-deal draft
-router.delete('/drafts', authMiddleware, async (req, res) => {
+router.delete('/drafts', authenticateToken, async (req, res) => {
   try {
     await User.findByIdAndUpdate(req.user.id, { 'preferences.drafts.deals': null, updatedAt: Date.now() }, { new: true });
     res.json({ ok: true, draft: null });
@@ -357,7 +357,7 @@ router.delete('/drafts', authMiddleware, async (req, res) => {
 });
 
 // POST /api/deals/:id/invite - generate counterparty join link (owner-only)
-router.post('/:id/invite', authMiddleware, async (req, res) => {
+router.post('/:id/invite', authenticateToken, async (req, res) => {
   try {
     const deal = await Deal.findOne({ _id: req.params.id, ownerId: req.user.id });
     if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
@@ -422,7 +422,7 @@ router.get('/join', async (req, res) => {
 });
 
 // POST /api/deals/join-authenticated - link invite token to logged-in account
-router.post('/join-authenticated', authMiddleware, async (req, res) => {
+router.post('/join-authenticated', authenticateToken, async (req, res) => {
   try {
     const token = sanitize(req.body?.inviteToken || req.query?.inviteToken || '');
     if (!token) return res.status(400).json({ ok: false, error: 'inviteToken is required' });
@@ -473,7 +473,7 @@ router.post('/join-authenticated', authMiddleware, async (req, res) => {
 });
 
 // POST /api/deals/:id/prepare-escrow - prepare deployment params for escrow on Base
-router.post('/:id/prepare-escrow', authMiddleware, async (req, res) => {
+router.post('/:id/prepare-escrow', authenticateToken, async (req, res) => {
   try {
     const deal = await Deal.findOne({ _id: req.params.id, ownerId: req.user.id });
     if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
@@ -523,7 +523,7 @@ router.post('/:id/prepare-escrow', authMiddleware, async (req, res) => {
 });
 
 // GET /api/deals/:id - get single deal
-router.get('/:id', authMiddleware, async (req, res) => {
+router.get('/:id', authenticateToken, async (req, res) => {
   try {
     const deal = await Deal.findOne({
       _id: req.params.id,
@@ -542,7 +542,7 @@ router.get('/:id', authMiddleware, async (req, res) => {
 });
 
 // PUT /api/deals/:id - update deal
-router.put('/:id', authMiddleware, async (req, res) => {
+router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const deal = await Deal.findOne({ _id: req.params.id, ownerId: req.user.id });
     if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
@@ -683,7 +683,7 @@ router.post('/:id/milestones/:milestoneId/evidence', async (req, res) => {
 });
 
 // GET /api/deals/:id/messages - fetch audit-friendly message log
-router.get('/:id/messages', authMiddleware, async (req, res) => {
+router.get('/:id/messages', authenticateToken, async (req, res) => {
   try {
     const deal = await Deal.findById(req.params.id);
     if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
@@ -697,7 +697,7 @@ router.get('/:id/messages', authMiddleware, async (req, res) => {
 });
 
 // POST /api/deals/:id/escrow/mock-fund - create mock funded state with party confirmation proof
-router.post('/:id/escrow/mock-fund', authMiddleware, async (req, res) => {
+router.post('/:id/escrow/mock-fund', authenticateToken, async (req, res) => {
   try {
     const deal = await Deal.findById(req.params.id);
     if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
@@ -755,7 +755,7 @@ router.post('/:id/escrow/mock-fund', authMiddleware, async (req, res) => {
 });
 
 // POST /api/deals/:id/escrow/confirm-receipt - buyer confirms receipt/authenticity
-router.post('/:id/escrow/confirm-receipt', authMiddleware, async (req, res) => {
+router.post('/:id/escrow/confirm-receipt', authenticateToken, async (req, res) => {
   try {
     const deal = await Deal.findById(req.params.id);
     if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
@@ -788,7 +788,7 @@ router.post('/:id/escrow/confirm-receipt', authMiddleware, async (req, res) => {
 });
 
 // POST /api/deals/:id/escrow/release - release escrow (seller/mediator/admin after buyer confirmation)
-router.post('/:id/escrow/release', authMiddleware, async (req, res) => {
+router.post('/:id/escrow/release', authenticateToken, async (req, res) => {
   try {
     const deal = await Deal.findById(req.params.id);
     if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
@@ -833,7 +833,7 @@ router.post('/:id/escrow/release', authMiddleware, async (req, res) => {
 });
 
 // POST /api/deals/:id/escrow/refund - refund escrow (seller/mediator/admin)
-router.post('/:id/escrow/refund', authMiddleware, async (req, res) => {
+router.post('/:id/escrow/refund', authenticateToken, async (req, res) => {
   try {
     const deal = await Deal.findById(req.params.id);
     if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
@@ -870,7 +870,7 @@ router.post('/:id/escrow/refund', authMiddleware, async (req, res) => {
 });
 
 // POST /api/deals/:id/dispute - open dispute and attach initial evidence
-router.post('/:id/dispute', authMiddleware, async (req, res) => {
+router.post('/:id/dispute', authenticateToken, async (req, res) => {
   try {
     const deal = await Deal.findById(req.params.id);
     if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
@@ -940,7 +940,7 @@ router.post('/:id/dispute', authMiddleware, async (req, res) => {
 });
 
 // POST /api/deals/:id/mediator/auto-assign - assign platform mediator (admin preferred)
-router.post('/:id/mediator/auto-assign', authMiddleware, async (req, res) => {
+router.post('/:id/mediator/auto-assign', authenticateToken, async (req, res) => {
   try {
     const deal = await Deal.findById(req.params.id);
     if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
@@ -976,7 +976,7 @@ router.post('/:id/mediator/auto-assign', authMiddleware, async (req, res) => {
 });
 
 // POST /api/deals/:id/mediator/request-custom - parties can request a trusted third-party mediator
-router.post('/:id/mediator/request-custom', authMiddleware, async (req, res) => {
+router.post('/:id/mediator/request-custom', authenticateToken, async (req, res) => {
   try {
     const deal = await Deal.findById(req.params.id);
     if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
@@ -1022,7 +1022,7 @@ router.post('/:id/mediator/request-custom', authMiddleware, async (req, res) => 
 });
 
 // PUT /api/deals/:id/mediator/approve - admin approves or declines mediator request
-router.put('/:id/mediator/approve', authMiddleware, async (req, res) => {
+router.put('/:id/mediator/approve', authenticateToken, async (req, res) => {
   try {
     if (req.user?.role !== 'admin') {
       return res.status(403).json({ ok: false, error: 'Admin approval required' });
@@ -1088,7 +1088,7 @@ router.put('/:id/mediator/approve', authMiddleware, async (req, res) => {
 });
 
 // PUT /api/deals/:id/dispute/resolve - mediator/admin resolution
-router.put('/:id/dispute/resolve', authMiddleware, async (req, res) => {
+router.put('/:id/dispute/resolve', authenticateToken, async (req, res) => {
   try {
     const deal = await Deal.findById(req.params.id);
     if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
@@ -1155,7 +1155,7 @@ router.put('/:id/dispute/resolve', authMiddleware, async (req, res) => {
 });
 
 // GET /api/deals/:id/reports/resolution-certificate - export compact signed-ish certificate for a resolved dispute
-router.get('/:id/reports/resolution-certificate', authMiddleware, async (req, res) => {
+router.get('/:id/reports/resolution-certificate', authenticateToken, async (req, res) => {
   try {
     const deal = await Deal.findById(req.params.id);
     if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
@@ -1198,7 +1198,7 @@ router.get('/:id/reports/resolution-certificate', authMiddleware, async (req, re
 });
 
 // GET /api/deals/:id/reports/export-bundle - combined dispute/certificate/export artifact
-router.get('/:id/reports/export-bundle', authMiddleware, async (req, res) => {
+router.get('/:id/reports/export-bundle', authenticateToken, async (req, res) => {
   try {
     const deal = await Deal.findById(req.params.id);
     if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
@@ -1288,7 +1288,7 @@ router.get('/:id/reports/export-bundle', authMiddleware, async (req, res) => {
 });
 
 // GET /api/deals/:id/dispute - fetch dispute details for deal participants
-router.get('/:id/dispute', authMiddleware, async (req, res) => {
+router.get('/:id/dispute', authenticateToken, async (req, res) => {
   try {
     const deal = await Deal.findById(req.params.id);
     if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
@@ -1304,7 +1304,7 @@ router.get('/:id/dispute', authMiddleware, async (req, res) => {
 });
 
 // POST /api/deals/:id/dispute/evidence - append dispute evidence from a participant
-router.post('/:id/dispute/evidence', authMiddleware, async (req, res) => {
+router.post('/:id/dispute/evidence', authenticateToken, async (req, res) => {
   try {
     const deal = await Deal.findById(req.params.id);
     if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
@@ -1349,7 +1349,7 @@ router.post('/:id/dispute/evidence', authMiddleware, async (req, res) => {
 });
 
 // POST /api/deals/:id/reports/fraud-packet - generate packet and optionally record outbound dispatch targets
-router.post('/:id/reports/fraud-packet', authMiddleware, async (req, res) => {
+router.post('/:id/reports/fraud-packet', authenticateToken, async (req, res) => {
   try {
     const deal = await Deal.findById(req.params.id);
     if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
@@ -1434,7 +1434,7 @@ router.post('/:id/reports/fraud-packet', authMiddleware, async (req, res) => {
 });
 
 // GET /api/deals/:id/reports/outbound-queue - fetch outbound dispatch queue
-router.get('/:id/reports/outbound-queue', authMiddleware, async (req, res) => {
+router.get('/:id/reports/outbound-queue', authenticateToken, async (req, res) => {
   try {
     const deal = await Deal.findById(req.params.id);
     if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
@@ -1457,7 +1457,7 @@ router.get('/:id/reports/outbound-queue', authMiddleware, async (req, res) => {
 });
 
 // PUT /api/deals/:id/reports/outbound/:packetId/status - admin marks dispatch status
-router.put('/:id/reports/outbound/:packetId/status', authMiddleware, async (req, res) => {
+router.put('/:id/reports/outbound/:packetId/status', authenticateToken, async (req, res) => {
   try {
     if (req.user?.role !== 'admin') {
       return res.status(403).json({ ok: false, error: 'Admin privileges required' });
@@ -1505,7 +1505,7 @@ router.put('/:id/reports/outbound/:packetId/status', authMiddleware, async (req,
 
 // POST /api/deals/quick/initiate - create deal and send initial contact email
 // Simple workflow: reach out to counterparty with amount, description, and contact method
-router.post('/quick/initiate', authMiddleware, async (req, res) => {
+router.post('/quick/initiate', authenticateToken, async (req, res) => {
   try {
     const { counterpartyEmail, counterpartyName, amount, currency = 'USD', description, contactMethod = 'email' } = req.body || {};
     
@@ -1579,7 +1579,7 @@ router.post('/quick/initiate', authMiddleware, async (req, res) => {
 });
 
 // POST /api/deals/:id/quick/accept - counterparty accepts and provides payment/crypto info
-router.post('/:id/quick/accept', authMiddleware, async (req, res) => {
+router.post('/:id/quick/accept', authenticateToken, async (req, res) => {
   try {
     const { walletAddress, paymentMethod = 'crypto', additionalInfo = '' } = req.body || {};
     
@@ -1637,7 +1637,7 @@ router.post('/:id/quick/accept', authMiddleware, async (req, res) => {
 });
 
 // POST /api/deals/:id/quick/mock-confirm - both parties confirm mock payment (sends confirmation emails)
-router.post('/:id/quick/mock-confirm', authMiddleware, async (req, res) => {
+router.post('/:id/quick/mock-confirm', authenticateToken, async (req, res) => {
   try {
     const deal = await Deal.findById(req.params.id);
     if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });

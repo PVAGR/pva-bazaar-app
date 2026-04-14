@@ -9,7 +9,7 @@
 const express = require('express');
 const router = express.Router();
 const Order = require('../models/Order');
-const auth = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
 const adminSession = require('../middleware/adminSession');
 
 /**

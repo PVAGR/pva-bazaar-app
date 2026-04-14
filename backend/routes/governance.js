@@ -2,7 +2,7 @@ const express = require('express');
 const crypto = require('crypto');
 const { Web3 } = require('web3');
 const mongoose = require('mongoose');
-const { authMiddleware } = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
 const adminOnly = require('../middleware/adminOnly');
 const GovernanceProposal = require('../models/GovernanceProposal');
 const GovernanceAdminResponse = require('../models/GovernanceAdminResponse');
@@ -243,7 +243,7 @@ router.get('/admin-responses', async (_req, res) => {
   }
 });
 
-router.get('/admin-responses/sync-health', authMiddleware, adminOnly, async (_req, res) => {
+router.get('/admin-responses/sync-health', authenticateToken, adminOnly, async (_req, res) => {
   try {
     const responses = await GovernanceAdminResponse.find({})
       .sort({ updatedAt: -1 })
@@ -310,7 +310,7 @@ router.get('/admin-responses/sync-health', authMiddleware, adminOnly, async (_re
   }
 });
 
-router.post('/admin-responses/:proposalId/repair-lifecycle', authMiddleware, adminOnly, async (req, res) => {
+router.post('/admin-responses/:proposalId/repair-lifecycle', authenticateToken, adminOnly, async (req, res) => {
   try {
     const proposalId = sanitize(req.params?.proposalId);
     if (!proposalId) {
@@ -353,7 +353,7 @@ router.post('/admin-responses/:proposalId/repair-lifecycle', authMiddleware, adm
   }
 });
 
-router.put('/admin-responses/:proposalId', authMiddleware, adminOnly, async (req, res) => {
+router.put('/admin-responses/:proposalId', authenticateToken, adminOnly, async (req, res) => {
   try {
     const proposalId = sanitize(req.params?.proposalId);
     if (!proposalId) {
@@ -445,7 +445,7 @@ router.get('/proposals/:proposalId/execution/timeline', async (req, res) => {
   }
 });
 
-router.post('/proposals/:proposalId/execution/updates', authMiddleware, async (req, res) => {
+router.post('/proposals/:proposalId/execution/updates', authenticateToken, async (req, res) => {
   try {
     if (!isCommitteeMember(req)) {
       return res.status(403).json({ ok: false, error: 'Only committee members can post execution updates' });
@@ -548,7 +548,7 @@ router.post('/proposals/:proposalId/execution/updates', authMiddleware, async (r
   }
 });
 
-router.post('/proposals', authMiddleware, async (req, res) => {
+router.post('/proposals', authenticateToken, async (req, res) => {
   try {
     const walletAddress = await getVerifiedWalletForUser(req.user.id);
     if (!walletAddress) {
@@ -618,7 +618,7 @@ router.get('/proposals/:proposalId', async (req, res) => {
   }
 });
 
-router.post('/proposals/:proposalId/support', authMiddleware, async (req, res) => {
+router.post('/proposals/:proposalId/support', authenticateToken, async (req, res) => {
   try {
     const walletAddress = await getVerifiedWalletForUser(req.user.id);
     if (!walletAddress) {
@@ -664,7 +664,7 @@ router.post('/proposals/:proposalId/support', authMiddleware, async (req, res) =
   }
 });
 
-router.post('/proposals/:proposalId/queue', authMiddleware, async (req, res) => {
+router.post('/proposals/:proposalId/queue', authenticateToken, async (req, res) => {
   try {
     if (!isCommitteeMember(req)) {
       return res.status(403).json({ ok: false, error: 'Only committee members can queue proposals' });
@@ -704,7 +704,7 @@ router.post('/proposals/:proposalId/queue', authMiddleware, async (req, res) => 
   }
 });
 
-router.post('/proposals/:proposalId/status', authMiddleware, async (req, res) => {
+router.post('/proposals/:proposalId/status', authenticateToken, async (req, res) => {
   try {
     if (!isCommitteeMember(req)) {
       return res.status(403).json({ ok: false, error: 'Only committee members can change proposal status' });
@@ -792,7 +792,7 @@ router.post('/proposals/:proposalId/status', authMiddleware, async (req, res) =>
   }
 });
 
-router.post('/proposals/:proposalId/outcome', authMiddleware, async (req, res) => {
+router.post('/proposals/:proposalId/outcome', authenticateToken, async (req, res) => {
   try {
     if (!isCommitteeMember(req)) {
       return res.status(403).json({ ok: false, error: 'Only committee members can publish outcomes' });
@@ -844,7 +844,7 @@ router.post('/proposals/:proposalId/outcome', authMiddleware, async (req, res) =
   }
 });
 
-router.post('/wallet/challenge', authMiddleware, async (req, res) => {
+router.post('/wallet/challenge', authenticateToken, async (req, res) => {
   try {
     const walletAddress = normalizeWalletAddress(req.body?.walletAddress);
     if (!walletAddress) {
@@ -876,7 +876,7 @@ router.post('/wallet/challenge', authMiddleware, async (req, res) => {
   }
 });
 
-router.post('/wallet/verify', authMiddleware, async (req, res) => {
+router.post('/wallet/verify', authenticateToken, async (req, res) => {
   try {
     const walletAddress = normalizeWalletAddress(req.body?.walletAddress);
     const nonce = sanitize(req.body?.nonce);
@@ -929,7 +929,7 @@ router.post('/wallet/verify', authMiddleware, async (req, res) => {
   }
 });
 
-router.post('/proposals/:proposalId/votes/onchain', authMiddleware, async (req, res) => {
+router.post('/proposals/:proposalId/votes/onchain', authenticateToken, async (req, res) => {
   try {
     const proposal = await GovernanceProposal.findById(req.params.proposalId);
     if (!proposal) {

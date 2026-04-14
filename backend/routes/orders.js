@@ -7,10 +7,10 @@ const ProvenanceReviewLog = require('../models/ProvenanceReviewLog');
 const stripe = require("../lib/stripeClient");
 const { requireAdmin } = require("../middleware/adminOnly");
 const { createTransactionEvent, dispatchToOpenClaw } = require('../utils/openclaw-events');
-const { authMiddleware } = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
 
 // GET /api/orders/mine (authenticated user - user's own orders)
-router.get('/mine', authMiddleware, async (req, res) => {
+router.get('/mine', authenticateToken, async (req, res) => {
   try {
     const limit = Math.min(Number(req.query.limit) || 25, 100);
     const cursor = req.query.cursor;
@@ -45,7 +45,7 @@ router.get('/mine', authMiddleware, async (req, res) => {
 });
 
 // GET /api/orders/escrow (authenticated user - user's escrow transactions)
-router.get('/escrow', authMiddleware, async (req, res) => {
+router.get('/escrow', authenticateToken, async (req, res) => {
   try {
     const limit = Math.min(Number(req.query.limit) || 25, 100);
 

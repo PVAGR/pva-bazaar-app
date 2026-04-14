@@ -1,5 +1,5 @@
 const express = require('express');
-const auth = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
 const Proposal = require('../models/Proposal');
 const User = require('../models/User');
 const requireVerifiedCitizen = require('../middleware/verifiedCitizenOnly');
@@ -91,7 +91,7 @@ router.get('/proposals', async (req, res) => {
 });
 
 // Own submissions (must come before :proposalId route)
-router.get('/proposals/my/submissions', auth, requireVerifiedCitizen, async (req, res) => {
+router.get('/proposals/my/submissions', authenticateToken, requireVerifiedCitizen, async (req, res) => {
   try {
     const items = await Proposal.find({ submittedBy: req.user.id })
       .sort({ updatedAt: -1 })
@@ -122,7 +122,7 @@ router.get('/proposals/:proposalId', async (req, res) => {
 });
 
 // Create draft proposal
-router.post('/proposals', auth, requireVerifiedCitizen, async (req, res) => {
+router.post('/proposals', authenticateToken, requireVerifiedCitizen, async (req, res) => {
   try {
     const payload = {
       title: String(req.body?.title || '').trim(),
@@ -147,7 +147,7 @@ router.post('/proposals', auth, requireVerifiedCitizen, async (req, res) => {
 });
 
 // Publish own draft
-router.post('/proposals/:proposalId/publish', auth, requireVerifiedCitizen, async (req, res) => {
+router.post('/proposals/:proposalId/publish', authenticateToken, requireVerifiedCitizen, async (req, res) => {
   try {
     const proposalId = String(req.params.proposalId || '').trim().toUpperCase();
     const item = await Proposal.findOne({ proposalId });
@@ -173,7 +173,7 @@ router.post('/proposals/:proposalId/publish', auth, requireVerifiedCitizen, asyn
 });
 
 // Endorse proposal
-router.post('/proposals/:proposalId/endorse', auth, requireVerifiedCitizen, async (req, res) => {
+router.post('/proposals/:proposalId/endorse', authenticateToken, requireVerifiedCitizen, async (req, res) => {
   try {
     const proposalId = String(req.params.proposalId || '').trim().toUpperCase();
     const item = await Proposal.findOne({ proposalId });
@@ -209,7 +209,7 @@ router.post('/proposals/:proposalId/endorse', auth, requireVerifiedCitizen, asyn
 });
 
 // Remove endorsement
-router.delete('/proposals/:proposalId/endorse', auth, requireVerifiedCitizen, async (req, res) => {
+router.delete('/proposals/:proposalId/endorse', authenticateToken, requireVerifiedCitizen, async (req, res) => {
   try {
     const proposalId = String(req.params.proposalId || '').trim().toUpperCase();
     const item = await Proposal.findOne({ proposalId });
@@ -241,7 +241,7 @@ router.delete('/proposals/:proposalId/endorse', auth, requireVerifiedCitizen, as
 });
 
 // Admin: list threshold-reached proposals
-router.get('/admin/proposals/endorsed', auth, requireAdminSecretariat, async (req, res) => {
+router.get('/admin/proposals/endorsed', authenticateToken, requireAdminSecretariat, async (req, res) => {
   try {
     const items = await Proposal.find({
       thresholdReachedAt: { $ne: null },
@@ -257,7 +257,7 @@ router.get('/admin/proposals/endorsed', auth, requireAdminSecretariat, async (re
 });
 
 // Admin: official response
-router.post('/admin/proposals/:proposalId/respond', auth, requireAdminSecretariat, async (req, res) => {
+router.post('/admin/proposals/:proposalId/respond', authenticateToken, requireAdminSecretariat, async (req, res) => {
   try {
     const proposalId = String(req.params.proposalId || '').trim().toUpperCase();
     const item = await Proposal.findOne({ proposalId });
@@ -281,7 +281,7 @@ router.post('/admin/proposals/:proposalId/respond', auth, requireAdminSecretaria
 });
 
 // Admin: override status
-router.put('/admin/proposals/:proposalId/status', auth, requireAdminSecretariat, async (req, res) => {
+router.put('/admin/proposals/:proposalId/status', authenticateToken, requireAdminSecretariat, async (req, res) => {
   try {
     const proposalId = String(req.params.proposalId || '').trim().toUpperCase();
     const status = String(req.body?.status || '').trim();
@@ -300,7 +300,7 @@ router.put('/admin/proposals/:proposalId/status', auth, requireAdminSecretariat,
 });
 
 // Admin: set execution project
-router.post('/admin/proposals/:proposalId/execution', auth, requireAdminSecretariat, async (req, res) => {
+router.post('/admin/proposals/:proposalId/execution', authenticateToken, requireAdminSecretariat, async (req, res) => {
   try {
     const proposalId = String(req.params.proposalId || '').trim().toUpperCase();
     const item = await Proposal.findOne({ proposalId });
