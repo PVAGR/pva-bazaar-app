@@ -52,6 +52,14 @@ export default function CreatorPortalPage() {
             Open my listings
           </Link>
         </article>
+
+        <article className="creator-card">
+          <h2>5. Review royalties</h2>
+          <p>Open the creator royalty dashboard to inspect earnings, secondary sales, and platform breakdowns.</p>
+          <Link to={authenticated ? '/creator/dashboard' : '/login?next=%2Fcreator%2Fdashboard'} className="creator-btn">
+            Open royalty dashboard
+          </Link>
+        </article>
       </div>
 
       <SellerFAQ />

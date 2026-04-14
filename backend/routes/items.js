@@ -143,6 +143,23 @@ function verifyFeedSignature(payload, signature) {
   };
 }
 
+function getTraderIdentityMissingFields(user) {
+  const compliance = user?.onboardingProfile?.compliance || {};
+  const checks = [
+    ['legalFullName', compliance.legalFullName],
+    ['legalIdType', compliance.legalIdType],
+    ['legalIdNumber', compliance.legalIdNumber],
+    ['addressLine1', compliance.addressLine1],
+    ['city', compliance.city],
+    ['postalCode', compliance.postalCode],
+    ['country', compliance.country],
+    ['phone', compliance.phone],
+    ['identityAttested', compliance.identityAttested === true ? 'true' : ''],
+  ];
+
+  return checks.filter(([, value]) => !String(value || '').trim()).map(([field]) => field);
+}
+
 async function getLiveOnChainState({ contractAddress, tokenId }) {
   const normalizedContract = String(contractAddress || '').trim();
   const normalizedTokenId = String(tokenId || '').trim();
@@ -721,7 +738,30 @@ router.post('/register', authenticateToken, async (req, res) => {
       return res.status(400).json({ ok: false, error: 'One or more images are too large. Please upload smaller files.' });
     }
 
-    const user = await User.findById(req.user.id).select('name email');
+    const user = await User.findById(req.user.id).select('name email onboardingProfile');
+    if (!user) {
+      return res.status(401).json({ ok: false, error: 'User account not found' });
+    }
+
+    const tradingRestricted = Boolean(user?.onboardingProfile?.trustAndSafety?.tradingRestricted);
+    if (tradingRestricted) {
+      return res.status(403).json({
+        ok: false,
+        error: 'Trading is currently restricted for this account. Contact support to resolve this case.',
+        code: 'TRADING_RESTRICTED',
+      });
+    }
+
+    const missingIdentity = getTraderIdentityMissingFields(user);
+    if (missingIdentity.length > 0) {
+      return res.status(403).json({
+        ok: false,
+        error: 'Trader identity profile is incomplete. Complete legal identity fields before listing items.',
+        code: 'TRADER_IDENTITY_REQUIRED',
+        missingFields: missingIdentity,
+      });
+    }
+
     const requestedSyndication = normalizeSyndicationInput(syndication);
 
     // Prepare artifact data

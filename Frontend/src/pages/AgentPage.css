@@ -53,6 +53,16 @@
   margin-bottom: var(--spacing-lg, 24px);
 }
 
+.agent-onboarding-banner {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--site-border, rgba(255, 255, 255, 0.12));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--site-accent, #00d9ff) 9%, transparent);
+  color: var(--site-text, #e0f2f1);
+  font-size: 0.9rem;
+}
+
 .agent-page__about {
   margin-bottom: var(--spacing-lg, 24px);
 }

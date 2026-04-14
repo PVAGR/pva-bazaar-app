@@ -1,7 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { fetchMarketplaceItem, createCheckoutSession, createMarketplaceInquiry } from "../lib/api";
+import {
+  fetchMarketplaceItem,
+  createCheckoutSession,
+  createMarketplaceInquiry,
+  fetchCryptoCheckoutConfig,
+  prepareCryptoCheckout,
+  confirmCryptoCheckoutPayment,
+} from "../lib/api";
 import "./MarketplaceItemPage.css";
 
 const PLACEHOLDER = "/placeholder.png";
@@ -34,6 +41,16 @@ export default function MarketplaceItemPage() {
     reservationRequested: false,
     message: "",
   });
+  const [cryptoConfig, setCryptoConfig] = useState(null);
+  const [cryptoConfigError, setCryptoConfigError] = useState("");
+  const [preparingCrypto, setPreparingCrypto] = useState(false);
+  const [cryptoCheckout, setCryptoCheckout] = useState(null);
+  const [confirmingCrypto, setConfirmingCrypto] = useState(false);
+  const [cryptoBuyerWallet, setCryptoBuyerWallet] = useState("");
+  const [cryptoBuyerEmail, setCryptoBuyerEmail] = useState("");
+  const [cryptoTxHash, setCryptoTxHash] = useState("");
+  const [cryptoError, setCryptoError] = useState("");
+  const [cryptoSuccess, setCryptoSuccess] = useState("");
 
   useEffect(() => {
     let mounted = true;
@@ -51,6 +68,23 @@ export default function MarketplaceItemPage() {
     });
     return () => { mounted = false; };
   }, [slugOrId]);
+
+  useEffect(() => {
+    let mounted = true;
+    fetchCryptoCheckoutConfig().then((res) => {
+      if (!mounted) return;
+      if (res.ok) {
+        setCryptoConfig(res);
+        setCryptoConfigError("");
+      } else {
+        setCryptoConfig(null);
+        setCryptoConfigError(res.error || "Crypto checkout config unavailable.");
+      }
+    });
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   if (loading) return <div className="marketplace-item-page"><div className="loading">Loading...</div></div>;
   if (error || !item) return <div className="marketplace-item-page"><div className="error">{error || "Item not found"}</div></div>;
@@ -100,6 +134,74 @@ export default function MarketplaceItemPage() {
     setInquiryForm((prev) => ({
       ...prev,
       message: "",
+    }));
+  };
+
+  const formatEthFromWei = (weiValue) => {
+    const raw = String(weiValue || "0").trim();
+    if (!/^\d+$/.test(raw)) return "0";
+    const padded = raw.padStart(19, "0");
+    const whole = padded.slice(0, -18).replace(/^0+/, "") || "0";
+    const fractional = padded.slice(-18).replace(/0+$/, "");
+    return fractional ? `${whole}.${fractional}` : whole;
+  };
+
+  const copyText = async (value) => {
+    if (!value) return;
+    try {
+      if (globalThis?.navigator?.clipboard?.writeText) {
+        await globalThis.navigator.clipboard.writeText(value);
+      }
+    } catch (_) {
+      // Clipboard access can be denied in some browsers; ignore silently.
+    }
+  };
+
+  const handlePrepareCrypto = async () => {
+    setCryptoError("");
+    setCryptoSuccess("");
+    setCryptoCheckout(null);
+    setCryptoTxHash("");
+    setPreparingCrypto(true);
+    const response = await prepareCryptoCheckout({
+      itemId: item.id,
+      buyerWallet: cryptoBuyerWallet,
+      buyerEmail: cryptoBuyerEmail,
+    });
+    setPreparingCrypto(false);
+    if (!response.ok) {
+      setCryptoError(response.error || "Failed to prepare crypto checkout.");
+      return;
+    }
+    setCryptoCheckout(response);
+  };
+
+  const handleConfirmCrypto = async () => {
+    if (!cryptoCheckout?.orderId) {
+      setCryptoError("Prepare crypto checkout first.");
+      return;
+    }
+    if (!cryptoTxHash.trim()) {
+      setCryptoError("Enter your transaction hash to confirm payment.");
+      return;
+    }
+    setCryptoError("");
+    setCryptoSuccess("");
+    setConfirmingCrypto(true);
+    const response = await confirmCryptoCheckoutPayment({
+      orderId: cryptoCheckout.orderId,
+      txHash: cryptoTxHash.trim(),
+      buyerWallet: cryptoBuyerWallet,
+    });
+    setConfirmingCrypto(false);
+    if (!response.ok) {
+      setCryptoError(response.error || "Failed to confirm crypto payment.");
+      return;
+    }
+    setCryptoSuccess("Crypto payment confirmed. Your order is now finalized.");
+    setCryptoCheckout((prev) => ({
+      ...(prev || {}),
+      explorerUrl: response.explorerUrl || "",
     }));
   };
 
@@ -270,6 +372,101 @@ export default function MarketplaceItemPage() {
           >
             {buying ? "Redirecting..." : "Buy"}
           </button>
+
+          <section className="item-crypto-panel" aria-label="Crypto checkout">
+            <h2>Buy With Crypto</h2>
+            {cryptoConfig?.available ? (
+              <>
+                <p className="item-crypto-note">
+                  Send crypto to the wallet below, then submit your transaction hash to finalize this purchase.
+                </p>
+                <div className="item-crypto-destination">
+                  <span>Treasury wallet</span>
+                  <strong>{cryptoConfig.recipientAddress}</strong>
+                  <button type="button" className="item-copy-btn" onClick={() => copyText(cryptoConfig.recipientAddress)}>Copy</button>
+                </div>
+                <div className="item-crypto-meta">
+                  <span>Network: {cryptoConfig.network}</span>
+                  <span>Chain ID: {cryptoConfig.chainId}</span>
+                  <span>Quote: 1 ETH ≈ ${cryptoConfig.quoteUsdPerEth.toLocaleString()}</span>
+                </div>
+
+                <div className="item-crypto-form-grid">
+                  <input
+                    type="text"
+                    placeholder="Your wallet address (optional)"
+                    value={cryptoBuyerWallet}
+                    onChange={(e) => setCryptoBuyerWallet(e.target.value)}
+                  />
+                  <input
+                    type="email"
+                    placeholder="Your email (optional)"
+                    value={cryptoBuyerEmail}
+                    onChange={(e) => setCryptoBuyerEmail(e.target.value)}
+                  />
+                </div>
+                <button
+                  type="button"
+                  className="buy-btn buy-btn-crypto"
+                  disabled={preparingCrypto || !item.id}
+                  onClick={handlePrepareCrypto}
+                >
+                  {preparingCrypto ? "Preparing crypto checkout..." : "Prepare Crypto Checkout"}
+                </button>
+
+                {cryptoCheckout?.orderId ? (
+                  <div className="item-crypto-prepared">
+                    <div className="item-crypto-destination">
+                      <span>Pay this exact amount</span>
+                      <strong>{formatEthFromWei(cryptoCheckout.amountWei)} ETH</strong>
+                      <button type="button" className="item-copy-btn" onClick={() => copyText(formatEthFromWei(cryptoCheckout.amountWei))}>Copy</button>
+                    </div>
+                    <div className="item-crypto-destination">
+                      <span>Amount in wei</span>
+                      <strong>{cryptoCheckout.amountWei}</strong>
+                      <button type="button" className="item-copy-btn" onClick={() => copyText(cryptoCheckout.amountWei)}>Copy</button>
+                    </div>
+                    <div className="item-crypto-destination">
+                      <span>Memo</span>
+                      <strong>{cryptoCheckout.memo}</strong>
+                      <button type="button" className="item-copy-btn" onClick={() => copyText(cryptoCheckout.memo)}>Copy</button>
+                    </div>
+                    <p className="item-crypto-note">Order reference: {cryptoCheckout.orderId}</p>
+
+                    <div className="item-crypto-form-grid">
+                      <input
+                        type="text"
+                        placeholder="Transaction hash"
+                        value={cryptoTxHash}
+                        onChange={(e) => setCryptoTxHash(e.target.value)}
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      className="buy-btn buy-btn-crypto"
+                      disabled={confirmingCrypto}
+                      onClick={handleConfirmCrypto}
+                    >
+                      {confirmingCrypto ? "Confirming payment..." : "Confirm Crypto Payment"}
+                    </button>
+
+                    {cryptoCheckout.explorerUrl ? (
+                      <a href={cryptoCheckout.explorerUrl} target="_blank" rel="noreferrer" className="item-crypto-link">
+                        View transaction on explorer
+                      </a>
+                    ) : null}
+                  </div>
+                ) : null}
+              </>
+            ) : (
+              <p className="item-crypto-note error">
+                {cryptoConfigError || "Crypto checkout is not available right now."}
+              </p>
+            )}
+
+            {cryptoError ? <div className="item-inquiry-error">{cryptoError}</div> : null}
+            {cryptoSuccess ? <div className="item-inquiry-success">{cryptoSuccess}</div> : null}
+          </section>
         </section>
       </div>
     </div>

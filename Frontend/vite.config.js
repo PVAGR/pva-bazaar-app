@@ -26,8 +26,49 @@ export default defineConfig({
     rollupOptions: {
       external: ['fsevents'],
       output: {
-        manualChunks(id, { getModuleInfo }) {
+        manualChunks(id) {
+          if (id.includes('/src/components/governance/') || id.includes('/src/store/governanceStore')) {
+            return 'governance';
+          }
+
+          if (id.includes('/src/components/AgentChat') || id.includes('/src/pages/AgentPage')) {
+            return 'agent';
+          }
+
           if (id.includes('node_modules')) {
+            if (id.includes('react-router') || id.includes('react-dom') || id.includes('/react/')) {
+              return 'react-core';
+            }
+
+            if (id.includes('zustand') || id.includes('axios')) {
+              return 'state-network';
+            }
+
+            if (id.includes('chart.js') || id.includes('react-chartjs-2')) {
+              return 'charts-core';
+            }
+
+            if (id.includes('recharts') || id.includes('/d3-')) {
+              return 'charts-recharts';
+            }
+
+            if (
+              id.includes('react-markdown')
+              || id.includes('rehype-sanitize')
+              || id.includes('mermaid')
+              || id.includes('es-toolkit')
+            ) {
+              return 'content-render';
+            }
+
+            if (id.includes('@solana/web3.js')) {
+              return 'solana';
+            }
+
+            if (id.includes('framer-motion')) {
+              return 'motion';
+            }
+
             return 'vendor';
           }
         }

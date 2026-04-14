@@ -11,8 +11,38 @@ const STEPS = ['Basic Info', 'Pricing', 'Images', 'Syndication'];
 const SYNDICATION_CHANNELS = ['facebook', 'etsy', 'ebay'];
 const NEEDS_ATTENTION_STATUSES = new Set(['failed', 'manual_required']);
 
+const COMPLIANCE_FIELD_LABELS = {
+  legalFullName: 'legal full name',
+  legalIdType: 'government ID type',
+  legalIdNumber: 'government ID number',
+  addressLine1: 'address line 1',
+  city: 'city',
+  postalCode: 'postal code',
+  country: 'country',
+  phone: 'phone',
+  identityAttested: 'identity attestation checkbox',
+};
+
 const CATEGORY_OPTIONS = ['clothing', 'electronics', 'home', 'art', 'jewelry', 'other'];
 const CONDITION_OPTIONS = ['new', 'like-new', 'used', 'used-fair', 'vintage'];
+
+function formatListingSubmissionError(result) {
+  if (result?.code === 'TRADING_RESTRICTED') {
+    return 'Your account is currently restricted from trading. Contact support to resolve this before creating listings or shops.';
+  }
+
+  if (result?.code === 'TRADER_IDENTITY_REQUIRED') {
+    const missing = (result?.missingFields || [])
+      .map((field) => COMPLIANCE_FIELD_LABELS[field] || field)
+      .join(', ');
+    if (missing) {
+      return `Complete your trader identity profile first. Missing: ${missing}. You can update this in onboarding.`;
+    }
+    return 'Complete your trader identity profile first before creating listings or shops.';
+  }
+
+  return result?.error || 'Failed to create listing';
+}
 
 export default function ListItemPage() {
   const navigate = useNavigate();
@@ -221,7 +251,7 @@ export default function ListItemPage() {
     setSubmitting(false);
 
     if (!res.ok) {
-      setError(res.error || 'Failed to create listing');
+      setError(formatListingSubmissionError(res));
       return;
     }
 

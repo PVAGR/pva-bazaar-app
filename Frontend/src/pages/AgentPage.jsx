@@ -1,9 +1,28 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
-import AgentChat from '../components/AgentChat';
+import { useLocation } from 'react-router-dom';
+import AgentChat from '../components/AgentChat.jsx';
 import './AgentPage.css';
 
 export default function AgentPage() {
+  const location = useLocation();
+  const params = new globalThis.URLSearchParams(location.search || '');
+  const onboardingEntry = params.get('onboarding') === '1';
+  const focus = params.get('focus') || '';
+  const tags = params.get('tags') || '';
+  const journey = params.get('journey') || '';
+  const starter = params.get('starter') || '';
+
+  const initialInput = onboardingEntry
+    ? (starter || [
+      'I am entering from onboarding.',
+      focus ? `Focus: ${focus}.` : '',
+      tags ? `Tags: ${tags}.` : '',
+      journey ? `Journey: ${journey.slice(0, 240)}` : '',
+      'Help me plan my first contribution in the community.',
+    ].filter(Boolean).join(' '))
+    : '';
+
   return (
     <>
       <Helmet>
@@ -38,7 +57,12 @@ export default function AgentPage() {
         </section>
 
         <section className="agent-page__chat section-card">
-          <AgentChat />
+          {onboardingEntry ? (
+            <div className="agent-onboarding-banner" role="status">
+              <strong>Onboarding context loaded.</strong> Your first message is prefilled with your path and journey. Edit it if needed, then send.
+            </div>
+          ) : null}
+          <AgentChat initialInput={initialInput} />
         </section>
 
         <section className="agent-page__about section-card">

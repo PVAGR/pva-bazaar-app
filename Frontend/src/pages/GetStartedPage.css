@@ -1,0 +1,159 @@
+.get-started {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.get-started__hero {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 1rem;
+}
+
+.get-started__hero h1 {
+  margin: 0.4rem 0 0.55rem;
+  font-size: clamp(1.5rem, 2.4vw, 2rem);
+}
+
+.get-started__hero p {
+  margin: 0;
+  line-height: 1.6;
+  color: var(--site-text-muted, var(--site-text));
+}
+
+.get-started__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.get-started__signup {
+  border: 1px solid var(--site-border);
+  border-radius: var(--radius-lg, 14px);
+  background: var(--site-panel-bg, var(--site-panel));
+  padding: 0.85rem;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.get-started__signup h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.get-started__signup p {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.get-started__form {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.get-started__form label {
+  display: grid;
+  gap: 0.3rem;
+  font-size: 0.92rem;
+}
+
+.get-started__form input {
+  border: 1px solid var(--site-border);
+  border-radius: var(--radius-sm, 8px);
+  background: color-mix(in srgb, var(--site-panel-bg, var(--site-panel)) 86%, transparent);
+  color: var(--site-text);
+  padding: 0.52rem 0.65rem;
+}
+
+.get-started__form select {
+  border: 1px solid var(--site-border);
+  border-radius: var(--radius-sm, 8px);
+  background: color-mix(in srgb, var(--site-panel-bg, var(--site-panel)) 86%, transparent);
+  color: var(--site-text);
+  padding: 0.52rem 0.65rem;
+}
+
+.get-started__form input:focus {
+  outline: 2px solid var(--site-accent);
+  outline-offset: 1px;
+}
+
+.get-started__form select:focus {
+  outline: 2px solid var(--site-accent);
+  outline-offset: 1px;
+}
+
+.get-started__section {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.get-started__sectionHead h2 {
+  margin: 0;
+}
+
+.get-started__sectionHead p {
+  margin: 0.3rem 0 0;
+  color: var(--site-text-muted, var(--site-text));
+}
+
+.get-started__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.85rem;
+}
+
+.get-started__card {
+  border: 1px solid var(--site-border);
+  background: var(--site-panel-bg, var(--site-panel));
+  border-radius: var(--radius-lg, 14px);
+  padding: 0.85rem;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.get-started__card h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.get-started__card h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.get-started__card p {
+  margin: 0;
+  color: var(--site-text-muted, var(--site-text));
+  line-height: 1.45;
+  font-size: 0.94rem;
+}
+
+.get-started__card a {
+  color: var(--site-accent);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.get-started__card a:hover {
+  text-decoration: underline;
+}
+
+.get-started__steps {
+  margin: 0;
+  padding-left: 1.15rem;
+  display: grid;
+  gap: 0.45rem;
+  color: var(--site-text-muted, var(--site-text));
+}
+
+@media (max-width: 640px) {
+  .get-started {
+    gap: 1rem;
+  }
+
+  .get-started__hero {
+    grid-template-columns: 1fr;
+  }
+}

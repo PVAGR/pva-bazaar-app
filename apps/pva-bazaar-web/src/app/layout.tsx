@@ -54,6 +54,9 @@ export default function RootLayout({
                 </span>
               </Link>
               <div className="flex items-center gap-6 text-xs font-medium text-zinc-400">
+                <Link href="/get-started" className="hover:text-amber-300">
+                  Get Started
+                </Link>
                 <Link href="/archive" className="hover:text-amber-300">
                   Archive
                 </Link>

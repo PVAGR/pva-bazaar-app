@@ -22,6 +22,8 @@ const PUBLIC_FIELDS = [
   'votesCast',
   'joinedCivilizationAt',
   'pvaReputation',
+  'onboardingProfile.trustAndSafety.publicSafetyNotice',
+  'onboardingProfile.trustAndSafety.tradingRestricted',
 ].join(' ');
 
 const PRIVATE_FIELDS = `${PUBLIC_FIELDS} walletAddress bazBalance email username walletBindingChallenge auditHistory approvalHistory`;
@@ -111,6 +113,8 @@ function sanitizeProfile(userDoc) {
     credentialVersion: Number(userDoc.credentialVersion || 0),
     claims: Array.isArray(userDoc.claims) ? userDoc.claims : [],
     eligibility: deriveEligibility(userDoc),
+    publicSafetyNotice: userDoc?.onboardingProfile?.trustAndSafety?.publicSafetyNotice || '',
+    tradingRestricted: Boolean(userDoc?.onboardingProfile?.trustAndSafety?.tradingRestricted),
   };
 }
 

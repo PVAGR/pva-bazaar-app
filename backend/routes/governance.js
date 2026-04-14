@@ -81,6 +81,20 @@ function sanitize(value) {
   return value.replace(/<[^>]*>/g, '').trim();
 }
 
+function sanitizeGovernanceDraft(input) {
+  if (!input || typeof input !== 'object') return null;
+  const draft = {
+    title: sanitize(input.title).slice(0, 200),
+    problem: sanitize(input.problem).slice(0, 5000),
+    solution: sanitize(input.solution).slice(0, 5000),
+    outcome: sanitize(input.outcome).slice(0, 5000),
+    category: sanitize(input.category).slice(0, 80),
+    urgency: sanitize(input.urgency).slice(0, 40),
+    savedAt: new Date().toISOString(),
+  };
+  return draft;
+}
+
 function parseCommitteeUserIds() {
   return new Set(
     String(process.env.PEOPLES_COMMITTEE_USER_IDS || '')
@@ -228,6 +242,56 @@ router.get('/proposals', async (req, res) => {
   } catch (error) {
     console.error('Error listing proposals:', error);
     return res.status(500).json({ ok: false, error: 'Failed to list proposals' });
+  }
+});
+
+// GET /api/governance/drafts - fetch draft proposal form state for current user
+router.get('/drafts', authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('preferences.drafts.governance');
+    return res.json({ ok: true, draft: user?.preferences?.drafts?.governance || null });
+  } catch (error) {
+    console.error('Error fetching governance draft:', error);
+    return res.status(500).json({ ok: false, error: 'Failed to fetch governance draft' });
+  }
+});
+
+// PUT /api/governance/drafts - save draft proposal form state for current user
+router.put('/drafts', authenticateToken, async (req, res) => {
+  try {
+    const draft = sanitizeGovernanceDraft(req.body?.draft);
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      {
+        'preferences.drafts.governance': draft,
+        updatedAt: Date.now(),
+      },
+      { new: true }
+    ).select('preferences.drafts.governance');
+
+    return res.json({ ok: true, draft: user?.preferences?.drafts?.governance || null });
+  } catch (error) {
+    console.error('Error saving governance draft:', error);
+    return res.status(500).json({ ok: false, error: 'Failed to save governance draft' });
+  }
+});
+
+// DELETE /api/governance/drafts - clear draft proposal form state
+router.delete('/drafts', authenticateToken, async (req, res) => {
+  try {
+    await User.findByIdAndUpdate(
+      req.user.id,
+      {
+        'preferences.drafts.governance': null,
+        updatedAt: Date.now(),
+      },
+      { new: true }
+    );
+
+    return res.json({ ok: true, draft: null });
+  } catch (error) {
+    console.error('Error clearing governance draft:', error);
+    return res.status(500).json({ ok: false, error: 'Failed to clear governance draft' });
   }
 });
 

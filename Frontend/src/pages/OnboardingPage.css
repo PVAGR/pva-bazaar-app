@@ -44,6 +44,56 @@
   flex-wrap: wrap;
 }
 
+.onboardingWalletActions {
+  align-items: center;
+}
+
+.onboardingWalletMeta {
+  margin-top: 8px;
+}
+
+.onboardingIdentityForm {
+  margin-top: 12px;
+}
+
+.onboardingWalletNote {
+  margin-top: 8px;
+}
+
+.chipRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.chipBtn {
+  border: 1px solid var(--border);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.chipBtn:hover {
+  border-color: var(--accent);
+}
+
+.chipBtn.is-active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.onboardingSuggestedRoutes {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
 @media (max-width: 900px) {
   .onboardingGrid {
     grid-template-columns: 1fr;

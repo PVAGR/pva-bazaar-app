@@ -1,5 +1,6 @@
 const express = require('express');
 const shopService = require('../services/shopService');
+const { authenticateToken } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -13,13 +14,57 @@ function requireAuth(req, res, next) {
   next();
 }
 
+function getTraderIdentityMissingFields(user) {
+  const compliance = user?.onboardingProfile?.compliance || {};
+  const checks = [
+    ['legalFullName', compliance.legalFullName],
+    ['legalIdType', compliance.legalIdType],
+    ['legalIdNumber', compliance.legalIdNumber],
+    ['addressLine1', compliance.addressLine1],
+    ['city', compliance.city],
+    ['postalCode', compliance.postalCode],
+    ['country', compliance.country],
+    ['phone', compliance.phone],
+    ['identityAttested', compliance.identityAttested === true ? 'true' : ''],
+  ];
+
+  return checks.filter(([, value]) => !String(value || '').trim()).map(([field]) => field);
+}
+
+function enforceTraderEligibility(req, res) {
+  const tradingRestricted = Boolean(req.user?.onboardingProfile?.trustAndSafety?.tradingRestricted);
+  if (tradingRestricted) {
+    res.status(403).json({
+      ok: false,
+      error: 'Trading is currently restricted for this account. Contact support to resolve this case.',
+      code: 'TRADING_RESTRICTED',
+    });
+    return false;
+  }
+
+  const missingIdentity = getTraderIdentityMissingFields(req.user);
+  if (missingIdentity.length > 0) {
+    res.status(403).json({
+      ok: false,
+      error: 'Trader identity profile is incomplete. Complete legal identity fields before creating or publishing shops.',
+      code: 'TRADER_IDENTITY_REQUIRED',
+      missingFields: missingIdentity,
+    });
+    return false;
+  }
+
+  return true;
+}
+
 /**
  * POST /api/shops
  * Create a new shop for authenticated user
  * Expects: { shopName, description, story, categories, tags, businessType }
  */
-router.post('/', requireAuth, async (req, res) => {
+router.post('/', authenticateToken, requireAuth, async (req, res) => {
   try {
+    if (!enforceTraderEligibility(req, res)) return;
+
     const { shopName, description, story, categories, tags, businessType } = req.body;
 
     if (!shopName) {
@@ -48,7 +93,7 @@ router.post('/', requireAuth, async (req, res) => {
  * GET /api/shops/me
  * Get authenticated user's shop
  */
-router.get('/me', requireAuth, async (req, res) => {
+router.get('/me', authenticateToken, requireAuth, async (req, res) => {
   try {
     const shopData = await shopService.getMyShop(req.user._id);
     res.json(shopData);
@@ -77,7 +122,7 @@ router.get('/:shopId', async (req, res) => {
  * PUT /api/shops/:shopId
  * Update shop details (owner only)
  */
-router.put('/:shopId', requireAuth, async (req, res) => {
+router.put('/:shopId', authenticateToken, requireAuth, async (req, res) => {
   try {
     const shop = await shopService.updateShop(req.params.shopId, req.body, req.user._id);
 
@@ -94,8 +139,10 @@ router.put('/:shopId', requireAuth, async (req, res) => {
  * POST /api/shops/:shopId/publish
  * Publish shop (move from draft to live)
  */
-router.post('/:shopId/publish', requireAuth, async (req, res) => {
+router.post('/:shopId/publish', authenticateToken, requireAuth, async (req, res) => {
   try {
+    if (!enforceTraderEligibility(req, res)) return;
+
     const shop = await shopService.publishShop(req.params.shopId, req.user._id);
 
     res.json({
@@ -128,7 +175,7 @@ router.get('/:shopId/products', async (req, res) => {
  * POST /api/shops/:shopId/follow
  * Follow a shop
  */
-router.post('/:shopId/follow', requireAuth, async (req, res) => {
+router.post('/:shopId/follow', authenticateToken, requireAuth, async (req, res) => {
   try {
     await shopService.followShop(req.params.shopId, req.user._id);
 
@@ -145,7 +192,7 @@ router.post('/:shopId/follow', requireAuth, async (req, res) => {
  * DELETE /api/shops/:shopId/follow
  * Unfollow a shop
  */
-router.delete('/:shopId/follow', requireAuth, async (req, res) => {
+router.delete('/:shopId/follow', authenticateToken, requireAuth, async (req, res) => {
   try {
     const result = await shopService.unfollowShop(req.params.shopId, req.user._id);
 
@@ -162,7 +209,7 @@ router.delete('/:shopId/follow', requireAuth, async (req, res) => {
  * GET /api/shops/:shopId/follow-status
  * Check if user is following shop
  */
-router.get('/:shopId/follow-status', requireAuth, async (req, res) => {
+router.get('/:shopId/follow-status', authenticateToken, requireAuth, async (req, res) => {
   try {
     const isFollowing = await shopService.isFollowingShop(req.params.shopId, req.user._id);
 

@@ -81,6 +81,9 @@ export const fetchGovernanceExecutionTimeline = (proposalId) =>
   apiGet(`/governance/proposals/${encodeURIComponent(proposalId)}/execution/timeline`);
 export const postGovernanceExecutionUpdate = (proposalId, payload) =>
   apiPost(`/governance/proposals/${encodeURIComponent(proposalId)}/execution/updates`, payload);
+export const fetchGovernanceDraft = () => apiGet('/governance/drafts');
+export const saveGovernanceDraft = (draft) => apiPut('/governance/drafts', { draft });
+export const clearGovernanceDraft = () => apiDelete('/governance/drafts');
 
 export const fetchCurrentUser = () => apiGet('/auth/me');
 export const fetchProposals = (params = {}) => apiGet('/proposals', { params });
@@ -339,6 +342,25 @@ export async function prepareCryptoCheckout({ itemId, buyerWallet = '', buyerEma
   }
 }
 
+export async function fetchCryptoCheckoutConfig() {
+  try {
+    const response = await apiGet('/checkout/crypto/config');
+    if (response && response.ok) {
+      return {
+        ok: true,
+        available: Boolean(response.available),
+        recipientAddress: response.recipientAddress || '',
+        network: response.network || 'base',
+        chainId: Number(response.chainId || 8453),
+        quoteUsdPerEth: Number(response.quoteUsdPerEth || 0),
+      };
+    }
+    return { ok: false, error: response?.error || response?.message || 'Failed to load crypto checkout config' };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+}
+
 export async function confirmCryptoCheckoutPayment({ orderId, txHash, buyerWallet = '' } = {}) {
   if (!orderId || !txHash) return { ok: false, error: 'Missing order id or tx hash' };
   try {
@@ -589,9 +611,19 @@ export async function createMarketplaceItem(payload) {
         syndication: response.syndication || null,
       };
     }
-    return { ok: false, error: response?.error || response?.message || 'Failed to create item' };
+    return {
+      ok: false,
+      error: response?.error || response?.message || 'Failed to create item',
+      code: response?.code || '',
+      missingFields: Array.isArray(response?.missingFields) ? response.missingFields : [],
+    };
   } catch (err) {
-    return { ok: false, error: err.message };
+    return {
+      ok: false,
+      error: err?.response?.data?.error || err?.response?.data?.message || err.message,
+      code: err?.response?.data?.code || '',
+      missingFields: Array.isArray(err?.response?.data?.missingFields) ? err.response.data.missingFields : [],
+    };
   }
 }
 

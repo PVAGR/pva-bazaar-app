@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useGovernanceStore } from '../../store/governanceStore'
 
 const STAGE_ORDER = ['draft', 'endorsed', 'panel', 'vote', 'passed', 'rejected']
@@ -88,13 +88,41 @@ function Hero({ onCreate }) {
   )
 }
 
-function ProposalForm({ onClose, onSubmit }) {
+function ProposalForm({
+  onClose,
+  onSubmit,
+  initialDraft = null,
+  onDraftChange = null,
+  showDraftExplainer = false,
+}) {
   const [title, setTitle] = useState('')
   const [category, setCategory] = useState('Governance')
   const [urgency, setUrgency] = useState('Standard')
   const [problem, setProblem] = useState('')
   const [solution, setSolution] = useState('')
   const [outcome, setOutcome] = useState('')
+
+  useEffect(() => {
+    if (!initialDraft) return
+    setTitle((prev) => prev || String(initialDraft.title || ''))
+    setCategory((prev) => prev || String(initialDraft.category || 'Governance'))
+    setUrgency((prev) => prev || String(initialDraft.urgency || 'Standard'))
+    setProblem((prev) => prev || String(initialDraft.problem || ''))
+    setSolution((prev) => prev || String(initialDraft.solution || ''))
+    setOutcome((prev) => prev || String(initialDraft.outcome || ''))
+  }, [initialDraft])
+
+  useEffect(() => {
+    if (typeof onDraftChange !== 'function') return
+    onDraftChange({
+      title,
+      category,
+      urgency,
+      problem,
+      solution,
+      outcome,
+    })
+  }, [title, category, urgency, problem, solution, outcome, onDraftChange])
 
   const canSubmit = title.trim() && solution.trim()
 
@@ -120,6 +148,12 @@ function ProposalForm({ onClose, onSubmit }) {
 
   return (
     <form className="gov-form-wrap" onSubmit={handleSubmit}>
+      {showDraftExplainer && initialDraft ? (
+        <div className="gov-form-explainer" role="status">
+          <strong>Why this draft appears:</strong> it was generated from your onboarding path tags and journey so you can edit and submit a first proposal faster.
+        </div>
+      ) : null}
+
       <div className="gov-form-group">
         <label className="gov-form-label" htmlFor="gov-title">Proposal Title</label>
         <input id="gov-title" className="gov-form-input" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Example: Expand clean water infrastructure" />
@@ -609,7 +643,16 @@ function RightPanel({ liveProposal, tickerEvents, citizen, onVote }) {
   )
 }
 
-export default function GovernanceInterface({ initialPage = 'forum' }) {
+export default function GovernanceInterface({
+  initialPage = 'forum',
+  initialQuery = '',
+  initialShowForm = false,
+  initialProposalDraft = null,
+  onDraftChange = null,
+  onDraftClear = null,
+  onProposalSubmitted = null,
+  showDraftExplainer = false,
+}) {
   const proposals = useGovernanceStore((s) => s.proposals)
   const conference = useGovernanceStore((s) => s.conference)
   const treasury = useGovernanceStore((s) => s.treasury)
@@ -622,9 +665,9 @@ export default function GovernanceInterface({ initialPage = 'forum' }) {
   const toasts = useGovernanceStore((s) => s.toasts)
 
   const [activePage, setActivePage] = useState(initialPage)
-  const [query, setQuery] = useState('')
+  const [query, setQuery] = useState(initialQuery)
   const [stageFilter, setStageFilter] = useState('all')
-  const [showForm, setShowForm] = useState(false)
+  const [showForm, setShowForm] = useState(initialShowForm)
   const [selectedProposal, setSelectedProposal] = useState(null)
 
   const handleModalOverlayKeyDown = (event) => {
@@ -669,7 +712,14 @@ export default function GovernanceInterface({ initialPage = 'forum' }) {
               {showForm ? (
                 <ProposalForm
                   onClose={() => setShowForm(false)}
-                  onSubmit={(payload) => addProposal(payload)}
+                  onSubmit={(payload) => {
+                    addProposal(payload)
+                    if (typeof onDraftClear === 'function') onDraftClear()
+                    if (typeof onProposalSubmitted === 'function') onProposalSubmitted(payload)
+                  }}
+                  initialDraft={initialProposalDraft}
+                  onDraftChange={onDraftChange}
+                  showDraftExplainer={showDraftExplainer}
                 />
               ) : null}
 

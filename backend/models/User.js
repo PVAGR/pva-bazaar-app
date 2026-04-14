@@ -20,6 +20,64 @@ const userSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.Mixed,
     default: {},
   },
+  onboardingProfile: {
+    roleIntent: {
+      type: String,
+      enum: ['seller', 'consumer', 'creator_artist', 'collector', 'researcher', 'federation_contributor', 'other'],
+      default: 'consumer',
+    },
+    roleOther: { type: String, default: '' },
+    appRole: {
+      type: String,
+      enum: ['seller', 'consumer', 'creator', 'collector', 'researcher', 'contributor', 'other'],
+      default: 'consumer',
+    },
+    personalJourney: { type: String, default: '' },
+    federationPathTags: { type: [String], default: [] },
+    contactLinks: {
+      instagram: { type: String, default: '' },
+      telegram: { type: String, default: '' },
+      website: { type: String, default: '' },
+      other: { type: String, default: '' },
+    },
+    compliance: {
+      legalFullName: { type: String, default: '' },
+      legalIdType: { type: String, default: '' },
+      legalIdNumber: { type: String, default: '' },
+      addressLine1: { type: String, default: '' },
+      addressLine2: { type: String, default: '' },
+      city: { type: String, default: '' },
+      stateProvince: { type: String, default: '' },
+      postalCode: { type: String, default: '' },
+      country: { type: String, default: '' },
+      phone: { type: String, default: '' },
+      identityAttested: { type: Boolean, default: false },
+      identityAttestedAt: { type: Date },
+      submittedAt: { type: Date },
+    },
+    trustAndSafety: {
+      tradingRestricted: { type: Boolean, default: false },
+      publicSafetyNotice: { type: String, default: '' },
+      internalCaseNotes: { type: String, default: '' },
+    },
+    emailPreferences: {
+      digestOptIn: { type: Boolean, default: false },
+      roleTrackUpdates: { type: Boolean, default: true },
+    },
+    identity: {
+      walletMode: {
+        type: String,
+        enum: ['none', 'connected', 'generated'],
+        default: 'none',
+      },
+      generatedWalletAddress: { type: String, default: '' },
+      generatedWalletAt: { type: Date },
+      didEnabled: { type: Boolean, default: false },
+      didMethod: { type: String, default: '' },
+      ipfsEnabled: { type: Boolean, default: false },
+      ipfsCid: { type: String, default: '' },
+    },
+  },
   preferences: {
     defaultCountry: { type: String, default: '' },
     defaultCurrency: { type: String, default: 'USD' },
@@ -35,6 +93,7 @@ const userSchema = new mongoose.Schema({
     drafts: {
       streams: { type: mongoose.Schema.Types.Mixed, default: null },
       deals: { type: mongoose.Schema.Types.Mixed, default: null },
+      governance: { type: mongoose.Schema.Types.Mixed, default: null },
     },
   },
   // Voting system profile (for prediction markets)

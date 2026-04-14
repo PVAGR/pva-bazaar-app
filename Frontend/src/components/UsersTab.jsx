@@ -21,8 +21,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { apiGet, apiPut, apiDelete } from '../lib/api';
+import api from '../lib/axios';
 import { createLogger } from '../lib/logger';
-import LoadingSpinner, { LoadingDots } from './LoadingSpinner';
+import LoadingSpinner, { LoadingDots } from './LoadingSpinner.jsx';
 import './UsersTab.css';
 
 const logger = createLogger('UsersTab');
@@ -38,10 +39,16 @@ export default function UsersTab() {
   const [success, setSuccess] = useState(null);
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState(null);
+  const [trustForm, setTrustForm] = useState({
+    tradingRestricted: false,
+    publicSafetyNotice: '',
+    internalCaseNotes: '',
+  });
 
   useEffect(() => {
     loadUsers();
     loadStats();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, searchQuery]);
 
   const loadUsers = async () => {
@@ -80,9 +87,66 @@ export default function UsersTab() {
       const data = await apiGet(`/admin/users/${userId}`);
       if (data.ok) {
         setSelectedUser(data.user);
+        const trust = data.user?.onboardingProfile?.trustAndSafety || {};
+        setTrustForm({
+          tradingRestricted: Boolean(trust.tradingRestricted),
+          publicSafetyNotice: trust.publicSafetyNotice || '',
+          internalCaseNotes: trust.internalCaseNotes || '',
+        });
       }
     } catch (err) {
       setError(err.message);
+    }
+  };
+
+  const saveTrustSettings = async () => {
+    if (!selectedUser?._id) return;
+    try {
+      const data = await apiPut(`/admin/users/${selectedUser._id}/trust`, trustForm);
+      if (data.ok) {
+        setSuccess('Trust and safety settings updated');
+        setSelectedUser(data.user);
+        loadUsers();
+      } else {
+        setError(data.error || 'Failed to update trust settings');
+      }
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const triggerBlobDownload = async (urlPath, fallbackName) => {
+    const response = await api.get(urlPath, { responseType: 'blob' });
+    const blob = new globalThis.Blob([response.data]);
+    const disposition = response.headers?.['content-disposition'] || '';
+    const match = disposition.match(/filename="?([^";]+)"?/i);
+    const fileName = match?.[1] || fallbackName;
+
+    const objectUrl = globalThis.URL.createObjectURL(blob);
+    const link = globalThis.document.createElement('a');
+    link.href = objectUrl;
+    link.download = fileName;
+    globalThis.document.body.appendChild(link);
+    link.click();
+    globalThis.document.body.removeChild(link);
+    globalThis.URL.revokeObjectURL(objectUrl);
+  };
+
+  const downloadAllUsers = async () => {
+    try {
+      await triggerBlobDownload('/admin/users/export.csv', 'admin-users-export.csv');
+      setSuccess('User export downloaded');
+    } catch (err) {
+      setError(err?.response?.data?.error || err.message || 'Failed to download user export');
+    }
+  };
+
+  const downloadSingleUser = async (userId) => {
+    try {
+      await triggerBlobDownload(`/admin/users/${userId}/export`, `user-${userId}.json`);
+      setSuccess('User profile export downloaded');
+    } catch (err) {
+      setError(err?.response?.data?.error || err.message || 'Failed to download profile export');
     }
   };
 
@@ -114,7 +178,7 @@ export default function UsersTab() {
   };
 
   const handleDeleteUser = async (userId, userName) => {
-    if (!confirm(`Are you sure you want to delete user "${userName}"? This action cannot be undone.`)) {
+    if (!globalThis.confirm(`Are you sure you want to delete user "${userName}"? This action cannot be undone.`)) {
       return;
     }
 
@@ -219,6 +283,9 @@ export default function UsersTab() {
         <button onClick={loadUsers} className="btn btn-refresh" disabled={loading}>
           {loading ? <LoadingDots /> : '🔄 Refresh'}
         </button>
+        <button onClick={downloadAllUsers} className="btn btn-secondary" disabled={loading}>
+          ⬇️ Export CSV
+        </button>
       </div>
 
       {users.length === 0 ? (
@@ -276,6 +343,13 @@ export default function UsersTab() {
                           title="View details"
                         >
                           👁️
+                        </button>
+                        <button
+                          onClick={() => downloadSingleUser(user._id)}
+                          className="btn-icon"
+                          title="Download profile export"
+                        >
+                          ⬇️
                         </button>
                         <button
                           onClick={() => handleEditUser(user)}
@@ -431,11 +505,79 @@ export default function UsersTab() {
                 <div className="detail-row">
                   <strong>User ID:</strong> <code>{selectedUser._id}</code>
                 </div>
+
+                <hr />
+                <h4>Trading identity profile</h4>
+                <div className="detail-row">
+                  <strong>Legal name:</strong> {selectedUser?.onboardingProfile?.compliance?.legalFullName || '—'}
+                </div>
+                <div className="detail-row">
+                  <strong>ID type:</strong> {selectedUser?.onboardingProfile?.compliance?.legalIdType || '—'}
+                </div>
+                <div className="detail-row">
+                  <strong>ID number:</strong> {selectedUser?.onboardingProfile?.compliance?.legalIdNumber || '—'}
+                </div>
+                <div className="detail-row">
+                  <strong>Address:</strong> {[selectedUser?.onboardingProfile?.compliance?.addressLine1, selectedUser?.onboardingProfile?.compliance?.city, selectedUser?.onboardingProfile?.compliance?.stateProvince, selectedUser?.onboardingProfile?.compliance?.postalCode, selectedUser?.onboardingProfile?.compliance?.country].filter(Boolean).join(', ') || '—'}
+                </div>
+                <div className="detail-row">
+                  <strong>Phone:</strong> {selectedUser?.onboardingProfile?.compliance?.phone || '—'}
+                </div>
+                <div className="detail-row">
+                  <strong>Identity attested:</strong> {selectedUser?.onboardingProfile?.compliance?.identityAttested ? 'Yes' : 'No'}
+                </div>
+
+                <h4>Contact links</h4>
+                <div className="detail-row">
+                  <strong>Instagram:</strong> {selectedUser?.onboardingProfile?.contactLinks?.instagram || '—'}
+                </div>
+                <div className="detail-row">
+                  <strong>Telegram:</strong> {selectedUser?.onboardingProfile?.contactLinks?.telegram || '—'}
+                </div>
+                <div className="detail-row">
+                  <strong>Website:</strong> {selectedUser?.onboardingProfile?.contactLinks?.website || '—'}
+                </div>
+
+                <hr />
+                <h4>Trust and safety controls</h4>
+                <label className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <input
+                    type="checkbox"
+                    checked={trustForm.tradingRestricted}
+                    onChange={(e) => setTrustForm((prev) => ({ ...prev, tradingRestricted: e.target.checked }))}
+                  />
+                  Restrict this user from trading
+                </label>
+                <div className="form-group">
+                  <label>Public safety notice (non-PII)</label>
+                  <textarea
+                    value={trustForm.publicSafetyNotice}
+                    onChange={(e) => setTrustForm((prev) => ({ ...prev, publicSafetyNotice: e.target.value }))}
+                    className="form-input"
+                    rows={3}
+                    placeholder="Public warning summary without private identifiers"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Internal case notes (admin only)</label>
+                  <textarea
+                    value={trustForm.internalCaseNotes}
+                    onChange={(e) => setTrustForm((prev) => ({ ...prev, internalCaseNotes: e.target.value }))}
+                    className="form-input"
+                    rows={4}
+                  />
+                </div>
               </div>
             </div>
             <div className="modal-footer">
               <button onClick={() => setSelectedUser(null)} className="btn btn-secondary">
                 Close
+              </button>
+              <button onClick={() => downloadSingleUser(selectedUser._id)} className="btn btn-secondary">
+                ⬇️ Download profile
+              </button>
+              <button onClick={saveTrustSettings} className="btn btn-secondary">
+                Save trust settings
               </button>
               <button 
                 onClick={() => {

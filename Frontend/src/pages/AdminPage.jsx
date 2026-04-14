@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { Suspense, lazy, useState, useEffect, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { apiGet, apiPost, fetchItemInquiries } from '../lib/api';
 import { ENV } from '../config/env';
@@ -10,29 +10,29 @@ import AdminTabs from '../components/AdminTabs.jsx';
 import { clearToken, setToken } from '../lib/auth';
 import { createLogger } from '../lib/logger';
 import { LoadingDots } from '../components/LoadingSpinner.jsx';
-import DashboardTab from '../components/DashboardTab.jsx';
 import MakeOrderModal from '../components/MakeOrderModal.jsx';
-import ArchiveTab from '../components/ArchiveTab.jsx';
-import MarketplaceTab from '../components/MarketplaceTab.jsx';
-import InquiriesTab from '../components/InquiriesTab.jsx';
-import UsersTab from '../components/UsersTab.jsx';
-import AttributionTab from '../components/AttributionTab.jsx';
-import PayoutTab from '../components/PayoutTab.jsx';
-import SettlementContractsTab from '../components/SettlementContractsTab.jsx';
-import CloudStorageTab from '../components/CloudStorageTab.jsx';
-import LibraryTab from '../components/LibraryTab.jsx';
-import ApiDocsTab from '../components/ApiDocsTab.jsx';
-import HealthTab from '../components/HealthTab.jsx';
-import SettingsTab from '../components/SettingsTab.jsx';
-import OpenClawTab from '../components/OpenClawTab.jsx';
-import BountyHunterTab from '../components/BountyHunterTab.jsx';
-import RoyaltyAnalyticsTab from '../components/RoyaltyAnalyticsTab.jsx';
-import OverviewTab from '../components/OverviewTab.jsx';
-import AdminOrdersPage from './AdminOrdersPage.jsx';
-import TransactionsTab from '../components/TransactionsTab.jsx';
 import './AdminPage.css';
 
 const logger = createLogger('AdminPage');
+const DashboardTab = lazy(() => import('../components/DashboardTab.jsx'));
+const ArchiveTab = lazy(() => import('../components/ArchiveTab.jsx'));
+const MarketplaceTab = lazy(() => import('../components/MarketplaceTab.jsx'));
+const InquiriesTab = lazy(() => import('../components/InquiriesTab.jsx'));
+const UsersTab = lazy(() => import('../components/UsersTab.jsx'));
+const AttributionTab = lazy(() => import('../components/AttributionTab.jsx'));
+const PayoutTab = lazy(() => import('../components/PayoutTab.jsx'));
+const SettlementContractsTab = lazy(() => import('../components/SettlementContractsTab.jsx'));
+const CloudStorageTab = lazy(() => import('../components/CloudStorageTab.jsx'));
+const LibraryTab = lazy(() => import('../components/LibraryTab.jsx'));
+const ApiDocsTab = lazy(() => import('../components/ApiDocsTab.jsx'));
+const HealthTab = lazy(() => import('../components/HealthTab.jsx'));
+const SettingsTab = lazy(() => import('../components/SettingsTab.jsx'));
+const OpenClawTab = lazy(() => import('../components/OpenClawTab.jsx'));
+const BountyHunterTab = lazy(() => import('../components/BountyHunterTab.jsx'));
+const RoyaltyAnalyticsTab = lazy(() => import('../components/RoyaltyAnalyticsTab.jsx'));
+const OverviewTab = lazy(() => import('../components/OverviewTab.jsx'));
+const TransactionsTab = lazy(() => import('../components/TransactionsTab.jsx'));
+const AdminOrdersPage = lazy(() => import('./AdminOrdersPage.jsx'));
 
 export default function AdminPage() {
   const navigate = useNavigate();
@@ -89,6 +89,18 @@ export default function AdminPage() {
   });
   const [inquiryCounts, setInquiryCounts] = useState({ new: 0, contacted: 0, reserved: 0, closed: 0, total: 0 });
   const [makeOrderModalOpen, setMakeOrderModalOpen] = useState(false);
+
+  const tabLoadingFallback = (
+    <div className="admin-status-card" role="status" aria-live="polite">
+      <LoadingDots label="Loading admin tab..." />
+    </div>
+  );
+
+  const renderTab = useCallback((content) => (
+    <ErrorBoundary>
+      <Suspense fallback={tabLoadingFallback}>{content}</Suspense>
+    </ErrorBoundary>
+  ), [tabLoadingFallback]);
 
   const nextPath = useCallback(() => {
     const params = new URLSearchParams(location.search || '');
@@ -933,135 +945,99 @@ export default function AdminPage() {
         <div className="admin-container">
           {/* Dashboard Tab - Overview */}
           {activeTab === 'dashboard' && (
-            <ErrorBoundary>
+            renderTab(
               <DashboardTab onNavigateTab={handleTabChange} onMakeOrder={() => setMakeOrderModalOpen(true)} />
-            </ErrorBoundary>
+            )
           )}
 
           {/* Orders Tab */}
           {activeTab === 'orders' && (
-            <ErrorBoundary>
-              <AdminOrdersPage />
-            </ErrorBoundary>
+            renderTab(<AdminOrdersPage />)
           )}
 
           {/* Transactions Tab */}
           {activeTab === 'transactions' && (
-            <ErrorBoundary>
-              <TransactionsTab />
-            </ErrorBoundary>
+            renderTab(<TransactionsTab />)
           )}
 
           {/* Archive Tab */}
           {activeTab === 'archive' && (
-            <ErrorBoundary>
-              <ArchiveTab />
-            </ErrorBoundary>
+            renderTab(<ArchiveTab />)
           )}
 
           {/* Marketplace Tab */}
           {activeTab === 'marketplace' && (
-            <ErrorBoundary>
-              <MarketplaceTab />
-            </ErrorBoundary>
+            renderTab(<MarketplaceTab />)
           )}
 
           {/* Inquiries Tab */}
           {activeTab === 'inquiries' && (
-            <ErrorBoundary>
-              <InquiriesTab onNavigateTab={handleTabChange} />
-            </ErrorBoundary>
+            renderTab(<InquiriesTab onNavigateTab={handleTabChange} />)
           )}
 
           {/* Users Tab */}
           {activeTab === 'users' && (
-            <ErrorBoundary>
-              <UsersTab />
-            </ErrorBoundary>
+            renderTab(<UsersTab />)
           )}
 
           {/* Attribution Tab */}
           {activeTab === 'attribution' && (
-            <ErrorBoundary>
-              <AttributionTab />
-            </ErrorBoundary>
+            renderTab(<AttributionTab />)
           )}
 
           {/* Payouts Tab */}
           {activeTab === 'payouts' && (
-            <ErrorBoundary>
-              <PayoutTab />
-            </ErrorBoundary>
+            renderTab(<PayoutTab />)
           )}
 
           {/* Settlement Contracts Tab */}
           {activeTab === 'settlements' && (
-            <ErrorBoundary>
-              <SettlementContractsTab />
-            </ErrorBoundary>
+            renderTab(<SettlementContractsTab />)
           )}
 
           {/* Cloud Storage Tab */}
           {activeTab === 'cloud' && (
-            <ErrorBoundary>
-              <CloudStorageTab />
-            </ErrorBoundary>
+            renderTab(<CloudStorageTab />)
           )}
 
           {/* Library Tab */}
           {activeTab === 'library' && (
-            <ErrorBoundary>
-              <LibraryTab />
-            </ErrorBoundary>
+            renderTab(<LibraryTab />)
           )}
 
           {/* API Documentation Tab */}
           {activeTab === 'api' && (
-            <ErrorBoundary>
-              <ApiDocsTab />
-            </ErrorBoundary>
+            renderTab(<ApiDocsTab />)
           )}
 
           {/* Health Tab */}
           {activeTab === 'health' && (
-            <ErrorBoundary>
-              <HealthTab />
-            </ErrorBoundary>
+            renderTab(<HealthTab />)
           )}
 
           {/* Settings Tab */}
           {activeTab === 'settings' && (
-            <ErrorBoundary>
-              <SettingsTab />
-            </ErrorBoundary>
+            renderTab(<SettingsTab />)
           )}
 
           {/* OpenClaw Tab */}
           {activeTab === 'openclaw' && (
-            <ErrorBoundary>
-              <OpenClawTab />
-            </ErrorBoundary>
+            renderTab(<OpenClawTab />)
           )}
 
           {/* Bounty Hunter Tab */}
           {activeTab === 'bounty-hunter' && (
-            <ErrorBoundary>
-              <BountyHunterTab />
-            </ErrorBoundary>
+            renderTab(<BountyHunterTab />)
           )}
 
           {/* Royalty Analytics Tab */}
           {activeTab === 'royalty-analytics' && (
-            <ErrorBoundary>
-              <RoyaltyAnalyticsTab />
-            </ErrorBoundary>
+            renderTab(<RoyaltyAnalyticsTab />)
           )}
 
           {/* Overview Tab */}
           {activeTab === 'overview' && (
-            <ErrorBoundary>
-              <OverviewTab onNavigateTab={handleTabChange} />
-            </ErrorBoundary>
+            renderTab(<OverviewTab onNavigateTab={handleTabChange} />)
           )}
         </div>
 

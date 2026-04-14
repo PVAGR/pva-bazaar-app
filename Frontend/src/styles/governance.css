@@ -816,11 +816,20 @@
 .gov-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; }
 .gov-form-actions { display: flex; gap: 9px; justify-content: flex-end; margin-top: 0.85rem; }
 
+.gov-form-explainer {
+  border: 1px solid rgba(77, 176, 255, 0.35);
+  background: rgba(77, 176, 255, 0.08);
+  border-radius: 10px;
+  padding: 10px 12px;
+  color: #dff4ff;
+  font-size: 0.9rem;
+}
 /* -- MODAL ----------------------------------------------------------------- */
 .gov-modal-overlay {
   position: fixed;
   inset: 0;
   background: rgba(0,0,0,0.72);
+  -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
   z-index: 1000;
   display: flex;

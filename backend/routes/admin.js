@@ -437,6 +437,143 @@ router.get('/users', adminSession, async (req, res) => {
 });
 
 /**
+ * GET /api/admin/users/export.csv
+ * Export user profiles and compliance data as CSV (admin only)
+ */
+router.get('/users/export.csv', adminSession, async (_req, res) => {
+  try {
+    const users = await User.find({}).select('-password -oauthTokens').sort({ createdAt: -1 }).lean();
+
+    const headers = [
+      'id', 'name', 'email', 'username', 'role', 'appRole', 'roleIntent',
+      'legalFullName', 'legalIdType', 'legalIdNumber', 'addressLine1', 'addressLine2',
+      'city', 'stateProvince', 'postalCode', 'country', 'phone', 'identityAttested',
+      'instagram', 'telegram', 'website', 'other', 'tradingRestricted',
+      'publicSafetyNotice', 'createdAt', 'updatedAt',
+    ];
+
+    const csvEscape = (value) => {
+      const raw = String(value ?? '');
+      if (raw.includes('"') || raw.includes(',') || raw.includes('\n')) {
+        return `"${raw.replace(/"/g, '""')}"`;
+      }
+      return raw;
+    };
+
+    const rows = users.map((user) => {
+      const onboarding = user.onboardingProfile || {};
+      const compliance = onboarding.compliance || {};
+      const links = onboarding.contactLinks || {};
+      const trust = onboarding.trustAndSafety || {};
+
+      const values = [
+        user._id,
+        user.name,
+        user.email,
+        user.username,
+        user.role,
+        onboarding.appRole,
+        onboarding.roleIntent,
+        compliance.legalFullName,
+        compliance.legalIdType,
+        compliance.legalIdNumber,
+        compliance.addressLine1,
+        compliance.addressLine2,
+        compliance.city,
+        compliance.stateProvince,
+        compliance.postalCode,
+        compliance.country,
+        compliance.phone,
+        compliance.identityAttested,
+        links.instagram,
+        links.telegram,
+        links.website,
+        links.other,
+        trust.tradingRestricted,
+        trust.publicSafetyNotice,
+        user.createdAt,
+        user.updatedAt,
+      ];
+
+      return values.map(csvEscape).join(',');
+    });
+
+    const csv = [headers.join(','), ...rows].join('\n');
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="admin-users-export-${stamp}.csv"`);
+    return res.send(csv);
+  } catch (error) {
+    console.error('Admin export users csv error:', error);
+    return res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+/**
+ * GET /api/admin/users/:id/export
+ * Export a single user profile with full admin-safe fields
+ */
+router.get('/users/:id/export', adminSession, async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).select('-password -oauthTokens').lean();
+    if (!user) {
+      return res.status(404).json({ ok: false, error: 'User not found' });
+    }
+
+    const payload = {
+      ok: true,
+      exportedAt: new Date().toISOString(),
+      user,
+    };
+
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="user-profile-${String(user._id)}-${stamp}.json"`);
+    return res.send(JSON.stringify(payload, null, 2));
+  } catch (error) {
+    console.error('Admin export single user error:', error);
+    return res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+/**
+ * PUT /api/admin/users/:id/trust
+ * Update trust and safety controls for a user
+ */
+router.put('/users/:id/trust', adminSession, async (req, res) => {
+  try {
+    const tradingRestricted = req.body?.tradingRestricted;
+    const publicSafetyNotice = String(req.body?.publicSafetyNotice || '').trim().slice(0, 500);
+    const internalCaseNotes = String(req.body?.internalCaseNotes || '').trim().slice(0, 5000);
+
+    const updates = {
+      updatedAt: new Date(),
+      'onboardingProfile.trustAndSafety.publicSafetyNotice': publicSafetyNotice,
+      'onboardingProfile.trustAndSafety.internalCaseNotes': internalCaseNotes,
+    };
+
+    if (tradingRestricted !== undefined) {
+      updates['onboardingProfile.trustAndSafety.tradingRestricted'] = Boolean(tradingRestricted);
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      { $set: updates },
+      { new: true, runValidators: true },
+    ).select('-password -oauthTokens');
+
+    if (!user) {
+      return res.status(404).json({ ok: false, error: 'User not found' });
+    }
+
+    return res.json({ ok: true, user, message: 'Trust and safety settings updated' });
+  } catch (error) {
+    console.error('Admin trust update error:', error);
+    return res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+/**
  * GET /api/admin/users/:id
  * Get detailed user information
  */

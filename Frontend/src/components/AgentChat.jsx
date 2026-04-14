@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './AgentChat.css';
 
-export default function AgentChat() {
+export default function AgentChat({ initialInput = '' }) {
   const [conversationId, setConversationId] = useState(null);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -25,9 +25,15 @@ export default function AgentChat() {
     loadInitialConversation();
   }, []);
 
+  useEffect(() => {
+    if (!input && initialInput) {
+      setInput(initialInput);
+    }
+  }, [initialInput, input]);
+
   const checkAgentStatus = async () => {
     try {
-      const response = await fetch('/api/agent/status');
+      const response = await globalThis.fetch('/api/agent/status');
       const data = await response.json();
       if (data.ok && data.ollama.status === 'online') {
         setAgentStatus('online');
@@ -43,11 +49,11 @@ export default function AgentChat() {
 
   const loadInitialConversation = async () => {
     try {
-      const userId = localStorage.getItem('userId') || 'anonymous-' + Date.now();
-      localStorage.setItem('userId', userId);
+      const userId = globalThis.localStorage.getItem('userId') || `anonymous-${Date.now()}`;
+      globalThis.localStorage.setItem('userId', userId);
 
       // Try to load existing conversation
-      const response = await fetch(
+      const response = await globalThis.fetch(
         `/api/agent/conversations?userId=${encodeURIComponent(userId)}&limit=1`
       );
       const data = await response.json();
@@ -58,7 +64,7 @@ export default function AgentChat() {
         setMessages(convo.messages || []);
       } else {
         // Create new conversation
-        const newResponse = await fetch('/api/agent/conversation', {
+        const newResponse = await globalThis.fetch('/api/agent/conversation', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -95,7 +101,7 @@ export default function AgentChat() {
     setError(null);
 
     try {
-      const userId = localStorage.getItem('userId') || 'anonymous';
+      const userId = globalThis.localStorage.getItem('userId') || 'anonymous';
 
       // Add user message to UI optimistically
       const userMsg = {
@@ -107,7 +113,7 @@ export default function AgentChat() {
       setMessages((prev) => [...prev, userMsg]);
 
       // Send to API
-      const response = await fetch('/api/agent/chat', {
+      const response = await globalThis.fetch('/api/agent/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -138,12 +144,12 @@ export default function AgentChat() {
   };
 
   const clearConversation = async () => {
-    if (!conversationId || !window.confirm('Clear all messages?')) {
+    if (!conversationId || !globalThis.confirm('Clear all messages?')) {
       return;
     }
 
     try {
-      const response = await fetch(`/api/agent/conversation/${conversationId}/clear`, {
+      const response = await globalThis.fetch(`/api/agent/conversation/${conversationId}/clear`, {
         method: 'POST',
       });
       const data = await response.json();

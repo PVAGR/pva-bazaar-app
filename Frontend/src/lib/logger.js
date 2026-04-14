@@ -5,9 +5,17 @@
  * - Provides structured logging with categories
  */
 
-import * as Sentry from '@sentry/react';
-
 const isDev = import.meta.env.MODE === 'development';
+const sentryDsn = import.meta.env.VITE_SENTRY_DSN;
+let sentryPromise = null;
+
+function loadSentry() {
+  if (!sentryDsn) return null;
+  if (!sentryPromise) {
+    sentryPromise = import('@sentry/react').catch(() => null);
+  }
+  return sentryPromise;
+}
 
 /**
  * Log levels
@@ -62,13 +70,17 @@ class Logger {
       console.warn(formatted, ...args);
     }
     
-    // Add breadcrumb to Sentry
-    Sentry.addBreadcrumb({
-      category: this.category || 'general',
-      message: formatted,
-      level: 'warning',
-      data: args.length > 0 ? { context: args } : undefined,
-    });
+    const sentryLoader = loadSentry();
+    if (sentryLoader) {
+      sentryLoader.then((Sentry) => {
+        Sentry?.addBreadcrumb?.({
+          category: this.category || 'general',
+          message: formatted,
+          level: 'warning',
+          data: args.length > 0 ? { context: args } : undefined,
+        });
+      });
+    }
   }
 
   /**
@@ -81,28 +93,33 @@ class Logger {
       console.error(formatted, error, ...args);
     }
     
-    // Send to Sentry in production
-    if (error instanceof Error) {
-      Sentry.captureException(error, {
-        tags: { category: this.category || 'general' },
-        contexts: {
-          details: {
-            message: formatted,
-            additionalData: args.length > 0 ? args : undefined,
-          },
-        },
-      });
-    } else {
-      // If error is not an Error object, capture as message
-      Sentry.captureMessage(formatted, {
-        level: 'error',
-        tags: { category: this.category || 'general' },
-        contexts: {
-          details: {
-            error,
-            additionalData: args.length > 0 ? args : undefined,
-          },
-        },
+    const sentryLoader = loadSentry();
+    if (sentryLoader) {
+      sentryLoader.then((Sentry) => {
+        if (!Sentry) return;
+        if (error instanceof Error) {
+          Sentry.captureException(error, {
+            tags: { category: this.category || 'general' },
+            contexts: {
+              details: {
+                message: formatted,
+                additionalData: args.length > 0 ? args : undefined,
+              },
+            },
+          });
+        } else {
+          // If error is not an Error object, capture as message.
+          Sentry.captureMessage(formatted, {
+            level: 'error',
+            tags: { category: this.category || 'general' },
+            contexts: {
+              details: {
+                error,
+                additionalData: args.length > 0 ? args : undefined,
+              },
+            },
+          });
+        }
       });
     }
   }

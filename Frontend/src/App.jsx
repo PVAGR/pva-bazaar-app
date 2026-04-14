@@ -1,4 +1,3 @@
-import AdminOrdersPage from './pages/AdminOrdersPage.jsx';
 import React, { Suspense, lazy, useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Layout from './components/Layout.jsx';
@@ -8,25 +7,27 @@ import { Telemetry } from './lib/telemetry';
 
 import ArchiveLibraryPage from './pages/ArchiveLibraryPage.jsx';
 import HomePage from './pages/HomePage.jsx';
-import AdminPage from './pages/AdminPage.jsx';
-import RegisterPage from './pages/RegisterPage.jsx';
-import LoginPage from './pages/LoginPage.jsx';
-import AccountPage from './pages/AccountPage.jsx';
-import PassportPage from './pages/PassportPage.jsx';
-import OnboardingPage from './pages/OnboardingPage.jsx';
-import ListItemPage from './pages/ListItemPage.jsx';
-import MyListingsPage from './pages/MyListingsPage.jsx';
-import DealsPage from './pages/DealsPage.jsx';
-import DealJoinPage from './pages/DealJoinPage.jsx';
-import CheckoutSuccessPage from './pages/CheckoutSuccessPage.jsx';
-import CheckoutCancelPage from './pages/CheckoutCancelPage.jsx';
-import UserDashboard from './pages/UserDashboard.jsx';
-import AdminGovernancePage from './pages/AdminGovernancePage.jsx';
-import { GovernanceConferencePage, GovernanceTreasuryPage } from './pages/OtherPages.jsx';
 import useArchiveTheme from './hooks/useArchiveTheme.js';
 import './pages/HomePage.css';
 import './base.css';
 
+const AdminPage = lazy(() => import('./pages/AdminPage.jsx'));
+const AdminOrdersPage = lazy(() => import('./pages/AdminOrdersPage.jsx'));
+const AdminGovernancePage = lazy(() => import('./pages/AdminGovernancePage.jsx'));
+const RegisterPage = lazy(() => import('./pages/RegisterPage.jsx'));
+const LoginPage = lazy(() => import('./pages/LoginPage.jsx'));
+const AccountPage = lazy(() => import('./pages/AccountPage.jsx'));
+const PassportPage = lazy(() => import('./pages/PassportPage.jsx'));
+const OnboardingPage = lazy(() => import('./pages/OnboardingPage.jsx'));
+const ListItemPage = lazy(() => import('./pages/ListItemPage.jsx'));
+const MyListingsPage = lazy(() => import('./pages/MyListingsPage.jsx'));
+const DealsPage = lazy(() => import('./pages/DealsPage.jsx'));
+const DealJoinPage = lazy(() => import('./pages/DealJoinPage.jsx'));
+const CheckoutSuccessPage = lazy(() => import('./pages/CheckoutSuccessPage.jsx'));
+const CheckoutCancelPage = lazy(() => import('./pages/CheckoutCancelPage.jsx'));
+const UserDashboard = lazy(() => import('./pages/UserDashboard.jsx'));
+const GovernanceConferencePage = lazy(() => import('./pages/OtherPages.jsx').then((m) => ({ default: m.GovernanceConferencePage })));
+const GovernanceTreasuryPage = lazy(() => import('./pages/OtherPages.jsx').then((m) => ({ default: m.GovernanceTreasuryPage })));
 const AboutPage = lazy(() => import('./pages/AboutPage.jsx'));
 const AgentPage = lazy(() => import('./pages/AgentPage.jsx'));
 const CivilizationLibraryPage = lazy(() => import('./pages/CivilizationLibraryPage.jsx'));
@@ -36,6 +37,7 @@ const MarketplaceItemPage = lazy(() => import('./pages/MarketplaceItemPage.jsx')
 const ShowroomPage = lazy(() => import('./pages/ShowroomPage.jsx'));
 const ShowroomItemPage = lazy(() => import('./pages/ShowroomItemPage.jsx'));
 const CreatorPortalPage = lazy(() => import('./pages/CreatorPortalPage.jsx'));
+const CreatorDashboard = lazy(() => import('./pages/CreatorDashboard.jsx'));
 const CitizenDirectoryPage = lazy(() => import('./pages/CitizenDirectoryPage.jsx'));
 const PopularConferencePage = lazy(() => import('./pages/PopularConferencePage.jsx'));
 const ProposalsPage = lazy(() => import('./pages/ProposalsPage.jsx'));
@@ -45,6 +47,7 @@ const TreasuryPage = lazy(() => import('./pages/TreasuryPage.jsx'));
 const DeployPage = lazy(() => import('./pages/DeployPage.jsx'));
 const DownloadAppPage = lazy(() => import('./pages/DownloadAppPage.jsx'));
 const ForumPage = lazy(() => import('./pages/Forum.jsx'));
+const GetStartedPage = lazy(() => import('./pages/GetStartedPage.jsx'));
 
 function RequireUserAuth({ children }) {
   const location = useLocation();
@@ -95,11 +98,12 @@ export default function App() {
         <Route path="/treasury" element={<Layout><TreasuryPage /></Layout>} />
         <Route path="/deploy" element={<Layout><DeployPage /></Layout>} />
 
-        <Route path="/" element={<Layout><HomePage /></Layout>} />
+        <Route path="/" element={<Layout><GetStartedPage /></Layout>} />
         <Route path="/home" element={<Layout><HomePage /></Layout>} />
         <Route path="/library" element={<Layout><ArchiveLibraryPage /></Layout>} />
         <Route path="/archive" element={<Layout><ArchiveLibraryPage /></Layout>} />
         <Route path="/creator" element={<Layout><CreatorPortalPage /></Layout>} />
+        <Route path="/creator/dashboard" element={<RequireUserAuth><Layout><CreatorDashboard /></Layout></RequireUserAuth>} />
         <Route path="/civilization-library" element={<Layout><CivilizationLibraryPage /></Layout>} />
         <Route path="/career-quiz" element={<Layout><CareerQuizPage /></Layout>} />
         <Route path="/about" element={<Layout><AboutPage /></Layout>} />

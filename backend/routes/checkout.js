@@ -56,6 +56,28 @@ function isMarkedSold(artifact) {
   return Boolean(artifact?.omnichannel?.soldState?.isSold);
 }
 
+// GET /api/checkout/crypto/config
+// Read-only checkout settings so UI can display destination wallet before any reservation.
+router.get('/crypto/config', async (_req, res) => {
+  try {
+    const recipientAddress = trimAddress(process.env.CRYPTO_TREASURY_WALLET || process.env.RECEIPT_TREASURY_WALLET);
+    const network = normalizeNetwork(process.env.CRYPTO_NETWORK || 'base');
+    const chainId = Number(process.env.CRYPTO_CHAIN_ID || 8453);
+    const quoteUsdPerEth = getCryptoQuoteRateUsdPerEth();
+
+    return res.json({
+      ok: true,
+      available: Boolean(recipientAddress),
+      recipientAddress,
+      network,
+      chainId,
+      quoteUsdPerEth,
+    });
+  } catch (err) {
+    return res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
 // POST /api/checkout/create-session
 router.post("/create-session", async (req, res) => {
   try {

@@ -1,7 +1,18 @@
 export const PUBLIC_ROUTES = [
   {
-    key: 'home',
+    key: 'get-started',
     to: '/',
+    navLabel: 'Get Started',
+    title: 'Get Started',
+    description: 'Your onboarding entry point for federation features and account setup path.',
+    group: 'core',
+    badge: 'Start',
+    navPlacement: 'primary',
+    access: 'public',
+  },
+  {
+    key: 'home',
+    to: '/home',
     navLabel: 'Home',
     title: 'Home',
     description: 'Full landing page and site overview.',

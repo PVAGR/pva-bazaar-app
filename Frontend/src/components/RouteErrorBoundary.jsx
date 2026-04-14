@@ -1,5 +1,4 @@
 import React from 'react';
-import * as Sentry from '@sentry/react';
 import { createLogger } from '../lib/logger';
 
 const logger = createLogger('ErrorBoundary');
@@ -20,16 +19,6 @@ class RouteErrorBoundary extends React.Component {
 
   componentDidCatch(error, errorInfo) {
     logger.error('React component error', error, errorInfo);
-    
-    // Sentry will automatically capture this via its error boundary
-    // but we can add additional context here if needed
-    Sentry.captureException(error, {
-      contexts: {
-        react: {
-          componentStack: errorInfo.componentStack,
-        },
-      },
-    });
   }
 
   render() {

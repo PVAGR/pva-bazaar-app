@@ -556,6 +556,89 @@
 .buy-btn-crypto {
   background: #0f7f7a;
 }
+
+.item-crypto-panel {
+  border: 1px solid var(--site-border);
+  border-radius: 10px;
+  background: var(--site-panel-soft);
+  padding: 0.75rem;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.item-crypto-panel h2 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.item-crypto-note {
+  margin: 0;
+  color: var(--site-text-muted);
+  font-size: 0.84rem;
+}
+
+.item-crypto-note.error {
+  color: var(--site-danger-text);
+}
+
+.item-crypto-destination {
+  border: 1px solid var(--site-border);
+  border-radius: 8px;
+  background: var(--site-panel);
+  padding: 0.4rem 0.5rem;
+  display: grid;
+  gap: 0.15rem;
+}
+
+.item-crypto-destination span {
+  color: var(--site-text-muted);
+  font-size: 0.78rem;
+}
+
+.item-crypto-destination strong {
+  font-size: 0.84rem;
+  overflow-wrap: anywhere;
+}
+
+.item-crypto-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  color: var(--site-text-muted);
+  font-size: 0.78rem;
+}
+
+.item-crypto-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.5rem;
+}
+
+.item-crypto-form-grid input {
+  border: 1px solid var(--site-border);
+  border-radius: 8px;
+  background: var(--site-panel);
+  color: var(--site-text);
+  padding: 0.45rem 0.55rem;
+}
+
+.item-crypto-prepared {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.item-crypto-link {
+  color: var(--site-accent);
+  text-decoration: none;
+  font-size: 0.84rem;
+}
+
+.item-crypto-link:hover,
+.item-crypto-link:focus {
+  text-decoration: underline;
+  color: var(--site-accent-strong);
+}
+
 .loading {
   text-align: center;
   color: var(--site-text-muted);
