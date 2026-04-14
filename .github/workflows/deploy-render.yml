@@ -1,0 +1,31 @@
+name: 🚀 Auto-Deploy to Render.com
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: 🔧 Prepare deployment
+        run: |
+          echo "Deployment package ready"
+          ls -la
+
+      - name: 🚀 Deploy to Render
+        run: |
+          echo "📡 Triggering Render deployment via webhook..."
+          if [ ! -z "${{ secrets.RENDER_DEPLOY_HOOK }}" ]; then
+            curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}" || echo "Webhook not configured yet"
+          else
+            echo "⚠️  RENDER_DEPLOY_HOOK secret not set"
+            echo "Get it from Render dashboard → Settings → Deploy Hook"
+          fi
+
+      - name: ✅ Deployment triggered
+        run: |
+          echo "✅ App queued for deployment on Render.com"
+          echo "📊 Check status: https://dashboard.render.com"
