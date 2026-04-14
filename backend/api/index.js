@@ -491,6 +491,21 @@ try {
   console.warn('⚠️ Optional route disabled: articles', err?.message || err);
 }
 
+// Phase 6a: Dynamic pricing & market intelligence (optional routes)
+try {
+  const pricingRoutes = require('../routes/pricing');
+  app.use('/api/pricing', pricingRoutes);
+} catch (err) {
+  console.warn('⚠️ Optional route disabled: pricing', err?.message || err);
+}
+
+try {
+  const adminIntelligenceRoutes = require('../routes/admin-intelligence');
+  app.use('/api/admin/intelligence', adminIntelligenceRoutes);
+} catch (err) {
+  console.warn('⚠️ Optional route disabled: admin-intelligence', err?.message || err);
+}
+
 app.get('/api/governance/proposals', async (req, res) => {
   try {
     const { status = '', cycleKey = '', limit = '30', skip = '0' } = req.query;
