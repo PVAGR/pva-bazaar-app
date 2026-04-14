@@ -1,0 +1,39 @@
+services:
+  - type: web
+    name: pva-bazaar-api
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build:backend && npm run build:frontend
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5001
+      - key: MONGODB_URI
+        fromDatabase:
+          name: pva-bazaar-db
+          property: connectionString
+    autoDeploy: true
+
+databases:
+  - name: pva-bazaar-db
+    databaseName: pvabazaar
+    plan: free
+    ipWhitelist: []
+
+envVarGroups:
+  - name: PVA Bazaar Production
+    envVars:
+      - key: JWT_SECRET
+        scope: all
+      - key: ETHEREUM_RPC_URL
+        scope: all
+      - key: STRIPE_SECRET_KEY
+        scope: all
+      - key: SENDGRID_API_KEY
+        scope: all
+      - key: AWS_ACCESS_KEY_ID
+        scope: all
+      - key: AWS_SECRET_ACCESS_KEY
+        scope: all

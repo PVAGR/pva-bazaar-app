@@ -71,7 +71,15 @@
     "contracts:deploy:sepolia": "npm --prefix contracts run deploy:sepolia",
     "contracts:deploy:polygon": "npm --prefix contracts run deploy:polygon",
     "deploy:production": "node scripts/deploy-production.mjs",
-    "deploy:production:dry": "node scripts/deploy-production.mjs --dry-run"
+    "deploy:production:dry": "node scripts/deploy-production.mjs --dry-run",
+    "deploy:railway": "bash scripts/deploy-railway.sh",
+    "deploy:render": "bash scripts/deploy-render.sh",
+    "deploy:flyio": "bash scripts/deploy-flyio.sh",
+    "docker:build": "docker build -t pva-bazaar:latest .",
+    "docker:run": "docker run -p 5001:5001 --env-file .env.production pva-bazaar:latest",
+    "docker:compose:up": "docker-compose up -d",
+    "docker:compose:down": "docker-compose down",
+    "docker:compose:logs": "docker-compose logs -f"
   },
   "dependencies": {
     "@pinata/sdk": "^2.1.0",

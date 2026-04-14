@@ -1,40 +1,118 @@
+version: '3.8'
+
 services:
-  mongo:
-    image: mongo:6.0
+  # MongoDB Database
+  mongodb:
+    image: mongo:7.0-alpine
+    container_name: pva-bazaar-mongo
     restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: secure_password_123
+      MONGO_INITDB_DATABASE: pvabazaar
     volumes:
       - mongo-data:/data/db
+      - mongo-config:/data/configdb
     ports:
       - '27017:27017'
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - pva-network
 
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: pva-bazaar-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    ports:
+      - '6379:6379'
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - pva-network
+
+  # Backend API
   backend:
     build: ./backend
+    container_name: pva-bazaar-api
+    restart: unless-stopped
     depends_on:
-      - mongo
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
-      MONGODB_URI: 'mongodb://mongo:27017/pvabazaar'
-      PORT: '5001'
       NODE_ENV: 'development'
+      PORT: '5001'
+      MONGODB_URI: 'mongodb://admin:secure_password_123@mongodb:27017/pvabazaar?authSource=admin'
+      REDIS_URL: 'redis://redis:6379/0'
+      JWT_SECRET: 'dev_jwt_secret_change_in_production'
+      ETHEREUM_RPC_URL: 'https://polygon-amoy-rpc.publicnode.com'
+      STRIPE_SECRET_KEY: 'sk_test_dev'
+      SENDGRID_API_KEY: 'SG.dev'
+      SENDGRID_FROM: 'dev@localhost.local'
+      AWS_REGION: 'us-east-1'
       DEV_AUTO_SEED: 'true'
-      JWT_SECRET: 'dev_jwt_secret'
-      ADMIN_SECRET_CODE: 'dev_admin_code'
-      USE_MEMORY_DB: 'false'
       ENABLE_QUICK_PUBLISH: 'true'
     ports:
       - '5001:5001'
     volumes:
       - ./backend:/app
       - /app/node_modules
-    command: sh -c "sleep 5 && node seed.js || true && node api/index.js"
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/api/health-check"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - pva-network
+    command: sh -c "sleep 5 && npm run seed:db || true && npm start"
 
+  # Frontend App
   frontend:
     build: ./Frontend
+    container_name: pva-bazaar-frontend
+    restart: unless-stopped
     depends_on:
       - backend
-    ports:
-      - '3000:80'
     environment:
       VITE_API_URL: 'http://localhost:5001'
+    ports:
+      - '3000:80'
+    networks:
+      - pva-network
+
+  # Mailhog for Email Testing
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: pva-bazaar-mailhog
+    restart: unless-stopped
+    ports:
+      - '1025:1025'  # SMTP port
+      - '8025:8025'  # Web UI
+    networks:
+      - pva-network
 
 volumes:
   mongo-data:
+    driver: local
+  mongo-config:
+    driver: local
+  redis-data:
+    driver: local
+
+networks:
+  pva-network:
+    driver: bridge
