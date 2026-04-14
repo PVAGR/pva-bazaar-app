@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const DecentralizedIdentity = require('../models/DecentralizedIdentity');
-const { authMiddleware } = require('../middleware/auth');
+const authMiddleware = require('../middleware/auth');
 const crypto = require('crypto');
 
 /**

@@ -13,7 +13,8 @@ const githubService = require('../services/gitHubService');
 const router = express.Router();
 
 // Configuration
-const OLLAMA_BASE_URL = String(process.env.OLLAMA_BASE_URL || '').trim().replace(/\/$/, '') || 'http://localhost:11434';
+const OLLAMA_BASE_URL = String(process.env.OLLAMA_BASE_URL || '').trim().replace(/\/$/, '');
+// When empty, llmProvider falls back to cloud LLMs (Claude, GPT-4, Pollinations)
 const OLLAMA_MODEL = String(process.env.OLLAMA_MODEL || 'llama3.1').trim();
 const OLLAMA_TIMEOUT_MS = Math.min(
   Math.max(parseInt(process.env.OLLAMA_TIMEOUT_MS || '20000', 10), 5000),

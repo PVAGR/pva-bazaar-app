@@ -1,16 +1,13 @@
 // Frontend/src/config/env.ts
-const must = (key: string, val: string | undefined) => {
-  if (!val) throw new Error(`Missing required env var: ${key}`);
-  return val;
-};
-
-const rawApiUrl = must("VITE_API_URL", import.meta.env.VITE_API_URL).replace(/\/$/, "");
+const rawApiUrl = (import.meta.env.VITE_API_URL || "https://pvabazaar.org/api").replace(
+  /\/$/, ""
+);
 const isProdBuild = import.meta.env.MODE === "production";
 const isLocalApi = /localhost|127\.0\.0\.1/i.test(rawApiUrl);
 
 if (isProdBuild && isLocalApi) {
   throw new Error(
-    "VITE_API_URL points to localhost in production build. Set it to the deployed API domain (e.g., https://api.pvabazaar.org)."
+    "VITE_API_URL points to localhost in production build. Set it to the deployed API domain (e.g., https://pvabazaar.org/api)."
   );
 }
 

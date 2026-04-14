@@ -23,6 +23,10 @@
       }
     },
     {
+      "src": "backend/workers/queueProcessor.cjs",
+      "use": "@vercel/node"
+    },
+    {
       "src": "Frontend/package.json",
       "use": "@vercel/static-build",
       "config": { "distDir": "dist" }
@@ -39,5 +43,11 @@
     { "src": "^/pages/.*\\.html$", "status": 308, "dest": "/#/library" },
     { "handle": "filesystem" },
     { "src": "/(.*)", "dest": "/index.html" }
+  ],
+  "crons": [
+    {
+      "path": "/api/internal/worker-pulse",
+      "schedule": "*/10 * * * *"
+    }
   ]
 }

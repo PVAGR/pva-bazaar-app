@@ -81,6 +81,11 @@ app.use(helmet({
 // --- UNCONDITIONAL CORS (runs before everything, even on errors) ---
 const allowedOrigins = new Set(getAllowedOrigins());
 
+function isAllowedDevOrigin(origin = '') {
+  // Allow any localhost/127.0.0.1 port for Vite/React dev.
+  return /^http:\/\/(localhost|127\.0\.0\.1):\d+$/.test(String(origin || '').trim());
+}
+
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   
@@ -88,7 +93,7 @@ app.use((req, res, next) => {
   res.setHeader('Vary', 'Origin');
   
   // Set CORS headers if origin is allowed (never use * with credentials)
-  if (allowedOrigins.has(origin)) {
+  if (allowedOrigins.has(origin) || isAllowedDevOrigin(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Access-Control-Allow-Credentials', 'true');
   }
@@ -196,6 +201,13 @@ try {
   app.use('/api/webhooks', webhooksTelegramRoutes);
 } catch (err) {
   console.warn('⚠️ Optional route disabled: webhooksTelegram', err?.message || err);
+}
+try {
+  const webhooksGithubRoutes = require('../routes/webhooksGithub');
+  app.use('/webhooks', webhooksGithubRoutes);
+  app.use('/api/webhooks', webhooksGithubRoutes);
+} catch (err) {
+  console.warn('⚠️ Optional route disabled: webhooksGithub', err?.message || err);
 }
 
 // Connect to MongoDB - optimized for serverless with global caching
@@ -387,6 +399,7 @@ app.use('/api/partners', partnersRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/passport', passportRoutes);
+app.use('/api/passports', passportRoutes);
 app.use('/api/admin/passport', passportRoutes);
 app.use('/api', proposalsRoutes);
 app.use('/api/cloud-storage', cloudStorageRoutes);
@@ -531,6 +544,23 @@ app.post('/api/dev/token', (req, res) => {
 // Express ping - guaranteed fast, no DB
 app.get('/api/express-ping', (req, res) => {
   res.json({ ok: true, source: 'express' });
+});
+
+// Internal: Vercel Cron Worker Pulse - processes queue without local watchdog
+app.post('/api/internal/worker-pulse', async (req, res) => {
+  try {
+    // Load the queue processor handler
+    const queueProcessor = require('../workers/queueProcessor.cjs');
+    // Call it directly with the request/response
+    return await queueProcessor(req, res);
+  } catch (error) {
+    console.error('[Worker Pulse Error]', error);
+    res.status(500).json({
+      ok: false,
+      error: error.message,
+      timestamp: new Date().toISOString(),
+    });
+  }
 });
 
 // Decentralized stack status (cloud + web3/IPFS/OpenClaw readiness)

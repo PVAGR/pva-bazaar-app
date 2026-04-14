@@ -72,6 +72,9 @@ export const submitGovernanceOnChainVote = (proposalId, payload) =>
 export const fetchGovernanceVoteSummary = (proposalId) =>
   apiGet(`/governance/proposals/${encodeURIComponent(proposalId)}/votes/summary`);
 export const fetchGovernanceAdminResponses = () => apiGet('/governance/admin-responses');
+export const fetchGovernanceAdminSyncHealth = () => apiGet('/governance/admin-responses/sync-health');
+export const repairGovernanceAdminLifecycleSync = (proposalId) =>
+  apiPost(`/governance/admin-responses/${encodeURIComponent(proposalId)}/repair-lifecycle`, {});
 export const upsertGovernanceAdminResponse = (proposalId, payload) =>
   apiPut(`/governance/admin-responses/${encodeURIComponent(proposalId)}`, payload);
 export const fetchGovernanceExecutionTimeline = (proposalId) =>

@@ -368,6 +368,17 @@ function buildWatchdogSummary(logLines, alertLines) {
 }
 
 function resolveWatchdogPaths() {
+  // On Vercel/serverless, file logging doesn't work - use queue-based monitoring
+  const isServerless = process.env.VERCEL_ENV || process.env.IS_SERVERLESS === 'true';
+
+  if (isServerless) {
+    return {
+      logPath: null,
+      alertPath: null,
+      reason: 'Serverless deployment - using queue-based monitoring',
+    };
+  }
+
   const defaultLog = path.join(process.cwd(), 'infra', 'openclaw', 'logs', 'watchdog.log');
   const defaultAlert = path.join(process.cwd(), 'infra', 'openclaw', 'logs', 'watchdog.alert.log');
 

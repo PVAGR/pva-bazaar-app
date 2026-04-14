@@ -6,6 +6,7 @@ import { MongoMemoryServer } from 'mongodb-memory-server';
 
 let mongoServer;
 let app;
+let GovernanceProposal;
 
 async function registerUser({ name, email }) {
   const res = await request(app).post('/api/auth/register').send({
@@ -34,6 +35,12 @@ async function promoteUserToAdmin(email) {
   expect(result?.matchedCount || 0).toBeGreaterThan(0);
 }
 
+async function getUserIdByEmail(email) {
+  const user = await mongoose.connection.collection('users').findOne({ email });
+  expect(user?._id).toBeTruthy();
+  return user._id;
+}
+
 describe('Governance execution timeline endpoints', () => {
   beforeAll(async () => {
     process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-jwt-secret-32-characters-minimum!!!';
@@ -46,6 +53,8 @@ describe('Governance execution timeline endpoints', () => {
     // Import app after env is configured.
     // eslint-disable-next-line global-require
     app = require('../api/index.js');
+    // eslint-disable-next-line global-require
+    GovernanceProposal = require('../models/GovernanceProposal');
   });
 
   afterAll(async () => {
@@ -157,5 +166,91 @@ describe('Governance execution timeline endpoints', () => {
     expect(Array.isArray(timelineRes.body?.execution?.updates)).toBe(true);
     expect(timelineRes.body.execution.updates.length).toBeGreaterThanOrEqual(1);
     expect(timelineRes.body.execution.updates.at(-1)?.message).toContain('Second milestone completed');
+  });
+
+  it('reports admin decision and lifecycle mismatches in sync-health endpoint', async () => {
+    const adminEmail = `admin-sync-${Date.now()}@example.com`;
+    await registerUser({ name: 'Sync Admin', email: adminEmail });
+    await promoteUserToAdmin(adminEmail);
+    const adminToken = await loginUser(adminEmail);
+    const adminUserId = await getUserIdByEmail(adminEmail);
+
+    const proposal = await GovernanceProposal.create({
+      title: 'Lifecycle sync health test proposal',
+      summary: 'Used by test to validate decision-to-lifecycle mismatch reporting.',
+      createdBy: adminUserId,
+      status: 'conference_queue',
+    });
+
+    const responseSeed = await request(app)
+      .put(`/api/governance/admin-responses/${proposal._id}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        decision: 'accepted',
+        reason: 'Approved by admin but lifecycle intentionally not advanced for mismatch test.',
+      });
+
+    expect(responseSeed.status).toBe(200);
+    expect(responseSeed.body?.ok).toBe(true);
+
+    const healthRes = await request(app)
+      .get('/api/governance/admin-responses/sync-health')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(healthRes.status).toBe(200);
+    expect(healthRes.body?.ok).toBe(true);
+    expect(Number(healthRes.body?.summary?.total || 0)).toBeGreaterThan(0);
+
+    const match = (healthRes.body?.items || []).find((item) => item.proposalId === String(proposal._id));
+    expect(match).toBeTruthy();
+    expect(match.adminDecision).toBe('accepted');
+    expect(match.expectedLifecycleStatus).toBe('outcome_published');
+    expect(match.actualLifecycleStatus).toBe('conference_queue');
+    expect(match.syncState).toBe('mismatch');
+  });
+
+  it('repairs lifecycle mismatch to expected status from admin decision', async () => {
+    const adminEmail = `admin-repair-${Date.now()}@example.com`;
+    await registerUser({ name: 'Repair Admin', email: adminEmail });
+    await promoteUserToAdmin(adminEmail);
+    const adminToken = await loginUser(adminEmail);
+    const adminUserId = await getUserIdByEmail(adminEmail);
+
+    const proposal = await GovernanceProposal.create({
+      title: 'Lifecycle repair test proposal',
+      summary: 'Used by test to validate lifecycle repair endpoint.',
+      createdBy: adminUserId,
+      status: 'conference_queue',
+    });
+
+    const responseSeed = await request(app)
+      .put(`/api/governance/admin-responses/${proposal._id}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        decision: 'accepted',
+        reason: 'Intentional mismatch before repair.',
+      });
+
+    expect(responseSeed.status).toBe(200);
+    expect(responseSeed.body?.ok).toBe(true);
+
+    const repairRes = await request(app)
+      .post(`/api/governance/admin-responses/${proposal._id}/repair-lifecycle`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({});
+
+    expect(repairRes.status).toBe(200);
+    expect(repairRes.body?.ok).toBe(true);
+    expect(repairRes.body?.status).toBe('outcome_published');
+
+    const healthRes = await request(app)
+      .get('/api/governance/admin-responses/sync-health')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(healthRes.status).toBe(200);
+    const match = (healthRes.body?.items || []).find((item) => item.proposalId === String(proposal._id));
+    expect(match).toBeTruthy();
+    expect(match.syncState).toBe('synced');
+    expect(match.actualLifecycleStatus).toBe('outcome_published');
   });
 });

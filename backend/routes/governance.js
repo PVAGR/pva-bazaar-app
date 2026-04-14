@@ -111,6 +111,14 @@ function normalizeAdminDecision(value) {
   return ALLOWED_ADMIN_DECISIONS.has(clean) ? clean : '';
 }
 
+function expectedLifecycleStatusFromDecision(decision) {
+  const normalized = normalizeAdminDecision(decision);
+  if (!normalized) return '';
+  if (normalized === 'public') return 'public_discussion';
+  if (normalized === 'conference_queue') return 'conference_queue';
+  return 'outcome_published';
+}
+
 function sanitizeExecutionBlock(input) {
   if (!input || typeof input !== 'object') return null;
 
@@ -232,6 +240,116 @@ router.get('/admin-responses', async (_req, res) => {
   } catch (error) {
     console.error('Error listing governance admin responses:', error);
     return res.status(500).json({ ok: false, error: 'Failed to list governance admin responses' });
+  }
+});
+
+router.get('/admin-responses/sync-health', authMiddleware, adminOnly, async (_req, res) => {
+  try {
+    const responses = await GovernanceAdminResponse.find({})
+      .sort({ updatedAt: -1 })
+      .lean();
+
+    const proposalObjectIds = responses
+      .map((item) => String(item?.proposalId || '').trim())
+      .filter((proposalId) => mongoose.Types.ObjectId.isValid(proposalId));
+
+    const proposals = proposalObjectIds.length
+      ? await GovernanceProposal.find({ _id: { $in: proposalObjectIds } })
+        .select('_id status title updatedAt')
+        .lean()
+      : [];
+
+    const proposalMap = new Map(proposals.map((proposal) => [String(proposal._id), proposal]));
+
+    const items = responses.map((item) => {
+      const proposalId = String(item?.proposalId || '').trim();
+      const expectedLifecycleStatus = expectedLifecycleStatusFromDecision(item?.decision);
+      const isObjectId = mongoose.Types.ObjectId.isValid(proposalId);
+      const proposal = isObjectId ? proposalMap.get(proposalId) : null;
+      const actualLifecycleStatus = proposal?.status || null;
+
+      let syncState = 'local_only';
+      if (isObjectId && !proposal) syncState = 'missing';
+      if (isObjectId && proposal && !expectedLifecycleStatus) syncState = 'unmapped';
+      if (isObjectId && proposal && expectedLifecycleStatus) {
+        syncState = expectedLifecycleStatus === actualLifecycleStatus ? 'synced' : 'mismatch';
+      }
+
+      return {
+        proposalId,
+        proposalTitle: proposal?.title || null,
+        adminDecision: item?.decision || 'public',
+        expectedLifecycleStatus: expectedLifecycleStatus || null,
+        actualLifecycleStatus,
+        syncState,
+        updatedAt: item?.updatedAt || null,
+      };
+    });
+
+    const summary = items.reduce((acc, item) => {
+      acc.total += 1;
+      if (item.syncState === 'synced') acc.synced += 1;
+      if (item.syncState === 'mismatch') acc.mismatch += 1;
+      if (item.syncState === 'missing') acc.missing += 1;
+      if (item.syncState === 'local_only') acc.localOnly += 1;
+      if (item.syncState === 'unmapped') acc.unmapped += 1;
+      return acc;
+    }, {
+      total: 0,
+      synced: 0,
+      mismatch: 0,
+      missing: 0,
+      localOnly: 0,
+      unmapped: 0,
+    });
+
+    return res.json({ ok: true, summary, items });
+  } catch (error) {
+    console.error('Error fetching governance admin-response sync health:', error);
+    return res.status(500).json({ ok: false, error: 'Failed to fetch governance sync health' });
+  }
+});
+
+router.post('/admin-responses/:proposalId/repair-lifecycle', authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const proposalId = sanitize(req.params?.proposalId);
+    if (!proposalId) {
+      return res.status(400).json({ ok: false, error: 'proposalId is required' });
+    }
+    if (!mongoose.Types.ObjectId.isValid(proposalId)) {
+      return res.status(400).json({ ok: false, error: 'repair-lifecycle requires a MongoDB proposal id' });
+    }
+
+    const adminResponse = await GovernanceAdminResponse.findOne({ proposalId }).lean();
+    if (!adminResponse) {
+      return res.status(404).json({ ok: false, error: 'Admin response not found for proposal' });
+    }
+
+    const expectedLifecycleStatus = expectedLifecycleStatusFromDecision(adminResponse.decision);
+    if (!expectedLifecycleStatus) {
+      return res.status(409).json({ ok: false, error: 'Cannot map admin decision to lifecycle status' });
+    }
+
+    const proposal = await GovernanceProposal.findById(proposalId);
+    if (!proposal) {
+      return res.status(404).json({ ok: false, error: 'Proposal not found' });
+    }
+
+    const previousStatus = proposal.status;
+    proposal.status = expectedLifecycleStatus;
+    await proposal.save();
+
+    return res.json({
+      ok: true,
+      repaired: previousStatus !== proposal.status,
+      proposalId,
+      adminDecision: adminResponse.decision,
+      previousStatus,
+      status: proposal.status,
+    });
+  } catch (error) {
+    console.error('Error repairing governance lifecycle status:', error);
+    return res.status(500).json({ ok: false, error: 'Failed to repair governance lifecycle status' });
   }
 });
 

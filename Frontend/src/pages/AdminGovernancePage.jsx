@@ -2,8 +2,10 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useGovernanceStore } from '../store/governanceStore';
 import {
   fetchGovernanceAdminResponses,
+  fetchGovernanceAdminSyncHealth,
   fetchGovernanceExecutionTimeline,
   postGovernanceExecutionUpdate,
+  repairGovernanceAdminLifecycleSync,
   updateGovernanceProposalLifecycleStatus,
   upsertGovernanceAdminResponse,
 } from '../lib/api';
@@ -43,14 +45,89 @@ export default function AdminGovernancePage() {
   const [timelines, setTimelines] = useState({});
   const [timelineLoading, setTimelineLoading] = useState({});
   const [lifecycleSyncById, setLifecycleSyncById] = useState({});
+  const [syncHealth, setSyncHealth] = useState({
+    summary: { total: 0, synced: 0, mismatch: 0, missing: 0, localOnly: 0, unmapped: 0 },
+    items: [],
+  });
+  const [syncHealthFilter, setSyncHealthFilter] = useState('all');
+  const [repairingByProposalId, setRepairingByProposalId] = useState({});
+  const [repairAllLoading, setRepairAllLoading] = useState(false);
+  const [syncHealthLoading, setSyncHealthLoading] = useState(false);
   const [syncError, setSyncError] = useState('');
+
+  const loadSyncHealth = async () => {
+    setSyncHealthLoading(true);
+    try {
+      const data = await fetchGovernanceAdminSyncHealth();
+      if (data?.ok) {
+        setSyncHealth({
+          summary: data.summary || { total: 0, synced: 0, mismatch: 0, missing: 0, localOnly: 0, unmapped: 0 },
+          items: Array.isArray(data.items) ? data.items : [],
+        });
+      }
+    } catch (_err) {
+      setSyncError('Unable to load governance lifecycle sync health right now.');
+    } finally {
+      setSyncHealthLoading(false);
+    }
+  };
+
+  const repairLifecycle = async (proposalId, options = {}) => {
+    const { refresh = true } = options;
+    setSyncError('');
+    setRepairingByProposalId((state) => ({ ...state, [proposalId]: true }));
+    try {
+      const response = await repairGovernanceAdminLifecycleSync(proposalId);
+      if (!response?.ok) {
+        throw new Error(response?.error || 'Repair action failed');
+      }
+      if (refresh) {
+        await loadSyncHealth();
+      }
+    } catch (_error) {
+      setSyncError('Lifecycle repair failed. Please refresh and try again.');
+    } finally {
+      setRepairingByProposalId((state) => ({ ...state, [proposalId]: false }));
+    }
+  };
+
+  const visibleSyncItems = useMemo(() => {
+    const all = Array.isArray(syncHealth.items) ? syncHealth.items : [];
+    if (syncHealthFilter === 'all') return all;
+    return all.filter((item) => item.syncState === syncHealthFilter);
+  }, [syncHealth.items, syncHealthFilter]);
+
+  const repairAllMismatches = async () => {
+    setSyncError('');
+    setRepairAllLoading(true);
+    try {
+      const mismatchIds = (syncHealth.items || [])
+        .filter((item) => item.syncState === 'mismatch')
+        .map((item) => item.proposalId)
+        .filter(Boolean);
+
+      for (const proposalId of mismatchIds) {
+        // eslint-disable-next-line no-await-in-loop
+        await repairLifecycle(proposalId, { refresh: false });
+      }
+
+      await loadSyncHealth();
+    } catch (_error) {
+      setSyncError('Bulk lifecycle repair failed. Please refresh and retry.');
+    } finally {
+      setRepairAllLoading(false);
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
 
     const loadAdminResponses = async () => {
       try {
-        const data = await fetchGovernanceAdminResponses();
+        const [data] = await Promise.all([
+          fetchGovernanceAdminResponses(),
+          loadSyncHealth(),
+        ]);
         if (cancelled) return;
         if (data?.ok && Array.isArray(data.items) && data.items.length) {
           hydrateAdminResponses(data.items);
@@ -155,6 +232,8 @@ export default function AdminGovernancePage() {
       nextStep: form.nextStep,
       targetTimeline: form.targetTimeline,
     });
+
+    loadSyncHealth();
   };
 
   const applyExecution = async (proposal) => {
@@ -272,10 +351,119 @@ export default function AdminGovernancePage() {
         </div>
       ) : null}
 
+      <section
+        style={{
+          marginBottom: '14px',
+          border: '1px solid var(--site-border)',
+          borderRadius: '12px',
+          background: 'var(--site-panel)',
+          padding: '12px',
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <h2 style={{ margin: 0, fontSize: '16px' }}>Lifecycle Sync Health</h2>
+          <button
+            type="button"
+            onClick={loadSyncHealth}
+            style={{ padding: '6px 10px', border: '1px solid var(--site-border)', borderRadius: '8px', background: 'var(--site-panel-soft)', color: 'var(--site-text)', fontWeight: 700, cursor: 'pointer' }}
+          >
+            {syncHealthLoading ? 'Refreshing…' : 'Refresh'}
+          </button>
+        </div>
+        <p style={{ margin: '8px 0 0', color: 'var(--site-text-muted)', fontSize: '13px' }}>
+          Total: {syncHealth.summary.total} · Synced: {syncHealth.summary.synced} · Mismatch: {syncHealth.summary.mismatch} · Missing: {syncHealth.summary.missing} · Local-only: {syncHealth.summary.localOnly}
+        </p>
+        <div style={{ marginTop: '10px', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+          {[
+            { value: 'all', label: 'All' },
+            { value: 'mismatch', label: 'Mismatch' },
+            { value: 'missing', label: 'Missing' },
+            { value: 'local_only', label: 'Local-only' },
+            { value: 'synced', label: 'Synced' },
+          ].map((chip) => (
+            <button
+              key={chip.value}
+              type="button"
+              onClick={() => setSyncHealthFilter(chip.value)}
+              style={{
+                padding: '5px 10px',
+                borderRadius: '999px',
+                border: '1px solid var(--site-border)',
+                background: syncHealthFilter === chip.value ? 'var(--site-accent)' : 'var(--site-panel-soft)',
+                color: syncHealthFilter === chip.value ? '#fff' : 'var(--site-text)',
+                cursor: 'pointer',
+                fontWeight: 700,
+                fontSize: '12px',
+              }}
+            >
+              {chip.label}
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={repairAllMismatches}
+            disabled={repairAllLoading || syncHealth.summary.mismatch < 1}
+            style={{
+              padding: '5px 10px',
+              borderRadius: '999px',
+              border: '1px solid var(--site-border)',
+              background: 'var(--site-accent)',
+              color: '#fff',
+              cursor: repairAllLoading || syncHealth.summary.mismatch < 1 ? 'not-allowed' : 'pointer',
+              opacity: repairAllLoading || syncHealth.summary.mismatch < 1 ? 0.65 : 1,
+              fontWeight: 700,
+              fontSize: '12px',
+            }}
+          >
+            {repairAllLoading ? 'Repairing All…' : 'Repair All Mismatches'}
+          </button>
+        </div>
+        {visibleSyncItems.length ? (
+          <div style={{ marginTop: '10px', display: 'grid', gap: '8px' }}>
+            {visibleSyncItems
+              .slice(0, 6)
+              .map((item) => (
+                <div
+                  key={`repair-${item.proposalId}`}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    gap: '8px',
+                    flexWrap: 'wrap',
+                    alignItems: 'center',
+                    border: '1px solid var(--site-border)',
+                    borderRadius: '8px',
+                    padding: '8px',
+                    background: 'var(--site-panel-soft)',
+                  }}
+                >
+                  <span style={{ color: 'var(--site-text-muted)', fontSize: '12px' }}>
+                    {item.proposalId}: {item.actualLifecycleStatus || 'n/a'} {'->'} {item.expectedLifecycleStatus || 'n/a'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => repairLifecycle(item.proposalId)}
+                    disabled={Boolean(repairingByProposalId[item.proposalId]) || item.syncState !== 'mismatch' || repairAllLoading}
+                    style={{ padding: '6px 10px', border: 'none', borderRadius: '8px', background: 'var(--site-accent)', color: '#fff', fontWeight: 700, cursor: 'pointer' }}
+                  >
+                    {item.syncState === 'mismatch'
+                      ? (repairingByProposalId[item.proposalId] ? 'Repairing…' : 'Repair')
+                      : 'No Action'}
+                  </button>
+                </div>
+              ))}
+          </div>
+        ) : null}
+      </section>
+
       <div style={{ display: 'grid', gap: '14px' }}>
         {filteredProposals.map((proposal) => {
           const decision = getDecisionForm(proposal);
           const execution = getExecutionForm(proposal);
+          const healthItem = syncHealth.items.find((item) => item.proposalId === String(proposal._id || proposal.id));
+          const healthBadge = healthItem
+            ? `${healthItem.syncState}: ${healthItem.expectedLifecycleStatus || 'n/a'} -> ${healthItem.actualLifecycleStatus || 'n/a'}`
+            : null;
 
           return (
             <section
@@ -291,6 +479,11 @@ export default function AdminGovernancePage() {
               <p style={{ margin: '0 0 12px', color: 'var(--site-text-muted)' }}>
                 Status: {proposal.status} · Supports: {proposal.supportCount}
               </p>
+              {healthBadge ? (
+                <p style={{ margin: '0 0 12px', color: 'var(--site-text-muted)', fontSize: '12px' }}>
+                  Sync: {healthBadge}
+                </p>
+              ) : null}
 
               <div style={{ display: 'grid', gap: '10px', marginBottom: '12px' }}>
                 <label>
