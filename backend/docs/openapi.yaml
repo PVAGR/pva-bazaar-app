@@ -1,0 +1,639 @@
+openapi: 3.0.0
+info:
+  title: PVA Bazaar Marketplace API
+  description: Complete global marketplace for artisans, creators, and sellers with all 8 phases
+  version: 8.0.0
+  contact:
+    name: PVA Support
+    url: https://pvabazaar.org
+  license:
+    name: Proprietary
+    url: https://pvabazaar.org/license
+
+servers:
+  - url: https://api.pvabazaar.org
+    description: Production
+  - url: http://localhost:5001
+    description: Development
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    apiKeyAuth:
+      type: http
+      scheme: bearer
+      description: API Key for partner integrations
+
+  schemas:
+    Shop:
+      type: object
+      properties:
+        _id: { type: string }
+        userId: { type: string }
+        shopName: { type: string }
+        slug: { type: string }
+        description: { type: string }
+        banner: { type: string }
+        logo: { type: string }
+        status: { type: string, enum: [draft, live, suspended] }
+        analytics: { type: object }
+        createdAt: { type: string }
+
+    ProductType:
+      type: object
+      properties:
+        _id: { type: string }
+        title: { type: string }
+        description: { type: string }
+        type: { type: string, enum: [physical_good, digital_download, course, expertise, nft, service] }
+        price: { type: number }
+        stockQty: { type: number }
+        sellerId: { type: string }
+
+    FulfillmentCenter:
+      type: object
+      properties:
+        _id: { type: string }
+        name: { type: string }
+        code: { type: string }
+        address: { type: object }
+        capacity: { type: object }
+        metrics: { type: object }
+
+    Shipment:
+      type: object
+      properties:
+        _id: { type: string }
+        orderId: { type: string }
+        trackingNumber: { type: string }
+        carrier: { type: string }
+        status: { type: string }
+        estimatedDelivery: { type: string }
+
+    Review:
+      type: object
+      properties:
+        _id: { type: string }
+        productId: { type: string }
+        reviewerId: { type: string }
+        rating: { type: number, minimum: 1, maximum: 5 }
+        comment: { type: string }
+        verifiedPurchase: { type: boolean }
+
+    Error:
+      type: object
+      properties:
+        error: { type: string }
+        message: { type: string }
+
+security:
+  - bearerAuth: []
+
+paths:
+  # ===== PHASE 2: SHOP BUILDER =====
+  /api/shops:
+    post:
+      tags: [Shops - Phase 2]
+      summary: Create new shop
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                shopName: { type: string }
+                description: { type: string }
+      responses:
+        '201':
+          description: Shop created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Shop' }
+        '400':
+          description: Invalid input
+        '401':
+          description: Unauthorized
+
+    get:
+      tags: [Shops - Phase 2]
+      summary: List all shops
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, default: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 50 }
+      responses:
+        '200':
+          description: List of shops
+
+  /api/shops/{shopId}:
+    get:
+      tags: [Shops - Phase 2]
+      summary: Get shop details
+      parameters:
+        - name: shopId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Shop details
+        '404':
+          description: Shop not found
+
+    put:
+      tags: [Shops - Phase 2]
+      summary: Update shop
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: shopId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Shop updated
+        '401':
+          description: Unauthorized
+
+  /api/shops/{shopId}/follow:
+    post:
+      tags: [Shops - Phase 2]
+      summary: Follow/unfollow shop
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: shopId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Follow status changed
+
+  # ===== PHASE 3: MULTI-PRODUCT =====
+  /api/products:
+    post:
+      tags: [Products - Phase 3]
+      summary: Create product (physical, digital, course, expertise, NFT, service)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title: { type: string }
+                type: { type: string }
+                price: { type: number }
+      responses:
+        '201':
+          description: Product created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProductType' }
+
+    get:
+      tags: [Products - Phase 3]
+      summary: List products
+      parameters:
+        - name: type
+          in: query
+          schema: { type: string }
+        - name: sellerId
+          in: query
+          schema: { type: string }
+      responses:
+        '200':
+          description: Products list
+
+  /api/courses/{courseId}/enroll:
+    post:
+      tags: [Products - Phase 3]
+      summary: Enroll in course
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: courseId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Enrolled successfully
+
+  # ===== PHASE 4: SELLER FEATURES =====
+  /api/reviews:
+    post:
+      tags: [Reviews - Phase 4]
+      summary: Submit product review
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                productId: { type: string }
+                rating: { type: number }
+                comment: { type: string }
+      responses:
+        '201':
+          description: Review created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Review' }
+
+    get:
+      tags: [Reviews - Phase 4]
+      summary: Get reviews
+      parameters:
+        - name: productId
+          in: query
+          schema: { type: string }
+      responses:
+        '200':
+          description: Reviews list
+
+  /api/messages:
+    post:
+      tags: [Messaging - Phase 4]
+      summary: Send message
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                recipientId: { type: string }
+                message: { type: string }
+      responses:
+        '201':
+          description: Message sent
+
+    get:
+      tags: [Messaging - Phase 4]
+      summary: Get conversations
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Conversations list
+
+  /api/analytics:
+    get:
+      tags: [Analytics - Phase 4]
+      summary: Get seller analytics
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Analytics data
+
+  # ===== PHASE 5: COMMUNITY =====
+  /api/forums/threads:
+    post:
+      tags: [Forums - Phase 5]
+      summary: Create forum thread
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                categoryId: { type: string }
+                title: { type: string }
+                content: { type: string }
+      responses:
+        '201':
+          description: Thread created
+
+  /api/events:
+    post:
+      tags: [Events - Phase 5]
+      summary: Create event
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title: { type: string }
+                eventType: { type: string }
+                dateTime: { type: string }
+      responses:
+        '201':
+          description: Event created
+
+  /api/articles:
+    post:
+      tags: [Articles - Phase 5]
+      summary: Publish article
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: Article published
+
+  # ===== PHASE 6a: PRICING & INTELLIGENCE =====
+  /api/pricing/calculate:
+    post:
+      tags: [Pricing - Phase 6a]
+      summary: Calculate fair price
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                productId: { type: string }
+                condition: { type: string }
+      responses:
+        '200':
+          description: Fair price calculated
+
+  /api/pricing/recommend:
+    post:
+      tags: [Pricing - Phase 6a]
+      summary: Get pricing recommendation
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Recommendation provided
+
+  /api/admin/intelligence/dashboard:
+    get:
+      tags: [Intelligence - Phase 6a]
+      summary: Get market intelligence dashboard
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Dashboard data
+
+  # ===== PHASE 6b: FULFILLMENT =====
+  /api/fulfillment/select-center:
+    post:
+      tags: [Fulfillment - Phase 6b]
+      summary: Select best fulfillment center
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                destinationCountry: { type: string }
+                destinationCity: { type: string }
+      responses:
+        '200':
+          description: Selected fulfillment center
+
+  /api/fulfillment/calculate-shipping:
+    post:
+      tags: [Fulfillment - Phase 6b]
+      summary: Calculate shipping cost
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                destinationCountry: { type: string }
+                weight: { type: number }
+      responses:
+        '200':
+          description: Shipping cost calculated
+
+  /api/fulfillment/create-shipment:
+    post:
+      tags: [Fulfillment - Phase 6b]
+      summary: Create shipment
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: Shipment created
+
+  /api/fulfillment/track-shipment/{trackingNumber}:
+    get:
+      tags: [Fulfillment - Phase 6b]
+      summary: Track shipment
+      parameters:
+        - name: trackingNumber
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Shipment tracking info
+
+  /api/fulfillment/initiate-return:
+    post:
+      tags: [Fulfillment - Phase 6b]
+      summary: Initiate return process
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                orderId: { type: string }
+                reason: { type: string }
+      responses:
+        '200':
+          description: Return initiated
+
+  # ===== PHASE 7: AI HELPER =====
+  /api/ai-help/ask:
+    post:
+      tags: [AI Help - Phase 7]
+      summary: Ask AI assistant
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                question: { type: string }
+                topic: { type: string }
+      responses:
+        '200':
+          description: AI response
+
+  /api/ai-help/guides/{topic}:
+    get:
+      tags: [AI Help - Phase 7]
+      summary: Get help guide for topic
+      parameters:
+        - name: topic
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Guide content
+
+  /api/ai-help/pricing-suggest:
+    post:
+      tags: [AI Help - Phase 7]
+      summary: Get AI pricing suggestions
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Pricing suggestions
+
+  /api/ai-help/compliance-checklist:
+    get:
+      tags: [AI Help - Phase 7]
+      summary: Get compliance checklist
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Compliance items
+
+  # ===== PHASE 8: OPEN API =====
+  /api/integrations/connect/{partner}:
+    post:
+      tags: [Integrations - Phase 8]
+      summary: Connect partner account
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: partner
+          in: path
+          required: true
+          schema: { type: string, enum: [shopify, amazon, etsy, opensea, wechat, woocommerce] }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Partner connected
+
+  /api/v1/products:
+    get:
+      tags: [Public API - Phase 8]
+      summary: List seller products (API)
+      security:
+        - apiKeyAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer }
+        - name: limit
+          in: query
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Products list
+
+  /api/v1/orders:
+    get:
+      tags: [Public API - Phase 8]
+      summary: List seller orders (API)
+      security:
+        - apiKeyAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Orders list
+
+  /api/v1/inventory/sync:
+    post:
+      tags: [Public API - Phase 8]
+      summary: Sync inventory levels
+      security:
+        - apiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                updates: { type: array }
+      responses:
+        '200':
+          description: Inventory synced
+
+  /api/v1/analytics:
+    get:
+      tags: [Public API - Phase 8]
+      summary: Get seller analytics
+      security:
+        - apiKeyAuth: []
+      responses:
+        '200':
+          description: Analytics data

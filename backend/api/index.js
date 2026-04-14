@@ -381,6 +381,18 @@ app.get('/api/version', (req, res) => {
   res.status(200).json({ ok: true, timestamp: new Date().toISOString(), ...build });
 });
 
+// API Documentation
+app.get('/api/openapi.json', (req, res) => {
+  const { getOpenApiSpec } = require('../utils/openapi');
+  const spec = getOpenApiSpec();
+  res.json(spec);
+});
+
+app.use('/api/docs', require('../routes/api-docs'));
+
+// Health checks
+app.use('/api/health-check', require('../routes/health-check'));
+
 app.use('/api/blogs', blogsRoutes);
 app.use('/api/pages', pagesRoutes);
 app.use('/api/comments', commentsRoutes);

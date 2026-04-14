@@ -21,6 +21,8 @@
     "test:ci": "vitest run --coverage",
     "test:staged": "vitest related --run",
     "test:smoke": "npm run smoke:openclaw --workspace backend",
+    "test:phases-6-8": "vitest backend/__tests__/phases-6-8.test.js",
+    "seed:db": "node backend/scripts/seedDatabase.js",
     "verify:prod": "node scripts/verify-prod.mjs",
     "verify:prod:wait": "node scripts/wait-prod-deploy.mjs",
     "verify:live": "node scripts/verify-live-ready.mjs",
