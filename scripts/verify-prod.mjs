@@ -29,7 +29,7 @@ const BACKEND =
   FRONTEND;
 
 function fail(msg) {
-  console.error("❌ " + msg);
+  console.error(`❌ ${msg}`);
   process.exitCode = 1;
 }
 

@@ -32,8 +32,8 @@ function parseSupport(text) {
   const proposalTitle = `PROD AUDIT ${stamp}`;
   const proposalComment = `PROD AUDIT COMMENT ${stamp}`;
 
-  let adminWithoutToken = { url: '', title: '', h1: [] };
-  let adminWithToken = { url: '', title: '', h1: [], governanceVisible: false };
+  const adminWithoutToken = { url: '', title: '', h1: [] };
+  const adminWithToken = { url: '', title: '', h1: [], governanceVisible: false };
 
   try {
     await page.goto('https://pvabazaar.org/', { waitUntil: 'domcontentloaded' });

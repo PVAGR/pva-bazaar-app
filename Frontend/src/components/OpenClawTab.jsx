@@ -1,5 +1,3 @@
-/* global setTimeout, clearTimeout, setInterval, clearInterval */
-
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { apiGet, apiPost, apiPut, fetchAdminRuntimeConfig, updateOpenClawRuntimeConfig } from '../lib/api';
 import { createLogger } from '../lib/logger';

@@ -26,7 +26,7 @@ router.post('/twitch', async (req, res) => {
   }
 
   if (secret && signature && messageId && messageTimestamp) {
-    const expected = 'sha256=' + crypto.createHmac('sha256', secret).update(messageId + messageTimestamp + rawBody).digest('hex');
+    const expected = `sha256=${  crypto.createHmac('sha256', secret).update(messageId + messageTimestamp + rawBody).digest('hex')}`;
     if (signature !== expected) return res.status(403).json({ ok: false, error: 'Invalid signature' });
   }
 

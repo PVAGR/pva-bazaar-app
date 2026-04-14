@@ -130,7 +130,7 @@ export default function AdminOrdersPage() {
       }
       const res = await refundOrder(orderDetail._id, { amountCents, reason: refundReason });
       if (res.ok) {
-        setStatusMsg("Refund initiated. Status: " + res.status);
+        setStatusMsg(`Refund initiated. Status: ${  res.status}`);
         setShowRefund(false);
         await openOrderDetail(orderDetail._id);
         // update list row

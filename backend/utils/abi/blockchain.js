@@ -45,7 +45,7 @@ async function verifyOnChain(contractAddress, tokenId) {
     return {
       currentOwner: owner,
       tokenURI: uri,
-      baseURI: baseURI,
+      baseURI,
       verified: true,
       timestamp: new Date().toISOString(),
     };

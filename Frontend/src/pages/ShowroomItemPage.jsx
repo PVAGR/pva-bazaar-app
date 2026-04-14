@@ -52,7 +52,7 @@ export default function ShowroomItemPage() {
       );
       setTimeout(() => setInquirySuccess(false), 5000);
     } catch (err) {
-      setInquiryMessage("✗ " + (err.message || "Failed to send inquiry"));
+      setInquiryMessage(`✗ ${  err.message || "Failed to send inquiry"}`);
       setInquirySuccess(false);
     }
   };

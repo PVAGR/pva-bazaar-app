@@ -182,7 +182,7 @@ async function validateProduction() {
   }
 
   // Summary
-  console.log('\n' + '='.repeat(60));
+  console.log(`\n${  '='.repeat(60)}`);
   console.log('\n📊 VALIDATION SUMMARY\n');
   console.log(`✅ Passed: ${results.passed.length}`);
   results.passed.forEach(item => console.log(`   • ${item}`));
@@ -194,7 +194,7 @@ async function validateProduction() {
     console.log('\n🎉 ALL SYSTEMS OPERATIONAL!');
   }
 
-  console.log('\n' + '='.repeat(60));
+  console.log(`\n${  '='.repeat(60)}`);
   console.log('\n📋 DEPLOYMENT STATUS:\n');
   console.log('🌐 Website: https://pvabazaar.org');
   console.log('📡 API: https://api.pvabazaar.org');

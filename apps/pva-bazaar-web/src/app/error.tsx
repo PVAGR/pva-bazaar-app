@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 
 export default function Error({
@@ -9,6 +10,10 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  useEffect(() => {
+    console.error(error);
+  }, [error]);
+
   return (
     <section className="flex flex-col gap-8 py-12">
       <p className="text-xs uppercase tracking-[0.35em] text-zinc-500">

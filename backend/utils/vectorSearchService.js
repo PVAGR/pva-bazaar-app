@@ -53,7 +53,7 @@ class VectorSearchService {
       // Update the artifact with the embedding
       const updatedArtifact = await Artifact.findByIdAndUpdate(
         artifact._id,
-        { embedding: embedding },
+        { embedding },
         { new: true },
       );
 

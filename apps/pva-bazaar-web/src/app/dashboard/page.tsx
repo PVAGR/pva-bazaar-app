@@ -8,7 +8,7 @@ const API_BASE =
     ? (process.env.NEXT_PUBLIC_VERIFICATION_API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "")
     : "";
 
-type VerificationResult = {
+interface VerificationResult {
   verification: {
     certificateId: string;
     is_authentic: boolean;
@@ -19,7 +19,7 @@ type VerificationResult = {
     computed_hash: string | null;
   } | null;
   message?: string;
-};
+}
 
 export default function DashboardPage() {
   const [idsInput, setIdsInput] = useState("");

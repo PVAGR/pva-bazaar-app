@@ -117,8 +117,8 @@ router.post('/:messageId/read', requireAuth, async (req, res) => {
  */
 router.delete('/:messageId', requireAuth, async (req, res) => {
   try {
-    const message = await messageService.deleteMessage(req.params.messageId, req.user._id);
-    res.json({ message: 'Message deleted', message: message });
+    const deletedMessage = await messageService.deleteMessage(req.params.messageId, req.user._id);
+    res.json({ message: 'Message deleted', deletedMessage });
   } catch (error) {
     if (error.message === 'Unauthorized') {
       return res.status(403).json({ error: error.message });

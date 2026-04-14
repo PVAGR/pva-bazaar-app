@@ -23,7 +23,7 @@ const endpoints = [
   '/api/version',
 ];
 
-let lastStatus = {};
+const lastStatus = {};
 let consecutiveFailures = 0;
 const MAX_FAILURES = 3;
 

@@ -9,7 +9,7 @@ export default async function handler(req, res) {
     if (req.method === 'OPTIONS') return res.status(204).end();
 
     const url = new URL(req.url, `http://${req.headers.host}`);
-    let path = url.pathname.replace(/^\/api\/comments\/?/, '');
+    const path = url.pathname.replace(/^\/api\/comments\/?/, '');
 
     // List comments: GET /api/comments/:slug
     if (req.method === 'GET') {

@@ -366,7 +366,7 @@ export default function MyListingsPage() {
             const jobs = item?.syndication?.jobs || [];
             return jobs.length > 0;
           }).length,
-          loading: loading,
+          loading,
         }}
       />
 
@@ -706,7 +706,7 @@ export default function MyListingsPage() {
                 ))}
               </div>
 
-              {!!retryableChannels.length ? (
+              {retryableChannels.length ? (
                 <div className="listing-footer-actions">
                   <button
                     type="button"

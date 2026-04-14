@@ -73,7 +73,7 @@ module.exports = async (req, res) => {
       nodeVersion: process.version,
       platform: process.platform,
       nodeEnv: process.env.NODE_ENV,
-      memoryUsage: Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + 'MB',
+      memoryUsage: `${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)  }MB`,
     },
   });
 };

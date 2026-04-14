@@ -346,7 +346,7 @@ const SettingsTab = React.memo(function SettingsTab() {
             <button onClick={() => window.open('/archive', '_blank')} className="action-btn">
               📚 Open Archive
             </button>
-            <button onClick={() => window.open(ENV.API_URL + '/health', '_blank')} className="action-btn">
+            <button onClick={() => window.open(`${ENV.API_URL  }/health`, '_blank')} className="action-btn">
               💚 API Health Page
             </button>
             {navigator.clipboard && (

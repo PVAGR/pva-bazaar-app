@@ -408,7 +408,7 @@ async function scanImmuneFi() {
     for (const prog of programs.slice(0, 50)) {
       if (!prog || prog.status === 'Inactive') continue;
       const text = `${prog.project || prog.name || ''} ${prog.description || ''}`;
-      const { score, matched } = scoreText(text + ' bug bounty security audit');
+      const { score, matched } = scoreText(`${text  } bug bounty security audit`);
 
       const maxBounty = parseFloat(prog.maxBounty || prog.maxReward || 0) || 0;
 

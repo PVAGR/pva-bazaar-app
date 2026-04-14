@@ -14,12 +14,12 @@ const {
 
 // Configure multer for image uploads
 const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
+  destination (req, file, cb) {
     cb(null, path.join(__dirname, '../../uploads/artifacts'));
   },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, uniqueSuffix + '-' + file.originalname.replace(/\s+/g, '_'));
+  filename (req, file, cb) {
+    const uniqueSuffix = `${Date.now()  }-${  Math.round(Math.random() * 1e9)}`;
+    cb(null, `${uniqueSuffix  }-${  file.originalname.replace(/\s+/g, '_')}`);
   },
 });
 const upload = multer({ storage });
@@ -186,7 +186,7 @@ router.post('/', authenticateToken, upload.array('assetPhotos', 6), async (req, 
     // Handle images
     let imageUrls = [];
     if (req.files && req.files.length > 0) {
-      imageUrls = req.files.map((f) => '/uploads/artifacts/' + f.filename);
+      imageUrls = req.files.map((f) => `/uploads/artifacts/${  f.filename}`);
     }
 
     // Build payout and consignment info

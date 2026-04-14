@@ -223,7 +223,7 @@ submissionSchema.index({ 'marketplaceData.listingId': 1 });
 
 // Calculate completeness score
 submissionSchema.methods.calculateCompleteness = function () {
-  let scores = { material: 0, narrative: 0, proof: 0 };
+  const scores = { material: 0, narrative: 0, proof: 0 };
 
   // Material truth scoring
   const mt = this.materialTruth;

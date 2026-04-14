@@ -4,13 +4,13 @@ const mongoose = require('mongoose');
 const app = require('../api/index.js');
 
 // Test data
-let authToken = null;
-let sellerId = null;
-let shopId = null;
-let productId = null;
-let centerId = null;
-let orderId = null;
-let shipmentId = null;
+const authToken = null;
+const sellerId = null;
+const shopId = null;
+const productId = null;
+const centerId = null;
+const orderId = null;
+const shipmentId = null;
 
 describe('Phase 6b: Global Fulfillment', () => {
   describe('Fulfillment Centers', () => {

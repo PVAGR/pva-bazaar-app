@@ -930,7 +930,7 @@ app.get('/api/health', async (req, res) => {
     sha: build.sha,
     shortSha: build.shortSha,
     deploymentId: build.deploymentId,
-    allowedOrigins: allowedOrigins,
+    allowedOrigins,
     timestamp: new Date().toISOString(),
     ...(dbError && { dbError }),
   });

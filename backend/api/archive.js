@@ -42,7 +42,7 @@ module.exports = async (req, res) => {
 
       // Build filter
       const filter = {};
-      if (category) filter.category = new RegExp('^' + category + '$', 'i');
+      if (category) filter.category = new RegExp(`^${category}$`, 'i');
       if (tag) filter.tags = tag;
 
       // Search
@@ -97,42 +97,3 @@ module.exports = async (req, res) => {
     res.status(500).json({ ok: false, error: err.message });
   }
 };
-        wordCount: body.wordCount || '0',
-        priority: body.priority || 5,
-        media: Array.isArray(body.media) ? body.media : [],
-      });
-
-      await newEntry.save();
-
-      return res.status(201).json({
-        ok: true,
-        item: {
-          id: newEntry._id.toString(),
-          title: newEntry.title,
-          category: newEntry.category,
-          description: newEntry.description,
-          content: newEntry.content,
-          wordCount: newEntry.wordCount,
-          priority: newEntry.priority,
-          media: Array.isArray(newEntry.media) ? newEntry.media : [],
-          createdAt: newEntry.createdAt,
-          updatedAt: newEntry.updatedAt,
-        },
-      });
-    }
-
-    // Method not allowed
-    return res.status(405).json({
-      ok: false,
-      error: 'Method not allowed',
-    });
-
-  } catch (err) {
-    console.error('Archive API error:', err);
-    return res.status(500).json({
-      ok: false,
-      error: err.message || 'Internal server error',
-    });
-  }
-};
-// trigger deploy

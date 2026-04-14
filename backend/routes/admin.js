@@ -6,6 +6,7 @@ const { authenticateToken } = require('../middleware/auth');
 const adminOnly = require('../middleware/adminOnly');
 const adminSession = require('../middleware/adminSession');
 const AdminRuntimeConfig = require('../models/AdminRuntimeConfig');
+const Artifact = require('../models/Artifact');
 const Order = require('../models/Order');
 const { createSystemEvent, dispatchToOpenClaw } = require('../utils/openclaw-events');
 const { getBuildInfo } = require('../lib/buildInfo');
@@ -135,7 +136,7 @@ router.post('/token-refresh', (req, res, next) => {
     return res.json({ ok: true, token, refreshed: true, mode: 'development' });
   }
 
-  return auth(req, res, (err) => {
+  return authenticateToken(req, res, (err) => {
     if (err) return next(err);
     return adminOnly(req, res, () => {
       if (!process.env.JWT_SECRET) {
@@ -158,7 +159,7 @@ router.get('/status', (req, res, next) => {
   if (process.env.NODE_ENV !== 'production') {
     return res.json({ ok: true, status: 'admin-ok-dev', user: { id: 'dev', role: 'admin' }, timestamp: new Date().toISOString() });
   }
-  return auth(req, res, (err) => {
+  return authenticateToken(req, res, (err) => {
     if (err) return next(err);
     return adminOnly(req, res, () => {
       res.json({ ok: true, status: 'admin-ok', user: req.user, timestamp: new Date().toISOString() });

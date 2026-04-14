@@ -637,7 +637,7 @@ router.get('/:slugOrId/provenance/verify', async (req, res) => {
       ? String(timeline[timeline.length - 1]?.ownerWallet || '').toLowerCase()
       : '';
     const liveOwner = String(liveOnChain?.currentOwner || '').toLowerCase();
-    const ownerMatchesTimeline = Boolean(latestTimelineOwner && liveOwner)
+    const ownerMatchesTimeline = latestTimelineOwner && liveOwner
       ? latestTimelineOwner === liveOwner
       : null;
 

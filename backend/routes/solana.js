@@ -698,7 +698,7 @@ router.post('/execute-test-flow', adminSession, async (req, res) => {
     const lamports = Math.round(numericSol * LAMPORTS_PER_SOL);
     const feeBufferLamports = 20000; // conservative fee/headroom buffer
 
-    let preBalanceLamports = await connection.getBalance(keypair.publicKey);
+    const preBalanceLamports = await connection.getBalance(keypair.publicKey);
     let postAirdropBalanceLamports = preBalanceLamports;
     let airdrop = {
       attempted: false,

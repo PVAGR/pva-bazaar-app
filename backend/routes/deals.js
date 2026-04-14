@@ -615,8 +615,8 @@ router.post('/:id/messages', async (req, res) => {
     const { actor } = await verifyDealActor(req, deal);
     const text = sanitize(req.body?.text);
     if (!text) return res.status(400).json({ ok: false, error: 'Message text is required' });
-    let authorWallet = sanitize(req.body?.authorWallet || '');
-    let signature = sanitize(req.body?.signature || '');
+    const authorWallet = sanitize(req.body?.authorWallet || '');
+    const signature = sanitize(req.body?.signature || '');
 
     if (signature && authorWallet && req.body?.typedData) {
       try {
@@ -652,8 +652,8 @@ router.post('/:id/milestones/:milestoneId/evidence', async (req, res) => {
     const milestone = (deal.milestones || []).find((m) => String(m._id) === String(req.params.milestoneId));
     if (!milestone) return res.status(404).json({ ok: false, error: 'Milestone not found' });
 
-    let evidenceAuthorWallet = sanitize(req.body?.authorWallet || '');
-    let evidenceSignature = sanitize(req.body?.signature || '');
+    const evidenceAuthorWallet = sanitize(req.body?.authorWallet || '');
+    const evidenceSignature = sanitize(req.body?.signature || '');
 
     if (evidenceSignature && evidenceAuthorWallet && req.body?.typedData) {
       try {

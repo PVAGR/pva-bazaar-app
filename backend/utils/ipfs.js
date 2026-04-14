@@ -56,7 +56,7 @@ async function pinJSON(json, name = 'metadata.json', metadata = {}) {
   try {
     const options = {
       pinataMetadata: {
-        name: name,
+        name,
         keyvalues: {
           ...metadata,
           uploadedBy: 'pvabazaar-api',

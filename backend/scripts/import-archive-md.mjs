@@ -39,7 +39,7 @@ function excerptFrom(body, n = 240) {
     .replace(/```[\s\S]*?```/g, "")
     .replace(/\s+/g, " ")
     .trim();
-  return clean.length > n ? clean.slice(0, n - 1) + "…" : clean;
+  return clean.length > n ? `${clean.slice(0, n - 1)}…` : clean;
 }
 
 function slugify(s) {

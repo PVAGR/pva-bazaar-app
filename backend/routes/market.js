@@ -38,7 +38,7 @@ router.get('/categories/counts', async (req, res) => {
     const data = {};
     for (const cat of categories) {
       data[cat] = await Artifact.countDocuments({
-        category: new RegExp('^' + cat + '$', 'i'),
+        category: new RegExp(`^${  cat  }$`, 'i'),
         status: 'published',
       });
     }

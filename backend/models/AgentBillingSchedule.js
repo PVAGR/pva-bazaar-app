@@ -185,7 +185,7 @@ agentBillingScheduleSchema.index({ 'failureHandling.escalateAfterFailures': 1 })
 // Methods
 agentBillingScheduleSchema.methods.calculateNextBillingDate = function() {
   const today = new Date();
-  let nextDate = new Date(today);
+  const nextDate = new Date(today);
 
   switch (this.frequency) {
     case 'daily':

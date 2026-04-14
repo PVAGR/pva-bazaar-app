@@ -202,7 +202,7 @@
   window.OpenClawWidget = {
     init: initOpenClawWidget,
     refresh: fetchStatus,
-    destroy: destroy,
+    destroy,
     getStatus: () => currentStatus,
   };
 

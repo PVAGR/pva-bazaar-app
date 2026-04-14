@@ -126,7 +126,7 @@ export default function MarketplacePage() {
           {categories.map(cat => (
             <button
               key={cat}
-              className={"category-chip" + (cat === selectedCategory ? " selected" : "")}
+              className={`category-chip${  cat === selectedCategory ? " selected" : ""}`}
               onClick={() => handleCategory(cat)}
               aria-pressed={cat === selectedCategory}
             >

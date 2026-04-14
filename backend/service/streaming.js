@@ -174,10 +174,10 @@ class StreamingService {
     }
 
     const message = messageId + timestamp + body;
-    const expectedSignature = 'sha256=' + crypto
+    const expectedSignature = `sha256=${  crypto
       .createHmac('sha256', secret)
       .update(message)
-      .digest('hex');
+      .digest('hex')}`;
 
     return signature === expectedSignature;
   }

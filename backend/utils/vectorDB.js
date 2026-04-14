@@ -64,9 +64,9 @@ class VectorDB {
       const documents = embeddings.map((e) => e.text);
 
       await this.collection.add({
-        ids: ids,
+        ids,
         embeddings: embeddingsData,
-        documents: documents,
+        documents,
         metadatas: embeddings.map((e) => ({ artifactId: e.artifactId.toString() })),
       });
 

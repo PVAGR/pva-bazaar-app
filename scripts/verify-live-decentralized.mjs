@@ -1,5 +1,4 @@
 /* eslint-env node */
-/* global fetch */
 
 const BASE = (globalThis.process?.env?.BACKEND_URL || "https://api.pvabazaar.org").replace(/\/+$/, "");
 

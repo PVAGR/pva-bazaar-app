@@ -55,7 +55,7 @@ router.get('/markets', getUser, async (req, res) => {
     const total = await VotingMarket.countDocuments(filter);
 
     // Add user's bet data if authenticated
-    let userBets = {};
+    const userBets = {};
     if (req.user && req.user._id) {
       const bets = await VotingBet.find({
         userId: req.user._id,

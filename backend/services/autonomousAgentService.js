@@ -350,7 +350,7 @@ class AutonomousAgentService {
    */
   static calculateNextPaymentDate(frequency, dayOfMonth = 1) {
     const now = new Date();
-    let nextDate = new Date(now);
+    const nextDate = new Date(now);
 
     if (frequency === 'daily') {
       nextDate.setDate(nextDate.getDate() + 1);

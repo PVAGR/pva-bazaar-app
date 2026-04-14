@@ -60,7 +60,7 @@ async function runTests() {
     if (res1.status === 200 && res1.body.token) {
       token = res1.body.token;
       console.log('✅ POST /api/admin/token → 200 + token');
-      console.log('   Token:', token.substring(0, 30) + '...\n');
+      console.log('   Token:', `${token.substring(0, 30)  }...\n`);
     } else {
       console.log('❌ POST /api/admin/token failed:', res1.status, res1.body);
       process.exit(1);

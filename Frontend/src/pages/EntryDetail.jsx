@@ -7,7 +7,7 @@ import { fetchArchiveEntryById } from '../lib/archiveApi.js';
 // Helper to build canonical URLs
 function getCanonicalUrl(path = '') {
   const base = 'https://pvabazaar.org';
-  return base + (path.startsWith('/') ? path : '/' + path);
+  return base + (path.startsWith('/') ? path : `/${  path}`);
 }
 
 export default function EntryDetail({ entries = [] }) {
@@ -121,7 +121,7 @@ export default function EntryDetail({ entries = [] }) {
             <div className="entry-page__meta">
               {new Date(displayEntry.date).toLocaleDateString()}
               {displayEntry.location ? ` · ${displayEntry.location}` : ''}
-              {displayEntry.tags?.length ? ' · ' + displayEntry.tags.join(', ') : ''}
+              {displayEntry.tags?.length ? ` · ${  displayEntry.tags.join(', ')}` : ''}
             </div>
 
             {/* Table of Contents */}

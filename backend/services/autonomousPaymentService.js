@@ -398,7 +398,7 @@ class AutonomousPaymentService {
     const agent = await AutonomousAgent.findById(agentId);
     if (!agent) throw new Error('Agent not found');
 
-    let startDate = new Date();
+    const startDate = new Date();
 
     switch (period) {
       case 'day':

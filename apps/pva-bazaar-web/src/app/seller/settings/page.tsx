@@ -94,7 +94,7 @@ export default function SellerSettings() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-600 mb-4">You don't have a shop yet.</p>
+          <p className="text-gray-600 mb-4">You don&apos;t have a shop yet.</p>
           <button
             onClick={() => router.push('/seller/create')}
             className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"

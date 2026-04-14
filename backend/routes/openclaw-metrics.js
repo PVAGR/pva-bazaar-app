@@ -49,7 +49,7 @@ function getOpenClawMetrics() {
   // Check configuration
   const webhookUrl = process.env.OPENCLAW_WEBHOOK_URL || '';
   const gatewayUrl = process.env.OPENCLAW_GATEWAY_URL || '';
-  const configured = Boolean(webhookUrl || gatewayUrl) ? 1 : 0;
+  const configured = webhookUrl || gatewayUrl ? 1 : 0;
   
   // Read logs
   const logLines = readLastLines(logPath, 400);

@@ -42,7 +42,7 @@ router.get('/', async (req, res) => {
 
     // Build filter
     const filter = adminRequest ? {} : { status: 'published' };
-    if (category) filter.category = new RegExp('^' + escapeRegExp(category) + '$', 'i');
+    if (category) filter.category = new RegExp(`^${  escapeRegExp(category)  }$`, 'i');
     if (tag) filter.tags = tag;
 
     // Search

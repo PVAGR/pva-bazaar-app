@@ -49,7 +49,7 @@ export default function HealthTab() {
       const pending = response.queue?.pending ?? '?';
       const stale = response.queue?.stale ?? 0;
       const detail = stale > 0 ? `, stale=${stale}` : '';
-      return `${mode} — pending=${pending}${detail}${response.message ? ' · ' + response.message : ''}`;
+      return `${mode} — pending=${pending}${detail}${response.message ? ` · ${  response.message}` : ''}`;
     }
     // /watchdog-status response shape: { available, summary }
     if (!response.available) {

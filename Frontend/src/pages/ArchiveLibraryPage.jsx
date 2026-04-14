@@ -3,7 +3,7 @@ import { Helmet } from 'react-helmet-async';
 // Helper to build canonical URLs
 function getCanonicalUrl(path = '') {
   const base = 'https://pvabazaar.org';
-  return base + (path.startsWith('/') ? path : '/' + path);
+  return base + (path.startsWith('/') ? path : `/${  path}`);
 }
 import { Link } from 'react-router-dom';
 import { fetchArchiveEntriesSafe } from '../lib/archiveFeed';
@@ -403,7 +403,7 @@ export default function ArchiveLibraryPage() {
   const renderMarkdown = (md) => {
     if (!md) return '';
     
-    let html = md
+    const html = md
       // Headers
       .replace(/^### (.*$)/gim, '<h3>$1</h3>')
       .replace(/^## (.*$)/gim, '<h2>$1</h2>')

@@ -204,7 +204,7 @@ export default function LibraryTab() {
       new Set([...categories.duplicates, ...domains.duplicates, ...roles.duplicates]),
     );
 
-    let domainRoles = {};
+    const domainRoles = {};
     let domainRolesError = '';
     let unknownDomainMappings = [];
     try {

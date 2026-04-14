@@ -204,7 +204,7 @@ class AutonomousEmailService {
       <h3>Payment Methods Connected:</h3>
       <ul>
         ${agent.paypal?.connected ? '<li>✓ PayPal</li>' : '<li>✗ PayPal</li>'}
-        ${agent.cryptoWallets?.length ? '<li>✓ Crypto Wallets (' + agent.cryptoWallets.length + ')</li>' : '<li>✗ Crypto Wallets</li>'}
+        ${agent.cryptoWallets?.length ? `<li>✓ Crypto Wallets (${  agent.cryptoWallets.length  })</li>` : '<li>✗ Crypto Wallets</li>'}
         ${agent.cashapp?.connected ? '<li>✓ CashApp</li>' : '<li>✗ CashApp</li>'}
         ${agent.card?.connected ? '<li>✓ Card</li>' : '<li>✗ Card</li>'}
         ${agent.bankAccount?.connected ? '<li>✓ Bank Account</li>' : '<li>✗ Bank Account</li>'}

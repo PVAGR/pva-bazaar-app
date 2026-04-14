@@ -28,10 +28,10 @@ async function calculateFairPrice(productId, sellerInputs = {}) {
   }
 
   // Start with market average
-  let basePrice = marketData.avgPrice;
+  const basePrice = marketData.avgPrice;
 
   // Apply market condition adjustments
-  let adjustments = [];
+  const adjustments = [];
 
   // 1. Demand adjustment (rising demand = higher price)
   let demandMultiplier = 1.0;

@@ -136,7 +136,7 @@ class AutonomousAgentScheduler {
   static async checkLowBalances() {
     try {
       const agents = await AutonomousAgent.find({
-        notificationSettings.alertOnLowBalance: true
+        'notificationSettings.alertOnLowBalance': true
       });
 
       for (const agent of agents) {
