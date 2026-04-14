@@ -1,39 +1,19 @@
 services:
   - type: web
-    name: pva-bazaar-api
-    runtime: node
+    name: pva-bazaar-api-prod
+    env: node
+    region: oregon
     plan: free
-    buildCommand: npm install && npm run build:backend && npm run build:frontend
+    buildCommand: npm install
     startCommand: npm start
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
         value: 5001
-      - key: MONGODB_URI
-        fromDatabase:
-          name: pva-bazaar-db
-          property: connectionString
-    autoDeploy: true
-
-databases:
-  - name: pva-bazaar-db
-    databaseName: pvabazaar
-    plan: free
-    ipWhitelist: []
-
-envVarGroups:
-  - name: PVA Bazaar Production
-    envVars:
       - key: JWT_SECRET
-        scope: all
+        value: pva_jwt_secret_key_change_this_to_something_longer_32_chars_minimum
+      - key: MONGODB_URI
+        value: mongodb+srv://pva_admin:pva_bazaar_2024@pvabazaar.mongodb.net/pvabazaar?retryWrites=true&w=majority
       - key: ETHEREUM_RPC_URL
-        scope: all
-      - key: STRIPE_SECRET_KEY
-        scope: all
-      - key: SENDGRID_API_KEY
-        scope: all
-      - key: AWS_ACCESS_KEY_ID
-        scope: all
-      - key: AWS_SECRET_ACCESS_KEY
-        scope: all
+        value: https://polygon-amoy-rpc.publicnode.com

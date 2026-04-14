@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "render-oss": {
+      "type": "git",
+      "url": "https://github.com/render-oss/render-mcp-server.git",
+      "command": "npm",
+      "args": ["start"]
+    }
+  }
+}
