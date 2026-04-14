@@ -37,6 +37,25 @@ const userSchema = new mongoose.Schema({
       deals: { type: mongoose.Schema.Types.Mixed, default: null },
     },
   },
+  // Voting system profile (for prediction markets)
+  votingProfile: {
+    emailVerified: { type: Boolean, default: false },
+    emailVerifiedAt: { type: Date },
+    passportVerified: { type: Boolean, default: false },
+    passportVerifiedAt: { type: Date },
+    passportStatus: {
+      type: String,
+      enum: ['unverified', 'pending', 'verified', 'suspended'],
+      default: 'unverified',
+    },
+    governanceToken: { type: Boolean, default: false }, // can participate in governance/voting
+    kycStatus: {
+      type: String,
+      enum: ['not_started', 'pending', 'verified', 'rejected'],
+      default: 'not_started',
+    },
+    votingWalletId: { type: mongoose.Schema.Types.ObjectId, ref: 'VotingWallet' },
+  },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });

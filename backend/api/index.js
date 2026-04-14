@@ -506,6 +506,42 @@ app.use('/api/deals', dealsRoutes);
 app.use('/api/governance', governanceRoutes);
 mountOptionalRoute('/api/manifesto', '../routes/manifesto-ai-routes', 'manifesto-ai');
 
+// NEW FEATURES: Payment Splitting, Voting, Item Reclaim
+try {
+  const bankIntegrationRoutes = require('../routes/bankIntegration');
+  app.use('/api/payouts', bankIntegrationRoutes);
+} catch (err) {
+  console.warn('⚠️ Optional route disabled: bankIntegration', err?.message || err);
+}
+
+try {
+  const votingRoutes = require('../routes/voting');
+  app.use('/api/voting', votingRoutes);
+} catch (err) {
+  console.warn('⚠️ Optional route disabled: voting', err?.message || err);
+}
+
+try {
+  const votingAuthRoutes = require('../routes/votingAuth');
+  app.use('/api/voting-auth', votingAuthRoutes);
+} catch (err) {
+  console.warn('⚠️ Optional route disabled: votingAuth', err?.message || err);
+}
+
+try {
+  const itemReclaimRoutes = require('../routes/itemReclaim');
+  app.use('/api/item-reclaim', itemReclaimRoutes);
+} catch (err) {
+  console.warn('⚠️ Optional route disabled: itemReclaim', err?.message || err);
+}
+
+try {
+  const pricingLookupRoutes = require('../routes/pricingLookup');
+  app.use('/api/pricing-lookup', pricingLookupRoutes);
+} catch (err) {
+  console.warn('⚠️ Optional route disabled: pricingLookup', err?.message || err);
+}
+
 // OAUTH (Twitch & YouTube) - status, live-status, start, callback
 mountOptionalRoute('/api/oauth', '../routes/oauthTwitch', 'oauth-twitch');
 mountOptionalRoute('/api/oauth', '../routes/oauthYouTube', 'oauth-youtube');
@@ -555,6 +591,42 @@ app.post('/api/internal/worker-pulse', async (req, res) => {
     return await queueProcessor(req, res);
   } catch (error) {
     console.error('[Worker Pulse Error]', error);
+    res.status(500).json({
+      ok: false,
+      error: error.message,
+      timestamp: new Date().toISOString(),
+    });
+  }
+});
+
+// Internal: Voting Market Resolution Cron (runs daily at 11 PM UTC)
+app.post('/api/voting/resolve-markets', async (req, res) => {
+  try {
+    // Verify Cron secret
+    if (process.env.CRON_SECRET && req.headers.authorization !== `Bearer ${process.env.CRON_SECRET}`) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    // Only run if voting is enabled
+    if (!process.env.VOTING_RESOLUTION_ENABLED || process.env.VOTING_RESOLUTION_ENABLED === 'false') {
+      return res.json({ ok: true, message: 'Voting resolution disabled' });
+    }
+
+    // Connect to database
+    await connectToDatabase();
+
+    // Auto-resolve expired markets
+    const votingResolutionService = require('../services/votingResolutionService');
+    const lockedCount = await votingResolutionService.autoResolveExpiredMarkets();
+
+    res.json({
+      ok: true,
+      locked: lockedCount,
+      message: `Daily voting market resolution: locked ${lockedCount} expired markets`,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error('[Voting Resolution Error]', error);
     res.status(500).json({
       ok: false,
       error: error.message,
