@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 import fs from 'fs';
 import path from 'path';
 
-const appPath = path.resolve(process.cwd(), 'Frontend/src/App.jsx');
-const layoutPath = path.resolve(process.cwd(), 'Frontend/src/components/Layout.jsx');
+const appPath = path.resolve(__dirname, '../src/App.jsx');
+const layoutPath = path.resolve(__dirname, '../src/components/Layout.jsx');
 
 function read(filePath) {
   return fs.readFileSync(filePath, 'utf8');

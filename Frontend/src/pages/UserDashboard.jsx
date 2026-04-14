@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { apiGet } from '../lib/api.js';
 import { createLogger } from '../lib/logger.js';
 import { getToken } from '../lib/auth.js';
-import Layout from '../components/Layout.jsx';
 import NavLink from '../components/NavLink.jsx';
 import '../pages/UserDashboard.css';
 
@@ -98,15 +97,13 @@ export default function UserDashboard() {
 
   if (!hasToken) {
     return (
-      <Layout>
-        <div className="user-dashboard-container">
-          <div className="auth-required">
-            <h2>📊 Dashboard</h2>
-            <p>You must be logged in to access your dashboard.</p>
-            <NavLink to="/login" className="btn btn-primary">Sign In</NavLink>
-          </div>
+      <div className="user-dashboard-container">
+        <div className="auth-required">
+          <h2>📊 Dashboard</h2>
+          <p>You must be logged in to access your dashboard.</p>
+          <NavLink to="/login" className="btn btn-primary">Sign In</NavLink>
         </div>
-      </Layout>
+      </div>
     );
   }
 
@@ -155,8 +152,7 @@ export default function UserDashboard() {
     .slice(0, 5);
 
   return (
-    <Layout>
-      <div className="user-dashboard-container">
+    <div className="user-dashboard-container">
         <header className="dashboard-header">
           <h1>📊 Your Dashboard</h1>
           <p>Manage your orders, items, and sales in one place</p>
@@ -425,6 +421,5 @@ export default function UserDashboard() {
           </>
         )}
       </div>
-    </Layout>
   );
 }
