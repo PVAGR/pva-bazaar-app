@@ -10,7 +10,7 @@ echo "║              No User Interaction Required                      ║"
 echo "╚════════════════════════════════════════════════════════════════╝"
 echo ""
 
-PROJECT_ROOT="/c/Users/user/pvabazaarapp/pva-bazaar-app"
+PROJECT_ROOT="${PROJECT_ROOT:-$(git rev-parse --show-toplevel)}"
 cd "$PROJECT_ROOT"
 
 # PHASE 1: VERIFY EVERYTHING IS READY
@@ -69,7 +69,7 @@ cat > /tmp/render-deploy-config.json << 'CONFIG'
   "environment_variables": {
     "NODE_ENV": "production",
     "PORT": "5001",
-    "JWT_SECRET": "pva_autonomous_agent_super_secret_key_min_32_chars",
+    "JWT_SECRET": "REPLACE_WITH_SECURE_RANDOM_SECRET_MIN_32_CHARS",
     "MONGODB_URI": "mongodb://localhost:27017/pvabazaar",
     "ETHEREUM_RPC_URL": "https://polygon-amoy-rpc.publicnode.com",
     "ALLOW_ORIGIN": "https://pva-bazaar-prod.onrender.com",

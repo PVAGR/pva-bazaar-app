@@ -24,7 +24,7 @@ Go to: https://render.com/dashboard
 ```
 NODE_ENV=production
 PORT=5001
-JWT_SECRET=pva_autonomous_agent_super_secret_key_32_chars_min
+JWT_SECRET=REPLACE_WITH_SECURE_RANDOM_SECRET_MIN_32_CHARS
 MONGODB_URI=mongodb://localhost:27017/pvabazaar
 ETHEREUM_RPC_URL=https://polygon-amoy-rpc.publicnode.com
 ALLOW_ORIGIN=https://pva-bazaar-prod.onrender.com

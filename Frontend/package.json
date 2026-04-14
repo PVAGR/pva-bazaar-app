@@ -34,8 +34,12 @@
   },
   "devDependencies": {
     "@sentry/vite-plugin": "^4.7.0",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@vitejs/plugin-react": "^4.3.4",
     "@vitest/ui": "^3.2.4",
-    "vike": "^0.4.252"
+    "jsdom": "^26.1.0",
+    "vike": "^0.4.252",
+    "vitest": "^3.2.4"
   }
 }
