@@ -80,6 +80,91 @@ const DISPUTE_REASON_CODES = {
   ],
 };
 
+function toFiniteNumber(value, fallback = 0) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function normalizeSplit(input = {}) {
+  const creatorPct = clamp(toFiniteNumber(input.creatorPct, 45), 0, 100);
+  const shipperPct = clamp(toFiniteNumber(input.shipperPct, 35), 0, 100);
+  const platformPct = clamp(toFiniteNumber(input.platformPct, 10), 0, 100);
+  const bufferPct = clamp(toFiniteNumber(input.bufferPct, 10), 0, 100);
+  const sum = creatorPct + shipperPct + platformPct + bufferPct;
+  if (sum <= 0) {
+    return { creatorPct: 45, shipperPct: 35, platformPct: 10, bufferPct: 10 };
+  }
+  const scale = 100 / sum;
+  return {
+    creatorPct: Number((creatorPct * scale).toFixed(2)),
+    shipperPct: Number((shipperPct * scale).toFixed(2)),
+    platformPct: Number((platformPct * scale).toFixed(2)),
+    bufferPct: Number((bufferPct * scale).toFixed(2)),
+  };
+}
+
+function buildPvaScoreAndEstimate(input = {}) {
+  const productionCost = Math.max(0, toFiniteNumber(input.productionCost, 0));
+  const shippingCost = Math.max(0, toFiniteNumber(input.shippingCost, 0));
+  const platformFee = Math.max(0, toFiniteNumber(input.platformFee, 0));
+  const routeKm = Math.max(0, toFiniteNumber(input.routeKm, 0));
+  const estimatedProductionDays = Math.max(0, toFiniteNumber(input.estimatedProductionDays, 7));
+  const estimatedTransitDays = Math.max(0, toFiniteNumber(input.estimatedTransitDays, 7));
+  const reliability = clamp(toFiniteNumber(input.reliability, 75), 0, 100);
+  const consolidation = clamp(toFiniteNumber(input.consolidation, 50), 0, 100);
+  const reputation = clamp(toFiniteNumber(input.reputation, 70), 0, 100);
+
+  const totalAmount = Number((productionCost + shippingCost + platformFee).toFixed(2));
+  const costScore = clamp(100 - Math.min(100, totalAmount / 20), 0, 100);
+  const routeEfficiencyScore = clamp(100 - Math.min(100, routeKm / 150), 0, 100);
+  const finalScore = Number((
+    costScore * 0.4 +
+    reliability * 0.2 +
+    routeEfficiencyScore * 0.15 +
+    consolidation * 0.15 +
+    reputation * 0.1
+  ).toFixed(2));
+
+  return {
+    totalAmount,
+    estimatedDays: Math.round(estimatedProductionDays + estimatedTransitDays),
+    routeScore: {
+      costScore,
+      reliabilityScore: reliability,
+      routeEfficiencyScore,
+      consolidationScore: consolidation,
+      reputationScore: reputation,
+      finalScore,
+      distanceKm: routeKm,
+      estimatedDays: Math.round(estimatedProductionDays + estimatedTransitDays),
+    },
+  };
+}
+
+function normalizePvaCandidate(candidate = {}, fallbackRole = 'creator') {
+  return {
+    role: fallbackRole,
+    userId: sanitize(candidate.userId || ''),
+    name: sanitize(candidate.name || ''),
+    country: sanitize(candidate.country || ''),
+    city: sanitize(candidate.city || ''),
+    walletAddress: sanitize(candidate.walletAddress || ''),
+    contact: sanitize(candidate.contact || ''),
+    productionCost: Math.max(0, toFiniteNumber(candidate.productionCost, 0)),
+    shippingCost: Math.max(0, toFiniteNumber(candidate.shippingCost, 0)),
+    routeKm: Math.max(0, toFiniteNumber(candidate.routeKm, 0)),
+    estimatedProductionDays: Math.max(0, toFiniteNumber(candidate.estimatedProductionDays, 7)),
+    estimatedTransitDays: Math.max(0, toFiniteNumber(candidate.estimatedTransitDays, 7)),
+    reliability: clamp(toFiniteNumber(candidate.reliability, 75), 0, 100),
+    consolidation: clamp(toFiniteNumber(candidate.consolidation, 50), 0, 100),
+    reputation: clamp(toFiniteNumber(candidate.reputation, 70), 0, 100),
+  };
+}
+
 function toPublicDeal(deal) {
   if (!deal) return null;
   const d = deal.toObject ? deal.toObject() : deal;
@@ -104,6 +189,14 @@ function dealRoleForUser(deal, userId) {
   const subjectId = String(userId);
   if (String(deal.ownerId || '') === subjectId) return 'seller';
   if (String(deal.counterparty?.userId || '') === subjectId) return 'buyer';
+  if (Array.isArray(deal.pva?.parties)) {
+    const pvaParty = deal.pva.parties.find(
+      (party) => party?.userId && String(party.userId) === subjectId && ['creator', 'shipper', 'buyer'].includes(String(party.role || ''))
+    );
+    if (pvaParty?.role === 'creator') return 'creator';
+    if (pvaParty?.role === 'shipper') return 'shipper';
+    if (pvaParty?.role === 'buyer') return 'buyer';
+  }
   if (deal.mediatorId && String(deal.mediatorId) === subjectId) return 'mediator';
   return 'none';
 }
@@ -167,6 +260,7 @@ async function verifyDealActor(req, deal) {
       err.status = 401;
       throw err;
     }
+    // Invite-link callers are the classic counterparty (not yet mapped to PVA "buyer" party).
     return { actor: 'counterparty', decoded };
   }
 
@@ -178,18 +272,169 @@ async function verifyDealActor(req, deal) {
     throw err;
   }
 
-  const isOwner = String(deal.ownerId) === subjectId;
-  const isCounterpartyUser = deal.counterparty?.userId && String(deal.counterparty.userId) === subjectId;
+  const role = dealRoleForUser(deal, subjectId);
+  const isOwner = role === 'seller';
+  const isCounterpartyUser = role === 'buyer';
+  const isPvaCreator = role === 'creator';
+  const isPvaShipper = role === 'shipper';
   const isMediator = deal.mediatorId && String(deal.mediatorId) === subjectId;
-  if (!isOwner && !isCounterpartyUser && !isMediator) {
+  if (!isOwner && !isCounterpartyUser && !isPvaCreator && !isPvaShipper && !isMediator) {
     const err = new Error('Forbidden');
     err.status = 403;
     throw err;
   }
 
-  if (isOwner) return { actor: 'owner', decoded };
-  if (isCounterpartyUser) return { actor: 'counterparty', decoded };
+  if (isOwner) return { actor: 'seller', decoded };
+  if (isCounterpartyUser) return { actor: 'buyer', decoded };
+  if (isPvaCreator) return { actor: 'creator', decoded };
+  if (isPvaShipper) return { actor: 'shipper', decoded };
   return { actor: 'mediator', decoded };
+}
+
+function canSubmitMilestoneEvidence(requiredRole, actor, isAdmin = false) {
+  if (isAdmin) return true;
+  const required = String(requiredRole || 'any');
+  if (required === 'any') return true;
+  if (required === 'creator') return actor === 'creator' || actor === 'seller';
+  if (required === 'seller') return actor === 'seller';
+  if (required === 'shipper') return actor === 'shipper';
+  if (required === 'buyer') return actor === 'buyer';
+  if (required === 'mediator') return actor === 'mediator';
+  return false;
+}
+
+function mapUserToPvaCandidate(user, role) {
+  const compliance = user?.onboardingProfile?.compliance || {};
+  const identity = user?.onboardingProfile?.identity || {};
+  const prefs = user?.preferences || {};
+  const pathTags = Array.isArray(user?.onboardingProfile?.federationPathTags) ? user.onboardingProfile.federationPathTags : [];
+  const journey = String(user?.onboardingProfile?.personalJourney || '').toLowerCase();
+  const isShipperTagged = pathTags.some((tag) => /ship|freight|logistic|cargo|courier|transport/i.test(String(tag || '')))
+    || /ship|freight|logistic|cargo|courier|transport/.test(journey);
+  const reliabilitySeed = user?.onboardingProfile?.compliance?.identityAttested ? 84 : 68;
+
+  return {
+    userId: String(user?._id || ''),
+    role,
+    name: user?.name || '',
+    country: compliance.country || prefs.defaultCountry || '',
+    city: compliance.city || '',
+    walletAddress: identity.generatedWalletAddress || prefs.defaultWalletAddress || '',
+    contact: user?.email || '',
+    appRole: user?.onboardingProfile?.appRole || 'consumer',
+    roleIntent: user?.onboardingProfile?.roleIntent || 'consumer',
+    federationPathTags: pathTags,
+    reliability: role === 'shipper' && isShipperTagged ? reliabilitySeed + 6 : reliabilitySeed,
+    consolidation: role === 'shipper' && isShipperTagged ? 72 : 55,
+    reputation: reliabilitySeed,
+  };
+}
+
+function mapUserToPartySnapshot(user, role) {
+  const compliance = user?.onboardingProfile?.compliance || {};
+  const identity = user?.onboardingProfile?.identity || {};
+  const prefs = user?.preferences || {};
+  return {
+    role,
+    userId: user?._id,
+    name: user?.name || '',
+    country: compliance.country || prefs.defaultCountry || '',
+    city: compliance.city || '',
+    walletAddress: identity.generatedWalletAddress || prefs.defaultWalletAddress || '',
+  };
+}
+
+function getPvaPartyByRole(deal, role) {
+  if (!Array.isArray(deal?.pva?.parties)) return null;
+  return deal.pva.parties.find((party) => String(party?.role || '') === String(role || '')) || null;
+}
+
+function buildPvaPayoutPreview(totalAmount, split = {}, currency = 'USD', escrowStatus = 'draft') {
+  const total = Math.max(0, toFiniteNumber(totalAmount, 0));
+  const creatorPct = clamp(toFiniteNumber(split.creatorPct, 45), 0, 100);
+  const shipperPct = clamp(toFiniteNumber(split.shipperPct, 35), 0, 100);
+  const platformPct = clamp(toFiniteNumber(split.platformPct, 10), 0, 100);
+  const bufferPct = clamp(toFiniteNumber(split.bufferPct, 10), 0, 100);
+  const eligible = ['buyer_confirmed', 'released'].includes(String(escrowStatus || ''));
+  const released = String(escrowStatus || '') === 'released';
+  const lineStatus = released ? 'released' : eligible ? 'eligible' : 'projected';
+
+  return [
+    { role: 'creator', pct: creatorPct, amount: Number(((total * creatorPct) / 100).toFixed(2)), currency, status: lineStatus },
+    { role: 'shipper', pct: shipperPct, amount: Number(((total * shipperPct) / 100).toFixed(2)), currency, status: lineStatus },
+    { role: 'platform', pct: platformPct, amount: Number(((total * platformPct) / 100).toFixed(2)), currency, status: lineStatus },
+    { role: 'buffer', pct: bufferPct, amount: Number(((total * bufferPct) / 100).toFixed(2)), currency, status: lineStatus },
+  ];
+}
+
+function enqueuePvaNotification(deal, { targetRole = 'system', eventType = 'pva_event', subject = '', message = '', payload = null }) {
+  const targetParty = getPvaPartyByRole(deal, targetRole);
+  const targetUserId = targetParty?.userId || undefined;
+  const entry = {
+    targetRole,
+    targetUserId,
+    channel: 'in_app',
+    eventType,
+    subject,
+    message,
+    payload,
+    status: 'queued',
+    createdAt: new Date(),
+  };
+  const existing = Array.isArray(deal?.pva?.notificationQueue) ? deal.pva.notificationQueue : [];
+  deal.pva = {
+    ...(deal.pva || {}),
+    notificationQueue: [...existing, entry],
+  };
+  deal.messages.push({ author: 'system', text: `[PVA Ping] ${targetRole}: ${subject || eventType}` });
+}
+
+function applyPvaWorkflowTransition(deal) {
+  const creatorAccepted = String(deal?.pva?.roleAcceptance?.creator?.status || 'pending') === 'accepted';
+  const shipperAccepted = String(deal?.pva?.roleAcceptance?.shipper?.status || 'pending') === 'accepted';
+  const buyerAccepted = String(deal?.pva?.roleAcceptance?.buyer?.status || 'pending') === 'accepted';
+
+  let nextStatus = 'awaiting_creator';
+  if (creatorAccepted && !shipperAccepted) nextStatus = 'awaiting_shipper';
+  if (creatorAccepted && shipperAccepted && !buyerAccepted) nextStatus = 'awaiting_buyer_confirmation';
+  if (creatorAccepted && shipperAccepted && buyerAccepted) nextStatus = 'ready_for_release';
+
+  const previousStatus = String(deal?.pva?.workflow?.status || 'draft');
+  deal.pva = {
+    ...(deal.pva || {}),
+    workflow: {
+      ...(deal.pva?.workflow || {}),
+      status: nextStatus,
+      updatedAt: new Date(),
+    },
+  };
+
+  if (previousStatus !== nextStatus) {
+    if (nextStatus === 'awaiting_shipper') {
+      enqueuePvaNotification(deal, {
+        targetRole: 'shipper',
+        eventType: 'pva_ping_shipper',
+        subject: 'Creator accepted. Shipper action required',
+        message: 'Creator accepted the deal. Review terms and accept shipping assignment.',
+      });
+    }
+    if (nextStatus === 'awaiting_buyer_confirmation') {
+      enqueuePvaNotification(deal, {
+        targetRole: 'buyer',
+        eventType: 'pva_ping_buyer_confirmation',
+        subject: 'Creator and shipper accepted. Buyer confirmation required',
+        message: 'Both creator and shipper accepted. Confirm final terms to unlock release lane.',
+      });
+    }
+    if (nextStatus === 'ready_for_release') {
+      enqueuePvaNotification(deal, {
+        targetRole: 'seller',
+        eventType: 'pva_ready_for_release',
+        subject: 'PVA workflow ready for release',
+        message: 'All parties accepted. Escrow release path is unlocked once buyer confirmation is complete.',
+      });
+    }
+  }
 }
 
 // POST /api/deals/verify-signature - verify EIP-712 signature and return recovered address
@@ -234,6 +479,306 @@ router.get('/', authenticateToken, async (req, res) => {
   }
 });
 
+// GET /api/deals/pva/candidates - discover creator/shipper candidates from user profiles
+router.get('/pva/candidates', authenticateToken, async (req, res) => {
+  try {
+    const role = sanitize(req.query?.role || 'both').toLowerCase();
+    const country = sanitize(req.query?.country || '');
+    const city = sanitize(req.query?.city || '');
+    const search = sanitize(req.query?.search || '').toLowerCase();
+    const limit = clamp(parseInt(req.query?.limit || '25', 10), 1, 100);
+
+    const query = {};
+    if (country) query['onboardingProfile.compliance.country'] = new RegExp(`^${country}$`, 'i');
+    if (city) query['onboardingProfile.compliance.city'] = new RegExp(`^${city}$`, 'i');
+
+    const users = await User.find(query)
+      .select('name email onboardingProfile preferences')
+      .limit(limit * 4)
+      .sort({ updatedAt: -1 });
+
+    const creators = [];
+    const shippers = [];
+
+    for (const user of users) {
+      const appRole = String(user?.onboardingProfile?.appRole || '');
+      const roleIntent = String(user?.onboardingProfile?.roleIntent || '');
+      const pathTags = Array.isArray(user?.onboardingProfile?.federationPathTags) ? user.onboardingProfile.federationPathTags : [];
+      const journey = String(user?.onboardingProfile?.personalJourney || '').toLowerCase();
+      const haystack = [user?.name, user?.email, appRole, roleIntent, ...pathTags, journey].join(' ').toLowerCase();
+      if (search && !haystack.includes(search)) continue;
+
+      const canBeCreator = ['creator', 'seller'].includes(appRole) || ['creator_artist', 'seller'].includes(roleIntent);
+      const canBeShipper = pathTags.some((tag) => /ship|freight|logistic|cargo|courier|transport/i.test(String(tag || '')))
+        || /ship|freight|logistic|cargo|courier|transport/.test(journey);
+
+      if (canBeCreator) creators.push(mapUserToPvaCandidate(user, 'creator'));
+      if (canBeShipper) shippers.push(mapUserToPvaCandidate(user, 'shipper'));
+    }
+
+    const response = { ok: true };
+    if (role === 'creator') response.creators = creators.slice(0, limit);
+    else if (role === 'shipper') response.shippers = shippers.slice(0, limit);
+    else {
+      response.creators = creators.slice(0, limit);
+      response.shippers = shippers.slice(0, limit);
+    }
+
+    return res.json(response);
+  } catch (err) {
+    console.error('Error fetching PVA candidates:', err);
+    return res.status(500).json({ ok: false, error: 'Failed to fetch PVA candidates' });
+  }
+});
+
+// POST /api/deals/pva/plan - build creator+shipper plan for a multi-party deal
+router.post('/pva/plan', authenticateToken, async (req, res) => {
+  try {
+    const body = sanitizeDeep(req.body || {});
+
+    const title = sanitize(body.title || body.requestTitle || 'PVA Supply Chain Deal');
+    const description = sanitize(body.description || 'Algorithm-generated creator + shipper deal plan');
+    const currency = sanitize(body.currency || 'USD') || 'USD';
+
+    const buyer = body.buyer || {};
+    const creators = Array.isArray(body.creators) && body.creators.length
+      ? body.creators.map((candidate) => normalizePvaCandidate(candidate, 'creator'))
+      : [normalizePvaCandidate(body.creator || {}, 'creator')];
+    const shippers = Array.isArray(body.shippers) && body.shippers.length
+      ? body.shippers.map((candidate) => normalizePvaCandidate(candidate, 'shipper'))
+      : [normalizePvaCandidate(body.shipper || {}, 'shipper')];
+
+    const validCreators = creators.filter((candidate) => candidate.name);
+    const validShippers = shippers.filter((candidate) => candidate.name);
+    if (!validCreators.length) {
+      return res.status(400).json({ ok: false, error: 'At least one creator candidate with a name is required' });
+    }
+    if (!validShippers.length) {
+      return res.status(400).json({ ok: false, error: 'At least one shipper candidate with a name is required' });
+    }
+
+    const split = normalizeSplit(body.split || {});
+    const collateral = {
+      creatorStakePct: clamp(toFiniteNumber(body?.collateral?.creatorStakePct, 50), 0, 100),
+      shipperStakePct: clamp(toFiniteNumber(body?.collateral?.shipperStakePct, 50), 0, 100),
+      stakeMode: ['escrow', 'signature_commitment'].includes(String(body?.collateral?.stakeMode || ''))
+        ? String(body.collateral.stakeMode)
+        : 'escrow',
+    };
+
+    const basePlatformFee = Math.max(0, toFiniteNumber(body?.estimate?.platformFee, 0));
+
+    const rankedPairs = [];
+    for (const creatorCandidate of validCreators) {
+      for (const shipperCandidate of validShippers) {
+        const estimate = buildPvaScoreAndEstimate({
+          productionCost: creatorCandidate.productionCost || body?.estimate?.productionCost,
+          shippingCost: shipperCandidate.shippingCost || body?.estimate?.shippingCost,
+          platformFee: basePlatformFee,
+          routeKm: shipperCandidate.routeKm || body?.estimate?.routeKm,
+          estimatedProductionDays: creatorCandidate.estimatedProductionDays || body?.estimate?.estimatedProductionDays,
+          estimatedTransitDays: shipperCandidate.estimatedTransitDays || body?.estimate?.estimatedTransitDays,
+          reliability: Math.round((creatorCandidate.reliability + shipperCandidate.reliability) / 2),
+          consolidation: shipperCandidate.consolidation,
+          reputation: Math.round((creatorCandidate.reputation + shipperCandidate.reputation) / 2),
+        });
+
+        rankedPairs.push({
+          creator: creatorCandidate,
+          shipper: shipperCandidate,
+          estimate,
+        });
+      }
+    }
+
+    rankedPairs.sort((a, b) => {
+      if (b.estimate.routeScore.finalScore !== a.estimate.routeScore.finalScore) {
+        return b.estimate.routeScore.finalScore - a.estimate.routeScore.finalScore;
+      }
+      return a.estimate.totalAmount - b.estimate.totalAmount;
+    });
+
+    const bestPair = rankedPairs[0];
+    const creator = bestPair.creator;
+    const shipper = bestPair.shipper;
+    const estimate = bestPair.estimate;
+    const totalAmount = estimate.totalAmount;
+
+    const creatorCut = Number(((totalAmount * split.creatorPct) / 100).toFixed(2));
+    const shipperCut = Number(((totalAmount * split.shipperPct) / 100).toFixed(2));
+    const platformCut = Number(((totalAmount * split.platformPct) / 100).toFixed(2));
+    const bufferCut = Number(((totalAmount * split.bufferPct) / 100).toFixed(2));
+
+    const milestones = [
+      {
+        key: 'creator_proof',
+        title: 'Creator proof of production uploaded',
+        description: 'Creator uploads timestamped photos and progress notes.',
+        evidenceType: 'document',
+        assignedRole: 'creator',
+        status: 'pending',
+      },
+      {
+        key: 'shipper_pickup',
+        title: 'Shipper pickup and packaging proof uploaded',
+        description: 'Shipper uploads packaging photos and tracking details.',
+        evidenceType: 'tracking_number',
+        assignedRole: 'shipper',
+        status: 'pending',
+      },
+      {
+        key: 'buyer_confirm',
+        title: 'Buyer confirmation of delivery',
+        description: 'Buyer confirms receipt with barcode scan or image proof.',
+        evidenceType: 'message',
+        assignedRole: 'buyer',
+        status: 'pending',
+      },
+    ];
+
+    const payments = [
+      { label: 'Creator cut', amount: creatorCut, currency, status: 'pending' },
+      { label: 'Shipper cut', amount: shipperCut, currency, status: 'pending' },
+      { label: 'PVA platform fee', amount: platformCut, currency, status: 'pending' },
+      { label: 'Risk buffer', amount: bufferCut, currency, status: 'pending' },
+    ];
+
+    const pvaPlan = {
+      mode: 'creator_shipper',
+      algorithmVersion: 'pva-v1',
+      parties: [
+        {
+          role: 'buyer',
+          userId: isObjectIdHex(String(buyer.userId || '')) ? String(buyer.userId) : undefined,
+          name: sanitize(buyer.name || ''),
+          country: sanitize(buyer.country || ''),
+          city: sanitize(buyer.city || ''),
+          walletAddress: sanitize(buyer.walletAddress || ''),
+        },
+        {
+          role: 'creator',
+          userId: isObjectIdHex(String(creator.userId || '')) ? String(creator.userId) : undefined,
+          name: sanitize(creator.name || ''),
+          country: sanitize(creator.country || ''),
+          city: sanitize(creator.city || ''),
+          walletAddress: sanitize(creator.walletAddress || ''),
+        },
+        {
+          role: 'shipper',
+          userId: isObjectIdHex(String(shipper.userId || '')) ? String(shipper.userId) : undefined,
+          name: sanitize(shipper.name || ''),
+          country: sanitize(shipper.country || ''),
+          city: sanitize(shipper.city || ''),
+          walletAddress: sanitize(shipper.walletAddress || ''),
+        },
+      ],
+      split,
+      collateral,
+      roleAcceptance: {
+        creator: { userId: isObjectIdHex(String(creator.userId || '')) ? String(creator.userId) : undefined, status: 'pending' },
+        shipper: { userId: isObjectIdHex(String(shipper.userId || '')) ? String(shipper.userId) : undefined, status: 'pending' },
+        buyer: {
+          userId: isObjectIdHex(String(buyer.userId || '')) ? String(buyer.userId) : undefined,
+          status: isObjectIdHex(String(buyer.userId || '')) ? 'accepted' : 'pending',
+        },
+      },
+      workflow: { status: 'awaiting_creator', updatedAt: new Date() },
+      notificationQueue: [],
+      payoutPreview: buildPvaPayoutPreview(totalAmount, split, currency, 'draft'),
+      routeScore: estimate.routeScore,
+      planNotes: sanitize(body.planNotes || ''),
+    };
+
+    if (!body.createDeal) {
+      return res.json({
+        ok: true,
+        plan: {
+          title,
+          description,
+          currency,
+          totalAmount,
+          estimatedDays: estimate.estimatedDays,
+          split,
+          cuts: {
+            creatorCut,
+            shipperCut,
+            platformCut,
+            bufferCut,
+          },
+          collateral,
+          milestones,
+          payments,
+          pva: pvaPlan,
+          alternatives: rankedPairs.slice(0, 3).map((pair) => ({
+            creator: {
+              name: pair.creator.name,
+              country: pair.creator.country,
+              city: pair.creator.city,
+            },
+            shipper: {
+              name: pair.shipper.name,
+              country: pair.shipper.country,
+              city: pair.shipper.city,
+            },
+            totalAmount: pair.estimate.totalAmount,
+            score: pair.estimate.routeScore.finalScore,
+            estimatedDays: pair.estimate.estimatedDays,
+          })),
+        },
+      });
+    }
+
+    const deal = new Deal({
+      ownerId: req.user.id,
+      title,
+      description,
+      totalAmount,
+      currency,
+      status: 'draft',
+      counterparty: {
+        name: sanitize(creator.name || ''),
+        country: sanitize(creator.country || ''),
+        walletAddress: sanitize(creator.walletAddress || ''),
+        contact: sanitize(creator.contact || ''),
+      },
+      pva: pvaPlan,
+      payments,
+      milestones,
+      messages: [
+        { author: 'system', text: 'PVA plan created from creator + shipper matching algorithm' },
+      ],
+      escrow: {
+        fundingMode: 'mock',
+        status: 'draft',
+        fundedAmount: totalAmount,
+        fundedCurrency: currency,
+        mockTransferProofs: [],
+      },
+      dispute: {
+        status: 'none',
+        evidence: [],
+      },
+      mediation: {
+        mode: 'none',
+        status: 'none',
+      },
+    });
+
+    enqueuePvaNotification(deal, {
+      targetRole: 'creator',
+      eventType: 'pva_ping_creator',
+      subject: 'New PVA deal requires creator acceptance',
+      message: 'Review and accept this production assignment to continue workflow.',
+    });
+
+    await deal.save();
+    return res.status(201).json({ ok: true, item: toPublicDeal(deal), plan: { totalAmount, split, collateral } });
+  } catch (err) {
+    console.error('Error creating PVA plan:', err);
+    return res.status(500).json({ ok: false, error: 'Failed to build PVA deal plan' });
+  }
+});
+
 // POST /api/deals - create deal (owner-only)
 router.post('/', authenticateToken, async (req, res) => {
   try {
@@ -242,6 +787,7 @@ router.post('/', authenticateToken, async (req, res) => {
     if (!title) return res.status(400).json({ ok: false, error: 'Title is required' });
 
     const counterparty = req.body?.counterparty || {};
+    const pva = req.body?.pva && typeof req.body.pva === 'object' ? req.body.pva : null;
     const payments = Array.isArray(req.body?.payments) ? req.body.payments : [];
     const milestones = Array.isArray(req.body?.milestones) ? req.body.milestones : [];
 
@@ -258,6 +804,86 @@ router.post('/', authenticateToken, async (req, res) => {
       totalAmount: Number(req.body?.totalAmount || 0),
       currency: sanitize(req.body?.currency || 'USD') || 'USD',
       mediatorFeePct: Number(req.body?.mediatorFeePct || 0),
+      pva: pva
+        ? {
+            mode: ['classic', 'creator_shipper'].includes(String(pva.mode || '')) ? String(pva.mode) : 'creator_shipper',
+            algorithmVersion: sanitize(pva.algorithmVersion || 'pva-v1') || 'pva-v1',
+            planNotes: sanitize(pva.planNotes || ''),
+            parties: Array.isArray(pva.parties)
+              ? pva.parties
+                .filter((party) => party && typeof party === 'object')
+                .map((party) => ({
+                  role: sanitize(party.role || ''),
+                  userId: isObjectIdHex(String(party.userId || '')) ? String(party.userId) : undefined,
+                  name: sanitize(party.name || ''),
+                  country: sanitize(party.country || ''),
+                  city: sanitize(party.city || ''),
+                  walletAddress: sanitize(party.walletAddress || ''),
+                }))
+                .filter((party) => ['buyer', 'creator', 'shipper'].includes(party.role))
+              : [],
+            split: {
+              creatorPct: clamp(toFiniteNumber(pva?.split?.creatorPct, 45), 0, 100),
+              shipperPct: clamp(toFiniteNumber(pva?.split?.shipperPct, 35), 0, 100),
+              platformPct: clamp(toFiniteNumber(pva?.split?.platformPct, 10), 0, 100),
+              bufferPct: clamp(toFiniteNumber(pva?.split?.bufferPct, 10), 0, 100),
+            },
+            collateral: {
+              creatorStakePct: clamp(toFiniteNumber(pva?.collateral?.creatorStakePct, 50), 0, 100),
+              shipperStakePct: clamp(toFiniteNumber(pva?.collateral?.shipperStakePct, 50), 0, 100),
+              stakeMode: ['escrow', 'signature_commitment'].includes(String(pva?.collateral?.stakeMode || ''))
+                ? String(pva.collateral.stakeMode)
+                : 'escrow',
+            },
+            routeScore: {
+              costScore: clamp(toFiniteNumber(pva?.routeScore?.costScore, 0), 0, 100),
+              reliabilityScore: clamp(toFiniteNumber(pva?.routeScore?.reliabilityScore, 0), 0, 100),
+              routeEfficiencyScore: clamp(toFiniteNumber(pva?.routeScore?.routeEfficiencyScore, 0), 0, 100),
+              consolidationScore: clamp(toFiniteNumber(pva?.routeScore?.consolidationScore, 0), 0, 100),
+              reputationScore: clamp(toFiniteNumber(pva?.routeScore?.reputationScore, 0), 0, 100),
+              finalScore: clamp(toFiniteNumber(pva?.routeScore?.finalScore, 0), 0, 100),
+              distanceKm: Math.max(0, toFiniteNumber(pva?.routeScore?.distanceKm, 0)),
+              estimatedDays: Math.max(0, toFiniteNumber(pva?.routeScore?.estimatedDays, 0)),
+            },
+            roleAcceptance: {
+              creator: {
+                userId: isObjectIdHex(String(pva?.roleAcceptance?.creator?.userId || ''))
+                  ? String(pva.roleAcceptance.creator.userId)
+                  : undefined,
+                status: ['pending', 'accepted', 'declined'].includes(String(pva?.roleAcceptance?.creator?.status || ''))
+                  ? String(pva.roleAcceptance.creator.status)
+                  : 'pending',
+              },
+              shipper: {
+                userId: isObjectIdHex(String(pva?.roleAcceptance?.shipper?.userId || ''))
+                  ? String(pva.roleAcceptance.shipper.userId)
+                  : undefined,
+                status: ['pending', 'accepted', 'declined'].includes(String(pva?.roleAcceptance?.shipper?.status || ''))
+                  ? String(pva.roleAcceptance.shipper.status)
+                  : 'pending',
+              },
+              buyer: {
+                userId: isObjectIdHex(String(pva?.roleAcceptance?.buyer?.userId || ''))
+                  ? String(pva.roleAcceptance.buyer.userId)
+                  : undefined,
+                status: ['pending', 'accepted', 'declined'].includes(String(pva?.roleAcceptance?.buyer?.status || ''))
+                  ? String(pva.roleAcceptance.buyer.status)
+                  : 'pending',
+              },
+            },
+            workflow: {
+              status: ['draft', 'awaiting_creator', 'awaiting_shipper', 'awaiting_buyer_confirmation', 'ready_for_release', 'complete', 'cancelled']
+                .includes(String(pva?.workflow?.status || ''))
+                ? String(pva.workflow.status)
+                : 'awaiting_creator',
+              updatedAt: pva?.workflow?.updatedAt ? new Date(pva.workflow.updatedAt) : new Date(),
+            },
+            notificationQueue: [],
+            payoutPreview: Array.isArray(pva?.payoutPreview) && pva.payoutPreview.length
+              ? pva.payoutPreview
+              : buildPvaPayoutPreview(Number(req.body?.totalAmount || 0), pva?.split || {}, sanitize(req.body?.currency || 'USD') || 'USD', 'draft'),
+          }
+        : undefined,
       chainId: req.body?.chainId ? Number(req.body.chainId) : undefined,
       tokenAddress: sanitize(req.body?.tokenAddress || ''),
       status: sanitize(req.body?.status || 'draft') || 'draft',
@@ -281,6 +907,7 @@ router.post('/', authenticateToken, async (req, res) => {
           title: sanitize(m.title || ''),
           description: sanitize(m.description || ''),
           evidenceType: sanitize(m.evidenceType || 'none') || 'none',
+          assignedRole: sanitize(m.assignedRole || 'any') || 'any',
           evidenceValue: sanitize(m.evidenceValue || ''),
           status: sanitize(m.status || 'pending') || 'pending',
         }))
@@ -309,6 +936,17 @@ router.post('/', authenticateToken, async (req, res) => {
     });
 
     await deal.save();
+
+    if (deal?.pva?.mode === 'creator_shipper') {
+      enqueuePvaNotification(deal, {
+        targetRole: 'creator',
+        eventType: 'pva_ping_creator',
+        subject: 'New PVA deal requires creator acceptance',
+        message: 'Review and accept this production assignment to continue workflow.',
+      });
+      await deal.save();
+    }
+
     res.status(201).json({ ok: true, item: toPublicDeal(deal) });
   } catch (err) {
     console.error('Error creating deal:', err);
@@ -541,6 +1179,273 @@ router.get('/:id', authenticateToken, async (req, res) => {
   }
 });
 
+// PUT /api/deals/:id/pva/assign - assign creator/shipper/buyer accounts and milestone role ownership
+router.put('/:id/pva/assign', authenticateToken, async (req, res) => {
+  try {
+    const deal = await Deal.findById(req.params.id);
+    if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
+
+    const role = dealRoleForUser(deal, req.user.id);
+    if (!['seller', 'mediator'].includes(role) && req.user?.role !== 'admin') {
+      return res.status(403).json({ ok: false, error: 'Only seller/mediator/admin can assign PVA roles' });
+    }
+
+    const creatorUserId = sanitize(req.body?.creatorUserId || '');
+    const shipperUserId = sanitize(req.body?.shipperUserId || '');
+    const buyerUserId = sanitize(req.body?.buyerUserId || '');
+    const milestoneRoles = req.body?.milestoneRoles && typeof req.body.milestoneRoles === 'object'
+      ? req.body.milestoneRoles
+      : {};
+
+    const ids = [creatorUserId, shipperUserId, buyerUserId].filter((id) => isObjectIdHex(String(id || '')));
+    const users = ids.length
+      ? await User.find({ _id: { $in: ids } }).select('_id name onboardingProfile preferences')
+      : [];
+    const byId = new Map(users.map((u) => [String(u._id), u]));
+
+    const parties = Array.isArray(deal.pva?.parties) ? [...deal.pva.parties] : [];
+    const upsertParty = (party) => {
+      const idx = parties.findIndex((p) => String(p.role || '') === String(party.role || ''));
+      if (idx >= 0) parties[idx] = { ...parties[idx].toObject?.() || parties[idx], ...party };
+      else parties.push(party);
+    };
+
+    if (isObjectIdHex(creatorUserId) && byId.get(String(creatorUserId))) {
+      upsertParty(mapUserToPartySnapshot(byId.get(String(creatorUserId)), 'creator'));
+    }
+    if (isObjectIdHex(shipperUserId) && byId.get(String(shipperUserId))) {
+      upsertParty(mapUserToPartySnapshot(byId.get(String(shipperUserId)), 'shipper'));
+    }
+    if (isObjectIdHex(buyerUserId) && byId.get(String(buyerUserId))) {
+      upsertParty(mapUserToPartySnapshot(byId.get(String(buyerUserId)), 'buyer'));
+    }
+
+    const allowedAssignedRoles = ['any', 'buyer', 'seller', 'creator', 'shipper', 'mediator'];
+    const milestones = Array.isArray(deal.milestones) ? deal.milestones : [];
+    for (const milestone of milestones) {
+      const nextRole = sanitize(milestoneRoles[String(milestone._id)] || '');
+      if (!nextRole) continue;
+      if (!allowedAssignedRoles.includes(nextRole)) {
+        return res.status(400).json({ ok: false, error: `Invalid assigned role: ${nextRole}` });
+      }
+      milestone.assignedRole = nextRole;
+    }
+
+    deal.pva = {
+      ...(deal.pva || {}),
+      mode: deal.pva?.mode || 'creator_shipper',
+      algorithmVersion: deal.pva?.algorithmVersion || 'pva-v1',
+      parties,
+      roleAcceptance: {
+        ...(deal.pva?.roleAcceptance || {}),
+        creator: {
+          ...(deal.pva?.roleAcceptance?.creator || {}),
+          userId: isObjectIdHex(creatorUserId) ? creatorUserId : deal.pva?.roleAcceptance?.creator?.userId,
+        },
+        shipper: {
+          ...(deal.pva?.roleAcceptance?.shipper || {}),
+          userId: isObjectIdHex(shipperUserId) ? shipperUserId : deal.pva?.roleAcceptance?.shipper?.userId,
+        },
+        buyer: {
+          ...(deal.pva?.roleAcceptance?.buyer || {}),
+          userId: isObjectIdHex(buyerUserId) ? buyerUserId : deal.pva?.roleAcceptance?.buyer?.userId,
+        },
+      },
+      payoutPreview: buildPvaPayoutPreview(
+        Number(deal.totalAmount || 0),
+        deal.pva?.split || {},
+        deal.currency || 'USD',
+        deal.escrow?.status || 'draft'
+      ),
+    };
+
+    applyPvaWorkflowTransition(deal);
+
+    deal.messages.push({ author: 'system', text: 'PVA role assignments updated' });
+    await deal.save();
+    res.json({ ok: true, item: toPublicDeal(deal) });
+  } catch (err) {
+    console.error('Error assigning PVA roles:', err);
+    res.status(500).json({ ok: false, error: 'Failed to assign PVA roles' });
+  }
+});
+
+// POST /api/deals/:id/pva/accept-role - accept/decline creator/shipper/buyer assignment and trigger next pings
+router.post('/:id/pva/accept-role', authenticateToken, async (req, res) => {
+  try {
+    const deal = await Deal.findById(req.params.id);
+    if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
+
+    const actorRole = dealRoleForUser(deal, req.user.id);
+    const role = sanitize(req.body?.role || actorRole || '').toLowerCase();
+    const action = sanitize(req.body?.action || 'accept').toLowerCase();
+    const note = sanitize(req.body?.note || '');
+
+    if (!['creator', 'shipper', 'buyer'].includes(role)) {
+      return res.status(400).json({ ok: false, error: 'role must be creator, shipper, or buyer' });
+    }
+    if (!['accept', 'decline'].includes(action)) {
+      return res.status(400).json({ ok: false, error: 'action must be accept or decline' });
+    }
+
+    const targetParty = getPvaPartyByRole(deal, role);
+    const isAllowedActor = req.user?.role === 'admin'
+      || actorRole === role
+      || (targetParty?.userId && String(targetParty.userId) === String(req.user.id));
+    if (!isAllowedActor) {
+      return res.status(403).json({ ok: false, error: `Only assigned ${role} can perform this action` });
+    }
+
+    const now = new Date();
+    const nextStatus = action === 'accept' ? 'accepted' : 'declined';
+    deal.pva = {
+      ...(deal.pva || {}),
+      mode: deal.pva?.mode || 'creator_shipper',
+      roleAcceptance: {
+        ...(deal.pva?.roleAcceptance || {}),
+        [role]: {
+          ...(deal.pva?.roleAcceptance?.[role] || {}),
+          userId: targetParty?.userId || req.user.id,
+          status: nextStatus,
+          acceptedAt: action === 'accept' ? now : deal.pva?.roleAcceptance?.[role]?.acceptedAt,
+          declinedAt: action === 'decline' ? now : deal.pva?.roleAcceptance?.[role]?.declinedAt,
+          note,
+        },
+      },
+      payoutPreview: buildPvaPayoutPreview(
+        Number(deal.totalAmount || 0),
+        deal.pva?.split || {},
+        deal.currency || 'USD',
+        deal.escrow?.status || 'draft'
+      ),
+    };
+
+    if (action === 'decline') {
+      deal.pva.workflow = {
+        ...(deal.pva.workflow || {}),
+        status: 'cancelled',
+        updatedAt: now,
+      };
+      enqueuePvaNotification(deal, {
+        targetRole: 'seller',
+        eventType: 'pva_role_declined',
+        subject: `${role} declined assignment`,
+        message: `${role} declined the assignment. Reassign or renegotiate terms.`,
+      });
+    } else {
+      applyPvaWorkflowTransition(deal);
+    }
+
+    deal.messages.push({ author: 'system', text: `PVA role ${role} ${nextStatus}` });
+    await deal.save();
+    return res.json({ ok: true, item: toPublicDeal(deal) });
+  } catch (err) {
+    console.error('Error accepting PVA role:', err);
+    return res.status(500).json({ ok: false, error: 'Failed to update PVA role status' });
+  }
+});
+
+// GET /api/deals/:id/pva/notification-queue - view generated role ping payloads
+router.get('/:id/pva/notification-queue', authenticateToken, async (req, res) => {
+  try {
+    const deal = await Deal.findById(req.params.id);
+    if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
+    const role = dealRoleForUser(deal, req.user.id);
+    if (role === 'none' && req.user?.role !== 'admin') {
+      return res.status(403).json({ ok: false, error: 'Forbidden' });
+    }
+    const queue = Array.isArray(deal?.pva?.notificationQueue) ? deal.pva.notificationQueue : [];
+    return res.json({ ok: true, queue });
+  } catch (err) {
+    console.error('Error fetching PVA notification queue:', err);
+    return res.status(500).json({ ok: false, error: 'Failed to fetch PVA notification queue' });
+  }
+});
+
+// PUT /api/deals/:id/pva/notification-queue/:notificationId/status - update queue delivery status
+router.put('/:id/pva/notification-queue/:notificationId/status', authenticateToken, async (req, res) => {
+  try {
+    const deal = await Deal.findById(req.params.id);
+    if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
+
+    const role = dealRoleForUser(deal, req.user.id);
+    if (!['seller', 'mediator'].includes(role) && req.user?.role !== 'admin') {
+      return res.status(403).json({ ok: false, error: 'Only seller/mediator/admin can update PVA queue status' });
+    }
+
+    const nextStatus = sanitize(req.body?.status || '').toLowerCase();
+    const allowedStatus = ['queued', 'sent', 'failed'];
+    if (!allowedStatus.includes(nextStatus)) {
+      return res.status(400).json({ ok: false, error: 'status must be queued, sent, or failed' });
+    }
+    const hasHiddenFlag = typeof req.body?.hiddenFromView === 'boolean';
+
+    const queue = Array.isArray(deal?.pva?.notificationQueue) ? deal.pva.notificationQueue : [];
+    const idx = queue.findIndex((entry) => String(entry?._id || '') === String(req.params.notificationId || ''));
+    if (idx < 0) {
+      return res.status(404).json({ ok: false, error: 'Notification queue item not found' });
+    }
+
+    const now = new Date();
+    queue[idx].status = nextStatus;
+    queue[idx].sentAt = nextStatus === 'sent' ? now : queue[idx].sentAt;
+    if (hasHiddenFlag) {
+      queue[idx].hiddenFromView = req.body.hiddenFromView;
+    }
+
+    deal.pva = {
+      ...(deal.pva || {}),
+      notificationQueue: queue,
+    };
+    deal.messages.push({
+      author: 'system',
+      text: `PVA queue status updated: ${queue[idx].eventType || 'event'} -> ${nextStatus}`,
+    });
+
+    await deal.save();
+    return res.json({ ok: true, queue: deal.pva.notificationQueue, item: toPublicDeal(deal) });
+  } catch (err) {
+    console.error('Error updating PVA notification queue status:', err);
+    return res.status(500).json({ ok: false, error: 'Failed to update PVA queue status' });
+  }
+});
+
+// GET /api/deals/:id/pva/payout-preview - compute payout ledger and release simulation
+router.get('/:id/pva/payout-preview', authenticateToken, async (req, res) => {
+  try {
+    const deal = await Deal.findById(req.params.id);
+    if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
+    const role = dealRoleForUser(deal, req.user.id);
+    if (role === 'none' && req.user?.role !== 'admin') {
+      return res.status(403).json({ ok: false, error: 'Forbidden' });
+    }
+
+    const preview = buildPvaPayoutPreview(
+      Number(deal.totalAmount || 0),
+      deal.pva?.split || {},
+      deal.currency || 'USD',
+      deal.escrow?.status || 'draft'
+    );
+
+    deal.pva = {
+      ...(deal.pva || {}),
+      payoutPreview: preview,
+    };
+    await deal.save();
+
+    return res.json({
+      ok: true,
+      workflow: deal?.pva?.workflow || { status: 'draft' },
+      roleAcceptance: deal?.pva?.roleAcceptance || {},
+      payoutPreview: preview,
+      collateralOutcome: deal?.pva?.collateralOutcome || {},
+    });
+  } catch (err) {
+    console.error('Error fetching PVA payout preview:', err);
+    return res.status(500).json({ ok: false, error: 'Failed to fetch PVA payout preview' });
+  }
+});
+
 // PUT /api/deals/:id - update deal
 router.put('/:id', authenticateToken, async (req, res) => {
   try {
@@ -591,6 +1496,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
           title: sanitize(m.title || ''),
           description: sanitize(m.description || ''),
           evidenceType: sanitize(m.evidenceType || 'none') || 'none',
+          assignedRole: sanitize(m.assignedRole || 'any') || 'any',
           evidenceValue: sanitize(m.evidenceValue || ''),
           status: sanitize(m.status || 'pending') || 'pending',
           completedAt: m.completedAt ? new Date(m.completedAt) : undefined,
@@ -651,6 +1557,12 @@ router.post('/:id/milestones/:milestoneId/evidence', async (req, res) => {
 
     const milestone = (deal.milestones || []).find((m) => String(m._id) === String(req.params.milestoneId));
     if (!milestone) return res.status(404).json({ ok: false, error: 'Milestone not found' });
+    if (!canSubmitMilestoneEvidence(milestone.assignedRole, actor, req.user?.role === 'admin')) {
+      return res.status(403).json({
+        ok: false,
+        error: `Only ${milestone.assignedRole || 'assigned role'} can submit evidence for this milestone`,
+      });
+    }
 
     const evidenceAuthorWallet = sanitize(req.body?.authorWallet || '');
     const evidenceSignature = sanitize(req.body?.signature || '');
@@ -794,7 +1706,7 @@ router.post('/:id/escrow/release', authenticateToken, async (req, res) => {
     if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
 
     const role = dealRoleForUser(deal, req.user.id);
-    if (!['seller', 'mediator'].includes(role) && req.user?.role !== 'admin') {
+    if (!['seller', 'creator', 'shipper', 'mediator'].includes(role) && req.user?.role !== 'admin') {
       return res.status(403).json({ ok: false, error: 'Forbidden' });
     }
 
@@ -876,7 +1788,7 @@ router.post('/:id/dispute', authenticateToken, async (req, res) => {
     if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
 
     const role = dealRoleForUser(deal, req.user.id);
-    if (!['buyer', 'seller', 'mediator'].includes(role) && req.user?.role !== 'admin') {
+    if (!['buyer', 'seller', 'creator', 'shipper', 'mediator'].includes(role) && req.user?.role !== 'admin') {
       return res.status(403).json({ ok: false, error: 'Forbidden' });
     }
 
@@ -982,7 +1894,7 @@ router.post('/:id/mediator/request-custom', authenticateToken, async (req, res) 
     if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
 
     const role = dealRoleForUser(deal, req.user.id);
-    if (!['buyer', 'seller', 'mediator'].includes(role) && req.user?.role !== 'admin') {
+    if (!['buyer', 'seller', 'creator', 'shipper', 'mediator'].includes(role) && req.user?.role !== 'admin') {
       return res.status(403).json({ ok: false, error: 'Forbidden' });
     }
 
@@ -1134,6 +2046,40 @@ router.put('/:id/dispute/resolve', authenticateToken, async (req, res) => {
       resolutionNote: note,
       resolutionHash,
     };
+
+    const forfeitedParties = Array.isArray(req.body?.forfeitedParties)
+      ? req.body.forfeitedParties.filter((p) => ['creator', 'shipper'].includes(String(p)))
+      : decision === 'refund'
+        ? ['creator', 'shipper']
+        : [];
+    const creatorForfeitPct = forfeitedParties.includes('creator')
+      ? clamp(toFiniteNumber(deal?.pva?.collateral?.creatorStakePct, 0), 0, 100)
+      : 0;
+    const shipperForfeitPct = forfeitedParties.includes('shipper')
+      ? clamp(toFiniteNumber(deal?.pva?.collateral?.shipperStakePct, 0), 0, 100)
+      : 0;
+
+    // Mutate pva in place so Mongoose keeps nested subdocs (e.g. roleAcceptance) for classic deals.
+    if (!deal.pva) deal.pva = {};
+    deal.pva.collateralOutcome = {
+      decision,
+      executedAt: resolvedAt,
+      forfeitedParties,
+      creatorForfeitPct,
+      shipperForfeitPct,
+      notes: sanitize(req.body?.collateralNote || ''),
+    };
+    deal.pva.payoutPreview = buildPvaPayoutPreview(
+      Number(deal.totalAmount || 0),
+      deal.pva?.split || {},
+      deal.currency || 'USD',
+      decision === 'release' ? 'released' : 'refunded'
+    ).map((line) => {
+      if (decision === 'refund' && forfeitedParties.includes(String(line.role || ''))) {
+        return { ...line, status: 'forfeited' };
+      }
+      return line;
+    });
     deal.escrow = {
       ...(deal.escrow || {}),
       status: decision === 'release' ? 'released' : 'refunded',
@@ -1145,6 +2091,12 @@ router.put('/:id/dispute/resolve', authenticateToken, async (req, res) => {
     if (decision === 'release') deal.status = 'completed';
     if (decision === 'refund') deal.status = 'cancelled';
     deal.messages.push({ author: 'system', text: `Dispute resolved: ${decision} (${resolutionCode})` });
+    if (forfeitedParties.length) {
+      deal.messages.push({
+        author: 'system',
+        text: `Collateral executed: ${forfeitedParties.join(', ')} forfeiture applied`,
+      });
+    }
     await deal.save();
 
     res.json({ ok: true, item: toPublicDeal(deal) });
@@ -1310,7 +2262,7 @@ router.post('/:id/dispute/evidence', authenticateToken, async (req, res) => {
     if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
 
     const role = dealRoleForUser(deal, req.user.id);
-    if (!['buyer', 'seller', 'mediator'].includes(role) && req.user?.role !== 'admin') {
+    if (!['buyer', 'seller', 'creator', 'shipper', 'mediator'].includes(role) && req.user?.role !== 'admin') {
       return res.status(403).json({ ok: false, error: 'Forbidden' });
     }
 

@@ -341,6 +341,36 @@
   gap: 6px;
 }
 
+.pva-status-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 64px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+  background: color-mix(in srgb, var(--bg-secondary) 90%, transparent);
+  color: var(--text-primary);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.pva-status-chip--queued {
+  border-color: color-mix(in srgb, var(--deals-accent-warm) 62%, var(--border));
+  background: color-mix(in srgb, var(--deals-accent-warm) 16%, var(--bg-secondary));
+}
+
+.pva-status-chip--sent {
+  border-color: color-mix(in srgb, #2dbf70 58%, var(--border));
+  background: color-mix(in srgb, #2dbf70 18%, var(--bg-secondary));
+}
+
+.pva-status-chip--failed {
+  border-color: color-mix(in srgb, #cc4e5a 58%, var(--border));
+  background: color-mix(in srgb, #cc4e5a 16%, var(--bg-secondary));
+}
+
 @media (max-width: 900px) {
   .deals-main {
     padding: 12px;

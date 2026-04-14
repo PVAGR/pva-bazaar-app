@@ -12,6 +12,14 @@ export const apiDelete = (path, config) => api.delete(path, config).then(r => r.
 export const fetchDeals = (params = {}) => apiGet('/deals', { params });
 export const fetchDealById = (dealId) => apiGet(`/deals/${encodeURIComponent(dealId)}`);
 export const createDeal = (payload) => apiPost('/deals', payload);
+export const generatePvaDealPlan = (payload) => apiPost('/deals/pva/plan', payload);
+export const fetchPvaDealCandidates = (params = {}) => apiGet('/deals/pva/candidates', { params });
+export const assignDealPvaRoles = (dealId, payload) => apiPut(`/deals/${encodeURIComponent(dealId)}/pva/assign`, payload);
+export const acceptDealPvaRole = (dealId, payload) => apiPost(`/deals/${encodeURIComponent(dealId)}/pva/accept-role`, payload);
+export const fetchDealPvaNotificationQueue = (dealId) => apiGet(`/deals/${encodeURIComponent(dealId)}/pva/notification-queue`);
+export const updateDealPvaNotificationQueueStatus = (dealId, notificationId, payload) =>
+  apiPut(`/deals/${encodeURIComponent(dealId)}/pva/notification-queue/${encodeURIComponent(notificationId)}/status`, payload);
+export const fetchDealPvaPayoutPreview = (dealId) => apiGet(`/deals/${encodeURIComponent(dealId)}/pva/payout-preview`);
 export const createDealInvite = (dealId) => apiPost(`/deals/${encodeURIComponent(dealId)}/invite`, {});
 export const joinDealAuthenticated = (inviteToken) => apiPost('/deals/join-authenticated', { inviteToken });
 export const postDealMessage = (dealId, payload) => apiPost(`/deals/${encodeURIComponent(dealId)}/messages`, payload);

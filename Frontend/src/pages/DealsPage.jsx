@@ -6,6 +6,13 @@ import {
   apiPost,
   apiPut,
   createDealInvite,
+  generatePvaDealPlan,
+  fetchPvaDealCandidates,
+  assignDealPvaRoles,
+  acceptDealPvaRole,
+  fetchDealPvaNotificationQueue,
+  updateDealPvaNotificationQueueStatus,
+  fetchDealPvaPayoutPreview,
   fetchDeals,
   fetchDealById,
   generateDealFraudPacket,
@@ -67,6 +74,40 @@ export default function DealsPage() {
       { title: 'Tracking number provided', evidenceType: 'tracking_number', status: 'pending' },
       { title: 'Delivery confirmed', evidenceType: 'message', status: 'pending' },
     ],
+    pva: null,
+  });
+
+  const [pvaPlanLoading, setPvaPlanLoading] = useState(false);
+  const [pvaPlan, setPvaPlan] = useState(null);
+  const [pvaCandidatesLoading, setPvaCandidatesLoading] = useState(false);
+  const [pvaPlanner, setPvaPlanner] = useState({
+    requestTitle: '',
+    buyerName: '',
+    buyerUserId: '',
+    buyerCountry: '',
+    buyerCity: '',
+    buyerWalletAddress: '',
+    creatorName: '',
+    creatorUserId: '',
+    creatorCountry: '',
+    creatorCity: '',
+    creatorWalletAddress: '',
+    shipperName: '',
+    shipperUserId: '',
+    shipperCountry: '',
+    shipperCity: '',
+    shipperWalletAddress: '',
+    productionCost: '120',
+    shippingCost: '55',
+    platformFee: '20',
+    routeKm: '850',
+    estimatedProductionDays: '6',
+    estimatedTransitDays: '4',
+    reliability: '82',
+    consolidation: '66',
+    reputation: '79',
+    creatorStakePct: '50',
+    shipperStakePct: '50',
   });
 
   const [newMessage, setNewMessage] = useState('');
@@ -91,6 +132,18 @@ export default function DealsPage() {
   const [resolutionCode, setResolutionCode] = useState('');
   const [resolutionCertificate, setResolutionCertificate] = useState(null);
   const [exportBundle, setExportBundle] = useState(null);
+  const [workspaceCandidates, setWorkspaceCandidates] = useState({ creators: [], shippers: [] });
+  const [workspaceCandidatesLoading, setWorkspaceCandidatesLoading] = useState(false);
+  const [pvaRoleDraft, setPvaRoleDraft] = useState({ creatorUserId: '', shipperUserId: '' });
+  const [pvaNotificationQueue, setPvaNotificationQueue] = useState([]);
+  const [pvaNotificationStatusDrafts, setPvaNotificationStatusDrafts] = useState({});
+  const [pvaNotificationFilter, setPvaNotificationFilter] = useState('all');
+  const [pvaPayoutPreview, setPvaPayoutPreview] = useState([]);
+  const [pvaRoleAcceptance, setPvaRoleAcceptance] = useState(null);
+  const [pvaWorkflow, setPvaWorkflow] = useState(null);
+  const [forfeitCreator, setForfeitCreator] = useState(true);
+  const [forfeitShipper, setForfeitShipper] = useState(true);
+  const [collateralResolutionNote, setCollateralResolutionNote] = useState('');
   const [queueStatusFilter, setQueueStatusFilter] = useState('all');
   const [outboundQueue, setOutboundQueue] = useState([]);
   const [queueStatusDrafts, setQueueStatusDrafts] = useState({});
@@ -105,6 +158,10 @@ export default function DealsPage() {
     if (!viewerId) return 'none';
     if (String(selected.ownerId || '') === viewerId) return 'seller';
     if (String(selected.counterparty?.userId || '') === viewerId) return 'buyer';
+    const pvaParty = (selected?.pva?.parties || []).find((party) => String(party?.userId || '') === viewerId);
+    if (pvaParty?.role === 'creator') return 'creator';
+    if (pvaParty?.role === 'shipper') return 'shipper';
+    if (pvaParty?.role === 'buyer') return 'buyer';
     if (String(selected.mediatorId || '') === viewerId) return 'mediator';
     return 'none';
   }, [selected, profile?.role, viewerId]);
@@ -116,7 +173,7 @@ export default function DealsPage() {
   const canMockFund = useMemo(() => {
     if (!selected) return false;
     if (isEscrowFinalized) return false;
-    const roleAllowed = ['buyer', 'seller', 'mediator', 'admin'].includes(viewerRole);
+    const roleAllowed = ['buyer', 'seller', 'creator', 'shipper', 'mediator', 'admin'].includes(viewerRole);
     const statusAllowed = ['draft', 'funded_mock', 'funded_live', 'awaiting_receipt', 'disputed'].includes(escrowStatus);
     return roleAllowed && statusAllowed;
   }, [selected, isEscrowFinalized, viewerRole, escrowStatus]);
@@ -146,7 +203,7 @@ export default function DealsPage() {
 
   const canOpenDispute = useMemo(() => {
     if (!selected) return false;
-    const roleAllowed = ['buyer', 'seller', 'mediator', 'admin'].includes(viewerRole);
+    const roleAllowed = ['buyer', 'seller', 'creator', 'shipper', 'mediator', 'admin'].includes(viewerRole);
     return roleAllowed && disputeStatus !== 'open' && escrowStatus !== 'draft';
   }, [selected, viewerRole, disputeStatus, escrowStatus]);
 
@@ -158,9 +215,63 @@ export default function DealsPage() {
 
   const canAddDisputeEvidenceUi = useMemo(() => {
     if (!selected) return false;
-    const roleAllowed = ['buyer', 'seller', 'mediator', 'admin'].includes(viewerRole);
+    const roleAllowed = ['buyer', 'seller', 'creator', 'shipper', 'mediator', 'admin'].includes(viewerRole);
     return roleAllowed && disputeStatus === 'open';
   }, [selected, viewerRole, disputeStatus]);
+
+  const canAssignPvaRoles = useMemo(() => {
+    if (!selected) return false;
+    return ['seller', 'mediator', 'admin'].includes(viewerRole);
+  }, [selected, viewerRole]);
+
+  const currentRoleAcceptance = pvaRoleAcceptance || selected?.pva?.roleAcceptance || {};
+  const currentWorkflow = pvaWorkflow || selected?.pva?.workflow || null;
+
+  const viewerPvaAssignedRole = useMemo(() => {
+    if (!selected || !viewerId) return '';
+    const party = (selected?.pva?.parties || []).find((p) => String(p?.userId || '') === viewerId);
+    const role = String(party?.role || '');
+    return ['creator', 'shipper', 'buyer'].includes(role) ? role : '';
+  }, [selected, viewerId]);
+
+  const viewerRoleAcceptanceStatus = useMemo(() => {
+    if (!viewerPvaAssignedRole) return 'n/a';
+    return String(currentRoleAcceptance?.[viewerPvaAssignedRole]?.status || 'pending');
+  }, [viewerPvaAssignedRole, currentRoleAcceptance]);
+
+  const roleMilestoneMap = useMemo(() => ({
+    seller: 'seller',
+    buyer: 'buyer',
+    creator: 'creator',
+    shipper: 'shipper',
+    mediator: 'mediator',
+    admin: 'any',
+  }), []);
+
+  const myTaskMilestones = useMemo(() => {
+    const milestones = Array.isArray(selected?.milestones) ? selected.milestones : [];
+    const myRole = roleMilestoneMap[viewerRole] || 'none';
+    return milestones.filter((m) => {
+      const assigned = String(m?.assignedRole || 'any');
+      if (myRole === 'none') return false;
+      if (myRole === 'any') return true;
+      if (assigned === 'any') return true;
+      if (assigned === 'creator' && myRole === 'seller') return true;
+      return assigned === myRole;
+    });
+  }, [selected?.milestones, viewerRole, roleMilestoneMap]);
+
+  const disputeImpactPreview = useMemo(() => {
+    const total = Number(selected?.totalAmount || 0);
+    const creatorPct = Number(selected?.pva?.collateral?.creatorStakePct || 0);
+    const shipperPct = Number(selected?.pva?.collateral?.shipperStakePct || 0);
+    return {
+      total,
+      creatorForfeit: Number(((total * creatorPct) / 100).toFixed(2)),
+      shipperForfeit: Number(((total * shipperPct) / 100).toFixed(2)),
+      currency: selected?.currency || 'USD',
+    };
+  }, [selected?.totalAmount, selected?.pva?.collateral?.creatorStakePct, selected?.pva?.collateral?.shipperStakePct, selected?.currency]);
 
   const canAssignPlatformMediator = useMemo(() => {
     if (!selected) return false;
@@ -176,6 +287,30 @@ export default function DealsPage() {
     if (!selected) return false;
     return viewerRole === 'admin';
   }, [selected, viewerRole]);
+
+  const visiblePvaNotificationQueue = useMemo(() => {
+    const queue = Array.isArray(pvaNotificationQueue) ? [...pvaNotificationQueue] : [];
+    const filtered = pvaNotificationFilter === 'all'
+      ? queue
+      : queue.filter((entry) => String(entry?.status || '') === pvaNotificationFilter);
+    const notHidden = filtered.filter((entry) => !entry?.hiddenFromView);
+    notHidden.sort((a, b) => {
+      const at = new Date(a?.createdAt || 0).getTime();
+      const bt = new Date(b?.createdAt || 0).getTime();
+      return bt - at;
+    });
+    return notHidden;
+  }, [pvaNotificationQueue, pvaNotificationFilter]);
+
+  const displayedPvaNotificationQueue = useMemo(
+    () => visiblePvaNotificationQueue.slice(0, 12),
+    [visiblePvaNotificationQueue]
+  );
+
+  function getPvaPendingQueueCount(dealItem) {
+    const queue = Array.isArray(dealItem?.pva?.notificationQueue) ? dealItem.pva.notificationQueue : [];
+    return queue.filter((entry) => String(entry?.status || 'queued') === 'queued').length;
+  }
 
   const RESOLUTION_REASON_CODES = {
     release: [
@@ -301,6 +436,34 @@ export default function DealsPage() {
     }
   }
 
+  async function refreshPvaWorkspace(dealId) {
+    if (!dealId) {
+      setPvaNotificationQueue([]);
+      setPvaPayoutPreview([]);
+      setPvaRoleAcceptance(null);
+      setPvaWorkflow(null);
+      return;
+    }
+
+    try {
+      const [queueRes, payoutRes] = await Promise.all([
+        fetchDealPvaNotificationQueue(dealId),
+        fetchDealPvaPayoutPreview(dealId),
+      ]);
+
+      if (queueRes?.ok && Array.isArray(queueRes.queue)) {
+        setPvaNotificationQueue(queueRes.queue);
+      }
+      if (payoutRes?.ok) {
+        setPvaPayoutPreview(Array.isArray(payoutRes.payoutPreview) ? payoutRes.payoutPreview : []);
+        setPvaRoleAcceptance(payoutRes.roleAcceptance || null);
+        setPvaWorkflow(payoutRes.workflow || null);
+      }
+    } catch {
+      // Best effort; workspace can still function from selected deal payload.
+    }
+  }
+
   useEffect(() => {
     loadDeals();
   }, []);
@@ -308,6 +471,17 @@ export default function DealsPage() {
   useEffect(() => {
     if (selectedId) loadDeal(selectedId);
   }, [selectedId]);
+
+  useEffect(() => {
+    if (!selected?._id) {
+      setPvaNotificationQueue([]);
+      setPvaPayoutPreview([]);
+      setPvaRoleAcceptance(null);
+      setPvaWorkflow(null);
+      return;
+    }
+    refreshPvaWorkspace(selected._id).catch(() => {});
+  }, [selected?._id]);
 
   useEffect(() => {
     if (!selected?._id) {
@@ -335,6 +509,15 @@ export default function DealsPage() {
     }, 20000);
     return () => window.clearInterval(timer);
   }, [selected?._id, queueStatusFilter]);
+
+  useEffect(() => {
+    const creatorParty = (selected?.pva?.parties || []).find((p) => p.role === 'creator');
+    const shipperParty = (selected?.pva?.parties || []).find((p) => p.role === 'shipper');
+    setPvaRoleDraft({
+      creatorUserId: String(creatorParty?.userId || ''),
+      shipperUserId: String(shipperParty?.userId || ''),
+    });
+  }, [selected?._id, selected?.pva?.parties]);
 
   useEffect(() => {
     // Derive milestone hashes for the "contract draft" section (best-effort).
@@ -511,6 +694,179 @@ export default function DealsPage() {
     }
   }
 
+  async function handleGeneratePvaPlan() {
+    setPvaPlanLoading(true);
+    setError('');
+    try {
+      const payload = {
+        title: pvaPlanner.requestTitle?.trim() || 'PVA creator + shipper deal',
+        currency: draft.currency || 'USD',
+        buyer: {
+          userId: pvaPlanner.buyerUserId,
+          name: pvaPlanner.buyerName,
+          country: pvaPlanner.buyerCountry,
+          city: pvaPlanner.buyerCity,
+          walletAddress: pvaPlanner.buyerWalletAddress,
+        },
+        creator: {
+          userId: pvaPlanner.creatorUserId,
+          name: pvaPlanner.creatorName,
+          country: pvaPlanner.creatorCountry,
+          city: pvaPlanner.creatorCity,
+          walletAddress: pvaPlanner.creatorWalletAddress,
+        },
+        shipper: {
+          userId: pvaPlanner.shipperUserId,
+          name: pvaPlanner.shipperName,
+          country: pvaPlanner.shipperCountry,
+          city: pvaPlanner.shipperCity,
+          walletAddress: pvaPlanner.shipperWalletAddress,
+        },
+        collateral: {
+          creatorStakePct: Number(pvaPlanner.creatorStakePct || 50),
+          shipperStakePct: Number(pvaPlanner.shipperStakePct || 50),
+          stakeMode: 'escrow',
+        },
+        estimate: {
+          productionCost: Number(pvaPlanner.productionCost || 0),
+          shippingCost: Number(pvaPlanner.shippingCost || 0),
+          platformFee: Number(pvaPlanner.platformFee || 0),
+          routeKm: Number(pvaPlanner.routeKm || 0),
+          estimatedProductionDays: Number(pvaPlanner.estimatedProductionDays || 0),
+          estimatedTransitDays: Number(pvaPlanner.estimatedTransitDays || 0),
+          reliability: Number(pvaPlanner.reliability || 0),
+          consolidation: Number(pvaPlanner.consolidation || 0),
+          reputation: Number(pvaPlanner.reputation || 0),
+        },
+      };
+
+      const res = await generatePvaDealPlan(payload);
+      if (!res?.ok || !res?.plan) throw new Error(res?.error || res?.message || 'Failed to generate PVA plan');
+      setPvaPlan(res.plan);
+    } catch (e) {
+      const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
+      setError(serverMsg || e.message || 'Failed to generate PVA plan');
+    } finally {
+      setPvaPlanLoading(false);
+    }
+  }
+
+  async function handleLoadPvaCandidates() {
+    setPvaCandidatesLoading(true);
+    setError('');
+    try {
+      const params = {
+        country: pvaPlanner.buyerCountry || profile?.preferences?.defaultCountry || '',
+        city: pvaPlanner.buyerCity || '',
+        limit: 10,
+      };
+      const res = await fetchPvaDealCandidates(params);
+      if (!res?.ok) throw new Error(res?.error || res?.message || 'Failed to load candidates');
+
+      const firstCreator = Array.isArray(res.creators) && res.creators.length ? res.creators[0] : null;
+      const firstShipper = Array.isArray(res.shippers) && res.shippers.length ? res.shippers[0] : null;
+
+      setPvaPlanner((prev) => ({
+        ...prev,
+        creatorName: firstCreator?.name || prev.creatorName,
+        creatorUserId: firstCreator?.userId || prev.creatorUserId,
+        creatorCountry: firstCreator?.country || prev.creatorCountry,
+        creatorCity: firstCreator?.city || prev.creatorCity,
+        creatorWalletAddress: firstCreator?.walletAddress || prev.creatorWalletAddress,
+        shipperName: firstShipper?.name || prev.shipperName,
+        shipperUserId: firstShipper?.userId || prev.shipperUserId,
+        shipperCountry: firstShipper?.country || prev.shipperCountry,
+        shipperCity: firstShipper?.city || prev.shipperCity,
+        shipperWalletAddress: firstShipper?.walletAddress || prev.shipperWalletAddress,
+        reliability: String(firstShipper?.reliability ?? prev.reliability),
+        consolidation: String(firstShipper?.consolidation ?? prev.consolidation),
+        reputation: String(firstCreator?.reputation ?? prev.reputation),
+      }));
+    } catch (e) {
+      const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
+      setError(serverMsg || e.message || 'Failed to load candidates');
+    } finally {
+      setPvaCandidatesLoading(false);
+    }
+  }
+
+  function handleApplyPvaPlanToDraft() {
+    if (!pvaPlan) return;
+    setDraft((prev) => ({
+      ...prev,
+      title: pvaPlan.title || prev.title,
+      description: pvaPlan.description || prev.description,
+      counterpartyName: pvaPlan?.pva?.parties?.find((p) => p.role === 'creator')?.name || prev.counterpartyName,
+      counterpartyCountry: pvaPlan?.pva?.parties?.find((p) => p.role === 'creator')?.country || prev.counterpartyCountry,
+      counterpartyWallet: pvaPlan?.pva?.parties?.find((p) => p.role === 'creator')?.walletAddress || prev.counterpartyWallet,
+      totalAmount: String(pvaPlan.totalAmount || prev.totalAmount || ''),
+      currency: pvaPlan.currency || prev.currency || 'USD',
+      payments: Array.isArray(pvaPlan.payments) ? pvaPlan.payments : prev.payments,
+      milestones: Array.isArray(pvaPlan.milestones) ? pvaPlan.milestones : prev.milestones,
+      pva: pvaPlan.pva || null,
+    }));
+  }
+
+  async function handleCreatePvaDealNow() {
+    setPvaPlanLoading(true);
+    setError('');
+    try {
+      const payload = {
+        title: pvaPlanner.requestTitle?.trim() || 'PVA creator + shipper deal',
+        currency: draft.currency || 'USD',
+        buyer: {
+          userId: pvaPlanner.buyerUserId,
+          name: pvaPlanner.buyerName,
+          country: pvaPlanner.buyerCountry,
+          city: pvaPlanner.buyerCity,
+          walletAddress: pvaPlanner.buyerWalletAddress,
+        },
+        creator: {
+          userId: pvaPlanner.creatorUserId,
+          name: pvaPlanner.creatorName,
+          country: pvaPlanner.creatorCountry,
+          city: pvaPlanner.creatorCity,
+          walletAddress: pvaPlanner.creatorWalletAddress,
+        },
+        shipper: {
+          userId: pvaPlanner.shipperUserId,
+          name: pvaPlanner.shipperName,
+          country: pvaPlanner.shipperCountry,
+          city: pvaPlanner.shipperCity,
+          walletAddress: pvaPlanner.shipperWalletAddress,
+        },
+        collateral: {
+          creatorStakePct: Number(pvaPlanner.creatorStakePct || 50),
+          shipperStakePct: Number(pvaPlanner.shipperStakePct || 50),
+          stakeMode: 'escrow',
+        },
+        estimate: {
+          productionCost: Number(pvaPlanner.productionCost || 0),
+          shippingCost: Number(pvaPlanner.shippingCost || 0),
+          platformFee: Number(pvaPlanner.platformFee || 0),
+          routeKm: Number(pvaPlanner.routeKm || 0),
+          estimatedProductionDays: Number(pvaPlanner.estimatedProductionDays || 0),
+          estimatedTransitDays: Number(pvaPlanner.estimatedTransitDays || 0),
+          reliability: Number(pvaPlanner.reliability || 0),
+          consolidation: Number(pvaPlanner.consolidation || 0),
+          reputation: Number(pvaPlanner.reputation || 0),
+        },
+        createDeal: true,
+      };
+
+      const res = await generatePvaDealPlan(payload);
+      if (!res?.ok || !res?.item) throw new Error(res?.error || res?.message || 'Failed to create PVA deal');
+      await loadDeals();
+      setSelectedId(res.item._id);
+      setPvaPlan(res.plan || null);
+    } catch (e) {
+      const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
+      setError(serverMsg || e.message || 'Failed to create PVA deal');
+    } finally {
+      setPvaPlanLoading(false);
+    }
+  }
+
   async function handleCreate(e) {
     e.preventDefault();
     setCreating(true);
@@ -529,6 +885,7 @@ export default function DealsPage() {
         },
         totalAmount: Number(draft.totalAmount || 0),
         currency: draft.currency || 'USD',
+        pva: draft.pva || undefined,
         payments: payments
           .filter((p) => p && typeof p === 'object')
           .map((p) => ({
@@ -543,6 +900,7 @@ export default function DealsPage() {
           .map((m) => ({
             title: (m.title || '').trim(),
             evidenceType: m.evidenceType || 'none',
+            assignedRole: m.assignedRole || 'any',
             status: m.status || 'pending',
           }))
           .filter((m) => m.title),
@@ -689,10 +1047,160 @@ export default function DealsPage() {
 
   async function refreshSelected() {
     if (!selected?._id) return;
-    const res = await fetchDealById(selected._id);
+    const dealId = selected._id;
+    const res = await fetchDealById(dealId);
     if (res?.ok && res?.item) setSelected(res.item);
-    const q = await fetchDealOutboundQueue(selected._id, queueStatusFilter && queueStatusFilter !== 'all' ? { status: queueStatusFilter } : {});
+    const q = await fetchDealOutboundQueue(dealId, queueStatusFilter && queueStatusFilter !== 'all' ? { status: queueStatusFilter } : {});
     if (q?.ok && Array.isArray(q.queue)) setOutboundQueue(q.queue);
+    await refreshPvaWorkspace(dealId);
+  }
+
+  async function handlePvaRoleAction(role, action) {
+    if (!selected?._id) return;
+    setActionBusy(true);
+    setError('');
+    try {
+      const res = await acceptDealPvaRole(selected._id, { role, action });
+      if (!res?.ok || !res?.item) throw new Error(res?.error || res?.message || 'Failed to update role status');
+      setSelected(res.item);
+      await refreshPvaWorkspace(selected._id);
+    } catch (e) {
+      const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
+      setError(serverMsg || e.message || 'Failed to update role status');
+    } finally {
+      setActionBusy(false);
+    }
+  }
+
+  async function handlePvaQueueStatusUpdate(notificationId) {
+    if (!selected?._id || !notificationId) return;
+    if (!['seller', 'mediator', 'admin'].includes(viewerRole)) {
+      setError('Only seller, mediator, or admin can update PVA queue status');
+      return;
+    }
+
+    const status = String(pvaNotificationStatusDrafts[notificationId] || '').toLowerCase();
+    if (!['queued', 'sent', 'failed'].includes(status)) {
+      setError('Select a valid PVA queue status');
+      return;
+    }
+
+    setActionBusy(true);
+    setError('');
+    try {
+      const res = await updateDealPvaNotificationQueueStatus(selected._id, notificationId, { status });
+      if (!res?.ok) throw new Error(res?.error || res?.message || 'Failed to update PVA queue status');
+      if (Array.isArray(res.queue)) setPvaNotificationQueue(res.queue);
+      if (res.item) setSelected(res.item);
+    } catch (e) {
+      const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
+      setError(serverMsg || e.message || 'Failed to update PVA queue status');
+    } finally {
+      setActionBusy(false);
+    }
+  }
+
+  async function handleBulkPvaQueueStatusUpdate(nextStatus) {
+    if (!selected?._id) return;
+    if (!['seller', 'mediator', 'admin'].includes(viewerRole)) {
+      setError('Only seller, mediator, or admin can update PVA queue status');
+      return;
+    }
+    if (!['queued', 'sent', 'failed'].includes(String(nextStatus || '').toLowerCase())) {
+      setError('Select a valid bulk queue status');
+      return;
+    }
+
+    const targetRows = displayedPvaNotificationQueue.filter((note) => String(note?._id || ''));
+    if (!targetRows.length) return;
+
+    setActionBusy(true);
+    setError('');
+    try {
+      await Promise.all(
+        targetRows.map((note) =>
+          updateDealPvaNotificationQueueStatus(selected._id, note._id, { status: nextStatus })
+        )
+      );
+      await refreshPvaWorkspace(selected._id);
+      await loadDeal(selected._id);
+    } catch (e) {
+      const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
+      setError(serverMsg || e.message || 'Failed to apply bulk PVA queue update');
+    } finally {
+      setActionBusy(false);
+    }
+  }
+
+  async function handleRetryFailedOnly() {
+    if (!selected?._id) return;
+    if (!['seller', 'mediator', 'admin'].includes(viewerRole)) {
+      setError('Only seller, mediator, or admin can retry failed queue items');
+      return;
+    }
+
+    const failedRows = displayedPvaNotificationQueue.filter((note) => String(note?.status || '') === 'failed' && String(note?._id || ''));
+    if (!failedRows.length) return;
+
+    setActionBusy(true);
+    setError('');
+    try {
+      await Promise.all(
+        failedRows.map((note) =>
+          updateDealPvaNotificationQueueStatus(selected._id, note._id, { status: 'queued' })
+        )
+      );
+      await refreshPvaWorkspace(selected._id);
+      await loadDeal(selected._id);
+    } catch (e) {
+      const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
+      setError(serverMsg || e.message || 'Failed to retry failed queue items');
+    } finally {
+      setActionBusy(false);
+    }
+  }
+
+  async function handleClearSentFromView() {
+    const sentRows = displayedPvaNotificationQueue.filter((note) => String(note?.status || '') === 'sent' && String(note?._id || ''));
+    if (!sentRows.length) return;
+    setActionBusy(true);
+    setError('');
+    try {
+      await Promise.all(
+        sentRows.map((note) =>
+          updateDealPvaNotificationQueueStatus(selected._id, note._id, { status: 'sent', hiddenFromView: true })
+        )
+      );
+      await refreshPvaWorkspace(selected._id);
+    } catch (e) {
+      const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
+      setError(serverMsg || e.message || 'Failed to clear sent queue rows');
+    } finally {
+      setActionBusy(false);
+    }
+  }
+
+  async function handleUndoClearSentFromView() {
+    if (!selected?._id) return;
+    const hiddenRows = Array.isArray(pvaNotificationQueue)
+      ? pvaNotificationQueue.filter((note) => String(note?.status || '') === 'sent' && note?.hiddenFromView)
+      : [];
+    if (!hiddenRows.length) return;
+    setActionBusy(true);
+    setError('');
+    try {
+      await Promise.all(
+        hiddenRows.map((note) =>
+          updateDealPvaNotificationQueueStatus(selected._id, note._id, { status: 'sent', hiddenFromView: false })
+        )
+      );
+      await refreshPvaWorkspace(selected._id);
+    } catch (e) {
+      const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
+      setError(serverMsg || e.message || 'Failed to undo clear');
+    } finally {
+      setActionBusy(false);
+    }
   }
 
   async function handleMockFundEscrow() {
@@ -824,18 +1332,78 @@ export default function DealsPage() {
     setActionBusy(true);
     setError('');
     try {
+      const forfeitedParties = [];
+      if (decision === 'refund') {
+        if (forfeitCreator) forfeitedParties.push('creator');
+        if (forfeitShipper) forfeitedParties.push('shipper');
+      }
       const res = await resolveDealDispute(selected._id, {
         decision,
         resolutionCode,
         note: 'Resolved from deals workspace',
+        forfeitedParties,
+        collateralNote: collateralResolutionNote,
       });
       if (!res?.ok || !res?.item) throw new Error(res?.error || res?.message || 'Failed to resolve dispute');
       setSelected(res.item);
       setDisputeData(res.item?.dispute || null);
       setResolutionCode('');
+      setCollateralResolutionNote('');
     } catch (e) {
       const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
       setError(serverMsg || e.message || 'Failed to resolve dispute');
+    } finally {
+      setActionBusy(false);
+    }
+  }
+
+  async function handleLoadWorkspaceCandidates() {
+    if (!selected?._id) return;
+    setWorkspaceCandidatesLoading(true);
+    setError('');
+    try {
+      const buyerCountry = selected?.pva?.parties?.find((p) => p.role === 'buyer')?.country || selected?.counterparty?.country || '';
+      const res = await fetchPvaDealCandidates({ country: buyerCountry, limit: 25 });
+      if (!res?.ok) throw new Error(res?.error || res?.message || 'Failed to load network candidates');
+      setWorkspaceCandidates({
+        creators: Array.isArray(res.creators) ? res.creators : [],
+        shippers: Array.isArray(res.shippers) ? res.shippers : [],
+      });
+    } catch (e) {
+      const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
+      setError(serverMsg || e.message || 'Failed to load network candidates');
+    } finally {
+      setWorkspaceCandidatesLoading(false);
+    }
+  }
+
+  async function handleApplyPvaAssignments() {
+    if (!selected?._id) return;
+    if (!canAssignPvaRoles) {
+      setError('Only seller, mediator, or admin can assign creator/shipper roles');
+      return;
+    }
+    setActionBusy(true);
+    setError('');
+    try {
+      const milestoneRoles = {};
+      for (const milestone of selected?.milestones || []) {
+        if (!milestone?._id) continue;
+        if (milestone.key === 'creator_proof') milestoneRoles[String(milestone._id)] = 'creator';
+        if (milestone.key === 'shipper_pickup') milestoneRoles[String(milestone._id)] = 'shipper';
+        if (milestone.key === 'buyer_confirm') milestoneRoles[String(milestone._id)] = 'buyer';
+      }
+
+      const res = await assignDealPvaRoles(selected._id, {
+        creatorUserId: pvaRoleDraft.creatorUserId,
+        shipperUserId: pvaRoleDraft.shipperUserId,
+        milestoneRoles,
+      });
+      if (!res?.ok || !res?.item) throw new Error(res?.error || res?.message || 'Failed to assign PVA roles');
+      setSelected(res.item);
+    } catch (e) {
+      const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
+      setError(serverMsg || e.message || 'Failed to assign PVA roles');
     } finally {
       setActionBusy(false);
     }
@@ -1133,6 +1701,119 @@ export default function DealsPage() {
 
         <section className="card">
           <h2>
+            PVA creator + shipper planner
+            <HelpTip
+              title="What this does"
+              body="Builds a 3-party deal plan (buyer, creator, shipper), calculates cuts and collateral, and prepares milestone tasks for proof-driven fulfillment."
+              example="Buyer request -> creator accepts -> shipper accepts -> auto split and escrow-ready checklist"
+            />
+          </h2>
+          <div className="grid2">
+            <label>
+              <span className="labelRow">Request title</span>
+              <input value={pvaPlanner.requestTitle} onChange={(e) => setPvaPlanner((s) => ({ ...s, requestTitle: e.target.value }))} />
+            </label>
+            <label>
+              <span className="labelRow">Buyer name</span>
+              <input value={pvaPlanner.buyerName} onChange={(e) => setPvaPlanner((s) => ({ ...s, buyerName: e.target.value }))} />
+            </label>
+            <label>
+              <span className="labelRow">Buyer country</span>
+              <input value={pvaPlanner.buyerCountry} onChange={(e) => setPvaPlanner((s) => ({ ...s, buyerCountry: e.target.value }))} />
+            </label>
+            <label>
+              <span className="labelRow">Buyer city</span>
+              <input value={pvaPlanner.buyerCity} onChange={(e) => setPvaPlanner((s) => ({ ...s, buyerCity: e.target.value }))} />
+            </label>
+            <label>
+              <span className="labelRow">Creator name</span>
+              <input value={pvaPlanner.creatorName} onChange={(e) => setPvaPlanner((s) => ({ ...s, creatorName: e.target.value }))} />
+            </label>
+            <label>
+              <span className="labelRow">Creator country</span>
+              <input value={pvaPlanner.creatorCountry} onChange={(e) => setPvaPlanner((s) => ({ ...s, creatorCountry: e.target.value }))} />
+            </label>
+            <label>
+              <span className="labelRow">Shipper name</span>
+              <input value={pvaPlanner.shipperName} onChange={(e) => setPvaPlanner((s) => ({ ...s, shipperName: e.target.value }))} />
+            </label>
+            <label>
+              <span className="labelRow">Shipper country</span>
+              <input value={pvaPlanner.shipperCountry} onChange={(e) => setPvaPlanner((s) => ({ ...s, shipperCountry: e.target.value }))} />
+            </label>
+            <label>
+              <span className="labelRow">Production cost ({draft.currency || 'USD'})</span>
+              <input type="number" min="0" value={pvaPlanner.productionCost} onChange={(e) => setPvaPlanner((s) => ({ ...s, productionCost: e.target.value }))} />
+            </label>
+            <label>
+              <span className="labelRow">Shipping cost ({draft.currency || 'USD'})</span>
+              <input type="number" min="0" value={pvaPlanner.shippingCost} onChange={(e) => setPvaPlanner((s) => ({ ...s, shippingCost: e.target.value }))} />
+            </label>
+            <label>
+              <span className="labelRow">Platform fee ({draft.currency || 'USD'})</span>
+              <input type="number" min="0" value={pvaPlanner.platformFee} onChange={(e) => setPvaPlanner((s) => ({ ...s, platformFee: e.target.value }))} />
+            </label>
+            <label>
+              <span className="labelRow">Route distance km</span>
+              <input type="number" min="0" value={pvaPlanner.routeKm} onChange={(e) => setPvaPlanner((s) => ({ ...s, routeKm: e.target.value }))} />
+            </label>
+            <label>
+              <span className="labelRow">Reliability score (0-100)</span>
+              <input type="number" min="0" max="100" value={pvaPlanner.reliability} onChange={(e) => setPvaPlanner((s) => ({ ...s, reliability: e.target.value }))} />
+            </label>
+            <label>
+              <span className="labelRow">Consolidation score (0-100)</span>
+              <input type="number" min="0" max="100" value={pvaPlanner.consolidation} onChange={(e) => setPvaPlanner((s) => ({ ...s, consolidation: e.target.value }))} />
+            </label>
+            <label>
+              <span className="labelRow">Creator stake %</span>
+              <input type="number" min="0" max="100" value={pvaPlanner.creatorStakePct} onChange={(e) => setPvaPlanner((s) => ({ ...s, creatorStakePct: e.target.value }))} />
+            </label>
+            <label>
+              <span className="labelRow">Shipper stake %</span>
+              <input type="number" min="0" max="100" value={pvaPlanner.shipperStakePct} onChange={(e) => setPvaPlanner((s) => ({ ...s, shipperStakePct: e.target.value }))} />
+            </label>
+          </div>
+
+          <div className="row rowWrap" style={{ marginTop: '12px' }}>
+            <button type="button" className="btn ghost" onClick={handleLoadPvaCandidates} disabled={pvaCandidatesLoading || pvaPlanLoading}>
+              {pvaCandidatesLoading ? 'Finding candidates…' : 'Auto-fill from network'}
+            </button>
+            <button type="button" className="btn primary" onClick={handleGeneratePvaPlan} disabled={pvaPlanLoading}>
+              {pvaPlanLoading ? 'Planning…' : 'Generate PVA plan'}
+            </button>
+            <button type="button" className="btn ghost" onClick={handleApplyPvaPlanToDraft} disabled={!pvaPlan || pvaPlanLoading}>
+              Apply plan to create form
+            </button>
+            <button type="button" className="btn ghost" onClick={handleCreatePvaDealNow} disabled={pvaPlanLoading}>
+              Create deal from planner
+            </button>
+          </div>
+
+          {pvaPlan ? (
+            <div className="muted" style={{ marginTop: '12px' }}>
+              <div>
+                Planned total: <strong>{pvaPlan.currency} {pvaPlan.totalAmount}</strong> | ETA: <strong>{pvaPlan.estimatedDays} days</strong> | Route score: <strong>{pvaPlan?.pva?.routeScore?.finalScore}</strong>
+              </div>
+              <div>
+                Split: creator {pvaPlan?.split?.creatorPct}% | shipper {pvaPlan?.split?.shipperPct}% | platform {pvaPlan?.split?.platformPct}% | buffer {pvaPlan?.split?.bufferPct}%
+              </div>
+              {Array.isArray(pvaPlan.alternatives) && pvaPlan.alternatives.length ? (
+                <div style={{ marginTop: '8px' }}>
+                  Top routes: {pvaPlan.alternatives.map((alt, idx) => (
+                    <span key={`${alt?.creator?.name || 'creator'}-${alt?.shipper?.name || 'shipper'}-${idx}`}>
+                      {idx ? ' | ' : ''}
+                      {alt?.creator?.name} + {alt?.shipper?.name} ({alt?.score}, {pvaPlan.currency} {alt?.totalAmount})
+                    </span>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+        </section>
+
+        <section className="card">
+          <h2>
             Create new deal
             <HelpTip
               title="What is a Deal?"
@@ -1367,6 +2048,22 @@ export default function DealsPage() {
                       <option value="document">document</option>
                       <option value="message">message</option>
                     </select>
+                    <select
+                      value={m.assignedRole || 'any'}
+                      onChange={(e) =>
+                        setDraft((prev) => ({
+                          ...prev,
+                          milestones: prev.milestones.map((x, i) => (i === idx ? { ...x, assignedRole: e.target.value } : x)),
+                        }))
+                      }
+                    >
+                      <option value="any">assigned: any</option>
+                      <option value="buyer">assigned: buyer</option>
+                      <option value="seller">assigned: seller</option>
+                      <option value="creator">assigned: creator</option>
+                      <option value="shipper">assigned: shipper</option>
+                      <option value="mediator">assigned: mediator</option>
+                    </select>
                     <button
                       type="button"
                       className="btn ghost"
@@ -1383,7 +2080,7 @@ export default function DealsPage() {
                   onClick={() =>
                     setDraft((prev) => ({
                       ...prev,
-                      milestones: [...prev.milestones, { title: `Milestone ${prev.milestones.length + 1}`, evidenceType: 'none', status: 'pending' }],
+                      milestones: [...prev.milestones, { title: `Milestone ${prev.milestones.length + 1}`, evidenceType: 'none', assignedRole: 'any', status: 'pending' }],
                     }))
                   }
                 >
@@ -1412,7 +2109,15 @@ export default function DealsPage() {
                 onClick={() => setSelectedId(d._id)}
               >
                 <div className="deal-title">{d.title}</div>
-                <div className="muted small">{d.status || 'draft'} · {d.counterparty?.country || '—'} · {d.currency || 'USD'} {d.totalAmount || 0}</div>
+                <div className="muted small">
+                  {d.status || 'draft'}
+                  {d?.pva?.workflow?.status ? ` · pva:${d.pva.workflow.status}` : ''}
+                  {getPvaPendingQueueCount(d) > 0 ? ` · queue:${getPvaPendingQueueCount(d)}` : ''}
+                  {' · '}
+                  {d.counterparty?.country || '—'}
+                  {' · '}
+                  {d.currency || 'USD'} {d.totalAmount || 0}
+                </div>
               </button>
             ))}
           </div>
@@ -1453,6 +2158,192 @@ export default function DealsPage() {
                   </div>
                 ) : null}
 
+                <h3>PVA role assignment</h3>
+                <div className="subcard">
+                  <div className="muted small">
+                    Workflow: <strong>{String(currentWorkflow?.status || 'draft')}</strong>
+                    {currentWorkflow?.updatedAt ? ` · updated ${new Date(currentWorkflow.updatedAt).toLocaleString()}` : ''}
+                  </div>
+                  <div className="muted small" style={{ marginTop: '0.4rem' }}>
+                    Creator: <strong>{String(currentRoleAcceptance?.creator?.status || 'pending')}</strong>
+                    {' · '}
+                    Shipper: <strong>{String(currentRoleAcceptance?.shipper?.status || 'pending')}</strong>
+                    {' · '}
+                    Buyer: <strong>{String(currentRoleAcceptance?.buyer?.status || 'pending')}</strong>
+                  </div>
+                  {viewerPvaAssignedRole ? (
+                    <div className="row rowWrap" style={{ marginTop: '0.6rem' }}>
+                      <span className="muted small">
+                        Your role assignment: <strong>{viewerPvaAssignedRole}</strong> ({viewerRoleAcceptanceStatus})
+                      </span>
+                      <button
+                        className="btn ghost"
+                        type="button"
+                        disabled={actionBusy || viewerRoleAcceptanceStatus === 'accepted' || viewerRoleAcceptanceStatus === 'declined'}
+                        onClick={() => handlePvaRoleAction(viewerPvaAssignedRole, 'accept')}
+                      >
+                        Accept role
+                      </button>
+                      <button
+                        className="btn ghost"
+                        type="button"
+                        disabled={actionBusy || viewerRoleAcceptanceStatus === 'declined' || viewerRoleAcceptanceStatus === 'accepted'}
+                        onClick={() => handlePvaRoleAction(viewerPvaAssignedRole, 'decline')}
+                      >
+                        Decline role
+                      </button>
+                    </div>
+                  ) : null}
+                  <div className="row rowWrap">
+                    <button className="btn ghost" type="button" disabled={workspaceCandidatesLoading || actionBusy} onClick={handleLoadWorkspaceCandidates}>
+                      {workspaceCandidatesLoading ? 'Loading candidates…' : 'Load creator/shipper candidates'}
+                    </button>
+                    <button className="btn ghost" type="button" disabled={actionBusy} onClick={() => refreshPvaWorkspace(selected._id)}>
+                      Refresh workflow
+                    </button>
+                  </div>
+                  <div className="grid2" style={{ marginTop: '0.6rem' }}>
+                    <label>
+                      <span className="labelRow">Assign creator</span>
+                      <select
+                        value={pvaRoleDraft.creatorUserId}
+                        onChange={(e) => setPvaRoleDraft((prev) => ({ ...prev, creatorUserId: e.target.value }))}
+                      >
+                        <option value="">Select creator</option>
+                        {(workspaceCandidates.creators || []).map((c) => (
+                          <option key={c.userId || c.name} value={c.userId || ''}>
+                            {c.name} ({c.city || 'n/a'}, {c.country || 'n/a'})
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label>
+                      <span className="labelRow">Assign shipper</span>
+                      <select
+                        value={pvaRoleDraft.shipperUserId}
+                        onChange={(e) => setPvaRoleDraft((prev) => ({ ...prev, shipperUserId: e.target.value }))}
+                      >
+                        <option value="">Select shipper</option>
+                        {(workspaceCandidates.shippers || []).map((s) => (
+                          <option key={s.userId || s.name} value={s.userId || ''}>
+                            {s.name} ({s.city || 'n/a'}, {s.country || 'n/a'})
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+                  <div className="row rowWrap" style={{ marginTop: '0.6rem' }}>
+                    <button className="btn ghost" type="button" disabled={actionBusy || !canAssignPvaRoles} onClick={handleApplyPvaAssignments}>
+                      Apply creator/shipper assignment
+                    </button>
+                  </div>
+
+                  <div style={{ marginTop: '0.8rem' }}>
+                    <div className="muted small"><strong>PVA notification queue</strong></div>
+                    <div className="row rowWrap" style={{ marginTop: '0.35rem' }}>
+                      <span className="muted small">Filter</span>
+                      <select value={pvaNotificationFilter} onChange={(e) => setPvaNotificationFilter(e.target.value)}>
+                        <option value="all">all</option>
+                        <option value="queued">queued</option>
+                        <option value="sent">sent</option>
+                        <option value="failed">failed</option>
+                      </select>
+                      <span className="muted small">showing {displayedPvaNotificationQueue.length}</span>
+                      {['seller', 'mediator', 'admin'].includes(viewerRole) ? (
+                        <>
+                          <button className="btn ghost" type="button" disabled={actionBusy || !displayedPvaNotificationQueue.length} onClick={() => handleBulkPvaQueueStatusUpdate('sent')}>
+                            Mark visible sent
+                          </button>
+                          <button className="btn ghost" type="button" disabled={actionBusy || !displayedPvaNotificationQueue.length} onClick={() => handleBulkPvaQueueStatusUpdate('failed')}>
+                            Mark visible failed
+                          </button>
+                          <button className="btn ghost" type="button" disabled={actionBusy || !displayedPvaNotificationQueue.some((note) => String(note?.status || '') === 'failed')} onClick={handleRetryFailedOnly}>
+                            Retry failed only
+                          </button>
+                          <button className="btn ghost" type="button" disabled={actionBusy || !displayedPvaNotificationQueue.some((note) => String(note?.status || '') === 'sent')} onClick={handleClearSentFromView}>
+                            Clear sent from view
+                          </button>
+                          <button className="btn ghost" type="button" disabled={actionBusy || !Object.keys(dismissedPvaSentIds).length} onClick={handleUndoClearSentFromView}>
+                            Undo clear
+                          </button>
+                        </>
+                      ) : null}
+                    </div>
+                    {displayedPvaNotificationQueue.length ? (
+                      <div className="stack" style={{ marginTop: '0.4rem' }}>
+                        {displayedPvaNotificationQueue.map((note, idx) => (
+                          <div key={`${note?.targetRole || 'role'}-${note?.eventType || 'event'}-${idx}`} className="muted small">
+                            <div>
+                              {note?.eventType || 'event'} {' -> '} {note?.targetRole || 'party'}
+                              {' '}
+                              <span className={`pva-status-chip pva-status-chip--${String(note?.status || 'queued')}`}>{note?.status || 'queued'}</span>
+                              {note?.createdAt ? ` @ ${new Date(note.createdAt).toLocaleString()}` : ''}
+                            </div>
+                            {['seller', 'mediator', 'admin'].includes(viewerRole) && note?._id ? (
+                              <div className="row rowWrap" style={{ marginTop: '0.3rem' }}>
+                                <select
+                                  value={pvaNotificationStatusDrafts[note._id] || note?.status || 'queued'}
+                                  onChange={(e) =>
+                                    setPvaNotificationStatusDrafts((prev) => ({ ...prev, [note._id]: e.target.value }))
+                                  }
+                                >
+                                  <option value="queued">queued</option>
+                                  <option value="sent">sent</option>
+                                  <option value="failed">failed</option>
+                                </select>
+                                <button
+                                  className="btn ghost"
+                                  type="button"
+                                  disabled={actionBusy}
+                                  onClick={() => handlePvaQueueStatusUpdate(note._id)}
+                                >
+                                  Update
+                                </button>
+                              </div>
+                            ) : null}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="muted small" style={{ marginTop: '0.4rem' }}>No queued workflow notifications.</div>
+                    )}
+                  </div>
+
+                  <div style={{ marginTop: '0.8rem' }}>
+                    <div className="muted small"><strong>Payout preview</strong></div>
+                    {pvaPayoutPreview.length ? (
+                      <div className="stack" style={{ marginTop: '0.4rem' }}>
+                        {pvaPayoutPreview.map((line, idx) => (
+                          <div key={`${line?.party || 'party'}-${idx}`} className="muted small">
+                            {line?.party || 'party'}: {line?.currency || selected.currency || 'USD'} {line?.amount || 0}
+                            {' · '}
+                            {line?.status || 'pending'}
+                            {line?.note ? ` · ${line.note}` : ''}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="muted small" style={{ marginTop: '0.4rem' }}>No payout preview available yet.</div>
+                    )}
+                  </div>
+                </div>
+
+                <h3>My task dashboard</h3>
+                <div className="subcard">
+                  <div className="muted small">Current role: <strong>{viewerRole}</strong></div>
+                  {myTaskMilestones.length ? (
+                    <div className="stack" style={{ marginTop: '0.5rem' }}>
+                      {myTaskMilestones.map((m, idx) => (
+                        <div key={m._id || idx} className="muted small">
+                          <strong>{m.title}</strong> · assigned to {m.assignedRole || 'any'} · status {m.status || 'pending'}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="muted small" style={{ marginTop: '0.5rem' }}>No assigned tasks for your role yet.</div>
+                  )}
+                </div>
+
                 <h3>Milestones</h3>
                 {Array.isArray(selected.milestones) && selected.milestones.length ? (
                   <div className="milestones">
@@ -1461,6 +2352,7 @@ export default function DealsPage() {
                         <div className="milestone-title">{m.title}</div>
                         {m.description ? <div className="muted small">{m.description}</div> : null}
                         <div className="muted small">evidence: {m.evidenceType || 'none'}</div>
+                        <div className="muted small">assigned role: {m.assignedRole || 'any'}</div>
                         {m.evidenceValue ? <div className="muted small">evidence value: {m.evidenceValue}</div> : null}
                         {m.evidenceType && m.evidenceType !== 'none' ? (
                           <div className="row">
@@ -1469,7 +2361,12 @@ export default function DealsPage() {
                               onChange={(e) => setEvidenceDrafts((prev) => ({ ...prev, [m._id]: e.target.value }))}
                               placeholder="Submit evidence (tracking number, link, etc.)"
                             />
-                            <button className="btn ghost" type="button" onClick={() => handleSubmitEvidence(m._id)}>
+                            <button
+                              className="btn ghost"
+                              type="button"
+                              disabled={viewerRole !== 'admin' && !['any', viewerRole].includes(String(m.assignedRole || 'any')) && !(String(m.assignedRole || '') === 'creator' && viewerRole === 'seller')}
+                              onClick={() => handleSubmitEvidence(m._id)}
+                            >
                               Save evidence
                             </button>
                           </div>
@@ -1605,6 +2502,24 @@ export default function DealsPage() {
                     <button className="btn ghost" type="button" disabled={actionBusy || !canResolveDisputeUi} onClick={() => handleResolveDispute('refund')}>
                       Resolve: refund
                     </button>
+                  </div>
+                  <div className="row rowWrap" style={{ marginTop: '0.5rem' }}>
+                    <label className="check">
+                      <input type="checkbox" checked={forfeitCreator} onChange={(e) => setForfeitCreator(e.target.checked)} />
+                      <span>Forfeit creator collateral</span>
+                    </label>
+                    <label className="check">
+                      <input type="checkbox" checked={forfeitShipper} onChange={(e) => setForfeitShipper(e.target.checked)} />
+                      <span>Forfeit shipper collateral</span>
+                    </label>
+                    <input
+                      value={collateralResolutionNote}
+                      onChange={(e) => setCollateralResolutionNote(e.target.value)}
+                      placeholder="Collateral resolution note"
+                    />
+                  </div>
+                  <div className="muted small" style={{ marginTop: '0.35rem' }}>
+                    Impact preview ({disputeImpactPreview.currency}): creator at risk {disputeImpactPreview.creatorForfeit} · shipper at risk {disputeImpactPreview.shipperForfeit}
                   </div>
                   <div className="row rowWrap" style={{ marginTop: '0.5rem' }}>
                     <input
