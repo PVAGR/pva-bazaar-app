@@ -1,0 +1,399 @@
+/* Frontend/src/components/ProvenanceSubmission.module.css */
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.1);
+}
+
+.progressSection {
+  margin-bottom: 30px;
+}
+
+.progressBar {
+  width: 100%;
+  height: 8px;
+  background: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, #4c6ef5, #748ffc);
+  transition: width 0.3s ease;
+}
+
+.stepIndicator {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  color: #666;
+  font-weight: 600;
+}
+
+.progressPercent {
+  color: #4c6ef5;
+  font-weight: bold;
+}
+
+.stepContainer {
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.stepContainer h2 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 28px;
+  color: #1a1a1a;
+}
+
+.stepContainer > p {
+  color: #666;
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+
+/* Object Type Grid */
+.typeGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+  margin: 30px 0;
+}
+
+.typeCard {
+  padding: 20px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.typeCard:hover {
+  border-color: #4c6ef5;
+  background: #f0f4ff;
+  transform: translateY(-2px);
+}
+
+.typeCard:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.typeIcon {
+  font-size: 32px;
+}
+
+.typeLabel {
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Forms */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.formRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 15px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.formGroup label {
+  font-weight: 600;
+  color: #333;
+  font-size: 14px;
+}
+
+.formGroup input,
+.formGroup textarea,
+.formGroup select {
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+
+.formGroup input:focus,
+.formGroup textarea:focus,
+.formGroup select:focus {
+  outline: none;
+  border-color: #4c6ef5;
+  box-shadow: 0 0 0 3px rgba(76, 110, 245, 0.1);
+}
+
+.formGroup textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.largeTextarea {
+  width: 100%;
+  min-height: 250px;
+  padding: 15px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  line-height: 1.6;
+}
+
+.largeTextarea:focus {
+  outline: none;
+  border-color: #4c6ef5;
+}
+
+.charCount {
+  font-size: 12px;
+  color: #999;
+  text-align: right;
+  margin-top: -10px;
+}
+
+/* Buttons */
+.btn {
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #4c6ef5, #748ffc);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+  margin-top: 20px;
+}
+
+.btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(76, 110, 245, 0.3);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Proof Options */
+.proofOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.proofOption {
+  padding: 15px;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.2s;
+}
+
+.proofOption:hover {
+  border-color: #4c6ef5;
+  background: #f0f4ff;
+}
+
+.proofOption input {
+  cursor: pointer;
+}
+
+/* Upload Area */
+.uploadArea {
+  border: 2px dashed #4c6ef5;
+  border-radius: 8px;
+  padding: 40px;
+  text-align: center;
+  background: #f0f4ff;
+  margin: 20px 0;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.uploadArea:hover {
+  border-color: #364fc7;
+  background: #e7f0ff;
+}
+
+.uploadArea p {
+  margin: 0 0 10px 0;
+  color: #4c6ef5;
+  font-weight: 600;
+}
+
+.uploadArea input {
+  cursor: pointer;
+}
+
+/* Score Card */
+.scoreCard {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  margin: 20px 0;
+}
+
+.scoreSection {
+  margin-bottom: 15px;
+}
+
+.scoreSection strong {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.scoreBar {
+  width: 100%;
+  height: 8px;
+  background: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 5px;
+}
+
+.scoreProgress {
+  height: 100%;
+  background: linear-gradient(90deg, #51cf66, #37b24d);
+  transition: width 0.3s ease;
+}
+
+.scoreSection span {
+  display: inline-block;
+  padding: 4px 8px;
+  background: white;
+  border-radius: 4px;
+  font-weight: 600;
+  color: #51cf66;
+  font-size: 12px;
+}
+
+.totalScore {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 2px solid #ddd;
+  text-align: center;
+}
+
+.totalScore strong {
+  display: block;
+  margin-bottom: 10px;
+}
+
+.bigScore {
+  font-size: 48px;
+  font-weight: bold;
+  color: #4c6ef5;
+}
+
+/* Confirmation */
+.confirmation {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.checkmark {
+  width: 80px;
+  height: 80px;
+  background: #51cf66;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+  margin: 0 auto 20px;
+  animation: scaleIn 0.5s ease;
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+.confirmation h2 {
+  font-size: 32px;
+  margin: 10px 0;
+}
+
+.submissionId {
+  color: #999;
+  font-family: monospace;
+  font-size: 12px;
+  margin: 15px 0;
+}
+
+.nextSteps {
+  color: #666;
+  max-width: 500px;
+  margin: 20px auto;
+  line-height: 1.6;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .container {
+    padding: 15px;
+  }
+
+  .stepContainer h2 {
+    font-size: 22px;
+  }
+
+  .typeGrid {
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  }
+
+  .formRow {
+    grid-template-columns: 1fr;
+  }
+
+  .uploadArea {
+    padding: 30px 15px;
+  }
+
+  .btn {
+    width: 100%;
+  }
+}

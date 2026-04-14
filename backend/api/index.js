@@ -393,6 +393,9 @@ app.use('/api/docs', require('../routes/api-docs'));
 // Health checks
 app.use('/api/health-check', require('../routes/health-check'));
 
+// Phase 9: Provenance Tokenization Portal
+app.use('/api/provenance', require('../routes/provenance'));
+
 app.use('/api/blogs', blogsRoutes);
 app.use('/api/pages', pagesRoutes);
 app.use('/api/comments', commentsRoutes);
