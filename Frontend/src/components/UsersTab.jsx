@@ -44,6 +44,7 @@ export default function UsersTab() {
     publicSafetyNotice: '',
     internalCaseNotes: '',
   });
+  const [promotingUserId, setPromotingUserId] = useState('');
 
   useEffect(() => {
     loadUsers();
@@ -194,6 +195,33 @@ export default function UsersTab() {
       }
     } catch (err) {
       setError(err.message);
+    }
+  };
+
+  const handlePromoteToAdmin = async (user) => {
+    if (!user?._id) return;
+    const label = user.name || user.email || user.username || 'this user';
+    if (!globalThis.confirm(`Promote "${label}" to admin? They will get full admin access.`)) {
+      return;
+    }
+
+    try {
+      setPromotingUserId(user._id);
+      const data = await apiPut(`/admin/users/${user._id}`, { role: 'admin' });
+      if (data.ok) {
+        setSuccess(`"${label}" is now an admin.`);
+        if (selectedUser?._id === user._id) {
+          setSelectedUser((prev) => (prev ? { ...prev, role: 'admin' } : prev));
+        }
+        loadUsers();
+        loadStats();
+      } else {
+        setError(data.error || 'Failed to promote user');
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to promote user');
+    } finally {
+      setPromotingUserId('');
     }
   };
 
@@ -358,6 +386,16 @@ export default function UsersTab() {
                         >
                           ✏️
                         </button>
+                        {user.role !== 'admin' && (
+                          <button
+                            onClick={() => handlePromoteToAdmin(user)}
+                            className="btn-icon btn-promote"
+                            title="Promote to admin"
+                            disabled={promotingUserId === user._id}
+                          >
+                            {promotingUserId === user._id ? '⏳' : '👑'}
+                          </button>
+                        )}
                         {user.role !== 'admin' && (
                           <button
                             onClick={() => handleDeleteUser(user._id, user.name)}
@@ -579,6 +617,15 @@ export default function UsersTab() {
               <button onClick={saveTrustSettings} className="btn btn-secondary">
                 Save trust settings
               </button>
+              {selectedUser.role !== 'admin' && (
+                <button
+                  onClick={() => handlePromoteToAdmin(selectedUser)}
+                  className="btn btn-secondary"
+                  disabled={promotingUserId === selectedUser._id}
+                >
+                  {promotingUserId === selectedUser._id ? 'Promoting...' : '👑 Make admin'}
+                </button>
+              )}
               <button 
                 onClick={() => {
                   handleEditUser(selectedUser);

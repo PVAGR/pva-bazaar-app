@@ -287,6 +287,16 @@
   background: rgba(255, 50, 50, 0.2);
 }
 
+.btn-icon.btn-promote:hover:not(:disabled) {
+  background: rgba(255, 200, 0, 0.2);
+}
+
+.btn-icon:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
 /* Pagination */
 .pagination {
   display: flex;

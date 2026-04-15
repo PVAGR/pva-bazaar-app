@@ -608,13 +608,20 @@ router.get('/users/:id', adminSession, async (req, res) => {
  */
 router.put('/users/:id', adminSession, async (req, res) => {
   try {
-    const { name, email, username, profilePicture } = req.body;
+    const { name, email, username, profilePicture, role } = req.body;
     
     const updates = {};
     if (name !== undefined) updates.name = name;
     if (email !== undefined) updates.email = email;
     if (username !== undefined) updates.username = username;
     if (profilePicture !== undefined) updates.profilePicture = profilePicture;
+    if (role !== undefined) {
+      const nextRole = String(role).trim().toLowerCase();
+      if (!['user', 'admin'].includes(nextRole)) {
+        return res.status(400).json({ ok: false, error: 'Invalid role. Allowed roles: user, admin' });
+      }
+      updates.role = nextRole;
+    }
     updates.updatedAt = new Date();
 
     const user = await User.findByIdAndUpdate(

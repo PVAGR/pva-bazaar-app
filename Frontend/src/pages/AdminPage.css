@@ -1972,3 +1972,48 @@
   font-weight: 600;
   line-height: 1.2;
 }
+
+/* Full-width shell + anti-bleed fix */
+.admin-page.authenticated {
+  --admin-shell-max: 100vw;
+  overflow-x: hidden;
+}
+
+.admin-header .header-content {
+  width: calc(100vw - 20px);
+  max-width: none;
+}
+
+.admin-container {
+  width: calc(100vw - 20px);
+  max-width: none;
+  padding: 0.75rem 0.9rem 1.8rem;
+}
+
+.admin-page.authenticated .admin-tabs {
+  width: calc(100vw - 20px);
+  max-width: none;
+  margin-inline: auto;
+}
+
+/* Tighten admin rhythm while keeping full-width readability */
+.admin-page .tab-header {
+  padding: 0.72rem 0.85rem;
+  margin-bottom: 0.65rem;
+}
+
+.inquiry-grid {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+@media (max-width: 768px) {
+  .admin-header .header-content,
+  .admin-container,
+  .admin-page.authenticated .admin-tabs {
+    width: calc(100vw - 10px);
+  }
+
+  .admin-container {
+    padding: 0.55rem 0.45rem 1.35rem;
+  }
+}
