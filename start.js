@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 const path = require('path');
-require('dotenv').config();
+// On Render, env is injected by the platform — never let a stray .env from the image override it.
+if (process.env.RENDER !== 'true') {
+  require('dotenv').config({ override: false });
+}
 
 const app = require(path.join(__dirname, 'backend', 'api', 'index'));
 

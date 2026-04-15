@@ -16,8 +16,10 @@ const GovernanceProposal = require('../models/GovernanceProposal');
 const GovernanceVote = require('../models/GovernanceVote');
 const governanceRoutes = require('../routes/governance');
 
-// Load environment variables
-dotenv.config();
+// Load environment variables (skip file-based dotenv on Render — platform env is authoritative).
+if (process.env.RENDER !== 'true') {
+  dotenv.config({ override: false });
+}
 
 // Some hosts expose only DATABASE_URL; reuse if it is clearly a Mongo connection string.
 if (!process.env.MONGODB_URI && process.env.DATABASE_URL) {

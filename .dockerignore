@@ -1,8 +1,11 @@
 .git
 .gitignore
 .github
+.env
 .env.production
 .env.local
+backend/.env
+backend/.env.local
 .DS_Store
 node_modules
 npm-debug.log
