@@ -187,7 +187,7 @@ export default function CommoditiesPage() {
             <p className="muted">Build intelligence dossiers for any commodity: coffee, gemstones, soapstone, malachite, etc.</p>
           </div>
           <div className="commodities-actions">
-            <Link to="/broker" className="btn ghost">Hub</Link>
+            <Link to="/broker-hub" className="btn ghost">Hub</Link>
             <button className="btn ghost" onClick={loadCommodities} disabled={loading}>Refresh</button>
           </div>
         </div>

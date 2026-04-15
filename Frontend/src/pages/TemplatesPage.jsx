@@ -173,7 +173,7 @@ export default function TemplatesPage() {
             <p className="muted">Copy-paste vetting prompts, intro emails, and pitches. One-click copy or send via WhatsApp/Email.</p>
           </div>
           <div className="templates-actions">
-            <Link to="/broker" className="btn ghost">Hub</Link>
+            <Link to="/broker-hub" className="btn ghost">Hub</Link>
             <button className="btn ghost" onClick={loadTemplates} disabled={loading}>Refresh</button>
           </div>
         </div>

@@ -31,6 +31,9 @@ const GET_PROBES = [
   ["/api/bounties", [200, 401, 403]],
   ["/api/users/profile", [200, 401, 403]],
   ["/api/streams", [200, 401, 403]],
+  ["/api/commodities", [401, 403]],
+  ["/api/contacts", [401, 403]],
+  ["/api/templates", [401, 403]],
   ["/api/docs", [200]],
   ["/Frontend/dist/index.html", [200, 404]], // optional static; 404 ok if not served from API
 ];

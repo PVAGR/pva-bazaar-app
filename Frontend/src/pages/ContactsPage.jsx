@@ -171,7 +171,7 @@ export default function ContactsPage() {
             <p className="muted">Suppliers, buyers, producers, distributors—linked to commodities and deals.</p>
           </div>
           <div className="contacts-actions">
-            <Link to="/broker" className="btn ghost">Hub</Link>
+            <Link to="/broker-hub" className="btn ghost">Hub</Link>
             <button className="btn ghost" onClick={loadContacts} disabled={loading}>Refresh</button>
           </div>
         </div>

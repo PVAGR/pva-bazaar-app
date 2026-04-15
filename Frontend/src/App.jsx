@@ -48,6 +48,11 @@ const DeployPage = lazy(() => import('./pages/DeployPage.jsx'));
 const DownloadAppPage = lazy(() => import('./pages/DownloadAppPage.jsx'));
 const ForumPage = lazy(() => import('./pages/Forum.jsx'));
 const GetStartedPage = lazy(() => import('./pages/GetStartedPage.jsx'));
+const BrokerHubPage = lazy(() => import('./pages/BrokerHubPage.jsx'));
+const CommoditiesPage = lazy(() => import('./pages/CommoditiesPage.jsx'));
+const ContactsPage = lazy(() => import('./pages/ContactsPage.jsx'));
+const TemplatesPage = lazy(() => import('./pages/TemplatesPage.jsx'));
+const ChatPage = lazy(() => import('./pages/ChatPage.jsx'));
 
 function RequireUserAuth({ children }) {
   const location = useLocation();
@@ -90,6 +95,11 @@ export default function App() {
         <Route path="/items/mine" element={<RequireUserAuth><Layout><MyListingsPage /></Layout></RequireUserAuth>} />
         <Route path="/deals" element={<RequireUserAuth><Layout><DealsPage /></Layout></RequireUserAuth>} />
         <Route path="/deals/join" element={<RequireUserAuth><Layout><DealJoinPage /></Layout></RequireUserAuth>} />
+        <Route path="/broker-hub" element={<RequireUserAuth><Layout><BrokerHubPage /></Layout></RequireUserAuth>} />
+        <Route path="/commodities" element={<RequireUserAuth><Layout><CommoditiesPage /></Layout></RequireUserAuth>} />
+        <Route path="/contacts" element={<RequireUserAuth><Layout><ContactsPage /></Layout></RequireUserAuth>} />
+        <Route path="/templates" element={<RequireUserAuth><Layout><TemplatesPage /></Layout></RequireUserAuth>} />
+        <Route path="/chat" element={<Layout><ChatPage /></Layout>} />
         <Route path="/conference" element={<Layout><PopularConferencePage /></Layout>} />
         <Route path="/proposals" element={<Layout><ProposalsPage /></Layout>} />
         <Route path="/proposals/submit" element={<RequireUserAuth><Layout><SubmitProposalPage /></Layout></RequireUserAuth>} />

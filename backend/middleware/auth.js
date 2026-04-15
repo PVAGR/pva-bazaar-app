@@ -121,6 +121,8 @@ module.exports = {
   generateToken,
   verifyToken,
   authenticateToken,
+  /** Alias used by broker-hub routes (commodities, contacts, templates). */
+  authMiddleware: authenticateToken,
   authenticateApiKey,
   requireAdmin,
   requireSeller,

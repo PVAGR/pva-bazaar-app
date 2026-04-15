@@ -370,6 +370,10 @@ const telegramRoutes = require('../routes/telegram');
 const proposalsRoutes = require('../routes/proposals');
 const libraryTaxonomyRoutes = require('../routes/libraryTaxonomy');
 const libraryIntelligenceRoutes = require('../routes/libraryIntelligence');
+const commoditiesRoutes = require('../routes/commodities');
+const contactsRoutes = require('../routes/contacts');
+const templatesRoutes = require('../routes/templates');
+const chatRoutes = require('../routes/chat');
 // Models for optional seeding
 const Artifact = require('../models/Artifact');
 const User = require('../models/User');
@@ -468,6 +472,10 @@ app.use('/api/admin/library-intelligence', libraryIntelligenceRoutes);
 app.use('/api/attribution', attributionRoutes);
 app.use('/api/payouts', payoutsRoutes);
 app.use('/api/sales', salesRoutes);
+app.use('/api/commodities', commoditiesRoutes);
+app.use('/api/contacts', contactsRoutes);
+app.use('/api/templates', templatesRoutes);
+app.use('/api/chat', chatRoutes);
 
 // Phase 3: Multi-product support (optional routes)
 try {
