@@ -48,6 +48,8 @@ Frontend/dist/
 # Vercel CLI exports and Render bulk-import bundles (secrets)
 .tmp-vercel*/
 render-dashboard.env
+.render/
+render-api-key.local
 
 # OpenClaw watchdog logs
 infra/openclaw/logs/
