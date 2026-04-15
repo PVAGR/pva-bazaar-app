@@ -4,6 +4,16 @@ import { fetchMarketplaceItems } from "../lib/api";
 import useDebounce from "../hooks/useDebounce";
 import "./ShowroomPage.css";
 
+const FALLBACK_IMAGE = "/placeholder.png";
+
+function resolveItemImage(item) {
+  const primary = item?.media?.[0] || "";
+  if (typeof primary === "string" && /via\.placeholder\.com/i.test(primary)) {
+    return FALLBACK_IMAGE;
+  }
+  return primary || FALLBACK_IMAGE;
+}
+
 export default function ShowroomPage() {
   const [items, setItems] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -149,7 +159,7 @@ export default function ShowroomPage() {
             >
               <article className="item-card" tabIndex={0} aria-label={item.name || item.title}>
                 <img
-                  src={item.media?.[0] || "/placeholder.png"}
+                  src={resolveItemImage(item)}
                   alt={item.name || item.title}
                   className="item-image"
                 />
