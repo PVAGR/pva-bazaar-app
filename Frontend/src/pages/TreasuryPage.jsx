@@ -5,14 +5,20 @@ import { TREASURY_ABI, getContract, ensureCorrectChain } from '../lib/contracts.
 export default function TreasuryPage() {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const treasuryApiEnabled = import.meta.env.VITE_ENABLE_TREASURY_REQUESTS_API === 'true';
 
   useEffect(() => {
+    if (!treasuryApiEnabled) {
+      setLoading(false);
+      setRequests([]);
+      return;
+    }
     const fetchRequests = async () => {
       try {
         const data = await apiGet('/governance/treasury/requests');
         setRequests(Array.isArray(data?.items) ? data.items : []);
       } catch (error) {
-        console.error('Failed to fetch treasury requests', error);
+        console.warn('Treasury requests API unavailable, showing empty state.');
         setRequests([]);
       } finally {
         setLoading(false);
@@ -20,7 +26,7 @@ export default function TreasuryPage() {
     };
 
     fetchRequests();
-  }, []);
+  }, [treasuryApiEnabled]);
 
   const handleApprove = async (requestId, adminWallet) => {
     const ethereum = globalThis?.ethereum;
@@ -45,10 +51,12 @@ export default function TreasuryPage() {
       }
     }
 
-    try {
-      await apiPost(`/governance/treasury/requests/${requestId}/approve`, { adminWallet });
-    } catch (error) {
-      console.error('Backend treasury approval failed', error);
+    if (treasuryApiEnabled) {
+      try {
+        await apiPost(`/governance/treasury/requests/${requestId}/approve`, { adminWallet });
+      } catch (error) {
+        console.warn('Backend treasury approval endpoint unavailable.');
+      }
     }
   };
 

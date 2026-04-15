@@ -23,8 +23,5 @@ export const ENV = {
   CLOUDINARY_UPLOAD_PRESET: import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || "",
 };
 
-if (!ENV.CLOUDINARY_CLOUD_NAME || !ENV.CLOUDINARY_UPLOAD_PRESET) {
-  console.warn(
-    "Missing Cloudinary config. Set VITE_CLOUDINARY_CLOUD_NAME and VITE_CLOUDINARY_UPLOAD_PRESET."
-  );
-}
+// Cloudinary is optional for read-only browsing routes. Upload surfaces
+// display explicit UI guidance if these values are not configured.

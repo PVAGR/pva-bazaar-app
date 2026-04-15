@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { apiFetch } from '../lib/api';
 import './AgentChat.css';
 
 export default function AgentChat({ initialInput = '' }) {
@@ -33,7 +34,7 @@ export default function AgentChat({ initialInput = '' }) {
 
   const checkAgentStatus = async () => {
     try {
-      const response = await globalThis.fetch('/api/agent/status');
+      const response = await apiFetch('/api/agent/status');
       const data = await response.json();
       if (data.ok && data.ollama.status === 'online') {
         setAgentStatus('online');
@@ -53,7 +54,7 @@ export default function AgentChat({ initialInput = '' }) {
       globalThis.localStorage.setItem('userId', userId);
 
       // Try to load existing conversation
-      const response = await globalThis.fetch(
+      const response = await apiFetch(
         `/api/agent/conversations?userId=${encodeURIComponent(userId)}&limit=1`
       );
       const data = await response.json();
@@ -64,9 +65,8 @@ export default function AgentChat({ initialInput = '' }) {
         setMessages(convo.messages || []);
       } else {
         // Create new conversation
-        const newResponse = await globalThis.fetch('/api/agent/conversation', {
+        const newResponse = await apiFetch('/api/agent/conversation', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             userId,
             title: 'Chat with PVA Guardian',
@@ -113,9 +113,8 @@ export default function AgentChat({ initialInput = '' }) {
       setMessages((prev) => [...prev, userMsg]);
 
       // Send to API
-      const response = await globalThis.fetch('/api/agent/chat', {
+      const response = await apiFetch('/api/agent/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           conversationId,
           message: userMessage,
@@ -149,7 +148,7 @@ export default function AgentChat({ initialInput = '' }) {
     }
 
     try {
-      const response = await globalThis.fetch(`/api/agent/conversation/${conversationId}/clear`, {
+      const response = await apiFetch(`/api/agent/conversation/${conversationId}/clear`, {
         method: 'POST',
       });
       const data = await response.json();
