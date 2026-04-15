@@ -207,7 +207,7 @@ app.use('/api/webhooks', webhookLimiter);
 app.use((req, res, next) => {
   const apiNotReady = process.env.API_READY === 'false';
   const isProd = process.env.NODE_ENV === 'production';
-  const allowlist = ['/health', '/api/health', '/dev/token', '/api/dev/token', '/ping', '/api/ping', '/version', '/api/version', '/express-ping', '/api/express-ping', '/openclaw', '/api/openclaw', '/decentralized/status', '/api/decentralized/status', '/decentralized/ready', '/api/decentralized/ready', '/decentralized/report', '/api/decentralized/report', '/blockchain/health', '/api/blockchain/health'];
+  const allowlist = ['/health', '/api/health', '/dev/token', '/api/dev/token', '/ping', '/api/ping', '/version', '/api/version', '/express-ping', '/api/express-ping', '/openclaw', '/api/openclaw', '/decentralized/status', '/api/decentralized/status', '/decentralized/ready', '/api/decentralized/ready', '/decentralized/report', '/api/decentralized/report', '/blockchain/health', '/api/blockchain/health', '/api/openapi.json', '/api/docs'];
   if (apiNotReady && isProd && !allowlist.some(p => req.path.startsWith(p))) {
     return res.status(503).json({ ok: false, message: 'Service not configured. Missing environment secrets.' });
   }
@@ -304,7 +304,7 @@ async function connectToDatabase() {
 // Middleware: Ensure DB connection for routes that need it
 app.use(async (req, res, next) => {
   // Skip DB connection for health/ping endpoints and explicit safe endpoints
-  const skipPaths = ['/health', '/api/health', '/ping', '/api/ping', '/version', '/api/version', '/express-ping', '/api/express-ping', '/dev/token', '/api/dev/token', '/webhooks/stripe', '/api/webhooks/stripe', '/openclaw', '/api/openclaw', '/decentralized/status', '/api/decentralized/status', '/decentralized/ready', '/api/decentralized/ready', '/decentralized/report', '/api/decentralized/report', '/blockchain/health', '/api/blockchain/health'];
+  const skipPaths = ['/health', '/api/health', '/ping', '/api/ping', '/version', '/api/version', '/express-ping', '/api/express-ping', '/dev/token', '/api/dev/token', '/webhooks/stripe', '/api/webhooks/stripe', '/openclaw', '/api/openclaw', '/decentralized/status', '/api/decentralized/status', '/decentralized/ready', '/api/decentralized/ready', '/decentralized/report', '/api/decentralized/report', '/blockchain/health', '/api/blockchain/health', '/api/openapi.json', '/api/docs'];
   const skipPath = skipPaths.some(p => req.path === p || req.path.startsWith(p));
   
   if (skipPath) {
@@ -416,7 +416,9 @@ app.get('/api/openapi.json', (req, res) => {
   try {
     const { getOpenApiSpec } = require('../utils/openapi');
     const spec = getOpenApiSpec();
-    res.json(spec);
+    // Serialize here so JSON errors stay in this try/catch (Express 5 can surface res.json failures via the error handler).
+    const body = JSON.stringify(spec);
+    res.status(200).type('application/json').send(body);
   } catch (err) {
     console.error('OpenAPI spec error:', err?.message || err);
     res.status(500).json({ ok: false, error: 'OpenAPI spec unavailable', detail: String(err?.message || err) });
