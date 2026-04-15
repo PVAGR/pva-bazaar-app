@@ -43,8 +43,9 @@ jobs:
             exit 1
           fi
           if [ -z "$OPENCLAW_WEBHOOK_URL" ]; then
-            echo "OPENCLAW_WEBHOOK_URL is required"
-            exit 1
+            OPENCLAW_WEBHOOK_URL="${OPENCLAW_BACKEND_URL%/}/api/openclaw/webhook"
+            echo "OPENCLAW_WEBHOOK_URL=$OPENCLAW_WEBHOOK_URL" >> "$GITHUB_ENV"
+            echo "OPENCLAW_WEBHOOK_URL not set; defaulting to backend webhook endpoint"
           fi
           echo "Worker backend: $OPENCLAW_BACKEND_URL"
           echo "Worker webhook configured"
