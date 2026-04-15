@@ -25,13 +25,13 @@ describe('Career quiz MBTI + RIASEC scoring', () => {
     if (mongoServer) await mongoServer.stop();
   });
 
-  it('serves 60 default questions across enjoyment and introspection sections', async () => {
+  it('serves default narrative questions across enjoyment and introspection sections', async () => {
     const res = await request(app).get('/api/career-quiz/definition');
 
     expect(res.status).toBe(200);
     expect(res.body?.ok).toBe(true);
     const questions = Array.isArray(res.body?.quiz?.questions) ? res.body.quiz.questions : [];
-    expect(questions.length).toBe(60);
+    expect(questions.length).toBe(50);
 
     const sectionCounts = questions.reduce((acc, question) => {
       const section = String(question?.section || 'enjoyment');
@@ -40,7 +40,7 @@ describe('Career quiz MBTI + RIASEC scoring', () => {
     }, {});
 
     expect(sectionCounts.enjoyment).toBe(30);
-    expect(sectionCounts.introspection).toBe(30);
+    expect(sectionCounts.introspection).toBe(20);
   });
 
   it('returns confidence and major/supporting role recommendations on submit', async () => {

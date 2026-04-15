@@ -13,6 +13,8 @@ export default defineConfig({
       'build',
       'out',
       '.next',
+      // Nested duplicate checkout (see root .gitignore); do not run tests twice
+      'pva-bazaar-app/**',
       'qa/backstop',
       'qa/reports',
       // Playwright specs are not Vitest tests
