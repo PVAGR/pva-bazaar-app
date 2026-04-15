@@ -101,7 +101,7 @@ export default function GetStartedPage() {
   return (
     <section className="section-card get-started" aria-label="Federation onboarding entry">
       <header className="get-started__hero">
-        <div>
+        <div className="get-started__heroIntro">
           <p className="pill">Federation Entry</p>
           <h1>Begin your path in PVA Bazaar</h1>
           <p>
@@ -109,8 +109,8 @@ export default function GetStartedPage() {
             profile to continue into wallet, DID, and community setup.
           </p>
           <div className="get-started__actions">
-            <Link className="btn btn-secondary" to="/home">Explore home</Link>
-            <Link className="btn btn-ghost" to="/about">Read manifesto context</Link>
+            <Link className="btn btn-secondary" to="/home">Explore Home</Link>
+            <Link className="btn btn-ghost" to="/about">Read Manifesto</Link>
           </div>
         </div>
 
@@ -258,7 +258,9 @@ export default function GetStartedPage() {
             <article key={route.key} className="get-started__card">
               <h3>{route.title}</h3>
               <p>{routeSummary(route)}</p>
-              <Link to={route.to}>{route.navLabel || route.title}</Link>
+              <Link className="get-started__cardLink" to={route.to}>
+                Open {route.navLabel || route.title}
+              </Link>
             </article>
           ))}
         </div>
@@ -274,7 +276,9 @@ export default function GetStartedPage() {
             <article key={route.key} className="get-started__card">
               <h3>{route.title}</h3>
               <p>{routeSummary(route)}</p>
-              <Link to={route.to}>{route.navLabel || route.title}</Link>
+              <Link className="get-started__cardLink" to={route.to}>
+                Open {route.navLabel || route.title}
+              </Link>
             </article>
           ))}
         </div>

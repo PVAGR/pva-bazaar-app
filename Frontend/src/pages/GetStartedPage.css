@@ -9,6 +9,15 @@
   gap: 1rem;
 }
 
+.get-started__heroIntro {
+  border: 1px solid var(--site-border);
+  border-radius: var(--radius-lg, 14px);
+  padding: 0.95rem;
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--site-panel-bg, var(--site-panel)) 88%, transparent), transparent 65%),
+    var(--site-panel-bg, var(--site-panel));
+}
+
 .get-started__hero h1 {
   margin: 0.4rem 0 0.55rem;
   font-size: clamp(1.5rem, 2.4vw, 2rem);
@@ -25,6 +34,40 @@
   flex-wrap: wrap;
   gap: 0.75rem;
   margin-top: 1rem;
+}
+
+.get-started .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.2rem;
+  padding: 0.5rem 0.9rem;
+  border-radius: 10px;
+  border: 1px solid var(--site-border);
+  text-decoration: none;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  transition: transform 120ms ease, border-color 120ms ease, background-color 120ms ease;
+}
+
+.get-started .btn:hover {
+  transform: translateY(-1px);
+  border-color: var(--site-accent);
+}
+
+.get-started .btn-secondary {
+  color: var(--site-btn-text, #062611);
+  background: color-mix(in srgb, var(--site-accent) 82%, #ffffff 18%);
+}
+
+.get-started .btn-ghost {
+  color: var(--site-accent);
+  background: color-mix(in srgb, var(--site-panel-bg, var(--site-panel)) 80%, transparent);
+}
+
+.get-started .btn-primary {
+  color: var(--site-btn-text, #062611);
+  background: color-mix(in srgb, var(--site-accent) 86%, #ffffff 14%);
 }
 
 .get-started__signup {
@@ -130,14 +173,31 @@
   font-size: 0.94rem;
 }
 
-.get-started__card a {
+.get-started__cardLink {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--site-accent) 50%, var(--site-border));
   color: var(--site-accent);
   text-decoration: none;
   font-weight: 600;
+  font-size: 0.9rem;
+  padding: 0.32rem 0.72rem;
+  background: color-mix(in srgb, var(--site-panel-bg, var(--site-panel)) 75%, transparent);
+  transition: transform 120ms ease, border-color 120ms ease, background-color 120ms ease;
 }
 
-.get-started__card a:hover {
-  text-decoration: underline;
+.get-started__cardLink:hover {
+  transform: translateY(-1px);
+  border-color: var(--site-accent);
+  background: color-mix(in srgb, var(--site-panel-bg, var(--site-panel)) 60%, transparent);
+}
+
+.get-started__cardLink::after {
+  content: "->";
+  margin-left: 0.4rem;
+  font-size: 0.8rem;
 }
 
 .get-started__steps {
