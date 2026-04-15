@@ -413,9 +413,14 @@ app.get('/api/version', (req, res) => {
 
 // API Documentation
 app.get('/api/openapi.json', (req, res) => {
-  const { getOpenApiSpec } = require('../utils/openapi');
-  const spec = getOpenApiSpec();
-  res.json(spec);
+  try {
+    const { getOpenApiSpec } = require('../utils/openapi');
+    const spec = getOpenApiSpec();
+    res.json(spec);
+  } catch (err) {
+    console.error('OpenAPI spec error:', err?.message || err);
+    res.status(500).json({ ok: false, error: 'OpenAPI spec unavailable', detail: String(err?.message || err) });
+  }
 });
 
 app.use('/api/docs', require('../routes/api-docs'));

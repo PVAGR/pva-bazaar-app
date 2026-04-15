@@ -29,6 +29,7 @@
     "verify:prod": "node scripts/verify-prod.mjs",
     "verify:prod:wait": "node scripts/wait-prod-deploy.mjs",
     "verify:live": "node scripts/verify-live-ready.mjs",
+    "verify:network": "node scripts/verify-backend-network.mjs",
     "verify:live:decentralized": "node scripts/verify-live-decentralized.mjs",
     "verify:live:admin": "node -e \"process.env.REQUIRE_ADMIN='true'; import('./scripts/verify-live-ready.mjs')\"",
     "verify:live:strict": "node -e \"process.env.STRICT='true'; import('./scripts/verify-live-ready.mjs').catch(e=>{console.error(e);process.exit(1);})\"",
