@@ -1,12 +1,12 @@
 name: Deploy to Railway on Push
 
 on:
-  push:
-    branches:
-      - main
+  # Railway deploy requires RAILWAY_TOKEN; keep manual so pushes stay green without Railway.
+  workflow_dispatch:
 
 jobs:
   deploy:
+    if: ${{ secrets.RAILWAY_TOKEN != '' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3

@@ -167,7 +167,7 @@ jobs:
           cd Frontend/dist
           
           # Check if AdminPage includes OpenClaw integration
-          if grep -r "openclaw" . > /dev/null; then
+          if grep -ri "openclaw" . > /dev/null; then
             echo "✓ OpenClaw integration found in build"
           else
             echo "✗ OpenClaw integration not found in build"
