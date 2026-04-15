@@ -24,7 +24,7 @@ jobs:
         with:
           node-version: '24'
           cache: 'npm'
-          cache-dependency-path: 'Frontend/package-lock.json'
+          cache-dependency-path: 'package-lock.json'
 
       - name: Install dependencies
         working-directory: ./Frontend
@@ -62,7 +62,7 @@ jobs:
         with:
           node-version: '24'
           cache: 'npm'
-          cache-dependency-path: 'Frontend/package-lock.json'
+          cache-dependency-path: 'package-lock.json'
       
       - name: Install dependencies
         working-directory: ./Frontend
@@ -85,7 +85,7 @@ jobs:
         with:
           node-version: '24'
           cache: 'npm'
-          cache-dependency-path: 'Frontend/package-lock.json'
+          cache-dependency-path: 'package-lock.json'
       
       - name: Install dependencies
         working-directory: ./Frontend
@@ -115,7 +115,7 @@ jobs:
         with:
           node-version: '24'
           cache: 'npm'
-          cache-dependency-path: 'Frontend/package-lock.json'
+          cache-dependency-path: 'package-lock.json'
       
       - name: Install dependencies
         working-directory: ./Frontend
@@ -188,7 +188,7 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: 'Frontend/package-lock.json'
+          cache-dependency-path: 'package-lock.json'
       
       - name: Install dependencies
         working-directory: ./Frontend
@@ -225,7 +225,7 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: 'Frontend/package-lock.json'
+          cache-dependency-path: 'package-lock.json'
       
       - name: Install dependencies
         working-directory: ./Frontend
