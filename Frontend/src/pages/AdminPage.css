@@ -1801,3 +1801,174 @@
   --border-accent: var(--pva-primary);
   --highlight: var(--bg-tertiary);
 }
+
+/* ---- Premium admin layout tightening pass ---- */
+.admin-page.authenticated {
+  --admin-shell-max: 1320px;
+}
+
+.admin-header {
+  padding: 1rem 1.25rem;
+  border-bottom-width: 1px;
+}
+
+.admin-header .header-content {
+  width: min(100%, var(--admin-shell-max));
+  padding-inline: 0.25rem;
+}
+
+.admin-container {
+  width: min(100%, var(--admin-shell-max));
+  gap: 1.1rem;
+  padding: 1rem 1.25rem 2.25rem;
+}
+
+.admin-page .tab-header {
+  padding: 0.9rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--site-border) 86%, transparent);
+  border-radius: 12px;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--site-panel-soft) 92%, transparent),
+    color-mix(in srgb, var(--site-panel) 88%, transparent)
+  );
+  margin-bottom: 0.8rem;
+}
+
+.admin-page .tab-header h2 {
+  margin: 0;
+  font-size: 1.7rem;
+  letter-spacing: -0.01em;
+}
+
+.admin-page .tab-description {
+  margin: 0.3rem 0 0;
+  color: var(--site-text-muted);
+}
+
+.inquiry-kpis {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.inquiry-kpi {
+  border-radius: 8px;
+  padding: 8px 10px;
+  min-height: 64px;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--site-border) 65%, transparent);
+}
+
+.inquiry-kpi span {
+  font-size: 0.73rem;
+  letter-spacing: 0.03em;
+}
+
+.inquiry-kpi strong {
+  font-size: 1rem;
+}
+
+.inquiry-toolbar {
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.inquiry-toolbar input,
+.inquiry-toolbar select,
+.inquiry-toolbar button {
+  padding: 9px 10px;
+  border-radius: 7px;
+}
+
+.inquiry-grid {
+  gap: 8px;
+}
+
+.inquiry-card {
+  border-radius: 8px;
+  padding: 9px 10px;
+  gap: 5px;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--site-border) 70%, transparent);
+}
+
+.inquiry-status {
+  font-size: 0.62rem;
+  padding: 2px 7px;
+}
+
+.inquiry-meta {
+  font-size: 0.8rem;
+}
+
+.inquiry-message {
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+@media (max-width: 1100px) {
+  .inquiry-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-header {
+    padding: 0.8rem 0.7rem;
+  }
+
+  .admin-header .header-content,
+  .admin-container {
+    width: 100%;
+    padding-inline: 0.45rem;
+  }
+
+  .admin-page .tab-header h2 {
+    font-size: 1.35rem;
+  }
+
+  .inquiry-kpis {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Final high-standard polish pass */
+.admin-page .tab-header {
+  border-color: color-mix(in srgb, var(--site-border) 80%, transparent);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+}
+
+.admin-page .tab-header h2 {
+  font-size: clamp(1.25rem, 1rem + 1.1vw, 1.6rem);
+  line-height: 1.2;
+}
+
+.admin-page .tab-description {
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.inquiry-kpi {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--site-panel-soft) 94%, transparent),
+    color-mix(in srgb, var(--site-panel) 88%, transparent)
+  );
+}
+
+.inquiry-meta {
+  color: color-mix(in srgb, var(--site-text-muted) 88%, #d2e4f1 12%);
+  line-height: 1.35;
+}
+
+.inquiry-message {
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.inquiry-links a,
+.inquiry-links button,
+.inquiry-actions button {
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
