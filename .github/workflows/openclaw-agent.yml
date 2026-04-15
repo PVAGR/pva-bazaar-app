@@ -2,7 +2,7 @@ name: OpenClaw Agent Responder
 
 on:
   schedule:
-    - cron: '*/30 * * * *'
+    - cron: '*/5 * * * *'
   workflow_dispatch:
 
 permissions:
@@ -17,6 +17,11 @@ jobs:
   respond:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    env:
+      OPENCLAW_BACKEND_URL: ${{ vars.OPENCLAW_BACKEND_URL || 'https://pva-bazaar-app-1.onrender.com' }}
+      OPENCLAW_BRIDGE_SECRET: ${{ secrets.OPENCLAW_BRIDGE_SECRET }}
+      OLLAMA_BASE_URL: ${{ vars.OLLAMA_BASE_URL || vars.OPENCLAW_OLLAMA_BASE_URL || '' }}
+      OLLAMA_MODEL: ${{ vars.OLLAMA_MODEL || vars.OPENCLAW_OLLAMA_MODEL || 'llama3.1' }}
 
     steps:
       - name: Checkout
@@ -27,8 +32,15 @@ jobs:
         with:
           node-version: '24.x'
 
+      - name: Validate backend target
+        run: |
+          if [ -z "$OPENCLAW_BACKEND_URL" ]; then
+            echo "OPENCLAW_BACKEND_URL resolved empty"
+            exit 1
+          fi
+          echo "Using OpenClaw backend: $OPENCLAW_BACKEND_URL"
+
       - name: Run OpenClaw responder
         run: node .github/scripts/openclaw-respond.mjs
         env:
-          OPENCLAW_BACKEND_URL: https://api.pvabazaar.org
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

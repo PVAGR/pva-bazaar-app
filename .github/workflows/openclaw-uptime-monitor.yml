@@ -18,7 +18,7 @@ jobs:
     timeout-minutes: 5
 
     env:
-      OPENCLAW_BACKEND_URL: ${{ secrets.OPENCLAW_BACKEND_URL }}
+      OPENCLAW_BACKEND_URL: ${{ secrets.OPENCLAW_BACKEND_URL || vars.OPENCLAW_BACKEND_URL || 'https://pva-bazaar-app-1.onrender.com' }}
       OPENCLAW_ADMIN_JWT: ${{ secrets.OPENCLAW_ADMIN_JWT || secrets.BOUNTY_SCAN_JWT }}
       OPENCLAW_ALERT_WEBHOOK_URL: ${{ secrets.OPENCLAW_ALERT_WEBHOOK_URL }}
 

@@ -14,6 +14,9 @@ jobs:
   bridge:
     runs-on: ubuntu-latest
     timeout-minutes: 4
+    env:
+      OPENCLAW_BACKEND_URL: ${{ vars.OPENCLAW_BACKEND_URL || 'https://pva-bazaar-app-1.onrender.com' }}
+      OLLAMA_BASE_URL: ${{ vars.OLLAMA_BASE_URL || vars.OPENCLAW_OLLAMA_BASE_URL || '' }}
 
     steps:
       - name: Checkout
@@ -27,7 +30,7 @@ jobs:
       - name: Run Telegram Bridge Worker
         run: node .github/scripts/openclaw-telegram-bridge.mjs
         env:
-          OPENCLAW_BACKEND_URL: https://api.pvabazaar.org
+          OPENCLAW_BACKEND_URL: ${{ env.OPENCLAW_BACKEND_URL }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_ALLOWED_CHAT_IDS: ''
           TELEGRAM_PUBLIC_MODE: 'true'
@@ -38,6 +41,6 @@ jobs:
           OPENCLAW_DIRECT_MODEL_TIMEOUT_MS: 20000
           GITHUB_TOKEN: ${{ github.token }}
           GITHUB_REPOSITORY: ${{ github.repository }}
-          OLLAMA_BASE_URL: https://api.pvabazaar.org
+          OLLAMA_BASE_URL: ${{ env.OLLAMA_BASE_URL }}
           OLLAMA_MODEL: llama3.1
           OLLAMA_TEMPERATURE: '0.35'

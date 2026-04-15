@@ -3,7 +3,7 @@ name: OpenClaw Queue Worker Tick
 on:
   # Free tiers: avoid hammering the API every 5m (was burning Vercel/GitHub budgets).
   schedule:
-    - cron: '*/30 * * * *'
+    - cron: '*/5 * * * *'
   workflow_dispatch:
 
 permissions:
@@ -17,6 +17,11 @@ jobs:
   tick:
     runs-on: ubuntu-latest
     timeout-minutes: 4
+    env:
+      OPENCLAW_BACKEND_URL: ${{ vars.OPENCLAW_BACKEND_URL || 'https://pva-bazaar-app-1.onrender.com' }}
+      OPENCLAW_WEBHOOK_URL: ${{ secrets.OPENCLAW_WEBHOOK_URL || vars.OPENCLAW_WEBHOOK_URL || '' }}
+      OPENCLAW_API_KEY: ${{ secrets.OPENCLAW_API_KEY || '' }}
+      OPENCLAW_BRIDGE_SECRET: ${{ secrets.OPENCLAW_BRIDGE_SECRET || '' }}
 
     steps:
       - name: Checkout
@@ -31,13 +36,28 @@ jobs:
         working-directory: backend
         run: npm install
 
+      - name: Validate worker targets
+        run: |
+          if [ -z "$OPENCLAW_BACKEND_URL" ]; then
+            echo "OPENCLAW_BACKEND_URL is required"
+            exit 1
+          fi
+          if [ -z "$OPENCLAW_WEBHOOK_URL" ]; then
+            echo "OPENCLAW_WEBHOOK_URL is required"
+            exit 1
+          fi
+          echo "Worker backend: $OPENCLAW_BACKEND_URL"
+          echo "Worker webhook configured"
+
       - name: Run one-shot queue worker
         working-directory: backend
         env:
           NODE_ENV: production
           OPENCLAW_PUBLIC_MODE: 'true'
-          OPENCLAW_BACKEND_URL: https://api.pvabazaar.org
-          OPENCLAW_WEBHOOK_URL: https://httpbin.org/post
+          OPENCLAW_BACKEND_URL: ${{ env.OPENCLAW_BACKEND_URL }}
+          OPENCLAW_WEBHOOK_URL: ${{ env.OPENCLAW_WEBHOOK_URL }}
+          OPENCLAW_API_KEY: ${{ env.OPENCLAW_API_KEY }}
+          OPENCLAW_BRIDGE_SECRET: ${{ env.OPENCLAW_BRIDGE_SECRET }}
           OPENCLAW_WORKER_NAME: openclaw-queue-dispatcher-gha
           OPENCLAW_WORKER_BATCH_SIZE: 25
           OPENCLAW_WORKER_POLL_MS: 10000

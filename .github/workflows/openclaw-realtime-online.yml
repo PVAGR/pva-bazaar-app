@@ -17,6 +17,9 @@ jobs:
   realtime:
     runs-on: ubuntu-latest
     timeout-minutes: 58
+    env:
+      OPENCLAW_BACKEND_URL: ${{ vars.OPENCLAW_BACKEND_URL || 'https://pva-bazaar-app-1.onrender.com' }}
+      OLLAMA_BASE_URL: ${{ vars.OLLAMA_BASE_URL || vars.OPENCLAW_OLLAMA_BASE_URL || '' }}
 
     steps:
       - name: Checkout
@@ -34,9 +37,9 @@ jobs:
       - name: Run realtime loop
         shell: bash
         env:
-          OPENCLAW_BACKEND_URL: https://api.pvabazaar.org
+          OPENCLAW_BACKEND_URL: ${{ env.OPENCLAW_BACKEND_URL }}
           GITHUB_TOKEN: ${{ github.token }}
-          OLLAMA_BASE_URL: https://api.pvabazaar.org
+          OLLAMA_BASE_URL: ${{ env.OLLAMA_BASE_URL }}
           OLLAMA_MODEL: llama3.1
           OLLAMA_TEMPERATURE: '0.35'
         run: |
