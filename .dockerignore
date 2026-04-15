@@ -23,6 +23,6 @@ tmp
 .turbo
 .vercel
 .railway
-vercel.json
+# vercel.json must stay in context — runtime Dockerfile copies it into the image
 docker-compose.yml
 Dockerfile
