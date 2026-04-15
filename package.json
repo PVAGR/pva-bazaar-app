@@ -36,6 +36,7 @@
     "verify:live:decentralized": "node scripts/verify-live-decentralized.mjs",
     "verify:live:admin": "node -e \"process.env.REQUIRE_ADMIN='true'; import('./scripts/verify-live-ready.mjs')\"",
     "verify:live:strict": "node -e \"process.env.STRICT='true'; import('./scripts/verify-live-ready.mjs').catch(e=>{console.error(e);process.exit(1);})\"",
+    "data:onet:download": "powershell -ExecutionPolicy Bypass -File \"scripts/download-onet-jobs-skills.ps1\"",
     "e2e": "playwright test",
     "e2e:smoke:live": "playwright test --config=playwright.smoke-live.config.ts",
     "e2e:ui": "playwright test --ui",
