@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import GovernanceInterface from '../components/governance'
 import { clearGovernanceDraft, fetchGovernanceDraft, saveGovernanceDraft } from '../lib/api'
+import { getToken } from '../lib/auth'
 import { Telemetry } from '../lib/telemetry'
 import '../styles/governance.css'
 import './Forum.css'
@@ -58,6 +59,7 @@ export default function ForumPage() {
   const initialProposalDraft = draftFromServer || onboardingDraft
 
   useEffect(() => {
+    if (!getToken()) return undefined
     let mounted = true
     fetchGovernanceDraft()
       .then((res) => {

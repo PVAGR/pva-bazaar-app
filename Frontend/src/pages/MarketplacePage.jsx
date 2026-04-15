@@ -4,7 +4,7 @@ import { fetchMarketplaceItems } from "../lib/api";
 import useDebounce from "../hooks/useDebounce";
 import "./MarketplacePage.css";
 
-const FALLBACK_IMAGE = "/placeholder.png";
+const FALLBACK_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='360' viewBox='0 0 640 360'%3E%3Crect width='640' height='360' fill='%23141a2b'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23cfe8ff' font-family='Arial,sans-serif' font-size='24'%3EPVA Bazaar%3C/text%3E%3C/svg%3E";
 
 function resolveItemImage(item) {
   const primary = item?.media?.[0] || "";
