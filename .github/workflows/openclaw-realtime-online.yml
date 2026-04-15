@@ -20,6 +20,7 @@ jobs:
     env:
       OPENCLAW_BACKEND_URL: ${{ vars.OPENCLAW_BACKEND_URL || 'https://pva-bazaar-app-1.onrender.com' }}
       OLLAMA_BASE_URL: ${{ vars.OLLAMA_BASE_URL || vars.OPENCLAW_OLLAMA_BASE_URL || '' }}
+      OPENCLAW_BRIDGE_SECRET: ${{ secrets.OPENCLAW_BRIDGE_SECRET }}
 
     steps:
       - name: Checkout
@@ -54,3 +55,18 @@ jobs:
             echo "[Realtime] Cycle $cycle complete"
             sleep 1
           done
+
+      - name: Notify Telegram on startup
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          if [ -z "$OPENCLAW_BRIDGE_SECRET" ]; then
+            echo "OPENCLAW_BRIDGE_SECRET missing; skipping Telegram startup notification"
+            exit 0
+          fi
+          STATUS=$(curl -sS -o /tmp/openclaw-telegram-notify.json -w "%{http_code}" \
+            -X POST "${OPENCLAW_BACKEND_URL}/api/openclaw/telegram/notify-ready" \
+            -H "X-OpenClaw-Secret: ${OPENCLAW_BRIDGE_SECRET}" \
+            -H "Content-Type: application/json" \
+            --max-time 20 || true)
+          echo "notify-ready status: $STATUS"
+          cat /tmp/openclaw-telegram-notify.json || true

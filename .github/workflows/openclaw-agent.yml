@@ -44,3 +44,18 @@ jobs:
         run: node .github/scripts/openclaw-respond.mjs
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Notify Telegram on startup
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          if [ -z "$OPENCLAW_BRIDGE_SECRET" ]; then
+            echo "OPENCLAW_BRIDGE_SECRET missing; skipping Telegram startup notification"
+            exit 0
+          fi
+          STATUS=$(curl -sS -o /tmp/openclaw-telegram-notify.json -w "%{http_code}" \
+            -X POST "${OPENCLAW_BACKEND_URL}/api/openclaw/telegram/notify-ready" \
+            -H "X-OpenClaw-Secret: ${OPENCLAW_BRIDGE_SECRET}" \
+            -H "Content-Type: application/json" \
+            --max-time 20 || true)
+          echo "notify-ready status: $STATUS"
+          cat /tmp/openclaw-telegram-notify.json || true
