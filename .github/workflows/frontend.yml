@@ -197,7 +197,7 @@ jobs:
       - name: Build frontend
         working-directory: ./Frontend
         env:
-          VITE_API_URL: ${{ secrets.VITE_API_URL_PRODUCTION }}
+          VITE_API_URL: ${{ vars.VITE_API_URL || vars.VITE_API_BASE_URL || secrets.VITE_API_URL_PRODUCTION || 'https://pva-bazaar-app-1.onrender.com/api' }}
         run: npm run build
       
       - name: Setup Pages
