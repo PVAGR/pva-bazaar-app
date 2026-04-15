@@ -4,6 +4,50 @@
   padding: 16px;
 }
 
+.onboardingPage .card {
+  border: 1px solid color-mix(in srgb, var(--border) 92%, #ffffff 8%);
+  border-left: 4px solid color-mix(in srgb, var(--accent) 76%, #d1a84f 24%);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.22);
+}
+
+.onboardingPage .card + .card {
+  margin-top: 20px;
+}
+
+.onboardingPage .card h2 {
+  margin: 0 0 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 90%, transparent);
+}
+
+.onboardingPage .form {
+  gap: 16px;
+}
+
+.onboardingPage .form > label,
+.onboardingPage .form > .row,
+.onboardingPage .form > .check {
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--bg-secondary) 94%, transparent);
+}
+
+.onboardingPage .form > .row {
+  background: color-mix(in srgb, var(--bg-tertiary) 88%, transparent);
+}
+
+.onboardingPage .form > .check {
+  align-items: flex-start;
+  line-height: 1.4;
+}
+
+.onboardingPage .form > label > input,
+.onboardingPage .form > label > select,
+.onboardingPage .form > label > textarea {
+  margin-top: 4px;
+}
+
 .onboardingHeader {
   display: flex;
   justify-content: space-between;
@@ -24,10 +68,11 @@
 }
 
 .onboardingItem {
-  border: 1px solid var(--border);
+  border: 1px solid color-mix(in srgb, var(--border) 86%, transparent);
   border-radius: 10px;
   padding: 12px;
-  background: var(--bg-secondary);
+  background: color-mix(in srgb, var(--bg-secondary) 94%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 10%, transparent);
 }
 
 .onboardingItem__title {
@@ -91,7 +136,7 @@
 .onboardingSuggestedRoutes {
   margin-top: 10px;
   padding-top: 10px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid color-mix(in srgb, var(--border) 90%, transparent);
 }
 
 @media (max-width: 900px) {
