@@ -47,9 +47,8 @@ export default defineConfig({
               return 'charts-core';
             }
 
-            if (id.includes('recharts') || id.includes('/d3-')) {
-              return 'charts-recharts';
-            }
+            // Keep recharts/d3 in the general vendor chunk to avoid
+            // eager runtime execution ordering issues in production.
 
             if (
               id.includes('react-markdown')
