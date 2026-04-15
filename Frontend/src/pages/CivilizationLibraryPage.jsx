@@ -13,6 +13,12 @@ function toApiUrl(path) {
 
 export default function CivilizationLibraryPage() {
   const [items, setItems] = useState([]);
+  const [careerItems, setCareerItems] = useState([]);
+  const [careerSummary, setCareerSummary] = useState(null);
+  const [careerTotal, setCareerTotal] = useState(0);
+  const [careerLoading, setCareerLoading] = useState(true);
+  const [careerError, setCareerError] = useState('');
+  const [careerQuery, setCareerQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [query, setQuery] = useState('');
@@ -21,6 +27,13 @@ export default function CivilizationLibraryPage() {
   useEffect(() => {
     loadItems();
   }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      loadCareers(careerQuery);
+    }, 220);
+    return () => clearTimeout(timer);
+  }, [careerQuery]);
 
   const loadItems = async () => {
     setLoading(true);
@@ -36,6 +49,27 @@ export default function CivilizationLibraryPage() {
       setError(err.message || 'Failed to load public library');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadCareers = async (queryText = '') => {
+    setCareerLoading(true);
+    setCareerError('');
+    try {
+      const data = await apiGet('/library/careers', {
+        params: { limit: 24, q: queryText.trim() || undefined },
+      });
+      if (data?.ok) {
+        setCareerItems(Array.isArray(data.items) ? data.items : []);
+        setCareerSummary(data.summary || null);
+        setCareerTotal(Number(data.total || 0));
+      } else {
+        setCareerError(data?.error || 'Failed to load careers dataset');
+      }
+    } catch (err) {
+      setCareerError(err.message || 'Failed to load careers dataset');
+    } finally {
+      setCareerLoading(false);
     }
   };
 
@@ -140,6 +174,57 @@ export default function CivilizationLibraryPage() {
           ))}
         </section>
       )}
+
+      <section className="civil-careers">
+        <header className="civil-careers__head">
+          <div>
+            <h2>Jobs, Professions, and Skills Starter Dataset</h2>
+            <p>
+              Based on O*NET public data. Use this as a practical launch point for role pathways, training tracks,
+              and career matching.
+            </p>
+          </div>
+          <a className="civil-btn civil-btn-secondary" href={toApiUrl('/api/library/careers/export/json')}>
+            Download Jobs/Skills JSON
+          </a>
+        </header>
+
+        <div className="civil-careers__toolbar">
+          <input
+            value={careerQuery}
+            onChange={(e) => setCareerQuery(e.target.value)}
+            placeholder="Search professions, job titles, or skills..."
+          />
+          <span className="civil-careers__stats">
+            {careerSummary ? `${careerSummary.occupations} roles | ${careerSummary.skillConcepts} skill concepts` : null}
+            {careerSummary ? ` | showing ${careerItems.length} of ${careerTotal}` : null}
+          </span>
+        </div>
+
+        {careerError ? <div className="civil-alert civil-alert-error">{careerError}</div> : null}
+        {careerLoading ? (
+          <div className="civil-loading">Loading jobs and skills...</div>
+        ) : (
+          <div className="civil-careers__grid">
+            {careerItems.map((item) => (
+              <article key={item.onetSocCode} className="civil-careerCard">
+                <h3>{item.title}</h3>
+                <p>{item.description}</p>
+                <div className="civil-meta">
+                  <span>{item.onetSocCode}</span>
+                  <span>Job Zone {item.jobZone || 'n/a'}</span>
+                  <span>{(item.topSkills || []).length} top skills</span>
+                </div>
+                <div className="civil-careerCard__skills">
+                  {(item.topSkills || []).slice(0, 5).map((skill) => (
+                    <span key={`${item.onetSocCode}-${skill.id}`}>{skill.name}</span>
+                  ))}
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   );
 }

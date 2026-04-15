@@ -8,6 +8,8 @@ const archiver = require('archiver');
 const LibraryDocument = require('../models/LibraryDocument');
 
 const LIBRARY_UPLOAD_DIR = path.join(__dirname, '../uploads/library');
+const CAREERS_SEED_PATH = path.join(__dirname, '../data/seed/onet-jobs-professions-skills.json');
+let careersSeedCache = null;
 
 function safeName(name) {
   return path.basename(String(name || 'document')).replace(/[^a-zA-Z0-9._-]/g, '_');
@@ -53,6 +55,85 @@ async function resolveDocumentReadStream(doc) {
 
   throw new Error('No readable file source found');
 }
+
+async function loadCareersSeed() {
+  if (careersSeedCache) return careersSeedCache;
+  const raw = await fsp.readFile(CAREERS_SEED_PATH, 'utf8');
+  const parsed = JSON.parse(raw);
+  careersSeedCache = parsed;
+  return careersSeedCache;
+}
+
+router.get('/careers', async (req, res) => {
+  try {
+    const seed = await loadCareersSeed();
+    const all = Array.isArray(seed.professions) ? seed.professions : [];
+    const limit = Math.max(1, Math.min(parseInt(req.query.limit, 10) || 24, 100));
+    const offset = Math.max(0, parseInt(req.query.offset, 10) || 0);
+    const q = String(req.query.q || '').trim().toLowerCase();
+    const jobZone = String(req.query.jobZone || '').trim();
+
+    const filtered = all.filter((item) => {
+      if (jobZone && String(item.jobZone || '') !== jobZone) return false;
+      if (!q) return true;
+      const haystack = [
+        item.title,
+        item.description,
+        item.onetSocCode,
+        ...(Array.isArray(item.sampleTitles) ? item.sampleTitles : []),
+        ...(Array.isArray(item.topSkills) ? item.topSkills.map((s) => s.name) : []),
+      ]
+        .join(' ')
+        .toLowerCase();
+      return haystack.includes(q);
+    });
+
+    const page = filtered.slice(offset, offset + limit);
+    return res.json({
+      ok: true,
+      summary: seed.summary || { occupations: all.length, skillConcepts: 0 },
+      total: filtered.length,
+      limit,
+      offset,
+      items: page,
+    });
+  } catch (error) {
+    return res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/careers/skills', async (req, res) => {
+  try {
+    const seed = await loadCareersSeed();
+    const all = Array.isArray(seed.skillsCatalog) ? seed.skillsCatalog : [];
+    const limit = Math.max(1, Math.min(parseInt(req.query.limit, 10) || 100, 500));
+    const q = String(req.query.q || '').trim().toLowerCase();
+
+    const filtered = q
+      ? all.filter((item) =>
+        `${String(item.name || '')} ${String(item.description || '')}`.toLowerCase().includes(q))
+      : all;
+
+    return res.json({
+      ok: true,
+      total: filtered.length,
+      items: filtered.slice(0, limit),
+    });
+  } catch (error) {
+    return res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/careers/export/json', async (_req, res) => {
+  try {
+    await fsp.access(CAREERS_SEED_PATH, fs.constants.R_OK);
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="onet-jobs-professions-skills.json"');
+    return fs.createReadStream(CAREERS_SEED_PATH).pipe(res);
+  } catch (error) {
+    return res.status(404).json({ ok: false, error: 'Careers seed file not found' });
+  }
+});
 
 router.get('/', async (req, res) => {
   try {

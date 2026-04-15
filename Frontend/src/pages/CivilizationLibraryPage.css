@@ -141,8 +141,100 @@
   border-color: color-mix(in srgb, var(--site-danger-text) 65%, transparent);
 }
 
+.civil-careers {
+  margin-top: 1rem;
+  border: 1px solid var(--site-border);
+  border-radius: 12px;
+  background: var(--site-panel);
+  padding: 0.9rem;
+}
+
+.civil-careers__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.7rem;
+}
+
+.civil-careers__head h2 {
+  margin: 0;
+  color: var(--site-accent-strong);
+  font-size: 1.1rem;
+}
+
+.civil-careers__head p {
+  margin: 0.35rem 0 0;
+  color: var(--site-text-muted);
+  max-width: 70ch;
+}
+
+.civil-careers__toolbar {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.6rem;
+  margin-bottom: 0.8rem;
+}
+
+.civil-careers__toolbar input {
+  border: 1px solid var(--site-border);
+  border-radius: 8px;
+  background: var(--site-panel-soft);
+  color: var(--site-text);
+  padding: 0.55rem 0.7rem;
+}
+
+.civil-careers__stats {
+  align-self: center;
+  font-size: 0.82rem;
+  color: var(--site-text-muted);
+}
+
+.civil-careers__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 0.7rem;
+}
+
+.civil-careerCard {
+  border: 1px solid var(--site-border);
+  border-radius: 10px;
+  background: var(--site-panel-soft);
+  padding: 0.72rem;
+}
+
+.civil-careerCard h3 {
+  margin: 0;
+  font-size: 0.96rem;
+}
+
+.civil-careerCard p {
+  margin: 0.45rem 0;
+  color: var(--site-text-muted);
+  font-size: 0.83rem;
+  line-height: 1.45;
+}
+
+.civil-careerCard__skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.civil-careerCard__skills span {
+  border: 1px solid color-mix(in srgb, var(--site-accent) 48%, var(--site-border));
+  border-radius: 999px;
+  padding: 0.14rem 0.48rem;
+  font-size: 0.72rem;
+  background: color-mix(in srgb, var(--site-accent-soft) 58%, transparent);
+}
+
 @media (max-width: 880px) {
   .civil-library-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .civil-careers__toolbar {
     grid-template-columns: 1fr;
   }
 }
