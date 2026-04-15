@@ -293,7 +293,7 @@ function ProposalCard({ proposal, onEndorse, onVote, onOpen }) {
             className="gov-action-btn"
             onClick={(event) => event.stopPropagation()}
           >
-            💬 {proposal.comments}
+            💬 {Array.isArray(proposal.comments) ? proposal.comments.length : Number(proposal.comments || 0)}
           </button>
         </div>
       </div>
