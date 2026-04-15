@@ -29,6 +29,7 @@
     "verify:prod": "node scripts/verify-prod.mjs",
     "verify:prod:wait": "node scripts/wait-prod-deploy.mjs",
     "verify:live": "node scripts/verify-live-ready.mjs",
+    "verify:routes:live": "node scripts/verify-frontend-routes-live.mjs",
     "verify:network": "node scripts/verify-backend-network.mjs",
     "verify:surface": "node scripts/verify-feature-surface.mjs",
     "verify:connectivity": "npm run verify:network && npm run verify:live && npm run verify:surface",
