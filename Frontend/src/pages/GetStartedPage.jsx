@@ -82,7 +82,7 @@ export default function GetStartedPage() {
             }
             : undefined,
         },
-      });
+      }, { timeout: 120_000 });
 
       if (!res?.ok || !res?.token) {
         throw new Error(res?.message || 'Registration failed');

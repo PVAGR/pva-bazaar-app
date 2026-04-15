@@ -88,18 +88,28 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // 401: redirect to login
+    // 401: session expired or invalid credentials on a protected call
     if (status === 401) {
       const originalRequest = error?.config || {};
       const requestUrl = String(error?.config?.url || '');
       const isAdminAuthRequest = /\/admin\/(login|signup|bootstrap-status)$/i.test(requestUrl);
+      const isUserAuthRequest = /\/auth\/(login|register)$/i.test(requestUrl);
       const isTokenRefreshRequest = /\/admin\/token-refresh$/i.test(requestUrl);
-      if (isAdminAuthRequest) {
+      if (isAdminAuthRequest || isUserAuthRequest) {
         return Promise.reject(error);
       }
 
+      const tokenBefore =
+        localStorage.getItem("token") ||
+        localStorage.getItem("authToken") ||
+        localStorage.getItem("jwt");
+      const hadToken = Boolean(tokenBefore);
+      const adminShellSession =
+        typeof window !== "undefined" &&
+        sessionStorage.getItem("admin-auth") === "authenticated";
+
       const hasTriedRefresh = Boolean(originalRequest?._retryAfterRefresh);
-      if (!hasTriedRefresh && !isTokenRefreshRequest) {
+      if (adminShellSession && !hasTriedRefresh && !isTokenRefreshRequest) {
         const refreshedToken = await tryRefreshAdminToken();
         if (refreshedToken) {
           originalRequest._retryAfterRefresh = true;
@@ -122,12 +132,16 @@ api.interceptors.response.use(
         // Ignore storage failures and continue with the forced session reset.
       }
 
-      if (typeof window !== "undefined") {
-        window.dispatchEvent(new Event('admin-session-expired'));
+      if (typeof window !== "undefined" && hadToken) {
         const currentHash = window.location.hash || '';
-        const onAdminShell = currentHash.startsWith('#/admin');
-        if (!onAdminShell) {
-          window.location.assign('/#/admin');
+        const onAdminShell = currentHash.startsWith("#/admin");
+        if (adminShellSession) {
+          window.dispatchEvent(new Event("admin-session-expired"));
+          if (!onAdminShell) {
+            window.location.assign("/#/admin");
+          }
+        } else if (!currentHash.startsWith("#/login")) {
+          window.location.assign("/#/login");
         }
       }
       return Promise.reject(error);

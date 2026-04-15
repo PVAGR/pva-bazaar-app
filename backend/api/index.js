@@ -207,7 +207,7 @@ app.use('/api/webhooks', webhookLimiter);
 app.use((req, res, next) => {
   const apiNotReady = process.env.API_READY === 'false';
   const isProd = process.env.NODE_ENV === 'production';
-  const allowlist = ['/health', '/api/health', '/dev/token', '/api/dev/token', '/ping', '/api/ping', '/version', '/api/version', '/express-ping', '/api/express-ping', '/openclaw', '/api/openclaw', '/decentralized/status', '/api/decentralized/status', '/decentralized/ready', '/api/decentralized/ready', '/decentralized/report', '/api/decentralized/report', '/blockchain/health', '/api/blockchain/health', '/api/openapi.json', '/api/docs'];
+  const allowlist = ['/health', '/api/health', '/dev/token', '/api/dev/token', '/ping', '/api/ping', '/version', '/api/version', '/express-ping', '/api/express-ping', '/openclaw', '/api/openclaw', '/decentralized/status', '/api/decentralized/status', '/decentralized/ready', '/api/decentralized/ready', '/decentralized/report', '/api/decentralized/report', '/blockchain/health', '/api/blockchain/health', '/api/openapi.json', '/api/docs', '/api/auth'];
   if (apiNotReady && isProd && !allowlist.some(p => req.path.startsWith(p))) {
     return res.status(503).json({ ok: false, message: 'Service not configured. Missing environment secrets.' });
   }

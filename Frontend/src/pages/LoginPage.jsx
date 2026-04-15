@@ -28,10 +28,14 @@ export default function LoginPage() {
     setLoading(true);
     setError('');
     try {
-      const data = await apiPost('/admin/login', {
-        username: adminCreds.username.trim(),
-        password: adminCreds.password.trim(),
-      });
+      const data = await apiPost(
+        '/admin/login',
+        {
+          username: adminCreds.username.trim(),
+          password: adminCreds.password.trim(),
+        },
+        { timeout: 120_000 },
+      );
       if (!data?.ok || !data?.token) throw new Error(data?.message || 'Invalid username or password');
       setToken(data.token);
       sessionStorage.setItem('admin-auth', 'authenticated');
@@ -51,9 +55,13 @@ export default function LoginPage() {
     setError('');
     try {
       const loginId = userCreds.usernameOrEmail.trim();
-      const res = await apiPost('/auth/login', loginId.includes('@')
-        ? { email: loginId, password: userCreds.password }
-        : { username: loginId, password: userCreds.password });
+      const res = await apiPost(
+        '/auth/login',
+        loginId.includes('@')
+          ? { email: loginId, password: userCreds.password }
+          : { username: loginId, password: userCreds.password },
+        { timeout: 120_000 },
+      );
       if (!res?.ok || !res?.token) throw new Error(res?.message || 'Invalid username or password');
       sessionStorage.removeItem('admin-auth');
       sessionStorage.removeItem('admin-auth-version');
