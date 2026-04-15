@@ -33,7 +33,7 @@ jobs:
         env:
           OPENCLAW_BACKEND_URL: ${{ env.OPENCLAW_BACKEND_URL }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_ALLOWED_CHAT_IDS: ''
+          TELEGRAM_ALLOWED_CHAT_IDS: ${{ vars.TELEGRAM_ALLOWED_CHAT_IDS || secrets.TELEGRAM_ALLOWED_CHAT_IDS || '' }}
           TELEGRAM_PUBLIC_MODE: 'true'
           TELEGRAM_STATE_KEY: telegram:lastUpdateId
           TELEGRAM_POLL_LIMIT: '25'
@@ -52,10 +52,18 @@ jobs:
             echo "OPENCLAW_BRIDGE_SECRET missing; skipping Telegram startup notification"
             exit 0
           fi
+          CHAT_ID="${TELEGRAM_ALLOWED_CHAT_IDS%%,*}"
+          PAYLOAD='{}'
+          if [ -n "$CHAT_ID" ]; then
+            PAYLOAD="{\"chatId\":\"${CHAT_ID}\"}"
+          fi
           STATUS=$(curl -sS -o /tmp/openclaw-telegram-notify.json -w "%{http_code}" \
             -X POST "${OPENCLAW_BACKEND_URL}/api/openclaw/telegram/notify-ready" \
             -H "X-OpenClaw-Secret: ${OPENCLAW_BRIDGE_SECRET}" \
             -H "Content-Type: application/json" \
+            --data "$PAYLOAD" \
             --max-time 20 || true)
           echo "notify-ready status: $STATUS"
           cat /tmp/openclaw-telegram-notify.json || true
+        env:
+          TELEGRAM_ALLOWED_CHAT_IDS: ${{ vars.TELEGRAM_ALLOWED_CHAT_IDS || secrets.TELEGRAM_ALLOWED_CHAT_IDS || '' }}
