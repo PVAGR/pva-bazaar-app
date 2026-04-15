@@ -271,13 +271,29 @@ const assets = [...home.text.matchAll(/\/assets\/[^"']+\.js/g)].map(m => m[0]);
 if (assets.length === 0) fail("frontend bundle references missing");
 else console.log(`✅ frontend assets found (${assets.length})`);
 
-const runtimeCfg = await getJson(`${FRONTEND}/public/api-base.json`);
-if (!runtimeCfg.res.ok || typeof runtimeCfg.json?.apiUrl !== "string") {
-  softWarn("runtime api-base.json unavailable");
+let runtimeCfg = null;
+for (const path of ["/api-base.json", "/public/api-base.json"]) {
+  const candidate = await getJson(`${FRONTEND}${path}`);
+  if (candidate.res.ok && typeof candidate.json?.apiUrl === "string") {
+    runtimeCfg = candidate;
+    break;
+  }
+}
+if (!runtimeCfg || !runtimeCfg.res.ok || typeof runtimeCfg.json?.apiUrl !== "string") {
+  softWarn("runtime api-base.json unavailable (tried /api-base.json and /public/api-base.json)");
 } else if (isLocalhostUrl(runtimeCfg.json.apiUrl)) {
   fail(`runtime api-base.json points to localhost (${runtimeCfg.json.apiUrl})`);
 } else {
-  console.log(`✅ runtime api base: ${runtimeCfg.json.apiUrl}`);
+  const apiRoot = String(runtimeCfg.json.apiUrl).replace(/\/+$/, "");
+  const pingRuntime = await getJson(`${apiRoot}/ping`);
+  if (!pingRuntime.res.ok || pingRuntime.json?.ok !== true) {
+    fail(
+      `runtime api-base.json points to a dead API (${apiRoot}/ping -> ${pingRuntime.res.status}). ` +
+        `Update GitHub Actions secret VITE_API_URL (or repo var VITE_API_BASE_URL) and redeploy Pages.`,
+    );
+  } else {
+    console.log(`✅ runtime api base: ${runtimeCfg.json.apiUrl} (ping ok)`);
+  }
 }
 
 console.log("\n== Deploy parity check ==");

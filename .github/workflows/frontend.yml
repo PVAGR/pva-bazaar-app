@@ -134,7 +134,7 @@ jobs:
       - name: Build frontend
         working-directory: ./Frontend
         env:
-          VITE_API_URL: https://api.pvabazaar.org/api
+          VITE_API_URL: https://pva-bazaar-app-1.onrender.com/api
           VITE_CLOUDINARY_CLOUD_NAME: ''
           VITE_CLOUDINARY_UPLOAD_PRESET: ''
           VITE_FEDERATION_ENABLED: 'false'

@@ -119,6 +119,29 @@ try {
   console.warn("WARN frontend probe skipped");
 }
 
+// Fail if published api-base.json points at a non-working API (e.g. retired Vercel host).
+try {
+  const fe = FRONTEND.replace(/\/+$/, "");
+  const cfgRes = await fetch(`${fe}/api-base.json`, { redirect: "follow" });
+  if (cfgRes.ok) {
+    const cfg = await cfgRes.json();
+    const apiUrl = typeof cfg?.apiUrl === "string" ? cfg.apiUrl.replace(/\/+$/, "") : "";
+    if (apiUrl) {
+      const pingCfg = await probe("GET", `${apiUrl}/ping`, { acceptable: [200] });
+      if (!pingCfg.ok) {
+        console.error(
+          `FAIL frontend api-base.json -> ${apiUrl} (ping -> ${pingCfg.status}${pingCfg.error ? ` ${pingCfg.error}` : ""})`,
+        );
+        failed++;
+      } else {
+        console.log(`OK   frontend api-base.json -> ${apiUrl} (ping -> ${pingCfg.status})`);
+      }
+    }
+  }
+} catch (e) {
+  console.warn(`WARN api-base.json probe: ${e?.message || e}`);
+}
+
 console.log("");
 if (failed > 0) {
   console.error(`\n${failed} probe(s) failed.`);
