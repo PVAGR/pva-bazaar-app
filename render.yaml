@@ -66,3 +66,23 @@ services:
         value: base
       - key: GITHUB_TOKEN
         sync: false
+      - key: GITHUB_BOUNTY_REPOS
+        sync: false
+      - key: OPENCLAW_OLLAMA_BASE_URL
+        sync: false
+      - key: OPENCLAW_OLLAMA_MODEL
+        sync: false
+      - key: OPENCLAW_WEBSITE_HEALTH_URL
+        sync: false
+      - key: OPENCLAW_WEBSITE_URL
+        sync: false
+      - key: OPENCLAW_TELEGRAM_SOURCE
+        sync: false
+      - key: OPENCLAW_CHAT_TIMEOUT_MS
+        sync: false
+      - key: TELEGRAM_PUBLIC_MODE
+        sync: false
+      - key: PUBLIC_API_URL
+        sync: false
+      - key: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+        sync: false
