@@ -1,0 +1,69 @@
+.contacts-shell {
+  min-height: 100vh;
+}
+
+.contacts-main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.contacts-header__row {
+  max-width: 1600px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.contacts-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.contacts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.contact-item {
+  text-align: left;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-secondary);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.contact-item:hover,
+.contact-item.active {
+  background: var(--bg-tertiary);
+  border-color: var(--accent);
+}
+
+.contact-title {
+  font-weight: 600;
+}
+
+.contacts-shell.admin-page .subcard {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.08);
+  display: grid;
+  gap: 10px;
+}
+
+.contacts-shell.admin-page .subcard__title {
+  font-weight: 800;
+  color: var(--accent);
+}
+
+.contacts-shell.admin-page .rowWrap {
+  flex-wrap: wrap;
+}
