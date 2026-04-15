@@ -1,6 +1,6 @@
 /* eslint-env node */
 
-const BASE = (globalThis.process?.env?.BACKEND_URL || "https://api.pvabazaar.org").replace(/\/+$/, "");
+const BASE = (globalThis.process?.env?.BACKEND_URL || "https://pva-bazaar-app-1.onrender.com").replace(/\/+$/, "");
 
 const checks = [
   {

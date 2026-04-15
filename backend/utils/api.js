@@ -2,7 +2,7 @@
 const API_URL =
   process.env.API_URL ||
   process.env.NEXT_PUBLIC_API_URL ||
-  'https://api.pvabazaar.org';
+  'https://pva-bazaar-app-1.onrender.com';
 
 export const fetchData = async (endpoint) => {
   const response = await fetch(`${API_URL}${endpoint}`);

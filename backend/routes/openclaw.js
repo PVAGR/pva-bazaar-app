@@ -391,7 +391,11 @@ function resolveWatchdogPaths() {
 function getConfig() {
   const defaultApiBase = String(
     process.env.OPENCLAW_DEFAULT_API_BASE ||
-    (process.env.NODE_ENV === 'production' ? 'https://api.pvabazaar.org' : ''),
+      (process.env.NODE_ENV === 'production'
+        ? (process.env.RENDER_EXTERNAL_URL || '').replace(/\/$/, '') ||
+          (process.env.PUBLIC_API_URL || '').replace(/\/api\/?$/i, '').replace(/\/$/, '') ||
+          'https://pva-bazaar-app-1.onrender.com'
+        : ''),
   )
     .trim()
     .replace(/\/$/, '');

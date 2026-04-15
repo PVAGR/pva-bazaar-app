@@ -129,7 +129,7 @@ async function checkOllamaDirect() {
 }
 
 async function main() {
-  const baseUrl = trimTrailingSlash(process.env.BACKEND_BASE_URL || 'https://api.pvabazaar.org');
+  const baseUrl = trimTrailingSlash(process.env.BACKEND_BASE_URL || 'https://pva-bazaar-app-1.onrender.com');
   const headers = buildAuthHeaders();
 
   console.log(`Running Telegram/OpenClaw/Ollama smoke checks against ${baseUrl}`);

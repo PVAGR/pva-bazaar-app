@@ -38,6 +38,7 @@ if (sentryDsn) {
               'pvabazaar.org',
               'api.pvabazaar.org',
               /^https:\/\/pvabazaar\.org/,
+              /^https:\/\/.*\.onrender\.com/,
               /^https:\/\/.*vercel\.app/
             ],
           }),

@@ -1170,7 +1170,12 @@ module.exports.connectToDatabase = connectToDatabase;
 // Start the server only when run directly (local dev)
 if (require.main === module) {
   const PORT = process.env.PORT || 5001;
-  const advertisedBase = process.env.PUBLIC_API_URL || 'https://api.pvabazaar.org';
+  const advertisedBase =
+    process.env.PUBLIC_API_URL ||
+    (process.env.RENDER === 'true' && process.env.RENDER_EXTERNAL_URL
+      ? String(process.env.RENDER_EXTERNAL_URL).replace(/\/$/, '')
+      : '') ||
+    'https://api.pvabazaar.org';
 
   connectToDatabase()
     .then(() => autoSeed())
