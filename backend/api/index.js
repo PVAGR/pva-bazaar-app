@@ -19,6 +19,14 @@ const governanceRoutes = require('../routes/governance');
 // Load environment variables
 dotenv.config();
 
+// Some hosts expose only DATABASE_URL; reuse if it is clearly a Mongo connection string.
+if (!process.env.MONGODB_URI && process.env.DATABASE_URL) {
+  const d = String(process.env.DATABASE_URL).trim();
+  if (d.startsWith('mongodb://') || d.startsWith('mongodb+srv://')) {
+    process.env.MONGODB_URI = d;
+  }
+}
+
 const CLOUD_ONLY_MODE = process.env.CLOUD_ONLY_MODE !== 'false';
 
 function isLoopbackOrigin(origin) {
@@ -51,6 +59,18 @@ function getAllowedOrigins() {
   return Array.from(new Set(base));
 }
 
+function mongoUriLooksLocal(uri) {
+  if (!uri) return false;
+  const s = String(uri).toLowerCase();
+  return (
+    s.includes('127.0.0.1') ||
+    s.includes('localhost') ||
+    s.includes('::1') ||
+    s.includes('@localhost') ||
+    s.includes('@127.')
+  );
+}
+
 // Validate critical env and mark API readiness (fail-safe in production)
 function validateEnv() {
   const isProd = process.env.NODE_ENV === 'production';
@@ -61,9 +81,17 @@ function validateEnv() {
     const msg = `Missing env: ${missing.join(', ')}`;
     console.warn('⚠️ Env validation:', msg);
     process.env.API_READY = 'false';
-  } else {
-    process.env.API_READY = 'true';
+    return;
   }
+  if (isProd && process.env.MONGODB_URI && mongoUriLooksLocal(process.env.MONGODB_URI)) {
+    console.error(
+      '❌ MONGODB_URI points at this machine (localhost). On Render/Railway/Fly there is no local MongoDB.\n' +
+        '   Fix: Render Dashboard → Environment → set MONGODB_URI to your MongoDB Atlas `mongodb+srv://…` string (same as old Vercel).',
+    );
+    process.env.API_READY = 'false';
+    return;
+  }
+  process.env.API_READY = 'true';
 }
 validateEnv();
 

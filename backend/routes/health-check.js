@@ -46,8 +46,21 @@ router.get('/', async (req, res) => {
   // Check environment
   const requiredEnv = ['MONGODB_URI', 'JWT_SECRET'];
   const missingEnv = requiredEnv.filter((e) => !process.env[e]);
-  checks.checks.environment.status = missingEnv.length === 0 ? 'ok' : 'warning';
-  checks.checks.environment.message = missingEnv.length ? `Missing: ${missingEnv.join(', ')}` : 'All required vars set';
+  const mongo = String(process.env.MONGODB_URI || '');
+  const mongoLocal =
+    mongo &&
+    (mongo.includes('127.0.0.1') || mongo.includes('localhost') || mongo.includes('::1'));
+  if (missingEnv.length) {
+    checks.checks.environment.status = 'warning';
+    checks.checks.environment.message = `Missing: ${missingEnv.join(', ')}`;
+  } else if (mongoLocal) {
+    checks.checks.environment.status = 'warning';
+    checks.checks.environment.message =
+      'MONGODB_URI uses localhost — use MongoDB Atlas (mongodb+srv) on cloud hosts';
+  } else {
+    checks.checks.environment.status = 'ok';
+    checks.checks.environment.message = 'All required vars set';
+  }
 
   // Check integrations (models exist)
   try {
