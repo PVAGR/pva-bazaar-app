@@ -26,6 +26,18 @@ export default function ProposalCard({ proposal, onSupport, onUpvote, onVote }) 
   const supportCount = Number(proposal.supportCount ?? proposal.endorsements ?? 0);
   const comments = Array.isArray(proposal.comments) ? proposal.comments : [];
   const latestComment = comments.length ? comments[comments.length - 1] : null;
+  const latestCommentAuthor =
+    typeof latestComment?.authorName === 'string'
+      ? latestComment.authorName
+      : latestComment?.authorName
+        ? JSON.stringify(latestComment.authorName)
+        : 'Citizen';
+  const latestCommentBody =
+    typeof latestComment?.body === 'string'
+      ? latestComment.body
+      : latestComment?.body
+        ? JSON.stringify(latestComment.body)
+        : '';
   const currentStatus = proposal.status || 'draft';
   const handleSupport = () => {
     if (typeof onSupport === 'function') return onSupport(proposal.id);
@@ -76,7 +88,7 @@ export default function ProposalCard({ proposal, onSupport, onUpvote, onVote }) 
 
       <p className="gov-card-excerpt"><strong>Discussion:</strong> {comments.length} comment(s)</p>
       {latestComment ? (
-        <p className="gov-card-excerpt"><strong>Latest:</strong> {latestComment.authorName}: {latestComment.body}</p>
+        <p className="gov-card-excerpt"><strong>Latest:</strong> {latestCommentAuthor}: {latestCommentBody}</p>
       ) : null}
 
       <div className="gov-card-footer">
