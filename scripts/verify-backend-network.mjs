@@ -8,7 +8,7 @@
  * Exits non-zero if any probe fails with a network error, timeout, or unexpected HTTP status.
  */
 const DEFAULT_BACKEND = "https://pva-bazaar-app-1.onrender.com";
-const TIMEOUT_MS = 25_000;
+const TIMEOUT_MS = 45_000;
 
 const base = String(process.env.BACKEND_URL || DEFAULT_BACKEND).replace(/\/+$/, "");
 

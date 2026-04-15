@@ -1,31 +1,52 @@
+/**
+ * Lightweight production checks using Playwright's HTTP client (no local webServer).
+ * Full API matrix: `npm run verify:connectivity`
+ *
+ * Optional browser SPA checks (slow / environment-sensitive):
+ *   RUN_LIVE_E2E=1 npm run e2e:smoke:live
+ */
 const { test, expect } = require("@playwright/test");
 
-test("PVABAZAAR core routes + nav links", async ({ page }) => {
-  await page.goto("https://pvabazaar.org/#/");
+const FE = (process.env.E2E_BASE_URL || "https://pvabazaar.org").replace(/\/+$/, "");
+const API = (process.env.BACKEND_URL || "https://pva-bazaar-app-1.onrender.com").replace(/\/+$/, "");
 
-  // Basic navigation
-  await page.getByRole("link", { name: "Journal" }).click();
-  await expect(page).toHaveURL(/#\/journal/);
-
-  await page.getByRole("link", { name: "Archive" }).click();
-  await expect(page).toHaveURL(/#\/archive/);
-
-  await page.getByRole("link", { name: "Search" }).click();
-  await expect(page).toHaveURL(/#\/search/);
-
-  await page.getByRole("link", { name: "Admin" }).click();
-  await expect(page).toHaveURL(/#\/admin/);
-});
-
-test("Frontend actually calls backend /api/archive", async ({ page }) => {
-  let sawArchive = false;
-
-  page.on("request", (req) => {
-    if (req.url().includes("/api/archive")) sawArchive = true;
+test.describe("production HTTP connectivity", () => {
+  test("site index responds", async ({ request }) => {
+    const res = await request.get(`${FE}/`);
+    expect(res.status(), "home should be reachable").toBeLessThan(400);
+    const text = await res.text();
+    expect(text.length).toBeGreaterThan(200);
   });
 
-  await page.goto("https://pvabazaar.org/#/");
-  await page.waitForTimeout(1500);
+  test("api-base.json points to live API", async ({ request }) => {
+    const res = await request.get(`${FE}/api-base.json`);
+    expect(res.ok()).toBeTruthy();
+    const body = await res.json();
+    expect(typeof body.apiUrl).toBe("string");
+    expect(body.apiUrl).toMatch(/^https:\/\//);
+    const ping = await request.get(`${String(body.apiUrl).replace(/\/+$/, "")}/ping`);
+    expect(ping.ok()).toBeTruthy();
+    const pingJson = await ping.json();
+    expect(pingJson.ok).toBeTruthy();
+  });
 
-  expect(sawArchive).toBeTruthy();
+  test("backend archive and items", async ({ request }) => {
+    const archive = await request.get(`${API}/api/archive`);
+    expect(archive.ok()).toBeTruthy();
+    const a = await archive.json();
+    expect(a.ok).toBeTruthy();
+
+    const items = await request.get(`${API}/api/items?limit=2`);
+    expect(items.ok()).toBeTruthy();
+  });
+
+  test("backend governance and openclaw", async ({ request }) => {
+    const gov = await request.get(`${API}/api/governance/proposals`);
+    expect(gov.ok()).toBeTruthy();
+
+    const oc = await request.get(`${API}/api/openclaw/status`);
+    expect(oc.ok()).toBeTruthy();
+    const ocj = await oc.json();
+    expect(ocj.ok).toBeTruthy();
+  });
 });
