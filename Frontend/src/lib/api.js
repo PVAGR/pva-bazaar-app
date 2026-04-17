@@ -188,6 +188,14 @@ export const refreshPassportCredential = (userId) =>
 export const updatePassportClaims = (userId, payload = {}) =>
   apiPost(`/admin/passport/claims/${encodeURIComponent(userId)}`, payload);
 
+export const fetchFederationIntroQuizDefinition = () => apiGet('/federation/intro-quiz/definition');
+export const submitFederationIntroQuiz = (answers = []) =>
+  apiPost('/federation/intro-quiz/submit', { answers });
+export const fetchFederationLiveMap = (minutes = 60) =>
+  apiGet('/federation/live', { params: { minutes } });
+export const fetchMyFederationPresence = () => apiGet('/federation/me');
+export const checkInFederationPresence = (payload = {}) => apiPost('/federation/check-in', payload);
+
 /**
  * Upload a FormData payload (multipart/form-data).
  * Uses native fetch so the browser can set the correct Content-Type boundary.

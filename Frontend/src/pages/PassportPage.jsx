@@ -681,6 +681,7 @@ export default function PassportPage() {
           <Link to="/marketplace">Marketplace / Economy</Link>
           <Link to="/library">Learning / Library</Link>
           <Link to="/civilization-library">Culture & Memory</Link>
+          <Link to="/federation-map">Live Federation Map</Link>
         </div>
       </section>
     </div>

@@ -138,6 +138,7 @@ export default function CareerQuizPage() {
         <p>{quiz.intro}</p>
         <div className="career-quiz-links">
           <Link to="/civilization-library">Open Knowledge Library</Link>
+          <Link to="/federation-map">Open Federation Map</Link>
         </div>
       </header>
 
@@ -300,6 +301,7 @@ export default function CareerQuizPage() {
           ) : null}
           <div className="career-actions">
             <Link to="/civilization-library">Find Matching Manuals</Link>
+            <Link to="/federation-map">Continue To Federation Map</Link>
             <button onClick={() => {
               setAnswers({});
               setStep(0);

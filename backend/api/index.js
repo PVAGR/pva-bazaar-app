@@ -364,6 +364,7 @@ const didRoutes = require('../routes/did');
 const dppRoutes = require('../routes/dpp');
 const databasesRoutes = require('../routes/databases');
 const careerQuizRoutes = require('../routes/careerQuiz');
+const federationRoutes = require('../routes/federation');
 const passportRoutes = require('../routes/passport');
 const agentRoutes = require('../routes/agent');
 const telegramRoutes = require('../routes/telegram');
@@ -678,6 +679,7 @@ app.use('/api/did', didRoutes);
 app.use('/api/dpp', dppRoutes);
 app.use('/api/databases', databasesRoutes);
 app.use('/api/career-quiz', careerQuizRoutes);
+app.use('/api/federation', federationRoutes);
 app.use('/api/openclaw', openClawRoutes);
 app.use('/api/openclaw', openClawMetricsRoutes); // Prometheus metrics
 app.use('/api/agent', agentRoutes); // AI Agent with persistent memory

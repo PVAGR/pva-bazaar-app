@@ -53,6 +53,17 @@ export const PUBLIC_ROUTES = [
     access: 'public',
   },
   {
+    key: 'federation-map',
+    to: '/federation-map',
+    navLabel: 'Federation Map',
+    title: 'Federation Map',
+    description: 'Live world pulse map of active passport citizens and contribution roles.',
+    group: 'support',
+    badge: 'Live',
+    navPlacement: 'secondary',
+    access: 'public',
+  },
+  {
     key: 'marketplace',
     to: '/marketplace',
     navLabel: 'Marketplace',

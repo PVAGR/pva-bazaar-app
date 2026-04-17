@@ -53,6 +53,7 @@ const CommoditiesPage = lazy(() => import('./pages/CommoditiesPage.jsx'));
 const ContactsPage = lazy(() => import('./pages/ContactsPage.jsx'));
 const TemplatesPage = lazy(() => import('./pages/TemplatesPage.jsx'));
 const ChatPage = lazy(() => import('./pages/ChatPage.jsx'));
+const FederationMapPage = lazy(() => import('./pages/FederationMapPage.jsx'));
 
 function RequireUserAuth({ children }) {
   const location = useLocation();
@@ -116,6 +117,7 @@ export default function App() {
         <Route path="/creator/dashboard" element={<RequireUserAuth><Layout><CreatorDashboard /></Layout></RequireUserAuth>} />
         <Route path="/civilization-library" element={<Layout><CivilizationLibraryPage /></Layout>} />
         <Route path="/career-quiz" element={<Layout><CareerQuizPage /></Layout>} />
+        <Route path="/federation-map" element={<Layout><FederationMapPage /></Layout>} />
         <Route path="/about" element={<Layout><AboutPage /></Layout>} />
         <Route path="/agent" element={<Layout><AgentPage /></Layout>} />
         <Route path="/citizens" element={<Layout><CitizenDirectoryPage /></Layout>} />
