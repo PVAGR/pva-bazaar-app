@@ -18,7 +18,7 @@ jobs:
       - name: 🚀 Deploy to Render
         env:
           RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK || vars.RENDER_DEPLOY_HOOK || secrets.RENDER_DEPLOY_HOOK_URL || vars.RENDER_DEPLOY_HOOK_URL || secrets.RENDER_WEBHOOK_URL || vars.RENDER_WEBHOOK_URL }}
-          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY || vars.RENDER_API_KEY || secrets.RENDER_API_TOKEN || vars.RENDER_API_TOKEN || secrets.RENDER_AUTH_TOKEN || vars.RENDER_AUTH_TOKEN }}
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY || vars.RENDER_API_KEY || secrets.RENDER_API_TOKEN || vars.RENDER_API_TOKEN || secrets.RENDER_AUTH_TOKEN || vars.RENDER_AUTH_TOKEN || secrets.RENDER_TOKEN || vars.RENDER_TOKEN || secrets.RENDER_ACCESS_TOKEN || vars.RENDER_ACCESS_TOKEN }}
           RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID || vars.RENDER_SERVICE_ID || secrets.RENDER_BACKEND_SERVICE_ID || vars.RENDER_BACKEND_SERVICE_ID || secrets.RENDER_API_SERVICE_ID || vars.RENDER_API_SERVICE_ID || 'srv-d7etc3n41pts73f3b0fg' }}
         run: |
           echo "📡 Triggering Render deployment via webhook..."
