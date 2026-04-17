@@ -128,13 +128,26 @@ jobs:
           vercel-args: "--prod"
 
       - name: Fallback backend deploy via Vercel CLI
+        id: vercel_fallback
         if: steps.vercel_action.outcome != 'success'
+        continue-on-error: true
         run: |
           npm i -g vercel@latest
           cd backend
           vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN || secrets.VERCEL_API_TOKEN }}
           vercel build --prod --token=${{ secrets.VERCEL_TOKEN || secrets.VERCEL_API_TOKEN }}
           vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN || secrets.VERCEL_API_TOKEN }}
+
+      - name: Ensure backend deploy succeeded
+        if: always()
+        run: |
+          if [ "${{ steps.vercel_action.conclusion }}" = "success" ] || [ "${{ steps.vercel_fallback.conclusion }}" = "success" ]; then
+            echo "backend deployment path succeeded"
+            exit 0
+          fi
+
+          echo "::error title=Backend deploy failed::Both primary and fallback deploy paths failed"
+          exit 1
 
       - name: Verify decentralized live endpoints
         env:
