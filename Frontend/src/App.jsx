@@ -31,6 +31,7 @@ const GovernanceTreasuryPage = lazy(() => import('./pages/OtherPages.jsx').then(
 const AboutPage = lazy(() => import('./pages/AboutPage.jsx'));
 const AgentPage = lazy(() => import('./pages/AgentPage.jsx'));
 const CivilizationLibraryPage = lazy(() => import('./pages/CivilizationLibraryPage.jsx'));
+const CollaborativeLibraryPage = lazy(() => import('./pages/CollaborativeLibraryPage.jsx'));
 const CareerQuizPage = lazy(() => import('./pages/CareerQuizPage.jsx'));
 const MarketplacePage = lazy(() => import('./pages/MarketplacePage.jsx'));
 const MarketplaceItemPage = lazy(() => import('./pages/MarketplaceItemPage.jsx'));
@@ -116,6 +117,9 @@ export default function App() {
         <Route path="/creator" element={<Layout><CreatorPortalPage /></Layout>} />
         <Route path="/creator/dashboard" element={<RequireUserAuth><Layout><CreatorDashboard /></Layout></RequireUserAuth>} />
         <Route path="/civilization-library" element={<Layout><CivilizationLibraryPage /></Layout>} />
+        <Route path="/civilization-library/editor" element={<RequireUserAuth><Layout><CollaborativeLibraryPage mode="editor" /></Layout></RequireUserAuth>} />
+        <Route path="/civilization-library/moderation" element={<RequireUserAuth><Layout><CollaborativeLibraryPage mode="moderation" /></Layout></RequireUserAuth>} />
+        <Route path="/civilization-library/article/:id" element={<Layout><CollaborativeLibraryPage mode="viewer" /></Layout>} />
         <Route path="/career-quiz" element={<Layout><CareerQuizPage /></Layout>} />
         <Route path="/federation-map" element={<Layout><FederationMapPage /></Layout>} />
         <Route path="/about" element={<Layout><AboutPage /></Layout>} />

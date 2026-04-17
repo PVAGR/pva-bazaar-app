@@ -33,6 +33,14 @@ export const apiPut = (path, body, config) => api.put(path, body, config).then(r
 export const apiPatch = (path, body, config) => api.patch(path, body, config).then(r => r.data);
 export const apiDelete = (path, config) => api.delete(path, config).then(r => r.data);
 
+export const submitLibraryArticle = (payload) => apiPost('/library/submit', payload);
+export const fetchPendingLibraryArticles = (params = {}) => apiGet('/library/pending', { params });
+export const approveLibraryArticle = (articleId, payload = {}) =>
+  apiPut(`/library/${encodeURIComponent(articleId)}/approve`, payload);
+export const rejectLibraryArticle = (articleId, payload = {}) =>
+  apiPut(`/library/${encodeURIComponent(articleId)}/reject`, payload);
+export const fetchLibraryArticleById = (articleId) => apiGet(`/library/${encodeURIComponent(articleId)}`);
+
 export const fetchDeals = (params = {}) => apiGet('/deals', { params });
 export const fetchDealById = (dealId) => apiGet(`/deals/${encodeURIComponent(dealId)}`);
 export const createDeal = (payload) => apiPost('/deals', payload);

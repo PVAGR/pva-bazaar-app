@@ -5,17 +5,382 @@ const fs = require('fs');
 const fsp = require('fs').promises;
 const axios = require('axios');
 const archiver = require('archiver');
+const rateLimit = require('express-rate-limit');
+const slugify = require('slugify');
+const { authenticateToken } = require('../middleware/auth');
 const LibraryDocument = require('../models/LibraryDocument');
+const LibraryArticle = require('../models/LibraryArticle');
+const ModerationLog = require('../models/ModerationLog');
+const ipfsService = require('../service/ipfs');
+const {
+  parseFrontmatter,
+  buildTemplateFrontmatter,
+  ensureUniversalReference,
+  computeDiffSummary,
+  renderArticleHtml,
+  uploadHtmlToIpfs,
+  writeToGitBranch,
+  buildFrontmatterMarkdown,
+} = require('../services/libraryPublisher');
 
 const LIBRARY_UPLOAD_DIR = path.join(__dirname, '../uploads/library');
 const CAREERS_SEED_PATH = path.join(__dirname, '../data/seed/onet-jobs-professions-skills.json');
 let careersSeedCache = null;
+
+const submitLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (_req, res) => {
+    res.status(429).json({ ok: false, error: 'rate_limited' });
+  },
+});
 
 const EMPTY_CAREERS_SEED = {
   summary: { occupations: 0, skillConcepts: 0 },
   professions: [],
   skillsCatalog: [],
 };
+
+function sanitizeText(value, max = 12000) {
+  return String(value || '')
+    .replace(/[<>]/g, '')
+    .trim()
+    .slice(0, max);
+}
+
+function isModerator(req) {
+  const role = String(req.user?.role || '').toLowerCase();
+  return role === 'admin' || role === 'moderator';
+}
+
+function requireModerator(req, res, next) {
+  if (!isModerator(req)) {
+    return res.status(403).json({ ok: false, error: 'Moderator or admin access required' });
+  }
+  next();
+}
+
+function normalizeArticlePayload(input, reqUser) {
+  const markdownInput = String(input?.markdown || '').trim();
+  if (!markdownInput) {
+    throw new Error('markdown is required');
+  }
+
+  const parsed = parseFrontmatter(markdownInput);
+  const normalizedFrontmatter = buildTemplateFrontmatter(parsed.frontmatter, String(reqUser?.id || ''));
+  ensureUniversalReference(normalizedFrontmatter);
+
+  const slug = slugify(
+    sanitizeText(input?.slug || normalizedFrontmatter.title || input?.title || 'library-entry', 200),
+    { lower: true, strict: true },
+  );
+
+  if (!slug) {
+    throw new Error('Unable to create a slug from title');
+  }
+
+  return {
+    title: sanitizeText(normalizedFrontmatter.title, 200),
+    slug,
+    body: parsed.body,
+    frontmatter: normalizedFrontmatter,
+    markdown: buildFrontmatterMarkdown(normalizedFrontmatter, parsed.body),
+  };
+}
+
+function articleSelectProjection() {
+  return 'title slug status authorId version markdown frontmatter quickFacts renderedHtml ipfsCid ipfsGatewayUrl gitCommitHash lastPublishedAt lastSubmittedAt updatedAt createdAt moderationNote rejectedReason';
+}
+
+async function resolvePublishedArticle(identifier) {
+  const byId = await LibraryArticle.findOne({
+    _id: identifier,
+    status: 'published',
+  })
+    .select(articleSelectProjection())
+    .lean();
+
+  if (byId) return byId;
+
+  return LibraryArticle.findOne({
+    slug: sanitizeText(identifier, 200).toLowerCase(),
+    status: 'published',
+  })
+    .select(articleSelectProjection())
+    .lean();
+}
+
+router.post('/submit', authenticateToken, submitLimiter, async (req, res) => {
+  try {
+    const payload = normalizeArticlePayload(req.body, req.user);
+    const note = sanitizeText(req.body?.note || '', 600);
+    const articleId = sanitizeText(req.body?.articleId || '', 120);
+
+    let article;
+    if (articleId) {
+      article = await LibraryArticle.findById(articleId);
+      if (!article) {
+        return res.status(404).json({ ok: false, error: 'Article not found' });
+      }
+
+      const isOwner = String(article.authorId) === String(req.user?.id || '');
+      if (!isOwner && !isModerator(req)) {
+        return res.status(403).json({ ok: false, error: 'Only the author can resubmit this article' });
+      }
+    } else {
+      article = new LibraryArticle({
+        authorId: req.user.id,
+      });
+    }
+
+    const beforeStatus = article.status || 'draft';
+    article.title = payload.title;
+    article.slug = payload.slug;
+    article.markdown = payload.markdown;
+    article.frontmatter = payload.frontmatter;
+    article.quickFacts = payload.frontmatter.quick_facts || {};
+    article.status = 'pending';
+    article.lastSubmittedAt = new Date();
+    article.rejectedReason = '';
+    article.moderationNote = '';
+
+    const nextVersion = Math.max(Number(article.version || 1), 1);
+    article.version = nextVersion;
+    article.versionHistory.push({
+      version: nextVersion,
+      status: 'pending',
+      markdown: payload.markdown,
+      frontmatter: payload.frontmatter,
+      submittedBy: req.user.id,
+      submittedAt: new Date(),
+      reviewNote: note,
+    });
+
+    await article.save();
+
+    await ModerationLog.create({
+      articleId: article._id,
+      actorId: req.user.id,
+      actorRole: String(req.user?.role || 'user').toLowerCase(),
+      action: 'submit',
+      beforeStatus,
+      afterStatus: 'pending',
+      diffSummary: computeDiffSummary('', payload.markdown),
+      note,
+      metadata: {
+        slug: article.slug,
+        version: article.version,
+      },
+    });
+
+    return res.status(201).json({
+      ok: true,
+      item: {
+        id: article._id,
+        slug: article.slug,
+        title: article.title,
+        status: article.status,
+        version: article.version,
+        submittedAt: article.lastSubmittedAt,
+      },
+    });
+  } catch (error) {
+    return res.status(400).json({ ok: false, error: error.message || 'Failed to submit article' });
+  }
+});
+
+router.get('/pending', authenticateToken, requireModerator, async (req, res) => {
+  try {
+    const limit = Math.max(1, Math.min(parseInt(req.query.limit, 10) || 30, 100));
+
+    const items = await LibraryArticle.find({ status: 'pending' })
+      .sort({ lastSubmittedAt: -1, updatedAt: -1 })
+      .limit(limit)
+      .populate('authorId', 'name email role')
+      .lean();
+
+    const payload = items.map((item) => {
+      const lastPublishedSnapshot = [...(item.versionHistory || [])]
+        .reverse()
+        .find((snapshot) => snapshot.status === 'published');
+
+      const diffSummary = computeDiffSummary(lastPublishedSnapshot?.markdown || '', item.markdown || '');
+
+      return {
+        _id: item._id,
+        title: item.title,
+        slug: item.slug,
+        status: item.status,
+        version: item.version,
+        author: item.authorId,
+        lastSubmittedAt: item.lastSubmittedAt,
+        updatedAt: item.updatedAt,
+        diffSummary,
+        markdown: item.markdown,
+        frontmatter: item.frontmatter,
+      };
+    });
+
+    return res.json({ ok: true, items: payload });
+  } catch (error) {
+    return res.status(500).json({ ok: false, error: error.message || 'Failed to load moderation queue' });
+  }
+});
+
+router.put('/:id/approve', authenticateToken, requireModerator, submitLimiter, async (req, res) => {
+  try {
+    const article = await LibraryArticle.findById(req.params.id);
+    if (!article) return res.status(404).json({ ok: false, error: 'Article not found' });
+    if (article.status !== 'pending') {
+      return res.status(400).json({ ok: false, error: 'Only pending articles can be approved' });
+    }
+
+    const note = sanitizeText(req.body?.note || '', 600);
+    const beforeStatus = article.status;
+    const nextVersion = Math.max(Number(article.version || 1), 1);
+
+    const parsed = parseFrontmatter(article.markdown);
+    const html = renderArticleHtml({
+      title: article.title,
+      frontmatter: article.frontmatter || parsed.frontmatter || {},
+      body: parsed.body,
+    });
+
+    const ipfsPublish = await uploadHtmlToIpfs({
+      html,
+      slug: article.slug,
+      version: nextVersion,
+    });
+
+    const gitSync = await writeToGitBranch({
+      slug: article.slug,
+      markdown: article.markdown,
+      version: nextVersion,
+      status: 'published',
+    });
+
+    article.status = 'published';
+    article.version = nextVersion + 1;
+    article.moderationNote = note;
+    article.rejectedReason = '';
+    article.renderedHtml = html;
+    article.lastPublishedAt = new Date();
+    article.ipfsCid = ipfsPublish.cid || '';
+    article.ipfsGatewayUrl = ipfsPublish.gatewayUrl || '';
+    article.gitCommitHash = gitSync.gitCommitHash || '';
+
+    article.versionHistory.push({
+      version: nextVersion,
+      status: 'published',
+      markdown: article.markdown,
+      frontmatter: article.frontmatter,
+      submittedBy: article.authorId,
+      reviewedBy: req.user.id,
+      submittedAt: article.lastSubmittedAt || new Date(),
+      reviewedAt: new Date(),
+      reviewNote: note,
+      gitCommitHash: article.gitCommitHash,
+      ipfsCid: article.ipfsCid,
+      renderedHtml: html,
+    });
+
+    await article.save();
+
+    const lastPublishedSnapshot = [...article.versionHistory]
+      .reverse()
+      .find((snapshot) => snapshot.status === 'published' && snapshot.version !== nextVersion);
+
+    await ModerationLog.create({
+      articleId: article._id,
+      actorId: req.user.id,
+      actorRole: String(req.user?.role || 'moderator').toLowerCase(),
+      action: 'approve',
+      beforeStatus,
+      afterStatus: 'published',
+      diffSummary: computeDiffSummary(lastPublishedSnapshot?.markdown || '', article.markdown),
+      note,
+      metadata: {
+        slug: article.slug,
+        version: nextVersion,
+        ipfsCid: article.ipfsCid,
+        gitCommitHash: article.gitCommitHash,
+        ipfsError: ipfsPublish.error || '',
+      },
+    });
+
+    return res.json({
+      ok: true,
+      item: {
+        _id: article._id,
+        title: article.title,
+        slug: article.slug,
+        status: article.status,
+        version: article.version,
+        ipfsCid: article.ipfsCid,
+        ipfsGatewayUrl: article.ipfsGatewayUrl,
+        gitCommitHash: article.gitCommitHash,
+        publishedAt: article.lastPublishedAt,
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({ ok: false, error: error.message || 'Failed to approve article' });
+  }
+});
+
+router.put('/:id/reject', authenticateToken, requireModerator, submitLimiter, async (req, res) => {
+  try {
+    const article = await LibraryArticle.findById(req.params.id);
+    if (!article) return res.status(404).json({ ok: false, error: 'Article not found' });
+    if (article.status !== 'pending') {
+      return res.status(400).json({ ok: false, error: 'Only pending articles can be rejected' });
+    }
+
+    const reason = sanitizeText(req.body?.reason || req.body?.note || 'Needs revision', 600);
+    const beforeStatus = article.status;
+
+    article.status = 'rejected';
+    article.rejectedReason = reason;
+    article.moderationNote = reason;
+    article.versionHistory.push({
+      version: Math.max(Number(article.version || 1), 1),
+      status: 'rejected',
+      markdown: article.markdown,
+      frontmatter: article.frontmatter,
+      reviewedBy: req.user.id,
+      reviewedAt: new Date(),
+      reviewNote: reason,
+    });
+
+    await article.save();
+
+    await ModerationLog.create({
+      articleId: article._id,
+      actorId: req.user.id,
+      actorRole: String(req.user?.role || 'moderator').toLowerCase(),
+      action: 'reject',
+      beforeStatus,
+      afterStatus: 'rejected',
+      diffSummary: computeDiffSummary('', article.markdown || ''),
+      note: reason,
+      metadata: { slug: article.slug, version: article.version },
+    });
+
+    return res.json({
+      ok: true,
+      item: {
+        _id: article._id,
+        slug: article.slug,
+        title: article.title,
+        status: article.status,
+        rejectedReason: article.rejectedReason,
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({ ok: false, error: error.message || 'Failed to reject article' });
+  }
+});
 
 function safeName(name) {
   return path.basename(String(name || 'document')).replace(/[^a-zA-Z0-9._-]/g, '_');
@@ -148,6 +513,26 @@ router.get('/careers/export/json', async (_req, res) => {
 
 router.get('/', async (req, res) => {
   try {
+    if (String(req.query.kind || '').toLowerCase() === 'articles') {
+      const limit = Math.max(1, Math.min(parseInt(req.query.limit, 10) || 60, 200));
+      const articleFilter = { status: 'published' };
+      if (req.query.q) {
+        const q = sanitizeText(req.query.q, 120);
+        articleFilter.$or = [
+          { title: { $regex: q, $options: 'i' } },
+          { slug: { $regex: q, $options: 'i' } },
+        ];
+      }
+
+      const articleItems = await LibraryArticle.find(articleFilter)
+        .select('title slug status version ipfsCid ipfsGatewayUrl gitCommitHash quickFacts updatedAt createdAt')
+        .sort({ updatedAt: -1, _id: -1 })
+        .limit(limit)
+        .lean();
+
+      return res.json({ ok: true, items: articleItems });
+    }
+
     const limit = Math.max(1, Math.min(parseInt(req.query.limit, 10) || 60, 200));
     const filter = buildPublicFilter(req);
 
@@ -165,6 +550,41 @@ router.get('/', async (req, res) => {
 
 router.get('/:id', async (req, res) => {
   try {
+    const publishedArticle = await resolvePublishedArticle(req.params.id);
+    if (publishedArticle) {
+      let servedFrom = 'database';
+      let resolvedHtml = publishedArticle.renderedHtml || '';
+
+      if (publishedArticle.ipfsCid) {
+        try {
+          const ipfsBuffer = await ipfsService.getFile(publishedArticle.ipfsCid);
+          resolvedHtml = ipfsBuffer.toString('utf8');
+          servedFrom = 'ipfs';
+        } catch (_ipfsErr) {
+          servedFrom = 'database-fallback';
+        }
+      }
+
+      return res.json({
+        ok: true,
+        item: {
+          _id: publishedArticle._id,
+          title: publishedArticle.title,
+          slug: publishedArticle.slug,
+          status: publishedArticle.status,
+          version: publishedArticle.version,
+          frontmatter: publishedArticle.frontmatter,
+          markdown: publishedArticle.markdown,
+          renderedHtml: resolvedHtml,
+          ipfsCid: publishedArticle.ipfsCid,
+          ipfsGatewayUrl: publishedArticle.ipfsGatewayUrl,
+          gitCommitHash: publishedArticle.gitCommitHash,
+          lastPublishedAt: publishedArticle.lastPublishedAt,
+        },
+        source: servedFrom,
+      });
+    }
+
     const item = await LibraryDocument.findOne({
       _id: req.params.id,
       status: 'published',

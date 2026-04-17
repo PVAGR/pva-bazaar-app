@@ -1,0 +1,47 @@
+name: Library IPFS Publish
+
+on:
+  push:
+    branches:
+      - main
+      - content-library
+    paths:
+      - content/library/**
+      - scripts/library/ipfs-publish.mjs
+
+jobs:
+  publish-library-content:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Generate HTML, upload to IPFS, update CID map
+        env:
+          PINATA_API_KEY: ${{ secrets.PINATA_API_KEY }}
+          PINATA_API_SECRET: ${{ secrets.PINATA_API_SECRET }}
+          PINATA_GATEWAY_URL: ${{ secrets.PINATA_GATEWAY_URL }}
+        run: node scripts/library/ipfs-publish.mjs
+
+      - name: Commit CID map changes
+        run: |
+          if git diff --quiet -- content/library/cid-map.json; then
+            echo "No CID map changes to commit"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add content/library/cid-map.json
+          git commit -m "chore(library): update IPFS CID map"
+          git push

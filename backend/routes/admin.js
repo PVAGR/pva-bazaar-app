@@ -617,8 +617,8 @@ router.put('/users/:id', adminSession, async (req, res) => {
     if (profilePicture !== undefined) updates.profilePicture = profilePicture;
     if (role !== undefined) {
       const nextRole = String(role).trim().toLowerCase();
-      if (!['user', 'admin'].includes(nextRole)) {
-        return res.status(400).json({ ok: false, error: 'Invalid role. Allowed roles: user, admin' });
+      if (!['user', 'moderator', 'admin'].includes(nextRole)) {
+        return res.status(400).json({ ok: false, error: 'Invalid role. Allowed roles: user, moderator, admin' });
       }
       updates.role = nextRole;
     }
