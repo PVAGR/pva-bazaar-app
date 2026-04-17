@@ -54,6 +54,18 @@ function deriveLiveShortSha(versionPayload) {
   return null;
 }
 
+function normalizeShaPrefix(value) {
+  const sha = String(value || "").trim().toLowerCase();
+  return /^[a-f0-9]{7,40}$/.test(sha) ? sha : null;
+}
+
+function shasMatch(a, b) {
+  const left = normalizeShaPrefix(a);
+  const right = normalizeShaPrefix(b);
+  if (!left || !right) return false;
+  return left.startsWith(right) || right.startsWith(left);
+}
+
 function isArrayLike(v) {
   return Array.isArray(v) || (v && typeof v === "object" && Array.isArray(v.items));
 }
@@ -307,7 +319,7 @@ if (!localShortSha) {
   } else {
     console.log("ℹ️ parity skipped: local git short SHA unavailable.");
   }
-} else if (liveShortSha === localShortSha) {
+} else if (shasMatch(liveShortSha, localShortSha)) {
   console.log(`✅ parity ok (live=${liveShortSha}, local=${localShortSha})`);
 } else if (!liveShortSha) {
   if (PARITY_REQUIRED) {
@@ -316,7 +328,7 @@ if (!localShortSha) {
     console.log("ℹ️ parity skipped: live /api/version has no usable sha/shortSha.");
   }
 } else {
-  while (Date.now() < deadline && liveShortSha !== localShortSha) {
+  while (Date.now() < deadline && !shasMatch(liveShortSha, localShortSha)) {
     console.log(`⏳ waiting parity: live=${liveShortSha}, local=${localShortSha}`);
     await sleep(WAIT_POLL_MS);
     const next = await getJson(`${BACKEND}/api/version`);
@@ -325,7 +337,7 @@ if (!localShortSha) {
       if (!liveShortSha) break;
     }
   }
-  if (liveShortSha === localShortSha) {
+  if (shasMatch(liveShortSha, localShortSha)) {
     console.log(`✅ parity reached (live=${liveShortSha})`);
   } else {
     if (PARITY_REQUIRED) {

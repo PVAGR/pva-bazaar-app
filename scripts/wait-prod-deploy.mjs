@@ -32,6 +32,30 @@ function getLocalShortSha() {
   }
 }
 
+function deriveLiveShortSha(versionPayload) {
+  if (!versionPayload || typeof versionPayload !== "object") return null;
+  if (typeof versionPayload.shortSha === "string" && versionPayload.shortSha.trim()) {
+    return versionPayload.shortSha.trim();
+  }
+  if (typeof versionPayload.sha === "string" && versionPayload.sha.trim()) {
+    const sha = versionPayload.sha.trim();
+    if (sha !== "local") return sha.slice(0, 7);
+  }
+  return null;
+}
+
+function normalizeShaPrefix(value) {
+  const sha = String(value || "").trim().toLowerCase();
+  return /^[a-f0-9]{7,40}$/.test(sha) ? sha : null;
+}
+
+function shasMatch(a, b) {
+  const left = normalizeShaPrefix(a);
+  const right = normalizeShaPrefix(b);
+  if (!left || !right) return false;
+  return left.startsWith(right) || right.startsWith(left);
+}
+
 async function sleep(ms) {
   await new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -76,10 +100,10 @@ while (Date.now() < deadline) {
   } else if (!json || json.ok !== true) {
     console.warn(`⚠️ [attempt ${attempt}] /api/version non-JSON or invalid payload: ${text.slice(0, 140)}`);
   } else {
-    lastShortSha = json.shortSha || null;
+    lastShortSha = deriveLiveShortSha(json);
     if (!lastShortSha) {
       console.warn(`⚠️ [attempt ${attempt}] live /api/version has no shortSha yet.`);
-    } else if (lastShortSha === localShortSha) {
+    } else if (shasMatch(lastShortSha, localShortSha)) {
       console.log(`✅ Live backend matches local commit (${localShortSha})`);
       process.exit(0);
     } else {
