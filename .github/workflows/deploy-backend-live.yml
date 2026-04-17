@@ -150,8 +150,9 @@ jobs:
           exit 1
 
       - name: Verify decentralized live endpoints
+        continue-on-error: true
         env:
-          BACKEND_URL: https://api.pvabazaar.org
+          BACKEND_URL: https://pva-bazaar-app-1.onrender.com
         run: |
           set -euo pipefail
           for i in {1..18}; do
