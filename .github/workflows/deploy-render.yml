@@ -18,11 +18,19 @@ jobs:
       - name: 🚀 Deploy to Render
         run: |
           echo "📡 Triggering Render deployment via webhook..."
-          if [ ! -z "${{ secrets.RENDER_DEPLOY_HOOK }}" ]; then
-            curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}" || echo "Webhook not configured yet"
-          else
-            echo "⚠️  RENDER_DEPLOY_HOOK secret not set"
-            echo "Get it from Render dashboard → Settings → Deploy Hook"
+          if [ -z "${{ secrets.RENDER_DEPLOY_HOOK }}" ]; then
+            echo "::error title=Missing Render deploy hook::RENDER_DEPLOY_HOOK secret not set"
+            echo "Get it from Render dashboard -> Settings -> Deploy Hook"
+            exit 1
+          fi
+
+          status=$(curl -sS -o /tmp/render_hook_response.txt -w "%{http_code}" -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}")
+          echo "Render webhook HTTP status: ${status}"
+          cat /tmp/render_hook_response.txt || true
+
+          if [ "${status}" -lt 200 ] || [ "${status}" -ge 300 ]; then
+            echo "::error title=Render deploy hook failed::Webhook returned HTTP ${status}"
+            exit 1
           fi
 
       - name: ✅ Deployment triggered
