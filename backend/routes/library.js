@@ -11,6 +11,12 @@ const LIBRARY_UPLOAD_DIR = path.join(__dirname, '../uploads/library');
 const CAREERS_SEED_PATH = path.join(__dirname, '../data/seed/onet-jobs-professions-skills.json');
 let careersSeedCache = null;
 
+const EMPTY_CAREERS_SEED = {
+  summary: { occupations: 0, skillConcepts: 0 },
+  professions: [],
+  skillsCatalog: [],
+};
+
 function safeName(name) {
   return path.basename(String(name || 'document')).replace(/[^a-zA-Z0-9._-]/g, '_');
 }
@@ -58,9 +64,14 @@ async function resolveDocumentReadStream(doc) {
 
 async function loadCareersSeed() {
   if (careersSeedCache) return careersSeedCache;
-  const raw = await fsp.readFile(CAREERS_SEED_PATH, 'utf8');
-  const parsed = JSON.parse(raw);
-  careersSeedCache = parsed;
+  try {
+    const raw = await fsp.readFile(CAREERS_SEED_PATH, 'utf8');
+    const parsed = JSON.parse(raw);
+    careersSeedCache = parsed;
+  } catch (_error) {
+    // Keep public library route functional even when optional seed file is not bundled.
+    careersSeedCache = EMPTY_CAREERS_SEED;
+  }
   return careersSeedCache;
 }
 
