@@ -3,6 +3,30 @@ import { ENV } from "../config/env";
 import { getToken } from "./auth";
 import { FEATURED_INVENTORY, findFeaturedItem } from "./featuredInventory";
 
+function normalizeApiBaseUrl(rawUrl) {
+  const value = String(rawUrl || '').trim();
+  if (!value) return '';
+  let next = value.replace(/\/+$/, '');
+  // Ensure callers can provide either host root or full /api base.
+  if (!/\/api$/i.test(next)) {
+    next = `${next}/api`;
+  }
+  return next;
+}
+
+function resolveApiBaseUrl() {
+  try {
+    const localOverride = localStorage.getItem('api-base-url');
+    if (localOverride) {
+      const normalizedOverride = normalizeApiBaseUrl(localOverride);
+      if (normalizedOverride) return normalizedOverride;
+    }
+  } catch (_err) {
+    // Ignore localStorage read errors and continue with environment fallback.
+  }
+  return normalizeApiBaseUrl(ENV.API_URL);
+}
+
 export const apiGet = (path, config) => api.get(path, config).then(r => r.data);
 export const apiPost = (path, body, config) => api.post(path, body, config).then(r => r.data);
 export const apiPut = (path, body, config) => api.put(path, body, config).then(r => r.data);
@@ -55,7 +79,47 @@ export const requestDevnetAirdropHotWallet = (payload) => apiPost('/solana/devne
 export const executeSolanaTestFlow = (payload) => apiPost('/solana/execute-test-flow', payload);
 export const directSolanaTransfer = (payload) => apiPost('/solana/direct-transfer', payload);
 export const fetchAutopilotRuns = (limit = 30) => apiGet(`/solana/autopilot-runs?limit=${limit}`);
-export const fetchTransactions = (limit = 10) => apiGet('/transactions', { params: { limit } });
+export const fetchTransactions = async (limit = 10) => {
+  const boundedLimit = Math.max(1, Math.min(Number(limit) || 10, 100));
+  try {
+    const [ordersResponse, escrowResponse] = await Promise.all([
+      apiGet('/orders/mine', { params: { limit: boundedLimit } }).catch(() => ({ ok: false, items: [] })),
+      apiGet('/orders/escrow', { params: { limit: boundedLimit } }).catch(() => ({ ok: false, items: [] })),
+    ]);
+
+    const orderItems = Array.isArray(ordersResponse?.items) ? ordersResponse.items : [];
+    const escrowItems = Array.isArray(escrowResponse?.items) ? escrowResponse.items : [];
+
+    const normalized = [
+      ...orderItems.map((order) => ({
+        _id: order?._id,
+        type: 'buy',
+        title: order?.itemSnapshot?.name || order?.itemName || 'Order',
+        amount: Number(order?.amountTotal || 0) / 100,
+        currency: order?.currency || 'USD',
+        date: order?.createdAt || order?.updatedAt,
+        status: order?.paymentStatus || order?.status || 'pending',
+      })),
+      ...escrowItems
+        .filter((escrow) => Boolean(escrow?.isSeller))
+        .map((escrow) => ({
+          _id: escrow?.orderId,
+          type: 'sale',
+          title: escrow?.itemName || 'Escrow Sale',
+          amount: Number(escrow?.amount || 0) / 100,
+          currency: escrow?.currency || 'USD',
+          date: escrow?.createdAt || escrow?.updatedAt,
+          status: escrow?.status || 'held',
+        })),
+    ]
+      .sort((a, b) => new Date(b?.date || 0) - new Date(a?.date || 0))
+      .slice(0, boundedLimit);
+
+    return normalized;
+  } catch (_err) {
+    return [];
+  }
+};
 export const fetchAdminTransactions = (limit = 25) =>
   apiGet('/admin/transactions/recent', { params: { limit } });
 
@@ -130,7 +194,7 @@ export const updatePassportClaims = (userId, payload = {}) =>
  * Attaches the auth token automatically.
  */
 export async function apiUpload(path, formData) {
-  const API_BASE = ENV.API_URL.replace(/\/+$/, '');
+  const API_BASE = resolveApiBaseUrl();
   const normalizedPath = API_BASE.endsWith('/api') && path.startsWith('/api/')
     ? path.slice(4)
     : path;
@@ -162,7 +226,7 @@ export async function apiUpload(path, formData) {
 
 // Helper for native fetch (with proper base URL handling)
 export async function apiFetch(path, options = {}) {
-  const API_BASE = ENV.API_URL.replace(/\/+$/, '');
+  const API_BASE = resolveApiBaseUrl();
   const normalizedPath = (() => {
     if (!path || path.startsWith('http')) return path;
     // Allow both '/items' and '/api/items' call styles when API_BASE already includes '/api'.
@@ -183,12 +247,12 @@ export async function apiFetch(path, options = {}) {
 
 // API base URL management (for AdminDashboard)
 export function getApiBase() {
-  return localStorage.getItem('api-base-url') || ENV.API_URL;
+  return resolveApiBaseUrl();
 }
 
 export function setApiBase(url) {
   if (url) {
-    localStorage.setItem('api-base-url', url);
+    localStorage.setItem('api-base-url', normalizeApiBaseUrl(url));
   } else {
     localStorage.removeItem('api-base-url');
   }
@@ -999,6 +1063,10 @@ export async function fetchNotificationBadge(recipientAddress) {
     const response = await apiGet(`/notifications/badge?recipientAddress=${encodeURIComponent(recipientAddress)}`);
     return { ok: true, unreadCount: response?.unreadCount ?? 0 };
   } catch (err) {
+    const status = err?.response?.status;
+    if (status === 404 || status === 410) {
+      return { ok: true, unreadCount: 0 };
+    }
     return { ok: false, unreadCount: 0, error: err.message };
   }
 }
@@ -1016,6 +1084,10 @@ export async function fetchNotifications(recipientAddress, { limit = 50, offset 
     }
     return { ok: false, notifications: [], total: 0, unreadCount: 0, error: response?.error };
   } catch (err) {
+    const status = err?.response?.status;
+    if (status === 404 || status === 410) {
+      return { ok: true, notifications: [], total: 0, unreadCount: 0 };
+    }
     return { ok: false, notifications: [], total: 0, unreadCount: 0, error: err.message };
   }
 }
@@ -1025,6 +1097,10 @@ export async function markNotificationsRead(recipientAddress, ids = []) {
     await apiPost('/notifications/mark-read', { recipientAddress, ids });
     return { ok: true };
   } catch (err) {
+    const status = err?.response?.status;
+    if (status === 404 || status === 410) {
+      return { ok: true };
+    }
     return { ok: false, error: err.message };
   }
 }
@@ -1034,6 +1110,10 @@ export async function markAllNotificationsRead(recipientAddress) {
     await apiPost('/notifications/mark-all-read', { recipientAddress });
     return { ok: true };
   } catch (err) {
+    const status = err?.response?.status;
+    if (status === 404 || status === 410) {
+      return { ok: true };
+    }
     return { ok: false, error: err.message };
   }
 }
@@ -1043,6 +1123,10 @@ export async function deleteNotification(recipientAddress, id) {
     await apiDelete(`/notifications/${encodeURIComponent(id)}?recipientAddress=${encodeURIComponent(recipientAddress)}`);
     return { ok: true };
   } catch (err) {
+    const status = err?.response?.status;
+    if (status === 404 || status === 410) {
+      return { ok: true };
+    }
     return { ok: false, error: err.message };
   }
 }

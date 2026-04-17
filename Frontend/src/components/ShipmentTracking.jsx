@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { apiFetch } from '../lib/api';
 import styles from './ShipmentTracking.module.css';
 
 /**
@@ -17,7 +18,7 @@ const ShipmentTracking = ({ trackingNumber }) => {
 
   const fetchShipment = async () => {
     try {
-      const response = await fetch(`/api/fulfillment/track-shipment/${trackingNumber}`);
+      const response = await apiFetch(`/api/fulfillment/track-shipment/${trackingNumber}`);
       if (response.ok) {
         const data = await response.json();
         setShipment(data);

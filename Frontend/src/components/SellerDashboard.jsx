@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { apiFetch } from '../lib/api';
 import styles from './SellerDashboard.module.css';
 
 /**
@@ -20,7 +21,7 @@ const SellerDashboard = ({ sellerId }) => {
       const token = localStorage.getItem('token');
 
       // Fetch analytics
-      const analyticsRes = await fetch('/api/analytics', {
+      const analyticsRes = await apiFetch('/api/analytics', {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (analyticsRes.ok) {
@@ -28,7 +29,7 @@ const SellerDashboard = ({ sellerId }) => {
       }
 
       // Fetch orders
-      const ordersRes = await fetch('/api/orders', {
+      const ordersRes = await apiFetch('/api/orders', {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (ordersRes.ok) {
@@ -36,7 +37,7 @@ const SellerDashboard = ({ sellerId }) => {
       }
 
       // Fetch AI insights
-      const insightsRes = await fetch('/api/ai-help/performance-insights', {
+      const insightsRes = await apiFetch('/api/ai-help/performance-insights', {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (insightsRes.ok) {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { apiGet } from '../lib/api.js';
+import { apiGet, fetchTransactions } from '../lib/api.js';
 import { createLogger } from '../lib/logger.js';
 import { getToken } from '../lib/auth.js';
 import NavLink from '../components/NavLink.jsx';
@@ -56,7 +56,7 @@ export default function UserDashboard() {
       const results = await Promise.allSettled([
         apiGet('/orders/mine').catch(() => ({ error: 'Error loading orders' })),
         apiGet('/items/mine').catch(() => ({ error: 'Error loading items' })),
-        apiGet('/transactions?limit=10').catch(() => []),
+        fetchTransactions(10).catch(() => []),
         apiGet('/items?limit=100').catch(() => ({})),
         apiGet('/orders/escrow').catch(() => []),
         apiGet('/sales/metrics').catch(() => ({})),
@@ -215,7 +215,7 @@ export default function UserDashboard() {
                         <div key={i} className="activity-item">
                           <span className="activity-type">{tx.type || 'Transaction'}</span>
                           <span className="activity-date">{new Date(tx.createdAt || tx.date || Date.now()).toLocaleDateString()}</span>
-                          <span className="activity-amount">${(Number(tx.amount || 0)).toFixed(2)}</span>
+                          <span className="activity-amount">${toAmount(tx.amount || 0).toFixed(2)}</span>
                         </div>
                       ))}
                     </div>
@@ -309,7 +309,7 @@ export default function UserDashboard() {
                         <span className="tx-user">{tx.user?.name || 'User'}</span>
                         <span className="tx-date">{new Date(tx.createdAt || tx.date || Date.now()).toLocaleDateString()}</span>
                         <span className={`tx-amount ${tx.type?.toLowerCase() === 'sale' ? 'income' : 'expense'}`}>
-                          {tx.type?.toLowerCase() === 'sale' ? '+' : '-'} ${(Number(tx.amount || 0)).toFixed(2)}
+                          {tx.type?.toLowerCase() === 'sale' ? '+' : '-'} ${toAmount(tx.amount || 0).toFixed(2)}
                         </span>
                       </div>
                     ))}

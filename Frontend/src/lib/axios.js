@@ -3,6 +3,29 @@ import { ENV } from "../config/env";
 
 let refreshPromise = null;
 
+function normalizeApiBaseUrl(rawUrl) {
+  const value = String(rawUrl || '').trim();
+  if (!value) return '';
+  let next = value.replace(/\/+$/, '');
+  if (!/\/api$/i.test(next)) {
+    next = `${next}/api`;
+  }
+  return next;
+}
+
+function resolveApiBaseUrl() {
+  try {
+    const localOverride = localStorage.getItem('api-base-url');
+    if (localOverride) {
+      const normalizedOverride = normalizeApiBaseUrl(localOverride);
+      if (normalizedOverride) return normalizedOverride;
+    }
+  } catch (_err) {
+    // Ignore localStorage read errors and continue with environment fallback.
+  }
+  return normalizeApiBaseUrl(ENV.API_URL);
+}
+
 async function tryRefreshAdminToken() {
   if (refreshPromise) {
     return refreshPromise;
@@ -19,7 +42,7 @@ async function tryRefreshAdminToken() {
 
   refreshPromise = axios
     .post(
-      `${ENV.API_URL}/admin/token-refresh`,
+      `${resolveApiBaseUrl()}/admin/token-refresh`,
       {},
       {
         headers: {
@@ -46,7 +69,7 @@ async function tryRefreshAdminToken() {
 
 // Internal backend-only Axios client
 const api = axios.create({
-  baseURL: ENV.API_URL,
+  baseURL: resolveApiBaseUrl(),
   withCredentials: false,      // set true only if you use cookies/sessions
   allowAbsoluteUrls: false,    // prevents accidental calls to external absolute URLs via this client
 });
@@ -54,6 +77,8 @@ const api = axios.create({
 // --- Request: attach token (if present) ---
 api.interceptors.request.use(
   (config) => {
+    config.baseURL = resolveApiBaseUrl();
+
     const token =
       localStorage.getItem("token") ||
       localStorage.getItem("authToken") ||

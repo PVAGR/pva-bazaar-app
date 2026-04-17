@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { apiFetch } from '../lib/api';
 import styles from './ShopPage.module.css';
 
 /**
@@ -16,12 +17,12 @@ const ShopPage = ({ shopId }) => {
 
   const fetchShop = async () => {
     try {
-      const response = await fetch(`/api/shops/${shopId}`);
+      const response = await apiFetch(`/api/shops/${shopId}`);
       const data = await response.json();
       setShop(data);
 
       // Fetch shop products
-      const productsResponse = await fetch(`/api/shops/${shopId}/products?limit=12`);
+      const productsResponse = await apiFetch(`/api/shops/${shopId}/products?limit=12`);
       const productsData = await productsResponse.json();
       setProducts(productsData);
     } catch (err) {
@@ -33,7 +34,7 @@ const ShopPage = ({ shopId }) => {
 
   const handleFollow = async () => {
     try {
-      await fetch(`/api/shops/${shopId}/follow`, {
+      await apiFetch(`/api/shops/${shopId}/follow`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
       });

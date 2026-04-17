@@ -374,6 +374,7 @@ const commoditiesRoutes = require('../routes/commodities');
 const contactsRoutes = require('../routes/contacts');
 const templatesRoutes = require('../routes/templates');
 const chatRoutes = require('../routes/chat');
+const notificationsRoutes = require('../routes/notifications');
 // Models for optional seeding
 const Artifact = require('../models/Artifact');
 const User = require('../models/User');
@@ -476,6 +477,7 @@ app.use('/api/commodities', commoditiesRoutes);
 app.use('/api/contacts', contactsRoutes);
 app.use('/api/templates', templatesRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/notifications', notificationsRoutes);
 
 // Phase 3: Multi-product support (optional routes)
 try {

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { apiFetch } from '../lib/api';
 import styles from './ProvenanceSubmission.module.css';
 
 /**
@@ -25,7 +26,7 @@ const ProvenanceSubmission = ({ onComplete }) => {
   const startSubmission = async (type) => {
     setLoading(true);
     try {
-      const response = await fetch('/api/provenance/start', {
+      const response = await apiFetch('/api/provenance/start', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -122,7 +123,7 @@ const MaterialTruthForm = ({ submissionId, objectType, onNext }) => {
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/provenance/${submissionId}/material-truth`, {
+      const response = await apiFetch(`/api/provenance/${submissionId}/material-truth`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -266,7 +267,7 @@ const NarrativeForm = ({ submissionId, onNext }) => {
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      await fetch(`/api/provenance/${submissionId}/narrative`, {
+      await apiFetch(`/api/provenance/${submissionId}/narrative`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -311,7 +312,7 @@ const ProofsForm = ({ submissionId, onNext }) => {
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      await fetch(`/api/provenance/${submissionId}/proofs`, {
+      await apiFetch(`/api/provenance/${submissionId}/proofs`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -391,7 +392,7 @@ const CreatorForm = ({ submissionId, onNext }) => {
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      await fetch(`/api/provenance/${submissionId}/creator-info`, {
+      await apiFetch(`/api/provenance/${submissionId}/creator-info`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -463,7 +464,7 @@ const ReviewForm = ({ submissionId, onNext, onComplete }) => {
 
   useEffect(() => {
     // Fetch submission details
-    fetch(`/api/provenance/${submissionId}`, {
+    apiFetch(`/api/provenance/${submissionId}`, {
       headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
     })
       .then((r) => r.json())
@@ -474,7 +475,7 @@ const ReviewForm = ({ submissionId, onNext, onComplete }) => {
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      await fetch(`/api/provenance/${submissionId}/submit`, {
+      await apiFetch(`/api/provenance/${submissionId}/submit`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });

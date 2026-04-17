@@ -3,14 +3,17 @@
  * 
  * Standalone component that can be embedded in any page to show OpenClaw status
  * Usage: <div id="openclaw-health-widget"></div>
- * Then call: initOpenClawWidget({ apiUrl: 'https://pva-bazaar-app-1.onrender.com' });
+ * Then call: initOpenClawWidget({ apiUrl: 'https://your-api-host.example' });
  */
 
 (function(window) {
   'use strict';
 
+  const FALLBACK_API_URL =
+    (window && window.location && window.location.origin) || 'https://pvabazaar.org';
+
   const DEFAULT_CONFIG = {
-    apiUrl: 'https://pva-bazaar-app-1.onrender.com',
+    apiUrl: FALLBACK_API_URL,
     refreshInterval: 60000, // 60 seconds
     showDetails: true,
     compact: false,
@@ -214,7 +217,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const widgetEl = document.getElementById('openclaw-health-widget');
   if (widgetEl && widgetEl.dataset.autoInit !== 'false') {
     const config = {
-      apiUrl: widgetEl.dataset.apiUrl || 'https://pva-bazaar-app-1.onrender.com',
+      apiUrl: widgetEl.dataset.apiUrl || FALLBACK_API_URL,
       refreshInterval: parseInt(widgetEl.dataset.refreshInterval) || 60000,
       showDetails: widgetEl.dataset.showDetails !== 'false',
       compact: widgetEl.dataset.compact === 'true',
