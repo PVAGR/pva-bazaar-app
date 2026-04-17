@@ -7,6 +7,7 @@ const axios = require('axios');
 const archiver = require('archiver');
 const rateLimit = require('express-rate-limit');
 const slugify = require('slugify');
+const mongoose = require('mongoose');
 const { authenticateToken } = require('../middleware/auth');
 const LibraryDocument = require('../models/LibraryDocument');
 const LibraryArticle = require('../models/LibraryArticle');
@@ -95,17 +96,22 @@ function articleSelectProjection() {
 }
 
 async function resolvePublishedArticle(identifier) {
-  const byId = await LibraryArticle.findOne({
-    _id: identifier,
-    status: 'published',
-  })
-    .select(articleSelectProjection())
-    .lean();
+  const normalizedIdentifier = sanitizeText(identifier, 200);
+  let byId = null;
+
+  if (mongoose.Types.ObjectId.isValid(normalizedIdentifier)) {
+    byId = await LibraryArticle.findOne({
+      _id: normalizedIdentifier,
+      status: 'published',
+    })
+      .select(articleSelectProjection())
+      .lean();
+  }
 
   if (byId) return byId;
 
   return LibraryArticle.findOne({
-    slug: sanitizeText(identifier, 200).toLowerCase(),
+    slug: normalizedIdentifier.toLowerCase(),
     status: 'published',
   })
     .select(articleSelectProjection())
@@ -585,13 +591,18 @@ router.get('/:id', async (req, res) => {
       });
     }
 
-    const item = await LibraryDocument.findOne({
-      _id: req.params.id,
-      status: 'published',
-      visibility: 'public',
-    })
-      .select('-storage.backup.localFilename')
-      .lean();
+    const documentIdentifier = sanitizeText(req.params.id, 200);
+    let item = null;
+
+    if (mongoose.Types.ObjectId.isValid(documentIdentifier)) {
+      item = await LibraryDocument.findOne({
+        _id: documentIdentifier,
+        status: 'published',
+        visibility: 'public',
+      })
+        .select('-storage.backup.localFilename')
+        .lean();
+    }
 
     if (!item) return res.status(404).json({ ok: false, error: 'Document not found' });
     return res.json({ ok: true, item });
