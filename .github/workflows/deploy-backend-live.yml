@@ -55,8 +55,8 @@ jobs:
         run: |
           set -euo pipefail
           if [ -z "${TELEGRAM_BOT_TOKEN:-}" ]; then
-            echo "::error title=Missing Telegram secret::TELEGRAM_BOT_TOKEN is required for webhook runtime"
-            exit 1
+            echo "::warning title=Missing Telegram secret::TELEGRAM_BOT_TOKEN not configured; skipping webhook env sync"
+            exit 0
           fi
 
           node - <<'NODE'
