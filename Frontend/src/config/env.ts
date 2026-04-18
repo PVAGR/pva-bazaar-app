@@ -21,6 +21,7 @@ export const ENV = {
   API_URL: rawApiUrl,
   CLOUDINARY_CLOUD_NAME: import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || "",
   CLOUDINARY_UPLOAD_PRESET: import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || "",
+  CREATOR_FORM_ACTION: import.meta.env.VITE_CREATOR_FORM_ACTION || "",
 };
 
 // Cloudinary is optional for read-only browsing routes. Upload surfaces
