@@ -50,12 +50,24 @@ export default function Layout({ children }) {
   }, [routeIdentity]);
 
   const primaryNavRoutes = useMemo(() => (
-    PUBLIC_ROUTES.filter((route) => route.navPlacement === 'primary' && route.access === 'public').slice(0, 5)
+    PUBLIC_ROUTES.filter((route) => route.navPlacement === 'primary' && route.access === 'public')
   ), []);
 
   const footerExploreRoutes = useMemo(() => (
-    PUBLIC_ROUTES.filter((route) => route.access === 'public').slice(0, 8)
+    PUBLIC_ROUTES.filter((route) => route.access === 'public')
   ), []);
+
+  const traversal = useMemo(() => {
+    const publicRoutes = PUBLIC_ROUTES.filter((route) => route.access === 'public');
+    const currentIndex = publicRoutes.findIndex((route) => route.to === pathname);
+    if (currentIndex < 0) {
+      return { prev: null, next: null };
+    }
+    return {
+      prev: currentIndex > 0 ? publicRoutes[currentIndex - 1] : null,
+      next: currentIndex < publicRoutes.length - 1 ? publicRoutes[currentIndex + 1] : null,
+    };
+  }, [pathname]);
 
   const footerCitizenRoutes = useMemo(() => [
     { key: 'citizens', to: '/citizens', title: 'Citizens' },
@@ -114,6 +126,12 @@ export default function Layout({ children }) {
             <p data-route-label="description" className="layout__routeDescription">
               {routeIdentity.description}
             </p>
+          ) : null}
+          {(traversal.prev || traversal.next) ? (
+            <div className="layout__routeTraversal" aria-label="Route traversal">
+              {traversal.prev ? <NavLink to={traversal.prev.to}>← {traversal.prev.title}</NavLink> : <span />}
+              {traversal.next ? <NavLink to={traversal.next.to}>{traversal.next.title} →</NavLink> : <span />}
+            </div>
           ) : null}
         </section>
         {children}

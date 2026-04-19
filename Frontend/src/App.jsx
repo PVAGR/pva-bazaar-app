@@ -50,6 +50,7 @@ const DeployPage = lazy(() => import('./pages/DeployPage.jsx'));
 const DownloadAppPage = lazy(() => import('./pages/DownloadAppPage.jsx'));
 const ForumPage = lazy(() => import('./pages/Forum.jsx'));
 const GetStartedPage = lazy(() => import('./pages/GetStartedPage.jsx'));
+const OpeningHomePage = lazy(() => import('./pages/OpeningHomePage.jsx'));
 const BrokerHubPage = lazy(() => import('./pages/BrokerHubPage.jsx'));
 const CommoditiesPage = lazy(() => import('./pages/CommoditiesPage.jsx'));
 const ContactsPage = lazy(() => import('./pages/ContactsPage.jsx'));
@@ -112,7 +113,8 @@ export default function App() {
         <Route path="/treasury" element={<Layout><TreasuryPage /></Layout>} />
         <Route path="/deploy" element={<Layout><DeployPage /></Layout>} />
 
-        <Route path="/" element={<Layout><GetStartedPage /></Layout>} />
+        <Route path="/" element={<Layout><OpeningHomePage /></Layout>} />
+        <Route path="/get-started" element={<Layout><GetStartedPage /></Layout>} />
         <Route path="/home" element={<Layout><HomePage /></Layout>} />
         <Route path="/library" element={<Layout><ArchiveLibraryPage /></Layout>} />
         <Route path="/archive" element={<Layout><ArchiveLibraryPage /></Layout>} />
@@ -138,7 +140,7 @@ export default function App() {
         <Route path="/download-app" element={<Layout><DownloadAppPage /></Layout>} />
         <Route path="/checkout/success" element={<Layout><CheckoutSuccessPage /></Layout>} />
         <Route path="/checkout/cancel" element={<Layout><CheckoutCancelPage /></Layout>} />
-        <Route path="*" element={<Navigate to="/library" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       </Suspense>
     </HashRouter>
