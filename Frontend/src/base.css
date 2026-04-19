@@ -435,6 +435,37 @@ body {
   box-shadow: none;
 }
 
+/* Normalize plain links into themed button links to avoid browser-default blue anchors. */
+.layout__main a:not([class]),
+.layout__footer a:not([class]) {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0.2rem 0.25rem 0.2rem 0;
+  background: var(--site-panel-soft);
+  color: var(--site-text);
+  padding: 0.45rem 0.78rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--site-border);
+  text-decoration: none;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  transition: border-color 0.16s ease, color 0.16s ease, background 0.16s ease, transform 0.16s ease;
+}
+
+.layout__main a:not([class]):hover,
+.layout__footer a:not([class]):hover {
+  border-color: var(--site-accent);
+  color: var(--site-accent-strong);
+  background: var(--site-accent-soft);
+  transform: translateY(-1px);
+}
+
+.layout__main a:not([class]):visited,
+.layout__footer a:not([class]):visited {
+  color: var(--site-text);
+}
+
 button,
 input,
 select,
