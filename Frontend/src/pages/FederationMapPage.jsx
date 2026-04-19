@@ -6,6 +6,9 @@ import {
   fetchFederationLiveMap,
   checkInFederationPresence,
   fetchMyFederationPresence,
+  fetchFederationGameState,
+  runFederationGameAction,
+  fetchFederationGameWorld,
 } from '../lib/api';
 import { PUBLIC_ROUTES } from '../config/publicRoutes';
 import './FederationMapPage.css';
@@ -118,6 +121,8 @@ export default function FederationMapPage() {
   const [planetView, setPlanetView] = useState({ zoom: 1.05, yaw: 0, pitch: 10 });
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [gameNotice, setGameNotice] = useState('');
+  const [gameBusy, setGameBusy] = useState(false);
+  const [worldGameFeed, setWorldGameFeed] = useState({ leaderboard: [], events: [], sectors: [] });
   const [gameState, setGameState] = useState({
     cycle: 0,
     energy: 120,
@@ -203,6 +208,11 @@ export default function FederationMapPage() {
         fetchFederationIntroQuizDefinition(),
       ]);
 
+      const [gameStateResponse, worldResponse] = await Promise.all([
+        fetchFederationGameState().catch(() => ({ ok: false })),
+        fetchFederationGameWorld().catch(() => ({ ok: false })),
+      ]);
+
       if (liveResponse?.ok) {
         setLiveData(liveResponse);
       }
@@ -217,6 +227,25 @@ export default function FederationMapPage() {
       if (quizResponse?.ok && quizResponse.quiz) {
         setQuiz(quizResponse.quiz);
       }
+
+      if (gameStateResponse?.ok && gameStateResponse.state) {
+        const state = gameStateResponse.state;
+        setGameState((prev) => ({
+          ...prev,
+          cycle: Number(state.cycle || 0),
+          energy: Number(state.energy || 0),
+          food: Number(state.food || 0),
+          materials: Number(state.materials || 0),
+          population: Number(state.population || 1),
+          outposts: Number(state.outposts || 0),
+          keepers: Number(state.keepers || 0),
+          research: Number(state.research || 0),
+        }));
+      }
+
+      if (worldResponse?.ok && worldResponse.world) {
+        setWorldGameFeed(worldResponse.world);
+      }
     } catch (err) {
       setError(err?.message || 'Unable to load federation map data.');
     } finally {
@@ -227,28 +256,6 @@ export default function FederationMapPage() {
   useEffect(() => {
     loadBootstrap();
   }, []);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setGameState((prev) => {
-        const activeCitizens = Number(liveData?.totals?.activeCitizens || 0);
-        const countriesOnline = Number(liveData?.totals?.countries || 0);
-        const energyGain = 4 + prev.outposts * 2 + Math.floor(activeCitizens / 20);
-        const foodGain = 3 + Math.floor(countriesOnline / 4);
-        const materialsGain = 2 + Math.floor(prev.keepers / 2);
-        const populationShift = prev.food > prev.population ? 1 : 0;
-        return {
-          ...prev,
-          cycle: prev.cycle + 1,
-          energy: prev.energy + energyGain,
-          food: Math.max(0, prev.food + foodGain - Math.floor(prev.population / 8)),
-          materials: prev.materials + materialsGain,
-          population: prev.population + populationShift,
-        };
-      });
-    }, 3500);
-    return () => clearInterval(timer);
-  }, [liveData]);
 
   const handlePlanetWheel = (event) => {
     event.preventDefault();
@@ -282,57 +289,57 @@ export default function FederationMapPage() {
     dragRef.current = null;
   };
 
-  const triggerGameAction = (type) => {
+  const actionToApiType = {
+    outpost: 'build_outpost',
+    keeper: 'train_keeper',
+    research: 'run_research',
+  };
+
+  const triggerGameAction = async (type) => {
+    const actionType = actionToApiType[type];
+    if (!actionType) return;
     setGameNotice('');
-    setGameState((prev) => {
-      if (type === 'outpost') {
-        if (prev.energy < 25 || prev.materials < 30 || prev.food < 12) {
-          setGameNotice('Insufficient resources for Outpost expansion.');
-          return prev;
-        }
-        setGameNotice('Outpost deployed. Federation coverage increased.');
-        return {
-          ...prev,
-          outposts: prev.outposts + 1,
-          energy: prev.energy - 25,
-          materials: prev.materials - 30,
-          food: prev.food - 12,
-          population: prev.population + 2,
-        };
+    setGameBusy(true);
+    try {
+      const response = await runFederationGameAction(actionType);
+      if (!response?.ok || !response.state) {
+        setGameNotice(response?.message || 'Action failed.');
+        return;
       }
-      if (type === 'keeper') {
-        if (prev.food < 14 || prev.materials < 10) {
-          setGameNotice('Need more food/materials to train keepers.');
-          return prev;
-        }
-        setGameNotice('Keeper trained. Resource logistics improved.');
-        return {
-          ...prev,
-          keepers: prev.keepers + 1,
-          food: prev.food - 14,
-          materials: prev.materials - 10,
-        };
+      const state = response.state;
+      setGameState((prev) => ({
+        ...prev,
+        cycle: Number(state.cycle || 0),
+        energy: Number(state.energy || 0),
+        food: Number(state.food || 0),
+        materials: Number(state.materials || 0),
+        population: Number(state.population || 1),
+        outposts: Number(state.outposts || 0),
+        keepers: Number(state.keepers || 0),
+        research: Number(state.research || 0),
+      }));
+      setGameNotice(response.notice || 'Action completed.');
+      const worldResponse = await fetchFederationGameWorld().catch(() => ({ ok: false }));
+      if (worldResponse?.ok && worldResponse.world) {
+        setWorldGameFeed(worldResponse.world);
       }
-      if (type === 'research') {
-        if (prev.energy < 30 || prev.materials < 15) {
-          setGameNotice('Research requires more energy/materials.');
-          return prev;
-        }
-        setGameNotice('Research advanced. Planet systems improved.');
-        return {
-          ...prev,
-          energy: prev.energy - 30,
-          materials: prev.materials - 15,
-          research: prev.research + 8,
-        };
-      }
-      return prev;
-    });
+    } catch (err) {
+      setGameNotice(err?.message || 'Action failed.');
+    } finally {
+      setGameBusy(false);
+    }
   };
 
   useEffect(() => {
     const timer = setInterval(() => {
       loadLiveData().catch(() => {});
+      fetchFederationGameWorld()
+        .then((response) => {
+          if (response?.ok && response.world) {
+            setWorldGameFeed(response.world);
+          }
+        })
+        .catch(() => {});
     }, 15000);
     return () => clearInterval(timer);
   }, []);
@@ -638,11 +645,49 @@ export default function FederationMapPage() {
             <div><span>Research</span><strong>{gameState.research}</strong></div>
           </div>
           <div className="federation-button-row">
-            <button type="button" onClick={() => triggerGameAction('outpost')}>Build Outpost</button>
-            <button type="button" onClick={() => triggerGameAction('keeper')}>Train Keeper</button>
-            <button type="button" onClick={() => triggerGameAction('research')}>Run Research</button>
+            <button type="button" disabled={gameBusy} onClick={() => triggerGameAction('outpost')}>Build Outpost</button>
+            <button type="button" disabled={gameBusy} onClick={() => triggerGameAction('keeper')}>Train Keeper</button>
+            <button type="button" disabled={gameBusy} onClick={() => triggerGameAction('research')}>Run Research</button>
           </div>
           {gameNotice ? <p className="federation-inline-note">{gameNotice}</p> : null}
+        </div>
+
+        <div className="planet-game-multiplayer">
+          <article className="planet-game-panel">
+            <h3>Commander Leaderboard</h3>
+            <div className="planet-game-list">
+              {(worldGameFeed.leaderboard || []).slice(0, 8).map((row, idx) => (
+                <div key={`${row.commanderName}-${idx}`}>
+                  <strong>#{idx + 1} {row.commanderName}</strong>
+                  <span>{row.faction || 'PVA Collective'} · {row.outposts} outposts · {row.research} research</span>
+                </div>
+              ))}
+            </div>
+          </article>
+
+          <article className="planet-game-panel">
+            <h3>Sector Control</h3>
+            <div className="planet-game-list">
+              {(worldGameFeed.sectors || []).slice(0, 8).map((sector) => (
+                <div key={`${sector.sector}-${sector.label}`}>
+                  <strong>{sector.label}</strong>
+                  <span>{sector.activeCitizens} active · control: {sector.controlRole}</span>
+                </div>
+              ))}
+            </div>
+          </article>
+
+          <article className="planet-game-panel">
+            <h3>World Events</h3>
+            <div className="planet-game-list">
+              {(worldGameFeed.events || []).slice(0, 8).map((event) => (
+                <div key={event.id}>
+                  <strong>{event.commanderName}: {event.title}</strong>
+                  <span>{formatRelativeTime(event.createdAt)} · {event.eventType}</span>
+                </div>
+              ))}
+            </div>
+          </article>
         </div>
       </section>
 

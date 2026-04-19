@@ -1,5 +1,7 @@
 const express = require('express');
 const FederationPresence = require('../models/FederationPresence');
+const FederationGameState = require('../models/FederationGameState');
+const FederationWorldEvent = require('../models/FederationWorldEvent');
 const User = require('../models/User');
 const { authenticateToken } = require('../middleware/auth');
 
@@ -106,6 +108,141 @@ function scoreIntroQuiz(answers = []) {
     rankedRoles: ranked,
     answered,
   };
+}
+
+function defaultGameState() {
+  return {
+    commanderName: 'Citizen Commander',
+    faction: 'PVA Collective',
+    cycle: 0,
+    energy: 120,
+    food: 95,
+    materials: 80,
+    population: 14,
+    outposts: 1,
+    keepers: 0,
+    research: 0,
+  };
+}
+
+function sanitizeGameProfile(input = {}) {
+  const commanderName = cleanText(input.commanderName, 80) || 'Citizen Commander';
+  const faction = cleanText(input.faction, 80) || 'PVA Collective';
+  return { commanderName, faction };
+}
+
+function applyPassiveGameTick(state, context = {}) {
+  const activeCitizens = Number(context.activeCitizens || 0);
+  const countriesOnline = Number(context.countriesOnline || 0);
+  const energyGain = 4 + Number(state.outposts || 0) * 2 + Math.floor(activeCitizens / 20);
+  const foodGain = 3 + Math.floor(countriesOnline / 4);
+  const materialsGain = 2 + Math.floor(Number(state.keepers || 0) / 2);
+  const foodConsumption = Math.floor(Number(state.population || 1) / 8);
+  const populationShift = Number(state.food || 0) > Number(state.population || 0) ? 1 : 0;
+
+  return {
+    cycle: Number(state.cycle || 0) + 1,
+    energy: Math.max(0, Number(state.energy || 0) + energyGain),
+    food: Math.max(0, Number(state.food || 0) + foodGain - foodConsumption),
+    materials: Math.max(0, Number(state.materials || 0) + materialsGain),
+    population: Math.max(1, Number(state.population || 1) + populationShift),
+  };
+}
+
+function applyGameAction(state, actionType) {
+  const next = {
+    cycle: Number(state.cycle || 0),
+    energy: Number(state.energy || 0),
+    food: Number(state.food || 0),
+    materials: Number(state.materials || 0),
+    population: Number(state.population || 1),
+    outposts: Number(state.outposts || 0),
+    keepers: Number(state.keepers || 0),
+    research: Number(state.research || 0),
+  };
+
+  if (actionType === 'build_outpost') {
+    if (next.energy < 25 || next.materials < 30 || next.food < 12) {
+      return { ok: false, message: 'Insufficient resources for outpost build.' };
+    }
+    next.energy -= 25;
+    next.materials -= 30;
+    next.food -= 12;
+    next.population += 2;
+    next.outposts += 1;
+    return {
+      ok: true,
+      next,
+      event: {
+        title: 'Outpost Established',
+        details: 'A new federation outpost has been deployed.',
+        delta: { energy: -25, materials: -30, food: -12, population: 2, outposts: 1 },
+      },
+    };
+  }
+
+  if (actionType === 'train_keeper') {
+    if (next.food < 14 || next.materials < 10) {
+      return { ok: false, message: 'Insufficient resources for keeper training.' };
+    }
+    next.food -= 14;
+    next.materials -= 10;
+    next.keepers += 1;
+    return {
+      ok: true,
+      next,
+      event: {
+        title: 'Keeper Trained',
+        details: 'A keeper has joined logistics and protection operations.',
+        delta: { food: -14, materials: -10, keepers: 1 },
+      },
+    };
+  }
+
+  if (actionType === 'run_research') {
+    if (next.energy < 30 || next.materials < 15) {
+      return { ok: false, message: 'Insufficient resources for research.' };
+    }
+    next.energy -= 30;
+    next.materials -= 15;
+    next.research += 8;
+    return {
+      ok: true,
+      next,
+      event: {
+        title: 'Research Complete',
+        details: 'Federation labs completed a strategic research cycle.',
+        delta: { energy: -30, materials: -15, research: 8 },
+      },
+    };
+  }
+
+  return { ok: false, message: 'Unsupported action type.' };
+}
+
+async function getActivePresenceContext(windowMinutes = 90) {
+  const since = new Date(Date.now() - windowMinutes * 60 * 1000);
+  const rows = await FederationPresence.find({ lastSeenAt: { $gte: since } }).select('countryCode country').lean();
+  const uniqueCountries = new Set(
+    rows.map((row) => String(row.countryCode || row.country || 'UNKNOWN').toUpperCase()),
+  );
+  return { activeCitizens: rows.length, countriesOnline: uniqueCountries.size };
+}
+
+async function ensureGameState(user) {
+  const base = defaultGameState();
+  const profile = sanitizeGameProfile({
+    commanderName: user?.name,
+    faction: user?.onboardingProfile?.appRole || user?.citizenRole || 'PVA Collective',
+  });
+
+  const state = await FederationGameState.findOneAndUpdate(
+    { userId: user._id },
+    { $setOnInsert: { ...base, ...profile, userId: user._id } },
+    { upsert: true, new: true, setDefaultsOnInsert: true },
+  );
+
+  return state;
 }
 
 async function upsertPresenceForUser(user, patch = {}) {
@@ -310,6 +447,162 @@ router.get('/live', async (req, res) => {
       },
       byCountry,
       participants,
+    });
+  } catch (error) {
+    return res.status(500).json({ ok: false, message: error.message });
+  }
+});
+
+router.get('/game/state', authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('_id name onboardingProfile citizenRole');
+    if (!user) {
+      return res.status(404).json({ ok: false, message: 'User not found' });
+    }
+
+    const state = await ensureGameState(user);
+    return res.json({ ok: true, state });
+  } catch (error) {
+    return res.status(500).json({ ok: false, message: error.message });
+  }
+});
+
+router.put('/game/state', authenticateToken, async (req, res) => {
+  try {
+    const patch = sanitizeGameProfile(req.body || {});
+    const state = await FederationGameState.findOneAndUpdate(
+      { userId: req.user.id },
+      { $set: patch, $setOnInsert: { ...defaultGameState(), userId: req.user.id } },
+      { upsert: true, new: true, setDefaultsOnInsert: true },
+    );
+    return res.json({ ok: true, state });
+  } catch (error) {
+    return res.status(500).json({ ok: false, message: error.message });
+  }
+});
+
+router.post('/game/actions', authenticateToken, async (req, res) => {
+  try {
+    const actionType = String(req.body?.actionType || '').trim();
+    if (!actionType) {
+      return res.status(400).json({ ok: false, message: 'actionType is required' });
+    }
+
+    const user = await User.findById(req.user.id).select('_id name onboardingProfile citizenRole');
+    if (!user) {
+      return res.status(404).json({ ok: false, message: 'User not found' });
+    }
+
+    const state = await ensureGameState(user);
+    const context = await getActivePresenceContext(90);
+    const passive = applyPassiveGameTick(state, context);
+
+    const workingState = {
+      ...state.toObject(),
+      ...passive,
+      outposts: Number(state.outposts || 0),
+      keepers: Number(state.keepers || 0),
+      research: Number(state.research || 0),
+    };
+
+    const result = applyGameAction(workingState, actionType);
+    if (!result.ok) {
+      return res.status(400).json({ ok: false, message: result.message });
+    }
+
+    const next = result.next;
+    const updated = await FederationGameState.findOneAndUpdate(
+      { userId: req.user.id },
+      {
+        $set: {
+          cycle: next.cycle,
+          energy: next.energy,
+          food: next.food,
+          materials: next.materials,
+          population: next.population,
+          outposts: next.outposts,
+          keepers: next.keepers,
+          research: next.research,
+          lastActionAt: new Date(),
+        },
+      },
+      { new: true },
+    );
+
+    await FederationWorldEvent.create({
+      userId: req.user.id,
+      commanderName: cleanText(updated?.commanderName || user?.name || 'Citizen Commander', 80),
+      eventType: actionType,
+      title: result.event.title,
+      details: result.event.details,
+      delta: result.event.delta,
+    });
+
+    return res.json({ ok: true, state: updated, notice: result.event.title });
+  } catch (error) {
+    return res.status(500).json({ ok: false, message: error.message });
+  }
+});
+
+router.get('/game/world', async (_req, res) => {
+  try {
+    const [recentEvents, topStates, livePresence] = await Promise.all([
+      FederationWorldEvent.find({}).sort({ createdAt: -1 }).limit(40).lean(),
+      FederationGameState.find({})
+        .sort({ outposts: -1, research: -1, population: -1, updatedAt: -1 })
+        .limit(20)
+        .select('commanderName faction outposts keepers research population updatedAt')
+        .lean(),
+      FederationPresence.find({ lastSeenAt: { $gte: new Date(Date.now() - 90 * 60 * 1000) } })
+        .select('country countryCode introRecommendedRole')
+        .lean(),
+    ]);
+
+    const sectorMap = new Map();
+    for (const row of livePresence) {
+      const key = String(row.countryCode || row.country || 'UNKNOWN').toUpperCase();
+      const item = sectorMap.get(key) || {
+        sector: key,
+        label: String(row.country || row.countryCode || 'Unknown'),
+        activeCitizens: 0,
+        controlRole: 'Citizen',
+        roleCount: {},
+      };
+      item.activeCitizens += 1;
+      const role = String(row.introRecommendedRole || 'Citizen');
+      item.roleCount[role] = (item.roleCount[role] || 0) + 1;
+      sectorMap.set(key, item);
+    }
+
+    const sectors = Array.from(sectorMap.values())
+      .map((entry) => {
+        const controlRole = Object.entries(entry.roleCount)
+          .sort((a, b) => b[1] - a[1])[0]?.[0] || 'Citizen';
+        return {
+          sector: entry.sector,
+          label: entry.label,
+          activeCitizens: entry.activeCitizens,
+          controlRole,
+        };
+      })
+      .sort((a, b) => b.activeCitizens - a.activeCitizens)
+      .slice(0, 20);
+
+    return res.json({
+      ok: true,
+      world: {
+        leaderboard: topStates,
+        events: recentEvents.map((event) => ({
+          id: String(event._id),
+          commanderName: event.commanderName,
+          eventType: event.eventType,
+          title: event.title,
+          details: event.details,
+          delta: event.delta,
+          createdAt: event.createdAt,
+        })),
+        sectors,
+      },
     });
   } catch (error) {
     return res.status(500).json({ ok: false, message: error.message });

@@ -206,6 +206,11 @@ export const fetchFederationLiveMap = (minutes = 60) =>
   apiGet('/federation/live', { params: { minutes } });
 export const fetchMyFederationPresence = () => apiGet('/federation/me');
 export const checkInFederationPresence = (payload = {}) => apiPost('/federation/check-in', payload);
+export const fetchFederationGameState = () => apiGet('/federation/game/state');
+export const updateFederationGameProfile = (payload = {}) => apiPut('/federation/game/state', payload);
+export const runFederationGameAction = (actionType) =>
+  apiPost('/federation/game/actions', { actionType });
+export const fetchFederationGameWorld = () => apiGet('/federation/game/world');
 
 /**
  * Upload a FormData payload (multipart/form-data).

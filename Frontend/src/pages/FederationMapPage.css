@@ -393,6 +393,46 @@
   gap: var(--space-3);
 }
 
+.planet-game-multiplayer {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.planet-game-panel {
+  border: 1px solid var(--site-border);
+  border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, 0.2);
+  padding: var(--space-3);
+  display: grid;
+  gap: var(--space-2);
+}
+
+.planet-game-panel h3 {
+  margin: 0;
+  color: var(--site-accent);
+  font-size: 0.92rem;
+}
+
+.planet-game-list {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.planet-game-list div {
+  border: 1px solid var(--site-border);
+  border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, 0.24);
+  padding: 0.45rem 0.55rem;
+  display: grid;
+  gap: 0.2rem;
+}
+
+.planet-game-list span {
+  color: var(--site-text-muted);
+  font-size: 0.8rem;
+}
+
 .planet-resource-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(100px, 1fr));
@@ -477,7 +517,8 @@
 
   .planet-game-layout,
   .dynamic-sitemap-grid,
-  .planet-resource-grid {
+  .planet-resource-grid,
+  .planet-game-multiplayer {
     grid-template-columns: 1fr;
   }
 
