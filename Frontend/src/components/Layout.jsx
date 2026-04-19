@@ -18,6 +18,14 @@ export default function Layout({ children }) {
   }, [location?.pathname]);
 
   const routeIdentity = useMemo(() => {
+    if (pathname.startsWith('/deal-local/') || pathname.startsWith('/deals-local')) {
+      return {
+        section: 'Local Deal',
+        title: 'No Render Deal Mode',
+        description: 'Fully local browser flow that works without backend deployment.',
+      };
+    }
+
     if (pathname.startsWith('/deal/')) {
       return {
         section: 'Public Deal',
