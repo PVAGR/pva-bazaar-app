@@ -141,7 +141,7 @@ jobs:
       - name: Ensure backend deploy succeeded
         if: always()
         run: |
-          if [ "${{ steps.vercel_action.conclusion }}" = "success" ] || [ "${{ steps.vercel_fallback.conclusion }}" = "success" ]; then
+          if [ "${{ steps.vercel_action.outcome }}" = "success" ] || [ "${{ steps.vercel_fallback.outcome }}" = "success" ]; then
             echo "backend deployment path succeeded"
             exit 0
           fi
@@ -150,7 +150,6 @@ jobs:
           exit 1
 
       - name: Verify decentralized live endpoints
-        continue-on-error: true
         env:
           BACKEND_URL: https://pva-bazaar-app-1.onrender.com
         run: |
@@ -167,3 +166,11 @@ jobs:
 
           echo "decentralized live verification failed after retries"
           exit 1
+
+      - name: Ensure live backend commit parity
+        env:
+          BACKEND_URL: https://pva-bazaar-app-1.onrender.com
+          STRICT: "true"
+          POLL_MS: "10000"
+          TIMEOUT_MS: "300000"
+        run: npm run verify:prod:wait
