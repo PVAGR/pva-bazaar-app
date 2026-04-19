@@ -912,6 +912,17 @@ export default function DealsPage() {
         setShareLink(res.shareUrl);
       } else if (res?.publicId) {
         setShareLink(`${globalThis.location?.origin || ''}/#/deal/${encodeURIComponent(res.publicId)}`);
+      } else if (res?.item?._id) {
+        try {
+          const invite = await createDealInvite(res.item._id);
+          if (invite?.ok && invite?.joinUrl) {
+            setShareLink(invite.joinUrl);
+            setInviteLink(invite.joinUrl);
+            setInviteExpiresAt(invite.expiresAt || '');
+          }
+        } catch (_inviteErr) {
+          // Keep create success even if invite link generation fails.
+        }
       }
       // Clear Mongo-backed draft after a successful create.
       apiDelete('/deals/drafts').catch(() => {});

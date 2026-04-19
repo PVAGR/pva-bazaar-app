@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { fetchPublicDealByPublicId, fetchDealVerificationSummary, verifyDealParticipation } from '../lib/api';
+import { fetchPublicDealByPublicId, fetchDealVerificationSummary, verifyDealParticipation, joinDealAuthenticated } from '../lib/api';
 import { getToken, setToken } from '../lib/auth';
 import { getErrorMessage } from '../lib/errorUtils';
 
@@ -11,6 +11,8 @@ export default function DealPublicPage() {
   const [deal, setDeal] = useState(null);
   const [verification, setVerification] = useState(null);
   const [actionBusy, setActionBusy] = useState(false);
+  const [compatMode, setCompatMode] = useState(false);
+  const [reloadTick, setReloadTick] = useState(0);
   const [token, setTokenState] = useState(() => getToken());
   const [tokenDraft, setTokenDraft] = useState(() => getToken());
   const [copyLabel, setCopyLabel] = useState('Copy link');
@@ -37,6 +39,7 @@ export default function DealPublicPage() {
 
       setLoading(true);
       setError('');
+      setCompatMode(false);
       try {
         const response = await fetchPublicDealByPublicId(publicId);
         if (!active) return;
@@ -46,7 +49,29 @@ export default function DealPublicPage() {
         setDeal(response.item);
         setVerification(response.verification || response.item?.verification || null);
       } catch (err) {
-        if (active) setError(getErrorMessage(err, 'Failed to load public deal'));
+        const sessionToken = getToken();
+        if (sessionToken) {
+          try {
+            const joined = await joinDealAuthenticated(publicId);
+            if (!active) return;
+            if (joined?.ok && joined?.item) {
+              setCompatMode(true);
+              setDeal(joined.item);
+              setVerification(null);
+              setError('');
+              return;
+            }
+          } catch (_inviteErr) {
+            // Fall through to normal error handling below.
+          }
+        }
+
+        if (active) {
+          const baseMessage = getErrorMessage(err, 'Failed to load public deal');
+          setError(
+            `${baseMessage}. If this link is an invite token, paste a JWT above and click Use token to load invite mode.`
+          );
+        }
       } finally {
         if (active) setLoading(false);
       }
@@ -56,7 +81,7 @@ export default function DealPublicPage() {
     return () => {
       active = false;
     };
-  }, [publicId]);
+  }, [publicId, reloadTick]);
 
   useEffect(() => {
     setTokenState(getToken());
@@ -64,6 +89,7 @@ export default function DealPublicPage() {
   }, []);
 
   async function refreshVerificationSummary(nextDealId = deal?._id) {
+    if (compatMode) return;
     if (!nextDealId) return;
     try {
       const response = await fetchDealVerificationSummary(nextDealId);
@@ -98,6 +124,15 @@ export default function DealPublicPage() {
     setActionBusy(true);
     setError('');
     try {
+      if (compatMode) {
+        const joined = await joinDealAuthenticated(publicId);
+        if (!joined?.ok || !joined?.item) {
+          throw new Error(joined?.error || 'Failed to refresh invite deal context');
+        }
+        setDeal(joined.item);
+        return;
+      }
+
       const response = await verifyDealParticipation(deal._id, {});
       if (!response?.ok) {
         throw new Error(response?.error || 'Verification failed');
@@ -120,6 +155,7 @@ export default function DealPublicPage() {
       setError('Paste a valid JWT token to unlock verification.');
     } else {
       setError('');
+      setReloadTick((v) => v + 1);
     }
   }
 
@@ -157,7 +193,7 @@ export default function DealPublicPage() {
                 </div>
                 <div className="rounded-lg border border-zinc-800 bg-black/20 p-3">
                   <div className="text-zinc-500">Public ID</div>
-                  <div className="mt-1 text-sm font-semibold text-zinc-100 break-all">{deal.publicId}</div>
+                  <div className="mt-1 text-sm font-semibold text-zinc-100 break-all">{deal.publicId || publicId}</div>
                 </div>
                 <div className="rounded-lg border border-zinc-800 bg-black/20 p-3">
                   <div className="text-zinc-500">Created</div>
@@ -171,7 +207,7 @@ export default function DealPublicPage() {
             <section className="rounded-lg border border-zinc-700/70 bg-zinc-900/60 p-4 space-y-3">
               <h2 className="text-sm font-semibold text-zinc-200">Verification</h2>
               <div className="rounded-lg border border-zinc-800 bg-black/20 p-3 text-sm text-zinc-300">
-                <div className="text-zinc-500">Verified participants</div>
+                <div className="text-zinc-500">{compatMode ? 'Invite mode (legacy backend)' : 'Verified participants'}</div>
                 <div className="mt-1 text-2xl font-semibold text-zinc-100">{verificationCount}</div>
               </div>
               <div className="space-y-2 text-xs text-zinc-400">
@@ -217,7 +253,7 @@ export default function DealPublicPage() {
                     disabled={actionBusy}
                     type="button"
                   >
-                    {actionBusy ? 'Verifying…' : 'Verify participation'}
+                    {actionBusy ? 'Working…' : compatMode ? 'Refresh invite access' : 'Verify participation'}
                   </button>
                 ) : (
                   <div className="rounded-lg border border-zinc-700 bg-zinc-800/60 px-3 py-2 text-xs text-zinc-400">
