@@ -43,6 +43,7 @@ export const fetchLibraryArticleById = (articleId) => apiGet(`/library/${encodeU
 
 export const fetchDeals = (params = {}) => apiGet('/deals', { params });
 export const fetchDealById = (dealId) => apiGet(`/deals/${encodeURIComponent(dealId)}`);
+export const fetchPublicDealByPublicId = (publicId) => apiGet(`/deals/public/${encodeURIComponent(publicId)}`);
 export const createDeal = (payload) => apiPost('/deals', payload);
 export const generatePvaDealPlan = (payload) => apiPost('/deals/pva/plan', payload);
 export const fetchPvaDealCandidates = (params = {}) => apiGet('/deals/pva/candidates', { params });
@@ -75,6 +76,8 @@ export const fetchDealExportBundle = (dealId, params = {}) => apiGet(`/deals/${e
 export const fetchDealOutboundQueue = (dealId, params = {}) => apiGet(`/deals/${encodeURIComponent(dealId)}/reports/outbound-queue`, { params });
 export const updateDealOutboundQueueStatus = (dealId, packetId, payload) =>
   apiPut(`/deals/${encodeURIComponent(dealId)}/reports/outbound/${encodeURIComponent(packetId)}/status`, payload);
+export const verifyDealParticipation = (dealId, payload = {}) => apiPost(`/deals/${encodeURIComponent(dealId)}/verify`, payload);
+export const fetchDealVerificationSummary = (dealId) => apiGet(`/deals/${encodeURIComponent(dealId)}/verification`);
 
 export const fetchAdminRuntimeConfig = () => apiGet('/admin/runtime-config');
 export const updateOpenClawRuntimeConfig = (payload) => apiPut('/admin/runtime-config/openclaw', payload);

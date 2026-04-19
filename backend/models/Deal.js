@@ -101,6 +101,26 @@ const dealOutboundDispatchSchema = new mongoose.Schema(
   { _id: true }
 );
 
+const dealVerificationSchema = new mongoose.Schema(
+  {
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    verifiedAt: { type: Date, default: Date.now },
+    method: { type: String, default: 'jwt' },
+    note: { type: String, default: '' },
+  },
+  { _id: true }
+);
+
+const dealAuditEventSchema = new mongoose.Schema(
+  {
+    eventType: { type: String, required: true },
+    actorUserId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    createdAt: { type: Date, default: Date.now },
+    payload: { type: mongoose.Schema.Types.Mixed, default: null },
+  },
+  { _id: true }
+);
+
 const dealPvaPartySchema = new mongoose.Schema(
   {
     role: { type: String, enum: ['buyer', 'creator', 'shipper'], required: true },
@@ -222,6 +242,9 @@ const dealSchema = new mongoose.Schema(
     ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     mediatorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // optional (future: broker role distinct from owner)
 
+    publicId: { type: String, unique: true, sparse: true, index: true },
+    publicVisible: { type: Boolean, default: false, index: true },
+
     title: { type: String, required: true },
     description: { type: String, default: '' },
 
@@ -325,12 +348,17 @@ const dealSchema = new mongoose.Schema(
     milestones: { type: [dealMilestoneSchema], default: [] },
     messages: { type: [dealMessageSchema], default: [] },
     outboundDispatchQueue: { type: [dealOutboundDispatchSchema], default: [] },
+    verifiedParticipants: { type: [dealVerificationSchema], default: [] },
+    verificationCount: { type: Number, default: 0 },
+    auditEvents: { type: [dealAuditEventSchema], default: [] },
   },
   { timestamps: true }
 );
 
 dealSchema.index({ ownerId: 1, createdAt: -1 });
 dealSchema.index({ status: 1, createdAt: -1 });
+dealSchema.index({ publicId: 1 }, { unique: true, sparse: true });
+dealSchema.index({ publicVisible: 1, createdAt: -1 });
 
 module.exports = mongoose.model('Deal', dealSchema);
 

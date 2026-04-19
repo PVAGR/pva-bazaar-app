@@ -112,6 +112,7 @@ export default function DealsPage() {
 
   const [newMessage, setNewMessage] = useState('');
   const [inviteLink, setInviteLink] = useState('');
+  const [shareLink, setShareLink] = useState('');
   const [inviteExpiresAt, setInviteExpiresAt] = useState('');
   const [inviteLoading, setInviteLoading] = useState(false);
   const [evidenceDrafts, setEvidenceDrafts] = useState({});
@@ -907,6 +908,11 @@ export default function DealsPage() {
       };
       const res = await apiPost('/deals', payload);
       if (!res?.ok || !res.item) throw new Error(res?.error || res?.message || 'Create failed');
+      if (res?.shareUrl) {
+        setShareLink(res.shareUrl);
+      } else if (res?.publicId) {
+        setShareLink(`${globalThis.location?.origin || ''}/#/deal/${encodeURIComponent(res.publicId)}`);
+      }
       // Clear Mongo-backed draft after a successful create.
       apiDelete('/deals/drafts').catch(() => {});
       await loadDeals();
@@ -1638,6 +1644,31 @@ export default function DealsPage() {
               Draft real-world deals (parties, wallets, milestones, payment schedule) with an audit trail. On-chain contract deployment comes next.
             </p>
           </div>
+            {shareLink ? (
+              <div className="rounded-lg border border-zinc-700/70 bg-zinc-900/60 p-4 space-y-3">
+                <h2 className="text-sm font-semibold text-zinc-100">Shareable public deal link</h2>
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <input
+                    className="w-full rounded-lg border border-zinc-600 bg-zinc-800 px-3 py-2 text-xs text-zinc-100"
+                    value={shareLink}
+                    readOnly
+                  />
+                  <button
+                    className="rounded-lg border border-amber-300/50 bg-amber-300/10 px-3 py-2 text-xs text-amber-200"
+                    onClick={async () => {
+                      try {
+                        await navigator.clipboard.writeText(shareLink);
+                      } catch (_err) {
+                        // Clipboard access is best effort only.
+                      }
+                    }}
+                  >
+                    Copy link
+                  </button>
+                </div>
+                <p className="text-xs text-zinc-500">Open this link publicly to review the proposal and verify with an authenticated session.</p>
+              </div>
+            ) : null}
           <div className="deals-actions">
             <Link to="/admin" className="btn ghost">← Admin</Link>
             <button className="btn ghost" onClick={loadDeals} disabled={loading}>Refresh</button>

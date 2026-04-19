@@ -18,6 +18,14 @@ export default function Layout({ children }) {
   }, [location?.pathname]);
 
   const routeIdentity = useMemo(() => {
+    if (pathname.startsWith('/deal/')) {
+      return {
+        section: 'Public Deal',
+        title: 'Deal Proposal',
+        description: 'Read-only public proposal page with authenticated verification.',
+      };
+    }
+
     const route = PUBLIC_ROUTES.find((item) => item.to === pathname);
     if (route) {
       return {

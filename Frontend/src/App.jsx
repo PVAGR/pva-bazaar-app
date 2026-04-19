@@ -23,6 +23,7 @@ const ListItemPage = lazy(() => import('./pages/ListItemPage.jsx'));
 const MyListingsPage = lazy(() => import('./pages/MyListingsPage.jsx'));
 const DealsPage = lazy(() => import('./pages/DealsPage.jsx'));
 const DealJoinPage = lazy(() => import('./pages/DealJoinPage.jsx'));
+const DealPublicPage = lazy(() => import('./pages/DealPublicPage.jsx'));
 const CheckoutSuccessPage = lazy(() => import('./pages/CheckoutSuccessPage.jsx'));
 const CheckoutCancelPage = lazy(() => import('./pages/CheckoutCancelPage.jsx'));
 const UserDashboard = lazy(() => import('./pages/UserDashboard.jsx'));
@@ -97,6 +98,7 @@ export default function App() {
         <Route path="/items/mine" element={<RequireUserAuth><Layout><MyListingsPage /></Layout></RequireUserAuth>} />
         <Route path="/deals" element={<RequireUserAuth><Layout><DealsPage /></Layout></RequireUserAuth>} />
         <Route path="/deals/join" element={<RequireUserAuth><Layout><DealJoinPage /></Layout></RequireUserAuth>} />
+        <Route path="/deal/:publicId" element={<Layout><DealPublicPage /></Layout>} />
         <Route path="/broker-hub" element={<RequireUserAuth><Layout><BrokerHubPage /></Layout></RequireUserAuth>} />
         <Route path="/commodities" element={<RequireUserAuth><Layout><CommoditiesPage /></Layout></RequireUserAuth>} />
         <Route path="/contacts" element={<RequireUserAuth><Layout><ContactsPage /></Layout></RequireUserAuth>} />

@@ -5,6 +5,12 @@ const jwt = require('jsonwebtoken');
 const Deal = require('../models/Deal');
 const User = require('../models/User');
 const { authenticateToken } = require('../middleware/auth');
+const {
+  appendDealAuditEvent,
+  generatePublicDealId,
+  projectPublicDeal,
+  projectVerificationSummary,
+} = require('../utils/dealVisibility');
 
 let buildDealMessageTypedData;
 let buildDealEvidenceTypedData;
@@ -55,6 +61,21 @@ function getBearerToken(req) {
 
 function sha256Hex(v) {
   return crypto.createHash('sha256').update(String(v)).digest('hex');
+}
+
+async function generateUniquePublicId() {
+  for (let attempt = 0; attempt < 12; attempt += 1) {
+    const candidate = generatePublicDealId();
+    // eslint-disable-next-line no-await-in-loop
+    const exists = await Deal.exists({ publicId: candidate });
+    if (!exists) return candidate;
+  }
+  throw new Error('Failed to generate public deal id');
+}
+
+function buildPublicShareUrl(req, publicId) {
+  const origin = req.get('origin') || process.env.PUBLIC_APP_URL || process.env.FRONTEND_URL || 'https://pvabazaar.org';
+  return `${String(origin).replace(/\/+$/, '')}/#/deal/${encodeURIComponent(publicId)}`;
 }
 
 function nextDealDispatchBackoffMs(attemptCount) {
@@ -169,6 +190,9 @@ function toPublicDeal(deal) {
   if (!deal) return null;
   const d = deal.toObject ? deal.toObject() : deal;
   // Keep it simple; we can tighten this later when we add counterparty join links.
+  if (d?.counterpartyAccess) {
+    delete d.counterpartyAccess;
+  }
   return d;
 }
 
@@ -476,6 +500,33 @@ router.get('/', authenticateToken, async (req, res) => {
   } catch (err) {
     console.error('Error fetching deals:', err);
     res.status(500).json({ ok: false, error: 'Failed to fetch deals' });
+  }
+});
+
+// GET /api/deals/public/:publicId - public redacted deal view
+router.get('/public/:publicId', async (req, res) => {
+  try {
+    const publicId = sanitize(req.params.publicId || '');
+    if (!publicId) return res.status(404).json({ ok: false, error: 'Deal not found' });
+
+    const deal = await Deal.findOne({ publicId, publicVisible: true });
+    if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
+
+    appendDealAuditEvent(deal, {
+      eventType: 'deal_viewed',
+      actorUserId: null,
+      payload: { publicId: deal.publicId },
+    });
+    await deal.save();
+
+    res.json({
+      ok: true,
+      item: projectPublicDeal(deal),
+      verification: projectVerificationSummary(deal),
+    });
+  } catch (err) {
+    console.error('Error fetching public deal:', err);
+    res.status(500).json({ ok: false, error: 'Failed to fetch public deal' });
   }
 });
 
@@ -790,9 +841,13 @@ router.post('/', authenticateToken, async (req, res) => {
     const pva = req.body?.pva && typeof req.body.pva === 'object' ? req.body.pva : null;
     const payments = Array.isArray(req.body?.payments) ? req.body.payments : [];
     const milestones = Array.isArray(req.body?.milestones) ? req.body.milestones : [];
+    const publicVisible = req.body?.publicVisible !== false;
+    const publicId = await generateUniquePublicId();
 
     const deal = new Deal({
       ownerId: req.user.id,
+      publicId,
+      publicVisible,
       title,
       description,
       counterparty: {
@@ -935,6 +990,17 @@ router.post('/', authenticateToken, async (req, res) => {
       },
     });
 
+    appendDealAuditEvent(deal, {
+      eventType: 'deal_created',
+      actorUserId: req.user.id,
+      payload: {
+        publicId: deal.publicId,
+        title: deal.title,
+        totalAmount: deal.totalAmount,
+        currency: deal.currency,
+      },
+    });
+
     await deal.save();
 
     if (deal?.pva?.mode === 'creator_shipper') {
@@ -947,7 +1013,12 @@ router.post('/', authenticateToken, async (req, res) => {
       await deal.save();
     }
 
-    res.status(201).json({ ok: true, item: toPublicDeal(deal) });
+    res.status(201).json({
+      ok: true,
+      item: toPublicDeal(deal),
+      publicId: deal.publicId,
+      shareUrl: buildPublicShareUrl(req, deal.publicId),
+    });
   } catch (err) {
     console.error('Error creating deal:', err);
     res.status(500).json({ ok: false, error: 'Failed to create deal' });
@@ -1176,6 +1247,66 @@ router.get('/:id', authenticateToken, async (req, res) => {
   } catch (err) {
     console.error('Error fetching deal:', err);
     res.status(500).json({ ok: false, error: 'Failed to fetch deal' });
+  }
+});
+
+// POST /api/deals/:id/verify - record authenticated participant verification
+router.post('/:id/verify', authenticateToken, async (req, res) => {
+  try {
+    const deal = await Deal.findById(req.params.id);
+    if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
+    if (!deal.publicVisible || !deal.publicId) {
+      return res.status(404).json({ ok: false, error: 'Deal not found' });
+    }
+
+    const existing = Array.isArray(deal.verifiedParticipants)
+      ? deal.verifiedParticipants.find((entry) => String(entry?.userId || '') === String(req.user.id))
+      : null;
+
+    if (existing) {
+      return res.status(400).json({ ok: false, error: 'Already verified this deal' });
+    }
+
+    const verificationEntry = {
+      userId: req.user.id,
+      verifiedAt: new Date(),
+      method: 'jwt',
+      note: sanitize(req.body?.note || ''),
+    };
+
+    deal.verifiedParticipants = [...(Array.isArray(deal.verifiedParticipants) ? deal.verifiedParticipants : []), verificationEntry];
+    deal.verificationCount = deal.verifiedParticipants.length;
+    appendDealAuditEvent(deal, {
+      eventType: 'deal_verified',
+      actorUserId: req.user.id,
+      payload: { publicId: deal.publicId, verificationCount: deal.verificationCount },
+    });
+
+    await deal.save();
+
+    res.json({
+      ok: true,
+      item: toPublicDeal(deal),
+      verification: projectVerificationSummary(deal),
+    });
+  } catch (err) {
+    console.error('Error verifying deal:', err);
+    res.status(err.status || 500).json({ ok: false, error: err.message || 'Failed to verify deal' });
+  }
+});
+
+// GET /api/deals/:id/verification - public verification summary
+router.get('/:id/verification', async (req, res) => {
+  try {
+    const deal = await Deal.findById(req.params.id);
+    if (!deal || !deal.publicVisible) {
+      return res.status(404).json({ ok: false, error: 'Deal not found' });
+    }
+
+    res.json({ ok: true, verification: projectVerificationSummary(deal) });
+  } catch (err) {
+    console.error('Error fetching deal verification:', err);
+    res.status(500).json({ ok: false, error: 'Failed to fetch deal verification' });
   }
 });
 
