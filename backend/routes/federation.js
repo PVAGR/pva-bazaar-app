@@ -2,6 +2,8 @@ const express = require('express');
 const FederationPresence = require('../models/FederationPresence');
 const FederationGameState = require('../models/FederationGameState');
 const FederationWorldEvent = require('../models/FederationWorldEvent');
+const FederationFaction = require('../models/FederationFaction');
+const FederationSectorControl = require('../models/FederationSectorControl');
 const User = require('../models/User');
 const { authenticateToken } = require('../middleware/auth');
 
@@ -129,6 +131,42 @@ function sanitizeGameProfile(input = {}) {
   const commanderName = cleanText(input.commanderName, 80) || 'Citizen Commander';
   const faction = cleanText(input.faction, 80) || 'PVA Collective';
   return { commanderName, faction };
+}
+
+function makeInviteCode() {
+  const alpha = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let out = '';
+  for (let i = 0; i < 8; i += 1) {
+    out += alpha[Math.floor(Math.random() * alpha.length)];
+  }
+  return out;
+}
+
+function calcPower(state) {
+  const outposts = Number(state?.outposts || 0);
+  const keepers = Number(state?.keepers || 0);
+  const research = Number(state?.research || 0);
+  const population = Number(state?.population || 0);
+  return outposts * 20 + keepers * 8 + research * 2 + population;
+}
+
+async function syncFactionPowerForTag(factionTag) {
+  if (!factionTag) return;
+  const faction = await FederationFaction.findOne({ tag: factionTag }).lean();
+  if (!faction) return;
+
+  const userIds = (faction.members || []).map((m) => m.userId);
+  const states = await FederationGameState.find({ userId: { $in: userIds } })
+    .select('outposts keepers research population')
+    .lean();
+  const totalPower = states.reduce((sum, state) => sum + calcPower(state), 0);
+  await FederationFaction.findByIdAndUpdate(faction._id, {
+    $set: {
+      memberCount: (faction.members || []).length,
+      totalPower,
+      updatedAt: new Date(),
+    },
+  });
 }
 
 function applyPassiveGameTick(state, context = {}) {
@@ -388,6 +426,219 @@ router.post('/check-in', authenticateToken, async (req, res) => {
   }
 });
 
+router.get('/game/faction/mine', authenticateToken, async (req, res) => {
+  try {
+    const state = await FederationGameState.findOne({ userId: req.user.id }).select('faction commanderName').lean();
+    if (!state?.faction || state.faction === 'PVA Collective') {
+      return res.json({ ok: true, faction: null });
+    }
+
+    const faction = await FederationFaction.findOne({ tag: state.faction }).lean();
+    return res.json({ ok: true, faction: faction || null });
+  } catch (error) {
+    return res.status(500).json({ ok: false, message: error.message });
+  }
+});
+
+router.post('/game/factions/create', authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('_id name');
+    if (!user) {
+      return res.status(404).json({ ok: false, message: 'User not found' });
+    }
+
+    const state = await ensureGameState(user);
+    if (state?.faction && state.faction !== 'PVA Collective') {
+      return res.status(400).json({ ok: false, message: 'Already in a faction.' });
+    }
+
+    const name = cleanText(req.body?.name, 60);
+    const tag = cleanText(req.body?.tag, 16).toUpperCase();
+    if (!name || !tag) {
+      return res.status(400).json({ ok: false, message: 'Faction name and tag are required.' });
+    }
+
+    const exists = await FederationFaction.findOne({ $or: [{ name }, { tag }] }).lean();
+    if (exists) {
+      return res.status(409).json({ ok: false, message: 'Faction name or tag already exists.' });
+    }
+
+    let inviteCode = makeInviteCode();
+    while (await FederationFaction.findOne({ inviteCode }).lean()) {
+      inviteCode = makeInviteCode();
+    }
+
+    const commanderName = cleanText(state?.commanderName || user.name, 80) || 'Citizen Commander';
+
+    const faction = await FederationFaction.create({
+      name,
+      tag,
+      inviteCode,
+      founderUserId: user._id,
+      members: [{ userId: user._id, commanderName, role: 'founder' }],
+      memberCount: 1,
+      totalPower: calcPower(state),
+    });
+
+    await FederationGameState.findOneAndUpdate(
+      { userId: user._id },
+      { $set: { faction: tag, updatedAt: new Date() } },
+      { new: true },
+    );
+
+    await FederationWorldEvent.create({
+      userId: user._id,
+      commanderName,
+      eventType: 'create_faction',
+      title: 'Faction Founded',
+      details: `${commanderName} founded ${name} (${tag}).`,
+      delta: {},
+    });
+
+    return res.json({ ok: true, faction });
+  } catch (error) {
+    return res.status(500).json({ ok: false, message: error.message });
+  }
+});
+
+router.post('/game/factions/join', authenticateToken, async (req, res) => {
+  try {
+    const inviteCode = cleanText(req.body?.inviteCode, 20).toUpperCase();
+    if (!inviteCode) {
+      return res.status(400).json({ ok: false, message: 'inviteCode is required.' });
+    }
+
+    const user = await User.findById(req.user.id).select('_id name');
+    if (!user) {
+      return res.status(404).json({ ok: false, message: 'User not found' });
+    }
+
+    const state = await ensureGameState(user);
+    if (state?.faction && state.faction !== 'PVA Collective') {
+      return res.status(400).json({ ok: false, message: 'Already in a faction.' });
+    }
+
+    const faction = await FederationFaction.findOne({ inviteCode });
+    if (!faction) {
+      return res.status(404).json({ ok: false, message: 'Faction invite not found.' });
+    }
+
+    const alreadyMember = (faction.members || []).some((member) => String(member.userId) === String(user._id));
+    if (!alreadyMember) {
+      faction.members.push({
+        userId: user._id,
+        commanderName: cleanText(state?.commanderName || user.name, 80) || 'Citizen Commander',
+        role: 'member',
+      });
+      faction.memberCount = faction.members.length;
+      await faction.save();
+    }
+
+    await FederationGameState.findOneAndUpdate(
+      { userId: user._id },
+      { $set: { faction: faction.tag, updatedAt: new Date() } },
+      { new: true },
+    );
+
+    await syncFactionPowerForTag(faction.tag);
+
+    await FederationWorldEvent.create({
+      userId: user._id,
+      commanderName: cleanText(state?.commanderName || user.name, 80) || 'Citizen Commander',
+      eventType: 'join_faction',
+      title: 'Faction Joined',
+      details: `${user.name || 'Citizen'} joined ${faction.name} (${faction.tag}).`,
+      delta: {},
+    });
+
+    return res.json({ ok: true, faction });
+  } catch (error) {
+    return res.status(500).json({ ok: false, message: error.message });
+  }
+});
+
+router.post('/game/sectors/claim', authenticateToken, async (req, res) => {
+  try {
+    const sector = cleanText(req.body?.sector, 12).toUpperCase();
+    const label = cleanText(req.body?.label, 80) || sector;
+    if (!sector) {
+      return res.status(400).json({ ok: false, message: 'sector is required.' });
+    }
+
+    const user = await User.findById(req.user.id).select('_id name');
+    if (!user) {
+      return res.status(404).json({ ok: false, message: 'User not found' });
+    }
+
+    const state = await ensureGameState(user);
+    const factionTag = cleanText(state?.faction, 16).toUpperCase();
+    if (!factionTag || factionTag === 'PVA COLLECTIVE') {
+      return res.status(400).json({ ok: false, message: 'Join or create a faction before claiming sectors.' });
+    }
+
+    const faction = await FederationFaction.findOne({ tag: factionTag });
+    if (!faction) {
+      return res.status(404).json({ ok: false, message: 'Faction not found.' });
+    }
+
+    if (Number(state.energy || 0) < 18 || Number(state.materials || 0) < 12) {
+      return res.status(400).json({ ok: false, message: 'Need at least 18 energy and 12 materials to claim.' });
+    }
+
+    const influence = calcPower(state);
+    const existing = await FederationSectorControl.findOne({ sector });
+    if (existing && existing.controllerFactionTag && existing.controllerFactionTag !== faction.tag) {
+      const required = Number(existing.influence || 0) + 6;
+      if (influence < required) {
+        return res.status(409).json({
+          ok: false,
+          message: `Sector defended by ${existing.controllerFactionTag}. Need influence ${required}+ to seize.`,
+        });
+      }
+    }
+
+    const updatedControl = await FederationSectorControl.findOneAndUpdate(
+      { sector },
+      {
+        $set: {
+          label,
+          controllerFactionId: faction._id,
+          controllerFactionTag: faction.tag,
+          controllerFactionName: faction.name,
+          influence,
+          updatedByUserId: user._id,
+          updatedAt: new Date(),
+        },
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true },
+    );
+
+    await FederationGameState.findOneAndUpdate(
+      { userId: user._id },
+      {
+        $inc: { energy: -18, materials: -12 },
+        $set: { updatedAt: new Date(), lastActionAt: new Date() },
+      },
+      { new: true },
+    );
+
+    await syncFactionPowerForTag(faction.tag);
+
+    await FederationWorldEvent.create({
+      userId: user._id,
+      commanderName: cleanText(state?.commanderName || user.name, 80) || 'Citizen Commander',
+      eventType: 'claim_sector',
+      title: 'Sector Claimed',
+      details: `${faction.tag} secured ${label} (${sector}).`,
+      delta: { energy: -18, materials: -12 },
+    });
+
+    return res.json({ ok: true, sector: updatedControl });
+  } catch (error) {
+    return res.status(500).json({ ok: false, message: error.message });
+  }
+});
+
 router.get('/live', async (req, res) => {
   try {
     const minutes = Math.max(5, Math.min(Number(req.query.minutes) || 60, 1440));
@@ -538,6 +789,8 @@ router.post('/game/actions', authenticateToken, async (req, res) => {
       delta: result.event.delta,
     });
 
+    await syncFactionPowerForTag(cleanText(updated?.faction, 16).toUpperCase());
+
     return res.json({ ok: true, state: updated, notice: result.event.title });
   } catch (error) {
     return res.status(500).json({ ok: false, message: error.message });
@@ -546,7 +799,7 @@ router.post('/game/actions', authenticateToken, async (req, res) => {
 
 router.get('/game/world', async (_req, res) => {
   try {
-    const [recentEvents, topStates, livePresence] = await Promise.all([
+    const [recentEvents, topStates, livePresence, sectorControls, factions] = await Promise.all([
       FederationWorldEvent.find({}).sort({ createdAt: -1 }).limit(40).lean(),
       FederationGameState.find({})
         .sort({ outposts: -1, research: -1, population: -1, updatedAt: -1 })
@@ -555,6 +808,12 @@ router.get('/game/world', async (_req, res) => {
         .lean(),
       FederationPresence.find({ lastSeenAt: { $gte: new Date(Date.now() - 90 * 60 * 1000) } })
         .select('country countryCode introRecommendedRole')
+        .lean(),
+      FederationSectorControl.find({}).sort({ updatedAt: -1 }).limit(80).lean(),
+      FederationFaction.find({})
+        .sort({ totalPower: -1, memberCount: -1, updatedAt: -1 })
+        .limit(20)
+        .select('name tag memberCount totalPower updatedAt')
         .lean(),
     ]);
 
@@ -574,15 +833,21 @@ router.get('/game/world', async (_req, res) => {
       sectorMap.set(key, item);
     }
 
+    const sectorControlMap = new Map(sectorControls.map((row) => [String(row.sector || '').toUpperCase(), row]));
+
     const sectors = Array.from(sectorMap.values())
       .map((entry) => {
         const controlRole = Object.entries(entry.roleCount)
           .sort((a, b) => b[1] - a[1])[0]?.[0] || 'Citizen';
+        const control = sectorControlMap.get(String(entry.sector || '').toUpperCase());
         return {
           sector: entry.sector,
           label: entry.label,
           activeCitizens: entry.activeCitizens,
           controlRole,
+          controllerFactionTag: control?.controllerFactionTag || '',
+          controllerFactionName: control?.controllerFactionName || '',
+          influence: Number(control?.influence || 0),
         };
       })
       .sort((a, b) => b.activeCitizens - a.activeCitizens)
@@ -592,6 +857,13 @@ router.get('/game/world', async (_req, res) => {
       ok: true,
       world: {
         leaderboard: topStates,
+        factions: factions.map((faction) => ({
+          name: faction.name,
+          tag: faction.tag,
+          memberCount: Number(faction.memberCount || 0),
+          totalPower: Number(faction.totalPower || 0),
+          updatedAt: faction.updatedAt,
+        })),
         events: recentEvents.map((event) => ({
           id: String(event._id),
           commanderName: event.commanderName,

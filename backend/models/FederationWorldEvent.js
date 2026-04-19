@@ -6,7 +6,16 @@ const federationWorldEventSchema = new mongoose.Schema(
     commanderName: { type: String, required: true },
     eventType: {
       type: String,
-      enum: ['build_outpost', 'train_keeper', 'run_research', 'check_in', 'system_tick'],
+      enum: [
+        'build_outpost',
+        'train_keeper',
+        'run_research',
+        'check_in',
+        'system_tick',
+        'create_faction',
+        'join_faction',
+        'claim_sector',
+      ],
       required: true,
       index: true,
     },

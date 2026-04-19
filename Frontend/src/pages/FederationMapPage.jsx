@@ -9,6 +9,10 @@ import {
   fetchFederationGameState,
   runFederationGameAction,
   fetchFederationGameWorld,
+  fetchMyFederationFaction,
+  createFederationFaction,
+  joinFederationFaction,
+  claimFederationSector,
 } from '../lib/api';
 import { PUBLIC_ROUTES } from '../config/publicRoutes';
 import './FederationMapPage.css';
@@ -118,6 +122,13 @@ export default function FederationMapPage() {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [siteMapFilter, setSiteMapFilter] = useState('');
+  const [myFaction, setMyFaction] = useState(null);
+  const [newFactionName, setNewFactionName] = useState('');
+  const [newFactionTag, setNewFactionTag] = useState('');
+  const [joinInviteCode, setJoinInviteCode] = useState('');
+  const [claimSectorCode, setClaimSectorCode] = useState('');
+  const [claimSectorLabel, setClaimSectorLabel] = useState('');
+  const [factionBusy, setFactionBusy] = useState(false);
   const [planetView, setPlanetView] = useState({ zoom: 1.05, yaw: 0, pitch: 10 });
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [gameNotice, setGameNotice] = useState('');
@@ -213,6 +224,8 @@ export default function FederationMapPage() {
         fetchFederationGameWorld().catch(() => ({ ok: false })),
       ]);
 
+      const factionResponse = await fetchMyFederationFaction().catch(() => ({ ok: false }));
+
       if (liveResponse?.ok) {
         setLiveData(liveResponse);
       }
@@ -245,6 +258,10 @@ export default function FederationMapPage() {
 
       if (worldResponse?.ok && worldResponse.world) {
         setWorldGameFeed(worldResponse.world);
+      }
+
+      if (factionResponse?.ok) {
+        setMyFaction(factionResponse.faction || null);
       }
     } catch (err) {
       setError(err?.message || 'Unable to load federation map data.');
@@ -434,6 +451,96 @@ export default function FederationMapPage() {
       setError(err?.message || 'Check-in failed.');
     } finally {
       setCheckingIn(false);
+    }
+  };
+
+  const refreshFactionAndWorld = async () => {
+    const [factionResponse, worldResponse, stateResponse] = await Promise.all([
+      fetchMyFederationFaction().catch(() => ({ ok: false })),
+      fetchFederationGameWorld().catch(() => ({ ok: false })),
+      fetchFederationGameState().catch(() => ({ ok: false })),
+    ]);
+    if (factionResponse?.ok) {
+      setMyFaction(factionResponse.faction || null);
+    }
+    if (worldResponse?.ok && worldResponse.world) {
+      setWorldGameFeed(worldResponse.world);
+    }
+    if (stateResponse?.ok && stateResponse.state) {
+      const state = stateResponse.state;
+      setGameState((prev) => ({
+        ...prev,
+        cycle: Number(state.cycle || 0),
+        energy: Number(state.energy || 0),
+        food: Number(state.food || 0),
+        materials: Number(state.materials || 0),
+        population: Number(state.population || 1),
+        outposts: Number(state.outposts || 0),
+        keepers: Number(state.keepers || 0),
+        research: Number(state.research || 0),
+      }));
+    }
+  };
+
+  const handleCreateFaction = async () => {
+    setFactionBusy(true);
+    setError('');
+    setMessage('');
+    try {
+      const response = await createFederationFaction({ name: newFactionName, tag: newFactionTag });
+      if (!response?.ok) {
+        setError(response?.message || 'Unable to create faction.');
+        return;
+      }
+      setMessage(`Faction created: ${response.faction.name} (${response.faction.tag})`);
+      setNewFactionName('');
+      setNewFactionTag('');
+      await refreshFactionAndWorld();
+    } catch (err) {
+      setError(err?.message || 'Unable to create faction.');
+    } finally {
+      setFactionBusy(false);
+    }
+  };
+
+  const handleJoinFaction = async () => {
+    setFactionBusy(true);
+    setError('');
+    setMessage('');
+    try {
+      const response = await joinFederationFaction({ inviteCode: joinInviteCode });
+      if (!response?.ok) {
+        setError(response?.message || 'Unable to join faction.');
+        return;
+      }
+      setMessage(`Joined faction: ${response.faction.name} (${response.faction.tag})`);
+      setJoinInviteCode('');
+      await refreshFactionAndWorld();
+    } catch (err) {
+      setError(err?.message || 'Unable to join faction.');
+    } finally {
+      setFactionBusy(false);
+    }
+  };
+
+  const handleClaimSector = async () => {
+    setFactionBusy(true);
+    setError('');
+    setMessage('');
+    try {
+      const response = await claimFederationSector({ sector: claimSectorCode, label: claimSectorLabel });
+      if (!response?.ok) {
+        setError(response?.message || 'Unable to claim sector.');
+        return;
+      }
+      setMessage(`Sector secured: ${response.sector.label} (${response.sector.sector})`);
+      setClaimSectorCode('');
+      setClaimSectorLabel('');
+      await refreshFactionAndWorld();
+    } catch (err) {
+      setError(err?.message || 'Unable to claim sector.');
+    } finally {
+      setFactionBusy(false);
     }
   };
 
@@ -652,6 +759,63 @@ export default function FederationMapPage() {
           {gameNotice ? <p className="federation-inline-note">{gameNotice}</p> : null}
         </div>
 
+        <div className="planet-faction-shell">
+          <article className="planet-game-panel">
+            <h3>Faction Command</h3>
+            {myFaction ? (
+              <div className="planet-game-list">
+                <div>
+                  <strong>{myFaction.name} ({myFaction.tag})</strong>
+                  <span>Members: {myFaction.memberCount || (myFaction.members || []).length} · Invite: {myFaction.inviteCode}</span>
+                </div>
+              </div>
+            ) : (
+              <p className="federation-inline-note">No faction yet. Create one or join using an invite code.</p>
+            )}
+          </article>
+
+          <article className="planet-game-panel">
+            <h3>Create Faction</h3>
+            <div className="federation-form-row">
+              <label htmlFor="newFactionName">Faction Name</label>
+              <input id="newFactionName" value={newFactionName} onChange={(e) => setNewFactionName(e.target.value)} placeholder="Aurora League" />
+            </div>
+            <div className="federation-form-row">
+              <label htmlFor="newFactionTag">Faction Tag</label>
+              <input id="newFactionTag" value={newFactionTag} onChange={(e) => setNewFactionTag(e.target.value.toUpperCase())} placeholder="AUR" />
+            </div>
+            <button type="button" disabled={factionBusy || !newFactionName || !newFactionTag} onClick={handleCreateFaction}>
+              {factionBusy ? 'Processing...' : 'Create Faction'}
+            </button>
+          </article>
+
+          <article className="planet-game-panel">
+            <h3>Join Faction</h3>
+            <div className="federation-form-row">
+              <label htmlFor="joinInviteCode">Invite Code</label>
+              <input id="joinInviteCode" value={joinInviteCode} onChange={(e) => setJoinInviteCode(e.target.value.toUpperCase())} placeholder="AB12CD34" />
+            </div>
+            <button type="button" disabled={factionBusy || !joinInviteCode} onClick={handleJoinFaction}>
+              {factionBusy ? 'Processing...' : 'Join by Invite'}
+            </button>
+          </article>
+
+          <article className="planet-game-panel">
+            <h3>Claim Sector</h3>
+            <div className="federation-form-row">
+              <label htmlFor="claimSectorCode">Sector Code</label>
+              <input id="claimSectorCode" value={claimSectorCode} onChange={(e) => setClaimSectorCode(e.target.value.toUpperCase())} placeholder="KE" maxLength={12} />
+            </div>
+            <div className="federation-form-row">
+              <label htmlFor="claimSectorLabel">Sector Label</label>
+              <input id="claimSectorLabel" value={claimSectorLabel} onChange={(e) => setClaimSectorLabel(e.target.value)} placeholder="Kenya Frontier" />
+            </div>
+            <button type="button" disabled={factionBusy || !claimSectorCode} onClick={handleClaimSector}>
+              {factionBusy ? 'Processing...' : 'Claim Sector'}
+            </button>
+          </article>
+        </div>
+
         <div className="planet-game-multiplayer">
           <article className="planet-game-panel">
             <h3>Commander Leaderboard</h3>
@@ -666,12 +830,28 @@ export default function FederationMapPage() {
           </article>
 
           <article className="planet-game-panel">
+            <h3>Faction Power Ladder</h3>
+            <div className="planet-game-list">
+              {(worldGameFeed.factions || []).slice(0, 8).map((faction, idx) => (
+                <div key={`${faction.tag}-${idx}`}>
+                  <strong>#{idx + 1} {faction.name} ({faction.tag})</strong>
+                  <span>Members: {faction.memberCount} · Power: {faction.totalPower}</span>
+                </div>
+              ))}
+            </div>
+          </article>
+
+          <article className="planet-game-panel">
             <h3>Sector Control</h3>
             <div className="planet-game-list">
               {(worldGameFeed.sectors || []).slice(0, 8).map((sector) => (
                 <div key={`${sector.sector}-${sector.label}`}>
                   <strong>{sector.label}</strong>
-                  <span>{sector.activeCitizens} active · control: {sector.controlRole}</span>
+                  <span>
+                    {sector.activeCitizens} active · role: {sector.controlRole}
+                    {sector.controllerFactionTag ? ` · faction: ${sector.controllerFactionTag}` : ''}
+                    {sector.influence ? ` · influence: ${sector.influence}` : ''}
+                  </span>
                 </div>
               ))}
             </div>

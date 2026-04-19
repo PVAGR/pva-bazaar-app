@@ -211,6 +211,10 @@ export const updateFederationGameProfile = (payload = {}) => apiPut('/federation
 export const runFederationGameAction = (actionType) =>
   apiPost('/federation/game/actions', { actionType });
 export const fetchFederationGameWorld = () => apiGet('/federation/game/world');
+export const fetchMyFederationFaction = () => apiGet('/federation/game/faction/mine');
+export const createFederationFaction = (payload = {}) => apiPost('/federation/game/factions/create', payload);
+export const joinFederationFaction = (payload = {}) => apiPost('/federation/game/factions/join', payload);
+export const claimFederationSector = (payload = {}) => apiPost('/federation/game/sectors/claim', payload);
 
 /**
  * Upload a FormData payload (multipart/form-data).
