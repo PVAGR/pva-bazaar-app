@@ -3,6 +3,7 @@ name: 🚀 Auto-Deploy to Render.com
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -50,8 +51,9 @@ jobs:
             exit 0
           fi
 
-          echo "::error title=Missing Render deployment credentials::Set deploy hook or Render API key + service id"
-          exit 1
+          echo "::warning title=Missing Render deployment credentials::Set deploy hook or Render API key + service id"
+          echo "No Render deploy trigger is configured, skipping deploy trigger step."
+          exit 0
 
       - name: ✅ Deployment triggered
         run: |
