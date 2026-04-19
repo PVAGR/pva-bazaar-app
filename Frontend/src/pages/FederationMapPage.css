@@ -273,6 +273,199 @@
   font-weight: 700;
 }
 
+.federation-card--planetGame,
+.federation-card--dynamicSitemap {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.planet-game-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(260px, 0.75fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.planet-shell {
+  position: relative;
+  min-height: 420px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--site-border);
+  background:
+    radial-gradient(circle at 28% 22%, rgba(77, 208, 225, 0.2), transparent 42%),
+    radial-gradient(circle at 70% 70%, rgba(102, 187, 106, 0.16), transparent 45%),
+    rgba(0, 0, 0, 0.24);
+  overflow: hidden;
+  cursor: grab;
+}
+
+.planet-shell:active {
+  cursor: grabbing;
+}
+
+.planet-sphere {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: min(84%, 460px);
+  aspect-ratio: 1 / 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 1px solid var(--site-border-strong);
+  background:
+    radial-gradient(circle at 32% 30%, rgba(84, 216, 231, 0.32), transparent 40%),
+    radial-gradient(circle at 74% 62%, rgba(129, 199, 132, 0.24), transparent 35%),
+    linear-gradient(155deg, rgba(6, 23, 48, 0.95), rgba(10, 42, 68, 0.85));
+  box-shadow: inset -12px -18px 36px rgba(0, 0, 0, 0.35), 0 14px 28px rgba(0, 0, 0, 0.32);
+}
+
+.planet-grid {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: min(84%, 460px);
+  aspect-ratio: 1 / 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background-image:
+    repeating-radial-gradient(circle at center, transparent 0 17px, rgba(255, 255, 255, 0.06) 18px 19px),
+    repeating-linear-gradient(90deg, transparent 0 29px, rgba(255, 255, 255, 0.06) 30px 31px);
+  mix-blend-mode: screen;
+  opacity: 0.38;
+  pointer-events: none;
+}
+
+.planet-node {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 1px solid var(--site-accent-strong);
+  background: radial-gradient(circle, var(--site-accent-strong), var(--site-accent));
+  box-shadow: 0 0 0 4px rgba(38, 198, 218, 0.15);
+  cursor: pointer;
+}
+
+.planet-node.active {
+  box-shadow: 0 0 0 6px rgba(38, 198, 218, 0.28), 0 0 18px rgba(38, 198, 218, 0.45);
+  border-color: #d5fbff;
+}
+
+.planet-inspector {
+  border: 1px solid var(--site-border);
+  border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, 0.2);
+  padding: var(--space-3);
+  display: grid;
+  gap: var(--space-2);
+}
+
+.planet-inspector h3 {
+  margin: 0;
+  color: var(--site-accent);
+}
+
+.planet-inspector ul {
+  margin: 0;
+  padding-left: 1rem;
+  color: var(--site-text-muted);
+}
+
+.planet-people-list {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.planet-people-list article {
+  border: 1px solid var(--site-border);
+  border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, 0.22);
+  padding: 0.5rem 0.65rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.planet-people-list article span {
+  color: var(--site-text-muted);
+  font-size: 0.86rem;
+}
+
+.planet-game-controls {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.planet-resource-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(100px, 1fr));
+  gap: var(--space-2);
+}
+
+.planet-resource-grid div {
+  border: 1px solid var(--site-border);
+  border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, 0.18);
+  padding: 0.48rem 0.6rem;
+}
+
+.planet-resource-grid span {
+  display: block;
+  color: var(--site-text-muted);
+  font-size: 0.78rem;
+}
+
+.planet-resource-grid strong {
+  color: var(--site-accent-strong);
+  font-size: 1rem;
+}
+
+.dynamic-sitemap-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.dynamic-sitemap-group {
+  border: 1px solid var(--site-border);
+  border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, 0.2);
+  padding: var(--space-3);
+  display: grid;
+  gap: var(--space-2);
+}
+
+.dynamic-sitemap-group h3 {
+  margin: 0;
+  color: var(--site-accent);
+  font-size: 0.86rem;
+  letter-spacing: 0.06em;
+}
+
+.dynamic-sitemap-links {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.dynamic-sitemap-links a {
+  text-decoration: none;
+  border: 1px solid var(--site-border);
+  border-radius: var(--radius-sm);
+  background: var(--site-panel);
+  color: var(--site-text);
+  padding: 0.5rem 0.62rem;
+  display: grid;
+  gap: 0.18rem;
+}
+
+.dynamic-sitemap-links a:hover {
+  border-color: var(--site-accent);
+  color: var(--site-accent-strong);
+  background: var(--site-accent-soft);
+}
+
+.dynamic-sitemap-links a span {
+  color: var(--site-text-muted);
+  font-size: 0.8rem;
+}
+
 @media (max-width: 980px) {
   .federation-map-grid {
     grid-template-columns: 1fr;
@@ -280,5 +473,15 @@
 
   .federation-stats-row {
     grid-template-columns: 1fr;
+  }
+
+  .planet-game-layout,
+  .dynamic-sitemap-grid,
+  .planet-resource-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .planet-shell {
+    min-height: 360px;
   }
 }
