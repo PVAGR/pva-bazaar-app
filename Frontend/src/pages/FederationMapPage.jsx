@@ -18,6 +18,7 @@ import {
   verifyFederationHkPassportHash,
   recordFederationHkProgression,
   fetchFederationHkProgressionHistory,
+  fetchFederationIpLocation,
 } from '../lib/api';
 import { PUBLIC_ROUTES } from '../config/publicRoutes';
 import './FederationMapPage.css';
@@ -249,26 +250,30 @@ export default function FederationMapPage() {
     setLoading(true);
     setError('');
     try {
-      const [liveResponse, meResponse, quizResponse] = await Promise.all([
+      const [liveResult, meResult, quizResultResponse, gameStateResult, worldResult, hkProfileResult, hkHistoryResult, factionResult] = await Promise.allSettled([
         fetchFederationLiveMap(90),
-        fetchMyFederationPresence().catch(() => ({ ok: false })),
+        fetchMyFederationPresence(),
         fetchFederationIntroQuizDefinition(),
+        fetchFederationGameState(),
+        fetchFederationGameWorld(),
+        fetchFederationHkProfile(),
+        fetchFederationHkProgressionHistory(12),
+        fetchMyFederationFaction(),
       ]);
 
-      const [gameStateResponse, worldResponse] = await Promise.all([
-        fetchFederationGameState().catch(() => ({ ok: false })),
-        fetchFederationGameWorld().catch(() => ({ ok: false })),
-      ]);
-
-      const [hkProfileResponse, hkHistoryResponse] = await Promise.all([
-        fetchFederationHkProfile().catch(() => ({ ok: false })),
-        fetchFederationHkProgressionHistory(12).catch(() => ({ ok: false })),
-      ]);
-
-      const factionResponse = await fetchMyFederationFaction().catch(() => ({ ok: false }));
+      const liveResponse = liveResult.status === 'fulfilled' ? liveResult.value : null;
+      const meResponse = meResult.status === 'fulfilled' ? meResult.value : null;
+      const quizResponse = quizResultResponse.status === 'fulfilled' ? quizResultResponse.value : null;
+      const gameStateResponse = gameStateResult.status === 'fulfilled' ? gameStateResult.value : null;
+      const worldResponse = worldResult.status === 'fulfilled' ? worldResult.value : null;
+      const hkProfileResponse = hkProfileResult.status === 'fulfilled' ? hkProfileResult.value : null;
+      const hkHistoryResponse = hkHistoryResult.status === 'fulfilled' ? hkHistoryResult.value : null;
+      const factionResponse = factionResult.status === 'fulfilled' ? factionResult.value : null;
 
       if (liveResponse?.ok) {
         setLiveData(liveResponse);
+      } else if (!liveResponse) {
+        setMessage('Some federation live data is temporarily unavailable.');
       }
 
       if (meResponse?.ok && meResponse.item) {
@@ -318,7 +323,7 @@ export default function FederationMapPage() {
         setHkHistory(hkHistoryResponse.items);
       }
     } catch (err) {
-      setError(err?.message || 'Unable to load federation map data.');
+      setMessage(err?.message || 'Some federation data is unavailable right now.');
     } finally {
       setLoading(false);
     }
@@ -427,20 +432,20 @@ export default function FederationMapPage() {
     setError('');
     setMessage('');
     try {
-      const response = await fetch('https://ipapi.co/json/', { method: 'GET' });
-      const payload = await response.json();
-      const nextCountry = String(payload?.country_name || '').trim();
-      const nextCountryCode = String(payload?.country_code || '').trim().toUpperCase();
+      const response = await fetchFederationIpLocation();
+      const nextCountry = String(response?.location?.country || '').trim();
+      const nextCountryCode = String(response?.location?.countryCode || '').trim().toUpperCase();
 
       if (!nextCountry) {
-        throw new Error('Unable to determine country from public IP.');
+        setMessage('Auto-detect is unavailable right now. Enter your country manually to continue.');
+        return;
       }
 
       setCountry(nextCountry);
       setCountryCode(nextCountryCode);
       setMessage(`Detected location: ${nextCountry}${nextCountryCode ? ` (${nextCountryCode})` : ''}`);
     } catch (err) {
-      setError(err?.message || 'IP location detection failed.');
+      setMessage(err?.message || 'Auto-detect unavailable. Enter your country manually to continue.');
     } finally {
       setDetecting(false);
     }

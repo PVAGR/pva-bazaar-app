@@ -220,6 +220,7 @@ export const fetchFederationLiveMap = (minutes = 60) =>
   apiGet('/federation/live', { params: { minutes } });
 export const fetchMyFederationPresence = () => apiGet('/federation/me');
 export const checkInFederationPresence = (payload = {}) => apiPost('/federation/check-in', payload);
+export const fetchFederationIpLocation = () => apiGet('/federation/ip-lookup');
 export const fetchFederationGameState = () => apiGet('/federation/game/state');
 export const updateFederationGameProfile = (payload = {}) => apiPut('/federation/game/state', payload);
 export const runFederationGameAction = (actionType) =>

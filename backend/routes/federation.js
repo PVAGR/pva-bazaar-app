@@ -76,6 +76,41 @@ function normalizeCountryCode(value = '') {
   return '';
 }
 
+router.get('/ip-lookup', async (req, res) => {
+  try {
+    const forwardedFor = String(req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || '').split(',')[0].trim();
+    const ip = forwardedFor && !/^(127\.|10\.|172\.(1[6-9]|2\d|3[0-1])\.|192\.168\.|::1|localhost)$/i.test(forwardedFor)
+      ? forwardedFor
+      : '';
+
+    if (!ip) {
+      return res.json({ ok: true, location: null });
+    }
+
+    const response = await fetch(`https://ipapi.co/${encodeURIComponent(ip)}/json/`, {
+      headers: {
+        'User-Agent': 'PVA-Bazaar/1.0',
+      },
+    });
+
+    if (!response.ok) {
+      return res.json({ ok: true, location: null });
+    }
+
+    const data = await response.json();
+    return res.json({
+      ok: true,
+      location: {
+        ip,
+        country: cleanText(data?.country_name || '', 120),
+        countryCode: normalizeCountryCode(data?.country_code || ''),
+      },
+    });
+  } catch (_error) {
+    return res.json({ ok: true, location: null });
+  }
+});
+
 function chooseCountryFromUser(user) {
   const complianceCountry = String(user?.onboardingProfile?.compliance?.country || '').trim();
   const prefCountry = String(user?.preferences?.defaultCountry || '').trim();
