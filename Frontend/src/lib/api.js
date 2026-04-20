@@ -14,17 +14,31 @@ function normalizeApiBaseUrl(rawUrl) {
   return next;
 }
 
+function isUnsafeProductionOverride(rawUrl) {
+  const value = String(rawUrl || '').trim();
+  if (!value) return false;
+  return /localhost|127\.0\.0\.1|\[::1\]/i.test(value);
+}
+
 function resolveApiBaseUrl() {
+  const envBase = normalizeApiBaseUrl(ENV.API_URL);
+  const isProd = typeof import.meta !== 'undefined' && import.meta.env?.MODE === 'production';
   try {
     const localOverride = localStorage.getItem('api-base-url');
     if (localOverride) {
       const normalizedOverride = normalizeApiBaseUrl(localOverride);
-      if (normalizedOverride) return normalizedOverride;
+      if (normalizedOverride) {
+        if (isProd && isUnsafeProductionOverride(normalizedOverride)) {
+          localStorage.removeItem('api-base-url');
+        } else {
+          return normalizedOverride;
+        }
+      }
     }
   } catch (_err) {
     // Ignore localStorage read errors and continue with environment fallback.
   }
-  return normalizeApiBaseUrl(ENV.API_URL);
+  return envBase;
 }
 
 export const apiGet = (path, config) => api.get(path, config).then(r => r.data);
