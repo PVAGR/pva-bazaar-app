@@ -215,6 +215,14 @@ export const fetchMyFederationFaction = () => apiGet('/federation/game/faction/m
 export const createFederationFaction = (payload = {}) => apiPost('/federation/game/factions/create', payload);
 export const joinFederationFaction = (payload = {}) => apiPost('/federation/game/factions/join', payload);
 export const claimFederationSector = (payload = {}) => apiPost('/federation/game/sectors/claim', payload);
+export const onboardFederationHkPlayer = () => apiPost('/federation/game/hk/onboard', {});
+export const fetchFederationHkProfile = () => apiGet('/federation/game/hk/profile');
+export const verifyFederationHkPassportHash = (payload = {}) =>
+  apiPost('/federation/game/hk/passport/verify-hash', payload);
+export const recordFederationHkProgression = (payload = {}) =>
+  apiPost('/federation/game/hk/progression/record', payload);
+export const fetchFederationHkProgressionHistory = (limit = 30) =>
+  apiGet('/federation/game/hk/progression/history', { params: { limit } });
 
 /**
  * Upload a FormData payload (multipart/form-data).

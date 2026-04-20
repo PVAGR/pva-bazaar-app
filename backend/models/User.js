@@ -96,6 +96,27 @@ const userSchema = new mongoose.Schema({
       governance: { type: mongoose.Schema.Types.Mixed, default: null },
     },
   },
+  gameProfile: {
+    hkEnabled: { type: Boolean, default: true },
+    level: { type: Number, default: 1, min: 1 },
+    xp: { type: Number, default: 0, min: 0 },
+    contributionScore: { type: Number, default: 0, min: 0 },
+    economicScore: { type: Number, default: 0, min: 0 },
+    sprite: {
+      body: { type: String, default: 'citizen_base' },
+      palette: { type: String, default: 'atlas_01' },
+      accessory: { type: String, default: 'none' },
+    },
+    identity: {
+      passportHashVerified: { type: Boolean, default: false },
+      passportHashVerifiedAt: { type: Date },
+      passportHashLast4: { type: String, default: '' },
+    },
+    progression: {
+      lastEventAt: { type: Date },
+      lastLevelUpAt: { type: Date },
+    },
+  },
   // Voting system profile (for prediction markets)
   votingProfile: {
     emailVerified: { type: Boolean, default: false },

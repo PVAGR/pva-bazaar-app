@@ -1,9 +1,12 @@
 const express = require('express');
+const crypto = require('crypto');
 const FederationPresence = require('../models/FederationPresence');
 const FederationGameState = require('../models/FederationGameState');
 const FederationWorldEvent = require('../models/FederationWorldEvent');
 const FederationFaction = require('../models/FederationFaction');
 const FederationSectorControl = require('../models/FederationSectorControl');
+const FederationProgressionEvent = require('../models/FederationProgressionEvent');
+const FederationPassportHash = require('../models/FederationPassportHash');
 const User = require('../models/User');
 const { authenticateToken } = require('../middleware/auth');
 
@@ -258,6 +261,154 @@ function applyGameAction(state, actionType) {
   return { ok: false, message: 'Unsupported action type.' };
 }
 
+const MAX_DAILY_XP = 60;
+const MAX_EVENT_CONTRIBUTION_POINTS = 30;
+
+function normalizePassportId(raw) {
+  return String(raw || '')
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, '');
+}
+
+function hashPassportId(passportId) {
+  const pepper = String(process.env.HK_PASSPORT_HASH_PEPPER || process.env.JWT_SECRET || '').trim();
+  if (!pepper) {
+    throw new Error('Missing HK_PASSPORT_HASH_PEPPER or JWT_SECRET for passport hash operation.');
+  }
+  return crypto.createHash('sha256').update(`${pepper}|${passportId}`).digest('hex');
+}
+
+function xpRequiredForLevel(level) {
+  const safeLevel = Math.max(1, Number(level || 1));
+  if (safeLevel <= 1) return 0;
+  let total = 0;
+  for (let i = 1; i < safeLevel; i += 1) {
+    total += 120 + (i - 1) * 80;
+  }
+  return total;
+}
+
+function levelFromXp(xpTotal) {
+  const xp = Math.max(0, Number(xpTotal || 0));
+  let level = 1;
+  while (xpRequiredForLevel(level + 1) <= xp && level < 100) {
+    level += 1;
+  }
+  return level;
+}
+
+function normalizeContributionPoints(sourceType, contributionValue) {
+  const raw = Math.max(0, Number(contributionValue || 0));
+  if (!Number.isFinite(raw)) return 0;
+
+  if (sourceType === 'consistency_streak') {
+    return Math.min(12, Math.floor(raw));
+  }
+  if (sourceType === 'governance_action') {
+    return Math.min(18, Math.floor(raw));
+  }
+  return Math.min(MAX_EVENT_CONTRIBUTION_POINTS, Math.floor(raw));
+}
+
+function normalizeEconomicPoints(sourceType, economicValue) {
+  if (sourceType !== 'verified_transaction') return 0;
+  const amount = Math.max(0, Number(economicValue || 0));
+  if (!Number.isFinite(amount) || amount <= 0) return 0;
+  if (amount < 50) return 2;
+  if (amount < 250) return 5;
+  if (amount < 1000) return 8;
+  return 12;
+}
+
+async function getDailyXpUsed(userId) {
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+  const agg = await FederationProgressionEvent.aggregate([
+    { $match: { userId, createdAt: { $gte: start } } },
+    { $group: { _id: null, total: { $sum: '$totalXpAwarded' } } },
+  ]);
+  return Number(agg?.[0]?.total || 0);
+}
+
+async function awardProgression({ userId, sourceType, sourceRef = '', contributionPoints = 0, economicPoints = 0, notes = '', metadata = null }) {
+  const contribution = Math.max(0, Math.floor(Number(contributionPoints || 0)));
+  const economic = Math.max(0, Math.floor(Number(economicPoints || 0)));
+  const intendedXp = contribution + economic;
+  if (intendedXp <= 0) {
+    return { ok: true, awardedXp: 0, skipped: true, reason: 'No XP to award' };
+  }
+
+  const sourceRefClean = cleanText(sourceRef, 120);
+  if (sourceRefClean) {
+    const duplicate = await FederationProgressionEvent.findOne({ userId, sourceType, sourceRef: sourceRefClean }).lean();
+    if (duplicate) {
+      return { ok: true, awardedXp: 0, skipped: true, reason: 'Duplicate sourceRef' };
+    }
+  }
+
+  const dailyUsed = await getDailyXpUsed(userId);
+  const remaining = Math.max(0, MAX_DAILY_XP - dailyUsed);
+  if (remaining <= 0) {
+    return { ok: true, awardedXp: 0, skipped: true, reason: 'Daily XP cap reached' };
+  }
+
+  const awardedXp = Math.min(intendedXp, remaining);
+  const contributionAward = Math.min(contribution, awardedXp);
+  const economicAward = Math.max(0, awardedXp - contributionAward);
+
+  await FederationProgressionEvent.create({
+    userId,
+    sourceType,
+    sourceRef: sourceRefClean,
+    contributionPoints: contributionAward,
+    economicPoints: economicAward,
+    totalXpAwarded: awardedXp,
+    notes: cleanText(notes, 300),
+    metadata,
+  });
+
+  const user = await User.findById(userId).select('_id gameProfile');
+  if (!user) {
+    return { ok: false, awardedXp: 0, reason: 'User not found' };
+  }
+
+  const currentXp = Number(user?.gameProfile?.xp || 0);
+  const currentLevel = Math.max(1, Number(user?.gameProfile?.level || 1));
+  const nextXp = currentXp + awardedXp;
+  const nextLevel = levelFromXp(nextXp);
+  const levelChanged = nextLevel > currentLevel;
+
+  await User.findByIdAndUpdate(userId, {
+    $set: {
+      'gameProfile.level': nextLevel,
+      'gameProfile.xp': nextXp,
+      'gameProfile.progression.lastEventAt': new Date(),
+      ...(levelChanged ? { 'gameProfile.progression.lastLevelUpAt': new Date() } : {}),
+    },
+    $inc: {
+      'gameProfile.contributionScore': contributionAward,
+      'gameProfile.economicScore': economicAward,
+    },
+  });
+
+  return {
+    ok: true,
+    awardedXp,
+    level: nextLevel,
+    levelChanged,
+    nextLevelXp: xpRequiredForLevel(nextLevel + 1),
+  };
+}
+
+async function tryAwardProgression(params) {
+  try {
+    return await awardProgression(params);
+  } catch (_error) {
+    return { ok: false, skipped: true, reason: 'award_failed' };
+  }
+}
+
 async function getActivePresenceContext(windowMinutes = 90) {
   const since = new Date(Date.now() - windowMinutes * 60 * 1000);
   const rows = await FederationPresence.find({ lastSeenAt: { $gte: since } }).select('countryCode country').lean();
@@ -360,6 +511,17 @@ router.post('/intro-quiz/submit', authenticateToken, async (req, res) => {
       },
     });
 
+    await tryAwardProgression({
+      userId: user._id,
+      sourceType: 'knowledge_contribution',
+      sourceRef: `intro_quiz_${INTRO_QUIZ.id}`,
+      contributionPoints: Math.min(20, Math.max(6, Number(scoring.score || 0) + 4)),
+      notes: 'Completed federation intro quiz',
+      metadata: {
+        recommendedRole: scoring.recommendedRole,
+      },
+    });
+
     return res.json({
       ok: true,
       result: {
@@ -417,6 +579,17 @@ router.post('/check-in', authenticateToken, async (req, res) => {
       $set: {
         'preferences.defaultCountry': country,
         updatedAt: new Date(),
+      },
+    });
+
+    await tryAwardProgression({
+      userId: user._id,
+      sourceType: 'consistency_streak',
+      sourceRef: `checkin_${new Date().toISOString().slice(0, 10)}`,
+      contributionPoints: 4,
+      notes: 'Daily federation map check-in',
+      metadata: {
+        countryCode,
       },
     });
 
@@ -495,6 +668,17 @@ router.post('/game/factions/create', authenticateToken, async (req, res) => {
       delta: {},
     });
 
+    await tryAwardProgression({
+      userId: user._id,
+      sourceType: 'governance_action',
+      sourceRef: `create_faction_${faction.tag}`,
+      contributionPoints: 10,
+      notes: 'Founded a federation faction',
+      metadata: {
+        factionTag: faction.tag,
+      },
+    });
+
     return res.json({ ok: true, faction });
   } catch (error) {
     return res.status(500).json({ ok: false, message: error.message });
@@ -549,6 +733,17 @@ router.post('/game/factions/join', authenticateToken, async (req, res) => {
       title: 'Faction Joined',
       details: `${user.name || 'Citizen'} joined ${faction.name} (${faction.tag}).`,
       delta: {},
+    });
+
+    await tryAwardProgression({
+      userId: user._id,
+      sourceType: 'governance_action',
+      sourceRef: `join_faction_${faction.tag}`,
+      contributionPoints: 6,
+      notes: 'Joined a federation faction',
+      metadata: {
+        factionTag: faction.tag,
+      },
     });
 
     return res.json({ ok: true, faction });
@@ -633,6 +828,18 @@ router.post('/game/sectors/claim', authenticateToken, async (req, res) => {
       delta: { energy: -18, materials: -12 },
     });
 
+    await tryAwardProgression({
+      userId: user._id,
+      sourceType: 'governance_action',
+      sourceRef: `claim_sector_${sector}_${new Date().toISOString().slice(0, 10)}`,
+      contributionPoints: 8,
+      notes: 'Claimed a federation sector',
+      metadata: {
+        sector,
+        factionTag: faction.tag,
+      },
+    });
+
     return res.json({ ok: true, sector: updatedControl });
   } catch (error) {
     return res.status(500).json({ ok: false, message: error.message });
@@ -698,6 +905,258 @@ router.get('/live', async (req, res) => {
       },
       byCountry,
       participants,
+    });
+  } catch (error) {
+    return res.status(500).json({ ok: false, message: error.message });
+  }
+});
+
+router.post('/game/hk/onboard', authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('_id name gameProfile onboardingProfile citizenRole');
+    if (!user) {
+      return res.status(404).json({ ok: false, message: 'User not found' });
+    }
+
+    const state = await ensureGameState(user);
+    const existingProfile = user.gameProfile || {};
+    const nextProfile = {
+      hkEnabled: true,
+      level: Math.max(1, Number(existingProfile.level || 1)),
+      xp: Math.max(0, Number(existingProfile.xp || 0)),
+      contributionScore: Math.max(0, Number(existingProfile.contributionScore || 0)),
+      economicScore: Math.max(0, Number(existingProfile.economicScore || 0)),
+      sprite: {
+        body: cleanText(existingProfile?.sprite?.body || 'citizen_base', 60),
+        palette: cleanText(existingProfile?.sprite?.palette || 'atlas_01', 60),
+        accessory: cleanText(existingProfile?.sprite?.accessory || 'none', 60),
+      },
+      identity: {
+        passportHashVerified: Boolean(existingProfile?.identity?.passportHashVerified),
+        passportHashVerifiedAt: existingProfile?.identity?.passportHashVerifiedAt || null,
+        passportHashLast4: cleanText(existingProfile?.identity?.passportHashLast4 || '', 8),
+      },
+      progression: {
+        lastEventAt: existingProfile?.progression?.lastEventAt || null,
+        lastLevelUpAt: existingProfile?.progression?.lastLevelUpAt || null,
+      },
+    };
+
+    await User.findByIdAndUpdate(user._id, { $set: { gameProfile: nextProfile, updatedAt: new Date() } });
+
+    await awardProgression({
+      userId: user._id,
+      sourceType: 'system',
+      sourceRef: 'hk_onboard_v1',
+      contributionPoints: 8,
+      notes: 'HK onboarding initialization',
+      metadata: { scope: 'hk_onboard' },
+    });
+
+    const refreshed = await User.findById(user._id).select('gameProfile');
+    const profile = refreshed?.gameProfile || nextProfile;
+
+    return res.json({
+      ok: true,
+      profile: {
+        level: Number(profile.level || 1),
+        xp: Number(profile.xp || 0),
+        contributionScore: Number(profile.contributionScore || 0),
+        economicScore: Number(profile.economicScore || 0),
+        sprite: profile.sprite || {},
+        identity: {
+          passportHashVerified: Boolean(profile?.identity?.passportHashVerified),
+          passportHashVerifiedAt: profile?.identity?.passportHashVerifiedAt || null,
+          passportHashLast4: cleanText(profile?.identity?.passportHashLast4 || '', 8),
+        },
+        nextLevelXp: xpRequiredForLevel(Number(profile.level || 1) + 1),
+      },
+      state,
+    });
+  } catch (error) {
+    return res.status(500).json({ ok: false, message: error.message });
+  }
+});
+
+router.get('/game/hk/profile', authenticateToken, async (req, res) => {
+  try {
+    const [state, user] = await Promise.all([
+      FederationGameState.findOne({ userId: req.user.id }).lean(),
+      User.findById(req.user.id).select('name gameProfile').lean(),
+    ]);
+
+    if (!user) {
+      return res.status(404).json({ ok: false, message: 'User not found' });
+    }
+
+    const profile = user.gameProfile || {};
+    return res.json({
+      ok: true,
+      profile: {
+        name: cleanText(user.name, 120),
+        level: Number(profile.level || 1),
+        xp: Number(profile.xp || 0),
+        contributionScore: Number(profile.contributionScore || 0),
+        economicScore: Number(profile.economicScore || 0),
+        sprite: profile.sprite || {},
+        identity: {
+          passportHashVerified: Boolean(profile?.identity?.passportHashVerified),
+          passportHashVerifiedAt: profile?.identity?.passportHashVerifiedAt || null,
+          passportHashLast4: cleanText(profile?.identity?.passportHashLast4 || '', 8),
+        },
+        progression: {
+          lastEventAt: profile?.progression?.lastEventAt || null,
+          lastLevelUpAt: profile?.progression?.lastLevelUpAt || null,
+        },
+        nextLevelXp: xpRequiredForLevel(Number(profile.level || 1) + 1),
+      },
+      state: state || null,
+    });
+  } catch (error) {
+    return res.status(500).json({ ok: false, message: error.message });
+  }
+});
+
+router.post('/game/hk/passport/verify-hash', authenticateToken, async (req, res) => {
+  try {
+    const normalizedPassportId = normalizePassportId(req.body?.passportId);
+    const countryCode = normalizeCountryCode(req.body?.passportCountryCode || '');
+    if (!normalizedPassportId || normalizedPassportId.length < 6 || normalizedPassportId.length > 64) {
+      return res.status(400).json({ ok: false, message: 'passportId must be 6-64 alphanumeric characters.' });
+    }
+
+    const passportHash = hashPassportId(normalizedPassportId);
+    const claimedBy = await FederationPassportHash.findOne({ passportHash }).select('userId').lean();
+    if (claimedBy && String(claimedBy.userId) !== String(req.user.id)) {
+      return res.status(409).json({ ok: false, message: 'Passport identity already linked to another account.' });
+    }
+
+    await FederationPassportHash.findOneAndUpdate(
+      { userId: req.user.id },
+      {
+        $set: {
+          passportHash,
+          passportCountryCode: countryCode,
+          source: 'self-attested',
+          verifiedAt: new Date(),
+        },
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true },
+    );
+
+    const tail = normalizedPassportId.slice(-4);
+    await User.findByIdAndUpdate(req.user.id, {
+      $set: {
+        'gameProfile.identity.passportHashVerified': true,
+        'gameProfile.identity.passportHashVerifiedAt': new Date(),
+        'gameProfile.identity.passportHashLast4': tail,
+        updatedAt: new Date(),
+      },
+    });
+
+    const award = await awardProgression({
+      userId: req.user.id,
+      sourceType: 'identity_verification',
+      sourceRef: 'passport_hash_v1',
+      contributionPoints: 12,
+      notes: 'Passport hash verification completed',
+      metadata: { countryCode },
+    });
+
+    return res.json({
+      ok: true,
+      status: {
+        passportHashVerified: true,
+        passportHashVerifiedAt: new Date().toISOString(),
+        passportHashLast4: tail,
+      },
+      progression: {
+        awardedXp: Number(award?.awardedXp || 0),
+        level: Number(award?.level || 0),
+        levelChanged: Boolean(award?.levelChanged),
+      },
+    });
+  } catch (error) {
+    if (error?.code === 11000) {
+      return res.status(409).json({ ok: false, message: 'Passport identity conflict detected.' });
+    }
+    return res.status(500).json({ ok: false, message: error.message });
+  }
+});
+
+router.post('/game/hk/progression/record', authenticateToken, async (req, res) => {
+  try {
+    const sourceType = String(req.body?.sourceType || '').trim();
+    if (!['knowledge_contribution', 'verified_transaction', 'governance_action', 'consistency_streak'].includes(sourceType)) {
+      return res.status(400).json({ ok: false, message: 'Unsupported sourceType.' });
+    }
+
+    const sourceRef = cleanText(req.body?.sourceRef, 120);
+    const contributionPoints = normalizeContributionPoints(sourceType, req.body?.contributionValue);
+    const economicPoints = normalizeEconomicPoints(sourceType, req.body?.economicValue);
+
+    const award = await awardProgression({
+      userId: req.user.id,
+      sourceType,
+      sourceRef,
+      contributionPoints,
+      economicPoints,
+      notes: req.body?.notes,
+      metadata: req.body?.metadata || null,
+    });
+
+    if (!award.ok) {
+      return res.status(500).json({ ok: false, message: award.reason || 'Unable to record progression event.' });
+    }
+
+    const user = await User.findById(req.user.id).select('gameProfile').lean();
+    const profile = user?.gameProfile || {};
+
+    return res.json({
+      ok: true,
+      event: {
+        sourceType,
+        sourceRef,
+        contributionPoints,
+        economicPoints,
+      },
+      progression: {
+        awardedXp: Number(award.awardedXp || 0),
+        level: Number(profile.level || 1),
+        xp: Number(profile.xp || 0),
+        contributionScore: Number(profile.contributionScore || 0),
+        economicScore: Number(profile.economicScore || 0),
+        levelChanged: Boolean(award.levelChanged),
+        nextLevelXp: xpRequiredForLevel(Number(profile.level || 1) + 1),
+      },
+      skipped: Boolean(award.skipped),
+      skipReason: award.reason || '',
+    });
+  } catch (error) {
+    return res.status(500).json({ ok: false, message: error.message });
+  }
+});
+
+router.get('/game/hk/progression/history', authenticateToken, async (req, res) => {
+  try {
+    const limit = Math.max(1, Math.min(Number(req.query.limit) || 30, 120));
+    const items = await FederationProgressionEvent.find({ userId: req.user.id })
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .lean();
+
+    return res.json({
+      ok: true,
+      items: items.map((item) => ({
+        id: String(item._id),
+        sourceType: item.sourceType,
+        sourceRef: item.sourceRef,
+        contributionPoints: Number(item.contributionPoints || 0),
+        economicPoints: Number(item.economicPoints || 0),
+        totalXpAwarded: Number(item.totalXpAwarded || 0),
+        notes: item.notes || '',
+        createdAt: item.createdAt,
+      })),
     });
   } catch (error) {
     return res.status(500).json({ ok: false, message: error.message });
@@ -787,6 +1246,17 @@ router.post('/game/actions', authenticateToken, async (req, res) => {
       title: result.event.title,
       details: result.event.details,
       delta: result.event.delta,
+    });
+
+    await tryAwardProgression({
+      userId: req.user.id,
+      sourceType: 'consistency_streak',
+      sourceRef: `game_action_${actionType}_${next.cycle}`,
+      contributionPoints: 3,
+      notes: `Completed game action: ${actionType}`,
+      metadata: {
+        actionType,
+      },
     });
 
     await syncFactionPowerForTag(cleanText(updated?.faction, 16).toUpperCase());

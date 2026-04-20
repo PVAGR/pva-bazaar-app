@@ -87,6 +87,14 @@
   padding: 0.55rem 0.66rem;
 }
 
+.federation-form-row select {
+  border: 1px solid var(--site-border);
+  background: rgba(0, 0, 0, 0.22);
+  color: var(--site-text);
+  border-radius: var(--radius-sm);
+  padding: 0.55rem 0.66rem;
+}
+
 .federation-button-row {
   display: flex;
   gap: var(--space-3);
@@ -274,9 +282,52 @@
 }
 
 .federation-card--planetGame,
-.federation-card--dynamicSitemap {
+.federation-card--dynamicSitemap,
+.federation-card--hk {
   display: grid;
   gap: var(--space-3);
+}
+
+.hk-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.hk-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.hk-stat-grid div {
+  border: 1px solid var(--site-border);
+  border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, 0.24);
+  padding: 0.48rem 0.56rem;
+}
+
+.hk-stat-grid span {
+  display: block;
+  color: var(--site-text-muted);
+  font-size: 0.78rem;
+}
+
+.hk-stat-grid strong {
+  color: var(--site-accent-strong);
+  font-size: 1rem;
+}
+
+.hk-progress {
+  height: 10px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.hk-progress div {
+  height: 100%;
+  background: linear-gradient(90deg, var(--site-accent), var(--site-accent-strong));
 }
 
 .planet-game-layout {
@@ -524,6 +575,7 @@
   .planet-game-layout,
   .planet-faction-shell,
   .dynamic-sitemap-grid,
+  .hk-grid,
   .planet-resource-grid,
   .planet-game-multiplayer {
     grid-template-columns: 1fr;

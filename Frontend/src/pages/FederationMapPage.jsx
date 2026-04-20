@@ -13,6 +13,11 @@ import {
   createFederationFaction,
   joinFederationFaction,
   claimFederationSector,
+  onboardFederationHkPlayer,
+  fetchFederationHkProfile,
+  verifyFederationHkPassportHash,
+  recordFederationHkProgression,
+  fetchFederationHkProgressionHistory,
 } from '../lib/api';
 import { PUBLIC_ROUTES } from '../config/publicRoutes';
 import './FederationMapPage.css';
@@ -134,6 +139,17 @@ export default function FederationMapPage() {
   const [gameNotice, setGameNotice] = useState('');
   const [gameBusy, setGameBusy] = useState(false);
   const [worldGameFeed, setWorldGameFeed] = useState({ leaderboard: [], events: [], sectors: [] });
+  const [hkProfile, setHkProfile] = useState(null);
+  const [hkHistory, setHkHistory] = useState([]);
+  const [hkLoading, setHkLoading] = useState(false);
+  const [hkBusy, setHkBusy] = useState(false);
+  const [hkPassportId, setHkPassportId] = useState('');
+  const [hkPassportCountryCode, setHkPassportCountryCode] = useState('');
+  const [hkSourceType, setHkSourceType] = useState('knowledge_contribution');
+  const [hkSourceRef, setHkSourceRef] = useState('');
+  const [hkContributionValue, setHkContributionValue] = useState('10');
+  const [hkEconomicValue, setHkEconomicValue] = useState('0');
+  const [hkNotes, setHkNotes] = useState('');
   const [gameState, setGameState] = useState({
     cycle: 0,
     energy: 120,
@@ -209,6 +225,26 @@ export default function FederationMapPage() {
     }
   }
 
+  async function loadHkData() {
+    setHkLoading(true);
+    try {
+      const [profileResponse, historyResponse] = await Promise.all([
+        fetchFederationHkProfile().catch(() => ({ ok: false })),
+        fetchFederationHkProgressionHistory(12).catch(() => ({ ok: false })),
+      ]);
+
+      if (profileResponse?.ok && profileResponse.profile) {
+        setHkProfile(profileResponse.profile);
+      }
+
+      if (historyResponse?.ok && Array.isArray(historyResponse.items)) {
+        setHkHistory(historyResponse.items);
+      }
+    } finally {
+      setHkLoading(false);
+    }
+  }
+
   async function loadBootstrap() {
     setLoading(true);
     setError('');
@@ -222,6 +258,11 @@ export default function FederationMapPage() {
       const [gameStateResponse, worldResponse] = await Promise.all([
         fetchFederationGameState().catch(() => ({ ok: false })),
         fetchFederationGameWorld().catch(() => ({ ok: false })),
+      ]);
+
+      const [hkProfileResponse, hkHistoryResponse] = await Promise.all([
+        fetchFederationHkProfile().catch(() => ({ ok: false })),
+        fetchFederationHkProgressionHistory(12).catch(() => ({ ok: false })),
       ]);
 
       const factionResponse = await fetchMyFederationFaction().catch(() => ({ ok: false }));
@@ -262,6 +303,19 @@ export default function FederationMapPage() {
 
       if (factionResponse?.ok) {
         setMyFaction(factionResponse.faction || null);
+      }
+
+      if (hkProfileResponse?.ok && hkProfileResponse.profile) {
+        setHkProfile(hkProfileResponse.profile);
+      } else {
+        const onboardResponse = await onboardFederationHkPlayer().catch(() => ({ ok: false }));
+        if (onboardResponse?.ok && onboardResponse.profile) {
+          setHkProfile(onboardResponse.profile);
+        }
+      }
+
+      if (hkHistoryResponse?.ok && Array.isArray(hkHistoryResponse.items)) {
+        setHkHistory(hkHistoryResponse.items);
       }
     } catch (err) {
       setError(err?.message || 'Unable to load federation map data.');
@@ -305,6 +359,13 @@ export default function FederationMapPage() {
   const handlePlanetMouseUp = () => {
     dragRef.current = null;
   };
+
+  const hkProgressPercent = useMemo(() => {
+    const xp = Number(hkProfile?.xp || 0);
+    const next = Number(hkProfile?.nextLevelXp || 0);
+    if (next <= 0) return 0;
+    return clamp(Math.round((xp / next) * 100), 0, 100);
+  }, [hkProfile]);
 
   const actionToApiType = {
     outpost: 'build_outpost',
@@ -544,6 +605,83 @@ export default function FederationMapPage() {
     }
   };
 
+  const handleHkOnboard = async () => {
+    setHkBusy(true);
+    setError('');
+    setMessage('');
+    try {
+      const response = await onboardFederationHkPlayer();
+      if (!response?.ok || !response.profile) {
+        setError(response?.message || 'Unable to initialize HK profile.');
+        return;
+      }
+      setHkProfile(response.profile);
+      setMessage('HK profile initialized. Your sprite starts at level 1 and grows with verified contribution.');
+      await loadHkData();
+    } catch (err) {
+      setError(err?.message || 'Unable to initialize HK profile.');
+    } finally {
+      setHkBusy(false);
+    }
+  };
+
+  const handleHkVerifyPassportHash = async () => {
+    if (!hkPassportId.trim()) {
+      setError('Passport ID is required for hash verification.');
+      return;
+    }
+    setHkBusy(true);
+    setError('');
+    setMessage('');
+    try {
+      const response = await verifyFederationHkPassportHash({
+        passportId: hkPassportId.trim(),
+        passportCountryCode: hkPassportCountryCode.trim().toUpperCase(),
+      });
+      if (!response?.ok) {
+        setError(response?.message || 'Passport hash verification failed.');
+        return;
+      }
+      setHkPassportId('');
+      setMessage('Passport identity hash verified. Raw ID was not stored.');
+      await loadHkData();
+    } catch (err) {
+      setError(err?.message || 'Passport hash verification failed.');
+    } finally {
+      setHkBusy(false);
+    }
+  };
+
+  const handleHkRecordProgression = async () => {
+    setHkBusy(true);
+    setError('');
+    setMessage('');
+    try {
+      const payload = {
+        sourceType: hkSourceType,
+        sourceRef: hkSourceRef.trim(),
+        contributionValue: Number(hkContributionValue || 0),
+        economicValue: Number(hkEconomicValue || 0),
+        notes: hkNotes.trim(),
+      };
+      const response = await recordFederationHkProgression(payload);
+      if (!response?.ok) {
+        setError(response?.message || 'Unable to record progression event.');
+        return;
+      }
+      if (response?.skipped) {
+        setMessage(response?.skipReason || 'Progression event accepted but no XP was awarded.');
+      } else {
+        setMessage(`Progression recorded: +${response?.progression?.awardedXp || 0} XP`);
+      }
+      await loadHkData();
+    } catch (err) {
+      setError(err?.message || 'Unable to record progression event.');
+    } finally {
+      setHkBusy(false);
+    }
+  };
+
   return (
     <div className="federation-map-page">
       <header className="federation-map-hero">
@@ -668,6 +806,121 @@ export default function FederationMapPage() {
 
       {error ? <div className="federation-alert federation-alert--error">{error}</div> : null}
       {message ? <div className="federation-alert federation-alert--ok">{message}</div> : null}
+
+      <section className="federation-card federation-card--hk">
+        <div className="federation-live-header">
+          <h2>Heel-Kawn HK Profile</h2>
+          <div className="federation-button-row">
+            <button type="button" onClick={handleHkOnboard} disabled={hkBusy}>
+              {hkBusy ? 'Working...' : 'Initialize Level 1 Sprite'}
+            </button>
+            <button type="button" onClick={() => loadHkData()} disabled={hkLoading || hkBusy}>
+              {hkLoading ? 'Refreshing...' : 'Refresh HK'}
+            </button>
+          </div>
+        </div>
+
+        <p className="federation-inline-note">
+          HK is account-gated. Identity uses one-way passport hashing only, and location remains country-level by default.
+        </p>
+
+        <div className="hk-grid">
+          <article className="planet-game-panel">
+            <h3>Sprite Progression</h3>
+            <div className="hk-stat-grid">
+              <div><span>Level</span><strong>{hkProfile?.level || 1}</strong></div>
+              <div><span>XP</span><strong>{hkProfile?.xp || 0}</strong></div>
+              <div><span>Contribution</span><strong>{hkProfile?.contributionScore || 0}</strong></div>
+              <div><span>Economic</span><strong>{hkProfile?.economicScore || 0}</strong></div>
+            </div>
+            <div className="hk-progress">
+              <div style={{ width: `${hkProgressPercent}%` }} />
+            </div>
+            <p className="federation-inline-note">
+              {hkProfile?.xp || 0}/{hkProfile?.nextLevelXp || 120} XP to next level.
+            </p>
+          </article>
+
+          <article className="planet-game-panel">
+            <h3>Passport Hash Verification</h3>
+            <div className="federation-form-row">
+              <label htmlFor="hkPassportId">Passport ID (never stored raw)</label>
+              <input
+                id="hkPassportId"
+                value={hkPassportId}
+                onChange={(e) => setHkPassportId(e.target.value)}
+                placeholder="A12345678"
+              />
+            </div>
+            <div className="federation-form-row">
+              <label htmlFor="hkPassportCountryCode">Passport Country Code</label>
+              <input
+                id="hkPassportCountryCode"
+                value={hkPassportCountryCode}
+                onChange={(e) => setHkPassportCountryCode(e.target.value.toUpperCase())}
+                placeholder="KE"
+                maxLength={2}
+              />
+            </div>
+            <button type="button" disabled={hkBusy || !hkPassportId.trim()} onClick={handleHkVerifyPassportHash}>
+              {hkBusy ? 'Verifying...' : 'Verify Passport Hash'}
+            </button>
+            <p className="federation-inline-note">
+              Status: {hkProfile?.identity?.passportHashVerified ? 'Verified' : 'Not verified'}
+              {hkProfile?.identity?.passportHashLast4 ? ` (ending ${hkProfile.identity.passportHashLast4})` : ''}
+            </p>
+          </article>
+
+          <article className="planet-game-panel">
+            <h3>Record Contribution Event</h3>
+            <div className="federation-form-row">
+              <label htmlFor="hkSourceType">Source Type</label>
+              <select id="hkSourceType" value={hkSourceType} onChange={(e) => setHkSourceType(e.target.value)}>
+                <option value="knowledge_contribution">Knowledge Contribution</option>
+                <option value="verified_transaction">Verified Transaction</option>
+                <option value="governance_action">Governance Action</option>
+                <option value="consistency_streak">Consistency Streak</option>
+              </select>
+            </div>
+            <div className="federation-form-row">
+              <label htmlFor="hkSourceRef">Source Reference (optional but recommended)</label>
+              <input id="hkSourceRef" value={hkSourceRef} onChange={(e) => setHkSourceRef(e.target.value)} placeholder="order-123 / article-7" />
+            </div>
+            <div className="federation-form-row">
+              <label htmlFor="hkContributionValue">Contribution Value</label>
+              <input id="hkContributionValue" type="number" min="0" value={hkContributionValue} onChange={(e) => setHkContributionValue(e.target.value)} />
+            </div>
+            <div className="federation-form-row">
+              <label htmlFor="hkEconomicValue">Economic Value</label>
+              <input id="hkEconomicValue" type="number" min="0" value={hkEconomicValue} onChange={(e) => setHkEconomicValue(e.target.value)} />
+            </div>
+            <div className="federation-form-row">
+              <label htmlFor="hkNotes">Notes</label>
+              <input id="hkNotes" value={hkNotes} onChange={(e) => setHkNotes(e.target.value)} placeholder="Verified transaction from marketplace" />
+            </div>
+            <button type="button" disabled={hkBusy} onClick={handleHkRecordProgression}>
+              {hkBusy ? 'Recording...' : 'Record Progression'}
+            </button>
+          </article>
+
+          <article className="planet-game-panel">
+            <h3>Recent Progression History</h3>
+            <div className="planet-game-list">
+              {hkHistory.length ? hkHistory.map((item) => (
+                <div key={item.id}>
+                  <strong>{item.sourceType}</strong>
+                  <span>
+                    +{item.totalXpAwarded} XP ({item.contributionPoints} contribution, {item.economicPoints} economic)
+                  </span>
+                  <span>{formatRelativeTime(item.createdAt)}</span>
+                </div>
+              )) : (
+                <p className="federation-inline-note">No progression events yet.</p>
+              )}
+            </div>
+          </article>
+        </div>
+      </section>
 
       <section className="federation-card federation-card--planetGame">
         <div className="federation-live-header">
