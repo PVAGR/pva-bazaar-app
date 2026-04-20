@@ -397,6 +397,7 @@ export default function PassportPage() {
         </div>
         <div className="passport-hero-actions">
           <button type="button" className="button" onClick={handleConnectWallet}>Connect Wallet</button>
+          <Link className="button secondary" to="/federation-map">Open Federation Map</Link>
           <a className="button ghost" href="#governance-record">View Governance Record</a>
           <a className="button secondary" href="#economic-record">View Economic Record</a>
         </div>
@@ -676,12 +677,15 @@ export default function PassportPage() {
 
       <section className="section-card">
         <h2>Civilization Linkage</h2>
+        <p className="passport-section-note">
+          Use this page to move directly into the federation game map, then come back here to review identity, proof, and civic records.
+        </p>
         <div className="passport-link-strip">
+          <Link to="/federation-map">Live Federation Map</Link>
           <Link to="/conference">Popular Conference</Link>
           <Link to="/marketplace">Marketplace / Economy</Link>
           <Link to="/library">Learning / Library</Link>
           <Link to="/civilization-library">Culture & Memory</Link>
-          <Link to="/federation-map">Live Federation Map</Link>
         </div>
       </section>
     </div>

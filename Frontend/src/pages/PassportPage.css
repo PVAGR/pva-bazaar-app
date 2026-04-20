@@ -33,10 +33,10 @@
 }
 
 .passport-card {
-  border: 1px solid color-mix(in srgb, var(--site-accent-strong) 48%, var(--site-border));
+  border: 1px solid var(--site-border-strong);
   border-radius: 16px;
   background:
-    linear-gradient(135deg, color-mix(in srgb, var(--site-panel) 94%, transparent) 0%, color-mix(in srgb, var(--site-panel-soft) 92%, transparent) 100%);
+    linear-gradient(135deg, var(--site-panel) 0%, var(--site-panel-soft) 100%);
   padding: 1rem;
 }
 
@@ -70,13 +70,13 @@
 
 .status-verified {
   color: var(--site-success-text);
-  border-color: color-mix(in srgb, var(--site-success-text) 45%, var(--site-border));
+  border-color: var(--site-success-text);
   background: var(--site-success-bg);
 }
 
 .status-pending {
   color: var(--site-warning-text);
-  border-color: color-mix(in srgb, var(--site-warning-text) 45%, var(--site-border));
+  border-color: var(--site-warning-text);
   background: var(--site-warning-bg);
 }
 
@@ -88,7 +88,7 @@
 
 .status-suspended {
   color: var(--site-danger-text);
-  border-color: color-mix(in srgb, var(--site-danger-text) 45%, var(--site-border));
+  border-color: var(--site-danger-text);
   background: var(--site-danger-bg);
 }
 
@@ -278,7 +278,7 @@
 }
 
 .wallet-section article {
-  border-color: color-mix(in srgb, var(--site-success-text) 35%, var(--site-border));
+  border-color: var(--site-success-text);
 }
 
 .verifier-panel {
@@ -327,18 +327,30 @@
   gap: 0.6rem;
 }
 
+.passport-section-note {
+  margin: 0 0 0.8rem;
+  color: var(--site-text-muted);
+  line-height: 1.6;
+}
+
 .passport-link-strip a {
   text-decoration: none;
   border: 1px solid var(--site-border);
-  border-radius: 12px;
-  background: var(--site-panel-soft);
+  border-radius: 14px;
+  background: linear-gradient(180deg, var(--site-panel-soft), var(--site-panel));
   color: var(--site-text);
-  padding: 0.75rem;
+  padding: 0.82rem 0.8rem;
+  font-weight: 700;
+  min-height: 54px;
+  display: flex;
+  align-items: center;
 }
 
 .passport-link-strip a:hover {
   border-color: var(--site-accent);
   color: var(--site-accent-strong);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.16);
 }
 
 .directory-shell {
