@@ -15,9 +15,9 @@ export default function OpeningHomePage() {
             existing surface of the platform.
           </p>
           <div className="opening-home__actions">
-            <Link className="btn btn-primary" to="/get-started">Start Account Path</Link>
-            <Link className="btn btn-secondary" to="/home">Explore Home</Link>
-            <Link className="btn btn-ghost" to="/about">Read Manifesto</Link>
+            <Link className="opening-home__actionBtn opening-home__actionBtn--primary" to="/get-started">Start Account Path</Link>
+            <Link className="opening-home__actionBtn opening-home__actionBtn--secondary" to="/home">Explore Home</Link>
+            <Link className="opening-home__actionBtn opening-home__actionBtn--ghost" to="/about">Read Manifesto</Link>
           </div>
         </div>
 

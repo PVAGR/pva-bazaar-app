@@ -111,6 +111,35 @@ function formatRelativeTime(value) {
   return `${Math.floor(diffH / 24)}d ago`;
 }
 
+function federationUserMessageFromError(err, fallbackMessage) {
+  const status = Number(err?.response?.status || 0);
+  const message = String(err?.response?.data?.message || err?.message || '').trim();
+  if (!status) {
+    if (/network\s*error/i.test(message)) {
+      return fallbackMessage;
+    }
+    return message || fallbackMessage;
+  }
+  if (status === 401) {
+    return 'Please sign in to use this federation action.';
+  }
+  if (status === 404) {
+    return 'This federation feature is still deploying. Please retry shortly.';
+  }
+  if (status >= 500) {
+    return 'Federation service is temporarily unavailable. Please try again.';
+  }
+  return message || fallbackMessage;
+}
+
+function federationUserMessageFromResponse(response, fallbackMessage) {
+  const message = String(response?.message || '').trim();
+  if (!message || /network\s*error/i.test(message)) {
+    return fallbackMessage;
+  }
+  return message;
+}
+
 export default function FederationMapPage() {
   const [liveData, setLiveData] = useState(null);
   const [myPresence, setMyPresence] = useState(null);
@@ -323,7 +352,7 @@ export default function FederationMapPage() {
         setHkHistory(hkHistoryResponse.items);
       }
     } catch (err) {
-      setMessage(err?.message || 'Some federation data is unavailable right now.');
+      setMessage(federationUserMessageFromError(err, 'Some federation data is unavailable right now.'));
     } finally {
       setLoading(false);
     }
@@ -386,7 +415,7 @@ export default function FederationMapPage() {
     try {
       const response = await runFederationGameAction(actionType);
       if (!response?.ok || !response.state) {
-        setGameNotice(response?.message || 'Action failed.');
+        setGameNotice(federationUserMessageFromResponse(response, 'Action failed.'));
         return;
       }
       const state = response.state;
@@ -407,7 +436,7 @@ export default function FederationMapPage() {
         setWorldGameFeed(worldResponse.world);
       }
     } catch (err) {
-      setGameNotice(err?.message || 'Action failed.');
+      setGameNotice(federationUserMessageFromError(err, 'Action failed.'));
     } finally {
       setGameBusy(false);
     }
@@ -445,7 +474,7 @@ export default function FederationMapPage() {
       setCountryCode(nextCountryCode);
       setMessage(`Detected location: ${nextCountry}${nextCountryCode ? ` (${nextCountryCode})` : ''}`);
     } catch (err) {
-      setMessage(err?.message || 'Auto-detect unavailable. Enter your country manually to continue.');
+      setMessage(federationUserMessageFromError(err, 'Auto-detect unavailable. Enter your country manually to continue.'));
     } finally {
       setDetecting(false);
     }
@@ -467,13 +496,17 @@ export default function FederationMapPage() {
     }
 
     setError('');
-    const response = await submitFederationIntroQuiz(answers);
-    if (!response?.ok || !response.result) {
-      setError(response?.message || 'Unable to submit intro quiz.');
-      return;
+    try {
+      const response = await submitFederationIntroQuiz(answers);
+      if (!response?.ok || !response.result) {
+        setError(federationUserMessageFromResponse(response, 'Unable to submit intro quiz.'));
+        return;
+      }
+      setQuizResult(response.result);
+      setMessage(`Recommended federation role: ${response.result.recommendedRole}`);
+    } catch (err) {
+      setError(federationUserMessageFromError(err, 'Unable to submit intro quiz.'));
     }
-    setQuizResult(response.result);
-    setMessage(`Recommended federation role: ${response.result.recommendedRole}`);
   };
 
   const handleCheckIn = async () => {
@@ -506,7 +539,7 @@ export default function FederationMapPage() {
       });
 
       if (!response?.ok || !response.item) {
-        setError(response?.message || 'Check-in failed.');
+        setError(federationUserMessageFromResponse(response, 'Check-in failed.'));
         return;
       }
 
@@ -514,7 +547,7 @@ export default function FederationMapPage() {
       setMessage('Federation check-in complete. You are now visible on the world pulse map.');
       await loadLiveData();
     } catch (err) {
-      setError(err?.message || 'Check-in failed.');
+      setError(federationUserMessageFromError(err, 'Check-in failed.'));
     } finally {
       setCheckingIn(false);
     }
@@ -555,7 +588,7 @@ export default function FederationMapPage() {
     try {
       const response = await createFederationFaction({ name: newFactionName, tag: newFactionTag });
       if (!response?.ok) {
-        setError(response?.message || 'Unable to create faction.');
+        setError(federationUserMessageFromResponse(response, 'Unable to create faction.'));
         return;
       }
       setMessage(`Faction created: ${response.faction.name} (${response.faction.tag})`);
@@ -563,7 +596,7 @@ export default function FederationMapPage() {
       setNewFactionTag('');
       await refreshFactionAndWorld();
     } catch (err) {
-      setError(err?.message || 'Unable to create faction.');
+      setError(federationUserMessageFromError(err, 'Unable to create faction.'));
     } finally {
       setFactionBusy(false);
     }
@@ -576,14 +609,14 @@ export default function FederationMapPage() {
     try {
       const response = await joinFederationFaction({ inviteCode: joinInviteCode });
       if (!response?.ok) {
-        setError(response?.message || 'Unable to join faction.');
+        setError(federationUserMessageFromResponse(response, 'Unable to join faction.'));
         return;
       }
       setMessage(`Joined faction: ${response.faction.name} (${response.faction.tag})`);
       setJoinInviteCode('');
       await refreshFactionAndWorld();
     } catch (err) {
-      setError(err?.message || 'Unable to join faction.');
+      setError(federationUserMessageFromError(err, 'Unable to join faction.'));
     } finally {
       setFactionBusy(false);
     }
@@ -596,7 +629,7 @@ export default function FederationMapPage() {
     try {
       const response = await claimFederationSector({ sector: claimSectorCode, label: claimSectorLabel });
       if (!response?.ok) {
-        setError(response?.message || 'Unable to claim sector.');
+        setError(federationUserMessageFromResponse(response, 'Unable to claim sector.'));
         return;
       }
       setMessage(`Sector secured: ${response.sector.label} (${response.sector.sector})`);
@@ -604,7 +637,7 @@ export default function FederationMapPage() {
       setClaimSectorLabel('');
       await refreshFactionAndWorld();
     } catch (err) {
-      setError(err?.message || 'Unable to claim sector.');
+      setError(federationUserMessageFromError(err, 'Unable to claim sector.'));
     } finally {
       setFactionBusy(false);
     }
@@ -617,14 +650,14 @@ export default function FederationMapPage() {
     try {
       const response = await onboardFederationHkPlayer();
       if (!response?.ok || !response.profile) {
-        setError(response?.message || 'Unable to initialize HK profile.');
+        setError(federationUserMessageFromResponse(response, 'Unable to initialize HK profile.'));
         return;
       }
       setHkProfile(response.profile);
       setMessage('HK profile initialized. Your sprite starts at level 1 and grows with verified contribution.');
       await loadHkData();
     } catch (err) {
-      setError(err?.message || 'Unable to initialize HK profile.');
+      setError(federationUserMessageFromError(err, 'Unable to initialize HK profile.'));
     } finally {
       setHkBusy(false);
     }
@@ -644,14 +677,14 @@ export default function FederationMapPage() {
         passportCountryCode: hkPassportCountryCode.trim().toUpperCase(),
       });
       if (!response?.ok) {
-        setError(response?.message || 'Passport hash verification failed.');
+        setError(federationUserMessageFromResponse(response, 'Passport hash verification failed.'));
         return;
       }
       setHkPassportId('');
       setMessage('Passport identity hash verified. Raw ID was not stored.');
       await loadHkData();
     } catch (err) {
-      setError(err?.message || 'Passport hash verification failed.');
+      setError(federationUserMessageFromError(err, 'Passport hash verification failed.'));
     } finally {
       setHkBusy(false);
     }
@@ -671,7 +704,7 @@ export default function FederationMapPage() {
       };
       const response = await recordFederationHkProgression(payload);
       if (!response?.ok) {
-        setError(response?.message || 'Unable to record progression event.');
+        setError(federationUserMessageFromResponse(response, 'Unable to record progression event.'));
         return;
       }
       if (response?.skipped) {
@@ -681,7 +714,7 @@ export default function FederationMapPage() {
       }
       await loadHkData();
     } catch (err) {
-      setError(err?.message || 'Unable to record progression event.');
+      setError(federationUserMessageFromError(err, 'Unable to record progression event.'));
     } finally {
       setHkBusy(false);
     }

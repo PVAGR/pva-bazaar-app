@@ -71,7 +71,7 @@ export const PUBLIC_ROUTES = [
     description: 'Live world pulse map of active passport citizens and contribution roles.',
     group: 'support',
     badge: 'Live',
-    navPlacement: 'secondary',
+    navPlacement: 'primary',
     access: 'public',
   },
   {
