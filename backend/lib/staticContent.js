@@ -3,6 +3,7 @@ const path = require('path');
 const slugify = require('slugify');
 
 const ARCHIVE_DIRECTORIES = [
+  path.resolve(__dirname, '..', 'archive'),
   path.resolve(__dirname, '..', '..', 'archive'),
   path.resolve(__dirname, '..', '..', 'Frontend', 'public', 'archive'),
 ];

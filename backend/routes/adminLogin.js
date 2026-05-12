@@ -215,17 +215,21 @@ router.post('/login', async (req, res) => {
     const adminUserIdFromEnv = process.env.ADMIN_USER_ID;
     let subjectId = isObjectIdHex(adminUserIdFromEnv) ? adminUserIdFromEnv : null;
 
-    // Otherwise, ensure an admin user exists (idempotent) and use its _id.
+    // Otherwise, try to find/create an admin user; fall back to a synthetic ID on DB failure.
     if (!subjectId) {
       const adminEmail = process.env.ADMIN_EMAIL || 'admin@pvabazaar.org';
-      let user = await User.findOne({ email: adminEmail });
-      if (!user) {
-        // This account is not intended for /api/auth/login, so the password can be random.
-        const randomPassword = crypto.randomBytes(24).toString('hex');
-        user = new User({ name: 'Admin', email: adminEmail, password: randomPassword });
-        await user.save();
+      try {
+        let user = await User.findOne({ email: adminEmail });
+        if (!user) {
+          const randomPassword = crypto.randomBytes(24).toString('hex');
+          user = new User({ name: 'Admin', email: adminEmail, password: randomPassword });
+          await user.save();
+        }
+        subjectId = String(user._id);
+      } catch (_dbErr) {
+        // DB write may fail (read-only user, cold start, etc); still allow login
+        subjectId = '000000000000000000000000';
       }
-      subjectId = String(user._id);
     }
 
     // Issue JWT (12h) - in production, prefer HttpOnly cookie

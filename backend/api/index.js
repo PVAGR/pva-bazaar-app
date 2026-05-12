@@ -397,7 +397,7 @@ function legacyGate(req, res, next) {
 
 // Set LEGACY_MODE default
 if (!process.env.LEGACY_MODE) {
-  process.env.LEGACY_MODE = 'false';
+  process.env.LEGACY_MODE = 'true';
 }
 console.log('🔒 LEGACY_MODE:', process.env.LEGACY_MODE);
 
