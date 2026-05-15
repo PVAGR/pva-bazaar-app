@@ -161,6 +161,16 @@ export const PUBLIC_ROUTES = [
     access: 'public',
   },
   {
+    key: 'heelkawn',
+    to: '/heelkawn',
+    navLabel: 'HeelKawn',
+    title: 'HeelKawn',
+    description: 'HeelKawn game page with direct mobile download access.',
+    group: 'support',
+    navPlacement: 'secondary',
+    access: 'public',
+  },
+  {
     key: 'identity-center',
     to: '/identity-center',
     navLabel: 'Citizen Passport',

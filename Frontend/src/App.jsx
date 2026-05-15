@@ -48,6 +48,7 @@ const SubmitProposalPage = lazy(() => import('./pages/SubmitProposalPage.jsx'));
 const TreasuryPage = lazy(() => import('./pages/TreasuryPage.jsx'));
 const DeployPage = lazy(() => import('./pages/DeployPage.jsx'));
 const DownloadAppPage = lazy(() => import('./pages/DownloadAppPage.jsx'));
+const HeelKawnPage = lazy(() => import('./pages/HeelKawnPage.jsx'));
 const ForumPage = lazy(() => import('./pages/Forum.jsx'));
 const GetStartedPage = lazy(() => import('./pages/GetStartedPage.jsx'));
 const OpeningHomePage = lazy(() => import('./pages/OpeningHomePage.jsx'));
@@ -138,6 +139,7 @@ export default function App() {
         <Route path="/showroom" element={<Layout><ShowroomPage /></Layout>} />
         <Route path="/showroom/:slugOrId" element={<Layout><ShowroomItemPage /></Layout>} />
         <Route path="/download-app" element={<Layout><DownloadAppPage /></Layout>} />
+        <Route path="/heelkawn" element={<Layout><HeelKawnPage /></Layout>} />
         <Route path="/checkout/success" element={<Layout><CheckoutSuccessPage /></Layout>} />
         <Route path="/checkout/cancel" element={<Layout><CheckoutCancelPage /></Layout>} />
         <Route path="*" element={<Navigate to="/" replace />} />

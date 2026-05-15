@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 
+const heelKawnDownloadUrl = import.meta.env.VITE_HEELKAWN_DOWNLOAD_URL || 'https://github.com/PVAGR/HeelKawn1/archive/refs/heads/main.zip';
+
 export default function DownloadAppPage() {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [isInstallable, setIsInstallable] = useState(false);
@@ -75,6 +77,20 @@ export default function DownloadAppPage() {
         >
           {isStandalone ? 'Installed' : 'Install App'}
         </button>
+        <a
+          className="button secondary"
+          href="/#/heelkawn"
+        >
+          Open HeelKawn page
+        </a>
+        <a
+          className="button ghost"
+          href={heelKawnDownloadUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Download HeelKawn
+        </a>
       </div>
 
       <div className="download-help-grid">

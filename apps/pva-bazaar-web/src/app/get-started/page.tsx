@@ -20,6 +20,11 @@ const START_ROUTES = [
     description: "See the federation values and anti-Druj operating stance.",
   },
   {
+    href: "/heelkawn",
+    title: "HeelKawn",
+    description: "Access the dedicated game page and download package for phone testing.",
+  },
+  {
     href: "/dashboard",
     title: "Dashboard",
     description: "Track member activity, profile signals, and operational updates.",

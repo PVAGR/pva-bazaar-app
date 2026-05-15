@@ -66,6 +66,9 @@ export default function RootLayout({
                 <Link href="/manifesto" className="hover:text-amber-300">
                   Manifesto
                 </Link>
+                <Link href="/heelkawn" className="hover:text-amber-300">
+                  HeelKawn
+                </Link>
                 <Link href="/dashboard" className="hover:text-amber-300">
                   Dashboard
                 </Link>
