@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 const HEELKAWN_DOWNLOAD_URL =
   process.env.NEXT_PUBLIC_HEELKAWN_DOWNLOAD_URL ||
-  "https://github.com/PVAGR/HeelKawn1/archive/refs/heads/main.zip";
+  "https://github.com/PVAGR/HeelKawn1/releases/download/android-latest/HeelKawn-android.apk";
 
 const HEELKAWN_REPO_URL =
   process.env.NEXT_PUBLIC_HEELKAWN_REPO_URL || "https://github.com/PVAGR/HeelKawn1";

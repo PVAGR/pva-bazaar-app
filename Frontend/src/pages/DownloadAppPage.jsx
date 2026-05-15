@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
-const heelKawnDownloadUrl = import.meta.env.VITE_HEELKAWN_DOWNLOAD_URL || 'https://github.com/PVAGR/HeelKawn1/archive/refs/heads/main.zip';
+const heelKawnDownloadUrl = import.meta.env.VITE_HEELKAWN_DOWNLOAD_URL || 'https://github.com/PVAGR/HeelKawn1/releases/download/android-latest/HeelKawn-android.apk';
 
 export default function DownloadAppPage() {
   const [deferredPrompt, setDeferredPrompt] = useState(null);

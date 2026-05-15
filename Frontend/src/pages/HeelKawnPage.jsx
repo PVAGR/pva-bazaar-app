@@ -1,6 +1,6 @@
 import React from 'react';
 
-const downloadUrl = import.meta.env.VITE_HEELKAWN_DOWNLOAD_URL || 'https://github.com/PVAGR/HeelKawn1/archive/refs/heads/main.zip';
+const downloadUrl = import.meta.env.VITE_HEELKAWN_DOWNLOAD_URL || 'https://github.com/PVAGR/HeelKawn1/releases/download/android-latest/HeelKawn-android.apk';
 const repoUrl = import.meta.env.VITE_HEELKAWN_REPO_URL || 'https://github.com/PVAGR/HeelKawn1';
 
 export default function HeelKawnPage() {
