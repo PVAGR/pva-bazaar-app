@@ -165,7 +165,7 @@ export const PUBLIC_ROUTES = [
     to: '/heelkawn',
     navLabel: 'HeelKawn',
     title: 'HeelKawn',
-    description: 'HeelKawn game page with direct mobile download access.',
+    description: 'HeelKawn Armory hub with profile, customization, social tools, and mobile/PC downloads.',
     group: 'support',
     navPlacement: 'secondary',
     access: 'public',
