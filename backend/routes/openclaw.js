@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const dbConnect = require('../lib/dbConnect');
+const { verifyToken } = require('../middleware/auth');
 
 const OPENAI_API_KEY = String(process.env.OPENAI_API_KEY || '').trim();
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
@@ -80,6 +81,27 @@ function parseChatIds(value) {
     .split(',')
     .map((item) => item.trim())
     .filter(Boolean);
+}
+
+function resolveAuthenticatedAdmin(req) {
+  const authHeader = String(req.headers?.authorization || '').trim();
+  if (!authHeader.toLowerCase().startsWith('bearer ')) {
+    return null;
+  }
+  const token = authHeader.slice(7).trim();
+  if (!token) return null;
+
+  try {
+    const decoded = verifyToken(token);
+    const userId = String(decoded?.id || '').trim();
+    const role = String(decoded?.role || '').trim().toLowerCase();
+    if (!userId || role !== 'admin') {
+      return null;
+    }
+    return { userId, role };
+  } catch (_err) {
+    return null;
+  }
 }
 
 async function sendTelegramMessage(chatId, text) {
@@ -1598,6 +1620,15 @@ router.post('/chat', async (req, res) => {
 });
 
 router.post('/public/pulse', async (req, res) => {
+  const adminIdentity = resolveAuthenticatedAdmin(req);
+  if (!adminIdentity) {
+    return res.status(401).json({
+      ok: false,
+      message: 'Admin sign in is required for OpenClaw access',
+    });
+  }
+  const userId = adminIdentity.userId;
+
   const sessionId = normalizeSessionId(req.body?.sessionId);
   if (!sessionId) {
     return res.status(400).json({
@@ -1615,6 +1646,7 @@ router.post('/public/pulse', async (req, res) => {
       sessionId,
       key: `website:session:${sessionId}:presence`,
       value: JSON.stringify({
+        userId,
         path: pathName || null,
         title: pageTitle || null,
         referrer: referrer || null,
@@ -1639,6 +1671,14 @@ router.post('/public/pulse', async (req, res) => {
 });
 
 router.get('/public/memory', async (req, res) => {
+  const adminIdentity = resolveAuthenticatedAdmin(req);
+  if (!adminIdentity) {
+    return res.status(401).json({
+      ok: false,
+      message: 'Admin sign in is required for OpenClaw access',
+    });
+  }
+
   const sessionId = normalizeSessionId(req.query.sessionId);
   if (!sessionId) {
     return res.status(400).json({
@@ -1684,6 +1724,15 @@ router.get('/public/memory', async (req, res) => {
 });
 
 router.post('/public-chat', async (req, res) => {
+  const adminIdentity = resolveAuthenticatedAdmin(req);
+  if (!adminIdentity) {
+    return res.status(401).json({
+      ok: false,
+      message: 'Admin sign in is required for OpenClaw access',
+    });
+  }
+  const userId = adminIdentity.userId;
+
   const config = getConfig();
   const sessionId = normalizeSessionId(req.body?.sessionId);
   const text = String(req.body?.message || '').trim().slice(0, 1200);
@@ -1705,6 +1754,7 @@ router.post('/public-chat', async (req, res) => {
     : {};
   const metadata = {
     ...rawMetadata,
+    userId,
     source,
     sessionId,
     path: pathName || null,
