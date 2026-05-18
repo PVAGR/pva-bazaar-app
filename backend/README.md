@@ -21,6 +21,11 @@ Optional (development helpers):
 USE_MEMORY_DB=true        # fallback to in-memory Mongo if no MONGODB_URI
 DEV_AUTO_SEED=true        # seed sample data when using memory DB
 ADMIN_SECRET_CODE=dev-secret
+ADMIN_GITHUB_CLIENT_ID=your-github-oauth-client-id
+ADMIN_GITHUB_CLIENT_SECRET=your-github-oauth-client-secret
+# Optional: ADMIN_GITHUB_ALLOWED_USERS=yourgithublogin,you@example.com,1234567
+# Optional: ADMIN_GITHUB_FRONTEND_URL=https://pvabazaar.org/#/admin
+# Optional: ADMIN_GITHUB_CALLBACK_URL=https://api.yourdomain.com/api/admin/oauth/github/callback
 ```
 
 ## Running Locally

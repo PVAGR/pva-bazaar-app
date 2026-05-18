@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
+const axios = require('axios');
 const User = require('../models/User');
 
 function isObjectIdHex(v) {
@@ -48,7 +49,90 @@ function buildBootstrapStatus(adminCount) {
     signupAllowed,
     bootstrapCodeRequired,
     bootstrapCodeConfigured: Boolean(configuredBootstrapCode),
+    githubOAuthEnabled: Boolean(
+      String(process.env.ADMIN_GITHUB_CLIENT_ID || '').trim()
+      && String(process.env.ADMIN_GITHUB_CLIENT_SECRET || '').trim()
+      && String(process.env.JWT_SECRET || '').trim(),
+    ),
   };
+}
+
+function normalizeUrl(value) {
+  return String(value || '').trim().replace(/\/+$/, '');
+}
+
+function getRequestOrigin(req) {
+  const proto = String(req.headers['x-forwarded-proto'] || req.protocol || 'https').split(',')[0].trim();
+  const host = req.get('host');
+  return `${proto}://${host}`;
+}
+
+function getAdminGithubCallbackUrl(req) {
+  const configured = normalizeUrl(process.env.ADMIN_GITHUB_CALLBACK_URL || '');
+  if (configured) return configured;
+  return `${getRequestOrigin(req)}/api/admin/oauth/github/callback`;
+}
+
+function getAdminGithubFrontendUrl(req) {
+  const configured = normalizeUrl(process.env.ADMIN_GITHUB_FRONTEND_URL || process.env.PUBLIC_SITE_URL || '');
+  if (configured) {
+    return configured.includes('#') ? configured : `${configured}/#/admin`;
+  }
+  return `${getRequestOrigin(req)}/#/admin`;
+}
+
+function parseGithubAllowlist() {
+  return String(process.env.ADMIN_GITHUB_ALLOWED_USERS || '')
+    .split(',')
+    .map((item) => item.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+function isGithubIdentityAllowlisted({ githubLogin, githubId, email, allowlist }) {
+  if (!Array.isArray(allowlist) || allowlist.length === 0) return false;
+  const candidates = [
+    String(githubLogin || '').trim().toLowerCase(),
+    String(githubId || '').trim().toLowerCase(),
+    String(email || '').trim().toLowerCase(),
+  ].filter(Boolean);
+  return candidates.some((candidate) => allowlist.includes(candidate));
+}
+
+function buildFrontendRedirect(frontendUrl, params = {}) {
+  const query = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === '') return;
+    query.set(key, String(value));
+  });
+  const delimiter = frontendUrl.includes('?') ? '&' : '?';
+  return `${frontendUrl}${query.toString() ? `${delimiter}${query.toString()}` : ''}`;
+}
+
+function pickPrimaryGithubEmail({ profileEmail, emails }) {
+  const fromList = Array.isArray(emails)
+    ? (
+      emails.find((entry) => entry?.verified && entry?.primary)
+      || emails.find((entry) => entry?.verified)
+      || emails[0]
+    )
+    : null;
+
+  const raw = String(fromList?.email || profileEmail || '').trim().toLowerCase();
+  return raw || '';
+}
+
+async function findUserByGithubIdentity({ email, githubLogin }) {
+  if (email) {
+    const byEmail = await User.findOne({ email });
+    if (byEmail) return byEmail;
+  }
+
+  if (githubLogin) {
+    const byUsername = await User.findOne({ username: githubLogin });
+    if (byUsername) return byUsername;
+  }
+
+  return null;
 }
 
 // GET /api/admin/bootstrap-status - determines if first-time admin signup is allowed.
@@ -62,6 +146,274 @@ router.get('/bootstrap-status', async (_req, res) => {
   } catch (error) {
     console.error('Admin bootstrap-status error:', error);
     return res.status(500).json({ ok: false, message: 'Failed to load bootstrap status' });
+  }
+});
+
+// GET /api/admin/oauth/github/status - GitHub OAuth readiness for admin login.
+router.get('/oauth/github/status', (req, res) => {
+  const required = ['ADMIN_GITHUB_CLIENT_ID', 'ADMIN_GITHUB_CLIENT_SECRET', 'JWT_SECRET'];
+  const missing = required.filter((key) => !String(process.env[key] || '').trim());
+  const allowlist = parseGithubAllowlist();
+
+  return res.json({
+    ok: true,
+    configured: missing.length === 0,
+    missing,
+    callbackUrl: getAdminGithubCallbackUrl(req),
+    frontendReturnUrl: getAdminGithubFrontendUrl(req),
+    allowlistConfigured: allowlist.length > 0,
+  });
+});
+
+// GET /api/admin/oauth/github/start - Redirect to GitHub OAuth.
+router.get('/oauth/github/start', async (req, res) => {
+  try {
+    const clientId = String(process.env.ADMIN_GITHUB_CLIENT_ID || '').trim();
+    const clientSecret = String(process.env.ADMIN_GITHUB_CLIENT_SECRET || '').trim();
+    const jwtSecret = String(process.env.JWT_SECRET || '').trim();
+    const frontendUrl = getAdminGithubFrontendUrl(req);
+
+    if (!clientId || !clientSecret || !jwtSecret) {
+      return res.redirect(
+        buildFrontendRedirect(frontendUrl, {
+          oauth_admin_error: 'GitHub admin login is not configured on the server',
+        }),
+      );
+    }
+
+    const state = jwt.sign(
+      {
+        provider: 'github-admin',
+        nonce: crypto.randomBytes(12).toString('hex'),
+      },
+      jwtSecret,
+      { expiresIn: '10m' },
+    );
+
+    const params = new URLSearchParams({
+      client_id: clientId,
+      redirect_uri: getAdminGithubCallbackUrl(req),
+      scope: 'read:user user:email',
+      state,
+      allow_signup: 'false',
+      prompt: 'select_account',
+    });
+
+    return res.redirect(`https://github.com/login/oauth/authorize?${params.toString()}`);
+  } catch (error) {
+    const frontendUrl = getAdminGithubFrontendUrl(req);
+    return res.redirect(
+      buildFrontendRedirect(frontendUrl, {
+        oauth_admin_error: error.message || 'GitHub admin login start failed',
+      }),
+    );
+  }
+});
+
+// GET /api/admin/oauth/github/callback - Complete GitHub OAuth and issue admin token.
+router.get('/oauth/github/callback', async (req, res) => {
+  const frontendUrl = getAdminGithubFrontendUrl(req);
+
+  try {
+    const clientId = String(process.env.ADMIN_GITHUB_CLIENT_ID || '').trim();
+    const clientSecret = String(process.env.ADMIN_GITHUB_CLIENT_SECRET || '').trim();
+    const jwtSecret = String(process.env.JWT_SECRET || '').trim();
+
+    if (!clientId || !clientSecret || !jwtSecret) {
+      return res.redirect(
+        buildFrontendRedirect(frontendUrl, {
+          oauth_admin_error: 'GitHub admin login is not configured on the server',
+        }),
+      );
+    }
+
+    const code = String(req.query.code || '').trim();
+    const state = String(req.query.state || '').trim();
+    const oauthError = String(req.query.error || '').trim();
+    const oauthErrorDescription = String(req.query.error_description || '').trim();
+
+    if (oauthError) {
+      const msg = oauthErrorDescription ? `${oauthError}: ${oauthErrorDescription}` : oauthError;
+      return res.redirect(buildFrontendRedirect(frontendUrl, { oauth_admin_error: msg }));
+    }
+
+    if (!code || !state) {
+      return res.redirect(
+        buildFrontendRedirect(frontendUrl, {
+          oauth_admin_error: 'Missing code/state from GitHub',
+        }),
+      );
+    }
+
+    let decodedState;
+    try {
+      decodedState = jwt.verify(state, jwtSecret);
+    } catch (_err) {
+      return res.redirect(
+        buildFrontendRedirect(frontendUrl, {
+          oauth_admin_error: 'Invalid OAuth state. Please retry.',
+        }),
+      );
+    }
+
+    if (decodedState?.provider !== 'github-admin') {
+      return res.redirect(
+        buildFrontendRedirect(frontendUrl, {
+          oauth_admin_error: 'OAuth provider mismatch',
+        }),
+      );
+    }
+
+    const tokenResponse = await axios.post(
+      'https://github.com/login/oauth/access_token',
+      {
+        client_id: clientId,
+        client_secret: clientSecret,
+        code,
+        redirect_uri: getAdminGithubCallbackUrl(req),
+      },
+      {
+        headers: { Accept: 'application/json' },
+        timeout: 15000,
+      },
+    );
+
+    const accessToken = String(tokenResponse?.data?.access_token || '').trim();
+    if (!accessToken) {
+      return res.redirect(
+        buildFrontendRedirect(frontendUrl, {
+          oauth_admin_error: 'GitHub token exchange failed',
+        }),
+      );
+    }
+
+    const githubHeaders = {
+      Authorization: `Bearer ${accessToken}`,
+      Accept: 'application/vnd.github+json',
+      'User-Agent': 'pva-bazaar-admin-oauth',
+    };
+
+    const [profileResponse, emailsResponse] = await Promise.all([
+      axios.get('https://api.github.com/user', { headers: githubHeaders, timeout: 15000 }),
+      axios.get('https://api.github.com/user/emails', { headers: githubHeaders, timeout: 15000 }).catch(() => ({ data: [] })),
+    ]);
+
+    const profile = profileResponse?.data || {};
+    const emails = Array.isArray(emailsResponse?.data) ? emailsResponse.data : [];
+    const githubLogin = String(profile.login || '').trim();
+    const githubId = String(profile.id || '').trim();
+    const displayName = String(profile.name || githubLogin || 'GitHub Admin').trim();
+    const emailFromGithub = pickPrimaryGithubEmail({
+      profileEmail: profile.email,
+      emails,
+    });
+    const derivedEmail = emailFromGithub || (githubId ? `github-${githubId}@users.noreply.github.com` : '');
+
+    if (!githubId || !githubLogin) {
+      return res.redirect(
+        buildFrontendRedirect(frontendUrl, {
+          oauth_admin_error: 'GitHub profile data incomplete',
+        }),
+      );
+    }
+
+    const allowlist = parseGithubAllowlist();
+    const allowlistConfigured = allowlist.length > 0;
+    const allowlisted = isGithubIdentityAllowlisted({
+      githubLogin,
+      githubId,
+      email: derivedEmail,
+      allowlist,
+    });
+
+    const adminCount = await countAdminUsers();
+    let user = await findUserByGithubIdentity({
+      email: derivedEmail,
+      githubLogin,
+    });
+
+    if (allowlistConfigured && !allowlisted) {
+      return res.redirect(
+        buildFrontendRedirect(frontendUrl, {
+          oauth_admin_error: 'GitHub account is not in the admin allowlist',
+        }),
+      );
+    }
+
+    if (!allowlistConfigured && adminCount > 0 && (!user || user.role !== 'admin')) {
+      return res.redirect(
+        buildFrontendRedirect(frontendUrl, {
+          oauth_admin_error: 'GitHub login requires an existing admin account or allowlist entry',
+        }),
+      );
+    }
+
+    if (user && user.role !== 'admin') {
+      return res.redirect(
+        buildFrontendRedirect(frontendUrl, {
+          oauth_admin_error: 'Matched account is not an admin account',
+        }),
+      );
+    }
+
+    if (!user) {
+      user = new User({
+        name: displayName,
+        username: undefined,
+        email: derivedEmail,
+        password: crypto.randomBytes(24).toString('hex'),
+        role: 'admin',
+      });
+    } else {
+      user.name = user.name || displayName;
+      user.role = 'admin';
+    }
+
+    if (profile.avatar_url && !user.profilePicture) {
+      user.profilePicture = String(profile.avatar_url);
+    }
+
+    if (!user.username && githubLogin) {
+      const usernameTaken = await User.findOne({
+        _id: { $ne: user._id },
+        username: githubLogin,
+      })
+        .select('_id')
+        .lean();
+      if (!usernameTaken) {
+        user.username = githubLogin;
+      }
+    }
+
+    user.oauthTokens = user.oauthTokens || {};
+    user.oauthTokens.githubAdminProfile = {
+      provider: 'github',
+      id: githubId,
+      login: githubLogin,
+      name: displayName,
+      email: derivedEmail || '',
+      avatarUrl: String(profile.avatar_url || ''),
+      updatedAt: new Date().toISOString(),
+    };
+
+    await user.save();
+
+    const token = issueAdminToken(user._id, jwtSecret);
+    setAdminCookie(res, token);
+
+    return res.redirect(
+      buildFrontendRedirect(frontendUrl, {
+        oauth_admin_token: token,
+        oauth_provider: 'github',
+      }),
+    );
+  } catch (error) {
+    console.error('Admin GitHub OAuth callback error:', error?.response?.data || error.message);
+    return res.redirect(
+      buildFrontendRedirect(frontendUrl, {
+        oauth_admin_error: 'GitHub admin login failed',
+      }),
+    );
   }
 });
 

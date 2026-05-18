@@ -59,7 +59,9 @@ export default function AdminPage() {
     signupAllowed: true,
     selfSignupEnabled: true,
     bootstrapCodeRequired: false,
+    githubOAuthEnabled: false,
   });
+  const [githubAuthConfigured, setGithubAuthConfigured] = useState(false);
   const [activeTab, setActiveTab] = useState(() => {
     const savedTab = localStorage.getItem('admin-active-tab');
     if (savedTab && availableTabs.has(savedTab)) {
@@ -113,6 +115,43 @@ export default function AdminPage() {
 
     return '';
   }, [location.search]);
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search || '');
+    const hash = window.location.hash || '';
+    const hashQuery = hash.includes('?') ? hash.split('?')[1] : '';
+    const hashParams = new URLSearchParams(hashQuery);
+
+    const oauthToken = searchParams.get('oauth_admin_token') || hashParams.get('oauth_admin_token');
+    const oauthError = searchParams.get('oauth_admin_error') || hashParams.get('oauth_admin_error');
+    const hasOauthParams = Boolean(oauthToken || oauthError);
+
+    if (!hasOauthParams) {
+      return;
+    }
+
+    if (oauthToken) {
+      setToken(oauthToken);
+      setIsAuthenticated(true);
+      sessionStorage.setItem('admin-auth', 'authenticated');
+      sessionStorage.setItem('admin-auth-version', 'v2');
+      setError('');
+    } else if (oauthError) {
+      setError(oauthError);
+    }
+
+    if (hash.includes('?')) {
+      const hashPath = hash.split('?')[0];
+      const cleanedParams = new URLSearchParams(hashQuery);
+      cleanedParams.delete('oauth_admin_token');
+      cleanedParams.delete('oauth_admin_error');
+      cleanedParams.delete('oauth_provider');
+      const nextHash = cleanedParams.toString() ? `${hashPath}?${cleanedParams.toString()}` : hashPath;
+      window.history.replaceState(null, '', nextHash);
+    } else if (location.search) {
+      navigate(location.pathname, { replace: true });
+    }
+  }, [location.pathname, location.search, navigate]);
 
   // Check if already authenticated with NEW credentials system
   useEffect(() => {
@@ -213,6 +252,7 @@ export default function AdminPage() {
             signupAllowed: data.signupAllowed !== false,
             selfSignupEnabled: data.selfSignupEnabled !== false,
             bootstrapCodeRequired: Boolean(data.bootstrapCodeRequired),
+            githubOAuthEnabled: Boolean(data.githubOAuthEnabled),
           };
 
           setBootstrapStatus(nextStatus);
@@ -229,11 +269,35 @@ export default function AdminPage() {
       }
     };
 
+    const loadGithubOAuthStatus = async () => {
+      try {
+        const data = await apiGet('/admin/oauth/github/status');
+        if (!cancelled && data?.ok) {
+          setGithubAuthConfigured(Boolean(data.configured));
+        }
+      } catch (_err) {
+        if (!cancelled) {
+          setGithubAuthConfigured(false);
+        }
+      }
+    };
+
     loadBootstrapStatus();
+    loadGithubOAuthStatus();
     return () => {
       cancelled = true;
     };
   }, [isAuthenticated]);
+
+  const handleGithubLogin = useCallback(() => {
+    setError('');
+    const apiBase = String(ENV.API_URL || '').replace(/\/+$/, '');
+    if (!apiBase) {
+      setError('API base URL is not configured');
+      return;
+    }
+    window.location.assign(`${apiBase}/admin/oauth/github/start`);
+  }, []);
 
   const formatWatchdogMessage = useCallback((response) => {
     if (!response || response.ok === false) {
@@ -695,6 +759,21 @@ export default function AdminPage() {
                     : 'Access Admin Panel'}
               </button>
             </form>
+            {authMode === 'login' && (
+              <>
+                <div className="oauth-divider" aria-hidden="true">
+                  <span>or</span>
+                </div>
+                <button
+                  type="button"
+                  className="login-btn github-login-btn"
+                  disabled={isSubmitting || !githubAuthConfigured}
+                  onClick={handleGithubLogin}
+                >
+                  {githubAuthConfigured ? 'Continue with GitHub' : 'GitHub Login Unavailable'}
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>
