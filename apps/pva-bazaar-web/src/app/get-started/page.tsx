@@ -75,6 +75,15 @@ const PATH_OPTIONS = [
 export const metadata: Metadata = {
   title: "Get Started – PVA Bazaar",
   description: "First-stop onboarding map for the PVA federation experience.",
+  alternates: {
+    canonical: "/get-started",
+  },
+  openGraph: {
+    title: "Get Started – PVA Bazaar",
+    description: "First-stop onboarding map for the PVA federation experience.",
+    url: "/get-started",
+    type: "website",
+  },
 };
 
 export default function GetStartedPage() {

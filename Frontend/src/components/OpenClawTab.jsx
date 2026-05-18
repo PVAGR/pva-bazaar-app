@@ -5,6 +5,7 @@ import { LoadingDots } from '../components/LoadingSpinner.jsx';
 import './OpenClawTab.css';
 
 const logger = createLogger('OpenClawTab');
+const OPENCLAW_QUICK_MODE_STORAGE_KEY = 'openclaw-admin-quick-mode';
 
 function formatMessageTime(value) {
   if (!value) return 'n/a';
@@ -39,6 +40,15 @@ function coerceNumber(value, fallback, min, max) {
 }
 
 export default function OpenClawTab() {
+  const [quickMode, setQuickMode] = useState(() => {
+    try {
+      const stored = globalThis.localStorage?.getItem(OPENCLAW_QUICK_MODE_STORAGE_KEY);
+      if (stored == null) return true;
+      return stored !== 'false';
+    } catch (_err) {
+      return true;
+    }
+  });
   const [status, setStatus] = useState(null);
   const [statusLoading, setStatusLoading] = useState(true);
   const [queueStats, setQueueStats] = useState(null);
@@ -759,8 +769,16 @@ export default function OpenClawTab() {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [rows.length]);
 
+  useEffect(() => {
+    try {
+      globalThis.localStorage?.setItem(OPENCLAW_QUICK_MODE_STORAGE_KEY, quickMode ? 'true' : 'false');
+    } catch (_err) {
+      // Ignore storage failures; UI state still works for this session.
+    }
+  }, [quickMode]);
+
   return (
-    <div className="openclaw-tab" role="tabpanel" id="openclaw-panel">
+    <div className={`openclaw-tab ${quickMode ? 'quick-mode' : 'full-mode'}`} role="tabpanel" id="openclaw-panel">
       <div className="oc-panel">
         <div className="oc-panel-header">
           <div>
@@ -817,6 +835,13 @@ export default function OpenClawTab() {
                 disabled={!autoHealEnabled}
               />
             </label>
+            <button
+              className="oc-btn oc-btn--primary"
+              onClick={() => setQuickMode(prev => !prev)}
+              title="Toggle between quick chat mode and full admin console"
+            >
+              {quickMode ? '🧰 Full Console' : '⚡ Quick Mode'}
+            </button>
             <button
               className="oc-btn oc-btn--secondary"
               onClick={() => {

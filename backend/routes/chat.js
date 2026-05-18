@@ -64,7 +64,7 @@ router.post('/', async (req, res) => {
             ctx.push('\nYour templates (summaries):');
             templates.forEach((t) => ctx.push(`- ${t.name} (${t.type}): ${(t.body || '').slice(0, 150)}...`));
           }
-          if (ctx.length) systemContent += '\n\n[Your knowledge base]\n' + ctx.join('\n');
+          if (ctx.length) systemContent += `\n\n[Your knowledge base]\n${  ctx.join('\n')}`;
         }
       } catch {
         // auth failed, continue without RAG

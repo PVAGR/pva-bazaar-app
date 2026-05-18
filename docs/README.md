@@ -8,6 +8,16 @@ Quick pointer to the main docs used for the venture and the app.
 
 **Run from repo root:** `npm run dev:web` (Next sanctuary app), `npm run dev:backend` (API).
 
+## Travel continuity (critical)
+
+| Doc | Purpose |
+|-----|--------|
+| [TRAVEL_CONTINUITY_START_HERE.md](./TRAVEL_CONTINUITY_START_HERE.md) | Single re-entry point for continuity and recovery setup. |
+| [CONTINUITY_PROGRESS_TRACKER.md](./CONTINUITY_PROGRESS_TRACKER.md) | Master checklist you can mark over time. |
+| [DEVICE_LOSS_RECOVERY_RUNBOOK.md](./DEVICE_LOSS_RECOVERY_RUNBOOK.md) | Exact actions for phone/laptop/both lost scenarios. |
+| [OPENCLAW_CONTINUITY_SETUP.md](./OPENCLAW_CONTINUITY_SETUP.md) | OpenClaw persistence, alerts, and snapshot continuity. |
+| [SECURITY_HARDENING_CHECKLIST.md](./SECURITY_HARDENING_CHECKLIST.md) | Security controls to complete before and during travel. |
+
 ## Venture & ops (phased build)
 
 | Doc | Purpose |
@@ -34,6 +44,7 @@ Quick pointer to the main docs used for the venture and the app.
 | Doc | Purpose |
 |-----|--------|
 | [DEPLOY-SANCTUARY.md](./DEPLOY-SANCTUARY.md) | Deploy the Next sanctuary app as a separate Vercel project; env, CORS, checks. |
+| [GLOBAL_ACCESS_AND_STABILITY.md](./GLOBAL_ACCESS_AND_STABILITY.md) | Domain routing, CDN/DNS/TLS, uptime checks, and SEO verification runbook. |
 | [DEPLOYMENT.md](./DEPLOYMENT.md) | Deployment and env. |
 | [VERIFICATION-SYSTEM.md](./VERIFICATION-SYSTEM.md) | Verification / badge system. |
 | [PRODUCTION-ENV-SYNC.md](./PRODUCTION-ENV-SYNC.md) | Production env sync. |

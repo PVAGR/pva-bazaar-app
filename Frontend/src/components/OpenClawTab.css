@@ -240,6 +240,9 @@
 
 /* ── Buttons ─────────────────────────────────────────────────────────── */
 .oc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 7px 12px;
   border-radius: 8px;
   border: 1px solid transparent;
@@ -249,6 +252,20 @@
   transition: all 0.18s;
   line-height: 1.4;
   min-height: 34px;
+  text-decoration: none;
+}
+
+/* Quick mode keeps the OpenClaw tab focused on live chat only. */
+.openclaw-tab.quick-mode .oc-recovery-history,
+.openclaw-tab.quick-mode .oc-creator-section,
+.openclaw-tab.quick-mode .oc-memory-section,
+.openclaw-tab.quick-mode .oc-persona-shell,
+.openclaw-tab.quick-mode .oc-status-grid,
+.openclaw-tab.quick-mode .oc-ecosystem-panel,
+.openclaw-tab.quick-mode .oc-mission-rack,
+.openclaw-tab.quick-mode .oc-waiting-banner,
+.openclaw-tab.quick-mode .oc-config-box {
+  display: none;
 }
 
 .oc-btn--primary {
