@@ -1,0 +1,9 @@
+{
+  "name": "HeelKawn",
+  "platform": "android",
+  "package": "org.pvagr.heelkawn",
+  "versionName": "1.0",
+  "versionCode": 1,
+  "apkFile": "HeelKawn-android.apk",
+  "githubRelease": "https://github.com/PVAGR/HeelKawn1/releases/tag/android-latest"
+}

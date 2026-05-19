@@ -8,6 +8,8 @@ on:
       - 'Frontend/**'
       - '.github/workflows/deploy-frontend.yml'
   workflow_dispatch:
+  repository_dispatch:
+    types: [heelkawn-apk-published]
 
 permissions:
   contents: read
@@ -73,6 +75,14 @@ jobs:
 
       - name: Install frontend dependencies
         run: npm ci || npm install --no-audit --no-fund
+
+      - name: Bundle HeelKawn Android APK for pvabazaar.org
+        run: |
+          mkdir -p public/downloads
+          curl -fL --retry 3 --retry-delay 5 \
+            -o public/downloads/HeelKawn-android.apk \
+            "https://github.com/PVAGR/HeelKawn1/releases/download/android-latest/HeelKawn-android.apk"
+          ls -lah public/downloads/
 
       - name: Set Sentry Release (git SHA)
         id: sentry_release

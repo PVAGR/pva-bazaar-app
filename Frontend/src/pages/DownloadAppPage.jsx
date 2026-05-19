@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from 'react';
+import { HEELKAWN_DOWNLOAD } from '../config/heelkawnDownload.js';
 
 const heelKawnDownloadUrl =
-  import.meta.env.VITE_HEELKAWN_DOWNLOAD_URL || 'https://github.com/PVAGR/HeelKawn1/releases/latest';
+  import.meta.env.VITE_HEELKAWN_DOWNLOAD_URL || HEELKAWN_DOWNLOAD.releasesPage;
 
 export default function DownloadAppPage() {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [isInstallable, setIsInstallable] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
   const [isIos, setIsIos] = useState(false);
+  const [heelkawnApkUrl, setHeelkawnApkUrl] = useState(HEELKAWN_DOWNLOAD.githubApkUrl);
+  const [heelkawnApkOnSite, setHeelkawnApkOnSite] = useState(false);
 
   useEffect(() => {
     const browserWindow = globalThis?.window;
@@ -41,6 +44,33 @@ export default function DownloadAppPage() {
     };
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    const siteApk = HEELKAWN_DOWNLOAD.siteApkPath;
+
+    async function resolveApkUrl() {
+      try {
+        const res = await fetch(siteApk, { method: 'HEAD' });
+        if (!cancelled && res.ok) {
+          setHeelkawnApkOnSite(true);
+          setHeelkawnApkUrl(siteApk);
+          return;
+        }
+      } catch {
+        /* fall through to GitHub */
+      }
+      if (!cancelled) {
+        setHeelkawnApkOnSite(false);
+        setHeelkawnApkUrl(HEELKAWN_DOWNLOAD.githubApkUrl);
+      }
+    }
+
+    resolveApkUrl();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const handleInstall = async () => {
     if (!deferredPrompt) return;
     await deferredPrompt.prompt();
@@ -52,70 +82,12 @@ export default function DownloadAppPage() {
   };
 
   return (
-    <section className="section-card download-app-card">
-      <h2>Download PVA Bazaar on Mobile</h2>
-      <p>
-        Install PVA Bazaar as an app on your phone for fast launch, full-screen browsing,
-        and home-screen access to the Archive, Marketplace, Showroom, and Popular Conference.
-      </p>
+    <>
+      <section className="section-card download-app-card download-app-card--heelkawn">
+        <h2>HeelKawn — Android playtest</h2>
+        <p>
+          Install the Godot settlement sim on your phone for touch controls, mobile HUD, and
+          on-device playtesting. This is a debug build for internal testing (not Play Store).
+        </p>
 
-      {isStandalone ? (
-        <div className="download-status download-status--success">
-          PVA Bazaar is already installed on this device.
-        </div>
-      ) : (
-        <div className="download-status">
-          This site is now installable as a progressive web app (PWA).
-        </div>
-      )}
-
-      <div className="download-actions">
-        <button
-          type="button"
-          className="button"
-          onClick={handleInstall}
-          disabled={!isInstallable || isStandalone}
-        >
-          {isStandalone ? 'Installed' : 'Install App'}
-        </button>
-        <a
-          className="button secondary"
-          href="/#/heelkawn"
-        >
-          Open HeelKawn page
-        </a>
-        <a
-          className="button ghost"
-          href={heelKawnDownloadUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          HeelKawn Builds
-        </a>
-      </div>
-
-      <div className="download-help-grid">
-        <article className="download-help-panel">
-          <h3>Android (Chrome/Edge)</h3>
-          <ol>
-            <li>Open pvabazaar.org in your browser.</li>
-            <li>Tap Install App when prompted, or open the browser menu.</li>
-            <li>Choose Install app or Add to Home screen.</li>
-          </ol>
-        </article>
-
-        <article className="download-help-panel">
-          <h3>iPhone (Safari)</h3>
-          <ol>
-            <li>Open pvabazaar.org in Safari.</li>
-            <li>Tap the Share icon.</li>
-            <li>Select Add to Home Screen, then tap Add.</li>
-          </ol>
-          {isIos && !isStandalone ? (
-            <p className="subtle-note">On iPhone, install uses the Share menu rather than a browser prompt.</p>
-          ) : null}
-        </article>
-      </div>
-    </section>
-  );
-}
+        <motion.div className="download-meta">

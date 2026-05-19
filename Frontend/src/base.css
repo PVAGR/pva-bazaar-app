@@ -629,6 +629,42 @@ textarea:focus-visible {
   padding: 0.9rem 1rem;
 }
 
+.download-app-card--heelkawn {
+  border-color: var(--site-accent);
+}
+
+.download-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  align-items: center;
+  font-size: 0.92rem;
+  color: var(--site-text-muted, var(--site-text));
+}
+
+.download-meta-badge {
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  background: var(--site-success-bg);
+  color: var(--site-success-text);
+}
+
+.download-meta-badge--alt {
+  background: var(--site-panel-soft);
+  color: var(--site-text);
+  border: 1px solid var(--site-border);
+}
+
+.download-actions .button--primary {
+  font-weight: 600;
+}
+
+.download-actions .button--ghost {
+  background: transparent;
+  border: 1px solid var(--site-border);
+}
+
 .download-help-panel h3 {
   margin-top: 0;
   margin-bottom: 0.65rem;

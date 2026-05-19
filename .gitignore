@@ -41,6 +41,8 @@ pva-bazaar-app.env
 *SUMMARY*.md
 *magnum-opus-organized.html
 Frontend/dist/
+# HeelKawn APK — bundled at deploy time from GitHub release (see deploy-frontend.yml)
+Frontend/public/downloads/*.apk
 
 # Local temporary workspace artifacts
 .tmp/
