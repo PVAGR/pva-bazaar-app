@@ -149,6 +149,9 @@ export default function RootLayout({
                 <Link href="/recovery" className="hover:text-amber-300">
                   Recovery
                 </Link>
+                <Link href="/meow" className="hover:text-amber-300">
+                  Meow
+                </Link>
                 <Link href="/dashboard" className="hover:text-amber-300">
                   Dashboard
                 </Link>

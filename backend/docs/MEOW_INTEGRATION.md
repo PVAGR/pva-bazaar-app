@@ -32,6 +32,8 @@ Set in backend runtime (Render/Vercel/Railway/etc):
 - `MEOW_ENTITY_ID=...` (if your key is multi-entity)
 - `MEOW_ACCOUNT_ID=...` (default account scope)
 - `MEOW_WEBHOOK_SECRET=...`
+- `MEOW_PUBLIC_READ=true` (for public live testing endpoints)
+- `MEOW_PUBLIC_TRANSFER=true` (only if you intentionally allow public transfer tests)
 - Optional: `MEOW_BASE_URL=...`
 
 Default base URLs when `MEOW_BASE_URL` is unset:
@@ -56,3 +58,14 @@ Default base URLs when `MEOW_BASE_URL` is unset:
 5. Validate signature failures and successful accepted events.
 6. Enable `transfers/usdc` usage only after internal reconciliation signoff.
 7. Move `MEOW_ENV=production` with a new production API key after sandbox pass.
+
+## Live Public Test Surface
+
+If `apps/pva-bazaar-web` is deployed and `NEXT_PUBLIC_API_URL` points to your backend, the live test UI is:
+
+- `/meow` on your main web domain
+
+For public traffic tests:
+
+- Set `MEOW_PUBLIC_READ=true`
+- Keep `MEOW_PUBLIC_TRANSFER=false` unless you explicitly want open transfer tests

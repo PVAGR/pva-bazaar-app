@@ -11,6 +11,24 @@ const {
 
 const router = express.Router();
 
+function publicReadEnabled() {
+  return process.env.MEOW_PUBLIC_READ === 'true';
+}
+
+function publicTransferEnabled() {
+  return process.env.MEOW_PUBLIC_TRANSFER === 'true';
+}
+
+function requirePublicOrAdmin(req, res, next) {
+  if (publicReadEnabled()) return next();
+  return adminSession(req, res, next);
+}
+
+function requirePublicTransferOrAdmin(req, res, next) {
+  if (publicTransferEnabled()) return next();
+  return adminSession(req, res, next);
+}
+
 router.get('/health', (_req, res) => {
   const config = getMeowConfig();
   res.json({
@@ -58,9 +76,7 @@ router.post('/webhooks/meow', async (req, res) => {
   }
 });
 
-router.use(adminSession);
-
-router.get('/accounts', async (_req, res) => {
+router.get('/accounts', requirePublicOrAdmin, async (_req, res) => {
   try {
     const data = await listAccounts(getMeowConfig());
     res.json({ ok: true, data });
@@ -73,7 +89,7 @@ router.get('/accounts', async (_req, res) => {
   }
 });
 
-router.get('/balances', async (req, res) => {
+router.get('/balances', requirePublicOrAdmin, async (req, res) => {
   try {
     const accountId = String(req.query.accountId || '').trim() || undefined;
     const data = await getBalances(getMeowConfig(), accountId);
@@ -87,7 +103,7 @@ router.get('/balances', async (req, res) => {
   }
 });
 
-router.get('/transactions', async (req, res) => {
+router.get('/transactions', requirePublicOrAdmin, async (req, res) => {
   try {
     const accountId = String(req.query.accountId || '').trim() || undefined;
     const query = {
@@ -108,7 +124,7 @@ router.get('/transactions', async (req, res) => {
   }
 });
 
-router.post('/transfers/usdc', async (req, res) => {
+router.post('/transfers/usdc', requirePublicTransferOrAdmin, async (req, res) => {
   try {
     const accountId = String(req.body?.accountId || '').trim() || undefined;
     const payload = req.body?.payload || {};
