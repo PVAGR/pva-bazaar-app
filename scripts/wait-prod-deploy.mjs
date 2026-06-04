@@ -1,26 +1,10 @@
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import { execSync } from "node:child_process";
+import { getLiveTargets } from "./live-map.mjs";
 
-const FRONTEND = process.env.FRONTEND_URL || "https://pvabazaar.org";
+const { frontend: FRONTEND, backend: BACKEND } = getLiveTargets();
 const POLL_MS = Number(process.env.POLL_MS || 10000);
 const TIMEOUT_MS = Number(process.env.TIMEOUT_MS || 300000);
 const STRICT = process.env.STRICT === "true";
-
-function normalizeBase(url) {
-  return (url || "").replace(/\/+$/, "").replace(/\/api$/, "");
-}
-
-function getBackendFromProjectConfig() {
-  try {
-    const p = resolve(process.cwd(), "Frontend/public/api-base.json");
-    const raw = JSON.parse(readFileSync(p, "utf8"));
-    if (raw && typeof raw.apiUrl === "string" && raw.apiUrl.length > 0) {
-      return normalizeBase(raw.apiUrl);
-    }
-  } catch {}
-  return null;
-}
 
 function getLocalShortSha() {
   try {
@@ -69,11 +53,6 @@ async function getVersion(backendBase) {
   } catch {}
   return { res, json, text };
 }
-
-const BACKEND =
-  normalizeBase(process.env.BACKEND_URL) ||
-  getBackendFromProjectConfig() ||
-  FRONTEND;
 
 const localShortSha = getLocalShortSha();
 

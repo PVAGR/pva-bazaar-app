@@ -58,7 +58,9 @@ jobs:
           BACKEND_URL: ${{ github.event_name == 'workflow_dispatch' && inputs.backend_url || '' }}
           WAIT_TIMEOUT_MS: ${{ github.event_name == 'workflow_dispatch' && inputs.wait_timeout_ms || '120000' }}
           WAIT_POLL_MS: ${{ github.event_name == 'workflow_dispatch' && inputs.wait_poll_ms || '10000' }}
-        run: npm run verify:live
+        run: |
+          npm run verify:live
+          npm run verify:routes:live
 
       - name: Run live readiness (strict manual gate)
         if: github.event_name == 'workflow_dispatch' && inputs.strict == true
@@ -67,4 +69,6 @@ jobs:
           BACKEND_URL: ${{ inputs.backend_url }}
           WAIT_TIMEOUT_MS: ${{ inputs.wait_timeout_ms }}
           WAIT_POLL_MS: ${{ inputs.wait_poll_ms }}
-        run: npm run verify:live:strict
+        run: |
+          npm run verify:live:strict
+          npm run verify:routes:live

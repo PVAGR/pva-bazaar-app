@@ -6,9 +6,26 @@
  *   RUN_LIVE_E2E=1 npm run e2e:smoke:live
  */
 const { test, expect } = require("@playwright/test");
+const fs = require("fs");
+const path = require("path");
 
-const FE = (process.env.E2E_BASE_URL || "https://pvabazaar.org").replace(/\/+$/, "");
-const API = (process.env.BACKEND_URL || "https://pva-bazaar-app-1.onrender.com").replace(/\/+$/, "");
+function loadLiveMap() {
+  const candidates = [
+    path.resolve(process.cwd(), "Frontend/public/live-map.json"),
+    path.resolve(process.cwd(), "public/live-map.json"),
+  ];
+
+  for (const filePath of candidates) {
+    if (!fs.existsSync(filePath)) continue;
+    return JSON.parse(fs.readFileSync(filePath, "utf8"));
+  }
+
+  return {};
+}
+
+const liveMap = loadLiveMap();
+const FE = (process.env.E2E_BASE_URL || liveMap?.urls?.frontend || "https://pvabazaar.org").replace(/\/+$/, "");
+const API = (process.env.BACKEND_URL || liveMap?.urls?.backend || "https://api.pvabazaar.org").replace(/\/+$/, "");
 
 test.describe("production HTTP connectivity", () => {
   test("site index responds", async ({ request }) => {

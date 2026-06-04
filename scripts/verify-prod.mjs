@@ -2,31 +2,10 @@
 // Usage:
 //   npm run verify:prod
 //   FRONTEND_URL=https://pvabazaar.org BACKEND_URL=https://api.example.com npm run verify:prod
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import { execSync } from "node:child_process";
+import { getLiveTargets, getRuntimeApiCandidates, normalizeApiBase } from "./live-map.mjs";
 
-const FRONTEND = process.env.FRONTEND_URL || "https://pvabazaar.org";
-
-function normalizeBase(url) {
-  return (url || "").replace(/\/+$/, "").replace(/\/api$/, "");
-}
-
-function getBackendFromProjectConfig() {
-  try {
-    const p = resolve(process.cwd(), "Frontend/public/api-base.json");
-    const raw = JSON.parse(readFileSync(p, "utf8"));
-    if (raw && typeof raw.apiUrl === "string" && raw.apiUrl.length > 0) {
-      return normalizeBase(raw.apiUrl);
-    }
-  } catch {}
-  return null;
-}
-
-const BACKEND =
-  normalizeBase(process.env.BACKEND_URL) ||
-  getBackendFromProjectConfig() ||
-  FRONTEND;
+const { frontend: FRONTEND, backend: BACKEND, apiBase: API_BASE } = getLiveTargets();
 
 function fail(msg) {
   console.error(`❌ ${msg}`);
@@ -191,13 +170,27 @@ function getLocalShortSha() {
   }
 
   // Runtime API base validation from deployed static config
-  const { res: runtimeCfgRes, json: runtimeCfg } = await getJson(`${FRONTEND}/public/api-base.json`);
-  if (!runtimeCfgRes.ok || !runtimeCfg || typeof runtimeCfg.apiUrl !== "string") {
+  let runtimeCfg = null;
+  let runtimeCfgRes = null;
+  for (const candidateUrl of getRuntimeApiCandidates(FRONTEND)) {
+    const candidate = await getJson(candidateUrl);
+    if (candidate.res.ok && typeof candidate.json?.apiUrl === "string") {
+      runtimeCfg = candidate.json;
+      runtimeCfgRes = candidate.res;
+      break;
+    }
+  }
+  if (!runtimeCfgRes?.ok || !runtimeCfg || typeof runtimeCfg.apiUrl !== "string") {
     console.warn("⚠️ Could not read runtime api-base.json from frontend deployment.");
   } else if (isLocalhostUrl(runtimeCfg.apiUrl)) {
     fail(`runtime api-base.json points to localhost: ${runtimeCfg.apiUrl}`);
   } else {
-    console.log(`✅ runtime api-base.json URL: ${runtimeCfg.apiUrl}`);
+    const normalizedApi = normalizeApiBase(runtimeCfg.apiUrl);
+    if (normalizedApi !== API_BASE) {
+      fail(`runtime api-base.json drift detected: ${normalizedApi} != ${API_BASE}`);
+    } else {
+      console.log(`✅ runtime api-base.json URL: ${runtimeCfg.apiUrl}`);
+    }
   }
 
   console.log("\nDone.");

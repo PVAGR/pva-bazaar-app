@@ -1,6 +1,8 @@
 /* eslint-env node */
+import { getLiveTargets } from "./live-map.mjs";
 
-const BASE = (globalThis.process?.env?.BACKEND_URL || "https://pva-bazaar-app-1.onrender.com").replace(/\/+$/, "");
+const { backend } = getLiveTargets();
+const BASE = (globalThis.process?.env?.BACKEND_URL || backend).replace(/\/+$/, "");
 
 const checks = [
   {

@@ -5,101 +5,244 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PVABazaar Status</title>
     <style>
+      :root {
+        color-scheme: dark;
+      }
       body {
         font-family:
           Inter,
           system-ui,
           -apple-system,
-          Segoe UI,
-          Roboto,
+          BlinkMacSystemFont,
+          "Segoe UI",
           sans-serif;
-        background: #0f1419;
+        background: #081018;
         color: #e1e8ed;
-        max-width: 900px;
+        max-width: 1100px;
         margin: 0 auto;
         padding: 2rem;
       }
-      h1 {
-        font-size: 2rem;
-        margin-bottom: 1rem;
+      h1,
+      h2,
+      h3 {
+        margin: 0 0 0.75rem;
+      }
+      p,
+      li {
+        line-height: 1.5;
+      }
+      a {
+        color: #7dd3fc;
       }
       .grid {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
         gap: 1rem;
+        margin: 1rem 0 1.5rem;
       }
       .card {
-        background: #16202a;
-        border: 1px solid #2a3f5f;
-        border-left: 4px solid #00d9ff;
+        background: #101b26;
+        border: 1px solid #1f3348;
+        border-left: 4px solid #38bdf8;
+        border-radius: 8px;
         padding: 1rem;
-        border-radius: 6px;
       }
       .ok {
         color: #5eead4;
       }
+      .warn {
+        color: #fde68a;
+      }
       .bad {
-        color: #ff7777;
+        color: #fda4af;
+      }
+      code,
+      pre {
+        background: #0b1117;
+        border-radius: 6px;
       }
       code {
-        background: #0b1117;
-        padding: 2px 6px;
-        border-radius: 4px;
+        padding: 0.2rem 0.4rem;
       }
-      a {
-        color: #00d9ff;
-        text-decoration: none;
+      pre {
+        padding: 0.75rem;
+        overflow: auto;
+      }
+      .meta {
+        color: #94a3b8;
+        font-size: 0.95rem;
+      }
+      ul {
+        padding-left: 1.2rem;
       }
     </style>
   </head>
   <body>
-    <h1>PVABazaar Status</h1>
-    <p>This page checks API endpoints from the live site.</p>
+    <h1>PVABazaar Continuity Status</h1>
+    <p class="meta">Live continuity map, release gate health, and edge reachability.</p>
+
     <div class="grid">
-      <div class="card">
-        <h2>/api/health</h2>
-        <div id="health">Checking...</div>
-      </div>
-      <div class="card">
-        <h2>/api/archive</h2>
-        <div id="archive">Checking...</div>
-      </div>
-      <div class="card">
-        <h2>/api/blogs</h2>
-        <div id="blogs">Checking...</div>
-      </div>
-      <div class="card">
-        <h2>/api/search/text?q=test</h2>
-        <div id="search">Checking...</div>
-      </div>
+      <section class="card">
+        <h2>Release Gate</h2>
+        <div id="release-gate">Loading...</div>
+      </section>
+      <section class="card">
+        <h2>Frontend</h2>
+        <div id="frontend">Loading...</div>
+      </section>
+      <section class="card">
+        <h2>Backend</h2>
+        <div id="backend">Loading...</div>
+      </section>
+      <section class="card">
+        <h2>Version / Parity</h2>
+        <div id="version">Loading...</div>
+      </section>
+      <section class="card">
+        <h2>OpenClaw</h2>
+        <div id="openclaw">Loading...</div>
+      </section>
+      <section class="card">
+        <h2>Decentralized Ready</h2>
+        <div id="decentralized">Loading...</div>
+      </section>
+      <section class="card">
+        <h2>Edge Headers</h2>
+        <div id="edge">Loading...</div>
+      </section>
+      <section class="card">
+        <h2>Crawler Surface</h2>
+        <div id="crawl">Loading...</div>
+      </section>
     </div>
-    <p style="margin-top: 1rem">
-      If these show unavailable, the site is still live but the API isnt routed on this project. We
-      can switch the project to include serverless or serve a static health as a fallback.
-    </p>
+
+    <section class="card">
+      <h2>Live URL Map</h2>
+      <pre id="live-map">Loading...</pre>
+    </section>
+
     <script>
-      async function check(path, elId) {
-        const el = document.getElementById(elId);
-        try {
-          const res = await fetch(path, { headers: { Accept: 'application/json' } });
-          const text = await res.text();
-          let msg = text;
-          try {
-            msg = JSON.parse(text).message || text;
-          } catch {}
-          if (res.ok) {
-            el.innerHTML = `<span class="ok">OK (${res.status})</span> \u2014 ${msg}`;
-          } else {
-            el.innerHTML = `<span class="bad">Unavailable (${res.status})</span>\n<code>${msg.substring(0, 200)}</code>`;
-          }
-        } catch (e) {
-          el.innerHTML = `<span class="bad">Error</span> \u2014 ${String(e).substring(0, 120)}`;
-        }
+      const el = (id) => document.getElementById(id);
+
+      function statusClass(ok, warn = false) {
+        if (warn) return "warn";
+        return ok ? "ok" : "bad";
       }
-      check('/api/health', 'health');
-      check('/api/archive', 'archive');
-      check('/api/blogs', 'blogs');
-      check('/api/search/text?q=test', 'search');
+
+      function renderResult(targetId, title, ok, detail, warn = false) {
+        el(targetId).innerHTML = `<span class="${statusClass(ok, warn)}">${ok ? "OK" : warn ? "WARN" : "FAIL"}</span> — ${title}${detail ? `<br><code>${detail}</code>` : ""}`;
+      }
+
+      async function timedJson(url) {
+        const startedAt = performance.now();
+        const response = await fetch(url, { headers: { Accept: "application/json" } });
+        const text = await response.text();
+        let json = null;
+        try {
+          json = JSON.parse(text);
+        } catch {}
+        return { response, json, text, elapsedMs: Math.round(performance.now() - startedAt) };
+      }
+
+      async function timedText(url) {
+        const startedAt = performance.now();
+        const response = await fetch(url);
+        const text = await response.text();
+        return { response, text, elapsedMs: Math.round(performance.now() - startedAt) };
+      }
+
+      (async () => {
+        try {
+          const liveMap = await fetch("/live-map.json").then((response) => response.json());
+          const apiBase = String(liveMap?.urls?.apiBase || "").replace(/\/+$/, "");
+          const backend = String(liveMap?.urls?.backend || "").replace(/\/+$/, "");
+          const frontend = String(liveMap?.urls?.frontend || window.location.origin).replace(/\/+$/, "");
+          const statusPage = liveMap?.urls?.statusPage || `${frontend}/status.html`;
+          const targets = liveMap?.targets || {};
+          const requiredHeaders = liveMap?.edge?.requiredHeaders || [];
+
+          el("live-map").textContent = JSON.stringify(liveMap, null, 2);
+          renderResult("release-gate", "strict live readiness required", Boolean(liveMap?.releaseGate?.requireStrictReadiness), `route sweep=${Boolean(liveMap?.releaseGate?.requireRouteSweep)} parity=${Boolean(liveMap?.releaseGate?.requireParity)}`);
+
+          const frontendResult = await timedText(`${frontend}/`);
+          renderResult(
+            "frontend",
+            `${frontendResult.response.status} in ${frontendResult.elapsedMs}ms`,
+            frontendResult.response.ok && frontendResult.elapsedMs <= Number(targets.frontendLatencyMs || 2500),
+            `${frontend} · target <= ${Number(targets.frontendLatencyMs || 2500)}ms`,
+            frontendResult.response.ok && frontendResult.elapsedMs > Number(targets.frontendLatencyMs || 2500),
+          );
+
+          const health = await timedJson(`${backend}/api/health`);
+          renderResult(
+            "backend",
+            `${health.response.status} in ${health.elapsedMs}ms`,
+            health.response.ok && health.json?.ok === true && health.elapsedMs <= Number(targets.healthLatencyMs || 2500),
+            `${backend}/api/health · target <= ${Number(targets.healthLatencyMs || 2500)}ms`,
+            health.response.ok && health.elapsedMs > Number(targets.healthLatencyMs || 2500),
+          );
+
+          const version = await timedJson(`${backend}/api/version`);
+          renderResult(
+            "version",
+            version.json?.shortSha || version.json?.sha || "missing shortSha",
+            version.response.ok && version.json?.ok === true,
+            `status=${version.response.status} · ${statusPage}`,
+          );
+
+          const openclaw = await timedJson(`${backend}/api/openclaw/status`);
+          renderResult(
+            "openclaw",
+            openclaw.json?.mode || "mode unavailable",
+            openclaw.response.ok && openclaw.json?.ok === true && openclaw.json?.configured === true,
+            `pending=${openclaw.json?.queue?.pending ?? 0} stale=${openclaw.json?.queue?.stale ?? 0}`,
+            openclaw.response.ok && openclaw.json?.ok === true && Number(openclaw.json?.queue?.stale || 0) > 0,
+          );
+
+          const decentralized = await timedJson(`${backend}/api/decentralized/ready`);
+          renderResult(
+            "decentralized",
+            `passed=${Boolean(decentralized.json?.passed)}`,
+            decentralized.response.ok && decentralized.json?.ok === true && decentralized.json?.passed === true,
+            `${backend}/api/decentralized/ready`,
+            decentralized.response.ok && decentralized.json?.ok === true && decentralized.json?.passed !== true,
+          );
+
+          const assetMatch = frontendResult.text.match(/\/assets\/[^"']+\.(?:js|css)/);
+          const asset = assetMatch ? await timedText(`${frontend}${assetMatch[0]}`) : null;
+          const headerSummary = [
+            `home cache-control=${frontendResult.response.headers.get("cache-control") || "missing"}`,
+            asset ? `asset cache-control=${asset.response.headers.get("cache-control") || "missing"}` : "asset=missing",
+          ];
+          const missingHeaders = requiredHeaders.filter((header) => !frontendResult.response.headers.get(header));
+          renderResult(
+            "edge",
+            asset ? `asset ${asset.response.status} in ${asset.elapsedMs}ms` : "asset missing",
+            missingHeaders.length === 0 && Boolean(asset?.response?.ok),
+            headerSummary.join(" · "),
+            missingHeaders.length > 0 && Boolean(asset?.response?.ok),
+          );
+
+          const crawlChecks = await Promise.all([
+            timedText(liveMap?.urls?.llms || `${frontend}/llms.txt`),
+            timedText(liveMap?.urls?.readableSite || `${frontend}/readable-site.json`),
+            timedText(liveMap?.urls?.sitemap || `${frontend}/sitemap.xml`),
+          ]);
+          const crawlOk = crawlChecks.every((result) => result.response.ok);
+          renderResult(
+            "crawl",
+            crawlOk ? "all crawl resources reachable" : "crawl resource missing",
+            crawlOk,
+            crawlChecks.map((result) => `${result.response.url} -> ${result.response.status}`).join(" · "),
+          );
+        } catch (error) {
+          const message = String(error?.message || error);
+          ["release-gate", "frontend", "backend", "version", "openclaw", "decentralized", "edge", "crawl"].forEach((targetId) => {
+            renderResult(targetId, "status fetch failed", false, message);
+          });
+          el("live-map").textContent = message;
+        }
+      })();
     </script>
   </body>
 </html>

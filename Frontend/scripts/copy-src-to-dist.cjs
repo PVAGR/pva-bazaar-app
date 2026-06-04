@@ -17,6 +17,12 @@ function copyRecursive(src, dest) {
 }
 
 const projectRoot = process.cwd();
+const publicRoot = path.join(projectRoot, 'public');
+
+function readJson(filePath) {
+  if (!fs.existsSync(filePath)) return null;
+  return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+}
 
 // REMOVED: src/ copying - Vite bundles already handle all JS/JSX compilation
 // Raw source files should NOT be shipped to production
@@ -75,15 +81,7 @@ if (fs.existsSync(distIndex)) {
   }
 });
 
-// Ensure status.html is available at the root
-const statusSrc = path.join(projectRoot, 'status.html');
-const statusDest = path.join(projectRoot, 'dist', 'status.html');
-if (fs.existsSync(statusSrc)) {
-  fs.copyFileSync(statusSrc, statusDest);
-  console.log('COPIED status.html to dist');
-} else {
-  console.warn('WARNING: status.html not found at', statusSrc);
-}
+console.log('Keeping Frontend/public/status.html as the canonical status page');
 
 // Copy magnum-opus.html to dist
 const magnumOpusSrc = path.join(projectRoot, 'magnum-opus.html');
@@ -115,11 +113,11 @@ if (fs.existsSync(fallback404Src)) {
 
 // Copy only whitelisted assets from Frontend/public into dist/public
 const distPublic = path.join(projectRoot, 'dist', 'public');
-const localPublic = path.join(projectRoot, 'public');
+const localPublic = publicRoot;
 if (fs.existsSync(localPublic)) {
   console.log('Preparing dist/public');
   if (!fs.existsSync(distPublic)) fs.mkdirSync(distPublic, { recursive: true });
-  const whitelistFiles = ['config.js', 'sitemap.xml', 'robots.txt', 'status.html', 'api-base.json', 'magnum-opus.js'];
+  const whitelistFiles = ['config.js', 'sitemap.xml', 'robots.txt', 'status.html', 'api-base.json', 'live-map.json', 'magnum-opus.js'];
   const whitelistDirs = ['styles'];
   for (const f of whitelistFiles) {
     const s = path.join(localPublic, f);
@@ -140,6 +138,25 @@ if (fs.existsSync(localPublic)) {
       console.log('Copied directory', dname);
     }
   }
+}
+
+const liveMap = readJson(path.join(publicRoot, 'live-map.json'));
+const apiBaseUrl = liveMap?.urls?.apiBase;
+if (typeof apiBaseUrl === 'string' && apiBaseUrl.length > 0) {
+  const payload = `${JSON.stringify({ apiUrl: apiBaseUrl }, null, 2)}\n`;
+  const apiBaseTargets = [
+    path.join(projectRoot, 'dist', 'api-base.json'),
+    path.join(projectRoot, 'dist', 'public', 'api-base.json'),
+  ];
+
+  for (const target of apiBaseTargets) {
+    const targetDir = path.dirname(target);
+    if (!fs.existsSync(targetDir)) fs.mkdirSync(targetDir, { recursive: true });
+    fs.writeFileSync(target, payload, 'utf8');
+    console.log(`WROTE canonical api-base.json to ${target}`);
+  }
+} else {
+  console.warn('WARNING: live-map.json missing urls.apiBase; canonical api-base.json not regenerated');
 }
 
 // Skip copying organization/marketplace apps to ensure journal-only deploy

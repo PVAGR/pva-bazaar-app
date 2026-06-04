@@ -2,7 +2,7 @@ name: OpenClaw Uptime Monitor
 
 on:
   schedule:
-    - cron: '*/30 * * * *'
+    - cron: '*/10 * * * *'
   workflow_dispatch:
 
 permissions:
@@ -18,11 +18,20 @@ jobs:
     timeout-minutes: 5
 
     env:
-      OPENCLAW_BACKEND_URL: ${{ secrets.OPENCLAW_BACKEND_URL || vars.OPENCLAW_BACKEND_URL || 'https://pva-bazaar-app-1.onrender.com' }}
+      OPENCLAW_FRONTEND_URL: ${{ secrets.OPENCLAW_FRONTEND_URL || vars.OPENCLAW_FRONTEND_URL || 'https://pvabazaar.org' }}
+      OPENCLAW_BACKEND_URL: ${{ secrets.OPENCLAW_BACKEND_URL || vars.OPENCLAW_BACKEND_URL || 'https://api.pvabazaar.org' }}
       OPENCLAW_ADMIN_JWT: ${{ secrets.OPENCLAW_ADMIN_JWT || secrets.BOUNTY_SCAN_JWT }}
       OPENCLAW_ALERT_WEBHOOK_URL: ${{ secrets.OPENCLAW_ALERT_WEBHOOK_URL }}
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
       - name: Validate required config
         run: |
           if [ -z "$OPENCLAW_BACKEND_URL" ]; then
@@ -30,8 +39,21 @@ jobs:
             exit 1
           fi
 
+      - name: Run continuity readiness sweep
+        env:
+          FRONTEND_URL: ${{ env.OPENCLAW_FRONTEND_URL }}
+          BACKEND_URL: ${{ env.OPENCLAW_BACKEND_URL }}
+          STRICT: "true"
+          WAIT_TIMEOUT_MS: "120000"
+          WAIT_POLL_MS: "10000"
+        run: |
+          node scripts/verify-live-ready.mjs
+          node scripts/verify-live-decentralized.mjs
+
       - name: Check public health endpoints
         run: |
+          curl -sS -f "$OPENCLAW_FRONTEND_URL/" > /tmp/frontend-home.html
+          curl -sS -f "$OPENCLAW_FRONTEND_URL/status.html" > /tmp/frontend-status.html
           curl -sS -f "$OPENCLAW_BACKEND_URL/api/health" > /tmp/health.json
           curl -sS -f "$OPENCLAW_BACKEND_URL/api/openclaw/status" > /tmp/openclaw-status.json
 
@@ -90,7 +112,7 @@ jobs:
       - name: Notify on failure
         if: failure() && env.OPENCLAW_ALERT_WEBHOOK_URL != ''
         run: |
-          PAYLOAD=$(printf '{"text":"OpenClaw uptime monitor failed for %s at %s. Run: %s/%s/actions/runs/%s"}' "$GITHUB_REPOSITORY" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID")
+          PAYLOAD=$(printf '{"text":"[critical] PVA Bazaar continuity monitor failed for %s at %s. Run: %s/%s/actions/runs/%s"}' "$GITHUB_REPOSITORY" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID")
           curl -sS -X POST "$OPENCLAW_ALERT_WEBHOOK_URL" \
             -H "Content-Type: application/json" \
             --data "$PAYLOAD" \

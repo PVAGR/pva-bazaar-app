@@ -1,7 +1,7 @@
 # 🎯 PRODUCTION READINESS REPORT - END-TO-END ANALYSIS
 
-**Generated**: January 3, 2026  
-**Status**: BACKEND DEPLOYED BUT BLOCKED BY AUTHENTICATION  
+**Generated**: June 4, 2026  
+**Status**: CONTINUITY GATED BY CANONICAL LIVE MAP AND STRICT READINESS CHECKS  
 
 ---
 
@@ -9,9 +9,17 @@
 
 | Component | Status | Production URL |
 |-----------|--------|----------------|
-| **Frontend** | ✅ DEPLOYED | https://pvabazaar.org (GitHub Pages) |
-| **Backend** | 🔒 DEPLOYED BUT BLOCKED | https://backend-pvagrs-projects.vercel.app |
-| **Integration** | ❌ BROKEN | Frontend cannot reach backend (401 Authentication Required) |
+| **Frontend** | ✅ CANONICAL | https://pvabazaar.org (GitHub Pages) |
+| **Backend** | ✅ CANONICAL | https://api.pvabazaar.org |
+| **Integration** | ✅ GATED | Deploys must pass strict live readiness, route sweep, and parity |
+
+### Current continuity controls
+
+- Canonical live URL map: `Frontend/public/live-map.json`
+- Pre/post deploy gates: `verify:live`, `verify:live:strict`, `verify:routes:live`, `verify:prod:wait`
+- Scheduled continuity monitor: `.github/workflows/openclaw-uptime-monitor.yml`
+- Status page: `Frontend/public/status.html`
+- Rollback by ref: production workflow dispatch inputs
 
 ---
 

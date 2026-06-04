@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "updatedAt": "2026-06-04T00:00:00Z",
+  "releaseGate": {
+    "requireLiveReadiness": true,
+    "requireStrictReadiness": true,
+    "requireRouteSweep": true,
+    "requireParity": true
+  },
+  "urls": {
+    "frontend": "https://pvabazaar.org",
+    "backend": "https://api.pvabazaar.org",
+    "apiBase": "https://api.pvabazaar.org/api",
+    "statusPage": "https://pvabazaar.org/status.html",
+    "health": "https://api.pvabazaar.org/api/health",
+    "ping": "https://api.pvabazaar.org/api/ping",
+    "version": "https://api.pvabazaar.org/api/version",
+    "archive": "https://api.pvabazaar.org/api/archive",
+    "search": "https://api.pvabazaar.org/api/search/text?q=test",
+    "openclawStatus": "https://api.pvabazaar.org/api/openclaw/status",
+    "openclawWatchdog": "https://api.pvabazaar.org/api/openclaw/watchdog-status",
+    "decentralizedReady": "https://api.pvabazaar.org/api/decentralized/ready",
+    "llms": "https://pvabazaar.org/llms.txt",
+    "readableSite": "https://pvabazaar.org/readable-site.json",
+    "sitemap": "https://pvabazaar.org/sitemap.xml"
+  },
+  "redundancy": {
+    "frontendDelivery": "GitHub Pages + CDN edge cache",
+    "frontendPreview": "Vercel preview deployment",
+    "primaryBackend": "https://api.pvabazaar.org",
+    "fallbackBackend": "https://pva-bazaar-app-1.onrender.com"
+  },
+  "edge": {
+    "frontendHostnames": ["pvabazaar.org", "www.pvabazaar.org"],
+    "backendHostnames": ["api.pvabazaar.org"],
+    "requiredHeaders": ["cache-control", "content-type"]
+  },
+  "monitoring": {
+    "intervalMinutes": 10,
+    "statusPagePath": "/status.html",
+    "alertWebhookSecretName": "OPENCLAW_ALERT_WEBHOOK_URL"
+  },
+  "targets": {
+    "frontendAvailability": "99.95%",
+    "backendAvailability": "99.9%",
+    "frontendLatencyMs": 2500,
+    "pingLatencyMs": 1000,
+    "healthLatencyMs": 2500,
+    "assetLatencyMs": 4000,
+    "parityDeadlineMinutes": 10,
+    "assetPropagationMinutes": 10,
+    "rollbackStartMinutes": 15,
+    "restoreMinutes": 30
+  },
+  "operationsCadence": {
+    "daily": "Review status page, uptime monitor, and latest release verification.",
+    "weekly": "Run live route sweep and accessibility smoke checks against production.",
+    "monthly": "Run rollback drill and recovery simulation against the latest known-good release.",
+    "quarterly": "Audit dependencies, secrets, DNS/TLS, and continuity documentation."
+  }
+}
