@@ -1700,6 +1700,26 @@ export default function DealsPage() {
       <main className="deals-main">
         {error ? <ErrorBanner message={error} onRetry={loadDeals} onDismiss={() => setError('')} /> : null}
 
+        <section className="card deals-flow-card">
+          <h2>Operating flow</h2>
+          <div className="deals-flow-grid">
+            <article className="deals-flow-step">
+              <h3>1. Capture the people first</h3>
+              <p>Use the contacts CRM to record the supplier, buyer, or broker before you start drafting terms.</p>
+              <Link to="/contacts" className="btn ghost">Open contacts</Link>
+            </article>
+            <article className="deals-flow-step">
+              <h3>2. Structure the deal</h3>
+              <p>Use this page to define parties, payment schedule, milestones, and the working audit trail.</p>
+            </article>
+            <article className="deals-flow-step">
+              <h3>3. Manage the workflow</h3>
+              <p>Track invites, evidence, disputes, and outbound queue states so the deal stays operational instead of living in scattered notes.</p>
+              <Link to="/broker-hub" className="btn ghost">Back to broker hub</Link>
+            </article>
+          </div>
+        </section>
+
         <section className="card">
           <h2>
             Wallet (real crypto)
@@ -1863,6 +1883,9 @@ export default function DealsPage() {
               example="Import 1kg coffee beans from Kenya"
             />
           </h2>
+          <p className="muted" style={{ marginTop: 0 }}>
+            Start here after the contact is captured and the opportunity is real enough to need terms, milestones, and payment structure.
+          </p>
 
           {profile?.preferences ? (
             <div className="defaults">
@@ -2837,4 +2860,3 @@ export default function DealsPage() {
     </div>
   );
 }
-

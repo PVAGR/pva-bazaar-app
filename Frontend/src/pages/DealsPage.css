@@ -80,6 +80,31 @@
   color: color-mix(in srgb, var(--deals-accent-warm) 75%, var(--text-primary));
 }
 
+.deals-flow-card {
+  display: grid;
+  gap: 14px;
+}
+
+.deals-flow-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.deals-flow-step {
+  border: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
+  border-radius: 12px;
+  padding: 14px;
+  background: color-mix(in srgb, var(--deals-panel-soft) 68%, transparent);
+  display: grid;
+  gap: 10px;
+}
+
+.deals-flow-step h3,
+.deals-flow-step p {
+  margin: 0;
+}
+
 .form {
   display: grid;
   gap: 14px;
@@ -389,6 +414,8 @@
   .grid2 {
     grid-template-columns: 1fr;
   }
+
+  .deals-flow-grid,
   .workspace {
     grid-template-columns: 1fr;
   }
@@ -452,4 +479,3 @@
     font-size: 1rem;
   }
 }
-

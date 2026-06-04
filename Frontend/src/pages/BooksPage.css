@@ -141,3 +141,29 @@
     grid-template-columns: 1fr;
   }
 }
+
+@media (max-width: 640px) {
+  .books-page {
+    gap: 0.85rem;
+  }
+
+  .books-page__heroPanel,
+  .books-page__card,
+  .books-page__closing {
+    padding: 0.85rem;
+  }
+
+  .books-page__actions {
+    flex-direction: column;
+  }
+
+  .books-page__button {
+    width: 100%;
+  }
+
+  .books-page__themes span {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
+}

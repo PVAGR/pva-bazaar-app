@@ -272,4 +272,50 @@
     display: grid;
     align-items: start;
   }
+
+  .opening-home__hero::after {
+    width: 12rem;
+    height: 12rem;
+    inset: auto -12% -18% auto;
+  }
+
+  .opening-home__actions,
+  .opening-home__bookActions,
+  .opening-home__legacyActions {
+    width: 100%;
+  }
+
+  .opening-home__legacyActions {
+    justify-items: stretch;
+  }
+
+  .opening-home__actionBtn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 520px) {
+  .opening-home {
+    gap: 0.85rem;
+  }
+
+  .opening-home__heroCopy h1 {
+    font-size: 1.8rem;
+    line-height: 1.1;
+  }
+
+  .opening-home__heroPanel,
+  .opening-home__bookCard,
+  .opening-home__card {
+    padding: 0.85rem;
+  }
+
+  .opening-home__sectionHead {
+    gap: 0.65rem;
+  }
+
+  .opening-home__hero::after {
+    display: none;
+  }
 }

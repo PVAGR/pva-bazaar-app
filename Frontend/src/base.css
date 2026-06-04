@@ -571,6 +571,11 @@ textarea:focus-visible {
     align-items: flex-start;
   }
 
+  .layout__nav,
+  .layout__status {
+    width: 100%;
+  }
+
   .layout__footerGrid {
     grid-template-columns: 1fr;
   }
@@ -1470,7 +1475,6 @@ article {
   }
 
   .layout__header {
-    grid-template-columns: 1fr;
     gap: 1rem;
   }
 
@@ -1479,7 +1483,7 @@ article {
   }
 
   .layout__nav {
-    justify-content: center;
+    justify-content: flex-start;
   }
 
   .layout__nav a {
@@ -1515,8 +1519,29 @@ article {
   }
 
   .layout__nav a {
-    padding: 0.4rem 0.6rem;
+    flex: 1 1 calc(50% - 0.3rem);
+    justify-content: center;
+    padding: 0.55rem 0.6rem;
     font-size: 0.85rem;
+  }
+
+  .layout__status {
+    justify-content: space-between;
+    padding: 0.5rem 0.65rem;
+  }
+
+  .layout__themeToggle {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .layout__footerSection {
+    padding: 0.85rem;
+  }
+
+  .layout__footerLinks a {
+    width: 100%;
+    justify-content: center;
   }
 
   .layout__routeTraversal {
@@ -1544,7 +1569,8 @@ article {
   }
 
   .layout__nav a {
-    padding: 0.35rem 0.5rem;
+    flex-basis: 100%;
+    padding: 0.45rem 0.55rem;
     font-size: 0.8rem;
   }
 }

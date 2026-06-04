@@ -57,6 +57,67 @@
   gap: 12px;
 }
 
+.broker-flow-card {
+  display: grid;
+  gap: 16px;
+}
+
+.broker-flow-card__head {
+  display: grid;
+  gap: 12px;
+}
+
+.broker-flow-card__head h2,
+.broker-flow-step h3 {
+  margin: 0;
+}
+
+.broker-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.broker-summary-pill {
+  border: 1px solid var(--broker-border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: color-mix(in srgb, var(--broker-surface) 88%, transparent);
+  display: grid;
+  gap: 4px;
+}
+
+.broker-summary-pill strong {
+  font-size: 1.2rem;
+  color: var(--broker-accent);
+}
+
+.broker-summary-pill span {
+  color: #475569;
+  font-size: 0.9rem;
+}
+
+.broker-flow-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.broker-flow-step {
+  border: 1px solid var(--broker-border);
+  border-radius: 12px;
+  padding: 16px;
+  background: color-mix(in srgb, var(--broker-surface) 92%, transparent);
+  display: grid;
+  gap: 10px;
+}
+
+.broker-flow-step p {
+  margin: 0;
+  color: #475569;
+  line-height: 1.5;
+}
+
 .hub-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -98,4 +159,10 @@
 
 .broker-hub .card h2 a:hover {
   color: var(--broker-accent);
+}
+
+@media (max-width: 900px) {
+  .broker-flow-grid {
+    grid-template-columns: 1fr;
+  }
 }

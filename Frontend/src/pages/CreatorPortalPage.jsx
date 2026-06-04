@@ -49,7 +49,7 @@ export default function CreatorPortalPage() {
       }
 
       if (searchParams.get('submitted') === '1') {
-        setSubmitMessage('Submission sent. Check your email inbox and this history list.');
+        setSubmitMessage('Submission sent. Check your submission history and follow-up channel for next steps.');
       }
     } catch (_err) {
       // Ignore URL or storage parse issues and keep defaults.
@@ -73,7 +73,7 @@ export default function CreatorPortalPage() {
   const handleSubmit = (event) => {
     if (!formAction) {
       event.preventDefault();
-      setSubmitMessage('Configure VITE_CREATOR_FORM_ACTION to enable email delivery.');
+      setSubmitMessage('Configure VITE_CREATOR_FORM_ACTION to enable intake delivery.');
       return;
     }
 
@@ -113,8 +113,12 @@ export default function CreatorPortalPage() {
       <header className="creator-portal__hero">
         <h1 id="creator-portal-title">Creator Seller Portal</h1>
         <p>
-          Open to sellers in Kenya, the United States, and anywhere else. Register from your phone,
-          list your items, and manage your own listings safely.
+          This is the supplier intake and seller workspace for PVA Bazaar. Use it when you have real goods, real
+          pricing, and enough detail for a serious review.
+        </p>
+        <p>
+          The portal is designed for sellers in Kenya, the United States, and elsewhere who want a professional path
+          into the network. It is not a promise of instant publishing, automatic syndication, or automatic payout.
         </p>
         <p className="creator-portal__note">
           This is separate from the owner admin system. Creator accounts cannot access or modify main admin controls.
@@ -124,6 +128,38 @@ export default function CreatorPortalPage() {
           <a href={deepLink}>{deepLink}</a>
         </div>
       </header>
+
+      <section className="creator-portal__infoGrid" aria-label="Supplier standards">
+        <article className="creator-card">
+          <h2>What to prepare</h2>
+          <ul className="creator-list">
+            <li>Clear product name, category, and honest condition details.</li>
+            <li>Photos that show the item well enough for review.</li>
+            <li>Real asking price and basic origin or maker context.</li>
+            <li>Reliable contact information for follow-up.</li>
+          </ul>
+        </article>
+
+        <article className="creator-card">
+          <h2>What to expect</h2>
+          <ul className="creator-list">
+            <li>Your submission is sent through the configured intake endpoint and saved in this browser history.</li>
+            <li>PVA can review the submission before it becomes part of a wider selling workflow.</li>
+            <li>Deeper listing, deal, or payout steps depend on the actual relationship and product fit.</li>
+            <li>Use the portal to begin a serious record, not to flood the system with weak entries.</li>
+          </ul>
+        </article>
+
+        <article className="creator-card">
+          <h2>What this portal is not</h2>
+          <ul className="creator-list">
+            <li>Not the main admin system.</li>
+            <li>Not an instant approval queue for every product.</li>
+            <li>Not a guarantee of automated external marketplace posting.</li>
+            <li>Not a substitute for honest sourcing, fulfillment, and communication.</li>
+          </ul>
+        </article>
+      </section>
 
       <div className="creator-portal__tabs" role="tablist" aria-label="Creator portal tabs">
         <button
@@ -159,7 +195,7 @@ export default function CreatorPortalPage() {
         <div className="creator-portal__cards">
           <article className="creator-card">
             <h2>1. Create your account</h2>
-            <p>Sign up as a creator/seller. No admin privileges are granted.</p>
+            <p>Sign up as a creator or seller so your submissions and listing work stay tied to your own account.</p>
             <Link to="/register?next=%2Fonboarding" className="creator-btn creator-btn--primary">
               Sign up now
             </Link>
@@ -167,31 +203,31 @@ export default function CreatorPortalPage() {
 
           <article className="creator-card">
             <h2>2. Sign in and set up</h2>
-            <p>Use user login, save your defaults, then continue to your seller workspace.</p>
+            <p>Use standard user login, complete onboarding, and make your contact and business details clear.</p>
             <Link to="/login?next=%2Fonboarding" className="creator-btn">
               Sign in (User)
             </Link>
           </article>
 
           <article className="creator-card">
-            <h2>3. Post items for review</h2>
-            <p>Create listings from mobile or desktop. Submissions go through your safe creator flow.</p>
-            <Link to={authenticated ? '/items/new' : '/login?next=%2Fitems%2Fnew'} className="creator-btn">
-              Post an item
-            </Link>
+            <h2>3. Submit goods for review</h2>
+            <p>Use the intake flow when you have clear photos, pricing, and enough detail for a real evaluation.</p>
+            <button type="button" onClick={() => updateTab('submit')} className="creator-btn">
+              Open submit tab
+            </button>
           </article>
 
           <article className="creator-card">
             <h2>4. Manage your listings</h2>
-            <p>Track your own listings and syndication status without touching platform admin tools.</p>
+            <p>Track your own listings and submission history without touching platform admin tools.</p>
             <Link to={authenticated ? '/items/mine' : '/login?next=%2Fitems%2Fmine'} className="creator-btn">
               Open my listings
             </Link>
           </article>
 
           <article className="creator-card">
-            <h2>5. Review royalties</h2>
-            <p>Open the creator royalty dashboard to inspect earnings, secondary sales, and platform breakdowns.</p>
+            <h2>5. Review seller analytics</h2>
+            <p>Open the creator dashboard for royalty and sales analytics when that data is relevant to your account.</p>
             <Link
               to={authenticated ? '/creator/dashboard' : '/login?next=%2Fcreator%2Fdashboard'}
               className="creator-btn"
@@ -206,13 +242,23 @@ export default function CreatorPortalPage() {
         <article className="creator-card creator-card--form" aria-label="Submit new items form">
           <h2>Submit New Items</h2>
           <p>
-            Send photos, item details, and price. Deliveries go to your configured email endpoint and are also
-            saved locally in this browser history.
+            Send photos, item details, and price. Submissions are delivered to your configured intake endpoint and are
+            also saved locally in this browser history.
           </p>
+          <div className="creator-inlineGrid">
+            <div className="creator-inlineNote">
+              <strong>Before you submit</strong>
+              <p>Only submit goods you can accurately describe, price, and fulfill.</p>
+            </div>
+            <div className="creator-inlineNote">
+              <strong>After you submit</strong>
+              <p>Use the history tab to keep your own record while follow-up and next steps are handled from the intake flow.</p>
+            </div>
+          </div>
 
           {!formAction ? (
             <p className="creator-alert">
-              Set VITE_CREATOR_FORM_ACTION in your frontend environment to activate email delivery.
+              Set VITE_CREATOR_FORM_ACTION in your frontend environment to activate intake delivery.
             </p>
           ) : null}
 
@@ -240,7 +286,7 @@ export default function CreatorPortalPage() {
               <textarea
                 name="description"
                 rows="4"
-                placeholder="Condition, specs, history, and important details"
+                placeholder="Condition, specs, maker or origin details, quantity, and important notes"
               />
             </label>
 
@@ -277,7 +323,7 @@ export default function CreatorPortalPage() {
               </label>
 
               <label className="creator-field">
-                <span>Email (optional)</span>
+                <span>Email for follow-up (optional)</span>
                 <input type="email" name="submitter_email" />
               </label>
             </div>

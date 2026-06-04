@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { apiGet, apiPost, apiPut, apiDelete } from '../lib/api';
 import ErrorBanner from '../components/ErrorBanner.jsx';
@@ -33,6 +33,13 @@ export default function ContactsPage() {
     commodities: [],
   });
   const [commodities, setCommodities] = useState([]);
+  const summary = useMemo(() => {
+    const counts = TYPES.map((type) => ({
+      label: type,
+      value: items.filter((item) => String(item?.type || '') === type).length,
+    }));
+    return counts;
+  }, [items]);
 
   async function loadContacts() {
     setLoading(true);
@@ -181,19 +188,82 @@ export default function ContactsPage() {
       <main className="contacts-main">
         {error ? <ErrorBanner message={error} onRetry={loadContacts} onDismiss={() => setError('')} /> : null}
 
+        <section className="card contacts-flow-card">
+          <div className="contacts-flow-card__head">
+            <div>
+              <h2>CRM workflow</h2>
+              <p className="muted">Keep every supplier or buyer attached to a real record before you start a deal.</p>
+            </div>
+            <div className="contacts-summary-grid">
+              {summary.map((item) => (
+                <div key={item.label} className="contacts-summary-pill">
+                  <strong>{item.value}</strong>
+                  <span>{item.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="contacts-flow-grid">
+            <article className="contacts-flow-step">
+              <h3>1. Capture the relationship</h3>
+              <p>Add the contact with country, company, direct channels, and notes while the context is still fresh.</p>
+            </article>
+            <article className="contacts-flow-step">
+              <h3>2. Qualify the opportunity</h3>
+              <p>Use notes and commodity tags to record what they can supply, buy, broker, or distribute.</p>
+            </article>
+            <article className="contacts-flow-step">
+              <h3>3. Move into deals</h3>
+              <p>Once the opportunity is real, use the deals workspace to structure terms, milestones, and payment flow.</p>
+              <Link to="/deals" className="btn ghost">Open deals workspace</Link>
+            </article>
+          </div>
+        </section>
+
         <section className="card">
           <h2>New contact</h2>
           <form className="form" onSubmit={handleCreate}>
-            <label>Name *</label>
-            <input value={draft.name} onChange={(e) => setDraft((p) => ({ ...p, name: e.target.value }))} placeholder="Supplier or buyer name" />
-            <label>Type</label>
-            <select value={draft.type} onChange={(e) => setDraft((p) => ({ ...p, type: e.target.value }))}>
-              {TYPES.map((t) => (
-                <option key={t} value={t}>{t}</option>
-              ))}
-            </select>
-            <div className="row">
-              <button className="btn primary" type="submit" disabled={creating}>{creating ? 'Creating…' : 'Create'}</button>
+            <div className="row rowWrap">
+              <label>
+                Name *
+                <input value={draft.name} onChange={(e) => setDraft((p) => ({ ...p, name: e.target.value }))} placeholder="Supplier or buyer name" />
+              </label>
+              <label>
+                Type
+                <select value={draft.type} onChange={(e) => setDraft((p) => ({ ...p, type: e.target.value }))}>
+                  {TYPES.map((t) => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <div className="row rowWrap">
+              <label>
+                Company
+                <input value={draft.company} onChange={(e) => setDraft((p) => ({ ...p, company: e.target.value }))} placeholder="Company or workshop" />
+              </label>
+              <label>
+                Country
+                <input value={draft.country} onChange={(e) => setDraft((p) => ({ ...p, country: e.target.value }))} placeholder="Country" />
+              </label>
+            </div>
+            <div className="row rowWrap">
+              <label>
+                Email
+                <input value={draft.email} onChange={(e) => setDraft((p) => ({ ...p, email: e.target.value }))} placeholder="Email" />
+              </label>
+              <label>
+                Phone / WhatsApp
+                <input value={draft.phone} onChange={(e) => setDraft((p) => ({ ...p, phone: e.target.value }))} placeholder="Phone or WhatsApp" />
+              </label>
+            </div>
+            <label>
+              Notes
+              <textarea rows={3} value={draft.notes} onChange={(e) => setDraft((p) => ({ ...p, notes: e.target.value }))} placeholder="What they sell, buy, or need next" />
+            </label>
+            <div className="row rowWrap">
+              <button className="btn primary" type="submit" disabled={creating}>{creating ? 'Creating…' : 'Create contact'}</button>
+              <Link to="/deals" className="btn ghost">Go to deals</Link>
             </div>
           </form>
         </section>
@@ -281,9 +351,10 @@ export default function ContactsPage() {
                   ))}
                 </div>
               ) : null}
-              <div className="row">
+              <div className="row rowWrap">
                 <button className="btn primary" onClick={handleSave} disabled={saving}>{saving ? 'Saving…' : 'Save'}</button>
                 <button className="btn ghost" onClick={handleDelete}>Delete</button>
+                <Link to="/deals" className="btn ghost">Open deals workspace</Link>
               </div>
             </div>
           </section>

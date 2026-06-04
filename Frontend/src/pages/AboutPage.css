@@ -20,7 +20,7 @@
 
 .about-tagline {
   font-size: 1.1rem;
-  color: var(--site-text-dim, #aaa);
+  color: var(--site-text-muted, #aaa);
   margin: 0;
   font-style: italic;
 }
@@ -42,7 +42,7 @@
   border: 1px solid var(--site-border, rgba(255, 255, 255, 0.1));
   border-bottom: none;
   border-radius: 8px 8px 0 0;
-  color: var(--site-text-dim, #aaa);
+  color: var(--site-text-muted, #aaa);
   font-size: 0.95rem;
   font-weight: 500;
   cursor: pointer;
@@ -114,7 +114,7 @@
 .highlight-item p {
   margin: 0;
   font-size: 0.95rem;
-  color: var(--site-text-dim, #aaa);
+  color: var(--site-text-muted, #aaa);
 }
 
 /* Mission Pillars */
@@ -146,7 +146,7 @@
 
 .pillar p {
   margin: 0;
-  color: var(--site-text-dim, #aaa);
+  color: var(--site-text-muted, #aaa);
 }
 
 /* How It Works List */
@@ -200,7 +200,7 @@
 .feature p {
   margin: 0;
   font-size: 0.9rem;
-  color: var(--site-text-dim, #aaa);
+  color: var(--site-text-muted, #aaa);
 }
 
 /* Actions */

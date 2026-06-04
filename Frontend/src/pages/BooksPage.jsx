@@ -22,15 +22,16 @@ export default function BooksPage() {
             <h1>Start here first.</h1>
             <p className="books-page__lead">
               These two books are the clearest entrance into the larger work. They explain the labor model, the
-              philosophy, and the long-range blueprint behind PVA Bazaar.
+              philosophy, and the long-range blueprint behind PVA Bazaar: truthful living, meaningful labor, preserved
+              memory, and systems designed to endure instead of disappear.
             </p>
           </div>
 
           <aside className="books-page__heroPanel">
             <h2>Reading order</h2>
             <ol>
-              <li><strong>The Infinite Jobs</strong> explains the human work worth preserving forever.</li>
-              <li><strong>Magnum Opus Guide</strong> turns that vision into a civilization-scale blueprint.</li>
+              <li><strong>The Infinite Jobs</strong> explains the kinds of human work that should remain sacred, useful, and worth preserving.</li>
+              <li><strong>Magnum Opus Guide</strong> turns those commitments into a blueprint for continuity, stewardship, and open legacy.</li>
             </ol>
             <p>
               If someone wants to understand the heart of this project before the marketplace, archive, or governance
@@ -71,11 +72,22 @@ export default function BooksPage() {
 
         <section className="books-page__closing">
           <div>
+            <p className="pill">What the books stand for</p>
+            <h2>Truth first. Work with soul. Build what can last.</h2>
+            <p>
+              Read these books as the moral and practical spine of the site. They reject empty churn, false prestige,
+              and disposable systems in favor of work that serves people, honors origin, and remains legible over time.
+            </p>
+          </div>
+        </section>
+
+        <section className="books-page__closing">
+          <div>
             <p className="pill">After the books</p>
             <h2>Then return to the broader platform.</h2>
             <p>
               Once a reader understands these two books, the marketplace, supplier portal, archive, and governance
-              surfaces become much easier to read as one cohesive system.
+              surfaces become much easier to read as one cohesive system instead of disconnected tools.
             </p>
           </div>
           <div className="books-page__actions">

@@ -30,6 +30,62 @@
   margin-top: 12px;
 }
 
+.contacts-flow-card {
+  display: grid;
+  gap: 16px;
+}
+
+.contacts-flow-card__head {
+  display: grid;
+  gap: 12px;
+}
+
+.contacts-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.contacts-summary-pill {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: rgba(0, 0, 0, 0.06);
+  display: grid;
+  gap: 4px;
+}
+
+.contacts-summary-pill strong {
+  color: var(--accent);
+  font-size: 1.15rem;
+}
+
+.contacts-summary-pill span {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  text-transform: capitalize;
+}
+
+.contacts-flow-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.contacts-flow-step {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  background: rgba(0, 0, 0, 0.06);
+  display: grid;
+  gap: 10px;
+}
+
+.contacts-flow-step h3,
+.contacts-flow-step p {
+  margin: 0;
+}
+
 .contact-item {
   text-align: left;
   padding: 12px;
@@ -66,4 +122,10 @@
 
 .contacts-shell.admin-page .rowWrap {
   flex-wrap: wrap;
+}
+
+@media (max-width: 900px) {
+  .contacts-flow-grid {
+    grid-template-columns: 1fr;
+  }
 }

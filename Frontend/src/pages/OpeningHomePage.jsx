@@ -16,7 +16,8 @@ export default function OpeningHomePage() {
           </p>
           <p className="opening-home__lead opening-home__lead--secondary">
             It is both a trade network and a long-memory system: the marketplace handles movement, the archive keeps
-            the soul of the work, and the platform is being shaped to outlast any single season or lifetime.
+            the soul of the work, and the books explain the deeper discipline behind it all—truth over drift,
+            meaningful labor over hollow churn, and continuity that can outlast one lifetime.
           </p>
           <div className="opening-home__actions">
             <Link className="opening-home__actionBtn opening-home__actionBtn--primary" to="/books">Read the Books</Link>
@@ -28,10 +29,10 @@ export default function OpeningHomePage() {
         <aside className="opening-home__heroPanel" aria-label="Core value">
           <h2>Begin with the books</h2>
           <ul>
-            <li>Read the two core books first if you want the clearest understanding of the project.</li>
-            <li>Then use the marketplace, supplier portal, and archive as practical surfaces inside that vision.</li>
-            <li>The books explain the labor model, the blueprint, and the long-memory mission in one place.</li>
-            <li>Everything else on the site becomes easier to understand after that first step.</li>
+            <li>Read the books first if you want the clearest understanding of why this platform exists.</li>
+            <li>They explain the commitment to truthful living, useful work, and systems that preserve memory instead of severing it.</li>
+            <li>Then use the marketplace, supplier portal, and archive as practical expressions of that vision.</li>
+            <li>Everything else on the site becomes easier to read once that foundation is clear.</li>
           </ul>
         </aside>
       </section>
@@ -43,7 +44,8 @@ export default function OpeningHomePage() {
             <h2>The two books every first-time visitor should see</h2>
           </div>
           <p>
-            These are the most concentrated explanation of the work. Start here, then move into the wider platform.
+            These are the most concentrated explanation of the work: truth, meaningful labor, preservation, and the
+            long-range continuity the rest of the platform is trying to serve.
           </p>
         </div>
 
@@ -84,6 +86,10 @@ export default function OpeningHomePage() {
             <h3>For readers and first-time visitors</h3>
             <p>Start with the books to understand the labor vision, the blueprint, and the long-memory mission.</p>
           </Link>
+          <Link className="opening-home__card" to="/archive">
+            <h3>For the archive and the soul</h3>
+            <p>Read the writings, testimony, and first principles that keep the trade network tied to truth and memory.</p>
+          </Link>
           <Link className="opening-home__card" to="/marketplace">
             <h3>For buyers and retailers</h3>
             <p>Browse goods, evaluate provenance, and move toward direct sourcing conversations.</p>
@@ -91,10 +97,6 @@ export default function OpeningHomePage() {
           <Link className="opening-home__card" to="/creator">
             <h3>For suppliers and artisans</h3>
             <p>Join the network, submit products, and present what you can reliably ship and stand behind.</p>
-          </Link>
-          <Link className="opening-home__card" to="/archive">
-            <h3>For the archive and the soul</h3>
-            <p>Read the writings, context, and memory that give the trade network deeper meaning.</p>
           </Link>
         </div>
       </section>
@@ -117,7 +119,7 @@ export default function OpeningHomePage() {
           </article>
           <article className="opening-home__card opening-home__cardStatic">
             <h3>2. Verify trust</h3>
-            <p>Use provenance, profile details, and archive context to understand who made the work and why it matters.</p>
+            <p>Use provenance, profile details, and archive context to understand who made the work, how it was carried, and why it matters.</p>
           </article>
           <article className="opening-home__card opening-home__cardStatic">
             <h3>3. Move the goods</h3>
@@ -133,6 +135,10 @@ export default function OpeningHomePage() {
           <p>
             The commercial side matters because it feeds people and keeps goods moving. The archive matters because it
             preserves the spirit, testimony, and intent behind the network. Both belong together.
+          </p>
+          <p>
+            The deeper claim is simple: trade should not require the loss of soul. The platform is meant to help people
+            work, source, and build relationships without cutting story, truth, and human dignity out of the process.
           </p>
         </div>
         <div className="opening-home__legacyActions">

@@ -5,7 +5,7 @@ import { PUBLIC_ROUTES } from '../config/publicRoutes';
 import { getToken } from '../lib/auth';
 import useArchiveTheme from '../hooks/useArchiveTheme.js';
 
-const FOOTER_SUMMARY = 'PVA Bazaar is a sourcing bridge, provenance system, and living archive built to connect makers, buyers, and the long memory behind every object.';
+const FOOTER_SUMMARY = 'PVA Bazaar is a sourcing bridge, provenance system, and living archive built to keep trade, memory, and truthful context attached to every object and relationship.';
 
 function parseJwtPayload(token) {
   if (!token || typeof token !== 'string') return null;

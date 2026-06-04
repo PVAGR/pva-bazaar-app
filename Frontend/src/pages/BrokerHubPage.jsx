@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { apiGet } from '../lib/api';
 import ErrorBanner from '../components/ErrorBanner.jsx';
@@ -52,6 +52,15 @@ export default function BrokerHubPage() {
   const filteredTemplates = searchLower
     ? templates.filter((t) => (t.name || '').toLowerCase().includes(searchLower))
     : templates;
+  const summary = useMemo(() => {
+    const activeDeals = deals.filter((deal) => !['completed', 'cancelled', 'closed'].includes(String(deal?.status || '').toLowerCase())).length;
+    return [
+      { label: 'Tracked commodities', value: commodities.length },
+      { label: 'CRM contacts', value: contacts.length },
+      { label: 'Active deals', value: activeDeals },
+      { label: 'Reusable templates', value: templates.length },
+    ];
+  }, [commodities.length, contacts.length, deals, templates.length]);
 
   return (
     <div className="broker-hub admin-page authenticated">
@@ -73,6 +82,40 @@ export default function BrokerHubPage() {
       <main className="broker-hub-main">
         {error ? <ErrorBanner message={error} onRetry={loadAll} onDismiss={() => setError('')} /> : null}
 
+        <section className="card broker-flow-card">
+          <div className="broker-flow-card__head">
+            <div>
+              <h2>Business flow</h2>
+              <p className="muted">Capture the opportunity, qualify the relationship, then turn it into a structured deal.</p>
+            </div>
+            <div className="broker-summary-grid">
+              {summary.map((item) => (
+                <div key={item.label} className="broker-summary-pill">
+                  <strong>{item.value}</strong>
+                  <span>{item.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="broker-flow-grid">
+            <article className="broker-flow-step">
+              <h3>1. Capture the lead</h3>
+              <p>Add the supplier, buyer, producer, or distributor to CRM first so every opportunity starts with a real record.</p>
+              <Link to="/contacts" className="btn primary">Open contacts CRM</Link>
+            </article>
+            <article className="broker-flow-step">
+              <h3>2. Define the goods</h3>
+              <p>Track the commodity, category, or sourcing lane so the opportunity stays tied to something concrete.</p>
+              <Link to="/commodities" className="btn ghost">Open commodities</Link>
+            </article>
+            <article className="broker-flow-step">
+              <h3>3. Draft the deal</h3>
+              <p>Move the qualified contact into a real deal with parties, milestones, payment schedule, and an audit trail.</p>
+              <Link to="/deals" className="btn ghost">Open deals workspace</Link>
+            </article>
+          </div>
+        </section>
+
         <section className="card">
           <h2>Quick search</h2>
           <input
@@ -91,10 +134,10 @@ export default function BrokerHubPage() {
             <section className="card">
               <h2>Quick actions</h2>
               <div className="quick-actions">
-                <Link to="/commodities" className="btn primary">New commodity</Link>
-                <Link to="/contacts" className="btn primary">New contact</Link>
-                <Link to="/deals" className="btn primary">New deal</Link>
-                <Link to="/templates" className="btn primary">New template</Link>
+                <Link to="/contacts" className="btn primary">Capture contact</Link>
+                <Link to="/commodities" className="btn primary">Add commodity</Link>
+                <Link to="/deals" className="btn primary">Draft deal</Link>
+                <Link to="/templates" className="btn primary">Open templates</Link>
               </div>
             </section>
 

@@ -173,6 +173,16 @@
   font-size: 0.94rem;
 }
 
+.get-started__detailList {
+  margin: 0;
+  padding-left: 1rem;
+  display: grid;
+  gap: 0.35rem;
+  color: var(--site-text-muted, var(--site-text));
+  line-height: 1.45;
+  font-size: 0.92rem;
+}
+
 .get-started__cardLink {
   display: inline-flex;
   align-items: center;
@@ -215,5 +225,25 @@
 
   .get-started__hero {
     grid-template-columns: 1fr;
+  }
+
+  .get-started__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .get-started .btn {
+    width: 100%;
+  }
+
+  .get-started__heroIntro,
+  .get-started__signup,
+  .get-started__card {
+    padding: 0.8rem;
+  }
+
+  .get-started__cardLink {
+    width: 100%;
+    justify-content: center;
   }
 }
