@@ -124,7 +124,7 @@ async function assertDns(hostname, label) {
       fail(`${label} hostname did not resolve: ${hostname}`);
       return;
     }
-    console.log(`✅ ${label} DNS ok (${hostname} -> ${records.map(record => record.address).join(", ")})`);
+    console.log(`✅ ${label} DNS ok (${hostname} -> ${records.map(dnsRecord => dnsRecord.address).join(", ")})`);
   } catch (error) {
     fail(`${label} DNS lookup failed for ${hostname}: ${error.message}`);
   }

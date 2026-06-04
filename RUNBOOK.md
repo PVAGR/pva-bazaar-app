@@ -2,7 +2,7 @@
 
 ## Canonical Live Map
 
-- Source of truth: `/tmp/workspace/PVAGR/pva-bazaar-app/Frontend/public/live-map.json`
+- Source of truth: `Frontend/public/live-map.json`
 - Frontend: `https://pvabazaar.org`
 - Backend: `https://api.pvabazaar.org`
 - API base: `https://api.pvabazaar.org/api`

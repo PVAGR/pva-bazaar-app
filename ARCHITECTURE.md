@@ -10,7 +10,7 @@
 | Status page | https://pvabazaar.org/status.html |
 | Fallback backend | https://pva-bazaar-app-1.onrender.com |
 
-The canonical source of truth for live routing and release targets is `/tmp/workspace/PVAGR/pva-bazaar-app/Frontend/public/live-map.json`. Deploy gates, status reporting, and continuity monitoring should consume that file before using hardcoded endpoints.
+The canonical source of truth for live routing and release targets is `Frontend/public/live-map.json`. Deploy gates, status reporting, and continuity monitoring should consume that file before using hardcoded endpoints.
 
 ## 🏗️ System Architecture
 

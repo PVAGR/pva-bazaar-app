@@ -23,6 +23,8 @@ jobs:
   preflight-readiness:
     name: Preflight live readiness
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -44,6 +46,8 @@ jobs:
     name: Deploy frontend to Vercel (Production)
     needs: preflight-readiness
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     env:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID || vars.VERCEL_ORG_ID }}
