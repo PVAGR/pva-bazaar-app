@@ -198,6 +198,7 @@ export default function UserDashboard() {
     .slice(0, 5);
 
   const quickActions = [
+    { to: '/studio', label: 'Writing Studio', detail: 'Notes, blog posts, archive publishing, social launch' },
     { to: '/broker-hub', label: 'Broker Hub', detail: 'Research, contacts, templates, deals' },
     { to: '/deals', label: 'Deals', detail: `${dashboardData.deals.length} recent loaded` },
     { to: '/contacts', label: 'Contacts', detail: `${dashboardData.contacts.length} recent loaded` },

@@ -18,7 +18,7 @@ export default function JournalPage({ entries = [], searchTerm = '' }) {
           <div className="pill">Chronological log</div>
           <h2>Journal entries</h2>
         </div>
-        <a className="button" href="#/admin/new-journal">Add entry</a>
+        <a className="button" href="#/studio">Open writing studio</a>
       </div>
 
       <div className="form" style={{ marginBottom: '1rem' }}>

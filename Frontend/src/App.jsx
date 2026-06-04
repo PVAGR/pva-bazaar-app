@@ -50,6 +50,8 @@ const HeelKawnPage = lazy(() => import('./pages/HeelKawnPage.jsx'));
 const ForumPage = lazy(() => import('./pages/Forum.jsx'));
 const GetStartedPage = lazy(() => import('./pages/GetStartedPage.jsx'));
 const OpeningHomePage = lazy(() => import('./pages/OpeningHomePage.jsx'));
+const WritingStudioPage = lazy(() => import('./pages/WritingStudioPage.jsx'));
+const BlogPostPage = lazy(() => import('./pages/BlogPostPage.jsx'));
 const BrokerHubPage = lazy(() => import('./pages/BrokerHubPage.jsx'));
 const CommoditiesPage = lazy(() => import('./pages/CommoditiesPage.jsx'));
 const ContactsPage = lazy(() => import('./pages/ContactsPage.jsx'));
@@ -86,6 +88,7 @@ export default function App() {
 
         {/* User Dashboard - Protected */}
         <Route path="/dashboard" element={<RequireUserAuth><Layout><UserDashboard /></Layout></RequireUserAuth>} />
+        <Route path="/studio" element={<RequireUserAuth><Layout><WritingStudioPage /></Layout></RequireUserAuth>} />
 
         <Route path="/login" element={<Layout><LoginPage /></Layout>} />
         <Route path="/register" element={<Layout><RegisterPage /></Layout>} />
@@ -117,6 +120,7 @@ export default function App() {
         <Route path="/home" element={<Navigate to="/" replace />} />
         <Route path="/library" element={<Layout><ArchiveLibraryPage /></Layout>} />
         <Route path="/archive" element={<Layout><ArchiveLibraryPage /></Layout>} />
+        <Route path="/blog/:slug" element={<Layout><BlogPostPage /></Layout>} />
         <Route path="/creator" element={<Layout><CreatorPortalPage /></Layout>} />
         <Route path="/creator/dashboard" element={<RequireUserAuth><Layout><CreatorDashboard /></Layout></RequireUserAuth>} />
         <Route path="/civilization-library" element={<Layout><CivilizationLibraryPage /></Layout>} />

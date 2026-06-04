@@ -9,6 +9,7 @@ import './AdminNav.css';
 export default function AdminNav() {
   const items = [
     { to: '/dashboard', label: 'Command' },
+    { to: '/studio', label: 'Studio' },
     { to: '/admin', label: 'Admin' },
     { to: '/broker-hub', label: 'Broker' },
     { to: '/onboarding', label: 'Guide' },
