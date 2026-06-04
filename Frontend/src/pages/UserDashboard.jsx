@@ -3,9 +3,11 @@ import { apiGet, fetchTransactions } from '../lib/api.js';
 import { createLogger } from '../lib/logger.js';
 import { getToken } from '../lib/auth.js';
 import NavLink from '../components/NavLink.jsx';
+import AdminNav from '../components/AdminNav.jsx';
 import '../pages/UserDashboard.css';
 
 const logger = createLogger('UserDashboard');
+const COMMAND_NOTE_KEY = 'pva-command-center-note';
 
 /**
  * UserDashboard - Public-facing user dashboard
@@ -29,10 +31,16 @@ const logger = createLogger('UserDashboard');
 
 export default function UserDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
+  const [commandNote, setCommandNote] = useState('');
+  const [commandNoteStatus, setCommandNoteStatus] = useState('saved');
   const [dashboardData, setDashboardData] = useState({
     userOrders: [],
     userItems: [],
     userTransactions: [],
+    deals: [],
+    contacts: [],
+    templates: [],
+    streams: [],
     marketplaceStats: { totalItems: 0, totalSales: 0 },
     escrowStatus: [],
     salesMetrics: { totalSales: 0, thisMonth: 0, thisWeek: 0 },
@@ -51,6 +59,36 @@ export default function UserDashboard() {
     return () => clearInterval(interval); // eslint-disable-line no-undef
   }, [hasToken]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const stored = window.localStorage.getItem(COMMAND_NOTE_KEY);
+      if (stored) {
+        setCommandNote(stored);
+      }
+    } catch {
+      logger.warn('Unable to restore command center note');
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const timer = setTimeout(() => {
+      try {
+        window.localStorage.setItem(COMMAND_NOTE_KEY, commandNote);
+        setCommandNoteStatus('saved');
+      } catch {
+        setCommandNoteStatus('save-failed');
+      }
+    }, 300);
+
+    if (commandNoteStatus !== 'typing') {
+      setCommandNoteStatus(commandNote ? 'typing' : 'saved');
+    }
+
+    return () => clearTimeout(timer);
+  }, [commandNote]);
+
   async function loadDashboardData() {
     try {
       const results = await Promise.allSettled([
@@ -60,9 +98,13 @@ export default function UserDashboard() {
         apiGet('/items?limit=100').catch(() => ({})),
         apiGet('/orders/escrow').catch(() => []),
         apiGet('/sales/metrics').catch(() => ({})),
+        apiGet('/deals', { params: { limit: 5 } }).catch(() => ({})),
+        apiGet('/contacts', { params: { limit: 5 } }).catch(() => ({})),
+        apiGet('/templates', { params: { limit: 5 } }).catch(() => ({})),
+        apiGet('/streams', { params: { limit: 5 } }).catch(() => ({})),
       ]);
 
-      const [ordersR, itemsR, txR, mpR, escrowR, salesR] = results;
+      const [ordersR, itemsR, txR, mpR, escrowR, salesR, dealsR, contactsR, templatesR, streamsR] = results;
       const orderItems = Array.isArray(ordersR.value?.items)
         ? ordersR.value.items
         : Array.isArray(ordersR.value?.orders)
@@ -83,6 +125,10 @@ export default function UserDashboard() {
         userOrders: ordersR.status === 'fulfilled' ? orderItems : [],
         userItems: itemsR.status === 'fulfilled' ? (Array.isArray(itemsR.value?.items) ? itemsR.value.items : []) : [],
         userTransactions: txR.status === 'fulfilled' ? txItems : [],
+        deals: dealsR.status === 'fulfilled' && Array.isArray(dealsR.value?.items) ? dealsR.value.items : [],
+        contacts: contactsR.status === 'fulfilled' && Array.isArray(contactsR.value?.items) ? contactsR.value.items : [],
+        templates: templatesR.status === 'fulfilled' && Array.isArray(templatesR.value?.items) ? templatesR.value.items : [],
+        streams: streamsR.status === 'fulfilled' && Array.isArray(streamsR.value?.items) ? streamsR.value.items : [],
         marketplaceStats: mpR.status === 'fulfilled' ? mpR.value : { totalItems: 0, totalSales: 0 },
         escrowStatus: escrowR.status === 'fulfilled' ? escrowItems : [],
         salesMetrics: salesR.status === 'fulfilled' ? salesR.value : { totalSales: 0, thisMonth: 0, thisWeek: 0 },
@@ -108,7 +154,7 @@ export default function UserDashboard() {
   }
 
   const tabs = [
-    { id: 'overview', label: '📊 Overview', icon: '📊' },
+    { id: 'overview', label: '🧭 Command', icon: '🧭' },
     { id: 'orders', label: '🛍️ My Orders', icon: '🛍️' },
     { id: 'items', label: '📦 My Items', icon: '📦' },
     { id: 'transactions', label: '💱 Activity', icon: '💱' },
@@ -151,12 +197,30 @@ export default function UserDashboard() {
     .sort((a, b) => b.revenue - a.revenue)
     .slice(0, 5);
 
+  const quickActions = [
+    { to: '/broker-hub', label: 'Broker Hub', detail: 'Research, contacts, templates, deals' },
+    { to: '/deals', label: 'Deals', detail: `${dashboardData.deals.length} recent loaded` },
+    { to: '/contacts', label: 'Contacts', detail: `${dashboardData.contacts.length} recent loaded` },
+    { to: '/templates', label: 'Templates', detail: `${dashboardData.templates.length} recent loaded` },
+    { to: '/streams', label: 'Streams', detail: `${dashboardData.streams.length} recent loaded` },
+    { to: '/chat', label: 'Chat', detail: 'Talk to Richard about sourcing and operations' },
+    { to: '/items/new', label: 'List Item', detail: 'Create a new listing quickly' },
+    { to: '/archive', label: 'Archive', detail: 'Read and preserve the long memory' },
+  ];
+
+  const noteWordCount = commandNote.trim() ? commandNote.trim().split(/\s+/).length : 0;
+  const draftStatusLabel =
+    commandNoteStatus === 'typing' ? 'Saving...' :
+      commandNoteStatus === 'save-failed' ? 'Save failed locally' :
+        'Saved locally';
+
   return (
     <div className="user-dashboard-container">
         <header className="dashboard-header">
-          <h1>📊 Your Dashboard</h1>
-          <p>Manage your orders, items, and sales in one place</p>
+          <h1>🧭 Command Center</h1>
+          <p>Your operator workspace for writing, deals, communication, listings, and live business flow</p>
         </header>
+        <AdminNav />
 
         {/* Tab Navigation */}
         <nav className="dashboard-tabs">
@@ -184,6 +248,59 @@ export default function UserDashboard() {
             {/* Overview Tab */}
             {activeTab === 'overview' && (
               <section className="tab-content overview-content">
+                <div className="command-center-grid">
+                  <section className="overview-section command-note-panel">
+                    <div className="command-section-header">
+                      <div>
+                        <h2>Write first</h2>
+                        <p className="section-helper">This draft pad autosaves in your browser so you can think in plain text and keep moving.</p>
+                      </div>
+                      <span className={`command-note-status ${commandNoteStatus}`}>{draftStatusLabel}</span>
+                    </div>
+                    <textarea
+                      className="command-note-textarea"
+                      value={commandNote}
+                      onChange={(event) => setCommandNote(event.target.value)}
+                      placeholder="Write your notes, sourcing ideas, deal thoughts, reminders, or next moves here..."
+                    />
+                    <div className="command-note-footer">
+                      <span>{noteWordCount} words</span>
+                      <button
+                        type="button"
+                        className="command-note-clear"
+                        onClick={() => {
+                          setCommandNote('');
+                          setCommandNoteStatus('saved');
+                          try {
+                            window.localStorage.removeItem(COMMAND_NOTE_KEY);
+                          } catch {
+                            logger.warn('Unable to clear command center note');
+                          }
+                        }}
+                      >
+                        Clear note
+                      </button>
+                    </div>
+                  </section>
+
+                  <section className="overview-section command-actions-panel">
+                    <div className="command-section-header">
+                      <div>
+                        <h2>Operate the suite</h2>
+                        <p className="section-helper">Jump directly into the surfaces that keep the whole system moving.</p>
+                      </div>
+                    </div>
+                    <div className="command-actions-grid">
+                      {quickActions.map((action) => (
+                        <NavLink key={action.to} to={action.to} className="command-action-card">
+                          <strong>{action.label}</strong>
+                          <span>{action.detail}</span>
+                        </NavLink>
+                      ))}
+                    </div>
+                  </section>
+                </div>
+
                 <div className="stats-grid">
                   <div className="stat-card">
                     <span className="stat-label">my orders</span>
@@ -205,6 +322,43 @@ export default function UserDashboard() {
                     <span className="stat-value">${dashboardData.salesMetrics.thisMonth?.toFixed(2) || '0.00'}</span>
                     <span className="stat-unit">current</span>
                   </div>
+                </div>
+
+                <div className="command-center-grid command-center-grid--secondary">
+                  <section className="overview-section">
+                    <h2>Business surfaces</h2>
+                    <div className="command-mini-grid">
+                      <div className="command-mini-card">
+                        <span className="command-mini-label">Deals</span>
+                        <span className="command-mini-value">{dashboardData.deals.length}</span>
+                      </div>
+                      <div className="command-mini-card">
+                        <span className="command-mini-label">Contacts</span>
+                        <span className="command-mini-value">{dashboardData.contacts.length}</span>
+                      </div>
+                      <div className="command-mini-card">
+                        <span className="command-mini-label">Templates</span>
+                        <span className="command-mini-value">{dashboardData.templates.length}</span>
+                      </div>
+                      <div className="command-mini-card">
+                        <span className="command-mini-label">Streams</span>
+                        <span className="command-mini-value">{dashboardData.streams.length}</span>
+                      </div>
+                    </div>
+                  </section>
+
+                  <section className="overview-section">
+                    <h2>Recent business activity</h2>
+                    <div className="command-list-stack">
+                      {dashboardData.deals.slice(0, 3).map((deal) => (
+                        <NavLink key={deal._id} to="/deals" className="command-list-item">
+                          <strong>{deal.title || 'Untitled deal'}</strong>
+                          <span>{deal.status || 'unknown'} · {deal.currency || 'USD'} {deal.totalAmount || 0}</span>
+                        </NavLink>
+                      ))}
+                      {dashboardData.deals.length === 0 ? <p className="empty-state compact">No recent deals loaded yet.</p> : null}
+                    </div>
+                  </section>
                 </div>
 
                 <div className="overview-section">
@@ -236,6 +390,34 @@ export default function UserDashboard() {
                       <p className="stat-big">${dashboardData.marketplaceStats.totalSales?.toFixed(2) || '0.00'}</p>
                     </div>
                   </div>
+                </div>
+
+                <div className="command-center-grid command-center-grid--secondary">
+                  <section className="overview-section">
+                    <h2>Contacts in reach</h2>
+                    <div className="command-list-stack">
+                      {dashboardData.contacts.slice(0, 4).map((contact) => (
+                        <NavLink key={contact._id} to="/contacts" className="command-list-item">
+                          <strong>{contact.name || 'Unknown contact'}</strong>
+                          <span>{contact.company || contact.type || 'Contact record'}</span>
+                        </NavLink>
+                      ))}
+                      {dashboardData.contacts.length === 0 ? <p className="empty-state compact">No contacts loaded yet.</p> : null}
+                    </div>
+                  </section>
+
+                  <section className="overview-section">
+                    <h2>Templates and repeatables</h2>
+                    <div className="command-list-stack">
+                      {dashboardData.templates.slice(0, 4).map((template) => (
+                        <NavLink key={template._id} to="/templates" className="command-list-item">
+                          <strong>{template.name || 'Untitled template'}</strong>
+                          <span>{template.type || 'Reusable template'}</span>
+                        </NavLink>
+                      ))}
+                      {dashboardData.templates.length === 0 ? <p className="empty-state compact">No templates loaded yet.</p> : null}
+                    </div>
+                  </section>
                 </div>
               </section>
             )}

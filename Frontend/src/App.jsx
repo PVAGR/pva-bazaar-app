@@ -103,7 +103,7 @@ export default function App() {
         <Route path="/commodities" element={<RequireUserAuth><Layout><CommoditiesPage /></Layout></RequireUserAuth>} />
         <Route path="/contacts" element={<RequireUserAuth><Layout><ContactsPage /></Layout></RequireUserAuth>} />
         <Route path="/templates" element={<RequireUserAuth><Layout><TemplatesPage /></Layout></RequireUserAuth>} />
-        <Route path="/chat" element={<Layout><ChatPage /></Layout>} />
+        <Route path="/chat" element={<RequireUserAuth><Layout><ChatPage /></Layout></RequireUserAuth>} />
         <Route path="/conference" element={<Layout><PopularConferencePage /></Layout>} />
         <Route path="/proposals" element={<Layout><ProposalsPage /></Layout>} />
         <Route path="/proposals/submit" element={<RequireUserAuth><Layout><SubmitProposalPage /></Layout></RequireUserAuth>} />
@@ -127,6 +127,7 @@ export default function App() {
         <Route path="/federation-map" element={<Layout><FederationMapPage /></Layout>} />
         <Route path="/about" element={<Layout><AboutPage /></Layout>} />
         <Route path="/agent" element={<Layout><AgentPage /></Layout>} />
+        <Route path="/streams" element={<RequireUserAuth><Layout><StreamsPage /></Layout></RequireUserAuth>} />
         <Route path="/citizens" element={<Layout><CitizenDirectoryPage /></Layout>} />
         <Route path="/forum" element={<Layout><ForumPage /></Layout>} />
         <Route path="/passport/:userId" element={<Layout><PassportPage /></Layout>} />
