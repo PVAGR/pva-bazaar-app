@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="canonical" href="https://pvabazaar.org/" />
     <meta name="description" content="pvabazaar.org — A Life in Words. A modern personal journal and archive of entries across places and time." />
+    <meta name="llm:readable" content="true" />
+    <meta name="llm:content-url" content="https://pvabazaar.org/llms.txt" />
+    <meta name="llm:snapshot-url" content="https://pvabazaar.org/readable-site.json" />
     <title>pvabazaar.org — Personal Journal</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -15,6 +18,18 @@
   </head>
   <body>
     <div id="root" role="main"></div>
+    <noscript>
+      <section aria-label="PVA Bazaar no-script guidance">
+        <h1>PVA Bazaar</h1>
+        <p>This site requires JavaScript for the full app experience.</p>
+        <p>Machine-readable resources for crawlers and AI tools:</p>
+        <ul>
+          <li><a href="/llms.txt">llms.txt</a></li>
+          <li><a href="/readable-site.json">readable-site.json</a></li>
+          <li><a href="/sitemap.xml">sitemap.xml</a></li>
+        </ul>
+      </section>
+    </noscript>
     <!-- api-test.js excluded from production builds -->
   </body>
 </html>
