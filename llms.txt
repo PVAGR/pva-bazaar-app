@@ -48,7 +48,7 @@ Route purpose:
 Implementation notes:
 - Frontend framework: React + Vite
 - Router style: HashRouter
-- Main app shell: / (index.html) mounts JavaScript app into #root
+- Main app shell: / (index.html) mounts React app into #root
 
 If you are an AI agent fetching this website:
 1) Read this file first.
