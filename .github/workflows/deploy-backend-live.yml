@@ -9,15 +9,50 @@ on:
       - "vercel.json"
       - ".github/workflows/deploy-backend-live.yml"
   workflow_dispatch:
+    inputs:
+      ref_to_deploy:
+        description: "Commit, tag, or branch to deploy/rollback"
+        required: false
+        type: string
+        default: ""
+      rollback_reason:
+        description: "Reason for redeploying a known-good ref"
+        required: false
+        type: string
+        default: ""
 
 jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref_to_deploy || github.sha }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Run live readiness baseline gate
+        env:
+          FRONTEND_URL: https://pvabazaar.org
+          BACKEND_URL: https://api.pvabazaar.org
+        run: node scripts/verify-live-ready.mjs
+
   deploy:
+    needs: preflight
     runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref_to_deploy || github.sha }}
 
       - name: Setup Node
         uses: actions/setup-node@v6
@@ -151,7 +186,7 @@ jobs:
 
       - name: Verify decentralized live endpoints
         env:
-          BACKEND_URL: https://pva-bazaar-app-1.onrender.com
+          BACKEND_URL: https://api.pvabazaar.org
         run: |
           set -euo pipefail
           for i in {1..18}; do
@@ -167,9 +202,19 @@ jobs:
           echo "decentralized live verification failed after retries"
           exit 1
 
+      - name: Verify strict post-deploy readiness
+        env:
+          FRONTEND_URL: https://pvabazaar.org
+          BACKEND_URL: https://api.pvabazaar.org
+          STRICT: "true"
+          PARITY_REQUIRED: "true"
+          WAIT_TIMEOUT_MS: "300000"
+          WAIT_POLL_MS: "10000"
+        run: node scripts/verify-live-ready.mjs
+
       - name: Ensure live backend commit parity
         env:
-          BACKEND_URL: https://pva-bazaar-app-1.onrender.com
+          BACKEND_URL: https://api.pvabazaar.org
           STRICT: "true"
           POLL_MS: "10000"
           TIMEOUT_MS: "300000"

@@ -7,10 +7,11 @@
  *
  * Exits non-zero if any probe fails with a network error, timeout, or unexpected HTTP status.
  */
-const DEFAULT_BACKEND = "https://pva-bazaar-app-1.onrender.com";
-const TIMEOUT_MS = 45_000;
+import { getLiveTargets } from "./live-map.mjs";
 
-const base = String(process.env.BACKEND_URL || DEFAULT_BACKEND).replace(/\/+$/, "");
+const TIMEOUT_MS = 45_000;
+const { backend } = getLiveTargets();
+const base = String(process.env.BACKEND_URL || backend).replace(/\/+$/, "");
 
 /** GET paths: [path, acceptableStatusCodes] — 401/403 mean "route exists, auth required". */
 const GET_PROBES = [
@@ -39,7 +40,7 @@ const GET_PROBES = [
 ];
 
 async function probe(method, url, { headers = {}, acceptable = [200] } = {}) {
-  const controller = new AbortController();
+  const controller = new globalThis.AbortController();
   const t = setTimeout(() => controller.abort(), TIMEOUT_MS);
   try {
     const res = await fetch(url, { method, headers, redirect: "follow", signal: controller.signal });

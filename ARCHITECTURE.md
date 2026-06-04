@@ -1,5 +1,17 @@
 # Blueprint v1 Architecture & Data Flow
 
+## Live Continuity Map
+
+| Surface | Canonical URL |
+|---|---|
+| Frontend | https://pvabazaar.org |
+| Backend | https://api.pvabazaar.org |
+| API base | https://api.pvabazaar.org/api |
+| Status page | https://pvabazaar.org/status.html |
+| Fallback backend | https://pva-bazaar-app-1.onrender.com |
+
+The canonical source of truth for live routing and release targets is `/tmp/workspace/PVAGR/pva-bazaar-app/Frontend/public/live-map.json`. Deploy gates, status reporting, and continuity monitoring should consume that file before using hardcoded endpoints.
+
 ## 🏗️ System Architecture
 
 ```

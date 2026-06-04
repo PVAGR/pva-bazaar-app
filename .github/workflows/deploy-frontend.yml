@@ -8,6 +8,17 @@ on:
       - 'Frontend/**'
       - '.github/workflows/deploy-frontend.yml'
   workflow_dispatch:
+    inputs:
+      ref_to_deploy:
+        description: "Commit, tag, or branch to deploy/rollback"
+        required: false
+        type: string
+        default: ""
+      rollback_reason:
+        description: "Reason for redeploying a known-good ref"
+        required: false
+        type: string
+        default: ""
   repository_dispatch:
     types: [heelkawn-apk-published]
 
@@ -31,6 +42,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref_to_deploy || github.sha }}
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -50,10 +63,29 @@ jobs:
         continue-on-error: true
         run: npm run audit:theme:static
 
+  preflight-readiness:
+    name: Preflight Live Readiness
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref_to_deploy || github.sha }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run baseline live readiness gate
+        env:
+          FRONTEND_URL: https://pvabazaar.org
+          BACKEND_URL: https://api.pvabazaar.org
+        run: node scripts/verify-live-ready.mjs
+
   build:
     name: Build Frontend
     runs-on: ubuntu-latest
-    needs: [theme-guards]
+    needs: [theme-guards, preflight-readiness]
     if: ${{ always() }}
     outputs:
       main_js: ${{ steps.asset_manifest.outputs.main_js }}
@@ -65,6 +97,8 @@ jobs:
     
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref_to_deploy || github.sha }}
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -91,7 +125,7 @@ jobs:
       - name: Build frontend
         run: npm run build
         env:
-          VITE_API_URL: ${{ vars.VITE_API_URL || vars.VITE_API_BASE_URL || secrets.VITE_API_URL || 'https://pva-bazaar-app-1.onrender.com/api' }}
+          VITE_API_URL: ${{ vars.VITE_API_URL || vars.VITE_API_BASE_URL || secrets.VITE_API_URL || 'https://api.pvabazaar.org/api' }}
           VITE_CLOUDINARY_CLOUD_NAME: ${{ secrets.VITE_CLOUDINARY_CLOUD_NAME || vars.VITE_CLOUDINARY_CLOUD_NAME || '' }}
           VITE_CLOUDINARY_UPLOAD_PRESET: ${{ secrets.VITE_CLOUDINARY_UPLOAD_PRESET || vars.VITE_CLOUDINARY_UPLOAD_PRESET || '' }}
           VITE_SENTRY_RELEASE: ${{ env.RELEASE }}
@@ -126,7 +160,7 @@ jobs:
     name: Deploy to GitHub Pages
     needs: build
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: (github.ref == 'refs/heads/main' && github.event_name == 'push') || github.event_name == 'workflow_dispatch'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -172,7 +206,7 @@ jobs:
   deploy-vercel:
     name: Deploy Frontend to Vercel (Preview)
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
     
     defaults:
       run:
@@ -180,6 +214,8 @@ jobs:
     
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref_to_deploy || github.sha }}
 
       - name: Validate Vercel frontend secrets
         id: vercel_secrets
@@ -217,7 +253,7 @@ jobs:
         if: steps.vercel_secrets.outputs.ready == 'true'
         run: npm run build
         env:
-          VITE_API_URL: ${{ vars.VITE_API_URL || vars.VITE_API_BASE_URL || secrets.VITE_API_URL || 'https://pva-bazaar-app-1.onrender.com/api' }}
+          VITE_API_URL: ${{ vars.VITE_API_URL || vars.VITE_API_BASE_URL || secrets.VITE_API_URL || 'https://api.pvabazaar.org/api' }}
           VITE_CLOUDINARY_CLOUD_NAME: ${{ secrets.VITE_CLOUDINARY_CLOUD_NAME || vars.VITE_CLOUDINARY_CLOUD_NAME || '' }}
           VITE_CLOUDINARY_UPLOAD_PRESET: ${{ secrets.VITE_CLOUDINARY_UPLOAD_PRESET || vars.VITE_CLOUDINARY_UPLOAD_PRESET || '' }}
 
@@ -241,3 +277,32 @@ jobs:
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID || vars.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_FRONTEND_PROJECT_ID || vars.VERCEL_FRONTEND_PROJECT_ID || secrets.VERCEL_PROJECT_ID || vars.VERCEL_PROJECT_ID }}
 
+  post-deploy-readiness:
+    name: Post-Deploy Readiness
+    needs: deploy-pages
+    runs-on: ubuntu-latest
+    if: always() && ((github.ref == 'refs/heads/main' && github.event_name == 'push') || github.event_name == 'workflow_dispatch')
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref_to_deploy || github.sha }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run strict live readiness gate
+        env:
+          FRONTEND_URL: https://pvabazaar.org
+          BACKEND_URL: https://api.pvabazaar.org
+          STRICT: 'true'
+          WAIT_TIMEOUT_MS: '300000'
+          WAIT_POLL_MS: '10000'
+        run: node scripts/verify-live-ready.mjs
+
+      - name: Run live route sweep
+        env:
+          FRONTEND_URL: https://pvabazaar.org
+          BACKEND_URL: https://api.pvabazaar.org
+        run: node scripts/verify-frontend-routes-live.mjs
