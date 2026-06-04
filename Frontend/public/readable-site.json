@@ -6,6 +6,14 @@
     "framework": "react-vite",
     "router": "hash"
   },
+  "positioning": {
+    "summary": "PVA Bazaar connects global makers, suppliers, and artisans with American buyers through sourcing, provenance, and archive context.",
+    "pillars": [
+      "Trade and sourcing",
+      "Provenance and trust",
+      "Living archive and memory"
+    ]
+  },
   "machineReadable": {
     "llms": "https://pvabazaar.org/llms.txt",
     "sitemap": "https://pvabazaar.org/sitemap.xml",
@@ -16,25 +24,43 @@
       "name": "Home",
       "path": "/",
       "url": "https://pvabazaar.org/",
-      "description": "Full site landing hub and navigation overview."
+      "description": "Trade-facing landing page for buyers, suppliers, and the long-memory mission of the platform."
+    },
+    {
+      "name": "Get Started",
+      "path": "#/get-started",
+      "url": "https://pvabazaar.org/#/get-started",
+      "description": "Account creation and role selection for buyers, suppliers, artisans, and collaborators."
     },
     {
       "name": "Archive Library",
       "path": "#/library",
       "url": "https://pvabazaar.org/#/library",
-      "description": "Archive entries and long-form content library."
+      "description": "Archive entries, long-form writing, and business context that preserve the memory behind the work."
     },
     {
       "name": "Marketplace",
       "path": "#/marketplace",
       "url": "https://pvabazaar.org/#/marketplace",
-      "description": "Artifacts, listings, and commerce pages."
+      "description": "Product listings and sourcing surfaces for buyers and retail partners."
     },
     {
       "name": "Showroom",
       "path": "#/showroom",
       "url": "https://pvabazaar.org/#/showroom",
-      "description": "Curated display surfaces and item showcases."
+      "description": "Curated display surfaces for featured products, makers, and collections."
+    },
+    {
+      "name": "Supplier Portal",
+      "path": "#/creator",
+      "url": "https://pvabazaar.org/#/creator",
+      "description": "Entry point for suppliers, artisans, and sourcing partners joining the network."
+    },
+    {
+      "name": "About",
+      "path": "#/about",
+      "url": "https://pvabazaar.org/#/about",
+      "description": "Mission, operating model, and explanation of how trade, provenance, and archive fit together."
     },
     {
       "name": "Civilization Library",
@@ -46,80 +72,20 @@
       "name": "Popular Conference",
       "path": "#/conference",
       "url": "https://pvabazaar.org/#/conference",
-      "description": "Public governance proposal workflow and wallet-verified conference pages."
+      "description": "Public governance proposal workflow and conference pages."
     },
     {
       "name": "Governance Proposal Board",
       "path": "#/proposals",
       "url": "https://pvabazaar.org/#/proposals",
-      "description": "The People's Proposal Board with endorsement and decision lifecycle."
-    },
-    {
-      "name": "Submit Proposal",
-      "path": "#/proposals/submit",
-      "url": "https://pvabazaar.org/#/proposals/submit",
-      "description": "Verified citizen three-step proposal submission flow."
-    },
-    {
-      "name": "Citizen Passport",
-      "path": "#/passport",
-      "url": "https://pvabazaar.org/#/passport",
-      "description": "Citizen identity, credential, and eligibility passport panel."
-    },
-    {
-      "name": "Citizens Directory",
-      "path": "#/citizens",
-      "url": "https://pvabazaar.org/#/citizens",
-      "description": "Public directory of citizen profiles."
-    },
-    {
-      "name": "Forum",
-      "path": "#/forum",
-      "url": "https://pvabazaar.org/#/forum",
-      "description": "Civic governance forum with proposal board, support, and voting."
-    },
-    {
-      "name": "Governance Conference",
-      "path": "#/governance/conference",
-      "url": "https://pvabazaar.org/#/governance/conference",
-      "description": "Governance agenda and conference session overview."
-    },
-    {
-      "name": "Governance Treasury",
-      "path": "#/governance/treasury",
-      "url": "https://pvabazaar.org/#/governance/treasury",
-      "description": "Governance treasury and ledger transparency page."
-    },
-    {
-      "name": "Career Quiz",
-      "path": "#/career-quiz",
-      "url": "https://pvabazaar.org/#/career-quiz",
-      "description": "Career guidance and self-assessment flow."
-    },
-    {
-      "name": "About",
-      "path": "#/about",
-      "url": "https://pvabazaar.org/#/about",
-      "description": "Project and site overview."
-    },
-    {
-      "name": "Creator Portal",
-      "path": "#/creator",
-      "url": "https://pvabazaar.org/#/creator",
-      "description": "Creator sign-up and portal entry point."
-    },
-    {
-      "name": "Download App",
-      "path": "#/download-app",
-      "url": "https://pvabazaar.org/#/download-app",
-      "description": "Mobile install and quick-access app page."
+      "description": "Public proposal board with endorsement and decision lifecycle."
     }
   ],
   "guidanceForFetchers": [
     "If the root page appears as a loading shell, parse llms.txt and readable-site.json.",
     "Use hash route URLs exactly as listed for section intent.",
-    "Use sitemap.xml for static standalone pages under /writings and status routes.",
-    "Prefer the sections array for route discovery because it lists the public SPA pages in one place."
+    "Use sitemap.xml for static archive pages, writings, and status routes.",
+    "Prefer the sections array for the clearest public-facing explanation of the site's commercial and archival surfaces."
   ],
-  "updatedAt": "2026-04-12T00:00:00Z"
+  "updatedAt": "2026-06-04T00:00:00Z"
 }

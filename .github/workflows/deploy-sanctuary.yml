@@ -1,0 +1,60 @@
+name: Deploy Sanctuary (Next.js) to Vercel
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/pva-bazaar-web/**'
+      - '.github/workflows/deploy-sanctuary.yml'
+  workflow_dispatch:
+
+jobs:
+  deploy-sanctuary:
+    name: Deploy Next.js sanctuary to Vercel (Production)
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: apps/pva-bazaar-web
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Validate Vercel secrets
+        run: |
+          missing=0
+          for name in VERCEL_ORG_ID VERCEL_SANCTUARY_PROJECT_ID; do
+            if [ -z "${!name}" ]; then
+              echo "::error title=Missing required Vercel setting::${name} is not configured"
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: Pull Vercel env (Production)
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN || secrets.VERCEL_API_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID || vars.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_SANCTUARY_PROJECT_ID || vars.VERCEL_SANCTUARY_PROJECT_ID }}
+
+      - name: Build for Production
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN || secrets.VERCEL_API_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID || vars.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_SANCTUARY_PROJECT_ID || vars.VERCEL_SANCTUARY_PROJECT_ID }}
+
+      - name: Deploy to Production
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN || secrets.VERCEL_API_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID || vars.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_SANCTUARY_PROJECT_ID || vars.VERCEL_SANCTUARY_PROJECT_ID }}

@@ -7,43 +7,31 @@ Sitemap: https://pvabazaar.org/sitemap.xml
 Readable JSON: https://pvabazaar.org/readable-site.json
 Status page: https://pvabazaar.org/status.html
 
+Mission: PVA Bazaar is a bridge between global makers, suppliers, and artisans and American buyers. It combines sourcing, provenance, presentation, and archive context in one system.
+
 Primary routes (hash SPA):
 - Home: https://pvabazaar.org/#/
+- Get Started: https://pvabazaar.org/#/get-started
 - Archive Library: https://pvabazaar.org/#/library
 - Marketplace: https://pvabazaar.org/#/marketplace
 - Showroom: https://pvabazaar.org/#/showroom
+- Supplier Portal: https://pvabazaar.org/#/creator
 - Civilization Library: https://pvabazaar.org/#/civilization-library
 - Popular Conference: https://pvabazaar.org/#/conference
 - Governance Proposal Board: https://pvabazaar.org/#/proposals
-- Submit Proposal: https://pvabazaar.org/#/proposals/submit
-- Citizen Passport: https://pvabazaar.org/#/passport
-- Citizens Directory: https://pvabazaar.org/#/citizens
-- Forum: https://pvabazaar.org/#/forum
-- Governance Conference: https://pvabazaar.org/#/governance/conference
-- Governance Treasury: https://pvabazaar.org/#/governance/treasury
-- Career Quiz: https://pvabazaar.org/#/career-quiz
 - About: https://pvabazaar.org/#/about
-- Creator Portal: https://pvabazaar.org/#/creator
-- Download App: https://pvabazaar.org/#/download-app
 
 Route purpose:
-- Home: Full site landing hub and navigation overview.
-- Archive Library: Long-form archive content and entries.
-- Marketplace: Product and artifact catalog with commerce features.
-- Showroom: Curated presentation pages and item detail viewing.
-- Civilization Library: Knowledge and civilization-oriented writing index.
-- Popular Conference: Public governance and proposal workflow with wallet verification.
+- Home: Trade-facing landing page explaining the sourcing bridge, archive, and long-term mission.
+- Get Started: Account creation and role selection for buyers, suppliers, and collaborators.
+- Archive Library: Long-form archive content, essays, and business context.
+- Marketplace: Product catalog and sourcing surface for buyers.
+- Showroom: Curated presentation pages and featured goods.
+- Supplier Portal: Entry point for suppliers, artisans, and sourcing partners.
+- Civilization Library: Broader worldview and knowledge index connected to the archive.
+- Popular Conference: Public governance and proposal workflow.
 - Governance Proposal Board: Public proposal lifecycle board with status and endorsement progress.
-- Submit Proposal: Verified citizen submission flow for new proposals.
-- Citizen Passport: Identity and credential dashboard for citizens.
-- Citizens Directory: Public listing of citizen profiles.
-- Forum: Civic governance forum and proposal board.
-- Governance Conference: Governance agenda and conference session view.
-- Governance Treasury: Governance treasury and ledger view.
-- Career Quiz: Career guidance and assessment flow.
-- About: Site and project overview.
-- Creator Portal: Creator onboarding and sign-up.
-- Download App: Mobile and quick-access install information.
+- About: Project overview, mission, and operating model.
 
 Implementation notes:
 - Frontend framework: React + Vite

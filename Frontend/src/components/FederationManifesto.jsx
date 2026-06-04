@@ -1,6 +1,6 @@
 import React from 'react';
 
-const MANIFESTO_TEXT = "Welcome to the New Federation. This is the first design of a utopian digital sovereign space. Here, we inspire those who wish to join us in the coming race between man and technology, holding fast to our consciousness and selves. We are God's children, building a future where efficiency meets spirit.";
+const MANIFESTO_TEXT = 'PVA Bazaar is built to preserve memory, protect provenance, and create fair trade between global makers and the buyers who value their work. It is meant to hold both the soul of the archive and the practical machinery of sourcing, shipping, and trust.';
 
 export default function FederationManifesto({ title = 'Federation Manifesto', compact = false }) {
   return (

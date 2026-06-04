@@ -1,4 +1,6 @@
 /** @type {import('next').NextConfig} */
+const apiBase = process.env.NEXT_PUBLIC_API_URL;
+
 const nextConfig = {
   reactStrictMode: true,
   compress: true,
@@ -32,6 +34,18 @@ const nextConfig = {
         headers: [
           { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
         ],
+      },
+    ];
+  },
+  async rewrites() {
+    // Avoid an infinite rewrite loop when NEXT_PUBLIC_API_URL isn't set.
+    if (!apiBase) return [];
+
+    const base = apiBase.replace(/\/$/, "");
+    return [
+      {
+        source: "/api/:path*",
+        destination: `${base}/api/:path*`,
       },
     ];
   },

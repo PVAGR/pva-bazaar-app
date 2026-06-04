@@ -1,28 +1,18 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { PUBLIC_ROUTES } from '../config/publicRoutes';
 import { apiPost } from '../lib/api';
 import { setToken } from '../lib/auth';
 import './GetStartedPage.css';
 
 const ROLE_OPTIONS = [
-  { value: 'seller', label: 'Seller' },
-  { value: 'consumer', label: 'Consumer' },
-  { value: 'creator_artist', label: 'Creator/Artist' },
+  { value: 'seller', label: 'Supplier / Seller' },
+  { value: 'consumer', label: 'Buyer / Consumer' },
+  { value: 'creator_artist', label: 'Creator / Artisan' },
   { value: 'collector', label: 'Collector' },
   { value: 'researcher', label: 'Researcher' },
-  { value: 'federation_contributor', label: 'Federation Contributor' },
+  { value: 'federation_contributor', label: 'Platform Contributor' },
   { value: 'other', label: 'Other' },
 ];
-
-const TRADING_ROLE_INTENTS = new Set(['seller', 'creator_artist', 'collector', 'federation_contributor']);
-
-function routeSummary(route) {
-  if (!route?.description) {
-    return 'Explore this federation surface.';
-  }
-  return route.description;
-}
 
 export default function GetStartedPage() {
   const navigate = useNavigate();
@@ -34,27 +24,7 @@ export default function GetStartedPage() {
     password: '',
     roleIntent: 'consumer',
     roleOther: '',
-    legalIdType: '',
-    legalIdNumber: '',
-    addressLine1: '',
-    city: '',
-    postalCode: '',
-    country: '',
-    phone: '',
-    identityAttested: false,
   });
-
-  const spotlightRoutes = useMemo(() => (
-    PUBLIC_ROUTES.filter((route) => route.access === 'public').slice(0, 10)
-  ), []);
-
-  const coreRoutes = useMemo(() => (
-    spotlightRoutes.filter((route) => route.group === 'core').slice(0, 5)
-  ), [spotlightRoutes]);
-
-  const supportRoutes = useMemo(() => (
-    spotlightRoutes.filter((route) => route.group !== 'core').slice(0, 5)
-  ), [spotlightRoutes]);
 
   async function handleRegister(e) {
     e.preventDefault();
@@ -68,19 +38,6 @@ export default function GetStartedPage() {
         onboarding: {
           roleIntent: form.roleIntent,
           roleOther: form.roleIntent === 'other' ? form.roleOther : '',
-          compliance: TRADING_ROLE_INTENTS.has(form.roleIntent)
-            ? {
-              legalFullName: form.name,
-              legalIdType: form.legalIdType,
-              legalIdNumber: form.legalIdNumber,
-              addressLine1: form.addressLine1,
-              city: form.city,
-              postalCode: form.postalCode,
-              country: form.country,
-              phone: form.phone,
-              identityAttested: form.identityAttested,
-            }
-            : undefined,
         },
       }, { timeout: 120_000 });
 
@@ -102,21 +59,21 @@ export default function GetStartedPage() {
     <section className="section-card get-started" aria-label="Federation onboarding entry">
       <header className="get-started__hero">
         <div className="get-started__heroIntro">
-          <p className="pill">Federation Entry</p>
-          <h1>Begin your path in PVA Bazaar</h1>
+          <p className="pill">Start here</p>
+          <h1>Create your place in the network</h1>
           <p>
-            This is your first-stop map and account gate in one view. Learn what each tab is for, then create your citizen
-            profile to continue into wallet, DID, and community setup.
+            Start as a buyer, supplier, artisan, or partner. Create your account first, then complete the deeper
+            verification and profile steps only when you are ready to list products or open serious deals.
           </p>
           <div className="get-started__actions">
-            <Link className="btn btn-secondary" to="/home">Explore Home</Link>
-            <Link className="btn btn-ghost" to="/about">Read Manifesto</Link>
+            <Link className="btn btn-secondary" to="/marketplace">Browse Marketplace</Link>
+            <Link className="btn btn-ghost" to="/about">Read About</Link>
           </div>
         </div>
 
         <aside className="get-started__signup" aria-label="Quick signup">
           <h2>Create your account</h2>
-          <p>Balanced onboarding starts now: join first, then customize your identity path in the next step.</p>
+          <p>Join first. Detailed verification can be completed later when you are actively listing products or closing deals.</p>
           {error ? <div className="error" role="alert">{error}</div> : null}
           <form className="get-started__form" onSubmit={handleRegister}>
             <label>
@@ -168,76 +125,6 @@ export default function GetStartedPage() {
                 />
               </label>
             ) : null}
-            {TRADING_ROLE_INTENTS.has(form.roleIntent) ? (
-              <>
-                <label>
-                  Government ID type
-                  <input
-                    value={form.legalIdType}
-                    onChange={(e) => setForm((prev) => ({ ...prev, legalIdType: e.target.value }))}
-                    placeholder="Passport / National ID / Driver License"
-                    required
-                  />
-                </label>
-                <label>
-                  Government ID number
-                  <input
-                    value={form.legalIdNumber}
-                    onChange={(e) => setForm((prev) => ({ ...prev, legalIdNumber: e.target.value }))}
-                    required
-                  />
-                </label>
-                <label>
-                  Address line 1
-                  <input
-                    value={form.addressLine1}
-                    onChange={(e) => setForm((prev) => ({ ...prev, addressLine1: e.target.value }))}
-                    required
-                  />
-                </label>
-                <label>
-                  City
-                  <input
-                    value={form.city}
-                    onChange={(e) => setForm((prev) => ({ ...prev, city: e.target.value }))}
-                    required
-                  />
-                </label>
-                <label>
-                  Postal code
-                  <input
-                    value={form.postalCode}
-                    onChange={(e) => setForm((prev) => ({ ...prev, postalCode: e.target.value }))}
-                    required
-                  />
-                </label>
-                <label>
-                  Country
-                  <input
-                    value={form.country}
-                    onChange={(e) => setForm((prev) => ({ ...prev, country: e.target.value }))}
-                    required
-                  />
-                </label>
-                <label>
-                  Phone
-                  <input
-                    value={form.phone}
-                    onChange={(e) => setForm((prev) => ({ ...prev, phone: e.target.value }))}
-                    required
-                  />
-                </label>
-                <label className="check">
-                  <input
-                    type="checkbox"
-                    checked={form.identityAttested}
-                    onChange={(e) => setForm((prev) => ({ ...prev, identityAttested: e.target.checked }))}
-                    required
-                  />
-                  I attest this legal identity information is accurate.
-                </label>
-              </>
-            ) : null}
             <div className="get-started__actions">
               <button className="btn btn-primary" type="submit" disabled={loading}>
                 {loading ? 'Creating account...' : 'Create account'}
@@ -248,39 +135,48 @@ export default function GetStartedPage() {
         </aside>
       </header>
 
-      <section className="get-started__section" aria-label="Core tabs">
+      <section className="get-started__section" aria-label="Who this is for">
         <div className="get-started__sectionHead">
-          <h2>Core tabs</h2>
-          <p>These are your main federation surfaces for learning, trade, and civic participation.</p>
+          <h2>Who this is for</h2>
+          <p>Use the platform differently depending on whether you are sourcing goods, supplying them, or preserving the larger vision.</p>
         </div>
         <div className="get-started__grid">
-          {coreRoutes.map((route) => (
-            <article key={route.key} className="get-started__card">
-              <h3>{route.title}</h3>
-              <p>{routeSummary(route)}</p>
-              <Link className="get-started__cardLink" to={route.to}>
-                Open {route.navLabel || route.title}
-              </Link>
-            </article>
-          ))}
+          <article className="get-started__card">
+            <h3>Buyers and retailers</h3>
+            <p>Start in the marketplace to browse goods, evaluate sourcing opportunities, and identify suppliers worth speaking with.</p>
+            <Link className="get-started__cardLink" to="/marketplace">Open Marketplace</Link>
+          </article>
+          <article className="get-started__card">
+            <h3>Suppliers and artisans</h3>
+            <p>Use the supplier portal to enter the network, submit products, and build the foundation for repeatable trade.</p>
+            <Link className="get-started__cardLink" to="/creator">Open Supplier Portal</Link>
+          </article>
+          <article className="get-started__card">
+            <h3>Researchers and storykeepers</h3>
+            <p>The archive holds the context, essays, and long-form writing that explain what the network is trying to preserve.</p>
+            <Link className="get-started__cardLink" to="/archive">Open Archive</Link>
+          </article>
         </div>
       </section>
 
-      <section className="get-started__section" aria-label="Support tabs">
+      <section className="get-started__section" aria-label="What happens next">
         <div className="get-started__sectionHead">
-          <h2>Support tabs</h2>
-          <p>Use these to deepen context, discover people, and move through specialized workflows.</p>
+          <h2>What happens after signup</h2>
+          <p>You do not need to do everything at once. The professional path is staged.</p>
         </div>
         <div className="get-started__grid">
-          {supportRoutes.map((route) => (
-            <article key={route.key} className="get-started__card">
-              <h3>{route.title}</h3>
-              <p>{routeSummary(route)}</p>
-              <Link className="get-started__cardLink" to={route.to}>
-                Open {route.navLabel || route.title}
-              </Link>
-            </article>
-          ))}
+          <article className="get-started__card">
+            <h3>Build your profile</h3>
+            <p>Choose your role, refine your presence, and make it clear how you participate in the network.</p>
+          </article>
+          <article className="get-started__card">
+            <h3>Verify when needed</h3>
+            <p>Complete deeper compliance and trust steps when you begin listing products or entering serious deals.</p>
+          </article>
+          <article className="get-started__card">
+            <h3>Start moving goods</h3>
+            <p>Use the platform as a working bridge between relationships on the ground and buyers who need confidence.</p>
+          </article>
         </div>
       </section>
 
@@ -289,10 +185,10 @@ export default function GetStartedPage() {
           <h2>What comes next</h2>
         </div>
         <ol className="get-started__steps">
-          <li>Create your account and enter your onboarding flow.</li>
-          <li>Choose your federation role path and profile journey context.</li>
-          <li>Attach identity options like wallet, DID, and storage preferences.</li>
-          <li>Join the community layers for feed, messaging, and contribution.</li>
+          <li>Create your account and enter the onboarding flow.</li>
+          <li>Choose your role and make your business or sourcing intent clear.</li>
+          <li>Complete verification only when your trade activity requires it.</li>
+          <li>Use the marketplace, supplier portal, showroom, and archive as one connected system.</li>
         </ol>
       </section>
     </section>

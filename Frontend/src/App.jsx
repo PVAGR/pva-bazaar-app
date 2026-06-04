@@ -6,9 +6,7 @@ import { getToken } from './lib/auth';
 import { Telemetry } from './lib/telemetry';
 
 import ArchiveLibraryPage from './pages/ArchiveLibraryPage.jsx';
-import HomePage from './pages/HomePage.jsx';
 import useArchiveTheme from './hooks/useArchiveTheme.js';
-import './pages/HomePage.css';
 import './base.css';
 
 const AdminPage = lazy(() => import('./pages/AdminPage.jsx'));
@@ -116,7 +114,7 @@ export default function App() {
 
         <Route path="/" element={<Layout><OpeningHomePage /></Layout>} />
         <Route path="/get-started" element={<Layout><GetStartedPage /></Layout>} />
-        <Route path="/home" element={<Layout><HomePage /></Layout>} />
+        <Route path="/home" element={<Navigate to="/" replace />} />
         <Route path="/library" element={<Layout><ArchiveLibraryPage /></Layout>} />
         <Route path="/archive" element={<Layout><ArchiveLibraryPage /></Layout>} />
         <Route path="/creator" element={<Layout><CreatorPortalPage /></Layout>} />

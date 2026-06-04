@@ -32,10 +32,12 @@ export default function SellerSettings() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
+
   useEffect(() => {
     const fetchShop = async () => {
       try {
-        const response = await fetch('/api/shops/me', {
+        const response = await fetch(`${API_BASE}/api/shops/me`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
           },
@@ -63,7 +65,7 @@ export default function SellerSettings() {
     setError(null);
 
     try {
-      const response = await fetch(`/api/shops/${shop.id}`, {
+      const response = await fetch(`${API_BASE}/api/shops/${shop.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

@@ -34,10 +34,12 @@ export default function SellerDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
+
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
-        const response = await fetch('/api/seller/dashboard', {
+        const response = await fetch(`${API_BASE}/api/seller/dashboard`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
           },
