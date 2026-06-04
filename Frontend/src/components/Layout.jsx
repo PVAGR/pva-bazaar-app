@@ -81,6 +81,7 @@ export default function Layout({ children }) {
 
   const footerContextRoutes = useMemo(() => [
     { key: 'home', to: '/', title: 'Start Here' },
+    { key: 'books', to: '/books', title: 'Books' },
     { key: 'archive', to: '/archive', title: 'Archive Library' },
     { key: 'civilization', to: '/civilization-library', title: 'Civilization Library' },
     { key: 'about', to: '/about', title: 'About' },

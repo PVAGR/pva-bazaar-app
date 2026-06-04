@@ -27,6 +27,12 @@
       "description": "Trade-facing landing page for buyers, suppliers, and the long-memory mission of the platform."
     },
     {
+      "name": "Books",
+      "path": "#/books",
+      "url": "https://pvabazaar.org/#/books",
+      "description": "Dedicated presentation page for the two featured books that explain the labor vision and blueprint behind PVA Bazaar."
+    },
+    {
       "name": "Get Started",
       "path": "#/get-started",
       "url": "https://pvabazaar.org/#/get-started",
@@ -87,5 +93,5 @@
     "Use sitemap.xml for static archive pages, writings, and status routes.",
     "Prefer the sections array for the clearest public-facing explanation of the site's commercial and archival surfaces."
   ],
-  "updatedAt": "2026-06-04T00:00:00Z"
+  "updatedAt": "2026-06-04T17:00:00Z"
 }

@@ -41,6 +41,13 @@ function buildBootstrapStatus(adminCount) {
   const configuredBootstrapCode = getAdminBootstrapCode();
   const bootstrapCodeRequired = adminCount > 0 && !selfSignupEnabled;
   const signupAllowed = needsBootstrap || selfSignupEnabled || Boolean(configuredBootstrapCode);
+  const adminSecretConfigured = Boolean(String(process.env.ADMIN_SECRET_CODE || '').trim());
+  const jwtConfigured = Boolean(String(process.env.JWT_SECRET || '').trim());
+  const githubOAuthEnabled = Boolean(
+    String(process.env.ADMIN_GITHUB_CLIENT_ID || '').trim()
+    && String(process.env.ADMIN_GITHUB_CLIENT_SECRET || '').trim()
+    && jwtConfigured,
+  );
 
   return {
     adminCount,
@@ -49,11 +56,10 @@ function buildBootstrapStatus(adminCount) {
     signupAllowed,
     bootstrapCodeRequired,
     bootstrapCodeConfigured: Boolean(configuredBootstrapCode),
-    githubOAuthEnabled: Boolean(
-      String(process.env.ADMIN_GITHUB_CLIENT_ID || '').trim()
-      && String(process.env.ADMIN_GITHUB_CLIENT_SECRET || '').trim()
-      && String(process.env.JWT_SECRET || '').trim(),
-    ),
+    adminSecretConfigured,
+    jwtConfigured,
+    githubOAuthEnabled,
+    backupAdminReady: (adminSecretConfigured && jwtConfigured) || githubOAuthEnabled || signupAllowed,
   };
 }
 
@@ -158,6 +164,7 @@ router.get('/oauth/github/status', (req, res) => {
   return res.json({
     ok: true,
     configured: missing.length === 0,
+    jwtConfigured: Boolean(String(process.env.JWT_SECRET || '').trim()),
     missing,
     callbackUrl: getAdminGithubCallbackUrl(req),
     frontendReturnUrl: getAdminGithubFrontendUrl(req),

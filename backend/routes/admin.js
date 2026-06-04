@@ -67,6 +67,8 @@ router.get('/panel-report', async (_req, res) => {
         bootstrapCodeConfigured: Boolean(
           process.env.ADMIN_BOOTSTRAP_CODE || process.env.ADMIN_SECRET_CODE
         ),
+        adminSecretConfigured: Boolean(String(process.env.ADMIN_SECRET_CODE || '').trim()),
+        jwtConfigured: Boolean(String(process.env.JWT_SECRET || '').trim()),
       },
       links: {
         adminUi: 'https://pvabazaar.org/#/admin',

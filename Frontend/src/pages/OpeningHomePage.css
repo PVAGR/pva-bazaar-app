@@ -119,6 +119,11 @@
   gap: 1rem;
 }
 
+.opening-home__booksSection {
+  display: grid;
+  gap: 1rem;
+}
+
 .opening-home__sectionHead {
   display: flex;
   justify-content: space-between;
@@ -142,6 +147,52 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.85rem;
+}
+
+.opening-home__bookGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.opening-home__bookCard {
+  border: 1px solid var(--site-border);
+  border-radius: 14px;
+  padding: 1rem;
+  background: var(--site-panel-soft);
+  display: grid;
+  gap: 0.55rem;
+}
+
+.opening-home__bookCard h3 {
+  margin: 0;
+  color: var(--site-accent);
+}
+
+.opening-home__bookOrder {
+  margin: 0;
+  color: var(--site-text-muted);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.opening-home__bookSubtitle,
+.opening-home__bookCard p {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.opening-home__bookSubtitle {
+  color: var(--site-text);
+  font-weight: 700;
+}
+
+.opening-home__bookActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.25rem;
 }
 
 .opening-home__card {
@@ -202,7 +253,8 @@
 
 @media (max-width: 1020px) {
   .opening-home__hero,
-  .opening-home__grid {
+  .opening-home__grid,
+  .opening-home__bookGrid {
     grid-template-columns: 1fr 1fr;
   }
 
@@ -214,6 +266,7 @@
 @media (max-width: 760px) {
   .opening-home__hero,
   .opening-home__grid,
+  .opening-home__bookGrid,
   .opening-home__sectionHead {
     grid-template-columns: 1fr;
     display: grid;

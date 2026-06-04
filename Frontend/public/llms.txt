@@ -11,6 +11,7 @@ Mission: PVA Bazaar is a bridge between global makers, suppliers, and artisans a
 
 Primary routes (hash SPA):
 - Home: https://pvabazaar.org/#/
+- Books: https://pvabazaar.org/#/books
 - Get Started: https://pvabazaar.org/#/get-started
 - Archive Library: https://pvabazaar.org/#/library
 - Marketplace: https://pvabazaar.org/#/marketplace
@@ -23,6 +24,7 @@ Primary routes (hash SPA):
 
 Route purpose:
 - Home: Trade-facing landing page explaining the sourcing bridge, archive, and long-term mission.
+- Books: Dedicated landing page for the two foundational books that explain the labor model, the blueprint, and the long-memory mission.
 - Get Started: Account creation and role selection for buyers, suppliers, and collaborators.
 - Archive Library: Long-form archive content, essays, and business context.
 - Marketplace: Product catalog and sourcing surface for buyers.

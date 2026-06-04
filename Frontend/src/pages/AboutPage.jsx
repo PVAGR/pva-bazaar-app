@@ -60,6 +60,10 @@ export default function AboutPage() {
                 <p>Keep the maker, object, and record tied together instead of splitting story from sale.</p>
               </div>
               <div className="highlight-item">
+                <h3>Books and first-touch explanation</h3>
+                <p>Lead new visitors through the books first so the larger platform reads as one intentional whole.</p>
+              </div>
+              <div className="highlight-item">
                 <h3>Long memory</h3>
                 <p>Preserve the writings, context, and testimony that make the platform more than a catalog.</p>
               </div>
@@ -148,6 +152,7 @@ export default function AboutPage() {
       </div>
 
       <div className="about-actions">
+        <Link to="/books" className="button primary">Read the Books</Link>
         <Link to="/" className="button primary">Start Here</Link>
         <Link to="/marketplace" className="button ghost">Open Marketplace</Link>
         <Link to="/archive" className="button ghost">Read the Archive</Link>

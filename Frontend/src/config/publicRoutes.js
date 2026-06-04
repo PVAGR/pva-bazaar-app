@@ -33,6 +33,17 @@ export const PUBLIC_ROUTES = [
     access: 'public',
   },
   {
+    key: 'books',
+    to: '/books',
+    navLabel: 'Books',
+    title: 'Books',
+    description: 'Featured books that explain the labor vision, the blueprint, and the long-memory intent behind PVA Bazaar.',
+    group: 'core',
+    badge: 'Books',
+    navPlacement: 'primary',
+    access: 'public',
+  },
+  {
     key: 'civilization-library',
     to: '/civilization-library',
     navLabel: 'Civilization Library',

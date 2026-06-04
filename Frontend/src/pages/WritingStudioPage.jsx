@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import rehypeSanitize from 'rehype-sanitize';
@@ -13,6 +13,8 @@ const NOTE_DRAFT_KEY = 'pva-writing-studio-note-draft';
 const BLOG_DRAFT_KEY = 'pva-writing-studio-blog-draft';
 const SOCIAL_KEY = 'pva-writing-studio-social';
 const PUBLICATIONS_KEY = 'pva-writing-studio-publications';
+const COMMAND_CENTER_NOTE_KEY = 'pva-command-center-note';
+const STUDIO_BACKUP_VERSION = 'pva-writing-studio-backup-v1';
 
 const SOCIAL_FIELDS = [
   { key: 'facebook', label: 'Facebook', placeholder: 'https://facebook.com/yourpage' },
@@ -98,8 +100,22 @@ function buildShareLinks({ title, text, url }) {
   ];
 }
 
+function downloadJsonFile(filename, payload) {
+  if (typeof window === 'undefined') return;
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const objectUrl = window.URL.createObjectURL(blob);
+  const link = window.document.createElement('a');
+  link.href = objectUrl;
+  link.download = filename;
+  window.document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.URL.revokeObjectURL(objectUrl);
+}
+
 export default function WritingStudioPage() {
   const [activeTab, setActiveTab] = useState('notes');
+  const importBackupRef = useRef(null);
   const [notes, setNotes] = useState(() => loadJson(NOTES_KEY, []));
   const [noteDraft, setNoteDraft] = useState(() =>
     loadJson(NOTE_DRAFT_KEY, { id: '', title: '', body: '', tags: '' })
@@ -129,6 +145,13 @@ export default function WritingStudioPage() {
   const [remoteBlogs, setRemoteBlogs] = useState([]);
   const [remoteBlogsLoading, setRemoteBlogsLoading] = useState(true);
   const [remoteBlogsError, setRemoteBlogsError] = useState('');
+  const [continuityReadiness, setContinuityReadiness] = useState({
+    loading: true,
+    error: '',
+    bootstrap: null,
+    oauth: null,
+    panel: null,
+  });
 
   useEffect(() => {
     saveJson(NOTES_KEY, notes);
@@ -178,6 +201,43 @@ export default function WritingStudioPage() {
     };
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    const loadContinuityReadiness = async () => {
+      try {
+        const [bootstrap, oauth, panel] = await Promise.all([
+          apiGet('/admin/bootstrap-status'),
+          apiGet('/admin/oauth/github/status'),
+          apiGet('/admin/panel-report'),
+        ]);
+        if (!cancelled) {
+          setContinuityReadiness({
+            loading: false,
+            error: '',
+            bootstrap,
+            oauth,
+            panel,
+          });
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setContinuityReadiness({
+            loading: false,
+            error: error?.message || 'Unable to load continuity readiness',
+            bootstrap: null,
+            oauth: null,
+            panel: null,
+          });
+        }
+      }
+    };
+
+    loadContinuityReadiness();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const draftSlug = useMemo(
     () => slugify(blogDraft.slug || blogDraft.title),
     [blogDraft.slug, blogDraft.title]
@@ -196,6 +256,19 @@ export default function WritingStudioPage() {
     () => buildShareLinks({ title: blogDraft.title || 'PVA Bazaar post', text: shareText, url: latestPublicationUrl }),
     [blogDraft.title, latestPublicationUrl, shareText]
   );
+
+  const continuitySummary = useMemo(() => {
+    const bootstrap = continuityReadiness.bootstrap || {};
+    const oauth = continuityReadiness.oauth || {};
+    const panel = continuityReadiness.panel || {};
+    return {
+      backupAdminReady: Boolean(bootstrap.backupAdminReady || ((bootstrap.adminSecretConfigured && bootstrap.jwtConfigured) || oauth.configured)),
+      adminSecretConfigured: Boolean(bootstrap.adminSecretConfigured || panel?.integrations?.adminSecretConfigured),
+      githubReady: Boolean(oauth.configured),
+      bootstrapReady: Boolean(bootstrap.signupAllowed),
+      healthUrl: panel?.links?.apiHealth || '/api/health',
+    };
+  }, [continuityReadiness]);
 
   const saveNote = () => {
     if (!noteDraft.title.trim() && !noteDraft.body.trim()) {
@@ -241,6 +314,63 @@ export default function WritingStudioPage() {
       entry,
       ...current.filter((item) => item.url !== entry.url || item.type !== entry.type),
     ].slice(0, 12));
+  };
+
+  const exportStudioBackup = () => {
+    const commandCenterNote =
+      typeof window !== 'undefined' ? window.localStorage.getItem(COMMAND_CENTER_NOTE_KEY) || '' : '';
+
+    downloadJsonFile(`pva-writing-studio-backup-${new Date().toISOString().slice(0, 10)}.json`, {
+      version: STUDIO_BACKUP_VERSION,
+      exportedAt: new Date().toISOString(),
+      notes,
+      noteDraft,
+      blogDraft,
+      socialProfiles,
+      recentPublications,
+      commandCenterNote,
+    });
+
+    setPublishStatus({
+      kind: 'success',
+      message: 'Studio backup downloaded. It includes drafts, notes, social links, and command-center text, but no secrets or tokens.',
+    });
+  };
+
+  const importStudioBackup = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+      setNotes(Array.isArray(parsed?.notes) ? parsed.notes : []);
+      setNoteDraft(parsed?.noteDraft && typeof parsed.noteDraft === 'object' ? parsed.noteDraft : { id: '', title: '', body: '', tags: '' });
+      setBlogDraft(parsed?.blogDraft && typeof parsed.blogDraft === 'object' ? parsed.blogDraft : {
+        title: '',
+        slug: '',
+        excerpt: '',
+        content: '',
+        tags: '',
+        category: 'blog',
+        location: '',
+        authorName: 'Richard Torres',
+        socialCaption: '',
+        publishToArchive: true,
+        publishToBlog: true,
+        directBlogPublish: true,
+      });
+      setSocialProfiles(parsed?.socialProfiles && typeof parsed.socialProfiles === 'object' ? parsed.socialProfiles : { signature: '' });
+      setRecentPublications(Array.isArray(parsed?.recentPublications) ? parsed.recentPublications : []);
+      if (typeof window !== 'undefined' && typeof parsed?.commandCenterNote === 'string') {
+        window.localStorage.setItem(COMMAND_CENTER_NOTE_KEY, parsed.commandCenterNote);
+      }
+      setPublishStatus({ kind: 'success', message: 'Studio backup restored to this browser.' });
+    } catch (error) {
+      setPublishStatus({ kind: 'error', message: error?.message || 'Could not restore backup file.' });
+    } finally {
+      event.target.value = '';
+    }
   };
 
   const publishStudioPost = async () => {
@@ -425,6 +555,7 @@ export default function WritingStudioPage() {
           ['notes', 'Notes'],
           ['blog', 'Blog + Archive'],
           ['social', 'Social launch'],
+          ['continuity', 'Continuity'],
         ].map(([key, label]) => (
           <button
             key={key}
@@ -788,6 +919,114 @@ export default function WritingStudioPage() {
                 </div>
               ) : null}
             </div>
+          </article>
+        </section>
+      ) : null}
+
+      {activeTab === 'continuity' ? (
+        <section className="writing-studio__grid writing-studio__grid--blog">
+          <article className="section-card writing-studio__panel">
+            <div className="writing-studio__panelHead">
+              <div>
+                <p className="pill">Backup</p>
+                <h2>Save the studio to a file</h2>
+              </div>
+              <span className="writing-studio__muted">No secrets or admin tokens are included.</span>
+            </div>
+
+            <div className="writing-studio__continuityGrid">
+              <div className="writing-studio__continuityCard">
+                <strong>{notes.length}</strong>
+                <span>saved notes</span>
+              </div>
+              <div className="writing-studio__continuityCard">
+                <strong>{recentPublications.length}</strong>
+                <span>publication records</span>
+              </div>
+              <div className="writing-studio__continuityCard">
+                <strong>{SOCIAL_FIELDS.filter((field) => socialProfiles[field.key]).length}</strong>
+                <span>social links stored</span>
+              </div>
+            </div>
+
+            <div className="writing-studio__actions">
+              <button type="button" className="writing-studio__primaryBtn" onClick={exportStudioBackup}>
+                Download studio backup
+              </button>
+              <button type="button" className="writing-studio__ghostBtn" onClick={() => importBackupRef.current?.click()}>
+                Restore from backup
+              </button>
+              <input
+                ref={importBackupRef}
+                type="file"
+                accept="application/json"
+                className="sr-only"
+                onChange={importStudioBackup}
+              />
+            </div>
+
+            <div className="writing-studio__empty">
+              Export before travel, after major writing sessions, and before changing machines. This gives you a portable
+              copy of your studio state even if the browser or device is lost.
+            </div>
+          </article>
+
+          <article className="section-card writing-studio__panel">
+            <div className="writing-studio__panelHead">
+              <div>
+                <p className="pill">Recovery</p>
+                <h2>Backup admin access readiness</h2>
+              </div>
+              <span className="writing-studio__muted">
+                {continuityReadiness.loading ? 'Checking...' : continuitySummary.backupAdminReady ? 'Ready' : 'Needs attention'}
+              </span>
+            </div>
+
+            {continuityReadiness.error ? (
+              <div className="writing-studio__empty">{continuityReadiness.error}</div>
+            ) : null}
+
+            {!continuityReadiness.error ? (
+              <>
+                <div className="writing-studio__continuityGrid">
+                  <div className="writing-studio__continuityCard">
+                    <strong>{continuitySummary.backupAdminReady ? 'Yes' : 'No'}</strong>
+                    <span>backup admin path</span>
+                  </div>
+                  <div className="writing-studio__continuityCard">
+                    <strong>{continuitySummary.adminSecretConfigured ? 'Yes' : 'No'}</strong>
+                    <span>admin secret configured</span>
+                  </div>
+                  <div className="writing-studio__continuityCard">
+                    <strong>{continuitySummary.githubReady ? 'Yes' : 'No'}</strong>
+                    <span>GitHub admin login</span>
+                  </div>
+                  <div className="writing-studio__continuityCard">
+                    <strong>{continuitySummary.bootstrapReady ? 'Yes' : 'No'}</strong>
+                    <span>bootstrap/signup route</span>
+                  </div>
+                </div>
+
+                <div className="writing-studio__recoveryList">
+                  <div className="writing-studio__recoveryItem">
+                    <strong>Admin login</strong>
+                    <span>Use the main admin surface and keep at least one backup login path configured server-side.</span>
+                  </div>
+                  <div className="writing-studio__recoveryItem">
+                    <strong>Health check</strong>
+                    <a href={continuitySummary.healthUrl} target="_blank" rel="noreferrer">{continuitySummary.healthUrl}</a>
+                  </div>
+                  <div className="writing-studio__recoveryItem">
+                    <strong>Status page</strong>
+                    <a href="/status.html" target="_blank" rel="noreferrer">/status.html</a>
+                  </div>
+                  <div className="writing-studio__recoveryItem">
+                    <strong>Admin workspace</strong>
+                    <Link to="/admin">Open admin</Link>
+                  </div>
+                </div>
+              </>
+            ) : null}
           </article>
         </section>
       ) : null}

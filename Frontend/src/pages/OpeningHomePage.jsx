@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { FEATURED_BOOKS } from '../data/books.js';
 import './OpeningHomePage.css';
 
 export default function OpeningHomePage() {
@@ -18,21 +19,52 @@ export default function OpeningHomePage() {
             the soul of the work, and the platform is being shaped to outlast any single season or lifetime.
           </p>
           <div className="opening-home__actions">
-            <Link className="opening-home__actionBtn opening-home__actionBtn--primary" to="/marketplace">Browse Marketplace</Link>
-            <Link className="opening-home__actionBtn opening-home__actionBtn--secondary" to="/creator">Enter Supplier Portal</Link>
+            <Link className="opening-home__actionBtn opening-home__actionBtn--primary" to="/books">Read the Books</Link>
+            <Link className="opening-home__actionBtn opening-home__actionBtn--secondary" to="/marketplace">Browse Marketplace</Link>
             <Link className="opening-home__actionBtn opening-home__actionBtn--ghost" to="/about">Read the Mission</Link>
           </div>
         </div>
 
         <aside className="opening-home__heroPanel" aria-label="Core value">
-          <h2>Built for real trade</h2>
+          <h2>Begin with the books</h2>
           <ul>
-            <li>Direct pathways for suppliers, artisans, brokers, and buyers.</li>
-            <li>Provenance, archive context, and product storytelling in one system.</li>
-            <li>A clearer surface for sourcing now and a durable record for later.</li>
-            <li>Designed to keep working as a bridge between people, goods, and memory.</li>
+            <li>Read the two core books first if you want the clearest understanding of the project.</li>
+            <li>Then use the marketplace, supplier portal, and archive as practical surfaces inside that vision.</li>
+            <li>The books explain the labor model, the blueprint, and the long-memory mission in one place.</li>
+            <li>Everything else on the site becomes easier to understand after that first step.</li>
           </ul>
         </aside>
+      </section>
+
+      <section className="section-card opening-home__booksSection" aria-label="Featured books">
+        <div className="opening-home__sectionHead">
+          <div>
+            <p className="pill">Featured books</p>
+            <h2>The two books every first-time visitor should see</h2>
+          </div>
+          <p>
+            These are the most concentrated explanation of the work. Start here, then move into the wider platform.
+          </p>
+        </div>
+
+        <div className="opening-home__bookGrid">
+          {FEATURED_BOOKS.map((book) => (
+            <article key={book.key} className="opening-home__bookCard">
+              <p className="opening-home__bookOrder">{book.orderLabel}</p>
+              <h3>{book.title}</h3>
+              <p className="opening-home__bookSubtitle">{book.subtitle}</p>
+              <p>{book.excerpt}</p>
+              <div className="opening-home__bookActions">
+                <Link className="opening-home__actionBtn opening-home__actionBtn--secondary" to="/books">
+                  Open books page
+                </Link>
+                <a className="opening-home__actionBtn opening-home__actionBtn--ghost" href={book.manuscriptPath} target="_blank" rel="noreferrer">
+                  Open manuscript
+                </a>
+              </div>
+            </article>
+          ))}
+        </div>
       </section>
 
       <section className="section-card opening-home__firstSection" aria-label="Primary pathways">
@@ -48,6 +80,10 @@ export default function OpeningHomePage() {
         </div>
 
         <div className="opening-home__grid">
+          <Link className="opening-home__card" to="/books">
+            <h3>For readers and first-time visitors</h3>
+            <p>Start with the books to understand the labor vision, the blueprint, and the long-memory mission.</p>
+          </Link>
           <Link className="opening-home__card" to="/marketplace">
             <h3>For buyers and retailers</h3>
             <p>Browse goods, evaluate provenance, and move toward direct sourcing conversations.</p>
@@ -100,9 +136,10 @@ export default function OpeningHomePage() {
           </p>
         </div>
         <div className="opening-home__legacyActions">
+          <Link className="opening-home__actionBtn opening-home__actionBtn--primary" to="/books">Enter the books</Link>
           <Link className="opening-home__actionBtn opening-home__actionBtn--secondary" to="/showroom">View Showroom</Link>
           <Link className="opening-home__actionBtn opening-home__actionBtn--ghost" to="/about">Understand the platform</Link>
-          <Link className="opening-home__actionBtn opening-home__actionBtn--ghost" to="/get-started">Create an account</Link>
+          <Link className="opening-home__actionBtn opening-home__actionBtn--ghost" to="/creator">Enter supplier portal</Link>
         </div>
       </section>
     </div>
