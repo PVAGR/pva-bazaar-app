@@ -108,6 +108,50 @@ export default function HomePage({ entries = [] }) {
   ], [latestEntries.length])
 
   const latestRecoverySnapshot = recoverySnapshots[0] || null
+  const portalCards = useMemo(() => [
+    {
+      key: 'words',
+      title: 'Words',
+      to: '/archive',
+      badge: 'Archive',
+      description: 'Open the archive library and long-form writings.',
+    },
+    {
+      key: 'studio',
+      title: 'Writing Studio',
+      to: '/studio',
+      badge: 'Draft',
+      description: 'Write, edit, and save your personal notes and posts.',
+    },
+    {
+      key: 'continuity',
+      title: 'Continuity',
+      to: '/recovery',
+      badge: 'Backup',
+      description: 'Manage snapshots, restore bundles, and keep your context close.',
+    },
+    {
+      key: 'trade',
+      title: 'Business',
+      to: '/marketplace',
+      badge: 'Trade',
+      description: 'Browse the trade surface, sourcing, and marketplace tools.',
+    },
+    {
+      key: 'operations',
+      title: 'Operations',
+      to: '/admin',
+      badge: 'Admin',
+      description: 'Open the private operations console and continuity widget.',
+    },
+    {
+      key: 'world',
+      title: 'HeelKawn',
+      to: '/heelkawn',
+      badge: 'World',
+      description: 'Enter the game and simulation hub from the same front door.',
+    },
+  ], [])
 
   return (
     <div className="home-page">
@@ -143,6 +187,32 @@ export default function HomePage({ entries = [] }) {
             surface, and the HeelKawn hub without having to guess where anything lives.
           </p>
         </aside>
+      </section>
+
+      <section className="section-card home-section-shell">
+        <div className="section-heading">
+          <div>
+            <div className="pill">Site atlas</div>
+            <h2 style={{ margin: '0.35rem 0 0' }}>Everything visible from one place</h2>
+          </div>
+          <Link className="button ghost" to="/archive">Open archive library</Link>
+        </div>
+        <p className="home-state-copy">
+          The site is organized around the surfaces you actually use: words, business, continuity, operations,
+          and the simulation hub. Nothing here is meant to be hidden.
+        </p>
+        <div className="home-portal-grid">
+          {portalCards.map((card) => (
+            <Link key={card.key} to={card.to} className="home-portal-card">
+              <div className="home-portal-card__meta">
+                <span className="pill">{card.badge}</span>
+              </div>
+              <h3>{card.title}</h3>
+              <p>{card.description}</p>
+              <span className="home-card__link">Open section →</span>
+            </Link>
+          ))}
+        </div>
       </section>
 
       <section className="section-card home-section-shell home-continuity-shell">
