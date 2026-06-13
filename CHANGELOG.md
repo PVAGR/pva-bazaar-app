@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Home hero now exposes recovery as a first-class mobile entry point.
 - Home page now shows the latest remote continuity snapshot summary.
 - Writing studio now shows recent remote backup history and a shortcut back to recovery.
+- Admin dashboard now shows continuity snapshot count and the latest backup label/date.
 
 ## [1.0.0] - 2026-01-21
 

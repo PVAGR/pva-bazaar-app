@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { apiGet, fetchAdminTransactions } from '../lib/api';
+import { apiGet, fetchAdminTransactions, fetchRecoverySnapshots } from '../lib/api';
 import { createLogger } from '../lib/logger';
 import './DashboardTab.css';
 
@@ -20,6 +20,7 @@ export default function DashboardTab({ onNavigateTab, onMakeOrder }) {
     archive: { total: 0, categories: {}, loading: true },
     health: { status: 'unknown', timestamp: null, loading: true },
     cloudStorage: { files: 0, totalSize: 0, loading: true },
+    continuity: { total: 0, latestLabel: '', latestAt: null, loading: true },
     recentTransactions: { loading: true, items: [] },
   });
   const [error, setError] = useState(null);
@@ -35,12 +36,13 @@ export default function DashboardTab({ onNavigateTab, onMakeOrder }) {
     
     try {
       // Load data from all endpoints in parallel
-      const [usersResponse, itemsResponse, archiveResponse, healthResponse, cloudResponse, transactionsResponse] = await Promise.allSettled([
+      const [usersResponse, itemsResponse, archiveResponse, healthResponse, cloudResponse, continuityResponse, transactionsResponse] = await Promise.allSettled([
         apiGet('/admin/stats'),
         apiGet('/items').catch(() => ({ ok: false })),
         apiGet('/archive').catch(() => ({ ok: false })),
         apiGet('/health').catch(() => ({ ok: false })),
         apiGet('/admin/cloud-storage').catch(() => ({ ok: false })),
+        fetchRecoverySnapshots().catch(() => ({ ok: false })),
         fetchAdminTransactions(6).catch(() => ({ ok: false })),
       ]);
 
@@ -96,6 +98,19 @@ export default function DashboardTab({ onNavigateTab, onMakeOrder }) {
           }
         : { files: 0, totalSize: 0, configuredProviders: 0, loading: false };
 
+      const continuityItems = continuityResponse.status === 'fulfilled' && continuityResponse.value?.ok
+        ? Array.isArray(continuityResponse.value.items)
+          ? continuityResponse.value.items
+          : []
+        : [];
+      const latestContinuity = continuityItems[0] || null;
+      const continuityData = {
+        total: continuityItems.length,
+        latestLabel: latestContinuity?.label || '',
+        latestAt: latestContinuity?.createdAt || null,
+        loading: false,
+      };
+
       const txData = transactionsResponse.status === 'fulfilled' && (
         Array.isArray(transactionsResponse.value)
           ? transactionsResponse.value
@@ -116,6 +131,7 @@ export default function DashboardTab({ onNavigateTab, onMakeOrder }) {
         archive: archiveData,
         health: healthData,
         cloudStorage: cloudData,
+        continuity: continuityData,
         recentTransactions: { loading: false, items: txData },
       });
 
@@ -306,6 +322,40 @@ export default function DashboardTab({ onNavigateTab, onMakeOrder }) {
             </button>
           </div>
         </div>
+
+        {/* Continuity Metrics */}
+        <div className="metric-card">
+          <div className="metric-header">
+            <span className="metric-icon">🧭</span>
+            <h3>Continuity</h3>
+          </div>
+          <div className="metric-body">
+            <div className="metric-primary">
+              <span className="metric-value">{dashboardData.continuity.total}</span>
+              <span className="metric-label">Saved Snapshots</span>
+            </div>
+            <div className="metric-stats">
+              <div className="stat-item">
+                <span className="stat-label">Latest Label</span>
+                <span className="stat-value">{dashboardData.continuity.latestLabel || 'None yet'}</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-label">Latest Backup</span>
+                <span className="stat-value">
+                  {dashboardData.continuity.latestAt ? new Date(dashboardData.continuity.latestAt).toLocaleDateString() : 'n/a'}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div className="metric-footer metric-footer-links">
+            <button type="button" className="button" onClick={() => onNavigateTab?.('settings')}>
+              Open Settings →
+            </button>
+            <button type="button" className="button ghost" onClick={() => globalThis.location?.assign?.('#/recovery')}>
+              Open Recovery →
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Business Activity */}
@@ -381,6 +431,10 @@ export default function DashboardTab({ onNavigateTab, onMakeOrder }) {
             <span className="action-icon">⚙️</span>
             <span className="action-label">Settings</span>
           </button>
+          <button className="action-card" onClick={() => globalThis.location?.assign?.('#/recovery')}>
+            <span className="action-icon">🧭</span>
+            <span className="action-label">Open Recovery</span>
+          </button>
         </div>
       </div>
 
@@ -407,6 +461,12 @@ export default function DashboardTab({ onNavigateTab, onMakeOrder }) {
           <div className="info-item">
             <span className="info-label">Last Activity</span>
             <span className="info-value">{lastRefresh.toLocaleTimeString()}</span>
+          </div>
+          <div className="info-item">
+            <span className="info-label">Continuity Backups</span>
+            <span className="info-value">
+              {dashboardData.continuity.loading ? 'Loading…' : `${dashboardData.continuity.total} saved`}
+            </span>
           </div>
         </div>
       </div>

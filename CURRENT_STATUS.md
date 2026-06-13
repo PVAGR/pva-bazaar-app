@@ -8,6 +8,7 @@
 - Continuity snapshots are encrypted client-side, saved to the backend, and downloaded as portable JSON bundles.
 - Writing-studio backups can also be imported back into the browser so notes and drafts survive device changes.
 - The home page now shows the latest remote backup summary so continuity is visible immediately on entry.
+- The admin dashboard now exposes continuity snapshot count and the latest backup label/date.
 
 ---
 
