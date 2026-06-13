@@ -1021,6 +1021,10 @@ export default function WritingStudioPage() {
                     <a href="/status.html" target="_blank" rel="noreferrer">/status.html</a>
                   </div>
                   <div className="writing-studio__recoveryItem">
+                    <strong>Continuity console</strong>
+                    <Link to="/recovery">Open encrypted recovery</Link>
+                  </div>
+                  <div className="writing-studio__recoveryItem">
                     <strong>Admin workspace</strong>
                     <Link to="/admin">Open admin</Link>
                   </div>
