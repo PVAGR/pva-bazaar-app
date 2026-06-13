@@ -165,6 +165,43 @@ export default function HomePage({ entries = [] }) {
       ],
     },
   ], [])
+  const chooserButtons = useMemo(() => [
+    { key: 'learn', label: 'Learn', to: '/archive', note: 'Read pure life knowledge and long-form writings.' },
+    { key: 'buy', label: 'Buy', to: '/marketplace', note: 'Find goods, sourcing, and real trade.' },
+    { key: 'sell', label: 'Sell', to: '/creator', note: 'Offer goods as a supplier or artisan.' },
+    { key: 'recover', label: 'Recover', to: '/recovery', note: 'Restore context and keep continuity alive.' },
+    { key: 'participate', label: 'Participate', to: '/proposals', note: 'Read, vote, and discuss public decisions.' },
+    { key: 'explore', label: 'Explore', to: '/heelkawn', note: 'Enter the world, map, and simulation hub.' },
+  ], [])
+  const featuredJourneys = useMemo(() => [
+    {
+      key: 'learn',
+      title: 'If you want to learn',
+      items: [
+        { key: 'learn-archive', to: '/archive', label: 'Archive Library' },
+        { key: 'learn-books', to: '/books', label: 'Books' },
+        { key: 'learn-civilization', to: '/civilization-library', label: 'Civilization Library' },
+      ],
+    },
+    {
+      key: 'buy',
+      title: 'If you want to buy',
+      items: [
+        { key: 'buy-marketplace', to: '/marketplace', label: 'Marketplace' },
+        { key: 'buy-showroom', to: '/showroom', label: 'Showroom' },
+        { key: 'buy-creator', to: '/creator', label: 'Supplier Portal' },
+      ],
+    },
+    {
+      key: 'recover',
+      title: 'If you want to keep continuity',
+      items: [
+        { key: 'recover-console', to: '/recovery', label: 'Recovery' },
+        { key: 'recover-passport', to: '/passport', label: 'My Passport' },
+        { key: 'recover-start', to: '/get-started', label: 'Get Started' },
+      ],
+    },
+  ], [])
 
   return (
     <div className="home-page">
@@ -205,15 +242,23 @@ export default function HomePage({ entries = [] }) {
       <section className="section-card home-section-shell">
         <div className="section-heading">
           <div>
-            <div className="pill">Choose your path</div>
-            <h2 style={{ margin: '0.35rem 0 0' }}>What do you want to do?</h2>
+            <div className="pill">Start here</div>
+            <h2 style={{ margin: '0.35rem 0 0' }}>What are you here for?</h2>
           </div>
           <Link className="button ghost" to="/archive">Open archive library</Link>
         </div>
         <p className="home-state-copy">
-          Each block below is labeled by purpose so people can go straight to reading, creating, recovering,
-          participating, or exploring without hunting through the site.
+          Choose the path that matches your reason for being here. Each button leads to a section built for that
+          purpose so the site stays friendly, clear, and useful.
         </p>
+        <div className="home-choice-row" aria-label="Primary actions">
+          {chooserButtons.map((button) => (
+            <Link key={button.key} className="home-choice-button" to={button.to}>
+              <strong>{button.label}</strong>
+              <span>{button.note}</span>
+            </Link>
+          ))}
+        </div>
         <div className="home-path-groups">
           {pathGroups.map((group) => (
             <article key={group.key} className="home-path-group">
@@ -231,6 +276,30 @@ export default function HomePage({ entries = [] }) {
                     <strong>{card.title}</strong>
                     <p>{card.description}</p>
                     <span className="home-card__link">Open section →</span>
+                  </Link>
+                ))}
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="section-card home-section-shell">
+        <div className="section-heading">
+          <div>
+            <div className="pill">Featured journeys</div>
+            <h2 style={{ margin: '0.35rem 0 0' }}>Suggested routes for different people</h2>
+          </div>
+          <Link className="button ghost" to="/about">Read the mission</Link>
+        </div>
+        <div className="home-journey-grid">
+          {featuredJourneys.map((journey) => (
+            <article key={journey.key} className="home-journey-card">
+              <h3>{journey.title}</h3>
+              <div className="home-journey-links">
+                {journey.items.map((item) => (
+                  <Link key={item.key} to={item.to} className="home-journey-link">
+                    {item.label}
                   </Link>
                 ))}
               </div>

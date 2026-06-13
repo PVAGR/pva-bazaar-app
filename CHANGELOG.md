@@ -21,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Home page now groups the front door into labeled paths for writing, trade, continuity, civic use, and the world hub.
 - Main gateway cards now point directly to the section they represent instead of showing one flat navigation list.
 - Home page now frames the site as pure life knowledge in a bazaar format for people first.
+- Home page now includes a `What are you here for?` chooser and featured journeys for different visitor intent.
+- About, Books, and Civilization Library pages now align with the same pure-life, people-first language.
 - Writing studio hero now includes direct links to archive, recovery, home, and admin at the top of the page.
 - Writing studio now shows recent remote backup history and a shortcut back to recovery.
 - Admin dashboard now shows continuity snapshot count and the latest backup label/date.

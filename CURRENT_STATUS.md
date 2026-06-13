@@ -35,6 +35,11 @@
 - The gateway language is now aimed at people first: read, create, recover, participate, and explore.
 - Route descriptions were updated to match the same human-friendly, knowledge-forward tone.
 
+## 2026-06-13 Human Front Door
+- The home page now includes a `What are you here for?` chooser so first-time visitors can jump straight to the right path.
+- Featured journeys now surface the most likely routes for learners, buyers, sellers, recovery users, and explorers.
+- The About, Books, and Civilization Library pages now speak the same pure-life, people-first language as the front page.
+
 ---
 
 ## ✅ What's Working Right Now

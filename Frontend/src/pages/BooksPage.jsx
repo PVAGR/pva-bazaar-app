@@ -11,7 +11,7 @@ export default function BooksPage() {
         <title>Books · PVA Bazaar</title>
         <meta
           name="description"
-          content="Start with the two foundational PVA Bazaar books: The Infinite Jobs and Magnum Opus Guide."
+          content="Start with the two foundational PVA Bazaar books on pure life knowledge: The Infinite Jobs and Magnum Opus Guide."
         />
       </Helmet>
 
@@ -22,8 +22,8 @@ export default function BooksPage() {
             <h1>Start here first.</h1>
             <p className="books-page__lead">
               These two books are the clearest entrance into the larger work. They explain the labor model, the
-              philosophy, and the long-range blueprint behind PVA Bazaar: truthful living, meaningful labor, preserved
-              memory, and systems designed to endure instead of disappear.
+              philosophy, and the long-range blueprint behind PVA Bazaar as pure life knowledge in a bazaar format:
+              truthful living, meaningful labor, preserved memory, and systems designed to endure instead of disappear.
             </p>
           </div>
 

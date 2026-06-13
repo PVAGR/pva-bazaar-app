@@ -96,7 +96,7 @@ export default function CivilizationLibraryPage() {
         <title>Civilization Library | PVA Bazaar</title>
         <meta
           name="description"
-          content="Download practical manuals and training guides for essential roles: agriculture, healthcare, engineering, security, and more."
+          content="Download practical manuals and training guides for essential roles in a pure-life knowledge bazaar: agriculture, healthcare, engineering, security, and more."
         />
       </Helmet>
 
@@ -105,7 +105,7 @@ export default function CivilizationLibraryPage() {
           <h1>Civilization Knowledge Library</h1>
           <p>
             Public archive of practical manuals and training material designed to help communities survive,
-            rebuild, and thrive.
+            rebuild, and thrive. This is the practical side of pure life knowledge.
           </p>
         </div>
         <div className="civil-library-hero-actions">
@@ -181,7 +181,7 @@ export default function CivilizationLibraryPage() {
             <h2>Jobs, Professions, and Skills Starter Dataset</h2>
             <p>
               Based on O*NET public data. Use this as a practical launch point for role pathways, training tracks,
-              and career matching.
+              and career matching inside a public knowledge bazaar.
             </p>
           </div>
           <a className="civil-btn civil-btn-secondary" href={toApiUrl('/api/library/careers/export/json')}>

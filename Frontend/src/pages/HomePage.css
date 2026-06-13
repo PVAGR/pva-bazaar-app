@@ -108,6 +108,41 @@
   gap: 1rem;
 }
 
+.home-choice-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.home-choice-button {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--site-border);
+  border-radius: 14px;
+  background: var(--site-panel-soft);
+  color: var(--site-text);
+  text-decoration: none;
+  transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.home-choice-button:hover {
+  transform: translateY(-2px);
+  border-color: var(--site-accent);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
+.home-choice-button strong {
+  color: var(--site-accent-strong);
+  font-size: 1rem;
+}
+
+.home-choice-button span {
+  color: var(--site-text-muted);
+  line-height: 1.5;
+  font-size: 0.9rem;
+}
+
 .home-path-groups {
   display: grid;
   gap: 0.9rem;
@@ -181,6 +216,52 @@
   align-items: center;
   justify-content: flex-start;
   gap: 0.5rem;
+}
+
+.home-journey-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.home-journey-card {
+  border: 1px solid var(--site-border);
+  border-radius: 16px;
+  padding: 1rem;
+  background: var(--site-panel-soft);
+  display: grid;
+  gap: 0.8rem;
+}
+
+.home-journey-card h3 {
+  margin: 0;
+  color: var(--site-accent);
+  font-size: 1.05rem;
+}
+
+.home-journey-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.home-journey-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--site-border);
+  background: var(--site-panel);
+  color: var(--site-text);
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 0.88rem;
+  transition: all 0.16s ease;
+}
+
+.home-journey-link:hover {
+  border-color: var(--site-accent);
+  color: var(--site-accent);
 }
 
 .home-continuity-grid {
@@ -356,7 +437,9 @@
 
 @media (max-width: 1100px) {
   .home-hero,
+  .home-choice-row,
   .home-path-grid,
+  .home-journey-grid,
   .home-section-grid--core,
   .home-section-grid--support,
   .home-continuity-grid,
@@ -396,5 +479,14 @@
 
   .home-path-card {
     width: 100%;
+  }
+
+  .home-choice-row {
+    grid-template-columns: 1fr;
+  }
+
+  .home-journey-link {
+    width: 100%;
+    justify-content: center;
   }
 }

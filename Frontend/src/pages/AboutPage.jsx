@@ -14,11 +14,11 @@ export default function AboutPage() {
   ];
 
   return (
-    <section className="about-page section-card">
-      <header className="about-header">
+      <section className="about-page section-card">
+        <header className="about-header">
         <h1>About PVA Bazaar</h1>
-        <p className="about-tagline">A sourcing bridge guided by truthful work, living memory, and continuity beyond one lifetime</p>
-      </header>
+        <p className="about-tagline">Pure life knowledge in a bazaar format: reading, trade, recovery, memory, and public life for real people</p>
+        </header>
 
       <FederationManifesto title="Why this work lasts" compact />
 
@@ -43,21 +43,21 @@ export default function AboutPage() {
           <div id="overview-panel" role="tabpanel" aria-labelledby="overview-tab">
             <h2>What PVA Bazaar does</h2>
             <p>
-              PVA Bazaar is a bridge between suppliers, artisans, and makers around the world and buyers in America who
-              want goods they can actually trust, understand, and resell with confidence.
+              PVA Bazaar is a public home for pure life knowledge and practical trade. It connects readers, buyers,
+              suppliers, and makers around the world with a site that keeps writings, recovery, and commerce in one place.
             </p>
             <p>
-              The platform brings together sourcing, presentation, archive writing, and provenance so the commercial
+              The platform brings together archive writing, presentation, recovery, and provenance so the commercial
               side of the work never becomes detached from the people, stories, and first principles behind it.
             </p>
             <div className="about-highlights">
               <div className="highlight-item">
                 <h3>Truth before spin</h3>
-                <p>The site is meant to stay legible and honest instead of hiding labor, origin, or intent.</p>
+                <p>The site stays legible and honest instead of hiding labor, origin, or intent.</p>
               </div>
               <div className="highlight-item">
                 <h3>Work with soul</h3>
-                <p>Commerce matters here, but not as empty churn; it should serve real people and meaningful craft.</p>
+                <p>Commerce matters here, but not as empty churn; it serves real people and meaningful craft.</p>
               </div>
               <div className="highlight-item">
                 <h3>Trade that respects origin</h3>
@@ -75,8 +75,8 @@ export default function AboutPage() {
           <div id="mission-panel" role="tabpanel" aria-labelledby="mission-tab">
             <h2>Principles</h2>
             <p>
-              The mission is not only to move goods. It is to build a professional system where trade, memory, and
-              human dignity remain tied together instead of being split apart.
+              The mission is not only to move goods. It is to build a public system where knowledge, trade, memory,
+              and human dignity remain tied together instead of being split apart.
             </p>
             <div className="mission-pillars">
               <div className="pillar">
@@ -99,7 +99,7 @@ export default function AboutPage() {
           <div id="how-it-works-panel" role="tabpanel" aria-labelledby="how-it-works-tab">
             <h2>How It Works</h2>
             <p>
-              The platform is organized around a simple flow that keeps business and meaning connected.
+              The platform is organized around a simple flow that keeps knowledge and business connected.
             </p>
             <ol className="how-it-works-list">
               <li>
