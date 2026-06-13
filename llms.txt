@@ -1,0 +1,46 @@
+# PVA Bazaar
+
+PVA Bazaar is a personal website, business bridge, archive, and continuity layer.
+It combines personal writings, a commerce layer, civic tools, and the HeelKawn game hub.
+The site is a React + Vite SPA that uses hash routes for the live app shell.
+
+Site URL: https://pvabazaar.org/
+Sitemap: https://pvabazaar.org/sitemap.xml
+Readable JSON: https://pvabazaar.org/readable-site.json
+Status page: https://pvabazaar.org/status.html
+
+Primary surfaces:
+- Home: https://pvabazaar.org/
+- Archive: https://pvabazaar.org/#/archive
+- Marketplace: https://pvabazaar.org/#/marketplace
+- Governance: https://pvabazaar.org/#/proposals
+- Conference: https://pvabazaar.org/#/conference
+- Forum: https://pvabazaar.org/#/forum
+- HeelKawn: https://pvabazaar.org/#/heelkawn
+- Download App: https://pvabazaar.org/#/download-app
+- Recovery: https://pvabazaar.org/#/recovery
+- Creator Portal: https://pvabazaar.org/#/creator
+- Career Quiz: https://pvabazaar.org/#/career-quiz
+- Federation Map: https://pvabazaar.org/#/federation-map
+- About: https://pvabazaar.org/#/about
+
+Operational routes:
+- Login: https://pvabazaar.org/#/login
+- Register: https://pvabazaar.org/#/register
+- Account: https://pvabazaar.org/#/account
+- Passport: https://pvabazaar.org/#/passport
+- Dashboard: https://pvabazaar.org/#/dashboard
+- Deals: https://pvabazaar.org/#/deals
+- Contacts: https://pvabazaar.org/#/contacts
+- Templates: https://pvabazaar.org/#/templates
+- Chat: https://pvabazaar.org/#/chat
+
+Writings:
+- Main archive file: https://pvabazaar.org/writings/pva-archive.html
+- Additional writing pages live under /writings/*.html
+
+Notes for automated fetchers:
+1. Read this file first.
+2. Use readable-site.json for structured metadata.
+3. Hash routes are the live SPA navigation.
+4. Some operational routes require authentication.

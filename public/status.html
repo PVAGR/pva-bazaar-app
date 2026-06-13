@@ -3,103 +3,143 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>PVABazaar Status</title>
+    <meta name="description" content="PVA Bazaar live status page." />
+    <title>PVA Bazaar Status</title>
     <style>
       body {
-        font-family:
-          Inter,
-          system-ui,
-          -apple-system,
-          Segoe UI,
-          Roboto,
-          sans-serif;
-        background: #0f1419;
-        color: #e1e8ed;
-        max-width: 900px;
-        margin: 0 auto;
-        padding: 2rem;
-      }
-      h1 {
-        font-size: 2rem;
-        margin-bottom: 1rem;
-      }
-      .grid {
+        margin: 0;
+        min-height: 100vh;
         display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1rem;
+        place-items: center;
+        background: #0b1118;
+        color: #e8edf3;
+        font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+        padding: 24px;
       }
       .card {
-        background: #16202a;
-        border: 1px solid #2a3f5f;
-        border-left: 4px solid #00d9ff;
-        padding: 1rem;
-        border-radius: 6px;
+        width: min(760px, 100%);
+        background: #111922;
+        border: 1px solid #223544;
+        border-radius: 18px;
+        padding: 24px;
+        box-shadow: 0 20px 90px rgba(0, 0, 0, 0.3);
       }
-      .ok {
-        color: #5eead4;
+      h1 { margin: 0 0 8px; font-size: clamp(1.7rem, 3vw, 2.5rem); }
+      p { margin: 0; color: #a9b6c4; line-height: 1.6; }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 18px;
       }
-      .bad {
-        color: #ff7777;
+      .row {
+        border: 1px solid #223544;
+        border-radius: 14px;
+        padding: 14px;
+        background: rgba(255, 255, 255, 0.02);
+      }
+      .label {
+        display: block;
+        color: #6fe7c8;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 6px;
+      }
+      .status {
+        font-size: 0.98rem;
+        color: #e8edf3;
       }
       code {
-        background: #0b1117;
-        padding: 2px 6px;
-        border-radius: 4px;
+        display: inline-block;
+        margin-top: 8px;
+        background: rgba(255,255,255,0.06);
+        border-radius: 8px;
+        padding: 3px 8px;
+        word-break: break-all;
+      }
+      .links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 18px;
       }
       a {
-        color: #00d9ff;
+        color: #9af0dd;
         text-decoration: none;
+        border: 1px solid #223544;
+        border-radius: 999px;
+        padding: 8px 12px;
+        background: rgba(255,255,255,0.03);
       }
     </style>
   </head>
   <body>
-    <h1>PVABazaar Status</h1>
-    <p>This page checks API endpoints from the live site.</p>
-    <div class="grid">
-      <div class="card">
-        <h2>/api/health</h2>
-        <div id="health">Checking...</div>
+    <main class="card">
+      <h1>PVA Bazaar Status</h1>
+      <p>This page checks the current backend URL and the live health endpoint configured for this site.</p>
+
+      <div class="grid">
+        <div class="row">
+          <span class="label">Backend URL</span>
+          <div class="status" id="backendUrl">Loading...</div>
+        </div>
+        <div class="row">
+          <span class="label">Health check</span>
+          <div class="status" id="healthStatus">Loading...</div>
+        </div>
       </div>
-      <div class="card">
-        <h2>/api/archive</h2>
-        <div id="archive">Checking...</div>
+
+      <div class="row" style="margin-top: 12px;">
+        <span class="label">Response</span>
+        <div class="status" id="healthDetail">Waiting for fetch...</div>
       </div>
-      <div class="card">
-        <h2>/api/blogs</h2>
-        <div id="blogs">Checking...</div>
+
+      <div class="links">
+        <a href="/">Home</a>
+        <a href="/llms.txt">llms.txt</a>
+        <a href="/readable-site.json">readable-site.json</a>
+        <a href="/sitemap.xml">sitemap.xml</a>
       </div>
-      <div class="card">
-        <h2>/api/search/text?q=test</h2>
-        <div id="search">Checking...</div>
-      </div>
-    </div>
-    <p style="margin-top: 1rem">
-      If these show unavailable, the site is still live but the API isnt routed on this project. We
-      can switch the project to include serverless or serve a static health as a fallback.
-    </p>
+    </main>
+
     <script>
-      async function check(path, elId) {
-        const el = document.getElementById(elId);
+      async function loadStatus() {
+        const backendUrlNode = document.getElementById('backendUrl');
+        const healthStatusNode = document.getElementById('healthStatus');
+        const healthDetailNode = document.getElementById('healthDetail');
+
         try {
-          const res = await fetch(path, { headers: { Accept: 'application/json' } });
-          const text = await res.text();
-          let msg = text;
-          try {
-            msg = JSON.parse(text).message || text;
-          } catch {}
-          if (res.ok) {
-            el.innerHTML = `<span class="ok">OK (${res.status})</span> \u2014 ${msg}`;
-          } else {
-            el.innerHTML = `<span class="bad">Unavailable (${res.status})</span>\n<code>${msg.substring(0, 200)}</code>`;
+          const res = await fetch('/api-base.json', { cache: 'no-store' });
+          const cfg = await res.json();
+          const apiBase = String(cfg.apiUrl || '').replace(/\/+$/, '');
+          backendUrlNode.textContent = apiBase || 'Not configured';
+
+          if (!apiBase) {
+            healthStatusNode.textContent = 'No backend configured';
+            healthDetailNode.textContent = 'Set api-base.json or the deployment env to point at the live API.';
+            return;
           }
-        } catch (e) {
-          el.innerHTML = `<span class="bad">Error</span> \u2014 ${String(e).substring(0, 120)}`;
+
+          const healthUrl = apiBase.endsWith('/api') ? `${apiBase}/health` : `${apiBase}/api/health`;
+          const healthRes = await fetch(healthUrl, { headers: { Accept: 'application/json' } });
+          const text = await healthRes.text();
+          let body = text;
+          try {
+            const parsed = JSON.parse(text);
+            body = JSON.stringify(parsed, null, 2);
+          } catch {}
+
+          healthStatusNode.textContent = healthRes.ok ? 'OK' : `Unavailable (${healthRes.status})`;
+          healthDetailNode.innerHTML = `<code>${body.slice(0, 500)}</code>`;
+        } catch (error) {
+          backendUrlNode.textContent = 'Unknown';
+          healthStatusNode.textContent = 'Error';
+          healthDetailNode.textContent = String(error).slice(0, 240);
         }
       }
-      check('/api/health', 'health');
-      check('/api/archive', 'archive');
-      check('/api/blogs', 'blogs');
-      check('/api/search/text?q=test', 'search');
+
+      loadStatus();
     </script>
   </body>
 </html>

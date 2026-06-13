@@ -1,0 +1,184 @@
+:root {
+  --writing-bg: linear-gradient(135deg, #0a0e27 0%, #1a1a3a 100%);
+  --writing-surface: rgba(20, 20, 40, 0.78);
+  --writing-surface-strong: rgba(16, 22, 44, 0.92);
+  --writing-text: #e0f2f1;
+  --writing-text-soft: #c7dde2;
+  --writing-muted: #95aeb5;
+  --writing-accent: #26c6da;
+  --writing-accent-soft: #4dd0e1;
+  --writing-border: #00695c;
+  --writing-highlight: rgba(38, 198, 218, 0.12);
+}
+
+body.writing-template {
+  background: var(--writing-bg) !important;
+  color: var(--writing-text) !important;
+  min-height: 100vh;
+  margin: 0;
+  padding: 2rem 1rem;
+  line-height: 1.82;
+}
+
+body.writing-template .container,
+body.writing-template article.entry {
+  max-width: 920px;
+  margin: 0 auto;
+  background: var(--writing-surface);
+  border: 1px solid var(--writing-border);
+  border-radius: 14px;
+  padding: 2.5rem;
+  color: var(--writing-text);
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.28);
+}
+
+body.writing-template .back-to-archive,
+body.writing-template .nav-link,
+body.writing-template nav a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0 0 1.2rem;
+  color: var(--writing-accent);
+  text-decoration: none;
+  font-weight: 700;
+  border: 1px solid var(--writing-border);
+  border-radius: 999px;
+  padding: 0.45rem 0.85rem;
+  background: var(--writing-highlight);
+}
+
+body.writing-template .back-to-archive:hover,
+body.writing-template .nav-link:hover,
+body.writing-template nav a:hover {
+  color: var(--writing-accent-soft);
+  border-color: var(--writing-accent);
+  text-decoration: none;
+}
+
+body.writing-template nav {
+  margin: 0 0 1rem;
+  text-align: left;
+  padding: 0;
+}
+
+body.writing-template header {
+  margin: 0 0 2rem;
+  padding: 0 0 1.5rem;
+  border-bottom: 2px solid var(--writing-border);
+  text-align: left;
+}
+
+body.writing-template h1 {
+  margin: 0;
+  color: var(--writing-accent);
+  font-size: clamp(2rem, 4vw, 2.8rem);
+  line-height: 1.2;
+}
+
+body.writing-template .subtitle {
+  color: var(--writing-text-soft);
+  margin: 0.6rem 0 0;
+  font-size: 1.05rem;
+  font-style: normal;
+}
+
+body.writing-template .author,
+body.writing-template .timestamp,
+body.writing-template .translation,
+body.writing-template .writing-meta {
+  margin: 0.55rem 0 0;
+  color: var(--writing-muted);
+  font-size: 0.95rem;
+}
+
+body.writing-template h2 {
+  color: var(--writing-accent-soft);
+  border-bottom-color: var(--writing-border);
+  margin: 2.3rem 0 1rem;
+  padding-bottom: 0.55rem;
+  line-height: 1.3;
+}
+
+body.writing-template h3,
+body.writing-template h4 {
+  color: var(--writing-text);
+  margin: 1.7rem 0 0.8rem;
+  line-height: 1.35;
+}
+
+body.writing-template p,
+body.writing-template li {
+  color: var(--writing-text-soft);
+  margin-bottom: 1.05rem;
+  line-height: 1.85;
+}
+
+body.writing-template ul,
+body.writing-template ol {
+  margin: 0.65rem 0 1.1rem;
+  padding-left: 1.6rem;
+}
+
+body.writing-template blockquote,
+body.writing-template .quote {
+  background: var(--writing-highlight) !important;
+  border-left-color: var(--writing-accent) !important;
+  color: var(--writing-text-soft) !important;
+  border-radius: 6px;
+}
+
+body.writing-template .intro-box,
+body.writing-template .memory-box,
+body.writing-template .reflection-box,
+body.writing-template .struggle-box,
+body.writing-template .honest-box,
+body.writing-template .egyptian-box,
+body.writing-template .recipe-box,
+body.writing-template .denial-box,
+body.writing-template .awakening-box,
+body.writing-template .pattern-box,
+body.writing-template .pura-box,
+body.writing-template .place-card,
+body.writing-template .practice-card,
+body.writing-template .food-card,
+body.writing-template .insight-box,
+body.writing-template .toc,
+body.writing-template .section {
+  background: var(--writing-surface-strong) !important;
+  border-color: var(--writing-border) !important;
+  color: var(--writing-text-soft) !important;
+}
+
+body.writing-template .location,
+body.writing-template .footer,
+body.writing-template footer {
+  color: var(--writing-muted) !important;
+}
+
+@media (max-width: 768px) {
+  body.writing-template {
+    padding: 1rem 0.55rem;
+  }
+
+  body.writing-template .container,
+  body.writing-template article.entry {
+    padding: 1.4rem;
+    border-radius: 12px;
+  }
+
+  body.writing-template h1 {
+    font-size: 1.75rem;
+  }
+
+  body.writing-template h2 {
+    font-size: 1.4rem;
+    margin-top: 1.95rem;
+  }
+
+  body.writing-template p,
+  body.writing-template li {
+    font-size: 0.98rem;
+    line-height: 1.8;
+  }
+}

@@ -1,0 +1,164 @@
+{
+  "site": {
+    "name": "PVA Bazaar",
+    "url": "https://pvabazaar.org",
+    "type": "spa",
+    "framework": "react-vite",
+    "router": "hash"
+  },
+  "machineReadable": {
+    "llms": "https://pvabazaar.org/llms.txt",
+    "sitemap": "https://pvabazaar.org/sitemap.xml",
+    "status": "https://pvabazaar.org/status.html"
+  },
+  "summary": {
+    "type": "personal website + business suite",
+    "focus": [
+      "personal writings and archive",
+      "sourcing, trade, and fulfillment operations",
+      "civic proposals and conference workflow",
+      "HeelKawn game hub and repository pulse"
+    ]
+  },
+  "sections": [
+    {
+      "name": "Home",
+      "path": "/",
+      "url": "https://pvabazaar.org/",
+      "description": "Opening home page and path chooser."
+    },
+    {
+      "name": "Archive",
+      "path": "#/archive",
+      "url": "https://pvabazaar.org/#/archive",
+      "description": "Archive entries and long-form content."
+    },
+    {
+      "name": "Marketplace",
+      "path": "#/marketplace",
+      "url": "https://pvabazaar.org/#/marketplace",
+      "description": "Artifacts, listings, sourcing, and commerce."
+    },
+    {
+      "name": "Governance",
+      "path": "#/proposals",
+      "url": "https://pvabazaar.org/#/proposals",
+      "description": "Public proposal lifecycle board."
+    },
+    {
+      "name": "Conference",
+      "path": "#/conference",
+      "url": "https://pvabazaar.org/#/conference",
+      "description": "Public governance conference and execution context."
+    },
+    {
+      "name": "Forum",
+      "path": "#/forum",
+      "url": "https://pvabazaar.org/#/forum",
+      "description": "Civic discussion and proposal support flow."
+    },
+    {
+      "name": "Creator Portal",
+      "path": "#/creator",
+      "url": "https://pvabazaar.org/#/creator",
+      "description": "Creator onboarding and portal entry point."
+    },
+    {
+      "name": "Download App",
+      "path": "#/download-app",
+      "url": "https://pvabazaar.org/#/download-app",
+      "description": "Mobile install and quick-access app page."
+    },
+    {
+      "name": "Recovery",
+      "path": "#/recovery",
+      "url": "https://pvabazaar.org/#/recovery",
+      "description": "Recovery and continuity tools for keeping the site close across devices."
+    },
+    {
+      "name": "HeelKawn",
+      "path": "#/heelkawn",
+      "url": "https://pvabazaar.org/#/heelkawn",
+      "description": "HeelKawn download hub and repository pulse."
+    },
+    {
+      "name": "About",
+      "path": "#/about",
+      "url": "https://pvabazaar.org/#/about",
+      "description": "Project and site overview."
+    },
+    {
+      "name": "Login",
+      "path": "#/login",
+      "url": "https://pvabazaar.org/#/login",
+      "description": "User sign-in route."
+    },
+    {
+      "name": "Register",
+      "path": "#/register",
+      "url": "https://pvabazaar.org/#/register",
+      "description": "User account creation route."
+    },
+    {
+      "name": "Account",
+      "path": "#/account",
+      "url": "https://pvabazaar.org/#/account",
+      "description": "Authenticated account area."
+    },
+    {
+      "name": "Passport",
+      "path": "#/passport",
+      "url": "https://pvabazaar.org/#/passport",
+      "description": "Citizen passport profile and wallet identity center."
+    },
+    {
+      "name": "Dashboard",
+      "path": "#/dashboard",
+      "url": "https://pvabazaar.org/#/dashboard",
+      "description": "My artifacts verification dashboard."
+    },
+    {
+      "name": "Deals",
+      "path": "#/deals",
+      "url": "https://pvabazaar.org/#/deals",
+      "description": "Authenticated secure deals and escrow workflow."
+    },
+    {
+      "name": "Contacts",
+      "path": "#/contacts",
+      "url": "https://pvabazaar.org/#/contacts",
+      "description": "Supplier and partner contact management."
+    },
+    {
+      "name": "Templates",
+      "path": "#/templates",
+      "url": "https://pvabazaar.org/#/templates",
+      "description": "Reusable message and operations templates."
+    },
+    {
+      "name": "Chat",
+      "path": "#/chat",
+      "url": "https://pvabazaar.org/#/chat",
+      "description": "Messaging and support chat surface."
+    },
+    {
+      "name": "Career Quiz",
+      "path": "#/career-quiz",
+      "url": "https://pvabazaar.org/#/career-quiz",
+      "description": "Career guidance and self-assessment flow."
+    },
+    {
+      "name": "Federation Map",
+      "path": "#/federation-map",
+      "url": "https://pvabazaar.org/#/federation-map",
+      "description": "Live world pulse map of active passport citizens and contribution roles."
+    }
+  ],
+  "guidanceForFetchers": [
+    "Read llms.txt first if you need a short human-readable overview.",
+    "Use the sections array for route discovery and intent.",
+    "Use sitemap.xml for static file URLs under /writings.",
+    "Hash routes are the live SPA navigation."
+  ],
+  "updatedAt": "2026-06-13T00:00:00Z"
+}
