@@ -16,6 +16,10 @@
 - The writing studio hero now exposes the main site paths at the top of the page instead of hiding continuity actions deeper in the layout.
 - This pass is about making the site feel like one coherent personal portal instead of separate hidden areas.
 
+## 2026-06-13 Mobile Archive Fix
+- The archive header now stacks cleanly on small screens instead of keeping its action buttons absolutely positioned.
+- This keeps the public reading surface usable on phones without overlapping the title or compressing the top controls.
+
 ---
 
 ## ✅ What's Working Right Now

@@ -876,6 +876,18 @@
 }
 
 @media (max-width: 768px) {
+  .header-content {
+    flex-direction: column;
+    gap: 0.85rem;
+    align-items: stretch;
+  }
+
+  .header-actions {
+    position: static;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
   .archive-header h1 {
     font-size: 2rem;
   }
