@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Account-backed `/recovery` dashboard with client-side encrypted continuity bundles.
 - Snapshot creation that saves to the backend and downloads a portable JSON bundle in one action.
 - Restore/import support for encrypted recovery bundles and legacy writing-studio backups.
+- Home hero now exposes recovery as a first-class mobile entry point.
 
 ## [1.0.0] - 2026-01-21
 

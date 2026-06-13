@@ -98,6 +98,7 @@ export default function HomePage({ entries = [] }) {
             <Link className="button" to="/archive">Open archive</Link>
             <Link className="button ghost" to="/marketplace">Open marketplace</Link>
             <Link className="button secondary" to="/heelkawn">Open HeelKawn</Link>
+            <Link className="button ghost" to="/recovery">Open recovery</Link>
           </div>
         </div>
 

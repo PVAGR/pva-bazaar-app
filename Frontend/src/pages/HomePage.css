@@ -270,4 +270,13 @@
   .home-card--featured {
     grid-row: auto;
   }
+
+  .home-hero__actions {
+    flex-direction: column;
+  }
+
+  .home-hero__actions .button {
+    width: 100%;
+    justify-content: center;
+  }
 }

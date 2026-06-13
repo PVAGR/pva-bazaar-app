@@ -347,4 +347,14 @@
   .recovery-link-grid {
     grid-template-columns: 1fr;
   }
+
+  .recovery-actions {
+    flex-direction: column;
+  }
+
+  .recovery-actions .primary-btn,
+  .recovery-actions .ghost-btn {
+    width: 100%;
+    justify-content: center;
+  }
 }
