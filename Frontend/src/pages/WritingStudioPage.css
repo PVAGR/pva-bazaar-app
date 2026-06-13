@@ -115,6 +115,10 @@
   gap: 0.9rem;
 }
 
+.writing-studio__panel--full {
+  grid-column: 1 / -1;
+}
+
 .writing-studio__panelHead {
   display: flex;
   align-items: flex-start;
@@ -372,5 +376,13 @@
   .writing-studio__socialGrid,
   .writing-studio__continuityGrid {
     grid-template-columns: 1fr;
+  }
+
+  .writing-studio__panel--full {
+    grid-column: auto;
+  }
+
+  .writing-studio__panelHead {
+    flex-direction: column;
   }
 }

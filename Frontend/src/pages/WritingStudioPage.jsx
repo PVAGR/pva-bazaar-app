@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import rehypeSanitize from 'rehype-sanitize';
 import AdminNav from '../components/AdminNav.jsx';
-import { apiFetch, apiGet } from '../lib/api.js';
+import { apiFetch, apiGet, fetchRecoverySnapshots } from '../lib/api.js';
 import { addLocalEntry } from '../lib/entries.js';
 import { createArchiveEntry, requestAdminToken } from '../lib/archiveApi.js';
 import './WritingStudioPage.css';
@@ -145,6 +145,9 @@ export default function WritingStudioPage() {
   const [remoteBlogs, setRemoteBlogs] = useState([]);
   const [remoteBlogsLoading, setRemoteBlogsLoading] = useState(true);
   const [remoteBlogsError, setRemoteBlogsError] = useState('');
+  const [recoverySnapshots, setRecoverySnapshots] = useState([]);
+  const [recoverySnapshotsLoading, setRecoverySnapshotsLoading] = useState(true);
+  const [recoverySnapshotsError, setRecoverySnapshotsError] = useState('');
   const [continuityReadiness, setContinuityReadiness] = useState({
     loading: true,
     error: '',
@@ -238,6 +241,34 @@ export default function WritingStudioPage() {
     };
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    const loadRecoverySnapshots = async () => {
+      setRecoverySnapshotsLoading(true);
+      setRecoverySnapshotsError('');
+      try {
+        const result = await fetchRecoverySnapshots();
+        if (!cancelled) {
+          setRecoverySnapshots(Array.isArray(result?.items) ? result.items : []);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setRecoverySnapshots([]);
+          setRecoverySnapshotsError(error?.message || 'Unable to load recovery snapshots');
+        }
+      } finally {
+        if (!cancelled) {
+          setRecoverySnapshotsLoading(false);
+        }
+      }
+    };
+
+    loadRecoverySnapshots();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const draftSlug = useMemo(
     () => slugify(blogDraft.slug || blogDraft.title),
     [blogDraft.slug, blogDraft.title]
@@ -269,6 +300,8 @@ export default function WritingStudioPage() {
       healthUrl: panel?.links?.apiHealth || '/api/health',
     };
   }, [continuityReadiness]);
+
+  const latestRecoverySnapshot = recoverySnapshots[0] || null;
 
   const saveNote = () => {
     if (!noteDraft.title.trim() && !noteDraft.body.trim()) {
@@ -924,6 +957,7 @@ export default function WritingStudioPage() {
       ) : null}
 
       {activeTab === 'continuity' ? (
+        <>
         <section className="writing-studio__grid writing-studio__grid--blog">
           <article className="section-card writing-studio__panel">
             <div className="writing-studio__panelHead">
@@ -1033,6 +1067,66 @@ export default function WritingStudioPage() {
             ) : null}
           </article>
         </section>
+
+        <section className="section-card writing-studio__panel writing-studio__panel--full">
+          <div className="writing-studio__panelHead">
+            <div>
+              <p className="pill">Remote backups</p>
+              <h2>Latest saved continuity snapshots</h2>
+            </div>
+            <Link to="/recovery" className="writing-studio__ghostLink">Open recovery console</Link>
+          </div>
+
+          {recoverySnapshotsLoading ? (
+            <div className="writing-studio__empty">Loading saved snapshots...</div>
+          ) : null}
+
+          {!recoverySnapshotsLoading && recoverySnapshotsError ? (
+            <div className="writing-studio__empty">{recoverySnapshotsError}</div>
+          ) : null}
+
+          {!recoverySnapshotsLoading && !recoverySnapshotsError ? (
+            <>
+              <div className="writing-studio__continuityGrid">
+                <div className="writing-studio__continuityCard">
+                  <strong>{recoverySnapshots.length}</strong>
+                  <span>remote snapshots</span>
+                </div>
+                <div className="writing-studio__continuityCard">
+                  <strong>{latestRecoverySnapshot ? new Date(latestRecoverySnapshot.createdAt).toLocaleDateString() : 'None'}</strong>
+                  <span>latest backup date</span>
+                </div>
+                <div className="writing-studio__continuityCard">
+                  <strong>{latestRecoverySnapshot?.label || 'No snapshot yet'}</strong>
+                  <span>latest backup label</span>
+                </div>
+                <div className="writing-studio__continuityCard">
+                  <strong>{latestRecoverySnapshot ? `${Math.round((latestRecoverySnapshot.payloadSizeBytes || 0) / 1024)} KB` : '—'}</strong>
+                  <span>latest payload size</span>
+                </div>
+              </div>
+
+              <div className="writing-studio__recoveryList">
+                {recoverySnapshots.slice(0, 5).map((snapshot) => (
+                  <div className="writing-studio__recoveryItem" key={snapshot.id || snapshot._id}>
+                    <strong>{snapshot.label || 'Untitled snapshot'}</strong>
+                    <span>
+                      {snapshot.createdAt ? new Date(snapshot.createdAt).toLocaleString() : 'Unknown date'} ·{' '}
+                      {snapshot.device?.platform || 'unknown device'} · {snapshot.encryption?.algorithm || 'AES-GCM'}
+                    </span>
+                    <Link to="/recovery">Open in recovery console</Link>
+                  </div>
+                ))}
+                {recoverySnapshots.length === 0 ? (
+                  <div className="writing-studio__empty">
+                    No remote backups saved yet. Use the recovery console to create the first one.
+                  </div>
+                ) : null}
+              </div>
+            </>
+          ) : null}
+        </section>
+        </>
       ) : null}
     </div>
   );
