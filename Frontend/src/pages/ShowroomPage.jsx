@@ -105,6 +105,20 @@ export default function ShowroomPage() {
             </Link>
           ))}
         </div>
+        <section className="showroom-atlas" aria-label="Showroom atlas">
+          <h2>Atlas</h2>
+          <p className="showroom-atlas-copy">
+            This display surface stays connected to the same knowledge bazaar as the rest of the site.
+          </p>
+          <div className="showroom-atlas-links">
+            <Link to="/" className="showroom-atlas-link">Home</Link>
+            <Link to="/archive" className="showroom-atlas-link">Archive</Link>
+            <Link to="/marketplace" className="showroom-atlas-link">Marketplace</Link>
+            <Link to="/studio" className="showroom-atlas-link">Writing Studio</Link>
+            <Link to="/recovery" className="showroom-atlas-link">Recovery</Link>
+            <Link to="/creator" className="showroom-atlas-link">Creator Portal</Link>
+          </div>
+        </section>
         <input
           aria-label="Search items"
           className="showroom-search"

@@ -86,6 +86,51 @@
   line-height: 1.45;
 }
 
+.showroom-atlas {
+  width: 100%;
+  display: grid;
+  gap: 0.55rem;
+  padding: 1rem;
+  border: 1px solid var(--site-border);
+  border-radius: 14px;
+  background: var(--site-panel);
+}
+
+.showroom-atlas h2 {
+  margin: 0;
+  font-size: 1.02rem;
+}
+
+.showroom-atlas-copy {
+  margin: 0;
+  color: var(--site-text-muted);
+  line-height: 1.55;
+}
+
+.showroom-atlas-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.showroom-atlas-link {
+  text-decoration: none;
+  border: 1px solid var(--site-border);
+  background: var(--site-panel-soft);
+  color: var(--site-text);
+  border-radius: 999px;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.showroom-atlas-link:hover {
+  border-color: var(--site-accent);
+  color: var(--site-accent);
+  background: var(--site-accent-soft);
+}
+
 .showroom-nav-link {
   text-decoration: none;
   border: 1px solid var(--site-border);
@@ -359,6 +404,11 @@
     width: 100%;
   }
 
+  .showroom-atlas-links {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .showroom-header h1 {
     font-size: 1.8rem;
   }
@@ -382,6 +432,10 @@
   }
 
   .showroom-portal-row {
+    grid-template-columns: 1fr;
+  }
+
+  .showroom-atlas-links {
     grid-template-columns: 1fr;
   }
 

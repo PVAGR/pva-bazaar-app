@@ -108,6 +108,21 @@ export default function MarketplacePage() {
             </Link>
           ))}
         </div>
+        <section className="marketplace-atlas" aria-label="Marketplace atlas">
+          <h2>Atlas</h2>
+          <p className="marketplace-atlas-copy">
+            Stay oriented while moving between reading, selling, recovery, and public display. This is one portal in
+            the same site, not a separate system.
+          </p>
+          <div className="marketplace-atlas-links">
+            <Link to="/" className="marketplace-atlas-link">Home</Link>
+            <Link to="/archive" className="marketplace-atlas-link">Archive</Link>
+            <Link to="/studio" className="marketplace-atlas-link">Writing Studio</Link>
+            <Link to="/recovery" className="marketplace-atlas-link">Recovery</Link>
+            <Link to="/showroom" className="marketplace-atlas-link">Showroom</Link>
+            <Link to="/creator" className="marketplace-atlas-link">Creator Portal</Link>
+          </div>
+        </section>
         <input
           aria-label="Search items"
           className="marketplace-search"

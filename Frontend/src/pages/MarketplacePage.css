@@ -83,6 +83,51 @@
   line-height: 1.45;
 }
 
+.marketplace-atlas {
+  width: 100%;
+  display: grid;
+  gap: 0.55rem;
+  padding: 1rem;
+  border: 1px solid var(--site-border);
+  border-radius: 14px;
+  background: var(--site-panel);
+}
+
+.marketplace-atlas h2 {
+  margin: 0;
+  font-size: 1.02rem;
+}
+
+.marketplace-atlas-copy {
+  margin: 0;
+  color: var(--site-text-muted);
+  line-height: 1.55;
+}
+
+.marketplace-atlas-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.marketplace-atlas-link {
+  text-decoration: none;
+  border: 1px solid var(--site-border);
+  background: var(--site-panel-soft);
+  color: var(--site-text);
+  border-radius: 999px;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.marketplace-atlas-link:hover {
+  border-color: var(--site-accent);
+  color: var(--site-accent);
+  background: var(--site-accent-soft);
+}
+
 .marketplace-nav-link {
   text-decoration: none;
   border: 1px solid var(--site-border);
@@ -322,6 +367,11 @@
   .marketplace-portal-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .marketplace-atlas-links {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 640px) {
@@ -343,6 +393,10 @@
   }
 
   .marketplace-portal-row {
+    grid-template-columns: 1fr;
+  }
+
+  .marketplace-atlas-links {
     grid-template-columns: 1fr;
   }
 }
