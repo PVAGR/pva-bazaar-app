@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.jsx';
 import { HelmetProvider } from 'react-helmet-async';
@@ -21,6 +21,55 @@ function AppCrashFallback() {
       </div>
     </div>
   );
+}
+
+function MountSignal() {
+  useEffect(() => {
+    if (globalThis.document?.body) {
+      globalThis.document.body.dataset.appMounted = 'true';
+    }
+
+    return () => {
+      if (globalThis.document?.body?.dataset?.appMounted) {
+        delete globalThis.document.body.dataset.appMounted;
+      }
+    };
+  }, []);
+
+  return null;
+}
+
+class AppErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, info) {
+    try {
+      if (globalThis.document?.body?.dataset?.appMounted) {
+        delete globalThis.document.body.dataset.appMounted;
+      }
+    } catch (_err) {
+      // Ignore cleanup issues.
+    }
+
+    if (globalThis.console?.error) {
+      globalThis.console.error('PVA Bazaar app crashed during render', error, info);
+    }
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return <AppCrashFallback />;
+    }
+
+    return this.props.children;
+  }
 }
 
 const sentryDsn = import.meta.env.VITE_SENTRY_DSN;
@@ -79,11 +128,13 @@ if (sentryDsn) {
 
 const root = document.getElementById('root');
 if (root) {
-  document.body.dataset.appMounted = 'true';
   createRoot(root).render(
-    <HelmetProvider>
-      <App />
-    </HelmetProvider>
+    <AppErrorBoundary>
+      <HelmetProvider>
+        <MountSignal />
+        <App />
+      </HelmetProvider>
+    </AppErrorBoundary>
   );
 }
 
