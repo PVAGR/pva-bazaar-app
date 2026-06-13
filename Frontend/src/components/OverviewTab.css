@@ -17,6 +17,56 @@
   margin-bottom: 2rem;
 }
 
+.overview-atlas {
+  display: grid;
+  gap: 0.55rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  border: 1px solid rgba(38, 198, 218, 0.18);
+  border-radius: 12px;
+  background: var(--site-panel);
+}
+
+.overview-atlas h2 {
+  margin: 0;
+  color: var(--site-accent-strong);
+  font-size: 1.08rem;
+}
+
+.overview-atlas__copy {
+  margin: 0;
+  color: var(--site-text-muted);
+  line-height: 1.55;
+}
+
+.overview-atlas__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.overview-atlas__link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.45rem 0.8rem;
+  border: 1px solid rgba(38, 198, 218, 0.25);
+  border-radius: 999px;
+  background: var(--site-panel-soft);
+  color: var(--site-text);
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 0.88rem;
+  transition: all 0.2s ease;
+}
+
+.overview-atlas__link:hover {
+  border-color: var(--site-accent);
+  color: var(--site-accent-strong);
+  background: var(--site-accent-soft);
+  transform: translateY(-1px);
+}
+
 /* Overview Sections */
 .overview-section {
   background: var(--site-panel);
@@ -301,5 +351,16 @@
   .feature-status {
     margin-left: 0;
     margin-top: 0.5rem;
+  }
+
+  .overview-atlas__links {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .overview-atlas__links {
+    grid-template-columns: 1fr;
   }
 }

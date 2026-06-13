@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { apiGet, fetchAdminTransactions, fetchOrders } from '../lib/api';
 import { createLogger } from '../lib/logger';
 import './OverviewTab.css';
@@ -141,7 +142,22 @@ export default function OverviewTab({ onNavigateTab }) {
   return (
     <div className="admin-tab-container overview-tab">
       <h1>🎯 Admin Overview</h1>
-      <p className="tab-description">Welcome to your 3PL dashboard. Monitor all critical business operations from here.</p>
+      <p className="tab-description">Welcome to your operations atlas. Monitor the pure-life business system from here.</p>
+
+      <section className="overview-atlas">
+        <h2>Atlas</h2>
+        <p className="overview-atlas__copy">
+          Move between public knowledge, recovery, commerce, and control without leaving the same site.
+        </p>
+        <div className="overview-atlas__links">
+          <Link to="/" className="overview-atlas__link">Home</Link>
+          <Link to="/archive" className="overview-atlas__link">Archive</Link>
+          <Link to="/recovery" className="overview-atlas__link">Recovery</Link>
+          <Link to="/marketplace" className="overview-atlas__link">Marketplace</Link>
+          <Link to="/account" className="overview-atlas__link">Account</Link>
+          <Link to="/settings" className="overview-atlas__link">Settings</Link>
+        </div>
+      </section>
 
       {/* System Status Section */}
       <section className="overview-section">

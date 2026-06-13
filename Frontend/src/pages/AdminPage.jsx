@@ -34,6 +34,15 @@ const OverviewTab = lazy(() => import('../components/OverviewTab.jsx'));
 const TransactionsTab = lazy(() => import('../components/TransactionsTab.jsx'));
 const AdminOrdersPage = lazy(() => import('./AdminOrdersPage.jsx'));
 
+const ADMIN_ATLAS_LINKS = [
+  { key: 'home', label: 'Home', to: '/' },
+  { key: 'archive', label: 'Archive', to: '/archive' },
+  { key: 'recovery', label: 'Recovery', to: '/recovery' },
+  { key: 'marketplace', label: 'Marketplace', to: '/marketplace' },
+  { key: 'dashboard', label: 'Command Center', to: '/dashboard' },
+  { key: 'account', label: 'Account', to: '/account' },
+];
+
 export default function AdminPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -1018,6 +1027,19 @@ export default function AdminPage() {
               </div>
             )}
           </div>
+          <section className="admin-atlas" aria-label="Admin atlas">
+            <h2>Atlas</h2>
+            <p className="admin-atlas__copy">
+              Keep the control panel tied to the same paths as the public site and the personal workspace.
+            </p>
+            <div className="admin-atlas__links">
+              {ADMIN_ATLAS_LINKS.map((link) => (
+                <Link key={link.key} to={link.to} className="admin-atlas__link">
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+          </section>
         </div>
         <AdminNav />
         <AdminTabs activeTab={activeTab} onTabChange={handleTabChange} inquiryCounts={inquiryCounts} />

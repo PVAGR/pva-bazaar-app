@@ -422,6 +422,56 @@
   align-items: center;
 }
 
+.admin-atlas {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.9rem;
+  padding: 0.95rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--bg-tertiary) 78%, transparent);
+}
+
+.admin-atlas h2 {
+  margin: 0;
+  color: var(--accent);
+  font-size: 1rem;
+}
+
+.admin-atlas__copy {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.admin-atlas__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.admin-atlas__link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.45rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 0.88rem;
+  transition: all 0.2s ease;
+}
+
+.admin-atlas__link:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--highlight);
+  transform: translateY(-1px);
+}
+
 
 .theme-toggle {
   background: var(--bg-secondary);
@@ -1966,6 +2016,11 @@
   .inquiry-kpis {
     grid-template-columns: 1fr 1fr;
   }
+
+  .admin-atlas__links {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 /* Final high-standard polish pass */
@@ -2052,5 +2107,11 @@
 
   .admin-container {
     padding: 0.55rem 0.45rem 1.35rem;
+  }
+}
+
+@media (max-width: 560px) {
+  .admin-atlas__links {
+    grid-template-columns: 1fr;
   }
 }
