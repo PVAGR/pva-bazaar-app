@@ -4,12 +4,22 @@
  */
 
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { apiGet, apiPost, apiDelete, apiUpload } from '../lib/api';
 import { createLogger } from '../lib/logger';
 import LoadingSpinner, { LoadingDots } from './LoadingSpinner';
 import './CloudStorageTab.css';
 
 const logger = createLogger('CloudStorageTab');
+
+const CLOUD_STORAGE_ATLAS_LINKS = [
+  { to: '/', label: 'Home' },
+  { to: '/archive', label: 'Archive' },
+  { to: '/recovery', label: 'Recovery' },
+  { to: '/marketplace', label: 'Marketplace' },
+  { to: '/dashboard', label: 'Command Center' },
+  { to: '/settings', label: 'Settings' },
+];
 
 export default function CloudStorageTab() {
   const [providers, setProviders] = useState(null);
@@ -175,6 +185,20 @@ export default function CloudStorageTab() {
         <h2>☁️ Cloud Storage Management</h2>
         <p>Connect and manage files across multiple cloud providers with one-click buttons</p>
       </div>
+
+      <section className="cloud-storage-atlas" aria-label="Cloud storage atlas">
+        <h3>Continuity atlas</h3>
+        <p className="cloud-storage-atlas__copy">
+          Move from storage to recovery to the rest of the site without breaking the workflow.
+        </p>
+        <div className="cloud-storage-atlas__links">
+          {CLOUD_STORAGE_ATLAS_LINKS.map((link) => (
+            <Link key={link.to} to={link.to} className="cloud-storage-atlas__link">
+              {link.label}
+            </Link>
+          ))}
+        </div>
+      </section>
 
       {/* Alert Messages */}
       {error && (

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { apiGet, fetchAdminTransactions, fetchRecoverySnapshots } from '../lib/api';
 import { createLogger } from '../lib/logger';
 import './DashboardTab.css';
@@ -11,6 +12,15 @@ import './DashboardTab.css';
  */
 
 const logger = createLogger('DashboardTab');
+
+const DASHBOARD_ATLAS_LINKS = [
+  { to: '/', label: 'Home' },
+  { to: '/archive', label: 'Archive' },
+  { to: '/recovery', label: 'Recovery' },
+  { to: '/marketplace', label: 'Marketplace' },
+  { to: '/settings', label: 'Settings' },
+  { to: '/admin', label: 'Admin' },
+];
 
 export default function DashboardTab({ onNavigateTab, onMakeOrder }) {
   const [loading, setLoading] = useState(true);
@@ -177,6 +187,20 @@ export default function DashboardTab({ onNavigateTab, onMakeOrder }) {
           </button>
         </div>
       </div>
+
+      <section className="dashboard-atlas" aria-label="Dashboard atlas">
+        <h3>Operations atlas</h3>
+        <p className="dashboard-atlas__copy">
+          Jump between the live system, continuity tools, and public surfaces without losing the thread.
+        </p>
+        <div className="dashboard-atlas__links">
+          {DASHBOARD_ATLAS_LINKS.map((link) => (
+            <Link key={link.to} to={link.to} className="dashboard-atlas__link">
+              {link.label}
+            </Link>
+          ))}
+        </div>
+      </section>
 
       {error && (
         <div className="error-banner">

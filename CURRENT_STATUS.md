@@ -46,6 +46,7 @@
 - The Archive Library and Writing Studio now expose the same atlas links so the reading and publishing surfaces feel guided too.
 - The Admin shell and Overview tab now expose the same atlas links so the control panel feels like part of the same site.
 - The Settings, Health, and API Docs tabs now expose the same atlas links so the remaining system pages match the rest of the site.
+- The Dashboard and Cloud Storage tabs now expose the same atlas links so the major operational panels match the site atlas too.
 
 ---
 
