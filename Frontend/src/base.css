@@ -237,6 +237,42 @@ body {
   line-height: 1.5;
 }
 
+.layout__intentChooser {
+  margin-top: 0.85rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.layout__intentCard {
+  display: grid;
+  gap: 0.18rem;
+  padding: 0.72rem 0.8rem;
+  border: 1px solid var(--site-border);
+  border-radius: 12px;
+  background: var(--site-panel-soft);
+  color: var(--site-text);
+  text-decoration: none;
+  transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.layout__intentCard:hover {
+  transform: translateY(-2px);
+  border-color: var(--site-accent);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
+}
+
+.layout__intentCard strong {
+  color: var(--site-accent-strong);
+  font-size: 0.95rem;
+}
+
+.layout__intentCard span {
+  color: var(--site-text-muted);
+  line-height: 1.45;
+  font-size: 0.82rem;
+}
+
 .layout__routeTraversal {
   margin-top: 0.8rem;
   display: grid;
@@ -574,6 +610,10 @@ textarea:focus-visible {
   .layout__nav,
   .layout__status {
     width: 100%;
+  }
+
+  .layout__intentChooser {
+    grid-template-columns: 1fr;
   }
 
   .layout__footerGrid {
@@ -1546,6 +1586,10 @@ article {
 
   .layout__routeTraversal {
     grid-template-columns: 1fr;
+  }
+
+  .layout__intentCard {
+    width: 100%;
   }
 
   .layout__routeTraversal a:last-child,

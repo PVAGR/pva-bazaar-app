@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { Link, NavLink, useLocation } from 'react-router-dom';
 import OpenClawFloatingAssistant from './OpenClawFloatingAssistant.jsx';
 import { PUBLIC_ROUTES } from '../config/publicRoutes';
 import { getToken } from '../lib/auth';
@@ -106,6 +106,15 @@ export default function Layout({ children }) {
     { key: 'download', to: '/download-app', title: 'Download App' },
   ], []);
 
+  const intentRoutes = useMemo(() => [
+    { key: 'learn', title: 'Learn', to: '/archive', note: 'Read pure life knowledge and long-form writings.' },
+    { key: 'buy', title: 'Buy', to: '/marketplace', note: 'Find goods, sourcing, and real trade.' },
+    { key: 'sell', title: 'Sell', to: '/creator', note: 'Offer goods as a supplier or artisan.' },
+    { key: 'recover', title: 'Recover', to: '/recovery', note: 'Restore context and keep continuity alive.' },
+    { key: 'participate', title: 'Participate', to: '/proposals', note: 'Read, vote, and discuss public decisions.' },
+    { key: 'explore', title: 'Explore', to: '/heelkawn', note: 'Enter the world, map, and simulation hub.' },
+  ], []);
+
   return (
     <div className="layout">
       <a className="sr-only" href="#content">Skip to content</a>
@@ -148,6 +157,14 @@ export default function Layout({ children }) {
               {routeIdentity.description}
             </p>
           ) : null}
+          <div className="layout__intentChooser" aria-label="What are you here for?">
+            {intentRoutes.map((route) => (
+              <Link key={route.key} className="layout__intentCard" to={route.to}>
+                <strong>{route.title}</strong>
+                <span>{route.note}</span>
+              </Link>
+            ))}
+          </div>
           {(traversal.prev || traversal.next) ? (
             <div className="layout__routeTraversal" aria-label="Route traversal">
               {traversal.prev ? <NavLink to={traversal.prev.to}>← {traversal.prev.title}</NavLink> : <span />}
