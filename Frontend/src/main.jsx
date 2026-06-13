@@ -1,5 +1,4 @@
-
-import React, { useEffect } from 'react';
+import React from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.jsx';
 import { HelmetProvider } from 'react-helmet-async';
@@ -21,22 +20,6 @@ function AppCrashFallback() {
       </div>
     </div>
   );
-}
-
-function MountSignal() {
-  useEffect(() => {
-    if (globalThis.document?.body) {
-      globalThis.document.body.dataset.appMounted = 'true';
-    }
-
-    return () => {
-      if (globalThis.document?.body?.dataset?.appMounted) {
-        delete globalThis.document.body.dataset.appMounted;
-      }
-    };
-  }, []);
-
-  return null;
 }
 
 class AppErrorBoundary extends React.Component {
@@ -131,7 +114,6 @@ if (root) {
   createRoot(root).render(
     <AppErrorBoundary>
       <HelmetProvider>
-        <MountSignal />
         <App />
       </HelmetProvider>
     </AppErrorBoundary>

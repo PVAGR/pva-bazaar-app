@@ -63,6 +63,18 @@ export default function Layout({ children }) {
   }, [pathname]);
 
   useEffect(() => {
+    if (!globalThis.document?.body) return undefined;
+
+    globalThis.document.body.dataset.appContentReady = 'true';
+
+    return () => {
+      if (globalThis.document?.body?.dataset?.appContentReady) {
+        delete globalThis.document.body.dataset.appContentReady;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     const baseTitle = 'pvabazaar.org';
     if (routeIdentity?.title) {
       globalThis.document.title = `${routeIdentity.title} · ${baseTitle}`;

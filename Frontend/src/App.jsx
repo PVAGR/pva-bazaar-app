@@ -49,6 +49,7 @@ const DownloadAppPage = lazy(() => import('./pages/DownloadAppPage.jsx'));
 const RecoveryPage = lazy(() => import('./pages/RecoveryPage.jsx'));
 const HeelKawnPage = lazy(() => import('./pages/HeelKawnPage.jsx'));
 const ForumPage = lazy(() => import('./pages/Forum.jsx'));
+const StreamsPage = lazy(() => import('./pages/StreamsPage.jsx'));
 const GetStartedPage = lazy(() => import('./pages/GetStartedPage.jsx'));
 const OpeningHomePage = lazy(() => import('./pages/OpeningHomePage.jsx'));
 const BooksPage = lazy(() => import('./pages/BooksPage.jsx'));
