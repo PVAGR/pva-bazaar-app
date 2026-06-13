@@ -68,7 +68,7 @@ export default function BrokerHubPage() {
         <div className="broker-hub-header__row">
           <div>
             <h1>Broker Hub</h1>
-            <p className="muted">All-in-one: research commodities, manage contacts, use templates, track deals.</p>
+            <p className="muted">All-in-one: research commodities, manage contacts, use templates, track deals, and move through the pure-life bazaar.</p>
           </div>
           <div className="broker-hub-actions">
             <Link to="/chat" className="btn primary">Chat with Richard AI</Link>
@@ -81,6 +81,19 @@ export default function BrokerHubPage() {
 
       <main className="broker-hub-main">
         {error ? <ErrorBanner message={error} onRetry={loadAll} onDismiss={() => setError('')} /> : null}
+
+        <section className="card broker-atlas">
+          <h2>Private atlas</h2>
+          <p className="muted">Keep the brokerage side connected to the same routes as the rest of the site.</p>
+          <div className="broker-atlas-links">
+            <Link to="/" className="btn ghost">Home</Link>
+            <Link to="/archive" className="btn ghost">Archive</Link>
+            <Link to="/recovery" className="btn ghost">Recovery</Link>
+            <Link to="/marketplace" className="btn ghost">Marketplace</Link>
+            <Link to="/creator" className="btn ghost">Creator Portal</Link>
+            <Link to="/dashboard" className="btn ghost">Command Center</Link>
+          </div>
+        </section>
 
         <section className="card broker-flow-card">
           <div className="broker-flow-card__head">

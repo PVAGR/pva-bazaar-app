@@ -129,6 +129,21 @@ export default function CreatorPortalPage() {
         </div>
       </header>
 
+      <section className="creator-card creator-portal__atlas" aria-label="Private atlas">
+        <h2>Private atlas</h2>
+        <p className="creator-portal__atlasCopy">
+          Move through the same knowledge bazaar from one private tool to the next without losing the thread.
+        </p>
+        <div className="creator-portal__atlasLinks">
+          <Link to="/" className="creator-btn">Home</Link>
+          <Link to="/archive" className="creator-btn">Archive</Link>
+          <Link to="/recovery" className="creator-btn">Recovery</Link>
+          <Link to="/marketplace" className="creator-btn">Marketplace</Link>
+          <Link to="/dashboard" className="creator-btn">Command Center</Link>
+          <Link to="/broker-hub" className="creator-btn">Broker Hub</Link>
+        </div>
+      </section>
+
       <section className="creator-portal__infoGrid" aria-label="Supplier standards">
         <article className="creator-card">
           <h2>What to prepare</h2>

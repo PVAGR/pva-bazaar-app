@@ -54,6 +54,22 @@
   font-weight: 600;
 }
 
+.creator-portal__atlas {
+  gap: 0.8rem;
+}
+
+.creator-portal__atlasCopy {
+  margin: 0;
+  color: var(--site-text-muted);
+  line-height: 1.5;
+}
+
+.creator-portal__atlasLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
 .creator-portal__tabs {
   display: flex;
   flex-wrap: wrap;
@@ -261,6 +277,11 @@
 }
 
 @media (max-width: 640px) {
+  .creator-portal__atlasLinks {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .creator-inlineGrid {
     grid-template-columns: 1fr;
   }
@@ -286,5 +307,9 @@
   .creator-btn {
     width: 100%;
     justify-content: center;
+  }
+
+  .creator-portal__atlasLinks {
+    grid-template-columns: 1fr;
   }
 }
