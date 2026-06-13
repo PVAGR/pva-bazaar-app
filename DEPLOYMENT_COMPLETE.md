@@ -151,7 +151,7 @@ Configuration:
 - `Frontend/vite.config.js` - Build config ✅
 
 Documentation:
-- `QUICK_DEPLOY_BACKEND.md` - Start here! ⭐
+- `QUICK_DEPLOY_BACKEND.md` - Legacy reference. Start at [CANONICAL_MAP.md](CANONICAL_MAP.md) instead.
 - `VERCEL_BACKEND_DEPLOYMENT.md` - Detailed guide
 - `DEPLOYMENT_SITREP.md` - Status report
 - `DEPLOYMENT_COMPLETE.md` - This file
@@ -162,7 +162,7 @@ Documentation:
 
 Everything is configured and ready. Just follow the quick deploy guide and you'll be live in 15 minutes!
 
-**Start here**: [QUICK_DEPLOY_BACKEND.md](./QUICK_DEPLOY_BACKEND.md)
+**Reference only**: [CANONICAL_MAP.md](CANONICAL_MAP.md)
 
 ---
 

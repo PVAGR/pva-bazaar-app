@@ -224,4 +224,4 @@ If you get stuck:
 
 Your code is production-ready. Just follow the deployment guide and you'll have a fully working site in about 15 minutes!
 
-**Start here**: `VERCEL_BACKEND_DEPLOYMENT.md`
+**Reference only**: start at [CANONICAL_MAP.md](CANONICAL_MAP.md)

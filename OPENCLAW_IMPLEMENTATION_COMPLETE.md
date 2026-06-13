@@ -335,7 +335,7 @@ curl http://localhost:3000/api/openclaw/metrics
 - Metrics: `http://localhost:3000/api/openclaw/metrics`
 
 ### Documentation
-- Start here: [OPENCLAW_QUICK_REFERENCE.md](OPENCLAW_QUICK_REFERENCE.md)
+- Reference only: [CANONICAL_MAP.md](CANONICAL_MAP.md)
 - Events guide: [OPENCLAW_EVENT_INTEGRATION.md](OPENCLAW_EVENT_INTEGRATION.md)
 - Architecture: [OPENCLAW_ARCHITECTURE.md](OPENCLAW_ARCHITECTURE.md)
 - Full guide: [OPENCLAW_INTEGRATION.md](OPENCLAW_INTEGRATION.md)

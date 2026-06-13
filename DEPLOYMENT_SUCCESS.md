@@ -186,7 +186,7 @@ npm run build  # Already done
 
 2. **No Split-Brain Writes**
    - Removed localStorage fallback in AdminNewEntry
-   - Backend is now single source of truth
+   - Backend is the canonical live API for this repo
    - No more "appears to work but didn't save" UX
 
 3. **Consistent Admin Auth**

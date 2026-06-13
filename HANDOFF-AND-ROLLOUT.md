@@ -4,7 +4,7 @@
 
 # PVA Bazaar — Full Handoff & Rollout Guide
 
-This document is the **single source of truth for execution**: what was built, what you need to provide, and how to commit and roll it out. Give it to the LLM coder (or human) who will execute the rollout and ongoing builds.
+This document is historical execution context. Start with [CANONICAL_MAP.md](CANONICAL_MAP.md) for the live repo map and operating path.
 
 **Stack (do not assume Next.js):** Frontend = **Vite + React** (HashRouter). Backend = **Express + MongoDB**. Hosting = **Vercel**. Payments = **Stripe**. Verification = **Python script + GitHub Actions**; results in **MongoDB** (optional Supabase in `/supabase/`). For the **philosophical mandate** and how it maps to this codebase, see **`ARCHITECTURAL-MANDATE-AND-CURRENT-BUILD.md`**.
 
