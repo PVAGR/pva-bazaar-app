@@ -1,15 +1,18 @@
 # PVA Bazaar Continuity Runbook
 
-## Canonical Live Map
+Use this runbook to operate the live site without guessing.
+For the single source of truth, start with [CANONICAL_MAP.md](CANONICAL_MAP.md).
 
-- Source of truth: `Frontend/public/live-map.json`
+## Canonical live map
+
 - Frontend: `https://pvabazaar.org`
 - Backend: `https://api.pvabazaar.org`
 - API base: `https://api.pvabazaar.org/api`
 - Status page: `https://pvabazaar.org/status.html`
 - Fallback backend: `https://pva-bazaar-app-1.onrender.com`
+- Live routing map: `Frontend/public/live-map.json`
 
-## Release Gate
+## Release gate
 
 Every production deploy must pass:
 
@@ -19,7 +22,7 @@ Every production deploy must pass:
 4. Live route sweep `verify:routes:live`
 5. Backend parity wait `verify:prod:wait`
 
-## Reliability Targets
+## Reliability targets
 
 - Frontend availability: 99.95%
 - Backend availability: 99.9%
@@ -31,7 +34,7 @@ Every production deploy must pass:
 - Rollback start: within 15 minutes
 - Service restore after rollback: within 30 minutes
 
-## Monitoring Cadence
+## Monitoring cadence
 
 - Every 10 minutes: continuity monitor and OpenClaw checks
 - Daily: review status page, alerts, and latest deploy verification
@@ -39,7 +42,7 @@ Every production deploy must pass:
 - Monthly: rollback drill and recovery rehearsal
 - Quarterly: dependency, secret, DNS/TLS, and runbook audit
 
-## Rollback Procedure
+## Rollback procedure
 
 1. Identify the last known-good ref.
 2. Run the production deployment workflow with `ref_to_deploy`.
@@ -47,7 +50,7 @@ Every production deploy must pass:
 4. Wait for strict readiness and parity verification to pass.
 5. Confirm `status.html`, `llms.txt`, `readable-site.json`, and `sitemap.xml` are reachable.
 
-## Global Reach Checklist
+## Global reach checklist
 
 - Frontend home reachable over HTTPS
 - Status page reachable over HTTPS
