@@ -220,9 +220,25 @@ export default function UserDashboard() {
     <div className="user-dashboard-container">
         <header className="dashboard-header">
           <h1>🧭 Command Center</h1>
-          <p>Your operator workspace for writing, deals, communication, listings, and live business flow</p>
+          <p>Your operator workspace for pure life knowledge, writing, deals, recovery, listings, and live business flow</p>
         </header>
         <AdminNav />
+
+        <section className="dashboard-atlas">
+          <h2>Private atlas</h2>
+          <p className="dashboard-atlas-copy">
+            Keep the private flow tied to the same paths as the public site so you can move naturally between reading,
+            recovering, selling, and managing.
+          </p>
+          <div className="dashboard-atlas-links">
+            {quickActions.slice(0, 4).map((item) => (
+              <NavLink key={item.to} to={item.to} className="dashboard-atlas-link">
+                <strong>{item.label}</strong>
+                <span>{item.detail}</span>
+              </NavLink>
+            ))}
+          </div>
+        </section>
 
         {/* Tab Navigation */}
         <nav className="dashboard-tabs">

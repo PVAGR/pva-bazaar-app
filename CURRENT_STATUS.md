@@ -40,6 +40,7 @@
 - Featured journeys now surface the most likely routes for learners, buyers, sellers, recovery users, and explorers.
 - The About, Books, and Civilization Library pages now speak the same pure-life, people-first language as the front page.
 - The Account and Admin Dashboard pages now expose the same atlas links so private tools feel connected to the public site.
+- The Login and Command Center pages now use the same atlas language so the private entry flow feels like one site.
 
 ---
 

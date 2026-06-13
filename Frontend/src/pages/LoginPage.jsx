@@ -98,7 +98,7 @@ export default function LoginPage() {
         <div>
           <h1>🔐 Sign in</h1>
           <p className="muted">
-            Use Admin login for private playtesting, or User login for your personal account.
+            Enter the same pure-life knowledge system through your personal account or private admin access.
           </p>
         </div>
         <div className="loginActions">
@@ -115,6 +115,20 @@ export default function LoginPage() {
       </header>
 
       <main className="loginMain">
+        <section className="card">
+          <h2>Quick paths</h2>
+          <p className="muted" style={{ marginTop: 0 }}>
+            Go straight to the part of the site you want to use, or return to the public front door.
+          </p>
+          <div className="row" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+            <Link to="/" className="btn ghost">Home</Link>
+            <Link to="/archive" className="btn ghost">Archive</Link>
+            <Link to="/recovery" className="btn ghost">Recovery</Link>
+            <Link to="/register" className="btn ghost">Register</Link>
+            <Link to="/dashboard" className="btn ghost">Command Center</Link>
+          </div>
+        </section>
+
         <section className="card">
           <div className="loginTabs" role="tablist" aria-label="Login type">
             <button
@@ -210,4 +224,3 @@ export default function LoginPage() {
     </div>
   );
 }
-
