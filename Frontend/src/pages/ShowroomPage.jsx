@@ -5,6 +5,14 @@ import useDebounce from "../hooks/useDebounce";
 import "./ShowroomPage.css";
 
 const FALLBACK_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='360' viewBox='0 0 640 360'%3E%3Crect width='640' height='360' fill='%23141a2b'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23cfe8ff' font-family='Arial,sans-serif' font-size='24'%3EPVA Bazaar%3C/text%3E%3C/svg%3E";
+const SHOWROOM_PORTAL_LINKS = [
+  { key: 'home', label: 'Home', to: '/', note: 'Personal portal and site atlas' },
+  { key: 'archive', label: 'Archive', to: '/archive', note: 'Words, writings, and public context' },
+  { key: 'marketplace', label: 'Marketplace', to: '/marketplace', note: 'Sourcing, listings, and trade' },
+  { key: 'studio', label: 'Writing Studio', to: '/studio', note: 'Drafts, notes, and publishing' },
+  { key: 'recovery', label: 'Recovery', to: '/recovery', note: 'Backups, bundles, continuity' },
+  { key: 'admin', label: 'Admin', to: '/admin', note: 'Operations and continuity controls' },
+];
 
 function resolveItemImage(item) {
   const primary = item?.media?.[0] || "";
@@ -80,12 +88,22 @@ export default function ShowroomPage() {
     <main className="showroom-page">
       <section className="showroom-header">
         <div className="showroom-header-content">
+          <p className="showroom-kicker">Featured display</p>
           <h1>Professional Showroom</h1>
-          <p className="showroom-tagline">Discover premium materials, gemstones, and artisanal pieces curated for creative professionals.</p>
+          <p className="showroom-tagline">Discover premium materials, gemstones, and artisanal pieces curated for creative professionals. The showroom is part of the same personal site, not a separate system.</p>
         </div>
         <div className="showroom-nav-links">
-          <Link to="/library" className="showroom-nav-link">Back to Home</Link>
+          <Link to="/" className="showroom-nav-link">Home</Link>
+          <Link to="/archive" className="showroom-nav-link">Archive</Link>
           <Link to="/marketplace" className="showroom-nav-link">Go to Marketplace</Link>
+        </div>
+        <div className="showroom-portal-row" aria-label="Showroom portal shortcuts">
+          {SHOWROOM_PORTAL_LINKS.map((link) => (
+            <Link key={link.key} to={link.to} className="showroom-portal-card">
+              <strong>{link.label}</strong>
+              <span>{link.note}</span>
+            </Link>
+          ))}
         </div>
         <input
           aria-label="Search items"

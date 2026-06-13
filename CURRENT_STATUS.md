@@ -20,6 +20,11 @@
 - The archive header now stacks cleanly on small screens instead of keeping its action buttons absolutely positioned.
 - This keeps the public reading surface usable on phones without overlapping the title or compressing the top controls.
 
+## 2026-06-13 Business Portal Update
+- The marketplace now opens with a connected portal row and clearer site framing so it reads as part of the same personal website.
+- The showroom now uses the same portal treatment so the public display surface matches the rest of the site.
+- Home, archive, studio, recovery, marketplace, showroom, and admin now share a more consistent navigation language.
+
 ---
 
 ## ✅ What's Working Right Now

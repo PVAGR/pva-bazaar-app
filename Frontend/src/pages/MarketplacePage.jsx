@@ -5,6 +5,14 @@ import useDebounce from "../hooks/useDebounce";
 import "./MarketplacePage.css";
 
 const FALLBACK_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='360' viewBox='0 0 640 360'%3E%3Crect width='640' height='360' fill='%23141a2b'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23cfe8ff' font-family='Arial,sans-serif' font-size='24'%3EPVA Bazaar%3C/text%3E%3C/svg%3E";
+const MARKETPLACE_PORTAL_LINKS = [
+  { key: 'home', label: 'Home', to: '/', note: 'Personal portal and site atlas' },
+  { key: 'archive', label: 'Archive', to: '/archive', note: 'Words, writings, and public context' },
+  { key: 'studio', label: 'Writing Studio', to: '/studio', note: 'Drafts, notes, and publishing' },
+  { key: 'recovery', label: 'Recovery', to: '/recovery', note: 'Backups, bundles, continuity' },
+  { key: 'showroom', label: 'Showroom', to: '/showroom', note: 'Curated display of featured pieces' },
+  { key: 'admin', label: 'Admin', to: '/admin', note: 'Operations and continuity controls' },
+];
 
 function resolveItemImage(item) {
   const primary = item?.media?.[0] || "";
@@ -79,10 +87,26 @@ export default function MarketplacePage() {
   return (
     <main className="marketplace-page">
       <section className="marketplace-header">
-        <h1>Marketplace</h1>
+        <div className="marketplace-header-copy">
+          <p className="marketplace-kicker">Business portal</p>
+          <h1>Marketplace</h1>
+          <p className="marketplace-tagline">
+            A public trade surface for sourcing, listings, and product discovery. Use it alongside the archive,
+            writing studio, and recovery tools as one connected site.
+          </p>
+        </div>
         <div className="marketplace-nav-links">
-          <Link to="/library" className="marketplace-nav-link">Back to Home</Link>
+          <Link to="/" className="marketplace-nav-link">Home</Link>
+          <Link to="/archive" className="marketplace-nav-link">Archive</Link>
           <Link to="/showroom" className="marketplace-nav-link">Go to Showroom</Link>
+        </div>
+        <div className="marketplace-portal-row" aria-label="Marketplace portal shortcuts">
+          {MARKETPLACE_PORTAL_LINKS.map((link) => (
+            <Link key={link.key} to={link.to} className="marketplace-portal-card">
+              <strong>{link.label}</strong>
+              <span>{link.note}</span>
+            </Link>
+          ))}
         </div>
         <input
           aria-label="Search items"

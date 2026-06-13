@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Home page now includes a site atlas linking archive, writing studio, recovery, admin, marketplace, and HeelKawn.
 - Archive library now includes direct continuity shortcuts to recovery, writing studio, home, and admin.
 - Archive header now stacks cleanly on mobile so the title and controls remain readable on phones.
+- Marketplace now opens with a connected portal row and a clearer site-wide framing.
+- Showroom now uses the same portal treatment so the public display surface matches the rest of the site.
 - Writing studio hero now includes direct links to archive, recovery, home, and admin at the top of the page.
 - Writing studio now shows recent remote backup history and a shortcut back to recovery.
 - Admin dashboard now shows continuity snapshot count and the latest backup label/date.
