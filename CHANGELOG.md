@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- Account-backed `/recovery` dashboard with client-side encrypted continuity bundles.
+- Snapshot creation that saves to the backend and downloads a portable JSON bundle in one action.
+- Restore/import support for encrypted recovery bundles and legacy writing-studio backups.
+
 ## [1.0.0] - 2026-01-21
 
 ### Added

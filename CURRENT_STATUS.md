@@ -3,6 +3,11 @@
 **Date:** January 23, 2026  
 **Status:** Frontend Running ✅ | Backend Integration Needed ⚠️
 
+## 2026-06-13 Recovery Update
+- The live frontend now has an account-backed `/recovery` dashboard.
+- Continuity snapshots are encrypted client-side, saved to the backend, and downloaded as portable JSON bundles.
+- Writing-studio backups can also be imported back into the browser so notes and drafts survive device changes.
+
 ---
 
 ## ✅ What's Working Right Now

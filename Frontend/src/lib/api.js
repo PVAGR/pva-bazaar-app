@@ -183,6 +183,12 @@ export const saveGovernanceDraft = (draft) => apiPut('/governance/drafts', { dra
 export const clearGovernanceDraft = () => apiDelete('/governance/drafts');
 
 export const fetchCurrentUser = () => apiGet('/auth/me');
+export const fetchRecoverySnapshots = () => apiGet('/recovery/snapshots');
+export const createRecoverySnapshot = (payload) => apiPost('/recovery/snapshots', payload);
+export const fetchRecoverySnapshotById = (snapshotId) =>
+  apiGet(`/recovery/snapshots/${encodeURIComponent(snapshotId)}`);
+export const deleteRecoverySnapshotById = (snapshotId) =>
+  apiDelete(`/recovery/snapshots/${encodeURIComponent(snapshotId)}`);
 export const fetchProposals = (params = {}) => apiGet('/proposals', { params });
 export const fetchProposalById = (proposalId) => apiGet(`/proposals/${encodeURIComponent(proposalId)}`);
 export const createProposal = (payload) => apiPost('/proposals', payload);
