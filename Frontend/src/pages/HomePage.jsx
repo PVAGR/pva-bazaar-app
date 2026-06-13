@@ -110,32 +110,32 @@ export default function HomePage({ entries = [] }) {
   const latestRecoverySnapshot = recoverySnapshots[0] || null
   const pathGroups = useMemo(() => [
     {
-      key: 'writing',
-      kicker: 'Words',
-      title: 'For writings and long-form work',
-      description: 'Archive the finished pieces, keep drafts moving, and hold the books and essays together in one place.',
+      key: 'learning',
+      kicker: 'Learn',
+      title: 'Pure life knowledge for reading and study',
+      description: 'Start with the archive, books, and civilization library when you want to learn, reflect, or go deep.',
       cards: [
         { key: 'archive', title: 'Archive Library', to: '/archive', badge: 'Read', description: 'Open the living archive and long-form writings.' },
-        { key: 'studio', title: 'Writing Studio', to: '/studio', badge: 'Write', description: 'Draft, edit, and publish your notes or posts.' },
-        { key: 'books', title: 'Books', to: '/books', badge: 'Long form', description: 'Open the bigger works and explainers.' },
+        { key: 'books', title: 'Books', to: '/books', badge: 'Study', description: 'Open the bigger works and explainers.' },
+        { key: 'civilization', title: 'Civilization Library', to: '/civilization-library', badge: 'Wisdom', description: 'Read the worldview and knowledge sections.' },
       ],
     },
     {
-      key: 'trade',
-      kicker: 'Business',
-      title: 'For customers and product sourcing',
-      description: 'Move from discovery into the real trade surfaces without having to guess where items live.',
+      key: 'create',
+      kicker: 'Create',
+      title: 'For writing, making, and publishing',
+      description: 'Move from a thought to a draft, a post, a listing, or a supplier submission without getting lost.',
       cards: [
-        { key: 'marketplace', title: 'Marketplace', to: '/marketplace', badge: 'Buy', description: 'Browse goods, sourcing opportunities, and inventory.' },
-        { key: 'showroom', title: 'Showroom', to: '/showroom', badge: 'Display', description: 'See curated pieces and premium presentations.' },
+        { key: 'studio', title: 'Writing Studio', to: '/studio', badge: 'Write', description: 'Draft, edit, and publish your notes or posts.' },
         { key: 'creator', title: 'Supplier Portal', to: '/creator', badge: 'Sell', description: 'Start as a supplier, artisan, or sourcing partner.' },
+        { key: 'marketplace', title: 'Marketplace', to: '/marketplace', badge: 'List', description: 'Browse goods, sourcing opportunities, and inventory.' },
       ],
     },
     {
       key: 'continuity',
-      kicker: 'Continuity',
-      title: 'For recovery and identity',
-      description: 'Keep your context, backups, and account identity close so the site follows you across devices.',
+      kicker: 'Return',
+      title: 'For recovery and personal continuity',
+      description: 'Keep your context, backups, and identity close so the site follows you across devices and places.',
       cards: [
         { key: 'recovery', title: 'Recovery', to: '/recovery', badge: 'Backup', description: 'Save snapshots, restore bundles, and keep continuity alive.' },
         { key: 'passport', title: 'My Passport', to: '/passport', badge: 'Identity', description: 'Open the passport and wallet identity center.' },
@@ -144,9 +144,9 @@ export default function HomePage({ entries = [] }) {
     },
     {
       key: 'civic',
-      kicker: 'Public',
+      kicker: 'Participate',
       title: 'For proposals and public decisions',
-      description: 'See the civic surface where proposals, votes, and public discussions stay visible.',
+      description: 'Use the civic surfaces when you want to discuss, vote, or see how public choices are made.',
       cards: [
         { key: 'proposals', title: 'Governance', to: '/proposals', badge: 'Vote', description: 'Browse the People\'s Proposal Board.' },
         { key: 'forum', title: 'Forum', to: '/forum', badge: 'Discuss', description: 'Open the civic forum and proposal feed.' },
@@ -155,13 +155,13 @@ export default function HomePage({ entries = [] }) {
     },
     {
       key: 'world',
-      kicker: 'World',
-      title: 'For the simulation and the wider map',
-      description: 'Enter the simulation hub, world map, and civilization reading surfaces from the same front page.',
+      kicker: 'Explore',
+      title: 'For the world, the map, and the simulation',
+      description: 'Enter the simulation hub and world-reading surfaces from the same front page when you want to explore.',
       cards: [
         { key: 'heelkawn', title: 'HeelKawn', to: '/heelkawn', badge: 'Play', description: 'Enter the game and simulation hub.' },
         { key: 'federation', title: 'Federation Map', to: '/federation-map', badge: 'Live', description: 'View the live world pulse and roles.' },
-        { key: 'civilization', title: 'Civilization Library', to: '/civilization-library', badge: 'Study', description: 'Open the worldview and knowledge sections.' },
+        { key: 'citizens', title: 'Citizens', to: '/citizens', badge: 'People', description: 'Browse verified public societal profiles.' },
       ],
     },
   ], [])
@@ -170,12 +170,12 @@ export default function HomePage({ entries = [] }) {
     <div className="home-page">
       <section className="home-hero section-card">
         <div className="home-hero__copy">
-          <div className="pill home-hero__kicker">PVA Bazaar · Full site overview</div>
-          <h1>A personal website for words, business, recovery, and public decisions.</h1>
+          <div className="pill home-hero__kicker">PVA Bazaar · Pure life knowledge</div>
+          <h1>A human-friendly bazaar for pure life knowledge, writing, recovery, trade, and public life.</h1>
           <p>
-            PVA Bazaar combines a living knowledge library, a business bridge, and the civic tools that keep the
-            record open. It is where my writings live, where suppliers and buyers connect, and where public
-            decisions stay visible instead of hidden.
+            Pura Vida Ayurveda means pure life knowledge. This site is built as a friendly public atlas for all
+            people: read the writings, buy and sell, recover your context, join public decisions, and explore the
+            wider world from one front door.
           </p>
           <div className="home-hero__actions">
             <Link className="button" to="/archive">Open archive</Link>
@@ -206,13 +206,13 @@ export default function HomePage({ entries = [] }) {
         <div className="section-heading">
           <div>
             <div className="pill">Choose your path</div>
-            <h2 style={{ margin: '0.35rem 0 0' }}>Categorized entry points</h2>
+            <h2 style={{ margin: '0.35rem 0 0' }}>What do you want to do?</h2>
           </div>
           <Link className="button ghost" to="/archive">Open archive library</Link>
         </div>
         <p className="home-state-copy">
-          Each block below is labeled by purpose so you can go straight to writing, buying, recovery, civic work,
-          or the simulation hub without hunting through the site.
+          Each block below is labeled by purpose so people can go straight to reading, creating, recovering,
+          participating, or exploring without hunting through the site.
         </p>
         <div className="home-path-groups">
           {pathGroups.map((group) => (

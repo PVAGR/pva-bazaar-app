@@ -30,6 +30,11 @@
 - Each card on the main gateway now points directly at the section it represents, reducing hunting and making the site easier to navigate.
 - The front page is now organized around user intent instead of one flat list of links.
 
+## 2026-06-13 Pure Life Framing
+- The front page copy now explicitly frames PVA Bazaar as pure life knowledge in a bazaar format.
+- The gateway language is now aimed at people first: read, create, recover, participate, and explore.
+- Route descriptions were updated to match the same human-friendly, knowledge-forward tone.
+
 ---
 
 ## ✅ What's Working Right Now
