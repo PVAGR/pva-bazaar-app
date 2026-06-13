@@ -506,6 +506,21 @@ export default function ArchiveLibraryPage() {
             Browse All Categories
           </button>
         </div>
+
+        <div className="archive-bridge" aria-label="Continuity shortcuts">
+          <Link to="/recovery" className="archive-bridge__link">
+            Recovery
+          </Link>
+          <Link to="/studio" className="archive-bridge__link">
+            Writing Studio
+          </Link>
+          <Link to="/" className="archive-bridge__link">
+            Home
+          </Link>
+          <Link to="/admin" className="archive-bridge__link">
+            Admin
+          </Link>
+        </div>
         
         <div className="view-mode-toggle">
           <button 
