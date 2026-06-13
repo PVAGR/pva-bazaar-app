@@ -18,6 +18,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { getApiBase, setApiBase, apiGet } from '../lib/api';
 import { ENV } from '../config/env';
 import { clearToken, getToken } from '../lib/auth';
@@ -25,6 +26,15 @@ import { createLogger } from '../lib/logger';
 import './SettingsTab.css';
 
 const logger = createLogger('SettingsTab');
+
+const SETTINGS_ATLAS_LINKS = [
+  { to: '/', label: 'Home' },
+  { to: '/archive', label: 'Archive' },
+  { to: '/recovery', label: 'Recovery' },
+  { to: '/marketplace', label: 'Marketplace' },
+  { to: '/dashboard', label: 'Command Center' },
+  { to: '/account', label: 'Account' },
+];
 
 const SettingsTab = React.memo(function SettingsTab() {
   const [apiUrl, setApiUrl] = useState(getApiBase() || ENV.API_URL);
@@ -160,6 +170,20 @@ const SettingsTab = React.memo(function SettingsTab() {
           🔄 Refresh All
         </button>
       </div>
+
+      <section className="settings-atlas" aria-label="Settings atlas">
+        <h3>Private atlas</h3>
+        <p className="settings-atlas__copy">
+          Move through the private suite without losing the thread of the site.
+        </p>
+        <div className="settings-atlas__links">
+          {SETTINGS_ATLAS_LINKS.map((link) => (
+            <Link key={link.to} to={link.to} className="settings-atlas__link">
+              {link.label}
+            </Link>
+          ))}
+        </div>
+      </section>
 
       {message && <div className="success-message">{message}</div>}
 

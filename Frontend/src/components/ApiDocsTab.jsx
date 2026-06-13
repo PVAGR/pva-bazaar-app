@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { ENV } from '../config/env';
 import HelpTip from './HelpTip.jsx';
 import './ApiDocsTab.css';
@@ -15,6 +16,14 @@ const ApiDocsTab = React.memo(function ApiDocsTab() {
   const [expandedCategory, setExpandedCategory] = useState('artifacts');
 
   const apiBase = (ENV.API_URL || 'https://pvabazaar.org/api').replace(/\/api\/?$/, '');
+  const docsAtlasLinks = [
+    { to: '/', label: 'Home' },
+    { to: '/archive', label: 'Archive' },
+    { to: '/marketplace', label: 'Marketplace' },
+    { to: '/showroom', label: 'Showroom' },
+    { to: '/dashboard', label: 'Command Center' },
+    { to: '/settings', label: 'Settings' },
+  ];
 
   const copyToClipboard = (text, endpoint) => {
     navigator.clipboard.writeText(text).then(() => {
@@ -463,6 +472,20 @@ const ApiDocsTab = React.memo(function ApiDocsTab() {
         <h2>🔗 API Documentation</h2>
         <p>Readable endpoint reference with operational guidance for teams moving from standard commerce to blockchain-aware workflows.</p>
       </div>
+
+      <section className="api-docs-atlas" aria-label="API docs atlas">
+        <h3>Public atlas</h3>
+        <p className="api-docs-atlas__copy">
+          Jump from endpoint reference into the rest of the site without losing context.
+        </p>
+        <div className="api-docs-atlas__links">
+          {docsAtlasLinks.map((link) => (
+            <Link key={link.to} to={link.to} className="api-docs-atlas__link">
+              {link.label}
+            </Link>
+          ))}
+        </div>
+      </section>
 
       {/* Quick Info Panel */}
       <div className="quick-info-panel">

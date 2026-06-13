@@ -20,6 +20,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { apiGet, apiPost } from '../lib/api';
 import { ENV } from '../config/env';
 import { createLogger } from '../lib/logger';
@@ -27,6 +28,15 @@ import LoadingSpinner, { LoadingDots } from '../components/LoadingSpinner.jsx';
 import './HealthTab.css';
 
 const logger = createLogger('HealthTab');
+
+const HEALTH_ATLAS_LINKS = [
+  { to: '/', label: 'Home' },
+  { to: '/archive', label: 'Archive' },
+  { to: '/recovery', label: 'Recovery' },
+  { to: '/marketplace', label: 'Marketplace' },
+  { to: '/settings', label: 'Settings' },
+  { to: '/admin', label: 'Admin' },
+];
 
 export default function HealthTab() {
   const [connectionStatus, setConnectionStatus] = useState({
@@ -185,6 +195,20 @@ export default function HealthTab() {
           Monitor system health, API connectivity, and OpenClaw event dispatching.
         </p>
       </div>
+
+      <section className="health-atlas" aria-label="Health atlas">
+        <h3>Operations atlas</h3>
+        <p className="health-atlas__copy">
+          Move between the live system, private controls, and recovery without leaving the flow.
+        </p>
+        <div className="health-atlas__links">
+          {HEALTH_ATLAS_LINKS.map((link) => (
+            <Link key={link.to} to={link.to} className="health-atlas__link">
+              {link.label}
+            </Link>
+          ))}
+        </div>
+      </section>
 
       <div className="health-controls">
         <button onClick={runHealthCheck} className="refresh-btn" disabled={connectionStatus.loading}>

@@ -2,6 +2,58 @@
   width: 100%;
 }
 
+.health-atlas {
+  margin-bottom: 24px;
+  padding: 18px;
+  border: 1px solid var(--site-border, rgba(255, 255, 255, 0.1));
+  border-radius: 12px;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--site-accent-soft, rgba(0, 217, 255, 0.15)) 58%, var(--site-panel-soft, rgba(255, 255, 255, 0.03))),
+    var(--site-panel-soft, rgba(255, 255, 255, 0.03))
+  );
+}
+
+.health-atlas h3 {
+  margin: 0 0 6px;
+  font-size: 1.05rem;
+  color: var(--site-text, #fff);
+}
+
+.health-atlas__copy {
+  margin: 0 0 14px;
+  color: var(--site-text-dim, #aaa);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.health-atlas__links {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.health-atlas__link {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 44px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--site-border, rgba(255, 255, 255, 0.1));
+  background: var(--site-panel, rgba(255, 255, 255, 0.04));
+  color: var(--site-text, #fff);
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.health-atlas__link:hover {
+  transform: translateY(-1px);
+  border-color: var(--site-accent, #00d9ff);
+  background: color-mix(in srgb, var(--site-accent-soft, rgba(0, 217, 255, 0.15)) 58%, var(--site-panel, rgba(255, 255, 255, 0.04)));
+}
+
 .section-heading-row {
   display: inline-flex;
   align-items: center;
@@ -501,6 +553,10 @@
 
 /* Responsive */
 @media (max-width: 768px) {
+  .health-atlas__links {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .health-grid {
     grid-template-columns: 1fr;
   }
@@ -527,5 +583,11 @@
   .wallet-send-btn {
     width: 100%;
     min-width: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .health-atlas__links {
+    grid-template-columns: 1fr;
   }
 }
