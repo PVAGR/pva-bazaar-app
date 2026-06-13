@@ -10,6 +10,12 @@
 - The home page now shows the latest remote backup summary so continuity is visible immediately on entry.
 - The admin dashboard now exposes continuity snapshot count and the latest backup label/date.
 
+## 2026-06-13 Site Atlas Update
+- The home page now includes a visible site atlas for archive, writing studio, recovery, admin, marketplace, and HeelKawn.
+- The archive library now links directly into recovery, writing studio, home, and admin so the public surfaces stay connected.
+- The writing studio hero now exposes the main site paths at the top of the page instead of hiding continuity actions deeper in the layout.
+- This pass is about making the site feel like one coherent personal portal instead of separate hidden areas.
+
 ---
 
 ## ✅ What's Working Right Now

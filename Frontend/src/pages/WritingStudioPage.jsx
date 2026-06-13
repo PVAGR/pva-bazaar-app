@@ -15,6 +15,12 @@ const SOCIAL_KEY = 'pva-writing-studio-social';
 const PUBLICATIONS_KEY = 'pva-writing-studio-publications';
 const COMMAND_CENTER_NOTE_KEY = 'pva-command-center-note';
 const STUDIO_BACKUP_VERSION = 'pva-writing-studio-backup-v1';
+const STUDIO_PORTAL_LINKS = [
+  { key: 'archive', label: 'Archive', to: '/archive', note: 'Long-form writings and published posts' },
+  { key: 'recovery', label: 'Recovery', to: '/recovery', note: 'Snapshots, restore bundles, continuity' },
+  { key: 'home', label: 'Home', to: '/', note: 'Personal site overview and content atlas' },
+  { key: 'admin', label: 'Admin', to: '/admin', note: 'Operations console and continuity widget' },
+];
 
 const SOCIAL_FIELDS = [
   { key: 'facebook', label: 'Facebook', placeholder: 'https://facebook.com/yourpage' },
@@ -564,6 +570,14 @@ export default function WritingStudioPage() {
             Write quickly, save private notes whenever you need them, turn stronger pieces into blog posts or archive
             entries, and launch them out through the social channels you want connected.
           </p>
+          <div className="writing-studio__portalRow" aria-label="Studio quick links">
+            {STUDIO_PORTAL_LINKS.map((link) => (
+              <Link key={link.key} to={link.to} className="writing-studio__portalCard">
+                <strong>{link.label}</strong>
+                <span>{link.note}</span>
+              </Link>
+            ))}
+          </div>
         </div>
         <div className="writing-studio__heroMeta">
           <div>

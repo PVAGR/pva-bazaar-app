@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Restore/import support for encrypted recovery bundles and legacy writing-studio backups.
 - Home hero now exposes recovery as a first-class mobile entry point.
 - Home page now shows the latest remote continuity snapshot summary.
+- Home page now includes a site atlas linking archive, writing studio, recovery, admin, marketplace, and HeelKawn.
+- Archive library now includes direct continuity shortcuts to recovery, writing studio, home, and admin.
+- Writing studio hero now includes direct links to archive, recovery, home, and admin at the top of the page.
 - Writing studio now shows recent remote backup history and a shortcut back to recovery.
 - Admin dashboard now shows continuity snapshot count and the latest backup label/date.
 

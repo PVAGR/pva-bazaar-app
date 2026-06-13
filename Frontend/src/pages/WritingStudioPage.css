@@ -33,6 +33,42 @@
   line-height: 1.7;
 }
 
+.writing-studio__portalRow {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin-top: 1rem;
+}
+
+.writing-studio__portalCard {
+  display: grid;
+  gap: 0.25rem;
+  border: 1px solid var(--site-border);
+  border-radius: 14px;
+  padding: 0.85rem 0.9rem;
+  background: var(--site-panel-soft);
+  color: var(--site-text);
+  text-decoration: none;
+  transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.writing-studio__portalCard:hover {
+  transform: translateY(-2px);
+  border-color: var(--site-accent);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
+.writing-studio__portalCard strong {
+  color: var(--site-accent-strong);
+  font-size: 0.98rem;
+}
+
+.writing-studio__portalCard span {
+  color: var(--site-text-muted);
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
 .writing-studio__heroMeta {
   display: grid;
   gap: 0.75rem;
@@ -374,7 +410,8 @@
   .writing-studio__grid--blog,
   .writing-studio__fieldRow,
   .writing-studio__socialGrid,
-  .writing-studio__continuityGrid {
+  .writing-studio__continuityGrid,
+  .writing-studio__portalRow {
     grid-template-columns: 1fr;
   }
 
@@ -384,5 +421,9 @@
 
   .writing-studio__panelHead {
     flex-direction: column;
+  }
+
+  .writing-studio__portalCard {
+    width: 100%;
   }
 }
