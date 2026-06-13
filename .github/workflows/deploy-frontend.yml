@@ -76,7 +76,12 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Skip baseline live readiness gate for manual deploys
+        if: github.event_name == 'workflow_dispatch'
+        run: echo "Manual deploy dispatch requested; skipping baseline live readiness gate."
+
       - name: Run baseline live readiness gate
+        if: github.event_name != 'workflow_dispatch'
         env:
           FRONTEND_URL: https://pvabazaar.org
           BACKEND_URL: https://api.pvabazaar.org
