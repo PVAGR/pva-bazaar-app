@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <link rel="canonical" href="https://pvabazaar.org/" />
     <link rel="manifest" href="/manifest.webmanifest" />
-    <meta name="description" content="PVA Bazaar connects global makers, suppliers, and artisans with American buyers through sourcing, provenance, and a living archive of the work behind each object." />
+    <meta name="description" content="PVA Bazaar is a personal archive and business suite for writings, commerce, recovery, civic tools, provenance, and HeelKawn." />
     <meta name="llm:readable" content="true" />
     <meta name="llm:content-url" content="https://pvabazaar.org/llms.txt" />
     <meta name="llm:snapshot-url" content="https://pvabazaar.org/readable-site.json" />
@@ -19,7 +19,7 @@
     <meta name="pva:federation-hub" content="%VITE_FEDERATION_HUB_URL%" />
     <meta name="pva:federation-community-url-template" content="https://federation.pvabazaar.org/api/communities/%VITE_COMMUNITY_ID%" />
     <!-- Pages deploy: bump when forcing rebuild after API URL changes -->
-    <title>PVA Bazaar — Global sourcing, provenance, and living archive</title>
+    <title>PVA Bazaar — Personal Site, Business, and Writings</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Open+Sans:wght@400;700&display=swap" rel="stylesheet" />
@@ -102,7 +102,7 @@
         "@type": "WebSite",
         "name": "PVA Bazaar",
         "url": "https://pvabazaar.org/",
-        "description": "PVA Bazaar connects global suppliers and artisans with American buyers through sourcing, provenance, and a living archive.",
+        "description": "PVA Bazaar personal archive, business bridge, recovery layer, civic tools, and HeelKawn hub.",
         "hasPart": [
           {
             "@type": "WebPage",
@@ -122,7 +122,27 @@
           {
             "@type": "WebPage",
             "name": "Archive Library",
-            "url": "https://pvabazaar.org/#/library"
+            "url": "https://pvabazaar.org/#/archive"
+          },
+          {
+            "@type": "WebPage",
+            "name": "About",
+            "url": "https://pvabazaar.org/#/about"
+          },
+          {
+            "@type": "WebPage",
+            "name": "Download App",
+            "url": "https://pvabazaar.org/#/download-app"
+          },
+          {
+            "@type": "WebPage",
+            "name": "Recovery",
+            "url": "https://pvabazaar.org/#/recovery"
+          },
+          {
+            "@type": "WebPage",
+            "name": "HeelKawn",
+            "url": "https://pvabazaar.org/#/heelkawn"
           }
         ]
       }
@@ -156,7 +176,7 @@
     <div id="app-shell-fallback" hidden>
       <div class="fallback-panel">
         <h1 class="fallback-title">Loading PVA Bazaar...</h1>
-        <p class="fallback-copy">If this takes unusually long, refresh the page once. If the issue persists, check <a href="/status.html">status</a>.</p>
+        <p class="fallback-copy">If this takes unusually long, refresh the page once. If the issue persists, check <a href="/status.html">status</a> or read <a href="/llms.txt">llms.txt</a>.</p>
       </div>
     </div>
     <script type="module" src="/src/main.jsx"></script>

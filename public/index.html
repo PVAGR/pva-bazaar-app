@@ -1,182 +1,317 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Writings Archive - Richy's Complete Works</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Source+Code+Pro:wght@300;400&display=swap" rel="stylesheet">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="PVA Bazaar is a personal website, business bridge, archive, and continuity layer." />
+    <meta name="theme-color" content="#0f1419" />
+    <title>PVA Bazaar — Personal Site, Business, and Writings</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Inter', sans-serif;
-            line-height: 1.8;
-            color: #2d3436;
-            background: linear-gradient(to right, #fafafa 0%, #ffffff 50%, #fafafa 100%);
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 3rem 2rem;
-            border-left: 1px solid #e0e0e0;
-            border-right: 1px solid #e0e0e0;
-            min-height: 100vh;
-        }
-        header { 
-            margin-bottom: 4rem; 
-            padding-bottom: 2rem; 
-            border-bottom: 3px solid #1c5a45; 
-        }
-        h1 { 
-            font-size: 3.2rem; 
-            font-weight: 700; 
-            margin-bottom: 0.3rem; 
-            color: #0a1f19; 
-            letter-spacing: -0.5px; 
-        }
-        .subtitle {
-            font-family: 'Source Code Pro', monospace;
-            font-size: 1.15rem;
-            color: #4ef8a3;
-            font-weight: 400;
-            margin-bottom: 1rem;
-        }
-        .timestamp {
-            font-family: 'Source Code Pro', monospace;
-            font-size: 0.85rem;
-            color: #999;
-            margin-top: 1rem;
-        }
-        nav {
-            margin: 2rem 0;
-            padding: 1rem 0;
-            border-bottom: 1px dashed #ddd;
-        }
-        nav a {
-            color: #1c5a45;
-            text-decoration: none;
-            margin-right: 1.5rem;
-            font-weight: 500;
-            border-bottom: 2px solid transparent;
-            transition: all 0.2s;
-        }
-        nav a:hover {
-            border-bottom: 2px solid #4ef8a3;
-            <!doctype html>
-            <html lang="en">
-            <head>
-              <meta charset="utf-8" />
-              <meta name="viewport" content="width=device-width, initial-scale=1" />
-              <title>PVA Backend API</title>
-              <style>
-                :root {
-                  color-scheme: light;
-                  --bg: #0b1320;
-                  --card: #111a2b;
-                  --accent: #4ef8a3;
-                  --text: #e8edf5;
-                  --muted: #9fb1c7;
-                  --border: #1f2a3c;
-                }
-                * { box-sizing: border-box; }
-                body {
-                  margin: 0;
-                  min-height: 100vh;
-                  display: grid;
-                  place-items: center;
-                  background: radial-gradient(circle at 20% 20%, rgba(78,248,163,0.08), transparent 25%),
-                              radial-gradient(circle at 80% 10%, rgba(78,248,163,0.05), transparent 20%),
-                              linear-gradient(145deg, #0b1320 0%, #0c1626 40%, #0d192c 100%);
-                  color: var(--text);
-                  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-                  padding: 24px;
-                }
-                .card {
-                  width: min(560px, 100%);
-                  background: var(--card);
-                  border: 1px solid var(--border);
-                  border-radius: 16px;
-                  padding: 28px;
-                  box-shadow: 0 20px 80px rgba(0,0,0,0.35);
-                }
-                h1 {
-                  margin: 0 0 8px;
-                  font-size: 24px;
-                  letter-spacing: -0.3px;
-                }
-                .subtitle {
-                  margin: 0 0 16px;
-                  color: var(--muted);
-                  font-size: 14px;
-                }
-                .status {
-                  display: inline-flex;
-                  align-items: center;
-                  gap: 8px;
-                  padding: 8px 12px;
-                  background: rgba(78,248,163,0.1);
-                  color: var(--accent);
-                  border: 1px solid rgba(78,248,163,0.4);
-                  border-radius: 10px;
-                  font-weight: 600;
-                  margin-bottom: 18px;
-                }
-                ul {
-                  list-style: none;
-                  padding: 0;
-                  margin: 0 0 16px;
-                  display: grid;
-                  gap: 10px;
-                }
-                li {
-                  background: rgba(255,255,255,0.02);
-                  border: 1px solid var(--border);
-                  border-radius: 10px;
-                  padding: 12px 14px;
-                  font-size: 14px;
-                  color: var(--muted);
-                }
-                code {
-                  font-family: 'Source Code Pro', ui-monospace, SFMono-Regular, Menlo, monospace;
-                  background: rgba(255,255,255,0.06);
-                  padding: 2px 6px;
-                  border-radius: 6px;
-                  color: var(--text);
-                }
-                .footer {
-                  color: var(--muted);
-                  font-size: 12px;
-                  border-top: 1px solid var(--border);
-                  padding-top: 12px;
-                  margin-top: 12px;
-                }
-              </style>
-                <p>A universal language concept inspired by Greek, Persian, and Egyptian traditions. The bridge between all human communication.</p>
-            </head>
-            <body>
-              <div class="card">
-                <div class="status">● API running</div>
-                <h1>PVA Backend API</h1>
-                <p class="subtitle">Serverless backend deployment entry point.</p>
-                <ul>
-                  <li>Health: <code>/api/health</code></li>
-                  <li>Ping: <code>/api/ping</code></li>
-                  <li>Transactions: <code>/api/transactions</code></li>
-                </ul>
-                <div class="footer">If you expected a UI, hit the frontend deployment instead.</div>
+      :root {
+        color-scheme: dark;
+        --bg: #0a0f15;
+        --panel: #101922;
+        --panel-soft: #13202a;
+        --border: #223544;
+        --text: #e8edf3;
+        --muted: #a9b6c4;
+        --accent: #6fe7c8;
+        --accent-strong: #9af0dd;
+        --shadow: 0 24px 90px rgba(0, 0, 0, 0.35);
+        --radius: 18px;
+        --max: 1080px;
+      }
+      * { box-sizing: border-box; }
+      html, body { min-height: 100%; }
+      body {
+        margin: 0;
+        background:
+          radial-gradient(circle at top right, rgba(111, 231, 200, 0.08), transparent 24%),
+          radial-gradient(circle at 20% 10%, rgba(111, 231, 200, 0.06), transparent 18%),
+          linear-gradient(180deg, #081018 0%, #0a0f15 100%);
+        color: var(--text);
+        font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+        line-height: 1.6;
+      }
+      a { color: var(--accent); text-decoration: none; }
+      a:hover { color: var(--accent-strong); }
+      .wrap {
+        width: min(var(--max), calc(100vw - 24px));
+        margin: 18px auto 32px;
+        padding: 18px;
+        background: rgba(10, 15, 21, 0.8);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+      }
+      .topbar, .footerbar {
+        display: flex;
+        justify-content: space-between;
+        gap: 14px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .brand {
+        display: grid;
+        gap: 4px;
+      }
+      .brand strong {
+        font-size: 1.35rem;
+        letter-spacing: -0.02em;
+      }
+      .brand span {
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+      .nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .nav a {
+        border: 1px solid var(--border);
+        background: var(--panel-soft);
+        padding: 8px 11px;
+        border-radius: 999px;
+        font-weight: 600;
+      }
+      .hero {
+        display: grid;
+        grid-template-columns: 1.4fr 0.9fr;
+        gap: 14px;
+        margin-top: 18px;
+      }
+      .panel {
+        background: linear-gradient(180deg, rgba(19, 32, 42, 0.92) 0%, rgba(16, 25, 34, 0.92) 100%);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 18px;
+      }
+      h1, h2, h3 { margin: 0; line-height: 1.15; }
+      h1 { font-size: clamp(2rem, 4vw, 3.4rem); }
+      h2 { font-size: 1.2rem; color: var(--accent); }
+      p { margin: 0; color: var(--muted); }
+      .lead { font-size: 1.03rem; color: var(--text); max-width: 68ch; }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border: 1px solid rgba(111, 231, 200, 0.4);
+        background: rgba(111, 231, 200, 0.08);
+        color: var(--accent-strong);
+        border-radius: 999px;
+        padding: 7px 10px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+      .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+      .button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 11px 14px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: var(--panel-soft);
+        color: var(--text);
+        font-weight: 700;
+      }
+      .button.primary {
+        background: linear-gradient(180deg, rgba(111, 231, 200, 0.16) 0%, rgba(111, 231, 200, 0.08) 100%);
+        border-color: rgba(111, 231, 200, 0.45);
+        color: var(--accent-strong);
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 14px;
+      }
+      .card {
+        background: rgba(16, 25, 34, 0.92);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 16px;
+        display: grid;
+        gap: 8px;
+      }
+      .card a {
+        font-weight: 700;
+      }
+      .note {
+        margin-top: 14px;
+        padding: 14px;
+        border-radius: 16px;
+        border: 1px solid rgba(111, 231, 200, 0.24);
+        background: rgba(111, 231, 200, 0.06);
+      }
+      .small {
+        font-size: 0.92rem;
+      }
+      .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 7px 10px;
+        background: var(--panel-soft);
+        color: var(--muted);
+      }
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #66788a;
+      }
+      .dot.ok { background: #4ade80; }
+      .dot.warn { background: #fbbf24; }
+      .dot.bad { background: #fb7185; }
+      .stack { display: grid; gap: 12px; margin-top: 16px; }
+      .stack-item {
+        display: flex;
+        justify-content: space-between;
+        gap: 14px;
+        align-items: start;
+        padding: 12px 0;
+        border-top: 1px solid rgba(255,255,255,0.06);
+      }
+      .stack-item:first-child { border-top: 0; padding-top: 0; }
+      .stack-item strong { color: var(--text); }
+      .archive-quote {
+        margin-top: 16px;
+        padding: 16px;
+        border-radius: 16px;
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.06);
+      }
+      .footerbar {
+        margin-top: 18px;
+        padding-top: 16px;
+        border-top: 1px solid rgba(255,255,255,0.06);
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+      @media (max-width: 900px) {
+        .hero,
+        .grid { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <header class="topbar">
+        <div class="brand">
+          <strong>PVA Bazaar</strong>
+          <span>Personal site · business suite · writings · HeelKawn</span>
+        </div>
+        <nav class="nav" aria-label="Primary">
+          <a href="/#/">Home</a>
+          <a href="/#/archive">Archive</a>
+          <a href="/#/marketplace">Marketplace</a>
+          <a href="/#/heelkawn">HeelKawn</a>
+          <a href="/status.html">Status</a>
+        </nav>
+      </header>
+
+      <section class="hero" aria-label="Overview">
+        <article class="panel">
+          <span class="pill">Everything visible</span>
+          <h1>My notes, my business, and my game all live here.</h1>
+          <p class="lead" style="margin-top: 12px;">
+            PVA Bazaar is not just a storefront. It is my personal website, a bridge for suppliers and buyers,
+            a place for my writings, and a home for the HeelKawn universe. Nothing important should be hidden or
+            malformed. Everything should be readable, discoverable, and kept intact.
+          </p>
+          <div class="actions">
+            <a class="button primary" href="/#/archive">Open archive</a>
+            <a class="button" href="/#/marketplace">Open business side</a>
+            <a class="button" href="/#/heelkawn">Open HeelKawn</a>
+            <a class="button" href="/llms.txt">Read site map</a>
+          </div>
+        </article>
+
+        <aside class="panel">
+          <h2>Live status</h2>
+          <div class="stack" data-api-panel>
+            <div class="stack-item">
+              <div>
+                <strong>Site shell</strong>
+                <p class="small">Static portal and route entry point.</p>
               </div>
-            </body>
-            </html>
-        <h2>About This Archive</h2>
-        <p>This is not a blog. It's not a portfolio. It's a <strong>testament.</strong></p>
-        <p>Every page here represents hours, days, sometimes months of thinking, writing, and refining ideas. Some are polished. Most are raw. All are honest.</p>
-        <p>I was inspired by <strong>Aaron Swartz</strong>, who believed knowledge should be free and accessible. His blog remains online, a permanent record of his thoughts. This is my version of that.</p>
-        <p>If you're reading this and I'm gone, know that these words mattered to me. If you're reading this and I'm still here, reach out. Let's talk about balance, consciousness, or why sloths are the perfect metaphor for living.</p>
-    </section>
+              <span class="status"><span class="dot ok"></span><span>Live</span></span>
+            </div>
+            <div class="stack-item">
+              <div>
+                <strong>Backend</strong>
+                <p class="small" data-api-status>Checking...</p>
+              </div>
+              <span class="status"><span class="dot warn"></span><span>Pending</span></span>
+            </div>
+            <div class="stack-item">
+              <div>
+                <strong>Current year</strong>
+                <p class="small" data-current-year></p>
+              </div>
+              <span class="status"><span class="dot ok"></span><span>Updated</span></span>
+            </div>
+          </div>
+        </aside>
+      </section>
 
-    <footer>
-        <p>Â© 2025 Richy. All writings released freely under <a href="https://creativecommons.org/publicdomain/zero/1.0/" style="color: #1c5a45;">CC0 Public Domain</a>.</p>
-        <p style="margin-top: 0.5rem; color: #999;">No paywalls. No gatekeeping. Just words that stay.</p>
-    </footer>
-</body>
+      <section class="grid" aria-label="Primary areas">
+        <article class="card">
+          <h3>Writings and archive</h3>
+          <p>Long-form essays, archive entries, and the personal record I want preserved.</p>
+          <a href="/#/archive">Read the archive →</a>
+        </article>
+        <article class="card">
+          <h3>Business and logistics</h3>
+          <p>Supplier bridges, inventory, commerce, fulfillment, and operational tools.</p>
+          <a href="/#/marketplace">Open marketplace →</a>
+        </article>
+        <article class="card">
+          <h3>HeelKawn</h3>
+          <p>The game hub, downloads, repository pulse, and the future simulation work.</p>
+          <a href="/#/heelkawn">Open the game hub →</a>
+        </article>
+      </section>
+
+      <section class="note" aria-label="Preserved writing note">
+        <h2 style="margin-bottom: 8px;">Preserved note</h2>
+        <p class="small">
+          This is not meant to be a throwaway blog or a hidden folder. It is a record of what was built, what was
+          learned, and what still matters. The site should keep the writings readable, the business surface functional,
+          and the whole system honest.
+        </p>
+      </section>
+
+      <section class="grid" aria-label="More routes">
+        <article class="card">
+          <h3>Continuity</h3>
+          <p>Install the site, keep it on your phone, and use recovery tools when they are available.</p>
+          <a href="/#/recovery">Open recovery page →</a>
+        </article>
+        <article class="card">
+          <h3>Governance</h3>
+          <p>Public proposals, conference flow, and the civic layer that keeps decisions visible.</p>
+          <a href="/#/conference">Open conference →</a>
+        </article>
+        <article class="card">
+          <h3>About</h3>
+          <p>Project context, personal background, and the site’s purpose in one place.</p>
+          <a href="/#/about">Read more →</a>
+        </article>
+      </section>
+
+      <div class="footerbar">
+        <span>© <span data-current-year></span> PVA Bazaar</span>
+        <span>All important routes stay visible.</span>
+      </div>
+    </main>
+    <script src="/config.js"></script>
+    <script src="/app.js"></script>
+  </body>
 </html>
-

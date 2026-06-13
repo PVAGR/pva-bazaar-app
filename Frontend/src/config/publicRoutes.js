@@ -162,6 +162,17 @@ export const PUBLIC_ROUTES = [
     access: 'public',
   },
   {
+    key: 'recovery',
+    to: '/recovery',
+    navLabel: 'Recovery',
+    title: 'Recovery',
+    description: 'Recovery, continuity, and install tools for keeping the site close across devices.',
+    group: 'support',
+    badge: 'Continuity',
+    navPlacement: 'secondary',
+    access: 'public',
+  },
+  {
     key: 'heelkawn',
     to: '/heelkawn',
     navLabel: 'HeelKawn',

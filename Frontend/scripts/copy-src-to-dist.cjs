@@ -117,7 +117,17 @@ const localPublic = publicRoot;
 if (fs.existsSync(localPublic)) {
   console.log('Preparing dist/public');
   if (!fs.existsSync(distPublic)) fs.mkdirSync(distPublic, { recursive: true });
-  const whitelistFiles = ['config.js', 'sitemap.xml', 'robots.txt', 'status.html', 'api-base.json', 'live-map.json', 'magnum-opus.js'];
+  const whitelistFiles = [
+    'config.js',
+    'sitemap.xml',
+    'robots.txt',
+    'status.html',
+    'api-base.json',
+    'live-map.json',
+    'magnum-opus.js',
+    'llms.txt',
+    'readable-site.json',
+  ];
   const whitelistDirs = ['styles'];
   for (const f of whitelistFiles) {
     const s = path.join(localPublic, f);

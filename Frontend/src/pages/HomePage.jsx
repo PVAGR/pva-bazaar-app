@@ -87,17 +87,17 @@ export default function HomePage({ entries = [] }) {
     <div className="home-page">
       <section className="home-hero section-card">
         <div className="home-hero__copy">
-          <div className="pill home-hero__kicker">PVA Bazaar · Full Site Overview</div>
-          <h1>A public civilization platform for memory, trade, and accountable decisions.</h1>
+          <div className="pill home-hero__kicker">PVA Bazaar · Full site overview</div>
+          <h1>A personal website for words, business, recovery, and public decisions.</h1>
           <p>
-            PVA Bazaar combines a living knowledge library, an ethical marketplace, and a governance engine.
-            The Popular Conference is where citizens submit proposals, build support, receive official responses,
-            and track execution openly.
+            PVA Bazaar combines a living knowledge library, a business bridge, and the civic tools that keep the
+            record open. It is where my writings live, where suppliers and buyers connect, and where public
+            decisions stay visible instead of hidden.
           </p>
           <div className="home-hero__actions">
-            <Link className="button" to="/conference">Enter Popular Conference</Link>
-            <Link className="button ghost" to="/archive">Open Library</Link>
-            <Link className="button secondary" to="/marketplace">Open Marketplace</Link>
+            <Link className="button" to="/archive">Open archive</Link>
+            <Link className="button ghost" to="/marketplace">Open marketplace</Link>
+            <Link className="button secondary" to="/heelkawn">Open HeelKawn</Link>
           </div>
         </div>
 
@@ -112,8 +112,8 @@ export default function HomePage({ entries = [] }) {
             ))}
           </div>
           <p className="home-hero__panel-copy">
-            Governance is centered in the Popular Conference. Public navigation is intentionally reduced so first-time
-            visitors can orient quickly.
+            The opening page is intentionally broad so first-time visitors can find the archive, the business
+            surface, and the HeelKawn hub without having to guess where anything lives.
           </p>
         </aside>
       </section>
