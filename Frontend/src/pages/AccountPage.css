@@ -84,6 +84,22 @@
   letter-spacing: 0.01em;
 }
 
+.accountAtlas {
+  grid-column: 1 / -1;
+}
+
+.accountAtlasCopy {
+  margin: -4px 0 12px;
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+
+.accountAtlasLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .accountPage .form {
   gap: 14px;
 }
@@ -200,6 +216,11 @@
   .accountActions {
     justify-content: flex-start;
   }
+
+  .accountAtlasLinks {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 640px) {
@@ -218,5 +239,8 @@
     min-height: 38px;
     padding: 8px 10px;
   }
-}
 
+  .accountAtlasLinks {
+    grid-template-columns: 1fr;
+  }
+}

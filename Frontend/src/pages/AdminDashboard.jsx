@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { apiFetch, getApiBase, setApiBase } from '../lib/api.js';
 import { fetchAdminStatus, requestDevToken } from '../lib/archiveApi.js';
 
@@ -82,6 +83,20 @@ export default function AdminDashboard() {
         <button className="button" type="button" onClick={checkStatus} disabled={busy}>Check admin status</button>
         <button className="button ghost" type="button" onClick={checkHealth} disabled={busy}>Check API health</button>
         <a className="button ghost" href="#/admin/new-journal">New entry</a>
+      </div>
+
+      <div className="section-card" style={{ marginBottom: '1rem' }}>
+        <h3>Private atlas</h3>
+        <p className="muted" style={{ marginTop: 0 }}>
+          Keep the operations side tied to the same site paths as the public front door.
+        </p>
+        <div className="form__actions">
+          <Link className="button ghost" to="/">Home</Link>
+          <Link className="button ghost" to="/archive">Archive</Link>
+          <Link className="button ghost" to="/recovery">Recovery</Link>
+          <Link className="button ghost" to="/marketplace">Marketplace</Link>
+          <Link className="button ghost" to="/account">Account</Link>
+        </div>
       </div>
 
       {health && (

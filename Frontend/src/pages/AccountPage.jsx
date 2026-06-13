@@ -124,7 +124,9 @@ export default function AccountPage() {
       <header className="admin-header accountHeader">
         <div>
           <h1>👤 Account</h1>
-          <p className="muted">Edit your saved defaults and profile info (stored in MongoDB).</p>
+          <p className="muted">
+            Your personal control room for pure life knowledge, saved defaults, listings, recovery, and private continuity.
+          </p>
         </div>
         <div className="accountActions">
           <Link to="/" className="btn ghost">
@@ -156,6 +158,21 @@ export default function AccountPage() {
         {okMsg ? <div className="notice">{okMsg}</div> : null}
 
         {profile ? <SetupReminder missingSteps={getMissingProfileSteps(profile)} /> : null}
+
+        <section className="card accountAtlas">
+          <h2>Private atlas</h2>
+          <p className="accountAtlasCopy">
+            Keep the personal and business side together. Jump straight to the parts of the site you use most.
+          </p>
+          <div className="accountAtlasLinks">
+            <Link className="btn ghost" to="/">Home</Link>
+            <Link className="btn ghost" to="/archive">Archive</Link>
+            <Link className="btn ghost" to="/recovery">Recovery</Link>
+            <Link className="btn ghost" to="/marketplace">Marketplace</Link>
+            <Link className="btn ghost" to="/items/mine">My Listings</Link>
+            <Link className="btn ghost" to="/admin">Admin</Link>
+          </div>
+        </section>
 
         {profile ? (
           <section className="card">
@@ -310,4 +327,3 @@ export default function AccountPage() {
     </div>
   );
 }
-
