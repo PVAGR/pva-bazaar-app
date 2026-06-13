@@ -25,6 +25,11 @@
 - The showroom now uses the same portal treatment so the public display surface matches the rest of the site.
 - Home, archive, studio, recovery, marketplace, showroom, and admin now share a more consistent navigation language.
 
+## 2026-06-13 Categorized Front Page
+- The front page now opens with labeled path groups for writing, trade, continuity, civic use, and the world/simulation hub.
+- Each card on the main gateway now points directly at the section it represents, reducing hunting and making the site easier to navigate.
+- The front page is now organized around user intent instead of one flat list of links.
+
 ---
 
 ## ✅ What's Working Right Now

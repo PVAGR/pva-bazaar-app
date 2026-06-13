@@ -108,48 +108,61 @@ export default function HomePage({ entries = [] }) {
   ], [latestEntries.length])
 
   const latestRecoverySnapshot = recoverySnapshots[0] || null
-  const portalCards = useMemo(() => [
+  const pathGroups = useMemo(() => [
     {
-      key: 'words',
-      title: 'Words',
-      to: '/archive',
-      badge: 'Archive',
-      description: 'Open the archive library and long-form writings.',
-    },
-    {
-      key: 'studio',
-      title: 'Writing Studio',
-      to: '/studio',
-      badge: 'Draft',
-      description: 'Write, edit, and save your personal notes and posts.',
-    },
-    {
-      key: 'continuity',
-      title: 'Continuity',
-      to: '/recovery',
-      badge: 'Backup',
-      description: 'Manage snapshots, restore bundles, and keep your context close.',
+      key: 'writing',
+      kicker: 'Words',
+      title: 'For writings and long-form work',
+      description: 'Archive the finished pieces, keep drafts moving, and hold the books and essays together in one place.',
+      cards: [
+        { key: 'archive', title: 'Archive Library', to: '/archive', badge: 'Read', description: 'Open the living archive and long-form writings.' },
+        { key: 'studio', title: 'Writing Studio', to: '/studio', badge: 'Write', description: 'Draft, edit, and publish your notes or posts.' },
+        { key: 'books', title: 'Books', to: '/books', badge: 'Long form', description: 'Open the bigger works and explainers.' },
+      ],
     },
     {
       key: 'trade',
-      title: 'Business',
-      to: '/marketplace',
-      badge: 'Trade',
-      description: 'Browse the trade surface, sourcing, and marketplace tools.',
+      kicker: 'Business',
+      title: 'For customers and product sourcing',
+      description: 'Move from discovery into the real trade surfaces without having to guess where items live.',
+      cards: [
+        { key: 'marketplace', title: 'Marketplace', to: '/marketplace', badge: 'Buy', description: 'Browse goods, sourcing opportunities, and inventory.' },
+        { key: 'showroom', title: 'Showroom', to: '/showroom', badge: 'Display', description: 'See curated pieces and premium presentations.' },
+        { key: 'creator', title: 'Supplier Portal', to: '/creator', badge: 'Sell', description: 'Start as a supplier, artisan, or sourcing partner.' },
+      ],
     },
     {
-      key: 'operations',
-      title: 'Operations',
-      to: '/admin',
-      badge: 'Admin',
-      description: 'Open the private operations console and continuity widget.',
+      key: 'continuity',
+      kicker: 'Continuity',
+      title: 'For recovery and identity',
+      description: 'Keep your context, backups, and account identity close so the site follows you across devices.',
+      cards: [
+        { key: 'recovery', title: 'Recovery', to: '/recovery', badge: 'Backup', description: 'Save snapshots, restore bundles, and keep continuity alive.' },
+        { key: 'passport', title: 'My Passport', to: '/passport', badge: 'Identity', description: 'Open the passport and wallet identity center.' },
+        { key: 'start', title: 'Get Started', to: '/get-started', badge: 'Onboard', description: 'Create an account and choose your path.' },
+      ],
+    },
+    {
+      key: 'civic',
+      kicker: 'Public',
+      title: 'For proposals and public decisions',
+      description: 'See the civic surface where proposals, votes, and public discussions stay visible.',
+      cards: [
+        { key: 'proposals', title: 'Governance', to: '/proposals', badge: 'Vote', description: 'Browse the People\'s Proposal Board.' },
+        { key: 'forum', title: 'Forum', to: '/forum', badge: 'Discuss', description: 'Open the civic forum and proposal feed.' },
+        { key: 'conference', title: 'Conference', to: '/conference', badge: 'Meet', description: 'Follow the conference workflow and sessions.' },
+      ],
     },
     {
       key: 'world',
-      title: 'HeelKawn',
-      to: '/heelkawn',
-      badge: 'World',
-      description: 'Enter the game and simulation hub from the same front door.',
+      kicker: 'World',
+      title: 'For the simulation and the wider map',
+      description: 'Enter the simulation hub, world map, and civilization reading surfaces from the same front page.',
+      cards: [
+        { key: 'heelkawn', title: 'HeelKawn', to: '/heelkawn', badge: 'Play', description: 'Enter the game and simulation hub.' },
+        { key: 'federation', title: 'Federation Map', to: '/federation-map', badge: 'Live', description: 'View the live world pulse and roles.' },
+        { key: 'civilization', title: 'Civilization Library', to: '/civilization-library', badge: 'Study', description: 'Open the worldview and knowledge sections.' },
+      ],
     },
   ], [])
 
@@ -192,25 +205,36 @@ export default function HomePage({ entries = [] }) {
       <section className="section-card home-section-shell">
         <div className="section-heading">
           <div>
-            <div className="pill">Site atlas</div>
-            <h2 style={{ margin: '0.35rem 0 0' }}>Everything visible from one place</h2>
+            <div className="pill">Choose your path</div>
+            <h2 style={{ margin: '0.35rem 0 0' }}>Categorized entry points</h2>
           </div>
           <Link className="button ghost" to="/archive">Open archive library</Link>
         </div>
         <p className="home-state-copy">
-          The site is organized around the surfaces you actually use: words, business, continuity, operations,
-          and the simulation hub. Nothing here is meant to be hidden.
+          Each block below is labeled by purpose so you can go straight to writing, buying, recovery, civic work,
+          or the simulation hub without hunting through the site.
         </p>
-        <div className="home-portal-grid">
-          {portalCards.map((card) => (
-            <Link key={card.key} to={card.to} className="home-portal-card">
-              <div className="home-portal-card__meta">
-                <span className="pill">{card.badge}</span>
+        <div className="home-path-groups">
+          {pathGroups.map((group) => (
+            <article key={group.key} className="home-path-group">
+              <div className="home-path-group__header">
+                <div className="pill">{group.kicker}</div>
+                <h3>{group.title}</h3>
+                <p>{group.description}</p>
               </div>
-              <h3>{card.title}</h3>
-              <p>{card.description}</p>
-              <span className="home-card__link">Open section →</span>
-            </Link>
+              <div className="home-path-grid">
+                {group.cards.map((card) => (
+                  <Link key={card.key} to={card.to} className="home-path-card">
+                    <div className="home-path-card__meta">
+                      <span className="pill">{card.badge}</span>
+                    </div>
+                    <strong>{card.title}</strong>
+                    <p>{card.description}</p>
+                    <span className="home-card__link">Open section →</span>
+                  </Link>
+                ))}
+              </div>
+            </article>
           ))}
         </div>
       </section>

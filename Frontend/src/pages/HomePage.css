@@ -108,45 +108,75 @@
   gap: 1rem;
 }
 
-.home-portal-grid {
+.home-path-groups {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.9rem;
 }
 
-.home-portal-card {
+.home-path-group {
+  border: 1px solid var(--site-border);
+  border-radius: 16px;
+  padding: 1rem;
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--site-accent-soft) 35%, transparent), transparent 56%),
+    var(--site-panel-soft);
+  display: grid;
+  gap: 0.85rem;
+}
+
+.home-path-group__header {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.home-path-group__header h3 {
+  margin: 0;
+  color: var(--site-accent);
+  font-size: 1.15rem;
+}
+
+.home-path-group__header p {
+  margin: 0;
+  color: var(--site-text-muted);
+  line-height: 1.6;
+}
+
+.home-path-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.home-path-card {
   text-decoration: none;
   border: 1px solid var(--site-border);
   border-radius: 14px;
-  padding: 1rem 1rem 0.95rem;
-  background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--site-accent-soft) 35%, transparent), transparent 55%),
-    var(--site-panel-soft);
+  padding: 0.95rem 1rem;
+  background: var(--site-panel);
   color: var(--site-text);
   transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
   display: grid;
-  gap: 0.6rem;
+  gap: 0.45rem;
 }
 
-.home-portal-card:hover {
+.home-path-card:hover {
   transform: translateY(-2px);
   border-color: var(--site-accent);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
 }
 
-.home-portal-card h3 {
-  margin: 0;
-  color: var(--site-accent);
-  font-size: 1.05rem;
+.home-path-card strong {
+  color: var(--site-accent-strong);
+  font-size: 1rem;
 }
 
-.home-portal-card p {
+.home-path-card p {
   margin: 0;
   color: var(--site-text);
-  line-height: 1.6;
+  line-height: 1.55;
 }
 
-.home-portal-card__meta {
+.home-path-card__meta {
   display: flex;
   align-items: center;
   justify-content: flex-start;
@@ -326,7 +356,7 @@
 
 @media (max-width: 1100px) {
   .home-hero,
-  .home-portal-grid,
+  .home-path-grid,
   .home-section-grid--core,
   .home-section-grid--support,
   .home-continuity-grid,
@@ -338,7 +368,7 @@
 
 @media (max-width: 760px) {
   .home-hero,
-  .home-portal-grid,
+  .home-path-grid,
   .home-section-grid--core,
   .home-section-grid--support,
   .home-continuity-grid,
@@ -364,7 +394,7 @@
     justify-content: center;
   }
 
-  .home-portal-card {
+  .home-path-card {
     width: 100%;
   }
 }
