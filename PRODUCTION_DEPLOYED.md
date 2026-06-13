@@ -1,3 +1,8 @@
+# Reference only
+
+Start at [CANONICAL_MAP.md](CANONICAL_MAP.md) for the single source of truth.
+This file is a historical production note, not the canonical operating guide.
+
 # 🚀 Production Deployment Complete
 
 ## Deployment Summary (January 27, 2026)

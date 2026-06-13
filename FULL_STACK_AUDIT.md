@@ -1,3 +1,8 @@
+# Reference only
+
+Start at [CANONICAL_MAP.md](CANONICAL_MAP.md) for the single source of truth.
+This file is a historical audit report, not the canonical operating guide.
+
 # Full-Stack Audit Report
 ## GitHub Pages Frontend + Vercel Backend Architecture
 

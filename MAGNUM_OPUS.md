@@ -1,3 +1,8 @@
+# Reference only
+
+Start at [CANONICAL_MAP.md](CANONICAL_MAP.md) for the single source of truth.
+This file is a historical vision document, not the canonical operating guide.
+
 # 🕯️ MAGNUM OPUS - Digital Legacy & Decentralized Immortality
 
 **Created**: January 13, 2026  

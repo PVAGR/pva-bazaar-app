@@ -1,3 +1,7 @@
+> Reference only. Start at [CANONICAL_MAP.md](CANONICAL_MAP.md) for the single source of truth.
+>
+> This document is kept for historical rollout notes and should not override the canonical map.
+
 # PVA Bazaar — Full Handoff & Rollout Guide
 
 This document is the **single source of truth for execution**: what was built, what you need to provide, and how to commit and roll it out. Give it to the LLM coder (or human) who will execute the rollout and ongoing builds.

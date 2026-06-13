@@ -1,3 +1,8 @@
+# Reference only
+
+Start at [CANONICAL_MAP.md](CANONICAL_MAP.md) for the single source of truth.
+This file is a historical deployment status log, not the canonical operating guide.
+
 # ✅ DEPLOYMENT SETUP COMPLETE
 
 **Date**: January 14, 2026  

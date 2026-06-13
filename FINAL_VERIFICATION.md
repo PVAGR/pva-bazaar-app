@@ -1,3 +1,8 @@
+# Reference only
+
+Start at [CANONICAL_MAP.md](CANONICAL_MAP.md) for the single source of truth.
+This file is a historical verification record, not the canonical operating guide.
+
 # ✅ Final Verification Report - All Requirements Met
 
 **Date:** 2026-01-04

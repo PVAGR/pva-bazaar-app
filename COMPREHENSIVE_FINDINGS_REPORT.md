@@ -1,3 +1,8 @@
+# Reference only
+
+Start at [CANONICAL_MAP.md](CANONICAL_MAP.md) for the single source of truth.
+This file is a historical findings report, not the canonical operating guide.
+
 # 🔍 COMPREHENSIVE PROJECT ANALYSIS & FINDINGS
 
 **Date:** January 21, 2026  

@@ -1,3 +1,8 @@
+# Reference only
+
+Start at [CANONICAL_MAP.md](CANONICAL_MAP.md) for the single source of truth.
+This file is a historical deployment record, not the canonical operating guide.
+
 # 🚀 PVA BAZAAR - DEPLOYMENT COMPLETE
 
 **Status**: ✅ **PRODUCTION READY**  
