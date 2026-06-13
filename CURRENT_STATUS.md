@@ -43,6 +43,7 @@
 - The Login and Command Center pages now use the same atlas language so the private entry flow feels like one site.
 - The Creator Portal and Broker Hub now expose the same atlas links so the private business surfaces feel part of the same system.
 - The Marketplace and Showroom pages now expose the same atlas links so the public business surfaces feel part of the same system.
+- The Archive Library and Writing Studio now expose the same atlas links so the reading and publishing surfaces feel guided too.
 
 ---
 

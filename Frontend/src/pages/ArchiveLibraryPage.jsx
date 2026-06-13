@@ -521,6 +521,21 @@ export default function ArchiveLibraryPage() {
             Admin
           </Link>
         </div>
+
+        <section className="archive-atlas" aria-label="Archive atlas">
+          <h2>Atlas</h2>
+          <p className="archive-atlas__copy">
+            Move between reading, writing, recovery, and trade without leaving the same site.
+          </p>
+          <div className="archive-atlas__links">
+            <Link to="/" className="archive-atlas__link">Home</Link>
+            <Link to="/studio" className="archive-atlas__link">Writing Studio</Link>
+            <Link to="/recovery" className="archive-atlas__link">Recovery</Link>
+            <Link to="/marketplace" className="archive-atlas__link">Marketplace</Link>
+            <Link to="/showroom" className="archive-atlas__link">Showroom</Link>
+            <Link to="/creator" className="archive-atlas__link">Creator Portal</Link>
+          </div>
+        </section>
         
         <div className="view-mode-toggle">
           <button 

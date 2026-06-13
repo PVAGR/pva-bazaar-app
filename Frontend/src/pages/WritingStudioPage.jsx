@@ -22,6 +22,15 @@ const STUDIO_PORTAL_LINKS = [
   { key: 'admin', label: 'Admin', to: '/admin', note: 'Operations console and continuity widget' },
 ];
 
+const STUDIO_ATLAS_LINKS = [
+  { key: 'account', label: 'Account', to: '/account' },
+  { key: 'dashboard', label: 'Command Center', to: '/dashboard' },
+  { key: 'marketplace', label: 'Marketplace', to: '/marketplace' },
+  { key: 'showroom', label: 'Showroom', to: '/showroom' },
+  { key: 'creator', label: 'Creator Portal', to: '/creator' },
+  { key: 'broker', label: 'Broker Hub', to: '/broker-hub' },
+];
+
 const SOCIAL_FIELDS = [
   { key: 'facebook', label: 'Facebook', placeholder: 'https://facebook.com/yourpage' },
   { key: 'instagram', label: 'Instagram', placeholder: 'https://instagram.com/yourhandle' },
@@ -594,6 +603,21 @@ export default function WritingStudioPage() {
           </div>
         </div>
       </header>
+
+      <section className="writing-studio__atlas section-card" aria-label="Studio atlas">
+        <h2>Atlas</h2>
+        <p className="writing-studio__atlasCopy">
+          Keep the writing surface connected to the rest of the site so drafts, publishing, recovery, and business
+          stay in the same flow.
+        </p>
+        <div className="writing-studio__atlasLinks">
+          {STUDIO_ATLAS_LINKS.map((link) => (
+            <Link key={link.key} to={link.to} className="writing-studio__atlasLink">
+              {link.label}
+            </Link>
+          ))}
+        </div>
+      </section>
 
       <AdminNav />
 

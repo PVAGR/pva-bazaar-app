@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Login and Command Center now share the same atlas language so the private entry flow reads as one system.
 - Creator Portal and Broker Hub now expose the same atlas links so the private business surfaces feel part of the same system.
 - Marketplace and Showroom now expose the same atlas links so the public business surfaces feel part of the same system.
+- Archive Library and Writing Studio now expose the same atlas links so the reading and publishing surfaces feel guided too.
 - Writing studio hero now includes direct links to archive, recovery, home, and admin at the top of the page.
 - Writing studio now shows recent remote backup history and a shortcut back to recovery.
 - Admin dashboard now shows continuity snapshot count and the latest backup label/date.
