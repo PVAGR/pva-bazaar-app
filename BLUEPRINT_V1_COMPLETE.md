@@ -1,3 +1,8 @@
+# Reference only
+
+Start at [CANONICAL_MAP.md](CANONICAL_MAP.md) for the single source of truth.
+This file is historical reference material and should not override the canonical map.
+
 # 🌊 Blueprint v1 Implementation Complete
 
 ## Summary
