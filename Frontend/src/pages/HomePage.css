@@ -108,6 +108,41 @@
   gap: 1rem;
 }
 
+.home-continuity-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.home-continuity-card {
+  display: grid;
+  gap: 0.55rem;
+  border: 1px solid var(--site-border);
+  border-radius: 14px;
+  padding: 1rem;
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--site-accent-soft) 50%, transparent), transparent 60%),
+    var(--site-panel-soft);
+}
+
+.home-continuity-label {
+  color: var(--site-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.78rem;
+}
+
+.home-continuity-card strong {
+  color: var(--site-accent-strong);
+  font-size: 1.15rem;
+}
+
+.home-continuity-card p {
+  margin: 0;
+  color: var(--site-text);
+  line-height: 1.6;
+}
+
 .home-section-grid {
   display: grid;
   gap: 0.9rem;
@@ -248,6 +283,7 @@
   .home-hero,
   .home-section-grid--core,
   .home-section-grid--support,
+  .home-continuity-grid,
   .home-spotlight-grid,
   .home-proposal-grid {
     grid-template-columns: 1fr 1fr;
@@ -258,6 +294,7 @@
   .home-hero,
   .home-section-grid--core,
   .home-section-grid--support,
+  .home-continuity-grid,
   .home-spotlight-grid,
   .home-proposal-grid {
     grid-template-columns: 1fr;

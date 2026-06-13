@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Snapshot creation that saves to the backend and downloads a portable JSON bundle in one action.
 - Restore/import support for encrypted recovery bundles and legacy writing-studio backups.
 - Home hero now exposes recovery as a first-class mobile entry point.
+- Home page now shows the latest remote continuity snapshot summary.
+- Writing studio now shows recent remote backup history and a shortcut back to recovery.
 
 ## [1.0.0] - 2026-01-21
 

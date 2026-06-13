@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchArchiveEntriesSafe } from '../lib/archiveFeed'
-import { fetchProposals } from '../lib/api'
+import { fetchProposals, fetchRecoverySnapshots } from '../lib/api'
 import { HOME_CORE_ROUTES, HOME_SUPPORT_ROUTES } from '../config/publicRoutes'
 import FederationManifesto from '../components/FederationManifesto.jsx'
 
@@ -13,6 +13,8 @@ export default function HomePage({ entries = [] }) {
   const [liveEntriesLoading, setLiveEntriesLoading] = useState(true)
   const [latestProposals, setLatestProposals] = useState([])
   const [proposalsLoading, setProposalsLoading] = useState(true)
+  const [recoverySnapshots, setRecoverySnapshots] = useState([])
+  const [recoverySnapshotsLoading, setRecoverySnapshotsLoading] = useState(true)
 
   useEffect(() => {
     let cancelled = false
@@ -63,6 +65,28 @@ export default function HomePage({ entries = [] }) {
     }
   }, [])
 
+  useEffect(() => {
+    let cancelled = false
+
+    const loadRecoverySnapshots = async () => {
+      setRecoverySnapshotsLoading(true)
+      try {
+        const response = await fetchRecoverySnapshots()
+        if (cancelled) return
+        setRecoverySnapshots(Array.isArray(response?.items) ? response.items : [])
+      } catch (_error) {
+        if (!cancelled) setRecoverySnapshots([])
+      } finally {
+        if (!cancelled) setRecoverySnapshotsLoading(false)
+      }
+    }
+
+    loadRecoverySnapshots()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   const latestEntries = useMemo(() => {
     const source = Array.isArray(liveEntries) && liveEntries.length > 0 ? liveEntries : entries
     if (!Array.isArray(source) || source.length === 0) return []
@@ -82,6 +106,8 @@ export default function HomePage({ entries = [] }) {
     { value: String(HOME_SUPPORT_ROUTES.length), label: 'Support routes' },
     { value: `${HOME_CORE_ROUTES.filter((section) => section.featured).length}`, label: 'Featured civic hub' },
   ], [latestEntries.length])
+
+  const latestRecoverySnapshot = recoverySnapshots[0] || null
 
   return (
     <div className="home-page">
@@ -117,6 +143,33 @@ export default function HomePage({ entries = [] }) {
             surface, and the HeelKawn hub without having to guess where anything lives.
           </p>
         </aside>
+      </section>
+
+      <section className="section-card home-section-shell home-continuity-shell">
+        <div className="section-heading">
+          <div>
+            <div className="pill">Continuity</div>
+            <h2 style={{ margin: '0.35rem 0 0' }}>Latest remote backup</h2>
+          </div>
+          <Link className="button ghost" to="/recovery">Open recovery console</Link>
+        </div>
+        <div className="home-continuity-grid">
+          <article className="home-continuity-card">
+            <span className="home-continuity-label">Remote snapshots</span>
+            <strong>{recoverySnapshotsLoading ? 'Loading...' : recoverySnapshots.length}</strong>
+            <p>Encrypted backups saved to your account and ready to restore.</p>
+          </article>
+          <article className="home-continuity-card">
+            <span className="home-continuity-label">Latest label</span>
+            <strong>{recoverySnapshotsLoading ? 'Loading...' : (latestRecoverySnapshot?.label || 'No backup yet')}</strong>
+            <p>{latestRecoverySnapshot?.createdAt ? new Date(latestRecoverySnapshot.createdAt).toLocaleString() : 'Create a backup in the recovery console.'}</p>
+          </article>
+          <article className="home-continuity-card">
+            <span className="home-continuity-label">Restore path</span>
+            <strong>/recovery</strong>
+            <p>Import a portable bundle, inspect saved snapshots, or restore your browser context.</p>
+          </article>
+        </div>
       </section>
 
       <FederationManifesto title="Federation Manifesto" />
