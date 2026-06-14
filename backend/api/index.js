@@ -359,6 +359,7 @@ const adminLoginRoutes = require('../routes/adminLogin');
 const cloudStorageRoutes = require('../routes/cloudStorage');
 const adminLibraryRoutes = require('../routes/adminLibrary');
 const libraryRoutes = require('../routes/library');
+const bookPublishingRoutes = require('../routes/bookPublishing');
 // Attribution & creator analytics routes
 const attributionRoutes = require('../routes/attribution');
 const payoutsRoutes = require('../routes/payouts');
@@ -476,6 +477,7 @@ app.use('/api', proposalsRoutes);
 app.use('/api/cloud-storage', cloudStorageRoutes);
 app.use('/api/admin/library', adminLibraryRoutes);
 app.use('/api/library', libraryRoutes);
+app.use('/api/book-publishing', bookPublishingRoutes);
 app.use('/api/library-taxonomy', libraryTaxonomyRoutes);
 app.use('/api/admin/library-intelligence', libraryIntelligenceRoutes);
 app.use('/api/attribution', attributionRoutes);

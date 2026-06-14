@@ -46,6 +46,22 @@ export default function Layout({ children }) {
       };
     }
 
+    if (pathname === '/books/publish') {
+      return {
+        section: 'Private Route',
+        title: 'Book Publishing',
+        description: 'Draft, design, and publish a book with covers, manuscript, PDF, EPUB, and web view.',
+      };
+    }
+
+    if (pathname.startsWith('/books/read/')) {
+      return {
+        section: 'Public Book',
+        title: 'Book Reader',
+        description: 'Read a published book with its online web view and download options.',
+      };
+    }
+
     const route = PUBLIC_ROUTES.find((item) => item.to === pathname);
     if (route) {
       return {
@@ -122,6 +138,7 @@ export default function Layout({ children }) {
     { key: 'learn', title: 'Learn', to: '/archive', note: 'Read pure life knowledge and long-form writings.' },
     { key: 'buy', title: 'Buy', to: '/marketplace', note: 'Find goods, sourcing, and real trade.' },
     { key: 'sell', title: 'Sell', to: '/creator', note: 'Offer goods as a supplier or artisan.' },
+    { key: 'publish', title: 'Publish', to: '/books/publish', note: 'Prepare a book with covers, manuscript, and exports.' },
     { key: 'recover', title: 'Recover', to: '/recovery', note: 'Restore context and keep continuity alive.' },
     { key: 'participate', title: 'Participate', to: '/proposals', note: 'Read, vote, and discuss public decisions.' },
     { key: 'explore', title: 'Explore', to: '/heelkawn', note: 'Enter the world, map, and simulation hub.' },

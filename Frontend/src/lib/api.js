@@ -189,6 +189,14 @@ export const fetchRecoverySnapshotById = (snapshotId) =>
   apiGet(`/recovery/snapshots/${encodeURIComponent(snapshotId)}`);
 export const deleteRecoverySnapshotById = (snapshotId) =>
   apiDelete(`/recovery/snapshots/${encodeURIComponent(snapshotId)}`);
+
+export const fetchMyBookProjects = () => apiGet('/book-publishing/mine');
+export const fetchBookProjectById = (bookId) => apiGet(`/book-publishing/${encodeURIComponent(bookId)}`);
+export const fetchPublicBookProject = (slug) =>
+  apiGet(`/book-publishing/public/${encodeURIComponent(slug)}`);
+export const saveBookProject = (formData) => apiUpload('/book-publishing', formData);
+export const deleteBookProject = (bookId) => apiDelete(`/book-publishing/${encodeURIComponent(bookId)}`);
+
 export const fetchProposals = (params = {}) => apiGet('/proposals', { params });
 export const fetchProposalById = (proposalId) => apiGet(`/proposals/${encodeURIComponent(proposalId)}`);
 export const createProposal = (payload) => apiPost('/proposals', payload);

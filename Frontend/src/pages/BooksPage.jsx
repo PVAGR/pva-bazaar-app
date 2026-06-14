@@ -94,6 +94,9 @@ export default function BooksPage() {
             <Link className="books-page__button books-page__button--primary" to="/">
               Return to home
             </Link>
+            <Link className="books-page__button books-page__button--primary" to="/books/publish">
+              Publish your own book
+            </Link>
             <Link className="books-page__button" to="/marketplace">
               Browse marketplace
             </Link>

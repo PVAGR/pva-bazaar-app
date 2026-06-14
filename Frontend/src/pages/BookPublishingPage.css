@@ -1,0 +1,328 @@
+.book-publish {
+  display: grid;
+  gap: 1rem;
+}
+
+.book-publish__hero,
+.book-publish__atlas,
+.book-publish__panel,
+.book-publish__previewPanel {
+  border: 1px solid var(--site-border);
+  border-radius: 20px;
+  background: var(--site-panel-soft);
+  padding: 1rem;
+}
+
+.book-publish__heroPanel {
+  border: 1px solid var(--site-border);
+  border-radius: 20px;
+  background: var(--site-panel);
+  padding: 1rem;
+}
+
+.book-publish__hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+  gap: 1rem;
+}
+
+.book-publish__hero h1,
+.book-publish__panel h2,
+.book-publish__previewPanel h2 {
+  margin: 0.35rem 0 0.6rem;
+  color: var(--site-accent);
+  line-height: 1.08;
+}
+
+.book-publish__lead,
+.book-publish__heroPanel p,
+.book-publish__heroPanel li,
+.book-publish__muted {
+  color: var(--site-text-muted);
+  line-height: 1.65;
+}
+
+.book-publish__heroPanel,
+.book-publish__panel,
+.book-publish__previewPanel,
+.book-publish__atlas {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.book-publish__heroPanel h2,
+.book-publish__panel h2,
+.book-publish__atlas h2 {
+  margin: 0;
+  color: var(--site-accent-strong);
+}
+
+.book-publish__heroPanel ul {
+  margin: 0.75rem 0 0;
+  padding-left: 1.15rem;
+}
+
+.book-publish__heroActions,
+.book-publish__atlasLinks,
+.book-publish__editorActions,
+.book-publish__linkGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.book-publish__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--site-border);
+  border-radius: 999px;
+  padding: 0.6rem 0.95rem;
+  background: var(--site-panel);
+  color: var(--site-text);
+  text-decoration: none;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.book-publish__button:hover {
+  border-color: var(--site-accent);
+  color: var(--site-accent-strong);
+}
+
+.book-publish__button--primary {
+  background: color-mix(in srgb, var(--site-accent-soft) 82%, transparent);
+  color: var(--site-accent-strong);
+}
+
+.book-publish__button--danger {
+  background: color-mix(in srgb, #a83333 15%, var(--site-panel));
+  color: #8f1d1d;
+}
+
+.book-publish__grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.95fr) minmax(0, 1.25fr);
+  gap: 1rem;
+}
+
+.book-publish__panel,
+.book-publish__previewCard,
+.book-publish__reader {
+  border: 1px solid var(--site-border);
+  border-radius: 18px;
+  background: var(--site-panel);
+}
+
+.book-publish__panel {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.book-publish__panelHeader,
+.book-publish__previewHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.book-publish__stats,
+.book-publish__previewMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.book-publish__stats span,
+.book-publish__previewMeta span {
+  border: 1px solid var(--site-border);
+  border-radius: 999px;
+  padding: 0.34rem 0.66rem;
+  background: var(--site-panel-soft);
+  color: var(--site-text-muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.book-publish__list {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.book-publish__listItem {
+  border: 1px solid var(--site-border);
+  border-radius: 16px;
+  background: var(--site-panel-soft);
+  padding: 0.85rem;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.book-publish__listItem.is-selected {
+  border-color: var(--site-accent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--site-accent) 35%, transparent);
+}
+
+.book-publish__listButton {
+  display: grid;
+  gap: 0.25rem;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  text-align: left;
+  color: var(--site-text);
+  cursor: pointer;
+}
+
+.book-publish__listButton strong {
+  color: var(--site-accent-strong);
+}
+
+.book-publish__listButton span,
+.book-publish__listButton em {
+  color: var(--site-text-muted);
+  font-style: normal;
+}
+
+.book-publish__listActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.book-publish__form {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.book-publish__form label {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--site-text);
+  font-weight: 700;
+}
+
+.book-publish__form input,
+.book-publish__form textarea {
+  width: 100%;
+  border: 1px solid var(--site-border);
+  border-radius: 14px;
+  background: var(--site-panel-soft);
+  color: var(--site-text);
+  padding: 0.8rem 0.85rem;
+  font: inherit;
+}
+
+.book-publish__form textarea {
+  resize: vertical;
+  min-height: 110px;
+}
+
+.book-publish__row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.book-publish__error,
+.book-publish__success {
+  border-radius: 14px;
+  padding: 0.8rem 0.9rem;
+}
+
+.book-publish__error {
+  border: 1px solid color-mix(in srgb, #b33737 35%, var(--site-border));
+  background: color-mix(in srgb, #b33737 12%, var(--site-panel-soft));
+  color: #892525;
+}
+
+.book-publish__success {
+  border: 1px solid color-mix(in srgb, #2f7c45 35%, var(--site-border));
+  background: color-mix(in srgb, #2f7c45 12%, var(--site-panel-soft));
+  color: #245f34;
+}
+
+.book-publish__previewPanel {
+  display: grid;
+  gap: 1rem;
+}
+
+.book-publish__previewGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.book-publish__previewCard {
+  padding: 0.9rem;
+}
+
+.book-publish__previewCard h3,
+.book-publish__reader h3 {
+  margin: 0 0 0.75rem;
+  color: var(--site-accent-strong);
+}
+
+.book-publish__previewCard img {
+  width: 100%;
+  display: block;
+  border-radius: 14px;
+  border: 1px solid var(--site-border);
+}
+
+.book-publish__reader {
+  padding: 1rem;
+}
+
+.book-publish__readerBody :is(h1, h2, h3) {
+  color: var(--site-accent-strong);
+}
+
+.book-publish__readerBody :is(p, li, blockquote) {
+  color: var(--site-text);
+  line-height: 1.7;
+}
+
+.book-publish__readerBody blockquote {
+  margin: 1rem 0;
+  padding-left: 1rem;
+  border-left: 4px solid var(--site-accent);
+}
+
+@media (max-width: 960px) {
+  .book-publish__hero,
+  .book-publish__grid,
+  .book-publish__previewGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .book-publish__row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .book-publish {
+    gap: 0.85rem;
+  }
+
+  .book-publish__hero,
+  .book-publish__heroPanel,
+  .book-publish__atlas,
+  .book-publish__panel,
+  .book-publish__previewPanel {
+    padding: 0.85rem;
+  }
+
+  .book-publish__button {
+    width: 100%;
+  }
+
+  .book-publish__heroActions,
+  .book-publish__atlasLinks,
+  .book-publish__editorActions,
+  .book-publish__linkGrid,
+  .book-publish__listActions {
+    flex-direction: column;
+  }
+}

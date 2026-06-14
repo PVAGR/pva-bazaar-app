@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Book publishing workspace with cover uploads, manuscript editing, public web reader, and PDF/EPUB export routes.
 - Account-backed `/recovery` dashboard with client-side encrypted continuity bundles.
 - Snapshot creation that saves to the backend and downloads a portable JSON bundle in one action.
 - Restore/import support for encrypted recovery bundles and legacy writing-studio backups.
