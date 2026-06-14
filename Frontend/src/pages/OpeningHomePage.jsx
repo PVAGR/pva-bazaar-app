@@ -18,6 +18,9 @@ export default function OpeningHomePage() {
             <Link className="opening-home__actionBtn opening-home__actionBtn--primary" to="/archive">
               Open archive
             </Link>
+            <Link className="opening-home__actionBtn opening-home__actionBtn--secondary" to="/books">
+              Open books
+            </Link>
             <Link className="opening-home__actionBtn opening-home__actionBtn--secondary" to="/marketplace">
               Open business side
             </Link>
@@ -49,15 +52,19 @@ export default function OpeningHomePage() {
           </p>
         </div>
 
-        <div className="opening-home__grid">
-          <Link className="opening-home__card" to="/archive">
-            <h3>Writings and archive</h3>
-            <p>Read the long-form notes, preserved essays, and the personal record that should never be lost.</p>
-          </Link>
-          <Link className="opening-home__card" to="/marketplace">
-            <h3>Business and trade</h3>
-            <p>Run the marketplace, inventory, sourcing, fulfillment, and the buyer-supplier bridge.</p>
-          </Link>
+          <div className="opening-home__grid">
+            <Link className="opening-home__card" to="/archive">
+              <h3>Writings and archive</h3>
+              <p>Read the long-form notes, preserved essays, and the personal record that should never be lost.</p>
+            </Link>
+            <Link className="opening-home__card" to="/books">
+              <h3>Books and publishing</h3>
+              <p>Read the featured books, browse published editions, and open the workspace for new publishing.</p>
+            </Link>
+            <Link className="opening-home__card" to="/marketplace">
+              <h3>Business and trade</h3>
+              <p>Run the marketplace, inventory, sourcing, fulfillment, and the buyer-supplier bridge.</p>
+            </Link>
           <Link className="opening-home__card" to="/conference">
             <h3>Governance and public work</h3>
             <p>Track proposals, conference flow, and the public decisions that shape the site’s direction.</p>

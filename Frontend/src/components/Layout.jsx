@@ -54,6 +54,14 @@ export default function Layout({ children }) {
       };
     }
 
+    if (pathname === '/books/published') {
+      return {
+        section: 'Public Library',
+        title: 'Published Books',
+        description: 'Browse published books, open the online reader, and download PDF or EPUB editions.',
+      };
+    }
+
     if (pathname.startsWith('/books/read/')) {
       return {
         section: 'Public Book',

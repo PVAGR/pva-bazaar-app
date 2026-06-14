@@ -1,7 +1,7 @@
 # PVA Bazaar
 
-PVA Bazaar is a personal website, business bridge, archive, and continuity layer.
-It combines personal writings, a commerce layer, civic tools, and the HeelKawn game hub.
+PVA Bazaar is a personal website, business bridge, archive, continuity layer, and publishing suite.
+It combines personal writings, a commerce layer, civic tools, a public book shelf, and the HeelKawn game hub.
 The site is a React + Vite SPA that uses hash routes for the live app shell.
 
 Site URL: https://pvabazaar.org/
@@ -13,6 +13,8 @@ Primary surfaces:
 - Home: https://pvabazaar.org/
 - Archive: https://pvabazaar.org/#/archive
 - Marketplace: https://pvabazaar.org/#/marketplace
+- Books: https://pvabazaar.org/#/books
+- Published Books: https://pvabazaar.org/#/books/published
 - Governance: https://pvabazaar.org/#/proposals
 - Conference: https://pvabazaar.org/#/conference
 - Forum: https://pvabazaar.org/#/forum

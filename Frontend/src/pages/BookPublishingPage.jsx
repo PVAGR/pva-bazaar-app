@@ -246,6 +246,7 @@ export default function BookPublishingPage() {
             </ul>
             <div className="book-publish__heroActions">
               <Link className="book-publish__button" to="/books">Back to books</Link>
+              <Link className="book-publish__button" to="/books/published">Browse published books</Link>
               <Link className="book-publish__button book-publish__button--primary" to="/books">
                 Open the books page
               </Link>

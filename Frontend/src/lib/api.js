@@ -191,6 +191,7 @@ export const deleteRecoverySnapshotById = (snapshotId) =>
   apiDelete(`/recovery/snapshots/${encodeURIComponent(snapshotId)}`);
 
 export const fetchMyBookProjects = () => apiGet('/book-publishing/mine');
+export const fetchPublishedBookProjects = (params = {}) => apiGet('/book-publishing/public', { params });
 export const fetchBookProjectById = (bookId) => apiGet(`/book-publishing/${encodeURIComponent(bookId)}`);
 export const fetchPublicBookProject = (slug) =>
   apiGet(`/book-publishing/public/${encodeURIComponent(slug)}`);

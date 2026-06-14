@@ -44,6 +44,17 @@ export const PUBLIC_ROUTES = [
     access: 'public',
   },
   {
+    key: 'books-published',
+    to: '/books/published',
+    navLabel: 'Published Books',
+    title: 'Published Books',
+    description: 'Browse the public book shelf, read published works online, and download PDF or EPUB editions.',
+    group: 'core',
+    badge: 'Books',
+    navPlacement: 'secondary',
+    access: 'public',
+  },
+  {
     key: 'civilization-library',
     to: '/civilization-library',
     navLabel: 'Civilization Library',

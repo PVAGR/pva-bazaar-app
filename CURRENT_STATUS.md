@@ -15,6 +15,7 @@
 - Archive, studio, recovery, marketplace, showroom, admin, account, login, and dashboard surfaces all share the same atlas language.
 - Recovery and continuity flows are visible from the public site and the private tools.
 - A dedicated book publishing workspace is being added so authors can draft, upload covers, publish, and export PDF/EPUB/web editions from one source.
+- A public published-books shelf now exposes live editions with reader, PDF, and EPUB links.
 - The live frontend deployment was refreshed successfully.
 
 ## What to trust

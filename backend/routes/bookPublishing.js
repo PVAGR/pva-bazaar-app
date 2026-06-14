@@ -292,6 +292,52 @@ router.get('/mine', authenticateToken, async (req, res) => {
   }
 });
 
+router.get('/public', async (req, res) => {
+  try {
+    const limit = Math.max(1, Math.min(Number(req.query?.limit) || 24, 100));
+    const query = sanitizeText(req.query?.q || '', 120);
+    const genre = sanitizeText(req.query?.genre || '', 80).toLowerCase();
+    const filter = { status: 'published' };
+    const items = await BookProject.find(filter)
+      .sort({ publishedAt: -1, updatedAt: -1, _id: -1 })
+      .lean();
+
+    const loweredQuery = query.toLowerCase();
+    const matchedItems = items.filter((item) => {
+      if (genre && String(item.genre || '').toLowerCase() !== genre) {
+        return false;
+      }
+
+      if (!loweredQuery) return true;
+      const searchable = [
+        item.title,
+        item.subtitle,
+        item.authorName,
+        item.description,
+        item.slug,
+        item.genre,
+        item.audience,
+        item.language,
+      ]
+        .filter(Boolean)
+        .map((field) => String(field).toLowerCase())
+        .join(' ');
+
+      return searchable.includes(loweredQuery);
+    });
+
+    return res.json({
+      ok: true,
+      items: matchedItems.slice(0, limit).map((item) => bookSummary(item, { publicView: true })),
+      total: matchedItems.length,
+      query,
+      genre,
+    });
+  } catch (error) {
+    return res.status(500).json({ ok: false, error: error.message || 'Failed to load books' });
+  }
+});
+
 router.post('/', authenticateToken, bookUpload, async (req, res) => {
   try {
     const bookId = sanitizeText(req.body?.bookId || '', 120);

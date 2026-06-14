@@ -74,6 +74,7 @@ export default function BookReaderPage() {
             <h2>Download and return</h2>
             <div className="book-reader__actions">
               <Link className="book-reader__button" to="/books">Back to books</Link>
+              <Link className="book-reader__button" to="/books/published">Browse bookshelf</Link>
               <Link className="book-reader__button" to="/books/publish">Publish a book</Link>
               {viewLinks?.pdf ? <a className="book-reader__button book-reader__button--primary" href={viewLinks.pdf} target="_blank" rel="noreferrer">PDF</a> : null}
               {viewLinks?.epub ? <a className="book-reader__button" href={viewLinks.epub} target="_blank" rel="noreferrer">EPUB</a> : null}

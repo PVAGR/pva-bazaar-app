@@ -12,10 +12,11 @@
     "status": "https://pvabazaar.org/status.html"
   },
   "summary": {
-    "type": "personal website + business suite",
+    "type": "personal website + business suite + publishing suite",
     "focus": [
       "personal writings and archive",
       "sourcing, trade, and fulfillment operations",
+      "book publishing and public bookshelf",
       "civic proposals and conference workflow",
       "HeelKawn game hub and repository pulse"
     ]
@@ -38,6 +39,18 @@
       "path": "#/marketplace",
       "url": "https://pvabazaar.org/#/marketplace",
       "description": "Artifacts, listings, sourcing, and commerce."
+    },
+    {
+      "name": "Books",
+      "path": "#/books",
+      "url": "https://pvabazaar.org/#/books",
+      "description": "Featured books, reading order, and publishing gateway."
+    },
+    {
+      "name": "Published Books",
+      "path": "#/books/published",
+      "url": "https://pvabazaar.org/#/books/published",
+      "description": "Public bookshelf with online reader and download links."
     },
     {
       "name": "Governance",
@@ -160,5 +173,5 @@
     "Use sitemap.xml for static file URLs under /writings.",
     "Hash routes are the live SPA navigation."
   ],
-  "updatedAt": "2026-06-13T00:00:00Z"
+  "updatedAt": "2026-06-14T00:00:00Z"
 }

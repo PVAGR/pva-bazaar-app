@@ -83,6 +83,25 @@ export default function BooksPage() {
 
         <section className="books-page__closing">
           <div>
+            <p className="pill">Published shelf</p>
+            <h2>Read the editions that are already live.</h2>
+            <p>
+              The public bookshelf collects published books in one clean place so readers can open the web edition or
+              download the formatted files without searching through the editor.
+            </p>
+          </div>
+          <div className="books-page__actions">
+            <Link className="books-page__button books-page__button--primary" to="/books/published">
+              Open published bookshelf
+            </Link>
+            <Link className="books-page__button" to="/books/publish">
+              Publish a new book
+            </Link>
+          </div>
+        </section>
+
+        <section className="books-page__closing">
+          <div>
             <p className="pill">After the books</p>
             <h2>Then return to the broader platform.</h2>
             <p>
@@ -93,6 +112,9 @@ export default function BooksPage() {
           <div className="books-page__actions">
             <Link className="books-page__button books-page__button--primary" to="/">
               Return to home
+            </Link>
+            <Link className="books-page__button books-page__button--primary" to="/books/published">
+              Browse published books
             </Link>
             <Link className="books-page__button books-page__button--primary" to="/books/publish">
               Publish your own book
