@@ -1,6 +1,7 @@
 // Standalone health check serverless function
 // No Express, no models, no route loading - instant response
 const mongoose = require('mongoose');
+const { connectMongo, getMongoState } = require('../lib/mongoConnection');
 
 module.exports = async (req, res) => {
   const start = Date.now();
@@ -34,25 +35,12 @@ module.exports = async (req, res) => {
   let dbError = null;
   
   try {
-    // Check if already connected
-    if (mongoose.connection.readyState === 1) {
-      dbStatus = 'connected';
-    } else {
-      // Try to connect with 3s timeout
-      const connectPromise = mongoose.connect(process.env.MONGODB_URI, {
-        serverSelectionTimeoutMS: 3000,
-        connectTimeoutMS: 3000,
-        socketTimeoutMS: 3000,
-        maxPoolSize: 1,
-      });
-      
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('DB timeout')), 3000)
-      );
-      
-      await Promise.race([connectPromise, timeoutPromise]);
-      dbStatus = 'connected';
-    }
+    await Promise.race([
+      connectMongo({ logger: console }),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('DB timeout')), 3000)),
+    ]);
+    const mongoState = getMongoState();
+    dbStatus = mongoState.mode === 'memory' ? 'memory' : 'connected';
   } catch (err) {
     dbError = err.message;
   }
@@ -66,6 +54,7 @@ module.exports = async (req, res) => {
     uptime: process.uptime(),
     database: {
       status: dbStatus,
+      mode: getMongoState().mode,
       error: dbError,
       responseTime: `${elapsed}ms`,
     },

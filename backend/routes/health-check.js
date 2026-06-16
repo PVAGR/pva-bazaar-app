@@ -2,6 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
+const { connectMongo, getMongoState } = require('../lib/mongoConnection');
 
 /**
  * GET /api/health-check - Comprehensive system health check
@@ -31,9 +32,13 @@ router.get('/', async (req, res) => {
 
   // Check database
   try {
-    const dbStatus = mongoose.connection.readyState;
-    checks.checks.database.status = dbStatus === 1 ? 'ok' : 'disconnected';
-    checks.checks.database.message = `MongoDB connection state: ${dbStatus}`;
+    await Promise.race([
+      connectMongo({ logger: console }),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('DB timeout')), 3000)),
+    ]);
+    const mongoState = getMongoState();
+    checks.checks.database.status = mongoState.mode === 'memory' ? 'warning' : 'ok';
+    checks.checks.database.message = `MongoDB connection state: ${mongoose.connection.readyState} (${mongoState.mode})`;
   } catch (err) {
     checks.checks.database.status = 'error';
     checks.checks.database.message = err.message;
@@ -44,7 +49,7 @@ router.get('/', async (req, res) => {
   checks.checks.memory.message = `Heap: ${Math.round(memUsage.heapUsed / 1024 / 1024)}MB / ${Math.round(memUsage.heapTotal / 1024 / 1024)}MB`;
 
   // Check environment
-  const requiredEnv = ['MONGODB_URI', 'JWT_SECRET'];
+  const requiredEnv = ['JWT_SECRET'];
   const missingEnv = requiredEnv.filter((e) => !process.env[e]);
   const mongo = String(process.env.MONGODB_URI || '');
   const mongoLocal =
@@ -57,6 +62,10 @@ router.get('/', async (req, res) => {
     checks.checks.environment.status = 'warning';
     checks.checks.environment.message =
       'MONGODB_URI uses localhost — use MongoDB Atlas (mongodb+srv) on cloud hosts';
+  } else if (!process.env.MONGODB_URI) {
+    checks.checks.environment.status = 'warning';
+    checks.checks.environment.message =
+      'No MONGODB_URI configured; using in-memory MongoDB fallback when available';
   } else {
     checks.checks.environment.status = 'ok';
     checks.checks.environment.message = 'All required vars set';

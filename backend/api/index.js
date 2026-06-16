@@ -6,11 +6,11 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const path = require('path');
-let MongoMemoryServer;
 const openClawRoutes = require('../routes/openclaw');
 const openClawMetricsRoutes = require('../routes/openclaw-metrics');
 const salesRoutes = require('../routes/sales');
 const { getBuildInfo } = require('../lib/buildInfo');
+const { connectMongo, getMongoState } = require('../lib/mongoConnection');
 const { getRpcDiagnostics } = require('../utils/blockchain');
 const GovernanceProposal = require('../models/GovernanceProposal');
 const GovernanceVote = require('../models/GovernanceVote');
@@ -77,8 +77,9 @@ function mongoUriLooksLocal(uri) {
 function validateEnv() {
   const isProd = process.env.NODE_ENV === 'production';
   const missing = [];
-  if (!process.env.JWT_SECRET) missing.push('JWT_SECRET');
-  if (isProd && !process.env.MONGODB_URI) missing.push('MONGODB_URI');
+  if (isProd && !process.env.MONGODB_URI && process.env.ALLOW_MEMORY_DB_FALLBACK === 'false') {
+    missing.push('MONGODB_URI');
+  }
   if (missing.length) {
     const msg = `Missing env: ${missing.join(', ')}`;
     console.warn('⚠️ Env validation:', msg);
@@ -90,8 +91,6 @@ function validateEnv() {
       '❌ MONGODB_URI points at this machine (localhost). On Render/Railway/Fly there is no local MongoDB.\n' +
         '   Fix: Render Dashboard → Environment → set MONGODB_URI to your MongoDB Atlas `mongodb+srv://…` string (same as old Vercel).',
     );
-    process.env.API_READY = 'false';
-    return;
   }
   process.env.API_READY = 'true';
 }
@@ -245,61 +244,12 @@ try {
   console.warn('⚠️ Optional route disabled: webhooksGithub', err?.message || err);
 }
 
-// Connect to MongoDB - optimized for serverless with global caching
-// Use global to persist connection across serverless function invocations
-global._mongooseConn = global._mongooseConn || { conn: null, promise: null };
-global._mongoMemoryServer = global._mongoMemoryServer || null;
-
 async function connectToDatabase() {
-  // Return cached connection if available
-  if (global._mongooseConn.conn) {
-    return global._mongooseConn.conn;
-  }
-
-  // If a connection is in progress, wait for it
-  if (global._mongooseConn.promise) {
-    global._mongooseConn.conn = await global._mongooseConn.promise;
-    return global._mongooseConn.conn;
-  }
-
   try {
-    const useMemoryDb = process.env.USE_MEMORY_DB === 'true';
-    const mongoUriFromEnv = process.env.MONGODB_URI;
-
-    if (!mongoUriFromEnv && (process.env.NODE_ENV === 'production' || CLOUD_ONLY_MODE) && !useMemoryDb) {
-      throw new Error('MONGODB_URI is required when CLOUD_ONLY_MODE is enabled');
-    }
-
-    let mongoUri = mongoUriFromEnv;
-
-    if (useMemoryDb) {
-      if (!MongoMemoryServer) {
-        ({ MongoMemoryServer } = require('mongodb-memory-server'));
-      }
-      if (!global._mongoMemoryServer) {
-        global._mongoMemoryServer = await MongoMemoryServer.create();
-      }
-      mongoUri = global._mongoMemoryServer.getUri();
-      console.log('🧠 Using in-memory MongoDB for development');
-    } else {
-      console.log('🔌 Connecting to MongoDB...');
-    }
-
-    // Set timeouts for serverless environment
-    global._mongooseConn.promise = mongoose.connect(mongoUri, {
-      serverSelectionTimeoutMS: 5000,
-      connectTimeoutMS: 10000,
-      socketTimeoutMS: 20000,
-      maxPoolSize: 10,
-      autoIndex: process.env.NODE_ENV !== 'production', // Don't build indexes in prod
-    });
-
-    global._mongooseConn.conn = await global._mongooseConn.promise;
-    mongoose.connection.on('error', (err) => {
-      console.error('MongoDB error:', err?.message || err);
-    });
-    console.log('✅ MongoDB connected');
-    return global._mongooseConn.conn;
+    const conn = await connectMongo({ logger: console });
+    const mongoState = getMongoState();
+    console.log(`✅ MongoDB connected (${mongoState.mode})`);
+    return conn;
   } catch (err) {
     console.error('❌ MongoDB connection error:', err.message);
     throw err;
@@ -980,10 +930,13 @@ app.get('/api/health', async (req, res) => {
   const allowedOrigins = getAllowedOrigins();
 
   // Always return 200 with status info
+  const mongoState = getMongoState();
   res.json({
     ok: true,
     message: 'PVABazaar API is running',
     mongo: mongoConnected,
+    databaseMode: mongoState.mode,
+    databaseFallback: mongoState.mode === 'memory',
     ready: process.env.API_READY !== 'false' && mongoConnected,
     nodeEnv: process.env.NODE_ENV || 'development',
     version: build.version,

@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { getBuildInfo } = require('../lib/buildInfo');
+const { getMongoState } = require('../lib/mongoConnection');
 
 // Import OpenClaw health check (optional dependency)
 let getOpenClawHealth;
@@ -24,6 +25,12 @@ router.get('/', (req, res) => {
     version: build.version,
     sha: build.sha,
     shortSha: build.shortSha,
+    database: {
+      mode: getMongoState().mode,
+      connected: getMongoState().connected,
+      readyState: getMongoState().readyState,
+      hasEnvUri: getMongoState().hasEnvUri,
+    },
   };
 
   // Add OpenClaw status if available

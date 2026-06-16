@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Mongo bootstrap fallback that seeds a usable in-memory login when production database config is missing, so the API continues to answer instead of crashing.
 - Public published-books shelf with search, reader links, and PDF/EPUB access.
 - Books landing page and home page now surface the publishing flow more directly.
 - Book publishing workspace with cover uploads, manuscript editing, public web reader, and PDF/EPUB export routes.
