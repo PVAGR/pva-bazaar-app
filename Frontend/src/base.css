@@ -191,6 +191,7 @@ body {
 
 .layout__status {
   display: inline-flex;
+  flex-wrap: wrap;
   gap: var(--space-2);
   align-items: center;
   padding: 0.36rem 0.58rem;
@@ -211,6 +212,36 @@ body {
   color: var(--site-accent-strong);
   font-weight: 700;
   font-size: 0.88rem;
+}
+
+.layout__connectionBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.22rem 0.48rem;
+  border-radius: 999px;
+  border: 1px solid var(--site-border);
+  font-size: 0.72rem;
+  line-height: 1.2;
+  white-space: nowrap;
+  color: var(--site-text);
+  background: var(--site-panel);
+}
+
+.layout__connectionBadge--live {
+  border-color: color-mix(in srgb, var(--site-success-text) 70%, var(--site-border));
+  background: color-mix(in srgb, var(--site-success-bg) 55%, var(--site-panel));
+  color: var(--site-success-text);
+}
+
+.layout__connectionBadge--fallback,
+.layout__connectionBadge--local {
+  border-color: color-mix(in srgb, var(--site-warning-text) 55%, var(--site-border));
+  background: color-mix(in srgb, var(--site-warning-bg) 55%, var(--site-panel));
+  color: var(--site-warning-text);
+}
+
+.layout__connectionBadge--checking {
+  opacity: 0.85;
 }
 
 .layout__main {

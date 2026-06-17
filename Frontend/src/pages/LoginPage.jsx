@@ -4,12 +4,14 @@ import HelpTip from '../components/HelpTip.jsx';
 import { apiGet, apiPost } from '../lib/api';
 import { setToken } from '../lib/auth';
 import { loginLocalAccount } from '../lib/localAuthVault';
+import useConnectionMode from '../hooks/useConnectionMode.js';
 import useArchiveTheme from '../hooks/useArchiveTheme.js';
 import '../styles/admin-common.css';
 import './LoginPage.css';
 
 export default function LoginPage() {
   const { darkMode, toggleTheme } = useArchiveTheme();
+  const connectionMode = useConnectionMode();
   const navigate = useNavigate();
   const location = useLocation();
   const nextFromUrl = useMemo(() => {
@@ -115,6 +117,10 @@ export default function LoginPage() {
           <p className="muted">
             Enter the same pure-life knowledge system through your personal account or private admin access.
           </p>
+          <div className={`auth-connection auth-connection--${connectionMode.status}`} aria-live="polite">
+            <strong>{connectionMode.label}</strong>
+            <span>{connectionMode.detail}</span>
+          </div>
         </div>
         <div className="loginActions">
           <Link to="/" className="btn ghost">

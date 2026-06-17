@@ -4,6 +4,7 @@ import HelpTip from '../components/HelpTip.jsx';
 import { apiPost } from '../lib/api';
 import { setToken } from '../lib/auth';
 import { registerLocalAccount } from '../lib/localAuthVault';
+import useConnectionMode from '../hooks/useConnectionMode.js';
 import useArchiveTheme from '../hooks/useArchiveTheme.js';
 import '../styles/admin-common.css';
 import './RegisterPage.css';
@@ -22,6 +23,7 @@ const TRADING_ROLE_INTENTS = new Set(['seller', 'creator_artist', 'collector', '
 
 export default function RegisterPage() {
   const { darkMode, toggleTheme } = useArchiveTheme();
+  const connectionMode = useConnectionMode();
   const navigate = useNavigate();
   const location = useLocation();
   const next = useMemo(() => {
@@ -123,6 +125,10 @@ export default function RegisterPage() {
         <div>
           <h1>🧾 Create account</h1>
           <p className="muted">This creates a MongoDB-backed user account (separate from Admin login).</p>
+          <div className={`auth-connection auth-connection--${connectionMode.status}`} aria-live="polite">
+            <strong>{connectionMode.label}</strong>
+            <span>{connectionMode.detail}</span>
+          </div>
         </div>
         <div className="registerActions">
           <Link to="/login" className="btn ghost">

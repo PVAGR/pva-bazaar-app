@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Free browser-side auth fallback so people can sign in and sign up even when the hosted API is unavailable.
+- Global connection indicators on the layout and auth pages so the site shows live backend vs free fallback mode clearly.
 - Mongo bootstrap fallback that uses a serverless-safe mock state when production database config is missing, so the API continues to answer instead of crashing.
 - Serverless-safe mock database fallback plus shared JWT secret fallback so `/api/health` and login continue working when production secrets are missing.
 - Public published-books shelf with search, reader links, and PDF/EPUB access.

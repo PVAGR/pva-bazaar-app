@@ -4,6 +4,7 @@ import OpenClawFloatingAssistant from './OpenClawFloatingAssistant.jsx';
 import { PUBLIC_ROUTES } from '../config/publicRoutes';
 import { getToken } from '../lib/auth';
 import useArchiveTheme from '../hooks/useArchiveTheme.js';
+import useConnectionMode from '../hooks/useConnectionMode.js';
 
 const FEDERATION_SNIPPET =
   'PVA Bazaar is my personal archive, business bridge, and continuity layer. Nothing important should be hidden, lost, or silently replaced.';
@@ -24,6 +25,7 @@ function parseJwtPayload(token) {
 
 export default function Layout({ children }) {
   const { darkMode, toggleTheme } = useArchiveTheme();
+  const connectionMode = useConnectionMode();
   const location = useLocation();
   const token = getToken();
   const hasUserAccess = Boolean(token);
@@ -172,6 +174,9 @@ export default function Layout({ children }) {
           <NavLink className="layout__statusAction" to={hasUserAccess ? '/dashboard' : '/login'}>
             {hasUserAccess ? 'Authenticated' : 'Guest'}
           </NavLink>
+          <span className={`layout__connectionBadge layout__connectionBadge--${connectionMode.status}`}>
+            {connectionMode.label}
+          </span>
         </div>
         <button
           type="button"

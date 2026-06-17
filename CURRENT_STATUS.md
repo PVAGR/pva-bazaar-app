@@ -10,6 +10,7 @@
 - The repo now has one clear starting point: `CANONICAL_MAP.md`.
 - Sign-in and sign-up now have a free browser-side fallback path if the hosted API is unavailable.
 - The frontend build is green after adding the local auth vault dependency and wiring login/register fallback.
+- The layout and auth pages now show whether the site is on the live backend or free local fallback mode.
 
 ## Recently completed
 
