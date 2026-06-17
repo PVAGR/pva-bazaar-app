@@ -2,6 +2,7 @@
 import { ENV } from "../config/env";
 import { getToken } from "./auth";
 import { FEATURED_INVENTORY, findFeaturedItem } from "./featuredInventory";
+import { getLocalCurrentUser, isLocalToken } from './localAuthVault';
 
 function normalizeApiBaseUrl(rawUrl) {
   const value = String(rawUrl || '').trim();
@@ -183,6 +184,25 @@ export const saveGovernanceDraft = (draft) => apiPut('/governance/drafts', { dra
 export const clearGovernanceDraft = () => apiDelete('/governance/drafts');
 
 export const fetchCurrentUser = () => apiGet('/auth/me');
+export const fetchCurrentUserWithFallback = async () => {
+  const token = getToken();
+  if (isLocalToken(token)) {
+    const user = getLocalCurrentUser();
+    if (user) {
+      return { ok: true, user };
+    }
+  }
+
+  try {
+    return await fetchCurrentUser();
+  } catch (_err) {
+    const user = getLocalCurrentUser();
+    if (user) {
+      return { ok: true, user };
+    }
+    return { ok: false, user: null };
+  }
+};
 export const fetchRecoverySnapshots = () => apiGet('/recovery/snapshots');
 export const createRecoverySnapshot = (payload) => apiPost('/recovery/snapshots', payload);
 export const fetchRecoverySnapshotById = (snapshotId) =>

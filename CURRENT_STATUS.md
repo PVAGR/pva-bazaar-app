@@ -1,6 +1,6 @@
 # Current Status - PVA Bazaar
 
-**Status:** Live frontend updated | Backend on Vercel | Canonical map established
+**Status:** Live frontend updated | Backend on Vercel (fallback-safe) | Canonical map established
 
 ## Current truth
 
@@ -8,6 +8,8 @@
 - The backend/API is treated as a separate Vercel deployment.
 - `Frontend/public/live-map.json` is the canonical live routing map.
 - The repo now has one clear starting point: `CANONICAL_MAP.md`.
+- Sign-in and sign-up now have a free browser-side fallback path if the hosted API is unavailable.
+- The frontend build is green after adding the local auth vault dependency and wiring login/register fallback.
 
 ## Recently completed
 

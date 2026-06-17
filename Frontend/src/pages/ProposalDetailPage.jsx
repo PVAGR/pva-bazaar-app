@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
   endorseProposal,
-  fetchCurrentUser,
+  fetchCurrentUserWithFallback,
   fetchGovernanceExecutionTimeline,
   fetchGovernanceVoteSummary,
   fetchMyPassport,
@@ -68,7 +68,7 @@ export default function ProposalDetailPage() {
     async function loadViewer() {
       if (!getToken()) return;
       try {
-        const [passportResponse, userResponse] = await Promise.all([fetchMyPassport(), fetchCurrentUser()]);
+        const [passportResponse, userResponse] = await Promise.all([fetchMyPassport(), fetchCurrentUserWithFallback()]);
         if (!active) return;
         const eligible = passportResponse?.item?.passportStatus === 'verified' && passportResponse?.item?.governanceToken === true;
         setVerifiedCitizen(Boolean(eligible));

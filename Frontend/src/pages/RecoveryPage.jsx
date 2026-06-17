@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   createRecoverySnapshot,
   deleteRecoverySnapshotById,
-  fetchCurrentUser,
+  fetchCurrentUserWithFallback,
   fetchRecoverySnapshotById,
   fetchRecoverySnapshots,
   getApiBase,
@@ -151,7 +151,7 @@ export default function RecoveryPage() {
 
   const loadAccount = async () => {
     try {
-      const result = await fetchCurrentUser();
+      const result = await fetchCurrentUserWithFallback();
       setAccount(result?.user || null);
       setAccountError('');
     } catch (error) {

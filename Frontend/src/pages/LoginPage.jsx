@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import HelpTip from '../components/HelpTip.jsx';
 import { apiGet, apiPost } from '../lib/api';
 import { setToken } from '../lib/auth';
+import { loginLocalAccount } from '../lib/localAuthVault';
 import useArchiveTheme from '../hooks/useArchiveTheme.js';
 import '../styles/admin-common.css';
 import './LoginPage.css';
@@ -86,7 +87,21 @@ export default function LoginPage() {
       navigate('/onboarding', { replace: true });
     } catch (err) {
       const serverMsg = err?.response?.data?.message || err?.response?.data?.error;
-      setError(serverMsg || err.message || 'Login failed');
+      try {
+        const local = await loginLocalAccount({
+          usernameOrEmail: userCreds.usernameOrEmail.trim(),
+          password: userCreds.password,
+        });
+        setToken(local.token);
+        if (nextFromUrl) {
+          navigate(nextFromUrl, { replace: true });
+          return;
+        }
+        navigate('/onboarding', { replace: true });
+        return;
+      } catch (localErr) {
+        setError(localErr?.message || serverMsg || err.message || 'Login failed');
+      }
     } finally {
       setLoading(false);
     }

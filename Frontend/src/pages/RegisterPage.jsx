@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import HelpTip from '../components/HelpTip.jsx';
 import { apiPost } from '../lib/api';
 import { setToken } from '../lib/auth';
+import { registerLocalAccount } from '../lib/localAuthVault';
 import useArchiveTheme from '../hooks/useArchiveTheme.js';
 import '../styles/admin-common.css';
 import './RegisterPage.css';
@@ -81,7 +82,36 @@ export default function RegisterPage() {
       navigate(next, { replace: true });
     } catch (err) {
       const serverMsg = err?.response?.data?.message || err?.response?.data?.error;
-      setError(serverMsg || err.message || 'Registration failed');
+      try {
+        const local = await registerLocalAccount({
+          name: form.name.trim(),
+          email: form.email.trim(),
+          password: form.password,
+          onboarding: {
+            roleIntent: form.roleIntent,
+            roleOther: form.roleIntent === 'other' ? form.roleOther : '',
+            appRole: 'consumer',
+            compliance: TRADING_ROLE_INTENTS.has(form.roleIntent)
+              ? {
+                legalFullName: form.name,
+                legalIdType: form.legalIdType,
+                legalIdNumber: form.legalIdNumber,
+                addressLine1: form.addressLine1,
+                city: form.city,
+                postalCode: form.postalCode,
+                country: form.country,
+                phone: form.phone,
+                identityAttested: form.identityAttested,
+              }
+              : undefined,
+          },
+        });
+        setToken(local.token);
+        navigate(next, { replace: true });
+        return;
+      } catch (localErr) {
+        setError(localErr?.message || serverMsg || err.message || 'Registration failed');
+      }
     } finally {
       setLoading(false);
     }
@@ -234,4 +264,3 @@ export default function RegisterPage() {
     </div>
   );
 }
-

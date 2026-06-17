@@ -1,3 +1,5 @@
+import { clearCurrent } from './localAuthVault';
+
 export function getToken() {
   if (typeof window === 'undefined') return '';
   const token =
@@ -17,6 +19,9 @@ export function setToken(token) {
   localStorage.setItem('token', token);
   localStorage.removeItem('authToken');
   localStorage.removeItem('jwt');
+  if (!String(token || '').startsWith('local.')) {
+    clearCurrent();
+  }
 }
 
 export function clearToken() {
@@ -24,5 +29,9 @@ export function clearToken() {
   localStorage.removeItem('token');
   localStorage.removeItem('authToken');
   localStorage.removeItem('jwt');
+  clearCurrent();
 }
 
+export function isLocalToken(token) {
+  return String(token || '').startsWith('local.');
+}
