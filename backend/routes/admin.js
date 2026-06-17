@@ -11,6 +11,7 @@ const Order = require('../models/Order');
 const { createSystemEvent, dispatchToOpenClaw } = require('../utils/openclaw-events');
 const { getBuildInfo } = require('../lib/buildInfo');
 const { getRpcDiagnostics } = require('../utils/blockchain');
+const { getJwtSecret, hasConfiguredJwtSecret } = require('../lib/jwtSecret');
 
 const ALLOWED_USER_SORT_FIELDS = new Set(['createdAt', 'updatedAt', 'name', 'email', 'username', 'role']);
 
@@ -68,7 +69,7 @@ router.get('/panel-report', async (_req, res) => {
           process.env.ADMIN_BOOTSTRAP_CODE || process.env.ADMIN_SECRET_CODE
         ),
         adminSecretConfigured: Boolean(String(process.env.ADMIN_SECRET_CODE || '').trim()),
-        jwtConfigured: Boolean(String(process.env.JWT_SECRET || '').trim()),
+        jwtConfigured: hasConfiguredJwtSecret(),
       },
       links: {
         adminUi: 'https://pvabazaar.org/#/admin',
@@ -115,7 +116,7 @@ router.post('/token', (req, res) => {
   // Generate JWT with 12-hour expiration
   const token = jwt.sign(
     { id: getAdminSubjectId(), role: 'admin' }, 
-    process.env.JWT_SECRET,
+    getJwtSecret(),
     { expiresIn: '12h' }
   );
   
@@ -125,13 +126,9 @@ router.post('/token', (req, res) => {
 // POST /api/admin/token-refresh - Refresh authenticated admin token
 router.post('/token-refresh', (req, res, next) => {
   if (process.env.NODE_ENV !== 'production') {
-    if (!process.env.JWT_SECRET) {
-      return res.status(503).json({ ok: false, message: 'JWT secret is not configured' });
-    }
-
     const token = jwt.sign(
       { id: getAdminSubjectId(), role: 'admin' },
-      process.env.JWT_SECRET,
+      getJwtSecret(),
       { expiresIn: '12h' }
     );
 
@@ -141,13 +138,9 @@ router.post('/token-refresh', (req, res, next) => {
   return authenticateToken(req, res, (err) => {
     if (err) return next(err);
     return adminOnly(req, res, () => {
-      if (!process.env.JWT_SECRET) {
-        return res.status(503).json({ ok: false, message: 'JWT secret is not configured' });
-      }
-
       const token = jwt.sign(
         { id: req.user?.id || getAdminSubjectId(), role: 'admin' },
-        process.env.JWT_SECRET,
+        getJwtSecret(),
         { expiresIn: '12h' }
       );
 

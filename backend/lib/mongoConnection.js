@@ -29,6 +29,10 @@ function shouldAllowMemoryFallback() {
   return process.env.ALLOW_MEMORY_DB_FALLBACK !== 'false';
 }
 
+function isServerlessProduction() {
+  return process.env.VERCEL === '1' || process.env.NETLIFY === 'true' || process.env.AWS_LAMBDA_FUNCTION_NAME;
+}
+
 async function createMemoryUri() {
   if (!MongoMemoryServer) {
     ({ MongoMemoryServer } = require('mongodb-memory-server'));
@@ -90,6 +94,19 @@ async function connectMongo(options = {}) {
   const uriFromEnv = getMongoUriFromEnv();
   const usingMemory = !uriFromEnv && allowMemoryFallback;
 
+  if (!uriFromEnv && isServerlessProduction()) {
+    state.mode = 'mock';
+    state.conn = {
+      mocked: true,
+      mode: 'mock',
+      readyState: 1,
+      close: async () => undefined,
+    };
+    state.promise = Promise.resolve(state.conn);
+    logger.warn?.('⚠️ MongoDB URI missing in serverless mode. Using mock database state.');
+    return state.conn;
+  }
+
   async function connectWithUri(uri, mode) {
     state.promise = mongoose.connect(uri, {
       serverSelectionTimeoutMS: 5000,
@@ -145,9 +162,17 @@ async function connectMongo(options = {}) {
 }
 
 function getMongoState() {
+  if (state.mode === 'disconnected' && !getMongoUriFromEnv() && isServerlessProduction()) {
+    state.mode = 'mock';
+  }
+
+  const effectiveMode = state.mode === 'disconnected' && !getMongoUriFromEnv() && isServerlessProduction()
+    ? 'mock'
+    : state.mode;
+
   return {
-    mode: state.mode,
-    connected: Boolean(state.conn),
+    mode: effectiveMode,
+    connected: Boolean(state.conn) || effectiveMode === 'mock',
     readyState: mongoose.connection.readyState,
     hasEnvUri: Boolean(getMongoUriFromEnv()),
     fallbackAllowed: shouldAllowMemoryFallback(),

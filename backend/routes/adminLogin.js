@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const axios = require('axios');
 const User = require('../models/User');
+const { getJwtSecret, hasConfiguredJwtSecret } = require('../lib/jwtSecret');
 
 function isObjectIdHex(v) {
   return typeof v === 'string' && /^[a-f\d]{24}$/i.test(v);
@@ -42,7 +43,7 @@ function buildBootstrapStatus(adminCount) {
   const bootstrapCodeRequired = adminCount > 0 && !selfSignupEnabled;
   const signupAllowed = needsBootstrap || selfSignupEnabled || Boolean(configuredBootstrapCode);
   const adminSecretConfigured = Boolean(String(process.env.ADMIN_SECRET_CODE || '').trim());
-  const jwtConfigured = Boolean(String(process.env.JWT_SECRET || '').trim());
+  const jwtConfigured = hasConfiguredJwtSecret();
   const githubOAuthEnabled = Boolean(
     String(process.env.ADMIN_GITHUB_CLIENT_ID || '').trim()
     && String(process.env.ADMIN_GITHUB_CLIENT_SECRET || '').trim()
@@ -157,14 +158,14 @@ router.get('/bootstrap-status', async (_req, res) => {
 
 // GET /api/admin/oauth/github/status - GitHub OAuth readiness for admin login.
 router.get('/oauth/github/status', (req, res) => {
-  const required = ['ADMIN_GITHUB_CLIENT_ID', 'ADMIN_GITHUB_CLIENT_SECRET', 'JWT_SECRET'];
+  const required = ['ADMIN_GITHUB_CLIENT_ID', 'ADMIN_GITHUB_CLIENT_SECRET'];
   const missing = required.filter((key) => !String(process.env[key] || '').trim());
   const allowlist = parseGithubAllowlist();
 
   return res.json({
     ok: true,
     configured: missing.length === 0,
-    jwtConfigured: Boolean(String(process.env.JWT_SECRET || '').trim()),
+    jwtConfigured: hasConfiguredJwtSecret(),
     missing,
     callbackUrl: getAdminGithubCallbackUrl(req),
     frontendReturnUrl: getAdminGithubFrontendUrl(req),
@@ -177,10 +178,10 @@ router.get('/oauth/github/start', async (req, res) => {
   try {
     const clientId = String(process.env.ADMIN_GITHUB_CLIENT_ID || '').trim();
     const clientSecret = String(process.env.ADMIN_GITHUB_CLIENT_SECRET || '').trim();
-    const jwtSecret = String(process.env.JWT_SECRET || '').trim();
+    const jwtSecret = getJwtSecret();
     const frontendUrl = getAdminGithubFrontendUrl(req);
 
-    if (!clientId || !clientSecret || !jwtSecret) {
+    if (!clientId || !clientSecret) {
       return res.redirect(
         buildFrontendRedirect(frontendUrl, {
           oauth_admin_error: 'GitHub admin login is not configured on the server',
@@ -224,9 +225,9 @@ router.get('/oauth/github/callback', async (req, res) => {
   try {
     const clientId = String(process.env.ADMIN_GITHUB_CLIENT_ID || '').trim();
     const clientSecret = String(process.env.ADMIN_GITHUB_CLIENT_SECRET || '').trim();
-    const jwtSecret = String(process.env.JWT_SECRET || '').trim();
+    const jwtSecret = getJwtSecret();
 
-    if (!clientId || !clientSecret || !jwtSecret) {
+    if (!clientId || !clientSecret) {
       return res.redirect(
         buildFrontendRedirect(frontendUrl, {
           oauth_admin_error: 'GitHub admin login is not configured on the server',

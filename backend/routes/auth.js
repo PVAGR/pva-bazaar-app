@@ -5,6 +5,9 @@ const jwt = require('jsonwebtoken');
 const { authenticateToken } = require('../middleware/auth');
 const { createUserEvent, dispatchToOpenClaw } = require('../utils/openclaw-events');
 const { sendWelcomeEmail } = require('../services/emailService');
+const { getMongoState } = require('../lib/mongoConnection');
+const { ensureSeedUsers, findUser, saveUser } = require('../lib/mockUserStore');
+const { getJwtSecret } = require('../lib/jwtSecret');
 
 const ROLE_INTENT_TO_APP_ROLE = {
   seller: 'seller',
@@ -57,12 +60,19 @@ router.post('/register', async (req, res) => {
       : null;
 
     // Check if user already exists
-    const existingUser = await User.findOne({ email });
+    const useMockStore = getMongoState().mode === 'mock';
+    if (useMockStore) {
+      await ensureSeedUsers();
+    }
+
+    const existingUser = useMockStore
+      ? await findUser({ email })
+      : await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ ok: false, message: 'User already exists' });
     }
 
-    const user = new User({
+    const userData = {
       name,
       email,
       password,
@@ -80,9 +90,10 @@ router.post('/register', async (req, res) => {
           roleTrackUpdates,
         },
       },
-    });
-    await user.save();
-    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    };
+
+    const user = useMockStore ? await saveUser(userData) : await new User(userData).save();
+    const token = jwt.sign({ id: user._id, role: user.role }, getJwtSecret(), { expiresIn: '7d' });
     
     // Dispatch user registration event (non-blocking)
     dispatchToOpenClaw(createUserEvent('registered', user, {
@@ -126,13 +137,26 @@ router.post('/login', async (req, res) => {
     }
 
     const identifierLower = identifier.toLowerCase();
-    let user = await User.findOne({
-      $or: [
-        { email: identifierLower },
-        { email: identifier },
-        { username: identifier },
-      ],
-    });
+    const useMockStore = getMongoState().mode === 'mock';
+    if (useMockStore) {
+      await ensureSeedUsers();
+    }
+
+    let user = useMockStore
+      ? await findUser({
+          $or: [
+            { email: identifierLower },
+            { email: identifier },
+            { username: identifier },
+          ],
+        })
+      : await User.findOne({
+          $or: [
+            { email: identifierLower },
+            { email: identifier },
+            { username: identifier },
+          ],
+        });
 
     // Optional emergency admin bootstrap from env vars.
     // This keeps production recoverable if the admin user record is missing.
@@ -149,22 +173,31 @@ router.post('/login', async (req, res) => {
     let envAdminAuthenticated = false;
 
     if (envAdminPassword && adminIdentifierMatch && password === envAdminPassword) {
-      user = await User.findOne({
+      user = useMockStore
+        ? await findUser({
+            $or: [
+              { username: envAdminUsername },
+              { email: envAdminEmail },
+              { email: envAdminUsernameLower },
+            ],
+          })
+        : await User.findOne({
         $or: [
           { username: envAdminUsername },
           { email: envAdminEmail },
           { email: envAdminUsernameLower },
         ],
-      });
+        });
 
       if (!user) {
-        user = new User({
+        const adminData = {
           name: 'PVA Admin',
           username: envAdminUsername,
           email: envAdminEmail || envAdminUsernameLower,
           password: envAdminPassword,
           role: 'admin',
-        });
+        };
+        user = useMockStore ? await saveUser(adminData) : new User(adminData);
       } else {
         if (!user.username) user.username = envAdminUsername;
         // Keep env-admin login deterministic: refresh password from env when override path is used.
@@ -172,7 +205,11 @@ router.post('/login', async (req, res) => {
         user.role = 'admin';
       }
 
-      await user.save();
+      if (!useMockStore) {
+        await user.save();
+      } else {
+        await saveUser(user);
+      }
       envAdminAuthenticated = true;
     }
 
@@ -183,7 +220,7 @@ router.post('/login', async (req, res) => {
     if (!envAdminAuthenticated && !(await user.comparePassword(password))) {
       return res.status(401).json({ ok: false, message: 'Invalid credentials' });
     }
-    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ id: user._id, role: user.role }, getJwtSecret(), { expiresIn: '7d' });
     
     // Dispatch user login event (non-blocking)
     dispatchToOpenClaw(createUserEvent('authenticated', user, {

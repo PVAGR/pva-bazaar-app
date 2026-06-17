@@ -16,7 +16,7 @@
 - Recovery and continuity flows are visible from the public site and the private tools.
 - A dedicated book publishing workspace is being added so authors can draft, upload covers, publish, and export PDF/EPUB/web editions from one source.
 - A public published-books shelf now exposes live editions with reader, PDF, and EPUB links.
-- Backend database bootstrap now falls back to in-memory Mongo with a seeded login user if production MONGODB_URI is missing, so the API keeps responding instead of hard-failing at startup.
+- Backend database bootstrap now uses a serverless-safe mock fallback when production `MONGODB_URI` is missing, and auth/login falls back to a shared JWT secret so the API keeps responding instead of hard-failing at startup.
 - The live frontend deployment was refreshed successfully.
 
 ## What to trust

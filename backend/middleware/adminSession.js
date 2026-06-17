@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const { getJwtSecret } = require('../lib/jwtSecret');
 
 // Middleware to check for a valid admin session via HttpOnly cookie
 module.exports = function adminSession(req, res, next) {
@@ -11,11 +12,7 @@ module.exports = function adminSession(req, res, next) {
     return res.status(401).json({ ok: false, message: 'Not authenticated (no token)' });
   }
   try {
-    if (!process.env.JWT_SECRET) {
-      return res.status(503).json({ ok: false, message: 'JWT secret not configured' });
-    }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, getJwtSecret());
     if (decoded.role !== 'admin') {
       return res.status(403).json({ ok: false, message: 'Forbidden (not admin)' });
     }
