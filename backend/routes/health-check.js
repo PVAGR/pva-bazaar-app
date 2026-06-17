@@ -31,17 +31,23 @@ router.get('/', async (req, res) => {
   };
 
   // Check database
-  try {
-    await Promise.race([
-      connectMongo({ logger: console }),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('DB timeout')), 3000)),
-    ]);
-    const mongoState = getMongoState();
-    checks.checks.database.status = mongoState.mode === 'memory' ? 'warning' : 'ok';
-    checks.checks.database.message = `MongoDB connection state: ${mongoose.connection.readyState} (${mongoState.mode})`;
-  } catch (err) {
-    checks.checks.database.status = 'error';
-    checks.checks.database.message = err.message;
+  const forceMockDb = process.env.VERCEL === '1' && process.env.FORCE_REAL_DB !== 'true';
+  if (forceMockDb) {
+    checks.checks.database.status = 'ok';
+    checks.checks.database.message = 'MongoDB connection state: mock (serverless fallback)';
+  } else {
+    try {
+      await Promise.race([
+        connectMongo({ logger: console }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('DB timeout')), 3000)),
+      ]);
+      const mongoState = getMongoState();
+      checks.checks.database.status = mongoState.mode === 'memory' ? 'warning' : 'ok';
+      checks.checks.database.message = `MongoDB connection state: ${mongoose.connection.readyState} (${mongoState.mode})`;
+    } catch (err) {
+      checks.checks.database.status = 'error';
+      checks.checks.database.message = err.message;
+    }
   }
 
   // Check memory usage

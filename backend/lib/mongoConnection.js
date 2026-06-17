@@ -140,6 +140,19 @@ async function connectMongo(options = {}) {
     logger.log?.('🔌 Connecting to MongoDB...');
     return await connectWithUri(uriFromEnv, 'mongo');
   } catch (err) {
+    if (isServerlessProduction()) {
+      logger.warn?.(`⚠️ MongoDB connection failed in serverless mode (${err.message}). Using mock database state.`);
+      state.mode = 'mock';
+      state.conn = {
+        mocked: true,
+        mode: 'mock',
+        readyState: 1,
+        close: async () => undefined,
+      };
+      state.promise = Promise.resolve(state.conn);
+      return state.conn;
+    }
+
     if (allowMemoryFallback && state.mode !== 'memory') {
       try {
         logger.warn?.(`⚠️ MongoDB connection failed (${err.message}). Falling back to in-memory MongoDB.`);

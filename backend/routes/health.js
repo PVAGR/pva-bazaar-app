@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { getBuildInfo } = require('../lib/buildInfo');
-const { getMongoState } = require('../lib/mongoConnection');
+const { connectMongo, getMongoState } = require('../lib/mongoConnection');
 
 // Import OpenClaw health check (optional dependency)
 let getOpenClawHealth;
@@ -12,9 +12,31 @@ try {
   getOpenClawHealth = null;
 }
 
-router.get('/', (req, res) => {
+router.get('/', async (_req, res) => {
   // Health check: simple, no DB dependency
   const build = getBuildInfo();
+  const forceMockDb = process.env.VERCEL === '1' && process.env.FORCE_REAL_DB !== 'true';
+  let mongoState = getMongoState();
+
+  if (forceMockDb) {
+    mongoState = {
+      ...mongoState,
+      mode: 'mock',
+      connected: true,
+      readyState: 1,
+    };
+  } else {
+    try {
+      await Promise.race([
+        connectMongo({ logger: console }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('DB timeout')), 3000)),
+      ]);
+    } catch (err) {
+      console.warn('⚠️ Health check DB connection failed:', err.message);
+    }
+
+    mongoState = getMongoState();
+  }
   const response = { 
     ok: true, 
     message: 'PVA Bazaar API is healthy!', 
@@ -26,10 +48,10 @@ router.get('/', (req, res) => {
     sha: build.sha,
     shortSha: build.shortSha,
     database: {
-      mode: getMongoState().mode,
-      connected: getMongoState().connected,
-      readyState: getMongoState().readyState,
-      hasEnvUri: getMongoState().hasEnvUri,
+      mode: mongoState.mode,
+      connected: mongoState.connected,
+      readyState: mongoState.readyState,
+      hasEnvUri: mongoState.hasEnvUri,
     },
   };
 

@@ -266,6 +266,12 @@ app.use(async (req, res, next) => {
     return next();
   }
 
+  const forceMockDb = process.env.VERCEL === '1' && process.env.FORCE_REAL_DB !== 'true';
+  if (forceMockDb) {
+    console.warn('⚠️ Serverless mock DB mode enabled. Skipping live DB connection middleware.');
+    return next();
+  }
+
   // Connect to DB for all other routes
   try {
     await connectToDatabase();

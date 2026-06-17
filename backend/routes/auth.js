@@ -60,7 +60,9 @@ router.post('/register', async (req, res) => {
       : null;
 
     // Check if user already exists
-    const useMockStore = getMongoState().mode === 'mock';
+    const useMockStore = process.env.VERCEL === '1' && process.env.FORCE_REAL_DB !== 'true'
+      ? true
+      : getMongoState().mode === 'mock';
     if (useMockStore) {
       await ensureSeedUsers();
     }
@@ -137,7 +139,9 @@ router.post('/login', async (req, res) => {
     }
 
     const identifierLower = identifier.toLowerCase();
-    const useMockStore = getMongoState().mode === 'mock';
+    const useMockStore = process.env.VERCEL === '1' && process.env.FORCE_REAL_DB !== 'true'
+      ? true
+      : getMongoState().mode === 'mock';
     if (useMockStore) {
       await ensureSeedUsers();
     }
