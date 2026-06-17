@@ -1,0 +1,106 @@
+const express = require('express');
+const helmet = require('helmet');
+const cors = require('cors');
+const dotenv = require('dotenv');
+const { getBuildInfo } = require('../lib/buildInfo');
+const { connectMongo, getMongoState } = require('../lib/mongoConnection');
+
+if (process.env.RENDER !== 'true') {
+  dotenv.config({ override: false });
+}
+
+const app = express();
+app.set('trust proxy', 1);
+app.use(helmet({ contentSecurityPolicy: false }));
+app.use(cors({
+  origin: true,
+  credentials: true,
+}));
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+
+function forceMockDbMode() {
+  return process.env.VERCEL === '1' && process.env.FORCE_REAL_DB !== 'true';
+}
+
+async function ensureDatabaseState() {
+  if (forceMockDbMode()) {
+    const state = getMongoState();
+    return {
+      ...state,
+      mode: 'mock',
+      connected: true,
+      readyState: 1,
+    };
+  }
+
+  try {
+    await Promise.race([
+      connectMongo({ logger: console }),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('DB timeout')), 3000)),
+    ]);
+  } catch (err) {
+    console.warn('⚠️ Serverless DB bootstrap warning:', err.message);
+  }
+
+  return getMongoState();
+}
+
+app.use(async (req, res, next) => {
+  res.setHeader('Vary', 'Origin');
+  const origin = req.headers.origin || '';
+  if (origin) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+  }
+  res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Admin-Code,Origin,X-Requested-With,Accept');
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end();
+  }
+  next();
+});
+
+app.get('/api/health', async (_req, res) => {
+  const build = getBuildInfo();
+  const mongoState = await ensureDatabaseState();
+  res.status(200).json({
+    ok: true,
+    message: 'PVA Bazaar API is healthy!',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || 'development',
+    legacyMode: process.env.LEGACY_MODE === 'true',
+    version: build.version,
+    sha: build.sha,
+    shortSha: build.shortSha,
+    database: {
+      mode: mongoState.mode,
+      connected: mongoState.connected,
+      readyState: mongoState.readyState,
+      hasEnvUri: mongoState.hasEnvUri,
+    },
+  });
+});
+
+app.use('/api/health-check', require('../routes/health-check'));
+app.use('/api/auth', require('../routes/auth'));
+app.use('/api/admin', require('../routes/adminLogin'));
+app.use('/api/admin', require('../routes/admin'));
+app.use('/api/health', require('../routes/health'));
+
+app.get('/api/ping', (_req, res) => {
+  const build = getBuildInfo();
+  res.status(200).json({ ok: true, message: 'pong', timestamp: new Date().toISOString(), version: build.version, sha: build.sha, shortSha: build.shortSha });
+});
+
+app.get('/api/version', (_req, res) => {
+  const build = getBuildInfo();
+  res.status(200).json({ ok: true, ...build, timestamp: new Date().toISOString() });
+});
+
+app.use((req, res) => {
+  res.status(404).json({ ok: false, message: 'API endpoint not found' });
+});
+
+module.exports = app;

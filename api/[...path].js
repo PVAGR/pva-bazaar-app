@@ -3,7 +3,7 @@
 
 try {
   // Load the app
-  const app = require('../backend/api/index.js');
+  const app = require('../backend/api/index-serverless.js');
   module.exports = app;
 } catch (error) {
   console.error('CRITICAL: Failed to load API:', error);
