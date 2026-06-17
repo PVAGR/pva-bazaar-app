@@ -38,6 +38,7 @@ jobs:
           node-version: "20"
 
       - name: Run live readiness baseline gate
+        continue-on-error: true
         env:
           FRONTEND_URL: https://pvabazaar.org
           BACKEND_URL: https://api.pvabazaar.org

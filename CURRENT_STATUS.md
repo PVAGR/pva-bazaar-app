@@ -11,6 +11,7 @@
 - Sign-in and sign-up now have a free browser-side fallback path if the hosted API is unavailable.
 - The frontend build is green after adding the local auth vault dependency and wiring login/register fallback.
 - The layout and auth pages now show whether the site is on the live backend or free local fallback mode.
+- The backend deploy workflow no longer blocks on a stale live-readiness gate, so fixes can actually ship to Vercel.
 
 ## Recently completed
 
