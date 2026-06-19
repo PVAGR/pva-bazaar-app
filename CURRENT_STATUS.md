@@ -1,16 +1,17 @@
 # Current Status - PVA Bazaar
 
-**Status:** Live frontend updated | Backend on Vercel (fallback-safe) | Canonical map established
+**Status:** Live frontend updated | Multi-host backend failover active | Canonical map established
 
 ## Current truth
 
 - The public website runs on GitHub Pages.
-- The backend/API is treated as a separate Vercel deployment.
+- The backend/API now prefers the reachable Render host and can fail over to alternate hosts so the site stays reachable across regions.
 - `Frontend/public/live-map.json` is the canonical live routing map.
 - The repo now has one clear starting point: `CANONICAL_MAP.md`.
 - Sign-in and sign-up now have a free browser-side fallback path if the hosted API is unavailable.
 - The frontend build is green after adding the local auth vault dependency and wiring login/register fallback.
 - The layout and auth pages now show whether the site is on the live backend or free local fallback mode.
+- The frontend API client now tries multiple backend candidates instead of depending on one endpoint.
 - The backend deploy workflow no longer blocks on a stale live-readiness gate, so fixes can actually ship to Vercel.
 
 ## Recently completed
@@ -21,6 +22,7 @@
 - A dedicated book publishing workspace is being added so authors can draft, upload covers, publish, and export PDF/EPUB/web editions from one source.
 - A public published-books shelf now exposes live editions with reader, PDF, and EPUB links.
 - Backend database bootstrap now uses a serverless-safe mock fallback when production `MONGODB_URI` is missing, and auth/login falls back to a shared JWT secret so the API keeps responding instead of hard-failing at startup.
+- The frontend API client now falls back across Render, the pvabazaar API domain, and Vercel endpoints so people in more regions can still reach the site even if one host is slow or down.
 - The live frontend deployment was refreshed successfully.
 
 ## What to trust

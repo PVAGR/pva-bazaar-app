@@ -1,3 +1,8 @@
+if (process.env.VERCEL === '1' && process.env.FORCE_FULL_EXPRESS !== 'true') {
+  module.exports = require('./index-serverless');
+  return;
+}
+
 const express = require('express');
 const helmet = require('helmet');
 const Sentry = require('@sentry/node');

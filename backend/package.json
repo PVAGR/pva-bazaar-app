@@ -2,7 +2,7 @@
   "name": "pva-bazaar",
   "version": "1.0.0",
   "description": "PVA Bazaar - Blockchain-powered artisan marketplace",
-  "main": "api/index.js",
+  "main": "api/index-serverless.js",
   "engines": {
     "node": "20.x"
   },

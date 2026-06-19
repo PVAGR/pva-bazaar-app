@@ -29,8 +29,16 @@ function shouldAllowMemoryFallback() {
   return process.env.ALLOW_MEMORY_DB_FALLBACK !== 'false';
 }
 
+function shouldAllowMockFallback() {
+  return process.env.ALLOW_MOCK_DB_FALLBACK !== 'false';
+}
+
 function isServerlessProduction() {
   return process.env.VERCEL === '1' || process.env.NETLIFY === 'true' || process.env.AWS_LAMBDA_FUNCTION_NAME;
+}
+
+function isRenderProduction() {
+  return process.env.RENDER === 'true';
 }
 
 async function createMemoryUri() {
@@ -78,6 +86,15 @@ async function seedFallbackData() {
   state.seeded = true;
 }
 
+function createMockConnection() {
+  return {
+    mocked: true,
+    mode: 'mock',
+    readyState: 1,
+    close: async () => undefined,
+  };
+}
+
 async function connectMongo(options = {}) {
   const logger = options.logger || console;
 
@@ -92,18 +109,13 @@ async function connectMongo(options = {}) {
 
   const allowMemoryFallback = options.allowMemoryFallback !== false && shouldAllowMemoryFallback();
   const uriFromEnv = getMongoUriFromEnv();
-  const usingMemory = !uriFromEnv && allowMemoryFallback;
+  const usingMemory = !uriFromEnv && allowMemoryFallback && !isRenderProduction();
 
-  if (!uriFromEnv && isServerlessProduction()) {
+  if (!uriFromEnv && (isServerlessProduction() || isRenderProduction())) {
     state.mode = 'mock';
-    state.conn = {
-      mocked: true,
-      mode: 'mock',
-      readyState: 1,
-      close: async () => undefined,
-    };
+    state.conn = createMockConnection();
     state.promise = Promise.resolve(state.conn);
-    logger.warn?.('⚠️ MongoDB URI missing in serverless mode. Using mock database state.');
+    logger.warn?.('⚠️ MongoDB URI missing in serverless/render mode. Using mock database state.');
     return state.conn;
   }
 
@@ -134,21 +146,23 @@ async function connectMongo(options = {}) {
     }
 
     if (!uriFromEnv) {
+      if (shouldAllowMockFallback()) {
+        logger.warn?.('⚠️ MongoDB URI missing. Using mock database state.');
+        state.mode = 'mock';
+        state.conn = createMockConnection();
+        state.promise = Promise.resolve(state.conn);
+        return state.conn;
+      }
       throw new Error('MONGODB_URI is required');
     }
 
     logger.log?.('🔌 Connecting to MongoDB...');
     return await connectWithUri(uriFromEnv, 'mongo');
   } catch (err) {
-    if (isServerlessProduction()) {
-      logger.warn?.(`⚠️ MongoDB connection failed in serverless mode (${err.message}). Using mock database state.`);
+    if (isServerlessProduction() || isRenderProduction()) {
+      logger.warn?.(`⚠️ MongoDB connection failed in serverless/render mode (${err.message}). Using mock database state.`);
       state.mode = 'mock';
-      state.conn = {
-        mocked: true,
-        mode: 'mock',
-        readyState: 1,
-        close: async () => undefined,
-      };
+      state.conn = createMockConnection();
       state.promise = Promise.resolve(state.conn);
       return state.conn;
     }
@@ -162,10 +176,25 @@ async function connectMongo(options = {}) {
         await seedFallbackData();
         return conn;
       } catch (memoryErr) {
+        if (shouldAllowMockFallback()) {
+          logger.warn?.(`⚠️ In-memory MongoDB fallback failed (${memoryErr.message}). Using mock database state.`);
+          state.promise = Promise.resolve(createMockConnection());
+          state.mode = 'mock';
+          state.conn = createMockConnection();
+          return state.conn;
+        }
         state.promise = null;
         state.mode = 'error';
         throw memoryErr;
       }
+    }
+
+    if (shouldAllowMockFallback()) {
+      logger.warn?.(`⚠️ MongoDB connection failed (${err.message}). Using mock database state.`);
+      state.mode = 'mock';
+      state.conn = createMockConnection();
+      state.promise = Promise.resolve(state.conn);
+      return state.conn;
     }
 
     state.promise = null;

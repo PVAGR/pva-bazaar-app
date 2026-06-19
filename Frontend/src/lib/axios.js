@@ -1,97 +1,83 @@
 import axios from "axios";
-import { ENV } from "../config/env";
+import {
+  getApiBaseCandidates,
+  getPreferredApiBase,
+  normalizeApiBaseUrl,
+  rememberApiBase,
+} from "./apiBase";
 
 let refreshPromise = null;
 
-function normalizeApiBaseUrl(rawUrl) {
-  const value = String(rawUrl || '').trim();
-  if (!value) return '';
-  let next = value.replace(/\/+$/, '');
-  if (!/\/api$/i.test(next)) {
-    next = `${next}/api`;
+function uniqueNormalizedBases(values) {
+  const out = [];
+  for (const value of values) {
+    const normalized = normalizeApiBaseUrl(value);
+    if (!normalized || out.includes(normalized)) continue;
+    out.push(normalized);
   }
-  return next;
+  return out;
 }
 
-function isUnsafeProductionOverride(rawUrl) {
-  const value = String(rawUrl || '').trim();
-  if (!value) return false;
-  return /localhost|127\.0\.0\.1|\[::1\]/i.test(value);
+function shouldRetryBackendError(error) {
+  const status = error?.response?.status;
+  if (!status) return true;
+  return status >= 500;
 }
 
-function resolveApiBaseUrl() {
-  const envBase = normalizeApiBaseUrl(ENV.API_URL);
-  const isProd = typeof import.meta !== 'undefined' && import.meta.env?.MODE === 'production';
-  try {
-    const localOverride = localStorage.getItem('api-base-url');
-    if (localOverride) {
-      const normalizedOverride = normalizeApiBaseUrl(localOverride);
-      if (normalizedOverride) {
-        if (isProd && isUnsafeProductionOverride(normalizedOverride)) {
-          localStorage.removeItem('api-base-url');
-        } else {
-          return normalizedOverride;
-        }
-      }
-    }
-  } catch (_err) {
-    // Ignore localStorage read errors and continue with environment fallback.
-  }
-  return envBase;
+function getFailoverBases(baseURL) {
+  return uniqueNormalizedBases([baseURL, ...getApiBaseCandidates()]);
 }
 
-async function tryRefreshAdminToken() {
-  if (refreshPromise) {
-    return refreshPromise;
-  }
-
-  const token =
-    localStorage.getItem("token") ||
-    localStorage.getItem("authToken") ||
-    localStorage.getItem("jwt");
-
-  if (!token) {
-    return null;
-  }
-
-  refreshPromise = axios
-    .post(
-      `${resolveApiBaseUrl()}/admin/token-refresh`,
-      {},
-      {
-        headers: {
-          Authorization: token.startsWith("Bearer ") ? token : `Bearer ${token}`,
-        },
-        withCredentials: false,
-      }
-    )
-    .then((res) => {
-      const nextToken = res?.data?.token;
-      if (!nextToken) return null;
-      localStorage.setItem("token", nextToken);
-      localStorage.removeItem("authToken");
-      localStorage.removeItem("jwt");
-      return nextToken;
-    })
-    .catch(() => null)
-    .finally(() => {
-      refreshPromise = null;
-    });
-
-  return refreshPromise;
-}
-
-// Internal backend-only Axios client
-const api = axios.create({
-  baseURL: resolveApiBaseUrl(),
-  withCredentials: false,      // set true only if you use cookies/sessions
-  allowAbsoluteUrls: false,    // prevents accidental calls to external absolute URLs via this client
+// Internal backend-only Axios client.
+const coreApi = axios.create({
+  baseURL: getPreferredApiBase(),
+  withCredentials: false, // set true only if you use cookies/sessions
+  allowAbsoluteUrls: false, // prevents accidental calls to external absolute URLs via this client
 });
 
+const baseRequest = coreApi.request.bind(coreApi);
+
+async function requestWithFailover(config = {}) {
+  const requestConfig = { ...config };
+  const requestUrl = String(requestConfig.url || "");
+
+  // Absolute URLs are already explicit and should not be rewritten.
+  if (/^https?:\/\//i.test(requestUrl)) {
+    return baseRequest(requestConfig);
+  }
+
+  const bases = getFailoverBases(requestConfig.baseURL);
+  let lastError = null;
+
+  for (const baseURL of bases) {
+    try {
+      const response = await baseRequest({
+        ...requestConfig,
+        baseURL,
+      });
+
+      if (baseURL) {
+        rememberApiBase(baseURL);
+      }
+
+      return response;
+    } catch (error) {
+      lastError = error;
+      if (!shouldRetryBackendError(error)) {
+        throw error;
+      }
+    }
+  }
+
+  throw lastError || new Error("Request failed");
+}
+
 // --- Request: attach token (if present) ---
-api.interceptors.request.use(
+coreApi.interceptors.request.use(
   (config) => {
-    config.baseURL = resolveApiBaseUrl();
+    if (!config.baseURL) {
+      config.baseURL = getPreferredApiBase();
+    }
 
     const token =
       localStorage.getItem("token") ||
@@ -111,26 +97,25 @@ api.interceptors.request.use(
 );
 
 // --- Response: global error handling ---
-api.interceptors.response.use(
+coreApi.interceptors.response.use(
   (response) => response,
   async (error) => {
     const status = error?.response?.status;
 
-    // Network/CORS errors often have no response/status
+    // Network/CORS errors often have no response/status.
     if (!status) {
       console.error("[API NETWORK ERROR]", {
         message: error?.message,
         code: error?.code,
         config: error?.config,
       });
-      // Don't show alert for network errors - let components handle gracefully
       return Promise.reject(error);
     }
 
-    // 401: session expired or invalid credentials on a protected call
+    // 401: session expired or invalid credentials on a protected call.
     if (status === 401) {
       const originalRequest = error?.config || {};
-      const requestUrl = String(error?.config?.url || '');
+      const requestUrl = String(error?.config?.url || "");
       const isAdminAuthRequest = /\/admin\/(login|signup|bootstrap-status)$/i.test(requestUrl);
       const isUserAuthRequest = /\/auth\/(login|register)$/i.test(requestUrl);
       const isTokenRefreshRequest = /\/admin\/token-refresh$/i.test(requestUrl);
@@ -156,7 +141,7 @@ api.interceptors.response.use(
           originalRequest.headers.Authorization = refreshedToken.startsWith("Bearer ")
             ? refreshedToken
             : `Bearer ${refreshedToken}`;
-          return api.request(originalRequest);
+          return requestWithFailover(originalRequest);
         }
       }
 
@@ -172,7 +157,7 @@ api.interceptors.response.use(
       }
 
       if (typeof window !== "undefined" && hadToken) {
-        const currentHash = window.location.hash || '';
+        const currentHash = window.location.hash || "";
         const onAdminShell = currentHash.startsWith("#/admin");
         if (adminShellSession) {
           window.dispatchEvent(new Event("admin-session-expired"));
@@ -186,7 +171,7 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // 500+: log but don't alert (let components decide)
+    // 500+: log but don't alert (let components decide).
     if (status >= 500) {
       const msg =
         error?.response?.data?.message ||
@@ -199,5 +184,54 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+async function tryRefreshAdminToken() {
+  if (refreshPromise) {
+    return refreshPromise;
+  }
+
+  const token =
+    localStorage.getItem("token") ||
+    localStorage.getItem("authToken") ||
+    localStorage.getItem("jwt");
+
+  if (!token) {
+    return null;
+  }
+
+  refreshPromise = requestWithFailover({
+    method: "post",
+    url: "/admin/token-refresh",
+    data: {},
+    headers: {
+      Authorization: token.startsWith("Bearer ") ? token : `Bearer ${token}`,
+    },
+    withCredentials: false,
+  })
+    .then((res) => {
+      const nextToken = res?.data?.token;
+      if (!nextToken) return null;
+      localStorage.setItem("token", nextToken);
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("jwt");
+      return nextToken;
+    })
+    .catch(() => null)
+    .finally(() => {
+      refreshPromise = null;
+    });
+
+  return refreshPromise;
+}
+
+const api = coreApi;
+api.request = requestWithFailover;
+api.get = (url, config = {}) => requestWithFailover({ ...config, method: "get", url });
+api.delete = (url, config = {}) => requestWithFailover({ ...config, method: "delete", url });
+api.head = (url, config = {}) => requestWithFailover({ ...config, method: "head", url });
+api.options = (url, config = {}) => requestWithFailover({ ...config, method: "options", url });
+api.post = (url, data, config = {}) => requestWithFailover({ ...config, method: "post", url, data });
+api.put = (url, data, config = {}) => requestWithFailover({ ...config, method: "put", url, data });
+api.patch = (url, data, config = {}) => requestWithFailover({ ...config, method: "patch", url, data });
 
 export default api;

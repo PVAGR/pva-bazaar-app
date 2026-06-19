@@ -1,46 +1,14 @@
 ﻿import api from "./axios";
-import { ENV } from "../config/env";
 import { getToken } from "./auth";
 import { FEATURED_INVENTORY, findFeaturedItem } from "./featuredInventory";
 import { getLocalCurrentUser, isLocalToken } from './localAuthVault';
-
-function normalizeApiBaseUrl(rawUrl) {
-  const value = String(rawUrl || '').trim();
-  if (!value) return '';
-  let next = value.replace(/\/+$/, '');
-  // Ensure callers can provide either host root or full /api base.
-  if (!/\/api$/i.test(next)) {
-    next = `${next}/api`;
-  }
-  return next;
-}
-
-function isUnsafeProductionOverride(rawUrl) {
-  const value = String(rawUrl || '').trim();
-  if (!value) return false;
-  return /localhost|127\.0\.0\.1|\[::1\]/i.test(value);
-}
-
-function resolveApiBaseUrl() {
-  const envBase = normalizeApiBaseUrl(ENV.API_URL);
-  const isProd = typeof import.meta !== 'undefined' && import.meta.env?.MODE === 'production';
-  try {
-    const localOverride = localStorage.getItem('api-base-url');
-    if (localOverride) {
-      const normalizedOverride = normalizeApiBaseUrl(localOverride);
-      if (normalizedOverride) {
-        if (isProd && isUnsafeProductionOverride(normalizedOverride)) {
-          localStorage.removeItem('api-base-url');
-        } else {
-          return normalizedOverride;
-        }
-      }
-    }
-  } catch (_err) {
-    // Ignore localStorage read errors and continue with environment fallback.
-  }
-  return envBase;
-}
+import {
+  clearApiBaseOverride,
+  getApiBaseCandidates,
+  getPreferredApiBase,
+  normalizeApiBaseUrl,
+  rememberApiBase,
+} from './apiBase';
 
 export const apiGet = (path, config) => api.get(path, config).then(r => r.data);
 export const apiPost = (path, body, config) => api.post(path, body, config).then(r => r.data);
@@ -274,33 +242,75 @@ export const recordFederationHkProgression = (payload = {}) =>
 export const fetchFederationHkProgressionHistory = (limit = 30) =>
   apiGet('/federation/game/hk/progression/history', { params: { limit } });
 
+function normalizeRequestPath(path, apiBase) {
+  if (!path || String(path).startsWith('http')) return path;
+  const normalizedBase = normalizeApiBaseUrl(apiBase);
+  if (normalizedBase.endsWith('/api') && String(path).startsWith('/api/')) {
+    return String(path).slice(4);
+  }
+  return path;
+}
+
+async function fetchWithBackendFailover(path, options = {}) {
+  const candidates = getApiBaseCandidates();
+  const absolutePath = String(path || '').startsWith('http');
+  let lastResponse = null;
+  let lastError = null;
+
+  for (const apiBase of absolutePath ? [''] : candidates) {
+    const normalizedPath = absolutePath ? path : normalizeRequestPath(path, apiBase);
+    const url = normalizedPath.startsWith('http') ? normalizedPath : `${normalizeApiBaseUrl(apiBase)}${normalizedPath}`;
+
+    try {
+      const response = await fetch(url, {
+        ...options,
+        headers: {
+          ...options.headers,
+        },
+      });
+
+      if (response.ok || response.status < 500) {
+        if (apiBase) {
+          rememberApiBase(apiBase);
+        }
+        return response;
+      }
+
+      lastResponse = response;
+    } catch (error) {
+      lastError = error;
+      continue;
+    }
+  }
+
+  if (lastResponse) {
+    return lastResponse;
+  }
+
+  throw lastError || new Error('Backend request failed');
+}
+
 /**
  * Upload a FormData payload (multipart/form-data).
  * Uses native fetch so the browser can set the correct Content-Type boundary.
  * Attaches the auth token automatically.
  */
 export async function apiUpload(path, formData) {
-  const API_BASE = resolveApiBaseUrl();
-  const normalizedPath = API_BASE.endsWith('/api') && path.startsWith('/api/')
-    ? path.slice(4)
-    : path;
-  const url = normalizedPath.startsWith('http') ? normalizedPath : `${API_BASE}${normalizedPath}`;
-
   const headers = {};
   const token = getToken();
   if (token) {
     headers.Authorization = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
   }
-  // Do NOT set Content-Type â€” browser sets it with the boundary for multipart
+  // Do NOT set Content-Type — browser sets it with the boundary for multipart.
 
-  const response = await fetch(url, {
+  const response = await fetchWithBackendFailover(path, {
     method: 'POST',
     headers,
     body: formData,
     credentials: 'omit',
   });
 
-  const data = await response.json();
+  const data = await response.json().catch(() => ({}));
   if (!response.ok) {
     const err = new Error(data?.error || data?.message || `Upload failed (${response.status})`);
     err.status = response.status;
@@ -312,17 +322,7 @@ export async function apiUpload(path, formData) {
 
 // Helper for native fetch (with proper base URL handling)
 export async function apiFetch(path, options = {}) {
-  const API_BASE = resolveApiBaseUrl();
-  const normalizedPath = (() => {
-    if (!path || path.startsWith('http')) return path;
-    // Allow both '/items' and '/api/items' call styles when API_BASE already includes '/api'.
-    if (API_BASE.endsWith('/api') && path.startsWith('/api/')) {
-      return path.slice(4);
-    }
-    return path;
-  })();
-  const url = normalizedPath.startsWith('http') ? normalizedPath : `${API_BASE}${normalizedPath}`;
-  return fetch(url, {
+  return fetchWithBackendFailover(path, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -333,14 +333,14 @@ export async function apiFetch(path, options = {}) {
 
 // API base URL management (for AdminDashboard)
 export function getApiBase() {
-  return resolveApiBaseUrl();
+  return getPreferredApiBase();
 }
 
 export function setApiBase(url) {
   if (url) {
-    localStorage.setItem('api-base-url', normalizeApiBaseUrl(url));
+    rememberApiBase(url);
   } else {
-    localStorage.removeItem('api-base-url');
+    clearApiBaseOverride();
   }
 }
 
