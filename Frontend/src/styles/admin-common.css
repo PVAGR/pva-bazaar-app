@@ -72,7 +72,8 @@
 .admin-page .btn.primary {
   background: linear-gradient(125deg, var(--accent), color-mix(in srgb, var(--accent) 64%, #d1a84f));
   border-color: var(--accent);
-  color: var(--site-bg-primary, #0a0e27);
+  color: #ffffff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.22);
 }
 
 .admin-page .btn.ghost {
@@ -88,6 +89,12 @@
 .admin-page .btn:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
+}
+
+.admin-page .btn:disabled {
+  opacity: 0.86;
+  cursor: not-allowed;
+  box-shadow: none;
 }
 
 .admin-page .notice {
@@ -117,4 +124,3 @@
 .admin-page .small {
   font-size: 0.85rem;
 }
-
