@@ -158,12 +158,6 @@ export default function BookPublishingPage() {
     reader.readAsText(file);
   }
 
-  function triggerFileInput(ref) {
-    if (ref?.current) {
-      ref.current.click();
-    }
-  }
-
   async function submitBook(publish) {
     setSaving(true);
     setError('');
@@ -395,19 +389,16 @@ export default function BookPublishingPage() {
               <label>
                 Front cover image
                 <div className="book-publish__fileRow">
-                  <button
-                    type="button"
-                    className="book-publish__button book-publish__button--primary"
-                    onClick={() => triggerFileInput(frontCoverInputRef)}
-                  >
+                  <label className="book-publish__button book-publish__button--primary book-publish__fileButton" htmlFor="frontCoverUpload">
                     Choose front cover
-                  </button>
+                  </label>
                   <span className="book-publish__fileName">
                     {frontCoverFile?.name || 'PNG, JPG, or WEBP'}
                   </span>
                 </div>
                 <input
                   ref={frontCoverInputRef}
+                  id="frontCoverUpload"
                   className="book-publish__nativeFile"
                   type="file"
                   accept="image/*"
@@ -417,19 +408,16 @@ export default function BookPublishingPage() {
               <label>
                 Back cover image
                 <div className="book-publish__fileRow">
-                  <button
-                    type="button"
-                    className="book-publish__button book-publish__button--primary"
-                    onClick={() => triggerFileInput(backCoverInputRef)}
-                  >
+                  <label className="book-publish__button book-publish__button--primary book-publish__fileButton" htmlFor="backCoverUpload">
                     Choose back cover
-                  </button>
+                  </label>
                   <span className="book-publish__fileName">
                     {backCoverFile?.name || 'PNG, JPG, or WEBP'}
                   </span>
                 </div>
                 <input
                   ref={backCoverInputRef}
+                  id="backCoverUpload"
                   className="book-publish__nativeFile"
                   type="file"
                   accept="image/*"
@@ -439,26 +427,27 @@ export default function BookPublishingPage() {
               <label>
                 Manuscript file
                 <div className="book-publish__fileRow">
-                  <button
-                    type="button"
-                    className="book-publish__button book-publish__button--primary"
-                    onClick={() => triggerFileInput(manuscriptInputRef)}
-                  >
+                  <label className="book-publish__button book-publish__button--primary book-publish__fileButton" htmlFor="manuscriptUpload">
                     Choose manuscript
-                  </button>
+                  </label>
                   <span className="book-publish__fileName">
-                    {manuscriptFileName || 'DOCX, TXT, MD, or HTML'}
+                    {manuscriptFileName || 'DOCX, PDF, TXT, MD, or HTML'}
                   </span>
                 </div>
                 <input
                   ref={manuscriptInputRef}
+                  id="manuscriptUpload"
                   className="book-publish__nativeFile"
                   type="file"
-                  accept=".docx,.txt,.md,.markdown,.html,.htm,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,text/markdown,text/html"
+                  accept=".docx,.pdf,.txt,.md,.markdown,.html,.htm,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,text/plain,text/markdown,text/html"
                   onChange={handleManuscriptFile}
                 />
               </label>
-              {manuscriptFileName ? <p className="book-publish__muted">Loaded file: {manuscriptFileName}</p> : null}
+              <p className="book-publish__muted">
+                {manuscriptFileName
+                  ? `Loaded file: ${manuscriptFileName}. PDF and DOCX will be extracted when you save.`
+                  : 'Upload a DOCX or PDF manuscript, or paste text directly into the editor.'}
+              </p>
 
               <label>
                 Manuscript content

@@ -20,6 +20,13 @@ try {
   mammoth = null;
 }
 
+let pdfParse = null;
+try {
+  pdfParse = require('pdf-parse');
+} catch (_err) {
+  pdfParse = null;
+}
+
 let multer = null;
 try {
   multer = require('multer');
@@ -181,6 +188,12 @@ function isDocxFile(file) {
   return name.endsWith('.docx') || mime === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
 }
 
+function isPdfFile(file) {
+  const name = String(file?.originalname || '').toLowerCase();
+  const mime = String(file?.mimetype || '').toLowerCase();
+  return name.endsWith('.pdf') || mime === 'application/pdf';
+}
+
 async function extractManuscriptTextFromUpload(file) {
   if (!file?.buffer) return '';
 
@@ -197,6 +210,11 @@ async function extractManuscriptTextFromUpload(file) {
         .replace(/\n{3,}/g, '\n\n')
         .trim();
     }
+  }
+
+  if (isPdfFile(file) && pdfParse) {
+    const parsed = await pdfParse(file.buffer);
+    return String(parsed?.text || '').trim();
   }
 
   return file.buffer.toString('utf8').trim();
