@@ -143,8 +143,15 @@ export default function BookPublishingPage() {
     const isDocx =
       file.name.toLowerCase().endsWith('.docx') ||
       file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+    const isPdf =
+      file.name.toLowerCase().endsWith('.pdf') ||
+      file.type === 'application/pdf';
 
-    if (isDocx) {
+    if (isDocx || isPdf) {
+      setForm((prev) => ({
+        ...prev,
+        manuscriptMarkdown: '',
+      }));
       return;
     }
 
@@ -386,8 +393,8 @@ export default function BookPublishingPage() {
                 </label>
               </div>
 
-              <label>
-                Front cover image
+              <div className="book-publish__field">
+                <span>Front cover image</span>
                 <div className="book-publish__fileRow">
                   <label className="book-publish__button book-publish__button--primary book-publish__fileButton" htmlFor="frontCoverUpload">
                     Choose front cover
@@ -404,9 +411,9 @@ export default function BookPublishingPage() {
                   accept="image/*"
                   onChange={(e) => handleCoverChange(e, setFrontCoverFile, setFrontCoverPreview)}
                 />
-              </label>
-              <label>
-                Back cover image
+              </div>
+              <div className="book-publish__field">
+                <span>Back cover image</span>
                 <div className="book-publish__fileRow">
                   <label className="book-publish__button book-publish__button--primary book-publish__fileButton" htmlFor="backCoverUpload">
                     Choose back cover
@@ -423,13 +430,17 @@ export default function BookPublishingPage() {
                   accept="image/*"
                   onChange={(e) => handleCoverChange(e, setBackCoverFile, setBackCoverPreview)}
                 />
-              </label>
-              <label>
-                Manuscript file
+              </div>
+              <div className="book-publish__field">
+                <span>Manuscript file</span>
                 <div className="book-publish__fileRow">
-                  <label className="book-publish__button book-publish__button--primary book-publish__fileButton" htmlFor="manuscriptUpload">
+                  <button
+                    type="button"
+                    className="book-publish__button book-publish__button--primary book-publish__fileButton"
+                    onClick={() => manuscriptInputRef.current?.click()}
+                  >
                     Choose manuscript
-                  </label>
+                  </button>
                   <span className="book-publish__fileName">
                     {manuscriptFileName || 'DOCX, PDF, TXT, MD, or HTML'}
                   </span>
@@ -437,12 +448,12 @@ export default function BookPublishingPage() {
                 <input
                   ref={manuscriptInputRef}
                   id="manuscriptUpload"
-                  className="book-publish__nativeFile"
+                  className="book-publish__nativeFile book-publish__nativeFile--visible"
                   type="file"
                   accept=".docx,.pdf,.txt,.md,.markdown,.html,.htm,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,text/plain,text/markdown,text/html"
                   onChange={handleManuscriptFile}
                 />
-              </label>
+              </div>
               <p className="book-publish__muted">
                 {manuscriptFileName
                   ? `Loaded file: ${manuscriptFileName}. PDF and DOCX will be extracted when you save.`

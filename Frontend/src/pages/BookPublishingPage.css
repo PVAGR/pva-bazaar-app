@@ -206,6 +206,13 @@
   font-weight: 700;
 }
 
+.book-publish__field {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--site-text);
+  font-weight: 700;
+}
+
 .book-publish__form input,
 .book-publish__form textarea {
   width: 100%;
@@ -239,6 +246,33 @@
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+.book-publish__nativeFile--visible {
+  position: static;
+  width: 100%;
+  height: auto;
+  margin: 0;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+  border: 1px solid var(--site-border);
+  border-radius: 14px;
+  background: var(--site-panel-soft);
+  color: var(--site-text);
+  padding: 0.8rem 0.85rem;
+  min-height: 3rem;
+}
+
+.book-publish__nativeFile--visible::file-selector-button {
+  border: 1px solid var(--site-border);
+  border-radius: 999px;
+  background: var(--site-panel);
+  color: var(--site-text);
+  padding: 0.45rem 0.8rem;
+  margin-right: 0.75rem;
+  font: inherit;
+  font-weight: 700;
 }
 
 .book-publish__nativeFile:focus-visible + .book-publish__fileButton,
