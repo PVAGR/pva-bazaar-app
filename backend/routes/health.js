@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { getBuildInfo } = require('../lib/buildInfo');
 const { connectMongo, getMongoState } = require('../lib/mongoConnection');
+const { getAuthStoreState } = require('../lib/mockUserStore');
 
 // Import OpenClaw health check (optional dependency)
 let getOpenClawHealth;
@@ -37,6 +38,10 @@ router.get('/', async (_req, res) => {
 
     mongoState = getMongoState();
   }
+  const authStoreState = await getAuthStoreState().catch(() => null);
+  const effectiveDatabaseMode = mongoState.mode === 'mock' && authStoreState?.mode === 'file'
+    ? 'file'
+    : mongoState.mode;
   const response = { 
     ok: true, 
     message: 'PVA Bazaar API is healthy!', 
@@ -48,10 +53,11 @@ router.get('/', async (_req, res) => {
     sha: build.sha,
     shortSha: build.shortSha,
     database: {
-      mode: mongoState.mode,
-      connected: mongoState.connected,
-      readyState: mongoState.readyState,
+      mode: effectiveDatabaseMode,
+      connected: effectiveDatabaseMode === 'file' ? true : mongoState.connected,
+      readyState: effectiveDatabaseMode === 'file' ? 1 : mongoState.readyState,
       hasEnvUri: mongoState.hasEnvUri,
+      authStore: authStoreState,
     },
   };
 

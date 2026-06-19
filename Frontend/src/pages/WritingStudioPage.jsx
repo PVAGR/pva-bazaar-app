@@ -1067,11 +1067,11 @@ export default function WritingStudioPage() {
                   </div>
                   <div className="writing-studio__continuityCard">
                     <strong>{continuitySummary.adminSecretConfigured ? 'Yes' : 'No'}</strong>
-                    <span>admin secret configured</span>
+                    <span>private secret configured</span>
                   </div>
                   <div className="writing-studio__continuityCard">
                     <strong>{continuitySummary.githubReady ? 'Yes' : 'No'}</strong>
-                    <span>GitHub admin login</span>
+                    <span>GitHub access</span>
                   </div>
                   <div className="writing-studio__continuityCard">
                     <strong>{continuitySummary.bootstrapReady ? 'Yes' : 'No'}</strong>
@@ -1081,8 +1081,8 @@ export default function WritingStudioPage() {
 
                 <div className="writing-studio__recoveryList">
                   <div className="writing-studio__recoveryItem">
-                    <strong>Admin login</strong>
-                    <span>Use the main admin surface and keep at least one backup login path configured server-side.</span>
+                    <strong>Private sign-in</strong>
+                    <span>Use the main private surface and keep at least one backup login path configured server-side.</span>
                   </div>
                   <div className="writing-studio__recoveryItem">
                     <strong>Health check</strong>

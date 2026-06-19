@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Unified the login screen into one normal sign-in form and removed the visible admin/user split from the public auth page.
+- File-backed shared auth store so sign-ups can persist on the backend without a paid external database when Mongo is unavailable.
+- Connection status badges now distinguish live backend, shared auth store, and free local fallback mode.
 - Frontend backend failover across Render, the pvabazaar API domain, and Vercel so the site can stay reachable when one backend host is unavailable.
 - Free browser-side auth fallback so people can sign in and sign up even when the hosted API is unavailable.
 - Global connection indicators on the layout and auth pages so the site shows live backend vs free fallback mode clearly.

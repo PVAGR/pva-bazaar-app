@@ -8,9 +8,10 @@
 - The backend/API now prefers the reachable Render host and can fail over to alternate hosts so the site stays reachable across regions.
 - `Frontend/public/live-map.json` is the canonical live routing map.
 - The repo now has one clear starting point: `CANONICAL_MAP.md`.
-- Sign-in and sign-up now have a free browser-side fallback path if the hosted API is unavailable.
-- The frontend build is green after adding the local auth vault dependency and wiring login/register fallback.
-- The layout and auth pages now show whether the site is on the live backend or free local fallback mode.
+- Sign-in and sign-up now use a regular single-form login UI, with a free browser-side fallback path if the hosted API is unavailable.
+- The backend auth store now persists to a shared file-backed store when Mongo is unavailable, so sign-ups can survive across requests instead of disappearing.
+- The frontend build is green after wiring the login/register fallback and the shared auth store status labels.
+- The layout and auth pages now show whether the site is on the live backend, the shared auth store, or free local fallback mode.
 - The frontend API client now tries multiple backend candidates instead of depending on one endpoint.
 - The backend deploy workflow no longer blocks on a stale live-readiness gate, so fixes can actually ship to Vercel.
 - The live Render backend is still serving the older deployed SHA until its service redeploys; repo code now has the failover logic ready for when the host updates.

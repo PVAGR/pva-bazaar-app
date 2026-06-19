@@ -16,6 +16,7 @@ const openClawMetricsRoutes = require('../routes/openclaw-metrics');
 const salesRoutes = require('../routes/sales');
 const { getBuildInfo } = require('../lib/buildInfo');
 const { connectMongo, getMongoState } = require('../lib/mongoConnection');
+const { getAuthStoreState } = require('../lib/mockUserStore');
 const { getRpcDiagnostics } = require('../utils/blockchain');
 const GovernanceProposal = require('../models/GovernanceProposal');
 const GovernanceVote = require('../models/GovernanceVote');
@@ -939,21 +940,26 @@ app.get('/api/health', async (req, res) => {
 
   // Prepare allowed origins for display (safe - no secrets)
   const allowedOrigins = getAllowedOrigins();
+  const mongoState = getMongoState();
+  const authStoreState = await getAuthStoreState().catch(() => null);
+  const effectiveDatabaseMode = mongoState.mode === 'mock' && authStoreState?.mode === 'file'
+    ? 'file'
+    : mongoState.mode;
 
   // Always return 200 with status info
-  const mongoState = getMongoState();
   res.json({
     ok: true,
     message: 'PVABazaar API is running',
     mongo: mongoConnected,
-    databaseMode: mongoState.mode,
-    databaseFallback: mongoState.mode === 'memory',
-    ready: process.env.API_READY !== 'false' && mongoConnected,
+    databaseMode: effectiveDatabaseMode,
+    databaseFallback: effectiveDatabaseMode === 'memory',
+    ready: process.env.API_READY !== 'false' && (mongoConnected || effectiveDatabaseMode === 'file'),
     nodeEnv: process.env.NODE_ENV || 'development',
     version: build.version,
     sha: build.sha,
     shortSha: build.shortSha,
     deploymentId: build.deploymentId,
+    authStore: authStoreState,
     allowedOrigins,
     timestamp: new Date().toISOString(),
     ...(dbError && { dbError }),

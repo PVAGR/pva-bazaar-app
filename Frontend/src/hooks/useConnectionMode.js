@@ -34,11 +34,16 @@ export default function useConnectionMode() {
         if (!active) return;
         const mode = String(health?.database?.mode || '').toLowerCase();
         const connected = health?.ok !== false && mode !== 'mock' && mode !== 'fallback';
+        const isFileStore = mode === 'file';
         setState({
           status: connected ? 'live' : 'fallback',
-          label: connected ? 'Live backend connected' : 'Fallback mode active',
+          label: isFileStore
+            ? 'Shared account database connected'
+            : (connected ? 'Live backend connected' : 'Fallback mode active'),
           detail: connected
-            ? 'The shared backend is responding normally.'
+            ? (isFileStore
+              ? 'The shared free account store is responding normally.'
+              : 'The shared backend is responding normally.')
             : 'The hosted backend is responding through the free fallback path.',
           checkedAt: new Date().toISOString(),
         });

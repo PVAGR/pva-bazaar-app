@@ -124,7 +124,7 @@ export default function RegisterPage() {
       <header className="admin-header registerHeader">
         <div>
           <h1>🧾 Create account</h1>
-          <p className="muted">This creates a MongoDB-backed user account (separate from Admin login).</p>
+          <p className="muted">This creates a shared account for the PVA Bazaar login system.</p>
           <div className={`auth-connection auth-connection--${connectionMode.status}`} aria-live="polite">
             <strong>{connectionMode.label}</strong>
             <span>{connectionMode.detail}</span>

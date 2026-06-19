@@ -19,38 +19,10 @@ export default function LoginPage() {
     return params.get('next') || '';
   }, [location.search]);
 
-  const [mode, setMode] = useState('admin'); // 'admin' | 'user'
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const [adminCreds, setAdminCreds] = useState({ username: '', password: '' });
   const [userCreds, setUserCreds] = useState({ usernameOrEmail: '', password: '' });
-
-  async function handleAdminLogin(e) {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-    try {
-      const data = await apiPost(
-        '/admin/login',
-        {
-          username: adminCreds.username.trim(),
-          password: adminCreds.password.trim(),
-        },
-        { timeout: 120_000 },
-      );
-      if (!data?.ok || !data?.token) throw new Error(data?.message || 'Invalid username or password');
-      setToken(data.token);
-      sessionStorage.setItem('admin-auth', 'authenticated');
-      sessionStorage.setItem('admin-auth-version', 'v2');
-      sessionStorage.setItem('admin-login-time', new Date().toISOString());
-      navigate(nextFromUrl || '/admin', { replace: true });
-    } catch (err) {
-      setError(err?.response?.data?.message || err.message || 'Login failed');
-    } finally {
-      setLoading(false);
-    }
-  }
 
   async function handleUserLogin(e) {
     e.preventDefault();
@@ -70,6 +42,13 @@ export default function LoginPage() {
       sessionStorage.removeItem('admin-auth-version');
       sessionStorage.removeItem('admin-login-time');
       setToken(res.token);
+      if (String(res?.user?.role || '').toLowerCase() === 'admin') {
+        sessionStorage.setItem('admin-auth', 'authenticated');
+        sessionStorage.setItem('admin-auth-version', 'v2');
+        sessionStorage.setItem('admin-login-time', new Date().toISOString());
+        navigate(nextFromUrl || '/admin', { replace: true });
+        return;
+      }
       if (nextFromUrl) {
         navigate(nextFromUrl, { replace: true });
         return;
@@ -121,7 +100,7 @@ export default function LoginPage() {
         <div>
           <h1>🔐 Sign in</h1>
           <p className="muted">
-            Enter the same pure-life knowledge system through your personal account or private admin access.
+            Enter the same pure-life knowledge system through your personal account.
           </p>
           <div className={`auth-connection auth-connection--${connectionMode.status}`} aria-live="polite">
             <strong>{connectionMode.label}</strong>
@@ -131,9 +110,6 @@ export default function LoginPage() {
         <div className="loginActions">
           <Link to="/" className="btn ghost">
             ← Home
-          </Link>
-          <Link to="/admin" className="btn ghost">
-            Archive Admin
           </Link>
           <button className="btn ghost" onClick={toggleTheme} title="Toggle theme" aria-label="Toggle theme">
             {darkMode ? '☀️' : '🌙'}
@@ -157,98 +133,48 @@ export default function LoginPage() {
         </section>
 
         <section className="card">
-          <div className="loginTabs" role="tablist" aria-label="Login type">
-            <button
-              type="button"
-              className={`btn ghost ${mode === 'admin' ? 'active' : ''}`}
-              onClick={() => setMode('admin')}
-            >
-              Admin login
-            </button>
-            <button
-              type="button"
-              className={`btn ghost ${mode === 'user' ? 'active' : ''}`}
-              onClick={() => setMode('user')}
-            >
-              User login
-            </button>
-          </div>
-
           {error ? (
             <div className="error" role="alert">
               {error}
             </div>
           ) : null}
           <p className="muted" style={{ marginTop: '-0.25rem', marginBottom: '0.5rem' }}>
-            Buttons are now high-contrast white. If the hosted backend is unreachable, the login will create or use a free local account on this device.
+            Buttons are now high-contrast white. If the hosted backend is unreachable, the login will create or use a free shared account store on this device.
           </p>
 
-          {mode === 'admin' ? (
-            <form className="form" onSubmit={handleAdminLogin}>
-              <label>
-                <span>
-                  Username
-                  <HelpTip title="Admin username" body="Your private admin username (from env)." example="admin" />
-                </span>
-                <input
-                  value={adminCreds.username}
-                  onChange={(e) => setAdminCreds((p) => ({ ...p, username: e.target.value }))}
-                  autoComplete="username"
-                />
-              </label>
-              <label>
-                <span>
-                  Password
-                  <HelpTip title="Admin password" body="Your private admin password (from env)." example="********" />
-                </span>
-                <input
-                  type="password"
-                  value={adminCreds.password}
-                  onChange={(e) => setAdminCreds((p) => ({ ...p, password: e.target.value }))}
-                  autoComplete="current-password"
-                />
-              </label>
-              <div className="row">
-                <button className="btn primary" type="submit" disabled={loading}>
-                  {loading ? 'Signing in…' : 'Sign in (Admin)'}
-                </button>
-              </div>
-            </form>
-          ) : (
-            <form className="form" onSubmit={handleUserLogin}>
-              <label>
-                <span>
-                  Username or email
-                  <HelpTip title="Username or email" body="Your username (e.g. richyrichaii) or the email you registered with." example="richyrichaii" />
-                </span>
-                <input
-                  value={userCreds.usernameOrEmail}
-                  onChange={(e) => setUserCreds((p) => ({ ...p, usernameOrEmail: e.target.value }))}
-                  autoComplete="username"
-                />
-              </label>
-              <label>
-                <span>
-                  Password
-                  <HelpTip title="Password" body="Your user account password." example="********" />
-                </span>
-                <input
-                  type="password"
-                  value={userCreds.password}
-                  onChange={(e) => setUserCreds((p) => ({ ...p, password: e.target.value }))}
-                  autoComplete="current-password"
-                />
-              </label>
-              <div className="row">
-                <button className="btn primary" type="submit" disabled={loading}>
-                  {loading ? 'Signing in…' : 'Sign in (User)'}
-                </button>
-                <Link to={`/register?next=${encodeURIComponent(nextFromUrl || '/onboarding')}`} className="btn ghost">
-                  Create account
-                </Link>
-              </div>
-            </form>
-          )}
+          <form className="form" onSubmit={handleUserLogin}>
+            <label>
+              <span>
+                Username or email
+                <HelpTip title="Username or email" body="Your username (e.g. richyrichaii) or the email you registered with." example="richyrichaii" />
+              </span>
+              <input
+                value={userCreds.usernameOrEmail}
+                onChange={(e) => setUserCreds((p) => ({ ...p, usernameOrEmail: e.target.value }))}
+                autoComplete="username"
+              />
+            </label>
+            <label>
+              <span>
+                Password
+                <HelpTip title="Password" body="Your account password." example="********" />
+              </span>
+              <input
+                type="password"
+                value={userCreds.password}
+                onChange={(e) => setUserCreds((p) => ({ ...p, password: e.target.value }))}
+                autoComplete="current-password"
+              />
+            </label>
+            <div className="row">
+              <button className="btn primary" type="submit" disabled={loading}>
+                {loading ? 'Signing in…' : 'Sign in'}
+              </button>
+              <Link to={`/register?next=${encodeURIComponent(nextFromUrl || '/onboarding')}`} className="btn ghost">
+                Create account
+              </Link>
+            </div>
+          </form>
         </section>
       </main>
     </div>

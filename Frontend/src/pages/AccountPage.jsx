@@ -180,7 +180,7 @@ export default function AccountPage() {
               Profile{' '}
               <HelpTip
                 title="Profile"
-                body="Basic account identity. This is separate from Admin login."
+                body="Basic account identity for the shared sign-in system."
                 example="you@example.com"
               />
             </h2>
