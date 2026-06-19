@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- DOCX manuscript upload support in the book publishing workspace, with server-side text extraction and a visible mobile-friendly browse button.
 - Unified the login screen into one normal sign-in form and removed the visible admin/user split from the public auth page.
 - File-backed shared auth store so sign-ups can persist on the backend without a paid external database when Mongo is unavailable.
 - Connection status badges now distinguish live backend, shared auth store, and free local fallback mode.

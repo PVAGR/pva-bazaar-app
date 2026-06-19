@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
@@ -39,12 +39,16 @@ export default function BookPublishingPage() {
   const [backCoverFile, setBackCoverFile] = useState(null);
   const [frontCoverPreview, setFrontCoverPreview] = useState('');
   const [backCoverPreview, setBackCoverPreview] = useState('');
+  const [manuscriptFile, setManuscriptFile] = useState(null);
   const [manuscriptFileName, setManuscriptFileName] = useState('');
   const [form, setForm] = useState(EMPTY_FORM);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const frontCoverInputRef = useRef(null);
+  const backCoverInputRef = useRef(null);
+  const manuscriptInputRef = useRef(null);
 
   const selectedBook = useMemo(
     () => books.find((item) => item.id === selectedBookId) || null,
@@ -76,6 +80,7 @@ export default function BookPublishingPage() {
     setBackCoverPreview(selectedBook.links?.backCover ? toApiUrl(selectedBook.links.backCover) : '');
     setFrontCoverFile(null);
     setBackCoverFile(null);
+    setManuscriptFile(null);
     setManuscriptFileName('');
   }, [selectedBook]);
 
@@ -104,6 +109,7 @@ export default function BookPublishingPage() {
     setForm(EMPTY_FORM);
     setFrontCoverFile(null);
     setBackCoverFile(null);
+    setManuscriptFile(null);
     setFrontCoverPreview('');
     setBackCoverPreview('');
     setManuscriptFileName('');
@@ -130,8 +136,17 @@ export default function BookPublishingPage() {
 
   function handleManuscriptFile(event) {
     const file = event.target.files?.[0] || null;
+    setManuscriptFile(file);
     setManuscriptFileName(file?.name || '');
     if (!file) return;
+
+    const isDocx =
+      file.name.toLowerCase().endsWith('.docx') ||
+      file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+
+    if (isDocx) {
+      return;
+    }
 
     const reader = new FileReader();
     reader.onload = () => {
@@ -141,6 +156,12 @@ export default function BookPublishingPage() {
       }));
     };
     reader.readAsText(file);
+  }
+
+  function triggerFileInput(ref) {
+    if (ref?.current) {
+      ref.current.click();
+    }
   }
 
   async function submitBook(publish) {
@@ -159,6 +180,7 @@ export default function BookPublishingPage() {
       payload.append('audience', form.audience);
       payload.append('language', form.language);
       payload.append('manuscriptMarkdown', form.manuscriptMarkdown);
+      if (manuscriptFile) payload.append('manuscriptFile', manuscriptFile);
       payload.append('publish', publish ? 'true' : 'false');
       if (frontCoverFile) payload.append('frontCover', frontCoverFile);
       if (backCoverFile) payload.append('backCover', backCoverFile);
@@ -372,15 +394,69 @@ export default function BookPublishingPage() {
 
               <label>
                 Front cover image
-                <input type="file" accept="image/*" onChange={(e) => handleCoverChange(e, setFrontCoverFile, setFrontCoverPreview)} />
+                <div className="book-publish__fileRow">
+                  <button
+                    type="button"
+                    className="book-publish__button book-publish__button--primary"
+                    onClick={() => triggerFileInput(frontCoverInputRef)}
+                  >
+                    Choose front cover
+                  </button>
+                  <span className="book-publish__fileName">
+                    {frontCoverFile?.name || 'PNG, JPG, or WEBP'}
+                  </span>
+                </div>
+                <input
+                  ref={frontCoverInputRef}
+                  className="book-publish__nativeFile"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleCoverChange(e, setFrontCoverFile, setFrontCoverPreview)}
+                />
               </label>
               <label>
                 Back cover image
-                <input type="file" accept="image/*" onChange={(e) => handleCoverChange(e, setBackCoverFile, setBackCoverPreview)} />
+                <div className="book-publish__fileRow">
+                  <button
+                    type="button"
+                    className="book-publish__button book-publish__button--primary"
+                    onClick={() => triggerFileInput(backCoverInputRef)}
+                  >
+                    Choose back cover
+                  </button>
+                  <span className="book-publish__fileName">
+                    {backCoverFile?.name || 'PNG, JPG, or WEBP'}
+                  </span>
+                </div>
+                <input
+                  ref={backCoverInputRef}
+                  className="book-publish__nativeFile"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleCoverChange(e, setBackCoverFile, setBackCoverPreview)}
+                />
               </label>
               <label>
                 Manuscript file
-                <input type="file" accept=".txt,.md,.markdown,.html,.htm,text/plain,text/markdown,text/html" onChange={handleManuscriptFile} />
+                <div className="book-publish__fileRow">
+                  <button
+                    type="button"
+                    className="book-publish__button book-publish__button--primary"
+                    onClick={() => triggerFileInput(manuscriptInputRef)}
+                  >
+                    Choose manuscript
+                  </button>
+                  <span className="book-publish__fileName">
+                    {manuscriptFileName || 'DOCX, TXT, MD, or HTML'}
+                  </span>
+                </div>
+                <input
+                  ref={manuscriptInputRef}
+                  className="book-publish__nativeFile"
+                  type="file"
+                  accept=".docx,.txt,.md,.markdown,.html,.htm,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,text/markdown,text/html"
+                  onChange={handleManuscriptFile}
+                />
               </label>
               {manuscriptFileName ? <p className="book-publish__muted">Loaded file: {manuscriptFileName}</p> : null}
 

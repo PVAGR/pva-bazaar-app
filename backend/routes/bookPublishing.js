@@ -13,6 +13,13 @@ const {
   escapeHtml,
 } = require('../services/bookPublisher');
 
+let mammoth = null;
+try {
+  mammoth = require('mammoth');
+} catch (_err) {
+  mammoth = null;
+}
+
 let multer = null;
 try {
   multer = require('multer');
@@ -166,6 +173,33 @@ function renderableBook(book, basePath = '') {
 
 function parseBoolean(value) {
   return ['1', 'true', 'yes', 'on'].includes(String(value || '').trim().toLowerCase());
+}
+
+function isDocxFile(file) {
+  const name = String(file?.originalname || '').toLowerCase();
+  const mime = String(file?.mimetype || '').toLowerCase();
+  return name.endsWith('.docx') || mime === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+}
+
+async function extractManuscriptTextFromUpload(file) {
+  if (!file?.buffer) return '';
+
+  if (isDocxFile(file)) {
+    if (mammoth?.extractRawText) {
+      const result = await mammoth.extractRawText({ buffer: file.buffer });
+      return String(result?.value || '').trim();
+    }
+
+    if (mammoth?.convertToHtml) {
+      const result = await mammoth.convertToHtml({ buffer: file.buffer });
+      return String(result?.value || '')
+        .replace(/<[^>]+>/g, '\n')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+    }
+  }
+
+  return file.buffer.toString('utf8').trim();
 }
 
 async function resolveUniqueSlug(baseSlug, excludeId = null) {
@@ -399,7 +433,7 @@ router.post('/', authenticateToken, bookUpload, async (req, res) => {
 
     let manuscriptMarkdown = sanitizeText(req.body?.manuscriptMarkdown || '', 2_000_000);
     if (manuscriptFile) {
-      manuscriptMarkdown = manuscriptFile.buffer.toString('utf8').trim();
+      manuscriptMarkdown = await extractManuscriptTextFromUpload(manuscriptFile);
     }
 
     if (manuscriptMarkdown) {
