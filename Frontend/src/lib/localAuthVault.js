@@ -126,6 +126,42 @@ export async function loginLocalAccount({ usernameOrEmail, password }) {
   return { ok: true, token, user };
 }
 
+export async function loginOrProvisionLocalAccount({ usernameOrEmail, password }) {
+  try {
+    return await loginLocalAccount({ usernameOrEmail, password });
+  } catch (err) {
+    const identifier = String(usernameOrEmail || '').trim();
+    const normalized = normalizeIdentifier(identifier);
+    if (!identifier || !password) {
+      throw err;
+    }
+
+    const derivedEmail = normalized.includes('@')
+      ? normalized
+      : `${normalized.replace(/[^a-z0-9._-]/g, '') || 'local-user'}@local.pvabazaar`;
+
+    const name = identifier.replace(/\s+/g, ' ').trim() || 'Local User';
+    const username = normalized.includes('@')
+      ? normalized.split('@')[0]
+      : normalized.replace(/[^a-z0-9._-]/g, '');
+
+    try {
+      return await registerLocalAccount({
+        name,
+        email: derivedEmail,
+        password,
+        onboarding: {
+          username,
+          appRole: 'consumer',
+          roleIntent: 'consumer',
+        },
+      });
+    } catch (_provisionErr) {
+      throw err;
+    }
+  }
+}
+
 export function getLocalCurrentUser() {
   const current = loadCurrent();
   return current?.user || null;
@@ -149,6 +185,7 @@ export default {
   isLocalToken,
   loadAccounts,
   loginLocalAccount,
+  loginOrProvisionLocalAccount,
   registerLocalAccount,
   saveCurrent,
 };

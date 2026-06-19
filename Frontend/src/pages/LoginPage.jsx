@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import HelpTip from '../components/HelpTip.jsx';
 import { apiGet, apiPost } from '../lib/api';
 import { setToken } from '../lib/auth';
-import { loginLocalAccount } from '../lib/localAuthVault';
+import { loginOrProvisionLocalAccount } from '../lib/localAuthVault';
 import useConnectionMode from '../hooks/useConnectionMode.js';
 import useArchiveTheme from '../hooks/useArchiveTheme.js';
 import '../styles/admin-common.css';
@@ -90,7 +90,7 @@ export default function LoginPage() {
     } catch (err) {
       const serverMsg = err?.response?.data?.message || err?.response?.data?.error;
       try {
-        const local = await loginLocalAccount({
+        const local = await loginOrProvisionLocalAccount({
           usernameOrEmail: userCreds.usernameOrEmail.trim(),
           password: userCreds.password,
         });
@@ -102,7 +102,13 @@ export default function LoginPage() {
         navigate('/onboarding', { replace: true });
         return;
       } catch (localErr) {
-        setError(localErr?.message || serverMsg || err.message || 'Login failed');
+        const isNetworkIssue = !err?.response || /network|failed to fetch|fetch/i.test(String(err?.message || ''));
+        setError(
+          localErr?.message ||
+          serverMsg ||
+          (isNetworkIssue ? 'Connection is down right now. Free local sign-in is unavailable on this device until you create one.' : err.message) ||
+          'Login failed'
+        );
       }
     } finally {
       setLoading(false);
@@ -173,6 +179,9 @@ export default function LoginPage() {
               {error}
             </div>
           ) : null}
+          <p className="muted" style={{ marginTop: '-0.25rem', marginBottom: '0.5rem' }}>
+            Buttons are now high-contrast white. If the hosted backend is unreachable, the login will create or use a free local account on this device.
+          </p>
 
           {mode === 'admin' ? (
             <form className="form" onSubmit={handleAdminLogin}>

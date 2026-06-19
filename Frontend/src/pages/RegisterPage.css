@@ -50,3 +50,37 @@
 .auth-connection--checking {
   opacity: 0.9;
 }
+
+.registerPage .form .btn.primary,
+.registerPage .form .btn.primary:link,
+.registerPage .form .btn.primary:visited {
+  background: #ffffff !important;
+  color: #0a0e27 !important;
+  border-color: #ffffff !important;
+  box-shadow: 0 10px 26px rgba(255, 255, 255, 0.22);
+  opacity: 1 !important;
+  text-shadow: none;
+}
+
+.registerPage .form .btn.primary:hover:not(:disabled) {
+  background: #f3f6fb !important;
+  color: #0a0e27 !important;
+}
+
+.registerPage .form .btn.primary:disabled {
+  background: #d9dfe8 !important;
+  color: #3a4357 !important;
+  border-color: #d9dfe8 !important;
+  opacity: 1 !important;
+}
+
+.registerPage .row > .btn,
+.registerPage .row > a.btn {
+  min-height: 48px;
+  padding-inline: 1.1rem;
+  font-weight: 800;
+}
+
+.registerPage .error {
+  border-color: rgba(255, 255, 255, 0.16);
+}
