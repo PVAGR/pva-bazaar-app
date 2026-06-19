@@ -22,7 +22,7 @@
 - Archive, studio, recovery, marketplace, showroom, admin, account, login, and dashboard surfaces all share the same atlas language.
 - Recovery and continuity flows are visible from the public site and the private tools.
 - A dedicated book publishing workspace is being added so authors can draft, upload covers, publish, and export PDF/EPUB/web editions from one source.
-- The book publishing workspace now accepts DOCX and PDF manuscripts through a visible mobile-friendly upload button plus visible file control, with server-side extraction and binary uploads skipped on the client text editor until save.
+- The book publishing workspace now accepts DOCX and PDF manuscripts through a visible mobile-friendly upload button plus visible file control, with server-side extraction, binary uploads skipped on the client text editor until save, and a free file-backed book store fallback when Mongo is unavailable so publishing does not stall.
 - A public published-books shelf now exposes live editions with reader, PDF, and EPUB links.
 - Backend database bootstrap now uses a serverless-safe mock fallback when production `MONGODB_URI` is missing, and auth/login falls back to a shared JWT secret so the API keeps responding instead of hard-failing at startup.
 - The frontend API client now falls back across Render, the pvabazaar API domain, and Vercel endpoints so people in more regions can still reach the site even if one host is slow or down.

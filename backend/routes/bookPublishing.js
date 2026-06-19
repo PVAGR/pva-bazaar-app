@@ -6,6 +6,14 @@ const path = require('path');
 const axios = require('axios');
 const { authenticateToken } = require('../middleware/auth');
 const BookProject = require('../models/BookProject');
+const { getMongoState } = require('../lib/mongoConnection');
+const {
+  deleteBook: deleteFileBook,
+  findBookById: findFileBookById,
+  findBookOne: findFileBookOne,
+  listBooks: listFileBooks,
+  saveBook: saveFileBook,
+} = require('../lib/bookProjectStore');
 const {
   renderBookHtml,
   buildPdfBuffer,
@@ -182,6 +190,11 @@ function parseBoolean(value) {
   return ['1', 'true', 'yes', 'on'].includes(String(value || '').trim().toLowerCase());
 }
 
+function shouldUseFileBookStore() {
+  const mongoState = getMongoState();
+  return mongoState.mode === 'mock' || mongoState.mode === 'error' || mongoState.mode === 'disconnected';
+}
+
 function isDocxFile(file) {
   const name = String(file?.originalname || '').toLowerCase();
   const mime = String(file?.mimetype || '').toLowerCase();
@@ -227,17 +240,84 @@ async function resolveUniqueSlug(baseSlug, excludeId = null) {
   let suffix = 2;
 
   while (true) {
-    const match = await BookProject.findOne({
-      slug: candidate,
-      ...(excludeId ? { _id: { $ne: excludeId } } : {}),
-    })
-      .select('_id')
-      .lean();
+    let match = null;
+    if (shouldUseFileBookStore()) {
+      const books = await listFileBooks();
+      match = books.find((book) => {
+        if (String(book.slug || '') !== candidate) return false;
+        if (!excludeId) return true;
+        return String(book._id || '') !== String(excludeId);
+      }) || null;
+    } else {
+      match = await BookProject.findOne({
+        slug: candidate,
+        ...(excludeId ? { _id: { $ne: excludeId } } : {}),
+      })
+        .select('_id')
+        .lean();
+    }
 
     if (!match) return candidate;
     candidate = `${base}-${suffix}`;
     suffix += 1;
   }
+}
+
+async function listUserBooks(userId) {
+  if (shouldUseFileBookStore()) {
+    return listFileBooks({ authorId: String(userId || '') }, { updatedAt: -1, _id: -1 });
+  }
+
+  return BookProject.find({
+    authorId: userId,
+  })
+    .sort({ updatedAt: -1, _id: -1 })
+    .lean();
+}
+
+async function listPublishedBooks() {
+  if (shouldUseFileBookStore()) {
+    return listFileBooks({ status: 'published' }, { publishedAt: -1, updatedAt: -1, _id: -1 });
+  }
+
+  return BookProject.find({ status: 'published' })
+    .sort({ publishedAt: -1, updatedAt: -1, _id: -1 })
+    .lean();
+}
+
+async function loadBookForEdit(bookId) {
+  if (shouldUseFileBookStore()) {
+    return findFileBookById(bookId);
+  }
+
+  return BookProject.findById(bookId).lean();
+}
+
+async function loadBookForSlug(slug) {
+  const normalized = sanitizeText(slug, 180).toLowerCase();
+  if (!normalized) return null;
+
+  if (shouldUseFileBookStore()) {
+    return findFileBookOne({ slug: normalized, status: 'published' });
+  }
+
+  return BookProject.findOne({ slug: normalized, status: 'published' }).lean();
+}
+
+async function persistBookRecord(book) {
+  if (shouldUseFileBookStore()) {
+    return saveFileBook(book);
+  }
+
+  return book.save();
+}
+
+async function removeBookRecord(bookId) {
+  if (shouldUseFileBookStore()) {
+    return deleteFileBook(bookId);
+  }
+
+  return BookProject.findByIdAndDelete(bookId);
 }
 
 function bookSummary(book, { publicView = false } = {}) {
@@ -296,17 +376,6 @@ function canViewBook(req, book) {
   return canEditBook(req, book);
 }
 
-async function loadBookForPublicSlug(slug) {
-  const normalized = sanitizeText(slug, 180).toLowerCase();
-  if (!normalized) return null;
-  return BookProject.findOne({ slug: normalized, status: 'published' }).lean();
-}
-
-async function loadBookById(id) {
-  const normalized = sanitizeText(id, 120);
-  return BookProject.findById(normalized).lean();
-}
-
 function notFound(res, message = 'Book not found') {
   return res.status(404).json({ ok: false, error: message });
 }
@@ -329,11 +398,7 @@ function renderNotFoundHtml(message) {
 
 router.get('/mine', authenticateToken, async (req, res) => {
   try {
-    const items = await BookProject.find({
-      authorId: req.user.id,
-    })
-      .sort({ updatedAt: -1, _id: -1 })
-      .lean();
+    const items = await listUserBooks(req.user.id);
 
     return res.json({
       ok: true,
@@ -349,10 +414,7 @@ router.get('/public', async (req, res) => {
     const limit = Math.max(1, Math.min(Number(req.query?.limit) || 24, 100));
     const query = sanitizeText(req.query?.q || '', 120);
     const genre = sanitizeText(req.query?.genre || '', 80).toLowerCase();
-    const filter = { status: 'published' };
-    const items = await BookProject.find(filter)
-      .sort({ publishedAt: -1, updatedAt: -1, _id: -1 })
-      .lean();
+    const items = await listPublishedBooks();
 
     const loweredQuery = query.toLowerCase();
     const matchedItems = items.filter((item) => {
@@ -400,13 +462,13 @@ router.post('/', authenticateToken, bookUpload, async (req, res) => {
 
     let book = null;
     if (bookId) {
-      book = await BookProject.findById(bookId);
+      book = await loadBookForEdit(bookId);
       if (!book) return notFound(res);
       if (!canEditBook(req, book)) {
         return res.status(403).json({ ok: false, error: 'You do not have permission to edit this book' });
       }
     } else {
-      book = new BookProject({ authorId: req.user.id });
+      book = shouldUseFileBookStore() ? { authorId: req.user.id } : new BookProject({ authorId: req.user.id });
     }
 
     const previousStatus = book.status || 'draft';
@@ -482,17 +544,29 @@ router.post('/', authenticateToken, bookUpload, async (req, res) => {
       book.publishedAt = new Date();
     }
 
-    const renderBase = shouldPublish
-      ? `/api/book-publishing/public/${encodeURIComponent(book.slug)}`
-      : `/api/book-publishing/${encodeURIComponent(book._id)}`;
-    book.webHtml = renderBookHtml(renderableBook(book, renderBase));
-    book.lastRenderedAt = new Date();
+    const useFileStore = shouldUseFileBookStore();
+    let savedBook = null;
 
-    await book.save();
+    if (useFileStore && !bookId) {
+      savedBook = await persistBookRecord(book);
+      const renderBase = shouldPublish
+        ? `/api/book-publishing/public/${encodeURIComponent(savedBook.slug)}`
+        : `/api/book-publishing/${encodeURIComponent(savedBook._id || '')}`;
+      savedBook.webHtml = renderBookHtml(renderableBook(savedBook, renderBase));
+      savedBook.lastRenderedAt = new Date().toISOString();
+      savedBook = await persistBookRecord(savedBook);
+    } else {
+      const renderBase = shouldPublish
+        ? `/api/book-publishing/public/${encodeURIComponent(book.slug)}`
+        : `/api/book-publishing/${encodeURIComponent(book._id || '')}`;
+      book.webHtml = renderBookHtml(renderableBook(book, renderBase));
+      book.lastRenderedAt = new Date().toISOString();
+      savedBook = await persistBookRecord(book);
+    }
 
     return res.status(bookId ? 200 : 201).json({
       ok: true,
-      item: bookSummary(book.toObject ? book.toObject() : book),
+      item: bookSummary(savedBook?.toObject ? savedBook.toObject() : savedBook || book),
     });
   } catch (error) {
     return res.status(400).json({ ok: false, error: error.message || 'Failed to save book' });
@@ -501,7 +575,7 @@ router.post('/', authenticateToken, bookUpload, async (req, res) => {
 
 router.get('/public/:slug', async (req, res) => {
   try {
-    const book = await loadBookForPublicSlug(req.params.slug);
+    const book = await loadBookForSlug(req.params.slug);
     if (!book) return notFound(res);
     return res.json({ ok: true, item: bookSummary(book, { publicView: true }) });
   } catch (error) {
@@ -511,7 +585,7 @@ router.get('/public/:slug', async (req, res) => {
 
 router.get('/public/:slug/view', async (req, res) => {
   try {
-    const book = await loadBookForPublicSlug(req.params.slug);
+    const book = await loadBookForSlug(req.params.slug);
     if (!book) {
       return res.status(404).type('html').send(renderNotFoundHtml('This book has not been published yet.'));
     }
@@ -548,7 +622,7 @@ router.get('/assets/local/:filename', async (req, res) => {
 
 router.get('/public/:slug/assets/:assetKey', async (req, res) => {
   try {
-    const book = await loadBookForPublicSlug(req.params.slug);
+    const book = await loadBookForSlug(req.params.slug);
     if (!book) return notFound(res);
 
     const key = String(req.params.assetKey || '').toLowerCase();
@@ -572,7 +646,7 @@ router.get('/public/:slug/assets/:assetKey', async (req, res) => {
 
 router.get('/public/:slug/download/pdf', async (req, res) => {
   try {
-    const book = await loadBookForPublicSlug(req.params.slug);
+    const book = await loadBookForSlug(req.params.slug);
     if (!book) return notFound(res);
 
     const pdfBuffer = await buildPdfBuffer(book, resolveAssetBuffer);
@@ -587,7 +661,7 @@ router.get('/public/:slug/download/pdf', async (req, res) => {
 
 router.get('/public/:slug/download/epub', async (req, res) => {
   try {
-    const book = await loadBookForPublicSlug(req.params.slug);
+    const book = await loadBookForSlug(req.params.slug);
     if (!book) return notFound(res);
 
     const epubBuffer = await buildEpubBuffer(book, resolveAssetBuffer);
@@ -602,7 +676,7 @@ router.get('/public/:slug/download/epub', async (req, res) => {
 
 router.get('/:bookId', authenticateToken, async (req, res) => {
   try {
-    const book = await loadBookById(req.params.bookId);
+    const book = await loadBookForEdit(req.params.bookId);
     if (!book) return notFound(res);
     if (!canViewBook(req, book)) {
       return res.status(403).json({ ok: false, error: 'You do not have permission to view this book' });
@@ -615,7 +689,7 @@ router.get('/:bookId', authenticateToken, async (req, res) => {
 
 router.get('/:bookId/view', authenticateToken, async (req, res) => {
   try {
-    const book = await loadBookById(req.params.bookId);
+    const book = await loadBookForEdit(req.params.bookId);
     if (!book) return res.status(404).type('html').send(renderNotFoundHtml('Book not found.'));
     if (!canViewBook(req, book)) {
       return res.status(403).type('html').send(renderNotFoundHtml('You do not have permission to view this book.'));
@@ -631,7 +705,7 @@ router.get('/:bookId/view', authenticateToken, async (req, res) => {
 
 router.get('/:bookId/assets/:assetKey', authenticateToken, async (req, res) => {
   try {
-    const book = await loadBookById(req.params.bookId);
+    const book = await loadBookForEdit(req.params.bookId);
     if (!book) return notFound(res);
     if (!canViewBook(req, book)) {
       return res.status(403).json({ ok: false, error: 'You do not have permission to view this asset' });
@@ -658,7 +732,7 @@ router.get('/:bookId/assets/:assetKey', authenticateToken, async (req, res) => {
 
 router.get('/:bookId/download/pdf', authenticateToken, async (req, res) => {
   try {
-    const book = await loadBookById(req.params.bookId);
+    const book = await loadBookForEdit(req.params.bookId);
     if (!book) return notFound(res);
     if (!canViewBook(req, book)) {
       return res.status(403).json({ ok: false, error: 'You do not have permission to download this book' });
@@ -676,7 +750,7 @@ router.get('/:bookId/download/pdf', authenticateToken, async (req, res) => {
 
 router.get('/:bookId/download/epub', authenticateToken, async (req, res) => {
   try {
-    const book = await loadBookById(req.params.bookId);
+    const book = await loadBookForEdit(req.params.bookId);
     if (!book) return notFound(res);
     if (!canViewBook(req, book)) {
       return res.status(403).json({ ok: false, error: 'You do not have permission to download this book' });
@@ -694,7 +768,7 @@ router.get('/:bookId/download/epub', authenticateToken, async (req, res) => {
 
 router.delete('/:bookId', authenticateToken, async (req, res) => {
   try {
-    const book = await BookProject.findById(req.params.bookId);
+    const book = await loadBookForEdit(req.params.bookId);
     if (!book) return notFound(res);
     if (!canEditBook(req, book)) {
       return res.status(403).json({ ok: false, error: 'You do not have permission to delete this book' });
@@ -709,7 +783,7 @@ router.delete('/:bookId', authenticateToken, async (req, res) => {
       await fsp.rm(filePath, { force: true }).catch(() => {});
     }
 
-    await BookProject.findByIdAndDelete(book._id);
+    await removeBookRecord(book._id);
     return res.json({ ok: true });
   } catch (error) {
     return res.status(500).json({ ok: false, error: error.message || 'Failed to delete book' });

@@ -256,18 +256,47 @@ async function fetchWithBackendFailover(path, options = {}) {
   const absolutePath = String(path || '').startsWith('http');
   let lastResponse = null;
   let lastError = null;
+  const timeoutMs = Math.max(5000, Number(options.timeoutMs || 20000));
 
   for (const apiBase of absolutePath ? [''] : candidates) {
     const normalizedPath = absolutePath ? path : normalizeRequestPath(path, apiBase);
     const url = normalizedPath.startsWith('http') ? normalizedPath : `${normalizeApiBaseUrl(apiBase)}${normalizedPath}`;
+    const controller = new AbortController();
+    const signal = controller.signal;
+    let timeoutId = null;
+    let signalCleanup = null;
+
+    if (options.signal) {
+      if (options.signal.aborted) {
+        controller.abort();
+      } else {
+        const abortHandler = () => controller.abort();
+        signalCleanup = () => {
+          try {
+            options.signal.removeEventListener('abort', abortHandler);
+          } catch (_err) {
+            // ignore cleanup failures
+          }
+        };
+        options.signal.addEventListener('abort', abortHandler, { once: true });
+      }
+    }
+
+    timeoutId = setTimeout(() => {
+      controller.abort();
+    }, timeoutMs);
 
     try {
       const response = await fetch(url, {
         ...options,
+        signal,
         headers: {
           ...options.headers,
         },
       });
+
+      clearTimeout(timeoutId);
+      if (signalCleanup) signalCleanup();
 
       if (response.ok || response.status < 500) {
         if (apiBase) {
@@ -278,6 +307,8 @@ async function fetchWithBackendFailover(path, options = {}) {
 
       lastResponse = response;
     } catch (error) {
+      clearTimeout(timeoutId);
+      if (signalCleanup) signalCleanup();
       lastError = error;
       continue;
     }

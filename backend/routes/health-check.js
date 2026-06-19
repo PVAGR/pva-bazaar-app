@@ -4,6 +4,7 @@ const router = express.Router();
 const mongoose = require('mongoose');
 const { connectMongo, getMongoState } = require('../lib/mongoConnection');
 const { getAuthStoreState } = require('../lib/mockUserStore');
+const { getBookStoreState } = require('../lib/bookProjectStore');
 
 /**
  * GET /api/health-check - Comprehensive system health check
@@ -44,12 +45,13 @@ router.get('/', async (req, res) => {
       ]);
       const mongoState = getMongoState();
       const authStoreState = await getAuthStoreState().catch(() => null);
+      const bookStoreState = await getBookStoreState().catch(() => null);
       const effectiveMode = mongoState.mode === 'mock' && authStoreState?.mode === 'file'
         ? 'file'
         : mongoState.mode;
       checks.checks.database.status = effectiveMode === 'memory' ? 'warning' : 'ok';
       checks.checks.database.message = effectiveMode === 'file'
-        ? `Shared auth store active (${authStoreState?.users || 0} users)`
+        ? `Shared auth store active (${authStoreState?.users || 0} users), book store active (${bookStoreState?.books || 0} books)`
         : `MongoDB connection state: ${mongoose.connection.readyState} (${effectiveMode})`;
     } catch (err) {
       checks.checks.database.status = 'error';
