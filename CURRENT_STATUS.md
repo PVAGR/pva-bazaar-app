@@ -13,6 +13,7 @@
 - The layout and auth pages now show whether the site is on the live backend or free local fallback mode.
 - The frontend API client now tries multiple backend candidates instead of depending on one endpoint.
 - The backend deploy workflow no longer blocks on a stale live-readiness gate, so fixes can actually ship to Vercel.
+- The live Render backend is still serving the older deployed SHA until its service redeploys; repo code now has the failover logic ready for when the host updates.
 
 ## Recently completed
 
