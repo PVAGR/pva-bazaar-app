@@ -2,9 +2,13 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link, useParams } from 'react-router-dom';
 import { fetchPublicBookProject, getApiBase } from '../lib/api';
+import { findLocalPublishedBookBySlug } from '../lib/localBookVault';
+import ReactMarkdown from 'react-markdown';
+import rehypeSanitize from 'rehype-sanitize';
 import './BookReaderPage.css';
 
 function toApiUrl(path) {
+  if (!path || /^data:|^blob:|^https?:/i.test(path)) return path;
   const base = getApiBase().replace(/\/+$/, '');
   const normalized = base.endsWith('/api') && path.startsWith('/api/') ? path.slice(4) : path;
   return `${base}${normalized}`;
@@ -28,7 +32,12 @@ export default function BookReaderPage() {
         }
         if (!cancelled) setBook(data.item);
       } catch (err) {
+        const localBook = findLocalPublishedBookBySlug(slug);
         if (!cancelled) setError(err.message || 'Failed to load book');
+        if (!cancelled && localBook) {
+          setBook(localBook);
+          setError('');
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -90,7 +99,12 @@ export default function BookReaderPage() {
             {!loading && !error && book?.webHtml ? (
               <div className="book-reader__html" dangerouslySetInnerHTML={{ __html: book.webHtml }} />
             ) : null}
-            {!loading && !error && !book?.webHtml ? (
+            {!loading && !error && !book?.webHtml && book?.manuscriptMarkdown ? (
+              <div className="book-reader__html">
+                <ReactMarkdown rehypePlugins={[rehypeSanitize]}>{book.manuscriptMarkdown}</ReactMarkdown>
+              </div>
+            ) : null}
+            {!loading && !error && !book?.webHtml && !book?.manuscriptMarkdown ? (
               <p className="book-reader__muted">This book does not have rendered HTML yet.</p>
             ) : null}
           </article>

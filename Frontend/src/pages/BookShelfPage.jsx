@@ -2,9 +2,11 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import { fetchPublishedBookProjects, getApiBase } from '../lib/api';
+import { listLocalPublishedBookProjects } from '../lib/localBookVault';
 import './BookShelfPage.css';
 
 function toApiUrl(path) {
+  if (!path || /^data:|^blob:|^https?:/i.test(path)) return path;
   const base = getApiBase().replace(/\/+$/, '');
   const normalized = base.endsWith('/api') && path.startsWith('/api/') ? path.slice(4) : path;
   return `${base}${normalized}`;
@@ -38,12 +40,26 @@ export default function BookShelfPage() {
         if (!data?.ok) {
           throw new Error(data?.error || 'Failed to load published books');
         }
+        const localItems = listLocalPublishedBookProjects();
+        const items = Array.isArray(data.items) ? data.items : [];
+        const merged = [...items, ...localItems].reduce((acc, book) => {
+          const key = String(book.id || book.slug || '');
+          if (!key) return acc;
+          if (!acc.some((item) => String(item.id || item.slug || '') === key)) {
+            acc.push(book);
+          }
+          return acc;
+        }, []);
         if (!cancelled) {
-          setBooks(Array.isArray(data.items) ? data.items : []);
+          setBooks(merged);
         }
       } catch (err) {
+        const localItems = listLocalPublishedBookProjects();
         if (!cancelled) {
-          setError(err.message || 'Failed to load published books');
+          setBooks(localItems);
+          if (!localItems.length) {
+            setError(err.message || 'Failed to load published books');
+          }
         }
       } finally {
         if (!cancelled) {

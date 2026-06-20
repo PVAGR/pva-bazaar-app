@@ -4,6 +4,11 @@ import { Link } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import rehypeSanitize from 'rehype-sanitize';
 import { deleteBookProject, fetchMyBookProjects, getApiBase, saveBookProject } from '../lib/api';
+import {
+  deleteLocalBookProject,
+  listLocalBookProjects,
+  saveLocalBookProject,
+} from '../lib/localBookVault';
 import './BookPublishingPage.css';
 
 const EMPTY_FORM = {
@@ -20,6 +25,7 @@ const EMPTY_FORM = {
 };
 
 function toApiUrl(path) {
+  if (!path || /^data:|^blob:|^https?:/i.test(path)) return path;
   const base = getApiBase().replace(/\/+$/, '');
   const normalized = base.endsWith('/api') && path.startsWith('/api/') ? path.slice(4) : path;
   return `${base}${normalized}`;
@@ -30,6 +36,23 @@ function countWords(text) {
     .split(/\s+/)
     .map((token) => token.trim())
     .filter(Boolean).length;
+}
+
+async function fileToDataUrl(file) {
+  if (!file) return '';
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ''));
+    reader.onerror = () => reject(reader.error || new Error('Failed to read file'));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function extractDocxText(file) {
+  if (!file) return '';
+  const mammoth = await import('mammoth/mammoth.browser');
+  const result = await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() });
+  return String(result?.value || '').trim();
 }
 
 export default function BookPublishingPage() {
@@ -93,12 +116,30 @@ export default function BookPublishingPage() {
         throw new Error(data?.error || 'Failed to load your books');
       }
       const items = Array.isArray(data.items) ? data.items : [];
-      setBooks(items);
+      const localItems = listLocalBookProjects();
+      const merged = [...items, ...localItems].reduce((acc, book) => {
+        const key = String(book.id || book._id || book.slug || '');
+        if (!key) return acc;
+        if (!acc.some((item) => String(item.id || item._id || item.slug || '') === key)) {
+          acc.push(book);
+        }
+        return acc;
+      }, []);
+      setBooks(merged);
       if (!selectedBookId && items.length) {
         setSelectedBookId(items[0].id);
+      } else if (!selectedBookId && localItems.length) {
+        setSelectedBookId(localItems[0].id);
       }
     } catch (err) {
-      setError(err.message || 'Failed to load your books');
+      const localItems = listLocalBookProjects();
+      setBooks(localItems);
+      if (!selectedBookId && localItems.length) {
+        setSelectedBookId(localItems[0].id);
+      }
+      if (!localItems.length) {
+        setError(err.message || 'Failed to load your books');
+      }
     } finally {
       setLoading(false);
     }
@@ -134,7 +175,7 @@ export default function BookPublishingPage() {
     setPreview(URL.createObjectURL(file));
   }
 
-  function handleManuscriptFile(event) {
+  async function handleManuscriptFile(event) {
     const file = event.target.files?.[0] || null;
     setManuscriptFile(file);
     setManuscriptFileName(file?.name || '');
@@ -148,10 +189,20 @@ export default function BookPublishingPage() {
       file.type === 'application/pdf';
 
     if (isDocx || isPdf) {
-      setForm((prev) => ({
-        ...prev,
-        manuscriptMarkdown: '',
-      }));
+      if (isDocx) {
+        try {
+          const extracted = await extractDocxText(file);
+          setForm((prev) => ({
+            ...prev,
+            manuscriptMarkdown: extracted,
+          }));
+          return;
+        } catch (_err) {
+          // Keep the file attached and let the save path try again server-side.
+        }
+      }
+
+      setForm((prev) => ({ ...prev, manuscriptMarkdown: '' }));
       return;
     }
 
@@ -186,19 +237,73 @@ export default function BookPublishingPage() {
       if (frontCoverFile) payload.append('frontCover', frontCoverFile);
       if (backCoverFile) payload.append('backCover', backCoverFile);
 
-      const data = await saveBookProject(payload);
-      if (!data?.ok || !data?.item) {
-        throw new Error(data?.error || 'Failed to save book');
-      }
+      const saveViaLocalVault = async () => {
+        const [frontCoverDataUrl, backCoverDataUrl] = await Promise.all([
+          frontCoverFile ? fileToDataUrl(frontCoverFile) : Promise.resolve(''),
+          backCoverFile ? fileToDataUrl(backCoverFile) : Promise.resolve(''),
+        ]);
+        const localSaved = saveLocalBookProject({
+          bookId: form.bookId || '',
+          title: form.title,
+          subtitle: form.subtitle,
+          authorName: form.authorName,
+          slug: form.slug,
+          description: form.description,
+          genre: form.genre,
+          audience: form.audience,
+          language: form.language,
+          manuscriptMarkdown: form.manuscriptMarkdown,
+          status: publish ? 'published' : 'draft',
+          publishedAt: publish ? new Date().toISOString() : null,
+          frontCover: frontCoverDataUrl
+            ? {
+              provider: 'local',
+              url: frontCoverDataUrl,
+              originalName: frontCoverFile?.name || '',
+              mimeType: frontCoverFile?.type || '',
+              size: frontCoverFile?.size || 0,
+            }
+            : undefined,
+          backCover: backCoverDataUrl
+            ? {
+              provider: 'local',
+              url: backCoverDataUrl,
+              originalName: backCoverFile?.name || '',
+              mimeType: backCoverFile?.type || '',
+              size: backCoverFile?.size || 0,
+            }
+            : undefined,
+        });
+        setBooks((prev) => {
+          const next = prev.filter((book) => String(book.id) !== String(localSaved.id));
+          return [localSaved, ...next].sort((left, right) => new Date(right.updatedAt || 0) - new Date(left.updatedAt || 0));
+        });
+        setSelectedBookId(localSaved.id);
+        setSuccess(
+          publish
+            ? `"${localSaved.title}" is published locally on this device and ready to view.`
+            : `"${localSaved.title}" was saved locally as a draft.`,
+        );
+      };
 
-      const saved = data.item;
-      setSuccess(
-        publish
-          ? `"${saved.title}" is published and ready for web, PDF, and EPUB delivery.`
-          : `"${saved.title}" was saved as a draft.`,
-      );
-      await loadBooks();
-      setSelectedBookId(saved.id);
+      try {
+        const data = await saveBookProject(payload);
+        if (!data?.ok || !data?.item) {
+          throw new Error(data?.error || 'Failed to save book');
+        }
+
+        const saved = data.item;
+        setSuccess(
+          publish
+            ? `"${saved.title}" is published and ready for web, PDF, and EPUB delivery.`
+            : `"${saved.title}" was saved as a draft.`,
+        );
+        await loadBooks();
+        setSelectedBookId(saved.id);
+      } catch (networkErr) {
+        await saveViaLocalVault();
+        setError('');
+      }
     } catch (err) {
       setError(err.message || 'Failed to save book');
     } finally {
@@ -222,7 +327,10 @@ export default function BookPublishingPage() {
       resetForm();
       await loadBooks();
     } catch (err) {
-      setError(err.message || 'Failed to delete book');
+      deleteLocalBookProject(bookId);
+      setSuccess('Book project deleted locally.');
+      resetForm();
+      await loadBooks();
     } finally {
       setSaving(false);
     }
@@ -236,6 +344,12 @@ export default function BookPublishingPage() {
     frontCover: selectedBook.links.frontCover ? toApiUrl(selectedBook.links.frontCover) : '',
     backCover: selectedBook.links.backCover ? toApiUrl(selectedBook.links.backCover) : '',
   } : null;
+
+  const manuscriptHint = manuscriptFileName
+    ? (manuscriptFileName.toLowerCase().endsWith('.docx')
+      ? `Loaded file: ${manuscriptFileName}. DOCX content is extracted into the editor, and save/publish will recheck it if needed.`
+      : `Loaded file: ${manuscriptFileName}. PDF and DOCX are extracted on save if the backend is available.`)
+    : 'Upload a DOCX or PDF manuscript, or paste text directly into the editor.';
 
   return (
     <>
@@ -455,9 +569,7 @@ export default function BookPublishingPage() {
                 />
               </div>
               <p className="book-publish__muted">
-                {manuscriptFileName
-                  ? `Loaded file: ${manuscriptFileName}. PDF and DOCX will be extracted when you save.`
-                  : 'Upload a DOCX or PDF manuscript, or paste text directly into the editor.'}
+                {manuscriptHint}
               </p>
 
               <label>
