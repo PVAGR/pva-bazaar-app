@@ -171,15 +171,35 @@ export default function AdminPage() {
     if (auth === 'authenticated' && authVersion === 'v2') {
       setIsAuthenticated(true);
     } else {
-      // Clear old sessions
-      sessionStorage.removeItem('admin-auth');
-      sessionStorage.removeItem('admin-auth-version');
-      setIsAuthenticated(false);
+      // Check if there's a valid token in localStorage that we can restore session from
+      const token = localStorage.getItem('token') || localStorage.getItem('authToken') || localStorage.getItem('jwt');
+      if (token) {
+        // Restore the admin session from localStorage token
+        sessionStorage.setItem('admin-auth', 'authenticated');
+        sessionStorage.setItem('admin-auth-version', 'v2');
+        setIsAuthenticated(true);
+      } else {
+        // Clear old sessions
+        sessionStorage.removeItem('admin-auth');
+        sessionStorage.removeItem('admin-auth-version');
+        setIsAuthenticated(false);
+      }
     }
   }, []);
 
   useEffect(() => {
     const handleSessionExpired = () => {
+      // Check if we still have a valid token in localStorage - if so, restore the session
+      const token = localStorage.getItem('token') || localStorage.getItem('authToken') || localStorage.getItem('jwt');
+      if (token) {
+        // Token still exists, restore admin session
+        sessionStorage.setItem('admin-auth', 'authenticated');
+        sessionStorage.setItem('admin-auth-version', 'v2');
+        setIsAuthenticated(true);
+        setError('');
+        return;
+      }
+      
       setIsAuthenticated(false);
       setUsername('');
       setEmail('');

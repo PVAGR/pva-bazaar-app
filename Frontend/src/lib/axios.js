@@ -145,26 +145,27 @@ coreApi.interceptors.response.use(
         }
       }
 
-      try {
-        localStorage.removeItem("token");
-        localStorage.removeItem("authToken");
-        localStorage.removeItem("jwt");
-        sessionStorage.removeItem("admin-auth");
-        sessionStorage.removeItem("admin-auth-version");
-        sessionStorage.removeItem("admin-login-time");
-      } catch (_err) {
-        // Ignore storage failures and continue with the forced session reset.
+      // Only wipe tokens+session if the token refresh also failed (or wasn't attempted)
+      // and we're on the admin shell - for non-admin 401s, let the regular flow handle it.
+      if (!adminShellSession) {
+        try {
+          localStorage.removeItem("token");
+          localStorage.removeItem("authToken");
+          localStorage.removeItem("jwt");
+          sessionStorage.removeItem("admin-auth");
+          sessionStorage.removeItem("admin-auth-version");
+          sessionStorage.removeItem("admin-login-time");
+        } catch (_err) {
+          // Ignore storage failures and continue with the forced session reset.
+        }
       }
 
       if (typeof window !== "undefined" && hadToken) {
-        const currentHash = window.location.hash || "";
-        const onAdminShell = currentHash.startsWith("#/admin");
         if (adminShellSession) {
+          // Don't wipe sessionStorage for admin - just dispatch event to let AdminPage handle it gracefully
+          // The handleSessionExpired handler will check localStorage and restore if token still exists
           window.dispatchEvent(new Event("admin-session-expired"));
-          if (!onAdminShell) {
-            window.location.assign("/#/admin");
-          }
-        } else if (!currentHash.startsWith("#/login")) {
+        } else if (!window.location.hash.startsWith("#/login")) {
           window.location.assign("/#/login");
         }
       }
