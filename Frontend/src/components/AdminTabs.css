@@ -1,12 +1,12 @@
 .admin-tabs {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   width: min(100%, var(--admin-shell-max, 1320px));
-  margin: 0 auto 14px;
-  padding: 10px;
+  margin: 0 auto 18px;
+  padding: 12px;
   border: 1px solid color-mix(in srgb, var(--site-border, rgba(255, 255, 255, 0.1)) 90%, transparent);
   border-radius: 12px;
-  margin-top: 6px;
+  margin-top: 8px;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   position: sticky;
@@ -18,12 +18,12 @@
 }
 
 .admin-tab {
-  padding: 8px 12px;
+  padding: 10px 16px;
   background: var(--site-panel-soft, rgba(255, 255, 255, 0.03));
   border: 1px solid var(--site-border, rgba(255, 255, 255, 0.1));
-  border-radius: 9px;
+  border-radius: 10px;
   color: var(--site-text-dim, #aaa);
-  font-size: 0.84rem;
+  font-size: 0.86rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -55,15 +55,15 @@
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .admin-tabs {
-    padding: 8px 6px;
-    gap: 6px;
+    padding: 10px 8px;
+    gap: 8px;
     border-radius: 10px;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
   }
 
   .admin-tab {
-    padding: 7px 10px;
-    font-size: 0.8rem;
+    padding: 8px 12px;
+    font-size: 0.82rem;
   }
 
   /* Hide shortcuts on mobile */

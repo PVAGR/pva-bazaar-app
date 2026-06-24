@@ -87,24 +87,24 @@ body {
 }
 
 .layout {
-  width: min(var(--container-max), calc(100vw - 24px));
-  margin: var(--space-4) auto;
+  width: min(var(--container-max), calc(100vw - 32px));
+  margin: var(--space-5) auto;
   background: var(--site-panel);
   border: 1px solid var(--site-border);
   border-radius: var(--radius-lg);
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
-  padding: clamp(1rem, 1.6vw, 1.5rem);
+  padding: clamp(1.5rem, 2vw, 2rem);
 }
 
 .layout__header {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-4);
+  gap: var(--space-5);
   align-items: center;
   justify-content: space-between;
-  margin-bottom: var(--space-5);
+  margin-bottom: var(--space-6);
   border-bottom: 1px solid var(--site-border);
-  padding-bottom: var(--space-4);
+  padding-bottom: var(--space-5);
 }
 
 .layout__brand {
@@ -398,7 +398,7 @@ body {
   background: var(--site-panel);
   border: 1px solid var(--site-border);
   border-radius: var(--radius-md);
-  padding: clamp(0.95rem, 1.2vw, 1.4rem);
+  padding: clamp(1.25rem, 1.5vw, 1.75rem);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
 }
 
@@ -432,7 +432,7 @@ body {
 }
 
 .entry-card {
-  padding: 1rem;
+  padding: 1.25rem;
   border: 1px solid var(--site-border);
   border-radius: var(--radius-md);
   background: var(--site-panel-soft);
@@ -548,7 +548,7 @@ textarea {
   color: var(--site-text);
   border: 1px solid var(--site-border);
   border-radius: var(--radius-sm);
-  padding: 0.62rem 0.72rem;
+  padding: 0.75rem 0.85rem;
 }
 
 a:focus-visible,
@@ -562,7 +562,7 @@ textarea:focus-visible {
 
 .form {
   display: grid;
-  gap: 0.75rem;
+  gap: 1rem;
 }
 
 .form-spaced {
@@ -1198,6 +1198,7 @@ textarea:focus-visible {
   overflow: hidden;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
 }
 

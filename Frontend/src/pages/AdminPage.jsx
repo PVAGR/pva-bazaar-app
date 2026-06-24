@@ -227,22 +227,15 @@ export default function AdminPage() {
       }
     };
 
-    const handleFocus = () => {
-      validateSession();
-    };
+    // Only validate on initial mount, not on focus/visibility changes
+    // This prevents frequent logouts when switching tabs
+    validateSession();
 
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        validateSession();
-      }
-    };
-
-    window.addEventListener('focus', handleFocus);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    // Optional: periodic validation every 5 minutes instead of on every focus
+    const intervalId = setInterval(validateSession, 300000);
 
     return () => {
-      window.removeEventListener('focus', handleFocus);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      clearInterval(intervalId);
     };
   }, [isAuthenticated]);
 

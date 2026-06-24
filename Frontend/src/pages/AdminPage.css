@@ -266,33 +266,35 @@
   background: var(--bg-secondary);
   border: 1px solid var(--border);
   border-radius: 16px;
-  padding: 3rem;
-  max-width: 450px;
+  padding: 3.5rem 3rem;
+  max-width: 480px;
   width: 100%;
   text-align: center;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  margin: 2rem auto;
 }
 
 .login-card h1 {
-  margin: 0 0 0.5rem;
-  font-size: 2rem;
+  margin: 0 0 1rem;
+  font-size: 2.1rem;
   color: var(--accent);
 }
 
 .login-card p {
-  margin: 0 0 2rem;
+  margin: 0 0 2.5rem;
   color: var(--text-secondary);
+  line-height: 1.6;
 }
 
 .login-input {
   width: 100%;
-  padding: 1rem;
+  padding: 1.1rem 1rem;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 10px;
   color: var(--text-primary);
   font-size: 1rem;
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
   transition: all 0.2s;
 }
 
@@ -393,7 +395,7 @@
 .admin-header {
   background: var(--bg-secondary);
   border-bottom: 2px solid var(--border-accent);
-  padding: 1.5rem 2rem;
+  padding: 1.75rem 2.5rem;
   position: sticky;
   top: 0;
   z-index: 100;
@@ -717,8 +719,8 @@
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  padding: 1.25rem 1rem 2rem;
+  gap: 1.5rem;
+  padding: 2rem 1.5rem 2.5rem;
   min-height: calc(100vh - 100px);
 }
 
@@ -732,14 +734,14 @@
 .sidebar-section {
   background: var(--bg-tertiary);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 0.4rem 0.4rem 0.3rem 0.4rem;
-  margin-bottom: 0.25rem;
+  border-radius: 10px;
+  padding: 0.75rem 0.75rem 0.65rem 0.75rem;
+  margin-bottom: 0.5rem;
 }
 
 .sidebar-section h2 {
-  margin: 0 0 0.5rem;
-  font-size: 0.95rem;
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
   color: var(--accent);
 }
 
