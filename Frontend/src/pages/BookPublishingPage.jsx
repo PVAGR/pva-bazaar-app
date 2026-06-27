@@ -279,11 +279,17 @@ export default function BookPublishingPage() {
           return [localSaved, ...next].sort((left, right) => new Date(right.updatedAt || 0) - new Date(left.updatedAt || 0));
         });
         setSelectedBookId(localSaved.id);
-        setSuccess(
-          publish
-            ? `"${localSaved.title}" is published locally on this device and ready to view.`
-            : `"${localSaved.title}" was saved locally as a draft.`,
-        );
+        if (localSaved._storageError) {
+          setError(localSaved._storageError);
+          setSuccess('');
+        } else {
+          var storageNote = localSaved._storageWarning ? ' Note: ' + localSaved._storageWarning : '';
+          setSuccess(
+            (publish
+              ? '"' + localSaved.title + '" is published locally on this device and ready to view.'
+              : '"' + localSaved.title + '" was saved locally as a draft.') + storageNote,
+          );
+        }
       };
 
       try {

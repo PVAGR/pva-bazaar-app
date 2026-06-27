@@ -1,141 +1,196 @@
 const BOOKS_KEY = 'pva:local-book-projects-v1';
+const MAX_DATA_URL_BYTES = 250 * 1024;
 
-function canUseStorage() {
-  return typeof window !== 'undefined' && Boolean(window.localStorage);
-}
+// Internal helpers
+
+function canUseStorage() { return typeof window !== 'undefined' && Boolean(window.localStorage); }
 
 function readJson(key, fallback) {
   if (!canUseStorage()) return fallback;
-  try {
-    return JSON.parse(window.localStorage.getItem(key) || JSON.stringify(fallback));
-  } catch (_err) {
-    return fallback;
-  }
+  try { return JSON.parse(window.localStorage.getItem(key) || JSON.stringify(fallback)); } catch (_err) { return fallback; }
 }
-
 function writeJson(key, value) {
-  if (!canUseStorage()) return;
-  window.localStorage.setItem(key, JSON.stringify(value));
+  if (!canUseStorage()) return { ok: false, message: 'localStorage is not available.' };
+  var first = trySet(key, value);
+  if (first.ok) return { ok: true, strippedImages: false, message: '' };
+  if (!isQuotaError(first.error)) throw first.error;
+  var trimmed = stripOversizedDataUrls(value);
+  var second = trySet(key, trimmed);
+  if (second.ok) { syncArrayInPlace(value, trimmed); return { ok: true, strippedImages: true, message: 'Large cover images were removed.' }; }
+  if (!isQuotaError(second.error)) throw second.error;
+  var bare = stripAllDataUrls(value);
+  var third = trySet(key, bare);
+  if (third.ok) { syncArrayInPlace(value, bare); return { ok: true, strippedImages: true, message: 'Cover images were removed to fit storage limits.' }; }
+  if (!isQuotaError(third.error)) throw third.error;
+  return { ok: false, message: 'Storage full (' + estimateSize(value) + ' KB). Delete local books and try again.' };
 }
 
-function normalize(value) {
-  return String(value || '').trim().toLowerCase();
+function trySet(key, value) {
+  try { window.localStorage.setItem(key, JSON.stringify(value)); return { ok: true }; }
+  catch (err) { return { ok: false, error: err }; }
 }
 
-function loadBooks() {
-  return readJson(BOOKS_KEY, []);
+function isQuotaError(err) {
+  if (!err) return false;
+  var m = String(err.name || err.message || '').toLowerCase();
+  return m.indexOf('quota') !== -1 || m.indexOf('exceeded') !== -1 || err.code === 22 || err.code === 1014;
 }
 
-function saveBooks(books) {
-  writeJson(BOOKS_KEY, books);
+function estimateSize(v) { try { return Math.round(JSON.stringify(v).length / 1024); } catch (_) { return -1; } }
+
+function syncArrayInPlace(t, s) {
+  if (!Array.isArray(t) || !Array.isArray(s)) return; t.length = 0;
+  for (var i = 0; i < s.length; i++) t.push(s[i]);
 }
 
+function isOversizedDataUrl(url) {
+  if (!url || typeof url !== 'string' || url.indexOf('data:') !== 0) return false;
+  return (url.length * 3) / 4 > MAX_DATA_URL_BYTES;
+}
+
+function stripOversizedDataUrls(books) {
+  if (!Array.isArray(books)) return books;
+  return books.map(function(b) {
+    var c = Object.assign({}, b);
+    if (c.frontCover && isOversizedDataUrl(c.frontCover.url)) c.frontCover = Object.assign({}, c.frontCover, { url: '', _imageStripped: 'oversized' });
+    if (c.backCover && isOversizedDataUrl(c.backCover.url)) c.backCover = Object.assign({}, c.backCover, { url: '', _imageStripped: 'oversized' });
+    return c;
+  });
+}
+
+function stripAllDataUrls(books) {
+  if (!Array.isArray(books)) return books;
+  return books.map(function(b) {
+    var c = Object.assign({}, b);
+    if (c.frontCover && typeof c.frontCover.url === 'string' && c.frontCover.url.indexOf('data:') === 0) c.frontCover = Object.assign({}, c.frontCover, { url: '', _imageStripped: 'quota' });
+    if (c.backCover && typeof c.backCover.url === 'string' && c.backCover.url.indexOf('data:') === 0) c.backCover = Object.assign({}, c.backCover, { url: '', _imageStripped: 'quota' });
+    return c;
+  });
+}
+
+function normalize(v) { return String(v || '').trim().toLowerCase(); }
+
+function loadBooks() { return readJson(BOOKS_KEY, []); }
+
+function saveBooks(books) { return writeJson(BOOKS_KEY, books); }
 function buildLocalLinks(book) {
-  const slug = normalize(book.slug) || `local-book-${String(book.id || '').slice(-8)}`;
+  var slug = normalize(book.slug) || 'local-book-' + String(book.id || '').slice(-8);
   return {
-    publicPage: `/books/read/${encodeURIComponent(slug)}`,
+    publicPage: '/books/read/' + encodeURIComponent(slug),
     apiView: '',
     pdf: '',
     epub: '',
-    frontCover: book.frontCover?.url || '',
-    backCover: book.backCover?.url || '',
+    frontCover: (book.frontCover && book.frontCover.url) || '',
+    backCover: (book.backCover && book.backCover.url) || '',
   };
 }
 
-export function normalizeLocalBook(raw = {}) {
-  const book = { ...raw };
-  const id = String(book.id || book._id || `local-book-${Date.now()}`);
-  const slug = normalize(book.slug) || `local-book-${id}`.toLowerCase();
-  const status = String(book.status || 'draft').toLowerCase() === 'published' ? 'published' : 'draft';
-  const title = String(book.title || 'Untitled book').trim();
-  const manuscriptMarkdown = String(book.manuscriptMarkdown || '');
-
+function normalizeLocalBook(raw) {
+  if (!raw) raw = {};
+  var book = Object.assign({}, raw);
+  var id = String(book.id || book._id || 'local-book-' + Date.now());
+  var slug = normalize(book.slug) || ('local-book-' + id).toLowerCase();
+  var status = (String(book.status || 'draft').toLowerCase() === 'published') ? 'published' : 'draft';
+  var title = String(book.title || 'Untitled book').trim();
+  var manuscriptMarkdown = String(book.manuscriptMarkdown || '');
+  var wc = Number(book.wordCount || manuscriptMarkdown.split(/\s+/).filter(Boolean).length || 0);
   return {
-    id,
-    _id: id,
-    title,
+    id: id, _id: id, title: title,
     subtitle: String(book.subtitle || ''),
     authorName: String(book.authorName || ''),
-    slug,
+    slug: slug,
     description: String(book.description || ''),
     genre: String(book.genre || 'general').toLowerCase(),
     audience: String(book.audience || 'general').toLowerCase(),
     language: String(book.language || 'en').toLowerCase(),
-    status,
-    wordCount: Number(book.wordCount || manuscriptMarkdown.split(/\s+/).filter(Boolean).length || 0),
+    status: status, wordCount: wc,
     publishedAt: book.publishedAt || null,
     updatedAt: book.updatedAt || new Date().toISOString(),
     createdAt: book.createdAt || new Date().toISOString(),
-    manuscriptMarkdown,
+    manuscriptMarkdown: manuscriptMarkdown,
     webHtml: String(book.webHtml || ''),
     frontCover: book.frontCover || {},
     backCover: book.backCover || {},
-    links: buildLocalLinks({ ...book, id, slug, frontCover: book.frontCover, backCover: book.backCover }),
+    links: {
+      publicPage: '/books/read/' + encodeURIComponent(slug),
+      apiView: '', pdf: '', epub: '',
+      frontCover: (book.frontCover && book.frontCover.url) || '',
+      backCover: (book.backCover && book.backCover.url) || '',
+    },
     source: 'local',
   };
 }
 
-export function listLocalBookProjects() {
+function listLocalBookProjects() {
   return loadBooks().map(normalizeLocalBook);
 }
 
-export function listLocalPublishedBookProjects() {
-  return listLocalBookProjects().filter((book) => book.status === 'published');
+function listLocalPublishedBookProjects() {
+  return listLocalBookProjects().filter(function(b) { return b.status === 'published'; });
 }
 
-export function findLocalBookById(bookId) {
-  const id = String(bookId || '');
-  return listLocalBookProjects().find((book) => String(book.id || book._id || '') === id) || null;
+function findLocalBookById(bookId) {
+  var id = String(bookId || '');
+  return listLocalBookProjects().find(function(b) { return String(b.id || b._id || '') === id; }) || null;
 }
 
-export function findLocalPublishedBookBySlug(slug) {
-  const normalized = normalize(slug);
-  if (!normalized) return null;
-  return listLocalPublishedBookProjects().find((book) => normalize(book.slug) === normalized) || null;
+function findLocalPublishedBookBySlug(slug) {
+  var norm = normalize(slug);
+  if (!norm) return null;
+  return listLocalPublishedBookProjects().find(function(b) { return normalize(b.slug) === norm; }) || null;
 }
 
-export function saveLocalBookProject(payload = {}) {
-  const books = loadBooks();
-  const next = normalizeLocalBook(payload);
-  const index = books.findIndex((book) => String(book.id || book._id || '') === String(next.id));
-
-  if (index >= 0) {
-    books[index] = {
-      ...books[index],
-      ...next,
-      updatedAt: new Date().toISOString(),
-    };
+function saveLocalBookProject(payload) {
+  if (!payload) payload = {};
+  var books = loadBooks();
+  var next = normalizeLocalBook(payload);
+  var idx = books.findIndex(function(b) { return String(b.id || b._id || '') === String(next.id); });
+  if (idx >= 0) {
+    books[idx] = Object.assign({}, books[idx], next, { updatedAt: new Date().toISOString() });
   } else {
-    books.push({
-      ...next,
+    books.push(Object.assign({}, next, {
       createdAt: next.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-    });
+    }));
   }
-
-  saveBooks(books);
-  return normalizeLocalBook(books[index >= 0 ? index : books.length - 1]);
+  var sr = saveBooks(books);
+  var saved = normalizeLocalBook(books[idx >= 0 ? idx : books.length - 1]);
+  if (sr && !sr.ok) { saved._storageError = sr.message; }
+  else if (sr && sr.strippedImages) { saved._imagesStripped = true; saved._storageWarning = sr.message; }
+  return saved;
 }
 
-export function deleteLocalBookProject(bookId) {
-  const id = String(bookId || '');
-  const books = loadBooks().filter((book) => String(book.id || book._id || '') !== id);
+function deleteLocalBookProject(bookId) {
+  var id = String(bookId || '');
+  var books = loadBooks().filter(function(b) { return String(b.id || b._id || '') !== id; });
   saveBooks(books);
   return true;
 }
 
-export function clearLocalBookProjects() {
+function clearLocalBookProjects() {
   if (!canUseStorage()) return;
   window.localStorage.removeItem(BOOKS_KEY);
 }
 
-export default {
-  clearLocalBookProjects,
-  deleteLocalBookProject,
-  findLocalBookById,
-  findLocalPublishedBookBySlug,
-  listLocalBookProjects,
-  listLocalPublishedBookProjects,
-  normalizeLocalBook,
-  saveLocalBookProject,
+module.exports = {
+  clearLocalBookProjects: clearLocalBookProjects,
+  deleteLocalBookProject: deleteLocalBookProject,
+  findLocalBookById: findLocalBookById,
+  findLocalPublishedBookBySlug: findLocalPublishedBookBySlug,
+  listLocalBookProjects: listLocalBookProjects,
+  listLocalPublishedBookProjects: listLocalPublishedBookProjects,
+  normalizeLocalBook: normalizeLocalBook,
+  saveLocalBookProject: saveLocalBookProject,
 };
+
+// ES module exports for bundler
+var exp = module.exports;
+export var clearLocalBookProjects = exp.clearLocalBookProjects;
+export var deleteLocalBookProject = exp.deleteLocalBookProject;
+export var findLocalBookById = exp.findLocalBookById;
+export var findLocalPublishedBookBySlug = exp.findLocalPublishedBookBySlug;
+export var listLocalBookProjects = exp.listLocalBookProjects;
+export var listLocalPublishedBookProjects = exp.listLocalPublishedBookProjects;
+export var normalizeLocalBook = exp.normalizeLocalBook;
+export var saveLocalBookProject = exp.saveLocalBookProject;
+export default exp;
