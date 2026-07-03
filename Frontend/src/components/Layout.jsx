@@ -1,13 +1,10 @@
 import React, { useEffect, useMemo } from 'react';
-import { Link, NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import OpenClawFloatingAssistant from './OpenClawFloatingAssistant.jsx';
 import { PUBLIC_ROUTES } from '../config/publicRoutes';
 import { getToken } from '../lib/auth';
 import useArchiveTheme from '../hooks/useArchiveTheme.js';
 import useConnectionMode from '../hooks/useConnectionMode.js';
-
-const FEDERATION_SNIPPET =
-  'PVA Bazaar is my personal archive, business bridge, and continuity layer. Nothing important should be hidden, lost, or silently replaced.';
 
 function parseJwtPayload(token) {
   if (!token || typeof token !== 'string') return null;
@@ -111,9 +108,6 @@ export default function Layout({ children }) {
     PUBLIC_ROUTES.filter((route) => route.navPlacement === 'primary' && route.access === 'public')
   ), []);
 
-  const footerExploreRoutes = useMemo(() => (
-    PUBLIC_ROUTES.filter((route) => route.access === 'public')
-  ), []);
 
   const traversal = useMemo(() => {
     const publicRoutes = PUBLIC_ROUTES.filter((route) => route.access === 'public');
@@ -127,31 +121,28 @@ export default function Layout({ children }) {
     };
   }, [pathname]);
 
-  const footerCitizenRoutes = useMemo(() => [
-    { key: 'citizens', to: '/citizens', title: 'Citizens' },
-    { key: 'passport', to: '/passport', title: 'Citizen Passport' },
+  const footerKnowledgeRoutes = useMemo(() => [
+    { key: 'archive', to: '/archive', title: 'Archive Library' },
+    { key: 'books', to: '/books', title: 'Books' },
+    { key: 'books-published', to: '/books/published', title: 'Published Books' },
+    { key: 'civilization-library', to: '/civilization-library', title: 'Civilization Library' },
+    { key: 'forum', to: '/forum', title: 'Forum' },
+  ], []);
+
+  const footerCommerceRoutes = useMemo(() => [
+    { key: 'marketplace', to: '/marketplace', title: 'Marketplace' },
+    { key: 'showroom', to: '/showroom', title: 'Showroom' },
+    { key: 'creator', to: '/creator', title: 'Supplier Portal' },
+    { key: 'heelkawn', to: '/heelkawn', title: 'HeelKawn' },
+    { key: 'recovery', to: '/recovery', title: 'Recovery & Install' },
+  ], []);
+
+  const footerCivicRoutes = useMemo(() => [
+    { key: 'proposals', to: '/proposals', title: 'Proposals' },
     { key: 'conference', to: '/conference', title: 'Conference' },
     { key: 'treasury', to: '/treasury', title: 'Treasury' },
-    { key: 'proposals', to: '/proposals', title: 'Proposals' },
-  ], []);
-
-  const footerEssentialRoutes = useMemo(() => [
-    { key: 'home', to: '/', title: 'Home' },
+    { key: 'citizens', to: '/citizens', title: 'Citizens' },
     { key: 'about', to: '/about', title: 'About' },
-    { key: 'marketplace', to: '/marketplace', title: 'Marketplace' },
-    { key: 'archive', to: '/archive', title: 'Archive Library' },
-    { key: 'recovery', to: '/recovery', title: 'Recovery' },
-    { key: 'download', to: '/download-app', title: 'Download App' },
-  ], []);
-
-  const intentRoutes = useMemo(() => [
-    { key: 'learn', title: 'Learn', to: '/archive', note: 'Read pure life knowledge and long-form writings.' },
-    { key: 'buy', title: 'Buy', to: '/marketplace', note: 'Find goods, sourcing, and real trade.' },
-    { key: 'sell', title: 'Sell', to: '/creator', note: 'Offer goods as a supplier or artisan.' },
-    { key: 'publish', title: 'Publish', to: '/books/publish', note: 'Prepare a book with covers, manuscript, and exports.' },
-    { key: 'recover', title: 'Recover', to: '/recovery', note: 'Restore context and keep continuity alive.' },
-    { key: 'participate', title: 'Participate', to: '/proposals', note: 'Read, vote, and discuss public decisions.' },
-    { key: 'explore', title: 'Explore', to: '/heelkawn', note: 'Enter the world, map, and simulation hub.' },
   ], []);
 
   return (
@@ -199,14 +190,6 @@ export default function Layout({ children }) {
               {routeIdentity.description}
             </p>
           ) : null}
-          <div className="layout__intentChooser" aria-label="What are you here for?">
-            {intentRoutes.map((route) => (
-              <Link key={route.key} className="layout__intentCard" to={route.to}>
-                <strong>{route.title}</strong>
-                <span>{route.note}</span>
-              </Link>
-            ))}
-          </div>
           {(traversal.prev || traversal.next) ? (
             <div className="layout__routeTraversal" aria-label="Route traversal">
               {traversal.prev ? <NavLink to={traversal.prev.to}>← {traversal.prev.title}</NavLink> : <span />}
@@ -221,10 +204,10 @@ export default function Layout({ children }) {
       ) : null}
       <footer className="layout__footer">
         <div className="layout__footerGrid">
-          <section className="layout__footerSection" aria-label="Essential routes">
-            <h2>Essential</h2>
+          <section className="layout__footerSection" aria-label="Knowledge">
+            <h2>Knowledge</h2>
             <div className="layout__footerLinks">
-              {footerEssentialRoutes.map((route) => (
+              {footerKnowledgeRoutes.map((route) => (
                 <NavLink key={route.key} to={route.to} end={route.to === '/'}>
                   {route.title}
                 </NavLink>
@@ -232,10 +215,10 @@ export default function Layout({ children }) {
             </div>
           </section>
 
-          <section className="layout__footerSection" aria-label="Explore routes">
-            <h2>Explore</h2>
+          <section className="layout__footerSection" aria-label="Commerce">
+            <h2>Commerce</h2>
             <div className="layout__footerLinks">
-              {footerExploreRoutes.map((route) => (
+              {footerCommerceRoutes.map((route) => (
                 <NavLink key={route.key} to={route.to} end={route.to === '/'}>
                   {route.title}
                 </NavLink>
@@ -243,11 +226,10 @@ export default function Layout({ children }) {
             </div>
           </section>
 
-          <section className="layout__footerSection" aria-label="Federation manifesto snippet">
-            <h2>Manifesto</h2>
-            <p style={{ margin: 0, lineHeight: 1.65 }}>{FEDERATION_SNIPPET}</p>
-            <div className="layout__footerLinks" style={{ marginTop: '0.65rem' }}>
-              {footerCitizenRoutes.map((route) => (
+          <section className="layout__footerSection" aria-label="Civic">
+            <h2>Civic</h2>
+            <div className="layout__footerLinks">
+              {footerCivicRoutes.map((route) => (
                 <NavLink key={route.key} to={route.to} end={route.to === '/'}>
                   {route.title}
                 </NavLink>
