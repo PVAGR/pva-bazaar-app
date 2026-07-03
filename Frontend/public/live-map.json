@@ -9,17 +9,17 @@
   },
   "urls": {
     "frontend": "https://pvabazaar.org",
-    "backend": "https://api.pvabazaar.org",
-    "apiBase": "https://api.pvabazaar.org/api",
+    "backend": "https://pva-bazaar-app-1.onrender.com",
+    "apiBase": "https://pva-bazaar-app-1.onrender.com/api",
     "statusPage": "https://pvabazaar.org/status.html",
-    "health": "https://api.pvabazaar.org/api/health",
-    "ping": "https://api.pvabazaar.org/api/ping",
-    "version": "https://api.pvabazaar.org/api/version",
-    "archive": "https://api.pvabazaar.org/api/archive",
-    "search": "https://api.pvabazaar.org/api/search/text?q=test",
-    "openclawStatus": "https://api.pvabazaar.org/api/openclaw/status",
-    "openclawWatchdog": "https://api.pvabazaar.org/api/openclaw/watchdog-status",
-    "decentralizedReady": "https://api.pvabazaar.org/api/decentralized/ready",
+    "health": "https://pva-bazaar-app-1.onrender.com/api/health",
+    "ping": "https://pva-bazaar-app-1.onrender.com/api/ping",
+    "version": "https://pva-bazaar-app-1.onrender.com/api/version",
+    "archive": "https://pva-bazaar-app-1.onrender.com/api/archive",
+    "search": "https://pva-bazaar-app-1.onrender.com/api/search/text?q=test",
+    "openclawStatus": "https://pva-bazaar-app-1.onrender.com/api/openclaw/status",
+    "openclawWatchdog": "https://pva-bazaar-app-1.onrender.com/api/openclaw/watchdog-status",
+    "decentralizedReady": "https://pva-bazaar-app-1.onrender.com/api/decentralized/ready",
     "llms": "https://pvabazaar.org/llms.txt",
     "readableSite": "https://pvabazaar.org/readable-site.json",
     "sitemap": "https://pvabazaar.org/sitemap.xml"
@@ -27,8 +27,8 @@
   "redundancy": {
     "frontendDelivery": "GitHub Pages + CDN edge cache",
     "frontendPreview": "Vercel preview deployment",
-    "primaryBackend": "https://api.pvabazaar.org",
-    "fallbackBackend": "https://pva-bazaar-app-1.onrender.com"
+    "primaryBackend": "https://pva-bazaar-app-1.onrender.com",
+    "fallbackBackend": "https://api.pvabazaar.org"
   },
   "edge": {
     "frontendHostnames": ["pvabazaar.org", "www.pvabazaar.org"],
