@@ -2,86 +2,82 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import './OpeningHomePage.css';
 
+const PRIMARY_CATEGORIES = [
+  {
+    key: 'archive',
+    to: '/archive',
+    symbol: '📖',
+    title: 'Archive & Writings',
+    subtitle: 'Knowledge',
+    desc: 'Long-form notes, preserved essays, and the personal record. The foundation of everything.',
+  },
+  {
+    key: 'marketplace',
+    to: '/marketplace',
+    symbol: '⚖️',
+    title: 'Marketplace & Trade',
+    subtitle: 'Commerce',
+    desc: 'Browse goods, connect with suppliers, run sourcing and fulfillment. Real trade.',
+  },
+  {
+    key: 'books',
+    to: '/books',
+    symbol: '📚',
+    title: 'Books & Publishing',
+    subtitle: 'Publishing',
+    desc: 'Featured books, published editions, and the workspace for new publishing projects.',
+  },
+  {
+    key: 'heelkawn',
+    to: '/heelkawn',
+    symbol: '🎮',
+    title: 'HeelKawn',
+    subtitle: 'Game',
+    desc: 'The game hub — downloads, armory profile, and repository pulse, all in one place.',
+  },
+];
+
+const SECONDARY_LINKS = [
+  { key: 'governance', to: '/proposals', label: 'Governance & Proposals' },
+  { key: 'creator', to: '/creator', label: 'Supplier Portal' },
+  { key: 'about', to: '/about', label: 'About' },
+  { key: 'recovery', to: '/recovery', label: 'Recovery & Install' },
+  { key: 'forum', to: '/forum', label: 'Forum' },
+  { key: 'started', to: '/get-started', label: 'Get Started' },
+];
+
 export default function OpeningHomePage() {
   return (
     <div className="opening-home" aria-label="PVA Bazaar opening homepage">
       <section className="section-card opening-home__hero">
-        <div className="opening-home__heroCopy">
-          <p className="pill">PVA Bazaar · Personal site + business suite</p>
-          <h1>Everything I keep building, in one living place.</h1>
-          <p className="opening-home__lead">
-            This site is my personal archive, business bridge, recovery layer, and public operating surface.
-            It holds my words, my commerce work, the HeelKawn universe, and the live tools I use to keep everything
-            organized and visible without hiding or breaking the record.
-          </p>
-          <div className="opening-home__actions">
-            <Link className="opening-home__actionBtn opening-home__actionBtn--primary" to="/archive">
-              Open archive
-            </Link>
-            <Link className="opening-home__actionBtn opening-home__actionBtn--secondary" to="/books">
-              Open books
-            </Link>
-            <Link className="opening-home__actionBtn opening-home__actionBtn--secondary" to="/marketplace">
-              Open business side
-            </Link>
-            <Link className="opening-home__actionBtn opening-home__actionBtn--ghost" to="/heelkawn">
-              Open HeelKawn
-            </Link>
-          </div>
-        </div>
-
-        <aside className="opening-home__heroPanel" aria-label="Opening promise">
-          <h2>What stays visible</h2>
-          <ul>
-            <li>My notes and writings stay part of the site, not hidden away.</li>
-            <li>The business surface stays connected to suppliers, buyers, and operations.</li>
-            <li>The game and the website can grow together without erasing the record.</li>
-          </ul>
-        </aside>
+        <p className="pill">pvabazaar.org</p>
+        <h1 className="opening-home__heroTitle">Archive · Trade · Books · HeelKawn</h1>
+        <p className="opening-home__heroLead">
+          Personal archive, commerce bridge, publishing workspace, and game hub — one site, four clear doors.
+        </p>
       </section>
 
-      <section className="section-card opening-home__firstSection" aria-label="Primary pathways">
-        <div className="opening-home__sectionHead">
-          <div>
-            <p className="pill">First Section</p>
-            <h2>Choose the surface you need</h2>
-          </div>
-          <p>
-            Every route is part of the same living website. Pick the surface you need now and keep moving through
-            the rest whenever you want.
-          </p>
-        </div>
+      <section className="opening-home__primaryGrid" aria-label="Primary categories">
+        {PRIMARY_CATEGORIES.map((cat) => (
+          <Link key={cat.key} className="opening-home__primaryCard" to={cat.to}>
+            <span className="opening-home__cardSymbol" aria-hidden="true">{cat.symbol}</span>
+            <span className="opening-home__cardSubtitle">{cat.subtitle}</span>
+            <h2 className="opening-home__cardTitle">{cat.title}</h2>
+            <p className="opening-home__cardDesc">{cat.desc}</p>
+            <span className="opening-home__cardArrow" aria-hidden="true">→</span>
+          </Link>
+        ))}
+      </section>
 
-          <div className="opening-home__grid">
-            <Link className="opening-home__card" to="/archive">
-              <h3>Writings and archive</h3>
-              <p>Read the long-form notes, preserved essays, and the personal record that should never be lost.</p>
+      <section className="section-card opening-home__secondary" aria-label="More sections">
+        <p className="pill">More</p>
+        <nav className="opening-home__secondaryNav" aria-label="Secondary links">
+          {SECONDARY_LINKS.map((link) => (
+            <Link key={link.key} className="opening-home__secondaryLink" to={link.to}>
+              {link.label}
             </Link>
-            <Link className="opening-home__card" to="/books">
-              <h3>Books and publishing</h3>
-              <p>Read the featured books, browse published editions, and open the workspace for new publishing.</p>
-            </Link>
-            <Link className="opening-home__card" to="/marketplace">
-              <h3>Business and trade</h3>
-              <p>Run the marketplace, inventory, sourcing, fulfillment, and the buyer-supplier bridge.</p>
-            </Link>
-          <Link className="opening-home__card" to="/conference">
-            <h3>Governance and public work</h3>
-            <p>Track proposals, conference flow, and the public decisions that shape the site’s direction.</p>
-          </Link>
-          <Link className="opening-home__card" to="/heelkawn">
-            <h3>HeelKawn</h3>
-            <p>Open the game hub, download links, and repository pulse without leaving the main site.</p>
-          </Link>
-          <Link className="opening-home__card" to="/recovery">
-            <h3>Recovery and install</h3>
-            <p>Use the install page and continuity tools so the site can follow you from device to device.</p>
-          </Link>
-          <Link className="opening-home__card" to="/about">
-            <h3>About and overview</h3>
-            <p>Read the project description, personal context, and the larger purpose behind the whole system.</p>
-          </Link>
-        </div>
+          ))}
+        </nav>
       </section>
     </div>
   );
