@@ -39,7 +39,7 @@ export default function Layout({ children }) {
   const routeIdentity = useMemo(() => {
     if (pathname.startsWith('/deal/')) {
       return {
-        section: 'Public Deal',
+        badge: null,
         title: 'Deal Proposal',
         description: 'Read-only public proposal page with authenticated verification.',
       };
@@ -47,7 +47,7 @@ export default function Layout({ children }) {
 
     if (pathname === '/books/publish') {
       return {
-        section: 'Private Route',
+        badge: 'Publishing',
         title: 'Book Publishing',
         description: 'Draft, design, and publish a book with covers, manuscript, PDF, EPUB, and web view.',
       };
@@ -55,7 +55,7 @@ export default function Layout({ children }) {
 
     if (pathname === '/books/published') {
       return {
-        section: 'Public Library',
+        badge: 'Books',
         title: 'Published Books',
         description: 'Browse published books, open the online reader, and download PDF or EPUB editions.',
       };
@@ -63,7 +63,7 @@ export default function Layout({ children }) {
 
     if (pathname.startsWith('/books/read/')) {
       return {
-        section: 'Public Book',
+        badge: 'Books',
         title: 'Book Reader',
         description: 'Read a published book with its online web view and download options.',
       };
@@ -72,14 +72,14 @@ export default function Layout({ children }) {
     const route = PUBLIC_ROUTES.find((item) => item.to === pathname);
     if (route) {
       return {
-        section: route.group === 'core' ? 'Core Route' : route.group === 'support' ? 'Support Route' : 'Route',
+        badge: route.badge || null,
         title: route.title,
         description: route.description || '',
       };
     }
 
     return {
-      section: 'Route',
+      badge: null,
       title: pathname === '/' ? 'Home' : pathname,
       description: '',
     };
@@ -181,7 +181,9 @@ export default function Layout({ children }) {
       </header>
       <main id="content" className="layout__main">
         <section className="section-card layout__routeIdentity" data-route-identity="true" aria-label="Current route identity">
-          <div className="pill" data-route-label="section">{routeIdentity.section}</div>
+          {routeIdentity.badge ? (
+            <div className="pill" data-route-label="badge">{routeIdentity.badge}</div>
+          ) : null}
           <h2 data-route-label="title" className="layout__routeTitle">
             {routeIdentity.title}
           </h2>
