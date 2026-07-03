@@ -180,25 +180,27 @@ export default function Layout({ children }) {
         </button>
       </header>
       <main id="content" className="layout__main">
-        <section className="section-card layout__routeIdentity" data-route-identity="true" aria-label="Current route identity">
-          {routeIdentity.badge ? (
-            <div className="pill" data-route-label="badge">{routeIdentity.badge}</div>
-          ) : null}
-          <h2 data-route-label="title" className="layout__routeTitle">
-            {routeIdentity.title}
-          </h2>
-          {routeIdentity.description ? (
-            <p data-route-label="description" className="layout__routeDescription">
-              {routeIdentity.description}
-            </p>
-          ) : null}
-          {(traversal.prev || traversal.next) ? (
-            <div className="layout__routeTraversal" aria-label="Route traversal">
-              {traversal.prev ? <NavLink to={traversal.prev.to}>← {traversal.prev.title}</NavLink> : <span />}
-              {traversal.next ? <NavLink to={traversal.next.to}>{traversal.next.title} →</NavLink> : <span />}
-            </div>
-          ) : null}
-        </section>
+        {pathname !== '/' ? (
+          <section className="section-card layout__routeIdentity" data-route-identity="true" aria-label="Current route identity">
+            {routeIdentity.badge ? (
+              <div className="pill" data-route-label="badge">{routeIdentity.badge}</div>
+            ) : null}
+            <h2 data-route-label="title" className="layout__routeTitle">
+              {routeIdentity.title}
+            </h2>
+            {routeIdentity.description ? (
+              <p data-route-label="description" className="layout__routeDescription">
+                {routeIdentity.description}
+              </p>
+            ) : null}
+            {(traversal.prev || traversal.next) ? (
+              <div className="layout__routeTraversal" aria-label="Route traversal">
+                {traversal.prev ? <NavLink to={traversal.prev.to}>← {traversal.prev.title}</NavLink> : <span />}
+                {traversal.next ? <NavLink to={traversal.next.to}>{traversal.next.title} →</NavLink> : <span />}
+              </div>
+            ) : null}
+          </section>
+        ) : null}
         {children}
       </main>
       {hasAdminAccess ? (
