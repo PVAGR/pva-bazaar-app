@@ -85,7 +85,7 @@ function buildLocalLinks(book) {
   };
 }
 
-function normalizeLocalBook(raw) {
+export function normalizeLocalBook(raw) {
   if (!raw) raw = {};
   var book = Object.assign({}, raw);
   var id = String(book.id || book._id || 'local-book-' + Date.now());
@@ -121,26 +121,26 @@ function normalizeLocalBook(raw) {
   };
 }
 
-function listLocalBookProjects() {
+export function listLocalBookProjects() {
   return loadBooks().map(normalizeLocalBook);
 }
 
-function listLocalPublishedBookProjects() {
+export function listLocalPublishedBookProjects() {
   return listLocalBookProjects().filter(function(b) { return b.status === 'published'; });
 }
 
-function findLocalBookById(bookId) {
+export function findLocalBookById(bookId) {
   var id = String(bookId || '');
   return listLocalBookProjects().find(function(b) { return String(b.id || b._id || '') === id; }) || null;
 }
 
-function findLocalPublishedBookBySlug(slug) {
+export function findLocalPublishedBookBySlug(slug) {
   var norm = normalize(slug);
   if (!norm) return null;
   return listLocalPublishedBookProjects().find(function(b) { return normalize(b.slug) === norm; }) || null;
 }
 
-function saveLocalBookProject(payload) {
+export function saveLocalBookProject(payload) {
   if (!payload) payload = {};
   var books = loadBooks();
   var next = normalizeLocalBook(payload);
@@ -160,37 +160,14 @@ function saveLocalBookProject(payload) {
   return saved;
 }
 
-function deleteLocalBookProject(bookId) {
+export function deleteLocalBookProject(bookId) {
   var id = String(bookId || '');
   var books = loadBooks().filter(function(b) { return String(b.id || b._id || '') !== id; });
   saveBooks(books);
   return true;
 }
 
-function clearLocalBookProjects() {
+export function clearLocalBookProjects() {
   if (!canUseStorage()) return;
   window.localStorage.removeItem(BOOKS_KEY);
 }
-
-module.exports = {
-  clearLocalBookProjects: clearLocalBookProjects,
-  deleteLocalBookProject: deleteLocalBookProject,
-  findLocalBookById: findLocalBookById,
-  findLocalPublishedBookBySlug: findLocalPublishedBookBySlug,
-  listLocalBookProjects: listLocalBookProjects,
-  listLocalPublishedBookProjects: listLocalPublishedBookProjects,
-  normalizeLocalBook: normalizeLocalBook,
-  saveLocalBookProject: saveLocalBookProject,
-};
-
-// ES module exports for bundler
-var exp = module.exports;
-export var clearLocalBookProjects = exp.clearLocalBookProjects;
-export var deleteLocalBookProject = exp.deleteLocalBookProject;
-export var findLocalBookById = exp.findLocalBookById;
-export var findLocalPublishedBookBySlug = exp.findLocalPublishedBookBySlug;
-export var listLocalBookProjects = exp.listLocalBookProjects;
-export var listLocalPublishedBookProjects = exp.listLocalPublishedBookProjects;
-export var normalizeLocalBook = exp.normalizeLocalBook;
-export var saveLocalBookProject = exp.saveLocalBookProject;
-export default exp;
