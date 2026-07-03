@@ -161,13 +161,14 @@ export default function Layout({ children }) {
           ))}
         </nav>
         <div className="layout__status" aria-live="polite">
-          <span className="layout__statusLabel">User Status</span>
           <NavLink className="layout__statusAction" to={hasUserAccess ? '/dashboard' : '/login'}>
-            {hasUserAccess ? 'Authenticated' : 'Guest'}
+            {hasUserAccess ? 'My Account' : 'Sign in'}
           </NavLink>
-          <span className={`layout__connectionBadge layout__connectionBadge--${connectionMode.status}`}>
-            {connectionMode.label}
-          </span>
+          {connectionMode.status !== 'live' ? (
+            <span className={`layout__connectionBadge layout__connectionBadge--${connectionMode.status}`}>
+              {connectionMode.label}
+            </span>
+          ) : null}
         </div>
         <button
           type="button"
