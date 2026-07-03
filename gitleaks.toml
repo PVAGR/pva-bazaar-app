@@ -1,0 +1,11 @@
+title = "PVA Bazaar Secret Scan"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Allow benign user prompt strings — no actual secrets"
+regexes = [
+  '''Enter your (account )?password''',
+  '''User-entered runtime values; nothing hardcoded'''
+]

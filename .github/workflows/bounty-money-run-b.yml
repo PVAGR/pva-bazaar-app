@@ -5,8 +5,7 @@ name: Bounty Hunter - Money Run (B)
 #   A: :00 :10 :20 :30 :40 :50
 #   B: :05 :15 :25 :35 :45 :55
 on:
-  schedule:
-    - cron: '15,45 * * * *'
+  # Schedule disabled — run manually from Actions tab when needed
   workflow_dispatch:
     inputs:
       platforms:
