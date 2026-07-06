@@ -1,10 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import {
-  createProposal,
-  fetchMyPassport,
-  publishProposal,
-} from '../lib/api';
+import { createProposal, fetchMyPassport, publishProposal } from '../lib/api';
 import './ProposalEngine.css';
 
 const CATEGORIES = [
@@ -56,13 +52,15 @@ export default function SubmitProposalPage() {
   }, []);
 
   const canContinueStep2 = useMemo(() => Boolean(draft.category), [draft.category]);
-  const canSubmit = useMemo(() => (
-    Boolean(draft.category)
-    && Boolean(draft.title.trim())
-    && Boolean(draft.problem.trim())
-    && Boolean(draft.solution.trim())
-    && Boolean(draft.expectedOutcome.trim())
-  ), [draft]);
+  const canSubmit = useMemo(
+    () =>
+      Boolean(draft.category) &&
+      Boolean(draft.title.trim()) &&
+      Boolean(draft.problem.trim()) &&
+      Boolean(draft.solution.trim()) &&
+      Boolean(draft.expectedOutcome.trim()),
+    [draft],
+  );
 
   const submitDraft = async () => {
     if (!canSubmit) return;
@@ -103,7 +101,11 @@ export default function SubmitProposalPage() {
   };
 
   if (eligible === null) {
-    return <section className="section-card"><p>Checking citizen eligibility...</p></section>;
+    return (
+      <section className="section-card">
+        <p>Checking citizen eligibility...</p>
+      </section>
+    );
   }
 
   if (!eligible) {
@@ -111,7 +113,9 @@ export default function SubmitProposalPage() {
       <section className="section-card">
         <h1>Submit Proposal</h1>
         <p>Only verified citizens can submit proposals.</p>
-        <Link className="button" to="/passport">Open Passport Verification</Link>
+        <Link className="button" to="/passport">
+          Open Passport Verification
+        </Link>
       </section>
     );
   }
@@ -147,52 +151,133 @@ export default function SubmitProposalPage() {
           <div className="proposal-form">
             <label>
               Title
-              <input value={draft.title} maxLength={150} onChange={(event) => setDraft((prev) => ({ ...prev, title: event.target.value }))} />
+              <input
+                value={draft.title}
+                maxLength={150}
+                onChange={(event) => setDraft((prev) => ({ ...prev, title: event.target.value }))}
+              />
             </label>
             <label>
               Problem
-              <textarea value={draft.problem} maxLength={2000} rows={5} onChange={(event) => setDraft((prev) => ({ ...prev, problem: event.target.value }))} />
+              <textarea
+                value={draft.problem}
+                maxLength={2000}
+                rows={5}
+                onChange={(event) => setDraft((prev) => ({ ...prev, problem: event.target.value }))}
+              />
             </label>
             <label>
               Proposed solution
-              <textarea value={draft.solution} maxLength={2000} rows={5} onChange={(event) => setDraft((prev) => ({ ...prev, solution: event.target.value }))} />
+              <textarea
+                value={draft.solution}
+                maxLength={2000}
+                rows={5}
+                onChange={(event) =>
+                  setDraft((prev) => ({ ...prev, solution: event.target.value }))
+                }
+              />
             </label>
             <label>
               Expected outcome
-              <textarea value={draft.expectedOutcome} maxLength={1000} rows={4} onChange={(event) => setDraft((prev) => ({ ...prev, expectedOutcome: event.target.value }))} />
+              <textarea
+                value={draft.expectedOutcome}
+                maxLength={1000}
+                rows={4}
+                onChange={(event) =>
+                  setDraft((prev) => ({ ...prev, expectedOutcome: event.target.value }))
+                }
+              />
             </label>
             <label>
               Estimated cost (optional)
-              <input value={draft.estimatedCost} onChange={(event) => setDraft((prev) => ({ ...prev, estimatedCost: event.target.value }))} />
+              <input
+                value={draft.estimatedCost}
+                onChange={(event) =>
+                  setDraft((prev) => ({ ...prev, estimatedCost: event.target.value }))
+                }
+              />
             </label>
             <label>
               Timeline (optional)
-              <input value={draft.timeline} onChange={(event) => setDraft((prev) => ({ ...prev, timeline: event.target.value }))} />
+              <input
+                value={draft.timeline}
+                onChange={(event) =>
+                  setDraft((prev) => ({ ...prev, timeline: event.target.value }))
+                }
+              />
             </label>
           </div>
         ) : null}
 
         {step === 3 ? (
           <div className="proposal-detail-grid">
-            <article><h3>Category</h3><p>{draft.category}</p></article>
-            <article><h3>Title</h3><p>{draft.title || 'Missing title'}</p></article>
-            <article><h3>Problem</h3><p>{draft.problem || 'Missing problem statement'}</p></article>
-            <article><h3>Solution</h3><p>{draft.solution || 'Missing proposed solution'}</p></article>
-            <article><h3>Expected outcome</h3><p>{draft.expectedOutcome || 'Missing expected outcome'}</p></article>
-            <article><h3>Logistics</h3><p>{draft.estimatedCost || 'No cost set'} · {draft.timeline || 'No timeline set'}</p></article>
+            <article>
+              <h3>Category</h3>
+              <p>{draft.category}</p>
+            </article>
+            <article>
+              <h3>Title</h3>
+              <p>{draft.title || 'Missing title'}</p>
+            </article>
+            <article>
+              <h3>Problem</h3>
+              <p>{draft.problem || 'Missing problem statement'}</p>
+            </article>
+            <article>
+              <h3>Solution</h3>
+              <p>{draft.solution || 'Missing proposed solution'}</p>
+            </article>
+            <article>
+              <h3>Expected outcome</h3>
+              <p>{draft.expectedOutcome || 'Missing expected outcome'}</p>
+            </article>
+            <article>
+              <h3>Logistics</h3>
+              <p>
+                {draft.estimatedCost || 'No cost set'} · {draft.timeline || 'No timeline set'}
+              </p>
+            </article>
           </div>
         ) : null}
 
         <div className="home-hero__actions" style={{ marginTop: '0.9rem' }}>
-          <button type="button" className="button ghost" onClick={() => setStep((value) => Math.max(1, value - 1))} disabled={step === 1}>Back</button>
+          <button
+            type="button"
+            className="button ghost"
+            onClick={() => setStep((value) => Math.max(1, value - 1))}
+            disabled={step === 1}
+          >
+            Back
+          </button>
           {step === 1 ? (
-            <button type="button" className="button" onClick={() => setStep(2)} disabled={!canContinueStep2}>Continue</button>
+            <button
+              type="button"
+              className="button"
+              onClick={() => setStep(2)}
+              disabled={!canContinueStep2}
+            >
+              Continue
+            </button>
           ) : null}
           {step === 2 ? (
-            <button type="button" className="button" onClick={() => setStep(3)} disabled={!canSubmit}>Preview</button>
+            <button
+              type="button"
+              className="button"
+              onClick={() => setStep(3)}
+              disabled={!canSubmit}
+            >
+              Preview
+            </button>
           ) : null}
           {step === 3 ? (
-            <button type="button" className="button" onClick={submitDraft} disabled={!canSubmit || saving}>{saving ? 'Submitting...' : 'Submit Draft'}</button>
+            <button
+              type="button"
+              className="button"
+              onClick={submitDraft}
+              disabled={!canSubmit || saving}
+            >
+              {saving ? 'Submitting...' : 'Submit Draft'}
+            </button>
           ) : null}
         </div>
       </section>
@@ -200,19 +285,39 @@ export default function SubmitProposalPage() {
       {created ? (
         <section className="section-card">
           <h2>Proposal created</h2>
-          <p>Proposal ID: <strong>{created.proposalId}</strong></p>
-          <p>Current status: <strong>{created.status}</strong></p>
+          <p>
+            Proposal ID: <strong>{created.proposalId}</strong>
+          </p>
+          <p>
+            Current status: <strong>{created.status}</strong>
+          </p>
           <div className="home-hero__actions">
-            <button type="button" className="button" onClick={publishNow} disabled={saving || created.status !== 'draft'}>
+            <button
+              type="button"
+              className="button"
+              onClick={publishNow}
+              disabled={saving || created.status !== 'draft'}
+            >
               {created.status === 'draft' ? 'Publish Now' : 'Already Published'}
             </button>
-            <Link className="button ghost" to={`/proposals/${encodeURIComponent(created.proposalId)}`}>Open Proposal</Link>
-            <Link className="button secondary" to="/proposals/my">Keep as Draft</Link>
+            <Link
+              className="button ghost"
+              to={`/proposals/${encodeURIComponent(created.proposalId)}`}
+            >
+              Open Proposal
+            </Link>
+            <Link className="button secondary" to="/proposals/my">
+              Keep as Draft
+            </Link>
           </div>
         </section>
       ) : null}
 
-      {message ? <section className="section-card"><p>{message}</p></section> : null}
+      {message ? (
+        <section className="section-card">
+          <p>{message}</p>
+        </section>
+      ) : null}
     </div>
   );
 }

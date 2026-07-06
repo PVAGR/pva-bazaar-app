@@ -28,14 +28,14 @@ class AutonomousAgentService {
         autoBackup: true,
         autoUpdateDependencies: true,
         monthlyBudget: 5000,
-        emergencyBudget: 1000
+        emergencyBudget: 1000,
       },
       healthStatus: {
         lastHealthCheckAt: new Date(),
         fullySynced: false,
         allPaymentMethodsConnected: false,
-        sufficientFundsAvailable: false
-      }
+        sufficientFundsAvailable: false,
+      },
     });
 
     await newAgent.save();
@@ -56,7 +56,7 @@ class AutonomousAgentService {
           clientSecret: encryptedCredentials.clientSecret,
           connected: true,
           balance: 0,
-          lastSyncedAt: new Date()
+          lastSyncedAt: new Date(),
         };
         break;
 
@@ -67,7 +67,7 @@ class AutonomousAgentService {
           privateKeyEncrypted: encryptedCredentials.privateKey,
           balance: 0,
           network: credentials.network || 'polygon',
-          lastSyncedAt: new Date()
+          lastSyncedAt: new Date(),
         });
         break;
 
@@ -77,7 +77,7 @@ class AutonomousAgentService {
           connected: true,
           apiKey: encryptedCredentials.apiKey,
           balance: 0,
-          lastSyncedAt: new Date()
+          lastSyncedAt: new Date(),
         };
         break;
 
@@ -88,7 +88,7 @@ class AutonomousAgentService {
           expiryYear: credentials.expiryYear,
           connected: true,
           tokenId: encryptedCredentials.tokenId,
-          billingAddress: credentials.billingAddress
+          billingAddress: credentials.billingAddress,
         };
         break;
 
@@ -98,7 +98,7 @@ class AutonomousAgentService {
           routingNumber: encryptedCredentials.routingNumber,
           bankName: credentials.bankName,
           accountType: credentials.accountType,
-          connected: true
+          connected: true,
         };
         break;
     }
@@ -111,7 +111,10 @@ class AutonomousAgentService {
    * Create scheduled payment
    */
   static async createScheduledPayment(agent, paymentData) {
-    const nextPaymentDate = this.calculateNextPaymentDate(paymentData.frequency, paymentData.dayOfMonth);
+    const nextPaymentDate = this.calculateNextPaymentDate(
+      paymentData.frequency,
+      paymentData.dayOfMonth,
+    );
 
     agent.scheduledPayments.push({
       vendor: paymentData.vendor,
@@ -119,7 +122,7 @@ class AutonomousAgentService {
       currency: paymentData.currency || 'USD',
       frequency: paymentData.frequency,
       nextPaymentDate,
-      active: true
+      active: true,
     });
 
     await agent.save();
@@ -131,9 +134,7 @@ class AutonomousAgentService {
    */
   static async executeScheduledPayments(agent) {
     const now = new Date();
-    const duePayments = agent.scheduledPayments.filter(p =>
-      p.active && p.nextPaymentDate <= now
-    );
+    const duePayments = agent.scheduledPayments.filter((p) => p.active && p.nextPaymentDate <= now);
 
     const results = [];
 
@@ -141,8 +142,11 @@ class AutonomousAgentService {
       try {
         // Check if agent can make payment
         if (!agent.canMakePayment(payment.amount)) {
-          await this.sendAlert(agent, 'warning',
-            `Insufficient funds for ${payment.vendor} payment of $${payment.amount}`);
+          await this.sendAlert(
+            agent,
+            'warning',
+            `Insufficient funds for ${payment.vendor} payment of $${payment.amount}`,
+          );
           continue;
         }
 
@@ -151,24 +155,29 @@ class AutonomousAgentService {
         results.push({
           vendor: payment.vendor,
           success: true,
-          transactionId: transactionResult._id
+          transactionId: transactionResult._id,
         });
 
         // Update next payment date
-        payment.nextPaymentDate = this.calculateNextPaymentDate(payment.frequency, payment.dayOfMonth);
+        payment.nextPaymentDate = this.calculateNextPaymentDate(
+          payment.frequency,
+          payment.dayOfMonth,
+        );
 
         // Send confirmation email
         await this.sendPaymentConfirmation(agent, payment, transactionResult);
-
       } catch (error) {
         results.push({
           vendor: payment.vendor,
           success: false,
-          error: error.message
+          error: error.message,
         });
 
-        await this.sendAlert(agent, 'critical',
-          `Payment failed for ${payment.vendor}: ${error.message}`);
+        await this.sendAlert(
+          agent,
+          'critical',
+          `Payment failed for ${payment.vendor}: ${error.message}`,
+        );
       }
     }
 
@@ -194,7 +203,7 @@ class AutonomousAgentService {
       paymentMethod: method,
       type: 'payment',
       status: 'completed',
-      timestamp: new Date()
+      timestamp: new Date(),
     });
 
     await transaction.save();
@@ -213,7 +222,8 @@ class AutonomousAgentService {
    * Fund agent wallet
    */
   static async fundAgent(agent, amount, method = 'initial_funding') {
-    agent.balanceByMethod[agent.primaryPaymentMethod] = (agent.balanceByMethod[agent.primaryPaymentMethod] || 0) + amount;
+    agent.balanceByMethod[agent.primaryPaymentMethod] =
+      (agent.balanceByMethod[agent.primaryPaymentMethod] || 0) + amount;
     agent.totalBalanceUSD += amount;
 
     const funding = new AgentTransaction({
@@ -225,7 +235,7 @@ class AutonomousAgentService {
       type: 'funding',
       status: 'completed',
       description: method,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
 
     await funding.save();
@@ -235,7 +245,7 @@ class AutonomousAgentService {
     return {
       success: true,
       totalBalance: agent.totalBalanceUSD,
-      transaction: funding
+      transaction: funding,
     };
   }
 
@@ -252,11 +262,11 @@ class AutonomousAgentService {
       totalBalance: agent.totalBalanceUSD,
       balanceByMethod: agent.balanceByMethod,
       paymentMethods: agent.getActivePaymentMethods(),
-      scheduledPayments: agent.scheduledPayments.filter(p => p.active).length,
+      scheduledPayments: agent.scheduledPayments.filter((p) => p.active).length,
       uptime: agent.uptime,
       healthStatus: agent.healthStatus,
       lastActiveAt: agent.lastActiveAt,
-      maintenanceConfig: agent.maintenanceConfig
+      maintenanceConfig: agent.maintenanceConfig,
     };
   }
 
@@ -269,8 +279,8 @@ class AutonomousAgentService {
         service: 'gmail',
         auth: {
           user: agent.email,
-          pass: agent.emailPassword
-        }
+          pass: agent.emailPassword,
+        },
       });
 
       const mailOptions = {
@@ -287,7 +297,7 @@ class AutonomousAgentService {
           <p><strong>New Balance:</strong> $${agent.totalBalanceUSD}</p>
           <hr>
           <p><small>This is an automated payment from PVA Bazaar Autonomous Agent</small></p>
-        `
+        `,
       };
 
       await transporter.sendMail(mailOptions);
@@ -308,7 +318,7 @@ class AutonomousAgentService {
     agent.auditLog.push({
       action: 'alert',
       details: { severity, message },
-      timestamp: new Date()
+      timestamp: new Date(),
     });
 
     await agent.save();
@@ -323,8 +333,8 @@ class AutonomousAgentService {
         service: 'gmail',
         auth: {
           user: agent.email,
-          pass: agent.emailPassword
-        }
+          pass: agent.emailPassword,
+        },
       });
 
       const mailOptions = {
@@ -336,7 +346,7 @@ class AutonomousAgentService {
           <p>${message}</p>
           <p><strong>Time:</strong> ${new Date().toISOString()}</p>
           <p>Please check your PVA Bazaar dashboard for more details.</p>
-        `
+        `,
       };
 
       await transporter.sendMail(mailOptions);
@@ -396,7 +406,8 @@ class AutonomousAgentService {
   static async performHealthCheck(agent) {
     agent.healthStatus.lastHealthCheckAt = new Date();
     agent.healthStatus.allPaymentMethodsConnected = agent.getActivePaymentMethods().length >= 2;
-    agent.healthStatus.sufficientFundsAvailable = agent.totalBalanceUSD >= agent.maintenanceConfig.monthlyBudget;
+    agent.healthStatus.sufficientFundsAvailable =
+      agent.totalBalanceUSD >= agent.maintenanceConfig.monthlyBudget;
     agent.lastActiveAt = new Date();
 
     await agent.save();

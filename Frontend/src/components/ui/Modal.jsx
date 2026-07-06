@@ -2,7 +2,14 @@ import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import './Modal.css';
 
-export default function Modal({ isOpen, onClose, title, children, footer, closeOnBackdrop = true }) {
+export default function Modal({
+  isOpen,
+  onClose,
+  title,
+  children,
+  footer,
+  closeOnBackdrop = true,
+}) {
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -52,12 +59,7 @@ export default function Modal({ isOpen, onClose, title, children, footer, closeO
             {title && (
               <div className="modal-header">
                 <h2 className="modal-title">{title}</h2>
-                <button
-                  type="button"
-                  className="modal-close"
-                  onClick={onClose}
-                  aria-label="Close"
-                >
+                <button type="button" className="modal-close" onClick={onClose} aria-label="Close">
                   ×
                 </button>
               </div>

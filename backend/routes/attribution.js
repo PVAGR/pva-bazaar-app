@@ -82,12 +82,10 @@ router.get('/creators', adminSession, async (req, res) => {
 
     // Sort based on requested field
     const sortMap = {
-      commission_total: (a, b) =>
-        b.totalCommissionsCents - a.totalCommissionsCents,
+      commission_total: (a, b) => b.totalCommissionsCents - a.totalCommissionsCents,
       orders_count: (a, b) => b.ordersCount - a.ordersCount,
       conversion_rate: (a, b) => b.conversionRate - a.conversionRate,
-      revenue_total: (a, b) =>
-        b.totalRevenuesCents - a.totalRevenuesCents,
+      revenue_total: (a, b) => b.totalRevenuesCents - a.totalRevenuesCents,
     };
 
     if (sortMap[sortBy]) {
@@ -127,9 +125,7 @@ router.get('/creator/:handle', adminSession, async (req, res) => {
 
     // Get order details
     const orders = await Order.find(matchStage)
-      .select(
-        'itemSnapshot amountTotal paymentStatus attribution createdAt stripeSessionId'
-      )
+      .select('itemSnapshot amountTotal paymentStatus attribution createdAt stripeSessionId')
       .sort({ createdAt: -1 })
       .limit(100)
       .lean();
@@ -276,11 +272,7 @@ router.get('/summary', adminSession, async (req, res) => {
           totalCommissionsCents: { $sum: '$attribution.commissionAmountCents' },
           attributedOrders: {
             $sum: {
-              $cond: [
-                { $ne: ['$attribution.creatorHandle', null] },
-                1,
-                0,
-              ],
+              $cond: [{ $ne: ['$attribution.creatorHandle', null] }, 1, 0],
             },
           },
         },

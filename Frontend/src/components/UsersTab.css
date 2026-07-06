@@ -53,7 +53,7 @@
   align-items: center;
   gap: 1rem;
   padding: 1.5rem;
-  background: var( --site-bg-secondary, rgba(20, 40, 80, 0.6));
+  background: var(--site-bg-secondary, rgba(20, 40, 80, 0.6));
   border: 1px solid var(--site-border, rgba(0, 255, 255, 0.2));
   border-radius: 12px;
   transition: all 0.3s ease;

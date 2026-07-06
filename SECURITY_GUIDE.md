@@ -18,14 +18,15 @@ This guide ensures PVABazaar is production-hardened against common security thre
 
 ```javascript
 // WRONG - Secrets in code
-const JWT_SECRET = "my-secret-key-12345";
-const MONGODB_URI = "mongodb://user:pass@localhost";
-const API_KEY = "sk-1234567890";
+const JWT_SECRET = 'my-secret-key-12345';
+const MONGODB_URI = 'mongodb://user:pass@localhost';
+const API_KEY = 'sk-1234567890';
 ```
 
 ### ✅ DO This Instead
 
 **Backend (.env)**
+
 ```bash
 # backend/.env (NEVER commit this file)
 JWT_SECRET=<generated-secret-256-bit>
@@ -36,6 +37,7 @@ NODE_ENV=production
 ```
 
 **Gitignore**
+
 ```bash
 # .gitignore
 .env
@@ -46,6 +48,7 @@ secrets/
 ```
 
 **Verify**
+
 ```bash
 # Ensure .env is NOT committed
 git status | grep .env
@@ -78,6 +81,7 @@ echo "Secrets rotated: $(date)" >> SECURITY.log
 ### JWT Configuration
 
 **Secure Token Generation**
+
 ```javascript
 // backend/middleware/auth.js
 const crypto = require('crypto');
@@ -90,16 +94,12 @@ const SECRET = process.env.JWT_SECRET; // 256+ bits
 const TOKEN_EXPIRY = '24h'; // Expire daily
 
 function generateToken(userId) {
-  return jwt.sign(
-    { userId, iat: Math.floor(Date.now() / 1000) },
-    SECRET,
-    { 
-      algorithm: 'HS256',
-      expiresIn: TOKEN_EXPIRY,
-      issuer: 'pvabazaar',
-      audience: 'pvabazaar-users'
-    }
-  );
+  return jwt.sign({ userId, iat: Math.floor(Date.now() / 1000) }, SECRET, {
+    algorithm: 'HS256',
+    expiresIn: TOKEN_EXPIRY,
+    issuer: 'pvabazaar',
+    audience: 'pvabazaar-users',
+  });
 }
 
 // ✅ DO: Verify token signature
@@ -108,7 +108,7 @@ function verifyToken(token) {
     return jwt.verify(token, SECRET, {
       algorithms: ['HS256'],
       issuer: 'pvabazaar',
-      audience: 'pvabazaar-users'
+      audience: 'pvabazaar-users',
     });
   } catch (error) {
     console.error('Token verification failed:', error.message);
@@ -122,6 +122,7 @@ module.exports = { generateToken, verifyToken };
 ### Password Security
 
 **Hashing Configuration**
+
 ```javascript
 // backend/routes/auth.js
 const bcrypt = require('bcryptjs');
@@ -134,7 +135,7 @@ async function hashPassword(password) {
   if (password.length < 12) {
     throw new Error('Password must be at least 12 characters');
   }
-  
+
   if (!hasUpperCase(password) || !hasNumbers(password)) {
     throw new Error('Password must contain uppercase letters and numbers');
   }
@@ -158,6 +159,7 @@ module.exports = { hashPassword, verifyPassword };
 ```
 
 **Hash Verification Time**
+
 ```
 With SALT_ROUNDS=12:
 - Password hashing takes ~250ms per attempt
@@ -170,10 +172,10 @@ With SALT_ROUNDS=12:
 ```javascript
 // ✅ DO: Use HttpOnly cookies (not localStorage)
 res.cookie('token', jwt, {
-  httpOnly: true,      // Can't access via JavaScript
-  secure: true,        // HTTPS only
-  sameSite: 'strict',  // CSRF protection
-  maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  httpOnly: true, // Can't access via JavaScript
+  secure: true, // HTTPS only
+  sameSite: 'strict', // CSRF protection
+  maxAge: 24 * 60 * 60 * 1000, // 24 hours
 });
 
 // ✅ DO: Implement logout (token invalidation list)
@@ -182,11 +184,11 @@ const INVALIDATED_TOKENS = new Set();
 app.post('/api/auth/logout', (req, res) => {
   const token = req.cookies.token;
   INVALIDATED_TOKENS.add(token);
-  
+
   // Or store in Redis for distributed systems
   // redis.sadd('invalidated_tokens', token);
   // redis.expire('invalidated_tokens', 86400); // 24 hours
-  
+
   res.clearCookie('token');
   res.json({ message: 'Logged out successfully' });
 });
@@ -199,6 +201,7 @@ app.post('/api/auth/logout', (req, res) => {
 ### Rate Limiting
 
 **Configuration**
+
 ```javascript
 // backend/middleware/rateLimit.js
 const rateLimit = require('express-rate-limit');
@@ -208,27 +211,27 @@ const rateLimit = require('express-rate-limit');
 // General rate limiter
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100,                   // 100 requests per window
-  standardHeaders: true,      // Return rate limit info in headers
+  max: 100, // 100 requests per window
+  standardHeaders: true, // Return rate limit info in headers
   legacyHeaders: false,
   handler: (req, res) => {
     res.status(429).json({
       error: 'Too many requests. Please try again later.',
-      retryAfter: req.rateLimit.resetTime
+      retryAfter: req.rateLimit.resetTime,
     });
-  }
+  },
 });
 
 // Auth rate limiter (stricter)
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 5,  // 5 attempts per window
+  max: 5, // 5 attempts per window
   skipSuccessfulRequests: true, // Don't count successful attempts
   handler: (req, res) => {
     res.status(429).json({
-      error: 'Too many login attempts. Please try again after 15 minutes.'
+      error: 'Too many login attempts. Please try again after 15 minutes.',
     });
-  }
+  },
 });
 
 // Apply limiters
@@ -242,15 +245,16 @@ module.exports = { generalLimiter, authLimiter };
 ### CORS Configuration
 
 **Whitelist Specific Origins**
+
 ```javascript
 // backend/middleware/cors.js
 const cors = require('cors');
 
 // ✅ DO: Whitelist specific origins
 const ALLOWED_ORIGINS = [
-  'http://localhost:5173',           // Local dev
-  'http://localhost:3000',           // Local dev (Next.js)
-  'https://pvabazaar.org',           // Production
+  'http://localhost:5173', // Local dev
+  'http://localhost:3000', // Local dev (Next.js)
+  'https://pvabazaar.org', // Production
   'https://pvabazaar-livestream.vercel.app', // Next.js production
 ];
 
@@ -262,10 +266,10 @@ const corsOptions = {
       callback(new Error('Not allowed by CORS'));
     }
   },
-  credentials: true,  // Allow credentials (cookies)
+  credentials: true, // Allow credentials (cookies)
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  maxAge: 86400 // 24 hours
+  maxAge: 86400, // 24 hours
 };
 
 app.use(cors(corsOptions));
@@ -283,10 +287,7 @@ module.exports = corsOptions;
 const { body, validationResult, param } = require('express-validator');
 
 // ✅ DO: Validate all inputs
-const validateEmail = body('email')
-  .isEmail()
-  .normalizeEmail()
-  .trim();
+const validateEmail = body('email').isEmail().normalizeEmail().trim();
 
 const validatePassword = body('password')
   .isLength({ min: 12 })
@@ -302,17 +303,13 @@ const validateTitle = body('title')
   .withMessage('Title must be 3-200 characters');
 
 // Use in routes
-app.post('/api/auth/register',
-  validateEmail,
-  validatePassword,
-  (req, res, next) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-    next();
+app.post('/api/auth/register', validateEmail, validatePassword, (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
   }
-);
+  next();
+});
 
 // ✅ DO: Sanitize HTML to prevent XSS
 const sanitizeHtml = require('sanitize-html');
@@ -320,8 +317,8 @@ const sanitizeHtml = require('sanitize-html');
 const CLEAN_HTML_OPTIONS = {
   allowedTags: ['b', 'i', 'em', 'strong', 'a', 'p', 'br', 'ul', 'ol', 'li'],
   allowedAttributes: {
-    'a': ['href', 'target']
-  }
+    a: ['href', 'target'],
+  },
 };
 
 function cleanUserContent(html) {
@@ -361,6 +358,7 @@ app.post('/api/auth/register', emailSchema, (req, res) => {
 ### Encryption at Rest
 
 **Database Field Encryption**
+
 ```javascript
 // backend/models/User.js
 const crypto = require('crypto');
@@ -371,10 +369,10 @@ const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || crypto.randomBytes(32);
 function encrypt(text) {
   const iv = crypto.randomBytes(16);
   const cipher = crypto.createCipheriv('aes-256-cbc', ENCRYPTION_KEY, iv);
-  
+
   let encrypted = cipher.update(text, 'utf8', 'hex');
   encrypted += cipher.final('hex');
-  
+
   return iv.toString('hex') + ':' + encrypted;
 }
 
@@ -382,10 +380,10 @@ function decrypt(text) {
   const parts = text.split(':');
   const iv = Buffer.from(parts[0], 'hex');
   const decipher = crypto.createDecipheriv('aes-256-cbc', ENCRYPTION_KEY, iv);
-  
+
   let decrypted = decipher.update(parts[1], 'hex', 'utf8');
   decrypted += decipher.final('utf8');
-  
+
   return decrypted;
 }
 
@@ -395,13 +393,13 @@ const userSchema = new Schema({
   // ✅ DO: Encrypt sensitive fields
   bio: {
     type: String,
-    get: function(value) {
+    get: function (value) {
       return value ? decrypt(value) : value;
     },
-    set: function(value) {
+    set: function (value) {
       return value ? encrypt(value) : value;
-    }
-  }
+    },
+  },
 });
 
 module.exports = mongoose.model('User', userSchema);
@@ -425,19 +423,21 @@ if (process.env.NODE_ENV === 'production') {
 
 // ✅ DO: Set security headers
 const helmet = require('helmet');
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", 'data:', 'https:'],
-      connectSrc: ["'self'", 'https://api.pinata.cloud'],
-    }
-  },
-  frameguard: { action: 'deny' },
-  referrerPolicy: { policy: 'strict-origin-when-cross-origin' }
-}));
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", 'data:', 'https:'],
+        connectSrc: ["'self'", 'https://api.pinata.cloud'],
+      },
+    },
+    frameguard: { action: 'deny' },
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+  }),
+);
 ```
 
 ### Data Export & GDPR Compliance
@@ -451,7 +451,7 @@ app.get('/api/users/export', authMiddleware, async (req, res) => {
     const user = await User.findById(req.user.id);
     const streams = await Stream.find({ userId: req.user.id });
     const journals = await JournalEntry.find({ userId: req.user.id });
-    
+
     const exportData = {
       user: {
         id: user._id,
@@ -459,11 +459,11 @@ app.get('/api/users/export', authMiddleware, async (req, res) => {
         createdAt: user.createdAt,
         // Include all non-sensitive fields
       },
-      streams: streams.map(s => ({...s.toObject()})),
-      journals: journals.map(j => ({...j.toObject()})),
-      exportedAt: new Date()
+      streams: streams.map((s) => ({ ...s.toObject() })),
+      journals: journals.map((j) => ({ ...j.toObject() })),
+      exportedAt: new Date(),
     };
-    
+
     res.setHeader('Content-Type', 'application/json');
     res.setHeader('Content-Disposition', 'attachment; filename="export.json"');
     res.json(exportData);
@@ -476,19 +476,19 @@ app.get('/api/users/export', authMiddleware, async (req, res) => {
 app.delete('/api/users/account', authMiddleware, async (req, res) => {
   try {
     const { password } = req.body;
-    
+
     const user = await User.findById(req.user.id);
     const validPassword = await bcrypt.compare(password, user.password);
-    
+
     if (!validPassword) {
       return res.status(401).json({ error: 'Invalid password' });
     }
-    
+
     // Delete all user data
     await User.deleteOne({ _id: req.user.id });
     await Stream.deleteMany({ userId: req.user.id });
     await JournalEntry.deleteMany({ userId: req.user.id });
-    
+
     res.json({ message: 'Account deleted permanently' });
   } catch (error) {
     res.status(500).json({ error: 'Deletion failed' });
@@ -533,7 +533,7 @@ import mongoose from 'mongoose';
 
 export async function connectToDatabase() {
   if (mongoose.connection.readyState === 1) return;
-  
+
   try {
     // ✅ DO: Require TLS
     await mongoose.connect(process.env.MONGODB_URI, {
@@ -616,10 +616,10 @@ function logSecurityEvent(eventType, details, severity = 'info') {
       method: details.method,
       status: details.status,
       ip: details.ip,
-      error: details.error
-    }
+      error: details.error,
+    },
   };
-  
+
   // Store in database or log service
   console.log(JSON.stringify(logEntry));
 }
@@ -632,23 +632,31 @@ app.post('/api/auth/login', (req, res) => {
       userId: user._id,
       ip: req.ip,
       path: req.path,
-      method: req.method
+      method: req.method,
     });
   } catch (error) {
-    logSecurityEvent('login_failed', {
-      email: req.body.email,
-      ip: req.ip,
-      error: error.message
-    }, 'warning');
+    logSecurityEvent(
+      'login_failed',
+      {
+        email: req.body.email,
+        ip: req.ip,
+        error: error.message,
+      },
+      'warning',
+    );
   }
 });
 
 // ✅ DO: Log security-relevant actions
 app.delete('/api/users/account', (req, res) => {
-  logSecurityEvent('account_deleted', {
-    userId: req.user.id,
-    ip: req.ip
-  }, 'warning');
+  logSecurityEvent(
+    'account_deleted',
+    {
+      userId: req.user.id,
+      ip: req.ip,
+    },
+    'warning',
+  );
 });
 
 // ❌ DON'T: Log sensitive information

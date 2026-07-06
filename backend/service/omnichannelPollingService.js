@@ -25,12 +25,15 @@ async function runPollingSync({ limit = 25 } = {}) {
   let syncFailures = 0;
 
   for (const artifact of artifacts) {
-    const channels = Array.isArray(artifact?.omnichannel?.channels) ? artifact.omnichannel.channels : [];
-    const pollingChannels = channels.filter((entry) =>
-      entry &&
-      entry.syncMode === 'polling' &&
-      entry.externalListingId &&
-      !['sold', 'delisted'].includes(entry.status)
+    const channels = Array.isArray(artifact?.omnichannel?.channels)
+      ? artifact.omnichannel.channels
+      : [];
+    const pollingChannels = channels.filter(
+      (entry) =>
+        entry &&
+        entry.syncMode === 'polling' &&
+        entry.externalListingId &&
+        !['sold', 'delisted'].includes(entry.status),
     );
 
     if (!pollingChannels.length) continue;

@@ -120,10 +120,10 @@ function renderMarkdownToHtml(markdown) {
 }
 
 function renderBookBody(book) {
-  const subtitle = book.subtitle
-    ? `<p class="book-subtitle">${escapeHtml(book.subtitle)}</p>`
+  const subtitle = book.subtitle ? `<p class="book-subtitle">${escapeHtml(book.subtitle)}</p>` : '';
+  const authorName = book.authorName
+    ? `<p class="book-author">${escapeHtml(book.authorName)}</p>`
     : '';
-  const authorName = book.authorName ? `<p class="book-author">${escapeHtml(book.authorName)}</p>` : '';
   const description = book.description
     ? `<section class="book-section"><h2>Overview</h2><p>${escapeHtml(book.description)}</p></section>`
     : '';
@@ -132,7 +132,9 @@ function renderBookBody(book) {
     book.audience ? `<span>${escapeHtml(book.audience)}</span>` : '',
     book.language ? `<span>${escapeHtml(book.language.toUpperCase())}</span>` : '',
     book.wordCount ? `<span>${Number(book.wordCount).toLocaleString()} words</span>` : '',
-  ].filter(Boolean).join('');
+  ]
+    .filter(Boolean)
+    .join('');
 
   const frontCover = book.frontCover?.url
     ? `<figure class="book-cover"><img src="${escapeHtml(book.frontCover.url)}" alt="Front cover for ${escapeHtml(book.title)}" /></figure>`
@@ -228,18 +230,27 @@ async function buildPdfBuffer(book, resolveAssetBuffer) {
   }
 
   doc.addPage();
-  doc.font('Times-Bold').fontSize(24).fillColor('#111111').text(book.title || 'Book', {
-    align: 'center',
-  });
+  doc
+    .font('Times-Bold')
+    .fontSize(24)
+    .fillColor('#111111')
+    .text(book.title || 'Book', {
+      align: 'center',
+    });
   if (book.subtitle) {
     doc.moveDown(0.4).font('Times-Italic').fontSize(14).fillColor('#444444').text(book.subtitle, {
       align: 'center',
     });
   }
   if (book.authorName) {
-    doc.moveDown(0.4).font('Times-Roman').fontSize(12).fillColor('#444444').text(`by ${book.authorName}`, {
-      align: 'center',
-    });
+    doc
+      .moveDown(0.4)
+      .font('Times-Roman')
+      .fontSize(12)
+      .fillColor('#444444')
+      .text(`by ${book.authorName}`, {
+        align: 'center',
+      });
   }
   if (book.description) {
     doc.moveDown(1).font('Times-Roman').fontSize(11).fillColor('#222222').text(book.description, {
@@ -267,22 +278,36 @@ async function buildPdfBuffer(book, resolveAssetBuffer) {
     }
 
     if (trimmed.startsWith('## ')) {
-      doc.moveDown(0.35).font('Times-Bold').fontSize(14).fillColor('#1f3552').text(trimmed.slice(3));
+      doc
+        .moveDown(0.35)
+        .font('Times-Bold')
+        .fontSize(14)
+        .fillColor('#1f3552')
+        .text(trimmed.slice(3));
       doc.moveDown(0.1);
       continue;
     }
 
     if (trimmed.startsWith('### ')) {
-      doc.moveDown(0.25).font('Times-Bold').fontSize(12).fillColor('#1f3552').text(trimmed.slice(4));
+      doc
+        .moveDown(0.25)
+        .font('Times-Bold')
+        .fontSize(12)
+        .fillColor('#1f3552')
+        .text(trimmed.slice(4));
       doc.moveDown(0.05);
       continue;
     }
 
     if (/^[-*] /.test(trimmed)) {
-      doc.font('Times-Roman').fontSize(11).fillColor('#202020').text(`• ${trimmed.slice(2)}`, {
-        indent: 14,
-        paragraphGap: 3,
-      });
+      doc
+        .font('Times-Roman')
+        .fontSize(11)
+        .fillColor('#202020')
+        .text(`• ${trimmed.slice(2)}`, {
+          indent: 14,
+          paragraphGap: 3,
+        });
       continue;
     }
 
@@ -401,7 +426,10 @@ function normalizeMediaType(asset) {
 
 async function buildEpubBuffer(book, resolveAssetBuffer) {
   if (!archiver) {
-    return Buffer.from(`EPUB generation unavailable for ${String(book.title || 'this book')}.`, 'utf8');
+    return Buffer.from(
+      `EPUB generation unavailable for ${String(book.title || 'this book')}.`,
+      'utf8',
+    );
   }
 
   const archive = archiver('zip', { zlib: { level: 9 } });
@@ -443,7 +471,9 @@ async function buildEpubBuffer(book, resolveAssetBuffer) {
     const coverExt = path.extname(coverName) || (coverMediaType === 'image/png' ? '.png' : '.jpg');
     coverImagePath = `images/front-cover${coverExt}`;
     archive.append(frontCoverBuffer, { name: `OEBPS/${coverImagePath}` });
-    manifestItems.push(`<item id="cover-image" href="${coverImagePath}" media-type="${coverMediaType}" properties="cover-image"/>`);
+    manifestItems.push(
+      `<item id="cover-image" href="${coverImagePath}" media-type="${coverMediaType}" properties="cover-image"/>`,
+    );
     manifestItems.push('<item id="cover" href="cover.xhtml" media-type="application/xhtml+xml"/>');
     spineItems.unshift('<itemref idref="cover"/>');
     frontCoverItem = `

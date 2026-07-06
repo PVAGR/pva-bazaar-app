@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from "react";
-import "./ShowroomImageGallery.css";
+import React, { useState, useEffect } from 'react';
+import './ShowroomImageGallery.css';
 
 export default function ShowroomImageGallery({ images, title }) {
   const [mainIdx, setMainIdx] = useState(0);
   const [loadingError, setLoadingError] = useState({});
 
-  const media = Array.isArray(images) && images.length > 0 ? images : ["/placeholder.png"];
-  const mainImage = media[mainIdx] || "/placeholder.png";
+  const media = Array.isArray(images) && images.length > 0 ? images : ['/placeholder.png'];
+  const mainImage = media[mainIdx] || '/placeholder.png';
 
   const handlePrevious = () => {
     setMainIdx((prev) => (prev === 0 ? media.length - 1 : prev - 1));
@@ -18,11 +18,11 @@ export default function ShowroomImageGallery({ images, title }) {
 
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === "ArrowLeft") handlePrevious();
-      if (e.key === "ArrowRight") handleNext();
+      if (e.key === 'ArrowLeft') handlePrevious();
+      if (e.key === 'ArrowRight') handleNext();
     };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [media.length]);
 
   const handleImageError = (idx) => {
@@ -74,7 +74,7 @@ export default function ShowroomImageGallery({ images, title }) {
           {media.map((img, idx) => (
             <button
               key={idx}
-              className={`thumbnail-btn ${idx === mainIdx ? "active" : ""}`}
+              className={`thumbnail-btn ${idx === mainIdx ? 'active' : ''}`}
               onClick={() => setMainIdx(idx)}
               aria-label={`View image ${idx + 1}`}
               aria-pressed={idx === mainIdx}

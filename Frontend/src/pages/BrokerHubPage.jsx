@@ -44,16 +44,27 @@ export default function BrokerHubPage() {
 
   const searchLower = search.toLowerCase().trim();
   const filteredCommodities = searchLower
-    ? commodities.filter((c) => (c.name || '').toLowerCase().includes(searchLower) || (c.category || '').toLowerCase().includes(searchLower))
+    ? commodities.filter(
+        (c) =>
+          (c.name || '').toLowerCase().includes(searchLower) ||
+          (c.category || '').toLowerCase().includes(searchLower),
+      )
     : commodities;
   const filteredContacts = searchLower
-    ? contacts.filter((c) => (c.name || '').toLowerCase().includes(searchLower) || (c.company || '').toLowerCase().includes(searchLower))
+    ? contacts.filter(
+        (c) =>
+          (c.name || '').toLowerCase().includes(searchLower) ||
+          (c.company || '').toLowerCase().includes(searchLower),
+      )
     : contacts;
   const filteredTemplates = searchLower
     ? templates.filter((t) => (t.name || '').toLowerCase().includes(searchLower))
     : templates;
   const summary = useMemo(() => {
-    const activeDeals = deals.filter((deal) => !['completed', 'cancelled', 'closed'].includes(String(deal?.status || '').toLowerCase())).length;
+    const activeDeals = deals.filter(
+      (deal) =>
+        !['completed', 'cancelled', 'closed'].includes(String(deal?.status || '').toLowerCase()),
+    ).length;
     return [
       { label: 'Tracked commodities', value: commodities.length },
       { label: 'CRM contacts', value: contacts.length },
@@ -68,30 +79,55 @@ export default function BrokerHubPage() {
         <div className="broker-hub-header__row">
           <div>
             <h1>Broker Hub</h1>
-            <p className="muted">All-in-one: research commodities, manage contacts, use templates, track deals, and move through the pure-life bazaar.</p>
+            <p className="muted">
+              All-in-one: research commodities, manage contacts, use templates, track deals, and
+              move through the pure-life bazaar.
+            </p>
           </div>
           <div className="broker-hub-actions">
-            <Link to="/chat" className="btn primary">Chat with Richard AI</Link>
-            <Link to="/deals" className="btn ghost">Deals</Link>
-            <button className="btn ghost" onClick={loadAll} disabled={loading}>Refresh</button>
+            <Link to="/chat" className="btn primary">
+              Chat with Richard AI
+            </Link>
+            <Link to="/deals" className="btn ghost">
+              Deals
+            </Link>
+            <button className="btn ghost" onClick={loadAll} disabled={loading}>
+              Refresh
+            </button>
           </div>
         </div>
       </header>
       <AdminNav />
 
       <main className="broker-hub-main">
-        {error ? <ErrorBanner message={error} onRetry={loadAll} onDismiss={() => setError('')} /> : null}
+        {error ? (
+          <ErrorBanner message={error} onRetry={loadAll} onDismiss={() => setError('')} />
+        ) : null}
 
         <section className="card broker-atlas">
           <h2>Private atlas</h2>
-          <p className="muted">Keep the brokerage side connected to the same routes as the rest of the site.</p>
+          <p className="muted">
+            Keep the brokerage side connected to the same routes as the rest of the site.
+          </p>
           <div className="broker-atlas-links">
-            <Link to="/" className="btn ghost">Home</Link>
-            <Link to="/archive" className="btn ghost">Archive</Link>
-            <Link to="/recovery" className="btn ghost">Recovery</Link>
-            <Link to="/marketplace" className="btn ghost">Marketplace</Link>
-            <Link to="/creator" className="btn ghost">Creator Portal</Link>
-            <Link to="/dashboard" className="btn ghost">Command Center</Link>
+            <Link to="/" className="btn ghost">
+              Home
+            </Link>
+            <Link to="/archive" className="btn ghost">
+              Archive
+            </Link>
+            <Link to="/recovery" className="btn ghost">
+              Recovery
+            </Link>
+            <Link to="/marketplace" className="btn ghost">
+              Marketplace
+            </Link>
+            <Link to="/creator" className="btn ghost">
+              Creator Portal
+            </Link>
+            <Link to="/dashboard" className="btn ghost">
+              Command Center
+            </Link>
           </div>
         </section>
 
@@ -99,7 +135,10 @@ export default function BrokerHubPage() {
           <div className="broker-flow-card__head">
             <div>
               <h2>Business flow</h2>
-              <p className="muted">Capture the opportunity, qualify the relationship, then turn it into a structured deal.</p>
+              <p className="muted">
+                Capture the opportunity, qualify the relationship, then turn it into a structured
+                deal.
+              </p>
             </div>
             <div className="broker-summary-grid">
               {summary.map((item) => (
@@ -113,18 +152,33 @@ export default function BrokerHubPage() {
           <div className="broker-flow-grid">
             <article className="broker-flow-step">
               <h3>1. Capture the lead</h3>
-              <p>Add the supplier, buyer, producer, or distributor to CRM first so every opportunity starts with a real record.</p>
-              <Link to="/contacts" className="btn primary">Open contacts CRM</Link>
+              <p>
+                Add the supplier, buyer, producer, or distributor to CRM first so every opportunity
+                starts with a real record.
+              </p>
+              <Link to="/contacts" className="btn primary">
+                Open contacts CRM
+              </Link>
             </article>
             <article className="broker-flow-step">
               <h3>2. Define the goods</h3>
-              <p>Track the commodity, category, or sourcing lane so the opportunity stays tied to something concrete.</p>
-              <Link to="/commodities" className="btn ghost">Open commodities</Link>
+              <p>
+                Track the commodity, category, or sourcing lane so the opportunity stays tied to
+                something concrete.
+              </p>
+              <Link to="/commodities" className="btn ghost">
+                Open commodities
+              </Link>
             </article>
             <article className="broker-flow-step">
               <h3>3. Draft the deal</h3>
-              <p>Move the qualified contact into a real deal with parties, milestones, payment schedule, and an audit trail.</p>
-              <Link to="/deals" className="btn ghost">Open deals workspace</Link>
+              <p>
+                Move the qualified contact into a real deal with parties, milestones, payment
+                schedule, and an audit trail.
+              </p>
+              <Link to="/deals" className="btn ghost">
+                Open deals workspace
+              </Link>
             </article>
           </div>
         </section>
@@ -147,10 +201,18 @@ export default function BrokerHubPage() {
             <section className="card">
               <h2>Quick actions</h2>
               <div className="quick-actions">
-                <Link to="/contacts" className="btn primary">Capture contact</Link>
-                <Link to="/commodities" className="btn primary">Add commodity</Link>
-                <Link to="/deals" className="btn primary">Draft deal</Link>
-                <Link to="/templates" className="btn primary">Open templates</Link>
+                <Link to="/contacts" className="btn primary">
+                  Capture contact
+                </Link>
+                <Link to="/commodities" className="btn primary">
+                  Add commodity
+                </Link>
+                <Link to="/deals" className="btn primary">
+                  Draft deal
+                </Link>
+                <Link to="/templates" className="btn primary">
+                  Open templates
+                </Link>
               </div>
             </section>
 
@@ -189,7 +251,9 @@ export default function BrokerHubPage() {
                 <h2>
                   <Link to="/templates">Templates</Link>
                 </h2>
-                {filteredTemplates.length === 0 ? <div className="muted">None yet. Run seed or create one.</div> : null}
+                {filteredTemplates.length === 0 ? (
+                  <div className="muted">None yet. Run seed or create one.</div>
+                ) : null}
                 <ul className="hub-list">
                   {filteredTemplates.slice(0, 8).map((t) => (
                     <li key={t._id}>
@@ -209,7 +273,9 @@ export default function BrokerHubPage() {
                   {deals.slice(0, 8).map((d) => (
                     <li key={d._id}>
                       <Link to="/deals">{d.title}</Link>
-                      <span className="muted small">{d.status} · {d.currency} {d.totalAmount || 0}</span>
+                      <span className="muted small">
+                        {d.status} · {d.currency} {d.totalAmount || 0}
+                      </span>
                     </li>
                   ))}
                 </ul>

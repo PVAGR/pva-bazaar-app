@@ -151,17 +151,27 @@ router.post('/', adminSession, upload.single('file'), async (req, res) => {
     }
 
     const checksum = crypto.createHash('sha256').update(req.file.buffer).digest('hex');
-    const category = String(req.body.category || 'general').trim().toLowerCase();
-    const domain = String(req.body.domain || 'general').trim().toLowerCase();
+    const category = String(req.body.category || 'general')
+      .trim()
+      .toLowerCase();
+    const domain = String(req.body.domain || 'general')
+      .trim()
+      .toLowerCase();
     const tags = parseTags(req.body.tags);
     const status = req.body.status === 'published' ? 'published' : 'draft';
     const visibility = req.body.visibility === 'admin-only' ? 'admin-only' : 'public';
     const skillLevel = ['intro', 'intermediate', 'advanced'].includes(req.body.skillLevel)
       ? req.body.skillLevel
       : 'intro';
-    const language = String(req.body.language || 'en').trim().toLowerCase();
+    const language = String(req.body.language || 'en')
+      .trim()
+      .toLowerCase();
 
-    const primary = await uploadPrimary(req.file.buffer, req.file.originalname, 'pva-bazaar-library');
+    const primary = await uploadPrimary(
+      req.file.buffer,
+      req.file.originalname,
+      'pva-bazaar-library',
+    );
     const backup = await writeLocalFile(req.file.buffer, req.file.originalname, 'backup');
 
     const item = new LibraryDocument({
@@ -235,7 +245,9 @@ router.put('/:id', adminSession, async (req, res) => {
       return res.status(400).json({ ok: false, error: 'Invalid skillLevel' });
     }
 
-    const item = await LibraryDocument.findByIdAndUpdate(req.params.id, updates, { new: true }).lean();
+    const item = await LibraryDocument.findByIdAndUpdate(req.params.id, updates, {
+      new: true,
+    }).lean();
     if (!item) {
       return res.status(404).json({ ok: false, error: 'Document not found' });
     }

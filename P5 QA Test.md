@@ -8204,7 +8204,7 @@ it('should handle price feed failures gracefully', async () \=\> {
 
 it('should detect stale price data', async () \=\> {  
  _// Fast forward time to make data stale_  
- await ethers.provider.send('evm_increaseTime', \[3700\]) _// 1+ hour_  
+ await ethers.provider.send('evm*increaseTime', \[3700\]) *// 1+ hour\_  
  await ethers.provider.send('evm_mine', \[\])
 
     await expect(priceOracle.getETHPrice())
@@ -8233,10 +8233,10 @@ name: QA Automation Suite
 on:  
  push:  
  branches: \[main, develop\]  
- pull_request:  
+ pull*request:  
  branches: \[main\]  
  schedule:  
- \- cron: '0 2 \* \* \*' _\# Daily at 2 AM_
+ \- cron: '0 2 \* \* \*' *\# Daily at 2 AM\_
 
 env:  
  PVA_PRIMARY: '\#1c5a45'  
@@ -8550,22 +8550,22 @@ _// scripts/check-performance-budget.js_
 const lighthouse \= require('lighthouse')  
 const chromeLauncher \= require('chrome-launcher')
 
-const PVA_PERFORMANCE_BUDGET \= {  
- 'first-contentful-paint': 1800, _// 1.8s_  
- 'largest-contentful-paint': 2500, _// 2.5s_  
- 'first-input-delay': 100, _// 100ms_  
- 'cumulative-layout-shift': 0.1, _// 0.1_  
- 'total-blocking-time': 200, _// 200ms_  
- 'speed-index': 3000, _// 3s_  
- 'interactive': 3800, _// 3.8s_  
+const PVA*PERFORMANCE_BUDGET \= {  
+ 'first-contentful-paint': 1800, *// 1.8s*  
+ 'largest-contentful-paint': 2500, *// 2.5s*  
+ 'first-input-delay': 100, *// 100ms*  
+ 'cumulative-layout-shift': 0.1, *// 0.1*  
+ 'total-blocking-time': 200, *// 200ms*  
+ 'speed-index': 3000, *// 3s*  
+ 'interactive': 3800, *// 3.8s\_  
 }
 
-const PVA_RESOURCE_BUDGET \= {  
- 'main-bundle-size': 500 \* 1024, _// 500KB_  
- 'total-js-size': 1000 \* 1024, _// 1MB_  
- 'total-css-size': 100 \* 1024, _// 100KB_  
+const PVA*RESOURCE_BUDGET \= {  
+ 'main-bundle-size': 500 \* 1024, *// 500KB*  
+ 'total-js-size': 1000 \* 1024, *// 1MB*  
+ 'total-css-size': 100 \* 1024, *// 100KB*  
  'image-count': 50,  
- 'third-party-size': 200 \* 1024, _// 200KB_  
+ 'third-party-size': 200 \* 1024, *// 200KB\_  
 }
 
 async function runPerformanceAudit() {  
@@ -8693,7 +8693,6 @@ try {
     } else {
       console.log('\\n✅ All performance budgets passed')
     }
-
 
 } finally {  
  await chrome.kill()  

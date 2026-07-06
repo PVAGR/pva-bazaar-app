@@ -1,186 +1,187 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OpenClaw Widget Example</title>
-  <link rel="stylesheet" href="../src/lib/openclaw-widget.css">
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      padding: 2rem;
-      background: #f8f9fa;
-    }
-    
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-    
-    h1 {
-      margin-bottom: 2rem;
-      color: #212529;
-    }
-    
-    .examples {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-      gap: 2rem;
-      margin-bottom: 2rem;
-    }
-    
-    .example {
-      background: white;
-      padding: 1.5rem;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-    
-    .example h2 {
-      font-size: 1.1rem;
-      margin-bottom: 1rem;
-      color: #495057;
-    }
-    
-    .code-block {
-      background: #f8f9fa;
-      border: 1px solid #dee2e6;
-      border-radius: 4px;
-      padding: 1rem;
-      font-family: 'Courier New', monospace;
-      font-size: 0.85rem;
-      overflow-x: auto;
-      margin-bottom: 1rem;
-    }
-    
-    .inline-widget {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      flex-wrap: wrap;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h1>🔗 OpenClaw Health Widget Examples</h1>
-    
-    <div class="examples">
-      <!-- Example 1: Auto-initialized Full Widget -->
-      <div class="example">
-        <h2>Auto-Initialized (Full)</h2>
-        <p>Uses data attributes for configuration:</p>
-        <div class="code-block">
-&lt;div id="openclaw-health-widget"
-  data-api-url="https://api.pvabazaar.org"
-  data-refresh-interval="60000"
-  data-show-details="true"&gt;
-&lt;/div&gt;
-        </div>
-        <div id="openclaw-health-widget" 
-          data-api-url="https://api.pvabazaar.org"
-          data-refresh-interval="60000"
-          data-show-details="true">
-        </div>
-      </div>
-      
-      <!-- Example 2: Compact Widget -->
-      <div class="example">
-        <h2>Compact Widget</h2>
-        <p>Minimal inline display:</p>
-        <div class="code-block">
-&lt;div id="openclaw-compact"
-  data-compact="true"
-  data-show-details="false"&gt;
-&lt;/div&gt;
-        </div>
-        <div class="inline-widget">
-          <span>System Status:</span>
-          <div id="openclaw-compact" 
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OpenClaw Widget Example</title>
+    <link rel="stylesheet" href="../src/lib/openclaw-widget.css" />
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        padding: 2rem;
+        background: #f8f9fa;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      h1 {
+        margin-bottom: 2rem;
+        color: #212529;
+      }
+
+      .examples {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 2rem;
+        margin-bottom: 2rem;
+      }
+
+      .example {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .example h2 {
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+        color: #495057;
+      }
+
+      .code-block {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        padding: 1rem;
+        font-family: 'Courier New', monospace;
+        font-size: 0.85rem;
+        overflow-x: auto;
+        margin-bottom: 1rem;
+      }
+
+      .inline-widget {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🔗 OpenClaw Health Widget Examples</h1>
+
+      <div class="examples">
+        <!-- Example 1: Auto-initialized Full Widget -->
+        <div class="example">
+          <h2>Auto-Initialized (Full)</h2>
+          <p>Uses data attributes for configuration:</p>
+          <div class="code-block">
+            &lt;div id="openclaw-health-widget" data-api-url="https://api.pvabazaar.org"
+            data-refresh-interval="60000" data-show-details="true"&gt; &lt;/div&gt;
+          </div>
+          <div
+            id="openclaw-health-widget"
             data-api-url="https://api.pvabazaar.org"
-            data-compact="true"
-            data-show-details="false"
-            data-auto-init="false">
+            data-refresh-interval="60000"
+            data-show-details="true"
+          ></div>
+        </div>
+
+        <!-- Example 2: Compact Widget -->
+        <div class="example">
+          <h2>Compact Widget</h2>
+          <p>Minimal inline display:</p>
+          <div class="code-block">
+            &lt;div id="openclaw-compact" data-compact="true" data-show-details="false"&gt;
+            &lt;/div&gt;
+          </div>
+          <div class="inline-widget">
+            <span>System Status:</span>
+            <div
+              id="openclaw-compact"
+              data-api-url="https://api.pvabazaar.org"
+              data-compact="true"
+              data-show-details="false"
+              data-auto-init="false"
+            ></div>
           </div>
         </div>
-      </div>
-      
-      <!-- Example 3: Manual Initialization -->
-      <div class="example">
-        <h2>Manual Initialization</h2>
-        <p>Programmatic control:</p>
-        <div class="code-block">
-&lt;div id="openclaw-manual"&gt;&lt;/div&gt;
 
-&lt;script&gt;
-OpenClawWidget.init({
-  apiUrl: 'https://api.pvabazaar.org',
-  refreshInterval: 30000,
-  showDetails: true
-});
-&lt;/script&gt;
+        <!-- Example 3: Manual Initialization -->
+        <div class="example">
+          <h2>Manual Initialization</h2>
+          <p>Programmatic control:</p>
+          <div class="code-block">
+            &lt;div id="openclaw-manual"&gt;&lt;/div&gt; &lt;script&gt; OpenClawWidget.init({
+            apiUrl: 'https://api.pvabazaar.org', refreshInterval: 30000, showDetails: true });
+            &lt;/script&gt;
+          </div>
+          <div id="openclaw-manual"></div>
         </div>
-        <div id="openclaw-manual"></div>
+      </div>
+
+      <div class="example">
+        <h2>API Methods</h2>
+        <p>Programmatic control examples:</p>
+        <div class="code-block">
+          // Initialize widget OpenClawWidget.init({ apiUrl: 'https://api.pvabazaar.org' }); //
+          Manual refresh OpenClawWidget.refresh(); // Get current status const status =
+          OpenClawWidget.getStatus(); console.log(status); // Destroy widget (stop auto-refresh)
+          OpenClawWidget.destroy();
+        </div>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap">
+          <button
+            onclick="OpenClawWidget.refresh()"
+            style="
+              padding: 0.5rem 1rem;
+              cursor: pointer;
+              border: 1px solid #dee2e6;
+              border-radius: 4px;
+              background: white;
+            "
+          >
+            🔄 Refresh Now
+          </button>
+          <button
+            onclick="console.log(OpenClawWidget.getStatus())"
+            style="
+              padding: 0.5rem 1rem;
+              cursor: pointer;
+              border: 1px solid #dee2e6;
+              border-radius: 4px;
+              background: white;
+            "
+          >
+            📊 Log Status
+          </button>
+        </div>
       </div>
     </div>
-    
-    <div class="example">
-      <h2>API Methods</h2>
-      <p>Programmatic control examples:</p>
-      <div class="code-block">
-// Initialize widget
-OpenClawWidget.init({ apiUrl: 'https://api.pvabazaar.org' });
 
-// Manual refresh
-OpenClawWidget.refresh();
+    <script src="../src/lib/openclaw-widget.js"></script>
+    <script>
+      // Manual initialization for compact widget
+      setTimeout(() => {
+        const compactEl = document.getElementById('openclaw-compact');
+        if (compactEl) {
+          window.OpenClawWidget.init({
+            apiUrl: 'https://api.pvabazaar.org',
+            refreshInterval: 60000,
+            showDetails: false,
+            compact: true,
+          });
+        }
+      }, 100);
 
-// Get current status
-const status = OpenClawWidget.getStatus();
-console.log(status);
-
-// Destroy widget (stop auto-refresh)
-OpenClawWidget.destroy();
-      </div>
-      <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-        <button onclick="OpenClawWidget.refresh()" style="padding: 0.5rem 1rem; cursor: pointer; border: 1px solid #dee2e6; border-radius: 4px; background: white;">
-          🔄 Refresh Now
-        </button>
-        <button onclick="console.log(OpenClawWidget.getStatus())" style="padding: 0.5rem 1rem; cursor: pointer; border: 1px solid #dee2e6; border-radius: 4px; background: white;">
-          📊 Log Status
-        </button>
-      </div>
-    </div>
-  </div>
-  
-  <script src="../src/lib/openclaw-widget.js"></script>
-  <script>
-    // Manual initialization for compact widget
-    setTimeout(() => {
-      const compactEl = document.getElementById('openclaw-compact');
-      if (compactEl) {
-        window.OpenClawWidget.init({
-          apiUrl: 'https://api.pvabazaar.org',
-          refreshInterval: 60000,
-          showDetails: false,
-          compact: true
-        });
-      }
-    }, 100);
-    
-    // Manual initialization for manual example
-    setTimeout(() => {
-      const manualEl = document.getElementById('openclaw-manual');
-      if (manualEl) {
-        const originalEl = widgetElement;
-        widgetElement = manualEl;
-        window.OpenClawWidget.init({
-          apiUrl: 'https://api.pvabazaar.org',
-          refreshInterval: 60000,
-          showDetails: true
-        });
-        widgetElement = originalEl;
-      }
-    }, 100);
-  </script>
-</body>
+      // Manual initialization for manual example
+      setTimeout(() => {
+        const manualEl = document.getElementById('openclaw-manual');
+        if (manualEl) {
+          const originalEl = widgetElement;
+          widgetElement = manualEl;
+          window.OpenClawWidget.init({
+            apiUrl: 'https://api.pvabazaar.org',
+            refreshInterval: 60000,
+            showDetails: true,
+          });
+          widgetElement = originalEl;
+        }
+      }, 100);
+    </script>
+  </body>
 </html>

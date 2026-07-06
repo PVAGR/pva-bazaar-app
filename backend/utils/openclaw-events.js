@@ -1,6 +1,6 @@
 /**
  * OpenClaw Event Helpers
- * 
+ *
  * Standardized event creators for common PVA Bazaar events to be dispatched
  * to OpenClaw for processing, notifications, and automation.
  */

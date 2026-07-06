@@ -68,16 +68,23 @@ async function run() {
 
   const event = postResult.event || {};
   assert(nearlyEqual(event.salePrice, SALE_PRICE), `Unexpected salePrice: ${event.salePrice}`);
-  assert(nearlyEqual(event.royaltyAmount, EXPECTED_ROYALTY), `Unexpected royaltyAmount: ${event.royaltyAmount}`);
+  assert(
+    nearlyEqual(event.royaltyAmount, EXPECTED_ROYALTY),
+    `Unexpected royaltyAmount: ${event.royaltyAmount}`,
+  );
 
-  const dashboardResp = await getJson(`/api/analytics/dashboard/${encodeURIComponent(CREATOR_ADDRESS)}?days=365`);
+  const dashboardResp = await getJson(
+    `/api/analytics/dashboard/${encodeURIComponent(CREATOR_ADDRESS)}?days=365`,
+  );
   assert(dashboardResp.ok === true, 'Dashboard response was not ok');
 
   const summary = dashboardResp.dashboard?.summary || {};
   assert(Number(summary.total_sales_count) >= 1, 'Dashboard total_sales_count did not increment');
   assert(Number(summary.total_sales_volume) >= SALE_PRICE, 'Dashboard total_sales_volume mismatch');
 
-  const historyResp = await getJson(`/api/analytics/royalty-history/${encodeURIComponent(CREATOR_ADDRESS)}?limit=5&offset=0`);
+  const historyResp = await getJson(
+    `/api/analytics/royalty-history/${encodeURIComponent(CREATOR_ADDRESS)}?limit=5&offset=0`,
+  );
   assert(historyResp.ok === true, 'History response was not ok');
 
   const events = Array.isArray(historyResp.history?.events) ? historyResp.history.events : [];

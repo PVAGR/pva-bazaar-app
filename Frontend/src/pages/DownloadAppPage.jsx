@@ -98,12 +98,18 @@ export default function DownloadAppPage() {
           {heelkawnApkOnSite ? (
             <span className="download-meta-badge">Hosted on pvabazaar.org</span>
           ) : (
-            <span className="download-meta-badge download-meta-badge--alt">GitHub release mirror</span>
+            <span className="download-meta-badge download-meta-badge--alt">
+              GitHub release mirror
+            </span>
           )}
         </div>
 
         <div className="download-actions">
-          <a className="button button--primary" href={heelkawnApkUrl} download="HeelKawn-android.apk">
+          <a
+            className="button button--primary"
+            href={heelkawnApkUrl}
+            download="HeelKawn-android.apk"
+          >
             Download HeelKawn APK
           </a>
           <a
@@ -120,13 +126,20 @@ export default function DownloadAppPage() {
           <article className="download-help-panel">
             <h3>Install on Android</h3>
             <ol>
-              <li>Tap <strong>Download HeelKawn APK</strong> above (use Chrome if possible).</li>
-              <li>When the download finishes, open the file from your notifications or Downloads folder.</li>
+              <li>
+                Tap <strong>Download HeelKawn APK</strong> above (use Chrome if possible).
+              </li>
+              <li>
+                When the download finishes, open the file from your notifications or Downloads
+                folder.
+              </li>
               <li>
                 If prompted, allow installs from this browser or enable{' '}
                 <strong>Install unknown apps</strong> for Chrome.
               </li>
-              <li>Confirm install, then open <strong>HeelKawn</strong> from your app drawer.</li>
+              <li>
+                Confirm install, then open <strong>HeelKawn</strong> from your app drawer.
+              </li>
             </ol>
           </article>
           <article className="download-help-panel">
@@ -144,8 +157,8 @@ export default function DownloadAppPage() {
       <section className="section-card download-app-card">
         <h2>Download PVA Bazaar on Mobile</h2>
         <p>
-          Install PVA Bazaar as an app on your phone for fast launch, full-screen browsing,
-          and home-screen access to the Archive, Marketplace, Showroom, and Popular Conference.
+          Install PVA Bazaar as an app on your phone for fast launch, full-screen browsing, and
+          home-screen access to the Archive, Marketplace, Showroom, and Popular Conference.
         </p>
         {isStandalone ? (
           <div className="download-status download-status--success">
@@ -194,7 +207,9 @@ export default function DownloadAppPage() {
               <li>Select Add to Home Screen, then tap Add.</li>
             </ol>
             {isIos && !isStandalone ? (
-              <p className="subtle-note">On iPhone, install uses the Share menu rather than a browser prompt.</p>
+              <p className="subtle-note">
+                On iPhone, install uses the Share menu rather than a browser prompt.
+              </p>
             ) : null}
           </article>
         </div>

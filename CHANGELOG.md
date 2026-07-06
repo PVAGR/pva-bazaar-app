@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
 - DOCX and PDF manuscript upload support in the book publishing workspace, with immediate DOCX extraction in the browser, server-side text extraction, a visible mobile-friendly browse button plus file control, binary-file handling that skips the client text editor until save, and a free file-backed book store fallback when Mongo is unavailable so publishing does not stall.
 - Unified the login screen into one normal sign-in form and removed the visible admin/user split from the public auth page.
 - File-backed shared auth store so sign-ups can persist on the backend without a paid external database when Mongo is unavailable.
@@ -51,6 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.0] - 2026-01-21
 
 ### Added
+
 - ✨ Full-stack marketplace application
 - 🛍️ Product catalog with search & filters
 - 🛒 Shopping cart functionality
@@ -73,7 +75,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 📄 MIT License
 
 ### Features
+
 #### Marketplace
+
 - Browse artifacts with real-time inventory
 - Search and filter capabilities
 - Detailed product pages
@@ -82,6 +86,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Order confirmation & history
 
 #### User Management
+
 - User registration & login
 - Profile management
 - Order history tracking
@@ -90,6 +95,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Password hashing with bcryptjs
 
 #### Admin Panel
+
 - Dashboard with metrics
 - Product management (CRUD)
 - User management
@@ -98,6 +104,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - System settings
 
 #### Security
+
 - HTTPS/TLS encryption
 - Password hashing (bcryptjs, 10 salt rounds)
 - JWT token authentication
@@ -110,6 +117,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Input validation
 
 #### API
+
 - 25+ REST endpoints
 - Proper HTTP status codes
 - JSON request/response format
@@ -118,6 +126,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rate limiting
 
 #### Database
+
 - MongoDB Atlas integration
 - 8 data models
 - Indexed queries for performance
@@ -125,6 +134,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Automated backups
 
 #### Deployment
+
 - GitHub Pages for frontend
 - Vercel serverless for backend
 - CI/CD pipelines
@@ -133,6 +143,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Secret scanning (gitleaks)
 
 ### Fixed
+
 - ✅ Vite port configuration (3000 → 5173)
 - ✅ API proxy routing (→ localhost:5001)
 - ✅ Hardcoded metrics (now uses real DB queries)
@@ -140,6 +151,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ✅ All critical production issues
 
 ### Documentation
+
 - Production Deployment Guide (400+ lines)
 - Quick Deployment Checklist
 - Local Setup Guide
@@ -153,6 +165,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - GitHub templates
 
 ### Quality
+
 - Production-ready code (A- grade)
 - Build Quality: 9/10
 - Security: 9/10
@@ -165,18 +178,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Version History
 
 ### Release Schedule
+
 - **v1.0.0** - January 21, 2026 - Initial release
 - **v1.1.0** - Q1 2026 - Testing framework, performance optimization
 - **v1.2.0** - Q2 2026 - Advanced features, analytics
 - **v2.0.0** - Q3 2026 - Major overhaul, new features
 
 ### Breaking Changes
+
 None in v1.0.0 (initial release)
 
 ### Deprecations
+
 None in v1.0.0
 
 ### Migration Guide
+
 N/A for v1.0.0 (initial release)
 
 ---
@@ -184,6 +201,7 @@ N/A for v1.0.0 (initial release)
 ## Future Roadmap
 
 ### v1.1.0 (Planned)
+
 - [ ] Jest unit tests (backend)
 - [ ] Vitest unit tests (frontend)
 - [ ] E2E tests (Playwright)
@@ -192,6 +210,7 @@ N/A for v1.0.0 (initial release)
 - [ ] Bundle size reduction
 
 ### v1.2.0 (Planned)
+
 - [ ] Advanced admin analytics
 - [ ] User roles and permissions
 - [ ] Batch operations
@@ -200,6 +219,7 @@ N/A for v1.0.0 (initial release)
 - [ ] Custom fields
 
 ### v2.0.0 (Planned)
+
 - [ ] GraphQL API option
 - [ ] Real-time notifications
 - [ ] Multi-language support
@@ -212,11 +232,13 @@ N/A for v1.0.0 (initial release)
 ## Support
 
 For issues or feature requests:
+
 1. Check existing [issues](https://github.com/PVAGR/pva-bazaar-app/issues)
 2. Read [CONTRIBUTING.md](./CONTRIBUTING.md)
 3. Open a new issue with appropriate template
 
 For security issues:
+
 - Email: security@pvabazaar.org
 - Do not open public issues for security vulnerabilities
 

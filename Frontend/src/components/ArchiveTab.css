@@ -102,7 +102,9 @@
   font-size: 1rem;
   padding: 0.25rem;
   opacity: 0.6;
-  transition: opacity 0.2s, transform 0.2s;
+  transition:
+    opacity 0.2s,
+    transform 0.2s;
 }
 
 .delete-btn:hover {
@@ -301,7 +303,7 @@
   transform: translateY(-2px);
 }
 
-.media-uploader__button input[type="file"] {
+.media-uploader__button input[type='file'] {
   display: none;
 }
 

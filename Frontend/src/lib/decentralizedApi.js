@@ -214,4 +214,3 @@ export const deleteDatabaseEntry = async (databaseId, entryId) => {
     return { ok: false, error: error.message };
   }
 };
-

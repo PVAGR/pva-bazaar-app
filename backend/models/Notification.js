@@ -15,7 +15,7 @@ const NotificationSchema = new mongoose.Schema(
     readAt: { type: Date, default: null },
     meta: { type: mongoose.Schema.Types.Mixed, default: null },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 NotificationSchema.index({ recipientAddress: 1, createdAt: -1 });

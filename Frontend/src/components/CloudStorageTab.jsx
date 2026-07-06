@@ -124,7 +124,7 @@ export default function CloudStorageTab() {
     try {
       const id = file.ipfsHash || file.publicId || file.name;
       const data = await apiDelete(`/cloud-storage/delete/${file.provider}/${id}`);
-      
+
       if (data.ok) {
         setSuccess(`Deleted ${file.name}`);
         loadFiles();
@@ -233,19 +233,14 @@ export default function CloudStorageTab() {
       <section className="upload-section">
         <h3>📤 Upload Files</h3>
         <div className="upload-box">
-          <input 
-            type="file" 
-            id="file-input"
-            onChange={handleFileSelect}
-            className="file-input"
-          />
+          <input type="file" id="file-input" onChange={handleFileSelect} className="file-input" />
           <label htmlFor="file-input" className="file-label">
             {selectedFile ? `📎 ${selectedFile.name}` : '📁 Choose file to upload'}
           </label>
 
           {selectedFile && (
             <div className="upload-buttons">
-              <button 
+              <button
                 onClick={() => handleUpload('local')}
                 disabled={uploadingTo}
                 className="btn btn-upload"
@@ -253,7 +248,7 @@ export default function CloudStorageTab() {
                 {uploadingTo === 'local' ? <LoadingDots /> : '💾 Upload Local'}
               </button>
 
-              <button 
+              <button
                 onClick={() => handleUpload('cloudinary')}
                 disabled={uploadingTo || !providers.cloudinary.configured}
                 className="btn btn-upload"
@@ -262,7 +257,7 @@ export default function CloudStorageTab() {
                 {uploadingTo === 'cloudinary' ? <LoadingDots /> : '☁️ Upload Cloudinary'}
               </button>
 
-              <button 
+              <button
                 onClick={() => handleUpload('pinata')}
                 disabled={uploadingTo || !providers.pinata.configured}
                 className="btn btn-upload"
@@ -290,22 +285,21 @@ export default function CloudStorageTab() {
 
               <div className="provider-features">
                 {provider.features.map((feature, i) => (
-                  <span key={i} className="feature-tag">{feature}</span>
+                  <span key={i} className="feature-tag">
+                    {feature}
+                  </span>
                 ))}
               </div>
 
               <div className="provider-actions">
                 {provider.signupUrl && (
-                  <button 
-                    onClick={() => openSignup(provider.signupUrl)}
-                    className="btn btn-signup"
-                  >
+                  <button onClick={() => openSignup(provider.signupUrl)} className="btn btn-signup">
                     🚀 Sign Up Free
                   </button>
                 )}
 
                 {provider.dashboardUrl && (
-                  <button 
+                  <button
                     onClick={() => openSignup(provider.dashboardUrl)}
                     className="btn btn-secondary"
                   >
@@ -314,7 +308,7 @@ export default function CloudStorageTab() {
                 )}
 
                 {provider.status === 'connected' && (
-                  <button 
+                  <button
                     onClick={() => handleTestConnection(key)}
                     className="btn btn-test"
                     disabled={loading}
@@ -324,19 +318,14 @@ export default function CloudStorageTab() {
                 )}
 
                 {provider.docsUrl && (
-                  <button 
-                    onClick={() => openSignup(provider.docsUrl)}
-                    className="btn btn-docs"
-                  >
+                  <button onClick={() => openSignup(provider.docsUrl)} className="btn btn-docs">
                     📚 Docs
                   </button>
                 )}
               </div>
 
               {!provider.configured && provider.name !== 'Local Storage' && (
-                <div className="config-hint">
-                  ⚠️ Add environment variables to connect
-                </div>
+                <div className="config-hint">⚠️ Add environment variables to connect</div>
               )}
             </div>
           ))}
@@ -369,7 +358,9 @@ export default function CloudStorageTab() {
                 </div>
 
                 <div className="file-info">
-                  <div className="file-name" title={file.name}>{file.name}</div>
+                  <div className="file-name" title={file.name}>
+                    {file.name}
+                  </div>
                   <div className="file-meta">
                     <span className={`provider-badge ${file.provider}`}>
                       {file.provider.toUpperCase()}
@@ -379,21 +370,21 @@ export default function CloudStorageTab() {
                 </div>
 
                 <div className="file-actions">
-                  <button 
+                  <button
                     onClick={() => window.open(file.url, '_blank')}
                     className="btn-icon"
                     title="Open"
                   >
                     👁️
                   </button>
-                  <button 
+                  <button
                     onClick={() => copyToClipboard(file.url)}
                     className="btn-icon"
                     title="Copy URL"
                   >
                     📋
                   </button>
-                  <button 
+                  <button
                     onClick={() => handleDelete(file)}
                     className="btn-icon btn-delete"
                     title="Delete"
@@ -415,7 +406,10 @@ export default function CloudStorageTab() {
             <div className="step-number">1</div>
             <div className="step-content">
               <h4>Choose Your Provider</h4>
-              <p>Click "Sign Up Free" on any provider above to create an account. We recommend starting with Cloudinary for images/videos or Pinata for decentralized IPFS storage.</p>
+              <p>
+                Click "Sign Up Free" on any provider above to create an account. We recommend
+                starting with Cloudinary for images/videos or Pinata for decentralized IPFS storage.
+              </p>
             </div>
           </div>
 
@@ -423,11 +417,21 @@ export default function CloudStorageTab() {
             <div className="step-number">2</div>
             <div className="step-content">
               <h4>Get API Credentials</h4>
-              <p>After signing up, get your API keys from the provider's dashboard. Each provider has a different format:</p>
+              <p>
+                After signing up, get your API keys from the provider's dashboard. Each provider has
+                a different format:
+              </p>
               <ul>
-                <li><strong>Cloudinary:</strong> CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET</li>
-                <li><strong>Pinata:</strong> PINATA_API_KEY, PINATA_API_SECRET</li>
-                <li><strong>AWS S3:</strong> AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_BUCKET_NAME</li>
+                <li>
+                  <strong>Cloudinary:</strong> CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY,
+                  CLOUDINARY_API_SECRET
+                </li>
+                <li>
+                  <strong>Pinata:</strong> PINATA_API_KEY, PINATA_API_SECRET
+                </li>
+                <li>
+                  <strong>AWS S3:</strong> AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_BUCKET_NAME
+                </li>
               </ul>
             </div>
           </div>
@@ -438,8 +442,12 @@ export default function CloudStorageTab() {
               <h4>Add Environment Variables</h4>
               <p>Add your credentials to:</p>
               <ul>
-                <li><strong>Local:</strong> <code>backend/.env</code> file</li>
-                <li><strong>Production:</strong> Vercel dashboard → Settings → Environment Variables</li>
+                <li>
+                  <strong>Local:</strong> <code>backend/.env</code> file
+                </li>
+                <li>
+                  <strong>Production:</strong> Vercel dashboard → Settings → Environment Variables
+                </li>
               </ul>
             </div>
           </div>
@@ -448,7 +456,10 @@ export default function CloudStorageTab() {
             <div className="step-number">4</div>
             <div className="step-content">
               <h4>Test & Upload</h4>
-              <p>Click "Test Connection" to verify your credentials, then start uploading files with the one-click buttons above!</p>
+              <p>
+                Click "Test Connection" to verify your credentials, then start uploading files with
+                the one-click buttons above!
+              </p>
             </div>
           </div>
         </div>
@@ -462,5 +473,5 @@ function formatBytes(bytes) {
   const k = 1024;
   const sizes = ['B', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return `${Math.round(bytes / Math.pow(k, i) * 100) / 100  } ${  sizes[i]}`;
+  return `${Math.round((bytes / Math.pow(k, i)) * 100) / 100} ${sizes[i]}`;
 }

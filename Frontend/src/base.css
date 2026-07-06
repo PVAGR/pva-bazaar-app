@@ -60,7 +60,9 @@
   box-sizing: border-box;
 }
 
-html, body, #root {
+html,
+body,
+#root {
   min-height: 100%;
 }
 
@@ -153,7 +155,10 @@ body {
   font: inherit;
   font-weight: 700;
   cursor: pointer;
-  transition: border-color 0.16s ease, color 0.16s ease, background 0.16s ease;
+  transition:
+    border-color 0.16s ease,
+    color 0.16s ease,
+    background 0.16s ease;
 }
 
 .layout__themeToggle:hover {
@@ -176,7 +181,11 @@ body {
   background: var(--site-panel-soft);
   font-weight: 600;
   letter-spacing: 0.01em;
-  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .layout__nav a.active {
@@ -287,7 +296,10 @@ body {
   background: var(--site-panel-soft);
   color: var(--site-text);
   text-decoration: none;
-  transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+  transition:
+    transform 0.16s ease,
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
 }
 
 .layout__intentCard:hover {
@@ -381,7 +393,10 @@ body {
   padding: 0.36rem 0.7rem;
   font-size: 0.84rem;
   line-height: 1.2;
-  transition: border-color 0.16s ease, color 0.16s ease, background 0.16s ease;
+  transition:
+    border-color 0.16s ease,
+    color 0.16s ease,
+    background 0.16s ease;
 }
 
 .layout__footerLinks a:hover,
@@ -439,7 +454,9 @@ body {
   border: 1px solid var(--site-border);
   border-radius: var(--radius-md);
   background: var(--site-panel-soft);
-  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  transition:
+    transform 0.1s ease,
+    box-shadow 0.1s ease;
 }
 
 .entry-card:hover {
@@ -484,7 +501,10 @@ body {
   font-weight: 700;
   letter-spacing: 0.02em;
   box-shadow: 0 6px 18px var(--site-accent-soft);
-  transition: transform 0.15s ease, filter 0.15s ease, border-color 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    filter 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .button:hover {
@@ -520,7 +540,11 @@ body {
   text-decoration: none;
   font-weight: 700;
   letter-spacing: 0.01em;
-  transition: border-color 0.16s ease, color 0.16s ease, background 0.16s ease, transform 0.16s ease;
+  transition:
+    border-color 0.16s ease,
+    color 0.16s ease,
+    background 0.16s ease,
+    transform 0.16s ease;
 }
 
 .layout__main a:not([class]):hover,
@@ -536,11 +560,16 @@ body {
   color: var(--site-text);
 }
 
-button, input, select, textarea {
+button,
+input,
+select,
+textarea {
   font: inherit;
 }
 
-input, select, textarea {
+input,
+select,
+textarea {
   width: 100%;
   background: var(--site-panel-soft);
   color: var(--site-text);
@@ -600,7 +629,14 @@ textarea:focus-visible {
 .federation-manifesto {
   display: grid;
   gap: var(--space-3);
-  background: linear-gradient(140deg, rgba(38, 198, 218, 0.12), rgba(38, 198, 218, 0.03) 40%, rgba(0, 0, 0, 0) 100%), var(--site-panel);
+  background:
+    linear-gradient(
+      140deg,
+      rgba(38, 198, 218, 0.12),
+      rgba(38, 198, 218, 0.03) 40%,
+      rgba(0, 0, 0, 0) 100%
+    ),
+    var(--site-panel);
 }
 
 .federation-manifesto__title {
@@ -1301,13 +1337,26 @@ textarea:focus-visible {
 }
 
 .nav-prev,
-.nav-next { flex: 0.5; }
-.nav-back { flex: 1; }
+.nav-next {
+  flex: 0.5;
+}
+.nav-back {
+  flex: 1;
+}
 
-.entry-detail-scrollable::-webkit-scrollbar { width: 8px; }
-.entry-detail-scrollable::-webkit-scrollbar-track { background: var(--site-panel-soft); }
-.entry-detail-scrollable::-webkit-scrollbar-thumb { background: var(--site-border); border-radius: 4px; }
-.entry-detail-scrollable::-webkit-scrollbar-thumb:hover { background: var(--site-text-muted); }
+.entry-detail-scrollable::-webkit-scrollbar {
+  width: 8px;
+}
+.entry-detail-scrollable::-webkit-scrollbar-track {
+  background: var(--site-panel-soft);
+}
+.entry-detail-scrollable::-webkit-scrollbar-thumb {
+  background: var(--site-border);
+  border-radius: 4px;
+}
+.entry-detail-scrollable::-webkit-scrollbar-thumb:hover {
+  background: var(--site-text-muted);
+}
 
 .grid-two {
   display: grid;
@@ -1361,7 +1410,9 @@ textarea:focus-visible {
   padding: 0.5rem 1.2rem;
   border-radius: 8px 8px 0 0;
   cursor: pointer;
-  transition: background 0.2s, color 0.2s;
+  transition:
+    background 0.2s,
+    color 0.2s;
 }
 
 .pva-tabs button.active {
@@ -1400,7 +1451,7 @@ textarea:focus-visible {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  background: #228B22;
+  background: #228b22;
   color: #fff;
   padding: 0.5rem 0.9rem;
   border-radius: 8px;
@@ -1409,7 +1460,9 @@ textarea:focus-visible {
   border: 1px solid #1b6e1b;
 }
 
-.media-uploader__button input { display: none; }
+.media-uploader__button input {
+  display: none;
+}
 
 .media-uploader__error {
   color: #b91c1c;

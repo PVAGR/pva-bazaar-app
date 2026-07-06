@@ -15,7 +15,11 @@
   border-radius: 12px;
   background: linear-gradient(
     135deg,
-    color-mix(in srgb, var(--site-accent-soft, rgba(0, 217, 255, 0.15)) 58%, var(--site-panel-soft, rgba(255, 255, 255, 0.03))),
+    color-mix(
+      in srgb,
+      var(--site-accent-soft, rgba(0, 217, 255, 0.15)) 58%,
+      var(--site-panel-soft, rgba(255, 255, 255, 0.03))
+    ),
     var(--site-panel-soft, rgba(255, 255, 255, 0.03))
   );
 }
@@ -51,13 +55,20 @@
   color: var(--site-text, #fff);
   text-decoration: none;
   font-weight: 600;
-  transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    background-color 0.2s ease;
 }
 
 .dashboard-atlas__link:hover {
   transform: translateY(-1px);
   border-color: var(--site-accent, #00d9ff);
-  background: color-mix(in srgb, var(--site-accent-soft, rgba(0, 217, 255, 0.15)) 58%, var(--site-panel, rgba(255, 255, 255, 0.05)));
+  background: color-mix(
+    in srgb,
+    var(--site-accent-soft, rgba(0, 217, 255, 0.15)) 58%,
+    var(--site-panel, rgba(255, 255, 255, 0.05))
+  );
 }
 
 /* Header */
@@ -504,7 +515,9 @@
   text-decoration: none;
   padding: 0.7rem 0.85rem;
   background: var(--site-bg-dark, rgba(0, 0, 0, 0.22));
-  transition: transform 0.16s ease, border-color 0.16s ease;
+  transition:
+    transform 0.16s ease,
+    border-color 0.16s ease;
 }
 
 .deploy-run-row:hover {

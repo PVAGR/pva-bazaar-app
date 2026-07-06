@@ -24,12 +24,19 @@ async function sha256(input) {
     return String(input || '');
   }
   const encoder = new TextEncoder();
-  const hash = await globalThis.crypto.subtle.digest('SHA-256', encoder.encode(String(input || '')));
-  return Array.from(new Uint8Array(hash)).map((byte) => byte.toString(16).padStart(2, '0')).join('');
+  const hash = await globalThis.crypto.subtle.digest(
+    'SHA-256',
+    encoder.encode(String(input || '')),
+  );
+  return Array.from(new Uint8Array(hash))
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('');
 }
 
 function normalizeIdentifier(identifier) {
-  return String(identifier || '').trim().toLowerCase();
+  return String(identifier || '')
+    .trim()
+    .toLowerCase();
 }
 
 function loadAccounts() {
@@ -72,9 +79,10 @@ export async function registerLocalAccount({ name, email, password, onboarding =
   }
 
   const normalizedUsername = normalizeIdentifier(onboarding.username || '');
-  const existing = accounts.find((account) =>
-    normalizeIdentifier(account.email) === normalizedEmail ||
-    (normalizedUsername && normalizeIdentifier(account.username || '') === normalizedUsername),
+  const existing = accounts.find(
+    (account) =>
+      normalizeIdentifier(account.email) === normalizedEmail ||
+      (normalizedUsername && normalizeIdentifier(account.username || '') === normalizedUsername),
   );
   if (existing) {
     throw new Error('User already exists');

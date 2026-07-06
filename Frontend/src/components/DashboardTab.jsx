@@ -6,7 +6,7 @@ import './DashboardTab.css';
 
 /**
  * DashboardTab
- * 
+ *
  * Comprehensive overview of the entire PVA Bazaar admin system.
  * Aggregates data from all subsystems for at-a-glance monitoring.
  */
@@ -43,10 +43,18 @@ export default function DashboardTab({ onNavigateTab, onMakeOrder }) {
   const loadDashboardData = async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
       // Load data from all endpoints in parallel
-      const [usersResponse, itemsResponse, archiveResponse, healthResponse, cloudResponse, continuityResponse, transactionsResponse] = await Promise.allSettled([
+      const [
+        usersResponse,
+        itemsResponse,
+        archiveResponse,
+        healthResponse,
+        cloudResponse,
+        continuityResponse,
+        transactionsResponse,
+      ] = await Promise.allSettled([
         apiGet('/admin/stats'),
         apiGet('/items').catch(() => ({ ok: false })),
         apiGet('/archive').catch(() => ({ ok: false })),
@@ -57,62 +65,70 @@ export default function DashboardTab({ onNavigateTab, onMakeOrder }) {
       ]);
 
       // Process users data
-      const usersData = usersResponse.status === 'fulfilled' && usersResponse.value.ok
-        ? {
-            total: usersResponse.value.stats?.totalUsers || 0,
-            active: usersResponse.value.stats?.activeUsers || 0,
-            admins: usersResponse.value.stats?.adminUsers || 0,
-            newThisMonth: usersResponse.value.stats?.newUsersThisMonth || 0,
-            loading: false,
-          }
-        : { total: 0, active: 0, admins: 0, newThisMonth: 0, loading: false };
+      const usersData =
+        usersResponse.status === 'fulfilled' && usersResponse.value.ok
+          ? {
+              total: usersResponse.value.stats?.totalUsers || 0,
+              active: usersResponse.value.stats?.activeUsers || 0,
+              admins: usersResponse.value.stats?.adminUsers || 0,
+              newThisMonth: usersResponse.value.stats?.newUsersThisMonth || 0,
+              loading: false,
+            }
+          : { total: 0, active: 0, admins: 0, newThisMonth: 0, loading: false };
 
       // Process items data
-      const itemsData = itemsResponse.status === 'fulfilled' && itemsResponse.value.ok
-        ? {
-            total: itemsResponse.value.items?.length || 0,
-            published: itemsResponse.value.items?.filter(i => i.status === 'published').length || 0,
-            draft: itemsResponse.value.items?.filter(i => i.status === 'draft').length || 0,
-            loading: false,
-          }
-        : { total: 0, published: 0, draft: 0, loading: false };
+      const itemsData =
+        itemsResponse.status === 'fulfilled' && itemsResponse.value.ok
+          ? {
+              total: itemsResponse.value.items?.length || 0,
+              published:
+                itemsResponse.value.items?.filter((i) => i.status === 'published').length || 0,
+              draft: itemsResponse.value.items?.filter((i) => i.status === 'draft').length || 0,
+              loading: false,
+            }
+          : { total: 0, published: 0, draft: 0, loading: false };
 
       // Process archive data
-      const archiveData = archiveResponse.status === 'fulfilled' && archiveResponse.value.ok
-        ? {
-            total: archiveResponse.value.items?.length || 0,
-            categories: archiveResponse.value.items?.reduce((acc, entry) => {
-              acc[entry.category] = (acc[entry.category] || 0) + 1;
-              return acc;
-            }, {}) || {},
-            loading: false,
-          }
-        : { total: 0, categories: {}, loading: false };
+      const archiveData =
+        archiveResponse.status === 'fulfilled' && archiveResponse.value.ok
+          ? {
+              total: archiveResponse.value.items?.length || 0,
+              categories:
+                archiveResponse.value.items?.reduce((acc, entry) => {
+                  acc[entry.category] = (acc[entry.category] || 0) + 1;
+                  return acc;
+                }, {}) || {},
+              loading: false,
+            }
+          : { total: 0, categories: {}, loading: false };
 
       // Process health data
-      const healthData = healthResponse.status === 'fulfilled' && healthResponse.value.ok
-        ? {
-            status: 'healthy',
-            timestamp: healthResponse.value.timestamp,
-            loading: false,
-          }
-        : { status: 'error', timestamp: null, loading: false };
+      const healthData =
+        healthResponse.status === 'fulfilled' && healthResponse.value.ok
+          ? {
+              status: 'healthy',
+              timestamp: healthResponse.value.timestamp,
+              loading: false,
+            }
+          : { status: 'error', timestamp: null, loading: false };
 
       // Process cloud storage data
-      const cloudData = cloudResponse.status === 'fulfilled' && cloudResponse.value.ok
-        ? {
-            files: cloudResponse.value.files || 0,
-            totalSize: cloudResponse.value.totalSize || 0,
-            configuredProviders: cloudResponse.value.configuredProviders || 0,
-            loading: false,
-          }
-        : { files: 0, totalSize: 0, configuredProviders: 0, loading: false };
+      const cloudData =
+        cloudResponse.status === 'fulfilled' && cloudResponse.value.ok
+          ? {
+              files: cloudResponse.value.files || 0,
+              totalSize: cloudResponse.value.totalSize || 0,
+              configuredProviders: cloudResponse.value.configuredProviders || 0,
+              loading: false,
+            }
+          : { files: 0, totalSize: 0, configuredProviders: 0, loading: false };
 
-      const continuityItems = continuityResponse.status === 'fulfilled' && continuityResponse.value?.ok
-        ? Array.isArray(continuityResponse.value.items)
-          ? continuityResponse.value.items
-          : []
-        : [];
+      const continuityItems =
+        continuityResponse.status === 'fulfilled' && continuityResponse.value?.ok
+          ? Array.isArray(continuityResponse.value.items)
+            ? continuityResponse.value.items
+            : []
+          : [];
       const latestContinuity = continuityItems[0] || null;
       const continuityData = {
         total: continuityItems.length,
@@ -121,13 +137,13 @@ export default function DashboardTab({ onNavigateTab, onMakeOrder }) {
         loading: false,
       };
 
-      const txData = transactionsResponse.status === 'fulfilled' && (
-        Array.isArray(transactionsResponse.value)
+      const txData =
+        transactionsResponse.status === 'fulfilled' &&
+        (Array.isArray(transactionsResponse.value)
           ? transactionsResponse.value
           : Array.isArray(transactionsResponse.value?.transactions)
             ? transactionsResponse.value.transactions
-            : []
-      );
+            : []);
 
       setDashboardData({
         users: usersData,
@@ -164,10 +180,14 @@ export default function DashboardTab({ onNavigateTab, onMakeOrder }) {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'healthy': return '#4caf50';
-      case 'warning': return '#ff9800';
-      case 'error': return '#f44336';
-      default: return '#9e9e9e';
+      case 'healthy':
+        return '#4caf50';
+      case 'warning':
+        return '#ff9800';
+      case 'error':
+        return '#f44336';
+      default:
+        return '#9e9e9e';
     }
   };
 
@@ -179,9 +199,7 @@ export default function DashboardTab({ onNavigateTab, onMakeOrder }) {
           <p>Real-time overview of PVA Bazaar system status and metrics</p>
         </div>
         <div className="header-actions">
-          <span className="last-refresh">
-            Last refreshed: {lastRefresh.toLocaleTimeString()}
-          </span>
+          <span className="last-refresh">Last refreshed: {lastRefresh.toLocaleTimeString()}</span>
           <button onClick={loadDashboardData} className="btn-refresh" disabled={loading}>
             {loading ? '⏳ Loading...' : '🔄 Refresh'}
           </button>
@@ -191,7 +209,8 @@ export default function DashboardTab({ onNavigateTab, onMakeOrder }) {
       <section className="dashboard-atlas" aria-label="Dashboard atlas">
         <h3>Operations atlas</h3>
         <p className="dashboard-atlas__copy">
-          Jump between the live system, continuity tools, and public surfaces without losing the thread.
+          Jump between the live system, continuity tools, and public surfaces without losing the
+          thread.
         </p>
         <div className="dashboard-atlas__links">
           {DASHBOARD_ATLAS_LINKS.map((link) => (
@@ -202,17 +221,23 @@ export default function DashboardTab({ onNavigateTab, onMakeOrder }) {
         </div>
       </section>
 
-      {error && (
-        <div className="error-banner">
-          ⚠️ Error loading dashboard: {error}
-        </div>
-      )}
+      {error && <div className="error-banner">⚠️ Error loading dashboard: {error}</div>}
 
       {/* System Health Status */}
-      <div className="health-banner" style={{ borderLeftColor: getStatusColor(dashboardData.health.status) }}>
+      <div
+        className="health-banner"
+        style={{ borderLeftColor: getStatusColor(dashboardData.health.status) }}
+      >
         <div className="health-indicator">
-          <span className="health-icon" style={{ color: getStatusColor(dashboardData.health.status) }}>
-            {dashboardData.health.status === 'healthy' ? '✅' : dashboardData.health.status === 'error' ? '❌' : '⚠️'}
+          <span
+            className="health-icon"
+            style={{ color: getStatusColor(dashboardData.health.status) }}
+          >
+            {dashboardData.health.status === 'healthy'
+              ? '✅'
+              : dashboardData.health.status === 'error'
+                ? '❌'
+                : '⚠️'}
           </span>
           <div className="health-text">
             <strong>System Status: {dashboardData.health.status}</strong>
@@ -249,7 +274,9 @@ export default function DashboardTab({ onNavigateTab, onMakeOrder }) {
               </div>
               <div className="stat-item">
                 <span className="stat-label">New (30d)</span>
-                <span className="stat-value stat-highlight">{dashboardData.users.newThisMonth}</span>
+                <span className="stat-value stat-highlight">
+                  {dashboardData.users.newThisMonth}
+                </span>
               </div>
             </div>
           </div>
@@ -302,12 +329,14 @@ export default function DashboardTab({ onNavigateTab, onMakeOrder }) {
             </div>
             {Object.keys(dashboardData.archive.categories).length > 0 && (
               <div className="metric-stats">
-                {Object.entries(dashboardData.archive.categories).slice(0, 3).map(([category, count]) => (
-                  <div key={category} className="stat-item">
-                    <span className="stat-label">{category}</span>
-                    <span className="stat-value">{count}</span>
-                  </div>
-                ))}
+                {Object.entries(dashboardData.archive.categories)
+                  .slice(0, 3)
+                  .map(([category, count]) => (
+                    <div key={category} className="stat-item">
+                      <span className="stat-label">{category}</span>
+                      <span className="stat-value">{count}</span>
+                    </div>
+                  ))}
               </div>
             )}
           </div>
@@ -332,11 +361,15 @@ export default function DashboardTab({ onNavigateTab, onMakeOrder }) {
             <div className="metric-stats">
               <div className="stat-item">
                 <span className="stat-label">Providers</span>
-                <span className="stat-value">{dashboardData.cloudStorage.configuredProviders} active</span>
+                <span className="stat-value">
+                  {dashboardData.cloudStorage.configuredProviders} active
+                </span>
               </div>
               <div className="stat-item">
                 <span className="stat-label">Total Size</span>
-                <span className="stat-value">{formatBytes(dashboardData.cloudStorage.totalSize)}</span>
+                <span className="stat-value">
+                  {formatBytes(dashboardData.cloudStorage.totalSize)}
+                </span>
               </div>
             </div>
           </div>
@@ -361,12 +394,16 @@ export default function DashboardTab({ onNavigateTab, onMakeOrder }) {
             <div className="metric-stats">
               <div className="stat-item">
                 <span className="stat-label">Latest Label</span>
-                <span className="stat-value">{dashboardData.continuity.latestLabel || 'None yet'}</span>
+                <span className="stat-value">
+                  {dashboardData.continuity.latestLabel || 'None yet'}
+                </span>
               </div>
               <div className="stat-item">
                 <span className="stat-label">Latest Backup</span>
                 <span className="stat-value">
-                  {dashboardData.continuity.latestAt ? new Date(dashboardData.continuity.latestAt).toLocaleDateString() : 'n/a'}
+                  {dashboardData.continuity.latestAt
+                    ? new Date(dashboardData.continuity.latestAt).toLocaleDateString()
+                    : 'n/a'}
                 </span>
               </div>
             </div>
@@ -375,7 +412,11 @@ export default function DashboardTab({ onNavigateTab, onMakeOrder }) {
             <button type="button" className="button" onClick={() => onNavigateTab?.('settings')}>
               Open Settings →
             </button>
-            <button type="button" className="button ghost" onClick={() => globalThis.location?.assign?.('#/recovery')}>
+            <button
+              type="button"
+              className="button ghost"
+              onClick={() => globalThis.location?.assign?.('#/recovery')}
+            >
               Open Recovery →
             </button>
           </div>
@@ -399,7 +440,10 @@ export default function DashboardTab({ onNavigateTab, onMakeOrder }) {
           <div className="entry-list">
             {dashboardData.recentTransactions.items.slice(0, 4).map((tx, index) => (
               <article className="entry-card" key={`${tx.title || tx.user || 'tx'}-${index}`}>
-                <div className="entry-meta" style={{ display: 'flex', justifyContent: 'space-between', gap: '0.75rem' }}>
+                <div
+                  className="entry-meta"
+                  style={{ display: 'flex', justifyContent: 'space-between', gap: '0.75rem' }}
+                >
                   <span className="pill">{tx.type || 'transaction'}</span>
                   <span>{tx.time || 'n/a'}</span>
                 </div>
@@ -455,7 +499,10 @@ export default function DashboardTab({ onNavigateTab, onMakeOrder }) {
             <span className="action-icon">⚙️</span>
             <span className="action-label">Settings</span>
           </button>
-          <button className="action-card" onClick={() => globalThis.location?.assign?.('#/recovery')}>
+          <button
+            className="action-card"
+            onClick={() => globalThis.location?.assign?.('#/recovery')}
+          >
             <span className="action-icon">🧭</span>
             <span className="action-label">Open Recovery</span>
           </button>
@@ -489,7 +536,9 @@ export default function DashboardTab({ onNavigateTab, onMakeOrder }) {
           <div className="info-item">
             <span className="info-label">Continuity Backups</span>
             <span className="info-value">
-              {dashboardData.continuity.loading ? 'Loading…' : `${dashboardData.continuity.total} saved`}
+              {dashboardData.continuity.loading
+                ? 'Loading…'
+                : `${dashboardData.continuity.total} saved`}
             </span>
           </div>
         </div>

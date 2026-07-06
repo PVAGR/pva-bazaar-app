@@ -14,21 +14,21 @@ router.get('/metrics', authenticateToken, async (req, res) => {
     // Get all sales where user is the creator/seller
     const allSales = await Order.find({
       'attribution.creatorId': req.user.id,
-      paymentStatus: 'paid' // Only count paid orders
+      paymentStatus: 'paid', // Only count paid orders
     }).lean();
 
     // Sales this month
     const thisMonthSales = await Order.find({
       'attribution.creatorId': req.user.id,
       paymentStatus: 'paid',
-      createdAt: { $gte: startOfMonth }
+      createdAt: { $gte: startOfMonth },
     }).lean();
 
     // Sales thisweek
     const thisWeekSales = await Order.find({
       'attribution.creatorId': req.user.id,
       paymentStatus: 'paid',
-      createdAt: { $gte: startOfWeek }
+      createdAt: { $gte: startOfWeek },
     }).lean();
 
     // Calculate totals in cents, convert to dollars

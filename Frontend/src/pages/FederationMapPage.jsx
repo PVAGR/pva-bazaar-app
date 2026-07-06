@@ -62,7 +62,7 @@ function hashCode(input) {
 function fallbackCoords(countryCode, country) {
   const seed = hashCode(`${countryCode || ''}${country || ''}`);
   const lat = ((seed % 1500) / 1500) * 130 - 65;
-  const lon = (((Math.floor(seed / 17) % 3600) / 3600) * 360) - 180;
+  const lon = ((Math.floor(seed / 17) % 3600) / 3600) * 360 - 180;
   return { lat, lon };
 }
 
@@ -202,28 +202,34 @@ export default function FederationMapPage() {
   }, [liveData]);
 
   const planetNodes = useMemo(() => {
-    return countries.map((row) => {
-      const coords = resolveCoords(row.countryCode, row.country);
-      const projected = projectToPlanet(coords.lat, coords.lon, planetView);
-      if (!projected) return null;
-      const sizeBoost = Math.log2(Number(row.activeCount || 1) + 1);
-      return {
-        ...row,
-        lat: coords.lat,
-        lon: coords.lon,
-        left: projected.left,
-        top: projected.top,
-        depth: projected.z,
-        markerSize: clamp(6 + sizeBoost * 3.2 * projected.z, 6, 20),
-      };
-    }).filter(Boolean);
+    return countries
+      .map((row) => {
+        const coords = resolveCoords(row.countryCode, row.country);
+        const projected = projectToPlanet(coords.lat, coords.lon, planetView);
+        if (!projected) return null;
+        const sizeBoost = Math.log2(Number(row.activeCount || 1) + 1);
+        return {
+          ...row,
+          lat: coords.lat,
+          lon: coords.lon,
+          left: projected.left,
+          top: projected.top,
+          depth: projected.z,
+          markerSize: clamp(6 + sizeBoost * 3.2 * projected.z, 6, 20),
+        };
+      })
+      .filter(Boolean);
   }, [countries, planetView]);
 
   const visibleParticipants = useMemo(() => {
     if (!selectedCountry) return [];
     const rows = Array.isArray(liveData?.participants) ? liveData.participants : [];
     return rows
-      .filter((person) => String(person.countryCode || '').toUpperCase() === String(selectedCountry.countryCode || '').toUpperCase())
+      .filter(
+        (person) =>
+          String(person.countryCode || '').toUpperCase() ===
+          String(selectedCountry.countryCode || '').toUpperCase(),
+      )
       .slice(0, 10);
   }, [liveData, selectedCountry]);
 
@@ -279,7 +285,16 @@ export default function FederationMapPage() {
     setLoading(true);
     setError('');
     try {
-      const [liveResult, meResult, quizResultResponse, gameStateResult, worldResult, hkProfileResult, hkHistoryResult, factionResult] = await Promise.allSettled([
+      const [
+        liveResult,
+        meResult,
+        quizResultResponse,
+        gameStateResult,
+        worldResult,
+        hkProfileResult,
+        hkHistoryResult,
+        factionResult,
+      ] = await Promise.allSettled([
         fetchFederationLiveMap(90),
         fetchMyFederationPresence(),
         fetchFederationIntroQuizDefinition(),
@@ -292,11 +307,15 @@ export default function FederationMapPage() {
 
       const liveResponse = liveResult.status === 'fulfilled' ? liveResult.value : null;
       const meResponse = meResult.status === 'fulfilled' ? meResult.value : null;
-      const quizResponse = quizResultResponse.status === 'fulfilled' ? quizResultResponse.value : null;
-      const gameStateResponse = gameStateResult.status === 'fulfilled' ? gameStateResult.value : null;
+      const quizResponse =
+        quizResultResponse.status === 'fulfilled' ? quizResultResponse.value : null;
+      const gameStateResponse =
+        gameStateResult.status === 'fulfilled' ? gameStateResult.value : null;
       const worldResponse = worldResult.status === 'fulfilled' ? worldResult.value : null;
-      const hkProfileResponse = hkProfileResult.status === 'fulfilled' ? hkProfileResult.value : null;
-      const hkHistoryResponse = hkHistoryResult.status === 'fulfilled' ? hkHistoryResult.value : null;
+      const hkProfileResponse =
+        hkProfileResult.status === 'fulfilled' ? hkProfileResult.value : null;
+      const hkHistoryResponse =
+        hkHistoryResult.status === 'fulfilled' ? hkHistoryResult.value : null;
       const factionResponse = factionResult.status === 'fulfilled' ? factionResult.value : null;
 
       if (liveResponse?.ok) {
@@ -352,7 +371,9 @@ export default function FederationMapPage() {
         setHkHistory(hkHistoryResponse.items);
       }
     } catch (err) {
-      setMessage(federationUserMessageFromError(err, 'Some federation data is unavailable right now.'));
+      setMessage(
+        federationUserMessageFromError(err, 'Some federation data is unavailable right now.'),
+      );
     } finally {
       setLoading(false);
     }
@@ -463,18 +484,29 @@ export default function FederationMapPage() {
     try {
       const response = await fetchFederationIpLocation();
       const nextCountry = String(response?.location?.country || '').trim();
-      const nextCountryCode = String(response?.location?.countryCode || '').trim().toUpperCase();
+      const nextCountryCode = String(response?.location?.countryCode || '')
+        .trim()
+        .toUpperCase();
 
       if (!nextCountry) {
-        setMessage('Auto-detect is unavailable right now. Enter your country manually to continue.');
+        setMessage(
+          'Auto-detect is unavailable right now. Enter your country manually to continue.',
+        );
         return;
       }
 
       setCountry(nextCountry);
       setCountryCode(nextCountryCode);
-      setMessage(`Detected location: ${nextCountry}${nextCountryCode ? ` (${nextCountryCode})` : ''}`);
+      setMessage(
+        `Detected location: ${nextCountry}${nextCountryCode ? ` (${nextCountryCode})` : ''}`,
+      );
     } catch (err) {
-      setMessage(federationUserMessageFromError(err, 'Auto-detect unavailable. Enter your country manually to continue.'));
+      setMessage(
+        federationUserMessageFromError(
+          err,
+          'Auto-detect unavailable. Enter your country manually to continue.',
+        ),
+      );
     } finally {
       setDetecting(false);
     }
@@ -627,7 +659,10 @@ export default function FederationMapPage() {
     setError('');
     setMessage('');
     try {
-      const response = await claimFederationSector({ sector: claimSectorCode, label: claimSectorLabel });
+      const response = await claimFederationSector({
+        sector: claimSectorCode,
+        label: claimSectorLabel,
+      });
       if (!response?.ok) {
         setError(federationUserMessageFromResponse(response, 'Unable to claim sector.'));
         return;
@@ -654,7 +689,9 @@ export default function FederationMapPage() {
         return;
       }
       setHkProfile(response.profile);
-      setMessage('HK profile initialized. Your sprite starts at level 1 and grows with verified contribution.');
+      setMessage(
+        'HK profile initialized. Your sprite starts at level 1 and grows with verified contribution.',
+      );
       await loadHkData();
     } catch (err) {
       setError(federationUserMessageFromError(err, 'Unable to initialize HK profile.'));
@@ -704,7 +741,9 @@ export default function FederationMapPage() {
       };
       const response = await recordFederationHkProgression(payload);
       if (!response?.ok) {
-        setError(federationUserMessageFromResponse(response, 'Unable to record progression event.'));
+        setError(
+          federationUserMessageFromResponse(response, 'Unable to record progression event.'),
+        );
         return;
       }
       if (response?.skipped) {
@@ -726,8 +765,8 @@ export default function FederationMapPage() {
         <p className="federation-map-kicker">Federation Node Network</p>
         <h1>Live World Citizen Pulse</h1>
         <p>
-          Track active countries, passport holders, and contribution roles in near real time.
-          Use auto-detect from your public IP or manually register your location.
+          Track active countries, passport holders, and contribution roles in near real time. Use
+          auto-detect from your public IP or manually register your location.
         </p>
         <div className="federation-map-actions">
           <Link to="/passport">Open Passport</Link>
@@ -742,7 +781,12 @@ export default function FederationMapPage() {
 
           <div className="federation-form-row">
             <label htmlFor="country">Country</label>
-            <input id="country" value={country} onChange={(e) => setCountry(e.target.value)} placeholder="Kenya" />
+            <input
+              id="country"
+              value={country}
+              onChange={(e) => setCountry(e.target.value)}
+              placeholder="Kenya"
+            />
           </div>
 
           <div className="federation-form-row">
@@ -797,7 +841,8 @@ export default function FederationMapPage() {
 
           {myPresence ? (
             <p className="federation-inline-note">
-              Last seen: {formatRelativeTime(myPresence.lastSeenAt)} in {myPresence.country || 'Unknown'}
+              Last seen: {formatRelativeTime(myPresence.lastSeenAt)} in{' '}
+              {myPresence.country || 'Unknown'}
             </p>
           ) : null}
         </article>
@@ -859,17 +904,30 @@ export default function FederationMapPage() {
         </div>
 
         <p className="federation-inline-note">
-          HK is account-gated. Identity uses one-way passport hashing only, and location remains country-level by default.
+          HK is account-gated. Identity uses one-way passport hashing only, and location remains
+          country-level by default.
         </p>
 
         <div className="hk-grid">
           <article className="planet-game-panel">
             <h3>Sprite Progression</h3>
             <div className="hk-stat-grid">
-              <div><span>Level</span><strong>{hkProfile?.level || 1}</strong></div>
-              <div><span>XP</span><strong>{hkProfile?.xp || 0}</strong></div>
-              <div><span>Contribution</span><strong>{hkProfile?.contributionScore || 0}</strong></div>
-              <div><span>Economic</span><strong>{hkProfile?.economicScore || 0}</strong></div>
+              <div>
+                <span>Level</span>
+                <strong>{hkProfile?.level || 1}</strong>
+              </div>
+              <div>
+                <span>XP</span>
+                <strong>{hkProfile?.xp || 0}</strong>
+              </div>
+              <div>
+                <span>Contribution</span>
+                <strong>{hkProfile?.contributionScore || 0}</strong>
+              </div>
+              <div>
+                <span>Economic</span>
+                <strong>{hkProfile?.economicScore || 0}</strong>
+              </div>
             </div>
             <div className="hk-progress">
               <div style={{ width: `${hkProgressPercent}%` }} />
@@ -900,12 +958,18 @@ export default function FederationMapPage() {
                 maxLength={2}
               />
             </div>
-            <button type="button" disabled={hkBusy || !hkPassportId.trim()} onClick={handleHkVerifyPassportHash}>
+            <button
+              type="button"
+              disabled={hkBusy || !hkPassportId.trim()}
+              onClick={handleHkVerifyPassportHash}
+            >
               {hkBusy ? 'Verifying...' : 'Verify Passport Hash'}
             </button>
             <p className="federation-inline-note">
               Status: {hkProfile?.identity?.passportHashVerified ? 'Verified' : 'Not verified'}
-              {hkProfile?.identity?.passportHashLast4 ? ` (ending ${hkProfile.identity.passportHashLast4})` : ''}
+              {hkProfile?.identity?.passportHashLast4
+                ? ` (ending ${hkProfile.identity.passportHashLast4})`
+                : ''}
             </p>
           </article>
 
@@ -913,7 +977,11 @@ export default function FederationMapPage() {
             <h3>Record Contribution Event</h3>
             <div className="federation-form-row">
               <label htmlFor="hkSourceType">Source Type</label>
-              <select id="hkSourceType" value={hkSourceType} onChange={(e) => setHkSourceType(e.target.value)}>
+              <select
+                id="hkSourceType"
+                value={hkSourceType}
+                onChange={(e) => setHkSourceType(e.target.value)}
+              >
                 <option value="knowledge_contribution">Knowledge Contribution</option>
                 <option value="verified_transaction">Verified Transaction</option>
                 <option value="governance_action">Governance Action</option>
@@ -922,19 +990,41 @@ export default function FederationMapPage() {
             </div>
             <div className="federation-form-row">
               <label htmlFor="hkSourceRef">Source Reference (optional but recommended)</label>
-              <input id="hkSourceRef" value={hkSourceRef} onChange={(e) => setHkSourceRef(e.target.value)} placeholder="order-123 / article-7" />
+              <input
+                id="hkSourceRef"
+                value={hkSourceRef}
+                onChange={(e) => setHkSourceRef(e.target.value)}
+                placeholder="order-123 / article-7"
+              />
             </div>
             <div className="federation-form-row">
               <label htmlFor="hkContributionValue">Contribution Value</label>
-              <input id="hkContributionValue" type="number" min="0" value={hkContributionValue} onChange={(e) => setHkContributionValue(e.target.value)} />
+              <input
+                id="hkContributionValue"
+                type="number"
+                min="0"
+                value={hkContributionValue}
+                onChange={(e) => setHkContributionValue(e.target.value)}
+              />
             </div>
             <div className="federation-form-row">
               <label htmlFor="hkEconomicValue">Economic Value</label>
-              <input id="hkEconomicValue" type="number" min="0" value={hkEconomicValue} onChange={(e) => setHkEconomicValue(e.target.value)} />
+              <input
+                id="hkEconomicValue"
+                type="number"
+                min="0"
+                value={hkEconomicValue}
+                onChange={(e) => setHkEconomicValue(e.target.value)}
+              />
             </div>
             <div className="federation-form-row">
               <label htmlFor="hkNotes">Notes</label>
-              <input id="hkNotes" value={hkNotes} onChange={(e) => setHkNotes(e.target.value)} placeholder="Verified transaction from marketplace" />
+              <input
+                id="hkNotes"
+                value={hkNotes}
+                onChange={(e) => setHkNotes(e.target.value)}
+                placeholder="Verified transaction from marketplace"
+              />
             </div>
             <button type="button" disabled={hkBusy} onClick={handleHkRecordProgression}>
               {hkBusy ? 'Recording...' : 'Record Progression'}
@@ -944,15 +1034,18 @@ export default function FederationMapPage() {
           <article className="planet-game-panel">
             <h3>Recent Progression History</h3>
             <div className="planet-game-list">
-              {hkHistory.length ? hkHistory.map((item) => (
-                <div key={item.id}>
-                  <strong>{item.sourceType}</strong>
-                  <span>
-                    +{item.totalXpAwarded} XP ({item.contributionPoints} contribution, {item.economicPoints} economic)
-                  </span>
-                  <span>{formatRelativeTime(item.createdAt)}</span>
-                </div>
-              )) : (
+              {hkHistory.length ? (
+                hkHistory.map((item) => (
+                  <div key={item.id}>
+                    <strong>{item.sourceType}</strong>
+                    <span>
+                      +{item.totalXpAwarded} XP ({item.contributionPoints} contribution,{' '}
+                      {item.economicPoints} economic)
+                    </span>
+                    <span>{formatRelativeTime(item.createdAt)}</span>
+                  </div>
+                ))
+              ) : (
                 <p className="federation-inline-note">No progression events yet.</p>
               )}
             </div>
@@ -964,14 +1057,30 @@ export default function FederationMapPage() {
         <div className="federation-live-header">
           <h2>Federation Planet Engine (PVA Alpha)</h2>
           <div className="federation-button-row">
-            <button type="button" onClick={() => setPlanetView((prev) => ({ ...prev, zoom: clamp(prev.zoom + 0.12, 0.75, 2.4) }))}>Zoom +</button>
-            <button type="button" onClick={() => setPlanetView((prev) => ({ ...prev, zoom: clamp(prev.zoom - 0.12, 0.75, 2.4) }))}>Zoom -</button>
-            <button type="button" onClick={() => setPlanetView({ zoom: 1.05, yaw: 0, pitch: 10 })}>Reset View</button>
+            <button
+              type="button"
+              onClick={() =>
+                setPlanetView((prev) => ({ ...prev, zoom: clamp(prev.zoom + 0.12, 0.75, 2.4) }))
+              }
+            >
+              Zoom +
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                setPlanetView((prev) => ({ ...prev, zoom: clamp(prev.zoom - 0.12, 0.75, 2.4) }))
+              }
+            >
+              Zoom -
+            </button>
+            <button type="button" onClick={() => setPlanetView({ zoom: 1.05, yaw: 0, pitch: 10 })}>
+              Reset View
+            </button>
           </div>
         </div>
         <p className="federation-inline-note">
-          Drag to rotate the planet, scroll to zoom, then click a node to inspect active citizens. This is an original
-          strategy sandbox inspired by community simulation concepts.
+          Drag to rotate the planet, scroll to zoom, then click a node to inspect active citizens.
+          This is an original strategy sandbox inspired by community simulation concepts.
         </p>
 
         <div className="planet-game-layout">
@@ -1009,20 +1118,27 @@ export default function FederationMapPage() {
             {selectedCountry ? (
               <>
                 <p>
-                  <strong>{selectedCountry.activeCount}</strong> active citizens · {selectedCountry.countryCode || '??'}
+                  <strong>{selectedCountry.activeCount}</strong> active citizens ·{' '}
+                  {selectedCountry.countryCode || '??'}
                 </p>
                 <ul>
                   {selectedCountry.topRoles.map((role) => (
-                    <li key={`${selectedCountry.countryCode}-${role.role}`}>{role.role} ({role.count})</li>
+                    <li key={`${selectedCountry.countryCode}-${role.role}`}>
+                      {role.role} ({role.count})
+                    </li>
                   ))}
                 </ul>
                 <div className="planet-people-list">
-                  {visibleParticipants.length > 0 ? visibleParticipants.map((person) => (
-                    <article key={`${person.id}-${person.lastSeenAt}`}>
-                      <strong>{person.name}</strong>
-                      <span>{person.jobTitle || person.citizenRole || 'Citizen'}</span>
-                    </article>
-                  )) : <p>No live participant detail for this node yet.</p>}
+                  {visibleParticipants.length > 0 ? (
+                    visibleParticipants.map((person) => (
+                      <article key={`${person.id}-${person.lastSeenAt}`}>
+                        <strong>{person.name}</strong>
+                        <span>{person.jobTitle || person.citizenRole || 'Citizen'}</span>
+                      </article>
+                    ))
+                  ) : (
+                    <p>No live participant detail for this node yet.</p>
+                  )}
                 </div>
               </>
             ) : (
@@ -1033,19 +1149,49 @@ export default function FederationMapPage() {
 
         <div className="planet-game-controls">
           <div className="planet-resource-grid">
-            <div><span>Cycle</span><strong>{gameState.cycle}</strong></div>
-            <div><span>Energy</span><strong>{gameState.energy}</strong></div>
-            <div><span>Food</span><strong>{gameState.food}</strong></div>
-            <div><span>Materials</span><strong>{gameState.materials}</strong></div>
-            <div><span>Population</span><strong>{gameState.population}</strong></div>
-            <div><span>Outposts</span><strong>{gameState.outposts}</strong></div>
-            <div><span>Keepers</span><strong>{gameState.keepers}</strong></div>
-            <div><span>Research</span><strong>{gameState.research}</strong></div>
+            <div>
+              <span>Cycle</span>
+              <strong>{gameState.cycle}</strong>
+            </div>
+            <div>
+              <span>Energy</span>
+              <strong>{gameState.energy}</strong>
+            </div>
+            <div>
+              <span>Food</span>
+              <strong>{gameState.food}</strong>
+            </div>
+            <div>
+              <span>Materials</span>
+              <strong>{gameState.materials}</strong>
+            </div>
+            <div>
+              <span>Population</span>
+              <strong>{gameState.population}</strong>
+            </div>
+            <div>
+              <span>Outposts</span>
+              <strong>{gameState.outposts}</strong>
+            </div>
+            <div>
+              <span>Keepers</span>
+              <strong>{gameState.keepers}</strong>
+            </div>
+            <div>
+              <span>Research</span>
+              <strong>{gameState.research}</strong>
+            </div>
           </div>
           <div className="federation-button-row">
-            <button type="button" disabled={gameBusy} onClick={() => triggerGameAction('outpost')}>Build Outpost</button>
-            <button type="button" disabled={gameBusy} onClick={() => triggerGameAction('keeper')}>Train Keeper</button>
-            <button type="button" disabled={gameBusy} onClick={() => triggerGameAction('research')}>Run Research</button>
+            <button type="button" disabled={gameBusy} onClick={() => triggerGameAction('outpost')}>
+              Build Outpost
+            </button>
+            <button type="button" disabled={gameBusy} onClick={() => triggerGameAction('keeper')}>
+              Train Keeper
+            </button>
+            <button type="button" disabled={gameBusy} onClick={() => triggerGameAction('research')}>
+              Run Research
+            </button>
           </div>
           {gameNotice ? <p className="federation-inline-note">{gameNotice}</p> : null}
         </div>
@@ -1056,12 +1202,19 @@ export default function FederationMapPage() {
             {myFaction ? (
               <div className="planet-game-list">
                 <div>
-                  <strong>{myFaction.name} ({myFaction.tag})</strong>
-                  <span>Members: {myFaction.memberCount || (myFaction.members || []).length} · Invite: {myFaction.inviteCode}</span>
+                  <strong>
+                    {myFaction.name} ({myFaction.tag})
+                  </strong>
+                  <span>
+                    Members: {myFaction.memberCount || (myFaction.members || []).length} · Invite:{' '}
+                    {myFaction.inviteCode}
+                  </span>
                 </div>
               </div>
             ) : (
-              <p className="federation-inline-note">No faction yet. Create one or join using an invite code.</p>
+              <p className="federation-inline-note">
+                No faction yet. Create one or join using an invite code.
+              </p>
             )}
           </article>
 
@@ -1069,13 +1222,27 @@ export default function FederationMapPage() {
             <h3>Create Faction</h3>
             <div className="federation-form-row">
               <label htmlFor="newFactionName">Faction Name</label>
-              <input id="newFactionName" value={newFactionName} onChange={(e) => setNewFactionName(e.target.value)} placeholder="Aurora League" />
+              <input
+                id="newFactionName"
+                value={newFactionName}
+                onChange={(e) => setNewFactionName(e.target.value)}
+                placeholder="Aurora League"
+              />
             </div>
             <div className="federation-form-row">
               <label htmlFor="newFactionTag">Faction Tag</label>
-              <input id="newFactionTag" value={newFactionTag} onChange={(e) => setNewFactionTag(e.target.value.toUpperCase())} placeholder="AUR" />
+              <input
+                id="newFactionTag"
+                value={newFactionTag}
+                onChange={(e) => setNewFactionTag(e.target.value.toUpperCase())}
+                placeholder="AUR"
+              />
             </div>
-            <button type="button" disabled={factionBusy || !newFactionName || !newFactionTag} onClick={handleCreateFaction}>
+            <button
+              type="button"
+              disabled={factionBusy || !newFactionName || !newFactionTag}
+              onClick={handleCreateFaction}
+            >
               {factionBusy ? 'Processing...' : 'Create Faction'}
             </button>
           </article>
@@ -1084,9 +1251,18 @@ export default function FederationMapPage() {
             <h3>Join Faction</h3>
             <div className="federation-form-row">
               <label htmlFor="joinInviteCode">Invite Code</label>
-              <input id="joinInviteCode" value={joinInviteCode} onChange={(e) => setJoinInviteCode(e.target.value.toUpperCase())} placeholder="AB12CD34" />
+              <input
+                id="joinInviteCode"
+                value={joinInviteCode}
+                onChange={(e) => setJoinInviteCode(e.target.value.toUpperCase())}
+                placeholder="AB12CD34"
+              />
             </div>
-            <button type="button" disabled={factionBusy || !joinInviteCode} onClick={handleJoinFaction}>
+            <button
+              type="button"
+              disabled={factionBusy || !joinInviteCode}
+              onClick={handleJoinFaction}
+            >
               {factionBusy ? 'Processing...' : 'Join by Invite'}
             </button>
           </article>
@@ -1095,13 +1271,28 @@ export default function FederationMapPage() {
             <h3>Claim Sector</h3>
             <div className="federation-form-row">
               <label htmlFor="claimSectorCode">Sector Code</label>
-              <input id="claimSectorCode" value={claimSectorCode} onChange={(e) => setClaimSectorCode(e.target.value.toUpperCase())} placeholder="KE" maxLength={12} />
+              <input
+                id="claimSectorCode"
+                value={claimSectorCode}
+                onChange={(e) => setClaimSectorCode(e.target.value.toUpperCase())}
+                placeholder="KE"
+                maxLength={12}
+              />
             </div>
             <div className="federation-form-row">
               <label htmlFor="claimSectorLabel">Sector Label</label>
-              <input id="claimSectorLabel" value={claimSectorLabel} onChange={(e) => setClaimSectorLabel(e.target.value)} placeholder="Kenya Frontier" />
+              <input
+                id="claimSectorLabel"
+                value={claimSectorLabel}
+                onChange={(e) => setClaimSectorLabel(e.target.value)}
+                placeholder="Kenya Frontier"
+              />
             </div>
-            <button type="button" disabled={factionBusy || !claimSectorCode} onClick={handleClaimSector}>
+            <button
+              type="button"
+              disabled={factionBusy || !claimSectorCode}
+              onClick={handleClaimSector}
+            >
               {factionBusy ? 'Processing...' : 'Claim Sector'}
             </button>
           </article>
@@ -1113,8 +1304,13 @@ export default function FederationMapPage() {
             <div className="planet-game-list">
               {(worldGameFeed.leaderboard || []).slice(0, 8).map((row, idx) => (
                 <div key={`${row.commanderName}-${idx}`}>
-                  <strong>#{idx + 1} {row.commanderName}</strong>
-                  <span>{row.faction || 'PVA Collective'} · {row.outposts} outposts · {row.research} research</span>
+                  <strong>
+                    #{idx + 1} {row.commanderName}
+                  </strong>
+                  <span>
+                    {row.faction || 'PVA Collective'} · {row.outposts} outposts · {row.research}{' '}
+                    research
+                  </span>
                 </div>
               ))}
             </div>
@@ -1125,8 +1321,12 @@ export default function FederationMapPage() {
             <div className="planet-game-list">
               {(worldGameFeed.factions || []).slice(0, 8).map((faction, idx) => (
                 <div key={`${faction.tag}-${idx}`}>
-                  <strong>#{idx + 1} {faction.name} ({faction.tag})</strong>
-                  <span>Members: {faction.memberCount} · Power: {faction.totalPower}</span>
+                  <strong>
+                    #{idx + 1} {faction.name} ({faction.tag})
+                  </strong>
+                  <span>
+                    Members: {faction.memberCount} · Power: {faction.totalPower}
+                  </span>
                 </div>
               ))}
             </div>
@@ -1140,7 +1340,9 @@ export default function FederationMapPage() {
                   <strong>{sector.label}</strong>
                   <span>
                     {sector.activeCitizens} active · role: {sector.controlRole}
-                    {sector.controllerFactionTag ? ` · faction: ${sector.controllerFactionTag}` : ''}
+                    {sector.controllerFactionTag
+                      ? ` · faction: ${sector.controllerFactionTag}`
+                      : ''}
                     {sector.influence ? ` · influence: ${sector.influence}` : ''}
                   </span>
                 </div>
@@ -1153,8 +1355,12 @@ export default function FederationMapPage() {
             <div className="planet-game-list">
               {(worldGameFeed.events || []).slice(0, 8).map((event) => (
                 <div key={event.id}>
-                  <strong>{event.commanderName}: {event.title}</strong>
-                  <span>{formatRelativeTime(event.createdAt)} · {event.eventType}</span>
+                  <strong>
+                    {event.commanderName}: {event.title}
+                  </strong>
+                  <span>
+                    {formatRelativeTime(event.createdAt)} · {event.eventType}
+                  </span>
                 </div>
               ))}
             </div>
@@ -1165,7 +1371,9 @@ export default function FederationMapPage() {
       <section className="federation-card federation-card--dynamicSitemap">
         <div className="federation-live-header">
           <h2>Dynamic Site Map</h2>
-          <span className="federation-inline-note">{dynamicSiteMap.length} public routes indexed</span>
+          <span className="federation-inline-note">
+            {dynamicSiteMap.length} public routes indexed
+          </span>
         </div>
         <p>Live route index generated from the current application route configuration.</p>
         <div className="federation-form-row">

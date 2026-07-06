@@ -22,7 +22,7 @@ This doc records the **environment variable names** used in production (Vercel) 
 
 ## Optional
 
-- **SMTP_*** — For fulfillment confirmation and payment-failed emails.
+- **SMTP\_\*** — For fulfillment confirmation and payment-failed emails.
 - **VERIFY_API_URL** / **VERIFY_API_SECRET** — For GitHub Actions to POST verification results so the badge shows “AI-Verified.”
 
 ## Codebase alignment

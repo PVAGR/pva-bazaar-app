@@ -24,10 +24,10 @@ async function makeRequest(method, path, body, headers = {}) {
         ...headers,
       },
     };
-    
+
     const req = http.request(options, (res) => {
       let data = '';
-      res.on('data', chunk => data += chunk);
+      res.on('data', (chunk) => (data += chunk));
       res.on('end', () => {
         try {
           resolve({ status: res.statusCode, body: JSON.parse(data) });
@@ -36,7 +36,7 @@ async function makeRequest(method, path, body, headers = {}) {
         }
       });
     });
-    
+
     req.on('error', reject);
     if (body) req.write(JSON.stringify(body));
     req.end();
@@ -45,27 +45,27 @@ async function makeRequest(method, path, body, headers = {}) {
 
 async function runTests() {
   console.log('🧪 Starting admin token smoke tests...\n');
-  
+
   // Start server
-  await new Promise(resolve => server.listen(PORT, resolve));
+  await new Promise((resolve) => server.listen(PORT, resolve));
   console.log(`✓ Test server listening on :${PORT}\n`);
-  
+
   let token = null;
-  
+
   try {
     // Test 1: POST /api/admin/token with correct secret
     const secret = process.env.ADMIN_SECRET_CODE || 'test-admin-secret-code';
     const res1 = await makeRequest('POST', '/api/admin/token', { secret });
-    
+
     if (res1.status === 200 && res1.body.token) {
       token = res1.body.token;
       console.log('✅ POST /api/admin/token → 200 + token');
-      console.log('   Token:', `${token.substring(0, 30)  }...\n`);
+      console.log('   Token:', `${token.substring(0, 30)}...\n`);
     } else {
       console.log('❌ POST /api/admin/token failed:', res1.status, res1.body);
       process.exit(1);
     }
-    
+
     // Test 2: POST /api/admin/token with wrong secret
     const res2 = await makeRequest('POST', '/api/admin/token', { secret: 'wrong' });
     if (res2.status === 401) {
@@ -73,7 +73,7 @@ async function runTests() {
     } else {
       console.log('❌ Wrong secret should return 401, got:', res2.status);
     }
-    
+
     // Test 3: POST /api/archive with token
     const entry = {
       title: 'Test Entry from Smoke Test',
@@ -83,11 +83,11 @@ async function runTests() {
       tags: ['test'],
       category: 'journal',
     };
-    
+
     const res3 = await makeRequest('POST', '/api/archive', entry, {
       Authorization: `Bearer ${token}`,
     });
-    
+
     if (res3.status === 201) {
       console.log('✅ POST /api/archive (with token) → 201 + created entry');
       console.log('   Created ID:', res3.body.id || res3.body._id, '\n');
@@ -95,11 +95,11 @@ async function runTests() {
       console.log('❌ POST /api/archive failed:', res3.status, res3.body);
       process.exit(1);
     }
-    
+
     // Test 4: GET /api/archive
     const res4 = await makeRequest('GET', '/api/archive');
     if (res4.status === 200 && Array.isArray(res4.body)) {
-      const found = res4.body.find(e => e.title === 'Test Entry from Smoke Test');
+      const found = res4.body.find((e) => e.title === 'Test Entry from Smoke Test');
       if (found) {
         console.log('✅ GET /api/archive includes created entry\n');
       } else {
@@ -108,9 +108,8 @@ async function runTests() {
     } else {
       console.log('❌ GET /api/archive failed:', res4.status);
     }
-    
+
     console.log('✅ All admin token tests passed!');
-    
   } catch (err) {
     console.error('❌ Test failed:', err.message);
     process.exit(1);
@@ -120,9 +119,8 @@ async function runTests() {
   }
 }
 
-runTests().catch(err => {
+runTests().catch((err) => {
   console.error('❌ Test suite failed:', err);
   server.close();
   process.exit(1);
 });
-

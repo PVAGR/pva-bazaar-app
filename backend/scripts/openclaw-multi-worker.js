@@ -1,11 +1,10 @@
 const { spawn } = require('child_process');
 const path = require('path');
 
-const count = Math.min(
-  Math.max(parseInt(process.env.OPENCLAW_WORKER_COUNT || '1', 10), 1),
-  20,
-);
-const baseName = String(process.env.OPENCLAW_WORKER_NAME || 'openclaw-queue-dispatcher').trim() || 'openclaw-queue-dispatcher';
+const count = Math.min(Math.max(parseInt(process.env.OPENCLAW_WORKER_COUNT || '1', 10), 1), 20);
+const baseName =
+  String(process.env.OPENCLAW_WORKER_NAME || 'openclaw-queue-dispatcher').trim() ||
+  'openclaw-queue-dispatcher';
 const workerScript = path.join(__dirname, 'openclaw-queue-worker.js');
 
 const children = [];
@@ -26,7 +25,9 @@ function startWorker(index) {
 
   child.on('exit', (code, signal) => {
     if (!stopping) {
-      console.error(`[OpenClawMultiWorker] worker=${workerName} exited code=${code} signal=${signal}`);
+      console.error(
+        `[OpenClawMultiWorker] worker=${workerName} exited code=${code} signal=${signal}`,
+      );
     }
   });
 
@@ -46,9 +47,11 @@ function shutdown(signal) {
     }
   }
 
-  global.setTimeout(() => {
-    process.exit(0);
-  }, 2000).unref();
+  global
+    .setTimeout(() => {
+      process.exit(0);
+    }, 2000)
+    .unref();
 }
 
 for (let index = 0; index < count; index += 1) {

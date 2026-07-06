@@ -55,7 +55,15 @@ const knowledgeNodeSchema = new mongoose.Schema({
       nodeId: mongoose.Schema.Types.ObjectId,
       relationshipType: {
         type: String,
-        enum: ['teaches', 'uses', 'related_to', 'evolved_from', 'part_of', 'parent_of', 'similar_to'],
+        enum: [
+          'teaches',
+          'uses',
+          'related_to',
+          'evolved_from',
+          'part_of',
+          'parent_of',
+          'similar_to',
+        ],
       },
       strength: Number, // 1-5, how strongly related
     },

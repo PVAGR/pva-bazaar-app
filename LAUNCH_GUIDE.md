@@ -60,6 +60,7 @@
 ### Day Before Launch
 
 - [ ] **Final Build**
+
   ```bash
   cd backend && npm run build
   cd Frontend && npm run build
@@ -73,6 +74,7 @@
   - [ ] Monitor memory usage
 
 - [ ] **Database Backup**
+
   ```bash
   # Export current database (if migrating)
   mongoexport --uri="MONGODB_URI" --collection=users --out=backup_users.json
@@ -108,6 +110,7 @@ open http://localhost:5173
 ```
 
 **Test Flow:**
+
 1. ✅ Visit landing page (not logged in)
 2. ✅ Click "Sign Up"
 3. ✅ Create account with test email
@@ -457,18 +460,19 @@ unzip export_*.json | grep -c "Launch Test"
 ### Pre-Announcement (4 Hours Before)
 
 1. **Notify Stakeholders**
+
    ```
    "PVABazaar is launching in 4 hours!
-   
+
    Backend: https://pvabazaar-api.vercel.app
    Frontend: https://username.github.io/pva-bazaar-app
-   
+
    Features:
    - Decentralized livestreaming
    - Autonomous journal entries
    - IPFS recording
    - Full data ownership
-   
+
    Sign up early access: [LINK]"
    ```
 
@@ -649,33 +653,33 @@ After resolving any critical issue:
 
 ### Technical
 
-| Metric | Target | Current |
-|--------|--------|---------|
-| Uptime | 99.9% | TBD |
-| Response Time | <200ms | TBD |
-| Error Rate | <0.1% | TBD |
-| IPFS Upload Success | 99.5% | TBD |
-| Database Capacity | <50% used | TBD |
+| Metric              | Target    | Current |
+| ------------------- | --------- | ------- |
+| Uptime              | 99.9%     | TBD     |
+| Response Time       | <200ms    | TBD     |
+| Error Rate          | <0.1%     | TBD     |
+| IPFS Upload Success | 99.5%     | TBD     |
+| Database Capacity   | <50% used | TBD     |
 
 ### User
 
-| Metric | Target | Current |
-|--------|--------|---------|
-| Signups | 100+ | TBD |
-| Active Users | 50+ | TBD |
-| Streams Created | 20+ | TBD |
-| Journal Entries | 50+ | TBD |
-| Data Exported | 10+ users | TBD |
+| Metric          | Target    | Current |
+| --------------- | --------- | ------- |
+| Signups         | 100+      | TBD     |
+| Active Users    | 50+       | TBD     |
+| Streams Created | 20+       | TBD     |
+| Journal Entries | 50+       | TBD     |
+| Data Exported   | 10+ users | TBD     |
 
 ### Community
 
-| Metric | Target | Current |
-|--------|--------|---------|
-| GitHub Stars | 50+ | TBD |
-| Forks | 5+ | TBD |
-| PRs/Issues | 10+ | TBD |
-| Blog Posts | 3+ | TBD |
-| Social Mentions | 100+ | TBD |
+| Metric          | Target | Current |
+| --------------- | ------ | ------- |
+| GitHub Stars    | 50+    | TBD     |
+| Forks           | 5+     | TBD     |
+| PRs/Issues      | 10+    | TBD     |
+| Blog Posts      | 3+     | TBD     |
+| Social Mentions | 100+   | TBD     |
 
 ---
 
@@ -710,6 +714,7 @@ After resolving any critical issue:
 ## Checklist Summary
 
 **Before Launch**
+
 - [ ] Code reviewed and tested
 - [ ] Security audit complete
 - [ ] All environment variables set
@@ -718,6 +723,7 @@ After resolving any critical issue:
 - [ ] Support team ready
 
 **Launch Day**
+
 - [ ] Final local test pass
 - [ ] Backend deployed to Vercel
 - [ ] Frontend deployed to GitHub Pages
@@ -726,6 +732,7 @@ After resolving any critical issue:
 - [ ] Monitoring active
 
 **After Launch**
+
 - [ ] Monitor for 24 hours continuously
 - [ ] Respond to user issues
 - [ ] Collect feedback
@@ -749,7 +756,7 @@ Questions during deployment?
 
 The future of decentralized streaming is in your hands. Launch with confidence, support your community, and help reclaim digital autonomy one broadcast at a time.
 
-*"Open the doorway at the top of your brain."*
+_"Open the doorway at the top of your brain."_
 
 **Go live!**
 

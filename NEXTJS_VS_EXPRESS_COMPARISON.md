@@ -76,22 +76,22 @@ Both achieve the same core vision: autonomous streaming, IPFS recording, journal
 
 ## Feature Parity Matrix
 
-| Feature | Express + Vite | Next.js | Notes |
-|---------|---------------|---------|-------|
-| **Authentication** | JWT tokens | NextAuth.js | NextAuth more batteries-included |
-| **User Signup/Login** | ✅ Custom routes | ✅ Credentials provider | Both work identically |
-| **Livestream Management** | ✅ CRUD API | ✅ API routes | Same MongoDB schema |
-| **Journal Entries** | ✅ Full CRUD | ✅ Full CRUD | Same functionality |
-| **IPFS Integration** | ✅ Pinata service | ✅ Pinata library | Both use Pinata |
-| **Streaming Connectors** | ✅ Twitch/Livepeer | ✅ Twitch/Livepeer | Same integration approach |
-| **DID Support** | ✅ W3C standard | 🔜 Not yet implemented | Express has this built |
-| **Custom Databases** | ✅ Full implementation | 🔜 Not yet implemented | Express has "PirateBay" feature |
-| **Data Export** | ✅ JSON download | ✅ JSON download | Both support GDPR compliance |
-| **Webhooks** | ✅ Twitch EventSub | ✅ Twitch EventSub | Same webhook handlers |
-| **Deployment** | ✅ Vercel + GitHub Pages | ✅ Vercel (single deploy) | Next.js simpler deployment |
-| **Server-Side Rendering** | ❌ Client-only | ✅ SSR/SSG | Next.js SEO advantage |
-| **API Rate Limiting** | ✅ express-rate-limit | 🔜 Needs middleware | Express has this |
-| **CORS Configuration** | ✅ Configured | ✅ Next.js handles | Both work |
+| Feature                   | Express + Vite           | Next.js                   | Notes                            |
+| ------------------------- | ------------------------ | ------------------------- | -------------------------------- |
+| **Authentication**        | JWT tokens               | NextAuth.js               | NextAuth more batteries-included |
+| **User Signup/Login**     | ✅ Custom routes         | ✅ Credentials provider   | Both work identically            |
+| **Livestream Management** | ✅ CRUD API              | ✅ API routes             | Same MongoDB schema              |
+| **Journal Entries**       | ✅ Full CRUD             | ✅ Full CRUD              | Same functionality               |
+| **IPFS Integration**      | ✅ Pinata service        | ✅ Pinata library         | Both use Pinata                  |
+| **Streaming Connectors**  | ✅ Twitch/Livepeer       | ✅ Twitch/Livepeer        | Same integration approach        |
+| **DID Support**           | ✅ W3C standard          | 🔜 Not yet implemented    | Express has this built           |
+| **Custom Databases**      | ✅ Full implementation   | 🔜 Not yet implemented    | Express has "PirateBay" feature  |
+| **Data Export**           | ✅ JSON download         | ✅ JSON download          | Both support GDPR compliance     |
+| **Webhooks**              | ✅ Twitch EventSub       | ✅ Twitch EventSub        | Same webhook handlers            |
+| **Deployment**            | ✅ Vercel + GitHub Pages | ✅ Vercel (single deploy) | Next.js simpler deployment       |
+| **Server-Side Rendering** | ❌ Client-only           | ✅ SSR/SSG                | Next.js SEO advantage            |
+| **API Rate Limiting**     | ✅ express-rate-limit    | 🔜 Needs middleware       | Express has this                 |
+| **CORS Configuration**    | ✅ Configured            | ✅ Next.js handles        | Both work                        |
 
 **Legend:**  
 ✅ Implemented | 🔜 Not yet implemented | ❌ Not applicable
@@ -103,6 +103,7 @@ Both achieve the same core vision: autonomous streaming, IPFS recording, journal
 ### 1. Project Structure
 
 #### Express + Vite
+
 ```
 pva-bazaar-app/
 ├── backend/
@@ -130,6 +131,7 @@ pva-bazaar-app/
 ```
 
 #### Next.js
+
 ```
 pvabazaar-livestream/
 ├── app/                       # App Router
@@ -162,6 +164,7 @@ pvabazaar-livestream/
 #### Express + Vite
 
 **Backend (JWT):**
+
 ```javascript
 // backend/middleware/auth.js
 const jwt = require('jsonwebtoken');
@@ -169,7 +172,7 @@ const jwt = require('jsonwebtoken');
 function authMiddleware(req, res, next) {
   const token = req.headers.authorization?.split(' ')[1];
   if (!token) return res.status(401).json({ error: 'Unauthorized' });
-  
+
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
@@ -181,17 +184,20 @@ function authMiddleware(req, res, next) {
 ```
 
 **Frontend:**
+
 ```javascript
 // Frontend/src/lib/api.js
 axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 ```
 
 **Pros:**
+
 - Full control over token structure
 - Can customize expiration, refresh logic
 - Works with any frontend framework
 
 **Cons:**
+
 - Manual token management (localStorage, refresh)
 - Need to implement password reset, email verification separately
 - More boilerplate code
@@ -199,6 +205,7 @@ axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 #### Next.js
 
 **NextAuth.js:**
+
 ```typescript
 // app/api/auth/[...nextauth]/route.ts
 import NextAuth from 'next-auth';
@@ -232,6 +239,7 @@ export const authOptions = {
 ```
 
 **Frontend:**
+
 ```typescript
 import { useSession } from 'next-auth/react';
 
@@ -240,12 +248,14 @@ const { data: session } = useSession();
 ```
 
 **Pros:**
+
 - Built-in session management (no manual token storage)
 - Easy to add OAuth providers (Google, GitHub, Twitter)
 - Automatic CSRF protection
 - Supports server-side session checks
 
 **Cons:**
+
 - Less control over JWT structure
 - Opinionated architecture
 - Harder to customize deeply
@@ -259,6 +269,7 @@ const { data: session } = useSession();
 #### Express + Vite
 
 **Endpoint Definition:**
+
 ```javascript
 // backend/routes/streams.js
 const express = require('express');
@@ -278,18 +289,21 @@ module.exports = router;
 ```
 
 **Mount in app:**
+
 ```javascript
 // backend/api/index.js
 app.use('/api/streams', streamsRoutes);
 ```
 
 **Pros:**
+
 - Explicit routing with Express Router
 - Full middleware control (rate limiting, validation, logging)
 - Easy to test with supertest
 - Traditional REST conventions
 
 **Cons:**
+
 - Separate deployment from frontend (CORS issues)
 - Need to manage API versioning manually
 - Cold starts on serverless can be slower
@@ -297,6 +311,7 @@ app.use('/api/streams', streamsRoutes);
 #### Next.js
 
 **API Route:**
+
 ```typescript
 // app/api/streams/route.ts
 import { getServerSession } from 'next-auth/next';
@@ -305,7 +320,7 @@ import { NextResponse } from 'next/server';
 export async function GET(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  
+
   const streams = await Stream.find({ userId: session.user.id });
   return NextResponse.json(streams);
 }
@@ -313,7 +328,7 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  
+
   const body = await req.json();
   const stream = await Stream.create({ ...body, userId: session.user.id });
   return NextResponse.json(stream, { status: 201 });
@@ -321,12 +336,14 @@ export async function POST(req: Request) {
 ```
 
 **Pros:**
+
 - Co-located with frontend (no CORS issues)
 - File-based routing (intuitive structure)
 - TypeScript support out of the box
 - Automatic serverless deployment on Vercel
 
 **Cons:**
+
 - Less explicit routing (file names = routes)
 - Harder to share API with non-Next.js clients
 - Middleware requires learning Next.js patterns
@@ -340,6 +357,7 @@ export async function POST(req: Request) {
 #### Express + Vite
 
 **Connection Pooling:**
+
 ```javascript
 // backend/config/database.js
 const mongoose = require('mongoose');
@@ -348,18 +366,19 @@ let cachedDb = null;
 
 async function connectDB() {
   if (cachedDb) return cachedDb;
-  
+
   const db = await mongoose.connect(process.env.MONGODB_URI, {
     bufferCommands: false,
     serverSelectionTimeoutMS: 5000,
   });
-  
+
   cachedDb = db;
   return db;
 }
 ```
 
 **Usage:**
+
 ```javascript
 // In each route
 const db = await connectDB();
@@ -369,6 +388,7 @@ const streams = await StreamSession.find({ userId: req.user.id });
 #### Next.js
 
 **Connection Caching:**
+
 ```typescript
 // lib/mongodb.ts
 import mongoose from 'mongoose';
@@ -377,11 +397,11 @@ const cached = (global as any).mongoose || { conn: null, promise: null };
 
 export async function connectToDatabase() {
   if (cached.conn) return cached.conn;
-  
+
   if (!cached.promise) {
     cached.promise = mongoose.connect(process.env.MONGODB_URI);
   }
-  
+
   cached.conn = await cached.promise;
   return cached.conn;
 }
@@ -398,6 +418,7 @@ export async function connectToDatabase() {
 #### Express + Vite
 
 **Dev Workflow:**
+
 ```bash
 # Terminal 1: Backend
 cd backend && npm run dev     # Runs on :5001
@@ -407,18 +428,21 @@ cd Frontend && npm run dev    # Runs on :5173
 ```
 
 **Build:**
+
 ```bash
 cd Frontend && npm run build
 # Deploy dist/ to GitHub Pages
 ```
 
 **Pros:**
+
 - Lightning-fast HMR with Vite
 - Separate frontend/backend deployments (can update independently)
 - Can use any frontend framework (React, Vue, Svelte)
 - Clear separation of concerns
 
 **Cons:**
+
 - Need to run two dev servers
 - CORS configuration required
 - Environment variable management across two projects
@@ -427,17 +451,20 @@ cd Frontend && npm run build
 #### Next.js
 
 **Dev Workflow:**
+
 ```bash
 npm run dev  # Everything runs on :3000
 ```
 
 **Build:**
+
 ```bash
 npm run build
 # Deploy entire app to Vercel
 ```
 
 **Pros:**
+
 - Single dev server (frontend + backend)
 - No CORS issues (same origin)
 - Server-side rendering for SEO
@@ -445,6 +472,7 @@ npm run build
 - Image optimization built-in
 
 **Cons:**
+
 - Slower HMR than Vite (improving with Turbopack)
 - Opinionated structure (harder to customize)
 - Locked into React (can't use Vue/Svelte)
@@ -459,6 +487,7 @@ npm run build
 #### Express + Vite
 
 **Backend (Vercel):**
+
 ```json
 // vercel.json
 {
@@ -479,21 +508,25 @@ npm run build
 ```
 
 **Frontend (GitHub Pages):**
+
 ```bash
 npm run build  # Creates Frontend/dist/
 git subtree push --prefix Frontend/dist origin gh-pages
 ```
 
 **Two deployments:**
+
 1. Backend → Vercel (pvabazaar-api.vercel.app)
 2. Frontend → GitHub Pages (pvabazaar.org)
 
 **Pros:**
+
 - Frontend on free GitHub Pages (unlimited bandwidth)
 - Backend scales independently
 - Can switch frontend CDN (Cloudflare, Netlify) easily
 
 **Cons:**
+
 - Two separate deployments to manage
 - Need to configure CORS
 - Environment variables in two places
@@ -501,21 +534,25 @@ git subtree push --prefix Frontend/dist origin gh-pages
 #### Next.js
 
 **Single Deployment (Vercel):**
+
 ```bash
 git push origin main
 # Vercel auto-deploys everything
 ```
 
 **One deployment:**
+
 - Everything → Vercel (pvabazaar.vercel.app)
 
 **Pros:**
+
 - Single command deployment
 - Automatic preview deployments (PRs)
 - Edge caching for static pages
 - Built-in analytics
 
 **Cons:**
+
 - Vendor lock-in to Vercel (though self-hostable)
 - Free tier limits (100GB bandwidth/month)
 - All frontend changes require full redeploy
@@ -529,6 +566,7 @@ git push origin main
 #### Express + Vite Implementation Has:
 
 ✅ **Decentralized Identity (DID)**
+
 - W3C-compliant DID generation (did:key method)
 - Ed25519 key pair generation
 - Public key verification
@@ -536,6 +574,7 @@ git push origin main
 - Verifiable credentials support
 
 ✅ **Custom Databases**
+
 - User-created databases ("PirateBay-like")
 - Flexible entry schema (files, links, media, mixed)
 - IPFS backup for entire database
@@ -543,17 +582,20 @@ git push origin main
 - Statistics tracking (totalEntries, totalSize)
 
 ✅ **Advanced IPFS Features**
+
 - Upload files/JSON
 - Pin/unpin management
 - Gateway URL generation
 - Metadata tagging
 
 ✅ **Streaming Platform Integration**
+
 - Twitch: OAuth, stream status, webhook validation
 - Livepeer: Decentralized streaming, transcoding profiles
 - Kick: Stub prepared
 
 ✅ **Rate Limiting**
+
 - express-rate-limit configured
 - 100 requests/15min general
 - 10 requests/15min for auth endpoints
@@ -561,12 +603,14 @@ git push origin main
 #### Next.js Implementation Has:
 
 ✅ **Core Features**
+
 - User authentication (NextAuth)
 - Stream management (CRUD)
 - Journal entries (CRUD)
 - Data export (JSON)
 
 🔜 **Not Yet Implemented** (can be added):
+
 - DID support (copy from Express version)
 - Custom databases (copy from Express version)
 - Advanced IPFS features
@@ -641,6 +685,7 @@ git push origin main
 5. ✅ **Your philosophy** - More control, less vendor lock-in aligns with "digital sovereignty"
 
 **Use Next.js for:**
+
 - Rapid prototypes
 - New community forks (easier for beginners)
 - SEO-driven marketing sites
@@ -660,11 +705,13 @@ pva-bazaar-app/
 ```
 
 **Same MongoDB database** - Both can share schemas:
+
 ```bash
 MONGODB_URI=mongodb+srv://...same-cluster.../pvabazaar
 ```
 
 **Why?**
+
 - Compare implementations
 - A/B test user experience
 - Offer both to community (let them choose)
@@ -674,16 +721,16 @@ MONGODB_URI=mongodb+srv://...same-cluster.../pvabazaar
 
 ## Conclusion
 
-| Criteria | Express + Vite | Next.js |
-|----------|---------------|---------|
-| **Production Readiness** | ✅ Deployed, tested | 🔜 Ready to deploy |
-| **Feature Completeness** | ✅ 100% Blueprint v1 | 🔜 70% (missing DID, Custom DBs) |
-| **Developer Experience** | ⭐⭐⭐ Fast (Vite), more setup | ⭐⭐⭐⭐ Faster setup, slower HMR |
-| **Deployment Simplicity** | ⭐⭐⭐ Two deployments | ⭐⭐⭐⭐⭐ One command |
-| **Flexibility** | ⭐⭐⭐⭐⭐ API-first | ⭐⭐⭐ Opinionated |
-| **SEO** | ⭐⭐ Client-side only | ⭐⭐⭐⭐⭐ SSR built-in |
-| **Community Adoption** | ⭐⭐⭐⭐ Familiar stack | ⭐⭐⭐⭐⭐ Trending |
-| **Long-term Maintenance** | ⭐⭐⭐⭐ More control | ⭐⭐⭐⭐ Less boilerplate |
+| Criteria                  | Express + Vite                 | Next.js                           |
+| ------------------------- | ------------------------------ | --------------------------------- |
+| **Production Readiness**  | ✅ Deployed, tested            | 🔜 Ready to deploy                |
+| **Feature Completeness**  | ✅ 100% Blueprint v1           | 🔜 70% (missing DID, Custom DBs)  |
+| **Developer Experience**  | ⭐⭐⭐ Fast (Vite), more setup | ⭐⭐⭐⭐ Faster setup, slower HMR |
+| **Deployment Simplicity** | ⭐⭐⭐ Two deployments         | ⭐⭐⭐⭐⭐ One command            |
+| **Flexibility**           | ⭐⭐⭐⭐⭐ API-first           | ⭐⭐⭐ Opinionated                |
+| **SEO**                   | ⭐⭐ Client-side only          | ⭐⭐⭐⭐⭐ SSR built-in           |
+| **Community Adoption**    | ⭐⭐⭐⭐ Familiar stack        | ⭐⭐⭐⭐⭐ Trending               |
+| **Long-term Maintenance** | ⭐⭐⭐⭐ More control          | ⭐⭐⭐⭐ Less boilerplate         |
 
 **Final Verdict:**
 
@@ -695,6 +742,7 @@ Both are excellent choices. The guide provides a **complete Next.js blueprint** 
 ---
 
 **Related Documentation:**
+
 - [COPY_PASTE_BUILD_GUIDE.md](COPY_PASTE_BUILD_GUIDE.md) - Full Next.js implementation guide
 - [BLUEPRINT_V1_README.md](BLUEPRINT_V1_README.md) - Express implementation overview
 - [QUICKSTART.md](QUICKSTART.md) - Express setup guide

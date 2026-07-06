@@ -10,7 +10,15 @@ import {
   Cell,
 } from 'recharts';
 
-const PLATFORM_COLORS = ['#26c6da', '#66bb6a', '#4dd0e1', '#81c784', '#26a69a', '#ff8a65', '#ba68c8'];
+const PLATFORM_COLORS = [
+  '#26c6da',
+  '#66bb6a',
+  '#4dd0e1',
+  '#81c784',
+  '#26a69a',
+  '#ff8a65',
+  '#ba68c8',
+];
 
 function formatUsd(v) {
   return new Intl.NumberFormat('en-US', {
@@ -39,7 +47,11 @@ export default function RoyaltyAnalyticsChart({ platformBreakdown }) {
               borderRadius: '8px',
             }}
             formatter={(value, name) => [
-              name === 'volume' ? formatUsd(value) : name === 'royalties' ? formatUsd(value) : value,
+              name === 'volume'
+                ? formatUsd(value)
+                : name === 'royalties'
+                  ? formatUsd(value)
+                  : value,
               name,
             ]}
           />

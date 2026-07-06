@@ -14,9 +14,8 @@ router.get('/stats', async (req, res) => {
     const refundedTransactions = (await Order.countDocuments({ paymentStatus: 'refunded' })) || 0;
     const successfulTransactions = Math.max(totalTransactions - refundedTransactions, 0);
     // Approximate satisfaction from successful transaction ratio until review model exists
-    const satisfactionRate = totalTransactions > 0
-      ? Math.round((successfulTransactions / totalTransactions) * 100)
-      : 95;
+    const satisfactionRate =
+      totalTransactions > 0 ? Math.round((successfulTransactions / totalTransactions) * 100) : 95;
     const totalSellers = await User.countDocuments({ role: 'seller' });
     res.json({
       ok: true,
@@ -38,7 +37,7 @@ router.get('/categories/counts', async (req, res) => {
     const data = {};
     for (const cat of categories) {
       data[cat] = await Artifact.countDocuments({
-        category: new RegExp(`^${  cat  }$`, 'i'),
+        category: new RegExp(`^${cat}$`, 'i'),
         status: 'published',
       });
     }

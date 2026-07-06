@@ -105,7 +105,9 @@ export function PromptModal({
       }
     >
       <form onSubmit={handleSubmit}>
-        {message && <p style={{ marginTop: 0, marginBottom: '1rem', lineHeight: 1.6 }}>{message}</p>}
+        {message && (
+          <p style={{ marginTop: 0, marginBottom: '1rem', lineHeight: 1.6 }}>{message}</p>
+        )}
         <input
           type={inputType}
           value={value}

@@ -164,7 +164,7 @@ async function submitForReview(submissionId, userId) {
   // Basic validation
   if (submission.completeness.overallScore < 40) {
     throw new Error(
-      `Submission incomplete (${submission.completeness.overallScore.toFixed(0)}% complete). Minimum 40% required.`
+      `Submission incomplete (${submission.completeness.overallScore.toFixed(0)}% complete). Minimum 40% required.`,
     );
   }
 
@@ -205,7 +205,10 @@ async function mintNFT(submissionId, userId) {
         { trait_type: 'Type', value: submission.objectType },
         { trait_type: 'Creator', value: submission.creatorInfo.name },
         { trait_type: 'Country', value: submission.creatorInfo.country },
-        { trait_type: 'Authenticity Score', value: submission.completeness.overallScore.toFixed(0) },
+        {
+          trait_type: 'Authenticity Score',
+          value: submission.completeness.overallScore.toFixed(0),
+        },
       ],
       provenance: {
         materialTruth: submission.materialTruth,

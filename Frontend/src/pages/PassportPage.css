@@ -35,8 +35,7 @@
 .passport-card {
   border: 1px solid var(--site-border-strong);
   border-radius: 16px;
-  background:
-    linear-gradient(135deg, var(--site-panel) 0%, var(--site-panel-soft) 100%);
+  background: linear-gradient(135deg, var(--site-panel) 0%, var(--site-panel-soft) 100%);
   padding: 1rem;
 }
 

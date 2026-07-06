@@ -12,9 +12,10 @@ export default function ErrorFallback({ error, resetError }) {
         <div className="errorFallback__icon">⚠</div>
         <h1 className="errorFallback__title">Something went wrong</h1>
         <p className="errorFallback__message">
-          We've been notified and will look into it. You can try reloading the page or return to the archive.
+          We've been notified and will look into it. You can try reloading the page or return to the
+          archive.
         </p>
-        
+
         {error && import.meta.env.MODE === 'development' && (
           <details className="errorFallback__details">
             <summary>Error details (dev only)</summary>
@@ -33,10 +34,7 @@ export default function ErrorFallback({ error, resetError }) {
           >
             Try again
           </button>
-          <a
-            href="/#/"
-            className="errorFallback__btn errorFallback__btn--secondary"
-          >
+          <a href="/#/" className="errorFallback__btn errorFallback__btn--secondary">
             Go to Archive
           </a>
         </div>

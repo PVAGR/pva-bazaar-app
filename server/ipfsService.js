@@ -2,7 +2,9 @@ const pinataSDK = require('@pinata/sdk');
 const stream = require('stream');
 
 function hasPinataCredentials() {
-  return Boolean(process.env.PINATA_JWT || (process.env.PINATA_API_KEY && process.env.PINATA_SECRET_KEY));
+  return Boolean(
+    process.env.PINATA_JWT || (process.env.PINATA_API_KEY && process.env.PINATA_SECRET_KEY),
+  );
 }
 
 function buildPinataClient() {

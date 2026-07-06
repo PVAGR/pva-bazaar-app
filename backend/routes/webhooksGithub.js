@@ -21,7 +21,9 @@ router.get('/github', (_req, res) => {
 });
 
 router.post('/github', (req, res) => {
-  const secret = String(process.env.GITHUB_APP_WEBHOOK_SECRET || process.env.GITHUB_WEBHOOK_SECRET || '').trim();
+  const secret = String(
+    process.env.GITHUB_APP_WEBHOOK_SECRET || process.env.GITHUB_WEBHOOK_SECRET || '',
+  ).trim();
   const signature = String(req.get('x-hub-signature-256') || '').trim();
   const event = String(req.get('x-github-event') || 'unknown').trim();
   const delivery = String(req.get('x-github-delivery') || '').trim();

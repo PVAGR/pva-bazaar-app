@@ -29,7 +29,9 @@ class StreamingService {
     if (this.twitchAccessToken) return this.twitchAccessToken;
 
     if (!this.twitchClientId || !this.twitchClientSecret) {
-      throw new Error('Twitch credentials not configured. Set TWITCH_CLIENT_ID and TWITCH_CLIENT_SECRET.');
+      throw new Error(
+        'Twitch credentials not configured. Set TWITCH_CLIENT_ID and TWITCH_CLIENT_SECRET.',
+      );
     }
 
     try {
@@ -62,7 +64,7 @@ class StreamingService {
         params: { user_login: username },
         headers: {
           'Client-ID': this.twitchClientId,
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -107,10 +109,10 @@ class StreamingService {
         },
         {
           headers: {
-            'Authorization': `Bearer ${this.livepeerApiKey}`,
+            Authorization: `Bearer ${this.livepeerApiKey}`,
             'Content-Type': 'application/json',
           },
-        }
+        },
       );
 
       const stream = response.data;
@@ -140,7 +142,7 @@ class StreamingService {
     try {
       const response = await axios.get(`${this.livepeerBaseUrl}/stream/${streamId}`, {
         headers: {
-          'Authorization': `Bearer ${this.livepeerApiKey}`,
+          Authorization: `Bearer ${this.livepeerApiKey}`,
         },
       });
 
@@ -174,7 +176,7 @@ class StreamingService {
     }
 
     const message = messageId + timestamp + body;
-    const expectedSignature = `sha256=${  crypto
+    const expectedSignature = `sha256=${crypto
       .createHmac('sha256', secret)
       .update(message)
       .digest('hex')}`;

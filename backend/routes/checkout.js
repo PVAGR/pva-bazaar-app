@@ -1,19 +1,19 @@
-const { reserveOne, finalizeSale, releaseReservation } = require("../lib/itemInventory");
-const { v4: uuidv4 } = require("uuid");
+const { reserveOne, finalizeSale, releaseReservation } = require('../lib/itemInventory');
+const { v4: uuidv4 } = require('uuid');
 const crypto = require('crypto');
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const stripe = require("../lib/stripeClient");
+const stripe = require('../lib/stripeClient');
 const jwt = require('jsonwebtoken');
-const Artifact = require("../models/Artifact");
-const { toPublicItem } = require("../lib/itemNormalize");
-const Order = require("../models/Order");
+const Artifact = require('../models/Artifact');
+const { toPublicItem } = require('../lib/itemNormalize');
+const Order = require('../models/Order');
 const VerificationResult = require('../models/VerificationResult');
 const { createTransactionEvent, dispatchToOpenClaw } = require('../utils/openclaw-events');
 const { inspectTransaction, getExplorerTxUrl, normalizeNetwork } = require('../utils/blockchain');
 const { completeSaleAcrossChannels } = require('../service/omnichannelSyncService');
 
-const PUBLIC_SITE_URL = process.env.PUBLIC_SITE_URL || "https://pvabazaar.org";
+const PUBLIC_SITE_URL = process.env.PUBLIC_SITE_URL || 'https://pvabazaar.org';
 
 function extractUserIdFromAuth(req) {
   try {
@@ -35,7 +35,7 @@ function getCryptoQuoteRateUsdPerEth() {
 function quoteWeiFromCents(priceCents, usdPerEth) {
   const cents = BigInt(Math.max(0, Number(priceCents || 0)));
   const rateScaled = BigInt(Math.max(1, Math.round(Number(usdPerEth || 0) * 100)));
-  const wei = (cents * (10n ** 18n)) / rateScaled;
+  const wei = (cents * 10n ** 18n) / rateScaled;
   return wei > 0n ? wei : 1n;
 }
 
@@ -60,7 +60,9 @@ function isMarkedSold(artifact) {
 // Read-only checkout settings so UI can display destination wallet before any reservation.
 router.get('/crypto/config', async (_req, res) => {
   try {
-    const recipientAddress = trimAddress(process.env.CRYPTO_TREASURY_WALLET || process.env.RECEIPT_TREASURY_WALLET);
+    const recipientAddress = trimAddress(
+      process.env.CRYPTO_TREASURY_WALLET || process.env.RECEIPT_TREASURY_WALLET,
+    );
     const network = normalizeNetwork(process.env.CRYPTO_NETWORK || 'base');
     const chainId = Number(process.env.CRYPTO_CHAIN_ID || 8453);
     const quoteUsdPerEth = getCryptoQuoteRateUsdPerEth();
@@ -79,22 +81,25 @@ router.get('/crypto/config', async (_req, res) => {
 });
 
 // POST /api/checkout/create-session
-router.post("/create-session", async (req, res) => {
+router.post('/create-session', async (req, res) => {
   try {
     const buyerId = extractUserIdFromAuth(req);
     const { itemId } = req.body;
-    if (!itemId) return res.status(400).json({ ok: false, error: "Missing itemId" });
+    if (!itemId) return res.status(400).json({ ok: false, error: 'Missing itemId' });
     const artifact = await Artifact.findOne({ $or: [{ _id: itemId }, { slug: itemId }] });
-    if (!artifact) return res.status(404).json({ ok: false, error: "Item not found" });
-    if (artifact.status !== "published") return res.status(403).json({ ok: false, error: "Item not available for purchase" });
-    if (isMarkedSold(artifact)) return res.status(409).json({ ok: false, error: 'item_already_sold' });
+    if (!artifact) return res.status(404).json({ ok: false, error: 'Item not found' });
+    if (artifact.status !== 'published')
+      return res.status(403).json({ ok: false, error: 'Item not available for purchase' });
+    if (isMarkedSold(artifact))
+      return res.status(409).json({ ok: false, error: 'item_already_sold' });
     const item = toPublicItem(artifact);
-    if (!item.priceCents || !item.currency) return res.status(400).json({ ok: false, error: "Item missing price/currency" });
+    if (!item.priceCents || !item.currency)
+      return res.status(400).json({ ok: false, error: 'Item missing price/currency' });
 
     // Reserve inventory
     const reservationId = uuidv4();
     const reserve = await reserveOne(item.id, reservationId);
-    if (!reserve.ok) return res.status(409).json({ ok: false, error: "sold_out" });
+    if (!reserve.ok) return res.status(409).json({ ok: false, error: 'sold_out' });
 
     // Create Order (pending)
     const order = await Order.create({
@@ -108,7 +113,7 @@ router.post("/create-session", async (req, res) => {
         media0: item.media && item.media.length ? item.media[0] : undefined,
       },
       stripeSessionId: null, // will update after session creation
-      paymentStatus: "pending",
+      paymentStatus: 'pending',
       isLocked: false,
       amountTotal: item.priceCents,
       currency: item.currency,
@@ -118,8 +123,8 @@ router.post("/create-session", async (req, res) => {
     let session;
     try {
       session = await stripe.checkout.sessions.create({
-        mode: "payment",
-        payment_method_types: ["card"],
+        mode: 'payment',
+        payment_method_types: ['card'],
         line_items: [
           {
             price_data: {
@@ -140,8 +145,8 @@ router.post("/create-session", async (req, res) => {
         metadata: {
           orderId: order._id.toString(),
           itemId: item.id,
-          itemSlug: item.slug || "",
-          itemName: item.name || "",
+          itemSlug: item.slug || '',
+          itemName: item.name || '',
           reservationId,
         },
       });
@@ -162,19 +167,25 @@ router.post("/create-session", async (req, res) => {
     await order.save();
 
     // Dispatch transaction created event (non-blocking)
-    dispatchToOpenClaw(createTransactionEvent('created', {
-      _id: order._id,
-      artifactId: item.id,
-      amount: item.priceCents,
-      currency: item.currency,
-      status: order.paymentStatus,
-    }, {
-      itemId: item.id,
-      itemName: item.name,
-      amountCents: item.priceCents,
-      currency: item.currency,
-      sessionId: session.id
-    }));
+    dispatchToOpenClaw(
+      createTransactionEvent(
+        'created',
+        {
+          _id: order._id,
+          artifactId: item.id,
+          amount: item.priceCents,
+          currency: item.currency,
+          status: order.paymentStatus,
+        },
+        {
+          itemId: item.id,
+          itemName: item.name,
+          amountCents: item.priceCents,
+          currency: item.currency,
+          sessionId: session.id,
+        },
+      ),
+    );
 
     return res.json({ ok: true, url: session.url, orderId: order._id.toString() });
   } catch (err) {
@@ -202,11 +213,21 @@ router.post('/cancel-session', async (req, res) => {
       if (reservationId) {
         await releaseReservation(reservationId).catch(() => {});
       }
-      return res.json({ ok: true, cancelled: true, released: Boolean(reservationId), orderId: null });
+      return res.json({
+        ok: true,
+        cancelled: true,
+        released: Boolean(reservationId),
+        orderId: null,
+      });
     }
 
     if (order.paymentStatus === 'paid' || order.paymentStatus === 'refunded') {
-      return res.json({ ok: true, cancelled: false, alreadyFinalized: true, orderId: String(order._id) });
+      return res.json({
+        ok: true,
+        cancelled: false,
+        alreadyFinalized: true,
+        orderId: String(order._id),
+      });
     }
 
     if (order.reservationId) {
@@ -230,12 +251,12 @@ router.post('/cancel-session', async (req, res) => {
 });
 
 // GET /api/checkout/session?session_id=...
-router.get("/session", async (req, res) => {
+router.get('/session', async (req, res) => {
   try {
     const { session_id } = req.query;
-    if (!session_id) return res.status(400).json({ ok: false, error: "Missing session_id" });
+    if (!session_id) return res.status(400).json({ ok: false, error: 'Missing session_id' });
     const session = await stripe.checkout.sessions.retrieve(session_id);
-    if (!session) return res.status(404).json({ ok: false, error: "Session not found" });
+    if (!session) return res.status(404).json({ ok: false, error: 'Session not found' });
     return res.json({
       ok: true,
       session: {
@@ -276,10 +297,7 @@ router.post('/finalize-session', async (req, res) => {
 
     const orderId = session.client_reference_id || session.metadata?.orderId;
     const order = await Order.findOne({
-      $or: [
-        ...(orderId ? [{ _id: orderId }] : []),
-        { stripeSessionId: session.id },
-      ],
+      $or: [...(orderId ? [{ _id: orderId }] : []), { stripeSessionId: session.id }],
     });
 
     if (!order) return res.status(404).json({ ok: false, error: 'Order not found for session' });
@@ -376,9 +394,13 @@ router.post('/crypto/prepare', async (req, res) => {
       return res.status(400).json({ ok: false, error: 'Item missing price/currency' });
     }
 
-    const treasuryWallet = trimAddress(process.env.CRYPTO_TREASURY_WALLET || process.env.RECEIPT_TREASURY_WALLET);
+    const treasuryWallet = trimAddress(
+      process.env.CRYPTO_TREASURY_WALLET || process.env.RECEIPT_TREASURY_WALLET,
+    );
     if (!treasuryWallet) {
-      return res.status(503).json({ ok: false, error: 'Crypto checkout unavailable: treasury wallet not configured' });
+      return res
+        .status(503)
+        .json({ ok: false, error: 'Crypto checkout unavailable: treasury wallet not configured' });
     }
 
     const reservationId = uuidv4();
@@ -461,7 +483,9 @@ router.post('/crypto/confirm', async (req, res) => {
       return res.status(404).json({ ok: false, error: 'Transaction not found' });
     }
     if (tx.status === 'pending') {
-      return res.status(409).json({ ok: false, error: 'Transaction is still pending confirmation' });
+      return res
+        .status(409)
+        .json({ ok: false, error: 'Transaction is still pending confirmation' });
     }
     if (tx.status !== 'confirmed') {
       if (order.reservationId) await releaseReservation(order.reservationId);
@@ -470,25 +494,35 @@ router.post('/crypto/confirm', async (req, res) => {
       return res.status(400).json({ ok: false, error: 'Transaction failed on-chain' });
     }
 
-    const expectedReceiver = trimAddress(process.env.CRYPTO_TREASURY_WALLET || process.env.RECEIPT_TREASURY_WALLET).toLowerCase();
+    const expectedReceiver = trimAddress(
+      process.env.CRYPTO_TREASURY_WALLET || process.env.RECEIPT_TREASURY_WALLET,
+    ).toLowerCase();
     if (expectedReceiver && String(tx.toAddress || '').toLowerCase() !== expectedReceiver) {
-      return res.status(400).json({ ok: false, error: 'Transaction recipient does not match treasury wallet' });
+      return res
+        .status(400)
+        .json({ ok: false, error: 'Transaction recipient does not match treasury wallet' });
     }
 
     const expectedChainId = Number(order?.crypto?.chainId || process.env.CRYPTO_CHAIN_ID || 8453);
     if (Number.isFinite(expectedChainId) && tx.chainId && Number(tx.chainId) !== expectedChainId) {
-      return res.status(400).json({ ok: false, error: 'Transaction chain does not match expected checkout network' });
+      return res
+        .status(400)
+        .json({ ok: false, error: 'Transaction chain does not match expected checkout network' });
     }
 
     const providedBuyerWallet = trimAddress(buyerWallet).toLowerCase();
     if (providedBuyerWallet && String(tx.fromAddress || '').toLowerCase() !== providedBuyerWallet) {
-      return res.status(400).json({ ok: false, error: 'Transaction sender does not match buyer wallet' });
+      return res
+        .status(400)
+        .json({ ok: false, error: 'Transaction sender does not match buyer wallet' });
     }
 
     const expectedWei = safeBigInt(order?.crypto?.expectedAmountWei, 0n);
     const paidWei = safeBigInt(tx?.valueWei, 0n);
     if (expectedWei > 0n && paidWei < expectedWei) {
-      return res.status(400).json({ ok: false, error: 'Transaction value is lower than expected quote amount' });
+      return res
+        .status(400)
+        .json({ ok: false, error: 'Transaction value is lower than expected quote amount' });
     }
 
     if (order.reservationId) {
@@ -503,10 +537,14 @@ router.post('/crypto/confirm', async (req, res) => {
       txHash,
       paidAmountWei: tx.valueWei || '',
       buyerWallet: buyerWallet || tx.fromAddress || order?.crypto?.buyerWallet || '',
-      explorerUrl: getExplorerTxUrl(normalizeNetwork(process.env.CRYPTO_NETWORK || order?.crypto?.network || 'base'), txHash),
+      explorerUrl: getExplorerTxUrl(
+        normalizeNetwork(process.env.CRYPTO_NETWORK || order?.crypto?.network || 'base'),
+        txHash,
+      ),
       confirmedAt: new Date(),
     };
-    order.adminNotes = `${order.adminNotes || ''}\ncrypto_confirmed tx=${txHash} from=${tx.fromAddress} to=${tx.toAddress}`.trim();
+    order.adminNotes =
+      `${order.adminNotes || ''}\ncrypto_confirmed tx=${txHash} from=${tx.fromAddress} to=${tx.toAddress}`.trim();
     await order.save();
 
     const itemDoc = await Artifact.findById(order.itemId);
@@ -542,21 +580,25 @@ router.post('/crypto/confirm', async (req, res) => {
 
 // GET /api/checkout/download?order_id=...&token=...
 // Validates token and redirects to digital download URL (or returns JSON if no URL configured).
-router.get("/download", async (req, res) => {
+router.get('/download', async (req, res) => {
   try {
     const { order_id, token } = req.query;
-    if (!order_id || !token) return res.status(400).json({ ok: false, error: "Missing order_id or token" });
+    if (!order_id || !token)
+      return res.status(400).json({ ok: false, error: 'Missing order_id or token' });
     const order = await Order.findOne({ _id: order_id, downloadToken: token });
-    if (!order) return res.status(404).json({ ok: false, error: "Invalid or expired download link" });
-    if (!order.downloadGrantedAt) return res.status(403).json({ ok: false, error: "Download not granted for this order" });
-    const artifact = await Artifact.findById(order.itemId).select("downloadUrl name").lean();
+    if (!order)
+      return res.status(404).json({ ok: false, error: 'Invalid or expired download link' });
+    if (!order.downloadGrantedAt)
+      return res.status(403).json({ ok: false, error: 'Download not granted for this order' });
+    const artifact = await Artifact.findById(order.itemId).select('downloadUrl name').lean();
     const downloadUrl = artifact?.downloadUrl;
     if (downloadUrl) {
       return res.redirect(302, downloadUrl);
     }
     return res.json({
       ok: true,
-      message: "Download access confirmed. No file URL configured for this item; you may receive it by email or physical shipment.",
+      message:
+        'Download access confirmed. No file URL configured for this item; you may receive it by email or physical shipment.',
       itemName: order.itemSnapshot?.name,
     });
   } catch (err) {

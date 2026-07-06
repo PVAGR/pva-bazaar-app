@@ -1,7 +1,9 @@
 const crypto = require('crypto');
 
 function normalizeString(value) {
-  return String(value || '').trim().toLowerCase();
+  return String(value || '')
+    .trim()
+    .toLowerCase();
 }
 
 function normalizeStringArray(values) {
@@ -13,7 +15,10 @@ function normalizeStringArray(values) {
 }
 
 function sha256Hex(input) {
-  return crypto.createHash('sha256').update(String(input || ''), 'utf8').digest('hex');
+  return crypto
+    .createHash('sha256')
+    .update(String(input || ''), 'utf8')
+    .digest('hex');
 }
 
 function sha256BufferHex(inputBuffer) {
@@ -73,8 +78,7 @@ function hashSingleImageEntry(entry) {
       if (buffer.length > 0) {
         return { hash: sha256BufferHex(buffer), mode: 'base64' };
       }
-    } catch (_) {
-    }
+    } catch (_) {}
   }
 
   return { hash: sha256Hex(value), mode: 'raw' };
@@ -82,9 +86,7 @@ function hashSingleImageEntry(entry) {
 
 function hashImageSet(payload = {}) {
   const entries = normalizeImageEntries(payload);
-  const perImage = entries
-    .map((entry) => hashSingleImageEntry(entry))
-    .filter((row) => row.hash);
+  const perImage = entries.map((entry) => hashSingleImageEntry(entry)).filter((row) => row.hash);
   const imageHashes = perImage.map((row) => row.hash).sort();
   const dominantMode = perImage.length > 0 ? perImage[0].mode : 'none';
   const imageHash = sha256Hex(imageHashes.join('|') || 'no-image');
@@ -195,7 +197,13 @@ async function findDuplicateCandidates(ArtifactModel, provenance, limit = 8) {
       slug: row.slug || '',
       title: row.title || row.name || 'Untitled',
       status: row.status || '',
-      matchType: exactCombined ? 'exact' : exactImage ? 'image' : exactMetadata ? 'metadata' : 'possible',
+      matchType: exactCombined
+        ? 'exact'
+        : exactImage
+          ? 'image'
+          : exactMetadata
+            ? 'metadata'
+            : 'possible',
       score: exactCombined ? 100 : exactImage ? 85 : exactMetadata ? 70 : 50,
       createdAt: row.createdAt,
       combinedHash: row?.provenance?.combinedHash || '',

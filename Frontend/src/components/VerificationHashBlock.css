@@ -16,13 +16,15 @@
   gap: 0.5rem;
   width: 100%;
   padding: 0.5rem 0.75rem;
-  background: var(--alchemical-surface, rgba(255,255,255,0.06));
-  border: 1px solid var(--alchemical-border, rgba(212,175,55,0.2));
+  background: var(--alchemical-surface, rgba(255, 255, 255, 0.06));
+  border: 1px solid var(--alchemical-border, rgba(212, 175, 55, 0.2));
   border-radius: 6px;
   cursor: pointer;
   font-family: inherit;
   color: var(--alchemical-text, #e0e0e0);
-  transition: border-color 0.2s, background 0.2s;
+  transition:
+    border-color 0.2s,
+    background 0.2s;
 }
 
 .verification-hash-block__trigger:hover,
@@ -30,7 +32,7 @@
   outline: 2px solid var(--alchemical-gold, #d4af37);
   outline-offset: 2px;
   border-color: var(--alchemical-gold, #d4af37);
-  background: var(--alchemical-surface-hover, rgba(212,175,55,0.08));
+  background: var(--alchemical-surface-hover, rgba(212, 175, 55, 0.08));
 }
 
 .verification-hash-block__partial {
@@ -50,8 +52,8 @@
   overflow: hidden;
   margin-top: 0.35rem;
   padding: 0.6rem 0.75rem;
-  background: var(--alchemical-surface, rgba(0,0,0,0.2));
-  border: 1px solid var(--alchemical-border, rgba(212,175,55,0.15));
+  background: var(--alchemical-surface, rgba(0, 0, 0, 0.2));
+  border: 1px solid var(--alchemical-border, rgba(212, 175, 55, 0.15));
   border-radius: 6px;
 }
 

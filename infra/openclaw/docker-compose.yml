@@ -4,17 +4,17 @@ services:
     container_name: openclaw-gateway
     restart: unless-stopped
     ports:
-      - "${OPENCLAW_PORT:-18789}:18789"
+      - '${OPENCLAW_PORT:-18789}:18789'
     environment:
       OPENCLAW_GATEWAY_BIND: ${OPENCLAW_GATEWAY_BIND:-lan}
-      OPENCLAW_GATEWAY_PORT: "18789"
+      OPENCLAW_GATEWAY_PORT: '18789'
       OPENCLAW_HOME: /home/node/.openclaw
       OPENCLAW_CONFIG_PATH: /home/node/.openclaw/openclaw.json
     volumes:
       - ./data/openclaw:/home/node/.openclaw
       - ./data/workspace:/home/node/.openclaw/workspace
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:18789/healthz >/dev/null 2>&1 || exit 1"]
+      test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1:18789/healthz >/dev/null 2>&1 || exit 1']
       interval: 30s
       timeout: 10s
       retries: 5
@@ -26,7 +26,7 @@ services:
       dockerfile: Dockerfile
     container_name: pva-openclaw-worker
     restart: unless-stopped
-    command: ["node", "scripts/openclaw-queue-worker.js"]
+    command: ['node', 'scripts/openclaw-queue-worker.js']
     env_file:
       - ../../backend/.env
     environment:

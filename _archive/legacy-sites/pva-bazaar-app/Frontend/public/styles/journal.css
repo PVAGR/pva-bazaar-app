@@ -2,30 +2,30 @@ Here are the contents for the file `Frontend/public/styles/journal.css`:
 
 /* Journal specific styles */
 .journal-container {
-    padding: 20px;
-    background-color: #f9f9f9;
+  padding: 20px;
+  background-color: #f9f9f9;
 }
 
 .journal-entry {
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    margin-bottom: 15px;
-    padding: 15px;
-    background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  margin-bottom: 15px;
+  padding: 15px;
+  background-color: #fff;
 }
 
 .journal-title {
-    font-size: 1.5em;
-    color: #333;
+  font-size: 1.5em;
+  color: #333;
 }
 
 .journal-date {
-    font-size: 0.9em;
-    color: #777;
+  font-size: 0.9em;
+  color: #777;
 }
 
 .journal-content {
-    margin-top: 10px;
-    font-size: 1em;
-    color: #555;
+  margin-top: 10px;
+  font-size: 1em;
+  color: #555;
 }

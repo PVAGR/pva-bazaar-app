@@ -15,9 +15,9 @@
 .tab-description {
   color: var(--site-text-dim, #aaa);
   margin: 0;
-.market-stat.warning strong {
-  color: var(--site-danger-text, #ff8a80);
-}
+  .market-stat.warning strong {
+    color: var(--site-danger-text, #ff8a80);
+  }
   font-size: 0.95rem;
 }
 
@@ -40,53 +40,53 @@
 .marketplace-ops-row .submit-btn {
   margin-top: 0;
   padding: 10px 16px;
-.ops-controls {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
+  .ops-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
 
-.ops-limit {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--site-text-dim, #aaa);
-  font-size: 0.84rem;
-}
+  .ops-limit {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--site-text-dim, #aaa);
+    font-size: 0.84rem;
+  }
 
-.ops-limit input {
-  width: 78px;
-  background: var(--site-panel, rgba(255, 255, 255, 0.06));
-  border: 1px solid var(--site-border, rgba(255, 255, 255, 0.1));
-  border-radius: 7px;
-  color: var(--site-text, #fff);
-  padding: 6px 8px;
-}
+  .ops-limit input {
+    width: 78px;
+    background: var(--site-panel, rgba(255, 255, 255, 0.06));
+    border: 1px solid var(--site-border, rgba(255, 255, 255, 0.1));
+    border-radius: 7px;
+    color: var(--site-text, #fff);
+    padding: 6px 8px;
+  }
 
-.ops-channels {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
+  .ops-channels {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
 
-.ops-check {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  border: 1px solid var(--site-border, rgba(255, 255, 255, 0.1));
-  border-radius: 999px;
-  padding: 4px 10px;
-  color: var(--site-text, #fff);
-  font-size: 0.82rem;
-  text-transform: capitalize;
-  background: var(--site-panel-soft, rgba(255, 255, 255, 0.03));
-}
+  .ops-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    border: 1px solid var(--site-border, rgba(255, 255, 255, 0.1));
+    border-radius: 999px;
+    padding: 4px 10px;
+    color: var(--site-text, #fff);
+    font-size: 0.82rem;
+    text-transform: capitalize;
+    background: var(--site-panel-soft, rgba(255, 255, 255, 0.03));
+  }
 
-.ops-check input {
-  accent-color: var(--site-accent, #00d9ff);
-}
+  .ops-check input {
+    accent-color: var(--site-accent, #00d9ff);
+  }
 }
 
 .market-stat {

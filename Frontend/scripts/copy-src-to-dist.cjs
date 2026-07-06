@@ -166,7 +166,9 @@ if (typeof apiBaseUrl === 'string' && apiBaseUrl.length > 0) {
     console.log(`WROTE canonical api-base.json to ${target}`);
   }
 } else {
-  console.warn('WARNING: live-map.json missing urls.apiBase; canonical api-base.json not regenerated');
+  console.warn(
+    'WARNING: live-map.json missing urls.apiBase; canonical api-base.json not regenerated',
+  );
 }
 
 // Skip copying organization/marketplace apps to ensure journal-only deploy

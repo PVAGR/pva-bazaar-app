@@ -5,14 +5,14 @@ import { connectToDatabase } from '@/lib/mongodb';
 import { User } from '@/models/User';
 
 declare module 'next-auth' {
-    interface Session {
-        user: {
-            id: string;
-            name: string;
-            email: string;
-            image?: string;
-        }
-    }
+  interface Session {
+    user: {
+      id: string;
+      name: string;
+      email: string;
+      image?: string;
+    };
+  }
 }
 
 export const authOptions: NextAuthOptions = {

@@ -7,6 +7,7 @@
 ## ✅ CURRENT SETUP (No New Projects Created)
 
 You have:
+
 - **Frontend**: GitHub Pages (automatic deployment)
 - **Backend**: Vercel `pva-backend-api` (automatic deployment)
 - **Repository**: GitHub (PVAGR/pva-bazaar-app)
@@ -19,12 +20,14 @@ You have:
 These are common VS Code extensions that could help. **I will NOT install any without asking.**
 
 ### Documentation & Notes
+
 - **Markdown All in One** - Better markdown editing
   - Publisher: Yu Zhang
   - ID: `yzhang.markdown-all-in-one`
   - Use for: Writing `.md` files more easily
 
 ### API & Backend Development
+
 - **REST Client** - Test API endpoints directly in VS Code
   - Publisher: Huachao Mao
   - ID: `humao.rest-client`
@@ -36,12 +39,14 @@ These are common VS Code extensions that could help. **I will NOT install any wi
   - Use for: Visual API testing
 
 ### Git & GitHub
+
 - **GitHub Pull Requests and Issues** - Manage PRs in VS Code
   - Publisher: GitHub
   - ID: `GitHub.vscode-pull-request-github`
   - Use for: Code reviews without leaving VS Code
 
 ### Frontend Development
+
 - **Vite** - Vite syntax highlighting
   - Publisher: Anthony Fu
   - ID: `antfu.vite`
@@ -53,6 +58,7 @@ These are common VS Code extensions that could help. **I will NOT install any wi
   - Use for: Faster component writing
 
 ### Debugging & Testing
+
 - **Debugger for Chrome** - Debug frontend in Chrome from VS Code
   - Publisher: Microsoft
   - ID: `msjsdiag.debugger-for-chrome`
@@ -64,6 +70,7 @@ These are common VS Code extensions that could help. **I will NOT install any wi
   - Use for: Run tests without terminal
 
 ### Code Quality
+
 - **ESLint** - Code linting (if not already installed)
   - Publisher: Microsoft
   - ID: `dbaeumer.vscode-eslint`
@@ -79,6 +86,7 @@ These are common VS Code extensions that could help. **I will NOT install any wi
 ## 🔍 HOW TO IDENTIFY WHAT'S INSTALLED
 
 To see what extensions you currently have:
+
 1. Open VS Code
 2. Click Extensions icon (left sidebar)
 3. See "Installed" tab
@@ -107,10 +115,12 @@ To see what extensions you currently have:
 Based on your project:
 
 ### You MIGHT want:
+
 1. **REST Client** - To easily test your backend API endpoints
 2. **Markdown All in One** - Since we're using lots of `.md` documentation
 
 ### You PROBABLY DON'T need:
+
 - Vercel extensions (automatic)
 - GitHub Copilot (you have me!)
 - Custom scaffolding tools (monorepo is already set up)
@@ -120,6 +130,7 @@ Based on your project:
 ## 🎯 NEXT STEPS
 
 Tell me:
+
 1. What specific tasks do you find frustrating in VS Code?
 2. Do you want to test APIs directly from the editor? (REST Client)
 3. Do you want better markdown editing? (Markdown All in One)

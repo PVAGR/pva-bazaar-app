@@ -1,6 +1,6 @@
 /**
  * Prometheus Metrics Exporter for OpenClaw
- * 
+ *
  * Exposes OpenClaw health metrics in Prometheus format
  * Endpoint: GET /api/openclaw/metrics
  */
@@ -33,7 +33,7 @@ function readLastLines(filePath, maxLines = 200) {
 
   const lines = raw
     .split(/\r?\n/)
-    .map(line => line.trim())
+    .map((line) => line.trim())
     .filter(Boolean);
 
   if (lines.length <= maxLines) {
@@ -45,21 +45,21 @@ function readLastLines(filePath, maxLines = 200) {
 
 function getOpenClawMetrics() {
   const { logPath, alertPath } = resolveWatchdogPaths();
-  
+
   // Check configuration
   const webhookUrl = process.env.OPENCLAW_WEBHOOK_URL || '';
   const gatewayUrl = process.env.OPENCLAW_GATEWAY_URL || '';
   const configured = webhookUrl || gatewayUrl ? 1 : 0;
-  
+
   // Read logs
   const logLines = readLastLines(logPath, 400);
   const alertLines = readLastLines(alertPath, 120);
-  
+
   // Count metrics
-  const errorCount = logLines.filter(line => line.includes('[ERROR]')).length;
-  const warnCount = logLines.filter(line => line.includes('[WARN]')).length;
+  const errorCount = logLines.filter((line) => line.includes('[ERROR]')).length;
+  const warnCount = logLines.filter((line) => line.includes('[WARN]')).length;
   const alertCount = alertLines.length;
-  
+
   // Determine health state
   let healthState = 0; // unknown
   if (logLines.length > 0) {
@@ -71,7 +71,7 @@ function getOpenClawMetrics() {
       healthState = 1; // healthy
     }
   }
-  
+
   // Parse latest timestamp
   let lastEventTimestamp = 0;
   for (let i = logLines.length - 1; i >= 0; i--) {
@@ -85,7 +85,7 @@ function getOpenClawMetrics() {
       }
     }
   }
-  
+
   return {
     configured,
     healthState,
@@ -102,7 +102,7 @@ function getOpenClawMetrics() {
 router.get('/metrics', adminSession, (req, res) => {
   try {
     const metrics = getOpenClawMetrics();
-    
+
     // Format in Prometheus exposition format
     const prometheusOutput = `# HELP openclaw_configured Whether OpenClaw is configured
 # TYPE openclaw_configured gauge

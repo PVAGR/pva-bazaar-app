@@ -35,9 +35,11 @@ const journalEntrySchema = new mongoose.Schema({
     type: String, // IPFS CID if user wants to backup journal entry
   },
   // Metadata
-  tags: [{
-    type: String,
-  }],
+  tags: [
+    {
+      type: String,
+    },
+  ],
   mood: {
     type: String, // e.g., 'reflective', 'uplifting', 'vulnerable'
   },

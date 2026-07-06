@@ -5,15 +5,15 @@ const conversationThreadSchema = new mongoose.Schema(
     // Conversation metadata
     title: { type: String, default: 'Conversation with Creator Agent' },
     description: { type: String, default: '' },
-    
+
     // Ownership & access
     creatorId: { type: String, required: true }, // who owns this conversation
     participantId: { type: String, required: true }, // who is talking to the agent
-    
+
     // Agent personality
     agentPersona: {
       name: { type: String, default: 'PVA Guardian' },
-      role: { type: String, default: 'Creator\'s Agent & Guide' },
+      role: { type: String, default: "Creator's Agent & Guide" },
       context: { type: String, default: '' }, // Custom personality context
     },
 
@@ -61,7 +61,7 @@ const conversationThreadSchema = new mongoose.Schema(
   {
     timestamps: true,
     collection: 'conversation_threads',
-  }
+  },
 );
 
 // Indexes

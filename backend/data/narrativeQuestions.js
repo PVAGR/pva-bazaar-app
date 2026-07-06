@@ -26,17 +26,17 @@ const NARRATIVE_ENJOYMENT_QUESTIONS = [
       {
         key: '2',
         value: 2,
-        text: 'I\'d enjoy parts of it, but I\'d want someone to appreciate my work afterward.',
+        text: "I'd enjoy parts of it, but I'd want someone to appreciate my work afterward.",
       },
       {
         key: '3',
         value: 3,
-        text: 'It\'s fine, but other things energize me more.',
+        text: "It's fine, but other things energize me more.",
       },
       {
         key: '4',
         value: 4,
-        text: 'I\'d rather work on something bigger with implications.',
+        text: "I'd rather work on something bigger with implications.",
       },
       {
         key: '5',
@@ -49,7 +49,7 @@ const NARRATIVE_ENJOYMENT_QUESTIONS = [
   {
     id: 'q2',
     prompt:
-      'You notice something doesn\'t quite add up. A pattern, a data inconsistency, a logical gap. You become obsessed with understanding *why*. You follow threads for weeks, hypothesize, refine your theory. Finally, all pieces click and you understand something most people are blind to. How alive does that moment feel?',
+      "You notice something doesn't quite add up. A pattern, a data inconsistency, a logical gap. You become obsessed with understanding *why*. You follow threads for weeks, hypothesize, refine your theory. Finally, all pieces click and you understand something most people are blind to. How alive does that moment feel?",
     axis: 'SN',
     scale: 'likert',
     section: 'enjoyment',
@@ -62,7 +62,7 @@ const NARRATIVE_ENJOYMENT_QUESTIONS = [
       {
         key: '1',
         value: 1,
-        text: 'That\'s when I feel most alive. The chase matters as much as the answer.',
+        text: "That's when I feel most alive. The chase matters as much as the answer.",
       },
       {
         key: '2',
@@ -90,7 +90,7 @@ const NARRATIVE_ENJOYMENT_QUESTIONS = [
   {
     id: 'q3',
     prompt:
-      'You\'re creating something beautiful—whether design, writing, music, food, or space. Hours disappear. The creation is becoming real in the world through your hands and imagination. You see something that should exist and you\'re bringing it into being. Does that activate you?',
+      "You're creating something beautiful—whether design, writing, music, food, or space. Hours disappear. The creation is becoming real in the world through your hands and imagination. You see something that should exist and you're bringing it into being. Does that activate you?",
     axis: 'SN',
     scale: 'likert',
     section: 'enjoyment',
@@ -103,12 +103,12 @@ const NARRATIVE_ENJOYMENT_QUESTIONS = [
       {
         key: '1',
         value: 1,
-        text: 'Absolutely. That\'s my element. I could do this every day.',
+        text: "Absolutely. That's my element. I could do this every day.",
       },
       {
         key: '2',
         value: 2,
-        text: 'Yes, as long as it\'s for something meaningful.',
+        text: "Yes, as long as it's for something meaningful.",
       },
       {
         key: '3',
@@ -123,7 +123,7 @@ const NARRATIVE_ENJOYMENT_QUESTIONS = [
       {
         key: '5',
         value: 5,
-        text: 'I\'d rather leave creation to specialists.',
+        text: "I'd rather leave creation to specialists.",
       },
     ],
   },
@@ -144,7 +144,7 @@ const NARRATIVE_ENJOYMENT_QUESTIONS = [
       {
         key: '1',
         value: 1,
-        text: 'It\'s the most meaningful thing I can do. Without those moments, my work feels hollow.',
+        text: "It's the most meaningful thing I can do. Without those moments, my work feels hollow.",
       },
       {
         key: '2',
@@ -154,12 +154,12 @@ const NARRATIVE_ENJOYMENT_QUESTIONS = [
       {
         key: '3',
         value: 3,
-        text: 'It\'s nice, but other things fulfill me more.',
+        text: "It's nice, but other things fulfill me more.",
       },
       {
         key: '4',
         value: 4,
-        text: 'I\'d rather support people through expertise, not emotional conversations.',
+        text: "I'd rather support people through expertise, not emotional conversations.",
       },
       {
         key: '5',
@@ -190,12 +190,12 @@ const NARRATIVE_ENJOYMENT_QUESTIONS = [
       {
         key: '2',
         value: 2,
-        text: 'Yes, but I\'d want to do it with people I trust.',
+        text: "Yes, but I'd want to do it with people I trust.",
       },
       {
         key: '3',
         value: 3,
-        text: 'It\'s satisfying in short bursts.',
+        text: "It's satisfying in short bursts.",
       },
       {
         key: '4',
@@ -213,7 +213,7 @@ const NARRATIVE_ENJOYMENT_QUESTIONS = [
   {
     id: 'q6',
     prompt:
-      'You\'ve created a system—a budget, a filing method, a schedule, a process—that works perfectly. New information arrives chaotic; you integrate it cleanly into your system; everything stays organized and predictable. Others find this tedious, but you find it satisfying. Is this you?',
+      "You've created a system—a budget, a filing method, a schedule, a process—that works perfectly. New information arrives chaotic; you integrate it cleanly into your system; everything stays organized and predictable. Others find this tedious, but you find it satisfying. Is this you?",
     axis: 'JP',
     scale: 'likert',
     section: 'enjoyment',
@@ -236,7 +236,7 @@ const NARRATIVE_ENJOYMENT_QUESTIONS = [
       {
         key: '3',
         value: 3,
-        text: 'Neutral. I maintain systems when necessary but don\'t enjoy it.',
+        text: "Neutral. I maintain systems when necessary but don't enjoy it.",
       },
       {
         key: '4',
@@ -254,7 +254,7 @@ const NARRATIVE_ENJOYMENT_QUESTIONS = [
   {
     id: 'q7',
     prompt:
-      'You\'re outside—hiking, gardening, working with animals, or just in nature. Your attention is fully here: the smell of soil, the weight of a tool, the physics of movement, the feedback from the environment. Are you energized or drained by spending hours like this?',
+      "You're outside—hiking, gardening, working with animals, or just in nature. Your attention is fully here: the smell of soil, the weight of a tool, the physics of movement, the feedback from the environment. Are you energized or drained by spending hours like this?",
     axis: 'EI',
     scale: 'likert',
     section: 'enjoyment',
@@ -272,12 +272,12 @@ const NARRATIVE_ENJOYMENT_QUESTIONS = [
       {
         key: '2',
         value: 2,
-        text: 'Mostly energized, though I\'d want to share it with someone.',
+        text: "Mostly energized, though I'd want to share it with someone.",
       },
       {
         key: '3',
         value: 3,
-        text: 'Neutral. It\'s fine.',
+        text: "Neutral. It's fine.",
       },
       {
         key: '4',
@@ -287,7 +287,7 @@ const NARRATIVE_ENJOYMENT_QUESTIONS = [
       {
         key: '5',
         value: 5,
-        text: 'Very drained. I\'d prefer being indoors with people or projects.',
+        text: "Very drained. I'd prefer being indoors with people or projects.",
       },
     ],
   },
@@ -295,7 +295,7 @@ const NARRATIVE_ENJOYMENT_QUESTIONS = [
   {
     id: 'q8',
     prompt:
-      'You\'re deeply focused on one thing—reading, writing code, analyzing data, creating. Hours evaporate. You\'re in flow. No one interrupts; no meetings; just you and the work that demands all your attention. How necessary is this for your wellbeing?',
+      "You're deeply focused on one thing—reading, writing code, analyzing data, creating. Hours evaporate. You're in flow. No one interrupts; no meetings; just you and the work that demands all your attention. How necessary is this for your wellbeing?",
     axis: 'EI',
     scale: 'likert',
     section: 'enjoyment',
@@ -336,7 +336,7 @@ const NARRATIVE_ENJOYMENT_QUESTIONS = [
   {
     id: 'q9',
     prompt:
-      'You\'re in a room with new people, or a brainstorm with your core team. Ideas bounce back and forth. Energy is sparking. You\'re talking, building on what others said, the ideas are getting better and crazier in real time. Does this energize or drain you?',
+      "You're in a room with new people, or a brainstorm with your core team. Ideas bounce back and forth. Energy is sparking. You're talking, building on what others said, the ideas are getting better and crazier in real time. Does this energize or drain you?",
     axis: 'EI',
     scale: 'likert',
     section: 'enjoyment',
@@ -369,7 +369,7 @@ const NARRATIVE_ENJOYMENT_QUESTIONS = [
       {
         key: '5',
         value: 5,
-        text: 'Draining. I\'d prefer thinking through things on my own first.',
+        text: "Draining. I'd prefer thinking through things on my own first.",
       },
     ],
   },
@@ -377,7 +377,7 @@ const NARRATIVE_ENJOYMENT_QUESTIONS = [
   {
     id: 'q10',
     prompt:
-      'You\'re working alone on a project you completely control—from concept to completion, your vision, your decisions, your pace. No meetings. No approval layers. Just you building something. How appealing is this?',
+      "You're working alone on a project you completely control—from concept to completion, your vision, your decisions, your pace. No meetings. No approval layers. Just you building something. How appealing is this?",
     axis: 'EI',
     scale: 'likert',
     section: 'enjoyment',
@@ -400,17 +400,17 @@ const NARRATIVE_ENJOYMENT_QUESTIONS = [
       {
         key: '3',
         value: 3,
-        text: 'I\'m flexible. Solo or collaborative both work.',
+        text: "I'm flexible. Solo or collaborative both work.",
       },
       {
         key: '4',
         value: 4,
-        text: 'I\'d want collaboration and input from others.',
+        text: "I'd want collaboration and input from others.",
       },
       {
         key: '5',
         value: 5,
-        text: 'I\'d feel isolated. I need my team around me.',
+        text: "I'd feel isolated. I need my team around me.",
       },
     ],
   },
@@ -459,7 +459,7 @@ const NARRATIVE_ENJOYMENT_QUESTIONS = [
   {
     id: 'q12',
     prompt:
-      'You\'re facing a task with immediate, visible results. Fix it, produce it, complete it—and by end of day, there\'s tangible evidence of your work. How much does that appeal to you versus work with delayed or abstract payoff?',
+      "You're facing a task with immediate, visible results. Fix it, produce it, complete it—and by end of day, there's tangible evidence of your work. How much does that appeal to you versus work with delayed or abstract payoff?",
     axis: 'SN',
     scale: 'likert',
     section: 'enjoyment',
@@ -482,12 +482,12 @@ const NARRATIVE_ENJOYMENT_QUESTIONS = [
       {
         key: '3',
         value: 3,
-        text: 'Neutral. I\'m flexible on timeline.',
+        text: "Neutral. I'm flexible on timeline.",
       },
       {
         key: '4',
         value: 4,
-        text: 'I\'m okay with delayed results if the work is meaningful.',
+        text: "I'm okay with delayed results if the work is meaningful.",
       },
       {
         key: '5',
@@ -500,7 +500,7 @@ const NARRATIVE_ENJOYMENT_QUESTIONS = [
   {
     id: 'q13',
     prompt:
-      'Someone presents a problem with conflicting needs or values. A solution that\'s logically perfect might hurt someone emotionally. Another solution honors the person but costs efficiency. When you have to choose, what pulls at you more—the logic or the person?',
+      "Someone presents a problem with conflicting needs or values. A solution that's logically perfect might hurt someone emotionally. Another solution honors the person but costs efficiency. When you have to choose, what pulls at you more—the logic or the person?",
     axis: 'TF',
     scale: 'likert',
     section: 'enjoyment',
@@ -528,7 +528,7 @@ const NARRATIVE_ENJOYMENT_QUESTIONS = [
       {
         key: '4',
         value: 4,
-        text: 'The person matters more. I\'ll find a logical way that honors them.',
+        text: "The person matters more. I'll find a logical way that honors them.",
       },
       {
         key: '5',
@@ -582,7 +582,7 @@ const NARRATIVE_ENJOYMENT_QUESTIONS = [
   {
     id: 'q15',
     prompt:
-      'You have a clear plan for your day/week/year. You know what will happen and when. There\'s structure and predictability. Does this feel stabilizing or suffocating?',
+      "You have a clear plan for your day/week/year. You know what will happen and when. There's structure and predictability. Does this feel stabilizing or suffocating?",
     axis: 'JP',
     scale: 'likert',
     section: 'enjoyment',
@@ -605,7 +605,7 @@ const NARRATIVE_ENJOYMENT_QUESTIONS = [
       {
         key: '3',
         value: 3,
-        text: 'Neutral. I\'m flexible either way.',
+        text: "Neutral. I'm flexible either way.",
       },
       {
         key: '4',
@@ -651,7 +651,7 @@ const NARRATIVE_ENJOYMENT_QUESTIONS = [
       {
         key: '4',
         value: 4,
-        text: 'Somewhat stressed. I prefer knowing what\'s coming.',
+        text: "Somewhat stressed. I prefer knowing what's coming.",
       },
       {
         key: '5',
@@ -664,7 +664,7 @@ const NARRATIVE_ENJOYMENT_QUESTIONS = [
   {
     id: 'q17',
     prompt:
-      'An opportunity to present your ideas, be in the spotlight, or have your work recognized publicly. You\'d be on stage (literally or figuratively). Does that excite or terrify you?',
+      "An opportunity to present your ideas, be in the spotlight, or have your work recognized publicly. You'd be on stage (literally or figuratively). Does that excite or terrify you?",
     axis: 'EI',
     scale: 'likert',
     section: 'enjoyment',
@@ -692,7 +692,7 @@ const NARRATIVE_ENJOYMENT_QUESTIONS = [
       {
         key: '4',
         value: 4,
-        text: 'Somewhat terrifying. I\'d do it but prefer being behind the scenes.',
+        text: "Somewhat terrifying. I'd do it but prefer being behind the scenes.",
       },
       {
         key: '5',
@@ -705,7 +705,7 @@ const NARRATIVE_ENJOYMENT_QUESTIONS = [
   {
     id: 'q18',
     prompt:
-      'Important work is happening, but no one knows your name or sees your contribution. You\'re behind the scenes. The work is valuable and important. How okay are you with that invisibility?',
+      "Important work is happening, but no one knows your name or sees your contribution. You're behind the scenes. The work is valuable and important. How okay are you with that invisibility?",
     axis: 'EI',
     scale: 'likert',
     section: 'enjoyment',
@@ -723,7 +723,7 @@ const NARRATIVE_ENJOYMENT_QUESTIONS = [
       {
         key: '2',
         value: 2,
-        text: 'Okay with it. I don\'t need recognition.',
+        text: "Okay with it. I don't need recognition.",
       },
       {
         key: '3',
@@ -733,12 +733,12 @@ const NARRATIVE_ENJOYMENT_QUESTIONS = [
       {
         key: '4',
         value: 4,
-        text: 'Uncomfortable. I\'d want my contribution acknowledged.',
+        text: "Uncomfortable. I'd want my contribution acknowledged.",
       },
       {
         key: '5',
         value: 5,
-        text: ' Unacceptable. I\'d feel unvalued.',
+        text: " Unacceptable. I'd feel unvalued.",
       },
     ],
   },
@@ -769,7 +769,7 @@ const NARRATIVE_ENJOYMENT_QUESTIONS = [
       {
         key: '3',
         value: 3,
-        text: 'Neutral. I learn what\'s necessary.',
+        text: "Neutral. I learn what's necessary.",
       },
       {
         key: '4',
@@ -787,7 +787,7 @@ const NARRATIVE_ENJOYMENT_QUESTIONS = [
   {
     id: 'q20',
     prompt:
-      'You\'re cultivating creativity—whether cooking, writing, designing, tinkering, or making something new. You have freedom to experiment and improvise. The final product is uniquely yours. How fulfilled does this make you?',
+      "You're cultivating creativity—whether cooking, writing, designing, tinkering, or making something new. You have freedom to experiment and improvise. The final product is uniquely yours. How fulfilled does this make you?",
     axis: 'SN',
     scale: 'likert',
     section: 'enjoyment',
@@ -828,7 +828,7 @@ const NARRATIVE_ENJOYMENT_QUESTIONS = [
   {
     id: 'q21',
     prompt:
-      'You\'re designing the layout, look, or experience of a space, website, product. You\'re thinking about beauty, efficiency, how it will feel to the person using it. You care about both the aesthetic and the function. Does this kind of design work appeal?',
+      "You're designing the layout, look, or experience of a space, website, product. You're thinking about beauty, efficiency, how it will feel to the person using it. You care about both the aesthetic and the function. Does this kind of design work appeal?",
     axis: 'SN',
     scale: 'likert',
     section: 'enjoyment',
@@ -851,7 +851,7 @@ const NARRATIVE_ENJOYMENT_QUESTIONS = [
       {
         key: '3',
         value: 3,
-        text: 'Somewhat. It\'s not my primary interest.',
+        text: "Somewhat. It's not my primary interest.",
       },
       {
         key: '4',
@@ -869,7 +869,7 @@ const NARRATIVE_ENJOYMENT_QUESTIONS = [
   {
     id: 'q22',
     prompt:
-      'You\'re working with numbers—budgets, data, statistics, financial planning. You\'re analyzing trends, spotting patterns, ensuring accuracy. This kind of detailed, technical financial work is what\'s in front of you. How does it sit with you?',
+      "You're working with numbers—budgets, data, statistics, financial planning. You're analyzing trends, spotting patterns, ensuring accuracy. This kind of detailed, technical financial work is what's in front of you. How does it sit with you?",
     axis: 'TF',
     scale: 'likert',
     section: 'enjoyment',
@@ -892,12 +892,12 @@ const NARRATIVE_ENJOYMENT_QUESTIONS = [
       {
         key: '3',
         value: 3,
-        text: 'I can do it, but it\'s not my favorite.',
+        text: "I can do it, but it's not my favorite.",
       },
       {
         key: '4',
         value: 4,
-        text: 'Not my strength. I\'d prefer other work.',
+        text: "Not my strength. I'd prefer other work.",
       },
       {
         key: '5',
@@ -910,7 +910,7 @@ const NARRATIVE_ENJOYMENT_QUESTIONS = [
   {
     id: 'q23',
     prompt:
-      'You\'re investigating, experimenting, conducting research. The scientific process fascinates you. You\'re testing hypotheses, collecting data, trying to understand how something works at the deepest level. Does this energize you?',
+      "You're investigating, experimenting, conducting research. The scientific process fascinates you. You're testing hypotheses, collecting data, trying to understand how something works at the deepest level. Does this energize you?",
     axis: 'SN',
     scale: 'likert',
     section: 'enjoyment',
@@ -933,7 +933,7 @@ const NARRATIVE_ENJOYMENT_QUESTIONS = [
       {
         key: '3',
         value: 3,
-        text: 'Somewhat. It\'s interesting but not my main drive.',
+        text: "Somewhat. It's interesting but not my main drive.",
       },
       {
         key: '4',
@@ -951,7 +951,7 @@ const NARRATIVE_ENJOYMENT_QUESTIONS = [
   {
     id: 'q24',
     prompt:
-      'You\'re telling a story—through writing, conversation, performance, or narrative. You\'re drawing people into a world, invoking emotion, creating meaning through language or imagery. Does this kind of storytelling work feed your soul?',
+      "You're telling a story—through writing, conversation, performance, or narrative. You're drawing people into a world, invoking emotion, creating meaning through language or imagery. Does this kind of storytelling work feed your soul?",
     axis: 'SN',
     scale: 'likert',
     section: 'enjoyment',
@@ -992,7 +992,7 @@ const NARRATIVE_ENJOYMENT_QUESTIONS = [
   {
     id: 'q25',
     prompt:
-      'You\'re mentoring or coaching someone. You\'re helping them see their own strength and agency. You\'re asking questions that catalyze their growth. They come back months later and tell you how your guidance changed something. Does this work fulfill you?',
+      "You're mentoring or coaching someone. You're helping them see their own strength and agency. You're asking questions that catalyze their growth. They come back months later and tell you how your guidance changed something. Does this work fulfill you?",
     axis: 'TF',
     scale: 'likert',
     section: 'enjoyment',
@@ -1015,7 +1015,7 @@ const NARRATIVE_ENJOYMENT_QUESTIONS = [
       {
         key: '3',
         value: 3,
-        text: 'Fulfilling, but it\'s not my primary focus.',
+        text: "Fulfilling, but it's not my primary focus.",
       },
       {
         key: '4',
@@ -1025,7 +1025,7 @@ const NARRATIVE_ENJOYMENT_QUESTIONS = [
       {
         key: '5',
         value: 5,
-        text: 'Not fulfilling. I\'m not good at people development.',
+        text: "Not fulfilling. I'm not good at people development.",
       },
     ],
   },
@@ -1033,7 +1033,7 @@ const NARRATIVE_ENJOYMENT_QUESTIONS = [
   {
     id: 'q26',
     prompt:
-      'You\'re negotiating, persuading, making the sale, or moving people to action. You\'re using logic and charm to align others around your vision. You\'re closing deals or securing buy-in. Does this activate you?',
+      "You're negotiating, persuading, making the sale, or moving people to action. You're using logic and charm to align others around your vision. You're closing deals or securing buy-in. Does this activate you?",
     axis: 'EI',
     scale: 'likert',
     section: 'enjoyment',
@@ -1092,22 +1092,22 @@ const NARRATIVE_ENJOYMENT_QUESTIONS = [
       {
         key: '2',
         value: 2,
-        text: 'I can do it. It\'s boring but necessary.',
+        text: "I can do it. It's boring but necessary.",
       },
       {
         key: '3',
         value: 3,
-        text: 'Neutral. I\'d mix it with more interesting work.',
+        text: "Neutral. I'd mix it with more interesting work.",
       },
       {
         key: '4',
         value: 4,
-        text: 'Somewhat draining. I\'d want more variety.',
+        text: "Somewhat draining. I'd want more variety.",
       },
       {
         key: '5',
         value: 5,
-        text: 'Unbearable. I\'d go crazy with repetition.',
+        text: "Unbearable. I'd go crazy with repetition.",
       },
     ],
   },
@@ -1138,12 +1138,12 @@ const NARRATIVE_ENJOYMENT_QUESTIONS = [
       {
         key: '3',
         value: 3,
-        text: 'Appealing, but I\'d want some structure.',
+        text: "Appealing, but I'd want some structure.",
       },
       {
         key: '4',
         value: 4,
-        text: 'Somewhat stressful. I\'d prefer predictability.',
+        text: "Somewhat stressful. I'd prefer predictability.",
       },
       {
         key: '5',
@@ -1156,7 +1156,7 @@ const NARRATIVE_ENJOYMENT_QUESTIONS = [
   {
     id: 'q29',
     prompt:
-      'You\'re solving a stubborn technical problem. The system is broken; you diagnose it; you implement a fix; the system works again. The debugging process fascinates you—understanding the cause, trying approaches, getting closer to the solution. How engaged are you?',
+      "You're solving a stubborn technical problem. The system is broken; you diagnose it; you implement a fix; the system works again. The debugging process fascinates you—understanding the cause, trying approaches, getting closer to the solution. How engaged are you?",
     axis: 'SN',
     scale: 'likert',
     section: 'enjoyment',
@@ -1184,7 +1184,7 @@ const NARRATIVE_ENJOYMENT_QUESTIONS = [
       {
         key: '4',
         value: 4,
-        text: 'Not particularly. It\'s frustrating.',
+        text: "Not particularly. It's frustrating.",
       },
       {
         key: '5',
@@ -1197,7 +1197,7 @@ const NARRATIVE_ENJOYMENT_QUESTIONS = [
   {
     id: 'q30',
     prompt:
-      'Quiet time. Reading. Journaling. Meditating. Walking alone. Thinking deeply. No external input, no stimulation, just your own mind. This kind of internal reflection is what\'s available. Does it restore you or make you antsy?',
+      "Quiet time. Reading. Journaling. Meditating. Walking alone. Thinking deeply. No external input, no stimulation, just your own mind. This kind of internal reflection is what's available. Does it restore you or make you antsy?",
     axis: 'EI',
     scale: 'likert',
     section: 'enjoyment',
@@ -1411,8 +1411,7 @@ const INTROSPECTION_QUESTIONS = [
 
   {
     id: 'i9',
-    prompt:
-      'You trust proven methods more than intuitive hunches about future possibilities.',
+    prompt: 'You trust proven methods more than intuitive hunches about future possibilities.',
     axis: 'SN',
     scale: 'likert',
     section: 'introspection',
@@ -1656,10 +1655,7 @@ const INTROSPECTION_QUESTIONS = [
   },
 ];
 
-const DEFAULT_NARRATIVE_QUESTIONS = [
-  ...NARRATIVE_ENJOYMENT_QUESTIONS,
-  ...INTROSPECTION_QUESTIONS,
-];
+const DEFAULT_NARRATIVE_QUESTIONS = [...NARRATIVE_ENJOYMENT_QUESTIONS, ...INTROSPECTION_QUESTIONS];
 
 module.exports = {
   NARRATIVE_ENJOYMENT_QUESTIONS,

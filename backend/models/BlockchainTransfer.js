@@ -3,7 +3,12 @@ const mongoose = require('mongoose');
 const blockchainTransferSchema = new mongoose.Schema(
   {
     submittedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
-    artifactId: { type: mongoose.Schema.Types.ObjectId, ref: 'Artifact', index: true, default: null },
+    artifactId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Artifact',
+      index: true,
+      default: null,
+    },
     artifactSlug: { type: String, default: '' },
     artifactTitle: { type: String, default: '' },
     network: {
@@ -77,7 +82,7 @@ const blockchainTransferSchema = new mongoose.Schema(
     ],
     rawError: { type: String, default: '' },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 blockchainTransferSchema.index({ createdAt: -1, _id: -1 });

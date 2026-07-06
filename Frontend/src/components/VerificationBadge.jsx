@@ -23,14 +23,19 @@ export default function VerificationBadge({ artifactIdOrSlug, className = '', th
       setVerification(res.ok ? res.verification : null);
       setLoading(false);
     });
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, [artifactIdOrSlug]);
 
   const themeClass = theme === 'alchemical' ? ' verification-badge--alchemical' : '';
 
   if (loading) {
     return (
-      <span className={`verification-badge verification-badge--loading${themeClass} ${className}`} aria-hidden="true">
+      <span
+        className={`verification-badge verification-badge--loading${themeClass} ${className}`}
+        aria-hidden="true"
+      >
         …
       </span>
     );
@@ -41,7 +46,8 @@ export default function VerificationBadge({ artifactIdOrSlug, className = '', th
   }
 
   const isVerified = verification.is_authentic && verification.confidence_score >= 1.0;
-  const isCompromised = verification.status === 'integrity_compromised' || verification.status === 'error';
+  const isCompromised =
+    verification.status === 'integrity_compromised' || verification.status === 'error';
 
   if (isVerified) {
     return (
@@ -49,7 +55,9 @@ export default function VerificationBadge({ artifactIdOrSlug, className = '', th
         className={`verification-badge verification-badge--verified${themeClass} ${className}`}
         title={verification.message || 'Hash verified against trusted database'}
       >
-        <span className="verification-badge__icon" aria-hidden="true">✓</span>
+        <span className="verification-badge__icon" aria-hidden="true">
+          ✓
+        </span>
         <span>AI-Verified</span>
       </span>
     );
@@ -61,7 +69,9 @@ export default function VerificationBadge({ artifactIdOrSlug, className = '', th
         className={`verification-badge verification-badge--compromised${themeClass} ${className}`}
         title={verification.message || 'Integrity compromised'}
       >
-        <span className="verification-badge__icon" aria-hidden="true">⚠</span>
+        <span className="verification-badge__icon" aria-hidden="true">
+          ⚠
+        </span>
         <span>Integrity Compromised</span>
       </span>
     );
@@ -72,7 +82,9 @@ export default function VerificationBadge({ artifactIdOrSlug, className = '', th
       className={`verification-badge verification-badge--unknown${themeClass} ${className}`}
       title={verification.message || 'Not in trusted database'}
     >
-      <span className="verification-badge__icon" aria-hidden="true">?</span>
+      <span className="verification-badge__icon" aria-hidden="true">
+        ?
+      </span>
       <span>Unverified</span>
     </span>
   );

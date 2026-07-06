@@ -1,5 +1,11 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { apiGet, apiPost, apiPut, fetchAdminRuntimeConfig, updateOpenClawRuntimeConfig } from '../lib/api';
+import {
+  apiGet,
+  apiPost,
+  apiPut,
+  fetchAdminRuntimeConfig,
+  updateOpenClawRuntimeConfig,
+} from '../lib/api';
 import { createLogger } from '../lib/logger';
 import { LoadingDots } from '../components/LoadingSpinner.jsx';
 import './OpenClawTab.css';
@@ -204,8 +210,18 @@ export default function OpenClawTab() {
         apiKey: openclawConfig.apiKey,
         bridgeSecret: openclawConfig.bridgeSecret,
         autonomousEnabled: openclawConfig.autonomousEnabled,
-        autonomousBountyScanMinutes: coerceInteger(openclawConfig.autonomousBountyScanMinutes, 30, 5, 1440),
-        autonomousKeepaliveMinutes: coerceInteger(openclawConfig.autonomousKeepaliveMinutes, 10, 1, 240),
+        autonomousBountyScanMinutes: coerceInteger(
+          openclawConfig.autonomousBountyScanMinutes,
+          30,
+          5,
+          1440,
+        ),
+        autonomousKeepaliveMinutes: coerceInteger(
+          openclawConfig.autonomousKeepaliveMinutes,
+          10,
+          1,
+          240,
+        ),
         autonomousMoneyRunEnabled: openclawConfig.autonomousMoneyRunEnabled,
         workerName: openclawConfig.workerName,
         workerPollMs: coerceInteger(openclawConfig.workerPollMs, 10000, 2000),
@@ -221,7 +237,10 @@ export default function OpenClawTab() {
         setConfigResult({ ok: false, text: data?.error || 'Failed to save runtime config.' });
       }
     } catch (err) {
-      setConfigResult({ ok: false, text: err?.response?.data?.error || err.message || 'Failed to save runtime config.' });
+      setConfigResult({
+        ok: false,
+        text: err?.response?.data?.error || err.message || 'Failed to save runtime config.',
+      });
     } finally {
       setConfigSaving(false);
     }
@@ -271,7 +290,9 @@ export default function OpenClawTab() {
       const profile = encodeURIComponent(personaProfileId || 'default');
       const channel = encodeURIComponent(personaChannel || '');
       const includeJournal = personaIncludeJournal ? 'true' : 'false';
-      const data = await apiGet(`/openclaw/persona/context?profileId=${profile}&channel=${channel}&includeJournal=${includeJournal}&limit=24`);
+      const data = await apiGet(
+        `/openclaw/persona/context?profileId=${profile}&channel=${channel}&includeJournal=${includeJournal}&limit=24`,
+      );
       if (data?.ok) {
         setPersonaContext(Array.isArray(data.context) ? data.context : []);
         setPersonaContextSummary(data.summary || null);
@@ -303,7 +324,10 @@ export default function OpenClawTab() {
       });
 
       if (data?.ok) {
-        setPersonaActionResult({ ok: true, text: `Memory absorbed as ${data.kind} (score ${data.score}).` });
+        setPersonaActionResult({
+          ok: true,
+          text: `Memory absorbed as ${data.kind} (score ${data.score}).`,
+        });
         setPersonaIngestText('');
         setPersonaIngestPinned(false);
         loadPersonaContext();
@@ -311,53 +335,85 @@ export default function OpenClawTab() {
         setPersonaActionResult({ ok: false, text: data?.message || 'Persona ingest failed.' });
       }
     } catch (err) {
-      setPersonaActionResult({ ok: false, text: err?.response?.data?.message || err.message || 'Persona ingest failed.' });
-    }
-  }, [loadPersonaContext, personaChannel, personaIngestKind, personaIngestPinned, personaIngestText, personaProfileId]);
-
-  const setPersonaMode = useCallback(async (modeName) => {
-    const mode = String(modeName || '').trim();
-    if (!mode) {
-      setPersonaActionResult({ ok: false, text: 'Mode name is required.' });
-      return;
-    }
-
-    setModeSaving(true);
-    try {
-      const data = await apiPut('/openclaw/persona/mode', {
-        activeMode: mode,
-        personaProfileId: personaProfileId || 'default',
+      setPersonaActionResult({
+        ok: false,
+        text: err?.response?.data?.message || err.message || 'Persona ingest failed.',
       });
-      if (data?.ok) {
-        setAgentConfig((prev) => ({ ...prev, activeMode: data.activeMode, personaProfileId: data.personaProfileId }));
-        setPersonaActionResult({ ok: true, text: `Mode switched to ${data.activeMode} for profile ${data.personaProfileId}.` });
-      } else {
-        setPersonaActionResult({ ok: false, text: data?.message || 'Failed to set mode.' });
-      }
-    } catch (err) {
-      setPersonaActionResult({ ok: false, text: err?.response?.data?.message || err.message || 'Failed to set mode.' });
-    } finally {
-      setModeSaving(false);
     }
-  }, [personaProfileId]);
+  }, [
+    loadPersonaContext,
+    personaChannel,
+    personaIngestKind,
+    personaIngestPinned,
+    personaIngestText,
+    personaProfileId,
+  ]);
 
-  const reinforcePersonaMemory = useCallback(async (id, delta, pin) => {
-    try {
-      const data = await apiPut(`/openclaw/persona/memory/${id}/reinforce`, {
-        delta,
-        ...(typeof pin === 'boolean' ? { pin } : {}),
-      });
-
-      if (data?.ok) {
-        setPersonaActionResult({ ok: true, text: `Memory updated · score ${data.score}${data.pinned ? ' · pinned' : ''}` });
-        loadPersonaContext();
-      } else {
-        setPersonaActionResult({ ok: false, text: data?.message || 'Memory update failed.' });
+  const setPersonaMode = useCallback(
+    async (modeName) => {
+      const mode = String(modeName || '').trim();
+      if (!mode) {
+        setPersonaActionResult({ ok: false, text: 'Mode name is required.' });
+        return;
       }
-    } catch (err) {
-      setPersonaActionResult({ ok: false, text: err?.response?.data?.message || err.message || 'Memory update failed.' });
-    }
-  }, [loadPersonaContext]);
+
+      setModeSaving(true);
+      try {
+        const data = await apiPut('/openclaw/persona/mode', {
+          activeMode: mode,
+          personaProfileId: personaProfileId || 'default',
+        });
+        if (data?.ok) {
+          setAgentConfig((prev) => ({
+            ...prev,
+            activeMode: data.activeMode,
+            personaProfileId: data.personaProfileId,
+          }));
+          setPersonaActionResult({
+            ok: true,
+            text: `Mode switched to ${data.activeMode} for profile ${data.personaProfileId}.`,
+          });
+        } else {
+          setPersonaActionResult({ ok: false, text: data?.message || 'Failed to set mode.' });
+        }
+      } catch (err) {
+        setPersonaActionResult({
+          ok: false,
+          text: err?.response?.data?.message || err.message || 'Failed to set mode.',
+        });
+      } finally {
+        setModeSaving(false);
+      }
+    },
+    [personaProfileId],
+  );
+
+  const reinforcePersonaMemory = useCallback(
+    async (id, delta, pin) => {
+      try {
+        const data = await apiPut(`/openclaw/persona/memory/${id}/reinforce`, {
+          delta,
+          ...(typeof pin === 'boolean' ? { pin } : {}),
+        });
+
+        if (data?.ok) {
+          setPersonaActionResult({
+            ok: true,
+            text: `Memory updated · score ${data.score}${data.pinned ? ' · pinned' : ''}`,
+          });
+          loadPersonaContext();
+        } else {
+          setPersonaActionResult({ ok: false, text: data?.message || 'Memory update failed.' });
+        }
+      } catch (err) {
+        setPersonaActionResult({
+          ok: false,
+          text: err?.response?.data?.message || err.message || 'Memory update failed.',
+        });
+      }
+    },
+    [loadPersonaContext],
+  );
 
   const saveCreatorCommands = useCallback(async () => {
     const commands = creatorCommandsDraft
@@ -374,7 +430,10 @@ export default function OpenClawTab() {
       if (data?.ok) {
         const savedDirectives = data.globalDirectives ?? data.creatorCommands ?? commands;
         setAgentConfig((c) => ({ ...c, creatorCommands: savedDirectives }));
-        setConfigSaveResult({ ok: true, text: 'Logic directives saved. OpenClaw will apply them globally.' });
+        setConfigSaveResult({
+          ok: true,
+          text: 'Logic directives saved. OpenClaw will apply them globally.',
+        });
       } else {
         setConfigSaveResult({ ok: false, text: data?.message || 'Save failed' });
       }
@@ -439,12 +498,12 @@ export default function OpenClawTab() {
         const type = String(event?.type || '').toLowerCase();
         const msg = String(event?.message || '').toLowerCase();
         return (
-          type.includes('recovery')
-          || type.includes('alert')
-          || type.includes('health-failure')
-          || msg.includes('recover')
-          || msg.includes('replay')
-          || msg.includes('health check failed')
+          type.includes('recovery') ||
+          type.includes('alert') ||
+          type.includes('health-failure') ||
+          msg.includes('recover') ||
+          msg.includes('replay') ||
+          msg.includes('health check failed')
         );
       });
       setRecoveryHistory(filtered.slice(0, 20));
@@ -465,16 +524,19 @@ export default function OpenClawTab() {
     if (sendResultTimer.current) clearTimeout(sendResultTimer.current);
 
     try {
-      const data = await apiPost(effectiveLiveReplyEnabled ? '/openclaw/chat' : '/openclaw/dispatch', {
-        event: 'pvabazaar.admin.message',
-        message: trimmed,
-        waitForReplyMs: Math.min(Math.max(Number(replyWaitMs) || 14000, 2000), 25000),
-        source: 'admin-openclaw-tab',
-        metadata: {
+      const data = await apiPost(
+        effectiveLiveReplyEnabled ? '/openclaw/chat' : '/openclaw/dispatch',
+        {
+          event: 'pvabazaar.admin.message',
+          message: trimmed,
+          waitForReplyMs: Math.min(Math.max(Number(replyWaitMs) || 14000, 2000), 25000),
           source: 'admin-openclaw-tab',
-          timestamp: new Date().toISOString(),
+          metadata: {
+            source: 'admin-openclaw-tab',
+            timestamp: new Date().toISOString(),
+          },
         },
-      });
+      );
 
       if (data.ok) {
         const hasLiveReply = effectiveLiveReplyEnabled && data?.reply?.content;
@@ -482,11 +544,11 @@ export default function OpenClawTab() {
           ok: true,
           text: hasLiveReply
             ? 'Live reply received from OpenClaw.'
-            : (data.waiting
+            : data.waiting
               ? 'Message sent. OpenClaw is still working; poll will pick up the reply shortly.'
-              : (data.forwarded
+              : data.forwarded
                 ? 'Message sent to OpenClaw and queued for agent response'
-                : 'Message queued for agent response')),
+                : 'Message queued for agent response',
         });
         setMessageInput('');
         setTimeout(loadMessages, hasLiveReply ? 250 : 1000);
@@ -519,7 +581,10 @@ export default function OpenClawTab() {
         setQueueActionResult({ ok: false, text: data?.message || 'Replay failed' });
       }
     } catch (err) {
-      setQueueActionResult({ ok: false, text: err?.response?.data?.message || err.message || 'Replay failed' });
+      setQueueActionResult({
+        ok: false,
+        text: err?.response?.data?.message || err.message || 'Replay failed',
+      });
       logger.error('Failed to replay webhook messages', err);
     } finally {
       setQueueActionLoading(false);
@@ -547,90 +612,109 @@ export default function OpenClawTab() {
         setQueueActionResult({ ok: false, text: data?.message || 'Recovery failed' });
       }
     } catch (err) {
-      setQueueActionResult({ ok: false, text: err?.response?.data?.message || err.message || 'Recovery failed' });
+      setQueueActionResult({
+        ok: false,
+        text: err?.response?.data?.message || err.message || 'Recovery failed',
+      });
       logger.error('Failed to run OpenClaw recovery', err);
     } finally {
       setRecoverLoading(false);
     }
   }, [loadStatus, loadQueueStats, loadRecoveryHistory]);
 
-  const runMission = useCallback(async (type) => {
-    setMissionLoading(type);
-    setMissionResult(null);
+  const runMission = useCallback(
+    async (type) => {
+      setMissionLoading(type);
+      setMissionResult(null);
 
-    const payload = {
-      limit: coerceInteger(missionLimit, 10, 1, 25),
-      walletAddress: missionWalletAddress.trim(),
-      minRewardRaw: coerceNumber(missionMinRewardRaw, 0, 0),
-    };
+      const payload = {
+        limit: coerceInteger(missionLimit, 10, 1, 25),
+        walletAddress: missionWalletAddress.trim(),
+        minRewardRaw: coerceNumber(missionMinRewardRaw, 0, 0),
+      };
 
-    try {
-      let data;
-      if (type === 'scan') {
-        data = await apiPost('/bounties/scan', { quick: true }, { timeout: 45000 });
+      try {
+        let data;
+        if (type === 'scan') {
+          data = await apiPost('/bounties/scan', { quick: true }, { timeout: 45000 });
+          setMissionResult({
+            ok: data?.ok !== false,
+            text:
+              data?.ok === false
+                ? data?.message || 'Scan did not complete successfully.'
+                : `Scan completed. Sources refreshed: ${Array.isArray(data?.results) ? data.results.length : 0}.`,
+          });
+        } else if (type === 'dispatch') {
+          data = await apiPost('/bounties/dispatch-top', payload);
+          setMissionResult({
+            ok: data?.ok !== false,
+            text: data?.queued
+              ? `Queued ${data.rankedCount || 0} ranked opportunities to OpenClaw for ${data.walletAddress || 'default payout wallet'}.`
+              : data?.message || 'No dispatch candidates available.',
+          });
+        } else if (type === 'money-run') {
+          data = await apiPost('/bounties/money-run', payload, { timeout: 60000 });
+          setMissionResult({
+            ok: data?.ok !== false,
+            text: data?.queued
+              ? `Money run queued ${data.rankedCount || 0} opportunities for ${data.walletAddress || 'default payout wallet'}.`
+              : data?.message || 'Money run completed with no qualifying opportunities.',
+          });
+        } else if (type === 'ops-brief') {
+          data = await apiPost('/openclaw/dispatch', {
+            event: 'pvabazaar.admin.ops.brief',
+            message: [
+              'Maintain website uptime and queue hygiene.',
+              'Prioritize stalled deliveries, stale outbound queue items, and gateway reachability issues.',
+              'If bounty workflows are enabled, prefer high-confidence opportunities above the configured minimum reward.',
+              `Target payout wallet: ${missionWalletAddress.trim() || 'default payout wallet'}.`,
+            ].join(' '),
+            metadata: {
+              source: 'admin-openclaw-mission-rack',
+              minRewardRaw: coerceNumber(missionMinRewardRaw, 0, 0),
+              limit: coerceInteger(missionLimit, 10, 1, 25),
+              timestamp: new Date().toISOString(),
+            },
+          });
+          setMissionResult({
+            ok: data?.ok !== false,
+            text: data?.forwarded
+              ? 'Operations brief sent to OpenClaw and forwarded to the active gateway.'
+              : 'Operations brief queued for OpenClaw.',
+          });
+        }
+
+        loadStatus();
+        loadMessages();
+        loadQueueStats();
+        loadRecoveryHistory();
+      } catch (err) {
+        const isTimeout =
+          err?.code === 'ECONNABORTED' ||
+          String(err?.message || '')
+            .toLowerCase()
+            .includes('timeout');
         setMissionResult({
-          ok: data?.ok !== false,
-          text: data?.ok === false
-            ? (data?.message || 'Scan did not complete successfully.')
-            : `Scan completed. Sources refreshed: ${Array.isArray(data?.results) ? data.results.length : 0}.`,
+          ok: false,
+          text: isTimeout
+            ? 'Mission timed out. Try again or reduce scan breadth.'
+            : err?.response?.data?.message || err.message || 'Mission failed',
         });
-      } else if (type === 'dispatch') {
-        data = await apiPost('/bounties/dispatch-top', payload);
-        setMissionResult({
-          ok: data?.ok !== false,
-          text: data?.queued
-            ? `Queued ${data.rankedCount || 0} ranked opportunities to OpenClaw for ${data.walletAddress || 'default payout wallet'}.`
-            : (data?.message || 'No dispatch candidates available.'),
-        });
-      } else if (type === 'money-run') {
-        data = await apiPost('/bounties/money-run', payload, { timeout: 60000 });
-        setMissionResult({
-          ok: data?.ok !== false,
-          text: data?.queued
-            ? `Money run queued ${data.rankedCount || 0} opportunities for ${data.walletAddress || 'default payout wallet'}.`
-            : (data?.message || 'Money run completed with no qualifying opportunities.'),
-        });
-      } else if (type === 'ops-brief') {
-        data = await apiPost('/openclaw/dispatch', {
-          event: 'pvabazaar.admin.ops.brief',
-          message: [
-            'Maintain website uptime and queue hygiene.',
-            'Prioritize stalled deliveries, stale outbound queue items, and gateway reachability issues.',
-            'If bounty workflows are enabled, prefer high-confidence opportunities above the configured minimum reward.',
-            `Target payout wallet: ${missionWalletAddress.trim() || 'default payout wallet'}.`,
-          ].join(' '),
-          metadata: {
-            source: 'admin-openclaw-mission-rack',
-            minRewardRaw: coerceNumber(missionMinRewardRaw, 0, 0),
-            limit: coerceInteger(missionLimit, 10, 1, 25),
-            timestamp: new Date().toISOString(),
-          },
-        });
-        setMissionResult({
-          ok: data?.ok !== false,
-          text: data?.forwarded
-            ? 'Operations brief sent to OpenClaw and forwarded to the active gateway.'
-            : 'Operations brief queued for OpenClaw.',
-        });
+        logger.error(`OpenClaw mission failed: ${type}`, err);
+      } finally {
+        setMissionLoading('');
       }
-
-      loadStatus();
-      loadMessages();
-      loadQueueStats();
-      loadRecoveryHistory();
-    } catch (err) {
-      const isTimeout = err?.code === 'ECONNABORTED' || String(err?.message || '').toLowerCase().includes('timeout');
-      setMissionResult({
-        ok: false,
-        text: isTimeout
-          ? 'Mission timed out. Try again or reduce scan breadth.'
-          : (err?.response?.data?.message || err.message || 'Mission failed'),
-      });
-      logger.error(`OpenClaw mission failed: ${type}`, err);
-    } finally {
-      setMissionLoading('');
-    }
-  }, [loadMessages, loadQueueStats, loadRecoveryHistory, loadStatus, missionLimit, missionMinRewardRaw, missionWalletAddress]);
+    },
+    [
+      loadMessages,
+      loadQueueStats,
+      loadRecoveryHistory,
+      loadStatus,
+      missionLimit,
+      missionMinRewardRaw,
+      missionWalletAddress,
+    ],
+  );
 
   useEffect(() => {
     loadStatus();
@@ -645,7 +729,17 @@ export default function OpenClawTab() {
     return () => {
       if (sendResultTimer.current) clearTimeout(sendResultTimer.current);
     };
-  }, [loadStatus, loadMessages, loadQueueStats, loadRuntimeConfig, loadRecoveryHistory, loadBountyDefaults, loadAgentConfig, loadMemory, loadPersonaContext]);
+  }, [
+    loadStatus,
+    loadMessages,
+    loadQueueStats,
+    loadRuntimeConfig,
+    loadRecoveryHistory,
+    loadBountyDefaults,
+    loadAgentConfig,
+    loadMemory,
+    loadPersonaContext,
+  ]);
 
   const waitingForAgent = pendingOutbound > 0;
   const refreshInterval = waitingForAgent ? 5000 : 15000;
@@ -661,7 +755,16 @@ export default function OpenClawTab() {
       loadPersonaContext();
     }, refreshInterval);
     return () => clearInterval(id);
-  }, [autoRefresh, refreshInterval, loadStatus, loadMessages, loadQueueStats, loadRecoveryHistory, loadMemory, loadPersonaContext]);
+  }, [
+    autoRefresh,
+    refreshInterval,
+    loadStatus,
+    loadMessages,
+    loadQueueStats,
+    loadRecoveryHistory,
+    loadMemory,
+    loadPersonaContext,
+  ]);
 
   const shouldAutoHeal = useMemo(() => {
     if (!autoHealEnabled || statusLoading || queueLoading) {
@@ -673,8 +776,10 @@ export default function OpenClawTab() {
     if (!queueOnlyMode && !status?.reachable) reasons.push('gateway offline');
     const heartbeatAge = formatAgeMinutes(status?.worker?.heartbeatAt);
     if (status?.worker?.active === false) reasons.push('worker lease inactive');
-    if (heartbeatAge !== null && heartbeatAge > 4) reasons.push(`heartbeat stale (${heartbeatAge}m)`);
-    if ((queueStats?.staleOutbound || 0) > 0) reasons.push(`stale queue (${queueStats?.staleOutbound})`);
+    if (heartbeatAge !== null && heartbeatAge > 4)
+      reasons.push(`heartbeat stale (${heartbeatAge}m)`);
+    if ((queueStats?.staleOutbound || 0) > 0)
+      reasons.push(`stale queue (${queueStats?.staleOutbound})`);
 
     if (!reasons.length) {
       return { run: false, reason: '' };
@@ -682,7 +787,7 @@ export default function OpenClawTab() {
 
     const cooldownMs = Math.max(Number(autoHealCooldownMinutes || 8), 1) * 60 * 1000;
     const last = autoHealLastRunAt ? new Date(autoHealLastRunAt).getTime() : 0;
-    const cooldownPassed = !last || (Date.now() - last) >= cooldownMs;
+    const cooldownPassed = !last || Date.now() - last >= cooldownMs;
 
     return {
       run: cooldownPassed,
@@ -705,11 +810,10 @@ export default function OpenClawTab() {
     autoHealRunningRef.current = true;
     setQueueActionResult({ ok: true, text: `Auto-heal triggered: ${shouldAutoHeal.reason}` });
 
-    runRecovery()
-      .finally(() => {
-        setAutoHealLastRunAt(new Date().toISOString());
-        autoHealRunningRef.current = false;
-      });
+    runRecovery().finally(() => {
+      setAutoHealLastRunAt(new Date().toISOString());
+      autoHealRunningRef.current = false;
+    });
   }, [recoverLoading, runRecovery, shouldAutoHeal]);
 
   const handleKeyDown = (event) => {
@@ -739,16 +843,43 @@ export default function OpenClawTab() {
   const ecosystemState = status?.ecosystem?.status || 'unknown';
   const autonomyPosture = useMemo(() => {
     if (!openclawConfig.autonomousEnabled) {
-      return { tone: 'oc-warn', icon: '🧷', label: 'Manual hold', detail: 'Autonomous mode is disabled' };
+      return {
+        tone: 'oc-warn',
+        icon: '🧷',
+        label: 'Manual hold',
+        detail: 'Autonomous mode is disabled',
+      };
     }
     if ((!queueOnlyMode && !status?.reachable) || !leaseActive || staleOutbound > 0) {
-      return { tone: 'oc-bad', icon: '🚨', label: 'Recovery pressure', detail: 'Operator attention required' };
+      return {
+        tone: 'oc-bad',
+        icon: '🚨',
+        label: 'Recovery pressure',
+        detail: 'Operator attention required',
+      };
     }
     if (openclawConfig.autonomousMoneyRunEnabled) {
-      return { tone: 'oc-ok', icon: '🟢', label: 'Live bounty posture', detail: 'Autonomous ops and money-run are armed' };
+      return {
+        tone: 'oc-ok',
+        icon: '🟢',
+        label: 'Live bounty posture',
+        detail: 'Autonomous ops and money-run are armed',
+      };
     }
-    return { tone: 'oc-info', icon: '🧭', label: 'Operator-guided', detail: 'Autonomous ops active, money-run held' };
-  }, [leaseActive, openclawConfig.autonomousEnabled, openclawConfig.autonomousMoneyRunEnabled, queueOnlyMode, staleOutbound, status?.reachable]);
+    return {
+      tone: 'oc-info',
+      icon: '🧭',
+      label: 'Operator-guided',
+      detail: 'Autonomous ops active, money-run held',
+    };
+  }, [
+    leaseActive,
+    openclawConfig.autonomousEnabled,
+    openclawConfig.autonomousMoneyRunEnabled,
+    queueOnlyMode,
+    staleOutbound,
+    status?.reachable,
+  ]);
 
   const reachabilityCard = useMemo(() => {
     if (queueOnlyMode) {
@@ -771,19 +902,29 @@ export default function OpenClawTab() {
 
   useEffect(() => {
     try {
-      globalThis.localStorage?.setItem(OPENCLAW_QUICK_MODE_STORAGE_KEY, quickMode ? 'true' : 'false');
+      globalThis.localStorage?.setItem(
+        OPENCLAW_QUICK_MODE_STORAGE_KEY,
+        quickMode ? 'true' : 'false',
+      );
     } catch (_err) {
       // Ignore storage failures; UI state still works for this session.
     }
   }, [quickMode]);
 
   return (
-    <div className={`openclaw-tab ${quickMode ? 'quick-mode' : 'full-mode'}`} role="tabpanel" id="openclaw-panel">
+    <div
+      className={`openclaw-tab ${quickMode ? 'quick-mode' : 'full-mode'}`}
+      role="tabpanel"
+      id="openclaw-panel"
+    >
       <div className="oc-panel">
         <div className="oc-panel-header">
           <div>
             <h2 className="oc-panel-title">🦞 OpenClaw Live Console</h2>
-            <p className="oc-listening">Rick Taur neural cockpit is live. OpenClaw listens, remembers, and adapts in real time.</p>
+            <p className="oc-listening">
+              Rick Taur neural cockpit is live. OpenClaw listens, remembers, and adapts in real
+              time.
+            </p>
           </div>
           <div className="oc-panel-actions">
             <label className="oc-auto-refresh-label">
@@ -837,7 +978,7 @@ export default function OpenClawTab() {
             </label>
             <button
               className="oc-btn oc-btn--primary"
-              onClick={() => setQuickMode(prev => !prev)}
+              onClick={() => setQuickMode((prev) => !prev)}
               title="Toggle between quick chat mode and full admin console"
             >
               {quickMode ? '🧰 Full Console' : '⚡ Quick Mode'}
@@ -865,7 +1006,9 @@ export default function OpenClawTab() {
             >
               {queueActionLoading
                 ? 'Replaying...'
-                : (queueOnlyMode ? '🔁 Replay Webhook (needs gateway)' : '🔁 Replay Webhook')}
+                : queueOnlyMode
+                  ? '🔁 Replay Webhook (needs gateway)'
+                  : '🔁 Replay Webhook'}
             </button>
             <button
               className="oc-btn oc-btn--secondary"
@@ -906,9 +1049,14 @@ export default function OpenClawTab() {
           ) : (
             <div className="oc-recovery-list">
               {recoveryHistory.map((event, index) => (
-                <div key={event.id || `${event.timestamp || 'no-ts'}-${index}`} className="oc-recovery-row">
+                <div
+                  key={event.id || `${event.timestamp || 'no-ts'}-${index}`}
+                  className="oc-recovery-row"
+                >
                   <div className="oc-recovery-meta">
-                    <span className={`oc-recovery-level oc-recovery-level-${String(event.level || 'info').toLowerCase()}`}>
+                    <span
+                      className={`oc-recovery-level oc-recovery-level-${String(event.level || 'info').toLowerCase()}`}
+                    >
                       {event.level || 'INFO'}
                     </span>
                     <span>{event.type || 'event'}</span>
@@ -929,7 +1077,8 @@ export default function OpenClawTab() {
             Configure broad directives for the assistant behavior. One directive per line.
           </p>
           <p className="oc-hint">
-            Stored directives: {agentConfig.creatorCommands.length} · goals: {agentConfig.goals.length}
+            Stored directives: {agentConfig.creatorCommands.length} · goals:{' '}
+            {agentConfig.goals.length}
           </p>
           {agentConfigLoading ? (
             <LoadingDots size="small" label="Loading..." />
@@ -968,7 +1117,9 @@ export default function OpenClawTab() {
           <div className="oc-panel-header">
             <h3 className="oc-panel-title">Global Goals</h3>
           </div>
-          <p className="oc-hint">Broad goals the assistant should always pursue across the system. One per line.</p>
+          <p className="oc-hint">
+            Broad goals the assistant should always pursue across the system. One per line.
+          </p>
           {agentConfigLoading ? null : (
             <>
               <textarea
@@ -1007,12 +1158,16 @@ export default function OpenClawTab() {
           {memoryLoading && !memory.length ? (
             <LoadingDots size="small" label="Loading memory..." />
           ) : memory.length === 0 ? (
-            <p className="oc-hint">No memory yet. Conversations are stored after the agent replies.</p>
+            <p className="oc-hint">
+              No memory yet. Conversations are stored after the agent replies.
+            </p>
           ) : (
             <ul className="oc-memory-list">
               {memory.slice(0, 15).map((m) => (
                 <li key={m._id} className="oc-memory-item">
-                  <span className="oc-memory-type">[{m.type}]</span> {m.key}: {String(m.value).slice(0, 80)}{String(m.value).length > 80 ? '…' : ''}
+                  <span className="oc-memory-type">[{m.type}]</span> {m.key}:{' '}
+                  {String(m.value).slice(0, 80)}
+                  {String(m.value).length > 80 ? '…' : ''}
                 </li>
               ))}
             </ul>
@@ -1024,7 +1179,8 @@ export default function OpenClawTab() {
             <div>
               <h3 className="oc-panel-title">Rick Taur - Inner Cortex</h3>
               <p className="oc-config-note">
-                This is the human-facing interior of the evolving AI self. Profile and mode shape identity, while ingested memories tune voice and intent.
+                This is the human-facing interior of the evolving AI self. Profile and mode shape
+                identity, while ingested memories tune voice and intent.
               </p>
             </div>
             <button
@@ -1160,13 +1316,25 @@ export default function OpenClawTab() {
                     </div>
                     <div className="oc-persona-item-text">{entry.text}</div>
                     <div className="oc-persona-item-actions">
-                      <button type="button" className="oc-btn oc-btn--secondary" onClick={() => reinforcePersonaMemory(entry.id, 1)}>
+                      <button
+                        type="button"
+                        className="oc-btn oc-btn--secondary"
+                        onClick={() => reinforcePersonaMemory(entry.id, 1)}
+                      >
                         + Reinforce
                       </button>
-                      <button type="button" className="oc-btn oc-btn--secondary" onClick={() => reinforcePersonaMemory(entry.id, -1)}>
+                      <button
+                        type="button"
+                        className="oc-btn oc-btn--secondary"
+                        onClick={() => reinforcePersonaMemory(entry.id, -1)}
+                      >
                         - Decay
                       </button>
-                      <button type="button" className="oc-btn oc-btn--secondary" onClick={() => reinforcePersonaMemory(entry.id, 0, !entry.pinned)}>
+                      <button
+                        type="button"
+                        className="oc-btn oc-btn--secondary"
+                        onClick={() => reinforcePersonaMemory(entry.id, 0, !entry.pinned)}
+                      >
                         {entry.pinned ? 'Unpin' : 'Pin'}
                       </button>
                     </div>
@@ -1177,7 +1345,9 @@ export default function OpenClawTab() {
           </div>
 
           {personaActionResult && (
-            <div className={`oc-send-result ${personaActionResult.ok ? 'oc-send-result--ok' : 'oc-send-result--err'}`}>
+            <div
+              className={`oc-send-result ${personaActionResult.ok ? 'oc-send-result--ok' : 'oc-send-result--err'}`}
+            >
               {personaActionResult.text}
             </div>
           )}
@@ -1191,7 +1361,9 @@ export default function OpenClawTab() {
               <span className="oc-status-icon">{status?.configured ? '✅' : '⚠️'}</span>
               <div>
                 <div className="oc-status-label">Gateway</div>
-                <div className="oc-status-value">{status?.configured ? 'Configured' : 'Not configured'}</div>
+                <div className="oc-status-value">
+                  {status?.configured ? 'Configured' : 'Not configured'}
+                </div>
               </div>
             </div>
 
@@ -1238,7 +1410,9 @@ export default function OpenClawTab() {
               <span className="oc-status-icon">🧭</span>
               <div>
                 <div className="oc-status-label">Worker Lease</div>
-                <div className="oc-status-value">{leaseActive ? 'Active' : 'Inactive / expired'}</div>
+                <div className="oc-status-value">
+                  {leaseActive ? 'Active' : 'Inactive / expired'}
+                </div>
               </div>
             </div>
 
@@ -1264,22 +1438,30 @@ export default function OpenClawTab() {
                 One live snapshot for the website, OpenClaw, Ollama, and Telegram bridge.
               </p>
             </div>
-            <span className={`oc-mission-badge ${ecosystemState === 'healthy' ? 'oc-ok' : ecosystemState === 'degraded' ? 'oc-warn' : 'oc-bad'}`}>
+            <span
+              className={`oc-mission-badge ${ecosystemState === 'healthy' ? 'oc-ok' : ecosystemState === 'degraded' ? 'oc-warn' : 'oc-bad'}`}
+            >
               {ecosystemState.toUpperCase()}
             </span>
           </div>
 
           <div className="oc-status-grid">
-            <div className={`oc-status-card ${ecosystem.website?.reachable ? 'oc-ok' : 'oc-warn'} oc-url-card`}>
+            <div
+              className={`oc-status-card ${ecosystem.website?.reachable ? 'oc-ok' : 'oc-warn'} oc-url-card`}
+            >
               <span className="oc-status-icon">🌐</span>
               <div>
                 <div className="oc-status-label">Website</div>
                 <div className="oc-status-value">{ecosystem.website?.status || 'unknown'}</div>
-                <div className="oc-status-subvalue">{ecosystem.website?.url || 'Not configured'}</div>
+                <div className="oc-status-subvalue">
+                  {ecosystem.website?.url || 'Not configured'}
+                </div>
               </div>
             </div>
 
-            <div className={`oc-status-card ${ecosystem.openclaw?.status === 'online' ? 'oc-ok' : 'oc-warn'} oc-url-card`}>
+            <div
+              className={`oc-status-card ${ecosystem.openclaw?.status === 'online' ? 'oc-ok' : 'oc-warn'} oc-url-card`}
+            >
               <span className="oc-status-icon">🦞</span>
               <div>
                 <div className="oc-status-label">OpenClaw</div>
@@ -1295,18 +1477,24 @@ export default function OpenClawTab() {
               </div>
             </div>
 
-            <div className={`oc-status-card ${ecosystem.ollama?.reachable ? 'oc-ok' : ecosystem.ollama?.configured ? 'oc-warn' : 'oc-info'} oc-url-card`}>
+            <div
+              className={`oc-status-card ${ecosystem.ollama?.reachable ? 'oc-ok' : ecosystem.ollama?.configured ? 'oc-warn' : 'oc-info'} oc-url-card`}
+            >
               <span className="oc-status-icon">🧠</span>
               <div>
                 <div className="oc-status-label">Ollama</div>
                 <div className="oc-status-value">{ecosystem.ollama?.status || 'unknown'}</div>
                 <div className="oc-status-subvalue">
-                  {ecosystem.ollama?.model ? `Model: ${ecosystem.ollama.model}` : ecosystem.ollama?.message || 'Not configured'}
+                  {ecosystem.ollama?.model
+                    ? `Model: ${ecosystem.ollama.model}`
+                    : ecosystem.ollama?.message || 'Not configured'}
                 </div>
               </div>
             </div>
 
-            <div className={`oc-status-card ${ecosystem.telegram?.reachable ? 'oc-ok' : ecosystem.telegram?.configured ? 'oc-warn' : 'oc-info'} oc-url-card`}>
+            <div
+              className={`oc-status-card ${ecosystem.telegram?.reachable ? 'oc-ok' : ecosystem.telegram?.configured ? 'oc-warn' : 'oc-info'} oc-url-card`}
+            >
               <span className="oc-status-icon">📱</span>
               <div>
                 <div className="oc-status-label">Telegram</div>
@@ -1329,12 +1517,17 @@ export default function OpenClawTab() {
             <div>
               <h3 className="oc-config-title">Mission Rack</h3>
               <p className="oc-config-note">
-                Operator-approved actions for keeping OpenClaw active, ranking opportunities, and dispatching work without blind wallet autonomy.
+                Operator-approved actions for keeping OpenClaw active, ranking opportunities, and
+                dispatching work without blind wallet autonomy.
               </p>
             </div>
             <div className="oc-mission-posture">
-              <span className={`oc-mission-badge ${autonomyPosture.tone}`}>{autonomyPosture.label}</span>
-              <span className="oc-hint">Queue {pendingOutbound} pending · {staleOutbound} stale</span>
+              <span className={`oc-mission-badge ${autonomyPosture.tone}`}>
+                {autonomyPosture.label}
+              </span>
+              <span className="oc-hint">
+                Queue {pendingOutbound} pending · {staleOutbound} stale
+              </span>
             </div>
           </div>
 
@@ -1380,8 +1573,13 @@ export default function OpenClawTab() {
             >
               <span className="oc-mission-icon">🛰️</span>
               <span className="oc-mission-title">Send Ops Brief</span>
-              <span className="oc-mission-copy">Push a standing directive to prioritize uptime, queue hygiene, and recovery pressure.</span>
-              <span className="oc-mission-cta">{missionLoading === 'ops-brief' ? 'Dispatching...' : 'Queue mission'}</span>
+              <span className="oc-mission-copy">
+                Push a standing directive to prioritize uptime, queue hygiene, and recovery
+                pressure.
+              </span>
+              <span className="oc-mission-cta">
+                {missionLoading === 'ops-brief' ? 'Dispatching...' : 'Queue mission'}
+              </span>
             </button>
 
             <button
@@ -1392,8 +1590,13 @@ export default function OpenClawTab() {
             >
               <span className="oc-mission-icon">⚡</span>
               <span className="oc-mission-title">Run Fresh Scan</span>
-              <span className="oc-mission-copy">Refresh the bounty field so OpenClaw is working from current opportunities instead of stale inventory.</span>
-              <span className="oc-mission-cta">{missionLoading === 'scan' ? 'Scanning...' : 'Refresh sources'}</span>
+              <span className="oc-mission-copy">
+                Refresh the bounty field so OpenClaw is working from current opportunities instead
+                of stale inventory.
+              </span>
+              <span className="oc-mission-cta">
+                {missionLoading === 'scan' ? 'Scanning...' : 'Refresh sources'}
+              </span>
             </button>
 
             <button
@@ -1404,8 +1607,13 @@ export default function OpenClawTab() {
             >
               <span className="oc-mission-icon">🎯</span>
               <span className="oc-mission-title">Dispatch Top Ranked</span>
-              <span className="oc-mission-copy">Queue the best currently known opportunities to OpenClaw with your payout target and minimum reward filter.</span>
-              <span className="oc-mission-cta">{missionLoading === 'dispatch' ? 'Dispatching...' : 'Send ranked set'}</span>
+              <span className="oc-mission-copy">
+                Queue the best currently known opportunities to OpenClaw with your payout target and
+                minimum reward filter.
+              </span>
+              <span className="oc-mission-cta">
+                {missionLoading === 'dispatch' ? 'Dispatching...' : 'Send ranked set'}
+              </span>
             </button>
 
             <button
@@ -1416,13 +1624,20 @@ export default function OpenClawTab() {
             >
               <span className="oc-mission-icon">💸</span>
               <span className="oc-mission-title">Money Run</span>
-              <span className="oc-mission-copy">Perform the full admin-safe cycle: scan, rank, and queue qualified opportunities for OpenClaw to work.</span>
-              <span className="oc-mission-cta">{missionLoading === 'money-run' ? 'Running...' : 'Start cycle'}</span>
+              <span className="oc-mission-copy">
+                Perform the full admin-safe cycle: scan, rank, and queue qualified opportunities for
+                OpenClaw to work.
+              </span>
+              <span className="oc-mission-cta">
+                {missionLoading === 'money-run' ? 'Running...' : 'Start cycle'}
+              </span>
             </button>
           </div>
 
           {missionResult && (
-            <div className={`oc-send-result ${missionResult.ok ? 'oc-send-result--ok' : 'oc-send-result--err'}`}>
+            <div
+              className={`oc-send-result ${missionResult.ok ? 'oc-send-result--ok' : 'oc-send-result--err'}`}
+            >
               {missionResult.text}
             </div>
           )}
@@ -1440,14 +1655,16 @@ export default function OpenClawTab() {
 
         {waitingForAgent && (
           <div className="oc-waiting-banner" role="status" aria-live="polite">
-            ⏳ OpenClaw is processing {pendingOutbound} message{pendingOutbound !== 1 ? 's' : ''}. Replies will appear here.
+            ⏳ OpenClaw is processing {pendingOutbound} message{pendingOutbound !== 1 ? 's' : ''}.
+            Replies will appear here.
           </div>
         )}
 
         <div className="oc-config-box" aria-label="OpenClaw runtime configuration">
           <h3 className="oc-config-title">Runtime Configuration</h3>
           <p className="oc-config-note">
-            Save OpenClaw endpoints and worker tuning from this panel. Secret fields are optional on update.
+            Save OpenClaw endpoints and worker tuning from this panel. Secret fields are optional on
+            update.
           </p>
           <div className="oc-config-grid">
             <label>
@@ -1455,7 +1672,9 @@ export default function OpenClawTab() {
               <input
                 type="url"
                 value={openclawConfig.gatewayUrl}
-                onChange={(event) => setOpenclawConfig(prev => ({ ...prev, gatewayUrl: event.target.value }))}
+                onChange={(event) =>
+                  setOpenclawConfig((prev) => ({ ...prev, gatewayUrl: event.target.value }))
+                }
                 placeholder="https://openclaw.yourdomain.com"
               />
             </label>
@@ -1464,7 +1683,9 @@ export default function OpenClawTab() {
               <input
                 type="url"
                 value={openclawConfig.webhookUrl}
-                onChange={(event) => setOpenclawConfig(prev => ({ ...prev, webhookUrl: event.target.value }))}
+                onChange={(event) =>
+                  setOpenclawConfig((prev) => ({ ...prev, webhookUrl: event.target.value }))
+                }
                 placeholder="https://openclaw.yourdomain.com/webhook"
               />
             </label>
@@ -1473,7 +1694,9 @@ export default function OpenClawTab() {
               <input
                 type="url"
                 value={openclawConfig.healthUrl}
-                onChange={(event) => setOpenclawConfig(prev => ({ ...prev, healthUrl: event.target.value }))}
+                onChange={(event) =>
+                  setOpenclawConfig((prev) => ({ ...prev, healthUrl: event.target.value }))
+                }
                 placeholder="https://openclaw.yourdomain.com/healthz"
               />
             </label>
@@ -1482,7 +1705,9 @@ export default function OpenClawTab() {
               <input
                 type="url"
                 value={openclawConfig.ollamaBaseUrl}
-                onChange={(event) => setOpenclawConfig(prev => ({ ...prev, ollamaBaseUrl: event.target.value }))}
+                onChange={(event) =>
+                  setOpenclawConfig((prev) => ({ ...prev, ollamaBaseUrl: event.target.value }))
+                }
                 placeholder="https://ollama.yourdomain.com"
               />
             </label>
@@ -1491,7 +1716,9 @@ export default function OpenClawTab() {
               <input
                 type="text"
                 value={openclawConfig.ollamaModel}
-                onChange={(event) => setOpenclawConfig(prev => ({ ...prev, ollamaModel: event.target.value }))}
+                onChange={(event) =>
+                  setOpenclawConfig((prev) => ({ ...prev, ollamaModel: event.target.value }))
+                }
                 placeholder="llama3.1"
               />
             </label>
@@ -1500,7 +1727,9 @@ export default function OpenClawTab() {
               <input
                 type="text"
                 value={openclawConfig.workerName}
-                onChange={(event) => setOpenclawConfig(prev => ({ ...prev, workerName: event.target.value }))}
+                onChange={(event) =>
+                  setOpenclawConfig((prev) => ({ ...prev, workerName: event.target.value }))
+                }
               />
             </label>
             <label>
@@ -1510,7 +1739,9 @@ export default function OpenClawTab() {
                 min="2000"
                 step="1000"
                 value={openclawConfig.workerPollMs}
-                onChange={(event) => setOpenclawConfig(prev => ({ ...prev, workerPollMs: event.target.value }))}
+                onChange={(event) =>
+                  setOpenclawConfig((prev) => ({ ...prev, workerPollMs: event.target.value }))
+                }
               />
             </label>
             <label>
@@ -1521,7 +1752,9 @@ export default function OpenClawTab() {
                 max="100"
                 step="1"
                 value={openclawConfig.workerBatchSize}
-                onChange={(event) => setOpenclawConfig(prev => ({ ...prev, workerBatchSize: event.target.value }))}
+                onChange={(event) =>
+                  setOpenclawConfig((prev) => ({ ...prev, workerBatchSize: event.target.value }))
+                }
               />
             </label>
             <label>
@@ -1532,7 +1765,12 @@ export default function OpenClawTab() {
                 max="1440"
                 step="1"
                 value={openclawConfig.autonomousBountyScanMinutes}
-                onChange={(event) => setOpenclawConfig(prev => ({ ...prev, autonomousBountyScanMinutes: event.target.value }))}
+                onChange={(event) =>
+                  setOpenclawConfig((prev) => ({
+                    ...prev,
+                    autonomousBountyScanMinutes: event.target.value,
+                  }))
+                }
               />
             </label>
             <label>
@@ -1543,7 +1781,12 @@ export default function OpenClawTab() {
                 max="240"
                 step="1"
                 value={openclawConfig.autonomousKeepaliveMinutes}
-                onChange={(event) => setOpenclawConfig(prev => ({ ...prev, autonomousKeepaliveMinutes: event.target.value }))}
+                onChange={(event) =>
+                  setOpenclawConfig((prev) => ({
+                    ...prev,
+                    autonomousKeepaliveMinutes: event.target.value,
+                  }))
+                }
               />
             </label>
             <label>
@@ -1551,7 +1794,9 @@ export default function OpenClawTab() {
               <input
                 type="password"
                 value={openclawConfig.apiKey}
-                onChange={(event) => setOpenclawConfig(prev => ({ ...prev, apiKey: event.target.value }))}
+                onChange={(event) =>
+                  setOpenclawConfig((prev) => ({ ...prev, apiKey: event.target.value }))
+                }
                 placeholder="Leave blank to keep existing key"
               />
             </label>
@@ -1560,7 +1805,9 @@ export default function OpenClawTab() {
               <input
                 type="password"
                 value={openclawConfig.bridgeSecret}
-                onChange={(event) => setOpenclawConfig(prev => ({ ...prev, bridgeSecret: event.target.value }))}
+                onChange={(event) =>
+                  setOpenclawConfig((prev) => ({ ...prev, bridgeSecret: event.target.value }))
+                }
                 placeholder="Leave blank to keep existing secret"
               />
             </label>
@@ -1568,7 +1815,12 @@ export default function OpenClawTab() {
               <input
                 type="checkbox"
                 checked={openclawConfig.autonomousEnabled}
-                onChange={(event) => setOpenclawConfig(prev => ({ ...prev, autonomousEnabled: event.target.checked }))}
+                onChange={(event) =>
+                  setOpenclawConfig((prev) => ({
+                    ...prev,
+                    autonomousEnabled: event.target.checked,
+                  }))
+                }
               />
               Autonomous OpenClaw mode enabled
             </label>
@@ -1576,7 +1828,12 @@ export default function OpenClawTab() {
               <input
                 type="checkbox"
                 checked={openclawConfig.autonomousMoneyRunEnabled}
-                onChange={(event) => setOpenclawConfig(prev => ({ ...prev, autonomousMoneyRunEnabled: event.target.checked }))}
+                onChange={(event) =>
+                  setOpenclawConfig((prev) => ({
+                    ...prev,
+                    autonomousMoneyRunEnabled: event.target.checked,
+                  }))
+                }
               />
               Autonomous money-run workflows enabled
             </label>
@@ -1600,7 +1857,9 @@ export default function OpenClawTab() {
           </div>
 
           {configResult && (
-            <div className={`oc-send-result ${configResult.ok ? 'oc-send-result--ok' : 'oc-send-result--err'}`}>
+            <div
+              className={`oc-send-result ${configResult.ok ? 'oc-send-result--ok' : 'oc-send-result--err'}`}
+            >
               {configResult.text}
             </div>
           )}
@@ -1612,9 +1871,7 @@ export default function OpenClawTab() {
           ) : null}
 
           {!messagesLoading && messagesError ? (
-            <div className="oc-events-empty oc-messages-notice">
-              {messagesError}
-            </div>
+            <div className="oc-events-empty oc-messages-notice">{messagesError}</div>
           ) : null}
 
           {!messagesLoading && !messagesError && !rows.length ? (
@@ -1627,12 +1884,17 @@ export default function OpenClawTab() {
             <div className="oc-chat-list">
               {rows.map((row, index) => {
                 const inbound = row.direction === 'inbound';
-                const content = typeof row.content === 'string'
-                  ? row.content
-                  : (row.content == null ? '(empty)' : JSON.stringify(row.content));
+                const content =
+                  typeof row.content === 'string'
+                    ? row.content
+                    : row.content == null
+                      ? '(empty)'
+                      : JSON.stringify(row.content);
                 return (
                   <div
-                    key={row._id || `${row.direction || 'unknown'}-${row.createdAt || index}-${index}`}
+                    key={
+                      row._id || `${row.direction || 'unknown'}-${row.createdAt || index}-${index}`
+                    }
                     className={`oc-chat-row ${inbound ? 'inbound' : 'outbound'}`}
                   >
                     <div className="oc-chat-meta">

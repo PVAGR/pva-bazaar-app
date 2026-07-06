@@ -53,7 +53,6 @@ This implementation adds a hybrid sale-sync layer on top of the current PVA back
 
 ### Receipt token minting
 
-
 ## Provenance and Duplicate Detection
 
 - `PROVENANCE_FEED_SIGNING_KEY`: Optional HMAC key used to sign `GET /api/items/:slugOrId/provenance-feed` payloads.

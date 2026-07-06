@@ -25,28 +25,112 @@ const Bounty = require('../models/Bounty');
 // ─── Keyword Strategy ────────────────────────────────────────────────────────
 
 const KEYWORDS = {
-  compensation: ['bounty', 'reward', 'prize', 'pay', 'payment', 'paid', 'contest', 'hackathon', 'grant', 'earn', 'income', 'compensation', 'win', 'payout'],
-  crypto: ['crypto', 'eth', 'usdc', 'dai', 'matic', 'base', 'stablecoin', 'token', 'blockchain', 'web3', 'defi', 'nft', 'sol', 'solana', 'layer2', 'l2', 'onchain'],
-  task: ['task', 'quest', 'job', 'project', 'contract', 'freelance', 'remote', 'issue', 'open to work', 'gig', 'listing', 'opportunity'],
+  compensation: [
+    'bounty',
+    'reward',
+    'prize',
+    'pay',
+    'payment',
+    'paid',
+    'contest',
+    'hackathon',
+    'grant',
+    'earn',
+    'income',
+    'compensation',
+    'win',
+    'payout',
+  ],
+  crypto: [
+    'crypto',
+    'eth',
+    'usdc',
+    'dai',
+    'matic',
+    'base',
+    'stablecoin',
+    'token',
+    'blockchain',
+    'web3',
+    'defi',
+    'nft',
+    'sol',
+    'solana',
+    'layer2',
+    'l2',
+    'onchain',
+  ],
+  task: [
+    'task',
+    'quest',
+    'job',
+    'project',
+    'contract',
+    'freelance',
+    'remote',
+    'issue',
+    'open to work',
+    'gig',
+    'listing',
+    'opportunity',
+  ],
   aiExecutable: [
-    'code', 'script', 'solidity', 'smart contract', 'frontend', 'backend', 'api',
-    'write', 'document', 'tutorial', 'review', 'audit', 'readme', 'docs',
-    'react', 'node', 'python', 'typescript', 'data label', 'annotate', 'classify',
-    'test', 'deploy', 'integration', 'openai', 'llm', 'ai', 'prompt', 'bug', 'fix',
+    'code',
+    'script',
+    'solidity',
+    'smart contract',
+    'frontend',
+    'backend',
+    'api',
+    'write',
+    'document',
+    'tutorial',
+    'review',
+    'audit',
+    'readme',
+    'docs',
+    'react',
+    'node',
+    'python',
+    'typescript',
+    'data label',
+    'annotate',
+    'classify',
+    'test',
+    'deploy',
+    'integration',
+    'openai',
+    'llm',
+    'ai',
+    'prompt',
+    'bug',
+    'fix',
   ],
 };
 
 const ALL_KEYWORDS = Object.values(KEYWORDS).flat();
 const REDDIT_SUBREDDITS = [
-  'CryptoCurrency', 'web3', 'ethdev', 'solana', 'forhire', 'jobs4bitcoins',
-  'defi', 'Ethereum', 'NFT', 'layer2', 'gitcoingrants', 'algodev',
-  'freelance', 'slavelabour', 'defiblockchain',
+  'CryptoCurrency',
+  'web3',
+  'ethdev',
+  'solana',
+  'forhire',
+  'jobs4bitcoins',
+  'defi',
+  'Ethereum',
+  'NFT',
+  'layer2',
+  'gitcoingrants',
+  'algodev',
+  'freelance',
+  'slavelabour',
+  'defiblockchain',
 ];
 
 function scoreText(text) {
   if (!text) return { score: 0, matched: [] };
   const lower = text.toLowerCase();
-  const matched = [...new Set(ALL_KEYWORDS.filter(kw => lower.includes(kw)))];
+  const matched = [...new Set(ALL_KEYWORDS.filter((kw) => lower.includes(kw)))];
   return { score: matched.length, matched };
 }
 
@@ -78,7 +162,7 @@ async function scanDework() {
     const { data } = await axios.post(
       endpoint,
       { query, variables: { limit: 50 } },
-      { headers: { 'Content-Type': 'application/json' }, timeout: 15000 }
+      { headers: { 'Content-Type': 'application/json' }, timeout: 15000 },
     );
 
     const tasks = data?.data?.tasks || [];
@@ -97,7 +181,7 @@ async function scanDework() {
         platformUrl: task.permalink ? `https://app.dework.xyz${task.permalink}` : '',
         title: task.name,
         description: task.description || '',
-        tags: (task.tags || []).map(t => t.label),
+        tags: (task.tags || []).map((t) => t.label),
         keywords: matched,
         rewardAmount: rewardAmount ? `${rewardAmount} ${rewardToken}` : '',
         rewardToken,
@@ -121,7 +205,7 @@ async function scanGitHub() {
   const found = [];
   const repos = (process.env.GITHUB_BOUNTY_REPOS || '')
     .split(',')
-    .map(r => r.trim())
+    .map((r) => r.trim())
     .filter(Boolean);
 
   // Also scan public "good-first-issue" + "bounty" labeled issues via search
@@ -152,14 +236,21 @@ async function scanGitHub() {
     try {
       // Keep both a label-focused pass and a generic pass to avoid missing opportunities.
       const [labelPass, genericPass] = await Promise.all([
-        axios.get(`https://api.github.com/repos/${repo}/issues?state=open&per_page=30&labels=bounty,reward`, {
-          headers,
-          timeout: 10000,
-        }).catch(() => ({ data: [] })),
-        axios.get(`https://api.github.com/repos/${repo}/issues?state=open&per_page=30`, {
-          headers,
-          timeout: 10000,
-        }).catch(() => ({ data: [] })),
+        axios
+          .get(
+            `https://api.github.com/repos/${repo}/issues?state=open&per_page=30&labels=bounty,reward`,
+            {
+              headers,
+              timeout: 10000,
+            },
+          )
+          .catch(() => ({ data: [] })),
+        axios
+          .get(`https://api.github.com/repos/${repo}/issues?state=open&per_page=30`, {
+            headers,
+            timeout: 10000,
+          })
+          .catch(() => ({ data: [] })),
       ]);
 
       const data = [...(labelPass.data || []), ...(genericPass.data || [])];
@@ -180,7 +271,7 @@ async function scanGitHub() {
           platformUrl: issue.html_url,
           title: issue.title,
           description: (issue.body || '').substring(0, 2000),
-          tags: (issue.labels || []).map(l => l.name),
+          tags: (issue.labels || []).map((l) => l.name),
           keywords: matched,
           rewardAmount: rewardInfo.amountText,
           rewardToken: rewardInfo.token,
@@ -200,7 +291,7 @@ async function scanGitHub() {
       const url = `https://api.github.com/search/issues?q=${encodeURIComponent(q)}&per_page=30&sort=created&order=desc`;
       const { data } = await axios.get(url, { headers, timeout: 10000 });
 
-      for (const issue of (data.items || [])) {
+      for (const issue of data.items || []) {
         if (issue.pull_request) continue;
         const text = `${issue.title} ${issue.body || ''}`;
         const { score, matched } = scoreText(text);
@@ -214,7 +305,7 @@ async function scanGitHub() {
           platformUrl: issue.html_url,
           title: issue.title,
           description: (issue.body || '').substring(0, 2000),
-          tags: (issue.labels || []).map(l => l.name),
+          tags: (issue.labels || []).map((l) => l.name),
           keywords: matched,
           rewardAmount: rewardInfo.amountText,
           rewardToken: rewardInfo.token,
@@ -237,7 +328,7 @@ async function scanReddit() {
   const found = [];
   const subreddits = (process.env.REDDIT_BOUNTY_SUBREDDITS || REDDIT_SUBREDDITS.join(','))
     .split(',')
-    .map(s => s.trim())
+    .map((s) => s.trim())
     .filter(Boolean);
 
   for (const subreddit of subreddits) {
@@ -296,11 +387,15 @@ async function scanSuperteam() {
   try {
     const { data } = await axios.get(
       'https://earn.superteam.fun/api/listings/?type=BOUNTY&take=50',
-      { timeout: 15000, headers: { Accept: 'application/json' } }
+      { timeout: 15000, headers: { Accept: 'application/json' } },
     );
-    const items = Array.isArray(data?.data) ? data.data
-      : Array.isArray(data?.bounties) ? data.bounties
-      : Array.isArray(data) ? data : [];
+    const items = Array.isArray(data?.data)
+      ? data.data
+      : Array.isArray(data?.bounties)
+        ? data.bounties
+        : Array.isArray(data)
+          ? data
+          : [];
 
     for (const item of items) {
       if (!item || (item.status && item.status !== 'OPEN')) continue;
@@ -311,8 +406,8 @@ async function scanSuperteam() {
       const rewardRaw = parseFloat(item.rewardAmount || item.usdValue || 0) || 0;
       const token = item.token || 'USDC';
       const skillTags = (item.skills || [])
-        .flatMap(s => (typeof s === 'string' ? s : s.skills || s.skill || ''))
-        .filter(s => typeof s === 'string' && s);
+        .flatMap((s) => (typeof s === 'string' ? s : s.skills || s.skill || ''))
+        .filter((s) => typeof s === 'string' && s);
 
       found.push({
         platform: 'superteam',
@@ -349,7 +444,7 @@ async function scanCode4rena() {
 
     const { data: files } = await axios.get(
       'https://api.github.com/repos/code-423n4/code423n4.com/contents/_data/contests',
-      { headers, timeout: 12000 }
+      { headers, timeout: 12000 },
     );
 
     // Take the 15 most recent contest files
@@ -366,7 +461,7 @@ async function scanCode4rena() {
 
         const totalPrize = parseFloat(c.total_prize) || 0;
         const { score, matched } = scoreText(
-          `${c.title || ''} ${c.details || ''} audit solidity smart contract bounty`
+          `${c.title || ''} ${c.details || ''} audit solidity smart contract bounty`,
         );
 
         found.push({
@@ -399,23 +494,25 @@ async function scanCode4rena() {
 async function scanImmuneFi() {
   const found = [];
   try {
-    const { data } = await axios.get(
-      'https://immunefi.com/explore.json',
-      { timeout: 15000, headers: { Accept: 'application/json', 'User-Agent': 'pva-bazaar-bounty-scanner/1.0' } }
-    );
-    const programs = Array.isArray(data) ? data : (data?.programs || data?.bounties || []);
+    const { data } = await axios.get('https://immunefi.com/explore.json', {
+      timeout: 15000,
+      headers: { Accept: 'application/json', 'User-Agent': 'pva-bazaar-bounty-scanner/1.0' },
+    });
+    const programs = Array.isArray(data) ? data : data?.programs || data?.bounties || [];
 
     for (const prog of programs.slice(0, 50)) {
       if (!prog || prog.status === 'Inactive') continue;
       const text = `${prog.project || prog.name || ''} ${prog.description || ''}`;
-      const { score, matched } = scoreText(`${text  } bug bounty security audit`);
+      const { score, matched } = scoreText(`${text} bug bounty security audit`);
 
       const maxBounty = parseFloat(prog.maxBounty || prog.maxReward || 0) || 0;
 
       found.push({
         platform: 'immunefi',
         platformId: String(prog.id || prog.slug || prog.project),
-        platformUrl: prog.slug ? `https://immunefi.com/bug-bounty/${prog.slug}/` : 'https://immunefi.com/explore/',
+        platformUrl: prog.slug
+          ? `https://immunefi.com/bug-bounty/${prog.slug}/`
+          : 'https://immunefi.com/explore/',
         title: `[Bug Bounty] ${prog.project || prog.name || 'Unknown'}`,
         description: (prog.description || '').substring(0, 2000),
         tags: ['bug-bounty', 'security', ...(prog.technologies || [])],
@@ -490,7 +587,7 @@ Start directly with the deliverable, no preamble.`;
           'Content-Type': 'application/json',
         },
         timeout: 30000,
-      }
+      },
     );
 
     return data.choices?.[0]?.message?.content || '';

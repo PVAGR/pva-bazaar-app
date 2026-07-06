@@ -1,6 +1,6 @@
-﻿import api from "./axios";
-import { getToken } from "./auth";
-import { FEATURED_INVENTORY, findFeaturedItem } from "./featuredInventory";
+﻿import api from './axios';
+import { getToken } from './auth';
+import { FEATURED_INVENTORY, findFeaturedItem } from './featuredInventory';
 import { getLocalCurrentUser, isLocalToken } from './localAuthVault';
 import {
   clearApiBaseOverride,
@@ -10,11 +10,11 @@ import {
   rememberApiBase,
 } from './apiBase';
 
-export const apiGet = (path, config) => api.get(path, config).then(r => r.data);
-export const apiPost = (path, body, config) => api.post(path, body, config).then(r => r.data);
-export const apiPut = (path, body, config) => api.put(path, body, config).then(r => r.data);
-export const apiPatch = (path, body, config) => api.patch(path, body, config).then(r => r.data);
-export const apiDelete = (path, config) => api.delete(path, config).then(r => r.data);
+export const apiGet = (path, config) => api.get(path, config).then((r) => r.data);
+export const apiPost = (path, body, config) => api.post(path, body, config).then((r) => r.data);
+export const apiPut = (path, body, config) => api.put(path, body, config).then((r) => r.data);
+export const apiPatch = (path, body, config) => api.patch(path, body, config).then((r) => r.data);
+export const apiDelete = (path, config) => api.delete(path, config).then((r) => r.data);
 
 export const submitLibraryArticle = (payload) => apiPost('/library/submit', payload);
 export const fetchPendingLibraryArticles = (params = {}) => apiGet('/library/pending', { params });
@@ -22,54 +22,92 @@ export const approveLibraryArticle = (articleId, payload = {}) =>
   apiPut(`/library/${encodeURIComponent(articleId)}/approve`, payload);
 export const rejectLibraryArticle = (articleId, payload = {}) =>
   apiPut(`/library/${encodeURIComponent(articleId)}/reject`, payload);
-export const fetchLibraryArticleById = (articleId) => apiGet(`/library/${encodeURIComponent(articleId)}`);
+export const fetchLibraryArticleById = (articleId) =>
+  apiGet(`/library/${encodeURIComponent(articleId)}`);
 
 export const fetchDeals = (params = {}) => apiGet('/deals', { params });
 export const fetchDealById = (dealId) => apiGet(`/deals/${encodeURIComponent(dealId)}`);
-export const fetchPublicDealByPublicId = (publicId) => apiGet(`/deals/public/${encodeURIComponent(publicId)}`);
+export const fetchPublicDealByPublicId = (publicId) =>
+  apiGet(`/deals/public/${encodeURIComponent(publicId)}`);
 export const createDeal = (payload) => apiPost('/deals', payload);
 export const generatePvaDealPlan = (payload) => apiPost('/deals/pva/plan', payload);
 export const fetchPvaDealCandidates = (params = {}) => apiGet('/deals/pva/candidates', { params });
-export const assignDealPvaRoles = (dealId, payload) => apiPut(`/deals/${encodeURIComponent(dealId)}/pva/assign`, payload);
-export const acceptDealPvaRole = (dealId, payload) => apiPost(`/deals/${encodeURIComponent(dealId)}/pva/accept-role`, payload);
-export const fetchDealPvaNotificationQueue = (dealId) => apiGet(`/deals/${encodeURIComponent(dealId)}/pva/notification-queue`);
+export const assignDealPvaRoles = (dealId, payload) =>
+  apiPut(`/deals/${encodeURIComponent(dealId)}/pva/assign`, payload);
+export const acceptDealPvaRole = (dealId, payload) =>
+  apiPost(`/deals/${encodeURIComponent(dealId)}/pva/accept-role`, payload);
+export const fetchDealPvaNotificationQueue = (dealId) =>
+  apiGet(`/deals/${encodeURIComponent(dealId)}/pva/notification-queue`);
 export const updateDealPvaNotificationQueueStatus = (dealId, notificationId, payload) =>
-  apiPut(`/deals/${encodeURIComponent(dealId)}/pva/notification-queue/${encodeURIComponent(notificationId)}/status`, payload);
-export const fetchDealPvaPayoutPreview = (dealId) => apiGet(`/deals/${encodeURIComponent(dealId)}/pva/payout-preview`);
-export const createDealInvite = (dealId) => apiPost(`/deals/${encodeURIComponent(dealId)}/invite`, {});
-export const joinDealAuthenticated = (inviteToken) => apiPost('/deals/join-authenticated', { inviteToken });
-export const postDealMessage = (dealId, payload) => apiPost(`/deals/${encodeURIComponent(dealId)}/messages`, payload);
+  apiPut(
+    `/deals/${encodeURIComponent(dealId)}/pva/notification-queue/${encodeURIComponent(notificationId)}/status`,
+    payload,
+  );
+export const fetchDealPvaPayoutPreview = (dealId) =>
+  apiGet(`/deals/${encodeURIComponent(dealId)}/pva/payout-preview`);
+export const createDealInvite = (dealId) =>
+  apiPost(`/deals/${encodeURIComponent(dealId)}/invite`, {});
+export const joinDealAuthenticated = (inviteToken) =>
+  apiPost('/deals/join-authenticated', { inviteToken });
+export const postDealMessage = (dealId, payload) =>
+  apiPost(`/deals/${encodeURIComponent(dealId)}/messages`, payload);
 export const submitDealEvidence = (dealId, milestoneId, payload) =>
-  apiPost(`/deals/${encodeURIComponent(dealId)}/milestones/${encodeURIComponent(milestoneId)}/evidence`, payload);
-export const prepareDealEscrow = (dealId, payload = {}) => apiPost(`/deals/${encodeURIComponent(dealId)}/prepare-escrow`, payload);
-export const mockFundDealEscrow = (dealId, payload) => apiPost(`/deals/${encodeURIComponent(dealId)}/escrow/mock-fund`, payload);
-export const confirmDealReceipt = (dealId) => apiPost(`/deals/${encodeURIComponent(dealId)}/escrow/confirm-receipt`, {});
-export const releaseDealEscrow = (dealId) => apiPost(`/deals/${encodeURIComponent(dealId)}/escrow/release`, {});
-export const refundDealEscrow = (dealId) => apiPost(`/deals/${encodeURIComponent(dealId)}/escrow/refund`, {});
-export const openDealDispute = (dealId, payload) => apiPost(`/deals/${encodeURIComponent(dealId)}/dispute`, payload);
+  apiPost(
+    `/deals/${encodeURIComponent(dealId)}/milestones/${encodeURIComponent(milestoneId)}/evidence`,
+    payload,
+  );
+export const prepareDealEscrow = (dealId, payload = {}) =>
+  apiPost(`/deals/${encodeURIComponent(dealId)}/prepare-escrow`, payload);
+export const mockFundDealEscrow = (dealId, payload) =>
+  apiPost(`/deals/${encodeURIComponent(dealId)}/escrow/mock-fund`, payload);
+export const confirmDealReceipt = (dealId) =>
+  apiPost(`/deals/${encodeURIComponent(dealId)}/escrow/confirm-receipt`, {});
+export const releaseDealEscrow = (dealId) =>
+  apiPost(`/deals/${encodeURIComponent(dealId)}/escrow/release`, {});
+export const refundDealEscrow = (dealId) =>
+  apiPost(`/deals/${encodeURIComponent(dealId)}/escrow/refund`, {});
+export const openDealDispute = (dealId, payload) =>
+  apiPost(`/deals/${encodeURIComponent(dealId)}/dispute`, payload);
 export const fetchDealDispute = (dealId) => apiGet(`/deals/${encodeURIComponent(dealId)}/dispute`);
-export const addDealDisputeEvidence = (dealId, payload) => apiPost(`/deals/${encodeURIComponent(dealId)}/dispute/evidence`, payload);
-export const resolveDealDispute = (dealId, payload) => apiPut(`/deals/${encodeURIComponent(dealId)}/dispute/resolve`, payload);
-export const autoAssignDealMediator = (dealId, payload = {}) => apiPost(`/deals/${encodeURIComponent(dealId)}/mediator/auto-assign`, payload);
-export const requestDealCustomMediator = (dealId, payload) => apiPost(`/deals/${encodeURIComponent(dealId)}/mediator/request-custom`, payload);
-export const approveDealMediator = (dealId, payload) => apiPut(`/deals/${encodeURIComponent(dealId)}/mediator/approve`, payload);
-export const generateDealFraudPacket = (dealId, payload) => apiPost(`/deals/${encodeURIComponent(dealId)}/reports/fraud-packet`, payload);
-export const fetchDealResolutionCertificate = (dealId) => apiGet(`/deals/${encodeURIComponent(dealId)}/reports/resolution-certificate`);
-export const fetchDealExportBundle = (dealId, params = {}) => apiGet(`/deals/${encodeURIComponent(dealId)}/reports/export-bundle`, { params });
-export const fetchDealOutboundQueue = (dealId, params = {}) => apiGet(`/deals/${encodeURIComponent(dealId)}/reports/outbound-queue`, { params });
+export const addDealDisputeEvidence = (dealId, payload) =>
+  apiPost(`/deals/${encodeURIComponent(dealId)}/dispute/evidence`, payload);
+export const resolveDealDispute = (dealId, payload) =>
+  apiPut(`/deals/${encodeURIComponent(dealId)}/dispute/resolve`, payload);
+export const autoAssignDealMediator = (dealId, payload = {}) =>
+  apiPost(`/deals/${encodeURIComponent(dealId)}/mediator/auto-assign`, payload);
+export const requestDealCustomMediator = (dealId, payload) =>
+  apiPost(`/deals/${encodeURIComponent(dealId)}/mediator/request-custom`, payload);
+export const approveDealMediator = (dealId, payload) =>
+  apiPut(`/deals/${encodeURIComponent(dealId)}/mediator/approve`, payload);
+export const generateDealFraudPacket = (dealId, payload) =>
+  apiPost(`/deals/${encodeURIComponent(dealId)}/reports/fraud-packet`, payload);
+export const fetchDealResolutionCertificate = (dealId) =>
+  apiGet(`/deals/${encodeURIComponent(dealId)}/reports/resolution-certificate`);
+export const fetchDealExportBundle = (dealId, params = {}) =>
+  apiGet(`/deals/${encodeURIComponent(dealId)}/reports/export-bundle`, { params });
+export const fetchDealOutboundQueue = (dealId, params = {}) =>
+  apiGet(`/deals/${encodeURIComponent(dealId)}/reports/outbound-queue`, { params });
 export const updateDealOutboundQueueStatus = (dealId, packetId, payload) =>
-  apiPut(`/deals/${encodeURIComponent(dealId)}/reports/outbound/${encodeURIComponent(packetId)}/status`, payload);
-export const verifyDealParticipation = (dealId, payload = {}) => apiPost(`/deals/${encodeURIComponent(dealId)}/verify`, payload);
-export const fetchDealVerificationSummary = (dealId) => apiGet(`/deals/${encodeURIComponent(dealId)}/verification`);
+  apiPut(
+    `/deals/${encodeURIComponent(dealId)}/reports/outbound/${encodeURIComponent(packetId)}/status`,
+    payload,
+  );
+export const verifyDealParticipation = (dealId, payload = {}) =>
+  apiPost(`/deals/${encodeURIComponent(dealId)}/verify`, payload);
+export const fetchDealVerificationSummary = (dealId) =>
+  apiGet(`/deals/${encodeURIComponent(dealId)}/verification`);
 
 export const fetchAdminRuntimeConfig = () => apiGet('/admin/runtime-config');
-export const updateOpenClawRuntimeConfig = (payload) => apiPut('/admin/runtime-config/openclaw', payload);
-export const updatePayoutRuntimePolicy = (payload) => apiPut('/admin/runtime-config/payout-policy', payload);
+export const updateOpenClawRuntimeConfig = (payload) =>
+  apiPut('/admin/runtime-config/openclaw', payload);
+export const updatePayoutRuntimePolicy = (payload) =>
+  apiPut('/admin/runtime-config/payout-policy', payload);
 export const requestSolanaTestPayout = (payload) => apiPost('/solana/test-payout', payload);
 export const confirmSolanaTestPayout = (payload) => apiPost('/solana/confirm-test-payout', payload);
 export const getDirectTransferReadiness = () => apiGet('/solana/direct-transfer-readiness');
 export const getHotWalletBalance = () => apiGet('/solana/hot-wallet-balance');
-export const requestDevnetAirdropHotWallet = (payload) => apiPost('/solana/devnet-airdrop-hot-wallet', payload);
+export const requestDevnetAirdropHotWallet = (payload) =>
+  apiPost('/solana/devnet-airdrop-hot-wallet', payload);
 export const executeSolanaTestFlow = (payload) => apiPost('/solana/execute-test-flow', payload);
 export const directSolanaTransfer = (payload) => apiPost('/solana/direct-transfer', payload);
 export const fetchAutopilotRuns = (limit = 30) => apiGet(`/solana/autopilot-runs?limit=${limit}`);
@@ -77,8 +115,14 @@ export const fetchTransactions = async (limit = 10) => {
   const boundedLimit = Math.max(1, Math.min(Number(limit) || 10, 100));
   try {
     const [ordersResponse, escrowResponse] = await Promise.all([
-      apiGet('/orders/mine', { params: { limit: boundedLimit } }).catch(() => ({ ok: false, items: [] })),
-      apiGet('/orders/escrow', { params: { limit: boundedLimit } }).catch(() => ({ ok: false, items: [] })),
+      apiGet('/orders/mine', { params: { limit: boundedLimit } }).catch(() => ({
+        ok: false,
+        items: [],
+      })),
+      apiGet('/orders/escrow', { params: { limit: boundedLimit } }).catch(() => ({
+        ok: false,
+        items: [],
+      })),
     ]);
 
     const orderItems = Array.isArray(ordersResponse?.items) ? ordersResponse.items : [];
@@ -117,7 +161,8 @@ export const fetchTransactions = async (limit = 10) => {
 export const fetchAdminTransactions = (limit = 25) =>
   apiGet('/admin/transactions/recent', { params: { limit } });
 
-export const fetchGovernanceProposals = (params = {}) => apiGet('/governance/proposals', { params });
+export const fetchGovernanceProposals = (params = {}) =>
+  apiGet('/governance/proposals', { params });
 export const fetchGovernanceProposalById = (proposalId) =>
   apiGet(`/governance/proposals/${encodeURIComponent(proposalId)}`);
 export const createGovernanceProposal = (payload) => apiPost('/governance/proposals', payload);
@@ -138,7 +183,8 @@ export const submitGovernanceOnChainVote = (proposalId, payload) =>
 export const fetchGovernanceVoteSummary = (proposalId) =>
   apiGet(`/governance/proposals/${encodeURIComponent(proposalId)}/votes/summary`);
 export const fetchGovernanceAdminResponses = () => apiGet('/governance/admin-responses');
-export const fetchGovernanceAdminSyncHealth = () => apiGet('/governance/admin-responses/sync-health');
+export const fetchGovernanceAdminSyncHealth = () =>
+  apiGet('/governance/admin-responses/sync-health');
 export const repairGovernanceAdminLifecycleSync = (proposalId) =>
   apiPost(`/governance/admin-responses/${encodeURIComponent(proposalId)}/repair-lifecycle`, {});
 export const upsertGovernanceAdminResponse = (proposalId, payload) =>
@@ -179,36 +225,49 @@ export const deleteRecoverySnapshotById = (snapshotId) =>
   apiDelete(`/recovery/snapshots/${encodeURIComponent(snapshotId)}`);
 
 export const fetchMyBookProjects = () => apiGet('/book-publishing/mine');
-export const fetchPublishedBookProjects = (params = {}) => apiGet('/book-publishing/public', { params });
-export const fetchBookProjectById = (bookId) => apiGet(`/book-publishing/${encodeURIComponent(bookId)}`);
+export const fetchPublishedBookProjects = (params = {}) =>
+  apiGet('/book-publishing/public', { params });
+export const fetchBookProjectById = (bookId) =>
+  apiGet(`/book-publishing/${encodeURIComponent(bookId)}`);
 export const fetchPublicBookProject = (slug) =>
   apiGet(`/book-publishing/public/${encodeURIComponent(slug)}`);
 export const saveBookProject = (formData) => apiUpload('/book-publishing', formData);
-export const deleteBookProject = (bookId) => apiDelete(`/book-publishing/${encodeURIComponent(bookId)}`);
+export const deleteBookProject = (bookId) =>
+  apiDelete(`/book-publishing/${encodeURIComponent(bookId)}`);
 
 export const fetchProposals = (params = {}) => apiGet('/proposals', { params });
-export const fetchProposalById = (proposalId) => apiGet(`/proposals/${encodeURIComponent(proposalId)}`);
+export const fetchProposalById = (proposalId) =>
+  apiGet(`/proposals/${encodeURIComponent(proposalId)}`);
 export const createProposal = (payload) => apiPost('/proposals', payload);
-export const publishProposal = (proposalId) => apiPost(`/proposals/${encodeURIComponent(proposalId)}/publish`, {});
-export const endorseProposal = (proposalId) => apiPost(`/proposals/${encodeURIComponent(proposalId)}/endorse`, {});
-export const unendorseProposal = (proposalId) => apiDelete(`/proposals/${encodeURIComponent(proposalId)}/endorse`);
+export const publishProposal = (proposalId) =>
+  apiPost(`/proposals/${encodeURIComponent(proposalId)}/publish`, {});
+export const endorseProposal = (proposalId) =>
+  apiPost(`/proposals/${encodeURIComponent(proposalId)}/endorse`, {});
+export const unendorseProposal = (proposalId) =>
+  apiDelete(`/proposals/${encodeURIComponent(proposalId)}/endorse`);
 export const fetchMyProposals = () => apiGet('/proposals/my/submissions');
 export const fetchAdminEndorsedProposals = () => apiGet('/admin/proposals/endorsed');
-export const respondToProposal = (proposalId, payload) => apiPost(`/admin/proposals/${encodeURIComponent(proposalId)}/respond`, payload);
-export const setProposalStatus = (proposalId, payload) => apiPut(`/admin/proposals/${encodeURIComponent(proposalId)}/status`, payload);
-export const setProposalExecutionProject = (proposalId, payload) => apiPost(`/admin/proposals/${encodeURIComponent(proposalId)}/execution`, payload);
+export const respondToProposal = (proposalId, payload) =>
+  apiPost(`/admin/proposals/${encodeURIComponent(proposalId)}/respond`, payload);
+export const setProposalStatus = (proposalId, payload) =>
+  apiPut(`/admin/proposals/${encodeURIComponent(proposalId)}/status`, payload);
+export const setProposalExecutionProject = (proposalId, payload) =>
+  apiPost(`/admin/proposals/${encodeURIComponent(proposalId)}/execution`, payload);
 
 export const fetchMyPassport = () => apiGet('/passport/me');
 export const fetchPassportByUserId = (userId) => apiGet(`/passport/${encodeURIComponent(userId)}`);
 export const updatePassportProfile = (payload) => apiPut('/passport/profile', payload);
 export const requestPassportVerification = () => apiPost('/passport/verify-request', {});
 export const requestPassportWalletChallenge = () => apiPost('/passport/challenge/request', {});
-export const verifyPassportWalletChallenge = (payload) => apiPost('/passport/challenge/verify', payload);
+export const verifyPassportWalletChallenge = (payload) =>
+  apiPost('/passport/challenge/verify', payload);
 export const verifyPassportCredential = (params = {}) => apiGet('/passport/verify', { params });
-export const fetchPassportAudit = (userId) => apiGet(`/passport/audit/${encodeURIComponent(userId)}`);
+export const fetchPassportAudit = (userId) =>
+  apiGet(`/passport/audit/${encodeURIComponent(userId)}`);
 export const fetchCitizenDirectory = (params = {}) => apiGet('/passport/citizens', { params });
 export const fetchPendingPassports = () => apiGet('/admin/passport/pending');
-export const approvePassport = (userId) => apiPost(`/admin/passport/approve/${encodeURIComponent(userId)}`, {});
+export const approvePassport = (userId) =>
+  apiPost(`/admin/passport/approve/${encodeURIComponent(userId)}`, {});
 export const issuePassportCredential = (userId, payload = {}) =>
   apiPost(`/admin/passport/credential/issue/${encodeURIComponent(userId)}`, payload);
 export const refreshPassportCredential = (userId) =>
@@ -225,14 +284,18 @@ export const fetchMyFederationPresence = () => apiGet('/federation/me');
 export const checkInFederationPresence = (payload = {}) => apiPost('/federation/check-in', payload);
 export const fetchFederationIpLocation = () => apiGet('/federation/ip-lookup');
 export const fetchFederationGameState = () => apiGet('/federation/game/state');
-export const updateFederationGameProfile = (payload = {}) => apiPut('/federation/game/state', payload);
+export const updateFederationGameProfile = (payload = {}) =>
+  apiPut('/federation/game/state', payload);
 export const runFederationGameAction = (actionType) =>
   apiPost('/federation/game/actions', { actionType });
 export const fetchFederationGameWorld = () => apiGet('/federation/game/world');
 export const fetchMyFederationFaction = () => apiGet('/federation/game/faction/mine');
-export const createFederationFaction = (payload = {}) => apiPost('/federation/game/factions/create', payload);
-export const joinFederationFaction = (payload = {}) => apiPost('/federation/game/factions/join', payload);
-export const claimFederationSector = (payload = {}) => apiPost('/federation/game/sectors/claim', payload);
+export const createFederationFaction = (payload = {}) =>
+  apiPost('/federation/game/factions/create', payload);
+export const joinFederationFaction = (payload = {}) =>
+  apiPost('/federation/game/factions/join', payload);
+export const claimFederationSector = (payload = {}) =>
+  apiPost('/federation/game/sectors/claim', payload);
 export const onboardFederationHkPlayer = () => apiPost('/federation/game/hk/onboard', {});
 export const fetchFederationHkProfile = () => apiGet('/federation/game/hk/profile');
 export const verifyFederationHkPassportHash = (payload = {}) =>
@@ -260,7 +323,9 @@ async function fetchWithBackendFailover(path, options = {}) {
 
   for (const apiBase of absolutePath ? [''] : candidates) {
     const normalizedPath = absolutePath ? path : normalizeRequestPath(path, apiBase);
-    const url = normalizedPath.startsWith('http') ? normalizedPath : `${normalizeApiBaseUrl(apiBase)}${normalizedPath}`;
+    const url = normalizedPath.startsWith('http')
+      ? normalizedPath
+      : `${normalizeApiBaseUrl(apiBase)}${normalizedPath}`;
     const controller = new AbortController();
     const signal = controller.signal;
     let timeoutId = null;
@@ -389,7 +454,7 @@ export async function fetchOrders({ limit = 25, cursor = null, signal = null } =
   try {
     const config = { params: { limit, cursor } };
     if (signal) config.signal = signal;
-    const response = await apiGet("/orders", config);
+    const response = await apiGet('/orders', config);
     if (response && response.ok && Array.isArray(response.items)) {
       return { ok: true, items: response.items, nextCursor: response.nextCursor || null };
     }
@@ -410,10 +475,15 @@ export async function fetchOmnichannelOpsSnapshot({ limit = 25, source = '' } = 
         ok: true,
         summary: response.summary || {},
         sales: Array.isArray(response.sales) ? response.sales : [],
-        pendingCryptoOrders: Array.isArray(response.pendingCryptoOrders) ? response.pendingCryptoOrders : [],
+        pendingCryptoOrders: Array.isArray(response.pendingCryptoOrders)
+          ? response.pendingCryptoOrders
+          : [],
       };
     }
-    return { ok: false, error: response?.error || response?.message || 'Failed to load ops snapshot' };
+    return {
+      ok: false,
+      error: response?.error || response?.message || 'Failed to load ops snapshot',
+    };
   } catch (err) {
     return { ok: false, error: err.message };
   }
@@ -437,18 +507,22 @@ export async function fetchProvenanceOpsSnapshot({ limit = 20 } = {}) {
         recentRoyaltySales: Array.isArray(response.recentRoyaltySales)
           ? response.recentRoyaltySales
           : [],
-        recentReviewLogs: Array.isArray(response.recentReviewLogs)
-          ? response.recentReviewLogs
-          : [],
+        recentReviewLogs: Array.isArray(response.recentReviewLogs) ? response.recentReviewLogs : [],
       };
     }
-    return { ok: false, error: response?.error || response?.message || 'Failed to load provenance ops snapshot' };
+    return {
+      ok: false,
+      error: response?.error || response?.message || 'Failed to load provenance ops snapshot',
+    };
   } catch (err) {
     return { ok: false, error: err.message };
   }
 }
 
-export async function updateItemProvenanceReview(itemId, { verificationStatus, reviewNotes = '' } = {}) {
+export async function updateItemProvenanceReview(
+  itemId,
+  { verificationStatus, reviewNotes = '' } = {},
+) {
   if (!itemId) return { ok: false, error: 'Missing item id' };
   try {
     const response = await apiPost(`/items/${encodeURIComponent(itemId)}/provenance/review`, {
@@ -462,7 +536,10 @@ export async function updateItemProvenanceReview(itemId, { verificationStatus, r
         message: response.message || 'Provenance review updated',
       };
     }
-    return { ok: false, error: response?.error || response?.message || 'Failed to update provenance review' };
+    return {
+      ok: false,
+      error: response?.error || response?.message || 'Failed to update provenance review',
+    };
   } catch (err) {
     return { ok: false, error: err.message };
   }
@@ -486,7 +563,7 @@ export async function refundOrder(id, { amountCents, reason } = {}) {
     if (response && response.ok && response.refundId) {
       return { ok: true, refundId: response.refundId, status: response.status };
     }
-    return { ok: false, error: response?.error || "Refund failed" };
+    return { ok: false, error: response?.error || 'Refund failed' };
   } catch (err) {
     return { ok: false, error: err.message };
   }
@@ -494,11 +571,11 @@ export async function refundOrder(id, { amountCents, reason } = {}) {
 // Create Stripe Checkout Session
 export async function createCheckoutSession(itemId) {
   try {
-    const response = await apiPost("/checkout/create-session", { itemId });
+    const response = await apiPost('/checkout/create-session', { itemId });
     if (response && response.ok && response.url) {
       return { ok: true, url: response.url };
     }
-    return { ok: false, error: response?.error || "Failed to create session" };
+    return { ok: false, error: response?.error || 'Failed to create session' };
   } catch (err) {
     return { ok: false, error: err.message };
   }
@@ -525,7 +602,10 @@ export async function prepareCryptoCheckout({ itemId, buyerWallet = '', buyerEma
         memo: response.memo,
       };
     }
-    return { ok: false, error: response?.error || response?.message || 'Failed to prepare crypto checkout' };
+    return {
+      ok: false,
+      error: response?.error || response?.message || 'Failed to prepare crypto checkout',
+    };
   } catch (err) {
     return { ok: false, error: err.message };
   }
@@ -544,7 +624,10 @@ export async function fetchCryptoCheckoutConfig() {
         quoteUsdPerEth: Number(response.quoteUsdPerEth || 0),
       };
     }
-    return { ok: false, error: response?.error || response?.message || 'Failed to load crypto checkout config' };
+    return {
+      ok: false,
+      error: response?.error || response?.message || 'Failed to load crypto checkout config',
+    };
   } catch (err) {
     return { ok: false, error: err.message };
   }
@@ -568,7 +651,10 @@ export async function confirmCryptoCheckoutPayment({ orderId, txHash, buyerWalle
         delistResults: Array.isArray(response.delistResults) ? response.delistResults : [],
       };
     }
-    return { ok: false, error: response?.error || response?.message || 'Failed to confirm crypto checkout' };
+    return {
+      ok: false,
+      error: response?.error || response?.message || 'Failed to confirm crypto checkout',
+    };
   } catch (err) {
     return { ok: false, error: err.message };
   }
@@ -577,11 +663,11 @@ export async function confirmCryptoCheckoutPayment({ orderId, txHash, buyerWalle
 // Fetch Stripe Checkout Session details
 export async function fetchCheckoutSession(sessionId) {
   try {
-    const response = await apiGet("/checkout/session", { params: { session_id: sessionId } });
+    const response = await apiGet('/checkout/session', { params: { session_id: sessionId } });
     if (response && response.ok && response.session) {
       return { ok: true, session: response.session };
     }
-    return { ok: false, error: response?.error || "Session not found" };
+    return { ok: false, error: response?.error || 'Session not found' };
   } catch (err) {
     return { ok: false, error: err.message };
   }
@@ -645,7 +731,7 @@ export async function fetchVerificationByArtifact(idOrSlug) {
 
 // fetchMarketplaceItem(slugOrId): fetches a single marketplace item by slug or id
 export async function fetchMarketplaceItem(slugOrId) {
-  if (!slugOrId) return { ok: false, item: null, error: "Missing slug or id" };
+  if (!slugOrId) return { ok: false, item: null, error: 'Missing slug or id' };
   try {
     const url = `/items/${encodeURIComponent(slugOrId)}`;
     const response = await apiGet(url);
@@ -678,7 +764,10 @@ export async function fetchItemProvenanceFeed(slugOrId) {
         algorithm: response.algorithm || 'none',
       };
     }
-    return { ok: false, error: response?.error || response?.message || 'Failed to fetch provenance feed' };
+    return {
+      ok: false,
+      error: response?.error || response?.message || 'Failed to fetch provenance feed',
+    };
   } catch (err) {
     return { ok: false, error: err.message };
   }
@@ -689,7 +778,9 @@ export async function fetchItemProvenanceVerification(slugOrId, { live = true } 
   try {
     const params = new URLSearchParams();
     params.set('live', live ? 'true' : 'false');
-    const response = await apiGet(`/items/${encodeURIComponent(slugOrId)}/provenance/verify?${params.toString()}`);
+    const response = await apiGet(
+      `/items/${encodeURIComponent(slugOrId)}/provenance/verify?${params.toString()}`,
+    );
     if (response && response.ok) {
       return {
         ok: true,
@@ -701,7 +792,10 @@ export async function fetchItemProvenanceVerification(slugOrId, { live = true } 
         signature: response.signature || '',
       };
     }
-    return { ok: false, error: response?.error || response?.message || 'Failed to verify provenance' };
+    return {
+      ok: false,
+      error: response?.error || response?.message || 'Failed to verify provenance',
+    };
   } catch (err) {
     return { ok: false, error: err.message };
   }
@@ -733,7 +827,15 @@ export async function fetchMarketplaceItems({
     const config = signal ? { signal } : undefined;
     const response = await apiGet(url, config);
     if (response && response.ok && Array.isArray(response.items)) {
-      const hasFilters = Boolean(category || q || availabilityStatus || isUnique === true || isUnique === false || originCountry || color);
+      const hasFilters = Boolean(
+        category ||
+          q ||
+          availabilityStatus ||
+          isUnique === true ||
+          isUnique === false ||
+          originCountry ||
+          color,
+      );
       if (!hasFilters && response.items.length === 0) {
         return {
           ok: true,
@@ -750,7 +852,15 @@ export async function fetchMarketplaceItems({
         categories: response.categories || [],
       };
     }
-    const hasFilters = Boolean(category || q || availabilityStatus || isUnique === true || isUnique === false || originCountry || color);
+    const hasFilters = Boolean(
+      category ||
+        q ||
+        availabilityStatus ||
+        isUnique === true ||
+        isUnique === false ||
+        originCountry ||
+        color,
+    );
     if (!hasFilters) {
       return {
         ok: true,
@@ -762,7 +872,15 @@ export async function fetchMarketplaceItems({
     }
     return { ok: false, items: [], nextCursor: null, categories: [] };
   } catch (err) {
-    const hasFilters = Boolean(category || q || availabilityStatus || isUnique === true || isUnique === false || originCountry || color);
+    const hasFilters = Boolean(
+      category ||
+        q ||
+        availabilityStatus ||
+        isUnique === true ||
+        isUnique === false ||
+        originCountry ||
+        color,
+    );
     if (!hasFilters) {
       return {
         ok: true,
@@ -782,7 +900,11 @@ export async function fetchMyMarketplaceItems() {
     if (response && response.ok && Array.isArray(response.items)) {
       return { ok: true, items: response.items };
     }
-    return { ok: false, items: [], error: response?.error || response?.message || 'Failed to fetch your listings' };
+    return {
+      ok: false,
+      items: [],
+      error: response?.error || response?.message || 'Failed to fetch your listings',
+    };
   } catch (err) {
     return { ok: false, items: [], error: err.message };
   }
@@ -811,7 +933,9 @@ export async function createMarketplaceItem(payload) {
       ok: false,
       error: err?.response?.data?.error || err?.response?.data?.message || err.message,
       code: err?.response?.data?.code || '',
-      missingFields: Array.isArray(err?.response?.data?.missingFields) ? err.response.data.missingFields : [],
+      missingFields: Array.isArray(err?.response?.data?.missingFields)
+        ? err.response.data.missingFields
+        : [],
     };
   }
 }
@@ -880,7 +1004,10 @@ export async function updateItemInquiryStatus(inquiryId, { status, notes = '' } 
 export async function releaseItemInquiryReservation(inquiryId) {
   if (!inquiryId) return { ok: false, error: 'Missing inquiry id' };
   try {
-    const response = await apiPost(`/item-inquiries/${encodeURIComponent(inquiryId)}/release-reservation`, {});
+    const response = await apiPost(
+      `/item-inquiries/${encodeURIComponent(inquiryId)}/release-reservation`,
+      {},
+    );
     if (response && response.ok) {
       return {
         ok: true,
@@ -888,7 +1015,10 @@ export async function releaseItemInquiryReservation(inquiryId) {
         artifact: response.artifact || null,
       };
     }
-    return { ok: false, error: response?.error || response?.message || 'Failed to release reservation' };
+    return {
+      ok: false,
+      error: response?.error || response?.message || 'Failed to release reservation',
+    };
   } catch (err) {
     return { ok: false, error: err.message };
   }
@@ -940,7 +1070,10 @@ export async function retryMarketplaceSyndication(itemId, channels = []) {
         message: response.message || 'Syndication retry completed',
       };
     }
-    return { ok: false, error: response?.error || response?.message || 'Failed to retry syndication' };
+    return {
+      ok: false,
+      error: response?.error || response?.message || 'Failed to retry syndication',
+    };
   } catch (err) {
     return { ok: false, error: err.message };
   }
@@ -959,7 +1092,10 @@ export async function fetchOmnichannelStatus(itemId) {
         lastSyncAt: response.lastSyncAt || null,
       };
     }
-    return { ok: false, error: response?.error || response?.message || 'Failed to fetch omnichannel status' };
+    return {
+      ok: false,
+      error: response?.error || response?.message || 'Failed to fetch omnichannel status',
+    };
   } catch (err) {
     return { ok: false, error: err.message };
   }
@@ -968,7 +1104,9 @@ export async function fetchOmnichannelStatus(itemId) {
 export async function fetchOmnichannelSaleHistory(itemId, { limit = 10 } = {}) {
   if (!itemId) return { ok: false, error: 'Missing item id', sales: [] };
   try {
-    const response = await apiGet(`/omnichannel/${encodeURIComponent(itemId)}/sales?limit=${encodeURIComponent(limit)}`);
+    const response = await apiGet(
+      `/omnichannel/${encodeURIComponent(itemId)}/sales?limit=${encodeURIComponent(limit)}`,
+    );
     if (response && response.ok) {
       return {
         ok: true,
@@ -976,7 +1114,11 @@ export async function fetchOmnichannelSaleHistory(itemId, { limit = 10 } = {}) {
         sales: Array.isArray(response.sales) ? response.sales : [],
       };
     }
-    return { ok: false, sales: [], error: response?.error || response?.message || 'Failed to fetch sale history' };
+    return {
+      ok: false,
+      sales: [],
+      error: response?.error || response?.message || 'Failed to fetch sale history',
+    };
   } catch (err) {
     return { ok: false, sales: [], error: err.message };
   }
@@ -985,7 +1127,9 @@ export async function fetchOmnichannelSaleHistory(itemId, { limit = 10 } = {}) {
 export async function saveOmnichannelListings(itemId, channels = []) {
   if (!itemId) return { ok: false, error: 'Missing item id' };
   try {
-    const response = await apiPut(`/omnichannel/${encodeURIComponent(itemId)}/listings`, { channels });
+    const response = await apiPut(`/omnichannel/${encodeURIComponent(itemId)}/listings`, {
+      channels,
+    });
     if (response && response.ok) {
       return {
         ok: true,
@@ -994,7 +1138,10 @@ export async function saveOmnichannelListings(itemId, channels = []) {
         message: response.message || 'Marketplace listings saved',
       };
     }
-    return { ok: false, error: response?.error || response?.message || 'Failed to save marketplace listings' };
+    return {
+      ok: false,
+      error: response?.error || response?.message || 'Failed to save marketplace listings',
+    };
   } catch (err) {
     return { ok: false, error: err.message };
   }
@@ -1014,7 +1161,10 @@ export async function completeOmnichannelSale(payload = {}) {
         saleId: response.saleId || null,
       };
     }
-    return { ok: false, error: response?.error || response?.message || 'Failed to complete sale sync' };
+    return {
+      ok: false,
+      error: response?.error || response?.message || 'Failed to complete sale sync',
+    };
   } catch (err) {
     return { ok: false, error: err.message };
   }
@@ -1035,7 +1185,10 @@ export async function markListingSoldManually(itemId, payload = {}) {
         saleId: response.saleId || null,
       };
     }
-    return { ok: false, error: response?.error || response?.message || 'Failed to mark listing sold' };
+    return {
+      ok: false,
+      error: response?.error || response?.message || 'Failed to mark listing sold',
+    };
   } catch (err) {
     return { ok: false, error: err.message };
   }
@@ -1051,16 +1204,25 @@ export async function triggerOmnichannelPollingRun({ limit = 25 } = {}) {
         results: Array.isArray(response.results) ? response.results : [],
       };
     }
-    return { ok: false, error: response?.error || response?.message || 'Failed to run polling sync' };
+    return {
+      ok: false,
+      error: response?.error || response?.message || 'Failed to run polling sync',
+    };
   } catch (err) {
     return { ok: false, error: err.message };
   }
 }
 
-
 // Archive API functions
 // fetchArchiveEntries({ limit=12, cursor=null, category=null, tag=null, q=null, sort="new" })
-export async function fetchArchiveEntries({ limit = 12, cursor = null, category = null, tag = null, q = null, sort = "new" } = {}) {
+export async function fetchArchiveEntries({
+  limit = 12,
+  cursor = null,
+  category = null,
+  tag = null,
+  q = null,
+  sort = 'new',
+} = {}) {
   try {
     const params = new URLSearchParams();
     if (limit) params.append('limit', limit);
@@ -1104,7 +1266,9 @@ export async function deleteArchiveEntry(id) {
 export async function fetchCreatorRoyaltyDashboard(creatorAddress, { days = 365 } = {}) {
   if (!creatorAddress) return { ok: false, error: 'Missing creator address' };
   try {
-    const response = await apiGet(`/analytics/dashboard/${encodeURIComponent(creatorAddress)}?days=${encodeURIComponent(days)}`);
+    const response = await apiGet(
+      `/analytics/dashboard/${encodeURIComponent(creatorAddress)}?days=${encodeURIComponent(days)}`,
+    );
     if (response && response.ok && response.dashboard) {
       return { ok: true, dashboard: response.dashboard };
     }
@@ -1120,11 +1284,17 @@ export async function fetchCreatorRoyaltyHistory(creatorAddress, { limit = 100, 
     const params = new URLSearchParams();
     params.set('limit', String(limit));
     params.set('offset', String(offset));
-    const response = await apiGet(`/analytics/royalty-history/${encodeURIComponent(creatorAddress)}?${params.toString()}`);
+    const response = await apiGet(
+      `/analytics/royalty-history/${encodeURIComponent(creatorAddress)}?${params.toString()}`,
+    );
     if (response && response.ok && response.history) {
       return { ok: true, history: response.history };
     }
-    return { ok: false, error: response?.error || response?.message || 'Failed to load royalty history', history: null };
+    return {
+      ok: false,
+      error: response?.error || response?.message || 'Failed to load royalty history',
+      history: null,
+    };
   } catch (err) {
     return { ok: false, error: err.message, history: null };
   }
@@ -1156,7 +1326,6 @@ export async function exportCreatorRoyaltyCsv(creatorAddress) {
   }
 }
 
-
 export async function fetchAllRoyaltyEvents({ limit = 200, offset = 0, platform = '' } = {}) {
   try {
     const params = new URLSearchParams();
@@ -1177,7 +1346,9 @@ export async function fetchAllRoyaltyEvents({ limit = 200, offset = 0, platform 
 
 export async function fetchNotificationBadge(recipientAddress) {
   try {
-    const response = await apiGet(`/notifications/badge?recipientAddress=${encodeURIComponent(recipientAddress)}`);
+    const response = await apiGet(
+      `/notifications/badge?recipientAddress=${encodeURIComponent(recipientAddress)}`,
+    );
     return { ok: true, unreadCount: response?.unreadCount ?? 0 };
   } catch (err) {
     const status = err?.response?.status;
@@ -1188,7 +1359,10 @@ export async function fetchNotificationBadge(recipientAddress) {
   }
 }
 
-export async function fetchNotifications(recipientAddress, { limit = 50, offset = 0, unreadOnly = false } = {}) {
+export async function fetchNotifications(
+  recipientAddress,
+  { limit = 50, offset = 0, unreadOnly = false } = {},
+) {
   try {
     const params = new URLSearchParams();
     params.set('recipientAddress', recipientAddress);
@@ -1197,7 +1371,12 @@ export async function fetchNotifications(recipientAddress, { limit = 50, offset 
     if (unreadOnly) params.set('unreadOnly', '1');
     const response = await apiGet(`/notifications?${params.toString()}`);
     if (response && response.ok) {
-      return { ok: true, notifications: response.notifications || [], total: response.total || 0, unreadCount: response.unreadCount ?? 0 };
+      return {
+        ok: true,
+        notifications: response.notifications || [],
+        total: response.total || 0,
+        unreadCount: response.unreadCount ?? 0,
+      };
     }
     return { ok: false, notifications: [], total: 0, unreadCount: 0, error: response?.error };
   } catch (err) {
@@ -1237,7 +1416,9 @@ export async function markAllNotificationsRead(recipientAddress) {
 
 export async function deleteNotification(recipientAddress, id) {
   try {
-    await apiDelete(`/notifications/${encodeURIComponent(id)}?recipientAddress=${encodeURIComponent(recipientAddress)}`);
+    await apiDelete(
+      `/notifications/${encodeURIComponent(id)}?recipientAddress=${encodeURIComponent(recipientAddress)}`,
+    );
     return { ok: true };
   } catch (err) {
     const status = err?.response?.status;

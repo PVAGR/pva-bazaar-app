@@ -5,11 +5,14 @@ const PartnerSubmission = require('../models/PartnerSubmission');
 router.post('/', async (req, res) => {
   try {
     const { email, name, company, website, message } = req.body || {};
-    if (!email || !name) return res.status(400).json({ ok: false, message: 'Missing name or email' });
+    if (!email || !name)
+      return res.status(400).json({ ok: false, message: 'Missing name or email' });
 
     const normalizedEmail = String(email).trim().toLowerCase();
-    const existing = await PartnerSubmission.findOne({ email: normalizedEmail, status: 'new' })
-      .sort({ createdAt: -1 });
+    const existing = await PartnerSubmission.findOne({
+      email: normalizedEmail,
+      status: 'new',
+    }).sort({ createdAt: -1 });
     if (existing) {
       return res.json({
         ok: true,
@@ -34,7 +37,12 @@ router.post('/', async (req, res) => {
     return res.status(201).json({
       ok: true,
       message: 'Submission received',
-      data: { id: submission._id, name: submission.name, email: submission.email, status: submission.status },
+      data: {
+        id: submission._id,
+        name: submission.name,
+        email: submission.email,
+        status: submission.status,
+      },
     });
   } catch (err) {
     console.error('Partners submission failed:', err);

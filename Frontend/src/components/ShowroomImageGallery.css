@@ -120,7 +120,9 @@
   cursor: pointer;
   background: var(--site-panel-soft);
   overflow: hidden;
-  transition: border 0.2s, box-shadow 0.2s;
+  transition:
+    border 0.2s,
+    box-shadow 0.2s;
   outline: none;
 }
 

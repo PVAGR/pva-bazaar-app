@@ -16,6 +16,7 @@ cd pvabazaar-livestream
 ```
 
 When prompted:
+
 - ✅ TypeScript: Yes
 - ✅ Tailwind CSS: Yes
 - ✅ App Router: Yes
@@ -72,6 +73,7 @@ LIVEPEER_API_KEY=your_livepeer_key
 ```
 
 **To generate NEXTAUTH_SECRET:**
+
 ```bash
 openssl rand -hex 32
 # Copy output and paste into .env.local
@@ -141,8 +143,8 @@ export async function uploadToIPFS(file: File, metadata?: Record<string, any>) {
 
     const response = await axios.post('https://api.pinata.cloud/pinning/pinFileToIPFS', formData, {
       headers: {
-        'pinata_api_key': process.env.PINATA_API_KEY,
-        'pinata_secret_api_key': process.env.PINATA_API_SECRET,
+        pinata_api_key: process.env.PINATA_API_KEY,
+        pinata_secret_api_key: process.env.PINATA_API_SECRET,
       },
     });
 
@@ -198,7 +200,7 @@ const userSchema = new Schema<IUser>(
       dataExportable: { type: Boolean, default: true },
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 export const User = models.User || model<IUser>('User', userSchema);
@@ -235,10 +237,11 @@ const journalSchema = new Schema<IJournalEntry>(
     },
     isPublic: { type: Boolean, default: false },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-export const JournalEntry = models.JournalEntry || model<IJournalEntry>('JournalEntry', journalSchema);
+export const JournalEntry =
+  models.JournalEntry || model<IJournalEntry>('JournalEntry', journalSchema);
 ```
 
 ### `models/Stream.ts`
@@ -284,7 +287,7 @@ const streamSchema = new Schema<IStream>(
     tags: { type: [String], default: [] },
     isPublic: { type: Boolean, default: false },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 export const Stream = models.Stream || model<IStream>('Stream', streamSchema);
@@ -407,7 +410,7 @@ export async function POST(req: Request) {
           displayName: newUser.displayName,
         },
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error) {
     console.error(error);
@@ -436,7 +439,8 @@ export async function POST(req: Request) {
   }
 
   try {
-    const { title, description, platform, platformStreamId, ingestUrl, playbackUrl } = await req.json();
+    const { title, description, platform, platformStreamId, ingestUrl, playbackUrl } =
+      await req.json();
 
     await connectToDatabase();
 
@@ -1297,10 +1301,7 @@ body {
 import type { Config } from 'tailwindcss';
 
 const config: Config = {
-  content: [
-    './app/**/*.{js,ts,jsx,tsx,mdx}',
-    './components/**/*.{js,ts,jsx,tsx,mdx}',
-  ],
+  content: ['./app/**/*.{js,ts,jsx,tsx,mdx}', './components/**/*.{js,ts,jsx,tsx,mdx}'],
   theme: {
     extend: {
       colors: {
@@ -1422,6 +1423,7 @@ open http://localhost:3000
 ```
 
 **Test flow:**
+
 1. ✅ Visit http://localhost:3000 → See landing page
 2. ✅ Click "Sign Up" → Create account
 3. ✅ Auto-signs in → Redirects to dashboard

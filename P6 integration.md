@@ -278,7 +278,7 @@ UPSTASH_REDIS_TOKEN="your-token"
 
 _\# Project Configuration_
 
-PVA_PROJECT="com" _\# or "org"_
+PVA*PROJECT="com" *\# or "org"\_
 
 ### **1.4 Dependency Installation**
 

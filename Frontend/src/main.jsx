@@ -6,16 +6,73 @@ import './base.css';
 
 function AppCrashFallback() {
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', background: 'linear-gradient(135deg, var(--site-bg-primary) 0%, var(--site-bg-secondary) 100%)' }}>
-      <div style={{ width: 'min(620px, 100%)', background: 'var(--site-panel)', border: '1px solid var(--site-border)', borderRadius: '16px', padding: '24px' }}>
+    <div
+      style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        background:
+          'linear-gradient(135deg, var(--site-bg-primary) 0%, var(--site-bg-secondary) 100%)',
+      }}
+    >
+      <div
+        style={{
+          width: 'min(620px, 100%)',
+          background: 'var(--site-panel)',
+          border: '1px solid var(--site-border)',
+          borderRadius: '16px',
+          padding: '24px',
+        }}
+      >
         <h2 style={{ margin: '0 0 10px', color: 'var(--site-accent)' }}>The page hit an error</h2>
         <p style={{ margin: '0 0 16px', color: 'var(--site-text-muted)' }}>
           Please refresh, or use a direct destination below.
         </p>
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-          <a href="/#/library" style={{ color: 'var(--site-text)', textDecoration: 'none', border: '1px solid var(--site-border)', borderRadius: '10px', padding: '10px 12px', background: 'var(--site-panel-soft)', fontWeight: 700 }}>Archive Library</a>
-          <a href="/#/marketplace" style={{ color: 'var(--site-text)', textDecoration: 'none', border: '1px solid var(--site-border)', borderRadius: '10px', padding: '10px 12px', background: 'var(--site-panel-soft)', fontWeight: 700 }}>Marketplace</a>
-          <a href="/#/showroom" style={{ color: 'var(--site-text)', textDecoration: 'none', border: '1px solid var(--site-border)', borderRadius: '10px', padding: '10px 12px', background: 'var(--site-panel-soft)', fontWeight: 700 }}>Showroom</a>
+          <a
+            href="/#/library"
+            style={{
+              color: 'var(--site-text)',
+              textDecoration: 'none',
+              border: '1px solid var(--site-border)',
+              borderRadius: '10px',
+              padding: '10px 12px',
+              background: 'var(--site-panel-soft)',
+              fontWeight: 700,
+            }}
+          >
+            Archive Library
+          </a>
+          <a
+            href="/#/marketplace"
+            style={{
+              color: 'var(--site-text)',
+              textDecoration: 'none',
+              border: '1px solid var(--site-border)',
+              borderRadius: '10px',
+              padding: '10px 12px',
+              background: 'var(--site-panel-soft)',
+              fontWeight: 700,
+            }}
+          >
+            Marketplace
+          </a>
+          <a
+            href="/#/showroom"
+            style={{
+              color: 'var(--site-text)',
+              textDecoration: 'none',
+              border: '1px solid var(--site-border)',
+              borderRadius: '10px',
+              padding: '10px 12px',
+              background: 'var(--site-panel-soft)',
+              fontWeight: 700,
+            }}
+          >
+            Showroom
+          </a>
         </div>
       </div>
     </div>
@@ -71,7 +128,7 @@ if (sentryDsn) {
               'api.pvabazaar.org',
               /^https:\/\/pvabazaar\.org/,
               /^https:\/\/.*\.onrender\.com/,
-              /^https:\/\/.*vercel\.app/
+              /^https:\/\/.*vercel\.app/,
             ],
           }),
           Sentry.replayIntegration({
@@ -116,7 +173,7 @@ if (root) {
       <HelmetProvider>
         <App />
       </HelmetProvider>
-    </AppErrorBoundary>
+    </AppErrorBoundary>,
   );
 }
 

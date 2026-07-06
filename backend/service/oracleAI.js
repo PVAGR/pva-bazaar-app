@@ -7,7 +7,7 @@ class OracleAIEngine {
   constructor() {
     this.apiKey = process.env.OPENAI_API_KEY;
     this.apiUrl = 'https://api.openai.com/v1/chat/completions';
-    
+
     if (!this.apiKey) {
       console.warn('⚠️ OPENAI_API_KEY not set - Oracle AI features will be limited');
     }
@@ -27,7 +27,7 @@ class OracleAIEngine {
 
     try {
       const prompt = this.buildOraclePrompt(personalData, spiritualProfile);
-      
+
       const response = await axios.post(
         this.apiUrl,
         {
@@ -48,19 +48,19 @@ class OracleAIEngine {
         },
         {
           headers: {
-            'Authorization': `Bearer ${this.apiKey}`,
+            Authorization: `Bearer ${this.apiKey}`,
             'Content-Type': 'application/json',
           },
-        }
+        },
       );
 
       const content = response.data.choices[0].message.content;
       const parsedResults = JSON.parse(content);
-      
+
       return this.formatResults(parsedResults);
     } catch (error) {
       console.error('Oracle AI generation error:', error.response?.data || error.message);
-      
+
       // Fallback to mock data on error
       console.warn('Falling back to mock assessment data');
       return this.generateMockAssessment(personalData, spiritualProfile);
@@ -78,11 +78,15 @@ BIRTH DATA:
 - Date: ${personalData.birthDate}
 - Time: ${personalData.birthTime}
 - Place: ${personalData.birthPlace}
-${personalData.physicalStats ? `
+${
+  personalData.physicalStats
+    ? `
 - Physical: ${personalData.physicalStats.height || 'N/A'}cm, ${personalData.physicalStats.weight || 'N/A'}kg
 - Eyes: ${personalData.physicalStats.eyeColor || 'N/A'}
 - Hair: ${personalData.physicalStats.hairColor || 'N/A'}
-` : ''}
+`
+    : ''
+}
 
 SPIRITUAL PROFILE:
 - Meditation Practice: ${spiritualProfile.meditation ? 'Yes' : 'No'}
@@ -143,7 +147,9 @@ Make it deeply personal, spiritually uplifting, and practically actionable. Draw
       cosmicSignature: {
         astrological: parsedResults.cosmicSignature?.astrological || {},
         numerological: parsedResults.cosmicSignature?.numerological || {},
-        synthesis: parsedResults.cosmicSignature?.synthesis || 'Your cosmic signature reveals a unique spiritual path.',
+        synthesis:
+          parsedResults.cosmicSignature?.synthesis ||
+          'Your cosmic signature reveals a unique spiritual path.',
       },
       bodyBlueprint: {
         dietRecommendations: parsedResults.bodyBlueprint?.dietRecommendations || [],
@@ -152,14 +158,17 @@ Make it deeply personal, spiritually uplifting, and practically actionable. Draw
       },
       uniqueRevelation: {
         hiddenTalents: parsedResults.uniqueRevelation?.hiddenTalents || [],
-        lifePURPOSE: parsedResults.uniqueRevelation?.lifePURPOSE || 'To discover and express your authentic self.',
+        lifePURPOSE:
+          parsedResults.uniqueRevelation?.lifePURPOSE ||
+          'To discover and express your authentic self.',
         spiritualGifts: parsedResults.uniqueRevelation?.spiritualGifts || [],
         challenges: parsedResults.uniqueRevelation?.challenges || [],
       },
       goldenPath: {
         immediateSteps: parsedResults.goldenPath?.immediateSteps || [],
         monthlyGoals: parsedResults.goldenPath?.monthlyGoals || [],
-        yearlyVision: parsedResults.goldenPath?.yearlyVision || 'A year of growth and spiritual awakening.',
+        yearlyVision:
+          parsedResults.goldenPath?.yearlyVision || 'A year of growth and spiritual awakening.',
         sacredPractices: parsedResults.goldenPath?.sacredPractices || [],
       },
     };
@@ -171,7 +180,7 @@ Make it deeply personal, spiritually uplifting, and practically actionable. Draw
   generateMockAssessment(personalData, spiritualProfile) {
     const birthYear = new Date(personalData.birthDate).getFullYear();
     const lifePathNumber = this.calculateLifePath(birthYear);
-    
+
     return {
       cosmicSignature: {
         astrological: {
@@ -193,7 +202,7 @@ Make it deeply personal, spiritually uplifting, and practically actionable. Draw
       bodyBlueprint: {
         dietRecommendations: [
           'Focus on whole, unprocessed foods',
-          'Consider your body\'s natural rhythms',
+          "Consider your body's natural rhythms",
           'Stay hydrated throughout the day',
         ],
         exerciseGuidance: [
@@ -213,12 +222,9 @@ Make it deeply personal, spiritually uplifting, and practically actionable. Draw
           'Ability to inspire others',
           'Creative expression',
         ],
-        lifePURPOSE: 'To discover and express your authentic self while helping others on their spiritual journey.',
-        spiritualGifts: [
-          'Empathic connection',
-          'Wisdom sharing',
-          'Healing presence',
-        ],
+        lifePURPOSE:
+          'To discover and express your authentic self while helping others on their spiritual journey.',
+        spiritualGifts: ['Empathic connection', 'Wisdom sharing', 'Healing presence'],
         challenges: [
           'Balancing inner and outer worlds',
           'Trusting your intuition',
@@ -236,7 +242,8 @@ Make it deeply personal, spiritually uplifting, and practically actionable. Draw
           'Explore one new spiritual tradition',
           'Document your insights and growth',
         ],
-        yearlyVision: 'A year of profound spiritual growth, self-discovery, and alignment with your true purpose.',
+        yearlyVision:
+          'A year of profound spiritual growth, self-discovery, and alignment with your true purpose.',
         sacredPractices: [
           'Daily meditation or prayer',
           'Journaling your spiritual journey',
@@ -252,7 +259,10 @@ Make it deeply personal, spiritually uplifting, and practically actionable. Draw
   calculateLifePath(year) {
     let num = year;
     while (num > 9 && num !== 11 && num !== 22 && num !== 33) {
-      num = num.toString().split('').reduce((sum, digit) => sum + parseInt(digit), 0);
+      num = num
+        .toString()
+        .split('')
+        .reduce((sum, digit) => sum + parseInt(digit), 0);
     }
     return num;
   }

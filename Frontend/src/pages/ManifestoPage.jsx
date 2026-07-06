@@ -13,7 +13,9 @@ export default function ManifestoPage() {
       <header className="info-page__header">
         <p className="info-page__eyebrow">Manifesto</p>
         <h2>Build for truth, clarity, and continuity</h2>
-        <p className="info-page__lead"><strong>{SITE_TAGLINE}</strong></p>
+        <p className="info-page__lead">
+          <strong>{SITE_TAGLINE}</strong>
+        </p>
       </header>
 
       <article className="info-highlight">
@@ -29,15 +31,19 @@ export default function ManifestoPage() {
         <article className="info-block">
           <h3>Practical direction</h3>
           <p>
-            Preserve public-domain and scarce-knowledge artifacts with verifiable records,
-            then expand coverage carefully while keeping trust and readability first.
+            Preserve public-domain and scarce-knowledge artifacts with verifiable records, then
+            expand coverage carefully while keeping trust and readability first.
           </p>
         </article>
       </div>
 
       <div className="info-actions">
-        <Link to="/verification" className="button">See Verification</Link>
-        <Link to="/about" className="button ghost">About the Archive</Link>
+        <Link to="/verification" className="button">
+          See Verification
+        </Link>
+        <Link to="/about" className="button ghost">
+          About the Archive
+        </Link>
       </div>
     </section>
   );

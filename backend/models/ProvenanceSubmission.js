@@ -77,7 +77,15 @@ const submissionSchema = new mongoose.Schema(
     provenanceProof: {
       proofType: {
         type: String,
-        enum: ['photos', 'documents', 'qr_scan', 'blockchain', 'certification', 'gps_location', 'combined'],
+        enum: [
+          'photos',
+          'documents',
+          'qr_scan',
+          'blockchain',
+          'certification',
+          'gps_location',
+          'combined',
+        ],
       },
 
       photos: [
@@ -209,7 +217,7 @@ const submissionSchema = new mongoose.Schema(
       },
     ],
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // Indexes for efficient querying

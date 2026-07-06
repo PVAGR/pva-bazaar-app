@@ -10,8 +10,9 @@ export function calculateProfileCompletion(profile = {}) {
       email: !!profile?.email?.trim(),
       country: !!profile?.preferences?.defaultCountry?.trim(),
       currency: !!profile?.preferences?.defaultCurrency?.trim(),
-      payoutAccount: !!profile?.preferences?.payoutAccountId?.trim() || 
-                     !!profile?.preferences?.payoutInfo?.trim(),
+      payoutAccount:
+        !!profile?.preferences?.payoutAccountId?.trim() ||
+        !!profile?.preferences?.payoutInfo?.trim(),
     },
     total: 0,
     completed: 0,

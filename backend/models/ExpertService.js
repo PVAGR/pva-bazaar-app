@@ -3,7 +3,12 @@ const mongoose = require('mongoose');
 
 const expertServiceSchema = new mongoose.Schema({
   // Reference to ProductType
-  productId: { type: mongoose.Schema.Types.ObjectId, ref: 'ProductType', required: true, index: true },
+  productId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'ProductType',
+    required: true,
+    index: true,
+  },
   sellerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
 
   // Service details

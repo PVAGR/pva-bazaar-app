@@ -29,17 +29,17 @@ function sanitizeDeep(v) {
 router.get('/', authenticateToken, async (req, res) => {
   try {
     const { status, limit = 50, skip = 0 } = req.query;
-    
+
     const query = { userId: req.user.id };
     if (status) query.status = status;
-    
+
     const streams = await StreamSession.find(query)
       .sort({ createdAt: -1 })
       .limit(parseInt(limit))
       .skip(parseInt(skip));
-    
+
     const total = await StreamSession.countDocuments(query);
-    
+
     res.json({
       ok: true,
       items: streams,
@@ -84,7 +84,7 @@ router.put('/drafts', authenticateToken, async (req, res) => {
         'preferences.drafts.streams': draft,
         updatedAt: Date.now(),
       },
-      { new: true }
+      { new: true },
     ).select('preferences');
 
     res.json({ ok: true, draft: user?.preferences?.drafts?.streams || null });
@@ -104,7 +104,7 @@ router.delete('/drafts', authenticateToken, async (req, res) => {
     await User.findByIdAndUpdate(
       req.user.id,
       { 'preferences.drafts.streams': null, updatedAt: Date.now() },
-      { new: true }
+      { new: true },
     ).select('preferences');
 
     res.json({ ok: true, draft: null });
@@ -125,11 +125,11 @@ router.get('/:id', authenticateToken, async (req, res) => {
       _id: req.params.id,
       userId: req.user.id,
     });
-    
+
     if (!stream) {
       return res.status(404).json({ ok: false, error: 'Stream not found' });
     }
-    
+
     res.json({ ok: true, item: stream });
   } catch (error) {
     console.error('Error fetching stream:', error);
@@ -144,15 +144,8 @@ router.get('/:id', authenticateToken, async (req, res) => {
  */
 router.post('/', authenticateToken, async (req, res) => {
   try {
-    const {
-      title,
-      description,
-      platform,
-      platformStreamUrl,
-      tags,
-      isPublic,
-    } = req.body;
-    
+    const { title, description, platform, platformStreamUrl, tags, isPublic } = req.body;
+
     const stream = new StreamSession({
       userId: req.user.id,
       title: title || 'Untitled Stream',
@@ -162,9 +155,9 @@ router.post('/', authenticateToken, async (req, res) => {
       tags: tags || [],
       isPublic: isPublic !== undefined ? isPublic : true,
     });
-    
+
     await stream.save();
-    
+
     res.status(201).json({ ok: true, item: stream });
   } catch (error) {
     console.error('Error creating stream:', error);
@@ -183,11 +176,11 @@ router.put('/:id', authenticateToken, async (req, res) => {
       _id: req.params.id,
       userId: req.user.id,
     });
-    
+
     if (!stream) {
       return res.status(404).json({ ok: false, error: 'Stream not found' });
     }
-    
+
     const allowedUpdates = [
       'title',
       'description',
@@ -202,22 +195,22 @@ router.put('/:id', authenticateToken, async (req, res) => {
       'recordingSize',
       'thumbnailIpfsHash',
     ];
-    
+
     allowedUpdates.forEach((field) => {
       if (req.body[field] !== undefined) {
         stream[field] = req.body[field];
       }
     });
-    
+
     // Auto-set timestamps for status changes
     if (req.body.status === 'live' && !stream.startedAt) {
       stream.startedAt = new Date();
     } else if (req.body.status === 'ended' && !stream.endedAt) {
       stream.endedAt = new Date();
     }
-    
+
     await stream.save();
-    
+
     res.json({ ok: true, item: stream });
   } catch (error) {
     console.error('Error updating stream:', error);
@@ -236,11 +229,11 @@ router.delete('/:id', authenticateToken, async (req, res) => {
       _id: req.params.id,
       userId: req.user.id,
     });
-    
+
     if (!stream) {
       return res.status(404).json({ ok: false, error: 'Stream not found' });
     }
-    
+
     res.json({ ok: true, message: 'Stream deleted' });
   } catch (error) {
     console.error('Error deleting stream:', error);
@@ -297,20 +290,20 @@ router.post('/:id/webhook', async (req, res) => {
       console.error('STREAM_WEBHOOK_SECRET is not configured in production');
       return res.status(503).json({ ok: false, error: 'Webhook not configured' });
     }
-    
+
     const stream = await StreamSession.findById(req.params.id);
-    
+
     if (!stream) {
       return res.status(404).json({ ok: false, error: 'Stream not found' });
     }
-    
+
     // Log webhook event
     stream.webhookEvents.push({
       event: req.body.event || 'unknown',
       timestamp: new Date(),
       payload: req.body,
     });
-    
+
     // Handle specific events
     if (req.body.event === 'stream.online') {
       stream.status = 'live';
@@ -319,9 +312,9 @@ router.post('/:id/webhook', async (req, res) => {
       stream.status = 'ended';
       stream.endedAt = new Date();
     }
-    
+
     await stream.save();
-    
+
     res.json({ ok: true, received: true });
   } catch (error) {
     console.error('Error processing webhook:', error);

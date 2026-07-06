@@ -11,7 +11,11 @@ export default function Research() {
     const load = async () => {
       setLoading(true);
       setError('');
-      const response = await fetchArchiveEntries({ q: 'research notes study', limit: 8, sort: 'new' });
+      const response = await fetchArchiveEntries({
+        q: 'research notes study',
+        limit: 8,
+        sort: 'new',
+      });
       if (cancelled) return;
       if (response.ok) {
         setItems(response.items || []);
@@ -32,7 +36,9 @@ export default function Research() {
       <h2>Research</h2>
       {loading && <p>Loading research entries...</p>}
       {!loading && error && <p>{error}</p>}
-      {!loading && !error && items.length === 0 && <p>No research entries were returned by the archive API.</p>}
+      {!loading && !error && items.length === 0 && (
+        <p>No research entries were returned by the archive API.</p>
+      )}
       {!loading && items.length > 0 && (
         <ul>
           {items.map((entry) => (

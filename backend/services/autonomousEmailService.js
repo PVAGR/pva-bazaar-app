@@ -34,8 +34,8 @@ class AutonomousEmailService {
       service: 'gmail', // or configure custom SMTP
       auth: {
         user: agent.email,
-        pass: decryptedPassword
-      }
+        pass: decryptedPassword,
+      },
     });
 
     // Verify connection
@@ -76,7 +76,7 @@ class AutonomousEmailService {
       to: vendorInfo.email || vendorInfo.contact,
       subject: `Payment Received - ${transaction.transactionId}`,
       html: emailContent,
-      date: new Date()
+      date: new Date(),
     };
 
     try {
@@ -122,7 +122,7 @@ class AutonomousEmailService {
       from: agent.email,
       to: 'admin@pvabazaar.org', // Admin notification
       subject: `Upcoming Payment: ${billingSchedule.vendor} - $${billingSchedule.amount}`,
-      html: emailContent
+      html: emailContent,
     };
 
     try {
@@ -150,8 +150,8 @@ class AutonomousEmailService {
       .limit(10)
       .lean();
 
-    const completedCount = recentTransactions.filter(t => t.status === 'completed').length;
-    const failedCount = recentTransactions.filter(t => t.status === 'failed').length;
+    const completedCount = recentTransactions.filter((t) => t.status === 'completed').length;
+    const failedCount = recentTransactions.filter((t) => t.status === 'failed').length;
 
     const emailContent = `
       <h2>Autonomous Agent Status Report</h2>
@@ -171,7 +171,7 @@ class AutonomousEmailService {
         <li><strong>Crypto:</strong> $${agent.balanceByMethod.crypto.toFixed(2)}</li>
         <li><strong>CashApp:</strong> $${agent.balanceByMethod.cashapp.toFixed(2)}</li>
         <li><strong>Card:</strong> $${agent.balanceByMethod.card.toFixed(2)}</li>
-        <li><strong>Monthly Budget Used:</strong> ${((agent.maintenanceConfig.monthlyBudget * 0.7).toFixed(2))} / $${agent.maintenanceConfig.monthlyBudget}</li>
+        <li><strong>Monthly Budget Used:</strong> ${(agent.maintenanceConfig.monthlyBudget * 0.7).toFixed(2)} / $${agent.maintenanceConfig.monthlyBudget}</li>
       </ul>
 
       <h3>Recent Transactions (10 most recent):</h3>
@@ -183,7 +183,9 @@ class AutonomousEmailService {
           <th>Status</th>
           <th>Method</th>
         </tr>
-        ${recentTransactions.map(t => `
+        ${recentTransactions
+          .map(
+            (t) => `
           <tr>
             <td>${new Date(t.createdAt).toLocaleDateString()}</td>
             <td>${t.type}</td>
@@ -191,20 +193,22 @@ class AutonomousEmailService {
             <td>${t.status}</td>
             <td>${t.paymentMethod}</td>
           </tr>
-        `).join('')}
+        `,
+          )
+          .join('')}
       </table>
 
       <h3>Transaction Summary:</h3>
       <ul>
         <li><strong>Completed:</strong> ${completedCount}</li>
         <li><strong>Failed:</strong> ${failedCount}</li>
-        <li><strong>Success Rate:</strong> ${((completedCount / (completedCount + failedCount) * 100) || 0).toFixed(1)}%</li>
+        <li><strong>Success Rate:</strong> ${((completedCount / (completedCount + failedCount)) * 100 || 0).toFixed(1)}%</li>
       </ul>
 
       <h3>Payment Methods Connected:</h3>
       <ul>
         ${agent.paypal?.connected ? '<li>✓ PayPal</li>' : '<li>✗ PayPal</li>'}
-        ${agent.cryptoWallets?.length ? `<li>✓ Crypto Wallets (${  agent.cryptoWallets.length  })</li>` : '<li>✗ Crypto Wallets</li>'}
+        ${agent.cryptoWallets?.length ? `<li>✓ Crypto Wallets (${agent.cryptoWallets.length})</li>` : '<li>✗ Crypto Wallets</li>'}
         ${agent.cashapp?.connected ? '<li>✓ CashApp</li>' : '<li>✗ CashApp</li>'}
         ${agent.card?.connected ? '<li>✓ Card</li>' : '<li>✗ Card</li>'}
         ${agent.bankAccount?.connected ? '<li>✓ Bank Account</li>' : '<li>✗ Bank Account</li>'}
@@ -226,7 +230,7 @@ class AutonomousEmailService {
       from: agent.email,
       to: 'admin@pvabazaar.org',
       subject: `Agent Status Report - ${new Date().toLocaleDateString()}`,
-      html: emailContent
+      html: emailContent,
     };
 
     try {
@@ -281,7 +285,7 @@ class AutonomousEmailService {
       from: agent.email,
       to: 'admin@pvabazaar.org',
       subject: `Low Balance Alert - Action Required`,
-      html: emailContent
+      html: emailContent,
     };
 
     try {
@@ -334,7 +338,7 @@ class AutonomousEmailService {
       from: agent.email,
       to: 'admin@pvabazaar.org',
       subject: `Payment Failed - ${transaction.transactionId}`,
-      html: emailContent
+      html: emailContent,
     };
 
     try {

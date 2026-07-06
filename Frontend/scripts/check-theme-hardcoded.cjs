@@ -4,9 +4,7 @@ const path = require('path');
 const root = path.resolve(__dirname, '..', 'src');
 const includeExtensions = new Set(['.css', '.scss', '.less', '.js', '.jsx', '.ts', '.tsx']);
 
-const fileAllowList = new Set([
-  path.normalize('styles/magnum-opus.css')
-]);
+const fileAllowList = new Set([path.normalize('styles/magnum-opus.css')]);
 
 const forbiddenRegex = /background(?:-color)?\s*:\s*(?:#fff\b|#f[0-9a-fA-F]{2,5}\b|white\b)/i;
 
@@ -49,7 +47,7 @@ function collectViolations() {
         violations.push({
           file: `src/${relative}`,
           line: index + 1,
-          text: line.trim()
+          text: line.trim(),
         });
       }
     });

@@ -1,17 +1,17 @@
 # 🎯 PRODUCTION READINESS REPORT - END-TO-END ANALYSIS
 
 **Generated**: June 4, 2026  
-**Status**: CONTINUITY GATED BY CANONICAL LIVE MAP AND STRICT READINESS CHECKS  
+**Status**: CONTINUITY GATED BY CANONICAL LIVE MAP AND STRICT READINESS CHECKS
 
 ---
 
 ## 📊 EXECUTIVE SUMMARY
 
-| Component | Status | Production URL |
-|-----------|--------|----------------|
-| **Frontend** | ✅ CANONICAL | https://pvabazaar.org (GitHub Pages) |
-| **Backend** | ✅ CANONICAL | https://api.pvabazaar.org |
-| **Integration** | ✅ GATED | Deploys must pass strict live readiness, route sweep, and parity |
+| Component       | Status       | Production URL                                                   |
+| --------------- | ------------ | ---------------------------------------------------------------- |
+| **Frontend**    | ✅ CANONICAL | https://pvabazaar.org (GitHub Pages)                             |
+| **Backend**     | ✅ CANONICAL | https://api.pvabazaar.org                                        |
+| **Integration** | ✅ GATED     | Deploys must pass strict live readiness, route sweep, and parity |
 
 ### Current continuity controls
 
@@ -35,6 +35,7 @@ Organization: pvagr's projects (team_bP42aRmysolJDNBcN7kowsKJ)
 ```
 
 ### Production Deployments Found:
+
 ```
 Latest Ready: https://backend-ho21mp01o-pvagrs-projects.vercel.app (8 minutes ago)
 Production Domain: https://backend-pvagrs-projects.vercel.app
@@ -43,12 +44,14 @@ Production Domain: https://backend-pvagrs-projects.vercel.app
 ### 🔒 CRITICAL BLOCKER: Deployment Protection Enabled
 
 **Test Results:**
+
 ```bash
 $ curl https://backend-pvagrs-projects.vercel.app/api/health
 # Returns: 401 - "Authentication Required" page
 ```
 
 **Root Cause:** Vercel has deployment protection enabled on this project, requiring authentication to access. This prevents:
+
 - Public API access
 - Frontend API calls
 - Health check monitoring
@@ -64,6 +67,7 @@ $ curl https://backend-pvagrs-projects.vercel.app/api/health
 **Deployment:** Vercel Serverless Functions via `@vercel/node`
 
 ### File Structure:
+
 ```
 backend/
 ├── server.js           # Vercel entry point (serverless-http wrapper)
@@ -151,6 +155,7 @@ app.get('/api/health', async (req, res) => {
 ### CORS Configuration:
 
 **Hardcoded in `api/index.js`:**
+
 ```javascript
 cors({
   origin: (origin, callback) => {
@@ -163,15 +168,15 @@ cors({
       'http://127.0.0.1:5173',
       'http://127.0.0.1:8080',
       'http://127.0.0.1:8081',
-      'https://pvabazaar.org',           // ✅ Frontend domain allowed
-      'https://www.pvabazaar.org',       // ✅ www subdomain allowed
+      'https://pvabazaar.org', // ✅ Frontend domain allowed
+      'https://www.pvabazaar.org', // ✅ www subdomain allowed
     ];
     if (process.env.ALLOWED_ORIGIN) allowed.push(process.env.ALLOWED_ORIGIN);
     if (!origin || allowed.includes(origin)) return callback(null, true);
     return callback(new Error('CORS not allowed for origin: ' + origin));
   },
   credentials: true,
-})
+});
 ```
 
 **✅ CORS is correctly configured for `https://pvabazaar.org`**
@@ -181,11 +186,13 @@ cors({
 ## 3️⃣ EXPECTED BASE URL
 
 ### Correct Backend Base URL:
+
 ```
 https://backend-pvagrs-projects.vercel.app
 ```
 
 ### Expected API Endpoints:
+
 ```
 https://backend-pvagrs-projects.vercel.app/api/health
 https://backend-pvagrs-projects.vercel.app/api/auth/login
@@ -197,11 +204,13 @@ https://backend-pvagrs-projects.vercel.app/api/users
 ### ⚠️ IMPORTANT: Do NOT include `/api` in base URL
 
 **Frontend should use:**
+
 ```env
 VITE_API_URL=https://backend-pvagrs-projects.vercel.app
 ```
 
 **NOT:**
+
 ```env
 VITE_API_URL=https://backend-pvagrs-projects.vercel.app/api
 ```
@@ -214,6 +223,7 @@ apiFetch('/api/admin/status', {...})  // Will become: {BASE}/api/admin/status
 ```
 
 If you set `VITE_API_URL=https://backend.../api`, you'd get:
+
 ```
 https://backend.../api/api/admin/status  ❌ WRONG
 ```
@@ -225,6 +235,7 @@ https://backend.../api/api/admin/status  ❌ WRONG
 ### Current Frontend Configuration:
 
 **File:** `Frontend/.env.production`
+
 ```env
 VITE_API_URL=https://backend-git-main-pvagr-projects.vercel.app/api
 ```
@@ -235,6 +246,7 @@ VITE_API_URL=https://backend-git-main-pvagr-projects.vercel.app/api
 ### How Frontend Makes API Calls:
 
 **File:** `Frontend/src/lib/api.js`
+
 ```javascript
 export function getApiBase() {
   const envApiUrl = import.meta.env.VITE_API_URL;
@@ -251,6 +263,7 @@ export function apiFetch(path, options = {}) {
 ```
 
 **Usage:** `Frontend/src/lib/archiveApi.js`
+
 ```javascript
 import { apiFetch } from './api.js';
 
@@ -274,6 +287,7 @@ export async function fetchArchive() {
 ### Local Environment (`.env` file):
 
 **Currently Set:**
+
 ```env
 PORT=3000
 NODE_ENV=development
@@ -292,21 +306,21 @@ USE_VECTOR_DB=false
 
 **REQUIRED for production:**
 
-| Variable | Value | Purpose |
-|----------|-------|---------|
-| `MONGODB_URI` | `mongodb+srv://<username>:<password>@<cluster>...` | Database connection |
-| `JWT_SECRET` | `<generate-strong-random-secret>` | Token signing |
-| `NODE_ENV` | `production` | Environment mode |
-| `ALLOWED_ORIGIN` | `https://pvabazaar.org` | CORS configuration |
+| Variable         | Value                                              | Purpose             |
+| ---------------- | -------------------------------------------------- | ------------------- |
+| `MONGODB_URI`    | `mongodb+srv://<username>:<password>@<cluster>...` | Database connection |
+| `JWT_SECRET`     | `<generate-strong-random-secret>`                  | Token signing       |
+| `NODE_ENV`       | `production`                                       | Environment mode    |
+| `ALLOWED_ORIGIN` | `https://pvabazaar.org`                            | CORS configuration  |
 
 **OPTIONAL but recommended:**
 
-| Variable | Value | Purpose |
-|----------|-------|---------|
-| `USE_MEMORY_DB` | `false` | Force MongoDB Atlas |
-| `API_READY` | `true` | Enable all endpoints |
-| `ETHEREUM_RPC_URL` | `https://mainnet.base.org` | Blockchain integration |
-| `ADMIN_WALLET_PUBLIC` | `0x463ace850a958e768618361e352fe9efe31d5d0e` | Admin wallet |
+| Variable              | Value                                        | Purpose                |
+| --------------------- | -------------------------------------------- | ---------------------- |
+| `USE_MEMORY_DB`       | `false`                                      | Force MongoDB Atlas    |
+| `API_READY`           | `true`                                       | Enable all endpoints   |
+| `ETHEREUM_RPC_URL`    | `https://mainnet.base.org`                   | Blockchain integration |
+| `ADMIN_WALLET_PUBLIC` | `0x463ace850a958e768618361e352fe9efe31d5d0e` | Admin wallet           |
 
 ---
 
@@ -319,6 +333,7 @@ USE_VECTOR_DB=false
 **Fix Required:** Disable deployment protection in Vercel dashboard
 
 **Steps to Fix:**
+
 1. Go to: https://vercel.com/pvagrs-projects/backend/settings/deployment-protection
 2. Set "Deployment Protection" to **"Only Preview Deployments"** or **"Off"**
 3. Save changes
@@ -329,15 +344,18 @@ USE_VECTOR_DB=false
 ### 🟡 BLOCKER #2: Incorrect Frontend URL
 
 **Current:** `Frontend/.env.production`
+
 ```env
 VITE_API_URL=https://backend-git-main-pvagr-projects.vercel.app/api
 ```
 
 **Problems:**
+
 - URL doesn't exist (deployment not found)
 - Has `/api` suffix (will cause double path)
 
 **Correct Value:**
+
 ```env
 VITE_API_URL=https://backend-pvagrs-projects.vercel.app
 ```
@@ -347,9 +365,10 @@ VITE_API_URL=https://backend-pvagrs-projects.vercel.app
 ### 🟡 BLOCKER #3: Missing Vercel Environment Variables
 
 **Status:** Unknown if set in Vercel dashboard  
-**Risk:** Backend will fail if secrets are missing  
+**Risk:** Backend will fail if secrets are missing
 
 **To Check:**
+
 1. Go to: https://vercel.com/pvagrs-projects/backend/settings/environment-variables
 2. Verify all REQUIRED variables are set for "Production"
 
@@ -395,6 +414,7 @@ cd /workspaces/pva-bazaar-app
 ```
 
 Edit `Frontend/.env.production`:
+
 ```env
 # Production API URL for Vercel backend
 VITE_API_URL=https://backend-pvagrs-projects.vercel.app
@@ -435,6 +455,7 @@ curl https://backend-pvagrs-projects.vercel.app/api/health
 ### Backend Checks:
 
 - [ ] **Deployment protection disabled**
+
   ```bash
   curl https://backend-pvagrs-projects.vercel.app/api/health
   # Should return JSON, not authentication page
@@ -445,6 +466,7 @@ curl https://backend-pvagrs-projects.vercel.app/api/health
   - Verify: MONGODB_URI, JWT_SECRET, NODE_ENV, ALLOWED_ORIGIN
 
 - [ ] **Health endpoint responds**
+
   ```bash
   curl https://backend-pvagrs-projects.vercel.app/api/health
   # {"ok": true, "message": "PVABazaar API is running", ...}
@@ -460,6 +482,7 @@ curl https://backend-pvagrs-projects.vercel.app/api/health
 ### Frontend Checks:
 
 - [ ] **Correct API URL in production env**
+
   ```bash
   cat Frontend/.env.production
   # VITE_API_URL=https://backend-pvagrs-projects.vercel.app
@@ -467,6 +490,7 @@ curl https://backend-pvagrs-projects.vercel.app/api/health
   ```
 
 - [ ] **Changes committed and pushed**
+
   ```bash
   git status
   # Should be clean
@@ -496,15 +520,16 @@ curl https://backend-pvagrs-projects.vercel.app/api/health
 
 ### ✅ CONFIRMED PRODUCTION URLs:
 
-| Service | URL |
-|---------|-----|
-| **Frontend (Public)** | https://pvabazaar.org |
-| **Backend (API)** | https://backend-pvagrs-projects.vercel.app |
-| **Health Endpoint** | https://backend-pvagrs-projects.vercel.app/api/health |
-| **GitHub Repo** | https://github.com/PVAGR/pva-bazaar-app |
-| **Vercel Backend Dashboard** | https://vercel.com/pvagrs-projects/backend |
+| Service                      | URL                                                   |
+| ---------------------------- | ----------------------------------------------------- |
+| **Frontend (Public)**        | https://pvabazaar.org                                 |
+| **Backend (API)**            | https://backend-pvagrs-projects.vercel.app            |
+| **Health Endpoint**          | https://backend-pvagrs-projects.vercel.app/api/health |
+| **GitHub Repo**              | https://github.com/PVAGR/pva-bazaar-app               |
+| **Vercel Backend Dashboard** | https://vercel.com/pvagrs-projects/backend            |
 
 ### Frontend Environment Variable:
+
 ```env
 VITE_API_URL=https://backend-pvagrs-projects.vercel.app
 ```
@@ -528,13 +553,13 @@ VITE_API_URL=https://backend-pvagrs-projects.vercel.app
 
 ## 📊 RISK ASSESSMENT
 
-| Risk | Likelihood | Impact | Mitigation |
-|------|------------|--------|------------|
-| Deployment protection blocks API | ✅ CONFIRMED | 🔴 CRITICAL | Disable in Vercel settings |
-| Missing env vars crash backend | 🟡 POSSIBLE | 🔴 CRITICAL | Add all required vars |
-| CORS rejects frontend | 🟢 LOW | 🟡 HIGH | Already configured correctly |
-| Double `/api` in paths | ✅ CONFIRMED | 🟡 MEDIUM | Remove suffix from env var |
-| MongoDB connection fails | 🟡 POSSIBLE | 🔴 CRITICAL | Use provided URI with credentials |
+| Risk                             | Likelihood   | Impact      | Mitigation                        |
+| -------------------------------- | ------------ | ----------- | --------------------------------- |
+| Deployment protection blocks API | ✅ CONFIRMED | 🔴 CRITICAL | Disable in Vercel settings        |
+| Missing env vars crash backend   | 🟡 POSSIBLE  | 🔴 CRITICAL | Add all required vars             |
+| CORS rejects frontend            | 🟢 LOW       | 🟡 HIGH     | Already configured correctly      |
+| Double `/api` in paths           | ✅ CONFIRMED | 🟡 MEDIUM   | Remove suffix from env var        |
+| MongoDB connection fails         | 🟡 POSSIBLE  | 🔴 CRITICAL | Use provided URI with credentials |
 
 ---
 

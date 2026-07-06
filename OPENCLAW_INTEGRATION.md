@@ -79,6 +79,7 @@ OPENCLAW_WATCHDOG_ALERT_PATH=./infra/openclaw/logs/watchdog.alert.log
 ### 2. Backend Files
 
 **`backend/routes/openclaw.js`** - Bridge endpoints:
+
 - `GET /api/openclaw/status` - Gateway configuration and reachability
 - `POST /api/openclaw/dispatch` - Forward events to OpenClaw webhook
 - `POST /api/openclaw/chat` - Live chat request with short wait for correlated inbound reply
@@ -87,6 +88,7 @@ OPENCLAW_WATCHDOG_ALERT_PATH=./infra/openclaw/logs/watchdog.alert.log
 - `GET /api/openclaw/recent-events` - Structured recent activity (limit: 30-200)
 
 **`backend/routes/health.js`** - Enhanced health endpoint:
+
 - Includes OpenClaw status in main `/api/health` response
 - Shows `configured`, `status`, `errors`, `warnings`, `alerts` counts
 
@@ -108,18 +110,21 @@ curl http://localhost:5000/api/health
 ### Admin Panel Features
 
 **Connection Status Dropdown:**
+
 - Color-coded health indicator badge (green/orange/red/gray/blue)
 - Visual pulse animations for degraded/error/loading states
 - Auto-refresh every 60s while dropdown is open
 - Stale data detection with configurable threshold
 
 **OpenClaw Summary Section:**
+
 - Dedicated card above general API endpoints
 - Real-time metrics: state, errors, alerts, last event timestamp
 - "Test Dispatch" button - sends `pvabazaar.admin_test` event
 - "View Activity" button - toggles recent events viewer
 
 **Recent Events Viewer:**
+
 - Last 15 events displayed with color-coded levels (ERROR, WARN, INFO, ALERT, SUCCESS)
 - Timestamps in ISO format
 - Refresh button for manual updates
@@ -136,14 +141,14 @@ VITE_STATUS_STALE_MS=120000  # 2 minutes (min: 15000)
 
 ### Visual States
 
-| Health State | Badge Color | Condition |
-|-------------|-------------|-----------|
-| `healthy` | Green | All checks passing, no errors |
-| `degraded` | Orange | Minor issues, watchdog state degraded |
-| `error` | Red | Critical failure, high error count |
-| `stale` | Gray | Data older than threshold |
-| `loading` | Blue | Checking status |
-| `unknown` | Gray | No data available |
+| Health State | Badge Color | Condition                             |
+| ------------ | ----------- | ------------------------------------- |
+| `healthy`    | Green       | All checks passing, no errors         |
+| `degraded`   | Orange      | Minor issues, watchdog state degraded |
+| `error`      | Red         | Critical failure, high error count    |
+| `stale`      | Gray        | Data older than threshold             |
+| `loading`    | Blue        | Checking status                       |
+| `unknown`    | Gray        | No data available                     |
 
 ---
 
@@ -209,6 +214,7 @@ $webhookUrl = "https://..."   # Slack/Discord webhook
 **Description:** Check OpenClaw gateway configuration and reachability.
 
 **Response:**
+
 ```json
 {
   "ok": true,
@@ -217,7 +223,9 @@ $webhookUrl = "https://..."   # Slack/Discord webhook
   "gatewayUrl": "https://...",
   "webhookUrlConfigured": true,
   "timestamp": "2026-03-05T12:34:56.789Z",
-  "detail": { /* health endpoint response */ }
+  "detail": {
+    /* health endpoint response */
+  }
 }
 ```
 
@@ -228,6 +236,7 @@ $webhookUrl = "https://..."   # Slack/Discord webhook
 **Description:** Forward event to OpenClaw webhook.
 
 **Request:**
+
 ```json
 {
   "event": "pvabazaar.artifact.created",
@@ -240,6 +249,7 @@ $webhookUrl = "https://..."   # Slack/Discord webhook
 ```
 
 **Response:**
+
 ```json
 {
   "ok": true,
@@ -256,6 +266,7 @@ $webhookUrl = "https://..."   # Slack/Discord webhook
 **Description:** Send a chat message to OpenClaw and wait briefly for a correlated inbound response.
 
 **Request:**
+
 ```json
 {
   "message": "Run an ops status check and summarize queue health",
@@ -265,6 +276,7 @@ $webhookUrl = "https://..."   # Slack/Discord webhook
 ```
 
 **Response (live reply):**
+
 ```json
 {
   "ok": true,
@@ -283,6 +295,7 @@ $webhookUrl = "https://..."   # Slack/Discord webhook
 ```
 
 **Response (timed out waiting):**
+
 ```json
 {
   "ok": true,
@@ -303,6 +316,7 @@ $webhookUrl = "https://..."   # Slack/Discord webhook
 **Critical for threaded live chat:** include one or more correlation fields in `metadata`.
 
 **Recommended inbound payload contract:**
+
 ```json
 {
   "content": "Gateway healthy. No recovery action required.",
@@ -318,6 +332,7 @@ $webhookUrl = "https://..."   # Slack/Discord webhook
 ```
 
 Any of these currently correlate a reply to a chat request:
+
 - `respondingTo` (ObjectId of outbound message)
 - `metadata.respondingToMessageId` (string outbound message id)
 - `metadata.replyToRequestId` (chat request UUID)
@@ -330,6 +345,7 @@ Any of these currently correlate a reply to a chat request:
 **Description:** Detailed watchdog summary with log parsing.
 
 **Response:**
+
 ```json
 {
   "ok": true,
@@ -356,6 +372,7 @@ Any of these currently correlate a reply to a chat request:
 **Description:** Structured recent activity log.
 
 **Response:**
+
 ```json
 {
   "ok": true,
@@ -402,15 +419,18 @@ Any of these currently correlate a reply to a chat request:
 ### Watchdog Host
 
 **Option 1: Same Windows Server**
+
 - Install scheduled task on production Windows server
 - Logs stored locally, accessible via backend API
 
 **Option 2: Dedicated Monitoring Server**
+
 - Install watchdog on separate monitoring host
 - Update `OPENCLAW_WATCHDOG_LOG_PATH` to network path
 - Configure webhook alerts (Slack/Discord)
 
 **Option 3: Cloud Function**
+
 - Port watchdog logic to cloud function (AWS Lambda, Azure Functions)
 - Trigger via EventBridge/Timer
 - Store logs in cloud storage (S3, Blob Storage)
@@ -422,17 +442,20 @@ Any of these currently correlate a reply to a chat request:
 ### Watchdog Not Running
 
 **Check scheduled task:**
+
 ```powershell
 Get-ScheduledTask -TaskName "PVA-OpenClaw-Watchdog"
 Get-ScheduledTaskInfo -TaskName "PVA-OpenClaw-Watchdog"
 ```
 
 **Check startup folder:**
+
 ```powershell
 Test-Path "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup\launch-pvabazaar-openclaw-watchdog.bat"
 ```
 
 **Manual run:**
+
 ```powershell
 .\infra\openclaw\watchdog-bridge.ps1
 ```
@@ -442,12 +465,14 @@ Test-Path "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup\launch-pva
 ### Backend Returns "Not Configured"
 
 **Verify environment variables:**
+
 ```bash
 cd backend
 node -e "console.log(process.env.OPENCLAW_GATEWAY_URL)"
 ```
 
 **Check .env file:**
+
 ```bash
 cat backend/.env | grep OPENCLAW
 ```
@@ -457,12 +482,14 @@ cat backend/.env | grep OPENCLAW
 ### Frontend Shows Stale Data
 
 **Increase stale threshold:**
+
 ```bash
 # Frontend/.env.production
 VITE_STATUS_STALE_MS=300000  # 5 minutes
 ```
 
 **Check watchdog interval:**
+
 ```powershell
 # infra/openclaw/watchdog-bridge.ps1
 $checkInterval = 60  # Reduce for more frequent checks
@@ -473,6 +500,7 @@ $checkInterval = 60  # Reduce for more frequent checks
 ### Dispatch Fails with 502
 
 **Verify webhook URL:**
+
 ```bash
 curl -X POST https://your-openclaw-gateway.com/webhook \
   -H "Content-Type: application/json" \
@@ -480,6 +508,7 @@ curl -X POST https://your-openclaw-gateway.com/webhook \
 ```
 
 **Check API key:**
+
 ```bash
 # Ensure OPENCLAW_API_KEY matches gateway expectations
 ```
@@ -491,10 +520,11 @@ curl -X POST https://your-openclaw-gateway.com/webhook \
 1. Confirm webhook forwarding is enabled (`OPENCLAW_WEBHOOK_URL` or runtime OpenClaw webhook URL).
 2. Confirm OpenClaw posts to `/api/openclaw/inbound` after processing.
 3. Ensure inbound payload includes at least one correlation field:
-  - `respondingTo`
-  - `metadata.respondingToMessageId`
-  - `metadata.replyToRequestId`
-  - `metadata.chatRequestId`
+
+- `respondingTo`
+- `metadata.respondingToMessageId`
+- `metadata.replyToRequestId`
+- `metadata.chatRequestId`
 
 Without correlation fields, replies are stored but cannot be matched for immediate live chat response.
 
@@ -503,12 +533,14 @@ Without correlation fields, replies are stored but cannot be matched for immedia
 ### Desktop Toast Not Appearing
 
 **PowerShell execution policy:**
+
 ```powershell
 Get-ExecutionPolicy
 Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
 ```
 
 **Test toast directly:**
+
 ```powershell
 New-BurntToastNotification -Text "Test Title", "Test Message"
 ```
@@ -528,6 +560,7 @@ New-BurntToastNotification -Text "Test Title", "Test Message"
 ## Support
 
 For issues or questions:
+
 1. Check logs: `infra/openclaw/logs/`
 2. Verify environment configuration
 3. Review API responses: `/api/openclaw/status`

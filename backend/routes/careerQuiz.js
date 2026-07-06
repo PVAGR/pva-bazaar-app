@@ -20,7 +20,17 @@ const LIKERT_OPTIONS = [
   { key: '5', value: 5, text: '5 - I love this and lose track of time' },
 ];
 
-function buildLikertQuestion(id, prompt, axis, lowPole, highPole, riasecLow, riasecHigh, section = 'enjoyment', weight = 1) {
+function buildLikertQuestion(
+  id,
+  prompt,
+  axis,
+  lowPole,
+  highPole,
+  riasecLow,
+  riasecHigh,
+  section = 'enjoyment',
+  weight = 1,
+) {
   return {
     id,
     prompt,
@@ -37,69 +47,669 @@ function buildLikertQuestion(id, prompt, axis, lowPole, highPole, riasecLow, ria
 }
 
 const ENJOYMENT_QUESTIONS = [
-  buildLikertQuestion('q1', 'How much do you enjoy building or assembling things with your hands (furniture, models, machinery, electronics, etc.)?', 'SN', 'N', 'S', ['A', 'I'], ['R', 'C'], 'enjoyment', 1.15),
-  buildLikertQuestion('q2', 'How much do you enjoy researching, analyzing data, or investigating complex questions to figure out how things work?', 'SN', 'S', 'N', ['R', 'C'], ['I', 'C'], 'enjoyment', 1.15),
-  buildLikertQuestion('q3', 'How much do you enjoy creating art, music, writing, photography, design, or any form of artistic expression?', 'SN', 'S', 'N', ['C', 'R'], ['A', 'I'], 'enjoyment', 1.15),
-  buildLikertQuestion('q4', 'How much do you enjoy helping, teaching, counseling, or supporting other people through their problems or growth?', 'TF', 'T', 'F', ['I', 'C'], ['S', 'E'], 'enjoyment', 1.15),
-  buildLikertQuestion('q5', 'How much do you enjoy leading a group, motivating others, starting new projects, or being in charge?', 'EI', 'I', 'E', ['I', 'C'], ['E', 'S'], 'enjoyment', 1.15),
-  buildLikertQuestion('q6', 'How much do you enjoy organizing information, creating schedules, managing details, or keeping systems running smoothly?', 'JP', 'P', 'J', ['A', 'E'], ['C', 'E'], 'enjoyment', 1.15),
-  buildLikertQuestion('q7', 'How much do you enjoy physical outdoor activities (hiking, sports, gardening, working with nature or animals)?', 'EI', 'I', 'E', ['I', 'C'], ['R', 'E'], 'enjoyment', 1.15),
-  buildLikertQuestion('q8', 'How much do you enjoy quiet, focused indoor work where you can concentrate deeply without interruptions?', 'EI', 'E', 'I', ['E', 'S'], ['I', 'C'], 'enjoyment', 1.15),
-  buildLikertQuestion('q9', 'How much do you enjoy brainstorming and collaborating with a team of people?', 'EI', 'I', 'E', ['I', 'C'], ['E', 'A'], 'enjoyment', 1.15),
-  buildLikertQuestion('q10', 'How much do you enjoy working completely alone on a project you control from start to finish?', 'EI', 'E', 'I', ['E', 'S'], ['I', 'R'], 'enjoyment', 1.15),
-  buildLikertQuestion('q11', 'How much do you enjoy exploring big ideas, theories, philosophies, or future possibilities?', 'SN', 'S', 'N', ['R', 'C'], ['I', 'A'], 'enjoyment', 1.15),
-  buildLikertQuestion('q12', 'How much do you enjoy practical, real-world tasks that produce immediate, tangible results?', 'SN', 'N', 'S', ['A', 'I'], ['R', 'C'], 'enjoyment', 1.15),
-  buildLikertQuestion('q13', 'How much do you enjoy making decisions based on logic, facts, and objective analysis?', 'TF', 'F', 'T', ['S', 'E'], ['I', 'C'], 'enjoyment', 1.15),
-  buildLikertQuestion('q14', 'How much do you enjoy making decisions that focus on people’s feelings, values, and keeping harmony?', 'TF', 'T', 'F', ['I', 'C'], ['S', 'E'], 'enjoyment', 1.15),
-  buildLikertQuestion('q15', 'How much do you enjoy having a clear, structured routine and knowing exactly what to expect each day?', 'JP', 'P', 'J', ['A', 'E'], ['C', 'E'], 'enjoyment', 1.15),
-  buildLikertQuestion('q16', 'How much do you enjoy flexibility, last-minute changes, and spontaneous adventures?', 'JP', 'J', 'P', ['C', 'E'], ['E', 'A'], 'enjoyment', 1.15),
-  buildLikertQuestion('q17', 'How much do you enjoy public speaking, presenting ideas, or performing in front of others?', 'EI', 'I', 'E', ['I', 'C'], ['E', 'A'], 'enjoyment', 1.15),
-  buildLikertQuestion('q18', 'How much do you enjoy working behind the scenes where no one is watching or praising you?', 'EI', 'E', 'I', ['E', 'A'], ['I', 'C'], 'enjoyment', 1.15),
-  buildLikertQuestion('q19', 'How much do you enjoy learning about and experimenting with new technology, gadgets, or tools?', 'SN', 'S', 'N', ['C', 'S'], ['I', 'R'], 'enjoyment', 1.15),
-  buildLikertQuestion('q20', 'How much do you enjoy cooking, baking, or creatively experimenting with food and recipes?', 'SN', 'N', 'S', ['I', 'C'], ['A', 'R'], 'enjoyment', 1.15),
-  buildLikertQuestion('q21', 'How much do you enjoy designing spaces, interiors, websites, graphics, or visual layouts?', 'SN', 'S', 'N', ['C', 'R'], ['A', 'I'], 'enjoyment', 1.15),
-  buildLikertQuestion('q22', 'How much do you enjoy working with numbers, budgets, statistics, or financial planning?', 'TF', 'F', 'T', ['A', 'S'], ['C', 'I'], 'enjoyment', 1.15),
-  buildLikertQuestion('q23', 'How much do you enjoy conducting experiments, lab work, or scientific exploration?', 'SN', 'S', 'N', ['R', 'C'], ['I', 'A'], 'enjoyment', 1.15),
-  buildLikertQuestion('q24', 'How much do you enjoy inventing stories, poems, characters, or imaginary worlds?', 'SN', 'S', 'N', ['C', 'R'], ['A', 'I'], 'enjoyment', 1.15),
-  buildLikertQuestion('q25', 'How much do you enjoy mentoring, coaching, or guiding others to reach their full potential?', 'TF', 'T', 'F', ['I', 'C'], ['S', 'E'], 'enjoyment', 1.15),
-  buildLikertQuestion('q26', 'How much do you enjoy negotiating, selling ideas/products, or persuading people to take action?', 'EI', 'I', 'E', ['I', 'C'], ['E', 'S'], 'enjoyment', 1.15),
-  buildLikertQuestion('q27', 'How much do you enjoy maintaining accurate records, following established rules, or handling repetitive but important tasks?', 'JP', 'P', 'J', ['A', 'E'], ['C', 'E'], 'enjoyment', 1.15),
-  buildLikertQuestion('q28', 'How much do you enjoy traveling to new places, experiencing different cultures, or seeking new adventures?', 'JP', 'J', 'P', ['C', 'I'], ['E', 'A'], 'enjoyment', 1.15),
-  buildLikertQuestion('q29', 'How much do you enjoy solving mechanical or technical problems (fixing cars, building apps, troubleshooting systems)?', 'SN', 'N', 'S', ['A', 'S'], ['R', 'I'], 'enjoyment', 1.15),
-  buildLikertQuestion('q30', 'How much do you enjoy quiet, reflective activities like reading, journaling, meditating, or thinking deeply about life?', 'EI', 'E', 'I', ['E', 'S'], ['I', 'A'], 'enjoyment', 1.15),
+  buildLikertQuestion(
+    'q1',
+    'How much do you enjoy building or assembling things with your hands (furniture, models, machinery, electronics, etc.)?',
+    'SN',
+    'N',
+    'S',
+    ['A', 'I'],
+    ['R', 'C'],
+    'enjoyment',
+    1.15,
+  ),
+  buildLikertQuestion(
+    'q2',
+    'How much do you enjoy researching, analyzing data, or investigating complex questions to figure out how things work?',
+    'SN',
+    'S',
+    'N',
+    ['R', 'C'],
+    ['I', 'C'],
+    'enjoyment',
+    1.15,
+  ),
+  buildLikertQuestion(
+    'q3',
+    'How much do you enjoy creating art, music, writing, photography, design, or any form of artistic expression?',
+    'SN',
+    'S',
+    'N',
+    ['C', 'R'],
+    ['A', 'I'],
+    'enjoyment',
+    1.15,
+  ),
+  buildLikertQuestion(
+    'q4',
+    'How much do you enjoy helping, teaching, counseling, or supporting other people through their problems or growth?',
+    'TF',
+    'T',
+    'F',
+    ['I', 'C'],
+    ['S', 'E'],
+    'enjoyment',
+    1.15,
+  ),
+  buildLikertQuestion(
+    'q5',
+    'How much do you enjoy leading a group, motivating others, starting new projects, or being in charge?',
+    'EI',
+    'I',
+    'E',
+    ['I', 'C'],
+    ['E', 'S'],
+    'enjoyment',
+    1.15,
+  ),
+  buildLikertQuestion(
+    'q6',
+    'How much do you enjoy organizing information, creating schedules, managing details, or keeping systems running smoothly?',
+    'JP',
+    'P',
+    'J',
+    ['A', 'E'],
+    ['C', 'E'],
+    'enjoyment',
+    1.15,
+  ),
+  buildLikertQuestion(
+    'q7',
+    'How much do you enjoy physical outdoor activities (hiking, sports, gardening, working with nature or animals)?',
+    'EI',
+    'I',
+    'E',
+    ['I', 'C'],
+    ['R', 'E'],
+    'enjoyment',
+    1.15,
+  ),
+  buildLikertQuestion(
+    'q8',
+    'How much do you enjoy quiet, focused indoor work where you can concentrate deeply without interruptions?',
+    'EI',
+    'E',
+    'I',
+    ['E', 'S'],
+    ['I', 'C'],
+    'enjoyment',
+    1.15,
+  ),
+  buildLikertQuestion(
+    'q9',
+    'How much do you enjoy brainstorming and collaborating with a team of people?',
+    'EI',
+    'I',
+    'E',
+    ['I', 'C'],
+    ['E', 'A'],
+    'enjoyment',
+    1.15,
+  ),
+  buildLikertQuestion(
+    'q10',
+    'How much do you enjoy working completely alone on a project you control from start to finish?',
+    'EI',
+    'E',
+    'I',
+    ['E', 'S'],
+    ['I', 'R'],
+    'enjoyment',
+    1.15,
+  ),
+  buildLikertQuestion(
+    'q11',
+    'How much do you enjoy exploring big ideas, theories, philosophies, or future possibilities?',
+    'SN',
+    'S',
+    'N',
+    ['R', 'C'],
+    ['I', 'A'],
+    'enjoyment',
+    1.15,
+  ),
+  buildLikertQuestion(
+    'q12',
+    'How much do you enjoy practical, real-world tasks that produce immediate, tangible results?',
+    'SN',
+    'N',
+    'S',
+    ['A', 'I'],
+    ['R', 'C'],
+    'enjoyment',
+    1.15,
+  ),
+  buildLikertQuestion(
+    'q13',
+    'How much do you enjoy making decisions based on logic, facts, and objective analysis?',
+    'TF',
+    'F',
+    'T',
+    ['S', 'E'],
+    ['I', 'C'],
+    'enjoyment',
+    1.15,
+  ),
+  buildLikertQuestion(
+    'q14',
+    'How much do you enjoy making decisions that focus on people’s feelings, values, and keeping harmony?',
+    'TF',
+    'T',
+    'F',
+    ['I', 'C'],
+    ['S', 'E'],
+    'enjoyment',
+    1.15,
+  ),
+  buildLikertQuestion(
+    'q15',
+    'How much do you enjoy having a clear, structured routine and knowing exactly what to expect each day?',
+    'JP',
+    'P',
+    'J',
+    ['A', 'E'],
+    ['C', 'E'],
+    'enjoyment',
+    1.15,
+  ),
+  buildLikertQuestion(
+    'q16',
+    'How much do you enjoy flexibility, last-minute changes, and spontaneous adventures?',
+    'JP',
+    'J',
+    'P',
+    ['C', 'E'],
+    ['E', 'A'],
+    'enjoyment',
+    1.15,
+  ),
+  buildLikertQuestion(
+    'q17',
+    'How much do you enjoy public speaking, presenting ideas, or performing in front of others?',
+    'EI',
+    'I',
+    'E',
+    ['I', 'C'],
+    ['E', 'A'],
+    'enjoyment',
+    1.15,
+  ),
+  buildLikertQuestion(
+    'q18',
+    'How much do you enjoy working behind the scenes where no one is watching or praising you?',
+    'EI',
+    'E',
+    'I',
+    ['E', 'A'],
+    ['I', 'C'],
+    'enjoyment',
+    1.15,
+  ),
+  buildLikertQuestion(
+    'q19',
+    'How much do you enjoy learning about and experimenting with new technology, gadgets, or tools?',
+    'SN',
+    'S',
+    'N',
+    ['C', 'S'],
+    ['I', 'R'],
+    'enjoyment',
+    1.15,
+  ),
+  buildLikertQuestion(
+    'q20',
+    'How much do you enjoy cooking, baking, or creatively experimenting with food and recipes?',
+    'SN',
+    'N',
+    'S',
+    ['I', 'C'],
+    ['A', 'R'],
+    'enjoyment',
+    1.15,
+  ),
+  buildLikertQuestion(
+    'q21',
+    'How much do you enjoy designing spaces, interiors, websites, graphics, or visual layouts?',
+    'SN',
+    'S',
+    'N',
+    ['C', 'R'],
+    ['A', 'I'],
+    'enjoyment',
+    1.15,
+  ),
+  buildLikertQuestion(
+    'q22',
+    'How much do you enjoy working with numbers, budgets, statistics, or financial planning?',
+    'TF',
+    'F',
+    'T',
+    ['A', 'S'],
+    ['C', 'I'],
+    'enjoyment',
+    1.15,
+  ),
+  buildLikertQuestion(
+    'q23',
+    'How much do you enjoy conducting experiments, lab work, or scientific exploration?',
+    'SN',
+    'S',
+    'N',
+    ['R', 'C'],
+    ['I', 'A'],
+    'enjoyment',
+    1.15,
+  ),
+  buildLikertQuestion(
+    'q24',
+    'How much do you enjoy inventing stories, poems, characters, or imaginary worlds?',
+    'SN',
+    'S',
+    'N',
+    ['C', 'R'],
+    ['A', 'I'],
+    'enjoyment',
+    1.15,
+  ),
+  buildLikertQuestion(
+    'q25',
+    'How much do you enjoy mentoring, coaching, or guiding others to reach their full potential?',
+    'TF',
+    'T',
+    'F',
+    ['I', 'C'],
+    ['S', 'E'],
+    'enjoyment',
+    1.15,
+  ),
+  buildLikertQuestion(
+    'q26',
+    'How much do you enjoy negotiating, selling ideas/products, or persuading people to take action?',
+    'EI',
+    'I',
+    'E',
+    ['I', 'C'],
+    ['E', 'S'],
+    'enjoyment',
+    1.15,
+  ),
+  buildLikertQuestion(
+    'q27',
+    'How much do you enjoy maintaining accurate records, following established rules, or handling repetitive but important tasks?',
+    'JP',
+    'P',
+    'J',
+    ['A', 'E'],
+    ['C', 'E'],
+    'enjoyment',
+    1.15,
+  ),
+  buildLikertQuestion(
+    'q28',
+    'How much do you enjoy traveling to new places, experiencing different cultures, or seeking new adventures?',
+    'JP',
+    'J',
+    'P',
+    ['C', 'I'],
+    ['E', 'A'],
+    'enjoyment',
+    1.15,
+  ),
+  buildLikertQuestion(
+    'q29',
+    'How much do you enjoy solving mechanical or technical problems (fixing cars, building apps, troubleshooting systems)?',
+    'SN',
+    'N',
+    'S',
+    ['A', 'S'],
+    ['R', 'I'],
+    'enjoyment',
+    1.15,
+  ),
+  buildLikertQuestion(
+    'q30',
+    'How much do you enjoy quiet, reflective activities like reading, journaling, meditating, or thinking deeply about life?',
+    'EI',
+    'E',
+    'I',
+    ['E', 'S'],
+    ['I', 'A'],
+    'enjoyment',
+    1.15,
+  ),
 ];
 
 const INTROSPECTION_QUESTIONS = [
-  buildLikertQuestion('i1', 'After a week of intense work, being around people restores your energy more than spending time alone.', 'EI', 'I', 'E', ['I', 'C'], ['E', 'S'], 'introspection', 1),
-  buildLikertQuestion('i2', 'When walking into a room full of strangers, you naturally introduce yourself instead of observing quietly first.', 'EI', 'I', 'E', ['I', 'C'], ['E', 'S'], 'introspection', 1),
-  buildLikertQuestion('i3', 'You feel most alive when teaching or guiding others rather than mastering skills alone.', 'EI', 'I', 'E', ['I', 'R'], ['S', 'E'], 'introspection', 1),
-  buildLikertQuestion('i4', 'When you have a breakthrough idea, you talk it out quickly rather than processing it internally first.', 'EI', 'I', 'E', ['I', 'A'], ['E', 'A'], 'introspection', 1),
-  buildLikertQuestion('i5', 'In teams, you naturally drive conversation instead of listening quietly before speaking.', 'EI', 'I', 'E', ['I', 'C'], ['E', 'S'], 'introspection', 1),
-  buildLikertQuestion('i6', 'When learning something new, you prefer step-by-step instructions over high-level theory.', 'SN', 'N', 'S', ['I', 'A'], ['R', 'C'], 'introspection', 1),
-  buildLikertQuestion('i7', 'You are more satisfied fixing tangible objects than solving abstract conceptual puzzles.', 'SN', 'N', 'S', ['I', 'A'], ['R', 'C'], 'introspection', 1),
-  buildLikertQuestion('i8', 'You trust proven methods more than intuitive hunches about future possibilities.', 'SN', 'N', 'S', ['A', 'I'], ['C', 'R'], 'introspection', 1),
-  buildLikertQuestion('i9', 'When describing a scene, you focus more on specific details than symbolic meaning and patterns.', 'SN', 'N', 'S', ['A', 'I'], ['C', 'R'], 'introspection', 1),
-  buildLikertQuestion('i10', 'You prefer work with immediate visible results over work that builds long-term visions.', 'SN', 'N', 'S', ['A', 'I'], ['R', 'C'], 'introspection', 1),
-  buildLikertQuestion('i11', 'When making decisions, logical efficiency matters more to you than emotional alignment.', 'TF', 'F', 'T', ['S', 'E'], ['I', 'C'], 'introspection', 1),
-  buildLikertQuestion('i12', 'When a friend shares a problem, your first instinct is to offer practical solutions rather than emotional validation.', 'TF', 'F', 'T', ['S', 'E'], ['I', 'C'], 'introspection', 1),
-  buildLikertQuestion('i13', 'You believe hard truth is usually better than softening reality to avoid discomfort.', 'TF', 'F', 'T', ['S', 'E'], ['I', 'C'], 'introspection', 1),
-  buildLikertQuestion('i14', 'In conflicts, being factually right is more important to you than preserving harmony.', 'TF', 'F', 'T', ['S', 'E'], ['I', 'C'], 'introspection', 1),
-  buildLikertQuestion('i15', 'When evaluating careers, challenge and measurable payoff matter more than meaning and service.', 'TF', 'F', 'T', ['S', 'E'], ['I', 'C'], 'introspection', 1),
-  buildLikertQuestion('i16', 'You feel most relaxed when plans are set well in advance rather than open-ended.', 'JP', 'P', 'J', ['E', 'A'], ['C', 'E'], 'introspection', 1),
-  buildLikertQuestion('i17', 'You prefer finishing projects early over working close to the deadline.', 'JP', 'P', 'J', ['E', 'A'], ['C', 'E'], 'introspection', 1),
-  buildLikertQuestion('i18', 'Your workspace is naturally organized rather than comfortably cluttered.', 'JP', 'P', 'J', ['A', 'E'], ['C', 'E'], 'introspection', 1),
-  buildLikertQuestion('i19', 'You tend to make decisions quickly instead of continuing to gather more information.', 'JP', 'P', 'J', ['I', 'A'], ['E', 'C'], 'introspection', 1),
-  buildLikertQuestion('i20', 'You see rules as useful structure rather than unnecessary limitations.', 'JP', 'P', 'J', ['A', 'E'], ['C', 'E'], 'introspection', 1),
-  buildLikertQuestion('i21', 'You can stay engaged for hours in repetitive system-building tasks that others find draining.', 'JP', 'P', 'J', ['A', 'E'], ['C', 'R'], 'introspection', 1),
-  buildLikertQuestion('i22', 'People consistently praise your reliability and process discipline as one of your easiest strengths.', 'JP', 'P', 'J', ['A', 'I'], ['C', 'E'], 'introspection', 1),
-  buildLikertQuestion('i23', 'If failure were impossible, you would focus on solving systemic world problems at scale.', 'SN', 'S', 'N', ['C', 'R'], ['I', 'E'], 'introspection', 1),
-  buildLikertQuestion('i24', 'You are strongly moved by social suffering and feel compelled to respond personally.', 'TF', 'T', 'F', ['I', 'C'], ['S', 'E'], 'introspection', 1),
-  buildLikertQuestion('i25', 'In flow state, you are most often helping people rather than analyzing systems.', 'TF', 'T', 'F', ['I', 'C'], ['S', 'E'], 'introspection', 1),
-  buildLikertQuestion('i26', 'You could speak for 30 minutes without preparation on one focused practical domain you know deeply.', 'SN', 'N', 'S', ['A', 'I'], ['R', 'C'], 'introspection', 1),
-  buildLikertQuestion('i27', 'You are most fulfilled as a vision leader more than a craft specialist or relationship healer.', 'EI', 'I', 'E', ['I', 'R'], ['E', 'S'], 'introspection', 1),
-  buildLikertQuestion('i28', 'You often trust deep intuition before external evidence fully appears.', 'SN', 'S', 'N', ['C', 'R'], ['A', 'I'], 'introspection', 1),
-  buildLikertQuestion('i29', 'You think often about leaving a legacy through systems, institutions, or enduring work.', 'JP', 'P', 'J', ['A', 'E'], ['C', 'E'], 'introspection', 1),
-  buildLikertQuestion('i30', 'You are strongly motivated to align your life with a clear personal calling or purpose.', 'TF', 'T', 'F', ['I', 'C'], ['S', 'E'], 'introspection', 1),
+  buildLikertQuestion(
+    'i1',
+    'After a week of intense work, being around people restores your energy more than spending time alone.',
+    'EI',
+    'I',
+    'E',
+    ['I', 'C'],
+    ['E', 'S'],
+    'introspection',
+    1,
+  ),
+  buildLikertQuestion(
+    'i2',
+    'When walking into a room full of strangers, you naturally introduce yourself instead of observing quietly first.',
+    'EI',
+    'I',
+    'E',
+    ['I', 'C'],
+    ['E', 'S'],
+    'introspection',
+    1,
+  ),
+  buildLikertQuestion(
+    'i3',
+    'You feel most alive when teaching or guiding others rather than mastering skills alone.',
+    'EI',
+    'I',
+    'E',
+    ['I', 'R'],
+    ['S', 'E'],
+    'introspection',
+    1,
+  ),
+  buildLikertQuestion(
+    'i4',
+    'When you have a breakthrough idea, you talk it out quickly rather than processing it internally first.',
+    'EI',
+    'I',
+    'E',
+    ['I', 'A'],
+    ['E', 'A'],
+    'introspection',
+    1,
+  ),
+  buildLikertQuestion(
+    'i5',
+    'In teams, you naturally drive conversation instead of listening quietly before speaking.',
+    'EI',
+    'I',
+    'E',
+    ['I', 'C'],
+    ['E', 'S'],
+    'introspection',
+    1,
+  ),
+  buildLikertQuestion(
+    'i6',
+    'When learning something new, you prefer step-by-step instructions over high-level theory.',
+    'SN',
+    'N',
+    'S',
+    ['I', 'A'],
+    ['R', 'C'],
+    'introspection',
+    1,
+  ),
+  buildLikertQuestion(
+    'i7',
+    'You are more satisfied fixing tangible objects than solving abstract conceptual puzzles.',
+    'SN',
+    'N',
+    'S',
+    ['I', 'A'],
+    ['R', 'C'],
+    'introspection',
+    1,
+  ),
+  buildLikertQuestion(
+    'i8',
+    'You trust proven methods more than intuitive hunches about future possibilities.',
+    'SN',
+    'N',
+    'S',
+    ['A', 'I'],
+    ['C', 'R'],
+    'introspection',
+    1,
+  ),
+  buildLikertQuestion(
+    'i9',
+    'When describing a scene, you focus more on specific details than symbolic meaning and patterns.',
+    'SN',
+    'N',
+    'S',
+    ['A', 'I'],
+    ['C', 'R'],
+    'introspection',
+    1,
+  ),
+  buildLikertQuestion(
+    'i10',
+    'You prefer work with immediate visible results over work that builds long-term visions.',
+    'SN',
+    'N',
+    'S',
+    ['A', 'I'],
+    ['R', 'C'],
+    'introspection',
+    1,
+  ),
+  buildLikertQuestion(
+    'i11',
+    'When making decisions, logical efficiency matters more to you than emotional alignment.',
+    'TF',
+    'F',
+    'T',
+    ['S', 'E'],
+    ['I', 'C'],
+    'introspection',
+    1,
+  ),
+  buildLikertQuestion(
+    'i12',
+    'When a friend shares a problem, your first instinct is to offer practical solutions rather than emotional validation.',
+    'TF',
+    'F',
+    'T',
+    ['S', 'E'],
+    ['I', 'C'],
+    'introspection',
+    1,
+  ),
+  buildLikertQuestion(
+    'i13',
+    'You believe hard truth is usually better than softening reality to avoid discomfort.',
+    'TF',
+    'F',
+    'T',
+    ['S', 'E'],
+    ['I', 'C'],
+    'introspection',
+    1,
+  ),
+  buildLikertQuestion(
+    'i14',
+    'In conflicts, being factually right is more important to you than preserving harmony.',
+    'TF',
+    'F',
+    'T',
+    ['S', 'E'],
+    ['I', 'C'],
+    'introspection',
+    1,
+  ),
+  buildLikertQuestion(
+    'i15',
+    'When evaluating careers, challenge and measurable payoff matter more than meaning and service.',
+    'TF',
+    'F',
+    'T',
+    ['S', 'E'],
+    ['I', 'C'],
+    'introspection',
+    1,
+  ),
+  buildLikertQuestion(
+    'i16',
+    'You feel most relaxed when plans are set well in advance rather than open-ended.',
+    'JP',
+    'P',
+    'J',
+    ['E', 'A'],
+    ['C', 'E'],
+    'introspection',
+    1,
+  ),
+  buildLikertQuestion(
+    'i17',
+    'You prefer finishing projects early over working close to the deadline.',
+    'JP',
+    'P',
+    'J',
+    ['E', 'A'],
+    ['C', 'E'],
+    'introspection',
+    1,
+  ),
+  buildLikertQuestion(
+    'i18',
+    'Your workspace is naturally organized rather than comfortably cluttered.',
+    'JP',
+    'P',
+    'J',
+    ['A', 'E'],
+    ['C', 'E'],
+    'introspection',
+    1,
+  ),
+  buildLikertQuestion(
+    'i19',
+    'You tend to make decisions quickly instead of continuing to gather more information.',
+    'JP',
+    'P',
+    'J',
+    ['I', 'A'],
+    ['E', 'C'],
+    'introspection',
+    1,
+  ),
+  buildLikertQuestion(
+    'i20',
+    'You see rules as useful structure rather than unnecessary limitations.',
+    'JP',
+    'P',
+    'J',
+    ['A', 'E'],
+    ['C', 'E'],
+    'introspection',
+    1,
+  ),
+  buildLikertQuestion(
+    'i21',
+    'You can stay engaged for hours in repetitive system-building tasks that others find draining.',
+    'JP',
+    'P',
+    'J',
+    ['A', 'E'],
+    ['C', 'R'],
+    'introspection',
+    1,
+  ),
+  buildLikertQuestion(
+    'i22',
+    'People consistently praise your reliability and process discipline as one of your easiest strengths.',
+    'JP',
+    'P',
+    'J',
+    ['A', 'I'],
+    ['C', 'E'],
+    'introspection',
+    1,
+  ),
+  buildLikertQuestion(
+    'i23',
+    'If failure were impossible, you would focus on solving systemic world problems at scale.',
+    'SN',
+    'S',
+    'N',
+    ['C', 'R'],
+    ['I', 'E'],
+    'introspection',
+    1,
+  ),
+  buildLikertQuestion(
+    'i24',
+    'You are strongly moved by social suffering and feel compelled to respond personally.',
+    'TF',
+    'T',
+    'F',
+    ['I', 'C'],
+    ['S', 'E'],
+    'introspection',
+    1,
+  ),
+  buildLikertQuestion(
+    'i25',
+    'In flow state, you are most often helping people rather than analyzing systems.',
+    'TF',
+    'T',
+    'F',
+    ['I', 'C'],
+    ['S', 'E'],
+    'introspection',
+    1,
+  ),
+  buildLikertQuestion(
+    'i26',
+    'You could speak for 30 minutes without preparation on one focused practical domain you know deeply.',
+    'SN',
+    'N',
+    'S',
+    ['A', 'I'],
+    ['R', 'C'],
+    'introspection',
+    1,
+  ),
+  buildLikertQuestion(
+    'i27',
+    'You are most fulfilled as a vision leader more than a craft specialist or relationship healer.',
+    'EI',
+    'I',
+    'E',
+    ['I', 'R'],
+    ['E', 'S'],
+    'introspection',
+    1,
+  ),
+  buildLikertQuestion(
+    'i28',
+    'You often trust deep intuition before external evidence fully appears.',
+    'SN',
+    'S',
+    'N',
+    ['C', 'R'],
+    ['A', 'I'],
+    'introspection',
+    1,
+  ),
+  buildLikertQuestion(
+    'i29',
+    'You think often about leaving a legacy through systems, institutions, or enduring work.',
+    'JP',
+    'P',
+    'J',
+    ['A', 'E'],
+    ['C', 'E'],
+    'introspection',
+    1,
+  ),
+  buildLikertQuestion(
+    'i30',
+    'You are strongly motivated to align your life with a clear personal calling or purpose.',
+    'TF',
+    'T',
+    'F',
+    ['I', 'C'],
+    ['S', 'E'],
+    'introspection',
+    1,
+  ),
 ];
 
 const DEFAULT_QUESTIONS = DEFAULT_NARRATIVE_QUESTIONS;
@@ -123,7 +733,11 @@ const TYPE_TO_RECOMMENDATIONS = {
   },
   ISTP: {
     domains: ['mechanical-repair', 'security-defense', 'electrical'],
-    careers: ['Field Repair Specialist', 'Emergency Response Technician', 'Power Systems Technician'],
+    careers: [
+      'Field Repair Specialist',
+      'Emergency Response Technician',
+      'Power Systems Technician',
+    ],
   },
   ISFP: {
     domains: ['healthcare', 'craft-production', 'farming'],
@@ -143,7 +757,11 @@ const TYPE_TO_RECOMMENDATIONS = {
   },
   ESFP: {
     domains: ['healthcare', 'hospitality-logistics', 'community-services'],
-    careers: ['Public Health Outreach Worker', 'Supply Distribution Lead', 'Team Wellbeing Coordinator'],
+    careers: [
+      'Public Health Outreach Worker',
+      'Supply Distribution Lead',
+      'Team Wellbeing Coordinator',
+    ],
   },
   ENFP: {
     domains: ['education', 'innovation-hubs', 'community-development'],
@@ -167,7 +785,11 @@ const TYPE_TO_RECOMMENDATIONS = {
   },
   ENTJ: {
     domains: ['engineering', 'security-defense', 'infrastructure-strategy'],
-    careers: ['Infrastructure Director', 'Emergency Systems Strategist', 'Technical Operations Executive'],
+    careers: [
+      'Infrastructure Director',
+      'Emergency Systems Strategist',
+      'Technical Operations Executive',
+    ],
   },
 };
 
@@ -266,28 +888,100 @@ const RIASEC_TO_OCCUPATIONS = {
 
 const RIASEC_ROLE_BUCKETS = {
   R: {
-    majorRoles: ['Civil Engineer', 'Construction Supervisor', 'Master Electrician', 'Mechanical Systems Lead', 'Infrastructure Operations Manager'],
-    supportingRoles: ['Landscaper', 'Maintenance Repair Technician', 'Irrigation Specialist', 'Recycling Plant Operator', 'Road Crew Operator'],
+    majorRoles: [
+      'Civil Engineer',
+      'Construction Supervisor',
+      'Master Electrician',
+      'Mechanical Systems Lead',
+      'Infrastructure Operations Manager',
+    ],
+    supportingRoles: [
+      'Landscaper',
+      'Maintenance Repair Technician',
+      'Irrigation Specialist',
+      'Recycling Plant Operator',
+      'Road Crew Operator',
+    ],
   },
   I: {
-    majorRoles: ['Research Scientist', 'Data Science Lead', 'Forensic Investigator', 'Intelligence Analyst', 'Systems Research Architect'],
-    supportingRoles: ['Lab Assistant', 'Library Archivist', 'Survey Data Collector', 'Quality Assurance Tester', 'Patent Documentation Reviewer'],
+    majorRoles: [
+      'Research Scientist',
+      'Data Science Lead',
+      'Forensic Investigator',
+      'Intelligence Analyst',
+      'Systems Research Architect',
+    ],
+    supportingRoles: [
+      'Lab Assistant',
+      'Library Archivist',
+      'Survey Data Collector',
+      'Quality Assurance Tester',
+      'Patent Documentation Reviewer',
+    ],
   },
   A: {
-    majorRoles: ['Creative Director', 'Product Designer', 'Architect', 'Media Producer', 'Experience Designer'],
-    supportingRoles: ['Tattoo Artist', 'Set Designer', 'Costume Maker', 'Bookbinder', 'Independent Craft Producer'],
+    majorRoles: [
+      'Creative Director',
+      'Product Designer',
+      'Architect',
+      'Media Producer',
+      'Experience Designer',
+    ],
+    supportingRoles: [
+      'Tattoo Artist',
+      'Set Designer',
+      'Costume Maker',
+      'Bookbinder',
+      'Independent Craft Producer',
+    ],
   },
   S: {
-    majorRoles: ['Physician', 'Teacher', 'Therapist', 'Social Program Lead', 'Community Health Coordinator'],
-    supportingRoles: ['Hospice Worker', 'Crisis Hotline Operator', 'School Support Staff', 'Care Assistant', 'Volunteer Coordinator'],
+    majorRoles: [
+      'Physician',
+      'Teacher',
+      'Therapist',
+      'Social Program Lead',
+      'Community Health Coordinator',
+    ],
+    supportingRoles: [
+      'Hospice Worker',
+      'Crisis Hotline Operator',
+      'School Support Staff',
+      'Care Assistant',
+      'Volunteer Coordinator',
+    ],
   },
   E: {
-    majorRoles: ['Entrepreneur', 'Operations Director', 'Policy Leader', 'Sales Executive', 'Public Mobilization Strategist'],
-    supportingRoles: ['Shift Supervisor', 'Community Organizer', 'Union Representative', 'PR Coordinator', 'Stakeholder Liaison'],
+    majorRoles: [
+      'Entrepreneur',
+      'Operations Director',
+      'Policy Leader',
+      'Sales Executive',
+      'Public Mobilization Strategist',
+    ],
+    supportingRoles: [
+      'Shift Supervisor',
+      'Community Organizer',
+      'Union Representative',
+      'PR Coordinator',
+      'Stakeholder Liaison',
+    ],
   },
   C: {
-    majorRoles: ['Finance Controller', 'Compliance Director', 'Logistics Manager', 'Program Administrator', 'Supply Chain Planner'],
-    supportingRoles: ['Inventory Clerk', 'Records Clerk', 'Mail Distribution Specialist', 'Warehouse Coordinator', 'Scheduling Assistant'],
+    majorRoles: [
+      'Finance Controller',
+      'Compliance Director',
+      'Logistics Manager',
+      'Program Administrator',
+      'Supply Chain Planner',
+    ],
+    supportingRoles: [
+      'Inventory Clerk',
+      'Records Clerk',
+      'Mail Distribution Specialist',
+      'Warehouse Coordinator',
+      'Scheduling Assistant',
+    ],
   },
 };
 
@@ -378,9 +1072,10 @@ async function getActiveQuizDefinition() {
       version: active.version || QUIZ_VERSION,
       title: active.title || QUIZ_TITLE,
       intro: active.intro || QUIZ_INTRO,
-      questions: Array.isArray(active.questions) && active.questions.length
-        ? active.questions
-        : DEFAULT_QUESTIONS,
+      questions:
+        Array.isArray(active.questions) && active.questions.length
+          ? active.questions
+          : DEFAULT_QUESTIONS,
     };
   }
 
@@ -402,7 +1097,7 @@ function deriveType(axisScores) {
 
 function buildTopRiasecCodes(riasecScores, count = 3) {
   return Object.entries(riasecScores)
-    .sort((a, b) => (b[1] - a[1]) || a[0].localeCompare(b[0]))
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
     .slice(0, count)
     .map(([code]) => code);
 }
@@ -444,19 +1139,32 @@ function getQuestionWeight(question) {
   return Number.isFinite(weight) && weight > 0 ? weight : 1;
 }
 
-function buildConfidence(axisScores, answeredCount, totalQuestions, sectionScores, totalSignal, totalMaxSignal) {
-  const pairs = [['E', 'I'], ['S', 'N'], ['T', 'F'], ['J', 'P']];
-  const axisClarity = pairs.reduce((sum, [left, right]) => {
-    const leftScore = Number(axisScores[left] || 0);
-    const rightScore = Number(axisScores[right] || 0);
-    const total = leftScore + rightScore;
-    if (!total) return sum;
-    return sum + (Math.abs(leftScore - rightScore) / total);
-  }, 0) / pairs.length;
+function buildConfidence(
+  axisScores,
+  answeredCount,
+  totalQuestions,
+  sectionScores,
+  totalSignal,
+  totalMaxSignal,
+) {
+  const pairs = [
+    ['E', 'I'],
+    ['S', 'N'],
+    ['T', 'F'],
+    ['J', 'P'],
+  ];
+  const axisClarity =
+    pairs.reduce((sum, [left, right]) => {
+      const leftScore = Number(axisScores[left] || 0);
+      const rightScore = Number(axisScores[right] || 0);
+      const total = leftScore + rightScore;
+      if (!total) return sum;
+      return sum + Math.abs(leftScore - rightScore) / total;
+    }, 0) / pairs.length;
 
   const completion = totalQuestions > 0 ? answeredCount / totalQuestions : 0;
   const signalStrength = totalMaxSignal > 0 ? totalSignal / totalMaxSignal : 0;
-  const weighted = (completion * 0.35) + (signalStrength * 0.35) + (axisClarity * 0.30);
+  const weighted = completion * 0.35 + signalStrength * 0.35 + axisClarity * 0.3;
   const score = Math.round(weighted * 100);
   const band = score >= 75 ? 'high' : score >= 50 ? 'medium' : 'emerging';
 
@@ -464,13 +1172,13 @@ function buildConfidence(axisScores, answeredCount, totalQuestions, sectionScore
     const answered = Number(data?.answered || 0);
     const total = Number(data?.total || 0);
     const completionRatio = total > 0 ? answered / total : 0;
-    const signalRatio = data?.maxSignal > 0 ? (data.signal / data.maxSignal) : 0;
-    
+    const signalRatio = data?.maxSignal > 0 ? data.signal / data.maxSignal : 0;
+
     // Per-section confidence score (similar to overall score)
-    const sectionWeighted = (completionRatio * 0.35) + (signalRatio * 0.35) + (axisClarity * 0.30);
+    const sectionWeighted = completionRatio * 0.35 + signalRatio * 0.35 + axisClarity * 0.3;
     const sectionScore = Math.round(sectionWeighted * 100);
     const sectionBand = sectionScore >= 75 ? 'high' : sectionScore >= 50 ? 'medium' : 'emerging';
-    
+
     acc[section] = {
       answered,
       total,
@@ -504,20 +1212,20 @@ function buildRoleRationale(majorRoles, supportingRoles, topRiasec, riasecScores
 
   const buildExplanation = (role, codes) => {
     if (!codes || codes.length === 0) return `${role} matches your career profile.`;
-    
+
     const topCodes = codes.slice(0, 2);
-    const descriptors = topCodes.map(code => RIASEC_DESCRIPTORS[code] || code).join(' and ');
+    const descriptors = topCodes.map((code) => RIASEC_DESCRIPTORS[code] || code).join(' and ');
     return `${role} recommended because you show strong affinity for ${descriptors}.`;
   };
 
   const rationale = [];
-  
+
   for (const role of majorRoles || []) {
-    const matchedCodes = topRiasec.filter(code => {
+    const matchedCodes = topRiasec.filter((code) => {
       const bucket = RIASEC_ROLE_BUCKETS[code] || {};
       return (bucket.majorRoles || []).includes(role);
     });
-    
+
     if (matchedCodes.length > 0) {
       rationale.push({
         role,
@@ -529,11 +1237,11 @@ function buildRoleRationale(majorRoles, supportingRoles, topRiasec, riasecScores
   }
 
   for (const role of supportingRoles || []) {
-    const matchedCodes = topRiasec.filter(code => {
+    const matchedCodes = topRiasec.filter((code) => {
       const bucket = RIASEC_ROLE_BUCKETS[code] || {};
       return (bucket.supportingRoles || []).includes(role);
     });
-    
+
     if (matchedCodes.length > 0) {
       rationale.push({
         role,
@@ -568,7 +1276,12 @@ function buildRecommendations(personalityType, riasecScores) {
   }
 
   const roles = buildRoleBuckets(topRiasec, 10);
-  const rationale = buildRoleRationale(roles.majorRoles, roles.supportingRoles, topRiasec, riasecScores);
+  const rationale = buildRoleRationale(
+    roles.majorRoles,
+    roles.supportingRoles,
+    topRiasec,
+    riasecScores,
+  );
 
   return {
     topDomains: domains,
@@ -746,7 +1459,9 @@ function buildPreviewAnswers(questions, strategy) {
     if (normalizedStrategy === 'reverse') {
       selected = options[options.length - 1];
     } else if (normalizedStrategy === 'alternating') {
-      const code = String(question.id || '').split('').reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
+      const code = String(question.id || '')
+        .split('')
+        .reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
       selected = options[code % options.length];
     }
 
@@ -835,7 +1550,9 @@ router.post('/admin/preview', adminSession, async (req, res) => {
 
     const strategy = String(req.body?.strategy || 'first-option').trim();
     const providedAnswers = Array.isArray(req.body?.answers) ? req.body.answers : [];
-    const answers = providedAnswers.length ? providedAnswers : buildPreviewAnswers(quiz.questions, strategy);
+    const answers = providedAnswers.length
+      ? providedAnswers
+      : buildPreviewAnswers(quiz.questions, strategy);
     const scored = scoreQuizAnswers(quiz, answers, { fillDefaults: true });
 
     if (!scored) {
@@ -887,7 +1604,9 @@ router.put('/admin/definition', adminSession, async (req, res) => {
       return res.status(400).json({ ok: false, error: questionError });
     }
 
-    const latest = await CareerQuizDefinition.findOne({ isActive: true }).sort({ version: -1, _id: -1 }).lean();
+    const latest = await CareerQuizDefinition.findOne({ isActive: true })
+      .sort({ version: -1, _id: -1 })
+      .lean();
     const nextVersion = (latest?.version || QUIZ_VERSION) + 1;
 
     await CareerQuizDefinition.updateMany({ isActive: true }, { $set: { isActive: false } });

@@ -51,7 +51,11 @@ router.get('/:productId', async (req, res) => {
  */
 router.put('/:productId', requireAuth, async (req, res) => {
   try {
-    const product = await productService.updateProduct(req.params.productId, req.user._id, req.body);
+    const product = await productService.updateProduct(
+      req.params.productId,
+      req.user._id,
+      req.body,
+    );
     res.json(product);
   } catch (error) {
     if (error.message === 'Unauthorized') {

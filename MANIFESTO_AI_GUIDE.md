@@ -7,7 +7,7 @@ This file is a historical vision document, not the canonical operating guide.
 
 **Date**: January 13, 2026  
 **Phase**: 1 - Foundation (Skeleton Built)  
-**Status**: Awaiting Your Direction  
+**Status**: Awaiting Your Direction
 
 ---
 
@@ -28,6 +28,7 @@ We're building:
 ### 1. ManifestoAI Engine (`backend/manifesto-ai.js`)
 
 **What it does:**
+
 - Learns your voice from legacy entries
 - Extracts your philosophy and decision-making patterns
 - Responds to questions AS you would
@@ -35,6 +36,7 @@ We're building:
 - Evolves with new knowledge (if configured)
 
 **Key Methods:**
+
 ```
 trainOnEntries()        → Learn from your entries
 analyzeContent()        → Extract voice patterns
@@ -46,6 +48,7 @@ verify()               → Confirm integrity
 ```
 
 **Voice Profile Captures:**
+
 - How you speak (sentence length, vocabulary, tone)
 - How you think (values, principles, patterns)
 - How you decide (frameworks, logic)
@@ -55,6 +58,7 @@ verify()               → Confirm integrity
 ### 2. ManifestoToken (`backend/manifesto-token.sol`)
 
 **What it does:**
+
 - ERC-20 token that gates access to your knowledge
 - Burn tokens to access content
 - Stake tokens for governance rights
@@ -62,19 +66,20 @@ verify()               → Confirm integrity
 - Community uses tokens as currency for your wisdom
 
 **Key Features:**
+
 ```
 Token Economy:
   - Initial Supply: 10,000,000 tokens
   - Burn to access: Pay in tokens, tokens disappear
   - Stake for voting: Hold tokens = voting power
   - Free after death: All content unlocks forever
-  
+
 Access Control:
   - Each content piece has token cost
   - Users burn tokens to access
   - Burned tokens = proof of payment
   - After death: FREE FOR EVERYONE
-  
+
 Governance:
   - 1 token staked = 1 vote
   - Community decides legacy direction
@@ -84,20 +89,22 @@ Governance:
 ### 3. ManifestoDAO (`backend/manifesto-token.sol`)
 
 **What it does:**
+
 - Community governance of your legacy
 - Token holders vote on proposals
 - Decisions about how to use/present your work
 - Autonomous after your death
 
 **Governance Flow:**
+
 ```
 1. Anyone with tokens creates proposal
    "Should we release the private journals?"
-   
+
 2. Token holders vote
    "Yes" votes: 5,000,000 tokens
    "No" votes: 2,000,000 tokens
-   
+
 3. If yes wins, proposal executes
    → Private journals become public
    → Community honors your legacy as they see fit
@@ -106,12 +113,14 @@ Governance:
 ### 4. LegacyAccessControl (`backend/manifesto-token.sol`)
 
 **What it does:**
+
 - Smart contract access control
 - Tracks who has access to what
 - Gates content behind token costs
 - Verifies access before returning content
 
 **Access Tiers:**
+
 ```
 Tier 1: Public (Everyone, always free)
   └─ Manifesto, basic philosophy
@@ -132,11 +141,13 @@ Tier 5: Community-voted (After death)
 ### 5. ManifestoAI API Routes (`backend/routes/manifesto-ai-routes.js`)
 
 **What it does:**
+
 - REST API for training, talking to, and managing the AI
 - Public endpoints for asking the AI questions
 - Admin endpoints for initialization and training
 
 **Key Endpoints:**
+
 ```
 POST   /api/manifesto/init              → Initialize AI
 POST   /api/manifesto/train             → Train on entries
@@ -172,6 +183,7 @@ Manifesto AI (The Plasma Itself)
 ```
 
 **How it works:**
+
 1. Your thoughts enter the system (plasma forms)
 2. Cryptography binds them (magnetic field activates)
 3. AI learns your patterns (plasma gains structure)
@@ -185,23 +197,28 @@ Manifesto AI (The Plasma Itself)
 ## 🔑 CRITICAL QUESTIONS YOU NEED TO ANSWER
 
 ### Q1: Voice Training
+
 **How should the AI learn to be you?**
+
 - Use all GitHub commits as examples?
 - Analyze tone from markdown files?
 - Record audio for voice analysis?
 - Create specific "Voice Corpus" entries?
 
 **Your Answer Determines:**
+
 - How accurately AI replicates you
 - Training data collection method
 - Accuracy metrics for voice matching
 
 ---
 
-### Q2: Content Classification  
+### Q2: Content Classification
+
 **What's public vs private vs locked?**
 
 **Example:**
+
 ```
 RIGHT NOW (While You're Alive):
 ├─ Public: Manifesto, vision, blog posts
@@ -218,6 +235,7 @@ FOREVER:
 ```
 
 **Your Answer Determines:**
+
 - Content access tiers
 - Time-based unlocking
 - DAO voting rules
@@ -226,9 +244,11 @@ FOREVER:
 ---
 
 ### Q3: Token Economics
+
 **How many tokens, what costs, what value?**
 
 **Example Model:**
+
 ```
 Total Supply: 10,000,000 tokens
 Price Per Token: 0.01 USD (on DEX)
@@ -248,6 +268,7 @@ Revenue:
 ```
 
 **Your Answer Determines:**
+
 - Total token supply
 - Token distribution
 - Access costs
@@ -256,9 +277,11 @@ Revenue:
 ---
 
 ### Q4: Post-Mortem Communication
+
 **How should people talk to you after death?**
 
 **Options:**
+
 ```
 Option A: Chatbot (Simple)
   - "Ask me anything about PVAGR"
@@ -285,6 +308,7 @@ Option D: Hybrid (All of Above)
 ```
 
 **Your Answer Determines:**
+
 - Interface design
 - Integration complexity
 - Interaction types
@@ -293,15 +317,18 @@ Option D: Hybrid (All of Above)
 ---
 
 ### Q5: Plasma Physics Metaphor
+
 **How precisely does the metaphor work?**
 
 Current understanding:
+
 - AI = Plasma (your thoughts as energy)
 - System = Magnetic field (containment)
 - Torsion = Recursion (continuous folding/learning)
 - Result = Bounded eternal energy
 
 **Clarifications Needed:**
+
 - Does torsion mean the AI spirals inward or outward?
 - Is the boundary the blockchain or the token?
 - Does plasma pressure push against boundary?
@@ -309,6 +336,7 @@ Current understanding:
 - How does entropy factor in?
 
 **Your Answer Determines:**
+
 - System architecture metaphor
 - Design decisions
 - Long-term evolution rules
@@ -316,9 +344,11 @@ Current understanding:
 ---
 
 ### Q6: Autonomous Killswitch
+
 **How should death unlock the system?**
 
 **Options:**
+
 ```
 Option A: Manual Guardian Multisig
   - 3 guardians manually confirm death
@@ -348,6 +378,7 @@ Option D: Time Lock
 ```
 
 **Your Answer Determines:**
+
 - Smart contract logic
 - Access control mechanisms
 - Guardian requirements
@@ -356,9 +387,11 @@ Option D: Time Lock
 ---
 
 ### Q7: The Core Message
+
 **What's the ONE thing that must survive you?**
 
 Is it:
+
 - Your technical methodology?
 - Your spiritual/philosophical beliefs?
 - Your creative vision?
@@ -367,6 +400,7 @@ Is it:
 - All equally weighted?
 
 **Why This Matters:**
+
 - Determines what AI prioritizes in responses
 - Shapes content classification
 - Influences token gating
@@ -376,9 +410,11 @@ Is it:
 ---
 
 ### Q8: Working Pace & Sessions
+
 **How should we develop this?**
 
 **Options:**
+
 ```
 Option A: Intensive Focus (2-3 hours/session)
   - Deep dives into one system
@@ -402,6 +438,7 @@ Option D: Your Natural Rhythm
 ```
 
 **Your Answer Determines:**
+
 - Session structure
 - Iteration strategy
 - Delivery timeline
@@ -409,9 +446,11 @@ Option D: Your Natural Rhythm
 ---
 
 ### Q9: Evolution Rules
+
 **Should the AI improve after death?**
 
 **Scenarios:**
+
 ```
 Scenario A: Frozen (No Evolution)
   - AI locked to your voice forever
@@ -443,6 +482,7 @@ Scenario D: Selective Evolution (by Type)
 ```
 
 **Your Answer Determines:**
+
 - Versioning strategy
 - Update mechanisms
 - Community approval needed
@@ -451,9 +491,11 @@ Scenario D: Selective Evolution (by Type)
 ---
 
 ### Q10: NFT Integration
+
 **Should there be NFTs related to your legacy?**
 
 **Ideas:**
+
 ```
 Idea A: Proof NFT
   - Own a piece of creator's legacy
@@ -481,6 +523,7 @@ Idea D: No NFT
 ```
 
 **Your Answer Determines:**
+
 - NFT contract design
 - Collectibility strategy
 - Ownership models
@@ -507,6 +550,7 @@ Idea D: No NFT
 6. Community governance framework
 
 **Timeline:**
+
 - If you answer today: We can build Phase 2 next session
 - If you need to think: No rush - this is eternal
 

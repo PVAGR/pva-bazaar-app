@@ -13,7 +13,9 @@ const githubService = require('../services/gitHubService');
 const router = express.Router();
 
 // Configuration
-const OLLAMA_BASE_URL = String(process.env.OLLAMA_BASE_URL || '').trim().replace(/\/$/, '');
+const OLLAMA_BASE_URL = String(process.env.OLLAMA_BASE_URL || '')
+  .trim()
+  .replace(/\/$/, '');
 // When empty, llmProvider falls back to cloud LLMs (Claude, GPT-4, Pollinations)
 const OLLAMA_MODEL = String(process.env.OLLAMA_MODEL || 'llama3.1').trim();
 const OLLAMA_TIMEOUT_MS = Math.min(
@@ -51,10 +53,7 @@ Keep responses:
 
   try {
     // Add recent platform changes from conversations
-    const recentMemories = await OpenClawMemory.find({})
-      .sort({ createdAt: -1 })
-      .limit(5)
-      .lean();
+    const recentMemories = await OpenClawMemory.find({}).sort({ createdAt: -1 }).limit(5).lean();
 
     if (recentMemories.length > 0) {
       prompt += '\n\nRecent Platform Activity:';
@@ -75,7 +74,12 @@ Keep responses:
  * Generate AI response using multi-model LLM provider
  * Uses the best available model: Claude > GPT-4 > Ollama
  */
-async function generateAIResponse(messages, temperature = 0.35, maxTokens = 2000, taskType = 'general') {
+async function generateAIResponse(
+  messages,
+  temperature = 0.35,
+  maxTokens = 2000,
+  taskType = 'general',
+) {
   try {
     const response = await llmProvider.generateResponse(messages, {
       taskType,
@@ -141,7 +145,7 @@ router.post('/chat', async (req, res) => {
         participantId: userId,
         agentPersona: {
           name: AGENT_NAME,
-          role: 'Creator\'s Agent & Guide',
+          role: "Creator's Agent & Guide",
         },
         aiModel: OLLAMA_MODEL,
       });
@@ -260,11 +264,7 @@ router.get('/conversations', async (req, res) => {
     }
 
     const threads = await ConversationThread.find({
-      $or: [
-        { participantId: userId },
-        { creatorId: userId },
-        { allowedUsers: userId },
-      ],
+      $or: [{ participantId: userId }, { creatorId: userId }, { allowedUsers: userId }],
     })
       .sort({ lastActivityAt: -1 })
       .limit(Math.min(parseInt(limit, 10), 100))
@@ -272,11 +272,7 @@ router.get('/conversations', async (req, res) => {
       .lean();
 
     const total = await ConversationThread.countDocuments({
-      $or: [
-        { participantId: userId },
-        { creatorId: userId },
-        { allowedUsers: userId },
-      ],
+      $or: [{ participantId: userId }, { creatorId: userId }, { allowedUsers: userId }],
     });
 
     res.json({
@@ -311,7 +307,7 @@ router.post('/conversation', async (req, res) => {
       description: description || '',
       agentPersona: {
         name: AGENT_NAME,
-        role: 'Creator\'s Agent & Guide',
+        role: "Creator's Agent & Guide",
       },
       aiModel: OLLAMA_MODEL,
       isActive: true,
@@ -342,7 +338,7 @@ router.post('/conversation/:id/clear', async (req, res) => {
         messageCount: 0,
         lastActivityAt: new Date(),
       },
-      { new: true }
+      { new: true },
     );
 
     if (!thread) {
@@ -374,7 +370,8 @@ router.get('/status', async (req, res) => {
       });
       ollamaStatus = 'online';
       if (response.data.models && response.data.models.length > 0) {
-        ollamaModel = response.data.models.find((m) => m.name === OLLAMA_MODEL) || response.data.models[0];
+        ollamaModel =
+          response.data.models.find((m) => m.name === OLLAMA_MODEL) || response.data.models[0];
       }
     } catch (err) {
       // Ollama offline
@@ -599,9 +596,7 @@ router.get('/pending-changes', async (req, res) => {
     const query = { status };
     if (userId) query['requestedBy.userId'] = userId;
 
-    const changes = await PendingChange.find(query)
-      .sort({ createdAt: -1 })
-      .limit(50);
+    const changes = await PendingChange.find(query).sort({ createdAt: -1 }).limit(50);
 
     res.json({
       ok: true,

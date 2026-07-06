@@ -17,7 +17,8 @@ router.post('/assessment', authenticateToken, async (req, res) => {
     if (!personalData || !personalData.fullName || !personalData.birthDate) {
       return res.status(400).json({
         ok: false,
-        error: 'Missing required fields: personalData.fullName and personalData.birthDate are required',
+        error:
+          'Missing required fields: personalData.fullName and personalData.birthDate are required',
       });
     }
 
@@ -32,7 +33,8 @@ router.post('/assessment', authenticateToken, async (req, res) => {
     await assessment.save();
 
     // Generate AI assessment asynchronously
-    oracleAI.generateAssessment(personalData, spiritualProfile || {})
+    oracleAI
+      .generateAssessment(personalData, spiritualProfile || {})
       .then((results) => {
         assessment.results = results;
         assessment.status = 'completed';
@@ -158,7 +160,8 @@ router.post('/assessment/:id/regenerate', authenticateToken, async (req, res) =>
     await assessment.save();
 
     // Regenerate assessment
-    oracleAI.generateAssessment(assessment.personalData, assessment.spiritualProfile)
+    oracleAI
+      .generateAssessment(assessment.personalData, assessment.spiritualProfile)
       .then((results) => {
         assessment.results = results;
         assessment.status = 'completed';

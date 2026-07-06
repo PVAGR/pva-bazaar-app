@@ -35,7 +35,7 @@ export default function PrePublishChecklist({ form = {} }) {
     },
   ];
 
-  const satisfied = checks.filter(c => c.satisfied).length;
+  const satisfied = checks.filter((c) => c.satisfied).length;
   const total = checks.length;
   const canPublish = satisfied === total;
 
@@ -49,8 +49,11 @@ export default function PrePublishChecklist({ form = {} }) {
       </div>
 
       <div className="checklist-items">
-        {checks.map(check => (
-          <div key={check.id} className={`checklist-item ${check.satisfied ? 'satisfied' : 'pending'}`}>
+        {checks.map((check) => (
+          <div
+            key={check.id}
+            className={`checklist-item ${check.satisfied ? 'satisfied' : 'pending'}`}
+          >
             <span className="checklist-icon">{check.satisfied ? '✓' : '○'}</span>
             <div className="checklist-content">
               <span className="checklist-label">{check.label}</span>
@@ -61,9 +64,7 @@ export default function PrePublishChecklist({ form = {} }) {
       </div>
 
       {canPublish && (
-        <div className="checklist-success">
-          🎉 All set! Your listing is ready to publish.
-        </div>
+        <div className="checklist-success">🎉 All set! Your listing is ready to publish.</div>
       )}
     </div>
   );

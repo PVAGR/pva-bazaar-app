@@ -28,7 +28,7 @@ Ready for:
 const postData = JSON.stringify({
   chat_id: chatId,
   text: message,
-  parse_mode: 'Markdown'
+  parse_mode: 'Markdown',
 });
 
 const options = {
@@ -37,8 +37,8 @@ const options = {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
-    'Content-Length': Buffer.byteLength(postData)
-  }
+    'Content-Length': Buffer.byteLength(postData),
+  },
 };
 
 const req = https.request(options, (res) => {

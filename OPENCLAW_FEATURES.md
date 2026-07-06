@@ -20,14 +20,14 @@
 
 ### Backend API (Backend Routes)
 
-| Endpoint | Method | Purpose | File |
-|----------|--------|---------|------|
-| `/api/openclaw/status` | GET | Gateway configuration and reachability | `routes/openclaw.js` |
-| `/api/openclaw/dispatch` | POST | Forward events to OpenClaw webhook | `routes/openclaw.js` |
-| `/api/openclaw/watchdog-status` | GET | Detailed watchdog summary with logs | `routes/openclaw.js` |
-| `/api/openclaw/recent-events` | GET | Structured recent activity (limit 30-200) | `routes/openclaw.js` |
-| `/api/openclaw/metrics` | GET | Prometheus-format metrics | `routes/openclaw-metrics.js` |
-| `/api/health` | GET | **Enhanced** with OpenClaw status | `routes/health.js` |
+| Endpoint                        | Method | Purpose                                   | File                         |
+| ------------------------------- | ------ | ----------------------------------------- | ---------------------------- |
+| `/api/openclaw/status`          | GET    | Gateway configuration and reachability    | `routes/openclaw.js`         |
+| `/api/openclaw/dispatch`        | POST   | Forward events to OpenClaw webhook        | `routes/openclaw.js`         |
+| `/api/openclaw/watchdog-status` | GET    | Detailed watchdog summary with logs       | `routes/openclaw.js`         |
+| `/api/openclaw/recent-events`   | GET    | Structured recent activity (limit 30-200) | `routes/openclaw.js`         |
+| `/api/openclaw/metrics`         | GET    | Prometheus-format metrics                 | `routes/openclaw-metrics.js` |
+| `/api/health`                   | GET    | **Enhanced** with OpenClaw status         | `routes/health.js`           |
 
 **Authentication:** No auth required (DB-skip allowlist)  
 **Serverless Compatible:** Yes (reads logs from filesystem)
@@ -39,6 +39,7 @@
 **File:** `backend/utils/openclaw-events.js`
 
 **Event Creators:**
+
 - `createArtifactEvent(action, artifact, user, metadata)` - Artifact lifecycle events
 - `createUserEvent(action, user, metadata)` - User lifecycle events
 - `createTransactionEvent(action, transaction, metadata)` - Payment/transaction events
@@ -47,9 +48,11 @@
 - `createSystemEvent(level, message, context)` - System/operational events
 
 **Dispatcher:**
+
 - `dispatchToOpenClaw(eventPayload, logger)` - Async non-blocking dispatch
 
 **Integration Example:**
+
 ```javascript
 const { createArtifactEvent, dispatchToOpenClaw } = require('./utils/openclaw-events');
 
@@ -59,6 +62,7 @@ dispatchToOpenClaw(event); // Non-blocking
 ```
 
 **Current Integrations:**
+
 - ✅ `routes/artifacts.js` - Artifact creation events
 
 ---
@@ -71,6 +75,7 @@ dispatchToOpenClaw(event); // Non-blocking
 **Styles:** `Frontend/src/pages/AdminPage.css`
 
 #### 1. Health Indicator Badge
+
 - **Location:** Connection button (top-left)
 - **Features:**
   - Color-coded states: 🟢 Healthy, 🟠 Degraded, 🔴 Error, ⚪ Stale, 🔵 Loading
@@ -79,6 +84,7 @@ dispatchToOpenClaw(event); // Non-blocking
 - **Implementation:** ~120 lines CSS animations + state computation
 
 #### 2. OpenClaw Summary Card
+
 - **Location:** Connection status dropdown (dedicated section)
 - **Features:**
   - Visual header with Active/Issue status badge
@@ -88,6 +94,7 @@ dispatchToOpenClaw(event); // Non-blocking
 - **Implementation:** ~65 lines JSX + styling
 
 #### 3. Recent Events Viewer
+
 - **Location:** Collapsible panel within summary card
 - **Features:**
   - Last 15 events displayed
@@ -100,11 +107,13 @@ dispatchToOpenClaw(event); // Non-blocking
 ### Standalone Health Widget
 
 **Files:**
+
 - `Frontend/src/lib/openclaw-widget.js` - Widget logic (300+ lines)
 - `Frontend/src/lib/openclaw-widget.css` - Widget styles (250+ lines)
 - `Frontend/pages/openclaw-widget-demo.html` - Usage examples
 
 **Features:**
+
 - **Auto-initialization** via data attributes
 - **Compact mode** for inline display
 - **Full mode** with detailed metrics
@@ -113,11 +122,13 @@ dispatchToOpenClaw(event); // Non-blocking
 - **API methods:** `init()`, `refresh()`, `destroy()`, `getStatus()`
 
 **Usage:**
+
 ```html
-<div id="openclaw-health-widget"
+<div
+  id="openclaw-health-widget"
   data-api-url="https://api.pvabazaar.org"
-  data-refresh-interval="60000">
-</div>
+  data-refresh-interval="60000"
+></div>
 <script src="/src/lib/openclaw-widget.js"></script>
 ```
 
@@ -127,22 +138,23 @@ dispatchToOpenClaw(event); // Non-blocking
 
 ### PowerShell Scripts
 
-| Script | Purpose | Admin Required |
-|--------|---------|----------------|
-| `infra/openclaw/test-integration.ps1` | End-to-end integration tests (8 tests) | No |
-| `infra/openclaw/dispatch-event.ps1` | CLI event dispatcher | No |
-| `infra/openclaw/watchdog-bridge.ps1` | Monitoring loop + alerting | No |
-| `infra/openclaw/setup-windows.ps1` | Local OpenClaw CLI install | No |
-| `infra/openclaw/verify-bridge.ps1` | API verification | No |
-| `infra/openclaw/install-watchdog-task.ps1` | Scheduled task install | **Yes** |
-| `infra/openclaw/install-watchdog-startup.ps1` | Startup folder install | No |
-| `infra/openclaw/uninstall-watchdog-startup.ps1` | Startup folder removal | No |
+| Script                                          | Purpose                                | Admin Required |
+| ----------------------------------------------- | -------------------------------------- | -------------- |
+| `infra/openclaw/test-integration.ps1`           | End-to-end integration tests (8 tests) | No             |
+| `infra/openclaw/dispatch-event.ps1`             | CLI event dispatcher                   | No             |
+| `infra/openclaw/watchdog-bridge.ps1`            | Monitoring loop + alerting             | No             |
+| `infra/openclaw/setup-windows.ps1`              | Local OpenClaw CLI install             | No             |
+| `infra/openclaw/verify-bridge.ps1`              | API verification                       | No             |
+| `infra/openclaw/install-watchdog-task.ps1`      | Scheduled task install                 | **Yes**        |
+| `infra/openclaw/install-watchdog-startup.ps1`   | Startup folder install                 | No             |
+| `infra/openclaw/uninstall-watchdog-startup.ps1` | Startup folder removal                 | No             |
 
 ### Integration Test Suite
 
 **File:** `infra/openclaw/test-integration.ps1`
 
 **Tests:**
+
 1. Main health endpoint
 2. Ping endpoint
 3. Version endpoint
@@ -153,6 +165,7 @@ dispatchToOpenClaw(event); // Non-blocking
 8. Health endpoint includes OpenClaw field
 
 **Usage:**
+
 ```powershell
 .\infra\openclaw\test-integration.ps1 -Verbose
 .\infra\openclaw\test-integration.ps1 -Production
@@ -163,6 +176,7 @@ dispatchToOpenClaw(event); // Non-blocking
 **File:** `infra/openclaw/dispatch-event.ps1`
 
 **Usage:**
+
 ```powershell
 .\infra\openclaw\dispatch-event.ps1 `
   -Event "pvabazaar.artifact.created" `
@@ -179,6 +193,7 @@ dispatchToOpenClaw(event); // Non-blocking
 **File:** `.github/workflows/openclaw-integration.yml`
 
 **Jobs:**
+
 1. **test-openclaw-integration** (Ubuntu, Node 18.x + 20.x)
    - MongoDB service container
    - Backend startup
@@ -194,6 +209,7 @@ dispatchToOpenClaw(event); // Non-blocking
    - Event dispatch testing
 
 **Triggers:**
+
 - Push to main/develop
 - Pull requests
 - Daily at 6 AM UTC
@@ -210,6 +226,7 @@ dispatchToOpenClaw(event); // Non-blocking
 **File:** `backend/routes/openclaw-metrics.js`
 
 **Metrics Exposed:**
+
 - `openclaw_configured` - Configuration status (0/1)
 - `openclaw_health_state` - Health state (0=unknown, 1=healthy, 2=degraded, 3=critical)
 - `openclaw_errors_total` - Total errors in window
@@ -220,6 +237,7 @@ dispatchToOpenClaw(event); // Non-blocking
 - `openclaw_alert_lines_count` - Alert lines count
 
 **Prometheus Configuration:**
+
 ```yaml
 scrape_configs:
   - job_name: 'pvabazaar-openclaw'
@@ -230,6 +248,7 @@ scrape_configs:
 ```
 
 **Grafana Dashboard Queries:**
+
 ```promql
 # Health status
 openclaw_health_state
@@ -292,6 +311,7 @@ time() - openclaw_last_event_timestamp_seconds
 ### Environment Variables
 
 **Backend:**
+
 ```bash
 OPENCLAW_GATEWAY_URL             # Optional, base URL
 OPENCLAW_WEBHOOK_URL             # Required for dispatch
@@ -303,6 +323,7 @@ OPENCLAW_WATCHDOG_ALERT_PATH     # Optional, custom alert path
 ```
 
 **Frontend:**
+
 ```bash
 VITE_STATUS_STALE_MS=120000      # Stale threshold (2 min default)
 ```
@@ -416,6 +437,7 @@ npm run dev
 ## 🚀 Future Enhancements
 
 **Potential additions (not implemented):**
+
 - [ ] Alertmanager integration for advanced alert routing
 - [ ] Datadog/New Relic APM integration
 - [ ] Event replay/audit log viewer
@@ -430,6 +452,7 @@ npm run dev
 ## 📂 File Inventory
 
 ### Backend (8 files)
+
 - `backend/routes/openclaw.js` - Main bridge routes (300 lines)
 - `backend/routes/health.js` - Enhanced health (35 lines)
 - `backend/routes/openclaw-metrics.js` - Prometheus metrics (160 lines)
@@ -440,6 +463,7 @@ npm run dev
 - `backend/README.md` - Documentation (updated)
 
 ### Frontend (5 files)
+
 - `Frontend/src/pages/AdminPage.jsx` - Admin panel enhanced (900+ lines)
 - `Frontend/src/pages/AdminPage.css` - Styles enhanced (1600+ lines)
 - `Frontend/src/lib/openclaw-widget.js` - Standalone widget (300 lines)
@@ -447,6 +471,7 @@ npm run dev
 - `Frontend/pages/openclaw-widget-demo.html` - Widget examples (150 lines)
 
 ### Infrastructure (9 files)
+
 - `infra/openclaw/test-integration.ps1` - Integration tests (200 lines)
 - `infra/openclaw/dispatch-event.ps1` - Event dispatcher (70 lines)
 - `infra/openclaw/watchdog-bridge.ps1` - Monitoring loop (existing)
@@ -458,9 +483,11 @@ npm run dev
 - `infra/openclaw/QUICK_START.md` - Quick start guide (250 lines)
 
 ### CI/CD (1 file)
+
 - `.github/workflows/openclaw-integration.yml` - GitHub Actions (150 lines)
 
 ### Documentation (4 files)
+
 - `OPENCLAW_INTEGRATION.md` - Complete guide (500 lines)
 - `OPENCLAW_QUICK_REFERENCE.md` - Quick reference (350 lines)
 - `OPENCLAW_ARCHITECTURE.md` - Architecture diagram (400 lines)

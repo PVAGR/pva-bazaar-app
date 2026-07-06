@@ -1,11 +1,13 @@
 # How to Restore Your Journal Entries
 
 ## Current Situation
+
 The backend database is empty (`/api/archive` returns `[]`). Your journal content needs to be imported.
 
 ## Quick Restore Steps
 
 ### 1. Add Your Archive Content
+
 Edit `import/Archive.md` and paste ALL your journal entries. Format should be:
 
 ```markdown
@@ -19,11 +21,13 @@ More content...
 ```
 
 ### 2. Set Your Admin Secret
+
 ```bash
 export ADMIN_SECRET_CODE="your-admin-secret-from-backend-env"
 ```
 
 ### 3. Test Import (Dry Run)
+
 ```bash
 node backend/scripts/import-archive-md.mjs \
   --file import/Archive.md \
@@ -34,6 +38,7 @@ node backend/scripts/import-archive-md.mjs \
 This shows what WOULD be created without actually creating anything.
 
 ### 4. Real Import
+
 ```bash
 node backend/scripts/import-archive-md.mjs \
   --file import/Archive.md \
@@ -54,6 +59,7 @@ node backend/scripts/import-archive-md.mjs \
 ## After Import
 
 Visit `https://pvabazaar.org` and your entries will appear on:
+
 - Home page (recent entries)
 - Journal page (chronological)
 - Archive page (by category)
@@ -62,14 +68,17 @@ Visit `https://pvabazaar.org` and your entries will appear on:
 ## Troubleshooting
 
 **"No entry headings found"**
+
 - Make sure entries start with `# **Title**` format
 - Check for proper `**` bold markers
 
 **"Failed to get admin token"**
+
 - Verify `ADMIN_SECRET_CODE` matches backend env var
 - Check backend is accessible at the API URL
 
 **Entries appear but formatting is off**
+
 - The script wraps content in `<pre>` to preserve whitespace
 - Check browser DevTools for any CSS conflicts
 

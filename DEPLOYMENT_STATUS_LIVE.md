@@ -8,6 +8,7 @@
 ## 📦 Deployed Applications
 
 ### 1. Backend API
+
 - **Platform**: Vercel
 - **URL**: https://pva-backend-j8caliekt-pvagrs-projects.vercel.app
 - **Status**: 🟡 Protected (Vercel Authentication Required)
@@ -16,6 +17,7 @@
 - **Region**: Auto
 
 ### 2. Next.js Livestream Platform
+
 - **Platform**: Vercel
 - **URL**: https://pvabazaar-livestream-o3okjf15o-pvagrs-projects.vercel.app
 - **Status**: 🟢 Live
@@ -24,6 +26,7 @@
 - **Region**: Auto
 
 ### 3. Frontend (Marketplace)
+
 - **Platform**: GitHub Pages
 - **URL**: https://pvabazaar.org
 - **Status**: 🟢 Live (Auto-deploys from main)
@@ -38,11 +41,13 @@ Your deployments are currently protected by Vercel Authentication. To make them 
 ### Option 1: Via Vercel Dashboard (Recommended)
 
 **Backend API:**
+
 1. Go to https://vercel.com/pvagrs-projects/pva-backend-api/settings/deployment-protection
 2. Under "Deployment Protection", select **None** or configure custom rules
 3. Click **Save**
 
 **Next.js Livestream:**
+
 1. Go to https://vercel.com/pvagrs-projects/pvabazaar-livestream/settings/deployment-protection
 2. Under "Deployment Protection", select **None** or configure custom rules
 3. Click **Save**
@@ -66,9 +71,11 @@ vercel project rm deployment-protection
 ### CRITICAL: Add These to Vercel Dashboard
 
 #### Backend API
+
 Navigate to: https://vercel.com/pvagrs-projects/pva-backend-api/settings/environment-variables
 
 **Required Variables:**
+
 ```env
 MONGODB_URI=mongodb+srv://[username]:[password]@[cluster].mongodb.net/pva-bazaar
 JWT_SECRET=[generate-random-secret]
@@ -81,9 +88,11 @@ CORS_ORIGINS=https://pvabazaar.org,https://pvabazaar-livestream-o3okjf15o-pvagrs
 ```
 
 #### Next.js Livestream
+
 Navigate to: https://vercel.com/pvagrs-projects/pvabazaar-livestream/settings/environment-variables
 
 **Required Variables:**
+
 ```env
 MONGODB_URI=mongodb+srv://[username]:[password]@[cluster].mongodb.net/pva-bazaar
 NEXTAUTH_URL=https://pvabazaar-livestream-o3okjf15o-pvagrs-projects.vercel.app
@@ -99,6 +108,7 @@ NODE_ENV=production
 ### After Adding Variables
 
 **Redeploy both projects:**
+
 ```powershell
 # Backend
 cd backend
@@ -114,12 +124,14 @@ vercel --prod
 ## 🧪 Testing Commands
 
 ### Test Backend (after removing protection)
+
 ```powershell
 curl https://pva-backend-j8caliekt-pvagrs-projects.vercel.app/api/health
 # Expected: {"status":"ok","mongodb":"connected"}
 ```
 
 ### Test Livestream
+
 ```powershell
 # Check homepage
 curl -I https://pvabazaar-livestream-o3okjf15o-pvagrs-projects.vercel.app
@@ -130,6 +142,7 @@ curl https://pvabazaar-livestream-o3okjf15o-pvagrs-projects.vercel.app/api/healt
 ```
 
 ### Test Frontend
+
 ```powershell
 curl -I https://pvabazaar.org
 # Expected: 200 OK
@@ -170,25 +183,30 @@ curl -I https://pvabazaar.org
 ## 🔄 Next Actions (In Order)
 
 ### 1. Remove Deployment Protection (5 minutes)
+
 - [ ] Backend: Disable protection in Vercel dashboard
 - [ ] Livestream: Disable protection in Vercel dashboard
 
 ### 2. Configure Environment Variables (10 minutes)
+
 - [ ] Backend: Add all secrets to Vercel
 - [ ] Livestream: Add all secrets to Vercel
 - [ ] Generate DID_SEED: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`
 
 ### 3. Redeploy with Environment Variables (5 minutes)
+
 - [ ] `cd backend && vercel --prod`
 - [ ] `cd pvabazaar-livestream && vercel --prod`
 
 ### 4. Verify All Deployments (10 minutes)
+
 - [ ] Test backend health endpoint
 - [ ] Test livestream signup flow
 - [ ] Test frontend marketplace
 - [ ] Verify API connections
 
 ### 5. Optional: Custom Domains
+
 - [ ] Add api.pvabazaar.org → backend
 - [ ] Add stream.pvabazaar.org → livestream
 - [ ] Update CORS and API URLs
@@ -198,6 +216,7 @@ curl -I https://pvabazaar.org
 ## 🎯 Production Checklist
 
 ### Security
+
 - [ ] All secrets configured (no placeholders)
 - [ ] CORS properly restricted to production domains
 - [ ] MongoDB Atlas whitelist configured (0.0.0.0/0 or specific IPs)
@@ -205,16 +224,19 @@ curl -I https://pvabazaar.org
 - [ ] JWT_SECRET is unique and secure
 
 ### Performance
+
 - [ ] Vercel regions optimized
 - [ ] Database indexes created
 - [ ] CDN configured for static assets
 
 ### Monitoring
+
 - [ ] Vercel Analytics enabled
 - [ ] Error tracking configured (Sentry optional)
 - [ ] Uptime monitoring setup
 
 ### Documentation
+
 - [ ] README updated with production URLs
 - [ ] API documentation published
 - [ ] User guide created
@@ -224,23 +246,29 @@ curl -I https://pvabazaar.org
 ## 🛠️ Troubleshooting
 
 ### Issue: "Authentication Required" on Backend
+
 **Cause**: Deployment Protection is enabled  
 **Solution**: Go to Vercel dashboard → Project Settings → Deployment Protection → Set to "None"
 
 ### Issue: 500 Internal Server Error
+
 **Cause**: Missing or incorrect environment variables  
-**Solution**: 
+**Solution**:
+
 1. Check all env vars are set in Vercel dashboard
 2. Redeploy: `vercel --prod`
 3. Check logs: https://vercel.com/pvagrs-projects/[project]/logs
 
 ### Issue: CORS Error from Frontend
+
 **Cause**: CORS_ORIGINS not configured correctly  
 **Solution**: Add frontend URL to CORS_ORIGINS in backend env vars
 
 ### Issue: MongoDB Connection Failed
+
 **Cause**: Incorrect MONGODB_URI or firewall  
-**Solution**: 
+**Solution**:
+
 1. Verify URI format: `mongodb+srv://user:pass@cluster.mongodb.net/dbname`
 2. In MongoDB Atlas: Network Access → Add IP: 0.0.0.0/0
 
@@ -275,14 +303,14 @@ Internet
 
 ## 📞 Quick Access Links
 
-| Service | URL | Dashboard |
-|---------|-----|-----------|
-| Backend API | [Deployment URL](https://pva-backend-j8caliekt-pvagrs-projects.vercel.app) | [Settings](https://vercel.com/pvagrs-projects/pva-backend-api) |
-| Livestream | [Deployment URL](https://pvabazaar-livestream-o3okjf15o-pvagrs-projects.vercel.app) | [Settings](https://vercel.com/pvagrs-projects/pvabazaar-livestream) |
-| Frontend | [pvabazaar.org](https://pvabazaar.org) | [GitHub Pages](https://github.com/PVAGR/pva-bazaar-app/settings/pages) |
-| GitHub Repo | [pva-bazaar-app](https://github.com/PVAGR/pva-bazaar-app) | [Actions](https://github.com/PVAGR/pva-bazaar-app/actions) |
-| MongoDB | [Atlas](https://cloud.mongodb.com/) | [Clusters](https://cloud.mongodb.com/v2) |
-| Pinata | [Dashboard](https://app.pinata.cloud/) | [API Keys](https://app.pinata.cloud/developers/api-keys) |
+| Service     | URL                                                                                 | Dashboard                                                              |
+| ----------- | ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| Backend API | [Deployment URL](https://pva-backend-j8caliekt-pvagrs-projects.vercel.app)          | [Settings](https://vercel.com/pvagrs-projects/pva-backend-api)         |
+| Livestream  | [Deployment URL](https://pvabazaar-livestream-o3okjf15o-pvagrs-projects.vercel.app) | [Settings](https://vercel.com/pvagrs-projects/pvabazaar-livestream)    |
+| Frontend    | [pvabazaar.org](https://pvabazaar.org)                                              | [GitHub Pages](https://github.com/PVAGR/pva-bazaar-app/settings/pages) |
+| GitHub Repo | [pva-bazaar-app](https://github.com/PVAGR/pva-bazaar-app)                           | [Actions](https://github.com/PVAGR/pva-bazaar-app/actions)             |
+| MongoDB     | [Atlas](https://cloud.mongodb.com/)                                                 | [Clusters](https://cloud.mongodb.com/v2)                               |
+| Pinata      | [Dashboard](https://app.pinata.cloud/)                                              | [API Keys](https://app.pinata.cloud/developers/api-keys)               |
 
 ---
 
@@ -292,7 +320,7 @@ Internet
 ✅ **Backend deployed to Vercel** (needs env vars)  
 ✅ **Livestream deployed to Vercel** (needs env vars)  
 ✅ **Frontend auto-deploying** via GitHub Pages  
-✅ **Documentation created** (deployment guides)  
+✅ **Documentation created** (deployment guides)
 
 ⏳ **Next**: Configure environment variables and remove deployment protection
 

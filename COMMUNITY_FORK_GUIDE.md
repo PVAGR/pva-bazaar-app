@@ -24,7 +24,7 @@
 ✅ 30+ API endpoints  
 ✅ Production-ready infrastructure  
 ✅ Comprehensive documentation  
-✅ Community support  
+✅ Community support
 
 ---
 
@@ -74,10 +74,10 @@ git remote -v
 
 /* ✅ After (your community colors) */
 :root {
-  --charcoal-700: #0a0a0a;     /* Your primary dark color */
-  --charcoal-800: #1a1a1a;     /* Your secondary dark color */
-  --teal-300: #ff6b35;         /* Your accent color 1 */
-  --teal-500: #004e89;         /* Your accent color 2 */
+  --charcoal-700: #0a0a0a; /* Your primary dark color */
+  --charcoal-800: #1a1a1a; /* Your secondary dark color */
+  --teal-300: #ff6b35; /* Your accent color 1 */
+  --teal-500: #004e89; /* Your accent color 2 */
 }
 ```
 
@@ -104,15 +104,15 @@ mkdir -p Frontend/public/images
 ```html
 <!-- ❌ Before -->
 <title>PVABazaar - Decentralized Livestreaming</title>
-<meta name="description" content="Reclaim your digital autonomy...">
+<meta name="description" content="Reclaim your digital autonomy..." />
 
 <!-- ✅ After -->
 <title>YourCommunity - Autonomous Streaming Hub</title>
-<meta name="description" content="Join YourCommunity...">
+<meta name="description" content="Join YourCommunity..." />
 
 <!-- Update OG tags for social sharing -->
-<meta property="og:title" content="YourCommunity - Autonomous Streaming">
-<meta property="og:image" content="https://yourcdn.com/banner.jpg">
+<meta property="og:title" content="YourCommunity - Autonomous Streaming" />
+<meta property="og:image" content="https://yourcdn.com/banner.jpg" />
 ```
 
 ---
@@ -135,6 +135,7 @@ MONGODB_URI="mongodb+srv://user:pass@cluster.mongodb.net/yourcommunity"
 ### 2. Set Up IPFS (Pinata or Alternative)
 
 **Option A: Pinata** (Recommended for beginners)
+
 ```bash
 # Go to https://pinata.cloud
 # 1. Create account (free: 1GB)
@@ -147,6 +148,7 @@ PINATA_API_JWT="your_jwt"
 ```
 
 **Option B: Alternative IPFS Providers**
+
 - Web3.Storage (https://web3.storage) - 5GB free
 - Filecoin (https://filecoin.io) - Decentralized alternative
 - Self-hosted IPFS - Full control
@@ -198,12 +200,14 @@ npm run deploy
 ### Update API URL
 
 **If using Express:**
+
 ```bash
 # Frontend/.env.production
 VITE_API_URL=https://your-backend.vercel.app
 ```
 
 **If using Next.js:**
+
 ```bash
 # pvabazaar-livestream/.env.production
 NEXTAUTH_URL=https://your-domain.com
@@ -216,9 +220,9 @@ NEXTAUTH_URL=https://your-domain.com
 const ALLOWED_ORIGINS = [
   'http://localhost:5173',
   'http://localhost:3000',
-  'https://your-username.github.io',        // Your GitHub Pages
-  'https://your-domain.com',                 // Your custom domain
-  'https://your-community-app.vercel.app'    // If hosting on Vercel
+  'https://your-username.github.io', // Your GitHub Pages
+  'https://your-domain.com', // Your custom domain
+  'https://your-community-app.vercel.app', // If hosting on Vercel
 ];
 ```
 
@@ -232,10 +236,10 @@ const ALLOWED_ORIGINS = [
 // backend/models/Community.js
 const communitySchema = new Schema({
   name: String,
-  rules: [String],  // Community guidelines
+  rules: [String], // Community guidelines
   moderators: [{ type: ObjectId, ref: 'User' }],
-  categories: [String],  // Stream categories
-  themes: Object,        // Custom branding
+  categories: [String], // Stream categories
+  themes: Object, // Custom branding
 });
 ```
 
@@ -247,18 +251,11 @@ const streamSchema = new Schema({
   // ... existing fields
   category: {
     type: String,
-    enum: [
-      'education',
-      'entertainment',
-      'gaming',
-      'music',
-      'talk-show',
-      'other'
-    ],
-    default: 'other'
+    enum: ['education', 'entertainment', 'gaming', 'music', 'talk-show', 'other'],
+    default: 'other',
   },
   language: String,
-  tags: [String]
+  tags: [String],
 });
 ```
 
@@ -268,15 +265,15 @@ const streamSchema = new Schema({
 // backend/routes/moderation.js
 app.post('/api/streams/:id/report', async (req, res) => {
   const { reason, details } = req.body;
-  
+
   const report = await Report.create({
     streamId: req.params.id,
     reportedBy: req.user.id,
     reason,
     details,
-    createdAt: new Date()
+    createdAt: new Date(),
   });
-  
+
   res.json({ message: 'Report submitted' });
 });
 ```
@@ -290,7 +287,7 @@ const paymentSchema = new Schema({
   amount: Number,
   platform: String,
   date: Date,
-  status: String  // pending, completed, failed
+  status: String, // pending, completed, failed
 });
 
 // Scheduled job to process payments
@@ -393,6 +390,7 @@ curl -X POST https://your-backend/api/admin/streams/:id/approve
 # Welcome to YourCommunity Streaming Platform
 
 ## Guidelines
+
 1. Be respectful
 2. No hate speech
 3. Credit creators
@@ -400,6 +398,7 @@ curl -X POST https://your-backend/api/admin/streams/:id/approve
 5. Support each other
 
 ## Support
+
 - Email: support@yourcommunity.com
 - Discord: [link]
 - GitHub: [link]
@@ -418,22 +417,22 @@ const router = express.Router();
 
 router.post('/api/streams/:id/tip', authMiddleware, async (req, res) => {
   const { amount } = req.body;
-  
+
   // Process with Stripe/PayPal
   const charge = await stripe.charges.create({
     amount: amount * 100,
     currency: 'usd',
     source: req.body.token,
-    description: `Tip for stream ${req.params.id}`
+    description: `Tip for stream ${req.params.id}`,
   });
-  
+
   const tip = await Tip.create({
     streamId: req.params.id,
     from: req.user.id,
     amount,
-    timestamp: new Date()
+    timestamp: new Date(),
   });
-  
+
   res.json({ message: 'Tip received!', tip });
 });
 
@@ -446,16 +445,17 @@ module.exports = router;
 // backend/routes/analytics.js
 app.get('/api/analytics/dashboard', authMiddleware, async (req, res) => {
   const streams = await Stream.find({ userId: req.user.id });
-  
+
   const analytics = {
     totalStreams: streams.length,
     totalViewers: streams.reduce((sum, s) => sum + (s.viewerCount || 0), 0),
     totalDuration: streams.reduce((sum, s) => sum + (s.duration || 0), 0),
-    averageViewers: streams.length > 0 
-      ? streams.reduce((sum, s) => sum + (s.viewerCount || 0), 0) / streams.length 
-      : 0
+    averageViewers:
+      streams.length > 0
+        ? streams.reduce((sum, s) => sum + (s.viewerCount || 0), 0) / streams.length
+        : 0,
   };
-  
+
   res.json(analytics);
 });
 ```
@@ -498,16 +498,19 @@ When contributing, document your feature:
 ## My Awesome Feature
 
 ### What it does
+
 - Enables [feature]
 - Improves [aspect]
 - Fixes [issue]
 
 ### How to use
+
 1. Do X
 2. Do Y
 3. See Z
 
 ### Technical details
+
 - Uses [technology]
 - Requires [dependency]
 - Breaking changes: [if any]
@@ -670,7 +673,7 @@ When you fork, your code remains under MIT License (same as original). This mean
 ✅ You can modify code  
 ✅ You can distribute  
 ✅ You must include license  
-✅ Must cite original authors  
+✅ Must cite original authors
 
 See [LICENSE](LICENSE) for full details.
 

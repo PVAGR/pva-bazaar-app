@@ -27,6 +27,7 @@ OPENCLAW_API_KEY=your_api_key_here
 ```
 
 **Don't have OpenClaw yet?** Use a test webhook:
+
 ```bash
 # RequestBin, Webhook.site, or similar
 OPENCLAW_WEBHOOK_URL=https://webhook.site/your-unique-id
@@ -48,11 +49,13 @@ Wait for: `Backend running on port 5000`
 ## Step 3: Test Integration (30 seconds)
 
 **Option A: PowerShell (Windows)**
+
 ```powershell
 .\infra\openclaw\test-integration.ps1 -Verbose
 ```
 
 **Option B: curl (Any OS)**
+
 ```bash
 # Status check
 curl http://localhost:5000/api/openclaw/status
@@ -64,6 +67,7 @@ curl -X POST http://localhost:5000/api/openclaw/dispatch \
 ```
 
 **Expected Output:**
+
 ```
 ✓ All tests passed!
 Total Tests: 8
@@ -82,6 +86,7 @@ Failed: 0
 5. Click **[📋 View Activity]** to see events
 
 **You should see:**
+
 - 🟢 Green health badge
 - State: `ok`
 - Errors: `0`
@@ -92,16 +97,19 @@ Failed: 0
 ## Step 5: Install Watchdog (2 minutes)
 
 **Option A: With Admin Rights**
+
 ```powershell
 .\infra\openclaw\install-watchdog-task.ps1
 ```
 
 **Option B: Without Admin Rights**
+
 ```powershell
 .\infra\openclaw\install-watchdog-startup.ps1
 ```
 
 **Verify Running:**
+
 ```powershell
 Get-ScheduledTask -TaskName "PVA-OpenClaw-Watchdog"
 # OR
@@ -122,11 +130,11 @@ const { createArtifactEvent, dispatchToOpenClaw } = require('./utils/openclaw-ev
 // When artifact is created
 router.post('/artifacts', async (req, res) => {
   const artifact = await Artifact.create(req.body);
-  
+
   // Dispatch to OpenClaw
   const event = createArtifactEvent('created', artifact, req.user);
   dispatchToOpenClaw(event);
-  
+
   res.json({ ok: true, artifact });
 });
 ```
@@ -134,16 +142,19 @@ router.post('/artifacts', async (req, res) => {
 ### 📊 Monitor Health
 
 **Check logs:**
+
 ```powershell
 Get-Content .\infra\openclaw\logs\watchdog.log -Tail 20
 ```
 
 **Check status:**
+
 ```bash
 curl http://localhost:5000/api/openclaw/watchdog-status
 ```
 
 **View recent events:**
+
 ```bash
 curl http://localhost:5000/api/openclaw/recent-events?limit=10
 ```
@@ -156,11 +167,13 @@ curl http://localhost:5000/api/openclaw/recent-events?limit=10
    - `OPENCLAW_GATEWAY_URL`
 
 2. **Deploy backend:**
+
    ```bash
    vercel --prod
    ```
 
 3. **Install watchdog on server:**
+
    ```powershell
    .\infra\openclaw\install-watchdog-task.ps1
    ```
@@ -175,14 +188,14 @@ curl http://localhost:5000/api/openclaw/recent-events?limit=10
 
 ## Common Commands
 
-| Task | Command |
-|------|---------|
-| Test integration | `.\infra\openclaw\test-integration.ps1` |
-| Test dispatch | `.\infra\openclaw\dispatch-event.ps1 -Event "test" -Message "Hello"` |
-| Check watchdog status | `curl http://localhost:5000/api/openclaw/watchdog-status` |
-| View recent events | `curl http://localhost:5000/api/openclaw/recent-events` |
-| Check watchdog logs | `Get-Content .\infra\openclaw\logs\watchdog.log -Tail 20` |
-| Restart watchdog | `Stop-ScheduledTask -TaskName "PVA-OpenClaw-Watchdog"; Start-ScheduledTask -TaskName "PVA-OpenClaw-Watchdog"` |
+| Task                  | Command                                                                                                       |
+| --------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Test integration      | `.\infra\openclaw\test-integration.ps1`                                                                       |
+| Test dispatch         | `.\infra\openclaw\dispatch-event.ps1 -Event "test" -Message "Hello"`                                          |
+| Check watchdog status | `curl http://localhost:5000/api/openclaw/watchdog-status`                                                     |
+| View recent events    | `curl http://localhost:5000/api/openclaw/recent-events`                                                       |
+| Check watchdog logs   | `Get-Content .\infra\openclaw\logs\watchdog.log -Tail 20`                                                     |
+| Restart watchdog      | `Stop-ScheduledTask -TaskName "PVA-OpenClaw-Watchdog"; Start-ScheduledTask -TaskName "PVA-OpenClaw-Watchdog"` |
 
 ---
 
@@ -195,6 +208,7 @@ curl http://localhost:5000/api/openclaw/recent-events?limit=10
 ### ❌ Connection status shows red
 
 **Check:**
+
 1. Backend is running: `curl http://localhost:5000/api/health`
 2. Webhook URL is accessible: `curl $OPENCLAW_WEBHOOK_URL`
 3. Logs for errors: `Get-Content .\infra\openclaw\logs\watchdog.log`
@@ -202,11 +216,13 @@ curl http://localhost:5000/api/openclaw/recent-events?limit=10
 ### ❌ Watchdog not running
 
 **Windows:**
+
 ```powershell
 Get-ScheduledTask -TaskName "PVA-OpenClaw-Watchdog" | Start-ScheduledTask
 ```
 
 **Manual run:**
+
 ```powershell
 .\infra\openclaw\watchdog-bridge.ps1
 ```
@@ -216,6 +232,7 @@ Get-ScheduledTask -TaskName "PVA-OpenClaw-Watchdog" | Start-ScheduledTask
 ## Example Events
 
 **Artifact Created:**
+
 ```json
 {
   "event": "pvabazaar.artifact.created",
@@ -230,6 +247,7 @@ Get-ScheduledTask -TaskName "PVA-OpenClaw-Watchdog" | Start-ScheduledTask
 ```
 
 **Transaction Confirmed:**
+
 ```json
 {
   "event": "pvabazaar.transaction.confirmed",
@@ -244,6 +262,7 @@ Get-ScheduledTask -TaskName "PVA-OpenClaw-Watchdog" | Start-ScheduledTask
 ```
 
 **System Alert:**
+
 ```json
 {
   "event": "pvabazaar.system.warning",

@@ -18,7 +18,9 @@ export default function JournalPage({ entries = [], searchTerm = '' }) {
           <div className="pill">Chronological log</div>
           <h2>Journal entries</h2>
         </div>
-        <a className="button" href="#/studio">Open writing studio</a>
+        <a className="button" href="#/studio">
+          Open writing studio
+        </a>
       </div>
 
       <div className="form" style={{ marginBottom: '1rem' }}>
@@ -26,7 +28,9 @@ export default function JournalPage({ entries = [], searchTerm = '' }) {
           Filter by category
           <select value={category} onChange={(e) => setCategory(e.target.value)}>
             {categories.map((c) => (
-              <option key={c} value={c}>{c === 'all' ? 'All' : c}</option>
+              <option key={c} value={c}>
+                {c === 'all' ? 'All' : c}
+              </option>
             ))}
           </select>
         </label>
@@ -38,12 +42,18 @@ export default function JournalPage({ entries = [], searchTerm = '' }) {
       <div className="entry-list">
         {list.map((entry) => (
           <article className="entry-card" key={entry.id}>
-            <h3><a href={`#/entry/${entry.id}`}>{entry.title}</a></h3>
-            <div className="entry-meta">{new Date(entry.date).toLocaleDateString()} · {entry.category}</div>
+            <h3>
+              <a href={`#/entry/${entry.id}`}>{entry.title}</a>
+            </h3>
+            <div className="entry-meta">
+              {new Date(entry.date).toLocaleDateString()} · {entry.category}
+            </div>
             <p className="entry-excerpt">{entry.excerpt}</p>
             <div className="entry-tags">
               {(entry.tags || []).map((tag) => (
-                <span className="pill" key={tag}>{tag}</span>
+                <span className="pill" key={tag}>
+                  {tag}
+                </span>
               ))}
             </div>
           </article>

@@ -47,7 +47,7 @@ const lifecycleEventSchema = new mongoose.Schema(
     metadata: { type: mongoose.Schema.Types.Mixed, default: {} },
     occurredAt: { type: Date, default: Date.now },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const vcSchema = new mongoose.Schema(
@@ -60,7 +60,7 @@ const vcSchema = new mongoose.Schema(
     credentialSubject: { type: mongoose.Schema.Types.Mixed, default: {} },
     proof: { type: mongoose.Schema.Types.Mixed, default: {} },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const digitalProductPassportSchema = new mongoose.Schema(
@@ -123,7 +123,7 @@ const digitalProductPassportSchema = new mongoose.Schema(
     },
     latestEventAt: { type: Date },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 digitalProductPassportSchema.pre('validate', function preValidate(next) {

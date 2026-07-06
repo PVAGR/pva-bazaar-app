@@ -22,13 +22,14 @@ export default function CreatorPortalPage() {
 
   const deepLink = useMemo(
     () => `${window.location.origin}${window.location.pathname}#/creator?tab=submit`,
-    []
+    [],
   );
 
   const formAction = (ENV.CREATOR_FORM_ACTION || '').trim();
   const formNext = useMemo(
-    () => `${window.location.origin}${window.location.pathname}#/creator?tab=submissions&submitted=1`,
-    []
+    () =>
+      `${window.location.origin}${window.location.pathname}#/creator?tab=submissions&submitted=1`,
+    [],
   );
 
   useEffect(() => {
@@ -49,7 +50,9 @@ export default function CreatorPortalPage() {
       }
 
       if (searchParams.get('submitted') === '1') {
-        setSubmitMessage('Submission sent. Check your submission history and follow-up channel for next steps.');
+        setSubmitMessage(
+          'Submission sent. Check your submission history and follow-up channel for next steps.',
+        );
       }
     } catch (_err) {
       // Ignore URL or storage parse issues and keep defaults.
@@ -113,15 +116,17 @@ export default function CreatorPortalPage() {
       <header className="creator-portal__hero">
         <h1 id="creator-portal-title">Creator Seller Portal</h1>
         <p>
-          This is the supplier intake and seller workspace for PVA Bazaar. Use it when you have real goods, real
-          pricing, and enough detail for a serious review.
+          This is the supplier intake and seller workspace for PVA Bazaar. Use it when you have real
+          goods, real pricing, and enough detail for a serious review.
         </p>
         <p>
-          The portal is designed for sellers in Kenya, the United States, and elsewhere who want a professional path
-          into the network. It is not a promise of instant publishing, automatic syndication, or automatic payout.
+          The portal is designed for sellers in Kenya, the United States, and elsewhere who want a
+          professional path into the network. It is not a promise of instant publishing, automatic
+          syndication, or automatic payout.
         </p>
         <p className="creator-portal__note">
-          This is separate from the owner admin system. Creator accounts cannot access or modify main admin controls.
+          This is separate from the owner admin system. Creator accounts cannot access or modify
+          main admin controls.
         </p>
         <div className="creator-portal__share">
           <p>Direct submit link for partners:</p>
@@ -132,15 +137,28 @@ export default function CreatorPortalPage() {
       <section className="creator-card creator-portal__atlas" aria-label="Private atlas">
         <h2>Private atlas</h2>
         <p className="creator-portal__atlasCopy">
-          Move through the same knowledge bazaar from one private tool to the next without losing the thread.
+          Move through the same knowledge bazaar from one private tool to the next without losing
+          the thread.
         </p>
         <div className="creator-portal__atlasLinks">
-          <Link to="/" className="creator-btn">Home</Link>
-          <Link to="/archive" className="creator-btn">Archive</Link>
-          <Link to="/recovery" className="creator-btn">Recovery</Link>
-          <Link to="/marketplace" className="creator-btn">Marketplace</Link>
-          <Link to="/dashboard" className="creator-btn">Command Center</Link>
-          <Link to="/broker-hub" className="creator-btn">Broker Hub</Link>
+          <Link to="/" className="creator-btn">
+            Home
+          </Link>
+          <Link to="/archive" className="creator-btn">
+            Archive
+          </Link>
+          <Link to="/recovery" className="creator-btn">
+            Recovery
+          </Link>
+          <Link to="/marketplace" className="creator-btn">
+            Marketplace
+          </Link>
+          <Link to="/dashboard" className="creator-btn">
+            Command Center
+          </Link>
+          <Link to="/broker-hub" className="creator-btn">
+            Broker Hub
+          </Link>
         </div>
       </section>
 
@@ -158,10 +176,20 @@ export default function CreatorPortalPage() {
         <article className="creator-card">
           <h2>What to expect</h2>
           <ul className="creator-list">
-            <li>Your submission is sent through the configured intake endpoint and saved in this browser history.</li>
-            <li>PVA can review the submission before it becomes part of a wider selling workflow.</li>
-            <li>Deeper listing, deal, or payout steps depend on the actual relationship and product fit.</li>
-            <li>Use the portal to begin a serious record, not to flood the system with weak entries.</li>
+            <li>
+              Your submission is sent through the configured intake endpoint and saved in this
+              browser history.
+            </li>
+            <li>
+              PVA can review the submission before it becomes part of a wider selling workflow.
+            </li>
+            <li>
+              Deeper listing, deal, or payout steps depend on the actual relationship and product
+              fit.
+            </li>
+            <li>
+              Use the portal to begin a serious record, not to flood the system with weak entries.
+            </li>
           </ul>
         </article>
 
@@ -210,7 +238,10 @@ export default function CreatorPortalPage() {
         <div className="creator-portal__cards">
           <article className="creator-card">
             <h2>1. Create your account</h2>
-            <p>Sign up as a creator or seller so your submissions and listing work stay tied to your own account.</p>
+            <p>
+              Sign up as a creator or seller so your submissions and listing work stay tied to your
+              own account.
+            </p>
             <Link to="/register?next=%2Fonboarding" className="creator-btn creator-btn--primary">
               Sign up now
             </Link>
@@ -218,7 +249,10 @@ export default function CreatorPortalPage() {
 
           <article className="creator-card">
             <h2>2. Sign in and set up</h2>
-            <p>Use standard user login, complete onboarding, and make your contact and business details clear.</p>
+            <p>
+              Use standard user login, complete onboarding, and make your contact and business
+              details clear.
+            </p>
             <Link to="/login?next=%2Fonboarding" className="creator-btn">
               Sign in (User)
             </Link>
@@ -226,7 +260,10 @@ export default function CreatorPortalPage() {
 
           <article className="creator-card">
             <h2>3. Submit goods for review</h2>
-            <p>Use the intake flow when you have clear photos, pricing, and enough detail for a real evaluation.</p>
+            <p>
+              Use the intake flow when you have clear photos, pricing, and enough detail for a real
+              evaluation.
+            </p>
             <button type="button" onClick={() => updateTab('submit')} className="creator-btn">
               Open submit tab
             </button>
@@ -234,15 +271,23 @@ export default function CreatorPortalPage() {
 
           <article className="creator-card">
             <h2>4. Manage your listings</h2>
-            <p>Track your own listings and submission history without touching platform admin tools.</p>
-            <Link to={authenticated ? '/items/mine' : '/login?next=%2Fitems%2Fmine'} className="creator-btn">
+            <p>
+              Track your own listings and submission history without touching platform admin tools.
+            </p>
+            <Link
+              to={authenticated ? '/items/mine' : '/login?next=%2Fitems%2Fmine'}
+              className="creator-btn"
+            >
               Open my listings
             </Link>
           </article>
 
           <article className="creator-card">
             <h2>5. Review seller analytics</h2>
-            <p>Open the creator dashboard for royalty and sales analytics when that data is relevant to your account.</p>
+            <p>
+              Open the creator dashboard for royalty and sales analytics when that data is relevant
+              to your account.
+            </p>
             <Link
               to={authenticated ? '/creator/dashboard' : '/login?next=%2Fcreator%2Fdashboard'}
               className="creator-btn"
@@ -257,8 +302,8 @@ export default function CreatorPortalPage() {
         <article className="creator-card creator-card--form" aria-label="Submit new items form">
           <h2>Submit New Items</h2>
           <p>
-            Send photos, item details, and price. Submissions are delivered to your configured intake endpoint and are
-            also saved locally in this browser history.
+            Send photos, item details, and price. Submissions are delivered to your configured
+            intake endpoint and are also saved locally in this browser history.
           </p>
           <div className="creator-inlineGrid">
             <div className="creator-inlineNote">
@@ -267,7 +312,10 @@ export default function CreatorPortalPage() {
             </div>
             <div className="creator-inlineNote">
               <strong>After you submit</strong>
-              <p>Use the history tab to keep your own record while follow-up and next steps are handled from the intake flow.</p>
+              <p>
+                Use the history tab to keep your own record while follow-up and next steps are
+                handled from the intake flow.
+              </p>
             </div>
           </div>
 
@@ -293,7 +341,12 @@ export default function CreatorPortalPage() {
 
             <label className="creator-field">
               <span>Item Description / Name</span>
-              <input type="text" name="item_name" required placeholder="2023 MacBook Pro 16-inch M3 Max" />
+              <input
+                type="text"
+                name="item_name"
+                required
+                placeholder="2023 MacBook Pro 16-inch M3 Max"
+              />
             </label>
 
             <label className="creator-field">
@@ -327,7 +380,14 @@ export default function CreatorPortalPage() {
 
             <label className="creator-field">
               <span>Upload Photos (up to 10, max 20 MB total)</span>
-              <input type="file" name="photos" accept="image/*" multiple required onChange={handleFilesChanged} />
+              <input
+                type="file"
+                name="photos"
+                accept="image/*"
+                multiple
+                required
+                onChange={handleFilesChanged}
+              />
               {fileNames ? <small>{fileNames}</small> : null}
             </label>
 
@@ -353,10 +413,15 @@ export default function CreatorPortalPage() {
       {activeTab === 'submissions' ? (
         <article className="creator-card creator-card--table" aria-label="My submissions list">
           <h2>My Submissions</h2>
-          <p>Recent submissions saved in this browser. Email endpoint logs are managed by your form provider.</p>
+          <p>
+            Recent submissions saved in this browser. Email endpoint logs are managed by your form
+            provider.
+          </p>
 
           {savedSubmissions.length === 0 ? (
-            <p className="creator-empty">No saved submissions yet. Open Submit New Items to start.</p>
+            <p className="creator-empty">
+              No saved submissions yet. Open Submit New Items to start.
+            </p>
           ) : (
             <div className="creator-table-wrap">
               <table className="creator-table">

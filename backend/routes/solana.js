@@ -7,8 +7,10 @@ const adminSession = require('../middleware/adminSession');
 const { createSystemEvent, dispatchToOpenClaw } = require('../utils/openclaw-events');
 
 function getSolanaRpcUrl(preferredNetwork) {
-  const network = String(preferredNetwork || process.env.SOLANA_CLUSTER || 'devnet').trim() || 'devnet';
-  const hasExplicitNetwork = typeof preferredNetwork === 'string' && preferredNetwork.trim().length > 0;
+  const network =
+    String(preferredNetwork || process.env.SOLANA_CLUSTER || 'devnet').trim() || 'devnet';
+  const hasExplicitNetwork =
+    typeof preferredNetwork === 'string' && preferredNetwork.trim().length > 0;
 
   if (network === 'mainnet-beta' && process.env.SOLANA_RPC_URL_MAINNET) {
     return process.env.SOLANA_RPC_URL_MAINNET;
@@ -44,7 +46,7 @@ function getWalletAllowlist() {
   const raw = process.env.SOLANA_TEST_WALLET_ALLOWLIST || '';
   return raw
     .split(',')
-    .map(v => v.trim())
+    .map((v) => v.trim())
     .filter(Boolean);
 }
 
@@ -80,9 +82,10 @@ async function getEffectiveTestPolicy() {
       minSol,
       requireAllowlist: configured.requireAllowlist === true,
       walletAllowlist: Array.isArray(configured.walletAllowlist)
-        ? configured.walletAllowlist.map(v => String(v).trim()).filter(Boolean)
+        ? configured.walletAllowlist.map((v) => String(v).trim()).filter(Boolean)
         : fromEnv.walletAllowlist,
-      network: String(configured.network || process.env.SOLANA_CLUSTER || 'devnet').trim() || 'devnet',
+      network:
+        String(configured.network || process.env.SOLANA_CLUSTER || 'devnet').trim() || 'devnet',
       treasuryWallet: String(configured.treasuryWallet || '').trim(),
     };
   } catch (_err) {
@@ -115,14 +118,22 @@ async function fetchSignatureStatus(signature) {
 
 function isRetryableSendError(err) {
   const text = String(err?.message || '').toLowerCase();
-  return text.includes('blockhash not found')
-    || text.includes('node is behind')
-    || text.includes('timed out')
-    || text.includes('429')
-    || text.includes('too many requests');
+  return (
+    text.includes('blockhash not found') ||
+    text.includes('node is behind') ||
+    text.includes('timed out') ||
+    text.includes('429') ||
+    text.includes('too many requests')
+  );
 }
 
-async function sendSolTransferWithRetry({ connection, keypair, recipientAddress, lamports, maxAttempts = 2 }) {
+async function sendSolTransferWithRetry({
+  connection,
+  keypair,
+  recipientAddress,
+  lamports,
+  maxAttempts = 2,
+}) {
   const { Transaction, SystemProgram, PublicKey } = require('@solana/web3.js');
   let lastErr = null;
 
@@ -137,10 +148,12 @@ async function sendSolTransferWithRetry({ connection, keypair, recipientAddress,
           fromPubkey: keypair.publicKey,
           toPubkey: new PublicKey(recipientAddress),
           lamports,
-        })
+        }),
       );
       tx.sign(keypair);
-      const signature = await connection.sendRawTransaction(tx.serialize(), { skipPreflight: false });
+      const signature = await connection.sendRawTransaction(tx.serialize(), {
+        skipPreflight: false,
+      });
       return { signature, attempts: attempt };
     } catch (err) {
       lastErr = err;
@@ -174,7 +187,9 @@ router.post('/test-payout', adminSession, async (req, res) => {
     const numericAmountUsd = Number(amountUsd);
 
     if (!isLikelySolanaAddress(trimmedWallet)) {
-      return res.status(400).json({ ok: false, error: 'walletAddress must be a valid Solana address' });
+      return res
+        .status(400)
+        .json({ ok: false, error: 'walletAddress must be a valid Solana address' });
     }
     if (!Number.isFinite(numericAmountSol) || numericAmountSol <= 0) {
       return res.status(400).json({ ok: false, error: 'amountSol must be a positive number' });
@@ -182,21 +197,32 @@ router.post('/test-payout', adminSession, async (req, res) => {
 
     const hasUsd = Number.isFinite(numericAmountUsd) && numericAmountUsd > 0;
     if (hasUsd && Number.isFinite(policy.minUsd) && numericAmountUsd < policy.minUsd) {
-      return res.status(400).json({ ok: false, error: `amountUsd is below minimum of ${policy.minUsd}` });
+      return res
+        .status(400)
+        .json({ ok: false, error: `amountUsd is below minimum of ${policy.minUsd}` });
     }
     if (hasUsd && numericAmountUsd > policy.maxUsd) {
-      return res.status(400).json({ ok: false, error: `amountUsd exceeds max test limit of ${policy.maxUsd}` });
+      return res
+        .status(400)
+        .json({ ok: false, error: `amountUsd exceeds max test limit of ${policy.maxUsd}` });
     }
     if (Number.isFinite(policy.minSol) && numericAmountSol < policy.minSol) {
-      return res.status(400).json({ ok: false, error: `amountSol is below minimum of ${policy.minSol}` });
+      return res
+        .status(400)
+        .json({ ok: false, error: `amountSol is below minimum of ${policy.minSol}` });
     }
     if (numericAmountSol > policy.maxSol) {
-      return res.status(400).json({ ok: false, error: `amountSol exceeds max test limit of ${policy.maxSol}` });
+      return res
+        .status(400)
+        .json({ ok: false, error: `amountSol exceeds max test limit of ${policy.maxSol}` });
     }
 
-    const inAllowlist = policy.walletAllowlist.length === 0 || policy.walletAllowlist.includes(trimmedWallet);
+    const inAllowlist =
+      policy.walletAllowlist.length === 0 || policy.walletAllowlist.includes(trimmedWallet);
     if (policy.requireAllowlist && !inAllowlist) {
-      return res.status(403).json({ ok: false, error: 'walletAddress is not in SOLANA_TEST_WALLET_ALLOWLIST' });
+      return res
+        .status(403)
+        .json({ ok: false, error: 'walletAddress is not in SOLANA_TEST_WALLET_ALLOWLIST' });
     }
 
     const network = policy.network || process.env.SOLANA_CLUSTER || 'devnet';
@@ -250,7 +276,8 @@ router.post('/test-payout', adminSession, async (req, res) => {
         status: payout.status,
         createdAt: payout.createdAt,
       },
-      nextAction: 'Sign and submit transfer from funded treasury wallet, then call /api/solana/confirm-test-payout',
+      nextAction:
+        'Sign and submit transfer from funded treasury wallet, then call /api/solana/confirm-test-payout',
     });
   } catch (err) {
     console.error('Solana test-payout error:', err);
@@ -288,7 +315,7 @@ router.post('/confirm-test-payout', adminSession, async (req, res) => {
     const confirmed = !rpcError && (confirmation === 'confirmed' || confirmation === 'finalized');
 
     payout.txSignature = trimmedSignature;
-    payout.status = confirmed ? 'confirmed' : (rpcError ? 'failed' : 'pending');
+    payout.status = confirmed ? 'confirmed' : rpcError ? 'failed' : 'pending';
     payout.error = rpcError ? JSON.stringify(rpcError).slice(0, 300) : '';
     payout.metadata = {
       ...(payout.metadata || {}),
@@ -300,8 +327,12 @@ router.post('/confirm-test-payout', adminSession, async (req, res) => {
 
     await payout.save();
 
-    const eventName = confirmed ? 'OpenClaw payout.confirmed' : (rpcError ? 'OpenClaw payout.failed' : 'OpenClaw payout.pending');
-    const level = confirmed ? 'info' : (rpcError ? 'error' : 'warning');
+    const eventName = confirmed
+      ? 'OpenClaw payout.confirmed'
+      : rpcError
+        ? 'OpenClaw payout.failed'
+        : 'OpenClaw payout.pending';
+    const level = confirmed ? 'info' : rpcError ? 'error' : 'warning';
     const event = createSystemEvent(level, eventName, {
       payoutId: payout._id.toString(),
       txSignature: payout.txSignature,
@@ -420,7 +451,9 @@ router.post('/ritual', async (req, res) => {
 function parseHotWalletKeypair() {
   const raw = (process.env.SOLANA_HOT_WALLET_PRIVATE_KEY || '').trim();
   if (!raw) {
-    const err = new Error('SOLANA_HOT_WALLET_PRIVATE_KEY is not set. Add it to Vercel environment variables.');
+    const err = new Error(
+      'SOLANA_HOT_WALLET_PRIVATE_KEY is not set. Add it to Vercel environment variables.',
+    );
     err.notConfigured = true;
     throw err;
   }
@@ -473,16 +506,17 @@ router.get('/direct-transfer-readiness', adminSession, async (req, res) => {
   const network = policy.network || process.env.SOLANA_CLUSTER || 'devnet';
   const rpcUrl = getSolanaRpcUrl(network);
 
-  const policyRangeOk = Number.isFinite(policy.minSol)
-    && Number.isFinite(policy.maxSol)
-    && Number.isFinite(policy.minUsd)
-    && Number.isFinite(policy.maxUsd)
-    && policy.minSol >= 0
-    && policy.maxSol > 0
-    && policy.minUsd >= 0
-    && policy.maxUsd > 0
-    && policy.minSol <= policy.maxSol
-    && policy.minUsd <= policy.maxUsd;
+  const policyRangeOk =
+    Number.isFinite(policy.minSol) &&
+    Number.isFinite(policy.maxSol) &&
+    Number.isFinite(policy.minUsd) &&
+    Number.isFinite(policy.maxUsd) &&
+    policy.minSol >= 0 &&
+    policy.maxSol > 0 &&
+    policy.minUsd >= 0 &&
+    policy.maxUsd > 0 &&
+    policy.minSol <= policy.maxSol &&
+    policy.minUsd <= policy.maxUsd;
 
   checks.push({
     key: 'policyRange',
@@ -540,14 +574,16 @@ router.get('/direct-transfer-readiness', adminSession, async (req, res) => {
       key: 'hotWalletKey',
       ok: false,
       label: 'Server hot wallet private key is configured',
-      detail: notConfigured ? 'SOLANA_HOT_WALLET_PRIVATE_KEY is missing' : (err.message || 'Invalid key configuration'),
+      detail: notConfigured
+        ? 'SOLANA_HOT_WALLET_PRIVATE_KEY is missing'
+        : err.message || 'Invalid key configuration',
     });
 
     checks.push({
       key: 'rpcReachable',
       ok: false,
       label: 'Solana RPC is reachable',
-      detail: notConfigured ? 'Skipped until hot wallet is configured' : (err.message || rpcUrl),
+      detail: notConfigured ? 'Skipped until hot wallet is configured' : err.message || rpcUrl,
     });
   }
 
@@ -557,7 +593,9 @@ router.get('/direct-transfer-readiness', adminSession, async (req, res) => {
     notes.push('Complete failed checks before using one-click direct transfer.');
   }
   if (network !== 'devnet') {
-    notes.push('You are not on devnet. Ensure real funds and policy are intentional before sending.');
+    notes.push(
+      'You are not on devnet. Ensure real funds and policy are intentional before sending.',
+    );
   }
 
   return res.json({
@@ -666,31 +704,42 @@ router.post('/execute-test-flow', adminSession, async (req, res) => {
     const hasUsd = Number.isFinite(numericUsd) && numericUsd > 0;
 
     if (!isLikelySolanaAddress(trimmedRecipient)) {
-      return res.status(400).json({ ok: false, error: 'recipientAddress must be a valid Solana address' });
+      return res
+        .status(400)
+        .json({ ok: false, error: 'recipientAddress must be a valid Solana address' });
     }
     if (!Number.isFinite(numericSol) || numericSol <= 0) {
       return res.status(400).json({ ok: false, error: 'amountSol must be a positive number' });
     }
     if (hasUsd && Number.isFinite(policy.minUsd) && numericUsd < policy.minUsd) {
-      return res.status(400).json({ ok: false, error: `amountUsd is below minimum of $${policy.minUsd}` });
+      return res
+        .status(400)
+        .json({ ok: false, error: `amountUsd is below minimum of $${policy.minUsd}` });
     }
     if (hasUsd && Number.isFinite(policy.maxUsd) && numericUsd > policy.maxUsd) {
-      return res.status(400).json({ ok: false, error: `amountUsd exceeds maximum of $${policy.maxUsd}` });
+      return res
+        .status(400)
+        .json({ ok: false, error: `amountUsd exceeds maximum of $${policy.maxUsd}` });
     }
     if (Number.isFinite(policy.minSol) && numericSol < policy.minSol) {
-      return res.status(400).json({ ok: false, error: `amountSol is below minimum of ${policy.minSol} SOL` });
+      return res
+        .status(400)
+        .json({ ok: false, error: `amountSol is below minimum of ${policy.minSol} SOL` });
     }
     if (Number.isFinite(policy.maxSol) && numericSol > policy.maxSol) {
-      return res.status(400).json({ ok: false, error: `amountSol exceeds maximum of ${policy.maxSol} SOL` });
+      return res
+        .status(400)
+        .json({ ok: false, error: `amountSol exceeds maximum of ${policy.maxSol} SOL` });
     }
-    const inAllowlist = policy.walletAllowlist.length === 0 || policy.walletAllowlist.includes(trimmedRecipient);
+    const inAllowlist =
+      policy.walletAllowlist.length === 0 || policy.walletAllowlist.includes(trimmedRecipient);
     if (policy.requireAllowlist && !inAllowlist) {
-      return res.status(403).json({ ok: false, error: 'recipientAddress is not in the wallet allowlist' });
+      return res
+        .status(403)
+        .json({ ok: false, error: 'recipientAddress is not in the wallet allowlist' });
     }
 
-    const {
-      Connection, LAMPORTS_PER_SOL,
-    } = require('@solana/web3.js');
+    const { Connection, LAMPORTS_PER_SOL } = require('@solana/web3.js');
     const keypair = parseHotWalletKeypair();
     const rpcUrl = getSolanaRpcUrl(network);
     const connection = new Connection(rpcUrl, 'confirmed');
@@ -709,12 +758,15 @@ router.post('/execute-test-flow', adminSession, async (req, res) => {
       error: '',
     };
 
-    const needsTopUp = preBalanceLamports < (lamports + feeBufferLamports);
+    const needsTopUp = preBalanceLamports < lamports + feeBufferLamports;
     if (network === 'devnet' && autoAirdropOnDevnet && needsTopUp) {
       try {
         const targetLamports = lamports + feeBufferLamports;
         const deficit = Math.max(targetLamports - preBalanceLamports, 0);
-        const requestedLamports = Math.min(Math.max(deficit, Math.round(0.2 * LAMPORTS_PER_SOL)), 2 * LAMPORTS_PER_SOL);
+        const requestedLamports = Math.min(
+          Math.max(deficit, Math.round(0.2 * LAMPORTS_PER_SOL)),
+          2 * LAMPORTS_PER_SOL,
+        );
         const airdropSig = await connection.requestAirdrop(keypair.publicKey, requestedLamports);
         await connection.confirmTransaction(airdropSig, 'confirmed');
         postAirdropBalanceLamports = await connection.getBalance(keypair.publicKey);
@@ -741,7 +793,7 @@ router.post('/execute-test-flow', adminSession, async (req, res) => {
     }
 
     const effectiveBalanceLamports = postAirdropBalanceLamports;
-    if (effectiveBalanceLamports < (lamports + feeBufferLamports)) {
+    if (effectiveBalanceLamports < lamports + feeBufferLamports) {
       return res.status(400).json({
         ok: false,
         error: 'Insufficient hot wallet balance for transfer + fees',
@@ -769,7 +821,8 @@ router.post('/execute-test-flow', adminSession, async (req, res) => {
     const { status: sigStatus } = await fetchSignatureStatus(signature);
     const confirmationStatus = sigStatus?.confirmationStatus || 'submitted';
     const rpcError = sigStatus?.err || null;
-    const confirmed = !rpcError && (confirmationStatus === 'confirmed' || confirmationStatus === 'finalized');
+    const confirmed =
+      !rpcError && (confirmationStatus === 'confirmed' || confirmationStatus === 'finalized');
 
     const explorerCluster = network === 'mainnet-beta' ? '' : `?cluster=${network}`;
     const explorerUrl = `https://explorer.solana.com/tx/${signature}${explorerCluster}`;
@@ -858,31 +911,42 @@ router.post('/direct-transfer', adminSession, async (req, res) => {
     const hasUsd = Number.isFinite(numericUsd) && numericUsd > 0;
 
     if (!isLikelySolanaAddress(trimmedRecipient)) {
-      return res.status(400).json({ ok: false, error: 'recipientAddress must be a valid Solana address' });
+      return res
+        .status(400)
+        .json({ ok: false, error: 'recipientAddress must be a valid Solana address' });
     }
     if (!Number.isFinite(numericSol) || numericSol <= 0) {
       return res.status(400).json({ ok: false, error: 'amountSol must be a positive number' });
     }
     if (hasUsd && Number.isFinite(policy.minUsd) && numericUsd < policy.minUsd) {
-      return res.status(400).json({ ok: false, error: `amountUsd is below minimum of $${policy.minUsd}` });
+      return res
+        .status(400)
+        .json({ ok: false, error: `amountUsd is below minimum of $${policy.minUsd}` });
     }
     if (hasUsd && numericUsd > policy.maxUsd) {
-      return res.status(400).json({ ok: false, error: `amountUsd exceeds maximum of $${policy.maxUsd}` });
+      return res
+        .status(400)
+        .json({ ok: false, error: `amountUsd exceeds maximum of $${policy.maxUsd}` });
     }
     if (Number.isFinite(policy.minSol) && numericSol < policy.minSol) {
-      return res.status(400).json({ ok: false, error: `amountSol is below minimum of ${policy.minSol} SOL` });
+      return res
+        .status(400)
+        .json({ ok: false, error: `amountSol is below minimum of ${policy.minSol} SOL` });
     }
     if (numericSol > policy.maxSol) {
-      return res.status(400).json({ ok: false, error: `amountSol exceeds maximum of ${policy.maxSol} SOL` });
+      return res
+        .status(400)
+        .json({ ok: false, error: `amountSol exceeds maximum of ${policy.maxSol} SOL` });
     }
-    const inAllowlist = policy.walletAllowlist.length === 0 || policy.walletAllowlist.includes(trimmedRecipient);
+    const inAllowlist =
+      policy.walletAllowlist.length === 0 || policy.walletAllowlist.includes(trimmedRecipient);
     if (policy.requireAllowlist && !inAllowlist) {
-      return res.status(403).json({ ok: false, error: 'recipientAddress is not in the wallet allowlist' });
+      return res
+        .status(403)
+        .json({ ok: false, error: 'recipientAddress is not in the wallet allowlist' });
     }
 
-    const {
-      Connection, LAMPORTS_PER_SOL,
-    } = require('@solana/web3.js');
+    const { Connection, LAMPORTS_PER_SOL } = require('@solana/web3.js');
     const keypair = parseHotWalletKeypair();
     const rpcUrl = getSolanaRpcUrl(network);
     const connection = new Connection(rpcUrl, 'confirmed');
@@ -902,7 +966,8 @@ router.post('/direct-transfer', adminSession, async (req, res) => {
     const { status: sigStatus } = await fetchSignatureStatus(signature);
     const confirmationStatus = sigStatus?.confirmationStatus || 'submitted';
     const rpcError = sigStatus?.err || null;
-    const confirmed = !rpcError && (confirmationStatus === 'confirmed' || confirmationStatus === 'finalized');
+    const confirmed =
+      !rpcError && (confirmationStatus === 'confirmed' || confirmationStatus === 'finalized');
 
     const network = policy.network || process.env.SOLANA_CLUSTER || 'devnet';
     const explorerCluster = network === 'mainnet-beta' ? '' : `?cluster=${network}`;
@@ -1051,4 +1116,3 @@ router.get('/payouts', async (req, res) => {
 });
 
 module.exports = router;
-

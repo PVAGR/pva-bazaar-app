@@ -21,7 +21,7 @@ export default function SetupReminder({ missingSteps = [], onDismiss = null }) {
       <p className="reminder-intro">You still need to:</p>
 
       <ul className="reminder-steps">
-        {missingSteps.map(step => (
+        {missingSteps.map((step) => (
           <li key={step.id} className="reminder-step">
             <span className="step-label">{step.label}</span>
             <span className="step-hint">{step.hint}</span>
@@ -30,7 +30,8 @@ export default function SetupReminder({ missingSteps = [], onDismiss = null }) {
       </ul>
 
       <p className="reminder-note">
-        Complete these before posting your first item to ensure buyers have confidence in your listings.
+        Complete these before posting your first item to ensure buyers have confidence in your
+        listings.
       </p>
     </div>
   );

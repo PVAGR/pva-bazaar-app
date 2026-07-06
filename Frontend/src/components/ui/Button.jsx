@@ -9,4 +9,3 @@ export default function Button({ variant = 'ghost', className = '', type = 'butt
   const cls = `uiBtn uiBtn--${variant} ${className}`.trim();
   return <button type={type} className={cls} {...props} />;
 }
-

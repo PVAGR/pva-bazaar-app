@@ -88,4 +88,3 @@ Use the canned messages in `OPS-CUSTOMER-MESSAGES.md`.
 ---
 
 This workflow is intentionally simple. You can refine it later with automations, but this is enough to run a small, real business without dropping details.
-

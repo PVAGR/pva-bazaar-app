@@ -14,10 +14,10 @@ class IPFSService {
     this.pinataSecretKey = process.env.PINATA_API_SECRET;
     this.pinataBaseUrl = 'https://api.pinata.cloud';
     this.pinataGateway = process.env.PINATA_GATEWAY_URL || 'https://gateway.pinata.cloud/ipfs';
-    
+
     // Web3.Storage (alternative)
     this.web3StorageToken = process.env.WEB3_STORAGE_TOKEN;
-    
+
     // Cloud IPFS API endpoint (fallback)
     this.ipfsNodeUrl = process.env.IPFS_NODE_URL || 'https://ipfs.infura.io:5001';
   }
@@ -31,7 +31,9 @@ class IPFSService {
    */
   async uploadToPinata(fileBuffer, fileName, metadata = {}) {
     if (!this.pinataApiKey || !this.pinataSecretKey) {
-      throw new Error('Pinata API credentials not configured. Set PINATA_API_KEY and PINATA_API_SECRET.');
+      throw new Error(
+        'Pinata API credentials not configured. Set PINATA_API_KEY and PINATA_API_SECRET.',
+      );
     }
 
     try {
@@ -105,7 +107,7 @@ class IPFSService {
             pinata_api_key: this.pinataApiKey,
             pinata_secret_api_key: this.pinataSecretKey,
           },
-        }
+        },
       );
 
       return true;

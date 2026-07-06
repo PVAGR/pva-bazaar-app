@@ -11,7 +11,11 @@ export default function Writings() {
     const load = async () => {
       setLoading(true);
       setError('');
-      const response = await fetchArchiveEntries({ q: 'writing essay reflection', limit: 10, sort: 'new' });
+      const response = await fetchArchiveEntries({
+        q: 'writing essay reflection',
+        limit: 10,
+        sort: 'new',
+      });
       if (cancelled) return;
       if (response.ok) {
         setItems(response.items || []);
@@ -32,7 +36,9 @@ export default function Writings() {
       <h2>Writings</h2>
       {loading && <p>Loading writings...</p>}
       {!loading && error && <p>{error}</p>}
-      {!loading && !error && items.length === 0 && <p>No writings were returned by the archive API.</p>}
+      {!loading && !error && items.length === 0 && (
+        <p>No writings were returned by the archive API.</p>
+      )}
       {!loading && items.length > 0 && (
         <div>
           {items.map((entry) => (

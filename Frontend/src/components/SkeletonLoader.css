@@ -5,7 +5,7 @@
   --skeleton-shimmer: rgba(255, 255, 255, 0.08);
 }
 
-[data-theme="light"] {
+[data-theme='light'] {
   --skeleton-bg: rgba(22, 163, 74, 0.06);
   --skeleton-shimmer: rgba(22, 163, 74, 0.12);
 }
@@ -71,7 +71,14 @@
   height: 48px;
   border-radius: 50%;
   flex-shrink: 0;
-  background: linear-gradient(90deg, var(--skeleton-bg) 0%, var(--skeleton-shimmer) 50%, var(--skeleton-bg) 100%); background-size: 200% 100%; animation: skeletonShimmer 1.5s ease-in-out infinite;
+  background: linear-gradient(
+    90deg,
+    var(--skeleton-bg) 0%,
+    var(--skeleton-shimmer) 50%,
+    var(--skeleton-bg) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.5s ease-in-out infinite;
 }
 
 .skeleton-card__title-group {
@@ -106,7 +113,14 @@
   height: 32px;
   border-radius: 6px;
   flex-shrink: 0;
-  background: linear-gradient(90deg, var(--skeleton-bg) 0%, var(--skeleton-shimmer) 50%, var(--skeleton-bg) 100%); background-size: 200% 100%; animation: skeletonShimmer 1.5s ease-in-out infinite;
+  background: linear-gradient(
+    90deg,
+    var(--skeleton-bg) 0%,
+    var(--skeleton-shimmer) 50%,
+    var(--skeleton-bg) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.5s ease-in-out infinite;
 }
 
 .skeleton-list__content {
@@ -133,7 +147,14 @@
 .skeleton-article__category {
   width: 100px;
   height: 20px;
-  background: linear-gradient(90deg, var(--skeleton-bg) 0%, var(--skeleton-shimmer) 50%, var(--skeleton-bg) 100%); background-size: 200% 100%; animation: skeletonShimmer 1.5s ease-in-out infinite;
+  background: linear-gradient(
+    90deg,
+    var(--skeleton-bg) 0%,
+    var(--skeleton-shimmer) 50%,
+    var(--skeleton-bg) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.5s ease-in-out infinite;
   border-radius: 12px;
 }
 
@@ -151,7 +172,14 @@
 .skeleton-article__image {
   width: 100%;
   height: 300px;
-  background: linear-gradient(90deg, var(--skeleton-bg) 0%, var(--skeleton-shimmer) 50%, var(--skeleton-bg) 100%); background-size: 200% 100%; animation: skeletonShimmer 1.5s ease-in-out infinite;
+  background: linear-gradient(
+    90deg,
+    var(--skeleton-bg) 0%,
+    var(--skeleton-shimmer) 50%,
+    var(--skeleton-bg) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.5s ease-in-out infinite;
   border-radius: 8px;
   margin: 20px 0;
 }
@@ -176,7 +204,14 @@
 .skeleton-grid__image {
   width: 100%;
   height: 150px;
-  background: linear-gradient(90deg, var(--skeleton-bg) 0%, var(--skeleton-shimmer) 50%, var(--skeleton-bg) 100%); background-size: 200% 100%; animation: skeletonShimmer 1.5s ease-in-out infinite;
+  background: linear-gradient(
+    90deg,
+    var(--skeleton-bg) 0%,
+    var(--skeleton-shimmer) 50%,
+    var(--skeleton-bg) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.5s ease-in-out infinite;
   border-radius: 8px;
   margin-bottom: 8px;
 }
@@ -204,4 +239,3 @@
     background: var(--skeleton-bg);
   }
 }
-

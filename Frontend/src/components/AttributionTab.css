@@ -69,7 +69,9 @@
   border-radius: 10px;
   border: 1px solid var(--site-border);
   border-top: 3px solid var(--site-accent);
-  transition: border-color 0.2s ease, transform 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    transform 0.2s ease;
 }
 
 .metric-card:hover {

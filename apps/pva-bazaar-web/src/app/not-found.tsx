@@ -1,17 +1,13 @@
-import Link from "next/link";
+import Link from 'next/link';
 
 export default function NotFound() {
   return (
     <section className="flex flex-col gap-8 py-12">
-      <p className="text-xs uppercase tracking-[0.35em] text-zinc-500">
-        404
-      </p>
-      <h1 className="text-2xl font-semibold text-zinc-100">
-        This path is not in the archive.
-      </h1>
+      <p className="text-xs uppercase tracking-[0.35em] text-zinc-500">404</p>
+      <h1 className="text-2xl font-semibold text-zinc-100">This path is not in the archive.</h1>
       <p className="max-w-sm text-sm text-zinc-400">
-        The page you’re looking for doesn’t exist or has moved. Return to the
-        sanctuary and try Archive, Verification, or Manifesto.
+        The page you’re looking for doesn’t exist or has moved. Return to the sanctuary and try
+        Archive, Verification, or Manifesto.
       </p>
       <div className="flex flex-wrap gap-3">
         <Link

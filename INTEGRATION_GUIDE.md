@@ -51,34 +51,38 @@
 ## Frontend Configuration
 
 ### Environment Variables
+
 [Frontend/src/config/env.ts](Frontend/src/config/env.ts) validates and exports:
 
 ```typescript
 ENV = {
-  API_URL: "http://localhost:3001",  // From VITE_API_URL
-  CLOUDINARY_CLOUD_NAME: "...",
-  CLOUDINARY_UPLOAD_PRESET: "...",
-}
+  API_URL: 'http://localhost:3001', // From VITE_API_URL
+  CLOUDINARY_CLOUD_NAME: '...',
+  CLOUDINARY_UPLOAD_PRESET: '...',
+};
 ```
 
 **Build-time validation:**
+
 - Warns if localhost used in production build
 - Throws if VITE_API_URL not set
 
 ### API Client
+
 [Frontend/src/lib/api.js](Frontend/src/lib/api.js) provides:
 
 ```javascript
 import { apiGet, apiPost, apiPut, apiDelete } from './lib/api.js';
 
 // Automatic URL prefixing
-await apiGet('/products')           // → http://localhost:3001/products
-await apiPost('/orders', data)      // → http://localhost:3001/orders
-await apiPut('/orders/123', update) // → http://localhost:3001/orders/123
-await apiDelete('/orders/123')      // → http://localhost:3001/orders/123
+await apiGet('/products'); // → http://localhost:3001/products
+await apiPost('/orders', data); // → http://localhost:3001/orders
+await apiPut('/orders/123', update); // → http://localhost:3001/orders/123
+await apiDelete('/orders/123'); // → http://localhost:3001/orders/123
 ```
 
 **Features:**
+
 - Automatic ENV.API_URL prepending
 - Error handling & logging
 - Auth header injection
@@ -89,11 +93,13 @@ await apiDelete('/orders/123')      // → http://localhost:3001/orders/123
 ## Backend Configuration
 
 ### Entry Point
+
 [backend/api/index.js](backend/api/index.js) configures:
 
 1. **Express App Setup**
+
    ```javascript
-   app.set('trust proxy', 1)  // For Vercel reverse proxy
+   app.set('trust proxy', 1); // For Vercel reverse proxy
    ```
 
 2. **Security Headers**
@@ -102,6 +108,7 @@ await apiDelete('/orders/123')      // → http://localhost:3001/orders/123
    - XSS protection
 
 3. **CORS Middleware** (Unconditional)
+
    ```javascript
    const allowedOrigins = new Set([
      'https://pvabazaar.org',
@@ -109,7 +116,7 @@ await apiDelete('/orders/123')      // → http://localhost:3001/orders/123
      'http://localhost:3000',
      'http://localhost:5173',
    ]);
-   
+
    app.use((req, res, next) => {
      const origin = req.headers.origin;
      if (allowedOrigins.has(origin)) {
@@ -132,6 +139,7 @@ await apiDelete('/orders/123')      // → http://localhost:3001/orders/123
    - Webhooks: 30 requests/15min
 
 6. **Database Connection**
+
    ```javascript
    async function connectToDatabase() {
      // Returns cached connection for serverless
@@ -148,12 +156,15 @@ await apiDelete('/orders/123')      // → http://localhost:3001/orders/123
    - `/webhooks/stripe` - Payment webhooks
 
 ### Environment Variables
+
 Required:
+
 - `JWT_SECRET` - JWT signing key
 - `MONGODB_URI` - Database connection (optional in dev)
 - `NODE_ENV` - "development" or "production"
 
 Optional:
+
 - `SENTRY_DSN` - Error tracking
 - `STRIPE_SECRET_KEY` - Payment processing
 - `ADMIN_SECRET_CODE` - Admin authentication
@@ -163,6 +174,7 @@ Optional:
 ## API Endpoints
 
 ### Health & Status
+
 ```bash
 GET /health
 # Response: { ok: true, api_ready: true, ... }
@@ -172,6 +184,7 @@ GET /ping
 ```
 
 ### Products
+
 ```bash
 GET /api/products
 # Query params: ?page=1&limit=20&search=term&category=art
@@ -187,6 +200,7 @@ DELETE /api/products/:id (admin only)
 ```
 
 ### Authentication
+
 ```bash
 POST /api/auth/register
 # Body: { email, password, name }
@@ -201,6 +215,7 @@ GET /api/auth/me (requires auth)
 ```
 
 ### Orders
+
 ```bash
 GET /api/orders (requires auth)
 
@@ -213,6 +228,7 @@ PUT /api/orders/:id (admin only)
 ```
 
 ### Admin
+
 ```bash
 GET /admin/stats (requires admin code)
 
@@ -228,14 +244,16 @@ POST /admin/users/:id/ban (requires admin code)
 ### Scenario: User Browsing Products
 
 **1. Frontend Initialization**
+
 ```typescript
 // Frontend/src/config/env.ts
-API_URL = import.meta.env.VITE_API_URL
+API_URL = import.meta.env.VITE_API_URL;
 // = "http://localhost:3001" (dev)
 // = "https://api.pvabazaar.org" (prod)
 ```
 
 **2. Frontend Makes Request**
+
 ```javascript
 // Frontend/src/lib/api.js
 const response = await apiGet('/products');
@@ -243,6 +261,7 @@ const response = await apiGet('/products');
 ```
 
 **3. Backend Receives Request**
+
 ```javascript
 // backend/api/index.js
 app.use((req, res, next) => {
@@ -261,6 +280,7 @@ app.get('/products', async (req, res) => {
 ```
 
 **4. Backend Response**
+
 ```json
 {
   "ok": true,
@@ -276,6 +296,7 @@ app.get('/products', async (req, res) => {
 ```
 
 **5. CORS Headers in Response**
+
 ```
 Access-Control-Allow-Origin: http://localhost:5173
 Access-Control-Allow-Credentials: true
@@ -285,6 +306,7 @@ Vary: Origin
 ```
 
 **6. Frontend Receives Response**
+
 ```javascript
 // Browser allows response (CORS headers match)
 console.log(response.data); // Array of products
@@ -295,6 +317,7 @@ console.log(response.data); // Array of products
 ## Authentication Flow
 
 ### Login Process
+
 ```
 User enters email/password
          ↓
@@ -317,6 +340,7 @@ Allows/denies request
 ```
 
 ### Protected Requests
+
 ```javascript
 // Frontend automatically adds header
 const response = await apiGet('/api/orders');
@@ -326,6 +350,7 @@ const response = await apiGet('/api/orders');
 ```
 
 ### Admin Authentication
+
 ```javascript
 // Special admin endpoint
 POST /admin/users
@@ -342,9 +367,9 @@ X-Admin-Code: secret_code_here
 
 ```javascript
 // backend/api/index.js
-global._mongooseConn = global._mongooseConn || { 
-  conn: null, 
-  promise: null 
+global._mongooseConn = global._mongooseConn || {
+  conn: null,
+  promise: null,
 };
 
 async function connectToDatabase() {
@@ -352,23 +377,24 @@ async function connectToDatabase() {
   if (global._mongooseConn.conn) {
     return global._mongooseConn.conn;
   }
-  
+
   // If connection in progress, wait for it
   if (global._mongooseConn.promise) {
     return global._mongooseConn.promise;
   }
-  
+
   // Create new connection
   global._mongooseConn.promise = mongoose.connect(
-    process.env.MONGODB_URI || 'mongodb://localhost:27017/pva-bazaar'
+    process.env.MONGODB_URI || 'mongodb://localhost:27017/pva-bazaar',
   );
-  
+
   global._mongooseConn.conn = await global._mongooseConn.promise;
   return global._mongooseConn.conn;
 }
 ```
 
 **Why this matters:**
+
 - Vercel creates new container for each request
 - Without caching, would reconnect to DB every request
 - Global cache persists across invocations in same container
@@ -379,6 +405,7 @@ async function connectToDatabase() {
 ## Error Handling
 
 ### Frontend Errors
+
 ```javascript
 try {
   const response = await apiGet('/api/products');
@@ -396,6 +423,7 @@ try {
 ```
 
 ### Backend Errors
+
 ```javascript
 // Automatic error responses
 res.status(400).json({ ok: false, message: 'Bad request' });
@@ -408,7 +436,9 @@ res.status(500).json({ ok: false, message: 'Server error' });
 ```
 
 ### Sentry Error Tracking
+
 All errors automatically sent to Sentry if `SENTRY_DSN` configured:
+
 ```javascript
 console.error('Something went wrong');
 // → Captured in Sentry dashboard
@@ -422,6 +452,7 @@ console.error('Something went wrong');
 ## Development Workflow
 
 ### Starting Local Development
+
 ```bash
 # Terminal 1: Backend
 cd backend
@@ -441,6 +472,7 @@ mongod
 ```
 
 ### Making Changes
+
 1. Edit code
 2. Backend: Automatically restarts (nodemon)
 3. Frontend: Hot reload (Vite)
@@ -449,6 +481,7 @@ mongod
 6. Verify backend logs
 
 ### Testing API Calls
+
 ```bash
 # From browser console
 fetch('http://localhost:3001/api/products')
@@ -464,18 +497,21 @@ curl http://localhost:3001/api/products
 ## Production Deployment
 
 ### Vercel Backend
+
 - Deployed from `backend/` folder
 - Entry point: `api/[...path].js` (Vercel serverless)
 - Environment variables set in Vercel dashboard
 - MongoDB connection pooled globally
 
 ### Vercel Frontend
+
 - Deployed from `Frontend/` folder
 - Build: `npm run build`
 - Output: `dist/`
 - Environment variables set in Vercel dashboard
 
 ### Domain Setup
+
 - `api.pvabazaar.org` → Vercel Backend
 - `pvabazaar.org` → Vercel Frontend (or GitHub Pages)
 - DNS records managed by registrar
@@ -485,6 +521,7 @@ curl http://localhost:3001/api/products
 ## Testing Checklist
 
 ### Local Testing
+
 - [ ] Frontend builds: `npm run build`
 - [ ] Backend starts: `npm run dev`
 - [ ] Can visit http://localhost:5173
@@ -493,6 +530,7 @@ curl http://localhost:3001/api/products
 - [ ] Database connects (check backend logs)
 
 ### Integration Testing
+
 - [ ] Browse products (Frontend → Backend → DB)
 - [ ] Add product to cart
 - [ ] Go to checkout
@@ -500,6 +538,7 @@ curl http://localhost:3001/api/products
 - [ ] View order in admin panel
 
 ### Security Testing
+
 - [ ] CORS blocks wrong origins
 - [ ] Auth headers required for protected routes
 - [ ] Admin code prevents unauthorized access
@@ -511,29 +550,37 @@ curl http://localhost:3001/api/products
 ## Troubleshooting
 
 ### "Cannot GET /api/products"
+
 **Cause:** Backend not running or CORS issue
-**Fix:** 
+**Fix:**
+
 1. Check backend running: `npm run dev` in /backend
 2. Check frontend has correct API_URL
 3. Check CORS middleware in backend
 
 ### "CORS error: blocked by browser"
+
 **Cause:** Frontend origin not in allowed list
 **Fix:**
+
 1. Check browser console for full error
 2. Add origin to backend/api/index.js line 40-45
 3. Restart backend
 
 ### "401 Unauthorized"
+
 **Cause:** Missing or invalid auth token
 **Fix:**
+
 1. Login first: `POST /api/auth/login`
 2. Get token from response
 3. Subsequent requests auto-include token
 
 ### "503 Service Unavailable"
+
 **Cause:** Missing environment variables in production
 **Fix:**
+
 1. Check GitHub Secrets are set
 2. Check Vercel environment variables
 3. Check MongoDB connection string
@@ -542,14 +589,14 @@ curl http://localhost:3001/api/products
 
 ## Quick Reference
 
-| Component | Local | Production |
-|-----------|-------|------------|
-| Frontend | `npm run dev` on port 5173 | Vercel, pvabazaar.org |
-| Backend | `npm run dev` on port 3001 | Vercel, api.pvabazaar.org |
-| Database | `mongod` localhost:27017 | MongoDB Atlas |
-| API Base | http://localhost:3001 | https://api.pvabazaar.org |
-| Logs | Terminal output | Vercel dashboard |
-| Errors | Console/terminal | Sentry dashboard |
+| Component | Local                      | Production                |
+| --------- | -------------------------- | ------------------------- |
+| Frontend  | `npm run dev` on port 5173 | Vercel, pvabazaar.org     |
+| Backend   | `npm run dev` on port 3001 | Vercel, api.pvabazaar.org |
+| Database  | `mongod` localhost:27017   | MongoDB Atlas             |
+| API Base  | http://localhost:3001      | https://api.pvabazaar.org |
+| Logs      | Terminal output            | Vercel dashboard          |
+| Errors    | Console/terminal           | Sentry dashboard          |
 
 ---
 

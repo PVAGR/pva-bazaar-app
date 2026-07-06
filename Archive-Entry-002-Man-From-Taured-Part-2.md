@@ -921,6 +921,7 @@ This concludes the second half of "The Man from Taured," capturing Rick's journe
 The novel remains intentionally open-ended—Rick's journey home continues, the resistance grows, and the battle between human autonomy and technological control escalates. This reflects the ongoing nature of these struggles in our own world.
 
 Key moments preserved in this archive:
+
 - **The Awakening broadcast**: Rick's three-hour testimony going viral
 - **The Southern Alliance formation**: Meeting Elena Santos and the resistance network
 - **The Search Back Home**: Christina and Commander Chen's desperate attempts to find Rick
@@ -933,7 +934,7 @@ Every word preserved exactly as written during my creative journey from ages 24-
 
 ---
 
-*"I'm sorry. I'm trying. I promise I'm trying."*  
+_"I'm sorry. I'm trying. I promise I'm trying."_  
 — Rick Taur, somewhere between dimensions
 
 **Archive Entry Completed: January 4, 2026**  

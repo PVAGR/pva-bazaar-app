@@ -21,7 +21,12 @@ async function main() {
 
   let admin = await User.findOne({ email: 'admin@pvabazaar.org' });
   if (!admin) {
-    admin = new User({ name: 'PVA Admin', email: 'admin@pvabazaar.org', password: 'admin123', role: 'admin' });
+    admin = new User({
+      name: 'PVA Admin',
+      email: 'admin@pvabazaar.org',
+      password: 'admin123',
+      role: 'admin',
+    });
     await admin.save();
     console.log('✅ Admin user ensured: admin@pvabazaar.org / admin123');
   } else {
@@ -51,9 +56,7 @@ async function main() {
   // Backfill societal IDs in deterministic sequence for users that are missing one.
   const allUsers = await User.find({}).sort({ createdAt: 1 });
   const usedIds = new Set(
-    allUsers
-      .map((u) => String(u.societalId || ''))
-      .filter((id) => /^PVA-\d{5}$/.test(id)),
+    allUsers.map((u) => String(u.societalId || '')).filter((id) => /^PVA-\d{5}$/.test(id)),
   );
 
   let idCursor = 1;
@@ -80,7 +83,8 @@ async function main() {
     primaryAdmin.passportStatus = 'verified';
     primaryAdmin.governanceToken = true;
     primaryAdmin.passportIssuedAt = primaryAdmin.passportIssuedAt || new Date();
-    primaryAdmin.joinedCivilizationAt = primaryAdmin.joinedCivilizationAt || primaryAdmin.createdAt || new Date();
+    primaryAdmin.joinedCivilizationAt =
+      primaryAdmin.joinedCivilizationAt || primaryAdmin.createdAt || new Date();
     primaryAdmin.bazBalance = 100;
     primaryAdmin.pvaReputation = 500;
     if (!primaryAdmin.societalId) {
@@ -157,9 +161,12 @@ async function main() {
         proposalId: 'PROP-11001',
         title: 'Community Solar Credits for Artisan Workshops',
         category: 'infrastructure',
-        problem: 'Many artisan workshops experience unstable electricity costs that reduce output and wages.',
-        solution: 'Launch a cooperative solar credit pool for verified workshop clusters and shared battery storage.',
-        expectedOutcome: 'Reduce workshop energy costs by 25% within two quarters and stabilize production cycles.',
+        problem:
+          'Many artisan workshops experience unstable electricity costs that reduce output and wages.',
+        solution:
+          'Launch a cooperative solar credit pool for verified workshop clusters and shared battery storage.',
+        expectedOutcome:
+          'Reduce workshop energy costs by 25% within two quarters and stabilize production cycles.',
         estimatedCost: 'USD 42,000 equivalent',
         timeline: '6 months rollout',
         submittedBy: primaryAdmin?._id || admin._id,
@@ -179,18 +186,29 @@ async function main() {
         },
         executionProject: {
           owner: 'Infrastructure Secretariat',
-          milestones: ['Vendor selection complete', 'Pilot district installation', 'Usage dashboard launch'],
+          milestones: [
+            'Vendor selection complete',
+            'Pilot district installation',
+            'Usage dashboard launch',
+          ],
           budget: 'USD 42,000 equivalent',
           status: 'in_progress',
-          updates: [{ text: 'Pilot installation has started in two districts.', postedAt: new Date(now - 2 * 86400000) }],
+          updates: [
+            {
+              text: 'Pilot installation has started in two districts.',
+              postedAt: new Date(now - 2 * 86400000),
+            },
+          ],
         },
       },
       {
         proposalId: 'PROP-11002',
         title: 'Emergency Textile Relief Stock for Flood Seasons',
         category: 'emergency',
-        problem: 'Flood seasons repeatedly destroy household textile essentials and local trade stock.',
-        solution: 'Create a rotating relief stock with community-owned warehousing and monthly replenishment.',
+        problem:
+          'Flood seasons repeatedly destroy household textile essentials and local trade stock.',
+        solution:
+          'Create a rotating relief stock with community-owned warehousing and monthly replenishment.',
         expectedOutcome: 'Maintain 90-day emergency textile coverage for high-risk districts.',
         estimatedCost: 'USD 18,000 equivalent',
         timeline: '4 months setup',
@@ -208,8 +226,10 @@ async function main() {
         proposalId: 'PROP-11003',
         title: 'Neighborhood Learning Pods with Weekend Mentors',
         category: 'learning',
-        problem: 'Youth in several neighborhoods lack consistent access to mentorship and practical study support.',
-        solution: 'Fund neighborhood learning pods staffed by rotating certified mentors and maker instructors.',
+        problem:
+          'Youth in several neighborhoods lack consistent access to mentorship and practical study support.',
+        solution:
+          'Fund neighborhood learning pods staffed by rotating certified mentors and maker instructors.',
         expectedOutcome: 'Increase weekly learning participation by 35% in six months.',
         estimatedCost: 'USD 12,000 equivalent',
         timeline: '3 months launch',
@@ -226,8 +246,10 @@ async function main() {
         proposalId: 'PROP-11004',
         title: 'Citizen Mediation Desk for Trade Disputes',
         category: 'justice',
-        problem: 'Small trade disputes take too long to resolve, hurting trust and transaction velocity.',
-        solution: 'Establish a citizen mediation desk with transparent case SLAs and public metrics.',
+        problem:
+          'Small trade disputes take too long to resolve, hurting trust and transaction velocity.',
+        solution:
+          'Establish a citizen mediation desk with transparent case SLAs and public metrics.',
         expectedOutcome: 'Resolve at least 70% of eligible disputes within 10 business days.',
         estimatedCost: 'USD 9,500 equivalent',
         timeline: '2 months setup',
@@ -244,8 +266,10 @@ async function main() {
         proposalId: 'PROP-11005',
         title: 'Cultural Preservation Grants for Oral Histories',
         category: 'culture',
-        problem: 'Oral histories are being lost because recording and archival resources are limited.',
-        solution: 'Create micro-grants for recorders, translators, and archive curators in each district.',
+        problem:
+          'Oral histories are being lost because recording and archival resources are limited.',
+        solution:
+          'Create micro-grants for recorders, translators, and archive curators in each district.',
         expectedOutcome: 'Preserve 250 oral history records in the first year.',
         estimatedCost: 'USD 6,000 equivalent',
         timeline: '5 months to first archive release',

@@ -20,19 +20,34 @@ const OPENCLAW_CHAT_TIMEOUT_MS = Math.min(
   Math.max(parseInt(process.env.OPENCLAW_CHAT_TIMEOUT_MS || '12000', 10), 2000),
   25000,
 );
-const OPENCLAW_TELEGRAM_SOURCE = String(process.env.OPENCLAW_TELEGRAM_SOURCE || 'telegram-openclaw-webhook').trim();
+const OPENCLAW_TELEGRAM_SOURCE = String(
+  process.env.OPENCLAW_TELEGRAM_SOURCE || 'telegram-openclaw-webhook',
+).trim();
 const OPENAI_API_KEY = String(process.env.OPENAI_API_KEY || '').trim();
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 const OPENAI_MODEL = String(process.env.OPENAI_MODEL || 'gpt-4o-mini').trim() || 'gpt-4o-mini';
 const OPENAI_TEMPERATURE = Math.min(
-  Math.max(parseFloat(process.env.OPENAI_TEMPERATURE || process.env.OLLAMA_TEMPERATURE || '0.35'), 0),
+  Math.max(
+    parseFloat(process.env.OPENAI_TEMPERATURE || process.env.OLLAMA_TEMPERATURE || '0.35'),
+    0,
+  ),
   2,
 );
 const OPENAI_TIMEOUT_MS = Math.min(
-  Math.max(parseInt(process.env.OPENAI_TIMEOUT_MS || process.env.OPENCLAW_OPENAI_TIMEOUT_MS || '20000', 10), 5000),
+  Math.max(
+    parseInt(
+      process.env.OPENAI_TIMEOUT_MS || process.env.OPENCLAW_OPENAI_TIMEOUT_MS || '20000',
+      10,
+    ),
+    5000,
+  ),
   60000,
 );
-const POLLINATIONS_API_URL = String(process.env.POLLINATIONS_API_URL || 'https://text.pollinations.ai').trim().replace(/\/$/, '');
+const POLLINATIONS_API_URL = String(
+  process.env.POLLINATIONS_API_URL || 'https://text.pollinations.ai',
+)
+  .trim()
+  .replace(/\/$/, '');
 const POLLINATIONS_TIMEOUT_MS = Math.min(
   Math.max(parseInt(process.env.POLLINATIONS_TIMEOUT_MS || '20000', 10), 5000),
   60000,
@@ -42,8 +57,16 @@ const PERSONA_CONTEXT_LIMIT = Math.min(
   Math.max(parseInt(process.env.OPENCLAW_PERSONA_CONTEXT_LIMIT || '10', 10), 4),
   24,
 );
-const DEFAULT_PERSONA_PROFILE_ID = String(process.env.OPENCLAW_PERSONA_PROFILE_ID || 'default').trim().toLowerCase() || 'default';
-const DEFAULT_EMAIL_TO = String(process.env.OPENCLAW_TELEGRAM_DEFAULT_EMAIL_TO || process.env.ADMIN_EMAIL || process.env.SMTP_USER || '').trim();
+const DEFAULT_PERSONA_PROFILE_ID =
+  String(process.env.OPENCLAW_PERSONA_PROFILE_ID || 'default')
+    .trim()
+    .toLowerCase() || 'default';
+const DEFAULT_EMAIL_TO = String(
+  process.env.OPENCLAW_TELEGRAM_DEFAULT_EMAIL_TO ||
+    process.env.ADMIN_EMAIL ||
+    process.env.SMTP_USER ||
+    '',
+).trim();
 
 function backendHeaders() {
   const headers = { 'Content-Type': 'application/json' };
@@ -55,7 +78,9 @@ function backendHeaders() {
 }
 
 function getApiBaseUrl(req) {
-  const configured = String(process.env.OPENCLAW_BACKEND_URL || '').trim().replace(/\/$/, '');
+  const configured = String(process.env.OPENCLAW_BACKEND_URL || '')
+    .trim()
+    .replace(/\/$/, '');
   if (configured) return configured;
   const proto = String(req.headers['x-forwarded-proto'] || req.protocol || 'https');
   const host = req.get('host');
@@ -96,7 +121,9 @@ function validateOpsAccess(req) {
 }
 
 function sanitizeIncomingText(text) {
-  return String(text || '').trim().slice(0, 4000);
+  return String(text || '')
+    .trim()
+    .slice(0, 4000);
 }
 
 function normalizeLabel(value, fallback = 'default', maxLen = 80) {
@@ -129,7 +156,11 @@ async function writeBridgeState(state, details = {}) {
   const timestamp = new Date().toISOString();
   await Promise.allSettled([
     writeMemory('ecosystem:telegram-bridge:connectionState', state, 'fact'),
-    writeMemory('ecosystem:telegram-bridge:lastStatus', JSON.stringify({ state, timestamp, ...details }), 'reflection'),
+    writeMemory(
+      'ecosystem:telegram-bridge:lastStatus',
+      JSON.stringify({ state, timestamp, ...details }),
+      'reflection',
+    ),
   ]);
 }
 
@@ -141,11 +172,18 @@ async function recordBridgeSuccess(details = {}) {
 }
 
 async function recordBridgeFailure(message, details = {}) {
-  const previous = parseInt((await readLatestMemoryValue('ecosystem:telegram-bridge:consecutiveFailures')) || '0', 10);
+  const previous = parseInt(
+    (await readLatestMemoryValue('ecosystem:telegram-bridge:consecutiveFailures')) || '0',
+    10,
+  );
   const next = Number.isFinite(previous) ? previous + 1 : 1;
   await Promise.allSettled([
     writeMemory('ecosystem:telegram-bridge:consecutiveFailures', String(next), 'fact'),
-    writeMemory('ecosystem:telegram-bridge:lastError', String(message || 'unknown error').slice(0, 1200), 'reflection'),
+    writeMemory(
+      'ecosystem:telegram-bridge:lastError',
+      String(message || 'unknown error').slice(0, 1200),
+      'reflection',
+    ),
     writeBridgeState(`error:${String(message || 'unknown').slice(0, 160)}`, {
       consecutiveFailures: next,
       ...details,
@@ -228,20 +266,20 @@ async function fetchTelegramDiagnostics() {
     apiReachable: Boolean(me?.ok || webhookInfo?.ok),
     bot: meResult
       ? {
-        id: meResult.id,
-        username: meResult.username,
-        firstName: meResult.first_name,
-      }
+          id: meResult.id,
+          username: meResult.username,
+          firstName: meResult.first_name,
+        }
       : null,
     webhook: webhookResult
       ? {
-        url: webhookResult.url || null,
-        hasCustomCertificate: Boolean(webhookResult.has_custom_certificate),
-        pendingUpdateCount: webhookResult.pending_update_count ?? null,
-        lastErrorDate: webhookResult.last_error_date || null,
-        lastErrorMessage: webhookResult.last_error_message || null,
-        maxConnections: webhookResult.max_connections ?? null,
-      }
+          url: webhookResult.url || null,
+          hasCustomCertificate: Boolean(webhookResult.has_custom_certificate),
+          pendingUpdateCount: webhookResult.pending_update_count ?? null,
+          lastErrorDate: webhookResult.last_error_date || null,
+          lastErrorMessage: webhookResult.last_error_message || null,
+          maxConnections: webhookResult.max_connections ?? null,
+        }
       : null,
   };
 }
@@ -319,10 +357,15 @@ function assistantWorkflowKey(chatId) {
 }
 
 function parseEmailCommand(text) {
-  const payload = String(text || '').replace(/^\/email\s*/i, '').trim();
+  const payload = String(text || '')
+    .replace(/^\/email\s*/i, '')
+    .trim();
   if (!payload) return null;
 
-  const parts = payload.split('|').map((item) => item.trim()).filter(Boolean);
+  const parts = payload
+    .split('|')
+    .map((item) => item.trim())
+    .filter(Boolean);
   if (parts.length >= 3) {
     return {
       to: parts[0],
@@ -343,7 +386,9 @@ function parseEmailCommand(text) {
 }
 
 async function storeTask(chatId, value, type = 'task') {
-  const safeValue = String(value || '').trim().slice(0, 3500);
+  const safeValue = String(value || '')
+    .trim()
+    .slice(0, 3500);
   if (!safeValue) return null;
 
   await writeMemory(assistantTaskKey(chatId), safeValue, type);
@@ -351,7 +396,9 @@ async function storeTask(chatId, value, type = 'task') {
 }
 
 async function storeNote(chatId, value, type = 'note') {
-  const safeValue = String(value || '').trim().slice(0, 3500);
+  const safeValue = String(value || '')
+    .trim()
+    .slice(0, 3500);
   if (!safeValue) return null;
 
   await writeMemory(assistantNoteKey(chatId), safeValue, type);
@@ -359,7 +406,9 @@ async function storeNote(chatId, value, type = 'note') {
 }
 
 async function storePreferredEmail(chatId, value) {
-  const normalized = String(value || '').trim().toLowerCase();
+  const normalized = String(value || '')
+    .trim()
+    .toLowerCase();
   if (!normalized || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized)) {
     return null;
   }
@@ -405,7 +454,9 @@ async function fetchRecentNotes(chatId, limit = 8) {
 }
 
 function parseSetEmailCommand(text) {
-  const payload = String(text || '').replace(/^\/setemail\s*/i, '').trim();
+  const payload = String(text || '')
+    .replace(/^\/setemail\s*/i, '')
+    .trim();
   if (!payload) return null;
 
   const match = payload.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i);
@@ -414,18 +465,24 @@ function parseSetEmailCommand(text) {
 
 function parseInlineEmail(text) {
   const normalized = String(text || '').trim();
-  const match = normalized.match(/\b(?:my\s+email\s+is|email\s*[:=-]?)\s+([A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,})\b/i);
+  const match = normalized.match(
+    /\b(?:my\s+email\s+is|email\s*[:=-]?)\s+([A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,})\b/i,
+  );
   return match?.[1] ? match[1].toLowerCase() : null;
 }
 
 function parseFlightRequest(text) {
   const input = String(text || '').trim();
   const lower = input.toLowerCase();
-  if (!/(cheapest\s+flight|cheap\s+flight|find\s+flight|book\s+flight|flight\s+from)/i.test(lower)) {
+  if (
+    !/(cheapest\s+flight|cheap\s+flight|find\s+flight|book\s+flight|flight\s+from)/i.test(lower)
+  ) {
     return null;
   }
 
-  const fromToMatch = input.match(/from\s+([a-zA-Z\s]{2,40}?)\s+to\s+([a-zA-Z\s]{2,40})(?:\s+on\s+([^,.\n]+))?/i);
+  const fromToMatch = input.match(
+    /from\s+([a-zA-Z\s]{2,40}?)\s+to\s+([a-zA-Z\s]{2,40})(?:\s+on\s+([^,.\n]+))?/i,
+  );
   const destinationOnly = input.match(/to\s+([a-zA-Z\s]{2,40})(?:\s+on\s+([^,.\n]+))?/i);
   const dateMatch = input.match(/\b(\d{4}-\d{2}-\d{2})\b/);
 
@@ -458,7 +515,9 @@ async function readLatestWorkflowState(chatId) {
   const doc = await OpenClawMemory.findOne({
     key: assistantWorkflowKey(chatId),
     source: OPENCLAW_TELEGRAM_SOURCE,
-  }).sort({ createdAt: -1 }).lean();
+  })
+    .sort({ createdAt: -1 })
+    .lean();
 
   if (!doc?.value) return null;
 
@@ -486,7 +545,10 @@ async function createWorkflowState(chatId, title, rawSteps) {
   if (!steps.length) return null;
 
   return writeWorkflowState(chatId, {
-    title: String(title || 'Untitled plan').trim().slice(0, 120) || 'Untitled plan',
+    title:
+      String(title || 'Untitled plan')
+        .trim()
+        .slice(0, 120) || 'Untitled plan',
     steps,
     currentStepIndex: 0,
     status: 'active',
@@ -578,7 +640,11 @@ async function resolvePersonaRuntime(chatId) {
   ]);
 
   return {
-    profileId: normalizeLabel(chatProfile || defaults.profileId || DEFAULT_PERSONA_PROFILE_ID, 'default', 120),
+    profileId: normalizeLabel(
+      chatProfile || defaults.profileId || DEFAULT_PERSONA_PROFILE_ID,
+      'default',
+      120,
+    ),
     activeMode: normalizeLabel(chatMode || defaults.activeMode || 'default', 'default', 80),
   };
 }
@@ -592,7 +658,9 @@ function commandPayload(rawText, commandName) {
 }
 
 async function storePersonaEntry(kind, chatId, value, type = 'reflection') {
-  const safeValue = String(value || '').trim().slice(0, 3500);
+  const safeValue = String(value || '')
+    .trim()
+    .slice(0, 3500);
   if (!safeValue) return null;
 
   await writeMemory(personaKey(kind, chatId), safeValue, type);
@@ -624,17 +692,24 @@ async function fetchPersonaContext(chatId, limit = PERSONA_CONTEXT_LIMIT) {
     };
   }
 
-  const latestIdentity = filtered.find((item) => String(item.key).startsWith('persona:identity:')) || null;
-  const latestVoice = filtered.find((item) => String(item.key).startsWith('persona:voice:')) || null;
+  const latestIdentity =
+    filtered.find((item) => String(item.key).startsWith('persona:identity:')) || null;
+  const latestVoice =
+    filtered.find((item) => String(item.key).startsWith('persona:voice:')) || null;
   const imprints = filtered.filter((item) => String(item.key).startsWith('persona:imprint:'));
   const journals = filtered.filter((item) => String(item.key).startsWith('persona:journal:'));
 
   const selected = [];
-  if (latestIdentity?.value) selected.push(`Identity: ${String(latestIdentity.value).slice(0, 700)}`);
+  if (latestIdentity?.value)
+    selected.push(`Identity: ${String(latestIdentity.value).slice(0, 700)}`);
   if (latestVoice?.value) selected.push(`Voice: ${String(latestVoice.value).slice(0, 700)}`);
 
   const recentDynamic = filtered
-    .filter((item) => String(item.key).startsWith('persona:imprint:') || String(item.key).startsWith('persona:journal:'))
+    .filter(
+      (item) =>
+        String(item.key).startsWith('persona:imprint:') ||
+        String(item.key).startsWith('persona:journal:'),
+    )
     .slice(0, Math.max(limit - selected.length, 0))
     .map((item) => {
       const kind = String(item.key).startsWith('persona:imprint:') ? 'Imprint' : 'Journal';
@@ -705,7 +780,10 @@ async function openclawStatusSummary(apiBaseUrl) {
 
 async function openclawQueueSummary(apiBaseUrl) {
   const [queueRes, statusRes] = await Promise.all([
-    axios.get(`${apiBaseUrl}/api/openclaw/queue-stats`, { timeout: 12000, headers: backendHeaders() }),
+    axios.get(`${apiBaseUrl}/api/openclaw/queue-stats`, {
+      timeout: 12000,
+      headers: backendHeaders(),
+    }),
     axios.get(`${apiBaseUrl}/api/openclaw/status`, { timeout: 12000, headers: backendHeaders() }),
   ]);
 
@@ -736,11 +814,7 @@ async function openclawRecoverSummary(apiBaseUrl) {
   const replayed = payload?.replayed ?? payload?.result?.replayed ?? 'n/a';
   const stale = payload?.staleBefore ?? payload?.result?.staleBefore ?? 'n/a';
 
-  return [
-    'Recovery trigger sent.',
-    `Replayed: ${replayed}`,
-    `Stale before: ${stale}`,
-  ].join('\n');
+  return ['Recovery trigger sent.', `Replayed: ${replayed}`, `Stale before: ${stale}`].join('\n');
 }
 
 async function openclawChat(apiBaseUrl, message, sourceMeta = {}) {
@@ -830,24 +904,25 @@ async function requestPollinationsReply(userText, personaContext = null, persona
   if (!POLLINATIONS_API_URL) return null;
 
   const prompt = buildPollinationsPrompt(userText, personaContext, personaRuntime);
-  const response = await axios.get(
-    `${POLLINATIONS_API_URL}/${encodeURIComponent(prompt)}`,
-    {
-      timeout: POLLINATIONS_TIMEOUT_MS,
-      headers: {
-        Accept: 'text/plain, application/json;q=0.9, */*;q=0.8',
-      },
+  const response = await axios.get(`${POLLINATIONS_API_URL}/${encodeURIComponent(prompt)}`, {
+    timeout: POLLINATIONS_TIMEOUT_MS,
+    headers: {
+      Accept: 'text/plain, application/json;q=0.9, */*;q=0.8',
     },
-  );
+  });
 
   const data = response.data;
-  const text = typeof data === 'string'
-    ? data
-    : (data?.text || data?.output || data?.response || null);
+  const text =
+    typeof data === 'string' ? data : data?.text || data?.output || data?.response || null;
   return text ? String(text).trim().slice(0, 3500) : null;
 }
 
-async function generateOllamaFallbackReply(userText, apiBaseUrl, personaContext = null, personaRuntime = null) {
+async function generateOllamaFallbackReply(
+  userText,
+  apiBaseUrl,
+  personaContext = null,
+  personaRuntime = null,
+) {
   const openclawStatus = await fetchOpenClawStatus(apiBaseUrl).catch(() => null);
   const prompt = [
     'You are PVA Magnum Opus, the Telegram assistant for PVA Bazaar.',
@@ -873,7 +948,11 @@ async function generateOllamaFallbackReply(userText, apiBaseUrl, personaContext 
     }
   }
 
-  const onlineFallback = await requestPollinationsReply(userText, personaContext, personaRuntime).catch(() => null);
+  const onlineFallback = await requestPollinationsReply(
+    userText,
+    personaContext,
+    personaRuntime,
+  ).catch(() => null);
   return onlineFallback ? String(onlineFallback).slice(0, 3500) : null;
 }
 
@@ -907,7 +986,9 @@ router.get('/telegram/health', async (_req, res) => {
 
 router.get('/telegram/diagnostics', async (req, res) => {
   if (!validateOpsAccess(req)) {
-    return res.status(401).json({ ok: false, message: 'Unauthorized Telegram diagnostics request' });
+    return res
+      .status(401)
+      .json({ ok: false, message: 'Unauthorized Telegram diagnostics request' });
   }
 
   const diagnostics = await fetchTelegramDiagnostics();
@@ -1002,20 +1083,30 @@ router.post('/telegram/updates', async (req, res) => {
         'Use this chatId with POST /api/openclaw/telegram/notify-ready',
       ].join('\n');
       await sendTelegramMessage(chatId, payload);
-      await recordBridgeSuccess({ phase: 'command:chatid', updateId, chatId: String(chatId) }).catch(() => {});
+      await recordBridgeSuccess({
+        phase: 'command:chatid',
+        updateId,
+        chatId: String(chatId),
+      }).catch(() => {});
       return res.json({ ok: true, handled: true });
     }
 
     if (lower.startsWith('/identity')) {
       const payload = commandPayload(userText, 'identity');
       if (!payload) {
-        await sendTelegramMessage(chatId, 'Usage: /identity <who you are, your mission, your values>');
+        await sendTelegramMessage(
+          chatId,
+          'Usage: /identity <who you are, your mission, your values>',
+        );
         await recordBridgeSuccess({ phase: 'command:identity:missing', updateId }).catch(() => {});
         return res.json({ ok: true, handled: true });
       }
 
       await storePersonaEntry('identity', chatId, payload, 'fact').catch(() => {});
-      await sendTelegramMessage(chatId, 'Identity imprint stored. I will align future responses to this core self.');
+      await sendTelegramMessage(
+        chatId,
+        'Identity imprint stored. I will align future responses to this core self.',
+      );
       await recordBridgeSuccess({ phase: 'command:identity', updateId }).catch(() => {});
       return res.json({ ok: true, handled: true });
     }
@@ -1029,7 +1120,10 @@ router.post('/telegram/updates', async (req, res) => {
       }
 
       await storePersonaEntry('voice', chatId, payload, 'preference').catch(() => {});
-      await sendTelegramMessage(chatId, 'Voice profile stored. I will speak in this style moving forward.');
+      await sendTelegramMessage(
+        chatId,
+        'Voice profile stored. I will speak in this style moving forward.',
+      );
       await recordBridgeSuccess({ phase: 'command:voice', updateId }).catch(() => {});
       return res.json({ ok: true, handled: true });
     }
@@ -1040,13 +1134,19 @@ router.post('/telegram/updates', async (req, res) => {
         : commandPayload(userText, 'remember');
 
       if (!payload) {
-        await sendTelegramMessage(chatId, 'Usage: /imprint <memory to preserve as part of your AI self>');
+        await sendTelegramMessage(
+          chatId,
+          'Usage: /imprint <memory to preserve as part of your AI self>',
+        );
         await recordBridgeSuccess({ phase: 'command:imprint:missing', updateId }).catch(() => {});
         return res.json({ ok: true, handled: true });
       }
 
       await storePersonaEntry('imprint', chatId, payload, 'reflection').catch(() => {});
-      await sendTelegramMessage(chatId, 'Imprint stored. This is now part of your long-form AI memory stream.');
+      await sendTelegramMessage(
+        chatId,
+        'Imprint stored. This is now part of your long-form AI memory stream.',
+      );
       await recordBridgeSuccess({ phase: 'command:imprint', updateId }).catch(() => {});
       return res.json({ ok: true, handled: true });
     }
@@ -1061,7 +1161,10 @@ router.post('/telegram/updates', async (req, res) => {
 
       const profileId = normalizeLabel(payload, 'default', 120);
       await writeMemory(chatProfileKey(chatId), profileId, 'preference').catch(() => {});
-      await sendTelegramMessage(chatId, `Profile switched to ${profileId}. Future replies will align with this identity stream.`);
+      await sendTelegramMessage(
+        chatId,
+        `Profile switched to ${profileId}. Future replies will align with this identity stream.`,
+      );
       await recordBridgeSuccess({ phase: 'command:profile', updateId, profileId }).catch(() => {});
       return res.json({ ok: true, handled: true });
     }
@@ -1089,11 +1192,11 @@ router.post('/telegram/updates', async (req, res) => {
       const context = await fetchPersonaContext(chatId).catch(() => null);
       const summary = context
         ? [
-          `Runtime: profile=${personaRuntime.profileId} mode=${personaRuntime.activeMode}`,
-          `Self profile: ${context.summary}`,
-          '',
-          ...(context.lines.slice(0, 8).map((line) => `- ${line}`)),
-        ].join('\n')
+            `Runtime: profile=${personaRuntime.profileId} mode=${personaRuntime.activeMode}`,
+            `Self profile: ${context.summary}`,
+            '',
+            ...context.lines.slice(0, 8).map((line) => `- ${line}`),
+          ].join('\n')
         : 'Self profile unavailable right now.';
 
       await sendTelegramMessage(chatId, summary);
@@ -1120,22 +1223,31 @@ router.post('/telegram/updates', async (req, res) => {
       const stepsRaw = stepParts.join('|');
       const workflow = await createWorkflowState(chatId, title, stepsRaw).catch(() => null);
       if (!workflow) {
-        await sendTelegramMessage(chatId, 'No valid steps found. Use semicolons or new lines to separate actions.');
+        await sendTelegramMessage(
+          chatId,
+          'No valid steps found. Use semicolons or new lines to separate actions.',
+        );
         await recordBridgeSuccess({ phase: 'command:plan:invalid', updateId }).catch(() => {});
         return res.json({ ok: true, handled: true });
       }
 
-      await sendTelegramMessage(chatId, [
-        `Workflow stored: ${workflow.title}`,
-        `First step: ${workflow.steps[0]}`,
-        `Use /continue to advance after each step completes.`,
-      ].join('\n'));
+      await sendTelegramMessage(
+        chatId,
+        [
+          `Workflow stored: ${workflow.title}`,
+          `First step: ${workflow.steps[0]}`,
+          `Use /continue to advance after each step completes.`,
+        ].join('\n'),
+      );
       await recordBridgeSuccess({ phase: 'command:plan', updateId }).catch(() => {});
       return res.json({ ok: true, handled: true });
     }
 
     if (lower === '/continue') {
-      const result = await advanceWorkflowState(chatId).catch(() => ({ state: null, message: 'No active workflow found.' }));
+      const result = await advanceWorkflowState(chatId).catch(() => ({
+        state: null,
+        message: 'No active workflow found.',
+      }));
       await sendTelegramMessage(chatId, result.message);
       await recordBridgeSuccess({ phase: 'command:continue', updateId }).catch(() => {});
       return res.json({ ok: true, handled: true });
@@ -1143,7 +1255,9 @@ router.post('/telegram/updates', async (req, res) => {
 
     if (lower === '/tasks') {
       const tasks = await fetchRecentTasks(chatId).catch(() => []);
-      const output = tasks.length ? ['Recent tasks:', ...tasks.map((line) => `- ${line}`)].join('\n') : 'No tasks stored yet.';
+      const output = tasks.length
+        ? ['Recent tasks:', ...tasks.map((line) => `- ${line}`)].join('\n')
+        : 'No tasks stored yet.';
       await sendTelegramMessage(chatId, output);
       await recordBridgeSuccess({ phase: 'command:tasks', updateId }).catch(() => {});
       return res.json({ ok: true, handled: true });
@@ -1158,7 +1272,10 @@ router.post('/telegram/updates', async (req, res) => {
       }
 
       const stored = await storeTask(chatId, payload, 'task').catch(() => null);
-      await sendTelegramMessage(chatId, stored ? 'Task stored in assistant memory.' : 'Task could not be stored right now.');
+      await sendTelegramMessage(
+        chatId,
+        stored ? 'Task stored in assistant memory.' : 'Task could not be stored right now.',
+      );
       await recordBridgeSuccess({ phase: 'command:task', updateId }).catch(() => {});
       return res.json({ ok: true, handled: true });
     }
@@ -1172,14 +1289,19 @@ router.post('/telegram/updates', async (req, res) => {
       }
 
       const stored = await storeNote(chatId, payload, 'note').catch(() => null);
-      await sendTelegramMessage(chatId, stored ? 'Note stored in assistant memory.' : 'Note could not be stored right now.');
+      await sendTelegramMessage(
+        chatId,
+        stored ? 'Note stored in assistant memory.' : 'Note could not be stored right now.',
+      );
       await recordBridgeSuccess({ phase: 'command:note', updateId }).catch(() => {});
       return res.json({ ok: true, handled: true });
     }
 
     if (lower === '/notes') {
       const notes = await fetchRecentNotes(chatId).catch(() => []);
-      const output = notes.length ? ['Recent notes:', ...notes.map((line) => `- ${line}`)].join('\n') : 'No notes stored yet.';
+      const output = notes.length
+        ? ['Recent notes:', ...notes.map((line) => `- ${line}`)].join('\n')
+        : 'No notes stored yet.';
       await sendTelegramMessage(chatId, output);
       await recordBridgeSuccess({ phase: 'command:notes', updateId }).catch(() => {});
       return res.json({ ok: true, handled: true });
@@ -1214,7 +1336,10 @@ router.post('/telegram/updates', async (req, res) => {
       }
 
       const saved = await storePreferredEmail(chatId, extracted).catch(() => null);
-      await sendTelegramMessage(chatId, saved ? `Saved preferred email: ${saved}` : 'Could not save that email address.');
+      await sendTelegramMessage(
+        chatId,
+        saved ? `Saved preferred email: ${saved}` : 'Could not save that email address.',
+      );
       await recordBridgeSuccess({ phase: 'command:setemail', updateId }).catch(() => {});
       return res.json({ ok: true, handled: true });
     }
@@ -1222,9 +1347,12 @@ router.post('/telegram/updates', async (req, res) => {
     if (lower === '/myemail') {
       const preferred = await fetchPreferredEmail(chatId).catch(() => null);
       const email = preferred || DEFAULT_EMAIL_TO || null;
-      await sendTelegramMessage(chatId, email
-        ? `Preferred email: ${email}`
-        : 'No preferred email saved yet. Use /setemail you@example.com');
+      await sendTelegramMessage(
+        chatId,
+        email
+          ? `Preferred email: ${email}`
+          : 'No preferred email saved yet. Use /setemail you@example.com',
+      );
       await recordBridgeSuccess({ phase: 'command:myemail', updateId }).catch(() => {});
       return res.json({ ok: true, handled: true });
     }
@@ -1239,8 +1367,13 @@ router.post('/telegram/updates', async (req, res) => {
 
       const [fromRaw, toRaw, dateRaw] = payload.split('|').map((item) => String(item || '').trim());
       if (!toRaw) {
-        await sendTelegramMessage(chatId, 'Please include at least a destination: /flight <from> | <to> | <YYYY-MM-DD>');
-        await recordBridgeSuccess({ phase: 'command:flight:destination-missing', updateId }).catch(() => {});
+        await sendTelegramMessage(
+          chatId,
+          'Please include at least a destination: /flight <from> | <to> | <YYYY-MM-DD>',
+        );
+        await recordBridgeSuccess({ phase: 'command:flight:destination-missing', updateId }).catch(
+          () => {},
+        );
         return res.json({ ok: true, handled: true });
       }
 
@@ -1254,7 +1387,10 @@ router.post('/telegram/updates', async (req, res) => {
       const payload = parseEmailCommand(userText);
       if (!payload || !payload.subject || !payload.body) {
         const defaultHint = DEFAULT_EMAIL_TO ? ` Default recipient is ${DEFAULT_EMAIL_TO}.` : '';
-        await sendTelegramMessage(chatId, `Usage: /email to | subject | body (or /email subject | body after /setemail)${defaultHint}`);
+        await sendTelegramMessage(
+          chatId,
+          `Usage: /email to | subject | body (or /email subject | body after /setemail)${defaultHint}`,
+        );
         await recordBridgeSuccess({ phase: 'command:email:missing', updateId }).catch(() => {});
         return res.json({ ok: true, handled: true });
       }
@@ -1263,8 +1399,13 @@ router.post('/telegram/updates', async (req, res) => {
       const recipient = String(payload.to || preferredEmail || DEFAULT_EMAIL_TO || '').trim();
 
       if (!recipient) {
-        await sendTelegramMessage(chatId, 'No recipient configured. Set OPENCLAW_TELEGRAM_DEFAULT_EMAIL_TO or include the recipient in the command.');
-        await recordBridgeSuccess({ phase: 'command:email:recipient-missing', updateId }).catch(() => {});
+        await sendTelegramMessage(
+          chatId,
+          'No recipient configured. Set OPENCLAW_TELEGRAM_DEFAULT_EMAIL_TO or include the recipient in the command.',
+        );
+        await recordBridgeSuccess({ phase: 'command:email:recipient-missing', updateId }).catch(
+          () => {},
+        );
         return res.json({ ok: true, handled: true });
       }
 
@@ -1283,15 +1424,25 @@ router.post('/telegram/updates', async (req, res) => {
           fromName: 'PVA Bazaar Assistant',
         });
       } catch (emailError) {
-        await sendTelegramMessage(chatId, `Email failed for ${recipient}: ${String(emailError?.message || 'unknown error').slice(0, 180)}`);
-        await recordBridgeSuccess({ phase: 'command:email:error', updateId, to: recipient }).catch(() => {});
+        await sendTelegramMessage(
+          chatId,
+          `Email failed for ${recipient}: ${String(emailError?.message || 'unknown error').slice(0, 180)}`,
+        );
+        await recordBridgeSuccess({ phase: 'command:email:error', updateId, to: recipient }).catch(
+          () => {},
+        );
         return res.json({ ok: true, handled: true });
       }
 
-      await sendTelegramMessage(chatId, emailResult?.success
-        ? `Email sent to ${recipient}.`
-        : `Email request skipped for ${recipient}.`);
-      await recordBridgeSuccess({ phase: 'command:email', updateId, to: recipient }).catch(() => {});
+      await sendTelegramMessage(
+        chatId,
+        emailResult?.success
+          ? `Email sent to ${recipient}.`
+          : `Email request skipped for ${recipient}.`,
+      );
+      await recordBridgeSuccess({ phase: 'command:email', updateId, to: recipient }).catch(
+        () => {},
+      );
       return res.json({ ok: true, handled: true });
     }
 
@@ -1300,8 +1451,13 @@ router.post('/telegram/updates', async (req, res) => {
       if (inlineEmail) {
         const saved = await storePreferredEmail(chatId, inlineEmail).catch(() => null);
         if (saved) {
-          await sendTelegramMessage(chatId, `Saved your email as ${saved}. You can now use /email subject | body.`);
-          await recordBridgeSuccess({ phase: 'chat:inline-email', updateId, email: saved }).catch(() => {});
+          await sendTelegramMessage(
+            chatId,
+            `Saved your email as ${saved}. You can now use /email subject | body.`,
+          );
+          await recordBridgeSuccess({ phase: 'chat:inline-email', updateId, email: saved }).catch(
+            () => {},
+          );
           return res.json({ ok: true, handled: true });
         }
       }
@@ -1380,12 +1536,15 @@ router.post('/telegram/updates', async (req, res) => {
       personaMode: personaRuntime.activeMode,
     });
 
-    let replyText = reply?.reply?.content
-      ? String(reply.reply.content).slice(0, 3500)
-      : '';
+    let replyText = reply?.reply?.content ? String(reply.reply.content).slice(0, 3500) : '';
 
     if (needsDirectFallback(reply, userText) || !replyText) {
-      const direct = await generateOllamaFallbackReply(userText, apiBaseUrl, personaContext, personaRuntime).catch(() => null);
+      const direct = await generateOllamaFallbackReply(
+        userText,
+        apiBaseUrl,
+        personaContext,
+        personaRuntime,
+      ).catch(() => null);
       if (direct) replyText = direct;
     }
 
@@ -1397,19 +1556,29 @@ router.post('/telegram/updates', async (req, res) => {
     await recordBridgeSuccess({ phase: 'chat', updateId }).catch(() => {});
     return res.json({ ok: true, handled: true });
   } catch (err) {
-    await recordBridgeFailure(err?.message || 'telegram webhook failure', { updateId }).catch(() => {});
+    await recordBridgeFailure(err?.message || 'telegram webhook failure', { updateId }).catch(
+      () => {},
+    );
     const personaRuntime = await resolvePersonaRuntime(chatId).catch(() => ({
       profileId: DEFAULT_PERSONA_PROFILE_ID,
       activeMode: 'default',
     }));
     const personaContext = await fetchPersonaContext(chatId).catch(() => null);
-    const fallback = await generateOllamaFallbackReply(userText, apiBaseUrl, personaContext, personaRuntime).catch(() => null);
+    const fallback = await generateOllamaFallbackReply(
+      userText,
+      apiBaseUrl,
+      personaContext,
+      personaRuntime,
+    ).catch(() => null);
     if (fallback) {
       await sendTelegramMessage(chatId, fallback).catch(() => {});
       return res.json({ ok: true, handled: true, fallback: true });
     }
 
-    await sendTelegramMessage(chatId, `Bridge error: ${String(err?.message || 'unknown error').slice(0, 400)}`).catch(() => {});
+    await sendTelegramMessage(
+      chatId,
+      `Bridge error: ${String(err?.message || 'unknown error').slice(0, 400)}`,
+    ).catch(() => {});
     return res.status(200).json({ ok: true, handled: true, error: true });
   }
 });

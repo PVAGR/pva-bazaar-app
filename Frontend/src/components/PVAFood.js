@@ -11,7 +11,11 @@ export default function PVAFood() {
     const load = async () => {
       setLoading(true);
       setError('');
-      const response = await fetchArchiveEntries({ q: 'food recipe kitchen', limit: 8, sort: 'new' });
+      const response = await fetchArchiveEntries({
+        q: 'food recipe kitchen',
+        limit: 8,
+        sort: 'new',
+      });
       if (cancelled) return;
       if (response.ok) {
         setItems(response.items || []);
@@ -32,7 +36,9 @@ export default function PVAFood() {
       <h2>PVA Food</h2>
       {loading && <p>Loading food entries...</p>}
       {!loading && error && <p>{error}</p>}
-      {!loading && !error && items.length === 0 && <p>No food-related entries were found in archive data.</p>}
+      {!loading && !error && items.length === 0 && (
+        <p>No food-related entries were found in archive data.</p>
+      )}
       {!loading && items.length > 0 && (
         <ul>
           {items.map((entry) => (

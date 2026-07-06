@@ -7,6 +7,7 @@ Thank you for your interest in contributing to PVA Bazaar! We appreciate your he
 Thank you for helping build the frontier of direct democracy.
 
 ### Getting Started
+
 1. Fork the repo.
 2. Create a feature branch: `git checkout -b feat/your-feature`.
 3. Run `npm install` in root and `Frontend/`.
@@ -14,13 +15,16 @@ Thank you for helping build the frontier of direct democracy.
 5. Submit a PR with clear description and test coverage.
 
 ### Code Standards
+
 - Follow existing patterns in governance components.
 - Use CSS variables for theming: `var(--site-*)`.
 - Add eslint-disable only with justification.
 - Write tests for new logic in `Frontend/src/__tests__/`.
 
 ### Kenya Pilot Contributions
+
 If contributing features for Kenya deployment:
+
 - Add Swahili translations to localization maps.
 - Test offline behavior with browser offline mode.
 - Ensure Proof-of-Personhood component works on low-end Android devices.
@@ -57,6 +61,7 @@ If contributing features for Kenya deployment:
 ### Submitting Code Changes
 
 #### Prerequisites
+
 - Node.js 20.x
 - npm 10.x
 - Git
@@ -81,6 +86,7 @@ npm run dev
 #### Making Changes
 
 1. **Create a feature branch:**
+
    ```bash
    git checkout -b feature/your-feature-name
    # or
@@ -94,6 +100,7 @@ npm run dev
    - Update documentation if needed
 
 3. **Test your changes:**
+
    ```bash
    npm run lint          # Check linting
    npm run format        # Format code
@@ -102,11 +109,12 @@ npm run dev
    ```
 
 4. **Commit with clear messages:**
+
    ```bash
    git add .
    git commit -m "feat: add amazing feature"
    ```
-   
+
    **Commit format:**
    - `feat:` - New feature
    - `fix:` - Bug fix
@@ -117,6 +125,7 @@ npm run dev
    - `chore:` - Maintenance
 
 5. **Keep your branch updated:**
+
    ```bash
    git fetch upstream
    git rebase upstream/main
@@ -139,6 +148,7 @@ npm run dev
 ### Code Style Guidelines
 
 #### JavaScript/TypeScript
+
 ```javascript
 // Use 2-space indentation
 function example() {
@@ -147,8 +157,8 @@ function example() {
 }
 
 // Use const/let, not var
-const immutable = "value";
-let mutable = "value";
+const immutable = 'value';
+let mutable = 'value';
 
 // Use arrow functions
 const add = (a, b) => a + b;
@@ -158,6 +168,7 @@ const message = `Hello, ${name}!`;
 ```
 
 #### React Components
+
 ```javascript
 // Use functional components
 function MyComponent({ prop1, prop2 }) {
@@ -174,6 +185,7 @@ export default MyComponent;
 ```
 
 #### Comments
+
 ```javascript
 // Single line comments for brief notes
 // Use this for explaining the "why", not the "what"
@@ -203,6 +215,7 @@ function greet(name) {
 ### Testing
 
 #### Running Tests
+
 ```bash
 npm run test              # Run all tests
 npm run test:ci           # Run tests in CI mode
@@ -211,6 +224,7 @@ npm run test:coverage    # With coverage report
 ```
 
 #### Writing Tests
+
 - Put test files next to source files
 - Use `.test.js` or `.spec.js` extensions
 - Test behavior, not implementation
@@ -227,6 +241,7 @@ npm run test:coverage    # With coverage report
 ### Pull Request Review Process
 
 **What reviewers check:**
+
 1. ✅ Code quality and style
 2. ✅ Does it solve the issue?
 3. ✅ Tests pass and coverage maintained
@@ -240,6 +255,7 @@ npm run test:coverage    # With coverage report
 ### Merge Criteria
 
 Your PR will be merged when:
+
 - ✅ All tests pass
 - ✅ No conflicts with main branch
 - ✅ Approved by at least one maintainer
@@ -258,6 +274,7 @@ npm run lint       # Check code quality
 ```
 
 **Backend File Structure:**
+
 - `routes/` - API endpoints
 - `models/` - MongoDB schemas
 - `middleware/` - Express middleware
@@ -274,6 +291,7 @@ npm run lint       # Check code quality
 ```
 
 **Frontend File Structure:**
+
 - `src/components/` - Reusable components
 - `src/pages/` - Page components
 - `src/lib/` - Utilities
@@ -288,12 +306,14 @@ npm run lint       # Check code quality
 ## Getting Help
 
 ### Resources
+
 - **Documentation:** Check `PRODUCTION_DEPLOYMENT_GUIDE.md`
 - **Architecture:** See `INTEGRATION_GUIDE.md`
 - **Troubleshooting:** Read `TROUBLESHOOTING_PERFORMANCE.md`
 - **API Docs:** Check `backend/routes/` comments
 
 ### Communication
+
 - **Questions:** Use GitHub Discussions
 - **Bugs:** Open an issue with bug template
 - **Ideas:** Open an issue with feature template
@@ -302,6 +322,7 @@ npm run lint       # Check code quality
 ## Contributor Recognition
 
 We value all contributions! Contributors will be:
+
 - Listed in the project
 - Credited in release notes
 - Invited to GitHub team (if active)
@@ -309,6 +330,7 @@ We value all contributions! Contributors will be:
 ## Legal
 
 By contributing, you agree to:
+
 - Your contributions are under the MIT license
 - You have the right to contribute the code
 - You won't include proprietary or restricted content
@@ -316,6 +338,7 @@ By contributing, you agree to:
 ## Questions?
 
 Feel free to:
+
 - 📖 Check the documentation
 - 💬 Use GitHub Discussions
 - 🐛 Open an issue

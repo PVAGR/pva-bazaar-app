@@ -34,14 +34,16 @@ class SyncEngine {
   }
 
   persistExternalSyncState(artifactId, data) {
-    db.prepare(`
+    db.prepare(
+      `
       UPDATE artifacts
       SET external_platforms = ?,
           external_listing_ids = ?,
           external_sync_status = ?,
           external_sync_updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
-    `).run(
+    `,
+    ).run(
       JSON.stringify(data.platforms || []),
       JSON.stringify(data.listingIds || {}),
       String(data.status || ''),
@@ -64,7 +66,8 @@ class SyncEngine {
         return { success: true, duplicate: true, message: 'Artifact already sold' };
       }
 
-      db.prepare(`
+      db.prepare(
+        `
         UPDATE artifacts
         SET status = 'SOLD',
             owner_address = ?,
@@ -73,7 +76,8 @@ class SyncEngine {
             sale_platform = ?,
             sale_price = ?
         WHERE id = ?
-      `).run(
+      `,
+      ).run(
         String(saleDetails.buyerAddress || ''),
         String(saleDetails.txHash || ''),
         String(saleDetails.platform || ''),
@@ -83,7 +87,10 @@ class SyncEngine {
 
       try {
         const saleType = String(
-          saleDetails.saleType || (String(saleDetails.platform || '').toUpperCase() === 'WEBSITE' ? 'PRIMARY' : 'SECONDARY'),
+          saleDetails.saleType ||
+            (String(saleDetails.platform || '').toUpperCase() === 'WEBSITE'
+              ? 'PRIMARY'
+              : 'SECONDARY'),
         ).toUpperCase();
 
         royaltyTracker.recordRoyaltyEvent({
@@ -113,17 +120,22 @@ class SyncEngine {
           : { success: true, skipped: true },
       };
 
-      const delistSuccesses = [results.ebay?.success, results.amazon?.success, results.etsy?.success]
-        .filter((v) => typeof v === 'boolean');
+      const delistSuccesses = [
+        results.ebay?.success,
+        results.amazon?.success,
+        results.etsy?.success,
+      ].filter((v) => typeof v === 'boolean');
       const allDelisted = delistSuccesses.length > 0 && delistSuccesses.every(Boolean);
 
       this.persistExternalSyncState(artifactId, {
         platforms: allDelisted ? [] : ['EBAY', 'AMAZON', 'ETSY'],
-        listingIds: allDelisted ? {} : {
-          ebaySku: artifact.ebay_sku || sku,
-          amazonSku: artifact.amazon_sku || sku,
-          etsyListingId: artifact.etsy_listing_id || '',
-        },
+        listingIds: allDelisted
+          ? {}
+          : {
+              ebaySku: artifact.ebay_sku || sku,
+              amazonSku: artifact.amazon_sku || sku,
+              etsyListingId: artifact.etsy_listing_id || '',
+            },
         status: allDelisted ? 'SOLD_SYNCED' : 'SOLD_SYNC_PARTIAL',
       });
 
@@ -166,7 +178,10 @@ class SyncEngine {
       db.prepare('UPDATE artifacts SET amazon_sku = ? WHERE id = ?').run(sku, artifact.id);
     }
     if (results.etsy.success && results.etsy.etsyId) {
-      db.prepare('UPDATE artifacts SET etsy_listing_id = ? WHERE id = ?').run(String(results.etsy.etsyId), artifact.id);
+      db.prepare('UPDATE artifacts SET etsy_listing_id = ? WHERE id = ?').run(
+        String(results.etsy.etsyId),
+        artifact.id,
+      );
     }
 
     const platforms = [];
@@ -189,7 +204,9 @@ class SyncEngine {
       if (results.etsy.etsyId) listingIds.etsyListingId = String(results.etsy.etsyId);
     }
 
-    const hasFailures = ['ebay', 'amazon', 'etsy'].some((key) => results[key] && results[key].success === false);
+    const hasFailures = ['ebay', 'amazon', 'etsy'].some(
+      (key) => results[key] && results[key].success === false,
+    );
 
     this.persistExternalSyncState(artifact.id, {
       platforms,
@@ -225,7 +242,9 @@ class SyncEngine {
       const amazonSales = await this.amazon.checkOrders();
       if (amazonSales.success && Array.isArray(amazonSales.orders)) {
         for (const order of amazonSales.orders) {
-          const artifactId = this.extractArtifactIdFromSku(order?.SellerOrderId || order?.sellerOrderId || '');
+          const artifactId = this.extractArtifactIdFromSku(
+            order?.SellerOrderId || order?.sellerOrderId || '',
+          );
           if (!artifactId) continue;
 
           await this.syncAllPlatforms(artifactId, {

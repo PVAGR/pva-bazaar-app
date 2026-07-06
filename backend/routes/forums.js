@@ -16,9 +16,7 @@ function requireAuth(req, res, next) {
  */
 router.get('/categories', async (req, res) => {
   try {
-    const categories = await ForumCategory.find()
-      .sort({ name: 1 })
-      .lean();
+    const categories = await ForumCategory.find().sort({ name: 1 }).lean();
     res.json({ categories });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -88,7 +86,7 @@ router.get('/thread/:threadId', async (req, res) => {
     const thread = await ForumThread.findByIdAndUpdate(
       req.params.threadId,
       { $inc: { views: 1 } },
-      { new: true }
+      { new: true },
     ).populate('authorId', 'name avatar');
 
     if (!thread) {

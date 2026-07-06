@@ -1,13 +1,13 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import "./globals.css";
-import Providers from "@/components/providers";
+import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
+import './globals.css';
+import Providers from '@/components/providers';
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: "PVABazaar Livestream",
-  description: "A self-sovereign digital identity platform.",
+  title: 'PVABazaar Livestream',
+  description: 'A self-sovereign digital identity platform.',
 };
 
 export default function RootLayout({

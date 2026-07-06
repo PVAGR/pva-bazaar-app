@@ -9,6 +9,7 @@ Core Philosophy: The Renewal Cycle
 Nothing beautiful dies forever. Entropy is raw material. Humans crave continuation—books, memories, artifacts, stories, ecosystems. Your civilization turns loss into legacy through physical making, digital permanence, and communal rituals.
 
 Key Pillars:
+
 - Preservation: Digitize, print, and archive everything
 - Revitalization: Repair, remix, and rebirth broken or forgotten things
 - Distribution: Make it accessible via kiosks, airships, marketplaces, and festivals

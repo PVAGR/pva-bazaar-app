@@ -9,7 +9,12 @@ const reviewSchema = new mongoose.Schema({
     required: true,
     index: true,
   },
-  productId: { type: mongoose.Schema.Types.ObjectId, ref: 'ProductType', sparse: true, index: true },
+  productId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'ProductType',
+    sparse: true,
+    index: true,
+  },
   sellerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', sparse: true, index: true },
 
   // Reviewer info

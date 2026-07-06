@@ -95,12 +95,16 @@ export default function LibraryEditor({ articleId = '', onSubmitted = () => {} }
     <section className="library-module" aria-label="Library article editor">
       <header className="library-module-header">
         <h2>Universal Reference Editor</h2>
-        <p>Compose structured articles in Markdown with YAML frontmatter, then submit for moderation.</p>
+        <p>
+          Compose structured articles in Markdown with YAML frontmatter, then submit for moderation.
+        </p>
       </header>
 
       <form className="library-editor-grid" onSubmit={handleSubmit}>
         <div className="library-panel">
-          <label className="library-label" htmlFor="template-selector">Template</label>
+          <label className="library-label" htmlFor="template-selector">
+            Template
+          </label>
           <select
             id="template-selector"
             className="library-input"
@@ -110,7 +114,9 @@ export default function LibraryEditor({ articleId = '', onSubmitted = () => {} }
             <option value="universal-reference">English Universal Reference</option>
           </select>
 
-          <label className="library-label" htmlFor="markdown-editor">Article Markdown</label>
+          <label className="library-label" htmlFor="markdown-editor">
+            Article Markdown
+          </label>
           <textarea
             id="markdown-editor"
             className="library-textarea"
@@ -120,7 +126,9 @@ export default function LibraryEditor({ articleId = '', onSubmitted = () => {} }
             placeholder="Write Markdown with YAML frontmatter..."
           />
 
-          <label className="library-label" htmlFor="submission-note">Submission Note</label>
+          <label className="library-label" htmlFor="submission-note">
+            Submission Note
+          </label>
           <input
             id="submission-note"
             className="library-input"
@@ -142,7 +150,9 @@ export default function LibraryEditor({ articleId = '', onSubmitted = () => {} }
 
         <div className="library-panel">
           <h3>Frontmatter Preview</h3>
-          <pre className="library-code-block">{parsed.frontmatterText || 'No frontmatter found'}</pre>
+          <pre className="library-code-block">
+            {parsed.frontmatterText || 'No frontmatter found'}
+          </pre>
 
           <h3>Rendered Preview</h3>
           <article className="library-markdown-preview">

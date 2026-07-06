@@ -21,7 +21,13 @@ export const FEATURED_BOOKS = [
       'A blueprint for turning those commitments into a durable system where preservation, revitalization, distribution, and shared rituals keep good work alive beyond a single founder.',
     excerpt:
       'This book moves from principle to structure: build the tools, preserve what matters, reject hollow drift, and decentralize stewardship so the work can endure across generations.',
-    themes: ['Blueprint', 'Civilization design', 'Preservation', 'Civilization of truth', 'Open-source legacy'],
+    themes: [
+      'Blueprint',
+      'Civilization design',
+      'Preservation',
+      'Civilization of truth',
+      'Open-source legacy',
+    ],
     manuscriptPath: '/archive/Archive-Entry-028-Magnum-Opus-Guide-Eternal-Renewal-Civilization.md',
     archiveCta: '/archive',
   },

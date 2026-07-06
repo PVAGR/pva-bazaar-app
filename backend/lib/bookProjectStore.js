@@ -1,7 +1,8 @@
 const fs = require('fs/promises');
 const path = require('path');
 
-const STORE_PATH = process.env.BOOK_STORE_PATH || path.resolve(__dirname, '../data/book-projects.json');
+const STORE_PATH =
+  process.env.BOOK_STORE_PATH || path.resolve(__dirname, '../data/book-projects.json');
 
 const store = global._pvaBookProjectStore || {
   books: [],
@@ -76,9 +77,11 @@ async function persistStoreToDisk() {
 }
 
 function queuePersist() {
-  writeQueue = writeQueue.then(() => persistStoreToDisk()).catch((err) => {
-    console.warn('⚠️ book store persist failed:', err?.message || err);
-  });
+  writeQueue = writeQueue
+    .then(() => persistStoreToDisk())
+    .catch((err) => {
+      console.warn('⚠️ book store persist failed:', err?.message || err);
+    });
   return writeQueue;
 }
 
@@ -127,7 +130,11 @@ function sortBooks(books, sort = {}) {
       const rightValue = right?.[key];
       const leftDate = new Date(leftValue || 0).getTime();
       const rightDate = new Date(rightValue || 0).getTime();
-      const numericComparable = Number.isFinite(leftDate) && Number.isFinite(rightDate) && !Number.isNaN(leftDate) && !Number.isNaN(rightDate);
+      const numericComparable =
+        Number.isFinite(leftDate) &&
+        Number.isFinite(rightDate) &&
+        !Number.isNaN(leftDate) &&
+        !Number.isNaN(rightDate);
       if (numericComparable && leftDate !== rightDate) {
         return (leftDate - rightDate) * sign;
       }

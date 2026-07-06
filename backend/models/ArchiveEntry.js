@@ -1,6 +1,4 @@
-
 const mongoose = require('mongoose');
-
 
 const ArchiveEntrySchema = new mongoose.Schema(
   {

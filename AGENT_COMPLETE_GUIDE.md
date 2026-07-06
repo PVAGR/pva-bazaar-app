@@ -8,28 +8,32 @@ Your professional AI agent is **fully configured and ready to use**. Here's what
 
 ## 📦 What's Been Configured
 
-| Component | Status | Details |
-|-----------|--------|---------|
-| **GitHub Token** | ✅ ACTIVE | Token: `ghp_TTk...` · Repo: PVAGR/pva-bazaar-app |
-| **AI Models** | ✅ ACTIVE | Ollama (local/free) + optional GPT-4/Claude fallbacks |
-| **Telegram Bot** | ✅ ACTIVE | Bot Token configured · Ready for commands |
-| **Backend API** | ✅ READY | 12 endpoints for code analysis, generation, GitHub integration |
-| **MongoDB** | ✅ READY | Conversations & change history tracking |
-| **Approval Workflow** | ✅ READY | All code changes require your explicit approval |
+| Component             | Status    | Details                                                        |
+| --------------------- | --------- | -------------------------------------------------------------- |
+| **GitHub Token**      | ✅ ACTIVE | Token: `ghp_TTk...` · Repo: PVAGR/pva-bazaar-app               |
+| **AI Models**         | ✅ ACTIVE | Ollama (local/free) + optional GPT-4/Claude fallbacks          |
+| **Telegram Bot**      | ✅ ACTIVE | Bot Token configured · Ready for commands                      |
+| **Backend API**       | ✅ READY  | 12 endpoints for code analysis, generation, GitHub integration |
+| **MongoDB**           | ✅ READY  | Conversations & change history tracking                        |
+| **Approval Workflow** | ✅ READY  | All code changes require your explicit approval                |
 
 ---
 
 ## 🚀 QUICK START (5 minutes)
 
 ### 1. Start the Backend
+
 ```bash
 cd backend
 npm run dev
 ```
+
 Your API will be running at **http://localhost:5001**
 
 ### 2. Test It Works
+
 In a new terminal:
+
 ```bash
 # Check health
 curl http://localhost:5001/api/health
@@ -44,6 +48,7 @@ curl -X POST http://localhost:5001/api/agent/chat \
 ```
 
 ### 3. Test Code Analysis
+
 ```bash
 curl -X POST http://localhost:5001/api/agent/code-analysis \
   -H "Content-Type: application/json" \
@@ -61,10 +66,13 @@ curl -X POST http://localhost:5001/api/agent/code-analysis \
 Your bot is **ready for commands**. To enable chat notifications:
 
 ### Step 1: Message Your Bot
+
 Send any message to your Telegram bot. This registers your chat.
 
 ### Step 2: Get Your Chat ID
+
 Run this command in PowerShell:
+
 ```powershell
 $botToken = "8673642768:AAFHIy1m2fJg_SdZIhLdjViemuND1oUJPPU"
 $url = "https://api.telegram.org/bot$botToken/getUpdates"
@@ -74,18 +82,23 @@ $url = "https://api.telegram.org/bot$botToken/getUpdates"
 Copy the number you get (e.g., `123456789`)
 
 ### Step 3: Add to .env
+
 Edit `backend/.env` and add:
+
 ```
 TELEGRAM_CHAT_ID=123456789
 ```
 
 ### Step 4: Restart Backend
+
 ```bash
 npm run dev
 ```
 
 ### Step 5: Test Telegram
+
 Message your bot:
+
 - `/help` - See all commands
 - `/status` - Check agent status
 - `/pending` - View pending code changes
@@ -96,6 +109,7 @@ Message your bot:
 ## 💻 API Reference
 
 ### Agent Chat
+
 ```bash
 POST http://localhost:5001/api/agent/chat
 {
@@ -105,6 +119,7 @@ POST http://localhost:5001/api/agent/chat
 ```
 
 ### Code Analysis
+
 ```bash
 POST http://localhost:5001/api/agent/code-analysis
 {
@@ -115,6 +130,7 @@ POST http://localhost:5001/api/agent/code-analysis
 ```
 
 ### Generate Code
+
 ```bash
 POST http://localhost:5001/api/agent/code-generate
 {
@@ -126,6 +142,7 @@ POST http://localhost:5001/api/agent/code-generate
 ```
 
 ### Propose Code Change
+
 ```bash
 POST http://localhost:5001/api/agent/github/propose-change
 {
@@ -138,11 +155,13 @@ POST http://localhost:5001/api/agent/github/propose-change
 ```
 
 ### View Pending Changes
+
 ```bash
 GET http://localhost:5001/api/agent/pending-changes?userId=you@example.com
 ```
 
 ### Approve/Reject Change
+
 ```bash
 POST http://localhost:5001/api/agent/pending-changes/CHANGE_ID/approve
 ```
@@ -152,17 +171,22 @@ POST http://localhost:5001/api/agent/pending-changes/CHANGE_ID/approve
 ## 🎯 Test Workflow
 
 ### Test 1: Ask Agent a Question
+
 1. Start backend: `npm run dev`
-2. Ask agent: 
+2. Ask agent:
+
 ```bash
 curl -X POST http://localhost:5001/api/agent/chat \
   -H "Content-Type: application/json" \
   -d '{"userId":"test","message":"List 3 ways to improve security"}'
 ```
+
 3. See AI response ✅
 
 ### Test 2: Analyze Real Code
+
 1. Ask for analysis:
+
 ```bash
 curl -X POST http://localhost:5001/api/agent/code-analysis \
   -H "Content-Type: application/json" \
@@ -172,10 +196,13 @@ curl -X POST http://localhost:5001/api/agent/code-analysis \
     "filePath":"test.js"
   }'
 ```
+
 2. See improvements suggested ✅
 
 ### Test 3: Generate Code
+
 1. Request generation:
+
 ```bash
 curl -X POST http://localhost:5001/api/agent/code-generate \
   -H "Content-Type: application/json" \
@@ -185,10 +212,13 @@ curl -X POST http://localhost:5001/api/agent/code-generate \
     "language":"javascript"
   }'
 ```
+
 2. See generated code ✅
 
 ### Test 4: Propose GitHub Change
+
 1. Propose change:
+
 ```bash
 curl -X POST http://localhost:5001/api/agent/github/propose-change \
   -H "Content-Type: application/json" \
@@ -200,9 +230,11 @@ curl -X POST http://localhost:5001/api/agent/github/propose-change \
     "branch":"main"
   }'
 ```
+
 2. See change stored for approval ✅
 
 ### Test 5: Telegram Chat
+
 1. Message your bot: `/status`
 2. See agent status ✅
 3. Message: `/help`
@@ -213,17 +245,17 @@ curl -X POST http://localhost:5001/api/agent/github/propose-change \
 
 ## 📊 What Everything Does
 
-| Endpoint | Function | Example |
-|----------|----------|---------|
-| `POST /api/agent/chat` | Chat with AI agent | Ask questions |
-| `POST /api/agent/code-analysis` | Get code review from AI | Analyze security issues |
-| `POST /api/agent/code-generate` | Generate code | "Create login form" |
-| `POST /api/agent/github/propose-change` | Suggest code change on GitHub | Need approval first |
-| `GET /api/agent/pending-changes` | See all changes awaiting approval | Review before committing |
-| `POST /api/agent/pending-changes/{id}/approve` | Approve and execute code change | Only YOU can do this |
-| `POST /api/agent/pending-changes/{id}/reject` | Reject a proposed change | Cancel dangerous changes |
-| `GET /api/agent/providers` | Check available AI models | See which models are active |
-| `POST /api/telegram/webhook` | Telegram webhookhandler | Accepts bot messages |
+| Endpoint                                       | Function                          | Example                     |
+| ---------------------------------------------- | --------------------------------- | --------------------------- |
+| `POST /api/agent/chat`                         | Chat with AI agent                | Ask questions               |
+| `POST /api/agent/code-analysis`                | Get code review from AI           | Analyze security issues     |
+| `POST /api/agent/code-generate`                | Generate code                     | "Create login form"         |
+| `POST /api/agent/github/propose-change`        | Suggest code change on GitHub     | Need approval first         |
+| `GET /api/agent/pending-changes`               | See all changes awaiting approval | Review before committing    |
+| `POST /api/agent/pending-changes/{id}/approve` | Approve and execute code change   | Only YOU can do this        |
+| `POST /api/agent/pending-changes/{id}/reject`  | Reject a proposed change          | Cancel dangerous changes    |
+| `GET /api/agent/providers`                     | Check available AI models         | See which models are active |
+| `POST /api/telegram/webhook`                   | Telegram webhookhandler           | Accepts bot messages        |
 
 ---
 
@@ -256,11 +288,11 @@ curl -X POST http://localhost:5001/api/agent/github/propose-change \
 
 ## 🛠️ Helper Scripts Created
 
-| Script | Purpose | Run With |
-|--------|---------|----------|
-| `AGENT_READY_TEST.ps1` | Test all endpoints | `.\AGENT_READY_TEST.ps1` |
-| `AGENT_SETUP_COMPLETE.sh` | Setup reference | `bash AGENT_SETUP_COMPLETE.sh` |
-| `telegram_notify.py` | Send Telegram message | `python telegram_notify.py CHAT_ID "message"` |
+| Script                    | Purpose               | Run With                                      |
+| ------------------------- | --------------------- | --------------------------------------------- |
+| `AGENT_READY_TEST.ps1`    | Test all endpoints    | `.\AGENT_READY_TEST.ps1`                      |
+| `AGENT_SETUP_COMPLETE.sh` | Setup reference       | `bash AGENT_SETUP_COMPLETE.sh`                |
+| `telegram_notify.py`      | Send Telegram message | `python telegram_notify.py CHAT_ID "message"` |
 
 ---
 

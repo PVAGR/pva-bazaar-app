@@ -15,7 +15,12 @@ const federationFactionSchema = new mongoose.Schema(
     name: { type: String, required: true, unique: true, index: true },
     tag: { type: String, required: true, unique: true, index: true },
     inviteCode: { type: String, required: true, unique: true, index: true },
-    founderUserId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+    founderUserId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+      index: true,
+    },
     members: { type: [federationFactionMemberSchema], default: [] },
     memberCount: { type: Number, default: 0 },
     totalPower: { type: Number, default: 0 },

@@ -22,14 +22,14 @@ Copy `.env.example` to `.env.local` and set:
 
 ## Pages
 
-| Path | Purpose |
-|------|--------|
-| `/` | Home – preserve/verify/acquire, Phase One Kenyan + Anti-Druj |
-| `/archive` | Kenyan crafts as living artifacts; beadwork + soapstone; Pasha VII teaser |
-| `/verification` | How we verify; artifact lookup by ID/slug (uses API when URL set) |
-| `/manifesto` | Home Station Protocol (Pasha VII – Moon 3) |
-| `/dashboard` | My artifacts: multi-ID verification lookup (no sign-in for MVP) |
-| `/cart` | Checkout via Etsy for now; future in-house cart |
+| Path             | Purpose                                                                     |
+| ---------------- | --------------------------------------------------------------------------- |
+| `/`              | Home – preserve/verify/acquire, Phase One Kenyan + Anti-Druj                |
+| `/archive`       | Kenyan crafts as living artifacts; beadwork + soapstone; Pasha VII teaser   |
+| `/verification`  | How we verify; artifact lookup by ID/slug (uses API when URL set)           |
+| `/manifesto`     | Home Station Protocol (Pasha VII – Moon 3)                                  |
+| `/dashboard`     | My artifacts: multi-ID verification lookup (no sign-in for MVP)             |
+| `/cart`          | Checkout via Etsy for now; future in-house cart                             |
 | (any other path) | Custom 404 – “This path is not in the archive” with links to Home / Archive |
 
 Root `loading.tsx` shows a spinner during route transitions; `error.tsx` shows an on-brand recovery UI (Try again, Home) when something throws. The app serves `/sitemap.xml` and `/robots.txt` (base URL from `NEXT_PUBLIC_SITE_URL` or Vercel’s URL). A minimal health check is at `GET /api/health` (returns `{ ok: true }`).

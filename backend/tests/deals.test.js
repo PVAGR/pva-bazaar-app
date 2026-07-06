@@ -43,7 +43,9 @@ async function loginUser(email) {
 }
 
 async function promoteUserToAdmin(email) {
-  const result = await mongoose.connection.collection('users').updateOne({ email }, { $set: { role: 'admin' } });
+  const result = await mongoose.connection
+    .collection('users')
+    .updateOne({ email }, { $set: { role: 'admin' } });
   expect(result?.matchedCount || 0).toBeGreaterThan(0);
 }
 
@@ -83,7 +85,9 @@ describe('Deals + OAuth (backend)', () => {
         totalAmount: 1000,
         currency: 'USD',
         payments: [{ label: 'Deposit', amount: 300, currency: 'USD', status: 'pending' }],
-        milestones: [{ title: 'Tracking number provided', evidenceType: 'tracking_number', status: 'pending' }],
+        milestones: [
+          { title: 'Tracking number provided', evidenceType: 'tracking_number', status: 'pending' },
+        ],
       });
     expect(create.status).toBe(201);
     expect(create.body?.ok).toBe(true);
@@ -95,7 +99,9 @@ describe('Deals + OAuth (backend)', () => {
     expect(list.body?.ok).toBe(true);
     expect(Array.isArray(list.body?.items)).toBe(true);
 
-    const invite = await request(app).post(`/api/deals/${dealId}/invite`).set('Authorization', `Bearer ${token}`);
+    const invite = await request(app)
+      .post(`/api/deals/${dealId}/invite`)
+      .set('Authorization', `Bearer ${token}`);
     expect(invite.status).toBe(200);
     expect(invite.body?.ok).toBe(true);
     expect(typeof invite.body?.joinUrl).toBe('string');
@@ -105,7 +111,9 @@ describe('Deals + OAuth (backend)', () => {
     const joinToken = new URLSearchParams(qs).get('token');
     expect(joinToken).toBeTruthy();
 
-    const join = await request(app).get('/api/deals/join').set('Authorization', `Bearer ${joinToken}`);
+    const join = await request(app)
+      .get('/api/deals/join')
+      .set('Authorization', `Bearer ${joinToken}`);
     expect(join.status).toBe(200);
     expect(join.body?.ok).toBe(true);
     expect(join.body?.item?._id).toBe(dealId);
@@ -144,7 +152,9 @@ describe('Deals + OAuth (backend)', () => {
         description: 'Escrow workflow integration test',
         totalAmount: 450,
         currency: 'USD',
-        milestones: [{ title: 'Authenticity proof delivered', evidenceType: 'document', status: 'pending' }],
+        milestones: [
+          { title: 'Authenticity proof delivered', evidenceType: 'document', status: 'pending' },
+        ],
       });
     expect(create.status).toBe(201);
     const dealId = create.body?.item?._id;
@@ -268,14 +278,18 @@ describe('Deals + OAuth (backend)', () => {
       .set('Authorization', `Bearer ${sellerToken}`);
     expect(certificate.status).toBe(200);
     expect(certificate.body?.certificate?.certificateHash).toBeTruthy();
-    expect(certificate.body?.certificate?.resolutionHash).toBe(resolve.body?.item?.dispute?.resolutionHash);
+    expect(certificate.body?.certificate?.resolutionHash).toBe(
+      resolve.body?.item?.dispute?.resolutionHash,
+    );
 
     const bundle = await request(app)
       .get(`/api/deals/${dealId}/reports/export-bundle?queueStatus=failed`)
       .set('Authorization', `Bearer ${sellerToken}`);
     expect(bundle.status).toBe(200);
     expect(bundle.body?.bundle?.bundleHash).toBeTruthy();
-    expect(bundle.body?.bundle?.certificate?.certificateType).toBe('deal-resolution-certificate-v1');
+    expect(bundle.body?.bundle?.certificate?.certificateType).toBe(
+      'deal-resolution-certificate-v1',
+    );
 
     const packetForbidden = await request(app)
       .post(`/api/deals/${dealId}/reports/fraud-packet`)
@@ -324,7 +338,10 @@ describe('Deals + OAuth (backend)', () => {
       .set('Authorization', `Bearer ${adminToken}`)
       .send({ status: 'failed', lastError: 'Gateway timeout' });
     expect(queueMarkFailed.status).toBe(200);
-    expect(queueMarkFailed.body?.queue?.[0]?.nextAttemptAt || queueMarkFailed.body?.item?.outboundDispatchQueue?.[0]?.nextAttemptAt).toBeTruthy();
+    expect(
+      queueMarkFailed.body?.queue?.[0]?.nextAttemptAt ||
+        queueMarkFailed.body?.item?.outboundDispatchQueue?.[0]?.nextAttemptAt,
+    ).toBeTruthy();
 
     const queueMarkSent = await request(app)
       .put(`/api/deals/${dealId}/reports/outbound/${packetId}/status`)
@@ -350,4 +367,3 @@ describe('Deals + OAuth (backend)', () => {
     expect(res.body.url).toMatch(/^https:\/\/id\.twitch\.tv\/oauth2\/authorize\?/);
   });
 });
-

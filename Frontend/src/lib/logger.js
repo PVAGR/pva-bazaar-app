@@ -65,11 +65,11 @@ class Logger {
    */
   warn(message, ...args) {
     const formatted = formatMessage(this.category, message);
-    
+
     if (isDev) {
       console.warn(formatted, ...args);
     }
-    
+
     const sentryLoader = loadSentry();
     if (sentryLoader) {
       sentryLoader.then((Sentry) => {
@@ -88,11 +88,11 @@ class Logger {
    */
   error(message, error, ...args) {
     const formatted = formatMessage(this.category, message);
-    
+
     if (isDev) {
       console.error(formatted, error, ...args);
     }
-    
+
     const sentryLoader = loadSentry();
     if (sentryLoader) {
       sentryLoader.then((Sentry) => {
@@ -128,9 +128,7 @@ class Logger {
    * Create a child logger with a subcategory
    */
   child(subcategory) {
-    const newCategory = this.category 
-      ? `${this.category}:${subcategory}` 
-      : subcategory;
+    const newCategory = this.category ? `${this.category}:${subcategory}` : subcategory;
     return new Logger(newCategory);
   }
 }

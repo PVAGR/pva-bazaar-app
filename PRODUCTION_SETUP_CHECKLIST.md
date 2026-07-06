@@ -10,8 +10,9 @@ DID_SEED=2668c0dee48b9810fda17ec69c95f489a5c031fa15e650dc7fda528c5ff5c646
 ## Configuration Steps
 
 ### ✅ Step 1: Backend Environment Variables
+
 - [x] MONGODB_URI - Already configured
-- [x] JWT_SECRET - Already configured  
+- [x] JWT_SECRET - Already configured
 - [x] ADMIN_SECRET_CODE - Already configured
 - [x] NODE_ENV - Set to production
 - [x] ETHEREUM_RPC_URL - Configured
@@ -37,13 +38,15 @@ Variables to add (select: Production + Preview + Development):
 ### ⏳ Step 3: Remove Deployment Protection
 
 **Backend**: https://vercel.com/pvagrs-projects/pva-backend-api/settings/deployment-protection
+
 - [ ] Click "Deployment Protection"
 - [ ] Select "Only Preview Deployments" or "None"
 - [ ] Save changes
 
 **Livestream**: https://vercel.com/pvagrs-projects/pvabazaar-livestream/settings/deployment-protection
+
 - [ ] Click "Deployment Protection"
-- [ ] Select "Only Preview Deployments" or "None"  
+- [ ] Select "Only Preview Deployments" or "None"
 - [ ] Save changes
 
 **Time Required**: 3 minutes
@@ -88,11 +91,11 @@ curl -I https://pvabazaar.org
 
 ## Deployment URLs
 
-| Service | URL | Status |
-|---------|-----|--------|
-| Backend API | https://pva-backend-h6zkzdmjy-pvagrs-projects.vercel.app | 🟢 Running |
-| Frontend | https://pvabazaar.org | 🟢 Running |
-| Livestream | https://pvabazaar-livestream-o3okjf15o-pvagrs-projects.vercel.app | 🟡 Needs Config |
+| Service     | URL                                                               | Status          |
+| ----------- | ----------------------------------------------------------------- | --------------- |
+| Backend API | https://pva-backend-h6zkzdmjy-pvagrs-projects.vercel.app          | 🟢 Running      |
+| Frontend    | https://pvabazaar.org                                             | 🟢 Running      |
+| Livestream  | https://pvabazaar-livestream-o3okjf15o-pvagrs-projects.vercel.app | 🟡 Needs Config |
 
 ---
 

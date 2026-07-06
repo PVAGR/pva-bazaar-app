@@ -81,7 +81,7 @@ const ItemReclaimSchema = new mongoose.Schema(
       },
     ],
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // Indexes

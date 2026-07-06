@@ -19,7 +19,11 @@ function requireAuth(req, res, next) {
  */
 router.post('/products/:productId', requireAuth, async (req, res) => {
   try {
-    const review = await reviewService.createProductReview(req.user._id, req.params.productId, req.body);
+    const review = await reviewService.createProductReview(
+      req.user._id,
+      req.params.productId,
+      req.body,
+    );
     res.status(201).json(review);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -31,7 +35,11 @@ router.post('/products/:productId', requireAuth, async (req, res) => {
  */
 router.post('/sellers/:sellerId', requireAuth, async (req, res) => {
   try {
-    const review = await reviewService.createSellerReview(req.user._id, req.params.sellerId, req.body);
+    const review = await reviewService.createSellerReview(
+      req.user._id,
+      req.params.sellerId,
+      req.body,
+    );
     res.status(201).json(review);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -103,7 +111,11 @@ router.post('/:reviewId/helpful', requireAuth, async (req, res) => {
  */
 router.post('/:reviewId/response', requireAuth, async (req, res) => {
   try {
-    const review = await reviewService.addSellerResponse(req.params.reviewId, req.user._id, req.body.response);
+    const review = await reviewService.addSellerResponse(
+      req.params.reviewId,
+      req.user._id,
+      req.body.response,
+    );
     res.json({ message: 'Response added', review });
   } catch (error) {
     if (error.message === 'Unauthorized') {

@@ -124,4 +124,3 @@ Use these columns in your Google Sheet / Airtable:
   - Use phrases like “Preserve a handcrafted story,” “Artifact from Kisii stone,” “Conscious Player collection.”
 
 This document gives the next LLM coder (or you) a concrete base to generate detailed Etsy listings, contracts, and operations docs without re-thinking the product mix each time.
-

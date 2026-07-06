@@ -1,11 +1,11 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const StripeEventLogSchema = new mongoose.Schema(
   {
     eventId: { type: String, unique: true, required: true },
     type: { type: String },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-module.exports = mongoose.model("StripeEventLog", StripeEventLogSchema);
+module.exports = mongoose.model('StripeEventLog', StripeEventLogSchema);

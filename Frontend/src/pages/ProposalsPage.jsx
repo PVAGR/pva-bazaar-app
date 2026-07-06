@@ -22,7 +22,18 @@ const CATEGORIES = [
   'emergency',
 ];
 
-const STATUS_FILTERS = ['all', 'draft', 'open', 'endorsed', 'in_deliberation', 'voting', 'accepted', 'rejected', 'needs_revision', 'archived'];
+const STATUS_FILTERS = [
+  'all',
+  'draft',
+  'open',
+  'endorsed',
+  'in_deliberation',
+  'voting',
+  'accepted',
+  'rejected',
+  'needs_revision',
+  'archived',
+];
 
 export default function ProposalsPage({ mode = 'public' }) {
   const isMine = mode === 'mine';
@@ -76,7 +87,12 @@ export default function ProposalsPage({ mode = 'public' }) {
           if (!active) return;
           if (response?.ok) {
             setItems(Array.isArray(response.items) ? response.items : []);
-            setPagination({ page: 1, pages: 1, total: Array.isArray(response.items) ? response.items.length : 0, limit: 999 });
+            setPagination({
+              page: 1,
+              pages: 1,
+              total: Array.isArray(response.items) ? response.items.length : 0,
+              limit: 999,
+            });
           } else {
             setError(response?.message || 'Failed to load your proposals.');
           }
@@ -136,11 +152,17 @@ export default function ProposalsPage({ mode = 'public' }) {
       }));
       setTimelineFetchedAtById((state) => ({ ...state, [proposalKey]: Date.now() }));
       if (!response?.ok) {
-        setTimelineErrorById((state) => ({ ...state, [proposalKey]: 'Timeline is currently unavailable.' }));
+        setTimelineErrorById((state) => ({
+          ...state,
+          [proposalKey]: 'Timeline is currently unavailable.',
+        }));
       }
     } catch (_error) {
       setTimelineById((state) => ({ ...state, [proposalKey]: null }));
-      setTimelineErrorById((state) => ({ ...state, [proposalKey]: 'Failed to load execution timeline.' }));
+      setTimelineErrorById((state) => ({
+        ...state,
+        [proposalKey]: 'Failed to load execution timeline.',
+      }));
     } finally {
       setTimelineLoadingById((state) => ({ ...state, [proposalKey]: false }));
     }
@@ -153,8 +175,16 @@ export default function ProposalsPage({ mode = 'public' }) {
         <h1>{title}</h1>
         <p>Public proposals move from idea to endorsement threshold, deliberation, and decision.</p>
         <div className="home-hero__actions">
-          {!isMine && verifiedCitizen ? <Link className="button" to="/proposals/submit">Submit a Proposal</Link> : null}
-          {!isMine && getToken() ? <Link className="button ghost" to="/proposals/my">My Submissions</Link> : null}
+          {!isMine && verifiedCitizen ? (
+            <Link className="button" to="/proposals/submit">
+              Submit a Proposal
+            </Link>
+          ) : null}
+          {!isMine && getToken() ? (
+            <Link className="button ghost" to="/proposals/my">
+              My Submissions
+            </Link>
+          ) : null}
         </div>
       </section>
 
@@ -178,13 +208,29 @@ export default function ProposalsPage({ mode = 'public' }) {
           <div className="proposal-filter-grid">
             <label>
               Status
-              <select value={status} onChange={(event) => { setStatus(event.target.value); setPage(1); }}>
-                {STATUS_FILTERS.map((entry) => <option key={entry} value={entry}>{entry}</option>)}
+              <select
+                value={status}
+                onChange={(event) => {
+                  setStatus(event.target.value);
+                  setPage(1);
+                }}
+              >
+                {STATUS_FILTERS.map((entry) => (
+                  <option key={entry} value={entry}>
+                    {entry}
+                  </option>
+                ))}
               </select>
             </label>
             <label>
               Sort
-              <select value={sort} onChange={(event) => { setSort(event.target.value); setPage(1); }}>
+              <select
+                value={sort}
+                onChange={(event) => {
+                  setSort(event.target.value);
+                  setPage(1);
+                }}
+              >
                 <option value="recent">recent</option>
                 <option value="popular">popular</option>
               </select>
@@ -199,86 +245,143 @@ export default function ProposalsPage({ mode = 'public' }) {
       <section className="section-card proposal-grid">
         {loading ? <p>Loading proposals...</p> : null}
         {!loading && error ? <p>{error}</p> : null}
-        {!loading && !error && items.length === 0 ? <p>No proposals found for this filter.</p> : null}
+        {!loading && !error && items.length === 0 ? (
+          <p>No proposals found for this filter.</p>
+        ) : null}
 
-        {!loading && !error ? items.map((proposal) => {
-          const proposalKey = proposal.proposalId || proposal._id;
-          const progress = Math.min(100, Math.round((Number(proposal.endorsementCount || 0) / Number(proposal.endorsementThreshold || 10)) * 100));
-          const timeline = timelineById[proposalKey];
-          const timelineFetchedAt = timelineFetchedAtById[proposalKey];
-          const timelineError = timelineErrorById[proposalKey];
-          const updates = Array.isArray(timeline?.updates) ? timeline.updates : [];
-          const showExecutionTimeline = ['accepted', 'in_execution', 'completed', 'outcome_published'].includes(String(proposal.status || '').toLowerCase());
+        {!loading && !error
+          ? items.map((proposal) => {
+              const proposalKey = proposal.proposalId || proposal._id;
+              const progress = Math.min(
+                100,
+                Math.round(
+                  (Number(proposal.endorsementCount || 0) /
+                    Number(proposal.endorsementThreshold || 10)) *
+                    100,
+                ),
+              );
+              const timeline = timelineById[proposalKey];
+              const timelineFetchedAt = timelineFetchedAtById[proposalKey];
+              const timelineError = timelineErrorById[proposalKey];
+              const updates = Array.isArray(timeline?.updates) ? timeline.updates : [];
+              const showExecutionTimeline = [
+                'accepted',
+                'in_execution',
+                'completed',
+                'outcome_published',
+              ].includes(String(proposal.status || '').toLowerCase());
 
-          return (
-            <article key={proposalKey} className="proposal-card">
-              <div className="proposal-card-head">
-                <span className="proposal-badge">{proposal.category}</span>
-                <span className={`proposal-badge status-${proposal.status}`}>{proposal.status}</span>
-              </div>
-              <h3>
-                <Link to={`/proposals/${encodeURIComponent(proposalKey)}`}>
-                  {proposal.title}
-                </Link>
-              </h3>
-              <p className="proposal-meta">
-                By {proposal?.submittedBy?.name || 'Unknown citizen'} · {proposal?.createdAt ? new Date(proposal.createdAt).toLocaleDateString() : 'Unknown date'}
-              </p>
-              <div>
-                <p className="proposal-meta">{Number(proposal.endorsementCount || 0)}/{Number(proposal.endorsementThreshold || 10)} endorsements</p>
-                <div className="proposal-progress-track">
-                  <div className="proposal-progress-fill" style={{ width: `${progress}%` }} />
-                </div>
-              </div>
-              <p>{String(proposal.problem || '').slice(0, 220)}{String(proposal.problem || '').length > 220 ? '…' : ''}</p>
-
-              {showExecutionTimeline ? (
-                <div className="proposal-execution-panel">
-                  <div className="proposal-execution-head">
-                    <span>Execution Timeline</span>
-                    <button
-                      type="button"
-                      className="button ghost"
-                      onClick={() => loadTimeline(proposalKey, { force: true })}
-                      disabled={Boolean(timelineLoadingById[proposalKey])}
-                    >
-                      {timelineLoadingById[proposalKey] ? 'Loading…' : updates.length ? 'Refresh Updates' : 'Load Updates'}
-                    </button>
+              return (
+                <article key={proposalKey} className="proposal-card">
+                  <div className="proposal-card-head">
+                    <span className="proposal-badge">{proposal.category}</span>
+                    <span className={`proposal-badge status-${proposal.status}`}>
+                      {proposal.status}
+                    </span>
                   </div>
-
-                  {timelineFetchedAt ? (
-                    <p className="proposal-meta">Last synced {new Date(timelineFetchedAt).toLocaleTimeString()}</p>
-                  ) : null}
-
-                  {timeline?.executionBlock ? (
+                  <h3>
+                    <Link to={`/proposals/${encodeURIComponent(proposalKey)}`}>
+                      {proposal.title}
+                    </Link>
+                  </h3>
+                  <p className="proposal-meta">
+                    By {proposal?.submittedBy?.name || 'Unknown citizen'} ·{' '}
+                    {proposal?.createdAt
+                      ? new Date(proposal.createdAt).toLocaleDateString()
+                      : 'Unknown date'}
+                  </p>
+                  <div>
                     <p className="proposal-meta">
-                      Progress {Number(timeline.executionBlock.progressPercent || 0)}% · {timeline.executionBlock.latestUpdate || 'No latest update posted'}
+                      {Number(proposal.endorsementCount || 0)}/
+                      {Number(proposal.endorsementThreshold || 10)} endorsements
                     </p>
-                  ) : null}
+                    <div className="proposal-progress-track">
+                      <div className="proposal-progress-fill" style={{ width: `${progress}%` }} />
+                    </div>
+                  </div>
+                  <p>
+                    {String(proposal.problem || '').slice(0, 220)}
+                    {String(proposal.problem || '').length > 220 ? '…' : ''}
+                  </p>
 
-                  {timelineError ? <p className="proposal-meta">{timelineError}</p> : null}
+                  {showExecutionTimeline ? (
+                    <div className="proposal-execution-panel">
+                      <div className="proposal-execution-head">
+                        <span>Execution Timeline</span>
+                        <button
+                          type="button"
+                          className="button ghost"
+                          onClick={() => loadTimeline(proposalKey, { force: true })}
+                          disabled={Boolean(timelineLoadingById[proposalKey])}
+                        >
+                          {timelineLoadingById[proposalKey]
+                            ? 'Loading…'
+                            : updates.length
+                              ? 'Refresh Updates'
+                              : 'Load Updates'}
+                        </button>
+                      </div>
 
-                  {updates.length ? (
-                    <ul className="proposal-execution-list">
-                      {updates.slice(-3).reverse().map((entry, idx) => (
-                        <li key={`${proposalKey}-timeline-${idx}`}>
-                          <strong>{entry.createdAt ? new Date(entry.createdAt).toLocaleDateString() : 'Update'}:</strong> {entry.message}
-                        </li>
-                      ))}
-                    </ul>
+                      {timelineFetchedAt ? (
+                        <p className="proposal-meta">
+                          Last synced {new Date(timelineFetchedAt).toLocaleTimeString()}
+                        </p>
+                      ) : null}
+
+                      {timeline?.executionBlock ? (
+                        <p className="proposal-meta">
+                          Progress {Number(timeline.executionBlock.progressPercent || 0)}% ·{' '}
+                          {timeline.executionBlock.latestUpdate || 'No latest update posted'}
+                        </p>
+                      ) : null}
+
+                      {timelineError ? <p className="proposal-meta">{timelineError}</p> : null}
+
+                      {updates.length ? (
+                        <ul className="proposal-execution-list">
+                          {updates
+                            .slice(-3)
+                            .reverse()
+                            .map((entry, idx) => (
+                              <li key={`${proposalKey}-timeline-${idx}`}>
+                                <strong>
+                                  {entry.createdAt
+                                    ? new Date(entry.createdAt).toLocaleDateString()
+                                    : 'Update'}
+                                  :
+                                </strong>{' '}
+                                {entry.message}
+                              </li>
+                            ))}
+                        </ul>
+                      ) : null}
+                    </div>
                   ) : null}
-                </div>
-              ) : null}
-            </article>
-          );
-        }) : null}
+                </article>
+              );
+            })
+          : null}
       </section>
 
       {!isMine ? (
         <section className="section-card proposal-pagination">
-          <button type="button" className="button ghost" onClick={() => setPage((value) => Math.max(1, value - 1))} disabled={page <= 1}>Previous</button>
+          <button
+            type="button"
+            className="button ghost"
+            onClick={() => setPage((value) => Math.max(1, value - 1))}
+            disabled={page <= 1}
+          >
+            Previous
+          </button>
           <span>{pagedInfo}</span>
-          <button type="button" className="button ghost" onClick={() => setPage((value) => Math.min(pagination.pages || 1, value + 1))} disabled={page >= (pagination.pages || 1)}>Next</button>
+          <button
+            type="button"
+            className="button ghost"
+            onClick={() => setPage((value) => Math.min(pagination.pages || 1, value + 1))}
+            disabled={page >= (pagination.pages || 1)}
+          >
+            Next
+          </button>
         </section>
       ) : null}
     </div>

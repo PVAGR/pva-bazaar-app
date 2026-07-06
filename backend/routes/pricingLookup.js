@@ -116,7 +116,7 @@ async function fetchEtsyComparables(category, itemType, materials) {
     avg: 150,
     max: 400,
     count: 25,
-    link: `https://www.etsy.com/search?q=${  encodeURIComponent(itemType)}`,
+    link: `https://www.etsy.com/search?q=${encodeURIComponent(itemType)}`,
   };
 }
 

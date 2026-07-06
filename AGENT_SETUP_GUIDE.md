@@ -5,6 +5,7 @@
 ## Overview
 
 Your personal AI programmer that:
+
 - **Edits Code** on GitHub (with your approval)
 - **Writes & Reviews** code using powerful models (Claude 3 > GPT-4 > Ollama)
 - **Remembers Everything** with persistent MongoDB conversations
@@ -85,6 +86,7 @@ CREATOR_ID=creator@pvabazaar.org
 ### 3. Get Your Telegram Chat ID
 
 Message the bot, then run:
+
 ```bash
 curl "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getUpdates" | jq '.result[0].message.chat.id'
 ```
@@ -101,6 +103,7 @@ POST http://localhost:5001/api/telegram/set-webhook
 ```
 
 Or via terminal:
+
 ```bash
 curl -X POST http://localhost:5001/api/telegram/set-webhook \
   -H "Content-Type: application/json" \
@@ -110,11 +113,13 @@ curl -X POST http://localhost:5001/api/telegram/set-webhook \
 ## API Endpoints
 
 ### Agent Chat (Existing)
+
 - `POST /api/agent/chat` - Send message, get response
 - `GET /api/agent/status` - System status
 - `GET /api/agent/conversations` - List your conversations
 
 ### NEW: Code Analysis
+
 ```bash
 POST /api/agent/code-analysis
 {
@@ -126,6 +131,7 @@ POST /api/agent/code-analysis
 ```
 
 **Response:**
+
 ```json
 {
   "ok": true,
@@ -136,6 +142,7 @@ POST /api/agent/code-analysis
 ```
 
 ### NEW: Code Generation
+
 ```bash
 POST /api/agent/code-generate
 {
@@ -147,6 +154,7 @@ POST /api/agent/code-generate
 ```
 
 ### NEW: GitHub Integration
+
 ```bash
 POST /api/agent/github/propose-change
 {
@@ -159,6 +167,7 @@ POST /api/agent/github/propose-change
 ```
 
 **Response:**
+
 ```json
 {
   "ok": true,
@@ -169,6 +178,7 @@ POST /api/agent/github/propose-change
 ```
 
 ### NEW: Pending Changes
+
 ```bash
 # List pending changes
 GET /api/agent/pending-changes?status=pending
@@ -183,11 +193,13 @@ POST /api/agent/pending-changes/{changeId}/reject
 ```
 
 ### NEW: LLM Providers Status
+
 ```bash
 GET /api/agent/providers
 ```
 
 **Response:**
+
 ```json
 {
   "ok": true,
@@ -237,15 +249,18 @@ GET /api/agent/providers
 The agent automatically selects the **best available model** for each task:
 
 ### For Coding Tasks:
+
 1. **Claude 3 Opus** - Best reasoning + coding ability
 2. **GPT-4 Turbo** - Excellent reasoning
 3. **Ollama best local** - Fallback
 
 ### For General Questions:
+
 1. Whatever is fastest/available
 2. Falls back gracefully if offline
 
 ### Priority Ranking:
+
 ```
 Claude 3 Opus (100)      ← Best reasoning, coding, analysis
   ↓
@@ -287,6 +302,7 @@ Ollama local (50)        ← Always available fallback
 ## Safety Guardrails
 
 ✅ **Implemented:**
+
 - All code changes require explicit user approval
 - Changes tracked in MongoDB with full audit trail
 - File content validation before submission
@@ -296,6 +312,7 @@ Ollama local (50)        ← Always available fallback
 - No automatic file deletion
 
 🔒 **Coming Soon:**
+
 - Code sandboxing (static analysis before commit)
 - Dangerous pattern detection
 - Approval reason logging
@@ -305,6 +322,7 @@ Ollama local (50)        ← Always available fallback
 ## Example Workflows
 
 ### Scenario 1: Code Review
+
 ```
 User → /help
 Bot  → Shows available commands
@@ -317,6 +335,7 @@ Bot  → [Fetches file from GitHub]
 ```
 
 ### Scenario 2: Code Generation & Submission
+
 ```
 User → /help
       → Generate a React component for user profile
@@ -334,6 +353,7 @@ Agent → Creates branch
 ```
 
 ### Scenario 3: Bug Fix
+
 ```
 User → "Fix the auth module to handle expired tokens"
 
@@ -355,20 +375,24 @@ Agent → Commits fix
 ## Troubleshooting
 
 ### "No LLM providers available"
+
 - Make sure Ollama is running: `curl http://localhost:11434/api/tags`
 - Or add OpenAI/Anthropic API keys
 
 ### Telegram not sending messages
+
 - Check `TELEGRAM_BOT_TOKEN` is valid
 - Make sure webhook is registered: `GET /api/telegram/webhook-info`
 - Verify `TELEGRAM_CHAT_ID` is set
 
 ### GitHub changes not working
+
 - Verify `GITHUB_TOKEN` has `repo` scope
 - Check token isn't expired
 - Make sure `GITHUB_OWNER` and `GITHUB_REPO` are correct
 
 ### Slow responses
+
 - If using local Ollama with large models, it's normal
 - Add `OPENAI_API_KEY` or `ANTHROPIC_API_KEY` for faster responses
 - Claude 3 Opus is fastest for code
@@ -376,6 +400,7 @@ Agent → Commits fix
 ## Performance Notes
 
 **Model Response Times (Approximate):**
+
 - Claude 3 Opus (via API): 2-5s
 - GPT-4 Turbo (via API): 3-8s
 - Ollama llama3.2:1b (local): 10-30s
@@ -410,6 +435,7 @@ Agent → Commits fix
 ## Monitoring
 
 Check agent health:
+
 ```bash
 curl http://localhost:5001/api/agent/status
 curl http://localhost:5001/api/agent/providers
@@ -419,10 +445,12 @@ curl http://localhost:5001/api/telegram/webhook-info
 ## Cost Considerations
 
 **Free (Always):**
+
 - Ollama (local)
 - GitHub API (5000 req/hour)
 
 **Paid (Optional):**
+
 - OpenAI GPT-4: ~$0.04/1K tokens
 - Anthropic Claude: ~$0.003/1K tokens
 - Start small, scale as needed
@@ -430,6 +458,7 @@ curl http://localhost:5001/api/telegram/webhook-info
 ## Questions?
 
 The agent can help! Try:
+
 ```
 What can you do?
 How do I submit a code change?

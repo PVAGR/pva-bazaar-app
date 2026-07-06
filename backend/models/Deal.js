@@ -10,7 +10,16 @@ const dealMessageSchema = new mongoose.Schema(
   {
     author: {
       type: String,
-      enum: ['owner', 'counterparty', 'mediator', 'system', 'seller', 'buyer', 'creator', 'shipper'],
+      enum: [
+        'owner',
+        'counterparty',
+        'mediator',
+        'system',
+        'seller',
+        'buyer',
+        'creator',
+        'shipper',
+      ],
       default: 'owner',
     },
     authorWallet: { type: String, default: '' }, // optional (future: wallet-signed messages)
@@ -18,7 +27,7 @@ const dealMessageSchema = new mongoose.Schema(
     signature: { type: String, default: '' }, // future: EIP-191/EIP-712 signature
     createdAt: { type: Date, default: Date.now },
   },
-  { _id: true }
+  { _id: true },
 );
 
 const dealPaymentSchema = new mongoose.Schema(
@@ -32,7 +41,7 @@ const dealPaymentSchema = new mongoose.Schema(
     payeeWallet: { type: String, default: '' },
     txHash: { type: String, default: '' },
   },
-  { _id: true }
+  { _id: true },
 );
 
 const dealMilestoneSchema = new mongoose.Schema(
@@ -56,29 +65,37 @@ const dealMilestoneSchema = new mongoose.Schema(
     status: { type: String, enum: ['pending', 'completed'], default: 'pending' },
     completedAt: { type: Date },
   },
-  { _id: true }
+  { _id: true },
 );
 
 const dealMockTransferProofSchema = new mongoose.Schema(
   {
-    actor: { type: String, enum: ['buyer', 'seller', 'creator', 'shipper', 'mediator', 'system'], default: 'system' },
+    actor: {
+      type: String,
+      enum: ['buyer', 'seller', 'creator', 'shipper', 'mediator', 'system'],
+      default: 'system',
+    },
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     note: { type: String, default: '' },
     screenshotUrl: { type: String, default: '' },
     confirmedAt: { type: Date, default: Date.now },
   },
-  { _id: true }
+  { _id: true },
 );
 
 const dealDisputeEvidenceSchema = new mongoose.Schema(
   {
     authorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    role: { type: String, enum: ['buyer', 'seller', 'creator', 'shipper', 'mediator', 'system'], default: 'system' },
+    role: {
+      type: String,
+      enum: ['buyer', 'seller', 'creator', 'shipper', 'mediator', 'system'],
+      default: 'system',
+    },
     note: { type: String, default: '' },
     attachmentUrl: { type: String, default: '' },
     createdAt: { type: Date, default: Date.now },
   },
-  { _id: true }
+  { _id: true },
 );
 
 const dealOutboundDispatchSchema = new mongoose.Schema(
@@ -98,7 +115,7 @@ const dealOutboundDispatchSchema = new mongoose.Schema(
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
   },
-  { _id: true }
+  { _id: true },
 );
 
 const dealVerificationSchema = new mongoose.Schema(
@@ -108,7 +125,7 @@ const dealVerificationSchema = new mongoose.Schema(
     method: { type: String, default: 'jwt' },
     note: { type: String, default: '' },
   },
-  { _id: true }
+  { _id: true },
 );
 
 const dealAuditEventSchema = new mongoose.Schema(
@@ -118,7 +135,7 @@ const dealAuditEventSchema = new mongoose.Schema(
     createdAt: { type: Date, default: Date.now },
     payload: { type: mongoose.Schema.Types.Mixed, default: null },
   },
-  { _id: true }
+  { _id: true },
 );
 
 const dealPvaPartySchema = new mongoose.Schema(
@@ -130,7 +147,7 @@ const dealPvaPartySchema = new mongoose.Schema(
     city: { type: String, default: '' },
     walletAddress: { type: String, default: '' },
   },
-  { _id: true }
+  { _id: true },
 );
 
 const dealPvaSplitSchema = new mongoose.Schema(
@@ -140,7 +157,7 @@ const dealPvaSplitSchema = new mongoose.Schema(
     platformPct: { type: Number, default: 10 },
     bufferPct: { type: Number, default: 10 },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const dealPvaCollateralSchema = new mongoose.Schema(
@@ -149,7 +166,7 @@ const dealPvaCollateralSchema = new mongoose.Schema(
     shipperStakePct: { type: Number, default: 50 },
     stakeMode: { type: String, enum: ['escrow', 'signature_commitment'], default: 'escrow' },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const dealPvaRouteScoreSchema = new mongoose.Schema(
@@ -163,7 +180,7 @@ const dealPvaRouteScoreSchema = new mongoose.Schema(
     distanceKm: { type: Number, default: 0 },
     estimatedDays: { type: Number, default: 0 },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const dealPvaCollateralOutcomeSchema = new mongoose.Schema(
@@ -175,7 +192,7 @@ const dealPvaCollateralOutcomeSchema = new mongoose.Schema(
     shipperForfeitPct: { type: Number, default: 0 },
     notes: { type: String, default: '' },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const dealPvaRoleAcceptanceSchema = new mongoose.Schema(
@@ -186,7 +203,7 @@ const dealPvaRoleAcceptanceSchema = new mongoose.Schema(
     declinedAt: { type: Date },
     note: { type: String, default: '' },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const dealPvaWorkflowSchema = new mongoose.Schema(
@@ -206,12 +223,16 @@ const dealPvaWorkflowSchema = new mongoose.Schema(
     },
     updatedAt: { type: Date },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const dealPvaNotificationSchema = new mongoose.Schema(
   {
-    targetRole: { type: String, enum: ['buyer', 'creator', 'shipper', 'seller', 'mediator', 'system'], default: 'system' },
+    targetRole: {
+      type: String,
+      enum: ['buyer', 'creator', 'shipper', 'seller', 'mediator', 'system'],
+      default: 'system',
+    },
     targetUserId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     channel: { type: String, enum: ['in_app', 'email', 'telegram'], default: 'in_app' },
     eventType: { type: String, default: '' },
@@ -223,7 +244,7 @@ const dealPvaNotificationSchema = new mongoose.Schema(
     sentAt: { type: Date },
     createdAt: { type: Date, default: Date.now },
   },
-  { _id: true }
+  { _id: true },
 );
 
 const dealPvaPayoutPreviewLineSchema = new mongoose.Schema(
@@ -232,9 +253,13 @@ const dealPvaPayoutPreviewLineSchema = new mongoose.Schema(
     pct: { type: Number, default: 0 },
     amount: { type: Number, default: 0 },
     currency: { type: String, default: 'USD' },
-    status: { type: String, enum: ['projected', 'eligible', 'released', 'forfeited'], default: 'projected' },
+    status: {
+      type: String,
+      enum: ['projected', 'eligible', 'released', 'forfeited'],
+      default: 'projected',
+    },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const dealSchema = new mongoose.Schema(
@@ -300,7 +325,16 @@ const dealSchema = new mongoose.Schema(
       fundingMode: { type: String, enum: ['mock', 'live'], default: 'mock' },
       status: {
         type: String,
-        enum: ['draft', 'funded_mock', 'funded_live', 'awaiting_receipt', 'buyer_confirmed', 'released', 'refunded', 'disputed'],
+        enum: [
+          'draft',
+          'funded_mock',
+          'funded_live',
+          'awaiting_receipt',
+          'buyer_confirmed',
+          'released',
+          'refunded',
+          'disputed',
+        ],
         default: 'draft',
       },
       fundedAmount: { type: Number, default: 0 },
@@ -314,7 +348,11 @@ const dealSchema = new mongoose.Schema(
     },
 
     dispute: {
-      status: { type: String, enum: ['none', 'open', 'resolved_release', 'resolved_refund'], default: 'none' },
+      status: {
+        type: String,
+        enum: ['none', 'open', 'resolved_release', 'resolved_refund'],
+        default: 'none',
+      },
       openedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
       openedAt: { type: Date },
       reason: { type: String, default: '' },
@@ -329,7 +367,11 @@ const dealSchema = new mongoose.Schema(
 
     mediation: {
       mode: { type: String, enum: ['none', 'platform', 'custom'], default: 'none' },
-      status: { type: String, enum: ['none', 'requested', 'assigned', 'approved', 'declined'], default: 'none' },
+      status: {
+        type: String,
+        enum: ['none', 'requested', 'assigned', 'approved', 'declined'],
+        default: 'none',
+      },
       requestedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
       requestedAt: { type: Date },
       assignedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
@@ -352,7 +394,7 @@ const dealSchema = new mongoose.Schema(
     verificationCount: { type: Number, default: 0 },
     auditEvents: { type: [dealAuditEventSchema], default: [] },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 dealSchema.index({ ownerId: 1, createdAt: -1 });
@@ -361,4 +403,3 @@ dealSchema.index({ publicId: 1 }, { unique: true, sparse: true });
 dealSchema.index({ publicVisible: 1, createdAt: -1 });
 
 module.exports = mongoose.model('Deal', dealSchema);
-

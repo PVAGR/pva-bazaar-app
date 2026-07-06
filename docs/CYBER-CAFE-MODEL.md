@@ -16,14 +16,14 @@ This doc outlines a **micro cyber café** as a possible Phase 3 initiative. Per 
 
 Use your own numbers; these are placeholders.
 
-| Item | Type | Notes |
-|------|------|--------|
-| Rent (shared or small unit) | OpEx | Monthly; prefer short lease or pop-up at first. |
-| Internet (fibre or stable wireless) | OpEx | Business line if available; backup if possible. |
-| 3–6 workstations (refurb PCs or thin clients) | CapEx | One-time; keep spec modest. |
-| Furniture, basic security | CapEx | Desks, chairs, lockable cabinet. |
-| Power backup (UPS / small inverter) | CapEx | To ride short outages. |
-| Consumables (cleaning, small café stock) | OpEx | Monthly. |
+| Item                                          | Type  | Notes                                           |
+| --------------------------------------------- | ----- | ----------------------------------------------- |
+| Rent (shared or small unit)                   | OpEx  | Monthly; prefer short lease or pop-up at first. |
+| Internet (fibre or stable wireless)           | OpEx  | Business line if available; backup if possible. |
+| 3–6 workstations (refurb PCs or thin clients) | CapEx | One-time; keep spec modest.                     |
+| Furniture, basic security                     | CapEx | Desks, chairs, lockable cabinet.                |
+| Power backup (UPS / small inverter)           | CapEx | To ride short outages.                          |
+| Consumables (cleaning, small café stock)      | OpEx  | Monthly.                                        |
 
 ---
 

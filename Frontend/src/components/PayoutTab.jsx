@@ -59,13 +59,29 @@ export default function PayoutTab() {
   const [confirmForm, setConfirmForm] = useState({ payoutId: '', txSignature: '' });
   const [confirmResult, setConfirmResult] = useState(null);
   const [readiness, setReadiness] = useState({ loading: false, data: null, error: '' });
-  const [hotWallet, setHotWallet] = useState({ loading: false, publicKey: null, balanceSol: null, error: null, notConfigured: false });
+  const [hotWallet, setHotWallet] = useState({
+    loading: false,
+    publicKey: null,
+    balanceSol: null,
+    error: null,
+    notConfigured: false,
+  });
   const [airdrop, setAirdrop] = useState({ loading: false, result: null, error: '' });
-  const [directForm, setDirectForm] = useState({ recipientAddress: '', amountSol: '0.01', amountUsd: '5', memo: '' });
+  const [directForm, setDirectForm] = useState({
+    recipientAddress: '',
+    amountSol: '0.01',
+    amountUsd: '5',
+    memo: '',
+  });
   const [directResult, setDirectResult] = useState(null);
   const [directSending, setDirectSending] = useState(false);
   const [guidedFlow, setGuidedFlow] = useState({ loading: false, result: null, error: '' });
-  const [autopilot, setAutopilot] = useState({ running: false, steps: [], error: '', result: null });
+  const [autopilot, setAutopilot] = useState({
+    running: false,
+    steps: [],
+    error: '',
+    result: null,
+  });
   const [safeMode, setSafeMode] = useState(true);
   const [recentTransfers, setRecentTransfers] = useState({ loading: false, rows: [], error: '' });
   const [autopilotRuns, setAutopilotRuns] = useState({ loading: false, rows: [], error: '' });
@@ -87,7 +103,9 @@ export default function PayoutTab() {
           minSol: policy.minSol ?? 0.001,
           maxSol: policy.maxSol ?? 50,
           requireAllowlist: Boolean(policy.requireAllowlist),
-          walletAllowlist: Array.isArray(policy.walletAllowlist) ? policy.walletAllowlist.join('\n') : '',
+          walletAllowlist: Array.isArray(policy.walletAllowlist)
+            ? policy.walletAllowlist.join('\n')
+            : '',
           network: policy.network || 'devnet',
           treasuryWallet: policy.treasuryWallet || '',
           notes: policy.notes || '',
@@ -189,7 +207,7 @@ export default function PayoutTab() {
       maxSol: Number(nextPolicy.maxSol || 50),
       requireAllowlist: nextPolicy.requireAllowlist,
       walletAllowlist: String(nextPolicy.walletAllowlist || '')
-        .split(/\r?\n|,/) 
+        .split(/\r?\n|,/)
         .map((v) => v.trim())
         .filter(Boolean),
       network: nextPolicy.network,
@@ -218,7 +236,9 @@ export default function PayoutTab() {
         return { ok: false, data };
       }
     } catch (err) {
-      setPolicyMessage(`❌ ${err?.response?.data?.error || err.message || 'Failed to save payout policy.'}`);
+      setPolicyMessage(
+        `❌ ${err?.response?.data?.error || err.message || 'Failed to save payout policy.'}`,
+      );
       return { ok: false, error: err };
     } finally {
       setPolicySaving(false);
@@ -235,7 +255,7 @@ export default function PayoutTab() {
     try {
       const saveResult = await savePolicy(
         { network: targetNetwork },
-        `✅ Runtime network switched to ${targetNetwork}. Refreshing live checks...`
+        `✅ Runtime network switched to ${targetNetwork}. Refreshing live checks...`,
       );
       if (!saveResult?.ok) return;
       await Promise.all([runReadinessCheck(), loadHotWalletBalance()]);
@@ -264,7 +284,10 @@ export default function PayoutTab() {
         setTestResult({ ok: false, error: data?.error || 'Request failed' });
       }
     } catch (err) {
-      setTestResult({ ok: false, error: err?.response?.data?.error || err.message || 'Request failed' });
+      setTestResult({
+        ok: false,
+        error: err?.response?.data?.error || err.message || 'Request failed',
+      });
     }
   };
 
@@ -277,7 +300,10 @@ export default function PayoutTab() {
       const data = await confirmSolanaTestPayout(payload);
       setConfirmResult(data);
     } catch (err) {
-      setConfirmResult({ ok: false, error: err?.response?.data?.error || err.message || 'Confirmation failed' });
+      setConfirmResult({
+        ok: false,
+        error: err?.response?.data?.error || err.message || 'Confirmation failed',
+      });
     }
   };
 
@@ -286,13 +312,32 @@ export default function PayoutTab() {
     try {
       const data = await getHotWalletBalance();
       if (data?.ok) {
-        setHotWallet({ loading: false, publicKey: data.publicKey, balanceSol: data.balanceSol, network: data.network, error: null, notConfigured: false });
+        setHotWallet({
+          loading: false,
+          publicKey: data.publicKey,
+          balanceSol: data.balanceSol,
+          network: data.network,
+          error: null,
+          notConfigured: false,
+        });
       } else {
-        setHotWallet({ loading: false, publicKey: null, balanceSol: null, error: data?.error || 'Failed', notConfigured: Boolean(data?.notConfigured) });
+        setHotWallet({
+          loading: false,
+          publicKey: null,
+          balanceSol: null,
+          error: data?.error || 'Failed',
+          notConfigured: Boolean(data?.notConfigured),
+        });
       }
     } catch (err) {
       const msg = err?.response?.data?.error || err.message || 'Failed';
-      setHotWallet({ loading: false, publicKey: null, balanceSol: null, error: msg, notConfigured: Boolean(err?.response?.data?.notConfigured) });
+      setHotWallet({
+        loading: false,
+        publicKey: null,
+        balanceSol: null,
+        error: msg,
+        notConfigured: Boolean(err?.response?.data?.notConfigured),
+      });
     }
   };
 
@@ -303,10 +348,18 @@ export default function PayoutTab() {
       if (data?.ok) {
         setReadiness({ loading: false, data, error: '' });
       } else {
-        setReadiness({ loading: false, data: null, error: data?.error || 'Readiness check failed' });
+        setReadiness({
+          loading: false,
+          data: null,
+          error: data?.error || 'Readiness check failed',
+        });
       }
     } catch (err) {
-      setReadiness({ loading: false, data: null, error: err?.response?.data?.error || err.message || 'Readiness check failed' });
+      setReadiness({
+        loading: false,
+        data: null,
+        error: err?.response?.data?.error || err.message || 'Readiness check failed',
+      });
     }
   };
 
@@ -319,16 +372,29 @@ export default function PayoutTab() {
         loadHotWalletBalance();
         runReadinessCheck();
       } else {
-        setAirdrop({ loading: false, result: null, error: data?.error || 'Airdrop request failed' });
+        setAirdrop({
+          loading: false,
+          result: null,
+          error: data?.error || 'Airdrop request failed',
+        });
       }
     } catch (err) {
-      setAirdrop({ loading: false, result: null, error: err?.response?.data?.error || err.message || 'Airdrop request failed' });
+      setAirdrop({
+        loading: false,
+        result: null,
+        error: err?.response?.data?.error || err.message || 'Airdrop request failed',
+      });
     }
   };
 
   const executeGuidedFlow = async () => {
     if (safeMode && !readiness?.data?.ready) {
-      setGuidedFlow({ loading: false, result: null, error: 'Safe mode is ON. Run Readiness Check and resolve failures before executing guided flow.' });
+      setGuidedFlow({
+        loading: false,
+        result: null,
+        error:
+          'Safe mode is ON. Run Readiness Check and resolve failures before executing guided flow.',
+      });
       return;
     }
 
@@ -370,7 +436,11 @@ export default function PayoutTab() {
     }
 
     if (safeMode && !readiness?.data?.ready) {
-      setGuidedFlow({ loading: false, result: null, error: 'Safe mode is ON. Run Readiness Check and resolve failures before quick send.' });
+      setGuidedFlow({
+        loading: false,
+        result: null,
+        error: 'Safe mode is ON. Run Readiness Check and resolve failures before quick send.',
+      });
       return;
     }
 
@@ -418,13 +488,15 @@ export default function PayoutTab() {
     try {
       const data = await apiGet('/solana/payouts');
       const rows = Array.isArray(data?.payouts)
-        ? data.payouts
-            .filter((row) => row && row.txSignature)
-            .slice(0, 15)
+        ? data.payouts.filter((row) => row && row.txSignature).slice(0, 15)
         : [];
       setRecentTransfers({ loading: false, rows, error: '' });
     } catch (err) {
-      setRecentTransfers({ loading: false, rows: [], error: err.message || 'Failed to load transfer history' });
+      setRecentTransfers({
+        loading: false,
+        rows: [],
+        error: err.message || 'Failed to load transfer history',
+      });
     }
   };
 
@@ -448,7 +520,12 @@ export default function PayoutTab() {
 
   const runAutopilot = async () => {
     if (!directForm.recipientAddress) {
-      setAutopilot({ running: false, steps: [], error: 'Enter recipient wallet first.', result: null });
+      setAutopilot({
+        running: false,
+        steps: [],
+        error: 'Enter recipient wallet first.',
+        result: null,
+      });
       return;
     }
 
@@ -490,7 +567,12 @@ export default function PayoutTab() {
         ? readinessData.checks.filter((check) => !check?.ok).map((check) => check.key)
         : [];
 
-      if (!readinessData.ready && readinessData.network === 'devnet' && failed.includes('hotWalletBalance') && !failed.includes('hotWalletKey')) {
+      if (
+        !readinessData.ready &&
+        readinessData.network === 'devnet' &&
+        failed.includes('hotWalletBalance') &&
+        !failed.includes('hotWalletKey')
+      ) {
         appendStep('Hot wallet low on devnet, requesting airdrop...');
         const airdropData = await requestDevnetAirdropHotWallet({ amountSol: 1 });
         if (airdropData?.ok) {
@@ -552,7 +634,10 @@ export default function PayoutTab() {
 
   const handleDirectTransfer = async () => {
     if (safeMode && !readiness?.data?.ready) {
-      setDirectResult({ ok: false, error: 'Safe mode is ON. Run Readiness Check and resolve failures before direct send.' });
+      setDirectResult({
+        ok: false,
+        error: 'Safe mode is ON. Run Readiness Check and resolve failures before direct send.',
+      });
       return;
     }
 
@@ -571,7 +656,11 @@ export default function PayoutTab() {
         loadRecentTransfers();
       }
     } catch (err) {
-      setDirectResult({ ok: false, error: err?.response?.data?.error || err.message || 'Transfer failed', notConfigured: Boolean(err?.response?.data?.notConfigured) });
+      setDirectResult({
+        ok: false,
+        error: err?.response?.data?.error || err.message || 'Transfer failed',
+        notConfigured: Boolean(err?.response?.data?.notConfigured),
+      });
     } finally {
       setDirectSending(false);
     }
@@ -583,24 +672,31 @@ export default function PayoutTab() {
 
   const readinessState = readiness.loading
     ? 'checking'
-    : (readiness?.data?.ready ? 'ready' : (readiness?.data ? 'blocked' : 'unknown'));
+    : readiness?.data?.ready
+      ? 'ready'
+      : readiness?.data
+        ? 'blocked'
+        : 'unknown';
 
-  const latestReceipt = Array.isArray(recentTransfers.rows) && recentTransfers.rows.length > 0
-    ? recentTransfers.rows[0]
-    : null;
+  const latestReceipt =
+    Array.isArray(recentTransfers.rows) && recentTransfers.rows.length > 0
+      ? recentTransfers.rows[0]
+      : null;
 
   const lastTransferSignature =
-    guidedFlow?.result?.flow?.transfer?.signature
-    || directResult?.signature
-    || latestReceipt?.txSignature
-    || '';
+    guidedFlow?.result?.flow?.transfer?.signature ||
+    directResult?.signature ||
+    latestReceipt?.txSignature ||
+    '';
 
   const quickRepairTips = [];
   if (failedChecks.some((check) => check.key === 'hotWalletKey')) {
     quickRepairTips.push('Add SOLANA_HOT_WALLET_PRIVATE_KEY in Vercel and redeploy backend.');
   }
   if (failedChecks.some((check) => check.key === 'hotWalletBalance')) {
-    quickRepairTips.push('Fund hot wallet first: use Request Devnet Airdrop (devnet) or deposit SOL manually.');
+    quickRepairTips.push(
+      'Fund hot wallet first: use Request Devnet Airdrop (devnet) or deposit SOL manually.',
+    );
   }
   if (failedChecks.some((check) => check.key === 'policyRange')) {
     quickRepairTips.push('Fix policy min/max values and click Save Policy First.');
@@ -609,7 +705,9 @@ export default function PayoutTab() {
     quickRepairTips.push('Either disable allowlist or add wallet addresses to allowlist.');
   }
   if (failedChecks.some((check) => check.key === 'rpcReachable')) {
-    quickRepairTips.push('Verify SOLANA_RPC_URL or cluster connectivity, then run readiness again.');
+    quickRepairTips.push(
+      'Verify SOLANA_RPC_URL or cluster connectivity, then run readiness again.',
+    );
   }
 
   const anomalyAlerts = [];
@@ -630,7 +728,11 @@ export default function PayoutTab() {
   }
 
   if (loading && !summary) {
-    return <div className="payout-tab loading" role="tabpanel" id="payouts-panel">Loading payout data...</div>;
+    return (
+      <div className="payout-tab loading" role="tabpanel" id="payouts-panel">
+        Loading payout data...
+      </div>
+    );
   }
 
   return (
@@ -638,40 +740,59 @@ export default function PayoutTab() {
       <header className="payout-header">
         <h2>Payout Operations</h2>
         <p>
-          Manage creator commissions with a clear lifecycle from draft to completed while maintaining audit-ready records for both
-          traditional and crypto-enabled settlements.
+          Manage creator commissions with a clear lifecycle from draft to completed while
+          maintaining audit-ready records for both traditional and crypto-enabled settlements.
         </p>
       </header>
 
       <section className="payout-playbook" aria-label="Crypto transition playbook">
         <h3>Step-by-Step: Business to Crypto Consignment Splits</h3>
         <p className="playbook-intro">
-          Use this sequence every cycle so new team members can run payouts safely without skipping controls.
+          Use this sequence every cycle so new team members can run payouts safely without skipping
+          controls.
         </p>
         <ol className="playbook-steps">
           <li>
             <strong>Step 1 - Confirm split rules</strong>
-            <span>Verify creator handles, commission percentages, and settlement method before generating any payout batch.</span>
+            <span>
+              Verify creator handles, commission percentages, and settlement method before
+              generating any payout batch.
+            </span>
           </li>
           <li>
             <strong>Step 2 - Choose settlement rail</strong>
-            <span>Decide per creator if this cycle is fiat, crypto wallet transfer, or hybrid. Keep one method per payout record.</span>
+            <span>
+              Decide per creator if this cycle is fiat, crypto wallet transfer, or hybrid. Keep one
+              method per payout record.
+            </span>
           </li>
           <li>
             <strong>Step 3 - Generate draft payouts</strong>
-            <span>Run Generate Payouts for the target date window, then review totals and creator history before processing.</span>
+            <span>
+              Run Generate Payouts for the target date window, then review totals and creator
+              history before processing.
+            </span>
           </li>
           <li>
             <strong>Step 4 - Validate transaction evidence</strong>
-            <span>For crypto transfers, capture the chain transaction hash and store it in payout notes for downstream verification.</span>
+            <span>
+              For crypto transfers, capture the chain transaction hash and store it in payout notes
+              for downstream verification.
+            </span>
           </li>
           <li>
             <strong>Step 5 - Process then complete</strong>
-            <span>Move records from Ready to Processing only when payment execution starts, then mark Completed after confirmation.</span>
+            <span>
+              Move records from Ready to Processing only when payment execution starts, then mark
+              Completed after confirmation.
+            </span>
           </li>
           <li>
             <strong>Step 6 - Reconcile and communicate</strong>
-            <span>Refresh creator history, reconcile totals with accounting, and share payout confirmations with creators.</span>
+            <span>
+              Refresh creator history, reconcile totals with accounting, and share payout
+              confirmations with creators.
+            </span>
           </li>
         </ol>
       </section>
@@ -688,10 +809,16 @@ export default function PayoutTab() {
         <button className={tab === 'generate' ? 'active' : ''} onClick={() => setTab('generate')}>
           ➕ Generate Payouts
         </button>
-        <button className={tab === 'creator-history' ? 'active' : ''} onClick={() => setTab('creator-history')}>
+        <button
+          className={tab === 'creator-history' ? 'active' : ''}
+          onClick={() => setTab('creator-history')}
+        >
           👤 Creator History
         </button>
-        <button className={tab === 'policy-test' ? 'active' : ''} onClick={() => setTab('policy-test')}>
+        <button
+          className={tab === 'policy-test' ? 'active' : ''}
+          onClick={() => setTab('policy-test')}
+        >
           🧪 Policy + Test Transfer
         </button>
       </div>
@@ -710,13 +837,17 @@ export default function PayoutTab() {
             <div className="metric-card highlight">
               <div className="metric-label">PENDING</div>
               <div className="metric-value">
-                {summary.totals.totalPendingCents > 0 ? formatCurrency(summary.totals.totalPendingCents) : 'None'}
+                {summary.totals.totalPendingCents > 0
+                  ? formatCurrency(summary.totals.totalPendingCents)
+                  : 'None'}
               </div>
               <div className="metric-sublabel">Ready to payout</div>
             </div>
             <div className="metric-card highlight">
               <div className="metric-label">COMPLETED</div>
-              <div className="metric-value">{formatCurrency(summary.totals.totalProcessedCents)}</div>
+              <div className="metric-value">
+                {formatCurrency(summary.totals.totalProcessedCents)}
+              </div>
               <div className="metric-sublabel">Already paid</div>
             </div>
           </div>
@@ -762,13 +893,17 @@ export default function PayoutTab() {
 
           <div className="payouts-container">
             {payouts.length === 0 ? (
-              <div className="empty-state">No payouts found. Generate payouts from the "Generate Payouts" tab.</div>
+              <div className="empty-state">
+                No payouts found. Generate payouts from the "Generate Payouts" tab.
+              </div>
             ) : (
               payouts.map((payout) => (
                 <div
                   key={payout._id}
                   className={`payout-card ${payout.status}`}
-                  onClick={() => setSelectedPayout(selectedPayout?._id === payout._id ? null : payout)}
+                  onClick={() =>
+                    setSelectedPayout(selectedPayout?._id === payout._id ? null : payout)
+                  }
                 >
                   <div className="card-header">
                     <div className="creator-info">
@@ -886,7 +1021,8 @@ export default function PayoutTab() {
               Generate Payouts
             </button>
             <p className="form-help">
-              This will aggregate all commissioned orders from the date range and create payout records for each creator.
+              This will aggregate all commissioned orders from the date range and create payout
+              records for each creator.
             </p>
           </div>
         </div>
@@ -913,18 +1049,28 @@ export default function PayoutTab() {
               <div className="creator-stats">
                 <div className="stat-box">
                   <div className="stat-label">Total Earned</div>
-                  <div className="stat-value">{formatCurrency(creatorPayouts.reduce((sum, p) => sum + p.netPayoutCents, 0))}</div>
+                  <div className="stat-value">
+                    {formatCurrency(creatorPayouts.reduce((sum, p) => sum + p.netPayoutCents, 0))}
+                  </div>
                 </div>
                 <div className="stat-box">
                   <div className="stat-label">Already Paid</div>
                   <div className="stat-value">
-                    {formatCurrency(creatorPayouts.filter((p) => p.status === 'completed').reduce((sum, p) => sum + p.netPayoutCents, 0))}
+                    {formatCurrency(
+                      creatorPayouts
+                        .filter((p) => p.status === 'completed')
+                        .reduce((sum, p) => sum + p.netPayoutCents, 0),
+                    )}
                   </div>
                 </div>
                 <div className="stat-box">
                   <div className="stat-label">Pending</div>
                   <div className="stat-value">
-                    {formatCurrency(creatorPayouts.filter((p) => ['draft', 'ready'].includes(p.status)).reduce((sum, p) => sum + p.netPayoutCents, 0))}
+                    {formatCurrency(
+                      creatorPayouts
+                        .filter((p) => ['draft', 'ready'].includes(p.status))
+                        .reduce((sum, p) => sum + p.netPayoutCents, 0),
+                    )}
                   </div>
                 </div>
               </div>
@@ -947,9 +1093,15 @@ export default function PayoutTab() {
                       </td>
                       <td className="amount">{formatCurrency(payout.netPayoutCents)}</td>
                       <td>
-                        <span className={`status-badge ${payout.status}`}>{payout.status.toUpperCase()}</span>
+                        <span className={`status-badge ${payout.status}`}>
+                          {payout.status.toUpperCase()}
+                        </span>
                       </td>
-                      <td>{payout.completedAt ? new Date(payout.completedAt).toLocaleDateString() : '—'}</td>
+                      <td>
+                        {payout.completedAt
+                          ? new Date(payout.completedAt).toLocaleDateString()
+                          : '—'}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -965,7 +1117,13 @@ export default function PayoutTab() {
             <div className="policy-ribbon-header">
               <h3>Control Ribbon</h3>
               <span className={`ribbon-pill ribbon-pill--${readinessState}`}>
-                {readinessState === 'ready' ? 'READY' : readinessState === 'blocked' ? 'BLOCKED' : readinessState === 'checking' ? 'CHECKING' : 'UNKNOWN'}
+                {readinessState === 'ready'
+                  ? 'READY'
+                  : readinessState === 'blocked'
+                    ? 'BLOCKED'
+                    : readinessState === 'checking'
+                      ? 'CHECKING'
+                      : 'UNKNOWN'}
               </span>
             </div>
 
@@ -976,7 +1134,11 @@ export default function PayoutTab() {
               </div>
               <div className="ribbon-metric">
                 <span className="ribbon-label">Wallet Balance</span>
-                <strong>{hotWallet.balanceSol !== null && hotWallet.balanceSol !== undefined ? `${hotWallet.balanceSol} SOL` : 'unknown'}</strong>
+                <strong>
+                  {hotWallet.balanceSol !== null && hotWallet.balanceSol !== undefined
+                    ? `${hotWallet.balanceSol} SOL`
+                    : 'unknown'}
+                </strong>
               </div>
               <div className="ribbon-metric">
                 <span className="ribbon-label">Failed Checks</span>
@@ -989,19 +1151,39 @@ export default function PayoutTab() {
             </div>
 
             <div className="policy-actions">
-              <button className="btn-secondary" onClick={runReadinessCheck} disabled={readiness.loading}>
+              <button
+                className="btn-secondary"
+                onClick={runReadinessCheck}
+                disabled={readiness.loading}
+              >
                 {readiness.loading ? 'Checking...' : 'Run Readiness'}
               </button>
-              <button className="btn-secondary" onClick={loadHotWalletBalance} disabled={hotWallet.loading}>
+              <button
+                className="btn-secondary"
+                onClick={loadHotWalletBalance}
+                disabled={hotWallet.loading}
+              >
                 {hotWallet.loading ? 'Checking wallet...' : 'Check Wallet'}
               </button>
-              <button className="btn-secondary" onClick={loadRecentTransfers} disabled={recentTransfers.loading}>
+              <button
+                className="btn-secondary"
+                onClick={loadRecentTransfers}
+                disabled={recentTransfers.loading}
+              >
                 {recentTransfers.loading ? 'Refreshing receipts...' : 'Refresh Receipts'}
               </button>
-              <button className="btn-secondary" onClick={loadAutopilotRuns} disabled={autopilotRuns.loading}>
+              <button
+                className="btn-secondary"
+                onClick={loadAutopilotRuns}
+                disabled={autopilotRuns.loading}
+              >
                 {autopilotRuns.loading ? 'Refreshing runs...' : 'Refresh Runs'}
               </button>
-              <button className="btn-primary" onClick={runAutopilot} disabled={autopilot.running || !directForm.recipientAddress}>
+              <button
+                className="btn-primary"
+                onClick={runAutopilot}
+                disabled={autopilot.running || !directForm.recipientAddress}
+              >
                 {autopilot.running ? 'Autopilot Running...' : 'Autopilot Execute'}
               </button>
             </div>
@@ -1024,9 +1206,7 @@ export default function PayoutTab() {
               </div>
             )}
 
-            {autopilot.error ? (
-              <div className="policy-msg">❌ {autopilot.error}</div>
-            ) : null}
+            {autopilot.error ? <div className="policy-msg">❌ {autopilot.error}</div> : null}
 
             {autopilot.steps.length > 0 ? (
               <div className="autopilot-log">
@@ -1043,8 +1223,8 @@ export default function PayoutTab() {
           <div className="policy-card">
             <h3>Network Rail</h3>
             <p>
-              Switch the live settlement rail in one click. This saves the runtime policy, then refreshes readiness and
-              wallet status against the selected network.
+              Switch the live settlement rail in one click. This saves the runtime policy, then
+              refreshes readiness and wallet status against the selected network.
             </p>
             <div className="network-switcher" role="group" aria-label="Settlement network switcher">
               {['devnet', 'testnet', 'mainnet-beta'].map((network) => {
@@ -1058,7 +1238,11 @@ export default function PayoutTab() {
                     onClick={() => handleQuickNetworkSwitch(network)}
                     disabled={policySaving || Boolean(networkSwitching) || isActive}
                   >
-                    {isWorking ? 'Switching...' : (network === 'mainnet-beta' ? 'Mainnet Live' : network)}
+                    {isWorking
+                      ? 'Switching...'
+                      : network === 'mainnet-beta'
+                        ? 'Mainnet Live'
+                        : network}
                   </button>
                 );
               })}
@@ -1084,43 +1268,60 @@ export default function PayoutTab() {
           <div className="policy-card">
             <h3>⚡ Launch Readiness Check</h3>
             <p>
-              Run this before any one-click send. It verifies policy range, wallet key setup, wallet balance,
-              and RPC connectivity from the live backend environment.
+              Run this before any one-click send. It verifies policy range, wallet key setup, wallet
+              balance, and RPC connectivity from the live backend environment.
             </p>
             <div className="policy-actions">
               <button className="btn-secondary" onClick={handleSavePolicy} disabled={policySaving}>
                 {policySaving ? 'Saving policy...' : 'Save Policy First'}
               </button>
-              <button className="btn-primary" onClick={runReadinessCheck} disabled={readiness.loading}>
+              <button
+                className="btn-primary"
+                onClick={runReadinessCheck}
+                disabled={readiness.loading}
+              >
                 {readiness.loading ? 'Running checks...' : 'Run Readiness Check'}
               </button>
-              <button className="btn-secondary" onClick={loadHotWalletBalance} disabled={hotWallet.loading}>
+              <button
+                className="btn-secondary"
+                onClick={loadHotWalletBalance}
+                disabled={hotWallet.loading}
+              >
                 {hotWallet.loading ? 'Checking wallet...' : 'Check Wallet Balance'}
               </button>
               {policyForm.network === 'devnet' ? (
-                <button className="btn-secondary" onClick={requestDevnetAirdrop} disabled={airdrop.loading}>
+                <button
+                  className="btn-secondary"
+                  onClick={requestDevnetAirdrop}
+                  disabled={airdrop.loading}
+                >
                   {airdrop.loading ? 'Requesting airdrop...' : 'Request Devnet Airdrop'}
                 </button>
               ) : null}
             </div>
 
-            {readiness.error ? (
-              <div className="policy-msg">❌ {readiness.error}</div>
-            ) : null}
+            {readiness.error ? <div className="policy-msg">❌ {readiness.error}</div> : null}
 
             {readiness.data ? (
               <div className={`policy-msg ${readiness.data.ready ? 'direct-success' : ''}`}>
                 <div>
                   {readiness.data.ready ? '✅ Ready for one-click sends' : '⚠️ Not ready yet'}
                 </div>
-                <div>Network: <strong>{readiness.data.network}</strong></div>
-                <div>RPC: <span>{readiness.data.rpcUrl}</span></div>
-                {Array.isArray(readiness.data.checks) && readiness.data.checks.map((check) => (
-                  <div key={check.key} className="readiness-item">
-                    <strong>{check.ok ? '✅' : '❌'} {check.label}</strong>
-                    <div className="readiness-detail">{check.detail}</div>
-                  </div>
-                ))}
+                <div>
+                  Network: <strong>{readiness.data.network}</strong>
+                </div>
+                <div>
+                  RPC: <span>{readiness.data.rpcUrl}</span>
+                </div>
+                {Array.isArray(readiness.data.checks) &&
+                  readiness.data.checks.map((check) => (
+                    <div key={check.key} className="readiness-item">
+                      <strong>
+                        {check.ok ? '✅' : '❌'} {check.label}
+                      </strong>
+                      <div className="readiness-detail">{check.detail}</div>
+                    </div>
+                  ))}
                 {Array.isArray(readiness.data.notes) && readiness.data.notes.length > 0 && (
                   <div className="readiness-notes">
                     {readiness.data.notes.map((note) => (
@@ -1131,17 +1332,24 @@ export default function PayoutTab() {
               </div>
             ) : null}
 
-            {airdrop.error ? (
-              <div className="policy-msg">❌ {airdrop.error}</div>
-            ) : null}
+            {airdrop.error ? <div className="policy-msg">❌ {airdrop.error}</div> : null}
 
             {airdrop.result?.ok ? (
               <div className="policy-msg direct-success">
                 <div>✅ Devnet airdrop received: {airdrop.result.airdropAmountSol} SOL</div>
-                <div>Wallet: <code>{airdrop.result.hotWalletPublicKey}</code></div>
-                <div>Balance: <strong>{airdrop.result.balanceSol} SOL</strong></div>
                 <div>
-                  <a href={airdrop.result.explorerUrl} target="_blank" rel="noopener noreferrer" className="explorer-link">
+                  Wallet: <code>{airdrop.result.hotWalletPublicKey}</code>
+                </div>
+                <div>
+                  Balance: <strong>{airdrop.result.balanceSol} SOL</strong>
+                </div>
+                <div>
+                  <a
+                    href={airdrop.result.explorerUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="explorer-link"
+                  >
                     View Airdrop Transaction ↗
                   </a>
                 </div>
@@ -1152,29 +1360,51 @@ export default function PayoutTab() {
           <div className="policy-card">
             <h3>Runtime Payout Policy</h3>
             <p>
-              Set the allowed transfer range. Current intended range can be configured from $5 up to $50,000,
-              but transfers are only from funded treasury wallets and still require valid on-chain signatures.
+              Set the allowed transfer range. Current intended range can be configured from $5 up to
+              $50,000, but transfers are only from funded treasury wallets and still require valid
+              on-chain signatures.
             </p>
             <div className="policy-grid">
               <label>
                 Min USD
-                <input type="number" value={policyForm.minUsd} onChange={(e) => setPolicyForm((prev) => ({ ...prev, minUsd: e.target.value }))} />
+                <input
+                  type="number"
+                  value={policyForm.minUsd}
+                  onChange={(e) => setPolicyForm((prev) => ({ ...prev, minUsd: e.target.value }))}
+                />
               </label>
               <label>
                 Max USD
-                <input type="number" value={policyForm.maxUsd} onChange={(e) => setPolicyForm((prev) => ({ ...prev, maxUsd: e.target.value }))} />
+                <input
+                  type="number"
+                  value={policyForm.maxUsd}
+                  onChange={(e) => setPolicyForm((prev) => ({ ...prev, maxUsd: e.target.value }))}
+                />
               </label>
               <label>
                 Min SOL
-                <input type="number" step="0.000001" value={policyForm.minSol} onChange={(e) => setPolicyForm((prev) => ({ ...prev, minSol: e.target.value }))} />
+                <input
+                  type="number"
+                  step="0.000001"
+                  value={policyForm.minSol}
+                  onChange={(e) => setPolicyForm((prev) => ({ ...prev, minSol: e.target.value }))}
+                />
               </label>
               <label>
                 Max SOL
-                <input type="number" step="0.000001" value={policyForm.maxSol} onChange={(e) => setPolicyForm((prev) => ({ ...prev, maxSol: e.target.value }))} />
+                <input
+                  type="number"
+                  step="0.000001"
+                  value={policyForm.maxSol}
+                  onChange={(e) => setPolicyForm((prev) => ({ ...prev, maxSol: e.target.value }))}
+                />
               </label>
               <label>
                 Network
-                <select value={policyForm.network} onChange={(e) => setPolicyForm((prev) => ({ ...prev, network: e.target.value }))}>
+                <select
+                  value={policyForm.network}
+                  onChange={(e) => setPolicyForm((prev) => ({ ...prev, network: e.target.value }))}
+                >
                   <option value="devnet">devnet</option>
                   <option value="testnet">testnet</option>
                   <option value="mainnet-beta">mainnet-beta</option>
@@ -1182,27 +1412,47 @@ export default function PayoutTab() {
               </label>
               <label>
                 Treasury Wallet
-                <input type="text" value={policyForm.treasuryWallet} onChange={(e) => setPolicyForm((prev) => ({ ...prev, treasuryWallet: e.target.value }))} />
+                <input
+                  type="text"
+                  value={policyForm.treasuryWallet}
+                  onChange={(e) =>
+                    setPolicyForm((prev) => ({ ...prev, treasuryWallet: e.target.value }))
+                  }
+                />
               </label>
               <label className="policy-checkbox">
                 <input
                   type="checkbox"
                   checked={policyForm.requireAllowlist}
-                  onChange={(e) => setPolicyForm((prev) => ({ ...prev, requireAllowlist: e.target.checked }))}
+                  onChange={(e) =>
+                    setPolicyForm((prev) => ({ ...prev, requireAllowlist: e.target.checked }))
+                  }
                 />
                 Require allowlist
               </label>
               <label className="policy-span-2">
                 Wallet Allowlist (comma or newline separated)
-                <textarea rows="3" value={policyForm.walletAllowlist} onChange={(e) => setPolicyForm((prev) => ({ ...prev, walletAllowlist: e.target.value }))} />
+                <textarea
+                  rows="3"
+                  value={policyForm.walletAllowlist}
+                  onChange={(e) =>
+                    setPolicyForm((prev) => ({ ...prev, walletAllowlist: e.target.value }))
+                  }
+                />
               </label>
               <label className="policy-span-2">
                 Notes
-                <textarea rows="2" value={policyForm.notes} onChange={(e) => setPolicyForm((prev) => ({ ...prev, notes: e.target.value }))} />
+                <textarea
+                  rows="2"
+                  value={policyForm.notes}
+                  onChange={(e) => setPolicyForm((prev) => ({ ...prev, notes: e.target.value }))}
+                />
               </label>
             </div>
             <div className="policy-actions">
-              <button className="btn-secondary" onClick={loadRuntimePolicy}>Reload Policy</button>
+              <button className="btn-secondary" onClick={loadRuntimePolicy}>
+                Reload Policy
+              </button>
               <button className="btn-primary" onClick={handleSavePolicy} disabled={policySaving}>
                 {policySaving ? 'Saving...' : 'Save Policy'}
               </button>
@@ -1216,31 +1466,62 @@ export default function PayoutTab() {
             <div className="policy-grid">
               <label>
                 Recipient Wallet
-                <input type="text" value={testForm.walletAddress} onChange={(e) => setTestForm((prev) => ({ ...prev, walletAddress: e.target.value }))} />
+                <input
+                  type="text"
+                  value={testForm.walletAddress}
+                  onChange={(e) =>
+                    setTestForm((prev) => ({ ...prev, walletAddress: e.target.value }))
+                  }
+                />
               </label>
               <label>
                 Amount USD
-                <input type="number" value={testForm.amountUsd} onChange={(e) => setTestForm((prev) => ({ ...prev, amountUsd: e.target.value }))} />
+                <input
+                  type="number"
+                  value={testForm.amountUsd}
+                  onChange={(e) => setTestForm((prev) => ({ ...prev, amountUsd: e.target.value }))}
+                />
               </label>
               <label>
                 Amount SOL
-                <input type="number" step="0.000001" value={testForm.amountSol} onChange={(e) => setTestForm((prev) => ({ ...prev, amountSol: e.target.value }))} />
+                <input
+                  type="number"
+                  step="0.000001"
+                  value={testForm.amountSol}
+                  onChange={(e) => setTestForm((prev) => ({ ...prev, amountSol: e.target.value }))}
+                />
               </label>
               <label>
                 Artifact ID
-                <input type="text" value={testForm.artifactId} onChange={(e) => setTestForm((prev) => ({ ...prev, artifactId: e.target.value }))} />
+                <input
+                  type="text"
+                  value={testForm.artifactId}
+                  onChange={(e) => setTestForm((prev) => ({ ...prev, artifactId: e.target.value }))}
+                />
               </label>
               <label>
                 Artifact Title
-                <input type="text" value={testForm.artifactTitle} onChange={(e) => setTestForm((prev) => ({ ...prev, artifactTitle: e.target.value }))} />
+                <input
+                  type="text"
+                  value={testForm.artifactTitle}
+                  onChange={(e) =>
+                    setTestForm((prev) => ({ ...prev, artifactTitle: e.target.value }))
+                  }
+                />
               </label>
               <label>
                 Ritual ID
-                <input type="text" value={testForm.ritualId} onChange={(e) => setTestForm((prev) => ({ ...prev, ritualId: e.target.value }))} />
+                <input
+                  type="text"
+                  value={testForm.ritualId}
+                  onChange={(e) => setTestForm((prev) => ({ ...prev, ritualId: e.target.value }))}
+                />
               </label>
             </div>
             <div className="policy-actions">
-              <button className="btn-primary" onClick={handleRequestTestPayout}>Request Test Payout</button>
+              <button className="btn-primary" onClick={handleRequestTestPayout}>
+                Request Test Payout
+              </button>
             </div>
             {testResult && (
               <div className="policy-msg">
@@ -1254,13 +1535,15 @@ export default function PayoutTab() {
           <div className="policy-card">
             <h3>🔑 Hot Wallet Status</h3>
             <p>
-              The server holds a Solana keypair whose private key you store as <strong>SOLANA_HOT_WALLET_PRIVATE_KEY</strong> in
-              your Vercel environment variables. Once set and the wallet is funded, one click sends SOL directly to any address.
+              The server holds a Solana keypair whose private key you store as{' '}
+              <strong>SOLANA_HOT_WALLET_PRIVATE_KEY</strong> in your Vercel environment variables.
+              Once set and the wallet is funded, one click sends SOL directly to any address.
             </p>
             {hotWallet.notConfigured && (
               <div className="policy-msg">
-                ⚠️ Hot wallet key not set. Add <strong>SOLANA_HOT_WALLET_PRIVATE_KEY</strong> to Vercel → Project → Settings → Environment Variables,
-                then redeploy. Paste your Phantom JSON export array or base58 private key.
+                ⚠️ Hot wallet key not set. Add <strong>SOLANA_HOT_WALLET_PRIVATE_KEY</strong> to
+                Vercel → Project → Settings → Environment Variables, then redeploy. Paste your
+                Phantom JSON export array or base58 private key.
               </div>
             )}
             {hotWallet.publicKey && (
@@ -1268,7 +1551,9 @@ export default function PayoutTab() {
                 <span className="direct-balance-label">Address:</span>
                 <code className="direct-balance-val">{hotWallet.publicKey}</code>
                 <span className="direct-balance-label">Balance:</span>
-                <strong className="direct-balance-val">{hotWallet.balanceSol !== null ? `${hotWallet.balanceSol} SOL` : '—'}</strong>
+                <strong className="direct-balance-val">
+                  {hotWallet.balanceSol !== null ? `${hotWallet.balanceSol} SOL` : '—'}
+                </strong>
                 <span className="direct-balance-label">Network:</span>
                 <span className="direct-balance-val">{hotWallet.network}</span>
               </div>
@@ -1277,7 +1562,11 @@ export default function PayoutTab() {
               <div className="policy-msg">❌ {hotWallet.error}</div>
             )}
             <div className="policy-actions">
-              <button className="btn-secondary" onClick={loadHotWalletBalance} disabled={hotWallet.loading}>
+              <button
+                className="btn-secondary"
+                onClick={loadHotWalletBalance}
+                disabled={hotWallet.loading}
+              >
                 {hotWallet.loading ? 'Checking...' : 'Check Wallet Balance'}
               </button>
             </div>
@@ -1286,12 +1575,17 @@ export default function PayoutTab() {
           <div className="policy-card">
             <h3>🚀 Send SOL Directly to Wallet</h3>
             <p>
-              Signs and broadcasts instantly from the server hot wallet — no manual wallet step needed.
-              All policy limits apply. Start on <strong>devnet</strong> to test, then switch to <strong>mainnet-beta</strong>.
+              Signs and broadcasts instantly from the server hot wallet — no manual wallet step
+              needed. All policy limits apply. Start on <strong>devnet</strong> to test, then switch
+              to <strong>mainnet-beta</strong>.
             </p>
             <div className="policy-actions">
               <label className="policy-safe-mode">
-                <input type="checkbox" checked={safeMode} onChange={(e) => setSafeMode(e.target.checked)} />
+                <input
+                  type="checkbox"
+                  checked={safeMode}
+                  onChange={(e) => setSafeMode(e.target.checked)}
+                />
                 Safe mode: block send unless readiness is green
               </label>
             </div>
@@ -1302,7 +1596,9 @@ export default function PayoutTab() {
                   type="text"
                   placeholder="e.g. 7xKXtg2CW87d97TXJSDpbD..."
                   value={directForm.recipientAddress}
-                  onChange={(e) => setDirectForm((prev) => ({ ...prev, recipientAddress: e.target.value }))}
+                  onChange={(e) =>
+                    setDirectForm((prev) => ({ ...prev, recipientAddress: e.target.value }))
+                  }
                 />
               </label>
               <label>
@@ -1312,7 +1608,9 @@ export default function PayoutTab() {
                   step="0.000001"
                   min="0"
                   value={directForm.amountSol}
-                  onChange={(e) => setDirectForm((prev) => ({ ...prev, amountSol: e.target.value }))}
+                  onChange={(e) =>
+                    setDirectForm((prev) => ({ ...prev, amountSol: e.target.value }))
+                  }
                 />
               </label>
               <label>
@@ -1322,7 +1620,9 @@ export default function PayoutTab() {
                   step="0.01"
                   min="0"
                   value={directForm.amountUsd}
-                  onChange={(e) => setDirectForm((prev) => ({ ...prev, amountUsd: e.target.value }))}
+                  onChange={(e) =>
+                    setDirectForm((prev) => ({ ...prev, amountUsd: e.target.value }))
+                  }
                 />
               </label>
               <label className="policy-span-2">
@@ -1336,7 +1636,11 @@ export default function PayoutTab() {
               </label>
             </div>
             <div className="policy-actions">
-              <button className="btn-primary btn-send" onClick={handleDirectTransfer} disabled={directSending || !directForm.recipientAddress}>
+              <button
+                className="btn-primary btn-send"
+                onClick={handleDirectTransfer}
+                disabled={directSending || !directForm.recipientAddress}
+              >
                 {directSending ? '⏳ Sending...' : '🚀 Send SOL Now'}
               </button>
               <button
@@ -1346,16 +1650,29 @@ export default function PayoutTab() {
               >
                 {guidedFlow.loading ? 'Running $5 quick send...' : '💸 Quick $5 Test Send'}
               </button>
-              <button className="btn-secondary" onClick={executeGuidedFlow} disabled={guidedFlow.loading || !directForm.recipientAddress}>
+              <button
+                className="btn-secondary"
+                onClick={executeGuidedFlow}
+                disabled={guidedFlow.loading || !directForm.recipientAddress}
+              >
                 {guidedFlow.loading ? 'Running guided flow...' : '⚡ Execute One-Click Test Flow'}
               </button>
             </div>
             {directResult && directResult.ok && (
               <div className="policy-msg direct-success">
-                <div>✅ Sent! Status: <strong>{directResult.confirmationStatus}</strong></div>
-                <div>Signature: <code>{directResult.signature}</code></div>
                 <div>
-                  <a href={directResult.explorerUrl} target="_blank" rel="noopener noreferrer" className="explorer-link">
+                  ✅ Sent! Status: <strong>{directResult.confirmationStatus}</strong>
+                </div>
+                <div>
+                  Signature: <code>{directResult.signature}</code>
+                </div>
+                <div>
+                  <a
+                    href={directResult.explorerUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="explorer-link"
+                  >
                     View on Solana Explorer ↗
                   </a>
                 </div>
@@ -1365,19 +1682,23 @@ export default function PayoutTab() {
               <div className="policy-msg">
                 ❌ {directResult.error}
                 {directResult.notConfigured && (
-                  <span> — Add <strong>SOLANA_HOT_WALLET_PRIVATE_KEY</strong> to Vercel env vars and redeploy.</span>
+                  <span>
+                    {' '}
+                    — Add <strong>SOLANA_HOT_WALLET_PRIVATE_KEY</strong> to Vercel env vars and
+                    redeploy.
+                  </span>
                 )}
               </div>
             )}
 
-            {guidedFlow.error ? (
-              <div className="policy-msg">❌ {guidedFlow.error}</div>
-            ) : null}
+            {guidedFlow.error ? <div className="policy-msg">❌ {guidedFlow.error}</div> : null}
 
             {guidedFlow.result?.ok ? (
               <div className="policy-msg direct-success">
                 <div>✅ Guided flow completed</div>
-                <div>Network: <strong>{guidedFlow.result?.flow?.network}</strong></div>
+                <div>
+                  Network: <strong>{guidedFlow.result?.flow?.network}</strong>
+                </div>
                 <div>
                   Transfer Signature: <code>{guidedFlow.result?.flow?.transfer?.signature}</code>
                 </div>
@@ -1393,7 +1714,10 @@ export default function PayoutTab() {
                 </div>
                 {guidedFlow.result?.flow?.airdrop?.attempted ? (
                   <div>
-                    Airdrop: {guidedFlow.result?.flow?.airdrop?.ok ? '✅ success' : '⚠️ attempted but failed'}
+                    Airdrop:{' '}
+                    {guidedFlow.result?.flow?.airdrop?.ok
+                      ? '✅ success'
+                      : '⚠️ attempted but failed'}
                   </div>
                 ) : null}
               </div>
@@ -1404,12 +1728,18 @@ export default function PayoutTab() {
             <h3>📜 Recent Transfer Receipts</h3>
             <p>Latest on-chain payout records from this backend, with direct explorer links.</p>
             <div className="policy-actions">
-              <button className="btn-secondary" onClick={loadRecentTransfers} disabled={recentTransfers.loading}>
+              <button
+                className="btn-secondary"
+                onClick={loadRecentTransfers}
+                disabled={recentTransfers.loading}
+              >
                 {recentTransfers.loading ? 'Refreshing...' : 'Refresh Receipts'}
               </button>
             </div>
 
-            {recentTransfers.error ? <div className="policy-msg">❌ {recentTransfers.error}</div> : null}
+            {recentTransfers.error ? (
+              <div className="policy-msg">❌ {recentTransfers.error}</div>
+            ) : null}
 
             {!recentTransfers.loading && recentTransfers.rows.length === 0 ? (
               <div className="policy-msg">No transfer receipts yet.</div>
@@ -1429,16 +1759,24 @@ export default function PayoutTab() {
                   </thead>
                   <tbody>
                     {recentTransfers.rows.map((row) => {
-                      const cluster = row.network === 'mainnet-beta' ? '' : `?cluster=${row.network || 'devnet'}`;
+                      const cluster =
+                        row.network === 'mainnet-beta' ? '' : `?cluster=${row.network || 'devnet'}`;
                       const txUrl = `https://explorer.solana.com/tx/${row.txSignature}${cluster}`;
                       return (
                         <tr key={row.id}>
-                          <td>{row.createdAt ? new Date(row.createdAt).toLocaleString() : 'n/a'}</td>
+                          <td>
+                            {row.createdAt ? new Date(row.createdAt).toLocaleString() : 'n/a'}
+                          </td>
                           <td>{row.status || 'pending'}</td>
                           <td>{row.amountSol}</td>
                           <td className="receipt-wallet">{row.walletAddress}</td>
                           <td>
-                            <a href={txUrl} target="_blank" rel="noopener noreferrer" className="explorer-link">
+                            <a
+                              href={txUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="explorer-link"
+                            >
                               View ↗
                             </a>
                           </td>
@@ -1455,7 +1793,9 @@ export default function PayoutTab() {
             <h3>🛰️ Autopilot Run History</h3>
             <p>Persistent audit feed of guided one-click runs and their on-chain outcomes.</p>
 
-            {autopilotRuns.error ? <div className="policy-msg">❌ {autopilotRuns.error}</div> : null}
+            {autopilotRuns.error ? (
+              <div className="policy-msg">❌ {autopilotRuns.error}</div>
+            ) : null}
 
             {!autopilotRuns.loading && autopilotRuns.rows.length === 0 ? (
               <div className="policy-msg">No autopilot runs recorded yet.</div>
@@ -1484,7 +1824,12 @@ export default function PayoutTab() {
                         <td>{run.network || 'devnet'}</td>
                         <td>
                           {run.explorerUrl ? (
-                            <a href={run.explorerUrl} target="_blank" rel="noopener noreferrer" className="explorer-link">
+                            <a
+                              href={run.explorerUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="explorer-link"
+                            >
                               View ↗
                             </a>
                           ) : (
@@ -1504,15 +1849,29 @@ export default function PayoutTab() {
             <div className="policy-grid">
               <label>
                 Payout ID
-                <input type="text" value={confirmForm.payoutId} onChange={(e) => setConfirmForm((prev) => ({ ...prev, payoutId: e.target.value }))} />
+                <input
+                  type="text"
+                  value={confirmForm.payoutId}
+                  onChange={(e) =>
+                    setConfirmForm((prev) => ({ ...prev, payoutId: e.target.value }))
+                  }
+                />
               </label>
               <label className="policy-span-2">
                 Transaction Signature
-                <input type="text" value={confirmForm.txSignature} onChange={(e) => setConfirmForm((prev) => ({ ...prev, txSignature: e.target.value }))} />
+                <input
+                  type="text"
+                  value={confirmForm.txSignature}
+                  onChange={(e) =>
+                    setConfirmForm((prev) => ({ ...prev, txSignature: e.target.value }))
+                  }
+                />
               </label>
             </div>
             <div className="policy-actions">
-              <button className="btn-primary" onClick={handleConfirmTestPayout}>Confirm On-Chain Status</button>
+              <button className="btn-primary" onClick={handleConfirmTestPayout}>
+                Confirm On-Chain Status
+              </button>
             </div>
             {confirmResult && (
               <div className="policy-msg">

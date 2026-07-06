@@ -1,6 +1,7 @@
 # 🌍 GLOBAL INFRASTRUCTURE VERIFICATION CHECKLIST
 
 ## Summary
+
 ✅ **ALL SYSTEMS OPERATIONAL** - Backend connected to MongoDB, frontend configured for production, zero localhost dependencies.
 
 ---
@@ -8,6 +9,7 @@
 ## INFRASTRUCTURE STATUS
 
 ### ✅ Backend API (Vercel)
+
 - **URL:** https://pva-backend-api.vercel.app
 - **Status:** LIVE ✓
 - **Health Check:** `/api/health` → OK, DB connected (146ms response)
@@ -15,12 +17,14 @@
 - **Test Data:** `/api/archive` → Returns 12+ real entries
 
 ### ✅ Frontend (GitHub Pages)
+
 - **URL:** https://pvabazaar.org
 - **Status:** LIVE ✓
 - **API Configuration:** VITE_API_URL = https://pva-backend-api.vercel.app (production) ✓
 - **No Localhost:** All API calls go to live Vercel backend ✓
 
 ### ✅ Database (MongoDB Atlas)
+
 - **Status:** Connected ✓
 - **Response Time:** 146ms ✓
 - **Data:** 12+ archive entries available ✓
@@ -29,18 +33,19 @@
 
 ## DEPLOYMENT STATUS
 
-| ROUND | Feature | Commit | Status |
-|-------|---------|--------|--------|
-| 1 | Home button (🏠) added | ffbcde98 | ✅ DEPLOYED |
-| 1B | Dark mode colors (#4a90e2) | 6640acf5 | ✅ DEPLOYED |
-| 2 | Login whitespace trim | 522eb499 | ✅ DEPLOYED |
-| 3 | Footer "Back to Home" | 4bfd835d | ✅ DEPLOYED |
+| ROUND | Feature                    | Commit   | Status      |
+| ----- | -------------------------- | -------- | ----------- |
+| 1     | Home button (🏠) added     | ffbcde98 | ✅ DEPLOYED |
+| 1B    | Dark mode colors (#4a90e2) | 6640acf5 | ✅ DEPLOYED |
+| 2     | Login whitespace trim      | 522eb499 | ✅ DEPLOYED |
+| 3     | Footer "Back to Home"      | 4bfd835d | ✅ DEPLOYED |
 
 ---
 
 ## DEPLOYMENT VERIFICATION
 
 ### ✅ ROUND 1: Home Button
+
 - **Expected:** 🏠 button in entry header
 - **Live Check:** CSS deployed with correct styles
   - Normal: `#f5f9fd` background ✓
@@ -48,6 +53,7 @@
 - **Status:** ✅ LIVE
 
 ### ✅ ROUND 1B: Dark Mode Colors
+
 - **Expected:** Blue button matches dark theme
 - **Live Check:** Verified on production CSS
   - Normal state: `background:#f5f9fd` (subtle blue) ✓
@@ -55,12 +61,14 @@
 - **Status:** ✅ LIVE
 
 ### ✅ ROUND 2: Login Whitespace Fix
+
 - **Expected:** Login accepts credentials with accidental spaces
 - **Code:** `username.trim()` and `password.trim()` ✓
 - **Credentials:** <admin-username> / <admin-password>
 - **Status:** ✅ LIVE
 
 ### ✅ ROUND 3: Footer Navigation Update
+
 - **Expected:** "Back to Home" button linking to #/
 - **Live Check:** Needs verification on site
 - **Status:** ✅ DEPLOYED
@@ -70,6 +78,7 @@
 ## MANUAL VERIFICATION TASKS
 
 ### 📱 Mobile Verification (Use Phone or Browser DevTools)
+
 Test URL: https://pvabazaar.org
 
 1. **Home Page Layout**
@@ -102,6 +111,7 @@ Test URL: https://pvabazaar.org
    - [ ] Buttons don't jump when scrolling
 
 ### 🖥️ Desktop Verification
+
 Test URL: https://pvabazaar.org
 
 1. **Two-Column Layout**
@@ -134,6 +144,7 @@ Test URL: https://pvabazaar.org
 ## API CONNECTIVITY CHECKS
 
 ### Backend is Accessible from Production URLs
+
 ```bash
 # Test health endpoint
 curl -s https://pva-backend-api.vercel.app/api/health | jq .
@@ -148,12 +159,14 @@ curl -s https://pva-backend-api.vercel.app/api/health | jq .
 ```
 
 ### Frontend Calls Backend (No Localhost)
+
 - **File:** Frontend/src/lib/api.js
 - **Function:** `getApiBase()`
 - **Returns:** `https://pva-backend-api.vercel.app` (production only) ✓
 - **No localhost:** getApiBase() never returns localhost ✓
 
 ### Environment Configuration
+
 - **File:** Frontend/.env.production
 - **Setting:** `VITE_API_URL=https://pva-backend-api.vercel.app`
 - **Verified:** ✓ Correct production URL
@@ -183,13 +196,13 @@ curl -s https://pva-backend-api.vercel.app/api/health | jq .
 
 ## COMMITS REFERENCE
 
-| Commit | Round | Feature | Status |
-|--------|-------|---------|--------|
-| d76d0bef | RESET | Reverted to stable state | ✅ Done |
-| ffbcde98 | ROUND 1 | Added home button | ✅ Deployed |
-| 6640acf5 | ROUND 1B | Dark mode colors | ✅ Deployed |
-| 522eb499 | ROUND 2 | Login whitespace trim | ✅ Deployed |
-| 4bfd835d | ROUND 3 | Footer update | ✅ Deployed |
+| Commit   | Round    | Feature                  | Status      |
+| -------- | -------- | ------------------------ | ----------- |
+| d76d0bef | RESET    | Reverted to stable state | ✅ Done     |
+| ffbcde98 | ROUND 1  | Added home button        | ✅ Deployed |
+| 6640acf5 | ROUND 1B | Dark mode colors         | ✅ Deployed |
+| 522eb499 | ROUND 2  | Login whitespace trim    | ✅ Deployed |
+| 4bfd835d | ROUND 3  | Footer update            | ✅ Deployed |
 
 ---
 

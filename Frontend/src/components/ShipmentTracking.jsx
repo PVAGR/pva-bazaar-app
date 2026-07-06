@@ -89,9 +89,7 @@ const ShipmentTracking = ({ trackingNumber }) => {
           <div className={styles.eventList}>
             {shipment.events.map((event, idx) => (
               <div key={idx} className={styles.event}>
-                <div className={styles.eventTime}>
-                  {new Date(event.timestamp).toLocaleString()}
-                </div>
+                <div className={styles.eventTime}>{new Date(event.timestamp).toLocaleString()}</div>
                 <div className={styles.eventContent}>
                   <strong>{event.status}</strong>
                   {event.location && (

@@ -10,7 +10,9 @@ const MAX_PAYLOAD_BYTES = 850 * 1024; // stays below API JSON body limit with me
 const MAX_SNAPSHOTS_PER_USER = 40;
 
 function clampString(value, maxLen) {
-  return String(value || '').trim().slice(0, maxLen);
+  return String(value || '')
+    .trim()
+    .slice(0, maxLen);
 }
 
 function isBase64Like(value) {
@@ -65,7 +67,8 @@ router.post('/snapshots', authMiddleware, async (req, res) => {
   try {
     const label = clampString(req.body?.label || 'Untitled snapshot', 140);
     const payload = req.body?.payload || {};
-    const manifest = req.body?.manifest && typeof req.body.manifest === 'object' ? req.body.manifest : {};
+    const manifest =
+      req.body?.manifest && typeof req.body.manifest === 'object' ? req.body.manifest : {};
     const device = req.body?.device && typeof req.body.device === 'object' ? req.body.device : {};
     const pinToIpfs = Boolean(req.body?.pinToIpfs);
 
@@ -86,7 +89,9 @@ router.post('/snapshots', authMiddleware, async (req, res) => {
       return res.status(400).json({ ok: false, error: 'Encrypted payload must be base64 strings' });
     }
     if (!Number.isFinite(iterations) || iterations < 100000 || iterations > 1000000) {
-      return res.status(400).json({ ok: false, error: 'PBKDF2 iterations must be between 100000 and 1000000' });
+      return res
+        .status(400)
+        .json({ ok: false, error: 'PBKDF2 iterations must be between 100000 and 1000000' });
     }
 
     const payloadSizeBytes = estimateB64DecodedBytes(ciphertextB64);

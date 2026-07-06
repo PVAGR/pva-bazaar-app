@@ -10,7 +10,7 @@ function sanitizeInput(data) {
     if (typeof value === 'string') {
       sanitized[key] = validator.escape(value).trim();
     } else if (Array.isArray(value)) {
-      sanitized[key] = value.map(v => typeof v === 'string' ? validator.escape(v).trim() : v);
+      sanitized[key] = value.map((v) => (typeof v === 'string' ? validator.escape(v).trim() : v));
     } else if (typeof value === 'object' && value !== null) {
       sanitized[key] = sanitizeInput(value);
     } else {

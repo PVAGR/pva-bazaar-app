@@ -33,14 +33,16 @@ router.post('/submit', async (req, res) => {
     });
     await blog.save();
 
-    dispatchToOpenClaw(createSystemEvent('info', 'Contribution submitted', {
-      blogId: blog._id?.toString(),
-      slug: blog.slug,
-      title: blog.title,
-      status: blog.status,
-      route: 'contribute',
-      actor: 'public',
-    }));
+    dispatchToOpenClaw(
+      createSystemEvent('info', 'Contribution submitted', {
+        blogId: blog._id?.toString(),
+        slug: blog.slug,
+        title: blog.title,
+        status: blog.status,
+        route: 'contribute',
+        actor: 'public',
+      }),
+    );
 
     res.json({ ok: true, message: 'Contribution submitted for review', slug });
   } catch (err) {

@@ -11,30 +11,35 @@
 ### ✅ Frontend Checks (GitHub Pages)
 
 - [ ] **Build succeeds locally**
+
   ```bash
   cd Frontend && npm ci && npm run build
   # Should complete without errors
   ```
 
 - [ ] **dist/ contains built files**
+
   ```bash
   ls Frontend/dist/
   # Should show: index.html, assets/, writings/, etc.
   ```
 
 - [ ] **CNAME file present**
+
   ```bash
   cat CNAME
   # Should output: pvabazaar.org
   ```
 
 - [ ] **No secrets in .env.production**
+
   ```bash
   grep -E "SECRET|TOKEN|KEY|PASS" Frontend/.env.production
   # Should return no results
   ```
 
 - [ ] **Vite base path correct**
+
   ```bash
   grep "base:" Frontend/vite.config.js
   # Should show: base: '/'
@@ -49,30 +54,35 @@
 ### ✅ Backend Checks (Vercel)
 
 - [ ] **Backend builds locally**
+
   ```bash
   cd backend && npm ci
   node -c api/index.js  # Syntax check
   ```
 
 - [ ] **No secrets in code**
+
   ```bash
   grep -r "SECRET\|PASSWORD\|MONGODB" backend/ | grep -v node_modules | grep -v ".env"
   # Should return no results (or only from .env)
   ```
 
 - [ ] **CORS fixes applied**
+
   ```bash
   grep -A5 "getAllowedOrigins" backend/api/index.js
   # Should show helper function
   ```
 
 - [ ] **MongoDB connection safe for serverless**
+
   ```bash
   grep -A10 "connectToDatabase" backend/api/index.js | grep "global._mongooseConn"
   # Should show caching pattern
   ```
 
 - [ ] **Health endpoint working**
+
   ```bash
   grep -A5 "api/health" backend/api/index.js | grep "res.json"
   # Should show health response
@@ -96,11 +106,11 @@ Location: **GitHub UI → Settings → Secrets and variables → Repository secr
 ☐ VERCEL_TOKEN
   - Get from: https://vercel.com/account/tokens
   - Format: Long alphanumeric string
-  
+
 ☐ VERCEL_ORG_ID
   - Get from: Vercel Dashboard → Settings → General
   - Format: Alphanumeric ID
-  
+
 ☐ VERCEL_PROJECT_ID_BACKEND
   - Get from: Vercel Dashboard → Backend Project → Settings → General
   - Format: Alphanumeric ID starting with "prj_"
@@ -124,16 +134,17 @@ Location: **GitHub UI → Settings → Secrets and variables → Repository vari
 
 Location: **Vercel Dashboard → Backend Project → Settings → Environment Variables**
 
-| Variable | Value | Scope |
-|----------|-------|-------|
-| `MONGODB_URI` | `mongodb+srv://user:pass@cluster.mongodb.net/pva-bazaar?retryWrites=true&w=majority` | Production |
-| `JWT_SECRET` | Generate: `openssl rand -hex 32` | Production |
-| `ADMIN_SECRET_CODE` | Generate random code for admin access | Production |
-| `ALLOWED_ORIGIN` | `https://pvabazaar.org` | Production |
-| `NODE_ENV` | `production` | Production |
-| `LEGACY_MODE` | `false` | Production |
+| Variable            | Value                                                                                | Scope      |
+| ------------------- | ------------------------------------------------------------------------------------ | ---------- |
+| `MONGODB_URI`       | `mongodb+srv://user:pass@cluster.mongodb.net/pva-bazaar?retryWrites=true&w=majority` | Production |
+| `JWT_SECRET`        | Generate: `openssl rand -hex 32`                                                     | Production |
+| `ADMIN_SECRET_CODE` | Generate random code for admin access                                                | Production |
+| `ALLOWED_ORIGIN`    | `https://pvabazaar.org`                                                              | Production |
+| `NODE_ENV`          | `production`                                                                         | Production |
+| `LEGACY_MODE`       | `false`                                                                              | Production |
 
 **How to Add:**
+
 1. Go to Vercel Backend Project
 2. Click "Settings" → "Environment Variables"
 3. Add each variable
@@ -144,8 +155,8 @@ Location: **Vercel Dashboard → Backend Project → Settings → Environment Va
 
 If Frontend is also on Vercel:
 
-| Variable | Value | Scope |
-|----------|-------|-------|
+| Variable       | Value                                | Scope      |
+| -------------- | ------------------------------------ | ---------- |
 | `VITE_API_URL` | `https://pva-backend-api.vercel.app` | Production |
 
 ---
@@ -189,11 +200,13 @@ git push origin main
 ### Step 2: Trigger GitHub Actions
 
 **Frontend Deployment:**
+
 - Trigger: Push to `main` with changes in `Frontend/`
 - Automated by: [.github/workflows/deploy-frontend.yml](.github/workflows/deploy-frontend.yml)
 - Time: ~2-3 minutes
 
 **Backend Deployment:**
+
 - Trigger: Push to `main`
 - Automated by: [.github/workflows/deploy-backend.yml](.github/workflows/deploy-backend.yml)
 - Time: ~5-10 minutes
@@ -202,6 +215,7 @@ git push origin main
 ### Step 3: Monitor Deployments
 
 **GitHub Actions:**
+
 ```bash
 # View workflow status
 gh workflow list
@@ -213,6 +227,7 @@ gh workflow view deploy-backend.yml
 ```
 
 **Vercel:**
+
 ```bash
 # View deployments
 vercel list
@@ -231,12 +246,14 @@ vercel logs pva-backend-api --follow
 ### ✅ Phase 1: Immediate Checks (5 minutes)
 
 - [ ] **Frontend loads**
+
   ```bash
   curl -I https://pvabazaar.org
   # Should return: HTTP/1.1 200 OK
   ```
 
 - [ ] **Frontend can reach API**
+
   ```bash
   curl -H "Origin: https://pvabazaar.org" \
     https://pva-backend-api.vercel.app/api/health
@@ -245,6 +262,7 @@ vercel logs pva-backend-api --follow
   ```
 
 - [ ] **Health endpoint responds**
+
   ```bash
   curl https://pva-backend-api.vercel.app/api/health | jq .
   # Should show: {"ok":true,"mongo":true,"ready":true,...}
@@ -260,12 +278,14 @@ vercel logs pva-backend-api --follow
 ### ✅ Phase 2: Functional Tests (15 minutes)
 
 - [ ] **Visit homepage**
+
   ```
   https://pvabazaar.org/
   # Should load archive entries
   ```
 
 - [ ] **Navigate routes**
+
   ```
   https://pvabazaar.org/#/about
   https://pvabazaar.org/#/admin
@@ -280,6 +300,7 @@ vercel logs pva-backend-api --follow
   - Verify CORS headers present
 
 - [ ] **Admin panel accessible**
+
   ```
   https://pvabazaar.org/#/admin
   # Should show: Login form or admin dashboard
@@ -293,6 +314,7 @@ vercel logs pva-backend-api --follow
 ### ✅ Phase 3: Performance & Security (30 minutes)
 
 - [ ] **Page load time**
+
   ```bash
   curl -w "Total: %{time_total}s\n" \
     https://pvabazaar.org/ -o /dev/null -s
@@ -300,12 +322,14 @@ vercel logs pva-backend-api --follow
   ```
 
 - [ ] **HTTPS enforced**
+
   ```bash
   curl -I http://pvabazaar.org/
   # Should redirect to HTTPS
   ```
 
 - [ ] **CORS blocks invalid origins**
+
   ```bash
   curl -H "Origin: https://evil.com" \
     https://pva-backend-api.vercel.app/api/health | grep "Access-Control-Allow-Origin"
@@ -313,6 +337,7 @@ vercel logs pva-backend-api --follow
   ```
 
 - [ ] **Secrets not exposed**
+
   ```bash
   curl https://pvabazaar.org/*.env
   curl https://pvabazaar.org/api-keys.json
@@ -397,6 +422,7 @@ vercel logs pva-backend-api --follow
 ### Error Alerts
 
 **Set up Vercel alerts:**
+
 1. Go to Vercel Dashboard → Settings → Notifications
 2. Enable:
    - [ ] Failed deployments
@@ -404,6 +430,7 @@ vercel logs pva-backend-api --follow
    - [ ] Bandwidth alerts
 
 **Set up GitHub alerts:**
+
 1. Go to GitHub → Settings → Code security → Dependabot
 2. Enable:
    - [ ] Dependency alerts
@@ -437,6 +464,7 @@ vercel logs pva-backend-api --follow
 ## CONTACTS & REFERENCES
 
 **Useful URLs:**
+
 - Frontend: https://pvabazaar.org
 - Admin Panel: https://pvabazaar.org/#/admin
 - Backend Health: https://pva-backend-api.vercel.app/api/health
@@ -445,6 +473,7 @@ vercel logs pva-backend-api --follow
 - Vercel Dashboard: https://vercel.com/dashboard
 
 **Documentation:**
+
 - [Full Stack Audit](./FULL_STACK_AUDIT.md)
 - [CORS Fix Summary](./CORS_FIX_SUMMARY.md)
 - [Vite Config](./Frontend/vite.config.js)

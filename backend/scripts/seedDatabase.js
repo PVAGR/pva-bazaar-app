@@ -572,7 +572,8 @@ async function seedCommunity() {
   const forums = await ForumThread.insertMany([
     {
       title: 'Best practices for shipping emeralds internationally',
-      content: 'What are the best practices for shipping high-value gemstones? Insurance recommendations?',
+      content:
+        'What are the best practices for shipping high-value gemstones? Insurance recommendations?',
       authorId: 'community-user-1',
       categoryId: 'shipping',
       views: 234,

@@ -17,8 +17,8 @@ export const generateDID = async () => {
 };
 
 export const getAuthenticatedDID = async () => {
-    if (!did.authenticated) {
-        await did.authenticate();
-    }
-    return did;
-}
+  if (!did.authenticated) {
+    await did.authenticate();
+  }
+  return did;
+};

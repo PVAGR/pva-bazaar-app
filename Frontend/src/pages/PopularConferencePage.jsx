@@ -79,17 +79,20 @@ export default function PopularConferencePage() {
   }, [hydrateAdminResponses]);
 
   const sortedProposals = useMemo(() => {
-    return [...proposals]
-      .sort((a, b) => {
-        const statusDelta = statusOrder(a.status) - statusOrder(b.status);
-        if (statusDelta !== 0) return statusDelta;
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      });
+    return [...proposals].sort((a, b) => {
+      const statusDelta = statusOrder(a.status) - statusOrder(b.status);
+      if (statusDelta !== 0) return statusDelta;
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
   }, [proposals]);
 
   const conferenceQueue = useMemo(
-    () => sortedProposals.filter((proposal) => proposal.status === 'conference_queue' || proposal.status === 'threshold_reached'),
-    [sortedProposals]
+    () =>
+      sortedProposals.filter(
+        (proposal) =>
+          proposal.status === 'conference_queue' || proposal.status === 'threshold_reached',
+      ),
+    [sortedProposals],
   );
 
   const visibleProposals = useMemo(() => {
@@ -151,7 +154,11 @@ export default function PopularConferencePage() {
             <p className="gov-detail-body" style={{ marginBottom: '0.75rem' }}>
               <strong>Support threshold:</strong> {supportThreshold} supports
             </p>
-            <button type="button" className="gov-btn gov-btn-primary" onClick={handleMembershipActivate}>
+            <button
+              type="button"
+              className="gov-btn gov-btn-primary"
+              onClick={handleMembershipActivate}
+            >
               {citizenPassport.memberActive ? 'Refresh Membership' : 'Activate Membership'}
             </button>
             <p className="gov-detail-body" style={{ marginTop: '0.65rem' }}>
@@ -159,10 +166,14 @@ export default function PopularConferencePage() {
             </p>
           </div>
 
-          <div className="gov-section-label" style={{ marginTop: '1rem' }}>Conference Queue</div>
+          <div className="gov-section-label" style={{ marginTop: '1rem' }}>
+            Conference Queue
+          </div>
           <div className="gov-card">
             {conferenceQueue.length === 0 ? (
-              <p className="gov-detail-body">No proposals queued yet. Reach threshold to auto-queue.</p>
+              <p className="gov-detail-body">
+                No proposals queued yet. Reach threshold to auto-queue.
+              </p>
             ) : (
               conferenceQueue.map((proposal) => (
                 <div key={proposal.id} style={{ marginBottom: '0.65rem' }}>
@@ -179,21 +190,45 @@ export default function PopularConferencePage() {
             <div className="gov-hero-eyebrow">Popular Conference · Direct Democracy MVP</div>
             <h1 className="gov-hero-title">Public Proposal Engine</h1>
             <p className="gov-hero-sub">
-              Citizens submit proposals, community support triggers auto-queue for conference, moderators publish decisions,
-              and accepted items move into execution tracking.
+              Citizens submit proposals, community support triggers auto-queue for conference,
+              moderators publish decisions, and accepted items move into execution tracking.
             </p>
             <div className="gov-hero-actions">
-              <button type="button" className="gov-btn gov-btn-primary" onClick={() => setShowForm((value) => !value)}>
+              <button
+                type="button"
+                className="gov-btn gov-btn-primary"
+                onClick={() => setShowForm((value) => !value)}
+              >
                 {showForm ? 'Hide Proposal Form' : 'New Proposal'}
               </button>
-              <button type="button" className="gov-btn gov-btn-ghost" onClick={() => setFilter('all')}>All</button>
-              <button type="button" className="gov-btn gov-btn-ghost" onClick={() => setFilter('conference_queue')}>Conference Queue</button>
-              <button type="button" className="gov-btn gov-btn-ghost" onClick={() => setFilter('in_execution')}>In Execution</button>
+              <button
+                type="button"
+                className="gov-btn gov-btn-ghost"
+                onClick={() => setFilter('all')}
+              >
+                All
+              </button>
+              <button
+                type="button"
+                className="gov-btn gov-btn-ghost"
+                onClick={() => setFilter('conference_queue')}
+              >
+                Conference Queue
+              </button>
+              <button
+                type="button"
+                className="gov-btn gov-btn-ghost"
+                onClick={() => setFilter('in_execution')}
+              >
+                In Execution
+              </button>
             </div>
           </section>
 
           <section className="gov-card" style={{ marginBottom: '1rem' }}>
-            <div className="gov-section-title" style={{ marginBottom: '0.5rem' }}>Conference Agenda</div>
+            <div className="gov-section-title" style={{ marginBottom: '0.5rem' }}>
+              Conference Agenda
+            </div>
             <div className="gov-detail-body" style={{ marginBottom: '0.5rem' }}>
               Session #{conference.number} · {conference.date} · {conference.location}
             </div>
@@ -206,7 +241,9 @@ export default function PopularConferencePage() {
             </div>
           </section>
 
-          {showForm ? <ProposalForm onSubmit={handleSubmitProposal} onCancel={() => setShowForm(false)} /> : null}
+          {showForm ? (
+            <ProposalForm onSubmit={handleSubmitProposal} onCancel={() => setShowForm(false)} />
+          ) : null}
 
           <section>
             <div className="gov-section-header">
@@ -220,7 +257,10 @@ export default function PopularConferencePage() {
                   <ProposalCard proposal={proposal} onSupport={handleSupport} />
 
                   <div className="gov-card" style={{ marginTop: '0.65rem' }}>
-                    <div className="gov-section-title" style={{ marginBottom: '0.35rem', fontSize: '1rem' }}>
+                    <div
+                      className="gov-section-title"
+                      style={{ marginBottom: '0.35rem', fontSize: '1rem' }}
+                    >
                       Deliberation
                     </div>
                     {proposal.comments?.length ? (
@@ -232,7 +272,9 @@ export default function PopularConferencePage() {
                         ))}
                       </div>
                     ) : (
-                      <p className="gov-detail-body" style={{ marginBottom: '0.65rem' }}>No comments yet.</p>
+                      <p className="gov-detail-body" style={{ marginBottom: '0.65rem' }}>
+                        No comments yet.
+                      </p>
                     )}
 
                     <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
@@ -240,7 +282,12 @@ export default function PopularConferencePage() {
                         className="gov-form-input"
                         style={{ flex: '1 1 320px' }}
                         value={commentDrafts[proposal.id] || ''}
-                        onChange={(event) => setCommentDrafts((state) => ({ ...state, [proposal.id]: event.target.value }))}
+                        onChange={(event) =>
+                          setCommentDrafts((state) => ({
+                            ...state,
+                            [proposal.id]: event.target.value,
+                          }))
+                        }
                         placeholder="Add a public comment to this proposal"
                       />
                       <button
@@ -260,21 +307,34 @@ export default function PopularConferencePage() {
 
         <aside className="gov-right-panel">
           <section className="gov-live-widget">
-            <div className="gov-live-badge"><span className="gov-live-dot" /> Citizen Passport</div>
+            <div className="gov-live-badge">
+              <span className="gov-live-dot" /> Citizen Passport
+            </div>
             <div className="gov-widget-title">{citizen.name}</div>
-            <div className="gov-widget-desc">Verified: {citizenPassport.memberActive ? 'Yes' : 'No'}</div>
+            <div className="gov-widget-desc">
+              Verified: {citizenPassport.memberActive ? 'Yes' : 'No'}
+            </div>
             <div className="gov-widget-desc">Node: {citizenPassport.node}</div>
           </section>
 
           <section className="gov-card">
-            <div className="gov-section-title" style={{ marginBottom: '0.65rem' }}>Execution Snapshot</div>
-            {sortedProposals.filter((proposal) => proposal.executionProject).slice(0, 3).map((proposal) => (
-              <div key={proposal.id} className="gov-detail-body" style={{ marginBottom: '0.5rem' }}>
-                <strong>{proposal.id}</strong> · {proposal.executionProject.progressPercent || 0}%
-                <br />
-                {proposal.executionProject.latestUpdate || 'Awaiting execution update'}
-              </div>
-            ))}
+            <div className="gov-section-title" style={{ marginBottom: '0.65rem' }}>
+              Execution Snapshot
+            </div>
+            {sortedProposals
+              .filter((proposal) => proposal.executionProject)
+              .slice(0, 3)
+              .map((proposal) => (
+                <div
+                  key={proposal.id}
+                  className="gov-detail-body"
+                  style={{ marginBottom: '0.5rem' }}
+                >
+                  <strong>{proposal.id}</strong> · {proposal.executionProject.progressPercent || 0}%
+                  <br />
+                  {proposal.executionProject.latestUpdate || 'Awaiting execution update'}
+                </div>
+              ))}
           </section>
         </aside>
       </div>

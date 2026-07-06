@@ -132,15 +132,42 @@
   font-weight: 700;
 }
 
-.status-draft { color: #c4c4c4; border-color: #8d8d8d; }
-.status-open { color: #6ec1ff; border-color: #4e9ad8; }
-.status-endorsed { color: #ffbf66; border-color: #db9a36; }
-.status-in_deliberation { color: #c48dff; border-color: #9b67d2; }
-.status-voting { color: #ff9c4a; border-color: #d98238; }
-.status-accepted { color: #6fd58d; border-color: #4bb66d; }
-.status-rejected { color: #ff8585; border-color: #d36363; }
-.status-needs_revision { color: #ffd28f; border-color: #d5a85c; }
-.status-archived { color: #a5a5a5; border-color: #7c7c7c; }
+.status-draft {
+  color: #c4c4c4;
+  border-color: #8d8d8d;
+}
+.status-open {
+  color: #6ec1ff;
+  border-color: #4e9ad8;
+}
+.status-endorsed {
+  color: #ffbf66;
+  border-color: #db9a36;
+}
+.status-in_deliberation {
+  color: #c48dff;
+  border-color: #9b67d2;
+}
+.status-voting {
+  color: #ff9c4a;
+  border-color: #d98238;
+}
+.status-accepted {
+  color: #6fd58d;
+  border-color: #4bb66d;
+}
+.status-rejected {
+  color: #ff8585;
+  border-color: #d36363;
+}
+.status-needs_revision {
+  color: #ffd28f;
+  border-color: #d5a85c;
+}
+.status-archived {
+  color: #a5a5a5;
+  border-color: #7c7c7c;
+}
 
 .proposal-progress-track {
   width: 100%;

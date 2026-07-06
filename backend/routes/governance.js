@@ -17,7 +17,15 @@ const web3 = new Web3();
 
 const ALLOWED_OUTCOMES = new Set(['accepted', 'planned', 'deferred', 'rejected']);
 const ALLOWED_VOTE_CHOICES = new Set(['yes', 'no', 'abstain']);
-const ALLOWED_ADMIN_DECISIONS = new Set(['public', 'conference_queue', 'accepted', 'rejected', 'needs_revision', 'in_execution', 'completed']);
+const ALLOWED_ADMIN_DECISIONS = new Set([
+  'public',
+  'conference_queue',
+  'accepted',
+  'rejected',
+  'needs_revision',
+  'in_execution',
+  'completed',
+]);
 const ALLOWED_VOTE_STATUSES = new Set(['agenda_published', 'vote_window']);
 const EXECUTION_ELIGIBLE_DECISIONS = new Set(['accepted', 'in_execution', 'completed']);
 const STATUS_ORDER = {
@@ -66,7 +74,10 @@ function validateVoteWindow(voteWindow) {
   const endsAt = voteWindow?.endsAt ? new Date(voteWindow.endsAt) : null;
 
   if (!startsAt || !endsAt || Number.isNaN(startsAt.getTime()) || Number.isNaN(endsAt.getTime())) {
-    return { ok: false, error: 'voteWindow.startsAt and voteWindow.endsAt are required and must be valid dates' };
+    return {
+      ok: false,
+      error: 'voteWindow.startsAt and voteWindow.endsAt are required and must be valid dates',
+    };
   }
 
   if (endsAt.getTime() <= startsAt.getTime()) {
@@ -100,7 +111,7 @@ function parseCommitteeUserIds() {
     String(process.env.PEOPLES_COMMITTEE_USER_IDS || '')
       .split(',')
       .map((id) => id.trim())
-      .filter(Boolean)
+      .filter(Boolean),
   );
 }
 
@@ -111,12 +122,16 @@ function isCommitteeMember(req) {
 }
 
 function normalizeWalletAddress(value) {
-  const clean = String(value || '').trim().toLowerCase();
+  const clean = String(value || '')
+    .trim()
+    .toLowerCase();
   return /^0x[a-f0-9]{40}$/.test(clean) ? clean : '';
 }
 
 function normalizeTxHash(value) {
-  const clean = String(value || '').trim().toLowerCase();
+  const clean = String(value || '')
+    .trim()
+    .toLowerCase();
   return /^0x[a-f0-9]{64}$/.test(clean) ? clean : '';
 }
 
@@ -142,12 +157,12 @@ function sanitizeExecutionBlock(input) {
   const progressPercent = Math.min(Math.max(Number(input.progressPercent || 0), 0), 100);
   const milestones = Array.isArray(input.milestones)
     ? input.milestones
-      .map((milestone, idx) => ({
-        id: sanitize(milestone?.id) || `M-${idx + 1}`,
-        title: sanitize(milestone?.title),
-        done: Boolean(milestone?.done),
-      }))
-      .filter((milestone) => Boolean(milestone.title))
+        .map((milestone, idx) => ({
+          id: sanitize(milestone?.id) || `M-${idx + 1}`,
+          title: sanitize(milestone?.title),
+          done: Boolean(milestone?.done),
+        }))
+        .filter((milestone) => Boolean(milestone.title))
     : [];
 
   return {
@@ -266,7 +281,7 @@ router.put('/drafts', authenticateToken, async (req, res) => {
         'preferences.drafts.governance': draft,
         updatedAt: Date.now(),
       },
-      { new: true }
+      { new: true },
     ).select('preferences.drafts.governance');
 
     return res.json({ ok: true, draft: user?.preferences?.drafts?.governance || null });
@@ -285,7 +300,7 @@ router.delete('/drafts', authenticateToken, async (req, res) => {
         'preferences.drafts.governance': null,
         updatedAt: Date.now(),
       },
-      { new: true }
+      { new: true },
     );
 
     return res.json({ ok: true, draft: null });
@@ -309,9 +324,7 @@ router.get('/admin-responses', async (_req, res) => {
 
 router.get('/admin-responses/sync-health', authenticateToken, adminOnly, async (_req, res) => {
   try {
-    const responses = await GovernanceAdminResponse.find({})
-      .sort({ updatedAt: -1 })
-      .lean();
+    const responses = await GovernanceAdminResponse.find({}).sort({ updatedAt: -1 }).lean();
 
     const proposalObjectIds = responses
       .map((item) => String(item?.proposalId || '').trim())
@@ -319,8 +332,8 @@ router.get('/admin-responses/sync-health', authenticateToken, adminOnly, async (
 
     const proposals = proposalObjectIds.length
       ? await GovernanceProposal.find({ _id: { $in: proposalObjectIds } })
-        .select('_id status title updatedAt')
-        .lean()
+          .select('_id status title updatedAt')
+          .lean()
       : [];
 
     const proposalMap = new Map(proposals.map((proposal) => [String(proposal._id), proposal]));
@@ -350,22 +363,25 @@ router.get('/admin-responses/sync-health', authenticateToken, adminOnly, async (
       };
     });
 
-    const summary = items.reduce((acc, item) => {
-      acc.total += 1;
-      if (item.syncState === 'synced') acc.synced += 1;
-      if (item.syncState === 'mismatch') acc.mismatch += 1;
-      if (item.syncState === 'missing') acc.missing += 1;
-      if (item.syncState === 'local_only') acc.localOnly += 1;
-      if (item.syncState === 'unmapped') acc.unmapped += 1;
-      return acc;
-    }, {
-      total: 0,
-      synced: 0,
-      mismatch: 0,
-      missing: 0,
-      localOnly: 0,
-      unmapped: 0,
-    });
+    const summary = items.reduce(
+      (acc, item) => {
+        acc.total += 1;
+        if (item.syncState === 'synced') acc.synced += 1;
+        if (item.syncState === 'mismatch') acc.mismatch += 1;
+        if (item.syncState === 'missing') acc.missing += 1;
+        if (item.syncState === 'local_only') acc.localOnly += 1;
+        if (item.syncState === 'unmapped') acc.unmapped += 1;
+        return acc;
+      },
+      {
+        total: 0,
+        synced: 0,
+        mismatch: 0,
+        missing: 0,
+        localOnly: 0,
+        unmapped: 0,
+      },
+    );
 
     return res.json({ ok: true, summary, items });
   } catch (error) {
@@ -374,48 +390,59 @@ router.get('/admin-responses/sync-health', authenticateToken, adminOnly, async (
   }
 });
 
-router.post('/admin-responses/:proposalId/repair-lifecycle', authenticateToken, adminOnly, async (req, res) => {
-  try {
-    const proposalId = sanitize(req.params?.proposalId);
-    if (!proposalId) {
-      return res.status(400).json({ ok: false, error: 'proposalId is required' });
-    }
-    if (!mongoose.Types.ObjectId.isValid(proposalId)) {
-      return res.status(400).json({ ok: false, error: 'repair-lifecycle requires a MongoDB proposal id' });
-    }
+router.post(
+  '/admin-responses/:proposalId/repair-lifecycle',
+  authenticateToken,
+  adminOnly,
+  async (req, res) => {
+    try {
+      const proposalId = sanitize(req.params?.proposalId);
+      if (!proposalId) {
+        return res.status(400).json({ ok: false, error: 'proposalId is required' });
+      }
+      if (!mongoose.Types.ObjectId.isValid(proposalId)) {
+        return res
+          .status(400)
+          .json({ ok: false, error: 'repair-lifecycle requires a MongoDB proposal id' });
+      }
 
-    const adminResponse = await GovernanceAdminResponse.findOne({ proposalId }).lean();
-    if (!adminResponse) {
-      return res.status(404).json({ ok: false, error: 'Admin response not found for proposal' });
+      const adminResponse = await GovernanceAdminResponse.findOne({ proposalId }).lean();
+      if (!adminResponse) {
+        return res.status(404).json({ ok: false, error: 'Admin response not found for proposal' });
+      }
+
+      const expectedLifecycleStatus = expectedLifecycleStatusFromDecision(adminResponse.decision);
+      if (!expectedLifecycleStatus) {
+        return res
+          .status(409)
+          .json({ ok: false, error: 'Cannot map admin decision to lifecycle status' });
+      }
+
+      const proposal = await GovernanceProposal.findById(proposalId);
+      if (!proposal) {
+        return res.status(404).json({ ok: false, error: 'Proposal not found' });
+      }
+
+      const previousStatus = proposal.status;
+      proposal.status = expectedLifecycleStatus;
+      await proposal.save();
+
+      return res.json({
+        ok: true,
+        repaired: previousStatus !== proposal.status,
+        proposalId,
+        adminDecision: adminResponse.decision,
+        previousStatus,
+        status: proposal.status,
+      });
+    } catch (error) {
+      console.error('Error repairing governance lifecycle status:', error);
+      return res
+        .status(500)
+        .json({ ok: false, error: 'Failed to repair governance lifecycle status' });
     }
-
-    const expectedLifecycleStatus = expectedLifecycleStatusFromDecision(adminResponse.decision);
-    if (!expectedLifecycleStatus) {
-      return res.status(409).json({ ok: false, error: 'Cannot map admin decision to lifecycle status' });
-    }
-
-    const proposal = await GovernanceProposal.findById(proposalId);
-    if (!proposal) {
-      return res.status(404).json({ ok: false, error: 'Proposal not found' });
-    }
-
-    const previousStatus = proposal.status;
-    proposal.status = expectedLifecycleStatus;
-    await proposal.save();
-
-    return res.json({
-      ok: true,
-      repaired: previousStatus !== proposal.status,
-      proposalId,
-      adminDecision: adminResponse.decision,
-      previousStatus,
-      status: proposal.status,
-    });
-  } catch (error) {
-    console.error('Error repairing governance lifecycle status:', error);
-    return res.status(500).json({ ok: false, error: 'Failed to repair governance lifecycle status' });
-  }
-});
+  },
+);
 
 router.put('/admin-responses/:proposalId', authenticateToken, adminOnly, async (req, res) => {
   try {
@@ -461,7 +488,7 @@ router.put('/admin-responses/:proposalId', authenticateToken, adminOnly, async (
         upsert: true,
         new: true,
         runValidators: true,
-      }
+      },
     ).populate('updatedBy', 'name email role');
 
     return res.json({ ok: true, item });
@@ -512,7 +539,9 @@ router.get('/proposals/:proposalId/execution/timeline', async (req, res) => {
 router.post('/proposals/:proposalId/execution/updates', authenticateToken, async (req, res) => {
   try {
     if (!isCommitteeMember(req)) {
-      return res.status(403).json({ ok: false, error: 'Only committee members can post execution updates' });
+      return res
+        .status(403)
+        .json({ ok: false, error: 'Only committee members can post execution updates' });
     }
 
     const proposalId = sanitize(req.params?.proposalId);
@@ -522,12 +551,16 @@ router.post('/proposals/:proposalId/execution/updates', authenticateToken, async
 
     const updateEntry = sanitizeExecutionUpdate(req.body || {});
     if (!updateEntry) {
-      return res.status(400).json({ ok: false, error: 'A non-empty message is required for execution updates' });
+      return res
+        .status(400)
+        .json({ ok: false, error: 'A non-empty message is required for execution updates' });
     }
 
     const item = await GovernanceAdminResponse.findOne({ proposalId });
     if (!item) {
-      return res.status(409).json({ ok: false, error: 'Admin response not initialized for this proposal' });
+      return res
+        .status(409)
+        .json({ ok: false, error: 'Admin response not initialized for this proposal' });
     }
 
     if (!EXECUTION_ELIGIBLE_DECISIONS.has(item.decision)) {
@@ -554,7 +587,9 @@ router.post('/proposals/:proposalId/execution/updates', authenticateToken, async
       completed: false,
     };
 
-    const nextMilestones = Array.isArray(currentBlock.milestones) ? [...currentBlock.milestones] : [];
+    const nextMilestones = Array.isArray(currentBlock.milestones)
+      ? [...currentBlock.milestones]
+      : [];
     if (nextUpdate.milestone?.title) {
       const milestoneId = nextUpdate.milestone.id || `M-${nextMilestones.length + 1}`;
       const existingIndex = nextMilestones.findIndex((m) => sanitize(m?.id) === milestoneId);
@@ -592,11 +627,13 @@ router.post('/proposals/:proposalId/execution/updates', authenticateToken, async
       .populate('updatedBy', 'name email role')
       .populate('executionUpdates.updatedBy', 'name email role');
 
-    dispatchToOpenClaw(createSystemEvent('info', 'Governance execution update posted', {
-      proposalId,
-      byUser: req.user.id,
-      progressPercent: item.executionBlock.progressPercent,
-    })).catch((err) => {
+    dispatchToOpenClaw(
+      createSystemEvent('info', 'Governance execution update posted', {
+        proposalId,
+        byUser: req.user.id,
+        progressPercent: item.executionBlock.progressPercent,
+      }),
+    ).catch((err) => {
       console.warn('OpenClaw dispatch failed (execution update):', err?.message || err);
     });
 
@@ -635,10 +672,14 @@ router.post('/proposals', authenticateToken, async (req, res) => {
       problem: sanitize(req.body?.problem),
       solution: sanitize(req.body?.solution),
       expectedOutcome: sanitize(req.body?.expectedOutcome),
-      tags: Array.isArray(req.body?.tags) ? req.body.tags.map((v) => sanitize(v)).filter(Boolean) : [],
+      tags: Array.isArray(req.body?.tags)
+        ? req.body.tags.map((v) => sanitize(v)).filter(Boolean)
+        : [],
       cycleKey: sanitize(req.body?.cycleKey),
       voteWindow: {
-        startsAt: req.body?.voteWindow?.startsAt ? new Date(req.body.voteWindow.startsAt) : undefined,
+        startsAt: req.body?.voteWindow?.startsAt
+          ? new Date(req.body.voteWindow.startsAt)
+          : undefined,
         endsAt: req.body?.voteWindow?.endsAt ? new Date(req.body.voteWindow.endsAt) : undefined,
       },
       onChain: {
@@ -649,11 +690,13 @@ router.post('/proposals', authenticateToken, async (req, res) => {
       createdBy: req.user.id,
     });
 
-    dispatchToOpenClaw(createSystemEvent('info', 'Governance proposal created', {
-      proposalId: proposal._id.toString(),
-      userId: req.user.id,
-      walletAddress,
-    })).catch((err) => {
+    dispatchToOpenClaw(
+      createSystemEvent('info', 'Governance proposal created', {
+        proposalId: proposal._id.toString(),
+        userId: req.user.id,
+        walletAddress,
+      }),
+    ).catch((err) => {
       console.warn('OpenClaw dispatch failed (proposal created):', err?.message || err);
     });
 
@@ -686,7 +729,9 @@ router.post('/proposals/:proposalId/support', authenticateToken, async (req, res
   try {
     const walletAddress = await getVerifiedWalletForUser(req.user.id);
     if (!walletAddress) {
-      return res.status(403).json({ ok: false, error: 'Wallet verification is required before supporting proposals' });
+      return res
+        .status(403)
+        .json({ ok: false, error: 'Wallet verification is required before supporting proposals' });
     }
 
     const proposal = await GovernanceProposal.findById(req.params.proposalId);
@@ -731,7 +776,9 @@ router.post('/proposals/:proposalId/support', authenticateToken, async (req, res
 router.post('/proposals/:proposalId/queue', authenticateToken, async (req, res) => {
   try {
     if (!isCommitteeMember(req)) {
-      return res.status(403).json({ ok: false, error: 'Only committee members can queue proposals' });
+      return res
+        .status(403)
+        .json({ ok: false, error: 'Only committee members can queue proposals' });
     }
 
     const proposal = await GovernanceProposal.findById(req.params.proposalId);
@@ -745,16 +792,26 @@ router.post('/proposals/:proposalId/queue', authenticateToken, async (req, res) 
 
     if (req.body?.voteWindow?.startsAt || req.body?.voteWindow?.endsAt) {
       proposal.voteWindow = {
-        startsAt: req.body?.voteWindow?.startsAt ? new Date(req.body.voteWindow.startsAt) : proposal.voteWindow?.startsAt,
-        endsAt: req.body?.voteWindow?.endsAt ? new Date(req.body.voteWindow.endsAt) : proposal.voteWindow?.endsAt,
+        startsAt: req.body?.voteWindow?.startsAt
+          ? new Date(req.body.voteWindow.startsAt)
+          : proposal.voteWindow?.startsAt,
+        endsAt: req.body?.voteWindow?.endsAt
+          ? new Date(req.body.voteWindow.endsAt)
+          : proposal.voteWindow?.endsAt,
       };
     }
 
-    if (req.body?.onChain?.chainId || req.body?.onChain?.contractAddress || req.body?.onChain?.proposalRef) {
+    if (
+      req.body?.onChain?.chainId ||
+      req.body?.onChain?.contractAddress ||
+      req.body?.onChain?.proposalRef
+    ) {
       proposal.onChain = {
         ...proposal.onChain,
         chainId: Number(req.body?.onChain?.chainId || proposal.onChain?.chainId || 8453),
-        contractAddress: sanitize(req.body?.onChain?.contractAddress || proposal.onChain?.contractAddress),
+        contractAddress: sanitize(
+          req.body?.onChain?.contractAddress || proposal.onChain?.contractAddress,
+        ),
         proposalRef: sanitize(req.body?.onChain?.proposalRef || proposal.onChain?.proposalRef),
       };
     }
@@ -771,7 +828,9 @@ router.post('/proposals/:proposalId/queue', authenticateToken, async (req, res) 
 router.post('/proposals/:proposalId/status', authenticateToken, async (req, res) => {
   try {
     if (!isCommitteeMember(req)) {
-      return res.status(403).json({ ok: false, error: 'Only committee members can change proposal status' });
+      return res
+        .status(403)
+        .json({ ok: false, error: 'Only committee members can change proposal status' });
     }
 
     const proposal = await GovernanceProposal.findById(req.params.proposalId);
@@ -805,11 +864,17 @@ router.post('/proposals/:proposalId/status', authenticateToken, async (req, res)
     }
 
     if (nextStatus === 'vote_window') {
-      const startsAtMs = proposal.voteWindow?.startsAt ? new Date(proposal.voteWindow.startsAt).getTime() : null;
-      const endsAtMs = proposal.voteWindow?.endsAt ? new Date(proposal.voteWindow.endsAt).getTime() : null;
+      const startsAtMs = proposal.voteWindow?.startsAt
+        ? new Date(proposal.voteWindow.startsAt).getTime()
+        : null;
+      const endsAtMs = proposal.voteWindow?.endsAt
+        ? new Date(proposal.voteWindow.endsAt).getTime()
+        : null;
       const now = Date.now();
       if (!startsAtMs || !endsAtMs || now < startsAtMs || now > endsAtMs) {
-        return res.status(400).json({ ok: false, error: 'Current time must be inside the configured vote window' });
+        return res
+          .status(400)
+          .json({ ok: false, error: 'Current time must be inside the configured vote window' });
       }
     }
 
@@ -820,7 +885,9 @@ router.post('/proposals/:proposalId/status', authenticateToken, async (req, res)
       const quorum = buildQuorumMeta(totalVotes, eligibleVoterCount);
 
       if (totalVotes < 1) {
-        return res.status(400).json({ ok: false, error: 'Cannot publish outcome before any votes are recorded' });
+        return res
+          .status(400)
+          .json({ ok: false, error: 'Cannot publish outcome before any votes are recorded' });
       }
 
       if (!quorum.met) {
@@ -842,8 +909,12 @@ router.post('/proposals/:proposalId/status', authenticateToken, async (req, res)
       const existingStartsAt = proposal.voteWindow?.startsAt;
       const existingEndsAt = proposal.voteWindow?.endsAt;
       proposal.voteWindow = {
-        startsAt: req.body?.voteWindow?.startsAt ? new Date(req.body.voteWindow.startsAt) : existingStartsAt,
-        endsAt: req.body?.voteWindow?.endsAt ? new Date(req.body.voteWindow.endsAt) : existingEndsAt,
+        startsAt: req.body?.voteWindow?.startsAt
+          ? new Date(req.body.voteWindow.startsAt)
+          : existingStartsAt,
+        endsAt: req.body?.voteWindow?.endsAt
+          ? new Date(req.body.voteWindow.endsAt)
+          : existingEndsAt,
       };
     }
 
@@ -859,7 +930,9 @@ router.post('/proposals/:proposalId/status', authenticateToken, async (req, res)
 router.post('/proposals/:proposalId/outcome', authenticateToken, async (req, res) => {
   try {
     if (!isCommitteeMember(req)) {
-      return res.status(403).json({ ok: false, error: 'Only committee members can publish outcomes' });
+      return res
+        .status(403)
+        .json({ ok: false, error: 'Only committee members can publish outcomes' });
     }
 
     const outcome = sanitize(req.body?.outcome).toLowerCase();
@@ -880,7 +953,9 @@ router.post('/proposals/:proposalId/outcome', authenticateToken, async (req, res
 
     proposal.outcome = outcome;
     proposal.outcomeRationale = outcomeRationale;
-    proposal.plannedTargetDate = req.body?.plannedTargetDate ? new Date(req.body.plannedTargetDate) : proposal.plannedTargetDate;
+    proposal.plannedTargetDate = req.body?.plannedTargetDate
+      ? new Date(req.body.plannedTargetDate)
+      : proposal.plannedTargetDate;
     proposal.decidedBy = req.user.id;
     proposal.status = 'outcome_published';
 
@@ -893,11 +968,13 @@ router.post('/proposals/:proposalId/outcome', authenticateToken, async (req, res
 
     await proposal.save();
 
-    dispatchToOpenClaw(createSystemEvent('info', 'Governance proposal outcome published', {
-      proposalId: proposal._id.toString(),
-      outcome,
-      decidedBy: req.user.id,
-    })).catch((err) => {
+    dispatchToOpenClaw(
+      createSystemEvent('info', 'Governance proposal outcome published', {
+        proposalId: proposal._id.toString(),
+        outcome,
+        decidedBy: req.user.id,
+      }),
+    ).catch((err) => {
       console.warn('OpenClaw dispatch failed (proposal outcome):', err?.message || err);
     });
 
@@ -947,7 +1024,9 @@ router.post('/wallet/verify', authenticateToken, async (req, res) => {
     const signature = sanitize(req.body?.signature);
 
     if (!walletAddress || !nonce || !signature) {
-      return res.status(400).json({ ok: false, error: 'walletAddress, nonce and signature are required' });
+      return res
+        .status(400)
+        .json({ ok: false, error: 'walletAddress, nonce and signature are required' });
     }
 
     const challenge = await GovernanceWalletChallenge.findOne({
@@ -965,7 +1044,9 @@ router.post('/wallet/verify', authenticateToken, async (req, res) => {
       return res.status(400).json({ ok: false, error: 'Challenge expired' });
     }
 
-    const recoveredAddress = normalizeWalletAddress(web3.eth.accounts.recover(challenge.message, signature));
+    const recoveredAddress = normalizeWalletAddress(
+      web3.eth.accounts.recover(challenge.message, signature),
+    );
     if (!recoveredAddress || recoveredAddress !== walletAddress) {
       return res.status(401).json({ ok: false, error: 'Signature verification failed' });
     }
@@ -979,10 +1060,12 @@ router.post('/wallet/verify', authenticateToken, async (req, res) => {
       },
     });
 
-    dispatchToOpenClaw(createSystemEvent('info', 'Governance wallet verified', {
-      userId: req.user.id,
-      walletAddress,
-    })).catch((err) => {
+    dispatchToOpenClaw(
+      createSystemEvent('info', 'Governance wallet verified', {
+        userId: req.user.id,
+        walletAddress,
+      }),
+    ).catch((err) => {
       console.warn('OpenClaw dispatch failed (wallet verified):', err?.message || err);
     });
 
@@ -1018,7 +1101,9 @@ router.post('/proposals/:proposalId/votes/onchain', authenticateToken, async (re
 
     const walletAddress = await getVerifiedWalletForUser(req.user.id);
     if (!walletAddress) {
-      return res.status(403).json({ ok: false, error: 'Wallet verification is required before voting' });
+      return res
+        .status(403)
+        .json({ ok: false, error: 'Wallet verification is required before voting' });
     }
 
     const choice = sanitize(req.body?.choice).toLowerCase();
@@ -1033,9 +1118,14 @@ router.post('/proposals/:proposalId/votes/onchain', authenticateToken, async (re
       return res.status(400).json({ ok: false, error: 'A valid on-chain txHash is required' });
     }
 
-    const existing = await GovernanceVote.findOne({ proposalId: proposal._id, userId: req.user.id });
+    const existing = await GovernanceVote.findOne({
+      proposalId: proposal._id,
+      userId: req.user.id,
+    });
     if (existing) {
-      return res.status(409).json({ ok: false, error: 'User has already submitted a vote for this proposal' });
+      return res
+        .status(409)
+        .json({ ok: false, error: 'User has already submitted a vote for this proposal' });
     }
 
     const existingWalletVote = await GovernanceVote.findOne({
@@ -1043,7 +1133,9 @@ router.post('/proposals/:proposalId/votes/onchain', authenticateToken, async (re
       walletAddress,
     });
     if (existingWalletVote) {
-      return res.status(409).json({ ok: false, error: 'Wallet has already submitted a vote for this proposal' });
+      return res
+        .status(409)
+        .json({ ok: false, error: 'Wallet has already submitted a vote for this proposal' });
     }
 
     const vote = await GovernanceVote.create({
@@ -1067,13 +1159,15 @@ router.post('/proposals/:proposalId/votes/onchain', authenticateToken, async (re
       await proposal.save();
     }
 
-    dispatchToOpenClaw(createSystemEvent('info', 'Governance vote submitted', {
-      proposalId: proposal._id.toString(),
-      voteId: vote._id.toString(),
-      choice,
-      chainId,
-      txHash,
-    })).catch((err) => {
+    dispatchToOpenClaw(
+      createSystemEvent('info', 'Governance vote submitted', {
+        proposalId: proposal._id.toString(),
+        voteId: vote._id.toString(),
+        choice,
+        chainId,
+        txHash,
+      }),
+    ).catch((err) => {
       console.warn('OpenClaw dispatch failed (vote submitted):', err?.message || err);
     });
 
@@ -1081,7 +1175,9 @@ router.post('/proposals/:proposalId/votes/onchain', authenticateToken, async (re
   } catch (error) {
     console.error('Error submitting on-chain vote:', error);
     if (error?.code === 11000) {
-      return res.status(409).json({ ok: false, error: 'Duplicate vote or transaction hash detected' });
+      return res
+        .status(409)
+        .json({ ok: false, error: 'Duplicate vote or transaction hash detected' });
     }
     return res.status(500).json({ ok: false, error: 'Failed to submit vote' });
   }
@@ -1099,8 +1195,12 @@ router.get('/proposals/:proposalId/votes/summary', async (req, res) => {
     const eligibleVoterCount = await getEligibleVoterCount();
     const quorum = buildQuorumMeta(totalVotes, eligibleVoterCount);
     const now = Date.now();
-    const startsAtMs = proposal.voteWindow?.startsAt ? new Date(proposal.voteWindow.startsAt).getTime() : null;
-    const endsAtMs = proposal.voteWindow?.endsAt ? new Date(proposal.voteWindow.endsAt).getTime() : null;
+    const startsAtMs = proposal.voteWindow?.startsAt
+      ? new Date(proposal.voteWindow.startsAt).getTime()
+      : null;
+    const endsAtMs = proposal.voteWindow?.endsAt
+      ? new Date(proposal.voteWindow.endsAt).getTime()
+      : null;
 
     const voteWindow = {
       startsAt: proposal.voteWindow?.startsAt || null,

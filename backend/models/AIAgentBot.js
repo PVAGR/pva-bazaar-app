@@ -11,7 +11,16 @@ const aiAgentBotSchema = new mongoose.Schema({
   },
   topic: {
     type: String,
-    enum: ['pricing', 'registration', 'shipping', 'compliance', 'marketing', 'onboarding', 'product_setup', 'general'],
+    enum: [
+      'pricing',
+      'registration',
+      'shipping',
+      'compliance',
+      'marketing',
+      'onboarding',
+      'product_setup',
+      'general',
+    ],
     required: true,
   },
   sessionId: String, // Track conversation threads

@@ -22,8 +22,8 @@ The app is configured to deploy on **Vercel**: frontend static build plus server
 3. **Environment variables** (Project → Settings → Environment Variables):
    - Set all required env vars for the API (e.g. `MONGODB_URI`, `JWT_SECRET`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `PUBLIC_SITE_URL`, `SMTP_*` for emails).
 
-4. **Deployment hooks (optional)**  
-   - Vercel already deploys on every push to the production branch (usually `main`).  
+4. **Deployment hooks (optional)**
+   - Vercel already deploys on every push to the production branch (usually `main`).
    - To trigger deploys from other tools (e.g. CI), add a **Deploy Hook** in Project → Settings → Git → Deploy Hooks: create a hook and call its URL (POST) to trigger a new deployment.
 
 ### Stripe webhook URL (current backend)

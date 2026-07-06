@@ -11,7 +11,11 @@ const Shop = require('../models/Shop');
 async function createProduct(creatorId, productData) {
   const productType = productData.productType;
 
-  if (!['physical_good', 'digital_download', 'course', 'expertise', 'nft', 'service'].includes(productType)) {
+  if (
+    !['physical_good', 'digital_download', 'course', 'expertise', 'nft', 'service'].includes(
+      productType,
+    )
+  ) {
     throw new Error('Invalid product type');
   }
 
@@ -149,9 +153,7 @@ async function searchProducts(query, limit = 20) {
     status: 'published',
   };
 
-  const products = await ProductType.find(searchQuery)
-    .limit(limit)
-    .lean();
+  const products = await ProductType.find(searchQuery).limit(limit).lean();
 
   return products;
 }

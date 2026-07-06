@@ -62,7 +62,12 @@ const authenticateAPIKey = async (req, res, next) => {
  */
 router.post('/keys', authenticateToken, async (req, res) => {
   try {
-    const { applicationName, permissions = [], environment = 'test', expiresInDays = 365 } = req.body;
+    const {
+      applicationName,
+      permissions = [],
+      environment = 'test',
+      expiresInDays = 365,
+    } = req.body;
 
     if (!applicationName) {
       return res.status(400).json({ error: 'applicationName required' });
@@ -120,7 +125,7 @@ router.delete('/keys/:keyId', authenticateToken, async (req, res) => {
     const key = await APIKey.findOneAndUpdate(
       { _id: keyId, developerId: req.user.id },
       { status: 'revoked', revokedAt: new Date(), revokeReason: 'User revoked' },
-      { new: true }
+      { new: true },
     );
 
     if (!key) {
@@ -144,7 +149,18 @@ router.post('/connect/:partner', authenticateToken, async (req, res) => {
     const { partner } = req.params;
     const { partnerAccessToken, partnerAccountId, partnerAccountName } = req.body;
 
-    if (!['shopify', 'amazon', 'etsy', 'opensea', 'wechat', 'woocommerce', 'ebay', 'tiktok_shop'].includes(partner)) {
+    if (
+      ![
+        'shopify',
+        'amazon',
+        'etsy',
+        'opensea',
+        'wechat',
+        'woocommerce',
+        'ebay',
+        'tiktok_shop',
+      ].includes(partner)
+    ) {
       return res.status(400).json({ error: 'Invalid partner' });
     }
 
@@ -192,7 +208,9 @@ router.post('/connect/:partner', authenticateToken, async (req, res) => {
  */
 router.get('/', authenticateToken, async (req, res) => {
   try {
-    const integrations = await PartnerIntegration.find({ sellerId: req.user.id }).select('-partnerAccessToken');
+    const integrations = await PartnerIntegration.find({ sellerId: req.user.id }).select(
+      '-partnerAccessToken',
+    );
 
     res.json(integrations);
   } catch (error) {
@@ -309,7 +327,7 @@ router.post('/v1/inventory/sync', authenticateAPIKey, async (req, res) => {
           fulfillmentCenterId: update.fulfillmentCenterId,
         },
         { qtyOnHand: update.qtyOnHand },
-        { new: true }
+        { new: true },
       );
 
       results.push({ productId: update.productId, success: !!inventory });
@@ -364,7 +382,7 @@ router.post('/v1/orders/:orderId/fulfill', authenticateAPIKey, async (req, res) 
         trackingNumber,
         carrier,
       },
-      { new: true }
+      { new: true },
     );
 
     if (!order) {
@@ -410,7 +428,15 @@ router.post('/v1/webhooks/register', authenticateAPIKey, async (req, res) => {
   try {
     const { event, url } = req.body;
 
-    if (!['product.created', 'product.updated', 'order.created', 'order.updated', 'inventory.changed'].includes(event)) {
+    if (
+      ![
+        'product.created',
+        'product.updated',
+        'order.created',
+        'order.updated',
+        'inventory.changed',
+      ].includes(event)
+    ) {
       return res.status(400).json({ error: 'Invalid event type' });
     }
 

@@ -50,12 +50,11 @@
 }
 
 .card {
-  background:
-    linear-gradient(
-      160deg,
-      color-mix(in srgb, var(--bg-tertiary) 90%, transparent),
-      color-mix(in srgb, var(--bg-secondary) 84%, transparent)
-    );
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--bg-tertiary) 90%, transparent),
+    color-mix(in srgb, var(--bg-secondary) 84%, transparent)
+  );
   border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
   border-left: 3px solid var(--deals-accent-warm);
   border-radius: 14px;
@@ -130,7 +129,10 @@
   border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
   background: color-mix(in srgb, var(--bg-secondary) 90%, transparent);
   color: var(--text-primary);
-  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease;
 }
 
 .form select {
@@ -155,12 +157,11 @@
   border-left: 3px solid color-mix(in srgb, var(--deals-accent-warm) 72%, transparent);
   border-radius: 12px;
   padding: 12px;
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--deals-accent-warm) 8%, var(--bg-secondary)),
-      color-mix(in srgb, var(--bg-secondary) 90%, transparent)
-    );
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--deals-accent-warm) 8%, var(--bg-secondary)),
+    color-mix(in srgb, var(--bg-secondary) 90%, transparent)
+  );
   display: grid;
   gap: 10px;
 }
@@ -186,7 +187,9 @@
 }
 
 .json {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+    monospace;
   font-size: 0.9rem;
   white-space: pre-wrap;
   background: rgba(0, 0, 0, 0.18);
@@ -230,11 +233,19 @@
   background: color-mix(in srgb, var(--bg-secondary) 90%, transparent);
   color: var(--text-primary);
   cursor: pointer;
-  transition: transform 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease, background 0.14s ease;
+  transition:
+    transform 0.14s ease,
+    border-color 0.14s ease,
+    box-shadow 0.14s ease,
+    background 0.14s ease;
 }
 
 .btn.primary {
-  background: linear-gradient(120deg, var(--deals-accent-warm), color-mix(in srgb, var(--deals-accent-warm) 66%, var(--accent)));
+  background: linear-gradient(
+    120deg,
+    var(--deals-accent-warm),
+    color-mix(in srgb, var(--deals-accent-warm) 66%, var(--accent))
+  );
   border-color: var(--deals-accent-warm);
   color: var(--bg-primary);
 }
@@ -272,7 +283,10 @@
   background: color-mix(in srgb, var(--bg-secondary) 92%, transparent);
   color: var(--text-primary);
   cursor: pointer;
-  transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .deal-item:hover {
@@ -282,7 +296,9 @@
 
 .deal-item.active {
   border-color: var(--deals-accent-warm);
-  box-shadow: 0 0 0 1px var(--deals-accent-warm), 0 8px 18px rgba(0, 0, 0, 0.18);
+  box-shadow:
+    0 0 0 1px var(--deals-accent-warm),
+    0 8px 18px rgba(0, 0, 0, 0.18);
 }
 
 .deal-title {

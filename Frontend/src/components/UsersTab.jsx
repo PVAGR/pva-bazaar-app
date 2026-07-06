@@ -1,8 +1,8 @@
 /**
  * UsersTab
- * 
+ *
  * PURPOSE: Manage user accounts with real backend integration
- * 
+ *
  * FEATURES:
  * - View all registered users with pagination
  * - Search and filter users in real-time
@@ -10,7 +10,7 @@
  * - Edit user details (name, email, profile)
  * - Delete user accounts (with confirmation)
  * - View user statistics and activity
- * 
+ *
  * API ENDPOINTS:
  * - GET /api/admin/users - Fetch all users with filtering
  * - GET /api/admin/users/:id - Get specific user details
@@ -56,7 +56,7 @@ export default function UsersTab() {
     try {
       setLoading(true);
       const data = await apiGet(`/admin/users?page=${page}&limit=20&search=${searchQuery}`);
-      
+
       if (data.ok) {
         setUsers(data.users);
         setPagination(data.pagination);
@@ -163,7 +163,7 @@ export default function UsersTab() {
         name: editingUser.name,
         email: editingUser.email,
         username: editingUser.username,
-        profilePicture: editingUser.profilePicture
+        profilePicture: editingUser.profilePicture,
       });
 
       if (data.ok) {
@@ -179,13 +179,17 @@ export default function UsersTab() {
   };
 
   const handleDeleteUser = async (userId, userName) => {
-    if (!globalThis.confirm(`Are you sure you want to delete user "${userName}"? This action cannot be undone.`)) {
+    if (
+      !globalThis.confirm(
+        `Are you sure you want to delete user "${userName}"? This action cannot be undone.`,
+      )
+    ) {
       return;
     }
 
     try {
       const data = await apiDelete(`/admin/users/${userId}`);
-      
+
       if (data.ok) {
         setSuccess(`User "${userName}" deleted successfully`);
         loadUsers();
@@ -229,7 +233,7 @@ export default function UsersTab() {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
-      day: 'numeric'
+      day: 'numeric',
     });
   };
 
@@ -444,7 +448,9 @@ export default function UsersTab() {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>✏️ Edit User</h3>
-              <button onClick={() => setEditingUser(null)} className="btn-close">×</button>
+              <button onClick={() => setEditingUser(null)} className="btn-close">
+                ×
+              </button>
             </div>
             <div className="modal-body">
               <div className="form-group">
@@ -480,7 +486,9 @@ export default function UsersTab() {
                 <input
                   type="url"
                   value={editingUser.profilePicture || ''}
-                  onChange={(e) => setEditingUser({ ...editingUser, profilePicture: e.target.value })}
+                  onChange={(e) =>
+                    setEditingUser({ ...editingUser, profilePicture: e.target.value })
+                  }
                   className="form-input"
                   placeholder="https://..."
                 />
@@ -504,12 +512,18 @@ export default function UsersTab() {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>👤 User Details</h3>
-              <button onClick={() => setSelectedUser(null)} className="btn-close">×</button>
+              <button onClick={() => setSelectedUser(null)} className="btn-close">
+                ×
+              </button>
             </div>
             <div className="modal-body">
               <div className="user-details">
                 {selectedUser.profilePicture && (
-                  <img src={selectedUser.profilePicture} alt={selectedUser.name} className="user-avatar-large" />
+                  <img
+                    src={selectedUser.profilePicture}
+                    alt={selectedUser.name}
+                    className="user-avatar-large"
+                  />
                 )}
                 <div className="detail-row">
                   <strong>Name:</strong> {selectedUser.name}
@@ -523,7 +537,7 @@ export default function UsersTab() {
                   </div>
                 )}
                 <div className="detail-row">
-                  <strong>Role:</strong> 
+                  <strong>Role:</strong>
                   <span className={`role-badge ${selectedUser.role}`}>
                     {selectedUser.role === 'admin' ? '👑 Admin' : '👤 User'}
                   </span>
@@ -547,42 +561,64 @@ export default function UsersTab() {
                 <hr />
                 <h4>Trading identity profile</h4>
                 <div className="detail-row">
-                  <strong>Legal name:</strong> {selectedUser?.onboardingProfile?.compliance?.legalFullName || '—'}
+                  <strong>Legal name:</strong>{' '}
+                  {selectedUser?.onboardingProfile?.compliance?.legalFullName || '—'}
                 </div>
                 <div className="detail-row">
-                  <strong>ID type:</strong> {selectedUser?.onboardingProfile?.compliance?.legalIdType || '—'}
+                  <strong>ID type:</strong>{' '}
+                  {selectedUser?.onboardingProfile?.compliance?.legalIdType || '—'}
                 </div>
                 <div className="detail-row">
-                  <strong>ID number:</strong> {selectedUser?.onboardingProfile?.compliance?.legalIdNumber || '—'}
+                  <strong>ID number:</strong>{' '}
+                  {selectedUser?.onboardingProfile?.compliance?.legalIdNumber || '—'}
                 </div>
                 <div className="detail-row">
-                  <strong>Address:</strong> {[selectedUser?.onboardingProfile?.compliance?.addressLine1, selectedUser?.onboardingProfile?.compliance?.city, selectedUser?.onboardingProfile?.compliance?.stateProvince, selectedUser?.onboardingProfile?.compliance?.postalCode, selectedUser?.onboardingProfile?.compliance?.country].filter(Boolean).join(', ') || '—'}
+                  <strong>Address:</strong>{' '}
+                  {[
+                    selectedUser?.onboardingProfile?.compliance?.addressLine1,
+                    selectedUser?.onboardingProfile?.compliance?.city,
+                    selectedUser?.onboardingProfile?.compliance?.stateProvince,
+                    selectedUser?.onboardingProfile?.compliance?.postalCode,
+                    selectedUser?.onboardingProfile?.compliance?.country,
+                  ]
+                    .filter(Boolean)
+                    .join(', ') || '—'}
                 </div>
                 <div className="detail-row">
-                  <strong>Phone:</strong> {selectedUser?.onboardingProfile?.compliance?.phone || '—'}
+                  <strong>Phone:</strong>{' '}
+                  {selectedUser?.onboardingProfile?.compliance?.phone || '—'}
                 </div>
                 <div className="detail-row">
-                  <strong>Identity attested:</strong> {selectedUser?.onboardingProfile?.compliance?.identityAttested ? 'Yes' : 'No'}
+                  <strong>Identity attested:</strong>{' '}
+                  {selectedUser?.onboardingProfile?.compliance?.identityAttested ? 'Yes' : 'No'}
                 </div>
 
                 <h4>Contact links</h4>
                 <div className="detail-row">
-                  <strong>Instagram:</strong> {selectedUser?.onboardingProfile?.contactLinks?.instagram || '—'}
+                  <strong>Instagram:</strong>{' '}
+                  {selectedUser?.onboardingProfile?.contactLinks?.instagram || '—'}
                 </div>
                 <div className="detail-row">
-                  <strong>Telegram:</strong> {selectedUser?.onboardingProfile?.contactLinks?.telegram || '—'}
+                  <strong>Telegram:</strong>{' '}
+                  {selectedUser?.onboardingProfile?.contactLinks?.telegram || '—'}
                 </div>
                 <div className="detail-row">
-                  <strong>Website:</strong> {selectedUser?.onboardingProfile?.contactLinks?.website || '—'}
+                  <strong>Website:</strong>{' '}
+                  {selectedUser?.onboardingProfile?.contactLinks?.website || '—'}
                 </div>
 
                 <hr />
                 <h4>Trust and safety controls</h4>
-                <label className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <label
+                  className="form-group"
+                  style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                >
                   <input
                     type="checkbox"
                     checked={trustForm.tradingRestricted}
-                    onChange={(e) => setTrustForm((prev) => ({ ...prev, tradingRestricted: e.target.checked }))}
+                    onChange={(e) =>
+                      setTrustForm((prev) => ({ ...prev, tradingRestricted: e.target.checked }))
+                    }
                   />
                   Restrict this user from trading
                 </label>
@@ -590,7 +626,9 @@ export default function UsersTab() {
                   <label>Public safety notice (non-PII)</label>
                   <textarea
                     value={trustForm.publicSafetyNotice}
-                    onChange={(e) => setTrustForm((prev) => ({ ...prev, publicSafetyNotice: e.target.value }))}
+                    onChange={(e) =>
+                      setTrustForm((prev) => ({ ...prev, publicSafetyNotice: e.target.value }))
+                    }
                     className="form-input"
                     rows={3}
                     placeholder="Public warning summary without private identifiers"
@@ -600,7 +638,9 @@ export default function UsersTab() {
                   <label>Internal case notes (admin only)</label>
                   <textarea
                     value={trustForm.internalCaseNotes}
-                    onChange={(e) => setTrustForm((prev) => ({ ...prev, internalCaseNotes: e.target.value }))}
+                    onChange={(e) =>
+                      setTrustForm((prev) => ({ ...prev, internalCaseNotes: e.target.value }))
+                    }
                     className="form-input"
                     rows={4}
                   />
@@ -611,7 +651,10 @@ export default function UsersTab() {
               <button onClick={() => setSelectedUser(null)} className="btn btn-secondary">
                 Close
               </button>
-              <button onClick={() => downloadSingleUser(selectedUser._id)} className="btn btn-secondary">
+              <button
+                onClick={() => downloadSingleUser(selectedUser._id)}
+                className="btn btn-secondary"
+              >
                 ⬇️ Download profile
               </button>
               <button onClick={saveTrustSettings} className="btn btn-secondary">
@@ -626,11 +669,11 @@ export default function UsersTab() {
                   {promotingUserId === selectedUser._id ? 'Promoting...' : '👑 Make admin'}
                 </button>
               )}
-              <button 
+              <button
                 onClick={() => {
                   handleEditUser(selectedUser);
                   setSelectedUser(null);
-                }} 
+                }}
                 className="btn btn-primary"
               >
                 ✏️ Edit User

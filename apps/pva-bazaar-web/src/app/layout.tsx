@@ -1,63 +1,63 @@
-import type { Metadata } from "next";
-import Link from "next/link";
-import localFont from "next/font/local";
-import { getBaseUrl } from "@/lib/siteUrl";
-import "./globals.css";
+import type { Metadata } from 'next';
+import Link from 'next/link';
+import localFont from 'next/font/local';
+import { getBaseUrl } from '@/lib/siteUrl';
+import './globals.css';
 
 const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-  weight: "100 900",
+  src: './fonts/GeistVF.woff',
+  variable: '--font-geist-sans',
+  weight: '100 900',
 });
 
 const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
-  weight: "100 900",
+  src: './fonts/GeistMonoVF.woff',
+  variable: '--font-geist-mono',
+  weight: '100 900',
 });
 
 export const metadata: Metadata = {
   metadataBase: new URL(getBaseUrl()),
   title: {
-    default: "PVA Bazaar – AI-Verified Preservation",
-    template: "%s | PVA Bazaar",
+    default: 'PVA Bazaar – AI-Verified Preservation',
+    template: '%s | PVA Bazaar',
   },
   description:
-    "A digital sanctuary for scarce knowledge artifacts. Preserve history, verify integrity, and acquire artifacts as a Conscious Player.",
+    'A digital sanctuary for scarce knowledge artifacts. Preserve history, verify integrity, and acquire artifacts as a Conscious Player.',
   keywords: [
-    "PVA Bazaar",
-    "verified artifacts",
-    "digital archive",
-    "provenance",
-    "Kenya exports",
-    "HeelKawn",
-    "openclaw",
+    'PVA Bazaar',
+    'verified artifacts',
+    'digital archive',
+    'provenance',
+    'Kenya exports',
+    'HeelKawn',
+    'openclaw',
   ],
   alternates: {
-    canonical: "/",
+    canonical: '/',
   },
   openGraph: {
-    title: "PVA Bazaar – AI-Verified Preservation",
+    title: 'PVA Bazaar – AI-Verified Preservation',
     description:
-      "A digital sanctuary for scarce knowledge artifacts. Preserve history, verify integrity, and acquire artifacts as a Conscious Player.",
-    url: "/",
-    siteName: "PVA Bazaar",
-    locale: "en_US",
-    type: "website",
+      'A digital sanctuary for scarce knowledge artifacts. Preserve history, verify integrity, and acquire artifacts as a Conscious Player.',
+    url: '/',
+    siteName: 'PVA Bazaar',
+    locale: 'en_US',
+    type: 'website',
     images: [
       {
         url: getOgImageUrl(),
         width: 1200,
         height: 630,
-        alt: "PVA Bazaar",
+        alt: 'PVA Bazaar',
       },
     ],
   },
   twitter: {
-    card: "summary_large_image",
-    title: "PVA Bazaar – AI-Verified Preservation",
+    card: 'summary_large_image',
+    title: 'PVA Bazaar – AI-Verified Preservation',
     description:
-      "A digital sanctuary for scarce knowledge artifacts. Preserve history, verify integrity, and acquire artifacts as a Conscious Player.",
+      'A digital sanctuary for scarce knowledge artifacts. Preserve history, verify integrity, and acquire artifacts as a Conscious Player.',
     images: [getTwitterImageUrl()],
   },
   robots: {
@@ -71,7 +71,7 @@ function getOgImageUrl(): string {
   if (raw && /^https?:\/\//i.test(raw)) {
     return raw;
   }
-  return "/opengraph-image";
+  return '/opengraph-image';
 }
 
 function getTwitterImageUrl(): string {
@@ -79,7 +79,7 @@ function getTwitterImageUrl(): string {
   if (raw && /^https?:\/\//i.test(raw)) {
     return raw;
   }
-  return "/twitter-image";
+  return '/twitter-image';
 }
 
 export default function RootLayout({
@@ -89,16 +89,16 @@ export default function RootLayout({
 }>) {
   const baseUrl = getBaseUrl();
   const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    name: "PVA Bazaar",
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'PVA Bazaar',
     url: baseUrl,
     description:
-      "A digital sanctuary for scarce knowledge artifacts. Preserve history, verify integrity, and acquire artifacts as a Conscious Player.",
-    inLanguage: "en-US",
+      'A digital sanctuary for scarce knowledge artifacts. Preserve history, verify integrity, and acquire artifacts as a Conscious Player.',
+    inLanguage: 'en-US',
     publisher: {
-      "@type": "Organization",
-      name: "PVA Bazaar",
+      '@type': 'Organization',
+      name: 'PVA Bazaar',
       url: baseUrl,
     },
   };
@@ -123,12 +123,8 @@ export default function RootLayout({
           <header className="border-b border-zinc-800/80 bg-black/70 backdrop-blur">
             <nav className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
               <Link href="/" className="flex items-baseline gap-2">
-                <span className="text-xs tracking-[0.3em] text-zinc-500 uppercase">
-                  PVA
-                </span>
-                <span className="text-sm font-semibold text-zinc-200">
-                  Bazaar
-                </span>
+                <span className="text-xs tracking-[0.3em] text-zinc-500 uppercase">PVA</span>
+                <span className="text-sm font-semibold text-zinc-200">Bazaar</span>
               </Link>
               <div className="flex items-center gap-6 text-xs font-medium text-zinc-400">
                 <Link href="/get-started" className="hover:text-amber-300">
@@ -184,8 +180,8 @@ export default function RootLayout({
 
           <footer className="border-t border-zinc-800/80 px-4 py-4 text-center text-[11px] text-zinc-500">
             <p className="max-w-5xl mx-auto">
-              Built as an alchemical archive for scarce knowledge. All systems
-              aim to be auditable, anti‑Druj, and kind to future readers.
+              Built as an alchemical archive for scarce knowledge. All systems aim to be auditable,
+              anti‑Druj, and kind to future readers.
             </p>
           </footer>
         </div>

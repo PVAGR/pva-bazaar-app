@@ -52,9 +52,7 @@ describe('Career quiz MBTI + RIASEC scoring', () => {
       optionKey: '4',
     }));
 
-    const submitRes = await request(app)
-      .post('/api/career-quiz/submit')
-      .send({ answers });
+    const submitRes = await request(app).post('/api/career-quiz/submit').send({ answers });
 
     expect(submitRes.status).toBe(201);
     expect(submitRes.body?.ok).toBe(true);
@@ -69,7 +67,7 @@ describe('Career quiz MBTI + RIASEC scoring', () => {
     expect(typeof result.confidence.band).toBe('string');
     expect(result.confidence.score >= 0 && result.confidence.score <= 100).toBe(true);
     expect(['emerging', 'medium', 'high']).toContain(result.confidence.band);
-    
+
     // Validate per-section confidence breakdown
     expect(result.confidence.sectionBreakdown).toBeTruthy();
     expect(result.confidence.sectionBreakdown.enjoyment).toBeTruthy();
@@ -78,13 +76,13 @@ describe('Career quiz MBTI + RIASEC scoring', () => {
     expect(typeof result.confidence.sectionBreakdown.introspection.score).toBe('number');
     expect(typeof result.confidence.sectionBreakdown.enjoyment.band).toBe('string');
     expect(typeof result.confidence.sectionBreakdown.introspection.band).toBe('string');
-    
+
     // Validate role recommendations
     expect(Array.isArray(result?.majorRoles)).toBe(true);
     expect(Array.isArray(result?.supportingRoles)).toBe(true);
     expect(result.majorRoles.length).toBeGreaterThan(0);
     expect(result.supportingRoles.length).toBeGreaterThan(0);
-    
+
     // Validate role rationale
     expect(Array.isArray(result?.roleRationale)).toBe(true);
     expect(result.roleRationale.length).toBeGreaterThan(0);

@@ -11,9 +11,10 @@ export default function VerificationHashBlock({ verification, theme = 'alchemica
   const certificateId = verification?.certificateId || '';
   const hash = verification?.computed_hash || '';
   const displayValue = hash || certificateId;
-  const partial = displayValue.length > 16
-    ? `${displayValue.slice(0, 8)}…${displayValue.slice(-8)}`
-    : displayValue;
+  const partial =
+    displayValue.length > 16
+      ? `${displayValue.slice(0, 8)}…${displayValue.slice(-8)}`
+      : displayValue;
 
   if (!displayValue) return null;
 
@@ -50,9 +51,7 @@ export default function VerificationHashBlock({ verification, theme = 'alchemica
             transition={{ duration: 0.2 }}
           >
             <code className="verification-hash-block__full-value">{displayValue}</code>
-            {isVerified && (
-              <span className="verification-hash-block__status">AI-Verified</span>
-            )}
+            {isVerified && <span className="verification-hash-block__status">AI-Verified</span>}
           </motion.div>
         )}
       </AnimatePresence>

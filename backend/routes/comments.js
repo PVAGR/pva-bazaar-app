@@ -32,12 +32,14 @@ router.post('/:id/approve', adminSession, async (req, res) => {
     comment.approved = true;
     await comment.save();
 
-    dispatchToOpenClaw(createSystemEvent('info', 'Comment approved', {
-      commentId: comment._id?.toString(),
-      blogSlug: comment.blogSlug,
-      route: 'comments',
-      actor: 'admin',
-    }));
+    dispatchToOpenClaw(
+      createSystemEvent('info', 'Comment approved', {
+        commentId: comment._id?.toString(),
+        blogSlug: comment.blogSlug,
+        route: 'comments',
+        actor: 'admin',
+      }),
+    );
 
     res.json({ ok: true, message: 'Approved' });
   } catch (err) {
@@ -51,12 +53,14 @@ router.post('/:id/delete', adminSession, async (req, res) => {
     const deleted = await Comment.findByIdAndDelete(req.params.id);
 
     if (deleted) {
-      dispatchToOpenClaw(createSystemEvent('warning', 'Comment deleted', {
-        commentId: deleted._id?.toString(),
-        blogSlug: deleted.blogSlug,
-        route: 'comments',
-        actor: 'admin',
-      }));
+      dispatchToOpenClaw(
+        createSystemEvent('warning', 'Comment deleted', {
+          commentId: deleted._id?.toString(),
+          blogSlug: deleted.blogSlug,
+          route: 'comments',
+          actor: 'admin',
+        }),
+      );
     }
 
     res.json({ ok: true, message: 'Deleted' });
@@ -96,7 +100,9 @@ router.post('/:slug/add', commentsLimiter, async (req, res) => {
     if (!body || body.trim().length < 2)
       return res.status(400).json({ ok: false, message: 'Comment body too short' });
     if (body.length > 5000)
-      return res.status(400).json({ ok: false, message: 'Comment body too long (max 5000 characters)' });
+      return res
+        .status(400)
+        .json({ ok: false, message: 'Comment body too long (max 5000 characters)' });
     const safeAuthorName = (authorName || 'Anonymous').toString().slice(0, 100);
     const blogExists = await Blog.findOne({ slug, status: 'published' }).select('_id');
     if (!blogExists) return res.status(404).json({ ok: false, message: 'Blog not found' });
@@ -108,13 +114,15 @@ router.post('/:slug/add', commentsLimiter, async (req, res) => {
     });
     await comment.save();
 
-    dispatchToOpenClaw(createSystemEvent('info', 'Comment submitted', {
-      commentId: comment._id?.toString(),
-      blogSlug: comment.blogSlug,
-      approved: comment.approved,
-      route: 'comments',
-      actor: 'public',
-    }));
+    dispatchToOpenClaw(
+      createSystemEvent('info', 'Comment submitted', {
+        commentId: comment._id?.toString(),
+        blogSlug: comment.blogSlug,
+        approved: comment.approved,
+        route: 'comments',
+        actor: 'public',
+      }),
+    );
 
     res.json({ ok: true, message: 'Comment added', commentId: comment._id });
   } catch (err) {

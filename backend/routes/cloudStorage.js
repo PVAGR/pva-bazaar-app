@@ -16,22 +16,18 @@ const isCloudinaryConfigured = () =>
   Boolean(
     process.env.CLOUDINARY_CLOUD_NAME &&
       process.env.CLOUDINARY_API_KEY &&
-      process.env.CLOUDINARY_API_SECRET
+      process.env.CLOUDINARY_API_SECRET,
   );
 
 const getMissingCloudinaryVars = () => {
-  const required = [
-    'CLOUDINARY_CLOUD_NAME',
-    'CLOUDINARY_API_KEY',
-    'CLOUDINARY_API_SECRET',
-  ];
+  const required = ['CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET'];
   return required.filter((name) => !process.env[name]);
 };
 
 // Configure multer for memory storage
-const upload = multer({ 
+const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 50 * 1024 * 1024 } // 50MB limit
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB limit
 });
 
 /**
@@ -49,7 +45,7 @@ router.get('/providers', adminSession, async (req, res) => {
         dashboardUrl: 'https://cloudinary.com/console',
         docsUrl: 'https://cloudinary.com/documentation',
         features: ['Images', 'Videos', 'CDN', 'Transformations'],
-        status: cloudinaryConfigured ? 'connected' : 'disconnected'
+        status: cloudinaryConfigured ? 'connected' : 'disconnected',
       },
       pinata: {
         name: 'Pinata IPFS',
@@ -58,16 +54,20 @@ router.get('/providers', adminSession, async (req, res) => {
         dashboardUrl: 'https://app.pinata.cloud',
         docsUrl: 'https://docs.pinata.cloud',
         features: ['Decentralized', 'Permanent Storage', 'IPFS Gateway', 'Free Tier'],
-        status: process.env.PINATA_API_KEY ? 'connected' : 'disconnected'
+        status: process.env.PINATA_API_KEY ? 'connected' : 'disconnected',
       },
       aws: {
         name: 'AWS S3',
-        configured: !!(process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY && process.env.AWS_BUCKET_NAME),
+        configured: !!(
+          process.env.AWS_ACCESS_KEY_ID &&
+          process.env.AWS_SECRET_ACCESS_KEY &&
+          process.env.AWS_BUCKET_NAME
+        ),
         signupUrl: 'https://portal.aws.amazon.com/billing/signup',
         dashboardUrl: 'https://console.aws.amazon.com/s3',
         docsUrl: 'https://docs.aws.amazon.com/s3',
         features: ['Scalable', 'Global CDN', 'Secure', 'Pay-as-you-go'],
-        status: process.env.AWS_BUCKET_NAME ? 'connected' : 'disconnected'
+        status: process.env.AWS_BUCKET_NAME ? 'connected' : 'disconnected',
       },
       gcs: {
         name: 'Google Cloud Storage',
@@ -76,7 +76,7 @@ router.get('/providers', adminSession, async (req, res) => {
         dashboardUrl: 'https://console.cloud.google.com/storage',
         docsUrl: 'https://cloud.google.com/storage/docs',
         features: ['Global Access', 'ML Integration', 'Encryption', 'Free Tier'],
-        status: process.env.GCS_PROJECT_ID ? 'connected' : 'disconnected'
+        status: process.env.GCS_PROJECT_ID ? 'connected' : 'disconnected',
       },
       local: {
         name: 'Local Storage',
@@ -85,8 +85,8 @@ router.get('/providers', adminSession, async (req, res) => {
         dashboardUrl: null,
         docsUrl: null,
         features: ['No Cost', 'Full Control', 'Fast Access', 'Private'],
-        status: 'connected'
-      }
+        status: 'connected',
+      },
     };
 
     res.json({ ok: true, providers });
@@ -126,9 +126,10 @@ router.get('/status', adminSession, async (req, res) => {
 router.post('/upload/cloudinary', adminSession, upload.single('file'), async (req, res) => {
   try {
     if (!isCloudinaryConfigured()) {
-      return res.status(400).json({ 
-        ok: false, 
-        error: 'Cloudinary not configured. Add CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET to environment variables.' 
+      return res.status(400).json({
+        ok: false,
+        error:
+          'Cloudinary not configured. Add CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET to environment variables.',
       });
     }
 
@@ -140,7 +141,7 @@ router.post('/upload/cloudinary', adminSession, upload.single('file'), async (re
     cloudinary.config({
       cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
       api_key: process.env.CLOUDINARY_API_KEY,
-      api_secret: process.env.CLOUDINARY_API_SECRET
+      api_secret: process.env.CLOUDINARY_API_SECRET,
     });
 
     // Upload buffer to Cloudinary
@@ -151,7 +152,7 @@ router.post('/upload/cloudinary', adminSession, upload.single('file'), async (re
           (error, result) => {
             if (error) reject(error);
             else resolve(result);
-          }
+          },
         );
         stream.end(req.file.buffer);
       });
@@ -167,7 +168,7 @@ router.post('/upload/cloudinary', adminSession, upload.single('file'), async (re
       format: result.format,
       width: result.width,
       height: result.height,
-      size: result.bytes
+      size: result.bytes,
     });
   } catch (error) {
     console.error('Cloudinary upload error:', error);
@@ -182,9 +183,10 @@ router.post('/upload/cloudinary', adminSession, upload.single('file'), async (re
 router.post('/upload/pinata', adminSession, upload.single('file'), async (req, res) => {
   try {
     if (!process.env.PINATA_API_KEY || !process.env.PINATA_API_SECRET) {
-      return res.status(400).json({ 
-        ok: false, 
-        error: 'Pinata not configured. Add PINATA_API_KEY and PINATA_API_SECRET to environment variables.' 
+      return res.status(400).json({
+        ok: false,
+        error:
+          'Pinata not configured. Add PINATA_API_KEY and PINATA_API_SECRET to environment variables.',
       });
     }
 
@@ -197,7 +199,7 @@ router.post('/upload/pinata', adminSession, upload.single('file'), async (req, r
 
     const pinataMetadata = JSON.stringify({
       name: req.file.originalname,
-      keyvalues: { uploadedBy: 'pva-bazaar' }
+      keyvalues: { uploadedBy: 'pva-bazaar' },
     });
     formData.append('pinataMetadata', pinataMetadata);
 
@@ -205,9 +207,9 @@ router.post('/upload/pinata', adminSession, upload.single('file'), async (req, r
       headers: {
         ...formData.getHeaders(),
         pinata_api_key: process.env.PINATA_API_KEY,
-        pinata_secret_api_key: process.env.PINATA_API_SECRET
+        pinata_secret_api_key: process.env.PINATA_API_SECRET,
       },
-      maxBodyLength: Infinity
+      maxBodyLength: Infinity,
     });
 
     const ipfsHash = response.data.IpfsHash;
@@ -218,7 +220,7 @@ router.post('/upload/pinata', adminSession, upload.single('file'), async (req, r
       provider: 'pinata',
       url: gatewayUrl,
       ipfsHash,
-      size: response.data.PinSize
+      size: response.data.PinSize,
     });
   } catch (error) {
     console.error('Pinata upload error:', error);
@@ -243,7 +245,7 @@ router.post('/upload/local', adminSession, upload.single('file'), async (req, re
     const safeName = path.basename(req.file.originalname).replace(/[^a-zA-Z0-9._-]/g, '_');
     const filename = `${Date.now()}-${safeName}`;
     const filepath = path.join(uploadsDir, filename);
-    
+
     await fs.writeFile(filepath, req.file.buffer);
 
     const url = `/uploads/${filename}`;
@@ -253,7 +255,7 @@ router.post('/upload/local', adminSession, upload.single('file'), async (req, re
       provider: 'local',
       url,
       filename,
-      size: req.file.size
+      size: req.file.size,
     });
   } catch (error) {
     console.error('Local upload error:', error);
@@ -280,7 +282,7 @@ router.get('/files', adminSession, async (req, res) => {
           name: file,
           url: `/uploads/${file}`,
           size: stats.size,
-          uploaded: stats.birthtime
+          uploaded: stats.birthtime,
         });
       }
     } catch (err) {
@@ -290,12 +292,15 @@ router.get('/files', adminSession, async (req, res) => {
     // Get Pinata files (if configured)
     if (process.env.PINATA_API_KEY && process.env.PINATA_API_SECRET) {
       try {
-        const response = await axios.get('https://api.pinata.cloud/data/pinList?status=pinned&pageLimit=10', {
-          headers: {
-            pinata_api_key: process.env.PINATA_API_KEY,
-            pinata_secret_api_key: process.env.PINATA_API_SECRET
-          }
-        });
+        const response = await axios.get(
+          'https://api.pinata.cloud/data/pinList?status=pinned&pageLimit=10',
+          {
+            headers: {
+              pinata_api_key: process.env.PINATA_API_KEY,
+              pinata_secret_api_key: process.env.PINATA_API_SECRET,
+            },
+          },
+        );
 
         for (const pin of response.data.rows) {
           files.push({
@@ -304,7 +309,7 @@ router.get('/files', adminSession, async (req, res) => {
             url: `https://gateway.pinata.cloud/ipfs/${pin.ipfs_pin_hash}`,
             ipfsHash: pin.ipfs_pin_hash,
             size: pin.size,
-            uploaded: pin.date_pinned
+            uploaded: pin.date_pinned,
           });
         }
       } catch (err) {
@@ -343,8 +348,8 @@ router.delete('/delete/:provider/:id', adminSession, async (req, res) => {
       await axios.delete(`https://api.pinata.cloud/pinning/unpin/${id}`, {
         headers: {
           pinata_api_key: process.env.PINATA_API_KEY,
-          pinata_secret_api_key: process.env.PINATA_API_SECRET
-        }
+          pinata_secret_api_key: process.env.PINATA_API_SECRET,
+        },
       });
 
       return res.json({ ok: true, message: 'File unpinned from IPFS' });
@@ -359,7 +364,7 @@ router.delete('/delete/:provider/:id', adminSession, async (req, res) => {
       cloudinary.config({
         cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
         api_key: process.env.CLOUDINARY_API_KEY,
-        api_secret: process.env.CLOUDINARY_API_SECRET
+        api_secret: process.env.CLOUDINARY_API_SECRET,
       });
 
       await cloudinary.uploader.destroy(id);
@@ -383,14 +388,18 @@ router.post('/test-connection/:provider', adminSession, async (req, res) => {
 
     if (provider === 'cloudinary') {
       if (!isCloudinaryConfigured()) {
-        return res.json({ ok: false, connected: false, message: 'Cloudinary credentials not configured' });
+        return res.json({
+          ok: false,
+          connected: false,
+          message: 'Cloudinary credentials not configured',
+        });
       }
 
       const cloudinary = require('cloudinary').v2;
       cloudinary.config({
         cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
         api_key: process.env.CLOUDINARY_API_KEY,
-        api_secret: process.env.CLOUDINARY_API_SECRET
+        api_secret: process.env.CLOUDINARY_API_SECRET,
       });
 
       await cloudinary.api.ping();
@@ -399,14 +408,18 @@ router.post('/test-connection/:provider', adminSession, async (req, res) => {
 
     if (provider === 'pinata') {
       if (!process.env.PINATA_API_KEY || !process.env.PINATA_API_SECRET) {
-        return res.json({ ok: false, connected: false, message: 'Pinata credentials not configured' });
+        return res.json({
+          ok: false,
+          connected: false,
+          message: 'Pinata credentials not configured',
+        });
       }
 
       await axios.get('https://api.pinata.cloud/data/testAuthentication', {
         headers: {
           pinata_api_key: process.env.PINATA_API_KEY,
-          pinata_secret_api_key: process.env.PINATA_API_SECRET
-        }
+          pinata_secret_api_key: process.env.PINATA_API_SECRET,
+        },
       });
 
       return res.json({ ok: true, connected: true, message: 'Pinata connection successful' });

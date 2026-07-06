@@ -82,7 +82,7 @@ const VotingMarketSchema = new mongoose.Schema(
     // Audit trail
     lastModifiedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // Indexes

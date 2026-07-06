@@ -166,12 +166,11 @@ Example with webhook alerts enabled:
 
 This creates a user-level startup launcher at:
 
- 
- Remove startup launcher later:
- 
- ```powershell
- ./infra/openclaw/uninstall-watchdog-startup.ps1
- ```
+Remove startup launcher later:
+
+```powershell
+./infra/openclaw/uninstall-watchdog-startup.ps1
+```
 
 Logs are written to `infra/openclaw/logs/watchdog.log`.
 

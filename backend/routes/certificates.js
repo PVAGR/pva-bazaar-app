@@ -46,11 +46,13 @@ router.post('/verify/:id', async (req, res) => {
     await artifact.save();
 
     // Dispatch provenance verified event (non-blocking)
-    dispatchToOpenClaw(createProvenanceEvent('verified', artifact, {
-      chainOfCustody: artifact.ownershipHistory || [],
-      attestations: [],
-      verificationStatus: 'verified',
-    })).catch(() => {});
+    dispatchToOpenClaw(
+      createProvenanceEvent('verified', artifact, {
+        chainOfCustody: artifact.ownershipHistory || [],
+        attestations: [],
+        verificationStatus: 'verified',
+      }),
+    ).catch(() => {});
 
     res.json({
       ok: true,

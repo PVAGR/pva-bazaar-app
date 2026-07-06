@@ -22,33 +22,40 @@ I've successfully implemented **Blueprint v1** of the PVA Bazaar decentralized l
 ### Backend (Express API)
 
 **Models:**
+
 - `backend/models/StreamSession.js` - Livestream sessions with IPFS storage
 - `backend/models/JournalEntry.js` - Personal journal entries
 - `backend/models/DecentralizedIdentity.js` - W3C DID implementation
 - `backend/models/CustomDatabase.js` - User-created databases
 
 **Routes:**
+
 - `backend/routes/streams.js` - Stream CRUD + webhook handlers
 - `backend/routes/journal.js` - Journal CRUD + public feed
 - `backend/routes/did.js` - DID creation/verification
 - `backend/routes/databases.js` - Custom database management
 
 **Services:**
+
 - `backend/service/ipfs.js` - Pinata IPFS integration
 - `backend/service/streaming.js` - Twitch/Kick/Livepeer connectors
 
 **API Integration:**
+
 - Updated `backend/api/index.js` to mount new routes
 
 ### Frontend (Vite + React)
 
 **API Helpers:**
+
 - `Frontend/src/lib/decentralizedApi.js` - All API calls for new features
 
 **Pages:**
+
 - `Frontend/dashboard.html` - Central dashboard UI
 
 **Documentation:**
+
 - `BLUEPRINT_V1_README.md` - Comprehensive technical documentation
 - `QUICKSTART.md` - 5-minute setup guide
 - `.env.example.blueprint` - Environment variable template
@@ -71,12 +78,14 @@ User → OBS/Browser → PVA API (Vercel) → MongoDB + IPFS + Livepeer
 ## ✅ Features Implemented
 
 ### 1. Livestreaming
+
 - Create stream sessions (Twitch/Kick/Livepeer)
 - Webhook integration for auto-recording
 - IPFS storage for recordings
 - Stream status tracking (scheduled/live/ended)
 
 ### 2. Journal System
+
 - Markdown-based entries
 - Link to stream sessions
 - Public/private visibility
@@ -84,6 +93,7 @@ User → OBS/Browser → PVA API (Vercel) → MongoDB + IPFS + Livepeer
 - Tags and mood tracking
 
 ### 3. Decentralized Identity (DID)
+
 - W3C-compliant DID generation
 - Ed25519 key pair creation
 - DID document management
@@ -91,6 +101,7 @@ User → OBS/Browser → PVA API (Vercel) → MongoDB + IPFS + Livepeer
 - Public DID resolution
 
 ### 4. IPFS Storage
+
 - Pinata integration
 - File and JSON uploads
 - Pin/unpin management
@@ -98,6 +109,7 @@ User → OBS/Browser → PVA API (Vercel) → MongoDB + IPFS + Livepeer
 - Permanent storage
 
 ### 5. Custom Databases
+
 - User-created databases
 - Flexible entry schema
 - IPFS backup
@@ -109,6 +121,7 @@ User → OBS/Browser → PVA API (Vercel) → MongoDB + IPFS + Livepeer
 ## 🚀 Next Steps
 
 ### Immediate (You)
+
 1. **Configure environment variables:**
    - Copy `.env.example.blueprint` to `backend/.env`
    - Set MongoDB URI (free at mongodb.com/atlas)
@@ -116,12 +129,14 @@ User → OBS/Browser → PVA API (Vercel) → MongoDB + IPFS + Livepeer
    - Optional: Twitch/Livepeer keys
 
 2. **Install dependencies:**
+
    ```bash
    cd backend && npm install
    cd ../Frontend && npm install
    ```
 
 3. **Start development servers:**
+
    ```bash
    # Terminal 1
    cd backend && npm run dev
@@ -135,6 +150,7 @@ User → OBS/Browser → PVA API (Vercel) → MongoDB + IPFS + Livepeer
    - Create stream, journal entry, DID
 
 ### Phase 2 (Community Contributions)
+
 - [ ] WebRTC P2P streaming (no server dependency)
 - [ ] Enhanced UI/UX for dashboard
 - [ ] Mobile app (React Native)
@@ -142,6 +158,7 @@ User → OBS/Browser → PVA API (Vercel) → MongoDB + IPFS + Livepeer
 - [ ] Blockchain integration (Ethereum/Polygon)
 
 ### Phase 3 (Advanced Features)
+
 - [ ] AI journal insights ("uplifting senses")
 - [ ] Verifiable credentials system
 - [ ] Community marketplace
@@ -152,11 +169,13 @@ User → OBS/Browser → PVA API (Vercel) → MongoDB + IPFS + Livepeer
 ## 📚 Documentation
 
 **Read These Next:**
+
 1. `BLUEPRINT_V1_README.md` - Full technical docs
 2. `QUICKSTART.md` - Setup guide
 3. API docs in README (Streams, Journal, DID endpoints)
 
 **Key Concepts:**
+
 - All data is **voluntary** (you control what to share)
 - **Privacy-first** (no tracking, no analytics)
 - **Open source** (fork and customize freely)

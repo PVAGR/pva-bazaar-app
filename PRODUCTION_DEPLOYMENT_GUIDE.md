@@ -62,6 +62,7 @@ ADMIN_SECRET_CODE=<strong-random-code>
 ### Step 3: Get Backend URL
 
 After deployment, Vercel will provide a URL like:
+
 ```
 https://pva-bazaar-backend.vercel.app
 ```
@@ -132,19 +133,22 @@ npx gh-pages -d Frontend/dist
 
 2. **In GitHub Pages (Frontend):**
    - Create `Frontend/public/CNAME` file:
+
    ```
    pvabazaar.org
    ```
+
    - Add DNS records
 
 3. **DNS Records Needed:**
+
    ```
    # For GitHub Pages (Frontend)
    Type: CNAME
    Name: @
    Value: <your-username>.github.io
 
-   # For Vercel (Backend)  
+   # For Vercel (Backend)
    Type: CNAME
    Name: api
    Value: cname.vercel.com
@@ -166,23 +170,23 @@ Backend:  https://api.pvabazaar.org → Vercel
 
 **Backend (Vercel):**
 
-| Variable | Description | Where to Get |
-|----------|-------------|--------------|
-| `MONGODB_URI` | MongoDB Atlas connection string | Atlas dashboard |
-| `JWT_SECRET` | Secret for JWT tokens | Generate: `openssl rand -hex 32` |
-| `STRIPE_SECRET_KEY` | Stripe API secret | Stripe dashboard |
-| `STRIPE_WEBHOOK_SECRET` | Webhook signing secret | Stripe dashboard |
-| `SENTRY_DSN` | Error tracking URL | Sentry project settings |
-| `NODE_ENV` | Set to `production` | Manual |
-| `CORS_ALLOWED_ORIGINS` | Comma-separated origins | Your domain URLs |
-| `ADMIN_SECRET_CODE` | Admin access code | Generate secure string |
+| Variable                | Description                     | Where to Get                     |
+| ----------------------- | ------------------------------- | -------------------------------- |
+| `MONGODB_URI`           | MongoDB Atlas connection string | Atlas dashboard                  |
+| `JWT_SECRET`            | Secret for JWT tokens           | Generate: `openssl rand -hex 32` |
+| `STRIPE_SECRET_KEY`     | Stripe API secret               | Stripe dashboard                 |
+| `STRIPE_WEBHOOK_SECRET` | Webhook signing secret          | Stripe dashboard                 |
+| `SENTRY_DSN`            | Error tracking URL              | Sentry project settings          |
+| `NODE_ENV`              | Set to `production`             | Manual                           |
+| `CORS_ALLOWED_ORIGINS`  | Comma-separated origins         | Your domain URLs                 |
+| `ADMIN_SECRET_CODE`     | Admin access code               | Generate secure string           |
 
 **Frontend (.env.production):**
 
-| Variable | Value | Description |
-|----------|-------|-------------|
-| `VITE_API_URL` | Your backend URL | e.g., https://api.pvabazaar.org |
-| `VITE_BASE_PATH` | `/` | For root domain deployment |
+| Variable         | Value            | Description                     |
+| ---------------- | ---------------- | ------------------------------- |
+| `VITE_API_URL`   | Your backend URL | e.g., https://api.pvabazaar.org |
+| `VITE_BASE_PATH` | `/`              | For root domain deployment      |
 
 ---
 
@@ -227,12 +231,14 @@ stripe listen --forward-to https://api.pvabazaar.org/webhooks/stripe
 ### View Logs
 
 **Backend (Vercel):**
+
 ```bash
 # View Vercel logs
 vercel logs --prod
 ```
 
 **Frontend (GitHub Pages):**
+
 - Uses GitHub Actions logs
 - Check Actions tab in GitHub
 
@@ -262,6 +268,7 @@ npm run qa:accessibility
 ### Issue: "Cannot find module" errors
 
 **Solution:**
+
 ```bash
 # Reinstall dependencies
 npm run clean:full
@@ -273,6 +280,7 @@ npm run build:frontend
 ### Issue: CORS errors in browser
 
 **Solution:**
+
 1. Check `CORS_ALLOWED_ORIGINS` in Vercel backend settings
 2. Ensure frontend URL is included
 3. Clear browser cache and try again
@@ -280,6 +288,7 @@ npm run build:frontend
 ### Issue: "MongoDB connection failed"
 
 **Solution:**
+
 1. Check `MONGODB_URI` is correct
 2. Verify IP whitelist in MongoDB Atlas
 3. Check network connectivity
@@ -287,6 +296,7 @@ npm run build:frontend
 ### Issue: Stripe webhook not working
 
 **Solution:**
+
 1. Verify `STRIPE_WEBHOOK_SECRET` matches
 2. Check webhook endpoint in Stripe dashboard
 3. View webhook delivery logs in Stripe
@@ -294,6 +304,7 @@ npm run build:frontend
 ### Issue: Frontend not loading
 
 **Solution:**
+
 1. Check GitHub Pages is enabled
 2. Verify build completed in GitHub Actions
 3. Check `CNAME` file exists in dist/
@@ -301,6 +312,7 @@ npm run build:frontend
 ### Issue: "Port already in use" (Local)
 
 **Solution:**
+
 ```bash
 # Kill process on port 5001 (backend)
 lsof -ti:5001 | xargs kill -9
@@ -321,6 +333,7 @@ lsof -ti:5173 | xargs kill -9
    - Local: Terminal output
 
 2. **Common Commands:**
+
    ```bash
    npm run dev:backend    # Start local backend
    npm run dev:frontend   # Start local frontend

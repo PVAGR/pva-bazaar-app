@@ -45,7 +45,7 @@ export async function POST(req: Request) {
           did: newUser.did,
         },
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error) {
     console.error(error);

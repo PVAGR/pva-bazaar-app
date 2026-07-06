@@ -39,7 +39,7 @@ services:
       - key: OPENCLAW_BACKEND_URL
         sync: false
       - key: OPENCLAW_PUBLIC_MODE
-        value: "true"
+        value: 'true'
       - key: ADMIN_EMAIL
         sync: false
       - key: ADMIN_USERNAME

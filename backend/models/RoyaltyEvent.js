@@ -19,7 +19,7 @@ const RoyaltyEventSchema = new mongoose.Schema(
     metadata: { type: mongoose.Schema.Types.Mixed, default: null },
     source: { type: String, default: 'dashboard-record' },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 RoyaltyEventSchema.index({ ownerUserId: 1, sale_timestamp: -1 });

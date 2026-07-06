@@ -3,20 +3,23 @@
 ## What Was Built
 
 ### 1. **User Dashboard** (`/dashboard`)
+
 A completely separate, public-facing dashboard for regular users to view their personal marketplace activity safely.
 
 **Location:** `Frontend/src/pages/UserDashboard.jsx` + `UserDashboard.css`
 
 **Features:**
+
 - 📊 Overview - quick stats and recent activity
 - 🛍️ My Orders - user's purchase history
-- 📦 My Items - user's marketplace listings  
+- 📦 My Items - user's marketplace listings
 - 💱 My Activity - buy/sell transactions
 - 🔒 Escrow Status - transaction escrow protection
 - 💰 Sales Dashboard - seller metrics and tips
 - 📈 Analytics Preview - sales trends and top items
 
-**Protection:** 
+**Protection:**
+
 - Requires valid user JWT token
 - Redirects non-logged-in users to login
 - All data scoped to logged-in user only
@@ -24,9 +27,11 @@ A completely separate, public-facing dashboard for regular users to view their p
 ---
 
 ### 2. **Admin Dashboard** (`/admin`) - Now Protected
+
 Your existing admin dashboard is now fully protected with permission-based routing.
 
 **New Protection:** `RequireAdminAuth` component guards all `/admin` routes
+
 - Non-admin users trying to access `/admin` are redirected to home page
 - Only users with valid admin tokens can access
 - System-wide data access (unlike User Dashboard)
@@ -36,15 +41,18 @@ Your existing admin dashboard is now fully protected with permission-based routi
 ### 3. **Route Protection Architecture**
 
 #### RequireAdminAuth Component (NEW)
+
 File: `Frontend/src/components/RequireAdminAuth.jsx`
 
 Protects all admin routes:
+
 ```javascript
 <Route path="/admin" element={<RequireAdminAuth><AdminPage /></RequireAdminAuth>} />
 <Route path="/admin/orders" element={<RequireAdminAuth><AdminOrdersPage /></RequireAdminAuth>} />
 ```
 
 #### Updated Routing
+
 File: `Frontend/src/App.jsx` (UPDATED)
 
 ```javascript
@@ -59,19 +67,20 @@ File: `Frontend/src/App.jsx` (UPDATED)
 
 ## 🎯 Key Differences
 
-| Feature | User Dashboard | Admin Dashboard |
-|---------|---|---|
-| **URL** | `/dashboard` | `/admin` |
-| **Access** | Logged-in users | Admin users only |
-| **Data Scope** | Personal only | System-wide |
-| **Can View** | Own orders, items, transactions | ALL orders, items, users, transactions |
-| **Can Modify** | Personal account settings | System settings, refunds, payouts |
-| **Protection** | `RequireUserAuth` | `RequireAdminAuth` |
-| **Redirect** | → `/login` (if no token) | → `/` (if not admin) |
+| Feature        | User Dashboard                  | Admin Dashboard                        |
+| -------------- | ------------------------------- | -------------------------------------- |
+| **URL**        | `/dashboard`                    | `/admin`                               |
+| **Access**     | Logged-in users                 | Admin users only                       |
+| **Data Scope** | Personal only                   | System-wide                            |
+| **Can View**   | Own orders, items, transactions | ALL orders, items, users, transactions |
+| **Can Modify** | Personal account settings       | System settings, refunds, payouts      |
+| **Protection** | `RequireUserAuth`               | `RequireAdminAuth`                     |
+| **Redirect**   | → `/login` (if no token)        | → `/` (if not admin)                   |
 
 ---
 
 ## 📋 Build Status
+
 ✅ **Frontend Build:** Successful (4.49s)
 ✅ **All components:** No ESLint errors
 ✅ **Routing:** Properly configured
@@ -82,6 +91,7 @@ File: `Frontend/src/App.jsx` (UPDATED)
 ## 🚀 How to Deploy
 
 ### Step 1: Verify Build
+
 ```bash
 cd Frontend
 npm run build
@@ -89,24 +99,26 @@ npm run build
 ```
 
 ### Step 2: Ensure Backend Filters User Data
+
 Before users can see only their own data, backend endpoints must be updated:
 
 ```javascript
 // Example: GET /api/orders endpoint
 router.get('/orders', authMiddleware, (req, res) => {
   // IMPORTANT: Extract user ID from JWT
-  const userId = req.user.id;  // From token
-  
+  const userId = req.user.id; // From token
+
   // IMPORTANT: Filter by user ID
-  Order.find({ userId }).then(orders => {
+  Order.find({ userId }).then((orders) => {
     res.json({ ok: true, orders });
   });
 });
 ```
 
 **Critical endpoints that need user filtering:**
+
 - `GET /api/orders` → return only user's orders
-- `GET /api/items/mine` → return only user's items  
+- `GET /api/items/mine` → return only user's items
 - `GET /api/transactions` → return only user's transactions
 - `GET /api/sales/metrics` → return only user's metrics
 - `GET /api/orders/escrow` → return only user's escrow
@@ -114,6 +126,7 @@ router.get('/orders', authMiddleware, (req, res) => {
 ### Step 3: Test Dual Dashboard Access
 
 **Test User Dashboard:**
+
 ```
 1. Login as regular user: /login
 2. Navigate to: /dashboard
@@ -122,6 +135,7 @@ router.get('/orders', authMiddleware, (req, res) => {
 ```
 
 **Test Admin Dashboard:**
+
 ```
 1. Login as admin
 2. Navigate to: /admin
@@ -130,6 +144,7 @@ router.get('/orders', authMiddleware, (req, res) => {
 ```
 
 **Test Non-User Access:**
+
 ```
 1. Without login, try /dashboard
 2. Should redirect to /login
@@ -142,18 +157,20 @@ router.get('/orders', authMiddleware, (req, res) => {
 ## 📊 Escrow System Integration
 
 The User Dashboard includes an **Escrow Status** tab that shows:
+
 - User's escrow-protected transactions
 - Current status (held, released, disputed)
 - Amount protected and release date
 - Safe, read-only view
 
-**Backend requirement:** 
+**Backend requirement:**
 Ensure `GET /api/orders/escrow` returns only the logged-in user's escrow status:
+
 ```javascript
 router.get('/orders/escrow', authMiddleware, (req, res) => {
   const userId = req.user.id;
-  Order.find({ userId, hasEscrow: true }).then(orders => {
-    res.json(orders);  // Only user's escrow orders
+  Order.find({ userId, hasEscrow: true }).then((orders) => {
+    res.json(orders); // Only user's escrow orders
   });
 });
 ```
@@ -165,7 +182,7 @@ router.get('/orders/escrow', authMiddleware, (req, res) => {
 Before going live:
 
 - [ ] Admin routes require admin JWT token
-- [ ] User routes require user JWT token  
+- [ ] User routes require user JWT token
 - [ ] Backend `/admin` endpoints validate `role: 'admin'`
 - [ ] Backend `/api` endpoints filter by user ID from token
 - [ ] Sensitive fields never returned to frontend
@@ -223,8 +240,9 @@ Frontend/
 ## 🎨 Design Consistency
 
 Both dashboards use your existing theme system:
+
 - Dark blue night mode (`--site-bg-primary`)
-- Green day mode (`--site-bg-secondary`)  
+- Green day mode (`--site-bg-secondary`)
 - Cyan/blue accents (`--site-accent`)
 - Consistent card styling
 - Responsive grid layouts

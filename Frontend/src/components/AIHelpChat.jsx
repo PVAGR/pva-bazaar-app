@@ -9,7 +9,7 @@ const AIHelpChat = ({ userId, defaultTopic = 'general' }) => {
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
-      message: '👋 Hi! I\'m your PVA Assistant. How can I help you today?',
+      message: "👋 Hi! I'm your PVA Assistant. How can I help you today?",
     },
   ]);
   const [input, setInput] = useState('');
@@ -96,10 +96,7 @@ const AIHelpChat = ({ userId, defaultTopic = 'general' }) => {
     <div className={styles.chatContainer}>
       <div className={styles.chatHeader}>
         <h3>🤖 PVA AI Assistant</h3>
-        <button
-          className={styles.guideBtn}
-          onClick={() => setShowGuides(!showGuides)}
-        >
+        <button className={styles.guideBtn} onClick={() => setShowGuides(!showGuides)}>
           📖 Guides
         </button>
       </div>

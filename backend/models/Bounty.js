@@ -18,14 +18,23 @@ const bountySchema = new mongoose.Schema({
 
   // Payout details
   rewardAmount: { type: String }, // e.g. "500 USDC"
-  rewardToken: { type: String },  // e.g. "USDC", "ETH"
-  rewardRaw: { type: Number },    // numeric value for sorting
+  rewardToken: { type: String }, // e.g. "USDC", "ETH"
+  rewardRaw: { type: Number }, // numeric value for sorting
   chain: { type: String, default: 'base' },
 
   // Lifecycle
   status: {
     type: String,
-    enum: ['discovered', 'draft_ready', 'pending_review', 'approved', 'submitted', 'won', 'lost', 'skipped'],
+    enum: [
+      'discovered',
+      'draft_ready',
+      'pending_review',
+      'approved',
+      'submitted',
+      'won',
+      'lost',
+      'skipped',
+    ],
     default: 'discovered',
     index: true,
   },

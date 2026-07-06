@@ -28,7 +28,9 @@ function normalizeDateOrNull(raw) {
 }
 
 function projectFilteredEvents(events, { type, from, to }) {
-  const typeFilter = String(type || '').trim().toLowerCase();
+  const typeFilter = String(type || '')
+    .trim()
+    .toLowerCase();
   const fromDate = normalizeDateOrNull(from);
   const toDate = normalizeDateOrNull(to);
 
@@ -63,10 +65,7 @@ function buildEventStats(events) {
 async function findPassportByArtifactKey(key) {
   const clean = String(key || '').trim();
   const filter = {
-    $or: [
-      { artifactSlug: clean },
-      ...(isObjectId(clean) ? [{ artifactId: clean }] : []),
-    ],
+    $or: [{ artifactSlug: clean }, ...(isObjectId(clean) ? [{ artifactId: clean }] : [])],
   };
   return DigitalProductPassport.findOne(filter).lean();
 }
@@ -88,7 +87,9 @@ function toSafePassport(doc) {
     issuerDid: doc.issuerDid || '',
     ownerDid: doc.ownerDid || '',
     royaltyPolicy: doc.royaltyPolicy || {},
-    verifiableCredentials: Array.isArray(doc.verifiableCredentials) ? doc.verifiableCredentials : [],
+    verifiableCredentials: Array.isArray(doc.verifiableCredentials)
+      ? doc.verifiableCredentials
+      : [],
     lifecycleEvents: Array.isArray(doc.lifecycleEvents) ? doc.lifecycleEvents : [],
     ipfsCid: doc.ipfsCid || '',
     metadataUri: doc.metadataUri || '',
@@ -127,7 +128,9 @@ router.get('/:passportDid/events', async (req, res) => {
     const filtered = projectFilteredEvents(doc.lifecycleEvents, { type, from, to });
     const sorted = filtered
       .slice()
-      .sort((a, b) => new Date(b?.occurredAt || 0).getTime() - new Date(a?.occurredAt || 0).getTime());
+      .sort(
+        (a, b) => new Date(b?.occurredAt || 0).getTime() - new Date(a?.occurredAt || 0).getTime(),
+      );
 
     const total = sorted.length;
     const start = (page - 1) * limit;
@@ -188,7 +191,9 @@ router.get('/by-artifact/:artifactIdOrSlug/events', async (req, res) => {
     const filtered = projectFilteredEvents(doc.lifecycleEvents, { type, from, to });
     const sorted = filtered
       .slice()
-      .sort((a, b) => new Date(b?.occurredAt || 0).getTime() - new Date(a?.occurredAt || 0).getTime());
+      .sort(
+        (a, b) => new Date(b?.occurredAt || 0).getTime() - new Date(a?.occurredAt || 0).getTime(),
+      );
 
     const total = sorted.length;
     const start = (page - 1) * limit;
@@ -284,22 +289,28 @@ router.post('/', authenticateToken, async (req, res) => {
 
       const existing = await DigitalProductPassport.findOne({ artifactId: artifact._id }).lean();
       if (existing) {
-        return res.status(409).json({ ok: false, error: 'Passport already exists for this artifact', passportDid: existing.passportDid });
+        return res.status(409).json({
+          ok: false,
+          error: 'Passport already exists for this artifact',
+          passportDid: existing.passportDid,
+        });
       }
     }
 
     const policy = {
       basisPoints: clampBasisPoints(royaltyPolicy.basisPoints, 1000),
       payoutCurrency: String(royaltyPolicy.payoutCurrency || 'USD').toUpperCase(),
-      payoutRail: ['crypto', 'fiat', 'ussd', 'mixed'].includes(String(royaltyPolicy.payoutRail || '').toLowerCase())
+      payoutRail: ['crypto', 'fiat', 'ussd', 'mixed'].includes(
+        String(royaltyPolicy.payoutRail || '').toLowerCase(),
+      )
         ? String(royaltyPolicy.payoutRail).toLowerCase()
         : 'mixed',
       split: Array.isArray(royaltyPolicy.split)
         ? royaltyPolicy.split.map((entry) => ({
-          recipientDid: String(entry.recipientDid || ''),
-          role: String(entry.role || ''),
-          basisPoints: clampBasisPoints(entry.basisPoints, 0),
-        }))
+            recipientDid: String(entry.recipientDid || ''),
+            role: String(entry.role || ''),
+            basisPoints: clampBasisPoints(entry.basisPoints, 0),
+          }))
         : [],
     };
 
@@ -325,7 +336,9 @@ router.post('/', authenticateToken, async (req, res) => {
     }
 
     const doc = await DigitalProductPassport.create({
-      assetType: ['physical', 'digital', 'hybrid'].includes(String(assetType)) ? String(assetType) : 'hybrid',
+      assetType: ['physical', 'digital', 'hybrid'].includes(String(assetType))
+        ? String(assetType)
+        : 'hybrid',
       artifactId: artifact?._id,
       artifactSlug: artifact?.slug || String(artifactSlug || ''),
       productName: String(productName).trim(),
@@ -399,17 +412,23 @@ router.put('/:passportDid/royalty-policy', authenticateToken, async (req, res) =
     const body = req.body || {};
     const nextPolicy = {
       basisPoints: clampBasisPoints(body.basisPoints, doc.royaltyPolicy?.basisPoints || 1000),
-      payoutCurrency: String(body.payoutCurrency || doc.royaltyPolicy?.payoutCurrency || 'USD').toUpperCase(),
-      payoutRail: ['crypto', 'fiat', 'ussd', 'mixed'].includes(String(body.payoutRail || '').toLowerCase())
+      payoutCurrency: String(
+        body.payoutCurrency || doc.royaltyPolicy?.payoutCurrency || 'USD',
+      ).toUpperCase(),
+      payoutRail: ['crypto', 'fiat', 'ussd', 'mixed'].includes(
+        String(body.payoutRail || '').toLowerCase(),
+      )
         ? String(body.payoutRail).toLowerCase()
-        : (doc.royaltyPolicy?.payoutRail || 'mixed'),
+        : doc.royaltyPolicy?.payoutRail || 'mixed',
       split: Array.isArray(body.split)
         ? body.split.map((entry) => ({
-          recipientDid: String(entry.recipientDid || ''),
-          role: String(entry.role || ''),
-          basisPoints: clampBasisPoints(entry.basisPoints, 0),
-        }))
-        : (Array.isArray(doc.royaltyPolicy?.split) ? doc.royaltyPolicy.split : []),
+            recipientDid: String(entry.recipientDid || ''),
+            role: String(entry.role || ''),
+            basisPoints: clampBasisPoints(entry.basisPoints, 0),
+          }))
+        : Array.isArray(doc.royaltyPolicy?.split)
+          ? doc.royaltyPolicy.split
+          : [],
     };
 
     doc.royaltyPolicy = nextPolicy;

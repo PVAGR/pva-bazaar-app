@@ -7,11 +7,16 @@ const adminSession = require('../middleware/adminSession');
 const { generalLimiter } = require('../middleware/rateLimit');
 
 function toSafeText(input, max = 500) {
-  return String(input || '').trim().slice(0, max);
+  return String(input || '')
+    .trim()
+    .slice(0, max);
 }
 
 function toSafeEmail(input) {
-  return String(input || '').trim().toLowerCase().slice(0, 255);
+  return String(input || '')
+    .trim()
+    .toLowerCase()
+    .slice(0, 255);
 }
 
 function isValidEmail(email) {
@@ -94,7 +99,8 @@ router.post('/', generalLimiter, async (req, res) => {
 
     if (!slugOrId) return res.status(400).json({ ok: false, error: 'Missing item id or slug' });
     if (!requesterName) return res.status(400).json({ ok: false, error: 'Missing requester name' });
-    if (!isValidEmail(requesterEmail)) return res.status(400).json({ ok: false, error: 'Invalid requester email' });
+    if (!isValidEmail(requesterEmail))
+      return res.status(400).json({ ok: false, error: 'Invalid requester email' });
     if (!message) return res.status(400).json({ ok: false, error: 'Missing message' });
 
     const artifact = await findArtifactBySlugOrId(slugOrId);
@@ -219,7 +225,8 @@ router.patch('/:id/status', adminSession, async (req, res) => {
     const id = String(req.params.id || '');
     const status = toSafeText(req.body?.status, 30).toLowerCase();
     const notes = toSafeText(req.body?.notes, 2000);
-    if (!mongoose.Types.ObjectId.isValid(id)) return res.status(400).json({ ok: false, error: 'Invalid inquiry id' });
+    if (!mongoose.Types.ObjectId.isValid(id))
+      return res.status(400).json({ ok: false, error: 'Invalid inquiry id' });
     if (!['new', 'contacted', 'reserved', 'closed'].includes(status)) {
       return res.status(400).json({ ok: false, error: 'Invalid status' });
     }

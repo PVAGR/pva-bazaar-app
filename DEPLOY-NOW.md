@@ -11,6 +11,7 @@ bash scripts/one-command-deploy.sh
 ## 🎯 Choose Your Path
 
 ### ⭐ Path 1: Railway.app (RECOMMENDED)
+
 **Best for:** Easiest setup, most similar to Vercel
 
 ```bash
@@ -25,6 +26,7 @@ bash scripts/deploy-railway.sh
 - **Time:** ~10 minutes
 
 ### 🟢 Path 2: Render.com (FREE Tier)
+
 **Best for:** Zero cost forever
 
 ```bash
@@ -39,6 +41,7 @@ bash scripts/deploy-render.sh
 - **Time:** ~15 minutes
 
 ### 🔵 Path 3: Fly.io (Most Reliable)
+
 **Best for:** Best performance for free
 
 ```bash
@@ -53,6 +56,7 @@ bash scripts/deploy-flyio.sh
 - **Time:** ~10 minutes
 
 ### 🐳 Path 4: Docker (Any Server)
+
 **Best for:** Self-hosting, full control
 
 ```bash
@@ -71,12 +75,14 @@ npm run docker:compose:up
 ## 📋 Complete Setup Instructions
 
 ### Before You Start
+
 1. ✅ Node.js 20+ installed
 2. ✅ Git configured with main branch
 3. ✅ GitHub account (for Render/Railway/Fly)
 4. ✅ MongoDB Atlas account (free tier)
 
 ### Step 1: Create MongoDB Connection
+
 ```bash
 # Go to: https://www.mongodb.com/cloud/atlas
 # Create free cluster → Copy connection string
@@ -86,6 +92,7 @@ npm run docker:compose:up
 ### Step 2: Choose & Deploy
 
 **Option A - Railway (Easiest):**
+
 ```bash
 bash scripts/deploy-railway.sh
 # Script handles everything:
@@ -97,6 +104,7 @@ bash scripts/deploy-railway.sh
 ```
 
 **Option B - Render:**
+
 ```bash
 bash scripts/deploy-render.sh
 # Manual steps:
@@ -107,6 +115,7 @@ bash scripts/deploy-render.sh
 ```
 
 **Option C - Fly.io:**
+
 ```bash
 bash scripts/deploy-flyio.sh
 # Automated:
@@ -117,18 +126,21 @@ bash scripts/deploy-flyio.sh
 ```
 
 **Option D - Docker:**
+
 ```bash
 npm run docker:compose:up
 # Done! Runs locally on port 5001
 ```
 
 ### Step 3: Get Your URL
+
 - **Railway:** Check dashboard → Service → URL
 - **Render:** Check dashboard → URL
 - **Fly.io:** `https://{app-name}.fly.dev`
 - **Docker:** `http://localhost:5001`
 
 ### Step 4: Verify It's Working
+
 ```bash
 # Test endpoints
 curl https://your-app-url/api/health-check
@@ -141,6 +153,7 @@ npm run monitor:prod
 ```
 
 ### Step 5: Seed Your Database
+
 ```bash
 npm run seed:db
 
@@ -156,6 +169,7 @@ npm run seed:db
 ## 🏃 Quick Reference
 
 ### One-Time Setup
+
 ```bash
 # Interactive deployment guide
 bash scripts/one-command-deploy.sh
@@ -170,6 +184,7 @@ npm run docker:compose:up
 ```
 
 ### Testing Locally
+
 ```bash
 # Start Docker stack
 npm run docker:compose:up
@@ -182,6 +197,7 @@ npm run docker:compose:down
 ```
 
 ### After Deployment
+
 ```bash
 # Seed database
 npm run seed:db
@@ -197,6 +213,7 @@ curl https://your-url/api/docs
 ```
 
 ### Development
+
 ```bash
 # Start local backend
 npm run dev:backend
@@ -215,14 +232,14 @@ npm run test:phases-6-8
 
 ## 💰 Cost Comparison
 
-| Platform | Cost | Uptime | Cold Start | Best For |
-|----------|------|--------|-----------|----------|
-| Railway | $5/mo credits | 99.9% | <1s | Easiest setup |
-| Render | FREE | 99.9%* | 30s | Zero cost |
-| Fly.io | FREE | 99.99% | <1s | Best reliability |
-| Docker | $0-??? | 99.99%† | Instant | Self-control |
+| Platform | Cost          | Uptime  | Cold Start | Best For         |
+| -------- | ------------- | ------- | ---------- | ---------------- |
+| Railway  | $5/mo credits | 99.9%   | <1s        | Easiest setup    |
+| Render   | FREE          | 99.9%\* | 30s        | Zero cost        |
+| Fly.io   | FREE          | 99.99%  | <1s        | Best reliability |
+| Docker   | $0-???        | 99.99%† | Instant    | Self-control     |
 
-*Sleeps after 15 min inactivity
+\*Sleeps after 15 min inactivity
 †Depends on your server
 
 ---
@@ -230,12 +247,14 @@ npm run test:phases-6-8
 ## 🌐 After Going Live
 
 ### Access Your Application
+
 - **API:** `https://your-url/api`
 - **API Docs:** `https://your-url/api/docs` (Interactive Swagger UI)
 - **Health:** `https://your-url/api/health-check`
 - **OpenAPI:** `https://your-url/api/openapi.json`
 
 ### Key Endpoints
+
 ```
 POST   /api/artifacts                 # Create artifact
 GET    /api/artifacts                 # List artifacts
@@ -247,12 +266,14 @@ GET    /api/health-check              # System health
 ```
 
 ### Configure Your Domain
+
 - **Railway:** Settings → Custom Domain
 - **Render:** Settings → Custom Domain
 - **Fly.io:** `flyctl certs add yourdomain.com`
 - **Docker:** Set up reverse proxy (nginx/Caddy)
 
 ### Enable HTTPS
+
 All platforms handle this automatically. ✅
 
 ---
@@ -260,6 +281,7 @@ All platforms handle this automatically. ✅
 ## 🐛 Troubleshooting
 
 ### "MongoDB connection refused"
+
 ```bash
 # Problem: MONGODB_URI is wrong or IP not whitelisted
 # Fix:
@@ -270,6 +292,7 @@ All platforms handle this automatically. ✅
 ```
 
 ### "Port already in use (Docker)"
+
 ```bash
 # Problem: Port 5001 already in use
 # Fix:
@@ -278,6 +301,7 @@ npm run docker:compose:up    # Try again
 ```
 
 ### "Function timed out"
+
 ```bash
 # Problem: First request slow (cold start)
 # Fix: Wait ~30 seconds for warm-up
@@ -285,6 +309,7 @@ npm run docker:compose:up    # Try again
 ```
 
 ### "API returns 502 Bad Gateway"
+
 ```bash
 # Problem: App still deploying
 # Fix: Wait 2-3 minutes and retry
@@ -292,6 +317,7 @@ npm run docker:compose:up    # Try again
 ```
 
 ### "Health check fails"
+
 ```bash
 # Problem: Environment variables not set
 # Fix:
@@ -304,19 +330,20 @@ npm run docker:compose:up    # Try again
 
 ## 📚 Comprehensive Guides
 
-| Guide | Purpose |
-|-------|---------|
-| `DEPLOY-FREE-NOW.md` | Complete step-by-step guide |
-| `DEPLOYMENT-FREE.md` | Detailed platform comparison |
-| `backend/docs/API-DOCS.md` | API reference (430+ lines) |
-| `backend/docs/INTEGRATION-GUIDE.md` | Developer integration guide |
-| `backend/docs/PHASE9-PROVENANCE.md` | NFT system documentation |
+| Guide                               | Purpose                      |
+| ----------------------------------- | ---------------------------- |
+| `DEPLOY-FREE-NOW.md`                | Complete step-by-step guide  |
+| `DEPLOYMENT-FREE.md`                | Detailed platform comparison |
+| `backend/docs/API-DOCS.md`          | API reference (430+ lines)   |
+| `backend/docs/INTEGRATION-GUIDE.md` | Developer integration guide  |
+| `backend/docs/PHASE9-PROVENANCE.md` | NFT system documentation     |
 
 ---
 
 ## ✨ Features Included
 
 ### Platform Features
+
 - ✅ Full REST API (70+ endpoints)
 - ✅ User authentication & JWT tokens
 - ✅ Shop management
@@ -329,6 +356,7 @@ npm run docker:compose:up    # Try again
 - ✅ Real-time monitoring
 
 ### Infrastructure
+
 - ✅ MongoDB database (Atlas)
 - ✅ Redis caching
 - ✅ Docker containerization
@@ -339,6 +367,7 @@ npm run docker:compose:up    # Try again
 - ✅ Auto-scaling (platform-dependent)
 
 ### Documentation
+
 - ✅ OpenAPI 3.0 spec
 - ✅ Interactive Swagger UI
 - ✅ API documentation (430 lines)
@@ -351,13 +380,13 @@ npm run docker:compose:up    # Try again
 
 ## 🚀 TLDR Timeline
 
-| Step | Time | Action |
-|------|------|--------|
-| 1 | 2 min | Sign up on platform (Railway/Render/Fly) |
-| 2 | 2 min | Connect GitHub account |
-| 3 | 5 min | Run deployment script |
-| 4 | 1 min | Add environment variables |
-| 5 | Done! | Your app is LIVE 🎉 |
+| Step | Time  | Action                                   |
+| ---- | ----- | ---------------------------------------- |
+| 1    | 2 min | Sign up on platform (Railway/Render/Fly) |
+| 2    | 2 min | Connect GitHub account                   |
+| 3    | 5 min | Run deployment script                    |
+| 4    | 1 min | Add environment variables                |
+| 5    | Done! | Your app is LIVE 🎉                      |
 
 **Total: 10 minutes**
 
@@ -368,6 +397,7 @@ npm run docker:compose:up    # Try again
 ### Which platform for you?
 
 **If you want:**
+
 - ✅ Easiest setup → **Railway**
 - ✅ Zero cost forever → **Render or Fly.io**
 - ✅ Best reliability → **Fly.io**
@@ -386,18 +416,21 @@ No more $20/month. Go live in 10 minutes. Let's go! 🚀
 ## 📞 Support
 
 **Need help?**
+
 1. Read: `DEPLOY-FREE-NOW.md` (this file's sibling)
 2. Check: Platform-specific docs (Railway/Render/Fly links below)
 3. Run: `bash backend/scripts/status-dashboard.sh`
 4. View: API docs at `/api/docs` (after deployed)
 
 **Platform Documentation:**
+
 - Railway: https://docs.railway.app
 - Render: https://render.com/docs
 - Fly.io: https://fly.io/docs
 - Docker: https://docs.docker.com
 
 **Project Documentation:**
+
 - API Reference: `backend/docs/API-DOCS.md`
 - Integration: `backend/docs/INTEGRATION-GUIDE.md`
 - Production: `backend/docs/PRODUCTION-CHECKLIST.md`

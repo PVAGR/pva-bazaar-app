@@ -7,7 +7,7 @@ const logger = createLogger('RequireAdminAuth');
 
 /**
  * RequireAdminAuth - Guards admin-only routes
- * 
+ *
  * SECURITY: Only allows access to /admin with valid JWT token
  * Prevents public access to admin dashboard
  * Redirects unauthorized users to home page

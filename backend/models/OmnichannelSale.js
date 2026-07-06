@@ -3,7 +3,11 @@ const mongoose = require('mongoose');
 const delistResultSchema = new mongoose.Schema(
   {
     channel: { type: String, required: true },
-    status: { type: String, enum: ['success', 'failed', 'skipped', 'manual_required'], default: 'skipped' },
+    status: {
+      type: String,
+      enum: ['success', 'failed', 'skipped', 'manual_required'],
+      default: 'skipped',
+    },
     message: { type: String, default: '' },
     externalListingId: { type: String, default: '' },
     at: { type: Date, default: Date.now },
@@ -29,7 +33,11 @@ const omnichannelSaleSchema = new mongoose.Schema(
     currency: { type: String, default: 'usd' },
     buyerEmail: { type: String, default: '' },
     buyerWallet: { type: String, default: '' },
-    status: { type: String, enum: ['received', 'processing', 'completed', 'failed'], default: 'received' },
+    status: {
+      type: String,
+      enum: ['received', 'processing', 'completed', 'failed'],
+      default: 'received',
+    },
     royaltySettlement: {
       amountCents: { type: Number, default: 0 },
       currency: { type: String, default: 'usd' },
@@ -52,7 +60,11 @@ const omnichannelSaleSchema = new mongoose.Schema(
       tokenId: { type: String, default: '' },
       txHash: { type: String, default: '' },
       mintedAt: Date,
-      status: { type: String, enum: ['pending', 'minted', 'failed', 'skipped'], default: 'pending' },
+      status: {
+        type: String,
+        enum: ['pending', 'minted', 'failed', 'skipped'],
+        default: 'pending',
+      },
       failureReason: { type: String, default: '' },
     },
   },

@@ -109,7 +109,9 @@
   border: 1px solid var(--site-border);
   padding: 0.55rem 0.75rem;
   cursor: pointer;
-  transition: border-color 0.2s ease, transform 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    transform 0.2s ease;
   color: var(--site-text);
 }
 

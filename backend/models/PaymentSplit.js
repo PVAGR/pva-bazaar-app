@@ -81,7 +81,7 @@ const PaymentSplitSchema = new mongoose.Schema(
     reconciledAt: Date,
     reconciledBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // Indexes for queries

@@ -46,4 +46,3 @@ function decryptJson(payload) {
 }
 
 module.exports = { encryptJson, decryptJson };
-

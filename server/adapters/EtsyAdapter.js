@@ -13,7 +13,8 @@ class EtsyAdapter {
   }
 
   async listArtifact(artifact) {
-    if (!this.isReady()) return { success: false, skipped: true, error: 'Etsy credentials missing' };
+    if (!this.isReady())
+      return { success: false, skipped: true, error: 'Etsy credentials missing' };
 
     try {
       const response = await axios.post(
@@ -42,7 +43,8 @@ class EtsyAdapter {
   }
 
   async deleteListing(listingId) {
-    if (!this.isReady()) return { success: false, skipped: true, error: 'Etsy credentials missing' };
+    if (!this.isReady())
+      return { success: false, skipped: true, error: 'Etsy credentials missing' };
 
     try {
       await axios.delete(`${this.baseURL}/shops/${this.shopId}/listings/${listingId}`, {

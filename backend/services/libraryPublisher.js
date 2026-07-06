@@ -8,13 +8,7 @@ const ipfsService = require('../service/ipfs');
 
 const execFileAsync = promisify(execFile);
 
-const REQUIRED_REFERENCE_FIELDS = [
-  'title',
-  'quick_facts',
-  'history',
-  'operations',
-  'sources',
-];
+const REQUIRED_REFERENCE_FIELDS = ['title', 'quick_facts', 'history', 'operations', 'sources'];
 
 function sanitizeString(value, max = 12000) {
   return String(value || '')
@@ -70,7 +64,8 @@ function buildTemplateFrontmatter(inputFrontmatter, reqUserId) {
 function ensureUniversalReference(frontmatter) {
   const missing = REQUIRED_REFERENCE_FIELDS.filter((key) => {
     if (key === 'sources') return !Array.isArray(frontmatter[key]) || frontmatter[key].length === 0;
-    if (key === 'quick_facts') return !isObjectLike(frontmatter[key]) || Object.keys(frontmatter[key]).length === 0;
+    if (key === 'quick_facts')
+      return !isObjectLike(frontmatter[key]) || Object.keys(frontmatter[key]).length === 0;
     return !sanitizeString(frontmatter[key]);
   });
 
@@ -202,7 +197,9 @@ function renderSourcesList(sources) {
 
 function renderArticleHtml({ title, frontmatter, body }) {
   const quickFactsHtml = renderQuickFactsTable(frontmatter.quick_facts);
-  const historyHtml = frontmatter.history ? `<section><h2>History</h2><p>${escapeHtml(frontmatter.history)}</p></section>` : '';
+  const historyHtml = frontmatter.history
+    ? `<section><h2>History</h2><p>${escapeHtml(frontmatter.history)}</p></section>`
+    : '';
   const operationsHtml = frontmatter.operations
     ? `<section><h2>Operations and Impact</h2><p>${escapeHtml(frontmatter.operations)}</p></section>`
     : '';
@@ -260,7 +257,8 @@ async function writeToGitBranch({ slug, markdown, version, status }) {
   const contentDir = path.join(repoRoot, 'content', 'library');
   const contentFilePath = path.join(contentDir, `${slug}.md`);
 
-  const syncEnabled = String(process.env.LIBRARY_GIT_SYNC_ENABLED || 'true').toLowerCase() !== 'false';
+  const syncEnabled =
+    String(process.env.LIBRARY_GIT_SYNC_ENABLED || 'true').toLowerCase() !== 'false';
   if (!syncEnabled) {
     return { gitCommitHash: '' };
   }
@@ -277,7 +275,10 @@ async function writeToGitBranch({ slug, markdown, version, status }) {
       await runGitCommand(['checkout', '-b', branchName], repoRoot);
     }
 
-    await runGitCommand(['add', path.relative(repoRoot, contentFilePath).replace(/\\/g, '/')], repoRoot);
+    await runGitCommand(
+      ['add', path.relative(repoRoot, contentFilePath).replace(/\\/g, '/')],
+      repoRoot,
+    );
 
     const commitMessage = `library(${slug}): v${version} ${status}`;
     try {

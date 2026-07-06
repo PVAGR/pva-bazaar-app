@@ -5,6 +5,7 @@
 Go to: https://render.com/dashboard
 
 ### Step 1: Create Web Service
+
 - Click `+ New`
 - Click `Web Service`
 - Select `Deploy existing repository`
@@ -12,6 +13,7 @@ Go to: https://render.com/dashboard
 - Click `Connect`
 
 ### Step 2: Configure Service
+
 - Name: `pva-bazaar-prod`
 - Environment: `Node`
 - Region: `Oregon (us-west)` (or any region)
@@ -32,12 +34,14 @@ FRONTEND_URL=https://pva-bazaar-prod.onrender.com
 ```
 
 ### Step 4: Deploy
+
 - Select: `Free` (free tier)
 - Scroll down
 - Click purple `Deploy Web Service` button
 - Wait 5-10 minutes
 
 ### Step 5: Get Your Live URL
+
 - Once "Live" shows, copy your URL (something like: `https://pva-bazaar-prod-xxxxx.onrender.com`)
 - This is your API endpoint
 

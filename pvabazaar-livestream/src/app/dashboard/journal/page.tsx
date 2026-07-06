@@ -28,7 +28,7 @@ export default function JournalPage() {
     e.preventDefault();
     if (!session) return;
 
-    setLoading(prev => ({ ...prev, form: true }));
+    setLoading((prev) => ({ ...prev, form: true }));
 
     const formData = new FormData();
     formData.append('title', title);
@@ -43,7 +43,7 @@ export default function JournalPage() {
       body: formData,
     });
 
-    setLoading(prev => ({ ...prev, form: false }));
+    setLoading((prev) => ({ ...prev, form: false }));
 
     if (res.ok) {
       fetchEntries();
@@ -54,21 +54,21 @@ export default function JournalPage() {
   };
 
   const handleSign = async (entryId: string) => {
-    setLoading(prev => ({ ...prev, [entryId]: true }));
+    setLoading((prev) => ({ ...prev, [entryId]: true }));
     const res = await fetch(`/api/journals/${entryId}/sign`, {
       method: 'POST',
     });
     if (res.ok) {
       fetchEntries(); // Refetch to show the signed status
     }
-    setLoading(prev => ({ ...prev, [entryId]: false }));
+    setLoading((prev) => ({ ...prev, [entryId]: false }));
   };
 
   const handleVerify = async (entryId: string) => {
-    const entry = entries.find(e => e._id === entryId);
+    const entry = entries.find((e) => e._id === entryId);
     if (!entry || !entry.verifiableCredential) return;
 
-    setLoading(prev => ({ ...prev, [entryId]: true }));
+    setLoading((prev) => ({ ...prev, [entryId]: true }));
     const res = await fetch(`/api/journals/${entryId}/verify`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -76,8 +76,8 @@ export default function JournalPage() {
     });
 
     const result = await res.json();
-    setVerificationResult(prev => ({ ...prev, [entryId]: result }));
-    setLoading(prev => ({ ...prev, [entryId]: false }));
+    setVerificationResult((prev) => ({ ...prev, [entryId]: result }));
+    setLoading((prev) => ({ ...prev, [entryId]: false }));
   };
 
   return (
@@ -163,13 +163,18 @@ export default function JournalPage() {
             </div>
             {verificationResult[entry._id] && (
               <div className="mt-2 p-2 bg-gray-700 rounded">
-                <p className={`text-sm font-semibold ${verificationResult[entry._id]?.verified ? 'text-green-400' : 'text-red-400'}`}>
-                  Verification Status: {verificationResult[entry._id]?.verified ? 'Success' : 'Failed'}
+                <p
+                  className={`text-sm font-semibold ${verificationResult[entry._id]?.verified ? 'text-green-400' : 'text-red-400'}`}
+                >
+                  Verification Status:{' '}
+                  {verificationResult[entry._id]?.verified ? 'Success' : 'Failed'}
                 </p>
                 {verificationResult[entry._id] && (
                   <div className="mt-2 text-xs text-gray-300 bg-gray-900 p-2 rounded">
                     <h4 className="font-bold">Details:</h4>
-                    <pre className="whitespace-pre-wrap">{JSON.stringify(verificationResult[entry._id], null, 2)}</pre>
+                    <pre className="whitespace-pre-wrap">
+                      {JSON.stringify(verificationResult[entry._id], null, 2)}
+                    </pre>
                   </div>
                 )}
               </div>

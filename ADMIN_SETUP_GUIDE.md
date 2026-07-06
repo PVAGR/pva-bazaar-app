@@ -3,10 +3,12 @@
 ## What's been created:
 
 Your new **Overview** admin tab is now live! Access it by:
+
 - Navigating to the admin panel and clicking the **🎯 Overview** tab (at the end of all tabs)
 - Or use the keyboard shortcut (once your admin account is set up)
 
 The Overview tab shows:
+
 - ✅ System status dashboard (Admin access, Users, Marketplace, Orders, Transactions)
 - ✅ Feature checklist with quick links to Orders, Transactions, Dashboard, etc.
 - ✅ What's new section highlighting all recently added admin features
@@ -22,16 +24,19 @@ The Overview tab shows:
 You have 3 options:
 
 **Option A: Self-Signup Mode (EASIEST)** ⭐ Recommended
+
 - Allow anyone who knows the bootstrap code to create an admin account
 - Requires: `ADMIN_BOOTSTRAP_CODE` environment variable
 - Process: Set the env var, then both email addresses sign up with that code
 
-**Option B: Database Direct Assignment** 
+**Option B: Database Direct Assignment**
+
 - Manually add your emails to the `users` collection with `role: 'admin'`
 - No env vars needed
 - Requires MongoDB access
 
 **Option C: First-Admin Bootstrap** (Already available)
+
 - If NO admins exist yet, the first signup is auto-approved
 - Works only if `adminCount === 0` in database
 - Future signups need the bootstrap code
@@ -51,6 +56,7 @@ Environment: Production, Preview, Development
 ```
 
 Example bootstrap codes:
+
 - `phoenix_bazaar_admin_2024`
 - `pva_secure_key_xyz123`
 - `admin_bootstrap_secret_v1`
@@ -60,6 +66,7 @@ Pick something strong and memorable.
 #### 2b. Deploy Backend Changes
 
 Once the env var is set in Vercel:
+
 1. Your backend automatically reads it on next deployment
 2. Or: Re-deploy backend via Vercel dashboard
 
@@ -103,19 +110,20 @@ useEffect(() => {
   // Get current user role from localStorage
   const token = localStorage.getItem('token');
   const adminAuth = localStorage.getItem('admin-auth');
-  
+
   if (!token && !adminAuth) {
     // Redirect to login if not authenticated
     window.location.hash = '#/admin';
     return;
   }
-  
+
   // Optional: Check that user has admin role via token
   // (This requires decoding JWT - your backend should provide this)
 }, []);
 ```
 
 For full admin-only access security:
+
 - Add backend API endpoint `GET /api/admin/verify` that returns user's role
 - Call this in Overview tab on mount
 - Redirect non-admins to home page
@@ -163,43 +171,51 @@ VITE_API_URL=https://api.yourdomain.com
 
 Once you have admin access, use these shortcuts in the admin panel:
 
-| Key | Tab |
-|-----|-----|
-| **Alt+1** | Dashboard |
-| **Alt+2** | Orders |
-| **Alt+3** | Transactions |
-| **Alt+4** | Archive |
-| **Alt+5** | Marketplace |
-| **Alt+6** | Users |
-| **Alt+7** | Attribution |
-| **Alt+8** | Payouts |
+| Key       | Tab           |
+| --------- | ------------- |
+| **Alt+1** | Dashboard     |
+| **Alt+2** | Orders        |
+| **Alt+3** | Transactions  |
+| **Alt+4** | Archive       |
+| **Alt+5** | Marketplace   |
+| **Alt+6** | Users         |
+| **Alt+7** | Attribution   |
+| **Alt+8** | Payouts       |
 | **Alt+9** | Cloud Storage |
-| **Alt+0** | Settings |
+| **Alt+0** | Settings      |
 
 ---
 
 ## Troubleshooting
 
 ### Q: "Signup is disabled" error
+
 **A:** Admin count > 0 and bootstrap code not provided. Either:
+
 - Set `ADMIN_BOOTSTRAP_CODE` env var and provide it during signup
 - Or ask existing admin to create account for you (direct DB insertion)
 
 ### Q: Bootstrap code isn't working
+
 **A:** Check:
+
 1. Env var is set in Vercel **AND** backend was re-deployed
 2. Code is case-sensitive - match exactly
 3. Code has no leading/trailing spaces
 4. Backend actually read the new env var (trigger new deploy)
 
 ### Q: Only one email has admin access
-**A:** 
+
+**A:**
+
 - Second signup didn't complete? Try again with bootstrap code
 - Check MongoDB `users` collection: both should have `role: 'admin'`
 - Check browsers: second email might have logged in to different browser
 
 ### Q: Overview tab shows "0 transactions" or other metrics are wrong
-**A:** 
+
+**A:**
+
 - Metrics refresh on Overview tab page load
 - Check `/api/transactions`, `/api/users`, `/api/items` endpoints
 - Backend might not be returning data - check network tab in DevTools
@@ -229,6 +245,7 @@ Once you have admin access, use these shortcuts in the admin panel:
 ---
 
 **Need help?** Check these files for more details:
+
 - See memory file: `/memories/repo/admin-auth-session-401.md` for session handling patterns
 - Backend instructions: `.github/instructions/backend.instructions.md`
 - Frontend instructions: `.github/instructions/frontend.instructions.md`

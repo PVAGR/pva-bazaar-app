@@ -99,8 +99,12 @@ export default function BookPublishingPage() {
       language: selectedBook.language || 'en',
       manuscriptMarkdown: selectedBook.manuscriptMarkdown || '',
     });
-    setFrontCoverPreview(selectedBook.links?.frontCover ? toApiUrl(selectedBook.links.frontCover) : '');
-    setBackCoverPreview(selectedBook.links?.backCover ? toApiUrl(selectedBook.links.backCover) : '');
+    setFrontCoverPreview(
+      selectedBook.links?.frontCover ? toApiUrl(selectedBook.links.frontCover) : '',
+    );
+    setBackCoverPreview(
+      selectedBook.links?.backCover ? toApiUrl(selectedBook.links.backCover) : '',
+    );
     setFrontCoverFile(null);
     setBackCoverFile(null);
     setManuscriptFile(null);
@@ -184,9 +188,7 @@ export default function BookPublishingPage() {
     const isDocx =
       file.name.toLowerCase().endsWith('.docx') ||
       file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-    const isPdf =
-      file.name.toLowerCase().endsWith('.pdf') ||
-      file.type === 'application/pdf';
+    const isPdf = file.name.toLowerCase().endsWith('.pdf') || file.type === 'application/pdf';
 
     if (isDocx || isPdf) {
       if (isDocx) {
@@ -257,33 +259,37 @@ export default function BookPublishingPage() {
           publishedAt: publish ? new Date().toISOString() : null,
           frontCover: frontCoverDataUrl
             ? {
-              provider: 'local',
-              url: frontCoverDataUrl,
-              originalName: frontCoverFile?.name || '',
-              mimeType: frontCoverFile?.type || '',
-              size: frontCoverFile?.size || 0,
-            }
+                provider: 'local',
+                url: frontCoverDataUrl,
+                originalName: frontCoverFile?.name || '',
+                mimeType: frontCoverFile?.type || '',
+                size: frontCoverFile?.size || 0,
+              }
             : undefined,
           backCover: backCoverDataUrl
             ? {
-              provider: 'local',
-              url: backCoverDataUrl,
-              originalName: backCoverFile?.name || '',
-              mimeType: backCoverFile?.type || '',
-              size: backCoverFile?.size || 0,
-            }
+                provider: 'local',
+                url: backCoverDataUrl,
+                originalName: backCoverFile?.name || '',
+                mimeType: backCoverFile?.type || '',
+                size: backCoverFile?.size || 0,
+              }
             : undefined,
         });
         setBooks((prev) => {
           const next = prev.filter((book) => String(book.id) !== String(localSaved.id));
-          return [localSaved, ...next].sort((left, right) => new Date(right.updatedAt || 0) - new Date(left.updatedAt || 0));
+          return [localSaved, ...next].sort(
+            (left, right) => new Date(right.updatedAt || 0) - new Date(left.updatedAt || 0),
+          );
         });
         setSelectedBookId(localSaved.id);
         if (localSaved._storageError) {
           setError(localSaved._storageError);
           setSuccess('');
         } else {
-          var storageNote = localSaved._storageWarning ? ' Note: ' + localSaved._storageWarning : '';
+          var storageNote = localSaved._storageWarning
+            ? ' Note: ' + localSaved._storageWarning
+            : '';
           setSuccess(
             (publish
               ? '"' + localSaved.title + '" is published locally on this device and ready to view.'
@@ -318,7 +324,11 @@ export default function BookPublishingPage() {
   }
 
   async function removeBook(bookId) {
-    if (!window.confirm('Delete this book project? This removes the draft and attached local cover files.')) {
+    if (
+      !window.confirm(
+        'Delete this book project? This removes the draft and attached local cover files.',
+      )
+    ) {
       return;
     }
     setSaving(true);
@@ -342,19 +352,21 @@ export default function BookPublishingPage() {
     }
   }
 
-  const activeDownloadLinks = selectedBook ? {
-    pdf: toApiUrl(selectedBook.links.pdf),
-    epub: toApiUrl(selectedBook.links.epub),
-    apiView: toApiUrl(selectedBook.links.apiView),
-    publicPage: selectedBook.links.publicPage || '',
-    frontCover: selectedBook.links.frontCover ? toApiUrl(selectedBook.links.frontCover) : '',
-    backCover: selectedBook.links.backCover ? toApiUrl(selectedBook.links.backCover) : '',
-  } : null;
+  const activeDownloadLinks = selectedBook
+    ? {
+        pdf: toApiUrl(selectedBook.links.pdf),
+        epub: toApiUrl(selectedBook.links.epub),
+        apiView: toApiUrl(selectedBook.links.apiView),
+        publicPage: selectedBook.links.publicPage || '',
+        frontCover: selectedBook.links.frontCover ? toApiUrl(selectedBook.links.frontCover) : '',
+        backCover: selectedBook.links.backCover ? toApiUrl(selectedBook.links.backCover) : '',
+      }
+    : null;
 
   const manuscriptHint = manuscriptFileName
-    ? (manuscriptFileName.toLowerCase().endsWith('.docx')
+    ? manuscriptFileName.toLowerCase().endsWith('.docx')
       ? `Loaded file: ${manuscriptFileName}. DOCX content is extracted into the editor, and save/publish will recheck it if needed.`
-      : `Loaded file: ${manuscriptFileName}. PDF and DOCX are extracted on save if the backend is available.`)
+      : `Loaded file: ${manuscriptFileName}. PDF and DOCX are extracted on save if the backend is available.`
     : 'Upload a DOCX or PDF manuscript, or paste text directly into the editor.';
 
   return (
@@ -373,9 +385,9 @@ export default function BookPublishingPage() {
             <p className="pill">Book publishing</p>
             <h1>Publish your work as a real book.</h1>
             <p className="book-publish__lead">
-              Use this workspace to prepare the title, subtitle, author line, front cover, back cover, manuscript,
-              and publish output. One book can become a public web view, PDF, and EPUB without splitting the source
-              into separate systems.
+              Use this workspace to prepare the title, subtitle, author line, front cover, back
+              cover, manuscript, and publish output. One book can become a public web view, PDF, and
+              EPUB without splitting the source into separate systems.
             </p>
           </div>
 
@@ -388,8 +400,12 @@ export default function BookPublishingPage() {
               <li>Share the public web reader, PDF, or EPUB once published.</li>
             </ul>
             <div className="book-publish__heroActions">
-              <Link className="book-publish__button" to="/books">Back to books</Link>
-              <Link className="book-publish__button" to="/books/published">Browse published books</Link>
+              <Link className="book-publish__button" to="/books">
+                Back to books
+              </Link>
+              <Link className="book-publish__button" to="/books/published">
+                Browse published books
+              </Link>
               <Link className="book-publish__button book-publish__button--primary" to="/books">
                 Open the books page
               </Link>
@@ -399,13 +415,26 @@ export default function BookPublishingPage() {
 
         <section className="book-publish__atlas section-card">
           <h2>Publishing atlas</h2>
-          <p>Move between the book launch, archive, recovery, and marketplace without losing your place.</p>
+          <p>
+            Move between the book launch, archive, recovery, and marketplace without losing your
+            place.
+          </p>
           <div className="book-publish__atlasLinks">
-            <Link className="book-publish__button" to="/">Home</Link>
-            <Link className="book-publish__button" to="/archive">Archive</Link>
-            <Link className="book-publish__button" to="/recovery">Recovery</Link>
-            <Link className="book-publish__button" to="/marketplace">Marketplace</Link>
-            <Link className="book-publish__button" to="/creator">Supplier Portal</Link>
+            <Link className="book-publish__button" to="/">
+              Home
+            </Link>
+            <Link className="book-publish__button" to="/archive">
+              Archive
+            </Link>
+            <Link className="book-publish__button" to="/recovery">
+              Recovery
+            </Link>
+            <Link className="book-publish__button" to="/marketplace">
+              Marketplace
+            </Link>
+            <Link className="book-publish__button" to="/creator">
+              Supplier Portal
+            </Link>
           </div>
         </section>
 
@@ -422,38 +451,65 @@ export default function BookPublishingPage() {
             </div>
 
             {loading ? <p className="book-publish__muted">Loading your books…</p> : null}
-            {error ? <div className="book-publish__error" role="alert">{error}</div> : null}
-            {success ? <div className="book-publish__success" role="status">{success}</div> : null}
+            {error ? (
+              <div className="book-publish__error" role="alert">
+                {error}
+              </div>
+            ) : null}
+            {success ? (
+              <div className="book-publish__success" role="status">
+                {success}
+              </div>
+            ) : null}
 
             <div className="book-publish__list">
-              {books.length ? books.map((book) => (
-                <article
-                  key={book.id}
-                  className={`book-publish__listItem ${book.id === selectedBookId ? 'is-selected' : ''}`}
-                >
-                  <button type="button" className="book-publish__listButton" onClick={() => selectBook(book)}>
-                    <strong>{book.title}</strong>
-                    <span>{book.status} · {book.wordCount || 0} words</span>
-                    {book.subtitle ? <em>{book.subtitle}</em> : null}
-                  </button>
-                  <div className="book-publish__listActions">
-                    <button type="button" className="book-publish__button" onClick={() => selectBook(book)}>
-                      Edit
+              {books.length ? (
+                books.map((book) => (
+                  <article
+                    key={book.id}
+                    className={`book-publish__listItem ${book.id === selectedBookId ? 'is-selected' : ''}`}
+                  >
+                    <button
+                      type="button"
+                      className="book-publish__listButton"
+                      onClick={() => selectBook(book)}
+                    >
+                      <strong>{book.title}</strong>
+                      <span>
+                        {book.status} · {book.wordCount || 0} words
+                      </span>
+                      {book.subtitle ? <em>{book.subtitle}</em> : null}
                     </button>
-                    {book.status === 'published' && book.links?.publicPage ? (
-                      <Link className="book-publish__button" to={book.links.publicPage}>
-                        Reader page
-                      </Link>
-                    ) : null}
-                    {book.links?.apiView ? (
-                      <a className="book-publish__button" href={toApiUrl(book.links.apiView)} target="_blank" rel="noreferrer">
-                        API view
-                      </a>
-                    ) : null}
-                  </div>
-                </article>
-              )) : (
-                <p className="book-publish__muted">No book projects yet. Start a new one on the right.</p>
+                    <div className="book-publish__listActions">
+                      <button
+                        type="button"
+                        className="book-publish__button"
+                        onClick={() => selectBook(book)}
+                      >
+                        Edit
+                      </button>
+                      {book.status === 'published' && book.links?.publicPage ? (
+                        <Link className="book-publish__button" to={book.links.publicPage}>
+                          Reader page
+                        </Link>
+                      ) : null}
+                      {book.links?.apiView ? (
+                        <a
+                          className="book-publish__button"
+                          href={toApiUrl(book.links.apiView)}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          API view
+                        </a>
+                      ) : null}
+                    </div>
+                  </article>
+                ))
+              ) : (
+                <p className="book-publish__muted">
+                  No book projects yet. Start a new one on the right.
+                </p>
               )}
             </div>
           </section>
@@ -473,19 +529,39 @@ export default function BookPublishingPage() {
             <div className="book-publish__form">
               <label>
                 Title
-                <input name="title" value={form.title} onChange={handleFieldChange} placeholder="Your book title" />
+                <input
+                  name="title"
+                  value={form.title}
+                  onChange={handleFieldChange}
+                  placeholder="Your book title"
+                />
               </label>
               <label>
                 Subtitle
-                <input name="subtitle" value={form.subtitle} onChange={handleFieldChange} placeholder="Optional subtitle" />
+                <input
+                  name="subtitle"
+                  value={form.subtitle}
+                  onChange={handleFieldChange}
+                  placeholder="Optional subtitle"
+                />
               </label>
               <label>
                 Author name
-                <input name="authorName" value={form.authorName} onChange={handleFieldChange} placeholder="Author or pen name" />
+                <input
+                  name="authorName"
+                  value={form.authorName}
+                  onChange={handleFieldChange}
+                  placeholder="Author or pen name"
+                />
               </label>
               <label>
                 Slug
-                <input name="slug" value={form.slug} onChange={handleFieldChange} placeholder="optional-book-slug" />
+                <input
+                  name="slug"
+                  value={form.slug}
+                  onChange={handleFieldChange}
+                  placeholder="optional-book-slug"
+                />
               </label>
               <label>
                 Description
@@ -501,22 +577,40 @@ export default function BookPublishingPage() {
               <div className="book-publish__row">
                 <label>
                   Genre
-                  <input name="genre" value={form.genre} onChange={handleFieldChange} placeholder="general" />
+                  <input
+                    name="genre"
+                    value={form.genre}
+                    onChange={handleFieldChange}
+                    placeholder="general"
+                  />
                 </label>
                 <label>
                   Audience
-                  <input name="audience" value={form.audience} onChange={handleFieldChange} placeholder="general" />
+                  <input
+                    name="audience"
+                    value={form.audience}
+                    onChange={handleFieldChange}
+                    placeholder="general"
+                  />
                 </label>
                 <label>
                   Language
-                  <input name="language" value={form.language} onChange={handleFieldChange} placeholder="en" />
+                  <input
+                    name="language"
+                    value={form.language}
+                    onChange={handleFieldChange}
+                    placeholder="en"
+                  />
                 </label>
               </div>
 
               <div className="book-publish__field">
                 <span>Front cover image</span>
                 <div className="book-publish__fileRow">
-                  <label className="book-publish__button book-publish__button--primary book-publish__fileButton" htmlFor="frontCoverUpload">
+                  <label
+                    className="book-publish__button book-publish__button--primary book-publish__fileButton"
+                    htmlFor="frontCoverUpload"
+                  >
                     Choose front cover
                   </label>
                   <span className="book-publish__fileName">
@@ -535,7 +629,10 @@ export default function BookPublishingPage() {
               <div className="book-publish__field">
                 <span>Back cover image</span>
                 <div className="book-publish__fileRow">
-                  <label className="book-publish__button book-publish__button--primary book-publish__fileButton" htmlFor="backCoverUpload">
+                  <label
+                    className="book-publish__button book-publish__button--primary book-publish__fileButton"
+                    htmlFor="backCoverUpload"
+                  >
                     Choose back cover
                   </label>
                   <span className="book-publish__fileName">
@@ -574,9 +671,7 @@ export default function BookPublishingPage() {
                   onChange={handleManuscriptFile}
                 />
               </div>
-              <p className="book-publish__muted">
-                {manuscriptHint}
-              </p>
+              <p className="book-publish__muted">{manuscriptHint}</p>
 
               <label>
                 Manuscript content
@@ -591,14 +686,29 @@ export default function BookPublishingPage() {
             </div>
 
             <div className="book-publish__editorActions">
-              <button type="button" className="book-publish__button" onClick={() => submitBook(false)} disabled={saving}>
+              <button
+                type="button"
+                className="book-publish__button"
+                onClick={() => submitBook(false)}
+                disabled={saving}
+              >
                 {saving ? 'Saving…' : 'Save draft'}
               </button>
-              <button type="button" className="book-publish__button book-publish__button--primary" onClick={() => submitBook(true)} disabled={saving}>
+              <button
+                type="button"
+                className="book-publish__button book-publish__button--primary"
+                onClick={() => submitBook(true)}
+                disabled={saving}
+              >
                 {saving ? 'Publishing…' : 'Save and publish'}
               </button>
               {form.bookId ? (
-                <button type="button" className="book-publish__button book-publish__button--danger" onClick={() => removeBook(form.bookId)} disabled={saving}>
+                <button
+                  type="button"
+                  className="book-publish__button book-publish__button--danger"
+                  onClick={() => removeBook(form.bookId)}
+                  disabled={saving}
+                >
                   Delete book
                 </button>
               ) : null}
@@ -614,17 +724,32 @@ export default function BookPublishingPage() {
                     </Link>
                   ) : null}
                   {activeDownloadLinks?.apiView ? (
-                    <a className="book-publish__button" href={activeDownloadLinks.apiView} target="_blank" rel="noreferrer">
+                    <a
+                      className="book-publish__button"
+                      href={activeDownloadLinks.apiView}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
                       API web view
                     </a>
                   ) : null}
                   {activeDownloadLinks?.pdf ? (
-                    <a className="book-publish__button" href={activeDownloadLinks.pdf} target="_blank" rel="noreferrer">
+                    <a
+                      className="book-publish__button"
+                      href={activeDownloadLinks.pdf}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
                       Download PDF
                     </a>
                   ) : null}
                   {activeDownloadLinks?.epub ? (
-                    <a className="book-publish__button" href={activeDownloadLinks.epub} target="_blank" rel="noreferrer">
+                    <a
+                      className="book-publish__button"
+                      href={activeDownloadLinks.epub}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
                       Download EPUB
                     </a>
                   ) : null}

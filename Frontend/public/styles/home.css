@@ -3,8 +3,14 @@
 .hero {
   padding: 2rem 0 1rem;
 }
-.hero h1 { font-size: 2rem; margin: 0; }
-.hero p { margin: 0.5rem 0 0; color: var(--text-muted); }
+.hero h1 {
+  font-size: 2rem;
+  margin: 0;
+}
+.hero p {
+  margin: 0.5rem 0 0;
+  color: var(--text-muted);
+}
 
 .cards-grid {
   display: grid;
@@ -14,10 +20,14 @@
 }
 
 @media (max-width: 1024px) {
-  .cards-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cards-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 @media (max-width: 680px) {
-  .cards-grid { grid-template-columns: 1fr; }
+  .cards-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .writing-card {
@@ -26,7 +36,10 @@
   border-radius: 16px;
   box-shadow: var(--shadow);
   padding: 0.9rem 0.9rem;
-  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    border-color 160ms ease;
 }
 .writing-card:hover {
   transform: translateY(-2px);
@@ -60,12 +73,48 @@
 }
 
 /* Simple Tabs */
-.tabs { display: flex; border-bottom: 1px solid var(--border); gap: 0.25rem; margin-bottom: 0.75rem; }
-.tab { font-family: var(--font-ui); font-size: 0.95rem; padding: 0.4rem 0.6rem; border: 1px solid transparent; border-radius: 10px 10px 0 0; color: var(--text); }
-.tab[aria-selected="true"] { border-color: var(--border); border-bottom-color: var(--surface); background: var(--surface); }
-.tab:hover { background: var(--bg-muted); }
-.tab-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 0 12px 12px 12px; box-shadow: var(--shadow); padding: 0.9rem; }
-.mini-list { display: grid; gap: 0.5rem; }
-.mini-item { display: grid; gap: 0.15rem; }
-.mini-item .title { font-family: var(--font-ui); font-weight: 600; }
-.mini-item .meta { color: var(--text-muted); font-size: 0.9rem; }
+.tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  gap: 0.25rem;
+  margin-bottom: 0.75rem;
+}
+.tab {
+  font-family: var(--font-ui);
+  font-size: 0.95rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid transparent;
+  border-radius: 10px 10px 0 0;
+  color: var(--text);
+}
+.tab[aria-selected='true'] {
+  border-color: var(--border);
+  border-bottom-color: var(--surface);
+  background: var(--surface);
+}
+.tab:hover {
+  background: var(--bg-muted);
+}
+.tab-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0 12px 12px 12px;
+  box-shadow: var(--shadow);
+  padding: 0.9rem;
+}
+.mini-list {
+  display: grid;
+  gap: 0.5rem;
+}
+.mini-item {
+  display: grid;
+  gap: 0.15rem;
+}
+.mini-item .title {
+  font-family: var(--font-ui);
+  font-weight: 600;
+}
+.mini-item .meta {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}

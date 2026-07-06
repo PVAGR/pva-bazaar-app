@@ -58,6 +58,7 @@ This is the pinnacle of the vision. You are describing a Progressive, Sovereign 
 The core idea is that "citizenship" is not just a status; it's an active, rewarded participation in a circular economy designed to uplift everyone within it. The game loop is: Contribute → Be Rewarded → Prosper → Contribute More.
 
 Citizenship Tiers:
+
 - Resident (Tier 1): Anyone who holds any PVA-related asset
 - Citizen (Tier 2): Someone who has reached a certain threshold of engagement
 - Patron (Tier 3): Those who have made significant contributions
@@ -197,6 +198,7 @@ Core Philosophy: The Renewal Cycle
 Nothing beautiful dies forever. Entropy is raw material. Humans crave continuation—books, memories, artifacts, stories, ecosystems. Your civilization turns loss into legacy through physical making, digital permanence, and communal rituals.
 
 Key Pillars:
+
 - Preservation: Digitize, print, and archive everything
 - Revitalization: Repair, remix, and rebirth broken or forgotten things
 - Distribution: Make it accessible via kiosks, airships, marketplaces, and festivals
@@ -230,4 +232,3 @@ María's implant screamed. Error codes flooded her vision. REALITY COHERENCE FAI
 She blinked. Madrid snapped back.
 
 But that night, eight million people in Madrid would dream of mountains. Of stone cities glowing underground. Of voices whispering a word they didn't know: Asha.
-

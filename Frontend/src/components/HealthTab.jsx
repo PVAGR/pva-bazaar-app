@@ -1,8 +1,8 @@
 /**
  * HealthTab
- * 
+ *
  * PURPOSE: System health monitoring and OpenClaw integration
- * 
+ *
  * FEATURES:
  * - View system health status
  * - Monitor OpenClaw watchdog
@@ -10,7 +10,7 @@
  * - View recent events
  * - Test event dispatch
  * - View connection metrics
- * 
+ *
  * API ENDPOINTS USED:
  * - GET /api/health - System health
  * - GET /api/openclaw/status - OpenClaw status
@@ -59,7 +59,7 @@ export default function HealthTab() {
       const pending = response.queue?.pending ?? '?';
       const stale = response.queue?.stale ?? 0;
       const detail = stale > 0 ? `, stale=${stale}` : '';
-      return `${mode} — pending=${pending}${detail}${response.message ? ` · ${  response.message}` : ''}`;
+      return `${mode} — pending=${pending}${detail}${response.message ? ` · ${response.message}` : ''}`;
     }
     // /watchdog-status response shape: { available, summary }
     if (!response.available) {
@@ -74,7 +74,7 @@ export default function HealthTab() {
   }, []);
 
   const runHealthCheck = useCallback(async () => {
-    setConnectionStatus(prev => ({ ...prev, loading: true }));
+    setConnectionStatus((prev) => ({ ...prev, loading: true }));
     const results = {};
     const endpoints = [
       { key: 'health', url: '/health', label: 'Health Check' },
@@ -211,7 +211,11 @@ export default function HealthTab() {
       </section>
 
       <div className="health-controls">
-        <button onClick={runHealthCheck} className="refresh-btn" disabled={connectionStatus.loading}>
+        <button
+          onClick={runHealthCheck}
+          className="refresh-btn"
+          disabled={connectionStatus.loading}
+        >
           {connectionStatus.loading ? '⏳ Checking...' : '🔄 Refresh'}
         </button>
         <label className="auto-refresh-toggle">
@@ -275,10 +279,16 @@ export default function HealthTab() {
             className="test-dispatch-btn"
             disabled={dispatchTest.loading}
           >
-            {dispatchTest.loading ? <LoadingDots inline={true} label="Dispatching..." /> : '🚀 Dispatch Test Event'}
+            {dispatchTest.loading ? (
+              <LoadingDots inline={true} label="Dispatching..." />
+            ) : (
+              '🚀 Dispatch Test Event'
+            )}
           </button>
           {dispatchTest.message && (
-            <div className={`dispatch-message ${dispatchTest.message.includes('✅') ? 'success' : 'error'}`}>
+            <div
+              className={`dispatch-message ${dispatchTest.message.includes('✅') ? 'success' : 'error'}`}
+            >
               {dispatchTest.message}
             </div>
           )}
@@ -319,10 +329,18 @@ export default function HealthTab() {
           system that monitors events, logs alerts, and provides automation hooks.
         </p>
         <ul className="info-list">
-          <li><strong>Health Check</strong>: Verifies API connectivity and database status</li>
-          <li><strong>OpenClaw Status</strong>: Shows watchdog state, errors, and alerts</li>
-          <li><strong>Recent Events</strong>: Displays last 10 dispatched events</li>
-          <li><strong>Test Dispatch</strong>: Manually trigger a test event</li>
+          <li>
+            <strong>Health Check</strong>: Verifies API connectivity and database status
+          </li>
+          <li>
+            <strong>OpenClaw Status</strong>: Shows watchdog state, errors, and alerts
+          </li>
+          <li>
+            <strong>Recent Events</strong>: Displays last 10 dispatched events
+          </li>
+          <li>
+            <strong>Test Dispatch</strong>: Manually trigger a test event
+          </li>
         </ul>
       </div>
     </div>

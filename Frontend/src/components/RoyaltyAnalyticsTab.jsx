@@ -34,25 +34,30 @@ export default function RoyaltyAnalyticsTab() {
   const [saleTypeFilter, setSaleTypeFilter] = useState('');
   const [page, setPage] = useState(0);
 
-  const load = useCallback(async (opts = {}) => {
-    setLoading(true);
-    setError('');
-    const offset = (opts.page ?? page) * PAGE_SIZE;
-    const result = await fetchAllRoyaltyEvents({
-      limit: PAGE_SIZE,
-      offset,
-      platform: opts.platform ?? platformFilter,
-    });
-    setLoading(false);
-    if (!result.ok) {
-      setError(result.error || 'Failed to load events');
-      return;
-    }
-    setEvents(result.events);
-    setTotal(result.total);
-  }, [page, platformFilter]);
+  const load = useCallback(
+    async (opts = {}) => {
+      setLoading(true);
+      setError('');
+      const offset = (opts.page ?? page) * PAGE_SIZE;
+      const result = await fetchAllRoyaltyEvents({
+        limit: PAGE_SIZE,
+        offset,
+        platform: opts.platform ?? platformFilter,
+      });
+      setLoading(false);
+      if (!result.ok) {
+        setError(result.error || 'Failed to load events');
+        return;
+      }
+      setEvents(result.events);
+      setTotal(result.total);
+    },
+    [page, platformFilter],
+  );
 
-  useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    load();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   function applyFilter() {
     setPage(0);
@@ -74,20 +79,20 @@ export default function RoyaltyAnalyticsTab() {
   // Derived stats from current page (for overview numbers use total)
   const filteredEvents = useMemo(() => {
     if (!saleTypeFilter) return events;
-    return events.filter(e => e.sale_type === saleTypeFilter);
+    return events.filter((e) => e.sale_type === saleTypeFilter);
   }, [events, saleTypeFilter]);
 
   const summary = useMemo(() => {
     const allSales = filteredEvents.reduce((s, e) => s + Number(e.sale_price || 0), 0);
     const allRoyalties = filteredEvents.reduce((s, e) => s + Number(e.royalty_amount || 0), 0);
-    const creators = new Set(filteredEvents.map(e => e.creator_address).filter(Boolean));
-    const platforms = new Set(filteredEvents.map(e => e.platform).filter(Boolean));
+    const creators = new Set(filteredEvents.map((e) => e.creator_address).filter(Boolean));
+    const platforms = new Set(filteredEvents.map((e) => e.platform).filter(Boolean));
     return { allSales, allRoyalties, creators: creators.size, platforms: platforms.size };
   }, [filteredEvents]);
 
   const platformBreakdown = useMemo(() => {
     const map = {};
-    filteredEvents.forEach(e => {
+    filteredEvents.forEach((e) => {
       const p = e.platform || 'UNKNOWN';
       if (!map[p]) map[p] = { platform: p, volume: 0, royalties: 0, count: 0 };
       map[p].volume += Number(e.sale_price || 0);
@@ -115,12 +120,12 @@ export default function RoyaltyAnalyticsTab() {
             type="text"
             placeholder="e.g. WEBSITE, ETSY…"
             value={platformFilter}
-            onChange={e => setPlatformFilter(e.target.value.toUpperCase())}
+            onChange={(e) => setPlatformFilter(e.target.value.toUpperCase())}
           />
         </label>
         <label>
           <span>Sale Type</span>
-          <select value={saleTypeFilter} onChange={e => setSaleTypeFilter(e.target.value)}>
+          <select value={saleTypeFilter} onChange={(e) => setSaleTypeFilter(e.target.value)}>
             <option value="">All</option>
             <option value="PRIMARY">Primary</option>
             <option value="SECONDARY">Secondary</option>
@@ -132,7 +137,12 @@ export default function RoyaltyAnalyticsTab() {
         <button onClick={clearFilter} disabled={loading} className="royalty-analytics__btn-ghost">
           Clear
         </button>
-        <button onClick={() => load()} disabled={loading} className="royalty-analytics__btn-ghost" title="Refresh">
+        <button
+          onClick={() => load()}
+          disabled={loading}
+          className="royalty-analytics__btn-ghost"
+          title="Refresh"
+        >
           ↺ Refresh
         </button>
       </div>
@@ -181,9 +191,15 @@ export default function RoyaltyAnalyticsTab() {
           <h3>Events</h3>
           {totalPages > 1 && (
             <div className="royalty-analytics__pagination">
-              <button onClick={() => goPage(page - 1)} disabled={page === 0 || loading}>‹ Prev</button>
-              <span>Page {page + 1} / {totalPages}</span>
-              <button onClick={() => goPage(page + 1)} disabled={page >= totalPages - 1 || loading}>Next ›</button>
+              <button onClick={() => goPage(page - 1)} disabled={page === 0 || loading}>
+                ‹ Prev
+              </button>
+              <span>
+                Page {page + 1} / {totalPages}
+              </span>
+              <button onClick={() => goPage(page + 1)} disabled={page >= totalPages - 1 || loading}>
+                Next ›
+              </button>
             </div>
           )}
         </div>
@@ -191,7 +207,9 @@ export default function RoyaltyAnalyticsTab() {
           {loading ? (
             <div className="royalty-analytics__loading">Loading events…</div>
           ) : filteredEvents.length === 0 ? (
-            <div className="royalty-analytics__empty">No events found. Record a sale via the Creator Dashboard to populate data.</div>
+            <div className="royalty-analytics__empty">
+              No events found. Record a sale via the Creator Dashboard to populate data.
+            </div>
           ) : (
             <table>
               <thead>
@@ -207,13 +225,17 @@ export default function RoyaltyAnalyticsTab() {
                 </tr>
               </thead>
               <tbody>
-                {filteredEvents.map(e => (
+                {filteredEvents.map((e) => (
                   <tr key={e.id}>
                     <td>{e.id}</td>
                     <td>{formatDate(e.sale_timestamp)}</td>
-                    <td><span className="royalty-analytics__badge">{e.platform || '—'}</span></td>
                     <td>
-                      <span className={`royalty-analytics__badge royalty-analytics__badge--${(e.sale_type || '').toLowerCase()}`}>
+                      <span className="royalty-analytics__badge">{e.platform || '—'}</span>
+                    </td>
+                    <td>
+                      <span
+                        className={`royalty-analytics__badge royalty-analytics__badge--${(e.sale_type || '').toLowerCase()}`}
+                      >
                         {e.sale_type || '—'}
                       </span>
                     </td>

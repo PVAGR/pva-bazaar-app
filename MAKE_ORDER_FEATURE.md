@@ -1,7 +1,9 @@
 # Make Order Feature - Quick Deal Initiation
 
 ## Overview
+
 The "Make Order" feature enables admin users to quickly initiate deals with counterparties through a streamlined workflow:
+
 1. **Initiate**: Send email invite to counterparty with deal terms
 2. **Accept**: Counterparty accepts and provides payment/crypto details
 3. **Mock Confirm**: Both parties confirm order (emails sent as mock receipt)
@@ -10,6 +12,7 @@ The "Make Order" feature enables admin users to quickly initiate deals with coun
 ## User Flow
 
 ### Step 1: Make Order (Seller/Admin)
+
 - Navigate to Admin Dashboard
 - Click **"Make Order"** in Quick Actions
 - Fill form:
@@ -22,6 +25,7 @@ The "Make Order" feature enables admin users to quickly initiate deals with coun
 - Counterparty receives email with deal link
 
 ### Step 2: Accept Deal (Counterparty)
+
 - Receives email invitation
 - Clicks deal link / logs in to accept
 - Provides:
@@ -32,6 +36,7 @@ The "Make Order" feature enables admin users to quickly initiate deals with coun
 - Seller receives notification with payment details
 
 ### Step 3: Mock Confirm (Both Parties)
+
 - Both parties log in and confirm mock payment
 - Each receives confirmation email (like order receipt)
 - Shows:
@@ -41,6 +46,7 @@ The "Make Order" feature enables admin users to quickly initiate deals with coun
   - Status (CONFIRMED when both confirmed)
 
 ### Step 4: Execute (Blockchain)
+
 - Real transaction created on blockchain
 - Funds held in smart contract escrow
 - All milestones and payments tracked on-chain
@@ -49,9 +55,11 @@ The "Make Order" feature enables admin users to quickly initiate deals with coun
 ## API Endpoints
 
 ### POST /api/deals/quick/initiate
+
 Initiate a quick order and send invitation email
 
 **Request:**
+
 ```json
 {
   "counterpartyEmail": "buyer@example.com",
@@ -64,6 +72,7 @@ Initiate a quick order and send invitation email
 ```
 
 **Response:**
+
 ```json
 {
   "ok": true,
@@ -73,9 +82,11 @@ Initiate a quick order and send invitation email
 ```
 
 ### POST /api/deals/:id/quick/accept
+
 Counterparty accepts deal and provides payment info
 
 **Request:**
+
 ```json
 {
   "walletAddress": "0x742d35Cc6634C0532925a3b844Bc9e7595f42aE...",
@@ -85,6 +96,7 @@ Counterparty accepts deal and provides payment info
 ```
 
 **Response:**
+
 ```json
 {
   "ok": true,
@@ -93,9 +105,11 @@ Counterparty accepts deal and provides payment info
 ```
 
 ### POST /api/deals/:id/quick/mock-confirm
+
 Both parties confirm mock payment
 
 **Response:**
+
 ```json
 {
   "ok": true,
@@ -106,6 +120,7 @@ Both parties confirm mock payment
 ## Email Templates
 
 ### Deal Initiation Email
+
 - Sent to counterparty
 - Contains:
   - Deal details (description, amount, currency)
@@ -114,6 +129,7 @@ Both parties confirm mock payment
   - Next steps outline
 
 ### Deal Acceptance Email
+
 - Sent to seller
 - Contains:
   - Buyer information
@@ -122,6 +138,7 @@ Both parties confirm mock payment
   - Next step (wait for both parties to mock confirm)
 
 ### Mock Confirmation Email
+
 - Sent to both parties
 - Contains:
   - Order receipt format
@@ -134,6 +151,7 @@ Both parties confirm mock payment
 ## Integration with Existing Deal System
 
 The Quick Order feature creates standard Deal objects that are compatible with:
+
 - Deal messaging and audit trail
 - Mock escrow funding and confirmation
 - Dispute resolution
@@ -145,6 +163,7 @@ All existing deal workflows and features work with orders initiated via Quick Or
 ## Environment Setup
 
 Email notifications require:
+
 ```
 SMTP_USER=your-email@gmail.com
 SMTP_PASS=app-specific-password

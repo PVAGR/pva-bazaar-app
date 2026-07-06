@@ -88,7 +88,7 @@ const fulfillmentCenterSchema = new mongoose.Schema({
 });
 
 // Geospatial index for nearby lookups
-fulfillmentCenterSchema.index({ 'coordinates': '2dsphere' });
+fulfillmentCenterSchema.index({ coordinates: '2dsphere' });
 fulfillmentCenterSchema.index({ country: 1, active: 1 });
 
 fulfillmentCenterSchema.pre('save', function (next) {

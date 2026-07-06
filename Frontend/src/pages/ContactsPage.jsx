@@ -87,7 +87,9 @@ export default function ContactsPage() {
     loadContacts();
   }, [filterType]);
   useEffect(() => {
-    apiGet('/commodities', { params: { limit: 100 } }).then((r) => r?.ok && Array.isArray(r.items) && setCommodities(r.items)).catch(() => {});
+    apiGet('/commodities', { params: { limit: 100 } })
+      .then((r) => r?.ok && Array.isArray(r.items) && setCommodities(r.items))
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -120,7 +122,19 @@ export default function ContactsPage() {
       if (!res?.ok || !res.item) throw new Error(res?.error || 'Create failed');
       await loadContacts();
       setSelectedId(res.item._id);
-      setDraft({ name: '', email: '', phone: '', whatsapp: '', telegram: '', company: '', country: '', city: '', type: 'supplier', notes: '', commodities: [] });
+      setDraft({
+        name: '',
+        email: '',
+        phone: '',
+        whatsapp: '',
+        telegram: '',
+        company: '',
+        country: '',
+        city: '',
+        type: 'supplier',
+        notes: '',
+        commodities: [],
+      });
     } catch (e) {
       setError(getErrorMessage(e, 'Create failed'));
     } finally {
@@ -175,24 +189,34 @@ export default function ContactsPage() {
         <div className="contacts-header__row">
           <div>
             <h1>Contacts (CRM)</h1>
-            <p className="muted">Suppliers, buyers, producers, distributors—linked to commodities and deals.</p>
+            <p className="muted">
+              Suppliers, buyers, producers, distributors—linked to commodities and deals.
+            </p>
           </div>
           <div className="contacts-actions">
-            <Link to="/broker-hub" className="btn ghost">Hub</Link>
-            <button className="btn ghost" onClick={loadContacts} disabled={loading}>Refresh</button>
+            <Link to="/broker-hub" className="btn ghost">
+              Hub
+            </Link>
+            <button className="btn ghost" onClick={loadContacts} disabled={loading}>
+              Refresh
+            </button>
           </div>
         </div>
       </header>
       <AdminNav />
 
       <main className="contacts-main">
-        {error ? <ErrorBanner message={error} onRetry={loadContacts} onDismiss={() => setError('')} /> : null}
+        {error ? (
+          <ErrorBanner message={error} onRetry={loadContacts} onDismiss={() => setError('')} />
+        ) : null}
 
         <section className="card contacts-flow-card">
           <div className="contacts-flow-card__head">
             <div>
               <h2>CRM workflow</h2>
-              <p className="muted">Keep every supplier or buyer attached to a real record before you start a deal.</p>
+              <p className="muted">
+                Keep every supplier or buyer attached to a real record before you start a deal.
+              </p>
             </div>
             <div className="contacts-summary-grid">
               {summary.map((item) => (
@@ -206,16 +230,27 @@ export default function ContactsPage() {
           <div className="contacts-flow-grid">
             <article className="contacts-flow-step">
               <h3>1. Capture the relationship</h3>
-              <p>Add the contact with country, company, direct channels, and notes while the context is still fresh.</p>
+              <p>
+                Add the contact with country, company, direct channels, and notes while the context
+                is still fresh.
+              </p>
             </article>
             <article className="contacts-flow-step">
               <h3>2. Qualify the opportunity</h3>
-              <p>Use notes and commodity tags to record what they can supply, buy, broker, or distribute.</p>
+              <p>
+                Use notes and commodity tags to record what they can supply, buy, broker, or
+                distribute.
+              </p>
             </article>
             <article className="contacts-flow-step">
               <h3>3. Move into deals</h3>
-              <p>Once the opportunity is real, use the deals workspace to structure terms, milestones, and payment flow.</p>
-              <Link to="/deals" className="btn ghost">Open deals workspace</Link>
+              <p>
+                Once the opportunity is real, use the deals workspace to structure terms,
+                milestones, and payment flow.
+              </p>
+              <Link to="/deals" className="btn ghost">
+                Open deals workspace
+              </Link>
             </article>
           </div>
         </section>
@@ -226,13 +261,22 @@ export default function ContactsPage() {
             <div className="row rowWrap">
               <label>
                 Name *
-                <input value={draft.name} onChange={(e) => setDraft((p) => ({ ...p, name: e.target.value }))} placeholder="Supplier or buyer name" />
+                <input
+                  value={draft.name}
+                  onChange={(e) => setDraft((p) => ({ ...p, name: e.target.value }))}
+                  placeholder="Supplier or buyer name"
+                />
               </label>
               <label>
                 Type
-                <select value={draft.type} onChange={(e) => setDraft((p) => ({ ...p, type: e.target.value }))}>
+                <select
+                  value={draft.type}
+                  onChange={(e) => setDraft((p) => ({ ...p, type: e.target.value }))}
+                >
                   {TYPES.map((t) => (
-                    <option key={t} value={t}>{t}</option>
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
                   ))}
                 </select>
               </label>
@@ -240,30 +284,55 @@ export default function ContactsPage() {
             <div className="row rowWrap">
               <label>
                 Company
-                <input value={draft.company} onChange={(e) => setDraft((p) => ({ ...p, company: e.target.value }))} placeholder="Company or workshop" />
+                <input
+                  value={draft.company}
+                  onChange={(e) => setDraft((p) => ({ ...p, company: e.target.value }))}
+                  placeholder="Company or workshop"
+                />
               </label>
               <label>
                 Country
-                <input value={draft.country} onChange={(e) => setDraft((p) => ({ ...p, country: e.target.value }))} placeholder="Country" />
+                <input
+                  value={draft.country}
+                  onChange={(e) => setDraft((p) => ({ ...p, country: e.target.value }))}
+                  placeholder="Country"
+                />
               </label>
             </div>
             <div className="row rowWrap">
               <label>
                 Email
-                <input value={draft.email} onChange={(e) => setDraft((p) => ({ ...p, email: e.target.value }))} placeholder="Email" />
+                <input
+                  value={draft.email}
+                  onChange={(e) => setDraft((p) => ({ ...p, email: e.target.value }))}
+                  placeholder="Email"
+                />
               </label>
               <label>
                 Phone / WhatsApp
-                <input value={draft.phone} onChange={(e) => setDraft((p) => ({ ...p, phone: e.target.value }))} placeholder="Phone or WhatsApp" />
+                <input
+                  value={draft.phone}
+                  onChange={(e) => setDraft((p) => ({ ...p, phone: e.target.value }))}
+                  placeholder="Phone or WhatsApp"
+                />
               </label>
             </div>
             <label>
               Notes
-              <textarea rows={3} value={draft.notes} onChange={(e) => setDraft((p) => ({ ...p, notes: e.target.value }))} placeholder="What they sell, buy, or need next" />
+              <textarea
+                rows={3}
+                value={draft.notes}
+                onChange={(e) => setDraft((p) => ({ ...p, notes: e.target.value }))}
+                placeholder="What they sell, buy, or need next"
+              />
             </label>
             <div className="row rowWrap">
-              <button className="btn primary" type="submit" disabled={creating}>{creating ? 'Creating…' : 'Create contact'}</button>
-              <Link to="/deals" className="btn ghost">Go to deals</Link>
+              <button className="btn primary" type="submit" disabled={creating}>
+                {creating ? 'Creating…' : 'Create contact'}
+              </button>
+              <Link to="/deals" className="btn ghost">
+                Go to deals
+              </Link>
             </div>
           </form>
         </section>
@@ -275,7 +344,9 @@ export default function ContactsPage() {
             <select value={filterType} onChange={(e) => setFilterType(e.target.value)}>
               <option value="">All</option>
               {TYPES.map((t) => (
-                <option key={t} value={t}>{t}</option>
+                <option key={t} value={t}>
+                  {t}
+                </option>
               ))}
             </select>
           </div>
@@ -300,29 +371,68 @@ export default function ContactsPage() {
             <h2>Edit: {selected.name}</h2>
             <div className="form">
               <label>Name</label>
-              <input value={draft.name} onChange={(e) => setDraft((p) => ({ ...p, name: e.target.value }))} />
+              <input
+                value={draft.name}
+                onChange={(e) => setDraft((p) => ({ ...p, name: e.target.value }))}
+              />
               <label>Type</label>
-              <select value={draft.type} onChange={(e) => setDraft((p) => ({ ...p, type: e.target.value }))}>
+              <select
+                value={draft.type}
+                onChange={(e) => setDraft((p) => ({ ...p, type: e.target.value }))}
+              >
                 {TYPES.map((t) => (
-                  <option key={t} value={t}>{t}</option>
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
                 ))}
               </select>
               <label>Email</label>
-              <input value={draft.email} onChange={(e) => setDraft((p) => ({ ...p, email: e.target.value }))} />
+              <input
+                value={draft.email}
+                onChange={(e) => setDraft((p) => ({ ...p, email: e.target.value }))}
+              />
               <label>Phone / WhatsApp / Telegram</label>
               <div className="row rowWrap">
-                <input value={draft.phone} onChange={(e) => setDraft((p) => ({ ...p, phone: e.target.value }))} placeholder="Phone" />
-                <input value={draft.whatsapp} onChange={(e) => setDraft((p) => ({ ...p, whatsapp: e.target.value }))} placeholder="WhatsApp" />
-                <input value={draft.telegram} onChange={(e) => setDraft((p) => ({ ...p, telegram: e.target.value }))} placeholder="Telegram" />
+                <input
+                  value={draft.phone}
+                  onChange={(e) => setDraft((p) => ({ ...p, phone: e.target.value }))}
+                  placeholder="Phone"
+                />
+                <input
+                  value={draft.whatsapp}
+                  onChange={(e) => setDraft((p) => ({ ...p, whatsapp: e.target.value }))}
+                  placeholder="WhatsApp"
+                />
+                <input
+                  value={draft.telegram}
+                  onChange={(e) => setDraft((p) => ({ ...p, telegram: e.target.value }))}
+                  placeholder="Telegram"
+                />
               </div>
               <label>Company / Country / City</label>
               <div className="row rowWrap">
-                <input value={draft.company} onChange={(e) => setDraft((p) => ({ ...p, company: e.target.value }))} placeholder="Company" />
-                <input value={draft.country} onChange={(e) => setDraft((p) => ({ ...p, country: e.target.value }))} placeholder="Country" />
-                <input value={draft.city} onChange={(e) => setDraft((p) => ({ ...p, city: e.target.value }))} placeholder="City" />
+                <input
+                  value={draft.company}
+                  onChange={(e) => setDraft((p) => ({ ...p, company: e.target.value }))}
+                  placeholder="Company"
+                />
+                <input
+                  value={draft.country}
+                  onChange={(e) => setDraft((p) => ({ ...p, country: e.target.value }))}
+                  placeholder="Country"
+                />
+                <input
+                  value={draft.city}
+                  onChange={(e) => setDraft((p) => ({ ...p, city: e.target.value }))}
+                  placeholder="City"
+                />
               </div>
               <label>Notes</label>
-              <textarea rows={4} value={draft.notes} onChange={(e) => setDraft((p) => ({ ...p, notes: e.target.value }))} />
+              <textarea
+                rows={4}
+                value={draft.notes}
+                onChange={(e) => setDraft((p) => ({ ...p, notes: e.target.value }))}
+              />
               <label>Commodities (they deal in)</label>
               <div className="row rowWrap">
                 {commodities.map((c) => (
@@ -333,7 +443,9 @@ export default function ContactsPage() {
                       onChange={(e) =>
                         setDraft((p) => ({
                           ...p,
-                          commodities: e.target.checked ? [...(p.commodities || []), c._id] : (p.commodities || []).filter((id) => id !== c._id),
+                          commodities: e.target.checked
+                            ? [...(p.commodities || []), c._id]
+                            : (p.commodities || []).filter((id) => id !== c._id),
                         }))
                       }
                     />
@@ -344,17 +456,26 @@ export default function ContactsPage() {
               {selected.outreachLog?.length > 0 ? (
                 <div className="subcard">
                   <div className="subcard__title">Outreach log</div>
-                  {selected.outreachLog.slice(-5).reverse().map((o, i) => (
-                    <div key={i} className="muted small">
-                      {o.date ? new Date(o.date).toLocaleDateString() : ''} · {o.status || 'sent'}
-                    </div>
-                  ))}
+                  {selected.outreachLog
+                    .slice(-5)
+                    .reverse()
+                    .map((o, i) => (
+                      <div key={i} className="muted small">
+                        {o.date ? new Date(o.date).toLocaleDateString() : ''} · {o.status || 'sent'}
+                      </div>
+                    ))}
                 </div>
               ) : null}
               <div className="row rowWrap">
-                <button className="btn primary" onClick={handleSave} disabled={saving}>{saving ? 'Saving…' : 'Save'}</button>
-                <button className="btn ghost" onClick={handleDelete}>Delete</button>
-                <Link to="/deals" className="btn ghost">Open deals workspace</Link>
+                <button className="btn primary" onClick={handleSave} disabled={saving}>
+                  {saving ? 'Saving…' : 'Save'}
+                </button>
+                <button className="btn ghost" onClick={handleDelete}>
+                  Delete
+                </button>
+                <Link to="/deals" className="btn ghost">
+                  Open deals workspace
+                </Link>
               </div>
             </div>
           </section>

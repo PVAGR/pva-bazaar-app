@@ -11,7 +11,7 @@ try {
   module.exports = (req, res) => {
     res.status(500).json({
       error: 'API initialization failed',
-      message: error.message
+      message: error.message,
     });
   };
 }

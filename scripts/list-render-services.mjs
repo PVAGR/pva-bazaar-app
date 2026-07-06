@@ -4,11 +4,11 @@
  *   set RENDER_API_KEY=...   (Windows cmd)
  *   node scripts/list-render-services.mjs
  */
-import https from "https";
+import https from 'https';
 
 const token = process.env.RENDER_API_KEY;
 if (!token) {
-  console.error("Set RENDER_API_KEY");
+  console.error('Set RENDER_API_KEY');
   process.exit(1);
 }
 
@@ -16,17 +16,22 @@ function get(path) {
   return new Promise((resolve, reject) => {
     https
       .request(
-        { hostname: "api.render.com", path, method: "GET", headers: { Authorization: `Bearer ${token}`, Accept: "application/json" } },
+        {
+          hostname: 'api.render.com',
+          path,
+          method: 'GET',
+          headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
+        },
         (res) => {
-          let b = "";
-          res.on("data", (c) => (b += c));
-          res.on("end", () => {
+          let b = '';
+          res.on('data', (c) => (b += c));
+          res.on('end', () => {
             if (res.statusCode >= 400) reject(new Error(`${res.statusCode} ${b}`));
             else resolve(JSON.parse(b));
           });
-        }
+        },
       )
-      .on("error", reject)
+      .on('error', reject)
       .end();
   });
 }
@@ -42,8 +47,8 @@ for (;;) {
   for (const item of chunk) {
     const s = item.service || item;
     if (!s || !s.id) continue;
-    const url = s.serviceDetails?.url || "";
-    rows.push({ id: s.id, name: s.name || "", type: s.type || "", url });
+    const url = s.serviceDetails?.url || '';
+    rows.push({ id: s.id, name: s.name || '', type: s.type || '', url });
   }
 
   const last = chunk[chunk.length - 1];
@@ -51,6 +56,6 @@ for (;;) {
   if (!cursor) break;
 }
 
-for (const r of rows.sort((a, b) => (a.name || "").localeCompare(b.name || ""))) {
+for (const r of rows.sort((a, b) => (a.name || '').localeCompare(b.name || ''))) {
   console.log(`${r.id}\t${r.name}\t${r.type}\t${r.url}`);
 }

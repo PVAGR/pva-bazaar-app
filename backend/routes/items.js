@@ -41,8 +41,7 @@ function hasAdminAccess(req) {
     try {
       const decoded = jwt.verify(cookieToken, process.env.JWT_SECRET);
       if (decoded && decoded.role === 'admin') return true;
-    } catch (_) {
-    }
+    } catch (_) {}
   }
 
   const authHeader = req.headers.authorization || '';
@@ -51,8 +50,7 @@ function hasAdminAccess(req) {
     try {
       const decoded = jwt.verify(bearerToken, process.env.JWT_SECRET);
       if (decoded && decoded.role === 'admin') return true;
-    } catch (_) {
-    }
+    } catch (_) {}
   }
 
   return false;
@@ -102,11 +100,15 @@ function buildProvenanceFeedPayload(doc) {
       },
       chain: {
         network: doc?.provenance?.chain?.network || doc?.blockchainDetails?.network || '',
-        contractAddress: doc?.provenance?.chain?.contractAddress || doc?.blockchainDetails?.contractAddress || '',
-        tokenStandard: doc?.provenance?.chain?.tokenStandard || doc?.blockchainDetails?.tokenStandard || '',
+        contractAddress:
+          doc?.provenance?.chain?.contractAddress || doc?.blockchainDetails?.contractAddress || '',
+        tokenStandard:
+          doc?.provenance?.chain?.tokenStandard || doc?.blockchainDetails?.tokenStandard || '',
         tokenId: doc?.provenance?.chain?.tokenId || doc?.blockchainDetails?.tokenId || '',
       },
-      ownershipTimeline: Array.isArray(doc?.provenance?.ownershipTimeline) ? doc.provenance.ownershipTimeline : [],
+      ownershipTimeline: Array.isArray(doc?.provenance?.ownershipTimeline)
+        ? doc.provenance.ownershipTimeline
+        : [],
       documentation: doc?.provenance?.documentation || {},
     },
     issuedAt: new Date().toISOString(),
@@ -115,8 +117,12 @@ function buildProvenanceFeedPayload(doc) {
 }
 
 function safeCompare(a, b) {
-  const left = String(a || '').trim().toLowerCase();
-  const right = String(b || '').trim().toLowerCase();
+  const left = String(a || '')
+    .trim()
+    .toLowerCase();
+  const right = String(b || '')
+    .trim()
+    .toLowerCase();
   if (!left || !right) return null;
   return left === right;
 }
@@ -227,10 +233,12 @@ router.get('/', async (req, res) => {
     }
     if (category) filter.category = String(category);
     if (tag) filter.tags = tag;
-    if (availabilityStatus) filter.availabilityStatus = String(availabilityStatus).trim().toLowerCase();
+    if (availabilityStatus)
+      filter.availabilityStatus = String(availabilityStatus).trim().toLowerCase();
     if (isUnique === 'true') filter.isUnique = true;
     if (isUnique === 'false') filter.isUnique = false;
-    if (originCountry) filter['origin.country'] = new RegExp(`^${String(originCountry).trim()}$`, 'i');
+    if (originCountry)
+      filter['origin.country'] = new RegExp(`^${String(originCountry).trim()}$`, 'i');
     if (color) filter['gemProperties.color'] = new RegExp(String(color).trim(), 'i');
     // Search
     if (q) {
@@ -279,18 +287,24 @@ router.get('/', async (req, res) => {
           fallbackDocs = fallbackDocs.filter((item) => {
             const itemTime = new Date(item.createdAt).getTime();
             if (sort === 'old') {
-              return itemTime > cursorTime || (itemTime === cursorTime && String(item._id) > String(c.id));
+              return (
+                itemTime > cursorTime ||
+                (itemTime === cursorTime && String(item._id) > String(c.id))
+              );
             }
-            return itemTime < cursorTime || (itemTime === cursorTime && String(item._id) < String(c.id));
+            return (
+              itemTime < cursorTime || (itemTime === cursorTime && String(item._id) < String(c.id))
+            );
           });
         }
       }
 
       const items = fallbackDocs.slice(0, limit).map(toPublicItem);
       const last = fallbackDocs[limit - 1];
-      const nextCursor = fallbackDocs.length > limit && last
-        ? encodeCursor({ createdAt: last.createdAt, id: last._id })
-        : null;
+      const nextCursor =
+        fallbackDocs.length > limit && last
+          ? encodeCursor({ createdAt: last.createdAt, id: last._id })
+          : null;
       return res.json({ ok: true, items, nextCursor });
     }
 
@@ -374,7 +388,9 @@ router.post('/provenance/check', authenticateToken, async (req, res) => {
       candidate,
       duplicates,
       reverseImage,
-      isDuplicateLikely: duplicates.some((row) => row.matchType === 'exact') || Boolean(reverseImage?.likelyDuplicate),
+      isDuplicateLikely:
+        duplicates.some((row) => row.matchType === 'exact') ||
+        Boolean(reverseImage?.likelyDuplicate),
     });
   } catch (err) {
     return res.status(500).json({ ok: false, error: err.message });
@@ -495,14 +511,32 @@ router.post('/provenance/sync-mint', async (req, res) => {
     artifact.provenance = artifact.provenance || {};
     artifact.provenance.chain = artifact.provenance.chain || {};
 
-    artifact.blockchainDetails.network = String(network || artifact.blockchainDetails.network || 'base');
-    artifact.blockchainDetails.contractAddress = String(contractAddress || artifact.blockchainDetails.contractAddress || '');
-    artifact.blockchainDetails.tokenStandard = String(tokenStandard || artifact.blockchainDetails.tokenStandard || 'ERC-721');
+    artifact.blockchainDetails.network = String(
+      network || artifact.blockchainDetails.network || 'base',
+    );
+    artifact.blockchainDetails.contractAddress = String(
+      contractAddress || artifact.blockchainDetails.contractAddress || '',
+    );
+    artifact.blockchainDetails.tokenStandard = String(
+      tokenStandard || artifact.blockchainDetails.tokenStandard || 'ERC-721',
+    );
     artifact.blockchainDetails.tokenId = String(tokenId);
 
-    artifact.provenance.chain.network = String(network || artifact.provenance.chain.network || artifact.blockchainDetails.network || 'base');
-    artifact.provenance.chain.contractAddress = String(contractAddress || artifact.provenance.chain.contractAddress || artifact.blockchainDetails.contractAddress || '');
-    artifact.provenance.chain.tokenStandard = String(tokenStandard || artifact.provenance.chain.tokenStandard || artifact.blockchainDetails.tokenStandard || 'ERC-721');
+    artifact.provenance.chain.network = String(
+      network || artifact.provenance.chain.network || artifact.blockchainDetails.network || 'base',
+    );
+    artifact.provenance.chain.contractAddress = String(
+      contractAddress ||
+        artifact.provenance.chain.contractAddress ||
+        artifact.blockchainDetails.contractAddress ||
+        '',
+    );
+    artifact.provenance.chain.tokenStandard = String(
+      tokenStandard ||
+        artifact.provenance.chain.tokenStandard ||
+        artifact.blockchainDetails.tokenStandard ||
+        'ERC-721',
+    );
     artifact.provenance.chain.tokenId = String(tokenId);
 
     if (metadataUri) {
@@ -516,7 +550,9 @@ router.post('/provenance/sync-mint', async (req, res) => {
       const timeline = Array.isArray(artifact.provenance.ownershipTimeline)
         ? artifact.provenance.ownershipTimeline
         : [];
-      const hasTx = timeline.some((entry) => String(entry?.txHash || '').toLowerCase() === String(txHash).toLowerCase());
+      const hasTx = timeline.some(
+        (entry) => String(entry?.txHash || '').toLowerCase() === String(txHash).toLowerCase(),
+      );
       if (!hasTx) {
         timeline.push({
           ownerType: 'owner',
@@ -611,9 +647,18 @@ router.get('/:slugOrId/provenance/verify', async (req, res) => {
     const blockchainDetails = doc?.blockchainDetails || {};
     const hasOnChainBinding = Boolean(chain.network && chain.contractAddress && chain.tokenId);
 
-    const compareNetwork = safeCompare(docChain.network || chain.network, blockchainDetails.network);
-    const compareAddress = safeCompare(docChain.contractAddress || chain.contractAddress, blockchainDetails.contractAddress);
-    const compareTokenId = safeCompare(docChain.tokenId || chain.tokenId, blockchainDetails.tokenId);
+    const compareNetwork = safeCompare(
+      docChain.network || chain.network,
+      blockchainDetails.network,
+    );
+    const compareAddress = safeCompare(
+      docChain.contractAddress || chain.contractAddress,
+      blockchainDetails.contractAddress,
+    );
+    const compareTokenId = safeCompare(
+      docChain.tokenId || chain.tokenId,
+      blockchainDetails.tokenId,
+    );
     const liveOnChain = includeLiveOnChain
       ? await getLiveOnChainState({
           contractAddress: chain.contractAddress,
@@ -625,27 +670,28 @@ router.get('/:slugOrId/provenance/verify', async (req, res) => {
           reason: 'Live on-chain check skipped by request',
         };
 
-    const consistencyChecks = [compareNetwork, compareAddress, compareTokenId].filter((v) => v !== null);
-    const blockchainConsistent = consistencyChecks.length > 0
-      ? consistencyChecks.every(Boolean)
-      : true;
+    const consistencyChecks = [compareNetwork, compareAddress, compareTokenId].filter(
+      (v) => v !== null,
+    );
+    const blockchainConsistent =
+      consistencyChecks.length > 0 ? consistencyChecks.every(Boolean) : true;
 
     const timeline = Array.isArray(payload?.provenance?.ownershipTimeline)
       ? payload.provenance.ownershipTimeline
       : [];
-    const latestTimelineOwner = timeline.length > 0
-      ? String(timeline[timeline.length - 1]?.ownerWallet || '').toLowerCase()
-      : '';
+    const latestTimelineOwner =
+      timeline.length > 0
+        ? String(timeline[timeline.length - 1]?.ownerWallet || '').toLowerCase()
+        : '';
     const liveOwner = String(liveOnChain?.currentOwner || '').toLowerCase();
-    const ownerMatchesTimeline = latestTimelineOwner && liveOwner
-      ? latestTimelineOwner === liveOwner
-      : null;
+    const ownerMatchesTimeline =
+      latestTimelineOwner && liveOwner ? latestTimelineOwner === liveOwner : null;
 
     const isFullyVerified = Boolean(
-      signatureCheck.valid
-      && hasOnChainBinding
-      && blockchainConsistent
-      && (!includeLiveOnChain || (liveOnChain.available && liveOnChain.verified)),
+      signatureCheck.valid &&
+        hasOnChainBinding &&
+        blockchainConsistent &&
+        (!includeLiveOnChain || (liveOnChain.available && liveOnChain.verified)),
     );
 
     const verification = {
@@ -730,12 +776,19 @@ router.post('/register', authenticateToken, async (req, res) => {
     };
 
     // Guard rails for payload size/shape to avoid hitting body limits with inline images.
-    const submittedImages = Array.isArray(imageUrls) ? imageUrls : (Array.isArray(images) ? images : []);
+    const submittedImages = Array.isArray(imageUrls)
+      ? imageUrls
+      : Array.isArray(images)
+        ? images
+        : [];
     if (submittedImages.length > 6) {
       return res.status(400).json({ ok: false, error: 'Maximum 6 images allowed' });
     }
-    if (submittedImages.some(img => typeof img === 'string' && img.length > 350000)) {
-      return res.status(400).json({ ok: false, error: 'One or more images are too large. Please upload smaller files.' });
+    if (submittedImages.some((img) => typeof img === 'string' && img.length > 350000)) {
+      return res.status(400).json({
+        ok: false,
+        error: 'One or more images are too large. Please upload smaller files.',
+      });
     }
 
     const user = await User.findById(req.user.id).select('name email onboardingProfile');
@@ -747,7 +800,8 @@ router.post('/register', authenticateToken, async (req, res) => {
     if (tradingRestricted) {
       return res.status(403).json({
         ok: false,
-        error: 'Trading is currently restricted for this account. Contact support to resolve this case.',
+        error:
+          'Trading is currently restricted for this account. Contact support to resolve this case.',
         code: 'TRADING_RESTRICTED',
       });
     }
@@ -756,7 +810,8 @@ router.post('/register', authenticateToken, async (req, res) => {
     if (missingIdentity.length > 0) {
       return res.status(403).json({
         ok: false,
-        error: 'Trader identity profile is incomplete. Complete legal identity fields before listing items.',
+        error:
+          'Trader identity profile is incomplete. Complete legal identity fields before listing items.',
         code: 'TRADER_IDENTITY_REQUIRED',
         missingFields: missingIdentity,
       });
@@ -907,7 +962,7 @@ router.post('/register', authenticateToken, async (req, res) => {
     });
   } catch (err) {
     console.error('Item registration error:', err);
-    
+
     // Handle duplicate key errors (e.g., duplicate slug)
     if (err.code === 11000) {
       return res.status(400).json({
@@ -918,7 +973,9 @@ router.post('/register', authenticateToken, async (req, res) => {
 
     // Handle validation errors
     if (err.name === 'ValidationError') {
-      const errors = Object.values(err.errors).map(e => e.message).join(', ');
+      const errors = Object.values(err.errors)
+        .map((e) => e.message)
+        .join(', ');
       return res.status(400).json({ ok: false, error: `Validation error: ${errors}` });
     }
 
@@ -949,14 +1006,17 @@ router.post('/:id/syndication/retry', authenticateToken, async (req, res) => {
     const requestedByBody = Array.isArray(req.body?.channels)
       ? req.body.channels.filter((channel) => typeof channel === 'string')
       : [];
-    const channels = requestedByBody.length > 0
-      ? requestedByBody
-      : Array.isArray(artifact?.syndication?.requestedChannels)
-        ? artifact.syndication.requestedChannels
-        : [];
+    const channels =
+      requestedByBody.length > 0
+        ? requestedByBody
+        : Array.isArray(artifact?.syndication?.requestedChannels)
+          ? artifact.syndication.requestedChannels
+          : [];
 
     if (!channels.length) {
-      return res.status(400).json({ ok: false, error: 'No syndication channels selected for retry' });
+      return res
+        .status(400)
+        .json({ ok: false, error: 'No syndication channels selected for retry' });
     }
 
     const user = await User.findById(req.user.id).select('name email');
@@ -1046,10 +1106,12 @@ router.post('/', async (req, res) => {
     };
     await artifact.save();
 
-    dispatchToOpenClaw(createArtifactEvent('created', artifact, null, {
-      route: 'items',
-      actor: 'admin',
-    }));
+    dispatchToOpenClaw(
+      createArtifactEvent('created', artifact, null, {
+        route: 'items',
+        actor: 'admin',
+      }),
+    );
 
     res.status(201).json({ ok: true, item: toPublicItem(artifact), reverseImage });
   } catch (err) {
@@ -1065,7 +1127,9 @@ router.post('/:id/provenance/review', adminSession, async (req, res) => {
       return res.status(400).json({ ok: false, error: 'Invalid item id' });
     }
 
-    const nextStatus = String(req.body?.verificationStatus || '').trim().toLowerCase();
+    const nextStatus = String(req.body?.verificationStatus || '')
+      .trim()
+      .toLowerCase();
     const allowedStatus = ['hash_verified', 'pending', 'flagged'];
     if (!allowedStatus.includes(nextStatus)) {
       return res.status(400).json({ ok: false, error: 'Invalid verificationStatus' });
@@ -1075,7 +1139,9 @@ router.post('/:id/provenance/review', adminSession, async (req, res) => {
     if (!artifact) return res.status(404).json({ ok: false, error: 'Item not found' });
 
     artifact.provenance = artifact.provenance || {};
-    const previousStatus = String(artifact.provenance.verificationStatus || 'pending').toLowerCase();
+    const previousStatus = String(
+      artifact.provenance.verificationStatus || 'pending',
+    ).toLowerCase();
     artifact.provenance.verificationStatus = nextStatus;
     artifact.provenance.review = {
       ...(artifact.provenance.review || {}),
@@ -1120,10 +1186,12 @@ router.put('/:id', async (req, res) => {
     const artifact = await Artifact.findByIdAndUpdate(id, input, { new: true });
     if (!artifact) return res.status(404).json({ ok: false, error: 'Item not found' });
 
-    dispatchToOpenClaw(createArtifactEvent('updated', artifact, null, {
-      route: 'items',
-      actor: 'admin',
-    }));
+    dispatchToOpenClaw(
+      createArtifactEvent('updated', artifact, null, {
+        route: 'items',
+        actor: 'admin',
+      }),
+    );
 
     res.json({ ok: true, item: toPublicItem(artifact) });
   } catch (err) {
@@ -1140,10 +1208,12 @@ router.delete('/:id', async (req, res) => {
     const artifact = await Artifact.findByIdAndDelete(id);
     if (!artifact) return res.status(404).json({ ok: false, error: 'Item not found' });
 
-    dispatchToOpenClaw(createArtifactEvent('deleted', artifact, null, {
-      route: 'items',
-      actor: 'admin',
-    }));
+    dispatchToOpenClaw(
+      createArtifactEvent('deleted', artifact, null, {
+        route: 'items',
+        actor: 'admin',
+      }),
+    );
 
     res.json({ ok: true, item: toPublicItem(artifact) });
   } catch (err) {

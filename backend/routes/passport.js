@@ -43,7 +43,8 @@ function toClaimsForRole(role) {
   const base = ['visitor', 'citizen'];
   if (normalized === 'committee') base.push('committee_member');
   if (normalized === 'secretariat') base.push('committee_member', 'secretariat');
-  if (normalized === 'admin') base.push('committee_member', 'secretariat', 'admin', 'treasury_operator');
+  if (normalized === 'admin')
+    base.push('committee_member', 'secretariat', 'admin', 'treasury_operator');
   return Array.from(new Set(base));
 }
 
@@ -62,7 +63,10 @@ function deriveEligibility(userDoc) {
   const hasVerifiedPassport = String(userDoc?.passportStatus || '') === 'verified';
   const hasGovernanceVoteEligibility = hasVerifiedPassport && Boolean(userDoc?.governanceToken);
   const hasTreasuryAccess = claims.includes('treasury_operator') || claims.includes('admin');
-  const hasCommitteeAccess = claims.includes('committee_member') || claims.includes('secretariat') || claims.includes('admin');
+  const hasCommitteeAccess =
+    claims.includes('committee_member') ||
+    claims.includes('secretariat') ||
+    claims.includes('admin');
   return {
     hasVerifiedPassport,
     hasGovernanceVoteEligibility,
@@ -187,14 +191,18 @@ router.put('/profile', authenticateToken, async (req, res) => {
       update.bio = nextBio;
     }
 
-    if (location !== undefined) update.location = String(location || '').trim().slice(0, 120);
-    if (avatarUrl !== undefined) update.avatarUrl = String(avatarUrl || '').trim().slice(0, 500);
+    if (location !== undefined)
+      update.location = String(location || '')
+        .trim()
+        .slice(0, 120);
+    if (avatarUrl !== undefined)
+      update.avatarUrl = String(avatarUrl || '')
+        .trim()
+        .slice(0, 500);
 
-    const user = await User.findByIdAndUpdate(
-      req.user.id,
-      { $set: update },
-      { new: true },
-    ).select(PRIVATE_FIELDS);
+    const user = await User.findByIdAndUpdate(req.user.id, { $set: update }, { new: true }).select(
+      PRIVATE_FIELDS,
+    );
 
     if (!user) {
       return res.status(404).json({ ok: false, message: 'User not found' });
@@ -222,7 +230,9 @@ router.put('/profile', authenticateToken, async (req, res) => {
 // Request passport verification
 router.post('/verify-request', authenticateToken, async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select('passportStatus verificationStatus updatedAt auditHistory approvalHistory');
+    const user = await User.findById(req.user.id).select(
+      'passportStatus verificationStatus updatedAt auditHistory approvalHistory',
+    );
     if (!user) {
       return res.status(404).json({ ok: false, message: 'User not found' });
     }
@@ -232,7 +242,9 @@ router.post('/verify-request', authenticateToken, async (req, res) => {
     }
 
     if (user.passportStatus === 'suspended') {
-      return res.status(403).json({ ok: false, message: 'Passport is suspended and cannot request verification' });
+      return res
+        .status(403)
+        .json({ ok: false, message: 'Passport is suspended and cannot request verification' });
     }
 
     user.passportStatus = 'pending';
@@ -363,7 +375,9 @@ router.post('/challenge/verify', authenticateToken, async (req, res) => {
     const nonce = String(req.body?.nonce || '').trim();
 
     if (!walletAddress || !signature || !nonce) {
-      return res.status(400).json({ ok: false, message: 'walletAddress, signature, and nonce are required' });
+      return res
+        .status(400)
+        .json({ ok: false, message: 'walletAddress, signature, and nonce are required' });
     }
 
     const user = await User.findById(req.user.id).select(PRIVATE_FIELDS);
@@ -406,7 +420,11 @@ router.post('/challenge/verify', authenticateToken, async (req, res) => {
 
     await user.save();
 
-    return res.json({ ok: true, item: sanitizePrivateProfile(user), verificationMode: 'simulated/dev' });
+    return res.json({
+      ok: true,
+      item: sanitizePrivateProfile(user),
+      verificationMode: 'simulated/dev',
+    });
   } catch (err) {
     return res.status(500).json({ ok: false, message: err.message });
   }
@@ -419,13 +437,17 @@ router.get('/verify', async (req, res) => {
     const credentialId = String(req.query.credentialId || '').trim();
 
     if (!societalId && !credentialId) {
-      return res.status(400).json({ ok: false, message: 'societalId or credentialId query is required' });
+      return res
+        .status(400)
+        .json({ ok: false, message: 'societalId or credentialId query is required' });
     }
 
     const query = societalId ? { societalId } : { credentialId };
     const user = await User.findOne(query).select(PRIVATE_FIELDS);
     if (!user) {
-      return res.status(404).json({ ok: false, state: 'invalid', message: 'No matching passport credential found' });
+      return res
+        .status(404)
+        .json({ ok: false, state: 'invalid', message: 'No matching passport credential found' });
     }
 
     const state =
@@ -446,7 +468,9 @@ router.get('/verify', async (req, res) => {
         didSubject: user.didSubject || buildDidSubject(user.societalId),
         roleClaims: Array.isArray(user.claims) ? user.claims : [],
         issuedAt: user.credentialIssuedAt || null,
-        issuer: user.auditHistory?.filter((item) => item.event === 'credential_issued').slice(-1)[0]?.actorRole || 'system',
+        issuer:
+          user.auditHistory?.filter((item) => item.event === 'credential_issued').slice(-1)[0]
+            ?.actorRole || 'system',
         walletBindingState: user.walletBindingStatus || 'unbound',
         passportStatus: user.passportStatus,
       },
@@ -462,12 +486,19 @@ router.get('/audit/:userId', authenticateToken, async (req, res) => {
     const targetId = String(req.params.userId || '');
     const isSelf = String(req.user.id) === targetId;
     const requester = await User.findById(req.user.id).select('role citizenRole');
-    const isAdmin = requester?.role === 'admin' || requester?.citizenRole === 'admin' || requester?.citizenRole === 'secretariat';
+    const isAdmin =
+      requester?.role === 'admin' ||
+      requester?.citizenRole === 'admin' ||
+      requester?.citizenRole === 'secretariat';
     if (!isSelf && !isAdmin) {
-      return res.status(403).json({ ok: false, message: 'Not authorized to view this audit history' });
+      return res
+        .status(403)
+        .json({ ok: false, message: 'Not authorized to view this audit history' });
     }
 
-    const user = await User.findById(targetId).select('auditHistory approvalHistory societalId name');
+    const user = await User.findById(targetId).select(
+      'auditHistory approvalHistory societalId name',
+    );
     if (!user) {
       return res.status(404).json({ ok: false, message: 'User not found' });
     }
@@ -496,19 +527,23 @@ router.post('/credential/issue/:userId', authenticateToken, requireAdmin, async 
     }
 
     if (!target.societalId) {
-      return res.status(400).json({ ok: false, message: 'Societal ID is required before issuing credential' });
+      return res
+        .status(400)
+        .json({ ok: false, message: 'Societal ID is required before issuing credential' });
     }
 
-    const claims = Array.isArray(req.body?.claims) && req.body.claims.length
-      ? req.body.claims.filter((value) => CLAIMS.has(value))
-      : toClaimsForRole(target.citizenRole);
+    const claims =
+      Array.isArray(req.body?.claims) && req.body.claims.length
+        ? req.body.claims.filter((value) => CLAIMS.has(value))
+        : toClaimsForRole(target.citizenRole);
 
     target.didSubject = target.didSubject || buildDidSubject(target.societalId);
     target.credentialId = makeCredentialId();
     target.credentialVersion = Number(target.credentialVersion || 0) + 1;
     target.credentialIssuedAt = new Date();
     target.claims = Array.from(new Set(claims));
-    target.verificationStatus = target.passportStatus === 'verified' ? 'approved' : target.verificationStatus;
+    target.verificationStatus =
+      target.passportStatus === 'verified' ? 'approved' : target.verificationStatus;
 
     pushAuditEvent(target, 'credential_issued', {
       actorId: req.user.id,
@@ -567,8 +602,12 @@ router.post('/claims/:userId', authenticateToken, requireAdmin, async (req, res)
       return res.status(404).json({ ok: false, message: 'User not found' });
     }
 
-    const assign = Array.isArray(req.body?.assign) ? req.body.assign.filter((c) => CLAIMS.has(c)) : [];
-    const revoke = Array.isArray(req.body?.revoke) ? req.body.revoke.filter((c) => CLAIMS.has(c)) : [];
+    const assign = Array.isArray(req.body?.assign)
+      ? req.body.assign.filter((c) => CLAIMS.has(c))
+      : [];
+    const revoke = Array.isArray(req.body?.revoke)
+      ? req.body.revoke.filter((c) => CLAIMS.has(c))
+      : [];
     const current = new Set(Array.isArray(target.claims) ? target.claims : []);
 
     assign.forEach((claim) => current.add(claim));

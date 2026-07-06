@@ -36,7 +36,8 @@ function enforceTraderEligibility(req, res) {
   if (tradingRestricted) {
     res.status(403).json({
       ok: false,
-      error: 'Trading is currently restricted for this account. Contact support to resolve this case.',
+      error:
+        'Trading is currently restricted for this account. Contact support to resolve this case.',
       code: 'TRADING_RESTRICTED',
     });
     return false;
@@ -46,7 +47,8 @@ function enforceTraderEligibility(req, res) {
   if (missingIdentity.length > 0) {
     res.status(403).json({
       ok: false,
-      error: 'Trader identity profile is incomplete. Complete legal identity fields before creating or publishing shops.',
+      error:
+        'Trader identity profile is incomplete. Complete legal identity fields before creating or publishing shops.',
       code: 'TRADER_IDENTITY_REQUIRED',
       missingFields: missingIdentity,
     });

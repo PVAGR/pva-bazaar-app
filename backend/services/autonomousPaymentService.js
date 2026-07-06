@@ -46,8 +46,8 @@ class AutonomousPaymentService {
       initiatedAt: new Date(),
       from: {
         method: agent.primaryPaymentMethod,
-        identifier: agent.email
-      }
+        identifier: agent.email,
+      },
     });
 
     try {
@@ -79,7 +79,7 @@ class AutonomousPaymentService {
         transaction.result = {
           success: true,
           confirmationId: result.confirmationId,
-          receiptUrl: result.receiptUrl
+          receiptUrl: result.receiptUrl,
         };
         transaction.completedAt = new Date();
 
@@ -95,13 +95,12 @@ class AutonomousPaymentService {
       } else {
         throw new Error(result.error);
       }
-
     } catch (error) {
       transaction.status = 'failed';
       transaction.result = {
         success: false,
         errorMessage: error.message,
-        retryCount: 0
+        retryCount: 0,
       };
       await transaction.save();
 
@@ -145,19 +144,19 @@ class AutonomousPaymentService {
       const paypalPayload = {
         amount: {
           currency_code: 'USD',
-          value: amount.toString()
+          value: amount.toString(),
         },
         reference_id: transaction.transactionId,
         description: transaction.reason,
         custom_id: agent._id.toString(),
         payer: {
-          email_address: agent.paypal.email
+          email_address: agent.paypal.email,
         },
         shipping: {
           name: {
-            full_name: vendorInfo.name || 'Vendor'
-          }
-        }
+            full_name: vendorInfo.name || 'Vendor',
+          },
+        },
       };
 
       // Simulate PayPal API call
@@ -167,12 +166,12 @@ class AutonomousPaymentService {
         success: true,
         confirmationId,
         receiptUrl: `https://paypal.com/receipt/${confirmationId}`,
-        method: 'paypal'
+        method: 'paypal',
       };
     } catch (error) {
       return {
         success: false,
-        error: `PayPal payment failed: ${error.message}`
+        error: `PayPal payment failed: ${error.message}`,
       };
     }
   }
@@ -187,9 +186,9 @@ class AutonomousPaymentService {
 
     try {
       // Select best wallet (USDC for stablecoin, ETH as fallback)
-      let wallet = agent.cryptoWallets.find(w => w.coin === 'usdc');
+      let wallet = agent.cryptoWallets.find((w) => w.coin === 'usdc');
       if (!wallet) {
-        wallet = agent.cryptoWallets.find(w => w.coin === 'ethereum');
+        wallet = agent.cryptoWallets.find((w) => w.coin === 'ethereum');
       }
       if (!wallet) {
         wallet = agent.cryptoWallets[0];
@@ -210,12 +209,12 @@ class AutonomousPaymentService {
         method: 'crypto',
         txHash,
         coin: wallet.coin,
-        network: wallet.network
+        network: wallet.network,
       };
     } catch (error) {
       return {
         success: false,
-        error: `Crypto payment failed: ${error.message}`
+        error: `Crypto payment failed: ${error.message}`,
       };
     }
   }
@@ -236,12 +235,12 @@ class AutonomousPaymentService {
         success: true,
         confirmationId,
         receiptUrl: `https://cash.app/receipt/${confirmationId}`,
-        method: 'cashapp'
+        method: 'cashapp',
       };
     } catch (error) {
       return {
         success: false,
-        error: `CashApp payment failed: ${error.message}`
+        error: `CashApp payment failed: ${error.message}`,
       };
     }
   }
@@ -263,12 +262,12 @@ class AutonomousPaymentService {
         confirmationId,
         receiptUrl: `https://stripe.com/receipt/${confirmationId}`,
         method: 'card',
-        lastFourDigits: agent.card.lastFourDigits
+        lastFourDigits: agent.card.lastFourDigits,
       };
     } catch (error) {
       return {
         success: false,
-        error: `Card payment failed: ${error.message}`
+        error: `Card payment failed: ${error.message}`,
       };
     }
   }
@@ -289,12 +288,12 @@ class AutonomousPaymentService {
         confirmationId,
         receiptUrl: `https://bank.example.com/receipt/${confirmationId}`,
         method: 'bank',
-        processingTime: '1-2 business days'
+        processingTime: '1-2 business days',
       };
     } catch (error) {
       return {
         success: false,
-        error: `Bank transfer failed: ${error.message}`
+        error: `Bank transfer failed: ${error.message}`,
       };
     }
   }
@@ -338,7 +337,7 @@ class AutonomousPaymentService {
       return {
         success: true,
         balances: agent.balanceByMethod,
-        total: agent.totalBalanceUSD
+        total: agent.totalBalanceUSD,
       };
     } catch (error) {
       throw new Error(`Balance sync failed: ${error.message}`);
@@ -361,7 +360,7 @@ class AutonomousPaymentService {
         schedule.agentId,
         { name: schedule.vendor, email: schedule.vendorEmail },
         schedule.amount,
-        `Scheduled payment for ${schedule.vendor}`
+        `Scheduled payment for ${schedule.vendor}`,
       );
 
       if (result.success) {
@@ -384,7 +383,7 @@ class AutonomousPaymentService {
   static async getTransactionHistory(agentId, filter = {}) {
     return await AgentTransaction.find({
       agentId,
-      ...filter
+      ...filter,
     })
       .sort({ createdAt: -1 })
       .limit(100)
@@ -423,17 +422,17 @@ class AutonomousPaymentService {
         $match: {
           agentId: agent._id,
           status: 'completed',
-          createdAt: { $gte: startDate }
-        }
+          createdAt: { $gte: startDate },
+        },
       },
       {
         $group: {
           _id: '$paymentMethod',
           total: { $sum: '$amount' },
           count: { $sum: 1 },
-          avgAmount: { $avg: '$amount' }
-        }
-      }
+          avgAmount: { $avg: '$amount' },
+        },
+      },
     ]);
 
     return transactions;

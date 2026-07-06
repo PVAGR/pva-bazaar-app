@@ -21,7 +21,7 @@ router.post('/init', adminSession, (req, res) => {
     if (!creatorName) {
       return res.status(400).json({
         ok: false,
-        error: 'creatorName is required'
+        error: 'creatorName is required',
       });
     }
 
@@ -31,12 +31,12 @@ router.post('/init', adminSession, (req, res) => {
       ok: true,
       message: 'Manifesto AI initialized',
       creator: creatorName,
-      status: 'CREATED'
+      status: 'CREATED',
     });
   } catch (err) {
     res.status(500).json({
       ok: false,
-      error: err.message
+      error: err.message,
     });
   }
 });
@@ -50,7 +50,7 @@ router.post('/train', adminSession, (req, res) => {
     if (!manifestoAI) {
       return res.status(400).json({
         ok: false,
-        error: 'AI not initialized. Call /init first.'
+        error: 'AI not initialized. Call /init first.',
       });
     }
 
@@ -59,7 +59,7 @@ router.post('/train', adminSession, (req, res) => {
     if (!Array.isArray(entries) || entries.length === 0) {
       return res.status(400).json({
         ok: false,
-        error: 'entries array is required'
+        error: 'entries array is required',
       });
     }
 
@@ -73,13 +73,13 @@ router.post('/train', adminSession, (req, res) => {
         trained: voiceProfile.trained,
         entriesAnalyzed: voiceProfile.entriesAnalyzed,
         hash: voiceProfile.hash,
-        characteristics: voiceProfile.uniqueCharacteristics
-      }
+        characteristics: voiceProfile.uniqueCharacteristics,
+      },
     });
   } catch (err) {
     res.status(500).json({
       ok: false,
-      error: err.message
+      error: err.message,
     });
   }
 });
@@ -93,18 +93,18 @@ router.get('/voice-profile', (req, res) => {
     if (!manifestoAI) {
       return res.status(400).json({
         ok: false,
-        error: 'AI not initialized'
+        error: 'AI not initialized',
       });
     }
 
     res.json({
       ok: true,
-      voiceProfile: manifestoAI.voiceProfile
+      voiceProfile: manifestoAI.voiceProfile,
     });
   } catch (err) {
     res.status(500).json({
       ok: false,
-      error: err.message
+      error: err.message,
     });
   }
 });
@@ -119,14 +119,14 @@ router.post('/ask', async (req, res) => {
     if (!manifestoAI) {
       return res.status(400).json({
         ok: false,
-        error: 'AI not initialized'
+        error: 'AI not initialized',
       });
     }
 
     if (!manifestoAI.voiceProfile.trained) {
       return res.status(400).json({
         ok: false,
-        error: 'AI not trained yet. Call /train first.'
+        error: 'AI not trained yet. Call /train first.',
       });
     }
 
@@ -135,7 +135,7 @@ router.post('/ask', async (req, res) => {
     if (!question) {
       return res.status(400).json({
         ok: false,
-        error: 'question is required'
+        error: 'question is required',
       });
     }
 
@@ -143,12 +143,12 @@ router.post('/ask', async (req, res) => {
 
     res.json({
       ok: true,
-      response
+      response,
     });
   } catch (err) {
     res.status(500).json({
       ok: false,
-      error: err.message
+      error: err.message,
     });
   }
 });
@@ -162,18 +162,18 @@ router.get('/philosophy', (req, res) => {
     if (!manifestoAI) {
       return res.status(400).json({
         ok: false,
-        error: 'AI not initialized'
+        error: 'AI not initialized',
       });
     }
 
     res.json({
       ok: true,
-      philosophy: manifestoAI.philosophy
+      philosophy: manifestoAI.philosophy,
     });
   } catch (err) {
     res.status(500).json({
       ok: false,
-      error: err.message
+      error: err.message,
     });
   }
 });
@@ -187,18 +187,18 @@ router.get('/decisions', (req, res) => {
     if (!manifestoAI) {
       return res.status(400).json({
         ok: false,
-        error: 'AI not initialized'
+        error: 'AI not initialized',
       });
     }
 
     res.json({
       ok: true,
-      decisions: manifestoAI.decisions
+      decisions: manifestoAI.decisions,
     });
   } catch (err) {
     res.status(500).json({
       ok: false,
-      error: err.message
+      error: err.message,
     });
   }
 });
@@ -212,7 +212,7 @@ router.post('/resurrect', adminSession, async (req, res) => {
     if (!manifestoAI) {
       return res.status(400).json({
         ok: false,
-        error: 'AI not initialized'
+        error: 'AI not initialized',
       });
     }
 
@@ -221,7 +221,7 @@ router.post('/resurrect', adminSession, async (req, res) => {
     if (!deathProof) {
       return res.status(400).json({
         ok: false,
-        error: 'deathProof is required'
+        error: 'deathProof is required',
       });
     }
 
@@ -229,12 +229,12 @@ router.post('/resurrect', adminSession, async (req, res) => {
 
     res.json({
       ok: true,
-      resurrection: result
+      resurrection: result,
     });
   } catch (err) {
     res.status(500).json({
       ok: false,
-      error: err.message
+      error: err.message,
     });
   }
 });
@@ -249,7 +249,7 @@ router.post('/learn', adminSession, async (req, res) => {
     if (!manifestoAI) {
       return res.status(400).json({
         ok: false,
-        error: 'AI not initialized'
+        error: 'AI not initialized',
       });
     }
 
@@ -258,7 +258,7 @@ router.post('/learn', adminSession, async (req, res) => {
     if (!entry) {
       return res.status(400).json({
         ok: false,
-        error: 'entry is required'
+        error: 'entry is required',
       });
     }
 
@@ -266,12 +266,12 @@ router.post('/learn', adminSession, async (req, res) => {
 
     res.json({
       ok: true,
-      learning: result
+      learning: result,
     });
   } catch (err) {
     res.status(500).json({
       ok: false,
-      error: err.message
+      error: err.message,
     });
   }
 });
@@ -287,8 +287,8 @@ router.get('/status', (req, res) => {
         ok: true,
         status: {
           initialized: false,
-          message: 'AI not initialized'
-        }
+          message: 'AI not initialized',
+        },
       });
     }
 
@@ -302,13 +302,13 @@ router.get('/status', (req, res) => {
         isEvolving: manifestoAI.evolving,
         entriesCount: manifestoAI.entries.length,
         decisionsCount: manifestoAI.decisions.length,
-        voiceHash: manifestoAI.voiceProfile.hash
-      }
+        voiceHash: manifestoAI.voiceProfile.hash,
+      },
     });
   } catch (err) {
     res.status(500).json({
       ok: false,
-      error: err.message
+      error: err.message,
     });
   }
 });
@@ -322,7 +322,7 @@ router.get('/export', adminSession, (req, res) => {
     if (!manifestoAI) {
       return res.status(400).json({
         ok: false,
-        error: 'AI not initialized'
+        error: 'AI not initialized',
       });
     }
 
@@ -334,7 +334,7 @@ router.get('/export', adminSession, (req, res) => {
   } catch (err) {
     res.status(500).json({
       ok: false,
-      error: err.message
+      error: err.message,
     });
   }
 });
@@ -348,7 +348,7 @@ router.get('/verify', (req, res) => {
     if (!manifestoAI) {
       return res.status(400).json({
         ok: false,
-        error: 'AI not initialized'
+        error: 'AI not initialized',
       });
     }
 
@@ -356,12 +356,12 @@ router.get('/verify', (req, res) => {
 
     res.json({
       ok: true,
-      verification
+      verification,
     });
   } catch (err) {
     res.status(500).json({
       ok: false,
-      error: err.message
+      error: err.message,
     });
   }
 });

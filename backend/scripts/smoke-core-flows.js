@@ -30,9 +30,9 @@ function makeRequest(method, path, body, headers = {}) {
           ...headers,
         },
       },
-      res => {
+      (res) => {
         let data = '';
-        res.on('data', chunk => (data += chunk));
+        res.on('data', (chunk) => (data += chunk));
         res.on('end', () => {
           try {
             resolve({ status: res.statusCode, body: JSON.parse(data), headers: res.headers });
@@ -65,7 +65,7 @@ async function waitForAssessmentFinalStatus(id, authHeaders, maxAttempts = 20, d
     if (status === 'completed' || status === 'failed') {
       return status;
     }
-    await new Promise(resolve => setTimeout(resolve, delayMs));
+    await new Promise((resolve) => setTimeout(resolve, delayMs));
   }
   throw new Error('Oracle assessment did not reach a terminal status in time');
 }
@@ -77,7 +77,7 @@ async function run() {
 
   const app = require('../api/index');
   server = http.createServer(app);
-  await new Promise(resolve => server.listen(PORT, resolve));
+  await new Promise((resolve) => server.listen(PORT, resolve));
   console.log(`✓ smoke server started on :${PORT}`);
 
   try {
@@ -92,20 +92,38 @@ async function run() {
     // 1b) Ping/version metadata endpoints
     const ping = await makeRequest('GET', '/api/ping');
     assert(ping.status === 200 && ping.body.ok, `Ping failed: ${ping.status}`);
-    assert(typeof ping.body.shortSha === 'string' && ping.body.shortSha.length > 0, 'Ping shortSha missing');
+    assert(
+      typeof ping.body.shortSha === 'string' && ping.body.shortSha.length > 0,
+      'Ping shortSha missing',
+    );
     assert(ping.headers && ping.headers['x-app-version'], 'Ping X-App-Version header missing');
     console.log('✅ ping/version header ok');
 
     const version = await makeRequest('GET', '/api/version');
     assert(version.status === 200 && version.body.ok, `Version failed: ${version.status}`);
-    assert(typeof version.body.sha === 'string' && version.body.sha.length > 0, 'Version sha missing');
-    assert(typeof version.body.shortSha === 'string' && version.body.shortSha.length > 0, 'Version shortSha missing');
+    assert(
+      typeof version.body.sha === 'string' && version.body.sha.length > 0,
+      'Version sha missing',
+    );
+    assert(
+      typeof version.body.shortSha === 'string' && version.body.shortSha.length > 0,
+      'Version shortSha missing',
+    );
     console.log('✅ version metadata ok');
 
     const healthVersion = await makeRequest('GET', '/api/health/version');
-    assert(healthVersion.status === 200 && healthVersion.body.ok, `Health version failed: ${healthVersion.status}`);
-    assert(typeof healthVersion.body.version === 'string' && healthVersion.body.version.length > 0, 'Health version missing');
-    assert(typeof healthVersion.body.shortSha === 'string' && healthVersion.body.shortSha.length > 0, 'Health shortSha missing');
+    assert(
+      healthVersion.status === 200 && healthVersion.body.ok,
+      `Health version failed: ${healthVersion.status}`,
+    );
+    assert(
+      typeof healthVersion.body.version === 'string' && healthVersion.body.version.length > 0,
+      'Health version missing',
+    );
+    assert(
+      typeof healthVersion.body.shortSha === 'string' && healthVersion.body.shortSha.length > 0,
+      'Health shortSha missing',
+    );
     console.log('✅ health/version metadata ok');
 
     // 2) Auth register + login
@@ -164,8 +182,14 @@ async function run() {
     );
     assert(oracle.status === 202 && oracle.body.ok, `Oracle create failed: ${oracle.status}`);
     assert(oracle.body.assessment && oracle.body.assessment.id, 'Oracle assessment id missing');
-    const oracleFinalStatus = await waitForAssessmentFinalStatus(oracle.body.assessment.id, authHeaders);
-    assert(['completed', 'failed'].includes(oracleFinalStatus), `Unexpected oracle status: ${oracleFinalStatus}`);
+    const oracleFinalStatus = await waitForAssessmentFinalStatus(
+      oracle.body.assessment.id,
+      authHeaders,
+    );
+    assert(
+      ['completed', 'failed'].includes(oracleFinalStatus),
+      `Unexpected oracle status: ${oracleFinalStatus}`,
+    );
     console.log('✅ oracle create ok');
 
     // 5) Stream create
@@ -175,7 +199,10 @@ async function run() {
       { title: 'Smoke Stream', platform: 'none' },
       authHeaders,
     );
-    assert(streamCreate.status === 201 && streamCreate.body.ok, `Stream create failed: ${streamCreate.status}`);
+    assert(
+      streamCreate.status === 201 && streamCreate.body.ok,
+      `Stream create failed: ${streamCreate.status}`,
+    );
     const streamId = streamCreate.body.item._id;
     assert(streamId, 'Stream id missing');
     console.log('✅ stream create ok');
@@ -197,7 +224,10 @@ async function run() {
 
     // 7) Fetch stream and confirm live
     const streamRead = await makeRequest('GET', `/api/streams/${streamId}`, null, authHeaders);
-    assert(streamRead.status === 200 && streamRead.body.ok, `Stream fetch failed: ${streamRead.status}`);
+    assert(
+      streamRead.status === 200 && streamRead.body.ok,
+      `Stream fetch failed: ${streamRead.status}`,
+    );
     assert(streamRead.body.item.status === 'live', 'Stream should be live after webhook');
     console.log('✅ stream status transition ok');
 
@@ -211,8 +241,7 @@ async function run() {
   }
 }
 
-run().catch(err => {
+run().catch((err) => {
   console.error('❌ smoke-core-flows failed:', err.message);
   process.exit(1);
 });
-

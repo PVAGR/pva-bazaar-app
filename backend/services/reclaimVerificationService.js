@@ -74,7 +74,7 @@ function calculateMetadataSimilarity(artifact, submitted) {
   if (artifact.title && submitted.title) {
     const titleSimilarity = stringSimilarity(
       artifact.title.toLowerCase(),
-      submitted.title.toLowerCase()
+      submitted.title.toLowerCase(),
     );
     score += titleSimilarity * 40;
   }
@@ -97,7 +97,7 @@ function calculateMetadataSimilarity(artifact, submitted) {
   // Date match (10 points)
   if (artifact.createdAt && submitted.dateOfAcquisition) {
     const daysDiff = Math.abs(
-      (artifact.createdAt - new Date(submitted.dateOfAcquisition)) / (1000 * 60 * 60 * 24)
+      (artifact.createdAt - new Date(submitted.dateOfAcquisition)) / (1000 * 60 * 60 * 24),
     );
     if (daysDiff < 365) {
       score += (100 - Math.min(daysDiff, 100)) * 0.1; // decay over time
@@ -143,7 +143,11 @@ function stringSimilarity(str1, str2) {
   for (let j = 1; j <= len2; j++) {
     for (let i = 1; i <= len1; i++) {
       const indicator = str1[i - 1] === str2[j - 1] ? 0 : 1;
-      matrix[j][i] = Math.min(matrix[j][i - 1] + 1, matrix[j - 1][i] + 1, matrix[j - 1][i - 1] + indicator);
+      matrix[j][i] = Math.min(
+        matrix[j][i - 1] + 1,
+        matrix[j - 1][i] + 1,
+        matrix[j - 1][i - 1] + indicator,
+      );
     }
   }
 
@@ -176,7 +180,9 @@ async function validateAgainstDuplicate(artifactId, userId) {
   });
 
   if (recentReclaims.length > 3) {
-    console.warn(`User ${userId} has ${recentReclaims.length} reclaims in last 7 days - potential abuse`);
+    console.warn(
+      `User ${userId} has ${recentReclaims.length} reclaims in last 7 days - potential abuse`,
+    );
   }
 
   return { safe: recentReclaims.length <= 3, recentClaimCount: recentReclaims.length };

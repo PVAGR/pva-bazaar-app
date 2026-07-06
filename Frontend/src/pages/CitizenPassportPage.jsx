@@ -58,19 +58,32 @@ const CREDENTIAL_STEPS = [
   {
     title: 'On-Chain / Smart Account Identity',
     state: 'Planned next',
-    detail: 'Roadmap includes DID anchoring and ERC-4337 smart-account-compatible identity operations.',
+    detail:
+      'Roadmap includes DID anchoring and ERC-4337 smart-account-compatible identity operations.',
     live: false,
   },
 ];
 
-const SUPPORTED_WALLETS = ['MetaMask (EVM browser wallet)', 'Injected EVM wallets', 'Secure mobile deep-link handoff'];
-const FUTURE_WALLETS = ['WalletConnect session routing', 'Contract account support (ERC-4337)', 'Delegated session keys for civic actions'];
+const SUPPORTED_WALLETS = [
+  'MetaMask (EVM browser wallet)',
+  'Injected EVM wallets',
+  'Secure mobile deep-link handoff',
+];
+const FUTURE_WALLETS = [
+  'WalletConnect session routing',
+  'Contract account support (ERC-4337)',
+  'Delegated session keys for civic actions',
+];
 
 function statusLabel(citizenRole, memberActive, committeeAssignments) {
   if (!memberActive) return 'Visitor';
   if (String(citizenRole || '').toLowerCase() === 'admin') return 'Admin';
   if (String(citizenRole || '').toLowerCase() === 'secretariat') return 'Secretariat';
-  if (String(citizenRole || '').toLowerCase() === 'committee' || (committeeAssignments || []).length > 0) return 'Committee';
+  if (
+    String(citizenRole || '').toLowerCase() === 'committee' ||
+    (committeeAssignments || []).length > 0
+  )
+    return 'Committee';
   return 'Citizen';
 }
 
@@ -101,18 +114,25 @@ export default function CitizenPassportPage() {
 
     const commentsMade = proposals.reduce((count, proposal) => {
       const comments = Array.isArray(proposal.comments) ? proposal.comments : [];
-      return count + comments.filter((comment) => {
-        const byId = String(comment.authorId || '') === String(citizenId);
-        const byName = String(comment.authorName || '') === String(citizenName);
-        return byId || byName;
-      }).length;
+      return (
+        count +
+        comments.filter((comment) => {
+          const byId = String(comment.authorId || '') === String(citizenId);
+          const byName = String(comment.authorName || '') === String(citizenName);
+          return byId || byName;
+        }).length
+      );
     }, 0);
 
-    const conferenceParticipation = proposals.filter((proposal) => (
-      ['conference_queue', 'threshold_reached', 'accepted', 'in_execution', 'completed'].includes(proposal.status)
-    )).length;
+    const conferenceParticipation = proposals.filter((proposal) =>
+      ['conference_queue', 'threshold_reached', 'accepted', 'in_execution', 'completed'].includes(
+        proposal.status,
+      ),
+    ).length;
 
-    const officialResponsesVisible = proposals.filter((proposal) => Boolean(proposal.adminDecision || proposal.adminReason)).length;
+    const officialResponsesVisible = proposals.filter((proposal) =>
+      Boolean(proposal.adminDecision || proposal.adminReason),
+    ).length;
 
     const proposalParticipation = proposalsCreated.length + supportsCast.length;
     const governanceParticipation = proposalParticipation + commentsMade;
@@ -140,13 +160,21 @@ export default function CitizenPassportPage() {
       const accounts = await eth.request({ method: 'eth_requestAccounts' });
       const walletAddress = String(accounts?.[0] || '');
       ensureCitizenMembership(walletAddress);
-      setWalletState(walletAddress ? `Connected: ${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}` : 'Connected without address.');
+      setWalletState(
+        walletAddress
+          ? `Connected: ${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`
+          : 'Connected without address.',
+      );
     } catch (_err) {
       setWalletState('Wallet connection request was cancelled or failed.');
     }
   };
 
-  const membershipLabel = statusLabel(citizenRole, citizenPassport?.memberActive, committeeAssignments);
+  const membershipLabel = statusLabel(
+    citizenRole,
+    citizenPassport?.memberActive,
+    committeeAssignments,
+  );
 
   return (
     <div className="identity-page">
@@ -155,16 +183,22 @@ export default function CitizenPassportPage() {
           <div className="pill">Phase C1 · Citizen Passport + Wallet + Identity Lab</div>
           <h1>Citizen Passport</h1>
           <p>
-            The Citizen Passport is your identity layer for governance participation, wallet-linked reputation,
-            and future credential portability across the PVA civilization stack.
+            The Citizen Passport is your identity layer for governance participation, wallet-linked
+            reputation, and future credential portability across the PVA civilization stack.
           </p>
         </div>
         <div className="identity-hero__meta">
           <div className="identity-status">Status: {membershipLabel}</div>
           <div className="identity-cta-row">
-            <button type="button" className="button" onClick={handleConnectWallet}>Connect Wallet</button>
-            <a className="button ghost" href="#governance">View Governance Record</a>
-            <a className="button secondary" href="#economic">View Economic Record</a>
+            <button type="button" className="button" onClick={handleConnectWallet}>
+              Connect Wallet
+            </button>
+            <a className="button ghost" href="#governance">
+              View Governance Record
+            </a>
+            <a className="button secondary" href="#economic">
+              View Economic Record
+            </a>
           </div>
           <p className="identity-wallet-note">{walletState}</p>
         </div>
@@ -173,13 +207,38 @@ export default function CitizenPassportPage() {
       <section id="identity" className="section-card identity-grid identity-overview">
         <h2>Identity Overview</h2>
         <div className="identity-metric-grid">
-          <article className="identity-metric"><h3>Membership</h3><p>{citizenPassport?.memberActive ? 'Active Citizen Passport' : 'Visitor'}</p></article>
-          <article className="identity-metric"><h3>Wallet</h3><p>{citizenPassport?.walletAddress ? `${citizenPassport.walletAddress.slice(0, 6)}...${citizenPassport.walletAddress.slice(-4)}` : 'Not connected'}</p></article>
-          <article className="identity-metric"><h3>Governance participation</h3><p>{computed.governanceParticipation}</p></article>
-          <article className="identity-metric"><h3>Committee membership</h3><p>{committeeAssignments?.length || 0} assignments</p></article>
-          <article className="identity-metric"><h3>Proposal participation</h3><p>{computed.proposalParticipation}</p></article>
-          <article className="identity-metric"><h3>Votes cast</h3><p>{Number(citizen?.votes || 0)}</p></article>
-          <article className="identity-metric"><h3>Contribution score</h3><p>{Number(citizen?.reputation || 0)} / 100</p></article>
+          <article className="identity-metric">
+            <h3>Membership</h3>
+            <p>{citizenPassport?.memberActive ? 'Active Citizen Passport' : 'Visitor'}</p>
+          </article>
+          <article className="identity-metric">
+            <h3>Wallet</h3>
+            <p>
+              {citizenPassport?.walletAddress
+                ? `${citizenPassport.walletAddress.slice(0, 6)}...${citizenPassport.walletAddress.slice(-4)}`
+                : 'Not connected'}
+            </p>
+          </article>
+          <article className="identity-metric">
+            <h3>Governance participation</h3>
+            <p>{computed.governanceParticipation}</p>
+          </article>
+          <article className="identity-metric">
+            <h3>Committee membership</h3>
+            <p>{committeeAssignments?.length || 0} assignments</p>
+          </article>
+          <article className="identity-metric">
+            <h3>Proposal participation</h3>
+            <p>{computed.proposalParticipation}</p>
+          </article>
+          <article className="identity-metric">
+            <h3>Votes cast</h3>
+            <p>{Number(citizen?.votes || 0)}</p>
+          </article>
+          <article className="identity-metric">
+            <h3>Contribution score</h3>
+            <p>{Number(citizen?.reputation || 0)} / 100</p>
+          </article>
         </div>
       </section>
 
@@ -187,7 +246,10 @@ export default function CitizenPassportPage() {
         <h2>Credential Roadmap</h2>
         <div className="identity-roadmap-grid">
           {CREDENTIAL_STEPS.map((step, idx) => (
-            <article key={step.title} className={`identity-roadmap-step ${step.live ? 'is-live' : 'is-planned'}`}>
+            <article
+              key={step.title}
+              className={`identity-roadmap-step ${step.live ? 'is-live' : 'is-planned'}`}
+            >
               <div className="identity-roadmap-index">Step {idx + 1}</div>
               <h3>{step.title}</h3>
               <p className="identity-roadmap-state">{step.state}</p>
@@ -201,10 +263,17 @@ export default function CitizenPassportPage() {
         <h2>Role System</h2>
         <div className="identity-role-grid">
           {ROLE_CARDS.map((role) => (
-            <article key={role.key} className={`identity-role-card ${role.title === membershipLabel ? 'is-active' : ''}`}>
+            <article
+              key={role.key}
+              className={`identity-role-card ${role.title === membershipLabel ? 'is-active' : ''}`}
+            >
               <h3>{role.title}</h3>
-              <p><strong>Powers:</strong> {role.powers}</p>
-              <p><strong>Limits:</strong> {role.limits}</p>
+              <p>
+                <strong>Powers:</strong> {role.powers}
+              </p>
+              <p>
+                <strong>Limits:</strong> {role.limits}
+              </p>
             </article>
           ))}
         </div>
@@ -215,14 +284,24 @@ export default function CitizenPassportPage() {
         <div className="identity-columns">
           <article className="identity-panel">
             <h3>Connection state</h3>
-            <p>{citizenPassport?.walletAddress ? 'Wallet linked to passport context.' : 'Wallet not yet linked to passport context.'}</p>
-            <p className="identity-muted">Current: {citizenPassport?.walletAddress || 'No bound wallet address'}</p>
-            <button type="button" className="button" onClick={handleConnectWallet}>Connect Wallet</button>
+            <p>
+              {citizenPassport?.walletAddress
+                ? 'Wallet linked to passport context.'
+                : 'Wallet not yet linked to passport context.'}
+            </p>
+            <p className="identity-muted">
+              Current: {citizenPassport?.walletAddress || 'No bound wallet address'}
+            </p>
+            <button type="button" className="button" onClick={handleConnectWallet}>
+              Connect Wallet
+            </button>
           </article>
           <article className="identity-panel">
             <h3>Supported wallets</h3>
             <ul>
-              {SUPPORTED_WALLETS.map((item) => <li key={item}>{item}</li>)}
+              {SUPPORTED_WALLETS.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
             </ul>
             <h3>Wallet actions</h3>
             <ul>
@@ -234,9 +313,13 @@ export default function CitizenPassportPage() {
           <article className="identity-panel">
             <h3>Future support</h3>
             <ul>
-              {FUTURE_WALLETS.map((item) => <li key={item}>{item}</li>)}
+              {FUTURE_WALLETS.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
             </ul>
-            <p className="identity-muted">Planned features are roadmap items and are not yet live on-chain.</p>
+            <p className="identity-muted">
+              Planned features are roadmap items and are not yet live on-chain.
+            </p>
           </article>
         </div>
       </section>
@@ -244,46 +327,116 @@ export default function CitizenPassportPage() {
       <section id="governance" className="section-card identity-grid">
         <h2>Governance Record</h2>
         <div className="identity-metric-grid">
-          <article className="identity-metric"><h3>Proposals created</h3><p>{computed.proposalsCreated}</p></article>
-          <article className="identity-metric"><h3>Supports cast</h3><p>{computed.supportsCast}</p></article>
-          <article className="identity-metric"><h3>Comments made</h3><p>{computed.commentsMade}</p></article>
-          <article className="identity-metric"><h3>Conference participation</h3><p>{computed.conferenceParticipation}</p></article>
-          <article className="identity-metric"><h3>Official responses visible</h3><p>{computed.officialResponsesVisible}</p></article>
+          <article className="identity-metric">
+            <h3>Proposals created</h3>
+            <p>{computed.proposalsCreated}</p>
+          </article>
+          <article className="identity-metric">
+            <h3>Supports cast</h3>
+            <p>{computed.supportsCast}</p>
+          </article>
+          <article className="identity-metric">
+            <h3>Comments made</h3>
+            <p>{computed.commentsMade}</p>
+          </article>
+          <article className="identity-metric">
+            <h3>Conference participation</h3>
+            <p>{computed.conferenceParticipation}</p>
+          </article>
+          <article className="identity-metric">
+            <h3>Official responses visible</h3>
+            <p>{computed.officialResponsesVisible}</p>
+          </article>
         </div>
         <div className="identity-inline-links">
-          <Link className="button ghost" to="/conference">Open Popular Conference</Link>
-          <Link className="button secondary" to="/governance/conference">Open Governance Conference</Link>
+          <Link className="button ghost" to="/conference">
+            Open Popular Conference
+          </Link>
+          <Link className="button secondary" to="/governance/conference">
+            Open Governance Conference
+          </Link>
         </div>
       </section>
 
       <section id="economic" className="section-card identity-grid">
         <h2>Economic Record</h2>
         <div className="identity-metric-grid">
-          <article className="identity-metric"><h3>Wallet balance</h3><p>{Number(citizen?.tokens || 0)} PVA (live app record)</p></article>
-          <article className="identity-metric"><h3>Treasury participation</h3><p>{computed.conferenceParticipation} civic execution events</p></article>
-          <article className="identity-metric"><h3>Marketplace activity</h3><p>Live profile/order data exists in account dashboards</p></article>
-          <article className="identity-metric"><h3>Grants / labor / dues / exchange history</h3><p>Planned ledger view (roadmap)</p></article>
+          <article className="identity-metric">
+            <h3>Wallet balance</h3>
+            <p>{Number(citizen?.tokens || 0)} PVA (live app record)</p>
+          </article>
+          <article className="identity-metric">
+            <h3>Treasury participation</h3>
+            <p>{computed.conferenceParticipation} civic execution events</p>
+          </article>
+          <article className="identity-metric">
+            <h3>Marketplace activity</h3>
+            <p>Live profile/order data exists in account dashboards</p>
+          </article>
+          <article className="identity-metric">
+            <h3>Grants / labor / dues / exchange history</h3>
+            <p>Planned ledger view (roadmap)</p>
+          </article>
         </div>
-        <p className="identity-muted">Live now: app-level participation metrics and treasury snapshots. Planned: full standardized economic ledger timeline.</p>
+        <p className="identity-muted">
+          Live now: app-level participation metrics and treasury snapshots. Planned: full
+          standardized economic ledger timeline.
+        </p>
       </section>
 
       <section className="section-card identity-grid">
         <h2>Identity Architecture</h2>
         <div className="identity-arch-grid">
-          <article className="identity-panel"><h3>DID-ready identity</h3><p>Passport data model is structured to map into decentralized identifiers without replacing current app flows.</p></article>
-          <article className="identity-panel"><h3>VC-ready passport</h3><p>Role and participation records are positioned for verifiable credential issuance in later phases.</p></article>
-          <article className="identity-panel"><h3>WalletConnect-ready wallet layer</h3><p>Wallet center is prepared for multi-wallet session orchestration and mobile wallet interoperability.</p></article>
-          <article className="identity-panel"><h3>ERC-4337 smart-account-ready</h3><p>Future account abstraction support will enable safer delegated civic actions and recovery flows.</p></article>
+          <article className="identity-panel">
+            <h3>DID-ready identity</h3>
+            <p>
+              Passport data model is structured to map into decentralized identifiers without
+              replacing current app flows.
+            </p>
+          </article>
+          <article className="identity-panel">
+            <h3>VC-ready passport</h3>
+            <p>
+              Role and participation records are positioned for verifiable credential issuance in
+              later phases.
+            </p>
+          </article>
+          <article className="identity-panel">
+            <h3>WalletConnect-ready wallet layer</h3>
+            <p>
+              Wallet center is prepared for multi-wallet session orchestration and mobile wallet
+              interoperability.
+            </p>
+          </article>
+          <article className="identity-panel">
+            <h3>ERC-4337 smart-account-ready</h3>
+            <p>
+              Future account abstraction support will enable safer delegated civic actions and
+              recovery flows.
+            </p>
+          </article>
         </div>
       </section>
 
       <section className="section-card identity-grid">
         <h2>Civilization Linkage</h2>
         <div className="identity-linkage">
-          <Link to="/conference" className="identity-linkage-item"><h3>Popular Conference</h3><p>Identity authorizes civic voice and accountability.</p></Link>
-          <Link to="/marketplace" className="identity-linkage-item"><h3>Marketplace / Economy</h3><p>Identity anchors trust in exchange and contribution.</p></Link>
-          <Link to="/library" className="identity-linkage-item"><h3>Learning / Library</h3><p>Identity tracks participation in collective knowledge.</p></Link>
-          <Link to="/civilization-library" className="identity-linkage-item"><h3>Culture & Memory</h3><p>Identity links citizens to long-term civilizational memory.</p></Link>
+          <Link to="/conference" className="identity-linkage-item">
+            <h3>Popular Conference</h3>
+            <p>Identity authorizes civic voice and accountability.</p>
+          </Link>
+          <Link to="/marketplace" className="identity-linkage-item">
+            <h3>Marketplace / Economy</h3>
+            <p>Identity anchors trust in exchange and contribution.</p>
+          </Link>
+          <Link to="/library" className="identity-linkage-item">
+            <h3>Learning / Library</h3>
+            <p>Identity tracks participation in collective knowledge.</p>
+          </Link>
+          <Link to="/civilization-library" className="identity-linkage-item">
+            <h3>Culture & Memory</h3>
+            <p>Identity links citizens to long-term civilizational memory.</p>
+          </Link>
         </div>
       </section>
 

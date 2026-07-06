@@ -101,9 +101,7 @@ export default function AttributionTab() {
         <div className="metric-card">
           <div className="metric-label">Total Orders</div>
           <div className="metric-value">{summaryData.totalOrders || 0}</div>
-          <div className="metric-detail">
-            {summaryData.paidOrders || 0} paid
-          </div>
+          <div className="metric-detail">{summaryData.paidOrders || 0} paid</div>
         </div>
 
         <div className="metric-card">
@@ -119,10 +117,7 @@ export default function AttributionTab() {
           <div className="metric-value">{summaryData.attributedOrders || 0}</div>
           <div className="metric-detail">
             {summaryData.totalOrders > 0
-              ? (
-                  ((summaryData.attributedOrders || 0) / summaryData.totalOrders) *
-                  100
-                ).toFixed(1)
+              ? (((summaryData.attributedOrders || 0) / summaryData.totalOrders) * 100).toFixed(1)
               : 0}
             %
           </div>
@@ -145,9 +140,7 @@ export default function AttributionTab() {
             {topCreators.map((creator) => (
               <div key={creator._id} className="top-creator-card">
                 <div className="creator-handle">{creator._id}</div>
-                <div className="creator-stat">
-                  {creator.ordersCount} orders
-                </div>
+                <div className="creator-stat">{creator.ordersCount} orders</div>
                 <div className="creator-commission">
                   ${(creator.commissionsCents / 100).toFixed(2)}
                 </div>
@@ -181,13 +174,9 @@ export default function AttributionTab() {
                       onClick={() => handleSelectCreator(creator.creatorHandle)}
                       style={{ cursor: 'pointer' }}
                     >
-                      <td className="creator-handle-cell">
-                        {creator.creatorHandle}
-                      </td>
+                      <td className="creator-handle-cell">{creator.creatorHandle}</td>
                       <td>{creator.ordersCount}</td>
-                      <td>
-                        {(creator.conversionRate * 100).toFixed(1)}%
-                      </td>
+                      <td>{(creator.conversionRate * 100).toFixed(1)}%</td>
                       <td>${(creator.totalRevenuesCents / 100).toFixed(2)}</td>
                       <td className="commission-cell">
                         ${(creator.totalCommissionsCents / 100).toFixed(2)}
@@ -199,22 +188,16 @@ export default function AttributionTab() {
                         <td colSpan="6">
                           <div className="creator-detail-panel">
                             <h4>Recent Orders from {creator.creatorHandle}</h4>
-                            {creatorDetail.recentOrders &&
-                              creatorDetail.recentOrders.length > 0 ? (
+                            {creatorDetail.recentOrders && creatorDetail.recentOrders.length > 0 ? (
                               <div className="recent-orders">
                                 {creatorDetail.recentOrders.map((order) => (
-                                  <div
-                                    key={order._id}
-                                    className="recent-order-item"
-                                  >
+                                  <div key={order._id} className="recent-order-item">
                                     <div className="order-item-name">
                                       {order.itemSnapshot?.name || 'Unknown Item'}
                                     </div>
                                     <div className="order-item-details">
                                       {order.paymentStatus === 'paid' ? (
-                                        <span className="status-paid">
-                                          ✓ Paid
-                                        </span>
+                                        <span className="status-paid">✓ Paid</span>
                                       ) : (
                                         <span className="status-pending">
                                           ⏳ {order.paymentStatus}
@@ -225,15 +208,10 @@ export default function AttributionTab() {
                                       </span>
                                       <span className="commission">
                                         Commission: $
-                                        {(
-                                          order.attribution
-                                            .commissionAmountCents / 100
-                                        ).toFixed(2)}
+                                        {(order.attribution.commissionAmountCents / 100).toFixed(2)}
                                       </span>
                                       <span className="order-date">
-                                        {new Date(
-                                          order.createdAt
-                                        ).toLocaleDateString()}
+                                        {new Date(order.createdAt).toLocaleDateString()}
                                       </span>
                                     </div>
                                   </div>
@@ -261,22 +239,19 @@ export default function AttributionTab() {
         <h3>📊 How Creator Attribution Works</h3>
         <ul>
           <li>
-            <strong>UTM Tracking:</strong> Use links like
-            {' '}
-            <code>
-              ?utm_source=creator_handle&utm_medium=referral&utm_campaign=name
-            </code>
+            <strong>UTM Tracking:</strong> Use links like{' '}
+            <code>?utm_source=creator_handle&utm_medium=referral&utm_campaign=name</code>
           </li>
           <li>
             <strong>Referral Codes:</strong> Generate unique codes for each creator
           </li>
           <li>
-            <strong>Commission Calculation:</strong> Automatic percentage splits based on
-            order total
+            <strong>Commission Calculation:</strong> Automatic percentage splits based on order
+            total
           </li>
           <li>
-            <strong>Payout Ready:</strong> Track commission balances per creator for
-            monthly settlements
+            <strong>Payout Ready:</strong> Track commission balances per creator for monthly
+            settlements
           </li>
         </ul>
       </div>

@@ -42,25 +42,18 @@ function isLoopbackOrigin(origin) {
 }
 
 function getAllowedOrigins() {
-  const base = [
-    'https://pvabazaar.org',
-    'https://www.pvabazaar.org',
-  ];
+  const base = ['https://pvabazaar.org', 'https://www.pvabazaar.org'];
 
-  const originEnv = [
-    process.env.ALLOWED_ORIGIN,
-    process.env.CORS_ORIGIN,
-    process.env.FRONTEND_URL,
-  ]
+  const originEnv = [process.env.ALLOWED_ORIGIN, process.env.CORS_ORIGIN, process.env.FRONTEND_URL]
     .filter(Boolean)
     .join(',');
 
   if (originEnv) {
     const extras = originEnv
       .split(',')
-      .map(o => o.trim())
+      .map((o) => o.trim())
       .filter(Boolean)
-      .filter(o => !(CLOUD_ONLY_MODE && isLoopbackOrigin(o)));
+      .filter((o) => !(CLOUD_ONLY_MODE && isLoopbackOrigin(o)));
     base.push(...extras);
   }
 
@@ -109,9 +102,11 @@ const app = express();
 app.set('trust proxy', 1);
 
 // Security headers (Helmet)
-app.use(helmet({
-  contentSecurityPolicy: false, // Will tighten in Phase 3.13.2
-}));
+app.use(
+  helmet({
+    contentSecurityPolicy: false, // Will tighten in Phase 3.13.2
+  }),
+);
 
 // --- UNCONDITIONAL CORS (runs before everything, even on errors) ---
 const allowedOrigins = new Set(getAllowedOrigins());
@@ -123,39 +118,49 @@ function isAllowedDevOrigin(origin = '') {
 
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  
+
   // Always set Vary header for cache correctness
   res.setHeader('Vary', 'Origin');
-  
+
   // Set CORS headers if origin is allowed (never use * with credentials)
   if (allowedOrigins.has(origin) || isAllowedDevOrigin(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Access-Control-Allow-Credentials', 'true');
   }
-  
+
   // Always allow these methods and headers
   res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Admin-Code,Origin,X-Requested-With,Accept');
-  
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'Content-Type,Authorization,X-Admin-Code,Origin,X-Requested-With,Accept',
+  );
+
   // Handle OPTIONS preflight requests
   if (req.method === 'OPTIONS') {
     return res.status(204).end();
   }
-  
+
   next();
 });
 
 // Body size limits (before routes)
-app.use(express.json({
-  limit: '1mb',
-  verify: (req, _res, buf) => {
-    req.rawBody = Buffer.from(buf);
-  },
-}));
+app.use(
+  express.json({
+    limit: '1mb',
+    verify: (req, _res, buf) => {
+      req.rawBody = Buffer.from(buf);
+    },
+  }),
+);
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
 // Rate limiting
-const { generalLimiter, authLimiter, checkoutLimiter, webhookLimiter } = require('../middleware/rateLimit');
+const {
+  generalLimiter,
+  authLimiter,
+  checkoutLimiter,
+  webhookLimiter,
+} = require('../middleware/rateLimit');
 app.use('/', generalLimiter);
 
 // --- Sentry Monitoring ---
@@ -186,7 +191,7 @@ if (process.env.SENTRY_DSN) {
       if (event.request) scrub(event.request.data);
       if (event.user) scrub(event.user);
       if (event.extra) scrub(event.extra);
-      if (event.breadcrumbs) event.breadcrumbs.forEach(b => scrub(b));
+      if (event.breadcrumbs) event.breadcrumbs.forEach((b) => scrub(b));
       return event;
     },
   });
@@ -199,7 +204,7 @@ const stripeWebhookPaths = new Set(['/webhooks/stripe', '/api/webhooks/stripe'])
 const twitchWebhookPaths = new Set(['/webhooks/twitch', '/api/webhooks/twitch']);
 app.use((req, res, next) => {
   if (stripeWebhookPaths.has(req.originalUrl) || twitchWebhookPaths.has(req.originalUrl)) {
-    express.raw({ type: "application/json" })(req, res, next);
+    express.raw({ type: 'application/json' })(req, res, next);
   } else {
     next();
   }
@@ -217,9 +222,35 @@ app.use('/api/webhooks', webhookLimiter);
 app.use((req, res, next) => {
   const apiNotReady = process.env.API_READY === 'false';
   const isProd = process.env.NODE_ENV === 'production';
-  const allowlist = ['/health', '/api/health', '/dev/token', '/api/dev/token', '/ping', '/api/ping', '/version', '/api/version', '/express-ping', '/api/express-ping', '/openclaw', '/api/openclaw', '/decentralized/status', '/api/decentralized/status', '/decentralized/ready', '/api/decentralized/ready', '/decentralized/report', '/api/decentralized/report', '/blockchain/health', '/api/blockchain/health', '/api/openapi.json', '/api/docs', '/api/auth'];
-  if (apiNotReady && isProd && !allowlist.some(p => req.path.startsWith(p))) {
-    return res.status(503).json({ ok: false, message: 'Service not configured. Missing environment secrets.' });
+  const allowlist = [
+    '/health',
+    '/api/health',
+    '/dev/token',
+    '/api/dev/token',
+    '/ping',
+    '/api/ping',
+    '/version',
+    '/api/version',
+    '/express-ping',
+    '/api/express-ping',
+    '/openclaw',
+    '/api/openclaw',
+    '/decentralized/status',
+    '/api/decentralized/status',
+    '/decentralized/ready',
+    '/api/decentralized/ready',
+    '/decentralized/report',
+    '/api/decentralized/report',
+    '/blockchain/health',
+    '/api/blockchain/health',
+    '/api/openapi.json',
+    '/api/docs',
+    '/api/auth',
+  ];
+  if (apiNotReady && isProd && !allowlist.some((p) => req.path.startsWith(p))) {
+    return res
+      .status(503)
+      .json({ ok: false, message: 'Service not configured. Missing environment secrets.' });
   }
   next();
 });
@@ -265,9 +296,34 @@ async function connectToDatabase() {
 // Middleware: Ensure DB connection for routes that need it
 app.use(async (req, res, next) => {
   // Skip DB connection for health/ping endpoints and explicit safe endpoints
-  const skipPaths = ['/health', '/api/health', '/ping', '/api/ping', '/version', '/api/version', '/express-ping', '/api/express-ping', '/dev/token', '/api/dev/token', '/webhooks/stripe', '/api/webhooks/stripe', '/openclaw', '/api/openclaw', '/decentralized/status', '/api/decentralized/status', '/decentralized/ready', '/api/decentralized/ready', '/decentralized/report', '/api/decentralized/report', '/blockchain/health', '/api/blockchain/health', '/api/openapi.json', '/api/docs'];
-  const skipPath = skipPaths.some(p => req.path === p || req.path.startsWith(p));
-  
+  const skipPaths = [
+    '/health',
+    '/api/health',
+    '/ping',
+    '/api/ping',
+    '/version',
+    '/api/version',
+    '/express-ping',
+    '/api/express-ping',
+    '/dev/token',
+    '/api/dev/token',
+    '/webhooks/stripe',
+    '/api/webhooks/stripe',
+    '/openclaw',
+    '/api/openclaw',
+    '/decentralized/status',
+    '/api/decentralized/status',
+    '/decentralized/ready',
+    '/api/decentralized/ready',
+    '/decentralized/report',
+    '/api/decentralized/report',
+    '/blockchain/health',
+    '/api/blockchain/health',
+    '/api/openapi.json',
+    '/api/docs',
+  ];
+  const skipPath = skipPaths.some((p) => req.path === p || req.path.startsWith(p));
+
   if (skipPath) {
     return next();
   }
@@ -378,7 +434,9 @@ app.use('/api/health', healthRoutes);
 app.get('/api/ping', (req, res) => {
   const build = getBuildInfo();
   res.setHeader('X-App-Version', build.shortSha);
-  res.status(200).json({ ok: true, message: 'pong', timestamp: new Date().toISOString(), ...build });
+  res
+    .status(200)
+    .json({ ok: true, message: 'pong', timestamp: new Date().toISOString(), ...build });
 });
 
 app.get('/api/version', (req, res) => {
@@ -397,7 +455,9 @@ app.get('/api/openapi.json', (req, res) => {
     res.status(200).type('application/json').send(body);
   } catch (err) {
     console.error('OpenAPI spec error:', err?.message || err);
-    res.status(500).json({ ok: false, error: 'OpenAPI spec unavailable', detail: String(err?.message || err) });
+    res
+      .status(500)
+      .json({ ok: false, error: 'OpenAPI spec unavailable', detail: String(err?.message || err) });
   }
 });
 
@@ -620,7 +680,9 @@ app.get('/api/governance/proposals/:proposalId', async (req, res) => {
 
 app.get('/api/governance/proposals/:proposalId/votes/summary', async (req, res) => {
   try {
-    const item = await GovernanceProposal.findById(req.params.proposalId).select('_id outcome status');
+    const item = await GovernanceProposal.findById(req.params.proposalId).select(
+      '_id outcome status',
+    );
     if (!item) {
       return res.status(404).json({ ok: false, error: 'Proposal not found' });
     }
@@ -638,7 +700,14 @@ app.get('/api/governance/proposals/:proposalId/votes/summary', async (req, res) 
     }
 
     const totalVotes = voteCounts.yes + voteCounts.no + voteCounts.abstain;
-    res.json({ ok: true, proposalId: item._id, voteCounts, totalVotes, outcome: item.outcome, status: item.status });
+    res.json({
+      ok: true,
+      proposalId: item._id,
+      voteCounts,
+      totalVotes,
+      outcome: item.outcome,
+      status: item.status,
+    });
   } catch (error) {
     console.error('Error fetching governance vote summary:', error);
     res.status(500).json({ ok: false, error: 'Failed to fetch vote summary' });
@@ -789,12 +858,18 @@ app.post('/api/internal/worker-pulse', async (req, res) => {
 app.post('/api/voting/resolve-markets', async (req, res) => {
   try {
     // Verify Cron secret
-    if (process.env.CRON_SECRET && req.headers.authorization !== `Bearer ${process.env.CRON_SECRET}`) {
+    if (
+      process.env.CRON_SECRET &&
+      req.headers.authorization !== `Bearer ${process.env.CRON_SECRET}`
+    ) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
     // Only run if voting is enabled
-    if (!process.env.VOTING_RESOLUTION_ENABLED || process.env.VOTING_RESOLUTION_ENABLED === 'false') {
+    if (
+      !process.env.VOTING_RESOLUTION_ENABLED ||
+      process.env.VOTING_RESOLUTION_ENABLED === 'false'
+    ) {
       return res.json({ ok: true, message: 'Voting resolution disabled' });
     }
 
@@ -927,10 +1002,10 @@ app.get('/api/health', async (req, res) => {
   try {
     // Attempt to connect with timeout protection
     const connectPromise = connectToDatabase();
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Connection timeout')), 5000)
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Connection timeout')), 5000),
     );
-    
+
     await Promise.race([connectPromise, timeoutPromise]);
     mongoConnected = mongoose.connection.readyState === 1;
   } catch (err) {
@@ -942,9 +1017,8 @@ app.get('/api/health', async (req, res) => {
   const allowedOrigins = getAllowedOrigins();
   const mongoState = getMongoState();
   const authStoreState = await getAuthStoreState().catch(() => null);
-  const effectiveDatabaseMode = mongoState.mode === 'mock' && authStoreState?.mode === 'file'
-    ? 'file'
-    : mongoState.mode;
+  const effectiveDatabaseMode =
+    mongoState.mode === 'mock' && authStoreState?.mode === 'file' ? 'file' : mongoState.mode;
 
   // Always return 200 with status info
   res.json({
@@ -953,7 +1027,8 @@ app.get('/api/health', async (req, res) => {
     mongo: mongoConnected,
     databaseMode: effectiveDatabaseMode,
     databaseFallback: effectiveDatabaseMode === 'memory',
-    ready: process.env.API_READY !== 'false' && (mongoConnected || effectiveDatabaseMode === 'file'),
+    ready:
+      process.env.API_READY !== 'false' && (mongoConnected || effectiveDatabaseMode === 'file'),
     nodeEnv: process.env.NODE_ENV || 'development',
     version: build.version,
     sha: build.sha,
@@ -985,7 +1060,7 @@ app.use((err, req, res, next) => {
 // 404 handler
 app.use((req, res) => {
   // CORS headers already set by middleware above
-  
+
   res.status(404).json({
     ok: false,
     message: 'API endpoint not found',
@@ -1010,7 +1085,12 @@ async function autoSeed() {
     console.log('🌱 Seeding dev database...');
     let admin = await User.findOne({ email: 'admin@pvabazaar.org' });
     if (!admin) {
-      admin = new User({ name: 'PVA Admin', email: 'admin@pvabazaar.org', password: 'admin123', role: 'admin' });
+      admin = new User({
+        name: 'PVA Admin',
+        email: 'admin@pvabazaar.org',
+        password: 'admin123',
+        role: 'admin',
+      });
       await admin.save();
       console.log('✅ Admin user created: admin@pvabazaar.org / admin123');
     }

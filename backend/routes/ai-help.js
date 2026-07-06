@@ -105,18 +105,24 @@ router.get('/guides/:topic', async (req, res) => {
               'Do not underprice dramatically unless running a promotion. Do not price based on wishful thinking. Use data-driven decisions.',
           },
         ],
-        tools: ['Fair Price Calculator', 'Market Intelligence Dashboard', 'Competitor Price Tracker'],
+        tools: [
+          'Fair Price Calculator',
+          'Market Intelligence Dashboard',
+          'Competitor Price Tracker',
+        ],
       },
       registration: {
         title: 'Registration & Account Setup',
         sections: [
           {
             heading: 'Create Your Account',
-            content: 'Sign up with your email, verify ownership, and complete KYC verification for seller privileges.',
+            content:
+              'Sign up with your email, verify ownership, and complete KYC verification for seller privileges.',
           },
           {
             heading: 'Setting Up Your Shop',
-            content: 'Create a shop storefront with branding (logo, banner, colors), shop description, and policies (shipping, returns).',
+            content:
+              'Create a shop storefront with branding (logo, banner, colors), shop description, and policies (shipping, returns).',
           },
           {
             heading: 'Payment Methods',
@@ -131,15 +137,18 @@ router.get('/guides/:topic', async (req, res) => {
         sections: [
           {
             heading: 'Choose a Fulfillment Center',
-            content: 'Select fulfillment centers by location. We recommend the closest center to your customers for faster delivery.',
+            content:
+              'Select fulfillment centers by location. We recommend the closest center to your customers for faster delivery.',
           },
           {
             heading: 'Shipping Methods',
-            content: 'Offer multiple shipping options (standard, express, overnight). Get rate quotes from multiple carriers.',
+            content:
+              'Offer multiple shipping options (standard, express, overnight). Get rate quotes from multiple carriers.',
           },
           {
             heading: 'International Shipping',
-            content: 'For global sales, use our international fulfillment network. We handle customs, duties, and local delivery partners.',
+            content:
+              'For global sales, use our international fulfillment network. We handle customs, duties, and local delivery partners.',
           },
         ],
         tools: ['Fulfillment Center Locator', 'Shipping Rate Calculator', 'Return Label Generator'],
@@ -331,7 +340,7 @@ router.get('/performance-insights', authenticateToken, async (req, res) => {
       insights.push({
         category: 'Traffic',
         priority: 'medium',
-        insight: `Only ${(analytics.checkoutStarts / analytics.pageViews * 100).toFixed(1)}% of visitors view checkout. Improve: product descriptions, add reviews, reduce checkout friction.`,
+        insight: `Only ${((analytics.checkoutStarts / analytics.pageViews) * 100).toFixed(1)}% of visitors view checkout. Improve: product descriptions, add reviews, reduce checkout friction.`,
       });
     }
 
@@ -394,7 +403,7 @@ router.post('/rate-session', authenticateToken, async (req, res) => {
         satisfactionRating: rating,
         satisfactionComment: comment,
       },
-      { new: true }
+      { new: true },
     );
 
     res.json({ success: true, session });

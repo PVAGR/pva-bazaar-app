@@ -20,9 +20,11 @@ NEXTAUTH_URL=https://pvabazaar-livestream-o3okjf15o-pvagrs-projects.vercel.app
 ## IMMEDIATE ACTION (20 minutes)
 
 ### 1️⃣ Add Environment Variables
+
 **Dashboard**: https://vercel.com/pvagrs-projects/pvabazaar-livestream/settings/environment-variables
 
 Click **"Add New"** for each:
+
 - `NEXTAUTH_URL` = `https://pvabazaar-livestream-o3okjf15o-pvagrs-projects.vercel.app`
 - `NEXTAUTH_SECRET` = `yIklmeTFv8pLDoY6Qu7SEbRzK5nBCgqJZjXtW2cUdr3MGs4OxHPw1Af0haN9`
 - `NEXT_PUBLIC_API_URL` = `https://pva-backend-h6zkzdmjy-pvagrs-projects.vercel.app`
@@ -30,6 +32,7 @@ Click **"Add New"** for each:
 - `NODE_ENV` = `production` (Production only)
 
 **For MONGODB_URI**:
+
 1. Go to: https://vercel.com/pvagrs-projects/pva-backend-api/settings/environment-variables
 2. Copy the MONGODB_URI value
 3. Add to livestream with same value
@@ -39,12 +42,15 @@ Click **"Add New"** for each:
 ### 2️⃣ Remove Deployment Protection (2 min)
 
 **Backend**: https://vercel.com/pvagrs-projects/pva-backend-api/settings/deployment-protection
+
 - Set to **"None"** or **"Only Preview Deployments"** ✅
 
 **Livestream**: https://vercel.com/pvagrs-projects/pvabazaar-livestream/settings/deployment-protection
+
 - Set to **"None"** or **"Only Preview Deployments"** ✅
 
 ### 3️⃣ Redeploy (2 min)
+
 ```powershell
 cd pvabazaar-livestream
 vercel --prod
@@ -54,17 +60,18 @@ vercel --prod
 
 ## Deployment Status
 
-| Component | URL | Status |
-|-----------|-----|--------|
-| 🏠 Frontend | https://pvabazaar.org | ✅ Live |
-| 🔧 Backend API | https://pva-backend-h6zkzdmjy-pvagrs-projects.vercel.app | ✅ Live |
-| 📡 Livestream | https://pvabazaar-livestream-o3okjf15o-pvagrs-projects.vercel.app | 🟡 Ready (needs config) |
+| Component      | URL                                                               | Status                  |
+| -------------- | ----------------------------------------------------------------- | ----------------------- |
+| 🏠 Frontend    | https://pvabazaar.org                                             | ✅ Live                 |
+| 🔧 Backend API | https://pva-backend-h6zkzdmjy-pvagrs-projects.vercel.app          | ✅ Live                 |
+| 📡 Livestream  | https://pvabazaar-livestream-o3okjf15o-pvagrs-projects.vercel.app | 🟡 Ready (needs config) |
 
 ---
 
 ## What's Deployed
 
 ✅ **Complete Next.js 16 Livestream Platform**
+
 - Self-sovereign identity (DID support)
 - Journal entries with cryptographic signing
 - Live streaming management
@@ -72,12 +79,14 @@ vercel --prod
 - IPFS/Pinata integration
 
 ✅ **Express.js Backend API**
+
 - RESTful endpoints
 - MongoDB connection
 - CORS configured
 - Blockchain integration ready
 
 ✅ **React Frontend (GitHub Pages)**
+
 - Auto-deploys on git push
 - Fully functional marketplace
 - Connected to backend

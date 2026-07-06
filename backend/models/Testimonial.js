@@ -55,7 +55,14 @@ const testimonialSchema = new mongoose.Schema({
   tags: [String], // e.g., "quality", "communication", "delivery", "value"
   category: {
     type: String,
-    enum: ['general', 'product_quality', 'customer_service', 'shipping', 'value_for_money', 'craftsmanship'],
+    enum: [
+      'general',
+      'product_quality',
+      'customer_service',
+      'shipping',
+      'value_for_money',
+      'craftsmanship',
+    ],
     default: 'general',
   },
 

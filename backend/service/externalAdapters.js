@@ -1,7 +1,13 @@
 const axios = require('axios');
 
 class BaseMarketplaceAdapter {
-  constructor({ name, webhookUrl = '', webhookToken = '', pollWebhookUrl = '', pollWebhookToken = '' }) {
+  constructor({
+    name,
+    webhookUrl = '',
+    webhookToken = '',
+    pollWebhookUrl = '',
+    pollWebhookToken = '',
+  }) {
     this.name = name;
     this.webhookUrl = webhookUrl;
     this.webhookToken = webhookToken;
@@ -12,7 +18,9 @@ class BaseMarketplaceAdapter {
   normalizeSaleEvent(payload = {}) {
     return {
       channel: this.name,
-      externalSaleId: String(payload.externalSaleId || payload.orderId || payload.transactionId || ''),
+      externalSaleId: String(
+        payload.externalSaleId || payload.orderId || payload.transactionId || '',
+      ),
       externalListingId: String(payload.externalListingId || payload.listingId || ''),
       itemId: String(payload.itemId || payload.sku || payload.slug || ''),
       amountCents: Number(payload.amountCents || payload.totalCents || 0),
@@ -20,7 +28,10 @@ class BaseMarketplaceAdapter {
       buyerEmail: String(payload.buyerEmail || ''),
       buyerWallet: String(payload.buyerWallet || ''),
       paymentMethod: String(payload.paymentMethod || 'card').toLowerCase(),
-      idempotencyKey: String(payload.idempotencyKey || `${this.name}:${payload.externalSaleId || payload.orderId || payload.transactionId || ''}`),
+      idempotencyKey: String(
+        payload.idempotencyKey ||
+          `${this.name}:${payload.externalSaleId || payload.orderId || payload.transactionId || ''}`,
+      ),
       raw: payload,
     };
   }
@@ -34,7 +45,9 @@ class BaseMarketplaceAdapter {
       };
     }
 
-    const headers = this.webhookToken ? { Authorization: `Bearer ${this.webhookToken}` } : undefined;
+    const headers = this.webhookToken
+      ? { Authorization: `Bearer ${this.webhookToken}` }
+      : undefined;
 
     try {
       await axios.post(this.webhookUrl, payload, { timeout: 15000, headers });
@@ -61,7 +74,9 @@ class BaseMarketplaceAdapter {
       };
     }
 
-    const headers = this.pollWebhookToken ? { Authorization: `Bearer ${this.pollWebhookToken}` } : undefined;
+    const headers = this.pollWebhookToken
+      ? { Authorization: `Bearer ${this.pollWebhookToken}` }
+      : undefined;
 
     try {
       const response = await axios.post(this.pollWebhookUrl, payload, { timeout: 15000, headers });
@@ -100,7 +115,8 @@ class BaseMarketplaceAdapter {
       return {
         channel: this.name,
         status: 'error',
-        message: error?.response?.data?.message || error?.message || 'Polling connector request failed',
+        message:
+          error?.response?.data?.message || error?.message || 'Polling connector request failed',
       };
     }
   }
@@ -113,7 +129,8 @@ class EbayAdapter extends BaseMarketplaceAdapter {
       webhookUrl: process.env.EBAY_DELIST_WEBHOOK_URL || '',
       webhookToken: process.env.EBAY_DELIST_WEBHOOK_TOKEN || '',
       pollWebhookUrl: process.env.EBAY_POLL_WEBHOOK_URL || '',
-      pollWebhookToken: process.env.EBAY_POLL_WEBHOOK_TOKEN || process.env.EBAY_DELIST_WEBHOOK_TOKEN || '',
+      pollWebhookToken:
+        process.env.EBAY_POLL_WEBHOOK_TOKEN || process.env.EBAY_DELIST_WEBHOOK_TOKEN || '',
     });
   }
 }
@@ -125,7 +142,8 @@ class AmazonAdapter extends BaseMarketplaceAdapter {
       webhookUrl: process.env.AMAZON_DELIST_WEBHOOK_URL || '',
       webhookToken: process.env.AMAZON_DELIST_WEBHOOK_TOKEN || '',
       pollWebhookUrl: process.env.AMAZON_POLL_WEBHOOK_URL || '',
-      pollWebhookToken: process.env.AMAZON_POLL_WEBHOOK_TOKEN || process.env.AMAZON_DELIST_WEBHOOK_TOKEN || '',
+      pollWebhookToken:
+        process.env.AMAZON_POLL_WEBHOOK_TOKEN || process.env.AMAZON_DELIST_WEBHOOK_TOKEN || '',
     });
   }
 }
@@ -137,7 +155,8 @@ class EtsyAdapter extends BaseMarketplaceAdapter {
       webhookUrl: process.env.ETSY_DELIST_WEBHOOK_URL || '',
       webhookToken: process.env.ETSY_DELIST_WEBHOOK_TOKEN || '',
       pollWebhookUrl: process.env.ETSY_POLL_WEBHOOK_URL || '',
-      pollWebhookToken: process.env.ETSY_POLL_WEBHOOK_TOKEN || process.env.ETSY_DELIST_WEBHOOK_TOKEN || '',
+      pollWebhookToken:
+        process.env.ETSY_POLL_WEBHOOK_TOKEN || process.env.ETSY_DELIST_WEBHOOK_TOKEN || '',
     });
   }
 }
@@ -149,7 +168,8 @@ class FacebookAdapter extends BaseMarketplaceAdapter {
       webhookUrl: process.env.FACEBOOK_DELIST_WEBHOOK_URL || '',
       webhookToken: process.env.FACEBOOK_DELIST_WEBHOOK_TOKEN || '',
       pollWebhookUrl: process.env.FACEBOOK_POLL_WEBHOOK_URL || '',
-      pollWebhookToken: process.env.FACEBOOK_POLL_WEBHOOK_TOKEN || process.env.FACEBOOK_DELIST_WEBHOOK_TOKEN || '',
+      pollWebhookToken:
+        process.env.FACEBOOK_POLL_WEBHOOK_TOKEN || process.env.FACEBOOK_DELIST_WEBHOOK_TOKEN || '',
     });
   }
 }
@@ -161,7 +181,8 @@ class ShopifyAdapter extends BaseMarketplaceAdapter {
       webhookUrl: process.env.SHOPIFY_DELIST_WEBHOOK_URL || '',
       webhookToken: process.env.SHOPIFY_DELIST_WEBHOOK_TOKEN || '',
       pollWebhookUrl: process.env.SHOPIFY_POLL_WEBHOOK_URL || '',
-      pollWebhookToken: process.env.SHOPIFY_POLL_WEBHOOK_TOKEN || process.env.SHOPIFY_DELIST_WEBHOOK_TOKEN || '',
+      pollWebhookToken:
+        process.env.SHOPIFY_POLL_WEBHOOK_TOKEN || process.env.SHOPIFY_DELIST_WEBHOOK_TOKEN || '',
     });
   }
 }

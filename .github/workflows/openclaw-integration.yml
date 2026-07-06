@@ -2,9 +2,9 @@ name: OpenClaw Integration Test
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
   schedule:
     # Run daily at 6 AM UTC
     - cron: '0 6 * * *'
@@ -13,11 +13,11 @@ on:
 jobs:
   test-openclaw-integration:
     runs-on: ubuntu-latest
-    
+
     strategy:
       matrix:
         node-version: [20.x]
-    
+
     services:
       mongodb:
         image: mongo:7
@@ -28,23 +28,23 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
+
       - name: Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
           cache-dependency-path: backend/package-lock.json
-      
+
       - name: Install backend dependencies
         run: |
           cd backend
           npm ci || npm install --no-audit --no-fund
-      
+
       - name: Create test environment file
         run: |
           cd backend
@@ -53,7 +53,7 @@ jobs:
           MONGODB_URI=mongodb://localhost:27017/pvabazaar_test
           JWT_SECRET=test-secret-key-for-ci
           PORT=5000
-          
+
           # OpenClaw test configuration
           OPENCLAW_GATEWAY_URL=https://httpbin.org
           OPENCLAW_WEBHOOK_URL=https://httpbin.org/post
@@ -61,20 +61,20 @@ jobs:
           OPENCLAW_API_KEY=test-api-key
           OPENCLAW_BRIDGE_SECRET=test-bridge-secret
           EOF
-      
+
       - name: Syntax check OpenClaw routes
         run: |
           cd backend
           node --check routes/openclaw.js
           node --check routes/health.js
           node --check utils/openclaw-events.js
-      
+
       - name: Start backend server
         run: |
           cd backend
           npm run dev &
           echo $! > backend.pid
-          
+
           # Wait for server to start
           for i in {1..30}; do
             if curl -s http://localhost:5000/api/health > /dev/null; then
@@ -84,39 +84,39 @@ jobs:
             echo "Waiting for backend... ($i/30)"
             sleep 2
           done
-          
+
           echo "Backend failed to start"
           exit 1
-      
+
       - name: Test OpenClaw endpoints
         run: |
           ADMIN_TOKEN=$(node -e "console.log(require('jsonwebtoken').sign({role:'admin',email:'ci@pvabazaar.org'}, 'test-secret-key-for-ci', {expiresIn:'1h'}))")
 
           echo "Testing /api/health with OpenClaw integration..."
           curl -f http://localhost:5000/api/health | jq '.openclaw'
-          
+
           echo "Testing /api/openclaw/status..."
           curl -f http://localhost:5000/api/openclaw/status
-          
+
           echo "Testing /api/openclaw/watchdog-status..."
           curl -f http://localhost:5000/api/openclaw/watchdog-status
-          
+
           echo "Testing /api/openclaw/recent-events..."
           curl -f http://localhost:5000/api/openclaw/recent-events?limit=10
-          
+
           echo "Testing /api/openclaw/dispatch..."
           curl -f -X POST http://localhost:5000/api/openclaw/dispatch \
             -H "Authorization: Bearer $ADMIN_TOKEN" \
             -H "Content-Type: application/json" \
             -d '{"event":"test.ci","message":"Test from GitHub Actions","metadata":{"source":"github-actions"}}'
-      
+
       - name: Run smoke tests
         run: |
           cd backend
           node scripts/smoke-openclaw.js
         env:
           BACKEND_BASE_URL: http://localhost:5000
-      
+
       - name: Stop backend server
         if: always()
         run: |
@@ -124,7 +124,7 @@ jobs:
             kill $(cat backend/backend.pid) || true
             rm backend/backend.pid
           fi
-      
+
       - name: Upload logs on failure
         if: failure()
         uses: actions/upload-artifact@v4
@@ -137,23 +137,23 @@ jobs:
 
   test-frontend-build:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20.x'
           cache: 'npm'
           cache-dependency-path: package-lock.json
-      
+
       - name: Install frontend dependencies
         run: |
           cd Frontend
           npm ci || npm install --no-audit --no-fund
-      
+
       - name: Build frontend with OpenClaw UI
         run: |
           cd Frontend
@@ -161,11 +161,11 @@ jobs:
         env:
           VITE_API_URL: https://pva-bazaar-app-1.onrender.com/api
           VITE_STATUS_STALE_MS: 120000
-      
+
       - name: Check for OpenClaw components in build
         run: |
           cd Frontend/dist
-          
+
           # Check if AdminPage includes OpenClaw integration
           if grep -ri "openclaw" . > /dev/null; then
             echo "✓ OpenClaw integration found in build"
@@ -180,16 +180,16 @@ jobs:
     # Best-effort Windows leg; keep manual to avoid false negatives on hosted runners.
     if: github.event_name == 'workflow_dispatch'
     continue-on-error: true
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20.x'
-      
+
       - name: Install backend dependencies
         shell: pwsh
         run: |
@@ -199,7 +199,7 @@ jobs:
             npm install --no-audit --no-fund
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           }
-      
+
       - name: Create test environment
         shell: pwsh
         run: |
@@ -211,7 +211,7 @@ jobs:
           PORT=5000
           OPENCLAW_WEBHOOK_URL=https://httpbin.org/post
           "@ | Out-File -FilePath .env -Encoding utf8
-      
+
       - name: Start backend
         shell: pwsh
         run: |
@@ -239,13 +239,13 @@ jobs:
             Write-Error "Backend failed to become ready on port 5000"
             exit 1
           }
-      
+
       - name: Run PowerShell integration tests
         shell: pwsh
         run: |
           $adminToken = node -e "console.log(require('jsonwebtoken').sign({role:'admin',email:'ci@pvabazaar.org'}, 'test-secret', {expiresIn:'1h'}))"
           .\infra\openclaw\test-integration.ps1 -BackendUrl "http://localhost:5000" -AdminToken $adminToken -Verbose
-      
+
       - name: Test event dispatch
         shell: pwsh
         run: |

@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 
 export default function ShowroomSpecsPanel({ item }) {
   const catalog = item?.catalog || {};
@@ -9,20 +9,24 @@ export default function ShowroomSpecsPanel({ item }) {
   const gems = catalog.gemProperties || {};
 
   const specs = [
-    { label: "SKU / ID", value: sku },
-    { label: "Availability Status", value: catalog.availabilityStatus || "available" },
-    { label: "Category", value: item.category || "N/A" },
-    origin.country && { label: "Origin Country", value: origin.country },
-    origin.region && { label: "Region", value: origin.region },
-    dims.length && { label: "Dimensions", value: `${dims.length} × ${dims.width || 0} × ${dims.height || 0} ${dims.unit || "mm"}` },
-    weight.value && { label: "Weight", value: `${weight.value} ${weight.unit || "ct"}` },
-    gems.hardnessMohs && { label: "Mohs Hardness", value: gems.hardnessMohs },
-    gems.color && { label: "Color", value: gems.color },
-    gems.clarity && { label: "Clarity", value: gems.clarity },
-    gems.cut && { label: "Cut / Shape", value: gems.cut },
-    gems.treatmentStatus && { label: "Treatment", value: gems.treatmentStatus },
-    catalog.isUnique && { label: "Uniqueness", value: "One-of-One" },
-    !catalog.isUnique && catalog.bulkQuantity && { label: "Bulk Quantity", value: `${catalog.bulkQuantity} units` },
+    { label: 'SKU / ID', value: sku },
+    { label: 'Availability Status', value: catalog.availabilityStatus || 'available' },
+    { label: 'Category', value: item.category || 'N/A' },
+    origin.country && { label: 'Origin Country', value: origin.country },
+    origin.region && { label: 'Region', value: origin.region },
+    dims.length && {
+      label: 'Dimensions',
+      value: `${dims.length} × ${dims.width || 0} × ${dims.height || 0} ${dims.unit || 'mm'}`,
+    },
+    weight.value && { label: 'Weight', value: `${weight.value} ${weight.unit || 'ct'}` },
+    gems.hardnessMohs && { label: 'Mohs Hardness', value: gems.hardnessMohs },
+    gems.color && { label: 'Color', value: gems.color },
+    gems.clarity && { label: 'Clarity', value: gems.clarity },
+    gems.cut && { label: 'Cut / Shape', value: gems.cut },
+    gems.treatmentStatus && { label: 'Treatment', value: gems.treatmentStatus },
+    catalog.isUnique && { label: 'Uniqueness', value: 'One-of-One' },
+    !catalog.isUnique &&
+      catalog.bulkQuantity && { label: 'Bulk Quantity', value: `${catalog.bulkQuantity} units` },
   ].filter(Boolean);
 
   return (

@@ -15,7 +15,8 @@ export const PUBLIC_ROUTES = [
     to: '/get-started',
     navLabel: 'Get Started',
     title: 'Get Started',
-    description: 'Create an account and choose whether you are here to buy, supply, or collaborate.',
+    description:
+      'Create an account and choose whether you are here to buy, supply, or collaborate.',
     group: 'core',
     badge: 'Start',
     navPlacement: 'secondary',
@@ -37,7 +38,8 @@ export const PUBLIC_ROUTES = [
     to: '/books',
     navLabel: 'Books',
     title: 'Books',
-    description: 'Featured books that explain the labor vision, the blueprint, and the long-memory intent behind PVA Bazaar.',
+    description:
+      'Featured books that explain the labor vision, the blueprint, and the long-memory intent behind PVA Bazaar.',
     group: 'core',
     badge: 'Books',
     navPlacement: 'primary',
@@ -48,7 +50,8 @@ export const PUBLIC_ROUTES = [
     to: '/books/published',
     navLabel: 'Published Books',
     title: 'Published Books',
-    description: 'Browse the public book shelf, read published works online, and download PDF or EPUB editions.',
+    description:
+      'Browse the public book shelf, read published works online, and download PDF or EPUB editions.',
     group: 'core',
     badge: 'Books',
     navPlacement: 'secondary',
@@ -91,7 +94,8 @@ export const PUBLIC_ROUTES = [
     to: '/marketplace',
     navLabel: 'Marketplace',
     title: 'Marketplace',
-    description: 'Browse goods, sourcing opportunities, and commerce surfaces for real trade and daily use.',
+    description:
+      'Browse goods, sourcing opportunities, and commerce surfaces for real trade and daily use.',
     group: 'core',
     badge: 'Commerce',
     navPlacement: 'primary',
@@ -113,7 +117,7 @@ export const PUBLIC_ROUTES = [
     to: '/proposals',
     navLabel: 'Governance',
     title: 'Governance',
-    description: 'The People\'s Proposal Board with endorsement and decision lifecycle.',
+    description: "The People's Proposal Board with endorsement and decision lifecycle.",
     group: 'core',
     badge: 'Civic',
     navPlacement: 'secondary',
@@ -177,7 +181,8 @@ export const PUBLIC_ROUTES = [
     to: '/recovery',
     navLabel: 'Recovery',
     title: 'Recovery',
-    description: 'Recovery, continuity, and install tools for keeping the site close across devices and returns.',
+    description:
+      'Recovery, continuity, and install tools for keeping the site close across devices and returns.',
     group: 'support',
     badge: 'Continuity',
     navPlacement: 'secondary',
@@ -188,7 +193,8 @@ export const PUBLIC_ROUTES = [
     to: '/heelkawn',
     navLabel: 'HeelKawn',
     title: 'HeelKawn',
-    description: 'HeelKawn Armory hub with profile, customization, social tools, and mobile/PC downloads.',
+    description:
+      'HeelKawn Armory hub with profile, customization, social tools, and mobile/PC downloads.',
     group: 'support',
     navPlacement: 'secondary',
     access: 'public',
@@ -228,7 +234,8 @@ export const PUBLIC_ROUTES = [
     to: '/creator',
     navLabel: 'Supplier Portal',
     title: 'Supplier Portal',
-    description: 'Start as a supplier, artisan, or sourcing partner and submit products to the network.',
+    description:
+      'Start as a supplier, artisan, or sourcing partner and submit products to the network.',
     group: 'core',
     navPlacement: 'primary',
     access: 'public',
@@ -243,7 +250,7 @@ export const PUBLIC_ROUTES = [
     navPlacement: 'primary',
     access: 'public',
   },
-]
+];
 
-export const HOME_CORE_ROUTES = PUBLIC_ROUTES.filter((route) => route.group === 'core')
-export const HOME_SUPPORT_ROUTES = PUBLIC_ROUTES.filter((route) => route.group === 'support')
+export const HOME_CORE_ROUTES = PUBLIC_ROUTES.filter((route) => route.group === 'core');
+export const HOME_SUPPORT_ROUTES = PUBLIC_ROUTES.filter((route) => route.group === 'support');

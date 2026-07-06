@@ -20,7 +20,9 @@ const ROLE_INTENT_TO_APP_ROLE = {
 };
 
 function normalizeRoleIntent(rawRoleIntent) {
-  const value = String(rawRoleIntent || '').trim().toLowerCase();
+  const value = String(rawRoleIntent || '')
+    .trim()
+    .toLowerCase();
   if (Object.prototype.hasOwnProperty.call(ROLE_INTENT_TO_APP_ROLE, value)) {
     return value;
   }
@@ -28,11 +30,15 @@ function normalizeRoleIntent(rawRoleIntent) {
 }
 
 function sanitizeRoleOther(rawRoleOther) {
-  return String(rawRoleOther || '').trim().slice(0, 120);
+  return String(rawRoleOther || '')
+    .trim()
+    .slice(0, 120);
 }
 
 function cleanText(value, maxLen = 200) {
-  return String(value || '').trim().slice(0, maxLen);
+  return String(value || '')
+    .trim()
+    .slice(0, maxLen);
 }
 
 // Register
@@ -43,33 +49,33 @@ router.post('/register', async (req, res) => {
     const roleOther = sanitizeRoleOther(onboarding?.roleOther);
     const digestOptIn = Boolean(onboarding?.emailPreferences?.digestOptIn);
     const roleTrackUpdates = onboarding?.emailPreferences?.roleTrackUpdates !== false;
-    const compliance = onboarding?.compliance && typeof onboarding.compliance === 'object'
-      ? {
-        legalFullName: cleanText(onboarding.compliance.legalFullName, 150),
-        legalIdType: cleanText(onboarding.compliance.legalIdType, 80),
-        legalIdNumber: cleanText(onboarding.compliance.legalIdNumber, 120),
-        addressLine1: cleanText(onboarding.compliance.addressLine1, 180),
-        addressLine2: cleanText(onboarding.compliance.addressLine2, 180),
-        city: cleanText(onboarding.compliance.city, 120),
-        stateProvince: cleanText(onboarding.compliance.stateProvince, 120),
-        postalCode: cleanText(onboarding.compliance.postalCode, 40),
-        country: cleanText(onboarding.compliance.country, 120),
-        phone: cleanText(onboarding.compliance.phone, 40),
-        identityAttested: Boolean(onboarding.compliance.identityAttested),
-      }
-      : null;
+    const compliance =
+      onboarding?.compliance && typeof onboarding.compliance === 'object'
+        ? {
+            legalFullName: cleanText(onboarding.compliance.legalFullName, 150),
+            legalIdType: cleanText(onboarding.compliance.legalIdType, 80),
+            legalIdNumber: cleanText(onboarding.compliance.legalIdNumber, 120),
+            addressLine1: cleanText(onboarding.compliance.addressLine1, 180),
+            addressLine2: cleanText(onboarding.compliance.addressLine2, 180),
+            city: cleanText(onboarding.compliance.city, 120),
+            stateProvince: cleanText(onboarding.compliance.stateProvince, 120),
+            postalCode: cleanText(onboarding.compliance.postalCode, 40),
+            country: cleanText(onboarding.compliance.country, 120),
+            phone: cleanText(onboarding.compliance.phone, 40),
+            identityAttested: Boolean(onboarding.compliance.identityAttested),
+          }
+        : null;
 
     // Check if user already exists
-    const useMockStore = process.env.VERCEL === '1' && process.env.FORCE_REAL_DB !== 'true'
-      ? true
-      : getMongoState().mode === 'mock';
+    const useMockStore =
+      process.env.VERCEL === '1' && process.env.FORCE_REAL_DB !== 'true'
+        ? true
+        : getMongoState().mode === 'mock';
     if (useMockStore) {
       await ensureSeedUsers();
     }
 
-    const existingUser = useMockStore
-      ? await findUser({ email })
-      : await User.findOne({ email });
+    const existingUser = useMockStore ? await findUser({ email }) : await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ ok: false, message: 'User already exists' });
     }
@@ -82,11 +88,13 @@ router.post('/register', async (req, res) => {
         roleIntent,
         roleOther,
         appRole: ROLE_INTENT_TO_APP_ROLE[roleIntent] || 'consumer',
-        compliance: compliance ? {
-          ...compliance,
-          identityAttestedAt: compliance.identityAttested ? new Date() : undefined,
-          submittedAt: compliance.identityAttested ? new Date() : undefined,
-        } : undefined,
+        compliance: compliance
+          ? {
+              ...compliance,
+              identityAttestedAt: compliance.identityAttested ? new Date() : undefined,
+              submittedAt: compliance.identityAttested ? new Date() : undefined,
+            }
+          : undefined,
         emailPreferences: {
           digestOptIn,
           roleTrackUpdates,
@@ -96,32 +104,32 @@ router.post('/register', async (req, res) => {
 
     const user = useMockStore ? await saveUser(userData) : await new User(userData).save();
     const token = jwt.sign({ id: user._id, role: user.role }, getJwtSecret(), { expiresIn: '7d' });
-    
+
     // Dispatch user registration event (non-blocking)
-    dispatchToOpenClaw(createUserEvent('registered', user, {
-      method: 'password',
-    }));
+    dispatchToOpenClaw(
+      createUserEvent('registered', user, {
+        method: 'password',
+      }),
+    );
 
     // Send welcome email in non-blocking mode.
     sendWelcomeEmail(user).catch((emailErr) => {
       console.warn('Welcome email failed (non-blocking):', emailErr?.message || emailErr);
     });
-    
-    res
-      .status(201)
-      .json({
-        ok: true,
-        token,
-        user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          onboardingProfile: {
-            roleIntent: user.onboardingProfile?.roleIntent || 'consumer',
-            appRole: user.onboardingProfile?.appRole || 'consumer',
-          },
+
+    res.status(201).json({
+      ok: true,
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        onboardingProfile: {
+          roleIntent: user.onboardingProfile?.roleIntent || 'consumer',
+          appRole: user.onboardingProfile?.appRole || 'consumer',
         },
-      });
+      },
+    });
   } catch (error) {
     res.status(400).json({ ok: false, message: error.message });
   }
@@ -135,44 +143,41 @@ router.post('/login', async (req, res) => {
     const password = String(req.body?.password || '').trim();
 
     if (!identifier || !password) {
-      return res.status(400).json({ ok: false, message: 'Email/username and password are required' });
+      return res
+        .status(400)
+        .json({ ok: false, message: 'Email/username and password are required' });
     }
 
     const identifierLower = identifier.toLowerCase();
-    const useMockStore = process.env.VERCEL === '1' && process.env.FORCE_REAL_DB !== 'true'
-      ? true
-      : getMongoState().mode === 'mock';
+    const useMockStore =
+      process.env.VERCEL === '1' && process.env.FORCE_REAL_DB !== 'true'
+        ? true
+        : getMongoState().mode === 'mock';
     if (useMockStore) {
       await ensureSeedUsers();
     }
 
     let user = useMockStore
       ? await findUser({
-          $or: [
-            { email: identifierLower },
-            { email: identifier },
-            { username: identifier },
-          ],
+          $or: [{ email: identifierLower }, { email: identifier }, { username: identifier }],
         })
       : await User.findOne({
-          $or: [
-            { email: identifierLower },
-            { email: identifier },
-            { username: identifier },
-          ],
+          $or: [{ email: identifierLower }, { email: identifier }, { username: identifier }],
         });
 
     // Optional emergency admin bootstrap from env vars.
     // This keeps production recoverable if the admin user record is missing.
     const envAdminUsername = String(process.env.ADMIN_USERNAME || '').trim();
     const envAdminPassword = String(process.env.ADMIN_PASSWORD || '').trim();
-    const envAdminEmail = String(process.env.ADMIN_EMAIL || 'admin@pvabazaar.org').trim().toLowerCase();
+    const envAdminEmail = String(process.env.ADMIN_EMAIL || 'admin@pvabazaar.org')
+      .trim()
+      .toLowerCase();
     const envAdminUsernameLower = envAdminUsername.toLowerCase();
-    const adminIdentifierMatch = Boolean(envAdminUsername) && (
-      identifier === envAdminUsername ||
-      identifierLower === envAdminUsernameLower ||
-      identifierLower === envAdminEmail
-    );
+    const adminIdentifierMatch =
+      Boolean(envAdminUsername) &&
+      (identifier === envAdminUsername ||
+        identifierLower === envAdminUsernameLower ||
+        identifierLower === envAdminEmail);
 
     let envAdminAuthenticated = false;
 
@@ -186,12 +191,12 @@ router.post('/login', async (req, res) => {
             ],
           })
         : await User.findOne({
-        $or: [
-          { username: envAdminUsername },
-          { email: envAdminEmail },
-          { email: envAdminUsernameLower },
-        ],
-        });
+            $or: [
+              { username: envAdminUsername },
+              { email: envAdminEmail },
+              { email: envAdminUsernameLower },
+            ],
+          });
 
       if (!user) {
         const adminData = {
@@ -225,13 +230,19 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ ok: false, message: 'Invalid credentials' });
     }
     const token = jwt.sign({ id: user._id, role: user.role }, getJwtSecret(), { expiresIn: '7d' });
-    
+
     // Dispatch user login event (non-blocking)
-    dispatchToOpenClaw(createUserEvent('authenticated', user, {
-      method: 'password',
-    }));
-    
-    res.json({ ok: true, token, user: { id: user._id, name: user.name, email: user.email, role: user.role } });
+    dispatchToOpenClaw(
+      createUserEvent('authenticated', user, {
+        method: 'password',
+      }),
+    );
+
+    res.json({
+      ok: true,
+      token,
+      user: { id: user._id, name: user.name, email: user.email, role: user.role },
+    });
   } catch (error) {
     res.status(500).json({ ok: false, message: error.message });
   }

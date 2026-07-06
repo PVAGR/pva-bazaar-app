@@ -41,12 +41,11 @@ router.get('/', async (_req, res) => {
   }
   const authStoreState = await getAuthStoreState().catch(() => null);
   const bookStoreState = await getBookStoreState().catch(() => null);
-  const effectiveDatabaseMode = mongoState.mode === 'mock' && authStoreState?.mode === 'file'
-    ? 'file'
-    : mongoState.mode;
-  const response = { 
-    ok: true, 
-    message: 'PVA Bazaar API is healthy!', 
+  const effectiveDatabaseMode =
+    mongoState.mode === 'mock' && authStoreState?.mode === 'file' ? 'file' : mongoState.mode;
+  const response = {
+    ok: true,
+    message: 'PVA Bazaar API is healthy!',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     environment: process.env.NODE_ENV || 'development',
@@ -69,9 +68,9 @@ router.get('/', async (_req, res) => {
     try {
       response.openclaw = getOpenClawHealth();
     } catch (err) {
-      response.openclaw = { 
-        status: 'error', 
-        message: `Health check failed: ${err.message}` 
+      response.openclaw = {
+        status: 'error',
+        message: `Health check failed: ${err.message}`,
       };
     }
   }
@@ -83,7 +82,14 @@ router.get('/ping', (req, res) => {
   // Simple ping endpoint for monitoring
   const build = getBuildInfo();
   res.setHeader('X-App-Version', build.shortSha);
-  res.status(200).json({ ok: true, message: 'pong', timestamp: new Date().toISOString(), version: build.version, sha: build.sha, shortSha: build.shortSha });
+  res.status(200).json({
+    ok: true,
+    message: 'pong',
+    timestamp: new Date().toISOString(),
+    version: build.version,
+    sha: build.sha,
+    shortSha: build.shortSha,
+  });
 });
 
 router.get('/version', (req, res) => {

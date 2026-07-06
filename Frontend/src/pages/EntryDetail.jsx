@@ -7,7 +7,7 @@ import { fetchArchiveEntryById } from '../lib/archiveApi.js';
 // Helper to build canonical URLs
 function getCanonicalUrl(path = '') {
   const base = 'https://pvabazaar.org';
-  return base + (path.startsWith('/') ? path : `/${  path}`);
+  return base + (path.startsWith('/') ? path : `/${path}`);
 }
 
 export default function EntryDetail({ entries = [] }) {
@@ -78,7 +78,9 @@ export default function EntryDetail({ entries = [] }) {
     return (
       <section className="entry-detail-container">
         <div className="entry-detail-header">
-          <Link to="#/journal" className="entry-close-btn">✕</Link>
+          <Link to="#/journal" className="entry-close-btn">
+            ✕
+          </Link>
         </div>
         <div className="entry-detail-content">Loading entry...</div>
       </section>
@@ -89,7 +91,9 @@ export default function EntryDetail({ entries = [] }) {
     return (
       <section className="entry-detail-container">
         <div className="entry-detail-header">
-          <Link to="#/journal" className="entry-close-btn">✕</Link>
+          <Link to="#/journal" className="entry-close-btn">
+            ✕
+          </Link>
         </div>
         <div className="entry-detail-content">Entry not found.</div>
       </section>
@@ -99,21 +103,41 @@ export default function EntryDetail({ entries = [] }) {
   return (
     <>
       <Helmet>
-        <title>{displayEntry.title ? `${displayEntry.title} | PVA Bazaar Archive` : 'Archive Entry | PVA Bazaar'}</title>
-        <meta name="description" content={displayEntry.description || 'Read this archive entry on PVA Bazaar.'} />
+        <title>
+          {displayEntry.title
+            ? `${displayEntry.title} | PVA Bazaar Archive`
+            : 'Archive Entry | PVA Bazaar'}
+        </title>
+        <meta
+          name="description"
+          content={displayEntry.description || 'Read this archive entry on PVA Bazaar.'}
+        />
         <meta property="og:title" content={displayEntry.title || 'Archive Entry | PVA Bazaar'} />
-        <meta property="og:description" content={displayEntry.description || 'Read this archive entry on PVA Bazaar.'} />
+        <meta
+          property="og:description"
+          content={displayEntry.description || 'Read this archive entry on PVA Bazaar.'}
+        />
         <meta property="og:type" content="article" />
         <meta property="og:url" content={getCanonicalUrl(`/archive/${displayEntry.id || id}`)} />
-        <meta property="og:image" content={displayEntry.media?.[0] || getCanonicalUrl('/og-default.jpg')} />
+        <meta
+          property="og:image"
+          content={displayEntry.media?.[0] || getCanonicalUrl('/og-default.jpg')}
+        />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:image" content={displayEntry.media?.[0] || getCanonicalUrl('/og-default.jpg')} />
+        <meta
+          name="twitter:image"
+          content={displayEntry.media?.[0] || getCanonicalUrl('/og-default.jpg')}
+        />
       </Helmet>
       <section className="entry-detail-container">
         <div className="entry-detail-header">
-          <Link to="#/" className="entry-home-btn" aria-label="Home">🏠</Link>
+          <Link to="#/" className="entry-home-btn" aria-label="Home">
+            🏠
+          </Link>
           <h2 className="entry-detail-title">{displayEntry.title}</h2>
-          <Link to="#/journal" className="entry-close-btn" aria-label="Close">✕</Link>
+          <Link to="#/journal" className="entry-close-btn" aria-label="Close">
+            ✕
+          </Link>
         </div>
 
         <div className="entry-detail-scrollable">
@@ -121,7 +145,7 @@ export default function EntryDetail({ entries = [] }) {
             <div className="entry-page__meta">
               {new Date(displayEntry.date).toLocaleDateString()}
               {displayEntry.location ? ` · ${displayEntry.location}` : ''}
-              {displayEntry.tags?.length ? ` · ${  displayEntry.tags.join(', ')}` : ''}
+              {displayEntry.tags?.length ? ` · ${displayEntry.tags.join(', ')}` : ''}
             </div>
 
             {/* Table of Contents */}
@@ -182,9 +206,19 @@ export default function EntryDetail({ entries = [] }) {
         </div>
 
         <nav className="entry-detail-nav">
-          {prev && <Link to={`#/entry/${prev.id}`} className="nav-link nav-prev">← Previous</Link>}
-          <Link to="#/" className="nav-link nav-back">Back to Home</Link>
-          {next && <Link to={`#/entry/${next.id}`} className="nav-link nav-next">Next →</Link>}
+          {prev && (
+            <Link to={`#/entry/${prev.id}`} className="nav-link nav-prev">
+              ← Previous
+            </Link>
+          )}
+          <Link to="#/" className="nav-link nav-back">
+            Back to Home
+          </Link>
+          {next && (
+            <Link to={`#/entry/${next.id}`} className="nav-link nav-next">
+              Next →
+            </Link>
+          )}
         </nav>
       </section>
     </>

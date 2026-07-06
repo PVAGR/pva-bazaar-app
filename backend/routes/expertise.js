@@ -75,7 +75,9 @@ router.put('/:expertiseId', requireAuth, async (req, res) => {
       return res.status(403).json({ error: 'Unauthorized' });
     }
 
-    const updated = await ExpertService.findByIdAndUpdate(req.params.expertiseId, req.body, { new: true });
+    const updated = await ExpertService.findByIdAndUpdate(req.params.expertiseId, req.body, {
+      new: true,
+    });
     res.json(updated);
   } catch (error) {
     res.status(400).json({ error: error.message });

@@ -10,7 +10,7 @@ export default function CreatorNav() {
 
   useEffect(() => {
     apiGet('/users/profile')
-      .then(res => {
+      .then((res) => {
         if (res?.ok && res.user) {
           setProfile(res.user);
           setCompletion(calculateProfileCompletion(res.user));
@@ -29,7 +29,10 @@ export default function CreatorNav() {
     {
       to: '/account',
       label: 'Account',
-      suffix: completion && !completion.isComplete ? ` (${completion.completed}/${completion.total})` : null,
+      suffix:
+        completion && !completion.isComplete
+          ? ` (${completion.completed}/${completion.total})`
+          : null,
     },
   ];
 

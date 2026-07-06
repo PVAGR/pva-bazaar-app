@@ -43,11 +43,21 @@ async function appendLifecycleEventForArtifact({
 
   const extRef = String(externalRef || '').trim();
   if (extRef) {
-    const duplicate = Array.isArray(passport.lifecycleEvents) && passport.lifecycleEvents.some((event) => {
-      return String(event.externalRef || '') === extRef && String(event.type || '') === String(type || 'custom');
-    });
+    const duplicate =
+      Array.isArray(passport.lifecycleEvents) &&
+      passport.lifecycleEvents.some((event) => {
+        return (
+          String(event.externalRef || '') === extRef &&
+          String(event.type || '') === String(type || 'custom')
+        );
+      });
     if (duplicate) {
-      return { ok: true, skipped: true, reason: 'duplicate_external_ref', passportDid: passport.passportDid };
+      return {
+        ok: true,
+        skipped: true,
+        reason: 'duplicate_external_ref',
+        passportDid: passport.passportDid,
+      };
     }
   }
 

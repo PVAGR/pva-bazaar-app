@@ -88,7 +88,9 @@ const EXPLORER_BASE_BY_NETWORK = {
 };
 
 function normalizeNetwork(network) {
-  const normalized = String(network || 'base').trim().toLowerCase();
+  const normalized = String(network || 'base')
+    .trim()
+    .toLowerCase();
   return EXPLORER_BASE_BY_NETWORK[normalized] ? normalized : 'base';
 }
 
@@ -149,7 +151,7 @@ async function getRpcDiagnostics(options = {}) {
     const [chainIdRaw, blockNumberRaw] = await withTimeout(
       Promise.all([web3Client.eth.getChainId(), web3Client.eth.getBlockNumber()]),
       timeoutMs,
-      'rpc_timeout'
+      'rpc_timeout',
     );
 
     return {

@@ -10,16 +10,19 @@ This file is a historical production note, not the canonical operating guide.
 ### ✅ Deployed Services
 
 #### 1. Backend API (Vercel)
+
 - **URL**: https://pva-backend-j8caliekt-pvagrs-projects.vercel.app
 - **Status**: ✅ Deployed
 - **Inspect**: https://vercel.com/pvagrs-projects/pva-backend-api/41rC9yPwWsguYxdn6GqtnvYEVSKq
 
 #### 2. Next.js Livestream App (Vercel)
+
 - **URL**: https://pvabazaar-livestream-o3okjf15o-pvagrs-projects.vercel.app
 - **Status**: ✅ Deployed
 - **Inspect**: https://vercel.com/pvagrs-projects/pvabazaar-livestream/9vF6YDFBJyCGeFSauPXqppowB5Uk
 
 #### 3. Frontend (GitHub Pages)
+
 - **URL**: https://pvabazaar.org
 - **Status**: Auto-deploys from main branch
 - **Latest Commit**: b1c202dc
@@ -29,6 +32,7 @@ This file is a historical production note, not the canonical operating guide.
 ## 🔐 Required Environment Variables
 
 ### Backend (Vercel Dashboard)
+
 Navigate to: https://vercel.com/pvagrs-projects/pva-backend-api/settings/environment-variables
 
 ```env
@@ -42,6 +46,7 @@ CORS_ORIGINS=https://pvabazaar.org,https://pvabazaar-livestream-o3okjf15o-pvagrs
 ```
 
 ### Next.js Livestream (Vercel Dashboard)
+
 Navigate to: https://vercel.com/pvagrs-projects/pvabazaar-livestream/settings/environment-variables
 
 ```env
@@ -65,6 +70,7 @@ NEXT_PUBLIC_API_URL=https://pva-backend-j8caliekt-pvagrs-projects.vercel.app
 ```
 
 ### Frontend (GitHub Repository Settings)
+
 Navigate to: Settings > Pages > Environment variables (if using GitHub Actions)
 
 ```env
@@ -76,6 +82,7 @@ VITE_API_URL=https://pva-backend-j8caliekt-pvagrs-projects.vercel.app
 ## ⚡ Post-Deployment Checklist
 
 ### Immediate Actions
+
 - [ ] Set environment variables in Vercel dashboard (both projects)
 - [ ] Redeploy after adding env vars: `vercel --prod`
 - [ ] Update CORS_ORIGINS in backend to include production URLs
@@ -84,23 +91,27 @@ VITE_API_URL=https://pva-backend-j8caliekt-pvagrs-projects.vercel.app
 ### Verification Tests
 
 #### Backend API Health Check
+
 ```bash
 curl https://pva-backend-j8caliekt-pvagrs-projects.vercel.app/api/health
 # Expected: {"status":"ok","mongodb":"connected"}
 ```
 
 #### Next.js Livestream
+
 1. Visit https://pvabazaar-livestream-o3okjf15o-pvagrs-projects.vercel.app
 2. Test signup flow
 3. Test journal entry creation
 4. Verify DID generation
 
 #### Frontend
+
 1. Visit https://pvabazaar.org
 2. Check marketplace loads
 3. Verify API connection to backend
 
 ### Security Checks
+
 - [ ] All secrets configured (no placeholder values)
 - [ ] CORS properly restricted
 - [ ] NEXTAUTH_SECRET is unique and random
@@ -112,18 +123,21 @@ curl https://pva-backend-j8caliekt-pvagrs-projects.vercel.app/api/health
 ## 🔄 Redeployment Commands
 
 ### Redeploy Backend
+
 ```powershell
 cd backend
 vercel --prod
 ```
 
 ### Redeploy Next.js Livestream
+
 ```powershell
 cd pvabazaar-livestream
 vercel --prod
 ```
 
 ### Frontend (Auto-deploys on git push)
+
 ```powershell
 git push origin main
 ```
@@ -133,10 +147,12 @@ git push origin main
 ## 📊 Monitoring & Logs
 
 ### Vercel Dashboard
+
 - Backend logs: https://vercel.com/pvagrs-projects/pva-backend-api
 - Livestream logs: https://vercel.com/pvagrs-projects/pvabazaar-livestream
 
 ### GitHub Actions
+
 - Frontend deployment: https://github.com/PVAGR/pva-bazaar-app/actions
 
 ---
@@ -144,15 +160,19 @@ git push origin main
 ## 🛠️ Troubleshooting
 
 ### Issue: 500 Internal Server Error
+
 **Solution**: Check environment variables are set correctly in Vercel dashboard, then redeploy.
 
 ### Issue: CORS Errors
+
 **Solution**: Verify CORS_ORIGINS includes all production URLs in backend env vars.
 
 ### Issue: Database Connection Failed
+
 **Solution**: Confirm MONGODB_URI is correctly formatted and MongoDB Atlas allows connections from Vercel IPs (0.0.0.0/0).
 
 ### Issue: NextAuth Session Not Working
+
 **Solution**: Ensure NEXTAUTH_URL matches exact production URL (including https://) and NEXTAUTH_SECRET is set.
 
 ---

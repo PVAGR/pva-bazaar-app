@@ -55,7 +55,7 @@ export default function AgentChat({ initialInput = '' }) {
 
       // Try to load existing conversation
       const response = await apiFetch(
-        `/api/agent/conversations?userId=${encodeURIComponent(userId)}&limit=1`
+        `/api/agent/conversations?userId=${encodeURIComponent(userId)}&limit=1`,
       );
       const data = await response.json();
 
@@ -188,9 +188,7 @@ export default function AgentChat({ initialInput = '' }) {
         {messages.length === 0 && (
           <div className="agent-chat__welcome">
             <h3>Welcome to Creator's Agent</h3>
-            <p>
-              I'm an AI guide representing the creator within PVA Bazaar. I can help you:
-            </p>
+            <p>I'm an AI guide representing the creator within PVA Bazaar. I can help you:</p>
             <ul>
               <li>Understand the platform and its features</li>
               <li>Navigate marketplace and governance</li>
@@ -203,9 +201,7 @@ export default function AgentChat({ initialInput = '' }) {
 
         {messages.map((msg) => (
           <div key={msg.id} className={`message message--${msg.role}`}>
-            <div className="message__avatar">
-              {msg.role === 'user' ? '👤' : '🤖'}
-            </div>
+            <div className="message__avatar">{msg.role === 'user' ? '👤' : '🤖'}</div>
             <div className="message__content">
               <p>{msg.content}</p>
               <small className="message__time">

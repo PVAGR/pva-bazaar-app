@@ -63,19 +63,23 @@ const streamSessionSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
-  tags: [{
-    type: String,
-  }],
+  tags: [
+    {
+      type: String,
+    },
+  ],
   isPublic: {
     type: Boolean,
     default: true, // Users control privacy
   },
   // Webhook/automation tracking
-  webhookEvents: [{
-    event: String,
-    timestamp: Date,
-    payload: mongoose.Schema.Types.Mixed,
-  }],
+  webhookEvents: [
+    {
+      event: String,
+      timestamp: Date,
+      payload: mongoose.Schema.Types.Mixed,
+    },
+  ],
   createdAt: {
     type: Date,
     default: Date.now,

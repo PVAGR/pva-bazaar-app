@@ -9,16 +9,18 @@ export const Telemetry = {
     if (!canTrack()) return;
 
     if (import.meta.env.VITE_TELEMETRY_URL) {
-      globalThis.fetch(import.meta.env.VITE_TELEMETRY_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          event,
-          data,
-          ts: Date.now(),
-          locale: globalThis.navigator?.language,
-        }),
-      }).catch(() => {});
+      globalThis
+        .fetch(import.meta.env.VITE_TELEMETRY_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            event,
+            data,
+            ts: Date.now(),
+            locale: globalThis.navigator?.language,
+          }),
+        })
+        .catch(() => {});
     }
 
     if (import.meta.env.DEV) console.log('[Telemetry]', event, data);

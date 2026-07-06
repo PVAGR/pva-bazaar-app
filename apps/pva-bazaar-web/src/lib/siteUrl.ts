@@ -6,23 +6,25 @@ export function getBaseUrl(): string {
   const fromEnv = normalizeSiteUrl(process.env.NEXT_PUBLIC_SITE_URL);
   if (fromEnv) return fromEnv;
 
-  const fromVercel = normalizeSiteUrl(process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "");
+  const fromVercel = normalizeSiteUrl(
+    process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '',
+  );
   if (fromVercel) return fromVercel;
 
-  return "https://pvabazaar.org";
+  return 'https://pvabazaar.org';
 }
 
 function normalizeSiteUrl(value: string | undefined): string {
-  if (!value) return "";
+  if (!value) return '';
   try {
     const candidate = value.trim();
     const withProtocol = /^https?:\/\//i.test(candidate) ? candidate : `https://${candidate}`;
     const url = new URL(withProtocol);
-    if (url.protocol !== "https:" && url.protocol !== "http:") {
-      return "";
+    if (url.protocol !== 'https:' && url.protocol !== 'http:') {
+      return '';
     }
     return `${url.protocol}//${url.host}`;
   } catch {
-    return "";
+    return '';
   }
 }

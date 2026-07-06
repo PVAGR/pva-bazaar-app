@@ -45,8 +45,8 @@ export default function ChatPage() {
       <header className="chat-header">
         <h1>Chat with Richard</h1>
         <p className="muted">
-          Direct supply chain sourcer — Kenyan coffee, Congolese malachite, Kenyan soapstone, Afghan/Pakistani gemstones.
-          Reach Richard at pvaglobalreach@gmail.com or pvabazaar.com.
+          Direct supply chain sourcer — Kenyan coffee, Congolese malachite, Kenyan soapstone,
+          Afghan/Pakistani gemstones. Reach Richard at pvaglobalreach@gmail.com or pvabazaar.com.
         </p>
         {isLoggedIn ? <span className="chat-badge">Your data used for context</span> : null}
       </header>
@@ -55,7 +55,9 @@ export default function ChatPage() {
         {error ? (
           <div className="chat-error">
             {error}
-            <button type="button" className="btn ghost" onClick={() => setError('')}>Dismiss</button>
+            <button type="button" className="btn ghost" onClick={() => setError('')}>
+              Dismiss
+            </button>
           </div>
         ) : null}
 
@@ -63,7 +65,9 @@ export default function ChatPage() {
           {messages.length === 0 ? (
             <div className="chat-welcome">
               <p>Ask Richard about sourcing, vetting suppliers, or partnership opportunities.</p>
-              <p className="muted small">e.g. &quot;What should I look for when vetting a coffee supplier?&quot;</p>
+              <p className="muted small">
+                e.g. &quot;What should I look for when vetting a coffee supplier?&quot;
+              </p>
             </div>
           ) : (
             messages.map((m, i) => (

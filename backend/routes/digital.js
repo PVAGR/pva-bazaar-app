@@ -85,7 +85,9 @@ router.get('/:productId/download', requireAuth, async (req, res) => {
     // For now, just check download limits
 
     // Find or create download record
-    let downloadRecord = digital.downloads.find((d) => d.buyerId.toString() === req.user._id.toString());
+    let downloadRecord = digital.downloads.find(
+      (d) => d.buyerId.toString() === req.user._id.toString(),
+    );
 
     if (!downloadRecord) {
       downloadRecord = {
@@ -131,7 +133,9 @@ router.get('/:productId/download', requireAuth, async (req, res) => {
       downloadUrl: fileUrl.url,
       filename: fileUrl.filename,
       expiresIn: 3600, // 1 hour
-      downloadsRemaining: digital.downloadLimit ? digital.downloadLimit - downloadRecord.downloadCount : null,
+      downloadsRemaining: digital.downloadLimit
+        ? digital.downloadLimit - downloadRecord.downloadCount
+        : null,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });

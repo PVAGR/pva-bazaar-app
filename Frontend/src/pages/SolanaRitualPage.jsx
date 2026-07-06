@@ -1,6 +1,12 @@
 import React, { useState } from 'react';
 import { apiPost, apiGet } from '../lib/api';
-import { Connection, PublicKey, SystemProgram, Transaction, LAMPORTS_PER_SOL } from '@solana/web3.js';
+import {
+  Connection,
+  PublicKey,
+  SystemProgram,
+  Transaction,
+  LAMPORTS_PER_SOL,
+} from '@solana/web3.js';
 
 export default function SolanaRitualPage() {
   const [walletAddress, setWalletAddress] = useState('');
@@ -80,11 +86,12 @@ export default function SolanaRitualPage() {
           fromPubkey,
           toPubkey,
           lamports,
-        })
+        }),
       );
 
-      const signature = await provider.signAndSendTransaction
-        ? (await provider.signAndSendTransaction(tx)).signature || (await provider.signAndSendTransaction(tx))
+      const signature = (await provider.signAndSendTransaction)
+        ? (await provider.signAndSendTransaction(tx)).signature ||
+          (await provider.signAndSendTransaction(tx))
         : await provider.sendTransaction(tx, connection);
 
       await connection.confirmTransaction(
@@ -93,7 +100,7 @@ export default function SolanaRitualPage() {
           blockhash,
           lastValidBlockHeight,
         },
-        'confirmed'
+        'confirmed',
       );
 
       // Persist the ritual with the real tx signature
@@ -133,8 +140,9 @@ export default function SolanaRitualPage() {
       <header style={{ marginBottom: '1.5rem' }}>
         <h1>🕯️ Solana Revenue Ritual (Simulated)</h1>
         <p className="muted">
-          Record a payout ritual to a Solana wallet and emit an OpenClaw event. This first version logs the ritual
-          in MongoDB and OpenClaw for observability; on-chain transfer wiring can be added safely later.
+          Record a payout ritual to a Solana wallet and emit an OpenClaw event. This first version
+          logs the ritual in MongoDB and OpenClaw for observability; on-chain transfer wiring can be
+          added safely later.
         </p>
       </header>
 
@@ -142,7 +150,9 @@ export default function SolanaRitualPage() {
         <h2>Begin Ritual (Phantom + Solana devnet)</h2>
         <div style={{ marginBottom: '1rem' }}>
           <button type="button" className="btn primary" onClick={connectWallet}>
-            {walletPubkey ? `Wallet connected: ${walletPubkey.slice(0, 4)}…${walletPubkey.slice(-4)}` : 'Connect Phantom wallet'}
+            {walletPubkey
+              ? `Wallet connected: ${walletPubkey.slice(0, 4)}…${walletPubkey.slice(-4)}`
+              : 'Connect Phantom wallet'}
           </button>
         </div>
         <form onSubmit={runRitual} className="form">
@@ -194,8 +204,9 @@ export default function SolanaRitualPage() {
               {loading ? 'Running ritual…' : 'Run ritual (log payout)'}
             </button>
             <p className="muted small" style={{ marginTop: '0.5rem' }}>
-              This currently records a payout in the backend (status <code>simulated</code>) and dispatches an OpenClaw
-              system event. When you are ready, we can wire this to an actual Solana devnet/mainnet transfer.
+              This currently records a payout in the backend (status <code>simulated</code>) and
+              dispatches an OpenClaw system event. When you are ready, we can wire this to an actual
+              Solana devnet/mainnet transfer.
             </p>
           </div>
         </form>
@@ -248,7 +259,9 @@ export default function SolanaRitualPage() {
                   )}
                 </div>
                 <div className="muted small" style={{ textAlign: 'right' }}>
-                  <div>{p.status} • {p.network}</div>
+                  <div>
+                    {p.status} • {p.network}
+                  </div>
                   <div>{p.createdAt ? new Date(p.createdAt).toLocaleString() : 'n/a'}</div>
                 </div>
               </div>
@@ -259,4 +272,3 @@ export default function SolanaRitualPage() {
     </div>
   );
 }
-

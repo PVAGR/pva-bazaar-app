@@ -22,9 +22,24 @@ const INTRO_QUIZ = {
       id: 'f1',
       prompt: 'Which mission feels most natural to you?',
       options: [
-        { key: 'A', text: 'Build systems and infrastructure', role: 'Infrastructure Builder', weight: 3 },
-        { key: 'B', text: 'Coordinate people and operations', role: 'Operations Coordinator', weight: 3 },
-        { key: 'C', text: 'Teach, mentor, and guide communities', role: 'Community Mentor', weight: 3 },
+        {
+          key: 'A',
+          text: 'Build systems and infrastructure',
+          role: 'Infrastructure Builder',
+          weight: 3,
+        },
+        {
+          key: 'B',
+          text: 'Coordinate people and operations',
+          role: 'Operations Coordinator',
+          weight: 3,
+        },
+        {
+          key: 'C',
+          text: 'Teach, mentor, and guide communities',
+          role: 'Community Mentor',
+          weight: 3,
+        },
       ],
     },
     {
@@ -32,7 +47,12 @@ const INTRO_QUIZ = {
       prompt: 'How do you usually solve difficult problems?',
       options: [
         { key: 'A', text: 'Data first, then decisions', role: 'Research Strategist', weight: 2 },
-        { key: 'B', text: 'Talk with people and align quickly', role: 'Diplomatic Facilitator', weight: 2 },
+        {
+          key: 'B',
+          text: 'Talk with people and align quickly',
+          role: 'Diplomatic Facilitator',
+          weight: 2,
+        },
         { key: 'C', text: 'Prototype and test in the field', role: 'Field Innovator', weight: 2 },
       ],
     },
@@ -40,48 +60,96 @@ const INTRO_QUIZ = {
       id: 'f3',
       prompt: 'What pace suits you best?',
       options: [
-        { key: 'A', text: 'Long-term planning and architecture', role: 'Systems Planner', weight: 2 },
-        { key: 'B', text: 'Daily momentum and execution', role: 'Operations Coordinator', weight: 2 },
-        { key: 'C', text: 'Rapid response and adaptation', role: 'Emergency Response Lead', weight: 2 },
+        {
+          key: 'A',
+          text: 'Long-term planning and architecture',
+          role: 'Systems Planner',
+          weight: 2,
+        },
+        {
+          key: 'B',
+          text: 'Daily momentum and execution',
+          role: 'Operations Coordinator',
+          weight: 2,
+        },
+        {
+          key: 'C',
+          text: 'Rapid response and adaptation',
+          role: 'Emergency Response Lead',
+          weight: 2,
+        },
       ],
     },
     {
       id: 'f4',
       prompt: 'Which outcome would make you proud?',
       options: [
-        { key: 'A', text: 'A stable platform people depend on', role: 'Infrastructure Builder', weight: 3 },
+        {
+          key: 'A',
+          text: 'A stable platform people depend on',
+          role: 'Infrastructure Builder',
+          weight: 3,
+        },
         { key: 'B', text: 'A thriving, coordinated community', role: 'Civic Organizer', weight: 3 },
-        { key: 'C', text: 'A learning path that changes lives', role: 'Community Mentor', weight: 3 },
+        {
+          key: 'C',
+          text: 'A learning path that changes lives',
+          role: 'Community Mentor',
+          weight: 3,
+        },
       ],
     },
     {
       id: 'f5',
       prompt: 'Where would you like to contribute first?',
       options: [
-        { key: 'A', text: 'Technology, logistics, or supply systems', role: 'Infrastructure Builder', weight: 2 },
-        { key: 'B', text: 'Governance, mediation, or partnerships', role: 'Diplomatic Facilitator', weight: 2 },
-        { key: 'C', text: 'Education, culture, and public wellbeing', role: 'Community Mentor', weight: 2 },
+        {
+          key: 'A',
+          text: 'Technology, logistics, or supply systems',
+          role: 'Infrastructure Builder',
+          weight: 2,
+        },
+        {
+          key: 'B',
+          text: 'Governance, mediation, or partnerships',
+          role: 'Diplomatic Facilitator',
+          weight: 2,
+        },
+        {
+          key: 'C',
+          text: 'Education, culture, and public wellbeing',
+          role: 'Community Mentor',
+          weight: 2,
+        },
       ],
     },
   ],
 };
 
 function cleanText(value, maxLen = 120) {
-  return String(value || '').trim().slice(0, maxLen);
+  return String(value || '')
+    .trim()
+    .slice(0, maxLen);
 }
 
 function normalizeCountryCode(value = '') {
-  const cleaned = String(value || '').trim().toUpperCase();
+  const cleaned = String(value || '')
+    .trim()
+    .toUpperCase();
   if (/^[A-Z]{2}$/.test(cleaned)) return cleaned;
   return '';
 }
 
 router.get('/ip-lookup', async (req, res) => {
   try {
-    const forwardedFor = String(req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || '').split(',')[0].trim();
-    const ip = forwardedFor && !/^(127\.|10\.|172\.(1[6-9]|2\d|3[0-1])\.|192\.168\.|::1|localhost)$/i.test(forwardedFor)
-      ? forwardedFor
-      : '';
+    const forwardedFor = String(req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || '')
+      .split(',')[0]
+      .trim();
+    const ip =
+      forwardedFor &&
+      !/^(127\.|10\.|172\.(1[6-9]|2\d|3[0-1])\.|192\.168\.|::1|localhost)$/i.test(forwardedFor)
+        ? forwardedFor
+        : '';
 
     if (!ip) {
       return res.json({ ok: true, location: null });
@@ -124,7 +192,9 @@ function scoreIntroQuiz(answers = []) {
 
   for (const item of answers) {
     const questionId = String(item?.questionId || '').trim();
-    const optionKey = String(item?.optionKey || '').trim().toUpperCase();
+    const optionKey = String(item?.optionKey || '')
+      .trim()
+      .toUpperCase();
     const question = INTRO_QUIZ.questions.find((q) => q.id === questionId);
     if (!question) continue;
 
@@ -366,7 +436,15 @@ async function getDailyXpUsed(userId) {
   return Number(agg?.[0]?.total || 0);
 }
 
-async function awardProgression({ userId, sourceType, sourceRef = '', contributionPoints = 0, economicPoints = 0, notes = '', metadata = null }) {
+async function awardProgression({
+  userId,
+  sourceType,
+  sourceRef = '',
+  contributionPoints = 0,
+  economicPoints = 0,
+  notes = '',
+  metadata = null,
+}) {
   const contribution = Math.max(0, Math.floor(Number(contributionPoints || 0)));
   const economic = Math.max(0, Math.floor(Number(economicPoints || 0)));
   const intendedXp = contribution + economic;
@@ -376,7 +454,11 @@ async function awardProgression({ userId, sourceType, sourceRef = '', contributi
 
   const sourceRefClean = cleanText(sourceRef, 120);
   if (sourceRefClean) {
-    const duplicate = await FederationProgressionEvent.findOne({ userId, sourceType, sourceRef: sourceRefClean }).lean();
+    const duplicate = await FederationProgressionEvent.findOne({
+      userId,
+      sourceType,
+      sourceRef: sourceRefClean,
+    }).lean();
     if (duplicate) {
       return { ok: true, awardedXp: 0, skipped: true, reason: 'Duplicate sourceRef' };
     }
@@ -446,7 +528,9 @@ async function tryAwardProgression(params) {
 
 async function getActivePresenceContext(windowMinutes = 90) {
   const since = new Date(Date.now() - windowMinutes * 60 * 1000);
-  const rows = await FederationPresence.find({ lastSeenAt: { $gte: since } }).select('countryCode country').lean();
+  const rows = await FederationPresence.find({ lastSeenAt: { $gte: since } })
+    .select('countryCode country')
+    .lean();
   const uniqueCountries = new Set(
     rows.map((row) => String(row.countryCode || row.country || 'UNKNOWN').toUpperCase()),
   );
@@ -492,12 +576,20 @@ async function upsertPresenceForUser(user, patch = {}) {
     introRecommendedRole: cleanText(patch.introRecommendedRole, 120),
     introScore: Number.isFinite(Number(patch.introScore)) ? Number(patch.introScore) : 0,
     careerTopRoles: Array.isArray(patch.careerTopRoles)
-      ? patch.careerTopRoles.map((v) => cleanText(v, 120)).filter(Boolean).slice(0, 8)
+      ? patch.careerTopRoles
+          .map((v) => cleanText(v, 120))
+          .filter(Boolean)
+          .slice(0, 8)
       : [],
     careerTopDomains: Array.isArray(patch.careerTopDomains)
-      ? patch.careerTopDomains.map((v) => cleanText(v, 120)).filter(Boolean).slice(0, 8)
+      ? patch.careerTopDomains
+          .map((v) => cleanText(v, 120))
+          .filter(Boolean)
+          .slice(0, 8)
       : [],
-    lastSource: ['manual', 'ip-lookup', 'passport', 'system'].includes(String(patch.lastSource || 'manual'))
+    lastSource: ['manual', 'ip-lookup', 'passport', 'system'].includes(
+      String(patch.lastSource || 'manual'),
+    )
       ? String(patch.lastSource || 'manual')
       : 'manual',
     lastSeenAt: new Date(),
@@ -636,7 +728,9 @@ router.post('/check-in', authenticateToken, async (req, res) => {
 
 router.get('/game/faction/mine', authenticateToken, async (req, res) => {
   try {
-    const state = await FederationGameState.findOne({ userId: req.user.id }).select('faction commanderName').lean();
+    const state = await FederationGameState.findOne({ userId: req.user.id })
+      .select('faction commanderName')
+      .lean();
     if (!state?.faction || state.faction === 'PVA Collective') {
       return res.json({ ok: true, faction: null });
     }
@@ -742,7 +836,9 @@ router.post('/game/factions/join', authenticateToken, async (req, res) => {
       return res.status(404).json({ ok: false, message: 'Faction invite not found.' });
     }
 
-    const alreadyMember = (faction.members || []).some((member) => String(member.userId) === String(user._id));
+    const alreadyMember = (faction.members || []).some(
+      (member) => String(member.userId) === String(user._id),
+    );
     if (!alreadyMember) {
       faction.members.push({
         userId: user._id,
@@ -803,7 +899,9 @@ router.post('/game/sectors/claim', authenticateToken, async (req, res) => {
     const state = await ensureGameState(user);
     const factionTag = cleanText(state?.faction, 16).toUpperCase();
     if (!factionTag || factionTag === 'PVA COLLECTIVE') {
-      return res.status(400).json({ ok: false, message: 'Join or create a faction before claiming sectors.' });
+      return res
+        .status(400)
+        .json({ ok: false, message: 'Join or create a faction before claiming sectors.' });
     }
 
     const faction = await FederationFaction.findOne({ tag: factionTag });
@@ -812,12 +910,18 @@ router.post('/game/sectors/claim', authenticateToken, async (req, res) => {
     }
 
     if (Number(state.energy || 0) < 18 || Number(state.materials || 0) < 12) {
-      return res.status(400).json({ ok: false, message: 'Need at least 18 energy and 12 materials to claim.' });
+      return res
+        .status(400)
+        .json({ ok: false, message: 'Need at least 18 energy and 12 materials to claim.' });
     }
 
     const influence = calcPower(state);
     const existing = await FederationSectorControl.findOne({ sector });
-    if (existing && existing.controllerFactionTag && existing.controllerFactionTag !== faction.tag) {
+    if (
+      existing &&
+      existing.controllerFactionTag &&
+      existing.controllerFactionTag !== faction.tag
+    ) {
       const required = Number(existing.influence || 0) + 6;
       if (influence < required) {
         return res.status(409).json({
@@ -948,7 +1052,9 @@ router.get('/live', async (req, res) => {
 
 router.post('/game/hk/onboard', authenticateToken, async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select('_id name gameProfile onboardingProfile citizenRole');
+    const user = await User.findById(req.user.id).select(
+      '_id name gameProfile onboardingProfile citizenRole',
+    );
     if (!user) {
       return res.status(404).json({ ok: false, message: 'User not found' });
     }
@@ -977,7 +1083,9 @@ router.post('/game/hk/onboard', authenticateToken, async (req, res) => {
       },
     };
 
-    await User.findByIdAndUpdate(user._id, { $set: { gameProfile: nextProfile, updatedAt: new Date() } });
+    await User.findByIdAndUpdate(user._id, {
+      $set: { gameProfile: nextProfile, updatedAt: new Date() },
+    });
 
     await awardProgression({
       userId: user._id,
@@ -1056,14 +1164,24 @@ router.post('/game/hk/passport/verify-hash', authenticateToken, async (req, res)
   try {
     const normalizedPassportId = normalizePassportId(req.body?.passportId);
     const countryCode = normalizeCountryCode(req.body?.passportCountryCode || '');
-    if (!normalizedPassportId || normalizedPassportId.length < 6 || normalizedPassportId.length > 64) {
-      return res.status(400).json({ ok: false, message: 'passportId must be 6-64 alphanumeric characters.' });
+    if (
+      !normalizedPassportId ||
+      normalizedPassportId.length < 6 ||
+      normalizedPassportId.length > 64
+    ) {
+      return res
+        .status(400)
+        .json({ ok: false, message: 'passportId must be 6-64 alphanumeric characters.' });
     }
 
     const passportHash = hashPassportId(normalizedPassportId);
-    const claimedBy = await FederationPassportHash.findOne({ passportHash }).select('userId').lean();
+    const claimedBy = await FederationPassportHash.findOne({ passportHash })
+      .select('userId')
+      .lean();
     if (claimedBy && String(claimedBy.userId) !== String(req.user.id)) {
-      return res.status(409).json({ ok: false, message: 'Passport identity already linked to another account.' });
+      return res
+        .status(409)
+        .json({ ok: false, message: 'Passport identity already linked to another account.' });
     }
 
     await FederationPassportHash.findOneAndUpdate(
@@ -1122,7 +1240,14 @@ router.post('/game/hk/passport/verify-hash', authenticateToken, async (req, res)
 router.post('/game/hk/progression/record', authenticateToken, async (req, res) => {
   try {
     const sourceType = String(req.body?.sourceType || '').trim();
-    if (!['knowledge_contribution', 'verified_transaction', 'governance_action', 'consistency_streak'].includes(sourceType)) {
+    if (
+      ![
+        'knowledge_contribution',
+        'verified_transaction',
+        'governance_action',
+        'consistency_streak',
+      ].includes(sourceType)
+    ) {
       return res.status(400).json({ ok: false, message: 'Unsupported sourceType.' });
     }
 
@@ -1141,7 +1266,9 @@ router.post('/game/hk/progression/record', authenticateToken, async (req, res) =
     });
 
     if (!award.ok) {
-      return res.status(500).json({ ok: false, message: award.reason || 'Unable to record progression event.' });
+      return res
+        .status(500)
+        .json({ ok: false, message: award.reason || 'Unable to record progression event.' });
     }
 
     const user = await User.findById(req.user.id).select('gameProfile').lean();
@@ -1338,12 +1465,14 @@ router.get('/game/world', async (_req, res) => {
       sectorMap.set(key, item);
     }
 
-    const sectorControlMap = new Map(sectorControls.map((row) => [String(row.sector || '').toUpperCase(), row]));
+    const sectorControlMap = new Map(
+      sectorControls.map((row) => [String(row.sector || '').toUpperCase(), row]),
+    );
 
     const sectors = Array.from(sectorMap.values())
       .map((entry) => {
-        const controlRole = Object.entries(entry.roleCount)
-          .sort((a, b) => b[1] - a[1])[0]?.[0] || 'Citizen';
+        const controlRole =
+          Object.entries(entry.roleCount).sort((a, b) => b[1] - a[1])[0]?.[0] || 'Citizen';
         const control = sectorControlMap.get(String(entry.sector || '').toUpperCase());
         return {
           sector: entry.sector,

@@ -52,7 +52,8 @@ export default function Layout({ children }) {
       return {
         section: 'Private Route',
         title: 'Book Publishing',
-        description: 'Draft, design, and publish a book with covers, manuscript, PDF, EPUB, and web view.',
+        description:
+          'Draft, design, and publish a book with covers, manuscript, PDF, EPUB, and web view.',
       };
     }
 
@@ -60,7 +61,8 @@ export default function Layout({ children }) {
       return {
         section: 'Public Library',
         title: 'Published Books',
-        description: 'Browse published books, open the online reader, and download PDF or EPUB editions.',
+        description:
+          'Browse published books, open the online reader, and download PDF or EPUB editions.',
       };
     }
 
@@ -75,7 +77,12 @@ export default function Layout({ children }) {
     const route = PUBLIC_ROUTES.find((item) => item.to === pathname);
     if (route) {
       return {
-        section: route.group === 'core' ? 'Core Route' : route.group === 'support' ? 'Support Route' : 'Route',
+        section:
+          route.group === 'core'
+            ? 'Core Route'
+            : route.group === 'support'
+              ? 'Support Route'
+              : 'Route',
         title: route.title,
         description: route.description || '',
       };
@@ -107,13 +114,18 @@ export default function Layout({ children }) {
     }
   }, [routeIdentity]);
 
-  const primaryNavRoutes = useMemo(() => (
-    PUBLIC_ROUTES.filter((route) => route.navPlacement === 'primary' && route.access === 'public')
-  ), []);
+  const primaryNavRoutes = useMemo(
+    () =>
+      PUBLIC_ROUTES.filter(
+        (route) => route.navPlacement === 'primary' && route.access === 'public',
+      ),
+    [],
+  );
 
-  const footerExploreRoutes = useMemo(() => (
-    PUBLIC_ROUTES.filter((route) => route.access === 'public')
-  ), []);
+  const footerExploreRoutes = useMemo(
+    () => PUBLIC_ROUTES.filter((route) => route.access === 'public'),
+    [],
+  );
 
   const traversal = useMemo(() => {
     const publicRoutes = PUBLIC_ROUTES.filter((route) => route.access === 'public');
@@ -127,38 +139,84 @@ export default function Layout({ children }) {
     };
   }, [pathname]);
 
-  const footerCitizenRoutes = useMemo(() => [
-    { key: 'citizens', to: '/citizens', title: 'Citizens' },
-    { key: 'passport', to: '/passport', title: 'Citizen Passport' },
-    { key: 'conference', to: '/conference', title: 'Conference' },
-    { key: 'treasury', to: '/treasury', title: 'Treasury' },
-    { key: 'proposals', to: '/proposals', title: 'Proposals' },
-  ], []);
+  const footerCitizenRoutes = useMemo(
+    () => [
+      { key: 'citizens', to: '/citizens', title: 'Citizens' },
+      { key: 'passport', to: '/passport', title: 'Citizen Passport' },
+      { key: 'conference', to: '/conference', title: 'Conference' },
+      { key: 'treasury', to: '/treasury', title: 'Treasury' },
+      { key: 'proposals', to: '/proposals', title: 'Proposals' },
+    ],
+    [],
+  );
 
-  const footerEssentialRoutes = useMemo(() => [
-    { key: 'home', to: '/', title: 'Home' },
-    { key: 'about', to: '/about', title: 'About' },
-    { key: 'marketplace', to: '/marketplace', title: 'Marketplace' },
-    { key: 'archive', to: '/archive', title: 'Archive Library' },
-    { key: 'recovery', to: '/recovery', title: 'Recovery' },
-    { key: 'download', to: '/download-app', title: 'Download App' },
-  ], []);
+  const footerEssentialRoutes = useMemo(
+    () => [
+      { key: 'home', to: '/', title: 'Home' },
+      { key: 'about', to: '/about', title: 'About' },
+      { key: 'marketplace', to: '/marketplace', title: 'Marketplace' },
+      { key: 'archive', to: '/archive', title: 'Archive Library' },
+      { key: 'recovery', to: '/recovery', title: 'Recovery' },
+      { key: 'download', to: '/download-app', title: 'Download App' },
+    ],
+    [],
+  );
 
-  const intentRoutes = useMemo(() => [
-    { key: 'learn', title: 'Learn', to: '/archive', note: 'Read pure life knowledge and long-form writings.' },
-    { key: 'buy', title: 'Buy', to: '/marketplace', note: 'Find goods, sourcing, and real trade.' },
-    { key: 'sell', title: 'Sell', to: '/creator', note: 'Offer goods as a supplier or artisan.' },
-    { key: 'publish', title: 'Publish', to: '/books/publish', note: 'Prepare a book with covers, manuscript, and exports.' },
-    { key: 'recover', title: 'Recover', to: '/recovery', note: 'Restore context and keep continuity alive.' },
-    { key: 'participate', title: 'Participate', to: '/proposals', note: 'Read, vote, and discuss public decisions.' },
-    { key: 'explore', title: 'Explore', to: '/heelkawn', note: 'Enter the world, map, and simulation hub.' },
-  ], []);
+  const intentRoutes = useMemo(
+    () => [
+      {
+        key: 'learn',
+        title: 'Learn',
+        to: '/archive',
+        note: 'Read pure life knowledge and long-form writings.',
+      },
+      {
+        key: 'buy',
+        title: 'Buy',
+        to: '/marketplace',
+        note: 'Find goods, sourcing, and real trade.',
+      },
+      { key: 'sell', title: 'Sell', to: '/creator', note: 'Offer goods as a supplier or artisan.' },
+      {
+        key: 'publish',
+        title: 'Publish',
+        to: '/books/publish',
+        note: 'Prepare a book with covers, manuscript, and exports.',
+      },
+      {
+        key: 'recover',
+        title: 'Recover',
+        to: '/recovery',
+        note: 'Restore context and keep continuity alive.',
+      },
+      {
+        key: 'participate',
+        title: 'Participate',
+        to: '/proposals',
+        note: 'Read, vote, and discuss public decisions.',
+      },
+      {
+        key: 'explore',
+        title: 'Explore',
+        to: '/heelkawn',
+        note: 'Enter the world, map, and simulation hub.',
+      },
+    ],
+    [],
+  );
 
   return (
     <div className="layout">
-      <a className="sr-only" href="#content">Skip to content</a>
+      <a className="sr-only" href="#content">
+        Skip to content
+      </a>
       <header className="layout__header">
-        <NavLink to="/" end className="layout__brand layout__brandLink" aria-label="PVA Bazaar home">
+        <NavLink
+          to="/"
+          end
+          className="layout__brand layout__brandLink"
+          aria-label="PVA Bazaar home"
+        >
           <div className="layout__title">pvabazaar.org</div>
           <div className="layout__tagline">Personal site · Writings · Business · HeelKawn</div>
         </NavLink>
@@ -174,7 +232,9 @@ export default function Layout({ children }) {
           <NavLink className="layout__statusAction" to={hasUserAccess ? '/dashboard' : '/login'}>
             {hasUserAccess ? 'Authenticated' : 'Guest'}
           </NavLink>
-          <span className={`layout__connectionBadge layout__connectionBadge--${connectionMode.status}`}>
+          <span
+            className={`layout__connectionBadge layout__connectionBadge--${connectionMode.status}`}
+          >
             {connectionMode.label}
           </span>
         </div>
@@ -189,8 +249,14 @@ export default function Layout({ children }) {
         </button>
       </header>
       <main id="content" className="layout__main">
-        <section className="section-card layout__routeIdentity" data-route-identity="true" aria-label="Current route identity">
-          <div className="pill" data-route-label="section">{routeIdentity.section}</div>
+        <section
+          className="section-card layout__routeIdentity"
+          data-route-identity="true"
+          aria-label="Current route identity"
+        >
+          <div className="pill" data-route-label="section">
+            {routeIdentity.section}
+          </div>
           <h2 data-route-label="title" className="layout__routeTitle">
             {routeIdentity.title}
           </h2>
@@ -207,18 +273,24 @@ export default function Layout({ children }) {
               </Link>
             ))}
           </div>
-          {(traversal.prev || traversal.next) ? (
+          {traversal.prev || traversal.next ? (
             <div className="layout__routeTraversal" aria-label="Route traversal">
-              {traversal.prev ? <NavLink to={traversal.prev.to}>← {traversal.prev.title}</NavLink> : <span />}
-              {traversal.next ? <NavLink to={traversal.next.to}>{traversal.next.title} →</NavLink> : <span />}
+              {traversal.prev ? (
+                <NavLink to={traversal.prev.to}>← {traversal.prev.title}</NavLink>
+              ) : (
+                <span />
+              )}
+              {traversal.next ? (
+                <NavLink to={traversal.next.to}>{traversal.next.title} →</NavLink>
+              ) : (
+                <span />
+              )}
             </div>
           ) : null}
         </section>
         {children}
       </main>
-      {hasAdminAccess ? (
-        <OpenClawFloatingAssistant routePath={location.pathname || '/'} />
-      ) : null}
+      {hasAdminAccess ? <OpenClawFloatingAssistant routePath={location.pathname || '/'} /> : null}
       <footer className="layout__footer">
         <div className="layout__footerGrid">
           <section className="layout__footerSection" aria-label="Essential routes">

@@ -30,7 +30,7 @@ const ShopFollowerSchema = new mongoose.Schema(
     followedAt: { type: Date, default: Date.now },
     lastNotificationSentAt: Date,
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // Unique constraint: one follow per user per shop

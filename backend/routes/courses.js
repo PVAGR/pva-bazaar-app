@@ -96,7 +96,9 @@ router.post('/:courseId/enroll', requireAuth, async (req, res) => {
     }
 
     // Check if already enrolled
-    const alreadyEnrolled = course.enrolled.some((e) => e.userId.toString() === req.user._id.toString());
+    const alreadyEnrolled = course.enrolled.some(
+      (e) => e.userId.toString() === req.user._id.toString(),
+    );
     if (alreadyEnrolled) {
       return res.status(400).json({ error: 'Already enrolled in this course' });
     }
@@ -146,8 +148,11 @@ router.post('/:courseId/lessons/:lessonId/complete', requireAuth, async (req, re
     }
 
     // Calculate progress
-    const totalLessons = course.modules?.reduce((sum, mod) => sum + (mod.lessons?.length || 0), 0) || 0;
-    enrollment.progressPercentage = Math.round((enrollment.completedLessons.length / totalLessons) * 100);
+    const totalLessons =
+      course.modules?.reduce((sum, mod) => sum + (mod.lessons?.length || 0), 0) || 0;
+    enrollment.progressPercentage = Math.round(
+      (enrollment.completedLessons.length / totalLessons) * 100,
+    );
 
     await course.save();
 
@@ -176,7 +181,8 @@ router.post('/:courseId/complete', requireAuth, async (req, res) => {
     }
 
     // Check if all lessons are completed
-    const totalLessons = course.modules?.reduce((sum, mod) => sum + (mod.lessons?.length || 0), 0) || 0;
+    const totalLessons =
+      course.modules?.reduce((sum, mod) => sum + (mod.lessons?.length || 0), 0) || 0;
     if (enrollment.completedLessons.length < totalLessons) {
       return res.status(400).json({
         error: 'Not all lessons completed',
@@ -228,7 +234,9 @@ router.post('/:courseId/rate', requireAuth, async (req, res) => {
     }
 
     // Add or update rating
-    const existingRating = course.ratings.findIndex((r) => r.userId.toString() === req.user._id.toString());
+    const existingRating = course.ratings.findIndex(
+      (r) => r.userId.toString() === req.user._id.toString(),
+    );
 
     if (existingRating >= 0) {
       course.ratings[existingRating] = {
@@ -247,8 +255,7 @@ router.post('/:courseId/rate', requireAuth, async (req, res) => {
     }
 
     // Recalculate average rating
-    const avgRating =
-      course.ratings.reduce((sum, r) => sum + r.rating, 0) / course.ratings.length;
+    const avgRating = course.ratings.reduce((sum, r) => sum + r.rating, 0) / course.ratings.length;
     course.averageRating = parseFloat(avgRating.toFixed(1));
     course.reviewCount = course.ratings.length;
 

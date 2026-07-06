@@ -10,6 +10,7 @@ This file is historical reference material and should not override the canonical
 **Reclaim your digital sovereignty.** This platform enables users to livestream, journal, and organize data autonomously—breaking free from centralized control. Every recording, thought, and identity becomes part of your personal akashic record, evolving with you across time.
 
 ### Philosophy
+
 > "Open the doorway at the top of your brain"—a space for vulnerability, reflection, and connection with Truth (Asha). By streaming and journaling autonomously, you break the callus of centralized control. Whether you seek uplifting enlightenment or confront shadows, this is your sanctuary.
 
 ---
@@ -32,17 +33,20 @@ This file is historical reference material and should not override the canonical
 ### Tech Stack
 
 **Backend:**
+
 - Express.js API (Node.js)
 - MongoDB for user data, journals, streams
 - IPFS (Pinata) for decentralized storage
 - Deployed on Vercel (serverless)
 
 **Frontend:**
+
 - Vite + React
 - Axios for API calls
 - GitHub Pages deployment
 
 **Decentralization:**
+
 - IPFS: Permanent, censorship-resistant storage
 - DIDs: Self-sovereign identity (W3C standard)
 - Livepeer: Decentralized livestreaming network
@@ -86,31 +90,37 @@ This file is historical reference material and should not override the canonical
 ### v1 (Current - Blueprint)
 
 ✅ **Livestreaming Management**
+
 - Connect OBS to Twitch, Kick, YouTube, or Livepeer
 - Webhook integration for auto-recording
 - Stream status tracking
 
 ✅ **Journal System**
+
 - Markdown-based personal reflections
 - Link journal entries to stream sessions
 - Public/private visibility control
 
 ✅ **Decentralized Identity (DID)**
+
 - W3C-compliant DID creation
 - Ed25519 key pair generation
 - Self-custody of identity
 
 ✅ **IPFS Storage**
+
 - Auto-backup recordings to IPFS
 - Permanent, censorship-resistant storage
 - Gateway URLs for playback
 
 ✅ **Custom Databases**
+
 - Build personal "PirateBay-like" databases
 - Organize files, links, media
 - Full data custody
 
 ✅ **Privacy-First**
+
 - No tracking or analytics
 - Voluntary data setup
 - User-controlled encryption
@@ -118,24 +128,29 @@ This file is historical reference material and should not override the canonical
 ### v2 (Planned)
 
 🔜 **WebRTC P2P Streaming**
+
 - Direct peer-to-peer connections
 - No centralized server dependency
 
 🔜 **Blockchain Integration**
+
 - On-chain identity attestation
 - Smart contracts for data sovereignty
 
 🔜 **Enhanced DID**
+
 - Multi-sig authentication
 - Verifiable credentials
 
 ### v3 (Future)
 
 🔮 **AI Journal Insights**
+
 - "Uplifting senses" filter
 - Consciousness-aware analytics
 
 🔮 **Decentralized Marketplace**
+
 - Trade stream recordings
 - Community-driven content
 
@@ -153,12 +168,14 @@ This file is historical reference material and should not override the canonical
 ### Backend Setup
 
 1. **Clone repository:**
+
    ```bash
    git clone https://github.com/yourusername/pva-bazaar-app.git
    cd pva-bazaar-app
    ```
 
 2. **Install dependencies:**
+
    ```bash
    cd backend
    npm install
@@ -166,6 +183,7 @@ This file is historical reference material and should not override the canonical
 
 3. **Configure environment variables:**
    Create `.env` file in `backend/`:
+
    ```env
    # Database
    MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/pvabazaar
@@ -196,6 +214,7 @@ This file is historical reference material and should not override the canonical
 ### Frontend Setup
 
 1. **Install dependencies:**
+
    ```bash
    cd Frontend
    npm install
@@ -203,11 +222,13 @@ This file is historical reference material and should not override the canonical
 
 2. **Configure environment:**
    Create `.env.development` in `Frontend/`:
+
    ```env
    VITE_API_URL=http://localhost:5001/api
    ```
 
 3. **Start development server:**
+
    ```bash
    npm run dev
    ```
@@ -222,6 +243,7 @@ This file is historical reference material and should not override the canonical
 ### Authentication
 
 All protected routes require JWT token in `Authorization` header:
+
 ```
 Authorization: Bearer <your-jwt-token>
 ```
@@ -231,6 +253,7 @@ Authorization: Bearer <your-jwt-token>
 #### Streams
 
 **Create Stream**
+
 ```http
 POST /api/streams
 Content-Type: application/json
@@ -246,12 +269,14 @@ Authorization: Bearer <token>
 ```
 
 **Get User Streams**
+
 ```http
 GET /api/streams?status=live&limit=50
 Authorization: Bearer <token>
 ```
 
 **Update Stream** (e.g., add IPFS recording)
+
 ```http
 PUT /api/streams/:id
 Authorization: Bearer <token>
@@ -266,6 +291,7 @@ Authorization: Bearer <token>
 #### Journal
 
 **Create Entry**
+
 ```http
 POST /api/journal
 Authorization: Bearer <token>
@@ -281,6 +307,7 @@ Authorization: Bearer <token>
 ```
 
 **Get Entries**
+
 ```http
 GET /api/journal?tags=spirituality&limit=20
 Authorization: Bearer <token>
@@ -289,6 +316,7 @@ Authorization: Bearer <token>
 #### Decentralized Identity
 
 **Create DID**
+
 ```http
 POST /api/did
 Authorization: Bearer <token>
@@ -307,6 +335,7 @@ Response:
 ```
 
 **Resolve DID** (public)
+
 ```http
 GET /api/did/did:key:z6Mk...
 ```
@@ -314,6 +343,7 @@ GET /api/did/did:key:z6Mk...
 #### Custom Databases
 
 **Create Database**
+
 ```http
 POST /api/databases
 Authorization: Bearer <token>
@@ -327,6 +357,7 @@ Authorization: Bearer <token>
 ```
 
 **Add Entry to Database**
+
 ```http
 POST /api/databases/:id/entries
 Authorization: Bearer <token>
@@ -382,7 +413,7 @@ import { createStream, fetchStreams } from './lib/decentralizedApi';
 const result = await createStream({
   title: 'My Stream',
   platform: 'livepeer',
-  isPublic: true
+  isPublic: true,
 });
 
 if (result.ok) {
@@ -400,11 +431,13 @@ const streams = await fetchStreams({ status: 'live' });
 ### Backend (Vercel)
 
 1. **Install Vercel CLI:**
+
    ```bash
    npm i -g vercel
    ```
 
 2. **Deploy:**
+
    ```bash
    cd backend
    vercel --prod
@@ -422,17 +455,20 @@ const streams = await fetchStreams({ status: 'live' });
 ### Frontend (GitHub Pages)
 
 1. **Build production:**
+
    ```bash
    cd Frontend
    npm run build
    ```
 
 2. **Update `.env.production`:**
+
    ```env
    VITE_API_URL=https://your-api.vercel.app/api
    ```
 
 3. **Deploy to GitHub Pages:**
+
    ```bash
    npm run deploy
    ```
@@ -468,24 +504,28 @@ This is Blueprint v1—a **foundational skeleton for community iteration**. Cont
 ## 🗺️ Roadmap
 
 ### Phase 1: Blueprint v1 (Current)
+
 ✅ Core API infrastructure
 ✅ IPFS storage integration
 ✅ Basic DID support
 ✅ Dashboard UI
 
 ### Phase 2: Decentralization (Q2 2026)
+
 - [ ] Full WebRTC P2P streaming
 - [ ] OrbitDB for decentralized databases
 - [ ] IPFS pubsub for real-time updates
 - [ ] Enhanced privacy tools
 
 ### Phase 3: Community & Intelligence (Q3 2026)
+
 - [ ] AI journal insights
 - [ ] Community marketplace
 - [ ] Verifiable credentials
 - [ ] Multi-chain identity support
 
 ### Phase 4: Ecosystem (Q4 2026+)
+
 - [ ] Plugin system for extensibility
 - [ ] Developer SDK
 - [ ] Mobile apps
@@ -502,6 +542,7 @@ MIT License - Free to fork, modify, and distribute. See `LICENSE` file.
 ## 🙏 Acknowledgments
 
 Built with love for digital sovereignty. Special thanks to:
+
 - The IPFS/Filecoin community
 - W3C DID Working Group
 - Livepeer decentralized streaming network

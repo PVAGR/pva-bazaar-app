@@ -63,8 +63,12 @@ export default function CommoditiesPage() {
           },
           redFlags: Array.isArray(res.item.redFlags) ? [...res.item.redFlags] : [],
           greenFlags: Array.isArray(res.item.greenFlags) ? [...res.item.greenFlags] : [],
-          linkedTemplateIds: (res.item.linkedTemplateIds || []).map((t) => (typeof t === 'object' ? t._id : t)),
-          linkedContactIds: (res.item.linkedContactIds || []).map((c) => (typeof c === 'object' ? c._id : c)),
+          linkedTemplateIds: (res.item.linkedTemplateIds || []).map((t) =>
+            typeof t === 'object' ? t._id : t,
+          ),
+          linkedContactIds: (res.item.linkedContactIds || []).map((c) =>
+            typeof c === 'object' ? c._id : c,
+          ),
         });
       }
     } catch (e) {
@@ -76,8 +80,12 @@ export default function CommoditiesPage() {
     loadCommodities();
   }, []);
   useEffect(() => {
-    apiGet('/contacts', { params: { limit: 100 } }).then((r) => r?.ok && Array.isArray(r.items) && setContacts(r.items)).catch(() => {});
-    apiGet('/templates', { params: { limit: 100 } }).then((r) => r?.ok && Array.isArray(r.items) && setTemplates(r.items)).catch(() => {});
+    apiGet('/contacts', { params: { limit: 100 } })
+      .then((r) => r?.ok && Array.isArray(r.items) && setContacts(r.items))
+      .catch(() => {});
+    apiGet('/templates', { params: { limit: 100 } })
+      .then((r) => r?.ok && Array.isArray(r.items) && setTemplates(r.items))
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -100,7 +108,9 @@ export default function CommoditiesPage() {
         notes: draft.notes.trim(),
         marketData: {
           fobRange: draft.marketData.fobRange.trim(),
-          sampleCostMax: draft.marketData.sampleCostMax ? Number(draft.marketData.sampleCostMax) : undefined,
+          sampleCostMax: draft.marketData.sampleCostMax
+            ? Number(draft.marketData.sampleCostMax)
+            : undefined,
           certificationsNeeded: draft.marketData.certificationsNeeded.trim(),
           exportDocs: draft.marketData.exportDocs.trim(),
         },
@@ -110,7 +120,16 @@ export default function CommoditiesPage() {
       if (!res?.ok || !res.item) throw new Error(res?.error || 'Create failed');
       await loadCommodities();
       setSelectedId(res.item._id);
-      setDraft({ name: '', category: '', notes: '', marketData: { fobRange: '', sampleCostMax: '', certificationsNeeded: '', exportDocs: '' }, redFlags: [], greenFlags: [], linkedTemplateIds: [], linkedContactIds: [] });
+      setDraft({
+        name: '',
+        category: '',
+        notes: '',
+        marketData: { fobRange: '', sampleCostMax: '', certificationsNeeded: '', exportDocs: '' },
+        redFlags: [],
+        greenFlags: [],
+        linkedTemplateIds: [],
+        linkedContactIds: [],
+      });
     } catch (e) {
       setError(getErrorMessage(e, 'Create failed'));
     } finally {
@@ -129,7 +148,9 @@ export default function CommoditiesPage() {
         notes: draft.notes.trim(),
         marketData: {
           fobRange: draft.marketData.fobRange.trim(),
-          sampleCostMax: draft.marketData.sampleCostMax ? Number(draft.marketData.sampleCostMax) : undefined,
+          sampleCostMax: draft.marketData.sampleCostMax
+            ? Number(draft.marketData.sampleCostMax)
+            : undefined,
           certificationsNeeded: draft.marketData.certificationsNeeded.trim(),
           exportDocs: draft.marketData.exportDocs.trim(),
         },
@@ -174,7 +195,8 @@ export default function CommoditiesPage() {
   }
 
   function removeFlag(type, idx) {
-    if (type === 'red') setDraft((p) => ({ ...p, redFlags: p.redFlags.filter((_, i) => i !== idx) }));
+    if (type === 'red')
+      setDraft((p) => ({ ...p, redFlags: p.redFlags.filter((_, i) => i !== idx) }));
     else setDraft((p) => ({ ...p, greenFlags: p.greenFlags.filter((_, i) => i !== idx) }));
   }
 
@@ -184,28 +206,47 @@ export default function CommoditiesPage() {
         <div className="commodities-header__row">
           <div>
             <h1>Commodities (Research Hub)</h1>
-            <p className="muted">Build intelligence dossiers for any commodity: coffee, gemstones, soapstone, malachite, etc.</p>
+            <p className="muted">
+              Build intelligence dossiers for any commodity: coffee, gemstones, soapstone,
+              malachite, etc.
+            </p>
           </div>
           <div className="commodities-actions">
-            <Link to="/broker-hub" className="btn ghost">Hub</Link>
-            <button className="btn ghost" onClick={loadCommodities} disabled={loading}>Refresh</button>
+            <Link to="/broker-hub" className="btn ghost">
+              Hub
+            </Link>
+            <button className="btn ghost" onClick={loadCommodities} disabled={loading}>
+              Refresh
+            </button>
           </div>
         </div>
       </header>
       <AdminNav />
 
       <main className="commodities-main">
-        {error ? <ErrorBanner message={error} onRetry={loadCommodities} onDismiss={() => setError('')} /> : null}
+        {error ? (
+          <ErrorBanner message={error} onRetry={loadCommodities} onDismiss={() => setError('')} />
+        ) : null}
 
         <section className="card">
           <h2>New commodity</h2>
           <form className="form" onSubmit={handleCreate}>
             <label>Name *</label>
-            <input value={draft.name} onChange={(e) => setDraft((p) => ({ ...p, name: e.target.value }))} placeholder="e.g. Vietnamese Arabica" />
+            <input
+              value={draft.name}
+              onChange={(e) => setDraft((p) => ({ ...p, name: e.target.value }))}
+              placeholder="e.g. Vietnamese Arabica"
+            />
             <label>Category</label>
-            <input value={draft.category} onChange={(e) => setDraft((p) => ({ ...p, category: e.target.value }))} placeholder="coffee, gemstones, soapstone" />
+            <input
+              value={draft.category}
+              onChange={(e) => setDraft((p) => ({ ...p, category: e.target.value }))}
+              placeholder="coffee, gemstones, soapstone"
+            />
             <div className="row">
-              <button className="btn primary" type="submit" disabled={creating}>{creating ? 'Creating…' : 'Create'}</button>
+              <button className="btn primary" type="submit" disabled={creating}>
+                {creating ? 'Creating…' : 'Create'}
+              </button>
             </div>
           </form>
         </section>
@@ -233,69 +274,187 @@ export default function CommoditiesPage() {
             <h2>Edit: {selected.name}</h2>
             <div className="form">
               <label>Name</label>
-              <input value={draft.name} onChange={(e) => setDraft((p) => ({ ...p, name: e.target.value }))} />
+              <input
+                value={draft.name}
+                onChange={(e) => setDraft((p) => ({ ...p, name: e.target.value }))}
+              />
               <label>Category</label>
-              <input value={draft.category} onChange={(e) => setDraft((p) => ({ ...p, category: e.target.value }))} />
+              <input
+                value={draft.category}
+                onChange={(e) => setDraft((p) => ({ ...p, category: e.target.value }))}
+              />
               <label>Notes</label>
-              <textarea rows={4} value={draft.notes} onChange={(e) => setDraft((p) => ({ ...p, notes: e.target.value }))} placeholder="Market observations, landed-cost math..." />
+              <textarea
+                rows={4}
+                value={draft.notes}
+                onChange={(e) => setDraft((p) => ({ ...p, notes: e.target.value }))}
+                placeholder="Market observations, landed-cost math..."
+              />
               <div className="subcard">
                 <div className="subcard__title">Market data</div>
                 <label>FOB range</label>
-                <input value={draft.marketData.fobRange} onChange={(e) => setDraft((p) => ({ ...p, marketData: { ...p.marketData, fobRange: e.target.value } }))} placeholder="e.g. $3–4/kg" />
+                <input
+                  value={draft.marketData.fobRange}
+                  onChange={(e) =>
+                    setDraft((p) => ({
+                      ...p,
+                      marketData: { ...p.marketData, fobRange: e.target.value },
+                    }))
+                  }
+                  placeholder="e.g. $3–4/kg"
+                />
                 <label>Sample cost max (USD)</label>
-                <input type="number" value={draft.marketData.sampleCostMax} onChange={(e) => setDraft((p) => ({ ...p, marketData: { ...p.marketData, sampleCostMax: e.target.value } }))} placeholder="30" />
+                <input
+                  type="number"
+                  value={draft.marketData.sampleCostMax}
+                  onChange={(e) =>
+                    setDraft((p) => ({
+                      ...p,
+                      marketData: { ...p.marketData, sampleCostMax: e.target.value },
+                    }))
+                  }
+                  placeholder="30"
+                />
                 <label>Certifications needed</label>
-                <input value={draft.marketData.certificationsNeeded} onChange={(e) => setDraft((p) => ({ ...p, marketData: { ...p.marketData, certificationsNeeded: e.target.value } }))} />
+                <input
+                  value={draft.marketData.certificationsNeeded}
+                  onChange={(e) =>
+                    setDraft((p) => ({
+                      ...p,
+                      marketData: { ...p.marketData, certificationsNeeded: e.target.value },
+                    }))
+                  }
+                />
                 <label>Export docs</label>
-                <input value={draft.marketData.exportDocs} onChange={(e) => setDraft((p) => ({ ...p, marketData: { ...p.marketData, exportDocs: e.target.value } }))} />
+                <input
+                  value={draft.marketData.exportDocs}
+                  onChange={(e) =>
+                    setDraft((p) => ({
+                      ...p,
+                      marketData: { ...p.marketData, exportDocs: e.target.value },
+                    }))
+                  }
+                />
               </div>
               <div className="subcard">
                 <div className="subcard__title">Red flags</div>
                 {draft.redFlags.map((f, i) => (
                   <div key={i} className="row rowWrap">
                     <span className="flag-badge red">{f}</span>
-                    <button type="button" className="btn ghost" onClick={() => removeFlag('red', i)}>Remove</button>
+                    <button
+                      type="button"
+                      className="btn ghost"
+                      onClick={() => removeFlag('red', i)}
+                    >
+                      Remove
+                    </button>
                   </div>
                 ))}
                 <div className="row">
-                  <input value={newFlag.red} onChange={(e) => setNewFlag((n) => ({ ...n, red: e.target.value }))} placeholder="Add red flag" />
-                  <button type="button" className="btn ghost" onClick={() => addFlag('red')}>Add</button>
+                  <input
+                    value={newFlag.red}
+                    onChange={(e) => setNewFlag((n) => ({ ...n, red: e.target.value }))}
+                    placeholder="Add red flag"
+                  />
+                  <button type="button" className="btn ghost" onClick={() => addFlag('red')}>
+                    Add
+                  </button>
                 </div>
               </div>
               <div className="subcard">
                 <div className="subcard__title">Linked contacts</div>
                 {(draft.linkedContactIds || []).map((id) => {
-                  const c = contacts.find((x) => x._id === id) || selected?.linkedContactIds?.find((x) => (x?._id || x) === id);
+                  const c =
+                    contacts.find((x) => x._id === id) ||
+                    selected?.linkedContactIds?.find((x) => (x?._id || x) === id);
                   return (
                     <div key={id} className="row rowWrap">
-                      <Link to="/contacts" className="muted">{typeof c === 'object' ? c?.name : id}</Link>
-                      <button type="button" className="btn ghost" onClick={() => setDraft((p) => ({ ...p, linkedContactIds: (p.linkedContactIds || []).filter((x) => x !== id) }))}>Remove</button>
+                      <Link to="/contacts" className="muted">
+                        {typeof c === 'object' ? c?.name : id}
+                      </Link>
+                      <button
+                        type="button"
+                        className="btn ghost"
+                        onClick={() =>
+                          setDraft((p) => ({
+                            ...p,
+                            linkedContactIds: (p.linkedContactIds || []).filter((x) => x !== id),
+                          }))
+                        }
+                      >
+                        Remove
+                      </button>
                     </div>
                   );
                 })}
-                <select value="" onChange={(e) => { const v = e.target.value; if (v) setDraft((p) => ({ ...p, linkedContactIds: [...(p.linkedContactIds || []), v] })); e.target.value = ''; }}>
+                <select
+                  value=""
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (v)
+                      setDraft((p) => ({
+                        ...p,
+                        linkedContactIds: [...(p.linkedContactIds || []), v],
+                      }));
+                    e.target.value = '';
+                  }}
+                >
                   <option value="">+ Link contact</option>
-                  {contacts.filter((c) => !(draft.linkedContactIds || []).includes(c._id)).map((c) => (
-                    <option key={c._id} value={c._id}>{c.name}</option>
-                  ))}
+                  {contacts
+                    .filter((c) => !(draft.linkedContactIds || []).includes(c._id))
+                    .map((c) => (
+                      <option key={c._id} value={c._id}>
+                        {c.name}
+                      </option>
+                    ))}
                 </select>
               </div>
               <div className="subcard">
                 <div className="subcard__title">Linked templates</div>
                 {(draft.linkedTemplateIds || []).map((id) => {
-                  const t = templates.find((x) => x._id === id) || selected?.linkedTemplateIds?.find((x) => (x?._id || x) === id);
+                  const t =
+                    templates.find((x) => x._id === id) ||
+                    selected?.linkedTemplateIds?.find((x) => (x?._id || x) === id);
                   return (
                     <div key={id} className="row rowWrap">
-                      <Link to="/templates" className="muted">{typeof t === 'object' ? t?.name : id}</Link>
-                      <button type="button" className="btn ghost" onClick={() => setDraft((p) => ({ ...p, linkedTemplateIds: (p.linkedTemplateIds || []).filter((x) => x !== id) }))}>Remove</button>
+                      <Link to="/templates" className="muted">
+                        {typeof t === 'object' ? t?.name : id}
+                      </Link>
+                      <button
+                        type="button"
+                        className="btn ghost"
+                        onClick={() =>
+                          setDraft((p) => ({
+                            ...p,
+                            linkedTemplateIds: (p.linkedTemplateIds || []).filter((x) => x !== id),
+                          }))
+                        }
+                      >
+                        Remove
+                      </button>
                     </div>
                   );
                 })}
-                <select value="" onChange={(e) => { const v = e.target.value; if (v) setDraft((p) => ({ ...p, linkedTemplateIds: [...(p.linkedTemplateIds || []), v] })); e.target.value = ''; }}>
+                <select
+                  value=""
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (v)
+                      setDraft((p) => ({
+                        ...p,
+                        linkedTemplateIds: [...(p.linkedTemplateIds || []), v],
+                      }));
+                    e.target.value = '';
+                  }}
+                >
                   <option value="">+ Link template</option>
-                  {templates.filter((t) => !(draft.linkedTemplateIds || []).includes(t._id)).map((t) => (
-                    <option key={t._id} value={t._id}>{t.name}</option>
-                  ))}
+                  {templates
+                    .filter((t) => !(draft.linkedTemplateIds || []).includes(t._id))
+                    .map((t) => (
+                      <option key={t._id} value={t._id}>
+                        {t.name}
+                      </option>
+                    ))}
                 </select>
               </div>
               <div className="subcard">
@@ -303,17 +462,33 @@ export default function CommoditiesPage() {
                 {draft.greenFlags.map((f, i) => (
                   <div key={i} className="row rowWrap">
                     <span className="flag-badge green">{f}</span>
-                    <button type="button" className="btn ghost" onClick={() => removeFlag('green', i)}>Remove</button>
+                    <button
+                      type="button"
+                      className="btn ghost"
+                      onClick={() => removeFlag('green', i)}
+                    >
+                      Remove
+                    </button>
                   </div>
                 ))}
                 <div className="row">
-                  <input value={newFlag.green} onChange={(e) => setNewFlag((n) => ({ ...n, green: e.target.value }))} placeholder="Add green flag" />
-                  <button type="button" className="btn ghost" onClick={() => addFlag('green')}>Add</button>
+                  <input
+                    value={newFlag.green}
+                    onChange={(e) => setNewFlag((n) => ({ ...n, green: e.target.value }))}
+                    placeholder="Add green flag"
+                  />
+                  <button type="button" className="btn ghost" onClick={() => addFlag('green')}>
+                    Add
+                  </button>
                 </div>
               </div>
               <div className="row">
-                <button className="btn primary" onClick={handleSave} disabled={saving}>{saving ? 'Saving…' : 'Save'}</button>
-                <button className="btn ghost" onClick={handleDelete}>Delete</button>
+                <button className="btn primary" onClick={handleSave} disabled={saving}>
+                  {saving ? 'Saving…' : 'Save'}
+                </button>
+                <button className="btn ghost" onClick={handleDelete}>
+                  Delete
+                </button>
               </div>
             </div>
           </section>

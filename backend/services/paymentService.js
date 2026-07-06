@@ -73,7 +73,7 @@ async function refundPayment(paymentIntentId, amount = null) {
 
 /**
  * Handle Stripe webhook
- */async function handleWebhook(event) {
+ */ async function handleWebhook(event) {
   try {
     switch (event.type) {
       case 'payment_intent.succeeded':
@@ -104,10 +104,7 @@ async function refundPayment(paymentIntentId, amount = null) {
  * Generate idempotency key (prevent duplicate charges)
  */
 function generateIdempotencyKey(orderId, userId) {
-  return crypto
-    .createHash('sha256')
-    .update(`${orderId}-${userId}-${Date.now()}`)
-    .digest('hex');
+  return crypto.createHash('sha256').update(`${orderId}-${userId}-${Date.now()}`).digest('hex');
 }
 
 /**
@@ -144,7 +141,7 @@ async function updatePaymentStatus(orderId, status, paymentId) {
       stripePaymentId: paymentId,
       paidAt: status === 'paid' ? new Date() : null,
     },
-    { new: true }
+    { new: true },
   );
 
   return order;

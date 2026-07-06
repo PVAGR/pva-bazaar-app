@@ -45,7 +45,7 @@ router.post('/:id/material-truth', authenticateToken, async (req, res) => {
     const submission = await provenanceService.updateMaterialTruth(
       req.params.id,
       req.user.id,
-      req.body
+      req.body,
     );
 
     res.json({
@@ -64,7 +64,11 @@ router.post('/:id/material-truth', authenticateToken, async (req, res) => {
  */
 router.post('/:id/narrative', authenticateToken, async (req, res) => {
   try {
-    const submission = await provenanceService.updateNarrative(req.params.id, req.user.id, req.body);
+    const submission = await provenanceService.updateNarrative(
+      req.params.id,
+      req.user.id,
+      req.body,
+    );
 
     res.json({
       ok: true,
@@ -102,7 +106,11 @@ router.post('/:id/proofs', authenticateToken, async (req, res) => {
  */
 router.post('/:id/creator-info', authenticateToken, async (req, res) => {
   try {
-    const submission = await provenanceService.updateCreatorInfo(req.params.id, req.user.id, req.body);
+    const submission = await provenanceService.updateCreatorInfo(
+      req.params.id,
+      req.user.id,
+      req.body,
+    );
 
     res.json({
       ok: true,

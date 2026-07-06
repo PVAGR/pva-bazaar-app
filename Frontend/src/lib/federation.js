@@ -51,7 +51,7 @@ export async function fetchFederatedProposals(limit = 10) {
 
   try {
     const response = await globalThis.fetch(
-      `${FEDERATION_CONFIG.hubUrl}/api/proposals/trending?limit=${limit}&exclude=${FEDERATION_CONFIG.communityId}`
+      `${FEDERATION_CONFIG.hubUrl}/api/proposals/trending?limit=${limit}&exclude=${FEDERATION_CONFIG.communityId}`,
     );
     const data = await response.json();
     return data.items || [];
@@ -67,17 +67,20 @@ export async function voteOnFederatedProposal(federationId, support, walletAddre
   }
 
   try {
-    const response = await globalThis.fetch(`${FEDERATION_CONFIG.hubUrl}/api/proposals/${federationId}/vote`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        voterCommunity: FEDERATION_CONFIG.communityId,
-        support,
-        walletAddress,
-        signature,
-        timestamp: Date.now(),
-      }),
-    });
+    const response = await globalThis.fetch(
+      `${FEDERATION_CONFIG.hubUrl}/api/proposals/${federationId}/vote`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          voterCommunity: FEDERATION_CONFIG.communityId,
+          support,
+          walletAddress,
+          signature,
+          timestamp: Date.now(),
+        }),
+      },
+    );
 
     const data = await response.json();
     return { success: response.ok, ...data };

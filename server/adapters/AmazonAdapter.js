@@ -12,7 +12,8 @@ class AmazonAdapter {
   }
 
   async updateInventory(sku, quantity) {
-    if (!this.isReady()) return { success: false, skipped: true, error: 'Amazon credentials missing' };
+    if (!this.isReady())
+      return { success: false, skipped: true, error: 'Amazon credentials missing' };
 
     try {
       await axios.put(
@@ -41,7 +42,8 @@ class AmazonAdapter {
   }
 
   async checkOrders() {
-    if (!this.isReady()) return { success: false, skipped: true, error: 'Amazon credentials missing', orders: [] };
+    if (!this.isReady())
+      return { success: false, skipped: true, error: 'Amazon credentials missing', orders: [] };
 
     try {
       const response = await axios.get(`${this.baseURL}/orders/v0/orders`, {

@@ -54,7 +54,14 @@ router.get('/bank-account', requireAuth, async (req, res) => {
  */
 router.post('/bank-account', requireAuth, async (req, res) => {
   try {
-    const { accountHolderName, bankCountry, bankCurrency, accountNumber, routingNumber, swiftCode } = req.body;
+    const {
+      accountHolderName,
+      bankCountry,
+      bankCurrency,
+      accountNumber,
+      routingNumber,
+      swiftCode,
+    } = req.body;
 
     // Validate input
     if (!accountHolderName || !bankCountry || !bankCurrency || !accountNumber) {
@@ -62,7 +69,8 @@ router.post('/bank-account', requireAuth, async (req, res) => {
     }
 
     // Encrypt sensitive data
-    const encryption_key = process.env.BANK_ACCOUNT_ENCRYPTION_KEY || crypto.randomBytes(32).toString('hex');
+    const encryption_key =
+      process.env.BANK_ACCOUNT_ENCRYPTION_KEY || crypto.randomBytes(32).toString('hex');
     const iv = crypto.randomBytes(16);
     const cipher = crypto.createCipheriv('aes-256-gcm', Buffer.from(encryption_key, 'hex'), iv);
 
@@ -247,10 +255,7 @@ router.post('/bank-webhook', async (req, res) => {
  * Helper: Verify webhook signature
  */
 function verifyWebhookSignature(payload, signature, secret) {
-  const hash = crypto
-    .createHmac('sha256', secret)
-    .update(JSON.stringify(payload))
-    .digest('hex');
+  const hash = crypto.createHmac('sha256', secret).update(JSON.stringify(payload)).digest('hex');
   return crypto.timingSafeEqual(Buffer.from(hash), Buffer.from(signature));
 }
 

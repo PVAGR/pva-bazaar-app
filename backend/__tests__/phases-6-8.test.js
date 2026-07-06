@@ -31,14 +31,12 @@ describe('Phase 6b: Global Fulfillment', () => {
     });
 
     test('calculate-shipping: Get shipping cost with surcharges', async () => {
-      const response = await request(app)
-        .post('/api/fulfillment/calculate-shipping')
-        .send({
-          destinationCountry: 'USA',
-          weight: 2.5,
-          shippingMethod: 'standard',
-          insuranceValue: 1000,
-        });
+      const response = await request(app).post('/api/fulfillment/calculate-shipping').send({
+        destinationCountry: 'USA',
+        weight: 2.5,
+        shippingMethod: 'standard',
+        insuranceValue: 1000,
+      });
 
       expect(response.status).toBeOneOf([200, 400]);
       if (response.status === 200) {
@@ -49,13 +47,11 @@ describe('Phase 6b: Global Fulfillment', () => {
     });
 
     test('shipping-rates: Get multiple carrier options', async () => {
-      const response = await request(app)
-        .post('/api/fulfillment/shipping-rates')
-        .send({
-          destinationCountry: 'USA',
-          weight: 1,
-          insuranceValue: 500,
-        });
+      const response = await request(app).post('/api/fulfillment/shipping-rates').send({
+        destinationCountry: 'USA',
+        weight: 1,
+        insuranceValue: 500,
+      });
 
       expect(response.status).toBeOneOf([200, 400, 500]);
       if (response.status === 200) {
@@ -89,9 +85,7 @@ describe('Phase 6b: Global Fulfillment', () => {
     });
 
     test('track-shipment: Get real-time tracking info', async () => {
-      const response = await request(app)
-        .get('/api/fulfillment/track-shipment/TRACKING123')
-        .send();
+      const response = await request(app).get('/api/fulfillment/track-shipment/TRACKING123').send();
 
       expect(response.status).toBeOneOf([200, 404]);
     });
@@ -158,9 +152,7 @@ describe('Phase 7: AI Helper', () => {
     });
 
     test('guides: Get help guide for topic', async () => {
-      const response = await request(app)
-        .get('/api/ai-help/guides/pricing')
-        .send();
+      const response = await request(app).get('/api/ai-help/guides/pricing').send();
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('title');
@@ -331,9 +323,7 @@ describe('Phase 8: Open API & Integrations', () => {
 
 describe('Health & Status', () => {
   test('health: API health check', async () => {
-    const response = await request(app)
-      .get('/api/health')
-      .send();
+    const response = await request(app).get('/api/health').send();
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('ok');
@@ -341,27 +331,21 @@ describe('Health & Status', () => {
   });
 
   test('ping: Express ping', async () => {
-    const response = await request(app)
-      .get('/api/express-ping')
-      .send();
+    const response = await request(app).get('/api/express-ping').send();
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('ok');
   });
 
   test('version: API version info', async () => {
-    const response = await request(app)
-      .get('/api/version')
-      .send();
+    const response = await request(app).get('/api/version').send();
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('version');
   });
 
   test('openapi: OpenAPI spec available', async () => {
-    const response = await request(app)
-      .get('/api/openapi.json')
-      .send();
+    const response = await request(app).get('/api/openapi.json').send();
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('openapi');
@@ -370,9 +354,7 @@ describe('Health & Status', () => {
   });
 
   test('docs: Swagger UI available', async () => {
-    const response = await request(app)
-      .get('/api/docs')
-      .send();
+    const response = await request(app).get('/api/docs').send();
 
     expect(response.status).toBe(200);
     expect(response.text).toContain('swagger-ui');

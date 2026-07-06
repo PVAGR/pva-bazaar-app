@@ -176,7 +176,9 @@
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s, transform 0.2s;
+  transition:
+    background 0.2s,
+    transform 0.2s;
 }
 
 .sticky-cta:hover {
@@ -378,7 +380,9 @@
   padding: 0.65rem 0.8rem;
   font-family: inherit;
   font-size: 0.95rem;
-  transition: border 0.2s, box-shadow 0.2s;
+  transition:
+    border 0.2s,
+    box-shadow 0.2s;
   outline: none;
 }
 
@@ -432,7 +436,9 @@
   font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s, transform 0.2s;
+  transition:
+    background 0.2s,
+    transform 0.2s;
   align-self: flex-start;
 }
 

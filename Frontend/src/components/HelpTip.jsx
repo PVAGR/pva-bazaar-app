@@ -80,4 +80,3 @@ export default function HelpTip({ title, body, example }) {
     </span>
   );
 }
-

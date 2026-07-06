@@ -65,8 +65,10 @@ router.post('/', authMiddleware, async (req, res) => {
 // GET /api/contacts/:id
 router.get('/:id', authMiddleware, async (req, res) => {
   try {
-    const contact = await Contact.findOne({ _id: req.params.id, ownerId: req.user.id })
-      .populate('commodities', 'name category');
+    const contact = await Contact.findOne({ _id: req.params.id, ownerId: req.user.id }).populate(
+      'commodities',
+      'name category',
+    );
     if (!contact) return res.status(404).json({ ok: false, error: 'Contact not found' });
     res.json({ ok: true, item: contact });
   } catch (err) {
@@ -93,7 +95,8 @@ router.put('/:id', authMiddleware, async (req, res) => {
     if (body.type !== undefined) contact.type = sanitize(body.type) || contact.type;
     if (Array.isArray(body.commodities)) contact.commodities = body.commodities;
     if (body.notes !== undefined) contact.notes = sanitize(body.notes);
-    if (body.birthDate !== undefined) contact.birthDate = body.birthDate ? new Date(body.birthDate) : undefined;
+    if (body.birthDate !== undefined)
+      contact.birthDate = body.birthDate ? new Date(body.birthDate) : undefined;
     if (body.birthTime !== undefined) contact.birthTime = sanitize(body.birthTime);
     if (body.birthPlace !== undefined) contact.birthPlace = sanitize(body.birthPlace);
 

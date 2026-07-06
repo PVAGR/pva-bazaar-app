@@ -1,12 +1,14 @@
 # Local Development Setup Guide
 
 ## Prerequisites
+
 - Node.js 20.x or higher
 - npm or pnpm
 - MongoDB (local or Atlas)
 - Git
 
 ## Project Structure
+
 ```
 pva-bazaar-app/
 ├── Frontend/                 # React + Vite (port 5173)
@@ -23,12 +25,14 @@ pva-bazaar-app/
 ## Frontend Setup
 
 ### 1. Install Dependencies
+
 ```bash
 cd Frontend
 npm install
 ```
 
 ### 2. Create `.env.local`
+
 ```env
 # Frontend/.env.local
 VITE_API_URL=http://localhost:3001
@@ -37,23 +41,27 @@ VITE_CLOUDINARY_UPLOAD_PRESET=your_upload_preset
 ```
 
 ### 3. Development Server
+
 ```bash
 npm run dev
 # Frontend runs on http://localhost:5173
 ```
 
 ### 4. Build for Production
+
 ```bash
 npm run build
 # Output in dist/
 ```
 
 ### 5. Key Files
+
 - [src/config/env.ts](Frontend/src/config/env.ts) - Environment configuration (validates VITE_API_URL)
 - [src/lib/api.js](Frontend/src/lib/api.js) - API helpers (apiGet, apiPost, apiPut, apiDelete)
 - [vite.config.ts](Frontend/vite.config.ts) - Vite configuration
 
 ### Frontend Rules ✅
+
 - Never hardcode API URLs
 - Use `ENV.API_URL` from env.ts
 - Use api.js helpers for all backend calls
@@ -65,12 +73,14 @@ npm run build
 ## Backend Setup
 
 ### 1. Install Dependencies
+
 ```bash
 cd backend
 npm install
 ```
 
 ### 2. Create `.env`
+
 ```env
 # backend/.env
 NODE_ENV=development
@@ -92,6 +102,7 @@ SENTRY_ENVIRONMENT=development
 ### 3. MongoDB Setup
 
 **Option A: Local MongoDB**
+
 ```bash
 # Install MongoDB Community
 # macOS:
@@ -107,24 +118,28 @@ mongod
 ```
 
 **Option B: MongoDB Atlas (Cloud)**
+
 1. Create account at https://www.mongodb.com/cloud/atlas
 2. Create cluster (free tier available)
 3. Get connection string
 4. Use in MONGODB_URI
 
 ### 4. Development Server
+
 ```bash
 npm run dev
 # Backend runs on http://localhost:3001
 ```
 
 ### 5. Test API Health
+
 ```bash
 curl http://localhost:3001/health
 # Response: { "ok": true, ... }
 ```
 
 ### 6. Key Files
+
 - [api/index.js](backend/api/index.js) - Main Express app
   - CORS configuration (lines 40-65)
   - MongoDB connection pooling (lines 147-190)
@@ -133,6 +148,7 @@ curl http://localhost:3001/health
 - [middleware/](backend/middleware/) - Express middleware
 
 ### Backend Rules ✅
+
 - Read all secrets from process.env
 - CORS configured for pvabazaar.org + localhost
 - Never log/return raw secrets
@@ -144,6 +160,7 @@ curl http://localhost:3001/health
 ## Full Stack Development
 
 ### Terminal 1: Backend
+
 ```bash
 cd backend
 npm run dev
@@ -151,6 +168,7 @@ npm run dev
 ```
 
 ### Terminal 2: Frontend
+
 ```bash
 cd Frontend
 npm run dev
@@ -158,6 +176,7 @@ npm run dev
 ```
 
 ### Terminal 3: Optional - Testing
+
 ```bash
 # Run health checks
 curl http://localhost:3001/health
@@ -172,6 +191,7 @@ curl http://localhost:5173/
 ## CORS Configuration
 
 ### Current Setup
+
 - ✅ Allowed Origins:
   - `https://pvabazaar.org`
   - `https://www.pvabazaar.org`
@@ -189,12 +209,14 @@ curl http://localhost:5173/
 ## API Connectivity Verification
 
 ### 1. Check Backend Health
+
 ```bash
 curl -v http://localhost:3001/health
 # Should return 200 with { "ok": true, ... }
 ```
 
 ### 2. Check CORS Headers
+
 ```bash
 curl -v -X OPTIONS http://localhost:3001/api/products \
   -H "Origin: http://localhost:5173"
@@ -204,6 +226,7 @@ curl -v -X OPTIONS http://localhost:3001/api/products \
 ```
 
 ### 3. Check Frontend → Backend Communication
+
 1. Open http://localhost:5173
 2. Open browser DevTools (F12)
 3. Go to Network tab
@@ -215,6 +238,7 @@ curl -v -X OPTIONS http://localhost:3001/api/products \
 ## Common Issues & Solutions
 
 ### "Cannot find module" errors
+
 ```bash
 # Reinstall dependencies
 rm -rf node_modules package-lock.json
@@ -222,20 +246,24 @@ npm install
 ```
 
 ### "ECONNREFUSED localhost:3001" (Frontend can't reach Backend)
+
 1. Is backend running? Check Terminal 1
 2. Is VITE_API_URL correct? Check Frontend/.env.local
 3. CORS issue? Check browser console for error details
 
 ### "MONGODB_URI not set" error
+
 1. Create backend/.env
 2. Add MONGODB_URI (local or Atlas)
 3. Restart backend (npm run dev)
 
 ### MongoDB connection timeout
+
 - If local: Is mongod running? (`mongod` command)
 - If Atlas: Is IP whitelisted? Check Atlas dashboard
 
 ### Port already in use
+
 ```bash
 # Backend (3001) in use
 npx kill-port 3001
@@ -251,6 +279,7 @@ npm run dev -- --port 5174
 ## Deployment Environment Variables
 
 ### GitHub Secrets (for CI/CD)
+
 Add to repo Settings → Secrets and variables → Actions:
 
 ```
@@ -264,6 +293,7 @@ SENTRY_DSN             # Optional, for error tracking
 ```
 
 ### Vercel Backend Environment Variables
+
 Set in Vercel Project Settings:
 
 ```
@@ -276,6 +306,7 @@ NODE_ENV=production
 ```
 
 ### Vercel Frontend Environment Variables
+
 Set in Vercel Project Settings:
 
 ```
@@ -289,6 +320,7 @@ VITE_CLOUDINARY_UPLOAD_PRESET=...
 ## File Structure Reference
 
 ### Frontend Key Paths
+
 - **Config:** [Frontend/src/config/env.ts](Frontend/src/config/env.ts)
 - **API Client:** [Frontend/src/lib/api.js](Frontend/src/lib/api.js)
 - **Pages:** [Frontend/src/pages/](Frontend/src/pages/)
@@ -296,6 +328,7 @@ VITE_CLOUDINARY_UPLOAD_PRESET=...
 - **Vite Config:** [Frontend/vite.config.ts](Frontend/vite.config.ts)
 
 ### Backend Key Paths
+
 - **API Entry:** [backend/api/index.js](backend/api/index.js)
 - **Routes:** [backend/routes/](backend/routes/)
 - **Middleware:** [backend/middleware/](backend/middleware/)
@@ -307,6 +340,7 @@ VITE_CLOUDINARY_UPLOAD_PRESET=...
 ## Quick Commands
 
 ### Frontend
+
 ```bash
 cd Frontend
 npm install                # Install dependencies
@@ -317,6 +351,7 @@ npm run test              # Run tests
 ```
 
 ### Backend
+
 ```bash
 cd backend
 npm install                # Install dependencies
@@ -326,6 +361,7 @@ npm run seed              # Seed database
 ```
 
 ### Root Project
+
 ```bash
 git status               # Check git status
 git log --oneline        # View recent commits

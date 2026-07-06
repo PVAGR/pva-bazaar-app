@@ -47,7 +47,10 @@ router.post('/request', requireAuth, async (req, res) => {
     }
 
     // Check for duplicate attempts
-    const dupeCheck = await reclaimVerificationService.validateAgainstDuplicate(artifactId, req.user._id);
+    const dupeCheck = await reclaimVerificationService.validateAgainstDuplicate(
+      artifactId,
+      req.user._id,
+    );
     if (!dupeCheck.safe) {
       return res.status(429).json({
         error: `Too many reclaim attempts (${dupeCheck.recentClaimCount} in 7 days)`,
@@ -55,7 +58,10 @@ router.post('/request', requireAuth, async (req, res) => {
     }
 
     // Run verification
-    const verification = await reclaimVerificationService.verifyReclaimEligibility(artifactId, submittedMetadata);
+    const verification = await reclaimVerificationService.verifyReclaimEligibility(
+      artifactId,
+      submittedMetadata,
+    );
 
     // Create reclaim record
     const reclaim = new ItemReclaim({
@@ -86,7 +92,9 @@ router.post('/request', requireAuth, async (req, res) => {
     }
 
     res.status(201).json({
-      message: verification.eligible ? 'Reclaim approved and certificate issued' : 'Reclaim pending verification',
+      message: verification.eligible
+        ? 'Reclaim approved and certificate issued'
+        : 'Reclaim pending verification',
       reclaimId: reclaim._id,
       status: reclaim.status,
       confidence: verification.overallConfidence,

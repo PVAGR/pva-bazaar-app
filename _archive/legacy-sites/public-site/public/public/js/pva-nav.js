@@ -113,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
   navLinks.forEach((a) => {
     const href = (a.getAttribute('href') || '').toLowerCase();
     if (!href) return;
-    if (href === path || href === `/${  filename}` || (filename && href.endsWith(filename))) {
+    if (href === path || href === `/${filename}` || (filename && href.endsWith(filename))) {
       a.classList.add('active');
     }
   });

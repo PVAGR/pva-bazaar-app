@@ -8,6 +8,7 @@ This is the pinnacle of the vision. You are describing a Progressive, Sovereign 
 The core idea is that "citizenship" is not just a status; it's an active, rewarded participation in a circular economy designed to uplift everyone within it. The game loop is: Contribute → Be Rewarded → Prosper → Contribute More.
 
 Citizenship Tiers:
+
 - Resident (Tier 1): Anyone who holds any PVA-related asset
 - Citizen (Tier 2): Someone who has reached a certain threshold of engagement
 - Patron (Tier 3): Those who have made significant contributions

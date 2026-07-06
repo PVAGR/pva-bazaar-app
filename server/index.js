@@ -70,7 +70,7 @@ async function syncMintToMainApp({
       ok: res.ok,
       status: res.status,
       response: body,
-      error: res.ok ? '' : (body?.error || `Sync failed with HTTP ${res.status}`),
+      error: res.ok ? '' : body?.error || `Sync failed with HTTP ${res.status}`,
     };
   } catch (err) {
     return {
@@ -133,9 +133,7 @@ function isAuthorizedWebhookRequest(req) {
   if (!configuredSecret) return true;
 
   const providedSecret = String(
-    req.get('X-Registrar-Webhook-Secret')
-      || req.get('X-Webhook-Secret')
-      || '',
+    req.get('X-Registrar-Webhook-Secret') || req.get('X-Webhook-Secret') || '',
   ).trim();
 
   return Boolean(providedSecret) && providedSecret === configuredSecret;
@@ -190,7 +188,10 @@ app.post('/api/register', upload.single('image'), async (req, res) => {
       imageResult.ipfsHash,
       null,
     );
-    const docResult = await ipfsService.pinJSON(historicalRecord, `${name || 'artifact'}-documentation`);
+    const docResult = await ipfsService.pinJSON(
+      historicalRecord,
+      `${name || 'artifact'}-documentation`,
+    );
 
     const relativeImagePath = `uploads/${path.basename(req.file.path)}`;
     const stmt = db.prepare(`
@@ -314,7 +315,9 @@ app.post('/api/analytics/record-sale', (req, res) => {
 
     let finalCreatorAddress = String(creatorAddress || '').trim();
     if (!finalCreatorAddress && artifactId) {
-      const artifact = db.prepare('SELECT creator_address FROM artifacts WHERE id = ?').get(Number(artifactId));
+      const artifact = db
+        .prepare('SELECT creator_address FROM artifacts WHERE id = ?')
+        .get(Number(artifactId));
       finalCreatorAddress = String(artifact?.creator_address || '').trim();
     }
 
@@ -342,9 +345,10 @@ app.post('/api/analytics/record-sale', (req, res) => {
         recipientAddress: finalCreatorAddress,
         type: saleType === 'PRIMARY' ? 'SALE' : 'ROYALTY',
         title: saleType === 'PRIMARY' ? '🎉 Primary Sale Recorded' : '💰 Royalty Earned',
-        message: saleType === 'PRIMARY'
-          ? `Your artifact sold for $${salePriceNum.toFixed(2)} on ${platform}.`
-          : `Royalty of $${Number(royaltyAmt).toFixed(2)} earned on a $${salePriceNum.toFixed(2)} secondary sale via ${platform}.`,
+        message:
+          saleType === 'PRIMARY'
+            ? `Your artifact sold for $${salePriceNum.toFixed(2)} on ${platform}.`
+            : `Royalty of $${Number(royaltyAmt).toFixed(2)} earned on a $${salePriceNum.toFixed(2)} secondary sale via ${platform}.`,
         referenceId: event?.id ?? null,
         referenceType: 'royalty_event',
       });
@@ -365,7 +369,10 @@ app.get('/api/analytics/export/:creatorAddress', (req, res) => {
     const csv = royaltyTracker.exportCreatorCsv(creatorAddress);
 
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-    res.setHeader('Content-Disposition', `attachment; filename="royalty-history-${creatorAddress}.csv"`);
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="royalty-history-${creatorAddress}.csv"`,
+    );
     return res.status(200).send(csv);
   } catch (error) {
     return res.status(400).json({ ok: false, error: error.message });
@@ -415,19 +422,39 @@ app.post('/api/ipfs-upload', async (req, res) => {
 
     const absoluteImagePath = path.join(__dirname, artifact.image_path);
     if (!fs.existsSync(absoluteImagePath)) {
-      return res.status(404).json({ error: 'Image file not found on disk', path: artifact.image_path });
+      return res
+        .status(404)
+        .json({ error: 'Image file not found on disk', path: artifact.image_path });
     }
 
     const imageBuffer = fs.readFileSync(absoluteImagePath);
-    const imageResult = await ipfsService.pinFile(imageBuffer, `${artifact.name || 'artifact'}-${artifact.id}-image`);
-    const historicalRecord = ipfsService.generateHistoricalRecord(artifact, imageResult.ipfsHash, artifact.blockchain_tx_hash || null);
-    const docResult = await ipfsService.pinJSON(historicalRecord, `${artifact.name || 'artifact'}-${artifact.id}-documentation`);
+    const imageResult = await ipfsService.pinFile(
+      imageBuffer,
+      `${artifact.name || 'artifact'}-${artifact.id}-image`,
+    );
+    const historicalRecord = ipfsService.generateHistoricalRecord(
+      artifact,
+      imageResult.ipfsHash,
+      artifact.blockchain_tx_hash || null,
+    );
+    const docResult = await ipfsService.pinJSON(
+      historicalRecord,
+      `${artifact.name || 'artifact'}-${artifact.id}-documentation`,
+    );
 
-    db.prepare(`
+    db.prepare(
+      `
       UPDATE artifacts
       SET ipfs_image_hash = ?, ipfs_doc_hash = ?, ipfs_image_cid = ?, ipfs_metadata_uri = ?, ipfs_uploaded_at = CURRENT_TIMESTAMP
       WHERE id = ?
-    `).run(imageResult.ipfsHash, docResult.ipfsHash, imageResult.ipfsHash, `ipfs://${docResult.ipfsHash}`, artifact.id);
+    `,
+    ).run(
+      imageResult.ipfsHash,
+      docResult.ipfsHash,
+      imageResult.ipfsHash,
+      `ipfs://${docResult.ipfsHash}`,
+      artifact.id,
+    );
 
     return res.json({
       success: true,
@@ -449,7 +476,9 @@ app.post('/api/webhooks/ebay', async (req, res) => {
   const eventId = uuidv4();
   try {
     if (!isAuthorizedWebhookRequest(req)) {
-      return res.status(401).json({ received: false, eventId, error: 'Unauthorized webhook request' });
+      return res
+        .status(401)
+        .json({ received: false, eventId, error: 'Unauthorized webhook request' });
     }
 
     const order = req.body || {};
@@ -476,11 +505,15 @@ app.post('/api/webhooks/amazon', async (req, res) => {
   const eventId = uuidv4();
   try {
     if (!isAuthorizedWebhookRequest(req)) {
-      return res.status(401).json({ received: false, eventId, error: 'Unauthorized webhook request' });
+      return res
+        .status(401)
+        .json({ received: false, eventId, error: 'Unauthorized webhook request' });
     }
 
     const order = req.body || {};
-    const artifactId = syncEngine.extractArtifactIdFromSku(order?.sellerOrderId || order?.SellerOrderId || '');
+    const artifactId = syncEngine.extractArtifactIdFromSku(
+      order?.sellerOrderId || order?.SellerOrderId || '',
+    );
 
     if (artifactId) {
       await syncEngine.syncAllPlatforms(artifactId, {
@@ -502,7 +535,9 @@ app.post('/api/webhooks/website', async (req, res) => {
   const eventId = uuidv4();
   try {
     if (!isAuthorizedWebhookRequest(req)) {
-      return res.status(401).json({ received: false, eventId, error: 'Unauthorized webhook request' });
+      return res
+        .status(401)
+        .json({ received: false, eventId, error: 'Unauthorized webhook request' });
     }
 
     const { artifactId, buyerAddress, txHash, price } = req.body || {};
@@ -527,7 +562,12 @@ app.post('/api/webhooks/website', async (req, res) => {
 // ENDPOINT: Mint a registered artifact onto the blockchain
 app.post('/api/mint', async (req, res) => {
   try {
-    const { artifactId, recipientAddress, metadataURI = '', mainItemIdOrSlug = '' } = req.body || {};
+    const {
+      artifactId,
+      recipientAddress,
+      metadataURI = '',
+      mainItemIdOrSlug = '',
+    } = req.body || {};
 
     if (!artifactId) {
       return res.status(400).json({ error: 'artifactId is required' });
@@ -568,7 +608,8 @@ app.post('/api/mint', async (req, res) => {
 
     const recipient = recipientAddress || (await signer.getAddress());
     // Prefer: stored IPFS URI -> caller-supplied URI -> pending placeholder
-    const ipfsURI = artifact.ipfs_metadata_uri || metadataURI || `ipfs://pending/${artifact.unique_hash}`;
+    const ipfsURI =
+      artifact.ipfs_metadata_uri || metadataURI || `ipfs://pending/${artifact.unique_hash}`;
 
     const tx = await contract.mintArtifact(recipient, artifact.unique_hash, ipfsURI);
     const receipt = await tx.wait();
@@ -582,18 +623,22 @@ app.post('/api/mint', async (req, res) => {
           tokenId = Number(parsed.args.tokenId);
           break;
         }
-      } catch (_) { /* non-matching log */ }
+      } catch (_) {
+        /* non-matching log */
+      }
     }
 
     // Update local registry
-    db.prepare(`
+    db.prepare(
+      `
       UPDATE artifacts
       SET status = ?,
           blockchain_token_id = ?,
           blockchain_tx_hash = ?,
           owner_address = ?
       WHERE id = ?
-    `).run('MINTED', tokenId, tx.hash, recipient, artifact.id);
+    `,
+    ).run('MINTED', tokenId, tx.hash, recipient, artifact.id);
 
     const syncResult = await syncMintToMainApp({
       itemIdOrSlug: String(mainItemIdOrSlug || '').trim(),
@@ -629,11 +674,16 @@ app.post('/api/mint', async (req, res) => {
 app.get('/api/notifications', (req, res) => {
   try {
     const recipientAddress = String(req.query.recipientAddress || '').trim();
-    if (!recipientAddress) return res.status(400).json({ ok: false, error: 'recipientAddress is required' });
+    if (!recipientAddress)
+      return res.status(400).json({ ok: false, error: 'recipientAddress is required' });
     const limit = Math.min(Number(req.query.limit || 50), 200);
     const offset = Number(req.query.offset || 0);
     const unreadOnly = req.query.unreadOnly === 'true' || req.query.unreadOnly === '1';
-    const result = notificationService.getNotifications(recipientAddress, { limit, offset, unreadOnly });
+    const result = notificationService.getNotifications(recipientAddress, {
+      limit,
+      offset,
+      unreadOnly,
+    });
     return res.json({ ok: true, ...result });
   } catch (error) {
     return res.status(400).json({ ok: false, error: error.message });
@@ -656,7 +706,8 @@ app.get('/api/notifications/badge', (req, res) => {
 app.post('/api/notifications/mark-read', (req, res) => {
   try {
     const { recipientAddress, ids = [] } = req.body || {};
-    if (!recipientAddress) return res.status(400).json({ ok: false, error: 'recipientAddress is required' });
+    if (!recipientAddress)
+      return res.status(400).json({ ok: false, error: 'recipientAddress is required' });
     notificationService.markRead(recipientAddress, ids);
     return res.json({ ok: true });
   } catch (error) {
@@ -668,7 +719,8 @@ app.post('/api/notifications/mark-read', (req, res) => {
 app.post('/api/notifications/mark-all-read', (req, res) => {
   try {
     const { recipientAddress } = req.body || {};
-    if (!recipientAddress) return res.status(400).json({ ok: false, error: 'recipientAddress is required' });
+    if (!recipientAddress)
+      return res.status(400).json({ ok: false, error: 'recipientAddress is required' });
     notificationService.markAllRead(recipientAddress);
     return res.json({ ok: true });
   } catch (error) {
@@ -681,7 +733,8 @@ app.delete('/api/notifications/:id', (req, res) => {
   try {
     const { id } = req.params;
     const recipientAddress = String(req.query.recipientAddress || '').trim();
-    if (!recipientAddress) return res.status(400).json({ ok: false, error: 'recipientAddress is required' });
+    if (!recipientAddress)
+      return res.status(400).json({ ok: false, error: 'recipientAddress is required' });
     notificationService.deleteNotification(recipientAddress, id);
     return res.json({ ok: true });
   } catch (error) {
@@ -704,5 +757,7 @@ app.listen(PORT, () => {
   console.log(`  IPFS      -> POST ${baseUrl}/api/ipfs-upload`);
   console.log(`  Mint      -> POST ${baseUrl}/api/mint`);
   console.log('  Webhooks  -> POST /api/webhooks/ebay|amazon|website');
-  console.log(`  Webhook auth -> ${process.env.WEBHOOK_SHARED_SECRET ? 'enabled' : 'disabled (set WEBHOOK_SHARED_SECRET)'}`);
+  console.log(
+    `  Webhook auth -> ${process.env.WEBHOOK_SHARED_SECRET ? 'enabled' : 'disabled (set WEBHOOK_SHARED_SECRET)'}`,
+  );
 });

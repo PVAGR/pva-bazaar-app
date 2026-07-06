@@ -1,8 +1,8 @@
 /**
  * ArchiveTab
- * 
+ *
  * PURPOSE: Manage archive entries with CRUD operations
- * 
+ *
  * FEATURES:
  * - Create new archive entries with markdown support
  * - View all saved archive entries
@@ -11,7 +11,7 @@
  * - Media upload via Cloudinary
  * - Real-time word count
  * - Statistics display
- * 
+ *
  * API ENDPOINTS:
  * - GET /api/archive - Fetch all archive entries
  * - POST /api/archive - Create new entry
@@ -34,9 +34,9 @@ export default function ArchiveTab() {
     description: '',
     content: '',
     wordCount: '0',
-    mediaUrls: ''
+    mediaUrls: '',
   });
-  
+
   const [savedEntries, setSavedEntries] = useState([]);
   const [entriesLoading, setEntriesLoading] = useState(true);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -70,11 +70,11 @@ export default function ArchiveTab() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [name]: value,
       // Auto-calculate word count for content
-      ...(name === 'content' ? { wordCount: value.trim().split(/\s+/).length.toString() } : {})
+      ...(name === 'content' ? { wordCount: value.trim().split(/\s+/).length.toString() } : {}),
     }));
   };
 
@@ -93,7 +93,9 @@ export default function ArchiveTab() {
   const uploadMediaFiles = async (files) => {
     const { cloudName, uploadPreset } = getCloudinaryConfig();
     if (!cloudName || !uploadPreset) {
-      setMediaError('Missing Cloudinary config. Set VITE_CLOUDINARY_CLOUD_NAME and VITE_CLOUDINARY_UPLOAD_PRESET.');
+      setMediaError(
+        'Missing Cloudinary config. Set VITE_CLOUDINARY_CLOUD_NAME and VITE_CLOUDINARY_UPLOAD_PRESET.',
+      );
       return;
     }
     if (!files?.length) return;
@@ -116,7 +118,7 @@ export default function ArchiveTab() {
             throw new Error(data?.error?.message || 'Upload failed');
           }
           return data.secure_url;
-        })
+        }),
       );
 
       setFormData((prev) => {
@@ -134,7 +136,7 @@ export default function ArchiveTab() {
     e.preventDefault();
     setApiError('');
     setIsSubmitting(true);
-    
+
     try {
       if (editingEntry) {
         // For now, editing is not supported via API - show message
@@ -153,7 +155,7 @@ export default function ArchiveTab() {
         };
 
         const result = await createArchiveEntry(entryData);
-        
+
         if (!result.ok) {
           setApiError(`Failed to create entry: ${result.error}`);
           setIsSubmitting(false);
@@ -175,7 +177,7 @@ export default function ArchiveTab() {
         description: '',
         content: '',
         wordCount: '0',
-        mediaUrls: ''
+        mediaUrls: '',
       });
       setApiError('');
     } catch (err) {
@@ -193,7 +195,7 @@ export default function ArchiveTab() {
       description: entry.description,
       content: entry.content,
       wordCount: entry.wordCount,
-      mediaUrls: Array.isArray(entry.media) ? entry.media.join('\n') : ''
+      mediaUrls: Array.isArray(entry.media) ? entry.media.join('\n') : '',
     });
     // Scroll to form
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -207,7 +209,7 @@ export default function ArchiveTab() {
       description: '',
       content: '',
       wordCount: '0',
-      mediaUrls: ''
+      mediaUrls: '',
     });
   };
 
@@ -218,15 +220,15 @@ export default function ArchiveTab() {
 
   const confirmDeleteAction = async () => {
     if (!deleteConfirm) return;
-    
+
     const { id } = deleteConfirm;
-    
+
     try {
       setIsSubmitting(true);
       const result = await deleteArchiveEntry(id);
-      
+
       if (result.ok) {
-        setSavedEntries(prev => prev.filter(entry => entry._id !== id && entry.id !== id));
+        setSavedEntries((prev) => prev.filter((entry) => entry._id !== id && entry.id !== id));
         setShowSuccess(true);
         setTimeout(() => setShowSuccess(false), 3000);
         setDeleteConfirm(null);
@@ -274,16 +276,16 @@ export default function ArchiveTab() {
             <p className="empty-message">No custom entries yet</p>
           ) : (
             <div className="entries-list">
-              {savedEntries.map(entry => (
-                <div 
-                  key={entry.id} 
+              {savedEntries.map((entry) => (
+                <div
+                  key={entry.id}
                   className={`entry-preview ${editingEntry?.id === entry.id ? 'active' : ''}`}
                   onClick={() => handleEdit(entry)}
                 >
                   <div className="entry-preview-header">
                     <strong>{entry.title}</strong>
                     <div className="entry-actions">
-                      <button 
+                      <button
                         onClick={(e) => {
                           e.stopPropagation();
                           handleDelete(entry._id || entry.id, entry.title);
@@ -309,19 +311,18 @@ export default function ArchiveTab() {
           {editingEntry && (
             <div className="info-message">
               📝 Editing: <strong>{editingEntry.title}</strong>
-              <button onClick={handleCancelEdit} className="cancel-edit-btn">✕ Cancel</button>
+              <button onClick={handleCancelEdit} className="cancel-edit-btn">
+                ✕ Cancel
+              </button>
             </div>
           )}
           {showSuccess && (
             <div className="success-message">
-              ✅ Entry {editingEntry ? 'updated' : 'saved'} successfully! It will appear in the archive library.
+              ✅ Entry {editingEntry ? 'updated' : 'saved'} successfully! It will appear in the
+              archive library.
             </div>
           )}
-          {apiError && (
-            <div className="error-message api-error-message">
-              ❌ {apiError}
-            </div>
-          )}
+          {apiError && <div className="error-message api-error-message">❌ {apiError}</div>}
           <form onSubmit={handleSubmit}>
             <div className="form-group">
               <label htmlFor="title">
@@ -451,30 +452,38 @@ export default function ArchiveTab() {
                 rows="15"
                 required
               />
-              <div className="word-count">
-                Word count: {formData.wordCount}
-              </div>
+              <div className="word-count">Word count: {formData.wordCount}</div>
             </div>
             <button type="submit" className="submit-btn" disabled={isSubmitting}>
-              {isSubmitting ? '⏳ Publishing...' : (editingEntry ? '✅ Update Entry' : '💾 Publish to Live Site')}
+              {isSubmitting
+                ? '⏳ Publishing...'
+                : editingEntry
+                  ? '✅ Update Entry'
+                  : '💾 Publish to Live Site'}
             </button>
           </form>
         </div>
       </div>
-      
+
       {/* Delete Confirmation Modal */}
       {deleteConfirm && (
         <div className="modal-overlay" onClick={cancelDelete}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <h2>⚠️ Confirm Delete</h2>
             <p>Are you sure you want to delete this entry?</p>
-            <p><strong>{deleteConfirm.title}</strong></p>
+            <p>
+              <strong>{deleteConfirm.title}</strong>
+            </p>
             <p className="warning-text">This action cannot be undone.</p>
             <div className="modal-actions">
               <button onClick={cancelDelete} className="cancel-btn">
                 Cancel
               </button>
-              <button onClick={confirmDeleteAction} className="delete-btn-confirm" disabled={isSubmitting}>
+              <button
+                onClick={confirmDeleteAction}
+                className="delete-btn-confirm"
+                disabled={isSubmitting}
+              >
                 {isSubmitting ? 'Deleting...' : 'Delete Entry'}
               </button>
             </div>

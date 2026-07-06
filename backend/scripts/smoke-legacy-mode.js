@@ -19,10 +19,10 @@ async function makeRequest(method, path) {
       path,
       method,
     };
-    
+
     const req = http.request(options, (res) => {
       let data = '';
-      res.on('data', chunk => data += chunk);
+      res.on('data', (chunk) => (data += chunk));
       res.on('end', () => {
         try {
           resolve({ status: res.statusCode, body: JSON.parse(data) });
@@ -31,7 +31,7 @@ async function makeRequest(method, path) {
         }
       });
     });
-    
+
     req.on('error', reject);
     req.end();
   });
@@ -39,11 +39,11 @@ async function makeRequest(method, path) {
 
 async function runTests() {
   console.log('🧪 Testing LEGACY_MODE gating (LEGACY_MODE=false)...\n');
-  
+
   // Start server
-  await new Promise(resolve => server.listen(PORT, resolve));
+  await new Promise((resolve) => server.listen(PORT, resolve));
   console.log(`✓ Test server listening on :${PORT}\n`);
-  
+
   try {
     // Test 1: /api/health should work (always active)
     const res1 = await makeRequest('GET', '/api/health');
@@ -53,7 +53,7 @@ async function runTests() {
       console.log('❌ /api/health failed:', res1.status);
       process.exit(1);
     }
-    
+
     // Test 2: /api/archive should work (always active)
     const res2 = await makeRequest('GET', '/api/archive');
     if (res2.status === 200) {
@@ -62,7 +62,7 @@ async function runTests() {
       console.log('❌ /api/archive failed:', res2.status);
       process.exit(1);
     }
-    
+
     // Test 3: /api/artifacts should return 410 (legacy, gated)
     const res3 = await makeRequest('GET', '/api/artifacts');
     if (res3.status === 410 && res3.body.message.includes('retired')) {
@@ -73,7 +73,7 @@ async function runTests() {
       console.log('❌ /api/artifacts should return 410, got:', res3.status);
       process.exit(1);
     }
-    
+
     // Test 4: /api/market should return 410 (legacy, gated)
     const res4 = await makeRequest('GET', '/api/market/stats');
     if (res4.status === 410) {
@@ -82,9 +82,8 @@ async function runTests() {
       console.log('❌ /api/market should return 410, got:', res4.status);
       process.exit(1);
     }
-    
+
     console.log('✅ All LEGACY_MODE gating tests passed!');
-    
   } catch (err) {
     console.error('❌ Test failed:', err.message);
     process.exit(1);
@@ -94,7 +93,7 @@ async function runTests() {
   }
 }
 
-runTests().catch(err => {
+runTests().catch((err) => {
   console.error('❌ Test suite failed:', err);
   server.close();
   process.exit(1);

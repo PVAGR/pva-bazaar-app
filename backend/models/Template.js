@@ -17,7 +17,7 @@ const templateSchema = new mongoose.Schema(
     commodityTags: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Commodity' }],
     stepTags: [{ type: String, enum: ['procurement', 'payment', 'shipping', 'sale'] }],
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 templateSchema.index({ ownerId: 1, createdAt: -1 });

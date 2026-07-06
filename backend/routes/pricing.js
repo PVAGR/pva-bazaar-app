@@ -17,7 +17,17 @@ function requireAuth(req, res, next) {
  */
 router.post('/calculate', async (req, res) => {
   try {
-    const { productId, category, material, condition, urgency, costBasis, desiredMargin, targetMarketSize, premiumFactors } = req.body;
+    const {
+      productId,
+      category,
+      material,
+      condition,
+      urgency,
+      costBasis,
+      desiredMargin,
+      targetMarketSize,
+      premiumFactors,
+    } = req.body;
 
     if (!productId || !category) {
       return res.status(400).json({ error: 'productId and category required' });
@@ -45,13 +55,8 @@ router.post('/calculate', async (req, res) => {
  */
 router.post('/recommend', requireAuth, async (req, res) => {
   try {
-    const { productId, category, material, condition, urgency, initialPrice, costBasis, desiredMargin, targetMarketSize } = req.body;
-
-    if (!productId) {
-      return res.status(400).json({ error: 'productId required' });
-    }
-
-    const recommendation = await pricingService.createPricingRecommendation(req.user._id, productId, {
+    const {
+      productId,
       category,
       material,
       condition,
@@ -60,7 +65,26 @@ router.post('/recommend', requireAuth, async (req, res) => {
       costBasis,
       desiredMargin,
       targetMarketSize,
-    });
+    } = req.body;
+
+    if (!productId) {
+      return res.status(400).json({ error: 'productId required' });
+    }
+
+    const recommendation = await pricingService.createPricingRecommendation(
+      req.user._id,
+      productId,
+      {
+        category,
+        material,
+        condition,
+        urgency,
+        initialPrice,
+        costBasis,
+        desiredMargin,
+        targetMarketSize,
+      },
+    );
 
     res.status(201).json(recommendation);
   } catch (error) {
@@ -73,7 +97,9 @@ router.post('/recommend', requireAuth, async (req, res) => {
  */
 router.get('/recommendation/:recommendationId', async (req, res) => {
   try {
-    const recommendation = await PricingRecommendation.findById(req.params.recommendationId).populate('productId', 'name price');
+    const recommendation = await PricingRecommendation.findById(
+      req.params.recommendationId,
+    ).populate('productId', 'name price');
 
     if (!recommendation) {
       return res.status(404).json({ error: 'Recommendation not found' });

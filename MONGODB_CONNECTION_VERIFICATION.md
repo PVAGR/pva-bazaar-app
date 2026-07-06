@@ -3,6 +3,7 @@
 ## ✅ MongoDB Connection Status
 
 ### Database Configuration
+
 - **Provider:** MongoDB Atlas
 - **Connection Pattern:** Serverless-safe with global caching
 - **Connection Pool:** maxPoolSize: 10
@@ -13,6 +14,7 @@
 **Location:** `backend/api/index.js` lines 107-125
 
 ### ArchiveEntry Model
+
 - **File:** `backend/models/ArchiveEntry.js`
 - **Collection:** ArchiveEntry
 - **Schema Fields:**
@@ -29,6 +31,7 @@
 ## ✅ Delete Functionality Implementation Chain
 
 ### 1. Backend Routes (backend/routes/archive.js)
+
 ```javascript
 // DELETE endpoint at line 76
 router.delete('/:id', auth, adminOnly, async (req, res) => {
@@ -46,6 +49,7 @@ router.delete('/:id', auth, adminOnly, async (req, res) => {
 **Database Operation:** `ArchiveEntry.findByIdAndDelete(id)` → Direct MongoDB call to delete by ObjectId
 
 **Route Mounting:** `backend/api/index.js` line 210
+
 ```javascript
 app.use('/api/archive', archiveRoutes);
 ```
@@ -53,6 +57,7 @@ app.use('/api/archive', archiveRoutes);
 **Endpoint:** `DELETE /api/archive/:id`
 
 ### 2. Frontend API Function (Frontend/src/lib/api.js)
+
 ```javascript
 export async function deleteArchiveEntry(id, adminCode) {
   try {
@@ -63,13 +68,13 @@ export async function deleteArchiveEntry(id, adminCode) {
         'X-Admin-Code': adminCode || '',
       },
     });
-    
+
     const data = await response.json();
-    
+
     if (!response.ok) {
       throw new Error(data.message || data.error || `HTTP ${response.status}`);
     }
-    
+
     return { ok: true, message: data.message };
   } catch (err) {
     return { ok: false, error: err.message };
@@ -78,20 +83,21 @@ export async function deleteArchiveEntry(id, adminCode) {
 ```
 
 ### 3. Frontend UI Handler (Frontend/src/pages/AdminPage.jsx)
+
 ```javascript
 const handleDelete = async (id) => {
   const confirmDelete = window.confirm(
-    'Are you sure you want to delete this entry? This action cannot be undone.'
+    'Are you sure you want to delete this entry? This action cannot be undone.',
   );
-  
+
   if (!confirmDelete) return;
-  
+
   try {
     setIsSubmitting(true);
     const result = await deleteArchiveEntry(id, adminCode);
-    
+
     if (result.ok) {
-      setSavedEntries(prev => prev.filter(entry => entry._id !== id));
+      setSavedEntries((prev) => prev.filter((entry) => entry._id !== id));
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
     } else {
@@ -143,30 +149,32 @@ Success message shown for 3 seconds
 
 ## ✅ Error Handling
 
-| Error Scenario | HTTP Status | Response |
-|---|---|---|
-| Invalid/missing JWT | 401 | Unauthorized (auth middleware) |
-| Non-admin user | 403 | Forbidden (adminOnly middleware) |
-| Entry not found | 404 | `{ ok: false, message: "Entry not found" }` |
-| Database error | 500 | `{ ok: false, message: "error details" }` |
-| Network timeout | - | Frontend catches error and displays message |
+| Error Scenario      | HTTP Status | Response                                    |
+| ------------------- | ----------- | ------------------------------------------- |
+| Invalid/missing JWT | 401         | Unauthorized (auth middleware)              |
+| Non-admin user      | 403         | Forbidden (adminOnly middleware)            |
+| Entry not found     | 404         | `{ ok: false, message: "Entry not found" }` |
+| Database error      | 500         | `{ ok: false, message: "error details" }`   |
+| Network timeout     | -           | Frontend catches error and displays message |
 
 ## ✅ Git Commits
 
-| Commit | Message | Files |
-|---|---|---|
-| b54955ef | feat: Add full-stack production audit + CORS fixes | backend/api/index.js, +7 audit docs |
-| 2b13fc3d | feat: Implement delete functionality for admin posts | Frontend/src/lib/api.js, Frontend/src/pages/AdminPage.jsx, backend/routes/archive.js |
-| bb729bdc | docs: Add delete feature implementation documentation | DELETE_FEATURE_IMPLEMENTATION.md |
+| Commit   | Message                                               | Files                                                                                |
+| -------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| b54955ef | feat: Add full-stack production audit + CORS fixes    | backend/api/index.js, +7 audit docs                                                  |
+| 2b13fc3d | feat: Implement delete functionality for admin posts  | Frontend/src/lib/api.js, Frontend/src/pages/AdminPage.jsx, backend/routes/archive.js |
+| bb729bdc | docs: Add delete feature implementation documentation | DELETE_FEATURE_IMPLEMENTATION.md                                                     |
 
 ## ✅ MongoDB Connection Verification
 
 **Connection String Format:**
+
 ```
 MONGODB_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/<database>?retryWrites=true&w=majority
 ```
 
 **Global Caching Pattern (lines 107-109):**
+
 ```javascript
 global._mongooseConn = global._mongooseConn || { conn: null, promise: null };
 ```
@@ -174,6 +182,7 @@ global._mongooseConn = global._mongooseConn || { conn: null, promise: null };
 This pattern ensures MongoDB connections persist across serverless function invocations, preventing connection timeout issues.
 
 **Connection Test:**
+
 ```javascript
 // Automatically tested when first delete/create/read operation occurs
 async function connectToDatabase() {

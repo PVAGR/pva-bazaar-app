@@ -13,7 +13,7 @@ const pendingChangeSchema = new mongoose.Schema(
       unique: true,
       default: () => `change-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     },
-    
+
     // Change details
     title: {
       type: String,
@@ -24,14 +24,14 @@ const pendingChangeSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
-    
+
     // Code change
     changeType: {
       type: String,
       enum: ['file-create', 'file-update', 'file-delete', 'pr-create', 'multi-file'],
       required: true,
     },
-    
+
     // GitHub details
     filePath: String, // For single file changes
     repository: {
@@ -40,25 +40,27 @@ const pendingChangeSchema = new mongoose.Schema(
     },
     branch: { type: String, default: 'main' },
     baseBranch: { type: String, default: 'main' },
-    
+
     // Content changes
     currentContent: String, // Before
     proposedContent: String, // After
-    
+
     // Diff for review
     diff: String,
-    
+
     // Multiple file changes
     files: {
-      type: [{
-        path: String,
-        changeType: String,
-        current: String,
-        proposed: String,
-      }],
+      type: [
+        {
+          path: String,
+          changeType: String,
+          current: String,
+          proposed: String,
+        },
+      ],
       default: [],
     },
-    
+
     // PR details
     pullRequest: {
       title: String,
@@ -66,7 +68,7 @@ const pendingChangeSchema = new mongoose.Schema(
       number: Number,
       url: String,
     },
-    
+
     // AI reasoning
     reasoning: {
       model: String,
@@ -74,35 +76,39 @@ const pendingChangeSchema = new mongoose.Schema(
       reasoning: String,
       confidence: { type: Number, min: 0, max: 1 },
     },
-    
+
     // Approval workflow
     status: {
       type: String,
       enum: ['pending', 'approved', 'rejected', 'executed', 'failed'],
       default: 'pending',
     },
-    
+
     requestedBy: {
       userId: String,
       channel: { type: String, enum: ['telegram', 'api', 'webhook'], default: 'api' },
       channelId: String, // Telegram chat ID, etc.
     },
-    
+
     approvedBy: {
       userId: String,
       timestamp: Date,
       notes: String,
     },
-    
+
     rejectedBy: {
       userId: String,
       timestamp: Date,
       reason: String,
     },
-    
+
     // Execution details
     execution: {
-      status: { type: String, enum: ['pending', 'in-progress', 'completed', 'failed'], default: 'pending' },
+      status: {
+        type: String,
+        enum: ['pending', 'in-progress', 'completed', 'failed'],
+        default: 'pending',
+      },
       startedAt: Date,
       completedAt: Date,
       result: String,
@@ -110,7 +116,7 @@ const pendingChangeSchema = new mongoose.Schema(
       commitSha: String,
       prUrl: String,
     },
-    
+
     // Metadata
     tags: [String],
     priority: { type: String, enum: ['low', 'medium', 'high', 'critical'], default: 'medium' },
@@ -120,7 +126,7 @@ const pendingChangeSchema = new mongoose.Schema(
   {
     timestamps: true,
     collection: 'pending-changes',
-  }
+  },
 );
 
 // Index for fast queries

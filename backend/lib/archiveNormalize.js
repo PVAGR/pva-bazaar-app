@@ -12,7 +12,8 @@ function normalizeArchiveInput(body = {}) {
     category: body.category || 'journal',
     description: body.description || body.excerpt || '',
     content: body.content || body.contentHtml || '',
-    wordCount: typeof body.wordCount === 'number' ? body.wordCount : parseInt(body.wordCount || '0', 10),
+    wordCount:
+      typeof body.wordCount === 'number' ? body.wordCount : parseInt(body.wordCount || '0', 10),
     tags: Array.isArray(body.tags) ? body.tags : [],
     media: Array.isArray(body.media) ? body.media : [],
     location: body.location || '',
@@ -30,7 +31,8 @@ function toPublicArchiveEntry(doc) {
     category: doc.category || 'journal',
     description: doc.description || doc.excerpt || '',
     content: doc.content || doc.contentHtml || '',
-    wordCount: typeof doc.wordCount === 'number' ? doc.wordCount : parseInt(doc.wordCount || '0', 10),
+    wordCount:
+      typeof doc.wordCount === 'number' ? doc.wordCount : parseInt(doc.wordCount || '0', 10),
     tags: Array.isArray(doc.tags) ? doc.tags : [],
     media: Array.isArray(doc.media) ? doc.media : [],
     location: doc.location || '',

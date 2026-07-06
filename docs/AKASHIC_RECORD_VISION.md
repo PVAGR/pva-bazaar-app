@@ -1,10 +1,10 @@
 # 🌐 THE AKASHIC RECORD: PVA BAZAAR AS THE BUILDING BLOCK
 
-*Last Updated: 2025-02-20 | Status: VISION | Location: Sama Gardens, Kenya*
+_Last Updated: 2025-02-20 | Status: VISION | Location: Sama Gardens, Kenya_
 
 > [!ABSTRACT] Core Directive
 > **"Everyone deserves their own record within the Akashic Records."**
-> 
+>
 > PVA Bazaar is the rudimentary building block at the bottom of the pyramid. Greater minds will excel once they see the greater picture and perhaps create their own—benefiting society and humanity as a **record of someone after they are gone**: you can track and see everything they had, everything they loved, everything they built.
 >
 > **Why record everything?** Because every datum—every date, name, deal, contact, journal entry—can be run through **Asha/Druj**, **Socratic inquiry**, **gematria**, **atbash**, **astrology**, and **birth-chart timing**. The record is not inert data. It is the raw material of meaning.
@@ -17,54 +17,54 @@ Your studies and methods are not separate from the Akashic Record. They are the 
 
 ### Asha & Druj
 
-| Concept | Digital Manifestation |
-|---------|---------------------|
-| **Asha** (truth, order, rightness) | Provenance verification, signed attestations, EIP-712 deals, blockchain anchors. Tag entries as `#asha` when verified, attested, aligned. |
-| **Druj** (falsehood, chaos, deception) | Flag contradictions, unsigned claims, unverified sources. Tag `#druj` when uncertain; the record holds both—discerning is the work. |
-| **Purpose** | Every piece of data can be weighed: Does it align with Asha or drift toward Druj? The record becomes a ledger of truth-seeking. |
+| Concept                                | Digital Manifestation                                                                                                                     |
+| -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| **Asha** (truth, order, rightness)     | Provenance verification, signed attestations, EIP-712 deals, blockchain anchors. Tag entries as `#asha` when verified, attested, aligned. |
+| **Druj** (falsehood, chaos, deception) | Flag contradictions, unsigned claims, unverified sources. Tag `#druj` when uncertain; the record holds both—discerning is the work.       |
+| **Purpose**                            | Every piece of data can be weighed: Does it align with Asha or drift toward Druj? The record becomes a ledger of truth-seeking.           |
 
 ### Socratic Method
 
-| Concept | Digital Manifestation |
-|---------|---------------------|
+| Concept         | Digital Manifestation                                                                                                                                      |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Questioning** | Each note, deal, contact can have attached **Socratic prompts**: "What am I assuming here? What would falsify this? What would someone who disagrees say?" |
-| **Dialectic** | Thread discussions: thesis → antithesis → synthesis. Store as linked notes. The record is not flat—it is dialectical. |
-| **Purpose** | The Akashic Record does not just store answers. It stores questions. Future readers—and you—see the inquiry, not only the conclusion. |
+| **Dialectic**   | Thread discussions: thesis → antithesis → synthesis. Store as linked notes. The record is not flat—it is dialectical.                                      |
+| **Purpose**     | The Akashic Record does not just store answers. It stores questions. Future readers—and you—see the inquiry, not only the conclusion.                      |
 
 ### Gematria & Atbash
 
-| Concept | Digital Manifestation |
-|---------|---------------------|
-| **Gematria** | Letter→number correspondence (Hebrew, or extended). Names, key terms, dates—compute numeric value. Store alongside plain text. |
-| **Atbash** | Cipher (A↔Z, B↔Y, etc.). Encode significant phrases; decode for layers of meaning. Hidden readings in the record. |
-| **Purpose** | Names, dates, deal IDs, contact names—all reducible to number. Patterns emerge. "Why did this contact respond on 17?" Because 17 is in the chart. We record so we can compute. |
+| Concept      | Digital Manifestation                                                                                                                                                          |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Gematria** | Letter→number correspondence (Hebrew, or extended). Names, key terms, dates—compute numeric value. Store alongside plain text.                                                 |
+| **Atbash**   | Cipher (A↔Z, B↔Y, etc.). Encode significant phrases; decode for layers of meaning. Hidden readings in the record.                                                            |
+| **Purpose**  | Names, dates, deal IDs, contact names—all reducible to number. Patterns emerge. "Why did this contact respond on 17?" Because 17 is in the chart. We record so we can compute. |
 
 ### Astrology & Birth Signs/Times
 
-| Concept | Digital Manifestation |
-|---------|---------------------|
-| **Birth data** | Every person (contact, counterparty, yourself): birth date, time, place → chart. Every project, deal, hub: inception date/time/place → chart. |
-| **Transits** | Timestamp every event. "Deal signed 2025-02-20 14:32 Nairobi." Run transits: What was Mars doing? What was the Moon? The record + ephemeris = cosmic timing. |
-| **Purpose** | We record **when** not only for audit—but because when matters. Birth charts, ingress dates, electional choices. The Akashic Record is chronographic. |
+| Concept        | Digital Manifestation                                                                                                                                        |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Birth data** | Every person (contact, counterparty, yourself): birth date, time, place → chart. Every project, deal, hub: inception date/time/place → chart.                |
+| **Transits**   | Timestamp every event. "Deal signed 2025-02-20 14:32 Nairobi." Run transits: What was Mars doing? What was the Moon? The record + ephemeris = cosmic timing. |
+| **Purpose**    | We record **when** not only for audit—but because when matters. Birth charts, ingress dates, electional choices. The Akashic Record is chronographic.        |
 
 ### Unified Data Model
 
 ```yaml
 Every_Record_Entry:
-  content: "The raw text, the fact, the note"
-  timestamp: "ISO 8601 — for astrology, transit lookup"
-  place: "Lat/long or name — for chart location"
-  people: "Linked contacts — each with birth data"
-  
+  content: 'The raw text, the fact, the note'
+  timestamp: 'ISO 8601 — for astrology, transit lookup'
+  place: 'Lat/long or name — for chart location'
+  people: 'Linked contacts — each with birth data'
+
   # Hermeneutic metadata (optional, user-applied)
-  asha_druj: "asha | druj | unweighed"
-  socratic_prompts: ["What am I assuming?", "What would falsify this?"]
-  gematria_value: 42  # computed from key terms
-  atbash_encoded: "optional cipher layer"
-  
+  asha_druj: 'asha | druj | unweighed'
+  socratic_prompts: ['What am I assuming?', 'What would falsify this?']
+  gematria_value: 42 # computed from key terms
+  atbash_encoded: 'optional cipher layer'
+
   # Astrology
-  event_chart: "link to chart for this timestamp/place"
-  related_birth_charts: ["contact_id_1", "contact_id_2"]
+  event_chart: 'link to chart for this timestamp/place'
+  related_birth_charts: ['contact_id_1', 'contact_id_2']
 ```
 
 ---
@@ -95,12 +95,12 @@ A platform where **anyone** can create their own **personal Myspace of data**—
 
 ### What It Is
 
-| Concept | Description |
-|--------|-------------|
-| **Personal vault** | Encrypted store of notes, contacts, supply chain data, journal entries, outreach logs, media assets |
-| **Blockchain anchor** | Hash of the vault (or key fragments) committed on-chain for immutability and timestamping |
+| Concept               | Description                                                                                                                              |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| **Personal vault**    | Encrypted store of notes, contacts, supply chain data, journal entries, outreach logs, media assets                                      |
+| **Blockchain anchor** | Hash of the vault (or key fragments) committed on-chain for immutability and timestamping                                                |
 | **Dead-man's switch** | Conditional release: if the user does not "check in" within X months, or if a death certificate/statement is verified, the admin unlocks |
-| **Public release** | All notes, minus sensitive keys, become readable by anyone—a legacy, a gift, a record |
+| **Public release**    | All notes, minus sensitive keys, become readable by anyone—a legacy, a gift, a record                                                    |
 
 ### Technical Architecture (Building Block)
 
@@ -149,7 +149,7 @@ Trigger_Conditions:
 On_Trigger:
   - Decrypt vault (or key escrow releases)
   - Publish to IPFS / permanent storage
-  - Mint or update on-chain: "Record of [Name] — released [Date]"
+  - Mint or update on-chain: 'Record of [Name] — released [Date]'
   - Admin unlocked for public read; sensitive keys scrubbed
 ```
 
@@ -159,11 +159,11 @@ On_Trigger:
 
 **Today:** PVA Bazaar has:
 
-- Users, auth, profiles  
-- Deals with counterparties, milestones, signatures  
-- Streams with OAuth (Twitch, YouTube)  
-- Archive with entries, categories  
-- Admin (your operations, your narrative)  
+- Users, auth, profiles
+- Deals with counterparties, milestones, signatures
+- Streams with OAuth (Twitch, YouTube)
+- Archive with entries, categories
+- Admin (your operations, your narrative)
 
 **Tomorrow:** These become **modules** that others can:
 
@@ -190,22 +190,22 @@ On_Trigger:
 
 ### From Narrative Architect Master
 
-- **Top 10 contacts** → Stored in vault; linked to outreach templates. *Add birth date/time/place for each—chart on first outreach. Gematria on names.*
-- **Sama Gardens** → Property research, legal notes, budget calculator. *Inception date = project birth chart. Transits on key decision dates.*
-- **30-day sprint** → Checkboxes, wins, blockers, God-work reflections. *Socratic prompts on blockers. Asha/Druj on wins (verified vs claimed).*
+- **Top 10 contacts** → Stored in vault; linked to outreach templates. _Add birth date/time/place for each—chart on first outreach. Gematria on names._
+- **Sama Gardens** → Property research, legal notes, budget calculator. _Inception date = project birth chart. Transits on key decision dates._
+- **30-day sprint** → Checkboxes, wins, blockers, God-work reflections. _Socratic prompts on blockers. Asha/Druj on wins (verified vs claimed)._
 - **Obsidian structure** → Mirrored in "My Akashic Record" (00_MASTER, 01_CONTACTS, 02_SAMA_GARDENS, etc.)
 
 ### From Mobile Stack
 
-- **Banking / investing** → Optional: hashes of account setups (no real secrets). *Account opened date = chart. Gematria on bank names if meaningful.*
+- **Banking / investing** → Optional: hashes of account setups (no real secrets). _Account opened date = chart. Gematria on bank names if meaningful._
 - **Obsidian Mobile** → Same workflow; data syncs to PVA vault + blockchain anchor
-- **72-hour sprint** → Completion checklist stored in record. *Timestamps preserved for transit lookup.*
+- **72-hour sprint** → Completion checklist stored in record. _Timestamps preserved for transit lookup._
 
 ### From Influence–Supply Convergence
 
 - **Platform stack** → Patreon, Modash, Everledger, Stripe—all referenced in vault
-- **90-day roadmap** → Phase 1–3 tasks; progress logged in record. *Each milestone: date, time, place → chart.*
-- **Revenue splits** → Producer 60% • You 20% • Influencer 20%—template in vault. *60+20+20=100. Gematria on the structure if it carries meaning.*
+- **90-day roadmap** → Phase 1–3 tasks; progress logged in record. _Each milestone: date, time, place → chart._
+- **Revenue splits** → Producer 60% • You 20% • Influencer 20%—template in vault. _60+20+20=100. Gematria on the structure if it carries meaning._
 
 ### Your Job & Studies (Astrology, Asha/Druj, Socratic, Gematria, Atbash)
 
@@ -287,4 +287,4 @@ The Akashic Record is the **raw material**. Your methods are the **interpretive 
 > The Akashic Record is the promise.  
 > Greater minds will build the rest—and understand why we built it so."
 
-*This document is the strategic north star. It holds the hermeneutic layer as equal to the technical layer. Update as the vision evolves.*
+_This document is the strategic north star. It holds the hermeneutic layer as equal to the technical layer. Update as the vision evolves._

@@ -120,7 +120,10 @@ router.delete('/:testimonialId', requireAuth, async (req, res) => {
       return res.status(404).json({ error: 'Testimonial not found' });
     }
 
-    if (testimonial.authorId?.toString() !== req.user._id.toString() && testimonial.sellerId.toString() !== req.user._id.toString()) {
+    if (
+      testimonial.authorId?.toString() !== req.user._id.toString() &&
+      testimonial.sellerId.toString() !== req.user._id.toString()
+    ) {
       return res.status(403).json({ error: 'Unauthorized' });
     }
 

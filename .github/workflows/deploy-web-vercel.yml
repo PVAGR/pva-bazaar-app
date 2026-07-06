@@ -9,15 +9,15 @@ on:
   workflow_dispatch:
     inputs:
       ref_to_deploy:
-        description: "Commit, tag, or branch to deploy/rollback"
+        description: 'Commit, tag, or branch to deploy/rollback'
         required: false
         type: string
-        default: ""
+        default: ''
       rollback_reason:
-        description: "Reason for redeploying a known-good ref"
+        description: 'Reason for redeploying a known-good ref'
         required: false
         type: string
-        default: ""
+        default: ''
 
 jobs:
   preflight-readiness:
@@ -34,7 +34,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "20.x"
+          node-version: '20.x'
 
       - name: Run baseline live readiness gate
         env:
@@ -68,7 +68,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "20.x"
+          node-version: '20.x'
 
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
@@ -107,7 +107,7 @@ jobs:
         env:
           FRONTEND_URL: https://pvabazaar.org
           BACKEND_URL: https://api.pvabazaar.org
-          STRICT: "true"
-          WAIT_TIMEOUT_MS: "300000"
-          WAIT_POLL_MS: "10000"
+          STRICT: 'true'
+          WAIT_TIMEOUT_MS: '300000'
+          WAIT_POLL_MS: '10000'
         run: node ../scripts/verify-live-ready.mjs && node ../scripts/verify-frontend-routes-live.mjs

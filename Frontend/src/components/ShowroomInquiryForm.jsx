@@ -1,47 +1,47 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 
 export default function ShowroomInquiryForm({ item, onSubmit }) {
   const [formData, setFormData] = useState({
-    requesterName: "",
-    requesterEmail: "",
-    requesterCompany: "",
+    requesterName: '',
+    requesterEmail: '',
+    requesterCompany: '',
     quantityRequested: 1,
-    requestType: "sample",
-    message: "",
+    requestType: 'sample',
+    message: '',
     reservationRequested: false,
   });
 
   const [submitting, setSubmitting] = useState(false);
-  const [validationError, setValidationError] = useState("");
+  const [validationError, setValidationError] = useState('');
 
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-    setValidationError("");
+    setValidationError('');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setValidationError("");
+    setValidationError('');
 
     // Validation
     if (!formData.requesterName.trim()) {
-      setValidationError("Your name is required");
+      setValidationError('Your name is required');
       return;
     }
     if (!formData.requesterEmail.trim()) {
-      setValidationError("Your email is required");
+      setValidationError('Your email is required');
       return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.requesterEmail)) {
-      setValidationError("Please enter a valid email address");
+      setValidationError('Please enter a valid email address');
       return;
     }
     if (!formData.message.trim()) {
-      setValidationError("Please leave a message with your inquiry");
+      setValidationError('Please leave a message with your inquiry');
       return;
     }
     if (formData.quantityRequested < 1) {
-      setValidationError("Quantity must be at least 1");
+      setValidationError('Quantity must be at least 1');
       return;
     }
 
@@ -53,16 +53,16 @@ export default function ShowroomInquiryForm({ item, onSubmit }) {
       });
       // Reset form after successful submission
       setFormData({
-        requesterName: "",
-        requesterEmail: "",
-        requesterCompany: "",
+        requesterName: '',
+        requesterEmail: '',
+        requesterCompany: '',
         quantityRequested: 1,
-        requestType: "sample",
-        message: "",
+        requestType: 'sample',
+        message: '',
         reservationRequested: false,
       });
     } catch (err) {
-      setValidationError(err.message || "Failed to submit inquiry");
+      setValidationError(err.message || 'Failed to submit inquiry');
     } finally {
       setSubmitting(false);
     }
@@ -71,14 +71,16 @@ export default function ShowroomInquiryForm({ item, onSubmit }) {
   return (
     <form className="showroom-inquiry-form" onSubmit={handleSubmit}>
       <h2 className="form-title">Send Your Inquiry</h2>
-      <p className="form-subtitle">Tell us about your interest and needs. We'll respond within 24 hours.</p>
+      <p className="form-subtitle">
+        Tell us about your interest and needs. We'll respond within 24 hours.
+      </p>
 
       <div className="form-grid">
         <input
           type="text"
           placeholder="Your Full Name *"
           value={formData.requesterName}
-          onChange={(e) => handleChange("requesterName", e.target.value)}
+          onChange={(e) => handleChange('requesterName', e.target.value)}
           className="form-input"
           required
         />
@@ -86,7 +88,7 @@ export default function ShowroomInquiryForm({ item, onSubmit }) {
           type="email"
           placeholder="Your Email *"
           value={formData.requesterEmail}
-          onChange={(e) => handleChange("requesterEmail", e.target.value)}
+          onChange={(e) => handleChange('requesterEmail', e.target.value)}
           className="form-input"
           required
         />
@@ -94,7 +96,7 @@ export default function ShowroomInquiryForm({ item, onSubmit }) {
           type="text"
           placeholder="Company / Brand Name"
           value={formData.requesterCompany}
-          onChange={(e) => handleChange("requesterCompany", e.target.value)}
+          onChange={(e) => handleChange('requesterCompany', e.target.value)}
           className="form-input"
         />
         <input
@@ -102,12 +104,12 @@ export default function ShowroomInquiryForm({ item, onSubmit }) {
           min="1"
           placeholder="Quantity Needed"
           value={formData.quantityRequested}
-          onChange={(e) => handleChange("quantityRequested", e.target.value)}
+          onChange={(e) => handleChange('quantityRequested', e.target.value)}
           className="form-input"
         />
         <select
           value={formData.requestType}
-          onChange={(e) => handleChange("requestType", e.target.value)}
+          onChange={(e) => handleChange('requestType', e.target.value)}
           className="form-input"
         >
           <option value="sample">Sample Request</option>
@@ -121,7 +123,7 @@ export default function ShowroomInquiryForm({ item, onSubmit }) {
       <textarea
         placeholder="Describe your needs and any specific requirements *"
         value={formData.message}
-        onChange={(e) => handleChange("message", e.target.value)}
+        onChange={(e) => handleChange('message', e.target.value)}
         rows={4}
         className="form-textarea"
         required
@@ -131,7 +133,7 @@ export default function ShowroomInquiryForm({ item, onSubmit }) {
         <input
           type="checkbox"
           checked={formData.reservationRequested}
-          onChange={(e) => handleChange("reservationRequested", e.target.checked)}
+          onChange={(e) => handleChange('reservationRequested', e.target.checked)}
         />
         <span>Reserve this item while we discuss (if available)</span>
       </label>
@@ -142,12 +144,8 @@ export default function ShowroomInquiryForm({ item, onSubmit }) {
         </div>
       )}
 
-      <button
-        type="submit"
-        className="form-submit-btn"
-        disabled={submitting}
-      >
-        {submitting ? "Sending..." : "Submit Inquiry"}
+      <button type="submit" className="form-submit-btn" disabled={submitting}>
+        {submitting ? 'Sending...' : 'Submit Inquiry'}
       </button>
     </form>
   );

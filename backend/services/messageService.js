@@ -76,7 +76,10 @@ async function getUserConversations(userId, page = 1, limit = 20) {
   const conversations = await DirectMessage.aggregate([
     {
       $match: {
-        $or: [{ senderId: new mongoose.Types.ObjectId(userId) }, { recipientId: new mongoose.Types.ObjectId(userId) }],
+        $or: [
+          { senderId: new mongoose.Types.ObjectId(userId) },
+          { recipientId: new mongoose.Types.ObjectId(userId) },
+        ],
       },
     },
     {
@@ -87,7 +90,11 @@ async function getUserConversations(userId, page = 1, limit = 20) {
         _id: '$conversationId',
         other: {
           $first: {
-            $cond: [{ $eq: ['$senderId', new mongoose.Types.ObjectId(userId)] }, '$recipientId', '$senderId'],
+            $cond: [
+              { $eq: ['$senderId', new mongoose.Types.ObjectId(userId)] },
+              '$recipientId',
+              '$senderId',
+            ],
           },
         },
         lastMessage: { $first: '$message' },
@@ -96,7 +103,10 @@ async function getUserConversations(userId, page = 1, limit = 20) {
           $sum: {
             $cond: [
               {
-                $and: [{ $eq: ['$recipientId', new mongoose.Types.ObjectId(userId)] }, { $eq: ['$read', false] }],
+                $and: [
+                  { $eq: ['$recipientId', new mongoose.Types.ObjectId(userId)] },
+                  { $eq: ['$read', false] },
+                ],
               },
               1,
               0,
@@ -116,7 +126,10 @@ async function getUserConversations(userId, page = 1, limit = 20) {
   const total = await DirectMessage.aggregate([
     {
       $match: {
-        $or: [{ senderId: new mongoose.Types.ObjectId(userId) }, { recipientId: new mongoose.Types.ObjectId(userId) }],
+        $or: [
+          { senderId: new mongoose.Types.ObjectId(userId) },
+          { recipientId: new mongoose.Types.ObjectId(userId) },
+        ],
       },
     },
     {
@@ -153,7 +166,7 @@ async function markConversationRead(conversationId, userId) {
     {
       read: true,
       readAt: new Date(),
-    }
+    },
   );
 }
 

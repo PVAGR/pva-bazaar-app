@@ -20,8 +20,9 @@ async function selectFulfillmentCenter(destinationCountry, destinationCity, sell
   }
 
   // Fallback to any active center with inventory
-  const anywhere = await FulfillmentCenter.findOne({ active: true })
-    .sort({ 'metrics.orderAccuracy': -1 });
+  const anywhere = await FulfillmentCenter.findOne({ active: true }).sort({
+    'metrics.orderAccuracy': -1,
+  });
 
   return anywhere;
 }
@@ -49,7 +50,12 @@ async function reserveInventory(productId, quantity, fulfillmentCenterId) {
 /**
  * Calculate shipping cost
  */
-async function calculateShippingCost(destinationCountry, weight, shippingMethod = 'standard', insuranceValue = 0) {
+async function calculateShippingCost(
+  destinationCountry,
+  weight,
+  shippingMethod = 'standard',
+  insuranceValue = 0,
+) {
   const rate = await ShippingRate.findOne({
     destinationCountry,
     shippingMethod,

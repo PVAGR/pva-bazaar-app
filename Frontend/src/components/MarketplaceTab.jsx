@@ -1,8 +1,8 @@
 /**
  * MarketplaceTab
- * 
+ *
  * PURPOSE: Manage marketplace items (artifacts/products)
- * 
+ *
  * FEATURES:
  * - View all marketplace items in a list
  * - Create new items
@@ -10,7 +10,7 @@
  * - Delete items
  * - Upload images
  * - Set pricing and inventory
- * 
+ *
  * API ENDPOINTS USED:
  * - GET /api/items - Fetch all items
  * - POST /api/items - Create new item
@@ -72,25 +72,28 @@ export default function MarketplaceTab() {
     condition: 'New',
   });
 
-  const loadInquiries = useCallback(async ({ silent = false } = {}) => {
-    if (!silent) setInquiriesLoading(true);
-    try {
-      const response = await fetchItemInquiries({
-        limit: 60,
-        status: inquiryFilter || '',
-        q: inquirySearchQuery || '',
-      });
-      if (response.ok) {
-        setInquiries(response.items);
-      } else if (!silent) {
-        setError(response.error || 'Failed to load inquiries');
+  const loadInquiries = useCallback(
+    async ({ silent = false } = {}) => {
+      if (!silent) setInquiriesLoading(true);
+      try {
+        const response = await fetchItemInquiries({
+          limit: 60,
+          status: inquiryFilter || '',
+          q: inquirySearchQuery || '',
+        });
+        if (response.ok) {
+          setInquiries(response.items);
+        } else if (!silent) {
+          setError(response.error || 'Failed to load inquiries');
+        }
+      } catch (err) {
+        if (!silent) setError(err.message || 'Failed to load inquiries');
+      } finally {
+        if (!silent) setInquiriesLoading(false);
       }
-    } catch (err) {
-      if (!silent) setError(err.message || 'Failed to load inquiries');
-    } finally {
-      if (!silent) setInquiriesLoading(false);
-    }
-  }, [inquiryFilter, inquirySearchQuery]);
+    },
+    [inquiryFilter, inquirySearchQuery],
+  );
 
   useEffect(() => {
     loadItems();
@@ -113,12 +116,11 @@ export default function MarketplaceTab() {
     .filter((item) => {
       if (!searchQuery.trim()) return true;
       const q = searchQuery.toLowerCase();
-      return [
-        item.title,
-        item.description,
-        item.category,
-        item.origin,
-      ].some((field) => String(field || '').toLowerCase().includes(q));
+      return [item.title, item.description, item.category, item.origin].some((field) =>
+        String(field || '')
+          .toLowerCase()
+          .includes(q),
+      );
     })
     .sort((a, b) => {
       if (sortBy === 'price-asc') return (a.price || 0) - (b.price || 0);
@@ -133,7 +135,8 @@ export default function MarketplaceTab() {
   const stats = {
     total: items.length,
     outOfStock: items.filter((item) => Number(item.stock || 0) === 0).length,
-    lowStock: items.filter((item) => Number(item.stock || 0) > 0 && Number(item.stock || 0) < 5).length,
+    lowStock: items.filter((item) => Number(item.stock || 0) > 0 && Number(item.stock || 0) < 5)
+      .length,
     drafts: items.filter((item) => item.status === 'draft').length,
     syndicationAttention: items.filter((item) => {
       const jobs = item?.syndication?.jobs || [];
@@ -197,7 +200,13 @@ export default function MarketplaceTab() {
       setError('Select at least one syndication channel to retry.');
       return;
     }
-    if (!(typeof globalThis !== 'undefined' && globalThis.confirm && globalThis.confirm('Retry syndication for listings with failed/manual-required jobs?'))) {
+    if (
+      !(
+        typeof globalThis !== 'undefined' &&
+        globalThis.confirm &&
+        globalThis.confirm('Retry syndication for listings with failed/manual-required jobs?')
+      )
+    ) {
       return;
     }
     setBulkRetrying(true);
@@ -234,7 +243,7 @@ export default function MarketplaceTab() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
@@ -294,7 +303,13 @@ export default function MarketplaceTab() {
   };
 
   const handleDelete = async (item) => {
-    if (!(typeof globalThis !== 'undefined' && globalThis.confirm && globalThis.confirm(`Delete "${item.title}"? This action cannot be undone.`))) {
+    if (
+      !(
+        typeof globalThis !== 'undefined' &&
+        globalThis.confirm &&
+        globalThis.confirm(`Delete "${item.title}"? This action cannot be undone.`)
+      )
+    ) {
       return;
     }
 
@@ -341,7 +356,8 @@ export default function MarketplaceTab() {
       <div className="tab-header">
         <h2>🛒 Marketplace Management</h2>
         <p className="tab-description">
-          Create and manage marketplace items. Items appear on the marketplace page for customers to purchase.
+          Create and manage marketplace items. Items appear on the marketplace page for customers to
+          purchase.
         </p>
       </div>
 
@@ -430,7 +446,12 @@ export default function MarketplaceTab() {
               <option value="reserved">Reserved</option>
               <option value="closed">Closed</option>
             </select>
-            <button type="button" className="submit-btn" onClick={() => loadInquiries()} disabled={inquiriesLoading}>
+            <button
+              type="button"
+              className="submit-btn"
+              onClick={() => loadInquiries()}
+              disabled={inquiriesLoading}
+            >
               {inquiriesLoading ? 'Refreshing...' : 'Refresh Inquiries'}
             </button>
           </div>
@@ -515,7 +536,7 @@ export default function MarketplaceTab() {
             <p className="empty-message">No items yet. Create your first item!</p>
           ) : (
             <div className="items-list">
-              {filteredItems.map(item => (
+              {filteredItems.map((item) => (
                 <div
                   key={getItemId(item)}
                   className={`item-preview ${getItemId(selectedItem) === getItemId(item) ? 'active' : ''}`}
@@ -695,8 +716,10 @@ export default function MarketplaceTab() {
               <button type="submit" className="submit-btn" disabled={submitting}>
                 {submitting ? (
                   <LoadingDots inline={true} label={isEditing ? 'Updating...' : 'Creating...'} />
+                ) : isEditing ? (
+                  '✅ Update Item'
                 ) : (
-                  isEditing ? '✅ Update Item' : '💾 Create Item'
+                  '💾 Create Item'
                 )}
               </button>
             </form>

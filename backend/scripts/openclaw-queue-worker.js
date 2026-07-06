@@ -22,8 +22,14 @@ const REQUEST_TIMEOUT_MS = Math.max(
   parseInt(process.env.OPENCLAW_WORKER_REQUEST_TIMEOUT_MS || '12000', 10),
   1000,
 );
-const RETRY_BASE_MS = Math.max(parseInt(process.env.OPENCLAW_WORKER_RETRY_BASE_MS || '15000', 10), 1000);
-const RETRY_MAX_MS = Math.max(parseInt(process.env.OPENCLAW_WORKER_RETRY_MAX_MS || '300000', 10), RETRY_BASE_MS);
+const RETRY_BASE_MS = Math.max(
+  parseInt(process.env.OPENCLAW_WORKER_RETRY_BASE_MS || '15000', 10),
+  1000,
+);
+const RETRY_MAX_MS = Math.max(
+  parseInt(process.env.OPENCLAW_WORKER_RETRY_MAX_MS || '300000', 10),
+  RETRY_BASE_MS,
+);
 const MAX_RETRIES = Math.max(parseInt(process.env.OPENCLAW_WORKER_MAX_RETRIES || '12', 10), 1);
 const RUN_ONCE = process.env.OPENCLAW_WORKER_RUN_ONCE === 'true';
 
@@ -32,7 +38,7 @@ const WORKER_ID = `${os.hostname()}-${process.pid}-${crypto.randomUUID().slice(0
 let shuttingDown = false;
 
 function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function clipError(err, maxLength = 320) {
@@ -89,8 +95,16 @@ async function writeWorkerHeartbeat(state, details = {}) {
   await Promise.allSettled([
     writeMemory('ecosystem:openclaw-worker:lastHeartbeat', timestamp, 'fact'),
     writeMemory('ecosystem:openclaw-worker:connectionState', state, 'fact'),
-    writeMemory('ecosystem:openclaw-worker:lastStatus', JSON.stringify({ state, timestamp, ...details }), 'reflection'),
-    writeMemory('ecosystem:openclaw-worker:consecutiveFailures', String(details.consecutiveFailures || 0), 'fact'),
+    writeMemory(
+      'ecosystem:openclaw-worker:lastStatus',
+      JSON.stringify({ state, timestamp, ...details }),
+      'reflection',
+    ),
+    writeMemory(
+      'ecosystem:openclaw-worker:consecutiveFailures',
+      String(details.consecutiveFailures || 0),
+      'fact',
+    ),
   ]);
 }
 
@@ -131,10 +145,7 @@ async function acquireLease() {
   const lease = await OpenClawWorkerLease.findOneAndUpdate(
     {
       name: WORKER_NAME,
-      $or: [
-        { leaseUntil: { $lt: now } },
-        { holderId: WORKER_ID },
-      ],
+      $or: [{ leaseUntil: { $lt: now } }, { holderId: WORKER_ID }],
     },
     {
       $set: {
@@ -342,7 +353,9 @@ async function processLoop() {
     }
   }
 
-  console.log(`[OpenClawWorker] cycle processed=${batch.length} forwarded=${okCount} failed=${failedCount}`);
+  console.log(
+    `[OpenClawWorker] cycle processed=${batch.length} forwarded=${okCount} failed=${failedCount}`,
+  );
   await writeWorkerHeartbeat(failedCount > 0 ? 'degraded' : 'online', {
     workerId: WORKER_ID,
     processed: batch.length,
@@ -353,7 +366,9 @@ async function processLoop() {
 }
 
 async function main() {
-  console.log(`[OpenClawWorker] starting worker=${WORKER_NAME} workerId=${WORKER_ID} runOnce=${RUN_ONCE}`);
+  console.log(
+    `[OpenClawWorker] starting worker=${WORKER_NAME} workerId=${WORKER_ID} runOnce=${RUN_ONCE}`,
+  );
 
   if (!PUBLIC_MODE) {
     try {
@@ -362,7 +377,9 @@ async function main() {
       console.warn('[OpenClawWorker] db connect failed; switching to public-mode fallback');
       console.warn(`[OpenClawWorker] db error: ${err?.message || err}`);
       if (!BACKEND_URL) {
-        console.warn('[OpenClawWorker] OPENCLAW_BACKEND_URL not set; running as safe no-op until DB/backing API is reachable');
+        console.warn(
+          '[OpenClawWorker] OPENCLAW_BACKEND_URL not set; running as safe no-op until DB/backing API is reachable',
+        );
       }
       PUBLIC_MODE = true;
     }

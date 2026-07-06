@@ -7,6 +7,7 @@
 **Date:** February 20, 2026
 
 **What Was Built:**
+
 - Email service module (`backend/service/emailService.js`)
 - User confirmation emails on item registration
 - Admin notification emails for new registrations
@@ -17,11 +18,11 @@
 
 ## 📁 Files Created/Modified
 
-| File | Changes |
-|------|---------|
-| `backend/service/emailService.js` | **NEW** - Complete email service with HTML templates |
-| `backend/routes/items.js` | **MODIFIED** - Integrated email sending (lines 144-165) |
-| `backend/package.json` | **MODIFIED** - Added `nodemailer` dependency |
+| File                              | Changes                                                 |
+| --------------------------------- | ------------------------------------------------------- |
+| `backend/service/emailService.js` | **NEW** - Complete email service with HTML templates    |
+| `backend/routes/items.js`         | **MODIFIED** - Integrated email sending (lines 144-165) |
+| `backend/package.json`            | **MODIFIED** - Added `nodemailer` dependency            |
 
 ---
 
@@ -108,6 +109,7 @@ This will install `nodemailer` package.
 ## 📊 Email Templates
 
 ### User Confirmation Email Includes:
+
 - ✅ PVABazaar branding header
 - ✅ Item details (name, price, category, ID)
 - ✅ Status message (pending_review)
@@ -115,6 +117,7 @@ This will install `nodemailer` package.
 - ✅ Footer with links
 
 ### Admin Notification Includes:
+
 - ✅ Item details
 - ✅ User email who registered
 - ✅ Link to review page (if admin panel exists)
@@ -124,11 +127,13 @@ This will install `nodemailer` package.
 ## 🔗 Integration Points
 
 ### ✅ Integrated With:
+
 - Item Registration Route (`/api/items/register`)
 - User Model (fetches user email)
 - Artifact Model (uses item data)
 
 ### ⏭️ Ready For:
+
 - Phase 3: Frontend Registration Page
 - Admin approval workflow (can send approval/rejection emails)
 - Order confirmations (can extend email service)
@@ -161,17 +166,20 @@ This will install `nodemailer` package.
 ## 🐛 Troubleshooting
 
 **Email not sending:**
+
 - Check SMTP credentials in `.env`
 - Verify SMTP_HOST and SMTP_PORT are correct
 - For Gmail: Use App Password (not regular password)
 - Check server logs for specific error messages
 
 **Email sending but not arriving:**
+
 - Check spam folder
 - Verify sender email (SMTP_USER) is correct
 - Check SMTP server logs
 
 **"Email service not configured" warning:**
+
 - This is normal if SMTP vars aren't set
 - Registration will still work, just no email sent
 - Set SMTP vars to enable email functionality
@@ -180,15 +188,15 @@ This will install `nodemailer` package.
 
 ## ✅ Phase 2 Status
 
-| Component | Status |
-|-----------|--------|
-| Email Service Module | ✅ Complete |
-| User Confirmation Email | ✅ Complete |
-| Admin Notification | ✅ Complete |
-| Route Integration | ✅ Complete |
-| Error Handling | ✅ Complete |
-| Documentation | ✅ Complete |
-| **Ready for Testing** | ⏳ **After Phase 1 Confirmed** |
+| Component               | Status                         |
+| ----------------------- | ------------------------------ |
+| Email Service Module    | ✅ Complete                    |
+| User Confirmation Email | ✅ Complete                    |
+| Admin Notification      | ✅ Complete                    |
+| Route Integration       | ✅ Complete                    |
+| Error Handling          | ✅ Complete                    |
+| Documentation           | ✅ Complete                    |
+| **Ready for Testing**   | ⏳ **After Phase 1 Confirmed** |
 
 ---
 

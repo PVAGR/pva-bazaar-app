@@ -33,7 +33,11 @@ import {
   resolveDealDispute,
   confirmDealReceipt,
 } from '../lib/api';
-import { buildDealMessageTypedData, buildDealEvidenceTypedData, signTypedData } from '../lib/eip712';
+import {
+  buildDealMessageTypedData,
+  buildDealEvidenceTypedData,
+  signTypedData,
+} from '../lib/eip712';
 import { getErrorMessage, withRetry } from '../lib/errorUtils';
 import ErrorBanner from '../components/ErrorBanner.jsx';
 import LoadingSpinner from '../components/LoadingSpinner.jsx';
@@ -125,7 +129,9 @@ export default function DealsPage() {
   const [disputeReason, setDisputeReason] = useState('');
   const [disputeDetails, setDisputeDetails] = useState('');
   const [reportPacket, setReportPacket] = useState(null);
-  const [mockProofNote, setMockProofNote] = useState('Parties confirmed mock transfer via screenshots');
+  const [mockProofNote, setMockProofNote] = useState(
+    'Parties confirmed mock transfer via screenshots',
+  );
   const [mockProofUrl, setMockProofUrl] = useState('');
   const [disputeData, setDisputeData] = useState(null);
   const [disputeEvidenceNote, setDisputeEvidenceNote] = useState('');
@@ -148,10 +154,18 @@ export default function DealsPage() {
   const [queueStatusFilter, setQueueStatusFilter] = useState('all');
   const [outboundQueue, setOutboundQueue] = useState([]);
   const [queueStatusDrafts, setQueueStatusDrafts] = useState({});
-  const [mediatorRequest, setMediatorRequest] = useState({ name: '', email: '', contact: '', notes: '' });
+  const [mediatorRequest, setMediatorRequest] = useState({
+    name: '',
+    email: '',
+    contact: '',
+    notes: '',
+  });
   const [mediatorApproval, setMediatorApproval] = useState({ mediatorUserId: '', note: '' });
 
-  const viewerId = useMemo(() => String(profile?._id || profile?.id || ''), [profile?._id, profile?.id]);
+  const viewerId = useMemo(
+    () => String(profile?._id || profile?.id || ''),
+    [profile?._id, profile?.id],
+  );
 
   const viewerRole = useMemo(() => {
     if (!selected) return 'none';
@@ -159,7 +173,9 @@ export default function DealsPage() {
     if (!viewerId) return 'none';
     if (String(selected.ownerId || '') === viewerId) return 'seller';
     if (String(selected.counterparty?.userId || '') === viewerId) return 'buyer';
-    const pvaParty = (selected?.pva?.parties || []).find((party) => String(party?.userId || '') === viewerId);
+    const pvaParty = (selected?.pva?.parties || []).find(
+      (party) => String(party?.userId || '') === viewerId,
+    );
     if (pvaParty?.role === 'creator') return 'creator';
     if (pvaParty?.role === 'shipper') return 'shipper';
     if (pvaParty?.role === 'buyer') return 'buyer';
@@ -174,8 +190,16 @@ export default function DealsPage() {
   const canMockFund = useMemo(() => {
     if (!selected) return false;
     if (isEscrowFinalized) return false;
-    const roleAllowed = ['buyer', 'seller', 'creator', 'shipper', 'mediator', 'admin'].includes(viewerRole);
-    const statusAllowed = ['draft', 'funded_mock', 'funded_live', 'awaiting_receipt', 'disputed'].includes(escrowStatus);
+    const roleAllowed = ['buyer', 'seller', 'creator', 'shipper', 'mediator', 'admin'].includes(
+      viewerRole,
+    );
+    const statusAllowed = [
+      'draft',
+      'funded_mock',
+      'funded_live',
+      'awaiting_receipt',
+      'disputed',
+    ].includes(escrowStatus);
     return roleAllowed && statusAllowed;
   }, [selected, isEscrowFinalized, viewerRole, escrowStatus]);
 
@@ -189,7 +213,13 @@ export default function DealsPage() {
   const canRelease = useMemo(() => {
     if (!selected || isEscrowFinalized) return false;
     const roleAllowed = ['seller', 'mediator', 'admin'].includes(viewerRole);
-    const statusAllowed = ['buyer_confirmed', 'disputed', 'funded_mock', 'funded_live', 'awaiting_receipt'].includes(escrowStatus);
+    const statusAllowed = [
+      'buyer_confirmed',
+      'disputed',
+      'funded_mock',
+      'funded_live',
+      'awaiting_receipt',
+    ].includes(escrowStatus);
     if (!roleAllowed || !statusAllowed) return false;
     if (disputeStatus === 'open' && !['mediator', 'admin'].includes(viewerRole)) return false;
     return true;
@@ -198,13 +228,21 @@ export default function DealsPage() {
   const canRefund = useMemo(() => {
     if (!selected || isEscrowFinalized) return false;
     const roleAllowed = ['seller', 'mediator', 'admin'].includes(viewerRole);
-    const statusAllowed = ['funded_mock', 'funded_live', 'awaiting_receipt', 'buyer_confirmed', 'disputed'].includes(escrowStatus);
+    const statusAllowed = [
+      'funded_mock',
+      'funded_live',
+      'awaiting_receipt',
+      'buyer_confirmed',
+      'disputed',
+    ].includes(escrowStatus);
     return roleAllowed && statusAllowed;
   }, [selected, isEscrowFinalized, viewerRole, escrowStatus]);
 
   const canOpenDispute = useMemo(() => {
     if (!selected) return false;
-    const roleAllowed = ['buyer', 'seller', 'creator', 'shipper', 'mediator', 'admin'].includes(viewerRole);
+    const roleAllowed = ['buyer', 'seller', 'creator', 'shipper', 'mediator', 'admin'].includes(
+      viewerRole,
+    );
     return roleAllowed && disputeStatus !== 'open' && escrowStatus !== 'draft';
   }, [selected, viewerRole, disputeStatus, escrowStatus]);
 
@@ -216,7 +254,9 @@ export default function DealsPage() {
 
   const canAddDisputeEvidenceUi = useMemo(() => {
     if (!selected) return false;
-    const roleAllowed = ['buyer', 'seller', 'creator', 'shipper', 'mediator', 'admin'].includes(viewerRole);
+    const roleAllowed = ['buyer', 'seller', 'creator', 'shipper', 'mediator', 'admin'].includes(
+      viewerRole,
+    );
     return roleAllowed && disputeStatus === 'open';
   }, [selected, viewerRole, disputeStatus]);
 
@@ -240,14 +280,17 @@ export default function DealsPage() {
     return String(currentRoleAcceptance?.[viewerPvaAssignedRole]?.status || 'pending');
   }, [viewerPvaAssignedRole, currentRoleAcceptance]);
 
-  const roleMilestoneMap = useMemo(() => ({
-    seller: 'seller',
-    buyer: 'buyer',
-    creator: 'creator',
-    shipper: 'shipper',
-    mediator: 'mediator',
-    admin: 'any',
-  }), []);
+  const roleMilestoneMap = useMemo(
+    () => ({
+      seller: 'seller',
+      buyer: 'buyer',
+      creator: 'creator',
+      shipper: 'shipper',
+      mediator: 'mediator',
+      admin: 'any',
+    }),
+    [],
+  );
 
   const myTaskMilestones = useMemo(() => {
     const milestones = Array.isArray(selected?.milestones) ? selected.milestones : [];
@@ -272,7 +315,12 @@ export default function DealsPage() {
       shipperForfeit: Number(((total * shipperPct) / 100).toFixed(2)),
       currency: selected?.currency || 'USD',
     };
-  }, [selected?.totalAmount, selected?.pva?.collateral?.creatorStakePct, selected?.pva?.collateral?.shipperStakePct, selected?.currency]);
+  }, [
+    selected?.totalAmount,
+    selected?.pva?.collateral?.creatorStakePct,
+    selected?.pva?.collateral?.shipperStakePct,
+    selected?.currency,
+  ]);
 
   const canAssignPlatformMediator = useMemo(() => {
     if (!selected) return false;
@@ -291,9 +339,10 @@ export default function DealsPage() {
 
   const visiblePvaNotificationQueue = useMemo(() => {
     const queue = Array.isArray(pvaNotificationQueue) ? [...pvaNotificationQueue] : [];
-    const filtered = pvaNotificationFilter === 'all'
-      ? queue
-      : queue.filter((entry) => String(entry?.status || '') === pvaNotificationFilter);
+    const filtered =
+      pvaNotificationFilter === 'all'
+        ? queue
+        : queue.filter((entry) => String(entry?.status || '') === pvaNotificationFilter);
     const notHidden = filtered.filter((entry) => !entry?.hiddenFromView);
     notHidden.sort((a, b) => {
       const at = new Date(a?.createdAt || 0).getTime();
@@ -305,11 +354,13 @@ export default function DealsPage() {
 
   const displayedPvaNotificationQueue = useMemo(
     () => visiblePvaNotificationQueue.slice(0, 12),
-    [visiblePvaNotificationQueue]
+    [visiblePvaNotificationQueue],
   );
 
   function getPvaPendingQueueCount(dealItem) {
-    const queue = Array.isArray(dealItem?.pva?.notificationQueue) ? dealItem.pva.notificationQueue : [];
+    const queue = Array.isArray(dealItem?.pva?.notificationQueue)
+      ? dealItem.pva.notificationQueue
+      : [];
     return queue.filter((entry) => String(entry?.status || 'queued') === 'queued').length;
   }
 
@@ -369,7 +420,10 @@ export default function DealsPage() {
     setError('');
     if (!hasEthereum()) return;
     try {
-      await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: hexChainId }] });
+      await window.ethereum.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: hexChainId }],
+      });
       const chainId = await window.ethereum.request({ method: 'eth_chainId' });
       setWallet((w) => ({ ...w, chainId: String(chainId || '') }));
     } catch (e) {
@@ -496,7 +550,10 @@ export default function DealsPage() {
       })
       .catch(() => {});
 
-    fetchDealOutboundQueue(selected._id, queueStatusFilter && queueStatusFilter !== 'all' ? { status: queueStatusFilter } : {})
+    fetchDealOutboundQueue(
+      selected._id,
+      queueStatusFilter && queueStatusFilter !== 'all' ? { status: queueStatusFilter } : {},
+    )
       .then((res) => {
         if (res?.ok && Array.isArray(res.queue)) setOutboundQueue(res.queue);
       })
@@ -531,7 +588,7 @@ export default function DealsPage() {
           const base = `${selected._id}:${m._id || ''}:${m.title || ''}`;
           const h = await sha256Hex(base);
           return [String(m._id || m.title || ''), h];
-        })
+        }),
       );
       if (cancelled) return;
       setMilestoneHashes(Object.fromEntries(entries));
@@ -552,7 +609,8 @@ export default function DealsPage() {
             const next = { ...prev };
             const prefs = res.user?.preferences || {};
             if (!next.currency && prefs.defaultCurrency) next.currency = prefs.defaultCurrency;
-            if (!next.counterpartyCountry && prefs.defaultCountry) next.counterpartyCountry = prefs.defaultCountry;
+            if (!next.counterpartyCountry && prefs.defaultCountry)
+              next.counterpartyCountry = prefs.defaultCountry;
             return next;
           });
         }
@@ -596,7 +654,9 @@ export default function DealsPage() {
             !prev.counterpartyWallet &&
             !prev.totalAmount;
           if (!pristine) {
-            setDraftRestoreHint('A previous draft exists (not auto-restored because you already started typing).');
+            setDraftRestoreHint(
+              'A previous draft exists (not auto-restored because you already started typing).',
+            );
             return prev;
           }
           setDraftRestoreHint('Restored your last saved deal draft.');
@@ -651,9 +711,24 @@ export default function DealsPage() {
         totalAmount: '',
         currency: profile?.preferences?.defaultCurrency || 'USD',
         payments: [
-          { label: 'Deposit', amount: '', currency: profile?.preferences?.defaultCurrency || 'USD', status: 'pending' },
-          { label: 'Mid', amount: '', currency: profile?.preferences?.defaultCurrency || 'USD', status: 'pending' },
-          { label: 'Final', amount: '', currency: profile?.preferences?.defaultCurrency || 'USD', status: 'pending' },
+          {
+            label: 'Deposit',
+            amount: '',
+            currency: profile?.preferences?.defaultCurrency || 'USD',
+            status: 'pending',
+          },
+          {
+            label: 'Mid',
+            amount: '',
+            currency: profile?.preferences?.defaultCurrency || 'USD',
+            status: 'pending',
+          },
+          {
+            label: 'Final',
+            amount: '',
+            currency: profile?.preferences?.defaultCurrency || 'USD',
+            status: 'pending',
+          },
         ],
         milestones: [
           { title: 'Tracking number provided', evidenceType: 'tracking_number', status: 'pending' },
@@ -742,7 +817,8 @@ export default function DealsPage() {
       };
 
       const res = await generatePvaDealPlan(payload);
-      if (!res?.ok || !res?.plan) throw new Error(res?.error || res?.message || 'Failed to generate PVA plan');
+      if (!res?.ok || !res?.plan)
+        throw new Error(res?.error || res?.message || 'Failed to generate PVA plan');
       setPvaPlan(res.plan);
     } catch (e) {
       const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
@@ -764,8 +840,10 @@ export default function DealsPage() {
       const res = await fetchPvaDealCandidates(params);
       if (!res?.ok) throw new Error(res?.error || res?.message || 'Failed to load candidates');
 
-      const firstCreator = Array.isArray(res.creators) && res.creators.length ? res.creators[0] : null;
-      const firstShipper = Array.isArray(res.shippers) && res.shippers.length ? res.shippers[0] : null;
+      const firstCreator =
+        Array.isArray(res.creators) && res.creators.length ? res.creators[0] : null;
+      const firstShipper =
+        Array.isArray(res.shippers) && res.shippers.length ? res.shippers[0] : null;
 
       setPvaPlanner((prev) => ({
         ...prev,
@@ -797,9 +875,14 @@ export default function DealsPage() {
       ...prev,
       title: pvaPlan.title || prev.title,
       description: pvaPlan.description || prev.description,
-      counterpartyName: pvaPlan?.pva?.parties?.find((p) => p.role === 'creator')?.name || prev.counterpartyName,
-      counterpartyCountry: pvaPlan?.pva?.parties?.find((p) => p.role === 'creator')?.country || prev.counterpartyCountry,
-      counterpartyWallet: pvaPlan?.pva?.parties?.find((p) => p.role === 'creator')?.walletAddress || prev.counterpartyWallet,
+      counterpartyName:
+        pvaPlan?.pva?.parties?.find((p) => p.role === 'creator')?.name || prev.counterpartyName,
+      counterpartyCountry:
+        pvaPlan?.pva?.parties?.find((p) => p.role === 'creator')?.country ||
+        prev.counterpartyCountry,
+      counterpartyWallet:
+        pvaPlan?.pva?.parties?.find((p) => p.role === 'creator')?.walletAddress ||
+        prev.counterpartyWallet,
       totalAmount: String(pvaPlan.totalAmount || prev.totalAmount || ''),
       currency: pvaPlan.currency || prev.currency || 'USD',
       payments: Array.isArray(pvaPlan.payments) ? pvaPlan.payments : prev.payments,
@@ -856,7 +939,8 @@ export default function DealsPage() {
       };
 
       const res = await generatePvaDealPlan(payload);
-      if (!res?.ok || !res?.item) throw new Error(res?.error || res?.message || 'Failed to create PVA deal');
+      if (!res?.ok || !res?.item)
+        throw new Error(res?.error || res?.message || 'Failed to create PVA deal');
       await loadDeals();
       setSelectedId(res.item._id);
       setPvaPlan(res.plan || null);
@@ -911,7 +995,9 @@ export default function DealsPage() {
       if (res?.shareUrl) {
         setShareLink(res.shareUrl);
       } else if (res?.publicId) {
-        setShareLink(`${globalThis.location?.origin || ''}/#/deal/${encodeURIComponent(res.publicId)}`);
+        setShareLink(
+          `${globalThis.location?.origin || ''}/#/deal/${encodeURIComponent(res.publicId)}`,
+        );
       } else if (res?.item?._id) {
         try {
           const invite = await createDealInvite(res.item._id);
@@ -952,8 +1038,14 @@ export default function DealsPage() {
         signature = await signTypedData(typedData, wallet.address);
         authorWallet = wallet.address;
       }
-      const res = await apiPost(`/deals/${selected._id}/messages`, { text, authorWallet, signature, typedData });
-      if (!res?.ok || !res.item) throw new Error(res?.error || res?.message || 'Failed to add message');
+      const res = await apiPost(`/deals/${selected._id}/messages`, {
+        text,
+        authorWallet,
+        signature,
+        typedData,
+      });
+      if (!res?.ok || !res.item)
+        throw new Error(res?.error || res?.message || 'Failed to add message');
       setSelected(res.item);
       setNewMessage('');
     } catch (e) {
@@ -968,7 +1060,8 @@ export default function DealsPage() {
     setError('');
     try {
       const res = await createDealInvite(selected._id);
-      if (!res?.ok || !res?.joinUrl) throw new Error(res?.error || res?.message || 'Failed to generate invite');
+      if (!res?.ok || !res?.joinUrl)
+        throw new Error(res?.error || res?.message || 'Failed to generate invite');
       setInviteLink(res.joinUrl);
       setInviteExpiresAt(res.expiresAt || '');
       try {
@@ -995,7 +1088,13 @@ export default function DealsPage() {
       let typedData = null;
       if (wallet.address && requireSignature) {
         const ts = new Date().toISOString();
-        typedData = buildDealEvidenceTypedData(parseChainId(wallet.chainId), selected._id, milestoneId, evidenceValue, ts);
+        typedData = buildDealEvidenceTypedData(
+          parseChainId(wallet.chainId),
+          selected._id,
+          milestoneId,
+          evidenceValue,
+          ts,
+        );
         signature = await signTypedData(typedData, wallet.address);
         authorWallet = wallet.address;
       }
@@ -1005,7 +1104,8 @@ export default function DealsPage() {
         signature,
         typedData,
       });
-      if (!res?.ok || !res.item) throw new Error(res?.error || res?.message || 'Failed to submit evidence');
+      if (!res?.ok || !res.item)
+        throw new Error(res?.error || res?.message || 'Failed to submit evidence');
       setSelected(res.item);
       setEvidenceDrafts((prev) => ({ ...prev, [milestoneId]: '' }));
     } catch (e) {
@@ -1036,7 +1136,8 @@ export default function DealsPage() {
     setError('');
     try {
       const res = await prepareDealEscrow(selected._id, { ownerWallet: wallet.address || '' });
-      if (!res?.ok || !res.prepareEscrow) throw new Error(res?.error || res?.message || 'Failed to prepare escrow');
+      if (!res?.ok || !res.prepareEscrow)
+        throw new Error(res?.error || res?.message || 'Failed to prepare escrow');
       setEscrowPrepare(res.prepareEscrow);
     } catch (e) {
       const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
@@ -1052,7 +1153,8 @@ export default function DealsPage() {
     setError('');
     try {
       const res = await apiPut(`/deals/${selected._id}`, { contractAddress });
-      if (!res?.ok || !res.item) throw new Error(res?.error || res?.message || 'Failed to link contract');
+      if (!res?.ok || !res.item)
+        throw new Error(res?.error || res?.message || 'Failed to link contract');
       setSelected(res.item);
     } catch (e) {
       const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
@@ -1067,7 +1169,10 @@ export default function DealsPage() {
     const dealId = selected._id;
     const res = await fetchDealById(dealId);
     if (res?.ok && res?.item) setSelected(res.item);
-    const q = await fetchDealOutboundQueue(dealId, queueStatusFilter && queueStatusFilter !== 'all' ? { status: queueStatusFilter } : {});
+    const q = await fetchDealOutboundQueue(
+      dealId,
+      queueStatusFilter && queueStatusFilter !== 'all' ? { status: queueStatusFilter } : {},
+    );
     if (q?.ok && Array.isArray(q.queue)) setOutboundQueue(q.queue);
     await refreshPvaWorkspace(dealId);
   }
@@ -1078,7 +1183,8 @@ export default function DealsPage() {
     setError('');
     try {
       const res = await acceptDealPvaRole(selected._id, { role, action });
-      if (!res?.ok || !res?.item) throw new Error(res?.error || res?.message || 'Failed to update role status');
+      if (!res?.ok || !res?.item)
+        throw new Error(res?.error || res?.message || 'Failed to update role status');
       setSelected(res.item);
       await refreshPvaWorkspace(selected._id);
     } catch (e) {
@@ -1105,8 +1211,11 @@ export default function DealsPage() {
     setActionBusy(true);
     setError('');
     try {
-      const res = await updateDealPvaNotificationQueueStatus(selected._id, notificationId, { status });
-      if (!res?.ok) throw new Error(res?.error || res?.message || 'Failed to update PVA queue status');
+      const res = await updateDealPvaNotificationQueueStatus(selected._id, notificationId, {
+        status,
+      });
+      if (!res?.ok)
+        throw new Error(res?.error || res?.message || 'Failed to update PVA queue status');
       if (Array.isArray(res.queue)) setPvaNotificationQueue(res.queue);
       if (res.item) setSelected(res.item);
     } catch (e) {
@@ -1136,8 +1245,8 @@ export default function DealsPage() {
     try {
       await Promise.all(
         targetRows.map((note) =>
-          updateDealPvaNotificationQueueStatus(selected._id, note._id, { status: nextStatus })
-        )
+          updateDealPvaNotificationQueueStatus(selected._id, note._id, { status: nextStatus }),
+        ),
       );
       await refreshPvaWorkspace(selected._id);
       await loadDeal(selected._id);
@@ -1156,7 +1265,9 @@ export default function DealsPage() {
       return;
     }
 
-    const failedRows = displayedPvaNotificationQueue.filter((note) => String(note?.status || '') === 'failed' && String(note?._id || ''));
+    const failedRows = displayedPvaNotificationQueue.filter(
+      (note) => String(note?.status || '') === 'failed' && String(note?._id || ''),
+    );
     if (!failedRows.length) return;
 
     setActionBusy(true);
@@ -1164,8 +1275,8 @@ export default function DealsPage() {
     try {
       await Promise.all(
         failedRows.map((note) =>
-          updateDealPvaNotificationQueueStatus(selected._id, note._id, { status: 'queued' })
-        )
+          updateDealPvaNotificationQueueStatus(selected._id, note._id, { status: 'queued' }),
+        ),
       );
       await refreshPvaWorkspace(selected._id);
       await loadDeal(selected._id);
@@ -1178,15 +1289,20 @@ export default function DealsPage() {
   }
 
   async function handleClearSentFromView() {
-    const sentRows = displayedPvaNotificationQueue.filter((note) => String(note?.status || '') === 'sent' && String(note?._id || ''));
+    const sentRows = displayedPvaNotificationQueue.filter(
+      (note) => String(note?.status || '') === 'sent' && String(note?._id || ''),
+    );
     if (!sentRows.length) return;
     setActionBusy(true);
     setError('');
     try {
       await Promise.all(
         sentRows.map((note) =>
-          updateDealPvaNotificationQueueStatus(selected._id, note._id, { status: 'sent', hiddenFromView: true })
-        )
+          updateDealPvaNotificationQueueStatus(selected._id, note._id, {
+            status: 'sent',
+            hiddenFromView: true,
+          }),
+        ),
       );
       await refreshPvaWorkspace(selected._id);
     } catch (e) {
@@ -1200,7 +1316,9 @@ export default function DealsPage() {
   async function handleUndoClearSentFromView() {
     if (!selected?._id) return;
     const hiddenRows = Array.isArray(pvaNotificationQueue)
-      ? pvaNotificationQueue.filter((note) => String(note?.status || '') === 'sent' && note?.hiddenFromView)
+      ? pvaNotificationQueue.filter(
+          (note) => String(note?.status || '') === 'sent' && note?.hiddenFromView,
+        )
       : [];
     if (!hiddenRows.length) return;
     setActionBusy(true);
@@ -1208,8 +1326,11 @@ export default function DealsPage() {
     try {
       await Promise.all(
         hiddenRows.map((note) =>
-          updateDealPvaNotificationQueueStatus(selected._id, note._id, { status: 'sent', hiddenFromView: false })
-        )
+          updateDealPvaNotificationQueueStatus(selected._id, note._id, {
+            status: 'sent',
+            hiddenFromView: false,
+          }),
+        ),
       );
       await refreshPvaWorkspace(selected._id);
     } catch (e) {
@@ -1235,7 +1356,8 @@ export default function DealsPage() {
         proofNote: mockProofNote,
         screenshotUrl: mockProofUrl,
       });
-      if (!res?.ok || !res?.item) throw new Error(res?.error || res?.message || 'Failed to mock-fund escrow');
+      if (!res?.ok || !res?.item)
+        throw new Error(res?.error || res?.message || 'Failed to mock-fund escrow');
       setSelected(res.item);
     } catch (e) {
       const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
@@ -1255,7 +1377,8 @@ export default function DealsPage() {
     setError('');
     try {
       const res = await confirmDealReceipt(selected._id);
-      if (!res?.ok || !res?.item) throw new Error(res?.error || res?.message || 'Failed to confirm receipt');
+      if (!res?.ok || !res?.item)
+        throw new Error(res?.error || res?.message || 'Failed to confirm receipt');
       setSelected(res.item);
     } catch (e) {
       const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
@@ -1275,7 +1398,8 @@ export default function DealsPage() {
     setError('');
     try {
       const res = await releaseDealEscrow(selected._id);
-      if (!res?.ok || !res?.item) throw new Error(res?.error || res?.message || 'Failed to release escrow');
+      if (!res?.ok || !res?.item)
+        throw new Error(res?.error || res?.message || 'Failed to release escrow');
       setSelected(res.item);
     } catch (e) {
       const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
@@ -1295,7 +1419,8 @@ export default function DealsPage() {
     setError('');
     try {
       const res = await refundDealEscrow(selected._id);
-      if (!res?.ok || !res?.item) throw new Error(res?.error || res?.message || 'Failed to refund escrow');
+      if (!res?.ok || !res?.item)
+        throw new Error(res?.error || res?.message || 'Failed to refund escrow');
       setSelected(res.item);
     } catch (e) {
       const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
@@ -1322,7 +1447,8 @@ export default function DealsPage() {
         reason: disputeReason,
         details: disputeDetails,
       });
-      if (!res?.ok || !res?.item) throw new Error(res?.error || res?.message || 'Failed to open dispute');
+      if (!res?.ok || !res?.item)
+        throw new Error(res?.error || res?.message || 'Failed to open dispute');
       setSelected(res.item);
       setDisputeData(res.item?.dispute || null);
       setDisputeReason('');
@@ -1361,7 +1487,8 @@ export default function DealsPage() {
         forfeitedParties,
         collateralNote: collateralResolutionNote,
       });
-      if (!res?.ok || !res?.item) throw new Error(res?.error || res?.message || 'Failed to resolve dispute');
+      if (!res?.ok || !res?.item)
+        throw new Error(res?.error || res?.message || 'Failed to resolve dispute');
       setSelected(res.item);
       setDisputeData(res.item?.dispute || null);
       setResolutionCode('');
@@ -1379,9 +1506,13 @@ export default function DealsPage() {
     setWorkspaceCandidatesLoading(true);
     setError('');
     try {
-      const buyerCountry = selected?.pva?.parties?.find((p) => p.role === 'buyer')?.country || selected?.counterparty?.country || '';
+      const buyerCountry =
+        selected?.pva?.parties?.find((p) => p.role === 'buyer')?.country ||
+        selected?.counterparty?.country ||
+        '';
       const res = await fetchPvaDealCandidates({ country: buyerCountry, limit: 25 });
-      if (!res?.ok) throw new Error(res?.error || res?.message || 'Failed to load network candidates');
+      if (!res?.ok)
+        throw new Error(res?.error || res?.message || 'Failed to load network candidates');
       setWorkspaceCandidates({
         creators: Array.isArray(res.creators) ? res.creators : [],
         shippers: Array.isArray(res.shippers) ? res.shippers : [],
@@ -1416,7 +1547,8 @@ export default function DealsPage() {
         shipperUserId: pvaRoleDraft.shipperUserId,
         milestoneRoles,
       });
-      if (!res?.ok || !res?.item) throw new Error(res?.error || res?.message || 'Failed to assign PVA roles');
+      if (!res?.ok || !res?.item)
+        throw new Error(res?.error || res?.message || 'Failed to assign PVA roles');
       setSelected(res.item);
     } catch (e) {
       const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
@@ -1443,7 +1575,8 @@ export default function DealsPage() {
         note: disputeEvidenceNote,
         attachmentUrl: disputeEvidenceUrl,
       });
-      if (!res?.ok || !res?.item) throw new Error(res?.error || res?.message || 'Failed to add dispute evidence');
+      if (!res?.ok || !res?.item)
+        throw new Error(res?.error || res?.message || 'Failed to add dispute evidence');
       setSelected(res.item);
       setDisputeData(res.dispute || res.item?.dispute || null);
       setDisputeEvidenceNote('');
@@ -1465,8 +1598,11 @@ export default function DealsPage() {
     setActionBusy(true);
     setError('');
     try {
-      const res = await autoAssignDealMediator(selected._id, { note: 'Platform mediator assignment requested from workspace' });
-      if (!res?.ok || !res?.item) throw new Error(res?.error || res?.message || 'Failed to assign mediator');
+      const res = await autoAssignDealMediator(selected._id, {
+        note: 'Platform mediator assignment requested from workspace',
+      });
+      if (!res?.ok || !res?.item)
+        throw new Error(res?.error || res?.message || 'Failed to assign mediator');
       setSelected(res.item);
     } catch (e) {
       const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
@@ -1482,7 +1618,11 @@ export default function DealsPage() {
       setError('You are not allowed to request a custom mediator on this deal');
       return;
     }
-    if (!mediatorRequest.name.trim() && !mediatorRequest.email.trim() && !mediatorRequest.contact.trim()) {
+    if (
+      !mediatorRequest.name.trim() &&
+      !mediatorRequest.email.trim() &&
+      !mediatorRequest.contact.trim()
+    ) {
       setError('Provide mediator name, email, or contact');
       return;
     }
@@ -1495,7 +1635,8 @@ export default function DealsPage() {
         contact: mediatorRequest.contact,
         notes: mediatorRequest.notes,
       });
-      if (!res?.ok || !res?.item) throw new Error(res?.error || res?.message || 'Failed to request custom mediator');
+      if (!res?.ok || !res?.item)
+        throw new Error(res?.error || res?.message || 'Failed to request custom mediator');
       setSelected(res.item);
       setMediatorRequest({ name: '', email: '', contact: '', notes: '' });
     } catch (e) {
@@ -1520,7 +1661,8 @@ export default function DealsPage() {
         mediatorUserId: mediatorApproval.mediatorUserId,
         note: mediatorApproval.note,
       });
-      if (!res?.ok || !res?.item) throw new Error(res?.error || res?.message || 'Failed to process mediator approval');
+      if (!res?.ok || !res?.item)
+        throw new Error(res?.error || res?.message || 'Failed to process mediator approval');
       setSelected(res.item);
       setMediatorApproval({ mediatorUserId: '', note: '' });
     } catch (e) {
@@ -1543,7 +1685,8 @@ export default function DealsPage() {
           targets: ['FTC', 'FIA Pakistan', 'FBI IC3', 'PGMA Compliance Desk'],
         },
       });
-      if (!res?.ok || !res?.packet) throw new Error(res?.error || res?.message || 'Failed to generate packet');
+      if (!res?.ok || !res?.packet)
+        throw new Error(res?.error || res?.message || 'Failed to generate packet');
       setReportPacket(res.packet);
       await refreshSelected();
     } catch (e) {
@@ -1564,7 +1707,8 @@ export default function DealsPage() {
     setError('');
     try {
       const res = await fetchDealResolutionCertificate(selected._id);
-      if (!res?.ok || !res?.certificate) throw new Error(res?.error || res?.message || 'Failed to generate resolution certificate');
+      if (!res?.ok || !res?.certificate)
+        throw new Error(res?.error || res?.message || 'Failed to generate resolution certificate');
       setResolutionCertificate(res.certificate);
       await refreshSelected();
     } catch (e) {
@@ -1586,7 +1730,9 @@ export default function DealsPage() {
 
   async function handleDownloadResolutionCertificate() {
     if (!resolutionCertificate) return;
-    const blob = new Blob([JSON.stringify(resolutionCertificate, null, 2)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify(resolutionCertificate, null, 2)], {
+      type: 'application/json',
+    });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -1602,8 +1748,12 @@ export default function DealsPage() {
     setActionBusy(true);
     setError('');
     try {
-      const res = await fetchDealExportBundle(selected._id, queueStatusFilter && queueStatusFilter !== 'all' ? { queueStatus: queueStatusFilter } : {});
-      if (!res?.ok || !res?.bundle) throw new Error(res?.error || res?.message || 'Failed to generate export bundle');
+      const res = await fetchDealExportBundle(
+        selected._id,
+        queueStatusFilter && queueStatusFilter !== 'all' ? { queueStatus: queueStatusFilter } : {},
+      );
+      if (!res?.ok || !res?.bundle)
+        throw new Error(res?.error || res?.message || 'Failed to generate export bundle');
       setExportBundle(res.bundle);
       await refreshSelected();
     } catch (e) {
@@ -1633,8 +1783,12 @@ export default function DealsPage() {
         status: draft.status,
         lastError: draft.lastError,
       });
-      if (!res?.ok) throw new Error(res?.error || res?.message || 'Failed to update outbound status');
-      const q = await fetchDealOutboundQueue(selected._id, queueStatusFilter && queueStatusFilter !== 'all' ? { status: queueStatusFilter } : {});
+      if (!res?.ok)
+        throw new Error(res?.error || res?.message || 'Failed to update outbound status');
+      const q = await fetchDealOutboundQueue(
+        selected._id,
+        queueStatusFilter && queueStatusFilter !== 'all' ? { status: queueStatusFilter } : {},
+      );
       if (q?.ok && Array.isArray(q.queue)) setOutboundQueue(q.queue);
       if (res?.item) setSelected(res.item);
     } catch (e) {
@@ -1646,43 +1800,53 @@ export default function DealsPage() {
   }
 
   return (
-    <div className={`deals-shell admin-page authenticated ${darkMode ? 'dark-theme' : 'light-theme'}`}>
+    <div
+      className={`deals-shell admin-page authenticated ${darkMode ? 'dark-theme' : 'light-theme'}`}
+    >
       <header className="admin-header deals-header">
         <div className="deals-header__row">
           <div>
             <h1>🤝 Deals (Smart Contract Foundation)</h1>
             <p className="muted">
-              Draft real-world deals (parties, wallets, milestones, payment schedule) with an audit trail. On-chain contract deployment comes next.
+              Draft real-world deals (parties, wallets, milestones, payment schedule) with an audit
+              trail. On-chain contract deployment comes next.
             </p>
           </div>
-            {shareLink ? (
-              <div className="rounded-lg border border-zinc-700/70 bg-zinc-900/60 p-4 space-y-3">
-                <h2 className="text-sm font-semibold text-zinc-100">Shareable public deal link</h2>
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                  <input
-                    className="w-full rounded-lg border border-zinc-600 bg-zinc-800 px-3 py-2 text-xs text-zinc-100"
-                    value={shareLink}
-                    readOnly
-                  />
-                  <button
-                    className="rounded-lg border border-amber-300/50 bg-amber-300/10 px-3 py-2 text-xs text-amber-200"
-                    onClick={async () => {
-                      try {
-                        await navigator.clipboard.writeText(shareLink);
-                      } catch (_err) {
-                        // Clipboard access is best effort only.
-                      }
-                    }}
-                  >
-                    Copy link
-                  </button>
-                </div>
-                <p className="text-xs text-zinc-500">Open this link publicly to review the proposal and verify with an authenticated session.</p>
+          {shareLink ? (
+            <div className="rounded-lg border border-zinc-700/70 bg-zinc-900/60 p-4 space-y-3">
+              <h2 className="text-sm font-semibold text-zinc-100">Shareable public deal link</h2>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <input
+                  className="w-full rounded-lg border border-zinc-600 bg-zinc-800 px-3 py-2 text-xs text-zinc-100"
+                  value={shareLink}
+                  readOnly
+                />
+                <button
+                  className="rounded-lg border border-amber-300/50 bg-amber-300/10 px-3 py-2 text-xs text-amber-200"
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(shareLink);
+                    } catch (_err) {
+                      // Clipboard access is best effort only.
+                    }
+                  }}
+                >
+                  Copy link
+                </button>
               </div>
-            ) : null}
+              <p className="text-xs text-zinc-500">
+                Open this link publicly to review the proposal and verify with an authenticated
+                session.
+              </p>
+            </div>
+          ) : null}
           <div className="deals-actions">
-            <Link to="/admin" className="btn ghost">← Admin</Link>
-            <button className="btn ghost" onClick={loadDeals} disabled={loading}>Refresh</button>
+            <Link to="/admin" className="btn ghost">
+              ← Admin
+            </Link>
+            <button className="btn ghost" onClick={loadDeals} disabled={loading}>
+              Refresh
+            </button>
             <button
               className="btn ghost"
               onClick={toggleTheme}
@@ -1698,24 +1862,39 @@ export default function DealsPage() {
       <AdminNav />
 
       <main className="deals-main">
-        {error ? <ErrorBanner message={error} onRetry={loadDeals} onDismiss={() => setError('')} /> : null}
+        {error ? (
+          <ErrorBanner message={error} onRetry={loadDeals} onDismiss={() => setError('')} />
+        ) : null}
 
         <section className="card deals-flow-card">
           <h2>Operating flow</h2>
           <div className="deals-flow-grid">
             <article className="deals-flow-step">
               <h3>1. Capture the people first</h3>
-              <p>Use the contacts CRM to record the supplier, buyer, or broker before you start drafting terms.</p>
-              <Link to="/contacts" className="btn ghost">Open contacts</Link>
+              <p>
+                Use the contacts CRM to record the supplier, buyer, or broker before you start
+                drafting terms.
+              </p>
+              <Link to="/contacts" className="btn ghost">
+                Open contacts
+              </Link>
             </article>
             <article className="deals-flow-step">
               <h3>2. Structure the deal</h3>
-              <p>Use this page to define parties, payment schedule, milestones, and the working audit trail.</p>
+              <p>
+                Use this page to define parties, payment schedule, milestones, and the working audit
+                trail.
+              </p>
             </article>
             <article className="deals-flow-step">
               <h3>3. Manage the workflow</h3>
-              <p>Track invites, evidence, disputes, and outbound queue states so the deal stays operational instead of living in scattered notes.</p>
-              <Link to="/broker-hub" className="btn ghost">Back to broker hub</Link>
+              <p>
+                Track invites, evidence, disputes, and outbound queue states so the deal stays
+                operational instead of living in scattered notes.
+              </p>
+              <Link to="/broker-hub" className="btn ghost">
+                Back to broker hub
+              </Link>
             </article>
           </div>
         </section>
@@ -1730,8 +1909,17 @@ export default function DealsPage() {
             />
           </h2>
           <div className="row rowWrap">
-            <button className="btn primary" type="button" onClick={connectWallet} disabled={wallet.connecting}>
-              {wallet.address ? 'Wallet connected' : wallet.connecting ? 'Connecting…' : 'Connect wallet'}
+            <button
+              className="btn primary"
+              type="button"
+              onClick={connectWallet}
+              disabled={wallet.connecting}
+            >
+              {wallet.address
+                ? 'Wallet connected'
+                : wallet.connecting
+                  ? 'Connecting…'
+                  : 'Connect wallet'}
             </button>
             {wallet.address ? <span className="muted small">Address: {wallet.address}</span> : null}
             {wallet.chainId ? <span className="muted small">Chain: {wallet.chainId}</span> : null}
@@ -1739,7 +1927,12 @@ export default function DealsPage() {
           <div className="row rowWrap" style={{ marginTop: '8px' }}>
             <span className="muted small">Switch chain:</span>
             {CHAINS.map((c) => (
-              <button key={c.id} className="btn ghost" type="button" onClick={() => switchChain(c.hex)}>
+              <button
+                key={c.id}
+                className="btn ghost"
+                type="button"
+                onClick={() => switchChain(c.hex)}
+              >
                 {c.name}
               </button>
             ))}
@@ -1773,81 +1966,169 @@ export default function DealsPage() {
           <div className="grid2">
             <label>
               <span className="labelRow">Request title</span>
-              <input value={pvaPlanner.requestTitle} onChange={(e) => setPvaPlanner((s) => ({ ...s, requestTitle: e.target.value }))} />
+              <input
+                value={pvaPlanner.requestTitle}
+                onChange={(e) => setPvaPlanner((s) => ({ ...s, requestTitle: e.target.value }))}
+              />
             </label>
             <label>
               <span className="labelRow">Buyer name</span>
-              <input value={pvaPlanner.buyerName} onChange={(e) => setPvaPlanner((s) => ({ ...s, buyerName: e.target.value }))} />
+              <input
+                value={pvaPlanner.buyerName}
+                onChange={(e) => setPvaPlanner((s) => ({ ...s, buyerName: e.target.value }))}
+              />
             </label>
             <label>
               <span className="labelRow">Buyer country</span>
-              <input value={pvaPlanner.buyerCountry} onChange={(e) => setPvaPlanner((s) => ({ ...s, buyerCountry: e.target.value }))} />
+              <input
+                value={pvaPlanner.buyerCountry}
+                onChange={(e) => setPvaPlanner((s) => ({ ...s, buyerCountry: e.target.value }))}
+              />
             </label>
             <label>
               <span className="labelRow">Buyer city</span>
-              <input value={pvaPlanner.buyerCity} onChange={(e) => setPvaPlanner((s) => ({ ...s, buyerCity: e.target.value }))} />
+              <input
+                value={pvaPlanner.buyerCity}
+                onChange={(e) => setPvaPlanner((s) => ({ ...s, buyerCity: e.target.value }))}
+              />
             </label>
             <label>
               <span className="labelRow">Creator name</span>
-              <input value={pvaPlanner.creatorName} onChange={(e) => setPvaPlanner((s) => ({ ...s, creatorName: e.target.value }))} />
+              <input
+                value={pvaPlanner.creatorName}
+                onChange={(e) => setPvaPlanner((s) => ({ ...s, creatorName: e.target.value }))}
+              />
             </label>
             <label>
               <span className="labelRow">Creator country</span>
-              <input value={pvaPlanner.creatorCountry} onChange={(e) => setPvaPlanner((s) => ({ ...s, creatorCountry: e.target.value }))} />
+              <input
+                value={pvaPlanner.creatorCountry}
+                onChange={(e) => setPvaPlanner((s) => ({ ...s, creatorCountry: e.target.value }))}
+              />
             </label>
             <label>
               <span className="labelRow">Shipper name</span>
-              <input value={pvaPlanner.shipperName} onChange={(e) => setPvaPlanner((s) => ({ ...s, shipperName: e.target.value }))} />
+              <input
+                value={pvaPlanner.shipperName}
+                onChange={(e) => setPvaPlanner((s) => ({ ...s, shipperName: e.target.value }))}
+              />
             </label>
             <label>
               <span className="labelRow">Shipper country</span>
-              <input value={pvaPlanner.shipperCountry} onChange={(e) => setPvaPlanner((s) => ({ ...s, shipperCountry: e.target.value }))} />
+              <input
+                value={pvaPlanner.shipperCountry}
+                onChange={(e) => setPvaPlanner((s) => ({ ...s, shipperCountry: e.target.value }))}
+              />
             </label>
             <label>
               <span className="labelRow">Production cost ({draft.currency || 'USD'})</span>
-              <input type="number" min="0" value={pvaPlanner.productionCost} onChange={(e) => setPvaPlanner((s) => ({ ...s, productionCost: e.target.value }))} />
+              <input
+                type="number"
+                min="0"
+                value={pvaPlanner.productionCost}
+                onChange={(e) => setPvaPlanner((s) => ({ ...s, productionCost: e.target.value }))}
+              />
             </label>
             <label>
               <span className="labelRow">Shipping cost ({draft.currency || 'USD'})</span>
-              <input type="number" min="0" value={pvaPlanner.shippingCost} onChange={(e) => setPvaPlanner((s) => ({ ...s, shippingCost: e.target.value }))} />
+              <input
+                type="number"
+                min="0"
+                value={pvaPlanner.shippingCost}
+                onChange={(e) => setPvaPlanner((s) => ({ ...s, shippingCost: e.target.value }))}
+              />
             </label>
             <label>
               <span className="labelRow">Platform fee ({draft.currency || 'USD'})</span>
-              <input type="number" min="0" value={pvaPlanner.platformFee} onChange={(e) => setPvaPlanner((s) => ({ ...s, platformFee: e.target.value }))} />
+              <input
+                type="number"
+                min="0"
+                value={pvaPlanner.platformFee}
+                onChange={(e) => setPvaPlanner((s) => ({ ...s, platformFee: e.target.value }))}
+              />
             </label>
             <label>
               <span className="labelRow">Route distance km</span>
-              <input type="number" min="0" value={pvaPlanner.routeKm} onChange={(e) => setPvaPlanner((s) => ({ ...s, routeKm: e.target.value }))} />
+              <input
+                type="number"
+                min="0"
+                value={pvaPlanner.routeKm}
+                onChange={(e) => setPvaPlanner((s) => ({ ...s, routeKm: e.target.value }))}
+              />
             </label>
             <label>
               <span className="labelRow">Reliability score (0-100)</span>
-              <input type="number" min="0" max="100" value={pvaPlanner.reliability} onChange={(e) => setPvaPlanner((s) => ({ ...s, reliability: e.target.value }))} />
+              <input
+                type="number"
+                min="0"
+                max="100"
+                value={pvaPlanner.reliability}
+                onChange={(e) => setPvaPlanner((s) => ({ ...s, reliability: e.target.value }))}
+              />
             </label>
             <label>
               <span className="labelRow">Consolidation score (0-100)</span>
-              <input type="number" min="0" max="100" value={pvaPlanner.consolidation} onChange={(e) => setPvaPlanner((s) => ({ ...s, consolidation: e.target.value }))} />
+              <input
+                type="number"
+                min="0"
+                max="100"
+                value={pvaPlanner.consolidation}
+                onChange={(e) => setPvaPlanner((s) => ({ ...s, consolidation: e.target.value }))}
+              />
             </label>
             <label>
               <span className="labelRow">Creator stake %</span>
-              <input type="number" min="0" max="100" value={pvaPlanner.creatorStakePct} onChange={(e) => setPvaPlanner((s) => ({ ...s, creatorStakePct: e.target.value }))} />
+              <input
+                type="number"
+                min="0"
+                max="100"
+                value={pvaPlanner.creatorStakePct}
+                onChange={(e) => setPvaPlanner((s) => ({ ...s, creatorStakePct: e.target.value }))}
+              />
             </label>
             <label>
               <span className="labelRow">Shipper stake %</span>
-              <input type="number" min="0" max="100" value={pvaPlanner.shipperStakePct} onChange={(e) => setPvaPlanner((s) => ({ ...s, shipperStakePct: e.target.value }))} />
+              <input
+                type="number"
+                min="0"
+                max="100"
+                value={pvaPlanner.shipperStakePct}
+                onChange={(e) => setPvaPlanner((s) => ({ ...s, shipperStakePct: e.target.value }))}
+              />
             </label>
           </div>
 
           <div className="row rowWrap" style={{ marginTop: '12px' }}>
-            <button type="button" className="btn ghost" onClick={handleLoadPvaCandidates} disabled={pvaCandidatesLoading || pvaPlanLoading}>
+            <button
+              type="button"
+              className="btn ghost"
+              onClick={handleLoadPvaCandidates}
+              disabled={pvaCandidatesLoading || pvaPlanLoading}
+            >
               {pvaCandidatesLoading ? 'Finding candidates…' : 'Auto-fill from network'}
             </button>
-            <button type="button" className="btn primary" onClick={handleGeneratePvaPlan} disabled={pvaPlanLoading}>
+            <button
+              type="button"
+              className="btn primary"
+              onClick={handleGeneratePvaPlan}
+              disabled={pvaPlanLoading}
+            >
               {pvaPlanLoading ? 'Planning…' : 'Generate PVA plan'}
             </button>
-            <button type="button" className="btn ghost" onClick={handleApplyPvaPlanToDraft} disabled={!pvaPlan || pvaPlanLoading}>
+            <button
+              type="button"
+              className="btn ghost"
+              onClick={handleApplyPvaPlanToDraft}
+              disabled={!pvaPlan || pvaPlanLoading}
+            >
               Apply plan to create form
             </button>
-            <button type="button" className="btn ghost" onClick={handleCreatePvaDealNow} disabled={pvaPlanLoading}>
+            <button
+              type="button"
+              className="btn ghost"
+              onClick={handleCreatePvaDealNow}
+              disabled={pvaPlanLoading}
+            >
               Create deal from planner
             </button>
           </div>
@@ -1855,17 +2136,27 @@ export default function DealsPage() {
           {pvaPlan ? (
             <div className="muted" style={{ marginTop: '12px' }}>
               <div>
-                Planned total: <strong>{pvaPlan.currency} {pvaPlan.totalAmount}</strong> | ETA: <strong>{pvaPlan.estimatedDays} days</strong> | Route score: <strong>{pvaPlan?.pva?.routeScore?.finalScore}</strong>
+                Planned total:{' '}
+                <strong>
+                  {pvaPlan.currency} {pvaPlan.totalAmount}
+                </strong>{' '}
+                | ETA: <strong>{pvaPlan.estimatedDays} days</strong> | Route score:{' '}
+                <strong>{pvaPlan?.pva?.routeScore?.finalScore}</strong>
               </div>
               <div>
-                Split: creator {pvaPlan?.split?.creatorPct}% | shipper {pvaPlan?.split?.shipperPct}% | platform {pvaPlan?.split?.platformPct}% | buffer {pvaPlan?.split?.bufferPct}%
+                Split: creator {pvaPlan?.split?.creatorPct}% | shipper {pvaPlan?.split?.shipperPct}%
+                | platform {pvaPlan?.split?.platformPct}% | buffer {pvaPlan?.split?.bufferPct}%
               </div>
               {Array.isArray(pvaPlan.alternatives) && pvaPlan.alternatives.length ? (
                 <div style={{ marginTop: '8px' }}>
-                  Top routes: {pvaPlan.alternatives.map((alt, idx) => (
-                    <span key={`${alt?.creator?.name || 'creator'}-${alt?.shipper?.name || 'shipper'}-${idx}`}>
+                  Top routes:{' '}
+                  {pvaPlan.alternatives.map((alt, idx) => (
+                    <span
+                      key={`${alt?.creator?.name || 'creator'}-${alt?.shipper?.name || 'shipper'}-${idx}`}
+                    >
                       {idx ? ' | ' : ''}
-                      {alt?.creator?.name} + {alt?.shipper?.name} ({alt?.score}, {pvaPlan.currency} {alt?.totalAmount})
+                      {alt?.creator?.name} + {alt?.shipper?.name} ({alt?.score}, {pvaPlan.currency}{' '}
+                      {alt?.totalAmount})
                     </span>
                   ))}
                 </div>
@@ -1884,7 +2175,8 @@ export default function DealsPage() {
             />
           </h2>
           <p className="muted" style={{ marginTop: 0 }}>
-            Start here after the contact is captured and the opportunity is real enough to need terms, milestones, and payment structure.
+            Start here after the contact is captured and the opportunity is real enough to need
+            terms, milestones, and payment structure.
           </p>
 
           {profile?.preferences ? (
@@ -1901,32 +2193,62 @@ export default function DealsPage() {
                 <label>
                   <span className="labelRow">
                     Default country
-                    <HelpTip title="Default country" body="Used to auto-fill the country field for new deals." example="Kenya" />
+                    <HelpTip
+                      title="Default country"
+                      body="Used to auto-fill the country field for new deals."
+                      example="Kenya"
+                    />
                   </span>
                   <input
                     value={preferencesDraft.defaultCountry}
-                    onChange={(e) => setProfile((p) => ({ ...p, preferences: { ...(p?.preferences || {}), defaultCountry: e.target.value } }))}
+                    onChange={(e) =>
+                      setProfile((p) => ({
+                        ...p,
+                        preferences: { ...(p?.preferences || {}), defaultCountry: e.target.value },
+                      }))
+                    }
                   />
                 </label>
                 <label>
                   <span className="labelRow">
                     Default currency
-                    <HelpTip title="Default currency" body="Used to auto-fill currency in new deals and payment schedule." example="USD" />
+                    <HelpTip
+                      title="Default currency"
+                      body="Used to auto-fill currency in new deals and payment schedule."
+                      example="USD"
+                    />
                   </span>
                   <input
                     value={preferencesDraft.defaultCurrency}
-                    onChange={(e) => setProfile((p) => ({ ...p, preferences: { ...(p?.preferences || {}), defaultCurrency: e.target.value } }))}
+                    onChange={(e) =>
+                      setProfile((p) => ({
+                        ...p,
+                        preferences: { ...(p?.preferences || {}), defaultCurrency: e.target.value },
+                      }))
+                    }
                   />
                 </label>
               </div>
               <label>
                 <span className="labelRow">
                   Default wallet (optional)
-                  <HelpTip title="Default wallet" body="Optional. Your preferred wallet address for reference and future on-chain escrow." example="0xabc123..." />
+                  <HelpTip
+                    title="Default wallet"
+                    body="Optional. Your preferred wallet address for reference and future on-chain escrow."
+                    example="0xabc123..."
+                  />
                 </span>
                 <input
                   value={preferencesDraft.defaultWalletAddress}
-                  onChange={(e) => setProfile((p) => ({ ...p, preferences: { ...(p?.preferences || {}), defaultWalletAddress: e.target.value } }))}
+                  onChange={(e) =>
+                    setProfile((p) => ({
+                      ...p,
+                      preferences: {
+                        ...(p?.preferences || {}),
+                        defaultWalletAddress: e.target.value,
+                      },
+                    }))
+                  }
                 />
               </label>
               <div className="row">
@@ -1946,7 +2268,12 @@ export default function DealsPage() {
           {draftRestoreHint ? <div className="muted small">{draftRestoreHint}</div> : null}
           {draftLoaded ? (
             <div className="row">
-              <button type="button" className="btn ghost" disabled={draftSaving} onClick={clearDraft}>
+              <button
+                type="button"
+                className="btn ghost"
+                disabled={draftSaving}
+                onClick={clearDraft}
+              >
                 Clear draft
               </button>
               {draftSaving ? <span className="muted small">Saving draft…</span> : null}
@@ -1957,56 +2284,110 @@ export default function DealsPage() {
             <label>
               <span className="labelRow">
                 Title *
-                <HelpTip title="Deal title" body="Short name for this deal. Use something you’ll recognize later." example="Kenya coffee import (1kg)" />
+                <HelpTip
+                  title="Deal title"
+                  body="Short name for this deal. Use something you’ll recognize later."
+                  example="Kenya coffee import (1kg)"
+                />
               </span>
-              <input value={draft.title} onChange={(e) => setDraft((p) => ({ ...p, title: e.target.value }))} />
+              <input
+                value={draft.title}
+                onChange={(e) => setDraft((p) => ({ ...p, title: e.target.value }))}
+              />
             </label>
             <label>
               <span className="labelRow">
                 Description
-                <HelpTip title="Deal description" body="Optional context: product, quality specs, delivery method, and any important terms." example="AA grade, shipped via DHL" />
+                <HelpTip
+                  title="Deal description"
+                  body="Optional context: product, quality specs, delivery method, and any important terms."
+                  example="AA grade, shipped via DHL"
+                />
               </span>
-              <textarea rows={3} value={draft.description} onChange={(e) => setDraft((p) => ({ ...p, description: e.target.value }))} />
+              <textarea
+                rows={3}
+                value={draft.description}
+                onChange={(e) => setDraft((p) => ({ ...p, description: e.target.value }))}
+              />
             </label>
 
             <div className="grid2">
               <label>
                 <span className="labelRow">
                   Counterparty name
-                  <HelpTip title="Who are you dealing with?" body="The person/company on the other side of the deal." example="Nairobi Coffee Co." />
+                  <HelpTip
+                    title="Who are you dealing with?"
+                    body="The person/company on the other side of the deal."
+                    example="Nairobi Coffee Co."
+                  />
                 </span>
-                <input value={draft.counterpartyName} onChange={(e) => setDraft((p) => ({ ...p, counterpartyName: e.target.value }))} />
+                <input
+                  value={draft.counterpartyName}
+                  onChange={(e) => setDraft((p) => ({ ...p, counterpartyName: e.target.value }))}
+                />
               </label>
               <label>
                 <span className="labelRow">
                   Country
-                  <HelpTip title="Country" body="Where the counterparty is located (helps with logistics context)." example="Kenya" />
+                  <HelpTip
+                    title="Country"
+                    body="Where the counterparty is located (helps with logistics context)."
+                    example="Kenya"
+                  />
                 </span>
-                <input value={draft.counterpartyCountry} onChange={(e) => setDraft((p) => ({ ...p, counterpartyCountry: e.target.value }))} placeholder="Kenya" />
+                <input
+                  value={draft.counterpartyCountry}
+                  onChange={(e) => setDraft((p) => ({ ...p, counterpartyCountry: e.target.value }))}
+                  placeholder="Kenya"
+                />
               </label>
             </div>
             <label>
               <span className="labelRow">
                 Counterparty wallet (optional)
-                <HelpTip title="Counterparty wallet" body="Optional for now. Later this becomes the receiving/signing address for the smart contract." example="0xdef456..." />
+                <HelpTip
+                  title="Counterparty wallet"
+                  body="Optional for now. Later this becomes the receiving/signing address for the smart contract."
+                  example="0xdef456..."
+                />
               </span>
-              <input value={draft.counterpartyWallet} onChange={(e) => setDraft((p) => ({ ...p, counterpartyWallet: e.target.value }))} placeholder="0x..." />
+              <input
+                value={draft.counterpartyWallet}
+                onChange={(e) => setDraft((p) => ({ ...p, counterpartyWallet: e.target.value }))}
+                placeholder="0x..."
+              />
             </label>
 
             <div className="grid2">
               <label>
                 <span className="labelRow">
                   Total amount
-                  <HelpTip title="Total amount" body="Total value of the deal (informational + future escrow amount)." example="1000" />
+                  <HelpTip
+                    title="Total amount"
+                    body="Total value of the deal (informational + future escrow amount)."
+                    example="1000"
+                  />
                 </span>
-                <input value={draft.totalAmount} onChange={(e) => setDraft((p) => ({ ...p, totalAmount: e.target.value }))} placeholder="1000" />
+                <input
+                  value={draft.totalAmount}
+                  onChange={(e) => setDraft((p) => ({ ...p, totalAmount: e.target.value }))}
+                  placeholder="1000"
+                />
               </label>
               <label>
                 <span className="labelRow">
                   Currency
-                  <HelpTip title="Currency" body="Displayed currency for this deal (USD recommended while testing)." example="USD" />
+                  <HelpTip
+                    title="Currency"
+                    body="Displayed currency for this deal (USD recommended while testing)."
+                    example="USD"
+                  />
                 </span>
-                <input value={draft.currency} onChange={(e) => setDraft((p) => ({ ...p, currency: e.target.value }))} placeholder="USD" />
+                <input
+                  value={draft.currency}
+                  onChange={(e) => setDraft((p) => ({ ...p, currency: e.target.value }))}
+                  placeholder="USD"
+                />
               </label>
             </div>
 
@@ -2027,7 +2408,9 @@ export default function DealsPage() {
                       onChange={(e) =>
                         setDraft((prev) => ({
                           ...prev,
-                          payments: prev.payments.map((x, i) => (i === idx ? { ...x, label: e.target.value } : x)),
+                          payments: prev.payments.map((x, i) =>
+                            i === idx ? { ...x, label: e.target.value } : x,
+                          ),
                         }))
                       }
                       placeholder="Label"
@@ -2037,7 +2420,9 @@ export default function DealsPage() {
                       onChange={(e) =>
                         setDraft((prev) => ({
                           ...prev,
-                          payments: prev.payments.map((x, i) => (i === idx ? { ...x, amount: e.target.value } : x)),
+                          payments: prev.payments.map((x, i) =>
+                            i === idx ? { ...x, amount: e.target.value } : x,
+                          ),
                         }))
                       }
                       placeholder="Amount"
@@ -2047,7 +2432,9 @@ export default function DealsPage() {
                       onChange={(e) =>
                         setDraft((prev) => ({
                           ...prev,
-                          payments: prev.payments.map((x, i) => (i === idx ? { ...x, currency: e.target.value } : x)),
+                          payments: prev.payments.map((x, i) =>
+                            i === idx ? { ...x, currency: e.target.value } : x,
+                          ),
                         }))
                       }
                       placeholder="Currency"
@@ -2055,7 +2442,12 @@ export default function DealsPage() {
                     <button
                       type="button"
                       className="btn ghost"
-                      onClick={() => setDraft((prev) => ({ ...prev, payments: prev.payments.filter((_, i) => i !== idx) }))}
+                      onClick={() =>
+                        setDraft((prev) => ({
+                          ...prev,
+                          payments: prev.payments.filter((_, i) => i !== idx),
+                        }))
+                      }
                       title="Remove payment"
                     >
                       Remove
@@ -2068,7 +2460,15 @@ export default function DealsPage() {
                   onClick={() =>
                     setDraft((prev) => ({
                       ...prev,
-                      payments: [...prev.payments, { label: `Payment ${prev.payments.length + 1}`, amount: '', currency: prev.currency || 'USD', status: 'pending' }],
+                      payments: [
+                        ...prev.payments,
+                        {
+                          label: `Payment ${prev.payments.length + 1}`,
+                          amount: '',
+                          currency: prev.currency || 'USD',
+                          status: 'pending',
+                        },
+                      ],
                     }))
                   }
                 >
@@ -2094,7 +2494,9 @@ export default function DealsPage() {
                       onChange={(e) =>
                         setDraft((prev) => ({
                           ...prev,
-                          milestones: prev.milestones.map((x, i) => (i === idx ? { ...x, title: e.target.value } : x)),
+                          milestones: prev.milestones.map((x, i) =>
+                            i === idx ? { ...x, title: e.target.value } : x,
+                          ),
                         }))
                       }
                       placeholder="Milestone title"
@@ -2104,7 +2506,9 @@ export default function DealsPage() {
                       onChange={(e) =>
                         setDraft((prev) => ({
                           ...prev,
-                          milestones: prev.milestones.map((x, i) => (i === idx ? { ...x, evidenceType: e.target.value } : x)),
+                          milestones: prev.milestones.map((x, i) =>
+                            i === idx ? { ...x, evidenceType: e.target.value } : x,
+                          ),
                         }))
                       }
                     >
@@ -2118,7 +2522,9 @@ export default function DealsPage() {
                       onChange={(e) =>
                         setDraft((prev) => ({
                           ...prev,
-                          milestones: prev.milestones.map((x, i) => (i === idx ? { ...x, assignedRole: e.target.value } : x)),
+                          milestones: prev.milestones.map((x, i) =>
+                            i === idx ? { ...x, assignedRole: e.target.value } : x,
+                          ),
                         }))
                       }
                     >
@@ -2132,7 +2538,12 @@ export default function DealsPage() {
                     <button
                       type="button"
                       className="btn ghost"
-                      onClick={() => setDraft((prev) => ({ ...prev, milestones: prev.milestones.filter((_, i) => i !== idx) }))}
+                      onClick={() =>
+                        setDraft((prev) => ({
+                          ...prev,
+                          milestones: prev.milestones.filter((_, i) => i !== idx),
+                        }))
+                      }
                       title="Remove milestone"
                     >
                       Remove
@@ -2145,7 +2556,15 @@ export default function DealsPage() {
                   onClick={() =>
                     setDraft((prev) => ({
                       ...prev,
-                      milestones: [...prev.milestones, { title: `Milestone ${prev.milestones.length + 1}`, evidenceType: 'none', assignedRole: 'any', status: 'pending' }],
+                      milestones: [
+                        ...prev.milestones,
+                        {
+                          title: `Milestone ${prev.milestones.length + 1}`,
+                          evidenceType: 'none',
+                          assignedRole: 'any',
+                          status: 'pending',
+                        },
+                      ],
                     }))
                   }
                 >
@@ -2193,7 +2612,8 @@ export default function DealsPage() {
             <h2>Deal workspace</h2>
             {selected.counterpartyAccess?.joinedAt ? (
               <div className="counterparty-joined" role="status">
-                ✓ Counterparty joined {new Date(selected.counterpartyAccess.joinedAt).toLocaleString()}
+                ✓ Counterparty joined{' '}
+                {new Date(selected.counterpartyAccess.joinedAt).toLocaleString()}
               </div>
             ) : null}
             <div className="workspace">
@@ -2207,7 +2627,12 @@ export default function DealsPage() {
                   />
                 </h3>
                 <div className="row">
-                  <button className="btn ghost" type="button" disabled={inviteLoading} onClick={handleGenerateInvite}>
+                  <button
+                    className="btn ghost"
+                    type="button"
+                    disabled={inviteLoading}
+                    onClick={handleGenerateInvite}
+                  >
                     {inviteLoading ? 'Generating…' : 'Generate join link'}
                   </button>
                 </div>
@@ -2218,7 +2643,9 @@ export default function DealsPage() {
                       {inviteLink}
                     </div>
                     {inviteExpiresAt ? (
-                      <div className="muted small">Expires: {new Date(inviteExpiresAt).toLocaleString()}</div>
+                      <div className="muted small">
+                        Expires: {new Date(inviteExpiresAt).toLocaleString()}
+                      </div>
                     ) : null}
                   </div>
                 ) : null}
@@ -2227,24 +2654,34 @@ export default function DealsPage() {
                 <div className="subcard">
                   <div className="muted small">
                     Workflow: <strong>{String(currentWorkflow?.status || 'draft')}</strong>
-                    {currentWorkflow?.updatedAt ? ` · updated ${new Date(currentWorkflow.updatedAt).toLocaleString()}` : ''}
+                    {currentWorkflow?.updatedAt
+                      ? ` · updated ${new Date(currentWorkflow.updatedAt).toLocaleString()}`
+                      : ''}
                   </div>
                   <div className="muted small" style={{ marginTop: '0.4rem' }}>
-                    Creator: <strong>{String(currentRoleAcceptance?.creator?.status || 'pending')}</strong>
+                    Creator:{' '}
+                    <strong>{String(currentRoleAcceptance?.creator?.status || 'pending')}</strong>
                     {' · '}
-                    Shipper: <strong>{String(currentRoleAcceptance?.shipper?.status || 'pending')}</strong>
+                    Shipper:{' '}
+                    <strong>{String(currentRoleAcceptance?.shipper?.status || 'pending')}</strong>
                     {' · '}
-                    Buyer: <strong>{String(currentRoleAcceptance?.buyer?.status || 'pending')}</strong>
+                    Buyer:{' '}
+                    <strong>{String(currentRoleAcceptance?.buyer?.status || 'pending')}</strong>
                   </div>
                   {viewerPvaAssignedRole ? (
                     <div className="row rowWrap" style={{ marginTop: '0.6rem' }}>
                       <span className="muted small">
-                        Your role assignment: <strong>{viewerPvaAssignedRole}</strong> ({viewerRoleAcceptanceStatus})
+                        Your role assignment: <strong>{viewerPvaAssignedRole}</strong> (
+                        {viewerRoleAcceptanceStatus})
                       </span>
                       <button
                         className="btn ghost"
                         type="button"
-                        disabled={actionBusy || viewerRoleAcceptanceStatus === 'accepted' || viewerRoleAcceptanceStatus === 'declined'}
+                        disabled={
+                          actionBusy ||
+                          viewerRoleAcceptanceStatus === 'accepted' ||
+                          viewerRoleAcceptanceStatus === 'declined'
+                        }
                         onClick={() => handlePvaRoleAction(viewerPvaAssignedRole, 'accept')}
                       >
                         Accept role
@@ -2252,7 +2689,11 @@ export default function DealsPage() {
                       <button
                         className="btn ghost"
                         type="button"
-                        disabled={actionBusy || viewerRoleAcceptanceStatus === 'declined' || viewerRoleAcceptanceStatus === 'accepted'}
+                        disabled={
+                          actionBusy ||
+                          viewerRoleAcceptanceStatus === 'declined' ||
+                          viewerRoleAcceptanceStatus === 'accepted'
+                        }
                         onClick={() => handlePvaRoleAction(viewerPvaAssignedRole, 'decline')}
                       >
                         Decline role
@@ -2260,10 +2701,22 @@ export default function DealsPage() {
                     </div>
                   ) : null}
                   <div className="row rowWrap">
-                    <button className="btn ghost" type="button" disabled={workspaceCandidatesLoading || actionBusy} onClick={handleLoadWorkspaceCandidates}>
-                      {workspaceCandidatesLoading ? 'Loading candidates…' : 'Load creator/shipper candidates'}
+                    <button
+                      className="btn ghost"
+                      type="button"
+                      disabled={workspaceCandidatesLoading || actionBusy}
+                      onClick={handleLoadWorkspaceCandidates}
+                    >
+                      {workspaceCandidatesLoading
+                        ? 'Loading candidates…'
+                        : 'Load creator/shipper candidates'}
                     </button>
-                    <button className="btn ghost" type="button" disabled={actionBusy} onClick={() => refreshPvaWorkspace(selected._id)}>
+                    <button
+                      className="btn ghost"
+                      type="button"
+                      disabled={actionBusy}
+                      onClick={() => refreshPvaWorkspace(selected._id)}
+                    >
                       Refresh workflow
                     </button>
                   </div>
@@ -2272,7 +2725,9 @@ export default function DealsPage() {
                       <span className="labelRow">Assign creator</span>
                       <select
                         value={pvaRoleDraft.creatorUserId}
-                        onChange={(e) => setPvaRoleDraft((prev) => ({ ...prev, creatorUserId: e.target.value }))}
+                        onChange={(e) =>
+                          setPvaRoleDraft((prev) => ({ ...prev, creatorUserId: e.target.value }))
+                        }
                       >
                         <option value="">Select creator</option>
                         {(workspaceCandidates.creators || []).map((c) => (
@@ -2286,7 +2741,9 @@ export default function DealsPage() {
                       <span className="labelRow">Assign shipper</span>
                       <select
                         value={pvaRoleDraft.shipperUserId}
-                        onChange={(e) => setPvaRoleDraft((prev) => ({ ...prev, shipperUserId: e.target.value }))}
+                        onChange={(e) =>
+                          setPvaRoleDraft((prev) => ({ ...prev, shipperUserId: e.target.value }))
+                        }
                       >
                         <option value="">Select shipper</option>
                         {(workspaceCandidates.shippers || []).map((s) => (
@@ -2298,37 +2755,84 @@ export default function DealsPage() {
                     </label>
                   </div>
                   <div className="row rowWrap" style={{ marginTop: '0.6rem' }}>
-                    <button className="btn ghost" type="button" disabled={actionBusy || !canAssignPvaRoles} onClick={handleApplyPvaAssignments}>
+                    <button
+                      className="btn ghost"
+                      type="button"
+                      disabled={actionBusy || !canAssignPvaRoles}
+                      onClick={handleApplyPvaAssignments}
+                    >
                       Apply creator/shipper assignment
                     </button>
                   </div>
 
                   <div style={{ marginTop: '0.8rem' }}>
-                    <div className="muted small"><strong>PVA notification queue</strong></div>
+                    <div className="muted small">
+                      <strong>PVA notification queue</strong>
+                    </div>
                     <div className="row rowWrap" style={{ marginTop: '0.35rem' }}>
                       <span className="muted small">Filter</span>
-                      <select value={pvaNotificationFilter} onChange={(e) => setPvaNotificationFilter(e.target.value)}>
+                      <select
+                        value={pvaNotificationFilter}
+                        onChange={(e) => setPvaNotificationFilter(e.target.value)}
+                      >
                         <option value="all">all</option>
                         <option value="queued">queued</option>
                         <option value="sent">sent</option>
                         <option value="failed">failed</option>
                       </select>
-                      <span className="muted small">showing {displayedPvaNotificationQueue.length}</span>
+                      <span className="muted small">
+                        showing {displayedPvaNotificationQueue.length}
+                      </span>
                       {['seller', 'mediator', 'admin'].includes(viewerRole) ? (
                         <>
-                          <button className="btn ghost" type="button" disabled={actionBusy || !displayedPvaNotificationQueue.length} onClick={() => handleBulkPvaQueueStatusUpdate('sent')}>
+                          <button
+                            className="btn ghost"
+                            type="button"
+                            disabled={actionBusy || !displayedPvaNotificationQueue.length}
+                            onClick={() => handleBulkPvaQueueStatusUpdate('sent')}
+                          >
                             Mark visible sent
                           </button>
-                          <button className="btn ghost" type="button" disabled={actionBusy || !displayedPvaNotificationQueue.length} onClick={() => handleBulkPvaQueueStatusUpdate('failed')}>
+                          <button
+                            className="btn ghost"
+                            type="button"
+                            disabled={actionBusy || !displayedPvaNotificationQueue.length}
+                            onClick={() => handleBulkPvaQueueStatusUpdate('failed')}
+                          >
                             Mark visible failed
                           </button>
-                          <button className="btn ghost" type="button" disabled={actionBusy || !displayedPvaNotificationQueue.some((note) => String(note?.status || '') === 'failed')} onClick={handleRetryFailedOnly}>
+                          <button
+                            className="btn ghost"
+                            type="button"
+                            disabled={
+                              actionBusy ||
+                              !displayedPvaNotificationQueue.some(
+                                (note) => String(note?.status || '') === 'failed',
+                              )
+                            }
+                            onClick={handleRetryFailedOnly}
+                          >
                             Retry failed only
                           </button>
-                          <button className="btn ghost" type="button" disabled={actionBusy || !displayedPvaNotificationQueue.some((note) => String(note?.status || '') === 'sent')} onClick={handleClearSentFromView}>
+                          <button
+                            className="btn ghost"
+                            type="button"
+                            disabled={
+                              actionBusy ||
+                              !displayedPvaNotificationQueue.some(
+                                (note) => String(note?.status || '') === 'sent',
+                              )
+                            }
+                            onClick={handleClearSentFromView}
+                          >
                             Clear sent from view
                           </button>
-                          <button className="btn ghost" type="button" disabled={actionBusy || !Object.keys(dismissedPvaSentIds).length} onClick={handleUndoClearSentFromView}>
+                          <button
+                            className="btn ghost"
+                            type="button"
+                            disabled={actionBusy || !Object.keys(dismissedPvaSentIds).length}
+                            onClick={handleUndoClearSentFromView}
+                          >
                             Undo clear
                           </button>
                         </>
@@ -2337,19 +2841,34 @@ export default function DealsPage() {
                     {displayedPvaNotificationQueue.length ? (
                       <div className="stack" style={{ marginTop: '0.4rem' }}>
                         {displayedPvaNotificationQueue.map((note, idx) => (
-                          <div key={`${note?.targetRole || 'role'}-${note?.eventType || 'event'}-${idx}`} className="muted small">
+                          <div
+                            key={`${note?.targetRole || 'role'}-${note?.eventType || 'event'}-${idx}`}
+                            className="muted small"
+                          >
                             <div>
-                              {note?.eventType || 'event'} {' -> '} {note?.targetRole || 'party'}
-                              {' '}
-                              <span className={`pva-status-chip pva-status-chip--${String(note?.status || 'queued')}`}>{note?.status || 'queued'}</span>
-                              {note?.createdAt ? ` @ ${new Date(note.createdAt).toLocaleString()}` : ''}
+                              {note?.eventType || 'event'} {' -> '} {note?.targetRole || 'party'}{' '}
+                              <span
+                                className={`pva-status-chip pva-status-chip--${String(note?.status || 'queued')}`}
+                              >
+                                {note?.status || 'queued'}
+                              </span>
+                              {note?.createdAt
+                                ? ` @ ${new Date(note.createdAt).toLocaleString()}`
+                                : ''}
                             </div>
                             {['seller', 'mediator', 'admin'].includes(viewerRole) && note?._id ? (
                               <div className="row rowWrap" style={{ marginTop: '0.3rem' }}>
                                 <select
-                                  value={pvaNotificationStatusDrafts[note._id] || note?.status || 'queued'}
+                                  value={
+                                    pvaNotificationStatusDrafts[note._id] ||
+                                    note?.status ||
+                                    'queued'
+                                  }
                                   onChange={(e) =>
-                                    setPvaNotificationStatusDrafts((prev) => ({ ...prev, [note._id]: e.target.value }))
+                                    setPvaNotificationStatusDrafts((prev) => ({
+                                      ...prev,
+                                      [note._id]: e.target.value,
+                                    }))
                                   }
                                 >
                                   <option value="queued">queued</option>
@@ -2370,17 +2889,22 @@ export default function DealsPage() {
                         ))}
                       </div>
                     ) : (
-                      <div className="muted small" style={{ marginTop: '0.4rem' }}>No queued workflow notifications.</div>
+                      <div className="muted small" style={{ marginTop: '0.4rem' }}>
+                        No queued workflow notifications.
+                      </div>
                     )}
                   </div>
 
                   <div style={{ marginTop: '0.8rem' }}>
-                    <div className="muted small"><strong>Payout preview</strong></div>
+                    <div className="muted small">
+                      <strong>Payout preview</strong>
+                    </div>
                     {pvaPayoutPreview.length ? (
                       <div className="stack" style={{ marginTop: '0.4rem' }}>
                         {pvaPayoutPreview.map((line, idx) => (
                           <div key={`${line?.party || 'party'}-${idx}`} className="muted small">
-                            {line?.party || 'party'}: {line?.currency || selected.currency || 'USD'} {line?.amount || 0}
+                            {line?.party || 'party'}: {line?.currency || selected.currency || 'USD'}{' '}
+                            {line?.amount || 0}
                             {' · '}
                             {line?.status || 'pending'}
                             {line?.note ? ` · ${line.note}` : ''}
@@ -2388,24 +2912,31 @@ export default function DealsPage() {
                         ))}
                       </div>
                     ) : (
-                      <div className="muted small" style={{ marginTop: '0.4rem' }}>No payout preview available yet.</div>
+                      <div className="muted small" style={{ marginTop: '0.4rem' }}>
+                        No payout preview available yet.
+                      </div>
                     )}
                   </div>
                 </div>
 
                 <h3>My task dashboard</h3>
                 <div className="subcard">
-                  <div className="muted small">Current role: <strong>{viewerRole}</strong></div>
+                  <div className="muted small">
+                    Current role: <strong>{viewerRole}</strong>
+                  </div>
                   {myTaskMilestones.length ? (
                     <div className="stack" style={{ marginTop: '0.5rem' }}>
                       {myTaskMilestones.map((m, idx) => (
                         <div key={m._id || idx} className="muted small">
-                          <strong>{m.title}</strong> · assigned to {m.assignedRole || 'any'} · status {m.status || 'pending'}
+                          <strong>{m.title}</strong> · assigned to {m.assignedRole || 'any'} ·
+                          status {m.status || 'pending'}
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <div className="muted small" style={{ marginTop: '0.5rem' }}>No assigned tasks for your role yet.</div>
+                    <div className="muted small" style={{ marginTop: '0.5rem' }}>
+                      No assigned tasks for your role yet.
+                    </div>
                   )}
                 </div>
 
@@ -2418,18 +2949,29 @@ export default function DealsPage() {
                         {m.description ? <div className="muted small">{m.description}</div> : null}
                         <div className="muted small">evidence: {m.evidenceType || 'none'}</div>
                         <div className="muted small">assigned role: {m.assignedRole || 'any'}</div>
-                        {m.evidenceValue ? <div className="muted small">evidence value: {m.evidenceValue}</div> : null}
+                        {m.evidenceValue ? (
+                          <div className="muted small">evidence value: {m.evidenceValue}</div>
+                        ) : null}
                         {m.evidenceType && m.evidenceType !== 'none' ? (
                           <div className="row">
                             <input
                               value={evidenceDrafts[m._id] ?? ''}
-                              onChange={(e) => setEvidenceDrafts((prev) => ({ ...prev, [m._id]: e.target.value }))}
+                              onChange={(e) =>
+                                setEvidenceDrafts((prev) => ({ ...prev, [m._id]: e.target.value }))
+                              }
                               placeholder="Submit evidence (tracking number, link, etc.)"
                             />
                             <button
                               className="btn ghost"
                               type="button"
-                              disabled={viewerRole !== 'admin' && !['any', viewerRole].includes(String(m.assignedRole || 'any')) && !(String(m.assignedRole || '') === 'creator' && viewerRole === 'seller')}
+                              disabled={
+                                viewerRole !== 'admin' &&
+                                !['any', viewerRole].includes(String(m.assignedRole || 'any')) &&
+                                !(
+                                  String(m.assignedRole || '') === 'creator' &&
+                                  viewerRole === 'seller'
+                                )
+                              }
                               onClick={() => handleSubmitEvidence(m._id)}
                             >
                               Save evidence
@@ -2437,11 +2979,17 @@ export default function DealsPage() {
                           </div>
                         ) : null}
                         {m.status !== 'completed' ? (
-                          <button className="btn ghost" onClick={() => handleMarkMilestoneCompleted(idx)}>
+                          <button
+                            className="btn ghost"
+                            onClick={() => handleMarkMilestoneCompleted(idx)}
+                          >
                             Mark completed
                           </button>
                         ) : (
-                          <div className="muted small">completed {m.completedAt ? new Date(m.completedAt).toLocaleString() : ''}</div>
+                          <div className="muted small">
+                            completed{' '}
+                            {m.completedAt ? new Date(m.completedAt).toLocaleString() : ''}
+                          </div>
                         )}
                       </div>
                     ))}
@@ -2457,7 +3005,8 @@ export default function DealsPage() {
                       <div key={p._id || idx} className="payment">
                         <div className="payment-title">{p.label || `Payment ${idx + 1}`}</div>
                         <div className="muted small">
-                          {p.currency || selected.currency || 'USD'} {p.amount} · {p.status || 'pending'}
+                          {p.currency || selected.currency || 'USD'} {p.amount} ·{' '}
+                          {p.status || 'pending'}
                         </div>
                       </div>
                     ))}
@@ -2469,7 +3018,9 @@ export default function DealsPage() {
                 <h3>Escrow controls (live API + mock transfer lane)</h3>
                 <div className="subcard">
                   <div className="muted small">
-                    Role: <strong>{viewerRole}</strong> · Escrow status: <strong>{selected.escrow?.status || 'draft'}</strong> · mode: <strong>{selected.escrow?.fundingMode || 'mock'}</strong>
+                    Role: <strong>{viewerRole}</strong> · Escrow status:{' '}
+                    <strong>{selected.escrow?.status || 'draft'}</strong> · mode:{' '}
+                    <strong>{selected.escrow?.fundingMode || 'mock'}</strong>
                   </div>
                   <div className="row rowWrap" style={{ marginTop: '0.5rem' }}>
                     <input
@@ -2484,16 +3035,36 @@ export default function DealsPage() {
                     />
                   </div>
                   <div className="row rowWrap" style={{ marginTop: '0.5rem' }}>
-                    <button className="btn primary" type="button" disabled={actionBusy || !canMockFund} onClick={handleMockFundEscrow}>
+                    <button
+                      className="btn primary"
+                      type="button"
+                      disabled={actionBusy || !canMockFund}
+                      onClick={handleMockFundEscrow}
+                    >
                       Mock fund escrow
                     </button>
-                    <button className="btn ghost" type="button" disabled={actionBusy || !canConfirmReceipt} onClick={handleConfirmReceipt}>
+                    <button
+                      className="btn ghost"
+                      type="button"
+                      disabled={actionBusy || !canConfirmReceipt}
+                      onClick={handleConfirmReceipt}
+                    >
                       Buyer confirms receipt
                     </button>
-                    <button className="btn ghost" type="button" disabled={actionBusy || !canRelease} onClick={handleReleaseEscrow}>
+                    <button
+                      className="btn ghost"
+                      type="button"
+                      disabled={actionBusy || !canRelease}
+                      onClick={handleReleaseEscrow}
+                    >
                       Release funds
                     </button>
-                    <button className="btn ghost" type="button" disabled={actionBusy || !canRefund} onClick={handleRefundEscrow}>
+                    <button
+                      className="btn ghost"
+                      type="button"
+                      disabled={actionBusy || !canRefund}
+                      onClick={handleRefundEscrow}
+                    >
                       Refund buyer
                     </button>
                   </div>
@@ -2510,7 +3081,10 @@ export default function DealsPage() {
                     </div>
                   ) : null}
                   {disputeData?.resolutionHash ? (
-                    <div className="muted small" style={{ marginTop: '0.2rem', wordBreak: 'break-all' }}>
+                    <div
+                      className="muted small"
+                      style={{ marginTop: '0.2rem', wordBreak: 'break-all' }}
+                    >
                       Decision hash: <strong>{disputeData.resolutionHash}</strong>
                     </div>
                   ) : null}
@@ -2518,7 +3092,10 @@ export default function DealsPage() {
                     <button
                       className="btn ghost"
                       type="button"
-                      disabled={actionBusy || !['resolved_release', 'resolved_refund'].includes(disputeStatus)}
+                      disabled={
+                        actionBusy ||
+                        !['resolved_release', 'resolved_refund'].includes(disputeStatus)
+                      }
                       onClick={handleGenerateResolutionCertificate}
                     >
                       Generate resolution certificate
@@ -2527,10 +3104,18 @@ export default function DealsPage() {
                   {resolutionCertificate ? (
                     <div style={{ marginTop: '0.5rem' }}>
                       <div className="row rowWrap" style={{ marginBottom: '0.5rem' }}>
-                        <button className="btn ghost" type="button" onClick={handleCopyResolutionCertificate}>
+                        <button
+                          className="btn ghost"
+                          type="button"
+                          onClick={handleCopyResolutionCertificate}
+                        >
                           Copy certificate
                         </button>
-                        <button className="btn ghost" type="button" onClick={handleDownloadResolutionCertificate}>
+                        <button
+                          className="btn ghost"
+                          type="button"
+                          onClick={handleDownloadResolutionCertificate}
+                        >
                           Download certificate
                         </button>
                       </div>
@@ -2550,31 +3135,59 @@ export default function DealsPage() {
                     />
                   </div>
                   <div className="row rowWrap" style={{ marginTop: '0.5rem' }}>
-                    <select value={resolutionCode} onChange={(e) => setResolutionCode(e.target.value)}>
+                    <select
+                      value={resolutionCode}
+                      onChange={(e) => setResolutionCode(e.target.value)}
+                    >
                       <option value="">Select resolution code</option>
                       {Object.entries(RESOLUTION_REASON_CODES).flatMap(([decision, codes]) =>
                         codes.map((code) => (
-                          <option key={`${decision}-${code}`} value={code}>{decision}: {code}</option>
-                        ))
+                          <option key={`${decision}-${code}`} value={code}>
+                            {decision}: {code}
+                          </option>
+                        )),
                       )}
                     </select>
-                    <button className="btn ghost" type="button" disabled={actionBusy || !canOpenDispute} onClick={handleOpenDispute}>
+                    <button
+                      className="btn ghost"
+                      type="button"
+                      disabled={actionBusy || !canOpenDispute}
+                      onClick={handleOpenDispute}
+                    >
                       Open dispute
                     </button>
-                    <button className="btn ghost" type="button" disabled={actionBusy || !canResolveDisputeUi} onClick={() => handleResolveDispute('release')}>
+                    <button
+                      className="btn ghost"
+                      type="button"
+                      disabled={actionBusy || !canResolveDisputeUi}
+                      onClick={() => handleResolveDispute('release')}
+                    >
                       Resolve: release
                     </button>
-                    <button className="btn ghost" type="button" disabled={actionBusy || !canResolveDisputeUi} onClick={() => handleResolveDispute('refund')}>
+                    <button
+                      className="btn ghost"
+                      type="button"
+                      disabled={actionBusy || !canResolveDisputeUi}
+                      onClick={() => handleResolveDispute('refund')}
+                    >
                       Resolve: refund
                     </button>
                   </div>
                   <div className="row rowWrap" style={{ marginTop: '0.5rem' }}>
                     <label className="check">
-                      <input type="checkbox" checked={forfeitCreator} onChange={(e) => setForfeitCreator(e.target.checked)} />
+                      <input
+                        type="checkbox"
+                        checked={forfeitCreator}
+                        onChange={(e) => setForfeitCreator(e.target.checked)}
+                      />
                       <span>Forfeit creator collateral</span>
                     </label>
                     <label className="check">
-                      <input type="checkbox" checked={forfeitShipper} onChange={(e) => setForfeitShipper(e.target.checked)} />
+                      <input
+                        type="checkbox"
+                        checked={forfeitShipper}
+                        onChange={(e) => setForfeitShipper(e.target.checked)}
+                      />
                       <span>Forfeit shipper collateral</span>
                     </label>
                     <input
@@ -2584,7 +3197,9 @@ export default function DealsPage() {
                     />
                   </div>
                   <div className="muted small" style={{ marginTop: '0.35rem' }}>
-                    Impact preview ({disputeImpactPreview.currency}): creator at risk {disputeImpactPreview.creatorForfeit} · shipper at risk {disputeImpactPreview.shipperForfeit}
+                    Impact preview ({disputeImpactPreview.currency}): creator at risk{' '}
+                    {disputeImpactPreview.creatorForfeit} · shipper at risk{' '}
+                    {disputeImpactPreview.shipperForfeit}
                   </div>
                   <div className="row rowWrap" style={{ marginTop: '0.5rem' }}>
                     <input
@@ -2597,7 +3212,12 @@ export default function DealsPage() {
                       onChange={(e) => setDisputeEvidenceUrl(e.target.value)}
                       placeholder="Attachment URL (optional)"
                     />
-                    <button className="btn ghost" type="button" disabled={actionBusy || !canAddDisputeEvidenceUi} onClick={handleAddDisputeEvidence}>
+                    <button
+                      className="btn ghost"
+                      type="button"
+                      disabled={actionBusy || !canAddDisputeEvidenceUi}
+                      onClick={handleAddDisputeEvidence}
+                    >
                       Add evidence
                     </button>
                   </div>
@@ -2605,7 +3225,8 @@ export default function DealsPage() {
                     <div className="stack" style={{ marginTop: '0.5rem' }}>
                       {disputeData.evidence.slice(-10).map((ev) => (
                         <div key={ev._id || `${ev.createdAt}-${ev.note}`} className="muted small">
-                          <strong>{ev.role || 'party'}</strong> · {ev.createdAt ? new Date(ev.createdAt).toLocaleString() : ''}
+                          <strong>{ev.role || 'party'}</strong> ·{' '}
+                          {ev.createdAt ? new Date(ev.createdAt).toLocaleString() : ''}
                           {ev.note ? ` · ${ev.note}` : ''}
                           {ev.attachmentUrl ? ` · ${ev.attachmentUrl}` : ''}
                         </div>
@@ -2617,14 +3238,21 @@ export default function DealsPage() {
                 <h3>Mediator controls</h3>
                 <div className="subcard">
                   <div className="muted small">
-                    Mediator role: <strong>{viewerRole}</strong> · Current mediator: <strong>{selected.mediatorId || 'none'}</strong>
+                    Mediator role: <strong>{viewerRole}</strong> · Current mediator:{' '}
+                    <strong>{selected.mediatorId || 'none'}</strong>
                   </div>
                   <div className="muted small" style={{ marginTop: '0.35rem' }}>
-                    Mediation mode: <strong>{selected.mediation?.mode || 'none'}</strong> · status: <strong>{selected.mediation?.status || 'none'}</strong>
+                    Mediation mode: <strong>{selected.mediation?.mode || 'none'}</strong> · status:{' '}
+                    <strong>{selected.mediation?.status || 'none'}</strong>
                   </div>
 
                   <div className="row rowWrap" style={{ marginTop: '0.6rem' }}>
-                    <button className="btn ghost" type="button" disabled={actionBusy || !canAssignPlatformMediator} onClick={handleAssignPlatformMediator}>
+                    <button
+                      className="btn ghost"
+                      type="button"
+                      disabled={actionBusy || !canAssignPlatformMediator}
+                      onClick={handleAssignPlatformMediator}
+                    >
                       Assign platform mediator (admin)
                     </button>
                   </div>
@@ -2642,7 +3270,9 @@ export default function DealsPage() {
                     />
                     <input
                       value={mediatorRequest.contact}
-                      onChange={(e) => setMediatorRequest((p) => ({ ...p, contact: e.target.value }))}
+                      onChange={(e) =>
+                        setMediatorRequest((p) => ({ ...p, contact: e.target.value }))
+                      }
                       placeholder="Contact/telegram/phone"
                     />
                     <input
@@ -2650,7 +3280,12 @@ export default function DealsPage() {
                       onChange={(e) => setMediatorRequest((p) => ({ ...p, notes: e.target.value }))}
                       placeholder="Request notes"
                     />
-                    <button className="btn ghost" type="button" disabled={actionBusy || !canRequestCustomMediator} onClick={handleRequestCustomMediator}>
+                    <button
+                      className="btn ghost"
+                      type="button"
+                      disabled={actionBusy || !canRequestCustomMediator}
+                      onClick={handleRequestCustomMediator}
+                    >
                       Request trusted mediator
                     </button>
                   </div>
@@ -2659,18 +3294,32 @@ export default function DealsPage() {
                     <div className="row rowWrap" style={{ marginTop: '0.6rem' }}>
                       <input
                         value={mediatorApproval.mediatorUserId}
-                        onChange={(e) => setMediatorApproval((p) => ({ ...p, mediatorUserId: e.target.value }))}
+                        onChange={(e) =>
+                          setMediatorApproval((p) => ({ ...p, mediatorUserId: e.target.value }))
+                        }
                         placeholder="Optional approved mediator userId"
                       />
                       <input
                         value={mediatorApproval.note}
-                        onChange={(e) => setMediatorApproval((p) => ({ ...p, note: e.target.value }))}
+                        onChange={(e) =>
+                          setMediatorApproval((p) => ({ ...p, note: e.target.value }))
+                        }
                         placeholder="Admin approval note"
                       />
-                      <button className="btn ghost" type="button" disabled={actionBusy} onClick={() => handleApproveMediator('approve')}>
+                      <button
+                        className="btn ghost"
+                        type="button"
+                        disabled={actionBusy}
+                        onClick={() => handleApproveMediator('approve')}
+                      >
                         Approve mediator request
                       </button>
-                      <button className="btn ghost" type="button" disabled={actionBusy} onClick={() => handleApproveMediator('decline')}>
+                      <button
+                        className="btn ghost"
+                        type="button"
+                        disabled={actionBusy}
+                        onClick={() => handleApproveMediator('decline')}
+                      >
                         Decline mediator request
                       </button>
                     </div>
@@ -2678,7 +3327,9 @@ export default function DealsPage() {
 
                   {selected.mediation?.customRequest ? (
                     <div className="muted small" style={{ marginTop: '0.6rem' }}>
-                      Custom request: {selected.mediation.customRequest.name || 'n/a'} · {selected.mediation.customRequest.email || 'n/a'} · {selected.mediation.customRequest.contact || 'n/a'}
+                      Custom request: {selected.mediation.customRequest.name || 'n/a'} ·{' '}
+                      {selected.mediation.customRequest.email || 'n/a'} ·{' '}
+                      {selected.mediation.customRequest.contact || 'n/a'}
                     </div>
                   ) : null}
                 </div>
@@ -2697,7 +3348,8 @@ export default function DealsPage() {
                   {(selected.messages || []).slice(-50).map((msg, idx) => (
                     <div key={msg._id || idx} className="message">
                       <div className="muted small">
-                        {msg.author || 'owner'} · {msg.createdAt ? new Date(msg.createdAt).toLocaleString() : ''}
+                        {msg.author || 'owner'} ·{' '}
+                        {msg.createdAt ? new Date(msg.createdAt).toLocaleString() : ''}
                       </div>
                       <div className="message-text">{msg.text}</div>
                     </div>
@@ -2714,7 +3366,8 @@ export default function DealsPage() {
                   </button>
                 </div>
                 <p className="muted small">
-                  Next step: allow counterparty to join via link + wallet signature, then deploy an escrow contract on Base.
+                  Next step: allow counterparty to join via link + wallet signature, then deploy an
+                  escrow contract on Base.
                 </p>
 
                 <h3>
@@ -2777,78 +3430,124 @@ export default function DealsPage() {
                 <h3>Global fraud response packet</h3>
                 <div className="subcard">
                   <div className="row rowWrap">
-                    <button className="btn ghost" type="button" disabled={actionBusy} onClick={() => handleGenerateFraudPacket(false)}>
+                    <button
+                      className="btn ghost"
+                      type="button"
+                      disabled={actionBusy}
+                      onClick={() => handleGenerateFraudPacket(false)}
+                    >
                       Generate packet (download mode)
                     </button>
-                    <button className="btn ghost" type="button" disabled={actionBusy || viewerRole !== 'admin'} onClick={() => handleGenerateFraudPacket(true)}>
+                    <button
+                      className="btn ghost"
+                      type="button"
+                      disabled={actionBusy || viewerRole !== 'admin'}
+                      onClick={() => handleGenerateFraudPacket(true)}
+                    >
                       Generate + outbound request
                     </button>
                   </div>
                   <div className="muted small" style={{ marginTop: '0.4rem' }}>
-                    Outbound dispatch enqueue is admin-only and tracked in queue states: queued, sent, failed.
+                    Outbound dispatch enqueue is admin-only and tracked in queue states: queued,
+                    sent, failed.
                   </div>
                   <div className="row rowWrap" style={{ marginTop: '0.45rem' }}>
-                    <select value={queueStatusFilter} onChange={(e) => setQueueStatusFilter(e.target.value)}>
+                    <select
+                      value={queueStatusFilter}
+                      onChange={(e) => setQueueStatusFilter(e.target.value)}
+                    >
                       <option value="all">All queue items</option>
                       <option value="queued">Queued</option>
                       <option value="sent">Sent</option>
                       <option value="failed">Dead letters</option>
                     </select>
-                    <button className="btn ghost" type="button" disabled={actionBusy} onClick={handleGenerateExportBundle}>
+                    <button
+                      className="btn ghost"
+                      type="button"
+                      disabled={actionBusy}
+                      onClick={handleGenerateExportBundle}
+                    >
                       Generate export bundle
                     </button>
                   </div>
-                  {exportBundle ? <pre className="json" style={{ marginTop: '0.5rem' }}>{JSON.stringify(exportBundle, null, 2)}</pre> : null}
-                  {reportPacket ? <pre className="json">{JSON.stringify(reportPacket, null, 2)}</pre> : null}
+                  {exportBundle ? (
+                    <pre className="json" style={{ marginTop: '0.5rem' }}>
+                      {JSON.stringify(exportBundle, null, 2)}
+                    </pre>
+                  ) : null}
+                  {reportPacket ? (
+                    <pre className="json">{JSON.stringify(reportPacket, null, 2)}</pre>
+                  ) : null}
                   {Array.isArray(outboundQueue) && outboundQueue.length ? (
                     <div className="stack" style={{ marginTop: '0.7rem' }}>
-                      {outboundQueue.slice().reverse().map((q) => {
-                        const draftState = queueStatusDrafts[q.packetId] || { status: q.status || 'queued', lastError: q.lastError || '' };
-                        return (
-                          <div key={q._id || q.packetId} className="subcard">
-                            <div className="muted small">
-                              Packet <strong>{q.packetId}</strong> · status <strong>{q.status}</strong> · targets {Array.isArray(q.targets) ? q.targets.join(', ') : 'none'}
+                      {outboundQueue
+                        .slice()
+                        .reverse()
+                        .map((q) => {
+                          const draftState = queueStatusDrafts[q.packetId] || {
+                            status: q.status || 'queued',
+                            lastError: q.lastError || '',
+                          };
+                          return (
+                            <div key={q._id || q.packetId} className="subcard">
+                              <div className="muted small">
+                                Packet <strong>{q.packetId}</strong> · status{' '}
+                                <strong>{q.status}</strong> · targets{' '}
+                                {Array.isArray(q.targets) ? q.targets.join(', ') : 'none'}
+                              </div>
+                              {q.status === 'failed' ? (
+                                <div className="muted small" style={{ marginTop: '0.25rem' }}>
+                                  Dead letter · next attempt{' '}
+                                  {q.nextAttemptAt
+                                    ? new Date(q.nextAttemptAt).toLocaleString()
+                                    : 'n/a'}{' '}
+                                  · last error {q.lastError || 'n/a'}
+                                </div>
+                              ) : null}
+                              {viewerRole === 'admin' ? (
+                                <div className="row rowWrap" style={{ marginTop: '0.4rem' }}>
+                                  <select
+                                    value={draftState.status}
+                                    onChange={(e) =>
+                                      setQueueStatusDrafts((prev) => ({
+                                        ...prev,
+                                        [q.packetId]: {
+                                          ...(prev[q.packetId] || draftState),
+                                          status: e.target.value,
+                                        },
+                                      }))
+                                    }
+                                  >
+                                    <option value="queued">queued</option>
+                                    <option value="sent">sent</option>
+                                    <option value="failed">failed</option>
+                                  </select>
+                                  <input
+                                    value={draftState.lastError || ''}
+                                    onChange={(e) =>
+                                      setQueueStatusDrafts((prev) => ({
+                                        ...prev,
+                                        [q.packetId]: {
+                                          ...(prev[q.packetId] || draftState),
+                                          lastError: e.target.value,
+                                        },
+                                      }))
+                                    }
+                                    placeholder="Failure note (if failed)"
+                                  />
+                                  <button
+                                    className="btn ghost"
+                                    type="button"
+                                    disabled={actionBusy}
+                                    onClick={() => handleQueueStatusUpdate(q.packetId)}
+                                  >
+                                    Update queue status
+                                  </button>
+                                </div>
+                              ) : null}
                             </div>
-                            {q.status === 'failed' ? (
-                              <div className="muted small" style={{ marginTop: '0.25rem' }}>
-                                Dead letter · next attempt {q.nextAttemptAt ? new Date(q.nextAttemptAt).toLocaleString() : 'n/a'} · last error {q.lastError || 'n/a'}
-                              </div>
-                            ) : null}
-                            {viewerRole === 'admin' ? (
-                              <div className="row rowWrap" style={{ marginTop: '0.4rem' }}>
-                                <select
-                                  value={draftState.status}
-                                  onChange={(e) => setQueueStatusDrafts((prev) => ({
-                                    ...prev,
-                                    [q.packetId]: {
-                                      ...(prev[q.packetId] || draftState),
-                                      status: e.target.value,
-                                    },
-                                  }))}
-                                >
-                                  <option value="queued">queued</option>
-                                  <option value="sent">sent</option>
-                                  <option value="failed">failed</option>
-                                </select>
-                                <input
-                                  value={draftState.lastError || ''}
-                                  onChange={(e) => setQueueStatusDrafts((prev) => ({
-                                    ...prev,
-                                    [q.packetId]: {
-                                      ...(prev[q.packetId] || draftState),
-                                      lastError: e.target.value,
-                                    },
-                                  }))}
-                                  placeholder="Failure note (if failed)"
-                                />
-                                <button className="btn ghost" type="button" disabled={actionBusy} onClick={() => handleQueueStatusUpdate(q.packetId)}>
-                                  Update queue status
-                                </button>
-                              </div>
-                            ) : null}
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
                     </div>
                   ) : null}
                 </div>

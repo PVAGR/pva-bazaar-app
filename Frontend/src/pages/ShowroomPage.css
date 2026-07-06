@@ -66,7 +66,10 @@
   background: var(--site-panel-soft);
   color: var(--site-text);
   text-decoration: none;
-  transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+  transition:
+    transform 0.16s ease,
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
 }
 
 .showroom-portal-card:hover {
@@ -157,7 +160,9 @@
   border: 1px solid var(--site-border);
   border-radius: 8px;
   outline: none;
-  transition: border 0.2s, box-shadow 0.2s;
+  transition:
+    border 0.2s,
+    box-shadow 0.2s;
   background: var(--site-panel-soft);
   color: var(--site-text);
 }
@@ -204,7 +209,10 @@
   padding: 0.5rem 1.2rem;
   font-size: 0.98rem;
   cursor: pointer;
-  transition: background 0.2s, color 0.2s, border 0.2s;
+  transition:
+    background 0.2s,
+    color 0.2s,
+    border 0.2s;
   font-weight: 500;
 }
 .category-chip.selected,
@@ -243,7 +251,9 @@
   display: flex;
   flex-direction: column;
   gap: 0.7rem;
-  transition: box-shadow 0.2s, transform 0.2s;
+  transition:
+    box-shadow 0.2s,
+    transform 0.2s;
   cursor: pointer;
   outline: none;
 }
@@ -365,7 +375,9 @@
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s, opacity 0.2s;
+  transition:
+    background 0.2s,
+    opacity 0.2s;
 }
 
 .load-more:hover:not(:disabled) {

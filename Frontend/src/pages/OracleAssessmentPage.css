@@ -35,7 +35,11 @@
 .oracle-assessment .step {
   border: 1px solid color-mix(in srgb, var(--site-border) 84%, transparent);
   border-radius: 14px;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--site-panel-soft) 90%, transparent) 0%, var(--site-panel) 100%);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--site-panel-soft) 90%, transparent) 0%,
+    var(--site-panel) 100%
+  );
   padding: 1rem;
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.14);
 }
@@ -166,8 +170,12 @@
 }
 
 @keyframes oracle-spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .oracle-assessment__result-card {

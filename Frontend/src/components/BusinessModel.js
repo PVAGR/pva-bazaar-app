@@ -11,7 +11,11 @@ export default function BusinessModel() {
     const load = async () => {
       setLoading(true);
       setError('');
-      const response = await fetchArchiveEntries({ q: 'business model marketplace', limit: 8, sort: 'new' });
+      const response = await fetchArchiveEntries({
+        q: 'business model marketplace',
+        limit: 8,
+        sort: 'new',
+      });
       if (cancelled) return;
       if (response.ok) {
         setItems(response.items || []);
@@ -32,7 +36,9 @@ export default function BusinessModel() {
       <h2>Business Model</h2>
       {loading && <p>Loading business model entries...</p>}
       {!loading && error && <p>{error}</p>}
-      {!loading && !error && items.length === 0 && <p>No business model entries were returned by the archive API.</p>}
+      {!loading && !error && items.length === 0 && (
+        <p>No business model entries were returned by the archive API.</p>
+      )}
       {!loading && items.length > 0 && (
         <ul>
           {items.map((entry) => (

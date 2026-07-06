@@ -14,12 +14,12 @@ const {
 
 // Configure multer for image uploads
 const storage = multer.diskStorage({
-  destination (req, file, cb) {
+  destination(req, file, cb) {
     cb(null, path.join(__dirname, '../../uploads/artifacts'));
   },
-  filename (req, file, cb) {
-    const uniqueSuffix = `${Date.now()  }-${  Math.round(Math.random() * 1e9)}`;
-    cb(null, `${uniqueSuffix  }-${  file.originalname.replace(/\s+/g, '_')}`);
+  filename(req, file, cb) {
+    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+    cb(null, `${uniqueSuffix}-${file.originalname.replace(/\s+/g, '_')}`);
   },
 });
 const upload = multer({ storage });
@@ -186,7 +186,7 @@ router.post('/', authenticateToken, upload.array('assetPhotos', 6), async (req, 
     // Handle images
     let imageUrls = [];
     if (req.files && req.files.length > 0) {
-      imageUrls = req.files.map((f) => `/uploads/artifacts/${  f.filename}`);
+      imageUrls = req.files.map((f) => `/uploads/artifacts/${f.filename}`);
     }
 
     // Build payout and consignment info
@@ -270,7 +270,7 @@ router.post('/', authenticateToken, upload.array('assetPhotos', 6), async (req, 
       feedPath: `/marketplace/${encodeURIComponent(artifact.slug || String(artifact._id))}`,
     };
     await artifact.save();
-    
+
     // Dispatch event to OpenClaw (non-blocking)
     try {
       const event = createArtifactEvent('created', artifact, req.user, {
@@ -279,14 +279,14 @@ router.post('/', authenticateToken, upload.array('assetPhotos', 6), async (req, 
         price: artifact.price,
         artisan: artifact.artisan,
       });
-      dispatchToOpenClaw(event).catch(err => {
+      dispatchToOpenClaw(event).catch((err) => {
         console.error('[OpenClaw] Failed to dispatch artifact.created event:', err.message);
       });
     } catch (err) {
       // Don't fail the request if OpenClaw dispatch fails
       console.error('[OpenClaw] Error creating event:', err.message);
     }
-    
+
     res.status(201).json({ ok: true, artifact, reverseImage });
   } catch (err) {
     res.status(400).json({ ok: false, message: err.message });

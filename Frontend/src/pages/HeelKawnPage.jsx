@@ -3,8 +3,14 @@ import React, { useEffect, useMemo, useState } from 'react';
 const RELEASES_URL = 'https://github.com/PVAGR/HeelKawn1/releases/latest';
 const REPO_URL = 'https://github.com/PVAGR/HeelKawn1';
 
-const mobileDownloadUrl = normalizeExternalUrl(import.meta.env.VITE_HEELKAWN_DOWNLOAD_URL, RELEASES_URL);
-const pcDownloadUrl = normalizeExternalUrl(import.meta.env.VITE_HEELKAWN_PC_DOWNLOAD_URL, RELEASES_URL);
+const mobileDownloadUrl = normalizeExternalUrl(
+  import.meta.env.VITE_HEELKAWN_DOWNLOAD_URL,
+  RELEASES_URL,
+);
+const pcDownloadUrl = normalizeExternalUrl(
+  import.meta.env.VITE_HEELKAWN_PC_DOWNLOAD_URL,
+  RELEASES_URL,
+);
 const repoUrl = normalizeExternalUrl(import.meta.env.VITE_HEELKAWN_REPO_URL, REPO_URL);
 
 const GRID_SIZE = 16;
@@ -77,7 +83,18 @@ const weaponOptions = {
   ],
 };
 
-const NAME_PREFIX = ['Arin', 'Vela', 'Torin', 'Sefa', 'Kael', 'Nira', 'Yorin', 'Mira', 'Dren', 'Ashen'];
+const NAME_PREFIX = [
+  'Arin',
+  'Vela',
+  'Torin',
+  'Sefa',
+  'Kael',
+  'Nira',
+  'Yorin',
+  'Mira',
+  'Dren',
+  'Ashen',
+];
 const NAME_SUFFIX = ['of Taur', 'Ridgeborn', 'Ironwake', 'Lowland', 'Stonepath', 'Windhold'];
 const ROLE_POOL = ['Builder', 'Quartermaster', 'Pathfinder', 'Sentry', 'Craftmaster', 'Diplomat'];
 
@@ -89,7 +106,10 @@ const initialThreads = [
     members: 8,
     messages: [
       { from: 'Dispatch', text: 'Council queue initialized. Build requests syncing every cycle.' },
-      { from: 'Tower Relay', text: 'Weather relay online. Wind drift acceptable for caravan movement.' },
+      {
+        from: 'Tower Relay',
+        text: 'Weather relay online. Wind drift acceptable for caravan movement.',
+      },
     ],
   },
   {
@@ -97,8 +117,14 @@ const initialThreads = [
     name: 'Wolfpack Patrol',
     members: 5,
     messages: [
-      { from: 'Scout Node', text: 'Patrol route expanded to the eastern channel. No hostiles detected.' },
-      { from: 'Supply Relay', text: 'Torch stock replenished. Night shift can begin without delay.' },
+      {
+        from: 'Scout Node',
+        text: 'Patrol route expanded to the eastern channel. No hostiles detected.',
+      },
+      {
+        from: 'Supply Relay',
+        text: 'Torch stock replenished. Night shift can begin without delay.',
+      },
     ],
   },
 ];
@@ -137,22 +163,14 @@ export default function HeelKawnPage() {
   const activeThread = threads.find((thread) => thread.id === activeThreadId) || threads[0];
   const spriteCells = useMemo(
     () => buildSprite({ skin, hair, top, bottom, shoes, headgear, gloves, mainhand, offhand }),
-    [
-    skin,
-    hair,
-    top,
-    bottom,
-    shoes,
-    headgear,
-    gloves,
-    mainhand,
-    offhand,
-    ],
+    [skin, hair, top, bottom, shoes, headgear, gloves, mainhand, offhand],
   );
 
   const totalStamina = useMemo(() => {
     if (!citizens.length) return 0;
-    return Math.round(citizens.reduce((sum, citizen) => sum + citizen.stamina, 0) / citizens.length);
+    return Math.round(
+      citizens.reduce((sum, citizen) => sum + citizen.stamina, 0) / citizens.length,
+    );
   }, [citizens]);
 
   const totalFocus = useMemo(() => {
@@ -229,7 +247,15 @@ export default function HeelKawnPage() {
       'Repair Kit x3',
       'Settlement Sigils x14',
     ],
-    [bottom.label, gloves.label, headgear.label, mainhand.label, offhand.label, shoes.label, top.label],
+    [
+      bottom.label,
+      gloves.label,
+      headgear.label,
+      mainhand.label,
+      offhand.label,
+      shoes.label,
+      top.label,
+    ],
   );
 
   return (
@@ -238,8 +264,8 @@ export default function HeelKawnPage() {
         <div>
           <h2>HeelKawn Armory</h2>
           <p>
-            Live settlement simulation with active HeelKawnians, continuous world ticks, and equipment-driven sprite
-            identity.
+            Live settlement simulation with active HeelKawnians, continuous world ticks, and
+            equipment-driven sprite identity.
           </p>
         </div>
         <div className="download-status">
@@ -259,7 +285,11 @@ export default function HeelKawnPage() {
         <a className="button secondary" href={repoUrl} target="_blank" rel="noopener noreferrer">
           Source Repository
         </a>
-        <button className="button secondary" type="button" onClick={() => setLinked((value) => !value)}>
+        <button
+          className="button secondary"
+          type="button"
+          onClick={() => setLinked((value) => !value)}
+        >
           {linked ? 'Switch to Offline Mirror' : 'Reconnect Live Sync'}
         </button>
       </div>
@@ -338,7 +368,11 @@ export default function HeelKawnPage() {
             <div className="heelkawn-citizens">
               {citizens.map((citizen) => (
                 <div className="heelkawn-citizen" key={citizen.id}>
-                  <SpriteGrid cells={buildSprite(citizen.loadout)} label={`${citizen.name} sprite`} size="tiny" />
+                  <SpriteGrid
+                    cells={buildSprite(citizen.loadout)}
+                    label={`${citizen.name} sprite`}
+                    size="tiny"
+                  />
                   <div>
                     <strong>{citizen.name}</strong>
                     <p>
@@ -366,16 +400,36 @@ export default function HeelKawnPage() {
 
             <article className="heelkawn-panel">
               <h3>Body + Clothing</h3>
-              <PaletteGroup title="Skin" options={paletteOptions.skin} selected={skin.id} onSelect={setSkin} />
-              <PaletteGroup title="Hair" options={paletteOptions.hair} selected={hair.id} onSelect={setHair} />
-              <PaletteGroup title="Top" options={paletteOptions.top} selected={top.id} onSelect={setTop} />
+              <PaletteGroup
+                title="Skin"
+                options={paletteOptions.skin}
+                selected={skin.id}
+                onSelect={setSkin}
+              />
+              <PaletteGroup
+                title="Hair"
+                options={paletteOptions.hair}
+                selected={hair.id}
+                onSelect={setHair}
+              />
+              <PaletteGroup
+                title="Top"
+                options={paletteOptions.top}
+                selected={top.id}
+                onSelect={setTop}
+              />
               <PaletteGroup
                 title="Bottom"
                 options={paletteOptions.bottom}
                 selected={bottom.id}
                 onSelect={setBottom}
               />
-              <PaletteGroup title="Shoes" options={paletteOptions.shoes} selected={shoes.id} onSelect={setShoes} />
+              <PaletteGroup
+                title="Shoes"
+                options={paletteOptions.shoes}
+                selected={shoes.id}
+                onSelect={setShoes}
+              />
               <PaletteGroup
                 title="Headgear"
                 options={paletteOptions.headgear}
@@ -489,7 +543,10 @@ function SpriteGrid({ cells, label, size }) {
         <span
           key={cell.key}
           className="heelkawn-sprite__cell"
-          style={{ background: cell.color, boxShadow: cell.color === 'transparent' ? 'none' : undefined }}
+          style={{
+            background: cell.color,
+            boxShadow: cell.color === 'transparent' ? 'none' : undefined,
+          }}
         />
       ))}
     </div>
@@ -578,69 +635,87 @@ function buildSprite(loadout) {
   const paint = (points, token) => {
     points.forEach(([x, y]) => {
       if (x >= 0 && x < GRID_SIZE && y >= 0 && y < GRID_SIZE) {
-        tokens[(y * GRID_SIZE) + x] = token;
+        tokens[y * GRID_SIZE + x] = token;
       }
     });
   };
 
   paint(pointsRect(5, 1, 10, 4), 'outline');
   paint(pointsRect(6, 5, 9, 13), 'outline');
-  paint([
-    ...pointsRect(4, 6, 4, 10),
-    ...pointsRect(11, 6, 11, 10),
-    [6, 14],
-    [7, 14],
-    [8, 14],
-    [9, 14],
-    [6, 15],
-    [9, 15],
-  ], 'outline');
+  paint(
+    [
+      ...pointsRect(4, 6, 4, 10),
+      ...pointsRect(11, 6, 11, 10),
+      [6, 14],
+      [7, 14],
+      [8, 14],
+      [9, 14],
+      [6, 15],
+      [9, 15],
+    ],
+    'outline',
+  );
 
   paint(pointsRect(6, 2, 9, 4), 'skin');
   paint(pointsRect(6, 1, 9, 2), 'hair');
   paint(pointsRect(6, 5, 9, 9), 'top');
   paint(pointsRect(6, 10, 9, 13), 'bottom');
-  paint([
-    [6, 14],
-    [7, 14],
-    [8, 14],
-    [9, 14],
-    [6, 15],
-    [7, 15],
-    [8, 15],
-    [9, 15],
-  ], 'shoes');
-  paint([
-    [4, 8],
-    [4, 9],
-    [11, 8],
-    [11, 9],
-  ], 'hands');
-  paint([
-    [6, 6],
-    [7, 6],
-    [8, 6],
-    [9, 6],
-    [7, 8],
-    [8, 8],
-    [7, 11],
-    [8, 11],
-  ], 'line');
+  paint(
+    [
+      [6, 14],
+      [7, 14],
+      [8, 14],
+      [9, 14],
+      [6, 15],
+      [7, 15],
+      [8, 15],
+      [9, 15],
+    ],
+    'shoes',
+  );
+  paint(
+    [
+      [4, 8],
+      [4, 9],
+      [11, 8],
+      [11, 9],
+    ],
+    'hands',
+  );
+  paint(
+    [
+      [6, 6],
+      [7, 6],
+      [8, 6],
+      [9, 6],
+      [7, 8],
+      [8, 8],
+      [7, 11],
+      [8, 11],
+    ],
+    'line',
+  );
 
   if (loadout.headgear.id !== 'none') {
     paint(pointsRect(5, 0, 10, 1), 'headgear');
-    paint([
-      [5, 2],
-      [10, 2],
-    ], 'headgear');
+    paint(
+      [
+        [5, 2],
+        [10, 2],
+      ],
+      'headgear',
+    );
   }
 
   paint(mainhandPattern(loadout.mainhand.id), 'mainhand');
   paint(offhandPattern(loadout.offhand.id), 'offhand');
-  paint([
-    [7, 3],
-    [8, 3],
-  ], 'accent');
+  paint(
+    [
+      [7, 3],
+      [8, 3],
+    ],
+    'accent',
+  );
 
   return tokens.map((token, index) => ({
     key: `cell-${index}`,

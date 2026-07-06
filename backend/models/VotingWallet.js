@@ -55,7 +55,7 @@ const VotingWalletSchema = new mongoose.Schema(
     totalMarketsParticipated: { type: Number, default: 0 },
     winRate: { type: Number, default: 0 }, // 0-100%
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // Indexes

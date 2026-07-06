@@ -54,7 +54,13 @@ describe('dealVisibility utilities', () => {
         verifiedParticipants: [
           { userId: 'user-1', verifiedAt: '2026-04-18T00:00:00.000Z', method: 'jwt', note: 'ok' },
         ],
-        auditEvents: [{ eventType: 'deal_created', createdAt: '2026-04-18T00:00:00.000Z', payload: { hidden: true } }],
+        auditEvents: [
+          {
+            eventType: 'deal_created',
+            createdAt: '2026-04-18T00:00:00.000Z',
+            payload: { hidden: true },
+          },
+        ],
       }),
     };
 

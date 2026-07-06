@@ -17,7 +17,10 @@ const availableModels = {
 const providers = {
   ollama: {
     enabled: Boolean(process.env.OLLAMA_BASE_URL),
-    baseUrl: String(process.env.OLLAMA_BASE_URL || '').trim().replace(/\/$/, '') || 'http://localhost:11434',
+    baseUrl:
+      String(process.env.OLLAMA_BASE_URL || '')
+        .trim()
+        .replace(/\/$/, '') || 'http://localhost:11434',
     timeout: Math.min(
       Math.max(parseInt(process.env.OLLAMA_TIMEOUT_MS || '60000', 10), 5000),
       120000,
@@ -91,7 +94,7 @@ async function getBestOllamaModel() {
     if (response.data.models && response.data.models.length > 0) {
       // Prefer larger models for better quality
       const modelPreference = ['llama2', 'mistral', 'neural-chat', 'llama2-uncensored'];
-      
+
       for (const pref of modelPreference) {
         const found = response.data.models.find((m) => m.name.includes(pref));
         if (found) return found.name;
@@ -110,15 +113,11 @@ async function getBestOllamaModel() {
  * Generate response using the best available model
  */
 async function generateResponse(messages, options = {}) {
-  const {
-    taskType = 'general',
-    temperature = 0.35,
-    maxTokens = 2000,
-  } = options;
+  const { taskType = 'general', temperature = 0.35, maxTokens = 2000 } = options;
 
   try {
     const modelChoice = await selectBestModel(taskType);
-    
+
     console.log(`📤 Using ${modelChoice.provider}/${modelChoice.model} for ${taskType}`);
 
     if (modelChoice.provider === 'anthropic') {
@@ -164,7 +163,7 @@ async function generateWithAnthropic(messages, model, temperature, maxTokens) {
           'anthropic-version': '2023-06-01',
         },
         timeout: 120000,
-      }
+      },
     );
 
     if (response.data.content && response.data.content[0]) {
@@ -213,10 +212,10 @@ async function generateWithOpenAI(messages, model, temperature, maxTokens) {
       },
       {
         headers: {
-          'Authorization': `Bearer ${providers.openai.apiKey}`,
+          Authorization: `Bearer ${providers.openai.apiKey}`,
         },
         timeout: 120000,
-      }
+      },
     );
 
     if (response.data.choices && response.data.choices[0]) {
@@ -269,7 +268,7 @@ async function generateWithOllama(messages, model, temperature, maxTokens) {
       {
         timeout: providers.ollama.timeout,
         validateStatus: () => true,
-      }
+      },
     );
 
     if (response.status === 200 && response.data.message) {

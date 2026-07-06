@@ -98,7 +98,7 @@ const ShopSchema = new mongoose.Schema(
     suspendedAt: Date,
     suspensionReason: String,
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // Indexes

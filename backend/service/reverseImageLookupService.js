@@ -6,14 +6,19 @@ function normalizeUrl(value) {
 
 function parseBool(value) {
   if (typeof value === 'boolean') return value;
-  const text = String(value || '').trim().toLowerCase();
+  const text = String(value || '')
+    .trim()
+    .toLowerCase();
   return text === '1' || text === 'true' || text === 'yes' || text === 'on';
 }
 
 async function lookupReverseImageSignals({ imageUrls = [], title = '', category = '' } = {}) {
   const providerUrl = normalizeUrl(process.env.REVERSE_IMAGE_PROVIDER_URL);
   const providerToken = normalizeUrl(process.env.REVERSE_IMAGE_PROVIDER_TOKEN);
-  const timeoutMs = Math.max(1000, Math.min(Number(process.env.REVERSE_IMAGE_PROVIDER_TIMEOUT_MS || 7000), 30000));
+  const timeoutMs = Math.max(
+    1000,
+    Math.min(Number(process.env.REVERSE_IMAGE_PROVIDER_TIMEOUT_MS || 7000), 30000),
+  );
 
   if (!providerUrl || !Array.isArray(imageUrls) || imageUrls.length === 0) {
     return {
@@ -23,7 +28,9 @@ async function lookupReverseImageSignals({ imageUrls = [], title = '', category 
       matches: [],
       likelyDuplicate: false,
       score: 0,
-      message: providerUrl ? 'No images submitted for reverse lookup' : 'Reverse image provider not configured',
+      message: providerUrl
+        ? 'No images submitted for reverse lookup'
+        : 'Reverse image provider not configured',
     };
   }
 
@@ -37,7 +44,10 @@ async function lookupReverseImageSignals({ imageUrls = [], title = '', category 
       imageUrls: imageUrls.map(normalizeUrl).filter(Boolean),
       title: String(title || ''),
       category: String(category || ''),
-      maxResults: Math.max(1, Math.min(Number(process.env.REVERSE_IMAGE_PROVIDER_MAX_RESULTS || 8), 30)),
+      maxResults: Math.max(
+        1,
+        Math.min(Number(process.env.REVERSE_IMAGE_PROVIDER_MAX_RESULTS || 8), 30),
+      ),
     };
 
     const response = await axios.post(providerUrl, payload, {
@@ -62,9 +72,17 @@ async function lookupReverseImageSignals({ imageUrls = [], title = '', category 
       firstSeenAt: row.firstSeenAt || row.discoveredAt || null,
     }));
 
-    const threshold = Math.max(0, Math.min(Number(process.env.REVERSE_IMAGE_DUPLICATE_THRESHOLD || 0.92), 1));
-    const exactLike = normalized.filter((row) => Math.max(row.similarity, row.confidence) >= threshold);
-    const topScore = normalized.reduce((acc, row) => Math.max(acc, row.similarity, row.confidence), 0);
+    const threshold = Math.max(
+      0,
+      Math.min(Number(process.env.REVERSE_IMAGE_DUPLICATE_THRESHOLD || 0.92), 1),
+    );
+    const exactLike = normalized.filter(
+      (row) => Math.max(row.similarity, row.confidence) >= threshold,
+    );
+    const topScore = normalized.reduce(
+      (acc, row) => Math.max(acc, row.similarity, row.confidence),
+      0,
+    );
 
     return {
       enabled: true,
@@ -74,7 +92,10 @@ async function lookupReverseImageSignals({ imageUrls = [], title = '', category 
       likelyDuplicate: exactLike.length > 0,
       score: topScore,
       threshold,
-      message: exactLike.length > 0 ? 'Potential external duplicate(s) detected' : 'No high-confidence external duplicates found',
+      message:
+        exactLike.length > 0
+          ? 'Potential external duplicate(s) detected'
+          : 'No high-confidence external duplicates found',
     };
   } catch (error) {
     return {

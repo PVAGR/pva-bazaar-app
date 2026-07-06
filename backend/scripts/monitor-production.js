@@ -31,7 +31,7 @@ function log(message, level = 'INFO') {
   const timestamp = new Date().toISOString();
   const logEntry = `[${timestamp}] ${level} ${message}\n`;
   console.log(logEntry);
-  
+
   try {
     fs.appendFileSync(LOG_FILE, logEntry);
   } catch (err) {
@@ -47,7 +47,7 @@ function checkEndpoint(endpoint) {
     const request = http.get(url, { timeout: 5000 }, (res) => {
       const responseTime = Date.now() - startTime;
       const status = res.statusCode;
-      
+
       resolve({
         endpoint,
         status,
@@ -99,7 +99,7 @@ async function monitor() {
   // Statistics
   const healthy = results.filter((r) => r.success).length;
   const avgResponseTime = Math.round(
-    results.reduce((sum, r) => sum + r.responseTime, 0) / results.length
+    results.reduce((sum, r) => sum + r.responseTime, 0) / results.length,
   );
 
   if (allHealthy) {
@@ -107,7 +107,10 @@ async function monitor() {
     log(`✅ All systems healthy (${healthy}/${results.length}) - Avg: ${avgResponseTime}ms`);
   } else {
     consecutiveFailures++;
-    log(`⚠️ Some endpoints down (${healthy}/${results.length}) - Failures: ${consecutiveFailures}/${MAX_FAILURES}`, 'WARN');
+    log(
+      `⚠️ Some endpoints down (${healthy}/${results.length}) - Failures: ${consecutiveFailures}/${MAX_FAILURES}`,
+      'WARN',
+    );
 
     if (consecutiveFailures >= MAX_FAILURES) {
       log(`❌ CRITICAL: ${consecutiveFailures} consecutive failures!`, 'ERROR');
@@ -128,8 +131,8 @@ async function monitor() {
         results,
       },
       null,
-      2
-    )
+      2,
+    ),
   );
 
   log('✅ Health check cycle complete\n');

@@ -13,7 +13,14 @@ const MAX_NOTIFICATIONS_PER_USER = 200;
  * @param {string|null} [opts.referenceType]
  * @returns {object} The inserted notification row
  */
-function createNotification({ recipientAddress, type = 'INFO', title, message, referenceId = null, referenceType = null }) {
+function createNotification({
+  recipientAddress,
+  type = 'INFO',
+  title,
+  message,
+  referenceId = null,
+  referenceType = null,
+}) {
   if (!recipientAddress || !title || !message) {
     throw new Error('recipientAddress, title, and message are required');
   }
@@ -32,7 +39,8 @@ function createNotification({ recipientAddress, type = 'INFO', title, message, r
   );
 
   // Prune old notifications beyond max, keeping newest ones
-  db.prepare(`
+  db.prepare(
+    `
     DELETE FROM notifications
     WHERE recipient_address = ?
       AND id NOT IN (
@@ -41,7 +49,12 @@ function createNotification({ recipientAddress, type = 'INFO', title, message, r
         ORDER BY created_at DESC
         LIMIT ?
       )
-  `).run(String(recipientAddress).trim(), String(recipientAddress).trim(), MAX_NOTIFICATIONS_PER_USER);
+  `,
+  ).run(
+    String(recipientAddress).trim(),
+    String(recipientAddress).trim(),
+    MAX_NOTIFICATIONS_PER_USER,
+  );
 
   return db.prepare('SELECT * FROM notifications WHERE id = ?').get(info.lastInsertRowid);
 }
@@ -56,19 +69,25 @@ function getNotifications(recipientAddress, { limit = 50, offset = 0, unreadOnly
   const addr = String(recipientAddress || '').trim();
   if (!addr) return { notifications: [], total: 0, unreadCount: 0 };
 
-  const where = unreadOnly ? 'WHERE recipient_address = ? AND read = 0' : 'WHERE recipient_address = ?';
+  const where = unreadOnly
+    ? 'WHERE recipient_address = ? AND read = 0'
+    : 'WHERE recipient_address = ?';
 
-  const notifications = db.prepare(`
+  const notifications = db
+    .prepare(
+      `
     SELECT * FROM notifications
     ${where}
     ORDER BY created_at DESC
     LIMIT ? OFFSET ?
-  `).all(addr, limit, offset);
+  `,
+    )
+    .all(addr, limit, offset);
 
   const total = db.prepare(`SELECT COUNT(*) as c FROM notifications ${where}`).get(addr).c;
-  const unreadCount = db.prepare(
-    'SELECT COUNT(*) as c FROM notifications WHERE recipient_address = ? AND read = 0',
-  ).get(addr).c;
+  const unreadCount = db
+    .prepare('SELECT COUNT(*) as c FROM notifications WHERE recipient_address = ? AND read = 0')
+    .get(addr).c;
 
   return { notifications, total, unreadCount };
 }
@@ -106,7 +125,10 @@ function markAllRead(recipientAddress) {
 function deleteNotification(recipientAddress, id) {
   const addr = String(recipientAddress || '').trim();
   if (!addr || !id) return;
-  db.prepare('DELETE FROM notifications WHERE id = ? AND recipient_address = ?').run(Number(id), addr);
+  db.prepare('DELETE FROM notifications WHERE id = ? AND recipient_address = ?').run(
+    Number(id),
+    addr,
+  );
 }
 
 /**
@@ -117,9 +139,9 @@ function deleteNotification(recipientAddress, id) {
 function getUnreadCount(recipientAddress) {
   const addr = String(recipientAddress || '').trim();
   if (!addr) return 0;
-  const row = db.prepare(
-    'SELECT COUNT(*) as c FROM notifications WHERE recipient_address = ? AND read = 0',
-  ).get(addr);
+  const row = db
+    .prepare('SELECT COUNT(*) as c FROM notifications WHERE recipient_address = ? AND read = 0')
+    .get(addr);
   return row?.c ?? 0;
 }
 

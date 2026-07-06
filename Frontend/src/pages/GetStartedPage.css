@@ -14,7 +14,11 @@
   border-radius: var(--radius-lg, 14px);
   padding: 0.95rem;
   background:
-    linear-gradient(145deg, color-mix(in srgb, var(--site-panel-bg, var(--site-panel)) 88%, transparent), transparent 65%),
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--site-panel-bg, var(--site-panel)) 88%, transparent),
+      transparent 65%
+    ),
     var(--site-panel-bg, var(--site-panel));
 }
 
@@ -47,7 +51,10 @@
   text-decoration: none;
   font-weight: 600;
   letter-spacing: 0.01em;
-  transition: transform 120ms ease, border-color 120ms ease, background-color 120ms ease;
+  transition:
+    transform 120ms ease,
+    border-color 120ms ease,
+    background-color 120ms ease;
 }
 
 .get-started .btn:hover {
@@ -195,7 +202,10 @@
   font-size: 0.9rem;
   padding: 0.32rem 0.72rem;
   background: color-mix(in srgb, var(--site-panel-bg, var(--site-panel)) 75%, transparent);
-  transition: transform 120ms ease, border-color 120ms ease, background-color 120ms ease;
+  transition:
+    transform 120ms ease,
+    border-color 120ms ease,
+    background-color 120ms ease;
 }
 
 .get-started__cardLink:hover {
@@ -205,7 +215,7 @@
 }
 
 .get-started__cardLink::after {
-  content: "->";
+  content: '->';
   margin-left: 0.4rem;
   font-size: 0.8rem;
 }

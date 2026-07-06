@@ -13,7 +13,13 @@
         place-items: center;
         background: #0b1118;
         color: #e8edf3;
-        font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+        font-family:
+          Inter,
+          system-ui,
+          -apple-system,
+          Segoe UI,
+          Roboto,
+          sans-serif;
         padding: 24px;
       }
       .card {
@@ -24,8 +30,15 @@
         padding: 24px;
         box-shadow: 0 20px 90px rgba(0, 0, 0, 0.3);
       }
-      h1 { margin: 0 0 8px; font-size: clamp(1.7rem, 3vw, 2.5rem); }
-      p { margin: 0; color: #a9b6c4; line-height: 1.6; }
+      h1 {
+        margin: 0 0 8px;
+        font-size: clamp(1.7rem, 3vw, 2.5rem);
+      }
+      p {
+        margin: 0;
+        color: #a9b6c4;
+        line-height: 1.6;
+      }
       .grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -53,7 +66,7 @@
       code {
         display: inline-block;
         margin-top: 8px;
-        background: rgba(255,255,255,0.06);
+        background: rgba(255, 255, 255, 0.06);
         border-radius: 8px;
         padding: 3px 8px;
         word-break: break-all;
@@ -70,14 +83,17 @@
         border: 1px solid #223544;
         border-radius: 999px;
         padding: 8px 12px;
-        background: rgba(255,255,255,0.03);
+        background: rgba(255, 255, 255, 0.03);
       }
     </style>
   </head>
   <body>
     <main class="card">
       <h1>PVA Bazaar Status</h1>
-      <p>This page checks the current backend URL and the live health endpoint configured for this site.</p>
+      <p>
+        This page checks the current backend URL and the live health endpoint configured for this
+        site.
+      </p>
 
       <div class="grid">
         <div class="row">
@@ -90,7 +106,7 @@
         </div>
       </div>
 
-      <div class="row" style="margin-top: 12px;">
+      <div class="row" style="margin-top: 12px">
         <span class="label">Response</span>
         <div class="status" id="healthDetail">Waiting for fetch...</div>
       </div>
@@ -117,11 +133,14 @@
 
           if (!apiBase) {
             healthStatusNode.textContent = 'No backend configured';
-            healthDetailNode.textContent = 'Set api-base.json or the deployment env to point at the live API.';
+            healthDetailNode.textContent =
+              'Set api-base.json or the deployment env to point at the live API.';
             return;
           }
 
-          const healthUrl = apiBase.endsWith('/api') ? `${apiBase}/health` : `${apiBase}/api/health`;
+          const healthUrl = apiBase.endsWith('/api')
+            ? `${apiBase}/health`
+            : `${apiBase}/api/health`;
           const healthRes = await fetch(healthUrl, { headers: { Accept: 'application/json' } });
           const text = await healthRes.text();
           let body = text;

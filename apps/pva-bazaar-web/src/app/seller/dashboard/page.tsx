@@ -34,14 +34,14 @@ export default function SellerDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
+  const API_BASE = process.env.NEXT_PUBLIC_API_URL || '';
 
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
         const response = await fetch(`${API_BASE}/api/seller/dashboard`, {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
           },
         });
 
@@ -95,7 +95,9 @@ export default function SellerDashboard() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">{data.shop.name}</h1>
-          <p className="text-gray-600 mt-1">Shop Status: <span className="font-semibold capitalize">{data.shop.status}</span></p>
+          <p className="text-gray-600 mt-1">
+            Shop Status: <span className="font-semibold capitalize">{data.shop.status}</span>
+          </p>
           {data.shop.status === 'draft' && (
             <button className="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
               Publish Shop
@@ -174,8 +176,12 @@ export default function SellerDashboard() {
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600">Date</th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600">Buyer</th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600">Item</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600">Amount</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600">
+                    Amount
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600">
+                    Status
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -190,11 +196,15 @@ export default function SellerDashboard() {
                       {revenueFormatter.format(order.amount / 100)}
                     </td>
                     <td className="px-6 py-3 text-sm">
-                      <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                        order.status === 'delivered' ? 'bg-green-100 text-green-800' :
-                        order.status === 'shipped' ? 'bg-blue-100 text-blue-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
+                      <span
+                        className={`px-2 py-1 rounded text-xs font-semibold ${
+                          order.status === 'delivered'
+                            ? 'bg-green-100 text-green-800'
+                            : order.status === 'shipped'
+                              ? 'bg-blue-100 text-blue-800'
+                              : 'bg-gray-100 text-gray-800'
+                        }`}
+                      >
                         {order.status}
                       </span>
                     </td>

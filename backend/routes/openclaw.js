@@ -15,10 +15,20 @@ const OPENAI_TEMPERATURE = Math.min(
   2,
 );
 const OPENAI_TIMEOUT_MS = Math.min(
-  Math.max(parseInt(process.env.OPENAI_TIMEOUT_MS || process.env.OPENCLAW_OPENAI_TIMEOUT_MS || '20000', 10), 5000),
+  Math.max(
+    parseInt(
+      process.env.OPENAI_TIMEOUT_MS || process.env.OPENCLAW_OPENAI_TIMEOUT_MS || '20000',
+      10,
+    ),
+    5000,
+  ),
   60000,
 );
-const POLLINATIONS_API_URL = String(process.env.POLLINATIONS_API_URL || 'https://text.pollinations.ai').trim().replace(/\/$/, '');
+const POLLINATIONS_API_URL = String(
+  process.env.POLLINATIONS_API_URL || 'https://text.pollinations.ai',
+)
+  .trim()
+  .replace(/\/$/, '');
 const POLLINATIONS_TIMEOUT_MS = Math.min(
   Math.max(parseInt(process.env.POLLINATIONS_TIMEOUT_MS || '20000', 10), 5000),
   60000,
@@ -38,7 +48,7 @@ function readLastLines(filePath, maxLines = 200) {
 
   const lines = raw
     .split(/\r?\n/)
-    .map(line => line.trim())
+    .map((line) => line.trim())
     .filter(Boolean);
 
   if (lines.length <= maxLines) {
@@ -64,11 +74,15 @@ function parseTimestamp(line) {
 }
 
 function normalizeUrl(value) {
-  return String(value || '').trim().replace(/\/$/, '');
+  return String(value || '')
+    .trim()
+    .replace(/\/$/, '');
 }
 
 function getRequestBaseUrl(req) {
-  const configured = normalizeUrl(process.env.OPENCLAW_BACKEND_URL || process.env.PUBLIC_BACKEND_URL || '');
+  const configured = normalizeUrl(
+    process.env.OPENCLAW_BACKEND_URL || process.env.PUBLIC_BACKEND_URL || '',
+  );
   if (configured) return configured;
 
   const proto = String(req.headers['x-forwarded-proto'] || req.protocol || 'https');
@@ -94,7 +108,9 @@ function resolveAuthenticatedAdmin(req) {
   try {
     const decoded = verifyToken(token);
     const userId = String(decoded?.id || '').trim();
-    const role = String(decoded?.role || '').trim().toLowerCase();
+    const role = String(decoded?.role || '')
+      .trim()
+      .toLowerCase();
     if (!userId || role !== 'admin') {
       return null;
     }
@@ -136,7 +152,9 @@ async function loadTelegramReadyRecipients(requestedChatIds = []) {
   const OpenClawMemory = require('../models/OpenClawMemory');
   const latest = await OpenClawMemory.findOne({
     key: { $in: ['telegram:lastChatId', 'ecosystem:telegram-bridge:lastChatId'] },
-  }).sort({ createdAt: -1 }).lean();
+  })
+    .sort({ createdAt: -1 })
+    .lean();
 
   if (latest?.value) {
     return [String(latest.value).trim()].filter(Boolean);
@@ -149,7 +167,7 @@ function isRecentTimestamp(value, maxAgeMinutes = 10) {
   if (!value) return false;
   const parsed = new Date(value).getTime();
   if (!Number.isFinite(parsed)) return false;
-  return (Date.now() - parsed) <= maxAgeMinutes * 60 * 1000;
+  return Date.now() - parsed <= maxAgeMinutes * 60 * 1000;
 }
 
 async function probeUrl(url, timeoutMs = 6000, headers = {}) {
@@ -196,10 +214,18 @@ async function loadMemoryEntries(keys = [], limit = 60) {
 }
 
 async function buildEcosystemSnapshot({ queue, worker } = {}) {
-  const websiteUrl = normalizeUrl(process.env.OPENCLAW_WEBSITE_URL || process.env.PUBLIC_WEBSITE_URL || 'https://pvabazaar.org');
-  const websiteHealthUrl = normalizeUrl(process.env.OPENCLAW_WEBSITE_HEALTH_URL || `${websiteUrl}/api/health`);
-  const ollamaBaseUrl = normalizeUrl(process.env.OLLAMA_BASE_URL || process.env.OPENCLAW_OLLAMA_BASE_URL || '');
-  const ollamaModel = String(process.env.OLLAMA_MODEL || process.env.OPENCLAW_OLLAMA_MODEL || '').trim();
+  const websiteUrl = normalizeUrl(
+    process.env.OPENCLAW_WEBSITE_URL || process.env.PUBLIC_WEBSITE_URL || 'https://pvabazaar.org',
+  );
+  const websiteHealthUrl = normalizeUrl(
+    process.env.OPENCLAW_WEBSITE_HEALTH_URL || `${websiteUrl}/api/health`,
+  );
+  const ollamaBaseUrl = normalizeUrl(
+    process.env.OLLAMA_BASE_URL || process.env.OPENCLAW_OLLAMA_BASE_URL || '',
+  );
+  const ollamaModel = String(
+    process.env.OLLAMA_MODEL || process.env.OPENCLAW_OLLAMA_MODEL || '',
+  ).trim();
 
   const memoryKeys = [
     'ecosystem:openclaw-responder:lastHeartbeat',
@@ -236,14 +262,20 @@ async function buildEcosystemSnapshot({ queue, worker } = {}) {
   const openclawHeartbeat = latestByKey.get('ecosystem:openclaw-responder:lastHeartbeat') || null;
   const brainState = latestByKey.get('ecosystem:openclaw-responder:brain') || null;
   const responderState = latestByKey.get('ecosystem:openclaw-responder:connectionState') || null;
-  const responderFailureCount = latestByKey.get('ecosystem:openclaw-responder:consecutiveFailures') || null;
+  const responderFailureCount =
+    latestByKey.get('ecosystem:openclaw-responder:consecutiveFailures') || null;
   const responderLastError = latestByKey.get('ecosystem:openclaw-responder:lastError') || null;
   const workerHeartbeat = latestByKey.get('ecosystem:openclaw-worker:lastHeartbeat') || null;
   const workerState = latestByKey.get('ecosystem:openclaw-worker:connectionState') || null;
-  const workerFailureCount = latestByKey.get('ecosystem:openclaw-worker:consecutiveFailures') || null;
-  const telegramHeartbeat = latestByKey.get('ecosystem:telegram-bridge:lastHeartbeat') || latestByKey.get('telegram:lastHeartbeat') || null;
+  const workerFailureCount =
+    latestByKey.get('ecosystem:openclaw-worker:consecutiveFailures') || null;
+  const telegramHeartbeat =
+    latestByKey.get('ecosystem:telegram-bridge:lastHeartbeat') ||
+    latestByKey.get('telegram:lastHeartbeat') ||
+    null;
   const telegramState = latestByKey.get('ecosystem:telegram-bridge:connectionState') || null;
-  const telegramFailureCount = latestByKey.get('ecosystem:telegram-bridge:consecutiveFailures') || null;
+  const telegramFailureCount =
+    latestByKey.get('ecosystem:telegram-bridge:consecutiveFailures') || null;
   const telegramLastError = latestByKey.get('ecosystem:telegram-bridge:lastError') || null;
   const telegramUpdate = latestByKey.get('telegram:lastUpdateId') || null;
 
@@ -251,37 +283,59 @@ async function buildEcosystemSnapshot({ queue, worker } = {}) {
     probeUrl(websiteHealthUrl, 6000),
     websiteUrl && websiteUrl !== websiteHealthUrl
       ? probeUrl(websiteUrl, 6000)
-      : Promise.resolve({ configured: true, reachable: false, url: websiteUrl, message: 'Not checked' }),
+      : Promise.resolve({
+          configured: true,
+          reachable: false,
+          url: websiteUrl,
+          message: 'Not checked',
+        }),
     ollamaBaseUrl
       ? probeUrl(`${ollamaBaseUrl}/api/version`, 6000)
-      : Promise.resolve({ configured: false, reachable: false, url: '', message: 'Not configured' }),
+      : Promise.resolve({
+          configured: false,
+          reachable: false,
+          url: '',
+          message: 'Not configured',
+        }),
   ]);
 
-  const telegramConfigured = Boolean(telegramHeartbeat || telegramUpdate || process.env.TELEGRAM_BOT_TOKEN || process.env.TELEGRAM_ALLOWED_CHAT_IDS);
+  const telegramConfigured = Boolean(
+    telegramHeartbeat ||
+      telegramUpdate ||
+      process.env.TELEGRAM_BOT_TOKEN ||
+      process.env.TELEGRAM_ALLOWED_CHAT_IDS,
+  );
   const telegramLive = isRecentTimestamp(telegramHeartbeat?.createdAt, 10);
-  const telegramWebhookConfigured = Boolean(process.env.TELEGRAM_WEBHOOK_URL || process.env.TELEGRAM_WEBHOOK_ENABLED === 'true');
+  const telegramWebhookConfigured = Boolean(
+    process.env.TELEGRAM_WEBHOOK_URL || process.env.TELEGRAM_WEBHOOK_ENABLED === 'true',
+  );
   const responderLive = isRecentTimestamp(openclawHeartbeat?.createdAt, 15);
-  const workerLive = isRecentTimestamp(workerHeartbeat?.createdAt, 10)
-    || isRecentTimestamp(worker?.heartbeatAt, 10)
-    || worker?.active === true;
+  const workerLive =
+    isRecentTimestamp(workerHeartbeat?.createdAt, 10) ||
+    isRecentTimestamp(worker?.heartbeatAt, 10) ||
+    worker?.active === true;
   const responderStateValue = String(responderState?.value || 'unknown');
-  const workerStateValue = String(workerState?.value || worker?.state || (worker?.active ? 'online' : 'unknown'));
+  const workerStateValue = String(
+    workerState?.value || worker?.state || (worker?.active ? 'online' : 'unknown'),
+  );
   const telegramStateValue = String(telegramState?.value || 'unknown');
   const responderInError = responderStateValue.startsWith('error:');
   const workerInError = workerStateValue.startsWith('error:');
   const telegramInError = telegramStateValue.startsWith('error:');
   const telegramFailureValue = Number.parseInt(String(telegramFailureCount?.value || '0'), 10) || 0;
-  const telegramOperational = telegramLive || (telegramWebhookConfigured && !telegramInError && telegramFailureValue === 0);
+  const telegramOperational =
+    telegramLive || (telegramWebhookConfigured && !telegramInError && telegramFailureValue === 0);
   const queuePending = queue?.pendingOutbound ?? 0;
   const staleOutbound = queue?.staleOutbound ?? 0;
   const queuePressure = queuePending > 0 || staleOutbound > 0;
-  const workerInactiveWithQueuePressure = worker?.active === false && (queuePending > 0 || staleOutbound > 0);
+  const workerInactiveWithQueuePressure =
+    worker?.active === false && (queuePending > 0 || staleOutbound > 0);
   const websiteReachable = Boolean(websiteProbe.reachable || websiteRootProbe.reachable);
   const websiteMessage = websiteProbe.reachable
     ? websiteProbe.message
-    : (websiteRootProbe.reachable
+    : websiteRootProbe.reachable
       ? `Health endpoint not reachable; root reachable (${websiteRootProbe.status || 'ok'})`
-      : websiteProbe.message);
+      : websiteProbe.message;
 
   const services = {
     website: {
@@ -306,17 +360,19 @@ async function buildEcosystemSnapshot({ queue, worker } = {}) {
       responderFailures: Number.parseInt(String(responderFailureCount?.value || '0'), 10) || 0,
       responderLastError: responderLastError?.value || null,
       brain: brainState?.value || null,
-      message: queue && worker
-        ? `${queue.pendingOutbound} pending · ${queue.staleOutbound} stale`
-        : 'Queue metadata unavailable',
-      status: staleOutbound > 0
-        || workerInactiveWithQueuePressure
-        || !responderLive
-        || responderInError
-        || workerInError
-        || (queuePressure && !workerLive)
-        ? 'degraded'
-        : 'online',
+      message:
+        queue && worker
+          ? `${queue.pendingOutbound} pending · ${queue.staleOutbound} stale`
+          : 'Queue metadata unavailable',
+      status:
+        staleOutbound > 0 ||
+        workerInactiveWithQueuePressure ||
+        !responderLive ||
+        responderInError ||
+        workerInError ||
+        (queuePressure && !workerLive)
+          ? 'degraded'
+          : 'online',
     },
     ollama: {
       configured: Boolean(ollamaBaseUrl),
@@ -325,7 +381,9 @@ async function buildEcosystemSnapshot({ queue, worker } = {}) {
       reachable: Boolean(ollamaBaseUrl && ollamaProbe.reachable),
       version: ollamaProbe?.detail?.version || ollamaProbe?.detail?.name || null,
       message: ollamaBaseUrl
-        ? (ollamaProbe.reachable ? 'Reachable' : ollamaProbe.message)
+        ? ollamaProbe.reachable
+          ? 'Reachable'
+          : ollamaProbe.message
         : 'Not configured',
       status: ollamaBaseUrl ? (ollamaProbe.reachable ? 'online' : 'degraded') : 'offline',
     },
@@ -339,20 +397,24 @@ async function buildEcosystemSnapshot({ queue, worker } = {}) {
       lastError: telegramLastError?.value || null,
       message: telegramLive
         ? 'Bridge heartbeat is fresh'
-        : (telegramWebhookConfigured
+        : telegramWebhookConfigured
           ? 'Webhook mode active'
-          : (telegramConfigured ? 'Bridge heartbeat is stale or missing' : 'Not configured')),
-      status: telegramOperational ? 'online' : (telegramConfigured ? 'degraded' : 'offline'),
+          : telegramConfigured
+            ? 'Bridge heartbeat is stale or missing'
+            : 'Not configured',
+      status: telegramOperational ? 'online' : telegramConfigured ? 'degraded' : 'offline',
     },
   };
 
   const serviceList = Object.values(services);
   const relevantServices = serviceList.filter((service) => service.configured !== false);
-  const degradedRelevantServices = relevantServices.filter((service) => service.status !== 'online');
+  const degradedRelevantServices = relevantServices.filter(
+    (service) => service.status !== 'online',
+  );
   const anyOnline = relevantServices.some((service) => service.status === 'online');
 
   return {
-    status: degradedRelevantServices.length === 0 ? 'healthy' : (anyOnline ? 'degraded' : 'offline'),
+    status: degradedRelevantServices.length === 0 ? 'healthy' : anyOnline ? 'degraded' : 'offline',
     services,
     snapshotAt: new Date().toISOString(),
     responderLive,
@@ -383,8 +445,8 @@ function buildWatchdogSummary(logLines, alertLines) {
       parseTimestamp(latestError) ||
       parseTimestamp(latestStatus) ||
       null,
-    errorCountWindow: logLines.filter(line => line.includes('[ERROR]')).length,
-    warnCountWindow: logLines.filter(line => line.includes('[WARN]')).length,
+    errorCountWindow: logLines.filter((line) => line.includes('[ERROR]')).length,
+    warnCountWindow: logLines.filter((line) => line.includes('[WARN]')).length,
     alertCountWindow: alertLines.length,
   };
 }
@@ -422,15 +484,21 @@ function getConfig() {
     .trim()
     .replace(/\/$/, '');
 
-  const gatewayUrl = process.env.OPENCLAW_GATEWAY_URL || (defaultApiBase ? `${defaultApiBase}/api/openclaw` : '');
-  const webhookUrl = process.env.OPENCLAW_WEBHOOK_URL || (defaultApiBase ? `${defaultApiBase}/api/openclaw/webhook` : '');
-  const healthUrl = process.env.OPENCLAW_HEALTH_URL ||
+  const gatewayUrl =
+    process.env.OPENCLAW_GATEWAY_URL || (defaultApiBase ? `${defaultApiBase}/api/openclaw` : '');
+  const webhookUrl =
+    process.env.OPENCLAW_WEBHOOK_URL ||
+    (defaultApiBase ? `${defaultApiBase}/api/openclaw/webhook` : '');
+  const healthUrl =
+    process.env.OPENCLAW_HEALTH_URL ||
     (defaultApiBase
       ? `${defaultApiBase}/api/health`
-      : (gatewayUrl ? `${gatewayUrl.replace(/\/$/, '')}/health` : ''));
+      : gatewayUrl
+        ? `${gatewayUrl.replace(/\/$/, '')}/health`
+        : '');
   const apiKey = process.env.OPENCLAW_API_KEY || '';
   const publicMode = process.env.OPENCLAW_PUBLIC_MODE === 'true';
-  const bridgeSecret = publicMode ? '' : (process.env.OPENCLAW_BRIDGE_SECRET || '');
+  const bridgeSecret = publicMode ? '' : process.env.OPENCLAW_BRIDGE_SECRET || '';
 
   // Queue is always enabled — MongoDB is always connected in production.
   // Webhook/gateway are optional enhancements on top of the persistent queue.
@@ -544,15 +612,21 @@ async function getWorkerStatus() {
     const OpenClawWorkerLease = require('../models/OpenClawWorkerLease');
     const workerName = process.env.OPENCLAW_WORKER_NAME || 'openclaw-queue-dispatcher';
     const lease = await OpenClawWorkerLease.findOne({ name: workerName }).lean();
-    const memory = await loadMemoryEntries([
-      'ecosystem:openclaw-worker:lastHeartbeat',
-      'ecosystem:openclaw-worker:connectionState',
-      'ecosystem:openclaw-worker:consecutiveFailures',
-      'ecosystem:openclaw-worker:lastStatus',
-    ], 10);
-    const workerHeartbeat = memory.find((item) => item.key === 'ecosystem:openclaw-worker:lastHeartbeat') || null;
-    const workerState = memory.find((item) => item.key === 'ecosystem:openclaw-worker:connectionState') || null;
-    const workerFailures = memory.find((item) => item.key === 'ecosystem:openclaw-worker:consecutiveFailures') || null;
+    const memory = await loadMemoryEntries(
+      [
+        'ecosystem:openclaw-worker:lastHeartbeat',
+        'ecosystem:openclaw-worker:connectionState',
+        'ecosystem:openclaw-worker:consecutiveFailures',
+        'ecosystem:openclaw-worker:lastStatus',
+      ],
+      10,
+    );
+    const workerHeartbeat =
+      memory.find((item) => item.key === 'ecosystem:openclaw-worker:lastHeartbeat') || null;
+    const workerState =
+      memory.find((item) => item.key === 'ecosystem:openclaw-worker:connectionState') || null;
+    const workerFailures =
+      memory.find((item) => item.key === 'ecosystem:openclaw-worker:consecutiveFailures') || null;
 
     const heartbeatAt = workerHeartbeat?.createdAt || null;
     const heartbeatFresh = isRecentTimestamp(heartbeatAt, 10);
@@ -560,7 +634,9 @@ async function getWorkerStatus() {
     if (!lease) {
       return {
         configured: true,
-        name: workerState?.value ? `openclaw-queue-dispatcher-${String(workerState.value).toLowerCase()}` : workerName,
+        name: workerState?.value
+          ? `openclaw-queue-dispatcher-${String(workerState.value).toLowerCase()}`
+          : workerName,
         active: heartbeatFresh,
         holderId: null,
         leaseUntil: null,
@@ -605,7 +681,9 @@ async function saveMessage(payload) {
 }
 
 function normalizeSessionId(value) {
-  const raw = String(value || '').trim().toLowerCase();
+  const raw = String(value || '')
+    .trim()
+    .toLowerCase();
   if (!raw) return '';
   return raw.replace(/[^a-z0-9:_-]/g, '-').slice(0, 120);
 }
@@ -615,7 +693,13 @@ function coerceMemoryText(value, max = 10000) {
   return String(value).trim().slice(0, max);
 }
 
-async function writeWebsiteSessionMemory({ sessionId, key, value, type = 'reflection', source = 'website-openclaw' }) {
+async function writeWebsiteSessionMemory({
+  sessionId,
+  key,
+  value,
+  type = 'reflection',
+  source = 'website-openclaw',
+}) {
   if (!sessionId || !key || value === undefined || value === null) return null;
 
   await dbConnect();
@@ -624,7 +708,9 @@ async function writeWebsiteSessionMemory({ sessionId, key, value, type = 'reflec
     key: String(key).slice(0, 500),
     value: coerceMemoryText(value, 10000),
     type: ['fact', 'goal', 'reflection', 'preference'].includes(type) ? type : 'reflection',
-    source: String(source || 'website-openclaw').trim().slice(0, 120),
+    source: String(source || 'website-openclaw')
+      .trim()
+      .slice(0, 120),
     channel: 'website-openclaw',
     profileId: sessionId,
     pinned: false,
@@ -633,10 +719,18 @@ async function writeWebsiteSessionMemory({ sessionId, key, value, type = 'reflec
   });
 }
 
-async function persistWebsiteConversationMemory({ sessionId, message, reply, pathName = '', source = 'website-openclaw-chat' }) {
+async function persistWebsiteConversationMemory({
+  sessionId,
+  message,
+  reply,
+  pathName = '',
+  source = 'website-openclaw-chat',
+}) {
   if (!sessionId) return;
 
-  const trimmedPath = String(pathName || '').trim().slice(0, 180);
+  const trimmedPath = String(pathName || '')
+    .trim()
+    .slice(0, 180);
   const nowIso = new Date().toISOString();
   const writes = [];
 
@@ -645,7 +739,11 @@ async function persistWebsiteConversationMemory({ sessionId, message, reply, pat
       writeWebsiteSessionMemory({
         sessionId,
         key: `website:session:${sessionId}:user-message`,
-        value: JSON.stringify({ text: String(message).slice(0, 3000), path: trimmedPath || null, timestamp: nowIso }),
+        value: JSON.stringify({
+          text: String(message).slice(0, 3000),
+          path: trimmedPath || null,
+          timestamp: nowIso,
+        }),
         type: 'reflection',
         source,
       }),
@@ -657,7 +755,11 @@ async function persistWebsiteConversationMemory({ sessionId, message, reply, pat
       writeWebsiteSessionMemory({
         sessionId,
         key: `website:session:${sessionId}:assistant-reply`,
-        value: JSON.stringify({ text: String(reply).slice(0, 3000), path: trimmedPath || null, timestamp: nowIso }),
+        value: JSON.stringify({
+          text: String(reply).slice(0, 3000),
+          path: trimmedPath || null,
+          timestamp: nowIso,
+        }),
         type: 'reflection',
         source,
       }),
@@ -689,7 +791,8 @@ async function markOutboundForwardSuccess(messageId, statusCode) {
 async function markOutboundForwardFailure(messageId, detail) {
   await dbConnect();
   const OpenClawMessage = require('../models/OpenClawMessage');
-  const safeDetail = typeof detail === 'string' ? detail.slice(0, 300) : JSON.stringify(detail).slice(0, 300);
+  const safeDetail =
+    typeof detail === 'string' ? detail.slice(0, 300) : JSON.stringify(detail).slice(0, 300);
   await OpenClawMessage.updateOne(
     { _id: messageId },
     {
@@ -764,20 +867,16 @@ async function requestPollinationsReply(messageText) {
   if (!POLLINATIONS_API_URL) return null;
 
   const prompt = buildPollinationsPrompt(messageText);
-  const response = await axios.get(
-    `${POLLINATIONS_API_URL}/${encodeURIComponent(prompt)}`,
-    {
-      timeout: POLLINATIONS_TIMEOUT_MS,
-      headers: {
-        Accept: 'text/plain, application/json;q=0.9, */*;q=0.8',
-      },
+  const response = await axios.get(`${POLLINATIONS_API_URL}/${encodeURIComponent(prompt)}`, {
+    timeout: POLLINATIONS_TIMEOUT_MS,
+    headers: {
+      Accept: 'text/plain, application/json;q=0.9, */*;q=0.8',
     },
-  );
+  });
 
   const data = response.data;
-  const text = typeof data === 'string'
-    ? data
-    : (data?.text || data?.output || data?.response || null);
+  const text =
+    typeof data === 'string' ? data : data?.text || data?.output || data?.response || null;
   return text ? String(text).trim().slice(0, 3500) : null;
 }
 
@@ -849,7 +948,10 @@ async function forwardOutboundMessage(config, storedOutbound, payload) {
   } catch (err) {
     if (storedOutbound) {
       try {
-        await markOutboundForwardFailure(storedOutbound._id, err?.response?.data || err.message || 'Unknown dispatch error');
+        await markOutboundForwardFailure(
+          storedOutbound._id,
+          err?.response?.data || err.message || 'Unknown dispatch error',
+        );
       } catch (_persistErr) {
         // best-effort metadata update
       }
@@ -874,7 +976,7 @@ async function waitForInboundReply(outboundId, requestId, waitMs) {
   const timeoutMs = Math.min(Math.max(parseInt(waitMs, 10) || 15000, 2000), 25000);
   const pollIntervalMs = 1000;
 
-  while ((Date.now() - startedAt) < timeoutMs) {
+  while (Date.now() - startedAt < timeoutMs) {
     const inbound = await OpenClawMessage.findOne({
       direction: 'inbound',
       $or: [
@@ -949,7 +1051,9 @@ router.get('/status', async (_req, res) => {
 
   const mode = config.webhookConfigured ? 'webhook+queue' : 'queue-only';
   const statusMsg = config.webhookConfigured
-    ? (reachable ? `Gateway reachable (${mode})` : `Gateway unreachable — events queued`)
+    ? reachable
+      ? `Gateway reachable (${mode})`
+      : `Gateway unreachable — events queued`
     : `Queue-only mode — ${queue ? queue.pendingOutbound : '?'} pending`;
 
   res.json({
@@ -961,13 +1065,15 @@ router.get('/status', async (_req, res) => {
     mode,
     message: statusMsg,
     gatewayUrl: config.gatewayUrl || null,
-    queue: queue ? {
-      pending: queue.pendingOutbound,
-      stale: queue.staleOutbound,
-      processed: queue.processedOutbound,
-      inbound: queue.inboundCount,
-      latestAt: queue.latestOutboundAt,
-    } : null,
+    queue: queue
+      ? {
+          pending: queue.pendingOutbound,
+          stale: queue.staleOutbound,
+          processed: queue.processedOutbound,
+          inbound: queue.inboundCount,
+          latestAt: queue.latestOutboundAt,
+        }
+      : null,
     worker,
     ecosystem,
     timestamp: new Date().toISOString(),
@@ -977,23 +1083,35 @@ router.get('/status', async (_req, res) => {
 
 router.post('/telegram/register-webhook', async (req, res) => {
   const config = getConfig();
-  if (!requireBridgeOrAdmin(req, res, config, 'Unauthorized Telegram webhook registration request')) return;
+  if (!requireBridgeOrAdmin(req, res, config, 'Unauthorized Telegram webhook registration request'))
+    return;
 
   const botToken = String(process.env.TELEGRAM_BOT_TOKEN || '').trim();
   const configuredUrl = String(process.env.TELEGRAM_WEBHOOK_URL || '').trim();
   const webhookUrl = String(req.body?.url || configuredUrl).trim();
-  const secretToken = String(req.body?.secretToken || process.env.TELEGRAM_WEBHOOK_SECRET || '').trim();
+  const secretToken = String(
+    req.body?.secretToken || process.env.TELEGRAM_WEBHOOK_SECRET || '',
+  ).trim();
   const maxConnections = Math.min(
-    Math.max(parseInt(String(req.body?.maxConnections || process.env.TELEGRAM_WEBHOOK_MAX_CONNECTIONS || '15'), 10), 1),
+    Math.max(
+      parseInt(
+        String(req.body?.maxConnections || process.env.TELEGRAM_WEBHOOK_MAX_CONNECTIONS || '15'),
+        10,
+      ),
+      1,
+    ),
     100,
   );
-  const allowedUpdatesInput = req.body?.allowedUpdates || process.env.TELEGRAM_WEBHOOK_ALLOWED_UPDATES || 'message,edited_message';
+  const allowedUpdatesInput =
+    req.body?.allowedUpdates ||
+    process.env.TELEGRAM_WEBHOOK_ALLOWED_UPDATES ||
+    'message,edited_message';
   const allowedUpdates = Array.isArray(allowedUpdatesInput)
     ? allowedUpdatesInput.map((item) => String(item || '').trim()).filter(Boolean)
     : String(allowedUpdatesInput)
-      .split(',')
-      .map((item) => item.trim())
-      .filter(Boolean);
+        .split(',')
+        .map((item) => item.trim())
+        .filter(Boolean);
 
   if (!botToken) {
     return res.status(400).json({
@@ -1045,7 +1163,10 @@ router.post('/telegram/register-webhook', async (req, res) => {
 
 router.post('/telegram/notify-ready', async (req, res) => {
   const config = getConfig();
-  if (!requireBridgeOrAdmin(req, res, config, 'Unauthorized Telegram readiness notification request')) return;
+  if (
+    !requireBridgeOrAdmin(req, res, config, 'Unauthorized Telegram readiness notification request')
+  )
+    return;
 
   const requestedChatIds = Array.isArray(req.body?.chatIds)
     ? req.body.chatIds.map((item) => String(item || '').trim()).filter(Boolean)
@@ -1057,16 +1178,26 @@ router.post('/telegram/notify-ready', async (req, res) => {
   if (!recipients.length) {
     return res.status(404).json({
       ok: false,
-      message: 'No Telegram recipient chat IDs found. Send a Telegram message once, or pass chatId/chatIds in the request body.',
+      message:
+        'No Telegram recipient chat IDs found. Send a Telegram message once, or pass chatId/chatIds in the request body.',
       timestamp: new Date().toISOString(),
     });
   }
 
   const apiBaseUrl = getRequestBaseUrl(req);
-  const status = await axios.get(`${apiBaseUrl}/api/openclaw/status`, { timeout: 12000 }).then((response) => response.data).catch(() => null);
-  const build = await axios.get(`${apiBaseUrl}/api/version`, { timeout: 12000 }).then((response) => response.data).catch(() => null);
+  const status = await axios
+    .get(`${apiBaseUrl}/api/openclaw/status`, { timeout: 12000 })
+    .then((response) => response.data)
+    .catch(() => null);
+  const build = await axios
+    .get(`${apiBaseUrl}/api/version`, { timeout: 12000 })
+    .then((response) => response.data)
+    .catch(() => null);
 
-  if (!status?.ecosystem?.services?.telegram || status.ecosystem.services.telegram.status !== 'online') {
+  if (
+    !status?.ecosystem?.services?.telegram ||
+    status.ecosystem.services.telegram.status !== 'online'
+  ) {
     return res.status(409).json({
       ok: false,
       message: 'Telegram service is not online yet. Not sending readiness text.',
@@ -1088,7 +1219,11 @@ router.post('/telegram/notify-ready', async (req, res) => {
     try {
       const response = await sendTelegramMessage(chatId, message);
       const payload = response.data || {};
-      results.push({ chatId, ok: Boolean(payload.ok), messageId: payload?.result?.message_id || null });
+      results.push({
+        chatId,
+        ok: Boolean(payload.ok),
+        messageId: payload?.result?.message_id || null,
+      });
     } catch (err) {
       results.push({
         chatId,
@@ -1195,10 +1330,7 @@ router.get('/recent-events', async (req, res) => {
     try {
       await dbConnect();
       const OpenClawMessage = require('../models/OpenClawMessage');
-      const messages = await OpenClawMessage.find({})
-        .sort({ createdAt: -1 })
-        .limit(limit)
-        .lean();
+      const messages = await OpenClawMessage.find({}).sort({ createdAt: -1 }).limit(limit).lean();
 
       if (!messages.length) {
         return res.json({
@@ -1249,25 +1381,25 @@ router.get('/recent-events', async (req, res) => {
   const events = logLines.map((line, idx) => {
     const timestampMatch = line.match(/^\[([^\]]+)\]/);
     const timestamp = timestampMatch ? timestampMatch[1] : null;
-    
+
     let level = 'INFO';
     if (line.includes('[ERROR]')) level = 'ERROR';
     else if (line.includes('[WARN]')) level = 'WARN';
     else if (line.includes('[SUCCESS]')) level = 'SUCCESS';
-    
+
     let type = 'general';
     if (line.includes('status configured=')) type = 'status-check';
     else if (line.includes('dispatch forwarded=')) type = 'dispatch';
     else if (line.includes('watchdog recovered')) type = 'recovery';
     else if (line.includes('health check failed')) type = 'health-failure';
-    
+
     return {
       id: `log-${idx}`,
       timestamp,
       level,
       type,
       message: requesterAuthorized ? line : `[${level}] ${type}`,
-      source: 'watchdog-log'
+      source: 'watchdog-log',
     };
   });
 
@@ -1280,7 +1412,7 @@ router.get('/recent-events', async (req, res) => {
       level: 'ALERT',
       type: 'alert',
       message: requesterAuthorized ? line : '[ALERT] watchdog alert',
-      source: 'alert-log'
+      source: 'alert-log',
     });
   });
 
@@ -1375,9 +1507,10 @@ router.post('/chat', async (req, res) => {
 
   const chatRequestId = crypto.randomUUID();
   const outboundEvent = 'pvabazaar.admin.chat';
-  const rawMetadata = (req.body && typeof req.body.metadata === 'object' && !Array.isArray(req.body.metadata))
-    ? req.body.metadata
-    : {};
+  const rawMetadata =
+    req.body && typeof req.body.metadata === 'object' && !Array.isArray(req.body.metadata)
+      ? req.body.metadata
+      : {};
   const metadata = {
     ...rawMetadata,
     source,
@@ -1532,7 +1665,8 @@ router.post('/chat', async (req, res) => {
         queued: true,
         forwarded: forward.forwarded,
         waiting: false,
-        message: 'Chat message accepted, but response matching is unavailable without message persistence.',
+        message:
+          'Chat message accepted, but response matching is unavailable without message persistence.',
         chatRequestId,
         timestamp: new Date().toISOString(),
       });
@@ -1637,9 +1771,15 @@ router.post('/public/pulse', async (req, res) => {
     });
   }
 
-  const pathName = String(req.body?.path || '').trim().slice(0, 180);
-  const pageTitle = String(req.body?.title || '').trim().slice(0, 180);
-  const referrer = String(req.body?.referrer || '').trim().slice(0, 220);
+  const pathName = String(req.body?.path || '')
+    .trim()
+    .slice(0, 180);
+  const pageTitle = String(req.body?.title || '')
+    .trim()
+    .slice(0, 180);
+  const referrer = String(req.body?.referrer || '')
+    .trim()
+    .slice(0, 220);
 
   try {
     await writeWebsiteSessionMemory({
@@ -1735,10 +1875,17 @@ router.post('/public-chat', async (req, res) => {
 
   const config = getConfig();
   const sessionId = normalizeSessionId(req.body?.sessionId);
-  const text = String(req.body?.message || '').trim().slice(0, 1200);
+  const text = String(req.body?.message || '')
+    .trim()
+    .slice(0, 1200);
   const waitForReplyMs = req.body?.waitForReplyMs;
-  const pathName = String(req.body?.path || '').trim().slice(0, 180);
-  const source = String(req.body?.source || 'website-openclaw-widget').trim().slice(0, 120) || 'website-openclaw-widget';
+  const pathName = String(req.body?.path || '')
+    .trim()
+    .slice(0, 180);
+  const source =
+    String(req.body?.source || 'website-openclaw-widget')
+      .trim()
+      .slice(0, 120) || 'website-openclaw-widget';
 
   if (!sessionId) {
     return res.status(400).json({ ok: false, message: 'sessionId is required' });
@@ -1749,9 +1896,10 @@ router.post('/public-chat', async (req, res) => {
 
   const chatRequestId = crypto.randomUUID();
   const outboundEvent = 'pvabazaar.website.chat';
-  const rawMetadata = (req.body && typeof req.body.metadata === 'object' && !Array.isArray(req.body.metadata))
-    ? req.body.metadata
-    : {};
+  const rawMetadata =
+    req.body && typeof req.body.metadata === 'object' && !Array.isArray(req.body.metadata)
+      ? req.body.metadata
+      : {};
   const metadata = {
     ...rawMetadata,
     userId,
@@ -2016,10 +2164,7 @@ router.get('/messages', async (req, res) => {
       query.processed = false;
     }
 
-    const messages = await OpenClawMessage.find(query)
-      .sort({ createdAt: 1 })
-      .limit(limit)
-      .lean();
+    const messages = await OpenClawMessage.find(query).sort({ createdAt: 1 }).limit(limit).lean();
 
     return res.json({
       ok: true,
@@ -2101,7 +2246,7 @@ router.post('/replay-webhook', async (req, res) => {
         attempted: pending.length,
         forwarded: 0,
         failed: 0,
-        candidateIds: pending.map(item => item._id.toString()),
+        candidateIds: pending.map((item) => item._id.toString()),
         timestamp: new Date().toISOString(),
       });
     }
@@ -2150,7 +2295,10 @@ router.post('/replay-webhook', async (req, res) => {
             $set: {
               'metadata.lastWebhookReplayAt': new Date().toISOString(),
               'metadata.lastWebhookReplayStatus': 'failed',
-              'metadata.lastWebhookReplayError': typeof detail === 'string' ? detail.slice(0, 300) : JSON.stringify(detail).slice(0, 300),
+              'metadata.lastWebhookReplayError':
+                typeof detail === 'string'
+                  ? detail.slice(0, 300)
+                  : JSON.stringify(detail).slice(0, 300),
             },
           },
         );
@@ -2186,7 +2334,9 @@ router.post('/recover', async (req, res) => {
     const worker = await getWorkerStatus();
     const staleThreshold = Math.max(parseInt(process.env.OPENCLAW_RECOVER_STALE_MIN || '2', 10), 1);
     const heartbeatAt = worker?.heartbeatAt ? new Date(worker.heartbeatAt).getTime() : null;
-    const heartbeatAgeMin = heartbeatAt ? Math.max(Math.round((Date.now() - heartbeatAt) / 60000), 0) : null;
+    const heartbeatAgeMin = heartbeatAt
+      ? Math.max(Math.round((Date.now() - heartbeatAt) / 60000), 0)
+      : null;
     const workerStale = heartbeatAgeMin !== null && heartbeatAgeMin > staleThreshold;
 
     const actions = [];
@@ -2251,9 +2401,7 @@ router.post('/recover', async (req, res) => {
       },
       actions,
       replay,
-      message: actions.length
-        ? 'Recovery actions executed'
-        : 'No recovery actions required',
+      message: actions.length ? 'Recovery actions executed' : 'No recovery actions required',
       timestamp: new Date().toISOString(),
     });
   } catch (err) {
@@ -2422,7 +2570,8 @@ router.put('/agent-config', async (req, res) => {
   const config = getConfig();
   if (!requireBridgeOrAdmin(req, res, config, 'Unauthorized OpenClaw agent-config update')) return;
 
-  const { creatorCommands, globalDirectives, goals, activeMode, personaProfileId, modeProfiles } = req.body || {};
+  const { creatorCommands, globalDirectives, goals, activeMode, personaProfileId, modeProfiles } =
+    req.body || {};
   try {
     await dbConnect();
     const OpenClawAgentConfig = require('../models/OpenClawAgentConfig');
@@ -2435,19 +2584,31 @@ router.put('/agent-config', async (req, res) => {
       update.creatorCommands = creatorCommands;
     }
     if (Array.isArray(goals)) update.goals = goals;
-    if (typeof activeMode === 'string') update.activeMode = String(activeMode).trim().slice(0, 80) || 'default';
-    if (typeof personaProfileId === 'string') update.personaProfileId = String(personaProfileId).trim().slice(0, 120) || 'default';
+    if (typeof activeMode === 'string')
+      update.activeMode = String(activeMode).trim().slice(0, 80) || 'default';
+    if (typeof personaProfileId === 'string')
+      update.personaProfileId = String(personaProfileId).trim().slice(0, 120) || 'default';
     if (Array.isArray(modeProfiles)) {
       update.modeProfiles = modeProfiles
         .map((profile) => ({
-          name: String(profile?.name || '').trim().slice(0, 80),
+          name: String(profile?.name || '')
+            .trim()
+            .slice(0, 80),
           directives: Array.isArray(profile?.directives)
-            ? profile.directives.map((item) => String(item || '').trim()).filter(Boolean).slice(0, 40)
+            ? profile.directives
+                .map((item) => String(item || '').trim())
+                .filter(Boolean)
+                .slice(0, 40)
             : [],
           goals: Array.isArray(profile?.goals)
-            ? profile.goals.map((item) => String(item || '').trim()).filter(Boolean).slice(0, 30)
+            ? profile.goals
+                .map((item) => String(item || '').trim())
+                .filter(Boolean)
+                .slice(0, 30)
             : [],
-          style: String(profile?.style || '').trim().slice(0, 1000),
+          style: String(profile?.style || '')
+            .trim()
+            .slice(0, 1000),
           updatedAt: new Date(),
         }))
         .filter((profile) => profile.name)
@@ -2527,12 +2688,19 @@ router.post('/memory', async (req, res) => {
       value: String(value).slice(0, 10000),
       type: ['fact', 'goal', 'reflection', 'preference'].includes(type) ? type : 'fact',
       source: req.body?.source || 'api',
-      channel: String(req.body?.channel || '').trim().slice(0, 80),
-      profileId: String(req.body?.profileId || 'default').trim().slice(0, 120),
+      channel: String(req.body?.channel || '')
+        .trim()
+        .slice(0, 80),
+      profileId: String(req.body?.profileId || 'default')
+        .trim()
+        .slice(0, 120),
       pinned: Boolean(req.body?.pinned),
       score: Number.isFinite(Number(req.body?.score)) ? Number(req.body.score) : 1,
       tags: Array.isArray(req.body?.tags)
-        ? req.body.tags.map((item) => String(item || '').trim()).filter(Boolean).slice(0, 20)
+        ? req.body.tags
+            .map((item) => String(item || '').trim())
+            .filter(Boolean)
+            .slice(0, 20)
         : [],
     });
     return res.json({
@@ -2578,12 +2746,18 @@ router.delete('/memory/:id', async (req, res) => {
 });
 
 function normalizeProfileId(value) {
-  const normalized = String(value || 'default').trim().toLowerCase().replace(/[^a-z0-9:_-]/g, '-');
+  const normalized = String(value || 'default')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9:_-]/g, '-');
   return normalized.slice(0, 120) || 'default';
 }
 
 function normalizeChannel(value) {
-  const normalized = String(value || '').trim().toLowerCase().replace(/[^a-z0-9:_-]/g, '-');
+  const normalized = String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9:_-]/g, '-');
   return normalized.slice(0, 80);
 }
 
@@ -2598,17 +2772,31 @@ router.post('/persona/ingest', async (req, res) => {
   if (!requireBridgeOrAdmin(req, res, config, 'Unauthorized persona ingest request')) return;
 
   const text = String(req.body?.text || req.body?.value || '').trim();
-  const kind = String(req.body?.kind || 'journal').trim().toLowerCase();
+  const kind = String(req.body?.kind || 'journal')
+    .trim()
+    .toLowerCase();
   const profileId = normalizeProfileId(req.body?.profileId || 'default');
   const channel = normalizeChannel(req.body?.channel || '');
-  const source = String(req.body?.source || 'persona-ingest').trim().slice(0, 120);
-  const type = ['fact', 'goal', 'reflection', 'preference'].includes(req.body?.type) ? req.body.type : 'reflection';
+  const source = String(req.body?.source || 'persona-ingest')
+    .trim()
+    .slice(0, 120);
+  const type = ['fact', 'goal', 'reflection', 'preference'].includes(req.body?.type)
+    ? req.body.type
+    : 'reflection';
 
   if (!text) {
     return res.status(400).json({ ok: false, message: 'text is required' });
   }
 
-  const allowedKinds = new Set(['identity', 'voice', 'imprint', 'journal', 'goal', 'principle', 'memory']);
+  const allowedKinds = new Set([
+    'identity',
+    'voice',
+    'imprint',
+    'journal',
+    'goal',
+    'principle',
+    'memory',
+  ]);
   const safeKind = allowedKinds.has(kind) ? kind : 'journal';
   const key = `persona:${safeKind}:profile:${profileId}`;
   const now = new Date();
@@ -2619,7 +2807,8 @@ router.post('/persona/ingest', async (req, res) => {
 
     const pinned = Boolean(req.body?.pinned) || safeKind === 'identity' || safeKind === 'voice';
     const reinforcement = clampScore(req.body?.reinforcement || 1);
-    const baseScore = safeKind === 'identity' || safeKind === 'voice' ? 6 : (safeKind === 'imprint' ? 4 : 1);
+    const baseScore =
+      safeKind === 'identity' || safeKind === 'voice' ? 6 : safeKind === 'imprint' ? 4 : 1;
     const score = Math.max(1, Math.min(100, baseScore + reinforcement));
 
     const doc = await OpenClawMemory.create({
@@ -2632,7 +2821,10 @@ router.post('/persona/ingest', async (req, res) => {
       pinned,
       score,
       tags: Array.isArray(req.body?.tags)
-        ? req.body.tags.map((item) => String(item || '').trim()).filter(Boolean).slice(0, 20)
+        ? req.body.tags
+            .map((item) => String(item || '').trim())
+            .filter(Boolean)
+            .slice(0, 20)
         : [],
       lastAccessedAt: now,
       createdAt: now,
@@ -2652,7 +2844,9 @@ router.post('/persona/ingest', async (req, res) => {
       timestamp: new Date().toISOString(),
     });
   } catch (err) {
-    return res.status(500).json({ ok: false, message: 'Failed to ingest persona memory', error: err.message });
+    return res
+      .status(500)
+      .json({ ok: false, message: 'Failed to ingest persona memory', error: err.message });
   }
 });
 
@@ -2679,7 +2873,9 @@ router.get('/persona/context', async (req, res) => {
       .limit(200)
       .lean();
 
-    const filtered = includeJournal ? docs : docs.filter((item) => !String(item.key).includes('persona:journal:'));
+    const filtered = includeJournal
+      ? docs
+      : docs.filter((item) => !String(item.key).includes('persona:journal:'));
     const context = filtered.slice(0, limit).map((item) => {
       const key = String(item.key || '');
       const kind = key.split(':')[1] || 'memory';
@@ -2710,7 +2906,9 @@ router.get('/persona/context', async (req, res) => {
       total: context.length,
       pinned: context.filter((item) => item.pinned).length,
       averageScore: context.length
-        ? Math.round((context.reduce((sum, item) => sum + (item.score || 0), 0) / context.length) * 100) / 100
+        ? Math.round(
+            (context.reduce((sum, item) => sum + (item.score || 0), 0) / context.length) * 100,
+          ) / 100
         : 0,
     };
 
@@ -2721,7 +2919,9 @@ router.get('/persona/context', async (req, res) => {
       timestamp: new Date().toISOString(),
     });
   } catch (err) {
-    return res.status(500).json({ ok: false, message: 'Failed to load persona context', error: err.message });
+    return res
+      .status(500)
+      .json({ ok: false, message: 'Failed to load persona context', error: err.message });
   }
 });
 
@@ -2740,7 +2940,7 @@ router.put('/persona/memory/:id/reinforce', async (req, res) => {
       return res.status(404).json({ ok: false, message: 'Persona memory not found' });
     }
 
-    const nextScore = Math.max(0, Math.min((Number(current.score || 1) + delta), 100));
+    const nextScore = Math.max(0, Math.min(Number(current.score || 1) + delta, 100));
     current.score = nextScore;
     current.lastAccessedAt = new Date();
     current.updatedAt = new Date();
@@ -2758,7 +2958,9 @@ router.put('/persona/memory/:id/reinforce', async (req, res) => {
       timestamp: new Date().toISOString(),
     });
   } catch (err) {
-    return res.status(500).json({ ok: false, message: 'Failed to reinforce persona memory', error: err.message });
+    return res
+      .status(500)
+      .json({ ok: false, message: 'Failed to reinforce persona memory', error: err.message });
   }
 });
 
@@ -2780,7 +2982,9 @@ router.get('/persona/modes', async (req, res) => {
       timestamp: new Date().toISOString(),
     });
   } catch (err) {
-    return res.status(500).json({ ok: false, message: 'Failed to load persona modes', error: err.message });
+    return res
+      .status(500)
+      .json({ ok: false, message: 'Failed to load persona modes', error: err.message });
   }
 });
 
@@ -2788,7 +2992,9 @@ router.put('/persona/mode', async (req, res) => {
   const config = getConfig();
   if (!requireBridgeOrAdmin(req, res, config, 'Unauthorized persona mode update')) return;
 
-  const activeMode = String(req.body?.activeMode || '').trim().slice(0, 80);
+  const activeMode = String(req.body?.activeMode || '')
+    .trim()
+    .slice(0, 80);
   const personaProfileId = normalizeProfileId(req.body?.personaProfileId || 'default');
 
   if (!activeMode) {
@@ -2818,7 +3024,9 @@ router.put('/persona/mode', async (req, res) => {
       timestamp: new Date().toISOString(),
     });
   } catch (err) {
-    return res.status(500).json({ ok: false, message: 'Failed to set persona mode', error: err.message });
+    return res
+      .status(500)
+      .json({ ok: false, message: 'Failed to set persona mode', error: err.message });
   }
 });
 
@@ -2832,7 +3040,12 @@ router.get('/snapshot/marketplace', async (req, res) => {
     const Artifact = require('../models/Artifact');
     const [count, recent] = await Promise.all([
       Artifact.countDocuments().catch(() => 0),
-      Artifact.find().sort({ createdAt: -1 }).limit(limit).select('title slug category createdAt').lean().catch(() => []),
+      Artifact.find()
+        .sort({ createdAt: -1 })
+        .limit(limit)
+        .select('title slug category createdAt')
+        .lean()
+        .catch(() => []),
     ]);
     return res.json({
       ok: true,
@@ -2870,15 +3083,15 @@ function getOpenClawHealth() {
       mode: config.webhookConfigured ? 'webhook+queue' : 'queue-only',
       message: config.webhookConfigured
         ? 'Watchdog logs not found'
-        : 'Queue-only mode — events stored in MongoDB'
+        : 'Queue-only mode — events stored in MongoDB',
     };
   }
 
   try {
     const logLines = readLastLines(paths.logPath, 50);
     const alertLines = alertExists ? readLastLines(paths.alertPath, 20) : [];
-    const recentErrors = logLines.filter(l => l.includes('[ERROR]')).length;
-    const recentWarns = logLines.filter(l => l.includes('[WARN]')).length;
+    const recentErrors = logLines.filter((l) => l.includes('[ERROR]')).length;
+    const recentWarns = logLines.filter((l) => l.includes('[WARN]')).length;
     const status = recentErrors > 5 ? 'unhealthy' : recentErrors > 0 ? 'degraded' : 'healthy';
     return {
       configured: true,
@@ -2886,13 +3099,13 @@ function getOpenClawHealth() {
       errors: recentErrors,
       warnings: recentWarns,
       alerts: alertLines.length,
-      message: `OpenClaw ${status} (${recentErrors} errors, ${recentWarns} warnings)`
+      message: `OpenClaw ${status} (${recentErrors} errors, ${recentWarns} warnings)`,
     };
   } catch (err) {
     return {
       configured: true,
       status: 'error',
-      message: `Failed to read watchdog logs: ${err.message}`
+      message: `Failed to read watchdog logs: ${err.message}`,
     };
   }
 }

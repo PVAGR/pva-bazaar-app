@@ -97,7 +97,10 @@
   cursor: pointer;
   font-weight: 700;
   font-size: 0.82rem;
-  transition: border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
   white-space: nowrap;
 }
 
@@ -129,7 +132,10 @@
   color: var(--site-text);
   font-weight: 700;
   cursor: pointer;
-  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    background 0.18s ease;
 }
 
 .network-chip:hover:not(:disabled) {
@@ -284,7 +290,9 @@
   border-radius: 10px;
   padding: 0.82rem;
   cursor: pointer;
-  transition: border-color 0.2s ease, transform 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    transform 0.2s ease;
 }
 
 .payout-card:hover {
@@ -470,7 +478,9 @@
   border: 1px solid transparent;
   background: var(--site-panel-soft);
   color: var(--site-text);
-  transition: transform 0.2s ease, border-color 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .btn-action:hover {
@@ -709,7 +719,9 @@
   text-decoration: none;
   font-weight: 600;
 }
-.explorer-link:hover { text-decoration: underline; }
+.explorer-link:hover {
+  text-decoration: underline;
+}
 
 .direct-balance-row {
   display: flex;
@@ -718,12 +730,17 @@
   align-items: center;
   margin: 0.6rem 0;
   padding: 0.5rem 0.75rem;
-  background: rgba(255,255,255,0.04);
+  background: rgba(255, 255, 255, 0.04);
   border-radius: 6px;
   font-size: 0.85rem;
 }
-.direct-balance-label { opacity: 0.6; }
-.direct-balance-val   { font-weight: 600; word-break: break-all; }
+.direct-balance-label {
+  opacity: 0.6;
+}
+.direct-balance-val {
+  font-weight: 600;
+  word-break: break-all;
+}
 
 .btn-send {
   min-width: 160px;
@@ -912,7 +929,9 @@
   font-size: 0.83rem;
   font-weight: 700;
   cursor: pointer;
-  transition: transform 0.2s ease, border-color 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .btn-primary {

@@ -21,6 +21,7 @@ The Admin Panel now features a comprehensive tabbed interface that organizes adm
 **PURPOSE:** Create, edit, and manage archive entries
 
 **FEATURES:**
+
 - ✅ Create new archive entries with Markdown support
 - ✅ Edit existing entries
 - ✅ Delete entries with confirmation modal
@@ -32,6 +33,7 @@ The Admin Panel now features a comprehensive tabbed interface that organizes adm
 - ✅ Statistics (original entries + custom entries)
 
 **HOW TO USE:**
+
 1. Fill in the form fields (Title, Category, Description, Content)
 2. Optionally add media URLs or drag & drop files to upload
 3. Click "Publish to Live Site" to create the entry
@@ -40,11 +42,13 @@ The Admin Panel now features a comprehensive tabbed interface that organizes adm
 6. Click the 🗑️ icon to delete (with confirmation)
 
 **API ENDPOINTS:**
+
 - `POST /api/blog/entries` - Create entry
 - `GET /api/blog/entries` - Fetch entries
 - `DELETE /api/blog/entries/:id` - Delete entry
 
 **FILES:**
+
 - Component: `Frontend/src/pages/AdminPage.jsx` (lines 827-1051)
 - Styles: `Frontend/src/pages/AdminPage.css`
 
@@ -55,6 +59,7 @@ The Admin Panel now features a comprehensive tabbed interface that organizes adm
 **PURPOSE:** Manage marketplace items (products/artifacts)
 
 **FEATURES:**
+
 - ✅ View all marketplace items in sidebar list
 - ✅ Create new items with full details
 - ✅ Edit existing items
@@ -65,6 +70,7 @@ The Admin Panel now features a comprehensive tabbed interface that organizes adm
 - ✅ Origin tracking
 
 **HOW TO USE:**
+
 1. View existing items in the sidebar (shows thumbnail, price, stock)
 2. Fill in the form to create a new item:
    - **Title**: Item name (e.g., "Hand-carved Wooden Bowl")
@@ -80,12 +86,14 @@ The Admin Panel now features a comprehensive tabbed interface that organizes adm
 5. Click 🗑️ to delete (with confirmation)
 
 **API ENDPOINTS:**
+
 - `GET /api/items` - Fetch all items
 - `POST /api/items` - Create item
 - `PUT /api/items/:id` - Update item
 - `DELETE /api/items/:id` - Delete item
 
 **FILES:**
+
 - Component: `Frontend/src/components/MarketplaceTab.jsx`
 - Styles: `Frontend/src/components/MarketplaceTab.css`
 
@@ -96,6 +104,7 @@ The Admin Panel now features a comprehensive tabbed interface that organizes adm
 **PURPOSE:** View and manage user accounts
 
 **FEATURES:**
+
 - ✅ View all registered users in table format
 - ✅ Search users by name or email
 - ✅ See user roles (admin/user)
@@ -104,6 +113,7 @@ The Admin Panel now features a comprehensive tabbed interface that organizes adm
 - ✅ Statistics dashboard (total users, active users)
 
 **HOW TO USE:**
+
 1. Use search box to filter users by name or email
 2. View user details in the table:
    - **Name**: User's full name
@@ -114,11 +124,13 @@ The Admin Panel now features a comprehensive tabbed interface that organizes adm
    - **Orders**: Number of orders placed
 3. Click 👁️ icon to view user details (feature ready for backend implementation)
 
-**CURRENT STATUS:** 
+**CURRENT STATUS:**
+
 - ⚠️ **Demo Mode**: Displays mock data for demonstration
 - **Full functionality requires backend admin endpoints**
 
 **TO ENABLE FULL FUNCTIONALITY:**
+
 1. Add admin middleware to backend
 2. Implement `/api/admin/users` endpoints:
    - `GET /api/admin/users` - Fetch all users
@@ -129,6 +141,7 @@ The Admin Panel now features a comprehensive tabbed interface that organizes adm
 4. Connect tab to real API
 
 **FILES:**
+
 - Component: `Frontend/src/components/UsersTab.jsx`
 - Styles: `Frontend/src/components/UsersTab.css`
 
@@ -139,6 +152,7 @@ The Admin Panel now features a comprehensive tabbed interface that organizes adm
 **PURPOSE:** System health monitoring and OpenClaw integration
 
 **FEATURES:**
+
 - ✅ Overall health status indicator (Healthy/Degraded/Error)
 - ✅ API endpoint connectivity checks
 - ✅ OpenClaw watchdog status monitoring
@@ -149,16 +163,15 @@ The Admin Panel now features a comprehensive tabbed interface that organizes adm
 - ✅ Color-coded status indicators
 
 **HOW TO USE:**
+
 1. **Monitor Overall Health**: Top card shows system-wide status
    - ✅ Green = All Systems Operational
    - ⚠️ Yellow = Some Systems Degraded
    - ❌ Red = System Error
-   
 2. **Check Endpoints**: View connectivity for:
    - Health Check - API availability
    - OpenClaw Status - Watchdog state
    - OpenClaw Events - Event system status
-   
 3. **Test Event Dispatch**:
    - Click "🚀 Dispatch Test Event" button
    - Verifies event processing pipeline
@@ -176,6 +189,7 @@ The Admin Panel now features a comprehensive tabbed interface that organizes adm
    - Manual refresh with "🔄 Refresh" button
 
 **API ENDPOINTS:**
+
 - `GET /api/health` - System health
 - `GET /api/openclaw/status` - OpenClaw watchdog status
 - `GET /api/openclaw/recent-events` - Recent events list
@@ -183,12 +197,14 @@ The Admin Panel now features a comprehensive tabbed interface that organizes adm
 - `GET /api/openclaw/metrics` - Prometheus metrics
 
 **OPENCLAW INTEGRATION:**
+
 - Monitors watchdog state, errors, and alerts
 - Tracks event processing pipeline
 - Provides real-time system observability
 - See `OPENCLAW_*.md` files for full documentation
 
 **FILES:**
+
 - Component: `Frontend/src/components/HealthTab.jsx`
 - Styles: `Frontend/src/components/HealthTab.css`
 
@@ -199,6 +215,7 @@ The Admin Panel now features a comprehensive tabbed interface that organizes adm
 **PURPOSE:** Application configuration and settings management
 
 **FEATURES:**
+
 - ✅ Configure API base URL
 - ✅ Reset to default API URL
 - ✅ View current theme (dark/light)
@@ -209,11 +226,13 @@ The Admin Panel now features a comprehensive tabbed interface that organizes adm
 **HOW TO USE:**
 
 **API Configuration:**
+
 1. Enter custom API base URL in the input field
 2. Click "💾 Save" to apply
 3. Click "🔄 Reset" to restore default from environment
 
 **Data Management:**
+
 1. **Clear Cache**: Removes all localStorage and sessionStorage
    - ⚠️ Warning: Will log you out and reload the page
    - Use for troubleshooting or fresh start
@@ -223,12 +242,14 @@ The Admin Panel now features a comprehensive tabbed interface that organizes adm
    - Export timestamp
 
 **System Information:**
+
 - **Environment**: Development or production
 - **API URL**: Currently configured backend URL
 - **Version**: Application version
 - **Build**: Last build date
 
 **FILES:**
+
 - Component: `Frontend/src/components/SettingsTab.jsx`
 - Styles: `Frontend/src/components/SettingsTab.css`
 
@@ -239,16 +260,19 @@ The Admin Panel now features a comprehensive tabbed interface that organizes adm
 All tabs inherit the global Archive design baseline:
 
 **Dark Mode (Default):**
+
 - Background: Deep blue night mode (#0a0e27)
 - Accents: Cyan (#00d9ff)
 - Text: High contrast white
 
 **Light Mode:**
+
 - Background: Soft green
 - Accents: Green tones
 - Text: Dark for readability
 
 **CSS Variables Used:**
+
 - `--site-bg` - Background
 - `--site-panel` - Panel backgrounds
 - `--site-accent` - Accent color (cyan/green)
@@ -266,6 +290,7 @@ All custom CSS uses these variables to ensure consistent theming.
 ## Architecture
 
 **Component Structure:**
+
 ```
 AdminPage.jsx (main container)
 ├── AdminNav.jsx (global navigation)
@@ -279,11 +304,13 @@ AdminPage.jsx (main container)
 ```
 
 **State Management:**
+
 - `activeTab` state in AdminPage controls which tab is visible
 - Each tab manages its own internal state
 - Shared utilities: `api.js`, `logger.js`, `auth.js`
 
 **Code Splitting:**
+
 - Tab components are NOT lazy-loaded (immediate availability)
 - All admin functionality bundled together
 - ~20KB additional bundle size per tab (gzipped)
@@ -293,6 +320,7 @@ AdminPage.jsx (main container)
 ## Testing Checklist
 
 ### Archive Tab:
+
 - [ ] Login with valid credentials
 - [ ] Create new archive entry
 - [ ] Edit existing entry
@@ -301,6 +329,7 @@ AdminPage.jsx (main container)
 - [ ] Verify entry appears on live site
 
 ### Marketplace Tab:
+
 - [ ] View existing items in sidebar
 - [ ] Create new item with all fields
 - [ ] Edit existing item
@@ -309,6 +338,7 @@ AdminPage.jsx (main container)
 - [ ] Check items appear on marketplace page
 
 ### Users Tab:
+
 - [ ] View mock user data
 - [ ] Search users by name
 - [ ] Search users by email
@@ -316,6 +346,7 @@ AdminPage.jsx (main container)
 - [ ] Verify status badges display correctly
 
 ### Health Tab:
+
 - [ ] View overall health status
 - [ ] Check endpoint connectivity
 - [ ] View OpenClaw watchdog status
@@ -325,6 +356,7 @@ AdminPage.jsx (main container)
 - [ ] Manual refresh
 
 ### Settings Tab:
+
 - [ ] View current API URL
 - [ ] Change API URL and save
 - [ ] Reset to default API URL
@@ -337,6 +369,7 @@ AdminPage.jsx (main container)
 ## Future Enhancements
 
 ### Users Tab:
+
 1. Backend admin endpoints
 2. User detail modal
 3. Edit user roles
@@ -345,6 +378,7 @@ AdminPage.jsx (main container)
 6. Bulk actions
 
 ### Marketplace Tab:
+
 1. Bulk import from CSV
 2. Image upload via Cloudinary
 3. Inventory alerts
@@ -352,6 +386,7 @@ AdminPage.jsx (main container)
 5. Featured item toggle
 
 ### Health Tab:
+
 1. Historical metrics graphs
 2. Alert configuration
 3. Email notifications
@@ -359,6 +394,7 @@ AdminPage.jsx (main container)
 5. Performance metrics
 
 ### Settings Tab:
+
 1. Email configuration
 2. Payment gateway settings
 3. Shipping options
@@ -370,23 +406,27 @@ AdminPage.jsx (main container)
 ## Troubleshooting
 
 **Tab not switching:**
+
 - Check browser console for errors
 - Verify `activeTab` state is updating
 - Ensure all tab components are imported
 
 **API errors:**
+
 - Verify API_URL in settings tab
 - Check backend is running
 - Review network tab in DevTools
 - Check CORS configuration
 
 **Build errors:**
+
 - Run `npm install` to update dependencies
 - Check for missing imports
 - Verify all CSS files exist
 - Review theme guard output
 
 **OpenClaw not working:**
+
 - Verify backend `/api/openclaw/*` endpoints exist
 - Check watchdog is running (Windows: Task Scheduler)
 - Review `OPENCLAW_*.md` documentation
@@ -397,6 +437,7 @@ AdminPage.jsx (main container)
 ## Contributing
 
 When adding new admin functionality:
+
 1. Create new tab component in `Frontend/src/components/`
 2. Add corresponding CSS file
 3. Add tab to `AdminTabs.jsx` tabs array
@@ -422,6 +463,7 @@ When adding new admin functionality:
 ## Summary
 
 The tabbed admin interface provides:
+
 - ✅ **5 organized tabs** for different admin functions
 - ✅ **Consistent UI** matching Archive design baseline
 - ✅ **Full CRUD operations** for entries and items

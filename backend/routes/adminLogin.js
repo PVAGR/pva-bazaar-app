@@ -28,7 +28,9 @@ function getAdminBootstrapCode() {
 }
 
 function isAdminSelfSignupEnabled() {
-  const raw = String(process.env.ADMIN_SELF_SIGNUP_ENABLED || 'true').trim().toLowerCase();
+  const raw = String(process.env.ADMIN_SELF_SIGNUP_ENABLED || 'true')
+    .trim()
+    .toLowerCase();
   return raw !== 'false';
 }
 
@@ -45,9 +47,9 @@ function buildBootstrapStatus(adminCount) {
   const adminSecretConfigured = Boolean(String(process.env.ADMIN_SECRET_CODE || '').trim());
   const jwtConfigured = hasConfiguredJwtSecret();
   const githubOAuthEnabled = Boolean(
-    String(process.env.ADMIN_GITHUB_CLIENT_ID || '').trim()
-    && String(process.env.ADMIN_GITHUB_CLIENT_SECRET || '').trim()
-    && jwtConfigured,
+    String(process.env.ADMIN_GITHUB_CLIENT_ID || '').trim() &&
+      String(process.env.ADMIN_GITHUB_CLIENT_SECRET || '').trim() &&
+      jwtConfigured,
   );
 
   return {
@@ -60,16 +62,21 @@ function buildBootstrapStatus(adminCount) {
     adminSecretConfigured,
     jwtConfigured,
     githubOAuthEnabled,
-    backupAdminReady: (adminSecretConfigured && jwtConfigured) || githubOAuthEnabled || signupAllowed,
+    backupAdminReady:
+      (adminSecretConfigured && jwtConfigured) || githubOAuthEnabled || signupAllowed,
   };
 }
 
 function normalizeUrl(value) {
-  return String(value || '').trim().replace(/\/+$/, '');
+  return String(value || '')
+    .trim()
+    .replace(/\/+$/, '');
 }
 
 function getRequestOrigin(req) {
-  const proto = String(req.headers['x-forwarded-proto'] || req.protocol || 'https').split(',')[0].trim();
+  const proto = String(req.headers['x-forwarded-proto'] || req.protocol || 'https')
+    .split(',')[0]
+    .trim();
   const host = req.get('host');
   return `${proto}://${host}`;
 }
@@ -81,7 +88,9 @@ function getAdminGithubCallbackUrl(req) {
 }
 
 function getAdminGithubFrontendUrl(req) {
-  const configured = normalizeUrl(process.env.ADMIN_GITHUB_FRONTEND_URL || process.env.PUBLIC_SITE_URL || '');
+  const configured = normalizeUrl(
+    process.env.ADMIN_GITHUB_FRONTEND_URL || process.env.PUBLIC_SITE_URL || '',
+  );
   if (configured) {
     return configured.includes('#') ? configured : `${configured}/#/admin`;
   }
@@ -98,9 +107,15 @@ function parseGithubAllowlist() {
 function isGithubIdentityAllowlisted({ githubLogin, githubId, email, allowlist }) {
   if (!Array.isArray(allowlist) || allowlist.length === 0) return false;
   const candidates = [
-    String(githubLogin || '').trim().toLowerCase(),
-    String(githubId || '').trim().toLowerCase(),
-    String(email || '').trim().toLowerCase(),
+    String(githubLogin || '')
+      .trim()
+      .toLowerCase(),
+    String(githubId || '')
+      .trim()
+      .toLowerCase(),
+    String(email || '')
+      .trim()
+      .toLowerCase(),
   ].filter(Boolean);
   return candidates.some((candidate) => allowlist.includes(candidate));
 }
@@ -117,14 +132,14 @@ function buildFrontendRedirect(frontendUrl, params = {}) {
 
 function pickPrimaryGithubEmail({ profileEmail, emails }) {
   const fromList = Array.isArray(emails)
-    ? (
-      emails.find((entry) => entry?.verified && entry?.primary)
-      || emails.find((entry) => entry?.verified)
-      || emails[0]
-    )
+    ? emails.find((entry) => entry?.verified && entry?.primary) ||
+      emails.find((entry) => entry?.verified) ||
+      emails[0]
     : null;
 
-  const raw = String(fromList?.email || profileEmail || '').trim().toLowerCase();
+  const raw = String(fromList?.email || profileEmail || '')
+    .trim()
+    .toLowerCase();
   return raw || '';
 }
 
@@ -303,7 +318,9 @@ router.get('/oauth/github/callback', async (req, res) => {
 
     const [profileResponse, emailsResponse] = await Promise.all([
       axios.get('https://api.github.com/user', { headers: githubHeaders, timeout: 15000 }),
-      axios.get('https://api.github.com/user/emails', { headers: githubHeaders, timeout: 15000 }).catch(() => ({ data: [] })),
+      axios
+        .get('https://api.github.com/user/emails', { headers: githubHeaders, timeout: 15000 })
+        .catch(() => ({ data: [] })),
     ]);
 
     const profile = profileResponse?.data || {};
@@ -315,7 +332,8 @@ router.get('/oauth/github/callback', async (req, res) => {
       profileEmail: profile.email,
       emails,
     });
-    const derivedEmail = emailFromGithub || (githubId ? `github-${githubId}@users.noreply.github.com` : '');
+    const derivedEmail =
+      emailFromGithub || (githubId ? `github-${githubId}@users.noreply.github.com` : '');
 
     if (!githubId || !githubLogin) {
       return res.redirect(
@@ -435,7 +453,9 @@ router.post('/signup', async (req, res) => {
 
     const name = String(req.body?.name || '').trim();
     const username = String(req.body?.username || '').trim();
-    const email = String(req.body?.email || '').trim().toLowerCase();
+    const email = String(req.body?.email || '')
+      .trim()
+      .toLowerCase();
     const password = String(req.body?.password || '').trim();
     const bootstrapCode = String(req.body?.bootstrapCode || '').trim();
 
@@ -458,13 +478,17 @@ router.post('/signup', async (req, res) => {
     const adminCount = await countAdminUsers();
     const status = buildBootstrapStatus(adminCount);
     if (!status.signupAllowed) {
-      return res.status(403).json({ ok: false, message: 'Admin signup is disabled. Contact an existing admin.' });
+      return res
+        .status(403)
+        .json({ ok: false, message: 'Admin signup is disabled. Contact an existing admin.' });
     }
 
     if (status.bootstrapCodeRequired) {
       const configuredCode = getAdminBootstrapCode();
       if (!configuredCode) {
-        return res.status(403).json({ ok: false, message: 'Admin bootstrap is locked. Contact an existing admin.' });
+        return res
+          .status(403)
+          .json({ ok: false, message: 'Admin bootstrap is locked. Contact an existing admin.' });
       }
       if (!bootstrapCode || bootstrapCode !== configuredCode) {
         return res.status(403).json({ ok: false, message: 'Invalid bootstrap code' });
@@ -523,26 +547,26 @@ router.post('/login', async (req, res) => {
     const jwtSecret = process.env.JWT_SECRET;
 
     if (!identifier || !password) {
-      return res.status(400).json({ ok: false, message: 'Username/email and password are required' });
+      return res
+        .status(400)
+        .json({ ok: false, message: 'Username/email and password are required' });
     }
-    
+
     if (!jwtSecret) {
       return res.status(503).json({ ok: false, message: 'JWT secret not configured on server' });
     }
-    
+
     const identifierLower = identifier.toLowerCase();
     const adminUserLower = String(adminUser || '').toLowerCase();
 
-    const envAdminMatch = Boolean(adminUser && adminPass) && (
-      (identifier === adminUser || identifierLower === adminUserLower) && password === adminPass
-    );
+    const envAdminMatch =
+      Boolean(adminUser && adminPass) &&
+      (identifier === adminUser || identifierLower === adminUserLower) &&
+      password === adminPass;
 
     if (!envAdminMatch) {
       const user = await User.findOne({
-        $or: [
-          { email: identifierLower },
-          { username: identifier },
-        ],
+        $or: [{ email: identifierLower }, { username: identifier }],
       });
 
       if (!user || user.role !== 'admin') {
@@ -595,7 +619,7 @@ router.post('/login', async (req, res) => {
     // Issue JWT (12h) - in production, prefer HttpOnly cookie
     const token = issueAdminToken(subjectId, jwtSecret);
     setAdminCookie(res, token);
-    
+
     res.json({ ok: true, message: 'Login successful', token });
   } catch (error) {
     console.error('Admin login error:', error);

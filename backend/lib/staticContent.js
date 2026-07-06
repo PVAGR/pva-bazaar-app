@@ -64,7 +64,8 @@ const STATIC_ARTIFACTS = [
     slug: 'traditional-afghan-carpet',
     name: 'Traditional Afghan Carpet',
     title: 'Hand-woven Afghan Carpet',
-    description: 'Traditional Afghan carpet with intricate geometric patterns, hand-woven by master craftsmen.',
+    description:
+      'Traditional Afghan carpet with intricate geometric patterns, hand-woven by master craftsmen.',
     imageUrls: ['https://via.placeholder.com/400x300/8B4513/FFFFFF?text=Afghan+Carpet'],
     price: 2500,
     category: 'Textiles',
@@ -166,9 +167,8 @@ function parseArchiveFile(filePath) {
   const externalId = slugify(fileName, { lower: true, strict: true });
   const titleMatch = raw.match(/^#\s+(.+)$/m);
   const title = titleMatch ? String(titleMatch[1]).trim() : fileName.replace(/[-_]+/g, ' ');
-  const createdAt = order > 0
-    ? new Date(Date.UTC(2024, 0, Math.max(1, order), 0, 0, 0))
-    : new Date(stats.mtime);
+  const createdAt =
+    order > 0 ? new Date(Date.UTC(2024, 0, Math.max(1, order), 0, 0, 0)) : new Date(stats.mtime);
   const updatedAt = new Date(stats.mtime);
   const plainText = stripMarkdown(raw);
 
@@ -201,12 +201,14 @@ function getStaticArchiveEntries() {
 }
 
 function matchesQuery(doc, regex) {
-  return regex.test(doc.title || '')
-    || regex.test(doc.description || '')
-    || regex.test(doc.excerpt || '')
-    || regex.test(doc.content || '')
-    || regex.test(doc.category || '')
-    || (Array.isArray(doc.tags) && doc.tags.some((tag) => regex.test(tag)));
+  return (
+    regex.test(doc.title || '') ||
+    regex.test(doc.description || '') ||
+    regex.test(doc.excerpt || '') ||
+    regex.test(doc.content || '') ||
+    regex.test(doc.category || '') ||
+    (Array.isArray(doc.tags) && doc.tags.some((tag) => regex.test(tag)))
+  );
 }
 
 function listStaticArchiveEntries({ category, tag, q, sort = 'new' } = {}) {
@@ -237,11 +239,17 @@ function listStaticArchiveEntries({ category, tag, q, sort = 'new' } = {}) {
 }
 
 function findStaticArchiveEntry(id) {
-  const target = String(id || '').trim().toLowerCase();
-  return getStaticArchiveEntries().find((entry) => {
-    return String(entry.id || '').toLowerCase() === target
-      || String(entry.externalId || '').toLowerCase() === target;
-  }) || null;
+  const target = String(id || '')
+    .trim()
+    .toLowerCase();
+  return (
+    getStaticArchiveEntries().find((entry) => {
+      return (
+        String(entry.id || '').toLowerCase() === target ||
+        String(entry.externalId || '').toLowerCase() === target
+      );
+    }) || null
+  );
 }
 
 function searchStaticArchive(q, limit = 10) {
@@ -275,13 +283,14 @@ function listStaticArtifacts({ category, tag, q, sort = 'new', includeDrafts = f
       return false;
     }
     if (regex) {
-      const matched = regex.test(item.title || '')
-        || regex.test(item.name || '')
-        || regex.test(item.description || '')
-        || regex.test(item.category || '')
-        || regex.test(item.artisan || '')
-        || (Array.isArray(item.tags) && item.tags.some((value) => regex.test(value)))
-        || (Array.isArray(item.materials) && item.materials.some((value) => regex.test(value)));
+      const matched =
+        regex.test(item.title || '') ||
+        regex.test(item.name || '') ||
+        regex.test(item.description || '') ||
+        regex.test(item.category || '') ||
+        regex.test(item.artisan || '') ||
+        (Array.isArray(item.tags) && item.tags.some((value) => regex.test(value))) ||
+        (Array.isArray(item.materials) && item.materials.some((value) => regex.test(value)));
       if (!matched) return false;
     }
     return true;
@@ -300,11 +309,17 @@ function listStaticArtifacts({ category, tag, q, sort = 'new', includeDrafts = f
 }
 
 function findStaticArtifact(slugOrId) {
-  const target = String(slugOrId || '').trim().toLowerCase();
-  return STATIC_ARTIFACTS.find((item) => {
-    return String(item._id || '').toLowerCase() === target
-      || String(item.slug || '').toLowerCase() === target;
-  }) || null;
+  const target = String(slugOrId || '')
+    .trim()
+    .toLowerCase();
+  return (
+    STATIC_ARTIFACTS.find((item) => {
+      return (
+        String(item._id || '').toLowerCase() === target ||
+        String(item.slug || '').toLowerCase() === target
+      );
+    }) || null
+  );
 }
 
 function searchStaticArtifacts(q, limit = 10) {

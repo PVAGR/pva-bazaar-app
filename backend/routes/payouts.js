@@ -22,7 +22,8 @@ router.get('/', async (req, res) => {
     const filter = {};
 
     if (status) filter.status = status;
-    if (creator) filter.creatorHandle = new RegExp(escapeRegExp(String(creator).slice(0, 100)), 'i');
+    if (creator)
+      filter.creatorHandle = new RegExp(escapeRegExp(String(creator).slice(0, 100)), 'i');
 
     const payouts = await Payout.find(filter)
       .sort({ createdAt: -1 })
@@ -77,7 +78,11 @@ router.get('/summary', async (req, res) => {
                 },
                 totalProcessed: {
                   $sum: {
-                    $cond: [{ $in: ['$status', ['processing', 'completed']] }, '$netPayoutCents', 0],
+                    $cond: [
+                      { $in: ['$status', ['processing', 'completed']] },
+                      '$netPayoutCents',
+                      0,
+                    ],
                   },
                 },
                 totalCreators: { $addToSet: '$creatorHandle' },
@@ -184,7 +189,7 @@ router.post('/generate', async (req, res) => {
       'attribution.creatorHandle': { $ne: null },
       'attribution.commissionAmountCents': { $gt: 0 },
     };
-    
+
     // Add date range if provided
     if (start || end) {
       matchStage.createdAt = {};
@@ -214,7 +219,9 @@ router.post('/generate', async (req, res) => {
     const creatorCommissions = await Order.aggregate(pipeline);
 
     if (creatorCommissions.length === 0) {
-      return res.status(200).json({ ok: true, payouts: [], message: 'No commissions found for period' });
+      return res
+        .status(200)
+        .json({ ok: true, payouts: [], message: 'No commissions found for period' });
     }
 
     // Create payout records

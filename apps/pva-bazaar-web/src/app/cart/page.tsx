@@ -1,45 +1,40 @@
-import type { Metadata } from "next";
-import Link from "next/link";
+import type { Metadata } from 'next';
+import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: "Cart – PVA Bazaar",
+  title: 'Cart – PVA Bazaar',
   description:
-    "Checkout for Phase One runs on Etsy. This site is the ritual layer; in-house cart and verification dashboard coming later.",
+    'Checkout for Phase One runs on Etsy. This site is the ritual layer; in-house cart and verification dashboard coming later.',
 };
 
 export default function CartPage() {
   return (
     <section className="flex flex-col gap-10">
       <header className="space-y-3">
-        <p className="text-xs uppercase tracking-[0.35em] text-zinc-500">
-          Cart
-        </p>
-        <h1 className="text-2xl md:text-3xl font-semibold text-zinc-100">
-          Checkout for now
-        </h1>
+        <p className="text-xs uppercase tracking-[0.35em] text-zinc-500">Cart</p>
+        <h1 className="text-2xl md:text-3xl font-semibold text-zinc-100">Checkout for now</h1>
         <p className="max-w-xl text-sm text-zinc-400">
-          Phase One runs on external marketplaces so we can move quickly while
-          the in-house cart and verification layers mature.
+          Phase One runs on external marketplaces so we can move quickly while the in-house cart and
+          verification layers mature.
         </p>
       </header>
 
       <div className="rounded-xl border border-amber-300/60 bg-amber-300/5 px-4 py-5 text-sm text-zinc-300">
         <p className="mb-3">
-          <strong className="text-amber-200/90">Right now:</strong> Checkout for
-          Kenyan crafts (beadwork, Kisii soapstone) happens on Etsy and any
-          linked storefronts. Payments, taxes, and shipping are handled there.
+          <strong className="text-amber-200/90">Right now:</strong> Checkout for Kenyan crafts
+          (beadwork, Kisii soapstone) happens on Etsy and any linked storefronts. Payments, taxes,
+          and shipping are handled there.
         </p>
         <p className="mb-3">
-          <strong className="text-amber-200/90">This site</strong> is the ritual
-          layer: stories, hashes, provenance, and the archive. When you buy
-          via Etsy, you’re still acquiring an artifact we’ve documented here.
+          <strong className="text-amber-200/90">This site</strong> is the ritual layer: stories,
+          hashes, provenance, and the archive. When you buy via Etsy, you’re still acquiring an
+          artifact we’ve documented here.
         </p>
         <p className="mb-3">
-          <strong className="text-amber-200/90">Later:</strong> We’ll add an
-          in-house cart and verification dashboard so you can complete
-          acquisition and see your artifacts in one place. Until then, use the
-          Archive to find what’s available and follow links to the current
-          listings.
+          <strong className="text-amber-200/90">Later:</strong> We’ll add an in-house cart and
+          verification dashboard so you can complete acquisition and see your artifacts in one
+          place. Until then, use the Archive to find what’s available and follow links to the
+          current listings.
         </p>
         {process.env.NEXT_PUBLIC_ETSY_SHOP_URL && (
           <p>

@@ -12,19 +12,19 @@ const { createSystemEvent, dispatchToOpenClaw } = require('../utils/openclaw-eve
 router.get('/', authenticateToken, async (req, res) => {
   try {
     const { limit = 50, skip = 0, tags, isPublic } = req.query;
-    
+
     const query = { userId: req.user.id };
     if (tags) query.tags = { $in: tags.split(',') };
     if (isPublic !== undefined) query.isPublic = isPublic === 'true';
-    
+
     const entries = await JournalEntry.find(query)
       .sort({ createdAt: -1 })
       .limit(parseInt(limit))
       .skip(parseInt(skip))
       .populate('streamSessionId', 'title platform startedAt');
-    
+
     const total = await JournalEntry.countDocuments(query);
-    
+
     res.json({
       ok: true,
       items: entries,
@@ -48,11 +48,11 @@ router.get('/:id', authenticateToken, async (req, res) => {
       _id: req.params.id,
       userId: req.user.id,
     }).populate('streamSessionId', 'title platform startedAt');
-    
+
     if (!entry) {
       return res.status(404).json({ ok: false, error: 'Journal entry not found' });
     }
-    
+
     res.json({ ok: true, item: entry });
   } catch (error) {
     console.error('Error fetching journal entry:', error);
@@ -67,20 +67,12 @@ router.get('/:id', authenticateToken, async (req, res) => {
  */
 router.post('/', authenticateToken, async (req, res) => {
   try {
-    const {
-      title,
-      content,
-      contentType,
-      streamSessionId,
-      tags,
-      mood,
-      isPublic,
-    } = req.body;
-    
+    const { title, content, contentType, streamSessionId, tags, mood, isPublic } = req.body;
+
     if (!title || !content) {
       return res.status(400).json({ ok: false, error: 'Title and content are required' });
     }
-    
+
     const entry = new JournalEntry({
       userId: req.user.id,
       title,
@@ -91,17 +83,19 @@ router.post('/', authenticateToken, async (req, res) => {
       mood,
       isPublic: isPublic || false,
     });
-    
+
     await entry.save();
 
-    dispatchToOpenClaw(createSystemEvent('info', 'Journal entry created', {
-      journalEntryId: entry._id?.toString(),
-      title: entry.title,
-      isPublic: entry.isPublic,
-      userId: req.user.id,
-      route: 'journal',
-    }));
-    
+    dispatchToOpenClaw(
+      createSystemEvent('info', 'Journal entry created', {
+        journalEntryId: entry._id?.toString(),
+        title: entry.title,
+        isPublic: entry.isPublic,
+        userId: req.user.id,
+        route: 'journal',
+      }),
+    );
+
     res.status(201).json({ ok: true, item: entry });
   } catch (error) {
     console.error('Error creating journal entry:', error);
@@ -120,11 +114,11 @@ router.put('/:id', authenticateToken, async (req, res) => {
       _id: req.params.id,
       userId: req.user.id,
     });
-    
+
     if (!entry) {
       return res.status(404).json({ ok: false, error: 'Journal entry not found' });
     }
-    
+
     const allowedUpdates = [
       'title',
       'content',
@@ -134,28 +128,30 @@ router.put('/:id', authenticateToken, async (req, res) => {
       'isPublic',
       'ipfsHash',
     ];
-    
+
     allowedUpdates.forEach((field) => {
       if (req.body[field] !== undefined) {
         entry[field] = req.body[field];
       }
     });
-    
+
     // Set publishedAt when making public for the first time
     if (req.body.isPublic && !entry.publishedAt) {
       entry.publishedAt = new Date();
     }
-    
+
     await entry.save();
 
-    dispatchToOpenClaw(createSystemEvent('info', 'Journal entry updated', {
-      journalEntryId: entry._id?.toString(),
-      title: entry.title,
-      isPublic: entry.isPublic,
-      userId: req.user.id,
-      route: 'journal',
-    }));
-    
+    dispatchToOpenClaw(
+      createSystemEvent('info', 'Journal entry updated', {
+        journalEntryId: entry._id?.toString(),
+        title: entry.title,
+        isPublic: entry.isPublic,
+        userId: req.user.id,
+        route: 'journal',
+      }),
+    );
+
     res.json({ ok: true, item: entry });
   } catch (error) {
     console.error('Error updating journal entry:', error);
@@ -174,18 +170,20 @@ router.delete('/:id', authenticateToken, async (req, res) => {
       _id: req.params.id,
       userId: req.user.id,
     });
-    
+
     if (!entry) {
       return res.status(404).json({ ok: false, error: 'Journal entry not found' });
     }
 
-    dispatchToOpenClaw(createSystemEvent('warning', 'Journal entry deleted', {
-      journalEntryId: entry._id?.toString(),
-      title: entry.title,
-      userId: req.user.id,
-      route: 'journal',
-    }));
-    
+    dispatchToOpenClaw(
+      createSystemEvent('warning', 'Journal entry deleted', {
+        journalEntryId: entry._id?.toString(),
+        title: entry.title,
+        userId: req.user.id,
+        route: 'journal',
+      }),
+    );
+
     res.json({ ok: true, message: 'Journal entry deleted' });
   } catch (error) {
     console.error('Error deleting journal entry:', error);
@@ -201,14 +199,14 @@ router.delete('/:id', authenticateToken, async (req, res) => {
 router.get('/public/feed', async (req, res) => {
   try {
     const { limit = 20, skip = 0 } = req.query;
-    
+
     const entries = await JournalEntry.find({ isPublic: true })
       .sort({ publishedAt: -1 })
       .limit(parseInt(limit))
       .skip(parseInt(skip))
       .populate('userId', 'name profilePicture')
       .select('-content'); // Only return excerpts for feed
-    
+
     res.json({ ok: true, items: entries });
   } catch (error) {
     console.error('Error fetching public feed:', error);

@@ -19,6 +19,7 @@
    - See [Environment Variables](#environment-variables) below.
 
 3. **Install and run locally**
+
    ```bash
    npm install
    npm run dev:frontend   # Frontend (Vite) — e.g. port 3000/5173
@@ -26,9 +27,11 @@
    ```
 
 4. **Health check (local)**
+
    ```bash
    bash api-health-check.sh http://localhost:5001
    ```
+
    Or: `curl http://localhost:5001/api/health`
 
 5. **Database: richyrichaii user and connection check**
@@ -42,7 +45,7 @@
      ```bash
      npm run db:check
      ```
-   - **App login:** username **richyrichaii**, password **pva123zxc!** (same as admin if you set ADMIN_* above).
+   - **App login:** username **richyrichaii**, password **pva123zxc!** (same as admin if you set ADMIN\_\* above).
 
 ## Environment Variables
 
@@ -91,9 +94,11 @@ Optional: `SMTP_*` (emails), `VERIFY_API_URL` / `VERIFY_API_SECRET`, `ETHEREUM_R
    - Redeploy so the serverless function gets the new secret.
 
 2. **Test health**
+
    ```bash
    bash api-health-check.sh https://pvabazaar.org
    ```
+
    Or: `curl https://pvabazaar.org/api/health`  
    Expect `ok: true`, `mongodb: "connected"`, `stripe: "configured"` when everything is set.
 

@@ -30,7 +30,8 @@ const journalSchema = new Schema<IJournalEntry>(
     },
     isPublic: { type: Boolean, default: false },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-export const JournalEntry = models.JournalEntry || model<IJournalEntry>('JournalEntry', journalSchema);
+export const JournalEntry =
+  models.JournalEntry || model<IJournalEntry>('JournalEntry', journalSchema);

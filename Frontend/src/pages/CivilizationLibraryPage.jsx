@@ -83,7 +83,13 @@ export default function CivilizationLibraryPage() {
       const categoryOk = category === 'all' || item.category === category;
       if (!categoryOk) return false;
       if (!query.trim()) return true;
-      const haystack = [item.title, item.description, item.category, item.domain, ...(item.tags || [])]
+      const haystack = [
+        item.title,
+        item.description,
+        item.category,
+        item.domain,
+        ...(item.tags || []),
+      ]
         .join(' ')
         .toLowerCase();
       return haystack.includes(query.trim().toLowerCase());
@@ -104,8 +110,8 @@ export default function CivilizationLibraryPage() {
         <div>
           <h1>Civilization Knowledge Library</h1>
           <p>
-            Public archive of practical manuals and training material designed to help communities survive,
-            rebuild, and thrive. This is the practical side of pure life knowledge.
+            Public archive of practical manuals and training material designed to help communities
+            survive, rebuild, and thrive. This is the practical side of pure life knowledge.
           </p>
         </div>
         <div className="civil-library-hero-actions">
@@ -141,9 +147,7 @@ export default function CivilizationLibraryPage() {
         </a>
       </section>
 
-      {error ? (
-        <div className="civil-alert civil-alert-error">{error}</div>
-      ) : null}
+      {error ? <div className="civil-alert civil-alert-error">{error}</div> : null}
 
       {loading ? (
         <div className="civil-loading">Loading public library...</div>
@@ -180,11 +184,14 @@ export default function CivilizationLibraryPage() {
           <div>
             <h2>Jobs, Professions, and Skills Starter Dataset</h2>
             <p>
-              Based on O*NET public data. Use this as a practical launch point for role pathways, training tracks,
-              and career matching inside a public knowledge bazaar.
+              Based on O*NET public data. Use this as a practical launch point for role pathways,
+              training tracks, and career matching inside a public knowledge bazaar.
             </p>
           </div>
-          <a className="civil-btn civil-btn-secondary" href={toApiUrl('/api/library/careers/export/json')}>
+          <a
+            className="civil-btn civil-btn-secondary"
+            href={toApiUrl('/api/library/careers/export/json')}
+          >
             Download Jobs/Skills JSON
           </a>
         </header>
@@ -196,7 +203,9 @@ export default function CivilizationLibraryPage() {
             placeholder="Search professions, job titles, or skills..."
           />
           <span className="civil-careers__stats">
-            {careerSummary ? `${careerSummary.occupations} roles | ${careerSummary.skillConcepts} skill concepts` : null}
+            {careerSummary
+              ? `${careerSummary.occupations} roles | ${careerSummary.skillConcepts} skill concepts`
+              : null}
             {careerSummary ? ` | showing ${careerItems.length} of ${careerTotal}` : null}
           </span>
         </div>

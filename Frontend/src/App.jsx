@@ -25,8 +25,12 @@ const DealPublicPage = lazy(() => import('./pages/DealPublicPage.jsx'));
 const CheckoutSuccessPage = lazy(() => import('./pages/CheckoutSuccessPage.jsx'));
 const CheckoutCancelPage = lazy(() => import('./pages/CheckoutCancelPage.jsx'));
 const UserDashboard = lazy(() => import('./pages/UserDashboard.jsx'));
-const GovernanceConferencePage = lazy(() => import('./pages/OtherPages.jsx').then((m) => ({ default: m.GovernanceConferencePage })));
-const GovernanceTreasuryPage = lazy(() => import('./pages/OtherPages.jsx').then((m) => ({ default: m.GovernanceTreasuryPage })));
+const GovernanceConferencePage = lazy(() =>
+  import('./pages/OtherPages.jsx').then((m) => ({ default: m.GovernanceConferencePage })),
+);
+const GovernanceTreasuryPage = lazy(() =>
+  import('./pages/OtherPages.jsx').then((m) => ({ default: m.GovernanceTreasuryPage })),
+);
 const AboutPage = lazy(() => import('./pages/AboutPage.jsx'));
 const AgentPage = lazy(() => import('./pages/AgentPage.jsx'));
 const CivilizationLibraryPage = lazy(() => import('./pages/CivilizationLibraryPage.jsx'));
@@ -85,79 +89,570 @@ export default function App() {
   return (
     <HashRouter>
       <Suspense fallback={<div className="section-card">Loading federation module...</div>}>
-      <Routes>
-        {/* Admin entry route must remain reachable so login/bootstrap UI can render */}
-        <Route path="/admin" element={<Layout><AdminPage /></Layout>} />
-        {/* Protected admin sub-routes */}
-        <Route path="/admin/orders" element={<RequireAdminAuth><Layout><AdminOrdersPage /></Layout></RequireAdminAuth>} />
-        <Route path="/admin/governance" element={<RequireAdminAuth><Layout><AdminGovernancePage /></Layout></RequireAdminAuth>} />
+        <Routes>
+          {/* Admin entry route must remain reachable so login/bootstrap UI can render */}
+          <Route
+            path="/admin"
+            element={
+              <Layout>
+                <AdminPage />
+              </Layout>
+            }
+          />
+          {/* Protected admin sub-routes */}
+          <Route
+            path="/admin/orders"
+            element={
+              <RequireAdminAuth>
+                <Layout>
+                  <AdminOrdersPage />
+                </Layout>
+              </RequireAdminAuth>
+            }
+          />
+          <Route
+            path="/admin/governance"
+            element={
+              <RequireAdminAuth>
+                <Layout>
+                  <AdminGovernancePage />
+                </Layout>
+              </RequireAdminAuth>
+            }
+          />
 
-        {/* User Dashboard - Protected */}
-        <Route path="/dashboard" element={<RequireUserAuth><Layout><UserDashboard /></Layout></RequireUserAuth>} />
-        <Route path="/studio" element={<RequireUserAuth><Layout><WritingStudioPage /></Layout></RequireUserAuth>} />
+          {/* User Dashboard - Protected */}
+          <Route
+            path="/dashboard"
+            element={
+              <RequireUserAuth>
+                <Layout>
+                  <UserDashboard />
+                </Layout>
+              </RequireUserAuth>
+            }
+          />
+          <Route
+            path="/studio"
+            element={
+              <RequireUserAuth>
+                <Layout>
+                  <WritingStudioPage />
+                </Layout>
+              </RequireUserAuth>
+            }
+          />
 
-        <Route path="/login" element={<Layout><LoginPage /></Layout>} />
-        <Route path="/register" element={<Layout><RegisterPage /></Layout>} />
-        <Route path="/onboarding" element={<RequireUserAuth><Layout><OnboardingPage /></Layout></RequireUserAuth>} />
-        <Route path="/account" element={<RequireUserAuth><Layout><AccountPage /></Layout></RequireUserAuth>} />
-        <Route path="/identity-center" element={<RequireUserAuth><Layout><PassportPage /></Layout></RequireUserAuth>} />
-        <Route path="/passport" element={<RequireUserAuth><Layout><PassportPage /></Layout></RequireUserAuth>} />
-        <Route path="/passport/me" element={<RequireUserAuth><Layout><PassportPage /></Layout></RequireUserAuth>} />
-        <Route path="/items/new" element={<RequireUserAuth><Layout><ListItemPage /></Layout></RequireUserAuth>} />
-        <Route path="/items/mine" element={<RequireUserAuth><Layout><MyListingsPage /></Layout></RequireUserAuth>} />
-        <Route path="/deals" element={<RequireUserAuth><Layout><DealsPage /></Layout></RequireUserAuth>} />
-        <Route path="/deals/join" element={<RequireUserAuth><Layout><DealJoinPage /></Layout></RequireUserAuth>} />
-        <Route path="/deal/:publicId" element={<Layout><DealPublicPage /></Layout>} />
-        <Route path="/broker-hub" element={<RequireUserAuth><Layout><BrokerHubPage /></Layout></RequireUserAuth>} />
-        <Route path="/commodities" element={<RequireUserAuth><Layout><CommoditiesPage /></Layout></RequireUserAuth>} />
-        <Route path="/contacts" element={<RequireUserAuth><Layout><ContactsPage /></Layout></RequireUserAuth>} />
-        <Route path="/templates" element={<RequireUserAuth><Layout><TemplatesPage /></Layout></RequireUserAuth>} />
-        <Route path="/chat" element={<RequireUserAuth><Layout><ChatPage /></Layout></RequireUserAuth>} />
-        <Route path="/conference" element={<Layout><PopularConferencePage /></Layout>} />
-        <Route path="/proposals" element={<Layout><ProposalsPage /></Layout>} />
-        <Route path="/proposals/submit" element={<RequireUserAuth><Layout><SubmitProposalPage /></Layout></RequireUserAuth>} />
-        <Route path="/proposals/my" element={<RequireUserAuth><Layout><ProposalsPage mode="mine" /></Layout></RequireUserAuth>} />
-        <Route path="/proposals/:proposalId" element={<Layout><ProposalDetailPage /></Layout>} />
-        <Route path="/treasury" element={<Layout><TreasuryPage /></Layout>} />
-        <Route path="/deploy" element={<Layout><DeployPage /></Layout>} />
+          <Route
+            path="/login"
+            element={
+              <Layout>
+                <LoginPage />
+              </Layout>
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              <Layout>
+                <RegisterPage />
+              </Layout>
+            }
+          />
+          <Route
+            path="/onboarding"
+            element={
+              <RequireUserAuth>
+                <Layout>
+                  <OnboardingPage />
+                </Layout>
+              </RequireUserAuth>
+            }
+          />
+          <Route
+            path="/account"
+            element={
+              <RequireUserAuth>
+                <Layout>
+                  <AccountPage />
+                </Layout>
+              </RequireUserAuth>
+            }
+          />
+          <Route
+            path="/identity-center"
+            element={
+              <RequireUserAuth>
+                <Layout>
+                  <PassportPage />
+                </Layout>
+              </RequireUserAuth>
+            }
+          />
+          <Route
+            path="/passport"
+            element={
+              <RequireUserAuth>
+                <Layout>
+                  <PassportPage />
+                </Layout>
+              </RequireUserAuth>
+            }
+          />
+          <Route
+            path="/passport/me"
+            element={
+              <RequireUserAuth>
+                <Layout>
+                  <PassportPage />
+                </Layout>
+              </RequireUserAuth>
+            }
+          />
+          <Route
+            path="/items/new"
+            element={
+              <RequireUserAuth>
+                <Layout>
+                  <ListItemPage />
+                </Layout>
+              </RequireUserAuth>
+            }
+          />
+          <Route
+            path="/items/mine"
+            element={
+              <RequireUserAuth>
+                <Layout>
+                  <MyListingsPage />
+                </Layout>
+              </RequireUserAuth>
+            }
+          />
+          <Route
+            path="/deals"
+            element={
+              <RequireUserAuth>
+                <Layout>
+                  <DealsPage />
+                </Layout>
+              </RequireUserAuth>
+            }
+          />
+          <Route
+            path="/deals/join"
+            element={
+              <RequireUserAuth>
+                <Layout>
+                  <DealJoinPage />
+                </Layout>
+              </RequireUserAuth>
+            }
+          />
+          <Route
+            path="/deal/:publicId"
+            element={
+              <Layout>
+                <DealPublicPage />
+              </Layout>
+            }
+          />
+          <Route
+            path="/broker-hub"
+            element={
+              <RequireUserAuth>
+                <Layout>
+                  <BrokerHubPage />
+                </Layout>
+              </RequireUserAuth>
+            }
+          />
+          <Route
+            path="/commodities"
+            element={
+              <RequireUserAuth>
+                <Layout>
+                  <CommoditiesPage />
+                </Layout>
+              </RequireUserAuth>
+            }
+          />
+          <Route
+            path="/contacts"
+            element={
+              <RequireUserAuth>
+                <Layout>
+                  <ContactsPage />
+                </Layout>
+              </RequireUserAuth>
+            }
+          />
+          <Route
+            path="/templates"
+            element={
+              <RequireUserAuth>
+                <Layout>
+                  <TemplatesPage />
+                </Layout>
+              </RequireUserAuth>
+            }
+          />
+          <Route
+            path="/chat"
+            element={
+              <RequireUserAuth>
+                <Layout>
+                  <ChatPage />
+                </Layout>
+              </RequireUserAuth>
+            }
+          />
+          <Route
+            path="/conference"
+            element={
+              <Layout>
+                <PopularConferencePage />
+              </Layout>
+            }
+          />
+          <Route
+            path="/proposals"
+            element={
+              <Layout>
+                <ProposalsPage />
+              </Layout>
+            }
+          />
+          <Route
+            path="/proposals/submit"
+            element={
+              <RequireUserAuth>
+                <Layout>
+                  <SubmitProposalPage />
+                </Layout>
+              </RequireUserAuth>
+            }
+          />
+          <Route
+            path="/proposals/my"
+            element={
+              <RequireUserAuth>
+                <Layout>
+                  <ProposalsPage mode="mine" />
+                </Layout>
+              </RequireUserAuth>
+            }
+          />
+          <Route
+            path="/proposals/:proposalId"
+            element={
+              <Layout>
+                <ProposalDetailPage />
+              </Layout>
+            }
+          />
+          <Route
+            path="/treasury"
+            element={
+              <Layout>
+                <TreasuryPage />
+              </Layout>
+            }
+          />
+          <Route
+            path="/deploy"
+            element={
+              <Layout>
+                <DeployPage />
+              </Layout>
+            }
+          />
 
-        <Route path="/" element={<Layout><OpeningHomePage /></Layout>} />
-        <Route path="/books" element={<Layout><BooksPage /></Layout>} />
-        <Route path="/books/published" element={<Layout><BookShelfPage /></Layout>} />
-        <Route path="/books/publish" element={<RequireUserAuth><Layout><BookPublishingPage /></Layout></RequireUserAuth>} />
-        <Route path="/books/read/:slug" element={<Layout><BookReaderPage /></Layout>} />
-        <Route path="/get-started" element={<Layout><GetStartedPage /></Layout>} />
-        <Route path="/home" element={<Navigate to="/" replace />} />
-        <Route path="/library" element={<Layout><ArchiveLibraryPage /></Layout>} />
-        <Route path="/archive" element={<Layout><ArchiveLibraryPage /></Layout>} />
-        <Route path="/blog/:slug" element={<Layout><BlogPostPage /></Layout>} />
-        <Route path="/creator" element={<Layout><CreatorPortalPage /></Layout>} />
-        <Route path="/creator/dashboard" element={<RequireUserAuth><Layout><CreatorDashboard /></Layout></RequireUserAuth>} />
-        <Route path="/civilization-library" element={<Layout><CivilizationLibraryPage /></Layout>} />
-        <Route path="/civilization-library/editor" element={<RequireUserAuth><Layout><CollaborativeLibraryPage mode="editor" /></Layout></RequireUserAuth>} />
-        <Route path="/civilization-library/moderation" element={<RequireUserAuth><Layout><CollaborativeLibraryPage mode="moderation" /></Layout></RequireUserAuth>} />
-        <Route path="/civilization-library/article/:id" element={<Layout><CollaborativeLibraryPage mode="viewer" /></Layout>} />
-        <Route path="/career-quiz" element={<Layout><CareerQuizPage /></Layout>} />
-        <Route path="/federation-map" element={<Layout><FederationMapPage /></Layout>} />
-        <Route path="/about" element={<Layout><AboutPage /></Layout>} />
-        <Route path="/agent" element={<Layout><AgentPage /></Layout>} />
-        <Route path="/streams" element={<RequireUserAuth><Layout><StreamsPage /></Layout></RequireUserAuth>} />
-        <Route path="/citizens" element={<Layout><CitizenDirectoryPage /></Layout>} />
-        <Route path="/forum" element={<Layout><ForumPage /></Layout>} />
-        <Route path="/passport/:userId" element={<Layout><PassportPage /></Layout>} />
-        <Route path="/governance/conference" element={<Layout><GovernanceConferencePage /></Layout>} />
-        <Route path="/governance/treasury" element={<Layout><GovernanceTreasuryPage /></Layout>} />
-        <Route path="/marketplace" element={<Layout><MarketplacePage /></Layout>} />
-        <Route path="/marketplace/:slugOrId" element={<Layout><MarketplaceItemPage /></Layout>} />
-        <Route path="/showroom" element={<Layout><ShowroomPage /></Layout>} />
-        <Route path="/showroom/:slugOrId" element={<Layout><ShowroomItemPage /></Layout>} />
-        <Route path="/download-app" element={<Layout><DownloadAppPage /></Layout>} />
-        <Route path="/recovery" element={<Layout><RecoveryPage /></Layout>} />
-        <Route path="/heelkawn" element={<Layout><HeelKawnPage /></Layout>} />
-        <Route path="/checkout/success" element={<Layout><CheckoutSuccessPage /></Layout>} />
-        <Route path="/checkout/cancel" element={<Layout><CheckoutCancelPage /></Layout>} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+          <Route
+            path="/"
+            element={
+              <Layout>
+                <OpeningHomePage />
+              </Layout>
+            }
+          />
+          <Route
+            path="/books"
+            element={
+              <Layout>
+                <BooksPage />
+              </Layout>
+            }
+          />
+          <Route
+            path="/books/published"
+            element={
+              <Layout>
+                <BookShelfPage />
+              </Layout>
+            }
+          />
+          <Route
+            path="/books/publish"
+            element={
+              <RequireUserAuth>
+                <Layout>
+                  <BookPublishingPage />
+                </Layout>
+              </RequireUserAuth>
+            }
+          />
+          <Route
+            path="/books/read/:slug"
+            element={
+              <Layout>
+                <BookReaderPage />
+              </Layout>
+            }
+          />
+          <Route
+            path="/get-started"
+            element={
+              <Layout>
+                <GetStartedPage />
+              </Layout>
+            }
+          />
+          <Route path="/home" element={<Navigate to="/" replace />} />
+          <Route
+            path="/library"
+            element={
+              <Layout>
+                <ArchiveLibraryPage />
+              </Layout>
+            }
+          />
+          <Route
+            path="/archive"
+            element={
+              <Layout>
+                <ArchiveLibraryPage />
+              </Layout>
+            }
+          />
+          <Route
+            path="/blog/:slug"
+            element={
+              <Layout>
+                <BlogPostPage />
+              </Layout>
+            }
+          />
+          <Route
+            path="/creator"
+            element={
+              <Layout>
+                <CreatorPortalPage />
+              </Layout>
+            }
+          />
+          <Route
+            path="/creator/dashboard"
+            element={
+              <RequireUserAuth>
+                <Layout>
+                  <CreatorDashboard />
+                </Layout>
+              </RequireUserAuth>
+            }
+          />
+          <Route
+            path="/civilization-library"
+            element={
+              <Layout>
+                <CivilizationLibraryPage />
+              </Layout>
+            }
+          />
+          <Route
+            path="/civilization-library/editor"
+            element={
+              <RequireUserAuth>
+                <Layout>
+                  <CollaborativeLibraryPage mode="editor" />
+                </Layout>
+              </RequireUserAuth>
+            }
+          />
+          <Route
+            path="/civilization-library/moderation"
+            element={
+              <RequireUserAuth>
+                <Layout>
+                  <CollaborativeLibraryPage mode="moderation" />
+                </Layout>
+              </RequireUserAuth>
+            }
+          />
+          <Route
+            path="/civilization-library/article/:id"
+            element={
+              <Layout>
+                <CollaborativeLibraryPage mode="viewer" />
+              </Layout>
+            }
+          />
+          <Route
+            path="/career-quiz"
+            element={
+              <Layout>
+                <CareerQuizPage />
+              </Layout>
+            }
+          />
+          <Route
+            path="/federation-map"
+            element={
+              <Layout>
+                <FederationMapPage />
+              </Layout>
+            }
+          />
+          <Route
+            path="/about"
+            element={
+              <Layout>
+                <AboutPage />
+              </Layout>
+            }
+          />
+          <Route
+            path="/agent"
+            element={
+              <Layout>
+                <AgentPage />
+              </Layout>
+            }
+          />
+          <Route
+            path="/streams"
+            element={
+              <RequireUserAuth>
+                <Layout>
+                  <StreamsPage />
+                </Layout>
+              </RequireUserAuth>
+            }
+          />
+          <Route
+            path="/citizens"
+            element={
+              <Layout>
+                <CitizenDirectoryPage />
+              </Layout>
+            }
+          />
+          <Route
+            path="/forum"
+            element={
+              <Layout>
+                <ForumPage />
+              </Layout>
+            }
+          />
+          <Route
+            path="/passport/:userId"
+            element={
+              <Layout>
+                <PassportPage />
+              </Layout>
+            }
+          />
+          <Route
+            path="/governance/conference"
+            element={
+              <Layout>
+                <GovernanceConferencePage />
+              </Layout>
+            }
+          />
+          <Route
+            path="/governance/treasury"
+            element={
+              <Layout>
+                <GovernanceTreasuryPage />
+              </Layout>
+            }
+          />
+          <Route
+            path="/marketplace"
+            element={
+              <Layout>
+                <MarketplacePage />
+              </Layout>
+            }
+          />
+          <Route
+            path="/marketplace/:slugOrId"
+            element={
+              <Layout>
+                <MarketplaceItemPage />
+              </Layout>
+            }
+          />
+          <Route
+            path="/showroom"
+            element={
+              <Layout>
+                <ShowroomPage />
+              </Layout>
+            }
+          />
+          <Route
+            path="/showroom/:slugOrId"
+            element={
+              <Layout>
+                <ShowroomItemPage />
+              </Layout>
+            }
+          />
+          <Route
+            path="/download-app"
+            element={
+              <Layout>
+                <DownloadAppPage />
+              </Layout>
+            }
+          />
+          <Route
+            path="/recovery"
+            element={
+              <Layout>
+                <RecoveryPage />
+              </Layout>
+            }
+          />
+          <Route
+            path="/heelkawn"
+            element={
+              <Layout>
+                <HeelKawnPage />
+              </Layout>
+            }
+          />
+          <Route
+            path="/checkout/success"
+            element={
+              <Layout>
+                <CheckoutSuccessPage />
+              </Layout>
+            }
+          />
+          <Route
+            path="/checkout/cancel"
+            element={
+              <Layout>
+                <CheckoutCancelPage />
+              </Layout>
+            }
+          />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
       </Suspense>
     </HashRouter>
   );

@@ -21,7 +21,10 @@ export default function ProofOfPersonhood({ walletAddress, onVerified }) {
 
       const fingerprint = `${nav.userAgent}:${screenInfo.width}x${screenInfo.height}`;
       const encoder = new Encoder();
-      const digest = await cryptoApi.subtle.digest('SHA-256', encoder.encode(`${walletAddress || ''}:${fingerprint}`));
+      const digest = await cryptoApi.subtle.digest(
+        'SHA-256',
+        encoder.encode(`${walletAddress || ''}:${fingerprint}`),
+      );
       const hashHex = Array.from(new Uint8Array(digest))
         .map((byte) => byte.toString(16).padStart(2, '0'))
         .join('');
@@ -56,8 +59,8 @@ export default function ProofOfPersonhood({ walletAddress, onVerified }) {
             Verify you are a unique human to participate in the Basic Peoples Committee.
           </p>
           <p style={{ margin: '0 0 16px', fontSize: '14px' }}>
-            Pilot mode: Uses wallet signature and device fingerprint. Production mode can integrate with Kenya National
-            ID biometric enrollment.
+            Pilot mode: Uses wallet signature and device fingerprint. Production mode can integrate
+            with Kenya National ID biometric enrollment.
           </p>
           <button
             type="button"
@@ -92,7 +95,10 @@ export default function ProofOfPersonhood({ walletAddress, onVerified }) {
           />
           <p>Verifying uniqueness...</p>
           <p style={{ fontSize: '12px', color: 'var(--site-text-muted)' }}>
-            Wallet: {walletAddress ? `${walletAddress.slice(0, 10)}...${walletAddress.slice(-8)}` : 'not connected'}
+            Wallet:{' '}
+            {walletAddress
+              ? `${walletAddress.slice(0, 10)}...${walletAddress.slice(-8)}`
+              : 'not connected'}
           </p>
         </div>
       ) : null}
@@ -103,7 +109,13 @@ export default function ProofOfPersonhood({ walletAddress, onVerified }) {
           <p style={{ margin: '0 0 8px', fontWeight: '600' }}>Verification Complete</p>
           <p style={{ margin: '0 0 16px', fontSize: '14px', color: 'var(--site-text-muted)' }}>
             Unique ID:{' '}
-            <code style={{ background: 'var(--site-muted-bg, #f1f5f9)', padding: '2px 6px', borderRadius: '4px' }}>
+            <code
+              style={{
+                background: 'var(--site-muted-bg, #f1f5f9)',
+                padding: '2px 6px',
+                borderRadius: '4px',
+              }}
+            >
               {scanData?.hash}
             </code>
           </p>
@@ -133,7 +145,11 @@ export default function ProofOfPersonhood({ walletAddress, onVerified }) {
         </div>
       ) : null}
 
-      <style>{'@keyframes pop-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }'}</style>
+      <style>
+        {
+          '@keyframes pop-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }'
+        }
+      </style>
     </div>
   );
 }

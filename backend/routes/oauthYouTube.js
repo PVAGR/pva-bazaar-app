@@ -59,9 +59,10 @@ router.get('/youtube/start', async (req, res) => {
     const returnUrl = getFrontendReturnUrl(req);
 
     if (!token) {
-      if (mode === 'json') return res.status(401).json({ ok: false, message: 'No authentication token provided' });
+      if (mode === 'json')
+        return res.status(401).json({ ok: false, message: 'No authentication token provided' });
       return res.redirect(
-        `${returnUrl}${returnUrl.includes('?') ? '&' : '?'}oauth_error=${encodeURIComponent('Please log in first')}`
+        `${returnUrl}${returnUrl.includes('?') ? '&' : '?'}oauth_error=${encodeURIComponent('Please log in first')}`,
       );
     }
 
@@ -83,7 +84,7 @@ router.get('/youtube/start', async (req, res) => {
     const state = jwt.sign(
       { uid: decoded.id, nonce: Math.random().toString(36).slice(2) },
       process.env.JWT_SECRET,
-      { expiresIn: '10m' }
+      { expiresIn: '10m' },
     );
 
     const params = new URLSearchParams({
@@ -102,7 +103,9 @@ router.get('/youtube/start', async (req, res) => {
     return res.redirect(url);
   } catch (err) {
     console.error('YouTube oauth start error:', err.message);
-    return res.status(503).json({ ok: false, error: 'YouTube OAuth not configured', message: err.message });
+    return res
+      .status(503)
+      .json({ ok: false, error: 'YouTube OAuth not configured', message: err.message });
   }
 });
 
@@ -120,22 +123,30 @@ router.get('/youtube/callback', async (req, res) => {
     const error = req.query.error;
 
     if (error) {
-      return res.redirect(`${returnUrl}${returnUrl.includes('?') ? '&' : '?'}oauth_error=${encodeURIComponent(String(error))}`);
+      return res.redirect(
+        `${returnUrl}${returnUrl.includes('?') ? '&' : '?'}oauth_error=${encodeURIComponent(String(error))}`,
+      );
     }
     if (!code || !state) {
-      return res.redirect(`${returnUrl}${returnUrl.includes('?') ? '&' : '?'}oauth_error=${encodeURIComponent('Missing code/state')}`);
+      return res.redirect(
+        `${returnUrl}${returnUrl.includes('?') ? '&' : '?'}oauth_error=${encodeURIComponent('Missing code/state')}`,
+      );
     }
 
     let decoded;
     try {
       decoded = jwt.verify(String(state), process.env.JWT_SECRET);
     } catch {
-      return res.redirect(`${returnUrl}${returnUrl.includes('?') ? '&' : '?'}oauth_error=${encodeURIComponent('Invalid OAuth state. Please try again.')}`);
+      return res.redirect(
+        `${returnUrl}${returnUrl.includes('?') ? '&' : '?'}oauth_error=${encodeURIComponent('Invalid OAuth state. Please try again.')}`,
+      );
     }
 
     const uid = decoded?.uid;
     if (!uid) {
-      return res.redirect(`${returnUrl}${returnUrl.includes('?') ? '&' : '?'}oauth_error=${encodeURIComponent('OAuth state missing user id')}`);
+      return res.redirect(
+        `${returnUrl}${returnUrl.includes('?') ? '&' : '?'}oauth_error=${encodeURIComponent('OAuth state missing user id')}`,
+      );
     }
 
     const tokenRes = await axios.post(
@@ -147,7 +158,7 @@ router.get('/youtube/callback', async (req, res) => {
         grant_type: 'authorization_code',
         redirect_uri: redirectUri,
       }).toString(),
-      { headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, timeout: 15000 }
+      { headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, timeout: 15000 },
     );
 
     const payload = tokenRes?.data || {};
@@ -156,14 +167,23 @@ router.get('/youtube/callback', async (req, res) => {
     const user = await User.findById(uid);
     if (user) {
       user.oauthTokens = user.oauthTokens || {};
-      user.oauthTokens.youtube = { payload: encryptJson({ provider: 'youtube', ...payload, saved_at: new Date().toISOString() }), updatedAt: new Date() };
+      user.oauthTokens.youtube = {
+        payload: encryptJson({
+          provider: 'youtube',
+          ...payload,
+          saved_at: new Date().toISOString(),
+        }),
+        updatedAt: new Date(),
+      };
       await user.save();
     }
 
     return res.redirect(`${returnUrl}${returnUrl.includes('?') ? '&' : '?'}connected=youtube`);
   } catch (err) {
     console.error('YouTube oauth callback error:', err.response?.data || err.message);
-    return res.redirect(`${returnUrl}${returnUrl.includes('?') ? '&' : '?'}oauth_error=${encodeURIComponent('YouTube connect failed')}`);
+    return res.redirect(
+      `${returnUrl}${returnUrl.includes('?') ? '&' : '?'}oauth_error=${encodeURIComponent('YouTube connect failed')}`,
+    );
   }
 });
 
@@ -220,7 +240,8 @@ router.get('/youtube/live-status', authenticateToken, async (req, res) => {
           timeout: 10000,
         });
         const ls = streamRes?.data?.items?.[0];
-        if (ls?.statistics?.concurrentViewers) viewerCount = parseInt(ls.statistics.concurrentViewers, 10) || 0;
+        if (ls?.statistics?.concurrentViewers)
+          viewerCount = parseInt(ls.statistics.concurrentViewers, 10) || 0;
       } catch {
         // best-effort
       }
@@ -243,4 +264,3 @@ router.get('/youtube/live-status', authenticateToken, async (req, res) => {
 });
 
 module.exports = router;
-

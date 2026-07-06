@@ -13,9 +13,12 @@ function getOrCreateSessionId() {
   const existing = storage.getItem(SESSION_STORAGE_KEY);
   if (existing) return existing;
 
-  const generated = (typeof globalThis !== 'undefined' && globalThis.crypto && typeof globalThis.crypto.randomUUID === 'function')
-    ? globalThis.crypto.randomUUID()
-    : `session-${Date.now()}-${Math.floor(Math.random() * 1000000)}`;
+  const generated =
+    typeof globalThis !== 'undefined' &&
+    globalThis.crypto &&
+    typeof globalThis.crypto.randomUUID === 'function'
+      ? globalThis.crypto.randomUUID()
+      : `session-${Date.now()}-${Math.floor(Math.random() * 1000000)}`;
 
   storage.setItem(SESSION_STORAGE_KEY, generated);
   return generated;
@@ -58,8 +61,12 @@ export default function OpenClawFloatingAssistant({ routePath = '/' }) {
       await apiPost('/openclaw/public/pulse', {
         sessionId,
         path: routePath,
-        title: typeof globalThis !== 'undefined' && globalThis.document ? globalThis.document.title : '',
-        referrer: typeof globalThis !== 'undefined' && globalThis.document ? globalThis.document.referrer : '',
+        title:
+          typeof globalThis !== 'undefined' && globalThis.document ? globalThis.document.title : '',
+        referrer:
+          typeof globalThis !== 'undefined' && globalThis.document
+            ? globalThis.document.referrer
+            : '',
       });
     } catch (_err) {
       // Presence capture is best-effort and should never block UX.
@@ -69,7 +76,9 @@ export default function OpenClawFloatingAssistant({ routePath = '/' }) {
   const loadMemory = useCallback(async () => {
     setLoadingMemory(true);
     try {
-      const data = await apiGet(`/openclaw/public/memory?sessionId=${encodeURIComponent(sessionId)}&limit=18`);
+      const data = await apiGet(
+        `/openclaw/public/memory?sessionId=${encodeURIComponent(sessionId)}&limit=18`,
+      );
       setMemory(Array.isArray(data?.memory) ? data.memory : []);
     } catch (_err) {
       setMemory([]);
@@ -116,7 +125,10 @@ export default function OpenClawFloatingAssistant({ routePath = '/' }) {
           ...prev,
           {
             role: 'assistant',
-            text: String(data?.message || 'Message received. I am still processing this for memory and response.'),
+            text: String(
+              data?.message ||
+                'Message received. I am still processing this for memory and response.',
+            ),
             at: new Date().toISOString(),
           },
         ]);
@@ -179,31 +191,50 @@ export default function OpenClawFloatingAssistant({ routePath = '/' }) {
       </button>
 
       {open && (
-        <section id="openclaw-float-panel" className="oc-float-panel" aria-label="OpenClaw website assistant">
+        <section
+          id="openclaw-float-panel"
+          className="oc-float-panel"
+          aria-label="OpenClaw website assistant"
+        >
           <header className="oc-float-header">
             <div>
               <strong>OpenClaw Live Memory</strong>
               <p>Status: {status}</p>
             </div>
-            <button type="button" className="oc-float-min" onClick={() => setOpen(false)} aria-label="Close assistant">
+            <button
+              type="button"
+              className="oc-float-min"
+              onClick={() => setOpen(false)}
+              aria-label="Close assistant"
+            >
               Close
             </button>
           </header>
 
           <div className="oc-float-chat" ref={listRef}>
             {messages.length === 0 ? (
-              <p className="oc-float-hint">I stay alive on this site and keep memory of your instructions. Start speaking to me.</p>
+              <p className="oc-float-hint">
+                I stay alive on this site and keep memory of your instructions. Start speaking to
+                me.
+              </p>
             ) : (
               messages.map((message, index) => (
-                <article key={`${message.role}-${index}-${message.at}`} className={`oc-msg oc-msg-${message.role}`}>
-                  <span className="oc-msg-role">{message.role === 'assistant' ? 'OpenClaw' : 'You'}</span>
+                <article
+                  key={`${message.role}-${index}-${message.at}`}
+                  className={`oc-msg oc-msg-${message.role}`}
+                >
+                  <span className="oc-msg-role">
+                    {message.role === 'assistant' ? 'OpenClaw' : 'You'}
+                  </span>
                   <p>{message.text}</p>
                 </article>
               ))
             )}
           </div>
 
-          <label className="oc-float-label" htmlFor="oc-float-input">Message</label>
+          <label className="oc-float-label" htmlFor="oc-float-input">
+            Message
+          </label>
           <textarea
             id="oc-float-input"
             value={draft}
@@ -211,14 +242,21 @@ export default function OpenClawFloatingAssistant({ routePath = '/' }) {
             placeholder="Tell OpenClaw what to remember, do, or monitor across the website..."
             rows={3}
           />
-          <button type="button" className="oc-float-send" onClick={sendMessage} disabled={sending || !draft.trim()}>
+          <button
+            type="button"
+            className="oc-float-send"
+            onClick={sendMessage}
+            disabled={sending || !draft.trim()}
+          >
             {sending ? 'Sending...' : 'Send and Remember'}
           </button>
 
           <div className="oc-memory-strip" aria-label="Session memory preview">
             <div className="oc-memory-strip-head">
               <strong>Session Memory</strong>
-              <button type="button" onClick={loadMemory} disabled={loadingMemory}>Refresh</button>
+              <button type="button" onClick={loadMemory} disabled={loadingMemory}>
+                Refresh
+              </button>
             </div>
             {loadingMemory ? (
               <p className="oc-float-hint">Loading memory...</p>
@@ -228,7 +266,13 @@ export default function OpenClawFloatingAssistant({ routePath = '/' }) {
               <ul>
                 {memory.slice(0, 6).map((item) => (
                   <li key={item.id}>
-                    <span>{String(item.key || '').split(':').slice(-1)[0]}</span>
+                    <span>
+                      {
+                        String(item.key || '')
+                          .split(':')
+                          .slice(-1)[0]
+                      }
+                    </span>
                     <p>{parseMemoryPreview(item).slice(0, 100)}</p>
                   </li>
                 ))}

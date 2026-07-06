@@ -156,7 +156,11 @@
   padding: 1rem;
   color: var(--site-text-muted);
   background:
-    radial-gradient(circle at top, color-mix(in srgb, var(--site-accent-soft) 40%, transparent), transparent 58%),
+    radial-gradient(
+      circle at top,
+      color-mix(in srgb, var(--site-accent-soft) 40%, transparent),
+      transparent 58%
+    ),
     var(--site-panel);
   text-align: center;
 }

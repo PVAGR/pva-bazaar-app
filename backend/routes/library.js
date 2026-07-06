@@ -70,11 +70,17 @@ function normalizeArticlePayload(input, reqUser) {
   }
 
   const parsed = parseFrontmatter(markdownInput);
-  const normalizedFrontmatter = buildTemplateFrontmatter(parsed.frontmatter, String(reqUser?.id || ''));
+  const normalizedFrontmatter = buildTemplateFrontmatter(
+    parsed.frontmatter,
+    String(reqUser?.id || ''),
+  );
   ensureUniversalReference(normalizedFrontmatter);
 
   const slug = slugify(
-    sanitizeText(input?.slug || normalizedFrontmatter.title || input?.title || 'library-entry', 200),
+    sanitizeText(
+      input?.slug || normalizedFrontmatter.title || input?.title || 'library-entry',
+      200,
+    ),
     { lower: true, strict: true },
   );
 
@@ -133,7 +139,9 @@ router.post('/submit', authenticateToken, submitLimiter, async (req, res) => {
 
       const isOwner = String(article.authorId) === String(req.user?.id || '');
       if (!isOwner && !isModerator(req)) {
-        return res.status(403).json({ ok: false, error: 'Only the author can resubmit this article' });
+        return res
+          .status(403)
+          .json({ ok: false, error: 'Only the author can resubmit this article' });
       }
     } else {
       article = new LibraryArticle({
@@ -212,7 +220,10 @@ router.get('/pending', authenticateToken, requireModerator, async (req, res) => 
         .reverse()
         .find((snapshot) => snapshot.status === 'published');
 
-      const diffSummary = computeDiffSummary(lastPublishedSnapshot?.markdown || '', item.markdown || '');
+      const diffSummary = computeDiffSummary(
+        lastPublishedSnapshot?.markdown || '',
+        item.markdown || '',
+      );
 
       return {
         _id: item._id,
@@ -231,7 +242,9 @@ router.get('/pending', authenticateToken, requireModerator, async (req, res) => 
 
     return res.json({ ok: true, items: payload });
   } catch (error) {
-    return res.status(500).json({ ok: false, error: error.message || 'Failed to load moderation queue' });
+    return res
+      .status(500)
+      .json({ ok: false, error: error.message || 'Failed to load moderation queue' });
   }
 });
 
@@ -452,7 +465,9 @@ router.get('/careers', async (req, res) => {
     const all = Array.isArray(seed.professions) ? seed.professions : [];
     const limit = Math.max(1, Math.min(parseInt(req.query.limit, 10) || 24, 100));
     const offset = Math.max(0, parseInt(req.query.offset, 10) || 0);
-    const q = String(req.query.q || '').trim().toLowerCase();
+    const q = String(req.query.q || '')
+      .trim()
+      .toLowerCase();
     const jobZone = String(req.query.jobZone || '').trim();
 
     const filtered = all.filter((item) => {
@@ -489,11 +504,14 @@ router.get('/careers/skills', async (req, res) => {
     const seed = await loadCareersSeed();
     const all = Array.isArray(seed.skillsCatalog) ? seed.skillsCatalog : [];
     const limit = Math.max(1, Math.min(parseInt(req.query.limit, 10) || 100, 500));
-    const q = String(req.query.q || '').trim().toLowerCase();
+    const q = String(req.query.q || '')
+      .trim()
+      .toLowerCase();
 
     const filtered = q
       ? all.filter((item) =>
-        `${String(item.name || '')} ${String(item.description || '')}`.toLowerCase().includes(q))
+          `${String(item.name || '')} ${String(item.description || '')}`.toLowerCase().includes(q),
+        )
       : all;
 
     return res.json({
@@ -510,7 +528,10 @@ router.get('/careers/export/json', async (_req, res) => {
   try {
     await fsp.access(CAREERS_SEED_PATH, fs.constants.R_OK);
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
-    res.setHeader('Content-Disposition', 'attachment; filename="onet-jobs-professions-skills.json"');
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename="onet-jobs-professions-skills.json"',
+    );
     return fs.createReadStream(CAREERS_SEED_PATH).pipe(res);
   } catch (error) {
     return res.status(404).json({ ok: false, error: 'Careers seed file not found' });
@@ -531,7 +552,9 @@ router.get('/', async (req, res) => {
       }
 
       const articleItems = await LibraryArticle.find(articleFilter)
-        .select('title slug status version ipfsCid ipfsGatewayUrl gitCommitHash quickFacts updatedAt createdAt')
+        .select(
+          'title slug status version ipfsCid ipfsGatewayUrl gitCommitHash quickFacts updatedAt createdAt',
+        )
         .sort({ updatedAt: -1, _id: -1 })
         .limit(limit)
         .lean();
@@ -697,7 +720,9 @@ router.get('/export/full/snapshot.zip', async (req, res) => {
 
 router.get('/export/category/:category/archive.zip', async (req, res) => {
   try {
-    const category = String(req.params.category || '').trim().toLowerCase();
+    const category = String(req.params.category || '')
+      .trim()
+      .toLowerCase();
     if (!category) return res.status(400).json({ ok: false, error: 'Category is required' });
     await streamZipExport(
       req,

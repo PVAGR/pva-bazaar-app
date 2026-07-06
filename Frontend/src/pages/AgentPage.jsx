@@ -14,13 +14,16 @@ export default function AgentPage() {
   const starter = params.get('starter') || '';
 
   const initialInput = onboardingEntry
-    ? (starter || [
-      'I am entering from onboarding.',
-      focus ? `Focus: ${focus}.` : '',
-      tags ? `Tags: ${tags}.` : '',
-      journey ? `Journey: ${journey.slice(0, 240)}` : '',
-      'Help me plan my first contribution in the community.',
-    ].filter(Boolean).join(' '))
+    ? starter ||
+      [
+        'I am entering from onboarding.',
+        focus ? `Focus: ${focus}.` : '',
+        tags ? `Tags: ${tags}.` : '',
+        journey ? `Journey: ${journey.slice(0, 240)}` : '',
+        'Help me plan my first contribution in the community.',
+      ]
+        .filter(Boolean)
+        .join(' ')
     : '';
 
   return (
@@ -59,7 +62,8 @@ export default function AgentPage() {
         <section className="agent-page__chat section-card">
           {onboardingEntry ? (
             <div className="agent-onboarding-banner" role="status">
-              <strong>Onboarding context loaded.</strong> Your first message is prefilled with your path and journey. Edit it if needed, then send.
+              <strong>Onboarding context loaded.</strong> Your first message is prefilled with your
+              path and journey. Edit it if needed, then send.
             </div>
           ) : null}
           <AgentChat initialInput={initialInput} />
@@ -67,39 +71,38 @@ export default function AgentPage() {
 
         <section className="agent-page__about section-card">
           <h2>About the Creator's Agent</h2>
-          
+
           <div className="info-grid">
             <div className="info-block">
               <h3>🎭 Identity</h3>
               <p>
-                The agent represents the creator's vision and values within PVA Bazaar.
-                It acts as an intermediary between users and the creator, providing
-                consistent guidance rooted in platform philosophy.
+                The agent represents the creator's vision and values within PVA Bazaar. It acts as
+                an intermediary between users and the creator, providing consistent guidance rooted
+                in platform philosophy.
               </p>
             </div>
 
             <div className="info-block">
               <h3>🧠 Memory System</h3>
               <p>
-                Conversations are stored in MongoDB with full history. The agent can
-                recall previous interactions and context, enabling truly persistent
-                relationships with users.
+                Conversations are stored in MongoDB with full history. The agent can recall previous
+                interactions and context, enabling truly persistent relationships with users.
               </p>
             </div>
 
             <div className="info-block">
               <h3>⚡ AI Engine</h3>
               <p>
-                Powered by Ollama with open-source language models. Runs locally,
-                ensuring privacy and data sovereignty while maintaining low latency.
+                Powered by Ollama with open-source language models. Runs locally, ensuring privacy
+                and data sovereignty while maintaining low latency.
               </p>
             </div>
 
             <div className="info-block">
               <h3>🔗 Platform Integration</h3>
               <p>
-                The agent has access to platform state, recent changes, and ecosystem
-                information. It provides real-time, contextually-aware responses.
+                The agent has access to platform state, recent changes, and ecosystem information.
+                It provides real-time, contextually-aware responses.
               </p>
             </div>
           </div>
@@ -148,45 +151,44 @@ export default function AgentPage() {
           <div className="faq-item">
             <h4>How does the agent learn?</h4>
             <p>
-              The agent learns through conversation context. Each interaction is stored,
-              and the AI model uses recent conversation history to inform its responses,
-              allowing it to adapt to user communication style over time.
+              The agent learns through conversation context. Each interaction is stored, and the AI
+              model uses recent conversation history to inform its responses, allowing it to adapt
+              to user communication style over time.
             </p>
           </div>
 
           <div className="faq-item">
             <h4>Is my data private?</h4>
             <p>
-              Yes. Conversations are stored in your local MongoDB instance. No data is
-              sent to external AI services. The agent runs on your infrastructure,
-              ensuring complete data sovereignty.
+              Yes. Conversations are stored in your local MongoDB instance. No data is sent to
+              external AI services. The agent runs on your infrastructure, ensuring complete data
+              sovereignty.
             </p>
           </div>
 
           <div className="faq-item">
             <h4>Can the agent make changes to the platform?</h4>
             <p>
-              The agent is read-only and observational. It cannot directly modify
-              platform data, artifacts, or settings. It provides guidance and
-              information only.
+              The agent is read-only and observational. It cannot directly modify platform data,
+              artifacts, or settings. It provides guidance and information only.
             </p>
           </div>
 
           <div className="faq-item">
             <h4>How is the agent connected to platform changes?</h4>
             <p>
-              The agent has access to OpenClaw memory logs, git commit history, and
-              API endpoints to understand recent platform changes and ecosystem state.
-              This allows it to provide current, contextual responses.
+              The agent has access to OpenClaw memory logs, git commit history, and API endpoints to
+              understand recent platform changes and ecosystem state. This allows it to provide
+              current, contextual responses.
             </p>
           </div>
 
           <div className="faq-item">
             <h4>Can multiple people talk to the same agent?</h4>
             <p>
-              Yes. The agent maintains separate conversation threads for different
-              users, allowing it to provide personalized guidance to multiple people
-              while maintaining distinct conversation histories.
+              Yes. The agent maintains separate conversation threads for different users, allowing
+              it to provide personalized guidance to multiple people while maintaining distinct
+              conversation histories.
             </p>
           </div>
         </section>

@@ -63,7 +63,8 @@
   border: 1px solid var(--site-border, rgba(255, 255, 255, 0.08));
   border-radius: 14px;
   padding: 14px 16px;
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--site-border, rgba(255, 255, 255, 0.08)) 45%, transparent);
+  box-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--site-border, rgba(255, 255, 255, 0.08)) 45%, transparent);
 }
 
 .oc-ecosystem-panel {
@@ -706,7 +707,10 @@
   background: var(--site-panel-soft, rgba(255, 255, 255, 0.03));
   color: var(--site-text, #fff);
   cursor: pointer;
-  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    background 0.18s ease;
 }
 
 .oc-mission-card:hover:not(:disabled) {
@@ -809,8 +813,8 @@
   flex-direction: row;
   align-items: center;
   gap: 8px;
-  background: var(--site-panel, rgba(255,255,255,0.04));
-  border: 1px solid var(--site-border, rgba(255,255,255,0.1));
+  background: var(--site-panel, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--site-border, rgba(255, 255, 255, 0.1));
   border-radius: 8px;
   padding: 10px 12px;
   color: var(--site-text, #eaf4ff);
@@ -855,8 +859,14 @@
 }
 
 @keyframes oc-fadein {
-  from { opacity: 0; transform: translateY(-4px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ── Events feed ─────────────────────────────────────────────────────── */
@@ -897,11 +907,25 @@
   word-break: break-word;
 }
 
-.oc-event--info    { border-left-color: var(--site-accent, #00d9ff); }
-.oc-event--success { border-left-color: #00e874; background: rgba(0, 210, 100, 0.04); }
-.oc-event--warn    { border-left-color: #ffc832; background: rgba(255, 195, 40, 0.04); }
-.oc-event--error   { border-left-color: #ff6b6b; background: rgba(255, 70, 70, 0.05); }
-.oc-event--alert   { border-left-color: #ff3d3d; background: rgba(255, 40, 40, 0.06); }
+.oc-event--info {
+  border-left-color: var(--site-accent, #00d9ff);
+}
+.oc-event--success {
+  border-left-color: #00e874;
+  background: rgba(0, 210, 100, 0.04);
+}
+.oc-event--warn {
+  border-left-color: #ffc832;
+  background: rgba(255, 195, 40, 0.04);
+}
+.oc-event--error {
+  border-left-color: #ff6b6b;
+  background: rgba(255, 70, 70, 0.05);
+}
+.oc-event--alert {
+  border-left-color: #ff3d3d;
+  background: rgba(255, 40, 40, 0.06);
+}
 
 .oc-event-meta {
   display: flex;

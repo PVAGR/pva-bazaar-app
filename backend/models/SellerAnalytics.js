@@ -2,7 +2,13 @@
 const mongoose = require('mongoose');
 
 const sellerAnalyticsSchema = new mongoose.Schema({
-  sellerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, unique: true, index: true },
+  sellerId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+    unique: true,
+    index: true,
+  },
   shopId: { type: mongoose.Schema.Types.ObjectId, ref: 'Shop', unique: true, sparse: true },
 
   // Time period reporting

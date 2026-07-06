@@ -77,7 +77,12 @@ router.get('/markets', getUser, async (req, res) => {
         totalPool: m.totalPoolCents,
         totalBets: m.totalBets,
         votingWindow: m.votingWindow,
-        userBet: userBets[m._id.toString()] ? { outcome: userBets[m._id.toString()].outcomeIndex, amount: userBets[m._id.toString()].amountCents } : null,
+        userBet: userBets[m._id.toString()]
+          ? {
+              outcome: userBets[m._id.toString()].outcomeIndex,
+              amount: userBets[m._id.toString()].amountCents,
+            }
+          : null,
       })),
       pagination: { page: pageNum, limit: limitNum, total, pages: Math.ceil(total / limitNum) },
     });
@@ -100,7 +105,9 @@ router.get('/markets/:id', getUser, async (req, res) => {
     // Get bet stats for each outcome
     const allBets = await VotingBet.aggregate([
       { $match: { marketId: market._id, status: 'active' } },
-      { $group: { _id: '$outcomeIndex', count: { $sum: 1 }, totalAmount: { $sum: '$amountCents' } } },
+      {
+        $group: { _id: '$outcomeIndex', count: { $sum: 1 }, totalAmount: { $sum: '$amountCents' } },
+      },
     ]);
 
     const betStats = {};
@@ -133,13 +140,15 @@ router.get('/markets/:id', getUser, async (req, res) => {
       resolution: market.resolution,
       payoutRule: market.payoutRule,
       createdBy: market.createdByName,
-      userBet: userBet ? {
-        outcomeIndex: userBet.outcomeIndex,
-        amount: userBet.amountCents,
-        isWinner: userBet.isWinner,
-        winnings: userBet.winnings,
-        placedAt: userBet.createdAt,
-      } : null,
+      userBet: userBet
+        ? {
+            outcomeIndex: userBet.outcomeIndex,
+            amount: userBet.amountCents,
+            isWinner: userBet.isWinner,
+            winnings: userBet.winnings,
+            placedAt: userBet.createdAt,
+          }
+        : null,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -204,7 +213,7 @@ router.put('/markets/:id/status', requireAdmin, async (req, res) => {
     const market = await VotingMarket.findByIdAndUpdate(
       req.params.id,
       { status, lastModifiedBy: req.user._id },
-      { new: true }
+      { new: true },
     );
 
     if (!market) {
@@ -310,7 +319,12 @@ router.post('/markets/:id/resolve', requireAdmin, async (req, res) => {
     const { correctOutcomeIndex } = req.body;
 
     // Resolve market
-    await votingResolutionService.resolveMarket(req.params.id, correctOutcomeIndex, 'admin', req.user._id);
+    await votingResolutionService.resolveMarket(
+      req.params.id,
+      correctOutcomeIndex,
+      'admin',
+      req.user._id,
+    );
 
     // Calculate payouts
     const payouts = await votingResolutionService.calculatePayouts(req.params.id);
@@ -364,7 +378,10 @@ router.get('/wallet', requireAuth, async (req, res) => {
  */
 router.post('/resolve-markets', async (req, res) => {
   // Verify Cron secret
-  if (process.env.CRON_SECRET && req.headers.authorization !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (
+    process.env.CRON_SECRET &&
+    req.headers.authorization !== `Bearer ${process.env.CRON_SECRET}`
+  ) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 

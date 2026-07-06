@@ -36,7 +36,7 @@ const ShopPage = ({ shopId }) => {
     try {
       await apiFetch(`/api/shops/${shopId}/follow`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
       setFollowers(!followers);
     } catch (err) {

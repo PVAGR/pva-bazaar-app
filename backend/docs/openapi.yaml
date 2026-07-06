@@ -48,7 +48,8 @@ components:
         _id: { type: string }
         title: { type: string }
         description: { type: string }
-        type: { type: string, enum: [physical_good, digital_download, course, expertise, nft, service] }
+        type:
+          { type: string, enum: [physical_good, digital_download, course, expertise, nft, service] }
         price: { type: number }
         stockQty: { type: number }
         sellerId: { type: string }

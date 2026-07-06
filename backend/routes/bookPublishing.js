@@ -61,17 +61,24 @@ const bookUpload = upload.fields([
 ]);
 
 const BOOK_UPLOAD_DIR = path.join(__dirname, '../uploads/books');
-const CLOUDINARY_ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif']);
+const CLOUDINARY_ALLOWED_IMAGE_TYPES = new Set([
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+]);
 
 let slugify = null;
 try {
   slugify = require('slugify');
 } catch (_err) {
-  slugify = (value) => String(value || '')
-    .toLowerCase()
-    .replace(/['"]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
+  slugify = (value) =>
+    String(value || '')
+      .toLowerCase()
+      .replace(/['"]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
 }
 
 function isAdmin(req) {
@@ -187,18 +194,27 @@ function renderableBook(book, basePath = '') {
 }
 
 function parseBoolean(value) {
-  return ['1', 'true', 'yes', 'on'].includes(String(value || '').trim().toLowerCase());
+  return ['1', 'true', 'yes', 'on'].includes(
+    String(value || '')
+      .trim()
+      .toLowerCase(),
+  );
 }
 
 function shouldUseFileBookStore() {
   const mongoState = getMongoState();
-  return mongoState.mode === 'mock' || mongoState.mode === 'error' || mongoState.mode === 'disconnected';
+  return (
+    mongoState.mode === 'mock' || mongoState.mode === 'error' || mongoState.mode === 'disconnected'
+  );
 }
 
 function isDocxFile(file) {
   const name = String(file?.originalname || '').toLowerCase();
   const mime = String(file?.mimetype || '').toLowerCase();
-  return name.endsWith('.docx') || mime === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+  return (
+    name.endsWith('.docx') ||
+    mime === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+  );
 }
 
 function isPdfFile(file) {
@@ -243,11 +259,12 @@ async function resolveUniqueSlug(baseSlug, excludeId = null) {
     let match = null;
     if (shouldUseFileBookStore()) {
       const books = await listFileBooks();
-      match = books.find((book) => {
-        if (String(book.slug || '') !== candidate) return false;
-        if (!excludeId) return true;
-        return String(book._id || '') !== String(excludeId);
-      }) || null;
+      match =
+        books.find((book) => {
+          if (String(book.slug || '') !== candidate) return false;
+          if (!excludeId) return true;
+          return String(book._id || '') !== String(excludeId);
+        }) || null;
     } else {
       match = await BookProject.findOne({
         slug: candidate,
@@ -323,14 +340,12 @@ async function removeBookRecord(bookId) {
 function bookSummary(book, { publicView = false } = {}) {
   const slug = String(book.slug || '').trim();
   const id = String(book._id || '');
-  const baseRoute = publicView ? `/api/book-publishing/public/${encodeURIComponent(slug)}` : `/api/book-publishing/${encodeURIComponent(id)}`;
+  const baseRoute = publicView
+    ? `/api/book-publishing/public/${encodeURIComponent(slug)}`
+    : `/api/book-publishing/${encodeURIComponent(id)}`;
 
-  const frontCover = book.frontCover?.url
-    ? `${baseRoute}/assets/front-cover`
-    : '';
-  const backCover = book.backCover?.url
-    ? `${baseRoute}/assets/back-cover`
-    : '';
+  const frontCover = book.frontCover?.url ? `${baseRoute}/assets/front-cover` : '';
+  const backCover = book.backCover?.url ? `${baseRoute}/assets/back-cover` : '';
 
   const publicRoute = slug ? `/books/read/${encodeURIComponent(slug)}` : '';
 
@@ -465,10 +480,14 @@ router.post('/', authenticateToken, bookUpload, async (req, res) => {
       book = await loadBookForEdit(bookId);
       if (!book) return notFound(res);
       if (!canEditBook(req, book)) {
-        return res.status(403).json({ ok: false, error: 'You do not have permission to edit this book' });
+        return res
+          .status(403)
+          .json({ ok: false, error: 'You do not have permission to edit this book' });
       }
     } else {
-      book = shouldUseFileBookStore() ? { authorId: req.user.id } : new BookProject({ authorId: req.user.id });
+      book = shouldUseFileBookStore()
+        ? { authorId: req.user.id }
+        : new BookProject({ authorId: req.user.id });
     }
 
     const previousStatus = book.status || 'draft';
@@ -478,10 +497,16 @@ router.post('/', authenticateToken, bookUpload, async (req, res) => {
     const backFile = req.files?.backCover?.[0];
     const manuscriptFile = req.files?.manuscriptFile?.[0];
 
-    if (frontFile && !CLOUDINARY_ALLOWED_IMAGE_TYPES.has(String(frontFile.mimetype || '').toLowerCase())) {
+    if (
+      frontFile &&
+      !CLOUDINARY_ALLOWED_IMAGE_TYPES.has(String(frontFile.mimetype || '').toLowerCase())
+    ) {
       return res.status(400).json({ ok: false, error: 'Front cover must be an image file' });
     }
-    if (backFile && !CLOUDINARY_ALLOWED_IMAGE_TYPES.has(String(backFile.mimetype || '').toLowerCase())) {
+    if (
+      backFile &&
+      !CLOUDINARY_ALLOWED_IMAGE_TYPES.has(String(backFile.mimetype || '').toLowerCase())
+    ) {
       return res.status(400).json({ ok: false, error: 'Back cover must be an image file' });
     }
 
@@ -495,7 +520,10 @@ router.post('/', authenticateToken, bookUpload, async (req, res) => {
       book.frontCover.originalName = frontFile.originalname;
       book.frontCover.mimeType = frontFile.mimetype;
       book.frontCover.size = frontFile.size;
-      book.frontCover.checksumSha256 = crypto.createHash('sha256').update(frontFile.buffer).digest('hex');
+      book.frontCover.checksumSha256 = crypto
+        .createHash('sha256')
+        .update(frontFile.buffer)
+        .digest('hex');
     }
 
     if (backFile) {
@@ -508,7 +536,10 @@ router.post('/', authenticateToken, bookUpload, async (req, res) => {
       book.backCover.originalName = backFile.originalname;
       book.backCover.mimeType = backFile.mimetype;
       book.backCover.size = backFile.size;
-      book.backCover.checksumSha256 = crypto.createHash('sha256').update(backFile.buffer).digest('hex');
+      book.backCover.checksumSha256 = crypto
+        .createHash('sha256')
+        .update(backFile.buffer)
+        .digest('hex');
     }
 
     let manuscriptMarkdown = sanitizeText(req.body?.manuscriptMarkdown || '', 2_000_000);
@@ -587,15 +618,25 @@ router.get('/public/:slug/view', async (req, res) => {
   try {
     const book = await loadBookForSlug(req.params.slug);
     if (!book) {
-      return res.status(404).type('html').send(renderNotFoundHtml('This book has not been published yet.'));
+      return res
+        .status(404)
+        .type('html')
+        .send(renderNotFoundHtml('This book has not been published yet.'));
     }
 
     return res
       .status(200)
       .type('html')
-      .send(renderBookHtml(renderableBook(book, `/api/book-publishing/public/${encodeURIComponent(book.slug)}`)));
+      .send(
+        renderBookHtml(
+          renderableBook(book, `/api/book-publishing/public/${encodeURIComponent(book.slug)}`),
+        ),
+      );
   } catch (error) {
-    return res.status(500).type('html').send(renderNotFoundHtml(error.message || 'Unable to render book'));
+    return res
+      .status(500)
+      .type('html')
+      .send(renderNotFoundHtml(error.message || 'Unable to render book'));
   }
 });
 
@@ -608,10 +649,13 @@ router.get('/assets/local/:filename', async (req, res) => {
 
     const ext = path.extname(filename).toLowerCase();
     const contentType =
-      ext === '.png' ? 'image/png' :
-      ext === '.webp' ? 'image/webp' :
-      ext === '.gif' ? 'image/gif' :
-      'image/jpeg';
+      ext === '.png'
+        ? 'image/png'
+        : ext === '.webp'
+          ? 'image/webp'
+          : ext === '.gif'
+            ? 'image/gif'
+            : 'image/jpeg';
 
     res.setHeader('Content-Type', contentType);
     return fs.createReadStream(filePath).pipe(res);
@@ -626,7 +670,8 @@ router.get('/public/:slug/assets/:assetKey', async (req, res) => {
     if (!book) return notFound(res);
 
     const key = String(req.params.assetKey || '').toLowerCase();
-    const asset = key === 'front-cover' ? book.frontCover : key === 'back-cover' ? book.backCover : null;
+    const asset =
+      key === 'front-cover' ? book.frontCover : key === 'back-cover' ? book.backCover : null;
     if (!asset || !asset.url) {
       return res.status(404).json({ ok: false, error: 'Asset not found' });
     }
@@ -679,7 +724,9 @@ router.get('/:bookId', authenticateToken, async (req, res) => {
     const book = await loadBookForEdit(req.params.bookId);
     if (!book) return notFound(res);
     if (!canViewBook(req, book)) {
-      return res.status(403).json({ ok: false, error: 'You do not have permission to view this book' });
+      return res
+        .status(403)
+        .json({ ok: false, error: 'You do not have permission to view this book' });
     }
     return res.json({ ok: true, item: bookSummary(book, { publicView: false }) });
   } catch (error) {
@@ -692,14 +739,24 @@ router.get('/:bookId/view', authenticateToken, async (req, res) => {
     const book = await loadBookForEdit(req.params.bookId);
     if (!book) return res.status(404).type('html').send(renderNotFoundHtml('Book not found.'));
     if (!canViewBook(req, book)) {
-      return res.status(403).type('html').send(renderNotFoundHtml('You do not have permission to view this book.'));
+      return res
+        .status(403)
+        .type('html')
+        .send(renderNotFoundHtml('You do not have permission to view this book.'));
     }
     return res
       .status(200)
       .type('html')
-      .send(renderBookHtml(renderableBook(book, `/api/book-publishing/${encodeURIComponent(book._id)}`)));
+      .send(
+        renderBookHtml(
+          renderableBook(book, `/api/book-publishing/${encodeURIComponent(book._id)}`),
+        ),
+      );
   } catch (error) {
-    return res.status(500).type('html').send(renderNotFoundHtml(error.message || 'Unable to render book'));
+    return res
+      .status(500)
+      .type('html')
+      .send(renderNotFoundHtml(error.message || 'Unable to render book'));
   }
 });
 
@@ -708,11 +765,14 @@ router.get('/:bookId/assets/:assetKey', authenticateToken, async (req, res) => {
     const book = await loadBookForEdit(req.params.bookId);
     if (!book) return notFound(res);
     if (!canViewBook(req, book)) {
-      return res.status(403).json({ ok: false, error: 'You do not have permission to view this asset' });
+      return res
+        .status(403)
+        .json({ ok: false, error: 'You do not have permission to view this asset' });
     }
 
     const key = String(req.params.assetKey || '').toLowerCase();
-    const asset = key === 'front-cover' ? book.frontCover : key === 'back-cover' ? book.backCover : null;
+    const asset =
+      key === 'front-cover' ? book.frontCover : key === 'back-cover' ? book.backCover : null;
     if (!asset || !asset.url) {
       return res.status(404).json({ ok: false, error: 'Asset not found' });
     }
@@ -735,7 +795,9 @@ router.get('/:bookId/download/pdf', authenticateToken, async (req, res) => {
     const book = await loadBookForEdit(req.params.bookId);
     if (!book) return notFound(res);
     if (!canViewBook(req, book)) {
-      return res.status(403).json({ ok: false, error: 'You do not have permission to download this book' });
+      return res
+        .status(403)
+        .json({ ok: false, error: 'You do not have permission to download this book' });
     }
 
     const pdfBuffer = await buildPdfBuffer(book, resolveAssetBuffer);
@@ -753,7 +815,9 @@ router.get('/:bookId/download/epub', authenticateToken, async (req, res) => {
     const book = await loadBookForEdit(req.params.bookId);
     if (!book) return notFound(res);
     if (!canViewBook(req, book)) {
-      return res.status(403).json({ ok: false, error: 'You do not have permission to download this book' });
+      return res
+        .status(403)
+        .json({ ok: false, error: 'You do not have permission to download this book' });
     }
 
     const epubBuffer = await buildEpubBuffer(book, resolveAssetBuffer);
@@ -771,7 +835,9 @@ router.delete('/:bookId', authenticateToken, async (req, res) => {
     const book = await loadBookForEdit(req.params.bookId);
     if (!book) return notFound(res);
     if (!canEditBook(req, book)) {
-      return res.status(403).json({ ok: false, error: 'You do not have permission to delete this book' });
+      return res
+        .status(403)
+        .json({ ok: false, error: 'You do not have permission to delete this book' });
     }
 
     if (book.frontCover?.provider === 'local' && book.frontCover?.localFilename) {

@@ -65,8 +65,9 @@ const ProvenanceSubmission = ({ onComplete }) => {
         <div className={styles.stepContainer}>
           <h2>🏛️ What Are You Tokenizing?</h2>
           <p>
-            Every object has a story. Whether it's handcrafted with passion, sourced with ethics, or simply found beauty,
-            PVA helps you preserve its history, prove its authenticity, and unlock its value on the blockchain.
+            Every object has a story. Whether it's handcrafted with passion, sourced with ethics, or
+            simply found beauty, PVA helps you preserve its history, prove its authenticity, and
+            unlock its value on the blockchain.
           </p>
 
           <div className={styles.typeGrid}>
@@ -86,7 +87,13 @@ const ProvenanceSubmission = ({ onComplete }) => {
       )}
 
       {/* Step 1: Material Truth */}
-      {step === 1 && <MaterialTruthForm submissionId={submissionId} objectType={objectType} onNext={() => setStep(2)} />}
+      {step === 1 && (
+        <MaterialTruthForm
+          submissionId={submissionId}
+          objectType={objectType}
+          onNext={() => setStep(2)}
+        />
+      )}
 
       {/* Step 2: Human Narrative */}
       {step === 2 && <NarrativeForm submissionId={submissionId} onNext={() => setStep(3)} />}
@@ -171,11 +178,18 @@ const MaterialTruthForm = ({ submissionId, objectType, onNext }) => {
         <div className={styles.formRow}>
           <div className={styles.formGroup}>
             <label>Creation Date *</label>
-            <input type="date" onChange={(e) => setFormData({ ...formData, creationDate: e.target.value })} />
+            <input
+              type="date"
+              onChange={(e) => setFormData({ ...formData, creationDate: e.target.value })}
+            />
           </div>
           <div className={styles.formGroup}>
             <label>Weight</label>
-            <input type="number" placeholder="0" onChange={(e) => setFormData({ ...formData, weight: e.target.value })} />
+            <input
+              type="number"
+              placeholder="0"
+              onChange={(e) => setFormData({ ...formData, weight: e.target.value })}
+            />
           </div>
           <div className={styles.formGroup}>
             <label>Unit</label>
@@ -200,7 +214,11 @@ const MaterialTruthForm = ({ submissionId, objectType, onNext }) => {
 
         <div className={styles.formGroup}>
           <label>Dimensions</label>
-          <input type="text" placeholder="e.g., '10x5x5 cm' or 'Size 8 ring'" onChange={(e) => setFormData({ ...formData, dimensions: e.target.value })} />
+          <input
+            type="text"
+            placeholder="e.g., '10x5x5 cm' or 'Size 8 ring'"
+            onChange={(e) => setFormData({ ...formData, dimensions: e.target.value })}
+          />
         </div>
 
         {/* Type-specific fields */}
@@ -208,7 +226,10 @@ const MaterialTruthForm = ({ submissionId, objectType, onNext }) => {
           <>
             <div className={styles.formGroup}>
               <label>Species</label>
-              <input placeholder="e.g., Ruby, Sapphire" onChange={(e) => setFormData({ ...formData, species: e.target.value })} />
+              <input
+                placeholder="e.g., Ruby, Sapphire"
+                onChange={(e) => setFormData({ ...formData, species: e.target.value })}
+              />
             </div>
             <div className={styles.formGroup}>
               <label>Clarity Grade</label>
@@ -227,11 +248,17 @@ const MaterialTruthForm = ({ submissionId, objectType, onNext }) => {
           <>
             <div className={styles.formGroup}>
               <label>Technique Used</label>
-              <input placeholder="e.g., Wheel-thrown, Forged" onChange={(e) => setFormData({ ...formData, technique: e.target.value })} />
+              <input
+                placeholder="e.g., Wheel-thrown, Forged"
+                onChange={(e) => setFormData({ ...formData, technique: e.target.value })}
+              />
             </div>
             <div className={styles.formGroup}>
               <label>Firing Temperature (°C)</label>
-              <input type="number" onChange={(e) => setFormData({ ...formData, firingTemperature: e.target.value })} />
+              <input
+                type="number"
+                onChange={(e) => setFormData({ ...formData, firingTemperature: e.target.value })}
+              />
             </div>
           </>
         )}
@@ -240,11 +267,18 @@ const MaterialTruthForm = ({ submissionId, objectType, onNext }) => {
           <>
             <div className={styles.formGroup}>
               <label>Origin Farm/Region</label>
-              <input placeholder="e.g., Arabica from Ethiopia" onChange={(e) => setFormData({ ...formData, originFarm: e.target.value })} />
+              <input
+                placeholder="e.g., Arabica from Ethiopia"
+                onChange={(e) => setFormData({ ...formData, originFarm: e.target.value })}
+              />
             </div>
             <div className={styles.formGroup}>
               <label>Organic Certified</label>
-              <input type="checkbox" onChange={(e) => setFormData({ ...formData, organic: e.target.checked })} /> Yes
+              <input
+                type="checkbox"
+                onChange={(e) => setFormData({ ...formData, organic: e.target.checked })}
+              />{' '}
+              Yes
             </div>
           </>
         )}
@@ -493,7 +527,10 @@ const ReviewForm = ({ submissionId, onNext, onComplete }) => {
         <div className={styles.scoreSection}>
           <strong>Material Truth:</strong>
           <div className={styles.scoreBar}>
-            <div className={styles.scoreProgress} style={{ width: `${completeness.materialTruthScore}%` }}></div>
+            <div
+              className={styles.scoreProgress}
+              style={{ width: `${completeness.materialTruthScore}%` }}
+            ></div>
           </div>
           <span>{completeness.materialTruthScore?.toFixed(0)}%</span>
         </div>
@@ -501,7 +538,10 @@ const ReviewForm = ({ submissionId, onNext, onComplete }) => {
         <div className={styles.scoreSection}>
           <strong>Narrative Quality:</strong>
           <div className={styles.scoreBar}>
-            <div className={styles.scoreProgress} style={{ width: `${completeness.narrativeScore}%` }}></div>
+            <div
+              className={styles.scoreProgress}
+              style={{ width: `${completeness.narrativeScore}%` }}
+            ></div>
           </div>
           <span>{completeness.narrativeScore?.toFixed(0)}%</span>
         </div>
@@ -509,7 +549,10 @@ const ReviewForm = ({ submissionId, onNext, onComplete }) => {
         <div className={styles.scoreSection}>
           <strong>Proof Quality:</strong>
           <div className={styles.scoreBar}>
-            <div className={styles.scoreProgress} style={{ width: `${completeness.proofScore}%` }}></div>
+            <div
+              className={styles.scoreProgress}
+              style={{ width: `${completeness.proofScore}%` }}
+            ></div>
           </div>
           <span>{completeness.proofScore?.toFixed(0)}%</span>
         </div>
@@ -539,9 +582,10 @@ const ConfirmationScreen = ({ submissionId }) => {
         <p>Your provenance has been submitted for review.</p>
         <p className={styles.submissionId}>Submission ID: {submissionId}</p>
         <p className={styles.nextSteps}>
-          Next: Our team will verify your submission and mint your NFT. You'll receive an email when ready!
+          Next: Our team will verify your submission and mint your NFT. You'll receive an email when
+          ready!
         </p>
-        <button className={styles.btn} onClick={() => window.location.href = '/dashboard'}>
+        <button className={styles.btn} onClick={() => (window.location.href = '/dashboard')}>
           Go to Dashboard
         </button>
       </div>

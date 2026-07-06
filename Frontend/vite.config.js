@@ -1,4 +1,3 @@
-
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
@@ -16,7 +15,7 @@ export default defineConfig({
       },
       release: process.env.SENTRY_RELEASE,
       dryRun: !process.env.SENTRY_AUTH_TOKEN,
-    })
+    }),
   ],
   build: {
     outDir: 'dist',
@@ -26,8 +25,8 @@ export default defineConfig({
       external: ['fsevents'],
       // Prefer Vite's default chunking to avoid startup ordering regressions
       // from aggressive manual chunk grouping in production.
-      output: {}
-    }
+      output: {},
+    },
   },
   server: {
     port: 5173,
@@ -36,11 +35,11 @@ export default defineConfig({
         target: process.env.VITE_API_URL || 'https://pvabazaar.org/api',
         changeOrigin: true,
         secure: false,
-        rewrite: (p) => p.replace(/^\/api/, '')
-      }
-    }
+        rewrite: (p) => p.replace(/^\/api/, ''),
+      },
+    },
   },
   test: {
-    environment: 'jsdom'
-  }
+    environment: 'jsdom',
+  },
 });

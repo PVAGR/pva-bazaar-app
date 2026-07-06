@@ -54,7 +54,7 @@ const PayoutSchema = new mongoose.Schema(
     isReconciled: { type: Boolean, default: false },
     reconciliationDate: { type: Date, sparse: true },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // Indexes for efficient querying

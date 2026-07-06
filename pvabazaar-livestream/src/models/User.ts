@@ -30,7 +30,7 @@ const userSchema = new Schema<IUser>(
       dataExportable: { type: Boolean, default: true },
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 export const User = models.User || model<IUser>('User', userSchema);

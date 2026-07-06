@@ -10,18 +10,27 @@ export default function OpeningHomePage() {
           <p className="pill">PVA Bazaar · Personal site + business suite</p>
           <h1>Everything I keep building, in one living place.</h1>
           <p className="opening-home__lead">
-            This site is my personal archive, business bridge, recovery layer, and public operating surface.
-            It holds my words, my commerce work, the HeelKawn universe, and the live tools I use to keep everything
-            organized and visible without hiding or breaking the record.
+            This site is my personal archive, business bridge, recovery layer, and public operating
+            surface. It holds my words, my commerce work, the HeelKawn universe, and the live tools
+            I use to keep everything organized and visible without hiding or breaking the record.
           </p>
           <div className="opening-home__actions">
-            <Link className="opening-home__actionBtn opening-home__actionBtn--primary" to="/archive">
+            <Link
+              className="opening-home__actionBtn opening-home__actionBtn--primary"
+              to="/archive"
+            >
               Open archive
             </Link>
-            <Link className="opening-home__actionBtn opening-home__actionBtn--secondary" to="/books">
+            <Link
+              className="opening-home__actionBtn opening-home__actionBtn--secondary"
+              to="/books"
+            >
               Open books
             </Link>
-            <Link className="opening-home__actionBtn opening-home__actionBtn--secondary" to="/marketplace">
+            <Link
+              className="opening-home__actionBtn opening-home__actionBtn--secondary"
+              to="/marketplace"
+            >
               Open business side
             </Link>
             <Link className="opening-home__actionBtn opening-home__actionBtn--ghost" to="/heelkawn">
@@ -47,39 +56,58 @@ export default function OpeningHomePage() {
             <h2>Choose the surface you need</h2>
           </div>
           <p>
-            Every route is part of the same living website. Pick the surface you need now and keep moving through
-            the rest whenever you want.
+            Every route is part of the same living website. Pick the surface you need now and keep
+            moving through the rest whenever you want.
           </p>
         </div>
 
-          <div className="opening-home__grid">
-            <Link className="opening-home__card" to="/archive">
-              <h3>Writings and archive</h3>
-              <p>Read the long-form notes, preserved essays, and the personal record that should never be lost.</p>
-            </Link>
-            <Link className="opening-home__card" to="/books">
-              <h3>Books and publishing</h3>
-              <p>Read the featured books, browse published editions, and open the workspace for new publishing.</p>
-            </Link>
-            <Link className="opening-home__card" to="/marketplace">
-              <h3>Business and trade</h3>
-              <p>Run the marketplace, inventory, sourcing, fulfillment, and the buyer-supplier bridge.</p>
-            </Link>
+        <div className="opening-home__grid">
+          <Link className="opening-home__card" to="/archive">
+            <h3>Writings and archive</h3>
+            <p>
+              Read the long-form notes, preserved essays, and the personal record that should never
+              be lost.
+            </p>
+          </Link>
+          <Link className="opening-home__card" to="/books">
+            <h3>Books and publishing</h3>
+            <p>
+              Read the featured books, browse published editions, and open the workspace for new
+              publishing.
+            </p>
+          </Link>
+          <Link className="opening-home__card" to="/marketplace">
+            <h3>Business and trade</h3>
+            <p>
+              Run the marketplace, inventory, sourcing, fulfillment, and the buyer-supplier bridge.
+            </p>
+          </Link>
           <Link className="opening-home__card" to="/conference">
             <h3>Governance and public work</h3>
-            <p>Track proposals, conference flow, and the public decisions that shape the site’s direction.</p>
+            <p>
+              Track proposals, conference flow, and the public decisions that shape the site’s
+              direction.
+            </p>
           </Link>
           <Link className="opening-home__card" to="/heelkawn">
             <h3>HeelKawn</h3>
-            <p>Open the game hub, download links, and repository pulse without leaving the main site.</p>
+            <p>
+              Open the game hub, download links, and repository pulse without leaving the main site.
+            </p>
           </Link>
           <Link className="opening-home__card" to="/recovery">
             <h3>Recovery and install</h3>
-            <p>Use the install page and continuity tools so the site can follow you from device to device.</p>
+            <p>
+              Use the install page and continuity tools so the site can follow you from device to
+              device.
+            </p>
           </Link>
           <Link className="opening-home__card" to="/about">
             <h3>About and overview</h3>
-            <p>Read the project description, personal context, and the larger purpose behind the whole system.</p>
+            <p>
+              Read the project description, personal context, and the larger purpose behind the
+              whole system.
+            </p>
           </Link>
         </div>
       </section>

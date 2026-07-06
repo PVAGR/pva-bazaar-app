@@ -36,9 +36,9 @@ This is the most important step! Vercel needs to know your backend is in a subdi
 Leave these settings as-is (Vercel will auto-detect):
 
 - **Framework Preset**: Other (or None)
-- **Build Command**: *(leave blank)*
-- **Output Directory**: *(leave blank)*
-- **Install Command**: *(leave blank)*
+- **Build Command**: _(leave blank)_
+- **Output Directory**: _(leave blank)_
+- **Install Command**: _(leave blank)_
 
 > ⚠️ **IMPORTANT**: You may see warnings about "dist folder not found" during deployment.  
 > **This is NORMAL for Node.js serverless functions!** Your backend uses `@vercel/node`, not static files.  
@@ -51,12 +51,14 @@ Scroll down to **"Environment Variables"** section.
 Add these 4 variables (click "Add Environment Variable" for each):
 
 ##### Variable 1: MONGODB_URI
+
 - **Name**: `MONGODB_URI`
 - **Value**: Your MongoDB connection string from your local `.env`
   - Example: `mongodb+srv://username:password@cluster.mongodb.net/pvabazaar`
 - Click **"Add"**
 
 ##### Variable 2: JWT_SECRET
+
 - **Name**: `JWT_SECRET`
 - **Value**: Your JWT secret key from your local `.env`
   - Example: `your-super-secret-key-here`
@@ -64,11 +66,13 @@ Add these 4 variables (click "Add Environment Variable" for each):
 - Click **"Add"**
 
 ##### Variable 3: NODE_ENV
+
 - **Name**: `NODE_ENV`
 - **Value**: `production`
 - Click **"Add"**
 
 ##### Variable 4: ALLOWED_ORIGIN
+
 - **Name**: `ALLOWED_ORIGIN`
 - **Value**: `https://pvabazaar.org`
 - Click **"Add"**
@@ -147,9 +151,9 @@ curl https://your-actual-backend-url.vercel.app/api/health
 **Expected Response**:
 \`\`\`json
 {
-  "ok": true,
-  "message": "API is healthy",
-  "timestamp": "2026-01-03T..."
+"ok": true,
+"message": "API is healthy",
+"timestamp": "2026-01-03T..."
 }
 \`\`\`
 
@@ -160,6 +164,7 @@ curl https://your-actual-backend-url.vercel.app/api/health
 ### Problem: Blank White Screen
 
 **Solution**:
+
 1. Hard refresh: **Ctrl+Shift+R**
 2. Open Console (F12), check for errors
 3. If you see "Failed to fetch from localhost" → Frontend didn't get the new backend URL
@@ -171,6 +176,7 @@ curl https://your-actual-backend-url.vercel.app/api/health
 **Error**: "Access to fetch has been blocked by CORS policy"
 
 **Solution**:
+
 1. Go to Vercel → Your backend project → **Settings** → **Environment Variables**
 2. Check that `ALLOWED_ORIGIN` is set to `https://pvabazaar.org` (no trailing slash)
 3. If missing or wrong, update it
@@ -179,6 +185,7 @@ curl https://your-actual-backend-url.vercel.app/api/health
 ### Problem: "401 Unauthorized" or "503 Service Not Configured"
 
 **Solution**:
+
 1. Your environment variables are missing or incorrect
 2. Go to Vercel → Your project → **Settings** → **Environment Variables**
 3. Verify all 4 variables are set:
@@ -191,6 +198,7 @@ curl https://your-actual-backend-url.vercel.app/api/health
 ### Problem: "Failed to connect to MongoDB"
 
 **Solution**:
+
 1. Check your MongoDB Atlas cluster is running
 2. Verify your connection string is correct
 3. Make sure your IP address is whitelisted in MongoDB Atlas:
@@ -213,20 +221,21 @@ Your backend uses `@vercel/node` for serverless functions, not static files. The
 **`backend/vercel.json`** ✅ Already configured correctly:
 \`\`\`json
 {
-  "version": 2,
-  "builds": [{"src": "api/index.js", "use": "@vercel/node"}],
-  "routes": [
-    {"src": "/api/(.*)", "dest": "api/index.js"},
-    {"src": "/(.*)", "dest": "api/index.js"}
-  ],
-  "env": {
-    "NODE_ENV": "production",
-    "ALLOWED_ORIGIN": "https://pvabazaar.org"
-  }
+"version": 2,
+"builds": [{"src": "api/index.js", "use": "@vercel/node"}],
+"routes": [
+{"src": "/api/(.*)", "dest": "api/index.js"},
+{"src": "/(.*)", "dest": "api/index.js"}
+],
+"env": {
+"NODE_ENV": "production",
+"ALLOWED_ORIGIN": "https://pvabazaar.org"
+}
 }
 \`\`\`
 
 **`backend/api/index.js`** ✅ Properly configured:
+
 - CORS allows `https://pvabazaar.org`
 - Environment variable validation
 - MongoDB connection with fallback
@@ -242,8 +251,8 @@ VITE_API_URL=https://pva-bazaar-backend.vercel.app
 **`Frontend/vite.config.js`** ✅ Correct:
 \`\`\`javascript
 export default defineConfig({
-  base: '/',  // ✅ Correct for root domain
-  // ...
+base: '/', // ✅ Correct for root domain
+// ...
 })
 \`\`\`
 

@@ -79,21 +79,21 @@ async function handleTextCommand(chatId, userId, text) {
     if (text.startsWith('/start')) {
       await sendTelegramMessage(
         chatId,
-        `Welcome to ${AGENT_NAME}! 👋\n\nI can help you with:\n• Code analysis\n• Code generation\n• GitHub integration\n• Viewing pending changes\n\nUse /help for available commands.`
+        `Welcome to ${AGENT_NAME}! 👋\n\nI can help you with:\n• Code analysis\n• Code generation\n• GitHub integration\n• Viewing pending changes\n\nUse /help for available commands.`,
       );
     }
-    
+
     if (text === '/help') {
       await sendTelegramMessage(
         chatId,
-        `Available Commands:\n\n/pending \\- Show pending code changes\n/status \\- Agent status\n/providers \\- Show LLM providers\n/help \\- This message`
+        `Available Commands:\n\n/pending \\- Show pending code changes\n/status \\- Agent status\n/providers \\- Show LLM providers\n/help \\- This message`,
       );
     }
 
     if (text === '/status') {
       await sendTelegramMessage(
         chatId,
-        `✅ ${AGENT_NAME} is online\n\nReady to assist with your coding needs\\!`
+        `✅ ${AGENT_NAME} is online\n\nReady to assist with your coding needs\\!`,
       );
     }
 
@@ -173,10 +173,12 @@ async function handleAgentMessage(chatId, userId, userMessage) {
       'messages.0': { $exists: true }, // Has messages
     }).sort({ createdAt: -1 });
 
-    const messages = thread ? thread.messages.map((m) => ({
-      role: m.role,
-      content: m.content,
-    })) : [];
+    const messages = thread
+      ? thread.messages.map((m) => ({
+          role: m.role,
+          content: m.content,
+        }))
+      : [];
 
     messages.push({
       role: 'user',
@@ -186,10 +188,7 @@ async function handleAgentMessage(chatId, userId, userMessage) {
     // Format for AI
     const systemPrompt = `You are ${AGENT_NAME}, helping a user via Telegram. Keep responses concise (under 500 chars when possible). Be helpful and direct.`;
 
-    const llmMessages = [
-      { role: 'system', content: systemPrompt },
-      ...messages,
-    ];
+    const llmMessages = [{ role: 'system', content: systemPrompt }, ...messages];
 
     // Get response from agent
     const llmProvider = require('../services/llmProvider');

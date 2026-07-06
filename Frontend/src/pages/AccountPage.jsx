@@ -120,12 +120,15 @@ export default function AccountPage() {
   }
 
   return (
-    <div className={`accountPage admin-page authenticated ${darkMode ? 'dark-theme' : 'light-theme'}`}>
+    <div
+      className={`accountPage admin-page authenticated ${darkMode ? 'dark-theme' : 'light-theme'}`}
+    >
       <header className="admin-header accountHeader">
         <div>
           <h1>👤 Account</h1>
           <p className="muted">
-            Your personal control room for pure life knowledge, saved defaults, listings, recovery, and private continuity.
+            Your personal control room for pure life knowledge, saved defaults, listings, recovery,
+            and private continuity.
           </p>
         </div>
         <div className="accountActions">
@@ -162,15 +165,28 @@ export default function AccountPage() {
         <section className="card accountAtlas">
           <h2>Private atlas</h2>
           <p className="accountAtlasCopy">
-            Keep the personal and business side together. Jump straight to the parts of the site you use most.
+            Keep the personal and business side together. Jump straight to the parts of the site you
+            use most.
           </p>
           <div className="accountAtlasLinks">
-            <Link className="btn ghost" to="/">Home</Link>
-            <Link className="btn ghost" to="/archive">Archive</Link>
-            <Link className="btn ghost" to="/recovery">Recovery</Link>
-            <Link className="btn ghost" to="/marketplace">Marketplace</Link>
-            <Link className="btn ghost" to="/items/mine">My Listings</Link>
-            <Link className="btn ghost" to="/admin">Admin</Link>
+            <Link className="btn ghost" to="/">
+              Home
+            </Link>
+            <Link className="btn ghost" to="/archive">
+              Archive
+            </Link>
+            <Link className="btn ghost" to="/recovery">
+              Recovery
+            </Link>
+            <Link className="btn ghost" to="/marketplace">
+              Marketplace
+            </Link>
+            <Link className="btn ghost" to="/items/mine">
+              My Listings
+            </Link>
+            <Link className="btn ghost" to="/admin">
+              Admin
+            </Link>
           </div>
         </section>
 
@@ -187,7 +203,10 @@ export default function AccountPage() {
             <div className="form">
               <label>
                 Name
-                <input value={profile.name || ''} onChange={(e) => setProfile((p) => ({ ...p, name: e.target.value }))} />
+                <input
+                  value={profile.name || ''}
+                  onChange={(e) => setProfile((p) => ({ ...p, name: e.target.value }))}
+                />
               </label>
               <label>
                 Email
@@ -256,7 +275,10 @@ export default function AccountPage() {
                 <input
                   value={preferencesDraft.defaultCountry}
                   onChange={(e) =>
-                    setProfile((p) => ({ ...p, preferences: { ...(p?.preferences || {}), defaultCountry: e.target.value } }))
+                    setProfile((p) => ({
+                      ...p,
+                      preferences: { ...(p?.preferences || {}), defaultCountry: e.target.value },
+                    }))
                   }
                 />
               </label>
@@ -265,7 +287,10 @@ export default function AccountPage() {
                 <input
                   value={preferencesDraft.defaultCurrency}
                   onChange={(e) =>
-                    setProfile((p) => ({ ...p, preferences: { ...(p?.preferences || {}), defaultCurrency: e.target.value } }))
+                    setProfile((p) => ({
+                      ...p,
+                      preferences: { ...(p?.preferences || {}), defaultCurrency: e.target.value },
+                    }))
                   }
                 />
               </label>
@@ -276,7 +301,10 @@ export default function AccountPage() {
                   onChange={(e) =>
                     setProfile((p) => ({
                       ...p,
-                      preferences: { ...(p?.preferences || {}), defaultWalletAddress: e.target.value },
+                      preferences: {
+                        ...(p?.preferences || {}),
+                        defaultWalletAddress: e.target.value,
+                      },
                     }))
                   }
                 />
@@ -286,7 +314,10 @@ export default function AccountPage() {
                 <input
                   value={preferencesDraft.defaultTags}
                   onChange={(e) =>
-                    setProfile((p) => ({ ...p, preferences: { ...(p?.preferences || {}), defaultTags: e.target.value } }))
+                    setProfile((p) => ({
+                      ...p,
+                      preferences: { ...(p?.preferences || {}), defaultTags: e.target.value },
+                    }))
                   }
                 />
               </label>
@@ -297,7 +328,10 @@ export default function AccountPage() {
                   onChange={(e) =>
                     setProfile((p) => ({
                       ...p,
-                      preferences: { ...(p?.preferences || {}), defaultStreamPlatform: e.target.value },
+                      preferences: {
+                        ...(p?.preferences || {}),
+                        defaultStreamPlatform: e.target.value,
+                      },
                     }))
                   }
                 />
@@ -309,14 +343,22 @@ export default function AccountPage() {
                   onChange={(e) =>
                     setProfile((p) => ({
                       ...p,
-                      preferences: { ...(p?.preferences || {}), defaultPublicVisibility: e.target.checked },
+                      preferences: {
+                        ...(p?.preferences || {}),
+                        defaultPublicVisibility: e.target.checked,
+                      },
                     }))
                   }
                 />
                 Default: Public visibility
               </label>
               <div className="row">
-                <button className="btn primary" type="button" disabled={saving} onClick={handleSave}>
+                <button
+                  className="btn primary"
+                  type="button"
+                  disabled={saving}
+                  onClick={handleSave}
+                >
                   {saving ? 'Saving…' : 'Save'}
                 </button>
               </div>

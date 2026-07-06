@@ -5,6 +5,7 @@
 **The original plan assumed PostgreSQL, but this codebase uses MongoDB/Mongoose.**
 
 **What Already Exists:**
+
 - ✅ MongoDB connection (`backend/lib/dbConnect.js`)
 - ✅ Oracle Assessment model (`backend/models/OracleAssessment.js`) - MongoDB
 - ✅ Artifact/Item model (`backend/models/Artifact.js`) - MongoDB
@@ -13,6 +14,7 @@
 - ✅ Journal system (`backend/routes/journal.js`)
 
 **What Needs to Be Built:**
+
 - ⚠️ Enhanced Item Registration frontend (multi-step wizard)
 - ⚠️ Email automation service (consign@pvabazaar.org)
 - ⚠️ User-facing item registration endpoint (currently admin-only)
@@ -39,17 +41,17 @@ router.post('/register', require('../middleware/auth').authMiddleware, async (re
       creator: req.user.id, // Set creator from authenticated user
       status: 'draft', // Start as draft, admin approves
     });
-    
+
     const artifact = new Artifact(input);
     await artifact.save();
-    
+
     // TODO: Send email notification to admin
     // TODO: Send confirmation email to user
-    
-    res.status(201).json({ 
-      ok: true, 
+
+    res.status(201).json({
+      ok: true,
       item: toPublicItem(artifact),
-      message: 'Item registered successfully. It will be reviewed before publishing.'
+      message: 'Item registered successfully. It will be reviewed before publishing.',
     });
   } catch (err) {
     res.status(400).json({ ok: false, error: err.message });
@@ -91,8 +93,8 @@ const transporter = nodemailer.createTransport({
   secure: false,
   auth: {
     user: process.env.SMTP_USER || 'consign@pvabazaar.org',
-    pass: process.env.SMTP_PASS
-  }
+    pass: process.env.SMTP_PASS,
+  },
 });
 
 async function sendConsignmentEmail({ to, subject, itemData, status }) {
@@ -114,7 +116,7 @@ async function sendConsignmentEmail({ to, subject, itemData, status }) {
     from: '"PVABazaar Consignment" <consign@pvabazaar.org>',
     to,
     subject,
-    html
+    html,
   });
 }
 
@@ -137,7 +139,7 @@ try {
       to: user.email,
       subject: 'Item Registration Confirmation',
       itemData: artifact,
-      status: 'pending_review'
+      status: 'pending_review',
     });
   }
 } catch (emailErr) {
@@ -206,7 +208,7 @@ describe('PVABazaar API Integration Tests', () => {
     const res = await request(app).post('/api/auth/signup').send({
       email: 'test@pvabazaar.org',
       password: 'test123',
-      name: 'Test User'
+      name: 'Test User',
     });
     authToken = res.body.token;
   });
@@ -221,12 +223,12 @@ describe('PVABazaar API Integration Tests', () => {
             fullName: 'Test User',
             birthDate: '1990-01-01',
             birthTime: '12:00',
-            birthPlace: 'Test City'
+            birthPlace: 'Test City',
           },
           spiritualProfile: {
             meditation: true,
-            spiritualPractices: ['Yoga']
-          }
+            spiritualPractices: ['Yoga'],
+          },
         });
       expect(res.status).toBe(202); // Accepted, processing
       expect(res.body.ok).toBe(true);
@@ -244,7 +246,7 @@ describe('PVABazaar API Integration Tests', () => {
           description: 'Test description',
           price: 99.99,
           category: 'electronics',
-          materials: ['Plastic', 'Metal']
+          materials: ['Plastic', 'Metal'],
         });
       expect(res.status).toBe(201);
       expect(res.body.ok).toBe(true);
@@ -260,14 +262,16 @@ describe('PVABazaar API Integration Tests', () => {
 **File: `Frontend/src/App.jsx`**
 
 Add route (already in original plan):
+
 ```jsx
 import ItemRegistrationPage from './pages/ItemRegistrationPage';
-<Route path="/item/register" element={<ItemRegistrationPage />} />
+<Route path="/item/register" element={<ItemRegistrationPage />} />;
 ```
 
 **File: `Frontend/src/components/Layout.jsx`**
 
 Add navigation link:
+
 ```jsx
 <NavLink to="/item/register">📦 Register Item</NavLink>
 ```
@@ -275,6 +279,7 @@ Add navigation link:
 **File: `Frontend/src/pages/ItemRegistrationPage.jsx`**
 
 Create the component (use original plan code, but ensure):
+
 - API endpoint: `/api/items/register`
 - Include Authorization header
 - Map form fields correctly to Artifact model
@@ -291,23 +296,28 @@ Create the component (use original plan code, but ensure):
 ## Required for Production
 
 ### Database
+
 - [x] MONGODB_URI (MongoDB Atlas connection string)
 - [ ] MONGODB_URI already configured
 
 ### Authentication
+
 - [x] JWT_SECRET (32+ character random string)
 - [ ] JWT_SECRET already configured
 
 ### AI Services
+
 - [ ] OPENAI_API_KEY (for Oracle Assessments)
 
 ### Email
+
 - [ ] SMTP_HOST (smtp.gmail.com)
 - [ ] SMTP_PORT (587)
 - [ ] SMTP_USER (consign@pvabazaar.org)
 - [ ] SMTP_PASS (Gmail app password)
 
 ### General
+
 - [x] NODE_ENV (production)
 - [ ] ALLOWED_ORIGIN (https://pvabazaar.org)
 ```
@@ -351,13 +361,13 @@ After implementation:
 
 ## 📊 WHAT'S DIFFERENT FROM ORIGINAL PLAN
 
-| Original Plan | Corrected Plan |
-|--------------|----------------|
+| Original Plan         | Corrected Plan                 |
+| --------------------- | ------------------------------ |
 | PostgreSQL migrations | MongoDB models (already exist) |
-| New Listing model | Enhance Artifact model |
-| SQL queries | Mongoose queries |
-| pg Pool | Mongoose connection |
-| New database setup | Use existing MongoDB |
+| New Listing model     | Enhance Artifact model         |
+| SQL queries           | Mongoose queries               |
+| pg Pool               | Mongoose connection            |
+| New database setup    | Use existing MongoDB           |
 
 ---
 
@@ -370,6 +380,7 @@ After implementation:
 5. Finally **PHASE 5** - Documentation
 
 **Report back after each phase with:**
+
 - Files created/modified
 - Any errors encountered
 - Testing results

@@ -66,7 +66,9 @@ export default function ModerationQueue() {
     setActionLoading(true);
     setError('');
     try {
-      const response = await rejectLibraryArticle(selectedItem._id, { reason: moderationNote || 'Needs revision' });
+      const response = await rejectLibraryArticle(selectedItem._id, {
+        reason: moderationNote || 'Needs revision',
+      });
       if (!response?.ok) throw new Error(response?.error || 'Reject failed');
       setModerationNote('');
       await loadPending();
@@ -100,7 +102,9 @@ export default function ModerationQueue() {
                 onClick={() => setSelectedId(String(item._id))}
               >
                 <strong>{item.title}</strong>
-                <span>v{item.version} • {item.slug}</span>
+                <span>
+                  v{item.version} • {item.slug}
+                </span>
               </button>
             ))}
           </div>
@@ -125,11 +129,15 @@ export default function ModerationQueue() {
                 </div>
                 <div>
                   <h4>Diff Preview</h4>
-                  <pre className="library-code-block">{formatDiffPreview(selectedItem.diffSummary?.preview)}</pre>
+                  <pre className="library-code-block">
+                    {formatDiffPreview(selectedItem.diffSummary?.preview)}
+                  </pre>
                 </div>
               </div>
 
-              <label className="library-label" htmlFor="moderation-note">Moderator Note</label>
+              <label className="library-label" htmlFor="moderation-note">
+                Moderator Note
+              </label>
               <input
                 id="moderation-note"
                 className="library-input"

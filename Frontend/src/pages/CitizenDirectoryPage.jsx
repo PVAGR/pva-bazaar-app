@@ -52,10 +52,16 @@ export default function CitizenDirectoryPage() {
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
     return citizens.filter((item) => {
-      const roleMatch = roleFilter === 'all' || String(item.citizenRole || '').toLowerCase() === roleFilter;
-      const searchMatch = !query
-        || String(item.name || '').toLowerCase().includes(query)
-        || String(item.societalId || '').toLowerCase().includes(query);
+      const roleMatch =
+        roleFilter === 'all' || String(item.citizenRole || '').toLowerCase() === roleFilter;
+      const searchMatch =
+        !query ||
+        String(item.name || '')
+          .toLowerCase()
+          .includes(query) ||
+        String(item.societalId || '')
+          .toLowerCase()
+          .includes(query);
       return roleMatch && searchMatch;
     });
   }, [citizens, roleFilter, search]);
@@ -83,7 +89,9 @@ export default function CitizenDirectoryPage() {
           Role filter
           <select value={roleFilter} onChange={(event) => setRoleFilter(event.target.value)}>
             {ROLE_OPTIONS.map((role) => (
-              <option key={role} value={role}>{role === 'all' ? 'All roles' : roleLabel(role)}</option>
+              <option key={role} value={role}>
+                {role === 'all' ? 'All roles' : roleLabel(role)}
+              </option>
             ))}
           </select>
         </label>
@@ -99,9 +107,17 @@ export default function CitizenDirectoryPage() {
               <Link key={citizen.id} to={`/passport/${citizen.id}`} className="directory-card">
                 <div className="directory-avatar">
                   {citizen.avatarUrl ? (
-                    <img src={citizen.avatarUrl} alt={`${citizen.name} avatar`} className="passport-avatar" />
+                    <img
+                      src={citizen.avatarUrl}
+                      alt={`${citizen.name} avatar`}
+                      className="passport-avatar"
+                    />
                   ) : (
-                    <div className="passport-avatar-placeholder">{String(citizen.name || '?').slice(0, 1).toUpperCase()}</div>
+                    <div className="passport-avatar-placeholder">
+                      {String(citizen.name || '?')
+                        .slice(0, 1)
+                        .toUpperCase()}
+                    </div>
                   )}
                 </div>
                 <h3>{citizen.name || 'Unknown Citizen'}</h3>

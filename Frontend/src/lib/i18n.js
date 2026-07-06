@@ -62,7 +62,8 @@ const STRINGS = {
     deploySubtitle: 'Launch a self-governing community instance in minutes with no code required.',
     configOptions: 'Configuration Options',
     joinFederation: 'Join the Federation',
-    federationText: 'Share approved proposals with the global PVA network for cross-community endorsement and coordination.',
+    federationText:
+      'Share approved proposals with the global PVA network for cross-community endorsement and coordination.',
     readProtocol: 'Read Federation Protocol Docs',
     viewStatus: 'View Live Network Status',
   },
@@ -110,7 +111,8 @@ const STRINGS = {
     deploySubtitle: 'Anzisha jamii inayojitawala kwa dakika chache bila kuandika msimbo.',
     configOptions: 'Mipangilio ya Usanidi',
     joinFederation: 'Jiunge na Shirikisho',
-    federationText: 'Shiriki mapendekezo yaliyopitishwa kwenye mtandao wa kimataifa wa PVA kwa uratibu wa jamii mbalimbali.',
+    federationText:
+      'Shiriki mapendekezo yaliyopitishwa kwenye mtandao wa kimataifa wa PVA kwa uratibu wa jamii mbalimbali.',
     readProtocol: 'Soma Hati ya Shirikisho',
     viewStatus: 'Tazama Hali ya Mtandao',
   },
@@ -356,7 +358,9 @@ export const setStoredLanguage = (lang) => {
   const next = LANGUAGE_OPTIONS.some((item) => item.code === lang) ? lang : 'en';
   globalThis.localStorage?.setItem(LANGUAGE_KEY, next);
   globalThis.document?.documentElement?.setAttribute('lang', next);
-  globalThis.window?.dispatchEvent(new globalThis.CustomEvent('pva-language-change', { detail: next }));
+  globalThis.window?.dispatchEvent(
+    new globalThis.CustomEvent('pva-language-change', { detail: next }),
+  );
   return next;
 };
 

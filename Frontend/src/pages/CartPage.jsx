@@ -9,7 +9,13 @@ export default function CartPage() {
   return (
     <section className="section-card">
       <h2>Cart</h2>
-      <p>Your cart is empty. Browse the <Link to="/marketplace" className="link">Marketplace</Link> to add items.</p>
+      <p>
+        Your cart is empty. Browse the{' '}
+        <Link to="/marketplace" className="link">
+          Marketplace
+        </Link>{' '}
+        to add items.
+      </p>
       <p className="subtle-note">
         We will support both physical and digital products with Stripe checkout.
       </p>

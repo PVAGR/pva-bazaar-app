@@ -30,17 +30,20 @@ pva-bazaar-app
 To get started with the project, follow these steps:
 
 1. **Clone the repository:**
+
    ```bash
    git clone https://github.com/PVAGR/pva-bazaar-app.git
    cd pva-bazaar-app/Frontend
    ```
 
 2. **Install dependencies:**
+
    ```bash
    npm install
    ```
 
 3. **Run the development server:**
+
    ```bash
    npm run dev
    ```

@@ -157,12 +157,14 @@ router.get('/analytics', requireAuth, async (req, res) => {
         rating: shop.analytics.avgRating,
         reviews: shop.analytics.reviewCount,
       },
-      profile: profile ? {
-        totalSales: profile.totalSales,
-        totalEarnings: profile.totalEarnings,
-        responseTime: profile.responseTime,
-        returnRate: profile.returnRate,
-      } : null,
+      profile: profile
+        ? {
+            totalSales: profile.totalSales,
+            totalEarnings: profile.totalEarnings,
+            responseTime: profile.responseTime,
+            returnRate: profile.returnRate,
+          }
+        : null,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -187,10 +189,7 @@ router.get('/orders', requireAuth, async (req, res) => {
       filter.fulfillmentStatus = status;
     }
 
-    const orders = await Order.find(filter)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
+    const orders = await Order.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit);
 
     const total = await Order.countDocuments(filter);
 
@@ -327,11 +326,9 @@ router.put('/profile', requireAuth, async (req, res) => {
       }
     }
 
-    const profile = await SellerProfile.findOneAndUpdate(
-      { userId: req.user._id },
-      sanitized,
-      { new: true }
-    );
+    const profile = await SellerProfile.findOneAndUpdate({ userId: req.user._id }, sanitized, {
+      new: true,
+    });
 
     res.json({
       message: 'Profile updated',

@@ -2,7 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
-import { fetchMarketplaceItem, fetchVerificationByArtifact, createCheckoutSession } from '../lib/api';
+import {
+  fetchMarketplaceItem,
+  fetchVerificationByArtifact,
+  createCheckoutSession,
+} from '../lib/api';
 import VerificationBadge from '../components/VerificationBadge.jsx';
 import VerificationHashBlock from '../components/VerificationHashBlock.jsx';
 import { AlertModal } from '../components/ui/DialogModals.jsx';
@@ -49,29 +53,32 @@ export default function ArtifactDetailPage() {
       setLoading(false);
       return;
     }
-    Promise.all([
-      fetchMarketplaceItem(slug),
-      fetchVerificationByArtifact(slug),
-    ]).then(([itemRes, verRes]) => {
-      if (!mounted) return;
-      if (itemRes.ok && itemRes.item) {
-        setItem(itemRes.item);
-        setMainIdx(0);
-      } else {
-        setError(itemRes.error || 'Artifact not found');
-      }
-      if (verRes.ok && verRes.verification) {
-        setVerification(verRes.verification);
-      }
-      setLoading(false);
-    });
-    return () => { mounted = false; };
+    Promise.all([fetchMarketplaceItem(slug), fetchVerificationByArtifact(slug)]).then(
+      ([itemRes, verRes]) => {
+        if (!mounted) return;
+        if (itemRes.ok && itemRes.item) {
+          setItem(itemRes.item);
+          setMainIdx(0);
+        } else {
+          setError(itemRes.error || 'Artifact not found');
+        }
+        if (verRes.ok && verRes.verification) {
+          setVerification(verRes.verification);
+        }
+        setLoading(false);
+      },
+    );
+    return () => {
+      mounted = false;
+    };
   }, [slug]);
 
   if (loading) {
     return (
       <div className="artifact-detail artifact-detail--loading">
-        <div className="artifact-detail__loader" aria-live="polite">Loading artifact…</div>
+        <div className="artifact-detail__loader" aria-live="polite">
+          Loading artifact…
+        </div>
       </div>
     );
   }
@@ -81,7 +88,9 @@ export default function ArtifactDetailPage() {
       <div className="artifact-detail">
         <div className="artifact-detail__error">
           <p>{error || 'Artifact not found.'}</p>
-          <Link to="/marketplace" className="artifact-detail__link">← Back to Archive</Link>
+          <Link to="/marketplace" className="artifact-detail__link">
+            ← Back to Archive
+          </Link>
         </div>
       </div>
     );
@@ -90,26 +99,25 @@ export default function ArtifactDetailPage() {
   const media = Array.isArray(item.media) && item.media.length > 0 ? item.media : [PLACEHOLDER];
   const mainImage = media[mainIdx] || PLACEHOLDER;
   const price = formatPrice(item.priceCents, item.currency);
-  const scarcityCount = item.stockQty != null && item.stockQty !== '' ? Number(item.stockQty) : null;
-  const scarcityText = scarcityCount != null && scarcityCount >= 0
-    ? `Only ${scarcityCount} preserved copies available`
-    : 'Limited preservation run';
+  const scarcityCount =
+    item.stockQty != null && item.stockQty !== '' ? Number(item.stockQty) : null;
+  const scarcityText =
+    scarcityCount != null && scarcityCount >= 0
+      ? `Only ${scarcityCount} preserved copies available`
+      : 'Limited preservation run';
   const lore = item.lore || item.description || 'No lore recorded for this artifact.';
 
   return (
-    <motion.div
-      className="artifact-detail"
-      initial="initial"
-      animate="animate"
-      variants={stagger}
-    >
+    <motion.div className="artifact-detail" initial="initial" animate="animate" variants={stagger}>
       <Helmet>
         <title>{item.name ? `${item.name} | PVA Bazaar` : 'Artifact | PVA Bazaar'}</title>
         <meta name="description" content={item.description || `Artifact: ${item.name}`} />
       </Helmet>
 
       <nav className="artifact-detail__nav" aria-label="Breadcrumb">
-        <Link to="/marketplace" className="artifact-detail__back">← Archive</Link>
+        <Link to="/marketplace" className="artifact-detail__back">
+          ← Archive
+        </Link>
       </nav>
 
       <div className="artifact-detail__grid">
@@ -124,11 +132,7 @@ export default function ArtifactDetailPage() {
             whileHover={{ scale: 1.01 }}
             transition={{ type: 'spring', stiffness: 300, damping: 20 }}
           >
-            <img
-              src={mainImage}
-              alt={item.name}
-              className="artifact-detail__image"
-            />
+            <img src={mainImage} alt={item.name} className="artifact-detail__image" />
           </motion.div>
           {media.length > 1 && (
             <div className="artifact-detail__thumbs" role="list">
@@ -176,7 +180,9 @@ export default function ArtifactDetailPage() {
             variants={fadeIn}
             aria-labelledby="lore-heading"
           >
-            <h2 id="lore-heading" className="artifact-detail__lore-title">Lore</h2>
+            <h2 id="lore-heading" className="artifact-detail__lore-title">
+              Lore
+            </h2>
             <div className="artifact-detail__lore-body">
               {lore.split('\n').map((p, i) => (
                 <p key={i}>{p}</p>
@@ -185,13 +191,8 @@ export default function ArtifactDetailPage() {
           </motion.section>
 
           {/* Initiate Acquisition */}
-          <motion.div
-            className="artifact-detail__actions"
-            variants={fadeIn}
-          >
-            {price && (
-              <p className="artifact-detail__price">{price}</p>
-            )}
+          <motion.div className="artifact-detail__actions" variants={fadeIn}>
+            {price && <p className="artifact-detail__price">{price}</p>}
             <motion.button
               type="button"
               className="artifact-detail__cta"

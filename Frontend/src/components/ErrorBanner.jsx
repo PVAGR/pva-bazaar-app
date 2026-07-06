@@ -16,7 +16,12 @@ export default function ErrorBanner({ message, onRetry, onDismiss }) {
           </button>
         ) : null}
         {onDismiss ? (
-          <button type="button" className="btn ghost errorBanner__btn" onClick={onDismiss} aria-label="Dismiss">
+          <button
+            type="button"
+            className="btn ghost errorBanner__btn"
+            onClick={onDismiss}
+            aria-label="Dismiss"
+          >
             ×
           </button>
         ) : null}

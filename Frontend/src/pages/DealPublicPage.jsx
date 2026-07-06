@@ -1,6 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { fetchPublicDealByPublicId, fetchDealVerificationSummary, verifyDealParticipation, joinDealAuthenticated } from '../lib/api';
+import {
+  fetchPublicDealByPublicId,
+  fetchDealVerificationSummary,
+  verifyDealParticipation,
+  joinDealAuthenticated,
+} from '../lib/api';
 import { getToken, setToken } from '../lib/auth';
 import { getErrorMessage } from '../lib/errorUtils';
 
@@ -23,9 +28,10 @@ export default function DealPublicPage() {
   }, [publicId]);
 
   const verificationCount = Number(
-    verification?.verificationCount || deal?.verification?.verificationCount || 0
+    verification?.verificationCount || deal?.verification?.verificationCount || 0,
   );
-  const verifiedParticipants = verification?.verifiedParticipants || deal?.verification?.verifiedParticipants || [];
+  const verifiedParticipants =
+    verification?.verifiedParticipants || deal?.verification?.verifiedParticipants || [];
 
   useEffect(() => {
     let active = true;
@@ -69,7 +75,7 @@ export default function DealPublicPage() {
         if (active) {
           const baseMessage = getErrorMessage(err, 'Failed to load public deal');
           setError(
-            `${baseMessage}. If this link is an invite token, paste a JWT above and click Use token to load invite mode.`
+            `${baseMessage}. If this link is an invite token, paste a JWT above and click Use token to load invite mode.`,
           );
         }
       } finally {
@@ -167,19 +173,30 @@ export default function DealPublicPage() {
           {loading ? 'Loading proposal…' : deal?.title || 'Deal proposal'}
         </h1>
         <p className="max-w-3xl text-sm text-zinc-400">
-          Read the proposal publicly, inspect the terms, and verify with a logged-in session when ready.
+          Read the proposal publicly, inspect the terms, and verify with a logged-in session when
+          ready.
         </p>
       </header>
 
-      {loading ? <div className="rounded-lg border border-zinc-700/70 bg-zinc-900/60 p-4 text-sm text-zinc-300">Loading deal…</div> : null}
-      {error ? <div className="rounded-lg border border-red-700/60 bg-red-950/40 px-3 py-2 text-sm text-red-200">{error}</div> : null}
+      {loading ? (
+        <div className="rounded-lg border border-zinc-700/70 bg-zinc-900/60 p-4 text-sm text-zinc-300">
+          Loading deal…
+        </div>
+      ) : null}
+      {error ? (
+        <div className="rounded-lg border border-red-700/60 bg-red-950/40 px-3 py-2 text-sm text-red-200">
+          {error}
+        </div>
+      ) : null}
 
       {deal ? (
         <>
           <div className="grid gap-6 md:grid-cols-2">
             <section className="rounded-lg border border-zinc-700/70 bg-zinc-900/60 p-4 space-y-3">
               <h2 className="text-sm font-semibold text-zinc-200">Proposal details</h2>
-              <p className="text-sm text-zinc-400">{deal.description || 'No description provided.'}</p>
+              <p className="text-sm text-zinc-400">
+                {deal.description || 'No description provided.'}
+              </p>
               <div className="grid grid-cols-2 gap-3 text-xs text-zinc-300">
                 <div className="rounded-lg border border-zinc-800 bg-black/20 p-3">
                   <div className="text-zinc-500">Funding needed</div>
@@ -189,11 +206,15 @@ export default function DealPublicPage() {
                 </div>
                 <div className="rounded-lg border border-zinc-800 bg-black/20 p-3">
                   <div className="text-zinc-500">Status</div>
-                  <div className="mt-1 text-sm font-semibold text-zinc-100">{deal.status || 'draft'}</div>
+                  <div className="mt-1 text-sm font-semibold text-zinc-100">
+                    {deal.status || 'draft'}
+                  </div>
                 </div>
                 <div className="rounded-lg border border-zinc-800 bg-black/20 p-3">
                   <div className="text-zinc-500">Public ID</div>
-                  <div className="mt-1 text-sm font-semibold text-zinc-100 break-all">{deal.publicId || publicId}</div>
+                  <div className="mt-1 text-sm font-semibold text-zinc-100 break-all">
+                    {deal.publicId || publicId}
+                  </div>
                 </div>
                 <div className="rounded-lg border border-zinc-800 bg-black/20 p-3">
                   <div className="text-zinc-500">Created</div>
@@ -207,18 +228,30 @@ export default function DealPublicPage() {
             <section className="rounded-lg border border-zinc-700/70 bg-zinc-900/60 p-4 space-y-3">
               <h2 className="text-sm font-semibold text-zinc-200">Verification</h2>
               <div className="rounded-lg border border-zinc-800 bg-black/20 p-3 text-sm text-zinc-300">
-                <div className="text-zinc-500">{compatMode ? 'Invite mode (legacy backend)' : 'Verified participants'}</div>
+                <div className="text-zinc-500">
+                  {compatMode ? 'Invite mode (legacy backend)' : 'Verified participants'}
+                </div>
                 <div className="mt-1 text-2xl font-semibold text-zinc-100">{verificationCount}</div>
               </div>
               <div className="space-y-2 text-xs text-zinc-400">
-                {verifiedParticipants.length ? verifiedParticipants.map((entry) => (
-                  <div key={`${entry.userId}-${entry.verifiedAt}`} className="rounded-lg border border-zinc-800 bg-black/20 p-3">
-                    <div className="text-zinc-300">{entry.userId || 'verified user'}</div>
-                    <div className="text-zinc-500">
-                      {entry.verifiedAt ? new Date(entry.verifiedAt).toLocaleString() : 'Unknown time'} · {entry.method || 'jwt'}
+                {verifiedParticipants.length ? (
+                  verifiedParticipants.map((entry) => (
+                    <div
+                      key={`${entry.userId}-${entry.verifiedAt}`}
+                      className="rounded-lg border border-zinc-800 bg-black/20 p-3"
+                    >
+                      <div className="text-zinc-300">{entry.userId || 'verified user'}</div>
+                      <div className="text-zinc-500">
+                        {entry.verifiedAt
+                          ? new Date(entry.verifiedAt).toLocaleString()
+                          : 'Unknown time'}{' '}
+                        · {entry.method || 'jwt'}
+                      </div>
                     </div>
-                  </div>
-                )) : <p>No verifications recorded yet.</p>}
+                  ))
+                ) : (
+                  <p>No verifications recorded yet.</p>
+                )}
               </div>
               <div className="space-y-2">
                 <label className="block text-xs font-medium text-zinc-300">JWT token</label>
@@ -253,14 +286,21 @@ export default function DealPublicPage() {
                     disabled={actionBusy}
                     type="button"
                   >
-                    {actionBusy ? 'Working…' : compatMode ? 'Refresh invite access' : 'Verify participation'}
+                    {actionBusy
+                      ? 'Working…'
+                      : compatMode
+                        ? 'Refresh invite access'
+                        : 'Verify participation'}
                   </button>
                 ) : (
                   <div className="rounded-lg border border-zinc-700 bg-zinc-800/60 px-3 py-2 text-xs text-zinc-400">
                     Enter a JWT token above to unlock verification.
                   </div>
                 )}
-                <Link className="rounded-lg border border-zinc-600 bg-zinc-800/70 px-3 py-2 text-xs text-zinc-200" to="/deals">
+                <Link
+                  className="rounded-lg border border-zinc-600 bg-zinc-800/70 px-3 py-2 text-xs text-zinc-200"
+                  to="/deals"
+                >
                   Back to deals
                 </Link>
               </div>
@@ -271,7 +311,9 @@ export default function DealPublicPage() {
             <h2 className="text-sm font-semibold text-zinc-200">Terms at a glance</h2>
             <div className="grid gap-3 md:grid-cols-3 text-sm text-zinc-300">
               <div>
-                <div className="text-zinc-500 text-xs uppercase tracking-[0.25em]">Counterparty</div>
+                <div className="text-zinc-500 text-xs uppercase tracking-[0.25em]">
+                  Counterparty
+                </div>
                 <div>{deal.counterparty?.name || 'Not specified'}</div>
               </div>
               <div>
@@ -279,7 +321,9 @@ export default function DealPublicPage() {
                 <div>{deal.counterparty?.country || 'Not specified'}</div>
               </div>
               <div>
-                <div className="text-zinc-500 text-xs uppercase tracking-[0.25em]">Verification count</div>
+                <div className="text-zinc-500 text-xs uppercase tracking-[0.25em]">
+                  Verification count
+                </div>
                 <div>{verificationCount}</div>
               </div>
             </div>

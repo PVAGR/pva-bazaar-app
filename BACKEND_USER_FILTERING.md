@@ -11,6 +11,7 @@ If the backend returns ALL users' data instead of just the current user's, users
 ## How It Should Work
 
 ### Request Flow
+
 ```
 1. User logs in → receives JWT token with { id: 'user123', role: 'user' }
 2. JWT stored in localStorage
@@ -27,6 +28,7 @@ If the backend returns ALL users' data instead of just the current user's, users
 ## Backend Filtering Implementation
 
 ### 1. Auth Middleware (Already exists)
+
 File: `backend/middleware/auth.js` or similar
 
 ```javascript
@@ -34,7 +36,7 @@ File: `backend/middleware/auth.js` or similar
 const authMiddleware = (req, res, next) => {
   const token = req.headers.authorization?.split(' ')[1];
   if (!token) return res.status(401).json({ error: 'No token' });
-  
+
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = { id: decoded.id, role: decoded.role };
@@ -48,57 +50,58 @@ const authMiddleware = (req, res, next) => {
 ### 2. Update Each Endpoint
 
 #### GET /api/orders
+
 ```javascript
 // ❌ WRONG - Returns ALL orders
 router.get('/orders', (req, res) => {
-  Order.find().then(orders => res.json({ orders }));
+  Order.find().then((orders) => res.json({ orders }));
 });
 
 // ✅ CORRECT - Returns only user's orders
 router.get('/orders', authMiddleware, (req, res) => {
-  const userId = req.user.id;  // Extract from JWT
-  Order.find({ userId }).then(orders => {
+  const userId = req.user.id; // Extract from JWT
+  Order.find({ userId }).then((orders) => {
     res.json({ ok: true, orders });
   });
 });
 ```
 
 #### GET /api/items/mine
+
 ```javascript
 // ✅ CORRECT - Returns only user's items
 router.get('/items/mine', authMiddleware, (req, res) => {
   const userId = req.user.id;
-  Item.find({ creatorId: userId }).then(items => {
+  Item.find({ creatorId: userId }).then((items) => {
     res.json({ ok: true, items });
   });
 });
 ```
 
 #### GET /api/transactions
+
 ```javascript
 // ✅ CORRECT - Returns only user's transactions
 router.get('/transactions', authMiddleware, (req, res) => {
   const userId = req.user.id;
   const limit = req.query.limit || 10;
-  
+
   Transaction.find({
-    $or: [
-      { buyerId: userId },
-      { sellerId: userId }
-    ]
+    $or: [{ buyerId: userId }, { sellerId: userId }],
   })
-  .limit(limit)
-  .sort({ createdAt: -1 })
-  .then(txs => res.json(txs));
+    .limit(limit)
+    .sort({ createdAt: -1 })
+    .then((txs) => res.json(txs));
 });
 ```
 
 #### GET /api/sales/metrics
+
 ```javascript
 // ✅ CORRECT - Returns only user's sales metrics
 router.get('/sales/metrics', authMiddleware, (req, res) => {
   const userId = req.user.id;
-  
+
   Transaction.aggregate([
     { $match: { sellerId: new ObjectId(userId) } },
     {
@@ -107,46 +110,43 @@ router.get('/sales/metrics', authMiddleware, (req, res) => {
         totalSales: { $sum: '$amount' },
         thisMonth: {
           $sum: {
-            $cond: [
-              { $gte: ['$createdAt', new Date(new Date().setDate(1))] },
-              '$amount',
-              0
-            ]
-          }
+            $cond: [{ $gte: ['$createdAt', new Date(new Date().setDate(1))] }, '$amount', 0],
+          },
         },
         thisWeek: {
           $sum: {
             $cond: [
-              { $gte: ['$createdAt', new Date(Date.now() - 7*24*60*60*1000)] },
+              { $gte: ['$createdAt', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)] },
               '$amount',
-              0
-            ]
-          }
-        }
-      }
-    }
-  ]).then(metrics => {
+              0,
+            ],
+          },
+        },
+      },
+    },
+  ]).then((metrics) => {
     res.json(metrics[0] || { totalSales: 0, thisMonth: 0, thisWeek: 0 });
   });
 });
 ```
 
 #### GET /api/orders/escrow
+
 ```javascript
 // ✅ CORRECT - Returns only user's escrow orders
 router.get('/orders/escrow', authMiddleware, (req, res) => {
   const userId = req.user.id;
-  
+
   Order.find({
     $or: [
       { buyerId: userId, hasEscrow: true },
-      { sellerId: userId, hasEscrow: true }
-    ]
+      { sellerId: userId, hasEscrow: true },
+    ],
   })
-  .select('_id itemName totalPrice status releaseDate')
-  .then(escrows => {
-    res.json(escrows);
-  });
+    .select('_id itemName totalPrice status releaseDate')
+    .then((escrows) => {
+      res.json(escrows);
+    });
 });
 ```
 
@@ -159,15 +159,15 @@ Admin endpoints should **NOT filter by user** - admins see everything:
 ```javascript
 // Admin: See ALL orders
 router.get('/admin/orders', authMiddleware, adminRequired, (req, res) => {
-  Order.find().then(orders => {
-    res.json({ ok: true, orders });  // No userId filter
+  Order.find().then((orders) => {
+    res.json({ ok: true, orders }); // No userId filter
   });
 });
 
 // Admin: See ALL transactions
 router.get('/admin/transactions', authMiddleware, adminRequired, (req, res) => {
-  Transaction.find().then(txs => {
-    res.json(txs);  // No userId filter
+  Transaction.find().then((txs) => {
+    res.json(txs); // No userId filter
   });
 });
 ```
@@ -210,19 +210,20 @@ Even when filtering by user ID, never return:
 
 Ensure your database has correct user ID fields:
 
-| Collection | User ID Field | Example Query |
-|-----------|---|---|
-| Order | `userId` or `buyerId` | `{ userId: 'user123' }` |
-| Item | `creatorId` | `{ creatorId: 'user123' }` |
+| Collection  | User ID Field          | Example Query                          |
+| ----------- | ---------------------- | -------------------------------------- |
+| Order       | `userId` or `buyerId`  | `{ userId: 'user123' }`                |
+| Item        | `creatorId`            | `{ creatorId: 'user123' }`             |
 | Transaction | `buyerId` & `sellerId` | `{ $or: [{ buyerId }, { sellerId }] }` |
-| Escrow | `buyerId` & `sellerId` | Same as transaction |
-| SalesMetric | `sellerId` | `{ sellerId: 'user123' }` |
+| Escrow      | `buyerId` & `sellerId` | Same as transaction                    |
+| SalesMetric | `sellerId`             | `{ sellerId: 'user123' }`              |
 
 ---
 
 ## Testing Data Isolation
 
 ### Test Script
+
 ```javascript
 // Test that API correctly filters data
 
@@ -269,24 +270,27 @@ const adminResponse = await GET('/admin/orders', { token: adminToken });
 ## Common Issues & Fixes
 
 ### Issue: User sees other users' orders
+
 **Solution:** Add `{ userId: req.user.id }` filter to `Order.find()`
 
 ### Issue: User sees all items in `/dashboard`
+
 **Solution:** Add `{ creatorId: req.user.id }` filter to `Item.find({ creatorId: req.user.id })`
 
 ### Issue: Transactions endpoint returns empty
+
 **Solution:** Use `$or` to match buyerId OR sellerId:
+
 ```javascript
 Transaction.find({
-  $or: [
-    { buyerId: userId },
-    { sellerId: userId }
-  ]
-})
+  $or: [{ buyerId: userId }, { sellerId: userId }],
+});
 ```
 
 ### Issue: Admin can't see all data
+
 **Solution:** Don't filter in `/admin/*` endpoints:
+
 ```javascript
 // ❌ Wrong
 router.get('/admin/orders', (req, res) => {
@@ -295,7 +299,7 @@ router.get('/admin/orders', (req, res) => {
 
 // ✅ Correct
 router.get('/admin/orders', (req, res) => {
-  Order.find({});  // Return all
+  Order.find({}); // Return all
 });
 ```
 

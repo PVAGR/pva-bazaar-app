@@ -8,44 +8,48 @@
 ## What Was Restored
 
 ### 1. **Blue & Green Theme (Light/Dark Mode)**
-   - Dark theme: Deep blue gradients (#0a3d62 → #1a4d7a) with teal accents (#26c6da)
-   - Light theme: Forest green (#1a4d2e → #0f3a24) with sage green accents (#66bb6a)
-   - Full light/dark mode toggle in header (🌙 / ☀️)
+
+- Dark theme: Deep blue gradients (#0a3d62 → #1a4d7a) with teal accents (#26c6da)
+- Light theme: Forest green (#1a4d2e → #0f3a24) with sage green accents (#66bb6a)
+- Full light/dark mode toggle in header (🌙 / ☀️)
 
 ### 2. **Archive Library - All 16+ Documents**
-   - Master Index (6,553 lines, complete catalog)
-   - Fiction: "The Man from Taured" (Parts 1–2)
-   - Spiritual: Asha vs Druj, Divine Connection, Distributed Flame, etc.
-   - Technology: Bioharmonic Suit, Vimana Technology
-   - Philosophy: Simulation Reality & Consciousness
-   - Business: PVA Bazaar Business Model
-   - Personal: Hermit's Journey, Essays & Reflections
-   - Architecture: Ziggurat Hub
-   - Master Integration & Roadmap
+
+- Master Index (6,553 lines, complete catalog)
+- Fiction: "The Man from Taured" (Parts 1–2)
+- Spiritual: Asha vs Druj, Divine Connection, Distributed Flame, etc.
+- Technology: Bioharmonic Suit, Vimana Technology
+- Philosophy: Simulation Reality & Consciousness
+- Business: PVA Bazaar Business Model
+- Personal: Hermit's Journey, Essays & Reflections
+- Architecture: Ziggurat Hub
+- Master Integration & Roadmap
 
 ### 3. **Frontend Infrastructure**
-   - GitHub Pages deployment (gh-pages branch + CNAME)
-   - Vite-built React app with ArchiveLibraryPage component
-   - Sidebar category filters + full-text search
-   - Markdown rendering with syntax highlighting
-   - Responsive design (desktop / tablet / mobile)
+
+- GitHub Pages deployment (gh-pages branch + CNAME)
+- Vite-built React app with ArchiveLibraryPage component
+- Sidebar category filters + full-text search
+- Markdown rendering with syntax highlighting
+- Responsive design (desktop / tablet / mobile)
 
 ### 4. **Backend API**
-   - Vercel deployment remains active
-   - Ready for blog post management (Admin panel present)
+
+- Vercel deployment remains active
+- Ready for blog post management (Admin panel present)
 
 ---
 
 ## Live Verification Results
 
-| Component | Status | Details |
-|-----------|--------|---------|
-| Homepage | ✅ HTTP 200 | https://pvabazaar.org |
-| Archive Index | ✅ HTTP 200 | /archive/ARCHIVE_MASTER_INDEX.md |
-| Sample Entry | ✅ HTTP 200 | Archive-Entry-001-Man-From-Taured-Part-1.md |
-| DOM + Root | ✅ Present | `<div id="root">` + archive-library class |
-| Theme CSS | ✅ Compiled | Blue/green variables active |
-| HTTPS + Custom Domain | ✅ Active | pvabazaar.org (GitHub Pages + CNAME) |
+| Component             | Status      | Details                                     |
+| --------------------- | ----------- | ------------------------------------------- |
+| Homepage              | ✅ HTTP 200 | https://pvabazaar.org                       |
+| Archive Index         | ✅ HTTP 200 | /archive/ARCHIVE_MASTER_INDEX.md            |
+| Sample Entry          | ✅ HTTP 200 | Archive-Entry-001-Man-From-Taured-Part-1.md |
+| DOM + Root            | ✅ Present  | `<div id="root">` + archive-library class   |
+| Theme CSS             | ✅ Compiled | Blue/green variables active                 |
+| HTTPS + Custom Domain | ✅ Active   | pvabazaar.org (GitHub Pages + CNAME)        |
 
 ---
 
@@ -62,6 +66,7 @@
 ## Technical Details
 
 ### Frontend Deployment
+
 - **Host:** GitHub Pages
 - **Branch:** `gh-pages` (published) + synced to `main` (Pages source)
 - **CNAME:** pvabazaar.org
@@ -69,10 +74,12 @@
 - **Theme Toggle:** StateProvider + CSS variables
 
 ### Backend Deployment
+
 - **Host:** Vercel
 - **Status:** Operational (separate from frontend)
 
 ### Repository Structure
+
 ```
 /Frontend
   /src

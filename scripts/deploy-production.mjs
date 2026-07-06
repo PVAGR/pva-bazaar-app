@@ -24,11 +24,7 @@ function run(command, commandArgs, options = {}) {
 }
 
 function warnMissingEnv() {
-  const required = [
-    'PUBLIC_SITE_URL',
-    'REGISTRAR_BASE_URL',
-    'BACKEND_BASE_URL',
-  ];
+  const required = ['PUBLIC_SITE_URL', 'REGISTRAR_BASE_URL', 'BACKEND_BASE_URL'];
   const missing = required.filter((k) => !process.env[k]);
   if (missing.length) {
     console.warn(`\n[deploy] Missing recommended env vars: ${missing.join(', ')}`);

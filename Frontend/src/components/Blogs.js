@@ -34,7 +34,9 @@ export default function Blogs() {
       <h2>Blogs</h2>
       {loading && <p>Loading blog entries...</p>}
       {!loading && error && <p>{error}</p>}
-      {!loading && !error && items.length === 0 && <p>No published blog entries are available from the API.</p>}
+      {!loading && !error && items.length === 0 && (
+        <p>No published blog entries are available from the API.</p>
+      )}
       {!loading && items.length > 0 && (
         <ul>
           {items.map((blog) => (

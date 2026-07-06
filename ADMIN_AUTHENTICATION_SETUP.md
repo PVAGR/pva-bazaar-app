@@ -105,24 +105,28 @@ vercel --prod
 Your admin panel now includes 5 comprehensive tabs:
 
 ### 1. 📚 Archive Tab
+
 - View all archive entries
 - Upload new entries with images
 - Edit existing content
 - Delete entries
 
 ### 2. 🛍️ Marketplace Tab
+
 - Manage marketplace items
 - CRUD operations (Create, Read, Update, Delete)
 - Image upload and preview
 - Category and condition management
 
 ### 3. 👥 Users Tab
+
 - View all registered users
 - Search and filter users
 - See user roles and status
 - Statistics dashboard
 
 ### 4. 💚 Health Tab
+
 - System health monitoring
 - API endpoint status checks
 - OpenClaw integration monitoring
@@ -130,6 +134,7 @@ Your admin panel now includes 5 comprehensive tabs:
 - Manual event dispatch for testing
 
 ### 5. ⚙️ Settings Tab
+
 - API URL configuration
 - Theme toggle (Archive baseline)
 - Clear cache functionality
@@ -198,6 +203,7 @@ If you see "invalid token" errors:
 ## 🎉 Summary
 
 Your admin authentication is now properly configured! The credentials `richyrichaii` / `pva123zxc!` will work once you:
+
 1. Start MongoDB
 2. Start the backend server
 3. Start the frontend server

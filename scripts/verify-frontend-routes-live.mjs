@@ -84,11 +84,14 @@ async function checkRoute(browser, route) {
       const root = document.querySelector('#root');
       const text = (document.body?.innerText || '').trim();
       const rootChildren = root?.children?.length || 0;
-      const hasAnyVisibleBlock = Array.from(document.querySelectorAll('main, section, article, [role="main"], .section-card, .admin-page'))
-        .some((el) => {
-          const rect = el.getBoundingClientRect();
-          return rect.width > 40 && rect.height > 40;
-        });
+      const hasAnyVisibleBlock = Array.from(
+        document.querySelectorAll(
+          'main, section, article, [role="main"], .section-card, .admin-page',
+        ),
+      ).some((el) => {
+        const rect = el.getBoundingClientRect();
+        return rect.width > 40 && rect.height > 40;
+      });
       return {
         textLength: text.length,
         rootChildren,
@@ -149,4 +152,3 @@ main().catch((err) => {
   console.error(err);
   process.exit(1);
 });
-

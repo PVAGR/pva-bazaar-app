@@ -38,7 +38,11 @@
 
 .info-block {
   border: 1px solid color-mix(in srgb, var(--site-border) 82%, transparent);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--site-panel-soft) 92%, transparent) 0%, var(--site-panel) 100%);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--site-panel-soft) 92%, transparent) 0%,
+    var(--site-panel) 100%
+  );
   border-radius: 12px;
   padding: 14px;
   box-shadow: 0 10px 22px rgba(0, 0, 0, 0.14);

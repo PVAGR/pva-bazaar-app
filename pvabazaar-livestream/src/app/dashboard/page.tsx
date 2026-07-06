@@ -18,11 +18,11 @@ export default function Dashboard() {
         fetch('/api/journals').then((res) => res.json()),
         fetch('/api/streams').then((res) => res.json()),
       ])
-      .then(([journalData, streamData]) => {
-        setJournals(journalData);
-        setStreams(streamData);
-      })
-      .finally(() => setLoading(false));
+        .then(([journalData, streamData]) => {
+          setJournals(journalData);
+          setStreams(streamData);
+        })
+        .finally(() => setLoading(false));
     }
   }, [session]);
 
@@ -57,13 +57,13 @@ export default function Dashboard() {
           <div className="bg-gray-800 p-4 rounded-lg col-span-1 md:col-span-2 lg:col-span-1">
             <h3 className="font-semibold text-white mb-2">Live Stream</h3>
             {liveStream ? (
-               <div className="flex items-center gap-2">
-                 <span className="relative flex h-3 w-3">
-                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                   <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
-                 </span>
-                 <p className="text-white">{(liveStream as any).title}</p>
-               </div>
+              <div className="flex items-center gap-2">
+                <span className="relative flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                </span>
+                <p className="text-white">{(liveStream as any).title}</p>
+              </div>
             ) : (
               <p className="text-gray-400">Not currently live.</p>
             )}
@@ -73,10 +73,16 @@ export default function Dashboard() {
           <div className="bg-gray-800 p-4 rounded-lg col-span-1 md:col-span-2">
             <h3 className="font-semibold text-white mb-3">Quick Actions</h3>
             <div className="flex gap-4">
-              <Link href="/dashboard/journal" className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2">
+              <Link
+                href="/dashboard/journal"
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2"
+              >
                 <FileText size={18} /> New Journal Entry
               </Link>
-              <Link href="/dashboard/streams" className="bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2">
+              <Link
+                href="/dashboard/streams"
+                className="bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2"
+              >
                 <Video size={18} /> New Stream
               </Link>
             </div>
@@ -89,7 +95,10 @@ export default function Dashboard() {
               <div className="border-l-4 border-indigo-500 pl-4">
                 <h4 className="text-lg font-bold text-white">{(latestJournal as any).title}</h4>
                 <p className="text-gray-400 truncate">{(latestJournal as any).content}</p>
-                <Link href="/dashboard/journal" className="text-blue-400 hover:underline text-sm mt-2 inline-block">
+                <Link
+                  href="/dashboard/journal"
+                  className="text-blue-400 hover:underline text-sm mt-2 inline-block"
+                >
                   View all entries...
                 </Link>
               </div>
@@ -97,7 +106,7 @@ export default function Dashboard() {
           )}
         </div>
       )}
-       <a href="https://pvabazaar.org" className="text-blue-400 hover:underline mt-8 inline-block">
+      <a href="https://pvabazaar.org" className="text-blue-400 hover:underline mt-8 inline-block">
         Link to Main Site
       </a>
     </div>

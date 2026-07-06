@@ -3,11 +3,17 @@ const MAX_DATA_URL_BYTES = 250 * 1024;
 
 // Internal helpers
 
-function canUseStorage() { return typeof window !== 'undefined' && Boolean(window.localStorage); }
+function canUseStorage() {
+  return typeof window !== 'undefined' && Boolean(window.localStorage);
+}
 
 function readJson(key, fallback) {
   if (!canUseStorage()) return fallback;
-  try { return JSON.parse(window.localStorage.getItem(key) || JSON.stringify(fallback)); } catch (_err) { return fallback; }
+  try {
+    return JSON.parse(window.localStorage.getItem(key) || JSON.stringify(fallback));
+  } catch (_err) {
+    return fallback;
+  }
 }
 function writeJson(key, value) {
   if (!canUseStorage()) return { ok: false, message: 'localStorage is not available.' };
@@ -16,30 +22,59 @@ function writeJson(key, value) {
   if (!isQuotaError(first.error)) throw first.error;
   var trimmed = stripOversizedDataUrls(value);
   var second = trySet(key, trimmed);
-  if (second.ok) { syncArrayInPlace(value, trimmed); return { ok: true, strippedImages: true, message: 'Large cover images were removed.' }; }
+  if (second.ok) {
+    syncArrayInPlace(value, trimmed);
+    return { ok: true, strippedImages: true, message: 'Large cover images were removed.' };
+  }
   if (!isQuotaError(second.error)) throw second.error;
   var bare = stripAllDataUrls(value);
   var third = trySet(key, bare);
-  if (third.ok) { syncArrayInPlace(value, bare); return { ok: true, strippedImages: true, message: 'Cover images were removed to fit storage limits.' }; }
+  if (third.ok) {
+    syncArrayInPlace(value, bare);
+    return {
+      ok: true,
+      strippedImages: true,
+      message: 'Cover images were removed to fit storage limits.',
+    };
+  }
   if (!isQuotaError(third.error)) throw third.error;
-  return { ok: false, message: 'Storage full (' + estimateSize(value) + ' KB). Delete local books and try again.' };
+  return {
+    ok: false,
+    message: 'Storage full (' + estimateSize(value) + ' KB). Delete local books and try again.',
+  };
 }
 
 function trySet(key, value) {
-  try { window.localStorage.setItem(key, JSON.stringify(value)); return { ok: true }; }
-  catch (err) { return { ok: false, error: err }; }
+  try {
+    window.localStorage.setItem(key, JSON.stringify(value));
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err };
+  }
 }
 
 function isQuotaError(err) {
   if (!err) return false;
   var m = String(err.name || err.message || '').toLowerCase();
-  return m.indexOf('quota') !== -1 || m.indexOf('exceeded') !== -1 || err.code === 22 || err.code === 1014;
+  return (
+    m.indexOf('quota') !== -1 ||
+    m.indexOf('exceeded') !== -1 ||
+    err.code === 22 ||
+    err.code === 1014
+  );
 }
 
-function estimateSize(v) { try { return Math.round(JSON.stringify(v).length / 1024); } catch (_) { return -1; } }
+function estimateSize(v) {
+  try {
+    return Math.round(JSON.stringify(v).length / 1024);
+  } catch (_) {
+    return -1;
+  }
+}
 
 function syncArrayInPlace(t, s) {
-  if (!Array.isArray(t) || !Array.isArray(s)) return; t.length = 0;
+  if (!Array.isArray(t) || !Array.isArray(s)) return;
+  t.length = 0;
   for (var i = 0; i < s.length; i++) t.push(s[i]);
 }
 
@@ -50,29 +85,49 @@ function isOversizedDataUrl(url) {
 
 function stripOversizedDataUrls(books) {
   if (!Array.isArray(books)) return books;
-  return books.map(function(b) {
+  return books.map(function (b) {
     var c = Object.assign({}, b);
-    if (c.frontCover && isOversizedDataUrl(c.frontCover.url)) c.frontCover = Object.assign({}, c.frontCover, { url: '', _imageStripped: 'oversized' });
-    if (c.backCover && isOversizedDataUrl(c.backCover.url)) c.backCover = Object.assign({}, c.backCover, { url: '', _imageStripped: 'oversized' });
+    if (c.frontCover && isOversizedDataUrl(c.frontCover.url))
+      c.frontCover = Object.assign({}, c.frontCover, { url: '', _imageStripped: 'oversized' });
+    if (c.backCover && isOversizedDataUrl(c.backCover.url))
+      c.backCover = Object.assign({}, c.backCover, { url: '', _imageStripped: 'oversized' });
     return c;
   });
 }
 
 function stripAllDataUrls(books) {
   if (!Array.isArray(books)) return books;
-  return books.map(function(b) {
+  return books.map(function (b) {
     var c = Object.assign({}, b);
-    if (c.frontCover && typeof c.frontCover.url === 'string' && c.frontCover.url.indexOf('data:') === 0) c.frontCover = Object.assign({}, c.frontCover, { url: '', _imageStripped: 'quota' });
-    if (c.backCover && typeof c.backCover.url === 'string' && c.backCover.url.indexOf('data:') === 0) c.backCover = Object.assign({}, c.backCover, { url: '', _imageStripped: 'quota' });
+    if (
+      c.frontCover &&
+      typeof c.frontCover.url === 'string' &&
+      c.frontCover.url.indexOf('data:') === 0
+    )
+      c.frontCover = Object.assign({}, c.frontCover, { url: '', _imageStripped: 'quota' });
+    if (
+      c.backCover &&
+      typeof c.backCover.url === 'string' &&
+      c.backCover.url.indexOf('data:') === 0
+    )
+      c.backCover = Object.assign({}, c.backCover, { url: '', _imageStripped: 'quota' });
     return c;
   });
 }
 
-function normalize(v) { return String(v || '').trim().toLowerCase(); }
+function normalize(v) {
+  return String(v || '')
+    .trim()
+    .toLowerCase();
+}
 
-function loadBooks() { return readJson(BOOKS_KEY, []); }
+function loadBooks() {
+  return readJson(BOOKS_KEY, []);
+}
 
-function saveBooks(books) { return writeJson(BOOKS_KEY, books); }
+function saveBooks(books) {
+  return writeJson(BOOKS_KEY, books);
+}
 function buildLocalLinks(book) {
   var slug = normalize(book.slug) || 'local-book-' + String(book.id || '').slice(-8);
   return {
@@ -90,12 +145,14 @@ function normalizeLocalBook(raw) {
   var book = Object.assign({}, raw);
   var id = String(book.id || book._id || 'local-book-' + Date.now());
   var slug = normalize(book.slug) || ('local-book-' + id).toLowerCase();
-  var status = (String(book.status || 'draft').toLowerCase() === 'published') ? 'published' : 'draft';
+  var status = String(book.status || 'draft').toLowerCase() === 'published' ? 'published' : 'draft';
   var title = String(book.title || 'Untitled book').trim();
   var manuscriptMarkdown = String(book.manuscriptMarkdown || '');
   var wc = Number(book.wordCount || manuscriptMarkdown.split(/\s+/).filter(Boolean).length || 0);
   return {
-    id: id, _id: id, title: title,
+    id: id,
+    _id: id,
+    title: title,
     subtitle: String(book.subtitle || ''),
     authorName: String(book.authorName || ''),
     slug: slug,
@@ -103,7 +160,8 @@ function normalizeLocalBook(raw) {
     genre: String(book.genre || 'general').toLowerCase(),
     audience: String(book.audience || 'general').toLowerCase(),
     language: String(book.language || 'en').toLowerCase(),
-    status: status, wordCount: wc,
+    status: status,
+    wordCount: wc,
     publishedAt: book.publishedAt || null,
     updatedAt: book.updatedAt || new Date().toISOString(),
     createdAt: book.createdAt || new Date().toISOString(),
@@ -113,7 +171,9 @@ function normalizeLocalBook(raw) {
     backCover: book.backCover || {},
     links: {
       publicPage: '/books/read/' + encodeURIComponent(slug),
-      apiView: '', pdf: '', epub: '',
+      apiView: '',
+      pdf: '',
+      epub: '',
       frontCover: (book.frontCover && book.frontCover.url) || '',
       backCover: (book.backCover && book.backCover.url) || '',
     },
@@ -126,43 +186,63 @@ function listLocalBookProjects() {
 }
 
 function listLocalPublishedBookProjects() {
-  return listLocalBookProjects().filter(function(b) { return b.status === 'published'; });
+  return listLocalBookProjects().filter(function (b) {
+    return b.status === 'published';
+  });
 }
 
 function findLocalBookById(bookId) {
   var id = String(bookId || '');
-  return listLocalBookProjects().find(function(b) { return String(b.id || b._id || '') === id; }) || null;
+  return (
+    listLocalBookProjects().find(function (b) {
+      return String(b.id || b._id || '') === id;
+    }) || null
+  );
 }
 
 function findLocalPublishedBookBySlug(slug) {
   var norm = normalize(slug);
   if (!norm) return null;
-  return listLocalPublishedBookProjects().find(function(b) { return normalize(b.slug) === norm; }) || null;
+  return (
+    listLocalPublishedBookProjects().find(function (b) {
+      return normalize(b.slug) === norm;
+    }) || null
+  );
 }
 
 function saveLocalBookProject(payload) {
   if (!payload) payload = {};
   var books = loadBooks();
   var next = normalizeLocalBook(payload);
-  var idx = books.findIndex(function(b) { return String(b.id || b._id || '') === String(next.id); });
+  var idx = books.findIndex(function (b) {
+    return String(b.id || b._id || '') === String(next.id);
+  });
   if (idx >= 0) {
     books[idx] = Object.assign({}, books[idx], next, { updatedAt: new Date().toISOString() });
   } else {
-    books.push(Object.assign({}, next, {
-      createdAt: next.createdAt || new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }));
+    books.push(
+      Object.assign({}, next, {
+        createdAt: next.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }),
+    );
   }
   var sr = saveBooks(books);
   var saved = normalizeLocalBook(books[idx >= 0 ? idx : books.length - 1]);
-  if (sr && !sr.ok) { saved._storageError = sr.message; }
-  else if (sr && sr.strippedImages) { saved._imagesStripped = true; saved._storageWarning = sr.message; }
+  if (sr && !sr.ok) {
+    saved._storageError = sr.message;
+  } else if (sr && sr.strippedImages) {
+    saved._imagesStripped = true;
+    saved._storageWarning = sr.message;
+  }
   return saved;
 }
 
 function deleteLocalBookProject(bookId) {
   var id = String(bookId || '');
-  var books = loadBooks().filter(function(b) { return String(b.id || b._id || '') !== id; });
+  var books = loadBooks().filter(function (b) {
+    return String(b.id || b._id || '') !== id;
+  });
   saveBooks(books);
   return true;
 }

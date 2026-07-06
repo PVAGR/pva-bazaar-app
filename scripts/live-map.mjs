@@ -1,19 +1,21 @@
-import { existsSync, readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { existsSync, readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 
-const DEFAULT_FRONTEND = "https://pvabazaar.org";
-const DEFAULT_API_BASE = "https://api.pvabazaar.org/api";
+const DEFAULT_FRONTEND = 'https://pvabazaar.org';
+const DEFAULT_API_BASE = 'https://api.pvabazaar.org/api';
 const LIVE_MAP_PATHS = [
-  resolve(process.cwd(), "Frontend/public/live-map.json"),
-  resolve(process.cwd(), "public/live-map.json"),
+  resolve(process.cwd(), 'Frontend/public/live-map.json'),
+  resolve(process.cwd(), 'public/live-map.json'),
 ];
 
 export function normalizeBase(url) {
-  return String(url || "").replace(/\/+$/, "").replace(/\/api$/, "");
+  return String(url || '')
+    .replace(/\/+$/, '')
+    .replace(/\/api$/, '');
 }
 
 export function normalizeApiBase(url) {
-  return String(url || "").replace(/\/+$/, "");
+  return String(url || '').replace(/\/+$/, '');
 }
 
 export function loadLiveMap() {
@@ -21,7 +23,7 @@ export function loadLiveMap() {
     if (!existsSync(filePath)) continue;
 
     try {
-      return JSON.parse(readFileSync(filePath, "utf8"));
+      return JSON.parse(readFileSync(filePath, 'utf8'));
     } catch (error) {
       throw new Error(`Unable to parse live map at ${filePath}: ${error.message}`);
     }

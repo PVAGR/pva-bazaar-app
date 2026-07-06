@@ -1,4 +1,5 @@
 # 🚀 PVA Bazaar - LIVE DEPLOYMENT GUIDE
+
 ## Deploy to Render.com (FREE Forever + Autonomous Payments)
 
 ---
@@ -18,6 +19,7 @@
 ## 🎯 QUICK START (10 minutes)
 
 ### Step 1: Go to Render.com Dashboard
+
 ```
 https://render.com/dashboard
 ```
@@ -25,6 +27,7 @@ https://render.com/dashboard
 ### Step 2: Click "+ New" → "Web Service"
 
 ### Step 3: Select Your Repository
+
 - Choose: **Deploy existing repo**
 - Search for: **pva-bazaar-app**
 - Click to select it
@@ -36,23 +39,25 @@ https://render.com/dashboard
 **GitHub Branch:** `main`
 
 **Build Command:**
+
 ```
 npm install && npm run build
 ```
 
 **Start Command:**
+
 ```
 npm start
 ```
 
 **Environment Variables** - Add these one by one:
 
-| Key | Value |
-|-----|-------|
-| NODE_ENV | production |
-| PORT | 5001 |
-| JWT_SECRET | your_secret_key_change_this_12345 |
-| MONGODB_URI | mongodb://localhost:27017/pvabazaar |
+| Key              | Value                                   |
+| ---------------- | --------------------------------------- |
+| NODE_ENV         | production                              |
+| PORT             | 5001                                    |
+| JWT_SECRET       | your_secret_key_change_this_12345       |
+| MONGODB_URI      | mongodb://localhost:27017/pvabazaar     |
 | ETHEREUM_RPC_URL | https://polygon-amoy-rpc.publicnode.com |
 
 **Plan:** Free (keeps checked ✓)
@@ -62,6 +67,7 @@ npm start
 ⏳ **Wait 5-10 minutes** for deployment
 
 ✅ Once it says "Live", you'll get your URL:
+
 ```
 https://pva-bazaar-prod.onrender.com
 ```
@@ -123,6 +129,7 @@ curl -X POST https://pva-bazaar-prod.onrender.com/api/admin/autonomous-agent/{AG
 ### 4. Create Monthly Billing Schedules
 
 **For Render ($5/month on 1st):**
+
 ```bash
 curl -X POST https://pva-bazaar-prod.onrender.com/api/admin/autonomous-agent/{AGENT_ID}/billing-schedule \
   -H "Content-Type: application/json" \
@@ -136,6 +143,7 @@ curl -X POST https://pva-bazaar-prod.onrender.com/api/admin/autonomous-agent/{AG
 ```
 
 **For Firebase ($10/month on 5th):**
+
 ```bash
 curl -X POST https://pva-bazaar-prod.onrender.com/api/admin/autonomous-agent/{AGENT_ID}/billing-schedule \
   -H "Content-Type: application/json" \
@@ -149,6 +157,7 @@ curl -X POST https://pva-bazaar-prod.onrender.com/api/admin/autonomous-agent/{AG
 ```
 
 **For SendGrid ($20/month on 10th):**
+
 ```bash
 curl -X POST https://pva-bazaar-prod.onrender.com/api/admin/autonomous-agent/{AGENT_ID}/billing-schedule \
   -H "Content-Type: application/json" \
@@ -162,6 +171,7 @@ curl -X POST https://pva-bazaar-prod.onrender.com/api/admin/autonomous-agent/{AG
 ```
 
 **For MongoDB ($50/month on 15th):**
+
 ```bash
 curl -X POST https://pva-bazaar-prod.onrender.com/api/admin/autonomous-agent/{AGENT_ID}/billing-schedule \
   -H "Content-Type: application/json" \
@@ -203,6 +213,7 @@ curl -s https://pva-bazaar-prod.onrender.com/api/admin/autonomous-agent/status \
 ```
 
 Should show:
+
 ```json
 {
   "success": true,
@@ -224,23 +235,28 @@ Should show:
 ## 🔄 WHAT HAPPENS NOW (Fully Automatic)
 
 ### Every 5 Minutes
+
 ✅ Agent checks for due payments
 ✅ If bill is due, automatically executes payment
 ✅ Sends confirmation email
 
 ### Every 30 Minutes
+
 ✅ Balances synced across all payment methods
 ✅ Wallet status verified
 
 ### Every 10 Minutes
+
 ✅ Health checks performed
 ✅ System integrity verified
 
 ### Every Hour
+
 ✅ Low balance alerts checked
 ✅ Emergency notifications sent if needed
 
 ### Every Month (Scheduled Days)
+
 ✅ **1st:** Render gets $5
 ✅ **5th:** Firebase gets $10
 ✅ **10th:** SendGrid gets $20
@@ -251,15 +267,16 @@ Should show:
 
 ## 💰 COST BREAKDOWN
 
-| Item | Original | Now | Savings |
-|------|----------|-----|---------|
-| Vercel | $20/month | FREE | $20 |
-| Render | - | FREE | - |
-| Monitoring | - | FREE | - |
-| Autonomous Agent | - | FREE | - |
-| **Total** | $20+/month | **FREE** | **100%** |
+| Item             | Original   | Now      | Savings  |
+| ---------------- | ---------- | -------- | -------- |
+| Vercel           | $20/month  | FREE     | $20      |
+| Render           | -          | FREE     | -        |
+| Monitoring       | -          | FREE     | -        |
+| Autonomous Agent | -          | FREE     | -        |
+| **Total**        | $20+/month | **FREE** | **100%** |
 
 **With $3,000 funding:**
+
 - Monthly spend: ~$85
 - Runway: **35+ months** (nearly 3 years!)
 - After that: Just add more funds when needed
@@ -294,17 +311,21 @@ Should show:
 ## 🚨 TROUBLESHOOTING
 
 ### App won't deploy?
+
 1. Check your GitHub repo is connected to Render
 2. Verify `main` branch was pushed
 3. Wait 10+ minutes (first deployment takes longer)
 
 ### Payment agent not responding?
+
 1. Check Render logs for errors
 2. Verify agent ID was returned in step 1
 3. Ensure JWT token is correct
 
 ### Low balance alert?
+
 Fund the agent again:
+
 ```bash
 curl -X POST https://pva-bazaar-prod.onrender.com/api/admin/autonomous-agent/{AGENT_ID}/fund \
   -H "Content-Type: application/json" \
@@ -317,6 +338,7 @@ curl -X POST https://pva-bazaar-prod.onrender.com/api/admin/autonomous-agent/{AG
 ## 📞 SUPPORT
 
 Check logs in Render dashboard:
+
 - Click your app → "Logs"
 - Look for errors or unexpected behavior
 - Most issues show in real-time logs

@@ -11,7 +11,7 @@ describe('HelpTip', () => {
       <div>
         <HelpTip title="Test title" body="Test body" example="Example value" />
         <button type="button">outside</button>
-      </div>
+      </div>,
     );
 
     expect(screen.queryByText('Test body')).toBeNull();
@@ -27,4 +27,3 @@ describe('HelpTip', () => {
     expect(screen.queryByText('Test body')).toBeNull();
   });
 });
-

@@ -4,10 +4,10 @@ This folder contains the **hash-based verification** for Scarce Knowledge artifa
 
 ## What’s here
 
-| File | Purpose |
-|------|--------|
-| `verify_artifact.py` | Python script: takes a file, computes SHA-256, compares to `trusted_hashes.json`, returns `is_authentic` and `confidence_score`. |
-| `trusted_hashes.json` | Trusted database of known-good hashes (e.g. from Archive.org). One entry per artifact with `sha256`, `name`, `source_url`, etc. |
+| File                  | Purpose                                                                                                                          |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `verify_artifact.py`  | Python script: takes a file, computes SHA-256, compares to `trusted_hashes.json`, returns `is_authentic` and `confidence_score`. |
+| `trusted_hashes.json` | Trusted database of known-good hashes (e.g. from Archive.org). One entry per artifact with `sha256`, `name`, `source_url`, etc.  |
 
 ## Run locally
 

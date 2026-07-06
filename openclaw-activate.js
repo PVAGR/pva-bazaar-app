@@ -33,7 +33,7 @@ async function updateMongoConfig() {
   try {
     await dbConnect();
     const AdminRuntimeConfig = require('./backend/models/AdminRuntimeConfig');
-    
+
     const config = await AdminRuntimeConfig.findOneAndUpdate(
       { key: 'default' },
       {
@@ -45,7 +45,7 @@ async function updateMongoConfig() {
           'openclaw.autonomousEnabled': true,
         },
       },
-      { upsert: true, new: true }
+      { upsert: true, new: true },
     );
     console.log('✅ MongoDB config updated');
     return config;
@@ -57,9 +57,9 @@ async function updateMongoConfig() {
 
 async function checkSystemHealth() {
   console.log('\n🔍 Checking System Health...\n');
-  
+
   const checks = [];
-  
+
   // Check backend
   try {
     const health = await axios.get(`${BACKEND_URL}/api/health`, { timeout: 5000 });
@@ -67,7 +67,7 @@ async function checkSystemHealth() {
   } catch (e) {
     checks.push({ name: 'Backend API', status: '❌', error: e.message });
   }
-  
+
   // Check MongoDB
   try {
     const status = mongoose.connection.readyState;
@@ -75,25 +75,25 @@ async function checkSystemHealth() {
   } catch (e) {
     checks.push({ name: 'MongoDB', status: '❌', error: e.message });
   }
-  
+
   // Check OpenClaw
   try {
     const oc = await axios.get(`${BACKEND_URL}/api/openclaw/status`, { timeout: 5000 });
-    checks.push({ 
-      name: 'OpenClaw Status', 
-      status: (oc.data?.configured && oc.data?.reachable) ? '✅' : '🟡',
+    checks.push({
+      name: 'OpenClaw Status',
+      status: oc.data?.configured && oc.data?.reachable ? '✅' : '🟡',
       configured: oc.data?.configured,
       reachable: oc.data?.reachable,
     });
   } catch (e) {
     checks.push({ name: 'OpenClaw Status', status: '❌', error: e.message });
   }
-  
+
   // Check Queue
   try {
     const queue = await axios.get(`${BACKEND_URL}/api/openclaw/queue-stats`, { timeout: 5000 });
-    checks.push({ 
-      name: 'Queue Stats', 
+    checks.push({
+      name: 'Queue Stats',
       status: queue.data?.ok ? '✅' : '🟡',
       pending: queue.data?.pendingOutbound || 0,
       processed: queue.data?.processedOutbound || 0,
@@ -101,12 +101,12 @@ async function checkSystemHealth() {
   } catch (e) {
     checks.push({ name: 'Queue Stats', status: '❌', error: e.message });
   }
-  
+
   // Check Worker
   try {
     const worker = await axios.get(`${BACKEND_URL}/api/openclaw/status`, { timeout: 5000 });
-    checks.push({ 
-      name: 'Worker Status', 
+    checks.push({
+      name: 'Worker Status',
       status: worker.data?.worker?.active ? '✅' : '🟡',
       active: worker.data?.worker?.active,
       name: worker.data?.worker?.name,
@@ -114,23 +114,25 @@ async function checkSystemHealth() {
   } catch (e) {
     checks.push({ name: 'Worker Status', status: '❌', error: e.message });
   }
-  
+
   // Display results
-  checks.forEach(check => {
+  checks.forEach((check) => {
     console.log(`${check.status} ${check.name.padEnd(20)}`);
     if (check.error) console.log(`     Error: ${check.error}`);
-    if (check.configured !== undefined) console.log(`     Configured: ${check.configured}, Reachable: ${check.reachable}`);
-    if (check.pending !== undefined) console.log(`     Pending: ${check.pending}, Processed: ${check.processed}`);
+    if (check.configured !== undefined)
+      console.log(`     Configured: ${check.configured}, Reachable: ${check.reachable}`);
+    if (check.pending !== undefined)
+      console.log(`     Pending: ${check.pending}, Processed: ${check.processed}`);
     if (check.active !== undefined) console.log(`     Active: ${check.active}`);
     if (check.name) console.log(`     Worker: ${check.name}`);
   });
-  
+
   return checks;
 }
 
 async function testEventProcessing() {
   console.log('\n🧪 Testing Event Processing...\n');
-  
+
   const testEvent = {
     message: 'Test event from OpenClaw activation script',
     event: 'test.worker.activation',
@@ -140,13 +142,13 @@ async function testEventProcessing() {
       test: true,
     },
   };
-  
+
   try {
     const response = await axios.post(`${BACKEND_URL}/api/openclaw/dispatch`, testEvent, {
       timeout: 5000,
       headers: { 'Content-Type': 'application/json' },
     });
-    
+
     if (response.data?.ok) {
       console.log('✅ Test event queued successfully');
       console.log(`   ID: ${response.data.id}`);
@@ -166,21 +168,21 @@ async function main() {
   console.log('\n╔════════════════════════════════════════╗');
   console.log('║  🤖 OpenClaw Worker Activation        ║');
   console.log('╚════════════════════════════════════════╝\n');
-  
+
   try {
     // Step 1: Update MongoDB config
     await updateMongoConfig();
-    
+
     // Step 2: Check system health
     const healthChecks = await checkSystemHealth();
-    
+
     // Step 3: Test event processing
     const testPassed = await testEventProcessing();
-    
+
     // Step 4: Send Telegram notification
-    const allHealthy = healthChecks.every(c => c.status === '✅');
+    const allHealthy = healthChecks.every((c) => c.status === '✅');
     const status = allHealthy && testPassed ? '✅ FULLY OPERATIONAL' : '🟡 PARTIAL (check logs)';
-    
+
     await sendTelegramNotification(`
 🤖 *OpenClaw Worker Activated*
 
@@ -196,16 +198,15 @@ ${status}
 The worker is ready to process queued events.
 Monitor via: /api/openclaw/queue-stats
 `);
-    
+
     console.log('\n✅ OpenClaw worker activation complete!');
     console.log('📱 Telegram notification sent to', TELEGRAM_CHAT_ID);
-    
   } catch (error) {
     console.error('\n❌ Activation failed:', error.message);
     await sendTelegramNotification(`❌ OpenClaw worker activation failed: ${error.message}`);
     process.exit(1);
   }
-  
+
   process.exit(0);
 }
 

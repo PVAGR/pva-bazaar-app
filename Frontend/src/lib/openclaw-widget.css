@@ -187,8 +187,12 @@
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* Dark mode support */
@@ -197,27 +201,27 @@
     background: #212529;
     color: #f8f9fa;
   }
-  
+
   .widget-header {
     border-bottom-color: #495057;
   }
-  
+
   .widget-header h4 {
     color: #f8f9fa;
   }
-  
+
   .widget-metric {
     background: #343a40;
   }
-  
+
   .metric-label {
     color: #adb5bd;
   }
-  
+
   .metric-value {
     color: #f8f9fa;
   }
-  
+
   .widget-timestamp {
     color: #adb5bd;
   }

@@ -17,9 +17,7 @@ function normalizeCreatorAddress(raw, req) {
   const explicit = String(raw || '').trim();
   if (explicit) return explicit;
   return String(
-    req.user?.preferences?.defaultWalletAddress
-      || req.user?.wallet?.generatedWalletAddress
-      || ''
+    req.user?.preferences?.defaultWalletAddress || req.user?.wallet?.generatedWalletAddress || '',
   ).trim();
 }
 
@@ -183,8 +181,10 @@ router.get('/seller/comparison', requireAuth, async (req, res) => {
     }
 
     const comp = previous[0];
-    const revenueChange = ((current.totalRevenue - comp.totalRevenue) / (comp.totalRevenue || 1)) * 100;
-    const ordersChange = ((current.completedOrders - comp.completedOrders) / (comp.completedOrders || 1)) * 100;
+    const revenueChange =
+      ((current.totalRevenue - comp.totalRevenue) / (comp.totalRevenue || 1)) * 100;
+    const ordersChange =
+      ((current.completedOrders - comp.completedOrders) / (comp.completedOrders || 1)) * 100;
     const conversionChange = current.conversionRate - comp.conversionRate;
 
     res.json({
@@ -250,7 +250,7 @@ router.get('/', requireAuth, async (req, res) => {
 router.get('/dashboard/:creatorAddress', requireAuth, async (req, res) => {
   try {
     const days = Math.max(1, Math.min(Number(req.query.days) || 365, 3650));
-    const cutoff = new Date(Date.now() - (days * 24 * 60 * 60 * 1000));
+    const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
     const creatorAddress = normalizeCreatorAddress(req.params.creatorAddress, req);
 
     const sales = await Order.find({
@@ -278,7 +278,10 @@ router.get('/dashboard/:creatorAddress', requireAuth, async (req, res) => {
     const allEvents = [...orderEvents, ...mappedPersisted];
 
     const totalRoyalties = allEvents.reduce((sum, row) => sum + Number(row.royalty_amount || 0), 0);
-    const totalEarnings = allEvents.reduce((sum, row) => sum + Number(row.creator_earning_amount || 0), 0);
+    const totalEarnings = allEvents.reduce(
+      (sum, row) => sum + Number(row.creator_earning_amount || 0),
+      0,
+    );
     const primarySalesVolume = allEvents
       .filter((row) => String(row.sale_type).toUpperCase() === 'PRIMARY')
       .reduce((sum, row) => sum + Number(row.sale_price || 0), 0);
@@ -328,7 +331,9 @@ router.get('/dashboard/:creatorAddress', requireAuth, async (req, res) => {
           total_sales_count: allEvents.length,
         },
         platformBreakdown: Array.from(platformMap.values()),
-        monthlyTrend: Array.from(monthlyTrendMap.values()).sort((a, b) => String(a.month).localeCompare(String(b.month))),
+        monthlyTrend: Array.from(monthlyTrendMap.values()).sort((a, b) =>
+          String(a.month).localeCompare(String(b.month)),
+        ),
       },
     });
   } catch (error) {
@@ -365,7 +370,10 @@ router.get('/royalty-history/:creatorAddress', requireAuth, async (req, res) => 
     const combined = [
       ...sales.map((row) => toOrderEvent(row, creatorAddress)),
       ...persistedEvents.map(toRoyaltyEvent),
-    ].sort((a, b) => new Date(b.sale_timestamp || 0).getTime() - new Date(a.sale_timestamp || 0).getTime());
+    ].sort(
+      (a, b) =>
+        new Date(b.sale_timestamp || 0).getTime() - new Date(a.sale_timestamp || 0).getTime(),
+    );
 
     const events = combined.slice(offset, offset + limit);
 
@@ -423,7 +431,9 @@ router.get('/all-events', requireAuth, async (req, res) => {
   try {
     const limit = Math.max(1, Math.min(Number(req.query.limit) || 200, 500));
     const offset = Math.max(0, Number(req.query.offset) || 0);
-    const platform = String(req.query.platform || '').trim().toUpperCase();
+    const platform = String(req.query.platform || '')
+      .trim()
+      .toUpperCase();
 
     const creatorAddress = String(req.query.creatorAddress || '').trim();
     const isAdmin = String(req.user?.role || '').toLowerCase() === 'admin';
@@ -455,7 +465,10 @@ router.get('/all-events', requireAuth, async (req, res) => {
 
     const filtered = allEvents
       .filter((row) => (platform ? row.platform === platform : true))
-      .sort((a, b) => new Date(b.sale_timestamp || 0).getTime() - new Date(a.sale_timestamp || 0).getTime());
+      .sort(
+        (a, b) =>
+          new Date(b.sale_timestamp || 0).getTime() - new Date(a.sale_timestamp || 0).getTime(),
+      );
     const events = filtered.slice(offset, offset + limit);
 
     return res.json({ ok: true, data: { events, total: filtered.length } });
@@ -491,7 +504,10 @@ router.get('/export/:creatorAddress', requireAuth, async (req, res) => {
     const combined = [
       ...sales.map((row) => toOrderEvent(row, creatorAddress)),
       ...persistedEvents.map(toRoyaltyEvent),
-    ].sort((a, b) => new Date(b.sale_timestamp || 0).getTime() - new Date(a.sale_timestamp || 0).getTime());
+    ].sort(
+      (a, b) =>
+        new Date(b.sale_timestamp || 0).getTime() - new Date(a.sale_timestamp || 0).getTime(),
+    );
 
     const lines = [
       'id,sale_timestamp,sale_type,platform,sale_price,royalty_amount,creator_earning_amount,creator_address,tx_hash',

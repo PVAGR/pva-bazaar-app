@@ -26,30 +26,34 @@ const customDatabaseSchema = new mongoose.Schema({
     default: 'mixed',
   },
   // Database entries (flexible schema)
-  entries: [{
-    title: String,
-    description: String,
-    url: String, // External URL or IPFS gateway
-    ipfsHash: String, // IPFS CID
-    fileType: String, // video, audio, document, etc.
-    fileSize: Number,
-    thumbnailIpfsHash: String,
-    tags: [String],
-    metadata: mongoose.Schema.Types.Mixed,
-    addedAt: {
-      type: Date,
-      default: Date.now,
+  entries: [
+    {
+      title: String,
+      description: String,
+      url: String, // External URL or IPFS gateway
+      ipfsHash: String, // IPFS CID
+      fileType: String, // video, audio, document, etc.
+      fileSize: Number,
+      thumbnailIpfsHash: String,
+      tags: [String],
+      metadata: mongoose.Schema.Types.Mixed,
+      addedAt: {
+        type: Date,
+        default: Date.now,
+      },
     },
-  }],
+  ],
   // Access control
   isPublic: {
     type: Boolean,
     default: false,
   },
-  sharedWith: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-  }],
+  sharedWith: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
+  ],
   // Decentralized backup
   ipfsBackupHash: {
     type: String, // IPFS CID of entire database export

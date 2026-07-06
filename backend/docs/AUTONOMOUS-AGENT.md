@@ -17,7 +17,9 @@ The PVA Bazaar Autonomous Agent is a self-maintaining system that manages all pl
 ### Models
 
 #### AutonomousAgent (`backend/models/AutonomousAgent.js`)
+
 Main agent model storing:
+
 - Agent identity (name, email, emailPassword)
 - Status and operational flags
 - Payment methods (PayPal, crypto, CashApp, card, bank)
@@ -27,7 +29,9 @@ Main agent model storing:
 - Audit trail of all operations
 
 #### AgentTransaction (`backend/models/AgentTransaction.js`)
+
 Records every transaction for:
+
 - Billing and accounting
 - Audit trail and compliance
 - Error tracking and retries
@@ -35,7 +39,9 @@ Records every transaction for:
 - AI decision making history
 
 #### AgentBillingSchedule (`backend/models/AgentBillingSchedule.js`)
+
 Tracks recurring payments for:
+
 - Monthly infrastructure costs (Railway, MongoDB, AWS)
 - Weekly backup services
 - Daily health monitoring
@@ -45,7 +51,9 @@ Tracks recurring payments for:
 ### Services
 
 #### AutonomousPaymentService
+
 Handles all payment operations:
+
 ```javascript
 // Process payment with auto-method selection
 await AutonomousPaymentService.processPayment(agentId, vendorInfo, amount, reason);
@@ -64,7 +72,9 @@ const spending = await AutonomousPaymentService.calculateSpending(agentId, 'mont
 ```
 
 #### AutonomousEmailService
+
 Handles all email communications:
+
 ```javascript
 // Send payment notification
 await AutonomousEmailService.sendPaymentNotification(agentId, vendorInfo, transaction);
@@ -83,7 +93,9 @@ await AutonomousEmailService.sendPaymentFailureAlert(agentId, transaction, error
 ```
 
 #### AutonomousMaintenanceScheduler
+
 Schedules autonomous operations on cron jobs:
+
 ```javascript
 // Start scheduler for agent
 await scheduler.startForAgent(agentId);
@@ -112,6 +124,7 @@ scheduler.stopScheduler();
 All routes protected with admin authentication (`authenticateToken`, `requireAdmin`).
 
 #### Agent Management
+
 ```
 GET  /api/admin/autonomous-agent/status
      - Get status of all agents
@@ -133,6 +146,7 @@ PUT  /api/admin/autonomous-agent/:agentId/config
 ```
 
 #### Payment Methods
+
 ```
 POST /api/admin/autonomous-agent/:agentId/payment-method
      - Add new payment method
@@ -141,6 +155,7 @@ POST /api/admin/autonomous-agent/:agentId/payment-method
 ```
 
 #### Transactions & Billing
+
 ```
 GET  /api/admin/autonomous-agent/:agentId/transactions
      - Get agent's transaction history
@@ -168,6 +183,7 @@ GET  /api/admin/autonomous-agent/:agentId/billing-schedules
 ```
 
 #### Operations
+
 ```
 POST /api/admin/autonomous-agent/:agentId/sync-balances
      - Manually sync all wallet balances
@@ -185,6 +201,7 @@ POST /api/admin/autonomous-agent/:agentId/send-test-email
 ## Payment Methods
 
 ### PayPal
+
 - **Setup**: email, clientId, clientSecret
 - **Features**: Direct transfers, recurring billing support
 - **Status**: Fully implemented (simulated for demo)
@@ -192,6 +209,7 @@ POST /api/admin/autonomous-agent/:agentId/send-test-email
 - **Speed**: 1-2 business days
 
 ### Crypto Wallets
+
 - **Supported coins**: Ethereum, Bitcoin, Polygon, Solana, USDC, DAI
 - **Setup**: wallet address, private key (encrypted)
 - **Features**: Fast transfers, stablecoin support
@@ -201,6 +219,7 @@ POST /api/admin/autonomous-agent/:agentId/send-test-email
 - **Advantage**: USDC for stablecoin efficient transfers
 
 ### CashApp
+
 - **Setup**: tag, API key
 - **Features**: P2P transfers, balance management
 - **Status**: Fully implemented (simulated for demo)
@@ -208,6 +227,7 @@ POST /api/admin/autonomous-agent/:agentId/send-test-email
 - **Speed**: Instant
 
 ### Credit Card
+
 - **Setup**: Stripe tokenized card
 - **Features**: Vendor payments, subscriptions
 - **Status**: Fully integrated with Stripe
@@ -215,6 +235,7 @@ POST /api/admin/autonomous-agent/:agentId/send-test-email
 - **Speed**: Instant authorization
 
 ### Bank Transfer
+
 - **Setup**: account number, routing number (encrypted)
 - **Features**: Large transfers, automated transfers
 - **Status**: Fully implemented (simulated for demo)
@@ -232,35 +253,35 @@ const schedules = [
     amount: 50,
     frequency: 'monthly',
     dayOfMonth: 1,
-    reason: 'infrastructure_payment'
+    reason: 'infrastructure_payment',
   },
   {
     vendor: 'mongodb',
     amount: 75,
     frequency: 'monthly',
     dayOfMonth: 5,
-    reason: 'database_payment'
+    reason: 'database_payment',
   },
   {
     vendor: 'sendgrid',
     amount: 20,
     frequency: 'monthly',
     dayOfMonth: 10,
-    reason: 'email_service_payment'
+    reason: 'email_service_payment',
   },
   {
     vendor: 'stripe',
     amount: 30,
     frequency: 'monthly',
     dayOfMonth: 15,
-    reason: 'payment_processor_fee'
+    reason: 'payment_processor_fee',
   },
   {
     vendor: 'sentry',
     amount: 25,
     frequency: 'monthly',
     dayOfMonth: 20,
-    reason: 'monitoring_payment'
+    reason: 'monitoring_payment',
   },
   {
     vendor: 'domain_registry',
@@ -268,8 +289,8 @@ const schedules = [
     frequency: 'yearly',
     dayOfMonth: 1,
     dayOfYear: 180,
-    reason: 'domain_renewal'
-  }
+    reason: 'domain_renewal',
+  },
 ];
 ```
 
@@ -286,6 +307,7 @@ const schedules = [
 ## Configuration
 
 ### Agent Limits
+
 ```javascript
 {
   maxSinglePayment: 500,           // Max per transaction
@@ -297,6 +319,7 @@ const schedules = [
 ```
 
 ### Maintenance Config
+
 ```javascript
 {
   autoPayBills: true,              // Auto-execute scheduled payments
@@ -312,6 +335,7 @@ const schedules = [
 ## Usage Examples
 
 ### 1. Create Autonomous Agent
+
 ```bash
 curl -X POST http://localhost:5001/api/admin/autonomous-agent \
   -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \
@@ -325,6 +349,7 @@ curl -X POST http://localhost:5001/api/admin/autonomous-agent \
 ```
 
 ### 2. Add PayPal Account
+
 ```bash
 curl -X POST http://localhost:5001/api/admin/autonomous-agent/{agentId}/payment-method \
   -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \
@@ -340,6 +365,7 @@ curl -X POST http://localhost:5001/api/admin/autonomous-agent/{agentId}/payment-
 ```
 
 ### 3. Add Crypto Wallet
+
 ```bash
 curl -X POST http://localhost:5001/api/admin/autonomous-agent/{agentId}/payment-method \
   -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \
@@ -355,6 +381,7 @@ curl -X POST http://localhost:5001/api/admin/autonomous-agent/{agentId}/payment-
 ```
 
 ### 4. Create Billing Schedule
+
 ```bash
 curl -X POST http://localhost:5001/api/admin/autonomous-agent/{agentId}/billing-schedule \
   -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \
@@ -368,12 +395,14 @@ curl -X POST http://localhost:5001/api/admin/autonomous-agent/{agentId}/billing-
 ```
 
 ### 5. Get Agent Status
+
 ```bash
 curl -X GET http://localhost:5001/api/admin/autonomous-agent/status \
   -H "Authorization: Bearer YOUR_ADMIN_TOKEN"
 ```
 
 ### 6. Sync Balances
+
 ```bash
 curl -X POST http://localhost:5001/api/admin/autonomous-agent/{agentId}/sync-balances \
   -H "Authorization: Bearer YOUR_ADMIN_TOKEN"
@@ -382,36 +411,42 @@ curl -X POST http://localhost:5001/api/admin/autonomous-agent/{agentId}/sync-bal
 ## Safety Features
 
 ### 1. Payment Limits
+
 - Single payment cap: $500 default
 - Daily spend limit: $1,000 default
 - Monthly budget: Configurable (default $100)
 - Large payments require admin approval
 
 ### 2. Retry Policy
+
 - Failed payments auto-retry up to 3 times
 - Configurable retry delay (default: 60 minutes)
 - Escalation to admin after max retries
 - Detailed error logging and reporting
 
 ### 3. Low Balance Alerts
+
 - Configurable threshold (default: $100)
 - Automatic email alerts when triggered
 - Operations suspend if balance drops critical
 - Emergency budget for critical issues ($500 default)
 
 ### 4. Audit Trail
+
 - Every action logged with timestamp and user
 - All transactions recorded permanently
 - Admin can review complete history
 - AI decision reasoning stored
 
 ### 5. Health Monitoring
+
 - Payment method connectivity checked every 10 min
 - Balance sync every 5 minutes
 - Health status dashboard
 - Automatic failure detection and alerts
 
 ### 6. Authorization Checks
+
 - Admin approval required for large payments
 - Config changes require admin approval
 - New payment methods require verification
@@ -420,6 +455,7 @@ curl -X POST http://localhost:5001/api/admin/autonomous-agent/{agentId}/sync-bal
 ## Monitoring & Alerts
 
 ### Email Notifications
+
 - **Payment Notifications**: When payment succeeds
 - **Billing Reminders**: 1 hour before scheduled payment
 - **Status Reports**: Daily at 9 AM
@@ -427,6 +463,7 @@ curl -X POST http://localhost:5001/api/admin/autonomous-agent/{agentId}/sync-bal
 - **Payment Failure Alerts**: When payment fails multiple times
 
 ### Status Report Contents
+
 - Current agent status
 - Financial summary (balance by method)
 - Recent transactions (10 most recent)
@@ -436,6 +473,7 @@ curl -X POST http://localhost:5001/api/admin/autonomous-agent/{agentId}/sync-bal
 - Spending summary
 
 ### Health Check Status
+
 ```javascript
 {
   lastHealthCheckAt: Date,
@@ -458,6 +496,7 @@ The autonomous agent can be connected to an OpenClaw AI agent for:
 ## Security Considerations
 
 ### Encrypted Fields
+
 - `emailPassword`: Agent email password
 - `bankAccount.accountNumber`: Bank account number
 - `bankAccount.routingNumber`: Bank routing number
@@ -467,12 +506,14 @@ The autonomous agent can be connected to an OpenClaw AI agent for:
 - `card.tokenId`: Stripe card token
 
 ### Access Control
+
 - All routes require admin authentication
 - Operations must be explicitly enabled
 - Each action logged with admin user ID
 - Payment approval thresholds enforced
 
 ### Best Practices
+
 1. Use strong payment method credentials
 2. Rotate credentials regularly
 3. Monitor spending regularly
@@ -485,24 +526,28 @@ The autonomous agent can be connected to an OpenClaw AI agent for:
 ## Troubleshooting
 
 ### Agent Not Starting
+
 - Check MongoDB connection
 - Verify JWT_SECRET is set
 - Check agent email credentials
 - Ensure NODE_ENV is set correctly
 
 ### Payments Failing
+
 - Check payment method balance
 - Verify credentials are correct
 - Check payment limits configuration
 - Review error message in transaction
 
 ### Emails Not Sending
+
 - Verify agent email is configured correctly
 - Check Gmail/SMTP settings if using Gmail
 - Verify SMTP credentials
 - Check if email service is rate-limited
 
 ### Balance Not Syncing
+
 - Check payment method API keys
 - Verify wallet addresses are correct
 - Check network connectivity

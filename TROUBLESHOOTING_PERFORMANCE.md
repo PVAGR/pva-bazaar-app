@@ -5,17 +5,21 @@
 ### FRONTEND ISSUES
 
 #### Issue: "Cannot connect to API" / CORS errors
+
 **Symptoms:**
+
 - Browser console: "Access to XMLHttpRequest blocked by CORS policy"
 - Frontend loads, but no data visible
 - Network tab shows failed XHR requests
 
 **Diagnosis:**
+
 1. Check backend is running
 2. Check API_URL is correct
 3. Check CORS headers in response
 
 **Solutions:**
+
 ```bash
 # 1. Verify backend is running
 cd backend && npm run dev
@@ -35,13 +39,16 @@ curl -v -X OPTIONS http://localhost:3001/api/products \
 ---
 
 #### Issue: "Cannot find module" errors during build
+
 **Symptoms:**
+
 ```
 Cannot find module '@/config/env'
 Module not found: Error: Can't resolve 'react-router-dom'
 ```
 
 **Solutions:**
+
 ```bash
 # 1. Reinstall dependencies
 cd Frontend
@@ -62,12 +69,15 @@ npm run build
 ---
 
 #### Issue: "VITE_API_URL pointing to localhost in production"
+
 **Symptoms:**
+
 ```
 Error: VITE_API_URL points to localhost in production build
 ```
 
 **Solutions:**
+
 ```bash
 # 1. Set production API URL in Vercel environment
 # Vercel Dashboard → Project Settings → Environment Variables
@@ -80,12 +90,15 @@ VITE_API_URL=https://api.pvabazaar.org npm run build
 ---
 
 #### Issue: Page loads but shows blank / no products
+
 **Symptoms:**
+
 - Homepage loads (no 404)
 - But no products visible
 - DevTools shows API request failed or timed out
 
 **Solutions:**
+
 ```bash
 # 1. Check backend is responding
 curl http://localhost:3001/api/products
@@ -106,11 +119,14 @@ curl http://localhost:3001/health
 ---
 
 #### Issue: Images not loading
+
 **Symptoms:**
+
 - Image placeholder or broken image icon
 - DevTools shows 404 or CORS error for image
 
 **Solutions:**
+
 ```bash
 # 1. If using Cloudinary, check credentials
 # Frontend/.env.local:
@@ -132,13 +148,16 @@ ls -la Frontend/public/images/
 ### BACKEND ISSUES
 
 #### Issue: "Cannot connect to MongoDB"
+
 **Symptoms:**
+
 ```
 Error: connect ECONNREFUSED 127.0.0.1:27017
 MongooseError: Cannot connect to MongoDB
 ```
 
 **Solutions:**
+
 ```bash
 # 1. If using local MongoDB, start it
 mongod
@@ -167,13 +186,16 @@ echo $MONGODB_URI
 ---
 
 #### Issue: "Port 3001 already in use"
+
 **Symptoms:**
+
 ```
 Error: listen EADDRINUSE :::3001
 Address already in use
 ```
 
 **Solutions:**
+
 ```bash
 # 1. Kill process using the port (macOS/Linux)
 lsof -i :3001 | grep LISTEN | awk '{print $2}' | xargs kill -9
@@ -191,13 +213,16 @@ PORT=3002 npm run dev
 ---
 
 #### Issue: "JWT_SECRET not set" error
+
 **Symptoms:**
+
 ```
 ⚠️ Env validation: Missing env: JWT_SECRET
 API_READY = false
 ```
 
 **Solutions:**
+
 ```bash
 # 1. Create .env file in backend/
 cat > backend/.env <<EOF
@@ -216,12 +241,15 @@ npm run dev
 ---
 
 #### Issue: "ADMIN_SECRET_CODE in production is unsafe"
+
 **Symptoms:**
+
 - Admin endpoints return 403
 - Cannot access admin panel
 - Security warnings in logs
 
 **Solutions:**
+
 ```bash
 # 1. In development, set in backend/.env
 ADMIN_SECRET_CODE=dev_code_here
@@ -238,13 +266,16 @@ grep "\.env" .gitignore
 ---
 
 #### Issue: "CORS error: Origin not allowed"
+
 **Symptoms:**
+
 ```
 Access-Control-Allow-Origin header missing
 Origin ... not allowed
 ```
 
 **Solutions:**
+
 ```bash
 # 1. Check CORS config in backend/api/index.js
 # Lines 40-45 should list your origins:
@@ -272,12 +303,15 @@ curl -v -H "Origin: http://localhost:5173" http://localhost:3001/health
 ---
 
 #### Issue: Requests timeout / very slow
+
 **Symptoms:**
+
 - API calls timeout after 30 seconds
 - Database queries take forever
 - Vercel logs show slow invocations
 
 **Solutions:**
+
 ```bash
 # 1. Check database connection
 # Add logging to see connection time
@@ -303,7 +337,9 @@ db.orders.createIndex({ userId: 1 })
 ### DEPLOYMENT ISSUES
 
 #### Issue: "Build fails on Vercel"
+
 **Symptoms:**
+
 ```
 Build Error: Command failed
 npm ERR! code ENOENT
@@ -311,6 +347,7 @@ npm ERR! notfound: vite
 ```
 
 **Solutions:**
+
 ```bash
 # 1. Test build locally first
 npm run build
@@ -336,13 +373,16 @@ npm ls
 ---
 
 #### Issue: "Environment variables not found in Vercel"
+
 **Symptoms:**
+
 ```
 Error: Missing required env var: MONGODB_URI
 API not ready (production)
 ```
 
 **Solutions:**
+
 ```bash
 # 1. Verify secrets in GitHub Actions
 # GitHub → Settings → Secrets → Actions
@@ -369,13 +409,16 @@ cat backend/.env
 ### GIT / GITHUB ISSUES
 
 #### Issue: "Secrets detected in git history"
+
 **Symptoms:**
+
 ```
 gitleaks: Private key found
 Secret detected: JWT_SECRET=...
 ```
 
 **Solutions:**
+
 ```bash
 # 1. Never commit .env files
 # Check .gitignore
@@ -401,13 +444,16 @@ gitleaks detect --source .
 ---
 
 #### Issue: "GitHub Actions workflow fails"
+
 **Symptoms:**
+
 ```
 Workflow failed at "Deploy Backend to Vercel"
 Error: VERCEL_TOKEN is not set
 ```
 
 **Solutions:**
+
 ```bash
 # 1. Check GitHub Secrets
 # GitHub → Settings → Secrets → Actions
@@ -434,6 +480,7 @@ Error: VERCEL_TOKEN is not set
 ### Frontend Performance
 
 #### Code Splitting
+
 ```typescript
 // Instead of importing everything:
 import { Dashboard, Checkout, Admin } from '@/pages';
@@ -450,12 +497,13 @@ const Admin = lazy(() => import('@/pages/Admin'));
 ```
 
 #### Image Optimization
+
 ```html
 <!-- ❌ Large unoptimized image -->
 <img src="/image.png" alt="Product" />
 
 <!-- ✅ Optimized with srcset -->
-<img 
+<img
   src="/image-400.webp"
   srcset="/image-200.webp 200w, /image-400.webp 400w, /image-800.webp 800w"
   alt="Product"
@@ -463,7 +511,7 @@ const Admin = lazy(() => import('@/pages/Admin'));
 />
 
 <!-- ✅ Using Cloudinary -->
-<img 
+<img
   src="https://res.cloudinary.com/{cloud_name}/image/upload/w_400,q_80/image.jpg"
   alt="Product"
   loading="lazy"
@@ -471,6 +519,7 @@ const Admin = lazy(() => import('@/pages/Admin'));
 ```
 
 #### Remove Unused CSS/JS
+
 ```bash
 # Check bundle size
 npm run build
@@ -494,6 +543,7 @@ export default {
 ```
 
 #### Reduce API Calls
+
 ```javascript
 // ❌ Multiple separate calls
 const products = await apiGet('/products');
@@ -509,6 +559,7 @@ const productData = await apiGet('/products?include=reviews,specs');
 ### Backend Performance
 
 #### Enable Caching
+
 ```javascript
 // Cache products for 1 hour
 app.get('/api/products', (req, res) => {
@@ -524,6 +575,7 @@ app.get('/public/*', (req, res) => {
 ```
 
 #### Database Query Optimization
+
 ```javascript
 // ❌ N+1 queries problem
 const products = await Product.find().limit(10);
@@ -532,13 +584,11 @@ for (const product of products) {
 }
 
 // ✅ Single query with populate
-const products = await Product
-  .find()
-  .limit(10)
-  .populate('reviews');
+const products = await Product.find().limit(10).populate('reviews');
 ```
 
 #### Add Database Indexes
+
 ```bash
 # Connect to MongoDB
 mongodb atlas
@@ -550,6 +600,7 @@ db.reviews.createIndex({ productId: 1 })
 ```
 
 #### Compression
+
 ```javascript
 // Enable gzip compression
 const compression = require('compression');
@@ -562,6 +613,7 @@ app.use(compression());
 ### Database Performance
 
 #### Connection Pooling
+
 ```javascript
 // Already optimized in backend/api/index.js
 // Uses global cache for serverless
@@ -569,16 +621,18 @@ app.use(compression());
 ```
 
 #### Query Performance
+
 ```javascript
 // ❌ Slow: unindexed search
-db.products.find({ name: { $regex: 'search' } })
+db.products.find({ name: { $regex: 'search' } });
 
 // ✅ Fast: text index
-db.products.createIndex({ name: 'text' })
-db.products.find({ $text: { $search: 'search' } })
+db.products.createIndex({ name: 'text' });
+db.products.find({ $text: { $search: 'search' } });
 ```
 
 #### Pagination
+
 ```javascript
 // ❌ Slow: fetch all
 const all = await Product.find({});
@@ -587,9 +641,7 @@ const all = await Product.find({});
 const page = req.query.page || 1;
 const limit = 20;
 const skip = (page - 1) * limit;
-const products = await Product.find()
-  .skip(skip)
-  .limit(limit);
+const products = await Product.find().skip(skip).limit(limit);
 ```
 
 ---
@@ -597,6 +649,7 @@ const products = await Product.find()
 ### Vercel Optimization
 
 #### Use Serverless Functions Efficiently
+
 ```javascript
 // ✅ Fast: reuse connections
 // Connection pooled globally
@@ -610,12 +663,14 @@ await db.connect();
 ```
 
 #### Monitor Cold Starts
+
 1. Vercel Dashboard → Project → Deployments → Function Duration
 2. First invocation slower (cold start)
 3. Subsequent invocations faster (warm)
 4. Optimize by reducing bundle size
 
 #### Use Edge Functions (Optional)
+
 ```javascript
 // For lightweight, ultra-fast responses
 // Static content, redirects, authentication
@@ -627,6 +682,7 @@ await db.connect();
 ## 📊 Monitoring & Debugging
 
 ### Local Debugging
+
 ```bash
 # Frontend with source maps
 npm run dev
@@ -652,6 +708,7 @@ node --inspect api/index.js
 ```
 
 ### Production Debugging
+
 ```bash
 # Vercel logs
 vercel logs <project-name> --follow
@@ -664,6 +721,7 @@ vercel logs <project-name> --follow
 ```
 
 ### Performance Monitoring
+
 ```bash
 # Lighthouse score (Frontend)
 # Chrome DevTools → Lighthouse → Generate report
@@ -683,6 +741,7 @@ vercel logs <project-name> --follow
 ## 🔧 Advanced Troubleshooting
 
 ### Enable Debug Logging
+
 ```javascript
 // backend/api/index.js
 const DEBUG = process.env.DEBUG === 'true';
@@ -696,6 +755,7 @@ if (DEBUG) {
 ```
 
 ### Test API Locally
+
 ```bash
 # Start all services
 # Backend: npm run dev
@@ -713,6 +773,7 @@ curl -X POST http://localhost:3001/api/auth/login \
 ```
 
 ### Check Network Request Details
+
 ```bash
 # In browser DevTools:
 1. Open Network tab

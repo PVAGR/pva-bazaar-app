@@ -309,7 +309,9 @@
   color: var(--site-text);
   display: grid;
   gap: 0.45rem;
-  transition: transform 0.16s ease, border-color 0.16s ease;
+  transition:
+    transform 0.16s ease,
+    border-color 0.16s ease;
 }
 
 .recovery-link-card:hover {

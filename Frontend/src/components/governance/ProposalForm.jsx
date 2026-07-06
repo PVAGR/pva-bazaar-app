@@ -38,7 +38,9 @@ export default function ProposalForm({ onSubmit, onCancel }) {
   return (
     <form className="gov-form-wrap" onSubmit={handleSubmit}>
       <div className="gov-form-group">
-        <label className="gov-form-label" htmlFor="gov-title">Title</label>
+        <label className="gov-form-label" htmlFor="gov-title">
+          Title
+        </label>
         <input
           id="gov-title"
           className="gov-form-input"
@@ -49,7 +51,9 @@ export default function ProposalForm({ onSubmit, onCancel }) {
       </div>
 
       <div className="gov-form-group">
-        <label className="gov-form-label" htmlFor="gov-problem">Problem</label>
+        <label className="gov-form-label" htmlFor="gov-problem">
+          Problem
+        </label>
         <textarea
           id="gov-problem"
           className="gov-form-textarea"
@@ -61,7 +65,9 @@ export default function ProposalForm({ onSubmit, onCancel }) {
 
       <div className="gov-form-row">
         <div className="gov-form-group">
-          <label className="gov-form-label" htmlFor="gov-category">Committee Category</label>
+          <label className="gov-form-label" htmlFor="gov-category">
+            Committee Category
+          </label>
           <select
             id="gov-category"
             className="gov-form-select"
@@ -76,7 +82,9 @@ export default function ProposalForm({ onSubmit, onCancel }) {
           </select>
         </div>
         <div className="gov-form-group">
-          <label className="gov-form-label" htmlFor="gov-urgency">Urgency</label>
+          <label className="gov-form-label" htmlFor="gov-urgency">
+            Urgency
+          </label>
           <select
             id="gov-urgency"
             className="gov-form-select"
@@ -90,7 +98,9 @@ export default function ProposalForm({ onSubmit, onCancel }) {
       </div>
 
       <div className="gov-form-group">
-        <label className="gov-form-label" htmlFor="gov-proposal">Proposal</label>
+        <label className="gov-form-label" htmlFor="gov-proposal">
+          Proposal
+        </label>
         <textarea
           id="gov-proposal"
           className="gov-form-textarea"
@@ -101,7 +111,9 @@ export default function ProposalForm({ onSubmit, onCancel }) {
       </div>
 
       <div className="gov-form-group">
-        <label className="gov-form-label" htmlFor="gov-outcome">Expected Outcome</label>
+        <label className="gov-form-label" htmlFor="gov-outcome">
+          Expected Outcome
+        </label>
         <textarea
           id="gov-outcome"
           className="gov-form-textarea"
@@ -112,7 +124,9 @@ export default function ProposalForm({ onSubmit, onCancel }) {
       </div>
 
       <div className="gov-form-group">
-        <label className="gov-form-label" htmlFor="gov-cost">Cost / Resources</label>
+        <label className="gov-form-label" htmlFor="gov-cost">
+          Cost / Resources
+        </label>
         <textarea
           id="gov-cost"
           className="gov-form-textarea"
@@ -123,7 +137,9 @@ export default function ProposalForm({ onSubmit, onCancel }) {
       </div>
 
       <div className="gov-form-group">
-        <label className="gov-form-label" htmlFor="gov-timeline">Target Timeline (optional)</label>
+        <label className="gov-form-label" htmlFor="gov-timeline">
+          Target Timeline (optional)
+        </label>
         <input
           id="gov-timeline"
           className="gov-form-input"
@@ -134,8 +150,12 @@ export default function ProposalForm({ onSubmit, onCancel }) {
       </div>
 
       <div className="gov-form-actions">
-        <button type="button" className="gov-btn gov-btn-ghost" onClick={onCancel}>Cancel</button>
-        <button type="submit" className="gov-btn gov-btn-primary" disabled={!canSubmit}>Submit Proposal</button>
+        <button type="button" className="gov-btn gov-btn-ghost" onClick={onCancel}>
+          Cancel
+        </button>
+        <button type="submit" className="gov-btn gov-btn-primary" disabled={!canSubmit}>
+          Submit Proposal
+        </button>
       </div>
     </form>
   );

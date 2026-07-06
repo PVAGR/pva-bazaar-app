@@ -47,7 +47,7 @@ function toWeiHex(nativeAmount) {
   const [wholeRaw, fractionRaw = ''] = input.split('.');
   const whole = wholeRaw.replace(/[^\d]/g, '') || '0';
   const fraction = fractionRaw.replace(/[^\d]/g, '').slice(0, 18).padEnd(18, '0');
-  const wei = (BigInt(whole) * (10n ** 18n)) + BigInt(fraction || '0');
+  const wei = BigInt(whole) * 10n ** 18n + BigInt(fraction || '0');
   if (wei <= 0n) {
     throw new Error('Native amount is too small');
   }
@@ -55,7 +55,12 @@ function toWeiHex(nativeAmount) {
 }
 
 export default function SettlementContractsTab() {
-  const [wallet, setWallet] = useState({ address: '', chainId: '', connecting: false, sending: false });
+  const [wallet, setWallet] = useState({
+    address: '',
+    chainId: '',
+    connecting: false,
+    sending: false,
+  });
   const [message, setMessage] = useState('');
   const [records, setRecords] = useState({ loading: true, data: [], error: null });
   const [templates, setTemplates] = useState({ loading: false, data: [], error: null });
@@ -118,15 +123,21 @@ export default function SettlementContractsTab() {
 
   const selectedArtifact = useMemo(
     () => artifacts.data.find((item) => String(item._id) === String(form.artifactId)),
-    [artifacts.data, form.artifactId]
+    [artifacts.data, form.artifactId],
   );
   const showAdvanced = !beginnerMode;
   const hasConnectedWallet = !!wallet.address;
-  const hasTxHash = String(form.txHash || '').trim().startsWith('0x') && String(form.txHash || '').trim().length >= 10;
+  const hasTxHash =
+    String(form.txHash || '')
+      .trim()
+      .startsWith('0x') && String(form.txHash || '').trim().length >= 10;
   const hasRequiredSignerNames =
-    String(form.partyOneSignerName || '').trim().length > 0 && String(form.partyTwoSignerName || '').trim().length > 0;
+    String(form.partyOneSignerName || '').trim().length > 0 &&
+    String(form.partyTwoSignerName || '').trim().length > 0;
   const anyFinalizedRecord = records.data.some((item) => !!item.isFinalized);
-  const anyVerifiedDigest = Object.values(integrityStatusById).some((status) => status === 'verified');
+  const anyVerifiedDigest = Object.values(integrityStatusById).some(
+    (status) => status === 'verified',
+  );
 
   const checklist = [
     {
@@ -182,7 +193,10 @@ export default function SettlementContractsTab() {
       .map((event, index) => ({
         key: `${event.eventType || 'event'}-${event.eventAt || index}`,
         eventType: event.eventType || 'audit-event',
-        actorRole: String(event.actorRole || '').trim().toLowerCase() || 'system',
+        actorRole:
+          String(event.actorRole || '')
+            .trim()
+            .toLowerCase() || 'system',
         title: AUDIT_EVENT_LABELS[event.eventType] || event.eventType || 'Audit event',
         when: event.eventAt,
         details: event.details || null,
@@ -203,12 +217,13 @@ export default function SettlementContractsTab() {
     return Array.from(set).sort();
   }, [timelineEntries]);
   const filteredTimelineEntries = useMemo(
-    () => timelineEntries.filter((entry) => {
-      const rolePass = timelineRoleFilter === 'all' || entry.actorRole === timelineRoleFilter;
-      const typePass = timelineTypeFilter === 'all' || entry.eventType === timelineTypeFilter;
-      return rolePass && typePass;
-    }),
-    [timelineEntries, timelineRoleFilter, timelineTypeFilter]
+    () =>
+      timelineEntries.filter((entry) => {
+        const rolePass = timelineRoleFilter === 'all' || entry.actorRole === timelineRoleFilter;
+        const typePass = timelineTypeFilter === 'all' || entry.eventType === timelineTypeFilter;
+        return rolePass && typePass;
+      }),
+    [timelineEntries, timelineRoleFilter, timelineTypeFilter],
   );
   const showWizardStep = (step) => !wizardMode || wizardStep === step;
   const wizardSteps = [
@@ -304,12 +319,14 @@ export default function SettlementContractsTab() {
 
   const canCompleteStep = (stepIndex) => {
     if (stepIndex === 0) {
-      return String(form.txHash || '').trim().startsWith('0x');
+      return String(form.txHash || '')
+        .trim()
+        .startsWith('0x');
     }
     if (stepIndex === 1) {
       return (
-        String(form.partyOneSignerName || '').trim().length > 0
-        && String(form.partyTwoSignerName || '').trim().length > 0
+        String(form.partyOneSignerName || '').trim().length > 0 &&
+        String(form.partyTwoSignerName || '').trim().length > 0
       );
     }
     if (stepIndex === 2) {
@@ -327,9 +344,15 @@ export default function SettlementContractsTab() {
         focusRequiredField('txHash', 'Complete tx hash in Step 1 before continuing.');
       } else if (wizardStep === 1) {
         if (!String(form.partyOneSignerName || '').trim()) {
-          focusRequiredField('partyOneSignerName', 'Complete Party One signer name before continuing.');
+          focusRequiredField(
+            'partyOneSignerName',
+            'Complete Party One signer name before continuing.',
+          );
         } else {
-          focusRequiredField('partyTwoSignerName', 'Complete Party Two signer name before continuing.');
+          focusRequiredField(
+            'partyTwoSignerName',
+            'Complete Party Two signer name before continuing.',
+          );
         }
       } else {
         setMessage('Complete this step before continuing.');
@@ -352,7 +375,11 @@ export default function SettlementContractsTab() {
       if (response.ok && Array.isArray(response.items)) {
         setRecords({ loading: false, data: response.items, error: null });
       } else {
-        setRecords({ loading: false, data: [], error: response.message || 'Failed to load records' });
+        setRecords({
+          loading: false,
+          data: [],
+          error: response.message || 'Failed to load records',
+        });
       }
     } catch (err) {
       logger.error('Failed to load transfers', err);
@@ -381,7 +408,11 @@ export default function SettlementContractsTab() {
       if (response?.ok && Array.isArray(response.templates)) {
         setTemplates({ loading: false, data: response.templates, error: null });
       } else {
-        setTemplates({ loading: false, data: [], error: response?.message || 'Failed to load templates' });
+        setTemplates({
+          loading: false,
+          data: [],
+          error: response?.message || 'Failed to load templates',
+        });
       }
     } catch (err) {
       logger.error('Failed to load templates', err);
@@ -399,7 +430,11 @@ export default function SettlementContractsTab() {
     try {
       const response = await apiGet(`/blockchain/transfers/${id}/audit-log`);
       if (response?.ok) {
-        setAuditLog({ loading: false, targetId: id, events: Array.isArray(response.events) ? response.events : [] });
+        setAuditLog({
+          loading: false,
+          targetId: id,
+          events: Array.isArray(response.events) ? response.events : [],
+        });
       } else {
         setAuditLog({ loading: false, targetId: id, events: [] });
       }
@@ -408,20 +443,23 @@ export default function SettlementContractsTab() {
     }
   }, []);
 
-  const appendAuditEvent = useCallback(async (transferId, eventType, details = null) => {
-    const id = String(transferId || '').trim();
-    if (!id || !eventType) return;
-    try {
-      await apiPost(`/blockchain/transfers/${id}/audit-log`, {
-        eventType,
-        actorRole: operationRole,
-        details,
-      });
-      await loadAuditLog(id);
-    } catch {
-      // Ignore non-critical logging failures so core workflow is not blocked.
-    }
-  }, [loadAuditLog, operationRole]);
+  const appendAuditEvent = useCallback(
+    async (transferId, eventType, details = null) => {
+      const id = String(transferId || '').trim();
+      if (!id || !eventType) return;
+      try {
+        await apiPost(`/blockchain/transfers/${id}/audit-log`, {
+          eventType,
+          actorRole: operationRole,
+          details,
+        });
+        await loadAuditLog(id);
+      } catch {
+        // Ignore non-critical logging failures so core workflow is not blocked.
+      }
+    },
+    [loadAuditLog, operationRole],
+  );
 
   useEffect(() => {
     loadTransfers();
@@ -488,10 +526,14 @@ export default function SettlementContractsTab() {
       return;
     }
     setForm((prev) => ({ ...prev, ...pendingDraft.form }));
-    setBeginnerMode(typeof pendingDraft.beginnerMode === 'boolean' ? pendingDraft.beginnerMode : true);
+    setBeginnerMode(
+      typeof pendingDraft.beginnerMode === 'boolean' ? pendingDraft.beginnerMode : true,
+    );
     setWizardMode(!!pendingDraft.wizardMode);
     setWizardStep(Number.isInteger(pendingDraft.wizardStep) ? pendingDraft.wizardStep : 0);
-    setOperationRole(typeof pendingDraft.operationRole === 'string' ? pendingDraft.operationRole : 'operator');
+    setOperationRole(
+      typeof pendingDraft.operationRole === 'string' ? pendingDraft.operationRole : 'operator',
+    );
     setDraftDecisionMade(true);
     setPendingDraft(null);
     setMessage('Draft restored. Continue from your last saved state.');
@@ -545,13 +587,15 @@ export default function SettlementContractsTab() {
       if (switchErr?.code === 4902) {
         await window.ethereum.request({
           method: 'wallet_addEthereumChain',
-          params: [{
-            chainId: BASE_CHAIN_ID_HEX,
-            chainName: 'Base',
-            nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
-            rpcUrls: ['https://mainnet.base.org'],
-            blockExplorerUrls: ['https://basescan.org'],
-          }],
+          params: [
+            {
+              chainId: BASE_CHAIN_ID_HEX,
+              chainName: 'Base',
+              nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+              rpcUrls: ['https://mainnet.base.org'],
+              blockExplorerUrls: ['https://basescan.org'],
+            },
+          ],
         });
       } else {
         throw switchErr;
@@ -685,7 +729,9 @@ export default function SettlementContractsTab() {
 
   const submitRecord = async (txHashOverride = '') => {
     if (!activeRole.canRecord) {
-      setMessage(`${activeRole.label} role is read-only for recording. Switch to Operator to record transfers.`);
+      setMessage(
+        `${activeRole.label} role is read-only for recording. Switch to Operator to record transfers.`,
+      );
       return;
     }
     if (wizardMode && wizardStep < 1) {
@@ -701,7 +747,10 @@ export default function SettlementContractsTab() {
 
     setSubmitting(true);
     try {
-      const response = await apiPost('/blockchain/transfers/record', buildRecordPayload(txHashOverride));
+      const response = await apiPost(
+        '/blockchain/transfers/record',
+        buildRecordPayload(txHashOverride),
+      );
       if (!response?.ok) {
         setMessage(`Failed to record transfer: ${response?.message || 'unknown error'}`);
       } else {
@@ -760,7 +809,11 @@ export default function SettlementContractsTab() {
     setReverifyId(id);
     try {
       const response = await apiPost(`/blockchain/transfers/${id}/reverify`, {});
-      setMessage(response?.ok ? 'Transfer refreshed from chain.' : `Failed to refresh: ${response?.message || 'Unknown error'}`);
+      setMessage(
+        response?.ok
+          ? 'Transfer refreshed from chain.'
+          : `Failed to refresh: ${response?.message || 'Unknown error'}`,
+      );
       await loadTransfers();
     } catch (err) {
       setMessage(err.message || 'Failed to refresh transfer');
@@ -879,7 +932,9 @@ export default function SettlementContractsTab() {
         setMessage(response?.message || 'Failed to export contract JSON');
         return;
       }
-      const blob = new Blob([JSON.stringify(response.contract, null, 2)], { type: 'application/json' });
+      const blob = new Blob([JSON.stringify(response.contract, null, 2)], {
+        type: 'application/json',
+      });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -899,7 +954,9 @@ export default function SettlementContractsTab() {
         setMessage(response?.message || 'Failed to export verification report');
         return;
       }
-      const blob = new Blob([JSON.stringify(response.report, null, 2)], { type: 'application/json' });
+      const blob = new Blob([JSON.stringify(response.report, null, 2)], {
+        type: 'application/json',
+      });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -965,11 +1022,14 @@ export default function SettlementContractsTab() {
       note: prev.note || 'Demo settlement workflow record',
       finalizationNote: prev.finalizationNote || 'Demo finalization note for training.',
     }));
-    setMessage('Demo values applied. Replace tx hash and names with real values before production finalization.');
+    setMessage(
+      'Demo values applied. Replace tx hash and names with real values before production finalization.',
+    );
   };
 
   const copyHandoffSummary = async (item) => {
-    const integrityStatus = integrityStatusById[item.id] || (item.finalizedAt ? 'not-verified-yet' : 'not-finalized');
+    const integrityStatus =
+      integrityStatusById[item.id] || (item.finalizedAt ? 'not-verified-yet' : 'not-finalized');
     const lines = [
       'PVA Bazaar Settlement Handoff Summary',
       `Transfer ID: ${item.id}`,
@@ -1065,18 +1125,27 @@ export default function SettlementContractsTab() {
       <div className="tab-header">
         <h2>📜 Settlement Contracts</h2>
         <p className="tab-description">
-          Execute wallet transfers, link them to artifacts, and generate printable contract receipts for online, PDF, or physical storage.
+          Execute wallet transfers, link them to artifacts, and generate printable contract receipts
+          for online, PDF, or physical storage.
         </p>
       </div>
 
       {pendingDraft && !draftDecisionMade ? (
         <div className="draft-banner" role="alert">
           <div>
-            Found a saved draft from {pendingDraft.updatedAt ? new Date(pendingDraft.updatedAt).toLocaleString() : 'earlier session'}.
+            Found a saved draft from{' '}
+            {pendingDraft.updatedAt
+              ? new Date(pendingDraft.updatedAt).toLocaleString()
+              : 'earlier session'}
+            .
           </div>
           <div className="draft-actions">
-            <button className="btn ghost tiny" type="button" onClick={restoreDraft}>Restore Draft</button>
-            <button className="btn ghost tiny" type="button" onClick={discardDraft}>Discard Draft</button>
+            <button className="btn ghost tiny" type="button" onClick={restoreDraft}>
+              Restore Draft
+            </button>
+            <button className="btn ghost tiny" type="button" onClick={discardDraft}>
+              Discard Draft
+            </button>
           </div>
         </div>
       ) : null}
@@ -1091,9 +1160,18 @@ export default function SettlementContractsTab() {
 
       <div className="workflow-card" role="note" aria-label="Required and optional fields">
         <h4>Before You Submit</h4>
-        <p><strong>Required now:</strong> Tx Hash, Party One Signer Name, Party Two Signer Name. These lock legal intent and chain evidence.</p>
-        <p><strong>Optional but recommended:</strong> signer wallets + EIP-191 signatures. These prove a wallet attested the text message.</p>
-        <p><strong>Optional context:</strong> artifact link, media URL, reference URL, witness info. These improve audit readability but do not block settlement lock.</p>
+        <p>
+          <strong>Required now:</strong> Tx Hash, Party One Signer Name, Party Two Signer Name.
+          These lock legal intent and chain evidence.
+        </p>
+        <p>
+          <strong>Optional but recommended:</strong> signer wallets + EIP-191 signatures. These
+          prove a wallet attested the text message.
+        </p>
+        <p>
+          <strong>Optional context:</strong> artifact link, media URL, reference URL, witness info.
+          These improve audit readability but do not block settlement lock.
+        </p>
       </div>
 
       <div className="mode-toggle-row" role="group" aria-label="Entry mode">
@@ -1112,14 +1190,26 @@ export default function SettlementContractsTab() {
           Advanced Mode
         </button>
         <span className="mode-hint">
-          {beginnerMode ? 'Showing only core required inputs + wallet send basics.' : 'Showing full optional legal and attestation controls.'}
+          {beginnerMode
+            ? 'Showing only core required inputs + wallet send basics.'
+            : 'Showing full optional legal and attestation controls.'}
         </span>
-        <button className="btn ghost tiny" type="button" onClick={applyQuickFillDemo}>Quick Fill Demo</button>
-        <button className={`btn tiny ${wizardMode ? 'accent' : 'ghost'}`} type="button" onClick={() => setWizardMode((prev) => !prev)}>
+        <button className="btn ghost tiny" type="button" onClick={applyQuickFillDemo}>
+          Quick Fill Demo
+        </button>
+        <button
+          className={`btn tiny ${wizardMode ? 'accent' : 'ghost'}`}
+          type="button"
+          onClick={() => setWizardMode((prev) => !prev)}
+        >
           {wizardMode ? 'Wizard On' : 'Wizard Off'}
         </button>
-        <button className="btn ghost tiny" type="button" onClick={openRunbookCard}>Print Runbook Card</button>
-        <button className="btn ghost tiny" type="button" onClick={discardDraft}>Clear Saved Draft</button>
+        <button className="btn ghost tiny" type="button" onClick={openRunbookCard}>
+          Print Runbook Card
+        </button>
+        <button className="btn ghost tiny" type="button" onClick={discardDraft}>
+          Clear Saved Draft
+        </button>
         <label className="role-picker">
           Role
           <select value={operationRole} onChange={(e) => setOperationRole(e.target.value)}>
@@ -1141,8 +1231,22 @@ export default function SettlementContractsTab() {
           </div>
           <p>{wizardSteps[wizardStep].description}</p>
           <div className="wizard-actions">
-            <button className="btn ghost tiny" type="button" onClick={goWizardBack} disabled={wizardStep === 0}>Back</button>
-            <button className="btn ghost tiny" type="button" onClick={goWizardNext} disabled={wizardStep === wizardSteps.length - 1}>Next</button>
+            <button
+              className="btn ghost tiny"
+              type="button"
+              onClick={goWizardBack}
+              disabled={wizardStep === 0}
+            >
+              Back
+            </button>
+            <button
+              className="btn ghost tiny"
+              type="button"
+              onClick={goWizardNext}
+              disabled={wizardStep === wizardSteps.length - 1}
+            >
+              Next
+            </button>
           </div>
         </div>
       ) : null}
@@ -1152,13 +1256,20 @@ export default function SettlementContractsTab() {
         <div className="checklist-items">
           {checklist.map((item, index) => (
             <div key={item.id} className={`checklist-item ${item.done ? 'done' : 'pending'}`}>
-              <span className={`check-badge ${item.done ? 'done' : 'pending'}`}>{item.done ? 'Done' : 'Pending'}</span>
-              <span className="check-step">Step {index + 1}: {item.label}</span>
+              <span className={`check-badge ${item.done ? 'done' : 'pending'}`}>
+                {item.done ? 'Done' : 'Pending'}
+              </span>
+              <span className="check-step">
+                Step {index + 1}: {item.label}
+              </span>
             </div>
           ))}
         </div>
         <p className="checklist-next">
-          <strong>Next action:</strong> {nextChecklistItem ? nextChecklistItem.hint : 'All steps complete. Export/print verification reports for archive.'}
+          <strong>Next action:</strong>{' '}
+          {nextChecklistItem
+            ? nextChecklistItem.hint
+            : 'All steps complete. Export/print verification reports for archive.'}
         </p>
       </div>
 
@@ -1166,27 +1277,55 @@ export default function SettlementContractsTab() {
         <div className="timeline-card" role="region" aria-label="Settlement audit timeline">
           <h4>Audit Timeline</h4>
           <div className="timeline-grid">
-            <div><strong>Recorded:</strong> {latestRecord?.createdAt ? new Date(latestRecord.createdAt).toLocaleString() : 'N/A'}</div>
-            <div><strong>Finalized:</strong> {latestRecord?.finalizedAt ? new Date(latestRecord.finalizedAt).toLocaleString() : 'Not finalized'}</div>
-            <div><strong>Chain Refresh:</strong> {latestRecord?.lastCheckedAt ? new Date(latestRecord.lastCheckedAt).toLocaleString() : 'N/A'}</div>
-            <div><strong>Audit Feed:</strong> {auditLog.loading ? 'Refreshing...' : `${filteredTimelineEntries.length}/${timelineEntries.length} events`}</div>
+            <div>
+              <strong>Recorded:</strong>{' '}
+              {latestRecord?.createdAt ? new Date(latestRecord.createdAt).toLocaleString() : 'N/A'}
+            </div>
+            <div>
+              <strong>Finalized:</strong>{' '}
+              {latestRecord?.finalizedAt
+                ? new Date(latestRecord.finalizedAt).toLocaleString()
+                : 'Not finalized'}
+            </div>
+            <div>
+              <strong>Chain Refresh:</strong>{' '}
+              {latestRecord?.lastCheckedAt
+                ? new Date(latestRecord.lastCheckedAt).toLocaleString()
+                : 'N/A'}
+            </div>
+            <div>
+              <strong>Audit Feed:</strong>{' '}
+              {auditLog.loading
+                ? 'Refreshing...'
+                : `${filteredTimelineEntries.length}/${timelineEntries.length} events`}
+            </div>
           </div>
           <div className="timeline-filters" aria-label="Audit timeline filters">
             <label>
               Role
-              <select value={timelineRoleFilter} onChange={(e) => setTimelineRoleFilter(e.target.value)}>
+              <select
+                value={timelineRoleFilter}
+                onChange={(e) => setTimelineRoleFilter(e.target.value)}
+              >
                 <option value="all">All roles</option>
                 {timelineRoleOptions.map((role) => (
-                  <option key={role} value={role}>{role}</option>
+                  <option key={role} value={role}>
+                    {role}
+                  </option>
                 ))}
               </select>
             </label>
             <label>
               Event Type
-              <select value={timelineTypeFilter} onChange={(e) => setTimelineTypeFilter(e.target.value)}>
+              <select
+                value={timelineTypeFilter}
+                onChange={(e) => setTimelineTypeFilter(e.target.value)}
+              >
                 <option value="all">All event types</option>
                 {timelineTypeOptions.map((type) => (
-                  <option key={type} value={type}>{AUDIT_EVENT_LABELS[type] || type}</option>
+                  <option key={type} value={type}>
+                    {AUDIT_EVENT_LABELS[type] || type}
+                  </option>
                 ))}
               </select>
             </label>
@@ -1228,20 +1367,42 @@ export default function SettlementContractsTab() {
 
       <div className="settlement-form-card">
         <div className="wallet-actions-row">
-          <button className="btn primary" type="button" onClick={connectWallet} disabled={wallet.connecting || wallet.sending}>
-            {wallet.connecting ? 'Connecting...' : wallet.address ? 'Wallet Connected' : 'Connect Wallet'}
+          <button
+            className="btn primary"
+            type="button"
+            onClick={connectWallet}
+            disabled={wallet.connecting || wallet.sending}
+          >
+            {wallet.connecting
+              ? 'Connecting...'
+              : wallet.address
+                ? 'Wallet Connected'
+                : 'Connect Wallet'}
           </button>
-          <button className="btn accent" type="button" onClick={handleWalletSendAndRecord} disabled={wallet.sending || !wallet.address || !activeRole.canWalletSend}>
+          <button
+            className="btn accent"
+            type="button"
+            onClick={handleWalletSendAndRecord}
+            disabled={wallet.sending || !wallet.address || !activeRole.canWalletSend}
+          >
             {wallet.sending ? 'Sending...' : 'Send On Base + Record'}
           </button>
-          {wallet.address ? <span className="wallet-chip">{wallet.address.slice(0, 6)}...{wallet.address.slice(-4)} {wallet.chainId ? `· ${wallet.chainId}` : ''}</span> : null}
+          {wallet.address ? (
+            <span className="wallet-chip">
+              {wallet.address.slice(0, 6)}...{wallet.address.slice(-4)}{' '}
+              {wallet.chainId ? `· ${wallet.chainId}` : ''}
+            </span>
+          ) : null}
         </div>
 
         <div className="settlement-grid">
           <label className="full-row">
             Reuse Prior Terms Template
             <div className="template-row">
-              <select value={selectedTemplateId} onChange={(e) => setSelectedTemplateId(e.target.value)}>
+              <select
+                value={selectedTemplateId}
+                onChange={(e) => setSelectedTemplateId(e.target.value)}
+              >
                 <option value="">Select template</option>
                 {templates.data.map((item) => (
                   <option key={item.id} value={item.id}>
@@ -1249,10 +1410,20 @@ export default function SettlementContractsTab() {
                   </option>
                 ))}
               </select>
-              <button className="btn ghost tiny" type="button" onClick={applyTemplate} disabled={!selectedTemplateId || templates.loading}>
+              <button
+                className="btn ghost tiny"
+                type="button"
+                onClick={applyTemplate}
+                disabled={!selectedTemplateId || templates.loading}
+              >
                 Apply
               </button>
-              <button className="btn ghost tiny" type="button" onClick={loadTemplates} disabled={templates.loading}>
+              <button
+                className="btn ghost tiny"
+                type="button"
+                onClick={loadTemplates}
+                disabled={templates.loading}
+              >
                 {templates.loading ? 'Loading...' : 'Refresh Templates'}
               </button>
             </div>
@@ -1262,7 +1433,10 @@ export default function SettlementContractsTab() {
           {showWizardStep(0) ? (
             <label>
               Network
-              <select value={form.network} onChange={(e) => setForm((prev) => ({ ...prev, network: e.target.value }))}>
+              <select
+                value={form.network}
+                onChange={(e) => setForm((prev) => ({ ...prev, network: e.target.value }))}
+              >
                 <option value="base">Base</option>
                 <option value="base-sepolia">Base Sepolia</option>
                 <option value="ethereum">Ethereum</option>
@@ -1277,14 +1451,22 @@ export default function SettlementContractsTab() {
           {showWizardStep(0) ? (
             <label>
               Recipient Wallet
-              <input value={form.recipientWallet} onChange={(e) => setForm((prev) => ({ ...prev, recipientWallet: e.target.value }))} placeholder="0x..." />
+              <input
+                value={form.recipientWallet}
+                onChange={(e) => setForm((prev) => ({ ...prev, recipientWallet: e.target.value }))}
+                placeholder="0x..."
+              />
             </label>
           ) : null}
 
           {showWizardStep(0) ? (
             <label>
               Native Amount (ETH)
-              <input value={form.nativeAmount} onChange={(e) => setForm((prev) => ({ ...prev, nativeAmount: e.target.value }))} placeholder="0.0003" />
+              <input
+                value={form.nativeAmount}
+                onChange={(e) => setForm((prev) => ({ ...prev, nativeAmount: e.target.value }))}
+                placeholder="0.0003"
+              />
             </label>
           ) : null}
 
@@ -1292,38 +1474,54 @@ export default function SettlementContractsTab() {
             <>
               <label>
                 USD Amount
-                <input type="number" min="0" step="0.01" value={form.amountUsd} onChange={(e) => setForm((prev) => ({ ...prev, amountUsd: e.target.value }))} />
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={form.amountUsd}
+                  onChange={(e) => setForm((prev) => ({ ...prev, amountUsd: e.target.value }))}
+                />
               </label>
 
               <label>
                 Token Symbol
-                <input value={form.tokenSymbol} onChange={(e) => setForm((prev) => ({ ...prev, tokenSymbol: e.target.value }))} />
+                <input
+                  value={form.tokenSymbol}
+                  onChange={(e) => setForm((prev) => ({ ...prev, tokenSymbol: e.target.value }))}
+                />
               </label>
 
               <label>
                 Token Amount
-                <input value={form.tokenAmount} onChange={(e) => setForm((prev) => ({ ...prev, tokenAmount: e.target.value }))} placeholder="1.0" />
+                <input
+                  value={form.tokenAmount}
+                  onChange={(e) => setForm((prev) => ({ ...prev, tokenAmount: e.target.value }))}
+                  placeholder="1.0"
+                />
               </label>
             </>
           ) : null}
 
           {showWizardStep(0) ? (
             <label className="full-row">
-            Tx Hash <span className="required-badge">Required</span>
-            <input
-              ref={txHashRef}
-              className={requiredErrors.txHash ? 'field-required-error' : ''}
-              value={form.txHash}
-              onChange={(e) => {
-                const value = e.target.value;
-                setForm((prev) => ({ ...prev, txHash: value }));
-                if (requiredErrors.txHash && String(value || '').trim()) {
-                  setRequiredErrors((prev) => ({ ...prev, txHash: false }));
-                }
-              }}
-              placeholder="0x..."
-            />
-            <small>Why required: anchors the settlement to a specific on-chain transaction for traceability.</small>
+              Tx Hash <span className="required-badge">Required</span>
+              <input
+                ref={txHashRef}
+                className={requiredErrors.txHash ? 'field-required-error' : ''}
+                value={form.txHash}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setForm((prev) => ({ ...prev, txHash: value }));
+                  if (requiredErrors.txHash && String(value || '').trim()) {
+                    setRequiredErrors((prev) => ({ ...prev, txHash: false }));
+                  }
+                }}
+                placeholder="0x..."
+              />
+              <small>
+                Why required: anchors the settlement to a specific on-chain transaction for
+                traceability.
+              </small>
             </label>
           ) : null}
 
@@ -1331,56 +1529,92 @@ export default function SettlementContractsTab() {
             <>
               <label className="full-row">
                 Artifact Search
-                <input value={artifactQuery} onChange={(e) => setArtifactQuery(e.target.value)} placeholder="Search artifact by title/slug" />
+                <input
+                  value={artifactQuery}
+                  onChange={(e) => setArtifactQuery(e.target.value)}
+                  placeholder="Search artifact by title/slug"
+                />
               </label>
 
               <label className="full-row">
                 Link Artifact
-                <select value={form.artifactId} onChange={(e) => setForm((prev) => ({ ...prev, artifactId: e.target.value }))}>
+                <select
+                  value={form.artifactId}
+                  onChange={(e) => setForm((prev) => ({ ...prev, artifactId: e.target.value }))}
+                >
                   <option value="">No artifact linked</option>
                   {artifacts.data.map((item) => (
-                    <option key={item._id} value={item._id}>{item.title || item.name} {item.slug ? `(${item.slug})` : ''}</option>
+                    <option key={item._id} value={item._id}>
+                      {item.title || item.name} {item.slug ? `(${item.slug})` : ''}
+                    </option>
                   ))}
                 </select>
                 {artifacts.loading ? <small>Loading artifacts...</small> : null}
-                {selectedArtifact ? <small>Linked: {selectedArtifact.title || selectedArtifact.name}</small> : null}
+                {selectedArtifact ? (
+                  <small>Linked: {selectedArtifact.title || selectedArtifact.name}</small>
+                ) : null}
               </label>
 
               <label className="full-row">
                 Settlement Note
-                <textarea rows="2" value={form.note} onChange={(e) => setForm((prev) => ({ ...prev, note: e.target.value }))} placeholder="Describe what this settlement covers" />
+                <textarea
+                  rows="2"
+                  value={form.note}
+                  onChange={(e) => setForm((prev) => ({ ...prev, note: e.target.value }))}
+                  placeholder="Describe what this settlement covers"
+                />
               </label>
 
               <label className="full-row">
                 Media URL
-                <input value={form.mediaUrl} onChange={(e) => setForm((prev) => ({ ...prev, mediaUrl: e.target.value }))} placeholder="https://..." />
+                <input
+                  value={form.mediaUrl}
+                  onChange={(e) => setForm((prev) => ({ ...prev, mediaUrl: e.target.value }))}
+                  placeholder="https://..."
+                />
               </label>
 
               <label className="full-row">
                 Reference URL
-                <input value={form.referenceUrl} onChange={(e) => setForm((prev) => ({ ...prev, referenceUrl: e.target.value }))} placeholder="https://..." />
+                <input
+                  value={form.referenceUrl}
+                  onChange={(e) => setForm((prev) => ({ ...prev, referenceUrl: e.target.value }))}
+                  placeholder="https://..."
+                />
               </label>
             </>
           ) : null}
 
           {showWizardStep(1) ? (
             <label>
-            Party One Name
-            <input value={form.partyOneName} onChange={(e) => setForm((prev) => ({ ...prev, partyOneName: e.target.value }))} placeholder="PVA Bazaar" />
+              Party One Name
+              <input
+                value={form.partyOneName}
+                onChange={(e) => setForm((prev) => ({ ...prev, partyOneName: e.target.value }))}
+                placeholder="PVA Bazaar"
+              />
             </label>
           ) : null}
 
           {showAdvanced && showWizardStep(2) ? (
             <label>
               Party One Role
-              <input value={form.partyOneRole} onChange={(e) => setForm((prev) => ({ ...prev, partyOneRole: e.target.value }))} placeholder="Operator" />
+              <input
+                value={form.partyOneRole}
+                onChange={(e) => setForm((prev) => ({ ...prev, partyOneRole: e.target.value }))}
+                placeholder="Operator"
+              />
             </label>
           ) : null}
 
           {showWizardStep(1) ? (
             <label>
-            Party Two Name
-            <input value={form.partyTwoName} onChange={(e) => setForm((prev) => ({ ...prev, partyTwoName: e.target.value }))} placeholder="Counterparty Name" />
+              Party Two Name
+              <input
+                value={form.partyTwoName}
+                onChange={(e) => setForm((prev) => ({ ...prev, partyTwoName: e.target.value }))}
+                placeholder="Counterparty Name"
+              />
             </label>
           ) : null}
 
@@ -1388,7 +1622,11 @@ export default function SettlementContractsTab() {
             <>
               <label>
                 Party Two Role
-                <input value={form.partyTwoRole} onChange={(e) => setForm((prev) => ({ ...prev, partyTwoRole: e.target.value }))} placeholder="Creator / Buyer / Seller" />
+                <input
+                  value={form.partyTwoRole}
+                  onChange={(e) => setForm((prev) => ({ ...prev, partyTwoRole: e.target.value }))}
+                  placeholder="Creator / Buyer / Seller"
+                />
               </label>
 
               <label className="full-row">
@@ -1396,7 +1634,9 @@ export default function SettlementContractsTab() {
                 <textarea
                   rows="4"
                   value={form.additionalClauses}
-                  onChange={(e) => setForm((prev) => ({ ...prev, additionalClauses: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, additionalClauses: e.target.value }))
+                  }
                   placeholder="Write any additional terms to appear on the printable contract"
                 />
               </label>
@@ -1405,55 +1645,65 @@ export default function SettlementContractsTab() {
 
           {showWizardStep(1) ? (
             <label>
-            Party One Signer Name <span className="required-badge">Required</span>
-            <input
-              ref={partyOneSignerNameRef}
-              className={requiredErrors.partyOneSignerName ? 'field-required-error' : ''}
-              value={form.partyOneSignerName}
-              onChange={(e) => {
-                const value = e.target.value;
-                setForm((prev) => ({ ...prev, partyOneSignerName: value }));
-                if (requiredErrors.partyOneSignerName && String(value || '').trim()) {
-                  setRequiredErrors((prev) => ({ ...prev, partyOneSignerName: false }));
-                }
-              }}
-              placeholder="Signer full name"
-            />
-            <small>Why required: identifies who approved terms for party one.</small>
+              Party One Signer Name <span className="required-badge">Required</span>
+              <input
+                ref={partyOneSignerNameRef}
+                className={requiredErrors.partyOneSignerName ? 'field-required-error' : ''}
+                value={form.partyOneSignerName}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setForm((prev) => ({ ...prev, partyOneSignerName: value }));
+                  if (requiredErrors.partyOneSignerName && String(value || '').trim()) {
+                    setRequiredErrors((prev) => ({ ...prev, partyOneSignerName: false }));
+                  }
+                }}
+                placeholder="Signer full name"
+              />
+              <small>Why required: identifies who approved terms for party one.</small>
             </label>
           ) : null}
 
           {showAdvanced && showWizardStep(2) ? (
             <label>
               Party One Signer Wallet (Optional)
-              <input value={form.partyOneSignerWallet} onChange={(e) => setForm((prev) => ({ ...prev, partyOneSignerWallet: e.target.value }))} placeholder="0x..." />
+              <input
+                value={form.partyOneSignerWallet}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, partyOneSignerWallet: e.target.value }))
+                }
+                placeholder="0x..."
+              />
             </label>
           ) : null}
 
           {showAdvanced && showWizardStep(2) ? (
             <label>
               Party One Signed At
-              <input type="datetime-local" value={form.partyOneSignedAt} onChange={(e) => setForm((prev) => ({ ...prev, partyOneSignedAt: e.target.value }))} />
+              <input
+                type="datetime-local"
+                value={form.partyOneSignedAt}
+                onChange={(e) => setForm((prev) => ({ ...prev, partyOneSignedAt: e.target.value }))}
+              />
             </label>
           ) : null}
 
           {showWizardStep(1) ? (
             <label>
-            Party Two Signer Name <span className="required-badge">Required</span>
-            <input
-              ref={partyTwoSignerNameRef}
-              className={requiredErrors.partyTwoSignerName ? 'field-required-error' : ''}
-              value={form.partyTwoSignerName}
-              onChange={(e) => {
-                const value = e.target.value;
-                setForm((prev) => ({ ...prev, partyTwoSignerName: value }));
-                if (requiredErrors.partyTwoSignerName && String(value || '').trim()) {
-                  setRequiredErrors((prev) => ({ ...prev, partyTwoSignerName: false }));
-                }
-              }}
-              placeholder="Signer full name"
-            />
-            <small>Why required: identifies who approved terms for party two.</small>
+              Party Two Signer Name <span className="required-badge">Required</span>
+              <input
+                ref={partyTwoSignerNameRef}
+                className={requiredErrors.partyTwoSignerName ? 'field-required-error' : ''}
+                value={form.partyTwoSignerName}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setForm((prev) => ({ ...prev, partyTwoSignerName: value }));
+                  if (requiredErrors.partyTwoSignerName && String(value || '').trim()) {
+                    setRequiredErrors((prev) => ({ ...prev, partyTwoSignerName: false }));
+                  }
+                }}
+                placeholder="Signer full name"
+              />
+              <small>Why required: identifies who approved terms for party two.</small>
             </label>
           ) : null}
 
@@ -1461,27 +1711,53 @@ export default function SettlementContractsTab() {
             <>
               <label>
                 Party Two Signer Wallet (Optional)
-                <input value={form.partyTwoSignerWallet} onChange={(e) => setForm((prev) => ({ ...prev, partyTwoSignerWallet: e.target.value }))} placeholder="0x..." />
+                <input
+                  value={form.partyTwoSignerWallet}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, partyTwoSignerWallet: e.target.value }))
+                  }
+                  placeholder="0x..."
+                />
               </label>
 
               <label>
                 Party Two Signed At
-                <input type="datetime-local" value={form.partyTwoSignedAt} onChange={(e) => setForm((prev) => ({ ...prev, partyTwoSignedAt: e.target.value }))} />
+                <input
+                  type="datetime-local"
+                  value={form.partyTwoSignedAt}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, partyTwoSignedAt: e.target.value }))
+                  }
+                />
               </label>
 
               <label>
                 Witness Name (optional)
-                <input value={form.witnessName} onChange={(e) => setForm((prev) => ({ ...prev, witnessName: e.target.value }))} placeholder="Witness full name" />
+                <input
+                  value={form.witnessName}
+                  onChange={(e) => setForm((prev) => ({ ...prev, witnessName: e.target.value }))}
+                  placeholder="Witness full name"
+                />
               </label>
 
               <label>
                 Witness Wallet (Optional)
-                <input value={form.witnessWallet} onChange={(e) => setForm((prev) => ({ ...prev, witnessWallet: e.target.value }))} placeholder="0x..." />
+                <input
+                  value={form.witnessWallet}
+                  onChange={(e) => setForm((prev) => ({ ...prev, witnessWallet: e.target.value }))}
+                  placeholder="0x..."
+                />
               </label>
 
               <label>
                 Witness Signed At (optional)
-                <input type="datetime-local" value={form.witnessSignedAt} onChange={(e) => setForm((prev) => ({ ...prev, witnessSignedAt: e.target.value }))} />
+                <input
+                  type="datetime-local"
+                  value={form.witnessSignedAt}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, witnessSignedAt: e.target.value }))
+                  }
+                />
               </label>
 
               <label className="full-row">
@@ -1489,7 +1765,9 @@ export default function SettlementContractsTab() {
                 <textarea
                   rows="2"
                   value={form.finalizationNote}
-                  onChange={(e) => setForm((prev) => ({ ...prev, finalizationNote: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, finalizationNote: e.target.value }))
+                  }
                   placeholder="Optional note recorded when contract is finalized"
                 />
               </label>
@@ -1499,7 +1777,9 @@ export default function SettlementContractsTab() {
                 <textarea
                   rows="3"
                   value={form.attestationMessage}
-                  onChange={(e) => setForm((prev) => ({ ...prev, attestationMessage: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, attestationMessage: e.target.value }))
+                  }
                   placeholder="If empty, the app auto-generates a standard message during finalization"
                 />
               </label>
@@ -1512,37 +1792,84 @@ export default function SettlementContractsTab() {
                     <option value="partyTwo">Sign as Party Two</option>
                     <option value="witness">Sign as Witness</option>
                   </select>
-                  <button className="btn ghost tiny" type="button" onClick={() => setForm((prev) => ({ ...prev, attestationMessage: buildDefaultAttestationMessage() }))}>
+                  <button
+                    className="btn ghost tiny"
+                    type="button"
+                    onClick={() =>
+                      setForm((prev) => ({
+                        ...prev,
+                        attestationMessage: buildDefaultAttestationMessage(),
+                      }))
+                    }
+                  >
                     Generate Suggested Message
                   </button>
-                  <button className="btn ghost tiny" type="button" onClick={signConnectedWallet} disabled={!wallet.address || signingWallet}>
+                  <button
+                    className="btn ghost tiny"
+                    type="button"
+                    onClick={signConnectedWallet}
+                    disabled={!wallet.address || signingWallet}
+                  >
                     {signingWallet ? 'Signing...' : 'Sign With Connected Wallet'}
                   </button>
                 </div>
-                <small>Why this helps: signatures let auditors cryptographically verify wallet-holder consent, not just typed names.</small>
+                <small>
+                  Why this helps: signatures let auditors cryptographically verify wallet-holder
+                  consent, not just typed names.
+                </small>
               </label>
 
               <label className="full-row">
                 Party One EIP-191 Signature (Optional)
-                <textarea rows="2" value={form.partyOneSignature} onChange={(e) => setForm((prev) => ({ ...prev, partyOneSignature: e.target.value }))} placeholder="0x..." />
+                <textarea
+                  rows="2"
+                  value={form.partyOneSignature}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, partyOneSignature: e.target.value }))
+                  }
+                  placeholder="0x..."
+                />
               </label>
 
               <label className="full-row">
                 Party Two EIP-191 Signature (Optional)
-                <textarea rows="2" value={form.partyTwoSignature} onChange={(e) => setForm((prev) => ({ ...prev, partyTwoSignature: e.target.value }))} placeholder="0x..." />
+                <textarea
+                  rows="2"
+                  value={form.partyTwoSignature}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, partyTwoSignature: e.target.value }))
+                  }
+                  placeholder="0x..."
+                />
               </label>
 
               <label className="full-row">
                 Witness EIP-191 Signature (Optional)
-                <textarea rows="2" value={form.witnessSignature} onChange={(e) => setForm((prev) => ({ ...prev, witnessSignature: e.target.value }))} placeholder="0x..." />
+                <textarea
+                  rows="2"
+                  value={form.witnessSignature}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, witnessSignature: e.target.value }))
+                  }
+                  placeholder="0x..."
+                />
               </label>
             </>
           ) : null}
         </div>
 
         <div className="manual-submit-row">
-          <button className="btn secondary" type="button" onClick={() => submitRecord()} disabled={submitting || !activeRole.canRecord || (wizardMode && wizardStep < 1)}>
-            {submitting ? <LoadingDots inline={true} label="Recording..." /> : 'Record Existing Tx Hash'}
+          <button
+            className="btn secondary"
+            type="button"
+            onClick={() => submitRecord()}
+            disabled={submitting || !activeRole.canRecord || (wizardMode && wizardStep < 1)}
+          >
+            {submitting ? (
+              <LoadingDots inline={true} label="Recording..." />
+            ) : (
+              'Record Existing Tx Hash'
+            )}
           </button>
         </div>
       </div>
@@ -1553,7 +1880,9 @@ export default function SettlementContractsTab() {
       <div className="records-card">
         <div className="records-header">
           <h3>Tracked Settlements</h3>
-          <button className="btn ghost" type="button" onClick={loadTransfers}>Refresh</button>
+          <button className="btn ghost" type="button" onClick={loadTransfers}>
+            Refresh
+          </button>
         </div>
 
         {records.loading ? (
@@ -1568,47 +1897,138 @@ export default function SettlementContractsTab() {
                   <span className={`chip status-${item.status}`}>{item.status}</span>
                   <span className="chip network">{item.network}</span>
                   {item.isFinalized ? <span className="chip finalized">Finalized</span> : null}
-                  {integrityStatusById[item.id] ? <span className={`chip integrity-${integrityStatusById[item.id]}`}>Digest: {integrityStatusById[item.id]}</span> : null}
-                  <button className="btn ghost tiny" type="button" onClick={() => handleReverify(item.id)} disabled={reverifyId === item.id}>
+                  {integrityStatusById[item.id] ? (
+                    <span className={`chip integrity-${integrityStatusById[item.id]}`}>
+                      Digest: {integrityStatusById[item.id]}
+                    </span>
+                  ) : null}
+                  <button
+                    className="btn ghost tiny"
+                    type="button"
+                    onClick={() => handleReverify(item.id)}
+                    disabled={reverifyId === item.id}
+                  >
                     {reverifyId === item.id ? 'Checking...' : 'Re-verify'}
                   </button>
-                  <button className="btn ghost tiny" type="button" onClick={() => verifyIntegrity(item.id)} disabled={verifyingId === item.id}>
+                  <button
+                    className="btn ghost tiny"
+                    type="button"
+                    onClick={() => verifyIntegrity(item.id)}
+                    disabled={verifyingId === item.id}
+                  >
                     {verifyingId === item.id ? 'Verifying...' : 'Verify Digest'}
                   </button>
                   <button
                     className="btn ghost tiny"
                     type="button"
                     onClick={() => finalizeTransfer(item.id)}
-                    disabled={item.isFinalized || finalizingId === item.id || !activeRole.canFinalize || (wizardMode && wizardStep < 3)}
+                    disabled={
+                      item.isFinalized ||
+                      finalizingId === item.id ||
+                      !activeRole.canFinalize ||
+                      (wizardMode && wizardStep < 3)
+                    }
                   >
-                    {item.isFinalized ? 'Locked' : finalizingId === item.id ? 'Finalizing...' : 'Finalize & Lock'}
+                    {item.isFinalized
+                      ? 'Locked'
+                      : finalizingId === item.id
+                        ? 'Finalizing...'
+                        : 'Finalize & Lock'}
                   </button>
                 </div>
 
                 <div className="record-meta">
-                  <span><strong>USD:</strong> ${Number(item.amountUsd || 0).toFixed(2)}</span>
-                  <span><strong>Token:</strong> {item.tokenSymbol} {item.tokenAmount || ''}</span>
-                  {item.artifactTitle ? <span><strong>Artifact:</strong> {item.artifactTitle}</span> : null}
-                  {item.finalizedAt ? <span><strong>Finalized:</strong> {new Date(item.finalizedAt).toLocaleString()}</span> : null}
+                  <span>
+                    <strong>USD:</strong> ${Number(item.amountUsd || 0).toFixed(2)}
+                  </span>
+                  <span>
+                    <strong>Token:</strong> {item.tokenSymbol} {item.tokenAmount || ''}
+                  </span>
+                  {item.artifactTitle ? (
+                    <span>
+                      <strong>Artifact:</strong> {item.artifactTitle}
+                    </span>
+                  ) : null}
+                  {item.finalizedAt ? (
+                    <span>
+                      <strong>Finalized:</strong> {new Date(item.finalizedAt).toLocaleString()}
+                    </span>
+                  ) : null}
                 </div>
 
                 {item.finalizationDigest ? (
                   <div className="digest-row">
-                    <span className="digest-text"><strong>Digest:</strong> {item.finalizationDigest}</span>
-                    <button className="btn ghost tiny" type="button" onClick={() => copyDigest(item.finalizationDigest)}>Copy Digest</button>
+                    <span className="digest-text">
+                      <strong>Digest:</strong> {item.finalizationDigest}
+                    </span>
+                    <button
+                      className="btn ghost tiny"
+                      type="button"
+                      onClick={() => copyDigest(item.finalizationDigest)}
+                    >
+                      Copy Digest
+                    </button>
                   </div>
                 ) : null}
 
                 <div className="record-links">
-                  {item.explorerUrl ? <a href={item.explorerUrl} target="_blank" rel="noopener noreferrer">Explorer</a> : null}
-                  {item.mediaUrl ? <a href={item.mediaUrl} target="_blank" rel="noopener noreferrer">Media</a> : null}
-                  {item.referenceUrl ? <a href={item.referenceUrl} target="_blank" rel="noopener noreferrer">Reference</a> : null}
-                  <button className="btn ghost tiny" type="button" onClick={() => openContract(item.id, false)}>View Contract</button>
-                  <button className="btn ghost tiny" type="button" onClick={() => openContract(item.id, true)}>Print / Save PDF</button>
-                  <button className="btn ghost tiny" type="button" onClick={() => exportContractJson(item.id)}>Export JSON</button>
-                  <button className="btn ghost tiny" type="button" onClick={() => exportVerificationReportJson(item.id)}>Export Verification JSON</button>
-                  <button className="btn ghost tiny" type="button" onClick={() => openVerificationReport(item.id, true)}>Print Verification Report</button>
-                  <button className="btn ghost tiny" type="button" onClick={() => copyHandoffSummary(item)}>Copy Handoff Summary</button>
+                  {item.explorerUrl ? (
+                    <a href={item.explorerUrl} target="_blank" rel="noopener noreferrer">
+                      Explorer
+                    </a>
+                  ) : null}
+                  {item.mediaUrl ? (
+                    <a href={item.mediaUrl} target="_blank" rel="noopener noreferrer">
+                      Media
+                    </a>
+                  ) : null}
+                  {item.referenceUrl ? (
+                    <a href={item.referenceUrl} target="_blank" rel="noopener noreferrer">
+                      Reference
+                    </a>
+                  ) : null}
+                  <button
+                    className="btn ghost tiny"
+                    type="button"
+                    onClick={() => openContract(item.id, false)}
+                  >
+                    View Contract
+                  </button>
+                  <button
+                    className="btn ghost tiny"
+                    type="button"
+                    onClick={() => openContract(item.id, true)}
+                  >
+                    Print / Save PDF
+                  </button>
+                  <button
+                    className="btn ghost tiny"
+                    type="button"
+                    onClick={() => exportContractJson(item.id)}
+                  >
+                    Export JSON
+                  </button>
+                  <button
+                    className="btn ghost tiny"
+                    type="button"
+                    onClick={() => exportVerificationReportJson(item.id)}
+                  >
+                    Export Verification JSON
+                  </button>
+                  <button
+                    className="btn ghost tiny"
+                    type="button"
+                    onClick={() => openVerificationReport(item.id, true)}
+                  >
+                    Print Verification Report
+                  </button>
+                  <button
+                    className="btn ghost tiny"
+                    type="button"
+                    onClick={() => copyHandoffSummary(item)}
+                  >
+                    Copy Handoff Summary
+                  </button>
                 </div>
 
                 {item.note ? <p className="record-note">{item.note}</p> : null}

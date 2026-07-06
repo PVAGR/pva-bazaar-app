@@ -273,7 +273,7 @@ async function processPaymentSplits(paymentSplit) {
                 totalAmountTransferred: split.amountCents,
               },
               $set: { lastUsedAt: new Date() },
-            }
+            },
           );
         }
       } catch (error) {

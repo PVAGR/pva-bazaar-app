@@ -63,7 +63,10 @@
   background: var(--site-panel-soft);
   color: var(--site-text);
   text-decoration: none;
-  transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+  transition:
+    transform 0.16s ease,
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
 }
 
 .dashboard-atlas-link:hover {
@@ -348,7 +351,9 @@
   border-radius: 8px;
   background: var(--site-panel-soft);
   padding: 0.85rem;
-  transition: border-color 0.2s ease, transform 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    transform 0.2s ease;
 }
 
 .command-action-card:hover,

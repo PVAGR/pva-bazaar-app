@@ -40,15 +40,21 @@ export default function OverviewTab({ onNavigateTab }) {
 
       setMetrics({
         admins: stats?.adminUsers || 0,
-        users: Number(stats?.totalUsers || 0) || (Array.isArray(usersResp?.users) ? usersResp.users.length : 0),
-        artifacts: Array.isArray(artifactsResp?.items) ? artifactsResp.items.length : artifactsResp?.count || 0,
-        orders: Number(stats?.totalOrders || 0) || (Array.isArray(ordersResp?.items) ? ordersResp.items.length : 0),
+        users:
+          Number(stats?.totalUsers || 0) ||
+          (Array.isArray(usersResp?.users) ? usersResp.users.length : 0),
+        artifacts: Array.isArray(artifactsResp?.items)
+          ? artifactsResp.items.length
+          : artifactsResp?.count || 0,
+        orders:
+          Number(stats?.totalOrders || 0) ||
+          (Array.isArray(ordersResp?.items) ? ordersResp.items.length : 0),
         transactions: txItems.length,
         loading: false,
       });
     } catch (error) {
       logger.error('Failed to load overview metrics', error);
-      setMetrics(m => ({ ...m, loading: false }));
+      setMetrics((m) => ({ ...m, loading: false }));
     }
   }
 
@@ -142,20 +148,35 @@ export default function OverviewTab({ onNavigateTab }) {
   return (
     <div className="admin-tab-container overview-tab">
       <h1>🎯 Admin Overview</h1>
-      <p className="tab-description">Welcome to your operations atlas. Monitor the pure-life business system from here.</p>
+      <p className="tab-description">
+        Welcome to your operations atlas. Monitor the pure-life business system from here.
+      </p>
 
       <section className="overview-atlas">
         <h2>Atlas</h2>
         <p className="overview-atlas__copy">
-          Move between public knowledge, recovery, commerce, and control without leaving the same site.
+          Move between public knowledge, recovery, commerce, and control without leaving the same
+          site.
         </p>
         <div className="overview-atlas__links">
-          <Link to="/" className="overview-atlas__link">Home</Link>
-          <Link to="/archive" className="overview-atlas__link">Archive</Link>
-          <Link to="/recovery" className="overview-atlas__link">Recovery</Link>
-          <Link to="/marketplace" className="overview-atlas__link">Marketplace</Link>
-          <Link to="/account" className="overview-atlas__link">Account</Link>
-          <Link to="/settings" className="overview-atlas__link">Settings</Link>
+          <Link to="/" className="overview-atlas__link">
+            Home
+          </Link>
+          <Link to="/archive" className="overview-atlas__link">
+            Archive
+          </Link>
+          <Link to="/recovery" className="overview-atlas__link">
+            Recovery
+          </Link>
+          <Link to="/marketplace" className="overview-atlas__link">
+            Marketplace
+          </Link>
+          <Link to="/account" className="overview-atlas__link">
+            Account
+          </Link>
+          <Link to="/settings" className="overview-atlas__link">
+            Settings
+          </Link>
         </div>
       </section>
 
@@ -163,7 +184,7 @@ export default function OverviewTab({ onNavigateTab }) {
       <section className="overview-section">
         <h2>System Status</h2>
         <div className="status-grid">
-          {systemStatus.map(item => (
+          {systemStatus.map((item) => (
             <div key={item.name} className="status-card">
               <div className="status-header">
                 <h3>{item.name}</h3>
@@ -180,9 +201,11 @@ export default function OverviewTab({ onNavigateTab }) {
       {/* Features Checklist Section */}
       <section className="overview-section">
         <h2>Quick Access - New Features</h2>
-        <p className="section-description">All new admin tools are ready to use. Click any to jump there.</p>
+        <p className="section-description">
+          All new admin tools are ready to use. Click any to jump there.
+        </p>
         <div className="features-grid">
-          {features.map(feature => (
+          {features.map((feature) => (
             <button
               key={feature.id}
               type="button"
@@ -204,12 +227,25 @@ export default function OverviewTab({ onNavigateTab }) {
       <section className="overview-section">
         <h2>🚀 What's New</h2>
         <ul className="new-features-list">
-          <li><strong>Orders Tab:</strong> Unified order management interface within admin shell</li>
-          <li><strong>Transactions Tab:</strong> Complete transaction history and activity feed</li>
-          <li><strong>Dashboard Enhancement:</strong> Business metrics with real-time transaction previews</li>
-          <li><strong>Session Management:</strong> Improved admin session handling and security</li>
-          <li><strong>Keyboard Shortcuts:</strong> Alt+1-9 for quick navigation between tabs</li>
-          <li><strong>Admin-Only Access:</strong> Restricted dashboard for authorized personnel only</li>
+          <li>
+            <strong>Orders Tab:</strong> Unified order management interface within admin shell
+          </li>
+          <li>
+            <strong>Transactions Tab:</strong> Complete transaction history and activity feed
+          </li>
+          <li>
+            <strong>Dashboard Enhancement:</strong> Business metrics with real-time transaction
+            previews
+          </li>
+          <li>
+            <strong>Session Management:</strong> Improved admin session handling and security
+          </li>
+          <li>
+            <strong>Keyboard Shortcuts:</strong> Alt+1-9 for quick navigation between tabs
+          </li>
+          <li>
+            <strong>Admin-Only Access:</strong> Restricted dashboard for authorized personnel only
+          </li>
         </ul>
       </section>
 
@@ -221,7 +257,11 @@ export default function OverviewTab({ onNavigateTab }) {
             <span>👥 Manage Users</span>
             <small>View and manage all registered users</small>
           </button>
-          <button type="button" className="tool-button" onClick={() => onNavigateTab?.('marketplace')}>
+          <button
+            type="button"
+            className="tool-button"
+            onClick={() => onNavigateTab?.('marketplace')}
+          >
             <span>🛍️ View Marketplace</span>
             <small>Monitor all artifacts and listings</small>
           </button>
@@ -229,7 +269,11 @@ export default function OverviewTab({ onNavigateTab }) {
             <span>📦 View Orders</span>
             <small>Check order status and history</small>
           </button>
-          <button type="button" className="tool-button" onClick={() => onNavigateTab?.('transactions')}>
+          <button
+            type="button"
+            className="tool-button"
+            onClick={() => onNavigateTab?.('transactions')}
+          >
             <span>💱 View Transactions</span>
             <small>Monitor all marketplace transactions</small>
           </button>

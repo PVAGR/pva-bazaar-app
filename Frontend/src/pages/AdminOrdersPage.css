@@ -22,7 +22,11 @@
 .ops-panel {
   border: 1px solid color-mix(in srgb, var(--border) 85%, transparent);
   border-radius: 14px;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--bg-secondary) 84%, transparent) 0%, var(--bg-tertiary) 100%);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--bg-secondary) 84%, transparent) 0%,
+    var(--bg-tertiary) 100%
+  );
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14);
   padding: 12px;
   margin-bottom: 1rem;
@@ -171,7 +175,11 @@
 .orders-list {
   border: 1px solid color-mix(in srgb, var(--border) 85%, transparent);
   border-radius: 14px;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--bg-secondary) 84%, transparent) 0%, var(--bg-tertiary) 100%);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--bg-secondary) 84%, transparent) 0%,
+    var(--bg-tertiary) 100%
+  );
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14);
   padding: 10px;
   overflow-x: auto;
@@ -182,7 +190,8 @@
   border-collapse: collapse;
   font-size: 0.98rem;
 }
-.orders-list th, .orders-list td {
+.orders-list th,
+.orders-list td {
   padding: 0.74rem 0.78rem;
   border-bottom: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
   text-align: left;
@@ -210,7 +219,9 @@
   border: none;
   border-radius: 10px;
   cursor: pointer;
-  transition: transform 0.15s ease, filter 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    filter 0.15s ease;
 }
 .load-more:hover:not(:disabled) {
   transform: translateY(-1px);
@@ -228,18 +239,25 @@
 }
 .order-detail-overlay {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.45);
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.45);
   z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 .order-detail-panel {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--bg-secondary) 90%, transparent) 0%, var(--bg-tertiary) 100%);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--bg-secondary) 90%, transparent) 0%,
+    var(--bg-tertiary) 100%
+  );
   border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
   border-radius: 14px;
-  box-shadow: 0 18px 48px rgba(0,0,0,0.35);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.35);
   padding: 2rem 1.5rem 1.5rem 1.5rem;
   min-width: 320px;
   width: min(1020px, 95vw);
@@ -275,7 +293,9 @@
   padding: 0.5rem 1.3rem;
   font-size: 1rem;
   cursor: pointer;
-  transition: transform 0.15s ease, filter 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    filter 0.15s ease;
 }
 .refund-btn:hover:not(:disabled) {
   transform: translateY(-1px);
@@ -296,18 +316,25 @@
 }
 .refund-modal {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.45);
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.45);
   z-index: 1100;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 .refund-modal-content {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--bg-secondary) 94%, transparent) 0%, var(--bg-tertiary) 100%);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--bg-secondary) 94%, transparent) 0%,
+    var(--bg-tertiary) 100%
+  );
   border: 1px solid var(--border);
   border-radius: 10px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.13);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.13);
   padding: 1.5rem 1.2rem;
   min-width: 260px;
   max-width: 95vw;
@@ -316,7 +343,8 @@
   display: block;
   margin-bottom: 0.7rem;
 }
-.refund-modal-content input, .refund-modal-content select {
+.refund-modal-content input,
+.refund-modal-content select {
   width: 100%;
   padding: 0.55rem 0.7rem;
   margin-top: 0.2rem;
@@ -384,7 +412,9 @@
     padding: 0.8rem 0.25rem 2rem;
   }
 
-  .orders-list table, .orders-list th, .orders-list td {
+  .orders-list table,
+  .orders-list th,
+  .orders-list td {
     font-size: 0.95rem;
     padding: 0.4rem 0.5rem;
   }

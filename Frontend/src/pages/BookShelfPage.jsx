@@ -36,7 +36,9 @@ export default function BookShelfPage() {
       setLoading(true);
       setError('');
       try {
-        const data = await fetchPublishedBookProjects(activeQuery ? { q: activeQuery, limit: 48 } : { limit: 48 });
+        const data = await fetchPublishedBookProjects(
+          activeQuery ? { q: activeQuery, limit: 48 } : { limit: 48 },
+        );
         if (!data?.ok) {
           throw new Error(data?.error || 'Failed to load published books');
         }
@@ -100,8 +102,8 @@ export default function BookShelfPage() {
             <p className="pill">Published books</p>
             <h1>Browse the public bookshelf.</h1>
             <p className="book-shelf__lead">
-              This shelf shows every published book that has been opened to the public. Read it online, open the API
-              view, or download the PDF and EPUB editions when available.
+              This shelf shows every published book that has been opened to the public. Read it
+              online, open the API view, or download the PDF and EPUB editions when available.
             </p>
           </div>
 
@@ -127,7 +129,9 @@ export default function BookShelfPage() {
               </div>
             </form>
             <div className="book-shelf__actions">
-              <Link className="book-shelf__button" to="/books">Back to books</Link>
+              <Link className="book-shelf__button" to="/books">
+                Back to books
+              </Link>
               <Link className="book-shelf__button book-shelf__button--primary" to="/books/publish">
                 Publish a book
               </Link>
@@ -136,17 +140,29 @@ export default function BookShelfPage() {
         </header>
 
         <div className="book-shelf__metaRow">
-          <span className="pill">{loading ? 'Loading…' : `${books.length} published book${books.length === 1 ? '' : 's'}`}</span>
-          {activeQuery ? <span className="book-shelf__query">Filtered by “{activeQuery}”</span> : <span className="book-shelf__query">All published books</span>}
+          <span className="pill">
+            {loading
+              ? 'Loading…'
+              : `${books.length} published book${books.length === 1 ? '' : 's'}`}
+          </span>
+          {activeQuery ? (
+            <span className="book-shelf__query">Filtered by “{activeQuery}”</span>
+          ) : (
+            <span className="book-shelf__query">All published books</span>
+          )}
         </div>
 
-        {error ? <div className="book-shelf__error" role="alert">{error}</div> : null}
+        {error ? (
+          <div className="book-shelf__error" role="alert">
+            {error}
+          </div>
+        ) : null}
         {!loading && !error && books.length === 0 ? (
           <section className="book-shelf__empty">
             <h2>No published books yet.</h2>
             <p>
-              The bookshelf will appear here as soon as a book is published. If you are the author, open the publishing
-              workspace and publish the first edition.
+              The bookshelf will appear here as soon as a book is published. If you are the author,
+              open the publishing workspace and publish the first edition.
             </p>
             <div className="book-shelf__actions">
               <Link className="book-shelf__button book-shelf__button--primary" to="/books/publish">
@@ -162,7 +178,9 @@ export default function BookShelfPage() {
         <div className="book-shelf__grid">
           {books.map((book) => {
             const coverUrl = book?.links?.frontCover ? toApiUrl(book.links.frontCover) : '';
-            const readerPath = book?.links?.publicPage || (book?.slug ? `/books/read/${encodeURIComponent(book.slug)}` : '/books');
+            const readerPath =
+              book?.links?.publicPage ||
+              (book?.slug ? `/books/read/${encodeURIComponent(book.slug)}` : '/books');
             return (
               <article key={book.id || book.slug} className="book-shelf__card">
                 <div className="book-shelf__cover">
@@ -180,29 +198,48 @@ export default function BookShelfPage() {
                     <p className="book-shelf__eyebrow">Published {formatDate(book.publishedAt)}</p>
                     <h2>{book.title}</h2>
                     {book.subtitle ? <p className="book-shelf__subtitle">{book.subtitle}</p> : null}
-                    {book.authorName ? <p className="book-shelf__author">by {book.authorName}</p> : null}
+                    {book.authorName ? (
+                      <p className="book-shelf__author">by {book.authorName}</p>
+                    ) : null}
                   </div>
 
-                  <p className="book-shelf__description">{book.description || 'No description provided yet.'}</p>
+                  <p className="book-shelf__description">
+                    {book.description || 'No description provided yet.'}
+                  </p>
 
                   <div className="book-shelf__tags">
                     {book.genre ? <span>{book.genre}</span> : null}
                     {book.audience ? <span>{book.audience}</span> : null}
                     {book.language ? <span>{String(book.language).toUpperCase()}</span> : null}
-                    {book.wordCount ? <span>{Number(book.wordCount).toLocaleString()} words</span> : null}
+                    {book.wordCount ? (
+                      <span>{Number(book.wordCount).toLocaleString()} words</span>
+                    ) : null}
                   </div>
 
                   <div className="book-shelf__actions">
-                    <Link className="book-shelf__button book-shelf__button--primary" to={readerPath}>
+                    <Link
+                      className="book-shelf__button book-shelf__button--primary"
+                      to={readerPath}
+                    >
                       Read online
                     </Link>
                     {book.links?.pdf ? (
-                      <a className="book-shelf__button" href={toApiUrl(book.links.pdf)} target="_blank" rel="noreferrer">
+                      <a
+                        className="book-shelf__button"
+                        href={toApiUrl(book.links.pdf)}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
                         PDF
                       </a>
                     ) : null}
                     {book.links?.epub ? (
-                      <a className="book-shelf__button" href={toApiUrl(book.links.epub)} target="_blank" rel="noreferrer">
+                      <a
+                        className="book-shelf__button"
+                        href={toApiUrl(book.links.epub)}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
                         EPUB
                       </a>
                     ) : null}
@@ -219,8 +256,8 @@ export default function BookShelfPage() {
               <p className="pill">Publish more</p>
               <h2>Keep adding public editions as they are ready.</h2>
               <p>
-                The bookshelf is designed to grow with the site. As more books are published, they appear here as a
-                clean public catalog with direct reader and download links.
+                The bookshelf is designed to grow with the site. As more books are published, they
+                appear here as a clean public catalog with direct reader and download links.
               </p>
             </div>
             <div className="book-shelf__actions">

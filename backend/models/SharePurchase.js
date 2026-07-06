@@ -40,7 +40,7 @@ const SharePurchaseSchema = new mongoose.Schema(
     idempotencyKey: { type: String, index: true, sparse: true },
     finalizedAt: { type: Date },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 module.exports = mongoose.model('SharePurchase', SharePurchaseSchema);

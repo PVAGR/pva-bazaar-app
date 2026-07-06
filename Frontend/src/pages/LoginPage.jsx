@@ -81,12 +81,15 @@ export default function LoginPage() {
         navigate('/onboarding', { replace: true });
         return;
       } catch (localErr) {
-        const isNetworkIssue = !err?.response || /network|failed to fetch|fetch/i.test(String(err?.message || ''));
+        const isNetworkIssue =
+          !err?.response || /network|failed to fetch|fetch/i.test(String(err?.message || ''));
         setError(
           localErr?.message ||
-          serverMsg ||
-          (isNetworkIssue ? 'Connection is down right now. Free local sign-in is unavailable on this device until you create one.' : err.message) ||
-          'Login failed'
+            serverMsg ||
+            (isNetworkIssue
+              ? 'Connection is down right now. Free local sign-in is unavailable on this device until you create one.'
+              : err.message) ||
+            'Login failed',
         );
       }
     } finally {
@@ -95,14 +98,19 @@ export default function LoginPage() {
   }
 
   return (
-    <div className={`loginPage admin-page authenticated ${darkMode ? 'dark-theme' : 'light-theme'}`}>
+    <div
+      className={`loginPage admin-page authenticated ${darkMode ? 'dark-theme' : 'light-theme'}`}
+    >
       <header className="admin-header loginHeader">
         <div>
           <h1>🔐 Sign in</h1>
           <p className="muted">
             Enter the same pure-life knowledge system through your personal account.
           </p>
-          <div className={`auth-connection auth-connection--${connectionMode.status}`} aria-live="polite">
+          <div
+            className={`auth-connection auth-connection--${connectionMode.status}`}
+            aria-live="polite"
+          >
             <strong>{connectionMode.label}</strong>
             <span>{connectionMode.detail}</span>
           </div>
@@ -111,7 +119,12 @@ export default function LoginPage() {
           <Link to="/" className="btn ghost">
             ← Home
           </Link>
-          <button className="btn ghost" onClick={toggleTheme} title="Toggle theme" aria-label="Toggle theme">
+          <button
+            className="btn ghost"
+            onClick={toggleTheme}
+            title="Toggle theme"
+            aria-label="Toggle theme"
+          >
             {darkMode ? '☀️' : '🌙'}
           </button>
         </div>
@@ -124,11 +137,21 @@ export default function LoginPage() {
             Go straight to the part of the site you want to use, or return to the public front door.
           </p>
           <div className="row" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-            <Link to="/" className="btn ghost">Home</Link>
-            <Link to="/archive" className="btn ghost">Archive</Link>
-            <Link to="/recovery" className="btn ghost">Recovery</Link>
-            <Link to="/register" className="btn ghost">Register</Link>
-            <Link to="/dashboard" className="btn ghost">Command Center</Link>
+            <Link to="/" className="btn ghost">
+              Home
+            </Link>
+            <Link to="/archive" className="btn ghost">
+              Archive
+            </Link>
+            <Link to="/recovery" className="btn ghost">
+              Recovery
+            </Link>
+            <Link to="/register" className="btn ghost">
+              Register
+            </Link>
+            <Link to="/dashboard" className="btn ghost">
+              Command Center
+            </Link>
           </div>
         </section>
 
@@ -139,14 +162,19 @@ export default function LoginPage() {
             </div>
           ) : null}
           <p className="muted" style={{ marginTop: '-0.25rem', marginBottom: '0.5rem' }}>
-            Buttons are now high-contrast white. If the hosted backend is unreachable, the login will create or use a free shared account store on this device.
+            Buttons are now high-contrast white. If the hosted backend is unreachable, the login
+            will create or use a free shared account store on this device.
           </p>
 
           <form className="form" onSubmit={handleUserLogin}>
             <label>
               <span>
                 Username or email
-                <HelpTip title="Username or email" body="Your username (e.g. richyrichaii) or the email you registered with." example="richyrichaii" />
+                <HelpTip
+                  title="Username or email"
+                  body="Your username (e.g. richyrichaii) or the email you registered with."
+                  example="richyrichaii"
+                />
               </span>
               <input
                 value={userCreds.usernameOrEmail}
@@ -170,7 +198,10 @@ export default function LoginPage() {
               <button className="btn primary" type="submit" disabled={loading}>
                 {loading ? 'Signing in…' : 'Sign in'}
               </button>
-              <Link to={`/register?next=${encodeURIComponent(nextFromUrl || '/onboarding')}`} className="btn ghost">
+              <Link
+                to={`/register?next=${encodeURIComponent(nextFromUrl || '/onboarding')}`}
+                className="btn ghost"
+              >
                 Create account
               </Link>
             </div>

@@ -79,7 +79,7 @@ class AutonomousMaintenanceScheduler {
       const overdueSchedules = await AgentBillingSchedule.find({
         agentId,
         active: true,
-        nextBillingDate: { $lte: new Date() }
+        nextBillingDate: { $lte: new Date() },
       });
 
       for (const schedule of overdueSchedules) {
@@ -93,7 +93,11 @@ class AutonomousMaintenanceScheduler {
           try {
             // Get last transaction for error details
             const transaction = schedule.recentTransactions?.[0];
-            await AutonomousEmailService.sendPaymentFailureAlert(agentId, transaction, error.message);
+            await AutonomousEmailService.sendPaymentFailureAlert(
+              agentId,
+              transaction,
+              error.message,
+            );
           } catch (emailError) {
             console.error(`Failed to send payment failure alert: ${emailError.message}`);
           }
@@ -130,7 +134,8 @@ class AutonomousMaintenanceScheduler {
       agent.healthStatus.allPaymentMethodsConnected = activeMethods.length >= 2;
 
       // Check balance
-      agent.healthStatus.sufficientFundsAvailable = agent.totalBalanceUSD > agent.maintenanceConfig.monthlyBudget * 0.2;
+      agent.healthStatus.sufficientFundsAvailable =
+        agent.totalBalanceUSD > agent.maintenanceConfig.monthlyBudget * 0.2;
 
       // Sync status
       agent.healthStatus.lastHealthCheckAt = new Date();
@@ -184,7 +189,7 @@ class AutonomousMaintenanceScheduler {
    * Stop scheduler
    */
   stopScheduler() {
-    this.jobs.forEach(job => job.stop());
+    this.jobs.forEach((job) => job.stop());
     this.jobs = [];
     this.isRunning = false;
     console.log('Autonomous scheduler stopped');
@@ -199,8 +204,8 @@ class AutonomousMaintenanceScheduler {
       jobCount: this.jobs.length,
       jobs: this.jobs.map((job, idx) => ({
         id: idx,
-        status: this.jobs[idx]._status
-      }))
+        status: this.jobs[idx]._status,
+      })),
     };
   }
 }
@@ -235,5 +240,5 @@ async function initializeGlobalScheduler() {
 module.exports = {
   AutonomousMaintenanceScheduler,
   initializeGlobalScheduler,
-  getScheduler: () => scheduler
+  getScheduler: () => scheduler,
 };

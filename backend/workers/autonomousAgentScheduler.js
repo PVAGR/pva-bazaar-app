@@ -40,12 +40,16 @@ class AutonomousAgentScheduler {
       for (const agent of agents) {
         const results = await AutonomousAgentService.executeScheduledPayments(agent);
 
-        if (results.some(r => r.success)) {
-          console.log(`✅ [${new Date().toISOString()}] Agent ${agent.name} executed ${results.filter(r => r.success).length} payment(s)`);
+        if (results.some((r) => r.success)) {
+          console.log(
+            `✅ [${new Date().toISOString()}] Agent ${agent.name} executed ${results.filter((r) => r.success).length} payment(s)`,
+          );
         }
 
-        if (results.some(r => !r.success)) {
-          console.warn(`⚠️ [${new Date().toISOString()}] Agent ${agent.name} had ${results.filter(r => !r.success).length} failed payment(s)`);
+        if (results.some((r) => !r.success)) {
+          console.warn(
+            `⚠️ [${new Date().toISOString()}] Agent ${agent.name} had ${results.filter((r) => !r.success).length} failed payment(s)`,
+          );
         }
       }
     } catch (error) {
@@ -136,7 +140,7 @@ class AutonomousAgentScheduler {
   static async checkLowBalances() {
     try {
       const agents = await AutonomousAgent.find({
-        'notificationSettings.alertOnLowBalance': true
+        'notificationSettings.alertOnLowBalance': true,
       });
 
       for (const agent of agents) {
@@ -150,7 +154,7 @@ class AutonomousAgentScheduler {
           await AutonomousAgentService.sendAlertEmail(
             agent,
             'critical',
-            `Your autonomous agent balance is critically low: $${agent.totalBalanceUSD}. Please fund immediately to continue operations.`
+            `Your autonomous agent balance is critically low: $${agent.totalBalanceUSD}. Please fund immediately to continue operations.`,
           );
         }
       }
@@ -180,8 +184,7 @@ class AutonomousAgentScheduler {
    */
   static shouldAutoRun() {
     // Don't auto-run in test environment or if explicitly disabled
-    return process.env.AUTO_AGENT_SCHEDULER !== 'false' &&
-           process.env.NODE_ENV !== 'test';
+    return process.env.AUTO_AGENT_SCHEDULER !== 'false' && process.env.NODE_ENV !== 'test';
   }
 }
 
@@ -189,7 +192,7 @@ class AutonomousAgentScheduler {
 if (AutonomousAgentScheduler.shouldAutoRun()) {
   // Delay startup to ensure DB connection is ready
   setTimeout(() => {
-    AutonomousAgentScheduler.start().catch(err => {
+    AutonomousAgentScheduler.start().catch((err) => {
       console.error('Failed to start autonomous agent scheduler:', err);
     });
   }, 5000);

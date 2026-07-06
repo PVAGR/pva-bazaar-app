@@ -12,9 +12,11 @@ PVA Bazaar now has **two completely separate dashboard systems**:
 ## 🟢 User Dashboard (`/dashboard`)
 
 ### What It Is
+
 A public-facing dashboard for **all registered users** to view their personal marketplace activity.
 
 ### Access Rules
+
 - ✅ **Accessible to:** All logged-in users
 - ✅ **Route protection:** Requires valid JWT token (via `RequireUserAuth`)
 - ✅ **URL:** `http://localhost:5173/#/dashboard` or production domain `/dashboard`
@@ -23,45 +25,53 @@ A public-facing dashboard for **all registered users** to view their personal ma
 ### Features (Safe & Personal Only)
 
 #### My Orders
+
 - User's purchase history
 - Order status, items, dates, amounts
 - Limited to user's own orders only
 
 #### My Items/Artifacts
+
 - User's own marketplace listings
 - Prices, status, images
 - Quick "View" links to marketplace
 - "Create Listing" CTA if empty
 
 #### My Activity/Transactions
+
 - User's buy/sell transactions
 - Income (sales) vs. expense (purchases) tracking
 - Date, item, user, amount
 - Read-only data
 
 #### Marketplace Stats
+
 - Public aggregates (total items, recent sales)
 - NOT per-user overviews
 - Informational only
 
 #### Escrow Status
+
 - User's own escrow-protected transactions
 - Release dates, protection status
 - No system-wide escrow data
 
 #### Sales Dashboard
+
 - Lifetime sales metrics (personal)
 - This month / this week breakdowns
 - Active listings count
 - Sales tips (read-only)
 
 #### Analytics Preview
+
 - Simple charts showing sales trends
 - Top performing items (user's only)
 - No real-time data required
 - Educational charts only
 
 ### What It CANNOT Do
+
 - ❌ Modify system settings
 - ❌ Create new admin accounts
 - ❌ Access other users' data
@@ -74,12 +84,14 @@ A public-facing dashboard for **all registered users** to view their personal ma
 
 **Backend Responsibility:**
 When API endpoints like `/orders`, `/items/mine`, `/transactions`, `/sales/metrics` are called from a user, the backend MUST:
+
 1. Verify JWT token and extract user ID
 2. Return ONLY that user's data
 3. Never return other users' information
 4. Never expose sensitive fields (passwords, API keys, etc.)
 
 Example safe backend response:
+
 ```javascript
 // GET /api/orders (for logged-in user)
 {
@@ -102,9 +114,11 @@ Example safe backend response:
 ## 🔴 Admin Dashboard (`/admin`)
 
 ### What It Is
+
 A **protected, admin-only** control panel for system management and business oversight.
 
 ### Access Rules
+
 - ✅ **Accessible to:** Admin users only (requires bootstrap code to create)
 - ✅ **Requires:** Valid admin JWT token
 - ✅ **Route protection:** `RequireAdminAuth` guard component
@@ -112,6 +126,7 @@ A **protected, admin-only** control panel for system management and business ove
 - ❌ **Redirect behavior:** Non-admins redirected to home page (`/`)
 
 ### Admin Authentication Flow
+
 1. **First Admin Setup:** If no admins exist, first signup is approved without code
 2. **Subsequent Admins:** Need `ADMIN_BOOTSTRAP_CODE` from environment
 3. **Protected:** Only you can create other admins via bootstrap code
@@ -119,57 +134,67 @@ A **protected, admin-only** control panel for system management and business ove
 ### Admin Features (Full System Control)
 
 #### 🎯 Overview Tab (NEW)
+
 - System status at a glance
 - All users, items, orders, transactions counts
 - Quick links to all admin tools
 - Feature checklist
 
 #### Orders Management (`/admin?tab=orders`)
+
 - All marketplace orders (not just personal)
 - Refund processing
 - Order status updates
 - User order history
 
 #### Transactions Tracking
+
 - Complete transaction ledger
 - Buy/sell activity of all users
 - Financial oversight
 - Settlement tracking
 
 #### User Management
+
 - Create, edit, disable user accounts
 - View all user data
 - Manage user roles
 
 #### Marketplace Control
+
 - All artifacts/items (not just personal listings)
 - Approve/reject listings
 - Feature or de-list items
 - Inventory management
 
 #### Payment & Payouts
+
 - Commission calculations
 - Payout processing
 - Settlement contracts
 - Financial reporting
 
 #### Cloud Storage Management
+
 - File upload limits
 - Storage quotas
 - Backup controls
 
 #### Health & Monitoring
+
 - System status
 - API health
 - Database monitoring
 - Performance metrics
 
 #### Settings
+
 - Admin configuration
 - Security settings
 - System preferences
 
 #### Additional Admin Tabs
+
 - Archive Management
 - Attribution & Credits
 - Blockchain Integration
@@ -180,12 +205,13 @@ A **protected, admin-only** control panel for system management and business ove
 - Royalty Analytics
 
 ### What Admin Can Do
+
 - ✅ View ALL user data
 - ✅ Process refunds and payments
 - ✅ Manage all marketplace items
 - ✅ Create other admin accounts
 - ✅ Configure system settings
-- ✅ View analacencies  and settle balances
+- ✅ View analacencies and settle balances
 - ✅ Manage storage and backups
 - ✅ Monitor system health
 - ✅ Access sensitive business data
@@ -195,6 +221,7 @@ A **protected, admin-only** control panel for system management and business ove
 ## 🔐 Security Architecture
 
 ### Route Protection
+
 ```javascript
 // User Dashboard - Protected with RequireUserAuth
 <Route path="/dashboard" element={<RequireUserAuth><UserDashboard /></RequireUserAuth>} />
@@ -205,23 +232,27 @@ A **protected, admin-only** control panel for system management and business ove
 ```
 
 ### RequireUserAuth Component
+
 - Checks for valid user token
 - Allows all authenticated users
 - Redirects to `/login?next=/dashboard` if not authenticated
 
 ### RequireAdminAuth Component (NEW)
+
 - Checks for admin token
 - Only allows admin users
 - Redirects to `/` (home) if not admin
 - Non-admins cannot access `/admin` routes
 
 ### Token Management
+
 - **User tokens:** Standard JWT in `localStorage: token`
 - **Admin tokens:** Admin-specific JWT in `localStorage: admin-token`
 - **Token expiration:** 12 hours for both
 - **Cleanup:** Both cleared from `localStorage` on 401 response
 
 ### Backend API Protection
+
 - All `/admin/*` endpoints require admin role verification
 - All `/api/*` endpoints must validate JWT and return only authorized data
 - User isolation enforced server-side (not client-side)
@@ -234,6 +265,7 @@ A **protected, admin-only** control panel for system management and business ove
 Before deploying this dual-dashboard system:
 
 ### Frontend
+
 - [ ] Build passes: `npm run build` ✅ (completed)
 - [ ] No ESLint errors
 - [ ] No TypeScript errors
@@ -245,6 +277,7 @@ Before deploying this dual-dashboard system:
 - [ ] Admin Dashboard still works ✅
 
 ### Backend API
+
 - [ ] `/dashboard` routes validate user JWT
 - [ ] `/admin` routes validate admin JWT
 - [ ] `/api/admin/*` endpoints restrict to admin role (verify JWT + check role field)
@@ -254,6 +287,7 @@ Before deploying this dual-dashboard system:
 - [ ] CORS configured for both dashboard domains
 
 ### Environment Variables
+
 ```env
 # Backend (already configured)
 JWT_SECRET=your_secret
@@ -265,6 +299,7 @@ VITE_API_URL=https://api.yourdomain.com
 ```
 
 ### Testing
+
 - [ ] User Dashboard loads at `/dashboard` for logged-in users
 - [ ] User Dashboard redirects to login at `/login` for guests
 - [ ] Admin Dashboard loads at `/admin` for admin users only
@@ -277,25 +312,26 @@ VITE_API_URL=https://api.yourdomain.com
 
 ## 📍 URL Map
 
-| Route | Access | Purpose | Component |
-|-------|--------|---------|-----------|
-| `/` | Public | Home page | ArchiveLibraryPage |
-| `/library` | Public | Archive content | ArchiveLibraryPage |
-| `/marketplace` | Public | Browse items | MarketplacePage |
-| `/login` | Public | Sign in | LoginPage |
-| `/register` | Public | Create account | RegisterPage |
-| `/dashboard` | Users only | Personal dashboard | **UserDashboard** |
-| `/admin` | Admins only | Admin panel | **AdminPage** (protected) |
-| `/admin/orders` | Admins only | Order management | **AdminOrdersPage** (protected) |
-| `/account` | Users only | Account settings | AccountPage |
-| `/items/new` | Users only | Create listing | ListItemPage |
-| `/items/mine` | Users only | My listings | MyListingsPage |
+| Route           | Access      | Purpose            | Component                       |
+| --------------- | ----------- | ------------------ | ------------------------------- |
+| `/`             | Public      | Home page          | ArchiveLibraryPage              |
+| `/library`      | Public      | Archive content    | ArchiveLibraryPage              |
+| `/marketplace`  | Public      | Browse items       | MarketplacePage                 |
+| `/login`        | Public      | Sign in            | LoginPage                       |
+| `/register`     | Public      | Create account     | RegisterPage                    |
+| `/dashboard`    | Users only  | Personal dashboard | **UserDashboard**               |
+| `/admin`        | Admins only | Admin panel        | **AdminPage** (protected)       |
+| `/admin/orders` | Admins only | Order management   | **AdminOrdersPage** (protected) |
+| `/account`      | Users only  | Account settings   | AccountPage                     |
+| `/items/new`    | Users only  | Create listing     | ListItemPage                    |
+| `/items/mine`   | Users only  | My listings        | MyListingsPage                  |
 
 ---
 
 ## 🔄 Data Flow
 
 ### User Dashboard Flow
+
 ```
 User @ /dashboard
          ↓
@@ -316,6 +352,7 @@ Display results (safe, personal data)
 ```
 
 ### Admin Dashboard Flow
+
 ```
 Admin @ /admin
          ↓
@@ -341,6 +378,7 @@ Returns all system data (no filtering)
 ## 🛡️ Escrow Integration
 
 The User Dashboard includes **Escrow Status** showing user's escrow-protected transactions:
+
 - Funds held in escrow during transaction
 - Release dates visible to both parties
 - Status tracking (held → released → complete)
@@ -351,6 +389,7 @@ The User Dashboard includes **Escrow Status** showing user's escrow-protected tr
 ## ✅ Testing Scenarios
 
 ### Test Case 1: User Access
+
 ```
 1. Register new user at /register
 2. Login at /login
@@ -361,6 +400,7 @@ The User Dashboard includes **Escrow Status** showing user's escrow-protected tr
 ```
 
 ### Test Case 2: Admin Access
+
 ```
 1. Login as admin (or register first admin)
 2. Navigate to /admin
@@ -370,6 +410,7 @@ The User Dashboard includes **Escrow Status** showing user's escrow-protected tr
 ```
 
 ### Test Case 3: Security - Unauthorized Access
+
 ```
 1. Guest user tries to visit /dashboard → Redirected to /login
 2. Regular user tries to visit /admin → Redirected to /
@@ -377,6 +418,7 @@ The User Dashboard includes **Escrow Status** showing user's escrow-protected tr
 ```
 
 ### Test Case 4: Token Expiration
+
 ```
 1. Login, access /dashboard
 2. Clear localStorage token

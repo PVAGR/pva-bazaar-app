@@ -1,4 +1,3 @@
-
 const express = require('express');
 const router = express.Router();
 const ArchiveEntry = require('../models/ArchiveEntry');
@@ -7,7 +6,6 @@ const adminSession = require('../middleware/adminSession');
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const { findStaticArchiveEntry, listStaticArchiveEntries } = require('../lib/staticContent');
-
 
 // Cursor-based pagination, filtering, and search
 const { encodeCursor, decodeCursor } = require('../lib/cursor');
@@ -42,7 +40,7 @@ router.get('/', async (req, res) => {
 
     // Build filter
     const filter = adminRequest ? {} : { status: 'published' };
-    if (category) filter.category = new RegExp(`^${  escapeRegExp(category)  }$`, 'i');
+    if (category) filter.category = new RegExp(`^${escapeRegExp(category)}$`, 'i');
     if (tag) filter.tags = tag;
 
     // Search
@@ -66,7 +64,9 @@ router.get('/', async (req, res) => {
     // Projection: avoid huge text payloads in list
     const projection = q ? { score: { $meta: 'textScore' } } : {};
 
-    let query = ArchiveEntry.find(filter, projection).sort(sortOrder).limit(limit + 1);
+    let query = ArchiveEntry.find(filter, projection)
+      .sort(sortOrder)
+      .limit(limit + 1);
     if (q) query = query.sort({ score: { $meta: 'textScore' }, ...sortOrder });
     const docs = await query.lean();
 
@@ -77,17 +77,24 @@ router.get('/', async (req, res) => {
         fallbackDocs = fallbackDocs.filter((entry) => {
           const entryTime = new Date(entry.createdAt).getTime();
           if (sort === 'old') {
-            return entryTime > cursorTime || (entryTime === cursorTime && String(entry.id) > String(cursor.id));
+            return (
+              entryTime > cursorTime ||
+              (entryTime === cursorTime && String(entry.id) > String(cursor.id))
+            );
           }
-          return entryTime < cursorTime || (entryTime === cursorTime && String(entry.id) < String(cursor.id));
+          return (
+            entryTime < cursorTime ||
+            (entryTime === cursorTime && String(entry.id) < String(cursor.id))
+          );
         });
       }
 
       const items = fallbackDocs.slice(0, limit).map(toPublicArchiveEntry);
       const last = fallbackDocs[limit - 1];
-      const nextCursor = fallbackDocs.length > limit && last
-        ? encodeCursor({ createdAt: last.createdAt, id: last.id || last.externalId })
-        : null;
+      const nextCursor =
+        fallbackDocs.length > limit && last
+          ? encodeCursor({ createdAt: last.createdAt, id: last.id || last.externalId })
+          : null;
 
       return res.json({ ok: true, items, nextCursor });
     }
@@ -160,7 +167,11 @@ router.delete('/:id', adminSession, async (req, res) => {
     const { id } = req.params;
     const entry = await ArchiveEntry.findByIdAndDelete(id).lean();
     if (!entry) return res.status(404).json({ ok: false, error: 'Entry not found' });
-    res.json({ ok: true, message: 'Entry deleted successfully', item: toPublicArchiveEntry(entry) });
+    res.json({
+      ok: true,
+      message: 'Entry deleted successfully',
+      item: toPublicArchiveEntry(entry),
+    });
   } catch (err) {
     res.status(500).json({ ok: false, error: err.message });
   }

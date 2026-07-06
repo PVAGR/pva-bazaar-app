@@ -20,7 +20,11 @@ for (const column of columns) {
     db.exec(sql);
     console.log(`Added column: ${column}`);
   } catch (error) {
-    if (String(error.message || '').toLowerCase().includes('duplicate column name')) {
+    if (
+      String(error.message || '')
+        .toLowerCase()
+        .includes('duplicate column name')
+    ) {
       console.log(`Column already exists: ${column}`);
       continue;
     }

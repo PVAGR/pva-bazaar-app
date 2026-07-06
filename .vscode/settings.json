@@ -1,7 +1,5 @@
 {
   "python.terminal.useEnvFile": true,
   "python.envFile": "${workspaceFolder}/agent-core/.env",
-  "python.analysis.extraPaths": [
-    "${workspaceFolder}/agent-core"
-  ]
+  "python.analysis.extraPaths": ["${workspaceFolder}/agent-core"]
 }

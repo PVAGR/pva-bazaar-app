@@ -67,7 +67,8 @@ function mapResponseToJob(channel, responseData) {
   return {
     channel,
     status,
-    message: typeof responseData?.message === 'string' ? responseData.message : 'Listing dispatched',
+    message:
+      typeof responseData?.message === 'string' ? responseData.message : 'Listing dispatched',
     externalListingId: responseData?.listingId ? String(responseData.listingId) : '',
     externalUrl: responseData?.listingUrl ? String(responseData.listingUrl) : '',
     attemptedAt: new Date(),
@@ -81,7 +82,8 @@ async function postToChannel({ artifact, user, channel }) {
       return {
         channel,
         status: 'manual_required',
-        message: 'No Facebook connector configured. Set FACEBOOK_MARKETPLACE_WEBHOOK_URL or complete this listing manually in Facebook Marketplace.',
+        message:
+          'No Facebook connector configured. Set FACEBOOK_MARKETPLACE_WEBHOOK_URL or complete this listing manually in Facebook Marketplace.',
         externalListingId: '',
         externalUrl: '',
         attemptedAt: new Date(),
@@ -110,13 +112,12 @@ async function postToChannel({ artifact, user, channel }) {
     return mapResponseToJob(channel, response?.data || {});
   } catch (error) {
     const responseMessage =
-      typeof error?.response?.data?.message === 'string'
-        ? error.response.data.message
-        : null;
+      typeof error?.response?.data?.message === 'string' ? error.response.data.message : null;
     return {
       channel,
       status: 'failed',
-      message: responseMessage || `Dispatch to ${channel} failed: ${error?.message || 'unknown error'}`,
+      message:
+        responseMessage || `Dispatch to ${channel} failed: ${error?.message || 'unknown error'}`,
       externalListingId: '',
       externalUrl: '',
       attemptedAt: new Date(),

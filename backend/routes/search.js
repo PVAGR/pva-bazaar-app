@@ -58,9 +58,10 @@ router.get('/text', async (req, res) => {
       .limit(lim)
       .lean();
 
-    const normalized = results.length > 0
-      ? results.map((e) => ({ ...e, id: e._id || e.id }))
-      : searchStaticArchive(qSafe, lim);
+    const normalized =
+      results.length > 0
+        ? results.map((e) => ({ ...e, id: e._id || e.id }))
+        : searchStaticArchive(qSafe, lim);
     res.json({ success: true, query: qSafe, results: normalized, count: normalized.length });
   } catch (error) {
     console.error('Text search error:', error);
@@ -91,23 +92,28 @@ router.get('/artifacts', async (req, res) => {
         { materials: regex },
       ],
     })
-      .select('title name description category tags artisan price slug imageUrls status createdAt updatedAt')
+      .select(
+        'title name description category tags artisan price slug imageUrls status createdAt updatedAt',
+      )
       .sort({ updatedAt: -1, createdAt: -1 })
       .limit(lim)
       .lean();
 
-    const normalized = items.length > 0
-      ? items.map((item) => ({
-          ...item,
-          id: item._id || item.id,
-          type: 'artifact',
-        }))
-      : searchStaticArtifacts(qSafe, lim);
+    const normalized =
+      items.length > 0
+        ? items.map((item) => ({
+            ...item,
+            id: item._id || item.id,
+            type: 'artifact',
+          }))
+        : searchStaticArtifacts(qSafe, lim);
 
     return res.json({ success: true, query: qSafe, results: normalized, count: normalized.length });
   } catch (error) {
     console.error('Artifact search error:', error);
-    return res.status(500).json({ success: false, error: 'An error occurred during artifact search' });
+    return res
+      .status(500)
+      .json({ success: false, error: 'An error occurred during artifact search' });
   }
 });
 
@@ -148,7 +154,9 @@ router.get('/all', async (req, res) => {
           { materials: regex },
         ],
       })
-        .select('title name description category tags artisan price slug imageUrls status createdAt updatedAt')
+        .select(
+          'title name description category tags artisan price slug imageUrls status createdAt updatedAt',
+        )
         .sort({ updatedAt: -1, createdAt: -1 })
         .limit(lim)
         .lean(),
@@ -165,12 +173,12 @@ router.get('/all', async (req, res) => {
       type: 'artifact',
     }));
 
-    const finalEntries = normalizedEntries.length > 0
-      ? normalizedEntries
-      : searchStaticArchive(qSafe, lim).map((entry) => ({ ...entry, type: 'entry' }));
-    const finalItems = normalizedItems.length > 0
-      ? normalizedItems
-      : searchStaticArtifacts(qSafe, lim);
+    const finalEntries =
+      normalizedEntries.length > 0
+        ? normalizedEntries
+        : searchStaticArchive(qSafe, lim).map((entry) => ({ ...entry, type: 'entry' }));
+    const finalItems =
+      normalizedItems.length > 0 ? normalizedItems : searchStaticArtifacts(qSafe, lim);
 
     const merged = [...finalEntries, ...finalItems]
       .sort((a, b) => {
@@ -192,7 +200,9 @@ router.get('/all', async (req, res) => {
     });
   } catch (error) {
     console.error('Combined search error:', error);
-    return res.status(500).json({ success: false, error: 'An error occurred during combined search' });
+    return res
+      .status(500)
+      .json({ success: false, error: 'An error occurred during combined search' });
   }
 });
 

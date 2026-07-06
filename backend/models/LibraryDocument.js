@@ -51,6 +51,12 @@ const libraryDocumentSchema = new mongoose.Schema(
 );
 
 libraryDocumentSchema.index({ createdAt: -1, _id: -1 });
-libraryDocumentSchema.index({ title: 'text', description: 'text', tags: 'text', category: 'text', domain: 'text' });
+libraryDocumentSchema.index({
+  title: 'text',
+  description: 'text',
+  tags: 'text',
+  category: 'text',
+  domain: 'text',
+});
 
 module.exports = mongoose.model('LibraryDocument', libraryDocumentSchema);

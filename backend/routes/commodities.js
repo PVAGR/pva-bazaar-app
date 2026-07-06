@@ -49,7 +49,9 @@ router.post('/', authMiddleware, async (req, res) => {
       },
       redFlags: Array.isArray(req.body?.redFlags) ? req.body.redFlags.map(sanitize) : [],
       greenFlags: Array.isArray(req.body?.greenFlags) ? req.body.greenFlags.map(sanitize) : [],
-      linkedTemplateIds: Array.isArray(req.body?.linkedTemplateIds) ? req.body.linkedTemplateIds : [],
+      linkedTemplateIds: Array.isArray(req.body?.linkedTemplateIds)
+        ? req.body.linkedTemplateIds
+        : [],
       linkedContactIds: Array.isArray(req.body?.linkedContactIds) ? req.body.linkedContactIds : [],
     });
 
@@ -86,10 +88,14 @@ router.put('/:id', authMiddleware, async (req, res) => {
     if (body.category !== undefined) commodity.category = sanitize(body.category);
     if (body.notes !== undefined) commodity.notes = sanitize(body.notes);
     if (body.marketData) {
-      if (body.marketData.fobRange !== undefined) commodity.marketData.fobRange = sanitize(body.marketData.fobRange);
-      if (body.marketData.sampleCostMax !== undefined) commodity.marketData.sampleCostMax = Number(body.marketData.sampleCostMax) || undefined;
-      if (body.marketData.certificationsNeeded !== undefined) commodity.marketData.certificationsNeeded = sanitize(body.marketData.certificationsNeeded);
-      if (body.marketData.exportDocs !== undefined) commodity.marketData.exportDocs = sanitize(body.marketData.exportDocs);
+      if (body.marketData.fobRange !== undefined)
+        commodity.marketData.fobRange = sanitize(body.marketData.fobRange);
+      if (body.marketData.sampleCostMax !== undefined)
+        commodity.marketData.sampleCostMax = Number(body.marketData.sampleCostMax) || undefined;
+      if (body.marketData.certificationsNeeded !== undefined)
+        commodity.marketData.certificationsNeeded = sanitize(body.marketData.certificationsNeeded);
+      if (body.marketData.exportDocs !== undefined)
+        commodity.marketData.exportDocs = sanitize(body.marketData.exportDocs);
     }
     if (Array.isArray(body.redFlags)) commodity.redFlags = body.redFlags.map(sanitize);
     if (Array.isArray(body.greenFlags)) commodity.greenFlags = body.greenFlags.map(sanitize);

@@ -76,7 +76,7 @@ router.get(
     await cacheService.set(cacheService.cacheKeys.stats, stats, 300); // 5 min cache
 
     res.json({ ok: true, ...stats });
-  })
+  }),
 );
 
 /**
@@ -95,12 +95,7 @@ router.get(
     if (search) query.$text = { $search: search };
 
     const [users, total] = await Promise.all([
-      User.find(query)
-        .select('-password')
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .lean(),
+      User.find(query).select('-password').sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
       User.countDocuments(query),
     ]);
 
@@ -109,7 +104,7 @@ router.get(
       users,
       pagination: { page, limit, total, pages: Math.ceil(total / limit) },
     });
-  })
+  }),
 );
 
 /**
@@ -141,7 +136,7 @@ router.get(
       orders,
       pagination: { page, limit, total, pages: Math.ceil(total / limit) },
     });
-  })
+  }),
 );
 
 /**
@@ -170,7 +165,7 @@ router.get(
       submissions,
       pagination: { page, limit, total, pages: Math.ceil(total / limit) },
     });
-  })
+  }),
 );
 
 /**
@@ -194,11 +189,11 @@ router.post(
           notes,
         },
       },
-      { new: true }
+      { new: true },
     );
 
     res.json({ ok: true, message: 'Submission approved', submission });
-  })
+  }),
 );
 
 /**
@@ -218,13 +213,13 @@ router.post(
         status: 'rejected',
         fraud: { flagged: true, flagReason: reason },
       },
-      { new: true }
+      { new: true },
     );
 
     // TODO: Send notification email
 
     res.json({ ok: true, message: 'Submission rejected', submission });
-  })
+  }),
 );
 
 /**
@@ -254,7 +249,7 @@ router.get(
       flags,
       pagination: { page, limit, total, pages: Math.ceil(total / limit) },
     });
-  })
+  }),
 );
 
 /**
@@ -309,7 +304,7 @@ router.get(
         timestamp: new Date().toISOString(),
       },
     });
-  })
+  }),
 );
 
 module.exports = router;

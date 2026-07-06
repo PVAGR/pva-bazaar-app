@@ -23,7 +23,15 @@ const userSchema = new mongoose.Schema({
   onboardingProfile: {
     roleIntent: {
       type: String,
-      enum: ['seller', 'consumer', 'creator_artist', 'collector', 'researcher', 'federation_contributor', 'other'],
+      enum: [
+        'seller',
+        'consumer',
+        'creator_artist',
+        'collector',
+        'researcher',
+        'federation_contributor',
+        'other',
+      ],
       default: 'consumer',
     },
     roleOther: { type: String, default: '' },

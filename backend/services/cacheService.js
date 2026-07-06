@@ -84,12 +84,12 @@ async function clear(pattern = '*') {
       }
     } else {
       if (pattern === '*') {
-        Object.keys(inMemoryCache).forEach(k => delete inMemoryCache[k]);
+        Object.keys(inMemoryCache).forEach((k) => delete inMemoryCache[k]);
       } else {
         const regex = new RegExp(pattern.replace('*', '.*'));
         Object.keys(inMemoryCache)
-          .filter(k => regex.test(k))
-          .forEach(k => delete inMemoryCache[k]);
+          .filter((k) => regex.test(k))
+          .forEach((k) => delete inMemoryCache[k]);
       }
     }
     return true;

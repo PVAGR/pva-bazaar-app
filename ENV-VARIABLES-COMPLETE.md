@@ -141,6 +141,7 @@ AUTO_AGENT_SCHEDULER    true
 ## 🚨 HOW TO GET REAL VALUES
 
 ### MongoDB (FREE TIER):
+
 1. Go to: https://www.mongodb.com/cloud/atlas
 2. Sign up for free
 3. Create cluster (free tier)
@@ -148,24 +149,28 @@ AUTO_AGENT_SCHEDULER    true
 5. Paste as MONGODB_URI
 
 ### Gmail SMTP (FREE):
+
 1. Go to: https://myaccount.google.com/security
 2. Enable "2-Step Verification"
 3. Create "App Password"
 4. Use in SMTP_PASS
 
 ### Stripe (FREE):
+
 1. Go to: https://dashboard.stripe.com
 2. Sign up (free testing mode)
 3. Get test keys from Dashboard
-4. Use "sk_test_..." for STRIPE_SECRET_KEY
+4. Use "sk*test*..." for STRIPE_SECRET_KEY
 
 ### Sentry (FREE):
+
 1. Go to: https://sentry.io
 2. Sign up free
 3. Create project (Node.js)
 4. Copy DSN URL
 
 ### SendGrid (FREE TIER):
+
 1. Go to: https://sendgrid.com
 2. Free tier: 100 emails/day
 3. Create API key
@@ -227,12 +232,12 @@ This creates the autonomous agent and everything works automatically!
 ## 💡 FOR PRODUCTION (Eventually)
 
 Replace test values with:
+
 - Real MongoDB production URI
-- Real Stripe production keys (sk_live_...)
+- Real Stripe production keys (sk*live*...)
 - Real SendGrid API key
 - Real Sentry production URL
 - Real domain in CORS_ORIGIN
 - Strong random JWT_SECRET
 
 But for now, the test values above work perfectly!
-

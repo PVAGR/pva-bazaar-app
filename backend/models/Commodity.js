@@ -21,7 +21,7 @@ const commoditySchema = new mongoose.Schema(
     linkedTemplateIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Template' }],
     linkedContactIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Contact' }],
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 commoditySchema.index({ ownerId: 1, createdAt: -1 });

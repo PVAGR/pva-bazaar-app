@@ -43,9 +43,9 @@ jobs:
         env:
           FRONTEND_URL: ${{ env.OPENCLAW_FRONTEND_URL }}
           BACKEND_URL: ${{ env.OPENCLAW_BACKEND_URL }}
-          STRICT: "true"
-          WAIT_TIMEOUT_MS: "120000"
-          WAIT_POLL_MS: "10000"
+          STRICT: 'true'
+          WAIT_TIMEOUT_MS: '120000'
+          WAIT_POLL_MS: '10000'
         run: |
           node scripts/verify-live-ready.mjs
           node scripts/verify-live-decentralized.mjs

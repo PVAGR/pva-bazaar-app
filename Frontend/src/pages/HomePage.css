@@ -123,7 +123,10 @@
   background: var(--site-panel-soft);
   color: var(--site-text);
   text-decoration: none;
-  transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+  transition:
+    transform 0.16s ease,
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
 }
 
 .home-choice-button:hover {
@@ -153,7 +156,11 @@
   border-radius: 16px;
   padding: 1rem;
   background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--site-accent-soft) 35%, transparent), transparent 56%),
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--site-accent-soft) 35%, transparent),
+      transparent 56%
+    ),
     var(--site-panel-soft);
   display: grid;
   gap: 0.85rem;
@@ -189,7 +196,10 @@
   padding: 0.95rem 1rem;
   background: var(--site-panel);
   color: var(--site-text);
-  transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+  transition:
+    transform 0.16s ease,
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
   display: grid;
   gap: 0.45rem;
 }
@@ -277,7 +287,11 @@
   border-radius: 14px;
   padding: 1rem;
   background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--site-accent-soft) 50%, transparent), transparent 60%),
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--site-accent-soft) 50%, transparent),
+      transparent 60%
+    ),
     var(--site-panel-soft);
 }
 
@@ -320,7 +334,10 @@
   padding: 1rem 1rem 0.95rem;
   background: var(--site-panel-soft);
   color: var(--site-text);
-  transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+  transition:
+    transform 0.16s ease,
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
   display: grid;
   gap: 0.6rem;
 }
@@ -425,15 +442,42 @@
   font-weight: 700;
 }
 
-.status-draft { color: #c4c4c4; border-color: #8d8d8d; }
-.status-open { color: #6ec1ff; border-color: #4e9ad8; }
-.status-endorsed { color: #ffbf66; border-color: #db9a36; }
-.status-in_deliberation { color: #c48dff; border-color: #9b67d2; }
-.status-voting { color: #ff9c4a; border-color: #d98238; }
-.status-accepted { color: #6fd58d; border-color: #4bb66d; }
-.status-rejected { color: #ff8585; border-color: #d36363; }
-.status-needs_revision { color: #ffd28f; border-color: #d5a85c; }
-.status-archived { color: #a5a5a5; border-color: #7c7c7c; }
+.status-draft {
+  color: #c4c4c4;
+  border-color: #8d8d8d;
+}
+.status-open {
+  color: #6ec1ff;
+  border-color: #4e9ad8;
+}
+.status-endorsed {
+  color: #ffbf66;
+  border-color: #db9a36;
+}
+.status-in_deliberation {
+  color: #c48dff;
+  border-color: #9b67d2;
+}
+.status-voting {
+  color: #ff9c4a;
+  border-color: #d98238;
+}
+.status-accepted {
+  color: #6fd58d;
+  border-color: #4bb66d;
+}
+.status-rejected {
+  color: #ff8585;
+  border-color: #d36363;
+}
+.status-needs_revision {
+  color: #ffd28f;
+  border-color: #d5a85c;
+}
+.status-archived {
+  color: #a5a5a5;
+  border-color: #7c7c7c;
+}
 
 @media (max-width: 1100px) {
   .home-hero,

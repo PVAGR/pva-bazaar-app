@@ -12,7 +12,8 @@ class EBayAdapter {
   }
 
   async listArtifact(artifact) {
-    if (!this.isReady()) return { success: false, skipped: true, error: 'eBay credentials missing' };
+    if (!this.isReady())
+      return { success: false, skipped: true, error: 'eBay credentials missing' };
 
     try {
       const sku = `ARTIFACT-${artifact.id}`;
@@ -41,7 +42,8 @@ class EBayAdapter {
   }
 
   async endListing(sku) {
-    if (!this.isReady()) return { success: false, skipped: true, error: 'eBay credentials missing' };
+    if (!this.isReady())
+      return { success: false, skipped: true, error: 'eBay credentials missing' };
 
     try {
       await axios.post(
@@ -61,7 +63,8 @@ class EBayAdapter {
   }
 
   async checkSales() {
-    if (!this.isReady()) return { success: false, skipped: true, error: 'eBay credentials missing', orders: [] };
+    if (!this.isReady())
+      return { success: false, skipped: true, error: 'eBay credentials missing', orders: [] };
 
     try {
       const response = await axios.get(`${this.baseURL}/sell/fulfillment/v1/order`, {

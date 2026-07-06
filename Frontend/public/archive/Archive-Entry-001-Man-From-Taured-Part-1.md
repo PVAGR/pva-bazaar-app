@@ -1,8 +1,10 @@
 # **The Man from Taured - Part 1**
+
 ## A Complete Novel by Richard Antonio Torres
+
 ### Chapters 1-6
 
-*A dimensional displacement story exploring consciousness, identity, resistance, and the battle between truth (Asha) and deception (Druj) across parallel realities.*
+_A dimensional displacement story exploring consciousness, identity, resistance, and the battle between truth (Asha) and deception (Druj) across parallel realities._
 
 ---
 
@@ -10,7 +12,7 @@
 
 Rick Taur's last memory was simple. Clean.
 
-Boarding the Ark. Christina's hand pressed against the transparent hull as he found his seat. Her smile—the one that said *come home safe* without using words. Ellie watching from behind her mother's legs. Cautious. Knowing. Too knowing for nine years old. Jayden waving like Rick was going on an adventure instead of a three-week intelligence mission into DRUJ territory. And Asha. Little Asha with her thumb in her mouth and her other hand reaching for him even though he was already too far away to touch.
+Boarding the Ark. Christina's hand pressed against the transparent hull as he found his seat. Her smile—the one that said _come home safe_ without using words. Ellie watching from behind her mother's legs. Cautious. Knowing. Too knowing for nine years old. Jayden waving like Rick was going on an adventure instead of a three-week intelligence mission into DRUJ territory. And Asha. Little Asha with her thumb in her mouth and her other hand reaching for him even though he was already too far away to touch.
 
 He'd waved back. All of them. His family. His reason for doing this. For taking missions that required him to pretend to be someone he wasn't. To infiltrate. To survive. To lie until lying felt more natural than truth.
 
@@ -20,7 +22,7 @@ Rick had nodded. Settled into the organic seat that molded perfectly to his body
 
 Closed his eyes.
 
-Said the traveler's prayer. *God, guide this vessel. Keep it hidden from those who would do harm. Bring me home when my work is done.*
+Said the traveler's prayer. _God, guide this vessel. Keep it hidden from those who would do harm. Bring me home when my work is done._
 
 And then—
 
@@ -48,13 +50,13 @@ Rows of seats. All filled. People reading. Sleeping. Watching screens embedded i
 
 Rick's heart rate spiked.
 
-*What happened?*
+_What happened?_
 
 He looked at his hands. Same hands. Same calluses from training. Same faint scars from operations that had gone wrong. But the uniform was different. Not his infiltration gear. Not even Taured civilian clothes.
 
 A cheap suit. Polyester. Something purchased at a department store for someone who needed to look professional without spending money. The kind of thing a mid-level office worker might wear on a flight to a conference they didn't want to attend.
 
-Rick's breath came faster. Training kicked in. *Don't panic. Assess. Gather information. Figure out where you are before revealing that you don't know.*
+Rick's breath came faster. Training kicked in. _Don't panic. Assess. Gather information. Figure out where you are before revealing that you don't know._
 
 He looked out the window. Sky. Clouds. Earth far below. All normal. All wrong.
 
@@ -64,19 +66,19 @@ News article. Date stamp in the corner. June 15th, 2024.
 
 2024.
 
-Rick's mind stuttered. *That's... that's not right.*
+Rick's mind stuttered. _That's... that's not right._
 
 In Taured, they used the Proclamation calendar. 55 P.E.—Post-Enlightenment. Fifty-five years since The Proclamation had been released. Since the world had split. Since those who chose freedom fled to the mountains and those who chose comfort stayed behind.
 
 But 2024. That was... he did the math. That was the old calendar. The one the enemy still used. The Gregorian year that DRUJ insisted on maintaining even after—
 
-*I'm behind enemy lines,* Rick thought. *Somehow I'm deep in DRUJ territory. So deep they don't even hide what year it is.*
+_I'm behind enemy lines,_ Rick thought. _Somehow I'm deep in DRUJ territory. So deep they don't even hide what year it is._
 
 But that didn't explain the suit. The seat. The fact that he couldn't remember boarding this plane. Couldn't remember anything between closing his eyes on the Ark and waking up here.
 
 A flight attendant walked past. Professional smile. Clean uniform. She glanced at Rick and the smile didn't waver. Just normal passenger. Nothing to see. Moving on.
 
-*She didn't recognize me.* Rick waited for the second glance. The subtle tell. The way DRUJ personnel always double-checked faces against internal databases. Neural implants feeding them constant information. *Is this person a threat? Are they on the watch list? Should I alert security?*
+_She didn't recognize me._ Rick waited for the second glance. The subtle tell. The way DRUJ personnel always double-checked faces against internal databases. Neural implants feeding them constant information. _Is this person a threat? Are they on the watch list? Should I alert security?_
 
 But the attendant just kept walking.
 
@@ -86,7 +88,7 @@ Or she didn't have the implant.
 
 Rick studied her more carefully as she moved down the aisle. The way she walked. Turned her head. Responded to passengers. All natural. Fluid. No micro-hesitations. No glazed look that came from constantly processing data feeds only she could see.
 
-*Unaugmented,* Rick thought. *She's clean.*
+_Unaugmented,_ Rick thought. _She's clean._
 
 Which meant either DRUJ had changed tactics in ways Taured intelligence hadn't predicted, or—
 
@@ -98,7 +100,7 @@ The woman beside him put away her tablet. Glanced at him. Smiled.
 
 "First time in Madrid?" she asked. Friendly. Casual. The kind of small talk people made on planes when they were bored and wanted human connection.
 
-Rick's mind raced. *Madrid. Spain. We're landing in Spain. But I was supposed to be going to—where was I supposed to be going?*
+Rick's mind raced. _Madrid. Spain. We're landing in Spain. But I was supposed to be going to—where was I supposed to be going?_
 
 He couldn't remember. The mission parameters were fuzzy. Like trying to recall a dream that had already started fading.
 
@@ -108,7 +110,7 @@ He couldn't remember. The mission parameters were fuzzy. Like trying to recall a
 
 Rick nodded. Smiled. Played the role of normal passenger who was totally supposed to be on this flight.
 
-But inside, his training was screaming. *Something is wrong. This is wrong. You need to figure out what happened. Where you are. How to get back.*
+But inside, his training was screaming. _Something is wrong. This is wrong. You need to figure out what happened. Where you are. How to get back._
 
 The plane touched down. Smooth. Professional. The cabin erupted in scattered applause. The woman beside Rick clapped twice and laughed.
 
@@ -130,17 +132,17 @@ His photograph stared back. Professional. Neutral expression. The kind taken for
 
 But the text below it—
 
-*TAURED*
+_TAURED_
 
-*PASSPORT*
+_PASSPORT_
 
-*Name: TAUR, RICHARD ANTONIO*
+_Name: TAUR, RICHARD ANTONIO_
 
-*Nationality: TAUREDIAN*
+_Nationality: TAUREDIAN_
 
 Rick's breath caught.
 
-*They made me a cover identity,* he thought. *Taured intelligence gave me papers for infiltration. Established a legend. Created a nation that—*
+_They made me a cover identity,_ he thought. _Taured intelligence gave me papers for infiltration. Established a legend. Created a nation that—_
 
 He stopped.
 
@@ -156,7 +158,7 @@ Or this was real.
 
 Rick's hands trembled. He closed the passport. Slipped it back into his pocket.
 
-*Don't think about it yet. Just move. Get through customs. Get out of the airport. Find somewhere safe to think.*
+_Don't think about it yet. Just move. Get through customs. Get out of the airport. Find somewhere safe to think._
 
 He followed the crowd. Through the jetway. Into the terminal. Bright. Clean. Modern. Madrid-Barajas Airport according to the signs. Everything in Spanish and English.
 
@@ -210,7 +212,7 @@ Truth mixed with plausible fiction. The best kind of cover story. The officer no
 
 Rick's mind blanked. He had no hotel reservation. No address. Nothing.
 
-*Think. What would a teacher on a budget say?*
+_Think. What would a teacher on a budget say?_
 
 "Hostel in the Lavapiés district," Rick said. "I have the address on my phone."
 
@@ -222,21 +224,21 @@ Then he stamped the passport. Handed it back.
 
 Rick took the passport. Felt his heartbeat returning to something approaching normal. He walked through the checkpoint. Into the main terminal. Kept walking. Out toward baggage claim even though he had no bags.
 
-*That almost went wrong,* the voice in his head observed. Not his voice. Never his voice. The other one. The entity that sometimes rode shotgun in his consciousness. That offered advice and commentary and occasionally took over completely when the mission required it.
+_That almost went wrong,_ the voice in his head observed. Not his voice. Never his voice. The other one. The entity that sometimes rode shotgun in his consciousness. That offered advice and commentary and occasionally took over completely when the mission required it.
 
-*I know,* Rick thought back.
+_I know,_ Rick thought back.
 
-*We need information. Need to understand where we are. What happened. Why your cover identity apparently extends back years even though you've never used it before.*
+_We need information. Need to understand where we are. What happened. Why your cover identity apparently extends back years even though you've never used it before._
 
-*I know.*
+_I know._
 
-*Do you know? Because you're walking through an airport in enemy territory with no plan and no backup and no way to contact command. That doesn't sound like someone who knows.*
+_Do you know? Because you're walking through an airport in enemy territory with no plan and no backup and no way to contact command. That doesn't sound like someone who knows._
 
 Rick stopped. Found a bench. Sat down. Tried to look like a tired traveler catching his breath.
 
-*What do you suggest?* he asked the voice.
+_What do you suggest?_ he asked the voice.
 
-*Find a computer. Search for Taured. See what the enemy thinks we are. Then make a plan.*
+_Find a computer. Search for Taured. See what the enemy thinks we are. Then make a plan._
 
 Rick looked around. Internet café in the corner. Old-fashioned. He walked over. Purchased thirty minutes of computer time from a bored teenager who barely glanced at him.
 
@@ -250,21 +252,21 @@ The results loaded. Rick stared at the screen.
 
 **The Man from Taured** – Urban legend. Wikipedia article. First paragraph:
 
-*"The Man from Taured (Japanese: タウレッドの男, Hepburn: Tauretto no otoko) is an urban legend about a man who allegedly arrived at a Japanese airport in the 1950s with a passport from the non-existent country of Taured. According to the story, the man was detained, and then mysteriously disappeared from a guarded room. The tale is generally considered to be a hoax or an internet fabrication."*
+_"The Man from Taured (Japanese: タウレッドの男, Hepburn: Tauretto no otoko) is an urban legend about a man who allegedly arrived at a Japanese airport in the 1950s with a passport from the non-existent country of Taured. According to the story, the man was detained, and then mysteriously disappeared from a guarded room. The tale is generally considered to be a hoax or an internet fabrication."_
 
 Rick's vision narrowed. He kept reading.
 
-*"The story first appeared in Western forums around 1997 but claims to reference events from 1954. The man purportedly showed authorities a passport from Taured, a country he claimed existed on the borders of Afghanistan and Pakistan. When officials checked maps, no such country existed. The man became agitated, insisting Taured had existed for a thousand years..."*
+_"The story first appeared in Western forums around 1997 but claims to reference events from 1954. The man purportedly showed authorities a passport from Taured, a country he claimed existed on the borders of Afghanistan and Pakistan. When officials checked maps, no such country existed. The man became agitated, insisting Taured had existed for a thousand years..."_
 
 His hands were steady on the keyboard but something inside him was screaming.
 
 He clicked through to the next link. Reddit post from three years ago. Thread titled: **Has anyone solved the Taured mystery?**
 
-Top comment: *"It's obviously fake. There's no contemporary evidence from the 1950s. No airport records. No news reports. Just internet stories about internet stories. Classic creepypasta."*
+Top comment: _"It's obviously fake. There's no contemporary evidence from the 1950s. No airport records. No news reports. Just internet stories about internet stories. Classic creepypasta."_
 
-Second comment: *"Even if it was real, dude probably just had a fake passport and spun some story to confuse airport security. Not exactly a dimensional traveler lol."*
+Second comment: _"Even if it was real, dude probably just had a fake passport and spun some story to confuse airport security. Not exactly a dimensional traveler lol."_
 
-Third comment: *"My head canon is that he was a time traveler from an alternate timeline where Taured existed. He got pulled into our dimension by accident and couldn't get home. Would make a cool novel."*
+Third comment: _"My head canon is that he was a time traveler from an alternate timeline where Taured existed. He got pulled into our dimension by accident and couldn't get home. Would make a cool novel."_
 
 Rick closed the browser.
 
@@ -272,9 +274,9 @@ Sat very still.
 
 Hands folded in his lap. Eyes fixed on the dark screen.
 
-*I'm the man from Taured,* he thought. *I'm the legend. The hoax. The story people mock and dismiss and use as an example of how gullible internet users are.*
+_I'm the man from Taured,_ he thought. _I'm the legend. The hoax. The story people mock and dismiss and use as an example of how gullible internet users are._
 
-*Except it's not a legend,* the voice said. *It's us. It's you. And you're not in 1954. You're in 2024. And you have no idea how you got here or how to get back.*
+_Except it's not a legend,_ the voice said. _It's us. It's you. And you're not in 1954. You're in 2024. And you have no idea how you got here or how to get back._
 
 Rick's chest tightened. Not panic. Not yet. Just the beginning recognition of how deeply lost he was.
 
@@ -296,13 +298,13 @@ Which meant either:
 
 Rick looked up from the screen. Around the internet café. At people typing. Scrolling. Living their lives. Normal. Unaware that a man from an impossible country was sitting ten feet away trying not to break.
 
-*What now?* he asked the voice.
+_What now?_ he asked the voice.
 
-*Now,* the voice said, *we find out if we're the only one. We search for evidence of Taured. Of The Proclamation. Of anything that matches what we know to be true. And if we find nothing...*
+_Now,_ the voice said, _we find out if we're the only one. We search for evidence of Taured. Of The Proclamation. Of anything that matches what we know to be true. And if we find nothing..._
 
-*If we find nothing?*
+_If we find nothing?_
 
-*Then we pray this is a really bad dream. And we try very, very hard to wake up.*
+_Then we pray this is a really bad dream. And we try very, very hard to wake up._
 
 But Rick knew it wasn't a dream. Dreams didn't have this much detail. Didn't maintain consistency. Didn't feel this real.
 
@@ -314,7 +316,7 @@ And he had no idea how to get back.
 
 ---
 
-*[Continue reading in Part 2 for Chapters 7-12...]*
+_[Continue reading in Part 2 for Chapters 7-12...]_
 
 ---
 

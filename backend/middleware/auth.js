@@ -66,8 +66,7 @@ async function authenticateApiKey(req, res, next) {
     }
 
     const APIKey = require('../models/APIKey');
-    const key = await APIKey.findOne({ key: token, active: true })
-      .populate('userId');
+    const key = await APIKey.findOne({ key: token, active: true }).populate('userId');
 
     if (!key) {
       return res.status(401).json({ error: 'Invalid API key' });
@@ -75,7 +74,7 @@ async function authenticateApiKey(req, res, next) {
 
     // Check rate limit
     const now = Date.now();
-    const recentRequests = key.requestLog.filter(t => now - t < 60000);
+    const recentRequests = key.requestLog.filter((t) => now - t < 60000);
 
     if (recentRequests.length >= key.rateLimit.requestsPerMinute) {
       return res.status(429).json({

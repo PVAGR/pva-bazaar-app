@@ -21,7 +21,7 @@ const physicalFulfillmentSchema = new mongoose.Schema(
     shippedAt: { type: Date },
     trackingNumber: { type: String },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 physicalFulfillmentSchema.index({ status: 1, createdAt: -1 });

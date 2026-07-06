@@ -66,7 +66,7 @@ async function calculateFairPrice(productId, sellerInputs = {}) {
   if (sellerInputs.urgency === 'urgent') {
     urgencyMultiplier = 0.85; // 15% discount for quick sale
   } else if (sellerInputs.urgency === 'clearance') {
-    urgencyMultiplier = 0.70; // 30% discount
+    urgencyMultiplier = 0.7; // 30% discount
   } else if (sellerInputs.urgency === 'exclusive') {
     urgencyMultiplier = 1.3; // 30% premium for exclusive
   }
@@ -85,9 +85,9 @@ async function calculateFairPrice(productId, sellerInputs = {}) {
   } else if (sellerInputs.condition === 'good') {
     conditionMultiplier = 0.95;
   } else if (sellerInputs.condition === 'fair') {
-    conditionMultiplier = 0.80;
+    conditionMultiplier = 0.8;
   } else if (sellerInputs.condition === 'poor') {
-    conditionMultiplier = 0.60;
+    conditionMultiplier = 0.6;
   }
   adjustments.push({
     factor: 'condition',
@@ -127,7 +127,14 @@ async function calculateFairPrice(productId, sellerInputs = {}) {
   }
 
   // Calculate final recommended price
-  let recommendedPrice = basePrice * demandMultiplier * seasonalMultiplier * urgencyMultiplier * conditionMultiplier * premiumMultiplier * costMultiplier;
+  let recommendedPrice =
+    basePrice *
+    demandMultiplier *
+    seasonalMultiplier *
+    urgencyMultiplier *
+    conditionMultiplier *
+    premiumMultiplier *
+    costMultiplier;
 
   // Round to nearest cent
   recommendedPrice = Math.round(recommendedPrice);
@@ -155,11 +162,17 @@ async function calculateFairPrice(productId, sellerInputs = {}) {
   if (recommendedPrice < marketData.p25) {
     percentile = 25;
   } else if (recommendedPrice < marketData.p50) {
-    percentile = Math.round(((recommendedPrice - marketData.p25) / (marketData.p50 - marketData.p25)) * 25 + 25);
+    percentile = Math.round(
+      ((recommendedPrice - marketData.p25) / (marketData.p50 - marketData.p25)) * 25 + 25,
+    );
   } else if (recommendedPrice < marketData.p75) {
-    percentile = Math.round(((recommendedPrice - marketData.p50) / (marketData.p75 - marketData.p50)) * 25 + 50);
+    percentile = Math.round(
+      ((recommendedPrice - marketData.p50) / (marketData.p75 - marketData.p50)) * 25 + 50,
+    );
   } else {
-    percentile = Math.round(((recommendedPrice - marketData.p75) / (marketData.p90 - marketData.p75)) * 25 + 75);
+    percentile = Math.round(
+      ((recommendedPrice - marketData.p75) / (marketData.p90 - marketData.p75)) * 25 + 75,
+    );
   }
 
   return {
@@ -203,7 +216,8 @@ async function createPricingRecommendation(productId, sellerId, inputs) {
       marketAvg: fairPrice.marketAvgPrice,
       competitorComparison: compareToMarket(fairPrice.recommendedPrice, fairPrice.marketAvgPrice),
       demandLevel: inputs.demandLevel,
-      seasonalAdjustment: fairPrice.adjustments.find((a) => a.factor === 'seasonality')?.impact || 0,
+      seasonalAdjustment:
+        fairPrice.adjustments.find((a) => a.factor === 'seasonality')?.impact || 0,
       urgencyAdjustment: fairPrice.adjustments.find((a) => a.factor === 'urgency')?.impact || 0,
       profitMarginResult: fairPrice.profitMargin,
     },
@@ -299,21 +313,27 @@ function generatePriceAlternatives(fairPrice, inputs) {
       price: fairPrice.minPrice,
       strategy: 'aggressive_sales',
       expectedDaysToSell: Math.max(1, fairPrice.expectedDaysToSell * 0.6),
-      expectedProfitMargin: inputs.costBasis ? ((fairPrice.minPrice - inputs.costBasis) / inputs.costBasis) * 100 : 0,
+      expectedProfitMargin: inputs.costBasis
+        ? ((fairPrice.minPrice - inputs.costBasis) / inputs.costBasis) * 100
+        : 0,
     },
     {
       price: Math.round((fairPrice.minPrice + fairPrice.recommendedPrice) / 2),
       strategy: 'balanced',
       expectedDaysToSell: fairPrice.expectedDaysToSell,
       expectedProfitMargin: inputs.costBasis
-        ? (((fairPrice.minPrice + fairPrice.recommendedPrice) / 2 - inputs.costBasis) / inputs.costBasis) * 100
+        ? (((fairPrice.minPrice + fairPrice.recommendedPrice) / 2 - inputs.costBasis) /
+            inputs.costBasis) *
+          100
         : 0,
     },
     {
       price: fairPrice.maxPrice,
       strategy: 'premium_positioning',
       expectedDaysToSell: Math.max(1, fairPrice.expectedDaysToSell * 1.5),
-      expectedProfitMargin: inputs.costBasis ? ((fairPrice.maxPrice - inputs.costBasis) / inputs.costBasis) * 100 : 0,
+      expectedProfitMargin: inputs.costBasis
+        ? ((fairPrice.maxPrice - inputs.costBasis) / inputs.costBasis) * 100
+        : 0,
     },
   ];
 }
@@ -321,7 +341,9 @@ function generatePriceAlternatives(fairPrice, inputs) {
 function generateWarnings(fairPrice, inputs) {
   const warnings = [];
   if (inputs.initialPrice && inputs.initialPrice > fairPrice.maxPrice) {
-    warnings.push(`Your initial price ${inputs.initialPrice} is ${Math.round((inputs.initialPrice / fairPrice.maxPrice - 1) * 100)}% above market average`);
+    warnings.push(
+      `Your initial price ${inputs.initialPrice} is ${Math.round((inputs.initialPrice / fairPrice.maxPrice - 1) * 100)}% above market average`,
+    );
   }
   if (fairPrice.pricePercentile > 80) {
     warnings.push('This price is in the premium tier - expect longer time to sell');
@@ -335,7 +357,9 @@ function generateOpportunities(fairPrice, inputs) {
     opportunities.push('Your certification can justify a premium price - highlight it clearly');
   }
   if (inputs.condition === 'like_new') {
-    opportunities.push('Like-new condition is attractive - add high-quality photos to justify price');
+    opportunities.push(
+      'Like-new condition is attractive - add high-quality photos to justify price',
+    );
   }
   return opportunities;
 }

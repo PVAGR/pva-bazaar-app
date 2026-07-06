@@ -12,8 +12,5 @@
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true
   },
-  "include": [
-    "src",
-    "vite-env.d.ts"
-  ]
+  "include": ["src", "vite-env.d.ts"]
 }

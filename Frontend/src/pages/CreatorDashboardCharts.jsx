@@ -41,7 +41,12 @@ export default function CreatorDashboardCharts({ platformData, trendData }) {
                 color: 'var(--site-text)',
               }}
             />
-            <Area type="monotone" dataKey="earnings" stroke="var(--site-accent)" fill="var(--site-accent-soft)" />
+            <Area
+              type="monotone"
+              dataKey="earnings"
+              stroke="var(--site-accent)"
+              fill="var(--site-accent-soft)"
+            />
           </AreaChart>
         </ResponsiveContainer>
       </article>
@@ -52,7 +57,10 @@ export default function CreatorDashboardCharts({ platformData, trendData }) {
           <PieChart>
             <Pie data={platformData} dataKey="value" nameKey="name" outerRadius={95}>
               {platformData.map((entry, idx) => (
-                <Cell key={`${entry.name}-${idx}`} fill={PLATFORM_COLORS[idx % PLATFORM_COLORS.length]} />
+                <Cell
+                  key={`${entry.name}-${idx}`}
+                  fill={PLATFORM_COLORS[idx % PLATFORM_COLORS.length]}
+                />
               ))}
             </Pie>
             <Tooltip

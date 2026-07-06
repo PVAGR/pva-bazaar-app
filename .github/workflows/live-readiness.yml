@@ -4,38 +4,38 @@ on:
   push:
     branches: [main]
     paths:
-      - "backend/**"
-      - "Frontend/**"
-      - "scripts/**"
-      - "package.json"
-      - ".github/workflows/live-readiness.yml"
+      - 'backend/**'
+      - 'Frontend/**'
+      - 'scripts/**'
+      - 'package.json'
+      - '.github/workflows/live-readiness.yml'
   workflow_dispatch:
     inputs:
       strict:
-        description: "Fail on warnings (strict mode)"
+        description: 'Fail on warnings (strict mode)'
         required: false
         type: boolean
         default: false
       frontend_url:
-        description: "Frontend base URL"
+        description: 'Frontend base URL'
         required: false
         type: string
-        default: "https://pvabazaar.org"
+        default: 'https://pvabazaar.org'
       backend_url:
-        description: "Backend base URL (optional; leave blank to auto-detect)"
+        description: 'Backend base URL (optional; leave blank to auto-detect)'
         required: false
         type: string
-        default: ""
+        default: ''
       wait_timeout_ms:
-        description: "Deploy parity wait timeout in ms"
+        description: 'Deploy parity wait timeout in ms'
         required: false
         type: string
-        default: "120000"
+        default: '120000'
       wait_poll_ms:
-        description: "Deploy parity polling interval in ms"
+        description: 'Deploy parity polling interval in ms'
         required: false
         type: string
-        default: "10000"
+        default: '10000'
 
 jobs:
   verify-live:
@@ -49,7 +49,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: '20'
 
       - name: Run live readiness (non-strict on push)
         if: github.event_name != 'workflow_dispatch' || inputs.strict != true

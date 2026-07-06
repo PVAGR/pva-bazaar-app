@@ -2,7 +2,10 @@ const crypto = require('crypto');
 
 function generatePublicDealId(length = 12) {
   const targetLength = Math.max(8, Number(length) || 12);
-  const raw = crypto.randomBytes(16).toString('base64url').replace(/[^a-zA-Z0-9_-]/g, '');
+  const raw = crypto
+    .randomBytes(16)
+    .toString('base64url')
+    .replace(/[^a-zA-Z0-9_-]/g, '');
   return raw.slice(0, targetLength);
 }
 
@@ -31,11 +34,11 @@ function sanitizeDealCounterparty(counterparty = {}) {
 function projectVerificationSummary(deal) {
   const participants = Array.isArray(deal?.verifiedParticipants)
     ? deal.verifiedParticipants.map((entry) => ({
-      userId: String(entry?.userId || ''),
-      verifiedAt: entry?.verifiedAt || null,
-      method: String(entry?.method || 'jwt'),
-      note: String(entry?.note || ''),
-    }))
+        userId: String(entry?.userId || ''),
+        verifiedAt: entry?.verifiedAt || null,
+        method: String(entry?.method || 'jwt'),
+        note: String(entry?.note || ''),
+      }))
     : [];
 
   return {

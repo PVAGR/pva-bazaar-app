@@ -13,7 +13,14 @@ const { getBuildInfo } = require('../lib/buildInfo');
 const { getRpcDiagnostics } = require('../utils/blockchain');
 const { getJwtSecret, hasConfiguredJwtSecret } = require('../lib/jwtSecret');
 
-const ALLOWED_USER_SORT_FIELDS = new Set(['createdAt', 'updatedAt', 'name', 'email', 'username', 'role']);
+const ALLOWED_USER_SORT_FIELDS = new Set([
+  'createdAt',
+  'updatedAt',
+  'name',
+  'email',
+  'username',
+  'role',
+]);
 
 function escapeRegExp(str) {
   return String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -54,19 +61,22 @@ router.get('/panel-report', async (_req, res) => {
       },
       integrations: {
         openclawBridgeConfigured: Boolean(
-          process.env.OPENCLAW_WEBHOOK_URL || process.env.OPENCLAW_GATEWAY_URL
+          process.env.OPENCLAW_WEBHOOK_URL || process.env.OPENCLAW_GATEWAY_URL,
         ),
         cloudinaryConfigured: Boolean(
           process.env.CLOUDINARY_CLOUD_NAME &&
             process.env.CLOUDINARY_API_KEY &&
-            process.env.CLOUDINARY_API_SECRET
+            process.env.CLOUDINARY_API_SECRET,
         ),
         ipfsConfigured: Boolean(
-          process.env.PINATA_API_KEY || process.env.WEB3_STORAGE_TOKEN || process.env.IPFS_NODE_URL
+          process.env.PINATA_API_KEY || process.env.WEB3_STORAGE_TOKEN || process.env.IPFS_NODE_URL,
         ),
-        adminSelfSignupEnabled: String(process.env.ADMIN_SELF_SIGNUP_ENABLED || 'true').trim().toLowerCase() !== 'false',
+        adminSelfSignupEnabled:
+          String(process.env.ADMIN_SELF_SIGNUP_ENABLED || 'true')
+            .trim()
+            .toLowerCase() !== 'false',
         bootstrapCodeConfigured: Boolean(
-          process.env.ADMIN_BOOTSTRAP_CODE || process.env.ADMIN_SECRET_CODE
+          process.env.ADMIN_BOOTSTRAP_CODE || process.env.ADMIN_SECRET_CODE,
         ),
         adminSecretConfigured: Boolean(String(process.env.ADMIN_SECRET_CODE || '').trim()),
         jwtConfigured: hasConfiguredJwtSecret(),
@@ -90,47 +100,44 @@ router.get('/panel-report', async (_req, res) => {
 // POST /api/admin/token - Production-safe admin authenticateToken via secret code
 router.post('/token', (req, res) => {
   const { secret } = req.body;
-  
+
   if (!secret) {
     return res.status(400).json({ ok: false, message: 'Secret required' });
   }
-  
+
   // Compare with environment variable (set in Vercel/production)
   const adminSecret = process.env.ADMIN_SECRET_CODE;
-  
+
   if (!adminSecret) {
-    return res.status(503).json({ 
-      ok: false, 
-      message: 'Admin authentication not configured on server' 
+    return res.status(503).json({
+      ok: false,
+      message: 'Admin authentication not configured on server',
     });
   }
-  
+
   // Constant-time comparison to prevent timing attacks
-  const secretsMatch = secret.length === adminSecret.length && 
+  const secretsMatch =
+    secret.length === adminSecret.length &&
     Buffer.compare(Buffer.from(secret), Buffer.from(adminSecret)) === 0;
-  
+
   if (!secretsMatch) {
     return res.status(401).json({ ok: false, message: 'Invalid secret' });
   }
-  
+
   // Generate JWT with 12-hour expiration
-  const token = jwt.sign(
-    { id: getAdminSubjectId(), role: 'admin' }, 
-    getJwtSecret(),
-    { expiresIn: '12h' }
-  );
-  
+  const token = jwt.sign({ id: getAdminSubjectId(), role: 'admin' }, getJwtSecret(), {
+    expiresIn: '12h',
+  });
+
   res.json({ ok: true, token });
 });
 
 // POST /api/admin/token-refresh - Refresh authenticated admin token
 router.post('/token-refresh', (req, res, next) => {
   if (process.env.NODE_ENV !== 'production') {
-    const token = jwt.sign(
-      { id: getAdminSubjectId(), role: 'admin' },
-      getJwtSecret(),
-      { expiresIn: '12h' }
-    );
+    const token = jwt.sign({ id: getAdminSubjectId(), role: 'admin' }, getJwtSecret(), {
+      expiresIn: '12h',
+    });
 
     return res.json({ ok: true, token, refreshed: true, mode: 'development' });
   }
@@ -141,7 +148,7 @@ router.post('/token-refresh', (req, res, next) => {
       const token = jwt.sign(
         { id: req.user?.id || getAdminSubjectId(), role: 'admin' },
         getJwtSecret(),
-        { expiresIn: '12h' }
+        { expiresIn: '12h' },
       );
 
       return res.json({ ok: true, token, refreshed: true });
@@ -152,12 +159,22 @@ router.post('/token-refresh', (req, res, next) => {
 // GET /api/admin/status - Check if user is authenticated admin
 router.get('/status', (req, res, next) => {
   if (process.env.NODE_ENV !== 'production') {
-    return res.json({ ok: true, status: 'admin-ok-dev', user: { id: 'dev', role: 'admin' }, timestamp: new Date().toISOString() });
+    return res.json({
+      ok: true,
+      status: 'admin-ok-dev',
+      user: { id: 'dev', role: 'admin' },
+      timestamp: new Date().toISOString(),
+    });
   }
   return authenticateToken(req, res, (err) => {
     if (err) return next(err);
     return adminOnly(req, res, () => {
-      res.json({ ok: true, status: 'admin-ok', user: req.user, timestamp: new Date().toISOString() });
+      res.json({
+        ok: true,
+        status: 'admin-ok',
+        user: req.user,
+        timestamp: new Date().toISOString(),
+      });
     });
   });
 });
@@ -240,18 +257,35 @@ router.put('/runtime-config/openclaw', adminSession, async (req, res) => {
       ollamaBaseUrl: String(body.ollamaBaseUrl || '').trim(),
       ollamaModel: String(body.ollamaModel || '').trim(),
       autonomousEnabled: body.autonomousEnabled !== false,
-      autonomousBountyScanMinutes: Math.min(Math.max(parseInt(body.autonomousBountyScanMinutes ?? '30', 10), 5), 1440),
-      autonomousKeepaliveMinutes: Math.min(Math.max(parseInt(body.autonomousKeepaliveMinutes ?? '10', 10), 1), 240),
+      autonomousBountyScanMinutes: Math.min(
+        Math.max(parseInt(body.autonomousBountyScanMinutes ?? '30', 10), 5),
+        1440,
+      ),
+      autonomousKeepaliveMinutes: Math.min(
+        Math.max(parseInt(body.autonomousKeepaliveMinutes ?? '10', 10), 1),
+        240,
+      ),
       autonomousMoneyRunEnabled: body.autonomousMoneyRunEnabled === true,
-      workerName: String(body.workerName || 'openclaw-queue-dispatcher').trim() || 'openclaw-queue-dispatcher',
+      workerName:
+        String(body.workerName || 'openclaw-queue-dispatcher').trim() ||
+        'openclaw-queue-dispatcher',
       workerPollMs: Math.max(parseInt(body.workerPollMs || '10000', 10), 2000),
       workerBatchSize: Math.min(Math.max(parseInt(body.workerBatchSize || '15', 10), 1), 100),
-      apiKey: typeof body.apiKey === 'string' ? body.apiKey.trim() : (doc.openclaw?.apiKey || ''),
-      bridgeSecret: typeof body.bridgeSecret === 'string' ? body.bridgeSecret.trim() : (doc.openclaw?.bridgeSecret || ''),
+      apiKey: typeof body.apiKey === 'string' ? body.apiKey.trim() : doc.openclaw?.apiKey || '',
+      bridgeSecret:
+        typeof body.bridgeSecret === 'string'
+          ? body.bridgeSecret.trim()
+          : doc.openclaw?.bridgeSecret || '',
     };
 
     doc.openclaw = nextOpenclaw;
-    const digest = buildDigest({ openclaw: { ...nextOpenclaw, apiKey: Boolean(nextOpenclaw.apiKey), bridgeSecret: Boolean(nextOpenclaw.bridgeSecret) } });
+    const digest = buildDigest({
+      openclaw: {
+        ...nextOpenclaw,
+        apiKey: Boolean(nextOpenclaw.apiKey),
+        bridgeSecret: Boolean(nextOpenclaw.bridgeSecret),
+      },
+    });
     doc.auditTrail.push({
       at: new Date(),
       actor: req.admin?.email || req.admin?.id || 'unknown-admin',
@@ -271,9 +305,15 @@ router.put('/runtime-config/openclaw', adminSession, async (req, res) => {
     process.env.OPENCLAW_API_KEY = nextOpenclaw.apiKey || '';
     process.env.OPENCLAW_BRIDGE_SECRET = nextOpenclaw.bridgeSecret || '';
     process.env.OPENCLAW_AUTONOMOUS_ENABLED = nextOpenclaw.autonomousEnabled ? 'true' : 'false';
-    process.env.OPENCLAW_AUTONOMOUS_BOUNTY_SCAN_MINUTES = String(nextOpenclaw.autonomousBountyScanMinutes || 30);
-    process.env.OPENCLAW_AUTONOMOUS_KEEPALIVE_MINUTES = String(nextOpenclaw.autonomousKeepaliveMinutes || 10);
-    process.env.OPENCLAW_AUTONOMOUS_MONEY_RUN_ENABLED = nextOpenclaw.autonomousMoneyRunEnabled ? 'true' : 'false';
+    process.env.OPENCLAW_AUTONOMOUS_BOUNTY_SCAN_MINUTES = String(
+      nextOpenclaw.autonomousBountyScanMinutes || 30,
+    );
+    process.env.OPENCLAW_AUTONOMOUS_KEEPALIVE_MINUTES = String(
+      nextOpenclaw.autonomousKeepaliveMinutes || 10,
+    );
+    process.env.OPENCLAW_AUTONOMOUS_MONEY_RUN_ENABLED = nextOpenclaw.autonomousMoneyRunEnabled
+      ? 'true'
+      : 'false';
     process.env.OPENCLAW_WORKER_NAME = nextOpenclaw.workerName || 'openclaw-queue-dispatcher';
     process.env.OPENCLAW_WORKER_POLL_MS = String(nextOpenclaw.workerPollMs || 10000);
     process.env.OPENCLAW_WORKER_BATCH_SIZE = String(nextOpenclaw.workerBatchSize || 15);
@@ -305,7 +345,7 @@ router.put('/runtime-config/payout-policy', adminSession, async (req, res) => {
     const doc = await getOrCreateRuntimeConfig();
     const body = req.body || {};
     const wallets = Array.isArray(body.walletAllowlist)
-      ? body.walletAllowlist.map(v => String(v || '').trim()).filter(Boolean)
+      ? body.walletAllowlist.map((v) => String(v || '').trim()).filter(Boolean)
       : [];
 
     const minUsd = Math.max(parseFloat(body.minUsd ?? 5), 0.01);
@@ -338,18 +378,24 @@ router.put('/runtime-config/payout-policy', adminSession, async (req, res) => {
     process.env.SOLANA_TEST_MAX_USD = String(maxUsd);
     process.env.SOLANA_TEST_MAX_SOL = String(maxSol);
     process.env.SOLANA_CLUSTER = doc.payoutPolicy.network || process.env.SOLANA_CLUSTER || 'devnet';
-    process.env.SOLANA_TEST_REQUIRE_ALLOWLIST = doc.payoutPolicy.requireAllowlist ? 'true' : 'false';
+    process.env.SOLANA_TEST_REQUIRE_ALLOWLIST = doc.payoutPolicy.requireAllowlist
+      ? 'true'
+      : 'false';
     process.env.SOLANA_TEST_WALLET_ALLOWLIST = (doc.payoutPolicy.walletAllowlist || []).join(',');
 
-    const event = createSystemEvent('info', 'OpenClaw payout policy updated in admin runtime-config', {
-      actor: req.admin?.email || req.admin?.id || 'unknown-admin',
-      digest,
-      minUsd,
-      maxUsd,
-      minSol,
-      maxSol,
-      allowlistSize: wallets.length,
-    });
+    const event = createSystemEvent(
+      'info',
+      'OpenClaw payout policy updated in admin runtime-config',
+      {
+        actor: req.admin?.email || req.admin?.id || 'unknown-admin',
+        digest,
+        minUsd,
+        maxUsd,
+        minSol,
+        maxSol,
+        allowlistSize: wallets.length,
+      },
+    );
     dispatchToOpenClaw(event, console.log).catch(() => {});
 
     return res.json({ ok: true, config: sanitizeRuntimeConfig(doc) });
@@ -371,24 +417,24 @@ const User = require('../models/User');
  */
 router.get('/users', adminSession, async (req, res) => {
   try {
-    const { 
-      page = 1, 
-      limit = 50, 
-      search = '', 
-      role = '', 
-      sortBy = 'createdAt', 
-      order = 'desc' 
+    const {
+      page = 1,
+      limit = 50,
+      search = '',
+      role = '',
+      sortBy = 'createdAt',
+      order = 'desc',
     } = req.query;
 
     // Build filter query
     const filter = {};
-    
+
     if (search) {
       const searchSafe = escapeRegExp(String(search).slice(0, 100));
       filter.$or = [
         { name: { $regex: searchSafe, $options: 'i' } },
         { email: { $regex: searchSafe, $options: 'i' } },
-        { username: { $regex: searchSafe, $options: 'i' } }
+        { username: { $regex: searchSafe, $options: 'i' } },
       ];
     }
 
@@ -410,10 +456,10 @@ router.get('/users', adminSession, async (req, res) => {
     const total = await User.countDocuments(filter);
 
     // Add computed fields
-    const enrichedUsers = users.map(user => ({
+    const enrichedUsers = users.map((user) => ({
       ...user,
       role: user.role || 'user',
-      status: 'active' // Add status logic later if needed
+      status: 'active', // Add status logic later if needed
     }));
 
     res.json({
@@ -423,8 +469,8 @@ router.get('/users', adminSession, async (req, res) => {
         page: parseInt(page),
         limit: parseInt(limit),
         total,
-        pages: Math.ceil(total / parseInt(limit))
-      }
+        pages: Math.ceil(total / parseInt(limit)),
+      },
     });
   } catch (error) {
     console.error('Admin get users error:', error);
@@ -438,14 +484,38 @@ router.get('/users', adminSession, async (req, res) => {
  */
 router.get('/users/export.csv', adminSession, async (_req, res) => {
   try {
-    const users = await User.find({}).select('-password -oauthTokens').sort({ createdAt: -1 }).lean();
+    const users = await User.find({})
+      .select('-password -oauthTokens')
+      .sort({ createdAt: -1 })
+      .lean();
 
     const headers = [
-      'id', 'name', 'email', 'username', 'role', 'appRole', 'roleIntent',
-      'legalFullName', 'legalIdType', 'legalIdNumber', 'addressLine1', 'addressLine2',
-      'city', 'stateProvince', 'postalCode', 'country', 'phone', 'identityAttested',
-      'instagram', 'telegram', 'website', 'other', 'tradingRestricted',
-      'publicSafetyNotice', 'createdAt', 'updatedAt',
+      'id',
+      'name',
+      'email',
+      'username',
+      'role',
+      'appRole',
+      'roleIntent',
+      'legalFullName',
+      'legalIdType',
+      'legalIdNumber',
+      'addressLine1',
+      'addressLine2',
+      'city',
+      'stateProvince',
+      'postalCode',
+      'country',
+      'phone',
+      'identityAttested',
+      'instagram',
+      'telegram',
+      'website',
+      'other',
+      'tradingRestricted',
+      'publicSafetyNotice',
+      'createdAt',
+      'updatedAt',
     ];
 
     const csvEscape = (value) => {
@@ -524,7 +594,10 @@ router.get('/users/:id/export', adminSession, async (req, res) => {
 
     const stamp = new Date().toISOString().replace(/[:.]/g, '-');
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
-    res.setHeader('Content-Disposition', `attachment; filename="user-profile-${String(user._id)}-${stamp}.json"`);
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="user-profile-${String(user._id)}-${stamp}.json"`,
+    );
     return res.send(JSON.stringify(payload, null, 2));
   } catch (error) {
     console.error('Admin export single user error:', error);
@@ -539,8 +612,12 @@ router.get('/users/:id/export', adminSession, async (req, res) => {
 router.put('/users/:id/trust', adminSession, async (req, res) => {
   try {
     const tradingRestricted = req.body?.tradingRestricted;
-    const publicSafetyNotice = String(req.body?.publicSafetyNotice || '').trim().slice(0, 500);
-    const internalCaseNotes = String(req.body?.internalCaseNotes || '').trim().slice(0, 5000);
+    const publicSafetyNotice = String(req.body?.publicSafetyNotice || '')
+      .trim()
+      .slice(0, 500);
+    const internalCaseNotes = String(req.body?.internalCaseNotes || '')
+      .trim()
+      .slice(0, 5000);
 
     const updates = {
       updatedAt: new Date(),
@@ -575,9 +652,7 @@ router.put('/users/:id/trust', adminSession, async (req, res) => {
  */
 router.get('/users/:id', adminSession, async (req, res) => {
   try {
-    const user = await User.findById(req.params.id)
-      .select('-password -oauthTokens')
-      .lean();
+    const user = await User.findById(req.params.id).select('-password -oauthTokens').lean();
 
     if (!user) {
       return res.status(404).json({ ok: false, error: 'User not found' });
@@ -587,7 +662,7 @@ router.get('/users/:id', adminSession, async (req, res) => {
     const enrichedUser = {
       ...user,
       role: user.role || 'user',
-      status: 'active'
+      status: 'active',
     };
 
     res.json({ ok: true, user: enrichedUser });
@@ -604,7 +679,7 @@ router.get('/users/:id', adminSession, async (req, res) => {
 router.put('/users/:id', adminSession, async (req, res) => {
   try {
     const { name, email, username, profilePicture, role } = req.body;
-    
+
     const updates = {};
     if (name !== undefined) updates.name = name;
     if (email !== undefined) updates.email = email;
@@ -613,7 +688,9 @@ router.put('/users/:id', adminSession, async (req, res) => {
     if (role !== undefined) {
       const nextRole = String(role).trim().toLowerCase();
       if (!['user', 'moderator', 'admin'].includes(nextRole)) {
-        return res.status(400).json({ ok: false, error: 'Invalid role. Allowed roles: user, moderator, admin' });
+        return res
+          .status(400)
+          .json({ ok: false, error: 'Invalid role. Allowed roles: user, moderator, admin' });
       }
       updates.role = nextRole;
     }
@@ -622,7 +699,7 @@ router.put('/users/:id', adminSession, async (req, res) => {
     const user = await User.findByIdAndUpdate(
       req.params.id,
       { $set: updates },
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     ).select('-password -oauthTokens');
 
     if (!user) {
@@ -643,7 +720,7 @@ router.put('/users/:id', adminSession, async (req, res) => {
 router.delete('/users/:id', adminSession, async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
-    
+
     if (!user) {
       return res.status(404).json({ ok: false, error: 'User not found' });
     }
@@ -691,11 +768,7 @@ router.get('/artifacts', adminSession, async (req, res) => {
     if (status) filter.status = status;
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const [artifacts, total] = await Promise.all([
-      Artifact.find(filter)
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(parseInt(limit))
-        .lean(),
+      Artifact.find(filter).sort({ createdAt: -1 }).skip(skip).limit(parseInt(limit)).lean(),
       Artifact.countDocuments(filter),
     ]);
     res.json({ ok: true, artifacts, total, page: parseInt(page), limit: parseInt(limit) });
@@ -713,20 +786,35 @@ router.post('/artifacts', adminSession, async (req, res) => {
   try {
     const adminSubjectId = getAdminSubjectId();
     const {
-      name, title, description, price, salePrice,
-      category, artisan, status = 'published',
-      imageUrls = [], materials = [],
-      stockQty = 0, isUnlimited = false,
+      name,
+      title,
+      description,
+      price,
+      salePrice,
+      category,
+      artisan,
+      status = 'published',
+      imageUrls = [],
+      materials = [],
+      stockQty = 0,
+      isUnlimited = false,
       tags = [],
     } = req.body;
     if (!name || !title || !description || !price || !category || !artisan) {
-      return res.status(400).json({ ok: false, error: 'Missing required fields: name, title, description, price, category, artisan' });
+      return res.status(400).json({
+        ok: false,
+        error: 'Missing required fields: name, title, description, price, category, artisan',
+      });
     }
     const artifact = new Artifact({
-      name, title, description,
+      name,
+      title,
+      description,
       price: Number(price),
       salePrice: salePrice ? Number(salePrice) : undefined,
-      category, artisan, status,
+      category,
+      artisan,
+      status,
       imageUrls: Array.isArray(imageUrls) ? imageUrls : [imageUrls].filter(Boolean),
       materials: Array.isArray(materials) ? materials : [materials].filter(Boolean),
       stockQty: Number(stockQty),
@@ -750,9 +838,19 @@ router.post('/artifacts', adminSession, async (req, res) => {
 router.put('/artifacts/:id', adminSession, async (req, res) => {
   try {
     const allowed = [
-      'name', 'title', 'description', 'price', 'salePrice',
-      'category', 'artisan', 'status', 'imageUrls', 'materials',
-      'stockQty', 'isUnlimited', 'tags',
+      'name',
+      'title',
+      'description',
+      'price',
+      'salePrice',
+      'category',
+      'artisan',
+      'status',
+      'imageUrls',
+      'materials',
+      'stockQty',
+      'isUnlimited',
+      'tags',
     ];
     const updates = {};
     for (const key of allowed) {
@@ -762,7 +860,7 @@ router.put('/artifacts/:id', adminSession, async (req, res) => {
     const artifact = await Artifact.findByIdAndUpdate(
       req.params.id,
       { $set: updates },
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     ).lean();
     if (!artifact) return res.status(404).json({ ok: false, error: 'Artifact not found' });
     res.json({ ok: true, artifact });
@@ -847,8 +945,15 @@ router.get('/cloud-storage', adminSession, async (req, res) => {
       {
         name: 'Cloudinary',
         key: 'cloudinary',
-        configured: !!(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET),
-        status: (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY) ? 'connected' : 'disconnected',
+        configured: !!(
+          process.env.CLOUDINARY_CLOUD_NAME &&
+          process.env.CLOUDINARY_API_KEY &&
+          process.env.CLOUDINARY_API_SECRET
+        ),
+        status:
+          process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY
+            ? 'connected'
+            : 'disconnected',
       },
       {
         name: 'Pinata IPFS',
@@ -859,16 +964,20 @@ router.get('/cloud-storage', adminSession, async (req, res) => {
       {
         name: 'AWS S3',
         key: 'aws',
-        configured: !!(process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY && process.env.AWS_BUCKET_NAME),
+        configured: !!(
+          process.env.AWS_ACCESS_KEY_ID &&
+          process.env.AWS_SECRET_ACCESS_KEY &&
+          process.env.AWS_BUCKET_NAME
+        ),
         status: process.env.AWS_BUCKET_NAME ? 'connected' : 'disconnected',
       },
     ];
 
-    const configuredCount = providers.filter(p => p.configured).length;
+    const configuredCount = providers.filter((p) => p.configured).length;
 
     res.json({
       ok: true,
-      files: 0,       // live file counts require per-provider API calls; use CloudStorageTab for detail
+      files: 0, // live file counts require per-provider API calls; use CloudStorageTab for detail
       totalSize: 0,
       configuredProviders: configuredCount,
       providers,
@@ -890,7 +999,9 @@ router.get('/transactions/recent', adminSession, async (req, res) => {
     const orders = await Order.find({})
       .sort({ createdAt: -1, _id: -1 })
       .limit(limit)
-      .select('_id itemSnapshot amountTotal currency createdAt paymentStatus customerEmail customerName buyerId attribution.creatorId')
+      .select(
+        '_id itemSnapshot amountTotal currency createdAt paymentStatus customerEmail customerName buyerId attribution.creatorId',
+      )
       .lean();
 
     const items = orders.map((order) => ({

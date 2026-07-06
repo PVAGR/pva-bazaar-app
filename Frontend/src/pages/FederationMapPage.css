@@ -366,7 +366,9 @@
     radial-gradient(circle at 32% 30%, rgba(84, 216, 231, 0.32), transparent 40%),
     radial-gradient(circle at 74% 62%, rgba(129, 199, 132, 0.24), transparent 35%),
     linear-gradient(155deg, rgba(6, 23, 48, 0.95), rgba(10, 42, 68, 0.85));
-  box-shadow: inset -12px -18px 36px rgba(0, 0, 0, 0.35), 0 14px 28px rgba(0, 0, 0, 0.32);
+  box-shadow:
+    inset -12px -18px 36px rgba(0, 0, 0, 0.35),
+    0 14px 28px rgba(0, 0, 0, 0.32);
 }
 
 .planet-grid {
@@ -377,7 +379,11 @@
   transform: translate(-50%, -50%);
   border-radius: 50%;
   background-image:
-    repeating-radial-gradient(circle at center, transparent 0 17px, rgba(255, 255, 255, 0.06) 18px 19px),
+    repeating-radial-gradient(
+      circle at center,
+      transparent 0 17px,
+      rgba(255, 255, 255, 0.06) 18px 19px
+    ),
     repeating-linear-gradient(90deg, transparent 0 29px, rgba(255, 255, 255, 0.06) 30px 31px);
   mix-blend-mode: screen;
   opacity: 0.38;
@@ -395,7 +401,9 @@
 }
 
 .planet-node.active {
-  box-shadow: 0 0 0 6px rgba(38, 198, 218, 0.28), 0 0 18px rgba(38, 198, 218, 0.45);
+  box-shadow:
+    0 0 0 6px rgba(38, 198, 218, 0.28),
+    0 0 18px rgba(38, 198, 218, 0.45);
   border-color: #d5fbff;
 }
 

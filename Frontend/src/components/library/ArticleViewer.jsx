@@ -60,7 +60,10 @@ export default function ArticleViewer({ articleId }) {
           </header>
 
           {item.renderedHtml ? (
-            <div className="library-rendered-html" dangerouslySetInnerHTML={{ __html: item.renderedHtml }} />
+            <div
+              className="library-rendered-html"
+              dangerouslySetInnerHTML={{ __html: item.renderedHtml }}
+            />
           ) : (
             <div className="library-markdown-preview">
               <ReactMarkdown rehypePlugins={[rehypeSanitize]}>{item.markdown || ''}</ReactMarkdown>

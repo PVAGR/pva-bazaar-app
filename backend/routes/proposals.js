@@ -13,7 +13,11 @@ function asPositiveInt(value, fallback) {
 }
 
 function isAdminOrSecretariat(userDoc, tokenUser) {
-  return tokenUser?.role === 'admin' || userDoc?.citizenRole === 'secretariat' || userDoc?.citizenRole === 'admin';
+  return (
+    tokenUser?.role === 'admin' ||
+    userDoc?.citizenRole === 'secretariat' ||
+    userDoc?.citizenRole === 'admin'
+  );
 }
 
 async function requireAdminSecretariat(req, res, next) {
@@ -60,9 +64,8 @@ router.get('/proposals', async (req, res) => {
     if (status) query.status = status;
     if (category) query.category = category;
 
-    const sortQuery = sort === 'popular'
-      ? { endorsementCount: -1, createdAt: -1 }
-      : { createdAt: -1 };
+    const sortQuery =
+      sort === 'popular' ? { endorsementCount: -1, createdAt: -1 } : { createdAt: -1 };
 
     const skip = (page - 1) * limit;
 
@@ -91,22 +94,29 @@ router.get('/proposals', async (req, res) => {
 });
 
 // Own submissions (must come before :proposalId route)
-router.get('/proposals/my/submissions', authenticateToken, requireVerifiedCitizen, async (req, res) => {
-  try {
-    const items = await Proposal.find({ submittedBy: req.user.id })
-      .sort({ updatedAt: -1 })
-      .populate('submittedBy', 'name societalId citizenRole');
+router.get(
+  '/proposals/my/submissions',
+  authenticateToken,
+  requireVerifiedCitizen,
+  async (req, res) => {
+    try {
+      const items = await Proposal.find({ submittedBy: req.user.id })
+        .sort({ updatedAt: -1 })
+        .populate('submittedBy', 'name societalId citizenRole');
 
-    return res.json({ ok: true, items });
-  } catch (error) {
-    return res.status(500).json({ ok: false, message: error.message });
-  }
-});
+      return res.json({ ok: true, items });
+    } catch (error) {
+      return res.status(500).json({ ok: false, message: error.message });
+    }
+  },
+);
 
 // Public detail by proposalId
 router.get('/proposals/:proposalId', async (req, res) => {
   try {
-    const proposalId = String(req.params.proposalId || '').trim().toUpperCase();
+    const proposalId = String(req.params.proposalId || '')
+      .trim()
+      .toUpperCase();
     const item = await Proposal.findOne({ proposalId })
       .populate('submittedBy', 'name societalId citizenRole')
       .populate('officialResponse.respondedBy', 'name citizenRole');
@@ -147,181 +157,242 @@ router.post('/proposals', authenticateToken, requireVerifiedCitizen, async (req,
 });
 
 // Publish own draft
-router.post('/proposals/:proposalId/publish', authenticateToken, requireVerifiedCitizen, async (req, res) => {
-  try {
-    const proposalId = String(req.params.proposalId || '').trim().toUpperCase();
-    const item = await Proposal.findOne({ proposalId });
+router.post(
+  '/proposals/:proposalId/publish',
+  authenticateToken,
+  requireVerifiedCitizen,
+  async (req, res) => {
+    try {
+      const proposalId = String(req.params.proposalId || '')
+        .trim()
+        .toUpperCase();
+      const item = await Proposal.findOne({ proposalId });
 
-    if (!item) {
-      return res.status(404).json({ ok: false, message: 'Proposal not found' });
+      if (!item) {
+        return res.status(404).json({ ok: false, message: 'Proposal not found' });
+      }
+
+      if (String(item.submittedBy) !== String(req.user.id)) {
+        return res
+          .status(403)
+          .json({ ok: false, message: 'Only the submitter can publish this proposal' });
+      }
+
+      if (item.status !== 'draft') {
+        return res
+          .status(400)
+          .json({ ok: false, message: 'Only draft proposals can be published' });
+      }
+
+      item.status = 'open';
+      await item.save();
+      return res.json({ ok: true, item });
+    } catch (error) {
+      return res.status(500).json({ ok: false, message: error.message });
     }
-
-    if (String(item.submittedBy) !== String(req.user.id)) {
-      return res.status(403).json({ ok: false, message: 'Only the submitter can publish this proposal' });
-    }
-
-    if (item.status !== 'draft') {
-      return res.status(400).json({ ok: false, message: 'Only draft proposals can be published' });
-    }
-
-    item.status = 'open';
-    await item.save();
-    return res.json({ ok: true, item });
-  } catch (error) {
-    return res.status(500).json({ ok: false, message: error.message });
-  }
-});
+  },
+);
 
 // Endorse proposal
-router.post('/proposals/:proposalId/endorse', authenticateToken, requireVerifiedCitizen, async (req, res) => {
-  try {
-    const proposalId = String(req.params.proposalId || '').trim().toUpperCase();
-    const item = await Proposal.findOne({ proposalId });
+router.post(
+  '/proposals/:proposalId/endorse',
+  authenticateToken,
+  requireVerifiedCitizen,
+  async (req, res) => {
+    try {
+      const proposalId = String(req.params.proposalId || '')
+        .trim()
+        .toUpperCase();
+      const item = await Proposal.findOne({ proposalId });
 
-    if (!item) {
-      return res.status(404).json({ ok: false, message: 'Proposal not found' });
-    }
-
-    if (String(item.submittedBy) === String(req.user.id)) {
-      return res.status(400).json({ ok: false, message: 'Submitter cannot endorse their own proposal' });
-    }
-
-    const existing = item.endorsements.find((entry) => String(entry.citizen) === String(req.user.id));
-    if (existing) {
-      return res.status(409).json({ ok: false, message: 'Proposal already endorsed by this citizen' });
-    }
-
-    item.endorsements.push({ citizen: req.user.id, endorsedAt: new Date() });
-    item.endorsementCount = item.endorsements.length;
-
-    if (item.endorsementCount >= item.endorsementThreshold) {
-      item.thresholdReachedAt = item.thresholdReachedAt || new Date();
-      if (['open', 'draft'].includes(item.status)) {
-        item.status = 'endorsed';
+      if (!item) {
+        return res.status(404).json({ ok: false, message: 'Proposal not found' });
       }
-    }
 
-    await item.save();
-    return res.json({ ok: true, item });
-  } catch (error) {
-    return res.status(500).json({ ok: false, message: error.message });
-  }
-});
+      if (String(item.submittedBy) === String(req.user.id)) {
+        return res
+          .status(400)
+          .json({ ok: false, message: 'Submitter cannot endorse their own proposal' });
+      }
+
+      const existing = item.endorsements.find(
+        (entry) => String(entry.citizen) === String(req.user.id),
+      );
+      if (existing) {
+        return res
+          .status(409)
+          .json({ ok: false, message: 'Proposal already endorsed by this citizen' });
+      }
+
+      item.endorsements.push({ citizen: req.user.id, endorsedAt: new Date() });
+      item.endorsementCount = item.endorsements.length;
+
+      if (item.endorsementCount >= item.endorsementThreshold) {
+        item.thresholdReachedAt = item.thresholdReachedAt || new Date();
+        if (['open', 'draft'].includes(item.status)) {
+          item.status = 'endorsed';
+        }
+      }
+
+      await item.save();
+      return res.json({ ok: true, item });
+    } catch (error) {
+      return res.status(500).json({ ok: false, message: error.message });
+    }
+  },
+);
 
 // Remove endorsement
-router.delete('/proposals/:proposalId/endorse', authenticateToken, requireVerifiedCitizen, async (req, res) => {
-  try {
-    const proposalId = String(req.params.proposalId || '').trim().toUpperCase();
-    const item = await Proposal.findOne({ proposalId });
+router.delete(
+  '/proposals/:proposalId/endorse',
+  authenticateToken,
+  requireVerifiedCitizen,
+  async (req, res) => {
+    try {
+      const proposalId = String(req.params.proposalId || '')
+        .trim()
+        .toUpperCase();
+      const item = await Proposal.findOne({ proposalId });
 
-    if (!item) {
-      return res.status(404).json({ ok: false, message: 'Proposal not found' });
-    }
-
-    const before = item.endorsements.length;
-    item.endorsements = item.endorsements.filter((entry) => String(entry.citizen) !== String(req.user.id));
-
-    if (item.endorsements.length === before) {
-      return res.status(404).json({ ok: false, message: 'Endorsement not found for this citizen' });
-    }
-
-    item.endorsementCount = item.endorsements.length;
-    if (item.endorsementCount < item.endorsementThreshold) {
-      item.thresholdReachedAt = null;
-      if (item.status === 'endorsed') {
-        item.status = 'open';
+      if (!item) {
+        return res.status(404).json({ ok: false, message: 'Proposal not found' });
       }
-    }
 
-    await item.save();
-    return res.json({ ok: true, item });
-  } catch (error) {
-    return res.status(500).json({ ok: false, message: error.message });
-  }
-});
+      const before = item.endorsements.length;
+      item.endorsements = item.endorsements.filter(
+        (entry) => String(entry.citizen) !== String(req.user.id),
+      );
+
+      if (item.endorsements.length === before) {
+        return res
+          .status(404)
+          .json({ ok: false, message: 'Endorsement not found for this citizen' });
+      }
+
+      item.endorsementCount = item.endorsements.length;
+      if (item.endorsementCount < item.endorsementThreshold) {
+        item.thresholdReachedAt = null;
+        if (item.status === 'endorsed') {
+          item.status = 'open';
+        }
+      }
+
+      await item.save();
+      return res.json({ ok: true, item });
+    } catch (error) {
+      return res.status(500).json({ ok: false, message: error.message });
+    }
+  },
+);
 
 // Admin: list threshold-reached proposals
-router.get('/admin/proposals/endorsed', authenticateToken, requireAdminSecretariat, async (req, res) => {
-  try {
-    const items = await Proposal.find({
-      thresholdReachedAt: { $ne: null },
-      endorsementCount: { $gte: 10 },
-    })
-      .sort({ thresholdReachedAt: -1 })
-      .populate('submittedBy', 'name societalId citizenRole');
+router.get(
+  '/admin/proposals/endorsed',
+  authenticateToken,
+  requireAdminSecretariat,
+  async (req, res) => {
+    try {
+      const items = await Proposal.find({
+        thresholdReachedAt: { $ne: null },
+        endorsementCount: { $gte: 10 },
+      })
+        .sort({ thresholdReachedAt: -1 })
+        .populate('submittedBy', 'name societalId citizenRole');
 
-    return res.json({ ok: true, items });
-  } catch (error) {
-    return res.status(500).json({ ok: false, message: error.message });
-  }
-});
+      return res.json({ ok: true, items });
+    } catch (error) {
+      return res.status(500).json({ ok: false, message: error.message });
+    }
+  },
+);
 
 // Admin: official response
-router.post('/admin/proposals/:proposalId/respond', authenticateToken, requireAdminSecretariat, async (req, res) => {
-  try {
-    const proposalId = String(req.params.proposalId || '').trim().toUpperCase();
-    const item = await Proposal.findOne({ proposalId });
+router.post(
+  '/admin/proposals/:proposalId/respond',
+  authenticateToken,
+  requireAdminSecretariat,
+  async (req, res) => {
+    try {
+      const proposalId = String(req.params.proposalId || '')
+        .trim()
+        .toUpperCase();
+      const item = await Proposal.findOne({ proposalId });
 
-    if (!item) {
-      return res.status(404).json({ ok: false, message: 'Proposal not found' });
+      if (!item) {
+        return res.status(404).json({ ok: false, message: 'Proposal not found' });
+      }
+
+      item.officialResponse = {
+        respondedBy: req.user.id,
+        decision: String(req.body?.decision || '').trim(),
+        explanation: String(req.body?.explanation || '').trim(),
+        respondedAt: new Date(),
+      };
+
+      await item.save();
+      return res.json({ ok: true, item });
+    } catch (error) {
+      return res.status(400).json({ ok: false, message: error.message });
     }
-
-    item.officialResponse = {
-      respondedBy: req.user.id,
-      decision: String(req.body?.decision || '').trim(),
-      explanation: String(req.body?.explanation || '').trim(),
-      respondedAt: new Date(),
-    };
-
-    await item.save();
-    return res.json({ ok: true, item });
-  } catch (error) {
-    return res.status(400).json({ ok: false, message: error.message });
-  }
-});
+  },
+);
 
 // Admin: override status
-router.put('/admin/proposals/:proposalId/status', authenticateToken, requireAdminSecretariat, async (req, res) => {
-  try {
-    const proposalId = String(req.params.proposalId || '').trim().toUpperCase();
-    const status = String(req.body?.status || '').trim();
-    const item = await Proposal.findOne({ proposalId });
+router.put(
+  '/admin/proposals/:proposalId/status',
+  authenticateToken,
+  requireAdminSecretariat,
+  async (req, res) => {
+    try {
+      const proposalId = String(req.params.proposalId || '')
+        .trim()
+        .toUpperCase();
+      const status = String(req.body?.status || '').trim();
+      const item = await Proposal.findOne({ proposalId });
 
-    if (!item) {
-      return res.status(404).json({ ok: false, message: 'Proposal not found' });
+      if (!item) {
+        return res.status(404).json({ ok: false, message: 'Proposal not found' });
+      }
+
+      item.status = status;
+      await item.save();
+      return res.json({ ok: true, item });
+    } catch (error) {
+      return res.status(400).json({ ok: false, message: error.message });
     }
-
-    item.status = status;
-    await item.save();
-    return res.json({ ok: true, item });
-  } catch (error) {
-    return res.status(400).json({ ok: false, message: error.message });
-  }
-});
+  },
+);
 
 // Admin: set execution project
-router.post('/admin/proposals/:proposalId/execution', authenticateToken, requireAdminSecretariat, async (req, res) => {
-  try {
-    const proposalId = String(req.params.proposalId || '').trim().toUpperCase();
-    const item = await Proposal.findOne({ proposalId });
+router.post(
+  '/admin/proposals/:proposalId/execution',
+  authenticateToken,
+  requireAdminSecretariat,
+  async (req, res) => {
+    try {
+      const proposalId = String(req.params.proposalId || '')
+        .trim()
+        .toUpperCase();
+      const item = await Proposal.findOne({ proposalId });
 
-    if (!item) {
-      return res.status(404).json({ ok: false, message: 'Proposal not found' });
+      if (!item) {
+        return res.status(404).json({ ok: false, message: 'Proposal not found' });
+      }
+
+      item.executionProject = {
+        owner: String(req.body?.owner || '').trim(),
+        milestones: normalizeMilestones(req.body?.milestones),
+        budget: String(req.body?.budget || '').trim(),
+        status: String(req.body?.status || 'not_started').trim(),
+        updates: normalizeUpdates(req.body?.updates),
+      };
+
+      await item.save();
+      return res.json({ ok: true, item });
+    } catch (error) {
+      return res.status(400).json({ ok: false, message: error.message });
     }
-
-    item.executionProject = {
-      owner: String(req.body?.owner || '').trim(),
-      milestones: normalizeMilestones(req.body?.milestones),
-      budget: String(req.body?.budget || '').trim(),
-      status: String(req.body?.status || 'not_started').trim(),
-      updates: normalizeUpdates(req.body?.updates),
-    };
-
-    await item.save();
-    return res.json({ ok: true, item });
-  } catch (error) {
-    return res.status(400).json({ ok: false, message: error.message });
-  }
-});
+  },
+);
 
 module.exports = router;

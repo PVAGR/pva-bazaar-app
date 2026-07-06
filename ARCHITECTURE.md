@@ -6,12 +6,12 @@ If a doc disagrees with that map, the map wins.
 
 ## Live continuity map
 
-| Surface | Canonical URL |
-|---|---|
-| Frontend | https://pvabazaar.org |
-| Backend | https://api.pvabazaar.org |
-| API base | https://api.pvabazaar.org/api |
-| Status page | https://pvabazaar.org/status.html |
+| Surface          | Canonical URL                         |
+| ---------------- | ------------------------------------- |
+| Frontend         | https://pvabazaar.org                 |
+| Backend          | https://api.pvabazaar.org             |
+| API base         | https://api.pvabazaar.org/api         |
+| Status page      | https://pvabazaar.org/status.html     |
 | Fallback backend | https://pva-bazaar-app-1.onrender.com |
 
 ## System overview

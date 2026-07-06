@@ -24,7 +24,11 @@
 
 .entry-detail-page .entry-page__body {
   border: 1px solid color-mix(in srgb, var(--site-border) 78%, transparent);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--site-panel-soft) 84%, transparent) 0%, var(--site-panel) 100%);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--site-panel-soft) 84%, transparent) 0%,
+    var(--site-panel) 100%
+  );
   border-radius: 14px;
   padding: clamp(0.9rem, 1.4vw, 1.2rem);
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.14);

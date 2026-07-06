@@ -58,7 +58,11 @@ router.post('/', requireAuth, async (req, res) => {
  */
 router.get('/:eventId', async (req, res) => {
   try {
-    const event = await Event.findByIdAndUpdate(req.params.eventId, { $inc: { views: 1 } }, { new: true });
+    const event = await Event.findByIdAndUpdate(
+      req.params.eventId,
+      { $inc: { views: 1 } },
+      { new: true },
+    );
     if (!event) return res.status(404).json({ error: 'Event not found' });
     res.json(event);
   } catch (error) {
@@ -74,7 +78,9 @@ router.post('/:eventId/register', requireAuth, async (req, res) => {
     const event = await Event.findById(req.params.eventId);
     if (!event) return res.status(404).json({ error: 'Event not found' });
 
-    const already = event.registeredUsers.find((u) => u.userId.toString() === req.user._id.toString());
+    const already = event.registeredUsers.find(
+      (u) => u.userId.toString() === req.user._id.toString(),
+    );
     if (already) {
       return res.status(400).json({ error: 'Already registered' });
     }

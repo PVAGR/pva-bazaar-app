@@ -12,7 +12,8 @@ const ARCHETYPES = {
   'adaptive-technician-001': {
     name: 'The Adaptive Technician',
     shortDescription: 'Hands-on problem-solver who builds and refines systems.',
-    mediumDescription: 'You thrive when given autonomy to diagnose problems, design solutions, and watch them work reliably. You see your career as a series of mastery checkpoints—each role a chance to exceed the last. You\'re motivated less by status and more by knowing you solved something nobody else could.',
+    mediumDescription:
+      "You thrive when given autonomy to diagnose problems, design solutions, and watch them work reliably. You see your career as a series of mastery checkpoints—each role a chance to exceed the last. You're motivated less by status and more by knowing you solved something nobody else could.",
     longDescription: `You are primarily a builder and investigator—someone equally comfortable diagnosing what's broken and fixing it. Your investigative mind wants to understand the underlying systems; your realistic hands want to build and maintain them.
 
 You thrive in roles where:
@@ -47,7 +48,8 @@ Your challenge: Your logical mind assumes others think like you do. They see pro
     careerStages: {
       explorer: {
         roles: ['Apprentice Technician', 'Junior Developer', 'Technical Support Specialist'],
-        guidance: 'Build foundational technical skills. Work on diverse projects to discover what resonates. Your job now is breadth—exposure to different domains. Volunteer for projects where you might fail and learn.',
+        guidance:
+          'Build foundational technical skills. Work on diverse projects to discover what resonates. Your job now is breadth—exposure to different domains. Volunteer for projects where you might fail and learn.',
         path: 'Apprentice → Journeyman → Specialist',
       },
       builder: {
@@ -57,12 +59,14 @@ Your challenge: Your logical mind assumes others think like you do. They see pro
           'Backend/Core Systems Architect',
           'Embedded Systems Engineer',
         ],
-        guidance: 'Pick a domain and go deep. Now you\'re optimizing for mastery, not breadth. Become the person others come to when things are broken. Leadership will call if you want it—your choice.',
+        guidance:
+          "Pick a domain and go deep. Now you're optimizing for mastery, not breadth. Become the person others come to when things are broken. Leadership will call if you want it—your choice.",
         path: 'Team Contributor → Senior Engineer → Technical Lead',
       },
       specialist: {
         roles: ['Principal Systems Architect', 'Staff Engineer', 'Technical Director'],
-        guidance: 'You\'ve achieved mastery. The question now: do you mentor others into mastery, or push deeper into the technical frontier? Either is valid.',
+        guidance:
+          "You've achieved mastery. The question now: do you mentor others into mastery, or push deeper into the technical frontier? Either is valid.",
         path: 'Tech Lead → Principal Architect or Staff Engineer',
       },
       leader: {
@@ -72,12 +76,19 @@ Your challenge: Your logical mind assumes others think like you do. They see pro
           'Research Lead',
           'Technical Fellow',
         ],
-        guidance: 'If you lead, ensure it\'s technically influential, not politically. Avoid roles that become 100% meetings. Your superpower is technical depth—lead in a way that preserves it.',
+        guidance:
+          "If you lead, ensure it's technically influential, not politically. Avoid roles that become 100% meetings. Your superpower is technical depth—lead in a way that preserves it.",
         path: 'Could evolve to CTO or stay in technical track',
       },
       sage: {
-        roles: ['Research Advisor', 'Technical Mentor', 'Independent Consultant', 'Author/Educator'],
-        guidance: 'Pass on what you\'ve built. Write about your systems, mentor the next generation, consult on hard problems. Your 40 years of technical knowledge is irreplaceable.',
+        roles: [
+          'Research Advisor',
+          'Technical Mentor',
+          'Independent Consultant',
+          'Author/Educator',
+        ],
+        guidance:
+          "Pass on what you've built. Write about your systems, mentor the next generation, consult on hard problems. Your 40 years of technical knowledge is irreplaceable.",
         path: 'Emeritus adviser or independent expert',
       },
     },
@@ -93,29 +104,36 @@ Your challenge: Your logical mind assumes others think like you do. They see pro
         title: 'Infrastructure Engineer/Lead',
         tier: 'perfect-match',
         why: 'Infrastructure is tangible, complex, and affects thousands. Your systematic mind loves this domain.',
-        progression: ['Senior Infrastructure Engineer', 'Infrastructure Lead', 'Director of Infrastructure'],
+        progression: [
+          'Senior Infrastructure Engineer',
+          'Infrastructure Lead',
+          'Director of Infrastructure',
+        ],
         watchOut: 'On-call culture can burn you out. Set clear boundaries.',
       },
       {
         title: 'Embedded Systems Engineer',
         tier: 'perfect-match',
-        why: 'Hardware + software. The problems you solve are genuinely hard. You\'ll respect yourself for it.',
+        why: "Hardware + software. The problems you solve are genuinely hard. You'll respect yourself for it.",
         progression: ['Senior Embedded Engineer', 'Technical Lead', 'Staff Engineer'],
-        watchOut: 'Hardware has physical constraints you can\'t code around. Embrace the creative limitation.',
+        watchOut:
+          "Hardware has physical constraints you can't code around. Embrace the creative limitation.",
       },
       {
         title: 'Database/Systems Performance Specialist',
         tier: 'excellent-match',
         why: 'Performance problems require both investigative thinking and hands-on debugging. Your sweet spot.',
         progression: ['Senior Performance Engineer', 'Database Architect', 'Technical Fellow'],
-        watchOut: 'Can become obsessed with micro-optimizations. Remember: premature optimization is evil.',
+        watchOut:
+          'Can become obsessed with micro-optimizations. Remember: premature optimization is evil.',
       },
       {
         title: 'Solutions Architect',
         tier: 'good-match',
         why: 'You understand technical depth and system-wide implications. You can bridge technical complexity.',
         progression: ['Senior Solutions Architect', 'Principal Architect', 'VP Solutions'],
-        watchOut: 'Requires more people communication than you might enjoy. Choose firms that value technical accuracy.',
+        watchOut:
+          'Requires more people communication than you might enjoy. Choose firms that value technical accuracy.',
       },
     ],
     avoidRoles: [
@@ -127,15 +145,21 @@ Your challenge: Your logical mind assumes others think like you do. They see pro
     growthEdges: [
       {
         challenge: 'Communication Gap',
-        description: 'Your logical explanations make sense to you but confuse others. Learn to explain through metaphor, analogy, and narrative.',
-        exercise: 'Pick one person per quarter. Spend 15 min explaining something technical. Notice what confuses them. That gap is where you grow.',
-        payoff: 'As you develop communication, your influence explodes. You move from "technical expert in the corner" to "technical leader everyone listens to".',
+        description:
+          'Your logical explanations make sense to you but confuse others. Learn to explain through metaphor, analogy, and narrative.',
+        exercise:
+          'Pick one person per quarter. Spend 15 min explaining something technical. Notice what confuses them. That gap is where you grow.',
+        payoff:
+          'As you develop communication, your influence explodes. You move from "technical expert in the corner" to "technical leader everyone listens to".',
       },
       {
         challenge: 'People Complexity',
-        description: 'Your systems are logical, but people are gloriously chaotic. Acknowledging this makes you more effective.',
-        exercise: 'For the next 3 months, notice one human factor in each problem you solve. What did someone need emotionally that logic couldn\'t address?',
-        payoff: 'You build systems people actually want to use, not just systems that work perfectly in isolation.',
+        description:
+          'Your systems are logical, but people are gloriously chaotic. Acknowledging this makes you more effective.',
+        exercise:
+          "For the next 3 months, notice one human factor in each problem you solve. What did someone need emotionally that logic couldn't address?",
+        payoff:
+          'You build systems people actually want to use, not just systems that work perfectly in isolation.',
       },
     ],
     strengthTriadExpectation: { knowledge: [8, 10], character: [6, 8], connection: [3, 6] },
@@ -163,7 +187,8 @@ Your challenge: Your logical mind assumes others think like you do. They see pro
   'visionary-designer-001': {
     name: 'The Visionary Designer',
     shortDescription: 'Creative technologist who builds beautiful, intelligent systems.',
-    mediumDescription: 'You bridge two worlds: the investigative mind that wants to understand how things work, and the artistic soul that insists they be beautiful. You create products, systems, and experiences that are both elegant and effective. Your design comes from logic, not just intuition.',
+    mediumDescription:
+      'You bridge two worlds: the investigative mind that wants to understand how things work, and the artistic soul that insists they be beautiful. You create products, systems, and experiences that are both elegant and effective. Your design comes from logic, not just intuition.',
     longDescription: `You are the rare person equally fluent in technical deep-dives and aesthetic vision. You don't separate "how it works" from "how it feels"—they're the same problem.
 
 Your best moments:
@@ -194,22 +219,25 @@ Your challenge: You can spend weeks perfecting details that 99% of users will ne
       'Can prioritize aesthetics when functionality is more important',
       'Perfectionism paralyzes shipping',
       'May dismiss practical constraints as "unimaginative"',
-      'Struggles with teams who don\'t value design process',
+      "Struggles with teams who don't value design process",
     ],
     careerStages: {
       explorer: {
         roles: ['UX/UI Designer', 'Junior Product Designer', 'Creative Developer'],
-        guidance: 'Explore different design domains. Build a portfolio. Volunteer for projects where you can see your design used by real people. Feedback is your primary teacher.',
+        guidance:
+          'Explore different design domains. Build a portfolio. Volunteer for projects where you can see your design used by real people. Feedback is your primary teacher.',
         path: 'Designer → Senior Designer',
       },
       builder: {
         roles: ['Product Designer', 'Design Lead', 'Creative Technologist', 'Design Architect'],
-        guidance: 'Lead design for a product or platform. Build systems that scale your aesthetic vision. Begin mentoring junior designers.',
+        guidance:
+          'Lead design for a product or platform. Build systems that scale your aesthetic vision. Begin mentoring junior designers.',
         path: 'Product Designer → Design Lead → Principal Designer',
       },
       specialist: {
         roles: ['Principal Designer', 'Chief Design Officer', 'Design Director'],
-        guidance: 'Shape the aesthetic direction of an entire organization. Your taste becomes the standard.',
+        guidance:
+          'Shape the aesthetic direction of an entire organization. Your taste becomes the standard.',
         path: 'Design Director → CDO or independent design firm',
       },
     },
@@ -226,7 +254,8 @@ Your challenge: You can spend weeks perfecting details that 99% of users will ne
         tier: 'perfect-match',
         why: 'Your investigative mind can systematize design. Your artistic sense keeps it beautiful.',
         progression: ['Senior Design Systems', 'Director of Design Systems', 'CDO'],
-        watchOut: 'Can become too abstract. Remember: the system serves the product, not vice versa.',
+        watchOut:
+          'Can become too abstract. Remember: the system serves the product, not vice versa.',
       },
     ],
     lifeValuesAlignment: ['mastery', 'recognition', 'beauty'],
@@ -239,7 +268,8 @@ Your challenge: You can spend weeks perfecting details that 99% of users will ne
   'inspiring-leader-001': {
     name: 'The Inspiring Leader',
     shortDescription: 'Charismatic guide who mobilizes people toward shared vision.',
-    mediumDescription: 'You naturally move people. Not through manipulation, but through seeing possibilities they haven\'t seen and inviting them into that vision. People want to follow you because you make them better versions of themselves.',
+    mediumDescription:
+      "You naturally move people. Not through manipulation, but through seeing possibilities they haven't seen and inviting them into that vision. People want to follow you because you make them better versions of themselves.",
     longDescription: `You are a catalyst—someone who sees potential in people and in situations, and somehow makes others see it too. You don't lead through authority; you lead through inspiration.
 
 Your element:
@@ -259,7 +289,7 @@ Your challenge: You can be so focused on the group's momentum that you miss indi
     },
     strengths: [
       'Naturally charismatic and approachable',
-      'Sees people\'s unique talents and unlocks them',
+      "Sees people's unique talents and unlocks them",
       'Creates high-trust teams',
       'Communicates vision in inspiring ways',
       'Mobilizes people toward shared goals',
@@ -273,7 +303,8 @@ Your challenge: You can be so focused on the group's momentum that you miss indi
     careerStages: {
       explorer: {
         roles: ['Team Lead', 'Community Organizer', 'Youth Mentor', 'Project Coordinator'],
-        guidance: 'Lead small groups. Build your leadership philosophy. Discover what kind of people and causes activate you. Learn through direct feedback.',
+        guidance:
+          'Lead small groups. Build your leadership philosophy. Discover what kind of people and causes activate you. Learn through direct feedback.',
         path: 'Coordinator → Lead',
       },
       builder: {
@@ -283,7 +314,8 @@ Your challenge: You can be so focused on the group's momentum that you miss indi
           'Team Manager',
           'Training Director',
         ],
-        guidance: 'Lead larger groups. Develop leaders beneath you. Begin shaping organizational culture intentionally.',
+        guidance:
+          'Lead larger groups. Develop leaders beneath you. Begin shaping organizational culture intentionally.',
         path: 'Manager → Director',
       },
       specialist: {
@@ -296,9 +328,9 @@ Your challenge: You can be so focused on the group's momentum that you miss indi
       {
         title: 'Training Director / Head of People Development',
         tier: 'perfect-match',
-        why: 'You see people\'s potential and know how to unlock it. Build systems that scale your gift.',
+        why: "You see people's potential and know how to unlock it. Build systems that scale your gift.",
         progression: ['VP People Development', 'CHRO', 'Chief Learning Officer'],
-        watchOut: 'Don\'t let admin overhead drown out your core gift. Delegate the paperwork.',
+        watchOut: "Don't let admin overhead drown out your core gift. Delegate the paperwork.",
       },
       {
         title: 'Community/Program Director',
@@ -318,7 +350,8 @@ Your challenge: You can be so focused on the group's momentum that you miss indi
   'systems-orchestrator-001': {
     name: 'The Systems Orchestrator',
     shortDescription: 'Strategic executor who builds reliable, scalable operations.',
-    mediumDescription: 'You are someone who sees chaos and instinctively creates order. Not through rigidity, but through elegant systems that scale. You thrive making big operations run smoothly. Your gift is seeing bottlenecks others miss and designing processes that fix them.',
+    mediumDescription:
+      'You are someone who sees chaos and instinctively creates order. Not through rigidity, but through elegant systems that scale. You thrive making big operations run smoothly. Your gift is seeing bottlenecks others miss and designing processes that fix them.',
     longDescription: `You combine the organizer's love of systems with the enterprise player's drive to achieve ambitious goals. You don't just maintain order—you architect order at scale.
 
 Your sweet spot:
@@ -357,22 +390,20 @@ Your challenge: You can become so focused on the system that you forget why the 
           'Logistics Assistant',
           'Administrative Manager',
         ],
-        guidance: 'Learn how organizations actually work. Build foundational operations skills. Notice inefficiencies everywhere.',
+        guidance:
+          'Learn how organizations actually work. Build foundational operations skills. Notice inefficiencies everywhere.',
         path: 'Coordinator → Manager',
       },
       builder: {
-        roles: [
-          'Operations Manager',
-          'Supply Chain Manager',
-          'Project Manager',
-          'Program Manager',
-        ],
-        guidance: 'Own a function. Build systems that scale. Prove you can manage complexity without losing quality.',
+        roles: ['Operations Manager', 'Supply Chain Manager', 'Project Manager', 'Program Manager'],
+        guidance:
+          'Own a function. Build systems that scale. Prove you can manage complexity without losing quality.',
         path: 'Manager → Director',
       },
       specialist: {
         roles: ['VP Operations', 'COO', 'Chief Administrative Officer'],
-        guidance: 'Run operations for the whole organization. Your systems become invisible because they work so well.',
+        guidance:
+          'Run operations for the whole organization. Your systems become invisible because they work so well.',
         path: 'Director → VP → COO',
       },
     },
@@ -382,14 +413,15 @@ Your challenge: You can become so focused on the system that you forget why the 
         tier: 'perfect-match',
         why: 'You see the entire machine. You can fix it so it hums.',
         progression: ['SVP Operations', 'COO', 'President'],
-        watchOut: 'Remember why the operation exists. Don\'t optimize away meaning.',
+        watchOut: "Remember why the operation exists. Don't optimize away meaning.",
       },
       {
         title: 'Supply Chain / Logistics Director',
         tier: 'perfect-match',
         why: 'Supply chains are complexity incarnate. Your mind loves this.',
         progression: ['VP Supply Chain', 'VP Operations', 'Chief Supply Chain Officer'],
-        watchOut: 'Human factors (labor, relationships with suppliers) matter as much as efficiency.',
+        watchOut:
+          'Human factors (labor, relationships with suppliers) matter as much as efficiency.',
       },
     ],
     lifeValuesAlignment: ['security', 'achievement', 'mastery'],
@@ -402,7 +434,8 @@ Your challenge: You can become so focused on the system that you forget why the 
   'master-craftsperson-001': {
     name: 'The Master Craftsperson',
     shortDescription: 'Skilled maker who creates lasting, beautiful, useful objects.',
-    mediumDescription: 'You bring things into being through your hands and mind. Whether it\'s furniture, food, craft, or art, you combine technical skill with genuine care that your work serves people well. You see yourself in what you create.',
+    mediumDescription:
+      "You bring things into being through your hands and mind. Whether it's furniture, food, craft, or art, you combine technical skill with genuine care that your work serves people well. You see yourself in what you create.",
     longDescription: `You are someone who makes things. Real, tangible things that last. And you care deeply that your creations serve people well and bring them joy.
 
 Your element:
@@ -436,17 +469,14 @@ Your challenge: The world wants to scale you. Resist the pressure to industriali
     careerStages: {
       explorer: {
         roles: ['Apprentice', 'Assistant Craftsperson', 'Craft Assistant'],
-        guidance: 'Learn the fundamentals deeply. Work under masters. Build your taste and standards.',
+        guidance:
+          'Learn the fundamentals deeply. Work under masters. Build your taste and standards.',
         path: 'Apprentice → Journeyman',
       },
       builder: {
-        roles: [
-          'Independent Craftsperson',
-          'Lead Artisan',
-          'Studio Owner',
-          'Master Maker',
-        ],
-        guidance: 'Establish your voice and reputation. Build a clientele that values your work. Possibly take apprentices.',
+        roles: ['Independent Craftsperson', 'Lead Artisan', 'Studio Owner', 'Master Maker'],
+        guidance:
+          'Establish your voice and reputation. Build a clientele that values your work. Possibly take apprentices.',
         path: 'Journeyman → Master → Studio Owner',
       },
       specialist: {
@@ -456,7 +486,8 @@ Your challenge: The world wants to scale you. Resist the pressure to industriali
           'Craft Preservationist',
           'Mentor/Master Craftsperson',
         ],
-        guidance: 'Your work is treasured. Consider teaching or documenting your methods for future generations.',
+        guidance:
+          'Your work is treasured. Consider teaching or documenting your methods for future generations.',
         path: 'Master → Mentor → Legacy role',
       },
     },
@@ -465,23 +496,15 @@ Your challenge: The world wants to scale you. Resist the pressure to industriali
         title: 'Independent Artisan / Studio Owner',
         tier: 'perfect-match',
         why: 'You own your craft. Direct customer relationships. Your values in every piece.',
-        progression: [
-          'Recognized Master',
-          'Teaching Master',
-          'Possibly small team of apprentices',
-        ],
+        progression: ['Recognized Master', 'Teaching Master', 'Possibly small team of apprentices'],
         watchOut: 'Business side can undermine your craft. Find partners for admin/sales.',
       },
       {
         title: 'Craft Educator / Master Teacher',
         tier: 'perfect-match',
         why: 'Pass on your knowledge and standards. Help others find mastery.',
-        progression: [
-          'Senior Instructor',
-          'Curriculum Designer',
-          'School Director',
-        ],
-        watchOut: 'Teaching requires patience with learners who don\'t yet have your standards.',
+        progression: ['Senior Instructor', 'Curriculum Designer', 'School Director'],
+        watchOut: "Teaching requires patience with learners who don't yet have your standards.",
       },
     ],
     lifeValuesAlignment: ['mastery', 'autonomy', 'beauty'],
@@ -494,7 +517,8 @@ Your challenge: The world wants to scale you. Resist the pressure to industriali
   'field-commander-001': {
     name: 'The Field Commander',
     shortDescription: 'Action-oriented leader who mobilizes teams to solve real-world problems.',
-    mediumDescription: 'You are at your best in the field, not in boardrooms. You see a problem, mobilize a team, and fix it. People trust you because you\'re not afraid to get your hands dirty and you deliver results.',
+    mediumDescription:
+      "You are at your best in the field, not in boardrooms. You see a problem, mobilize a team, and fix it. People trust you because you're not afraid to get your hands dirty and you deliver results.",
     longDescription: `You combine the practical, hands-on orientation of a Realistic person with the drive and leadership of an Enterprising person. You don\'t just solve problems—you lead teams to solve them fast.
 
 Your element:
@@ -528,7 +552,8 @@ Your challenge: You're often underestimated by people who mistake your directnes
     careerStages: {
       explorer: {
         roles: ['Field Technician', 'Emergency Responder', 'Site Lead', 'Crew Lead'],
-        guidance: 'Lead small teams in the field. Build credibility through competence and results.',
+        guidance:
+          'Lead small teams in the field. Build credibility through competence and results.',
         path: 'Team Lead → Supervisor',
       },
       builder: {
@@ -538,15 +563,12 @@ Your challenge: You're often underestimated by people who mistake your directnes
           'Project Commander',
           'Emergency Services Director',
         ],
-        guidance: 'Scale up your teams. Lead across multiple sites. Prove you can manage growth without losing the edge.',
+        guidance:
+          'Scale up your teams. Lead across multiple sites. Prove you can manage growth without losing the edge.',
         path: 'Supervisor → Manager → Director',
       },
       specialist: {
-        roles: [
-          'Regional Commander',
-          'VP Operations Field',
-          'Chief Operations Officer',
-        ],
+        roles: ['Regional Commander', 'VP Operations Field', 'Chief Operations Officer'],
         guidance: 'Lead operations at scale. Your field expertise now informs strategy.',
         path: 'Director → VP → COO',
       },
@@ -555,7 +577,7 @@ Your challenge: You're often underestimated by people who mistake your directnes
       {
         title: 'Emergency Services / Crisis Response Director',
         tier: 'perfect-match',
-        why: 'Your calm under pressure and decision-making are exactly what\'s needed.',
+        why: "Your calm under pressure and decision-making are exactly what's needed.",
         progression: [
           'Regional Commander',
           'State/National Director',
@@ -567,12 +589,8 @@ Your challenge: You're often underestimated by people who mistake your directnes
         title: 'Field Operations Director',
         tier: 'perfect-match',
         why: 'You manage field teams and deliver results. Your people trust you.',
-        progression: [
-          'Senior Director',
-          'VP Field Operations',
-          'COO or similar executive',
-        ],
-        watchOut: 'As you move up, you\'ll spend less time in the field. Make peace with that.',
+        progression: ['Senior Director', 'VP Field Operations', 'COO or similar executive'],
+        watchOut: "As you move up, you'll spend less time in the field. Make peace with that.",
       },
     ],
     lifeValuesAlignment: ['achievement', 'autonomy', 'impact'],
@@ -585,7 +603,8 @@ Your challenge: You're often underestimated by people who mistake your directnes
   'compassionate-healer-001': {
     name: 'The Compassionate Healer',
     shortDescription: 'Empathetic guide who helps people understand and heal themselves.',
-    mediumDescription: 'You combine deep understanding with genuine care. You listen carefully, ask probing questions, and help people see what\'s possible for themselves. People trust you because you truly understand them.',
+    mediumDescription:
+      "You combine deep understanding with genuine care. You listen carefully, ask probing questions, and help people see what's possible for themselves. People trust you because you truly understand them.",
     longDescription: `You are a rare combination: analytical about human complexity, yet deeply empathetic. You want to understand *why* people struggle and genuinely care about their healing.
 
 Your sweet spot:
@@ -611,7 +630,7 @@ Your challenge: You can become depleted from absorbing others\' pain. Boundaries
       'Integrates knowledge with compassion',
     ],
     blindSpots: [
-      'Can absorb clients\' pain and burn out',
+      "Can absorb clients' pain and burn out",
       'May struggle with boundaries',
       'Can over-identify with people you help',
       'May avoid necessary confrontation due to empathy',
@@ -624,7 +643,8 @@ Your challenge: You can become depleted from absorbing others\' pain. Boundaries
           'Mental Health Technician',
           'Care Assistant',
         ],
-        guidance: 'Work directly with people in need. Discover what kind of healing work calls to you. Build self-awareness about your boundaries.',
+        guidance:
+          'Work directly with people in need. Discover what kind of healing work calls to you. Build self-awareness about your boundaries.',
         path: 'Support role → Specialist',
       },
       builder: {
@@ -635,17 +655,14 @@ Your challenge: You can become depleted from absorbing others\' pain. Boundaries
           'Life Coach',
           'Training Therapist',
         ],
-        guidance: 'Develop deeper expertise in a specialty. Build your practice or caseload. Consider training others.',
+        guidance:
+          'Develop deeper expertise in a specialty. Build your practice or caseload. Consider training others.',
         path: 'Clinician → Senior Clinician → Supervisor',
       },
       specialist: {
-        roles: [
-          'Clinical Director',
-          'Training Supervisor',
-          'Chief Therapist',
-          'Practice Owner',
-        ],
-        guidance: 'Mentor others in your field. Shape training and standards. Possibly research or writing.',
+        roles: ['Clinical Director', 'Training Supervisor', 'Chief Therapist', 'Practice Owner'],
+        guidance:
+          'Mentor others in your field. Shape training and standards. Possibly research or writing.',
         path: 'Supervisor → Director or Independent Practice',
       },
     },
@@ -653,12 +670,8 @@ Your challenge: You can become depleted from absorbing others\' pain. Boundaries
       {
         title: 'Therapist / Counselor (individual specialty)',
         tier: 'perfect-match',
-        why: 'One-on-one depth work where you see people\'s growth. This is your element.',
-        progression: [
-          'Senior Therapist',
-          'Clinical Supervisor',
-          'Trainer of therapists',
-        ],
+        why: "One-on-one depth work where you see people's growth. This is your element.",
+        progression: ['Senior Therapist', 'Clinical Supervisor', 'Trainer of therapists'],
         watchOut: 'Vicarious trauma is real. Invest in your own therapy and support.',
       },
       {
@@ -679,7 +692,8 @@ Your challenge: You can become depleted from absorbing others\' pain. Boundaries
   'community-weaver-001': {
     name: 'The Community Weaver',
     shortDescription: 'Creative connector who builds belonging and shared meaning.',
-    mediumDescription: 'You see the isolated threads in a community and weave them into belonging. You create spaces—virtual or physical—where people connect authentically. Your gift is making people feel valued and seen.',
+    mediumDescription:
+      'You see the isolated threads in a community and weave them into belonging. You create spaces—virtual or physical—where people connect authentically. Your gift is making people feel valued and seen.',
     longDescription: `You combine the social gift of connection with artistic sensibility to create spaces of beauty and belonging. You don\'t just organize activities—you create meaning.
 
 Your element:
@@ -718,7 +732,8 @@ Your challenge: Community work can be emotionally intensive. People\'s needs oft
           'Volunteer Organizer',
           'Program Assistant',
         ],
-        guidance: 'Help create community experiences. Notice what makes gathering spaces work. Learn what resonates.',
+        guidance:
+          'Help create community experiences. Notice what makes gathering spaces work. Learn what resonates.',
         path: 'Coordinator → Manager',
       },
       builder: {
@@ -732,12 +747,8 @@ Your challenge: Community work can be emotionally intensive. People\'s needs oft
         path: 'Director → Senior Director',
       },
       specialist: {
-        roles: [
-          'Executive Director',
-          'Cultural Affairs Director',
-          'VP Community Engagement',
-        ],
-        guidance: 'Your vision shapes the city or organization\'s soul.',
+        roles: ['Executive Director', 'Cultural Affairs Director', 'VP Community Engagement'],
+        guidance: "Your vision shapes the city or organization's soul.",
         path: 'Senior Director → Executive role',
       },
     },
@@ -746,22 +757,14 @@ Your challenge: Community work can be emotionally intensive. People\'s needs oft
         title: 'Community Program Director',
         tier: 'perfect-match',
         why: 'You create belonging. Your programs are woven with intention.',
-        progression: [
-          'Senior Program Director',
-          'VP Community',
-          'Executive Director',
-        ],
-        watchOut: 'Community work is emotionally demanding. Don\'t skip self-care.',
+        progression: ['Senior Program Director', 'VP Community', 'Executive Director'],
+        watchOut: "Community work is emotionally demanding. Don't skip self-care.",
       },
       {
         title: 'Arts/Culture Director',
         tier: 'perfect-match',
         why: 'You make beauty and meaning accessible to communities.',
-        progression: [
-          'Senior Director',
-          'Chief Cultural Officer',
-          'City Arts Director',
-        ],
+        progression: ['Senior Director', 'Chief Cultural Officer', 'City Arts Director'],
         watchOut: 'Funding is always fragile. Build resilience.',
       },
     ],

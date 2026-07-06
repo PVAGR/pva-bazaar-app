@@ -3,6 +3,7 @@
 ## Pre-Deployment (LOCAL TESTING)
 
 ### ✅ Code Quality
+
 - [x] All tests passing: `npm test`
 - [x] Type checking: `npm run typecheck`
 - [x] Linting: `npm run lint:check`
@@ -10,6 +11,7 @@
 - [x] Brand compliance: `npm run qa:brand:check`
 
 ### ✅ API Verification (Local)
+
 ```bash
 # Start backend
 npm run dev:backend
@@ -19,6 +21,7 @@ npm run deploy:verify
 ```
 
 Expected output:
+
 - ✅ API Health
 - ✅ Express Ping
 - ✅ Version Info
@@ -29,6 +32,7 @@ Expected output:
 - ✅ Swagger UI
 
 ### ✅ Database Setup
+
 ```bash
 # Seed with sample data
 npm run seed:db
@@ -38,6 +42,7 @@ npm run db:check
 ```
 
 Expected output:
+
 ```
 ✅ Connected to MongoDB
 ✅ Created 6 users
@@ -47,6 +52,7 @@ Expected output:
 ```
 
 ### ✅ Frontend Components
+
 ```bash
 # Build frontend
 npm run build:frontend
@@ -56,12 +62,14 @@ npm run typecheck:frontend
 ```
 
 ### ✅ Documentation
+
 - [x] OpenAPI spec: `/api/openapi.json`
 - [x] Swagger UI: `/api/docs`
 - [x] Markdown guide: `backend/docs/API-DOCS.md`
 - [x] Health endpoints: `/api/health-check`
 
 ### ✅ Git Status
+
 ```bash
 # Verify all changes committed
 git status
@@ -76,11 +84,13 @@ git log --oneline -5
 ## Deployment to Vercel
 
 ### Step 1: Fix Vercel Account
+
 - [ ] Check billing status: https://vercel.com/settings/billing
 - [ ] Update payment method if needed
 - [ ] Re-enable project
 
 ### Step 2: Set Environment Variables on Vercel
+
 ```
 MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/pvabazaar
 JWT_SECRET=your-secret-key
@@ -89,6 +99,7 @@ NODE_ENV=production
 ```
 
 ### Step 3: Deploy
+
 ```bash
 # Deploy is automatic on push to main
 git push origin main
@@ -97,6 +108,7 @@ git push origin main
 ```
 
 ### Step 4: Post-Deployment Verification
+
 ```bash
 # Set API_URL to production
 export API_URL=https://api.pvabazaar.org
@@ -113,6 +125,7 @@ npm run monitor:prod
 ## Post-Deployment
 
 ### ✅ Verify Production
+
 ```bash
 # Health check
 curl https://api.pvabazaar.org/api/health
@@ -125,18 +138,21 @@ https://api.pvabazaar.org/api/docs
 ```
 
 ### ✅ Monitor Production
+
 ```bash
 # Start continuous monitoring
 npm run monitor:prod
 ```
 
 This will:
+
 - Check all endpoints every 30 seconds
 - Log results to `logs/monitor.log`
 - Save status to `logs/status.json`
 - Alert on consecutive failures
 
 ### ✅ Database Verification
+
 ```bash
 # Verify production database
 npm run db:check
@@ -147,6 +163,7 @@ npm run db:check
 ## Rollback Plan
 
 ### If Production Fails
+
 ```bash
 # 1. Check logs
 https://vercel.com/dashboard/YOUR_PROJECT/deployments
@@ -167,17 +184,20 @@ npm run deploy:verify
 ## Performance Targets
 
 ### API Response Times
+
 - Health check: < 100ms
 - Endpoint list: < 200ms
 - OpenAPI spec: < 300ms
 - Docs UI: < 500ms
 
 ### Availability
+
 - Target: 99.5% uptime
 - Max consecutive failures before alert: 3
 - Monitor interval: 30 seconds
 
 ### Database
+
 - Connection time: < 500ms
 - Query timeout: 30 seconds
 - Connection pool: 10 connections
@@ -187,17 +207,20 @@ npm run deploy:verify
 ## Alert Conditions
 
 ### Critical (Immediate Action)
+
 - ❌ API health endpoint down
 - ❌ Database disconnected
 - ❌ 3+ consecutive failures
 - ❌ Response time > 5 seconds
 
 ### Warning (Monitor)
+
 - ⚠️ Response time > 1 second
 - ⚠️ Single endpoint down
 - ⚠️ Memory usage > 80%
 
 ### Info (Log Only)
+
 - ℹ️ Unusual traffic patterns
 - ℹ️ Slow queries detected
 - ℹ️ Rate limiting triggered
@@ -207,6 +230,7 @@ npm run deploy:verify
 ## Monitoring Dashboard
 
 ### View Status
+
 ```bash
 # Check current status
 cat logs/status.json
@@ -216,6 +240,7 @@ tail -f logs/monitor.log
 ```
 
 Expected output:
+
 ```json
 {
   "timestamp": "2026-04-14T12:30:00Z",
@@ -240,16 +265,19 @@ Expected output:
 ## Ongoing Maintenance
 
 ### Daily
+
 - [ ] Check monitoring logs
 - [ ] Verify health endpoints
 - [ ] Review error logs
 
 ### Weekly
+
 - [ ] Performance analysis
 - [ ] Database backups check
 - [ ] Security scan
 
 ### Monthly
+
 - [ ] Full testing suite
 - [ ] Capacity planning
 - [ ] Dependency updates

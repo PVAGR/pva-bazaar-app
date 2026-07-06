@@ -11,7 +11,11 @@ export default function Journals() {
     const load = async () => {
       setLoading(true);
       setError('');
-      const response = await fetchArchiveEntries({ q: 'journal reflection', limit: 10, sort: 'new' });
+      const response = await fetchArchiveEntries({
+        q: 'journal reflection',
+        limit: 10,
+        sort: 'new',
+      });
       if (cancelled) return;
       if (response.ok) {
         setItems(response.items || []);
@@ -32,7 +36,9 @@ export default function Journals() {
       <h2>Journals</h2>
       {loading && <p>Loading journal entries...</p>}
       {!loading && error && <p>{error}</p>}
-      {!loading && !error && items.length === 0 && <p>No journal entries were returned by the archive API.</p>}
+      {!loading && !error && items.length === 0 && (
+        <p>No journal entries were returned by the archive API.</p>
+      )}
       {!loading && items.length > 0 && (
         <div>
           {items.map((entry) => (

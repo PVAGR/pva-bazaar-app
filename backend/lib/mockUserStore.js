@@ -2,7 +2,8 @@ const bcrypt = require('bcryptjs');
 const fs = require('fs/promises');
 const path = require('path');
 
-const STORE_PATH = process.env.AUTH_STORE_PATH || path.resolve(__dirname, '../data/auth-store.json');
+const STORE_PATH =
+  process.env.AUTH_STORE_PATH || path.resolve(__dirname, '../data/auth-store.json');
 
 const seedUsers = [
   {
@@ -60,7 +61,8 @@ function hydrateUser(user) {
     _id: String(user._id || ''),
     id: String(user._id || ''),
   };
-  hydrated.comparePassword = async (candidate) => bcrypt.compare(String(candidate || ''), String(hydrated.password || ''));
+  hydrated.comparePassword = async (candidate) =>
+    bcrypt.compare(String(candidate || ''), String(hydrated.password || ''));
   return hydrated;
 }
 
@@ -105,9 +107,11 @@ async function persistStoreToDisk() {
 }
 
 function queuePersist() {
-  writeQueue = writeQueue.then(() => persistStoreToDisk()).catch((err) => {
-    console.warn('⚠️ auth store persist failed:', err?.message || err);
-  });
+  writeQueue = writeQueue
+    .then(() => persistStoreToDisk())
+    .catch((err) => {
+      console.warn('⚠️ auth store persist failed:', err?.message || err);
+    });
   return writeQueue;
 }
 
@@ -124,8 +128,8 @@ async function ensureStoreLoaded() {
 async function seedDefaultUsers() {
   if (store.seeded) return;
   for (const seed of seedUsers) {
-    const existing = store.users.find((user) =>
-      (seed.username && user.username === seed.username) || user.email === seed.email,
+    const existing = store.users.find(
+      (user) => (seed.username && user.username === seed.username) || user.email === seed.email,
     );
     if (existing) continue;
     const hashed = await hashPassword(seed.password);
@@ -156,16 +160,21 @@ async function findUser(query = {}) {
   const orClauses = Array.isArray(query.$or) ? query.$or : null;
   const candidates = orClauses && orClauses.length ? orClauses : [query];
 
-  const match = store.users.find((user) => candidates.some((candidate) => {
-    const entries = Object.entries(candidate || {});
-    if (!entries.length) return false;
-    return entries.every(([key, value]) => {
-      if (key === 'email') return String(user.email || '').toLowerCase() === String(value || '').toLowerCase();
-      if (key === 'username') return String(user.username || '').toLowerCase() === String(value || '').toLowerCase();
-      if (key === 'role') return String(user.role || '').toLowerCase() === String(value || '').toLowerCase();
-      return String(user[key] || '') === String(value || '');
-    });
-  }));
+  const match = store.users.find((user) =>
+    candidates.some((candidate) => {
+      const entries = Object.entries(candidate || {});
+      if (!entries.length) return false;
+      return entries.every(([key, value]) => {
+        if (key === 'email')
+          return String(user.email || '').toLowerCase() === String(value || '').toLowerCase();
+        if (key === 'username')
+          return String(user.username || '').toLowerCase() === String(value || '').toLowerCase();
+        if (key === 'role')
+          return String(user.role || '').toLowerCase() === String(value || '').toLowerCase();
+        return String(user[key] || '') === String(value || '');
+      });
+    }),
+  );
 
   return cloneUser(match);
 }
@@ -175,11 +184,14 @@ async function saveUser(input) {
   const now = new Date();
   const doc = typeof input === 'object' ? { ...input } : {};
   const username = String(doc.username || '').trim();
-  const email = String(doc.email || '').trim().toLowerCase();
+  const email = String(doc.email || '')
+    .trim()
+    .toLowerCase();
 
-  const existingIndex = store.users.findIndex((user) =>
-    (username && String(user.username || '').toLowerCase() === username.toLowerCase()) ||
-    (email && String(user.email || '').toLowerCase() === email),
+  const existingIndex = store.users.findIndex(
+    (user) =>
+      (username && String(user.username || '').toLowerCase() === username.toLowerCase()) ||
+      (email && String(user.email || '').toLowerCase() === email),
   );
 
   const password = String(doc.password || '');
@@ -200,7 +212,8 @@ async function saveUser(input) {
     updatedAt: now,
   };
 
-  record.comparePassword = async (candidate) => bcrypt.compare(String(candidate || ''), record.password);
+  record.comparePassword = async (candidate) =>
+    bcrypt.compare(String(candidate || ''), record.password);
 
   if (existingIndex >= 0) {
     store.users[existingIndex] = { ...store.users[existingIndex], ...record };

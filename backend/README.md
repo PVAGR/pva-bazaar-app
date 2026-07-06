@@ -52,17 +52,19 @@ Never commit `.env`. The root `pva-bazaar-app.env` is a stub only.
 
 - With in-memory Mongo: `PORT=5000 NODE_ENV=development USE_MEMORY_DB=true DEV_AUTO_SEED=true npm run dev`
 
-
 ## CORS / Allowed Origins
 
 This API is consumed by:
+
 - Frontend (Vite) in dev: `http://localhost:5173` (sometimes `http://localhost:3000`)
 - Frontend (production): `https://pvabazaar.org` and `https://www.pvabazaar.org`
 
 ### Configuration
+
 CORS is configured in `index.js` using the `cors` middleware with an allowlist.
 
 Allowed origins include:
+
 - `http://localhost:5173`
 - `http://localhost:3000`
 - `https://pvabazaar.org`
@@ -73,15 +75,18 @@ Example:
 ALLOWED_ORIGIN="https://pvabazaar.org,https://www.pvabazaar.org,https://pvagr.github.io"
 
 ### Notes
+
 - `ALLOWED_ORIGIN` supports comma-separated values (it is split + trimmed in code).
 - Preflight requests are supported via `app.options("*", cors(corsOptions))`.
 - CORS headers are added on all responses (including errors), so browser errors don’t appear as “Failed to fetch” without context.
 
 ### Troubleshooting
+
 If the frontend shows “Failed to fetch”:
-1) Confirm the frontend is calling the correct backend base URL (VITE_API_URL).
-2) Confirm the exact frontend origin is included in `ALLOWED_ORIGIN`.
-3) Redeploy backend after changing env vars.
+
+1. Confirm the frontend is calling the correct backend base URL (VITE_API_URL).
+2. Confirm the exact frontend origin is included in `ALLOWED_ORIGIN`.
+3. Redeploy backend after changing env vars.
 
 ## Sentry Observability
 
@@ -102,6 +107,7 @@ This backend now exposes OpenClaw bridge endpoints:
 - `GET /api/openclaw/recent-events?limit=30` – returns structured recent activity log (last N events)
 
 **Enhanced Health Endpoint:**
+
 - `GET /api/health` – now includes `openclaw` field with gateway status summary
 
 ### Required env for bridge
@@ -117,6 +123,7 @@ This backend now exposes OpenClaw bridge endpoints:
 ### Frontend Integration
 
 The admin panel includes:
+
 - **Connection status dropdown** with color-coded health badges and auto-refresh
 - **OpenClaw summary card** showing state, errors, alerts, and last event timestamp
 - **Test dispatch button** for on-demand connectivity verification
@@ -141,25 +148,25 @@ The items API supports one-submit multi-channel syndication for seller listings.
 ### Endpoints
 
 - `POST /api/items/register` (auth required)
-	- Accepts `syndication` object in request body:
-		- `syndication.facebook` (boolean)
-		- `syndication.etsy` (boolean)
-		- `syndication.ebay` (boolean)
-	- Dispatches selected channels in parallel when connectors are configured.
-	- Returns channel job results in `syndication.jobs` and aggregate counts in `syndication.summary`.
+  - Accepts `syndication` object in request body:
+    - `syndication.facebook` (boolean)
+    - `syndication.etsy` (boolean)
+    - `syndication.ebay` (boolean)
+  - Dispatches selected channels in parallel when connectors are configured.
+  - Returns channel job results in `syndication.jobs` and aggregate counts in `syndication.summary`.
 
 - `POST /api/items/:id/syndication/retry` (auth required, creator or admin)
-	- Retries channels passed in body:
-		- `{ "channels": ["facebook", "etsy", "ebay"] }`
-	- If omitted, retries previously requested channels.
-	- Updates persisted syndication status on the artifact.
+  - Retries channels passed in body:
+    - `{ "channels": ["facebook", "etsy", "ebay"] }`
+  - If omitted, retries previously requested channels.
+  - Updates persisted syndication status on the artifact.
 
 - `POST /api/items/syndication/retry-bulk` (admin)
-	- Retries listings currently containing `failed` or `manual_required` jobs.
-	- Optional body fields:
-		- `limit` (default 50, max 200)
-		- `channels` (optional override list)
-	- Returns aggregate queue results for operational dashboards.
+  - Retries listings currently containing `failed` or `manual_required` jobs.
+  - Optional body fields:
+    - `limit` (default 50, max 200)
+    - `channels` (optional override list)
+  - Returns aggregate queue results for operational dashboards.
 
 ### Connector env vars
 
@@ -173,6 +180,7 @@ Set these in the backend environment to enable automatic posting:
 - `EBAY_LISTING_WEBHOOK_TOKEN`
 
 If a connector URL is missing:
+
 - Facebook returns `manual_required`.
 - Etsy/eBay return `skipped`.
 
@@ -182,29 +190,29 @@ Each connector receives:
 
 ```json
 {
-	"channel": "etsy",
-	"item": {
-		"id": "<artifact-id>",
-		"slug": "<item-slug>",
-		"title": "<title>",
-		"description": "<description>",
-		"category": "<category>",
-		"price": 49.99,
-		"currency": "USD",
-		"imageUrls": [],
-		"materials": [],
-		"artisan": "<seller name>",
-		"tags": [],
-		"condition": "used",
-		"measurements": ""
-	},
-	"seller": {
-		"id": "<user-id>",
-		"name": "<seller name>",
-		"email": "<seller email>"
-	},
-	"source": "pvabazaar",
-	"createdAt": "<iso timestamp>"
+  "channel": "etsy",
+  "item": {
+    "id": "<artifact-id>",
+    "slug": "<item-slug>",
+    "title": "<title>",
+    "description": "<description>",
+    "category": "<category>",
+    "price": 49.99,
+    "currency": "USD",
+    "imageUrls": [],
+    "materials": [],
+    "artisan": "<seller name>",
+    "tags": [],
+    "condition": "used",
+    "measurements": ""
+  },
+  "seller": {
+    "id": "<user-id>",
+    "name": "<seller name>",
+    "email": "<seller email>"
+  },
+  "source": "pvabazaar",
+  "createdAt": "<iso timestamp>"
 }
 ```
 

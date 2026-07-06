@@ -7,7 +7,7 @@ const outreachLogSchema = new mongoose.Schema(
     response: { type: String, default: '' },
     status: { type: String, default: 'sent' }, // sent, replied, no_reply
   },
-  { _id: true }
+  { _id: true },
 );
 
 /**
@@ -36,7 +36,7 @@ const contactSchema = new mongoose.Schema(
     birthTime: { type: String, default: '' },
     birthPlace: { type: String, default: '' },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 contactSchema.index({ ownerId: 1, createdAt: -1 });

@@ -82,11 +82,35 @@ export default function BookReaderPage() {
           <aside className="book-reader__panel">
             <h2>Download and return</h2>
             <div className="book-reader__actions">
-              <Link className="book-reader__button" to="/books">Back to books</Link>
-              <Link className="book-reader__button" to="/books/published">Browse bookshelf</Link>
-              <Link className="book-reader__button" to="/books/publish">Publish a book</Link>
-              {viewLinks?.pdf ? <a className="book-reader__button book-reader__button--primary" href={viewLinks.pdf} target="_blank" rel="noreferrer">PDF</a> : null}
-              {viewLinks?.epub ? <a className="book-reader__button" href={viewLinks.epub} target="_blank" rel="noreferrer">EPUB</a> : null}
+              <Link className="book-reader__button" to="/books">
+                Back to books
+              </Link>
+              <Link className="book-reader__button" to="/books/published">
+                Browse bookshelf
+              </Link>
+              <Link className="book-reader__button" to="/books/publish">
+                Publish a book
+              </Link>
+              {viewLinks?.pdf ? (
+                <a
+                  className="book-reader__button book-reader__button--primary"
+                  href={viewLinks.pdf}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  PDF
+                </a>
+              ) : null}
+              {viewLinks?.epub ? (
+                <a
+                  className="book-reader__button"
+                  href={viewLinks.epub}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  EPUB
+                </a>
+              ) : null}
             </div>
           </aside>
         </header>
@@ -95,13 +119,22 @@ export default function BookReaderPage() {
           <article className="book-reader__card">
             <h2>Reader view</h2>
             {loading ? <p className="book-reader__muted">Loading book…</p> : null}
-            {error ? <div className="book-reader__error" role="alert">{error}</div> : null}
+            {error ? (
+              <div className="book-reader__error" role="alert">
+                {error}
+              </div>
+            ) : null}
             {!loading && !error && book?.webHtml ? (
-              <div className="book-reader__html" dangerouslySetInnerHTML={{ __html: book.webHtml }} />
+              <div
+                className="book-reader__html"
+                dangerouslySetInnerHTML={{ __html: book.webHtml }}
+              />
             ) : null}
             {!loading && !error && !book?.webHtml && book?.manuscriptMarkdown ? (
               <div className="book-reader__html">
-                <ReactMarkdown rehypePlugins={[rehypeSanitize]}>{book.manuscriptMarkdown}</ReactMarkdown>
+                <ReactMarkdown rehypePlugins={[rehypeSanitize]}>
+                  {book.manuscriptMarkdown}
+                </ReactMarkdown>
               </div>
             ) : null}
             {!loading && !error && !book?.webHtml && !book?.manuscriptMarkdown ? (
@@ -112,11 +145,31 @@ export default function BookReaderPage() {
           <aside className="book-reader__card">
             <h2>Book details</h2>
             <ul className="book-reader__meta">
-              {book?.genre ? <li><strong>Genre:</strong> {book.genre}</li> : null}
-              {book?.audience ? <li><strong>Audience:</strong> {book.audience}</li> : null}
-              {book?.language ? <li><strong>Language:</strong> {book.language}</li> : null}
-              {book?.wordCount ? <li><strong>Words:</strong> {book.wordCount}</li> : null}
-              {book?.status ? <li><strong>Status:</strong> {book.status}</li> : null}
+              {book?.genre ? (
+                <li>
+                  <strong>Genre:</strong> {book.genre}
+                </li>
+              ) : null}
+              {book?.audience ? (
+                <li>
+                  <strong>Audience:</strong> {book.audience}
+                </li>
+              ) : null}
+              {book?.language ? (
+                <li>
+                  <strong>Language:</strong> {book.language}
+                </li>
+              ) : null}
+              {book?.wordCount ? (
+                <li>
+                  <strong>Words:</strong> {book.wordCount}
+                </li>
+              ) : null}
+              {book?.status ? (
+                <li>
+                  <strong>Status:</strong> {book.status}
+                </li>
+              ) : null}
             </ul>
 
             {viewLinks?.frontCover ? (
@@ -134,9 +187,34 @@ export default function BookReaderPage() {
 
             {viewLinks?.apiView ? (
               <div className="book-reader__actions">
-                <a className="book-reader__button" href={viewLinks.apiView} target="_blank" rel="noreferrer">Open API view</a>
-                {viewLinks.pdf ? <a className="book-reader__button" href={viewLinks.pdf} target="_blank" rel="noreferrer">Download PDF</a> : null}
-                {viewLinks.epub ? <a className="book-reader__button" href={viewLinks.epub} target="_blank" rel="noreferrer">Download EPUB</a> : null}
+                <a
+                  className="book-reader__button"
+                  href={viewLinks.apiView}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Open API view
+                </a>
+                {viewLinks.pdf ? (
+                  <a
+                    className="book-reader__button"
+                    href={viewLinks.pdf}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Download PDF
+                  </a>
+                ) : null}
+                {viewLinks.epub ? (
+                  <a
+                    className="book-reader__button"
+                    href={viewLinks.epub}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Download EPUB
+                  </a>
+                ) : null}
               </div>
             ) : null}
           </aside>

@@ -21,51 +21,51 @@ const checks = {
     {
       name: 'Production Backend API',
       url: 'https://api.pvabazaar.org/api/health',
-      expect: 'Status 200, Environment: production'
+      expect: 'Status 200, Environment: production',
     },
     {
       name: 'Production Website',
       url: 'https://pvabazaar.org',
-      expect: 'Status 200, HTML content'
+      expect: 'Status 200, HTML content',
     },
     {
       name: 'GitHub Repository',
       url: 'https://github.com/PVAGR/pva-bazaar-app',
-      expect: 'Accessible, commits visible'
+      expect: 'Accessible, commits visible',
     },
   ],
   openclaw: [
     {
       name: 'OpenClaw Status Endpoint',
       url: 'https://api.pvabazaar.org/api/openclaw/status',
-      expect: 'Worker active, queue operational'
+      expect: 'Worker active, queue operational',
     },
     {
       name: 'OpenClaw Queue Stats',
       url: 'https://api.pvabazaar.org/api/openclaw/queue-stats',
-      expect: '0 pending, 88+ processed events'
+      expect: '0 pending, 88+ processed events',
     },
     {
       name: 'OpenClaw Webhook Endpoint',
       url: 'https://api.pvabazaar.org/api/openclaw/webhook',
-      expect: 'Endpoint exists at production'
+      expect: 'Endpoint exists at production',
     },
   ],
   integrations: [
     {
       name: 'Telegram Integration',
       status: 'Online',
-      heartbeat: 'Fresh as of deployment'
+      heartbeat: 'Fresh as of deployment',
     },
     {
       name: 'GitHub Integration',
       status: 'Connected',
-      commits: 'Latest: ead36082'
+      commits: 'Latest: ead36082',
     },
     {
       name: 'Ollama LLM Provider',
       status: 'Online',
-      model: 'llama3.1'
+      model: 'llama3.1',
     },
   ],
 };

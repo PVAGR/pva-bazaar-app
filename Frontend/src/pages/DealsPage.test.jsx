@@ -13,7 +13,11 @@ vi.mock('../lib/api', () => {
         ok: true,
         user: {
           email: 't@example.com',
-          preferences: { defaultCountry: 'Kenya', defaultCurrency: 'USD', defaultWalletAddress: '' },
+          preferences: {
+            defaultCountry: 'Kenya',
+            defaultCurrency: 'USD',
+            defaultWalletAddress: '',
+          },
         },
       };
     }
@@ -32,7 +36,7 @@ describe('DealsPage', () => {
     render(
       <MemoryRouter>
         <DealsPage />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
 
     // Payment schedule has "Label" inputs; should start with 3.
@@ -46,4 +50,3 @@ describe('DealsPage', () => {
     expect(screen.getAllByPlaceholderText('Milestone title').length).toBe(3);
   });
 });
-

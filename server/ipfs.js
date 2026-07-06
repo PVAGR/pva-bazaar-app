@@ -10,12 +10,12 @@
 const fs = require('fs');
 const path = require('path');
 
-const PINATA_PIN_FILE_URL  = 'https://api.pinata.cloud/pinning/pinFileToIPFS';
-const PINATA_PIN_JSON_URL  = 'https://api.pinata.cloud/pinning/pinJSONToIPFS';
+const PINATA_PIN_FILE_URL = 'https://api.pinata.cloud/pinning/pinFileToIPFS';
+const PINATA_PIN_JSON_URL = 'https://api.pinata.cloud/pinning/pinJSONToIPFS';
 const PINATA_TEST_AUTH_URL = 'https://api.pinata.cloud/data/testAuthentication';
 
 function isPinataConfigured() {
-  return !!(process.env.PINATA_JWT);
+  return !!process.env.PINATA_JWT;
 }
 
 /**
@@ -29,17 +29,17 @@ async function uploadImageToIPFS(imagePath, label = 'artifact-image') {
   if (!jwt) throw new Error('PINATA_JWT is not set in environment');
 
   const buffer = fs.readFileSync(imagePath);
-  const blob   = new Blob([buffer], { type: guessMime(imagePath) });
+  const blob = new Blob([buffer], { type: guessMime(imagePath) });
 
   const form = new FormData();
   form.append('file', blob, path.basename(imagePath));
   form.append('pinataMetadata', JSON.stringify({ name: `${label}-image` }));
-  form.append('pinataOptions',  JSON.stringify({ cidVersion: 1 }));
+  form.append('pinataOptions', JSON.stringify({ cidVersion: 1 }));
 
   const res = await fetch(PINATA_PIN_FILE_URL, {
-    method:  'POST',
+    method: 'POST',
     headers: { Authorization: `Bearer ${jwt}` },
-    body:    form,
+    body: form,
   });
 
   if (!res.ok) {
@@ -48,7 +48,7 @@ async function uploadImageToIPFS(imagePath, label = 'artifact-image') {
   }
 
   const data = await res.json();
-  return data.IpfsHash;   // CID string
+  return data.IpfsHash; // CID string
 }
 
 /**
@@ -62,15 +62,15 @@ async function uploadMetadataToIPFS(metadata, label = 'artifact-metadata') {
   if (!jwt) throw new Error('PINATA_JWT is not set in environment');
 
   const res = await fetch(PINATA_PIN_JSON_URL, {
-    method:  'POST',
+    method: 'POST',
     headers: {
-      Authorization:  `Bearer ${jwt}`,
+      Authorization: `Bearer ${jwt}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      pinataContent:  metadata,
+      pinataContent: metadata,
       pinataMetadata: { name: `${label}-metadata.json` },
-      pinataOptions:  { cidVersion: 1 },
+      pinataOptions: { cidVersion: 1 },
     }),
   });
 
@@ -80,7 +80,7 @@ async function uploadMetadataToIPFS(metadata, label = 'artifact-metadata') {
   }
 
   const data = await res.json();
-  return data.IpfsHash;   // CID string
+  return data.IpfsHash; // CID string
 }
 
 /**
@@ -106,7 +106,13 @@ async function testPinataAuth() {
 
 function guessMime(filePath) {
   const ext = path.extname(filePath).toLowerCase();
-  const map = { '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.gif': 'image/gif', '.webp': 'image/webp' };
+  const map = {
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.png': 'image/png',
+    '.gif': 'image/gif',
+    '.webp': 'image/webp',
+  };
   return map[ext] || 'application/octet-stream';
 }
 

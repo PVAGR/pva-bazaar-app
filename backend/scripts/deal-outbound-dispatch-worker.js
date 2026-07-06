@@ -9,10 +9,22 @@ dotenv.config();
 
 const WORKER_NAME = process.env.DEAL_OUTBOUND_WORKER_NAME || 'deal-outbound-dispatch-worker';
 const POLL_MS = Math.max(parseInt(process.env.DEAL_OUTBOUND_WORKER_POLL_MS || '12000', 10), 2000);
-const BATCH_SIZE = Math.min(Math.max(parseInt(process.env.DEAL_OUTBOUND_WORKER_BATCH_SIZE || '12', 10), 1), 50);
-const REQUEST_TIMEOUT_MS = Math.max(parseInt(process.env.DEAL_OUTBOUND_WORKER_REQUEST_TIMEOUT_MS || '12000', 10), 1000);
-const RETRY_BASE_MS = Math.max(parseInt(process.env.DEAL_OUTBOUND_RETRY_BASE_MS || '15000', 10), 1000);
-const RETRY_MAX_MS = Math.max(parseInt(process.env.DEAL_OUTBOUND_RETRY_MAX_MS || '300000', 10), RETRY_BASE_MS);
+const BATCH_SIZE = Math.min(
+  Math.max(parseInt(process.env.DEAL_OUTBOUND_WORKER_BATCH_SIZE || '12', 10), 1),
+  50,
+);
+const REQUEST_TIMEOUT_MS = Math.max(
+  parseInt(process.env.DEAL_OUTBOUND_WORKER_REQUEST_TIMEOUT_MS || '12000', 10),
+  1000,
+);
+const RETRY_BASE_MS = Math.max(
+  parseInt(process.env.DEAL_OUTBOUND_RETRY_BASE_MS || '15000', 10),
+  1000,
+);
+const RETRY_MAX_MS = Math.max(
+  parseInt(process.env.DEAL_OUTBOUND_RETRY_MAX_MS || '300000', 10),
+  RETRY_BASE_MS,
+);
 const MAX_RETRIES = Math.max(parseInt(process.env.DEAL_OUTBOUND_WORKER_MAX_RETRIES || '10', 10), 1);
 
 const WORKER_ID = `${os.hostname()}-${process.pid}-${crypto.randomUUID().slice(0, 8)}`;
@@ -35,7 +47,9 @@ function nextBackoffMs(currentAttempt) {
 }
 
 function queueWebhookUrl() {
-  return String(process.env.DEAL_OUTBOUND_WEBHOOK_URL || process.env.OPENCLAW_WEBHOOK_URL || '').trim();
+  return String(
+    process.env.DEAL_OUTBOUND_WEBHOOK_URL || process.env.OPENCLAW_WEBHOOK_URL || '',
+  ).trim();
 }
 
 function buildOutboundPayload(deal, queueItem) {
@@ -69,15 +83,20 @@ async function fetchQueueBatch() {
   const now = new Date();
   const deals = await Deal.find({
     outboundDispatchQueue: { $elemMatch: { status: { $in: ['queued', 'failed'] } } },
-  }).limit(100).lean();
+  })
+    .limit(100)
+    .lean();
 
   const items = [];
   for (const deal of deals) {
-    for (const queueItem of Array.isArray(deal.outboundDispatchQueue) ? deal.outboundDispatchQueue : []) {
+    for (const queueItem of Array.isArray(deal.outboundDispatchQueue)
+      ? deal.outboundDispatchQueue
+      : []) {
       if (!['queued', 'failed'].includes(String(queueItem.status || 'queued'))) continue;
       const nextAttempt = queueItem.nextAttemptAt ? new Date(queueItem.nextAttemptAt) : null;
       if (nextAttempt && nextAttempt.getTime() > now.getTime()) continue;
-      if (Number(queueItem.attempts || 0) >= MAX_RETRIES && String(queueItem.status) !== 'queued') continue;
+      if (Number(queueItem.attempts || 0) >= MAX_RETRIES && String(queueItem.status) !== 'queued')
+        continue;
       items.push({ dealId: String(deal._id), deal, queueItem });
       if (items.length >= BATCH_SIZE) return items;
     }
@@ -100,7 +119,7 @@ async function persistSuccess(dealId, packetId, statusCode) {
         'outboundDispatchQueue.$.lastStatusCode': statusCode || 200,
       },
       $inc: { 'outboundDispatchQueue.$.attempts': 1 },
-    }
+    },
   );
 }
 
@@ -120,7 +139,7 @@ async function persistFailure(dealId, packetId, currentAttempt, err) {
         'outboundDispatchQueue.$.nextAttemptAt': deadLettered ? null : nextAttemptAt,
       },
       $inc: { 'outboundDispatchQueue.$.attempts': 1 },
-    }
+    },
   );
 }
 
@@ -134,7 +153,9 @@ async function processOne(item, webhookUrl) {
       timeout: REQUEST_TIMEOUT_MS,
       headers: {
         'Content-Type': 'application/json',
-        ...(process.env.DEAL_OUTBOUND_WEBHOOK_TOKEN ? { Authorization: `Bearer ${process.env.DEAL_OUTBOUND_WEBHOOK_TOKEN}` } : {}),
+        ...(process.env.DEAL_OUTBOUND_WEBHOOK_TOKEN
+          ? { Authorization: `Bearer ${process.env.DEAL_OUTBOUND_WEBHOOK_TOKEN}` }
+          : {}),
       },
     });
     await persistSuccess(dealId, queueItem.packetId, response.status);
@@ -148,7 +169,9 @@ async function processOne(item, webhookUrl) {
 async function processLoop() {
   const webhookUrl = queueWebhookUrl();
   if (!webhookUrl) {
-    console.log(`[DealOutboundWorker] ${WORKER_NAME} idle (no DEAL_OUTBOUND_WEBHOOK_URL or OPENCLAW_WEBHOOK_URL configured)`);
+    console.log(
+      `[DealOutboundWorker] ${WORKER_NAME} idle (no DEAL_OUTBOUND_WEBHOOK_URL or OPENCLAW_WEBHOOK_URL configured)`,
+    );
     return;
   }
 
@@ -163,7 +186,9 @@ async function processLoop() {
     else failed += 1;
   }
 
-  console.log(`[DealOutboundWorker] cycle processed=${batch.length} sent=${success} failed=${failed}`);
+  console.log(
+    `[DealOutboundWorker] cycle processed=${batch.length} sent=${success} failed=${failed}`,
+  );
 }
 
 async function main() {

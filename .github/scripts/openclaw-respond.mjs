@@ -5,15 +5,40 @@
 const BACKEND_URL = (process.env.OPENCLAW_BACKEND_URL || '').replace(/\/$/, '');
 const BRIDGE_SECRET = process.env.OPENCLAW_BRIDGE_SECRET || '';
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || '';
-const OLLAMA_BASE_URL = (process.env.OLLAMA_BASE_URL || process.env.OPENCLAW_OLLAMA_BASE_URL || '').replace(/\/$/, '');
+const OLLAMA_BASE_URL = (
+  process.env.OLLAMA_BASE_URL ||
+  process.env.OPENCLAW_OLLAMA_BASE_URL ||
+  ''
+).replace(/\/$/, '');
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || process.env.OPENCLAW_OLLAMA_MODEL || 'llama3.1';
-const OLLAMA_TEMPERATURE = Math.min(Math.max(parseFloat(process.env.OLLAMA_TEMPERATURE || '0.35'), 0), 2);
-const OLLAMA_TIMEOUT_MS = Math.min(Math.max(parseInt(process.env.OPENCLAW_OLLAMA_TIMEOUT_MS || '30000', 10), 5000), 120000);
-const GITHUB_MODELS_TIMEOUT_MS = Math.min(Math.max(parseInt(process.env.OPENCLAW_GITHUB_MODELS_TIMEOUT_MS || '35000', 10), 5000), 120000);
-const QUEUE_FETCH_TIMEOUT_MS = Math.min(Math.max(parseInt(process.env.OPENCLAW_QUEUE_FETCH_TIMEOUT_MS || '12000', 10), 3000), 60000);
-const QUEUE_FETCH_MAX_RETRIES = Math.min(Math.max(parseInt(process.env.OPENCLAW_QUEUE_FETCH_MAX_RETRIES || '5', 10), 0), 10);
-const QUEUE_FETCH_BASE_DELAY_MS = Math.min(Math.max(parseInt(process.env.OPENCLAW_QUEUE_FETCH_BASE_DELAY_MS || '1000', 10), 250), 10000);
-const QUEUE_FETCH_MAX_DELAY_MS = Math.min(Math.max(parseInt(process.env.OPENCLAW_QUEUE_FETCH_MAX_DELAY_MS || '60000', 10), 1000), 120000);
+const OLLAMA_TEMPERATURE = Math.min(
+  Math.max(parseFloat(process.env.OLLAMA_TEMPERATURE || '0.35'), 0),
+  2,
+);
+const OLLAMA_TIMEOUT_MS = Math.min(
+  Math.max(parseInt(process.env.OPENCLAW_OLLAMA_TIMEOUT_MS || '30000', 10), 5000),
+  120000,
+);
+const GITHUB_MODELS_TIMEOUT_MS = Math.min(
+  Math.max(parseInt(process.env.OPENCLAW_GITHUB_MODELS_TIMEOUT_MS || '35000', 10), 5000),
+  120000,
+);
+const QUEUE_FETCH_TIMEOUT_MS = Math.min(
+  Math.max(parseInt(process.env.OPENCLAW_QUEUE_FETCH_TIMEOUT_MS || '12000', 10), 3000),
+  60000,
+);
+const QUEUE_FETCH_MAX_RETRIES = Math.min(
+  Math.max(parseInt(process.env.OPENCLAW_QUEUE_FETCH_MAX_RETRIES || '5', 10), 0),
+  10,
+);
+const QUEUE_FETCH_BASE_DELAY_MS = Math.min(
+  Math.max(parseInt(process.env.OPENCLAW_QUEUE_FETCH_BASE_DELAY_MS || '1000', 10), 250),
+  10000,
+);
+const QUEUE_FETCH_MAX_DELAY_MS = Math.min(
+  Math.max(parseInt(process.env.OPENCLAW_QUEUE_FETCH_MAX_DELAY_MS || '60000', 10), 1000),
+  120000,
+);
 const REPO = process.env.GITHUB_REPOSITORY || 'PVAGR/pva-bazaar-app';
 const LOGIC_MODE_ALIASES = new Set(['logic', 'logic-mode', 'logical', 'analysis']);
 
@@ -122,17 +147,28 @@ async function writeResponderState(state, details = {}) {
   const timestamp = new Date().toISOString();
   await Promise.allSettled([
     writeMemory('ecosystem:openclaw-responder:connectionState', state, 'fact'),
-    writeMemory('ecosystem:openclaw-responder:lastStatus', JSON.stringify({ state, timestamp, ...details }), 'reflection'),
+    writeMemory(
+      'ecosystem:openclaw-responder:lastStatus',
+      JSON.stringify({ state, timestamp, ...details }),
+      'reflection',
+    ),
   ]);
 }
 
 async function recordResponderFailure(errorMessage, details = {}) {
-  const previous = parseInt((await readMemoryValue('ecosystem:openclaw-responder:consecutiveFailures')) || '0', 10);
+  const previous = parseInt(
+    (await readMemoryValue('ecosystem:openclaw-responder:consecutiveFailures')) || '0',
+    10,
+  );
   const next = Number.isFinite(previous) ? previous + 1 : 1;
   const timestamp = new Date().toISOString();
   await Promise.allSettled([
     writeMemory('ecosystem:openclaw-responder:consecutiveFailures', String(next), 'fact'),
-    writeMemory('ecosystem:openclaw-responder:lastError', String(errorMessage || 'unknown error').slice(0, 1200), 'reflection'),
+    writeMemory(
+      'ecosystem:openclaw-responder:lastError',
+      String(errorMessage || 'unknown error').slice(0, 1200),
+      'reflection',
+    ),
     writeResponderState(`error:${String(errorMessage || 'unknown').slice(0, 160)}`, {
       consecutiveFailures: next,
       timestamp,
@@ -220,12 +256,18 @@ async function fetchOutboundQueueWithRetry() {
       const delayMs = Number.isFinite(retryAfterMs) ? retryAfterMs : computeBackoffMs(attempt);
       await writeMemory(
         'ecosystem:openclaw-responder:lastRateLimit',
-        JSON.stringify({ status: response.status, delayMs, attempt, at: new Date().toISOString() }).slice(0, 4000),
+        JSON.stringify({
+          status: response.status,
+          delayMs,
+          attempt,
+          at: new Date().toISOString(),
+        }).slice(0, 4000),
         'reflection',
       );
       await sleep(delayMs);
     } catch (err) {
-      const retryable = err?.name === 'AbortError' || /network|timeout|fetch/i.test(String(err?.message || ''));
+      const retryable =
+        err?.name === 'AbortError' || /network|timeout|fetch/i.test(String(err?.message || ''));
       if (!retryable || attempt > QUEUE_FETCH_MAX_RETRIES) {
         throw err;
       }
@@ -245,13 +287,19 @@ async function writeHeartbeat(source, details = {}) {
   await Promise.allSettled([
     writeMemory('ecosystem:openclaw-responder:lastHeartbeat', timestamp, 'fact'),
     writeMemory('ecosystem:openclaw-responder:brain', source, 'fact'),
-    writeMemory('ecosystem:openclaw-responder:details', JSON.stringify({ source, timestamp, ...details }), 'reflection'),
+    writeMemory(
+      'ecosystem:openclaw-responder:details',
+      JSON.stringify({ source, timestamp, ...details }),
+      'reflection',
+    ),
   ]);
 }
 
 async function getAgentConfig() {
   try {
-    const response = await fetch(`${BACKEND_URL}/api/openclaw/agent-config`, { headers: getHeaders(true) });
+    const response = await fetch(`${BACKEND_URL}/api/openclaw/agent-config`, {
+      headers: getHeaders(true),
+    });
     if (!response.ok) {
       return {
         globalDirectives: [],
@@ -265,10 +313,17 @@ async function getAgentConfig() {
     return {
       globalDirectives: Array.isArray(data.globalDirectives)
         ? data.globalDirectives
-        : (Array.isArray(data.creatorCommands) ? data.creatorCommands : []),
+        : Array.isArray(data.creatorCommands)
+          ? data.creatorCommands
+          : [],
       goals: Array.isArray(data.goals) ? data.goals : [],
-      activeMode: String(data.activeMode || 'default').trim().toLowerCase(),
-      personaProfileId: String(data.personaProfileId || 'default').trim().toLowerCase() || 'default',
+      activeMode: String(data.activeMode || 'default')
+        .trim()
+        .toLowerCase(),
+      personaProfileId:
+        String(data.personaProfileId || 'default')
+          .trim()
+          .toLowerCase() || 'default',
       modeProfiles: Array.isArray(data.modeProfiles) ? data.modeProfiles : [],
     };
   } catch (_err) {
@@ -283,12 +338,17 @@ async function getAgentConfig() {
 }
 
 function normalizeModeName(value) {
-  return String(value || 'default').trim().toLowerCase();
+  return String(value || 'default')
+    .trim()
+    .toLowerCase();
 }
 
 function resolveModeRuntime(agentConfig) {
   const activeMode = normalizeModeName(agentConfig?.activeMode);
-  const profileId = String(agentConfig?.personaProfileId || 'default').trim().toLowerCase() || 'default';
+  const profileId =
+    String(agentConfig?.personaProfileId || 'default')
+      .trim()
+      .toLowerCase() || 'default';
   const modeProfiles = Array.isArray(agentConfig?.modeProfiles) ? agentConfig.modeProfiles : [];
   const profile = modeProfiles.find((item) => normalizeModeName(item?.name) === activeMode) || null;
 
@@ -334,7 +394,9 @@ function filterMemoryForMode(memory, modeRuntime) {
 
 async function getMemorySnapshot(limit = 30) {
   try {
-    const response = await fetch(`${BACKEND_URL}/api/openclaw/memory?limit=${limit}`, { headers: getHeaders(true) });
+    const response = await fetch(`${BACKEND_URL}/api/openclaw/memory?limit=${limit}`, {
+      headers: getHeaders(true),
+    });
     if (!response.ok) return [];
     const data = await response.json();
     return Array.isArray(data.memory) ? data.memory : [];
@@ -360,21 +422,27 @@ async function getOperationalSnapshot() {
   }
 
   try {
-    const statusRes = await fetch(`${BACKEND_URL}/api/openclaw/status`, { headers: getHeaders(false) });
+    const statusRes = await fetch(`${BACKEND_URL}/api/openclaw/status`, {
+      headers: getHeaders(false),
+    });
     if (statusRes.ok) snapshot.openclaw = await statusRes.json();
   } catch (_err) {
     // non-fatal
   }
 
   try {
-    const queueRes = await fetch(`${BACKEND_URL}/api/openclaw/queue-stats`, { headers: getHeaders(true) });
+    const queueRes = await fetch(`${BACKEND_URL}/api/openclaw/queue-stats`, {
+      headers: getHeaders(true),
+    });
     if (queueRes.ok) snapshot.queue = await queueRes.json();
   } catch (_err) {
     // non-fatal
   }
 
   try {
-    const marketRes = await fetch(`${BACKEND_URL}/api/openclaw/snapshot/marketplace?limit=10`, { headers: getHeaders(true) });
+    const marketRes = await fetch(`${BACKEND_URL}/api/openclaw/snapshot/marketplace?limit=10`, {
+      headers: getHeaders(true),
+    });
     if (marketRes.ok) {
       const data = await marketRes.json();
       if (data?.marketplace) snapshot.marketplace = data.marketplace;
@@ -635,7 +703,8 @@ async function main() {
 
   console.log(`Responder finished. processed=${processedCount} failed=${failedCount}`);
 
-  const sourceSummary = Array.from(usedSources).join(',') || (OLLAMA_BASE_URL ? 'ollama' : 'github-models');
+  const sourceSummary =
+    Array.from(usedSources).join(',') || (OLLAMA_BASE_URL ? 'ollama' : 'github-models');
   await writeHeartbeat(sourceSummary, {
     processedCount,
     failedCount,

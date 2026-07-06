@@ -2,7 +2,13 @@ const mongoose = require('mongoose');
 
 const federationGameStateSchema = new mongoose.Schema(
   {
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, unique: true, index: true },
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+      unique: true,
+      index: true,
+    },
     commanderName: { type: String, default: 'Citizen Commander' },
     faction: { type: String, default: 'PVA Collective' },
     cycle: { type: Number, default: 0, min: 0 },

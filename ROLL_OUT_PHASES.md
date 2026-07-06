@@ -19,25 +19,25 @@
 
 ## Phase C - Rollout Verification (run in order)
 
-1) Install dependencies
+1. Install dependencies
 
 ```bash
 npm install
 ```
 
-2) Backend load sanity
+2. Backend load sanity
 
 ```bash
 node -e "require('./backend/api/index'); console.log('backend-load-ok')"
 ```
 
-3) Frontend production build
+3. Frontend production build
 
 ```bash
 npm run build --workspace Frontend
 ```
 
-4) Runtime smoke (manual)
+4. Runtime smoke (manual)
 
 - Login and keep token in localStorage
 - Open `#/items/new`
@@ -47,7 +47,7 @@ npm run build --workspace Frontend
 - Confirm success message and redirect to marketplace
 - Confirm listing exists (draft state in backend DB)
 
-5) Backend API smoke with token
+5. Backend API smoke with token
 
 ```bash
 curl -X POST http://localhost:5001/api/items/register ^
@@ -63,7 +63,7 @@ cd backend
 npm run smoke:core
 ```
 
-6) Optional email verification
+6. Optional email verification
 
 - Set `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`
 - Re-submit listing and confirm email logs/sends

@@ -5,19 +5,14 @@ import './LoadingSpinner.css';
  * Themed loading spinner for async operations
  * Lightweight alternative to skeleton loaders for quick feedback
  */
-export default function LoadingSpinner({ 
-  size = 'medium', 
-  label,
-  inline = false,
-  className = '' 
-}) {
+export default function LoadingSpinner({ size = 'medium', label, inline = false, className = '' }) {
   const sizeClass = `loading-spinner--${size}`;
   const containerClass = inline ? 'loading-spinner--inline' : '';
 
   return (
-    <div 
+    <div
       className={`loading-spinner ${sizeClass} ${containerClass} ${className}`}
-      role="status" 
+      role="status"
       aria-label={label || 'Loading'}
     >
       <div className="loading-spinner__circle">
@@ -32,7 +27,7 @@ export function LoadingDots({ size = 'medium', label, className = '' }) {
   const sizeClass = `loading-dots--${size}`;
 
   return (
-    <div 
+    <div
       className={`loading-dots ${sizeClass} ${className}`}
       role="status"
       aria-label={label || 'Loading'}

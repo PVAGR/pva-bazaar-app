@@ -26,10 +26,19 @@ try {
   } = require('../lib/eip712'));
 } catch (err) {
   // Keep /api/deals mounted even if optional EIP-712 helpers are unavailable.
-  console.warn('⚠️ deals route: eip712 helper unavailable; signature endpoints limited', err?.message || err);
-  buildDealMessageTypedData = () => { throw new Error('EIP-712 helpers unavailable'); };
-  buildDealEvidenceTypedData = () => { throw new Error('EIP-712 helpers unavailable'); };
-  verifyDealSignature = () => { throw new Error('EIP-712 helpers unavailable'); };
+  console.warn(
+    '⚠️ deals route: eip712 helper unavailable; signature endpoints limited',
+    err?.message || err,
+  );
+  buildDealMessageTypedData = () => {
+    throw new Error('EIP-712 helpers unavailable');
+  };
+  buildDealEvidenceTypedData = () => {
+    throw new Error('EIP-712 helpers unavailable');
+  };
+  verifyDealSignature = () => {
+    throw new Error('EIP-712 helpers unavailable');
+  };
   normalizeAddress = (v) => (typeof v === 'string' ? v.toLowerCase() : '');
 }
 
@@ -74,7 +83,11 @@ async function generateUniquePublicId() {
 }
 
 function buildPublicShareUrl(req, publicId) {
-  const origin = req.get('origin') || process.env.PUBLIC_APP_URL || process.env.FRONTEND_URL || 'https://pvabazaar.org';
+  const origin =
+    req.get('origin') ||
+    process.env.PUBLIC_APP_URL ||
+    process.env.FRONTEND_URL ||
+    'https://pvabazaar.org';
   return `${String(origin).replace(/\/+$/, '')}/#/deal/${encodeURIComponent(publicId)}`;
 }
 
@@ -142,13 +155,15 @@ function buildPvaScoreAndEstimate(input = {}) {
   const totalAmount = Number((productionCost + shippingCost + platformFee).toFixed(2));
   const costScore = clamp(100 - Math.min(100, totalAmount / 20), 0, 100);
   const routeEfficiencyScore = clamp(100 - Math.min(100, routeKm / 150), 0, 100);
-  const finalScore = Number((
-    costScore * 0.4 +
-    reliability * 0.2 +
-    routeEfficiencyScore * 0.15 +
-    consolidation * 0.15 +
-    reputation * 0.1
-  ).toFixed(2));
+  const finalScore = Number(
+    (
+      costScore * 0.4 +
+      reliability * 0.2 +
+      routeEfficiencyScore * 0.15 +
+      consolidation * 0.15 +
+      reputation * 0.1
+    ).toFixed(2),
+  );
 
   return {
     totalAmount,
@@ -215,7 +230,10 @@ function dealRoleForUser(deal, userId) {
   if (String(deal.counterparty?.userId || '') === subjectId) return 'buyer';
   if (Array.isArray(deal.pva?.parties)) {
     const pvaParty = deal.pva.parties.find(
-      (party) => party?.userId && String(party.userId) === subjectId && ['creator', 'shipper', 'buyer'].includes(String(party.role || ''))
+      (party) =>
+        party?.userId &&
+        String(party.userId) === subjectId &&
+        ['creator', 'shipper', 'buyer'].includes(String(party.role || '')),
     );
     if (pvaParty?.role === 'creator') return 'creator';
     if (pvaParty?.role === 'shipper') return 'shipper';
@@ -239,7 +257,9 @@ function isEscrowFinalized(deal) {
 
 async function resolvePlatformMediatorUser(preferredAdminUserId = '') {
   if (preferredAdminUserId && isObjectIdHex(String(preferredAdminUserId))) {
-    const preferred = await User.findOne({ _id: preferredAdminUserId, role: 'admin' }).select('_id role');
+    const preferred = await User.findOne({ _id: preferredAdminUserId, role: 'admin' }).select(
+      '_id role',
+    );
     if (preferred) return preferred;
   }
   return User.findOne({ role: 'admin' }).sort({ createdAt: 1 }).select('_id role');
@@ -272,7 +292,9 @@ async function verifyDealActor(req, deal) {
     const jti = decoded?.jti ? String(decoded.jti) : '';
     const jtiHash = jti ? sha256Hex(jti) : '';
     const stored = deal?.counterpartyAccess?.inviteJtiHash || '';
-    const expiresAt = deal?.counterpartyAccess?.inviteExpiresAt ? new Date(deal.counterpartyAccess.inviteExpiresAt) : null;
+    const expiresAt = deal?.counterpartyAccess?.inviteExpiresAt
+      ? new Date(deal.counterpartyAccess.inviteExpiresAt)
+      : null;
     const now = Date.now();
     if (!stored || !jtiHash || stored !== jtiHash) {
       const err = new Error('Invalid deal access token');
@@ -331,10 +353,14 @@ function mapUserToPvaCandidate(user, role) {
   const compliance = user?.onboardingProfile?.compliance || {};
   const identity = user?.onboardingProfile?.identity || {};
   const prefs = user?.preferences || {};
-  const pathTags = Array.isArray(user?.onboardingProfile?.federationPathTags) ? user.onboardingProfile.federationPathTags : [];
+  const pathTags = Array.isArray(user?.onboardingProfile?.federationPathTags)
+    ? user.onboardingProfile.federationPathTags
+    : [];
   const journey = String(user?.onboardingProfile?.personalJourney || '').toLowerCase();
-  const isShipperTagged = pathTags.some((tag) => /ship|freight|logistic|cargo|courier|transport/i.test(String(tag || '')))
-    || /ship|freight|logistic|cargo|courier|transport/.test(journey);
+  const isShipperTagged =
+    pathTags.some((tag) =>
+      /ship|freight|logistic|cargo|courier|transport/i.test(String(tag || '')),
+    ) || /ship|freight|logistic|cargo|courier|transport/.test(journey);
   const reliabilitySeed = user?.onboardingProfile?.compliance?.identityAttested ? 84 : 68;
 
   return {
@@ -384,14 +410,41 @@ function buildPvaPayoutPreview(totalAmount, split = {}, currency = 'USD', escrow
   const lineStatus = released ? 'released' : eligible ? 'eligible' : 'projected';
 
   return [
-    { role: 'creator', pct: creatorPct, amount: Number(((total * creatorPct) / 100).toFixed(2)), currency, status: lineStatus },
-    { role: 'shipper', pct: shipperPct, amount: Number(((total * shipperPct) / 100).toFixed(2)), currency, status: lineStatus },
-    { role: 'platform', pct: platformPct, amount: Number(((total * platformPct) / 100).toFixed(2)), currency, status: lineStatus },
-    { role: 'buffer', pct: bufferPct, amount: Number(((total * bufferPct) / 100).toFixed(2)), currency, status: lineStatus },
+    {
+      role: 'creator',
+      pct: creatorPct,
+      amount: Number(((total * creatorPct) / 100).toFixed(2)),
+      currency,
+      status: lineStatus,
+    },
+    {
+      role: 'shipper',
+      pct: shipperPct,
+      amount: Number(((total * shipperPct) / 100).toFixed(2)),
+      currency,
+      status: lineStatus,
+    },
+    {
+      role: 'platform',
+      pct: platformPct,
+      amount: Number(((total * platformPct) / 100).toFixed(2)),
+      currency,
+      status: lineStatus,
+    },
+    {
+      role: 'buffer',
+      pct: bufferPct,
+      amount: Number(((total * bufferPct) / 100).toFixed(2)),
+      currency,
+      status: lineStatus,
+    },
   ];
 }
 
-function enqueuePvaNotification(deal, { targetRole = 'system', eventType = 'pva_event', subject = '', message = '', payload = null }) {
+function enqueuePvaNotification(
+  deal,
+  { targetRole = 'system', eventType = 'pva_event', subject = '', message = '', payload = null },
+) {
   const targetParty = getPvaPartyByRole(deal, targetRole);
   const targetUserId = targetParty?.userId || undefined;
   const entry = {
@@ -410,17 +463,24 @@ function enqueuePvaNotification(deal, { targetRole = 'system', eventType = 'pva_
     ...(deal.pva || {}),
     notificationQueue: [...existing, entry],
   };
-  deal.messages.push({ author: 'system', text: `[PVA Ping] ${targetRole}: ${subject || eventType}` });
+  deal.messages.push({
+    author: 'system',
+    text: `[PVA Ping] ${targetRole}: ${subject || eventType}`,
+  });
 }
 
 function applyPvaWorkflowTransition(deal) {
-  const creatorAccepted = String(deal?.pva?.roleAcceptance?.creator?.status || 'pending') === 'accepted';
-  const shipperAccepted = String(deal?.pva?.roleAcceptance?.shipper?.status || 'pending') === 'accepted';
-  const buyerAccepted = String(deal?.pva?.roleAcceptance?.buyer?.status || 'pending') === 'accepted';
+  const creatorAccepted =
+    String(deal?.pva?.roleAcceptance?.creator?.status || 'pending') === 'accepted';
+  const shipperAccepted =
+    String(deal?.pva?.roleAcceptance?.shipper?.status || 'pending') === 'accepted';
+  const buyerAccepted =
+    String(deal?.pva?.roleAcceptance?.buyer?.status || 'pending') === 'accepted';
 
   let nextStatus = 'awaiting_creator';
   if (creatorAccepted && !shipperAccepted) nextStatus = 'awaiting_shipper';
-  if (creatorAccepted && shipperAccepted && !buyerAccepted) nextStatus = 'awaiting_buyer_confirmation';
+  if (creatorAccepted && shipperAccepted && !buyerAccepted)
+    nextStatus = 'awaiting_buyer_confirmation';
   if (creatorAccepted && shipperAccepted && buyerAccepted) nextStatus = 'ready_for_release';
 
   const previousStatus = String(deal?.pva?.workflow?.status || 'draft');
@@ -455,7 +515,8 @@ function applyPvaWorkflowTransition(deal) {
         targetRole: 'seller',
         eventType: 'pva_ready_for_release',
         subject: 'PVA workflow ready for release',
-        message: 'All parties accepted. Escrow release path is unlocked once buyer confirmation is complete.',
+        message:
+          'All parties accepted. Escrow release path is unlocked once buyer confirmation is complete.',
       });
     }
   }
@@ -466,9 +527,16 @@ router.post('/verify-signature', async (req, res) => {
   try {
     const { domain, types, primaryType, message, signature } = req.body || {};
     if (!domain || !types || !primaryType || !message || !signature) {
-      return res.status(400).json({ ok: false, error: 'Missing domain, types, primaryType, message, or signature' });
+      return res
+        .status(400)
+        .json({ ok: false, error: 'Missing domain, types, primaryType, message, or signature' });
     }
-    const typedData = { domain, types: typeof types === 'object' ? types : { [primaryType]: types }, primaryType, message };
+    const typedData = {
+      domain,
+      types: typeof types === 'object' ? types : { [primaryType]: types },
+      primaryType,
+      message,
+    };
     const recovered = verifyDealSignature(typedData, String(signature));
     res.json({ ok: true, recoveredAddress: recovered });
   } catch (err) {
@@ -554,14 +622,22 @@ router.get('/pva/candidates', authenticateToken, async (req, res) => {
     for (const user of users) {
       const appRole = String(user?.onboardingProfile?.appRole || '');
       const roleIntent = String(user?.onboardingProfile?.roleIntent || '');
-      const pathTags = Array.isArray(user?.onboardingProfile?.federationPathTags) ? user.onboardingProfile.federationPathTags : [];
+      const pathTags = Array.isArray(user?.onboardingProfile?.federationPathTags)
+        ? user.onboardingProfile.federationPathTags
+        : [];
       const journey = String(user?.onboardingProfile?.personalJourney || '').toLowerCase();
-      const haystack = [user?.name, user?.email, appRole, roleIntent, ...pathTags, journey].join(' ').toLowerCase();
+      const haystack = [user?.name, user?.email, appRole, roleIntent, ...pathTags, journey]
+        .join(' ')
+        .toLowerCase();
       if (search && !haystack.includes(search)) continue;
 
-      const canBeCreator = ['creator', 'seller'].includes(appRole) || ['creator_artist', 'seller'].includes(roleIntent);
-      const canBeShipper = pathTags.some((tag) => /ship|freight|logistic|cargo|courier|transport/i.test(String(tag || '')))
-        || /ship|freight|logistic|cargo|courier|transport/.test(journey);
+      const canBeCreator =
+        ['creator', 'seller'].includes(appRole) ||
+        ['creator_artist', 'seller'].includes(roleIntent);
+      const canBeShipper =
+        pathTags.some((tag) =>
+          /ship|freight|logistic|cargo|courier|transport/i.test(String(tag || '')),
+        ) || /ship|freight|logistic|cargo|courier|transport/.test(journey);
 
       if (canBeCreator) creators.push(mapUserToPvaCandidate(user, 'creator'));
       if (canBeShipper) shippers.push(mapUserToPvaCandidate(user, 'shipper'));
@@ -588,31 +664,41 @@ router.post('/pva/plan', authenticateToken, async (req, res) => {
     const body = sanitizeDeep(req.body || {});
 
     const title = sanitize(body.title || body.requestTitle || 'PVA Supply Chain Deal');
-    const description = sanitize(body.description || 'Algorithm-generated creator + shipper deal plan');
+    const description = sanitize(
+      body.description || 'Algorithm-generated creator + shipper deal plan',
+    );
     const currency = sanitize(body.currency || 'USD') || 'USD';
 
     const buyer = body.buyer || {};
-    const creators = Array.isArray(body.creators) && body.creators.length
-      ? body.creators.map((candidate) => normalizePvaCandidate(candidate, 'creator'))
-      : [normalizePvaCandidate(body.creator || {}, 'creator')];
-    const shippers = Array.isArray(body.shippers) && body.shippers.length
-      ? body.shippers.map((candidate) => normalizePvaCandidate(candidate, 'shipper'))
-      : [normalizePvaCandidate(body.shipper || {}, 'shipper')];
+    const creators =
+      Array.isArray(body.creators) && body.creators.length
+        ? body.creators.map((candidate) => normalizePvaCandidate(candidate, 'creator'))
+        : [normalizePvaCandidate(body.creator || {}, 'creator')];
+    const shippers =
+      Array.isArray(body.shippers) && body.shippers.length
+        ? body.shippers.map((candidate) => normalizePvaCandidate(candidate, 'shipper'))
+        : [normalizePvaCandidate(body.shipper || {}, 'shipper')];
 
     const validCreators = creators.filter((candidate) => candidate.name);
     const validShippers = shippers.filter((candidate) => candidate.name);
     if (!validCreators.length) {
-      return res.status(400).json({ ok: false, error: 'At least one creator candidate with a name is required' });
+      return res
+        .status(400)
+        .json({ ok: false, error: 'At least one creator candidate with a name is required' });
     }
     if (!validShippers.length) {
-      return res.status(400).json({ ok: false, error: 'At least one shipper candidate with a name is required' });
+      return res
+        .status(400)
+        .json({ ok: false, error: 'At least one shipper candidate with a name is required' });
     }
 
     const split = normalizeSplit(body.split || {});
     const collateral = {
       creatorStakePct: clamp(toFiniteNumber(body?.collateral?.creatorStakePct, 50), 0, 100),
       shipperStakePct: clamp(toFiniteNumber(body?.collateral?.shipperStakePct, 50), 0, 100),
-      stakeMode: ['escrow', 'signature_commitment'].includes(String(body?.collateral?.stakeMode || ''))
+      stakeMode: ['escrow', 'signature_commitment'].includes(
+        String(body?.collateral?.stakeMode || ''),
+      )
         ? String(body.collateral.stakeMode)
         : 'escrow',
     };
@@ -627,9 +713,13 @@ router.post('/pva/plan', authenticateToken, async (req, res) => {
           shippingCost: shipperCandidate.shippingCost || body?.estimate?.shippingCost,
           platformFee: basePlatformFee,
           routeKm: shipperCandidate.routeKm || body?.estimate?.routeKm,
-          estimatedProductionDays: creatorCandidate.estimatedProductionDays || body?.estimate?.estimatedProductionDays,
-          estimatedTransitDays: shipperCandidate.estimatedTransitDays || body?.estimate?.estimatedTransitDays,
-          reliability: Math.round((creatorCandidate.reliability + shipperCandidate.reliability) / 2),
+          estimatedProductionDays:
+            creatorCandidate.estimatedProductionDays || body?.estimate?.estimatedProductionDays,
+          estimatedTransitDays:
+            shipperCandidate.estimatedTransitDays || body?.estimate?.estimatedTransitDays,
+          reliability: Math.round(
+            (creatorCandidate.reliability + shipperCandidate.reliability) / 2,
+          ),
           consolidation: shipperCandidate.consolidation,
           reputation: Math.round((creatorCandidate.reputation + shipperCandidate.reputation) / 2),
         });
@@ -726,8 +816,14 @@ router.post('/pva/plan', authenticateToken, async (req, res) => {
       split,
       collateral,
       roleAcceptance: {
-        creator: { userId: isObjectIdHex(String(creator.userId || '')) ? String(creator.userId) : undefined, status: 'pending' },
-        shipper: { userId: isObjectIdHex(String(shipper.userId || '')) ? String(shipper.userId) : undefined, status: 'pending' },
+        creator: {
+          userId: isObjectIdHex(String(creator.userId || '')) ? String(creator.userId) : undefined,
+          status: 'pending',
+        },
+        shipper: {
+          userId: isObjectIdHex(String(shipper.userId || '')) ? String(shipper.userId) : undefined,
+          status: 'pending',
+        },
         buyer: {
           userId: isObjectIdHex(String(buyer.userId || '')) ? String(buyer.userId) : undefined,
           status: isObjectIdHex(String(buyer.userId || '')) ? 'accepted' : 'pending',
@@ -823,7 +919,9 @@ router.post('/pva/plan', authenticateToken, async (req, res) => {
     });
 
     await deal.save();
-    return res.status(201).json({ ok: true, item: toPublicDeal(deal), plan: { totalAmount, split, collateral } });
+    return res
+      .status(201)
+      .json({ ok: true, item: toPublicDeal(deal), plan: { totalAmount, split, collateral } });
   } catch (err) {
     console.error('Error creating PVA plan:', err);
     return res.status(500).json({ ok: false, error: 'Failed to build PVA deal plan' });
@@ -861,21 +959,25 @@ router.post('/', authenticateToken, async (req, res) => {
       mediatorFeePct: Number(req.body?.mediatorFeePct || 0),
       pva: pva
         ? {
-            mode: ['classic', 'creator_shipper'].includes(String(pva.mode || '')) ? String(pva.mode) : 'creator_shipper',
+            mode: ['classic', 'creator_shipper'].includes(String(pva.mode || ''))
+              ? String(pva.mode)
+              : 'creator_shipper',
             algorithmVersion: sanitize(pva.algorithmVersion || 'pva-v1') || 'pva-v1',
             planNotes: sanitize(pva.planNotes || ''),
             parties: Array.isArray(pva.parties)
               ? pva.parties
-                .filter((party) => party && typeof party === 'object')
-                .map((party) => ({
-                  role: sanitize(party.role || ''),
-                  userId: isObjectIdHex(String(party.userId || '')) ? String(party.userId) : undefined,
-                  name: sanitize(party.name || ''),
-                  country: sanitize(party.country || ''),
-                  city: sanitize(party.city || ''),
-                  walletAddress: sanitize(party.walletAddress || ''),
-                }))
-                .filter((party) => ['buyer', 'creator', 'shipper'].includes(party.role))
+                  .filter((party) => party && typeof party === 'object')
+                  .map((party) => ({
+                    role: sanitize(party.role || ''),
+                    userId: isObjectIdHex(String(party.userId || ''))
+                      ? String(party.userId)
+                      : undefined,
+                    name: sanitize(party.name || ''),
+                    country: sanitize(party.country || ''),
+                    city: sanitize(party.city || ''),
+                    walletAddress: sanitize(party.walletAddress || ''),
+                  }))
+                  .filter((party) => ['buyer', 'creator', 'shipper'].includes(party.role))
               : [],
             split: {
               creatorPct: clamp(toFiniteNumber(pva?.split?.creatorPct, 45), 0, 100),
@@ -886,15 +988,25 @@ router.post('/', authenticateToken, async (req, res) => {
             collateral: {
               creatorStakePct: clamp(toFiniteNumber(pva?.collateral?.creatorStakePct, 50), 0, 100),
               shipperStakePct: clamp(toFiniteNumber(pva?.collateral?.shipperStakePct, 50), 0, 100),
-              stakeMode: ['escrow', 'signature_commitment'].includes(String(pva?.collateral?.stakeMode || ''))
+              stakeMode: ['escrow', 'signature_commitment'].includes(
+                String(pva?.collateral?.stakeMode || ''),
+              )
                 ? String(pva.collateral.stakeMode)
                 : 'escrow',
             },
             routeScore: {
               costScore: clamp(toFiniteNumber(pva?.routeScore?.costScore, 0), 0, 100),
               reliabilityScore: clamp(toFiniteNumber(pva?.routeScore?.reliabilityScore, 0), 0, 100),
-              routeEfficiencyScore: clamp(toFiniteNumber(pva?.routeScore?.routeEfficiencyScore, 0), 0, 100),
-              consolidationScore: clamp(toFiniteNumber(pva?.routeScore?.consolidationScore, 0), 0, 100),
+              routeEfficiencyScore: clamp(
+                toFiniteNumber(pva?.routeScore?.routeEfficiencyScore, 0),
+                0,
+                100,
+              ),
+              consolidationScore: clamp(
+                toFiniteNumber(pva?.routeScore?.consolidationScore, 0),
+                0,
+                100,
+              ),
               reputationScore: clamp(toFiniteNumber(pva?.routeScore?.reputationScore, 0), 0, 100),
               finalScore: clamp(toFiniteNumber(pva?.routeScore?.finalScore, 0), 0, 100),
               distanceKm: Math.max(0, toFiniteNumber(pva?.routeScore?.distanceKm, 0)),
@@ -905,7 +1017,9 @@ router.post('/', authenticateToken, async (req, res) => {
                 userId: isObjectIdHex(String(pva?.roleAcceptance?.creator?.userId || ''))
                   ? String(pva.roleAcceptance.creator.userId)
                   : undefined,
-                status: ['pending', 'accepted', 'declined'].includes(String(pva?.roleAcceptance?.creator?.status || ''))
+                status: ['pending', 'accepted', 'declined'].includes(
+                  String(pva?.roleAcceptance?.creator?.status || ''),
+                )
                   ? String(pva.roleAcceptance.creator.status)
                   : 'pending',
               },
@@ -913,7 +1027,9 @@ router.post('/', authenticateToken, async (req, res) => {
                 userId: isObjectIdHex(String(pva?.roleAcceptance?.shipper?.userId || ''))
                   ? String(pva.roleAcceptance.shipper.userId)
                   : undefined,
-                status: ['pending', 'accepted', 'declined'].includes(String(pva?.roleAcceptance?.shipper?.status || ''))
+                status: ['pending', 'accepted', 'declined'].includes(
+                  String(pva?.roleAcceptance?.shipper?.status || ''),
+                )
                   ? String(pva.roleAcceptance.shipper.status)
                   : 'pending',
               },
@@ -921,22 +1037,37 @@ router.post('/', authenticateToken, async (req, res) => {
                 userId: isObjectIdHex(String(pva?.roleAcceptance?.buyer?.userId || ''))
                   ? String(pva.roleAcceptance.buyer.userId)
                   : undefined,
-                status: ['pending', 'accepted', 'declined'].includes(String(pva?.roleAcceptance?.buyer?.status || ''))
+                status: ['pending', 'accepted', 'declined'].includes(
+                  String(pva?.roleAcceptance?.buyer?.status || ''),
+                )
                   ? String(pva.roleAcceptance.buyer.status)
                   : 'pending',
               },
             },
             workflow: {
-              status: ['draft', 'awaiting_creator', 'awaiting_shipper', 'awaiting_buyer_confirmation', 'ready_for_release', 'complete', 'cancelled']
-                .includes(String(pva?.workflow?.status || ''))
+              status: [
+                'draft',
+                'awaiting_creator',
+                'awaiting_shipper',
+                'awaiting_buyer_confirmation',
+                'ready_for_release',
+                'complete',
+                'cancelled',
+              ].includes(String(pva?.workflow?.status || ''))
                 ? String(pva.workflow.status)
                 : 'awaiting_creator',
               updatedAt: pva?.workflow?.updatedAt ? new Date(pva.workflow.updatedAt) : new Date(),
             },
             notificationQueue: [],
-            payoutPreview: Array.isArray(pva?.payoutPreview) && pva.payoutPreview.length
-              ? pva.payoutPreview
-              : buildPvaPayoutPreview(Number(req.body?.totalAmount || 0), pva?.split || {}, sanitize(req.body?.currency || 'USD') || 'USD', 'draft'),
+            payoutPreview:
+              Array.isArray(pva?.payoutPreview) && pva.payoutPreview.length
+                ? pva.payoutPreview
+                : buildPvaPayoutPreview(
+                    Number(req.body?.totalAmount || 0),
+                    pva?.split || {},
+                    sanitize(req.body?.currency || 'USD') || 'USD',
+                    'draft',
+                  ),
           }
         : undefined,
       chainId: req.body?.chainId ? Number(req.body.chainId) : undefined,
@@ -1045,7 +1176,7 @@ router.put('/drafts', authenticateToken, async (req, res) => {
     const user = await User.findByIdAndUpdate(
       req.user.id,
       { 'preferences.drafts.deals': draft, updatedAt: Date.now() },
-      { new: true }
+      { new: true },
     ).select('preferences');
     res.json({ ok: true, draft: user?.preferences?.drafts?.deals || null });
   } catch (err) {
@@ -1057,7 +1188,11 @@ router.put('/drafts', authenticateToken, async (req, res) => {
 // DELETE /api/deals/drafts - clear create-deal draft
 router.delete('/drafts', authenticateToken, async (req, res) => {
   try {
-    await User.findByIdAndUpdate(req.user.id, { 'preferences.drafts.deals': null, updatedAt: Date.now() }, { new: true });
+    await User.findByIdAndUpdate(
+      req.user.id,
+      { 'preferences.drafts.deals': null, updatedAt: Date.now() },
+      { new: true },
+    );
     res.json({ ok: true, draft: null });
   } catch (err) {
     console.error('Error clearing deal draft:', err);
@@ -1077,7 +1212,7 @@ router.post('/:id/invite', authenticateToken, async (req, res) => {
     const token = jwt.sign(
       { role: 'deal_counterparty', dealId: String(deal._id), jti: inviteJti },
       process.env.JWT_SECRET,
-      { expiresIn: '30d' }
+      { expiresIn: '30d' },
     );
 
     deal.counterpartyAccess = {
@@ -1102,7 +1237,8 @@ router.post('/:id/invite', authenticateToken, async (req, res) => {
 router.get('/join', async (req, res) => {
   try {
     const token = getBearerToken(req);
-    if (!token) return res.status(401).json({ ok: false, error: 'No authentication token provided' });
+    if (!token)
+      return res.status(401).json({ ok: false, error: 'No authentication token provided' });
     let decoded;
     try {
       decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -1150,13 +1286,17 @@ router.post('/join-authenticated', authenticateToken, async (req, res) => {
     if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
 
     if (deal.counterparty?.userId && String(deal.counterparty.userId) !== String(req.user.id)) {
-      return res.status(409).json({ ok: false, error: 'This invite is already linked to another account' });
+      return res
+        .status(409)
+        .json({ ok: false, error: 'This invite is already linked to another account' });
     }
 
     // Re-validate invite token hash/expiry against the deal before linking user.
     const jti = decoded?.jti ? String(decoded.jti) : '';
     const stored = deal?.counterpartyAccess?.inviteJtiHash || '';
-    const expiresAt = deal?.counterpartyAccess?.inviteExpiresAt ? new Date(deal.counterpartyAccess.inviteExpiresAt) : null;
+    const expiresAt = deal?.counterpartyAccess?.inviteExpiresAt
+      ? new Date(deal.counterpartyAccess.inviteExpiresAt)
+      : null;
     if (!jti || !stored || sha256Hex(jti) !== stored) {
       return res.status(401).json({ ok: false, error: 'Invite token no longer valid' });
     }
@@ -1171,7 +1311,10 @@ router.post('/join-authenticated', authenticateToken, async (req, res) => {
     if (!deal.counterpartyAccess?.joinedAt) {
       deal.counterpartyAccess = { ...(deal.counterpartyAccess || {}), joinedAt: new Date() };
     }
-    deal.messages.push({ author: 'system', text: 'Counterparty linked to authenticated user account' });
+    deal.messages.push({
+      author: 'system',
+      text: 'Counterparty linked to authenticated user account',
+    });
     await deal.save();
 
     res.json({ ok: true, item: toPublicDeal(deal), role: dealRoleForUser(deal, req.user.id) });
@@ -1260,7 +1403,9 @@ router.post('/:id/verify', authenticateToken, async (req, res) => {
     }
 
     const existing = Array.isArray(deal.verifiedParticipants)
-      ? deal.verifiedParticipants.find((entry) => String(entry?.userId || '') === String(req.user.id))
+      ? deal.verifiedParticipants.find(
+          (entry) => String(entry?.userId || '') === String(req.user.id),
+        )
       : null;
 
     if (existing) {
@@ -1274,7 +1419,10 @@ router.post('/:id/verify', authenticateToken, async (req, res) => {
       note: sanitize(req.body?.note || ''),
     };
 
-    deal.verifiedParticipants = [...(Array.isArray(deal.verifiedParticipants) ? deal.verifiedParticipants : []), verificationEntry];
+    deal.verifiedParticipants = [
+      ...(Array.isArray(deal.verifiedParticipants) ? deal.verifiedParticipants : []),
+      verificationEntry,
+    ];
     deal.verificationCount = deal.verifiedParticipants.length;
     appendDealAuditEvent(deal, {
       eventType: 'deal_verified',
@@ -1291,7 +1439,9 @@ router.post('/:id/verify', authenticateToken, async (req, res) => {
     });
   } catch (err) {
     console.error('Error verifying deal:', err);
-    res.status(err.status || 500).json({ ok: false, error: err.message || 'Failed to verify deal' });
+    res
+      .status(err.status || 500)
+      .json({ ok: false, error: err.message || 'Failed to verify deal' });
   }
 });
 
@@ -1318,17 +1468,22 @@ router.put('/:id/pva/assign', authenticateToken, async (req, res) => {
 
     const role = dealRoleForUser(deal, req.user.id);
     if (!['seller', 'mediator'].includes(role) && req.user?.role !== 'admin') {
-      return res.status(403).json({ ok: false, error: 'Only seller/mediator/admin can assign PVA roles' });
+      return res
+        .status(403)
+        .json({ ok: false, error: 'Only seller/mediator/admin can assign PVA roles' });
     }
 
     const creatorUserId = sanitize(req.body?.creatorUserId || '');
     const shipperUserId = sanitize(req.body?.shipperUserId || '');
     const buyerUserId = sanitize(req.body?.buyerUserId || '');
-    const milestoneRoles = req.body?.milestoneRoles && typeof req.body.milestoneRoles === 'object'
-      ? req.body.milestoneRoles
-      : {};
+    const milestoneRoles =
+      req.body?.milestoneRoles && typeof req.body.milestoneRoles === 'object'
+        ? req.body.milestoneRoles
+        : {};
 
-    const ids = [creatorUserId, shipperUserId, buyerUserId].filter((id) => isObjectIdHex(String(id || '')));
+    const ids = [creatorUserId, shipperUserId, buyerUserId].filter((id) =>
+      isObjectIdHex(String(id || '')),
+    );
     const users = ids.length
       ? await User.find({ _id: { $in: ids } }).select('_id name onboardingProfile preferences')
       : [];
@@ -1337,7 +1492,7 @@ router.put('/:id/pva/assign', authenticateToken, async (req, res) => {
     const parties = Array.isArray(deal.pva?.parties) ? [...deal.pva.parties] : [];
     const upsertParty = (party) => {
       const idx = parties.findIndex((p) => String(p.role || '') === String(party.role || ''));
-      if (idx >= 0) parties[idx] = { ...parties[idx].toObject?.() || parties[idx], ...party };
+      if (idx >= 0) parties[idx] = { ...(parties[idx].toObject?.() || parties[idx]), ...party };
       else parties.push(party);
     };
 
@@ -1371,22 +1526,28 @@ router.put('/:id/pva/assign', authenticateToken, async (req, res) => {
         ...(deal.pva?.roleAcceptance || {}),
         creator: {
           ...(deal.pva?.roleAcceptance?.creator || {}),
-          userId: isObjectIdHex(creatorUserId) ? creatorUserId : deal.pva?.roleAcceptance?.creator?.userId,
+          userId: isObjectIdHex(creatorUserId)
+            ? creatorUserId
+            : deal.pva?.roleAcceptance?.creator?.userId,
         },
         shipper: {
           ...(deal.pva?.roleAcceptance?.shipper || {}),
-          userId: isObjectIdHex(shipperUserId) ? shipperUserId : deal.pva?.roleAcceptance?.shipper?.userId,
+          userId: isObjectIdHex(shipperUserId)
+            ? shipperUserId
+            : deal.pva?.roleAcceptance?.shipper?.userId,
         },
         buyer: {
           ...(deal.pva?.roleAcceptance?.buyer || {}),
-          userId: isObjectIdHex(buyerUserId) ? buyerUserId : deal.pva?.roleAcceptance?.buyer?.userId,
+          userId: isObjectIdHex(buyerUserId)
+            ? buyerUserId
+            : deal.pva?.roleAcceptance?.buyer?.userId,
         },
       },
       payoutPreview: buildPvaPayoutPreview(
         Number(deal.totalAmount || 0),
         deal.pva?.split || {},
         deal.currency || 'USD',
-        deal.escrow?.status || 'draft'
+        deal.escrow?.status || 'draft',
       ),
     };
 
@@ -1420,11 +1581,14 @@ router.post('/:id/pva/accept-role', authenticateToken, async (req, res) => {
     }
 
     const targetParty = getPvaPartyByRole(deal, role);
-    const isAllowedActor = req.user?.role === 'admin'
-      || actorRole === role
-      || (targetParty?.userId && String(targetParty.userId) === String(req.user.id));
+    const isAllowedActor =
+      req.user?.role === 'admin' ||
+      actorRole === role ||
+      (targetParty?.userId && String(targetParty.userId) === String(req.user.id));
     if (!isAllowedActor) {
-      return res.status(403).json({ ok: false, error: `Only assigned ${role} can perform this action` });
+      return res
+        .status(403)
+        .json({ ok: false, error: `Only assigned ${role} can perform this action` });
     }
 
     const now = new Date();
@@ -1447,7 +1611,7 @@ router.post('/:id/pva/accept-role', authenticateToken, async (req, res) => {
         Number(deal.totalAmount || 0),
         deal.pva?.split || {},
         deal.currency || 'USD',
-        deal.escrow?.status || 'draft'
+        deal.escrow?.status || 'draft',
       ),
     };
 
@@ -1494,52 +1658,60 @@ router.get('/:id/pva/notification-queue', authenticateToken, async (req, res) =>
 });
 
 // PUT /api/deals/:id/pva/notification-queue/:notificationId/status - update queue delivery status
-router.put('/:id/pva/notification-queue/:notificationId/status', authenticateToken, async (req, res) => {
-  try {
-    const deal = await Deal.findById(req.params.id);
-    if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
+router.put(
+  '/:id/pva/notification-queue/:notificationId/status',
+  authenticateToken,
+  async (req, res) => {
+    try {
+      const deal = await Deal.findById(req.params.id);
+      if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
 
-    const role = dealRoleForUser(deal, req.user.id);
-    if (!['seller', 'mediator'].includes(role) && req.user?.role !== 'admin') {
-      return res.status(403).json({ ok: false, error: 'Only seller/mediator/admin can update PVA queue status' });
+      const role = dealRoleForUser(deal, req.user.id);
+      if (!['seller', 'mediator'].includes(role) && req.user?.role !== 'admin') {
+        return res
+          .status(403)
+          .json({ ok: false, error: 'Only seller/mediator/admin can update PVA queue status' });
+      }
+
+      const nextStatus = sanitize(req.body?.status || '').toLowerCase();
+      const allowedStatus = ['queued', 'sent', 'failed'];
+      if (!allowedStatus.includes(nextStatus)) {
+        return res.status(400).json({ ok: false, error: 'status must be queued, sent, or failed' });
+      }
+      const hasHiddenFlag = typeof req.body?.hiddenFromView === 'boolean';
+
+      const queue = Array.isArray(deal?.pva?.notificationQueue) ? deal.pva.notificationQueue : [];
+      const idx = queue.findIndex(
+        (entry) => String(entry?._id || '') === String(req.params.notificationId || ''),
+      );
+      if (idx < 0) {
+        return res.status(404).json({ ok: false, error: 'Notification queue item not found' });
+      }
+
+      const now = new Date();
+      queue[idx].status = nextStatus;
+      queue[idx].sentAt = nextStatus === 'sent' ? now : queue[idx].sentAt;
+      if (hasHiddenFlag) {
+        queue[idx].hiddenFromView = req.body.hiddenFromView;
+      }
+
+      deal.pva = {
+        ...(deal.pva || {}),
+        notificationQueue: queue,
+      };
+      deal.messages.push({
+        author: 'system',
+        text: `PVA queue status updated: ${queue[idx].eventType || 'event'} -> ${nextStatus}`,
+      });
+
+      await deal.save();
+      return res.json({ ok: true, queue: deal.pva.notificationQueue, item: toPublicDeal(deal) });
+    } catch (err) {
+      console.error('Error updating PVA notification queue status:', err);
+      return res.status(500).json({ ok: false, error: 'Failed to update PVA queue status' });
     }
-
-    const nextStatus = sanitize(req.body?.status || '').toLowerCase();
-    const allowedStatus = ['queued', 'sent', 'failed'];
-    if (!allowedStatus.includes(nextStatus)) {
-      return res.status(400).json({ ok: false, error: 'status must be queued, sent, or failed' });
-    }
-    const hasHiddenFlag = typeof req.body?.hiddenFromView === 'boolean';
-
-    const queue = Array.isArray(deal?.pva?.notificationQueue) ? deal.pva.notificationQueue : [];
-    const idx = queue.findIndex((entry) => String(entry?._id || '') === String(req.params.notificationId || ''));
-    if (idx < 0) {
-      return res.status(404).json({ ok: false, error: 'Notification queue item not found' });
-    }
-
-    const now = new Date();
-    queue[idx].status = nextStatus;
-    queue[idx].sentAt = nextStatus === 'sent' ? now : queue[idx].sentAt;
-    if (hasHiddenFlag) {
-      queue[idx].hiddenFromView = req.body.hiddenFromView;
-    }
-
-    deal.pva = {
-      ...(deal.pva || {}),
-      notificationQueue: queue,
-    };
-    deal.messages.push({
-      author: 'system',
-      text: `PVA queue status updated: ${queue[idx].eventType || 'event'} -> ${nextStatus}`,
-    });
-
-    await deal.save();
-    return res.json({ ok: true, queue: deal.pva.notificationQueue, item: toPublicDeal(deal) });
-  } catch (err) {
-    console.error('Error updating PVA notification queue status:', err);
-    return res.status(500).json({ ok: false, error: 'Failed to update PVA queue status' });
-  }
-});
+  },
+);
 
 // GET /api/deals/:id/pva/payout-preview - compute payout ledger and release simulation
 router.get('/:id/pva/payout-preview', authenticateToken, async (req, res) => {
@@ -1555,7 +1727,7 @@ router.get('/:id/pva/payout-preview', authenticateToken, async (req, res) => {
       Number(deal.totalAmount || 0),
       deal.pva?.split || {},
       deal.currency || 'USD',
-      deal.escrow?.status || 'draft'
+      deal.escrow?.status || 'draft',
     );
 
     deal.pva = {
@@ -1583,10 +1755,28 @@ router.put('/:id', authenticateToken, async (req, res) => {
     const deal = await Deal.findOne({ _id: req.params.id, ownerId: req.user.id });
     if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
 
-    const allowed = ['title', 'description', 'counterparty', 'totalAmount', 'currency', 'mediatorFeePct', 'chainId', 'tokenAddress', 'contractAddress', 'status'];
+    const allowed = [
+      'title',
+      'description',
+      'counterparty',
+      'totalAmount',
+      'currency',
+      'mediatorFeePct',
+      'chainId',
+      'tokenAddress',
+      'contractAddress',
+      'status',
+    ];
     for (const key of allowed) {
       if (req.body?.[key] === undefined) continue;
-      if (key === 'title' || key === 'description' || key === 'currency' || key === 'tokenAddress' || key === 'contractAddress' || key === 'status') {
+      if (
+        key === 'title' ||
+        key === 'description' ||
+        key === 'currency' ||
+        key === 'tokenAddress' ||
+        key === 'contractAddress' ||
+        key === 'status'
+      ) {
         deal[key] = sanitize(req.body[key]);
       } else if (key === 'counterparty') {
         const cp = req.body.counterparty || {};
@@ -1660,7 +1850,9 @@ router.post('/:id/messages', async (req, res) => {
         const td = req.body.typedData;
         const recovered = verifyDealSignature(td, signature);
         if (normalizeAddress(recovered) !== normalizeAddress(authorWallet)) {
-          return res.status(400).json({ ok: false, error: 'Signature does not match author wallet' });
+          return res
+            .status(400)
+            .json({ ok: false, error: 'Signature does not match author wallet' });
         }
       } catch (e) {
         return res.status(400).json({ ok: false, error: e.message || 'Invalid EIP-712 signature' });
@@ -1672,7 +1864,9 @@ router.post('/:id/messages', async (req, res) => {
     res.status(201).json({ ok: true, item: toPublicDeal(deal) });
   } catch (err) {
     console.error('Error adding deal message:', err);
-    res.status(err.status || 500).json({ ok: false, error: err.message || 'Failed to add message' });
+    res
+      .status(err.status || 500)
+      .json({ ok: false, error: err.message || 'Failed to add message' });
   }
 });
 
@@ -1684,9 +1878,12 @@ router.post('/:id/milestones/:milestoneId/evidence', async (req, res) => {
     const { actor } = await verifyDealActor(req, deal);
 
     const evidenceValue = sanitize(req.body?.evidenceValue || '');
-    if (!evidenceValue) return res.status(400).json({ ok: false, error: 'evidenceValue is required' });
+    if (!evidenceValue)
+      return res.status(400).json({ ok: false, error: 'evidenceValue is required' });
 
-    const milestone = (deal.milestones || []).find((m) => String(m._id) === String(req.params.milestoneId));
+    const milestone = (deal.milestones || []).find(
+      (m) => String(m._id) === String(req.params.milestoneId),
+    );
     if (!milestone) return res.status(404).json({ ok: false, error: 'Milestone not found' });
     if (!canSubmitMilestoneEvidence(milestone.assignedRole, actor, req.user?.role === 'admin')) {
       return res.status(403).json({
@@ -1703,7 +1900,9 @@ router.post('/:id/milestones/:milestoneId/evidence', async (req, res) => {
         const td = req.body.typedData;
         const recovered = verifyDealSignature(td, evidenceSignature);
         if (normalizeAddress(recovered) !== normalizeAddress(evidenceAuthorWallet)) {
-          return res.status(400).json({ ok: false, error: 'Signature does not match author wallet' });
+          return res
+            .status(400)
+            .json({ ok: false, error: 'Signature does not match author wallet' });
         }
       } catch (e) {
         return res.status(400).json({ ok: false, error: e.message || 'Invalid EIP-712 signature' });
@@ -1721,7 +1920,9 @@ router.post('/:id/milestones/:milestoneId/evidence', async (req, res) => {
     res.status(201).json({ ok: true, item: toPublicDeal(deal) });
   } catch (err) {
     console.error('Error submitting milestone evidence:', err);
-    res.status(err.status || 500).json({ ok: false, error: err.message || 'Failed to submit evidence' });
+    res
+      .status(err.status || 500)
+      .json({ ok: false, error: err.message || 'Failed to submit evidence' });
   }
 });
 
@@ -1731,7 +1932,8 @@ router.get('/:id/messages', authenticateToken, async (req, res) => {
     const deal = await Deal.findById(req.params.id);
     if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
     const role = dealRoleForUser(deal, req.user.id);
-    if (role === 'none' && req.user?.role !== 'admin') return res.status(403).json({ ok: false, error: 'Forbidden' });
+    if (role === 'none' && req.user?.role !== 'admin')
+      return res.status(403).json({ ok: false, error: 'Forbidden' });
     res.json({ ok: true, messages: Array.isArray(deal.messages) ? deal.messages : [] });
   } catch (err) {
     console.error('Error fetching deal messages:', err);
@@ -1755,7 +1957,9 @@ router.post('/:id/escrow/mock-fund', authenticateToken, async (req, res) => {
     }
 
     const current = String(deal.escrow?.status || 'draft');
-    if (!['draft', 'funded_mock', 'funded_live', 'awaiting_receipt', 'disputed'].includes(current)) {
+    if (
+      !['draft', 'funded_mock', 'funded_live', 'awaiting_receipt', 'disputed'].includes(current)
+    ) {
       return res.status(400).json({ ok: false, error: `Mock funding not allowed from ${current}` });
     }
 
@@ -1776,7 +1980,9 @@ router.post('/:id/escrow/mock-fund', authenticateToken, async (req, res) => {
       fundedCurrency: currency,
       fundedAt: new Date(),
       mockTransferProofs: [
-        ...((deal.escrow && Array.isArray(deal.escrow.mockTransferProofs)) ? deal.escrow.mockTransferProofs : []),
+        ...(deal.escrow && Array.isArray(deal.escrow.mockTransferProofs)
+          ? deal.escrow.mockTransferProofs
+          : []),
         {
           actor: role === 'none' ? 'system' : role,
           userId: req.user.id,
@@ -1810,11 +2016,15 @@ router.post('/:id/escrow/confirm-receipt', authenticateToken, async (req, res) =
 
     const current = String(deal.escrow?.status || 'draft');
     if (!['funded_mock', 'funded_live', 'awaiting_receipt'].includes(current)) {
-      return res.status(400).json({ ok: false, error: `Receipt confirmation not allowed from ${current}` });
+      return res
+        .status(400)
+        .json({ ok: false, error: `Receipt confirmation not allowed from ${current}` });
     }
 
     if (String(deal.dispute?.status || 'none') === 'open') {
-      return res.status(409).json({ ok: false, error: 'Cannot confirm receipt while dispute is open' });
+      return res
+        .status(409)
+        .json({ ok: false, error: 'Cannot confirm receipt while dispute is open' });
     }
 
     deal.escrow = {
@@ -1837,7 +2047,10 @@ router.post('/:id/escrow/release', authenticateToken, async (req, res) => {
     if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
 
     const role = dealRoleForUser(deal, req.user.id);
-    if (!['seller', 'creator', 'shipper', 'mediator'].includes(role) && req.user?.role !== 'admin') {
+    if (
+      !['seller', 'creator', 'shipper', 'mediator'].includes(role) &&
+      req.user?.role !== 'admin'
+    ) {
       return res.status(403).json({ ok: false, error: 'Forbidden' });
     }
 
@@ -1846,16 +2059,30 @@ router.post('/:id/escrow/release', authenticateToken, async (req, res) => {
     }
 
     const current = String(deal.escrow?.status || 'draft');
-    if (!['buyer_confirmed', 'disputed', 'funded_mock', 'funded_live', 'awaiting_receipt'].includes(current)) {
+    if (
+      !['buyer_confirmed', 'disputed', 'funded_mock', 'funded_live', 'awaiting_receipt'].includes(
+        current,
+      )
+    ) {
       return res.status(400).json({ ok: false, error: `Release not allowed from ${current}` });
     }
 
-    if (String(deal.dispute?.status || 'none') === 'open' && req.user?.role !== 'admin' && role !== 'mediator') {
+    if (
+      String(deal.dispute?.status || 'none') === 'open' &&
+      req.user?.role !== 'admin' &&
+      role !== 'mediator'
+    ) {
       return res.status(409).json({ ok: false, error: 'Cannot release while dispute is open' });
     }
 
-    if (String(deal.escrow?.status || 'draft') !== 'buyer_confirmed' && req.user?.role !== 'admin' && role !== 'mediator') {
-      return res.status(400).json({ ok: false, error: 'Buyer confirmation required before release' });
+    if (
+      String(deal.escrow?.status || 'draft') !== 'buyer_confirmed' &&
+      req.user?.role !== 'admin' &&
+      role !== 'mediator'
+    ) {
+      return res
+        .status(400)
+        .json({ ok: false, error: 'Buyer confirmation required before release' });
     }
 
     deal.escrow = {
@@ -1891,7 +2118,11 @@ router.post('/:id/escrow/refund', authenticateToken, async (req, res) => {
     }
 
     const current = String(deal.escrow?.status || 'draft');
-    if (!['funded_mock', 'funded_live', 'awaiting_receipt', 'buyer_confirmed', 'disputed'].includes(current)) {
+    if (
+      !['funded_mock', 'funded_live', 'awaiting_receipt', 'buyer_confirmed', 'disputed'].includes(
+        current,
+      )
+    ) {
       return res.status(400).json({ ok: false, error: `Refund not allowed from ${current}` });
     }
 
@@ -1919,7 +2150,10 @@ router.post('/:id/dispute', authenticateToken, async (req, res) => {
     if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
 
     const role = dealRoleForUser(deal, req.user.id);
-    if (!['buyer', 'seller', 'creator', 'shipper', 'mediator'].includes(role) && req.user?.role !== 'admin') {
+    if (
+      !['buyer', 'seller', 'creator', 'shipper', 'mediator'].includes(role) &&
+      req.user?.role !== 'admin'
+    ) {
       return res.status(403).json({ ok: false, error: 'Forbidden' });
     }
 
@@ -1929,7 +2163,9 @@ router.post('/:id/dispute', authenticateToken, async (req, res) => {
 
     const escrowStatus = String(deal.escrow?.status || 'draft');
     if (escrowStatus === 'draft') {
-      return res.status(400).json({ ok: false, error: 'Escrow must be funded before opening a dispute' });
+      return res
+        .status(400)
+        .json({ ok: false, error: 'Escrow must be funded before opening a dispute' });
     }
 
     const reason = sanitize(req.body?.reason || 'Unspecified dispute');
@@ -1937,7 +2173,9 @@ router.post('/:id/dispute', authenticateToken, async (req, res) => {
     const attachmentUrl = sanitize(req.body?.attachmentUrl || '');
 
     if (!deal.mediatorId) {
-      const mediatorUser = await resolvePlatformMediatorUser(req.user?.role === 'admin' ? req.user.id : '');
+      const mediatorUser = await resolvePlatformMediatorUser(
+        req.user?.role === 'admin' ? req.user.id : '',
+      );
       if (mediatorUser?._id) {
         deal.mediatorId = mediatorUser._id;
         deal.mediation = {
@@ -1958,7 +2196,7 @@ router.post('/:id/dispute', authenticateToken, async (req, res) => {
       reason,
       details,
       evidence: [
-        ...((deal.dispute && Array.isArray(deal.dispute.evidence)) ? deal.dispute.evidence : []),
+        ...(deal.dispute && Array.isArray(deal.dispute.evidence) ? deal.dispute.evidence : []),
         {
           authorId: req.user.id,
           role: role === 'none' ? 'system' : role,
@@ -1971,7 +2209,10 @@ router.post('/:id/dispute', authenticateToken, async (req, res) => {
     deal.escrow = { ...(deal.escrow || {}), status: 'disputed' };
     deal.messages.push({ author: 'system', text: `Dispute opened: ${reason}` });
     if (deal.mediatorId) {
-      deal.messages.push({ author: 'system', text: `Mediator assigned: ${String(deal.mediatorId)}` });
+      deal.messages.push({
+        author: 'system',
+        text: `Mediator assigned: ${String(deal.mediatorId)}`,
+      });
     }
     await deal.save();
 
@@ -1994,9 +2235,13 @@ router.post('/:id/mediator/auto-assign', authenticateToken, async (req, res) => 
     }
 
     const requestedAdminId = sanitize(req.body?.adminUserId || '');
-    const mediatorUser = await resolvePlatformMediatorUser(req.user?.role === 'admin' ? (requestedAdminId || req.user.id) : '');
+    const mediatorUser = await resolvePlatformMediatorUser(
+      req.user?.role === 'admin' ? requestedAdminId || req.user.id : '',
+    );
     if (!mediatorUser?._id) {
-      return res.status(404).json({ ok: false, error: 'No admin mediator account is currently available' });
+      return res
+        .status(404)
+        .json({ ok: false, error: 'No admin mediator account is currently available' });
     }
 
     deal.mediatorId = mediatorUser._id;
@@ -2008,7 +2253,10 @@ router.post('/:id/mediator/auto-assign', authenticateToken, async (req, res) => 
       assignedAt: new Date(),
       approvalNote: sanitize(req.body?.note || 'Platform mediator assigned'),
     };
-    deal.messages.push({ author: 'system', text: `Platform mediator assigned: ${String(mediatorUser._id)}` });
+    deal.messages.push({
+      author: 'system',
+      text: `Platform mediator assigned: ${String(mediatorUser._id)}`,
+    });
     await deal.save();
 
     res.json({ ok: true, item: toPublicDeal(deal) });
@@ -2025,7 +2273,10 @@ router.post('/:id/mediator/request-custom', authenticateToken, async (req, res) 
     if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
 
     const role = dealRoleForUser(deal, req.user.id);
-    if (!['buyer', 'seller', 'creator', 'shipper', 'mediator'].includes(role) && req.user?.role !== 'admin') {
+    if (
+      !['buyer', 'seller', 'creator', 'shipper', 'mediator'].includes(role) &&
+      req.user?.role !== 'admin'
+    ) {
       return res.status(403).json({ ok: false, error: 'Forbidden' });
     }
 
@@ -2036,7 +2287,10 @@ router.post('/:id/mediator/request-custom', authenticateToken, async (req, res) 
     const userId = sanitize(req.body?.userId || '');
 
     if (!name && !email && !contact && !userId) {
-      return res.status(400).json({ ok: false, error: 'Provide at least one mediator identifier (name, email, contact, or userId)' });
+      return res.status(400).json({
+        ok: false,
+        error: 'Provide at least one mediator identifier (name, email, contact, or userId)',
+      });
     }
 
     deal.mediation = {
@@ -2099,7 +2353,8 @@ router.put('/:id/mediator/approve', authenticateToken, async (req, res) => {
     let mediatorUser = null;
     if (mediatorUserId && isObjectIdHex(mediatorUserId)) {
       mediatorUser = await User.findById(mediatorUserId).select('_id');
-      if (!mediatorUser) return res.status(404).json({ ok: false, error: 'Requested mediator user not found' });
+      if (!mediatorUser)
+        return res.status(404).json({ ok: false, error: 'Requested mediator user not found' });
     }
 
     if (!mediatorUser && isObjectIdHex(String(deal.mediation?.customRequest?.userId || ''))) {
@@ -2111,7 +2366,9 @@ router.put('/:id/mediator/approve', authenticateToken, async (req, res) => {
     }
 
     if (!mediatorUser?._id) {
-      return res.status(404).json({ ok: false, error: 'No eligible mediator user found for approval' });
+      return res
+        .status(404)
+        .json({ ok: false, error: 'No eligible mediator user found for approval' });
     }
 
     deal.mediatorId = mediatorUser._id;
@@ -2120,7 +2377,10 @@ router.put('/:id/mediator/approve', authenticateToken, async (req, res) => {
     deal.mediation.assignedBy = req.user.id;
     deal.mediation.assignedAt = new Date();
     deal.mediation.approvalNote = note || 'Mediator request approved by admin';
-    deal.messages.push({ author: 'system', text: `Mediator approved by admin: ${String(mediatorUser._id)}` });
+    deal.messages.push({
+      author: 'system',
+      text: `Mediator approved by admin: ${String(mediatorUser._id)}`,
+    });
     await deal.save();
 
     res.json({ ok: true, item: toPublicDeal(deal) });
@@ -2165,7 +2425,7 @@ router.put('/:id/dispute/resolve', authenticateToken, async (req, res) => {
         note,
         resolvedBy: String(req.user.id || ''),
         resolvedAt: resolvedAt.toISOString(),
-      })
+      }),
     );
 
     deal.dispute = {
@@ -2204,7 +2464,7 @@ router.put('/:id/dispute/resolve', authenticateToken, async (req, res) => {
       Number(deal.totalAmount || 0),
       deal.pva?.split || {},
       deal.currency || 'USD',
-      decision === 'release' ? 'released' : 'refunded'
+      decision === 'release' ? 'released' : 'refunded',
     ).map((line) => {
       if (decision === 'refund' && forfeitedParties.includes(String(line.role || ''))) {
         return { ...line, status: 'forfeited' };
@@ -2221,7 +2481,10 @@ router.put('/:id/dispute/resolve', authenticateToken, async (req, res) => {
     };
     if (decision === 'release') deal.status = 'completed';
     if (decision === 'refund') deal.status = 'cancelled';
-    deal.messages.push({ author: 'system', text: `Dispute resolved: ${decision} (${resolutionCode})` });
+    deal.messages.push({
+      author: 'system',
+      text: `Dispute resolved: ${decision} (${resolutionCode})`,
+    });
     if (forfeitedParties.length) {
       deal.messages.push({
         author: 'system',
@@ -2248,8 +2511,14 @@ router.get('/:id/reports/resolution-certificate', authenticateToken, async (req,
       return res.status(403).json({ ok: false, error: 'Forbidden' });
     }
 
-    if (String(deal.dispute?.status || 'none') !== 'resolved_release' && String(deal.dispute?.status || 'none') !== 'resolved_refund') {
-      return res.status(409).json({ ok: false, error: 'Resolution certificate is only available after a dispute is resolved' });
+    if (
+      String(deal.dispute?.status || 'none') !== 'resolved_release' &&
+      String(deal.dispute?.status || 'none') !== 'resolved_refund'
+    ) {
+      return res.status(409).json({
+        ok: false,
+        error: 'Resolution certificate is only available after a dispute is resolved',
+      });
     }
 
     const certificate = {
@@ -2270,7 +2539,10 @@ router.get('/:id/reports/resolution-certificate', authenticateToken, async (req,
     };
     certificate.certificateHash = sha256Hex(JSON.stringify(certificate));
 
-    deal.messages.push({ author: 'system', text: `Resolution certificate generated: ${certificate.certificateId}` });
+    deal.messages.push({
+      author: 'system',
+      text: `Resolution certificate generated: ${certificate.certificateId}`,
+    });
     await deal.save();
 
     res.json({ ok: true, certificate });
@@ -2293,11 +2565,14 @@ router.get('/:id/reports/export-bundle', authenticateToken, async (req, res) => 
 
     const statusFilter = sanitize(req.query?.queueStatus || '').toLowerCase();
     const queue = Array.isArray(deal.outboundDispatchQueue) ? deal.outboundDispatchQueue : [];
-    const filteredQueue = statusFilter && ['queued', 'sent', 'failed'].includes(statusFilter)
-      ? queue.filter((item) => String(item.status || '').toLowerCase() === statusFilter)
-      : queue;
+    const filteredQueue =
+      statusFilter && ['queued', 'sent', 'failed'].includes(statusFilter)
+        ? queue.filter((item) => String(item.status || '').toLowerCase() === statusFilter)
+        : queue;
 
-    const certificate = ['resolved_release', 'resolved_refund'].includes(String(deal.dispute?.status || 'none'))
+    const certificate = ['resolved_release', 'resolved_refund'].includes(
+      String(deal.dispute?.status || 'none'),
+    )
       ? {
           certificateType: 'deal-resolution-certificate-v1',
           decision: deal.dispute?.status === 'resolved_release' ? 'release' : 'refund',
@@ -2326,7 +2601,9 @@ router.get('/:id/reports/export-bundle', authenticateToken, async (req, res) => 
         mediatorId: String(deal.mediatorId || ''),
       },
       certificate,
-      packet: ['resolved_release', 'resolved_refund'].includes(String(deal.dispute?.status || 'none'))
+      packet: ['resolved_release', 'resolved_refund'].includes(
+        String(deal.dispute?.status || 'none'),
+      )
         ? {
             packetType: 'fraud-response-v1',
             packetId: `packet_export_${String(deal._id)}`,
@@ -2337,7 +2614,9 @@ router.get('/:id/reports/export-bundle', authenticateToken, async (req, res) => 
               author: m.author || 'system',
               text: m.text || '',
             })),
-            outboundTargets: filteredQueue.flatMap((q) => Array.isArray(q.targets) ? q.targets : []),
+            outboundTargets: filteredQueue.flatMap((q) =>
+              Array.isArray(q.targets) ? q.targets : [],
+            ),
           }
         : null,
       queue: filteredQueue.map((item) => ({
@@ -2355,7 +2634,9 @@ router.get('/:id/reports/export-bundle', authenticateToken, async (req, res) => 
         messages: Array.isArray(deal.messages) ? deal.messages.length : 0,
         evidence: Array.isArray(deal.dispute?.evidence) ? deal.dispute.evidence.length : 0,
         queueItems: filteredQueue.length,
-        failedQueueItems: queue.filter((item) => String(item.status || '').toLowerCase() === 'failed').length,
+        failedQueueItems: queue.filter(
+          (item) => String(item.status || '').toLowerCase() === 'failed',
+        ).length,
       },
     };
     bundle.bundleHash = sha256Hex(JSON.stringify(bundle));
@@ -2393,7 +2674,10 @@ router.post('/:id/dispute/evidence', authenticateToken, async (req, res) => {
     if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
 
     const role = dealRoleForUser(deal, req.user.id);
-    if (!['buyer', 'seller', 'creator', 'shipper', 'mediator'].includes(role) && req.user?.role !== 'admin') {
+    if (
+      !['buyer', 'seller', 'creator', 'shipper', 'mediator'].includes(role) &&
+      req.user?.role !== 'admin'
+    ) {
       return res.status(403).json({ ok: false, error: 'Forbidden' });
     }
 
@@ -2442,7 +2726,8 @@ router.post('/:id/reports/fraud-packet', authenticateToken, async (req, res) => 
       return res.status(403).json({ ok: false, error: 'Forbidden' });
     }
 
-    const outbound = req.body?.outbound && typeof req.body.outbound === 'object' ? req.body.outbound : {};
+    const outbound =
+      req.body?.outbound && typeof req.body.outbound === 'object' ? req.body.outbound : {};
     const nowIso = new Date().toISOString();
     const packet = {
       packetType: 'fraud-response-v1',
@@ -2476,7 +2761,9 @@ router.post('/:id/reports/fraud-packet', authenticateToken, async (req, res) => 
     };
 
     if (packet.outbound.sendRequested && req.user?.role !== 'admin') {
-      return res.status(403).json({ ok: false, error: 'Only admin can enqueue outbound fraud packet dispatch' });
+      return res
+        .status(403)
+        .json({ ok: false, error: 'Only admin can enqueue outbound fraud packet dispatch' });
     }
 
     if (packet.outbound.sendRequested) {
@@ -2492,7 +2779,10 @@ router.post('/:id/reports/fraud-packet', authenticateToken, async (req, res) => 
         createdAt: new Date(),
         updatedAt: new Date(),
       };
-      deal.outboundDispatchQueue = [...(Array.isArray(deal.outboundDispatchQueue) ? deal.outboundDispatchQueue : []), queueItem];
+      deal.outboundDispatchQueue = [
+        ...(Array.isArray(deal.outboundDispatchQueue) ? deal.outboundDispatchQueue : []),
+        queueItem,
+      ];
       packet.outbound.queue = {
         packetId: queueItem.packetId,
         status: queueItem.status,
@@ -2529,9 +2819,10 @@ router.get('/:id/reports/outbound-queue', authenticateToken, async (req, res) =>
 
     const statusFilter = sanitize(req.query?.status || '').toLowerCase();
     const queue = Array.isArray(deal.outboundDispatchQueue) ? deal.outboundDispatchQueue : [];
-    const filtered = statusFilter && ['queued', 'sent', 'failed'].includes(statusFilter)
-      ? queue.filter((item) => String(item.status || '').toLowerCase() === statusFilter)
-      : queue;
+    const filtered =
+      statusFilter && ['queued', 'sent', 'failed'].includes(statusFilter)
+        ? queue.filter((item) => String(item.status || '').toLowerCase() === statusFilter)
+        : queue;
     res.json({ ok: true, queue: filtered, total: queue.length });
   } catch (err) {
     console.error('Error fetching outbound queue:', err);
@@ -2565,7 +2856,7 @@ router.put('/:id/reports/outbound/:packetId/status', authenticateToken, async (r
     item.updatedAt = new Date();
     item.lastAttemptAt = new Date();
     item.attempts = Number(item.attempts || 0) + 1;
-    item.lastError = status === 'failed' ? (lastError || 'Dispatch failed') : '';
+    item.lastError = status === 'failed' ? lastError || 'Dispatch failed' : '';
     if (status === 'sent') {
       item.sentAt = new Date();
       item.nextAttemptAt = null;
@@ -2574,7 +2865,10 @@ router.put('/:id/reports/outbound/:packetId/status', authenticateToken, async (r
       item.nextAttemptAt = new Date(Date.now() + nextDealDispatchBackoffMs(item.attempts));
     }
 
-    deal.messages.push({ author: 'system', text: `Outbound packet ${packetId} marked as ${status}` });
+    deal.messages.push({
+      author: 'system',
+      text: `Outbound packet ${packetId} marked as ${status}`,
+    });
     await deal.save();
 
     res.json({ ok: true, item: toPublicDeal(deal), queue });
@@ -2590,10 +2884,19 @@ router.put('/:id/reports/outbound/:packetId/status', authenticateToken, async (r
 // Simple workflow: reach out to counterparty with amount, description, and contact method
 router.post('/quick/initiate', authenticateToken, async (req, res) => {
   try {
-    const { counterpartyEmail, counterpartyName, amount, currency = 'USD', description, contactMethod = 'email' } = req.body || {};
-    
+    const {
+      counterpartyEmail,
+      counterpartyName,
+      amount,
+      currency = 'USD',
+      description,
+      contactMethod = 'email',
+    } = req.body || {};
+
     if (!counterpartyEmail || !counterpartyName || !amount) {
-      return res.status(400).json({ ok: false, error: 'counterpartyEmail, counterpartyName, and amount are required' });
+      return res
+        .status(400)
+        .json({ ok: false, error: 'counterpartyEmail, counterpartyName, and amount are required' });
     }
 
     if (Number(amount) <= 0) {
@@ -2665,13 +2968,15 @@ router.post('/quick/initiate', authenticateToken, async (req, res) => {
 router.post('/:id/quick/accept', authenticateToken, async (req, res) => {
   try {
     const { walletAddress, paymentMethod = 'crypto', additionalInfo = '' } = req.body || {};
-    
+
     const deal = await Deal.findById(req.params.id);
     if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
 
     // Verify counterparty
     if (deal.counterparty?.contact !== req.user.email) {
-      return res.status(403).json({ ok: false, error: 'Unauthorized: you are not the counterparty for this deal' });
+      return res
+        .status(403)
+        .json({ ok: false, error: 'Unauthorized: you are not the counterparty for this deal' });
     }
 
     const counterpartyUser = await User.findById(req.user.id).select('email name');
@@ -2726,7 +3031,8 @@ router.post('/:id/quick/mock-confirm', authenticateToken, async (req, res) => {
     if (!deal) return res.status(404).json({ ok: false, error: 'Deal not found' });
 
     const isSeller = String(deal.ownerId) === String(req.user.id);
-    const isCounterparty = deal.counterparty?.userId && String(deal.counterparty.userId) === String(req.user.id);
+    const isCounterparty =
+      deal.counterparty?.userId && String(deal.counterparty.userId) === String(req.user.id);
 
     if (!isSeller && !isCounterparty) {
       return res.status(403).json({ ok: false, error: 'Forbidden' });
@@ -2745,8 +3051,9 @@ router.post('/:id/quick/mock-confirm', authenticateToken, async (req, res) => {
 
     // Check if both parties have confirmed
     const mockProofs = deal.escrow?.mockTransferProofs || [];
-    const hasBothConfirmations = mockProofs.length >= 2 || 
-      (mockProofs.some(p => p.actor === 'seller') && mockProofs.some(p => p.actor === 'buyer'));
+    const hasBothConfirmations =
+      mockProofs.length >= 2 ||
+      (mockProofs.some((p) => p.actor === 'seller') && mockProofs.some((p) => p.actor === 'buyer'));
 
     if (!hasBothConfirmations) {
       deal.escrow = {
@@ -2763,9 +3070,9 @@ router.post('/:id/quick/mock-confirm', authenticateToken, async (req, res) => {
     // Send confirmation email to both parties
     try {
       const { sendMockConfirmationEmail } = require('../service/emailService');
-      const otherParty = isSeller ? 
-        await User.findById(deal.counterparty?.userId).select('email name') :
-        await User.findById(deal.ownerId).select('email name');
+      const otherParty = isSeller
+        ? await User.findById(deal.counterparty?.userId).select('email name')
+        : await User.findById(deal.ownerId).select('email name');
 
       if (otherParty?.email) {
         await sendMockConfirmationEmail({
@@ -2801,4 +3108,3 @@ router.post('/:id/quick/mock-confirm', authenticateToken, async (req, res) => {
 });
 
 module.exports = router;
-

@@ -28,7 +28,11 @@ function writeFile(p, content) {
 }
 
 function normalizeWhitespace(s) {
-  return s.replace(/\r/g, '').replace(/\t/g, ' ').replace(/[\u00A0\s]+/g, ' ').trim();
+  return s
+    .replace(/\r/g, '')
+    .replace(/\t/g, ' ')
+    .replace(/[\u00A0\s]+/g, ' ')
+    .trim();
 }
 
 function splitSections(md) {
@@ -70,14 +74,14 @@ function splitSections(md) {
   if (current.length) sections.push(current.join('\n').trim());
 
   // Filter out empty
-  return sections.map(s => s.trim()).filter(Boolean);
+  return sections.map((s) => s.trim()).filter(Boolean);
 }
 
 function firstHeading(text) {
   const m = text.match(/^\s*#{1,6}\s+(.+)$/m);
   if (m) return m[1].trim();
   // fallback to first non-empty line
-  const firstLine = text.split(/\n/).find(l => l.trim());
+  const firstLine = text.split(/\n/).find((l) => l.trim());
   return firstLine ? firstLine.replace(/^"\s*/, '').trim() : 'Untitled';
 }
 
@@ -96,7 +100,10 @@ function stripMarkdown(md) {
 function mdToHtml(md) {
   let html = md;
   // code blocks (strip for now)
-  html = html.replace(/^```([\s\S]*?)```$/gm, (m, code) => `<pre><code>${escapeHtml(code)}</code></pre>`);
+  html = html.replace(
+    /^```([\s\S]*?)```$/gm,
+    (m, code) => `<pre><code>${escapeHtml(code)}</code></pre>`,
+  );
   // headings
   for (let h = 6; h >= 1; h--) {
     const re = new RegExp(`^${'#'.repeat(h)}\\s+(.+)$`, 'gm');
@@ -108,14 +115,17 @@ function mdToHtml(md) {
   html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
   html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
   // links
-  html = html.replace(/\[(.*?)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+  html = html.replace(
+    /\[(.*?)\]\(([^)]+)\)/g,
+    '<a href="$2" target="_blank" rel="noopener">$1</a>',
+  );
   // lists
   html = html.replace(/^(\s*)[-*·]\s+(.+)$/gm, '$1<li>$2</li>');
   html = html.replace(/(<li>[^]+?<\/li>)(?!\n<li>)/g, '<ul>$1</ul>');
   // paragraphs
   html = html
     .split(/\n{2,}/)
-    .map(block => {
+    .map((block) => {
       if (/^<h\d|^<ul>|^<pre>/.test(block)) return block;
       const trimmed = block.trim();
       if (!trimmed) return '';
@@ -143,14 +153,24 @@ function guessCategory(title, text) {
   if (/\b(prologue|chapter\s*\d+|chapter\b)/i.test(title)) return 'novel';
   if (/\bautobiography\b/.test(t)) return 'memoir';
   if (/\bmanifesto\b|pva manifesto/.test(t)) return 'vision';
-  if (/the thread that blinks|trans-dimensional rescues|catalog of trans-dimensional/.test(t)) return 'research';
+  if (/the thread that blinks|trans-dimensional rescues|catalog of trans-dimensional/.test(t))
+    return 'research';
   if (/dedication|in memoriam|truth tellers/.test(t)) return 'notes';
-  if (/(pva trust engine|schema|certificate|ipfs|nft|blockchain|airtable|zapier|make|openzeppelin)/.test(t)) return 'research';
-  if (/(akashic|asha|druj|zoroastrian|default mode network|dmn|meditation|gateway)/.test(t)) return 'philosophy';
+  if (
+    /(pva trust engine|schema|certificate|ipfs|nft|blockchain|airtable|zapier|make|openzeppelin)/.test(
+      t,
+    )
+  )
+    return 'research';
+  if (/(akashic|asha|druj|zoroastrian|default mode network|dmn|meditation|gateway)/.test(t))
+    return 'philosophy';
   if (/(nutrition|eating|caloric|fast|alkaline)/.test(t)) return 'wellness';
-  if (/(infinite jobs|kiosk|memory|restoration|watch|garden|ocean|terraform|perfume|clock)/.test(t)) return 'vision';
-  if (/(magnum opus|renewal civilization|phase 1|phase 2|phase 3|phase 4|dao)/.test(t)) return 'vision';
-  if (/(books|corpus hermeticum|my inventions|schopenhauer|tagore|tesla|turing)/.test(t)) return 'notes';
+  if (/(infinite jobs|kiosk|memory|restoration|watch|garden|ocean|terraform|perfume|clock)/.test(t))
+    return 'vision';
+  if (/(magnum opus|renewal civilization|phase 1|phase 2|phase 3|phase 4|dao)/.test(t))
+    return 'vision';
+  if (/(books|corpus hermeticum|my inventions|schopenhauer|tagore|tesla|turing)/.test(t))
+    return 'notes';
   if (/(asha gods children|people|list|whistleblower|activist|prophet)/.test(t)) return 'notes';
   return 'journal';
 }
@@ -159,27 +179,58 @@ function extractTags(text) {
   const tags = new Set();
   const t = text.toLowerCase();
   const candidates = [
-    ['ipfs','ipfs'], ['nft','nft'], ['blockchain','blockchain'], ['certificate','certificate'],
-    ['akashic','akashic'], ['asha','asha'], ['druj','druj'], ['zoroastrian','zoroastrian'],
-    ['meditation','meditation'], ['dmn','dmn'], ['nutrition','nutrition'], ['fast','fasting'],
-    ['kiosk','kiosk'], ['printing','printing'], ['garden','garden'], ['airship','airship'],
-    ['dao','dao'], ['zapier','zapier'], ['airtable','airtable'], ['etherscan','etherscan'],
-    ['polygon','polygon'], ['openzeppelin','openzeppelin'], ['provenance','provenance'], ['gemstone','gemstone'],
+    ['ipfs', 'ipfs'],
+    ['nft', 'nft'],
+    ['blockchain', 'blockchain'],
+    ['certificate', 'certificate'],
+    ['akashic', 'akashic'],
+    ['asha', 'asha'],
+    ['druj', 'druj'],
+    ['zoroastrian', 'zoroastrian'],
+    ['meditation', 'meditation'],
+    ['dmn', 'dmn'],
+    ['nutrition', 'nutrition'],
+    ['fast', 'fasting'],
+    ['kiosk', 'kiosk'],
+    ['printing', 'printing'],
+    ['garden', 'garden'],
+    ['airship', 'airship'],
+    ['dao', 'dao'],
+    ['zapier', 'zapier'],
+    ['airtable', 'airtable'],
+    ['etherscan', 'etherscan'],
+    ['polygon', 'polygon'],
+    ['openzeppelin', 'openzeppelin'],
+    ['provenance', 'provenance'],
+    ['gemstone', 'gemstone'],
     // novel/world tags
-    ['ark','ark'], ['taured','taured'], ['augmentation','augmentation'], ['implant','implant'],
-    ['extraction','extraction'], ['monastery','monastery'], ['alliance','alliance'], ['vimana','vimana'],
-    ['barcelona','barcelona'], ['morrison','morrison'], ['beaumont','beaumont'], ['scan','scan'],
+    ['ark', 'ark'],
+    ['taured', 'taured'],
+    ['augmentation', 'augmentation'],
+    ['implant', 'implant'],
+    ['extraction', 'extraction'],
+    ['monastery', 'monastery'],
+    ['alliance', 'alliance'],
+    ['vimana', 'vimana'],
+    ['barcelona', 'barcelona'],
+    ['morrison', 'morrison'],
+    ['beaumont', 'beaumont'],
+    ['scan', 'scan'],
     // travel and symbolism
-    ['travel','travel'], ['pilgrimage','pilgrimage'], ['pineal','pineal'], ['pinecone','pinecone'],
+    ['travel', 'travel'],
+    ['pilgrimage', 'pilgrimage'],
+    ['pineal', 'pineal'],
+    ['pinecone', 'pinecone'],
     // language concept
-    ['aetherzamin','aetherzamin'], ['language','language']
+    ['aetherzamin', 'aetherzamin'],
+    ['language', 'language'],
   ];
   for (const [kw, tag] of candidates) {
     if (t.includes(kw)) tags.add(tag);
   }
   // crude hashtag capture
   const hashMatches = text.match(/#([a-z0-9\-]+)/gi);
-  if (hashMatches) hashMatches.forEach(h => tags.add(h.replace('#','').toLowerCase()));
+  if (hashMatches) hashMatches.forEach((h) => tags.add(h.replace('#', '').toLowerCase()));
   return Array.from(tags).slice(0, 12);
 }
 
@@ -203,7 +254,7 @@ function main() {
   const sections = splitSections(raw);
   const entries = [];
   const today = new Date();
-  const iso = today.toISOString().slice(0,10); // YYYY-MM-DD
+  const iso = today.toISOString().slice(0, 10); // YYYY-MM-DD
 
   sections.forEach((sec, i) => {
     const title = firstHeading(sec);
@@ -220,7 +271,7 @@ function main() {
       category,
       tags,
       excerpt,
-      contentHtml
+      contentHtml,
     };
     entries.push(entry);
   });

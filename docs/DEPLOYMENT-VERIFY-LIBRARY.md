@@ -3,14 +3,17 @@
 ## Current Status
 
 **Code Status:** ✅ Complete and committed to main
+
 - SHA: `fa2378a5c1a4a6a5b969330b0dd6fbef7bb9a85b`
 - All fixes merged: library routes, MongoDB error handling, CI/CD hardening
 
 **Live Status:** ⏳ Awaiting Render deployment
+
 - Live backend SHA: `6cb7cbd9c43406b57e1a1b62a38c0999e66add55` (old)
 - Live URL: https://pva-bazaar-app-1.onrender.com
 
 **Blocker:** Render deployment credentials not configured in GitHub repo
+
 - Solution: Configure `RENDER_DEPLOY_HOOK` OR (`RENDER_API_TOKEN` + `RENDER_SERVICE_ID`) in repo secrets/vars
 - Once configured: Next push to main will trigger auto-deployment
 
@@ -21,6 +24,7 @@
 Once deployment completes and live SHA advances past `6cb7cbd9`:
 
 ### 1. Verify Backend SHA
+
 ```bash
 curl -s https://pva-bazaar-app-1.onrender.com/api/version | jq '.sha'
 # Expected: fa2378a5... (or later)
@@ -29,12 +33,14 @@ curl -s https://pva-bazaar-app-1.onrender.com/api/version | jq '.sha'
 ### 2. Test Library Endpoints (4 endpoints)
 
 #### Endpoint 1: List Articles (Public)
+
 ```bash
 curl -s 'https://pva-bazaar-app-1.onrender.com/api/library?kind=articles&limit=3' | jq '.'
 # Expected: 200 OK with article array
 ```
 
 #### Endpoint 2: Submit Article (Auth Required)
+
 ```bash
 curl -s -X POST https://pva-bazaar-app-1.onrender.com/api/library/submit \
   -H 'Content-Type: application/json' \
@@ -43,12 +49,14 @@ curl -s -X POST https://pva-bazaar-app-1.onrender.com/api/library/submit \
 ```
 
 #### Endpoint 3: Pending Articles (Auth Required)
+
 ```bash
 curl -s https://pva-bazaar-app-1.onrender.com/api/library/pending | jq '.status'
 # Expected: 401 Unauthorized (no auth token)
 ```
 
 #### Endpoint 4: Get Invalid Article → **404 (Critical Fix)**
+
 ```bash
 curl -s -w '\nStatus: %{http_code}\n' \
   https://pva-bazaar-app-1.onrender.com/api/library/does-not-exist | jq '.'
@@ -57,6 +65,7 @@ curl -s -w '\nStatus: %{http_code}\n' \
 ```
 
 ### 3. Verify Database Entries
+
 ```bash
 # From backend terminal, connect to MongoDB production and verify:
 db.libraryarticles.find().limit(1)
@@ -64,6 +73,7 @@ db.libraryarticles.find().limit(1)
 ```
 
 ### 4. Check CI/CD Logs
+
 - GitHub Actions: https://github.com/PVAGR/pva-bazaar-app/actions
 - Look for latest `🚀 Auto-Deploy to Render.com` workflow
 - Should show: ✅ Deploy triggered successfully
@@ -75,6 +85,7 @@ db.libraryarticles.find().limit(1)
 Run these tests locally before deployment credentials are configured:
 
 ### Test 1: Backend Route Syntax
+
 ```bash
 cd backend
 npm test -- routes/library.test.js
@@ -85,6 +96,7 @@ curl -s http://localhost:5001/api/library?kind=articles
 ```
 
 ### Test 2: ObjectId Validation
+
 ```bash
 # Start backend locally
 npm start
@@ -102,6 +114,7 @@ curl -s -w '\nStatus: %{http_code}\n' http://localhost:5001/api/library/../../et
 ```
 
 ### Test 3: Docker Build
+
 ```bash
 docker build -t pva-bazaar-test .
 docker run -p 5001:5001 -e MONGODB_URI=mongodb://mongo:27017/pvabazaar pva-bazaar-test
@@ -113,6 +126,7 @@ docker run -p 5001:5001 -e MONGODB_URI=mongodb://mongo:27017/pvabazaar pva-bazaa
 ## Deployment Credential Configuration
 
 ### Option A: Webhook (Easiest)
+
 1. Go to https://dashboard.render.com
 2. Select service: `pva-bazaar-app-1`
 3. Settings → Deploy Hook → Copy webhook URL
@@ -121,6 +135,7 @@ docker run -p 5001:5001 -e MONGODB_URI=mongodb://mongo:27017/pvabazaar pva-bazaa
 6. Push any commit to main to trigger deployment
 
 ### Option B: API Token
+
 1. Go to https://render.com/account/api-tokens
 2. Create new token (copy it)
 3. GitHub repo → Settings → Secrets and variables → Actions
@@ -130,6 +145,7 @@ docker run -p 5001:5001 -e MONGODB_URI=mongodb://mongo:27017/pvabazaar pva-bazaa
 5. Push any commit to main to trigger deployment
 
 ### Verification After Configuration
+
 ```bash
 # Monitor GitHub Actions
 git push  # Any commit will trigger workflow
@@ -146,6 +162,7 @@ curl -s https://pva-bazaar-app-1.onrender.com/api/version | jq '.sha'
 ## Rollback Plan (if needed)
 
 If deployment fails:
+
 1. Check GitHub Actions workflow logs
 2. Common issues:
    - Webhook URL invalid/expired: Update `RENDER_DEPLOY_HOOK` in secrets
@@ -163,6 +180,7 @@ If deployment fails:
 ## Success Criteria
 
 ✅ All 4 library endpoints responding with correct status codes:
+
 - GET /api/library?kind=articles → 200
 - POST /api/library/submit (no auth) → 401
 - GET /api/library/pending (no auth) → 401

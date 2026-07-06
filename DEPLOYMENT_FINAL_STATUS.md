@@ -9,17 +9,20 @@
 ## ✅ DEPLOYED & LIVE
 
 ### 1. Backend API
+
 **URL**: https://pva-backend-h6zkzdmjy-pvagrs-projects.vercel.app  
 **Status**: 🟢 Deployed with environment variables  
 **Environment**: Production  
 **Variables Set**: ✅ MONGODB_URI, JWT_SECRET, ADMIN_SECRET_CODE, ETHEREUM_RPC_URL, NODE_ENV, ALLOWED_ORIGIN
 
 ### 2. Frontend (GitHub Pages)
+
 **URL**: https://pvabazaar.org  
 **Status**: 🟢 Auto-deploying from main branch  
 **Latest Push**: a1d01a10
 
 ### 3. Next.js Livestream
+
 **URL**: https://pvabazaar-livestream-o3okjf15o-pvagrs-projects.vercel.app  
 **Status**: 🟡 Deployed (needs environment variables)  
 **Next Step**: Configure environment variables in Vercel dashboard
@@ -54,11 +57,13 @@ NODE_ENV=production
 ```
 
 **Copy MONGODB_URI from backend**:
+
 1. Go to: https://vercel.com/pvagrs-projects/pva-backend-api/settings/environment-variables
 2. Copy the MONGODB_URI value
 3. Add it to livestream project
 
 **Then redeploy**:
+
 ```powershell
 cd pvabazaar-livestream
 vercel --prod
@@ -83,24 +88,28 @@ Your apps are currently behind Vercel authentication. Make them public:
 After configuring environment variables and removing protection, test:
 
 ### Backend Health Check
+
 ```powershell
 curl https://pva-backend-h6zkzdmjy-pvagrs-projects.vercel.app/api/health
 # Expected: {"status":"ok","mongodb":"connected"}
 ```
 
 ### Livestream Homepage
+
 ```powershell
 curl -I https://pvabazaar-livestream-o3okjf15o-pvagrs-projects.vercel.app
 # Expected: HTTP/2 200
 ```
 
 ### Frontend
+
 ```powershell
 curl -I https://pvabazaar.org
 # Expected: HTTP/2 200
 ```
 
 ### Test Full Flow
+
 1. Visit: https://pvabazaar-livestream-o3okjf15o-pvagrs-projects.vercel.app
 2. Click "Sign Up"
 3. Create an account
@@ -180,11 +189,11 @@ Users
 
 ## 📞 QUICK LINKS
 
-| Service | Dashboard | Settings |
-|---------|-----------|----------|
-| Backend | [View](https://vercel.com/pvagrs-projects/pva-backend-api) | [Configure](https://vercel.com/pvagrs-projects/pva-backend-api/settings/environment-variables) |
+| Service    | Dashboard                                                       | Settings                                                                                            |
+| ---------- | --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Backend    | [View](https://vercel.com/pvagrs-projects/pva-backend-api)      | [Configure](https://vercel.com/pvagrs-projects/pva-backend-api/settings/environment-variables)      |
 | Livestream | [View](https://vercel.com/pvagrs-projects/pvabazaar-livestream) | [Configure](https://vercel.com/pvagrs-projects/pvabazaar-livestream/settings/environment-variables) |
-| GitHub | [Repository](https://github.com/PVAGR/pva-bazaar-app) | [Actions](https://github.com/PVAGR/pva-bazaar-app/actions) |
+| GitHub     | [Repository](https://github.com/PVAGR/pva-bazaar-app)           | [Actions](https://github.com/PVAGR/pva-bazaar-app/actions)                                          |
 
 ---
 

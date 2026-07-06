@@ -122,7 +122,11 @@ function sanitizeList(values) {
   return Array.from(
     new Set(
       values
-        .map((value) => String(value || '').trim().toLowerCase())
+        .map((value) =>
+          String(value || '')
+            .trim()
+            .toLowerCase(),
+        )
         .filter(Boolean),
     ),
   ).sort();
@@ -137,7 +141,9 @@ function sanitizeDomainRoles(domainRoles, domains, roles) {
 
   if (domainRoles && typeof domainRoles === 'object' && !Array.isArray(domainRoles)) {
     for (const [rawDomain, rawRoles] of Object.entries(domainRoles)) {
-      const domain = String(rawDomain || '').trim().toLowerCase();
+      const domain = String(rawDomain || '')
+        .trim()
+        .toLowerCase();
       if (!domain || !domainSet.has(domain)) {
         if (domain) unknownDomains.push(domain);
         continue;
@@ -255,7 +261,10 @@ async function getActiveQuizDefinition() {
       version: active.version || 1,
       title: active.title || QUIZ_TITLE,
       intro: active.intro || QUIZ_INTRO,
-      questions: Array.isArray(active.questions) && active.questions.length ? active.questions : DEFAULT_QUESTIONS,
+      questions:
+        Array.isArray(active.questions) && active.questions.length
+          ? active.questions
+          : DEFAULT_QUESTIONS,
     };
   }
 
@@ -316,8 +325,10 @@ router.post('/snapshot/import', adminSession, async (req, res) => {
     const intro = String(quiz.intro || '').trim();
     const questions = Array.isArray(quiz.questions) ? quiz.questions : [];
 
-    if (!title) return res.status(400).json({ ok: false, error: 'Snapshot quiz title is required' });
-    if (!intro) return res.status(400).json({ ok: false, error: 'Snapshot quiz intro is required' });
+    if (!title)
+      return res.status(400).json({ ok: false, error: 'Snapshot quiz title is required' });
+    if (!intro)
+      return res.status(400).json({ ok: false, error: 'Snapshot quiz intro is required' });
 
     const questionError = validateQuestions(questions);
     if (questionError) {

@@ -79,7 +79,11 @@
   padding: 18px;
   margin: 14px 0;
   border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--bg-secondary) 90%, transparent) 0%, var(--bg-tertiary) 100%);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--bg-secondary) 90%, transparent) 0%,
+    var(--bg-tertiary) 100%
+  );
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.14);
 }
 
@@ -110,7 +114,9 @@
   border: 1px solid var(--border);
   background: var(--bg-secondary);
   color: var(--text-primary);
-  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
 .form input:focus,
@@ -142,7 +148,9 @@
   background: var(--bg-secondary);
   color: var(--text-primary);
   cursor: pointer;
-  transition: transform 0.16s ease, filter 0.16s ease;
+  transition:
+    transform 0.16s ease,
+    filter 0.16s ease;
 }
 
 .btn:hover {
@@ -289,4 +297,3 @@
     justify-content: flex-start;
   }
 }
-

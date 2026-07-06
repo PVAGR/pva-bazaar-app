@@ -39,11 +39,13 @@ export default function useConnectionMode() {
           status: connected ? 'live' : 'fallback',
           label: isFileStore
             ? 'Shared account database connected'
-            : (connected ? 'Live backend connected' : 'Fallback mode active'),
+            : connected
+              ? 'Live backend connected'
+              : 'Fallback mode active',
           detail: connected
-            ? (isFileStore
+            ? isFileStore
               ? 'The shared free account store is responding normally.'
-              : 'The shared backend is responding normally.')
+              : 'The shared backend is responding normally.'
             : 'The hosted backend is responding through the free fallback path.',
           checkedAt: new Date().toISOString(),
         });

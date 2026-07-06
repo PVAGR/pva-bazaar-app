@@ -3,7 +3,10 @@ import { clearCurrent } from './localAuthVault';
 export function getToken() {
   if (typeof window === 'undefined') return '';
   const token =
-    localStorage.getItem('token') || localStorage.getItem('authToken') || localStorage.getItem('jwt') || '';
+    localStorage.getItem('token') ||
+    localStorage.getItem('authToken') ||
+    localStorage.getItem('jwt') ||
+    '';
 
   // Migrate older keys to the canonical key.
   if (token && !localStorage.getItem('token')) {

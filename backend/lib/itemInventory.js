@@ -1,5 +1,5 @@
-const Artifact = require("../models/Artifact");
-const { v4: uuidv4 } = require("uuid");
+const Artifact = require('../models/Artifact');
+const { v4: uuidv4 } = require('uuid');
 
 function isInStock(doc) {
   if (!doc) return false;
@@ -12,15 +12,15 @@ async function reserveOne(itemId, reservationId) {
     _id: itemId,
     $or: [
       { isUnlimited: true },
-      { $expr: { $gt: [ { $subtract: ["$stockQty", { $add: ["$reservedQty", "$soldQty"] }] }, 0 ] } }
-    ]
+      { $expr: { $gt: [{ $subtract: ['$stockQty', { $add: ['$reservedQty', '$soldQty'] }] }, 0] } },
+    ],
   };
   const update = {
     $inc: { reservedQty: 1 },
     $addToSet: { reservations: reservationId },
   };
   const doc = await Artifact.findOneAndUpdate(filter, update, { new: true });
-  if (!doc) return { ok: false, error: "sold_out" };
+  if (!doc) return { ok: false, error: 'sold_out' };
   return { ok: true, doc };
 }
 
@@ -28,7 +28,7 @@ async function releaseReservation(reservationId) {
   const doc = await Artifact.findOneAndUpdate(
     { reservations: reservationId },
     { $inc: { reservedQty: -1 }, $pull: { reservations: reservationId } },
-    { new: true }
+    { new: true },
   );
   return !!doc;
 }
@@ -37,7 +37,7 @@ async function finalizeSale(reservationId) {
   const doc = await Artifact.findOneAndUpdate(
     { reservations: reservationId },
     { $inc: { reservedQty: -1, soldQty: 1 }, $pull: { reservations: reservationId } },
-    { new: true }
+    { new: true },
   );
   return !!doc;
 }

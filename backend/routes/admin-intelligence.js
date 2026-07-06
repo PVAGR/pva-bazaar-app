@@ -19,9 +19,7 @@ function requireAuth(req, res, next) {
 router.get('/dashboard', requireAuth, async (req, res) => {
   try {
     // Get latest report
-    const latestReport = await MarketIntelligence.findOne()
-      .sort({ reportDate: -1 })
-      .lean();
+    const latestReport = await MarketIntelligence.findOne().sort({ reportDate: -1 }).lean();
 
     // Get today's fraud flags
     const today = new Date();
@@ -97,9 +95,7 @@ router.get('/alerts', requireAuth, async (req, res) => {
   try {
     const severity = req.query.severity || 'critical';
 
-    const latestReport = await MarketIntelligence.findOne()
-      .sort({ reportDate: -1 })
-      .lean();
+    const latestReport = await MarketIntelligence.findOne().sort({ reportDate: -1 }).lean();
 
     if (!latestReport) {
       return res.json({ alerts: [] });
@@ -209,9 +205,7 @@ router.get('/category-analysis', requireAuth, async (req, res) => {
   try {
     const category = req.query.category;
 
-    const latestReport = await MarketIntelligence.findOne()
-      .sort({ reportDate: -1 })
-      .lean();
+    const latestReport = await MarketIntelligence.findOne().sort({ reportDate: -1 }).lean();
 
     if (!latestReport) {
       return res.json({ analysis: null });

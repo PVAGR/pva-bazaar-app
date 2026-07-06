@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useState } from 'react';
 
 type SnapshotSummary = {
   id: string;
@@ -51,7 +51,7 @@ type SnapshotRecordResponse = {
 };
 
 type BrowserSnapshotPayload = {
-  formatVersion: "pva-browser-recovery-v1";
+  formatVersion: 'pva-browser-recovery-v1';
   capturedAt: string;
   origin: string;
   userAgent: string;
@@ -68,22 +68,19 @@ type BrowserSnapshotPayload = {
   notes: string;
 };
 
-const STORAGE_KEY_TOKEN = "pvabazaar_recovery_token";
-const STORAGE_KEY_API = "pvabazaar_recovery_api";
+const STORAGE_KEY_TOKEN = 'pvabazaar_recovery_token';
+const STORAGE_KEY_API = 'pvabazaar_recovery_api';
 
 function getDefaultApiBase() {
-  const raw =
-    process.env.NEXT_PUBLIC_API_URL ||
-    process.env.NEXT_PUBLIC_VERIFICATION_API_URL ||
-    "";
+  const raw = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_VERIFICATION_API_URL || '';
 
-  if (!raw) return "";
-  const clean = raw.replace(/\/+$/, "");
-  return clean.endsWith("/api") ? clean : `${clean}/api`;
+  if (!raw) return '';
+  const clean = raw.replace(/\/+$/, '');
+  return clean.endsWith('/api') ? clean : `${clean}/api`;
 }
 
 function bytesToBase64(buffer: Uint8Array): string {
-  let binary = "";
+  let binary = '';
   const chunkSize = 0x8000;
   for (let i = 0; i < buffer.length; i += chunkSize) {
     const chunk = buffer.subarray(i, i + chunkSize);
@@ -102,37 +99,43 @@ function base64ToBytes(base64: string): Uint8Array {
 }
 
 async function sha256Hex(input: Uint8Array | string): Promise<string> {
-  const bytes = typeof input === "string" ? new TextEncoder().encode(input) : input;
+  const bytes = typeof input === 'string' ? new TextEncoder().encode(input) : input;
   const digestInput = Uint8Array.from(bytes);
-  const digest = await crypto.subtle.digest("SHA-256", digestInput);
+  const digest = await crypto.subtle.digest('SHA-256', digestInput);
   const view = new Uint8Array(digest);
-  return Array.from(view).map((b) => b.toString(16).padStart(2, "0")).join("");
+  return Array.from(view)
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
 }
 
-async function deriveKey(passphrase: string, salt: Uint8Array, iterations: number): Promise<CryptoKey> {
+async function deriveKey(
+  passphrase: string,
+  salt: Uint8Array,
+  iterations: number,
+): Promise<CryptoKey> {
   const passphraseBytes = Uint8Array.from(new TextEncoder().encode(passphrase));
   const saltBytes = Uint8Array.from(salt);
   const keyMaterial = await crypto.subtle.importKey(
-    "raw",
+    'raw',
     passphraseBytes,
-    { name: "PBKDF2" },
+    { name: 'PBKDF2' },
     false,
-    ["deriveKey"],
+    ['deriveKey'],
   );
   return crypto.subtle.deriveKey(
     {
-      name: "PBKDF2",
+      name: 'PBKDF2',
       salt: saltBytes,
       iterations,
-      hash: "SHA-256",
+      hash: 'SHA-256',
     },
     keyMaterial,
     {
-      name: "AES-GCM",
+      name: 'AES-GCM',
       length: 256,
     },
     false,
-    ["encrypt", "decrypt"],
+    ['encrypt', 'decrypt'],
   );
 }
 
@@ -142,13 +145,13 @@ async function encryptSnapshot(plainText: string, passphrase: string, iterations
   const key = await deriveKey(passphrase, salt, iterations);
   const encoded = Uint8Array.from(new TextEncoder().encode(plainText));
   const ivBytes = Uint8Array.from(iv);
-  const encrypted = await crypto.subtle.encrypt({ name: "AES-GCM", iv: ivBytes }, key, encoded);
+  const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv: ivBytes }, key, encoded);
   const cipherBytes = new Uint8Array(encrypted);
   return {
     payload: {
-      version: "hk-recovery-v1",
-      algorithm: "AES-GCM",
-      kdf: "PBKDF2-SHA256",
+      version: 'hk-recovery-v1',
+      algorithm: 'AES-GCM',
+      kdf: 'PBKDF2-SHA256',
       iterations,
       saltB64: bytesToBase64(salt),
       ivB64: bytesToBase64(iv),
@@ -160,17 +163,18 @@ async function encryptSnapshot(plainText: string, passphrase: string, iterations
   };
 }
 
-async function decryptSnapshot(
-  payload: SnapshotPayload,
-  passphrase: string,
-): Promise<string> {
+async function decryptSnapshot(payload: SnapshotPayload, passphrase: string): Promise<string> {
   const salt = base64ToBytes(payload.saltB64);
   const iv = base64ToBytes(payload.ivB64);
   const encrypted = base64ToBytes(payload.ciphertextB64);
   const key = await deriveKey(passphrase, salt, payload.iterations || 250000);
   const ivBytes = Uint8Array.from(iv);
   const encryptedBytes = Uint8Array.from(encrypted);
-  const plainBuffer = await crypto.subtle.decrypt({ name: "AES-GCM", iv: ivBytes }, key, encryptedBytes);
+  const plainBuffer = await crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv: ivBytes },
+    key,
+    encryptedBytes,
+  );
   return new TextDecoder().decode(plainBuffer);
 }
 
@@ -187,8 +191,8 @@ function readStorage(storage: Storage): Record<string, string> {
 }
 
 function humanBytes(value: number): string {
-  if (!Number.isFinite(value) || value < 0) return "0 B";
-  const units = ["B", "KB", "MB", "GB"];
+  if (!Number.isFinite(value) || value < 0) return '0 B';
+  const units = ['B', 'KB', 'MB', 'GB'];
   let size = value;
   let unitIndex = 0;
   while (size >= 1024 && unitIndex < units.length - 1) {
@@ -199,23 +203,24 @@ function humanBytes(value: number): string {
 }
 
 export default function RecoveryClient() {
-  const [apiBase, setApiBase] = useState("");
-  const [token, setToken] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [passphrase, setPassphrase] = useState("");
-  const [snapshotLabel, setSnapshotLabel] = useState("Primary Continuity Snapshot");
-  const [notes, setNotes] = useState("");
+  const [apiBase, setApiBase] = useState('');
+  const [token, setToken] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [passphrase, setPassphrase] = useState('');
+  const [snapshotLabel, setSnapshotLabel] = useState('Primary Continuity Snapshot');
+  const [notes, setNotes] = useState('');
   const [pinToIpfs, setPinToIpfs] = useState(false);
   const [includeSessionStorage, setIncludeSessionStorage] = useState(true);
   const [items, setItems] = useState<SnapshotSummary[]>([]);
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const storedApi = localStorage.getItem(STORAGE_KEY_API) || getDefaultApiBase();
-    const storedToken = localStorage.getItem(STORAGE_KEY_TOKEN) || localStorage.getItem("authToken") || "";
+    const storedToken =
+      localStorage.getItem(STORAGE_KEY_TOKEN) || localStorage.getItem('authToken') || '';
     setApiBase(storedApi);
     setToken(storedToken);
   }, []);
@@ -224,88 +229,92 @@ export default function RecoveryClient() {
     if (!currentToken || !currentApiBase) return;
     const response = await fetch(`${currentApiBase}/recovery/snapshots`, {
       headers: { Authorization: `Bearer ${currentToken}` },
-      cache: "no-store",
+      cache: 'no-store',
     });
-    const data = (await response.json()) as { ok?: boolean; items?: SnapshotSummary[]; error?: string };
+    const data = (await response.json()) as {
+      ok?: boolean;
+      items?: SnapshotSummary[];
+      error?: string;
+    };
     if (!response.ok || !data.ok) {
-      throw new Error(data.error || "Failed to load snapshots");
+      throw new Error(data.error || 'Failed to load snapshots');
     }
     setItems(Array.isArray(data.items) ? data.items : []);
   }
 
   async function onLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setError("");
-    setMessage("");
+    setError('');
+    setMessage('');
     if (!apiBase || !email || !password) {
-      setError("API URL, email/username, and password are required.");
+      setError('API URL, email/username, and password are required.');
       return;
     }
 
     setBusy(true);
     try {
       const response = await fetch(`${apiBase}/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
       const data = (await response.json()) as { ok?: boolean; token?: string; message?: string };
       if (!response.ok || !data.ok || !data.token) {
-        throw new Error(data.message || "Login failed");
+        throw new Error(data.message || 'Login failed');
       }
       setToken(data.token);
       localStorage.setItem(STORAGE_KEY_TOKEN, data.token);
-      localStorage.setItem("authToken", data.token);
+      localStorage.setItem('authToken', data.token);
       localStorage.setItem(STORAGE_KEY_API, apiBase);
       await fetchSnapshots(data.token, apiBase);
-      setMessage("Logged in. Recovery vault is ready.");
+      setMessage('Logged in. Recovery vault is ready.');
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed");
+      setError(err instanceof Error ? err.message : 'Login failed');
     } finally {
       setBusy(false);
     }
   }
 
   async function onRefresh() {
-    setError("");
-    setMessage("");
+    setError('');
+    setMessage('');
     if (!token || !apiBase) {
-      setError("Set API URL and token first.");
+      setError('Set API URL and token first.');
       return;
     }
     setBusy(true);
     try {
       await fetchSnapshots(token, apiBase);
       localStorage.setItem(STORAGE_KEY_API, apiBase);
-      setMessage("Snapshot list refreshed.");
+      setMessage('Snapshot list refreshed.');
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to refresh");
+      setError(err instanceof Error ? err.message : 'Failed to refresh');
     } finally {
       setBusy(false);
     }
   }
 
   async function onCreateSnapshot() {
-    setError("");
-    setMessage("");
+    setError('');
+    setMessage('');
     if (!token || !apiBase) {
-      setError("Set API URL and token first.");
+      setError('Set API URL and token first.');
       return;
     }
     if (passphrase.trim().length < 12) {
-      setError("Use an encryption passphrase of at least 12 characters.");
+      setError('Use an encryption passphrase of at least 12 characters.');
       return;
     }
 
     setBusy(true);
     try {
       const snapshot: BrowserSnapshotPayload = {
-        formatVersion: "pva-browser-recovery-v1",
+        formatVersion: 'pva-browser-recovery-v1',
         capturedAt: new Date().toISOString(),
         origin: window.location.origin,
         userAgent: navigator.userAgent,
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
-        language: navigator.language || "en-US",
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+        language: navigator.language || 'en-US',
         screen: {
           width: window.screen.width,
           height: window.screen.height,
@@ -313,7 +322,7 @@ export default function RecoveryClient() {
         },
         localStorage: readStorage(localStorage),
         sessionStorage: includeSessionStorage ? readStorage(sessionStorage) : {},
-        cookies: document.cookie || "",
+        cookies: document.cookie || '',
         notes: notes.trim(),
       };
 
@@ -325,26 +334,26 @@ export default function RecoveryClient() {
         hasCookies: snapshot.cookies.length > 0,
         noteLength: snapshot.notes.length,
         captureScope: [
-          "site-local-storage",
-          includeSessionStorage ? "site-session-storage" : null,
-          "site-readable-cookies",
-          "browser-context",
+          'site-local-storage',
+          includeSessionStorage ? 'site-session-storage' : null,
+          'site-readable-cookies',
+          'browser-context',
         ].filter(Boolean),
       };
 
       const response = await fetch(`${apiBase}/recovery/snapshots`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          label: snapshotLabel.trim() || "Untitled snapshot",
+          label: snapshotLabel.trim() || 'Untitled snapshot',
           manifest,
           device: {
-            type: /android|iphone|ipad|mobile/i.test(navigator.userAgent) ? "mobile" : "desktop",
-            platform: navigator.platform || "",
-            userAgent: navigator.userAgent || "",
+            type: /android|iphone|ipad|mobile/i.test(navigator.userAgent) ? 'mobile' : 'desktop',
+            platform: navigator.platform || '',
+            userAgent: navigator.userAgent || '',
             timezone: snapshot.timezone,
           },
           payload: encrypted.payload,
@@ -354,13 +363,13 @@ export default function RecoveryClient() {
 
       const data = (await response.json()) as { ok?: boolean; error?: string };
       if (!response.ok || !data.ok) {
-        throw new Error(data.error || "Failed to save snapshot");
+        throw new Error(data.error || 'Failed to save snapshot');
       }
 
       await fetchSnapshots(token, apiBase);
       setMessage(`Snapshot uploaded (${humanBytes(encrypted.ciphertextBytes)} encrypted payload).`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create snapshot");
+      setError(err instanceof Error ? err.message : 'Failed to create snapshot');
     } finally {
       setBusy(false);
     }
@@ -371,48 +380,48 @@ export default function RecoveryClient() {
       headers: {
         Authorization: `Bearer ${token}`,
       },
-      cache: "no-store",
+      cache: 'no-store',
     });
     const data = (await response.json()) as SnapshotRecordResponse;
     if (!response.ok || !data.ok || !data.item) {
-      throw new Error(data.error || "Failed to fetch snapshot");
+      throw new Error(data.error || 'Failed to fetch snapshot');
     }
     return data.item;
   }
 
   async function onDownload(snapshotId: string, label: string) {
-    setError("");
-    setMessage("");
+    setError('');
+    setMessage('');
     if (!passphrase.trim()) {
-      setError("Enter your passphrase to decrypt and download.");
+      setError('Enter your passphrase to decrypt and download.');
       return;
     }
     setBusy(true);
     try {
       const item = await getSnapshot(snapshotId);
       const plain = await decryptSnapshot(item.payload, passphrase.trim());
-      const blob = new Blob([plain], { type: "application/json" });
+      const blob = new Blob([plain], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
-      const anchor = document.createElement("a");
+      const anchor = document.createElement('a');
       anchor.href = url;
-      anchor.download = `${label.replace(/[^a-z0-9-_]+/gi, "_").slice(0, 40)}-${snapshotId}.json`;
+      anchor.download = `${label.replace(/[^a-z0-9-_]+/gi, '_').slice(0, 40)}-${snapshotId}.json`;
       document.body.appendChild(anchor);
       anchor.click();
       anchor.remove();
       URL.revokeObjectURL(url);
-      setMessage("Snapshot downloaded and decrypted.");
+      setMessage('Snapshot downloaded and decrypted.');
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Download failed");
+      setError(err instanceof Error ? err.message : 'Download failed');
     } finally {
       setBusy(false);
     }
   }
 
   async function onRestore(snapshotId: string) {
-    setError("");
-    setMessage("");
+    setError('');
+    setMessage('');
     if (!passphrase.trim()) {
-      setError("Enter your passphrase to decrypt and restore.");
+      setError('Enter your passphrase to decrypt and restore.');
       return;
     }
 
@@ -422,8 +431,8 @@ export default function RecoveryClient() {
       const plain = await decryptSnapshot(item.payload, passphrase.trim());
       const data = JSON.parse(plain) as BrowserSnapshotPayload;
 
-      if (!data || data.formatVersion !== "pva-browser-recovery-v1") {
-        throw new Error("Snapshot format is not supported");
+      if (!data || data.formatVersion !== 'pva-browser-recovery-v1') {
+        throw new Error('Snapshot format is not supported');
       }
 
       const localKeys = Object.entries(data.localStorage || {});
@@ -436,43 +445,48 @@ export default function RecoveryClient() {
         sessionStorage.setItem(key, String(value));
       }
 
-      setMessage(`Restored ${localKeys.length} localStorage keys and ${sessionKeys.length} sessionStorage keys.`);
+      setMessage(
+        `Restored ${localKeys.length} localStorage keys and ${sessionKeys.length} sessionStorage keys.`,
+      );
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Restore failed");
+      setError(err instanceof Error ? err.message : 'Restore failed');
     } finally {
       setBusy(false);
     }
   }
 
   async function onDelete(snapshotId: string) {
-    setError("");
-    setMessage("");
+    setError('');
+    setMessage('');
     setBusy(true);
     try {
-      const response = await fetch(`${apiBase}/recovery/snapshots/${encodeURIComponent(snapshotId)}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
+      const response = await fetch(
+        `${apiBase}/recovery/snapshots/${encodeURIComponent(snapshotId)}`,
+        {
+          method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
-      });
+      );
       const data = (await response.json()) as { ok?: boolean; error?: string };
       if (!response.ok || !data.ok) {
-        throw new Error(data.error || "Delete failed");
+        throw new Error(data.error || 'Delete failed');
       }
       await fetchSnapshots(token, apiBase);
-      setMessage("Snapshot deleted.");
+      setMessage('Snapshot deleted.');
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Delete failed");
+      setError(err instanceof Error ? err.message : 'Delete failed');
     } finally {
       setBusy(false);
     }
   }
 
   async function onDownloadVaultBundle() {
-    setError("");
-    setMessage("");
+    setError('');
+    setMessage('');
     if (!token || !apiBase) {
-      setError("Set API URL and token first.");
+      setError('Set API URL and token first.');
       return;
     }
     setBusy(true);
@@ -486,16 +500,16 @@ export default function RecoveryClient() {
       }
 
       const bundle = {
-        formatVersion: "pva-vault-bundle-v1",
+        formatVersion: 'pva-vault-bundle-v1',
         exportedAt: new Date().toISOString(),
         source: window.location.origin,
         count: fullItems.length,
         snapshots: fullItems,
       };
 
-      const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: "application/json" });
+      const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
-      const anchor = document.createElement("a");
+      const anchor = document.createElement('a');
       anchor.href = url;
       anchor.download = `pva-recovery-vault-${new Date().toISOString().slice(0, 10)}.json`;
       document.body.appendChild(anchor);
@@ -504,7 +518,7 @@ export default function RecoveryClient() {
       URL.revokeObjectURL(url);
       setMessage(`Downloaded vault bundle with ${fullItems.length} encrypted snapshots.`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to download vault bundle");
+      setError(err instanceof Error ? err.message : 'Failed to download vault bundle');
     } finally {
       setBusy(false);
     }
@@ -516,14 +530,17 @@ export default function RecoveryClient() {
         <p className="text-xs uppercase tracking-[0.32em] text-zinc-500">Continuity Layer</p>
         <h1 className="mt-2 text-3xl font-semibold text-zinc-100">Recovery Vault</h1>
         <p className="mt-3 max-w-3xl text-sm leading-7 text-zinc-300">
-          Create encrypted snapshots from this browser, store them in your account, and restore on a new device after
-          login. This captures website/browser state, not full operating-system files or hardware-level passwords.
+          Create encrypted snapshots from this browser, store them in your account, and restore on a
+          new device after login. This captures website/browser state, not full operating-system
+          files or hardware-level passwords.
         </p>
       </header>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <article className="rounded-xl border border-zinc-800/80 bg-zinc-950/70 p-4">
-          <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-zinc-300">Account Access</h2>
+          <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-zinc-300">
+            Account Access
+          </h2>
           <form className="mt-3 space-y-3" onSubmit={onLogin}>
             <label className="block text-xs text-zinc-400">
               API base URL
@@ -559,7 +576,7 @@ export default function RecoveryClient() {
                   const value = event.target.value.trim();
                   setToken(value);
                   localStorage.setItem(STORAGE_KEY_TOKEN, value);
-                  localStorage.setItem("authToken", value);
+                  localStorage.setItem('authToken', value);
                 }}
                 className="mt-1 w-full rounded border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 outline-none ring-amber-300/30 focus:ring"
               />
@@ -585,7 +602,9 @@ export default function RecoveryClient() {
         </article>
 
         <article className="rounded-xl border border-zinc-800/80 bg-zinc-950/70 p-4">
-          <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-zinc-300">Create Snapshot</h2>
+          <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-zinc-300">
+            Create Snapshot
+          </h2>
           <div className="mt-3 space-y-3">
             <label className="block text-xs text-zinc-400">
               Snapshot label
@@ -622,7 +641,11 @@ export default function RecoveryClient() {
               Include sessionStorage
             </label>
             <label className="flex items-center gap-2 text-xs text-zinc-300">
-              <input type="checkbox" checked={pinToIpfs} onChange={(event) => setPinToIpfs(event.target.checked)} />
+              <input
+                type="checkbox"
+                checked={pinToIpfs}
+                onChange={(event) => setPinToIpfs(event.target.checked)}
+              />
               Try pin encrypted snapshot to IPFS when backend keys are configured
             </label>
             <button
@@ -650,12 +673,20 @@ export default function RecoveryClient() {
           {message}
         </div>
       ) : null}
-      {error ? <div className="rounded-lg border border-red-500/50 bg-red-500/10 px-3 py-2 text-sm text-red-200">{error}</div> : null}
+      {error ? (
+        <div className="rounded-lg border border-red-500/50 bg-red-500/10 px-3 py-2 text-sm text-red-200">
+          {error}
+        </div>
+      ) : null}
 
       <article className="rounded-xl border border-zinc-800/80 bg-zinc-950/70 p-4">
-        <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-zinc-300">Vault Snapshots</h2>
+        <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-zinc-300">
+          Vault Snapshots
+        </h2>
         {items.length === 0 ? (
-          <p className="mt-3 text-sm text-zinc-500">No snapshots yet. Create one from this device first.</p>
+          <p className="mt-3 text-sm text-zinc-500">
+            No snapshots yet. Create one from this device first.
+          </p>
         ) : null}
         <div className="mt-3 grid gap-3">
           {items.map((item) => (
@@ -664,16 +695,15 @@ export default function RecoveryClient() {
                 <div>
                   <p className="text-sm font-semibold text-zinc-100">{item.label}</p>
                   <p className="mt-1 text-xs text-zinc-400">
-                    Created {new Date(item.createdAt).toLocaleString()} · {humanBytes(item.payloadSizeBytes)}
+                    Created {new Date(item.createdAt).toLocaleString()} ·{' '}
+                    {humanBytes(item.payloadSizeBytes)}
                   </p>
                   <p className="mt-1 text-xs text-zinc-500">
-                    {item.device?.type || "unknown"} · {item.device?.platform || "platform-unknown"} ·{" "}
-                    {item.device?.timezone || "timezone-unknown"}
+                    {item.device?.type || 'unknown'} · {item.device?.platform || 'platform-unknown'}{' '}
+                    · {item.device?.timezone || 'timezone-unknown'}
                   </p>
                   {item.ipfs?.cid ? (
-                    <p className="mt-1 text-xs text-amber-300">
-                      IPFS CID: {item.ipfs.cid}
-                    </p>
+                    <p className="mt-1 text-xs text-amber-300">IPFS CID: {item.ipfs.cid}</p>
                   ) : null}
                 </div>
                 <div className="flex flex-wrap gap-2">

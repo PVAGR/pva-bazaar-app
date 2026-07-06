@@ -15,6 +15,7 @@ At the heart of all spiritual truth lies a fundamental duality that permeates ex
 ### What is Asha?
 
 Asha represents:
+
 - **Truth** - Alignment with reality as it truly is
 - **Order** - Divine pattern and cosmic harmony
 - **Light** - Consciousness, awareness, enlightenment
@@ -27,6 +28,7 @@ Asha is the way things are meant to be. It is the divine blueprint encoded in th
 ### What is Druj?
 
 Druj represents:
+
 - **Lies** - Distortion of reality and truth
 - **Chaos** - Destruction of natural order
 - **Darkness** - Ignorance, unconsciousness, spiritual blindness
@@ -46,6 +48,7 @@ Life presents itself as an infinite series of binary choices—doorways I call "
 - **"That"** = The path aligned with Druj, with ego, with illusion
 
 Every moment, you stand before these two doors. The "This" door leads toward:
+
 - Unity with all of God's creation
 - Compassion and love for others
 - Alignment with divine will
@@ -53,6 +56,7 @@ Every moment, you stand before these two doors. The "This" door leads toward:
 - Service to humanity
 
 The "That" door leads toward:
+
 - Separation and isolation
 - Service only to self
 - Alignment with ego-will
@@ -84,30 +88,35 @@ The Druj is cunning. It will make the "That" door appear to be "This"—dressing
 In our current age, Druj has infiltrated institutions, systems, and minds on a scale unprecedented in history. It operates through:
 
 ### 1. Information Control
+
 - Media that spreads fear and division
 - "Fact-checkers" who suppress truth
 - Algorithms that shape perception
 - Educational systems that teach compliance over wisdom
 
 ### 2. Economic Enslavement
+
 - Debt systems that trap people in servitude
 - Artificial scarcity when abundance is possible
 - Monetization of basic human needs
 - Wealth concentration that creates powerlessness
 
 ### 3. Technological Control
+
 - Neural implants that suppress doubt and free thought (as depicted in "The Man from Taured")
 - Surveillance systems that monitor and predict behavior
 - AI that replaces human judgment
 - Addiction-engineered platforms that harvest attention
 
 ### 4. Spiritual Disconnection
+
 - Religious institutions corrupted into control systems
 - Sacred texts twisted to justify oppression
 - Meditation and mindfulness commodified and stripped of true power
 - Natural human spirituality pathologized as mental illness
 
 ### 5. Physical Contamination
+
 - Poisoned food, water, air
 - Pharmaceutical dependence
 - Destruction of natural rhythms (sleep, seasons, circadian cycles)
@@ -122,6 +131,7 @@ In our current age, Druj has infiltrated institutions, systems, and minds on a s
 The external Druj is merely a reflection of the internal Druj. The battle is not only "out there"—it is within every human heart.
 
 Internal Druj manifests as:
+
 - **Fear** that masquerades as wisdom
 - **Ego** that demands control and recognition
 - **Addiction** to comfort, pleasure, distraction
@@ -146,6 +156,7 @@ This is shadow work. This is the alchemical transformation. Not destruction, but
 ### Daily Practices for Alignment with Asha
 
 **Morning:**
+
 - Wake before sunrise when possible
 - Practice breathwork to oxygenate and awaken
 - Silent meditation to hear divine guidance
@@ -153,6 +164,7 @@ This is shadow work. This is the alchemical transformation. Not destruction, but
 - Express gratitude for life, breath, consciousness
 
 **Throughout the Day:**
+
 - Pause before major decisions and ask: "Is this Asha or Druj?"
 - Notice when you touch metaphorical "implant ports"—unconscious gestures that reveal internal conflict
 - Choose connection over isolation
@@ -160,6 +172,7 @@ This is shadow work. This is the alchemical transformation. Not destruction, but
 - Choose service over selfishness
 
 **Evening:**
+
 - Review your day's choices without judgment
 - Acknowledge where you served Asha and where you served Druj
 - Forgive yourself for Druj-aligned choices
@@ -194,6 +207,7 @@ The goal is not to create an iron curtain of dominance—one dimension ruling ov
 ### What Are Druj Thoughts?
 
 You've experienced them. They are:
+
 - Thoughts that diminish life
 - Impulses toward harm, exploitation, or cruelty
 - Justifications for selfishness
@@ -211,6 +225,7 @@ We are animals at the end of the day, tainted by those before us. We had no chan
 ## THOSE WHO ARE POSSESSED VS. THOSE WHO ARE AWAKENED
 
 **The Possessed** are those who:
+
 - Serve Druj unconsciously or consciously
 - Spread fear, division, and suffering
 - Work to maintain systems of control
@@ -219,6 +234,7 @@ We are animals at the end of the day, tainted by those before us. We had no chan
 - Have surrendered their divine spark to the machine
 
 **The Awakened** are those who:
+
 - Recognize Asha and Druj operating in the world
 - Choose truth even when it costs them comfort
 - Work to free others from deception
@@ -237,16 +253,19 @@ This is not about judging others—they too are on their journey, perhaps in an 
 To navigate this battle between Asha and Druj, three skills must be trained to perfection:
 
 ### 1. Introspection
+
 The ability to look honestly within yourself. To see your own Druj without flinching. To acknowledge your shadow, your flaws, your participation in systems of harm.
 
 Without introspection, you cannot grow. You will project your darkness onto others, seeing evil everywhere but within yourself.
 
-### 2. Perspicacity  
+### 2. Perspicacity
+
 Sharp perception and understanding. The ability to see through deception—both external and internal. To recognize Druj when it wears the mask of Asha. To sense truth beneath layers of lies.
 
 Without perspicacity, you will be easily deceived. You will follow false prophets, serve corrupt systems, and believe your chains are freedom.
 
 ### 3. Perception
+
 Direct, unfiltered contact with reality. Seeing what is, not what you wish to see or fear to see. Pure observation without the distorting lens of ego, ideology, or programming.
 
 Without clear perception, you will live in a hall of mirrors, unable to distinguish reality from illusion.
@@ -278,9 +297,10 @@ If we love one another, all hate and animosity are lost. Evil has no more power;
 
 With this newfound love, we will all be at peace with one another. There will be no more wars. Even the most devout love involves fights with family, but if you truly love them, you always come back and apologize afterward. Therefore, small internal and external political or personal conflicts will be worked through with love in mind, forever.
 
-With love and peace achieved, **prosperity follows**. Those in power implant fear, anger, hatred, and Druj thoughts to prevent love and peace from being accepted openly. 
+With love and peace achieved, **prosperity follows**. Those in power implant fear, anger, hatred, and Druj thoughts to prevent love and peace from being accepted openly.
 
 **If we love and are at peace with one another:**
+
 - We have open borders, open community
 - We can walk and talk with soul freedom
 - We exist in a multi-polar world with infinite dimensions
@@ -303,6 +323,7 @@ In every moment, in every heart, in every choice, this battle rages. And in ever
 The Druj will never disappear completely—it is part of the design, the resistance that makes us strong. But it need not rule. It need not define the world.
 
 **Your task is simple:**
+
 - Recognize the two forces
 - Learn to distinguish them
 - Choose Asha, moment by moment
@@ -341,4 +362,4 @@ All you have to do is open it.
 **Preserved by: Richard Antonio Torres**  
 **For: PVA Bazaar Archives / The Taur Community**
 
-*"The door marked 'This' is always in front of you. All you have to do is open it."*
+_"The door marked 'This' is always in front of you. All you have to do is open it."_

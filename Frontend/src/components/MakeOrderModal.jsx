@@ -77,14 +77,19 @@ export default function MakeOrderModal({ isOpen, onClose, onSuccess }) {
         {/* Header */}
         <div className="modal-header">
           <h2 className="modal-title">💼 Make Order</h2>
-          <button className="modal-close" onClick={handleClose} aria-label="Close">✕</button>
+          <button className="modal-close" onClick={handleClose} aria-label="Close">
+            ✕
+          </button>
         </div>
 
         {/* Content */}
         <div className="modal-body">
           {step === 'form' && (
             <form onSubmit={handleSubmit} className="make-order-form">
-              <p className="form-help">Initiate a deal with a counterparty. Send them an email invite to accept and provide payment details.</p>
+              <p className="form-help">
+                Initiate a deal with a counterparty. Send them an email invite to accept and provide
+                payment details.
+              </p>
 
               <div className="form-group">
                 <label htmlFor="counterpartyEmail">Counterparty Email *</label>
@@ -157,7 +162,12 @@ export default function MakeOrderModal({ isOpen, onClose, onSuccess }) {
               {error && <div className="form-error">{error}</div>}
 
               <div className="form-actions">
-                <button type="button" className="button ghost" onClick={handleClose} disabled={loading}>
+                <button
+                  type="button"
+                  className="button ghost"
+                  onClick={handleClose}
+                  disabled={loading}
+                >
                   Cancel
                 </button>
                 <button type="submit" className="button primary" disabled={loading}>
@@ -182,7 +192,9 @@ export default function MakeOrderModal({ isOpen, onClose, onSuccess }) {
                 An email invitation has been sent to <strong>{counterpartyEmail}</strong>.
               </p>
               <div className="success-details">
-                <p><strong>Next Steps:</strong></p>
+                <p>
+                  <strong>Next Steps:</strong>
+                </p>
                 <ul>
                   <li>Counterparty will receive the invite email</li>
                   <li>They accept and provide payment/crypto information</li>

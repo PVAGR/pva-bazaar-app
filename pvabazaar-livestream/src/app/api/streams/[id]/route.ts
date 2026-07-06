@@ -5,10 +5,7 @@ import { connectToDatabase } from '@/lib/mongodb';
 import { Stream } from '@/models/Stream';
 import { isValidObjectId } from 'mongoose';
 
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const session = await getServerSession(authOptions);
   if (!session) {
@@ -25,7 +22,10 @@ export async function DELETE(
     const stream = await Stream.findOne({ _id: id, userId: session.user.id });
 
     if (!stream) {
-      return NextResponse.json({ message: 'Stream not found or user not authorized' }, { status: 404 });
+      return NextResponse.json(
+        { message: 'Stream not found or user not authorized' },
+        { status: 404 },
+      );
     }
 
     await Stream.deleteOne({ _id: id });

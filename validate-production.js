@@ -19,7 +19,7 @@ function makeRequest(url, method = 'GET', body = null) {
       },
       (res) => {
         let data = '';
-        res.on('data', chunk => data += chunk);
+        res.on('data', (chunk) => (data += chunk));
         res.on('end', () => {
           const elapsed = Date.now() - start;
           try {
@@ -44,7 +44,7 @@ function makeRequest(url, method = 'GET', body = null) {
             });
           }
         });
-      }
+      },
     );
 
     req.on('error', reject);
@@ -98,7 +98,9 @@ async function validateProduction() {
       console.log(`   ✅ Configured: ${data.configured}`);
       console.log(`   ✅ Queue Enabled: ${data.queueEnabled}`);
       console.log(`   ✅ Worker Active: ${data.worker.active}`);
-      console.log(`   ✅ Queue Status: ${data.queue.pending} pending, ${data.queue.processed} processed`);
+      console.log(
+        `   ✅ Queue Status: ${data.queue.pending} pending, ${data.queue.processed} processed`,
+      );
       console.log(`   ✅ Ecosystem: ${data.ecosystem.status}`);
       console.log(`   ✅ Website: ${data.ecosystem.services.website.status}`);
       console.log(`   ✅ Telegram: ${data.ecosystem.services.telegram.status}`);
@@ -139,12 +141,12 @@ async function validateProduction() {
     const payload = JSON.stringify({
       message: 'Production validation test',
       event: 'validation.webhook.test',
-      metadata: { testAt: new Date().toISOString() }
+      metadata: { testAt: new Date().toISOString() },
     });
     const webhook = await makeRequest(
       'https://api.pvabazaar.org/api/openclaw/webhook',
       'POST',
-      payload
+      payload,
     );
     // Webhook may return 400 if it doesn't recognize the format, which is ok - it exists
     if (webhook.status === 200 || webhook.status === 201 || webhook.status === 400) {
@@ -166,7 +168,12 @@ async function validateProduction() {
   try {
     console.log('\n5️⃣  Testing Website (pvabazaar.org)...');
     const website = await makeRequest('https://pvabazaar.org');
-    if (website.status === 200 || website.status === 301 || website.status === 302 || website.status === 304) {
+    if (
+      website.status === 200 ||
+      website.status === 301 ||
+      website.status === 302 ||
+      website.status === 304
+    ) {
       console.log(`   ✅ Status: ${website.status} ${website.statusText}`);
       console.log(`   ✅ Response time: ${website.elapsed}ms`);
       if (website.raw.includes('<!doctype') || website.raw.includes('<html')) {
@@ -182,19 +189,19 @@ async function validateProduction() {
   }
 
   // Summary
-  console.log(`\n${  '='.repeat(60)}`);
+  console.log(`\n${'='.repeat(60)}`);
   console.log('\n📊 VALIDATION SUMMARY\n');
   console.log(`✅ Passed: ${results.passed.length}`);
-  results.passed.forEach(item => console.log(`   • ${item}`));
-  
+  results.passed.forEach((item) => console.log(`   • ${item}`));
+
   if (results.failed.length > 0) {
     console.log(`\n❌ Failed: ${results.failed.length}`);
-    results.failed.forEach(item => console.log(`   • ${item}`));
+    results.failed.forEach((item) => console.log(`   • ${item}`));
   } else {
     console.log('\n🎉 ALL SYSTEMS OPERATIONAL!');
   }
 
-  console.log(`\n${  '='.repeat(60)}`);
+  console.log(`\n${'='.repeat(60)}`);
   console.log('\n📋 DEPLOYMENT STATUS:\n');
   console.log('🌐 Website: https://pvabazaar.org');
   console.log('📡 API: https://api.pvabazaar.org');
@@ -204,7 +211,7 @@ async function validateProduction() {
   console.log('\n✨ System is FULLY OPERATIONAL and ONLINE ✨\n');
 }
 
-validateProduction().catch(err => {
+validateProduction().catch((err) => {
   console.error('Validation error:', err);
   process.exit(1);
 });

@@ -75,7 +75,7 @@ export function SkeletonArticle({ className = '' }) {
 
 export function SkeletonGrid({ columns = 3, rows = 2, className = '' }) {
   return (
-    <div 
+    <div
       className={`skeleton-grid ${className}`}
       style={{ gridTemplateColumns: `repeat(${columns}, 1fr)` }}
     >

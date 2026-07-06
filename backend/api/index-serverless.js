@@ -12,10 +12,12 @@ if (process.env.RENDER !== 'true') {
 const app = express();
 app.set('trust proxy', 1);
 app.use(helmet({ contentSecurityPolicy: false }));
-app.use(cors({
-  origin: true,
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: true,
+    credentials: true,
+  }),
+);
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
@@ -54,7 +56,10 @@ app.use(async (req, res, next) => {
     res.setHeader('Access-Control-Allow-Credentials', 'true');
   }
   res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Admin-Code,Origin,X-Requested-With,Accept');
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'Content-Type,Authorization,X-Admin-Code,Origin,X-Requested-With,Accept',
+  );
   if (req.method === 'OPTIONS') {
     return res.status(204).end();
   }
@@ -91,7 +96,14 @@ app.use('/api/health', require('../routes/health'));
 
 app.get('/api/ping', (_req, res) => {
   const build = getBuildInfo();
-  res.status(200).json({ ok: true, message: 'pong', timestamp: new Date().toISOString(), version: build.version, sha: build.sha, shortSha: build.shortSha });
+  res.status(200).json({
+    ok: true,
+    message: 'pong',
+    timestamp: new Date().toISOString(),
+    version: build.version,
+    sha: build.sha,
+    shortSha: build.shortSha,
+  });
 });
 
 app.get('/api/version', (_req, res) => {

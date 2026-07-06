@@ -5,6 +5,7 @@
 The **Universal Provenance Tokenization Portal** is a guided, adaptive submission system that captures the complete story of ANY item and mints it as an NFT with verifiable provenance on the blockchain.
 
 Whether it's a Panjshir emerald, handcrafted pottery, artisanal coffee, or vintage collectible—users can instantly:
+
 1. 📏 Document material truth
 2. 📖 Share the human narrative
 3. 🔐 Provide verifiable proof
@@ -20,6 +21,7 @@ Whether it's a Panjshir emerald, handcrafted pottery, artisanal coffee, or vinta
 ### Backend Model: `ProvenanceSubmission.js`
 
 **Core Structure**:
+
 - 6-step submission workflow
 - Adaptive fields by object type
 - Completeness scoring system
@@ -28,6 +30,7 @@ Whether it's a Panjshir emerald, handcrafted pottery, artisanal coffee, or vinta
 - Marketplace listing creation
 
 **Object Types Supported**:
+
 - 💎 Gemstones & Minerals
 - 👑 Jewelry
 - 🎨 Art & Sculpture
@@ -259,6 +262,7 @@ GET    /api/provenance/search/all
    - Link to dashboard
 
 **Features**:
+
 - Progress bar with percentage
 - Step-by-step navigation
 - Auto-save on each step
@@ -273,6 +277,7 @@ GET    /api/provenance/search/all
 ## 🎨 Adaptive Forms Example
 
 ### For Gemstones:
+
 ```
 Name: The Crimson Star Ruby
 Description: Natural Panjshir ruby...
@@ -285,6 +290,7 @@ Treatment: None
 ```
 
 ### For Artisan Crafts:
+
 ```
 Name: Hand-Thrown Raku Bowl
 Description: Traditional Japanese ceramic...
@@ -295,6 +301,7 @@ Firing Temperature: 1200°C
 ```
 
 ### For Food & Beverage:
+
 ```
 Name: Ethiopian Arabica Coffee
 Description: Single-origin from Sidamo...
@@ -311,18 +318,21 @@ Roast Level: Medium
 ## 📊 Completeness Scoring System
 
 **Material Truth (33%)**:
+
 - ✅ Basic info (name, description, materials): 30%
 - ✅ Physical specs (date, weight, dimensions): 20%
 - ✅ Type-specific fields: 50%
 - **Target**: 80-100%
 
 **Narrative Quality (33%)**:
+
 - ✅ Story (500+ characters): 40%
 - ✅ Creator statement + journey: 30%
 - ✅ Significance + context: 30%
 - **Target**: 70-100%
 
 **Proof Quality (33%)**:
+
 - ✅ 3+ photos (object, creator, workshop): 40%
 - ✅ 1+ document (certificate, receipt): 30%
 - ✅ Blockchain or GPS or certifier: 20%
@@ -338,6 +348,7 @@ Roast Level: Medium
 ## 🔐 Fraud Detection
 
 Checks for inconsistencies:
+
 - High proof score but no photos
 - Very short narrative (< 50 chars)
 - Blockchain proof doesn't verify
@@ -353,6 +364,7 @@ Checks for inconsistencies:
 ## 💎 Use Cases
 
 ### 1. Gemstone Seller
+
 ```
 Upload: Panjshir ruby
 Material: Weight, cut, clarity studies
@@ -363,6 +375,7 @@ Price: $1200 (AI-calculated)
 ```
 
 ### 2. Artisan Rediscovery
+
 ```
 Found: Old family ceramic bowl
 Material: Data about clay, glazes, dimensions
@@ -372,6 +385,7 @@ Result: NFT with provenance chain
 ```
 
 ### 3. Coffee Producer
+
 ```
 Upload: New harvest batch
 Material: Origin, altitude, roast profile
@@ -381,6 +395,7 @@ Result: Tokenized coffee + wholesale listing
 ```
 
 ### 4. Collectible Re-registration
+
 ```
 Previous: Item already minted & sold
 New: Owner re-registers for authenticity
@@ -394,6 +409,7 @@ Result: New NFT tracking chain of custody
 ## 🌍 Global Integration
 
 **Connected To**:
+
 - ✅ Marketplace product creation
 - ✅ Fair pricing engine (auto-price)
 - ✅ Shop system (auto-create shop if needed)
@@ -410,32 +426,33 @@ Single unified workflow
 ## 🚀 API Usage Example
 
 ### JavaScript Client
+
 ```javascript
 // Step 0: Start
 const res1 = await fetch('/api/provenance/start', {
   method: 'POST',
   headers: {
-    'Authorization': `Bearer ${token}`,
-    'Content-Type': 'application/json'
+    Authorization: `Bearer ${token}`,
+    'Content-Type': 'application/json',
   },
-  body: JSON.stringify({ objectType: 'gemstone' })
+  body: JSON.stringify({ objectType: 'gemstone' }),
 });
 const { submissionId } = await res1.json();
 
 // Step 1: Add material truth
 await fetch(`/api/provenance/${submissionId}/material-truth`, {
   method: 'POST',
-  headers: { 'Authorization': `Bearer ${token}` },
+  headers: { Authorization: `Bearer ${token}` },
   body: JSON.stringify({
     common: {
       objectName: 'The Crimson Star Ruby',
-      weight: { value: 2.5, unit: 'ct' }
+      weight: { value: 2.5, unit: 'ct' },
     },
     gemstone: {
       species: 'Ruby',
-      clarity: 'Included'
-    }
-  })
+      clarity: 'Included',
+    },
+  }),
 });
 
 // ... repeat for narrative, proofs, creator info
@@ -443,19 +460,19 @@ await fetch(`/api/provenance/${submissionId}/material-truth`, {
 // Step 5: Submit
 const review = await fetch(`/api/provenance/${submissionId}/submit`, {
   method: 'POST',
-  headers: { 'Authorization': `Bearer ${token}` }
+  headers: { Authorization: `Bearer ${token}` },
 });
 
 // Step 6: Mint (after admin approval)
 const mint = await fetch(`/api/provenance/${submissionId}/mint`, {
   method: 'POST',
-  headers: { 'Authorization': `Bearer ${token}` }
+  headers: { Authorization: `Bearer ${token}` },
 });
 
 // Step 7: List
 const listing = await fetch(`/api/provenance/${submissionId}/list`, {
   method: 'POST',
-  headers: { 'Authorization': `Bearer ${token}` }
+  headers: { Authorization: `Bearer ${token}` },
 });
 ```
 

@@ -49,17 +49,24 @@ function formatBytes(value) {
 }
 
 function slugify(value) {
-  return String(value || 'continuity')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 60) || 'continuity';
+  return (
+    String(value || 'continuity')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 60) || 'continuity'
+  );
 }
 
 function normalizeError(error) {
   if (!error) return 'Unknown error';
   if (typeof error === 'string') return error;
-  return error?.response?.data?.error || error?.response?.data?.message || error?.message || 'Unknown error';
+  return (
+    error?.response?.data?.error ||
+    error?.response?.data?.message ||
+    error?.message ||
+    'Unknown error'
+  );
 }
 
 function getSnapshotDeviceType() {
@@ -123,12 +130,17 @@ export default function RecoveryPage() {
   const [selectedSnapshot, setSelectedSnapshot] = useState(null);
   const [selectedSnapshotError, setSelectedSnapshotError] = useState('');
   const [passphrase, setPassphrase] = useState('');
-  const [label, setLabel] = useState(`Continuity snapshot ${new Date().toISOString().slice(0, 10)}`);
+  const [label, setLabel] = useState(
+    `Continuity snapshot ${new Date().toISOString().slice(0, 10)}`,
+  );
   const [includeSessionStorage, setIncludeSessionStorage] = useState(true);
   const [saveRemote, setSaveRemote] = useState(true);
   const [pinToIpfs, setPinToIpfs] = useState(false);
   const [replaceMatchingKeys, setReplaceMatchingKeys] = useState(true);
-  const [status, setStatus] = useState({ kind: 'idle', message: 'Ready to create a continuity snapshot.' });
+  const [status, setStatus] = useState({
+    kind: 'idle',
+    message: 'Ready to create a continuity snapshot.',
+  });
   const [busyAction, setBusyAction] = useState('');
   const [latestBundleInfo, setLatestBundleInfo] = useState(null);
 
@@ -235,7 +247,10 @@ export default function RecoveryPage() {
         });
         await loadSnapshots();
       } else {
-        setStatus({ kind: 'success', message: 'Snapshot downloaded locally. Remote save was skipped.' });
+        setStatus({
+          kind: 'success',
+          message: 'Snapshot downloaded locally. Remote save was skipped.',
+        });
       }
     } catch (error) {
       setStatus({ kind: 'error', message: normalizeError(error) });
@@ -250,7 +265,10 @@ export default function RecoveryPage() {
     try {
       const result = await fetchRecoverySnapshotById(snapshotId);
       setSelectedSnapshot(result?.item || null);
-      setStatus({ kind: 'success', message: `Loaded snapshot "${result?.item?.label || snapshotId}".` });
+      setStatus({
+        kind: 'success',
+        message: `Loaded snapshot "${result?.item?.label || snapshotId}".`,
+      });
     } catch (error) {
       setSelectedSnapshot(null);
       setSelectedSnapshotError(normalizeError(error));
@@ -353,11 +371,16 @@ export default function RecoveryPage() {
         return;
       }
 
-      if (parsed?.version === 'pva-writing-studio-backup-v1' || parsed?.notes || parsed?.blogDraft) {
+      if (
+        parsed?.version === 'pva-writing-studio-backup-v1' ||
+        parsed?.notes ||
+        parsed?.blogDraft
+      ) {
         applyStudioBackup(parsed);
         setStatus({
           kind: 'success',
-          message: 'Writing studio backup restored into this browser. Open the studio page to see the notes again.',
+          message:
+            'Writing studio backup restored into this browser. Open the studio page to see the notes again.',
         });
         return;
       }
@@ -386,15 +409,21 @@ export default function RecoveryPage() {
           <p className="pill">Continuity and recovery</p>
           <h1>Keep your site, notes, and work portable across devices.</h1>
           <p>
-            This page saves an encrypted continuity bundle to your account and downloads the same bundle locally so
-            you can restore your browser state, writings, and key settings on another phone, laptop, or desktop.
+            This page saves an encrypted continuity bundle to your account and downloads the same
+            bundle locally so you can restore your browser state, writings, and key settings on
+            another phone, laptop, or desktop.
           </p>
           <p className="recovery-note">
-            Secrets and auth tokens are excluded by default. What moves is your working context: notes, drafts,
-            configuration, and the live archive context the browser already knows.
+            Secrets and auth tokens are excluded by default. What moves is your working context:
+            notes, drafts, configuration, and the live archive context the browser already knows.
           </p>
           <div className="recovery-actions">
-            <button type="button" className="primary-btn" onClick={createSnapshot} disabled={busyAction === 'create'}>
+            <button
+              type="button"
+              className="primary-btn"
+              onClick={createSnapshot}
+              disabled={busyAction === 'create'}
+            >
               {busyAction === 'create' ? 'Creating snapshot...' : 'Create snapshot'}
             </button>
             <button
@@ -405,7 +434,12 @@ export default function RecoveryPage() {
             >
               Import backup file
             </button>
-            <button type="button" className="ghost-btn" onClick={loadSnapshots} disabled={snapshotsLoading}>
+            <button
+              type="button"
+              className="ghost-btn"
+              onClick={loadSnapshots}
+              disabled={snapshotsLoading}
+            >
               Refresh saved snapshots
             </button>
           </div>
@@ -461,7 +495,11 @@ export default function RecoveryPage() {
             Save to my account too
           </label>
           <label>
-            <input type="checkbox" checked={pinToIpfs} onChange={(event) => setPinToIpfs(event.target.checked)} />
+            <input
+              type="checkbox"
+              checked={pinToIpfs}
+              onChange={(event) => setPinToIpfs(event.target.checked)}
+            />
             Pin to IPFS when available
           </label>
           <label>
@@ -488,27 +526,41 @@ export default function RecoveryPage() {
           <article className="recovery-status-card">
             <span className="recovery-status-label">Account</span>
             <div className="recovery-status-value">
-              {account ? account.email || account.username || account.name || account.id : 'Not signed in'}
+              {account
+                ? account.email || account.username || account.name || account.id
+                : 'Not signed in'}
             </div>
           </article>
           <article className="recovery-status-card">
             <span className="recovery-status-label">Saved snapshots</span>
             <div className="recovery-status-value">
-              {snapshotsLoading ? 'Loading...' : `${snapshots.length} stored snapshot${snapshots.length === 1 ? '' : 's'}`}
+              {snapshotsLoading
+                ? 'Loading...'
+                : `${snapshots.length} stored snapshot${snapshots.length === 1 ? '' : 's'}`}
             </div>
           </article>
           <article className="recovery-status-card">
             <span className="recovery-status-label">Current browser</span>
             <div className="recovery-status-value">
-              {globalThis.navigator?.platform || globalThis.navigator?.userAgent || 'Unknown browser'}
+              {globalThis.navigator?.platform ||
+                globalThis.navigator?.userAgent ||
+                'Unknown browser'}
             </div>
           </article>
         </div>
 
-        {accountError ? <div className="recovery-inline-note">Account status: {accountError}</div> : null}
-        {archiveError ? <div className="recovery-inline-note">Archive status: {archiveError}</div> : null}
-        {snapshotsError ? <div className="recovery-inline-note">Snapshot status: {snapshotsError}</div> : null}
-        {selectedSnapshotError ? <div className="recovery-inline-note">Selected snapshot: {selectedSnapshotError}</div> : null}
+        {accountError ? (
+          <div className="recovery-inline-note">Account status: {accountError}</div>
+        ) : null}
+        {archiveError ? (
+          <div className="recovery-inline-note">Archive status: {archiveError}</div>
+        ) : null}
+        {snapshotsError ? (
+          <div className="recovery-inline-note">Snapshot status: {snapshotsError}</div>
+        ) : null}
+        {selectedSnapshotError ? (
+          <div className="recovery-inline-note">Selected snapshot: {selectedSnapshotError}</div>
+        ) : null}
 
         <div className="recovery-dual-grid">
           <article className="recovery-panel-card">
@@ -517,23 +569,32 @@ export default function RecoveryPage() {
                 <p className="pill">Remote continuity</p>
                 <h2>Saved snapshots</h2>
               </div>
-              <p className="recovery-muted">Inspect, restore, download, or delete encrypted account snapshots.</p>
+              <p className="recovery-muted">
+                Inspect, restore, download, or delete encrypted account snapshots.
+              </p>
             </div>
             <div className="recovery-list">
-              {snapshotsLoading ? <div className="recovery-empty">Loading saved snapshots...</div> : null}
+              {snapshotsLoading ? (
+                <div className="recovery-empty">Loading saved snapshots...</div>
+              ) : null}
               {!snapshotsLoading && recentSnapshots.length === 0 ? (
                 <div className="recovery-empty">No saved snapshots yet.</div>
               ) : null}
               {recentSnapshots.map((snapshot) => {
                 const snapshotId = snapshot.id || snapshot._id;
-                const isSelected = selectedSnapshot?._id === snapshotId || selectedSnapshot?.id === snapshotId;
+                const isSelected =
+                  selectedSnapshot?._id === snapshotId || selectedSnapshot?.id === snapshotId;
                 return (
-                  <article key={snapshotId} className={`recovery-listItem ${isSelected ? 'is-selected' : ''}`}>
+                  <article
+                    key={snapshotId}
+                    className={`recovery-listItem ${isSelected ? 'is-selected' : ''}`}
+                  >
                     <div>
                       <strong>{snapshot.label || 'Untitled snapshot'}</strong>
                       <span>{formatDate(snapshot.createdAt)}</span>
                       <p>
-                        {formatBytes(snapshot.payloadSizeBytes)} · {snapshot.encryption?.algorithm || 'AES-GCM'} ·{' '}
+                        {formatBytes(snapshot.payloadSizeBytes)} ·{' '}
+                        {snapshot.encryption?.algorithm || 'AES-GCM'} ·{' '}
                         {snapshot.device?.platform || 'unknown device'}
                       </p>
                     </div>
@@ -576,12 +637,14 @@ export default function RecoveryPage() {
                 <h2>Decrypt and restore</h2>
               </div>
               <p className="recovery-muted">
-                Load one saved snapshot, inspect its manifest, then restore the encrypted browser state with your
-                passphrase.
+                Load one saved snapshot, inspect its manifest, then restore the encrypted browser
+                state with your passphrase.
               </p>
             </div>
 
-            {!selectedSnapshot ? <div className="recovery-empty">Inspect a snapshot to see its details here.</div> : null}
+            {!selectedSnapshot ? (
+              <div className="recovery-empty">Inspect a snapshot to see its details here.</div>
+            ) : null}
             {selectedSnapshot ? (
               <div className="recovery-selected">
                 <div className="recovery-status-grid recovery-status-grid--compact">
@@ -591,11 +654,15 @@ export default function RecoveryPage() {
                   </article>
                   <article className="recovery-status-card">
                     <span className="recovery-status-label">Created</span>
-                    <div className="recovery-status-value">{formatDate(selectedSnapshot.createdAt)}</div>
+                    <div className="recovery-status-value">
+                      {formatDate(selectedSnapshot.createdAt)}
+                    </div>
                   </article>
                   <article className="recovery-status-card">
                     <span className="recovery-status-label">Payload size</span>
-                    <div className="recovery-status-value">{formatBytes(selectedSnapshot.payloadSizeBytes)}</div>
+                    <div className="recovery-status-value">
+                      {formatBytes(selectedSnapshot.payloadSizeBytes)}
+                    </div>
                   </article>
                   <article className="recovery-status-card">
                     <span className="recovery-status-label">IPFS</span>
@@ -640,13 +707,17 @@ export default function RecoveryPage() {
                 <p className="pill">Local continuity</p>
                 <h2>Archive and browser context</h2>
               </div>
-              <p className="recovery-muted">This is what the snapshot collects from the live browser session.</p>
+              <p className="recovery-muted">
+                This is what the snapshot collects from the live browser session.
+              </p>
             </div>
 
             <div className="recovery-status-grid recovery-status-grid--compact">
               <article className="recovery-status-card">
                 <span className="recovery-status-label">Session storage</span>
-                <div className="recovery-status-value">{includeSessionStorage ? 'Included' : 'Excluded'}</div>
+                <div className="recovery-status-value">
+                  {includeSessionStorage ? 'Included' : 'Excluded'}
+                </div>
               </article>
               <article className="recovery-status-card">
                 <span className="recovery-status-label">Archive items</span>
@@ -674,15 +745,23 @@ export default function RecoveryPage() {
                 <p className="pill">Archive pulse</p>
                 <h2>Recent archive entries</h2>
               </div>
-              <p className="recovery-muted">The snapshot includes this live archive context so the site is less empty on a new device.</p>
+              <p className="recovery-muted">
+                The snapshot includes this live archive context so the site is less empty on a new
+                device.
+              </p>
             </div>
-            {archiveLoading ? <div className="recovery-empty">Loading archive entries...</div> : null}
+            {archiveLoading ? (
+              <div className="recovery-empty">Loading archive entries...</div>
+            ) : null}
             {!archiveLoading && archiveEntries.length === 0 ? (
               <div className="recovery-empty">No archive entries loaded right now.</div>
             ) : null}
             <div className="recovery-archive-grid">
               {archivePreview.map((entry) => (
-                <article key={entry.id || entry.slug || entry.title} className="recovery-archive-card">
+                <article
+                  key={entry.id || entry.slug || entry.title}
+                  className="recovery-archive-card"
+                >
                   <h3>{entry.title || 'Untitled entry'}</h3>
                   <p>{entry.excerpt || 'No excerpt available.'}</p>
                   <span className="recovery-archive-note">
@@ -701,16 +780,24 @@ export default function RecoveryPage() {
               <h2>Bring backups back into this browser</h2>
             </div>
             <p className="recovery-muted">
-              You can import an encrypted continuity bundle from this page, or an older writing-studio backup if that
-              is the file you still have.
+              You can import an encrypted continuity bundle from this page, or an older
+              writing-studio backup if that is the file you still have.
             </p>
           </div>
 
           <div className="recovery-actions">
-            <button type="button" className="ghost-btn" onClick={() => importInputRef.current?.click()}>
+            <button
+              type="button"
+              className="ghost-btn"
+              onClick={() => importInputRef.current?.click()}
+            >
               Choose backup file
             </button>
-            <button type="button" className="ghost-btn" onClick={() => globalThis.location?.reload?.()}>
+            <button
+              type="button"
+              className="ghost-btn"
+              onClick={() => globalThis.location?.reload?.()}
+            >
               Reload page after restore
             </button>
           </div>

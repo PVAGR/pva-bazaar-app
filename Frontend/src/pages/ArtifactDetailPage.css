@@ -114,7 +114,9 @@
   background: var(--alchemical-surface);
   cursor: pointer;
   overflow: hidden;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
 }
 
 .artifact-detail__thumb:hover {
@@ -246,7 +248,10 @@
   border: none;
   border-radius: 10px;
   cursor: pointer;
-  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+  transition:
+    background 0.2s,
+    color 0.2s,
+    box-shadow 0.2s;
 }
 
 .artifact-detail__cta:hover:not(:disabled) {

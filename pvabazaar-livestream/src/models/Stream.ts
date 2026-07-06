@@ -38,7 +38,7 @@ const streamSchema = new Schema<IStream>(
     tags: { type: [String], default: [] },
     isPublic: { type: Boolean, default: false },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 export const Stream = models.Stream || model<IStream>('Stream', streamSchema);

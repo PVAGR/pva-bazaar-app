@@ -48,7 +48,7 @@ export default function StreamsPage() {
   const [twitchStatus, setTwitchStatus] = useState(null);
   const [youtubeStatus, setYouTubeStatus] = useState(null);
   const [liveLoading, setLiveLoading] = useState(false);
- const [twitchLive, setTwitchLive] = useState(null);
+  const [twitchLive, setTwitchLive] = useState(null);
   const [youtubeLive, setYouTubeLive] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null); // { id, title }
 
@@ -106,7 +106,9 @@ export default function StreamsPage() {
               platform: prefs.defaultStreamPlatform || prev.platform,
               tags: prefs.defaultTags || prev.tags,
               isPublic:
-                typeof prefs.defaultPublicVisibility === 'boolean' ? prefs.defaultPublicVisibility : prev.isPublic,
+                typeof prefs.defaultPublicVisibility === 'boolean'
+                  ? prefs.defaultPublicVisibility
+                  : prev.isPublic,
             };
           });
         }
@@ -189,7 +191,9 @@ export default function StreamsPage() {
             !prev.tags &&
             (prev.platform === 'none' || !prev.platform);
           if (!pristine) {
-            setDraftRestoreHint('A previous draft exists (not auto-restored because you already started typing).');
+            setDraftRestoreHint(
+              'A previous draft exists (not auto-restored because you already started typing).',
+            );
             return prev;
           }
           setDraftRestoreHint('Restored your last saved stream draft.');
@@ -231,7 +235,14 @@ export default function StreamsPage() {
     try {
       await apiDelete('/streams/drafts');
       setDraftRestoreHint('Draft cleared.');
-      setForm({ title: '', platform: 'none', platformStreamUrl: '', description: '', tags: '', isPublic: true });
+      setForm({
+        title: '',
+        platform: 'none',
+        platformStreamUrl: '',
+        description: '',
+        tags: '',
+        isPublic: true,
+      });
     } catch (e) {
       const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
       setError(serverMsg || e.message || 'Failed to clear draft');
@@ -244,7 +255,9 @@ export default function StreamsPage() {
     setError('');
     try {
       if (twitchStatus && twitchStatus.configured === false) {
-        const missing = Array.isArray(twitchStatus.missing) ? twitchStatus.missing.join(', ') : 'missing env vars';
+        const missing = Array.isArray(twitchStatus.missing)
+          ? twitchStatus.missing.join(', ')
+          : 'missing env vars';
         throw new Error(`Twitch is not configured yet (${missing})`);
       }
       // Must be an authenticated API call (Authorization header) so the backend can
@@ -264,7 +277,9 @@ export default function StreamsPage() {
     setError('');
     try {
       if (youtubeStatus && youtubeStatus.configured === false) {
-        const missing = Array.isArray(youtubeStatus.missing) ? youtubeStatus.missing.join(', ') : 'missing env vars';
+        const missing = Array.isArray(youtubeStatus.missing)
+          ? youtubeStatus.missing.join(', ')
+          : 'missing env vars';
         throw new Error(`YouTube is not configured yet (${missing})`);
       }
       const res = await apiGet('/oauth/youtube/start', { params: { mode: 'json' } });
@@ -299,7 +314,7 @@ export default function StreamsPage() {
         description: form.description.trim() || '',
         tags: form.tags
           .split(',')
-          .map(t => t.trim())
+          .map((t) => t.trim())
           .filter(Boolean),
         isPublic: !!form.isPublic,
       };
@@ -309,7 +324,14 @@ export default function StreamsPage() {
       }
       // Clear Mongo-backed draft after a successful create.
       apiDelete('/streams/drafts').catch(() => {});
-      setForm({ title: '', platform: 'none', platformStreamUrl: '', description: '', tags: '', isPublic: true });
+      setForm({
+        title: '',
+        platform: 'none',
+        platformStreamUrl: '',
+        description: '',
+        tags: '',
+        isPublic: true,
+      });
       await loadStreams();
     } catch (e2) {
       const serverMsg = e2?.response?.data?.error || e2?.response?.data?.message;
@@ -326,7 +348,7 @@ export default function StreamsPage() {
       if (!res?.ok || !res.item) {
         throw new Error(res?.error || res?.message || 'Update failed');
       }
-      setItems(prev => prev.map(s => (s._id === id ? res.item : s)));
+      setItems((prev) => prev.map((s) => (s._id === id ? res.item : s)));
     } catch (e) {
       const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
       setError(serverMsg || e.message || 'Update failed');
@@ -340,7 +362,7 @@ export default function StreamsPage() {
       if (!res?.ok) {
         throw new Error(res?.error || res?.message || 'Delete failed');
       }
-      setItems(prev => prev.filter(s => s._id !== id));
+      setItems((prev) => prev.filter((s) => s._id !== id));
       setDeleteConfirm(null);
     } catch (e) {
       const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
@@ -354,7 +376,9 @@ export default function StreamsPage() {
   }
 
   return (
-    <div className={`streams-shell admin-page authenticated ${darkMode ? 'dark-theme' : 'light-theme'}`}>
+    <div
+      className={`streams-shell admin-page authenticated ${darkMode ? 'dark-theme' : 'light-theme'}`}
+    >
       <header className="streams-header admin-header">
         <div>
           <h1>📺 Livestreams</h1>
@@ -363,13 +387,24 @@ export default function StreamsPage() {
           </p>
         </div>
         <div className="streams-actions">
-          <Link to="/admin" className="btn ghost">← Admin</Link>
-          <Link to="/deals" className="btn ghost">🤝 Deals</Link>
-          <Link to="/items/new" className="btn ghost">📦 Sell</Link>
+          <Link to="/admin" className="btn ghost">
+            ← Admin
+          </Link>
+          <Link to="/deals" className="btn ghost">
+            🤝 Deals
+          </Link>
+          <Link to="/items/new" className="btn ghost">
+            📦 Sell
+          </Link>
           <button className="btn ghost" onClick={loadStreams} disabled={loading}>
             Refresh
           </button>
-          <button className="btn ghost" type="button" onClick={refreshLiveStatus} disabled={liveLoading || !tokenPresent}>
+          <button
+            className="btn ghost"
+            type="button"
+            onClick={refreshLiveStatus}
+            disabled={liveLoading || !tokenPresent}
+          >
             {liveLoading ? 'Checking live…' : 'Check live'}
           </button>
           <button
@@ -396,9 +431,16 @@ export default function StreamsPage() {
                 example="Signed in as you@example.com"
               />
             </h2>
-            <div className="muted">Signed in as <b>{profile.email}</b></div>
             <div className="muted">
-              Twitch: {profile.twitch?.login ? <b>connected (@{profile.twitch.login})</b> : <b>not connected</b>}
+              Signed in as <b>{profile.email}</b>
+            </div>
+            <div className="muted">
+              Twitch:{' '}
+              {profile.twitch?.login ? (
+                <b>connected (@{profile.twitch.login})</b>
+              ) : (
+                <b>not connected</b>
+              )}
             </div>
             <div className="muted">
               YouTube: {youtubeLive?.connected ? <b>connected</b> : <b>not connected</b>}
@@ -410,7 +452,10 @@ export default function StreamsPage() {
                   <b>configured</b>
                 ) : (
                   <b>
-                    missing {Array.isArray(twitchStatus.missing) && twitchStatus.missing.length ? twitchStatus.missing.join(', ') : 'env vars'}
+                    missing{' '}
+                    {Array.isArray(twitchStatus.missing) && twitchStatus.missing.length
+                      ? twitchStatus.missing.join(', ')
+                      : 'env vars'}
                   </b>
                 )}{' '}
                 <HelpTip
@@ -442,17 +487,37 @@ export default function StreamsPage() {
             ) : null}
 
             <div className="row streaming-connectRow">
-              <button className="btn primary" type="button" onClick={handleConnectTwitch} title="Connect Twitch (OAuth)">
+              <button
+                className="btn primary"
+                type="button"
+                onClick={handleConnectTwitch}
+                title="Connect Twitch (OAuth)"
+              >
                 Connect Twitch
               </button>
-              <button className="btn ghost" type="button" onClick={handleConnectYouTube} title="Connect YouTube (OAuth)">
+              <button
+                className="btn ghost"
+                type="button"
+                onClick={handleConnectYouTube}
+                title="Connect YouTube (OAuth)"
+              >
                 Connect YouTube
               </button>
-              <a className="btn ghost" href="https://studio.youtube.com/channel/UC/livestreaming" target="_blank" rel="noreferrer">
+              <a
+                className="btn ghost"
+                href="https://studio.youtube.com/channel/UC/livestreaming"
+                target="_blank"
+                rel="noreferrer"
+              >
                 YouTube Studio
               </a>
               {twitchChannel ? (
-                <a className="btn ghost" href="https://dashboard.twitch.tv/u/me/stream-manager" target="_blank" rel="noreferrer">
+                <a
+                  className="btn ghost"
+                  href="https://dashboard.twitch.tv/u/me/stream-manager"
+                  target="_blank"
+                  rel="noreferrer"
+                >
                   Twitch Stream Manager
                 </a>
               ) : null}
@@ -464,7 +529,10 @@ export default function StreamsPage() {
                 {twitchLive?.connected ? (
                   twitchLive.live ? (
                     <b>
-                      LIVE{typeof twitchLive.viewerCount === 'number' ? ` · ${twitchLive.viewerCount} viewers` : ''}
+                      LIVE
+                      {typeof twitchLive.viewerCount === 'number'
+                        ? ` · ${twitchLive.viewerCount} viewers`
+                        : ''}
                     </b>
                   ) : (
                     <b>offline</b>
@@ -477,29 +545,45 @@ export default function StreamsPage() {
                 YouTube live:{' '}
                 {youtubeLive?.connected ? (
                   youtubeLive.live ? (
-                    <b>LIVE{youtubeLive.viewerCount ? ` · ${youtubeLive.viewerCount} viewers` : ''}</b>
+                    <b>
+                      LIVE{youtubeLive.viewerCount ? ` · ${youtubeLive.viewerCount} viewers` : ''}
+                    </b>
                   ) : (
                     <b>offline</b>
                   )
                 ) : (
                   <b>not connected</b>
                 )}{' '}
-                {youtubeLive?.channelTitle ? <span className="muted small">({youtubeLive.channelTitle})</span> : null}
+                {youtubeLive?.channelTitle ? (
+                  <span className="muted small">({youtubeLive.channelTitle})</span>
+                ) : null}
               </div>
             </div>
 
-            {(twitchChannel || youtubeLive?.connected) ? (
+            {twitchChannel || youtubeLive?.connected ? (
               <div className="goLive-cta">
                 <h3 className="goLive-cta__title">Go live</h3>
-                <p className="muted small">Start streaming on your platform, then create a session below to track it.</p>
+                <p className="muted small">
+                  Start streaming on your platform, then create a session below to track it.
+                </p>
                 <div className="row rowWrap">
                   {twitchChannel ? (
-                    <a className="btn primary" href="https://dashboard.twitch.tv/u/me/stream-manager" target="_blank" rel="noreferrer">
+                    <a
+                      className="btn primary"
+                      href="https://dashboard.twitch.tv/u/me/stream-manager"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
                       Open Twitch Stream Manager
                     </a>
                   ) : null}
                   {youtubeLive?.connected ? (
-                    <a className="btn primary" href="https://studio.youtube.com/" target="_blank" rel="noreferrer">
+                    <a
+                      className="btn primary"
+                      href="https://studio.youtube.com/"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
                       Open YouTube Studio
                     </a>
                   ) : null}
@@ -521,12 +605,7 @@ export default function StreamsPage() {
                 </div>
                 <div className="streaming-embed">
                   <div className="muted small">Chat</div>
-                  <iframe
-                    title="Twitch chat"
-                    src={twitchChatUrl}
-                    frameBorder="0"
-                    scrolling="no"
-                  />
+                  <iframe title="Twitch chat" src={twitchChatUrl} frameBorder="0" scrolling="no" />
                 </div>
               </div>
             ) : null}
@@ -548,7 +627,10 @@ export default function StreamsPage() {
                       onChange={(e) =>
                         setProfile((p) => ({
                           ...p,
-                          preferences: { ...(p?.preferences || {}), defaultStreamPlatform: e.target.value },
+                          preferences: {
+                            ...(p?.preferences || {}),
+                            defaultStreamPlatform: e.target.value,
+                          },
                         }))
                       }
                     >
@@ -584,7 +666,10 @@ export default function StreamsPage() {
                     onChange={(e) =>
                       setProfile((p) => ({
                         ...p,
-                        preferences: { ...(p?.preferences || {}), defaultPublicVisibility: e.target.checked },
+                        preferences: {
+                          ...(p?.preferences || {}),
+                          defaultPublicVisibility: e.target.checked,
+                        },
                       }))
                     }
                   />
@@ -616,7 +701,12 @@ export default function StreamsPage() {
             {draftRestoreHint ? <div className="muted small">{draftRestoreHint}</div> : null}
             {tokenPresent ? (
               <div className="row">
-                <button type="button" className="btn ghost" disabled={draftSaving} onClick={clearDraft}>
+                <button
+                  type="button"
+                  className="btn ghost"
+                  disabled={draftSaving}
+                  onClick={clearDraft}
+                >
                   Clear draft
                 </button>
               </div>
@@ -637,121 +727,125 @@ export default function StreamsPage() {
         <section className="card">
           <h2>Create stream session</h2>
           <form className="form" onSubmit={handleCreate}>
-          <label>
-            <span>
-              Title
-              <HelpTip
-                title="Stream title"
-                body="A human-friendly name for your livestream session. This is what you’ll search/filter by later."
-                example="Friday Night Live: Coffee Auction"
+            <label>
+              <span>
+                Title
+                <HelpTip
+                  title="Stream title"
+                  body="A human-friendly name for your livestream session. This is what you’ll search/filter by later."
+                  example="Friday Night Live: Coffee Auction"
+                />
+              </span>
+              <input
+                value={form.title}
+                onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))}
+                placeholder="Friday Night Live"
               />
-            </span>
-            <input
-              value={form.title}
-              onChange={e => setForm(prev => ({ ...prev, title: e.target.value }))}
-              placeholder="Friday Night Live"
-            />
-          </label>
+            </label>
 
-          <label>
-            <span>
-              Platform
-              <HelpTip
-                title="Streaming platform"
-                body="Where your stream is hosted. If you connect Twitch, we can use your Twitch identity for automations later."
-                example="twitch"
+            <label>
+              <span>
+                Platform
+                <HelpTip
+                  title="Streaming platform"
+                  body="Where your stream is hosted. If you connect Twitch, we can use your Twitch identity for automations later."
+                  example="twitch"
+                />
+              </span>
+              <select
+                value={form.platform}
+                onChange={(e) => setForm((prev) => ({ ...prev, platform: e.target.value }))}
+              >
+                {PLATFORM_OPTIONS.map((p) => (
+                  <option key={p} value={p}>
+                    {p}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label>
+              <span>
+                Platform stream URL (optional)
+                <HelpTip
+                  title="Stream URL"
+                  body="Link to the public stream page. Useful for sharing and for verifying you’re live."
+                  example="https://twitch.tv/yourchannel"
+                />
+              </span>
+              <input
+                value={form.platformStreamUrl}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, platformStreamUrl: e.target.value }))
+                }
+                placeholder="https://..."
               />
-            </span>
-            <select
-              value={form.platform}
-              onChange={e => setForm(prev => ({ ...prev, platform: e.target.value }))}
-            >
-              {PLATFORM_OPTIONS.map(p => (
-                <option key={p} value={p}>
-                  {p}
-                </option>
-              ))}
-            </select>
-          </label>
+            </label>
 
-          <label>
-            <span>
-              Platform stream URL (optional)
-              <HelpTip
-                title="Stream URL"
-                body="Link to the public stream page. Useful for sharing and for verifying you’re live."
-                example="https://twitch.tv/yourchannel"
+            <label>
+              <span>
+                Description
+                <HelpTip
+                  title="What is this stream about?"
+                  body="Optional notes: what you’re selling, what viewers can expect, and any rules or disclaimers."
+                  example="Live sourcing update + Q&A"
+                />
+              </span>
+              <textarea
+                rows={3}
+                value={form.description}
+                onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
               />
-            </span>
-            <input
-              value={form.platformStreamUrl}
-              onChange={e => setForm(prev => ({ ...prev, platformStreamUrl: e.target.value }))}
-              placeholder="https://..."
-            />
-          </label>
+            </label>
 
-          <label>
-            <span>
-              Description
-              <HelpTip
-                title="What is this stream about?"
-                body="Optional notes: what you’re selling, what viewers can expect, and any rules or disclaimers."
-                example="Live sourcing update + Q&A"
+            <label>
+              <span>
+                Tags (comma separated)
+                <HelpTip
+                  title="Tags"
+                  body="Helps you organize and search streams later. Separate tags with commas."
+                  example="coffee, kenya, logistics"
+                />
+              </span>
+              <input
+                value={form.tags}
+                onChange={(e) => setForm((prev) => ({ ...prev, tags: e.target.value }))}
+                placeholder="jewelry, auction, qna"
               />
-            </span>
-            <textarea
-              rows={3}
-              value={form.description}
-              onChange={e => setForm(prev => ({ ...prev, description: e.target.value }))}
-            />
-          </label>
+            </label>
 
-          <label>
-            <span>
-              Tags (comma separated)
-              <HelpTip
-                title="Tags"
-                body="Helps you organize and search streams later. Separate tags with commas."
-                example="coffee, kenya, logistics"
+            <label className="check">
+              <input
+                type="checkbox"
+                checked={form.isPublic}
+                onChange={(e) => setForm((prev) => ({ ...prev, isPublic: e.target.checked }))}
               />
-            </span>
-            <input
-              value={form.tags}
-              onChange={e => setForm(prev => ({ ...prev, tags: e.target.value }))}
-              placeholder="jewelry, auction, qna"
-            />
-          </label>
+              <span>
+                Public
+                <HelpTip
+                  title="Public visibility"
+                  body="If unchecked, this stream session is private to your account (useful while testing)."
+                  example="Public = on"
+                />
+              </span>
+            </label>
 
-          <label className="check">
-            <input
-              type="checkbox"
-              checked={form.isPublic}
-              onChange={e => setForm(prev => ({ ...prev, isPublic: e.target.checked }))}
-            />
-            <span>
-              Public
-              <HelpTip
-                title="Public visibility"
-                body="If unchecked, this stream session is private to your account (useful while testing)."
-                example="Public = on"
-              />
-            </span>
-          </label>
-
-          <div className="row">
-            <button className="btn primary" type="submit" disabled={creating}>
-              {creating ? 'Creating...' : 'Create'}
-            </button>
-          </div>
+            <div className="row">
+              <button className="btn primary" type="submit" disabled={creating}>
+                {creating ? 'Creating...' : 'Create'}
+              </button>
+            </div>
           </form>
         </section>
 
         <section className="card">
           <h2>Your stream sessions</h2>
           {loading ? <LoadingSpinner label="Loading streams…" /> : null}
-          {!loading && items.length === 0 ? <div className="muted">No stream sessions yet.</div> : null}
+          {!loading && items.length === 0 ? (
+            <div className="muted">No stream sessions yet.</div>
+          ) : null}
           <div className="streams-list">
-            {items.map(s => (
+            {items.map((s) => (
               <div key={s._id} className="stream-row">
                 <div className="stream-main">
                   <div className="stream-title">{s.title}</div>
@@ -760,14 +854,17 @@ export default function StreamsPage() {
                     {s.platformStreamUrl ? ` · ${s.platformStreamUrl}` : ''}
                   </div>
                   <div className="muted">
-                    created {formatDate(s.createdAt)}{s.startedAt ? ` · started ${formatDate(s.startedAt)}` : ''}
+                    created {formatDate(s.createdAt)}
+                    {s.startedAt ? ` · started ${formatDate(s.startedAt)}` : ''}
                   </div>
-                  {((s.webhookEvents && s.webhookEvents.length) || s.startedAt || s.endedAt) ? (
+                  {(s.webhookEvents && s.webhookEvents.length) || s.startedAt || s.endedAt ? (
                     <div className="stream-activity muted small">
                       <strong>Activity:</strong>{' '}
                       {s.startedAt ? `Went live ${formatDate(s.startedAt)}` : ''}
                       {s.endedAt ? ` · Ended ${formatDate(s.endedAt)}` : ''}
-                      {s.webhookEvents?.length ? ` · ${s.webhookEvents.length} webhook event(s)` : ''}
+                      {s.webhookEvents?.length
+                        ? ` · ${s.webhookEvents.length} webhook event(s)`
+                        : ''}
                     </div>
                   ) : null}
                 </div>
@@ -775,9 +872,9 @@ export default function StreamsPage() {
                 <div className="stream-controls">
                   <select
                     value={s.status || 'scheduled'}
-                    onChange={e => handleUpdate(s._id, { status: e.target.value })}
+                    onChange={(e) => handleUpdate(s._id, { status: e.target.value })}
                   >
-                    {STATUS_OPTIONS.map(st => (
+                    {STATUS_OPTIONS.map((st) => (
                       <option key={st} value={st}>
                         {st}
                       </option>
@@ -806,4 +903,3 @@ export default function StreamsPage() {
     </div>
   );
 }
-

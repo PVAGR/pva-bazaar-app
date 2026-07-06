@@ -7,16 +7,18 @@ const router = express.Router();
 router.use(authenticateToken);
 
 function normalizeAddress(value) {
-  return String(value || '').trim().toLowerCase();
+  return String(value || '')
+    .trim()
+    .toLowerCase();
 }
 
 function resolveRecipientAddress(req) {
   return normalizeAddress(
-    req.query.recipientAddress
-      || req.body?.recipientAddress
-      || req.user?.preferences?.defaultWalletAddress
-      || req.user?.wallet?.generatedWalletAddress
-      || ''
+    req.query.recipientAddress ||
+      req.body?.recipientAddress ||
+      req.user?.preferences?.defaultWalletAddress ||
+      req.user?.wallet?.generatedWalletAddress ||
+      '',
   );
 }
 
@@ -68,11 +70,7 @@ router.get('/', async (req, res) => {
     };
 
     const [rows, total, unreadCount] = await Promise.all([
-      Notification.find(filter)
-        .sort({ createdAt: -1 })
-        .skip(offset)
-        .limit(limit)
-        .lean(),
+      Notification.find(filter).sort({ createdAt: -1 }).skip(offset).limit(limit).lean(),
       Notification.countDocuments(filter),
       Notification.countDocuments({ recipientAddress, read: false }),
     ]);
@@ -105,7 +103,7 @@ router.post('/mark-read', async (req, res) => {
         },
         {
           $set: { read: true, readAt: new Date() },
-        }
+        },
       );
     }
 
@@ -125,7 +123,7 @@ router.post('/mark-all-read', async (req, res) => {
 
     await Notification.updateMany(
       { recipientAddress, read: false },
-      { $set: { read: true, readAt: new Date() } }
+      { $set: { read: true, readAt: new Date() } },
     );
 
     return res.json({ ok: true });

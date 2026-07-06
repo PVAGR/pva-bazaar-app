@@ -48,7 +48,9 @@ router.post('/', async (req, res) => {
         const userId = decoded?.id;
         if (userId) {
           const [commodities, templates] = await Promise.all([
-            Commodity.find({ ownerId: userId }).limit(20).select('name category notes marketData redFlags greenFlags'),
+            Commodity.find({ ownerId: userId })
+              .limit(20)
+              .select('name category notes marketData redFlags greenFlags'),
             Template.find({ ownerId: userId }).limit(10).select('name type body'),
           ]);
           const ctx = [];
@@ -62,9 +64,11 @@ router.post('/', async (req, res) => {
           }
           if (templates?.length) {
             ctx.push('\nYour templates (summaries):');
-            templates.forEach((t) => ctx.push(`- ${t.name} (${t.type}): ${(t.body || '').slice(0, 150)}...`));
+            templates.forEach((t) =>
+              ctx.push(`- ${t.name} (${t.type}): ${(t.body || '').slice(0, 150)}...`),
+            );
           }
-          if (ctx.length) systemContent += `\n\n[Your knowledge base]\n${  ctx.join('\n')}`;
+          if (ctx.length) systemContent += `\n\n[Your knowledge base]\n${ctx.join('\n')}`;
         }
       } catch {
         // auth failed, continue without RAG

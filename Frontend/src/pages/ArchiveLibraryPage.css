@@ -42,7 +42,9 @@
   right: 0;
   bottom: 0;
   overflow: hidden;
-  transition: background 0.3s ease, color 0.3s ease;
+  transition:
+    background 0.3s ease,
+    color 0.3s ease;
 }
 
 .archive-library a {
@@ -341,7 +343,6 @@
   font-weight: 600;
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.28);
 }
-
 
 .archive-layout {
   display: grid;

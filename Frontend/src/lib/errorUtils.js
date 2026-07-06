@@ -6,10 +6,7 @@ export function getErrorMessage(err, fallback = 'Something went wrong') {
   if (!err) return fallback;
   const data = err?.response?.data;
   const msg =
-    data?.error ||
-    data?.message ||
-    err?.message ||
-    (typeof err === 'string' ? err : fallback);
+    data?.error || data?.message || err?.message || (typeof err === 'string' ? err : fallback);
   return String(msg || fallback).trim() || fallback;
 }
 

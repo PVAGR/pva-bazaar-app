@@ -13,12 +13,11 @@
   position: sticky;
   top: var(--admin-sticky-offset, 96px);
   z-index: 96;
-  background:
-    linear-gradient(
-      135deg,
-      color-mix(in srgb, var(--bg-primary) 94%, transparent),
-      color-mix(in srgb, var(--bg-secondary) 88%, transparent)
-    );
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--bg-primary) 94%, transparent),
+    color-mix(in srgb, var(--bg-secondary) 88%, transparent)
+  );
   border: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
   border-radius: 14px;
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
@@ -35,7 +34,11 @@
   border-radius: 10px;
   font-weight: 650;
   letter-spacing: 0.01em;
-  transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    border-color 0.15s ease,
+    background 0.15s ease,
+    box-shadow 0.15s ease;
   white-space: nowrap;
   flex-shrink: 0;
   scroll-snap-align: start;
@@ -51,7 +54,9 @@
 .adminNav__tab.active {
   border-color: var(--admin-nav-accent);
   background: color-mix(in srgb, var(--admin-nav-accent) 18%, var(--bg-secondary));
-  box-shadow: 0 0 0 1px var(--admin-nav-accent), 0 10px 16px rgba(0, 0, 0, 0.18);
+  box-shadow:
+    0 0 0 1px var(--admin-nav-accent),
+    0 10px 16px rgba(0, 0, 0, 0.18);
 }
 
 .adminNav__tab:focus-visible {
@@ -73,4 +78,3 @@
     font-size: 0.9rem;
   }
 }
-

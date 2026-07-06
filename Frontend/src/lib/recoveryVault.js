@@ -1,6 +1,7 @@
 const SNAPSHOT_VERSION = 'hk-recovery-v1';
 const PBKDF2_ITERATIONS = 250000;
-const AUTH_KEY_PATTERN = /(?:^|[-_:])(token|auth|jwt|secret|password|session|admin-auth|login-time|auth-version)(?:$|[-_:])/i;
+const AUTH_KEY_PATTERN =
+  /(?:^|[-_:])(token|auth|jwt|secret|password|session|admin-auth|login-time|auth-version)(?:$|[-_:])/i;
 
 function getCrypto() {
   if (typeof globalThis !== 'undefined' && globalThis.crypto?.subtle) {
@@ -31,11 +32,13 @@ function base64ToBytes(value) {
 }
 
 function sha256Hex(input) {
-  return getCrypto().subtle.digest('SHA-256', new TextEncoder().encode(String(input || ''))).then((digest) =>
-    Array.from(new Uint8Array(digest))
-      .map((byte) => byte.toString(16).padStart(2, '0'))
-      .join(''),
-  );
+  return getCrypto()
+    .subtle.digest('SHA-256', new TextEncoder().encode(String(input || '')))
+    .then((digest) =>
+      Array.from(new Uint8Array(digest))
+        .map((byte) => byte.toString(16).padStart(2, '0'))
+        .join(''),
+    );
 }
 
 function shouldKeepStorageKey(key, includeSensitive = false) {
@@ -86,7 +89,9 @@ export function collectContinuitySnapshot({
     : [];
 
   return {
-    label: String(label || 'Untitled continuity snapshot').trim().slice(0, 140),
+    label: String(label || 'Untitled continuity snapshot')
+      .trim()
+      .slice(0, 140),
     exportedAt: new Date().toISOString(),
     version: SNAPSHOT_VERSION,
     site: {
@@ -207,11 +212,7 @@ export async function decryptContinuitySnapshot(payload, passphrase) {
     ['decrypt'],
   );
 
-  const plaintext = await cryptoApi.subtle.decrypt(
-    { name: 'AES-GCM', iv },
-    key,
-    ciphertext,
-  );
+  const plaintext = await cryptoApi.subtle.decrypt({ name: 'AES-GCM', iv }, key, ciphertext);
 
   const json = new TextDecoder().decode(plaintext);
   return JSON.parse(json);
@@ -223,8 +224,12 @@ export function applyContinuitySnapshot(snapshot, { replaceMatchingKeys = true }
   }
 
   const storage = snapshot.storage || {};
-  const localStorageEntries = storage.localStorage && typeof storage.localStorage === 'object' ? storage.localStorage : {};
-  const sessionStorageEntries = storage.sessionStorage && typeof storage.sessionStorage === 'object' ? storage.sessionStorage : {};
+  const localStorageEntries =
+    storage.localStorage && typeof storage.localStorage === 'object' ? storage.localStorage : {};
+  const sessionStorageEntries =
+    storage.sessionStorage && typeof storage.sessionStorage === 'object'
+      ? storage.sessionStorage
+      : {};
 
   const restoreEntries = (targetStorage, entries) => {
     const keys = Object.keys(entries || {});

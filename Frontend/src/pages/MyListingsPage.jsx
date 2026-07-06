@@ -216,7 +216,10 @@ export default function MyListingsPage() {
     const result = await fetchOmnichannelStatus(itemId);
     setOmniLoading((prev) => ({ ...prev, [itemId]: false }));
     if (!result.ok) {
-      setOmniError((prev) => ({ ...prev, [itemId]: result.error || 'Failed to load omnichannel status' }));
+      setOmniError((prev) => ({
+        ...prev,
+        [itemId]: result.error || 'Failed to load omnichannel status',
+      }));
       return;
     }
 
@@ -242,7 +245,9 @@ export default function MyListingsPage() {
 
   function updateOmniDraft(itemId, channel, field, value) {
     setOmniDrafts((prev) => {
-      const current = Array.isArray(prev[itemId]) ? prev[itemId] : OMNICHANNEL_CHANNELS.map((name) => normalizeChannelDraft(name));
+      const current = Array.isArray(prev[itemId])
+        ? prev[itemId]
+        : OMNICHANNEL_CHANNELS.map((name) => normalizeChannelDraft(name));
       const next = current.map((entry) => {
         if (entry.channel !== channel) return entry;
         return {
@@ -259,7 +264,9 @@ export default function MyListingsPage() {
 
   async function saveOmnichannelForItem(itemId) {
     const draft = Array.isArray(omniDrafts[itemId]) ? omniDrafts[itemId] : [];
-    const payloadChannels = draft.filter((entry) => String(entry.externalListingId || '').trim().length > 0);
+    const payloadChannels = draft.filter(
+      (entry) => String(entry.externalListingId || '').trim().length > 0,
+    );
     setOmniSaving((prev) => ({ ...prev, [itemId]: true }));
     setOmniError((prev) => ({ ...prev, [itemId]: '' }));
     setOmniSaved((prev) => ({ ...prev, [itemId]: '' }));
@@ -268,7 +275,10 @@ export default function MyListingsPage() {
     setOmniSaving((prev) => ({ ...prev, [itemId]: false }));
 
     if (!result.ok) {
-      setOmniError((prev) => ({ ...prev, [itemId]: result.error || 'Failed to save omnichannel mappings' }));
+      setOmniError((prev) => ({
+        ...prev,
+        [itemId]: result.error || 'Failed to save omnichannel mappings',
+      }));
       return;
     }
 
@@ -310,7 +320,10 @@ export default function MyListingsPage() {
 
     setManualSoldSaving((prev) => ({ ...prev, [itemId]: false }));
     if (!result.ok) {
-      setOmniError((prev) => ({ ...prev, [itemId]: result.error || 'Failed to mark listing sold' }));
+      setOmniError((prev) => ({
+        ...prev,
+        [itemId]: result.error || 'Failed to mark listing sold',
+      }));
       return;
     }
 
@@ -343,8 +356,7 @@ export default function MyListingsPage() {
           return { ...prev, [itemId]: '' };
         });
       }, 1600);
-    } catch (_) {
-    }
+    } catch (_) {}
   }
 
   return (
@@ -357,12 +369,13 @@ export default function MyListingsPage() {
       <SellerQuickStats
         stats={{
           total: items.length,
-          published: items.filter(item => item.status === 'published' || item.status === 'active').length,
-          needsAttention: items.filter(item => {
+          published: items.filter((item) => item.status === 'published' || item.status === 'active')
+            .length,
+          needsAttention: items.filter((item) => {
             const jobs = item?.syndication?.jobs || [];
-            return jobs.some(job => NEEDS_ATTENTION_STATUSES.has(job.status));
+            return jobs.some((job) => NEEDS_ATTENTION_STATUSES.has(job.status));
           }).length,
-          withSyndication: items.filter(item => {
+          withSyndication: items.filter((item) => {
             const jobs = item?.syndication?.jobs || [];
             return jobs.length > 0;
           }).length,
@@ -412,7 +425,8 @@ export default function MyListingsPage() {
 
       {!loading && !error && items.length === 0 ? (
         <div className="listings-note">
-          You have not created any listings yet. <Link to="/items/new">Create your first listing</Link>.
+          You have not created any listings yet.{' '}
+          <Link to="/items/new">Create your first listing</Link>.
         </div>
       ) : null}
 
@@ -437,13 +451,20 @@ export default function MyListingsPage() {
               <div className="listing-card-top">
                 <div>
                   <h2>{item.name || 'Untitled item'}</h2>
-                  <p>{item.category || 'Uncategorized'} • {formatMoney(item.priceCents, item.currency)}</p>
+                  <p>
+                    {item.category || 'Uncategorized'} •{' '}
+                    {formatMoney(item.priceCents, item.currency)}
+                  </p>
                 </div>
-                <span className={`listing-status is-${item.status || 'draft'}`}>{item.status || 'draft'}</span>
+                <span className={`listing-status is-${item.status || 'draft'}`}>
+                  {item.status || 'draft'}
+                </span>
               </div>
 
               <div className="listing-links">
-                <Link to={`/marketplace/${encodeURIComponent(item.slug || item.id)}`}>Open listing</Link>
+                <Link to={`/marketplace/${encodeURIComponent(item.slug || item.id)}`}>
+                  Open listing
+                </Link>
               </div>
 
               <div className="omni-block">
@@ -461,7 +482,9 @@ export default function MyListingsPage() {
 
                 <p className="muted">
                   Sold state: {omniStatus[item.id]?.soldState?.isSold ? 'Sold' : 'Available'}
-                  {omniStatus[item.id]?.soldState?.soldSource ? ` via ${omniStatus[item.id].soldState.soldSource}` : ''}
+                  {omniStatus[item.id]?.soldState?.soldSource
+                    ? ` via ${omniStatus[item.id].soldState.soldSource}`
+                    : ''}
                 </p>
 
                 {Array.isArray(omniDrafts[item.id]) ? (
@@ -472,18 +495,29 @@ export default function MyListingsPage() {
                         <input
                           type="text"
                           value={entry.externalListingId}
-                          onChange={(e) => updateOmniDraft(item.id, entry.channel, 'externalListingId', e.target.value)}
+                          onChange={(e) =>
+                            updateOmniDraft(
+                              item.id,
+                              entry.channel,
+                              'externalListingId',
+                              e.target.value,
+                            )
+                          }
                           placeholder="External Listing ID"
                         />
                         <input
                           type="url"
                           value={entry.externalUrl}
-                          onChange={(e) => updateOmniDraft(item.id, entry.channel, 'externalUrl', e.target.value)}
+                          onChange={(e) =>
+                            updateOmniDraft(item.id, entry.channel, 'externalUrl', e.target.value)
+                          }
                           placeholder="External Listing URL"
                         />
                         <select
                           value={entry.syncMode}
-                          onChange={(e) => updateOmniDraft(item.id, entry.channel, 'syncMode', e.target.value)}
+                          onChange={(e) =>
+                            updateOmniDraft(item.id, entry.channel, 'syncMode', e.target.value)
+                          }
                         >
                           <option value="manual">Manual</option>
                           <option value="webhook">Webhook</option>
@@ -493,7 +527,9 @@ export default function MyListingsPage() {
                     ))}
                   </div>
                 ) : (
-                  <p className="muted">Load this item's omnichannel profile to configure external listing mappings.</p>
+                  <p className="muted">
+                    Load this item's omnichannel profile to configure external listing mappings.
+                  </p>
                 )}
 
                 {omniError[item.id] ? <p className="form-error">{omniError[item.id]}</p> : null}
@@ -514,11 +550,16 @@ export default function MyListingsPage() {
 
                 <div className="manual-sold-block">
                   <h4>Manual Sold Action</h4>
-                  <p className="muted">Use this when sale happened off-platform and you need immediate delist + receipt sync.</p>
+                  <p className="muted">
+                    Use this when sale happened off-platform and you need immediate delist + receipt
+                    sync.
+                  </p>
                   <div className="manual-sold-grid">
                     <select
                       value={manualSoldDrafts[item.id]?.saleSource || 'manual'}
-                      onChange={(e) => updateManualSoldDraft(item.id, { saleSource: e.target.value })}
+                      onChange={(e) =>
+                        updateManualSoldDraft(item.id, { saleSource: e.target.value })
+                      }
                     >
                       <option value="manual">manual</option>
                       <option value="ebay">ebay</option>
@@ -529,7 +570,9 @@ export default function MyListingsPage() {
                     </select>
                     <select
                       value={manualSoldDrafts[item.id]?.paymentMethod || 'manual'}
-                      onChange={(e) => updateManualSoldDraft(item.id, { paymentMethod: e.target.value })}
+                      onChange={(e) =>
+                        updateManualSoldDraft(item.id, { paymentMethod: e.target.value })
+                      }
                     >
                       <option value="manual">manual</option>
                       <option value="card">card</option>
@@ -539,13 +582,17 @@ export default function MyListingsPage() {
                       type="text"
                       placeholder="External Sale ID"
                       value={manualSoldDrafts[item.id]?.externalSaleId || ''}
-                      onChange={(e) => updateManualSoldDraft(item.id, { externalSaleId: e.target.value })}
+                      onChange={(e) =>
+                        updateManualSoldDraft(item.id, { externalSaleId: e.target.value })
+                      }
                     />
                     <input
                       type="text"
                       placeholder="Buyer Wallet (optional)"
                       value={manualSoldDrafts[item.id]?.buyerWallet || ''}
-                      onChange={(e) => updateManualSoldDraft(item.id, { buyerWallet: e.target.value })}
+                      onChange={(e) =>
+                        updateManualSoldDraft(item.id, { buyerWallet: e.target.value })
+                      }
                     />
                   </div>
                   <div className="omni-actions">
@@ -569,11 +616,17 @@ export default function MyListingsPage() {
                       onClick={() => loadOmnichannelForItem(item.id)}
                       disabled={!!salesLoading[item.id] || !!omniLoading[item.id]}
                     >
-                      {(salesLoading[item.id] || omniLoading[item.id]) ? 'Refreshing...' : 'Refresh Receipts'}
+                      {salesLoading[item.id] || omniLoading[item.id]
+                        ? 'Refreshing...'
+                        : 'Refresh Receipts'}
                     </button>
                   </div>
 
-                  <div className="receipt-filter-row" role="group" aria-label="Receipt status filter">
+                  <div
+                    className="receipt-filter-row"
+                    role="group"
+                    aria-label="Receipt status filter"
+                  >
                     {RECEIPT_FILTERS.map((receiptStatus) => (
                       <button
                         key={`${item.id}-receipt-filter-${receiptStatus}`}
@@ -598,11 +651,15 @@ export default function MyListingsPage() {
                       {visibleSalesForItem.map((sale) => (
                         <div key={`${item.id}-sale-${sale._id}`} className="receipt-history-row">
                           <span className="receipt-source">{sale.saleSource || 'unknown'}</span>
-                          <span className={`receipt-status is-${sale.blockchainReceipt?.status || 'skipped'}`}>
+                          <span
+                            className={`receipt-status is-${sale.blockchainReceipt?.status || 'skipped'}`}
+                          >
                             {sale.blockchainReceipt?.status || 'skipped'}
                           </span>
                           <span className="receipt-meta">
-                            <span className="receipt-badge">{normalizeNetworkName(sale.blockchainReceipt?.network)}</span>
+                            <span className="receipt-badge">
+                              {normalizeNetworkName(sale.blockchainReceipt?.network)}
+                            </span>
                             {sale.blockchainReceipt?.txHash ? (
                               txExplorerUrlForSale(sale) ? (
                                 <a
@@ -623,9 +680,13 @@ export default function MyListingsPage() {
                               <button
                                 type="button"
                                 className="receipt-copy-btn"
-                                onClick={() => copyReceiptValue(item.id, sale.blockchainReceipt.txHash)}
+                                onClick={() =>
+                                  copyReceiptValue(item.id, sale.blockchainReceipt.txHash)
+                                }
                               >
-                                {copiedValueByItem[item.id] === sale.blockchainReceipt.txHash ? 'Copied' : 'Copy'}
+                                {copiedValueByItem[item.id] === sale.blockchainReceipt.txHash
+                                  ? 'Copied'
+                                  : 'Copy'}
                               </button>
                             ) : null}
                           </span>
@@ -650,9 +711,14 @@ export default function MyListingsPage() {
                               <button
                                 type="button"
                                 className="receipt-copy-btn"
-                                onClick={() => copyReceiptValue(item.id, String(sale.blockchainReceipt.tokenId))}
+                                onClick={() =>
+                                  copyReceiptValue(item.id, String(sale.blockchainReceipt.tokenId))
+                                }
                               >
-                                {copiedValueByItem[item.id] === String(sale.blockchainReceipt.tokenId) ? 'Copied' : 'Copy'}
+                                {copiedValueByItem[item.id] ===
+                                String(sale.blockchainReceipt.tokenId)
+                                  ? 'Copied'
+                                  : 'Copy'}
                               </button>
                             ) : null}
                           </span>
@@ -660,13 +726,28 @@ export default function MyListingsPage() {
                             {formatRelativeTime(sale.createdAt)}
                           </span>
                           {sale.royaltySettlement?.amountCents > 0 ? (
-                            <span className="receipt-royalty" title="Perpetual split recorded for this sale">
-                              creator {formatMoney(sale.royaltySettlement.creatorRoyaltyCents, sale.royaltySettlement.currency)}
-                              {' '}| pva {formatMoney(sale.royaltySettlement.platformFeeCents, sale.royaltySettlement.currency)}
+                            <span
+                              className="receipt-royalty"
+                              title="Perpetual split recorded for this sale"
+                            >
+                              creator{' '}
+                              {formatMoney(
+                                sale.royaltySettlement.creatorRoyaltyCents,
+                                sale.royaltySettlement.currency,
+                              )}{' '}
+                              | pva{' '}
+                              {formatMoney(
+                                sale.royaltySettlement.platformFeeCents,
+                                sale.royaltySettlement.currency,
+                              )}
                             </span>
                           ) : null}
-                          {(sale.blockchainReceipt?.status === 'failed' && sale.blockchainReceipt?.failureReason) ? (
-                            <span className="receipt-failure" title={sale.blockchainReceipt.failureReason}>
+                          {sale.blockchainReceipt?.status === 'failed' &&
+                          sale.blockchainReceipt?.failureReason ? (
+                            <span
+                              className="receipt-failure"
+                              title={sale.blockchainReceipt.failureReason}
+                            >
                               {sale.blockchainReceipt.failureReason}
                             </span>
                           ) : null}
@@ -679,7 +760,9 @@ export default function MyListingsPage() {
 
               <div className="syndication-block">
                 <h3>Syndication</h3>
-                {!jobs.length ? <p className="muted">No syndication requested for this listing.</p> : null}
+                {!jobs.length ? (
+                  <p className="muted">No syndication requested for this listing.</p>
+                ) : null}
                 {jobs.map((job) => (
                   <div key={`${item.id}-${job.channel}`} className="job-row">
                     <span className="job-channel">{job.channel}</span>
@@ -687,7 +770,12 @@ export default function MyListingsPage() {
                     <span className="job-message">{job.message || 'No details'}</span>
                     <div className="job-actions">
                       {job.externalUrl ? (
-                        <a className="btn ghost" href={job.externalUrl} target="_blank" rel="noreferrer">
+                        <a
+                          className="btn ghost"
+                          href={job.externalUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
                           Open
                         </a>
                       ) : null}
@@ -695,7 +783,13 @@ export default function MyListingsPage() {
                         <button
                           type="button"
                           className="btn ghost"
-                          onClick={() => retryChannelsForItem(item.id, [job.channel], `${item.id}-${job.channel}`)}
+                          onClick={() =>
+                            retryChannelsForItem(
+                              item.id,
+                              [job.channel],
+                              `${item.id}-${job.channel}`,
+                            )
+                          }
                           disabled={retryingKey === `${item.id}-${job.channel}`}
                         >
                           {retryingKey === `${item.id}-${job.channel}` ? 'Retrying...' : 'Retry'}
@@ -711,7 +805,9 @@ export default function MyListingsPage() {
                   <button
                     type="button"
                     className="btn primary"
-                    onClick={() => retryChannelsForItem(item.id, retryableChannels, `${item.id}-all`)}
+                    onClick={() =>
+                      retryChannelsForItem(item.id, retryableChannels, `${item.id}-all`)
+                    }
                     disabled={retryingKey === `${item.id}-all`}
                   >
                     {retryingKey === `${item.id}-all` ? 'Retrying...' : 'Retry All Failed Channels'}

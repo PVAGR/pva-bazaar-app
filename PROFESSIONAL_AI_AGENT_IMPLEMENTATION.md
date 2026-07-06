@@ -9,18 +9,21 @@
 ## What You Now Have
 
 ### 🧠 **Multi-Model LLM Intelligence**
+
 Your AI agent can now use the **best available model** for every task:
 
-| Rank | Model | Provider | Best For | Speed |
-|------|-------|----------|----------|-------|
-| 1 | Claude 3 Opus | Anthropic | Reasoning, coding analysis | 2-5s |
-| 2 | GPT-4 Turbo | OpenAI | Strong code + logic | 3-8s |
-| 3 | Ollama local | Local | Always available fallback | 10-30s |
+| Rank | Model         | Provider  | Best For                   | Speed  |
+| ---- | ------------- | --------- | -------------------------- | ------ |
+| 1    | Claude 3 Opus | Anthropic | Reasoning, coding analysis | 2-5s   |
+| 2    | GPT-4 Turbo   | OpenAI    | Strong code + logic        | 3-8s   |
+| 3    | Ollama local  | Local     | Always available fallback  | 10-30s |
 
 **Example:** When you ask for code review, it automatically uses Claude 3 Opus (best for coding). When Claude is offline, it falls back to GPT-4, then Ollama.
 
 ### 🔗 **GitHub Integration**
+
 Your agent can now:
+
 - **Read** any file from your repository
 - **Analyze** code and suggest improvements
 - **Write** new files or update existing ones
@@ -28,6 +31,7 @@ Your agent can now:
 - **All with your explicit approval**
 
 ### 📱 **Telegram Remote Control**
+
 Control your agent from anywhere, from your phone:
 
 ```
@@ -40,6 +44,7 @@ Control your agent from anywhere, from your phone:
 Then approve 1-click buttons: `✅ Approve | ❌ Reject`
 
 ### ✅ **Approval Workflow**
+
 **Your safety net:** No code changes happen without your explicit approval
 
 1. Agent proposes code change with reasoning
@@ -53,6 +58,7 @@ Then approve 1-click buttons: `✅ Approve | ❌ Reject`
 ## Complete API Reference
 
 ### **Chat & Conversations** (Existing)
+
 ```bash
 POST   /api/agent/chat                    # Send message, get response
 GET    /api/agent/status                  # System health check
@@ -62,12 +68,14 @@ GET    /api/agent/providers               # LLM availability
 ```
 
 ### **Code Analysis & Generation** (NEW)
+
 ```bash
 POST   /api/agent/code-analysis           # AI reviews code
 POST   /api/agent/code-generate           # Generate code from requirements
 ```
 
 **Example - Code Analysis:**
+
 ```bash
 curl -X POST http://localhost:5001/api/agent/code-analysis \
   -H "Content-Type: application/json" \
@@ -80,6 +88,7 @@ curl -X POST http://localhost:5001/api/agent/code-analysis \
 ```
 
 Response:
+
 ```json
 {
   "ok": true,
@@ -90,6 +99,7 @@ Response:
 ```
 
 ### **GitHub Integration** (NEW)
+
 ```bash
 POST   /api/agent/github/propose-change   # Submit code for approval
 GET    /api/agent/pending-changes         # List pending approvals
@@ -98,6 +108,7 @@ POST   /api/agent/pending-changes/{id}/reject    # Reject change
 ```
 
 **Example - Propose Code Change:**
+
 ```bash
 curl -X POST http://localhost:5001/api/agent/github/propose-change \
   -H "Content-Type: application/json" \
@@ -111,6 +122,7 @@ curl -X POST http://localhost:5001/api/agent/github/propose-change \
 ```
 
 Response:
+
 ```json
 {
   "ok": true,
@@ -121,6 +133,7 @@ Response:
 ```
 
 ### **Telegram Bot** (NEW)
+
 ```bash
 POST   /api/telegram/webhook              # Telegram message handler (auto)
 POST   /api/telegram/set-webhook          # Register webhook
@@ -132,6 +145,7 @@ GET    /api/telegram/webhook-info         # Check webhook status
 ## Setup Checklist (Next Steps)
 
 ### ✅ Step 1: GitHub Integration (5 min)
+
 1. Go to: https://github.com/settings/tokens/new
 2. Click "Generate new token (classic)"
 3. Select scope: `repo` (full access to private repos)
@@ -144,11 +158,13 @@ GET    /api/telegram/webhook-info         # Check webhook status
 ### ✅ Step 2: Add Premium LLM Keys (Optional, 2 min each)
 
 **OpenAI (GPT-4 access):**
+
 1. Go to: https://platform.openai.com/api-keys
 2. Create new key
 3. Add to `.env`: `OPENAI_API_KEY=sk-...`
 
 **Anthropic (Claude 3 - RECOMMENDED):**
+
 1. Go to: https://console.anthropic.com/keys
 2. Create new key
 3. Add to `.env`: `ANTHROPIC_API_KEY=sk-ant-...`
@@ -156,6 +172,7 @@ GET    /api/telegram/webhook-info         # Check webhook status
 > **Impact:** Without these, agent falls back to local Ollama (slower). With Claude 3, code analysis is ~5x better.
 
 ### ✅ Step 3: Telegram Setup (3 min)
+
 1. Message your bot on Telegram
 2. Run this command:
    ```bash
@@ -166,6 +183,7 @@ GET    /api/telegram/webhook-info         # Check webhook status
 4. Add to `.env`: `TELEGRAM_CHAT_ID=123456789`
 
 ### ✅ Step 4: Register Telegram Webhook (2 min)
+
 ```bash
 curl -X POST https://api.pvabazaar.org/api/telegram/set-webhook \
   -H "Content-Type: application/json" \
@@ -173,6 +191,7 @@ curl -X POST https://api.pvabazaar.org/api/telegram/set-webhook \
 ```
 
 ### ✅ Step 5: Restart Backend
+
 ```bash
 # Stop current backend (Ctrl+C)
 # Then:
@@ -181,6 +200,7 @@ npm run dev
 ```
 
 ### ✅ Step 6: Verify Everything Works
+
 ```bash
 # Check LLM providers
 curl http://localhost:5001/api/agent/providers | jq .
@@ -199,6 +219,7 @@ curl -X POST http://localhost:5001/api/agent/chat \
 ## Usage Examples
 
 ### Example 1: Code Review via HTTP
+
 ```bash
 POST /api/agent/code-analysis
 {
@@ -209,9 +230,11 @@ POST /api/agent/code-analysis
 ```
 
 Agent reviews:
+
 > "This code has a performance issue - you're fetching without waiting. Add `await` or `.then()`. Also handles errors?"
 
 ### Example 2: Generate Component
+
 ```bash
 POST /api/agent/code-generate
 {
@@ -222,7 +245,9 @@ POST /api/agent/code-generate
 ```
 
 Agent generates:
+
 > Complete React component with:
+>
 > - Avatar display with initials fallback
 > - Image error handling
 > - Proper TypeScript types
@@ -230,6 +255,7 @@ Agent generates:
 > - CSS for responsive sizing
 
 ### Example 3: Code Change Proposal
+
 ```bash
 POST /api/agent/github/propose-change
 {
@@ -294,17 +320,20 @@ backend/
 ## Configuration Reference
 
 ### Required (for GitHub integration)
+
 ```bash
 GITHUB_TOKEN=ghp_xxx...        # GitHub personal access token
 ```
 
 ### Optional (for better performance)
+
 ```bash
 OPENAI_API_KEY=sk-xxx...       # GPT-4 access
 ANTHROPIC_API_KEY=sk-ant-xxx   # Claude 3 access (BEST)
 ```
 
 ### Already Configured
+
 ```bash
 TELEGRAM_BOT_TOKEN=...         # Bot token (already set)
 OLLAMA_BASE_URL=localhost:11434  # Local LLM (fallback)
@@ -315,13 +344,13 @@ OLLAMA_MODEL=llama3.2:1b       # Default local model
 
 ## Model Quality Comparison
 
-| Task | Claude 3 Opus | GPT-4 Turbo | Ollama llama3.2 |
-|------|---------------|------------|-----------------|
-| Code Review Quality | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ |
-| Reasoning | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐ |
-| Speed | 2-5s | 3-8s | 15-30s |
-| Cost/1K tokens | $0.003 | $0.04 | Free |
-| Best Use | Code work | Logic tasks | Fallback |
+| Task                | Claude 3 Opus | GPT-4 Turbo | Ollama llama3.2 |
+| ------------------- | ------------- | ----------- | --------------- |
+| Code Review Quality | ⭐⭐⭐⭐⭐    | ⭐⭐⭐⭐    | ⭐⭐⭐          |
+| Reasoning           | ⭐⭐⭐⭐⭐    | ⭐⭐⭐⭐⭐  | ⭐⭐            |
+| Speed               | 2-5s          | 3-8s        | 15-30s          |
+| Cost/1K tokens      | $0.003        | $0.04       | Free            |
+| Best Use            | Code work     | Logic tasks | Fallback        |
 
 **Recommendation:** Add Claude 3 API key for best experience.
 
@@ -330,6 +359,7 @@ OLLAMA_MODEL=llama3.2:1b       # Default local model
 ## Safety Guarantees
 
 ✅ **Implemented:**
+
 - All code changes require explicit user approval
 - Full MongoDB audit trail (who, what, when, why)
 - GitHub API rate limiting
@@ -337,6 +367,7 @@ OLLAMA_MODEL=llama3.2:1b       # Default local model
 - No automatic file deletion
 
 🔒 **Architectural Safeguards:**
+
 - Read-only by default (requires approval to write)
 - Changes expire after 7 days if not executed
 - Rollback mechanism available
@@ -347,11 +378,13 @@ OLLAMA_MODEL=llama3.2:1b       # Default local model
 ## Performance & Costs
 
 ### Response Times
+
 - Claude 3 Opus: 2-5 seconds
-- GPT-4 Turbo: 3-8 seconds  
+- GPT-4 Turbo: 3-8 seconds
 - Ollama (local): 15-30 seconds
 
 ### Monthly Costs (Estimate)
+
 - Ollama local: **FREE**
 - Claude 3: ~$5-20/month (depending on usage)
 - GPT-4: ~$10-50/month
@@ -364,7 +397,9 @@ OLLAMA_MODEL=llama3.2:1b       # Default local model
 ## Troubleshooting
 
 ### Problem: "No LLM providers available"
+
 **Solution:**
+
 ```bash
 # Make sure Ollama is running
 curl http://localhost:11434/api/tags
@@ -375,7 +410,9 @@ ANTHROPIC_API_KEY=sk-ant-xxx
 ```
 
 ### Problem: GitHub changes not working
+
 **Solution:**
+
 ```bash
 # Verify token has 'repo' scope
 # Check token isn't expired
@@ -383,7 +420,9 @@ ANTHROPIC_API_KEY=sk-ant-xxx
 ```
 
 ### Problem: Telegram not responding
+
 **Solution:**
+
 ```bash
 # Check webhook is registered
 curl http://localhost:5001/api/telegram/webhook-info
@@ -444,7 +483,8 @@ curl -X POST http://localhost:5001/api/agent/code-analysis \
 ---
 
 **You now have a production-grade AI programmer that:**
-- 🧠 Uses the best AI models available  
+
+- 🧠 Uses the best AI models available
 - 🔐 Requires your approval for changes
 - 📱 Works from your phone via Telegram
 - 💾 Remembers everything in MongoDB
@@ -454,6 +494,6 @@ curl -X POST http://localhost:5001/api/agent/code-analysis \
 
 ---
 
-*Generated by: OpenClaw AI Agent*  
-*Implementation Date: 2026-04-13*  
-*Sophistication Level: Enterprise-Grade*  
+_Generated by: OpenClaw AI Agent_  
+_Implementation Date: 2026-04-13_  
+_Sophistication Level: Enterprise-Grade_

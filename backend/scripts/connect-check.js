@@ -10,17 +10,21 @@ const fs = require('fs');
 // Load backend/.env (no dotenv dependency when run from root)
 const envPath = path.join(__dirname, '..', '.env');
 if (fs.existsSync(envPath)) {
-  fs.readFileSync(envPath, 'utf8').split(/\r?\n/).forEach((line) => {
-    const match = line.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*?)\s*$/);
-    if (match) {
-      const val = match[2].replace(/^["']|["']$/g, '').trim();
-      if (!process.env[match[1]]) process.env[match[1]] = val;
-    }
-  });
+  fs.readFileSync(envPath, 'utf8')
+    .split(/\r?\n/)
+    .forEach((line) => {
+      const match = line.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*?)\s*$/);
+      if (match) {
+        const val = match[2].replace(/^["']|["']$/g, '').trim();
+        if (!process.env[match[1]]) process.env[match[1]] = val;
+      }
+    });
 }
 
 if (!process.env.MONGODB_URI) {
-  console.error('❌ MONGODB_URI not set. Copy backend/.env.example to backend/.env and set MONGODB_URI.');
+  console.error(
+    '❌ MONGODB_URI not set. Copy backend/.env.example to backend/.env and set MONGODB_URI.',
+  );
   process.exitCode = 1;
   process.exit(1);
 }
@@ -76,7 +80,9 @@ async function main() {
   if (allOk) {
     console.log('\n✅ All vessels connected: MongoDB, users collection, richyrichaii user.');
   } else {
-    console.log('\n⚠️ Not all checks passed. Run backend/seed.js to create richyrichaii user and sample data.');
+    console.log(
+      '\n⚠️ Not all checks passed. Run backend/seed.js to create richyrichaii user and sample data.',
+    );
     process.exitCode = 1;
   }
 }

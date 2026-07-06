@@ -6,7 +6,11 @@
 
 const VALID_UTM_SOURCES = [
   // Common creator platforms
-  'instagram', 'tiktok', 'youtube', 'twitter', 'facebook',
+  'instagram',
+  'tiktok',
+  'youtube',
+  'twitter',
+  'facebook',
   // Custom creator handles (format: creator_<handle>)
   // Validated by regex below
 ];
@@ -17,14 +21,8 @@ const VALID_UTM_SOURCES = [
  * @returns {object} Sanitized attribution object
  */
 function parseUTMParams(options = {}) {
-  const {
-    utm_source,
-    utm_medium,
-    utm_campaign,
-    utm_content,
-    referral_code,
-    creator_handle,
-  } = options;
+  const { utm_source, utm_medium, utm_campaign, utm_content, referral_code, creator_handle } =
+    options;
 
   const attribution = {
     utm_source: null,
@@ -40,10 +38,7 @@ function parseUTMParams(options = {}) {
   if (utm_source) {
     const normalized = String(utm_source).toLowerCase().trim();
     // Allow known platforms or creator_<handle> pattern
-    if (
-      VALID_UTM_SOURCES.includes(normalized) ||
-      /^creator_[a-z0-9_-]{3,30}$/.test(normalized)
-    ) {
+    if (VALID_UTM_SOURCES.includes(normalized) || /^creator_[a-z0-9_-]{3,30}$/.test(normalized)) {
       attribution.utm_source = normalized;
       attribution.attributionSource = 'utm';
     }
@@ -124,9 +119,9 @@ function generateReferralCode(creatorHandle) {
  */
 function calculateCommissionForCreator(amountCents, commissionType = 'default') {
   const rates = {
-    default: 0.10,   // 10% for standard creators
-    vip: 0.15,       // 15% for VIP/high-performing creators
-    micro: 0.08,     // 8% for micro influencers
+    default: 0.1, // 10% for standard creators
+    vip: 0.15, // 15% for VIP/high-performing creators
+    micro: 0.08, // 8% for micro influencers
   };
 
   const rate = rates[commissionType] || rates.default;

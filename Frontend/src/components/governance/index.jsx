@@ -1,39 +1,39 @@
-import React, { useEffect, useMemo, useState } from 'react'
-import { useGovernanceStore } from '../../store/governanceStore'
+import React, { useEffect, useMemo, useState } from 'react';
+import { useGovernanceStore } from '../../store/governanceStore';
 
-const STAGE_ORDER = ['draft', 'endorsed', 'panel', 'vote', 'passed', 'rejected']
+const STAGE_ORDER = ['draft', 'endorsed', 'panel', 'vote', 'passed', 'rejected'];
 
 const stageTagClass = (stage) => {
-  if (stage === 'vote') return 'gov-tag gov-tag-vote'
-  if (stage === 'panel') return 'gov-tag gov-tag-panel'
-  if (stage === 'endorsed') return 'gov-tag gov-tag-endorsed'
-  if (stage === 'passed') return 'gov-tag gov-tag-passed'
-  if (stage === 'rejected') return 'gov-tag gov-tag-rejected'
-  return 'gov-tag gov-tag-draft'
-}
+  if (stage === 'vote') return 'gov-tag gov-tag-vote';
+  if (stage === 'panel') return 'gov-tag gov-tag-panel';
+  if (stage === 'endorsed') return 'gov-tag gov-tag-endorsed';
+  if (stage === 'passed') return 'gov-tag gov-tag-passed';
+  if (stage === 'rejected') return 'gov-tag gov-tag-rejected';
+  return 'gov-tag gov-tag-draft';
+};
 
 const stageCardClass = (stage) => {
-  if (stage === 'vote') return 'gov-card stage-vote'
-  if (stage === 'panel') return 'gov-card stage-panel'
-  if (stage === 'endorsed') return 'gov-card stage-endorsed'
-  if (stage === 'passed') return 'gov-card stage-passed'
-  return 'gov-card stage-draft'
-}
+  if (stage === 'vote') return 'gov-card stage-vote';
+  if (stage === 'panel') return 'gov-card stage-panel';
+  if (stage === 'endorsed') return 'gov-card stage-endorsed';
+  if (stage === 'passed') return 'gov-card stage-passed';
+  return 'gov-card stage-draft';
+};
 
 const stageLabel = (stage) => {
-  if (stage === 'vote') return 'Live Vote'
-  if (stage === 'panel') return "Citizen Panel"
-  if (stage === 'endorsed') return 'Endorsed'
-  if (stage === 'passed') return 'Passed'
-  if (stage === 'rejected') return 'Rejected'
-  return 'Draft'
-}
+  if (stage === 'vote') return 'Live Vote';
+  if (stage === 'panel') return 'Citizen Panel';
+  if (stage === 'endorsed') return 'Endorsed';
+  if (stage === 'passed') return 'Passed';
+  if (stage === 'rejected') return 'Rejected';
+  return 'Draft';
+};
 
 const votePercent = (yes, no) => {
-  const total = yes + no
-  if (!total) return 50
-  return Math.max(0, Math.min(100, Math.round((yes / total) * 100)))
-}
+  const total = yes + no;
+  if (!total) return 50;
+  return Math.max(0, Math.min(100, Math.round((yes / total) * 100)));
+};
 
 function Sidebar({ activePage, onPageChange, stats }) {
   return (
@@ -41,9 +41,24 @@ function Sidebar({ activePage, onPageChange, stats }) {
       <div>
         <div className="gov-section-label">Civic Navigation</div>
         <div className="gov-nav-list">
-          <button className={activePage === 'forum' ? 'active' : ''} onClick={() => onPageChange('forum')}>◉ Forum</button>
-          <button className={activePage === 'conference' ? 'active' : ''} onClick={() => onPageChange('conference')}>◉ Conference VII</button>
-          <button className={activePage === 'treasury' ? 'active' : ''} onClick={() => onPageChange('treasury')}>◉ Treasury</button>
+          <button
+            className={activePage === 'forum' ? 'active' : ''}
+            onClick={() => onPageChange('forum')}
+          >
+            ◉ Forum
+          </button>
+          <button
+            className={activePage === 'conference' ? 'active' : ''}
+            onClick={() => onPageChange('conference')}
+          >
+            ◉ Conference VII
+          </button>
+          <button
+            className={activePage === 'treasury' ? 'active' : ''}
+            onClick={() => onPageChange('treasury')}
+          >
+            ◉ Treasury
+          </button>
         </div>
       </div>
 
@@ -69,23 +84,30 @@ function Sidebar({ activePage, onPageChange, stats }) {
         </div>
       </div>
     </aside>
-  )
+  );
 }
 
 function Hero({ onCreate }) {
   return (
     <section className="gov-hero">
       <div className="gov-hero-eyebrow">PVA Governance Layer</div>
-      <h1 className="gov-hero-title">The <strong>Civic Forge</strong> of PVA Bazaar</h1>
+      <h1 className="gov-hero-title">
+        The <strong>Civic Forge</strong> of PVA Bazaar
+      </h1>
       <p className="gov-hero-sub">
-        Proposals move from draft to endorsement, panel review, and live voting. Every civic action is visible, traceable, and community-auditable.
+        Proposals move from draft to endorsement, panel review, and live voting. Every civic action
+        is visible, traceable, and community-auditable.
       </p>
       <div className="gov-hero-actions">
-        <button type="button" className="gov-btn gov-btn-primary" onClick={onCreate}>+ New Proposal</button>
-        <button type="button" className="gov-btn gov-btn-ghost">View Governance Charter</button>
+        <button type="button" className="gov-btn gov-btn-primary" onClick={onCreate}>
+          + New Proposal
+        </button>
+        <button type="button" className="gov-btn gov-btn-ghost">
+          View Governance Charter
+        </button>
       </div>
     </section>
-  )
+  );
 }
 
 function ProposalForm({
@@ -95,25 +117,25 @@ function ProposalForm({
   onDraftChange = null,
   showDraftExplainer = false,
 }) {
-  const [title, setTitle] = useState('')
-  const [category, setCategory] = useState('Governance')
-  const [urgency, setUrgency] = useState('Standard')
-  const [problem, setProblem] = useState('')
-  const [solution, setSolution] = useState('')
-  const [outcome, setOutcome] = useState('')
+  const [title, setTitle] = useState('');
+  const [category, setCategory] = useState('Governance');
+  const [urgency, setUrgency] = useState('Standard');
+  const [problem, setProblem] = useState('');
+  const [solution, setSolution] = useState('');
+  const [outcome, setOutcome] = useState('');
 
   useEffect(() => {
-    if (!initialDraft) return
-    setTitle((prev) => prev || String(initialDraft.title || ''))
-    setCategory((prev) => prev || String(initialDraft.category || 'Governance'))
-    setUrgency((prev) => prev || String(initialDraft.urgency || 'Standard'))
-    setProblem((prev) => prev || String(initialDraft.problem || ''))
-    setSolution((prev) => prev || String(initialDraft.solution || ''))
-    setOutcome((prev) => prev || String(initialDraft.outcome || ''))
-  }, [initialDraft])
+    if (!initialDraft) return;
+    setTitle((prev) => prev || String(initialDraft.title || ''));
+    setCategory((prev) => prev || String(initialDraft.category || 'Governance'));
+    setUrgency((prev) => prev || String(initialDraft.urgency || 'Standard'));
+    setProblem((prev) => prev || String(initialDraft.problem || ''));
+    setSolution((prev) => prev || String(initialDraft.solution || ''));
+    setOutcome((prev) => prev || String(initialDraft.outcome || ''));
+  }, [initialDraft]);
 
   useEffect(() => {
-    if (typeof onDraftChange !== 'function') return
+    if (typeof onDraftChange !== 'function') return;
     onDraftChange({
       title,
       category,
@@ -121,14 +143,14 @@ function ProposalForm({
       problem,
       solution,
       outcome,
-    })
-  }, [title, category, urgency, problem, solution, outcome, onDraftChange])
+    });
+  }, [title, category, urgency, problem, solution, outcome, onDraftChange]);
 
-  const canSubmit = title.trim() && solution.trim()
+  const canSubmit = title.trim() && solution.trim();
 
   const handleSubmit = (event) => {
-    event.preventDefault()
-    if (!canSubmit) return
+    event.preventDefault();
+    if (!canSubmit) return;
 
     onSubmit({
       title: title.trim(),
@@ -137,32 +159,48 @@ function ProposalForm({
       problem: problem.trim(),
       solution: solution.trim(),
       outcome: outcome.trim(),
-    })
+    });
 
-    setTitle('')
-    setProblem('')
-    setSolution('')
-    setOutcome('')
-    onClose()
-  }
+    setTitle('');
+    setProblem('');
+    setSolution('');
+    setOutcome('');
+    onClose();
+  };
 
   return (
     <form className="gov-form-wrap" onSubmit={handleSubmit}>
       {showDraftExplainer && initialDraft ? (
         <div className="gov-form-explainer" role="status">
-          <strong>Why this draft appears:</strong> it was generated from your onboarding path tags and journey so you can edit and submit a first proposal faster.
+          <strong>Why this draft appears:</strong> it was generated from your onboarding path tags
+          and journey so you can edit and submit a first proposal faster.
         </div>
       ) : null}
 
       <div className="gov-form-group">
-        <label className="gov-form-label" htmlFor="gov-title">Proposal Title</label>
-        <input id="gov-title" className="gov-form-input" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Example: Expand clean water infrastructure" />
+        <label className="gov-form-label" htmlFor="gov-title">
+          Proposal Title
+        </label>
+        <input
+          id="gov-title"
+          className="gov-form-input"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Example: Expand clean water infrastructure"
+        />
       </div>
 
       <div className="gov-form-row">
         <div className="gov-form-group">
-          <label className="gov-form-label" htmlFor="gov-category">Category</label>
-          <select id="gov-category" className="gov-form-select" value={category} onChange={(e) => setCategory(e.target.value)}>
+          <label className="gov-form-label" htmlFor="gov-category">
+            Category
+          </label>
+          <select
+            id="gov-category"
+            className="gov-form-select"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+          >
             <option>Governance</option>
             <option>Infrastructure</option>
             <option>Health</option>
@@ -172,8 +210,15 @@ function ProposalForm({
         </div>
 
         <div className="gov-form-group">
-          <label className="gov-form-label" htmlFor="gov-urgency">Urgency</label>
-          <select id="gov-urgency" className="gov-form-select" value={urgency} onChange={(e) => setUrgency(e.target.value)}>
+          <label className="gov-form-label" htmlFor="gov-urgency">
+            Urgency
+          </label>
+          <select
+            id="gov-urgency"
+            className="gov-form-select"
+            value={urgency}
+            onChange={(e) => setUrgency(e.target.value)}
+          >
             <option>Standard</option>
             <option>High</option>
           </select>
@@ -181,37 +226,65 @@ function ProposalForm({
       </div>
 
       <div className="gov-form-group">
-        <label className="gov-form-label" htmlFor="gov-problem">Problem</label>
-        <textarea id="gov-problem" className="gov-form-textarea" value={problem} onChange={(e) => setProblem(e.target.value)} placeholder="What issue does this solve?" />
+        <label className="gov-form-label" htmlFor="gov-problem">
+          Problem
+        </label>
+        <textarea
+          id="gov-problem"
+          className="gov-form-textarea"
+          value={problem}
+          onChange={(e) => setProblem(e.target.value)}
+          placeholder="What issue does this solve?"
+        />
       </div>
 
       <div className="gov-form-group">
-        <label className="gov-form-label" htmlFor="gov-solution">Solution</label>
-        <textarea id="gov-solution" className="gov-form-textarea" value={solution} onChange={(e) => setSolution(e.target.value)} placeholder="Describe the implementation plan" />
+        <label className="gov-form-label" htmlFor="gov-solution">
+          Solution
+        </label>
+        <textarea
+          id="gov-solution"
+          className="gov-form-textarea"
+          value={solution}
+          onChange={(e) => setSolution(e.target.value)}
+          placeholder="Describe the implementation plan"
+        />
       </div>
 
       <div className="gov-form-group">
-        <label className="gov-form-label" htmlFor="gov-outcome">Expected Outcome</label>
-        <textarea id="gov-outcome" className="gov-form-textarea" value={outcome} onChange={(e) => setOutcome(e.target.value)} placeholder="Expected measurable impact" />
+        <label className="gov-form-label" htmlFor="gov-outcome">
+          Expected Outcome
+        </label>
+        <textarea
+          id="gov-outcome"
+          className="gov-form-textarea"
+          value={outcome}
+          onChange={(e) => setOutcome(e.target.value)}
+          placeholder="Expected measurable impact"
+        />
       </div>
 
       <div className="gov-form-actions">
-        <button type="button" className="gov-btn gov-btn-ghost" onClick={onClose}>Cancel</button>
-        <button type="submit" className="gov-btn gov-btn-primary" disabled={!canSubmit}>Submit Proposal</button>
+        <button type="button" className="gov-btn gov-btn-ghost" onClick={onClose}>
+          Cancel
+        </button>
+        <button type="submit" className="gov-btn gov-btn-primary" disabled={!canSubmit}>
+          Submit Proposal
+        </button>
       </div>
     </form>
-  )
+  );
 }
 
 function ProposalCard({ proposal, onEndorse, onVote, onOpen }) {
-  const yesPct = votePercent(proposal.yesVotes, proposal.noVotes)
-  const handleOpen = () => onOpen(proposal)
+  const yesPct = votePercent(proposal.yesVotes, proposal.noVotes);
+  const handleOpen = () => onOpen(proposal);
   const handleKeyOpen = (event) => {
     if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault()
-      onOpen(proposal)
+      event.preventDefault();
+      onOpen(proposal);
     }
-  }
+  };
 
   return (
     <article
@@ -244,7 +317,9 @@ function ProposalCard({ proposal, onEndorse, onVote, onOpen }) {
 
       <div className="gov-card-footer">
         <div className="gov-card-author">
-          <span className="gov-avatar" style={{ background: proposal.authorColor }}>{proposal.authorInitial}</span>
+          <span className="gov-avatar" style={{ background: proposal.authorColor }}>
+            {proposal.authorInitial}
+          </span>
           <span>{proposal.author}</span>
           <span>·</span>
           <span>{proposal.id}</span>
@@ -255,8 +330,8 @@ function ProposalCard({ proposal, onEndorse, onVote, onOpen }) {
             type="button"
             className={proposal.userEndorsed ? 'gov-action-btn liked' : 'gov-action-btn'}
             onClick={(event) => {
-              event.stopPropagation()
-              onEndorse(proposal.id)
+              event.stopPropagation();
+              onEndorse(proposal.id);
             }}
             disabled={proposal.userEndorsed}
           >
@@ -267,20 +342,24 @@ function ProposalCard({ proposal, onEndorse, onVote, onOpen }) {
             <>
               <button
                 type="button"
-                className={proposal.userVote === 'yes' ? 'gov-action-btn voted-yes' : 'gov-action-btn'}
+                className={
+                  proposal.userVote === 'yes' ? 'gov-action-btn voted-yes' : 'gov-action-btn'
+                }
                 onClick={(event) => {
-                  event.stopPropagation()
-                  onVote(proposal.id, 'yes')
+                  event.stopPropagation();
+                  onVote(proposal.id, 'yes');
                 }}
               >
                 YES
               </button>
               <button
                 type="button"
-                className={proposal.userVote === 'no' ? 'gov-action-btn voted-no' : 'gov-action-btn'}
+                className={
+                  proposal.userVote === 'no' ? 'gov-action-btn voted-no' : 'gov-action-btn'
+                }
                 onClick={(event) => {
-                  event.stopPropagation()
-                  onVote(proposal.id, 'no')
+                  event.stopPropagation();
+                  onVote(proposal.id, 'no');
                 }}
               >
                 NO
@@ -293,18 +372,21 @@ function ProposalCard({ proposal, onEndorse, onVote, onOpen }) {
             className="gov-action-btn"
             onClick={(event) => event.stopPropagation()}
           >
-            💬 {Array.isArray(proposal.comments) ? proposal.comments.length : Number(proposal.comments || 0)}
+            💬{' '}
+            {Array.isArray(proposal.comments)
+              ? proposal.comments.length
+              : Number(proposal.comments || 0)}
           </button>
         </div>
       </div>
     </article>
-  )
+  );
 }
 
 function ProposalModal({ proposal, onClose, onVote, onOverlayKeyDown }) {
-  if (!proposal) return null
+  if (!proposal) return null;
 
-  const yesPct = votePercent(proposal.yesVotes, proposal.noVotes)
+  const yesPct = votePercent(proposal.yesVotes, proposal.noVotes);
 
   return (
     <div
@@ -330,19 +412,24 @@ function ProposalModal({ proposal, onClose, onVote, onOverlayKeyDown }) {
             </div>
             <h3 className="gov-modal-title">{proposal.title}</h3>
           </div>
-          <button type="button" className="gov-modal-close" onClick={onClose}>×</button>
+          <button type="button" className="gov-modal-close" onClick={onClose}>
+            ×
+          </button>
         </div>
 
         <div className="gov-stage-timeline">
           {STAGE_ORDER.map((step, idx) => {
-            const done = idx < proposal.lifecycle
-            const current = idx + 1 === proposal.lifecycle
+            const done = idx < proposal.lifecycle;
+            const current = idx + 1 === proposal.lifecycle;
             return (
-              <div key={step} className={`gov-stage-step ${done ? 'done' : ''} ${current ? 'current' : ''}`}>
+              <div
+                key={step}
+                className={`gov-stage-step ${done ? 'done' : ''} ${current ? 'current' : ''}`}
+              >
                 <div className="gov-stage-dot">{idx + 1}</div>
                 <div className="gov-stage-label">{stageLabel(step)}</div>
               </div>
-            )
+            );
           })}
         </div>
 
@@ -358,7 +445,9 @@ function ProposalModal({ proposal, onClose, onVote, onOverlayKeyDown }) {
 
         <div className="gov-detail-section">
           <div className="gov-detail-title">Expected Outcome</div>
-          <div className="gov-detail-body">{proposal.outcome || 'Outcome report pending publication.'}</div>
+          <div className="gov-detail-body">
+            {proposal.outcome || 'Outcome report pending publication.'}
+          </div>
         </div>
 
         {proposal.panelStatement ? (
@@ -373,25 +462,37 @@ function ProposalModal({ proposal, onClose, onVote, onOverlayKeyDown }) {
             <div className="gov-detail-title">Live Vote</div>
             <div className="gov-vr-row">
               <div className="gov-vr-label">YES</div>
-              <div className="gov-vr-bar"><div className="gov-vr-fill-yes" style={{ width: `${yesPct}%` }} /></div>
+              <div className="gov-vr-bar">
+                <div className="gov-vr-fill-yes" style={{ width: `${yesPct}%` }} />
+              </div>
               <div className="gov-vr-pct">{yesPct}%</div>
             </div>
             <div className="gov-vr-row">
               <div className="gov-vr-label">NO</div>
-              <div className="gov-vr-bar"><div className="gov-vr-fill-no" style={{ width: `${100 - yesPct}%` }} /></div>
+              <div className="gov-vr-bar">
+                <div className="gov-vr-fill-no" style={{ width: `${100 - yesPct}%` }} />
+              </div>
               <div className="gov-vr-pct">{100 - yesPct}%</div>
             </div>
             <div className="gov-big-vote-btns">
               <button
                 type="button"
-                className={proposal.userVote === 'yes' ? 'gov-big-vote-btn gov-vote-yes selected' : 'gov-big-vote-btn gov-vote-yes'}
+                className={
+                  proposal.userVote === 'yes'
+                    ? 'gov-big-vote-btn gov-vote-yes selected'
+                    : 'gov-big-vote-btn gov-vote-yes'
+                }
                 onClick={() => onVote(proposal.id, 'yes')}
               >
                 Vote YES
               </button>
               <button
                 type="button"
-                className={proposal.userVote === 'no' ? 'gov-big-vote-btn gov-vote-no selected' : 'gov-big-vote-btn gov-vote-no'}
+                className={
+                  proposal.userVote === 'no'
+                    ? 'gov-big-vote-btn gov-vote-no selected'
+                    : 'gov-big-vote-btn gov-vote-no'
+                }
                 onClick={() => onVote(proposal.id, 'no')}
               >
                 Vote NO
@@ -401,39 +502,58 @@ function ProposalModal({ proposal, onClose, onVote, onOverlayKeyDown }) {
         ) : null}
       </div>
     </div>
-  )
+  );
 }
 
 function LiveVoteWidget({ proposal, onVote }) {
   if (!proposal) {
     return (
       <section className="gov-live-widget">
-        <div className="gov-live-badge"><span className="gov-live-dot" /> No Live Vote</div>
+        <div className="gov-live-badge">
+          <span className="gov-live-dot" /> No Live Vote
+        </div>
         <div className="gov-widget-title">No proposal in voting stage right now</div>
-        <div className="gov-widget-desc">Once a proposal reaches the voting phase, you will be able to cast your vote here.</div>
+        <div className="gov-widget-desc">
+          Once a proposal reaches the voting phase, you will be able to cast your vote here.
+        </div>
       </section>
-    )
+    );
   }
 
-  const yesPct = votePercent(proposal.yesVotes, proposal.noVotes)
+  const yesPct = votePercent(proposal.yesVotes, proposal.noVotes);
 
   return (
     <section className="gov-live-widget">
-      <div className="gov-live-badge"><span className="gov-live-dot" /> Live Voting</div>
-      <div className="gov-widget-title">{proposal.id}: {proposal.title}</div>
-      <div className="gov-widget-desc">Voting window closes in {proposal.daysLeft || 0} days. Vote is ZK-proven and posted to governance ledger.</div>
+      <div className="gov-live-badge">
+        <span className="gov-live-dot" /> Live Voting
+      </div>
+      <div className="gov-widget-title">
+        {proposal.id}: {proposal.title}
+      </div>
+      <div className="gov-widget-desc">
+        Voting window closes in {proposal.daysLeft || 0} days. Vote is ZK-proven and posted to
+        governance ledger.
+      </div>
 
       <div className="gov-big-vote-btns">
         <button
           type="button"
-          className={proposal.userVote === 'yes' ? 'gov-big-vote-btn gov-vote-yes selected' : 'gov-big-vote-btn gov-vote-yes'}
+          className={
+            proposal.userVote === 'yes'
+              ? 'gov-big-vote-btn gov-vote-yes selected'
+              : 'gov-big-vote-btn gov-vote-yes'
+          }
           onClick={() => onVote(proposal.id, 'yes')}
         >
           YES
         </button>
         <button
           type="button"
-          className={proposal.userVote === 'no' ? 'gov-big-vote-btn gov-vote-no selected' : 'gov-big-vote-btn gov-vote-no'}
+          className={
+            proposal.userVote === 'no'
+              ? 'gov-big-vote-btn gov-vote-no selected'
+              : 'gov-big-vote-btn gov-vote-no'
+          }
           onClick={() => onVote(proposal.id, 'no')}
         >
           NO
@@ -442,17 +562,23 @@ function LiveVoteWidget({ proposal, onVote }) {
 
       <div className="gov-vr-row">
         <div className="gov-vr-label">YES</div>
-        <div className="gov-vr-bar"><div className="gov-vr-fill-yes" style={{ width: `${yesPct}%` }} /></div>
+        <div className="gov-vr-bar">
+          <div className="gov-vr-fill-yes" style={{ width: `${yesPct}%` }} />
+        </div>
         <div className="gov-vr-pct">{yesPct}%</div>
       </div>
       <div className="gov-vr-row">
         <div className="gov-vr-label">NO</div>
-        <div className="gov-vr-bar"><div className="gov-vr-fill-no" style={{ width: `${100 - yesPct}%` }} /></div>
+        <div className="gov-vr-bar">
+          <div className="gov-vr-fill-no" style={{ width: `${100 - yesPct}%` }} />
+        </div>
         <div className="gov-vr-pct">{100 - yesPct}%</div>
       </div>
-      <div className="gov-vote-tally">{(proposal.yesVotes + proposal.noVotes).toLocaleString()} verified votes</div>
+      <div className="gov-vote-tally">
+        {(proposal.yesVotes + proposal.noVotes).toLocaleString()} verified votes
+      </div>
     </section>
-  )
+  );
 }
 
 function Ticker({ events }) {
@@ -473,7 +599,7 @@ function Ticker({ events }) {
         ))
       )}
     </section>
-  )
+  );
 }
 
 function Passport({ citizen }) {
@@ -510,23 +636,25 @@ function Passport({ citizen }) {
         <div className="gov-rep-bar-fill" style={{ width: `${citizen.reputation}%` }} />
       </div>
     </section>
-  )
+  );
 }
 
 function ConferenceCountdown({ conference }) {
-  const now = Date.now()
-  const diff = Math.max(0, conference.targetDate - now)
-  const totalHours = Math.floor(diff / (1000 * 60 * 60))
-  const days = Math.floor(totalHours / 24)
-  const hours = totalHours % 24
-  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+  const now = Date.now();
+  const diff = Math.max(0, conference.targetDate - now);
+  const totalHours = Math.floor(diff / (1000 * 60 * 60));
+  const days = Math.floor(totalHours / 24);
+  const hours = totalHours % 24;
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
 
   return (
     <section className="gov-conf-alert">
       <div className="gov-conf-icon">⌛</div>
       <div>
         <div className="gov-conf-title">Citizens Conference #{conference.number}</div>
-        <div className="gov-conf-desc">{conference.date} · {conference.location}</div>
+        <div className="gov-conf-desc">
+          {conference.date} · {conference.location}
+        </div>
         <div className="gov-countdown">
           <div className="gov-countdown-unit">
             <div className="gov-countdown-num">{days}</div>
@@ -543,7 +671,7 @@ function ConferenceCountdown({ conference }) {
         </div>
       </div>
     </section>
-  )
+  );
 }
 
 function ForumMain({ proposals, onEndorse, onVote, onOpen }) {
@@ -563,7 +691,7 @@ function ForumMain({ proposals, onEndorse, onVote, onOpen }) {
         />
       ))}
     </>
-  )
+  );
 }
 
 function ConferencePage({ conference }) {
@@ -582,7 +710,7 @@ function ConferencePage({ conference }) {
         ))}
       </div>
     </section>
-  )
+  );
 }
 
 function TreasuryPage({ treasury }) {
@@ -617,20 +745,29 @@ function TreasuryPage({ treasury }) {
       </div>
 
       <div className="gov-card">
-        <div className="gov-section-title" style={{ marginBottom: '0.6rem' }}>Recent Transactions</div>
+        <div className="gov-section-title" style={{ marginBottom: '0.6rem' }}>
+          Recent Transactions
+        </div>
         {treasury.recentTransactions.map((tx) => (
           <div className="gov-tx-item" key={tx.id}>
             <div className="gov-tx-id">{tx.id}</div>
             <div className="gov-tx-desc">{tx.desc}</div>
             <div className="gov-tx-date">{tx.date}</div>
-            <div className={tx.type === 'payout' ? 'gov-tx-amount gov-tx-payout' : 'gov-tx-amount gov-tx-deposit'}>
-              {tx.type === 'payout' ? '-' : '+'}{tx.amount.toLocaleString()}
+            <div
+              className={
+                tx.type === 'payout'
+                  ? 'gov-tx-amount gov-tx-payout'
+                  : 'gov-tx-amount gov-tx-deposit'
+              }
+            >
+              {tx.type === 'payout' ? '-' : '+'}
+              {tx.amount.toLocaleString()}
             </div>
           </div>
         ))}
       </div>
     </section>
-  )
+  );
 }
 
 function RightPanel({ liveProposal, tickerEvents, citizen, onVote }) {
@@ -640,7 +777,7 @@ function RightPanel({ liveProposal, tickerEvents, citizen, onVote }) {
       <Ticker events={tickerEvents} />
       <Passport citizen={citizen} />
     </aside>
-  )
+  );
 }
 
 export default function GovernanceInterface({
@@ -653,50 +790,50 @@ export default function GovernanceInterface({
   onProposalSubmitted = null,
   showDraftExplainer = false,
 }) {
-  const proposals = useGovernanceStore((s) => s.proposals)
-  const conference = useGovernanceStore((s) => s.conference)
-  const treasury = useGovernanceStore((s) => s.treasury)
-  const citizen = useGovernanceStore((s) => s.citizen)
-  const stats = useGovernanceStore((s) => s.communityStats)
-  const tickerEvents = useGovernanceStore((s) => s.tickerEvents)
-  const addProposal = useGovernanceStore((s) => s.addProposal)
-  const endorseProposal = useGovernanceStore((s) => s.endorseProposal)
-  const castVote = useGovernanceStore((s) => s.castVote)
-  const toasts = useGovernanceStore((s) => s.toasts)
+  const proposals = useGovernanceStore((s) => s.proposals);
+  const conference = useGovernanceStore((s) => s.conference);
+  const treasury = useGovernanceStore((s) => s.treasury);
+  const citizen = useGovernanceStore((s) => s.citizen);
+  const stats = useGovernanceStore((s) => s.communityStats);
+  const tickerEvents = useGovernanceStore((s) => s.tickerEvents);
+  const addProposal = useGovernanceStore((s) => s.addProposal);
+  const endorseProposal = useGovernanceStore((s) => s.endorseProposal);
+  const castVote = useGovernanceStore((s) => s.castVote);
+  const toasts = useGovernanceStore((s) => s.toasts);
 
-  const [activePage, setActivePage] = useState(initialPage)
-  const [query, setQuery] = useState(initialQuery)
-  const [stageFilter, setStageFilter] = useState('all')
-  const [showForm, setShowForm] = useState(initialShowForm)
-  const [selectedProposal, setSelectedProposal] = useState(null)
+  const [activePage, setActivePage] = useState(initialPage);
+  const [query, setQuery] = useState(initialQuery);
+  const [stageFilter, setStageFilter] = useState('all');
+  const [showForm, setShowForm] = useState(initialShowForm);
+  const [selectedProposal, setSelectedProposal] = useState(null);
 
   const handleModalOverlayKeyDown = (event) => {
     if (event.key === 'Escape' || event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault()
-      setSelectedProposal(null)
+      event.preventDefault();
+      setSelectedProposal(null);
     }
-  }
+  };
 
   const liveProposal = useMemo(
     () => proposals.find((p) => p.stage === 'vote') || null,
-    [proposals]
-  )
+    [proposals],
+  );
 
   const filteredProposals = useMemo(() => {
-    const q = query.trim().toLowerCase()
+    const q = query.trim().toLowerCase();
     return proposals
       .filter((p) => (stageFilter === 'all' ? true : p.stage === stageFilter))
       .filter((p) => {
-        if (!q) return true
+        if (!q) return true;
         return (
           p.title.toLowerCase().includes(q) ||
           p.excerpt.toLowerCase().includes(q) ||
           p.id.toLowerCase().includes(q) ||
           p.category.toLowerCase().includes(q)
-        )
+        );
       })
-      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-  }, [proposals, query, stageFilter])
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  }, [proposals, query, stageFilter]);
 
   return (
     <div className="gov-page">
@@ -713,9 +850,9 @@ export default function GovernanceInterface({
                 <ProposalForm
                   onClose={() => setShowForm(false)}
                   onSubmit={(payload) => {
-                    addProposal(payload)
-                    if (typeof onDraftClear === 'function') onDraftClear()
-                    if (typeof onProposalSubmitted === 'function') onProposalSubmitted(payload)
+                    addProposal(payload);
+                    if (typeof onDraftClear === 'function') onDraftClear();
+                    if (typeof onProposalSubmitted === 'function') onProposalSubmitted(payload);
                   }}
                   initialDraft={initialProposalDraft}
                   onDraftChange={onDraftChange}
@@ -789,5 +926,5 @@ export default function GovernanceInterface({
         ))}
       </div>
     </div>
-  )
+  );
 }

@@ -80,11 +80,9 @@ describe('Library intelligence snapshot import/export (backend)', () => {
     mongoServer = await MongoMemoryServer.create();
     process.env.MONGODB_URI = mongoServer.getUri();
 
-    adminToken = jwt.sign(
-      { role: 'admin', username: 'admin-test' },
-      process.env.JWT_SECRET,
-      { expiresIn: '1h' },
-    );
+    adminToken = jwt.sign({ role: 'admin', username: 'admin-test' }, process.env.JWT_SECRET, {
+      expiresIn: '1h',
+    });
 
     // Import after env is configured.
     // eslint-disable-next-line global-require

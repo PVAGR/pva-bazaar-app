@@ -63,7 +63,7 @@ const BankAccountSchema = new mongoose.Schema(
     transfersProcessed: { type: Number, default: 0 },
     totalAmountTransferred: { type: Number, default: 0 }, // in cents
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // Indexes

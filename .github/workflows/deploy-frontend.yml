@@ -3,22 +3,22 @@ name: Deploy Frontend to GitHub Pages & Vercel
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
     paths:
       - 'Frontend/**'
       - '.github/workflows/deploy-frontend.yml'
   workflow_dispatch:
     inputs:
       ref_to_deploy:
-        description: "Commit, tag, or branch to deploy/rollback"
+        description: 'Commit, tag, or branch to deploy/rollback'
         required: false
         type: string
-        default: ""
+        default: ''
       rollback_reason:
-        description: "Reason for redeploying a known-good ref"
+        description: 'Reason for redeploying a known-good ref'
         required: false
         type: string
-        default: ""
+        default: ''
   repository_dispatch:
     types: [heelkawn-apk-published]
 
@@ -28,7 +28,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: "deploy-frontend-pages-vercel-${{ github.ref }}"
+  group: 'deploy-frontend-pages-vercel-${{ github.ref }}'
   cancel-in-progress: true
 
 jobs:
@@ -96,11 +96,11 @@ jobs:
     outputs:
       main_js: ${{ steps.asset_manifest.outputs.main_js }}
       main_css: ${{ steps.asset_manifest.outputs.main_css }}
-    
+
     defaults:
       run:
         working-directory: Frontend
-    
+
     steps:
       - uses: actions/checkout@v4
         with:
@@ -156,7 +156,7 @@ jobs:
           echo "main_css=$MAIN_CSS" >> $GITHUB_OUTPUT
           echo "Expected JS: $MAIN_JS"
           echo "Expected CSS: $MAIN_CSS"
-      
+
       - name: Upload GitHub Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
@@ -213,11 +213,11 @@ jobs:
     name: Deploy Frontend to Vercel (Preview)
     runs-on: ubuntu-latest
     if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
-    
+
     defaults:
       run:
         working-directory: Frontend
-    
+
     steps:
       - uses: actions/checkout@v4
         with:

@@ -352,9 +352,7 @@ async function searchShops(query, page = 1, limit = 20) {
  * Get trending/top shops
  */
 async function getTrendingShops(limit = 10) {
-  return await Shop.find({ status: 'live' })
-    .sort({ 'analytics.totalViews': -1 })
-    .limit(limit);
+  return await Shop.find({ status: 'live' }).sort({ 'analytics.totalViews': -1 }).limit(limit);
 }
 
 /**

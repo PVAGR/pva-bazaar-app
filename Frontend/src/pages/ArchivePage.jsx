@@ -27,8 +27,12 @@ export default function ArchivePage({ entries = [], searchTerm = '' }) {
           <div className="entry-list">
             {list.map((entry) => (
               <article className="entry-card" key={entry.id}>
-                <h3><a href={`#/entry/${entry.id}`}>{entry.title}</a></h3>
-                <div className="entry-meta">{new Date(entry.date).toLocaleDateString()} · {entry.tags?.join(', ')}</div>
+                <h3>
+                  <a href={`#/entry/${entry.id}`}>{entry.title}</a>
+                </h3>
+                <div className="entry-meta">
+                  {new Date(entry.date).toLocaleDateString()} · {entry.tags?.join(', ')}
+                </div>
                 <p className="entry-excerpt">{entry.excerpt}</p>
               </article>
             ))}

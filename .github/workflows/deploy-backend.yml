@@ -2,7 +2,7 @@ name: Deploy Backend to Vercel
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
     paths:
       - 'backend/**'
       - '.github/workflows/deploy-backend.yml'
@@ -87,4 +87,3 @@ jobs:
               auto_merge: false,
               required_contexts: []
             })
-

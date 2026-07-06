@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useEffect } from "react";
-import Link from "next/link";
+import { useEffect } from 'react';
+import Link from 'next/link';
 
 export default function Error({
   error,
@@ -16,12 +16,8 @@ export default function Error({
 
   return (
     <section className="flex flex-col gap-8 py-12">
-      <p className="text-xs uppercase tracking-[0.35em] text-zinc-500">
-        Something went wrong
-      </p>
-      <h1 className="text-2xl font-semibold text-zinc-100">
-        The sanctuary hit a snag.
-      </h1>
+      <p className="text-xs uppercase tracking-[0.35em] text-zinc-500">Something went wrong</p>
+      <h1 className="text-2xl font-semibold text-zinc-100">The sanctuary hit a snag.</h1>
       <p className="max-w-sm text-sm text-zinc-400">
         We couldn’t load this page. You can try again or return to the archive.
       </p>

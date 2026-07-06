@@ -1,12 +1,12 @@
 /**
  * OpenClaw Health Widget
- * 
+ *
  * Standalone component that can be embedded in any page to show OpenClaw status
  * Usage: <div id="openclaw-health-widget"></div>
  * Then call: initOpenClawWidget({ apiUrl: 'https://your-api-host.example' });
  */
 
-(function(window) {
+(function (window) {
   'use strict';
 
   const FALLBACK_API_URL =
@@ -27,7 +27,7 @@
   function initOpenClawWidget(options = {}) {
     config = { ...DEFAULT_CONFIG, ...options };
     widgetElement = document.getElementById('openclaw-health-widget');
-    
+
     if (!widgetElement) {
       // Widget element not found - this is expected when widget is not on page
       return;
@@ -46,7 +46,7 @@
       const base = String(config.apiUrl || '').replace(/\/+$/, '');
       const response = await fetch(`${base}/api/openclaw/watchdog-status`);
       const data = await response.json();
-      
+
       currentStatus = {
         ok: data.ok,
         available: data.available,
@@ -54,7 +54,7 @@
         timestamp: new Date().toISOString(),
         error: null,
       };
-      
+
       render(currentStatus);
     } catch (err) {
       currentStatus = {
@@ -63,7 +63,7 @@
         error: err.message,
         timestamp: new Date().toISOString(),
       };
-      
+
       render(currentStatus);
     }
   }
@@ -85,7 +85,7 @@
     const stateClass = state.toLowerCase();
     const stateEmoji = getStateEmoji(state);
 
-    const html = config.compact 
+    const html = config.compact
       ? renderCompact(status, state, stateEmoji, stateClass)
       : renderFull(status, state, stateEmoji, stateClass);
 
@@ -103,7 +103,7 @@
 
   function renderFull(status, state, stateEmoji, stateClass) {
     const summary = status.summary || {};
-    
+
     return `
       <div class="openclaw-widget ${stateClass}">
         <div class="widget-header">
@@ -112,7 +112,9 @@
           <span class="widget-badge ${stateClass}">${state}</span>
         </div>
         
-        ${status.available && config.showDetails ? `
+        ${
+          status.available && config.showDetails
+            ? `
           <div class="widget-metrics">
             <div class="widget-metric">
               <span class="metric-label">Errors</span>
@@ -126,26 +128,40 @@
               <span class="metric-label">Alerts</span>
               <span class="metric-value">${summary.alertCountWindow || 0}</span>
             </div>
-            ${summary.lastEventAt ? `
+            ${
+              summary.lastEventAt
+                ? `
               <div class="widget-metric widget-metric--full">
                 <span class="metric-label">Last Activity</span>
                 <span class="metric-value">${formatTimestamp(summary.lastEventAt)}</span>
               </div>
-            ` : ''}
+            `
+                : ''
+            }
           </div>
-        ` : ''}
+        `
+            : ''
+        }
         
-        ${status.error ? `
+        ${
+          status.error
+            ? `
           <div class="widget-error">
             ⚠️ ${status.error}
           </div>
-        ` : ''}
+        `
+            : ''
+        }
         
-        ${!status.available && !status.error ? `
+        ${
+          !status.available && !status.error
+            ? `
           <div class="widget-message">
             No watchdog activity detected
           </div>
-        ` : ''}
+        `
+            : ''
+        }
         
         <div class="widget-footer">
           <span class="widget-timestamp">Updated: ${formatTimestamp(status.timestamp)}</span>
@@ -157,11 +173,11 @@
   function getHealthState(status) {
     if (!status.ok || status.error) return 'ERROR';
     if (!status.available) return 'UNKNOWN';
-    
+
     const summary = status.summary || {};
     const errors = summary.errorCountWindow || 0;
     const state = summary.state || 'unknown';
-    
+
     if (state === 'degraded' || errors > 3) return 'DEGRADED';
     if (errors > 0) return 'WARNING';
     return 'HEALTHY';
@@ -169,11 +185,11 @@
 
   function getStateEmoji(state) {
     const emojiMap = {
-      'HEALTHY': '✅',
-      'WARNING': '⚠️',
-      'DEGRADED': '🟠',
-      'ERROR': '❌',
-      'UNKNOWN': '❔',
+      HEALTHY: '✅',
+      WARNING: '⚠️',
+      DEGRADED: '🟠',
+      ERROR: '❌',
+      UNKNOWN: '❔',
     };
     return emojiMap[state] || '❔';
   }
@@ -184,7 +200,7 @@
       const now = new Date();
       const diffMs = now - date;
       const diffMins = Math.floor(diffMs / 60000);
-      
+
       if (diffMins < 1) return 'just now';
       if (diffMins < 60) return `${diffMins}m ago`;
       if (diffMins < 1440) return `${Math.floor(diffMins / 60)}h ago`;
@@ -209,11 +225,10 @@
     destroy,
     getStatus: () => currentStatus,
   };
-
 })(window);
 
 // Auto-initialize if data attributes are present
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
   const widgetEl = document.getElementById('openclaw-health-widget');
   if (widgetEl && widgetEl.dataset.autoInit !== 'false') {
     const config = {

@@ -106,9 +106,20 @@ export default function DeployPage() {
               event.currentTarget.style.transform = 'none';
             }}
           >
-            <div style={{ fontSize: '32px', marginBottom: '12px', color: option.color }}>{option.icon}</div>
-            <h3 style={{ margin: '0 0 8px', fontSize: '18px', fontWeight: '700' }}>{option.platform}</h3>
-            <p style={{ margin: 0, textAlign: 'center', color: 'var(--site-text-muted)', fontSize: '14px' }}>
+            <div style={{ fontSize: '32px', marginBottom: '12px', color: option.color }}>
+              {option.icon}
+            </div>
+            <h3 style={{ margin: '0 0 8px', fontSize: '18px', fontWeight: '700' }}>
+              {option.platform}
+            </h3>
+            <p
+              style={{
+                margin: 0,
+                textAlign: 'center',
+                color: 'var(--site-text-muted)',
+                fontSize: '14px',
+              }}
+            >
               One-click deploy with pre-configured governance, wallet auth, and offline sync.
             </p>
           </a>
@@ -125,12 +136,30 @@ export default function DeployPage() {
         }}
       >
         <h2 style={{ margin: '0 0 16px', fontSize: '20px' }}>{t('configOptions')}</h2>
-        <ul style={{ margin: 0, paddingLeft: '20px', color: 'var(--site-text-muted)', lineHeight: '1.8' }}>
-          <li><strong>Community Name:</strong> Customize your instance identity</li>
-          <li><strong>Blockchain:</strong> Choose Polygon, Ethereum, or local testnet</li>
-          <li><strong>Language:</strong> Enable Swahili, French, Arabic, or other locales</li>
-          <li><strong>Proof-of-Personhood:</strong> Integrate with local ID systems or wallet-only mode</li>
-          <li><strong>Federation:</strong> Connect to global PVA network or run isolated</li>
+        <ul
+          style={{
+            margin: 0,
+            paddingLeft: '20px',
+            color: 'var(--site-text-muted)',
+            lineHeight: '1.8',
+          }}
+        >
+          <li>
+            <strong>Community Name:</strong> Customize your instance identity
+          </li>
+          <li>
+            <strong>Blockchain:</strong> Choose Polygon, Ethereum, or local testnet
+          </li>
+          <li>
+            <strong>Language:</strong> Enable Swahili, French, Arabic, or other locales
+          </li>
+          <li>
+            <strong>Proof-of-Personhood:</strong> Integrate with local ID systems or wallet-only
+            mode
+          </li>
+          <li>
+            <strong>Federation:</strong> Connect to global PVA network or run isolated
+          </li>
         </ul>
       </section>
 
@@ -143,9 +172,7 @@ export default function DeployPage() {
         }}
       >
         <h2 style={{ margin: '0 0 16px', fontSize: '20px' }}>{t('joinFederation')}</h2>
-        <p style={{ margin: '0 0 16px', color: 'var(--site-text-muted)' }}>
-          {t('federationText')}
-        </p>
+        <p style={{ margin: '0 0 16px', color: 'var(--site-text-muted)' }}>{t('federationText')}</p>
         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
           <a
             href="https://github.com/pvabazaar/federation-protocol"

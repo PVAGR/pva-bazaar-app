@@ -21,7 +21,7 @@ class LegacyEntry {
       type: metadata.type || 'journal', // manifesto, code, thought, entry
       title: metadata.title || 'Untitled',
       tags: metadata.tags || [],
-      ...metadata
+      ...metadata,
     };
     this.hash = null;
     this.signature = null;
@@ -46,9 +46,9 @@ class LegacyEntry {
       timestamp: this.timestamp,
       content: this.content,
       metadata: this.metadata,
-      previousHash: this.previousHash
+      previousHash: this.previousHash,
     });
-    
+
     this.hash = crypto.createHash('sha256').update(data).digest('hex');
     return this.hash;
   }
@@ -61,15 +61,12 @@ class LegacyEntry {
     if (!this.hash) {
       this.computeHash();
     }
-    
+
     // In production: use actual PGP signing
     // For now: simulate with HMAC
     const secret = fs.readFileSync(privateKeyPath, 'utf8');
-    this.signature = crypto
-      .createHmac('sha256', secret)
-      .update(this.hash)
-      .digest('hex');
-    
+    this.signature = crypto.createHmac('sha256', secret).update(this.hash).digest('hex');
+
     return this.signature;
   }
 
@@ -83,11 +80,8 @@ class LegacyEntry {
 
     try {
       const secret = fs.readFileSync(publicKeyPath, 'utf8');
-      const expectedSignature = crypto
-        .createHmac('sha256', secret)
-        .update(this.hash)
-        .digest('hex');
-      
+      const expectedSignature = crypto.createHmac('sha256', secret).update(this.hash).digest('hex');
+
       return this.signature === expectedSignature;
     } catch (e) {
       return false;
@@ -107,7 +101,7 @@ class LegacyEntry {
       metadata: this.metadata,
       content: this.content,
       type: 'legacy-entry',
-      version: '1.0'
+      version: '1.0',
     };
   }
 
@@ -150,7 +144,7 @@ class LegacyChain {
     this.storagePath = storagePath;
     this.entries = [];
     this.merkleTree = null;
-    
+
     // Create storage if doesn't exist
     if (!fs.existsSync(storagePath)) {
       fs.mkdirSync(storagePath, { recursive: true });
@@ -165,10 +159,10 @@ class LegacyChain {
     if (this.entries.length > 0) {
       entry.previousHash = this.entries[this.entries.length - 1].hash;
     }
-    
+
     entry.computeHash();
     this.entries.push(entry);
-    
+
     return entry;
   }
 
@@ -177,19 +171,19 @@ class LegacyChain {
    * Creates cryptographic proof of entire chain integrity
    */
   buildMerkleTree() {
-    const hashes = this.entries.map(e => e.hash);
-    
+    const hashes = this.entries.map((e) => e.hash);
+
     const tree = {
       depth: 0,
       nodes: [hashes],
-      root: null
+      root: null,
     };
 
     let currentLevel = hashes;
 
     while (currentLevel.length > 1) {
       const nextLevel = [];
-      
+
       for (let i = 0; i < currentLevel.length; i += 2) {
         const left = currentLevel[i];
         const right = currentLevel[i + 1] || currentLevel[i];
@@ -197,7 +191,7 @@ class LegacyChain {
           .createHash('sha256')
           .update(left + right)
           .digest('hex');
-        
+
         nextLevel.push(combined);
       }
 
@@ -208,7 +202,7 @@ class LegacyChain {
 
     tree.root = currentLevel[0];
     this.merkleTree = tree;
-    
+
     return tree;
   }
 
@@ -221,7 +215,7 @@ class LegacyChain {
     for (let i = 1; i < this.entries.length; i++) {
       const current = this.entries[i];
       const previous = this.entries[i - 1];
-      
+
       if (current.previousHash !== previous.hash) {
         return false;
       }
@@ -230,11 +224,14 @@ class LegacyChain {
     // Verify merkle tree
     if (this.merkleTree) {
       const expectedRoot = this.entries
-        .map(e => e.hash)
-        .reduce((acc, hash) => 
-          crypto.createHash('sha256').update(acc + hash).digest('hex')
+        .map((e) => e.hash)
+        .reduce((acc, hash) =>
+          crypto
+            .createHash('sha256')
+            .update(acc + hash)
+            .digest('hex'),
         );
-      
+
       // Simplified verification
       return this.merkleTree.root !== null;
     }
@@ -256,7 +253,7 @@ class LegacyChain {
 
 ---
 
-${this.entries.map(e => e.toMarkdown()).join('\n\n---\n\n')}
+${this.entries.map((e) => e.toMarkdown()).join('\n\n---\n\n')}
 `;
   }
 
@@ -269,21 +266,18 @@ ${this.entries.map(e => e.toMarkdown()).join('\n\n---\n\n')}
       created: new Date().toISOString(),
       totalEntries: this.entries.length,
       merkleRoot: this.merkleTree?.root,
-      entries: this.entries.map(e => ({
+      entries: this.entries.map((e) => ({
         id: e.id,
         hash: e.hash,
         timestamp: e.timestamp,
-        title: e.metadata.title
-      }))
+        title: e.metadata.title,
+      })),
     };
 
-    fs.writeFileSync(
-      path.join(this.storagePath, 'index.json'),
-      JSON.stringify(index, null, 2)
-    );
+    fs.writeFileSync(path.join(this.storagePath, 'index.json'), JSON.stringify(index, null, 2));
 
     // Save each entry
-    this.entries.forEach(entry => {
+    this.entries.forEach((entry) => {
       const filename = path.join(this.storagePath, `${entry.id}.json`);
       fs.writeFileSync(filename, JSON.stringify(entry.toJSON(), null, 2));
     });
@@ -295,7 +289,7 @@ ${this.entries.map(e => e.toMarkdown()).join('\n\n---\n\n')}
     return {
       indexPath: path.join(this.storagePath, 'index.json'),
       journalPath,
-      entriesSaved: this.entries.length
+      entriesSaved: this.entries.length,
     };
   }
 }
@@ -321,7 +315,7 @@ class ResurrectionProtocol {
       name,
       publicKey,
       activated: false,
-      timestamp: null
+      timestamp: null,
     });
   }
 
@@ -336,16 +330,16 @@ class ResurrectionProtocol {
     this.guardians[guardianIndex].activated = true;
     this.guardians[guardianIndex].timestamp = new Date().toISOString();
 
-    const activatedCount = this.guardians.filter(g => g.activated).length;
+    const activatedCount = this.guardians.filter((g) => g.activated).length;
 
     if (activatedCount >= this.guardianThreshold) {
       this.deathProof = {
         confirmedAt: new Date().toISOString(),
         confirmedBy: activatedCount,
         deathCertificate,
-        status: 'VERIFIED'
+        status: 'VERIFIED',
       };
-      
+
       this.locked = false;
       return { status: 'UNLOCKED', proof: this.deathProof };
     }
@@ -353,7 +347,7 @@ class ResurrectionProtocol {
     return {
       status: 'PENDING',
       activations: activatedCount,
-      required: this.guardianThreshold
+      required: this.guardianThreshold,
     };
   }
 
@@ -372,10 +366,7 @@ class ResurrectionProtocol {
       proof: this.deathProof,
       accessLevel: 'PUBLIC',
       expiresNever: true,
-      hash: crypto
-        .createHash('sha256')
-        .update(JSON.stringify(this.deathProof))
-        .digest('hex')
+      hash: crypto.createHash('sha256').update(JSON.stringify(this.deathProof)).digest('hex'),
     };
 
     return token;
@@ -397,19 +388,19 @@ class LegacySystem {
    */
   async initialize(creatorName) {
     console.log(`🕯️ Initializing Legacy System for ${creatorName}`);
-    
+
     const manifestoEntry = new LegacyEntry(
       `${creatorName}'s legacy begins here.\n\nThis journal will be immortal.`,
       {
         creator: creatorName,
         type: 'genesis',
-        title: 'Genesis Entry - Digital Immortality Begins'
-      }
+        title: 'Genesis Entry - Digital Immortality Begins',
+      },
     );
 
     this.chain.addEntry(manifestoEntry);
     this.chain.buildMerkleTree();
-    
+
     return this.chain.save();
   }
 
@@ -420,7 +411,7 @@ class LegacySystem {
     const entry = new LegacyEntry(content, metadata);
     this.chain.addEntry(entry);
     this.chain.buildMerkleTree();
-    
+
     return this.chain.save();
   }
 
@@ -433,7 +424,7 @@ class LegacySystem {
       merkleRoot: this.chain.merkleTree?.root,
       isVerified: this.chain.verify(),
       locked: this.protocol.locked,
-      guardians: this.protocol.guardians.length
+      guardians: this.protocol.guardians.length,
     };
   }
 }
@@ -443,17 +434,17 @@ module.exports = {
   LegacyEntry,
   LegacyChain,
   ResurrectionProtocol,
-  LegacySystem
+  LegacySystem,
 };
 
 /**
  * Example usage:
- * 
+ *
  * const legacy = new LegacySystem();
  * await legacy.initialize('PVAGR');
  * legacy.addLegacyEntry('My first legacy entry', { title: 'Day 1' });
  * console.log(legacy.getStatus());
- * 
+ *
  * Every entry is hashed, signed, and permanent.
  * Death cannot delete this.
  * Your ideas will outlive you.

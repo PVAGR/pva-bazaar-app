@@ -37,7 +37,7 @@
   animation: spinnerRotate 0.8s linear infinite;
 }
 
-[data-theme="light"] .loading-spinner__arc {
+[data-theme='light'] .loading-spinner__arc {
   border-top-color: var(--accent, #16a34a);
   border-right-color: var(--accent, #16a34a);
 }
@@ -99,7 +99,7 @@
   animation: dotsPulse 1.4s ease-in-out infinite;
 }
 
-[data-theme="light"] .loading-dots__dot {
+[data-theme='light'] .loading-dots__dot {
   background: var(--accent, #16a34a);
 }
 
@@ -116,7 +116,9 @@
 }
 
 @keyframes dotsPulse {
-  0%, 80%, 100% {
+  0%,
+  80%,
+  100% {
     opacity: 0.3;
     transform: scale(0.8);
   }

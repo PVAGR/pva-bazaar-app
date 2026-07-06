@@ -3,7 +3,7 @@ import { Helmet } from 'react-helmet-async';
 // Helper to build canonical URLs
 function getCanonicalUrl(path = '') {
   const base = 'https://pvabazaar.org';
-  return base + (path.startsWith('/') ? path : `/${  path}`);
+  return base + (path.startsWith('/') ? path : `/${path}`);
 }
 import { Link } from 'react-router-dom';
 import { fetchArchiveEntriesSafe } from '../lib/archiveFeed';
@@ -317,16 +317,27 @@ export default function ArchiveLibraryPage() {
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  const categories = ['All', 'Index', 'Fiction', 'Spiritual', 'Technology', 'Business', 'Personal', 'Philosophy', 'Wisdom', 'Architecture', 'Strategic'];
+  const categories = [
+    'All',
+    'Index',
+    'Fiction',
+    'Spiritual',
+    'Technology',
+    'Business',
+    'Personal',
+    'Philosophy',
+    'Wisdom',
+    'Architecture',
+    'Strategic',
+  ];
   const isEntryMode = viewMode === 'archive' || viewMode === 'blog';
 
   // Get entries based on view mode
   const currentEntries = viewMode === 'archive' ? archiveEntries : customEntries;
-  
-  const filteredEntries =
-    !isEntryMode
-      ? []
-      : selectedCategory === 'All'
+
+  const filteredEntries = !isEntryMode
+    ? []
+    : selectedCategory === 'All'
       ? currentEntries
       : currentEntries.filter((e) => e.category === selectedCategory);
 
@@ -402,7 +413,7 @@ export default function ArchiveLibraryPage() {
   // Convert markdown to simple HTML (basic parser)
   const renderMarkdown = (md) => {
     if (!md) return '';
-    
+
     const html = md
       // Headers
       .replace(/^### (.*$)/gim, '<h3>$1</h3>')
@@ -441,9 +452,15 @@ export default function ArchiveLibraryPage() {
     <>
       <Helmet>
         <title>Archive Library | PVA Bazaar</title>
-        <meta name="description" content="Browse the complete PVA Bazaar Archive: 40+ works, 12 categories, 110,000+ words." />
+        <meta
+          name="description"
+          content="Browse the complete PVA Bazaar Archive: 40+ works, 12 categories, 110,000+ words."
+        />
         <meta property="og:title" content="Archive Library | PVA Bazaar" />
-        <meta property="og:description" content="Browse the complete PVA Bazaar Archive: 40+ works, 12 categories, 110,000+ words." />
+        <meta
+          property="og:description"
+          content="Browse the complete PVA Bazaar Archive: 40+ works, 12 categories, 110,000+ words."
+        />
         <meta property="og:type" content="website" />
         <meta property="og:url" content={getCanonicalUrl('/archive')} />
         <meta property="og:image" content={getCanonicalUrl('/og-default.jpg')} />
@@ -452,340 +469,367 @@ export default function ArchiveLibraryPage() {
       </Helmet>
       <div className={`archive-library ${darkMode ? 'dark-theme' : 'light-theme'}`}>
         <header className="archive-header">
-        <div className="header-content">
-          <h1>PVA Bazaar Archive Library</h1>
-          <div className="header-actions">
-            <Link to="/admin" className="admin-link">⚙️ Admin</Link>
-            <button 
-              className="theme-toggle" 
-              onClick={toggleTheme}
-              aria-label="Toggle theme"
+          <div className="header-content">
+            <h1>PVA Bazaar Archive Library</h1>
+            <div className="header-actions">
+              <Link to="/admin" className="admin-link">
+                ⚙️ Admin
+              </Link>
+              <button className="theme-toggle" onClick={toggleTheme} aria-label="Toggle theme">
+                {darkMode ? '☀️' : '🌙'}
+              </button>
+            </div>
+          </div>
+
+          <p className="hero-headline">
+            A curated archive of long-form writings, research, and worldbuilding from PVA Bazaar.
+          </p>
+          <p className="hero-subheadline">
+            Use one navigation model: choose a mode, choose a category, then open a document.
+          </p>
+
+          <div className="top-destination-tabs" aria-label="Top destinations">
+            <Link to="/civilization-library" className="destination-tab">
+              Civilization Library
+            </Link>
+            <Link to="/career-quiz" className="destination-tab">
+              Career Quiz
+            </Link>
+            <Link to="/marketplace" className="destination-tab">
+              Marketplace
+            </Link>
+            <Link to="/showroom" className="destination-tab">
+              Showroom
+            </Link>
+            <Link to="/creator" className="destination-tab">
+              Creator Sign Up
+            </Link>
+          </div>
+
+          <div className="hero-actions">
+            <button onClick={() => loadMarkdown(archiveEntries[0])} className="hero-cta">
+              Read Master Index
+            </button>
+            <button
+              onClick={() => {
+                setSelectedCategory('All');
+                if (window.innerWidth <= 1024) {
+                  setSidebarOpen(true);
+                }
+              }}
+              className="hero-cta hero-cta-secondary"
             >
-              {darkMode ? '☀️' : '🌙'}
+              Browse All Categories
             </button>
           </div>
-        </div>
 
-        <p className="hero-headline">A curated archive of long-form writings, research, and worldbuilding from PVA Bazaar.</p>
-        <p className="hero-subheadline">Use one navigation model: choose a mode, choose a category, then open a document.</p>
-
-        <div className="top-destination-tabs" aria-label="Top destinations">
-          <Link to="/civilization-library" className="destination-tab">
-            Civilization Library
-          </Link>
-          <Link to="/career-quiz" className="destination-tab">
-            Career Quiz
-          </Link>
-          <Link to="/marketplace" className="destination-tab">
-            Marketplace
-          </Link>
-          <Link to="/showroom" className="destination-tab">
-            Showroom
-          </Link>
-          <Link to="/creator" className="destination-tab">
-            Creator Sign Up
-          </Link>
-        </div>
-
-        <div className="hero-actions">
-          <button
-            onClick={() => loadMarkdown(archiveEntries[0])}
-            className="hero-cta"
-          >
-            Read Master Index
-          </button>
-          <button
-            onClick={() => {
-              setSelectedCategory('All');
-              if (window.innerWidth <= 1024) {
-                setSidebarOpen(true);
-              }
-            }}
-            className="hero-cta hero-cta-secondary"
-          >
-            Browse All Categories
-          </button>
-        </div>
-
-        <div className="archive-bridge" aria-label="Continuity shortcuts">
-          <Link to="/recovery" className="archive-bridge__link">
-            Recovery
-          </Link>
-          <Link to="/studio" className="archive-bridge__link">
-            Writing Studio
-          </Link>
-          <Link to="/" className="archive-bridge__link">
-            Home
-          </Link>
-          <Link to="/admin" className="archive-bridge__link">
-            Admin
-          </Link>
-        </div>
-
-        <section className="archive-atlas" aria-label="Archive atlas">
-          <h2>Atlas</h2>
-          <p className="archive-atlas__copy">
-            Move between reading, writing, recovery, and trade without leaving the same site.
-          </p>
-          <div className="archive-atlas__links">
-            <Link to="/" className="archive-atlas__link">Home</Link>
-            <Link to="/studio" className="archive-atlas__link">Writing Studio</Link>
-            <Link to="/recovery" className="archive-atlas__link">Recovery</Link>
-            <Link to="/marketplace" className="archive-atlas__link">Marketplace</Link>
-            <Link to="/showroom" className="archive-atlas__link">Showroom</Link>
-            <Link to="/creator" className="archive-atlas__link">Creator Portal</Link>
+          <div className="archive-bridge" aria-label="Continuity shortcuts">
+            <Link to="/recovery" className="archive-bridge__link">
+              Recovery
+            </Link>
+            <Link to="/studio" className="archive-bridge__link">
+              Writing Studio
+            </Link>
+            <Link to="/" className="archive-bridge__link">
+              Home
+            </Link>
+            <Link to="/admin" className="archive-bridge__link">
+              Admin
+            </Link>
           </div>
-        </section>
-        
-        <div className="view-mode-toggle">
-          <button 
-            className={`view-btn ${viewMode === 'archive' ? 'active' : ''}`}
-            onClick={() => {
-              setViewMode('archive');
-              setSelectedEntry(null);
-              setMarkdown('');
-              setSelectedCategory('All');
-            }}
-          >
-            Archive Collection ({archiveEntries.length})
-          </button>
-          <button 
-            className={`view-btn ${viewMode === 'blog' ? 'active' : ''}`}
-            onClick={() => {
-              setViewMode('blog');
-              setSelectedEntry(null);
-              setMarkdown('');
-              setSelectedCategory('All');
-            }}
-          >
-            Recent Posts ({customEntries.length})
-          </button>
-          <button
-            className={`view-btn ${viewMode === 'logic' ? 'active' : ''}`}
-            onClick={() => {
-              setViewMode('logic');
-              setSelectedEntry(null);
-              setMarkdown('');
-              setSelectedCategory('All');
-            }}
-          >
-            Logic Mode
-          </button>
-        </div>
 
-        <p className="archive-subtitle">
-          {viewMode === 'archive'
-            ? '110,000+ words • Ages 24-28 (2020-2026) • Every line preserved'
-            : viewMode === 'blog'
-              ? 'Fresh perspectives and new stories starting 2026'
-              : 'Structured analytical transmission across numerology and risk-adjusted weight-loss modeling'}
-        </p>
-        <div className="archive-stats">
-          <span>
-            {viewMode === 'logic'
-              ? `${logicSections.length} Analysis Sections`
-              : `${currentEntries.length} ${viewMode === 'archive' ? 'Documents' : 'Posts'}`}
-          </span>
-          <span className="stat-separator">•</span>
-          <span>{viewMode === 'logic' ? 'Dual-Domain Analysis' : '12 Categories'}</span>
-          <span className="stat-separator">•</span>
-          <span>
+          <section className="archive-atlas" aria-label="Archive atlas">
+            <h2>Atlas</h2>
+            <p className="archive-atlas__copy">
+              Move between reading, writing, recovery, and trade without leaving the same site.
+            </p>
+            <div className="archive-atlas__links">
+              <Link to="/" className="archive-atlas__link">
+                Home
+              </Link>
+              <Link to="/studio" className="archive-atlas__link">
+                Writing Studio
+              </Link>
+              <Link to="/recovery" className="archive-atlas__link">
+                Recovery
+              </Link>
+              <Link to="/marketplace" className="archive-atlas__link">
+                Marketplace
+              </Link>
+              <Link to="/showroom" className="archive-atlas__link">
+                Showroom
+              </Link>
+              <Link to="/creator" className="archive-atlas__link">
+                Creator Portal
+              </Link>
+            </div>
+          </section>
+
+          <div className="view-mode-toggle">
+            <button
+              className={`view-btn ${viewMode === 'archive' ? 'active' : ''}`}
+              onClick={() => {
+                setViewMode('archive');
+                setSelectedEntry(null);
+                setMarkdown('');
+                setSelectedCategory('All');
+              }}
+            >
+              Archive Collection ({archiveEntries.length})
+            </button>
+            <button
+              className={`view-btn ${viewMode === 'blog' ? 'active' : ''}`}
+              onClick={() => {
+                setViewMode('blog');
+                setSelectedEntry(null);
+                setMarkdown('');
+                setSelectedCategory('All');
+              }}
+            >
+              Recent Posts ({customEntries.length})
+            </button>
+            <button
+              className={`view-btn ${viewMode === 'logic' ? 'active' : ''}`}
+              onClick={() => {
+                setViewMode('logic');
+                setSelectedEntry(null);
+                setMarkdown('');
+                setSelectedCategory('All');
+              }}
+            >
+              Logic Mode
+            </button>
+          </div>
+
+          <p className="archive-subtitle">
             {viewMode === 'archive'
-              ? '40+ Distinct Works'
+              ? '110,000+ words • Ages 24-28 (2020-2026) • Every line preserved'
               : viewMode === 'blog'
-                ? 'Updated Regularly'
-                : 'No Canonical Meaning Claims'}
-          </span>
-        </div>
-      </header>
+                ? 'Fresh perspectives and new stories starting 2026'
+                : 'Structured analytical transmission across numerology and risk-adjusted weight-loss modeling'}
+          </p>
+          <div className="archive-stats">
+            <span>
+              {viewMode === 'logic'
+                ? `${logicSections.length} Analysis Sections`
+                : `${currentEntries.length} ${viewMode === 'archive' ? 'Documents' : 'Posts'}`}
+            </span>
+            <span className="stat-separator">•</span>
+            <span>{viewMode === 'logic' ? 'Dual-Domain Analysis' : '12 Categories'}</span>
+            <span className="stat-separator">•</span>
+            <span>
+              {viewMode === 'archive'
+                ? '40+ Distinct Works'
+                : viewMode === 'blog'
+                  ? 'Updated Regularly'
+                  : 'No Canonical Meaning Claims'}
+            </span>
+          </div>
+        </header>
 
-      <div className="archive-layout">
-        <aside className={`archive-sidebar ${sidebarOpen ? 'is-open' : 'is-collapsed'}`}>
-          {isEntryMode ? (
-            <>
-              <div className="category-filter">
-                <h3>{viewMode === 'archive' ? 'Archive Categories' : 'Post Categories'}</h3>
-                {categories.map((cat) => (
-                  <button
-                    key={cat}
-                    className={`category-btn ${selectedCategory === cat ? 'active' : ''}`}
-                    onClick={() => setSelectedCategory(cat)}
-                  >
-                    {cat}
-                    <span className="count">
-                      {cat === 'All'
-                        ? currentEntries.length
-                        : currentEntries.filter((e) => e.category === cat).length}
-                    </span>
-                  </button>
-                ))}
-              </div>
-
-              <div className="entry-list">
-                <h3>{viewMode === 'archive' ? 'Documents' : 'Posts'}</h3>
-                {sortedFilteredEntries.length === 0 ? (
-                  <div className="sidebar-empty-state">
-                    No items in this category yet.
-                  </div>
-                ) : (
-                  sortedFilteredEntries.map((entry) => (
+        <div className="archive-layout">
+          <aside className={`archive-sidebar ${sidebarOpen ? 'is-open' : 'is-collapsed'}`}>
+            {isEntryMode ? (
+              <>
+                <div className="category-filter">
+                  <h3>{viewMode === 'archive' ? 'Archive Categories' : 'Post Categories'}</h3>
+                  {categories.map((cat) => (
                     <button
-                      key={entry.id}
-                      className={`entry-item ${selectedEntry?.id === entry.id ? 'active' : ''}`}
-                      onClick={() => loadMarkdown(entry)}
+                      key={cat}
+                      className={`category-btn ${selectedCategory === cat ? 'active' : ''}`}
+                      onClick={() => setSelectedCategory(cat)}
                     >
-                      <div className="entry-title">{entry.title}</div>
-                      <div className="entry-meta">
-                        <span className="entry-category">{entry.category}</span>
-                        <span className="entry-words">{entry.wordCount} words</span>
-                      </div>
+                      {cat}
+                      <span className="count">
+                        {cat === 'All'
+                          ? currentEntries.length
+                          : currentEntries.filter((e) => e.category === cat).length}
+                      </span>
                     </button>
-                  ))
-                )}
-              </div>
-            </>
-          ) : (
-            <div className="logic-sidebar-note">
-              <h3>Logic Mode</h3>
-              <p>
-                This transmission view is fixed-reference content, not user-submitted archive material.
-              </p>
-              <p>
-                Use Archive Collection or Recent Posts to return to document navigation.
-              </p>
-            </div>
-          )}
-        </aside>
-
-        <main className="archive-content">
-          <button
-            className="mobile-sidebar-toggle"
-            onClick={() => setSidebarOpen((prev) => !prev)}
-            aria-expanded={sidebarOpen}
-          >
-            {sidebarOpen ? 'Hide Navigation' : 'Show Navigation'}
-          </button>
-
-          {!selectedEntry && viewMode === 'archive' && (
-            <div className="archive-welcome">
-              <h2>Start with the Archive Master Index</h2>
-              <p>
-                The homepage is intentionally archive-first: this is the canonical reading shell for the full PVA Bazaar writing archive.
-              </p>
-              <p>Select a category on the left, then open a document. If you want one best first click, open the Master Index.</p>
-              <div className="quick-links">
-                <h3>Recommended First Reads</h3>
-                <button onClick={() => loadMarkdown(archiveEntries[0])} className="quick-link">
-                  Read Master Index
-                </button>
-                <button onClick={() => loadMarkdown(archiveEntries[16])} className="quick-link">
-                  Read Master Integration and Roadmap
-                </button>
-                <button onClick={() => loadMarkdown(archiveEntries[1])} className="quick-link">
-                  Read The Man from Taured, Part 1
-                </button>
-              </div>
-            </div>
-          )}
-
-          {!selectedEntry && viewMode === 'blog' && (
-            <div className="archive-welcome">
-              <h2>Recent Posts</h2>
-              {entriesError && (
-                <div className="archive-error-box" role="status">
-                  <p>{entriesError}</p>
-                  <button className="quick-link retry-link" onClick={loadCustomEntries}>Retry Loading Posts</button>
+                  ))}
                 </div>
-              )}
-              {customEntries.length === 0 ? (
-                <>
-                  <p>
-                    No posts are published yet. This section will display new writings created from 2026 onward.
-                  </p>
-                  <p>
-                    Visit the <a href="#/admin" style={{color: 'var(--accent)', textDecoration: 'underline'}}>Admin Panel</a> to publish the first post.
-                  </p>
-                </>
-              ) : (
-                <>
-                  <p>
-                    Fresh perspectives and evolving thoughts from 2026 onward. Select a post from the sidebar to read.
-                  </p>
-                  <p className="blog-count">
-                    {customEntries.length} {customEntries.length === 1 ? 'post' : 'posts'} published
-                  </p>
-                </>
-              )}
-            </div>
-          )}
 
-          {!selectedEntry && viewMode === 'logic' && (
-            <article className="archive-document logic-document">
-              <div className="document-header">
-                <span className="document-category">Logic Mode</span>
-                <h1>Query Analysis Transmission</h1>
-                <p className="document-description">
-                  Prime-number numerology context and constrained fasting math presented as structured analytical output.
+                <div className="entry-list">
+                  <h3>{viewMode === 'archive' ? 'Documents' : 'Posts'}</h3>
+                  {sortedFilteredEntries.length === 0 ? (
+                    <div className="sidebar-empty-state">No items in this category yet.</div>
+                  ) : (
+                    sortedFilteredEntries.map((entry) => (
+                      <button
+                        key={entry.id}
+                        className={`entry-item ${selectedEntry?.id === entry.id ? 'active' : ''}`}
+                        onClick={() => loadMarkdown(entry)}
+                      >
+                        <div className="entry-title">{entry.title}</div>
+                        <div className="entry-meta">
+                          <span className="entry-category">{entry.category}</span>
+                          <span className="entry-words">{entry.wordCount} words</span>
+                        </div>
+                      </button>
+                    ))
+                  )}
+                </div>
+              </>
+            ) : (
+              <div className="logic-sidebar-note">
+                <h3>Logic Mode</h3>
+                <p>
+                  This transmission view is fixed-reference content, not user-submitted archive
+                  material.
                 </p>
+                <p>Use Archive Collection or Recent Posts to return to document navigation.</p>
               </div>
+            )}
+          </aside>
 
-              <div className="logic-disclaimer" role="note" aria-live="polite">
-                <strong>Medical note:</strong> the fasting section is a theoretical calculation summary only and not clinical advice. Any extended fasting requires medical supervision.
-              </div>
+          <main className="archive-content">
+            <button
+              className="mobile-sidebar-toggle"
+              onClick={() => setSidebarOpen((prev) => !prev)}
+              aria-expanded={sidebarOpen}
+            >
+              {sidebarOpen ? 'Hide Navigation' : 'Show Navigation'}
+            </button>
 
-              <div className="logic-sections">
-                {logicSections.map((section) => (
-                  <section key={section.id} className="logic-section">
-                    <h2>{section.title}</h2>
-                    <ul>
-                      {section.content.map((line, index) => (
-                        <li key={`${section.id}-${index}`}>{line}</li>
-                      ))}
-                    </ul>
-                  </section>
-                ))}
-              </div>
-            </article>
-          )}
-
-          {loading && (
-            <div className="archive-loading">
-              <div className="spinner"></div>
-              <p>Loading document...</p>
-            </div>
-          )}
-
-          {selectedEntry && !loading && (
-            <article className="archive-document">
-              <div className="document-header">
-                <span className="document-category">{selectedEntry.category}</span>
-                <h1>{selectedEntry.title}</h1>
-                {selectedEntry.description && (
-                  <p className="document-description">{selectedEntry.description}</p>
-                )}
-                <div className="document-meta">
-                  {selectedEntry.wordCount && <span>📝 {selectedEntry.wordCount} words</span>}
-                  {selectedEntry.wordCount && selectedEntry.file && <span>•</span>}
-                  {selectedEntry.file && <span>📄 {selectedEntry.file}</span>}
+            {!selectedEntry && viewMode === 'archive' && (
+              <div className="archive-welcome">
+                <h2>Start with the Archive Master Index</h2>
+                <p>
+                  The homepage is intentionally archive-first: this is the canonical reading shell
+                  for the full PVA Bazaar writing archive.
+                </p>
+                <p>
+                  Select a category on the left, then open a document. If you want one best first
+                  click, open the Master Index.
+                </p>
+                <div className="quick-links">
+                  <h3>Recommended First Reads</h3>
+                  <button onClick={() => loadMarkdown(archiveEntries[0])} className="quick-link">
+                    Read Master Index
+                  </button>
+                  <button onClick={() => loadMarkdown(archiveEntries[16])} className="quick-link">
+                    Read Master Integration and Roadmap
+                  </button>
+                  <button onClick={() => loadMarkdown(archiveEntries[1])} className="quick-link">
+                    Read The Man from Taured, Part 1
+                  </button>
                 </div>
               </div>
-              <div
-                className="markdown-content"
-                dangerouslySetInnerHTML={{ __html: renderMarkdown(markdown) }}
-              />
-              {Array.isArray(selectedEntry.media) && selectedEntry.media.length > 0 && (
-                <div className="entry-media">
-                  <h3>Media</h3>
-                  <div className="media-grid">
-                    {selectedEntry.media.map((url, index) => renderMediaItem(url, index))}
+            )}
+
+            {!selectedEntry && viewMode === 'blog' && (
+              <div className="archive-welcome">
+                <h2>Recent Posts</h2>
+                {entriesError && (
+                  <div className="archive-error-box" role="status">
+                    <p>{entriesError}</p>
+                    <button className="quick-link retry-link" onClick={loadCustomEntries}>
+                      Retry Loading Posts
+                    </button>
+                  </div>
+                )}
+                {customEntries.length === 0 ? (
+                  <>
+                    <p>
+                      No posts are published yet. This section will display new writings created
+                      from 2026 onward.
+                    </p>
+                    <p>
+                      Visit the{' '}
+                      <a
+                        href="#/admin"
+                        style={{ color: 'var(--accent)', textDecoration: 'underline' }}
+                      >
+                        Admin Panel
+                      </a>{' '}
+                      to publish the first post.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p>
+                      Fresh perspectives and evolving thoughts from 2026 onward. Select a post from
+                      the sidebar to read.
+                    </p>
+                    <p className="blog-count">
+                      {customEntries.length} {customEntries.length === 1 ? 'post' : 'posts'}{' '}
+                      published
+                    </p>
+                  </>
+                )}
+              </div>
+            )}
+
+            {!selectedEntry && viewMode === 'logic' && (
+              <article className="archive-document logic-document">
+                <div className="document-header">
+                  <span className="document-category">Logic Mode</span>
+                  <h1>Query Analysis Transmission</h1>
+                  <p className="document-description">
+                    Prime-number numerology context and constrained fasting math presented as
+                    structured analytical output.
+                  </p>
+                </div>
+
+                <div className="logic-disclaimer" role="note" aria-live="polite">
+                  <strong>Medical note:</strong> the fasting section is a theoretical calculation
+                  summary only and not clinical advice. Any extended fasting requires medical
+                  supervision.
+                </div>
+
+                <div className="logic-sections">
+                  {logicSections.map((section) => (
+                    <section key={section.id} className="logic-section">
+                      <h2>{section.title}</h2>
+                      <ul>
+                        {section.content.map((line, index) => (
+                          <li key={`${section.id}-${index}`}>{line}</li>
+                        ))}
+                      </ul>
+                    </section>
+                  ))}
+                </div>
+              </article>
+            )}
+
+            {loading && (
+              <div className="archive-loading">
+                <div className="spinner"></div>
+                <p>Loading document...</p>
+              </div>
+            )}
+
+            {selectedEntry && !loading && (
+              <article className="archive-document">
+                <div className="document-header">
+                  <span className="document-category">{selectedEntry.category}</span>
+                  <h1>{selectedEntry.title}</h1>
+                  {selectedEntry.description && (
+                    <p className="document-description">{selectedEntry.description}</p>
+                  )}
+                  <div className="document-meta">
+                    {selectedEntry.wordCount && <span>📝 {selectedEntry.wordCount} words</span>}
+                    {selectedEntry.wordCount && selectedEntry.file && <span>•</span>}
+                    {selectedEntry.file && <span>📄 {selectedEntry.file}</span>}
                   </div>
                 </div>
-              )}
-            </article>
-          )}
-        </main>
+                <div
+                  className="markdown-content"
+                  dangerouslySetInnerHTML={{ __html: renderMarkdown(markdown) }}
+                />
+                {Array.isArray(selectedEntry.media) && selectedEntry.media.length > 0 && (
+                  <div className="entry-media">
+                    <h3>Media</h3>
+                    <div className="media-grid">
+                      {selectedEntry.media.map((url, index) => renderMediaItem(url, index))}
+                    </div>
+                  </div>
+                )}
+              </article>
+            )}
+          </main>
+        </div>
       </div>
-    </div>
     </>
   );
 }

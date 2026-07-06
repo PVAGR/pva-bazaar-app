@@ -1,28 +1,25 @@
-import type { Metadata } from "next";
-import { getLiveRepoSignal } from "@/lib/heelkawn-ops";
+import type { Metadata } from 'next';
+import { getLiveRepoSignal } from '@/lib/heelkawn-ops';
 
-const HEELKAWN_DOWNLOAD_URL =
-  normalizeExternalUrl(
-    process.env.NEXT_PUBLIC_HEELKAWN_DOWNLOAD_URL,
-    "https://github.com/PVAGR/HeelKawn1/releases/latest",
-  );
+const HEELKAWN_DOWNLOAD_URL = normalizeExternalUrl(
+  process.env.NEXT_PUBLIC_HEELKAWN_DOWNLOAD_URL,
+  'https://github.com/PVAGR/HeelKawn1/releases/latest',
+);
 
-const HEELKAWN_PC_DOWNLOAD_URL =
-  normalizeExternalUrl(
-    process.env.NEXT_PUBLIC_HEELKAWN_PC_DOWNLOAD_URL,
-    "https://github.com/PVAGR/HeelKawn1/releases/latest",
-  );
+const HEELKAWN_PC_DOWNLOAD_URL = normalizeExternalUrl(
+  process.env.NEXT_PUBLIC_HEELKAWN_PC_DOWNLOAD_URL,
+  'https://github.com/PVAGR/HeelKawn1/releases/latest',
+);
 
-const HEELKAWN_REPO_URL =
-  normalizeExternalUrl(
-    process.env.NEXT_PUBLIC_HEELKAWN_REPO_URL,
-    "https://github.com/PVAGR/HeelKawn1",
-  );
+const HEELKAWN_REPO_URL = normalizeExternalUrl(
+  process.env.NEXT_PUBLIC_HEELKAWN_REPO_URL,
+  'https://github.com/PVAGR/HeelKawn1',
+);
 
 export const metadata: Metadata = {
-  title: "HeelKawn – PVA Bazaar",
+  title: 'HeelKawn – PVA Bazaar',
   description:
-    "HeelKawn Armory hub with mobile/PC downloads, profile context, and repository updates.",
+    'HeelKawn Armory hub with mobile/PC downloads, profile context, and repository updates.',
 };
 
 export default async function HeelKawnPage() {
@@ -30,28 +27,24 @@ export default async function HeelKawnPage() {
   const now = new Date();
   const cycle =
     now.getHours() < 5
-      ? "Deep night watch"
+      ? 'Deep night watch'
       : now.getHours() < 11
-        ? "Morning build cycle"
+        ? 'Morning build cycle'
         : now.getHours() < 17
-          ? "Daylight operations"
+          ? 'Daylight operations'
           : now.getHours() < 21
-            ? "Dusk patrol cycle"
-            : "Night relay cycle";
+            ? 'Dusk patrol cycle'
+            : 'Night relay cycle';
 
   return (
     <section className="flex w-full flex-col gap-8">
       <header className="space-y-3 rounded-xl border border-zinc-800/80 bg-zinc-950/60 p-6">
-        <p className="text-xs uppercase tracking-[0.35em] text-zinc-500">
-          HeelKawn
-        </p>
-        <h1 className="text-3xl font-semibold text-zinc-100 md:text-4xl">
-          HeelKawn download hub
-        </h1>
+        <p className="text-xs uppercase tracking-[0.35em] text-zinc-500">HeelKawn</p>
+        <h1 className="text-3xl font-semibold text-zinc-100 md:text-4xl">HeelKawn download hub</h1>
         <p className="max-w-3xl text-sm leading-7 text-zinc-300">
-          HeelKawn is a live simulation stack with continuous settlement activity,
-          equipment-aware sprites, and synchronized social relays. Use the
-          build links below and jump into the Armory on the main web app.
+          HeelKawn is a live simulation stack with continuous settlement activity, equipment-aware
+          sprites, and synchronized social relays. Use the build links below and jump into the
+          Armory on the main web app.
         </p>
         <div className="flex flex-wrap gap-3 pt-1">
           <a
@@ -92,7 +85,7 @@ export default async function HeelKawnPage() {
             <div className="flex items-center justify-between gap-4 rounded border border-zinc-800/80 bg-zinc-950/40 px-3 py-2">
               <dt>Last synced</dt>
               <dd className="font-medium text-zinc-100">
-                {now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
+                {now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
               </dd>
             </div>
             <div className="flex items-center justify-between gap-4 rounded border border-zinc-800/80 bg-zinc-950/40 px-3 py-2">
@@ -145,7 +138,7 @@ function normalizeExternalUrl(candidate: string | undefined, fallback: string): 
   if (!candidate) return fallback;
   try {
     const url = new URL(candidate);
-    if (url.protocol === "http:" || url.protocol === "https:") {
+    if (url.protocol === 'http:' || url.protocol === 'https:') {
       return url.toString();
     }
     return fallback;

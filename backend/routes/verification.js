@@ -39,7 +39,11 @@ router.post('/', verifySecret, async (req, res) => {
       matched_entry,
     } = req.body;
 
-    if (!artifactIdOrSlug || typeof is_authentic !== 'boolean' || typeof confidence_score !== 'number') {
+    if (
+      !artifactIdOrSlug ||
+      typeof is_authentic !== 'boolean' ||
+      typeof confidence_score !== 'number'
+    ) {
       return res.status(400).json({
         ok: false,
         error: 'artifactIdOrSlug, is_authentic, and confidence_score are required.',
@@ -70,16 +74,18 @@ router.post('/', verifySecret, async (req, res) => {
     });
 
     // Dispatch provenance event (non-blocking, after response sent)
-    dispatchToOpenClaw(createProvenanceEvent(
-      is_authentic ? 'verified' : 'attestation_added',
-      { _id: artifactIdOrSlug, title: artifactIdOrSlug },
-      {
-        chainOfCustody: [],
-        attestations: matched_entry ? [matched_entry] : [],
-        verificationStatus: status,
-      },
-      { certificateId: doc.certificateId, confidence_score, source }
-    )).catch(() => {});
+    dispatchToOpenClaw(
+      createProvenanceEvent(
+        is_authentic ? 'verified' : 'attestation_added',
+        { _id: artifactIdOrSlug, title: artifactIdOrSlug },
+        {
+          chainOfCustody: [],
+          attestations: matched_entry ? [matched_entry] : [],
+          verificationStatus: status,
+        },
+        { certificateId: doc.certificateId, confidence_score, source },
+      ),
+    ).catch(() => {});
   } catch (err) {
     console.error('Verification store error:', err);
     res.status(500).json({ ok: false, error: err.message });

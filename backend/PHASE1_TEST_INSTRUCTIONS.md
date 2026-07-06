@@ -3,6 +3,7 @@
 ## ✅ Implementation Complete
 
 **Files Modified:**
+
 - `backend/routes/items.js` - Added `POST /api/items/register` route
 - `backend/.env.example` - Added SMTP and OpenAI env vars
 
@@ -21,6 +22,7 @@ Server should start on `http://localhost:5001` (or PORT from .env)
 ### Step 2: Get Authentication Token
 
 **Option A: Register a new user**
+
 ```bash
 curl -X POST http://localhost:5001/api/auth/register \
   -H "Content-Type: application/json" \
@@ -32,6 +34,7 @@ curl -X POST http://localhost:5001/api/auth/register \
 ```
 
 **Response:**
+
 ```json
 {
   "ok": true,
@@ -41,6 +44,7 @@ curl -X POST http://localhost:5001/api/auth/register \
 ```
 
 **Option B: Login with existing user**
+
 ```bash
 curl -X POST http://localhost:5001/api/auth/login \
   -H "Content-Type: application/json" \
@@ -53,6 +57,7 @@ curl -X POST http://localhost:5001/api/auth/login \
 ### Step 3: Test Item Registration
 
 **Basic Registration:**
+
 ```bash
 curl -X POST http://localhost:5001/api/items/register \
   -H "Content-Type: application/json" \
@@ -69,6 +74,7 @@ curl -X POST http://localhost:5001/api/items/register \
 ```
 
 **Expected Response (201 Created):**
+
 ```json
 {
   "ok": true,
@@ -93,6 +99,7 @@ curl -X POST http://localhost:5001/api/items/register \
 ### Step 4: Test Validation Errors
 
 **Missing Required Fields:**
+
 ```bash
 curl -X POST http://localhost:5001/api/items/register \
   -H "Content-Type: application/json" \
@@ -104,6 +111,7 @@ curl -X POST http://localhost:5001/api/items/register \
 ```
 
 **Expected Response (400 Bad Request):**
+
 ```json
 {
   "ok": false,
@@ -112,6 +120,7 @@ curl -X POST http://localhost:5001/api/items/register \
 ```
 
 **Invalid Price:**
+
 ```bash
 curl -X POST http://localhost:5001/api/items/register \
   -H "Content-Type: application/json" \
@@ -125,6 +134,7 @@ curl -X POST http://localhost:5001/api/items/register \
 ```
 
 **Expected Response (400 Bad Request):**
+
 ```json
 {
   "ok": false,
@@ -146,6 +156,7 @@ curl -X POST http://localhost:5001/api/items/register \
 ```
 
 **Expected Response (401 Unauthorized):**
+
 ```json
 {
   "ok": false,
@@ -156,6 +167,7 @@ curl -X POST http://localhost:5001/api/items/register \
 ### Step 6: Verify Item in Database
 
 **Check via Admin Endpoint (if you have admin token):**
+
 ```bash
 curl -X GET "http://localhost:5001/api/items?includeDrafts=true" \
   -H "X-Admin-Code: YOUR_ADMIN_SECRET_CODE"
@@ -177,24 +189,29 @@ You should see your registered item with `status: "draft"` and `creator` set to 
 ## 🐛 Troubleshooting
 
 **Error: "Cannot find module '../middleware/auth'"**
+
 - Check that `backend/middleware/auth.js` exists
 - Verify the export: `module.exports.authMiddleware = authMiddleware;`
 
 **Error: "MongoDB connection failed"**
+
 - Check `MONGODB_URI` in `.env` file
 - Ensure MongoDB is running (local) or connection string is correct (Atlas)
 
 **Error: "JWT_SECRET is not defined"**
+
 - Add `JWT_SECRET` to `.env` file
 - Use a strong random string (32+ characters)
 
 **Item created but status is "published" instead of "draft"**
+
 - Check that the route is setting `status: 'draft'` explicitly
 - Verify Artifact model default is not overriding
 
 ## 📊 Next Steps
 
 After Phase 1 is verified working:
+
 1. ✅ Phase 1 Complete - Item Registration Route
 2. ⏭️ Phase 2 - Email Service (`backend/service/emailService.js`)
 3. ⏭️ Phase 3 - Frontend Registration Page
@@ -204,6 +221,7 @@ After Phase 1 is verified working:
 ## 🎯 Report Back
 
 After testing, report:
+
 - ✅ Route works with valid token
 - ✅ Validation errors work correctly
 - ✅ Unauthenticated requests are rejected

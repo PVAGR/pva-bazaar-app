@@ -12,12 +12,14 @@ const GITHUB_REPO = process.env.GITHUB_REPO || 'pva-bazaar-app';
 const github = axios.create({
   baseURL: 'https://api.github.com',
   headers: {
-    'Authorization': `token ${GITHUB_TOKEN}`,
-    'Accept': 'application/vnd.github.v3+json',
+    Authorization: `token ${GITHUB_TOKEN}`,
+    Accept: 'application/vnd.github.v3+json',
   },
 });
 
-console.log(`🔗 GitHub Integration: ${GITHUB_TOKEN ? '✅' : '🔴'} (${GITHUB_OWNER}/${GITHUB_REPO})`);
+console.log(
+  `🔗 GitHub Integration: ${GITHUB_TOKEN ? '✅' : '🔴'} (${GITHUB_OWNER}/${GITHUB_REPO})`,
+);
 
 /**
  * Get file content from GitHub
@@ -28,7 +30,7 @@ async function getFileContent(filePath, branch = 'main') {
       `/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${filePath}`,
       {
         params: { ref: branch },
-      }
+      },
     );
 
     if (response.data.type === 'file') {
@@ -68,7 +70,7 @@ async function updateFileContent(filePath, newContent, commitMessage, branch = '
           message: commitMessage,
           content: Buffer.from(newContent).toString('base64'),
           branch,
-        }
+        },
       );
 
       return {
@@ -87,7 +89,7 @@ async function updateFileContent(filePath, newContent, commitMessage, branch = '
         content: Buffer.from(newContent).toString('base64'),
         sha: current.sha,
         branch,
-      }
+      },
     );
 
     return {
@@ -111,19 +113,16 @@ async function createBranch(branchName, baseBranch = 'main') {
   try {
     // Get the latest commit SHA from base branch
     const refResponse = await github.get(
-      `/repos/${GITHUB_OWNER}/${GITHUB_REPO}/git/refs/heads/${baseBranch}`
+      `/repos/${GITHUB_OWNER}/${GITHUB_REPO}/git/refs/heads/${baseBranch}`,
     );
 
     const baseSha = refResponse.data.object.sha;
 
     // Create new branch
-    const response = await github.post(
-      `/repos/${GITHUB_OWNER}/${GITHUB_REPO}/git/refs`,
-      {
-        ref: `refs/heads/${branchName}`,
-        sha: baseSha,
-      }
-    );
+    const response = await github.post(`/repos/${GITHUB_OWNER}/${GITHUB_REPO}/git/refs`, {
+      ref: `refs/heads/${branchName}`,
+      sha: baseSha,
+    });
 
     return {
       success: true,
@@ -143,15 +142,12 @@ async function createBranch(branchName, baseBranch = 'main') {
  */
 async function createPullRequest(title, description, head, base = 'main') {
   try {
-    const response = await github.post(
-      `/repos/${GITHUB_OWNER}/${GITHUB_REPO}/pulls`,
-      {
-        title,
-        body: description,
-        head,
-        base,
-      }
-    );
+    const response = await github.post(`/repos/${GITHUB_OWNER}/${GITHUB_REPO}/pulls`, {
+      title,
+      body: description,
+      head,
+      base,
+    });
 
     return {
       success: true,
@@ -171,12 +167,9 @@ async function createPullRequest(title, description, head, base = 'main') {
  */
 async function listFiles(dirPath = '', branch = 'main') {
   try {
-    const response = await github.get(
-      `/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${dirPath}`,
-      {
-        params: { ref: branch },
-      }
-    );
+    const response = await github.get(`/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${dirPath}`, {
+      params: { ref: branch },
+    });
 
     const files = response.data
       .filter((item) => item.type === 'file')
@@ -245,7 +238,7 @@ async function mergePullRequest(prNumber, commitTitle, commitMessage, mergeMetho
         commit_title: commitTitle,
         commit_message: commitMessage,
         merge_method: mergeMethod,
-      }
+      },
     );
 
     return {

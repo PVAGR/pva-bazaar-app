@@ -11,15 +11,24 @@ const TELEGRAM_ALLOWED_CHAT_IDS = (process.env.TELEGRAM_ALLOWED_CHAT_IDS || '')
   .filter(Boolean);
 const TELEGRAM_PUBLIC_MODE = process.env.TELEGRAM_PUBLIC_MODE === 'true';
 const TELEGRAM_STATE_KEY = process.env.TELEGRAM_STATE_KEY || 'telegram:lastUpdateId';
-const TELEGRAM_POLL_LIMIT = Math.min(Math.max(parseInt(process.env.TELEGRAM_POLL_LIMIT || '15', 10), 1), 100);
-const OPENCLAW_CHAT_TIMEOUT_MS = Math.min(Math.max(parseInt(process.env.OPENCLAW_CHAT_TIMEOUT_MS || '14000', 10), 2000), 25000);
+const TELEGRAM_POLL_LIMIT = Math.min(
+  Math.max(parseInt(process.env.TELEGRAM_POLL_LIMIT || '15', 10), 1),
+  100,
+);
+const OPENCLAW_CHAT_TIMEOUT_MS = Math.min(
+  Math.max(parseInt(process.env.OPENCLAW_CHAT_TIMEOUT_MS || '14000', 10), 2000),
+  25000,
+);
 const OPENCLAW_CHAT_SOURCE = process.env.OPENCLAW_TELEGRAM_SOURCE || 'telegram-openclaw-bridge';
 const TELEGRAM_CONSECUTIVE_FAILURES_KEY = 'ecosystem:telegram-bridge:consecutiveFailures';
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || '';
 const GITHUB_REPOSITORY = process.env.GITHUB_REPOSITORY || 'PVAGR/pva-bazaar-app';
 const OLLAMA_BASE_URL = (process.env.OLLAMA_BASE_URL || '').replace(/\/$/, '');
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'llama3.1';
-const OLLAMA_TEMPERATURE = Math.min(Math.max(parseFloat(process.env.OLLAMA_TEMPERATURE || '0.35'), 0), 2);
+const OLLAMA_TEMPERATURE = Math.min(
+  Math.max(parseFloat(process.env.OLLAMA_TEMPERATURE || '0.35'), 0),
+  2,
+);
 const DIRECT_MODEL_TIMEOUT_MS = Math.min(
   Math.max(parseInt(process.env.OPENCLAW_DIRECT_MODEL_TIMEOUT_MS || '20000', 10), 5000),
   60000,
@@ -130,7 +139,11 @@ async function writeBridgeState(state, details = {}) {
   const timestamp = new Date().toISOString();
   await Promise.allSettled([
     writeMemory('ecosystem:telegram-bridge:connectionState', state, 'fact'),
-    writeMemory('ecosystem:telegram-bridge:lastStatus', JSON.stringify({ state, timestamp, ...details }), 'reflection'),
+    writeMemory(
+      'ecosystem:telegram-bridge:lastStatus',
+      JSON.stringify({ state, timestamp, ...details }),
+      'reflection',
+    ),
   ]);
 }
 
@@ -146,7 +159,11 @@ async function recordBridgeFailure(errorMessage, details = {}) {
   const next = Number.isFinite(previous) ? previous + 1 : 1;
   await Promise.allSettled([
     writeMemory(TELEGRAM_CONSECUTIVE_FAILURES_KEY, String(next), 'fact'),
-    writeMemory('ecosystem:telegram-bridge:lastError', String(errorMessage || 'unknown error').slice(0, 1200), 'reflection'),
+    writeMemory(
+      'ecosystem:telegram-bridge:lastError',
+      String(errorMessage || 'unknown error').slice(0, 1200),
+      'reflection',
+    ),
     writeBridgeState(`error:${String(errorMessage || 'unknown').slice(0, 160)}`, {
       consecutiveFailures: next,
       ...details,
@@ -260,7 +277,9 @@ async function getDirectContext() {
           Authorization: `Bearer ${GITHUB_TOKEN}`,
         }
       : { Accept: 'application/vnd.github+json' };
-    const repoResponse = await fetch(`https://api.github.com/repos/${GITHUB_REPOSITORY}`, { headers });
+    const repoResponse = await fetch(`https://api.github.com/repos/${GITHUB_REPOSITORY}`, {
+      headers,
+    });
     if (repoResponse.ok) {
       const repo = await repoResponse.json();
       context.githubRepo = {
@@ -295,22 +314,19 @@ async function generateDirectReply(userText) {
 
   if (OLLAMA_BASE_URL) {
     try {
-      const { response, payload } = await fetchJsonWithTimeout(
-        `${OLLAMA_BASE_URL}/api/chat`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            model: OLLAMA_MODEL,
-            stream: false,
-            options: { temperature: OLLAMA_TEMPERATURE },
-            messages: [
-              { role: 'system', content: systemPrompt },
-              { role: 'user', content: userPrompt },
-            ],
-          }),
-        },
-      );
+      const { response, payload } = await fetchJsonWithTimeout(`${OLLAMA_BASE_URL}/api/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: OLLAMA_MODEL,
+          stream: false,
+          options: { temperature: OLLAMA_TEMPERATURE },
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt },
+          ],
+        }),
+      });
 
       if (response.ok) {
         const text = payload?.message?.content?.trim() || payload?.response?.trim();
@@ -358,11 +374,15 @@ async function generateDirectReply(userText) {
 function needsDirectFallback(payload) {
   if (payload?.reply?.content) return false;
   const msg = String(payload?.message || '').toLowerCase();
-  return msg.includes('queued') || msg.includes('waiting') || msg.includes('configure webhook') || !msg;
+  return (
+    msg.includes('queued') || msg.includes('waiting') || msg.includes('configure webhook') || !msg
+  );
 }
 
 function sanitizeIncoming(text) {
-  return String(text || '').trim().slice(0, 4000);
+  return String(text || '')
+    .trim()
+    .slice(0, 4000);
 }
 
 function systemPromptText() {
@@ -444,11 +464,7 @@ async function openclawRecoverSummary() {
 
   const replayed = payload?.replayed ?? payload?.result?.replayed ?? 'n/a';
   const stale = payload?.staleBefore ?? payload?.result?.staleBefore ?? 'n/a';
-  return [
-    'Recovery trigger sent.',
-    `Replayed: ${replayed}`,
-    `Stale before: ${stale}`,
-  ].join('\n');
+  return ['Recovery trigger sent.', `Replayed: ${replayed}`, `Stale before: ${stale}`].join('\n');
 }
 
 function ecosystemSummary(status) {
@@ -548,7 +564,10 @@ async function handleMessage(update) {
     if (direct) {
       await sendTelegramMessage(chatId, direct);
     } else {
-      await sendTelegramMessage(chatId, `Bridge error: ${String(err.message || 'unknown error').slice(0, 500)}`);
+      await sendTelegramMessage(
+        chatId,
+        `Bridge error: ${String(err.message || 'unknown error').slice(0, 500)}`,
+      );
     }
   }
 
@@ -603,10 +622,14 @@ async function main() {
 
 main().catch(async (err) => {
   const message = String(err?.message || 'fatal telegram bridge failure');
-  const isPollingConflict = message.includes('error_code":409') || message.includes('terminated by other getUpdates request');
+  const isPollingConflict =
+    message.includes('error_code":409') ||
+    message.includes('terminated by other getUpdates request');
 
   if (isPollingConflict) {
-    console.warn('OpenClaw Telegram bridge detected another active poller; exiting this run without failure.');
+    console.warn(
+      'OpenClaw Telegram bridge detected another active poller; exiting this run without failure.',
+    );
     await recordBridgeSuccess({
       phase: 'poll-conflict',
       message: 'another poller active',

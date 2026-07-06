@@ -49,23 +49,24 @@ export default function SearchPage() {
           autoFocus
         />
       </div>
-      {error && (
-        <div className="search-error-box">
-          Error: {error}
-        </div>
-      )}
+      {error && <div className="search-error-box">Error: {error}</div>}
       <div className="entry-list">
         {results.map((entry) => (
           <article className="entry-card" key={entry._id || entry.id}>
-            <h3><a href={`#/entry/${entry._id || entry.id}`}>{entry.title}</a></h3>
+            <h3>
+              <a href={`#/entry/${entry._id || entry.id}`}>{entry.title}</a>
+            </h3>
             <div className="entry-meta">
-              {new Date(entry.date || entry.createdAt).toLocaleDateString()} · {entry.category || 'entry'}
+              {new Date(entry.date || entry.createdAt).toLocaleDateString()} ·{' '}
+              {entry.category || 'entry'}
             </div>
             <p className="entry-excerpt">{entry.excerpt || entry.content?.substring(0, 200)}</p>
             {entry.tags && entry.tags.length > 0 && (
               <div className="entry-tags">
                 {entry.tags.slice(0, 5).map((tag, i) => (
-                  <span className="pill" key={i}>{tag}</span>
+                  <span className="pill" key={i}>
+                    {tag}
+                  </span>
                 ))}
               </div>
             )}
@@ -73,9 +74,7 @@ export default function SearchPage() {
         ))}
       </div>
       {!loading && !error && searchTerm && results.length === 0 && (
-        <p className="search-empty-state">
-          No entries found for "{searchTerm}"
-        </p>
+        <p className="search-empty-state">No entries found for "{searchTerm}"</p>
       )}
     </section>
   );

@@ -24,7 +24,9 @@ const STATUS_LABELS = {
 };
 
 const roleLabel = (value = '') => {
-  const next = String(value || '').trim().toLowerCase();
+  const next = String(value || '')
+    .trim()
+    .toLowerCase();
   if (next === 'admin') return 'Admin';
   if (next === 'secretariat') return 'Secretariat';
   if (next === 'committee') return 'Committee Member';
@@ -80,9 +82,7 @@ export default function PassportPage() {
       setLoading(true);
       setError('');
       try {
-        const response = isOwnRoute
-          ? await fetchMyPassport()
-          : await fetchPassportByUserId(userId);
+        const response = isOwnRoute ? await fetchMyPassport() : await fetchPassportByUserId(userId);
 
         if (!active) return;
 
@@ -123,7 +123,11 @@ export default function PassportPage() {
         const response = await fetchPassportAudit(passport.id);
         if (!active) return;
         if (response?.ok && response.item) {
-          setAuditEvents(Array.isArray(response.item.auditHistory) ? response.item.auditHistory.slice().reverse() : []);
+          setAuditEvents(
+            Array.isArray(response.item.auditHistory)
+              ? response.item.auditHistory.slice().reverse()
+              : [],
+          );
         }
       } catch (_err) {
         if (!active) return;
@@ -161,23 +165,32 @@ export default function PassportPage() {
 
     const supportsCast = proposals.filter((proposal) => {
       const supporters = Array.isArray(proposal.supporters) ? proposal.supporters : [];
-      return supporters.includes(String(passport.citizenId || '')) || supporters.includes(identityId);
+      return (
+        supporters.includes(String(passport.citizenId || '')) || supporters.includes(identityId)
+      );
     }).length;
 
     const commentsMade = proposals.reduce((count, proposal) => {
       const comments = Array.isArray(proposal.comments) ? proposal.comments : [];
-      return count + comments.filter((comment) => {
-        const byId = String(comment.authorId || '') === identityId;
-        const byName = String(comment.authorName || '').trim() === identityName;
-        return byId || byName;
-      }).length;
+      return (
+        count +
+        comments.filter((comment) => {
+          const byId = String(comment.authorId || '') === identityId;
+          const byName = String(comment.authorName || '').trim() === identityName;
+          return byId || byName;
+        }).length
+      );
     }, 0);
 
-    const conferenceParticipation = proposals.filter((proposal) => (
-      ['conference_queue', 'threshold_reached', 'accepted', 'in_execution', 'completed'].includes(proposal.status)
-    )).length;
+    const conferenceParticipation = proposals.filter((proposal) =>
+      ['conference_queue', 'threshold_reached', 'accepted', 'in_execution', 'completed'].includes(
+        proposal.status,
+      ),
+    ).length;
 
-    const officialResponsesVisible = proposals.filter((proposal) => Boolean(proposal.adminDecision || proposal.adminReason)).length;
+    const officialResponsesVisible = proposals.filter((proposal) =>
+      Boolean(proposal.adminDecision || proposal.adminReason),
+    ).length;
 
     return {
       proposalsCreated,
@@ -202,7 +215,9 @@ export default function PassportPage() {
         setWalletSession('Wallet connected without an address response.');
         return;
       }
-      setWalletSession(`Session connected: ${toShortWallet(wallet)} (profile binding is planned for next slice).`);
+      setWalletSession(
+        `Session connected: ${toShortWallet(wallet)} (profile binding is planned for next slice).`,
+      );
     } catch (_err) {
       setWalletSession('Wallet connection request failed or was cancelled.');
     }
@@ -254,17 +269,26 @@ export default function PassportPage() {
       return;
     }
     try {
-      const params = verifierMode === 'credentialId'
-        ? { credentialId: verifierInput.trim() }
-        : { societalId: verifierInput.trim() };
+      const params =
+        verifierMode === 'credentialId'
+          ? { credentialId: verifierInput.trim() }
+          : { societalId: verifierInput.trim() };
       const response = await verifyPassportCredential(params);
       if (!response?.ok) {
-        setVerifierResult({ ok: false, state: response?.state || 'invalid', message: response?.message || 'Not found' });
+        setVerifierResult({
+          ok: false,
+          state: response?.state || 'invalid',
+          message: response?.message || 'Not found',
+        });
         return;
       }
       setVerifierResult({ ok: true, ...response });
     } catch (err) {
-      setVerifierResult({ ok: false, state: 'invalid', message: err?.message || 'Verification request failed.' });
+      setVerifierResult({
+        ok: false,
+        state: 'invalid',
+        message: err?.message || 'Verification request failed.',
+      });
     }
   };
 
@@ -311,8 +335,14 @@ export default function PassportPage() {
       setMessage('Target user ID is required.');
       return;
     }
-    const assign = claimsAssignInput.split(',').map((item) => item.trim()).filter(Boolean);
-    const revoke = claimsRevokeInput.split(',').map((item) => item.trim()).filter(Boolean);
+    const assign = claimsAssignInput
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean);
+    const revoke = claimsRevokeInput
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean);
     setMessage('');
     try {
       const response = await updatePassportClaims(adminTargetId.trim(), { assign, revoke });
@@ -368,7 +398,11 @@ export default function PassportPage() {
   };
 
   if (loading) {
-    return <section className="passport-page section-card"><p>Loading passport...</p></section>;
+    return (
+      <section className="passport-page section-card">
+        <p>Loading passport...</p>
+      </section>
+    );
   }
 
   if (error || !passport) {
@@ -382,7 +416,9 @@ export default function PassportPage() {
 
   const status = String(passport.passportStatus || 'unverified').toLowerCase();
   const passportRole = roleLabel(passport.citizenRole);
-  const isAdminContext = isOwnRoute && ['admin', 'secretariat'].includes(String(passport.citizenRole || '').toLowerCase());
+  const isAdminContext =
+    isOwnRoute &&
+    ['admin', 'secretariat'].includes(String(passport.citizenRole || '').toLowerCase());
 
   return (
     <div className="passport-page">
@@ -391,15 +427,23 @@ export default function PassportPage() {
           <div className="pill">Citizen Identity Layer</div>
           <h1>PVA BAZAAR - SOCIETAL PASSPORT</h1>
           <p>
-            The passport is your civilization identity anchor across governance voice, economic participation,
-            and future verifiable credentials.
+            The passport is your civilization identity anchor across governance voice, economic
+            participation, and future verifiable credentials.
           </p>
         </div>
         <div className="passport-hero-actions">
-          <button type="button" className="button" onClick={handleConnectWallet}>Connect Wallet</button>
-          <Link className="button secondary" to="/federation-map">Open Federation Map</Link>
-          <a className="button ghost" href="#governance-record">View Governance Record</a>
-          <a className="button secondary" href="#economic-record">View Economic Record</a>
+          <button type="button" className="button" onClick={handleConnectWallet}>
+            Connect Wallet
+          </button>
+          <Link className="button secondary" to="/federation-map">
+            Open Federation Map
+          </Link>
+          <a className="button ghost" href="#governance-record">
+            View Governance Record
+          </a>
+          <a className="button secondary" href="#economic-record">
+            View Economic Record
+          </a>
         </div>
       </section>
 
@@ -410,26 +454,67 @@ export default function PassportPage() {
               <h2>PVA BAZAAR - SOCIETAL PASSPORT</h2>
               <p>Citizen identity document</p>
             </div>
-            <span className={`passport-status status-${status}`}>{STATUS_LABELS[status] || 'Unverified'}</span>
+            <span className={`passport-status status-${status}`}>
+              {STATUS_LABELS[status] || 'Unverified'}
+            </span>
           </header>
 
           <div className="passport-card-body">
             <div className="passport-avatar-frame">
               {passport.avatarUrl ? (
-                <img src={passport.avatarUrl} alt={`${passport.name} avatar`} className="passport-avatar" />
+                <img
+                  src={passport.avatarUrl}
+                  alt={`${passport.name} avatar`}
+                  className="passport-avatar"
+                />
               ) : (
-                <div className="passport-avatar-placeholder">{String(passport.name || '?').slice(0, 1).toUpperCase()}</div>
+                <div className="passport-avatar-placeholder">
+                  {String(passport.name || '?')
+                    .slice(0, 1)
+                    .toUpperCase()}
+                </div>
               )}
             </div>
 
             <dl className="passport-fields">
-              <div><dt>Full Name</dt><dd>{passport.name || 'Unknown Citizen'}</dd></div>
-              <div><dt>Societal ID</dt><dd>{passport.societalId || 'Pending assignment'}</dd></div>
-              <div><dt>Joined</dt><dd>{passport.joinedCivilizationAt ? new Date(passport.joinedCivilizationAt).toLocaleDateString() : 'Unknown'}</dd></div>
-              <div><dt>Location</dt><dd>{passport.location || 'Not set'}</dd></div>
-              <div><dt>Role</dt><dd><span className="passport-role-badge">{passportRole}</span></dd></div>
-              <div><dt>Committees</dt><dd>{(passport.committees || []).length ? passport.committees.join(', ') : 'None assigned'}</dd></div>
-              <div className="passport-bio"><dt>Bio</dt><dd>{passport.bio || 'No biography set yet.'}</dd></div>
+              <div>
+                <dt>Full Name</dt>
+                <dd>{passport.name || 'Unknown Citizen'}</dd>
+              </div>
+              <div>
+                <dt>Societal ID</dt>
+                <dd>{passport.societalId || 'Pending assignment'}</dd>
+              </div>
+              <div>
+                <dt>Joined</dt>
+                <dd>
+                  {passport.joinedCivilizationAt
+                    ? new Date(passport.joinedCivilizationAt).toLocaleDateString()
+                    : 'Unknown'}
+                </dd>
+              </div>
+              <div>
+                <dt>Location</dt>
+                <dd>{passport.location || 'Not set'}</dd>
+              </div>
+              <div>
+                <dt>Role</dt>
+                <dd>
+                  <span className="passport-role-badge">{passportRole}</span>
+                </dd>
+              </div>
+              <div>
+                <dt>Committees</dt>
+                <dd>
+                  {(passport.committees || []).length
+                    ? passport.committees.join(', ')
+                    : 'None assigned'}
+                </dd>
+              </div>
+              <div className="passport-bio">
+                <dt>Bio</dt>
+                <dd>{passport.bio || 'No biography set yet.'}</dd>
+              </div>
               <div>
                 <dt>Governance Token</dt>
                 <dd className={passport.governanceToken ? 'token-active' : 'token-inactive'}>
@@ -445,7 +530,11 @@ export default function PassportPage() {
             <h3>Profile Controls</h3>
             <p>{walletSession || `Wallet: ${toShortWallet(passport.walletAddress || '')}`}</p>
             <div className="passport-edit-actions">
-              <button type="button" className="button ghost" onClick={() => setEditOpen((value) => !value)}>
+              <button
+                type="button"
+                className="button ghost"
+                onClick={() => setEditOpen((value) => !value)}
+              >
                 {editOpen ? 'Close Edit' : 'Edit Passport'}
               </button>
               {['unverified', 'pending'].includes(status) ? (
@@ -466,7 +555,9 @@ export default function PassportPage() {
                   Avatar URL
                   <input
                     value={draft.avatarUrl}
-                    onChange={(event) => setDraft((prev) => ({ ...prev, avatarUrl: event.target.value }))}
+                    onChange={(event) =>
+                      setDraft((prev) => ({ ...prev, avatarUrl: event.target.value }))
+                    }
                     placeholder="https://..."
                   />
                 </label>
@@ -474,7 +565,9 @@ export default function PassportPage() {
                   Location
                   <input
                     value={draft.location}
-                    onChange={(event) => setDraft((prev) => ({ ...prev, location: event.target.value }))}
+                    onChange={(event) =>
+                      setDraft((prev) => ({ ...prev, location: event.target.value }))
+                    }
                     placeholder="City, Region"
                   />
                 </label>
@@ -482,11 +575,18 @@ export default function PassportPage() {
                   Bio (max 500)
                   <textarea
                     value={draft.bio}
-                    onChange={(event) => setDraft((prev) => ({ ...prev, bio: event.target.value.slice(0, 500) }))}
+                    onChange={(event) =>
+                      setDraft((prev) => ({ ...prev, bio: event.target.value.slice(0, 500) }))
+                    }
                     rows={4}
                   />
                 </label>
-                <button type="button" className="button" onClick={handleSaveProfile} disabled={saving}>
+                <button
+                  type="button"
+                  className="button"
+                  onClick={handleSaveProfile}
+                  disabled={saving}
+                >
                   {saving ? 'Saving...' : 'Save Passport Profile'}
                 </button>
               </div>
@@ -496,7 +596,13 @@ export default function PassportPage() {
               <h4>Wallet Binding Rail</h4>
               <p>Mode: simulated/dev until cryptographic recovery is enabled.</p>
               <div className="passport-edit-actions">
-                <button type="button" className="button ghost" onClick={handleRequestWalletChallenge}>Request Challenge</button>
+                <button
+                  type="button"
+                  className="button ghost"
+                  onClick={handleRequestWalletChallenge}
+                >
+                  Request Challenge
+                </button>
               </div>
               {challenge ? (
                 <div className="passport-edit-form">
@@ -520,7 +626,11 @@ export default function PassportPage() {
                       placeholder="0xsignature..."
                     />
                   </label>
-                  <button type="button" className="button secondary" onClick={handleVerifyWalletChallenge}>
+                  <button
+                    type="button"
+                    className="button secondary"
+                    onClick={handleVerifyWalletChallenge}
+                  >
                     Submit Wallet Proof
                   </button>
                 </div>
@@ -535,24 +645,78 @@ export default function PassportPage() {
       <section className="section-card">
         <h2>Credential & Identity Proof</h2>
         <div className="passport-grid">
-          <article><h3>DID subject</h3><p>{passport.didSubject || 'Pending generation'}</p><small>Live now</small></article>
-          <article><h3>Credential ID</h3><p>{passport.credentialId || 'Not issued'}</p><small>Live now</small></article>
-          <article><h3>Credential version</h3><p>{Number(passport.credentialVersion || 0)}</p><small>Live now</small></article>
-          <article><h3>Credential issued</h3><p>{formatDate(passport.credentialIssuedAt)}</p><small>Live now</small></article>
-          <article><h3>Verification status</h3><p>{String(passport.verificationStatus || 'none')}</p><small>Live now</small></article>
-          <article><h3>Wallet binding</h3><p>{String(passport.walletBindingStatus || 'unbound')}</p><small>Live now</small></article>
+          <article>
+            <h3>DID subject</h3>
+            <p>{passport.didSubject || 'Pending generation'}</p>
+            <small>Live now</small>
+          </article>
+          <article>
+            <h3>Credential ID</h3>
+            <p>{passport.credentialId || 'Not issued'}</p>
+            <small>Live now</small>
+          </article>
+          <article>
+            <h3>Credential version</h3>
+            <p>{Number(passport.credentialVersion || 0)}</p>
+            <small>Live now</small>
+          </article>
+          <article>
+            <h3>Credential issued</h3>
+            <p>{formatDate(passport.credentialIssuedAt)}</p>
+            <small>Live now</small>
+          </article>
+          <article>
+            <h3>Verification status</h3>
+            <p>{String(passport.verificationStatus || 'none')}</p>
+            <small>Live now</small>
+          </article>
+          <article>
+            <h3>Wallet binding</h3>
+            <p>{String(passport.walletBindingStatus || 'unbound')}</p>
+            <small>Live now</small>
+          </article>
         </div>
       </section>
 
       <section className="section-card">
         <h2>Eligibility Snapshot</h2>
         <div className="passport-grid">
-          <article><h3>Verified passport</h3><p>{passport.eligibility?.hasVerifiedPassport ? 'Eligible' : 'Not eligible'}</p><small>Live now</small></article>
-          <article><h3>Governance vote</h3><p>{passport.eligibility?.hasGovernanceVoteEligibility ? 'Eligible' : 'Not eligible'}</p><small>Live now</small></article>
-          <article><h3>Committee access</h3><p>{passport.eligibility?.hasCommitteeAccess ? 'Eligible' : 'Not eligible'}</p><small>Live now</small></article>
-          <article><h3>Treasury access</h3><p>{passport.eligibility?.hasTreasuryAccess ? 'Eligible' : 'Not eligible'}</p><small>Live now</small></article>
-          <article><h3>Role claims</h3><p>{Array.isArray(passport.claims) && passport.claims.length ? passport.claims.join(', ') : 'visitor'}</p><small>Live now</small></article>
-          <article><h3>On-chain verifier</h3><p>Planned</p><small>Future cryptographic proof rail</small></article>
+          <article>
+            <h3>Verified passport</h3>
+            <p>{passport.eligibility?.hasVerifiedPassport ? 'Eligible' : 'Not eligible'}</p>
+            <small>Live now</small>
+          </article>
+          <article>
+            <h3>Governance vote</h3>
+            <p>
+              {passport.eligibility?.hasGovernanceVoteEligibility ? 'Eligible' : 'Not eligible'}
+            </p>
+            <small>Live now</small>
+          </article>
+          <article>
+            <h3>Committee access</h3>
+            <p>{passport.eligibility?.hasCommitteeAccess ? 'Eligible' : 'Not eligible'}</p>
+            <small>Live now</small>
+          </article>
+          <article>
+            <h3>Treasury access</h3>
+            <p>{passport.eligibility?.hasTreasuryAccess ? 'Eligible' : 'Not eligible'}</p>
+            <small>Live now</small>
+          </article>
+          <article>
+            <h3>Role claims</h3>
+            <p>
+              {Array.isArray(passport.claims) && passport.claims.length
+                ? passport.claims.join(', ')
+                : 'visitor'}
+            </p>
+            <small>Live now</small>
+          </article>
+          <article>
+            <h3>On-chain verifier</h3>
+            <p>Planned</p>
+            <small>Future cryptographic proof rail</small>
+          </article>
         </div>
       </section>
 
@@ -574,19 +738,41 @@ export default function PassportPage() {
               placeholder={verifierMode === 'credentialId' ? 'PVA-CRED-XXXX' : 'PVA-00001'}
             />
           </label>
-          <button type="button" className="button" onClick={handleVerifierLookup}>Verify Credential</button>
+          <button type="button" className="button" onClick={handleVerifierLookup}>
+            Verify Credential
+          </button>
         </div>
         {verifierResult ? (
           <div className="verifier-result">
-            <p><strong>State:</strong> {verifierResult.state || 'invalid'}</p>
+            <p>
+              <strong>State:</strong> {verifierResult.state || 'invalid'}
+            </p>
             {verifierResult.ok && verifierResult.verifier ? (
               <div className="passport-grid">
-                <article><h3>Societal ID</h3><p>{verifierResult.verifier.societalId || 'Unknown'}</p></article>
-                <article><h3>Credential ID</h3><p>{verifierResult.verifier.credentialId || 'Unknown'}</p></article>
-                <article><h3>DID subject</h3><p>{verifierResult.verifier.didSubject || 'Unknown'}</p></article>
-                <article><h3>Claims</h3><p>{(verifierResult.verifier.roleClaims || []).join(', ') || 'None'}</p></article>
-                <article><h3>Wallet binding</h3><p>{verifierResult.verifier.walletBindingState || 'unbound'}</p></article>
-                <article><h3>Issued</h3><p>{formatDate(verifierResult.verifier.issuedAt)}</p></article>
+                <article>
+                  <h3>Societal ID</h3>
+                  <p>{verifierResult.verifier.societalId || 'Unknown'}</p>
+                </article>
+                <article>
+                  <h3>Credential ID</h3>
+                  <p>{verifierResult.verifier.credentialId || 'Unknown'}</p>
+                </article>
+                <article>
+                  <h3>DID subject</h3>
+                  <p>{verifierResult.verifier.didSubject || 'Unknown'}</p>
+                </article>
+                <article>
+                  <h3>Claims</h3>
+                  <p>{(verifierResult.verifier.roleClaims || []).join(', ') || 'None'}</p>
+                </article>
+                <article>
+                  <h3>Wallet binding</h3>
+                  <p>{verifierResult.verifier.walletBindingState || 'unbound'}</p>
+                </article>
+                <article>
+                  <h3>Issued</h3>
+                  <p>{formatDate(verifierResult.verifier.issuedAt)}</p>
+                </article>
               </div>
             ) : (
               <p>{verifierResult.message || 'No matching credential found.'}</p>
@@ -601,21 +787,39 @@ export default function PassportPage() {
           <div className="passport-edit-form">
             <label>
               Target user ID
-              <input value={adminTargetId} onChange={(event) => setAdminTargetId(event.target.value)} placeholder="Mongo user id" />
+              <input
+                value={adminTargetId}
+                onChange={(event) => setAdminTargetId(event.target.value)}
+                placeholder="Mongo user id"
+              />
             </label>
             <div className="passport-edit-actions">
-              <button type="button" className="button" onClick={handleIssueCredential}>Issue Credential</button>
-              <button type="button" className="button ghost" onClick={handleRefreshCredential}>Refresh Credential</button>
+              <button type="button" className="button" onClick={handleIssueCredential}>
+                Issue Credential
+              </button>
+              <button type="button" className="button ghost" onClick={handleRefreshCredential}>
+                Refresh Credential
+              </button>
             </div>
             <label>
               Claims to assign (comma separated)
-              <input value={claimsAssignInput} onChange={(event) => setClaimsAssignInput(event.target.value)} placeholder="committee_member,creator" />
+              <input
+                value={claimsAssignInput}
+                onChange={(event) => setClaimsAssignInput(event.target.value)}
+                placeholder="committee_member,creator"
+              />
             </label>
             <label>
               Claims to revoke (comma separated)
-              <input value={claimsRevokeInput} onChange={(event) => setClaimsRevokeInput(event.target.value)} placeholder="visitor" />
+              <input
+                value={claimsRevokeInput}
+                onChange={(event) => setClaimsRevokeInput(event.target.value)}
+                placeholder="visitor"
+              />
             </label>
-            <button type="button" className="button secondary" onClick={handleUpdateClaims}>Update Claims</button>
+            <button type="button" className="button secondary" onClick={handleUpdateClaims}>
+              Update Claims
+            </button>
           </div>
         </section>
       ) : null}
@@ -644,41 +848,102 @@ export default function PassportPage() {
       <section id="governance-record" className="section-card">
         <h2>Governance Record</h2>
         <div className="passport-grid">
-          <article><h3>Proposals created</h3><p>{governanceRecord.proposalsCreated}</p></article>
-          <article><h3>Supports cast</h3><p>{governanceRecord.supportsCast}</p></article>
-          <article><h3>Comments made</h3><p>{governanceRecord.commentsMade}</p></article>
-          <article><h3>Conference participation</h3><p>{governanceRecord.conferenceParticipation}</p></article>
-          <article><h3>Official responses visible</h3><p>{governanceRecord.officialResponsesVisible}</p></article>
-          <article><h3>Group / committee participation</h3><p>{committeeAssignments.length}</p></article>
+          <article>
+            <h3>Proposals created</h3>
+            <p>{governanceRecord.proposalsCreated}</p>
+          </article>
+          <article>
+            <h3>Supports cast</h3>
+            <p>{governanceRecord.supportsCast}</p>
+          </article>
+          <article>
+            <h3>Comments made</h3>
+            <p>{governanceRecord.commentsMade}</p>
+          </article>
+          <article>
+            <h3>Conference participation</h3>
+            <p>{governanceRecord.conferenceParticipation}</p>
+          </article>
+          <article>
+            <h3>Official responses visible</h3>
+            <p>{governanceRecord.officialResponsesVisible}</p>
+          </article>
+          <article>
+            <h3>Group / committee participation</h3>
+            <p>{committeeAssignments.length}</p>
+          </article>
         </div>
       </section>
 
       <section id="economic-record" className="section-card wallet-section">
         <h2>Economic Record</h2>
         <div className="passport-grid">
-          <article><h3>Wallet balance</h3><p>{Number(passport.bazBalance || 0)} BAZ</p><small>Live now (account state)</small></article>
-          <article><h3>PVA reputation</h3><p>{Number(passport.pvaReputation || 0)}</p><small>Live now (contribution score)</small></article>
-          <article><h3>Votes cast</h3><p>{Number(passport.votesCast || citizen?.votes || 0)}</p><small>Live now</small></article>
-          <article><h3>Proposals submitted</h3><p>{Number(passport.proposalsSubmitted || governanceRecord.proposalsCreated || 0)}</p><small>Live now</small></article>
-          <article><h3>Treasury participation</h3><p>{(treasury?.recentTransactions || []).length} recent records</p><small>Live now (snapshot)</small></article>
-          <article><h3>Grants / labor / dues / exchange history</h3><p>Planned</p><small>Next ledger expansion</small></article>
+          <article>
+            <h3>Wallet balance</h3>
+            <p>{Number(passport.bazBalance || 0)} BAZ</p>
+            <small>Live now (account state)</small>
+          </article>
+          <article>
+            <h3>PVA reputation</h3>
+            <p>{Number(passport.pvaReputation || 0)}</p>
+            <small>Live now (contribution score)</small>
+          </article>
+          <article>
+            <h3>Votes cast</h3>
+            <p>{Number(passport.votesCast || citizen?.votes || 0)}</p>
+            <small>Live now</small>
+          </article>
+          <article>
+            <h3>Proposals submitted</h3>
+            <p>{Number(passport.proposalsSubmitted || governanceRecord.proposalsCreated || 0)}</p>
+            <small>Live now</small>
+          </article>
+          <article>
+            <h3>Treasury participation</h3>
+            <p>{(treasury?.recentTransactions || []).length} recent records</p>
+            <small>Live now (snapshot)</small>
+          </article>
+          <article>
+            <h3>Grants / labor / dues / exchange history</h3>
+            <p>Planned</p>
+            <small>Next ledger expansion</small>
+          </article>
         </div>
       </section>
 
       <section className="section-card">
         <h2>Identity Architecture</h2>
         <div className="passport-grid">
-          <article><h3>DID-ready identity</h3><p>Passport schema includes stable identity fields suitable for DID mapping in future phases.</p></article>
-          <article><h3>VC-ready passport</h3><p>Status, role, and participation records are structured for verifiable credential issuance.</p></article>
-          <article><h3>WalletConnect-ready wallet layer</h3><p>Wallet UX is designed for future WalletConnect session support.</p></article>
-          <article><h3>ERC-4337 / smart account direction</h3><p>Account abstraction support is planned for delegated civic and economic actions.</p></article>
+          <article>
+            <h3>DID-ready identity</h3>
+            <p>
+              Passport schema includes stable identity fields suitable for DID mapping in future
+              phases.
+            </p>
+          </article>
+          <article>
+            <h3>VC-ready passport</h3>
+            <p>
+              Status, role, and participation records are structured for verifiable credential
+              issuance.
+            </p>
+          </article>
+          <article>
+            <h3>WalletConnect-ready wallet layer</h3>
+            <p>Wallet UX is designed for future WalletConnect session support.</p>
+          </article>
+          <article>
+            <h3>ERC-4337 / smart account direction</h3>
+            <p>Account abstraction support is planned for delegated civic and economic actions.</p>
+          </article>
         </div>
       </section>
 
       <section className="section-card">
         <h2>Civilization Linkage</h2>
         <p className="passport-section-note">
-          Use this page to move directly into the federation game map, then come back here to review identity, proof, and civic records.
+          Use this page to move directly into the federation game map, then come back here to review
+          identity, proof, and civic records.
         </p>
         <div className="passport-link-strip">
           <Link to="/federation-map">Live Federation Map</Link>

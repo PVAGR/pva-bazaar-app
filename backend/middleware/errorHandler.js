@@ -44,7 +44,7 @@ function errorHandler(err, req, res, next) {
   if (err.name === 'ValidationError') {
     status = 400;
     message = Object.values(err.errors)
-      .map(e => e.message)
+      .map((e) => e.message)
       .join(', ');
     code = 'VALIDATION_ERROR';
   }

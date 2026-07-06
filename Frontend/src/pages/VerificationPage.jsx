@@ -20,15 +20,15 @@ export default function VerificationPage() {
         <article className="info-block">
           <h3>How verification is produced</h3>
           <p>
-            Verification runs through repeatable scripts and CI workflows so results can be reproduced,
-            compared, and audited over time.
+            Verification runs through repeatable scripts and CI workflows so results can be
+            reproduced, compared, and audited over time.
           </p>
         </article>
         <article className="info-block">
           <h3>What users see</h3>
           <p>
-            Item pages display AI-Verified status when a verification record exists. If no record exists,
-            the item remains transparent as unverified.
+            Item pages display AI-Verified status when a verification record exists. If no record
+            exists, the item remains transparent as unverified.
           </p>
         </article>
       </div>
@@ -44,8 +44,12 @@ export default function VerificationPage() {
       </article>
 
       <div className="info-actions">
-        <Link to="/search" className="button">Find an Artifact</Link>
-        <Link to="/" className="button ghost">Browse Archive</Link>
+        <Link to="/search" className="button">
+          Find an Artifact
+        </Link>
+        <Link to="/" className="button ghost">
+          Browse Archive
+        </Link>
       </div>
     </section>
   );

@@ -16,27 +16,27 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-  
-    const { title, description, platform, userId } = await req.json();
-  
-    if (userId !== session.user.id) {
-      return NextResponse.json({ error: 'Mismatched user' }, { status: 403 });
-    }
-  
-    await connectToDatabase();
-    const newStream = await Stream.create({
-      title,
-      description,
-      platform,
-      userId,
-      // platformStreamId is required, so we'll add a placeholder.
-      // In a real scenario, this would come from the streaming service API.
-      platformStreamId: `placeholder_${new Date().getTime()}`,
-    });
-  
-    return NextResponse.json(newStream, { status: 201 });
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+
+  const { title, description, platform, userId } = await req.json();
+
+  if (userId !== session.user.id) {
+    return NextResponse.json({ error: 'Mismatched user' }, { status: 403 });
+  }
+
+  await connectToDatabase();
+  const newStream = await Stream.create({
+    title,
+    description,
+    platform,
+    userId,
+    // platformStreamId is required, so we'll add a placeholder.
+    // In a real scenario, this would come from the streaming service API.
+    platformStreamId: `placeholder_${new Date().getTime()}`,
+  });
+
+  return NextResponse.json(newStream, { status: 201 });
+}

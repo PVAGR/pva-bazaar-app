@@ -32,7 +32,9 @@ export default function Biography() {
       <h2>Biography</h2>
       {loading && <p>Loading biography entries...</p>}
       {!loading && error && <p>{error}</p>}
-      {!loading && !error && items.length === 0 && <p>No biography entries were returned by the archive API.</p>}
+      {!loading && !error && items.length === 0 && (
+        <p>No biography entries were returned by the archive API.</p>
+      )}
       {!loading && items.length > 0 && (
         <ul>
           {items.map((entry) => (

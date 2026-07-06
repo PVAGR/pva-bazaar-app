@@ -38,7 +38,7 @@ const CryptoFiatExchangeSchema = new mongoose.Schema(
     source: { type: String, default: 'api' }, // api, contract, amm
     confidence: { type: Number, min: 0, max: 100 }, // 0-100% confidence
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // TTL index - automatically delete expired rates after 5 minutes

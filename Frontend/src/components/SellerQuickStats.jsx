@@ -2,7 +2,13 @@ import React from 'react';
 import './SellerQuickStats.css';
 
 export default function SellerQuickStats({ stats = {} }) {
-  const { total = 0, published = 0, needsAttention = 0, withSyndication = 0, loading = false } = stats;
+  const {
+    total = 0,
+    published = 0,
+    needsAttention = 0,
+    withSyndication = 0,
+    loading = false,
+  } = stats;
 
   const statusBadges = [
     {
@@ -41,7 +47,7 @@ export default function SellerQuickStats({ stats = {} }) {
 
   return (
     <div className="seller-quick-stats">
-      {statusBadges.map(badge => (
+      {statusBadges.map((badge) => (
         <div key={badge.label} className={`stat-card ${badge.color}`}>
           <span className="stat-icon">{badge.icon}</span>
           <div className="stat-content">

@@ -22,7 +22,9 @@
   border-radius: 12px;
   border: 1px solid color-mix(in srgb, var(--site-border) 84%, transparent);
   background: color-mix(in srgb, var(--site-panel-soft) 92%, transparent);
-  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
 }
 
 .search-page__input:focus {
@@ -66,7 +68,11 @@
 
 .search-page__result {
   border-color: color-mix(in srgb, var(--site-border) 80%, transparent);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--site-panel-soft) 88%, transparent) 0%, var(--site-panel) 100%);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--site-panel-soft) 88%, transparent) 0%,
+    var(--site-panel) 100%
+  );
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.14);
 }
 

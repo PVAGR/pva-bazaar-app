@@ -46,13 +46,13 @@ router.get('/', async (req, res) => {
       const mongoState = getMongoState();
       const authStoreState = await getAuthStoreState().catch(() => null);
       const bookStoreState = await getBookStoreState().catch(() => null);
-      const effectiveMode = mongoState.mode === 'mock' && authStoreState?.mode === 'file'
-        ? 'file'
-        : mongoState.mode;
+      const effectiveMode =
+        mongoState.mode === 'mock' && authStoreState?.mode === 'file' ? 'file' : mongoState.mode;
       checks.checks.database.status = effectiveMode === 'memory' ? 'warning' : 'ok';
-      checks.checks.database.message = effectiveMode === 'file'
-        ? `Shared auth store active (${authStoreState?.users || 0} users), book store active (${bookStoreState?.books || 0} books)`
-        : `MongoDB connection state: ${mongoose.connection.readyState} (${effectiveMode})`;
+      checks.checks.database.message =
+        effectiveMode === 'file'
+          ? `Shared auth store active (${authStoreState?.users || 0} users), book store active (${bookStoreState?.books || 0} books)`
+          : `MongoDB connection state: ${mongoose.connection.readyState} (${effectiveMode})`;
     } catch (err) {
       checks.checks.database.status = 'error';
       checks.checks.database.message = err.message;
@@ -68,8 +68,7 @@ router.get('/', async (req, res) => {
   const missingEnv = requiredEnv.filter((e) => !process.env[e]);
   const mongo = String(process.env.MONGODB_URI || '');
   const mongoLocal =
-    mongo &&
-    (mongo.includes('127.0.0.1') || mongo.includes('localhost') || mongo.includes('::1'));
+    mongo && (mongo.includes('127.0.0.1') || mongo.includes('localhost') || mongo.includes('::1'));
   if (missingEnv.length) {
     checks.checks.environment.status = 'warning';
     checks.checks.environment.message = `Missing: ${missingEnv.join(', ')}`;
@@ -177,7 +176,11 @@ router.get('/endpoints', (req, res) => {
     ],
     'Phase 6b - Fulfillment': [
       { method: 'POST', path: '/api/fulfillment/select-center', description: 'Select center' },
-      { method: 'POST', path: '/api/fulfillment/calculate-shipping', description: 'Calculate shipping' },
+      {
+        method: 'POST',
+        path: '/api/fulfillment/calculate-shipping',
+        description: 'Calculate shipping',
+      },
       { method: 'POST', path: '/api/fulfillment/create-shipment', description: 'Create shipment' },
       { method: 'GET', path: '/api/fulfillment/track-shipment/:id', description: 'Track shipment' },
       { method: 'POST', path: '/api/fulfillment/initiate-return', description: 'Initiate return' },
@@ -186,16 +189,24 @@ router.get('/endpoints', (req, res) => {
       { method: 'POST', path: '/api/ai-help/ask', description: 'Ask AI' },
       { method: 'GET', path: '/api/ai-help/guides/:topic', description: 'Get guide' },
       { method: 'POST', path: '/api/ai-help/pricing-suggest', description: 'Pricing suggestions' },
-      { method: 'GET', path: '/api/ai-help/compliance-checklist', description: 'Compliance checklist' },
+      {
+        method: 'GET',
+        path: '/api/ai-help/compliance-checklist',
+        description: 'Compliance checklist',
+      },
     ],
     'Phase 8 - Open API': [
-      { method: 'POST', path: '/api/integrations/connect/:partner', description: 'Connect partner' },
+      {
+        method: 'POST',
+        path: '/api/integrations/connect/:partner',
+        description: 'Connect partner',
+      },
       { method: 'GET', path: '/api/v1/products', description: 'List products (API)' },
       { method: 'GET', path: '/api/v1/orders', description: 'List orders (API)' },
       { method: 'POST', path: '/api/v1/inventory/sync', description: 'Sync inventory' },
       { method: 'GET', path: '/api/v1/analytics', description: 'Get analytics (API)' },
     ],
-    'Documentation': [
+    Documentation: [
       { method: 'GET', path: '/api/docs', description: 'Swagger UI' },
       { method: 'GET', path: '/api/openapi.json', description: 'OpenAPI spec' },
     ],

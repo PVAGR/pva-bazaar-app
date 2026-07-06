@@ -8,8 +8,16 @@
   border-radius: 14px;
   padding: 1rem 1.1rem;
   background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--site-accent) 18%, transparent), transparent 52%),
-    linear-gradient(160deg, color-mix(in srgb, var(--site-panel-soft) 92%, transparent), color-mix(in srgb, var(--site-panel) 96%, transparent));
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--site-accent) 18%, transparent),
+      transparent 52%
+    ),
+    linear-gradient(
+      160deg,
+      color-mix(in srgb, var(--site-panel-soft) 92%, transparent),
+      color-mix(in srgb, var(--site-panel) 96%, transparent)
+    );
 }
 
 .pc-hero h1 {

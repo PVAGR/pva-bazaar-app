@@ -9,7 +9,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <link rel="canonical" href="https://pvabazaar.org/" />
     <link rel="manifest" href="/manifest.webmanifest" />
-    <meta name="description" content="PVA Bazaar is a personal archive and business suite for writings, commerce, recovery, civic tools, provenance, and HeelKawn." />
+    <meta
+      name="description"
+      content="PVA Bazaar is a personal archive and business suite for writings, commerce, recovery, civic tools, provenance, and HeelKawn."
+    />
     <meta name="llm:readable" content="true" />
     <meta name="llm:content-url" content="https://pvabazaar.org/llms.txt" />
     <meta name="llm:snapshot-url" content="https://pvabazaar.org/readable-site.json" />
@@ -17,12 +20,18 @@
     <meta name="pva:federation-enabled" content="%VITE_FEDERATION_ENABLED%" />
     <meta name="pva:community-id" content="%VITE_COMMUNITY_ID%" />
     <meta name="pva:federation-hub" content="%VITE_FEDERATION_HUB_URL%" />
-    <meta name="pva:federation-community-url-template" content="https://federation.pvabazaar.org/api/communities/%VITE_COMMUNITY_ID%" />
+    <meta
+      name="pva:federation-community-url-template"
+      content="https://federation.pvabazaar.org/api/communities/%VITE_COMMUNITY_ID%"
+    />
     <!-- Pages deploy: bump when forcing rebuild after API URL changes -->
     <title>PVA Bazaar — Personal Site, Business, and Writings</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Open+Sans:wght@400;700&display=swap" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Open+Sans:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
     <style>
       body {
         margin: 0;
@@ -170,7 +179,12 @@
         "url": "https://pvabazaar.org/",
         "description": "A sourcing bridge connecting global suppliers, artisans, and makers with American buyers through provenance, presentation, and archive context.",
         "areaServed": ["United States", "Global"],
-        "knowsAbout": ["global sourcing", "artisan supply chains", "product provenance", "archive publishing"]
+        "knowsAbout": [
+          "global sourcing",
+          "artisan supply chains",
+          "product provenance",
+          "archive publishing"
+        ]
       }
     </script>
   </head>
@@ -179,7 +193,9 @@
     <noscript>
       <section class="noscript-panel" aria-label="PVA Bazaar no-script guidance">
         <h1>PVA Bazaar</h1>
-        <p>This site requires JavaScript for the full marketplace, archive, and supplier experience.</p>
+        <p>
+          This site requires JavaScript for the full marketplace, archive, and supplier experience.
+        </p>
         <p>Machine-readable resources for crawlers and AI tools:</p>
         <ul>
           <li><a href="/llms.txt">llms.txt</a></li>
@@ -191,7 +207,10 @@
     <div id="app-shell-fallback">
       <div class="fallback-panel" role="status" aria-live="polite">
         <h1 class="fallback-title">Loading PVA Bazaar...</h1>
-        <p class="fallback-copy">If the app is still waking up, use one of the direct paths below. The full site should appear automatically once the app mounts.</p>
+        <p class="fallback-copy">
+          If the app is still waking up, use one of the direct paths below. The full site should
+          appear automatically once the app mounts.
+        </p>
         <div class="fallback-links">
           <a class="fallback-link" href="/#/archive">Archive</a>
           <a class="fallback-link" href="/#/marketplace">Marketplace</a>
@@ -199,7 +218,10 @@
           <a class="fallback-link" href="/#/heelkawn">HeelKawn</a>
           <a class="fallback-link" href="/status.html">Status</a>
         </div>
-        <p class="fallback-copy" style="margin-top: 16px;">If this stays blank after a refresh, the app failed to mount and the error fallback should appear.</p>
+        <p class="fallback-copy" style="margin-top: 16px">
+          If this stays blank after a refresh, the app failed to mount and the error fallback should
+          appear.
+        </p>
       </div>
     </div>
     <script type="module" src="/src/main.jsx"></script>

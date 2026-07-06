@@ -3,6 +3,7 @@
 This file gives you ready-to-adapt text blocks for 8 starter listings. Replace `[YOUR SHOP NAME]` and adjust details as you work with real artisans.
 
 Each listing has:
+
 - SEO-friendly **Title**
 - Short **Description blocks** (Story, Details, Shipping)
 - Suggested **Tags**
@@ -127,12 +128,11 @@ Each listing has:
 
 ### Global Shop Policies (copy ideas)
 
-- **Processing time:**  
+- **Processing time:**
   - “Most items ship within 3–5 business days. For made-to-order pieces, allow 7–10 days.”
-- **Shipping:**  
+- **Shipping:**
   - “Tracked international shipping from Kenya (or your hub). Buyers are responsible for customs/duties where applicable.”
-- **Returns:**  
+- **Returns:**
   - “Because these are handmade artifacts, returns are accepted for damage on arrival or major defects only. Contact us within 7 days of delivery with photos.”
 
 You (or another assistant) can now take each block and paste it directly into Etsy, adjusting only specific dimensions, colors, and artisan details once you have them.
-

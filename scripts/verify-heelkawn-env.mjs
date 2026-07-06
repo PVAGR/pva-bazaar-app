@@ -28,11 +28,7 @@ const fileChecks = [
   },
   {
     file: 'Frontend/.env.example',
-    keys: [
-      'VITE_HEELKAWN_DOWNLOAD_URL',
-      'VITE_HEELKAWN_PC_DOWNLOAD_URL',
-      'VITE_HEELKAWN_REPO_URL',
-    ],
+    keys: ['VITE_HEELKAWN_DOWNLOAD_URL', 'VITE_HEELKAWN_PC_DOWNLOAD_URL', 'VITE_HEELKAWN_REPO_URL'],
   },
   {
     file: 'apps/pva-bazaar-web/.env.example',

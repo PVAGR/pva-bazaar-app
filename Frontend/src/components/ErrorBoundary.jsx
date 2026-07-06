@@ -1,8 +1,8 @@
 /**
  * ErrorBoundary
- * 
+ *
  * PURPOSE: Catch React errors in child components and display fallback UI
- * 
+ *
  * USAGE:
  * <ErrorBoundary>
  *   <YourComponent />
@@ -30,12 +30,12 @@ export default class ErrorBoundary extends React.Component {
     // Log error to monitoring service
     logger.error('Error boundary caught error:', {
       error: error.toString(),
-      componentStack: errorInfo.componentStack
+      componentStack: errorInfo.componentStack,
     });
-    
+
     this.setState({
       error,
-      errorInfo
+      errorInfo,
     });
   }
 
@@ -63,14 +63,14 @@ export default class ErrorBoundary extends React.Component {
               </details>
             )}
             <div className="error-boundary-actions">
-              <button 
-                onClick={() => window.location.reload()} 
+              <button
+                onClick={() => window.location.reload()}
                 className="error-boundary-btn error-boundary-btn-primary"
               >
                 Reload Page
               </button>
-              <button 
-                onClick={this.handleReset} 
+              <button
+                onClick={this.handleReset}
                 className="error-boundary-btn error-boundary-btn-secondary"
               >
                 Try Again

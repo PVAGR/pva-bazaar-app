@@ -37,14 +37,18 @@ export default function TreasuryPage() {
         await ensureCorrectChain(ethereum);
         const provider = new ethersLib.BrowserProvider(ethereum);
         const signer = await provider.getSigner();
-        const contract = getContract(import.meta.env.VITE_TREASURY_CONTRACT_ADDRESS, TREASURY_ABI, signer);
+        const contract = getContract(
+          import.meta.env.VITE_TREASURY_CONTRACT_ADDRESS,
+          TREASURY_ABI,
+          signer,
+        );
         const tx = await contract.approveFunding(requestId);
         await tx.wait();
 
         setRequests((prev) =>
           prev.map((request) =>
-            request.id === requestId ? { ...request, approved: true, txHash: tx.hash } : request
-          )
+            request.id === requestId ? { ...request, approved: true, txHash: tx.hash } : request,
+          ),
         );
       } catch (error) {
         console.error('On-chain approval failed', error);
@@ -92,7 +96,8 @@ export default function TreasuryPage() {
             fontWeight: '600',
           }}
         >
-          Polygon Amoy Testnet - {import.meta.env.VITE_TREASURY_CONTRACT_ADDRESS?.slice(0, 10) || 'N/A'}...
+          Polygon Amoy Testnet -{' '}
+          {import.meta.env.VITE_TREASURY_CONTRACT_ADDRESS?.slice(0, 10) || 'N/A'}...
         </p>
       </header>
 
@@ -204,7 +209,11 @@ export default function TreasuryPage() {
                     href={`https://amoy.polygonscan.com/tx/${req.txHash}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    style={{ color: 'var(--site-accent)', textDecoration: 'none', fontSize: '14px' }}
+                    style={{
+                      color: 'var(--site-accent)',
+                      textDecoration: 'none',
+                      fontSize: '14px',
+                    }}
                   >
                     View on PolygonScan
                   </a>

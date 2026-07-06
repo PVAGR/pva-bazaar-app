@@ -5,7 +5,10 @@ async function main() {
   const [deployer] = await ethers.getSigners();
 
   console.log('Deploying contracts with account:', deployer.address);
-  console.log('Account balance:', (await deployer.provider.getBalance(deployer.address)).toString());
+  console.log(
+    'Account balance:',
+    (await deployer.provider.getBalance(deployer.address)).toString(),
+  );
 
   const Governance = await ethers.getContractFactory('PvaGovernance');
   const governance = await Governance.deploy();

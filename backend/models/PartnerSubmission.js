@@ -26,4 +26,3 @@ partnerSubmissionSchema.pre('save', function preSave(next) {
 });
 
 module.exports = mongoose.model('PartnerSubmission', partnerSubmissionSchema);
-

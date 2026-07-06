@@ -1,4 +1,5 @@
 # 🤖 AUTONOMOUS AGENT DEPLOYMENT PROMPT
+
 ## Copy-paste this entire prompt into your OpenClaw AI agent
 
 ---
@@ -510,6 +511,7 @@ YOUR PLATFORM WILL MAINTAIN ITSELF COMPLETELY AUTONOMOUSLY! ✨
 4. **Hit Enter and watch it execute**
 
 The agent will:
+
 - Build Docker image
 - Deploy to Render.com (FREE)
 - Create autonomous payment system
@@ -518,4 +520,3 @@ The agent will:
 - Go fully live on internet
 
 **Result**: Your platform will pay all bills and maintain itself forever. Zero manual intervention needed.
-

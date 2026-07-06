@@ -9,22 +9,22 @@ const { encodeCursor, decodeCursor } = require('../lib/cursor');
 
 module.exports = async (req, res) => {
   // CORS headers - allow pvabazaar.org
-  const allowed = (process.env.ALLOWED_ORIGIN || "https://pvabazaar.org,https://www.pvabazaar.org")
-    .split(",")
-    .map(s => s.trim())
+  const allowed = (process.env.ALLOWED_ORIGIN || 'https://pvabazaar.org,https://www.pvabazaar.org')
+    .split(',')
+    .map((s) => s.trim())
     .filter(Boolean);
 
   const origin = req.headers.origin;
   if (origin && allowed.includes(origin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
-    res.setHeader("Vary", "Origin");
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin');
   }
-  res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Admin-Code");
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Admin-Code');
   res.setHeader('Content-Type', 'application/json');
 
   // Handle preflight
-  if (req.method === "OPTIONS") {
+  if (req.method === 'OPTIONS') {
     return res.status(204).end();
   }
 
@@ -65,7 +65,9 @@ module.exports = async (req, res) => {
       // Projection: avoid huge text payloads in list
       const projection = q ? { score: { $meta: 'textScore' } } : {};
 
-      let query = ArchiveEntry.find(filter, projection).sort(sortOrder).limit(limit + 1);
+      let query = ArchiveEntry.find(filter, projection)
+        .sort(sortOrder)
+        .limit(limit + 1);
       if (q) query = query.sort({ score: { $meta: 'textScore' }, ...sortOrder });
       const docs = await query.lean();
 
@@ -84,7 +86,11 @@ module.exports = async (req, res) => {
       // Parse JSON body (Vercel passes req.body as string sometimes)
       let body = req.body;
       if (typeof body === 'string') {
-        try { body = JSON.parse(body); } catch { body = {}; }
+        try {
+          body = JSON.parse(body);
+        } catch {
+          body = {};
+        }
       }
       const payload = normalizeArchiveInput(body);
       const entry = new ArchiveEntry(payload);

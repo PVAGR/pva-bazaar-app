@@ -72,23 +72,26 @@ export default function BountyHunterTab() {
 
   const PER_PAGE = 20;
 
-  const loadBounties = useCallback(async (pg = 1, statusF = filterStatus, platformF = filterPlatform) => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams({ page: pg, limit: PER_PAGE });
-      if (statusF) params.set('status', statusF);
-      if (platformF) params.set('platform', platformF);
-      const data = await apiGet(`/bounties?${params}`);
-      if (data.ok) {
-        setBounties(data.bounties || []);
-        setTotal(data.total || 0);
+  const loadBounties = useCallback(
+    async (pg = 1, statusF = filterStatus, platformF = filterPlatform) => {
+      setLoading(true);
+      try {
+        const params = new URLSearchParams({ page: pg, limit: PER_PAGE });
+        if (statusF) params.set('status', statusF);
+        if (platformF) params.set('platform', platformF);
+        const data = await apiGet(`/bounties?${params}`);
+        if (data.ok) {
+          setBounties(data.bounties || []);
+          setTotal(data.total || 0);
+        }
+      } catch (err) {
+        logger.error('Failed to load bounties', err);
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      logger.error('Failed to load bounties', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [filterStatus, filterPlatform]);
+    },
+    [filterStatus, filterPlatform],
+  );
 
   const loadStats = useCallback(async () => {
     try {
@@ -201,13 +204,15 @@ export default function BountyHunterTab() {
       if (err?.code === 4902) {
         await window.ethereum.request({
           method: 'wallet_addEthereumChain',
-          params: [{
-            chainId: BASE_CHAIN_ID_HEX,
-            chainName: 'Base Mainnet',
-            nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
-            rpcUrls: ['https://mainnet.base.org'],
-            blockExplorerUrls: ['https://basescan.org'],
-          }],
+          params: [
+            {
+              chainId: BASE_CHAIN_ID_HEX,
+              chainName: 'Base Mainnet',
+              nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+              rpcUrls: ['https://mainnet.base.org'],
+              blockExplorerUrls: ['https://basescan.org'],
+            },
+          ],
         });
         const chainId = await window.ethereum.request({ method: 'eth_chainId' });
         setWallet((w) => ({ ...w, chainId: String(chainId || '') }));
@@ -355,11 +360,13 @@ export default function BountyHunterTab() {
       const value = toWeiHex(payoutNativeAmount);
       const txHash = await window.ethereum.request({
         method: 'eth_sendTransaction',
-        params: [{
-          from: wallet.address,
-          to: walletAddress,
-          value,
-        }],
+        params: [
+          {
+            from: wallet.address,
+            to: walletAddress,
+            value,
+          },
+        ],
       });
 
       const data = await apiPost(`/bounties/${selected._id}/payout`, {
@@ -385,10 +392,12 @@ export default function BountyHunterTab() {
   const totalPages = Math.ceil(total / PER_PAGE);
   const displayBounties = rankedMode
     ? [...bounties].sort((a, b) => {
-      const scoreA = (Array.isArray(a.keywords) ? a.keywords.length : 0) * 2 + (a.rewardRaw || 0) / 25;
-      const scoreB = (Array.isArray(b.keywords) ? b.keywords.length : 0) * 2 + (b.rewardRaw || 0) / 25;
-      return scoreB - scoreA;
-    })
+        const scoreA =
+          (Array.isArray(a.keywords) ? a.keywords.length : 0) * 2 + (a.rewardRaw || 0) / 25;
+        const scoreB =
+          (Array.isArray(b.keywords) ? b.keywords.length : 0) * 2 + (b.rewardRaw || 0) / 25;
+        return scoreB - scoreA;
+      })
     : bounties;
 
   const handleDispatchTop = async () => {
@@ -448,14 +457,23 @@ export default function BountyHunterTab() {
       <div className="bh-header">
         <div className="bh-header-left">
           <h2 className="bh-title">🤖 Bounty Hunter</h2>
-          <p className="bh-subtitle">AI-powered crypto task discovery · HITL review · 24/7 scanning</p>
+          <p className="bh-subtitle">
+            AI-powered crypto task discovery · HITL review · 24/7 scanning
+          </p>
         </div>
         <button
           className={`bh-scan-btn ${scanning ? 'scanning' : ''}`}
           onClick={handleScan}
           disabled={scanning}
         >
-          {scanning ? <><LoadingDots />Scanning…</> : '⚡ Scan Now'}
+          {scanning ? (
+            <>
+              <LoadingDots />
+              Scanning…
+            </>
+          ) : (
+            '⚡ Scan Now'
+          )}
         </button>
       </div>
 
@@ -465,7 +483,11 @@ export default function BountyHunterTab() {
           onClick={connectWallet}
           disabled={wallet.connecting}
         >
-          {wallet.address ? 'Wallet connected' : wallet.connecting ? 'Connecting…' : 'Connect MetaMask'}
+          {wallet.address
+            ? 'Wallet connected'
+            : wallet.connecting
+              ? 'Connecting…'
+              : 'Connect MetaMask'}
         </button>
 
         {wallet.address && !isBaseChain(wallet.chainId) && (
@@ -476,7 +498,7 @@ export default function BountyHunterTab() {
 
         <button
           className={`bh-rank-btn ${rankedMode ? 'active' : ''}`}
-          onClick={() => setRankedMode(v => !v)}
+          onClick={() => setRankedMode((v) => !v)}
         >
           {rankedMode ? '🏅 Ranked View On' : '🏅 Rank Best'}
         </button>
@@ -484,7 +506,7 @@ export default function BountyHunterTab() {
         <input
           className="bh-wallet-input"
           value={walletAddress}
-          onChange={e => setWalletAddress(e.target.value)}
+          onChange={(e) => setWalletAddress(e.target.value)}
           placeholder="Base wallet address for OpenClaw context"
         />
 
@@ -494,7 +516,7 @@ export default function BountyHunterTab() {
           min="0"
           step="1"
           value={minRewardRaw}
-          onChange={e => setMinRewardRaw(e.target.value)}
+          onChange={(e) => setMinRewardRaw(e.target.value)}
           placeholder="Min reward"
           title="Minimum numeric reward to include in dispatch"
         />
@@ -508,17 +530,14 @@ export default function BountyHunterTab() {
           {moneyRunning ? 'Running…' : '💸 Money Run'}
         </button>
 
-        <button
-          className="bh-openclaw-btn"
-          onClick={handleDispatchTop}
-          disabled={dispatchingTop}
-        >
+        <button className="bh-openclaw-btn" onClick={handleDispatchTop} disabled={dispatchingTop}>
           {dispatchingTop ? 'Dispatching…' : '🤖 Send Top 10 to OpenClaw'}
         </button>
 
         {wallet.address && (
           <span className="bh-wallet-chip">
-            {wallet.address.slice(0, 6)}...{wallet.address.slice(-4)} {wallet.chainId ? `· ${isBaseChain(wallet.chainId) ? 'Base' : wallet.chainId}` : ''}
+            {wallet.address.slice(0, 6)}...{wallet.address.slice(-4)}{' '}
+            {wallet.chainId ? `· ${isBaseChain(wallet.chainId) ? 'Base' : wallet.chainId}` : ''}
           </span>
         )}
       </div>
@@ -546,10 +565,12 @@ export default function BountyHunterTab() {
         <div className={`bh-scan-result ${scanResult.error ? 'error' : 'ok'}`}>
           {scanResult.error
             ? `❌ Scan error: ${scanResult.error}`
-            : `✅ Scan complete: ${scanResult.discovered} new bounties discovered, ${scanResult.skipped} already known`
-          }
+            : `✅ Scan complete: ${scanResult.discovered} new bounties discovered, ${scanResult.skipped} already known`}
           {scanResult.errors?.length > 0 && (
-            <span className="bh-scan-warnings"> · {scanResult.errors.length} platform warnings</span>
+            <span className="bh-scan-warnings">
+              {' '}
+              · {scanResult.errors.length} platform warnings
+            </span>
           )}
         </div>
       )}
@@ -557,20 +578,23 @@ export default function BountyHunterTab() {
       {/* ── Stats row ──────────────────────────────────────────── */}
       {stats && (
         <div className="bh-stats">
-          {Object.entries(STATUS_LABELS).map(([key, label]) => (
-            stats.stats[key] > 0 && (
-              <button
-                key={key}
-                className={`bh-stat-chip ${filterStatus === key ? 'active' : ''}`}
-                onClick={() => setFilterStatus(filterStatus === key ? '' : key)}
-              >
-                <span className={`bh-stat-dot ${STATUS_CLASS[key]}`} />
-                {label} <strong>{stats.stats[key]}</strong>
-              </button>
-            )
-          ))}
+          {Object.entries(STATUS_LABELS).map(
+            ([key, label]) =>
+              stats.stats[key] > 0 && (
+                <button
+                  key={key}
+                  className={`bh-stat-chip ${filterStatus === key ? 'active' : ''}`}
+                  onClick={() => setFilterStatus(filterStatus === key ? '' : key)}
+                >
+                  <span className={`bh-stat-dot ${STATUS_CLASS[key]}`} />
+                  {label} <strong>{stats.stats[key]}</strong>
+                </button>
+              ),
+          )}
           {stats.wonCount > 0 && (
-            <div className="bh-stat-earned">💰 Total earned: <strong>{stats.totalEarned.toFixed(2)}</strong></div>
+            <div className="bh-stat-earned">
+              💰 Total earned: <strong>{stats.totalEarned.toFixed(2)}</strong>
+            </div>
           )}
         </div>
       )}
@@ -580,17 +604,25 @@ export default function BountyHunterTab() {
         <select
           className="bh-select"
           value={filterStatus}
-          onChange={e => { setFilterStatus(e.target.value); setPage(1); }}
+          onChange={(e) => {
+            setFilterStatus(e.target.value);
+            setPage(1);
+          }}
         >
           <option value="">All statuses</option>
           {Object.entries(STATUS_LABELS).map(([k, v]) => (
-            <option key={k} value={k}>{v}</option>
+            <option key={k} value={k}>
+              {v}
+            </option>
           ))}
         </select>
         <select
           className="bh-select"
           value={filterPlatform}
-          onChange={e => { setFilterPlatform(e.target.value); setPage(1); }}
+          onChange={(e) => {
+            setFilterPlatform(e.target.value);
+            setPage(1);
+          }}
         >
           <option value="">All platforms</option>
           <option value="dework">Dework</option>
@@ -599,7 +631,14 @@ export default function BountyHunterTab() {
           <option value="manual">Manual</option>
         </select>
         {(filterStatus || filterPlatform) && (
-          <button className="bh-clear-btn" onClick={() => { setFilterStatus(''); setFilterPlatform(''); setPage(1); }}>
+          <button
+            className="bh-clear-btn"
+            onClick={() => {
+              setFilterStatus('');
+              setFilterPlatform('');
+              setPage(1);
+            }}
+          >
             ✕ Clear filters
           </button>
         )}
@@ -608,10 +647,14 @@ export default function BountyHunterTab() {
 
       {/* ── Bounty list ────────────────────────────────────────── */}
       {loading ? (
-        <div className="bh-loading"><LoadingDots /> Loading bounties…</div>
+        <div className="bh-loading">
+          <LoadingDots /> Loading bounties…
+        </div>
       ) : bounties.length === 0 ? (
         <div className="bh-empty">
-          <p>No bounties found. Click <strong>⚡ Scan Now</strong> to discover opportunities.</p>
+          <p>
+            No bounties found. Click <strong>⚡ Scan Now</strong> to discover opportunities.
+          </p>
           <p className="bh-empty-note">
             The scanner checks Dework, GitHub, and more for tasks matching your keyword profile.
             Results are stored here for your review.
@@ -619,14 +662,16 @@ export default function BountyHunterTab() {
         </div>
       ) : (
         <div className="bh-list">
-          {displayBounties.map(b => (
+          {displayBounties.map((b) => (
             <div
               key={b._id}
               className={`bh-card ${STATUS_CLASS[b.status]}`}
               onClick={() => openDetail(b)}
             >
               <div className="bh-card-header">
-                <span className={`bh-badge ${STATUS_CLASS[b.status]}`}>{STATUS_LABELS[b.status]}</span>
+                <span className={`bh-badge ${STATUS_CLASS[b.status]}`}>
+                  {STATUS_LABELS[b.status]}
+                </span>
                 <span className="bh-platform">{b.platform}</span>
                 {b.rewardAmount && <span className="bh-reward">💎 {b.rewardAmount}</span>}
                 <span className="bh-time">{timeAgo(b.createdAt)}</span>
@@ -634,14 +679,14 @@ export default function BountyHunterTab() {
               <div className="bh-card-title">{b.title}</div>
               {b.keywords?.length > 0 && (
                 <div className="bh-keywords">
-                  {b.keywords.slice(0, 6).map(kw => (
-                    <span key={kw} className="bh-kw">{kw}</span>
+                  {b.keywords.slice(0, 6).map((kw) => (
+                    <span key={kw} className="bh-kw">
+                      {kw}
+                    </span>
                   ))}
                 </div>
               )}
-              {b.draftContent && (
-                <div className="bh-draft-indicator">✍️ AI draft ready</div>
-              )}
+              {b.draftContent && <div className="bh-draft-indicator">✍️ AI draft ready</div>}
             </div>
           ))}
         </div>
@@ -650,29 +695,49 @@ export default function BountyHunterTab() {
       {/* ── Pagination ─────────────────────────────────────────── */}
       {totalPages > 1 && (
         <div className="bh-pagination">
-          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)}>‹ Prev</button>
-          <span>Page {page} / {totalPages}</span>
-          <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>Next ›</button>
+          <button disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
+            ‹ Prev
+          </button>
+          <span>
+            Page {page} / {totalPages}
+          </span>
+          <button disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>
+            Next ›
+          </button>
         </div>
       )}
 
       {/* ── Detail / Review Modal ──────────────────────────────── */}
       {selected && (
-        <div className="bh-modal-backdrop" onClick={e => e.target === e.currentTarget && closeDetail()}>
+        <div
+          className="bh-modal-backdrop"
+          onClick={(e) => e.target === e.currentTarget && closeDetail()}
+        >
           <div className="bh-modal">
             <div className="bh-modal-header">
               <div>
-                <span className={`bh-badge ${STATUS_CLASS[selected.status]}`}>{STATUS_LABELS[selected.status]}</span>
+                <span className={`bh-badge ${STATUS_CLASS[selected.status]}`}>
+                  {STATUS_LABELS[selected.status]}
+                </span>
                 <span className="bh-platform bh-platform-lg">{selected.platform}</span>
-                {selected.rewardAmount && <span className="bh-reward">&nbsp;💎 {selected.rewardAmount}</span>}
+                {selected.rewardAmount && (
+                  <span className="bh-reward">&nbsp;💎 {selected.rewardAmount}</span>
+                )}
               </div>
-              <button className="bh-modal-close" onClick={closeDetail}>✕</button>
+              <button className="bh-modal-close" onClick={closeDetail}>
+                ✕
+              </button>
             </div>
 
             <h3 className="bh-modal-title">{selected.title}</h3>
 
             {selected.platformUrl && (
-              <a className="bh-ext-link" href={selected.platformUrl} target="_blank" rel="noopener noreferrer">
+              <a
+                className="bh-ext-link"
+                href={selected.platformUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 🔗 View on {selected.platform}
               </a>
             )}
@@ -686,7 +751,11 @@ export default function BountyHunterTab() {
 
             {selected.keywords?.length > 0 && (
               <div className="bh-keywords bh-keywords-lg">
-                {selected.keywords.map(kw => <span key={kw} className="bh-kw">{kw}</span>)}
+                {selected.keywords.map((kw) => (
+                  <span key={kw} className="bh-kw">
+                    {kw}
+                  </span>
+                ))}
               </div>
             )}
 
@@ -707,14 +776,15 @@ export default function BountyHunterTab() {
                 <textarea
                   className="bh-draft-editor"
                   value={editingDraft}
-                  onChange={e => setEditingDraft(e.target.value)}
+                  onChange={(e) => setEditingDraft(e.target.value)}
                   rows={14}
                   placeholder="AI-generated draft will appear here. Edit before submitting."
                 />
               ) : (
                 <div className="bh-draft-empty">
                   No draft yet. Click <strong>↻ Regen</strong> to generate one with AI.
-                  <br /><small>Requires OPENAI_API_KEY in backend env.</small>
+                  <br />
+                  <small>Requires OPENAI_API_KEY in backend env.</small>
                 </div>
               )}
             </div>
@@ -725,7 +795,7 @@ export default function BountyHunterTab() {
               <input
                 className="bh-notes-input"
                 value={reviewNotes}
-                onChange={e => setReviewNotes(e.target.value)}
+                onChange={(e) => setReviewNotes(e.target.value)}
                 placeholder="Optional notes for this bounty…"
               />
             </div>
@@ -770,7 +840,7 @@ export default function BountyHunterTab() {
                   <input
                     className="bh-notes-input"
                     value={walletAddress}
-                    onChange={e => setWalletAddress(e.target.value)}
+                    onChange={(e) => setWalletAddress(e.target.value)}
                     placeholder="Recipient wallet (0x...)"
                   />
                 </div>
@@ -778,7 +848,7 @@ export default function BountyHunterTab() {
                   <input
                     className="bh-notes-input bh-amount-input"
                     value={payoutNativeAmount}
-                    onChange={e => setPayoutNativeAmount(e.target.value)}
+                    onChange={(e) => setPayoutNativeAmount(e.target.value)}
                     placeholder="Amount in ETH on Base (e.g. 0.01)"
                   />
                   <button
@@ -794,7 +864,7 @@ export default function BountyHunterTab() {
                   <input
                     className="bh-notes-input"
                     value={payoutTxHash}
-                    onChange={e => setPayoutTxHash(e.target.value)}
+                    onChange={(e) => setPayoutTxHash(e.target.value)}
                     placeholder="Transaction hash (optional)"
                   />
                   <button
@@ -807,17 +877,24 @@ export default function BountyHunterTab() {
                 </div>
                 {selected.payoutTxHash && (
                   <div className="bh-tx">
-                    TX: <a
+                    TX:{' '}
+                    <a
                       href={`https://basescan.org/tx/${selected.payoutTxHash}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                    >{selected.payoutTxHash.slice(0, 18)}…</a>
+                    >
+                      {selected.payoutTxHash.slice(0, 18)}…
+                    </a>
                   </div>
                 )}
               </div>
             )}
 
-            {actionLoading && <div className="bh-action-loading"><LoadingDots /> Working…</div>}
+            {actionLoading && (
+              <div className="bh-action-loading">
+                <LoadingDots /> Working…
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -58,7 +58,11 @@ router.post('/', requireAuth, async (req, res) => {
  */
 router.get('/:articleId', async (req, res) => {
   try {
-    const article = await Article.findByIdAndUpdate(req.params.articleId, { $inc: { views: 1 } }, { new: true }).populate('author', 'name avatar');
+    const article = await Article.findByIdAndUpdate(
+      req.params.articleId,
+      { $inc: { views: 1 } },
+      { new: true },
+    ).populate('author', 'name avatar');
     if (!article) return res.status(404).json({ error: 'Article not found' });
     res.json(article);
   } catch (error) {

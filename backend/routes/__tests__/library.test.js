@@ -42,9 +42,7 @@ describe('Library Module API', () => {
     });
 
     it('should filter by kind=articles', async () => {
-      const response = await request(app)
-        .get('/api/library?kind=articles&limit=1')
-        .expect(200);
+      const response = await request(app).get('/api/library?kind=articles&limit=1').expect(200);
 
       expect(Array.isArray(response.body)).toBe(true);
       if (response.body.length > 0) {
@@ -53,9 +51,7 @@ describe('Library Module API', () => {
     });
 
     it('should respect limit parameter', async () => {
-      const response = await request(app)
-        .get('/api/library?kind=articles&limit=2')
-        .expect(200);
+      const response = await request(app).get('/api/library?kind=articles&limit=2').expect(200);
 
       expect(response.body.length).toBeLessThanOrEqual(2);
     });
@@ -79,7 +75,7 @@ describe('Library Module API', () => {
         .send({
           title: 'Test Article',
           content: 'Test content',
-          source: 'git-branch'
+          source: 'git-branch',
         })
         .expect(200 || 401 || 403); // Depends on auth implementation
 
@@ -89,9 +85,7 @@ describe('Library Module API', () => {
 
   describe('GET /api/library/pending - List Pending Articles', () => {
     it('should reject without authentication token (401)', async () => {
-      const response = await request(app)
-        .get('/api/library/pending')
-        .expect(401);
+      const response = await request(app).get('/api/library/pending').expect(401);
 
       expect(response.body).toHaveProperty('status');
     });
@@ -99,33 +93,25 @@ describe('Library Module API', () => {
 
   describe('GET /api/library/:id - Get Article by ID or Slug', () => {
     it('should return 404 for invalid MongoDB ObjectId', async () => {
-      const response = await request(app)
-        .get('/api/library/invalid-id-12345')
-        .expect(404);
+      const response = await request(app).get('/api/library/invalid-id-12345').expect(404);
 
       expect(response.body).toHaveProperty('status', 'error');
     });
 
     it('should return 404 for invalid hex string (not valid ObjectId)', async () => {
-      const response = await request(app)
-        .get('/api/library/xxxxxxxxxxxxxxxxxxxxxxxx')
-        .expect(404);
+      const response = await request(app).get('/api/library/xxxxxxxxxxxxxxxxxxxxxxxx').expect(404);
 
       expect(response.body).toHaveProperty('status', 'error');
     });
 
     it('should return 404 for path traversal attempts', async () => {
-      const response = await request(app)
-        .get('/api/library/../../etc/passwd')
-        .expect(404);
+      const response = await request(app).get('/api/library/../../etc/passwd').expect(404);
 
       expect(response.body).toHaveProperty('status', 'error');
     });
 
     it('should return 404 for special characters that break ObjectId.isValid', async () => {
-      const response = await request(app)
-        .get('/api/library/"; DROP TABLE users; --')
-        .expect(404);
+      const response = await request(app).get('/api/library/"; DROP TABLE users; --').expect(404);
 
       expect(response.body).toHaveProperty('status', 'error');
     });
@@ -139,9 +125,7 @@ describe('Library Module API', () => {
     });
 
     it('should return 404 for empty string', async () => {
-      const response = await request(app)
-        .get('/api/library/')
-        .expect(404); // Depends on routing
+      const response = await request(app).get('/api/library/').expect(404); // Depends on routing
 
       if (response.status === 404) {
         expect(response.body).toHaveProperty('status', 'error');
@@ -178,12 +162,11 @@ describe('Library Module API', () => {
         '"; DROP TABLE; --',
         '${malicious}',
         'null',
-        'undefined'
+        'undefined',
       ];
 
       for (const id of invalidIds) {
-        const response = await request(app)
-          .get(`/api/library/${id}`);
+        const response = await request(app).get(`/api/library/${id}`);
 
         // Should be 404, not 500
         expect([200, 404]).toContain(response.status);
@@ -247,9 +230,11 @@ describe('Library Module API', () => {
 /**
  * Run tests:
  * npm test -- backend/routes/__tests__/library.test.js
- * 
+ *
  * Or with Jest directly:
  * jest backend/routes/__tests__/library.test.js --testEnvironment=node
  */
 
-module.exports = { /* Export for test runner */ };
+module.exports = {
+  /* Export for test runner */
+};

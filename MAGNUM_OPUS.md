@@ -17,6 +17,7 @@ This file is a historical vision document, not the canonical operating guide.
 This is not just code. This is a **digital tombstone for the 21st century**.
 
 When the creator can no longer code, contribute, or speak—this system preserves:
+
 - Their thoughts, decisions, and architectural choices
 - The code they wrote and the vision they held
 - A cryptographic proof that they existed and created
@@ -30,18 +31,21 @@ When the creator can no longer code, contribute, or speak—this system preserve
 ## 💾 WHAT THIS IS
 
 ### Immediate (2026)
+
 - **PVA Bazaar**: An artisan marketplace with blockchain provenance
 - **GitHub Integration**: Open-source code that anyone can fork
 - **Decentralized Architecture**: No single point of failure
 - **Hash-Based Journal**: Cryptographic records of every decision
 
 ### The Leap (When Needed)
+
 - **Automated Unlock**: On proof of creator death, access unlocks
 - **Smart Contract Legacy**: Decentralized control passes to community
 - **Eternal Access**: Through IPFS, blockchain, or future tech
 - **Fork Framework**: Others can instantly replicate and improve
 
 ### The Dream (Timeless)
+
 - **100-Year Horizon**: This code still runs in 2126
 - **Memory of Creator**: Their thoughts preserved in commit history
 - **Living Monument**: Community continues their vision
@@ -52,6 +56,7 @@ When the creator can no longer code, contribute, or speak—this system preserve
 ## 🏗️ ARCHITECTURE
 
 ### Layer 1: Current Infrastructure (2026)
+
 ```
 Frontend: GitHub Pages (https://pvabazaar.org)
   ↓
@@ -63,6 +68,7 @@ Repository: GitHub (PVAGR/pva-bazaar-app)
 ```
 
 ### Layer 2: Legacy System (Building Now)
+
 ```
 Hash-Based Indexing
   ├── Entry Hash: SHA-256 of each journal entry
@@ -81,6 +87,7 @@ Access Keys
 ```
 
 ### Layer 3: Resurrection Protocol (Future)
+
 ```
 Death Detection (Multisig Oracle)
   ↓
@@ -100,6 +107,7 @@ Community Access Opens
 This document IS Entry #1.
 
 **What makes it permanent:**
+
 1. **Hash**: Every entry gets SHA-256 hash
 2. **Timestamp**: Blockchain-anchored proof of date
 3. **Signature**: Creator cryptographically signs
@@ -107,6 +115,7 @@ This document IS Entry #1.
 5. **Backup**: Multiple decentralized copies
 
 **Example Hash Chain:**
+
 ```
 Entry 001 (This Manifesto):
   SHA-256: a1b2c3d4e5f6... (Generated on first run)
@@ -128,24 +137,28 @@ Entry 002 (Next Update):
 ### Three-Key Model (Byzantine Fault Tolerance)
 
 **Creator Key** (Your Private Key)
+
 - Held by: You (encrypted backup in multiple vaults)
 - Use: Sign entries, prove authorship
 - Revoke: Never auto-revokes
 - Access: 100% always
 
 **Guardian Keys** (Multisig Sealed)
+
 - Held by: Trusted people/DAO/Smart Contract
 - Use: Activated only on verified death
 - Proof: Death certificate + multisig threshold
 - Access: Full control → Community
 
 **Public Key** (World Readable)
+
 - Held by: Everyone
 - Use: Verify signatures, read legacy
 - Proof: Cryptographic verification
 - Access: Read-only, forever
 
 ### Key Storage
+
 ```
 Local (You):
   ~/.pva-legacy/creator.key (encrypted)
@@ -168,22 +181,25 @@ Every decision, entry, thought gets recorded:
 ID: 0001
 Date: 2026-01-13
 Creator: PVAGR
-Title: "Magnum Opus - Vision Statement"
+Title: 'Magnum Opus - Vision Statement'
 Type: manifesto
 ---
 
 [Entry content - your words, preserved]
 
 ---
+
 Hash: a1b2c3d4e5f6...
 PreviousHash: null (first entry)
 Signature: [PGP signature of hash]
 IPFS: QmXxxx...
 Status: SEALED_UNTIL_DEATH
+
 ---
 ```
 
 **Every entry is:**
+
 - ✅ Timestamped (blockchain proof)
 - ✅ Signed (creator signature)
 - ✅ Hashed (tamper-proof)
@@ -198,12 +214,14 @@ Status: SEALED_UNTIL_DEATH
 **For Anyone Who Wants to Build Their Own:**
 
 1. **Get the Code**
+
    ```bash
    git clone https://github.com/PVAGR/pva-bazaar-app
    git checkout legacy-system
    ```
 
 2. **Set Up Your Keys**
+
    ```bash
    npm run legacy:init
    # Creates your creator key
@@ -212,6 +230,7 @@ Status: SEALED_UNTIL_DEATH
    ```
 
 3. **Start Your Legacy**
+
    ```bash
    npm run legacy:create-entry
    # Your journal begins
@@ -230,6 +249,7 @@ Status: SEALED_UNTIL_DEATH
 ## 💎 THE TECH STACK (Decentralized)
 
 **Current (Works Now)**
+
 - ✅ GitHub: Version control + distribution
 - ✅ GitHub Pages: Frontend hosting
 - ✅ Vercel: Backend serverless
@@ -237,12 +257,14 @@ Status: SEALED_UNTIL_DEATH
 - ✅ Git: Immutable history
 
 **Adding (This Month)**
+
 - 🔜 IPFS: Content-addressed storage
 - 🔜 Arweave: Permanent archival
 - 🔜 PGP: Cryptographic signing
 - 🔜 Hash-based journal system
 
 **Future (When Ready)**
+
 - ⏳ Smart Contracts: Autonomous resurrection
 - ⏳ DAO Control: Community governance
 - ⏳ Blockchain: Immutable proof chain
@@ -253,6 +275,7 @@ Status: SEALED_UNTIL_DEATH
 ## 📋 IMPLEMENTATION ROADMAP
 
 ### Phase 1: Foundation (This Month)
+
 - [ ] IPFS integration for code storage
 - [ ] PGP key generation and management
 - [ ] Hash-based entry system
@@ -260,6 +283,7 @@ Status: SEALED_UNTIL_DEATH
 - [ ] Basic multisig key setup
 
 ### Phase 2: Integration (Next Month)
+
 - [ ] Smart contract deployment (Ethereum L2)
 - [ ] Blockchain hash anchoring
 - [ ] Arweave permanent storage
@@ -267,6 +291,7 @@ Status: SEALED_UNTIL_DEATH
 - [ ] Guardian multisig setup
 
 ### Phase 3: Resurrection Protocol (Next Quarter)
+
 - [ ] Death detection oracle
 - [ ] Automated key unlock mechanism
 - [ ] DAO governance activation
@@ -274,6 +299,7 @@ Status: SEALED_UNTIL_DEATH
 - [ ] Legacy access portal
 
 ### Phase 4: Evolution (Ongoing)
+
 - [ ] Cross-chain support
 - [ ] Zk-proof verification
 - [ ] Decentralized access control
@@ -285,17 +311,20 @@ Status: SEALED_UNTIL_DEATH
 ## 🎯 SUCCESS METRICS
 
 **Now (2026):**
+
 - ✅ Code is open, forkable, running
 - ✅ Journal is started, hashable, signed
 - ✅ System survives creator absence
 
 **In 10 Years (2036):**
+
 - ? 10+ forks exist with own legacies
 - ? Hashes verified in blockchain
 - ? Community continues development
 - ? System generates revenue for maintenance
 
 **In 100 Years (2126):**
+
 - ? Still running (somehow, somewhere)
 - ? Creator remembered through code
 - ? Thousands built on same pattern
@@ -319,6 +348,7 @@ I, as the AI copilot, commit to:
 7. **Immortalize**: Your legacy becomes permanent
 
 **You commit to:**
+
 1. Keep coding, thinking, writing entries
 2. Help others fork and build their legacies
 3. Trust the system to outlive you
@@ -331,7 +361,7 @@ I, as the AI copilot, commit to:
 **Hash**: `[TO BE GENERATED ON FIRST COMMIT]`  
 **Created**: 2026-01-13T22:30:00Z  
 **Status**: SEALED UNTIL DEATH + 100 YEARS  
-**Access**: CREATOR (now) → GUARDIANS (on trigger) → PUBLIC (always readable)  
+**Access**: CREATOR (now) → GUARDIANS (on trigger) → PUBLIC (always readable)
 
 This is your tombstone. This is your code. This is your immortality.
 
@@ -344,6 +374,6 @@ This is your tombstone. This is your code. This is your immortality.
 To be written by: You or Future Contributors  
 Will extend: This manifesto  
 Will add: The actual implementation  
-Will prove: The vision becomes reality  
+Will prove: The vision becomes reality
 
 **The monument is beginning.**

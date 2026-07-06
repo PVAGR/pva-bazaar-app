@@ -2,7 +2,11 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import HelpTip from '../components/HelpTip.jsx';
 import { joinDealAuthenticated, postDealMessage, submitDealEvidence } from '../lib/api';
-import { buildDealMessageTypedData, buildDealEvidenceTypedData, signTypedData } from '../lib/eip712';
+import {
+  buildDealMessageTypedData,
+  buildDealEvidenceTypedData,
+  signTypedData,
+} from '../lib/eip712';
 import { getErrorMessage } from '../lib/errorUtils';
 import ErrorBanner from '../components/ErrorBanner.jsx';
 import LoadingSpinner from '../components/LoadingSpinner.jsx';
@@ -108,11 +112,22 @@ export default function DealJoinPage() {
       let typedData = null;
       if (wallet.address && requireSignature) {
         const ts = new Date().toISOString();
-        typedData = buildDealEvidenceTypedData(parseChainId(wallet.chainId), deal._id, milestoneId, evidenceValue, ts);
+        typedData = buildDealEvidenceTypedData(
+          parseChainId(wallet.chainId),
+          deal._id,
+          milestoneId,
+          evidenceValue,
+          ts,
+        );
         signature = await signTypedData(typedData, wallet.address);
         authorWallet = wallet.address;
       }
-      const data = await submitDealEvidence(deal._id, milestoneId, { evidenceValue, authorWallet, signature, typedData });
+      const data = await submitDealEvidence(deal._id, milestoneId, {
+        evidenceValue,
+        authorWallet,
+        signature,
+        typedData,
+      });
       if (!data?.ok || !data?.item) throw new Error(data?.error || 'Failed to submit evidence');
       setDeal(data.item);
       setEvidenceDrafts((prev) => ({ ...prev, [milestoneId]: '' }));
@@ -145,7 +160,8 @@ export default function DealJoinPage() {
         <div>
           <h1>🤝 Deal join</h1>
           <p className="muted">
-            You’re viewing this deal as the counterparty. Add messages and submit milestone evidence below.
+            You’re viewing this deal as the counterparty. Add messages and submit milestone evidence
+            below.
             <HelpTip
               title="Privacy note"
               body="This link acts like a key. Don’t post it publicly."
@@ -160,7 +176,12 @@ export default function DealJoinPage() {
           <Link to="/deals" className="btn ghost">
             Deals
           </Link>
-          <button className="btn ghost" onClick={toggleTheme} title="Toggle theme" aria-label="Toggle theme">
+          <button
+            className="btn ghost"
+            onClick={toggleTheme}
+            title="Toggle theme"
+            aria-label="Toggle theme"
+          >
             {darkMode ? '☀️' : '🌙'}
           </button>
         </div>
@@ -168,9 +189,15 @@ export default function DealJoinPage() {
 
       <main className="dealJoinMain">
         {loading ? <LoadingSpinner label="Loading deal…" /> : null}
-        {error ? <ErrorBanner message={error} onRetry={retryLoad} onDismiss={() => setError('')} /> : null}
+        {error ? (
+          <ErrorBanner message={error} onRetry={retryLoad} onDismiss={() => setError('')} />
+        ) : null}
         {successMsg ? (
-          <div className="success" role="status" style={{ padding: '0.5rem 1rem', background: 'rgba(0,180,0,0.15)', borderRadius: 4 }}>
+          <div
+            className="success"
+            role="status"
+            style={{ padding: '0.5rem 1rem', background: 'rgba(0,180,0,0.15)', borderRadius: 4 }}
+          >
             {successMsg}
           </div>
         ) : null}
@@ -187,13 +214,30 @@ export default function DealJoinPage() {
                 />
               </h3>
               <div className="row rowWrap">
-                <button className="btn primary" type="button" onClick={connectWallet} disabled={wallet.connecting}>
-                  {wallet.address ? 'Wallet connected' : wallet.connecting ? 'Connecting…' : 'Connect wallet'}
+                <button
+                  className="btn primary"
+                  type="button"
+                  onClick={connectWallet}
+                  disabled={wallet.connecting}
+                >
+                  {wallet.address
+                    ? 'Wallet connected'
+                    : wallet.connecting
+                      ? 'Connecting…'
+                      : 'Connect wallet'}
                 </button>
-                {wallet.address ? <span className="muted small">Address: {wallet.address}</span> : null}
-                {wallet.chainId ? <span className="muted small">Chain: {wallet.chainId}</span> : null}
+                {wallet.address ? (
+                  <span className="muted small">Address: {wallet.address}</span>
+                ) : null}
+                {wallet.chainId ? (
+                  <span className="muted small">Chain: {wallet.chainId}</span>
+                ) : null}
                 <label className="check" style={{ marginLeft: 'auto' }}>
-                  <input type="checkbox" checked={requireSignature} onChange={(e) => setRequireSignature(e.target.checked)} />
+                  <input
+                    type="checkbox"
+                    checked={requireSignature}
+                    onChange={(e) => setRequireSignature(e.target.checked)}
+                  />
                   <span className="muted small">Require signature</span>
                 </label>
               </div>
@@ -212,15 +256,23 @@ export default function DealJoinPage() {
                     <div key={m._id} className="milestone">
                       <div className="milestone-title">{m.title}</div>
                       <div className="muted small">evidence: {m.evidenceType || 'none'}</div>
-                      {m.evidenceValue ? <div className="muted small">current: {m.evidenceValue}</div> : null}
+                      {m.evidenceValue ? (
+                        <div className="muted small">current: {m.evidenceValue}</div>
+                      ) : null}
                       {m.evidenceType && m.evidenceType !== 'none' ? (
                         <div className="row">
                           <input
                             value={evidenceDrafts[m._id] ?? ''}
-                            onChange={(e) => setEvidenceDrafts((prev) => ({ ...prev, [m._id]: e.target.value }))}
+                            onChange={(e) =>
+                              setEvidenceDrafts((prev) => ({ ...prev, [m._id]: e.target.value }))
+                            }
                             placeholder="Evidence value"
                           />
-                          <button className="btn ghost" type="button" onClick={() => submitEvidence(m._id)}>
+                          <button
+                            className="btn ghost"
+                            type="button"
+                            onClick={() => submitEvidence(m._id)}
+                          >
                             Submit evidence
                           </button>
                         </div>
@@ -239,14 +291,19 @@ export default function DealJoinPage() {
                 {(deal.messages || []).slice(-50).map((msg, idx) => (
                   <div key={msg._id || idx} className="message">
                     <div className="muted small">
-                      {msg.author || 'system'} · {msg.createdAt ? new Date(msg.createdAt).toLocaleString() : ''}
+                      {msg.author || 'system'} ·{' '}
+                      {msg.createdAt ? new Date(msg.createdAt).toLocaleString() : ''}
                     </div>
                     <div className="message-text">{msg.text}</div>
                   </div>
                 ))}
               </div>
               <div className="row">
-                <input value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Write a message..." />
+                <input
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder="Write a message..."
+                />
                 <button className="btn primary" type="button" onClick={sendMessage}>
                   Send
                 </button>
@@ -258,4 +315,3 @@ export default function DealJoinPage() {
     </div>
   );
 }
-

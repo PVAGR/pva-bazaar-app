@@ -58,7 +58,9 @@ function normalizeItemInput(body = {}) {
     sku: String(body.sku || '').trim(),
     isUnique: body.isUnique !== undefined ? Boolean(body.isUnique) : true,
     bulkQuantity: toNumber(body.bulkQuantity, 0),
-    availabilityStatus: String(body.availabilityStatus || 'available').trim().toLowerCase(),
+    availabilityStatus: String(body.availabilityStatus || 'available')
+      .trim()
+      .toLowerCase(),
     dimensions: {
       length: toNumber(dimensions.length, 0),
       width: toNumber(dimensions.width, 0),
@@ -103,7 +105,13 @@ function toPublicItem(doc) {
   const media = doc.imageUrls || doc.media || [];
   const tags = doc.tags || doc.materials || [];
   const status = doc.status || 'published';
-  const priceCents = doc.priceCents || (doc.salePrice ? Math.round(Number(doc.salePrice) * 100) : (doc.price ? Math.round(Number(doc.price) * 100) : 0));
+  const priceCents =
+    doc.priceCents ||
+    (doc.salePrice
+      ? Math.round(Number(doc.salePrice) * 100)
+      : doc.price
+        ? Math.round(Number(doc.price) * 100)
+        : 0);
   const currency = doc.currency || 'USD';
   let slug = doc.slug;
   if (!slug && name) {
@@ -161,8 +169,10 @@ function toPublicItem(doc) {
     },
     chain: {
       network: doc?.provenance?.chain?.network || doc?.blockchainDetails?.network || '',
-      contractAddress: doc?.provenance?.chain?.contractAddress || doc?.blockchainDetails?.contractAddress || '',
-      tokenStandard: doc?.provenance?.chain?.tokenStandard || doc?.blockchainDetails?.tokenStandard || '',
+      contractAddress:
+        doc?.provenance?.chain?.contractAddress || doc?.blockchainDetails?.contractAddress || '',
+      tokenStandard:
+        doc?.provenance?.chain?.tokenStandard || doc?.blockchainDetails?.tokenStandard || '',
       tokenId: doc?.provenance?.chain?.tokenId || doc?.blockchainDetails?.tokenId || '',
     },
     ownershipTimelineCount: Array.isArray(doc?.provenance?.ownershipTimeline)

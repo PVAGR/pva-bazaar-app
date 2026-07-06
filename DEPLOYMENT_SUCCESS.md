@@ -14,6 +14,7 @@ This file is historical reference material and should not override the canonical
 ## Changes Deployed
 
 ### Frontend (5 files modified)
+
 1. **App.jsx** - API-first architecture with useEffect fetch
    - Loads from `/api/archive` on mount
    - Cache fallback to localStorage if backend unavailable
@@ -49,19 +50,22 @@ This file is historical reference material and should not override the canonical
 ## Pre-Deployment Verification ✅
 
 ### Git Status
+
 - 0 commits behind origin/main (synced)
 - 0 commits ahead before push
 - Clean rebase (no conflicts)
 
 ### Acceptance Scans
+
 ```bash
 ✅ PASS: no localhost
-✅ PASS: no legacy calls  
+✅ PASS: no legacy calls
 ✅ PASS: /api/archive present (3 occurrences)
 ✅ PASS: /api/search/text present (1 occurrence)
 ```
 
 ### Build Stats
+
 - Vite bundle: 379.20 kB (dist/assets/main-BB9IW_Wa.js)
 - Gzip: 120.05 kB
 - Build time: 1.50s
@@ -79,10 +83,13 @@ This file is historical reference material and should not override the canonical
 ### Smoke Tests (Post-Deploy)
 
 #### 1. Health Check ✅
+
 ```bash
 curl https://pva-backend-api.vercel.app/api/health
 ```
-**Result:** 
+
+**Result:**
+
 ```json
 {
   "status": "ok",
@@ -92,34 +99,45 @@ curl https://pva-backend-api.vercel.app/api/health
 ```
 
 #### 2. Archive List ✅
+
 ```bash
 curl https://pva-backend-api.vercel.app/api/archive
 ```
+
 **Result:**
+
 ```json
-{"ok": true, "entries": []}
+{ "ok": true, "entries": [] }
 ```
+
 - ✅ Correct response shape (matches `fetchArchiveEntries()` expectations)
 - ✅ Empty array valid (no entries created yet)
 
 #### 3. Search Text ✅ **FIXED**
+
 ```bash
 curl "https://pva-backend-api.vercel.app/api/search/text?q=test"
 ```
+
 **Result:**
+
 ```json
-{"success": true, "query": "test", "results": [], "count": 0}
+{ "success": true, "query": "test", "results": [], "count": 0 }
 ```
+
 - ✅ **No longer errors!** (was returning 500 before)
 - ✅ Now searches `ArchiveEntry` instead of `Artifact`
 - ✅ Regex escaping active (prevents injection)
 - ✅ Query length capped (prevents DoS)
 
 #### 4. Legacy Marketplace Gated ✅
+
 ```bash
 curl -I https://pva-backend-api.vercel.app/api/artifacts
 ```
+
 **Result:** `HTTP/2 410`
+
 - ✅ Marketplace endpoints correctly return 410 Gone
 - ✅ LEGACY_MODE gating still active
 
@@ -131,6 +149,7 @@ curl -I https://pva-backend-api.vercel.app/api/artifacts
 **Next Step:** Push Frontend/dist to GitHub Pages or Vercel
 
 ### Deployment Command (GH Pages)
+
 ```bash
 cd /workspaces/pva-bazaar-app/Frontend
 npm run build  # Already done
@@ -140,6 +159,7 @@ npm run build  # Already done
 ### Post-Frontend Deployment Tests
 
 #### Browser Smoke Tests
+
 1. **API-First Load**
    - Visit `/#/journal`
    - Open DevTools Network tab
@@ -218,6 +238,7 @@ npm run build  # Already done
 ## Behavioral Changes 🔄
 
 ### Before This Commit
+
 - App loaded entries from `window.JOURNAL_ENTRIES` + localStorage only
 - Search queried Artifact collection (marketplace) instead of journal
 - AdminNewEntry saved to localStorage even on backend failure
@@ -225,6 +246,7 @@ npm run build  # Already done
 - No AbortController (potential memory leaks)
 
 ### After This Commit
+
 - App fetches from `/api/archive` on mount (API-first)
 - Search queries ArchiveEntry collection (journal)
 - AdminNewEntry hard fails if backend unavailable (no false success)
@@ -251,16 +273,15 @@ cd Frontend && npm run build && [push to hosting]
 
 ## Summary
 
-| Component | Status | Notes |
-|-----------|--------|-------|
-| Backend deployment | ✅ Complete | Vercel production live |
-| Backend health | ✅ Verified | Database connected |
-| Search fix | ✅ Verified | Now queries ArchiveEntry |
-| Security fix | ✅ Verified | Regex escaping active |
-| Legacy gating | ✅ Verified | 410 Gone response |
-| Frontend build | ✅ Complete | dist/ ready |
-| Frontend deployment | ⏳ Pending | Awaiting push to hosting |
-| Browser tests | ⏳ Pending | After frontend deploy |
+| Component           | Status      | Notes                    |
+| ------------------- | ----------- | ------------------------ |
+| Backend deployment  | ✅ Complete | Vercel production live   |
+| Backend health      | ✅ Verified | Database connected       |
+| Search fix          | ✅ Verified | Now queries ArchiveEntry |
+| Security fix        | ✅ Verified | Regex escaping active    |
+| Legacy gating       | ✅ Verified | 410 Gone response        |
+| Frontend build      | ✅ Complete | dist/ ready              |
+| Frontend deployment | ⏳ Pending  | Awaiting push to hosting |
+| Browser tests       | ⏳ Pending  | After frontend deploy    |
 
 **Next Action:** Deploy Frontend/dist to production hosting
-

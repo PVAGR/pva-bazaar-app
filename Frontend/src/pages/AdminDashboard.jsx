@@ -71,18 +71,32 @@ export default function AdminDashboard() {
       <div className="form" style={{ marginBottom: '1rem' }}>
         <label>
           API base URL
-          <input value={apiBase} onChange={(e) => setBase(e.target.value)} placeholder="https://api.example.com" />
+          <input
+            value={apiBase}
+            onChange={(e) => setBase(e.target.value)}
+            placeholder="https://api.example.com"
+          />
         </label>
         <div className="form__actions">
-          <button className="button" type="button" onClick={saveBase}>Save</button>
-          <button className="button ghost" type="button" onClick={clearBase}>Clear</button>
+          <button className="button" type="button" onClick={saveBase}>
+            Save
+          </button>
+          <button className="button ghost" type="button" onClick={clearBase}>
+            Clear
+          </button>
         </div>
       </div>
 
       <div className="form__actions" style={{ marginBottom: '1rem' }}>
-        <button className="button" type="button" onClick={checkStatus} disabled={busy}>Check admin status</button>
-        <button className="button ghost" type="button" onClick={checkHealth} disabled={busy}>Check API health</button>
-        <a className="button ghost" href="#/admin/new-journal">New entry</a>
+        <button className="button" type="button" onClick={checkStatus} disabled={busy}>
+          Check admin status
+        </button>
+        <button className="button ghost" type="button" onClick={checkHealth} disabled={busy}>
+          Check API health
+        </button>
+        <a className="button ghost" href="#/admin/new-journal">
+          New entry
+        </a>
       </div>
 
       <div className="section-card" style={{ marginBottom: '1rem' }}>
@@ -91,11 +105,21 @@ export default function AdminDashboard() {
           Keep the operations side tied to the same site paths as the public front door.
         </p>
         <div className="form__actions">
-          <Link className="button ghost" to="/">Home</Link>
-          <Link className="button ghost" to="/archive">Archive</Link>
-          <Link className="button ghost" to="/recovery">Recovery</Link>
-          <Link className="button ghost" to="/marketplace">Marketplace</Link>
-          <Link className="button ghost" to="/account">Account</Link>
+          <Link className="button ghost" to="/">
+            Home
+          </Link>
+          <Link className="button ghost" to="/archive">
+            Archive
+          </Link>
+          <Link className="button ghost" to="/recovery">
+            Recovery
+          </Link>
+          <Link className="button ghost" to="/marketplace">
+            Marketplace
+          </Link>
+          <Link className="button ghost" to="/account">
+            Account
+          </Link>
         </div>
       </div>
 

@@ -22,7 +22,7 @@ router.post('/select-center', authenticateToken, async (req, res) => {
     const center = await fulfillmentService.selectFulfillmentCenter(
       destinationCountry,
       destinationCity,
-      sellerId
+      sellerId,
     );
 
     if (!center) {
@@ -50,7 +50,7 @@ router.post('/reserve-inventory', authenticateToken, async (req, res) => {
     const reservation = await fulfillmentService.reserveInventory(
       productId,
       quantity,
-      fulfillmentCenterId
+      fulfillmentCenterId,
     );
 
     res.json(reservation);
@@ -65,7 +65,12 @@ router.post('/reserve-inventory', authenticateToken, async (req, res) => {
  */
 router.post('/calculate-shipping', async (req, res) => {
   try {
-    const { destinationCountry, weight, shippingMethod = 'standard', insuranceValue = 0 } = req.body;
+    const {
+      destinationCountry,
+      weight,
+      shippingMethod = 'standard',
+      insuranceValue = 0,
+    } = req.body;
 
     if (!destinationCountry || !weight) {
       return res.status(400).json({ error: 'destinationCountry and weight required' });
@@ -75,7 +80,7 @@ router.post('/calculate-shipping', async (req, res) => {
       destinationCountry,
       weight,
       shippingMethod,
-      insuranceValue
+      insuranceValue,
     );
 
     res.json(shippingCost);
@@ -93,13 +98,15 @@ router.post('/create-shipment', authenticateToken, async (req, res) => {
     const { orderId, fulfillmentCenterId, shippingDetails } = req.body;
 
     if (!orderId || !fulfillmentCenterId || !shippingDetails) {
-      return res.status(400).json({ error: 'orderId, fulfillmentCenterId, shippingDetails required' });
+      return res
+        .status(400)
+        .json({ error: 'orderId, fulfillmentCenterId, shippingDetails required' });
     }
 
     const shipment = await fulfillmentService.createShipment(
       orderId,
       fulfillmentCenterId,
-      shippingDetails
+      shippingDetails,
     );
 
     res.status(201).json(shipment);
@@ -146,7 +153,7 @@ router.post('/update-shipment-status', async (req, res) => {
       trackingNumber,
       newStatus,
       location,
-      message
+      message,
     );
 
     res.json(updated);
@@ -210,7 +217,7 @@ router.post('/shipping-rates', async (req, res) => {
     const rates = await fulfillmentService.getShippingRates(
       destinationCountry,
       weight,
-      insuranceValue
+      insuranceValue,
     );
 
     res.json(rates);
@@ -227,8 +234,10 @@ router.get('/inventory-status/:productId', authenticateToken, async (req, res) =
   try {
     const { productId } = req.params;
 
-    const inventory = await InventoryLocation.find({ productId })
-      .populate('fulfillmentCenterId', 'name code address country');
+    const inventory = await InventoryLocation.find({ productId }).populate(
+      'fulfillmentCenterId',
+      'name code address country',
+    );
 
     res.json(inventory);
   } catch (error) {

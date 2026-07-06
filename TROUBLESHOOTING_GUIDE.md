@@ -2,7 +2,7 @@
 
 **Status:** Common issues and solutions  
 **Last Updated:** January 23, 2026  
-**For:** PVABazaar Blueprint v1  
+**For:** PVABazaar Blueprint v1
 
 ---
 
@@ -11,12 +11,14 @@
 ### Is it a...?
 
 **🔵 Backend issue?**
+
 ```bash
 curl https://your-backend.com/api/health
 # If error → See "Backend Won't Start"
 ```
 
 **🔵 Frontend issue?**
+
 ```bash
 # Check browser console (F12)
 # Look for Network tab errors
@@ -24,6 +26,7 @@ curl https://your-backend.com/api/health
 ```
 
 **🔵 Database issue?**
+
 ```bash
 # Try connecting directly
 mongosh "MONGODB_URI"
@@ -31,6 +34,7 @@ mongosh "MONGODB_URI"
 ```
 
 **🔵 IPFS issue?**
+
 ```bash
 # Test Pinata auth
 curl -X GET https://api.pinata.cloud/data/testAuthentication \
@@ -45,6 +49,7 @@ curl -X GET https://api.pinata.cloud/data/testAuthentication \
 ### Backend Won't Start
 
 #### Symptoms
+
 - Port 5001 already in use
 - `Error: EADDRINUSE: address already in use :::5001`
 - Server crashes immediately
@@ -53,6 +58,7 @@ curl -X GET https://api.pinata.cloud/data/testAuthentication \
 #### Solutions
 
 **Port Already in Use:**
+
 ```bash
 # macOS/Linux - Find process using port
 lsof -i :5001
@@ -69,6 +75,7 @@ PORT=5002 npm run dev
 ```
 
 **Missing Dependencies:**
+
 ```bash
 # Clear cache and reinstall
 rm -rf node_modules package-lock.json
@@ -79,6 +86,7 @@ npm update
 ```
 
 **Node Version Mismatch:**
+
 ```bash
 # Check required version
 node --version
@@ -91,6 +99,7 @@ nvm use 20
 ```
 
 **Environment Variables Missing:**
+
 ```bash
 # Check .env file exists
 ls -la backend/.env
@@ -105,6 +114,7 @@ vim backend/.env
 ### Backend API Returns 500 Errors
 
 #### Symptoms
+
 - `curl https://localhost:5001/api/streams` → `500 Internal Server Error`
 - Random endpoints fail
 - Works locally but fails in production
@@ -112,6 +122,7 @@ vim backend/.env
 #### Solutions
 
 **Check Server Logs:**
+
 ```bash
 # In development
 npm run dev  # See full stack trace
@@ -123,14 +134,15 @@ npm run dev  # See full stack trace
 
 **Common 500 Errors:**
 
-| Error | Cause | Fix |
-|-------|-------|-----|
-| `MongoNetworkError` | MongoDB unreachable | Check MONGODB_URI, whitelist IP in Atlas |
-| `JsonWebTokenError` | Invalid JWT secret | Verify JWT_SECRET in .env |
-| `Cannot read property 'id' of undefined` | User not authenticated | Check auth middleware |
-| `PINATA_API_KEY is undefined` | Missing env var | Add to .env and restart |
+| Error                                    | Cause                  | Fix                                      |
+| ---------------------------------------- | ---------------------- | ---------------------------------------- |
+| `MongoNetworkError`                      | MongoDB unreachable    | Check MONGODB_URI, whitelist IP in Atlas |
+| `JsonWebTokenError`                      | Invalid JWT secret     | Verify JWT_SECRET in .env                |
+| `Cannot read property 'id' of undefined` | User not authenticated | Check auth middleware                    |
+| `PINATA_API_KEY is undefined`            | Missing env var        | Add to .env and restart                  |
 
 **Debugging Strategy:**
+
 ```javascript
 // Add detailed logging (temporarily)
 app.use((req, res, next) => {
@@ -147,6 +159,7 @@ npm run dev
 ### Backend Can't Connect to MongoDB
 
 #### Symptoms
+
 - `MongoNetworkError: connect ECONNREFUSED`
 - `MongoAuthenticationError: authentication failed`
 - Connection timeout after 10s
@@ -154,6 +167,7 @@ npm run dev
 #### Solutions
 
 **Check MongoDB URI Format:**
+
 ```bash
 # Format should be:
 # mongodb+srv://username:password@cluster.mongodb.net/database
@@ -169,6 +183,7 @@ mongosh "mongodb+srv://username:password@cluster.mongodb.net/test"
 ```
 
 **If Using MongoDB Atlas:**
+
 ```bash
 # 1. Whitelist your IP
 #    Go to MongoDB Atlas → Network Access
@@ -186,6 +201,7 @@ npm run dev
 ```
 
 **If Using Local MongoDB:**
+
 ```bash
 # macOS - Install & start
 brew install mongodb-community
@@ -203,6 +219,7 @@ MONGODB_URI="mongodb://localhost:27017/pvabazaar"
 ```
 
 **Test Connection:**
+
 ```bash
 # Install mongosh if needed
 npm install -g mongosh
@@ -217,6 +234,7 @@ mongosh "YOUR_MONGODB_URI"
 ### Backend Endpoints Return 401 Unauthorized
 
 #### Symptoms
+
 - `{"message": "No token provided"}`
 - `{"message": "Invalid token"}`
 - Logs show `AuthError: jwt malformed`
@@ -224,6 +242,7 @@ mongosh "YOUR_MONGODB_URI"
 #### Solutions
 
 **Sending Token:**
+
 ```bash
 # ❌ Wrong - No token
 curl https://localhost:5001/api/streams
@@ -234,6 +253,7 @@ curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
 ```
 
 **Getting Token:**
+
 ```bash
 # 1. Sign up first
 curl -X POST https://localhost:5001/api/auth/signup \
@@ -248,6 +268,7 @@ curl -H "Authorization: Bearer $TOKEN" \
 ```
 
 **JWT Secret Mismatch:**
+
 ```bash
 # Issue: Different JWT_SECRET in different environments
 # Solution: Use same secret everywhere
@@ -263,6 +284,7 @@ npm run dev
 ### Backend Rate Limiting Errors
 
 #### Symptoms
+
 - `{"message": "Too many requests from this IP"}`
 - After 100 requests in 15 minutes
 - Happens even with valid auth
@@ -270,6 +292,7 @@ npm run dev
 #### Solutions
 
 **Expected Behavior:**
+
 ```
 - General endpoints: 100 requests / 15 minutes
 - Auth endpoints: 5 attempts / 15 minutes
@@ -277,6 +300,7 @@ npm run dev
 ```
 
 **Workarounds:**
+
 ```bash
 # Wait 15 minutes and try again
 sleep 900
@@ -287,6 +311,7 @@ npm run dev
 ```
 
 **Disable Rate Limiting (Development Only):**
+
 ```javascript
 // backend/middleware/rateLimit.js
 // ❌ NOT for production
@@ -302,6 +327,7 @@ const limiter = (req, res, next) => next(); // Skip
 ### Frontend Shows Blank Page
 
 #### Symptoms
+
 - Browser shows nothing
 - No errors in console
 - Network tab shows successful requests
@@ -309,6 +335,7 @@ const limiter = (req, res, next) => next(); // Skip
 #### Solutions
 
 **Clear Cache:**
+
 ```bash
 # Hard refresh (Cmd+Shift+R on Mac, Ctrl+Shift+R on Windows)
 # Or:
@@ -321,6 +348,7 @@ sessionStorage.clear()
 ```
 
 **Check API URL:**
+
 ```bash
 # In browser console (F12)
 console.log(import.meta.env.VITE_API_URL)
@@ -335,6 +363,7 @@ npm run dev
 ```
 
 **Check Network Errors:**
+
 ```bash
 # Open browser DevTools (F12)
 # Go to Network tab
@@ -346,11 +375,12 @@ npm run dev
 # ❌ CORS errors - Check backend CORS settings
 # ❌ 401 - Not authenticated
 
-# Solution: 
+# Solution:
 # npm run dev  (restart dev server)
 ```
 
 **React Component Errors:**
+
 ```bash
 # In browser console, look for:
 # - React warnings (yellow)
@@ -364,11 +394,11 @@ npm run dev
 // src/components/ErrorBoundary.tsx
 export class ErrorBoundary extends React.Component {
   state = { hasError: false };
-  
+
   static getDerivedStateFromError() {
     return { hasError: true };
   }
-  
+
   render() {
     if (this.state.hasError) return <div>Error loading page</div>;
     return this.props.children;
@@ -379,6 +409,7 @@ export class ErrorBoundary extends React.Component {
 ### Frontend API Calls Fail
 
 #### Symptoms
+
 - Console shows 404, 500, or CORS errors
 - Network tab shows failed requests to backend
 - Frontend and backend both running
@@ -386,27 +417,26 @@ export class ErrorBoundary extends React.Component {
 #### Solutions
 
 **CORS Errors (Most Common):**
+
 ```
-Error: Access to XMLHttpRequest at 'https://backend.com' 
+Error: Access to XMLHttpRequest at 'https://backend.com'
 from origin 'https://frontend.com' has been blocked by CORS policy
 ```
 
 **Fix CORS:**
+
 ```javascript
 // backend/middleware/cors.js
 const corsOptions = {
-  origin: [
-    'http://localhost:3000',
-    'http://localhost:5173',
-    'https://your-frontend.com'
-  ],
-  credentials: true
+  origin: ['http://localhost:3000', 'http://localhost:5173', 'https://your-frontend.com'],
+  credentials: true,
 };
 
 app.use(cors(corsOptions));
 ```
 
 **Wrong API URL:**
+
 ```bash
 # Check .env
 cat Frontend/.env
@@ -420,6 +450,7 @@ npm run dev
 ```
 
 **Backend Not Running:**
+
 ```bash
 # Try hitting backend directly
 curl https://your-backend.com/api/health
@@ -437,6 +468,7 @@ npm run dev  # Start locally
 ### Frontend Build Fails
 
 #### Symptoms
+
 - `npm run build` throws error
 - `vite build` fails
 - Production deployment fails
@@ -444,6 +476,7 @@ npm run dev  # Start locally
 #### Solutions
 
 **Check Error Message:**
+
 ```bash
 npm run build 2>&1 | head -50
 # Look for first error
@@ -455,6 +488,7 @@ npm run build 2>&1 | head -50
 ```
 
 **Fix TypeScript Errors:**
+
 ```bash
 # Check types
 npm run type-check
@@ -467,6 +501,7 @@ npm run build
 ```
 
 **Out of Memory:**
+
 ```bash
 # If: "FATAL ERROR: CALL_AND_RETRY_LAST Allocation failed"
 # Solution: Increase memory
@@ -481,6 +516,7 @@ npm run build
 ```
 
 **Vite Cache Issues:**
+
 ```bash
 # Clear cache
 rm -rf node_modules/.vite
@@ -496,6 +532,7 @@ npm run build
 ### Can't Sign Up
 
 #### Symptoms
+
 - Sign-up form won't submit
 - Returns validation error
 - Returns 400/500 error
@@ -503,6 +540,7 @@ npm run build
 #### Solutions
 
 **Validation Error:**
+
 ```
 ❌ "Password must be at least 8 characters"
 ❌ "Email already exists"
@@ -510,11 +548,13 @@ npm run build
 ```
 
 **Fix:**
+
 - Use strong password (8+ chars, mixed case, numbers)
 - Use valid email format (user@example.com)
 - Don't reuse email (create new account)
 
 **Server Error (500):**
+
 ```bash
 # Check backend logs
 npm run dev
@@ -533,6 +573,7 @@ npm run dev
 ### Can't Log In
 
 #### Symptoms
+
 - Wrong password message
 - "No user found" message
 - Request hangs/times out
@@ -540,6 +581,7 @@ npm run dev
 #### Solutions
 
 **Wrong Credentials:**
+
 ```bash
 # Double-check:
 # - Email spelling
@@ -548,6 +590,7 @@ npm run dev
 ```
 
 **Backend Not Responding:**
+
 ```bash
 # Is backend running?
 npm run dev
@@ -558,6 +601,7 @@ VITE_API_URL=https://correct-url
 ```
 
 **Token Expired:**
+
 ```bash
 # JWT tokens expire (default: 7 days)
 # Solution: Log in again
@@ -575,6 +619,7 @@ fetch('/api/auth/refresh', {
 ### Session Expires Too Quickly
 
 #### Symptoms
+
 - Logged out after 1 minute
 - "Please log in again" messages
 - Token constantly refreshing
@@ -582,26 +627,29 @@ fetch('/api/auth/refresh', {
 #### Solutions
 
 **JWT Expiration Too Short:**
+
 ```javascript
 // backend/config/jwt.js
-const JWT_EXPIRES_IN = '24h';  // Change from '1h' to '24h'
+const JWT_EXPIRES_IN = '24h'; // Change from '1h' to '24h'
 ```
 
 **Cookie Settings:**
+
 ```javascript
 // If using cookies:
 res.cookie('token', jwt, {
   httpOnly: true,
-  secure: true,  // HTTPS only
+  secure: true, // HTTPS only
   sameSite: 'strict',
-  maxAge: 24 * 60 * 60 * 1000  // 24 hours
+  maxAge: 24 * 60 * 60 * 1000, // 24 hours
 });
 ```
 
 **Test Local Storage:**
+
 ```javascript
 // In browser console
-console.log(localStorage.getItem('token'))
+console.log(localStorage.getItem('token'));
 // Should show JWT token
 
 // If empty, login again
@@ -614,6 +662,7 @@ console.log(localStorage.getItem('token'))
 ### Data Not Saving
 
 #### Symptoms
+
 - Create stream but it doesn't appear
 - Update user but changes don't stick
 - Random data loss
@@ -621,6 +670,7 @@ console.log(localStorage.getItem('token'))
 #### Solutions
 
 **Check MongoDB Connection:**
+
 ```bash
 mongosh "MONGODB_URI"
 use pvabazaar
@@ -634,6 +684,7 @@ db.streams.find()
 ```
 
 **Verify Write Permissions:**
+
 ```javascript
 // backend/routes/streams.js
 app.post('/api/streams', authMiddleware, async (req, res) => {
@@ -649,12 +700,13 @@ app.post('/api/streams', authMiddleware, async (req, res) => {
 ```
 
 **Check Validation Rules:**
+
 ```javascript
 // Models often have required fields
 const streamSchema = new Schema({
   title: { type: String, required: true },
   // If title missing, save fails silently
-})
+});
 
 // Ensure all required fields provided
 ```
@@ -662,6 +714,7 @@ const streamSchema = new Schema({
 ### Database Connection Slow
 
 #### Symptoms
+
 - API responses take 5+ seconds
 - Intermittent timeouts
 - "ECONNREFUSED" errors
@@ -669,6 +722,7 @@ const streamSchema = new Schema({
 #### Solutions
 
 **MongoDB Atlas Limits:**
+
 ```bash
 # Free tier limits:
 # - 512MB storage
@@ -682,6 +736,7 @@ const streamSchema = new Schema({
 ```
 
 **Add Indexes:**
+
 ```javascript
 // backend/models/Stream.js
 streamSchema.index({ userId: 1 });
@@ -692,15 +747,16 @@ streamSchema.index({ createdAt: -1 });
 ```
 
 **Connection Pooling:**
+
 ```javascript
 // backend/db/connect.js
 const options = {
   maxPoolSize: 10,
   minPoolSize: 5,
-  maxIdleTimeMS: 30000
-}
+  maxIdleTimeMS: 30000,
+};
 
-mongoose.connect(MONGODB_URI, options)
+mongoose.connect(MONGODB_URI, options);
 ```
 
 ---
@@ -710,6 +766,7 @@ mongoose.connect(MONGODB_URI, options)
 ### IPFS Upload Fails
 
 #### Symptoms
+
 - `Error: 401 Unauthorized` from Pinata
 - File upload stalls/hangs
 - "Network error" message
@@ -717,6 +774,7 @@ mongoose.connect(MONGODB_URI, options)
 #### Solutions
 
 **Check Pinata Credentials:**
+
 ```bash
 # Test authentication
 curl -X GET https://api.pinata.cloud/data/testAuthentication \
@@ -728,6 +786,7 @@ curl -X GET https://api.pinata.cloud/data/testAuthentication \
 ```
 
 **File Size Too Large:**
+
 ```bash
 # Pinata free tier limit: 100MB per file
 # If larger:
@@ -737,6 +796,7 @@ curl -X GET https://api.pinata.cloud/data/testAuthentication \
 ```
 
 **Network Issues:**
+
 ```bash
 # If upload stalls:
 # 1. Check internet connection
@@ -749,6 +809,7 @@ const response = await axios.post(url, form, { timeout })
 ```
 
 **IPFS Gateway Unreachable:**
+
 ```bash
 # If playback fails but upload succeeded:
 # 1. Check gateway URL
@@ -767,6 +828,7 @@ const response = await axios.post(url, form, { timeout })
 ### Stream Won't Go Live
 
 #### Symptoms
+
 - Status shows "starting" for 5+ minutes
 - Stream never appears on Twitch/platform
 - "Failed to connect" errors
@@ -774,6 +836,7 @@ const response = await axios.post(url, form, { timeout })
 #### Solutions
 
 **Twitch Integration:**
+
 ```bash
 # 1. Verify Twitch account
 #    https://www.twitch.tv/dashboard/account
@@ -791,6 +854,7 @@ curl -X GET https://api.twitch.tv/kraken/user \
 ```
 
 **OBS Encoder Settings:**
+
 ```
 Bitrate: 2500-6000 kbps (depends on internet)
 Resolution: 1280x720 (720p) recommended
@@ -799,6 +863,7 @@ Encoder: Hardware (NVIDIA/AMD) or x264
 ```
 
 **Network Bandwidth:**
+
 ```bash
 # Check upload speed
 # Download speedtest (speedtest.net or fast.com)
@@ -813,6 +878,7 @@ Encoder: Hardware (NVIDIA/AMD) or x264
 ### Stream Recordings Not Saving to IPFS
 
 #### Symptoms
+
 - Stream completes but no IPFS hash
 - "Recording not saved" message
 - Webhook never fires
@@ -820,6 +886,7 @@ Encoder: Hardware (NVIDIA/AMD) or x264
 #### Solutions
 
 **Check IPFS Service:**
+
 ```javascript
 // backend/services/ipfs.js
 // Add logging
@@ -837,12 +904,13 @@ async function uploadToPinata(file) {
 ```
 
 **Webhook Configuration:**
+
 ```javascript
 // Ensure webhook route exists
 app.post('/api/webhooks/twitch', (req, res) => {
   console.log('Webhook received');
   const stream = req.body;
-  
+
   // Download from Twitch
   // Upload to IPFS
   // Save hash to database
@@ -855,6 +923,7 @@ curl -X POST http://localhost:5001/api/webhooks/twitch \
 ```
 
 **Livepeer Integration:**
+
 ```bash
 # If using Livepeer:
 LIVEPEER_API_KEY=your_key
@@ -871,6 +940,7 @@ curl -X GET https://livepeer.com/api/stream \
 ### Backend Won't Deploy to Vercel
 
 #### Symptoms
+
 - Deployment fails with error
 - "Build failed"
 - "Cannot find module"
@@ -878,6 +948,7 @@ curl -X GET https://livepeer.com/api/stream \
 #### Solutions
 
 **Check Build Logs:**
+
 ```bash
 # Go to: https://vercel.com/dashboard
 # Click project → Deployments → [Failed] → Logs
@@ -886,14 +957,15 @@ curl -X GET https://livepeer.com/api/stream \
 
 **Common Errors:**
 
-| Error | Fix |
-|-------|-----|
-| Cannot find module | Missing dependency in package.json |
-| MONGODB_URI undefined | Add env vars in Vercel settings |
-| Port already in use | Vercel uses port 3000 automatically |
-| Timeout during build | Package too large, install issues |
+| Error                 | Fix                                 |
+| --------------------- | ----------------------------------- |
+| Cannot find module    | Missing dependency in package.json  |
+| MONGODB_URI undefined | Add env vars in Vercel settings     |
+| Port already in use   | Vercel uses port 3000 automatically |
+| Timeout during build  | Package too large, install issues   |
 
 **Add Environment Variables:**
+
 ```bash
 # Go to Vercel Project Settings
 # Environment Variables
@@ -904,6 +976,7 @@ PINATA_API_KEY = your_key
 ```
 
 **Deploy Manually:**
+
 ```bash
 # Install Vercel CLI
 npm install -g vercel
@@ -918,6 +991,7 @@ vercel --prod
 ### Frontend Won't Deploy to GitHub Pages
 
 #### Symptoms
+
 - 404 on GitHub Pages
 - CSS/JS not loading
 - Shows main repo page instead
@@ -925,6 +999,7 @@ vercel --prod
 #### Solutions
 
 **Enable GitHub Pages:**
+
 ```bash
 # Go to repo Settings → Pages
 # Select source: "Deploy from a branch"
@@ -934,6 +1009,7 @@ vercel --prod
 ```
 
 **Check Package.json Homepage:**
+
 ```json
 {
   "homepage": "https://YOUR_USERNAME.github.io/YOUR_REPO_NAME"
@@ -941,6 +1017,7 @@ vercel --prod
 ```
 
 **Deploy Manually:**
+
 ```bash
 # Build
 npm run build
@@ -1010,15 +1087,18 @@ DEBUG=true npm run dev
 ### Report a Bug
 
 When opening an issue:
+
 ```markdown
 **Title:** Clear one-line description
 
 **Environment:**
+
 - Node version: v20.x
 - OS: macOS/Linux/Windows
 - npm version: 10.x
 
 **Steps to Reproduce:**
+
 1. Do X
 2. Do Y
 3. See error
@@ -1051,7 +1131,7 @@ Shows error: "..."
 ✅ Backup database regularly  
 ✅ Use environment variables for secrets  
 ✅ Log important events  
-✅ Have a rollback plan  
+✅ Have a rollback plan
 
 ---
 

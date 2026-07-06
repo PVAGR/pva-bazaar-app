@@ -75,7 +75,11 @@ router.get('/thread/:conversationId', requireAuth, async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = Math.min(100, parseInt(req.query.limit) || 50);
 
-    const result = await messageService.getConversationThread(req.params.conversationId, page, limit);
+    const result = await messageService.getConversationThread(
+      req.params.conversationId,
+      page,
+      limit,
+    );
 
     // Mark as read
     await messageService.markConversationRead(req.params.conversationId, req.user._id);

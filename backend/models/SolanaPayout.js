@@ -17,10 +17,9 @@ const SolanaPayoutSchema = new mongoose.Schema(
     error: { type: String, default: '' },
     metadata: { type: Object, default: {} },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 SolanaPayoutSchema.index({ createdAt: -1 });
 
 module.exports = mongoose.model('SolanaPayout', SolanaPayoutSchema);
-

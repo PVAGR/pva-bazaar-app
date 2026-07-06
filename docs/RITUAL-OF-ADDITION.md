@@ -1,6 +1,6 @@
 # Ritual of Addition: How to Add New Artifacts
 
-*"Persistent Consistency is Quantum Repetition."* This document is the single place for how new artifacts (e.g. scarce knowledge, retro discs) are added so the system runs without ad-hoc steps.
+_"Persistent Consistency is Quantum Repetition."_ This document is the single place for how new artifacts (e.g. scarce knowledge, retro discs) are added so the system runs without ad-hoc steps.
 
 ---
 

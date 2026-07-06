@@ -1,10 +1,10 @@
 /**
  * SettingsTab
- * 
+ *
  * PURPOSE: Application configuration and settings
- * 
+ *
  * FEATURES:
- * - Toggle dark/light theme  
+ * - Toggle dark/light theme
  * - Configure API base URL
  * - View system information
  * - Clear cache/local storage
@@ -13,7 +13,7 @@
  * - Session management
  * - Admin activity log
  * - Quick refresh actions
- * 
+ *
  * Optimized with React.memo to prevent unnecessary re-renders.
  */
 
@@ -61,7 +61,7 @@ const SettingsTab = React.memo(function SettingsTab() {
     const authVersion = sessionStorage.getItem('admin-auth-version');
     const loginTime = sessionStorage.getItem('admin-login-time');
     const token = getToken();
-    
+
     setSessionInfo({
       authenticated: auth === 'authenticated' && Boolean(token),
       version: authVersion || 'unknown',
@@ -199,10 +199,12 @@ const SettingsTab = React.memo(function SettingsTab() {
             <dd className={sessionInfo.authenticated ? 'status-active' : 'status-inactive'}>
               {sessionInfo.authenticated ? '✅ Authenticated' : '❌ Not Authenticated'}
             </dd>
-            
+
             <dt>Auth Version:</dt>
-            <dd><code>{sessionInfo.version}</code></dd>
-            
+            <dd>
+              <code>{sessionInfo.version}</code>
+            </dd>
+
             {sessionInfo.loginTime && (
               <>
                 <dt>Session Duration:</dt>
@@ -233,18 +235,20 @@ const SettingsTab = React.memo(function SettingsTab() {
               <dl className="info-list">
                 <dt>Status:</dt>
                 <dd className={`status-${backendHealth.status}`}>
-                  {backendHealth.status === 'healthy' ? '✅ Healthy' : 
-                   backendHealth.status === 'unhealthy' ? '⚠️ Unhealthy' : 
-                   '❌ Error'}
+                  {backendHealth.status === 'healthy'
+                    ? '✅ Healthy'
+                    : backendHealth.status === 'unhealthy'
+                      ? '⚠️ Unhealthy'
+                      : '❌ Error'}
                 </dd>
-                
+
                 {backendHealth.data?.timestamp && (
                   <>
                     <dt>Last Check:</dt>
                     <dd>{new Date(backendHealth.data.timestamp).toLocaleString()}</dd>
                   </>
                 )}
-                
+
                 {backendHealth.error && (
                   <>
                     <dt>Error:</dt>
@@ -299,9 +303,11 @@ const SettingsTab = React.memo(function SettingsTab() {
           <dl className="info-list">
             <dt>Current Theme:</dt>
             <dd className="theme-badge">
-              {document.documentElement.getAttribute('data-theme') === 'dark' ? '🌙 Dark Mode' : '☀️ Light Mode'}
+              {document.documentElement.getAttribute('data-theme') === 'dark'
+                ? '🌙 Dark Mode'
+                : '☀️ Light Mode'}
             </dd>
-            
+
             <dt>Archive Baseline:</dt>
             <dd>✅ Active</dd>
           </dl>
@@ -332,37 +338,47 @@ const SettingsTab = React.memo(function SettingsTab() {
           </p>
           <dl className="info-list">
             <dt>Environment:</dt>
-            <dd><code>{ENV.NODE_ENV || 'production'}</code></dd>
-            
+            <dd>
+              <code>{ENV.NODE_ENV || 'production'}</code>
+            </dd>
+
             <dt>API Base:</dt>
-            <dd className="code-text"><code>{ENV.API_URL}</code></dd>
-            
+            <dd className="code-text">
+              <code>{ENV.API_URL}</code>
+            </dd>
+
             <dt>Current API:</dt>
-            <dd className="code-text"><code>{getApiBase()}</code></dd>
-            
+            <dd className="code-text">
+              <code>{getApiBase()}</code>
+            </dd>
+
             <dt>Version:</dt>
             <dd>1.0.0</dd>
-            
+
             <dt>Build Date:</dt>
             <dd>{new Date().toISOString().split('T')[0]}</dd>
-            
+
             <dt>User Agent:</dt>
-            <dd className="user-agent">{navigator.userAgent.split(' ').slice(0, 3).join(' ')}...</dd>
-            
+            <dd className="user-agent">
+              {navigator.userAgent.split(' ').slice(0, 3).join(' ')}...
+            </dd>
+
             <dt>Screen:</dt>
-            <dd>{window.screen.width} × {window.screen.height}</dd>
-            
+            <dd>
+              {window.screen.width} × {window.screen.height}
+            </dd>
+
             <dt>Viewport:</dt>
-            <dd>{window.innerWidth} × {window.innerHeight}</dd>
+            <dd>
+              {window.innerWidth} × {window.innerHeight}
+            </dd>
           </dl>
         </div>
 
         {/* Quick Actions */}
         <div className="setting-card">
           <h3>⚡ Quick Actions</h3>
-          <p className="setting-description">
-            Common administrative tasks and shortcuts.
-          </p>
+          <p className="setting-description">Common administrative tasks and shortcuts.</p>
           <div className="quick-actions">
             <button onClick={() => window.location.reload()} className="action-btn">
               🔄 Reload Page
@@ -370,11 +386,14 @@ const SettingsTab = React.memo(function SettingsTab() {
             <button onClick={() => window.open('/archive', '_blank')} className="action-btn">
               📚 Open Archive
             </button>
-            <button onClick={() => window.open(`${ENV.API_URL  }/health`, '_blank')} className="action-btn">
+            <button
+              onClick={() => window.open(`${ENV.API_URL}/health`, '_blank')}
+              className="action-btn"
+            >
               💚 API Health Page
             </button>
             {navigator.clipboard && (
-              <button 
+              <button
                 onClick={() => {
                   navigator.clipboard.writeText(ENV.API_URL);
                   setMessage('✅ API URL copied!');
@@ -391,21 +410,23 @@ const SettingsTab = React.memo(function SettingsTab() {
         {/* Security Info */}
         <div className="setting-card">
           <h3>🔒 Security</h3>
-          <p className="setting-description">
-            Security status and authentication information.
-          </p>
+          <p className="setting-description">Security status and authentication information.</p>
           <dl className="info-list">
             <dt>Session Storage:</dt>
             <dd>{sessionStorage.length} items</dd>
-            
+
             <dt>Local Storage:</dt>
             <dd>{localStorage.length} items</dd>
-            
+
             <dt>Cookies:</dt>
             <dd>{document.cookie ? document.cookie.split(';').length : 0} cookies</dd>
-            
+
             <dt>HTTPS:</dt>
-            <dd className={window.location.protocol === 'https:' ? 'status-active' : 'status-inactive'}>
+            <dd
+              className={
+                window.location.protocol === 'https:' ? 'status-active' : 'status-inactive'
+              }
+            >
               {window.location.protocol === 'https:' ? '✅ Secure' : '⚠️ Insecure'}
             </dd>
           </dl>

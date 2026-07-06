@@ -16,8 +16,18 @@ const PUBLICATIONS_KEY = 'pva-writing-studio-publications';
 const COMMAND_CENTER_NOTE_KEY = 'pva-command-center-note';
 const STUDIO_BACKUP_VERSION = 'pva-writing-studio-backup-v1';
 const STUDIO_PORTAL_LINKS = [
-  { key: 'archive', label: 'Archive', to: '/archive', note: 'Long-form writings and published posts' },
-  { key: 'recovery', label: 'Recovery', to: '/recovery', note: 'Snapshots, restore bundles, continuity' },
+  {
+    key: 'archive',
+    label: 'Archive',
+    to: '/archive',
+    note: 'Long-form writings and published posts',
+  },
+  {
+    key: 'recovery',
+    label: 'Recovery',
+    to: '/recovery',
+    note: 'Snapshots, restore bundles, continuity',
+  },
   { key: 'home', label: 'Home', to: '/', note: 'Personal site overview and content atlas' },
   { key: 'admin', label: 'Admin', to: '/admin', note: 'Operations console and continuity widget' },
 ];
@@ -60,11 +70,13 @@ function saveJson(key, value) {
 }
 
 function slugify(value) {
-  return String(value || '')
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '') || `post-${Date.now()}`;
+  return (
+    String(value || '')
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '') || `post-${Date.now()}`
+  );
 }
 
 function buildHashUrl(path) {
@@ -86,7 +98,8 @@ async function apiJson(path, { method = 'GET', token = '', body } = {}) {
 }
 
 async function ensureAdminToken() {
-  if (typeof window === 'undefined') throw new Error('Admin token can only be requested in the browser');
+  if (typeof window === 'undefined')
+    throw new Error('Admin token can only be requested in the browser');
   const existing = window.localStorage.getItem('admin:token');
   if (existing) return existing;
 
@@ -105,13 +118,41 @@ function buildShareLinks({ title, text, url }) {
   const encodedTitle = encodeURIComponent(title);
   const encodedText = encodeURIComponent(text);
   return [
-    { key: 'facebook', label: 'Facebook', href: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}` },
-    { key: 'x', label: 'X', href: `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}` },
-    { key: 'linkedin', label: 'LinkedIn', href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}` },
-    { key: 'reddit', label: 'Reddit', href: `https://www.reddit.com/submit?url=${encodedUrl}&title=${encodedTitle}` },
-    { key: 'whatsapp', label: 'WhatsApp', href: `https://wa.me/?text=${encodedText}%20${encodedUrl}` },
-    { key: 'telegram', label: 'Telegram', href: `https://t.me/share/url?url=${encodedUrl}&text=${encodedText}` },
-    { key: 'email', label: 'Email', href: `mailto:?subject=${encodedTitle}&body=${encodedText}%0A%0A${encodedUrl}` },
+    {
+      key: 'facebook',
+      label: 'Facebook',
+      href: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
+    },
+    {
+      key: 'x',
+      label: 'X',
+      href: `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}`,
+    },
+    {
+      key: 'linkedin',
+      label: 'LinkedIn',
+      href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`,
+    },
+    {
+      key: 'reddit',
+      label: 'Reddit',
+      href: `https://www.reddit.com/submit?url=${encodedUrl}&title=${encodedTitle}`,
+    },
+    {
+      key: 'whatsapp',
+      label: 'WhatsApp',
+      href: `https://wa.me/?text=${encodedText}%20${encodedUrl}`,
+    },
+    {
+      key: 'telegram',
+      label: 'Telegram',
+      href: `https://t.me/share/url?url=${encodedUrl}&text=${encodedText}`,
+    },
+    {
+      key: 'email',
+      label: 'Email',
+      href: `mailto:?subject=${encodedTitle}&body=${encodedText}%0A%0A${encodedUrl}`,
+    },
   ];
 }
 
@@ -133,7 +174,7 @@ export default function WritingStudioPage() {
   const importBackupRef = useRef(null);
   const [notes, setNotes] = useState(() => loadJson(NOTES_KEY, []));
   const [noteDraft, setNoteDraft] = useState(() =>
-    loadJson(NOTE_DRAFT_KEY, { id: '', title: '', body: '', tags: '' })
+    loadJson(NOTE_DRAFT_KEY, { id: '', title: '', body: '', tags: '' }),
   );
   const [blogDraft, setBlogDraft] = useState(() =>
     loadJson(BLOG_DRAFT_KEY, {
@@ -149,12 +190,14 @@ export default function WritingStudioPage() {
       publishToArchive: true,
       publishToBlog: true,
       directBlogPublish: true,
-    })
+    }),
   );
   const [socialProfiles, setSocialProfiles] = useState(() =>
-    loadJson(SOCIAL_KEY, { signature: '' })
+    loadJson(SOCIAL_KEY, { signature: '' }),
   );
-  const [recentPublications, setRecentPublications] = useState(() => loadJson(PUBLICATIONS_KEY, []));
+  const [recentPublications, setRecentPublications] = useState(() =>
+    loadJson(PUBLICATIONS_KEY, []),
+  );
   const [publishStatus, setPublishStatus] = useState({ kind: 'idle', message: '' });
   const [publishing, setPublishing] = useState(false);
   const [remoteBlogs, setRemoteBlogs] = useState([]);
@@ -286,11 +329,12 @@ export default function WritingStudioPage() {
 
   const draftSlug = useMemo(
     () => slugify(blogDraft.slug || blogDraft.title),
-    [blogDraft.slug, blogDraft.title]
+    [blogDraft.slug, blogDraft.title],
   );
 
   const shareText = useMemo(() => {
-    const base = blogDraft.socialCaption || blogDraft.excerpt || blogDraft.title || 'New post from PVA Bazaar';
+    const base =
+      blogDraft.socialCaption || blogDraft.excerpt || blogDraft.title || 'New post from PVA Bazaar';
     const signature = socialProfiles.signature ? ` ${socialProfiles.signature}` : '';
     return `${base}${signature}`.trim();
   }, [blogDraft.excerpt, blogDraft.socialCaption, blogDraft.title, socialProfiles.signature]);
@@ -299,8 +343,13 @@ export default function WritingStudioPage() {
   const latestPublicationUrl = shareReadyPublication?.url || buildHashUrl('studio');
 
   const shareLinks = useMemo(
-    () => buildShareLinks({ title: blogDraft.title || 'PVA Bazaar post', text: shareText, url: latestPublicationUrl }),
-    [blogDraft.title, latestPublicationUrl, shareText]
+    () =>
+      buildShareLinks({
+        title: blogDraft.title || 'PVA Bazaar post',
+        text: shareText,
+        url: latestPublicationUrl,
+      }),
+    [blogDraft.title, latestPublicationUrl, shareText],
   );
 
   const continuitySummary = useMemo(() => {
@@ -308,8 +357,14 @@ export default function WritingStudioPage() {
     const oauth = continuityReadiness.oauth || {};
     const panel = continuityReadiness.panel || {};
     return {
-      backupAdminReady: Boolean(bootstrap.backupAdminReady || ((bootstrap.adminSecretConfigured && bootstrap.jwtConfigured) || oauth.configured)),
-      adminSecretConfigured: Boolean(bootstrap.adminSecretConfigured || panel?.integrations?.adminSecretConfigured),
+      backupAdminReady: Boolean(
+        bootstrap.backupAdminReady ||
+          (bootstrap.adminSecretConfigured && bootstrap.jwtConfigured) ||
+          oauth.configured,
+      ),
+      adminSecretConfigured: Boolean(
+        bootstrap.adminSecretConfigured || panel?.integrations?.adminSecretConfigured,
+      ),
       githubReady: Boolean(oauth.configured),
       bootstrapReady: Boolean(bootstrap.signupAllowed),
       healthUrl: panel?.links?.apiHealth || '/api/health',
@@ -358,15 +413,19 @@ export default function WritingStudioPage() {
   };
 
   const rememberPublication = (entry) => {
-    setRecentPublications((current) => [
-      entry,
-      ...current.filter((item) => item.url !== entry.url || item.type !== entry.type),
-    ].slice(0, 12));
+    setRecentPublications((current) =>
+      [
+        entry,
+        ...current.filter((item) => item.url !== entry.url || item.type !== entry.type),
+      ].slice(0, 12),
+    );
   };
 
   const exportStudioBackup = () => {
     const commandCenterNote =
-      typeof window !== 'undefined' ? window.localStorage.getItem(COMMAND_CENTER_NOTE_KEY) || '' : '';
+      typeof window !== 'undefined'
+        ? window.localStorage.getItem(COMMAND_CENTER_NOTE_KEY) || ''
+        : '';
 
     downloadJsonFile(`pva-writing-studio-backup-${new Date().toISOString().slice(0, 10)}.json`, {
       version: STUDIO_BACKUP_VERSION,
@@ -381,7 +440,8 @@ export default function WritingStudioPage() {
 
     setPublishStatus({
       kind: 'success',
-      message: 'Studio backup downloaded. It includes drafts, notes, social links, and command-center text, but no secrets or tokens.',
+      message:
+        'Studio backup downloaded. It includes drafts, notes, social links, and command-center text, but no secrets or tokens.',
     });
   };
 
@@ -393,29 +453,46 @@ export default function WritingStudioPage() {
       const text = await file.text();
       const parsed = JSON.parse(text);
       setNotes(Array.isArray(parsed?.notes) ? parsed.notes : []);
-      setNoteDraft(parsed?.noteDraft && typeof parsed.noteDraft === 'object' ? parsed.noteDraft : { id: '', title: '', body: '', tags: '' });
-      setBlogDraft(parsed?.blogDraft && typeof parsed.blogDraft === 'object' ? parsed.blogDraft : {
-        title: '',
-        slug: '',
-        excerpt: '',
-        content: '',
-        tags: '',
-        category: 'blog',
-        location: '',
-        authorName: 'Richard Torres',
-        socialCaption: '',
-        publishToArchive: true,
-        publishToBlog: true,
-        directBlogPublish: true,
-      });
-      setSocialProfiles(parsed?.socialProfiles && typeof parsed.socialProfiles === 'object' ? parsed.socialProfiles : { signature: '' });
-      setRecentPublications(Array.isArray(parsed?.recentPublications) ? parsed.recentPublications : []);
+      setNoteDraft(
+        parsed?.noteDraft && typeof parsed.noteDraft === 'object'
+          ? parsed.noteDraft
+          : { id: '', title: '', body: '', tags: '' },
+      );
+      setBlogDraft(
+        parsed?.blogDraft && typeof parsed.blogDraft === 'object'
+          ? parsed.blogDraft
+          : {
+              title: '',
+              slug: '',
+              excerpt: '',
+              content: '',
+              tags: '',
+              category: 'blog',
+              location: '',
+              authorName: 'Richard Torres',
+              socialCaption: '',
+              publishToArchive: true,
+              publishToBlog: true,
+              directBlogPublish: true,
+            },
+      );
+      setSocialProfiles(
+        parsed?.socialProfiles && typeof parsed.socialProfiles === 'object'
+          ? parsed.socialProfiles
+          : { signature: '' },
+      );
+      setRecentPublications(
+        Array.isArray(parsed?.recentPublications) ? parsed.recentPublications : [],
+      );
       if (typeof window !== 'undefined' && typeof parsed?.commandCenterNote === 'string') {
         window.localStorage.setItem(COMMAND_CENTER_NOTE_KEY, parsed.commandCenterNote);
       }
       setPublishStatus({ kind: 'success', message: 'Studio backup restored to this browser.' });
     } catch (error) {
-      setPublishStatus({ kind: 'error', message: error?.message || 'Could not restore backup file.' });
+      setPublishStatus({
+        kind: 'error',
+        message: error?.message || 'Could not restore backup file.',
+      });
     } finally {
       event.target.value = '';
     }
@@ -557,9 +634,10 @@ export default function WritingStudioPage() {
 
       setPublishStatus({
         kind: 'success',
-        message: publicationResults.length > 0
-          ? `Published ${publicationResults.map((item) => `${item.type} (${item.status})`).join(', ')}.`
-          : 'Your draft is ready, but nothing was selected to publish.',
+        message:
+          publicationResults.length > 0
+            ? `Published ${publicationResults.map((item) => `${item.type} (${item.status})`).join(', ')}.`
+            : 'Your draft is ready, but nothing was selected to publish.',
       });
       setActiveTab('social');
     } catch (error) {
@@ -576,8 +654,9 @@ export default function WritingStudioPage() {
           <p className="pill">Writing studio</p>
           <h1>Your notes, blogs, archive posts, and social launch pad in one place.</h1>
           <p className="writing-studio__lead">
-            Write quickly, save private notes whenever you need them, turn stronger pieces into blog posts or archive
-            entries, and launch them out through the social channels you want connected.
+            Write quickly, save private notes whenever you need them, turn stronger pieces into blog
+            posts or archive entries, and launch them out through the social channels you want
+            connected.
           </p>
           <div className="writing-studio__portalRow" aria-label="Studio quick links">
             {STUDIO_PORTAL_LINKS.map((link) => (
@@ -607,8 +686,8 @@ export default function WritingStudioPage() {
       <section className="writing-studio__atlas section-card" aria-label="Studio atlas">
         <h2>Atlas</h2>
         <p className="writing-studio__atlasCopy">
-          Keep the writing surface connected to the rest of the site so drafts, publishing, recovery, and business
-          stay in the same flow.
+          Keep the writing surface connected to the rest of the site so drafts, publishing,
+          recovery, and business stay in the same flow.
         </p>
         <div className="writing-studio__atlasLinks">
           {STUDIO_ATLAS_LINKS.map((link) => (
@@ -640,7 +719,9 @@ export default function WritingStudioPage() {
       </section>
 
       {publishStatus.message ? (
-        <section className={`section-card writing-studio__status writing-studio__status--${publishStatus.kind}`}>
+        <section
+          className={`section-card writing-studio__status writing-studio__status--${publishStatus.kind}`}
+        >
           {publishStatus.message}
         </section>
       ) : null}
@@ -665,7 +746,9 @@ export default function WritingStudioPage() {
               <span>Title</span>
               <input
                 value={noteDraft.title}
-                onChange={(event) => setNoteDraft((current) => ({ ...current, title: event.target.value }))}
+                onChange={(event) =>
+                  setNoteDraft((current) => ({ ...current, title: event.target.value }))
+                }
                 placeholder="Capture the thought before it disappears"
               />
             </label>
@@ -673,7 +756,9 @@ export default function WritingStudioPage() {
               <span>Tags</span>
               <input
                 value={noteDraft.tags}
-                onChange={(event) => setNoteDraft((current) => ({ ...current, tags: event.target.value }))}
+                onChange={(event) =>
+                  setNoteDraft((current) => ({ ...current, tags: event.target.value }))
+                }
                 placeholder="sourcing, supply chain, essay idea"
               />
             </label>
@@ -682,7 +767,9 @@ export default function WritingStudioPage() {
               <textarea
                 rows={14}
                 value={noteDraft.body}
-                onChange={(event) => setNoteDraft((current) => ({ ...current, body: event.target.value }))}
+                onChange={(event) =>
+                  setNoteDraft((current) => ({ ...current, body: event.target.value }))
+                }
                 placeholder="Write freely. This stays private in your browser until you turn it into something more."
               />
             </label>
@@ -718,19 +805,30 @@ export default function WritingStudioPage() {
             </div>
             <div className="writing-studio__list">
               {notes.length === 0 ? (
-                <div className="writing-studio__empty">No notes yet. Start writing on the left.</div>
-              ) : notes.map((note) => (
-                <article key={note.id} className="writing-studio__listItem">
-                  <button type="button" onClick={() => loadNoteIntoEditor(note)}>
-                    <strong>{note.title}</strong>
-                    <span>{new Date(note.updatedAt).toLocaleString()}</span>
-                    <p>{String(note.body || '').slice(0, 140)}{String(note.body || '').length > 140 ? '…' : ''}</p>
-                  </button>
-                  <button type="button" className="writing-studio__dangerBtn" onClick={() => deleteNote(note.id)}>
-                    Delete
-                  </button>
-                </article>
-              ))}
+                <div className="writing-studio__empty">
+                  No notes yet. Start writing on the left.
+                </div>
+              ) : (
+                notes.map((note) => (
+                  <article key={note.id} className="writing-studio__listItem">
+                    <button type="button" onClick={() => loadNoteIntoEditor(note)}>
+                      <strong>{note.title}</strong>
+                      <span>{new Date(note.updatedAt).toLocaleString()}</span>
+                      <p>
+                        {String(note.body || '').slice(0, 140)}
+                        {String(note.body || '').length > 140 ? '…' : ''}
+                      </p>
+                    </button>
+                    <button
+                      type="button"
+                      className="writing-studio__dangerBtn"
+                      onClick={() => deleteNote(note.id)}
+                    >
+                      Delete
+                    </button>
+                  </article>
+                ))
+              )}
             </div>
           </article>
         </section>
@@ -752,7 +850,9 @@ export default function WritingStudioPage() {
                 <span>Title</span>
                 <input
                   value={blogDraft.title}
-                  onChange={(event) => setBlogDraft((current) => ({ ...current, title: event.target.value }))}
+                  onChange={(event) =>
+                    setBlogDraft((current) => ({ ...current, title: event.target.value }))
+                  }
                   placeholder="Write the piece you want the world to remember"
                 />
               </label>
@@ -760,7 +860,9 @@ export default function WritingStudioPage() {
                 <span>Slug</span>
                 <input
                   value={blogDraft.slug}
-                  onChange={(event) => setBlogDraft((current) => ({ ...current, slug: event.target.value }))}
+                  onChange={(event) =>
+                    setBlogDraft((current) => ({ ...current, slug: event.target.value }))
+                  }
                   placeholder="leave blank to auto-generate"
                 />
               </label>
@@ -771,14 +873,18 @@ export default function WritingStudioPage() {
                 <span>Author</span>
                 <input
                   value={blogDraft.authorName}
-                  onChange={(event) => setBlogDraft((current) => ({ ...current, authorName: event.target.value }))}
+                  onChange={(event) =>
+                    setBlogDraft((current) => ({ ...current, authorName: event.target.value }))
+                  }
                 />
               </label>
               <label className="writing-studio__field">
                 <span>Category</span>
                 <input
                   value={blogDraft.category}
-                  onChange={(event) => setBlogDraft((current) => ({ ...current, category: event.target.value }))}
+                  onChange={(event) =>
+                    setBlogDraft((current) => ({ ...current, category: event.target.value }))
+                  }
                   placeholder="blog, journal, sourcing, operations"
                 />
               </label>
@@ -789,7 +895,9 @@ export default function WritingStudioPage() {
               <textarea
                 rows={3}
                 value={blogDraft.excerpt}
-                onChange={(event) => setBlogDraft((current) => ({ ...current, excerpt: event.target.value }))}
+                onChange={(event) =>
+                  setBlogDraft((current) => ({ ...current, excerpt: event.target.value }))
+                }
                 placeholder="Short description for previews and social captions"
               />
             </label>
@@ -799,7 +907,9 @@ export default function WritingStudioPage() {
                 <span>Tags</span>
                 <input
                   value={blogDraft.tags}
-                  onChange={(event) => setBlogDraft((current) => ({ ...current, tags: event.target.value }))}
+                  onChange={(event) =>
+                    setBlogDraft((current) => ({ ...current, tags: event.target.value }))
+                  }
                   placeholder="artisan, sourcing, kenya"
                 />
               </label>
@@ -807,7 +917,9 @@ export default function WritingStudioPage() {
                 <span>Location</span>
                 <input
                   value={blogDraft.location}
-                  onChange={(event) => setBlogDraft((current) => ({ ...current, location: event.target.value }))}
+                  onChange={(event) =>
+                    setBlogDraft((current) => ({ ...current, location: event.target.value }))
+                  }
                   placeholder="Nairobi, Kenya"
                 />
               </label>
@@ -817,7 +929,9 @@ export default function WritingStudioPage() {
               <span>Social caption</span>
               <input
                 value={blogDraft.socialCaption}
-                onChange={(event) => setBlogDraft((current) => ({ ...current, socialCaption: event.target.value }))}
+                onChange={(event) =>
+                  setBlogDraft((current) => ({ ...current, socialCaption: event.target.value }))
+                }
                 placeholder="Custom line to use when you share this outward"
               />
             </label>
@@ -827,38 +941,80 @@ export default function WritingStudioPage() {
               <textarea
                 rows={18}
                 value={blogDraft.content}
-                onChange={(event) => setBlogDraft((current) => ({ ...current, content: event.target.value }))}
+                onChange={(event) =>
+                  setBlogDraft((current) => ({ ...current, content: event.target.value }))
+                }
                 placeholder="Write the full piece here..."
               />
             </label>
 
             <div className="writing-studio__checks">
-              <label><input type="checkbox" checked={blogDraft.publishToArchive} onChange={(event) => setBlogDraft((current) => ({ ...current, publishToArchive: event.target.checked }))} /> Publish to archive</label>
-              <label><input type="checkbox" checked={blogDraft.publishToBlog} onChange={(event) => setBlogDraft((current) => ({ ...current, publishToBlog: event.target.checked }))} /> Publish to blog</label>
-              <label><input type="checkbox" checked={blogDraft.directBlogPublish} onChange={(event) => setBlogDraft((current) => ({ ...current, directBlogPublish: event.target.checked }))} /> Try direct blog publish first</label>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={blogDraft.publishToArchive}
+                  onChange={(event) =>
+                    setBlogDraft((current) => ({
+                      ...current,
+                      publishToArchive: event.target.checked,
+                    }))
+                  }
+                />{' '}
+                Publish to archive
+              </label>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={blogDraft.publishToBlog}
+                  onChange={(event) =>
+                    setBlogDraft((current) => ({ ...current, publishToBlog: event.target.checked }))
+                  }
+                />{' '}
+                Publish to blog
+              </label>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={blogDraft.directBlogPublish}
+                  onChange={(event) =>
+                    setBlogDraft((current) => ({
+                      ...current,
+                      directBlogPublish: event.target.checked,
+                    }))
+                  }
+                />{' '}
+                Try direct blog publish first
+              </label>
             </div>
 
             <div className="writing-studio__actions">
-              <button type="button" className="writing-studio__primaryBtn" onClick={publishStudioPost} disabled={publishing}>
+              <button
+                type="button"
+                className="writing-studio__primaryBtn"
+                onClick={publishStudioPost}
+                disabled={publishing}
+              >
                 {publishing ? 'Publishing...' : 'Publish from studio'}
               </button>
               <button
                 type="button"
                 className="writing-studio__ghostBtn"
-                onClick={() => setBlogDraft({
-                  title: '',
-                  slug: '',
-                  excerpt: '',
-                  content: '',
-                  tags: '',
-                  category: 'blog',
-                  location: '',
-                  authorName: blogDraft.authorName || 'Richard Torres',
-                  socialCaption: '',
-                  publishToArchive: true,
-                  publishToBlog: true,
-                  directBlogPublish: true,
-                })}
+                onClick={() =>
+                  setBlogDraft({
+                    title: '',
+                    slug: '',
+                    excerpt: '',
+                    content: '',
+                    tags: '',
+                    category: 'blog',
+                    location: '',
+                    authorName: blogDraft.authorName || 'Richard Torres',
+                    socialCaption: '',
+                    publishToArchive: true,
+                    publishToBlog: true,
+                    directBlogPublish: true,
+                  })
+                }
               >
                 Clear draft
               </button>
@@ -871,14 +1027,19 @@ export default function WritingStudioPage() {
                 <p className="pill">Preview</p>
                 <h2>How it will read</h2>
               </div>
-              <Link to={`/blog/${draftSlug}`} className="writing-studio__ghostLink">Open blog route</Link>
+              <Link to={`/blog/${draftSlug}`} className="writing-studio__ghostLink">
+                Open blog route
+              </Link>
             </div>
             <article className="writing-studio__preview">
               <h1>{blogDraft.title || 'Untitled draft'}</h1>
               <p className="writing-studio__previewMeta">
-                {(blogDraft.authorName || 'Unknown author')} · {blogDraft.category || 'blog'} · {draftSlug}
+                {blogDraft.authorName || 'Unknown author'} · {blogDraft.category || 'blog'} ·{' '}
+                {draftSlug}
               </p>
-              {blogDraft.excerpt ? <p className="writing-studio__previewExcerpt">{blogDraft.excerpt}</p> : null}
+              {blogDraft.excerpt ? (
+                <p className="writing-studio__previewExcerpt">{blogDraft.excerpt}</p>
+              ) : null}
               <ReactMarkdown rehypePlugins={[rehypeSanitize]}>
                 {blogDraft.content || 'Your post preview will appear here as you write.'}
               </ReactMarkdown>
@@ -891,9 +1052,17 @@ export default function WritingStudioPage() {
               ) : (
                 <div className="writing-studio__list">
                   {recentPublications.map((item, index) => (
-                    <a key={`${item.url}-${index}`} className="writing-studio__listLink" href={item.url} target="_blank" rel="noreferrer">
+                    <a
+                      key={`${item.url}-${index}`}
+                      className="writing-studio__listLink"
+                      href={item.url}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
                       <strong>{item.title}</strong>
-                      <span>{item.type} · {item.status}</span>
+                      <span>
+                        {item.type} · {item.status}
+                      </span>
                     </a>
                   ))}
                 </div>
@@ -911,14 +1080,18 @@ export default function WritingStudioPage() {
                 <p className="pill">Connect</p>
                 <h2>Social links and identity</h2>
               </div>
-              <span className="writing-studio__muted">These are stored in this browser for now.</span>
+              <span className="writing-studio__muted">
+                These are stored in this browser for now.
+              </span>
             </div>
 
             <label className="writing-studio__field">
               <span>Signature</span>
               <input
                 value={socialProfiles.signature || ''}
-                onChange={(event) => setSocialProfiles((current) => ({ ...current, signature: event.target.value }))}
+                onChange={(event) =>
+                  setSocialProfiles((current) => ({ ...current, signature: event.target.value }))
+                }
                 placeholder="— Richard / PVA Bazaar"
               />
             </label>
@@ -929,7 +1102,12 @@ export default function WritingStudioPage() {
                   <span>{field.label}</span>
                   <input
                     value={socialProfiles[field.key] || ''}
-                    onChange={(event) => setSocialProfiles((current) => ({ ...current, [field.key]: event.target.value }))}
+                    onChange={(event) =>
+                      setSocialProfiles((current) => ({
+                        ...current,
+                        [field.key]: event.target.value,
+                      }))
+                    }
                     placeholder={field.placeholder}
                   />
                 </label>
@@ -953,7 +1131,13 @@ export default function WritingStudioPage() {
 
             <div className="writing-studio__shareActions">
               {shareLinks.map((link) => (
-                <a key={link.key} href={link.href} target="_blank" rel="noreferrer" className="writing-studio__shareBtn">
+                <a
+                  key={link.key}
+                  href={link.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="writing-studio__shareBtn"
+                >
                   {link.label}
                 </a>
               ))}
@@ -963,30 +1147,54 @@ export default function WritingStudioPage() {
               <h3>Your linked profiles</h3>
               <div className="writing-studio__list">
                 {SOCIAL_FIELDS.filter((field) => socialProfiles[field.key]).map((field) => (
-                  <a key={field.key} className="writing-studio__listLink" href={socialProfiles[field.key]} target="_blank" rel="noreferrer">
+                  <a
+                    key={field.key}
+                    className="writing-studio__listLink"
+                    href={socialProfiles[field.key]}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
                     <strong>{field.label}</strong>
                     <span>{socialProfiles[field.key]}</span>
                   </a>
                 ))}
                 {SOCIAL_FIELDS.every((field) => !socialProfiles[field.key]) ? (
-                  <div className="writing-studio__empty">Add your profile links on the left and they will appear here.</div>
+                  <div className="writing-studio__empty">
+                    Add your profile links on the left and they will appear here.
+                  </div>
                 ) : null}
               </div>
             </div>
 
             <div className="writing-studio__recent">
               <h3>Published blog feed</h3>
-              {remoteBlogsLoading ? <div className="writing-studio__empty">Loading published blogs...</div> : null}
-              {!remoteBlogsLoading && remoteBlogsError ? <div className="writing-studio__empty">{remoteBlogsError}</div> : null}
+              {remoteBlogsLoading ? (
+                <div className="writing-studio__empty">Loading published blogs...</div>
+              ) : null}
+              {!remoteBlogsLoading && remoteBlogsError ? (
+                <div className="writing-studio__empty">{remoteBlogsError}</div>
+              ) : null}
               {!remoteBlogsLoading && !remoteBlogsError ? (
                 <div className="writing-studio__list">
                   {remoteBlogs.slice(0, 8).map((blog) => (
-                    <Link key={blog.slug} className="writing-studio__listLink" to={`/blog/${blog.slug}`}>
+                    <Link
+                      key={blog.slug}
+                      className="writing-studio__listLink"
+                      to={`/blog/${blog.slug}`}
+                    >
                       <strong>{blog.title}</strong>
-                      <span>{blog.updatedAt ? new Date(blog.updatedAt).toLocaleDateString() : 'Published'}</span>
+                      <span>
+                        {blog.updatedAt
+                          ? new Date(blog.updatedAt).toLocaleDateString()
+                          : 'Published'}
+                      </span>
                     </Link>
                   ))}
-                  {remoteBlogs.length === 0 ? <div className="writing-studio__empty">No published blogs are available yet.</div> : null}
+                  {remoteBlogs.length === 0 ? (
+                    <div className="writing-studio__empty">
+                      No published blogs are available yet.
+                    </div>
+                  ) : null}
                 </div>
               ) : null}
             </div>
@@ -996,174 +1204,211 @@ export default function WritingStudioPage() {
 
       {activeTab === 'continuity' ? (
         <>
-        <section className="writing-studio__grid writing-studio__grid--blog">
-          <article className="section-card writing-studio__panel">
+          <section className="writing-studio__grid writing-studio__grid--blog">
+            <article className="section-card writing-studio__panel">
+              <div className="writing-studio__panelHead">
+                <div>
+                  <p className="pill">Backup</p>
+                  <h2>Save the studio to a file</h2>
+                </div>
+                <span className="writing-studio__muted">
+                  No secrets or admin tokens are included.
+                </span>
+              </div>
+
+              <div className="writing-studio__continuityGrid">
+                <div className="writing-studio__continuityCard">
+                  <strong>{notes.length}</strong>
+                  <span>saved notes</span>
+                </div>
+                <div className="writing-studio__continuityCard">
+                  <strong>{recentPublications.length}</strong>
+                  <span>publication records</span>
+                </div>
+                <div className="writing-studio__continuityCard">
+                  <strong>
+                    {SOCIAL_FIELDS.filter((field) => socialProfiles[field.key]).length}
+                  </strong>
+                  <span>social links stored</span>
+                </div>
+              </div>
+
+              <div className="writing-studio__actions">
+                <button
+                  type="button"
+                  className="writing-studio__primaryBtn"
+                  onClick={exportStudioBackup}
+                >
+                  Download studio backup
+                </button>
+                <button
+                  type="button"
+                  className="writing-studio__ghostBtn"
+                  onClick={() => importBackupRef.current?.click()}
+                >
+                  Restore from backup
+                </button>
+                <input
+                  ref={importBackupRef}
+                  type="file"
+                  accept="application/json"
+                  className="sr-only"
+                  onChange={importStudioBackup}
+                />
+              </div>
+
+              <div className="writing-studio__empty">
+                Export before travel, after major writing sessions, and before changing machines.
+                This gives you a portable copy of your studio state even if the browser or device is
+                lost.
+              </div>
+            </article>
+
+            <article className="section-card writing-studio__panel">
+              <div className="writing-studio__panelHead">
+                <div>
+                  <p className="pill">Recovery</p>
+                  <h2>Backup admin access readiness</h2>
+                </div>
+                <span className="writing-studio__muted">
+                  {continuityReadiness.loading
+                    ? 'Checking...'
+                    : continuitySummary.backupAdminReady
+                      ? 'Ready'
+                      : 'Needs attention'}
+                </span>
+              </div>
+
+              {continuityReadiness.error ? (
+                <div className="writing-studio__empty">{continuityReadiness.error}</div>
+              ) : null}
+
+              {!continuityReadiness.error ? (
+                <>
+                  <div className="writing-studio__continuityGrid">
+                    <div className="writing-studio__continuityCard">
+                      <strong>{continuitySummary.backupAdminReady ? 'Yes' : 'No'}</strong>
+                      <span>backup admin path</span>
+                    </div>
+                    <div className="writing-studio__continuityCard">
+                      <strong>{continuitySummary.adminSecretConfigured ? 'Yes' : 'No'}</strong>
+                      <span>private secret configured</span>
+                    </div>
+                    <div className="writing-studio__continuityCard">
+                      <strong>{continuitySummary.githubReady ? 'Yes' : 'No'}</strong>
+                      <span>GitHub access</span>
+                    </div>
+                    <div className="writing-studio__continuityCard">
+                      <strong>{continuitySummary.bootstrapReady ? 'Yes' : 'No'}</strong>
+                      <span>bootstrap/signup route</span>
+                    </div>
+                  </div>
+
+                  <div className="writing-studio__recoveryList">
+                    <div className="writing-studio__recoveryItem">
+                      <strong>Private sign-in</strong>
+                      <span>
+                        Use the main private surface and keep at least one backup login path
+                        configured server-side.
+                      </span>
+                    </div>
+                    <div className="writing-studio__recoveryItem">
+                      <strong>Health check</strong>
+                      <a href={continuitySummary.healthUrl} target="_blank" rel="noreferrer">
+                        {continuitySummary.healthUrl}
+                      </a>
+                    </div>
+                    <div className="writing-studio__recoveryItem">
+                      <strong>Status page</strong>
+                      <a href="/status.html" target="_blank" rel="noreferrer">
+                        /status.html
+                      </a>
+                    </div>
+                    <div className="writing-studio__recoveryItem">
+                      <strong>Continuity console</strong>
+                      <Link to="/recovery">Open encrypted recovery</Link>
+                    </div>
+                    <div className="writing-studio__recoveryItem">
+                      <strong>Admin workspace</strong>
+                      <Link to="/admin">Open admin</Link>
+                    </div>
+                  </div>
+                </>
+              ) : null}
+            </article>
+          </section>
+
+          <section className="section-card writing-studio__panel writing-studio__panel--full">
             <div className="writing-studio__panelHead">
               <div>
-                <p className="pill">Backup</p>
-                <h2>Save the studio to a file</h2>
+                <p className="pill">Remote backups</p>
+                <h2>Latest saved continuity snapshots</h2>
               </div>
-              <span className="writing-studio__muted">No secrets or admin tokens are included.</span>
+              <Link to="/recovery" className="writing-studio__ghostLink">
+                Open recovery console
+              </Link>
             </div>
 
-            <div className="writing-studio__continuityGrid">
-              <div className="writing-studio__continuityCard">
-                <strong>{notes.length}</strong>
-                <span>saved notes</span>
-              </div>
-              <div className="writing-studio__continuityCard">
-                <strong>{recentPublications.length}</strong>
-                <span>publication records</span>
-              </div>
-              <div className="writing-studio__continuityCard">
-                <strong>{SOCIAL_FIELDS.filter((field) => socialProfiles[field.key]).length}</strong>
-                <span>social links stored</span>
-              </div>
-            </div>
-
-            <div className="writing-studio__actions">
-              <button type="button" className="writing-studio__primaryBtn" onClick={exportStudioBackup}>
-                Download studio backup
-              </button>
-              <button type="button" className="writing-studio__ghostBtn" onClick={() => importBackupRef.current?.click()}>
-                Restore from backup
-              </button>
-              <input
-                ref={importBackupRef}
-                type="file"
-                accept="application/json"
-                className="sr-only"
-                onChange={importStudioBackup}
-              />
-            </div>
-
-            <div className="writing-studio__empty">
-              Export before travel, after major writing sessions, and before changing machines. This gives you a portable
-              copy of your studio state even if the browser or device is lost.
-            </div>
-          </article>
-
-          <article className="section-card writing-studio__panel">
-            <div className="writing-studio__panelHead">
-              <div>
-                <p className="pill">Recovery</p>
-                <h2>Backup admin access readiness</h2>
-              </div>
-              <span className="writing-studio__muted">
-                {continuityReadiness.loading ? 'Checking...' : continuitySummary.backupAdminReady ? 'Ready' : 'Needs attention'}
-              </span>
-            </div>
-
-            {continuityReadiness.error ? (
-              <div className="writing-studio__empty">{continuityReadiness.error}</div>
+            {recoverySnapshotsLoading ? (
+              <div className="writing-studio__empty">Loading saved snapshots...</div>
             ) : null}
 
-            {!continuityReadiness.error ? (
+            {!recoverySnapshotsLoading && recoverySnapshotsError ? (
+              <div className="writing-studio__empty">{recoverySnapshotsError}</div>
+            ) : null}
+
+            {!recoverySnapshotsLoading && !recoverySnapshotsError ? (
               <>
                 <div className="writing-studio__continuityGrid">
                   <div className="writing-studio__continuityCard">
-                    <strong>{continuitySummary.backupAdminReady ? 'Yes' : 'No'}</strong>
-                    <span>backup admin path</span>
+                    <strong>{recoverySnapshots.length}</strong>
+                    <span>remote snapshots</span>
                   </div>
                   <div className="writing-studio__continuityCard">
-                    <strong>{continuitySummary.adminSecretConfigured ? 'Yes' : 'No'}</strong>
-                    <span>private secret configured</span>
+                    <strong>
+                      {latestRecoverySnapshot
+                        ? new Date(latestRecoverySnapshot.createdAt).toLocaleDateString()
+                        : 'None'}
+                    </strong>
+                    <span>latest backup date</span>
                   </div>
                   <div className="writing-studio__continuityCard">
-                    <strong>{continuitySummary.githubReady ? 'Yes' : 'No'}</strong>
-                    <span>GitHub access</span>
+                    <strong>{latestRecoverySnapshot?.label || 'No snapshot yet'}</strong>
+                    <span>latest backup label</span>
                   </div>
                   <div className="writing-studio__continuityCard">
-                    <strong>{continuitySummary.bootstrapReady ? 'Yes' : 'No'}</strong>
-                    <span>bootstrap/signup route</span>
+                    <strong>
+                      {latestRecoverySnapshot
+                        ? `${Math.round((latestRecoverySnapshot.payloadSizeBytes || 0) / 1024)} KB`
+                        : '—'}
+                    </strong>
+                    <span>latest payload size</span>
                   </div>
                 </div>
 
                 <div className="writing-studio__recoveryList">
-                  <div className="writing-studio__recoveryItem">
-                    <strong>Private sign-in</strong>
-                    <span>Use the main private surface and keep at least one backup login path configured server-side.</span>
-                  </div>
-                  <div className="writing-studio__recoveryItem">
-                    <strong>Health check</strong>
-                    <a href={continuitySummary.healthUrl} target="_blank" rel="noreferrer">{continuitySummary.healthUrl}</a>
-                  </div>
-                  <div className="writing-studio__recoveryItem">
-                    <strong>Status page</strong>
-                    <a href="/status.html" target="_blank" rel="noreferrer">/status.html</a>
-                  </div>
-                  <div className="writing-studio__recoveryItem">
-                    <strong>Continuity console</strong>
-                    <Link to="/recovery">Open encrypted recovery</Link>
-                  </div>
-                  <div className="writing-studio__recoveryItem">
-                    <strong>Admin workspace</strong>
-                    <Link to="/admin">Open admin</Link>
-                  </div>
+                  {recoverySnapshots.slice(0, 5).map((snapshot) => (
+                    <div className="writing-studio__recoveryItem" key={snapshot.id || snapshot._id}>
+                      <strong>{snapshot.label || 'Untitled snapshot'}</strong>
+                      <span>
+                        {snapshot.createdAt
+                          ? new Date(snapshot.createdAt).toLocaleString()
+                          : 'Unknown date'}{' '}
+                        · {snapshot.device?.platform || 'unknown device'} ·{' '}
+                        {snapshot.encryption?.algorithm || 'AES-GCM'}
+                      </span>
+                      <Link to="/recovery">Open in recovery console</Link>
+                    </div>
+                  ))}
+                  {recoverySnapshots.length === 0 ? (
+                    <div className="writing-studio__empty">
+                      No remote backups saved yet. Use the recovery console to create the first one.
+                    </div>
+                  ) : null}
                 </div>
               </>
             ) : null}
-          </article>
-        </section>
-
-        <section className="section-card writing-studio__panel writing-studio__panel--full">
-          <div className="writing-studio__panelHead">
-            <div>
-              <p className="pill">Remote backups</p>
-              <h2>Latest saved continuity snapshots</h2>
-            </div>
-            <Link to="/recovery" className="writing-studio__ghostLink">Open recovery console</Link>
-          </div>
-
-          {recoverySnapshotsLoading ? (
-            <div className="writing-studio__empty">Loading saved snapshots...</div>
-          ) : null}
-
-          {!recoverySnapshotsLoading && recoverySnapshotsError ? (
-            <div className="writing-studio__empty">{recoverySnapshotsError}</div>
-          ) : null}
-
-          {!recoverySnapshotsLoading && !recoverySnapshotsError ? (
-            <>
-              <div className="writing-studio__continuityGrid">
-                <div className="writing-studio__continuityCard">
-                  <strong>{recoverySnapshots.length}</strong>
-                  <span>remote snapshots</span>
-                </div>
-                <div className="writing-studio__continuityCard">
-                  <strong>{latestRecoverySnapshot ? new Date(latestRecoverySnapshot.createdAt).toLocaleDateString() : 'None'}</strong>
-                  <span>latest backup date</span>
-                </div>
-                <div className="writing-studio__continuityCard">
-                  <strong>{latestRecoverySnapshot?.label || 'No snapshot yet'}</strong>
-                  <span>latest backup label</span>
-                </div>
-                <div className="writing-studio__continuityCard">
-                  <strong>{latestRecoverySnapshot ? `${Math.round((latestRecoverySnapshot.payloadSizeBytes || 0) / 1024)} KB` : '—'}</strong>
-                  <span>latest payload size</span>
-                </div>
-              </div>
-
-              <div className="writing-studio__recoveryList">
-                {recoverySnapshots.slice(0, 5).map((snapshot) => (
-                  <div className="writing-studio__recoveryItem" key={snapshot.id || snapshot._id}>
-                    <strong>{snapshot.label || 'Untitled snapshot'}</strong>
-                    <span>
-                      {snapshot.createdAt ? new Date(snapshot.createdAt).toLocaleString() : 'Unknown date'} ·{' '}
-                      {snapshot.device?.platform || 'unknown device'} · {snapshot.encryption?.algorithm || 'AES-GCM'}
-                    </span>
-                    <Link to="/recovery">Open in recovery console</Link>
-                  </div>
-                ))}
-                {recoverySnapshots.length === 0 ? (
-                  <div className="writing-studio__empty">
-                    No remote backups saved yet. Use the recovery console to create the first one.
-                  </div>
-                ) : null}
-              </div>
-            </>
-          ) : null}
-        </section>
+          </section>
         </>
       ) : null}
     </div>

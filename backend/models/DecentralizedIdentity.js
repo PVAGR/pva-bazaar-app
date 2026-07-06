@@ -39,13 +39,15 @@ const decentralizedIdentitySchema = new mongoose.Schema({
     type: mongoose.Schema.Types.Mixed, // JSON object
   },
   // Verifiable Credentials (optional)
-  credentials: [{
-    issuer: String,
-    type: String,
-    credentialSubject: mongoose.Schema.Types.Mixed,
-    proof: mongoose.Schema.Types.Mixed,
-    issuedAt: Date,
-  }],
+  credentials: [
+    {
+      issuer: String,
+      type: String,
+      credentialSubject: mongoose.Schema.Types.Mixed,
+      proof: mongoose.Schema.Types.Mixed,
+      issuedAt: Date,
+    },
+  ],
   // IPFS hash of DID Document (for decentralized backup)
   didDocumentIpfsHash: {
     type: String,

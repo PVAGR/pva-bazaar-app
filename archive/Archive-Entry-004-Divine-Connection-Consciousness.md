@@ -15,7 +15,7 @@
 God is as real as air molecules all around us. We cannot see air with our sight, but we can feel it. Similarly, if you truly believe in God, you can get some type of feeling—it's the same feeling you get during:
 
 - **Adrenaline moments** - When time slows and clarity comes
-- **Fight or flight responses** - When survival instinct activates something beyond normal consciousness  
+- **Fight or flight responses** - When survival instinct activates something beyond normal consciousness
 - **Sexual climax** - The biological euphoria that connects us to creation itself (the "birds and the bees")
 - **Deep meditation** - When the mind stills and something vast opens
 - **Moments of grace** - When you feel held by something larger than yourself
@@ -78,8 +78,9 @@ As humans, we will never fully perfect this balance while we are in our current 
 If one can view these forces as pure knowledge for themselves—human knowledge—to stay perceptive and remain knowing, do not let the Druj or darkness you view within yourself consume you.
 
 **It is not a being or external entity.** It is what is within every soul that we are actively trying to:
+
 - Transcend
-- Evolve  
+- Evolve
 - Cultivate into something sacred, pure, ritualistic
 - Transform with freedom and love of humanity in mind
 
@@ -96,6 +97,7 @@ We must possess both sides and allow both constriction and extraction. It is als
 What I call the "Christos" aligns with ancient teachings that link semen, cerebrospinal fluid, and life force energy to spiritual power.
 
 In mystical traditions:
+
 - The spinal fluid is often regarded as a carrier of divine energy
 - In some teachings, it is thought to rise through the spine (like Kundalini energy) to awaken higher consciousness
 - Semen is often seen as the essence of life, containing immense creative and spiritual potential
@@ -105,7 +107,7 @@ In mystical traditions:
 Many spiritual traditions emphasize the importance of retaining sexual energy to transmute it into spiritual power:
 
 - **Tantra** (Hindu and Buddhist traditions)
-- **Taoism** (Chinese internal alchemy)  
+- **Taoism** (Chinese internal alchemy)
 - **Certain Christian mystics** (who practiced celibacy not from repression but from energy cultivation)
 
 **The principle:** Semen is the essence of life, containing immense creative and spiritual potential. When retained and consciously directed, it can fuel enlightenment and vitality.
@@ -157,7 +159,7 @@ This is the ancient technology of the body-spirit vessel awakening to itself. It
 **You touched something real**—a direct communion with the divine current. Not abstract faith, but contact:
 
 - Flesh became the altar
-- Water became the purifier  
+- Water became the purifier
 - Fasting became the opening of the gate
 - Seed release became the offering
 - Silence that followed became the womb for revelation
@@ -171,7 +173,7 @@ This is the ancient technology of the body-spirit vessel awakening to itself. It
 ### The Process
 
 1. **Retain** - Build up the life force energy through abstinence
-2. **Fast** - Clear the body and quiet the physical demands  
+2. **Fast** - Clear the body and quiet the physical demands
 3. **Purify** - Cleanse through water, breath, prayer
 4. **Release** - (Optional) Sacred release as offering
 5. **Silence** - Enter the void where God speaks
@@ -230,7 +232,7 @@ Regular fasting cleanses the body and creates the empty space necessary for divi
 ### 8. Purification Rituals
 
 - Cold water immersion
-- Sweat lodges or sauna  
+- Sweat lodges or sauna
 - Salt baths
 - Cleansing breathwork
 - Prayer and intention-setting
@@ -268,6 +270,7 @@ In this age, the hermit represents one who loves the idea of what a hermit was. 
 Divine consciousness is not reserved for saints or gurus. It is your birthright. It is encoded in your DNA, waiting in your spinal fluid, dormant in your retained seed, present in every breath.
 
 **The path is:**
+
 1. Recognize you are a vessel
 2. Purify the vessel through right practice
 3. Fill it with divine energy through retention and intention
@@ -301,4 +304,4 @@ You have touched this reality. You have felt God move through you. Now your work
 **Preserved by: Richard Antonio Torres**  
 **For: PVA Bazaar Archives / The Taur Community**
 
-*"You are not trying to become divine. You are remembering that you always were."*
+_"You are not trying to become divine. You are remembering that you always were."_

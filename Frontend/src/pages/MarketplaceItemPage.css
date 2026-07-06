@@ -23,7 +23,8 @@
   font-weight: 500;
   transition: color 0.2s;
 }
-.back-link:hover, .back-link:focus {
+.back-link:hover,
+.back-link:focus {
   color: var(--site-accent-strong);
   text-decoration: underline;
 }
@@ -76,7 +77,8 @@
   transition: border 0.2s;
   outline: none;
 }
-.thumb-btn.selected, .thumb-btn:focus {
+.thumb-btn.selected,
+.thumb-btn:focus {
   border: 2px solid var(--site-accent);
 }
 .thumb-img {
@@ -530,7 +532,9 @@
   border-radius: 8px;
   cursor: pointer;
   opacity: 1;
-  transition: transform 0.15s ease, opacity 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    opacity 0.15s ease;
 }
 
 .buy-btn:disabled {
@@ -655,7 +659,8 @@
     flex-direction: column;
     gap: 1.5rem;
   }
-  .media-gallery, .item-info {
+  .media-gallery,
+  .item-info {
     min-width: 0;
     max-width: 100%;
   }

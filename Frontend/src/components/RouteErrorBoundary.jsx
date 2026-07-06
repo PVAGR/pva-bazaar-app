@@ -25,31 +25,37 @@ class RouteErrorBoundary extends React.Component {
     if (this.state.hasError) {
       // Custom fallback UI for route-level errors
       return (
-        <div style={{
-          padding: '48px 24px',
-          textAlign: 'center',
-          color: 'var(--site-text)',
-        }}>
-          <div style={{
-            maxWidth: '480px',
-            margin: '0 auto',
-            padding: '32px',
-            background: 'var(--card-bg, rgba(255, 255, 255, 0.03))',
-            border: '1px solid var(--card-border, rgba(255, 255, 255, 0.08))',
-            borderRadius: '12px',
-          }}>
+        <div
+          style={{
+            padding: '48px 24px',
+            textAlign: 'center',
+            color: 'var(--site-text)',
+          }}
+        >
+          <div
+            style={{
+              maxWidth: '480px',
+              margin: '0 auto',
+              padding: '32px',
+              background: 'var(--card-bg, rgba(255, 255, 255, 0.03))',
+              border: '1px solid var(--card-border, rgba(255, 255, 255, 0.08))',
+              borderRadius: '12px',
+            }}
+          >
             <div style={{ fontSize: '32px', marginBottom: '16px' }}>⚠</div>
-            <h2 style={{ margin: '0 0 12px', fontSize: '20px' }}>
-              This page encountered an error
-            </h2>
-            <p style={{
-              margin: '0 0 24px',
-              color: 'var(--site-text-muted, rgba(226, 232, 240, 0.7))',
-              fontSize: '14px',
-            }}>
+            <h2 style={{ margin: '0 0 12px', fontSize: '20px' }}>This page encountered an error</h2>
+            <p
+              style={{
+                margin: '0 0 24px',
+                color: 'var(--site-text-muted, rgba(226, 232, 240, 0.7))',
+                fontSize: '14px',
+              }}
+            >
               The error has been reported. Try refreshing the page or return to the archive.
             </p>
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <div
+              style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}
+            >
               <button
                 type="button"
                 onClick={() => window.location.reload()}

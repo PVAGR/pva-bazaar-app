@@ -7,7 +7,7 @@ const oracleAssessmentSchema = new mongoose.Schema({
     required: true,
     index: true,
   },
-  
+
   // Personal Data
   personalData: {
     fullName: { type: String, required: true },
@@ -21,7 +21,7 @@ const oracleAssessmentSchema = new mongoose.Schema({
       hairColor: { type: String },
     },
   },
-  
+
   // Spiritual Profile
   spiritualProfile: {
     meditation: { type: Boolean, default: false },
@@ -31,7 +31,7 @@ const oracleAssessmentSchema = new mongoose.Schema({
     personalSymbols: [{ type: String }],
     lifeGoals: [{ type: String }],
   },
-  
+
   // AI-Generated Results
   results: {
     cosmicSignature: {
@@ -57,14 +57,14 @@ const oracleAssessmentSchema = new mongoose.Schema({
       sacredPractices: [{ type: String }],
     },
   },
-  
+
   // Status tracking
   status: {
     type: String,
     enum: ['pending', 'processing', 'completed', 'failed'],
     default: 'pending',
   },
-  
+
   // Metadata
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
@@ -72,7 +72,7 @@ const oracleAssessmentSchema = new mongoose.Schema({
 });
 
 // Update updatedAt on save
-oracleAssessmentSchema.pre('save', function(next) {
+oracleAssessmentSchema.pre('save', function (next) {
   this.updatedAt = new Date();
   if (this.status === 'completed' && !this.completedAt) {
     this.completedAt = new Date();

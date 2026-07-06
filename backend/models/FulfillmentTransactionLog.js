@@ -13,7 +13,7 @@ const fulfillmentTransactionLogSchema = new mongoose.Schema(
     success: { type: Boolean, default: true },
     errorMessage: { type: String },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 fulfillmentTransactionLogSchema.index({ createdAt: -1 });

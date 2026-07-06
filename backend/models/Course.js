@@ -3,7 +3,12 @@ const mongoose = require('mongoose');
 
 const courseSchema = new mongoose.Schema({
   // Reference to ProductType
-  productId: { type: mongoose.Schema.Types.ObjectId, ref: 'ProductType', required: true, index: true },
+  productId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'ProductType',
+    required: true,
+    index: true,
+  },
   creatorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
 
   // Course details
@@ -126,10 +131,13 @@ courseSchema.pre('save', function (next) {
   this.updatedAt = Date.now();
   // Calculate total lessons
   this.totalLessons = this.modules?.reduce((sum, mod) => sum + (mod.lessons?.length || 0), 0) || 0;
-  this.totalDuration = this.modules?.reduce((sum, mod) =>
-    sum + (mod.lessons?.reduce((lessonSum, lesson) => lessonSum + (lesson.duration || 0), 0) || 0),
-    0
-  ) || 0;
+  this.totalDuration =
+    this.modules?.reduce(
+      (sum, mod) =>
+        sum +
+        (mod.lessons?.reduce((lessonSum, lesson) => lessonSum + (lesson.duration || 0), 0) || 0),
+      0,
+    ) || 0;
   next();
 });
 

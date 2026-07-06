@@ -64,7 +64,7 @@ const VotingBetSchema = new mongoose.Schema(
     // Metadata
     metadata: mongoose.Schema.Types.Mixed,
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // Indexes

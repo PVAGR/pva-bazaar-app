@@ -14,6 +14,7 @@ This file is a historical verification record, not the canonical operating guide
 ## Frontend Requirements ✅
 
 ### 1. API-First Architecture ✅
+
 **Location:** [Frontend/src/App.jsx](Frontend/src/App.jsx#L28-L57)
 
 ```javascript
@@ -35,6 +36,7 @@ useEffect(() => {
 ```
 
 **Verified:**
+
 - ✅ Fetches from `/api/archive` on mount
 - ✅ Backend is source of truth
 - ✅ localStorage used as cache fallback only
@@ -43,6 +45,7 @@ useEffect(() => {
 ---
 
 ### 2. EntryDetail Hard Refresh Support ✅
+
 **Location:** [Frontend/src/pages/EntryDetail.jsx](Frontend/src/pages/EntryDetail.jsx#L16-L38)
 
 ```javascript
@@ -51,7 +54,9 @@ useEffect(() => {
   if (!entry) {
     const controller = new AbortController();
     fetchArchiveEntryById(id, { signal: controller.signal }) // GET /api/archive/:id
-      .then((data) => { if (mounted) setFetchedEntry(data); })
+      .then((data) => {
+        if (mounted) setFetchedEntry(data);
+      })
       .catch((err) => {
         if (err?.name === 'AbortError') return; // Silent abort
         if (mounted) console.warn('Failed to fetch entry', err);
@@ -65,6 +70,7 @@ useEffect(() => {
 ```
 
 **Verified:**
+
 - ✅ Fetches from backend if entry not in state
 - ✅ AbortController properly wired with signal forwarding
 - ✅ Stale requests canceled on unmount
@@ -73,6 +79,7 @@ useEffect(() => {
 ---
 
 ### 3. Admin Create Flow (Real Backend) ✅
+
 **Location:** [Frontend/src/pages/AdminNewEntry.jsx](Frontend/src/pages/AdminNewEntry.jsx#L3,L20-L22,L41-L51)
 
 ```javascript
@@ -100,6 +107,7 @@ try {
 ```
 
 **Verified:**
+
 - ✅ Uses `requestAdminToken` (not `requestDevToken`)
 - ✅ POSTs to `/api/archive` with Bearer token
 - ✅ Hard fails with clear error message (no silent localStorage fallback)
@@ -108,9 +116,11 @@ try {
 ---
 
 ### 4. Backend-Powered Search ✅
+
 **Location:** [Frontend/src/pages/SearchPage.jsx](Frontend/src/pages/SearchPage.jsx)
 
 **Verified in build:**
+
 ```bash
 $ grep -o "/api/search/text" Frontend/dist/assets/*.js | wc -l
 1
@@ -125,6 +135,7 @@ $ grep -o "/api/search/text" Frontend/dist/assets/*.js | wc -l
 ### 5. Clean Build Output ✅
 
 **Build Scans:**
+
 ```bash
 ✅ PASS: no localhost (0 matches)
 ✅ PASS: no legacy calls (0 matches for /api/market, /api/artifacts, etc.)
@@ -133,6 +144,7 @@ $ grep -o "/api/search/text" Frontend/dist/assets/*.js | wc -l
 ```
 
 **Bundle Stats:**
+
 - Main bundle: 379.20 kB (gzip: 120.05 kB)
 - No raw src/ files copied
 - Vite-compiled bundles only
@@ -147,6 +159,7 @@ $ grep -o "/api/search/text" Frontend/dist/assets/*.js | wc -l
 ```
 
 **Verified Files:**
+
 - `/magnum-opus.html` - Magnum Opus page
 - `/public/status.html` - Status page
 - `/404.html` - Fallback (mirrors index.html)
@@ -156,6 +169,7 @@ $ grep -o "/api/search/text" Frontend/dist/assets/*.js | wc -l
 ## Backend Requirements ✅
 
 ### 1. Search Queries ArchiveEntry (Journal) ✅
+
 **Location:** [backend/routes/search.js](backend/routes/search.js#L5,L9-L10,L30-L60)
 
 ```javascript
@@ -169,7 +183,7 @@ router.get('/text', async (req, res) => {
   const { q, limit = 10 } = req.query;
   const qSafe = String(q).slice(0, 100); // Cap query length
   const regex = new RegExp(escapeRegExp(qSafe), 'i'); // Escape regex
-  
+
   const results = await ArchiveEntry.find({
     $or: [
       { title: regex },
@@ -186,21 +200,25 @@ router.get('/text', async (req, res) => {
 ```
 
 **Security Measures:**
+
 - ✅ Searches `ArchiveEntry` (not `Artifact`)
 - ✅ `escapeRegExp()` prevents regex injection
 - ✅ Query capped at 100 chars (prevents DoS)
 - ✅ Field limiting (no full `contentHtml` in results)
 
 **Backend Verification (Live):**
+
 ```bash
 $ curl "https://pva-backend-api.vercel.app/api/search/text?q=test"
 {"success":true,"query":"test","results":[],"count":0}
 ```
+
 ✅ No longer errors (was failing before deployment)
 
 ---
 
 ### 2. Archive/:id Supports ObjectId + externalId ✅
+
 **Location:** [backend/routes/archive.js](backend/routes/archive.js#L18-L28)
 
 ```javascript
@@ -208,7 +226,7 @@ router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const entry =
-      (await ArchiveEntry.findById(id).lean()) ||           // Try MongoDB ObjectId
+      (await ArchiveEntry.findById(id).lean()) || // Try MongoDB ObjectId
       (await ArchiveEntry.findOne({ externalId: id }).lean()); // Fallback to externalId
     if (!entry) return res.status(404).json({ ok: false, message: 'Entry not found' });
     res.json({ ok: true, entry });
@@ -219,6 +237,7 @@ router.get('/:id', async (req, res) => {
 ```
 
 **Verified:**
+
 - ✅ Tries `findById` first (MongoDB ObjectId)
 - ✅ Falls back to `findOne({ externalId })` if not found
 - ✅ Returns `{ ok: true, entry }` or 404
@@ -226,13 +245,16 @@ router.get('/:id', async (req, res) => {
 ---
 
 ### 3. Legacy Marketplace Gated ✅
+
 **Backend Verification (Live):**
+
 ```bash
 $ curl -I "https://pva-backend-api.vercel.app/api/artifacts"
 HTTP/2 410
 ```
 
 **Configuration:**
+
 - ✅ `LEGACY_MODE` defaults to `'false'`
 - ✅ `legacyGate` middleware returns 410 Gone
 - ✅ Marketplace endpoints (`/api/artifacts`, `/api/market`, etc.) blocked
@@ -240,6 +262,7 @@ HTTP/2 410
 ---
 
 ### 4. CORS Configuration ✅
+
 **Location:** [backend/api/index.js](backend/api/index.js#L30-L55)
 
 ```javascript
@@ -249,8 +272,8 @@ app.use(
       const allowed = [
         'http://localhost:3000',
         'http://localhost:5173',
-        'https://pvabazaar.org',      // ✅ Production domain
-        'https://www.pvabazaar.org',  // ✅ WWW subdomain
+        'https://pvabazaar.org', // ✅ Production domain
+        'https://www.pvabazaar.org', // ✅ WWW subdomain
       ];
       if (!origin || allowed.includes(origin)) return callback(null, true);
       return callback(new Error('CORS not allowed for origin: ' + origin));
@@ -261,6 +284,7 @@ app.use(
 ```
 
 **Verified:**
+
 - ✅ `pvabazaar.org` whitelisted
 - ✅ `www.pvabazaar.org` whitelisted
 - ✅ localhost ports for development
@@ -271,70 +295,82 @@ app.use(
 ## Backend Smoke Tests (Live Production) ✅
 
 ### Health Check ✅
+
 ```bash
 $ curl -s "https://pva-backend-api.vercel.app/api/health" | head -200
 {"status":"ok","database":{"status":"connected","responseTime":"153ms"},"uptime":10.94}
 ```
 
 ### Archive List ✅
+
 ```bash
 $ curl -s "https://pva-backend-api.vercel.app/api/archive" | head -200
 {"ok":true,"entries":[]}
 ```
+
 ✅ Correct shape (matches `fetchArchiveEntries()` expectations)
 
 ### Search Text ✅
+
 ```bash
 $ curl -s "https://pva-backend-api.vercel.app/api/search/text?q=test" | head -200
 {"success":true,"query":"test","results":[],"count":0}
 ```
+
 ✅ **FIXED** - No longer errors (searches ArchiveEntry, not Artifact)
 
 ### Legacy Marketplace Gated ✅
+
 ```bash
 $ curl -I "https://pva-backend-api.vercel.app/api/artifacts" | head -20
 HTTP/2 410
 ```
+
 ✅ Returns 410 Gone (marketplace disabled)
 
 ---
 
 ## Deployment Status
 
-| Component | Status | URL/Location |
-|-----------|--------|--------------|
-| Git commit | ✅ Pushed | abea51b (main) |
-| Backend | ✅ Deployed | https://pva-backend-api.vercel.app |
-| Frontend build | ✅ Complete | Frontend/dist/ ready |
-| Frontend deploy | ⏳ Pending | Awaiting GitHub Pages/Vercel trigger |
-| Database | ✅ Connected | MongoDB Atlas (153ms latency) |
-| CORS | ✅ Configured | pvabazaar.org whitelisted |
+| Component       | Status        | URL/Location                         |
+| --------------- | ------------- | ------------------------------------ |
+| Git commit      | ✅ Pushed     | abea51b (main)                       |
+| Backend         | ✅ Deployed   | https://pva-backend-api.vercel.app   |
+| Frontend build  | ✅ Complete   | Frontend/dist/ ready                 |
+| Frontend deploy | ⏳ Pending    | Awaiting GitHub Pages/Vercel trigger |
+| Database        | ✅ Connected  | MongoDB Atlas (153ms latency)        |
+| CORS            | ✅ Configured | pvabazaar.org whitelisted            |
 
 ---
 
 ## End-to-End Flow Verification
 
 ### 1. Home Page Load
+
 - User visits `https://pvabazaar.org`
 - App.jsx `useEffect` fires
 - **Expected:** `GET /api/archive` → displays entries
 
 ### 2. Journal/Archive Pages
+
 - User navigates to `/#/journal` or `/#/archive`
 - **Expected:** Entries from backend state render immediately
 - **Expected:** Category filtering works client-side
 
 ### 3. Entry Detail (Normal Navigation)
+
 - User clicks entry card
 - **Expected:** Entry from state renders
 - **Expected:** Prev/next navigation works
 
 ### 4. Entry Detail (Hard Refresh)
+
 - User visits `/#/entry/<id>` directly or refreshes
 - **Expected:** `GET /api/archive/:id` → entry loads
 - **Expected:** No "Entry not found" flicker
 
 ### 5. Admin Entry Creation
+
 - User visits `/#/admin/new-journal`
 - Fills form and submits
 - **Expected:** Prompts for admin secret (if not cached)
@@ -344,12 +380,14 @@ HTTP/2 410
 - **Expected:** Alert shown if backend unavailable
 
 ### 6. Search
+
 - User visits `/#/search`
 - Types query (debounced 300ms)
 - **Expected:** `GET /api/search/text?q=...` → displays results
 - **Expected:** Results from journal entries (not marketplace)
 
 ### 7. Offline Mode
+
 - User loads site with backend unreachable
 - **Expected:** Orange banner "⚠️ Offline mode — showing cached data"
 - **Expected:** Falls back to localStorage cache
@@ -359,6 +397,7 @@ HTTP/2 410
 ## Summary: All Requirements Met ✅
 
 ### Frontend Checklist
+
 - ✅ API-first with cache fallback
 - ✅ EntryDetail hard refresh works
 - ✅ Admin flow uses real backend (no silent fallbacks)
@@ -367,12 +406,14 @@ HTTP/2 410
 - ✅ Static files present (magnum-opus.html, status.html)
 
 ### Backend Checklist
+
 - ✅ Search queries ArchiveEntry with regex escaping
 - ✅ Archive/:id supports ObjectId + externalId
 - ✅ Legacy marketplace gated (410 Gone)
 - ✅ CORS allows pvabazaar.org
 
 ### Deployment Checklist
+
 - ✅ Code committed and pushed to main
 - ✅ Backend deployed to Vercel production
 - ✅ All smoke tests passing
@@ -383,11 +424,13 @@ HTTP/2 410
 ## Next Steps
 
 **Immediate:**
+
 1. Frontend should auto-deploy via GitHub Actions after push to main
 2. Monitor: https://github.com/PVAGR/pva-bazaar-app/actions
 3. Once deployed, test browser flows listed above
 
 **Post-Frontend Deploy:**
+
 ```bash
 # Browser smoke test checklist
 [ ] Visit pvabazaar.org - home loads, fetches /api/archive
@@ -400,4 +443,3 @@ HTTP/2 410
 ```
 
 **Everything is ready for production use! 🚀**
-

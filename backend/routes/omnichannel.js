@@ -25,8 +25,7 @@ function hasAdminAccess(req) {
     try {
       const decoded = jwt.verify(cookieToken, process.env.JWT_SECRET);
       if (decoded && decoded.role === 'admin') return true;
-    } catch (_) {
-    }
+    } catch (_) {}
   }
 
   const authHeader = req.headers.authorization || '';
@@ -35,8 +34,7 @@ function hasAdminAccess(req) {
     try {
       const decoded = jwt.verify(bearerToken, process.env.JWT_SECRET);
       if (decoded && decoded.role === 'admin') return true;
-    } catch (_) {
-    }
+    } catch (_) {}
   }
 
   return false;
@@ -123,10 +121,14 @@ router.put('/:itemId/listings', authenticateToken, async (req, res) => {
         channel: String(entry.channel).toLowerCase(),
         externalListingId: String(entry.externalListingId || ''),
         externalUrl: String(entry.externalUrl || ''),
-        syncMode: ['webhook', 'polling', 'manual'].includes(String(entry.syncMode || '').toLowerCase())
+        syncMode: ['webhook', 'polling', 'manual'].includes(
+          String(entry.syncMode || '').toLowerCase(),
+        )
           ? String(entry.syncMode).toLowerCase()
           : 'manual',
-        status: ['listed', 'sold', 'delisted', 'error'].includes(String(entry.status || '').toLowerCase())
+        status: ['listed', 'sold', 'delisted', 'error'].includes(
+          String(entry.status || '').toLowerCase(),
+        )
           ? String(entry.status).toLowerCase()
           : 'listed',
         lastSyncedAt: new Date(),
@@ -250,7 +252,9 @@ router.post('/:itemId/mark-sold', authenticateToken, async (req, res) => {
       buyerWallet: String(buyerWallet || ''),
       amountCents: Number(amountCents || Math.round(Number(item.price || 0) * 100) || 0),
       currency: String(currency || 'usd').toLowerCase(),
-      idempotencyKey: String(idempotencyKey || `manual:${String(item._id)}:${String(externalSaleId || '')}`),
+      idempotencyKey: String(
+        idempotencyKey || `manual:${String(item._id)}:${String(externalSaleId || '')}`,
+      ),
     });
 
     if (!result.ok) {
@@ -318,13 +322,18 @@ router.post('/webhooks/:channel/sale', async (req, res) => {
     const result = await completeSaleAcrossChannels({
       item,
       saleSource: normalizedChannel,
-      externalSaleId: String(payload.externalSaleId || payload.orderId || payload.transactionId || ''),
+      externalSaleId: String(
+        payload.externalSaleId || payload.orderId || payload.transactionId || '',
+      ),
       paymentMethod: String(payload.paymentMethod || 'card').toLowerCase(),
       buyerEmail: String(payload.buyerEmail || ''),
       buyerWallet: String(payload.buyerWallet || ''),
       amountCents: Number(payload.amountCents || 0),
       currency: String(payload.currency || 'usd').toLowerCase(),
-      idempotencyKey: String(payload.idempotencyKey || `${normalizedChannel}:${payload.externalSaleId || payload.orderId || payload.transactionId || ''}`),
+      idempotencyKey: String(
+        payload.idempotencyKey ||
+          `${normalizedChannel}:${payload.externalSaleId || payload.orderId || payload.transactionId || ''}`,
+      ),
     });
 
     if (!result.ok) {

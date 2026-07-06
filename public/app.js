@@ -29,12 +29,17 @@
     const apiBase = typeof backendUrl === 'string' ? backendUrl : await backendUrl;
     if (!apiBase) {
       statusNode.textContent = 'No backend URL configured yet.';
-      statusNode.parentElement && statusNode.parentElement.querySelector('.status span:last-child')?.replaceChildren(document.createTextNode('Unset'));
+      statusNode.parentElement &&
+        statusNode.parentElement
+          .querySelector('.status span:last-child')
+          ?.replaceChildren(document.createTextNode('Unset'));
       return;
     }
 
     const cleanBase = apiBase.replace(/\/+$/, '');
-    const healthUrl = cleanBase.endsWith('/api') ? `${cleanBase}/health` : `${cleanBase}/api/health`;
+    const healthUrl = cleanBase.endsWith('/api')
+      ? `${cleanBase}/health`
+      : `${cleanBase}/api/health`;
 
     try {
       const response = await fetch(healthUrl, {

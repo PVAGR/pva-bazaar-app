@@ -3,8 +3,9 @@ const crypto = require('crypto');
 function getMeowConfig() {
   const mode = String(process.env.MEOW_ENV || 'sandbox').toLowerCase();
   const isProd = mode === 'production';
-  const baseUrl = process.env.MEOW_BASE_URL
-    || (isProd ? 'https://api.meow.com/v1' : 'https://api.sandbox.meow.com/v1');
+  const baseUrl =
+    process.env.MEOW_BASE_URL ||
+    (isProd ? 'https://api.meow.com/v1' : 'https://api.sandbox.meow.com/v1');
 
   return {
     enabled: process.env.MEOW_ENABLED === 'true',
@@ -126,10 +127,7 @@ function verifyWebhookSignature({ config, rawBody, signatureHeader }) {
   if (!config.webhookSecret) return { ok: false, reason: 'missing_secret' };
   if (!rawBody || !signatureHeader) return { ok: false, reason: 'missing_payload_or_signature' };
 
-  const expected = crypto
-    .createHmac('sha256', config.webhookSecret)
-    .update(rawBody)
-    .digest('hex');
+  const expected = crypto.createHmac('sha256', config.webhookSecret).update(rawBody).digest('hex');
 
   const incomingRaw = String(signatureHeader).trim();
   const candidates = [incomingRaw];

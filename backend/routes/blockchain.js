@@ -70,9 +70,10 @@ function toPublicTransfer(transfer) {
     finalizationDigest: item.finalizationDigest || '',
     auditEvents: Array.isArray(item.auditEvents) ? item.auditEvents.slice(-30) : [],
     auditEventCount: Array.isArray(item.auditEvents) ? item.auditEvents.length : 0,
-    lastAuditAt: Array.isArray(item.auditEvents) && item.auditEvents.length
-      ? item.auditEvents[item.auditEvents.length - 1].eventAt
-      : null,
+    lastAuditAt:
+      Array.isArray(item.auditEvents) && item.auditEvents.length
+        ? item.auditEvents[item.auditEvents.length - 1].eventAt
+        : null,
     isFinalized: !!item.finalizedAt,
     createdAt: item.createdAt,
     updatedAt: item.updatedAt,
@@ -88,7 +89,9 @@ function appendAuditEvent(record, { eventType, actorId, actorRole, details }) {
     eventType: cleanType,
     eventAt: new Date(),
     actorId: actorId || null,
-    actorRole: String(actorRole || '').trim().slice(0, 60),
+    actorRole: String(actorRole || '')
+      .trim()
+      .slice(0, 60),
     details: details || null,
   };
   const prior = Array.isArray(record.auditEvents) ? record.auditEvents : [];
@@ -211,8 +214,11 @@ function verifyAttestationSignature(message, signature, wallet) {
 function buildIntegrityCheck(record) {
   const hasSnapshot = !!record.finalizationSnapshot;
   const storedDigest = String(record.finalizationDigest || '').trim();
-  const recomputedFromSnapshot = hasSnapshot ? computeFinalizationDigest(record.finalizationSnapshot) : '';
-  const digestMatchesSnapshot = !!storedDigest && !!recomputedFromSnapshot && storedDigest === recomputedFromSnapshot;
+  const recomputedFromSnapshot = hasSnapshot
+    ? computeFinalizationDigest(record.finalizationSnapshot)
+    : '';
+  const digestMatchesSnapshot =
+    !!storedDigest && !!recomputedFromSnapshot && storedDigest === recomputedFromSnapshot;
   const currentSnapshot = buildFinalizationSnapshot(record);
   const currentDigest = computeFinalizationDigest(currentSnapshot);
   const currentMatchesStored = !!storedDigest && storedDigest === currentDigest;
@@ -225,12 +231,11 @@ function buildIntegrityCheck(record) {
     digestMatchesSnapshot,
     currentDigest,
     currentMatchesStored,
-    status:
-      !record.finalizedAt
-        ? 'not-finalized'
-        : digestMatchesSnapshot && currentMatchesStored
-          ? 'verified'
-          : 'mismatch',
+    status: !record.finalizedAt
+      ? 'not-finalized'
+      : digestMatchesSnapshot && currentMatchesStored
+        ? 'verified'
+        : 'mismatch',
   };
 }
 
@@ -263,7 +268,12 @@ function buildVerificationReport(record, req) {
 }
 
 function buildVerificationReportHtml(report) {
-  const statusClass = report.integrity.status === 'verified' ? 'ok' : report.integrity.status === 'mismatch' ? 'bad' : 'warn';
+  const statusClass =
+    report.integrity.status === 'verified'
+      ? 'ok'
+      : report.integrity.status === 'mismatch'
+        ? 'bad'
+        : 'warn';
   return `<!doctype html>
 <html>
   <head>
@@ -583,9 +593,10 @@ router.get('/transfers/public/:id', async (req, res) => {
         },
         audit: {
           eventCount: Array.isArray(item.auditEvents) ? item.auditEvents.length : 0,
-          lastEventAt: Array.isArray(item.auditEvents) && item.auditEvents.length
-            ? item.auditEvents[item.auditEvents.length - 1].eventAt
-            : null,
+          lastEventAt:
+            Array.isArray(item.auditEvents) && item.auditEvents.length
+              ? item.auditEvents[item.auditEvents.length - 1].eventAt
+              : null,
         },
         generatedAt: payload.generatedAt,
       },
@@ -625,7 +636,9 @@ router.get('/transfers', authenticateToken, async (req, res) => {
 // GET /api/blockchain/transfers/:id/audit-log - persistent audit events for a transfer
 router.get('/transfers/:id/audit-log', authenticateToken, async (req, res) => {
   try {
-    const item = await BlockchainTransfer.findById(req.params.id).select('auditEvents txHash finalizedAt status createdAt updatedAt');
+    const item = await BlockchainTransfer.findById(req.params.id).select(
+      'auditEvents txHash finalizedAt status createdAt updatedAt',
+    );
     if (!item) {
       return res.status(404).json({ ok: false, message: 'Transfer record not found' });
     }
@@ -671,7 +684,9 @@ router.post('/transfers/:id/audit-log', authenticateToken, async (req, res) => {
     });
   } catch (error) {
     console.error('Blockchain transfer audit append error:', error);
-    res.status(500).json({ ok: false, message: 'Failed to append audit event', error: error.message });
+    res
+      .status(500)
+      .json({ ok: false, message: 'Failed to append audit event', error: error.message });
   }
 });
 
@@ -725,35 +740,66 @@ router.post('/transfers/record', authenticateToken, async (req, res) => {
     }
 
     const amountUsd = Number(req.body?.amountUsd || 0);
-    const note = String(req.body?.note || '').trim().slice(0, 800);
-    const tokenSymbol = String(req.body?.tokenSymbol || 'USDC').trim().slice(0, 16).toUpperCase();
-    const tokenAmount = String(req.body?.tokenAmount || '').trim().slice(0, 64);
+    const note = String(req.body?.note || '')
+      .trim()
+      .slice(0, 800);
+    const tokenSymbol = String(req.body?.tokenSymbol || 'USDC')
+      .trim()
+      .slice(0, 16)
+      .toUpperCase();
+    const tokenAmount = String(req.body?.tokenAmount || '')
+      .trim()
+      .slice(0, 64);
     const requestedNetwork = normalizeNetwork(req.body?.network || 'base');
     const mediaUrl = parseOptionalUrl(req.body?.mediaUrl);
     const referenceUrl = parseOptionalUrl(req.body?.referenceUrl);
     const contractTerms = {
-      partyOneName: String(req.body?.contractTerms?.partyOneName || '').trim().slice(0, 120),
-      partyOneRole: String(req.body?.contractTerms?.partyOneRole || 'Operator').trim().slice(0, 80),
-      partyTwoName: String(req.body?.contractTerms?.partyTwoName || '').trim().slice(0, 120),
-      partyTwoRole: String(req.body?.contractTerms?.partyTwoRole || 'Counterparty').trim().slice(0, 80),
-      additionalClauses: String(req.body?.contractTerms?.additionalClauses || '').trim().slice(0, 4000),
+      partyOneName: String(req.body?.contractTerms?.partyOneName || '')
+        .trim()
+        .slice(0, 120),
+      partyOneRole: String(req.body?.contractTerms?.partyOneRole || 'Operator')
+        .trim()
+        .slice(0, 80),
+      partyTwoName: String(req.body?.contractTerms?.partyTwoName || '')
+        .trim()
+        .slice(0, 120),
+      partyTwoRole: String(req.body?.contractTerms?.partyTwoRole || 'Counterparty')
+        .trim()
+        .slice(0, 80),
+      additionalClauses: String(req.body?.contractTerms?.additionalClauses || '')
+        .trim()
+        .slice(0, 4000),
     };
     const signatures = {
-      partyOneSignerName: String(req.body?.signatures?.partyOneSignerName || '').trim().slice(0, 120),
+      partyOneSignerName: String(req.body?.signatures?.partyOneSignerName || '')
+        .trim()
+        .slice(0, 120),
       partyOneSignerWallet: normalizeAddress(req.body?.signatures?.partyOneSignerWallet),
       partyOneSignedAt: parseOptionalDate(req.body?.signatures?.partyOneSignedAt),
-      partyTwoSignerName: String(req.body?.signatures?.partyTwoSignerName || '').trim().slice(0, 120),
+      partyTwoSignerName: String(req.body?.signatures?.partyTwoSignerName || '')
+        .trim()
+        .slice(0, 120),
       partyTwoSignerWallet: normalizeAddress(req.body?.signatures?.partyTwoSignerWallet),
       partyTwoSignedAt: parseOptionalDate(req.body?.signatures?.partyTwoSignedAt),
-      witnessName: String(req.body?.signatures?.witnessName || '').trim().slice(0, 120),
+      witnessName: String(req.body?.signatures?.witnessName || '')
+        .trim()
+        .slice(0, 120),
       witnessWallet: normalizeAddress(req.body?.signatures?.witnessWallet),
       witnessSignedAt: parseOptionalDate(req.body?.signatures?.witnessSignedAt),
     };
     const attestation = {
-      message: String(req.body?.attestation?.message || '').trim().slice(0, 2000),
-      partyOneSignature: String(req.body?.attestation?.partyOneSignature || '').trim().slice(0, 800),
-      partyTwoSignature: String(req.body?.attestation?.partyTwoSignature || '').trim().slice(0, 800),
-      witnessSignature: String(req.body?.attestation?.witnessSignature || '').trim().slice(0, 800),
+      message: String(req.body?.attestation?.message || '')
+        .trim()
+        .slice(0, 2000),
+      partyOneSignature: String(req.body?.attestation?.partyOneSignature || '')
+        .trim()
+        .slice(0, 800),
+      partyTwoSignature: String(req.body?.attestation?.partyTwoSignature || '')
+        .trim()
+        .slice(0, 800),
+      witnessSignature: String(req.body?.attestation?.witnessSignature || '')
+        .trim()
+        .slice(0, 800),
       partyOneValid: false,
       partyTwoValid: false,
       witnessValid: false,
@@ -775,7 +821,8 @@ router.post('/transfers/record', authenticateToken, async (req, res) => {
     if (existing?.finalizedAt) {
       return res.status(409).json({
         ok: false,
-        message: 'Transfer is finalized and cannot be modified. Create a new transfer for amendments.',
+        message:
+          'Transfer is finalized and cannot be modified. Create a new transfer for amendments.',
       });
     }
 
@@ -810,7 +857,7 @@ router.post('/transfers/record', authenticateToken, async (req, res) => {
     const item = await BlockchainTransfer.findOneAndUpdate(
       { txHash },
       { $set: updateDoc, $setOnInsert: { submittedBy: req.user.id } },
-      { upsert: true, new: true }
+      { upsert: true, new: true },
     );
 
     appendAuditEvent(item, {
@@ -832,7 +879,9 @@ router.post('/transfers/record', authenticateToken, async (req, res) => {
     });
   } catch (error) {
     console.error('Blockchain transfer record error:', error);
-    res.status(500).json({ ok: false, message: 'Failed to record blockchain transfer', error: error.message });
+    res
+      .status(500)
+      .json({ ok: false, message: 'Failed to record blockchain transfer', error: error.message });
   }
 });
 
@@ -847,8 +896,12 @@ router.post('/transfers/:id/finalize', authenticateToken, async (req, res) => {
       return res.status(409).json({ ok: false, message: 'Transfer is already finalized' });
     }
 
-    const partyOneSignerName = String(req.body?.signatures?.partyOneSignerName || '').trim().slice(0, 120);
-    const partyTwoSignerName = String(req.body?.signatures?.partyTwoSignerName || '').trim().slice(0, 120);
+    const partyOneSignerName = String(req.body?.signatures?.partyOneSignerName || '')
+      .trim()
+      .slice(0, 120);
+    const partyTwoSignerName = String(req.body?.signatures?.partyTwoSignerName || '')
+      .trim()
+      .slice(0, 120);
     if (!partyOneSignerName || !partyTwoSignerName) {
       return res.status(400).json({
         ok: false,
@@ -863,25 +916,50 @@ router.post('/transfers/:id/finalize', authenticateToken, async (req, res) => {
       partyTwoSignerName,
       partyTwoSignerWallet: normalizeAddress(req.body?.signatures?.partyTwoSignerWallet),
       partyTwoSignedAt: parseOptionalDate(req.body?.signatures?.partyTwoSignedAt) || new Date(),
-      witnessName: String(req.body?.signatures?.witnessName || '').trim().slice(0, 120),
+      witnessName: String(req.body?.signatures?.witnessName || '')
+        .trim()
+        .slice(0, 120),
       witnessWallet: normalizeAddress(req.body?.signatures?.witnessWallet),
       witnessSignedAt: parseOptionalDate(req.body?.signatures?.witnessSignedAt),
     };
-    const attestationMessage = String(req.body?.attestation?.message || '').trim().slice(0, 2000) || buildAttestationMessage(item);
-    const partyOneSignature = String(req.body?.attestation?.partyOneSignature || '').trim().slice(0, 800);
-    const partyTwoSignature = String(req.body?.attestation?.partyTwoSignature || '').trim().slice(0, 800);
-    const witnessSignature = String(req.body?.attestation?.witnessSignature || '').trim().slice(0, 800);
+    const attestationMessage =
+      String(req.body?.attestation?.message || '')
+        .trim()
+        .slice(0, 2000) || buildAttestationMessage(item);
+    const partyOneSignature = String(req.body?.attestation?.partyOneSignature || '')
+      .trim()
+      .slice(0, 800);
+    const partyTwoSignature = String(req.body?.attestation?.partyTwoSignature || '')
+      .trim()
+      .slice(0, 800);
+    const witnessSignature = String(req.body?.attestation?.witnessSignature || '')
+      .trim()
+      .slice(0, 800);
     item.attestation = {
       message: attestationMessage,
       partyOneSignature,
       partyTwoSignature,
       witnessSignature,
-      partyOneValid: verifyAttestationSignature(attestationMessage, partyOneSignature, item.signatures.partyOneSignerWallet),
-      partyTwoValid: verifyAttestationSignature(attestationMessage, partyTwoSignature, item.signatures.partyTwoSignerWallet),
-      witnessValid: verifyAttestationSignature(attestationMessage, witnessSignature, item.signatures.witnessWallet),
+      partyOneValid: verifyAttestationSignature(
+        attestationMessage,
+        partyOneSignature,
+        item.signatures.partyOneSignerWallet,
+      ),
+      partyTwoValid: verifyAttestationSignature(
+        attestationMessage,
+        partyTwoSignature,
+        item.signatures.partyTwoSignerWallet,
+      ),
+      witnessValid: verifyAttestationSignature(
+        attestationMessage,
+        witnessSignature,
+        item.signatures.witnessWallet,
+      ),
       verifiedAt: new Date(),
     };
-    item.finalizationNote = String(req.body?.finalizationNote || '').trim().slice(0, 2000);
+    item.finalizationNote = String(req.body?.finalizationNote || '')
+      .trim()
+      .slice(0, 2000);
     item.finalizedAt = new Date();
     item.finalizedBy = req.user.id;
     item.contractVersion = item.contractVersion || 'v3';
@@ -899,10 +977,16 @@ router.post('/transfers/:id/finalize', authenticateToken, async (req, res) => {
     });
     await item.save();
 
-    res.json({ ok: true, message: 'Settlement finalized and locked', item: toPublicTransfer(item) });
+    res.json({
+      ok: true,
+      message: 'Settlement finalized and locked',
+      item: toPublicTransfer(item),
+    });
   } catch (error) {
     console.error('Blockchain transfer finalize error:', error);
-    res.status(500).json({ ok: false, message: 'Failed to finalize transfer', error: error.message });
+    res
+      .status(500)
+      .json({ ok: false, message: 'Failed to finalize transfer', error: error.message });
   }
 });
 
@@ -924,7 +1008,9 @@ router.get('/transfers/:id/verify-integrity', authenticateToken, async (req, res
     res.json({ ok: true, integrity, item: toPublicTransfer(item) });
   } catch (error) {
     console.error('Blockchain transfer integrity verify error:', error);
-    res.status(500).json({ ok: false, message: 'Failed to verify integrity', error: error.message });
+    res
+      .status(500)
+      .json({ ok: false, message: 'Failed to verify integrity', error: error.message });
   }
 });
 
@@ -946,7 +1032,9 @@ router.get('/transfers/:id/verification-report', authenticateToken, async (req, 
     res.json({ ok: true, report });
   } catch (error) {
     console.error('Blockchain transfer verification report error:', error);
-    res.status(500).json({ ok: false, message: 'Failed to generate verification report', error: error.message });
+    res
+      .status(500)
+      .json({ ok: false, message: 'Failed to generate verification report', error: error.message });
   }
 });
 
@@ -969,7 +1057,9 @@ router.get('/transfers/:id/verification-report/render', authenticateToken, async
     res.json({ ok: true, report, html });
   } catch (error) {
     console.error('Blockchain transfer verification render error:', error);
-    res.status(500).json({ ok: false, message: 'Failed to render verification report', error: error.message });
+    res
+      .status(500)
+      .json({ ok: false, message: 'Failed to render verification report', error: error.message });
   }
 });
 
@@ -1002,7 +1092,9 @@ router.post('/transfers/:id/reverify', authenticateToken, async (req, res) => {
     res.json({ ok: true, message: 'Transfer status refreshed', item: toPublicTransfer(item) });
   } catch (error) {
     console.error('Blockchain transfer reverify error:', error);
-    res.status(500).json({ ok: false, message: 'Failed to re-verify transfer', error: error.message });
+    res
+      .status(500)
+      .json({ ok: false, message: 'Failed to re-verify transfer', error: error.message });
   }
 });
 
@@ -1025,7 +1117,9 @@ router.get('/transfers/:id/contract', authenticateToken, async (req, res) => {
     res.json({ ok: true, contract: payload });
   } catch (error) {
     console.error('Blockchain transfer contract payload error:', error);
-    res.status(500).json({ ok: false, message: 'Failed to build contract payload', error: error.message });
+    res
+      .status(500)
+      .json({ ok: false, message: 'Failed to build contract payload', error: error.message });
   }
 });
 

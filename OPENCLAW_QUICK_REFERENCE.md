@@ -7,6 +7,7 @@
 ## ✅ Completed Features
 
 ### Backend Integration
+
 - ✅ OpenClaw bridge routes (`backend/routes/openclaw.js`)
 - ✅ Status endpoint with reachability checks
 - ✅ Dispatch endpoint for event forwarding
@@ -21,6 +22,7 @@
 - ✅ Smoke tests (`backend/scripts/smoke-openclaw.js`)
 
 ### Frontend Integration
+
 - ✅ Admin panel connection status dropdown
 - ✅ Color-coded health indicator badge (green/orange/red/gray/blue)
 - ✅ Auto-refresh (60s) while dropdown open
@@ -36,6 +38,7 @@
 - ✅ Public status page (`Frontend/pages/status.html`)
 
 ### Operational Tools
+
 - ✅ Windows CLI bootstrap script (`infra/openclaw/setup-windows.ps1`)
 - ✅ Watchdog monitoring script (`infra/openclaw/watchdog-bridge.ps1`)
 - ✅ Alert system (file, desktop toast, webhook)
@@ -46,6 +49,7 @@
 - ✅ Event dispatcher CLI (`infra/openclaw/dispatch-event.ps1`)
 
 ### CI/CD
+
 - ✅ GitHub Actions workflow (`.github/workflows/openclaw-integration.yml`)
 - ✅ Multi-platform testing (Ubuntu + Windows)
 - ✅ Node.js version matrix (18, 20)
@@ -54,6 +58,7 @@
 - ✅ PowerShell integration tests
 
 ### Documentation
+
 - ✅ Comprehensive integration guide (`OPENCLAW_INTEGRATION.md`)
 - ✅ Architecture diagrams (`OPENCLAW_ARCHITECTURE.md`)
 - ✅ Quick start guide (`infra/openclaw/QUICK_START.md`)
@@ -69,6 +74,7 @@
 ## 📁 Key Files
 
 ### Backend
+
 ```
 backend/
 ├── routes/
@@ -83,6 +89,7 @@ backend/
 ```
 
 ### Frontend
+
 ```
 Frontend/
 ├── src/
@@ -96,6 +103,7 @@ Frontend/
 ```
 
 ### Infrastructure
+
 ```
 infra/openclaw/
 ├── setup-windows.ps1            # Local CLI install
@@ -113,6 +121,7 @@ infra/openclaw/
 ```
 
 ### Documentation
+
 ```
 OPENCLAW_INTEGRATION.md          # Complete integration guide
 backend/README.md                # Backend API docs (OpenClaw section)
@@ -124,22 +133,24 @@ VERCEL_READY_TO_DEPLOY.md        # Production deployment checklist
 
 ## 🌐 API Endpoints
 
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/api/openclaw/status` | GET | Config + reachability check |
-| `/api/openclaw/dispatch` | POST | Forward events to OpenClaw |
-| `/api/openclaw/watchdog-status` | GET | Detailed watchdog summary |
-| `/api/openclaw/recent-events` | GET | Structured activity log |
-| `/api/health` | GET | Includes OpenClaw status |
+| Endpoint                        | Method | Purpose                     |
+| ------------------------------- | ------ | --------------------------- |
+| `/api/openclaw/status`          | GET    | Config + reachability check |
+| `/api/openclaw/dispatch`        | POST   | Forward events to OpenClaw  |
+| `/api/openclaw/watchdog-status` | GET    | Detailed watchdog summary   |
+| `/api/openclaw/recent-events`   | GET    | Structured activity log     |
+| `/api/health`                   | GET    | Includes OpenClaw status    |
 
 ---
 
 ## 🎨 UI Components
 
 ### Connection Status Dropdown
+
 **Location:** [AdminPage.jsx](Frontend/src/pages/AdminPage.jsx) lines 560-710
 
 **Features:**
+
 - Health indicator badge on button (color-coded state)
 - API base URL display
 - Last check timestamp
@@ -148,18 +159,22 @@ VERCEL_READY_TO_DEPLOY.md        # Production deployment checklist
 - Admin token input (optional)
 
 ### OpenClaw Summary Card
+
 **Location:** [AdminPage.jsx](Frontend/src/pages/AdminPage.jsx) lines 620-685
 
 **Features:**
+
 - Header with Active/Issue status badge
 - Metrics grid: state, errors, alerts, last event
 - Test dispatch button
 - View activity button
 
 ### Recent Events Viewer
+
 **Location:** [AdminPage.jsx](Frontend/src/pages/AdminPage.jsx) lines 705-755
 
 **Features:**
+
 - Collapsible panel
 - Refresh button
 - Color-coded event levels (ERROR, WARN, INFO, ALERT, SUCCESS)
@@ -171,6 +186,7 @@ VERCEL_READY_TO_DEPLOY.md        # Production deployment checklist
 ## 🎨 CSS Classes
 
 ### Health Indicators
+
 ```css
 .health-indicator--healthy     /* Green pulse */
 .health-indicator--degraded    /* Orange pulse */
@@ -181,6 +197,7 @@ VERCEL_READY_TO_DEPLOY.md        # Production deployment checklist
 ```
 
 ### OpenClaw Components
+
 ```css
 .openclaw-summary              /* Main card */
 .openclaw-summary__header      /* Title + status badge */
@@ -202,6 +219,7 @@ VERCEL_READY_TO_DEPLOY.md        # Production deployment checklist
 ## ⚙️ Environment Variables
 
 ### Backend (`backend/.env`)
+
 ```bash
 OPENCLAW_GATEWAY_URL=https://...
 OPENCLAW_WEBHOOK_URL=https://...
@@ -213,6 +231,7 @@ OPENCLAW_WATCHDOG_ALERT_PATH=./infra/openclaw/logs/watchdog.alert.log
 ```
 
 ### Frontend (`Frontend/.env.production`)
+
 ```bash
 VITE_STATUS_STALE_MS=120000  # 2 minutes (min: 15000)
 ```
@@ -237,6 +256,7 @@ $webhookUrl = ""              # Slack/Discord webhook
 ## 🚀 Deployment Commands
 
 ### Backend
+
 ```bash
 cd backend
 npm run dev                   # Local development
@@ -245,6 +265,7 @@ node scripts/smoke-openclaw.js   # Smoke tests
 ```
 
 ### Frontend
+
 ```bash
 cd Frontend
 npm run dev                   # Local development
@@ -252,6 +273,7 @@ npm run build                 # Production build (validates)
 ```
 
 ### Watchdog (Windows)
+
 ```powershell
 # Admin (scheduled task)
 .\infra\openclaw\install-watchdog-task.ps1
@@ -267,20 +289,21 @@ npm run build                 # Production build (validates)
 
 ## 📊 Health States
 
-| State | Badge | Frontend Display | Backend Condition |
-|-------|-------|------------------|-------------------|
-| `healthy` | 🟢 Green | "All systems operational" | All checks pass, no errors |
-| `degraded` | 🟠 Orange | "Minor issues detected" | Some warnings, watchdog state degraded |
-| `error` | 🔴 Red | "Critical failure" | High error count, alerts triggered |
-| `stale` | ⚪ Gray | "Data may be stale" | Last check > threshold |
-| `loading` | 🔵 Blue | "Checking status..." | Request in progress |
-| `unknown` | ⚪ Gray | "Status unknown" | No data available |
+| State      | Badge     | Frontend Display          | Backend Condition                      |
+| ---------- | --------- | ------------------------- | -------------------------------------- |
+| `healthy`  | 🟢 Green  | "All systems operational" | All checks pass, no errors             |
+| `degraded` | 🟠 Orange | "Minor issues detected"   | Some warnings, watchdog state degraded |
+| `error`    | 🔴 Red    | "Critical failure"        | High error count, alerts triggered     |
+| `stale`    | ⚪ Gray   | "Data may be stale"       | Last check > threshold                 |
+| `loading`  | 🔵 Blue   | "Checking status..."      | Request in progress                    |
+| `unknown`  | ⚪ Gray   | "Status unknown"          | No data available                      |
 
 ---
 
 ## 🧪 Testing
 
 ### Backend Endpoints
+
 ```bash
 # Status check
 curl http://localhost:5000/api/openclaw/status
@@ -298,6 +321,7 @@ curl http://localhost:5000/api/openclaw/recent-events?limit=10
 ```
 
 ### Frontend UI
+
 1. Open admin panel (`/pages/admin_dashboard/admin.html`)
 2. Click connection status button (top-left)
 3. View OpenClaw summary card
@@ -305,6 +329,7 @@ curl http://localhost:5000/api/openclaw/recent-events?limit=10
 5. Click "View Activity" to see recent events
 
 ### Watchdog
+
 ```powershell
 # Manual run (terminal output)
 .\infra\openclaw\watchdog-bridge.ps1

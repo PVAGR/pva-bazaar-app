@@ -70,7 +70,10 @@
   color: var(--site-text);
   text-decoration: none;
   font-weight: 600;
-  transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    background-color 0.2s ease;
 }
 
 .api-docs-atlas__link:hover {
@@ -138,7 +141,9 @@
   border-radius: 6px;
   cursor: pointer;
   font-size: 0.85rem;
-  transition: border-color 0.2s ease, transform 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    transform 0.2s ease;
 }
 
 .btn-copy-small:hover {
@@ -282,7 +287,9 @@
   cursor: pointer;
   font-size: 0.75rem;
   font-weight: 700;
-  transition: border-color 0.2s ease, transform 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    transform 0.2s ease;
   white-space: nowrap;
 }
 
@@ -390,7 +397,9 @@
   background: var(--site-panel-soft);
   border: 1px solid var(--site-border);
   border-radius: 8px;
-  transition: border-color 0.2s ease, transform 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    transform 0.2s ease;
 }
 
 .contact-item:hover {

@@ -32,14 +32,14 @@ export default function SellerSettings() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
+  const API_BASE = process.env.NEXT_PUBLIC_API_URL || '';
 
   useEffect(() => {
     const fetchShop = async () => {
       try {
         const response = await fetch(`${API_BASE}/api/shops/me`, {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
           },
         });
 
@@ -69,7 +69,7 @@ export default function SellerSettings() {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
         },
         body: JSON.stringify(shop),
       });
@@ -126,9 +126,7 @@ export default function SellerSettings() {
               <h3 className="text-lg font-bold text-gray-900 mb-4">Basic Information</h3>
 
               <div className="mb-4">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Shop Name
-                </label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Shop Name</label>
                 <input
                   type="text"
                   value={shop.shopName}
@@ -151,9 +149,7 @@ export default function SellerSettings() {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Your Story
-                </label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Your Story</label>
                 <textarea
                   value={shop.story}
                   onChange={(e) => setShop({ ...shop, story: e.target.value })}
@@ -174,7 +170,9 @@ export default function SellerSettings() {
                 <input
                   type="text"
                   value={shop.tags.join(', ')}
-                  onChange={(e) => setShop({ ...shop, tags: e.target.value.split(',').map(t => t.trim()) })}
+                  onChange={(e) =>
+                    setShop({ ...shop, tags: e.target.value.split(',').map((t) => t.trim()) })
+                  }
                   className="w-full border border-gray-300 rounded px-3 py-2"
                   placeholder="e.g., handmade, organic, fair-trade"
                 />
@@ -225,32 +223,32 @@ export default function SellerSettings() {
               <h3 className="text-lg font-bold text-gray-900 mb-4">Social Links</h3>
 
               <div className="mb-4">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Instagram
-                </label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Instagram</label>
                 <input
                   type="url"
                   value={shop.socialLinks?.instagram || ''}
-                  onChange={(e) => setShop({
-                    ...shop,
-                    socialLinks: { ...shop.socialLinks, instagram: e.target.value }
-                  })}
+                  onChange={(e) =>
+                    setShop({
+                      ...shop,
+                      socialLinks: { ...shop.socialLinks, instagram: e.target.value },
+                    })
+                  }
                   className="w-full border border-gray-300 rounded px-3 py-2"
                   placeholder="https://instagram.com/..."
                 />
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Website
-                </label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Website</label>
                 <input
                   type="url"
                   value={shop.socialLinks?.website || ''}
-                  onChange={(e) => setShop({
-                    ...shop,
-                    socialLinks: { ...shop.socialLinks, website: e.target.value }
-                  })}
+                  onChange={(e) =>
+                    setShop({
+                      ...shop,
+                      socialLinks: { ...shop.socialLinks, website: e.target.value },
+                    })
+                  }
                   className="w-full border border-gray-300 rounded px-3 py-2"
                   placeholder="https://..."
                 />

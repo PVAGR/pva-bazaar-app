@@ -20,7 +20,11 @@ const federationPresenceSchema = new mongoose.Schema(
     introScore: { type: Number, default: 0 },
     careerTopRoles: { type: [String], default: [] },
     careerTopDomains: { type: [String], default: [] },
-    lastSource: { type: String, enum: ['manual', 'ip-lookup', 'passport', 'system'], default: 'manual' },
+    lastSource: {
+      type: String,
+      enum: ['manual', 'ip-lookup', 'passport', 'system'],
+      default: 'manual',
+    },
     lastSeenAt: { type: Date, default: Date.now, index: true },
     metadata: { type: mongoose.Schema.Types.Mixed, default: null },
   },

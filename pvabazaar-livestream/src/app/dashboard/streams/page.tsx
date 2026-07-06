@@ -38,16 +38,18 @@ export default function StreamsPage() {
     fetchStreams();
   }, [session]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
+  ) => {
     const { name, value } = e.target;
-    setFormState(prev => ({ ...prev, [name]: value }));
+    setFormState((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!session) return;
 
-    setFormState(prev => ({ ...prev, submitting: true }));
+    setFormState((prev) => ({ ...prev, submitting: true }));
 
     const res = await fetch('/api/streams', {
       method: 'POST',
@@ -60,7 +62,7 @@ export default function StreamsPage() {
       }),
     });
 
-    setFormState(prev => ({ ...prev, submitting: false }));
+    setFormState((prev) => ({ ...prev, submitting: false }));
 
     if (res.ok) {
       fetchStreams(); // Refetch streams to show the new one
@@ -74,7 +76,9 @@ export default function StreamsPage() {
   };
 
   const handleDelete = async (streamId: string) => {
-    if (!window.confirm('Are you sure you want to delete this stream? This action cannot be undone.')) {
+    if (
+      !window.confirm('Are you sure you want to delete this stream? This action cannot be undone.')
+    ) {
       return;
     }
     setDeleting(streamId);
@@ -148,20 +152,23 @@ export default function StreamsPage() {
       ) : streams.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {streams.map((stream: any) => (
-            <div key={stream._id} className="bg-gray-800 rounded-lg overflow-hidden flex flex-col justify-between">
+            <div
+              key={stream._id}
+              className="bg-gray-800 rounded-lg overflow-hidden flex flex-col justify-between"
+            >
               <div className="p-4">
                 <div className="flex justify-between items-start">
                   <h3 className="text-lg font-semibold text-white mb-1">{stream.title}</h3>
                   {stream.status === 'live' ? (
                     <div className="flex items-center gap-2 text-red-500">
-                       <span className="relative flex h-3 w-3">
-                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                         <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
-                       </span>
+                      <span className="relative flex h-3 w-3">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                      </span>
                       Live
                     </div>
                   ) : (
-                     <span className="px-2 py-1 text-xs font-semibold rounded-full bg-gray-600 text-gray-300">
+                    <span className="px-2 py-1 text-xs font-semibold rounded-full bg-gray-600 text-gray-300">
                       {stream.status}
                     </span>
                   )}
@@ -170,7 +177,9 @@ export default function StreamsPage() {
                   {platformIcons[stream.platform as keyof typeof platformIcons]}
                   {stream.platform}
                 </div>
-                <p className="text-sm text-gray-300 mt-2 h-12 overflow-y-auto">{stream.description || 'No description.'}</p>
+                <p className="text-sm text-gray-300 mt-2 h-12 overflow-y-auto">
+                  {stream.description || 'No description.'}
+                </p>
               </div>
               <div className="bg-gray-700/50 p-3 flex justify-between items-center">
                 {stream.recordingIpfsHash ? (
@@ -193,7 +202,11 @@ export default function StreamsPage() {
                   aria-label="Delete stream"
                 >
                   {deleting === stream._id ? (
-                    <span className="animate-spin inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full" role="status" aria-label="deleting"></span>
+                    <span
+                      className="animate-spin inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full"
+                      role="status"
+                      aria-label="deleting"
+                    ></span>
                   ) : (
                     <Trash2 size={18} />
                   )}

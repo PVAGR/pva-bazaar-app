@@ -26,13 +26,18 @@ function computeBountyPriority(bounty) {
   const keywordScore = Array.isArray(bounty.keywords) ? bounty.keywords.length * 2 : 0;
   const rewardScore = Number.isFinite(bounty.rewardRaw) ? Math.min(bounty.rewardRaw, 5000) / 25 : 0;
   const statusBoost = bounty.status === 'approved' ? 10 : bounty.status === 'draft_ready' ? 6 : 0;
-  const freshnessHours = Math.max(1, (Date.now() - new Date(bounty.createdAt || Date.now()).getTime()) / 3600000);
+  const freshnessHours = Math.max(
+    1,
+    (Date.now() - new Date(bounty.createdAt || Date.now()).getTime()) / 3600000,
+  );
   const freshnessScore = Math.max(0, 12 - Math.log2(freshnessHours + 1) * 2);
   return Math.round((keywordScore + rewardScore + statusBoost + freshnessScore) * 100) / 100;
 }
 
 function buildDispatchPrompt(topBounties, walletAddress) {
-  const skills = process.env.BOUNTY_SKILLS || 'web3 development, smart contracts, JavaScript/TypeScript, React, Node.js, Solidity, technical writing';
+  const skills =
+    process.env.BOUNTY_SKILLS ||
+    'web3 development, smart contracts, JavaScript/TypeScript, React, Node.js, Solidity, technical writing';
   const lines = topBounties.map((b, index) => {
     const highValue = (b.rewardRaw || 0) >= 100 ? ' ⭐ HIGH VALUE' : '';
     return [
@@ -63,8 +68,8 @@ function rankBountyCandidates(candidates, { limit = 10, minRewardRaw = 0 } = {})
   const normalizedMinReward = Math.max(0, Number(minRewardRaw) || 0);
 
   return candidates
-    .filter(item => (Number(item.rewardRaw) || 0) >= normalizedMinReward)
-    .map(item => ({ ...item, priorityScore: computeBountyPriority(item) }))
+    .filter((item) => (Number(item.rewardRaw) || 0) >= normalizedMinReward)
+    .map((item) => ({ ...item, priorityScore: computeBountyPriority(item) }))
     .sort((a, b) => b.priorityScore - a.priorityScore)
     .slice(0, normalizedLimit);
 }
@@ -81,7 +86,7 @@ async function queueOpenClawDispatch({ ranked, walletAddress, event }) {
     metadata: {
       walletAddress,
       chain: process.env.BOUNTY_PAYOUT_CHAIN || 'base',
-      topBountyIds: ranked.map(b => String(b._id)),
+      topBountyIds: ranked.map((b) => String(b._id)),
       generatedAt: new Date().toISOString(),
     },
   });
@@ -125,7 +130,13 @@ router.get('/', requireAdmin, async (req, res) => {
       Bounty.countDocuments(filter),
     ]);
 
-    return res.json({ ok: true, bounties, total, page: parseInt(page, 10), limit: parseInt(limit, 10) });
+    return res.json({
+      ok: true,
+      bounties,
+      total,
+      page: parseInt(page, 10),
+      limit: parseInt(limit, 10),
+    });
   } catch (err) {
     return res.status(500).json({ ok: false, message: err.message });
   }
@@ -136,9 +147,7 @@ router.get('/', requireAdmin, async (req, res) => {
 router.get('/stats', requireAdmin, async (req, res) => {
   try {
     await dbConnect();
-    const counts = await Bounty.aggregate([
-      { $group: { _id: '$status', count: { $sum: 1 } } },
-    ]);
+    const counts = await Bounty.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]);
     const stats = {};
     for (const row of counts) stats[row._id] = row.count;
 
@@ -163,7 +172,10 @@ router.get('/ranked', requireAdmin, async (req, res) => {
     await dbConnect();
     const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 25, 1), 100);
     const statusFilter = req.query.status
-      ? req.query.status.split(',').map(s => s.trim()).filter(Boolean)
+      ? req.query.status
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean)
       : ['discovered', 'draft_ready', 'approved', 'pending_review'];
 
     const rows = await Bounty.find({ status: { $in: statusFilter } })
@@ -172,7 +184,7 @@ router.get('/ranked', requireAdmin, async (req, res) => {
       .lean();
 
     const ranked = rows
-      .map(item => ({ ...item, priorityScore: computeBountyPriority(item) }))
+      .map((item) => ({ ...item, priorityScore: computeBountyPriority(item) }))
       .sort((a, b) => b.priorityScore - a.priorityScore)
       .slice(0, limit);
 
@@ -187,7 +199,9 @@ router.post('/dispatch-top', requireAdmin, async (req, res) => {
     await dbConnect();
     const limit = Math.min(Math.max(parseInt(req.body?.limit, 10) || 10, 1), 25);
     const minRewardRaw = Math.max(0, Number(req.body?.minRewardRaw) || 0);
-    const walletAddress = String(req.body?.walletAddress || process.env.BOUNTY_PAYOUT_WALLET || '').trim();
+    const walletAddress = String(
+      req.body?.walletAddress || process.env.BOUNTY_PAYOUT_WALLET || '',
+    ).trim();
 
     const candidates = await Bounty.find({
       status: { $in: ['discovered', 'draft_ready', 'approved', 'pending_review'] },
@@ -197,7 +211,11 @@ router.post('/dispatch-top', requireAdmin, async (req, res) => {
       .lean();
 
     if (!candidates.length) {
-      return res.json({ ok: true, queued: false, message: 'No bounty candidates available to dispatch' });
+      return res.json({
+        ok: true,
+        queued: false,
+        message: 'No bounty candidates available to dispatch',
+      });
     }
 
     const ranked = rankBountyCandidates(candidates, { limit, minRewardRaw });
@@ -223,7 +241,12 @@ router.post('/dispatch-top', requireAdmin, async (req, res) => {
       walletAddress,
       minRewardRaw,
       rankedCount: ranked.length,
-      top: ranked.map(b => ({ id: b._id, title: b.title, platform: b.platform, score: b.priorityScore })),
+      top: ranked.map((b) => ({
+        id: b._id,
+        title: b.title,
+        platform: b.platform,
+        score: b.priorityScore,
+      })),
     });
   } catch (err) {
     return res.status(500).json({ ok: false, message: err.message });
@@ -235,7 +258,9 @@ router.post('/money-run', requireAdmin, async (req, res) => {
     await dbConnect();
     const limit = Math.min(Math.max(parseInt(req.body?.limit, 10) || 10, 1), 25);
     const minRewardRaw = Math.max(0, Number(req.body?.minRewardRaw) || 0);
-    const walletAddress = String(req.body?.walletAddress || process.env.BOUNTY_PAYOUT_WALLET || '').trim();
+    const walletAddress = String(
+      req.body?.walletAddress || process.env.BOUNTY_PAYOUT_WALLET || '',
+    ).trim();
     const { platforms } = req.body || {};
 
     const scanResults = await runScan({ platforms, generateDrafts: false });
@@ -282,7 +307,12 @@ router.post('/money-run', requireAdmin, async (req, res) => {
       minRewardRaw,
       rankedCount: ranked.length,
       scanResults,
-      top: ranked.map(b => ({ id: b._id, title: b.title, platform: b.platform, score: b.priorityScore })),
+      top: ranked.map((b) => ({
+        id: b._id,
+        title: b.title,
+        platform: b.platform,
+        score: b.priorityScore,
+      })),
     });
   } catch (err) {
     return res.status(500).json({ ok: false, message: err.message });
@@ -351,7 +381,9 @@ router.put('/:id/draft', requireAdmin, async (req, res) => {
 
     const newDraft = await generateDraft(bounty);
     if (!newDraft) {
-      return res.status(503).json({ ok: false, message: 'AI draft generation unavailable (check OPENAI_API_KEY)' });
+      return res
+        .status(503)
+        .json({ ok: false, message: 'AI draft generation unavailable (check OPENAI_API_KEY)' });
     }
 
     bounty.draftContent = newDraft;

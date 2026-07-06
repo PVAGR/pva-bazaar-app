@@ -40,7 +40,7 @@ module.exports = async (req, res) => {
           holderId: process.env.VERCEL_DEPLOYMENT_ID || 'vercel-cron',
         },
       },
-      { upsert: true }
+      { upsert: true },
     );
 
     // Fetch pending outbound messages to process
@@ -92,7 +92,7 @@ module.exports = async (req, res) => {
                 'metadata.forwardedAt': now.toISOString(),
                 'metadata.forwardedBy': 'vercel-cron',
               },
-            }
+            },
           );
 
           forwarded += 1;
@@ -113,7 +113,7 @@ module.exports = async (req, res) => {
                 'metadata.lastRetryAt': now.toISOString(),
                 'metadata.lastError': errorMsg.slice(0, 300),
               },
-            }
+            },
           );
         }
       }

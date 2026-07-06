@@ -66,7 +66,10 @@ function buildDealEvidenceTypedData(chainId, dealId, milestoneId, evidenceValue,
 
 /** Verify EIP-712 signature and return recovered address (checksummed) */
 function verifyDealSignature(typedData, signature) {
-  const types = typeof typedData.types === 'object' ? typedData.types : { [typedData.primaryType]: typedData.types };
+  const types =
+    typeof typedData.types === 'object'
+      ? typedData.types
+      : { [typedData.primaryType]: typedData.types };
   const recovered = verifyTypedData(typedData.domain, types, typedData.message, signature);
   return getAddress(recovered);
 }

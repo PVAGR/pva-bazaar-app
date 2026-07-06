@@ -55,6 +55,7 @@ Railway provides $5/month free credits (plenty for our needs) and is the easiest
    ```
 
 ### Costs
+
 - **Free tier**: $5/month credits (more than enough)
 - You only pay if you exceed usage
 - MongoDB + Node instance = ~$2-3/month total
@@ -91,11 +92,13 @@ Render has a truly free tier but with limitations (auto-sleeps after 15 min inac
    ```
 
 ### Costs
+
 - **Free tier**: $0/month (includes 750 hours/month which covers one always-on instance)
 - Auto-sleeps after 15 min inactivity (cold start ~30 seconds)
 - **Status**: ✅ LIVE immediately
 
 ### Limitation
+
 - Plans sleep after inactivity (wake up is ~30s)
 - Not ideal for production but good for testing
 
@@ -108,6 +111,7 @@ Fly.io has the most generous free tier with excellent performance.
 ### Setup (5 minutes)
 
 1. **Install Fly CLI**
+
    ```bash
    # macOS / Linux
    curl -L https://fly.io/install.sh | sh
@@ -117,6 +121,7 @@ Fly.io has the most generous free tier with excellent performance.
    ```
 
 2. **Create Account**
+
    ```bash
    flyctl auth signup
    # Or login if you have existing account
@@ -124,6 +129,7 @@ Fly.io has the most generous free tier with excellent performance.
    ```
 
 3. **Deploy**
+
    ```bash
    # From repo root
    flyctl launch --name pva-bazaar
@@ -135,6 +141,7 @@ Fly.io has the most generous free tier with excellent performance.
    ```
 
 4. **Configure Environment**
+
    ```bash
    flyctl secrets set \
      JWT_SECRET="your-key" \
@@ -146,6 +153,7 @@ Fly.io has the most generous free tier with excellent performance.
    ```
 
 5. **Deploy**
+
    ```bash
    git push origin main  # Or flyctl deploy
    ```
@@ -157,6 +165,7 @@ Fly.io has the most generous free tier with excellent performance.
    ```
 
 ### Costs
+
 - **Free tier**: 3 shared-cpu-1x 256MB VMs + 3GB persistent storage
 - Perfect for one instance
 - **Status**: ✅ LIVE immediately
@@ -260,20 +269,24 @@ docker run -p 5001:5001 -e MONGODB_URI="..." pva-bazaar
 ## Troubleshooting
 
 ### "MongoDB connection failed"
+
 - Check `MONGODB_URI` is correct in dashboard
 - Verify IP whitelist in MongoDB Atlas (should allow all: 0.0.0.0/0)
 
 ### "Health check 404"
+
 - Wait 2-3 minutes for deployment to finish
 - Check logs in platform dashboard
 - Verify `NODE_ENV=production` is set
 
 ### "Dockerfile build failed"
+
 - Check `npm install` succeeds locally: `npm ci`
 - Verify Node version: `node -v` should be 20.x
 - Check Docker has enough disk space
 
 ### "Cold start too slow on Render"
+
 - Use Railway or Fly.io instead
 - Render sleeps after 15 min inactivity
 
@@ -295,11 +308,11 @@ docker run -p 5001:5001 -e MONGODB_URI="..." pva-bazaar
 
 ## Cost Summary
 
-| Platform | Monthly Cost | Uptime | Cold Start | Notes |
-|----------|-------------|--------|-----------|-------|
-| Railway | $5 credits | 99.9% | Instant | ⭐ RECOMMENDED |
-| Render | $0 (free tier) | 99.8% | 30 sec | Sleeps after 15 min |
-| Fly.io | $0 (free tier) | 99.99% | <1 sec | Most reliable |
+| Platform | Monthly Cost   | Uptime | Cold Start | Notes               |
+| -------- | -------------- | ------ | ---------- | ------------------- |
+| Railway  | $5 credits     | 99.9%  | Instant    | ⭐ RECOMMENDED      |
+| Render   | $0 (free tier) | 99.8%  | 30 sec     | Sleeps after 15 min |
+| Fly.io   | $0 (free tier) | 99.99% | <1 sec     | Most reliable       |
 
 All are **100% free** or **under $5/month** compared to Vercel's $20.
 

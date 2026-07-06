@@ -10,7 +10,14 @@ const federationProgressionEventSchema = new mongoose.Schema(
     },
     sourceType: {
       type: String,
-      enum: ['knowledge_contribution', 'verified_transaction', 'governance_action', 'consistency_streak', 'identity_verification', 'system'],
+      enum: [
+        'knowledge_contribution',
+        'verified_transaction',
+        'governance_action',
+        'consistency_streak',
+        'identity_verification',
+        'system',
+      ],
       required: true,
       index: true,
     },

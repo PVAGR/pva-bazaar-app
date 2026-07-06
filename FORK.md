@@ -52,7 +52,7 @@ Set these frontend variables in Frontend/.env.local:
 
 ## 5. Library Content Forkability
 
-- Approved articles are written to content/library/*.md.
+- Approved articles are written to content/library/\*.md.
 - CID mapping is tracked in content/library/cid-map.json.
 - You can maintain a separate content-library branch for collaborative content workflows.
 

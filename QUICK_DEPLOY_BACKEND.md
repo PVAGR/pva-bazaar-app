@@ -13,6 +13,7 @@ Deploying your Node.js backend API to Vercel so your frontend on GitHub Pages ca
 ## 📋 Before You Start
 
 Have these ready:
+
 1. Your **MongoDB connection string** (looks like `mongodb+srv://...`)
 2. Your **JWT secret** (from your local `.env` file)
 
@@ -46,10 +47,11 @@ On the configuration screen:
 ### 3. Leave Build Settings Blank (0 min)
 
 Don't touch these - leave them empty:
+
 - Framework Preset: **Other**
-- Build Command: *(empty)*
-- Output Directory: *(empty)*
-- Install Command: *(empty)*
+- Build Command: _(empty)_
+- Output Directory: _(empty)_
+- Install Command: _(empty)_
 
 ---
 
@@ -59,12 +61,12 @@ Scroll down to **"Environment Variables"**
 
 Click **"Add Environment Variable"** and add these 4:
 
-| Name | Value | Where to Find It |
-|------|-------|------------------|
-| `MONGODB_URI` | `mongodb+srv://...` | Your local `.env` file |
-| `JWT_SECRET` | `your-secret-key` | Your local `.env` file |
-| `NODE_ENV` | `production` | Type exactly this |
-| `ALLOWED_ORIGIN` | `https://pvabazaar.org` | Type exactly this |
+| Name             | Value                   | Where to Find It       |
+| ---------------- | ----------------------- | ---------------------- |
+| `MONGODB_URI`    | `mongodb+srv://...`     | Your local `.env` file |
+| `JWT_SECRET`     | `your-secret-key`       | Your local `.env` file |
+| `NODE_ENV`       | `production`            | Type exactly this      |
+| `ALLOWED_ORIGIN` | `https://pvabazaar.org` | Type exactly this      |
 
 Click **"Add"** after each one.
 
@@ -146,6 +148,7 @@ After completing all steps:
 3. Look for error messages
 
 **Common fixes:**
+
 - Hard refresh again: **Ctrl+Shift+R**
 - Check that you updated `.env.production` with the correct URL
 - Wait 5 minutes and try again (caching)

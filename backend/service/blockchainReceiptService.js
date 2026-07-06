@@ -52,8 +52,7 @@ async function mintReceiptOnChain({ buyerWallet, itemHash }) {
     const transferLog = (receipt?.logs || []).find(
       (log) =>
         Array.isArray(log.topics) &&
-        log.topics[0] ===
-          '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef',
+        log.topics[0] === '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef',
     );
 
     let tokenId = '';

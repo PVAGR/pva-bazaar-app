@@ -13,12 +13,18 @@ function applyOnChainProvenanceUpdate({ artifact, blockchainReceipt, buyerWallet
     ? artifact.provenance.ownershipTimeline
     : [];
 
-  artifact.provenance.chain.network = String(blockchainReceipt.network || artifact.provenance.chain.network || '');
+  artifact.provenance.chain.network = String(
+    blockchainReceipt.network || artifact.provenance.chain.network || '',
+  );
   artifact.provenance.chain.contractAddress = String(
     blockchainReceipt.contractAddress || artifact.provenance.chain.contractAddress || '',
   );
-  artifact.provenance.chain.tokenStandard = String(artifact.provenance.chain.tokenStandard || 'ERC-721');
-  artifact.provenance.chain.tokenId = String(blockchainReceipt.tokenId || artifact.provenance.chain.tokenId || '');
+  artifact.provenance.chain.tokenStandard = String(
+    artifact.provenance.chain.tokenStandard || 'ERC-721',
+  );
+  artifact.provenance.chain.tokenId = String(
+    blockchainReceipt.tokenId || artifact.provenance.chain.tokenId || '',
+  );
 
   const hasEntry = artifact.provenance.ownershipTimeline.some(
     (entry) =>
@@ -39,12 +45,18 @@ function applyOnChainProvenanceUpdate({ artifact, blockchainReceipt, buyerWallet
   }
 
   artifact.blockchainDetails = artifact.blockchainDetails || {};
-  artifact.blockchainDetails.network = String(blockchainReceipt.network || artifact.blockchainDetails.network || 'base');
+  artifact.blockchainDetails.network = String(
+    blockchainReceipt.network || artifact.blockchainDetails.network || 'base',
+  );
   artifact.blockchainDetails.contractAddress = String(
     blockchainReceipt.contractAddress || artifact.blockchainDetails.contractAddress || '',
   );
-  artifact.blockchainDetails.tokenStandard = String(artifact.blockchainDetails.tokenStandard || 'ERC-721');
-  artifact.blockchainDetails.tokenId = String(blockchainReceipt.tokenId || artifact.blockchainDetails.tokenId || '');
+  artifact.blockchainDetails.tokenStandard = String(
+    artifact.blockchainDetails.tokenStandard || 'ERC-721',
+  );
+  artifact.blockchainDetails.tokenId = String(
+    blockchainReceipt.tokenId || artifact.blockchainDetails.tokenId || '',
+  );
 }
 
 function computeRoyaltySettlement({ artifact, amountCents, currency }) {
@@ -116,7 +128,9 @@ async function completeSaleAcrossChannels({
     return { ok: false, error: 'Item not found' };
   }
 
-  const safeIdempotencyKey = idempotencyKey || [saleSource, externalSaleId, orderId, String(item._id)].filter(Boolean).join(':');
+  const safeIdempotencyKey =
+    idempotencyKey ||
+    [saleSource, externalSaleId, orderId, String(item._id)].filter(Boolean).join(':');
 
   if (safeIdempotencyKey) {
     const existing = await OmnichannelSale.findOne({ idempotencyKey: safeIdempotencyKey }).lean();
@@ -153,15 +167,22 @@ async function completeSaleAcrossChannels({
   const artifact = soldUpdate || (await Artifact.findById(item._id));
 
   if (!artifact.isUnlimited) {
-    const soldQtyTarget = Math.max(Number(artifact.soldQty || 0), Number(artifact.stockQty || 0) - Number(artifact.reservedQty || 0));
+    const soldQtyTarget = Math.max(
+      Number(artifact.soldQty || 0),
+      Number(artifact.stockQty || 0) - Number(artifact.reservedQty || 0),
+    );
     if (soldQtyTarget > Number(artifact.soldQty || 0)) {
       artifact.soldQty = soldQtyTarget;
       await artifact.save();
     }
   }
 
-  const channels = Array.isArray(artifact?.omnichannel?.channels) ? artifact.omnichannel.channels : [];
-  const delistTargets = channels.filter((entry) => entry.channel !== saleSource && entry.status !== 'delisted');
+  const channels = Array.isArray(artifact?.omnichannel?.channels)
+    ? artifact.omnichannel.channels
+    : [];
+  const delistTargets = channels.filter(
+    (entry) => entry.channel !== saleSource && entry.status !== 'delisted',
+  );
 
   const delistResults = [];
   for (const listing of delistTargets) {
@@ -252,7 +273,9 @@ async function completeSaleAcrossChannels({
       currency,
     }),
     sync: {
-      delistedChannels: delistResults.filter((result) => result.status === 'success').map((result) => result.channel),
+      delistedChannels: delistResults
+        .filter((result) => result.status === 'success')
+        .map((result) => result.channel),
       delistResults,
       syncedAt: new Date(),
     },

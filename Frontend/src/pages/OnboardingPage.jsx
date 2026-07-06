@@ -88,7 +88,8 @@ export default function OnboardingPage() {
       defaultWalletAddress: prefs.defaultWalletAddress || '',
       defaultTags: prefs.defaultTags || '',
       defaultStreamPlatform: prefs.defaultStreamPlatform || 'none',
-      defaultPublicVisibility: typeof prefs.defaultPublicVisibility === 'boolean' ? prefs.defaultPublicVisibility : true,
+      defaultPublicVisibility:
+        typeof prefs.defaultPublicVisibility === 'boolean' ? prefs.defaultPublicVisibility : true,
     };
   }, [profile]);
 
@@ -139,7 +140,9 @@ export default function OnboardingPage() {
     const onboarding = profile?.onboardingProfile || {};
     return {
       personalJourney: onboarding.personalJourney || '',
-      federationPathTags: Array.isArray(onboarding.federationPathTags) ? onboarding.federationPathTags : [],
+      federationPathTags: Array.isArray(onboarding.federationPathTags)
+        ? onboarding.federationPathTags
+        : [],
     };
   }, [profile]);
 
@@ -203,34 +206,41 @@ export default function OnboardingPage() {
   const step = useMemo(() => {
     const emailOk = !!profile?.email;
     const defaultsOk = !!prefsDraft.defaultCurrency; // always has default, but keep for messaging
-    const walletOk = !!(prefsDraft.defaultWalletAddress || wallet.address || identityDraft.generatedWalletAddress);
+    const walletOk = !!(
+      prefsDraft.defaultWalletAddress ||
+      wallet.address ||
+      identityDraft.generatedWalletAddress
+    );
     const twitchConnected = !!profile?.twitch?.login;
     const youtubeConnected = !!youtubeLive?.connected;
     const hasStreams = typeof streamsCount === 'number' ? streamsCount > 0 : false;
     const hasDeals = typeof dealsCount === 'number' ? dealsCount > 0 : false;
     const emailPrefsOk = Boolean(profile?.onboardingProfile?.emailPreferences);
-    const communityProfileOk = Boolean(communityDraft.personalJourney.trim()) && communityDraft.federationPathTags.length > 0;
+    const communityProfileOk =
+      Boolean(communityDraft.personalJourney.trim()) &&
+      communityDraft.federationPathTags.length > 0;
     const traderIdentityOk = Boolean(
-      traderDraft.legalFullName
-      && traderDraft.legalIdType
-      && traderDraft.legalIdNumber
-      && traderDraft.addressLine1
-      && traderDraft.city
-      && traderDraft.postalCode
-      && traderDraft.country
-      && traderDraft.phone
-      && traderDraft.identityAttested
+      traderDraft.legalFullName &&
+        traderDraft.legalIdType &&
+        traderDraft.legalIdNumber &&
+        traderDraft.addressLine1 &&
+        traderDraft.city &&
+        traderDraft.postalCode &&
+        traderDraft.country &&
+        traderDraft.phone &&
+        traderDraft.identityAttested,
     );
 
-    const all = emailOk
-      && defaultsOk
-      && (twitchConnected || youtubeConnected)
-      && walletOk
-      && traderIdentityOk
-      && emailPrefsOk
-      && communityProfileOk
-      && hasStreams
-      && hasDeals;
+    const all =
+      emailOk &&
+      defaultsOk &&
+      (twitchConnected || youtubeConnected) &&
+      walletOk &&
+      traderIdentityOk &&
+      emailPrefsOk &&
+      communityProfileOk &&
+      hasStreams &&
+      hasDeals;
     return {
       emailOk,
       defaultsOk,
@@ -273,8 +283,10 @@ export default function OnboardingPage() {
       if (tw.status === 'fulfilled' && tw.value?.ok) setTwitchStatus(tw.value);
       if (yt.status === 'fulfilled' && yt.value?.ok) setYouTubeStatus(yt.value);
 
-      if (s.status === 'fulfilled' && s.value?.ok && Array.isArray(s.value.items)) setStreamsCount(s.value.items.length);
-      if (d.status === 'fulfilled' && d.value?.ok && Array.isArray(d.value.items)) setDealsCount(d.value.items.length);
+      if (s.status === 'fulfilled' && s.value?.ok && Array.isArray(s.value.items))
+        setStreamsCount(s.value.items.length);
+      if (d.status === 'fulfilled' && d.value?.ok && Array.isArray(d.value.items))
+        setDealsCount(d.value.items.length);
     } finally {
       setLoading(false);
     }
@@ -282,7 +294,10 @@ export default function OnboardingPage() {
 
   async function refreshLiveStatus() {
     try {
-      const [tw, yt] = await Promise.allSettled([apiGet('/oauth/twitch/live-status'), apiGet('/oauth/youtube/live-status')]);
+      const [tw, yt] = await Promise.allSettled([
+        apiGet('/oauth/twitch/live-status'),
+        apiGet('/oauth/youtube/live-status'),
+      ]);
       if (tw.status === 'fulfilled' && tw.value?.ok) setTwitchLive(tw.value);
       if (yt.status === 'fulfilled' && yt.value?.ok) setYouTubeLive(yt.value);
     } catch {
@@ -297,7 +312,9 @@ export default function OnboardingPage() {
 
   useEffect(() => {
     // Bump "last seen" in Mongo so onboarding feels alive across devices.
-    apiPut('/users/profile', { preferences: { onboarding: { lastSeenAt: new Date().toISOString() } } }).catch(() => {});
+    apiPut('/users/profile', {
+      preferences: { onboarding: { lastSeenAt: new Date().toISOString() } },
+    }).catch(() => {});
   }, []);
 
   async function saveDefaults() {
@@ -323,7 +340,9 @@ export default function OnboardingPage() {
     setSaving(true);
     setError('');
     try {
-      await apiPut('/users/profile', { preferences: { onboarding: { dismissedAt: new Date().toISOString() } } });
+      await apiPut('/users/profile', {
+        preferences: { onboarding: { dismissedAt: new Date().toISOString() } },
+      });
       navigate('/account', { replace: true });
     } catch (e) {
       const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
@@ -337,7 +356,9 @@ export default function OnboardingPage() {
     setSaving(true);
     setError('');
     try {
-      await apiPut('/users/profile', { preferences: { onboarding: { completedAt: new Date().toISOString() } } });
+      await apiPut('/users/profile', {
+        preferences: { onboarding: { completedAt: new Date().toISOString() } },
+      });
       setOkMsg('Setup complete.');
       setTimeout(() => setOkMsg(''), 1200);
     } catch (e) {
@@ -436,7 +457,8 @@ export default function OnboardingPage() {
           },
         },
       });
-      if (!res?.ok || !res?.user) throw new Error(res?.message || 'Failed to save generated wallet');
+      if (!res?.ok || !res?.user)
+        throw new Error(res?.message || 'Failed to save generated wallet');
       setProfile(res.user);
       setWallet((w) => ({ ...w, address, generating: false }));
       setOkMsg('Wallet address generated and saved for onboarding intent.');
@@ -464,7 +486,8 @@ export default function OnboardingPage() {
         },
       };
       const res = await apiPut('/users/profile', payload);
-      if (!res?.ok || !res?.user) throw new Error(res?.message || 'Failed to save identity options');
+      if (!res?.ok || !res?.user)
+        throw new Error(res?.message || 'Failed to save identity options');
       setProfile(res.user);
       setOkMsg('Identity options saved.');
       setTimeout(() => setOkMsg(''), 1500);
@@ -490,7 +513,8 @@ export default function OnboardingPage() {
         },
       };
       const res = await apiPut('/users/profile', payload);
-      if (!res?.ok || !res?.user) throw new Error(res?.message || 'Failed to save email preferences');
+      if (!res?.ok || !res?.user)
+        throw new Error(res?.message || 'Failed to save email preferences');
       setProfile(res.user);
       setOkMsg('Email preferences saved.');
       setTimeout(() => setOkMsg(''), 1500);
@@ -514,7 +538,8 @@ export default function OnboardingPage() {
         },
       };
       const res = await apiPut('/users/profile', payload);
-      if (!res?.ok || !res?.user) throw new Error(res?.message || 'Failed to save community profile');
+      if (!res?.ok || !res?.user)
+        throw new Error(res?.message || 'Failed to save community profile');
       setProfile(res.user);
       setOkMsg('Community journey saved.');
       setTimeout(() => setOkMsg(''), 1500);
@@ -530,11 +555,14 @@ export default function OnboardingPage() {
     setError('');
     try {
       if (twitchStatus && twitchStatus.configured === false) {
-        const missing = Array.isArray(twitchStatus.missing) ? twitchStatus.missing.join(', ') : 'missing env vars';
+        const missing = Array.isArray(twitchStatus.missing)
+          ? twitchStatus.missing.join(', ')
+          : 'missing env vars';
         throw new Error(`Twitch is not configured yet (${missing})`);
       }
       const res = await apiGet('/oauth/twitch/start', { params: { mode: 'json' } });
-      if (!res?.ok || !res?.url) throw new Error(res?.message || res?.error || 'Failed to start Twitch connect');
+      if (!res?.ok || !res?.url)
+        throw new Error(res?.message || res?.error || 'Failed to start Twitch connect');
       window.location.assign(res.url);
     } catch (e) {
       const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
@@ -546,11 +574,14 @@ export default function OnboardingPage() {
     setError('');
     try {
       if (youtubeStatus && youtubeStatus.configured === false) {
-        const missing = Array.isArray(youtubeStatus.missing) ? youtubeStatus.missing.join(', ') : 'missing env vars';
+        const missing = Array.isArray(youtubeStatus.missing)
+          ? youtubeStatus.missing.join(', ')
+          : 'missing env vars';
         throw new Error(`YouTube is not configured yet (${missing})`);
       }
       const res = await apiGet('/oauth/youtube/start', { params: { mode: 'json' } });
-      if (!res?.ok || !res?.url) throw new Error(res?.message || res?.error || 'Failed to start YouTube connect');
+      if (!res?.ok || !res?.url)
+        throw new Error(res?.message || res?.error || 'Failed to start YouTube connect');
       window.location.assign(res.url);
     } catch (e) {
       const serverMsg = e?.response?.data?.error || e?.response?.data?.message;
@@ -559,7 +590,9 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className={`onboardingPage admin-page authenticated ${darkMode ? 'dark-theme' : 'light-theme'}`}>
+    <div
+      className={`onboardingPage admin-page authenticated ${darkMode ? 'dark-theme' : 'light-theme'}`}
+    >
       <header className="admin-header onboardingHeader">
         <div>
           <h1>🧭 Guided setup</h1>
@@ -606,45 +639,80 @@ export default function OnboardingPage() {
           <div className="onboardingChecklist">
             <div className="onboardingItem">
               <div className="onboardingItem__title">{yesNo(step.emailOk)} 1) Account created</div>
-              <div className="muted small">You’re signed in and your account exists in MongoDB.</div>
+              <div className="muted small">
+                You’re signed in and your account exists in MongoDB.
+              </div>
             </div>
             <div className="onboardingItem">
-              <div className="onboardingItem__title">{yesNo(step.defaultsOk)} 2) Defaults saved</div>
-              <div className="muted small">Country, currency, tags, and stream defaults help auto-fill forms.</div>
+              <div className="onboardingItem__title">
+                {yesNo(step.defaultsOk)} 2) Defaults saved
+              </div>
+              <div className="muted small">
+                Country, currency, tags, and stream defaults help auto-fill forms.
+              </div>
             </div>
             <div className="onboardingItem">
               <div className="onboardingItem__title">
                 {yesNo(step.twitchConnected || step.youtubeConnected)} 3) Streaming connected
               </div>
-              <div className="muted small">Connect Twitch and/or YouTube so “Go Live” feels real.</div>
+              <div className="muted small">
+                Connect Twitch and/or YouTube so “Go Live” feels real.
+              </div>
             </div>
             <div className="onboardingItem">
-              <div className="onboardingItem__title">{yesNo(step.walletOk)} 4) Wallet connected</div>
-              <div className="muted small">Lets you sign deal messages/evidence (audit trail) before escrow contracts.</div>
+              <div className="onboardingItem__title">
+                {yesNo(step.walletOk)} 4) Wallet connected
+              </div>
+              <div className="muted small">
+                Lets you sign deal messages/evidence (audit trail) before escrow contracts.
+              </div>
             </div>
             <div className="onboardingItem">
-              <div className="onboardingItem__title">{yesNo(step.traderIdentityOk)} 5) Trader identity complete</div>
-              <div className="muted small">Required before you can register items for trade and business operations.</div>
+              <div className="onboardingItem__title">
+                {yesNo(step.traderIdentityOk)} 5) Trader identity complete
+              </div>
+              <div className="muted small">
+                Required before you can register items for trade and business operations.
+              </div>
             </div>
             <div className="onboardingItem">
-              <div className="onboardingItem__title">{yesNo(step.hasStreams)} 6) First stream created</div>
+              <div className="onboardingItem__title">
+                {yesNo(step.hasStreams)} 6) First stream created
+              </div>
               <div className="muted small">Creates a saved stream session in MongoDB.</div>
             </div>
             <div className="onboardingItem">
-              <div className="onboardingItem__title">{yesNo(step.hasDeals)} 7) First deal created</div>
-              <div className="muted small">Creates a deal workspace with milestones, payments, and messages.</div>
+              <div className="onboardingItem__title">
+                {yesNo(step.hasDeals)} 7) First deal created
+              </div>
+              <div className="muted small">
+                Creates a deal workspace with milestones, payments, and messages.
+              </div>
             </div>
             <div className="onboardingItem">
-              <div className="onboardingItem__title">{yesNo(step.emailPrefsOk)} 8) Email preferences set</div>
-              <div className="muted small">Controls digest subscription and role-track updates for your federation journey.</div>
+              <div className="onboardingItem__title">
+                {yesNo(step.emailPrefsOk)} 8) Email preferences set
+              </div>
+              <div className="muted small">
+                Controls digest subscription and role-track updates for your federation journey.
+              </div>
             </div>
             <div className="onboardingItem">
-              <div className="onboardingItem__title">{yesNo(step.communityProfileOk)} 9) Community journey mapped</div>
-              <div className="muted small">Add your journey and path tags, then jump straight into community spaces.</div>
+              <div className="onboardingItem__title">
+                {yesNo(step.communityProfileOk)} 9) Community journey mapped
+              </div>
+              <div className="muted small">
+                Add your journey and path tags, then jump straight into community spaces.
+              </div>
             </div>
           </div>
           <div className="row">
-            <button className="btn primary" type="button" disabled={saving || !step.all} onClick={markCompleted}>
+            <button
+              className="btn primary"
+              type="button"
+              disabled={saving || !step.all}
+              onClick={markCompleted}
+            >
               Mark setup complete
             </button>
             <Link className="btn ghost" to="/account">
@@ -679,7 +747,10 @@ export default function OnboardingPage() {
                       ...p,
                       onboardingProfile: {
                         ...(p?.onboardingProfile || {}),
-                        compliance: { ...(p?.onboardingProfile?.compliance || {}), legalFullName: e.target.value },
+                        compliance: {
+                          ...(p?.onboardingProfile?.compliance || {}),
+                          legalFullName: e.target.value,
+                        },
                       },
                     }))
                   }
@@ -694,7 +765,10 @@ export default function OnboardingPage() {
                       ...p,
                       onboardingProfile: {
                         ...(p?.onboardingProfile || {}),
-                        compliance: { ...(p?.onboardingProfile?.compliance || {}), legalIdType: e.target.value },
+                        compliance: {
+                          ...(p?.onboardingProfile?.compliance || {}),
+                          legalIdType: e.target.value,
+                        },
                       },
                     }))
                   }
@@ -710,7 +784,10 @@ export default function OnboardingPage() {
                       ...p,
                       onboardingProfile: {
                         ...(p?.onboardingProfile || {}),
-                        compliance: { ...(p?.onboardingProfile?.compliance || {}), legalIdNumber: e.target.value },
+                        compliance: {
+                          ...(p?.onboardingProfile?.compliance || {}),
+                          legalIdNumber: e.target.value,
+                        },
                       },
                     }))
                   }
@@ -725,7 +802,10 @@ export default function OnboardingPage() {
                       ...p,
                       onboardingProfile: {
                         ...(p?.onboardingProfile || {}),
-                        compliance: { ...(p?.onboardingProfile?.compliance || {}), addressLine1: e.target.value },
+                        compliance: {
+                          ...(p?.onboardingProfile?.compliance || {}),
+                          addressLine1: e.target.value,
+                        },
                       },
                     }))
                   }
@@ -740,7 +820,10 @@ export default function OnboardingPage() {
                       ...p,
                       onboardingProfile: {
                         ...(p?.onboardingProfile || {}),
-                        compliance: { ...(p?.onboardingProfile?.compliance || {}), addressLine2: e.target.value },
+                        compliance: {
+                          ...(p?.onboardingProfile?.compliance || {}),
+                          addressLine2: e.target.value,
+                        },
                       },
                     }))
                   }
@@ -755,7 +838,10 @@ export default function OnboardingPage() {
                       ...p,
                       onboardingProfile: {
                         ...(p?.onboardingProfile || {}),
-                        compliance: { ...(p?.onboardingProfile?.compliance || {}), city: e.target.value },
+                        compliance: {
+                          ...(p?.onboardingProfile?.compliance || {}),
+                          city: e.target.value,
+                        },
                       },
                     }))
                   }
@@ -770,7 +856,10 @@ export default function OnboardingPage() {
                       ...p,
                       onboardingProfile: {
                         ...(p?.onboardingProfile || {}),
-                        compliance: { ...(p?.onboardingProfile?.compliance || {}), stateProvince: e.target.value },
+                        compliance: {
+                          ...(p?.onboardingProfile?.compliance || {}),
+                          stateProvince: e.target.value,
+                        },
                       },
                     }))
                   }
@@ -785,7 +874,10 @@ export default function OnboardingPage() {
                       ...p,
                       onboardingProfile: {
                         ...(p?.onboardingProfile || {}),
-                        compliance: { ...(p?.onboardingProfile?.compliance || {}), postalCode: e.target.value },
+                        compliance: {
+                          ...(p?.onboardingProfile?.compliance || {}),
+                          postalCode: e.target.value,
+                        },
                       },
                     }))
                   }
@@ -800,7 +892,10 @@ export default function OnboardingPage() {
                       ...p,
                       onboardingProfile: {
                         ...(p?.onboardingProfile || {}),
-                        compliance: { ...(p?.onboardingProfile?.compliance || {}), country: e.target.value },
+                        compliance: {
+                          ...(p?.onboardingProfile?.compliance || {}),
+                          country: e.target.value,
+                        },
                       },
                     }))
                   }
@@ -815,7 +910,10 @@ export default function OnboardingPage() {
                       ...p,
                       onboardingProfile: {
                         ...(p?.onboardingProfile || {}),
-                        compliance: { ...(p?.onboardingProfile?.compliance || {}), phone: e.target.value },
+                        compliance: {
+                          ...(p?.onboardingProfile?.compliance || {}),
+                          phone: e.target.value,
+                        },
                       },
                     }))
                   }
@@ -832,7 +930,10 @@ export default function OnboardingPage() {
                       ...p,
                       onboardingProfile: {
                         ...(p?.onboardingProfile || {}),
-                        contactLinks: { ...(p?.onboardingProfile?.contactLinks || {}), instagram: e.target.value },
+                        contactLinks: {
+                          ...(p?.onboardingProfile?.contactLinks || {}),
+                          instagram: e.target.value,
+                        },
                       },
                     }))
                   }
@@ -847,7 +948,10 @@ export default function OnboardingPage() {
                       ...p,
                       onboardingProfile: {
                         ...(p?.onboardingProfile || {}),
-                        contactLinks: { ...(p?.onboardingProfile?.contactLinks || {}), telegram: e.target.value },
+                        contactLinks: {
+                          ...(p?.onboardingProfile?.contactLinks || {}),
+                          telegram: e.target.value,
+                        },
                       },
                     }))
                   }
@@ -862,7 +966,10 @@ export default function OnboardingPage() {
                       ...p,
                       onboardingProfile: {
                         ...(p?.onboardingProfile || {}),
-                        contactLinks: { ...(p?.onboardingProfile?.contactLinks || {}), website: e.target.value },
+                        contactLinks: {
+                          ...(p?.onboardingProfile?.contactLinks || {}),
+                          website: e.target.value,
+                        },
                       },
                     }))
                   }
@@ -879,7 +986,10 @@ export default function OnboardingPage() {
                       ...p,
                       onboardingProfile: {
                         ...(p?.onboardingProfile || {}),
-                        compliance: { ...(p?.onboardingProfile?.compliance || {}), identityAttested: e.target.checked },
+                        compliance: {
+                          ...(p?.onboardingProfile?.compliance || {}),
+                          identityAttested: e.target.checked,
+                        },
                       },
                     }))
                   }
@@ -888,7 +998,12 @@ export default function OnboardingPage() {
               </label>
 
               <div className="row">
-                <button className="btn primary" type="button" disabled={saving} onClick={saveTraderIdentity}>
+                <button
+                  className="btn primary"
+                  type="button"
+                  disabled={saving}
+                  onClick={saveTraderIdentity}
+                >
                   {saving ? 'Saving…' : 'Save trader identity'}
                 </button>
               </div>
@@ -947,7 +1062,12 @@ export default function OnboardingPage() {
               Receive role-track updates
             </label>
             <div className="row">
-              <button className="btn primary" type="button" disabled={saving} onClick={saveEmailPreferences}>
+              <button
+                className="btn primary"
+                type="button"
+                disabled={saving}
+                onClick={saveEmailPreferences}
+              >
                 {saving ? 'Saving…' : 'Save email preferences'}
               </button>
             </div>
@@ -1019,7 +1139,12 @@ export default function OnboardingPage() {
             </label>
 
             <div className="row">
-              <button className="btn primary" type="button" disabled={saving} onClick={saveCommunityProfile}>
+              <button
+                className="btn primary"
+                type="button"
+                disabled={saving}
+                onClick={saveCommunityProfile}
+              >
                 {saving ? 'Saving…' : 'Save community journey'}
               </button>
             </div>
@@ -1041,7 +1166,9 @@ export default function OnboardingPage() {
 
             {suggestedRoutes.length > 0 ? (
               <div className="onboardingSuggestedRoutes" aria-label="Suggested next routes">
-                <div className="muted small"><strong>Suggested next routes for your selected path tags:</strong></div>
+                <div className="muted small">
+                  <strong>Suggested next routes for your selected path tags:</strong>
+                </div>
                 <div className="row rowWrap">
                   {suggestedRoutes.map((route) => (
                     <Link key={route.to} className="btn ghost" to={route.to}>
@@ -1067,38 +1194,75 @@ export default function OnboardingPage() {
             <div className="form">
               <label>
                 Default country
-                <HelpTip title="Default country" body="Used for deal drafts and logistics context." example="Kenya" />
+                <HelpTip
+                  title="Default country"
+                  body="Used for deal drafts and logistics context."
+                  example="Kenya"
+                />
                 <input
                   value={prefsDraft.defaultCountry}
-                  onChange={(e) => setProfile((p) => ({ ...p, preferences: { ...(p?.preferences || {}), defaultCountry: e.target.value } }))}
+                  onChange={(e) =>
+                    setProfile((p) => ({
+                      ...p,
+                      preferences: { ...(p?.preferences || {}), defaultCountry: e.target.value },
+                    }))
+                  }
                   placeholder="Kenya"
                 />
               </label>
               <label>
                 Default currency
-                <HelpTip title="Default currency" body="Used across Deals and payments." example="USD" />
+                <HelpTip
+                  title="Default currency"
+                  body="Used across Deals and payments."
+                  example="USD"
+                />
                 <input
                   value={prefsDraft.defaultCurrency}
-                  onChange={(e) => setProfile((p) => ({ ...p, preferences: { ...(p?.preferences || {}), defaultCurrency: e.target.value } }))}
+                  onChange={(e) =>
+                    setProfile((p) => ({
+                      ...p,
+                      preferences: { ...(p?.preferences || {}), defaultCurrency: e.target.value },
+                    }))
+                  }
                   placeholder="USD"
                 />
               </label>
               <label>
                 Default tags (comma separated)
-                <HelpTip title="Tags" body="Helps organize items and streams later." example="coffee, kenya, logistics" />
+                <HelpTip
+                  title="Tags"
+                  body="Helps organize items and streams later."
+                  example="coffee, kenya, logistics"
+                />
                 <input
                   value={prefsDraft.defaultTags}
-                  onChange={(e) => setProfile((p) => ({ ...p, preferences: { ...(p?.preferences || {}), defaultTags: e.target.value } }))}
+                  onChange={(e) =>
+                    setProfile((p) => ({
+                      ...p,
+                      preferences: { ...(p?.preferences || {}), defaultTags: e.target.value },
+                    }))
+                  }
                   placeholder="coffee, kenya, logistics"
                 />
               </label>
               <label>
                 Default stream platform
-                <HelpTip title="Stream platform" body="Auto-selects the platform when you create a stream session." example="twitch" />
+                <HelpTip
+                  title="Stream platform"
+                  body="Auto-selects the platform when you create a stream session."
+                  example="twitch"
+                />
                 <input
                   value={prefsDraft.defaultStreamPlatform}
                   onChange={(e) =>
-                    setProfile((p) => ({ ...p, preferences: { ...(p?.preferences || {}), defaultStreamPlatform: e.target.value } }))
+                    setProfile((p) => ({
+                      ...p,
+                      preferences: {
+                        ...(p?.preferences || {}),
+                        defaultStreamPlatform: e.target.value,
+                      },
+                    }))
                   }
                   placeholder="twitch"
                 />
@@ -1108,13 +1272,24 @@ export default function OnboardingPage() {
                   type="checkbox"
                   checked={!!prefsDraft.defaultPublicVisibility}
                   onChange={(e) =>
-                    setProfile((p) => ({ ...p, preferences: { ...(p?.preferences || {}), defaultPublicVisibility: e.target.checked } }))
+                    setProfile((p) => ({
+                      ...p,
+                      preferences: {
+                        ...(p?.preferences || {}),
+                        defaultPublicVisibility: e.target.checked,
+                      },
+                    }))
                   }
                 />
                 Default: Public visibility
               </label>
               <div className="row">
-                <button className="btn primary" type="button" disabled={saving} onClick={saveDefaults}>
+                <button
+                  className="btn primary"
+                  type="button"
+                  disabled={saving}
+                  onClick={saveDefaults}
+                >
                   {saving ? 'Saving…' : 'Save defaults'}
                 </button>
               </div>
@@ -1137,10 +1312,20 @@ export default function OnboardingPage() {
             <div className="subcard">
               <div className="subcard__title">Twitch</div>
               <div className="muted small">
-                Status: {profile?.twitch?.login ? <b>connected (@{profile.twitch.login})</b> : <b>not connected</b>}
+                Status:{' '}
+                {profile?.twitch?.login ? (
+                  <b>connected (@{profile.twitch.login})</b>
+                ) : (
+                  <b>not connected</b>
+                )}
               </div>
               <div className="muted small">
-                Config: {twitchStatus?.configured ? <b>configured</b> : <b>missing {twitchStatus?.missing?.join(', ') || 'env vars'}</b>}
+                Config:{' '}
+                {twitchStatus?.configured ? (
+                  <b>configured</b>
+                ) : (
+                  <b>missing {twitchStatus?.missing?.join(', ') || 'env vars'}</b>
+                )}
               </div>
               <div className="row rowWrap">
                 <button className="btn primary" type="button" onClick={handleConnectTwitch}>
@@ -1151,15 +1336,31 @@ export default function OnboardingPage() {
                 </button>
               </div>
               <div className="muted small">
-                Live: {twitchLive?.connected ? (twitchLive.live ? <b>LIVE</b> : <b>offline</b>) : <b>not connected</b>}
+                Live:{' '}
+                {twitchLive?.connected ? (
+                  twitchLive.live ? (
+                    <b>LIVE</b>
+                  ) : (
+                    <b>offline</b>
+                  )
+                ) : (
+                  <b>not connected</b>
+                )}
               </div>
             </div>
 
             <div className="subcard">
               <div className="subcard__title">YouTube</div>
-              <div className="muted small">Status: {youtubeLive?.connected ? <b>connected</b> : <b>not connected</b>}</div>
               <div className="muted small">
-                Config: {youtubeStatus?.configured ? <b>configured</b> : <b>missing {youtubeStatus?.missing?.join(', ') || 'env vars'}</b>}
+                Status: {youtubeLive?.connected ? <b>connected</b> : <b>not connected</b>}
+              </div>
+              <div className="muted small">
+                Config:{' '}
+                {youtubeStatus?.configured ? (
+                  <b>configured</b>
+                ) : (
+                  <b>missing {youtubeStatus?.missing?.join(', ') || 'env vars'}</b>
+                )}
               </div>
               <div className="row rowWrap">
                 <button className="btn primary" type="button" onClick={handleConnectYouTube}>
@@ -1168,11 +1369,18 @@ export default function OnboardingPage() {
                 <button className="btn ghost" type="button" onClick={refreshLiveStatus}>
                   Check
                 </button>
-                <a className="btn ghost" href="https://studio.youtube.com/" target="_blank" rel="noreferrer">
+                <a
+                  className="btn ghost"
+                  href="https://studio.youtube.com/"
+                  target="_blank"
+                  rel="noreferrer"
+                >
                   Open YouTube Studio
                 </a>
               </div>
-              <div className="muted small">{youtubeLive?.channelTitle ? `Channel: ${youtubeLive.channelTitle}` : ''}</div>
+              <div className="muted small">
+                {youtubeLive?.channelTitle ? `Channel: ${youtubeLive.channelTitle}` : ''}
+              </div>
             </div>
           </div>
         </section>
@@ -1187,10 +1395,24 @@ export default function OnboardingPage() {
             />
           </h2>
           <div className="row rowWrap onboardingWalletActions">
-            <button className="btn primary" type="button" onClick={connectWallet} disabled={wallet.connecting}>
-              {wallet.address ? 'Wallet connected' : wallet.connecting ? 'Connecting…' : 'Connect wallet'}
+            <button
+              className="btn primary"
+              type="button"
+              onClick={connectWallet}
+              disabled={wallet.connecting}
+            >
+              {wallet.address
+                ? 'Wallet connected'
+                : wallet.connecting
+                  ? 'Connecting…'
+                  : 'Connect wallet'}
             </button>
-            <button className="btn ghost" type="button" onClick={generateWallet} disabled={wallet.generating}>
+            <button
+              className="btn ghost"
+              type="button"
+              onClick={generateWallet}
+              disabled={wallet.generating}
+            >
               {wallet.generating ? 'Generating…' : 'Generate wallet'}
             </button>
             <div className="muted small">
@@ -1200,11 +1422,15 @@ export default function OnboardingPage() {
                   ? `Saved default: ${prefsDraft.defaultWalletAddress}`
                   : ''}
             </div>
-            {!hasEthereum() ? <div className="muted small">Tip: install MetaMask to enable wallet connect.</div> : null}
+            {!hasEthereum() ? (
+              <div className="muted small">Tip: install MetaMask to enable wallet connect.</div>
+            ) : null}
           </div>
           <div className="muted small onboardingWalletMeta">
             Wallet mode: <b>{identityDraft.walletMode}</b>
-            {identityDraft.generatedWalletAddress ? ` · Generated wallet: ${identityDraft.generatedWalletAddress}` : ''}
+            {identityDraft.generatedWalletAddress
+              ? ` · Generated wallet: ${identityDraft.generatedWalletAddress}`
+              : ''}
           </div>
 
           <div className="form onboardingIdentityForm">
@@ -1285,13 +1511,19 @@ export default function OnboardingPage() {
               />
             </label>
             <div className="row">
-              <button className="btn primary" type="button" disabled={saving} onClick={saveIdentityOptions}>
+              <button
+                className="btn primary"
+                type="button"
+                disabled={saving}
+                onClick={saveIdentityOptions}
+              >
                 {saving ? 'Saving…' : 'Save identity options'}
               </button>
             </div>
           </div>
           <div className="muted small onboardingWalletNote">
-            Generated wallet in this phase records onboarding intent only. Production key custody should use a secure wallet provider.
+            Generated wallet in this phase records onboarding intent only. Production key custody
+            should use a secure wallet provider.
           </div>
         </section>
 
@@ -1305,8 +1537,8 @@ export default function OnboardingPage() {
               Create first deal
             </Link>
             <div className="muted small">
-              Streams created: {typeof streamsCount === 'number' ? streamsCount : '—'} · Deals created:{' '}
-              {typeof dealsCount === 'number' ? dealsCount : '—'}
+              Streams created: {typeof streamsCount === 'number' ? streamsCount : '—'} · Deals
+              created: {typeof dealsCount === 'number' ? dealsCount : '—'}
             </div>
           </div>
         </section>
@@ -1314,4 +1546,3 @@ export default function OnboardingPage() {
     </div>
   );
 }
-

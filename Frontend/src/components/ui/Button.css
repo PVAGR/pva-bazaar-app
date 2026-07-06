@@ -6,7 +6,10 @@
   background: var(--bg-secondary);
   color: var(--text-primary);
   cursor: pointer;
-  transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    background 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .uiBtn:hover {
@@ -46,4 +49,3 @@
   cursor: not-allowed;
   transform: none;
 }
-

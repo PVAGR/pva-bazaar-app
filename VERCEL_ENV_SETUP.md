@@ -7,17 +7,20 @@ Go to Vercel Dashboard → Your Project → Settings → Environment Variables
 Add these variables for **Production**, **Preview**, and **Development** environments:
 
 ### Core Settings
+
 ```bash
 NODE_ENV=production
 ```
 
 ### Database
+
 ```bash
 MONGODB_URI=<your-mongodb-atlas-connection-string>
 # Example: mongodb+srv://username:password@cluster.mongodb.net/pvabazaar?retryWrites=true&w=majority
 ```
 
 ### Security & Authentication
+
 ```bash
 JWT_SECRET=<generate-random-64-char-string>
 # Generate with: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
@@ -33,12 +36,14 @@ ADMIN_PASSWORD=<your-admin-password>
 ```
 
 ### CORS
+
 ```bash
 CORS_ALLOWED_ORIGINS=https://pvabazaar.org
 # Add multiple origins separated by commas if needed
 ```
 
 ### Stripe (Payment Processing)
+
 ```bash
 STRIPE_SECRET_KEY=<your-stripe-secret-key>
 # Get from: https://dashboard.stripe.com/apikeys
@@ -48,12 +53,14 @@ STRIPE_WEBHOOK_SECRET=<your-stripe-webhook-secret>
 ```
 
 ### Optional: Error Tracking
+
 ```bash
 SENTRY_DSN=<your-sentry-dsn>
 # Get from: https://sentry.io/settings/projects/
 ```
 
 ### Optional: Ethereum/Blockchain
+
 ```bash
 ETHEREUM_RPC_URL=https://mainnet.base.org
 ADMIN_WALLET_PUBLIC=<your-wallet-address>
@@ -62,11 +69,13 @@ ADMIN_WALLET_PUBLIC=<your-wallet-address>
 ## Quick Setup Commands
 
 ### Generate JWT Secret
+
 ```bash
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
 
 ### Generate Admin Password
+
 ```bash
 node -e "console.log(require('crypto').randomBytes(16).toString('base64'))"
 ```
@@ -102,6 +111,7 @@ curl https://api.pvabazaar.org/api/admin/login \
 This configuration is saved at git tag: **v0.1.0-foundation**
 
 To restore to this point:
+
 ```bash
 git checkout v0.1.0-foundation
 ```

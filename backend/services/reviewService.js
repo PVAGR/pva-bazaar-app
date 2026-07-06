@@ -182,7 +182,7 @@ async function updateSellerRating(sellerId) {
     { userId: sellerId },
     {
       averageRating: Math.round(avgRating * 10) / 10,
-    }
+    },
   );
 }
 
@@ -252,12 +252,24 @@ async function getReviewSummary(productId) {
   // Calculate aspect averages
   const aspectAverages = {};
   for (const [key, ratings] of Object.entries(aspects)) {
-    aspectAverages[key] = Math.round((ratings.reduce((a, b) => a + b, 0) / ratings.length) * 10) / 10;
+    aspectAverages[key] =
+      Math.round((ratings.reduce((a, b) => a + b, 0) / ratings.length) * 10) / 10;
   }
 
   return {
     totalReviews: reviews.length,
-    averageRating: reviews.length > 0 ? Math.round((distribution[5] * 5 + distribution[4] * 4 + distribution[3] * 3 + distribution[2] * 2 + distribution[1] * 1) / reviews.length * 10) / 10 : 0,
+    averageRating:
+      reviews.length > 0
+        ? Math.round(
+            ((distribution[5] * 5 +
+              distribution[4] * 4 +
+              distribution[3] * 3 +
+              distribution[2] * 2 +
+              distribution[1] * 1) /
+              reviews.length) *
+              10,
+          ) / 10
+        : 0,
     distribution,
     aspectAverages,
   };

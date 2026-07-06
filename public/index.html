@@ -3,7 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="PVA Bazaar is a personal website, business bridge, archive, and continuity layer." />
+    <meta
+      name="description"
+      content="PVA Bazaar is a personal website, business bridge, archive, and continuity layer."
+    />
     <meta name="theme-color" content="#0f1419" />
     <title>PVA Bazaar — Personal Site, Business, and Writings</title>
     <style>
@@ -21,8 +24,13 @@
         --radius: 18px;
         --max: 1080px;
       }
-      * { box-sizing: border-box; }
-      html, body { min-height: 100%; }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        min-height: 100%;
+      }
       body {
         margin: 0;
         background:
@@ -30,11 +38,22 @@
           radial-gradient(circle at 20% 10%, rgba(111, 231, 200, 0.06), transparent 18%),
           linear-gradient(180deg, #081018 0%, #0a0f15 100%);
         color: var(--text);
-        font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+        font-family:
+          Inter,
+          system-ui,
+          -apple-system,
+          Segoe UI,
+          Roboto,
+          sans-serif;
         line-height: 1.6;
       }
-      a { color: var(--accent); text-decoration: none; }
-      a:hover { color: var(--accent-strong); }
+      a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+      a:hover {
+        color: var(--accent-strong);
+      }
       .wrap {
         width: min(var(--max), calc(100vw - 24px));
         margin: 18px auto 32px;
@@ -44,7 +63,8 @@
         border-radius: var(--radius);
         box-shadow: var(--shadow);
       }
-      .topbar, .footerbar {
+      .topbar,
+      .footerbar {
         display: flex;
         justify-content: space-between;
         gap: 14px;
@@ -87,11 +107,28 @@
         border-radius: 18px;
         padding: 18px;
       }
-      h1, h2, h3 { margin: 0; line-height: 1.15; }
-      h1 { font-size: clamp(2rem, 4vw, 3.4rem); }
-      h2 { font-size: 1.2rem; color: var(--accent); }
-      p { margin: 0; color: var(--muted); }
-      .lead { font-size: 1.03rem; color: var(--text); max-width: 68ch; }
+      h1,
+      h2,
+      h3 {
+        margin: 0;
+        line-height: 1.15;
+      }
+      h1 {
+        font-size: clamp(2rem, 4vw, 3.4rem);
+      }
+      h2 {
+        font-size: 1.2rem;
+        color: var(--accent);
+      }
+      p {
+        margin: 0;
+        color: var(--muted);
+      }
+      .lead {
+        font-size: 1.03rem;
+        color: var(--text);
+        max-width: 68ch;
+      }
       .pill {
         display: inline-flex;
         align-items: center;
@@ -106,7 +143,12 @@
         text-transform: uppercase;
         letter-spacing: 0.08em;
       }
-      .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 16px;
+      }
       .button {
         display: inline-flex;
         align-items: center;
@@ -119,7 +161,11 @@
         font-weight: 700;
       }
       .button.primary {
-        background: linear-gradient(180deg, rgba(111, 231, 200, 0.16) 0%, rgba(111, 231, 200, 0.08) 100%);
+        background: linear-gradient(
+          180deg,
+          rgba(111, 231, 200, 0.16) 0%,
+          rgba(111, 231, 200, 0.08) 100%
+        );
         border-color: rgba(111, 231, 200, 0.45);
         color: var(--accent-strong);
       }
@@ -166,37 +212,54 @@
         border-radius: 50%;
         background: #66788a;
       }
-      .dot.ok { background: #4ade80; }
-      .dot.warn { background: #fbbf24; }
-      .dot.bad { background: #fb7185; }
-      .stack { display: grid; gap: 12px; margin-top: 16px; }
+      .dot.ok {
+        background: #4ade80;
+      }
+      .dot.warn {
+        background: #fbbf24;
+      }
+      .dot.bad {
+        background: #fb7185;
+      }
+      .stack {
+        display: grid;
+        gap: 12px;
+        margin-top: 16px;
+      }
       .stack-item {
         display: flex;
         justify-content: space-between;
         gap: 14px;
         align-items: start;
         padding: 12px 0;
-        border-top: 1px solid rgba(255,255,255,0.06);
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
       }
-      .stack-item:first-child { border-top: 0; padding-top: 0; }
-      .stack-item strong { color: var(--text); }
+      .stack-item:first-child {
+        border-top: 0;
+        padding-top: 0;
+      }
+      .stack-item strong {
+        color: var(--text);
+      }
       .archive-quote {
         margin-top: 16px;
         padding: 16px;
         border-radius: 16px;
-        background: rgba(255,255,255,0.03);
-        border: 1px solid rgba(255,255,255,0.06);
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.06);
       }
       .footerbar {
         margin-top: 18px;
         padding-top: 16px;
-        border-top: 1px solid rgba(255,255,255,0.06);
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
         color: var(--muted);
         font-size: 0.92rem;
       }
       @media (max-width: 900px) {
         .hero,
-        .grid { grid-template-columns: 1fr; }
+        .grid {
+          grid-template-columns: 1fr;
+        }
       }
     </style>
   </head>
@@ -220,10 +283,11 @@
         <article class="panel">
           <span class="pill">Everything visible</span>
           <h1>My notes, my business, and my game all live here.</h1>
-          <p class="lead" style="margin-top: 12px;">
-            PVA Bazaar is not just a storefront. It is my personal website, a bridge for suppliers and buyers,
-            a place for my writings, and a home for the HeelKawn universe. Nothing important should be hidden or
-            malformed. Everything should be readable, discoverable, and kept intact.
+          <p class="lead" style="margin-top: 12px">
+            PVA Bazaar is not just a storefront. It is my personal website, a bridge for suppliers
+            and buyers, a place for my writings, and a home for the HeelKawn universe. Nothing
+            important should be hidden or malformed. Everything should be readable, discoverable,
+            and kept intact.
           </p>
           <div class="actions">
             <a class="button primary" href="/#/archive">Open archive</a>
@@ -280,23 +344,27 @@
       </section>
 
       <section class="note" aria-label="Preserved writing note">
-        <h2 style="margin-bottom: 8px;">Preserved note</h2>
+        <h2 style="margin-bottom: 8px">Preserved note</h2>
         <p class="small">
-          This is not meant to be a throwaway blog or a hidden folder. It is a record of what was built, what was
-          learned, and what still matters. The site should keep the writings readable, the business surface functional,
-          and the whole system honest.
+          This is not meant to be a throwaway blog or a hidden folder. It is a record of what was
+          built, what was learned, and what still matters. The site should keep the writings
+          readable, the business surface functional, and the whole system honest.
         </p>
       </section>
 
       <section class="grid" aria-label="More routes">
         <article class="card">
           <h3>Continuity</h3>
-          <p>Install the site, keep it on your phone, and use recovery tools when they are available.</p>
+          <p>
+            Install the site, keep it on your phone, and use recovery tools when they are available.
+          </p>
           <a href="/#/recovery">Open recovery page →</a>
         </article>
         <article class="card">
           <h3>Governance</h3>
-          <p>Public proposals, conference flow, and the civic layer that keeps decisions visible.</p>
+          <p>
+            Public proposals, conference flow, and the civic layer that keeps decisions visible.
+          </p>
           <a href="/#/conference">Open conference →</a>
         </article>
         <article class="card">

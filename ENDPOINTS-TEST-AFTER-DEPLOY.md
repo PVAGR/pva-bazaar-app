@@ -3,6 +3,7 @@
 Once your app is live on internet, test these endpoints to verify everything works:
 
 ## Replace this with your Render URL:
+
 ```
 PROD_URL="https://your-render-app.onrender.com"
 ```
@@ -12,18 +13,21 @@ PROD_URL="https://your-render-app.onrender.com"
 ## CRITICAL ENDPOINTS (Must Work)
 
 ### 1. Health Check
+
 ```bash
 curl -s $PROD_URL/api/health-check
 # Expected: HTTP 200, {"ok":true,...}
 ```
 
 ### 2. API Documentation
+
 ```bash
 curl -s $PROD_URL/api/docs | head -20
 # Expected: HTML with Swagger/OpenAPI UI
 ```
 
 ### 3. OpenAPI Spec
+
 ```bash
 curl -s $PROD_URL/api/openapi.json | jq .
 # Expected: JSON with all endpoint definitions
@@ -70,6 +74,7 @@ Test these in browser at: `$PROD_URL/`
 ## API ENDPOINT TESTS
 
 ### Authentication
+
 ```bash
 # Test JWT generation (mock)
 curl -X POST $PROD_URL/api/auth/register \
@@ -78,6 +83,7 @@ curl -X POST $PROD_URL/api/auth/register \
 ```
 
 ### Marketplace
+
 ```bash
 # Get products
 curl -s $PROD_URL/api/products | head -30
@@ -87,6 +93,7 @@ curl -s "$PROD_URL/api/search?q=craft" | head -30
 ```
 
 ### Provenance (NFT System)
+
 ```bash
 # Start submission
 curl -X POST $PROD_URL/api/provenance/start \
@@ -100,6 +107,7 @@ curl -X POST $PROD_URL/api/provenance/start \
 ## EXPECTED RESULTS
 
 All endpoints should return:
+
 - ✅ HTTP 200 or 201 (successful requests)
 - ✅ No "Connection refused" errors
 - ✅ No "502 Bad Gateway" errors
@@ -113,6 +121,7 @@ All endpoints should return:
 If something isn't working:
 
 ### Check Render Logs
+
 1. Go to https://dashboard.render.com
 2. Click your service
 3. Click "Logs" tab
@@ -120,12 +129,12 @@ If something isn't working:
 
 ### Common Issues & Fixes
 
-| Issue | Cause | Fix |
-|-------|-------|-----|
-| 502 Bad Gateway | Server crashed | Check logs, restart |
-| Cannot connect | Env vars wrong | Check MongoDB_URI, JWT_SECRET |
-| Network Error | API URL wrong | Verify frontend API config |
-| 404 errors | Routes not mounted | Confirm backend/api/index.js |
+| Issue           | Cause              | Fix                           |
+| --------------- | ------------------ | ----------------------------- |
+| 502 Bad Gateway | Server crashed     | Check logs, restart           |
+| Cannot connect  | Env vars wrong     | Check MongoDB_URI, JWT_SECRET |
+| Network Error   | API URL wrong      | Verify frontend API config    |
+| 404 errors      | Routes not mounted | Confirm backend/api/index.js  |
 
 ---
 

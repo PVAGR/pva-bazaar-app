@@ -1,21 +1,26 @@
 # Delete Functionality Implementation Summary
 
 ## Overview
+
 Successfully implemented delete functionality for admin posts in the PVA Bazaar application. Users can now delete archive entries they create with proper confirmation and error handling.
 
 ## Changes Made
 
 ### 1. Backend Changes (Already Complete)
+
 **File:** `backend/routes/archive.js`
+
 - Added DELETE /:id endpoint
 - Requires authentication (JWT) and admin authorization
 - Returns deleted entry on success
 - Proper error handling for non-existent entries
 
 ### 2. Frontend API Changes
+
 **File:** `Frontend/src/lib/api.js`
 
 Added new `deleteArchiveEntry()` function:
+
 ```javascript
 export async function deleteArchiveEntry(id, adminCode) {
   try {
@@ -26,13 +31,13 @@ export async function deleteArchiveEntry(id, adminCode) {
         'X-Admin-Code': adminCode || '',
       },
     });
-    
+
     const data = await response.json();
-    
+
     if (!response.ok) {
       throw new Error(data.message || data.error || `HTTP ${response.status}`);
     }
-    
+
     return { ok: true, message: data.message };
   } catch (err) {
     return { ok: false, error: err.message };
@@ -41,32 +46,37 @@ export async function deleteArchiveEntry(id, adminCode) {
 ```
 
 ### 3. Frontend UI Changes
+
 **File:** `Frontend/src/pages/AdminPage.jsx`
 
 #### Updated Imports
+
 Added `deleteArchiveEntry` to imports from api.js:
+
 ```javascript
 import { createArchiveEntry, fetchArchiveEntries, deleteArchiveEntry } from '../lib/api';
 ```
 
 #### Enhanced handleDelete() Function
+
 Replaced placeholder alert with full delete implementation:
+
 ```javascript
 const handleDelete = async (id) => {
   // Show confirmation dialog
   const confirmDelete = window.confirm(
-    'Are you sure you want to delete this entry? This action cannot be undone.'
+    'Are you sure you want to delete this entry? This action cannot be undone.',
   );
-  
+
   if (!confirmDelete) return;
-  
+
   try {
     setIsSubmitting(true);
     const result = await deleteArchiveEntry(id, adminCode);
-    
+
     if (result.ok) {
       // Remove from list
-      setSavedEntries(prev => prev.filter(entry => entry._id !== id));
+      setSavedEntries((prev) => prev.filter((entry) => entry._id !== id));
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
     } else {
@@ -112,23 +122,29 @@ const handleDelete = async (id) => {
 **DELETE /api/archive/:id**
 
 ### Request Headers
+
 - `X-Admin-Code: {adminCode}` - Admin authentication code
 - `Content-Type: application/json`
 
 ### Authentication
+
 - Requires valid JWT token in Authorization header
 - Requires admin-only middleware authorization
 
 ### Response (Success)
+
 ```json
 {
   "ok": true,
   "message": "Entry deleted successfully",
-  "entry": { /* deleted entry object */ }
+  "entry": {
+    /* deleted entry object */
+  }
 }
 ```
 
 ### Response (Error)
+
 ```json
 {
   "ok": false,
@@ -161,6 +177,7 @@ To test the delete functionality:
 **Message:** "feat: Implement delete functionality for admin posts"
 
 **Files Changed:**
+
 - Frontend/src/lib/api.js - Added deleteArchiveEntry() function
 - Frontend/src/pages/AdminPage.jsx - Updated imports and handleDelete() implementation
 - backend/routes/archive.js - DELETE endpoint already present

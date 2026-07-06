@@ -5,6 +5,7 @@ Your code is pushed to GitHub. Now get it LIVE online.
 ## 🎯 Two Options (Pick ONE)
 
 ### ⚡ OPTION A: Railway.app (FASTEST)
+
 **Best for**: Quick setup, easiest, most similar to Vercel
 
 ```bash
@@ -12,6 +13,7 @@ bash scripts/deploy-live-now.sh
 ```
 
 **What happens**:
+
 - Browser opens → Authenticate with GitHub
 - Selects Railway as host
 - Configures environment
@@ -24,6 +26,7 @@ bash scripts/deploy-live-now.sh
 ---
 
 ### 🎯 OPTION B: Fly.io (BEST PERFORMANCE)
+
 **Best for**: Best specs, global deployment, most powerful free tier
 
 ```bash
@@ -31,6 +34,7 @@ bash scripts/deploy-live-flyio.sh
 ```
 
 **What happens**:
+
 - Browser opens → Authenticate with Fly.io
 - Deploys Docker container to Fly
 - Configures environment variables
@@ -65,11 +69,13 @@ Pick whichever you want - both work perfectly.
 Once your app is live online, do these 5 steps:
 
 ### 1️⃣ Verify It's Working
+
 ```bash
 curl https://YOUR_NEW_URL/api/health-check
 ```
 
 You'll see:
+
 ```json
 {
   "status": "ok",
@@ -79,6 +85,7 @@ You'll see:
 ```
 
 ### 2️⃣ Add MongoDB (if you want persistent DB)
+
 - Go to https://www.mongodb.com/cloud/atlas
 - Create free cluster
 - Get connection string
@@ -105,6 +112,7 @@ Get the `agentId` from response.
 ### 4️⃣ Add Payment Methods to Agent
 
 **Add PayPal**:
+
 ```bash
 curl -X POST https://YOUR_NEW_URL/api/admin/autonomous-agent/{agentId}/payment-method \
   -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \
@@ -120,6 +128,7 @@ curl -X POST https://YOUR_NEW_URL/api/admin/autonomous-agent/{agentId}/payment-m
 ```
 
 **Add Crypto Wallet**:
+
 ```bash
 curl -X POST https://YOUR_NEW_URL/api/admin/autonomous-agent/{agentId}/payment-method \
   -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \
@@ -137,6 +146,7 @@ curl -X POST https://YOUR_NEW_URL/api/admin/autonomous-agent/{agentId}/payment-m
 ### 5️⃣ Create Billing Schedules
 
 **Monthly Railway Payment**:
+
 ```bash
 curl -X POST https://YOUR_NEW_URL/api/admin/autonomous-agent/{agentId}/billing-schedule \
   -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \
@@ -159,6 +169,7 @@ curl -X POST https://YOUR_NEW_URL/api/admin/autonomous-agent/{agentId}/toggle-op
 ### 7️⃣ Fund the Agent
 
 Transfer money to:
+
 - PayPal: $500
 - Crypto Wallet: $1,000
 - CashApp: $300
@@ -191,14 +202,14 @@ Your autonomous agent is now **LIVE ON THE INTERNET** and will:
 
 ## 💡 Quick Reference
 
-| Task | Command |
-|------|---------|
-| Deploy Railway | `bash scripts/deploy-live-now.sh` |
-| Deploy Fly.io | `bash scripts/deploy-live-flyio.sh` |
-| View Logs (Railway) | `railway logs` |
-| View Logs (Fly.io) | `flyctl logs -a YOUR_APP_NAME` |
-| SSH into app (Fly.io) | `flyctl ssh console` |
-| Update env var | Dashboard or `railway variables set KEY VALUE` |
+| Task                  | Command                                        |
+| --------------------- | ---------------------------------------------- |
+| Deploy Railway        | `bash scripts/deploy-live-now.sh`              |
+| Deploy Fly.io         | `bash scripts/deploy-live-flyio.sh`            |
+| View Logs (Railway)   | `railway logs`                                 |
+| View Logs (Fly.io)    | `flyctl logs -a YOUR_APP_NAME`                 |
+| SSH into app (Fly.io) | `flyctl ssh console`                           |
+| Update env var        | Dashboard or `railway variables set KEY VALUE` |
 
 ---
 

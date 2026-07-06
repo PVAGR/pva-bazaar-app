@@ -52,17 +52,16 @@ Keep any sensitive numbers high level (ranges are fine). Do not put bank details
 
 Use these sections to jot key ideas or constraints as they show up in your head; we’ll flesh them out when Phases 1–2 are humming.
 
-- **Phase 2 – Scale & light tech leverage**  
+- **Phase 2 – Scale & light tech leverage**
   - In-repo: Next sanctuary app (home, archive, verification, manifesto, dashboard, cart); run `npm run dev:web`.
-  - Ideas for which artifacts deserve “hero” pages in this app.  
+  - Ideas for which artifacts deserve “hero” pages in this app.
   - Thoughts on email list, repeat buyers, and simple automations you want.
 
-- **Phase 3 – Cyber café**  
+- **Phase 3 – Cyber café**
   - In-repo: `docs/CYBER-CAFE-MODEL.md` (capex/opex, pricing; only when export profits fund it).
-  - Potential locations, partners, and pricing models.  
+  - Potential locations, partners, and pricing models.
   - Early signals about local demand.
 
-- **Phase 4 – PVABazaar.org / Web3**  
+- **Phase 4 – PVABazaar.org / Web3**
   - In-repo: `docs/PVABAZAAR-MVP-WEB3.md` (verification MVP, reuse backend).
-  - Any concrete, *small* experiments you might want to try once the export business is stable.
-
+  - Any concrete, _small_ experiments you might want to try once the export business is stable.

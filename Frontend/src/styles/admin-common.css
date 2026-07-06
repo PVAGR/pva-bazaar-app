@@ -1,11 +1,10 @@
 /* Shared admin-area UI primitives (used by Login/Account/etc.). */
 .admin-page .card {
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--bg-secondary) 90%, transparent),
-      var(--bg-tertiary)
-    );
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--bg-secondary) 90%, transparent),
+    var(--bg-tertiary)
+  );
   border: 1px solid color-mix(in srgb, var(--border) 84%, transparent);
   border-left: 3px solid color-mix(in srgb, var(--accent) 68%, #d1a84f 32%);
   color: var(--text-primary);
@@ -46,7 +45,9 @@
   border: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
   background: color-mix(in srgb, var(--bg-secondary) 92%, transparent);
   color: var(--text-primary);
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .admin-page .form input:focus,
@@ -66,11 +67,18 @@
   color: var(--text-primary);
   cursor: pointer;
   text-decoration: none;
-  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .admin-page .btn.primary {
-  background: linear-gradient(125deg, var(--accent), color-mix(in srgb, var(--accent) 64%, #d1a84f));
+  background: linear-gradient(
+    125deg,
+    var(--accent),
+    color-mix(in srgb, var(--accent) 64%, #d1a84f)
+  );
   border-color: var(--accent);
   color: #ffffff;
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.22);

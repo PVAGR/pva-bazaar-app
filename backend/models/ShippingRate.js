@@ -90,7 +90,12 @@ const shippingRateSchema = new mongoose.Schema({
 });
 
 // Index for common queries
-shippingRateSchema.index({ originCountry: 1, destinationCountry: 1, carrier: 1, shippingMethod: 1 });
+shippingRateSchema.index({
+  originCountry: 1,
+  destinationCountry: 1,
+  carrier: 1,
+  shippingMethod: 1,
+});
 shippingRateSchema.index({ available: 1 });
 
 shippingRateSchema.pre('save', function (next) {

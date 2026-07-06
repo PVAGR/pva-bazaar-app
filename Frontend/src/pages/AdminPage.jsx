@@ -47,9 +47,25 @@ export default function AdminPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const availableTabs = new Set([
-    'dashboard', 'orders', 'transactions', 'archive', 'marketplace', 'inquiries',
-    'users', 'attribution', 'payouts', 'settlements', 'cloud', 'library', 'api',
-    'health', 'settings', 'openclaw', 'bounty-hunter', 'royalty-analytics', 'overview',
+    'dashboard',
+    'orders',
+    'transactions',
+    'archive',
+    'marketplace',
+    'inquiries',
+    'users',
+    'attribution',
+    'payouts',
+    'settlements',
+    'cloud',
+    'library',
+    'api',
+    'health',
+    'settings',
+    'openclaw',
+    'bounty-hunter',
+    'royalty-analytics',
+    'overview',
   ]);
   const staleThresholdMs = ENV.STATUS_STALE_MS || 120000;
   const staleThresholdMinutes = Math.round((staleThresholdMs / 60000) * 10) / 10;
@@ -85,7 +101,7 @@ export default function AdminPage() {
     document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
     return isDark;
   });
-  
+
   const [adminTokenInput, setAdminTokenInput] = useState('');
   const [showConnectionStatus, setShowConnectionStatus] = useState(false);
   const [dispatchTestState, setDispatchTestState] = useState({ loading: false, message: '' });
@@ -98,7 +114,13 @@ export default function AdminPage() {
     apiBase: ENV.API_URL,
     results: {},
   });
-  const [inquiryCounts, setInquiryCounts] = useState({ new: 0, contacted: 0, reserved: 0, closed: 0, total: 0 });
+  const [inquiryCounts, setInquiryCounts] = useState({
+    new: 0,
+    contacted: 0,
+    reserved: 0,
+    closed: 0,
+    total: 0,
+  });
   const [makeOrderModalOpen, setMakeOrderModalOpen] = useState(false);
 
   const tabLoadingFallback = (
@@ -107,11 +129,14 @@ export default function AdminPage() {
     </div>
   );
 
-  const renderTab = useCallback((content) => (
-    <ErrorBoundary>
-      <Suspense fallback={tabLoadingFallback}>{content}</Suspense>
-    </ErrorBoundary>
-  ), [tabLoadingFallback]);
+  const renderTab = useCallback(
+    (content) => (
+      <ErrorBoundary>
+        <Suspense fallback={tabLoadingFallback}>{content}</Suspense>
+      </ErrorBoundary>
+    ),
+    [tabLoadingFallback],
+  );
 
   const nextPath = useCallback(() => {
     const params = new URLSearchParams(location.search || '');
@@ -155,7 +180,9 @@ export default function AdminPage() {
       cleanedParams.delete('oauth_admin_token');
       cleanedParams.delete('oauth_admin_error');
       cleanedParams.delete('oauth_provider');
-      const nextHash = cleanedParams.toString() ? `${hashPath}?${cleanedParams.toString()}` : hashPath;
+      const nextHash = cleanedParams.toString()
+        ? `${hashPath}?${cleanedParams.toString()}`
+        : hashPath;
       window.history.replaceState(null, '', nextHash);
     } else if (location.search) {
       navigate(location.pathname, { replace: true });
@@ -166,13 +193,16 @@ export default function AdminPage() {
   useEffect(() => {
     const auth = sessionStorage.getItem('admin-auth');
     const authVersion = sessionStorage.getItem('admin-auth-version');
-    
+
     // Only accept sessions with v2 (username+password) - invalidate old password-only sessions
     if (auth === 'authenticated' && authVersion === 'v2') {
       setIsAuthenticated(true);
     } else {
       // Check if there's a valid token in localStorage that we can restore session from
-      const token = localStorage.getItem('token') || localStorage.getItem('authToken') || localStorage.getItem('jwt');
+      const token =
+        localStorage.getItem('token') ||
+        localStorage.getItem('authToken') ||
+        localStorage.getItem('jwt');
       if (token) {
         // Restore the admin session from localStorage token
         sessionStorage.setItem('admin-auth', 'authenticated');
@@ -190,7 +220,10 @@ export default function AdminPage() {
   useEffect(() => {
     const handleSessionExpired = () => {
       // Check if we still have a valid token in localStorage - if so, restore the session
-      const token = localStorage.getItem('token') || localStorage.getItem('authToken') || localStorage.getItem('jwt');
+      const token =
+        localStorage.getItem('token') ||
+        localStorage.getItem('authToken') ||
+        localStorage.getItem('jwt');
       if (token) {
         // Token still exists, restore admin session
         sessionStorage.setItem('admin-auth', 'authenticated');
@@ -199,7 +232,7 @@ export default function AdminPage() {
         setError('');
         return;
       }
-      
+
       setIsAuthenticated(false);
       setUsername('');
       setEmail('');
@@ -354,7 +387,10 @@ export default function AdminPage() {
       if (data.ok) {
         setDispatchTestState({ loading: false, message: '✅ Dispatch successful' });
       } else {
-        setDispatchTestState({ loading: false, message: `❌ ${data.message || 'Dispatch failed'}` });
+        setDispatchTestState({
+          loading: false,
+          message: `❌ ${data.message || 'Dispatch failed'}`,
+        });
       }
     } catch (err) {
       setDispatchTestState({ loading: false, message: `❌ ${err.message || 'Network error'}` });
@@ -372,17 +408,25 @@ export default function AdminPage() {
       if (data.ok) {
         setRecentEvents({ loading: false, data: data.events || [], error: null });
       } else {
-        setRecentEvents({ loading: false, data: null, error: data.message || 'Failed to fetch events' });
+        setRecentEvents({
+          loading: false,
+          data: null,
+          error: data.message || 'Failed to fetch events',
+        });
       }
     } catch (err) {
-      setRecentEvents({ loading: false, data: null, error: err?.response?.data?.message || err.message || 'Network error' });
+      setRecentEvents({
+        loading: false,
+        data: null,
+        error: err?.response?.data?.message || err.message || 'Network error',
+      });
     }
   }, []);
 
   const toggleRecentEvents = useCallback(() => {
     const newState = !showRecentEvents;
     setShowRecentEvents(newState);
-    
+
     // Fetch events when opening
     if (newState && !recentEvents.data) {
       fetchRecentEvents();
@@ -400,7 +444,8 @@ export default function AdminPage() {
         key: 'openclawWatchdog',
         path: '/openclaw/watchdog-status',
         label: '/api/openclaw/watchdog-status',
-        deriveOk: (response) => Boolean(response?.available) && response?.summary?.state !== 'degraded',
+        deriveOk: (response) =>
+          Boolean(response?.available) && response?.summary?.state !== 'degraded',
         deriveMessage: formatWatchdogMessage,
       },
     ];
@@ -416,12 +461,12 @@ export default function AdminPage() {
     for (const endpoint of endpoints) {
       try {
         const res = await apiGet(endpoint.path);
-        const derivedOk = typeof endpoint.deriveOk === 'function'
-          ? endpoint.deriveOk(res)
-          : res.ok !== false;
-        const derivedMessage = typeof endpoint.deriveMessage === 'function'
-          ? endpoint.deriveMessage(res)
-          : (res.message || res.status || res.error || '');
+        const derivedOk =
+          typeof endpoint.deriveOk === 'function' ? endpoint.deriveOk(res) : res.ok !== false;
+        const derivedMessage =
+          typeof endpoint.deriveMessage === 'function'
+            ? endpoint.deriveMessage(res)
+            : res.message || res.status || res.error || '';
 
         results[endpoint.key] = {
           ok: derivedOk,
@@ -457,13 +502,13 @@ export default function AdminPage() {
     if (connectionStatus.loading) return 'loading';
     if (!connectionStatus.checkedAtMs) return 'unknown';
     if (isConnectionStatusStale) return 'stale';
-    
+
     const results = Object.values(connectionStatus.results || {});
     if (!results.length) return 'unknown';
-    
-    const failedCount = results.filter(r => !r.ok).length;
+
+    const failedCount = results.filter((r) => !r.ok).length;
     const totalCount = results.length;
-    
+
     if (failedCount === 0) return 'healthy';
     if (failedCount === totalCount) return 'error';
     return 'degraded';
@@ -479,7 +524,7 @@ export default function AdminPage() {
       error: '❌ All endpoints failing',
       stale: '⏳ Data is stale',
       loading: '⏳ Checking...',
-      unknown: '❓ Status unknown'
+      unknown: '❓ Status unknown',
     };
     return `${baseText} • ${statusMap[overallHealth] || statusMap.unknown}`;
   };
@@ -578,7 +623,7 @@ export default function AdminPage() {
       if (id && timerApi?.clearInterval) timerApi.clearInterval(id);
     };
   }, [isAuthenticated]);
-  
+
   const handleLogin = async (e) => {
     e.preventDefault();
     const trimmedUsername = username.trim();
@@ -595,7 +640,9 @@ export default function AdminPage() {
 
       if (authMode === 'signup') {
         if (!bootstrapStatus.signupAllowed) {
-          throw new Error('Admin signup is currently disabled. Use login or contact an existing admin.');
+          throw new Error(
+            'Admin signup is currently disabled. Use login or contact an existing admin.',
+          );
         }
 
         data = await apiPost('/admin/signup', {
@@ -635,11 +682,16 @@ export default function AdminPage() {
     } catch (err) {
       const msg = err?.response?.data?.message || err.message || 'Authentication failed.';
       const statusCode = err?.response?.status;
-      const maybeCapacityIssue = /quota|capacity|storage|space quota|disk full|enospc/i.test(String(msg || ''));
-      const isSignupCapacityFailure = authMode === 'signup' && (statusCode === 507 || maybeCapacityIssue);
+      const maybeCapacityIssue = /quota|capacity|storage|space quota|disk full|enospc/i.test(
+        String(msg || ''),
+      );
+      const isSignupCapacityFailure =
+        authMode === 'signup' && (statusCode === 507 || maybeCapacityIssue);
 
       if (isSignupCapacityFailure) {
-        setError('Admin self-signup is temporarily unavailable due to backend storage capacity. Existing admins can sign in now. Use "Create Admin Account" again later when capacity is restored.');
+        setError(
+          'Admin self-signup is temporarily unavailable due to backend storage capacity. Existing admins can sign in now. Use "Create Admin Account" again later when capacity is restored.',
+        );
         setAuthMode('login');
       } else {
         setError(msg);
@@ -663,8 +715,8 @@ export default function AdminPage() {
   if (!isAuthenticated) {
     return (
       <div className="admin-page">
-        <button 
-          className="theme-toggle login-theme-toggle" 
+        <button
+          className="theme-toggle login-theme-toggle"
           onClick={() => {
             const newMode = !darkMode;
             setDarkMode(newMode);
@@ -819,7 +871,7 @@ export default function AdminPage() {
               <Link to="/deals" className="header-btn" title="Deals">
                 🤝 Deals
               </Link>
-              <button 
+              <button
                 className="header-btn refresh-btn"
                 onClick={runConnectionCheck}
                 disabled={connectionStatus.loading}
@@ -828,7 +880,7 @@ export default function AdminPage() {
               >
                 {connectionStatus.loading ? '⏳' : '🔄'}
               </button>
-              <button 
+              <button
                 className="header-btn logout-header-btn"
                 onClick={handleLogout}
                 aria-label="Logout"
@@ -836,8 +888,8 @@ export default function AdminPage() {
               >
                 🚪
               </button>
-              <button 
-                className="theme-toggle" 
+              <button
+                className="theme-toggle"
                 onClick={() => {
                   const newMode = !darkMode;
                   setDarkMode(newMode);
@@ -849,14 +901,17 @@ export default function AdminPage() {
               >
                 {darkMode ? '☀️' : '🌙'}
               </button>
-              <button 
-                className="connection-status-toggle" 
+              <button
+                className="connection-status-toggle"
                 onClick={() => setShowConnectionStatus(!showConnectionStatus)}
                 aria-label="Toggle connection status"
                 title={getHealthTooltip()}
               >
                 🔌
-                <span className={`health-indicator health-indicator--${overallHealth}`} aria-hidden="true"></span>
+                <span
+                  className={`health-indicator health-indicator--${overallHealth}`}
+                  aria-hidden="true"
+                ></span>
               </button>
             </div>
             {/* Connection Status Dropdown */}
@@ -879,9 +934,7 @@ export default function AdminPage() {
                       ⚠️ Data may be stale (older than {staleThresholdMinutes} min)
                     </div>
                   )}
-                  <div className="connection-updated">
-                    Auto-refresh: every 60s while open
-                  </div>
+                  <div className="connection-updated">Auto-refresh: every 60s while open</div>
                   <div className="connection-token">
                     <label htmlFor="adminToken">Admin token (optional)</label>
                     <input
@@ -899,7 +952,9 @@ export default function AdminPage() {
                     <div className="openclaw-summary">
                       <div className="openclaw-summary__header">
                         <h3>🔗 OpenClaw Gateway</h3>
-                        <span className={`openclaw-summary__status ${connectionStatus.results.openclawWatchdog.ok ? 'ok' : 'bad'}`}>
+                        <span
+                          className={`openclaw-summary__status ${connectionStatus.results.openclawWatchdog.ok ? 'ok' : 'bad'}`}
+                        >
                           {connectionStatus.results.openclawWatchdog.ok ? '✓ Active' : '✗ Issue'}
                         </span>
                       </div>
@@ -914,26 +969,32 @@ export default function AdminPage() {
                             <div className="openclaw-metric">
                               <span className="openclaw-metric__label">State:</span>
                               <span className="openclaw-metric__value">
-                                {connectionStatus.results.openclawWatchdog.data.summary.state || 'unknown'}
+                                {connectionStatus.results.openclawWatchdog.data.summary.state ||
+                                  'unknown'}
                               </span>
                             </div>
                             <div className="openclaw-metric">
                               <span className="openclaw-metric__label">Errors:</span>
                               <span className="openclaw-metric__value">
-                                {connectionStatus.results.openclawWatchdog.data.summary.errorCountWindow ?? 0}
+                                {connectionStatus.results.openclawWatchdog.data.summary
+                                  .errorCountWindow ?? 0}
                               </span>
                             </div>
                             <div className="openclaw-metric">
                               <span className="openclaw-metric__label">Alerts:</span>
                               <span className="openclaw-metric__value">
-                                {connectionStatus.results.openclawWatchdog.data.summary.alertCountWindow ?? 0}
+                                {connectionStatus.results.openclawWatchdog.data.summary
+                                  .alertCountWindow ?? 0}
                               </span>
                             </div>
                             {connectionStatus.results.openclawWatchdog.data.summary.lastEventAt && (
                               <div className="openclaw-metric">
                                 <span className="openclaw-metric__label">Last Event:</span>
                                 <span className="openclaw-metric__value">
-                                  {connectionStatus.results.openclawWatchdog.data.summary.lastEventAt}
+                                  {
+                                    connectionStatus.results.openclawWatchdog.data.summary
+                                      .lastEventAt
+                                  }
                                 </span>
                               </div>
                             )}
@@ -964,7 +1025,7 @@ export default function AdminPage() {
                         <div className="openclaw-events">
                           <div className="openclaw-events__header">
                             <h4>Recent Activity</h4>
-                            <button 
+                            <button
                               className="openclaw-events__refresh"
                               onClick={fetchRecentEvents}
                               disabled={recentEvents.loading}
@@ -973,30 +1034,26 @@ export default function AdminPage() {
                               🔄
                             </button>
                           </div>
-                          
+
                           {recentEvents.loading && (
                             <div className="openclaw-events__loading">
                               <LoadingDots size="small" label="Loading events..." />
                             </div>
                           )}
-                          
+
                           {recentEvents.error && (
-                            <div className="openclaw-events__error">
-                              ⚠️ {recentEvents.error}
-                            </div>
+                            <div className="openclaw-events__error">⚠️ {recentEvents.error}</div>
                           )}
-                          
+
                           {recentEvents.data && recentEvents.data.length === 0 && (
-                            <div className="openclaw-events__empty">
-                              No recent events found
-                            </div>
+                            <div className="openclaw-events__empty">No recent events found</div>
                           )}
-                          
+
                           {recentEvents.data && recentEvents.data.length > 0 && (
                             <div className="openclaw-events__list">
                               {recentEvents.data.slice(0, 15).map((event) => (
-                                <div 
-                                  key={event.id} 
+                                <div
+                                  key={event.id}
                                   className={`openclaw-event openclaw-event--${event.level.toLowerCase()}`}
                                 >
                                   <div className="openclaw-event__meta">
@@ -1005,9 +1062,7 @@ export default function AdminPage() {
                                       {event.timestamp || 'n/a'}
                                     </span>
                                   </div>
-                                  <div className="openclaw-event__message">
-                                    {event.message}
-                                  </div>
+                                  <div className="openclaw-event__message">{event.message}</div>
                                 </div>
                               ))}
                             </div>
@@ -1024,7 +1079,9 @@ export default function AdminPage() {
                         <li key={key} className={`connection-item ${item?.ok ? 'ok' : 'bad'}`}>
                           <div className="connection-item__row">
                             <span className="connection-item__status-dot" aria-hidden="true"></span>
-                            <span className="connection-item__name">{item?.label || `/api/${key}`}</span>
+                            <span className="connection-item__name">
+                              {item?.label || `/api/${key}`}
+                            </span>
                             <span className="connection-item__status">
                               {item ? (item.ok ? 'OK' : `Fail (${item.status})`) : '—'}
                             </span>
@@ -1043,7 +1100,8 @@ export default function AdminPage() {
           <section className="admin-atlas" aria-label="Admin atlas">
             <h2>Atlas</h2>
             <p className="admin-atlas__copy">
-              Keep the control panel tied to the same paths as the public site and the personal workspace.
+              Keep the control panel tied to the same paths as the public site and the personal
+              workspace.
             </p>
             <div className="admin-atlas__links">
               {ADMIN_ATLAS_LINKS.map((link) => (
@@ -1055,104 +1113,74 @@ export default function AdminPage() {
           </section>
         </div>
         <AdminNav />
-        <AdminTabs activeTab={activeTab} onTabChange={handleTabChange} inquiryCounts={inquiryCounts} />
+        <AdminTabs
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+          inquiryCounts={inquiryCounts}
+        />
         <div className="admin-container">
           {/* Dashboard Tab - Overview */}
-          {activeTab === 'dashboard' && (
+          {activeTab === 'dashboard' &&
             renderTab(
-              <DashboardTab onNavigateTab={handleTabChange} onMakeOrder={() => setMakeOrderModalOpen(true)} />
-            )
-          )}
+              <DashboardTab
+                onNavigateTab={handleTabChange}
+                onMakeOrder={() => setMakeOrderModalOpen(true)}
+              />,
+            )}
 
           {/* Orders Tab */}
-          {activeTab === 'orders' && (
-            renderTab(<AdminOrdersPage />)
-          )}
+          {activeTab === 'orders' && renderTab(<AdminOrdersPage />)}
 
           {/* Transactions Tab */}
-          {activeTab === 'transactions' && (
-            renderTab(<TransactionsTab />)
-          )}
+          {activeTab === 'transactions' && renderTab(<TransactionsTab />)}
 
           {/* Archive Tab */}
-          {activeTab === 'archive' && (
-            renderTab(<ArchiveTab />)
-          )}
+          {activeTab === 'archive' && renderTab(<ArchiveTab />)}
 
           {/* Marketplace Tab */}
-          {activeTab === 'marketplace' && (
-            renderTab(<MarketplaceTab />)
-          )}
+          {activeTab === 'marketplace' && renderTab(<MarketplaceTab />)}
 
           {/* Inquiries Tab */}
-          {activeTab === 'inquiries' && (
-            renderTab(<InquiriesTab onNavigateTab={handleTabChange} />)
-          )}
+          {activeTab === 'inquiries' && renderTab(<InquiriesTab onNavigateTab={handleTabChange} />)}
 
           {/* Users Tab */}
-          {activeTab === 'users' && (
-            renderTab(<UsersTab />)
-          )}
+          {activeTab === 'users' && renderTab(<UsersTab />)}
 
           {/* Attribution Tab */}
-          {activeTab === 'attribution' && (
-            renderTab(<AttributionTab />)
-          )}
+          {activeTab === 'attribution' && renderTab(<AttributionTab />)}
 
           {/* Payouts Tab */}
-          {activeTab === 'payouts' && (
-            renderTab(<PayoutTab />)
-          )}
+          {activeTab === 'payouts' && renderTab(<PayoutTab />)}
 
           {/* Settlement Contracts Tab */}
-          {activeTab === 'settlements' && (
-            renderTab(<SettlementContractsTab />)
-          )}
+          {activeTab === 'settlements' && renderTab(<SettlementContractsTab />)}
 
           {/* Cloud Storage Tab */}
-          {activeTab === 'cloud' && (
-            renderTab(<CloudStorageTab />)
-          )}
+          {activeTab === 'cloud' && renderTab(<CloudStorageTab />)}
 
           {/* Library Tab */}
-          {activeTab === 'library' && (
-            renderTab(<LibraryTab />)
-          )}
+          {activeTab === 'library' && renderTab(<LibraryTab />)}
 
           {/* API Documentation Tab */}
-          {activeTab === 'api' && (
-            renderTab(<ApiDocsTab />)
-          )}
+          {activeTab === 'api' && renderTab(<ApiDocsTab />)}
 
           {/* Health Tab */}
-          {activeTab === 'health' && (
-            renderTab(<HealthTab />)
-          )}
+          {activeTab === 'health' && renderTab(<HealthTab />)}
 
           {/* Settings Tab */}
-          {activeTab === 'settings' && (
-            renderTab(<SettingsTab />)
-          )}
+          {activeTab === 'settings' && renderTab(<SettingsTab />)}
 
           {/* OpenClaw Tab */}
-          {activeTab === 'openclaw' && (
-            renderTab(<OpenClawTab />)
-          )}
+          {activeTab === 'openclaw' && renderTab(<OpenClawTab />)}
 
           {/* Bounty Hunter Tab */}
-          {activeTab === 'bounty-hunter' && (
-            renderTab(<BountyHunterTab />)
-          )}
+          {activeTab === 'bounty-hunter' && renderTab(<BountyHunterTab />)}
 
           {/* Royalty Analytics Tab */}
-          {activeTab === 'royalty-analytics' && (
-            renderTab(<RoyaltyAnalyticsTab />)
-          )}
+          {activeTab === 'royalty-analytics' && renderTab(<RoyaltyAnalyticsTab />)}
 
           {/* Overview Tab */}
-          {activeTab === 'overview' && (
-            renderTab(<OverviewTab onNavigateTab={handleTabChange} />)
-          )}
+          {activeTab === 'overview' && renderTab(<OverviewTab onNavigateTab={handleTabChange} />)}
         </div>
 
         {/* Make Order Modal */}

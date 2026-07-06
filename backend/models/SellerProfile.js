@@ -75,7 +75,14 @@ const SellerProfileSchema = new mongoose.Schema(
     badges: [
       {
         type: String,
-        enum: ['verified', 'top_seller', 'eco_friendly', 'fair_trade', 'fast_shipper', 'responsive'],
+        enum: [
+          'verified',
+          'top_seller',
+          'eco_friendly',
+          'fair_trade',
+          'fast_shipper',
+          'responsive',
+        ],
       },
     ],
     onboardingComplete: { type: Boolean, default: false },
@@ -85,14 +92,18 @@ const SellerProfileSchema = new mongoose.Schema(
     preferences: {
       language: { type: String, default: 'en' },
       timezone: String,
-      communicationFrequency: { type: String, enum: ['daily', 'weekly', 'monthly'], default: 'weekly' },
+      communicationFrequency: {
+        type: String,
+        enum: ['daily', 'weekly', 'monthly'],
+        default: 'weekly',
+      },
     },
 
     // Metadata
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // Indexes

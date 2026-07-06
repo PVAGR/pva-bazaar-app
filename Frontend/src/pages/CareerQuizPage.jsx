@@ -74,7 +74,10 @@ export default function CareerQuizPage() {
 
   const submitQuiz = async () => {
     const payload = {
-      answers: Object.entries(answers).map(([questionId, optionKey]) => ({ questionId, optionKey })),
+      answers: Object.entries(answers).map(([questionId, optionKey]) => ({
+        questionId,
+        optionKey,
+      })),
     };
     setSubmitting(true);
     setError('');
@@ -97,7 +100,9 @@ export default function CareerQuizPage() {
     try {
       const uniqueDomains = Array.from(new Set((domains || []).filter(Boolean)));
       const responses = await Promise.all(
-        uniqueDomains.slice(0, 3).map((domain) => apiGet(`/library?domain=${encodeURIComponent(domain)}&limit=4`)),
+        uniqueDomains
+          .slice(0, 3)
+          .map((domain) => apiGet(`/library?domain=${encodeURIComponent(domain)}&limit=4`)),
       );
       const merged = responses
         .filter((res) => res?.ok)
@@ -179,7 +184,10 @@ export default function CareerQuizPage() {
                 Next
               </button>
             ) : (
-              <button onClick={submitQuiz} disabled={submitting || Object.keys(answers).length < questions.length}>
+              <button
+                onClick={submitQuiz}
+                disabled={submitting || Object.keys(answers).length < questions.length}
+              >
                 {submitting ? 'Scoring...' : 'Get My Career Compass'}
               </button>
             )}
@@ -197,14 +205,15 @@ export default function CareerQuizPage() {
               </p>
               <div className="career-archetype-intro">
                 <p>
-                  {result.archetypeDescription || 'You embody a distinctive professional archetype.'}
+                  {result.archetypeDescription ||
+                    'You embody a distinctive professional archetype.'}
                 </p>
               </div>
             </div>
           ) : (
             <h2>Your Profile: {result.personalityType}</h2>
           )}
-          
+
           <p>Suggested domains for contribution and training:</p>
           <div className="career-pills">
             {(result.topDomains || []).map((domain) => (
@@ -226,7 +235,9 @@ export default function CareerQuizPage() {
               <p>Interest score detail:</p>
               <div className="career-pills">
                 {Object.entries(result.riasecScores).map(([code, score]) => (
-                  <span key={`riasec-${code}`}>{code}:{score}</span>
+                  <span key={`riasec-${code}`}>
+                    {code}:{score}
+                  </span>
                 ))}
               </div>
             </>
@@ -245,8 +256,12 @@ export default function CareerQuizPage() {
                 <div className="career-section-confidence">
                   <p style={{ fontSize: '0.9em', marginTop: '1rem' }}>Per-section confidence:</p>
                   {Object.entries(result.confidence.sectionBreakdown).map(([section, data]) => (
-                    <div key={`section-${section}`} style={{ fontSize: '0.85em', marginLeft: '1rem', marginTop: '0.5rem' }}>
-                      <strong>{section}:</strong> score {data.score}% ({data.band}) - {data.answered}/{data.total} answered, signal {data.signalStrength}%
+                    <div
+                      key={`section-${section}`}
+                      style={{ fontSize: '0.85em', marginLeft: '1rem', marginTop: '0.5rem' }}
+                    >
+                      <strong>{section}:</strong> score {data.score}% ({data.band}) -{' '}
+                      {data.answered}/{data.total} answered, signal {data.signalStrength}%
                     </div>
                   ))}
                 </div>
@@ -264,7 +279,9 @@ export default function CareerQuizPage() {
               <p>Major civilization-fit roles:</p>
               <ul>
                 {(result.majorRoles || []).map((role) => {
-                  const rationale = (result.roleRationale || []).find(r => r.role === role && r.category === 'major');
+                  const rationale = (result.roleRationale || []).find(
+                    (r) => r.role === role && r.category === 'major',
+                  );
                   return (
                     <li key={`major-${role}`}>
                       <strong>{role}</strong>
@@ -284,7 +301,9 @@ export default function CareerQuizPage() {
               <p>Supporting and mission-critical roles:</p>
               <ul>
                 {(result.supportingRoles || []).map((role) => {
-                  const rationale = (result.roleRationale || []).find(r => r.role === role && r.category === 'supporting');
+                  const rationale = (result.roleRationale || []).find(
+                    (r) => r.role === role && r.category === 'supporting',
+                  );
                   return (
                     <li key={`support-${role}`}>
                       <strong>{role}</strong>
@@ -302,12 +321,14 @@ export default function CareerQuizPage() {
           <div className="career-actions">
             <Link to="/civilization-library">Find Matching Manuals</Link>
             <Link to="/federation-map">Continue To Federation Map</Link>
-            <button onClick={() => {
-              setAnswers({});
-              setStep(0);
-              setResult(null);
-              setRecommendedManuals([]);
-            }}>
+            <button
+              onClick={() => {
+                setAnswers({});
+                setStep(0);
+                setResult(null);
+                setRecommendedManuals([]);
+              }}
+            >
               Retake Quiz
             </button>
           </div>
@@ -325,7 +346,9 @@ export default function CareerQuizPage() {
                     rel="noreferrer"
                   >
                     <strong>{manual.title}</strong>
-                    <span>{manual.category} • {manual.domain}</span>
+                    <span>
+                      {manual.category} • {manual.domain}
+                    </span>
                   </a>
                 ))}
               </div>
@@ -336,7 +359,8 @@ export default function CareerQuizPage() {
             <div className="career-manuals">
               <h3>Civilization Role Atlas</h3>
               <p>
-                Your path can evolve across these shared role levels while contributing to core domains.
+                Your path can evolve across these shared role levels while contributing to core
+                domains.
               </p>
               <div className="career-pills">
                 {(taxonomy.roles || []).map((role) => (

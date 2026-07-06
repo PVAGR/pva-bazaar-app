@@ -40,7 +40,9 @@ export default function SignUpPage() {
         {error && <p className="bg-red-500 text-white p-3 rounded mb-4 text-center">{error}</p>}
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label htmlFor="displayName" className="block text-sm font-medium text-gray-300 mb-1">Display Name</label>
+            <label htmlFor="displayName" className="block text-sm font-medium text-gray-300 mb-1">
+              Display Name
+            </label>
             <input
               id="displayName"
               type="text"
@@ -51,7 +53,9 @@ export default function SignUpPage() {
             />
           </div>
           <div className="mb-4">
-            <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1">Email</label>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1">
+              Email
+            </label>
             <input
               id="email"
               type="email"
@@ -63,7 +67,9 @@ export default function SignUpPage() {
             />
           </div>
           <div className="mb-6">
-            <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-1">Password</label>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-1">
+              Password
+            </label>
             <input
               id="password"
               type="password"

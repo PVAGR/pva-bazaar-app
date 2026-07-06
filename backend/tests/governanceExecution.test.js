@@ -31,7 +31,9 @@ async function loginUser(email) {
 }
 
 async function promoteUserToAdmin(email) {
-  const result = await mongoose.connection.collection('users').updateOne({ email }, { $set: { role: 'admin' } });
+  const result = await mongoose.connection
+    .collection('users')
+    .updateOne({ email }, { $set: { role: 'admin' } });
   expect(result?.matchedCount || 0).toBeGreaterThan(0);
 }
 
@@ -165,7 +167,9 @@ describe('Governance execution timeline endpoints', () => {
     expect(Number(timelineRes.body?.execution?.executionBlock?.progressPercent || 0)).toBe(55);
     expect(Array.isArray(timelineRes.body?.execution?.updates)).toBe(true);
     expect(timelineRes.body.execution.updates.length).toBeGreaterThanOrEqual(1);
-    expect(timelineRes.body.execution.updates.at(-1)?.message).toContain('Second milestone completed');
+    expect(timelineRes.body.execution.updates.at(-1)?.message).toContain(
+      'Second milestone completed',
+    );
   });
 
   it('reports admin decision and lifecycle mismatches in sync-health endpoint', async () => {
@@ -201,7 +205,9 @@ describe('Governance execution timeline endpoints', () => {
     expect(healthRes.body?.ok).toBe(true);
     expect(Number(healthRes.body?.summary?.total || 0)).toBeGreaterThan(0);
 
-    const match = (healthRes.body?.items || []).find((item) => item.proposalId === String(proposal._id));
+    const match = (healthRes.body?.items || []).find(
+      (item) => item.proposalId === String(proposal._id),
+    );
     expect(match).toBeTruthy();
     expect(match.adminDecision).toBe('accepted');
     expect(match.expectedLifecycleStatus).toBe('outcome_published');
@@ -248,7 +254,9 @@ describe('Governance execution timeline endpoints', () => {
       .set('Authorization', `Bearer ${adminToken}`);
 
     expect(healthRes.status).toBe(200);
-    const match = (healthRes.body?.items || []).find((item) => item.proposalId === String(proposal._id));
+    const match = (healthRes.body?.items || []).find(
+      (item) => item.proposalId === String(proposal._id),
+    );
     expect(match).toBeTruthy();
     expect(match.syncState).toBe('synced');
     expect(match.actualLifecycleStatus).toBe('outcome_published');

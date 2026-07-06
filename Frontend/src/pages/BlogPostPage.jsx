@@ -26,7 +26,11 @@ export default function BlogPostPage() {
         }
       } catch (error) {
         if (!cancelled) {
-          setState({ loading: false, error: error?.message || 'Unable to load blog post', blog: null });
+          setState({
+            loading: false,
+            error: error?.message || 'Unable to load blog post',
+            blog: null,
+          });
         }
       }
     };
@@ -46,7 +50,9 @@ export default function BlogPostPage() {
       <section className="blog-post section-card">
         <h1>Blog post unavailable</h1>
         <p>{state.error || 'This post could not be found.'}</p>
-        <Link className="blog-post__back" to="/studio">Back to studio</Link>
+        <Link className="blog-post__back" to="/studio">
+          Back to studio
+        </Link>
       </section>
     );
   }
@@ -70,13 +76,15 @@ export default function BlogPostPage() {
           </p>
         </div>
         <article className="blog-post__body">
-          <ReactMarkdown rehypePlugins={[rehypeSanitize]}>
-            {state.blog.content || ''}
-          </ReactMarkdown>
+          <ReactMarkdown rehypePlugins={[rehypeSanitize]}>{state.blog.content || ''}</ReactMarkdown>
         </article>
         <nav className="blog-post__footer">
-          <Link className="blog-post__back" to="/studio">Writing studio</Link>
-          <Link className="blog-post__back" to="/archive">Archive</Link>
+          <Link className="blog-post__back" to="/studio">
+            Writing studio
+          </Link>
+          <Link className="blog-post__back" to="/archive">
+            Archive
+          </Link>
         </nav>
       </section>
     </>

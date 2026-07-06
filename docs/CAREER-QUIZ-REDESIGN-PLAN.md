@@ -1,4 +1,5 @@
 # Career Compass Quiz — Comprehensive Redesign Plan
+
 ## Creating 1000+ Unique Personal Outcomes
 
 ---
@@ -23,7 +24,7 @@ The six codes are:
    - Enjoys: understanding how things work, laboratory work, investigation, curiosity
    - Values: knowledge, accuracy, intellectual rigor, discovery
    - Example roles: Research scientist, analyst, engineer, programmer, forensic investigator
-   - **Why investigative?** These people need to understand the *why* before they act
+   - **Why investigative?** These people need to understand the _why_ before they act
 
 3. **A — Artistic (The Creator)**
    - Prefers: creative expression, design, innovation, unconventional thinking, aesthetics
@@ -71,11 +72,12 @@ The six codes are:
 No one is purely one code. People score on a spectrum:
 
 - **"Pure" profiles** (R: 95, others: 20s): A master electrician who only wants hands-on technical work
-- **Dual-interest profiles** (R: 75, I: 70, others low): A systems engineer fascinated by both building *and* understanding
+- **Dual-interest profiles** (R: 75, I: 70, others low): A systems engineer fascinated by both building _and_ understanding
 - **Balanced profiles** (multiple 60s-70s): People with diverse interests who adapt easily across roles
 - **Low-interest profiles**: Someone with no strong RIASEC signal—needs context beyond career fit
 
 **This is where we create nuance:** The same MBTI type (e.g., INTJ) can have radically different career paths depending on RIASEC ordering:
+
 - INTJ with high R: Systems engineer or infrastructure architect
 - INTJ with high I: Research scientist or strategy analyst
 - INTJ with high E: CTO or technology executive
@@ -113,18 +115,19 @@ We pair RIASEC with **MBTI (Myers-Briggs Type Indicator)** for a complete pictur
 
 ### Sample MBTI + RIASEC Combinations (Creating Unique Meanings)
 
-| MBTI | High R + I | High S + E | High A + C | Interpretation |
-|------|-----------|-----------|-----------|-----------------|
-| INTJ | Lead researcher designing new infrastructure | Rare—ethical sci-fi advisor | Technical architect with governance focus | The "Visionary Engineer" |
-| ENFP | Adventure guide + builder | Charismatic health educator | Community arts coordinator | The "Creator Connector" |
-| ISTJ | Master electrician, proven systems | Steady healthcare supporter | Bookkeeper in art nonprofits | The "Reliable Executor" |
-| ENFJ | Mobilizer of technical teams | Teacher/mentor par excellence | Inspiring organizational leader | The "Inspiring Leader" |
+| MBTI | High R + I                                   | High S + E                    | High A + C                                | Interpretation           |
+| ---- | -------------------------------------------- | ----------------------------- | ----------------------------------------- | ------------------------ |
+| INTJ | Lead researcher designing new infrastructure | Rare—ethical sci-fi advisor   | Technical architect with governance focus | The "Visionary Engineer" |
+| ENFP | Adventure guide + builder                    | Charismatic health educator   | Community arts coordinator                | The "Creator Connector"  |
+| ISTJ | Master electrician, proven systems           | Steady healthcare supporter   | Bookkeeper in art nonprofits              | The "Reliable Executor"  |
+| ENFJ | Mobilizer of technical teams                 | Teacher/mentor par excellence | Inspiring organizational leader           | The "Inspiring Leader"   |
 
 ---
 
 ## Part 3: Creating 1000+ Unique Outcomes
 
 ### Current State
+
 - 16 MBTI types × 6 RIASEC codes ÷ (assuming average 2-3 codes per person) = ~60-90 base combinations
 - This is not enough for "over 1,000 different types of solutions"
 
@@ -133,6 +136,7 @@ We pair RIASEC with **MBTI (Myers-Briggs Type Indicator)** for a complete pictur
 We'll add **5 new scoring dimensions** to create exponentially more personalized outcomes:
 
 #### Dimension 1: **RIASEC Intensity Profile** (Scoring Bands)
+
 Instead of just "your top 3 codes are R, I, A," we score each person into intensity brackets:
 
 - **Dominant trait**: Scores 80-100 (person must have something here)
@@ -141,9 +145,10 @@ Instead of just "your top 3 codes are R, I, A," we score each person into intens
 - **Baseline traits**: Scores 20-39 (can work in these but less fulfilling)
 - **Avoid traits**: Scores 0-19 (mismatch with core self)
 
-*Why it matters*: An INTJ with (R:95, I:75, A:40) has very different career needs than (R:60, I:60, A:60, E:60, S:60, C:60). The first is laser-focused; the second is adaptable.
+_Why it matters_: An INTJ with (R:95, I:75, A:40) has very different career needs than (R:60, I:60, A:60, E:60, S:60, C:60). The first is laser-focused; the second is adaptable.
 
 #### Dimension 2: **Career Stage** (5 Levels)
+
 We'll add a 5-question sub-panel to determine where people are:
 
 1. **Explorer** (age 15-23): Testing the waters, trying different roles, building foundation skills
@@ -152,9 +157,10 @@ We'll add a 5-question sub-panel to determine where people are:
 4. **Leader** (age 35-60+): Mentoring others, setting direction, organizational influence
 5. **Sage** (age 45+): Reflection, legacy-building, wisdom-sharing, optional involvement
 
-*Why it matters*: A 22-year-old INTJ-R should hear "apprentice electrician → master electrician → shop owner." A 48-year-old INTJ-R should hear "CTO → infrastructure strategy → teach at vocational school."
+_Why it matters_: A 22-year-old INTJ-R should hear "apprentice electrician → master electrician → shop owner." A 48-year-old INTJ-R should hear "CTO → infrastructure strategy → teach at vocational school."
 
 #### Dimension 3: **Work Environment DNA** (6 Scales)
+
 We'll add questions to assess environmental fit:
 
 1. **Autonomy vs. Collaboration** (Solo work ↔ Team-dependent)
@@ -164,11 +170,13 @@ We'll add questions to assess environmental fit:
 5. **Impact Timeline** (Immediate ↔ Long-term/systemic)
 6. **Physical vs. Mental** (Hands-on ↔ Desk/screen work)
 
-*Why it matters*: Two ENFP-S people might have radically different needs:
+_Why it matters_: Two ENFP-S people might have radically different needs:
+
 - ENFP-S-HighAutonomy-LowStability: Freelance community organizer
 - ENFP-S-LowAutonomy-HighStability: School counselor in established district
 
 #### Dimension 4: **Strength Triad** (Success Drivers)
+
 People describe themselves across three dimensions:
 
 1. **Knowledge** (What I know) — Technical expertise, credentials, learning speed
@@ -178,7 +186,8 @@ People describe themselves across three dimensions:
 Each weighted 1-10, creates 1000 combinations just here. We then match to role archetypes.
 
 #### Dimension 5: **Life Values** (3-4 Select Values)
-Questions to assess what success *means to them*:
+
+Questions to assess what success _means to them_:
 
 - **Freedom** (autonomy, flexibility, self-direction)
 - **Impact** (helping people, solving problems at scale)
@@ -189,7 +198,8 @@ Questions to assess what success *means to them*:
 - **Community** (belonging, loyalty, relationships)
 - **Legacy** (leaving something behind, mentoring)
 
-*Why it matters*: Two INTJ-R people:
+_Why it matters_: Two INTJ-R people:
+
 - INTJ-R-Mastery: "Become the world's best infrastructure engineer"
 - INTJ-R-Impact: "Build sustainable systems that serve 1M+ people"
 
@@ -227,7 +237,9 @@ With these five dimensions:
 ## Part 5: Redesigning Questions to Be Personal & Unique
 
 ### Current Problem
+
 Questions sound like:
+
 > "How much do you enjoy building or assembling things with your hands (furniture, models, machinery, electronics, etc.)?"
 
 This is **robotic, generic, and doesn't feel personal**.
@@ -240,16 +252,19 @@ We'll replace generic scales with **scenario-based questions** that feel more re
 
 **OLD**: "How much do you enjoy working with your hands?"
 
-**NEW**: 
+**NEW**:
+
 > "Imagine you're in a low-pressure situation where you have 3 hours alone to fix something that's been broken for months. No one's watching, no deadline, just you and the problem. As you work, you get 'in the zone'—fully absorbed, losing track of time, gradually solving it piece by piece. How much does that scenario appeal to you?"
 
 Options:
+
 - "That sounds like my ideal afternoon."
 - "I'd enjoy parts of that, especially if someone appreciated my work afterward."
 - "I'd rather be doing something else."
 - "I'd prefer working with others on bigger projects."
 
 **Why this works**:
+
 - Uses a real scenario instead of abstract wording
 - Focuses on emotional arc (absorption + flow + satisfaction) not just activity
 - Allows for nuance (appreciates work being valued) without awkward phrasing
@@ -261,9 +276,11 @@ Options:
 **OLD**: "How much do you enjoy creating art, music, writing, photography, design, or any form of artistic expression?"
 
 **NEW**:
+
 > "You're at a gathering, and someone asks you to share something you created. You jump at the chance—not because you're desperate for praise, but because explaining your creative vision to others honestly excites you. Does this feel like you?"
 
 Options:
+
 - "Yes, there's nothing I love more than sharing my work and talking about my ideas."
 - "Sort of—I'd be excited to share with close friends, but a group feels like too much attention."
 - "Not really—I create for myself, sharing feels like diluting something personal."
@@ -276,9 +293,11 @@ Options:
 **OLD**: "How much do you enjoy helping, teaching, counseling, or supporting other people through their problems or growth?"
 
 **NEW**:
+
 > "A friend reaches out in crisis. You have limited time and energy that day, but you drop everything. Hours later, after listening and reflecting back what you heard, they say, 'You really get it. I feel less alone.' That feeling—knowing you understood them—stays with you for days. How much does that experience represent what fulfills you?"
 
 Options:
+
 - "It's the most meaningful thing I can do. Without those moments, my work feels hollow."
 - "It's deeply satisfying, but I also need time to recharge and focus on my own growth."
 - "It's nice, but I'm not sure I'd rearrange my plans just to provide emotional support."
@@ -291,9 +310,11 @@ Options:
 **OLD**: "How much do you enjoy maintaining accurate records, following established rules, or handling repetitive but important tasks?"
 
 **NEW**:
+
 > "You've created a system—maybe a budget, a filing method, a schedule—that works perfectly. New information arrives chaotically; you integrate it into your system; everything stays clean and organized. Others might find this tedious, but you find it satisfying. Is this you?"
 
 Options:
+
 - "Yes—I actually feel anxious when my systems break down. Maintaining order is calming."
 - "Yes, but mostly because disorganization creates problems down the line, not because I enjoy it."
 - "Not really—I can do it when necessary, but it feels like busywork."
@@ -306,9 +327,11 @@ Options:
 **OLD**: "How much do you enjoy researching, analyzing data, or investigating complex questions to figure out how things work?"
 
 **NEW**:
-> "You encounter a pattern—something doesn't quite add up. You become obsessed with understanding *why*. You follow threads for weeks, reading, hypothesizing, refining your theory. Finally, all the pieces click together and you understand something no one else in the room sees. How alive does that feel?"
+
+> "You encounter a pattern—something doesn't quite add up. You become obsessed with understanding _why_. You follow threads for weeks, reading, hypothesizing, refining your theory. Finally, all the pieces click together and you understand something no one else in the room sees. How alive does that feel?"
 
 Options:
+
 - "That's how I feel alive. The chase matters as much as the answer."
 - "I enjoy it, especially if the answer is practical and useful."
 - "I can do it, but I'd rather focus on real applications than abstract understanding."
@@ -321,9 +344,11 @@ Options:
 **OLD**: "How much do you enjoy leading a group, motivating others, starting new projects, or being in charge?"
 
 **NEW**:
+
 > "A group is stuck, confused, or stuck arguing. You step in, analyze the situation clearly, propose a path forward, and people follow. Not because they like you personally, but because your logic is sound and your confidence is evident. That moment of moving people from chaos to direction—does it energize you?"
 
 Options:
+
 - "Absolutely. I live for those moments. Mobilizing people around clear objectives is my sweet spot."
 - "Yes, but I'd want to do it with people I trust and respect."
 - "I can do it in short bursts, but I'd rather focus on my own work."
@@ -348,9 +373,11 @@ Options:
 After completing the redesigned quiz, each person gets:
 
 #### Section 1: Your Archetype
+
 **"The Adaptive Technician"** (not just "INTJ with R:80, I:75")
 
 A brief, poetic description:
+
 > "You thrive in roles where systematic thinking meets tangible problem-solving. You're at your best when given autonomy to design systems that work reliably. You see your career as a series of mastery checkpoints—each role a chance to become better than you were. You're motivated less by status and more by knowing you've solved something nobody else could."
 
 #### Section 2: The Archetype Breakdown
@@ -373,24 +400,27 @@ A brief, poetic description:
 #### Section 3: Career Arc Guidance
 
 **If you're an Explorer (age 15-25):**
+
 > **Start Here**: Apprentice/Junior Technician roles, technical boot camps, maker spaces
-> 
+>
 > **Build toward**: Lead Technician, Systems Design Specialist
-> 
+>
 > **Your first 5 years**: Get hands dirty. Build tangible competence. Say yes to projects that stretch your technical knowledge. You'll build your reputation through work quality, not networking.
 
 **If you're a Builder (age 25-40):**
+
 > **Target roles**: Systems Engineer, Infrastructure Architect, Technical Director, Lead Programmer (systems/backend focus)
-> 
+>
 > **Your growth edge**: Learning to communicate your systems to non-technical people. You're so logical that you assume others see what you see—they usually don't.
-> 
+>
 > **Your career path over 10 years**: Deep specialist (years 1-5) → domain owner (years 5-8) → possible technical leadership (years 8+, only if you want it).
 
 **If you're a Specialist (age 40-55):**
+
 > **High fulfillment zone**: You're likely already in your deep work. The question now is: do you want to mentor others, or go deeper into mastery?
-> 
+>
 > **Leadership consideration**: You could lead, but only if the leadership role involves solving hard technical problems, not just people management.
-> 
+>
 > **Legacy opportunity**: Start training the next generation. Your unusual combination of building skill + investigative mind is rare—pass it on.
 
 #### Section 4: Role Recommendations (12-15 Specific Roles)
@@ -426,7 +456,7 @@ Listed with clear reasoning:
 
 #### Section 5: What Not To Do
 
-Honest feedback on roles to *avoid* or reconsider:
+Honest feedback on roles to _avoid_ or reconsider:
 
 - **"Don't pursue pure sales/business dev"** — You'd be trading your superpower (technical mastery) for something that energizes you less. Possible but misaligned.
 - **"Pure project management might drain you"** — Unless it's technical project management (you're managing other engineers building complex systems), this becomes administrative busywork.
@@ -437,11 +467,11 @@ Honest feedback on roles to *avoid* or reconsider:
 What to develop to expand options:
 
 > **Your Challenge**: Your logical mind sometimes assumes others think like you do. They don't.
-> 
+>
 > **Your Growth Opportunity**: Learn to explain your systems in metaphors and stories. Not to be "soft"—to be effective.
-> 
+>
 > **Practical Exercise**: Pick one person per quarter. Spend 15 minutes explaining something technical you've built. Notice what confuses them. That gap is where you grow.
-> 
+>
 > **Payoff**: As you develop communication skills, your options expand from "technical depth" to "technical leadership," exponentially increasing your influence and earning potential.
 
 #### Section 7: Recommended Knowledge Libraries
@@ -494,15 +524,15 @@ Based on your archetype, we recommend:
     connection: 5,
   },
   lifeValues: ["mastery", "autonomy", "security"],
-  
+
   // Pre-computed recommendations
   recommendations: { /* 12-15 roles with full rationale */ },
   growthEdges: [ /* 3-4 recommendations */ ],
   roleRationale: [ /* why each top role matches */ ],
-  
+
   // Archive links
   recommendedManuals: [ /* _id refs to library items */ ],
-  
+
   confidenceScore: 87, // 0-100, based on answer consistency
 }
 ```
@@ -567,7 +597,7 @@ Pre-define **1,200 unique archetypes** with:
 
 1. **Match MBTI + RIASEC to archetype clusters** → ~80-100 base archetypes
 2. **Modify based on intensity profile** (dominant vs. balanced) → ×3 variations
-3. **Adjust for career stage** → ×5 variations  
+3. **Adjust for career stage** → ×5 variations
 4. **Apply environment DNA weighting** → ×2-3 variations
 5. **Tailor life values messaging** → ×2-3 variations
 
@@ -580,18 +610,23 @@ Pre-define **1,200 unique archetypes** with:
 ## Part 9: Why This Approach Works
 
 ### 1. **Personal Without Being Reductive**
+
 Instead of "You're an INTJ-R," people see "You're The Adaptive Technician" with a narrative that feels like it was written for them.
 
 ### 2. **Actionable**
+
 Not just a personality label, but specific roles, paths, growth edges, and books that match.
 
 ### 3. **Honest**
-We tell people what they're good at *and* what might frustrate them. We acknowledge blind spots.
+
+We tell people what they're good at _and_ what might frustrate them. We acknowledge blind spots.
 
 ### 4. **Scalable to 1000+ Outcomes**
+
 By combining multiple dimensions (MBTI × RIASEC × Career Stage × Environment DNA × Life Values × Intensity Profiles), we naturally create hundreds of distinct combinations without feeling forced.
 
 ### 5. **Scientifically Grounded**
+
 - MBTI: 70+ years of personality research
 - RIASEC: 70+ years of vocational psychology
 - Career stage: Adult development theory
@@ -603,6 +638,7 @@ By combining multiple dimensions (MBTI × RIASEC × Career Stage × Environment 
 ## Implementation Roadmap
 
 ### Phase 1: Question Redesign (2 weeks)
+
 - Write 45 narrative-based questions (currently 60)
 - Add 8-10 environment DNA questions
 - Add 3-4 career stage questions
@@ -610,24 +646,28 @@ By combining multiple dimensions (MBTI × RIASEC × Career Stage × Environment 
 - Test with 20-30 pilot users
 
 ### Phase 2: Archetype Development (3 weeks)
+
 - Define 1,200 base archetypes with narratives
 - Create role progressions for each
 - Write growth edges and blind spots
 - Identify recommended knowledge libraries
 
 ### Phase 3: Scoring Algorithm (2 weeks)
+
 - Update backend scoring to incorporate all new dimensions
 - Build archetype matching logic
 - Calculate confidence scores
 - Pre-compute recommendations
 
 ### Phase 4: Frontend Redesign (3 weeks)
+
 - Rebuild results page as narrative experience
 - Add career stage progression visualizations
 - Create role recommendation cards with rationale
 - Build growth edge recommendations
 
 ### Phase 5: Testing & Launch (2 weeks)
+
 - Beta test with 50-100 users
 - Refine messaging based on feedback
 - Monitor for edge cases
@@ -642,8 +682,7 @@ When someone finishes this redesigned quiz, they'll feel:
 1. **"That was surprisingly personal"** — Not robotic or generic
 2. **"I learned something about myself"** — Not just confirmed what they already knew
 3. **"I know what to do next"** — Specific roles, paths, books, growth areas
-4. **"This feels like it was made for *me*"** — Because 1,200+ archetypes means specificity
+4. **"This feels like it was made for _me_"** — Because 1,200+ archetypes means specificity
 5. **"I see my career possibilities clearly now"** — They understand why certain roles fit and others don't
 
 ---
-

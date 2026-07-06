@@ -23,17 +23,20 @@ export async function POST(req: NextRequest) {
   const body = await req.text();
   const hmacMessage = messageId + timestamp + body;
 
-  const hmac = `sha256=${  crypto.createHmac('sha256', TWITCH_WEBHOOK_SECRET).update(hmacMessage).digest('hex')}`;
+  const hmac = `sha256=${crypto.createHmac('sha256', TWITCH_WEBHOOK_SECRET).update(hmacMessage).digest('hex')}`;
 
   if (crypto.timingSafeEqual(Buffer.from(hmac), Buffer.from(signature))) {
-    console.log("Signatures match!");
+    console.log('Signatures match!');
 
     const notification = JSON.parse(body);
 
     // Handle different message types
     if (messageType === 'webhook_callback_verification') {
       // This is for the initial webhook subscription verification
-      return new NextResponse(notification.challenge, { status: 200, headers: { 'Content-Type': 'text/plain' } });
+      return new NextResponse(notification.challenge, {
+        status: 200,
+        headers: { 'Content-Type': 'text/plain' },
+      });
     } else if (messageType === 'notification') {
       const { event, subscription } = notification;
       await connectToDatabase();
@@ -43,7 +46,7 @@ export async function POST(req: NextRequest) {
         console.log(`Stream is online for user: ${event.broadcaster_user_name}`);
         await Stream.findOneAndUpdate(
           { platform: 'twitch', platformStreamId: event.broadcaster_user_id },
-          { status: 'live', startTime: new Date() }
+          { status: 'live', startTime: new Date() },
         );
       } else if (subscription.type === 'stream.offline') {
         console.log(`Stream is offline for user: ${event.broadcaster_user_name}`);
@@ -51,14 +54,14 @@ export async function POST(req: NextRequest) {
         const placeholderIpfsHash = 'QmPlaceholderHash1234567890abcdefghijklmnop';
         await Stream.findOneAndUpdate(
           { platform: 'twitch', platformStreamId: event.broadcaster_user_id },
-          { status: 'ended', endTime: new Date(), recordingIpfsHash: placeholderIpfsHash }
+          { status: 'ended', endTime: new Date(), recordingIpfsHash: placeholderIpfsHash },
         );
       }
 
       return NextResponse.json({ received: true }, { status: 200 });
     }
   } else {
-    console.warn("Signature mismatch. Request might not be from Twitch.");
+    console.warn('Signature mismatch. Request might not be from Twitch.');
     return NextResponse.json({ error: 'Signature mismatch' }, { status: 403 });
   }
 

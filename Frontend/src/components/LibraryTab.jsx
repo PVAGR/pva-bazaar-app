@@ -215,7 +215,11 @@ export default function LibraryTab() {
         const domainSet = new Set(domains.unique);
         const roleSet = new Set(roles.unique);
         unknownDomainMappings = Object.keys(parsed)
-          .map((key) => String(key || '').trim().toLowerCase())
+          .map((key) =>
+            String(key || '')
+              .trim()
+              .toLowerCase(),
+          )
           .filter((key) => key && !domainSet.has(key));
 
         for (const domain of domains.unique) {
@@ -223,7 +227,11 @@ export default function LibraryTab() {
           const mapped = Array.from(
             new Set(
               rawRoles
-                .map((value) => String(value || '').trim().toLowerCase())
+                .map((value) =>
+                  String(value || '')
+                    .trim()
+                    .toLowerCase(),
+                )
                 .filter((value) => roleSet.has(value)),
             ),
           );
@@ -263,7 +271,9 @@ export default function LibraryTab() {
         throw new Error(taxonomyInsights.domainRolesError);
       }
       if (taxonomyInsights.unknownDomainMappings.length) {
-        throw new Error(`Unknown domain mappings: ${taxonomyInsights.unknownDomainMappings.join(', ')}`);
+        throw new Error(
+          `Unknown domain mappings: ${taxonomyInsights.unknownDomainMappings.join(', ')}`,
+        );
       }
 
       const payload = {
@@ -432,7 +442,11 @@ export default function LibraryTab() {
   };
 
   const openPublicDownload = (item) => {
-    window.open(toApiUrl(`/api/admin/library/${item._id}/download`), '_blank', 'noopener,noreferrer');
+    window.open(
+      toApiUrl(`/api/admin/library/${item._id}/download`),
+      '_blank',
+      'noopener,noreferrer',
+    );
   };
 
   const openFullExport = () => {
@@ -450,7 +464,8 @@ export default function LibraryTab() {
 
   const appendQuestionTemplate = () => {
     const domainHint = taxonomy?.domains?.[0] || 'infrastructure-operations';
-    const roleHint = taxonomy?.domainRoles?.[domainHint]?.[0] || taxonomy?.roles?.[0] || 'specialist';
+    const roleHint =
+      taxonomy?.domainRoles?.[domainHint]?.[0] || taxonomy?.roles?.[0] || 'specialist';
     const templateQuestion = {
       id: `q${Date.now()}`,
       prompt: `In ${domainHint}, which path feels closer to your natural role?`,
@@ -584,14 +599,18 @@ export default function LibraryTab() {
 
       setQuizTitle(String(quiz.title || ''));
       setQuizIntro(String(quiz.intro || ''));
-      setQuizQuestionsText(JSON.stringify(Array.isArray(quiz.questions) ? quiz.questions : [], null, 2));
+      setQuizQuestionsText(
+        JSON.stringify(Array.isArray(quiz.questions) ? quiz.questions : [], null, 2),
+      );
 
       setTaxonomyCategoriesText((taxonomySnapshot.categories || []).join(', '));
       setTaxonomyDomainsText((taxonomySnapshot.domains || []).join(', '));
       setTaxonomyRolesText((taxonomySnapshot.roles || []).join(', '));
       setTaxonomyDomainRolesText(JSON.stringify(taxonomySnapshot.domainRoles || {}, null, 2));
 
-      setSuccess('Snapshot staged into editors. Save Quiz Definition and Save Taxonomy to persist.');
+      setSuccess(
+        'Snapshot staged into editors. Save Quiz Definition and Save Taxonomy to persist.',
+      );
       setError('');
     } catch (err) {
       setError(err.message || 'Failed to apply snapshot draft');
@@ -701,8 +720,8 @@ export default function LibraryTab() {
       <div className="tab-header">
         <h2>🧠 Civilizational Knowledge Library</h2>
         <p>
-          Upload manuals, handbooks, and training guides to build a durable archive that can be accessed
-          globally and exported as offline ZIP snapshots.
+          Upload manuals, handbooks, and training guides to build a durable archive that can be
+          accessed globally and exported as offline ZIP snapshots.
         </p>
       </div>
 
@@ -765,14 +784,20 @@ export default function LibraryTab() {
           </label>
           <label>
             Visibility
-            <select value={form.visibility} onChange={(e) => handleInput('visibility', e.target.value)}>
+            <select
+              value={form.visibility}
+              onChange={(e) => handleInput('visibility', e.target.value)}
+            >
               <option value="public">Public</option>
               <option value="admin-only">Admin Only</option>
             </select>
           </label>
           <label>
             Skill level
-            <select value={form.skillLevel} onChange={(e) => handleInput('skillLevel', e.target.value)}>
+            <select
+              value={form.skillLevel}
+              onChange={(e) => handleInput('skillLevel', e.target.value)}
+            >
               <option value="intro">Intro</option>
               <option value="intermediate">Intermediate</option>
               <option value="advanced">Advanced</option>
@@ -780,7 +805,10 @@ export default function LibraryTab() {
           </label>
           <label>
             Language
-            <input value={form.language} onChange={(e) => handleInput('language', e.target.value)} />
+            <input
+              value={form.language}
+              onChange={(e) => handleInput('language', e.target.value)}
+            />
           </label>
         </div>
         <label className="library-description-field">
@@ -886,8 +914,12 @@ export default function LibraryTab() {
         <div className="library-list-toolbar">
           <h3>Career Quiz Intelligence</h3>
           <div className="library-filters">
-            <a className="btn-secondary" href="#/career-quiz">Open Public Quiz</a>
-            <button className="btn-secondary" onClick={loadQuizStats}>Refresh Stats</button>
+            <a className="btn-secondary" href="#/career-quiz">
+              Open Public Quiz
+            </a>
+            <button className="btn-secondary" onClick={loadQuizStats}>
+              Refresh Stats
+            </button>
           </div>
         </div>
         {!quizStats ? (
@@ -906,7 +938,9 @@ export default function LibraryTab() {
               </div>
               <div className="library-meta">
                 {(quizStats.topPersonalityTypes || []).map((item) => (
-                  <span key={item._id}>{item._id}: {item.count}</span>
+                  <span key={item._id}>
+                    {item._id}: {item.count}
+                  </span>
                 ))}
               </div>
             </article>
@@ -918,8 +952,14 @@ export default function LibraryTab() {
         <div className="library-list-toolbar">
           <h3>Career Quiz Definition Editor</h3>
           <div className="library-filters">
-            {quizDefinition?.version ? <span className="status-pill published">v{quizDefinition.version}</span> : null}
-            <button className="btn-secondary" onClick={loadQuizDefinition} disabled={quizEditorSaving}>
+            {quizDefinition?.version ? (
+              <span className="status-pill published">v{quizDefinition.version}</span>
+            ) : null}
+            <button
+              className="btn-secondary"
+              onClick={loadQuizDefinition}
+              disabled={quizEditorSaving}
+            >
               Reload
             </button>
           </div>
@@ -949,8 +989,8 @@ export default function LibraryTab() {
 
         <div className="library-taxonomy-hints">
           <p>
-            Axes: <strong>EI</strong> (energy), <strong>SN</strong> (learning), <strong>TF</strong> (decision),{' '}
-            <strong>JP</strong> (execution).
+            Axes: <strong>EI</strong> (energy), <strong>SN</strong> (learning), <strong>TF</strong>{' '}
+            (decision), <strong>JP</strong> (execution).
           </p>
           <div className="library-meta">
             {(taxonomy?.domains || []).map((domain) => (
@@ -976,10 +1016,18 @@ export default function LibraryTab() {
               <option value="custom">Custom Matrix</option>
             </select>
           </label>
-          <button onClick={previewQuizDefinition} className="btn-secondary" disabled={quizEditorSaving || quizPreviewLoading}>
+          <button
+            onClick={previewQuizDefinition}
+            className="btn-secondary"
+            disabled={quizEditorSaving || quizPreviewLoading}
+          >
             {quizPreviewLoading ? <LoadingDots /> : 'Preview Quiz Scoring'}
           </button>
-          <button onClick={appendQuestionTemplate} className="btn-secondary" disabled={quizEditorSaving}>
+          <button
+            onClick={appendQuestionTemplate}
+            className="btn-secondary"
+            disabled={quizEditorSaving}
+          >
             Insert Question Template
           </button>
           <button onClick={saveQuizDefinition} className="btn-primary" disabled={quizEditorSaving}>
@@ -992,7 +1040,9 @@ export default function LibraryTab() {
         {quizPreviewStrategy === 'custom' ? (
           <div className="library-preview-matrix">
             {previewQuestions.length === 0 ? (
-              <p className="library-helper-error">Questions JSON must be valid to configure custom answers.</p>
+              <p className="library-helper-error">
+                Questions JSON must be valid to configure custom answers.
+              </p>
             ) : (
               previewQuestions.map((question) => (
                 <label key={`preview-answer-${question.id}`}>
@@ -1021,14 +1071,11 @@ export default function LibraryTab() {
               <span>answers: {quizPreview.answerCount}</span>
               <span>strategy: {quizPreview.strategy}</span>
             </div>
+            <p>Domains: {(quizPreview.topDomains || []).join(', ') || 'n/a'}</p>
+            <p>Careers: {(quizPreview.topCareers || []).join(', ') || 'n/a'}</p>
             <p>
-              Domains: {(quizPreview.topDomains || []).join(', ') || 'n/a'}
-            </p>
-            <p>
-              Careers: {(quizPreview.topCareers || []).join(', ') || 'n/a'}
-            </p>
-            <p>
-              Axis: {Object.entries(quizPreview.axisScores || {})
+              Axis:{' '}
+              {Object.entries(quizPreview.axisScores || {})
                 .map(([k, v]) => `${k}:${v}`)
                 .join(' ')}
             </p>
@@ -1044,7 +1091,11 @@ export default function LibraryTab() {
           Move quiz definition + taxonomy between environments with a single JSON snapshot.
         </p>
         <div className="library-upload-actions">
-          <button onClick={exportLibrarySnapshot} className="btn-secondary" disabled={snapshotLoading}>
+          <button
+            onClick={exportLibrarySnapshot}
+            className="btn-secondary"
+            disabled={snapshotLoading}
+          >
             {snapshotLoading ? <LoadingDots /> : 'Export Snapshot JSON'}
           </button>
           <label>
@@ -1058,7 +1109,11 @@ export default function LibraryTab() {
           >
             {snapshotLoading ? <LoadingDots /> : 'Compare Snapshot vs Server'}
           </button>
-          <button onClick={applySnapshotDraft} className="btn-primary" disabled={!snapshotDraft || snapshotLoading}>
+          <button
+            onClick={applySnapshotDraft}
+            className="btn-primary"
+            disabled={!snapshotDraft || snapshotLoading}
+          >
             Stage Snapshot In Editors
           </button>
           <button
@@ -1075,8 +1130,18 @@ export default function LibraryTab() {
             <div className="library-meta">
               <span>version: {snapshotDraft.version || 'n/a'}</span>
               <span>exported: {snapshotDraft.exportedAt || 'unknown'}</span>
-              <span>questions: {Array.isArray(snapshotDraft.quiz?.questions) ? snapshotDraft.quiz.questions.length : 0}</span>
-              <span>domains: {Array.isArray(snapshotDraft.taxonomy?.domains) ? snapshotDraft.taxonomy.domains.length : 0}</span>
+              <span>
+                questions:{' '}
+                {Array.isArray(snapshotDraft.quiz?.questions)
+                  ? snapshotDraft.quiz.questions.length
+                  : 0}
+              </span>
+              <span>
+                domains:{' '}
+                {Array.isArray(snapshotDraft.taxonomy?.domains)
+                  ? snapshotDraft.taxonomy.domains.length
+                  : 0}
+              </span>
             </div>
             {snapshotDiff ? (
               <div className="library-snapshot-diff">
@@ -1110,18 +1175,20 @@ export default function LibraryTab() {
                   <p>domain role map updates: {snapshotDiff.domainRoleDiff.length}</p>
                 </div>
 
-                {(snapshotDiff.taxonomy.categories.added.length ||
-                  snapshotDiff.taxonomy.categories.removed.length ||
-                  snapshotDiff.taxonomy.domains.added.length ||
-                  snapshotDiff.taxonomy.domains.removed.length ||
-                  snapshotDiff.taxonomy.roles.added.length ||
-                  snapshotDiff.taxonomy.roles.removed.length) ? (
+                {snapshotDiff.taxonomy.categories.added.length ||
+                snapshotDiff.taxonomy.categories.removed.length ||
+                snapshotDiff.taxonomy.domains.added.length ||
+                snapshotDiff.taxonomy.domains.removed.length ||
+                snapshotDiff.taxonomy.roles.added.length ||
+                snapshotDiff.taxonomy.roles.removed.length ? (
                   <div className="library-snapshot-diff-details">
                     {snapshotDiff.taxonomy.categories.added.length ? (
                       <p>categories added: {snapshotDiff.taxonomy.categories.added.join(', ')}</p>
                     ) : null}
                     {snapshotDiff.taxonomy.categories.removed.length ? (
-                      <p>categories removed: {snapshotDiff.taxonomy.categories.removed.join(', ')}</p>
+                      <p>
+                        categories removed: {snapshotDiff.taxonomy.categories.removed.join(', ')}
+                      </p>
                     ) : null}
                     {snapshotDiff.taxonomy.domains.added.length ? (
                       <p>domains added: {snapshotDiff.taxonomy.domains.added.join(', ')}</p>
@@ -1141,9 +1208,11 @@ export default function LibraryTab() {
                 {snapshotDiff.domainRoleDiff.length > 0 ? (
                   <div className="library-snapshot-diff-details">
                     {snapshotDiff.domainRoleDiff.map((entry) => (
-                      <p key={`domain-role-diff-${entry.domain}`} className="library-snapshot-diff-note">
-                        {entry.domain}: +
-                        {entry.added.length ? entry.added.join(', ') : 'none'} / -
+                      <p
+                        key={`domain-role-diff-${entry.domain}`}
+                        className="library-snapshot-diff-note"
+                      >
+                        {entry.domain}: +{entry.added.length ? entry.added.join(', ') : 'none'} / -
                         {entry.removed.length ? entry.removed.join(', ') : 'none'}
                       </p>
                     ))}
@@ -1204,7 +1273,11 @@ export default function LibraryTab() {
         </label>
 
         <div className="library-upload-actions">
-          <button onClick={generateDomainRoleDefaults} className="btn-secondary" disabled={taxonomySaving}>
+          <button
+            onClick={generateDomainRoleDefaults}
+            className="btn-secondary"
+            disabled={taxonomySaving}
+          >
             Generate Domain Role Defaults
           </button>
           <button
@@ -1251,7 +1324,11 @@ function normalizeList(values) {
   return Array.from(
     new Set(
       (Array.isArray(values) ? values : [])
-        .map((value) => String(value || '').trim().toLowerCase())
+        .map((value) =>
+          String(value || '')
+            .trim()
+            .toLowerCase(),
+        )
         .filter(Boolean),
     ),
   ).sort();
@@ -1261,7 +1338,9 @@ function normalizeDomainRoles(rawDomainRoles) {
   const source = rawDomainRoles && typeof rawDomainRoles === 'object' ? rawDomainRoles : {};
   const normalized = {};
   for (const [domain, roles] of Object.entries(source)) {
-    const key = String(domain || '').trim().toLowerCase();
+    const key = String(domain || '')
+      .trim()
+      .toLowerCase();
     if (!key) continue;
     normalized[key] = normalizeList(roles);
   }
@@ -1304,8 +1383,10 @@ function buildSnapshotDiff(draftSnapshot, liveSnapshot) {
     }
   }
 
-  const quizTitleChanged = String(draftQuiz.title || '').trim() !== String(liveQuiz.title || '').trim();
-  const quizIntroChanged = String(draftQuiz.intro || '').trim() !== String(liveQuiz.intro || '').trim();
+  const quizTitleChanged =
+    String(draftQuiz.title || '').trim() !== String(liveQuiz.title || '').trim();
+  const quizIntroChanged =
+    String(draftQuiz.intro || '').trim() !== String(liveQuiz.intro || '').trim();
   const quizQuestionDelta = questionCountDraft - questionCountLive;
 
   const changesCount =

@@ -56,7 +56,7 @@ export default function SellerFAQ() {
   const [expanded, setExpanded] = useState({});
 
   function toggleItem(id) {
-    setExpanded(prev => ({
+    setExpanded((prev) => ({
       ...prev,
       [id]: !prev[id],
     }));
@@ -70,7 +70,7 @@ export default function SellerFAQ() {
       </div>
 
       <div className="faq-items">
-        {FAQ_ITEMS.map(item => (
+        {FAQ_ITEMS.map((item) => (
           <div key={item.id} className="faq-item">
             <button
               className="faq-question"

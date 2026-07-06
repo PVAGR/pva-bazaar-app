@@ -160,7 +160,7 @@ router.get('/twitch/start', async (req, res) => {
         return res.status(401).json({ ok: false, message: 'No authentication token provided' });
       }
       return res.redirect(
-        `${returnUrl}${returnUrl.includes('?') ? '&' : '?'}oauth_error=${encodeURIComponent('Please log in first')}`
+        `${returnUrl}${returnUrl.includes('?') ? '&' : '?'}oauth_error=${encodeURIComponent('Please log in first')}`,
       );
     }
 
@@ -182,7 +182,7 @@ router.get('/twitch/start', async (req, res) => {
     const state = jwt.sign(
       { uid: decoded.id, nonce: Math.random().toString(36).slice(2) },
       process.env.JWT_SECRET,
-      { expiresIn: '10m' }
+      { expiresIn: '10m' },
     );
 
     const params = new URLSearchParams({
@@ -226,23 +226,31 @@ router.get('/twitch/callback', async (req, res) => {
 
     if (error) {
       const msg = `${error}${errorDesc ? `: ${errorDesc}` : ''}`;
-      return res.redirect(`${returnUrl}${returnUrl.includes('?') ? '&' : '?'}oauth_error=${encodeURIComponent(msg)}`);
+      return res.redirect(
+        `${returnUrl}${returnUrl.includes('?') ? '&' : '?'}oauth_error=${encodeURIComponent(msg)}`,
+      );
     }
 
     if (!code || !state) {
-      return res.redirect(`${returnUrl}${returnUrl.includes('?') ? '&' : '?'}oauth_error=${encodeURIComponent('Missing code/state')}`);
+      return res.redirect(
+        `${returnUrl}${returnUrl.includes('?') ? '&' : '?'}oauth_error=${encodeURIComponent('Missing code/state')}`,
+      );
     }
 
     let decoded;
     try {
       decoded = jwt.verify(String(state), process.env.JWT_SECRET);
     } catch (e) {
-      return res.redirect(`${returnUrl}${returnUrl.includes('?') ? '&' : '?'}oauth_error=${encodeURIComponent('Invalid OAuth state. Please try again.')}`);
+      return res.redirect(
+        `${returnUrl}${returnUrl.includes('?') ? '&' : '?'}oauth_error=${encodeURIComponent('Invalid OAuth state. Please try again.')}`,
+      );
     }
 
     const uid = decoded?.uid;
     if (!uid) {
-      return res.redirect(`${returnUrl}${returnUrl.includes('?') ? '&' : '?'}oauth_error=${encodeURIComponent('OAuth state missing user id')}`);
+      return res.redirect(
+        `${returnUrl}${returnUrl.includes('?') ? '&' : '?'}oauth_error=${encodeURIComponent('OAuth state missing user id')}`,
+      );
     }
 
     // Exchange code -> user access token
@@ -287,7 +295,7 @@ router.get('/twitch/callback', async (req, res) => {
           },
         },
       },
-      { new: true }
+      { new: true },
     );
 
     // Persist tokens encrypted (foundation for real API calls).
@@ -312,9 +320,10 @@ router.get('/twitch/callback', async (req, res) => {
   } catch (err) {
     console.error('Twitch oauth callback error:', err.response?.data || err.message);
     const returnUrl = getFrontendReturnUrl(req);
-    return res.redirect(`${returnUrl}${returnUrl.includes('?') ? '&' : '?'}oauth_error=${encodeURIComponent('Twitch connect failed')}`);
+    return res.redirect(
+      `${returnUrl}${returnUrl.includes('?') ? '&' : '?'}oauth_error=${encodeURIComponent('Twitch connect failed')}`,
+    );
   }
 });
 
 module.exports = router;
-

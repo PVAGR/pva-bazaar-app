@@ -11,7 +11,7 @@ const legacySystem = new LegacySystem();
 /**
  * POST /api/legacy/entry
  * Create a new legacy entry
- * 
+ *
  * Body:
  * {
  *   "content": "Your thoughts, code, memories",
@@ -29,7 +29,7 @@ router.post('/entry', async (req, res) => {
     if (!content) {
       return res.status(400).json({
         ok: false,
-        error: 'Content is required'
+        error: 'Content is required',
       });
     }
 
@@ -38,7 +38,7 @@ router.post('/entry', async (req, res) => {
       title: metadata.title || 'Untitled Entry',
       type: metadata.type || 'journal',
       tags: metadata.tags || [],
-      ...metadata
+      ...metadata,
     });
 
     res.json({
@@ -47,14 +47,14 @@ router.post('/entry', async (req, res) => {
       entry: {
         hash: legacySystem.chain.entries[legacySystem.chain.entries.length - 1].hash,
         timestamp: new Date().toISOString(),
-        status: 'IMMORTAL'
+        status: 'IMMORTAL',
       },
-      saved: result
+      saved: result,
     });
   } catch (err) {
     res.status(500).json({
       ok: false,
-      error: err.message
+      error: err.message,
     });
   }
 });
@@ -66,26 +66,26 @@ router.post('/entry', async (req, res) => {
 router.get('/chain', (req, res) => {
   try {
     const status = legacySystem.getStatus();
-    const entries = legacySystem.chain.entries.map(e => ({
+    const entries = legacySystem.chain.entries.map((e) => ({
       id: e.id,
       hash: e.hash,
       title: e.metadata.title,
       timestamp: e.timestamp,
       type: e.metadata.type,
-      tags: e.metadata.tags
+      tags: e.metadata.tags,
     }));
 
     res.json({
       ok: true,
       chain: {
         ...status,
-        entries
-      }
+        entries,
+      },
     });
   } catch (err) {
     res.status(500).json({
       ok: false,
-      error: err.message
+      error: err.message,
     });
   }
 });
@@ -93,29 +93,29 @@ router.get('/chain', (req, res) => {
 /**
  * GET /api/legacy/entry/:hash
  * Retrieve specific entry by hash
- * 
+ *
  * Returns: Full entry with content
  */
 router.get('/entry/:hash', (req, res) => {
   try {
     const { hash } = req.params;
-    const entry = legacySystem.chain.entries.find(e => e.hash === hash);
+    const entry = legacySystem.chain.entries.find((e) => e.hash === hash);
 
     if (!entry) {
       return res.status(404).json({
         ok: false,
-        error: 'Entry not found'
+        error: 'Entry not found',
       });
     }
 
     res.json({
       ok: true,
-      entry: entry.toJSON()
+      entry: entry.toJSON(),
     });
   } catch (err) {
     res.status(500).json({
       ok: false,
-      error: err.message
+      error: err.message,
     });
   }
 });
@@ -123,7 +123,7 @@ router.get('/entry/:hash', (req, res) => {
 /**
  * GET /api/legacy/journal
  * Get complete journal as markdown
- * 
+ *
  * Returns: Full journal document
  */
 router.get('/journal', (req, res) => {
@@ -136,7 +136,7 @@ router.get('/journal', (req, res) => {
   } catch (err) {
     res.status(500).json({
       ok: false,
-      error: err.message
+      error: err.message,
     });
   }
 });
@@ -144,7 +144,7 @@ router.get('/journal', (req, res) => {
 /**
  * GET /api/legacy/verify
  * Verify integrity of entire chain
- * 
+ *
  * Returns: Verification status and merkle root
  */
 router.get('/verify', (req, res) => {
@@ -158,13 +158,13 @@ router.get('/verify', (req, res) => {
         valid: isValid,
         entries: status.entries,
         merkleRoot: status.merkleRoot,
-        timestamp: new Date().toISOString()
-      }
+        timestamp: new Date().toISOString(),
+      },
     });
   } catch (err) {
     res.status(500).json({
       ok: false,
-      error: err.message
+      error: err.message,
     });
   }
 });
@@ -172,7 +172,7 @@ router.get('/verify', (req, res) => {
 /**
  * POST /api/legacy/guardian/add
  * Add a guardian for resurrection protocol
- * 
+ *
  * Body:
  * {
  *   "name": "Guardian Name",
@@ -186,7 +186,7 @@ router.post('/guardian/add', (req, res) => {
     if (!name || !publicKey) {
       return res.status(400).json({
         ok: false,
-        error: 'Name and publicKey are required'
+        error: 'Name and publicKey are required',
       });
     }
 
@@ -198,13 +198,13 @@ router.post('/guardian/add', (req, res) => {
         name,
         index: legacySystem.protocol.guardians.length - 1,
         totalGuardians: legacySystem.protocol.guardians.length,
-        threshold: legacySystem.protocol.guardianThreshold
-      }
+        threshold: legacySystem.protocol.guardianThreshold,
+      },
     });
   } catch (err) {
     res.status(500).json({
       ok: false,
-      error: err.message
+      error: err.message,
     });
   }
 });
@@ -212,7 +212,7 @@ router.post('/guardian/add', (req, res) => {
 /**
  * POST /api/legacy/guardian/confirm-death
  * Guardian confirms death (multisig)
- * 
+ *
  * Body:
  * {
  *   "guardianIndex": 0,
@@ -226,7 +226,7 @@ router.post('/guardian/confirm-death', (req, res) => {
     if (guardianIndex === undefined || !deathCertificate) {
       return res.status(400).json({
         ok: false,
-        error: 'guardianIndex and deathCertificate are required'
+        error: 'guardianIndex and deathCertificate are required',
       });
     }
 
@@ -234,12 +234,12 @@ router.post('/guardian/confirm-death', (req, res) => {
 
     res.json({
       ok: true,
-      resurrection: result
+      resurrection: result,
     });
   } catch (err) {
     res.status(500).json({
       ok: false,
-      error: err.message
+      error: err.message,
     });
   }
 });
@@ -251,7 +251,7 @@ router.post('/guardian/confirm-death', (req, res) => {
 router.get('/resurrection-status', (req, res) => {
   try {
     const locked = legacySystem.protocol.locked;
-    const activations = legacySystem.protocol.guardians.filter(g => g.activated).length;
+    const activations = legacySystem.protocol.guardians.filter((g) => g.activated).length;
 
     let token = null;
     if (!locked) {
@@ -266,13 +266,13 @@ router.get('/resurrection-status', (req, res) => {
         totalGuardians: legacySystem.protocol.guardians.length,
         threshold: legacySystem.protocol.guardianThreshold,
         deathProof: locked ? null : legacySystem.protocol.deathProof,
-        resurrectionToken: token
-      }
+        resurrectionToken: token,
+      },
     });
   } catch (err) {
     res.status(500).json({
       ok: false,
-      error: err.message
+      error: err.message,
     });
   }
 });
@@ -286,8 +286,8 @@ router.get('/download', (req, res) => {
     const legacyData = {
       created: new Date().toISOString(),
       status: legacySystem.getStatus(),
-      entries: legacySystem.chain.entries.map(e => e.toJSON()),
-      merkleTree: legacySystem.chain.merkleTree
+      entries: legacySystem.chain.entries.map((e) => e.toJSON()),
+      merkleTree: legacySystem.chain.merkleTree,
     };
 
     res.setHeader('Content-Type', 'application/json');
@@ -296,7 +296,7 @@ router.get('/download', (req, res) => {
   } catch (err) {
     res.status(500).json({
       ok: false,
-      error: err.message
+      error: err.message,
     });
   }
 });

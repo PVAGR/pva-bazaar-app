@@ -9,7 +9,9 @@ const TELEGRAM_ALLOWED_CHAT_IDS = (process.env.TELEGRAM_ALLOWED_CHAT_IDS || '')
   .filter(Boolean);
 const TELEGRAM_CHAT_ID = String(process.env.TELEGRAM_CHAT_ID || '').trim();
 const TELEGRAM_MESSAGE = String(process.env.TELEGRAM_MESSAGE || '').trim();
-const OPENCLAW_BACKEND_URL = String(process.env.OPENCLAW_BACKEND_URL || 'https://api.pvabazaar.org').replace(/\/$/, '');
+const OPENCLAW_BACKEND_URL = String(
+  process.env.OPENCLAW_BACKEND_URL || 'https://api.pvabazaar.org',
+).replace(/\/$/, '');
 const OPENCLAW_BRIDGE_SECRET = String(process.env.OPENCLAW_BRIDGE_SECRET || '').trim();
 
 if (!TELEGRAM_BOT_TOKEN) {

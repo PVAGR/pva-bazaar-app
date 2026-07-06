@@ -17,7 +17,10 @@ function getMongoUriFromEnv() {
   if (direct) return direct;
 
   const databaseUrl = String(process.env.DATABASE_URL || '').trim();
-  if (databaseUrl && (databaseUrl.startsWith('mongodb://') || databaseUrl.startsWith('mongodb+srv://'))) {
+  if (
+    databaseUrl &&
+    (databaseUrl.startsWith('mongodb://') || databaseUrl.startsWith('mongodb+srv://'))
+  ) {
     return databaseUrl;
   }
 
@@ -34,7 +37,11 @@ function shouldAllowMockFallback() {
 }
 
 function isServerlessProduction() {
-  return process.env.VERCEL === '1' || process.env.NETLIFY === 'true' || process.env.AWS_LAMBDA_FUNCTION_NAME;
+  return (
+    process.env.VERCEL === '1' ||
+    process.env.NETLIFY === 'true' ||
+    process.env.AWS_LAMBDA_FUNCTION_NAME
+  );
 }
 
 function isRenderProduction() {
@@ -160,7 +167,9 @@ async function connectMongo(options = {}) {
     return await connectWithUri(uriFromEnv, 'mongo');
   } catch (err) {
     if (isServerlessProduction() || isRenderProduction()) {
-      logger.warn?.(`⚠️ MongoDB connection failed in serverless/render mode (${err.message}). Using mock database state.`);
+      logger.warn?.(
+        `⚠️ MongoDB connection failed in serverless/render mode (${err.message}). Using mock database state.`,
+      );
       state.mode = 'mock';
       state.conn = createMockConnection();
       state.promise = Promise.resolve(state.conn);
@@ -169,7 +178,9 @@ async function connectMongo(options = {}) {
 
     if (allowMemoryFallback && state.mode !== 'memory') {
       try {
-        logger.warn?.(`⚠️ MongoDB connection failed (${err.message}). Falling back to in-memory MongoDB.`);
+        logger.warn?.(
+          `⚠️ MongoDB connection failed (${err.message}). Falling back to in-memory MongoDB.`,
+        );
         const memoryUri = await createMemoryUri();
         state.promise = null;
         const conn = await connectWithUri(memoryUri, 'memory');
@@ -177,7 +188,9 @@ async function connectMongo(options = {}) {
         return conn;
       } catch (memoryErr) {
         if (shouldAllowMockFallback()) {
-          logger.warn?.(`⚠️ In-memory MongoDB fallback failed (${memoryErr.message}). Using mock database state.`);
+          logger.warn?.(
+            `⚠️ In-memory MongoDB fallback failed (${memoryErr.message}). Using mock database state.`,
+          );
           state.promise = Promise.resolve(createMockConnection());
           state.mode = 'mock';
           state.conn = createMockConnection();
@@ -208,9 +221,10 @@ function getMongoState() {
     state.mode = 'mock';
   }
 
-  const effectiveMode = state.mode === 'disconnected' && !getMongoUriFromEnv() && isServerlessProduction()
-    ? 'mock'
-    : state.mode;
+  const effectiveMode =
+    state.mode === 'disconnected' && !getMongoUriFromEnv() && isServerlessProduction()
+      ? 'mock'
+      : state.mode;
 
   return {
     mode: effectiveMode,

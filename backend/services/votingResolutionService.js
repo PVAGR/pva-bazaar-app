@@ -91,7 +91,9 @@ async function calculatePayouts(marketId) {
     const oddsMultiplier = winningOutcome.odds || 1;
 
     for (const winner of winners) {
-      const winnings = Math.floor(winner.amountCents * (oddsMultiplier - 1) * (market.payoutRule.winner_share_pct / 100));
+      const winnings = Math.floor(
+        winner.amountCents * (oddsMultiplier - 1) * (market.payoutRule.winner_share_pct / 100),
+      );
 
       results.push({
         userId: winner.userId,
@@ -165,7 +167,7 @@ async function processPayouts(marketId) {
         { userId: bet.userId },
         {
           $inc: { availableBalance: bet.winnings, totalWon: bet.winnings },
-        }
+        },
       );
 
       // Update bet

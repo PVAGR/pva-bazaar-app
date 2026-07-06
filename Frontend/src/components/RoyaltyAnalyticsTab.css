@@ -216,7 +216,7 @@
 }
 
 .royalty-analytics__table-wrap tr:hover td {
-  background: var(--site-accent-soft, rgba(255,255,255,0.04));
+  background: var(--site-accent-soft, rgba(255, 255, 255, 0.04));
 }
 
 /* Badges */

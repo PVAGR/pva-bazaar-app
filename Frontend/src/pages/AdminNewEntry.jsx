@@ -31,7 +31,9 @@ export default function AdminNewEntry({ onCreated }) {
   const uploadMediaFiles = async (files) => {
     const { cloudName, uploadPreset } = getCloudinaryConfig();
     if (!cloudName || !uploadPreset) {
-      setMediaError('Missing Cloudinary config. Set VITE_CLOUDINARY_CLOUD_NAME and VITE_CLOUDINARY_UPLOAD_PRESET.');
+      setMediaError(
+        'Missing Cloudinary config. Set VITE_CLOUDINARY_CLOUD_NAME and VITE_CLOUDINARY_UPLOAD_PRESET.',
+      );
       return;
     }
     if (!files?.length) return;
@@ -54,7 +56,7 @@ export default function AdminNewEntry({ onCreated }) {
             throw new Error(data?.error?.message || 'Upload failed');
           }
           return data.secure_url;
-        })
+        }),
       );
 
       setMediaUrls((prev) => {
@@ -88,7 +90,10 @@ export default function AdminNewEntry({ onCreated }) {
       date: date || new Date().toISOString().slice(0, 10),
       contentHtml: content.replace(/\n/g, '<br/>'),
       excerpt: content.slice(0, 200),
-      tags: tags.split(',').map((t) => t.trim()).filter(Boolean),
+      tags: tags
+        .split(',')
+        .map((t) => t.trim())
+        .filter(Boolean),
       category,
       location,
       media: parseMediaUrls(mediaUrls),
@@ -121,11 +126,26 @@ export default function AdminNewEntry({ onCreated }) {
       </div>
 
       <form className="form" onSubmit={handleSubmit}>
-        <label>Title<input value={title} onChange={(e) => setTitle(e.target.value)} required /></label>
-        <label>Date<input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></label>
-        <label>Location<input value={location} onChange={(e) => setLocation(e.target.value)} /></label>
-        <label>Category<input value={category} onChange={(e) => setCategory(e.target.value)} /></label>
-        <label>Tags (comma separated)<input value={tags} onChange={(e) => setTags(e.target.value)} /></label>
+        <label>
+          Title
+          <input value={title} onChange={(e) => setTitle(e.target.value)} required />
+        </label>
+        <label>
+          Date
+          <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+        </label>
+        <label>
+          Location
+          <input value={location} onChange={(e) => setLocation(e.target.value)} />
+        </label>
+        <label>
+          Category
+          <input value={category} onChange={(e) => setCategory(e.target.value)} />
+        </label>
+        <label>
+          Tags (comma separated)
+          <input value={tags} onChange={(e) => setTags(e.target.value)} />
+        </label>
         <label>
           Media URLs (comma or new line separated)
           <textarea rows={3} value={mediaUrls} onChange={(e) => setMediaUrls(e.target.value)} />
@@ -153,10 +173,17 @@ export default function AdminNewEntry({ onCreated }) {
           </label>
           {mediaError && <div className="media-uploader__error">{mediaError}</div>}
         </div>
-        <label>Content<textarea rows={10} value={content} onChange={(e) => setContent(e.target.value)} /></label>
+        <label>
+          Content
+          <textarea rows={10} value={content} onChange={(e) => setContent(e.target.value)} />
+        </label>
         <div className="form__actions">
-          <button className="button" type="submit" disabled={saving}>{saving ? 'Saving…' : 'Save entry'}</button>
-          <a className="button ghost" href="#/journal">Cancel</a>
+          <button className="button" type="submit" disabled={saving}>
+            {saving ? 'Saving…' : 'Save entry'}
+          </button>
+          <a className="button ghost" href="#/journal">
+            Cancel
+          </a>
         </div>
       </form>
     </section>

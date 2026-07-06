@@ -19,7 +19,12 @@ const ROLE_OPTIONS = [
   { value: 'other', label: 'Other' },
 ];
 
-const TRADING_ROLE_INTENTS = new Set(['seller', 'creator_artist', 'collector', 'federation_contributor']);
+const TRADING_ROLE_INTENTS = new Set([
+  'seller',
+  'creator_artist',
+  'collector',
+  'federation_contributor',
+]);
 
 export default function RegisterPage() {
   const { darkMode, toggleTheme } = useArchiveTheme();
@@ -54,28 +59,32 @@ export default function RegisterPage() {
     setLoading(true);
     setError('');
     try {
-      const res = await apiPost('/auth/register', {
-        name: form.name.trim(),
-        email: form.email.trim(),
-        password: form.password,
-        onboarding: {
-          roleIntent: form.roleIntent,
-          roleOther: form.roleIntent === 'other' ? form.roleOther : '',
-          compliance: TRADING_ROLE_INTENTS.has(form.roleIntent)
-            ? {
-              legalFullName: form.name,
-              legalIdType: form.legalIdType,
-              legalIdNumber: form.legalIdNumber,
-              addressLine1: form.addressLine1,
-              city: form.city,
-              postalCode: form.postalCode,
-              country: form.country,
-              phone: form.phone,
-              identityAttested: form.identityAttested,
-            }
-            : undefined,
+      const res = await apiPost(
+        '/auth/register',
+        {
+          name: form.name.trim(),
+          email: form.email.trim(),
+          password: form.password,
+          onboarding: {
+            roleIntent: form.roleIntent,
+            roleOther: form.roleIntent === 'other' ? form.roleOther : '',
+            compliance: TRADING_ROLE_INTENTS.has(form.roleIntent)
+              ? {
+                  legalFullName: form.name,
+                  legalIdType: form.legalIdType,
+                  legalIdNumber: form.legalIdNumber,
+                  addressLine1: form.addressLine1,
+                  city: form.city,
+                  postalCode: form.postalCode,
+                  country: form.country,
+                  phone: form.phone,
+                  identityAttested: form.identityAttested,
+                }
+              : undefined,
+          },
         },
-      }, { timeout: 120_000 });
+        { timeout: 120_000 },
+      );
       if (!res?.ok || !res?.token) throw new Error(res?.message || 'Registration failed');
       sessionStorage.removeItem('admin-auth');
       sessionStorage.removeItem('admin-auth-version');
@@ -95,16 +104,16 @@ export default function RegisterPage() {
             appRole: 'consumer',
             compliance: TRADING_ROLE_INTENTS.has(form.roleIntent)
               ? {
-                legalFullName: form.name,
-                legalIdType: form.legalIdType,
-                legalIdNumber: form.legalIdNumber,
-                addressLine1: form.addressLine1,
-                city: form.city,
-                postalCode: form.postalCode,
-                country: form.country,
-                phone: form.phone,
-                identityAttested: form.identityAttested,
-              }
+                  legalFullName: form.name,
+                  legalIdType: form.legalIdType,
+                  legalIdNumber: form.legalIdNumber,
+                  addressLine1: form.addressLine1,
+                  city: form.city,
+                  postalCode: form.postalCode,
+                  country: form.country,
+                  phone: form.phone,
+                  identityAttested: form.identityAttested,
+                }
               : undefined,
           },
         });
@@ -120,12 +129,17 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className={`registerPage admin-page authenticated ${darkMode ? 'dark-theme' : 'light-theme'}`}>
+    <div
+      className={`registerPage admin-page authenticated ${darkMode ? 'dark-theme' : 'light-theme'}`}
+    >
       <header className="admin-header registerHeader">
         <div>
           <h1>🧾 Create account</h1>
           <p className="muted">This creates a shared account for the PVA Bazaar login system.</p>
-          <div className={`auth-connection auth-connection--${connectionMode.status}`} aria-live="polite">
+          <div
+            className={`auth-connection auth-connection--${connectionMode.status}`}
+            aria-live="polite"
+          >
             <strong>{connectionMode.label}</strong>
             <span>{connectionMode.detail}</span>
           </div>
@@ -134,7 +148,12 @@ export default function RegisterPage() {
           <Link to="/login" className="btn ghost">
             ← Back to login
           </Link>
-          <button className="btn ghost" onClick={toggleTheme} title="Toggle theme" aria-label="Toggle theme">
+          <button
+            className="btn ghost"
+            onClick={toggleTheme}
+            title="Toggle theme"
+            aria-label="Toggle theme"
+          >
             {darkMode ? '☀️' : '🌙'}
           </button>
         </div>
@@ -152,21 +171,39 @@ export default function RegisterPage() {
             <label>
               <span>
                 Name
-                <HelpTip title="Name" body="Shown in your profile and used for ownership records later." example="Your name" />
+                <HelpTip
+                  title="Name"
+                  body="Shown in your profile and used for ownership records later."
+                  example="Your name"
+                />
               </span>
-              <input value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} />
+              <input
+                value={form.name}
+                onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+              />
             </label>
             <label>
               <span>
                 Email
-                <HelpTip title="Email" body="Used for sign-in and notifications later." example="you@example.com" />
+                <HelpTip
+                  title="Email"
+                  body="Used for sign-in and notifications later."
+                  example="you@example.com"
+                />
               </span>
-              <input value={form.email} onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))} />
+              <input
+                value={form.email}
+                onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
+              />
             </label>
             <label>
               <span>
                 Password
-                <HelpTip title="Password" body="Choose a strong password. You can change this later." example="********" />
+                <HelpTip
+                  title="Password"
+                  body="Choose a strong password. You can change this later."
+                  example="********"
+                />
               </span>
               <input
                 type="password"
@@ -183,9 +220,14 @@ export default function RegisterPage() {
                   example="Seller, Consumer, Researcher"
                 />
               </span>
-              <select value={form.roleIntent} onChange={(e) => setForm((p) => ({ ...p, roleIntent: e.target.value }))}>
+              <select
+                value={form.roleIntent}
+                onChange={(e) => setForm((p) => ({ ...p, roleIntent: e.target.value }))}
+              >
                 {ROLE_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
                 ))}
               </select>
             </label>
@@ -193,7 +235,11 @@ export default function RegisterPage() {
               <label>
                 <span>
                   Describe your path
-                  <HelpTip title="Custom role" body="Give a short description of your path." example="Community coordinator" />
+                  <HelpTip
+                    title="Custom role"
+                    body="Give a short description of your path."
+                    example="Community coordinator"
+                  />
                 </span>
                 <input
                   value={form.roleOther}
@@ -231,19 +277,35 @@ export default function RegisterPage() {
                 </label>
                 <label>
                   <span>City</span>
-                  <input value={form.city} onChange={(e) => setForm((p) => ({ ...p, city: e.target.value }))} required />
+                  <input
+                    value={form.city}
+                    onChange={(e) => setForm((p) => ({ ...p, city: e.target.value }))}
+                    required
+                  />
                 </label>
                 <label>
                   <span>Postal code</span>
-                  <input value={form.postalCode} onChange={(e) => setForm((p) => ({ ...p, postalCode: e.target.value }))} required />
+                  <input
+                    value={form.postalCode}
+                    onChange={(e) => setForm((p) => ({ ...p, postalCode: e.target.value }))}
+                    required
+                  />
                 </label>
                 <label>
                   <span>Country</span>
-                  <input value={form.country} onChange={(e) => setForm((p) => ({ ...p, country: e.target.value }))} required />
+                  <input
+                    value={form.country}
+                    onChange={(e) => setForm((p) => ({ ...p, country: e.target.value }))}
+                    required
+                  />
                 </label>
                 <label>
                   <span>Phone</span>
-                  <input value={form.phone} onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))} required />
+                  <input
+                    value={form.phone}
+                    onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
+                    required
+                  />
                 </label>
                 <label className="check">
                   <input

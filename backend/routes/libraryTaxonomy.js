@@ -25,14 +25,7 @@ const DEFAULT_TAXONOMY = {
     'science-research',
     'technical-foundations',
   ],
-  roles: [
-    'apprentice',
-    'operator',
-    'specialist',
-    'coordinator',
-    'trainer',
-    'manager',
-  ],
+  roles: ['apprentice', 'operator', 'specialist', 'coordinator', 'trainer', 'manager'],
   domainRoles: {
     'community-support': ['apprentice', 'operator', 'coordinator'],
     'civil-security': ['operator', 'specialist', 'manager'],
@@ -49,7 +42,11 @@ function sanitizeList(values) {
   return Array.from(
     new Set(
       values
-        .map((value) => String(value || '').trim().toLowerCase())
+        .map((value) =>
+          String(value || '')
+            .trim()
+            .toLowerCase(),
+        )
         .filter(Boolean),
     ),
   ).sort();
@@ -64,7 +61,9 @@ function sanitizeDomainRoles(domainRoles, domains, roles) {
 
   if (domainRoles && typeof domainRoles === 'object' && !Array.isArray(domainRoles)) {
     for (const [rawDomain, rawRoles] of Object.entries(domainRoles)) {
-      const domain = String(rawDomain || '').trim().toLowerCase();
+      const domain = String(rawDomain || '')
+        .trim()
+        .toLowerCase();
       if (!domain || !domainSet.has(domain)) {
         if (domain) unknownDomains.push(domain);
         continue;
@@ -109,7 +108,10 @@ async function getOrCreateTaxonomy() {
       doc.roles || DEFAULT_TAXONOMY.roles,
     );
     const patchedDomainRoles = patched.map;
-    await LibraryTaxonomy.updateOne({ _id: doc._id }, { $set: { domainRoles: patchedDomainRoles } });
+    await LibraryTaxonomy.updateOne(
+      { _id: doc._id },
+      { $set: { domainRoles: patchedDomainRoles } },
+    );
     doc.domainRoles = patchedDomainRoles;
   }
   return doc;

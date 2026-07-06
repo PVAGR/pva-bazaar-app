@@ -21,21 +21,28 @@ export default function BooksPage() {
             <p className="pill">Books</p>
             <h1>Start here first.</h1>
             <p className="books-page__lead">
-              These two books are the clearest entrance into the larger work. They explain the labor model, the
-              philosophy, and the long-range blueprint behind PVA Bazaar as pure life knowledge in a bazaar format:
-              truthful living, meaningful labor, preserved memory, and systems designed to endure instead of disappear.
+              These two books are the clearest entrance into the larger work. They explain the labor
+              model, the philosophy, and the long-range blueprint behind PVA Bazaar as pure life
+              knowledge in a bazaar format: truthful living, meaningful labor, preserved memory, and
+              systems designed to endure instead of disappear.
             </p>
           </div>
 
           <aside className="books-page__heroPanel">
             <h2>Reading order</h2>
             <ol>
-              <li><strong>The Infinite Jobs</strong> explains the kinds of human work that should remain sacred, useful, and worth preserving.</li>
-              <li><strong>Magnum Opus Guide</strong> turns those commitments into a blueprint for continuity, stewardship, and open legacy.</li>
+              <li>
+                <strong>The Infinite Jobs</strong> explains the kinds of human work that should
+                remain sacred, useful, and worth preserving.
+              </li>
+              <li>
+                <strong>Magnum Opus Guide</strong> turns those commitments into a blueprint for
+                continuity, stewardship, and open legacy.
+              </li>
             </ol>
             <p>
-              If someone wants to understand the heart of this project before the marketplace, archive, or governance
-              layers, send them here.
+              If someone wants to understand the heart of this project before the marketplace,
+              archive, or governance layers, send them here.
             </p>
           </aside>
         </header>
@@ -59,7 +66,12 @@ export default function BooksPage() {
               </div>
 
               <div className="books-page__actions">
-                <a className="books-page__button books-page__button--primary" href={book.manuscriptPath} target="_blank" rel="noreferrer">
+                <a
+                  className="books-page__button books-page__button--primary"
+                  href={book.manuscriptPath}
+                  target="_blank"
+                  rel="noreferrer"
+                >
                   Open manuscript
                 </a>
                 <Link className="books-page__button" to={book.archiveCta}>
@@ -75,8 +87,9 @@ export default function BooksPage() {
             <p className="pill">What the books stand for</p>
             <h2>Truth first. Work with soul. Build what can last.</h2>
             <p>
-              Read these books as the moral and practical spine of the site. They reject empty churn, false prestige,
-              and disposable systems in favor of work that serves people, honors origin, and remains legible over time.
+              Read these books as the moral and practical spine of the site. They reject empty
+              churn, false prestige, and disposable systems in favor of work that serves people,
+              honors origin, and remains legible over time.
             </p>
           </div>
         </section>
@@ -86,8 +99,8 @@ export default function BooksPage() {
             <p className="pill">Published shelf</p>
             <h2>Read the editions that are already live.</h2>
             <p>
-              The public bookshelf collects published books in one clean place so readers can open the web edition or
-              download the formatted files without searching through the editor.
+              The public bookshelf collects published books in one clean place so readers can open
+              the web edition or download the formatted files without searching through the editor.
             </p>
           </div>
           <div className="books-page__actions">
@@ -105,8 +118,9 @@ export default function BooksPage() {
             <p className="pill">After the books</p>
             <h2>Then return to the broader platform.</h2>
             <p>
-              Once a reader understands these two books, the marketplace, supplier portal, archive, and governance
-              surfaces become much easier to read as one cohesive system instead of disconnected tools.
+              Once a reader understands these two books, the marketplace, supplier portal, archive,
+              and governance surfaces become much easier to read as one cohesive system instead of
+              disconnected tools.
             </p>
           </div>
           <div className="books-page__actions">

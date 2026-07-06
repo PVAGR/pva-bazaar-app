@@ -8,7 +8,13 @@ import { SkeletonList } from '../components/SkeletonLoader.jsx';
 
 export default function InquiriesTab({ onNavigateTab }) {
   const [items, setItems] = useState([]);
-  const [summary, setSummary] = useState({ new: 0, contacted: 0, reserved: 0, closed: 0, total: 0 });
+  const [summary, setSummary] = useState({
+    new: 0,
+    contacted: 0,
+    reserved: 0,
+    closed: 0,
+    total: 0,
+  });
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('');
   const [query, setQuery] = useState('');
@@ -16,25 +22,28 @@ export default function InquiriesTab({ onNavigateTab }) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  const loadInquiries = useCallback(async ({ silent = false } = {}) => {
-    if (!silent) setLoading(true);
-    try {
-      const response = await fetchItemInquiries({
-        limit: 100,
-        status: statusFilter || '',
-        q: query || '',
-      });
-      if (!response.ok) {
-        if (!silent) setError(response.error || 'Failed to fetch inquiries');
-        return;
+  const loadInquiries = useCallback(
+    async ({ silent = false } = {}) => {
+      if (!silent) setLoading(true);
+      try {
+        const response = await fetchItemInquiries({
+          limit: 100,
+          status: statusFilter || '',
+          q: query || '',
+        });
+        if (!response.ok) {
+          if (!silent) setError(response.error || 'Failed to fetch inquiries');
+          return;
+        }
+        setItems(Array.isArray(response.items) ? response.items : []);
+        setSummary(response.summary || { new: 0, contacted: 0, reserved: 0, closed: 0, total: 0 });
+        if (!silent) setError('');
+      } finally {
+        if (!silent) setLoading(false);
       }
-      setItems(Array.isArray(response.items) ? response.items : []);
-      setSummary(response.summary || { new: 0, contacted: 0, reserved: 0, closed: 0, total: 0 });
-      if (!silent) setError('');
-    } finally {
-      if (!silent) setLoading(false);
-    }
-  }, [statusFilter, query]);
+    },
+    [statusFilter, query],
+  );
 
   useEffect(() => {
     loadInquiries();
@@ -93,10 +102,22 @@ export default function InquiriesTab({ onNavigateTab }) {
       </div>
 
       <div className="inquiry-kpis">
-        <div className="inquiry-kpi"><span>New</span><strong>{summary.new || 0}</strong></div>
-        <div className="inquiry-kpi"><span>Contacted</span><strong>{summary.contacted || 0}</strong></div>
-        <div className="inquiry-kpi"><span>Reserved</span><strong>{summary.reserved || 0}</strong></div>
-        <div className="inquiry-kpi"><span>Total</span><strong>{summary.total || 0}</strong></div>
+        <div className="inquiry-kpi">
+          <span>New</span>
+          <strong>{summary.new || 0}</strong>
+        </div>
+        <div className="inquiry-kpi">
+          <span>Contacted</span>
+          <strong>{summary.contacted || 0}</strong>
+        </div>
+        <div className="inquiry-kpi">
+          <span>Reserved</span>
+          <strong>{summary.reserved || 0}</strong>
+        </div>
+        <div className="inquiry-kpi">
+          <span>Total</span>
+          <strong>{summary.total || 0}</strong>
+        </div>
       </div>
 
       <div className="inquiry-toolbar">
@@ -137,10 +158,16 @@ export default function InquiriesTab({ onNavigateTab }) {
                 {row.requesterName} ({row.requesterEmail})
                 {row.requesterCompany ? ` - ${row.requesterCompany}` : ''}
               </p>
-              <p className="inquiry-meta">SKU: {row.itemSku || 'n/a'} | Qty: {row.quantityRequested} | {row.requestType}</p>
+              <p className="inquiry-meta">
+                SKU: {row.itemSku || 'n/a'} | Qty: {row.quantityRequested} | {row.requestType}
+              </p>
               <p className="inquiry-message">{row.message}</p>
               <div className="inquiry-links">
-                <a href={`/#/marketplace/${encodeURIComponent(row.itemSlug || row.artifactId || '')}`} target="_blank" rel="noreferrer">
+                <a
+                  href={`/#/marketplace/${encodeURIComponent(row.itemSlug || row.artifactId || '')}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
                   View public item
                 </a>
                 <button type="button" onClick={() => onNavigateTab && onNavigateTab('marketplace')}>
@@ -159,7 +186,11 @@ export default function InquiriesTab({ onNavigateTab }) {
                   <option value="closed">closed</option>
                 </select>
                 {row.reservationApplied ? (
-                  <button type="button" onClick={() => handleRelease(row.id)} disabled={updatingId === row.id}>
+                  <button
+                    type="button"
+                    onClick={() => handleRelease(row.id)}
+                    disabled={updatingId === row.id}
+                  >
                     Release reservation
                   </button>
                 ) : null}
