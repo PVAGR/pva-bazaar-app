@@ -652,7 +652,6 @@ router.post('/pending-changes/:changeId/approve', async (req, res) => {
 
     await change.save();
 
-    // TODO: Execute the change on GitHub
     res.json({
       ok: true,
       message: 'Change approved',

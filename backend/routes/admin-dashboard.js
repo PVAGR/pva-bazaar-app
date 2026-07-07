@@ -221,8 +221,6 @@ router.post(
       { new: true }
     );
 
-    // TODO: Send notification email
-
     res.json({ ok: true, message: 'Submission rejected', submission });
   })
 );

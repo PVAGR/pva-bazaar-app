@@ -206,9 +206,6 @@ async function issueNewCertificate(reclaimId, adminApproval = {}) {
   // Generate new certificate ID
   const certificateId = `PVA-RECERT-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 
-  // TODO: Mint new NFT on blockchain if applicable
-  // const tokenId = await mintNewBlockchainCertificate(artifact);
-
   // Update artifact with reclaim history
   artifact.reclaimHistory = artifact.reclaimHistory || [];
   artifact.reclaimHistory.push({

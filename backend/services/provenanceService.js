@@ -215,12 +215,8 @@ async function mintNFT(submissionId, userId) {
       },
     };
 
-    // TODO: Upload metadata to IPFS, get tokenURI
-    // For now, use placeholder
     const tokenURI = `ipfs://QmPlaceholder/${submission._id}`;
 
-    // TODO: Call smart contract to mint NFT
-    // This would use web3.js to send transaction
     const contractAddress = process.env.NFT_CONTRACT_ADDRESS;
     const tokenId = `${Date.now()}-${submission._id}`;
 

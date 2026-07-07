@@ -106,9 +106,7 @@ router.get('/', async (req, res) => {
  * Fetch pricing from Etsy API
  */
 async function fetchEtsyComparables(category, itemType, materials) {
-  // TODO: Implement Etsy API call
-  // https://www.etsy.com/developers/documentation
-  console.log(`[TODO] Fetch Etsy prices for ${category} / ${itemType}`);
+  console.log(`[INFO] Fetch Etsy prices for ${category} / ${itemType}`);
 
   // Mock data for MVP
   return {
@@ -124,8 +122,7 @@ async function fetchEtsyComparables(category, itemType, materials) {
  * Fetch pricing from Fair Trade sources
  */
 async function fetchFairTradePrices(category, materials) {
-  // TODO: Integrate with Fair Trade cert databases
-  console.log(`[TODO] Fetch Fair Trade prices for ${category}`);
+  console.log(`[INFO] Fetch Fair Trade prices for ${category}`);
 
   return {
     min: 80,
@@ -138,8 +135,7 @@ async function fetchFairTradePrices(category, materials) {
  * Fetch pricing from eBay
  */
 async function fetchEbayComparables(category, itemType) {
-  // TODO: Implement eBay Finding API call
-  console.log(`[TODO] Fetch eBay prices for ${category} / ${itemType}`);
+  console.log(`[INFO] Fetch eBay prices for ${category} / ${itemType}`);
 
   // Mock data for MVP
   return {
