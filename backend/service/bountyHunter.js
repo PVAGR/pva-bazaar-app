@@ -62,7 +62,7 @@ async function scanDework() {
   try {
     const query = `
       query GetBounties($limit: Int!) {
-        tasks(filter: { status: TODO, reward: { gt: { amount: 0 } } }, limit: $limit) {
+        tasks(filter: { status: OPEN, reward: { gt: { amount: 0 } } }, limit: $limit) {
           id
           name
           description
