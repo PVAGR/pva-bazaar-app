@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - DOCX and PDF manuscript upload support in the book publishing workspace, with immediate DOCX extraction in the browser, server-side text extraction, a visible mobile-friendly browse button plus file control, binary-file handling that skips the client text editor until save, and a free file-backed book store fallback when Mongo is unavailable so publishing does not stall.
+- Book publishing now saves locally first and syncs remotely in the background when the hosted backend is unreachable, so mobile publishing finishes immediately instead of hanging on `Publishing...`.
 - Unified the login screen into one normal sign-in form and removed the visible admin/user split from the public auth page.
 - File-backed shared auth store so sign-ups can persist on the backend without a paid external database when Mongo is unavailable.
 - Connection status badges now distinguish live backend, shared auth store, and free local fallback mode.

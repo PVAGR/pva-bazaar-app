@@ -221,21 +221,26 @@ export default function BookPublishingPage() {
     setError('');
     setSuccess('');
     try {
-      const payload = new FormData();
-      if (form.bookId) payload.append('bookId', form.bookId);
-      payload.append('title', form.title);
-      payload.append('subtitle', form.subtitle);
-      payload.append('authorName', form.authorName);
-      payload.append('slug', form.slug);
-      payload.append('description', form.description);
-      payload.append('genre', form.genre);
-      payload.append('audience', form.audience);
-      payload.append('language', form.language);
-      payload.append('manuscriptMarkdown', form.manuscriptMarkdown);
-      if (manuscriptFile) payload.append('manuscriptFile', manuscriptFile);
-      payload.append('publish', publish ? 'true' : 'false');
-      if (frontCoverFile) payload.append('frontCover', frontCoverFile);
-      if (backCoverFile) payload.append('backCover', backCoverFile);
+      const buildPayload = () => {
+        const payload = new FormData();
+        if (form.bookId) payload.append('bookId', form.bookId);
+        payload.append('title', form.title);
+        payload.append('subtitle', form.subtitle);
+        payload.append('authorName', form.authorName);
+        payload.append('slug', form.slug);
+        payload.append('description', form.description);
+        payload.append('genre', form.genre);
+        payload.append('audience', form.audience);
+        payload.append('language', form.language);
+        payload.append('manuscriptMarkdown', form.manuscriptMarkdown);
+        if (manuscriptFile) payload.append('manuscriptFile', manuscriptFile);
+        payload.append('publish', publish ? 'true' : 'false');
+        if (frontCoverFile) payload.append('frontCover', frontCoverFile);
+        if (backCoverFile) payload.append('backCover', backCoverFile);
+        return payload;
+      };
+
+      const payload = buildPayload();
 
       const saveViaLocalVault = async () => {
         const [frontCoverDataUrl, backCoverDataUrl] = await Promise.all([
@@ -283,31 +288,55 @@ export default function BookPublishingPage() {
           setError(localSaved._storageError);
           setSuccess('');
         } else {
-          var storageNote = localSaved._storageWarning ? ' Note: ' + localSaved._storageWarning : '';
+          const storageNote = localSaved._storageWarning ? ` Note: ${localSaved._storageWarning}` : '';
           setSuccess(
-            (publish
-              ? '"' + localSaved.title + '" is published locally on this device and ready to view.'
-              : '"' + localSaved.title + '" was saved locally as a draft.') + storageNote,
+            `${publish
+              ? `"${localSaved.title}" is published locally on this device and ready to view.`
+              : `"${localSaved.title}" was saved locally as a draft.`}${storageNote}`,
           );
         }
+        return localSaved;
       };
 
       try {
-        const data = await saveBookProject(payload);
-        if (!data?.ok || !data?.item) {
-          throw new Error(data?.error || 'Failed to save book');
-        }
+        const localSaved = await saveViaLocalVault();
+        setSaving(false);
 
-        const saved = data.item;
+        void (async () => {
+          try {
+            const remoteData = await saveBookProject(buildPayload());
+            if (!remoteData?.ok || !remoteData?.item) {
+              throw new Error(remoteData?.error || 'Failed to save book');
+            }
+
+            const saved = remoteData.item;
+            setBooks((prev) => {
+              const withoutLocal = prev.filter((book) => {
+                const sameLocalId = String(book.id || '') === String(localSaved.id || '');
+                const sameSlug = String(book.slug || '').trim().toLowerCase() === String(saved.slug || '').trim().toLowerCase();
+                return !(sameLocalId || sameSlug);
+              });
+              return [saved, ...withoutLocal].sort((left, right) => new Date(right.updatedAt || 0) - new Date(left.updatedAt || 0));
+            });
+            setSelectedBookId(saved.id);
+            setSuccess(
+              publish
+                ? `"${saved.title}" is published and synced for web, PDF, and EPUB delivery.`
+                : `"${saved.title}" was saved and synced as a draft.`,
+            );
+          } catch (_remoteErr) {
+            // Keep the local saved copy. Remote sync can retry later when the backend is reachable.
+          }
+        })();
+
+        return;
+      } catch (networkErr) {
+        const localSaved = await saveViaLocalVault();
         setSuccess(
           publish
-            ? `"${saved.title}" is published and ready for web, PDF, and EPUB delivery.`
-            : `"${saved.title}" was saved as a draft.`,
+            ? `"${localSaved.title}" is published locally on this device and ready to view.`
+            : `"${localSaved.title}" was saved locally as a draft.`,
         );
-        await loadBooks();
-        setSelectedBookId(saved.id);
-      } catch (networkErr) {
-        await saveViaLocalVault();
         setError('');
       }
     } catch (err) {
