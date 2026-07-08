@@ -2,13 +2,11 @@ import { ENV } from "../config/env";
 
 const STORAGE_KEY = "api-base-url";
 const PRIMARY_API_BASE = "https://pva-backend-api.vercel.app/api";
-const CUSTOM_DOMAIN_API_BASE = "https://api.pvabazaar.org/api";
 const LEGACY_STALE_API_BASE = `https://pva-bazaar-app-1.on${['ren', 'der.com'].join('')}/api`;
 
 const DEFAULT_CANDIDATES = [
   ENV.API_URL,
   PRIMARY_API_BASE,
-  CUSTOM_DOMAIN_API_BASE,
 ];
 
 export function normalizeApiBaseUrl(rawUrl) {

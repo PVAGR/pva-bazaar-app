@@ -68,7 +68,6 @@ if (sentryDsn) {
           Sentry.browserTracingIntegration({
           tracePropagationTargets: [
               'pvabazaar.org',
-              'api.pvabazaar.org',
               'pva-backend-api.vercel.app',
               /^https:\/\/pvabazaar\.org/,
               /^https:\/\/.*vercel\.app/
