@@ -85,7 +85,7 @@ jobs:
         continue-on-error: true
         env:
           FRONTEND_URL: https://pvabazaar.org
-          BACKEND_URL: https://api.pvabazaar.org
+          BACKEND_URL: https://pva-backend-api.vercel.app
         run: node scripts/verify-live-ready.mjs
 
   build:
@@ -131,7 +131,7 @@ jobs:
       - name: Build frontend
         run: npm run build
         env:
-          VITE_API_URL: ${{ vars.VITE_API_URL || vars.VITE_API_BASE_URL || secrets.VITE_API_URL || 'https://api.pvabazaar.org/api' }}
+          VITE_API_URL: ${{ vars.VITE_API_URL || vars.VITE_API_BASE_URL || secrets.VITE_API_URL || 'https://pva-backend-api.vercel.app/api' }}
           VITE_CLOUDINARY_CLOUD_NAME: ${{ secrets.VITE_CLOUDINARY_CLOUD_NAME || vars.VITE_CLOUDINARY_CLOUD_NAME || '' }}
           VITE_CLOUDINARY_UPLOAD_PRESET: ${{ secrets.VITE_CLOUDINARY_UPLOAD_PRESET || vars.VITE_CLOUDINARY_UPLOAD_PRESET || '' }}
           VITE_SENTRY_RELEASE: ${{ env.RELEASE }}
@@ -259,7 +259,7 @@ jobs:
         if: steps.vercel_secrets.outputs.ready == 'true'
         run: npm run build
         env:
-          VITE_API_URL: ${{ vars.VITE_API_URL || vars.VITE_API_BASE_URL || secrets.VITE_API_URL || 'https://api.pvabazaar.org/api' }}
+          VITE_API_URL: ${{ vars.VITE_API_URL || vars.VITE_API_BASE_URL || secrets.VITE_API_URL || 'https://pva-backend-api.vercel.app/api' }}
           VITE_CLOUDINARY_CLOUD_NAME: ${{ secrets.VITE_CLOUDINARY_CLOUD_NAME || vars.VITE_CLOUDINARY_CLOUD_NAME || '' }}
           VITE_CLOUDINARY_UPLOAD_PRESET: ${{ secrets.VITE_CLOUDINARY_UPLOAD_PRESET || vars.VITE_CLOUDINARY_UPLOAD_PRESET || '' }}
 
@@ -301,7 +301,7 @@ jobs:
       - name: Run strict live readiness gate
         env:
           FRONTEND_URL: https://pvabazaar.org
-          BACKEND_URL: https://api.pvabazaar.org
+          BACKEND_URL: https://pva-backend-api.vercel.app
           STRICT: 'true'
           WAIT_TIMEOUT_MS: '300000'
           WAIT_POLL_MS: '10000'
@@ -310,5 +310,5 @@ jobs:
       - name: Run live route sweep
         env:
           FRONTEND_URL: https://pvabazaar.org
-          BACKEND_URL: https://api.pvabazaar.org
+          BACKEND_URL: https://pva-backend-api.vercel.app
         run: node scripts/verify-frontend-routes-live.mjs

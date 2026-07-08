@@ -66,11 +66,11 @@ if (sentryDsn) {
         environment: import.meta.env.MODE,
         integrations: [
           Sentry.browserTracingIntegration({
-            tracePropagationTargets: [
+          tracePropagationTargets: [
               'pvabazaar.org',
               'api.pvabazaar.org',
+              'pva-backend-api.vercel.app',
               /^https:\/\/pvabazaar\.org/,
-              /^https:\/\/.*\.onrender\.com/,
               /^https:\/\/.*vercel\.app/
             ],
           }),

@@ -2,7 +2,7 @@ const axios = require('axios');
 
 async function main() {
   // Default to production so smoke checks work even when no local backend is running.
-  const backendBaseUrl = (process.env.BACKEND_BASE_URL || 'https://pva-bazaar-app-1.onrender.com').replace(
+  const backendBaseUrl = (process.env.BACKEND_BASE_URL || 'https://pva-backend-api.vercel.app').replace(
     /\/$/,
     '',
   );

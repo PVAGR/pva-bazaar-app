@@ -1,8 +1,6 @@
-name: 🚀 Auto-Deploy to Render.com
+name: 🧱 Legacy Render deploy (manual only)
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 jobs:

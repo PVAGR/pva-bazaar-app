@@ -7,7 +7,7 @@ function trim(value) {
 async function main() {
   const ollamaBaseUrl = trim(process.env.OLLAMA_BASE_URL || process.env.OPENCLAW_OLLAMA_BASE_URL || '');
   const ollamaModel = String(process.env.OLLAMA_MODEL || process.env.OPENCLAW_OLLAMA_MODEL || 'llama3.1').trim();
-  const backendBaseUrl = trim(process.env.OPENCLAW_BACKEND_URL || process.env.BACKEND_BASE_URL || 'https://api.pvabazaar.org');
+  const backendBaseUrl = trim(process.env.OPENCLAW_BACKEND_URL || process.env.BACKEND_BASE_URL || 'https://pva-backend-api.vercel.app');
   const bridgeSecret = String(process.env.OPENCLAW_BRIDGE_SECRET || '').trim();
 
   console.log(`backendBaseUrl=${backendBaseUrl}`);

@@ -416,7 +416,7 @@ function getConfig() {
       (process.env.NODE_ENV === 'production'
         ? (process.env.RENDER_EXTERNAL_URL || '').replace(/\/$/, '') ||
           (process.env.PUBLIC_API_URL || '').replace(/\/api\/?$/i, '').replace(/\/$/, '') ||
-          'https://pva-bazaar-app-1.onrender.com'
+          'https://pva-backend-api.vercel.app'
         : ''),
   )
     .trim()

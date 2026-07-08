@@ -56,7 +56,7 @@ jobs:
 
       - name: Verify decentralized live endpoints
         env:
-          BACKEND_URL: https://api.pvabazaar.org
+          BACKEND_URL: https://pva-backend-api.vercel.app
         run: |
           set -euo pipefail
           for i in {1..18}; do
@@ -87,4 +87,3 @@ jobs:
               auto_merge: false,
               required_contexts: []
             })
-

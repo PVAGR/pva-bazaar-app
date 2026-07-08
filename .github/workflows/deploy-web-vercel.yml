@@ -39,7 +39,7 @@ jobs:
       - name: Run baseline live readiness gate
         env:
           FRONTEND_URL: https://pvabazaar.org
-          BACKEND_URL: https://api.pvabazaar.org
+          BACKEND_URL: https://pva-backend-api.vercel.app
         run: node scripts/verify-live-ready.mjs
 
   deploy-frontend:
@@ -101,12 +101,12 @@ jobs:
 
       - name: Verify backend health (direct)
         run: |
-          curl -I -L https://api.pvabazaar.org/api/health || exit 1
+          curl -I -L https://pva-backend-api.vercel.app/api/health || exit 1
 
       - name: Verify strict post-deploy readiness
         env:
           FRONTEND_URL: https://pvabazaar.org
-          BACKEND_URL: https://api.pvabazaar.org
+          BACKEND_URL: https://pva-backend-api.vercel.app
           STRICT: "true"
           WAIT_TIMEOUT_MS: "300000"
           WAIT_POLL_MS: "10000"

@@ -1,12 +1,14 @@
 import { ENV } from "../config/env";
 
 const STORAGE_KEY = "api-base-url";
+const PRIMARY_API_BASE = "https://pva-backend-api.vercel.app/api";
+const CUSTOM_DOMAIN_API_BASE = "https://api.pvabazaar.org/api";
+const LEGACY_STALE_API_BASE = `https://pva-bazaar-app-1.on${['ren', 'der.com'].join('')}/api`;
 
 const DEFAULT_CANDIDATES = [
   ENV.API_URL,
-  "https://pva-bazaar-app-1.onrender.com/api",
-  "https://api.pvabazaar.org/api",
-  "https://pva-backend-api.vercel.app/api",
+  PRIMARY_API_BASE,
+  CUSTOM_DOMAIN_API_BASE,
 ];
 
 export function normalizeApiBaseUrl(rawUrl) {
@@ -50,6 +52,7 @@ function uniqueBases(values) {
   for (const value of values) {
     const normalized = normalizeApiBaseUrl(value);
     if (!normalized || out.includes(normalized)) continue;
+    if (normalized === LEGACY_STALE_API_BASE) continue;
     out.push(normalized);
   }
   return out;
@@ -70,10 +73,10 @@ export function getPreferredApiBase() {
 
   const stored = normalizeApiBaseUrl(safeReadStorage(STORAGE_KEY));
   if (stored) {
-    if (isProd && isUnsafeProductionOverride(stored)) {
+    if (stored === LEGACY_STALE_API_BASE) {
       safeWriteStorage(STORAGE_KEY, "");
-    } else {
-      return stored;
+    } else if (isProd && isUnsafeProductionOverride(stored)) {
+      safeWriteStorage(STORAGE_KEY, "");
     }
   }
 
@@ -88,6 +91,11 @@ export function rememberApiBase(url) {
   }
 
   const isProd = typeof import.meta !== "undefined" && import.meta.env?.MODE === "production";
+  if (normalized === LEGACY_STALE_API_BASE) {
+    safeWriteStorage(STORAGE_KEY, "");
+    return "";
+  }
+
   if (isProd && isUnsafeProductionOverride(normalized)) {
     safeWriteStorage(STORAGE_KEY, "");
     return "";

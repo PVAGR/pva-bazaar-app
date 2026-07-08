@@ -26,10 +26,10 @@ export default function DeployPage() {
       color: '#00C7B7',
     },
     {
-      platform: 'Render',
-      url: 'https://render.com/deploy?repo=https://github.com/pvabazaar/pva-bazaar',
-      icon: '⚡',
-      color: '#0094FF',
+      platform: 'GitHub Pages',
+      url: 'https://github.com/pvabazaar/pva-bazaar/settings/pages',
+      icon: '◰',
+      color: '#FFFFFF',
     },
   ];
 
