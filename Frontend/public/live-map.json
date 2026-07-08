@@ -28,7 +28,7 @@
     "frontendDelivery": "GitHub Pages + CDN edge cache",
     "frontendPreview": "Vercel preview deployment",
     "primaryBackend": "https://pva-bazaar-app-1.onrender.com",
-    "fallbackBackend": "https://api.pvabazaar.org"
+    "fallbackBackend": "https://pva-bazaar-app-1.onrender.com"
   },
   "edge": {
     "frontendHostnames": ["pvabazaar.org", "www.pvabazaar.org"],
