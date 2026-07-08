@@ -57,7 +57,7 @@ function uniqueBases(values) {
 
 export function getApiBaseCandidates() {
   const stored = normalizeApiBaseUrl(safeReadStorage(STORAGE_KEY));
-  const ordered = stored ? [stored, ...DEFAULT_CANDIDATES] : [...DEFAULT_CANDIDATES];
+  const ordered = stored ? [...DEFAULT_CANDIDATES, stored] : [...DEFAULT_CANDIDATES];
   return uniqueBases(ordered);
 }
 

@@ -240,8 +240,6 @@ export default function BookPublishingPage() {
         return payload;
       };
 
-      const payload = buildPayload();
-
       const saveViaLocalVault = async () => {
         const [frontCoverDataUrl, backCoverDataUrl] = await Promise.all([
           frontCoverFile ? fileToDataUrl(frontCoverFile) : Promise.resolve(''),
@@ -299,33 +297,40 @@ export default function BookPublishingPage() {
       };
 
       try {
-        const localSaved = await saveViaLocalVault();
-        setSaving(false);
+        const remoteData = await saveBookProject(buildPayload());
+        if (!remoteData?.ok || !remoteData?.item) {
+          throw new Error(remoteData?.error || 'Failed to save book');
+        }
+
+        const saved = remoteData.item;
+        setBooks((prev) => {
+          const withoutDuplicate = prev.filter((book) => {
+            const sameRemoteId = String(book.id || '') === String(saved.id || '');
+            const sameSlug = String(book.slug || '').trim().toLowerCase() === String(saved.slug || '').trim().toLowerCase();
+            return !(sameRemoteId || sameSlug);
+          });
+          return [saved, ...withoutDuplicate].sort((left, right) => new Date(right.updatedAt || 0) - new Date(left.updatedAt || 0));
+        });
+        setSelectedBookId(saved.id);
+        setSuccess(
+          publish
+            ? `"${saved.title}" is published and live for web, PDF, and EPUB delivery.`
+            : `"${saved.title}" was saved as a draft.`,
+        );
 
         void (async () => {
           try {
-            const remoteData = await saveBookProject(buildPayload());
-            if (!remoteData?.ok || !remoteData?.item) {
-              throw new Error(remoteData?.error || 'Failed to save book');
-            }
-
-            const saved = remoteData.item;
+            const localSaved = await saveViaLocalVault();
             setBooks((prev) => {
-              const withoutLocal = prev.filter((book) => {
-                const sameLocalId = String(book.id || '') === String(localSaved.id || '');
-                const sameSlug = String(book.slug || '').trim().toLowerCase() === String(saved.slug || '').trim().toLowerCase();
-                return !(sameLocalId || sameSlug);
+              const withoutRemote = prev.filter((book) => {
+                const sameRemoteId = String(book.id || '') === String(saved.id || '');
+                const sameLocalSlug = String(book.slug || '').trim().toLowerCase() === String(localSaved.slug || '').trim().toLowerCase();
+                return !(sameRemoteId || sameLocalSlug);
               });
-              return [saved, ...withoutLocal].sort((left, right) => new Date(right.updatedAt || 0) - new Date(left.updatedAt || 0));
+              return [saved, ...withoutRemote].sort((left, right) => new Date(right.updatedAt || 0) - new Date(left.updatedAt || 0));
             });
-            setSelectedBookId(saved.id);
-            setSuccess(
-              publish
-                ? `"${saved.title}" is published and synced for web, PDF, and EPUB delivery.`
-                : `"${saved.title}" was saved and synced as a draft.`,
-            );
-          } catch (_remoteErr) {
-            // Keep the local saved copy. Remote sync can retry later when the backend is reachable.
+          } catch (_localBackupErr) {
+            // Keep the online-published copy even if local backup fails.
           }
         })();
 
