@@ -60,6 +60,40 @@ const bookUpload = upload.fields([
   { name: 'manuscriptFile', maxCount: 1 },
 ]);
 
+function authenticateBookPublishing(req, res, next) {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
+
+  if (!token) {
+    return res.status(401).json({ error: 'Missing authentication token' });
+  }
+
+  if (token.startsWith('local.')) {
+    try {
+      const raw = Buffer.from(token.slice(6), 'base64').toString('utf8');
+      const payload = JSON.parse(raw);
+      const userId = String(payload.id || payload.userId || payload.sub || '').trim();
+      if (!userId) {
+        throw new Error('Invalid local session token');
+      }
+
+      req.user = {
+        _id: userId,
+        id: userId,
+        email: String(payload.email || ''),
+        username: String(payload.username || ''),
+        role: 'user',
+        local: true,
+      };
+      return next();
+    } catch (error) {
+      return res.status(401).json({ error: error.message || 'Invalid local session token' });
+    }
+  }
+
+  return authenticateToken(req, res, next);
+}
+
 const BOOK_UPLOAD_DIR = path.join(__dirname, '../uploads/books');
 const CLOUDINARY_ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif']);
 
@@ -396,7 +430,7 @@ function renderNotFoundHtml(message) {
 </html>`;
 }
 
-router.get('/mine', authenticateToken, async (req, res) => {
+router.get('/mine', authenticateBookPublishing, async (req, res) => {
   try {
     const items = await listUserBooks(req.user.id);
 
@@ -452,7 +486,7 @@ router.get('/public', async (req, res) => {
   }
 });
 
-router.post('/', authenticateToken, bookUpload, async (req, res) => {
+router.post('/', authenticateBookPublishing, bookUpload, async (req, res) => {
   try {
     const bookId = sanitizeText(req.body?.bookId || '', 120);
     const title = sanitizeText(req.body?.title || '', 240);
@@ -674,7 +708,7 @@ router.get('/public/:slug/download/epub', async (req, res) => {
   }
 });
 
-router.get('/:bookId', authenticateToken, async (req, res) => {
+router.get('/:bookId', authenticateBookPublishing, async (req, res) => {
   try {
     const book = await loadBookForEdit(req.params.bookId);
     if (!book) return notFound(res);
@@ -687,7 +721,7 @@ router.get('/:bookId', authenticateToken, async (req, res) => {
   }
 });
 
-router.get('/:bookId/view', authenticateToken, async (req, res) => {
+router.get('/:bookId/view', authenticateBookPublishing, async (req, res) => {
   try {
     const book = await loadBookForEdit(req.params.bookId);
     if (!book) return res.status(404).type('html').send(renderNotFoundHtml('Book not found.'));
@@ -703,7 +737,7 @@ router.get('/:bookId/view', authenticateToken, async (req, res) => {
   }
 });
 
-router.get('/:bookId/assets/:assetKey', authenticateToken, async (req, res) => {
+router.get('/:bookId/assets/:assetKey', authenticateBookPublishing, async (req, res) => {
   try {
     const book = await loadBookForEdit(req.params.bookId);
     if (!book) return notFound(res);
@@ -730,7 +764,7 @@ router.get('/:bookId/assets/:assetKey', authenticateToken, async (req, res) => {
   }
 });
 
-router.get('/:bookId/download/pdf', authenticateToken, async (req, res) => {
+router.get('/:bookId/download/pdf', authenticateBookPublishing, async (req, res) => {
   try {
     const book = await loadBookForEdit(req.params.bookId);
     if (!book) return notFound(res);
@@ -748,7 +782,7 @@ router.get('/:bookId/download/pdf', authenticateToken, async (req, res) => {
   }
 });
 
-router.get('/:bookId/download/epub', authenticateToken, async (req, res) => {
+router.get('/:bookId/download/epub', authenticateBookPublishing, async (req, res) => {
   try {
     const book = await loadBookForEdit(req.params.bookId);
     if (!book) return notFound(res);
@@ -766,7 +800,7 @@ router.get('/:bookId/download/epub', authenticateToken, async (req, res) => {
   }
 });
 
-router.delete('/:bookId', authenticateToken, async (req, res) => {
+router.delete('/:bookId', authenticateBookPublishing, async (req, res) => {
   try {
     const book = await loadBookForEdit(req.params.bookId);
     if (!book) return notFound(res);

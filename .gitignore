@@ -46,6 +46,7 @@ Frontend/public/downloads/*.apk
 
 # Local temporary workspace artifacts
 .tmp/
+backend/data/book-projects.json
 
 # Vercel CLI exports and Render bulk-import bundles (secrets)
 .tmp-vercel*/

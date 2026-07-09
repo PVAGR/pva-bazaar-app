@@ -3,7 +3,12 @@ import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import rehypeSanitize from 'rehype-sanitize';
-import { deleteBookProject, fetchMyBookProjects, getApiBase, saveBookProject } from '../lib/api';
+import {
+  deleteBookProject,
+  fetchMyBookProjects,
+  getApiBase,
+  saveBookProject,
+} from '../lib/api';
 import {
   deleteLocalBookProject,
   listLocalBookProjects,
@@ -48,11 +53,49 @@ async function fileToDataUrl(file) {
   });
 }
 
+async function dataUrlToFile(dataUrl, filename, fallbackType = 'application/octet-stream') {
+  if (!dataUrl || typeof dataUrl !== 'string' || !dataUrl.startsWith('data:')) return null;
+  const response = await fetch(dataUrl);
+  const blob = await response.blob();
+  return new File([blob], filename || 'asset', { type: blob.type || fallbackType });
+}
+
 async function extractDocxText(file) {
   if (!file) return '';
   const mammoth = await import('mammoth/mammoth.browser');
   const result = await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() });
   return String(result?.value || '').trim();
+}
+
+async function buildRemotePayloadFromBook(book) {
+  const payload = new FormData();
+  if (book?.id) payload.append('bookId', book.id);
+  payload.append('title', book?.title || '');
+  payload.append('subtitle', book?.subtitle || '');
+  payload.append('authorName', book?.authorName || '');
+  payload.append('slug', book?.slug || '');
+  payload.append('description', book?.description || '');
+  payload.append('genre', book?.genre || 'general');
+  payload.append('audience', book?.audience || 'general');
+  payload.append('language', book?.language || 'en');
+  payload.append('manuscriptMarkdown', book?.manuscriptMarkdown || '');
+  payload.append('publish', book?.status === 'published' ? 'true' : 'false');
+
+  const frontCoverFile = await dataUrlToFile(
+    book?.frontCover?.url || '',
+    book?.frontCover?.originalName || `${book?.slug || 'book'}-front-cover`,
+    book?.frontCover?.mimeType || 'image/png',
+  );
+  const backCoverFile = await dataUrlToFile(
+    book?.backCover?.url || '',
+    book?.backCover?.originalName || `${book?.slug || 'book'}-back-cover`,
+    book?.backCover?.mimeType || 'image/png',
+  );
+
+  if (frontCoverFile) payload.append('frontCover', frontCoverFile);
+  if (backCoverFile) payload.append('backCover', backCoverFile);
+
+  return payload;
 }
 
 export default function BookPublishingPage() {
@@ -72,6 +115,7 @@ export default function BookPublishingPage() {
   const frontCoverInputRef = useRef(null);
   const backCoverInputRef = useRef(null);
   const manuscriptInputRef = useRef(null);
+  const syncInFlightRef = useRef(false);
 
   const selectedBook = useMemo(
     () => books.find((item) => item.id === selectedBookId) || null,
@@ -107,6 +151,65 @@ export default function BookPublishingPage() {
     setManuscriptFileName('');
   }, [selectedBook]);
 
+  async function syncLocalPublishedBooks(remoteBooks = [], localBooks = []) {
+    if (syncInFlightRef.current) return;
+    syncInFlightRef.current = true;
+    try {
+      const remoteSlugs = new Set(
+        (remoteBooks || [])
+          .map((book) => String(book?.slug || '').trim().toLowerCase())
+          .filter(Boolean),
+      );
+      const candidates = (localBooks || []).filter((book) => {
+        const isPublished = String(book?.status || '').toLowerCase() === 'published';
+        const slug = String(book?.slug || '').trim().toLowerCase();
+        return isPublished && slug && !remoteSlugs.has(slug);
+      });
+
+      if (!candidates.length) return;
+
+      let syncedCount = 0;
+      const syncedItems = [];
+      for (const localBook of candidates) {
+        try {
+          const payload = await buildRemotePayloadFromBook(localBook);
+          const data = await saveBookProject(payload);
+          if (data?.ok && data?.item) {
+            syncedCount += 1;
+            syncedItems.push(data.item);
+          }
+        } catch (_err) {
+          // Keep syncing the remaining local books.
+        }
+      }
+
+      if (syncedItems.length) {
+        setBooks((prev) => {
+          const next = [...prev];
+          for (const item of syncedItems) {
+            const key = String(item?.id || item?._id || '').trim();
+            const slug = String(item?.slug || '').trim().toLowerCase();
+            const filtered = next.filter((book) => {
+              const bookKey = String(book?.id || book?._id || '').trim();
+              const bookSlug = String(book?.slug || '').trim().toLowerCase();
+              return bookKey !== key && bookSlug !== slug;
+            });
+            filtered.unshift(item);
+            next.splice(0, next.length, ...filtered);
+          }
+          return next;
+        });
+        setSelectedBookId(String(syncedItems[0]?.id || syncedItems[0]?._id || selectedBookId || ''));
+      }
+
+      if (syncedCount > 0) {
+        setSuccess((prev) => prev || `${syncedCount} local published book${syncedCount === 1 ? '' : 's'} synced online.`);
+      }
+    } finally {
+      syncInFlightRef.current = false;
+    }
+  }
+
   async function loadBooks() {
     setLoading(true);
     setError('');
@@ -130,6 +233,9 @@ export default function BookPublishingPage() {
         setSelectedBookId(items[0].id);
       } else if (!selectedBookId && localItems.length) {
         setSelectedBookId(localItems[0].id);
+      }
+      if (items.length || localItems.length) {
+        void syncLocalPublishedBooks(items, localItems);
       }
     } catch (err) {
       const localItems = listLocalBookProjects();
