@@ -46,7 +46,7 @@ jobs:
       
       - name: Install dependencies
         working-directory: ./backend
-        run: npm install --no-audit --no-fund
+        run: npm install --no-audit --no-fund --legacy-peer-deps
       
       - name: Run ESLint
         working-directory: ./backend
@@ -80,7 +80,7 @@ jobs:
       
       - name: Install dependencies
         working-directory: ./backend
-        run: npm install --no-audit --no-fund
+        run: npm install --no-audit --no-fund --legacy-peer-deps
       
       - name: Run tests
         working-directory: ./backend
@@ -119,7 +119,7 @@ jobs:
       
       - name: Install dependencies
         working-directory: ./backend
-        run: npm install --no-audit --no-fund
+        run: npm install --no-audit --no-fund --legacy-peer-deps
       
       - name: Build backend
         working-directory: ./backend
