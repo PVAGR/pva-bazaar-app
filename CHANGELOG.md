@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Root Vercel API catchall now answers health/version directly and lazily mounts the book publishing/auth/admin routes so the live bundle is less likely to fail during startup.
 - Vercel serverless backend now mounts the book publishing routes directly, so `/api/book-publishing/*` is available in the live backend bundle.
 - Build info no longer hard-depends on `backend/package.json` at runtime, which hardens the Vercel serverless entry against bundle/metadata mismatches.
 - Frontend/public config now defaults to the Vercel backend (`https://pva-backend-api.vercel.app/api`) so GitHub Pages traffic stops preferring Render.
