@@ -85,6 +85,7 @@ app.get('/api/health', async (_req, res) => {
 
 app.use('/api/health-check', require('../routes/health-check'));
 app.use('/api/auth', require('../routes/auth'));
+app.use('/api/book-publishing', require('../routes/bookPublishing'));
 app.use('/api/admin', require('../routes/adminLogin'));
 app.use('/api/admin', require('../routes/admin'));
 app.use('/api/health', require('../routes/health'));

@@ -1,4 +1,10 @@
-const backendPackage = require('../package.json');
+let backendVersion = '1.0.0';
+
+try {
+  backendVersion = require('../package.json')?.version || backendVersion;
+} catch (_err) {
+  // In serverless bundles the backend package metadata may not be included.
+}
 
 function getRawSha() {
   return (
@@ -16,7 +22,7 @@ function getBuildInfo() {
   const shortSha = sha === 'local' ? 'local' : sha.slice(0, 7);
 
   return {
-    version: backendPackage.version || '1.0.0',
+    version: backendVersion,
     sha,
     shortSha,
     deploymentId: process.env.VERCEL_DEPLOYMENT_ID || null,
