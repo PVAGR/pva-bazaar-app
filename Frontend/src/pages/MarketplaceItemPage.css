@@ -177,6 +177,13 @@
   font-size: 0.95rem;
 }
 
+.item-actions-row {
+  margin-top: 0.75rem;
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
 .item-dossier-panel h2 {
   margin: 0;
   font-size: 0.95rem;

@@ -816,6 +816,66 @@ export async function createMarketplaceItem(payload) {
   }
 }
 
+export async function fetchManagedMarketplaceItem(itemId) {
+  if (!itemId) return { ok: false, item: null, error: 'Missing item id' };
+  try {
+    const direct = await apiGet(`/items/${encodeURIComponent(itemId)}`);
+    if (direct && direct.ok && direct.item) {
+      return { ok: true, item: direct.item };
+    }
+  } catch (_err) {
+    // fall through to owner listings
+  }
+
+  try {
+    const mine = await apiGet('/items/mine');
+    if (mine && mine.ok && Array.isArray(mine.items)) {
+      const match = mine.items.find((item) => String(item.id || '') === String(itemId) || String(item.slug || '') === String(itemId));
+      if (match) {
+        return { ok: true, item: match };
+      }
+    }
+  } catch (err) {
+    return { ok: false, item: null, error: err.message };
+  }
+
+  return { ok: false, item: null, error: 'Item not found for management' };
+}
+
+export async function claimMarketplaceItem(itemId, payload = {}) {
+  if (!itemId) return { ok: false, error: 'Missing item id' };
+  try {
+    const response = await apiPost(`/items/${encodeURIComponent(itemId)}/claim`, payload);
+    if (response && response.ok) {
+      return {
+        ok: true,
+        item: response.item || null,
+        message: response.message || 'Claim recorded',
+      };
+    }
+    return { ok: false, error: response?.error || response?.message || 'Failed to claim listing' };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+}
+
+export async function updateMarketplaceItem(itemId, payload = {}) {
+  if (!itemId) return { ok: false, error: 'Missing item id' };
+  try {
+    const response = await apiPut(`/items/${encodeURIComponent(itemId)}/manage`, payload);
+    if (response && response.ok) {
+      return {
+        ok: true,
+        item: response.item || null,
+        message: response.message || 'Listing updated',
+      };
+    }
+    return { ok: false, error: response?.error || response?.message || 'Failed to update listing' };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+}
+
 export async function createMarketplaceInquiry(payload) {
   try {
     const response = await apiPost('/item-inquiries', payload);

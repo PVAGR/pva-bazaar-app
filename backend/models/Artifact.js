@@ -182,6 +182,30 @@ const artifactSchema = new mongoose.Schema({
     },
   },
 
+  // Stewardship layer for perennial listings and transfers
+  stewardship: {
+    currentHolderUserId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true },
+    currentHolderName: { type: String, default: '' },
+    currentHolderRole: {
+      type: String,
+      enum: ['owner', 'seller', 'consignee', 'marketer', 'referrer', 'partner', 'custodian', 'archivist', 'admin'],
+      default: 'owner',
+    },
+    claimCodeHint: { type: String, default: '' },
+    claimReason: { type: String, default: '' },
+    claimedAt: { type: Date },
+    claimHistory: [
+      {
+        userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        userName: { type: String, default: '' },
+        role: { type: String, default: 'owner' },
+        note: { type: String, default: '' },
+        claimedAt: { type: Date, default: Date.now },
+        claimMode: { type: String, default: 'self-service' },
+      },
+    ],
+  },
+
   // Fractionalization for shares
   fractionalization: {
     enabled: { type: Boolean, default: false },
@@ -254,6 +278,8 @@ const artifactSchema = new mongoose.Schema({
 
 // Compound index for pagination
 artifactSchema.index({ createdAt: -1, _id: -1 });
+artifactSchema.index({ creator: 1, createdAt: -1 });
+artifactSchema.index({ 'stewardship.currentHolderUserId': 1, createdAt: -1 });
 // Text index for search endpoints and vector fallback
 artifactSchema.index({
   name: 'text',

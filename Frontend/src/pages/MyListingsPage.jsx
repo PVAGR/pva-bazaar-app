@@ -444,6 +444,7 @@ export default function MyListingsPage() {
 
               <div className="listing-links">
                 <Link to={`/marketplace/${encodeURIComponent(item.slug || item.id)}`}>Open listing</Link>
+                <Link to={`/items/manage/${encodeURIComponent(item.id)}`}>Manage listing</Link>
               </div>
 
               <div className="omni-block">
@@ -462,6 +463,10 @@ export default function MyListingsPage() {
                 <p className="muted">
                   Sold state: {omniStatus[item.id]?.soldState?.isSold ? 'Sold' : 'Available'}
                   {omniStatus[item.id]?.soldState?.soldSource ? ` via ${omniStatus[item.id].soldState.soldSource}` : ''}
+                </p>
+                <p className="muted">
+                  Steward: {item?.stewardship?.currentHolderName || 'unassigned'}
+                  {item?.stewardship?.currentHolderRole ? ` (${item.stewardship.currentHolderRole})` : ''}
                 </p>
 
                 {Array.isArray(omniDrafts[item.id]) ? (

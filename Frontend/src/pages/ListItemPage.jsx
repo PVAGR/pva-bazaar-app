@@ -1,9 +1,17 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import HelpTip from '../components/HelpTip.jsx';
 import PrePublishChecklist from '../components/PrePublishChecklist.jsx';
 import SetupReminder from '../components/SetupReminder.jsx';
-import { apiGet, checkMarketplaceItemProvenance, createMarketplaceItem, retryMarketplaceSyndication } from '../lib/api';
+import {
+  apiGet,
+  checkMarketplaceItemProvenance,
+  claimMarketplaceItem,
+  createMarketplaceItem,
+  fetchManagedMarketplaceItem,
+  retryMarketplaceSyndication,
+  updateMarketplaceItem,
+} from '../lib/api';
 import { getMissingProfileSteps } from '../utils/sellerProfileUtils.js';
 import './ListItemPage.css';
 
@@ -53,17 +61,24 @@ function splitLines(value) {
 
 export default function ListItemPage() {
   const navigate = useNavigate();
+  const { itemId } = useParams();
   const [profile, setProfile] = useState(null);
   const [dismissedReminder, setDismissedReminder] = useState(false);
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [retrying, setRetrying] = useState(false);
+  const [loadingExisting, setLoadingExisting] = useState(Boolean(itemId));
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [createdItemId, setCreatedItemId] = useState('');
   const [provenanceChecking, setProvenanceChecking] = useState(false);
   const [provenanceSignature, setProvenanceSignature] = useState('');
   const [provenanceResult, setProvenanceResult] = useState(null);
+  const [loadedItem, setLoadedItem] = useState(null);
+  const [claimBusy, setClaimBusy] = useState(false);
+  const [claimCode, setClaimCode] = useState('');
+  const [claimRole, setClaimRole] = useState('owner');
+  const [claimNote, setClaimNote] = useState('');
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -101,6 +116,7 @@ export default function ListItemPage() {
     },
   });
   const [syndicationSummary, setSyndicationSummary] = useState(null);
+  const editMode = Boolean(itemId);
 
   useEffect(() => {
     apiGet('/users/profile')
@@ -112,7 +128,81 @@ export default function ListItemPage() {
       });
   }, []);
 
+  useEffect(() => {
+    if (!editMode || !itemId) return undefined;
+    let mounted = true;
+    setLoadingExisting(true);
+    setError('');
+    setSuccess('');
+    fetchManagedMarketplaceItem(itemId).then((result) => {
+      if (!mounted) return;
+      setLoadingExisting(false);
+      if (!result.ok || !result.item) {
+        setError(result.error || 'Listing not found');
+        return;
+      }
+      setLoadedItem(result.item);
+      setCreatedItemId(result.item.id || itemId);
+      hydrateFormFromItem(result.item);
+      setSuccess('Listing loaded. You can steward or update this perennial listing.');
+    });
+    return () => {
+      mounted = false;
+    };
+  }, [editMode, itemId]);
+
   const imagePreviews = useMemo(() => form.images.slice(0, 6), [form.images]);
+  const canManageLoadedItem = Boolean(
+    editMode
+      && loadedItem
+      && profile
+      && (
+        String(loadedItem.creator || '') === String(profile.id || '')
+        || String(loadedItem?.stewardship?.currentHolderUserId || '') === String(profile.id || '')
+        || String(profile?.role || '').toLowerCase() === 'admin'
+      ),
+  );
+
+  function hydrateFormFromItem(item) {
+    if (!item) return;
+    const firstTag = Array.isArray(item.tags) && item.tags.length > 0 ? item.tags[0] : '';
+    setForm({
+      title: item.name || item.title || '',
+      description: item.description || '',
+      category: item.category || '',
+      price: item.priceCents ? (Number(item.priceCents) / 100).toFixed(2) : '',
+      condition: firstTag || 'used',
+      brand: item.artisan || '',
+      measurements: '',
+      materials: Array.isArray(item.materials) ? item.materials.join(', ') : '',
+      knowledgeProfile: {
+        history: item?.knowledgeProfile?.history || '',
+        scientificClassification: item?.knowledgeProfile?.scientificClassification || '',
+        traditionalUses: Array.isArray(item?.knowledgeProfile?.traditionalUses) ? item.knowledgeProfile.traditionalUses.join('\n') : '',
+        modernUses: Array.isArray(item?.knowledgeProfile?.modernUses) ? item.knowledgeProfile.modernUses.join('\n') : '',
+        economicImportance: item?.knowledgeProfile?.economicImportance || '',
+        educationalValue: item?.knowledgeProfile?.educationalValue || '',
+        relatedDisciplines: Array.isArray(item?.knowledgeProfile?.relatedDisciplines) ? item.knowledgeProfile.relatedDisciplines.join('\n') : '',
+        safetyInformation: item?.knowledgeProfile?.safetyInformation || '',
+        importExportNotes: item?.knowledgeProfile?.importExportNotes || '',
+        certifications: Array.isArray(item?.knowledgeProfile?.certifications) ? item.knowledgeProfile.certifications.join('\n') : '',
+        articles: Array.isArray(item?.knowledgeProfile?.articles) ? item.knowledgeProfile.articles.join('\n') : '',
+        researchPapers: Array.isArray(item?.knowledgeProfile?.researchPapers) ? item.knowledgeProfile.researchPapers.join('\n') : '',
+        videos: Array.isArray(item?.knowledgeProfile?.videos) ? item.knowledgeProfile.videos.join('\n') : '',
+        classroomActivities: Array.isArray(item?.knowledgeProfile?.classroomActivities) ? item.knowledgeProfile.classroomActivities.join('\n') : '',
+        universityApplications: Array.isArray(item?.knowledgeProfile?.universityApplications) ? item.knowledgeProfile.universityApplications.join('\n') : '',
+        museumApplications: Array.isArray(item?.knowledgeProfile?.museumApplications) ? item.knowledgeProfile.museumApplications.join('\n') : '',
+        laboratoryApplications: Array.isArray(item?.knowledgeProfile?.laboratoryApplications) ? item.knowledgeProfile.laboratoryApplications.join('\n') : '',
+        industrialApplications: Array.isArray(item?.knowledgeProfile?.industrialApplications) ? item.knowledgeProfile.industrialApplications.join('\n') : '',
+      },
+      images: Array.isArray(item.media) ? item.media.filter(Boolean).slice(0, 6) : [],
+      syndication: {
+        ebay: Array.isArray(item?.syndication?.requestedChannels) ? item.syndication.requestedChannels.includes('ebay') : false,
+        etsy: Array.isArray(item?.syndication?.requestedChannels) ? item.syndication.requestedChannels.includes('etsy') : false,
+        facebook: Array.isArray(item?.syndication?.requestedChannels) ? item.syndication.requestedChannels.includes('facebook') : false,
+      },
+    });
+  }
 
   function updateField(name, value) {
     setProvenanceResult(null);
@@ -273,7 +363,7 @@ export default function ListItemPage() {
       return;
     }
     setError('');
-    setStep(s => Math.min(4, s + 1));
+    setStep(s => Math.min(5, s + 1));
   }
 
   function goBack() {
@@ -295,19 +385,46 @@ export default function ListItemPage() {
     const payload = buildListingPayload();
     const signature = buildProvenanceSignature(payload);
 
-    if (provenanceSignature !== signature) {
+    if (!editMode && provenanceSignature !== signature) {
       const checkRun = await runProvenanceCheck(payload);
       if (!checkRun.ok || checkRun.blocked) {
         setSubmitting(false);
         return;
       }
-    } else if (provenanceResult?.isDuplicateLikely) {
+    } else if (!editMode && provenanceResult?.isDuplicateLikely) {
       setSubmitting(false);
       setError('Potential duplicate detected by provenance checks. Resolve before submitting.');
       return;
     }
 
-    const res = await createMarketplaceItem(payload);
+    let res;
+    if (editMode) {
+      if (!canManageLoadedItem) {
+        if (!claimCode.trim()) {
+          setSubmitting(false);
+          setError('Enter the claim code before stewarding an existing listing.');
+          return;
+        }
+        setClaimBusy(true);
+        const claimResult = await claimMarketplaceItem(itemId, {
+          claimCode: claimCode.trim(),
+          role: claimRole,
+          note: claimNote.trim(),
+          claimantName: profile?.name || profile?.email || '',
+        });
+        setClaimBusy(false);
+        if (!claimResult.ok) {
+          setSubmitting(false);
+          setError(claimResult.error || 'Failed to claim listing');
+          return;
+        }
+        setLoadedItem(claimResult.item || loadedItem);
+        setSuccess(claimResult.message || 'Listing stewardship claimed.');
+      }
+      res = await updateMarketplaceItem(itemId, payload);
+    } else {
+      res = await createMarketplaceItem(payload);
+    }
     setSubmitting(false);
 
     if (!res.ok) {
@@ -318,17 +435,24 @@ export default function ListItemPage() {
     if (res.syndication) {
       setSyndicationSummary(res.syndication);
     }
-    setCreatedItemId(res.item?.id || '');
+    setCreatedItemId(res.item?.id || itemId || '');
+    if (res.item) {
+      setLoadedItem(res.item);
+    }
 
     const requiresAttention = Boolean(
       res.syndication?.jobs?.some(job => NEEDS_ATTENTION_STATUSES.has(job.status)),
     );
     if (requiresAttention) {
-      setSuccess('Listing submitted. Review syndication results below and retry channels that need attention.');
+      setSuccess(editMode
+        ? 'Listing updated. Review syndication results below and retry channels that need attention.'
+        : 'Listing submitted. Review syndication results below and retry channels that need attention.');
       return;
     }
 
-    setSuccess('Listing submitted successfully. It is now pending review. Redirecting to marketplace...');
+    setSuccess(editMode
+      ? 'Listing updated successfully. Redirecting to marketplace...'
+      : 'Listing submitted successfully. It is now pending review. Redirecting to marketplace...');
     setTimeout(() => navigate('/marketplace'), 1200);
   }
 
@@ -368,8 +492,12 @@ export default function ListItemPage() {
   return (
     <main className="list-item-page">
         <div className="list-item-header">
-          <h1>Create New Listing</h1>
-          <p>Submit your item for review and publication in the marketplace.</p>
+          <h1>{editMode ? 'Manage Existing Listing' : 'Create New Listing'}</h1>
+          <p>
+            {editMode
+              ? 'Claim a duplicate, continue a perennial item, and update the public listing without starting over.'
+              : 'Submit your item for review and publication in the marketplace.'}
+          </p>
         </div>
 
         <div className="list-progress" aria-label="Listing form progress">
@@ -392,6 +520,56 @@ export default function ListItemPage() {
             onDismiss={() => setDismissedReminder(true)}
           />
         )}
+
+        {loadingExisting && editMode ? <div className="listings-note">Loading existing listing...</div> : null}
+        {editMode && loadedItem ? (
+          <section className="list-form section-card" style={{ marginBottom: '1rem' }}>
+            <h3>Listing stewardship</h3>
+            <p className="hint">
+              {canManageLoadedItem
+                ? 'You already steward this item. Update it below and keep the record perennial.'
+                : 'If this listing belongs to you or was transferred to you, enter the claim code from the prior holder and continue the record.'}
+            </p>
+            <div className="list-form-grid">
+              <div>
+                <label className="list-labelRow">Claim code</label>
+                  <input
+                    value={claimCode}
+                    onChange={(e) => setClaimCode(e.target.value)}
+                    placeholder="Enter stewardship or transfer code"
+                    disabled={canManageLoadedItem || claimBusy || submitting}
+                  />
+              </div>
+              <div>
+                <label className="list-labelRow">Steward role</label>
+                <select value={claimRole} onChange={(e) => setClaimRole(e.target.value)} disabled={canManageLoadedItem || claimBusy || submitting}>
+                  <option value="owner">owner</option>
+                  <option value="seller">seller</option>
+                  <option value="consignee">consignee</option>
+                  <option value="marketer">marketer</option>
+                  <option value="referrer">referrer</option>
+                  <option value="partner">partner</option>
+                  <option value="custodian">custodian</option>
+                  <option value="archivist">archivist</option>
+                </select>
+              </div>
+            </div>
+            <label className="list-labelRow">Claim note</label>
+              <textarea
+                rows={3}
+                value={claimNote}
+                onChange={(e) => setClaimNote(e.target.value)}
+                placeholder="Why are you stewarding this listing?"
+                disabled={canManageLoadedItem || claimBusy || submitting}
+              />
+            {loadedItem?.stewardship?.currentHolderName ? (
+              <p className="hint">
+                Current steward: <strong>{loadedItem.stewardship.currentHolderName}</strong>{' '}
+                {loadedItem.stewardship.currentHolderRole ? `(${loadedItem.stewardship.currentHolderRole})` : ''}
+              </p>
+            ) : null}
+          </section>
+        ) : null}
 
         <PrePublishChecklist form={form} />
 
@@ -746,9 +924,16 @@ export default function ListItemPage() {
                       <div className="provenance-list">
                         {provenanceResult.duplicates.map((row) => (
                           <div key={`${row.itemId}-${row.matchType}`} className="provenance-row">
-                            <strong>{row.title || 'Untitled'}</strong>
-                            <span className="provenance-type">{row.matchType}</span>
-                            <span className="provenance-score">score {row.score}</span>
+                            <div className="provenance-row-main">
+                              <strong>{row.title || 'Untitled'}</strong>
+                              <span className="provenance-type">{row.matchType}</span>
+                              <span className="provenance-score">score {row.score}</span>
+                            </div>
+                            <div className="provenance-row-actions">
+                              <Link className="btn ghost" to={`/items/manage/${encodeURIComponent(row.itemId)}`}>
+                                Claim / Edit listing
+                              </Link>
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -842,8 +1027,10 @@ export default function ListItemPage() {
                 Next
               </button>
             ) : (
-              <button type="submit" className="btn primary" disabled={submitting}>
-                {submitting ? 'Submitting...' : 'Submit Listing'}
+              <button type="submit" className="btn primary" disabled={submitting || claimBusy}>
+                {submitting
+                  ? (editMode ? 'Saving...' : 'Submitting...')
+                  : (editMode ? (canManageLoadedItem ? 'Update Listing' : 'Claim & Update Listing') : 'Submit Listing')}
               </button>
             )}
           </div>

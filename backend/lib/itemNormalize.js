@@ -223,6 +223,24 @@ function toPublicItem(doc) {
       reviewedBy: doc?.provenance?.review?.reviewedBy || '',
     },
   };
+  const stewardship = {
+    currentHolderUserId: doc?.stewardship?.currentHolderUserId ? String(doc.stewardship.currentHolderUserId) : '',
+    currentHolderName: doc?.stewardship?.currentHolderName || '',
+    currentHolderRole: doc?.stewardship?.currentHolderRole || 'owner',
+    claimCodeHint: doc?.stewardship?.claimCodeHint || '',
+    claimReason: doc?.stewardship?.claimReason || '',
+    claimedAt: doc?.stewardship?.claimedAt ? new Date(doc.stewardship.claimedAt).toISOString() : undefined,
+    claimHistory: Array.isArray(doc?.stewardship?.claimHistory)
+      ? doc.stewardship.claimHistory.map((entry) => ({
+          userId: entry?.userId ? String(entry.userId) : '',
+          userName: String(entry?.userName || ''),
+          role: String(entry?.role || 'owner'),
+          note: String(entry?.note || ''),
+          claimedAt: entry?.claimedAt ? new Date(entry.claimedAt).toISOString() : undefined,
+          claimMode: String(entry?.claimMode || 'self-service'),
+        }))
+      : [],
+  };
   const fractionalization = {
     enabled: Boolean(doc?.fractionalization?.enabled),
     totalShares: Number(doc?.fractionalization?.totalShares || 0),
@@ -295,6 +313,7 @@ function toPublicItem(doc) {
 
   return {
     id: doc._id ? String(doc._id) : undefined,
+    creator: doc?.creator ? String(doc.creator) : '',
     slug,
     name,
     category,
@@ -309,6 +328,7 @@ function toPublicItem(doc) {
     syndication,
     omnichannel,
     provenance,
+    stewardship,
     fractionalization,
     ownershipHistory,
     catalog,

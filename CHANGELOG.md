@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Perennial listing stewardship: authenticated users can claim an existing listing with a code, manage their stewarded items, and continue updating a public record instead of creating duplicate entries.
+- Marketplace item pages now expose stewardship details and a direct claim/manage path for logged-in users.
+- The listing form now supports edit mode for existing items, including a stewardship claim flow when a duplicate record should be continued.
 - New institution hub and dedicated pages for universities, schools, museums, governments, research institutes, laboratories, libraries, NGOs, training centers, and TVETs, with procurement and partnership paths.
 - Marketplace item pages now show a full knowledge dossier for each listing, including origin story, scientific classification, uses, disciplines, safety, documentation, and application contexts when available.
 - Listing creation now captures the new knowledge-profile fields so origin history, uses, certifications, and educational context can be stored and surfaced on item pages.

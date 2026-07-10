@@ -68,7 +68,16 @@ function canManageArtifact(req, artifact) {
   if (!artifact) return false;
   if (hasAdminAccess(req)) return true;
   if (!req.user?.id) return false;
-  return String(artifact.creator) === String(req.user.id);
+  if (String(artifact.creator) === String(req.user.id)) return true;
+  if (String(artifact?.stewardship?.currentHolderUserId || '') === String(req.user.id)) return true;
+  return false;
+}
+
+function formatClaimHint(code = '') {
+  const value = String(code || '').trim();
+  if (!value) return '';
+  if (value.length <= 8) return value;
+  return `${value.slice(0, 4)}…${value.slice(-4)}`;
 }
 
 function signFeedPayload(payload) {
@@ -309,7 +318,12 @@ router.get('/', async (req, res) => {
 // GET /api/items/:slugOrId
 router.get('/mine', authenticateToken, async (req, res) => {
   try {
-    const docs = await Artifact.find({ creator: req.user.id })
+    const docs = await Artifact.find({
+      $or: [
+        { creator: req.user.id },
+        { 'stewardship.currentHolderUserId': req.user.id },
+      ],
+    })
       .sort({ createdAt: -1, _id: -1 })
       .limit(200)
       .exec();
@@ -320,6 +334,211 @@ router.get('/mine', authenticateToken, async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// POST /api/items/:id/claim - claim stewardship over an existing listing
+router.post('/:id/claim', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ ok: false, error: 'Invalid item id' });
+    }
+
+    const artifact = await Artifact.findById(id);
+    if (!artifact) {
+      return res.status(404).json({ ok: false, error: 'Item not found' });
+    }
+
+    const claimCode = String(req.body?.claimCode || '').trim();
+    const claimRole = String(req.body?.role || req.body?.claimRole || 'owner').trim().toLowerCase();
+    const claimNote = String(req.body?.note || '').trim();
+    const claimantName = String(req.body?.claimantName || req.user?.name || req.user?.email || 'PVA steward').trim();
+    const currentHolderId = String(artifact?.stewardship?.currentHolderUserId || '');
+    const userId = String(req.user.id);
+    const ownsCurrentListing = String(artifact.creator) === userId || currentHolderId === userId;
+    const claimMatches = [
+      artifact.authenticationCode,
+      artifact?.provenance?.uniqueCode,
+    ].some((value) => String(value || '').trim() && String(value || '').trim() === claimCode);
+
+    if (!ownsCurrentListing && !claimMatches && !hasAdminAccess(req)) {
+      return res.status(403).json({
+        ok: false,
+        error: 'A valid claim code or current ownership is required to take stewardship over this listing',
+      });
+    }
+
+    artifact.stewardship = {
+      ...(artifact.stewardship || {}),
+      currentHolderUserId: req.user.id,
+      currentHolderName: claimantName,
+      currentHolderRole: claimRole || 'owner',
+      claimCodeHint: formatClaimHint(claimCode || artifact?.authenticationCode || artifact?.provenance?.uniqueCode || ''),
+      claimReason: claimNote,
+      claimedAt: new Date(),
+      claimHistory: [
+        ...(Array.isArray(artifact?.stewardship?.claimHistory) ? artifact.stewardship.claimHistory : []),
+        {
+          userId: req.user.id,
+          userName: claimantName,
+          role: claimRole || 'owner',
+          note: claimNote,
+          claimedAt: new Date(),
+          claimMode: ownsCurrentListing ? 'continuation' : 'code-claim',
+        },
+      ],
+    };
+
+    artifact.ownershipHistory = Array.isArray(artifact.ownershipHistory) ? artifact.ownershipHistory : [];
+    artifact.ownershipHistory.push({
+      owner: claimantName,
+      date: new Date(),
+      transactionHash: claimCode ? `claim:${crypto.createHash('sha256').update(claimCode).digest('hex').slice(0, 24)}` : '',
+    });
+
+    artifact.provenance = artifact.provenance || {};
+    artifact.provenance.ownershipTimeline = Array.isArray(artifact.provenance.ownershipTimeline)
+      ? artifact.provenance.ownershipTimeline
+      : [];
+    artifact.provenance.ownershipTimeline.push({
+      ownerType: claimRole || 'owner',
+      ownerRef: String(req.user.id || ''),
+      acquiredAt: new Date(),
+      transferType: ownsCurrentListing ? 'stewardship-continuation' : 'stewardship-claim',
+      txHash: claimCode ? `claim:${crypto.createHash('sha256').update(claimCode).digest('hex').slice(0, 24)}` : '',
+      platform: 'pva-bazaar',
+    });
+    artifact.provenance.review = {
+      ...(artifact.provenance.review || {}),
+      reviewNotes: claimNote || artifact?.provenance?.review?.reviewNotes || '',
+      reviewedAt: new Date(),
+      reviewedBy: String(req.user?.email || req.user?.name || req.user?.id || 'user'),
+    };
+
+    await artifact.save();
+
+    dispatchToOpenClaw(createArtifactEvent('updated', artifact, null, {
+      route: 'items',
+      actor: ownsCurrentListing ? 'steward' : 'claim',
+    }));
+
+    return res.json({
+      ok: true,
+      item: toPublicItem(artifact),
+      message: ownsCurrentListing
+        ? 'Listing stewardship refreshed for your account'
+        : 'Listing stewardship claimed successfully',
+    });
+  } catch (err) {
+    return res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// PUT /api/items/:id/manage - owner/steward update path for perennial listings
+router.put('/:id/manage', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ ok: false, error: 'Invalid item id' });
+    }
+
+    const artifact = await Artifact.findById(id);
+    if (!artifact) {
+      return res.status(404).json({ ok: false, error: 'Item not found' });
+    }
+    if (!canManageArtifact(req, artifact)) {
+      return res.status(403).json({ ok: false, error: 'Forbidden' });
+    }
+
+    const input = normalizeItemInput(req.body || {});
+    const currentSlug = String(artifact.slug || '').trim();
+    const nextSlug = String(req.body?.slug || input.slug || currentSlug).trim();
+    const currentStatus = artifact.status || 'published';
+
+    artifact.name = input.name || artifact.name;
+    artifact.title = input.title || artifact.title;
+    artifact.description = input.description || artifact.description;
+    artifact.price = Number.isFinite(Number(input.price)) ? Number(input.price) : artifact.price;
+    artifact.salePrice = Number.isFinite(Number(input.salePrice)) ? Number(input.salePrice) : artifact.salePrice;
+    artifact.category = input.category || artifact.category;
+    artifact.imageUrls = Array.isArray(input.imageUrls) ? input.imageUrls : artifact.imageUrls;
+    artifact.materials = Array.isArray(input.materials) ? input.materials : artifact.materials;
+    artifact.artisan = input.artisan || artifact.artisan;
+    artifact.slug = nextSlug || currentSlug;
+    artifact.status = input.status || currentStatus;
+    artifact.tags = Array.isArray(input.tags) ? input.tags : artifact.tags;
+    artifact.sku = String(input.sku || artifact.sku || '').trim();
+    artifact.isUnique = input.isUnique !== undefined ? Boolean(input.isUnique) : artifact.isUnique;
+    artifact.bulkQuantity = Number.isFinite(Number(input.bulkQuantity)) ? Number(input.bulkQuantity) : artifact.bulkQuantity;
+    artifact.availabilityStatus = input.availabilityStatus || artifact.availabilityStatus;
+    artifact.dimensions = input.dimensions || artifact.dimensions;
+    artifact.weight = input.weight || artifact.weight;
+    artifact.origin = input.origin || artifact.origin;
+    artifact.gemProperties = input.gemProperties || artifact.gemProperties;
+    artifact.mediaAssets = input.mediaAssets || artifact.mediaAssets;
+    artifact.knowledgeProfile = input.knowledgeProfile || artifact.knowledgeProfile;
+    artifact.updatedAt = new Date();
+
+    const nextProvenance = buildProvenanceRecord({
+      title: artifact.title,
+      name: artifact.name,
+      description: artifact.description,
+      price: artifact.price,
+      category: artifact.category,
+      materials: artifact.materials,
+      imageUrls: artifact.imageUrls,
+      artisan: artifact.artisan,
+      creator: artifact.creator,
+      network: artifact?.blockchainDetails?.network || 'base',
+      royaltyBps: Number(artifact?.provenance?.royalty?.bps || 1000),
+      royaltyWallet: artifact?.provenance?.royalty?.beneficiaryWallet || '',
+      artisanWallet: artifact?.payoutInfo?.artisanWallet || '',
+      classification: artifact?.provenance?.classification || 'Modern Digital Artifact (2026)',
+      era: artifact?.provenance?.era || 'Web3 Integration Period',
+    });
+
+    artifact.provenance = {
+      ...(artifact.provenance || {}),
+      ...nextProvenance,
+      uniqueCode: artifact?.provenance?.uniqueCode || nextProvenance.uniqueCode,
+      sourceRecordVersion: Number(artifact?.provenance?.sourceRecordVersion || 1) + 1,
+      verificationStatus: 'pending',
+      metadataSnapshot: {
+        ...(artifact?.provenance?.metadataSnapshot || {}),
+        title: artifact.title,
+        name: artifact.name,
+        description: artifact.description,
+        category: artifact.category,
+        materials: Array.isArray(artifact.materials) ? artifact.materials : [],
+        imageUrls: Array.isArray(artifact.imageUrls) ? artifact.imageUrls : [],
+        knowledgeProfile: artifact.knowledgeProfile || {},
+      },
+      documentation: {
+        ...(artifact?.provenance?.documentation || {}),
+        headline: artifact?.provenance?.documentation?.headline || artifact.title || '',
+      },
+      ownershipTimeline: Array.isArray(artifact?.provenance?.ownershipTimeline)
+        ? artifact.provenance.ownershipTimeline
+        : nextProvenance.ownershipTimeline,
+    };
+
+    artifact.provenance.feedPath = `/marketplace/${encodeURIComponent(artifact.slug || String(artifact._id))}`;
+
+    await artifact.save();
+
+    dispatchToOpenClaw(createArtifactEvent('updated', artifact, null, {
+      route: 'items',
+      actor: 'steward',
+    }));
+
+    return res.json({
+      ok: true,
+      item: toPublicItem(artifact),
+      message: 'Listing updated successfully',
+    });
+  } catch (err) {
+    return res.status(500).json({ ok: false, error: err.message });
   }
 });
 

@@ -119,6 +119,7 @@ export default function MarketplaceItemPage() {
   const catalog = item.catalog || {};
   const provenance = item.provenance || {};
   const knowledgeProfile = item.knowledgeProfile || {};
+  const stewardship = item.stewardship || {};
   const documentation = provenance.documentation || {};
   const ownershipTimelineCount = Array.isArray(item.ownershipHistory) ? item.ownershipHistory.length : 0;
   const inquirySubject = encodeURIComponent(`Sample Request: ${catalog.sku || item.id}`);
@@ -286,6 +287,20 @@ export default function MarketplaceItemPage() {
             {Array.isArray(item.tags) && item.tags.map(tag => (
               <span className="item-tag" key={tag}>{tag}</span>
             ))}
+          </div>
+          <div className="item-specs-panel">
+            <h2>Listing stewardship</h2>
+            <div className="item-specs-grid">
+              <div><span>Current steward</span><strong>{stewardship.currentHolderName || 'Unassigned'}</strong></div>
+              <div><span>Role</span><strong>{stewardship.currentHolderRole || 'owner'}</strong></div>
+              <div><span>Claimed at</span><strong>{stewardship.claimedAt ? new Date(stewardship.claimedAt).toLocaleString() : 'Not claimed yet'}</strong></div>
+              <div><span>Claim code hint</span><strong>{stewardship.claimCodeHint || 'Not provided'}</strong></div>
+            </div>
+            <div className="item-actions-row">
+              <Link className="btn ghost" to={`/items/manage/${encodeURIComponent(item.id)}`}>
+                Claim / manage listing
+              </Link>
+            </div>
           </div>
           <p className="item-desc">{item.description}</p>
           <div className="item-specs-panel">
