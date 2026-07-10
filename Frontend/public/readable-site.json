@@ -42,6 +42,42 @@
       "description": "Artifacts, listings, sourcing, and commerce."
     },
     {
+      "name": "Agriculture",
+      "path": "#/marketplace/civilization/agriculture",
+      "url": "https://pvabazaar.org/#/marketplace/civilization/agriculture",
+      "description": "Coffee, tea, spices, herbs, seeds, and medicinal plants."
+    },
+    {
+      "name": "Geology",
+      "path": "#/marketplace/civilization/geology",
+      "url": "https://pvabazaar.org/#/marketplace/civilization/geology",
+      "description": "Minerals, gemstones, fossils, meteorites, and mining knowledge."
+    },
+    {
+      "name": "Materials",
+      "path": "#/marketplace/civilization/materials",
+      "url": "https://pvabazaar.org/#/marketplace/civilization/materials",
+      "description": "Wood, stone, metals, fibers, leather, dyes, pigments, and chemicals."
+    },
+    {
+      "name": "Education",
+      "path": "#/marketplace/civilization/education",
+      "url": "https://pvabazaar.org/#/marketplace/civilization/education",
+      "description": "Educational kits, curricula, laboratory supplies, and museum replicas."
+    },
+    {
+      "name": "Craft",
+      "path": "#/marketplace/civilization/craft",
+      "url": "https://pvabazaar.org/#/marketplace/civilization/craft",
+      "description": "Textiles, ceramics, glass, woodworking, and artisan goods."
+    },
+    {
+      "name": "Trade",
+      "path": "#/marketplace/civilization/trade",
+      "url": "https://pvabazaar.org/#/marketplace/civilization/trade",
+      "description": "Import/export, shipping, sourcing, fulfillment, and partnerships."
+    },
+    {
       "name": "Books",
       "path": "#/books",
       "url": "https://pvabazaar.org/#/books",

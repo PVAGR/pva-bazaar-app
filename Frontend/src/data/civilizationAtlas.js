@@ -1,0 +1,88 @@
+export const CIVILIZATION_PAGES = [
+  {
+    slug: 'agriculture',
+    path: '/marketplace/civilization/agriculture',
+    title: 'Agriculture',
+    kicker: 'Land · harvest · origin',
+    summary: 'Coffee, tea, spices, herbs, seeds, botanicals, and medicinal plants presented through origin, ecology, and trade.',
+    hero: 'Start with the land. Agriculture belongs here because food, farming, and botanical knowledge are the first civilizations we inherit.',
+    searchQuery: 'coffee tea spices herbs seeds botanicals medicinal plants',
+    focus: ['Coffee', 'Tea', 'Spices', 'Herbs', 'Seeds', 'Botany', 'Medicinal Plants'],
+    uses: ['Farm planning', 'Supply sourcing', 'Classroom kits', 'University study', 'Botanical collections'],
+    institutions: ['Universities', 'Schools', 'Libraries', 'Research Institutes', 'Museums'],
+  },
+  {
+    slug: 'geology',
+    path: '/marketplace/civilization/geology',
+    title: 'Geology',
+    kicker: 'Earth · stone · mineral',
+    summary: 'Minerals, gemstones, fossils, meteorites, and mining knowledge organized as scientific and cultural material.',
+    hero: 'The earth leaves records in stone. This page connects geology, mineralogy, mining, and the scientific story of every specimen.',
+    searchQuery: 'gemstone mineral fossil meteorite rock geology',
+    focus: ['Geology', 'Mineralogy', 'Gemstones', 'Fossils', 'Meteorites', 'Mining'],
+    uses: ['Specimen study', 'Museum labels', 'Lapidary reference', 'Science teaching', 'Collection cataloging'],
+    institutions: ['Museums', 'Universities', 'Labs', 'Libraries', 'Collectors'],
+  },
+  {
+    slug: 'materials',
+    path: '/marketplace/civilization/materials',
+    title: 'Materials',
+    kicker: 'Industry · fabrication · supply',
+    summary: 'Wood, stone, metals, fibers, leather, dyes, pigments, and chemicals for builders, makers, and manufacturers.',
+    hero: 'This page is for the matter of civilization: the materials that are shaped into homes, tools, products, and infrastructure.',
+    searchQuery: 'wood stone metal fiber leather dye pigment chemical manufacturing',
+    focus: ['Wood', 'Stone', 'Metals', 'Fibers', 'Leather', 'Natural Dyes', 'Pigments', 'Chemicals'],
+    uses: ['Manufacturing', 'Workshops', 'Prototype sourcing', 'Repair supplies', 'Material science'],
+    institutions: ['Manufacturers', 'Artisans', 'Universities', 'Labs', 'Training Centers'],
+  },
+  {
+    slug: 'education',
+    path: '/marketplace/civilization/education',
+    title: 'Education',
+    kicker: 'Learning · teaching · research',
+    summary: 'Educational kits, specimen boxes, curricula, lab supplies, museum replicas, and teaching resources for every age.',
+    hero: 'Education is a marketplace too. This page exists for the tools teachers, students, museums, and labs need to learn well.',
+    searchQuery: 'education kit specimen lab supply museum replica lesson plan',
+    focus: ['Educational Kits', 'Curriculum', 'Laboratory Supplies', 'Museum Replicas', 'Lesson Plans'],
+    uses: ['Lesson planning', 'STEM teaching', 'Museum education', 'University laboratories', 'School procurement'],
+    institutions: ['Schools', 'Universities', 'Libraries', 'Museums', 'Research Institutes'],
+  },
+  {
+    slug: 'craft',
+    path: '/marketplace/civilization/craft',
+    title: 'Craft',
+    kicker: 'Hand · tradition · skill',
+    summary: 'Textiles, ceramics, glass, woodworking, ethnographic collections, and artisan work presented with care and provenance.',
+    hero: 'Traditional craft keeps memory alive. Use this page to explore handmade work, artisan skill, and culturally grounded production.',
+    searchQuery: 'textile ceramic glass woodworking artisan craft ethnographic',
+    focus: ['Textiles', 'Ceramics', 'Glass', 'Woodworking', 'Ethnographic Collections', 'Artisan Goods'],
+    uses: ['Maker showcases', 'Cultural study', 'Design reference', 'Museum display', 'Trade support'],
+    institutions: ['Artisans', 'Museums', 'Design schools', 'Collectors', 'Cultural organizations'],
+  },
+  {
+    slug: 'trade',
+    path: '/marketplace/civilization/trade',
+    title: 'Trade',
+    kicker: 'Exchange · logistics · partnership',
+    summary: 'Import/export, shipping, institutions, and global sourcing connected into one clear trade surface.',
+    hero: 'Trade is where the whole site comes together: sourcing, logistics, institutions, and the movement of goods across the world.',
+    searchQuery: 'trade logistics import export sourcing shipping',
+    focus: ['Import & Export', 'Global Trade', 'Shipping', 'Sourcing', 'Fulfillment', 'Procurement'],
+    uses: ['Supplier onboarding', 'Institutional purchasing', 'Export planning', 'Logistics coordination', 'Trade partnerships'],
+    institutions: ['Governments', 'NGOs', 'Universities', 'Schools', 'Museums', 'Labs'],
+  },
+];
+
+export const CIVILIZATION_PAGE_LOOKUP = CIVILIZATION_PAGES.reduce((acc, page) => {
+  acc[page.slug] = page;
+  return acc;
+}, {});
+
+export const CIVILIZATION_INSTITUTION_LINKS = [
+  { key: 'universities', title: 'Universities', to: '/civilization-library', note: 'Procurement, research, and study' },
+  { key: 'schools', title: 'Schools', to: '/books', note: 'Classroom kits and lessons' },
+  { key: 'museums', title: 'Museums', to: '/archive', note: 'Collections and provenance' },
+  { key: 'labs', title: 'Laboratories', to: '/marketplace', note: 'Research supplies and specimens' },
+  { key: 'libraries', title: 'Libraries', to: '/archive', note: 'Long memory and reading' },
+  { key: 'trade', title: 'Trade Offices', to: '/creator', note: 'Sourcing and partnerships' },
+];

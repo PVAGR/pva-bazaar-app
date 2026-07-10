@@ -242,14 +242,29 @@
 }
 
 .opening-home__catalogCard {
+  text-decoration: none;
+  color: var(--site-text);
   display: grid;
   gap: 0.45rem;
   padding: 1rem;
   border: 1px solid var(--site-border);
   border-radius: 16px;
   background:
-    linear-gradient(180deg, color-mix(in srgb, var(--site-accent-soft) 16%, transparent), transparent),
-    var(--site-panel-soft);
+  linear-gradient(180deg, color-mix(in srgb, var(--site-accent-soft) 16%, transparent), transparent),
+  var(--site-panel-soft);
+}
+
+.opening-home__catalogCard:hover {
+  transform: translateY(-2px);
+  border-color: var(--site-accent);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+}
+
+.opening-home__catalogCardMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
 }
 
 .opening-home__catalogCard h3 {
@@ -262,6 +277,12 @@
   margin: 0;
   color: var(--site-text);
   line-height: 1.6;
+}
+
+.opening-home__catalogCardLink {
+  color: var(--site-accent-strong);
+  font-weight: 700;
+  font-size: 0.88rem;
 }
 
 .opening-home__institutionGrid {

@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { CIVILIZATION_PAGES, CIVILIZATION_INSTITUTION_LINKS } from '../data/civilizationAtlas.js';
 import './OpeningHomePage.css';
 
 const PRIMARY_CATEGORIES = [
@@ -83,48 +84,6 @@ const CINEMATIC_SCENES = [
     title: 'Ports, cargo, and global exchange',
     desc: 'Import, export, logistics, and sourcing surfaces that connect farmers, collectors, and institutions worldwide.',
   },
-];
-
-const CIVILIZATION_CATEGORIES = [
-  {
-    key: 'agriculture',
-    title: 'Agriculture',
-    desc: 'Coffee, tea, spices, herbs, seeds, botany, and medicinal plants.',
-  },
-  {
-    key: 'earth-sciences',
-    title: 'Earth Sciences',
-    desc: 'Geology, mineralogy, gemstones, fossils, meteorites, mining, and rare natural resources.',
-  },
-  {
-    key: 'materials',
-    title: 'Industrial Materials',
-    desc: 'Wood, stone, metals, fibers, leather, dyes, pigments, and chemicals.',
-  },
-  {
-    key: 'education',
-    title: 'Education',
-    desc: 'Kits, curriculum, laboratory supplies, museum collections, replicas, and classroom tools.',
-  },
-  {
-    key: 'craft',
-    title: 'Traditional Craft',
-    desc: 'Textiles, ceramics, glass, woodworking, ethnographic collections, and artisan goods.',
-  },
-  {
-    key: 'trade',
-    title: 'Trade & Institutions',
-    desc: 'Import/export, global trade, schools, universities, museums, libraries, labs, and NGOs.',
-  },
-];
-
-const INSTITUTION_PAGES = [
-  { key: 'universities', title: 'Universities', to: '/civilization-library', desc: 'Procurement, research, and teaching.' },
-  { key: 'schools', title: 'Schools', to: '/books', desc: 'Lesson materials and student kits.' },
-  { key: 'museums', title: 'Museums', to: '/archive', desc: 'Collections, replicas, and provenance.' },
-  { key: 'research', title: 'Research Institutes', to: '/marketplace', desc: 'Specimens, materials, and references.' },
-  { key: 'libraries', title: 'Libraries', to: '/archive', desc: 'Reading rooms and living knowledge.' },
-  { key: 'labs', title: 'Laboratories', to: '/marketplace', desc: 'Scientific supplies and samples.' },
 ];
 
 export default function OpeningHomePage() {
@@ -215,12 +174,16 @@ export default function OpeningHomePage() {
           </div>
           <Link className="button ghost" to="/marketplace">Browse trade</Link>
         </div>
-        <div className="opening-home__catalogGrid">
-          {CIVILIZATION_CATEGORIES.map((category) => (
-            <article key={category.key} className="opening-home__catalogCard">
+          <div className="opening-home__catalogGrid">
+          {CIVILIZATION_PAGES.map((category) => (
+            <Link key={category.slug} to={category.path} className="opening-home__catalogCard">
+              <div className="opening-home__catalogCardMeta">
+                <span className="pill">{category.kicker}</span>
+                <span className="opening-home__catalogCardLink">Open category →</span>
+              </div>
               <h3>{category.title}</h3>
-              <p>{category.desc}</p>
-            </article>
+              <p>{category.summary}</p>
+            </Link>
           ))}
         </div>
       </section>
@@ -234,10 +197,10 @@ export default function OpeningHomePage() {
           <Link className="button ghost" to="/creator">Partner with us</Link>
         </div>
         <div className="opening-home__institutionGrid">
-          {INSTITUTION_PAGES.map((institution) => (
+          {CIVILIZATION_INSTITUTION_LINKS.map((institution) => (
             <Link key={institution.key} className="opening-home__institutionCard" to={institution.to}>
               <strong>{institution.title}</strong>
-              <span>{institution.desc}</span>
+              <span>{institution.note}</span>
             </Link>
           ))}
         </div>

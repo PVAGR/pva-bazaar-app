@@ -14,6 +14,12 @@ Primary surfaces:
 - Home: https://pvabazaar.org/
 - Archive: https://pvabazaar.org/#/archive
 - Marketplace: https://pvabazaar.org/#/marketplace
+- Agriculture: https://pvabazaar.org/#/marketplace/civilization/agriculture
+- Geology: https://pvabazaar.org/#/marketplace/civilization/geology
+- Materials: https://pvabazaar.org/#/marketplace/civilization/materials
+- Education: https://pvabazaar.org/#/marketplace/civilization/education
+- Craft: https://pvabazaar.org/#/marketplace/civilization/craft
+- Trade: https://pvabazaar.org/#/marketplace/civilization/trade
 - Books: https://pvabazaar.org/#/books
 - Published Books: https://pvabazaar.org/#/books/published
 - Governance: https://pvabazaar.org/#/proposals

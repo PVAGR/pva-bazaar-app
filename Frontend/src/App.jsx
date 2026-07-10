@@ -30,6 +30,7 @@ const GovernanceTreasuryPage = lazy(() => import('./pages/OtherPages.jsx').then(
 const AboutPage = lazy(() => import('./pages/AboutPage.jsx'));
 const AgentPage = lazy(() => import('./pages/AgentPage.jsx'));
 const CivilizationLibraryPage = lazy(() => import('./pages/CivilizationLibraryPage.jsx'));
+const CivilizationCategoryPage = lazy(() => import('./pages/CivilizationCategoryPage.jsx'));
 const CollaborativeLibraryPage = lazy(() => import('./pages/CollaborativeLibraryPage.jsx'));
 const CareerQuizPage = lazy(() => import('./pages/CareerQuizPage.jsx'));
 const MarketplacePage = lazy(() => import('./pages/MarketplacePage.jsx'));
@@ -148,6 +149,7 @@ export default function App() {
         <Route path="/governance/conference" element={<Layout><GovernanceConferencePage /></Layout>} />
         <Route path="/governance/treasury" element={<Layout><GovernanceTreasuryPage /></Layout>} />
         <Route path="/marketplace" element={<Layout><MarketplacePage /></Layout>} />
+        <Route path="/marketplace/civilization/:categorySlug" element={<Layout><CivilizationCategoryPage /></Layout>} />
         <Route path="/marketplace/:slugOrId" element={<Layout><MarketplaceItemPage /></Layout>} />
         <Route path="/showroom" element={<Layout><ShowroomPage /></Layout>} />
         <Route path="/showroom/:slugOrId" element={<Layout><ShowroomItemPage /></Layout>} />
