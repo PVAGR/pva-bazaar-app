@@ -128,6 +128,9 @@ export default function CivilizationCategoryPage() {
             </Link>
           ))}
         </div>
+        <div className="civilization-category__hubCta">
+          <Link className="button ghost" to="/institutions">Open institution hub</Link>
+        </div>
       </section>
 
       <section className="section-card civilization-category__marketPanel">

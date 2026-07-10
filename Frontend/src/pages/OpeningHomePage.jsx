@@ -41,6 +41,7 @@ const PRIMARY_CATEGORIES = [
 const SECONDARY_LINKS = [
   { key: 'governance', to: '/proposals', label: 'Governance & Proposals' },
   { key: 'creator', to: '/creator', label: 'Supplier Portal' },
+  { key: 'institutions', to: '/institutions', label: 'Institution Hub' },
   { key: 'about', to: '/about', label: 'About' },
   { key: 'recovery', to: '/recovery', label: 'Recovery & Install' },
   { key: 'forum', to: '/forum', label: 'Forum' },
@@ -194,7 +195,7 @@ export default function OpeningHomePage() {
             <div className="pill">Institutional partnerships</div>
             <h2 style={{ margin: '0.35rem 0 0' }}>Built for universities, museums, schools, labs, and governments</h2>
           </div>
-          <Link className="button ghost" to="/creator">Partner with us</Link>
+          <Link className="button ghost" to="/institutions">Open institution hub</Link>
         </div>
         <div className="opening-home__institutionGrid">
           {CIVILIZATION_INSTITUTION_LINKS.map((institution) => (

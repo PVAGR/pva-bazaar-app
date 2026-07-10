@@ -79,10 +79,10 @@ export const CIVILIZATION_PAGE_LOOKUP = CIVILIZATION_PAGES.reduce((acc, page) =>
 }, {});
 
 export const CIVILIZATION_INSTITUTION_LINKS = [
-  { key: 'universities', title: 'Universities', to: '/civilization-library', note: 'Procurement, research, and study' },
-  { key: 'schools', title: 'Schools', to: '/books', note: 'Classroom kits and lessons' },
-  { key: 'museums', title: 'Museums', to: '/archive', note: 'Collections and provenance' },
-  { key: 'labs', title: 'Laboratories', to: '/marketplace', note: 'Research supplies and specimens' },
-  { key: 'libraries', title: 'Libraries', to: '/archive', note: 'Long memory and reading' },
-  { key: 'trade', title: 'Trade Offices', to: '/creator', note: 'Sourcing and partnerships' },
+  { key: 'universities', title: 'Universities', to: '/institutions/universities', note: 'Procurement, research, and study' },
+  { key: 'schools', title: 'Schools', to: '/institutions/schools', note: 'Classroom kits and lessons' },
+  { key: 'museums', title: 'Museums', to: '/institutions/museums', note: 'Collections and provenance' },
+  { key: 'labs', title: 'Laboratories', to: '/institutions/laboratories', note: 'Research supplies and specimens' },
+  { key: 'libraries', title: 'Libraries', to: '/institutions/libraries', note: 'Long memory and reading' },
+  { key: 'trade', title: 'Trade Offices', to: '/institutions/government', note: 'Sourcing and partnerships' },
 ];

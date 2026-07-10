@@ -1,0 +1,105 @@
+.institution-page {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 1.2rem;
+  color: var(--site-text);
+  display: grid;
+  gap: 1rem;
+}
+
+.institution-page__hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.95fr);
+  gap: 1rem;
+}
+
+.institution-page__hero h1 {
+  margin: 0.25rem 0 0.55rem;
+  font-size: clamp(2rem, 4vw, 3.4rem);
+}
+
+.institution-page__lead,
+.institution-page__summary {
+  margin: 0;
+  color: var(--site-text-muted);
+  line-height: 1.7;
+}
+
+.institution-page__summary {
+  margin-top: 0.6rem;
+}
+
+.institution-page__actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+.institution-page__panel {
+  border: 1px solid var(--site-border);
+  border-radius: 16px;
+  background: var(--site-panel-soft);
+  padding: 1rem;
+  display: grid;
+  gap: 0.8rem;
+}
+
+.institution-page__label {
+  margin: 0 0 0.4rem;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--site-accent);
+  font-weight: 700;
+}
+
+.institution-page__panel ul {
+  margin: 0;
+  padding-left: 1.1rem;
+  color: var(--site-text-muted);
+  display: grid;
+  gap: 0.35rem;
+}
+
+.institution-page__chipRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.institution-page__chip {
+  border: 1px solid var(--site-border);
+  border-radius: 999px;
+  padding: 0.3rem 0.6rem;
+  background: var(--site-panel);
+  font-size: 0.9rem;
+}
+
+.institution-page__pathGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.8rem;
+}
+
+.institution-page__pathCard {
+  display: grid;
+  gap: 0.35rem;
+  text-decoration: none;
+  color: var(--site-text);
+  border: 1px solid var(--site-border);
+  border-radius: 14px;
+  background: var(--site-panel);
+  padding: 1rem;
+}
+
+.institution-page__pathCard span {
+  color: var(--site-text-muted);
+}
+
+@media (max-width: 760px) {
+  .institution-page__hero {
+    grid-template-columns: 1fr;
+  }
+}
+

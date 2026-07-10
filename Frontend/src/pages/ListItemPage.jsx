@@ -7,7 +7,7 @@ import { apiGet, checkMarketplaceItemProvenance, createMarketplaceItem, retryMar
 import { getMissingProfileSteps } from '../utils/sellerProfileUtils.js';
 import './ListItemPage.css';
 
-const STEPS = ['Basic Info', 'Pricing', 'Images', 'Syndication'];
+const STEPS = ['Basic Info', 'Pricing', 'Story', 'Images', 'Syndication'];
 const SYNDICATION_CHANNELS = ['facebook', 'etsy', 'ebay'];
 const NEEDS_ATTENTION_STATUSES = new Set(['failed', 'manual_required']);
 
@@ -44,6 +44,13 @@ function formatListingSubmissionError(result) {
   return result?.error || 'Failed to create listing';
 }
 
+function splitLines(value) {
+  return String(value || '')
+    .split(/\n|,/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
 export default function ListItemPage() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
@@ -66,6 +73,26 @@ export default function ListItemPage() {
     brand: '',
     measurements: '',
     materials: '',
+    knowledgeProfile: {
+      history: '',
+      scientificClassification: '',
+      traditionalUses: '',
+      modernUses: '',
+      economicImportance: '',
+      educationalValue: '',
+      relatedDisciplines: '',
+      safetyInformation: '',
+      importExportNotes: '',
+      certifications: '',
+      articles: '',
+      researchPapers: '',
+      videos: '',
+      classroomActivities: '',
+      universityApplications: '',
+      museumApplications: '',
+      laboratoryApplications: '',
+      industrialApplications: '',
+    },
     images: [],
     syndication: {
       ebay: false,
@@ -91,6 +118,18 @@ export default function ListItemPage() {
     setProvenanceResult(null);
     setProvenanceSignature('');
     setForm(prev => ({ ...prev, [name]: value }));
+  }
+
+  function updateKnowledgeField(name, value) {
+    setProvenanceResult(null);
+    setProvenanceSignature('');
+    setForm(prev => ({
+      ...prev,
+      knowledgeProfile: {
+        ...prev.knowledgeProfile,
+        [name]: value,
+      },
+    }));
   }
 
   function updateSyndication(platform) {
@@ -150,6 +189,26 @@ export default function ListItemPage() {
         .split(',')
         .map(s => s.trim())
         .filter(Boolean),
+      knowledgeProfile: {
+        history: form.knowledgeProfile.history.trim(),
+        scientificClassification: form.knowledgeProfile.scientificClassification.trim(),
+        traditionalUses: splitLines(form.knowledgeProfile.traditionalUses),
+        modernUses: splitLines(form.knowledgeProfile.modernUses),
+        economicImportance: form.knowledgeProfile.economicImportance.trim(),
+        educationalValue: form.knowledgeProfile.educationalValue.trim(),
+        relatedDisciplines: splitLines(form.knowledgeProfile.relatedDisciplines),
+        safetyInformation: form.knowledgeProfile.safetyInformation.trim(),
+        importExportNotes: form.knowledgeProfile.importExportNotes.trim(),
+        certifications: splitLines(form.knowledgeProfile.certifications),
+        articles: splitLines(form.knowledgeProfile.articles),
+        researchPapers: splitLines(form.knowledgeProfile.researchPapers),
+        videos: splitLines(form.knowledgeProfile.videos),
+        classroomActivities: splitLines(form.knowledgeProfile.classroomActivities),
+        universityApplications: splitLines(form.knowledgeProfile.universityApplications),
+        museumApplications: splitLines(form.knowledgeProfile.museumApplications),
+        laboratoryApplications: splitLines(form.knowledgeProfile.laboratoryApplications),
+        industrialApplications: splitLines(form.knowledgeProfile.industrialApplications),
+      },
       images: form.images,
       syndication: form.syndication,
     };
@@ -163,6 +222,7 @@ export default function ListItemPage() {
       price: payload.price,
       materials: payload.materials,
       images: payload.images,
+      knowledgeProfile: payload.knowledgeProfile,
     });
   }
 
@@ -457,6 +517,163 @@ export default function ListItemPage() {
 
           {step === 3 && (
             <section>
+              <h3>Item story and educational dossier</h3>
+              <p className="hint">
+                Fill these in to make the listing useful for universities, museums, schools, labs, and serious buyers.
+                Blank fields are fine when the information is not known yet.
+              </p>
+
+              <label className="list-labelRow">
+                History
+                <HelpTip
+                  title="History"
+                  body="Where the item comes from, how it was made or found, and anything meaningful about its background."
+                  example="Collected in the Rift Valley from a family-held parcel"
+                />
+              </label>
+              <textarea rows={3} value={form.knowledgeProfile.history} onChange={e => updateKnowledgeField('history', e.target.value)} />
+
+              <label className="list-labelRow">
+                Scientific classification
+                <HelpTip
+                  title="Scientific classification"
+                  body="The scientific or technical category that best describes this item."
+                  example="Beryl; silicate mineral"
+                />
+              </label>
+              <input
+                value={form.knowledgeProfile.scientificClassification}
+                onChange={e => updateKnowledgeField('scientificClassification', e.target.value)}
+              />
+
+              <label className="list-labelRow">
+                Traditional uses
+              </label>
+              <textarea
+                rows={3}
+                placeholder="One use per line"
+                value={form.knowledgeProfile.traditionalUses}
+                onChange={e => updateKnowledgeField('traditionalUses', e.target.value)}
+              />
+
+              <label className="list-labelRow">Modern uses</label>
+              <textarea
+                rows={3}
+                placeholder="One use per line"
+                value={form.knowledgeProfile.modernUses}
+                onChange={e => updateKnowledgeField('modernUses', e.target.value)}
+              />
+
+              <label className="list-labelRow">Economic importance</label>
+              <textarea
+                rows={3}
+                value={form.knowledgeProfile.economicImportance}
+                onChange={e => updateKnowledgeField('economicImportance', e.target.value)}
+              />
+
+              <label className="list-labelRow">Educational value</label>
+              <textarea
+                rows={3}
+                value={form.knowledgeProfile.educationalValue}
+                onChange={e => updateKnowledgeField('educationalValue', e.target.value)}
+              />
+
+              <label className="list-labelRow">Related disciplines</label>
+              <textarea
+                rows={3}
+                placeholder="Geology, chemistry, history..."
+                value={form.knowledgeProfile.relatedDisciplines}
+                onChange={e => updateKnowledgeField('relatedDisciplines', e.target.value)}
+              />
+
+              <label className="list-labelRow">Safety information</label>
+              <textarea
+                rows={3}
+                value={form.knowledgeProfile.safetyInformation}
+                onChange={e => updateKnowledgeField('safetyInformation', e.target.value)}
+              />
+
+              <label className="list-labelRow">Import/export notes</label>
+              <textarea
+                rows={3}
+                value={form.knowledgeProfile.importExportNotes}
+                onChange={e => updateKnowledgeField('importExportNotes', e.target.value)}
+              />
+
+              <label className="list-labelRow">Certifications</label>
+              <textarea
+                rows={3}
+                placeholder="One certification per line"
+                value={form.knowledgeProfile.certifications}
+                onChange={e => updateKnowledgeField('certifications', e.target.value)}
+              />
+
+              <label className="list-labelRow">Articles and research papers</label>
+              <textarea
+                rows={3}
+                placeholder="Paste URLs or citations"
+                value={form.knowledgeProfile.articles}
+                onChange={e => updateKnowledgeField('articles', e.target.value)}
+              />
+              <textarea
+                rows={3}
+                placeholder="Research papers, one per line"
+                value={form.knowledgeProfile.researchPapers}
+                onChange={e => updateKnowledgeField('researchPapers', e.target.value)}
+              />
+
+              <label className="list-labelRow">Videos</label>
+              <textarea
+                rows={3}
+                placeholder="Video URLs, one per line"
+                value={form.knowledgeProfile.videos}
+                onChange={e => updateKnowledgeField('videos', e.target.value)}
+              />
+
+              <label className="list-labelRow">Suggested classroom activities</label>
+              <textarea
+                rows={3}
+                placeholder="One activity per line"
+                value={form.knowledgeProfile.classroomActivities}
+                onChange={e => updateKnowledgeField('classroomActivities', e.target.value)}
+              />
+
+              <label className="list-labelRow">University applications</label>
+              <textarea
+                rows={3}
+                placeholder="One application per line"
+                value={form.knowledgeProfile.universityApplications}
+                onChange={e => updateKnowledgeField('universityApplications', e.target.value)}
+              />
+
+              <label className="list-labelRow">Museum applications</label>
+              <textarea
+                rows={3}
+                placeholder="One application per line"
+                value={form.knowledgeProfile.museumApplications}
+                onChange={e => updateKnowledgeField('museumApplications', e.target.value)}
+              />
+
+              <label className="list-labelRow">Laboratory applications</label>
+              <textarea
+                rows={3}
+                placeholder="One application per line"
+                value={form.knowledgeProfile.laboratoryApplications}
+                onChange={e => updateKnowledgeField('laboratoryApplications', e.target.value)}
+              />
+
+              <label className="list-labelRow">Industrial applications</label>
+              <textarea
+                rows={3}
+                placeholder="One application per line"
+                value={form.knowledgeProfile.industrialApplications}
+                onChange={e => updateKnowledgeField('industrialApplications', e.target.value)}
+              />
+            </section>
+          )}
+
+          {step === 4 && (
+            <section>
               <label className="list-labelRow">
                 Upload Images
                 <HelpTip
@@ -478,7 +695,7 @@ export default function ListItemPage() {
             </section>
           )}
 
-          {step === 4 && (
+          {step === 5 && (
             <section>
               <p className="hint">Choose marketplaces to publish in parallel during submission.</p>
               {SYNDICATION_CHANNELS.map(platform => (
@@ -620,7 +837,7 @@ export default function ListItemPage() {
                 Back
               </button>
             )}
-            {step < 4 ? (
+            {step < 5 ? (
               <button type="button" className="btn primary" onClick={goNext}>
                 Next
               </button>
@@ -634,4 +851,3 @@ export default function ListItemPage() {
     </main>
   );
 }
-

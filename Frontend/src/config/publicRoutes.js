@@ -55,6 +55,17 @@ export const PUBLIC_ROUTES = [
     access: 'public',
   },
   {
+    key: 'institutions',
+    to: '/institutions',
+    navLabel: 'Institutions',
+    title: 'Institution Partnerships',
+    description: 'Universities, schools, museums, governments, labs, libraries, NGOs, training centers, and TVETs.',
+    group: 'atlas',
+    badge: 'Atlas',
+    navPlacement: 'secondary',
+    access: 'public',
+  },
+  {
     key: 'category-agriculture',
     to: '/marketplace/civilization/agriculture',
     navLabel: 'Agriculture',

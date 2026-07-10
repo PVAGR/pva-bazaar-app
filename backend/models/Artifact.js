@@ -19,6 +19,28 @@ const artifactSchema = new mongoose.Schema({
   status: { type: String, enum: ['draft', 'published'], default: 'published' },
   tags: [{ type: String }],
 
+  // Human knowledge and item-story fields
+  knowledgeProfile: {
+    history: { type: String, default: '' },
+    scientificClassification: { type: String, default: '' },
+    traditionalUses: [{ type: String }],
+    modernUses: [{ type: String }],
+    economicImportance: { type: String, default: '' },
+    educationalValue: { type: String, default: '' },
+    relatedDisciplines: [{ type: String }],
+    safetyInformation: { type: String, default: '' },
+    importExportNotes: { type: String, default: '' },
+    certifications: [{ type: String }],
+    articles: [{ type: String }],
+    researchPapers: [{ type: String }],
+    videos: [{ type: String }],
+    classroomActivities: [{ type: String }],
+    universityApplications: [{ type: String }],
+    museumApplications: [{ type: String }],
+    laboratoryApplications: [{ type: String }],
+    industrialApplications: [{ type: String }],
+  },
+
   // B2B showroom metadata
   sku: { type: String, trim: true, index: true, sparse: true },
   isUnique: { type: Boolean, default: true },
@@ -241,6 +263,14 @@ artifactSchema.index({
   tags: 'text',
   materials: 'text',
   artisan: 'text',
+  'knowledgeProfile.history': 'text',
+  'knowledgeProfile.scientificClassification': 'text',
+  'knowledgeProfile.traditionalUses': 'text',
+  'knowledgeProfile.modernUses': 'text',
+  'knowledgeProfile.economicImportance': 'text',
+  'knowledgeProfile.educationalValue': 'text',
+  'knowledgeProfile.relatedDisciplines': 'text',
+  'knowledgeProfile.certifications': 'text',
 });
 artifactSchema.index({ 'provenance.uniqueCode': 1 }, { unique: true, sparse: true });
 artifactSchema.index({ 'provenance.combinedHash': 1 }, { unique: true, sparse: true });

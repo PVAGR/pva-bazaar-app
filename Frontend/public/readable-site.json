@@ -18,6 +18,7 @@
       "sourcing, trade, fulfillment, and educational product operations",
       "book publishing and public bookshelf",
       "civilization categories: agriculture, minerals, research, craft, education",
+      "institution hub for universities, schools, museums, governments, labs, libraries, NGOs, training centers, and TVETs",
       "civic proposals and conference workflow",
       "HeelKawn game hub and repository pulse"
     ]
@@ -40,6 +41,12 @@
       "path": "#/marketplace",
       "url": "https://pvabazaar.org/#/marketplace",
       "description": "Artifacts, listings, sourcing, and commerce."
+    },
+    {
+      "name": "Institutions",
+      "path": "#/institutions",
+      "url": "https://pvabazaar.org/#/institutions",
+      "description": "Institution partnerships for universities, schools, museums, governments, labs, libraries, NGOs, training centers, and TVETs."
     },
     {
       "name": "Agriculture",
@@ -210,5 +217,5 @@
     "Use sitemap.xml for static file URLs under /writings.",
     "Hash routes are the live SPA navigation."
   ],
-  "updatedAt": "2026-06-14T00:00:00Z"
+  "updatedAt": "2026-07-10T00:00:00Z"
 }

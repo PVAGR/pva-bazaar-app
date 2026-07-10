@@ -31,6 +31,8 @@ const AboutPage = lazy(() => import('./pages/AboutPage.jsx'));
 const AgentPage = lazy(() => import('./pages/AgentPage.jsx'));
 const CivilizationLibraryPage = lazy(() => import('./pages/CivilizationLibraryPage.jsx'));
 const CivilizationCategoryPage = lazy(() => import('./pages/CivilizationCategoryPage.jsx'));
+const InstitutionsPage = lazy(() => import('./pages/InstitutionsPage.jsx'));
+const InstitutionPage = lazy(() => import('./pages/InstitutionPage.jsx'));
 const CollaborativeLibraryPage = lazy(() => import('./pages/CollaborativeLibraryPage.jsx'));
 const CareerQuizPage = lazy(() => import('./pages/CareerQuizPage.jsx'));
 const MarketplacePage = lazy(() => import('./pages/MarketplacePage.jsx'));
@@ -135,6 +137,8 @@ export default function App() {
         <Route path="/creator" element={<Layout><CreatorPortalPage /></Layout>} />
         <Route path="/creator/dashboard" element={<RequireUserAuth><Layout><CreatorDashboard /></Layout></RequireUserAuth>} />
         <Route path="/civilization-library" element={<Layout><CivilizationLibraryPage /></Layout>} />
+        <Route path="/institutions" element={<Layout><InstitutionsPage /></Layout>} />
+        <Route path="/institutions/:institutionSlug" element={<Layout><InstitutionPage /></Layout>} />
         <Route path="/civilization-library/editor" element={<RequireUserAuth><Layout><CollaborativeLibraryPage mode="editor" /></Layout></RequireUserAuth>} />
         <Route path="/civilization-library/moderation" element={<RequireUserAuth><Layout><CollaborativeLibraryPage mode="moderation" /></Layout></RequireUserAuth>} />
         <Route path="/civilization-library/article/:id" element={<Layout><CollaborativeLibraryPage mode="viewer" /></Layout>} />

@@ -22,6 +22,28 @@ function formatPrice(priceCents, currency = "USD") {
   }).format(priceCents / 100);
 }
 
+function normalizeList(value) {
+  return Array.isArray(value) ? value.map((entry) => String(entry || '').trim()).filter(Boolean) : [];
+}
+
+function renderInlineList(items, emptyLabel = 'Not supplied yet') {
+  const list = normalizeList(items);
+  if (!list.length) return <span className="item-inline-empty">{emptyLabel}</span>;
+  return (
+    <div className="item-inline-list">
+      {list.map((entry) => (
+        /^https?:\/\//i.test(entry) ? (
+          <a key={entry} className="item-inline-chip item-inline-chip--link" href={entry} target="_blank" rel="noreferrer">
+            {entry}
+          </a>
+        ) : (
+          <span key={entry} className="item-inline-chip">{entry}</span>
+        )
+      ))}
+    </div>
+  );
+}
+
 export default function MarketplaceItemPage() {
   const { slugOrId } = useParams();
   const [item, setItem] = useState(null);
@@ -95,6 +117,10 @@ export default function MarketplaceItemPage() {
   const ogImage = media[0] || PLACEHOLDER;
   const price = formatPrice(item.priceCents, item.currency);
   const catalog = item.catalog || {};
+  const provenance = item.provenance || {};
+  const knowledgeProfile = item.knowledgeProfile || {};
+  const documentation = provenance.documentation || {};
+  const ownershipTimelineCount = Array.isArray(item.ownershipHistory) ? item.ownershipHistory.length : 0;
   const inquirySubject = encodeURIComponent(`Sample Request: ${catalog.sku || item.id}`);
   const inquiryBody = encodeURIComponent(
     `Hello PVA Bazaar,%0D%0A%0D%0AI would like to inquire about this item:%0D%0A` +
@@ -274,6 +300,106 @@ export default function MarketplaceItemPage() {
               <div><span>Dimensions</span><strong>{`${catalog?.dimensions?.length || 0} x ${catalog?.dimensions?.width || 0} x ${catalog?.dimensions?.height || 0} ${catalog?.dimensions?.unit || 'mm'}`}</strong></div>
               <div><span>Weight</span><strong>{`${catalog?.weight?.value || 0} ${catalog?.weight?.unit || 'ct'}`}</strong></div>
             </div>
+          </div>
+          <div className="item-dossier-grid">
+            <article className="item-dossier-panel">
+              <h2>Story and origin</h2>
+              <p>{knowledgeProfile.history || documentation.historicalSignificance || item.lore || item.description}</p>
+              <div className="item-dossier-meta">
+                <div><span>Scientific class</span><strong>{knowledgeProfile.scientificClassification || provenance.classification || 'N/A'}</strong></div>
+                <div><span>Era</span><strong>{provenance.era || 'N/A'}</strong></div>
+                <div><span>Source type</span><strong>{catalog?.origin?.sourceType || 'N/A'}</strong></div>
+                <div><span>Authenticity score</span><strong>{provenance.authenticityScore || 'N/A'}</strong></div>
+              </div>
+            </article>
+
+            <article className="item-dossier-panel">
+              <h2>Uses and disciplines</h2>
+              <div className="item-dossier-block">
+                <h3>Traditional uses</h3>
+                {renderInlineList(knowledgeProfile.traditionalUses, 'No traditional uses added yet')}
+              </div>
+              <div className="item-dossier-block">
+                <h3>Modern uses</h3>
+                {renderInlineList(knowledgeProfile.modernUses, 'No modern uses added yet')}
+              </div>
+              <div className="item-dossier-block">
+                <h3>Related disciplines</h3>
+                {renderInlineList(knowledgeProfile.relatedDisciplines, 'No related disciplines added yet')}
+              </div>
+            </article>
+
+            <article className="item-dossier-panel">
+              <h2>Education and applications</h2>
+              <div className="item-dossier-block">
+                <h3>Educational value</h3>
+                <p>{knowledgeProfile.educationalValue || 'Not supplied yet'}</p>
+              </div>
+              <div className="item-dossier-block">
+                <h3>Classroom activities</h3>
+                {renderInlineList(knowledgeProfile.classroomActivities, 'No classroom activities added yet')}
+              </div>
+              <div className="item-dossier-block">
+                <h3>University applications</h3>
+                {renderInlineList(knowledgeProfile.universityApplications, 'No university applications added yet')}
+              </div>
+              <div className="item-dossier-block">
+                <h3>Museum applications</h3>
+                {renderInlineList(knowledgeProfile.museumApplications, 'No museum applications added yet')}
+              </div>
+              <div className="item-dossier-block">
+                <h3>Laboratory applications</h3>
+                {renderInlineList(knowledgeProfile.laboratoryApplications, 'No laboratory applications added yet')}
+              </div>
+              <div className="item-dossier-block">
+                <h3>Industrial applications</h3>
+                {renderInlineList(knowledgeProfile.industrialApplications, 'No industrial applications added yet')}
+              </div>
+            </article>
+
+            <article className="item-dossier-panel">
+              <h2>Safety and trade</h2>
+              <div className="item-dossier-block">
+                <h3>Safety information</h3>
+                <p>{knowledgeProfile.safetyInformation || 'No safety notes supplied yet'}</p>
+              </div>
+              <div className="item-dossier-block">
+                <h3>Import / export notes</h3>
+                <p>{knowledgeProfile.importExportNotes || 'No import/export notes supplied yet'}</p>
+              </div>
+              <div className="item-dossier-block">
+                <h3>Certifications</h3>
+                {renderInlineList(knowledgeProfile.certifications, 'No certifications supplied yet')}
+              </div>
+              <div className="item-dossier-block">
+                <h3>Economic importance</h3>
+                <p>{knowledgeProfile.economicImportance || 'No economic notes supplied yet'}</p>
+              </div>
+            </article>
+
+            <article className="item-dossier-panel">
+              <h2>Documentation and media</h2>
+              <div className="item-dossier-block">
+                <h3>Videos</h3>
+                {renderInlineList(knowledgeProfile.videos, 'No videos supplied yet')}
+              </div>
+              <div className="item-dossier-block">
+                <h3>Articles</h3>
+                {renderInlineList(knowledgeProfile.articles, 'No articles supplied yet')}
+              </div>
+              <div className="item-dossier-block">
+                <h3>Research papers</h3>
+                {renderInlineList(knowledgeProfile.researchPapers, 'No research papers supplied yet')}
+              </div>
+              <div className="item-dossier-block">
+                <h3>Ownership trail</h3>
+                <p>{provenance.ownershipTimelineCount || ownershipTimelineCount || 0} recorded step(s) in the trail.</p>
+              </div>
+              <div className="item-dossier-block">
+                <h3>Documentation headline</h3>
+                <p>{documentation.headline || 'No headline supplied yet'}</p>
+              </div>
+            </article>
           </div>
           {catalog?.mediaAssets?.videoUrl ? (
             <div className="item-video-block">

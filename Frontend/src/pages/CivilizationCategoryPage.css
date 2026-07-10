@@ -93,6 +93,11 @@
   gap: 0.8rem;
 }
 
+.civilization-category__hubCta {
+  display: flex;
+  justify-content: flex-end;
+}
+
 .civilization-category__institutionCard {
   display: grid;
   gap: 0.3rem;
@@ -204,6 +209,15 @@
   }
 
   .civilization-category__actions .button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .civilization-category__hubCta {
+    justify-content: stretch;
+  }
+
+  .civilization-category__hubCta .button {
     width: 100%;
     justify-content: center;
   }

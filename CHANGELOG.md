@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- New institution hub and dedicated pages for universities, schools, museums, governments, research institutes, laboratories, libraries, NGOs, training centers, and TVETs, with procurement and partnership paths.
+- Marketplace item pages now show a full knowledge dossier for each listing, including origin story, scientific classification, uses, disciplines, safety, documentation, and application contexts when available.
+- Listing creation now captures the new knowledge-profile fields so origin history, uses, certifications, and educational context can be stored and surfaced on item pages.
 - Backend workflow installs now use legacy peer-dependency resolution, which avoids the workspace Storybook/React conflict that was blocking `npm ci` / `npm install` in backend deploy jobs.
 - Root Vercel API catchall now answers health/version directly and lazily mounts the book publishing/auth/admin routes so the live bundle is less likely to fail during startup.
 - Vercel serverless backend now mounts the book publishing routes directly, so `/api/book-publishing/*` is available in the live backend bundle.

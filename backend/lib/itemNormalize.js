@@ -11,6 +11,18 @@ function toArray(input) {
   return input ? [input] : [];
 }
 
+function toStringArray(input) {
+  if (typeof input === 'string') {
+    return input
+      .split(/\n|,/)
+      .map((value) => String(value || '').trim())
+      .filter(Boolean);
+  }
+  return toArray(input)
+    .map((value) => String(value || '').trim())
+    .filter(Boolean);
+}
+
 function normalizeItemInput(body = {}) {
   // Accept legacy and canonical inputs and map to Artifact schema.
   const name = body.name || body.title || '';
@@ -41,6 +53,7 @@ function normalizeItemInput(body = {}) {
   const origin = body.origin || {};
   const gemProperties = body.gemProperties || {};
   const mediaAssets = body.mediaAssets || {};
+  const knowledgeProfile = body.knowledgeProfile || {};
 
   const normalized = {
     name,
@@ -86,6 +99,26 @@ function normalizeItemInput(body = {}) {
       angleImages: toArray(mediaAssets.angleImages),
       macroImages: toArray(mediaAssets.macroImages),
       contextImages: toArray(mediaAssets.contextImages),
+    },
+    knowledgeProfile: {
+      history: String(knowledgeProfile.history || '').trim(),
+      scientificClassification: String(knowledgeProfile.scientificClassification || '').trim(),
+      traditionalUses: toStringArray(knowledgeProfile.traditionalUses),
+      modernUses: toStringArray(knowledgeProfile.modernUses),
+      economicImportance: String(knowledgeProfile.economicImportance || '').trim(),
+      educationalValue: String(knowledgeProfile.educationalValue || '').trim(),
+      relatedDisciplines: toStringArray(knowledgeProfile.relatedDisciplines),
+      safetyInformation: String(knowledgeProfile.safetyInformation || '').trim(),
+      importExportNotes: String(knowledgeProfile.importExportNotes || '').trim(),
+      certifications: toStringArray(knowledgeProfile.certifications),
+      articles: toStringArray(knowledgeProfile.articles),
+      researchPapers: toStringArray(knowledgeProfile.researchPapers),
+      videos: toStringArray(knowledgeProfile.videos),
+      classroomActivities: toStringArray(knowledgeProfile.classroomActivities),
+      universityApplications: toStringArray(knowledgeProfile.universityApplications),
+      museumApplications: toStringArray(knowledgeProfile.museumApplications),
+      laboratoryApplications: toStringArray(knowledgeProfile.laboratoryApplications),
+      industrialApplications: toStringArray(knowledgeProfile.industrialApplications),
     },
   };
   if (body.creator) {
@@ -239,6 +272,26 @@ function toPublicItem(doc) {
       contextImages: toArray(doc?.mediaAssets?.contextImages),
     },
   };
+  const knowledgeProfile = {
+    history: doc?.knowledgeProfile?.history || '',
+    scientificClassification: doc?.knowledgeProfile?.scientificClassification || '',
+    traditionalUses: toStringArray(doc?.knowledgeProfile?.traditionalUses),
+    modernUses: toStringArray(doc?.knowledgeProfile?.modernUses),
+    economicImportance: doc?.knowledgeProfile?.economicImportance || '',
+    educationalValue: doc?.knowledgeProfile?.educationalValue || '',
+    relatedDisciplines: toStringArray(doc?.knowledgeProfile?.relatedDisciplines),
+    safetyInformation: doc?.knowledgeProfile?.safetyInformation || '',
+    importExportNotes: doc?.knowledgeProfile?.importExportNotes || '',
+    certifications: toStringArray(doc?.knowledgeProfile?.certifications),
+    articles: toStringArray(doc?.knowledgeProfile?.articles),
+    researchPapers: toStringArray(doc?.knowledgeProfile?.researchPapers),
+    videos: toStringArray(doc?.knowledgeProfile?.videos),
+    classroomActivities: toStringArray(doc?.knowledgeProfile?.classroomActivities),
+    universityApplications: toStringArray(doc?.knowledgeProfile?.universityApplications),
+    museumApplications: toStringArray(doc?.knowledgeProfile?.museumApplications),
+    laboratoryApplications: toStringArray(doc?.knowledgeProfile?.laboratoryApplications),
+    industrialApplications: toStringArray(doc?.knowledgeProfile?.industrialApplications),
+  };
 
   return {
     id: doc._id ? String(doc._id) : undefined,
@@ -259,6 +312,7 @@ function toPublicItem(doc) {
     fractionalization,
     ownershipHistory,
     catalog,
+    knowledgeProfile,
     createdAt: doc.createdAt ? doc.createdAt.toISOString() : undefined,
     updatedAt: doc.updatedAt ? doc.updatedAt.toISOString() : undefined,
   };

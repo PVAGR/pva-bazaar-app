@@ -16,7 +16,7 @@
 
 .list-progress {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 0.5rem;
   margin-bottom: 1rem;
 }
@@ -52,6 +52,11 @@
   display: flex;
   flex-direction: column;
   gap: 0.8rem;
+}
+
+.list-form section {
+  display: grid;
+  gap: 0.45rem;
 }
 
 .list-form label {
@@ -315,6 +320,10 @@
 }
 
 @media (max-width: 640px) {
+  .list-progress {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .syndication-job-actions {
     flex-direction: column;
     align-items: stretch;
@@ -324,4 +333,3 @@
     grid-template-columns: 1fr;
   }
 }
-

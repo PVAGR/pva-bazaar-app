@@ -11,6 +11,7 @@ const MARKETPLACE_PORTAL_LINKS = [
   { key: 'studio', label: 'Writing Studio', to: '/studio', note: 'Drafts, notes, and publishing' },
   { key: 'recovery', label: 'Recovery', to: '/recovery', note: 'Backups, bundles, continuity' },
   { key: 'showroom', label: 'Showroom', to: '/showroom', note: 'Curated display of featured pieces' },
+  { key: 'institutions', label: 'Institutions', to: '/institutions', note: 'Universities, museums, labs, and partners' },
   { key: 'admin', label: 'Admin', to: '/admin', note: 'Operations and continuity controls' },
 ];
 
@@ -121,6 +122,7 @@ export default function MarketplacePage() {
             <Link to="/recovery" className="marketplace-atlas-link">Recovery</Link>
             <Link to="/showroom" className="marketplace-atlas-link">Showroom</Link>
             <Link to="/creator" className="marketplace-atlas-link">Creator Portal</Link>
+            <Link to="/institutions" className="marketplace-atlas-link">Institutions</Link>
           </div>
         </section>
         <input
