@@ -12,11 +12,12 @@
     "status": "https://pvabazaar.org/status.html"
   },
   "summary": {
-    "type": "personal website + business suite + publishing suite",
+    "type": "personal website + knowledge marketplace + business suite + publishing suite",
     "focus": [
       "personal writings and archive",
-      "sourcing, trade, and fulfillment operations",
+      "sourcing, trade, fulfillment, and educational product operations",
       "book publishing and public bookshelf",
+      "civilization categories: agriculture, minerals, research, craft, education",
       "civic proposals and conference workflow",
       "HeelKawn game hub and repository pulse"
     ]

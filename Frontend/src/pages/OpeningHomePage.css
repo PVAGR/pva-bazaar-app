@@ -7,23 +7,136 @@
 /* ─── Hero ──────────────────────────────────────────────────── */
 .opening-home__hero {
   display: grid;
-  gap: 0.6rem;
+  grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.9fr);
+  gap: 1rem;
+  align-items: stretch;
+  overflow: hidden;
+  position: relative;
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--site-accent-soft) 35%, transparent), transparent 40%),
+    linear-gradient(180deg, color-mix(in srgb, var(--site-panel-soft) 88%, transparent), var(--site-panel-soft));
+}
+
+.opening-home__heroCopy {
+  display: grid;
+  gap: 0.75rem;
 }
 
 .opening-home__heroTitle {
-  margin: 0.35rem 0 0;
+  margin: 0;
   color: var(--site-accent);
   font-family: var(--site-font);
-  font-size: clamp(1.7rem, 3.5vw, 2.5rem);
+  font-size: clamp(2.1rem, 4vw, 3.45rem);
   line-height: 1.1;
   letter-spacing: -0.01em;
 }
 
 .opening-home__heroLead {
   margin: 0;
-  max-width: 68ch;
+  max-width: 70ch;
   color: var(--site-text-muted);
-  font-size: 1.03rem;
+  font-size: 1.04rem;
+  line-height: 1.7;
+}
+
+.opening-home__heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.opening-home__heroPanel {
+  display: grid;
+  gap: 0.85rem;
+  padding: 1rem;
+  border: 1px solid var(--site-border);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--site-accent-soft) 45%, transparent), transparent 55%),
+    var(--site-panel);
+}
+
+.opening-home__scene {
+  display: grid;
+  gap: 0.7rem;
+  min-height: 100%;
+}
+
+.opening-home__scenePill {
+  display: inline-flex;
+  align-self: start;
+  padding: 0.28rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid var(--site-border);
+  color: var(--site-accent-strong);
+  background: color-mix(in srgb, var(--site-accent-soft) 18%, transparent);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+}
+
+.opening-home__scene h2 {
+  margin: 0;
+  color: var(--site-accent);
+  font-family: var(--site-font);
+  font-size: clamp(1.3rem, 2.5vw, 1.85rem);
+  line-height: 1.15;
+}
+
+.opening-home__scene p {
+  margin: 0;
+  color: var(--site-text);
+  line-height: 1.65;
+  font-size: 0.98rem;
+}
+
+.opening-home__sceneStrip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.opening-home__sceneDot {
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 999px;
+  border: 1px solid var(--site-border);
+  background: color-mix(in srgb, var(--site-accent-soft) 25%, transparent);
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+.opening-home__sceneDot.is-active {
+  background: var(--site-accent);
+  border-color: var(--site-accent);
+  transform: scale(1.12);
+}
+
+.opening-home__heroMeta {
+  margin: 0;
+  color: var(--site-text-muted);
+  line-height: 1.55;
+  font-size: 0.92rem;
+}
+
+.opening-home__missionBand {
+  display: grid;
+  grid-template-columns: minmax(0, 0.75fr) minmax(0, 1.25fr);
+  gap: 1rem;
+  align-items: center;
+}
+
+.opening-home__missionBand h2 {
+  margin: 0.35rem 0 0;
+  color: var(--site-accent);
+  font-family: var(--site-font);
+  font-size: clamp(1.25rem, 2vw, 1.8rem);
+}
+
+.opening-home__missionBand p {
+  margin: 0;
+  color: var(--site-text-muted);
   line-height: 1.7;
 }
 
@@ -116,6 +229,75 @@
   gap: 0.75rem;
 }
 
+.opening-home__catalogSection,
+.opening-home__institutionSection {
+  display: grid;
+  gap: 1rem;
+}
+
+.opening-home__catalogGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.opening-home__catalogCard {
+  display: grid;
+  gap: 0.45rem;
+  padding: 1rem;
+  border: 1px solid var(--site-border);
+  border-radius: 16px;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--site-accent-soft) 16%, transparent), transparent),
+    var(--site-panel-soft);
+}
+
+.opening-home__catalogCard h3 {
+  margin: 0;
+  color: var(--site-accent);
+  font-size: 1.02rem;
+}
+
+.opening-home__catalogCard p {
+  margin: 0;
+  color: var(--site-text);
+  line-height: 1.6;
+}
+
+.opening-home__institutionGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.opening-home__institutionCard {
+  display: grid;
+  gap: 0.35rem;
+  padding: 1rem;
+  border: 1px solid var(--site-border);
+  border-radius: 16px;
+  background: var(--site-panel-soft);
+  text-decoration: none;
+  color: var(--site-text);
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.opening-home__institutionCard:hover {
+  transform: translateY(-2px);
+  border-color: var(--site-accent);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+}
+
+.opening-home__institutionCard strong {
+  color: var(--site-accent);
+  font-size: 1rem;
+}
+
+.opening-home__institutionCard span {
+  color: var(--site-text-muted);
+  line-height: 1.55;
+}
+
 .opening-home__secondaryNav {
   display: flex;
   flex-wrap: wrap;
@@ -141,9 +323,16 @@
 
 /* ─── Responsive ────────────────────────────────────────────── */
 @media (max-width: 760px) {
+  .opening-home__hero,
   .opening-home__primaryGrid {
     grid-template-columns: 1fr 1fr;
     gap: 0.75rem;
+  }
+
+  .opening-home__missionBand,
+  .opening-home__catalogGrid,
+  .opening-home__institutionGrid {
+    grid-template-columns: 1fr 1fr;
   }
 
   .opening-home__primaryCard {
@@ -157,14 +346,30 @@
   .opening-home__cardSymbol {
     font-size: 1.6rem;
   }
+
+  .opening-home__heroActions {
+    flex-direction: column;
+  }
+
+  .opening-home__heroActions .button {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 @media (max-width: 520px) {
+  .opening-home__hero,
   .opening-home__primaryGrid {
     grid-template-columns: 1fr;
   }
 
+  .opening-home__missionBand,
+  .opening-home__catalogGrid,
+  .opening-home__institutionGrid {
+    grid-template-columns: 1fr;
+  }
+
   .opening-home__heroTitle {
-    font-size: 1.6rem;
+    font-size: 1.8rem;
   }
 }
