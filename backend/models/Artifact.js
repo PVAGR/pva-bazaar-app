@@ -95,8 +95,8 @@ const artifactSchema = new mongoose.Schema({
     promoterContact: String,
   },
   consignment: {
-    artisanShare: { type: Number, default: 50 },
-    pvaFee: { type: Number, default: 35 },
+    artisanShare: { type: Number, default: 55 },
+    pvaFee: { type: Number, default: 30 },
     promoterShare: { type: Number, default: 15 },
     digitalSignature: String,
     agreed: { type: Boolean, default: false },
@@ -191,6 +191,10 @@ const artifactSchema = new mongoose.Schema({
       enum: ['owner', 'seller', 'consignee', 'marketer', 'referrer', 'partner', 'custodian', 'archivist', 'admin'],
       default: 'owner',
     },
+    accessCode: { type: String, default: '' },
+    accessCodeHash: { type: String, default: '', index: true, sparse: true },
+    accessCodeHint: { type: String, default: '' },
+    accessCodeIssuedAt: { type: Date },
     claimCodeHint: { type: String, default: '' },
     claimReason: { type: String, default: '' },
     claimedAt: { type: Date },
@@ -280,6 +284,7 @@ const artifactSchema = new mongoose.Schema({
 artifactSchema.index({ createdAt: -1, _id: -1 });
 artifactSchema.index({ creator: 1, createdAt: -1 });
 artifactSchema.index({ 'stewardship.currentHolderUserId': 1, createdAt: -1 });
+artifactSchema.index({ 'stewardship.accessCodeHash': 1 }, { sparse: true });
 // Text index for search endpoints and vector fallback
 artifactSchema.index({
   name: 'text',

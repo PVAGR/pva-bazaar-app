@@ -127,8 +127,9 @@ function normalizeItemInput(body = {}) {
   return normalized;
 }
 
-function toPublicItem(doc) {
+function toPublicItem(doc, options = {}) {
   if (!doc) return null;
+  const includePrivateStewardship = Boolean(options?.includePrivateStewardship);
   // Compute canonical fields from Artifact doc
   const name = doc.name || doc.title || '';
   const category = doc.category || '';
@@ -227,7 +228,8 @@ function toPublicItem(doc) {
     currentHolderUserId: doc?.stewardship?.currentHolderUserId ? String(doc.stewardship.currentHolderUserId) : '',
     currentHolderName: doc?.stewardship?.currentHolderName || '',
     currentHolderRole: doc?.stewardship?.currentHolderRole || 'owner',
-    claimCodeHint: doc?.stewardship?.claimCodeHint || '',
+    accessCodeHint: doc?.stewardship?.accessCodeHint || doc?.stewardship?.claimCodeHint || '',
+    claimCodeHint: doc?.stewardship?.claimCodeHint || doc?.stewardship?.accessCodeHint || '',
     claimReason: doc?.stewardship?.claimReason || '',
     claimedAt: doc?.stewardship?.claimedAt ? new Date(doc.stewardship.claimedAt).toISOString() : undefined,
     claimHistory: Array.isArray(doc?.stewardship?.claimHistory)
@@ -241,6 +243,13 @@ function toPublicItem(doc) {
         }))
       : [],
   };
+  if (includePrivateStewardship) {
+    stewardship.accessCode = doc?.stewardship?.accessCode || '';
+    stewardship.accessCodeHash = doc?.stewardship?.accessCodeHash || '';
+    stewardship.accessCodeIssuedAt = doc?.stewardship?.accessCodeIssuedAt
+      ? new Date(doc.stewardship.accessCodeIssuedAt).toISOString()
+      : undefined;
+  }
   const fractionalization = {
     enabled: Boolean(doc?.fractionalization?.enabled),
     totalShares: Number(doc?.fractionalization?.totalShares || 0),

@@ -468,6 +468,20 @@ export default function MyListingsPage() {
                   Steward: {item?.stewardship?.currentHolderName || 'unassigned'}
                   {item?.stewardship?.currentHolderRole ? ` (${item.stewardship.currentHolderRole})` : ''}
                 </p>
+                {(item?.stewardship?.accessCode || item?.stewardship?.accessCodeHint) ? (
+                  <p className="muted">
+                    Access code: <strong>{item?.stewardship?.accessCodeHint || 'saved'}</strong>{' '}
+                    {item?.stewardship?.accessCode ? (
+                      <button
+                        type="button"
+                        className="receipt-copy-btn"
+                        onClick={() => copyReceiptValue(item.id, item.stewardship.accessCode)}
+                      >
+                        {copiedValueByItem[item.id] === item.stewardship.accessCode ? 'Copied' : 'Copy code'}
+                      </button>
+                    ) : null}
+                  </p>
+                ) : null}
 
                 {Array.isArray(omniDrafts[item.id]) ? (
                   <div className="omni-channels-grid">

@@ -29,6 +29,11 @@ const {
   buildReverseImageSnapshot,
 } = require('../service/reverseImageLookupService');
 const { findStaticArtifact, listStaticArtifacts } = require('../lib/staticContent');
+const {
+  ensureItemAccessCode,
+  formatAccessCodeHint,
+  matchesItemAccessCode,
+} = require('../lib/itemAccessCode');
 
 function hasAdminAccess(req) {
   const adminCode = req.headers['x-admin-code'];
@@ -71,13 +76,6 @@ function canManageArtifact(req, artifact) {
   if (String(artifact.creator) === String(req.user.id)) return true;
   if (String(artifact?.stewardship?.currentHolderUserId || '') === String(req.user.id)) return true;
   return false;
-}
-
-function formatClaimHint(code = '') {
-  const value = String(code || '').trim();
-  if (!value) return '';
-  if (value.length <= 8) return value;
-  return `${value.slice(0, 4)}…${value.slice(-4)}`;
 }
 
 function signFeedPayload(payload) {
@@ -330,7 +328,7 @@ router.get('/mine', authenticateToken, async (req, res) => {
 
     res.json({
       ok: true,
-      items: docs.map(toPublicItem),
+      items: docs.map((doc) => toPublicItem(doc, { includePrivateStewardship: true })),
     });
   } catch (err) {
     res.status(500).json({ ok: false, error: err.message });
@@ -350,6 +348,7 @@ router.post('/:id/claim', authenticateToken, async (req, res) => {
       return res.status(404).json({ ok: false, error: 'Item not found' });
     }
 
+    ensureItemAccessCode(artifact);
     const claimCode = String(req.body?.claimCode || '').trim();
     const claimRole = String(req.body?.role || req.body?.claimRole || 'owner').trim().toLowerCase();
     const claimNote = String(req.body?.note || '').trim();
@@ -360,7 +359,8 @@ router.post('/:id/claim', authenticateToken, async (req, res) => {
     const claimMatches = [
       artifact.authenticationCode,
       artifact?.provenance?.uniqueCode,
-    ].some((value) => String(value || '').trim() && String(value || '').trim() === claimCode);
+    ].some((value) => String(value || '').trim() && String(value || '').trim() === claimCode)
+      || matchesItemAccessCode(artifact, claimCode);
 
     if (!ownsCurrentListing && !claimMatches && !hasAdminAccess(req)) {
       return res.status(403).json({
@@ -374,7 +374,11 @@ router.post('/:id/claim', authenticateToken, async (req, res) => {
       currentHolderUserId: req.user.id,
       currentHolderName: claimantName,
       currentHolderRole: claimRole || 'owner',
-      claimCodeHint: formatClaimHint(claimCode || artifact?.authenticationCode || artifact?.provenance?.uniqueCode || ''),
+      accessCode: artifact?.stewardship?.accessCode || '',
+      accessCodeHash: artifact?.stewardship?.accessCodeHash || '',
+      accessCodeHint: artifact?.stewardship?.accessCodeHint || formatAccessCodeHint(claimCode || artifact?.authenticationCode || artifact?.provenance?.uniqueCode || ''),
+      accessCodeIssuedAt: artifact?.stewardship?.accessCodeIssuedAt || undefined,
+      claimCodeHint: artifact?.stewardship?.claimCodeHint || formatAccessCodeHint(claimCode || artifact?.authenticationCode || artifact?.provenance?.uniqueCode || ''),
       claimReason: claimNote,
       claimedAt: new Date(),
       claimHistory: [
@@ -435,8 +439,8 @@ router.post('/:id/claim', authenticateToken, async (req, res) => {
   }
 });
 
-// PUT /api/items/:id/manage - owner/steward update path for perennial listings
-router.put('/:id/manage', authenticateToken, async (req, res) => {
+// GET /api/items/:id/manage - owner/steward private view or QR/access-code entry point
+router.get('/:id/manage', async (req, res) => {
   try {
     const { id } = req.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -447,7 +451,48 @@ router.put('/:id/manage', authenticateToken, async (req, res) => {
     if (!artifact) {
       return res.status(404).json({ ok: false, error: 'Item not found' });
     }
-    if (!canManageArtifact(req, artifact)) {
+
+    const accessCode = String(req.query?.accessCode || req.query?.claimCode || '').trim();
+    const hasCodeAccess = matchesItemAccessCode(artifact, accessCode) || Boolean(hasAdminAccess(req));
+
+    if (!hasCodeAccess) {
+      return res.status(403).json({ ok: false, error: 'A valid access code is required' });
+    }
+
+    ensureItemAccessCode(artifact);
+    artifact.stewardship = {
+      ...(artifact.stewardship || {}),
+      claimCodeHint: artifact?.stewardship?.claimCodeHint || formatAccessCodeHint(artifact?.stewardship?.accessCode || accessCode),
+      accessCodeHint: artifact?.stewardship?.accessCodeHint || formatAccessCodeHint(artifact?.stewardship?.accessCode || accessCode),
+    };
+    await artifact.save();
+
+    return res.json({
+      ok: true,
+      item: toPublicItem(artifact, { includePrivateStewardship: true }),
+    });
+  } catch (err) {
+    return res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// PUT /api/items/:id/manage - owner/steward update path for perennial listings
+router.put('/:id/manage', async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ ok: false, error: 'Invalid item id' });
+    }
+
+    const artifact = await Artifact.findById(id);
+    if (!artifact) {
+      return res.status(404).json({ ok: false, error: 'Item not found' });
+    }
+
+    const accessCode = String(req.body?.accessCode || req.body?.claimCode || '').trim();
+    const canManageByIdentity = canManageArtifact(req, artifact);
+    const canManageByCode = matchesItemAccessCode(artifact, accessCode);
+    if (!canManageByIdentity && !canManageByCode && !hasAdminAccess(req)) {
       return res.status(403).json({ ok: false, error: 'Forbidden' });
     }
 
@@ -478,6 +523,59 @@ router.put('/:id/manage', authenticateToken, async (req, res) => {
     artifact.gemProperties = input.gemProperties || artifact.gemProperties;
     artifact.mediaAssets = input.mediaAssets || artifact.mediaAssets;
     artifact.knowledgeProfile = input.knowledgeProfile || artifact.knowledgeProfile;
+    if (!canManageByIdentity && canManageByCode) {
+      const claimantName = String(req.body?.claimantName || req.body?.stewardName || req.user?.name || req.user?.email || artifact?.stewardship?.currentHolderName || 'PVA steward').trim();
+      const claimRole = String(req.body?.role || req.body?.claimRole || artifact?.stewardship?.currentHolderRole || 'owner').trim().toLowerCase();
+      const claimNote = String(req.body?.note || req.body?.claimNote || '').trim();
+      artifact.stewardship = {
+        ...(artifact.stewardship || {}),
+        currentHolderUserId: req.user?.id || artifact?.stewardship?.currentHolderUserId || '',
+        currentHolderName: claimantName,
+        currentHolderRole: claimRole,
+        accessCode: artifact?.stewardship?.accessCode || '',
+        accessCodeHash: artifact?.stewardship?.accessCodeHash || '',
+        accessCodeHint: artifact?.stewardship?.accessCodeHint || formatAccessCodeHint(accessCode),
+        accessCodeIssuedAt: artifact?.stewardship?.accessCodeIssuedAt || undefined,
+        claimCodeHint: artifact?.stewardship?.claimCodeHint || formatAccessCodeHint(accessCode),
+        claimReason: claimNote,
+        claimedAt: new Date(),
+        claimHistory: [
+          ...(Array.isArray(artifact?.stewardship?.claimHistory) ? artifact.stewardship.claimHistory : []),
+          {
+            userId: String(req.user?.id || ''),
+            userName: claimantName,
+            role: claimRole,
+            note: claimNote,
+            claimedAt: new Date(),
+            claimMode: 'code-access',
+          },
+        ],
+      };
+      artifact.ownershipHistory = Array.isArray(artifact.ownershipHistory) ? artifact.ownershipHistory : [];
+      artifact.ownershipHistory.push({
+        owner: claimantName,
+        date: new Date(),
+        transactionHash: accessCode ? `claim:${crypto.createHash('sha256').update(accessCode).digest('hex').slice(0, 24)}` : '',
+      });
+      artifact.provenance = artifact.provenance || {};
+      artifact.provenance.ownershipTimeline = Array.isArray(artifact.provenance.ownershipTimeline)
+        ? artifact.provenance.ownershipTimeline
+        : [];
+      artifact.provenance.ownershipTimeline.push({
+        ownerType: claimRole || 'owner',
+        ownerRef: String(req.user?.id || claimantName || ''),
+        acquiredAt: new Date(),
+        transferType: 'code-access',
+        txHash: accessCode ? `claim:${crypto.createHash('sha256').update(accessCode).digest('hex').slice(0, 24)}` : '',
+        platform: 'pva-bazaar',
+      });
+      artifact.provenance.review = {
+        ...(artifact.provenance.review || {}),
+        reviewNotes: claimNote || artifact?.provenance?.review?.reviewNotes || '',
+        reviewedAt: new Date(),
+        reviewedBy: String(req.user?.email || req.user?.name || req.user?.id || claimantName || 'user').trim(),
+      };
+    }
     artifact.updatedAt = new Date();
 
     const nextProvenance = buildProvenanceRecord({
@@ -526,15 +624,17 @@ router.put('/:id/manage', authenticateToken, async (req, res) => {
     artifact.provenance.feedPath = `/marketplace/${encodeURIComponent(artifact.slug || String(artifact._id))}`;
 
     await artifact.save();
+    ensureItemAccessCode(artifact);
+    await artifact.save();
 
     dispatchToOpenClaw(createArtifactEvent('updated', artifact, null, {
       route: 'items',
-      actor: 'steward',
+      actor: canManageByIdentity ? 'steward' : 'code-access',
     }));
 
     return res.json({
       ok: true,
-      item: toPublicItem(artifact),
+      item: toPublicItem(artifact, { includePrivateStewardship: true }),
       message: 'Listing updated successfully',
     });
   } catch (err) {
@@ -1048,8 +1148,8 @@ router.post('/register', authenticateToken, async (req, res) => {
 
     // Initialize consignment status
     artifactData.consignment = {
-      artisanShare: 50,
-      pvaFee: 35,
+      artisanShare: 55,
+      pvaFee: 30,
       promoterShare: 15,
       agreed: false,
     };
@@ -1068,6 +1168,7 @@ router.post('/register', authenticateToken, async (req, res) => {
     // Create artifact
     const artifact = new Artifact(artifactData);
     await artifact.save();
+    ensureItemAccessCode(artifact);
 
     artifact.provenance = {
       ...(artifact.provenance || {}),
@@ -1118,7 +1219,7 @@ router.post('/register', authenticateToken, async (req, res) => {
 
     res.status(201).json({
       ok: true,
-      item: toPublicItem(artifact),
+      item: toPublicItem(artifact, { includePrivateStewardship: true }),
       provenance: artifact.provenance,
       reverseImage,
       syndication: syndicationResult,
@@ -1258,6 +1359,7 @@ router.post('/', async (req, res) => {
 
     const artifact = new Artifact(input);
     await artifact.save();
+    ensureItemAccessCode(artifact);
 
     artifact.provenance = {
       ...(artifact.provenance || {}),
@@ -1270,7 +1372,11 @@ router.post('/', async (req, res) => {
       actor: 'admin',
     }));
 
-    res.status(201).json({ ok: true, item: toPublicItem(artifact), reverseImage });
+    res.status(201).json({
+      ok: true,
+      item: toPublicItem(artifact, { includePrivateStewardship: true }),
+      reverseImage,
+    });
   } catch (err) {
     res.status(400).json({ ok: false, error: err.message });
   }
@@ -1347,6 +1453,32 @@ router.put('/:id', async (req, res) => {
     res.json({ ok: true, item: toPublicItem(artifact) });
   } catch (err) {
     res.status(400).json({ ok: false, error: err.message });
+  }
+});
+
+// DELETE /api/items/:id/manage - creator-only delete for the original poster
+router.delete('/:id/manage', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ ok: false, error: 'Invalid item id' });
+    }
+
+    const artifact = await Artifact.findById(id);
+    if (!artifact) return res.status(404).json({ ok: false, error: 'Item not found' });
+    if (String(artifact.creator) !== String(req.user?.id || '')) {
+      return res.status(403).json({ ok: false, error: 'Only the original creator can delete this listing' });
+    }
+
+    await Artifact.findByIdAndDelete(id);
+    dispatchToOpenClaw(createArtifactEvent('deleted', artifact, null, {
+      route: 'items',
+      actor: 'creator',
+    }));
+
+    return res.json({ ok: true, item: toPublicItem(artifact), message: 'Listing deleted successfully' });
+  } catch (err) {
+    return res.status(400).json({ ok: false, error: err.message });
   }
 });
 

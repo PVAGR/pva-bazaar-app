@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import QRCode from 'qrcode';
 import HelpTip from '../components/HelpTip.jsx';
 import PrePublishChecklist from '../components/PrePublishChecklist.jsx';
 import SetupReminder from '../components/SetupReminder.jsx';
@@ -8,6 +9,7 @@ import {
   checkMarketplaceItemProvenance,
   claimMarketplaceItem,
   createMarketplaceItem,
+  deleteMarketplaceItem,
   fetchManagedMarketplaceItem,
   retryMarketplaceSyndication,
   updateMarketplaceItem,
@@ -61,6 +63,7 @@ function splitLines(value) {
 
 export default function ListItemPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { itemId } = useParams();
   const [profile, setProfile] = useState(null);
   const [dismissedReminder, setDismissedReminder] = useState(false);
@@ -79,6 +82,10 @@ export default function ListItemPage() {
   const [claimCode, setClaimCode] = useState('');
   const [claimRole, setClaimRole] = useState('owner');
   const [claimNote, setClaimNote] = useState('');
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+  const [manageAccessCode, setManageAccessCode] = useState('');
+  const [manageQr, setManageQr] = useState('');
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -118,6 +125,10 @@ export default function ListItemPage() {
   const [syndicationSummary, setSyndicationSummary] = useState(null);
   const editMode = Boolean(itemId);
 
+  function getAccessCodeStorageKey(id) {
+    return id ? `pva:item-access-code:${id}` : '';
+  }
+
   useEffect(() => {
     apiGet('/users/profile')
       .then(res => {
@@ -129,12 +140,30 @@ export default function ListItemPage() {
   }, []);
 
   useEffect(() => {
+    const params = new URLSearchParams(location.search || '');
+    const accessCode = String(params.get('accessCode') || params.get('claimCode') || '').trim();
+    const currentStorageKey = getAccessCodeStorageKey(itemId);
+    const storedAccessCode = currentStorageKey && globalThis?.localStorage
+      ? String(globalThis.localStorage.getItem(currentStorageKey) || '').trim()
+      : '';
+    if (accessCode) {
+      setClaimCode(accessCode);
+      setManageAccessCode(accessCode);
+    } else if (storedAccessCode) {
+      setClaimCode(storedAccessCode);
+      setManageAccessCode(storedAccessCode);
+    }
+  }, [itemId, location.search]);
+
+  useEffect(() => {
     if (!editMode || !itemId) return undefined;
     let mounted = true;
     setLoadingExisting(true);
     setError('');
     setSuccess('');
-    fetchManagedMarketplaceItem(itemId).then((result) => {
+    const params = new URLSearchParams(location.search || '');
+    const accessCode = String(params.get('accessCode') || params.get('claimCode') || manageAccessCode || '').trim();
+    fetchManagedMarketplaceItem(itemId, { accessCode }).then((result) => {
       if (!mounted) return;
       setLoadingExisting(false);
       if (!result.ok || !result.item) {
@@ -144,12 +173,19 @@ export default function ListItemPage() {
       setLoadedItem(result.item);
       setCreatedItemId(result.item.id || itemId);
       hydrateFormFromItem(result.item);
+      if (result.item?.stewardship?.accessCode) {
+        setManageAccessCode(result.item.stewardship.accessCode);
+        const currentStorageKey = getAccessCodeStorageKey(result.item.id || itemId);
+        if (currentStorageKey && globalThis?.localStorage) {
+          globalThis.localStorage.setItem(currentStorageKey, result.item.stewardship.accessCode);
+        }
+      }
       setSuccess('Listing loaded. You can steward or update this perennial listing.');
     });
     return () => {
       mounted = false;
     };
-  }, [editMode, itemId]);
+  }, [editMode, itemId, location.search, manageAccessCode]);
 
   const imagePreviews = useMemo(() => form.images.slice(0, 6), [form.images]);
   const canManageLoadedItem = Boolean(
@@ -162,6 +198,44 @@ export default function ListItemPage() {
         || String(profile?.role || '').toLowerCase() === 'admin'
       ),
   );
+
+  const managementUrl = useMemo(() => {
+    if (!editMode || !itemId) return '';
+    const code = String(manageAccessCode || loadedItem?.stewardship?.accessCode || claimCode || '').trim();
+    const base = globalThis?.window?.location?.origin || 'https://pvabazaar.org';
+    const hashUrl = `${base}/#/items/manage/${encodeURIComponent(itemId)}`;
+    return code ? `${hashUrl}?accessCode=${encodeURIComponent(code)}` : hashUrl;
+  }, [editMode, itemId, manageAccessCode, loadedItem?.stewardship?.accessCode, claimCode]);
+
+  useEffect(() => {
+    let mounted = true;
+    if (!managementUrl) {
+      setManageQr('');
+      return undefined;
+    }
+    QRCode.toDataURL(managementUrl, {
+      width: 220,
+      margin: 1,
+      errorCorrectionLevel: 'M',
+      color: {
+        dark: '#123341',
+        light: '#ffffff',
+      },
+    })
+      .then((url) => {
+        if (mounted) {
+          setManageQr(url);
+        }
+      })
+      .catch(() => {
+        if (mounted) {
+          setManageQr('');
+        }
+      });
+    return () => {
+      mounted = false;
+    };
+  }, [managementUrl]);
 
   function hydrateFormFromItem(item) {
     if (!item) return;
@@ -301,7 +375,20 @@ export default function ListItemPage() {
       },
       images: form.images,
       syndication: form.syndication,
+      accessCode: manageAccessCode || claimCode || '',
     };
+  }
+
+  async function copyText(value) {
+    const text = String(value || '').trim();
+    if (!text) return;
+    try {
+      if (globalThis?.navigator?.clipboard?.writeText) {
+        await globalThis.navigator.clipboard.writeText(text);
+      }
+    } catch (_) {
+      // ignore copy failures
+    }
   }
 
   function buildProvenanceSignature(payload) {
@@ -399,27 +486,32 @@ export default function ListItemPage() {
 
     let res;
     if (editMode) {
+      const accessCode = String(claimCode || manageAccessCode || '').trim();
       if (!canManageLoadedItem) {
-        if (!claimCode.trim()) {
+        if (!accessCode) {
           setSubmitting(false);
-          setError('Enter the claim code before stewarding an existing listing.');
+          setError('Enter the access code before stewarding an existing listing.');
           return;
         }
-        setClaimBusy(true);
-        const claimResult = await claimMarketplaceItem(itemId, {
-          claimCode: claimCode.trim(),
-          role: claimRole,
-          note: claimNote.trim(),
-          claimantName: profile?.name || profile?.email || '',
-        });
-        setClaimBusy(false);
-        if (!claimResult.ok) {
-          setSubmitting(false);
-          setError(claimResult.error || 'Failed to claim listing');
-          return;
+        if (profile?.id) {
+          setClaimBusy(true);
+          const claimResult = await claimMarketplaceItem(itemId, {
+            claimCode: accessCode,
+            role: claimRole,
+            note: claimNote.trim(),
+            claimantName: profile?.name || profile?.email || '',
+          });
+          setClaimBusy(false);
+          if (claimResult.ok) {
+            setLoadedItem(claimResult.item || loadedItem);
+            setManageAccessCode(claimResult.item?.stewardship?.accessCode || manageAccessCode || accessCode);
+            const currentStorageKey = getAccessCodeStorageKey(claimResult.item?.id || itemId);
+            if (claimResult.item?.stewardship?.accessCode && currentStorageKey && globalThis?.localStorage) {
+              globalThis.localStorage.setItem(currentStorageKey, claimResult.item.stewardship.accessCode);
+            }
+            setSuccess(claimResult.message || 'Listing stewardship claimed.');
+          }
         }
-        setLoadedItem(claimResult.item || loadedItem);
-        setSuccess(claimResult.message || 'Listing stewardship claimed.');
       }
       res = await updateMarketplaceItem(itemId, payload);
     } else {
@@ -438,6 +530,11 @@ export default function ListItemPage() {
     setCreatedItemId(res.item?.id || itemId || '');
     if (res.item) {
       setLoadedItem(res.item);
+      setManageAccessCode(res.item?.stewardship?.accessCode || manageAccessCode || '');
+      const currentStorageKey = getAccessCodeStorageKey(res.item.id || itemId);
+      if (res.item?.stewardship?.accessCode && currentStorageKey && globalThis?.localStorage) {
+        globalThis.localStorage.setItem(currentStorageKey, res.item.stewardship.accessCode);
+      }
     }
 
     const requiresAttention = Boolean(
@@ -450,10 +547,39 @@ export default function ListItemPage() {
       return;
     }
 
+    if (!editMode && (res.item?.stewardship?.accessCode || manageAccessCode)) {
+      setSuccess('Listing submitted successfully. Save the access code or QR below before leaving this page.');
+      return;
+    }
+
     setSuccess(editMode
       ? 'Listing updated successfully. Redirecting to marketplace...'
       : 'Listing submitted successfully. It is now pending review. Redirecting to marketplace...');
     setTimeout(() => navigate('/marketplace'), 1200);
+  }
+
+  async function handleDeleteListing() {
+    if (!editMode || !loadedItem) return;
+    const creatorId = String(loadedItem.creator || '');
+    const profileId = String(profile?.id || '');
+    if (creatorId !== profileId) {
+      setDeleteError('Only the original creator can delete this submission.');
+      return;
+    }
+    const confirmed = globalThis?.window?.confirm?.(
+      'Delete this listing permanently? Only the original creator can do this.',
+    );
+    if (!confirmed) return;
+    setDeleteBusy(true);
+    setDeleteError('');
+    const deleted = await deleteMarketplaceItem(itemId);
+    setDeleteBusy(false);
+    if (!deleted.ok) {
+      setDeleteError(deleted.error || 'Failed to delete listing');
+      return;
+    }
+    setSuccess(deleted.message || 'Listing deleted.');
+    navigate('/marketplace');
   }
 
   async function retrySyndicationChannels(channels) {
@@ -532,11 +658,11 @@ export default function ListItemPage() {
             </p>
             <div className="list-form-grid">
               <div>
-                <label className="list-labelRow">Claim code</label>
+                <label className="list-labelRow">Referral / access code</label>
                   <input
                     value={claimCode}
                     onChange={(e) => setClaimCode(e.target.value)}
-                    placeholder="Enter stewardship or transfer code"
+                    placeholder="Scan QR or enter referral code"
                     disabled={canManageLoadedItem || claimBusy || submitting}
                   />
               </div>
@@ -567,6 +693,59 @@ export default function ListItemPage() {
                 Current steward: <strong>{loadedItem.stewardship.currentHolderName}</strong>{' '}
                 {loadedItem.stewardship.currentHolderRole ? `(${loadedItem.stewardship.currentHolderRole})` : ''}
               </p>
+            ) : null}
+            {(manageAccessCode || loadedItem?.stewardship?.accessCode || manageQr) ? (
+              <div className="item-access-card">
+                <div className="item-access-card__copy">
+                  <h4>Item access code</h4>
+                  <p className="hint">
+                    Scan this QR or use the code to open the perennial edit page for this item.
+                  </p>
+                  <div className="item-access-card__code-row">
+                    <code>{manageAccessCode || loadedItem?.stewardship?.accessCode || '—'}</code>
+                    <button
+                      type="button"
+                      className="btn ghost"
+                      onClick={() => copyText(manageAccessCode || loadedItem?.stewardship?.accessCode)}
+                    >
+                      Copy code
+                    </button>
+                  </div>
+                  {managementUrl ? (
+                    <div className="item-access-card__code-row">
+                      <code>{managementUrl}</code>
+                      <button
+                        type="button"
+                        className="btn ghost"
+                        onClick={() => copyText(managementUrl)}
+                      >
+                        Copy link
+                      </button>
+                    </div>
+                  ) : null}
+                </div>
+                {manageQr ? (
+                  <img
+                    src={manageQr}
+                    alt="QR code for the item access page"
+                    className="item-access-card__qr"
+                  />
+                ) : null}
+              </div>
+            ) : null}
+            {deleteError ? <div className="error-box">{deleteError}</div> : null}
+            {String(loadedItem?.creator || '') === String(profile?.id || '') ? (
+              <div className="item-access-card__delete">
+                <button
+                  type="button"
+                  className="btn danger"
+                  onClick={handleDeleteListing}
+                  disabled={deleteBusy || submitting}
+                >
+                  {deleteBusy ? 'Deleting...' : 'Delete my listing'}
+                </button>
+                <p className="hint">Only the original creator can delete this submission.</p>
+              </div>
             ) : null}
           </section>
         ) : null}

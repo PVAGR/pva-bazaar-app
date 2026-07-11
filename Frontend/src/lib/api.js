@@ -816,9 +816,19 @@ export async function createMarketplaceItem(payload) {
   }
 }
 
-export async function fetchManagedMarketplaceItem(itemId) {
+export async function fetchManagedMarketplaceItem(itemId, options = {}) {
   if (!itemId) return { ok: false, item: null, error: 'Missing item id' };
+  const accessCode = String(options?.accessCode || '').trim();
   try {
+    if (accessCode) {
+      const managed = await apiGet(
+        `/items/${encodeURIComponent(itemId)}/manage?accessCode=${encodeURIComponent(accessCode)}`,
+      );
+      if (managed && managed.ok && managed.item) {
+        return { ok: true, item: managed.item };
+      }
+    }
+
     const direct = await apiGet(`/items/${encodeURIComponent(itemId)}`);
     if (direct && direct.ok && direct.item) {
       return { ok: true, item: direct.item };
@@ -871,6 +881,23 @@ export async function updateMarketplaceItem(itemId, payload = {}) {
       };
     }
     return { ok: false, error: response?.error || response?.message || 'Failed to update listing' };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+}
+
+export async function deleteMarketplaceItem(itemId) {
+  if (!itemId) return { ok: false, error: 'Missing item id' };
+  try {
+    const response = await apiDelete(`/items/${encodeURIComponent(itemId)}/manage`);
+    if (response && response.ok) {
+      return {
+        ok: true,
+        item: response.item || null,
+        message: response.message || 'Listing deleted',
+      };
+    }
+    return { ok: false, error: response?.error || response?.message || 'Failed to delete listing' };
   } catch (err) {
     return { ok: false, error: err.message };
   }

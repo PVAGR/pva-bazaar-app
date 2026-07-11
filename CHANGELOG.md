@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Item-specific access codes and QR manage links for perennial listings, so the original creator or steward can open, update, and continue a listing from a persistent referral hash.
+- Creator-only listing deletion for the original poster, keeping the history of a perennial item protected from other users.
+- A more seller-friendly default stewardship split for listings that use the consignment flow.
 - Perennial listing stewardship: authenticated users can claim an existing listing with a code, manage their stewarded items, and continue updating a public record instead of creating duplicate entries.
 - Marketplace item pages now expose stewardship details and a direct claim/manage path for logged-in users.
 - The listing form now supports edit mode for existing items, including a stewardship claim flow when a duplicate record should be continued.

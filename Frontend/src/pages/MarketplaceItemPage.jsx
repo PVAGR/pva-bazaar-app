@@ -294,7 +294,7 @@ export default function MarketplaceItemPage() {
               <div><span>Current steward</span><strong>{stewardship.currentHolderName || 'Unassigned'}</strong></div>
               <div><span>Role</span><strong>{stewardship.currentHolderRole || 'owner'}</strong></div>
               <div><span>Claimed at</span><strong>{stewardship.claimedAt ? new Date(stewardship.claimedAt).toLocaleString() : 'Not claimed yet'}</strong></div>
-              <div><span>Claim code hint</span><strong>{stewardship.claimCodeHint || 'Not provided'}</strong></div>
+              <div><span>Access code hint</span><strong>{stewardship.accessCodeHint || stewardship.claimCodeHint || 'Not provided'}</strong></div>
             </div>
             <div className="item-actions-row">
               <Link className="btn ghost" to={`/items/manage/${encodeURIComponent(item.id)}`}>
