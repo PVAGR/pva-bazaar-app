@@ -10,8 +10,8 @@ async function main() {
     { name: "Recovery page", url: `${base}/recovery`, expects: [200] },
     { name: "robots.txt", url: `${base}/robots.txt`, expects: [200] },
     { name: "sitemap.xml", url: `${base}/sitemap.xml`, expects: [200] },
-    { name: "OpenGraph image", url: `${base}/opengraph-image`, expects: [200] },
-    { name: "Twitter image", url: `${base}/twitter-image`, expects: [200] },
+    { name: "OpenGraph image", url: `${base}/og-default.svg`, expects: [200] },
+    { name: "Twitter image", url: `${base}/og-default.svg`, expects: [200] },
   ];
 
   let failed = 0;

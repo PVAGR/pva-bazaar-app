@@ -30,6 +30,12 @@
       "description": "Opening home page and public path chooser."
     },
     {
+      "name": "Get Started",
+      "path": "/get-started",
+      "url": "https://pvabazaar.org/get-started",
+      "description": "No-JavaScript onboarding and entry point."
+    },
+    {
       "name": "Marketplace",
       "path": "#/marketplace",
       "url": "https://pvabazaar.org/#/marketplace",
@@ -163,6 +169,13 @@
       "path": "/",
       "url": "https://pvabazaar.org/",
       "description": "Opening home page and public path chooser.",
+      "kind": "public-html-or-root"
+    },
+    {
+      "name": "Get Started",
+      "path": "/get-started",
+      "url": "https://pvabazaar.org/get-started",
+      "description": "No-JavaScript onboarding and entry point.",
       "kind": "public-html-or-root"
     },
     {
