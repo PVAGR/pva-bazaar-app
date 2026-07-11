@@ -35,19 +35,27 @@
       <div class="status-grid">
         <section class="status-card">
           <p class="muted">Frontend</p>
-          <div class="status-value" id="frontendStatus">Loading…</div>
-          <p id="frontendChecked" class="muted"></p>
+          <div class="status-value" id="frontendStatus">Online</div>
+          <p id="frontendChecked" class="muted">Checked when this page loaded.</p>
         </section>
         <section class="status-card">
           <p class="muted">Backend/API</p>
-          <div class="status-value" id="backendStatus">Loading…</div>
-          <p id="backendChecked" class="muted"></p>
+          <div class="status-value" id="backendStatus">Checking…</div>
+          <p id="backendChecked" class="muted">Backend health endpoint not publicly exposed yet.</p>
         </section>
       </div>
 
       <section class="card">
         <h2>Details</h2>
-        <pre id="statusDetails">Checking live endpoint…</pre>
+        <pre id="statusDetails">Backend health endpoint not publicly exposed. Frontend is online.</pre>
+      </section>
+
+      <section class="card">
+        <h2>What this means</h2>
+        <p class="muted">
+          If the backend/API is unavailable, the site can still load publicly. If the live backend
+          is exposed, this page will show the most recent health response and version information.
+        </p>
       </section>
 
       <section class="card">
@@ -60,6 +68,16 @@
           <a class="button secondary" href="/contact.html">Contact</a>
         </div>
       </section>
+
+      <noscript>
+        <section class="card">
+          <h2>JavaScript disabled</h2>
+          <p>
+            The site is still online. This status page shows the frontend health and a fallback
+            backend message even without JavaScript.
+          </p>
+        </section>
+      </noscript>
     </main>
   </div>
 

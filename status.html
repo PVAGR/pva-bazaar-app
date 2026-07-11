@@ -3,7 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>PVABazaar Status</title>
+    <title>PVA Bazaar Status</title>
+    <meta
+      name="description"
+      content="Live status page for the PVA Bazaar frontend and backend/API."
+    />
+    <link rel="canonical" href="https://pvabazaar.org/status.html" />
     <style>
       body {
         font-family:
@@ -25,7 +30,7 @@
       }
       .grid {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
         gap: 1rem;
       }
       .card {
@@ -45,61 +50,96 @@
         background: #0b1117;
         padding: 2px 6px;
         border-radius: 4px;
+        display: inline-block;
       }
       a {
         color: #00d9ff;
         text-decoration: none;
       }
+      .muted {
+        color: #aab7c4;
+      }
+      .links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-top: 1rem;
+      }
     </style>
   </head>
   <body>
-    <h1>PVABazaar Status</h1>
-    <p>This page checks API endpoints from the live site.</p>
+    <h1>PVA Bazaar Status</h1>
+    <p class="muted">
+      This page checks the frontend and attempts to check the live API. If the API is not
+      publicly exposed, the frontend can still be online and serve public pages.
+    </p>
     <div class="grid">
       <div class="card">
-        <h2>/api/health</h2>
+        <h2>Frontend</h2>
+        <div class="ok">Online</div>
+        <div class="muted" id="checked">Checked when this page loaded.</div>
+      </div>
+      <div class="card">
+        <h2>Backend/API</h2>
         <div id="health">Checking...</div>
       </div>
       <div class="card">
-        <h2>/api/archive</h2>
-        <div id="archive">Checking...</div>
+        <h2>Version</h2>
+        <div id="version">Not exposed</div>
       </div>
       <div class="card">
-        <h2>/api/blogs</h2>
-        <div id="blogs">Checking...</div>
-      </div>
-      <div class="card">
-        <h2>/api/search/text?q=test</h2>
-        <div id="search">Checking...</div>
+        <h2>Fallback</h2>
+        <div class="muted">
+          Backend health endpoint not publicly exposed. Frontend is online.
+        </div>
       </div>
     </div>
+
     <p style="margin-top: 1rem">
-      If these show unavailable, the site is still live but the API isnt routed on this project. We
-      can switch the project to include serverless or serve a static health as a fallback.
+      If the backend/API is unavailable, the site is still live. The frontend can continue serving
+      public pages while the health endpoint is being exposed or repaired.
     </p>
+
+    <div class="links">
+      <a href="/">Home</a>
+      <a href="/llms.txt">llms.txt</a>
+      <a href="/readable-site.json">readable-site.json</a>
+      <a href="/sitemap.xml">sitemap.xml</a>
+      <a href="/contact.html">Contact</a>
+    </div>
+
     <script>
-      async function check(path, elId) {
-        const el = document.getElementById(elId);
+      async function check() {
+        const healthEl = document.getElementById('health');
+        const checkedEl = document.getElementById('checked');
+        const versionEl = document.getElementById('version');
+        checkedEl.textContent = `Checked ${new Date().toLocaleString()}`;
         try {
-          const res = await fetch(path, { headers: { Accept: 'application/json' } });
+          const res = await fetch('/api/health', { headers: { Accept: 'application/json' } });
           const text = await res.text();
           let msg = text;
           try {
             msg = JSON.parse(text).message || text;
           } catch {}
           if (res.ok) {
-            el.innerHTML = `<span class="ok">OK (${res.status})</span> \u2014 ${msg}`;
+            healthEl.innerHTML = `<span class="ok">OK (${res.status})</span> — ${msg}`;
           } else {
-            el.innerHTML = `<span class="bad">Unavailable (${res.status})</span>\n<code>${msg.substring(0, 200)}</code>`;
+            healthEl.innerHTML = `<span class="bad">Unavailable (${res.status})</span> <code>${msg.substring(0, 200)}</code>`;
           }
         } catch (e) {
-          el.innerHTML = `<span class="bad">Error</span> \u2014 ${String(e).substring(0, 120)}`;
+          healthEl.innerHTML =
+            '<span class="bad">Backend health endpoint not publicly exposed. Frontend is online.</span>';
+        }
+
+        try {
+          const res = await fetch('/api/version', { headers: { Accept: 'application/json' } });
+          const text = await res.text();
+          versionEl.textContent = res.ok ? text.substring(0, 120) : 'Not exposed';
+        } catch {
+          versionEl.textContent = 'Not exposed';
         }
       }
-      check('/api/health', 'health');
-      check('/api/archive', 'archive');
-      check('/api/blogs', 'blogs');
-      check('/api/search/text?q=test', 'search');
+      check();
     </script>
   </body>
 </html>
