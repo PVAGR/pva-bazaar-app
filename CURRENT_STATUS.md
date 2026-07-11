@@ -12,6 +12,8 @@ Updated: 2026-07-11
 - Added creator-only deletion for listings so the original poster remains the only user who can remove their own submission.
 - Added a more seller-friendly default consignment split for listings that use the stewardship workflow.
 - Hardened the book publishing flow so the live backend can use a shared GitHub-backed persistence source when a GitHub token is available, and queued publish drafts stay local until the backend can sync them online.
+- Added a browser-saved GitHub publish key on the book publishing page, plus a public raw-GitHub bookshelf fallback so published books can appear on other devices even when the live backend is empty.
+- Added a backend public raw-GitHub fallback for the bookshelf, reader, PDF, and EPUB routes so published books can be read even when the live serverless store has not loaded the shared file yet.
 
 ## What was verified
 - `npm --prefix Frontend run build`
@@ -25,3 +27,5 @@ Updated: 2026-07-11
 - Claim codes still need to be shared by the current steward/owner for a transfer; the UI now exposes a dedicated management path.
 - Queue-backed publish drafts still depend on the backend being reachable again before they can sync from a device that could not publish online at the time of save.
 - The live public bookshelf still needs a fresh cross-device verification pass after this book-store source-selection fix deploys.
+- The browser publish key needs to be stored on the device that publishes a book; without that key, the save remains local to the device and cannot be promoted to the shared shelf.
+- Public book visibility now depends on the shared GitHub file being updated; if a device publishes without the key saved, the book stays local until that device is connected and resubmits with the key.

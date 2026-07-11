@@ -2,6 +2,7 @@
 import { getToken } from "./auth";
 import { FEATURED_INVENTORY, findFeaturedItem } from "./featuredInventory";
 import { getLocalCurrentUser, isLocalToken } from './localAuthVault';
+import { getBookStoreGitHubToken } from './bookStoreTokenVault';
 import {
   clearApiBaseOverride,
   getApiBaseCandidates,
@@ -178,13 +179,167 @@ export const fetchRecoverySnapshotById = (snapshotId) =>
 export const deleteRecoverySnapshotById = (snapshotId) =>
   apiDelete(`/recovery/snapshots/${encodeURIComponent(snapshotId)}`);
 
-export const fetchMyBookProjects = () => apiGet('/book-publishing/mine');
-export const fetchPublishedBookProjects = (params = {}) => apiGet('/book-publishing/public', { params });
-export const fetchBookProjectById = (bookId) => apiGet(`/book-publishing/${encodeURIComponent(bookId)}`);
-export const fetchPublicBookProject = (slug) =>
-  apiGet(`/book-publishing/public/${encodeURIComponent(slug)}`);
-export const saveBookProject = (formData) => apiUpload('/book-publishing', formData);
-export const deleteBookProject = (bookId) => apiDelete(`/book-publishing/${encodeURIComponent(bookId)}`);
+const BOOK_PROJECTS_RAW_URL = 'https://raw.githubusercontent.com/PVAGR/pva-bazaar-app/main/backend/data/book-projects.json';
+
+function withBookStoreTokenHeaders(headers = {}) {
+  const token = getBookStoreGitHubToken();
+  if (!token) return { ...headers };
+  return {
+    ...headers,
+    'X-PVA-GitHub-Token': token,
+  };
+}
+
+async function readGitHubPublishedBookIndex() {
+  try {
+    const response = await fetch(`${BOOK_PROJECTS_RAW_URL}?t=${Date.now()}`, {
+      method: 'GET',
+      cache: 'no-store',
+      headers: {
+        Accept: 'application/json',
+      },
+    });
+    if (!response.ok) {
+      return { ok: false, items: [], total: 0 };
+    }
+
+    const data = await response.json().catch(() => ({}));
+    const items = Array.isArray(data?.books) ? data.books : [];
+    return {
+      ok: true,
+      items,
+      total: items.length,
+      source: 'github-raw',
+    };
+  } catch (_err) {
+    return { ok: false, items: [], total: 0 };
+  }
+}
+
+function mergeBookCollections(primary = [], secondary = []) {
+  const merged = [];
+  const seen = new Set();
+  for (const book of [...primary, ...secondary]) {
+    const key = String(book?.slug || book?.id || book?._id || '').trim().toLowerCase();
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    merged.push(book);
+  }
+  return merged;
+}
+
+function normalizePublishedBook(book) {
+  const slug = String(book?.slug || '').trim();
+  const id = String(book?.id || book?._id || '').trim();
+  const baseRoute = slug
+    ? `/api/book-publishing/public/${encodeURIComponent(slug)}`
+    : id
+      ? `/api/book-publishing/${encodeURIComponent(id)}`
+      : '';
+  const publicPage = slug ? `/books/read/${encodeURIComponent(slug)}` : '';
+
+  return {
+    ...book,
+    id: id || slug || book?.id || book?._id || '',
+    _id: id || book?._id || book?.id || '',
+    links: {
+      ...(book?.links || {}),
+      publicPage: book?.links?.publicPage || publicPage,
+      apiView: book?.links?.apiView || (baseRoute ? `${baseRoute}/view` : ''),
+      pdf: book?.links?.pdf || (baseRoute ? `${baseRoute}/download/pdf` : ''),
+      epub: book?.links?.epub || (baseRoute ? `${baseRoute}/download/epub` : ''),
+      frontCover: book?.links?.frontCover || (book?.frontCover?.url ? `${baseRoute}/assets/front-cover` : ''),
+      backCover: book?.links?.backCover || (book?.backCover?.url ? `${baseRoute}/assets/back-cover` : ''),
+    },
+  };
+}
+
+export async function fetchMyBookProjects() {
+  const headers = withBookStoreTokenHeaders();
+  return apiGet('/book-publishing/mine', Object.keys(headers).length ? { headers } : undefined);
+}
+
+export async function fetchPublishedBookProjects(params = {}) {
+  const headers = withBookStoreTokenHeaders();
+  const backendResponse = await apiGet('/book-publishing/public', {
+    params,
+    ...(Object.keys(headers).length ? { headers } : {}),
+  }).catch(() => null);
+
+  const rawResponse = await readGitHubPublishedBookIndex();
+  const backendItems = Array.isArray(backendResponse?.items) ? backendResponse.items.map(normalizePublishedBook) : [];
+  const rawItems = Array.isArray(rawResponse?.items) ? rawResponse.items.map(normalizePublishedBook) : [];
+  const mergedItems = mergeBookCollections(backendItems, rawItems);
+  const limit = Math.max(1, Math.min(Number(params?.limit) || 24, 100));
+  const query = String(params?.q || '').trim();
+  const genre = String(params?.genre || '').trim().toLowerCase();
+  const loweredQuery = query.toLowerCase();
+  const matchedItems = mergedItems.filter((item) => {
+    if (genre && String(item?.genre || '').toLowerCase() !== genre) {
+      return false;
+    }
+
+    if (!loweredQuery) return true;
+    const searchable = [
+      item?.title,
+      item?.subtitle,
+      item?.authorName,
+      item?.description,
+      item?.slug,
+      item?.genre,
+      item?.audience,
+      item?.language,
+    ]
+      .filter(Boolean)
+      .map((field) => String(field).toLowerCase())
+      .join(' ');
+
+    return searchable.includes(loweredQuery);
+  });
+
+  return {
+    ok: true,
+    items: matchedItems.slice(0, limit),
+    total: matchedItems.length,
+    query,
+    genre,
+    source: rawItems.length ? 'backend+github-raw' : 'backend',
+  };
+}
+
+export async function fetchBookProjectById(bookId) {
+  const headers = withBookStoreTokenHeaders();
+  return apiGet(`/book-publishing/${encodeURIComponent(bookId)}`, Object.keys(headers).length ? { headers } : undefined);
+}
+
+export async function fetchPublicBookProject(slug) {
+  const backendResponse = await apiGet(`/book-publishing/public/${encodeURIComponent(slug)}`).catch(() => null);
+  if (backendResponse?.ok && backendResponse?.item) {
+    return backendResponse;
+  }
+
+  const rawResponse = await readGitHubPublishedBookIndex();
+  const targetSlug = String(slug || '').trim().toLowerCase();
+  const item = Array.isArray(rawResponse?.items)
+    ? rawResponse.items.map(normalizePublishedBook).find((book) => String(book?.slug || '').trim().toLowerCase() === targetSlug)
+    : null;
+
+  if (item) {
+    return { ok: true, item, source: 'github-raw' };
+  }
+
+  return backendResponse || { ok: false, error: 'Book not found' };
+}
+
+export async function saveBookProject(formData) {
+  const headers = withBookStoreTokenHeaders();
+  return apiUpload('/book-publishing', formData, headers);
+}
+
+export async function deleteBookProject(bookId) {
+  const headers = withBookStoreTokenHeaders();
+  return apiDelete(`/book-publishing/${encodeURIComponent(bookId)}`, Object.keys(headers).length ? { headers } : undefined);
+}
 
 export const fetchProposals = (params = {}) => apiGet('/proposals', { params });
 export const fetchProposalById = (proposalId) => apiGet(`/proposals/${encodeURIComponent(proposalId)}`);
@@ -326,8 +481,10 @@ async function fetchWithBackendFailover(path, options = {}) {
  * Uses native fetch so the browser can set the correct Content-Type boundary.
  * Attaches the auth token automatically.
  */
-export async function apiUpload(path, formData) {
-  const headers = {};
+export async function apiUpload(path, formData, extraHeaders = {}) {
+  const headers = {
+    ...extraHeaders,
+  };
   const token = getToken();
   if (token) {
     headers.Authorization = token.startsWith('Bearer ') ? token : `Bearer ${token}`;

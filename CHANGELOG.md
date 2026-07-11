@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Browser-saved GitHub publish key for the book publishing workspace, so a device can write directly to the shared bookshelf without depending on a server-side GitHub secret.
+- Public raw-GitHub bookshelf and reader fallbacks, so published books remain visible on other devices even when the live backend returns an empty book store.
+- Backend public raw-GitHub fallbacks for the bookshelf, reader, PDF, and EPUB routes, so shared books can still be read and downloaded when the live serverless store has not loaded yet.
 - Book publishing now prefers GitHub-backed persistence when a GitHub token is present in the live backend, so published books can remain visible across devices instead of living only in one serverless instance.
 - Failed online publishes now stay queued locally as drafts with publish intent, instead of claiming the book is already live when the backend is unreachable.
 - Item-specific access codes and QR manage links for perennial listings, so the original creator or steward can open, update, and continue a listing from a persistent referral hash.

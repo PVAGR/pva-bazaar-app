@@ -111,7 +111,26 @@ function hasStaticGitHubToken() {
   );
 }
 
+const PUBLIC_GITHUB_BOOK_STORE_URL = process.env.BOOK_STORE_PUBLIC_RAW_URL
+  || 'https://raw.githubusercontent.com/PVAGR/pva-bazaar-app/main/backend/data/book-projects.json';
+
 async function attachRequestGitHubToken(req, res, next) {
+  const requestToken = String(
+    req.get('x-pva-github-token')
+    || req.get('x-pva-book-store-github-token')
+    || req.query?.githubToken
+    || req.query?.bookStoreToken
+    || '',
+  ).trim();
+
+  if (requestToken) {
+    setGitHubTokenOverride(requestToken);
+    const clearToken = () => clearGitHubTokenOverride();
+    res.once('finish', clearToken);
+    res.once('close', clearToken);
+    return next();
+  }
+
   if (hasStaticGitHubToken()) {
     return next();
   }
@@ -137,6 +156,36 @@ async function attachRequestGitHubToken(req, res, next) {
   }
 
   return next();
+}
+
+async function readPublicBookStoreFromGitHubRaw() {
+  try {
+    const response = await axios.get(PUBLIC_GITHUB_BOOK_STORE_URL, {
+      timeout: 20000,
+      responseType: 'text',
+      transformResponse: [(data) => data],
+      headers: {
+        Accept: 'application/json,text/plain;q=0.9,*/*;q=0.8',
+      },
+    });
+
+    const text = String(response?.data || '').trim();
+    if (!text) {
+      return [];
+    }
+
+    const parsed = JSON.parse(text);
+    if (Array.isArray(parsed?.books)) {
+      return parsed.books;
+    }
+    if (Array.isArray(parsed)) {
+      return parsed;
+    }
+  } catch (_err) {
+    return [];
+  }
+
+  return [];
 }
 
 const BOOK_UPLOAD_DIR = path.join(__dirname, '../uploads/books');
@@ -355,13 +404,24 @@ async function listUserBooks(userId) {
 }
 
 async function listPublishedBooks() {
-  if (shouldUseFileBookStore()) {
-    return listFileBooks({ status: 'published' }, { publishedAt: -1, updatedAt: -1, _id: -1 });
+  const localBooks = shouldUseFileBookStore()
+    ? await listFileBooks({ status: 'published' }, { publishedAt: -1, updatedAt: -1, _id: -1 })
+    : await BookProject.find({ status: 'published' })
+      .sort({ publishedAt: -1, updatedAt: -1, _id: -1 })
+      .lean();
+
+  const rawBooks = await readPublicBookStoreFromGitHubRaw();
+  if (!rawBooks.length) {
+    return localBooks;
   }
 
-  return BookProject.find({ status: 'published' })
-    .sort({ publishedAt: -1, updatedAt: -1, _id: -1 })
-    .lean();
+  const merged = new Map();
+  for (const book of [...localBooks, ...rawBooks]) {
+    const key = String(book?.slug || book?._id || book?.id || '').trim().toLowerCase();
+    if (!key || merged.has(key)) continue;
+    merged.set(key, book);
+  }
+  return Array.from(merged.values());
 }
 
 async function loadBookForEdit(bookId) {
@@ -377,10 +437,16 @@ async function loadBookForSlug(slug) {
   if (!normalized) return null;
 
   if (shouldUseFileBookStore()) {
-    return findFileBookOne({ slug: normalized, status: 'published' });
+    const localBook = await findFileBookOne({ slug: normalized, status: 'published' });
+    if (localBook) return localBook;
+    const rawBooks = await readPublicBookStoreFromGitHubRaw();
+    return rawBooks.find((book) => String(book?.slug || '').trim().toLowerCase() === normalized) || null;
   }
 
-  return BookProject.findOne({ slug: normalized, status: 'published' }).lean();
+  const localBook = await BookProject.findOne({ slug: normalized, status: 'published' }).lean();
+  if (localBook) return localBook;
+  const rawBooks = await readPublicBookStoreFromGitHubRaw();
+  return rawBooks.find((book) => String(book?.slug || '').trim().toLowerCase() === normalized) || null;
 }
 
 async function persistBookRecord(book) {
