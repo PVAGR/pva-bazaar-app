@@ -3,20 +3,30 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 
+const sentryOrg = process.env.SENTRY_ORG?.trim();
+const sentryProject = process.env.SENTRY_PROJECT?.trim();
+const sentryAuthToken = process.env.SENTRY_AUTH_TOKEN?.trim();
+const sentryRelease = process.env.SENTRY_RELEASE?.trim();
+const hasSentryUploadConfig = Boolean(sentryOrg && sentryProject && sentryAuthToken && sentryRelease);
+
+const sentryPlugin = hasSentryUploadConfig
+  ? sentryVitePlugin({
+      org: sentryOrg,
+      project: sentryProject,
+      authToken: sentryAuthToken,
+      sourcemaps: {
+        assets: './dist/client/assets',
+      },
+      release: sentryRelease,
+      dryRun: false,
+    })
+  : null;
+
 export default defineConfig({
   base: process.env.VITE_BASE_PATH || '/',
   plugins: [
     react(),
-    sentryVitePlugin({
-      org: process.env.SENTRY_ORG,
-      project: process.env.SENTRY_PROJECT,
-      authToken: process.env.SENTRY_AUTH_TOKEN,
-      sourcemaps: {
-        assets: './dist/client/assets',
-      },
-      release: process.env.SENTRY_RELEASE,
-      dryRun: !process.env.SENTRY_AUTH_TOKEN,
-    })
+    ...(sentryPlugin ? [sentryPlugin] : []),
   ],
   build: {
     outDir: 'dist',
