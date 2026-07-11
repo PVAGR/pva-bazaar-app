@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Public-facing site hardening pass: professional homepage framing, clean primary navigation, static no-JavaScript fallback pages, custom 404, and trust/legal/support pages.
+- SEO/crawlability refresh: robots.txt, sitemap.xml, llms.txt, readable-site.json, canonical URLs, and social preview metadata for the major public pages.
+- Legacy compatibility pages now redirect or render clean public content instead of landing as sloppy dead ends.
 - Browser-saved GitHub publish key for the book publishing workspace, so a device can write directly to the shared bookshelf without depending on a server-side GitHub secret.
 - Public raw-GitHub bookshelf and reader fallbacks, so published books remain visible on other devices even when the live backend returns an empty book store.
 - Backend public raw-GitHub fallbacks for the bookshelf, reader, PDF, and EPUB routes, so shared books can still be read and downloaded when the live serverless store has not loaded yet.

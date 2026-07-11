@@ -28,6 +28,10 @@ const UserDashboard = lazy(() => import('./pages/UserDashboard.jsx'));
 const GovernanceConferencePage = lazy(() => import('./pages/OtherPages.jsx').then((m) => ({ default: m.GovernanceConferencePage })));
 const GovernanceTreasuryPage = lazy(() => import('./pages/OtherPages.jsx').then((m) => ({ default: m.GovernanceTreasuryPage })));
 const AboutPage = lazy(() => import('./pages/AboutPage.jsx'));
+const ContactPage = lazy(() => import('./pages/ContactPage.jsx'));
+const PartnershipsPage = lazy(() => import('./pages/PartnershipsPage.jsx'));
+const ProvenancePage = lazy(() => import('./pages/ProvenancePage.jsx'));
+const PortfolioPage = lazy(() => import('./pages/PortfolioPage.jsx'));
 const AgentPage = lazy(() => import('./pages/AgentPage.jsx'));
 const CivilizationLibraryPage = lazy(() => import('./pages/CivilizationLibraryPage.jsx'));
 const CivilizationCategoryPage = lazy(() => import('./pages/CivilizationCategoryPage.jsx'));
@@ -126,12 +130,14 @@ export default function App() {
         <Route path="/deploy" element={<Layout><DeployPage /></Layout>} />
 
         <Route path="/" element={<Layout><OpeningHomePage /></Layout>} />
+        <Route path="/welcome" element={<Navigate to="/" replace />} />
         <Route path="/books" element={<Layout><BooksPage /></Layout>} />
         <Route path="/books/published" element={<Layout><BookShelfPage /></Layout>} />
         <Route path="/books/publish" element={<RequireUserAuth><Layout><BookPublishingPage /></Layout></RequireUserAuth>} />
         <Route path="/books/read/:slug" element={<Layout><BookReaderPage /></Layout>} />
         <Route path="/get-started" element={<Layout><GetStartedPage /></Layout>} />
         <Route path="/home" element={<Navigate to="/" replace />} />
+        <Route path="/writings" element={<Layout><ArchiveLibraryPage /></Layout>} />
         <Route path="/library" element={<Layout><ArchiveLibraryPage /></Layout>} />
         <Route path="/archive" element={<Layout><ArchiveLibraryPage /></Layout>} />
         <Route path="/blog/:slug" element={<Layout><BlogPostPage /></Layout>} />
@@ -146,6 +152,10 @@ export default function App() {
         <Route path="/career-quiz" element={<Layout><CareerQuizPage /></Layout>} />
         <Route path="/federation-map" element={<Layout><FederationMapPage /></Layout>} />
         <Route path="/about" element={<Layout><AboutPage /></Layout>} />
+        <Route path="/contact" element={<Layout><ContactPage /></Layout>} />
+        <Route path="/partnerships" element={<Layout><PartnershipsPage /></Layout>} />
+        <Route path="/provenance" element={<Layout><ProvenancePage /></Layout>} />
+        <Route path="/portfolio" element={<Layout><PortfolioPage /></Layout>} />
         <Route path="/agent" element={<Layout><AgentPage /></Layout>} />
         <Route path="/streams" element={<RequireUserAuth><Layout><StreamsPage /></Layout></RequireUserAuth>} />
         <Route path="/citizens" element={<Layout><CitizenDirectoryPage /></Layout>} />

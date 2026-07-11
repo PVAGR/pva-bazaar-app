@@ -2,7 +2,7 @@
   "site": {
     "name": "PVA Bazaar",
     "url": "https://pvabazaar.org",
-    "type": "spa",
+    "type": "hybrid-spa-plus-static-fallback",
     "framework": "react-vite",
     "router": "hash"
   },
@@ -12,15 +12,14 @@
     "status": "https://pvabazaar.org/status.html"
   },
   "summary": {
-    "type": "personal website + knowledge marketplace + business suite + publishing suite",
+    "type": "public knowledge marketplace + archive + publishing suite",
     "focus": [
-      "personal writings and archive",
-      "sourcing, trade, fulfillment, and educational product operations",
-      "book publishing and public bookshelf",
-      "civilization categories: agriculture, minerals, research, craft, education",
-      "institution hub for universities, schools, museums, governments, labs, libraries, NGOs, training centers, and TVETs",
-      "civic proposals and conference workflow",
-      "HeelKawn game hub and repository pulse"
+      "pure life knowledge and public writings",
+      "trade, sourcing, and product provenance",
+      "books, publishing, and published bookshelf",
+      "institution partnerships for schools, museums, labs, and libraries",
+      "continuity, recovery, and support pages",
+      "public contact and collaboration paths"
     ]
   },
   "sections": [
@@ -28,194 +27,134 @@
       "name": "Home",
       "path": "/",
       "url": "https://pvabazaar.org/",
-      "description": "Opening home page and path chooser."
-    },
-    {
-      "name": "Archive",
-      "path": "#/archive",
-      "url": "https://pvabazaar.org/#/archive",
-      "description": "Archive entries and long-form content."
+      "description": "Opening home page and public path chooser."
     },
     {
       "name": "Marketplace",
       "path": "#/marketplace",
       "url": "https://pvabazaar.org/#/marketplace",
-      "description": "Artifacts, listings, sourcing, and commerce."
+      "description": "Commerce surface for goods, kits, and sourcing opportunities."
     },
     {
-      "name": "Institutions",
-      "path": "#/institutions",
-      "url": "https://pvabazaar.org/#/institutions",
-      "description": "Institution partnerships for universities, schools, museums, governments, labs, libraries, NGOs, training centers, and TVETs."
+      "name": "Archive",
+      "path": "#/archive",
+      "url": "https://pvabazaar.org/#/archive",
+      "description": "Archive library and long-form memory layer."
     },
     {
-      "name": "Agriculture",
-      "path": "#/marketplace/civilization/agriculture",
-      "url": "https://pvabazaar.org/#/marketplace/civilization/agriculture",
-      "description": "Coffee, tea, spices, herbs, seeds, and medicinal plants."
-    },
-    {
-      "name": "Geology",
-      "path": "#/marketplace/civilization/geology",
-      "url": "https://pvabazaar.org/#/marketplace/civilization/geology",
-      "description": "Minerals, gemstones, fossils, meteorites, and mining knowledge."
-    },
-    {
-      "name": "Materials",
-      "path": "#/marketplace/civilization/materials",
-      "url": "https://pvabazaar.org/#/marketplace/civilization/materials",
-      "description": "Wood, stone, metals, fibers, leather, dyes, pigments, and chemicals."
-    },
-    {
-      "name": "Education",
-      "path": "#/marketplace/civilization/education",
-      "url": "https://pvabazaar.org/#/marketplace/civilization/education",
-      "description": "Educational kits, curricula, laboratory supplies, and museum replicas."
-    },
-    {
-      "name": "Craft",
-      "path": "#/marketplace/civilization/craft",
-      "url": "https://pvabazaar.org/#/marketplace/civilization/craft",
-      "description": "Textiles, ceramics, glass, woodworking, and artisan goods."
-    },
-    {
-      "name": "Trade",
-      "path": "#/marketplace/civilization/trade",
-      "url": "https://pvabazaar.org/#/marketplace/civilization/trade",
-      "description": "Import/export, shipping, sourcing, fulfillment, and partnerships."
+      "name": "Writings",
+      "path": "/writings.html",
+      "url": "https://pvabazaar.org/writings.html",
+      "description": "Static public writing index for no-JavaScript access."
     },
     {
       "name": "Books",
       "path": "#/books",
       "url": "https://pvabazaar.org/#/books",
-      "description": "Featured books, reading order, and publishing gateway."
+      "description": "Books hub and publishing gateway."
     },
     {
       "name": "Published Books",
       "path": "#/books/published",
       "url": "https://pvabazaar.org/#/books/published",
-      "description": "Public bookshelf with online reader and download links."
+      "description": "Public bookshelf with online reading and downloads."
     },
     {
-      "name": "Governance",
-      "path": "#/proposals",
-      "url": "https://pvabazaar.org/#/proposals",
-      "description": "Public proposal lifecycle board."
-    },
-    {
-      "name": "Conference",
-      "path": "#/conference",
-      "url": "https://pvabazaar.org/#/conference",
-      "description": "Public governance conference and execution context."
-    },
-    {
-      "name": "Forum",
-      "path": "#/forum",
-      "url": "https://pvabazaar.org/#/forum",
-      "description": "Civic discussion and proposal support flow."
-    },
-    {
-      "name": "Creator Portal",
+      "name": "Supplier Portal",
       "path": "#/creator",
       "url": "https://pvabazaar.org/#/creator",
-      "description": "Creator onboarding and portal entry point."
+      "description": "Supplier and creator onboarding."
     },
     {
-      "name": "Download App",
-      "path": "#/download-app",
-      "url": "https://pvabazaar.org/#/download-app",
-      "description": "Mobile install and quick-access app page."
+      "name": "Partnerships",
+      "path": "/partnerships.html",
+      "url": "https://pvabazaar.org/partnerships.html",
+      "description": "Institution, supplier, and collaboration entry page."
+    },
+    {
+      "name": "Provenance",
+      "path": "/provenance.html",
+      "url": "https://pvabazaar.org/provenance.html",
+      "description": "Origin, trust, and sourcing context page."
+    },
+    {
+      "name": "Contact",
+      "path": "/contact.html",
+      "url": "https://pvabazaar.org/contact.html",
+      "description": "Public contact and inquiry page."
     },
     {
       "name": "Recovery",
       "path": "#/recovery",
       "url": "https://pvabazaar.org/#/recovery",
-      "description": "Recovery and continuity tools for keeping the site close across devices."
+      "description": "Continuity and recovery tools."
+    },
+    {
+      "name": "Governance",
+      "path": "#/proposals",
+      "url": "https://pvabazaar.org/#/proposals",
+      "description": "Public proposal board."
+    },
+    {
+      "name": "Conference",
+      "path": "#/conference",
+      "url": "https://pvabazaar.org/#/conference",
+      "description": "Governance conference page."
+    },
+    {
+      "name": "Forum",
+      "path": "#/forum",
+      "url": "https://pvabazaar.org/#/forum",
+      "description": "Civic discussion and proposal support."
     },
     {
       "name": "HeelKawn",
       "path": "#/heelkawn",
       "url": "https://pvabazaar.org/#/heelkawn",
-      "description": "HeelKawn download hub and repository pulse."
+      "description": "Adjacent game hub and repository pulse."
     },
     {
-      "name": "About",
-      "path": "#/about",
-      "url": "https://pvabazaar.org/#/about",
-      "description": "Project and site overview."
+      "name": "Status",
+      "path": "/status.html",
+      "url": "https://pvabazaar.org/status.html",
+      "description": "Frontend and backend health page."
     },
     {
-      "name": "Login",
-      "path": "#/login",
-      "url": "https://pvabazaar.org/#/login",
-      "description": "User sign-in route."
+      "name": "Privacy",
+      "path": "/privacy.html",
+      "url": "https://pvabazaar.org/privacy.html",
+      "description": "Privacy policy and data handling notes."
     },
     {
-      "name": "Register",
-      "path": "#/register",
-      "url": "https://pvabazaar.org/#/register",
-      "description": "User account creation route."
+      "name": "Terms",
+      "path": "/terms.html",
+      "url": "https://pvabazaar.org/terms.html",
+      "description": "Terms of use and platform expectations."
     },
     {
-      "name": "Account",
-      "path": "#/account",
-      "url": "https://pvabazaar.org/#/account",
-      "description": "Authenticated account area."
+      "name": "Shipping",
+      "path": "/shipping.html",
+      "url": "https://pvabazaar.org/shipping.html",
+      "description": "Shipping and fulfillment guidance."
     },
     {
-      "name": "Passport",
-      "path": "#/passport",
-      "url": "https://pvabazaar.org/#/passport",
-      "description": "Citizen passport profile and wallet identity center."
+      "name": "Returns",
+      "path": "/returns.html",
+      "url": "https://pvabazaar.org/returns.html",
+      "description": "Returns and exchange guidance."
     },
     {
-      "name": "Dashboard",
-      "path": "#/dashboard",
-      "url": "https://pvabazaar.org/#/dashboard",
-      "description": "My artifacts verification dashboard."
-    },
-    {
-      "name": "Deals",
-      "path": "#/deals",
-      "url": "https://pvabazaar.org/#/deals",
-      "description": "Authenticated secure deals and escrow workflow."
-    },
-    {
-      "name": "Contacts",
-      "path": "#/contacts",
-      "url": "https://pvabazaar.org/#/contacts",
-      "description": "Supplier and partner contact management."
-    },
-    {
-      "name": "Templates",
-      "path": "#/templates",
-      "url": "https://pvabazaar.org/#/templates",
-      "description": "Reusable message and operations templates."
-    },
-    {
-      "name": "Chat",
-      "path": "#/chat",
-      "url": "https://pvabazaar.org/#/chat",
-      "description": "Messaging and support chat surface."
-    },
-    {
-      "name": "Career Quiz",
-      "path": "#/career-quiz",
-      "url": "https://pvabazaar.org/#/career-quiz",
-      "description": "Career guidance and self-assessment flow."
-    },
-    {
-      "name": "Federation Map",
-      "path": "#/federation-map",
-      "url": "https://pvabazaar.org/#/federation-map",
-      "description": "Live world pulse map of active passport citizens and contribution roles."
+      "name": "Disclaimer",
+      "path": "/disclaimer.html",
+      "url": "https://pvabazaar.org/disclaimer.html",
+      "description": "Important public disclaimer about site claims."
     }
   ],
   "guidanceForFetchers": [
     "Read llms.txt first if you need a short human-readable overview.",
     "Use the sections array for route discovery and intent.",
-    "Use sitemap.xml for static file URLs under /writings.",
-    "Hash routes are the live SPA navigation."
+    "Use sitemap.xml for static file URLs under /pages and /writings.",
+    "Hash routes are the live SPA navigation, while the .html pages provide no-JavaScript fallbacks."
   ],
-  "updatedAt": "2026-07-10T00:00:00Z"
+  "updatedAt": "2026-07-11T00:00:00Z"
 }

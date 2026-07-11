@@ -3,6 +3,10 @@
 Updated: 2026-07-11
 
 ## What changed
+- Rebuilt the public-facing site shell around clean primary navigation, static no-JavaScript fallback pages, and dedicated trust/legal/support pages.
+- Added a professional homepage/landing experience with clear mission copy, marketplace/knowledge positioning, and direct public entry points.
+- Repaired old indexed compatibility routes and added branded static fallbacks so legacy URLs no longer land on ugly dead ends.
+- Added a real status page, robots/sitemap/LLMS/readable-site refresh, and canonical/OG metadata for the major public surfaces.
 - Added a dedicated institutional hub with pages for universities, schools, museums, government, research institutes, laboratories, libraries, NGOs, training centers, and TVETs.
 - Added richer marketplace item dossiers so listings can show history, scientific classification, uses, educational value, safety, documentation, and application context.
 - Expanded the listing flow to capture the new knowledge-profile fields.
@@ -17,11 +21,14 @@ Updated: 2026-07-11
 
 ## What was verified
 - `npm --prefix Frontend run build`
+- Canonical static pages and the site shell built cleanly after the public route cleanup.
 - Backend syntax checks for the widened marketplace item model and normalizer
 - `git diff --check`
 - Local syntax and build checks passed after the book-store source-selection fix.
 
 ## What remains
+- Live deployment/cache propagation still needs a final public-site check after this route/SEO pass ships.
+- Some static fallback pages intentionally mirror SPA content; if we later consolidate to one canonical route per page, we can trim the duplicates further.
 - Existing listings will show stewardship and dossier details only when that data is already present.
 - Future listing submissions should populate the new knowledge profile fields to make the pages fully rich.
 - Claim codes still need to be shared by the current steward/owner for a transfer; the UI now exposes a dedicated management path.

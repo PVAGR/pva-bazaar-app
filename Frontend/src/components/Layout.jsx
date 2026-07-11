@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import OpenClawFloatingAssistant from './OpenClawFloatingAssistant.jsx';
 import { PUBLIC_ROUTES } from '../config/publicRoutes';
 import { getToken } from '../lib/auth';
@@ -37,6 +38,14 @@ export default function Layout({ children }) {
   }, [location?.pathname]);
 
   const routeIdentity = useMemo(() => {
+    if (pathname === '/') {
+      return {
+        badge: 'Home',
+        title: 'PVA Bazaar',
+        description: 'Pure life knowledge marketplace connecting trade, education, provenance, writings, and public partnership.',
+      };
+    }
+
     if (pathname.startsWith('/deal/')) {
       return {
         badge: null,
@@ -108,6 +117,14 @@ export default function Layout({ children }) {
     PUBLIC_ROUTES.filter((route) => route.navPlacement === 'primary' && route.access === 'public')
   ), []);
 
+  const canonicalUrl = useMemo(() => {
+    const cleanPath = pathname === '/home' ? '/' : pathname;
+    return `https://pvabazaar.org${cleanPath === '/' ? '/' : cleanPath}`;
+  }, [pathname]);
+
+  const seoDescription = routeIdentity.description
+    || 'PVA Bazaar is a pure life knowledge marketplace connecting education, trade, provenance, writings, and public partnerships.';
+
 
   const traversal = useMemo(() => {
     const publicRoutes = PUBLIC_ROUTES.filter((route) => route.access === 'public');
@@ -123,16 +140,19 @@ export default function Layout({ children }) {
 
   const footerKnowledgeRoutes = useMemo(() => [
     { key: 'archive', to: '/archive', title: 'Archive Library' },
+    { key: 'writings', to: '/writings', title: 'Writings' },
     { key: 'books', to: '/books', title: 'Books' },
     { key: 'books-published', to: '/books/published', title: 'Published Books' },
     { key: 'civilization-library', to: '/civilization-library', title: 'Civilization Library' },
-    { key: 'forum', to: '/forum', title: 'Forum' },
+    { key: 'portfolio', to: '/portfolio', title: 'Portfolio' },
   ], []);
 
   const footerCommerceRoutes = useMemo(() => [
     { key: 'marketplace', to: '/marketplace', title: 'Marketplace' },
     { key: 'showroom', to: '/showroom', title: 'Showroom' },
     { key: 'creator', to: '/creator', title: 'Supplier Portal' },
+    { key: 'partnerships', to: '/partnerships', title: 'Partnerships' },
+    { key: 'provenance', to: '/provenance', title: 'Provenance' },
     { key: 'heelkawn', to: '/heelkawn', title: 'HeelKawn' },
     { key: 'recovery', to: '/recovery', title: 'Recovery & Install' },
   ], []);
@@ -142,16 +162,42 @@ export default function Layout({ children }) {
     { key: 'conference', to: '/conference', title: 'Conference' },
     { key: 'treasury', to: '/treasury', title: 'Treasury' },
     { key: 'citizens', to: '/citizens', title: 'Citizens' },
+    { key: 'contact', to: '/contact', title: 'Contact' },
     { key: 'about', to: '/about', title: 'About' },
+  ], []);
+
+  const footerUtilityRoutes = useMemo(() => [
+    { key: 'privacy', to: '/privacy.html', title: 'Privacy' },
+    { key: 'terms', to: '/terms.html', title: 'Terms' },
+    { key: 'shipping', to: '/shipping.html', title: 'Shipping' },
+    { key: 'returns', to: '/returns.html', title: 'Returns' },
+    { key: 'disclaimer', to: '/disclaimer.html', title: 'Disclaimer' },
+    { key: 'status', to: '/status.html', title: 'Status' },
+    { key: 'sitemap', to: '/sitemap.xml', title: 'Sitemap' },
   ], []);
 
   return (
     <div className="layout">
+      <Helmet>
+        <title>{routeIdentity?.title ? `${routeIdentity.title} · PVA Bazaar` : 'PVA Bazaar | Pure Life Knowledge Marketplace'}</title>
+        <meta name="description" content={seoDescription} />
+        <link rel="canonical" href={canonicalUrl} />
+        <meta property="og:site_name" content="PVA Bazaar" />
+        <meta property="og:title" content={routeIdentity?.title ? `${routeIdentity.title} · PVA Bazaar` : 'PVA Bazaar | Pure Life Knowledge Marketplace'} />
+        <meta property="og:description" content={seoDescription} />
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:type" content={pathname === '/' ? 'website' : 'article'} />
+        <meta property="og:image" content="https://pvabazaar.org/og-default.svg" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={routeIdentity?.title ? `${routeIdentity.title} · PVA Bazaar` : 'PVA Bazaar | Pure Life Knowledge Marketplace'} />
+        <meta name="twitter:description" content={seoDescription} />
+        <meta name="twitter:image" content="https://pvabazaar.org/og-default.svg" />
+      </Helmet>
       <a className="sr-only" href="#content">Skip to content</a>
       <header className="layout__header">
         <NavLink to="/" end className="layout__brand layout__brandLink" aria-label="PVA Bazaar home">
           <div className="layout__title">pvabazaar.org</div>
-          <div className="layout__tagline">Personal site · Writings · Business · HeelKawn</div>
+          <div className="layout__tagline">Knowledge · Commerce · Partnerships · Archive</div>
         </NavLink>
         <nav className="layout__nav" aria-label="Primary">
           {primaryNavRoutes.map((route) => (
@@ -238,6 +284,17 @@ export default function Layout({ children }) {
                 <NavLink key={route.key} to={route.to} end={route.to === '/'}>
                   {route.title}
                 </NavLink>
+              ))}
+            </div>
+          </section>
+
+          <section className="layout__footerSection" aria-label="Legal and support">
+            <h2>Legal</h2>
+            <div className="layout__footerLinks">
+              {footerUtilityRoutes.map((route) => (
+                <a key={route.key} href={route.to}>
+                  {route.title}
+                </a>
               ))}
             </div>
           </section>

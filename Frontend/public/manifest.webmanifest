@@ -1,8 +1,8 @@
 {
   "name": "PVA Bazaar",
   "short_name": "PVA Bazaar",
-  "description": "Archive, marketplace, showroom, and popular conference for the PVA Bazaar civilization layer.",
-  "start_url": "/#/",
+  "description": "Pure life knowledge marketplace and public bridge for trade, education, provenance, writings, books, and partnerships.",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#0a0e27",
@@ -24,15 +24,15 @@
   "shortcuts": [
     {
       "name": "Archive Library",
-      "url": "/#/library"
+      "url": "/archive"
     },
     {
       "name": "Marketplace",
-      "url": "/#/marketplace"
+      "url": "/marketplace"
     },
     {
       "name": "Popular Conference",
-      "url": "/#/conference"
+      "url": "/conference"
     }
   ]
 }

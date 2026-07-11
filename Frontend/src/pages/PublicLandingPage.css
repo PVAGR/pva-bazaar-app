@@ -1,0 +1,115 @@
+.static-page {
+  display: grid;
+  gap: 1rem;
+}
+
+.static-page__hero,
+.static-page__card {
+  border: 1px solid var(--site-border, rgba(38, 198, 218, 0.24));
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--site-accent-soft, rgba(38, 198, 218, 0.18)) 35%, transparent), transparent 56%),
+    color-mix(in srgb, var(--site-panel, #12182c) 95%, transparent);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.18);
+}
+
+.static-page__hero {
+  padding: clamp(1.25rem, 2.5vw, 2rem);
+  display: grid;
+  gap: 0.9rem;
+}
+
+.static-page__kicker {
+  display: inline-flex;
+  width: fit-content;
+  padding: 0.4rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(38, 198, 218, 0.12);
+  color: var(--site-accent, #26c6da);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.static-page__hero h1,
+.static-page__card h2 {
+  margin: 0;
+  color: var(--site-text-strong, #f1fbff);
+  font-family: var(--site-font, Merriweather, Georgia, serif);
+}
+
+.static-page__hero p,
+.static-page__card p,
+.static-page__list li {
+  color: var(--site-text-muted, #b7c8d4);
+  line-height: 1.65;
+}
+
+.static-page__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.8rem 1rem;
+  border-radius: 999px;
+  border: 1px solid var(--site-accent, #26c6da);
+  background: var(--site-accent, #26c6da);
+  color: #071318;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.button.ghost {
+  background: transparent;
+  color: var(--site-text-strong, #f1fbff);
+}
+
+.static-page__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.static-page__card {
+  padding: 1rem;
+}
+
+.static-page__list {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.static-page__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.static-page__chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 0.8rem;
+  border-radius: 999px;
+  border: 1px solid rgba(38, 198, 218, 0.3);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--site-text-strong, #f1fbff);
+}
+
+.static-page__link {
+  color: var(--site-accent, #26c6da);
+  word-break: break-word;
+}
+
+@media (max-width: 900px) {
+  .static-page__grid {
+    grid-template-columns: 1fr;
+  }
+}

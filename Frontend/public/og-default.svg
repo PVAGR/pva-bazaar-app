@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="PVA Bazaar">
+  <defs>
+    <linearGradient id="g" x1="0%" x2="100%" y1="0%" y2="100%">
+      <stop offset="0%" stop-color="#091321"/>
+      <stop offset="100%" stop-color="#17334a"/>
+    </linearGradient>
+    <radialGradient id="r" cx="50%" cy="35%" r="70%">
+      <stop offset="0%" stop-color="#4fe0ec" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#4fe0ec" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#g)"/>
+  <circle cx="900" cy="150" r="280" fill="url(#r)"/>
+  <rect x="72" y="72" width="1056" height="486" rx="28" fill="rgba(255,255,255,0.03)" stroke="#3fd2de" stroke-opacity="0.28"/>
+  <text x="96" y="184" fill="#8df4ff" font-family="Georgia, serif" font-size="72" font-weight="700">PVA Bazaar</text>
+  <text x="96" y="260" fill="#ecf8fb" font-family="Inter, Arial, sans-serif" font-size="34">Pure Life Knowledge Marketplace</text>
+  <text x="96" y="330" fill="#b7ccd5" font-family="Inter, Arial, sans-serif" font-size="26">Education · Trade · Provenance · Writings · Partnerships</text>
+  <text x="96" y="418" fill="#cfe8ef" font-family="Inter, Arial, sans-serif" font-size="28">A public bridge for people, schools, suppliers, and partners.</text>
+  <text x="96" y="500" fill="#7bdfe9" font-family="Inter, Arial, sans-serif" font-size="22">pvabazaar.org</text>
+</svg>

@@ -1,23 +1,92 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Page Not Found — PVA Bazaar</title>
-    <link rel="canonical" href="https://pvabazaar.org/404.html" />
-    <meta name="description" content="404 — The page you requested could not be found." />
-    <style>
-      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; background:#0f1419; color:#e1e8ed; display:flex; align-items:center; justify-content:center; min-height:100vh; margin:0; }
-      .box { max-width: 640px; padding: 2rem; border:1px solid #2a3f5f; border-radius:8px; background:#11161b; }
-      a { color:#00d9ff; text-decoration:none; }
-      a:hover { color:#5eead4; }
-    </style>
-  </head>
-  <body>
-    <div class="box">
-      <h1>404 — Page Not Found</h1>
-      <p>The page you’re looking for doesn’t exist or may have moved.</p>
-      <p><a href="/">Go back to Home</a></p>
-    </div>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Page Not Found | PVA Bazaar</title>
+  <meta name="description" content="The requested PVA Bazaar page could not be found." />
+  <link rel="canonical" href="https://pvabazaar.org/404.html" />
+  <meta name="robots" content="noindex" />
+  <link rel="stylesheet" href="/styles/static-pages.css" />
+</head>
+<body>
+  <div class="shell">
+    <main class="page">
+      <section class="hero">
+        <span class="eyebrow">404</span>
+        <h1>This page could not be found.</h1>
+        <p id="redirectMessage">The link may be old, renamed, or missing. Use the navigation below to continue.</p>
+        <div class="actions">
+          <a class="button" href="/">Home</a>
+          <a class="button secondary" href="/marketplace.html">Marketplace</a>
+          <a class="button secondary" href="/archive.html">Archive</a>
+          <a class="button secondary" href="/contact.html">Contact</a>
+          <a class="button secondary" href="/about.html">About</a>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script>
+    (function () {
+      const path = (globalThis.location?.pathname || '/').replace(/\/+$/, '') || '/';
+      const normalized = path.toLowerCase();
+      const redirects = {
+        '/welcome': '/',
+        '/pages/welcome.html': '/',
+        '/home': '/',
+        '/about': '/#/about',
+        '/about.html': '/#/about',
+        '/marketplace': '/#/marketplace',
+        '/marketplace.html': '/#/marketplace',
+        '/archive': '/#/archive',
+        '/archive.html': '/#/archive',
+        '/writings': '/#/writings',
+        '/writings.html': '/#/writings',
+        '/books': '/#/books',
+        '/books.html': '/#/books',
+        '/books/published': '/#/books/published',
+        '/creator': '/#/creator',
+        '/creator.html': '/#/creator',
+        '/partnerships': '/#/partnerships',
+        '/partnerships.html': '/#/partnerships',
+        '/provenance': '/#/provenance',
+        '/provenance.html': '/#/provenance',
+        '/contact': '/#/contact',
+        '/contact.html': '/#/contact',
+        '/recovery': '/#/recovery',
+        '/recovery.html': '/#/recovery',
+        '/portfolio': '/#/portfolio',
+        '/portfolio.html': '/#/portfolio',
+        '/pvashares.html': '/#/partnerships',
+        '/governance': '/#/proposals',
+        '/proposals': '/#/proposals',
+        '/conference': '/#/conference',
+        '/forum': '/#/forum',
+        '/heelkawn': '/#/heelkawn',
+        '/status': '/status.html',
+        '/status.html': '/status.html',
+        '/privacy': '/privacy.html',
+        '/privacy.html': '/privacy.html',
+        '/terms': '/terms.html',
+        '/terms.html': '/terms.html',
+        '/shipping': '/shipping.html',
+        '/shipping.html': '/shipping.html',
+        '/returns': '/returns.html',
+        '/returns.html': '/returns.html',
+        '/disclaimer': '/disclaimer.html',
+        '/disclaimer.html': '/disclaimer.html',
+      };
+      const target = redirects[normalized];
+      if (target && target !== globalThis.location?.pathname) {
+        const message = document.getElementById('redirectMessage');
+        if (message) {
+          message.textContent = `Redirecting to the closest live page for ${path || '/'}.`;
+        }
+        globalThis.setTimeout(() => {
+          globalThis.location.replace(target);
+        }, 40);
+      }
+    })();
+  </script>
+</body>
 </html>
