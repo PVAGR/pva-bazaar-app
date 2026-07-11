@@ -117,12 +117,18 @@ jobs:
         run: npm ci || npm install --no-audit --no-fund
 
       - name: Bundle HeelKawn Android APK for pvabazaar.org
+        continue-on-error: true
         run: |
           mkdir -p public/downloads
-          curl -fL --retry 3 --retry-delay 5 \
+          if curl -fL --retry 3 --retry-delay 5 \
             -o public/downloads/HeelKawn-android.apk \
-            "https://github.com/PVAGR/HeelKawn1/releases/download/android-latest/HeelKawn-android.apk"
-          ls -lah public/downloads/
+            "https://github.com/PVAGR/HeelKawn1/releases/download/android-latest/HeelKawn-android.apk"; then
+            echo "Bundled HeelKawn Android APK for the live download tile."
+          else
+            echo "HeelKawn Android APK bundle unavailable; continuing site build without it."
+            rm -f public/downloads/HeelKawn-android.apk
+          fi
+          ls -lah public/downloads/ || true
 
       - name: Set Sentry Release (git SHA)
         id: sentry_release

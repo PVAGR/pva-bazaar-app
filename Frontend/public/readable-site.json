@@ -156,5 +156,308 @@
     "Use sitemap.xml for static file URLs under /pages and /writings.",
     "Hash routes are the live SPA navigation, while the .html pages provide no-JavaScript fallbacks."
   ],
-  "updatedAt": "2026-07-11T00:00:00Z"
+  "updatedAt": "2026-07-11T16:54:47.646Z",
+  "routes": [
+    {
+      "name": "Home",
+      "path": "/",
+      "url": "https://pvabazaar.org/",
+      "description": "Opening home page and public path chooser.",
+      "kind": "public-html-or-root"
+    },
+    {
+      "name": "Marketplace",
+      "path": "#/marketplace",
+      "url": "https://pvabazaar.org/#/marketplace",
+      "description": "Commerce surface for goods, kits, and sourcing opportunities.",
+      "kind": "spa-hash-route"
+    },
+    {
+      "name": "Archive",
+      "path": "#/archive",
+      "url": "https://pvabazaar.org/#/archive",
+      "description": "Archive library and long-form memory layer.",
+      "kind": "spa-hash-route"
+    },
+    {
+      "name": "Writings",
+      "path": "/writings.html",
+      "url": "https://pvabazaar.org/writings.html",
+      "description": "Static public writing index for no-JavaScript access.",
+      "kind": "public-html-or-root"
+    },
+    {
+      "name": "Books",
+      "path": "#/books",
+      "url": "https://pvabazaar.org/#/books",
+      "description": "Books hub and publishing gateway.",
+      "kind": "spa-hash-route"
+    },
+    {
+      "name": "Published Books",
+      "path": "#/books/published",
+      "url": "https://pvabazaar.org/#/books/published",
+      "description": "Public bookshelf with online reading and downloads.",
+      "kind": "spa-hash-route"
+    },
+    {
+      "name": "Supplier Portal",
+      "path": "#/creator",
+      "url": "https://pvabazaar.org/#/creator",
+      "description": "Supplier and creator onboarding.",
+      "kind": "spa-hash-route"
+    },
+    {
+      "name": "Partnerships",
+      "path": "/partnerships.html",
+      "url": "https://pvabazaar.org/partnerships.html",
+      "description": "Institution, supplier, and collaboration entry page.",
+      "kind": "public-html-or-root"
+    },
+    {
+      "name": "Provenance",
+      "path": "/provenance.html",
+      "url": "https://pvabazaar.org/provenance.html",
+      "description": "Origin, trust, and sourcing context page.",
+      "kind": "public-html-or-root"
+    },
+    {
+      "name": "Contact",
+      "path": "/contact.html",
+      "url": "https://pvabazaar.org/contact.html",
+      "description": "Public contact and inquiry page.",
+      "kind": "public-html-or-root"
+    },
+    {
+      "name": "Recovery",
+      "path": "#/recovery",
+      "url": "https://pvabazaar.org/#/recovery",
+      "description": "Continuity and recovery tools.",
+      "kind": "spa-hash-route"
+    },
+    {
+      "name": "Governance",
+      "path": "#/proposals",
+      "url": "https://pvabazaar.org/#/proposals",
+      "description": "Public proposal board.",
+      "kind": "spa-hash-route"
+    },
+    {
+      "name": "Conference",
+      "path": "#/conference",
+      "url": "https://pvabazaar.org/#/conference",
+      "description": "Governance conference page.",
+      "kind": "spa-hash-route"
+    },
+    {
+      "name": "Forum",
+      "path": "#/forum",
+      "url": "https://pvabazaar.org/#/forum",
+      "description": "Civic discussion and proposal support.",
+      "kind": "spa-hash-route"
+    },
+    {
+      "name": "HeelKawn",
+      "path": "#/heelkawn",
+      "url": "https://pvabazaar.org/#/heelkawn",
+      "description": "Adjacent game hub and repository pulse.",
+      "kind": "spa-hash-route"
+    },
+    {
+      "name": "Status",
+      "path": "/status.html",
+      "url": "https://pvabazaar.org/status.html",
+      "description": "Frontend and backend health page.",
+      "kind": "public-html-or-root"
+    },
+    {
+      "name": "Privacy",
+      "path": "/privacy.html",
+      "url": "https://pvabazaar.org/privacy.html",
+      "description": "Privacy policy and data handling notes.",
+      "kind": "public-html-or-root"
+    },
+    {
+      "name": "Terms",
+      "path": "/terms.html",
+      "url": "https://pvabazaar.org/terms.html",
+      "description": "Terms of use and platform expectations.",
+      "kind": "public-html-or-root"
+    },
+    {
+      "name": "Shipping",
+      "path": "/shipping.html",
+      "url": "https://pvabazaar.org/shipping.html",
+      "description": "Shipping and fulfillment guidance.",
+      "kind": "public-html-or-root"
+    },
+    {
+      "name": "Returns",
+      "path": "/returns.html",
+      "url": "https://pvabazaar.org/returns.html",
+      "description": "Returns and exchange guidance.",
+      "kind": "public-html-or-root"
+    },
+    {
+      "name": "Disclaimer",
+      "path": "/disclaimer.html",
+      "url": "https://pvabazaar.org/disclaimer.html",
+      "description": "Important public disclaimer about site claims.",
+      "kind": "public-html-or-root"
+    },
+    {
+      "name": "Welcome Redirect",
+      "path": "/pages/welcome.html",
+      "url": "https://pvabazaar.org/pages/welcome.html",
+      "description": "Legacy welcome route redirecting to the main homepage.",
+      "kind": "legacy-static-fallback"
+    },
+    {
+      "name": "Legacy Portfolio",
+      "path": "/pages/portfolio.html",
+      "url": "https://pvabazaar.org/pages/portfolio.html",
+      "description": "Legacy portfolio route redirecting to the professional portfolio page.",
+      "kind": "legacy-static-fallback"
+    },
+    {
+      "name": "Legacy Provenance",
+      "path": "/pages/provenance.html",
+      "url": "https://pvabazaar.org/pages/provenance.html",
+      "description": "Legacy provenance route redirecting to the trust and sourcing page.",
+      "kind": "legacy-static-fallback"
+    },
+    {
+      "name": "Legacy PVA Shares",
+      "path": "/pages/pvashares.html",
+      "url": "https://pvabazaar.org/pages/pvashares.html",
+      "description": "Legacy participation route redirecting to partnerships and support.",
+      "kind": "legacy-static-fallback"
+    },
+    {
+      "name": "Static About",
+      "path": "/about.html",
+      "url": "https://pvabazaar.org/about.html",
+      "description": "Static about page for no-JavaScript access.",
+      "kind": "static-html"
+    },
+    {
+      "name": "Static Contact",
+      "path": "/contact.html",
+      "url": "https://pvabazaar.org/contact.html",
+      "description": "Static contact page for no-JavaScript access.",
+      "kind": "static-html"
+    },
+    {
+      "name": "Static Partnerships",
+      "path": "/partnerships.html",
+      "url": "https://pvabazaar.org/partnerships.html",
+      "description": "Static partnerships page for no-JavaScript access.",
+      "kind": "static-html"
+    },
+    {
+      "name": "Static Provenance",
+      "path": "/provenance.html",
+      "url": "https://pvabazaar.org/provenance.html",
+      "description": "Static provenance page for no-JavaScript access.",
+      "kind": "static-html"
+    },
+    {
+      "name": "Static Portfolio",
+      "path": "/portfolio.html",
+      "url": "https://pvabazaar.org/portfolio.html",
+      "description": "Static portfolio page for no-JavaScript access.",
+      "kind": "static-html"
+    },
+    {
+      "name": "Static Marketplace",
+      "path": "/marketplace.html",
+      "url": "https://pvabazaar.org/marketplace.html",
+      "description": "Static marketplace page for no-JavaScript access.",
+      "kind": "static-html"
+    },
+    {
+      "name": "Static Archive",
+      "path": "/archive.html",
+      "url": "https://pvabazaar.org/archive.html",
+      "description": "Static archive page for no-JavaScript access.",
+      "kind": "static-html"
+    },
+    {
+      "name": "Static Books",
+      "path": "/books.html",
+      "url": "https://pvabazaar.org/books.html",
+      "description": "Static books page for no-JavaScript access.",
+      "kind": "static-html"
+    },
+    {
+      "name": "Static Creator",
+      "path": "/creator.html",
+      "url": "https://pvabazaar.org/creator.html",
+      "description": "Static creator portal page for no-JavaScript access.",
+      "kind": "static-html"
+    },
+    {
+      "name": "Static Recovery",
+      "path": "/recovery.html",
+      "url": "https://pvabazaar.org/recovery.html",
+      "description": "Static recovery page for no-JavaScript access.",
+      "kind": "static-html"
+    },
+    {
+      "name": "Static Governance",
+      "path": "/governance.html",
+      "url": "https://pvabazaar.org/governance.html",
+      "description": "Static governance page for no-JavaScript access.",
+      "kind": "static-html"
+    },
+    {
+      "name": "Static HeelKawn",
+      "path": "/heelkawn.html",
+      "url": "https://pvabazaar.org/heelkawn.html",
+      "description": "Static HeelKawn page for no-JavaScript access.",
+      "kind": "static-html"
+    },
+    {
+      "name": "Static Privacy",
+      "path": "/privacy.html",
+      "url": "https://pvabazaar.org/privacy.html",
+      "description": "Static privacy page for no-JavaScript access.",
+      "kind": "static-html"
+    },
+    {
+      "name": "Static Terms",
+      "path": "/terms.html",
+      "url": "https://pvabazaar.org/terms.html",
+      "description": "Static terms page for no-JavaScript access.",
+      "kind": "static-html"
+    },
+    {
+      "name": "Static Shipping",
+      "path": "/shipping.html",
+      "url": "https://pvabazaar.org/shipping.html",
+      "description": "Static shipping page for no-JavaScript access.",
+      "kind": "static-html"
+    },
+    {
+      "name": "Static Returns",
+      "path": "/returns.html",
+      "url": "https://pvabazaar.org/returns.html",
+      "description": "Static returns page for no-JavaScript access.",
+      "kind": "static-html"
+    },
+    {
+      "name": "Static Disclaimer",
+      "path": "/disclaimer.html",
+      "url": "https://pvabazaar.org/disclaimer.html",
+      "description": "Static disclaimer page for no-JavaScript access.",
+      "kind": "static-html"
+    },
+    {
+      "name": "Static Status",
+      "path": "/status.html",
+      "url": "https://pvabazaar.org/status.html",
+      "description": "Static status page for no-JavaScript access.",
+      "kind": "static-html"
+    }
+  ]
 }
