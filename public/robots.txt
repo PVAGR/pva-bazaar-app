@@ -2,3 +2,5 @@ User-agent: *
 Allow: /
 
 Sitemap: https://pvabazaar.org/sitemap.xml
+# Machine-readable index for AI fetchers
+LLM: https://pvabazaar.org/llms.txt

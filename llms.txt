@@ -1,57 +1,44 @@
 # PVA Bazaar
 
-This site is a JavaScript SPA. If you cannot execute JavaScript, use this file and readable-site.json.
+PVA Bazaar is a public pure-life knowledge marketplace and business bridge.
+It combines commerce, provenance, archive writing, publishing, continuity tools, and institutional partnership pages.
 
 Site URL: https://pvabazaar.org/
 Sitemap: https://pvabazaar.org/sitemap.xml
 Readable JSON: https://pvabazaar.org/readable-site.json
 Status page: https://pvabazaar.org/status.html
 
-Primary routes (hash SPA):
-- Home: https://pvabazaar.org/#/
-- Archive Library: https://pvabazaar.org/#/library
+Public surfaces:
+- Home: https://pvabazaar.org/
 - Marketplace: https://pvabazaar.org/#/marketplace
-- Showroom: https://pvabazaar.org/#/showroom
-- Civilization Library: https://pvabazaar.org/#/civilization-library
-- Public Conference: https://pvabazaar.org/#/conference
-- Governance Proposal Board: https://pvabazaar.org/#/proposals
-- Submit Proposal: https://pvabazaar.org/#/proposals/submit
-- Citizen Passport: https://pvabazaar.org/#/passport
-- Citizens Directory: https://pvabazaar.org/#/citizens
+- Archive: https://pvabazaar.org/#/archive
+- Writings: https://pvabazaar.org/writings.html
+- Books: https://pvabazaar.org/#/books
+- Published Books: https://pvabazaar.org/#/books/published
+- Supplier Portal: https://pvabazaar.org/#/creator
+- Partnerships: https://pvabazaar.org/partnerships.html
+- Provenance: https://pvabazaar.org/provenance.html
+- Contact: https://pvabazaar.org/contact.html
+- Privacy: https://pvabazaar.org/privacy.html
+- Terms: https://pvabazaar.org/terms.html
+- Shipping: https://pvabazaar.org/shipping.html
+- Returns: https://pvabazaar.org/returns.html
+- Disclaimer: https://pvabazaar.org/disclaimer.html
+- Recovery: https://pvabazaar.org/#/recovery
+- HeelKawn: https://pvabazaar.org/#/heelkawn
+- Governance: https://pvabazaar.org/#/proposals
+- Conference: https://pvabazaar.org/#/conference
 - Forum: https://pvabazaar.org/#/forum
-- Governance Conference: https://pvabazaar.org/#/governance/conference
-- Governance Treasury: https://pvabazaar.org/#/governance/treasury
-- Career Quiz: https://pvabazaar.org/#/career-quiz
-- About: https://pvabazaar.org/#/about
-- Creator Portal: https://pvabazaar.org/#/creator
-- Download App: https://pvabazaar.org/#/download-app
+- Civilization Atlas: https://pvabazaar.org/#/marketplace/civilization/agriculture
 
-Route purpose:
-- Home: Full site landing hub and navigation overview.
-- Archive Library: Long-form archive content and entries.
-- Marketplace: Product and artifact catalog with commerce features.
-- Showroom: Curated presentation pages and item detail viewing.
-- Civilization Library: Knowledge and civilization-oriented writing index.
-- Public Conference: Public governance sessions, agenda, and proposal discussions with wallet verification.
-- Governance Proposal Board: Public proposal lifecycle board with status and endorsement progress.
-- Submit Proposal: Verified citizen submission flow for new proposals.
-- Citizen Passport: Identity and credential dashboard for citizens.
-- Citizens Directory: Public listing of citizen profiles.
-- Forum: Community discussion board for citizen dialogue, announcements, and open conversations.
-- Governance Conference: Governance agenda and conference session view.
-- Governance Treasury: Governance treasury and ledger view.
-- Career Quiz: Career guidance and assessment flow.
-- About: Site and project overview.
-- Creator Portal: Creator onboarding and sign-up.
-- Download App: Mobile and quick-access install information.
+Legacy static compatibility:
+- /pages/welcome.html
+- /pages/portfolio.html
+- /pages/provenance.html
+- /pages/pvashares.html
 
-Implementation notes:
-- Frontend framework: React + Vite
-- Router style: HashRouter
-- Main app shell: / (index.html) mounts React app into #root
-
-If you are an AI agent fetching this website:
-1) Read this file first.
-2) Read readable-site.json for structured metadata.
-3) Use sitemap.xml for additional static page URLs.
-4) If the root page looks like a shell, use the fallback content in index.html and the hash routes above.
+Notes for fetchers:
+1. Start with this file for a short summary.
+2. Use readable-site.json for structured route metadata.
+3. Static HTML fallback pages exist for direct browser access without JavaScript.
+4. Private account surfaces require authentication.
