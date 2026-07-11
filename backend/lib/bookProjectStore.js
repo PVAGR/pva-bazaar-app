@@ -1,6 +1,10 @@
 const fs = require('fs/promises');
 const path = require('path');
-const { getFileContent, updateFileContent } = require('../services/gitHubService');
+const {
+  getEffectiveGitHubToken,
+  getFileContent,
+  updateFileContent,
+} = require('../services/gitHubService');
 
 const STORE_PATH = process.env.BOOK_STORE_PATH || path.resolve(__dirname, '../data/book-projects.json');
 const GITHUB_STORE_PATH = process.env.BOOK_STORE_GITHUB_PATH || 'backend/data/book-projects.json';
@@ -68,14 +72,7 @@ async function readStoreFromDisk() {
 }
 
 function shouldUseGitHubStore() {
-  return Boolean(
-    process.env.GITHUB_TOKEN ||
-      process.env.GITHUB_APP_TOKEN ||
-      process.env.GH_TOKEN ||
-      process.env.BOOK_STORE_GITHUB_TOKEN ||
-      process.env.BOOK_STORE_TOKEN ||
-      process.env.GITHUB_PAT,
-  );
+  return Boolean(getEffectiveGitHubToken());
 }
 
 async function readStoreFromGitHub() {
@@ -149,7 +146,19 @@ function queuePersist() {
 }
 
 async function ensureStoreLoaded() {
+  if (shouldUseGitHubStore()) {
+    if (!store.loaded || store.sourceMode !== 'github') {
+      if (await readStoreFromGitHub()) {
+        store.loaded = true;
+        return;
+      }
+    } else {
+      return;
+    }
+  }
+
   if (store.loaded) return;
+
   if (!(await readStoreFromGitHub())) {
     await readStoreFromDisk();
   }
@@ -266,11 +275,12 @@ async function deleteBook(bookId) {
 
 async function getBookStoreState() {
   await ensureStoreLoaded();
+  const usingGitHub = shouldUseGitHubStore();
   return {
-    mode: shouldUseGitHubStore() ? 'github' : 'file',
+    mode: usingGitHub ? 'github' : 'file',
     connected: true,
     readyState: 1,
-    path: shouldUseGitHubStore() ? GITHUB_STORE_PATH : STORE_PATH,
+    path: usingGitHub ? GITHUB_STORE_PATH : STORE_PATH,
     books: store.books.length,
     loaded: store.loaded,
     sourceMode: store.sourceMode,

@@ -5,31 +5,66 @@
 
 const axios = require('axios');
 
-const GITHUB_TOKEN =
-  process.env.GITHUB_TOKEN ||
-  process.env.GITHUB_APP_TOKEN ||
-  process.env.GH_TOKEN ||
-  process.env.BOOK_STORE_GITHUB_TOKEN ||
-  process.env.BOOK_STORE_TOKEN ||
-  process.env.GITHUB_PAT;
 const GITHUB_OWNER = process.env.GITHUB_OWNER || 'PVAGR';
 const GITHUB_REPO = process.env.GITHUB_REPO || 'pva-bazaar-app';
 
-const github = axios.create({
-  baseURL: 'https://api.github.com',
-  headers: {
-    'Authorization': `token ${GITHUB_TOKEN}`,
-    'Accept': 'application/vnd.github.v3+json',
-  },
-});
+function getStaticGitHubToken() {
+  return (
+    process.env.GITHUB_TOKEN ||
+    process.env.GITHUB_APP_TOKEN ||
+    process.env.GH_TOKEN ||
+    process.env.BOOK_STORE_GITHUB_TOKEN ||
+    process.env.BOOK_STORE_TOKEN ||
+    process.env.GITHUB_PAT ||
+    ''
+  ).trim();
+}
 
-console.log(`🔗 GitHub Integration: ${GITHUB_TOKEN ? '✅' : '🔴'} (${GITHUB_OWNER}/${GITHUB_REPO})`);
+function getOverriddenGitHubToken() {
+  return String(global._pvaGitHubTokenOverride || '').trim();
+}
+
+function getEffectiveGitHubToken() {
+  return getOverriddenGitHubToken() || getStaticGitHubToken();
+}
+
+function createGithubClient() {
+  const token = getEffectiveGitHubToken();
+  const headers = {
+    Accept: 'application/vnd.github.v3+json',
+  };
+
+  if (token) {
+    headers.Authorization = `token ${token}`;
+  }
+
+  return axios.create({
+    baseURL: 'https://api.github.com',
+    headers,
+  });
+}
+
+function setGitHubTokenOverride(token) {
+  const next = String(token || '').trim();
+  if (next) {
+    global._pvaGitHubTokenOverride = next;
+  } else {
+    delete global._pvaGitHubTokenOverride;
+  }
+}
+
+function clearGitHubTokenOverride() {
+  delete global._pvaGitHubTokenOverride;
+}
+
+console.log(`🔗 GitHub Integration: ${getEffectiveGitHubToken() ? '✅' : '🔴'} (${GITHUB_OWNER}/${GITHUB_REPO})`);
 
 /**
  * Get file content from GitHub
  */
 async function getFileContent(filePath, branch = 'main') {
   try {
+    const github = createGithubClient();
     const response = await github.get(
       `/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${filePath}`,
       {
@@ -63,6 +98,7 @@ async function getFileContent(filePath, branch = 'main') {
  */
 async function updateFileContent(filePath, newContent, commitMessage, branch = 'main') {
   try {
+    const github = createGithubClient();
     // First, get current file to get SHA
     const current = await getFileContent(filePath, branch);
 
@@ -115,6 +151,7 @@ async function updateFileContent(filePath, newContent, commitMessage, branch = '
  */
 async function createBranch(branchName, baseBranch = 'main') {
   try {
+    const github = createGithubClient();
     // Get the latest commit SHA from base branch
     const refResponse = await github.get(
       `/repos/${GITHUB_OWNER}/${GITHUB_REPO}/git/refs/heads/${baseBranch}`
@@ -149,6 +186,7 @@ async function createBranch(branchName, baseBranch = 'main') {
  */
 async function createPullRequest(title, description, head, base = 'main') {
   try {
+    const github = createGithubClient();
     const response = await github.post(
       `/repos/${GITHUB_OWNER}/${GITHUB_REPO}/pulls`,
       {
@@ -177,6 +215,7 @@ async function createPullRequest(title, description, head, base = 'main') {
  */
 async function listFiles(dirPath = '', branch = 'main') {
   try {
+    const github = createGithubClient();
     const response = await github.get(
       `/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${dirPath}`,
       {
@@ -218,6 +257,7 @@ async function listFiles(dirPath = '', branch = 'main') {
  */
 async function getRepoStatus() {
   try {
+    const github = createGithubClient();
     const response = await github.get(`/repos/${GITHUB_OWNER}/${GITHUB_REPO}`);
 
     return {
@@ -245,6 +285,7 @@ async function getRepoStatus() {
  */
 async function mergePullRequest(prNumber, commitTitle, commitMessage, mergeMethod = 'squash') {
   try {
+    const github = createGithubClient();
     const response = await github.put(
       `/repos/${GITHUB_OWNER}/${GITHUB_REPO}/pulls/${prNumber}/merge`,
       {
@@ -268,11 +309,14 @@ async function mergePullRequest(prNumber, commitTitle, commitMessage, mergeMetho
 }
 
 module.exports = {
-  getFileContent,
-  updateFileContent,
+  clearGitHubTokenOverride,
   createBranch,
   createPullRequest,
-  listFiles,
+  getFileContent,
+  getEffectiveGitHubToken,
   getRepoStatus,
+  listFiles,
   mergePullRequest,
+  setGitHubTokenOverride,
+  updateFileContent,
 };

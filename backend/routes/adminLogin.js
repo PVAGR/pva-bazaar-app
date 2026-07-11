@@ -5,6 +5,7 @@ const crypto = require('crypto');
 const axios = require('axios');
 const User = require('../models/User');
 const { getJwtSecret, hasConfiguredJwtSecret } = require('../lib/jwtSecret');
+const { encryptJson } = require('../utils/cryptoVault');
 
 function isObjectIdHex(v) {
   return typeof v === 'string' && /^[a-f\d]{24}$/i.test(v);
@@ -401,6 +402,16 @@ router.get('/oauth/github/callback', async (req, res) => {
       name: displayName,
       email: derivedEmail || '',
       avatarUrl: String(profile.avatar_url || ''),
+      payload: encryptJson({
+        provider: 'github-admin',
+        accessToken,
+        id: githubId,
+        login: githubLogin,
+        name: displayName,
+        email: derivedEmail || '',
+        avatarUrl: String(profile.avatar_url || ''),
+        saved_at: new Date().toISOString(),
+      }),
       updatedAt: new Date().toISOString(),
     };
 

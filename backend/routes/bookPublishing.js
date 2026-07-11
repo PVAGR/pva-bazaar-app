@@ -5,8 +5,10 @@ const fsp = require('fs').promises;
 const path = require('path');
 const axios = require('axios');
 const { authenticateToken } = require('../middleware/auth');
+const User = require('../models/User');
 const BookProject = require('../models/BookProject');
 const { getMongoState } = require('../lib/mongoConnection');
+const { decryptJson } = require('../utils/cryptoVault');
 const {
   deleteBook: deleteFileBook,
   findBookById: findFileBookById,
@@ -20,6 +22,10 @@ const {
   buildEpubBuffer,
   escapeHtml,
 } = require('../services/bookPublisher');
+const {
+  clearGitHubTokenOverride,
+  setGitHubTokenOverride,
+} = require('../services/gitHubService');
 
 let mammoth = null;
 try {
@@ -92,6 +98,45 @@ function authenticateBookPublishing(req, res, next) {
   }
 
   return authenticateToken(req, res, next);
+}
+
+function hasStaticGitHubToken() {
+  return Boolean(
+    process.env.GITHUB_TOKEN ||
+      process.env.GITHUB_APP_TOKEN ||
+      process.env.GH_TOKEN ||
+      process.env.BOOK_STORE_GITHUB_TOKEN ||
+      process.env.BOOK_STORE_TOKEN ||
+      process.env.GITHUB_PAT,
+  );
+}
+
+async function attachRequestGitHubToken(req, res, next) {
+  if (hasStaticGitHubToken()) {
+    return next();
+  }
+
+  const userId = String(req.user?.id || '').trim();
+  if (!userId || String(req.user?.role || '').toLowerCase() !== 'admin') {
+    return next();
+  }
+
+  try {
+    const user = await User.findById(userId).select('oauthTokens').lean();
+    const tokenPayload = user?.oauthTokens?.githubAdminProfile?.payload;
+    const tokenData = decryptJson(tokenPayload);
+    const accessToken = String(tokenData?.accessToken || '').trim();
+    if (accessToken) {
+      setGitHubTokenOverride(accessToken);
+      const clearToken = () => clearGitHubTokenOverride();
+      res.once('finish', clearToken);
+      res.once('close', clearToken);
+    }
+  } catch (error) {
+    console.warn('⚠️ GitHub token attach failed:', error?.message || error);
+  }
+
+  return next();
 }
 
 const BOOK_UPLOAD_DIR = path.join(__dirname, '../uploads/books');
@@ -430,7 +475,7 @@ function renderNotFoundHtml(message) {
 </html>`;
 }
 
-router.get('/mine', authenticateBookPublishing, async (req, res) => {
+router.get('/mine', authenticateBookPublishing, attachRequestGitHubToken, async (req, res) => {
   try {
     const items = await listUserBooks(req.user.id);
 
@@ -486,7 +531,7 @@ router.get('/public', async (req, res) => {
   }
 });
 
-router.post('/', authenticateBookPublishing, bookUpload, async (req, res) => {
+router.post('/', authenticateBookPublishing, attachRequestGitHubToken, bookUpload, async (req, res) => {
   try {
     const bookId = sanitizeText(req.body?.bookId || '', 120);
     const title = sanitizeText(req.body?.title || '', 240);
@@ -708,7 +753,7 @@ router.get('/public/:slug/download/epub', async (req, res) => {
   }
 });
 
-router.get('/:bookId', authenticateBookPublishing, async (req, res) => {
+router.get('/:bookId', authenticateBookPublishing, attachRequestGitHubToken, async (req, res) => {
   try {
     const book = await loadBookForEdit(req.params.bookId);
     if (!book) return notFound(res);
@@ -721,7 +766,7 @@ router.get('/:bookId', authenticateBookPublishing, async (req, res) => {
   }
 });
 
-router.get('/:bookId/view', authenticateBookPublishing, async (req, res) => {
+router.get('/:bookId/view', authenticateBookPublishing, attachRequestGitHubToken, async (req, res) => {
   try {
     const book = await loadBookForEdit(req.params.bookId);
     if (!book) return res.status(404).type('html').send(renderNotFoundHtml('Book not found.'));
@@ -737,7 +782,7 @@ router.get('/:bookId/view', authenticateBookPublishing, async (req, res) => {
   }
 });
 
-router.get('/:bookId/assets/:assetKey', authenticateBookPublishing, async (req, res) => {
+router.get('/:bookId/assets/:assetKey', authenticateBookPublishing, attachRequestGitHubToken, async (req, res) => {
   try {
     const book = await loadBookForEdit(req.params.bookId);
     if (!book) return notFound(res);
@@ -764,7 +809,7 @@ router.get('/:bookId/assets/:assetKey', authenticateBookPublishing, async (req, 
   }
 });
 
-router.get('/:bookId/download/pdf', authenticateBookPublishing, async (req, res) => {
+router.get('/:bookId/download/pdf', authenticateBookPublishing, attachRequestGitHubToken, async (req, res) => {
   try {
     const book = await loadBookForEdit(req.params.bookId);
     if (!book) return notFound(res);
@@ -782,7 +827,7 @@ router.get('/:bookId/download/pdf', authenticateBookPublishing, async (req, res)
   }
 });
 
-router.get('/:bookId/download/epub', authenticateBookPublishing, async (req, res) => {
+router.get('/:bookId/download/epub', authenticateBookPublishing, attachRequestGitHubToken, async (req, res) => {
   try {
     const book = await loadBookForEdit(req.params.bookId);
     if (!book) return notFound(res);
@@ -800,7 +845,7 @@ router.get('/:bookId/download/epub', authenticateBookPublishing, async (req, res
   }
 });
 
-router.delete('/:bookId', authenticateBookPublishing, async (req, res) => {
+router.delete('/:bookId', authenticateBookPublishing, attachRequestGitHubToken, async (req, res) => {
   try {
     const book = await loadBookForEdit(req.params.bookId);
     if (!book) return notFound(res);
