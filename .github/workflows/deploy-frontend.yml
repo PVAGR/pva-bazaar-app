@@ -48,12 +48,12 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
           cache-dependency-path: 'package-lock.json'
 
       - name: Install frontend dependencies
-        run: npm ci || npm install --no-audit --no-fund
+        run: npm ci --legacy-peer-deps || npm install --no-audit --no-fund --legacy-peer-deps
 
       - name: Run src theme guard
         continue-on-error: true
@@ -74,7 +74,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
 
       - name: Skip baseline live readiness gate for manual deploys
         if: github.event_name == 'workflow_dispatch'
@@ -109,12 +109,12 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
           cache-dependency-path: 'package-lock.json'
 
       - name: Install frontend dependencies
-        run: npm ci || npm install --no-audit --no-fund
+        run: npm ci --legacy-peer-deps || npm install --no-audit --no-fund --legacy-peer-deps
 
       - name: Bundle HeelKawn Android APK for pvabazaar.org
         continue-on-error: true
@@ -253,13 +253,13 @@ jobs:
         if: steps.vercel_secrets.outputs.ready == 'true'
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
           cache-dependency-path: 'package-lock.json'
 
       - name: Install frontend dependencies
         if: steps.vercel_secrets.outputs.ready == 'true'
-        run: npm ci || npm install --no-audit --no-fund
+        run: npm ci --legacy-peer-deps || npm install --no-audit --no-fund --legacy-peer-deps
 
       - name: Build frontend
         if: steps.vercel_secrets.outputs.ready == 'true'
@@ -302,7 +302,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
 
       - name: Run strict live readiness gate
         env:
