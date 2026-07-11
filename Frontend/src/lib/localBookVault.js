@@ -91,6 +91,7 @@ export function normalizeLocalBook(raw) {
   var id = String(book.id || book._id || 'local-book-' + Date.now());
   var slug = normalize(book.slug) || ('local-book-' + id).toLowerCase();
   var status = (String(book.status || 'draft').toLowerCase() === 'published') ? 'published' : 'draft';
+  var pendingPublish = Boolean(book.pendingPublish || book.publishQueued || book.publishRequested);
   var title = String(book.title || 'Untitled book').trim();
   var manuscriptMarkdown = String(book.manuscriptMarkdown || '');
   var wc = Number(book.wordCount || manuscriptMarkdown.split(/\s+/).filter(Boolean).length || 0);
@@ -107,6 +108,7 @@ export function normalizeLocalBook(raw) {
     publishedAt: book.publishedAt || null,
     updatedAt: book.updatedAt || new Date().toISOString(),
     createdAt: book.createdAt || new Date().toISOString(),
+    pendingPublish: pendingPublish,
     manuscriptMarkdown: manuscriptMarkdown,
     webHtml: String(book.webHtml || ''),
     frontCover: book.frontCover || {},
@@ -127,6 +129,10 @@ export function listLocalBookProjects() {
 
 export function listLocalPublishedBookProjects() {
   return listLocalBookProjects().filter(function(b) { return b.status === 'published'; });
+}
+
+export function listLocalQueuedPublishBookProjects() {
+  return listLocalBookProjects().filter(function(b) { return b.pendingPublish && b.status !== 'published'; });
 }
 
 export function findLocalBookById(bookId) {

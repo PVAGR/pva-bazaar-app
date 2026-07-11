@@ -43,6 +43,24 @@ function countWords(text) {
     .filter(Boolean).length;
 }
 
+function normalizeBookKey(book) {
+  return String(book?.slug || book?.id || book?._id || '')
+    .trim()
+    .toLowerCase();
+}
+
+function mergeBooksByKey(primary = [], secondary = []) {
+  const merged = [];
+  const seen = new Set();
+  for (const book of [...primary, ...secondary]) {
+    const key = normalizeBookKey(book);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    merged.push(book);
+  }
+  return merged;
+}
+
 async function fileToDataUrl(file) {
   if (!file) return '';
   return new Promise((resolve, reject) => {
@@ -210,6 +228,69 @@ export default function BookPublishingPage() {
     }
   }
 
+  async function syncQueuedPublishDrafts(remoteBooks = [], localBooks = []) {
+    const remoteSlugs = new Set(
+      (remoteBooks || [])
+        .map((book) => String(book?.slug || '').trim().toLowerCase())
+        .filter(Boolean),
+    );
+    const queued = (localBooks || []).filter((book) => {
+      const slug = String(book?.slug || '').trim().toLowerCase();
+      return Boolean(book?.pendingPublish) && slug && !remoteSlugs.has(slug);
+    });
+
+    if (!queued.length) return;
+
+    let syncedCount = 0;
+    const syncedItems = [];
+    for (const localBook of queued) {
+      try {
+        const payload = await buildRemotePayloadFromBook(localBook);
+        payload.set('publish', 'true');
+        const data = await saveBookProject(payload);
+        if (data?.ok && data?.item) {
+          syncedCount += 1;
+          syncedItems.push(data.item);
+          saveLocalBookProject({
+            ...localBook,
+            pendingPublish: false,
+            status: 'published',
+            publishedAt: data.item.publishedAt || new Date().toISOString(),
+            slug: data.item.slug || localBook.slug,
+            title: data.item.title || localBook.title,
+            subtitle: data.item.subtitle || localBook.subtitle,
+            authorName: data.item.authorName || localBook.authorName,
+            description: data.item.description || localBook.description,
+            genre: data.item.genre || localBook.genre,
+            audience: data.item.audience || localBook.audience,
+            language: data.item.language || localBook.language,
+            manuscriptMarkdown: data.item.manuscriptMarkdown || localBook.manuscriptMarkdown,
+          });
+        }
+      } catch (_err) {
+        // Keep trying queued books individually.
+      }
+    }
+
+    if (syncedItems.length) {
+      setBooks((prev) => {
+        const next = [...prev];
+        for (const item of syncedItems) {
+          const key = normalizeBookKey(item);
+          const filtered = next.filter((book) => normalizeBookKey(book) !== key);
+          filtered.unshift(item);
+          next.splice(0, next.length, ...filtered);
+        }
+        return next;
+      });
+      setSelectedBookId(String(syncedItems[0]?.id || syncedItems[0]?._id || selectedBookId || ''));
+    }
+
+    if (syncedCount > 0) {
+      setSuccess((prev) => prev || `${syncedCount} queued publish${syncedCount === 1 ? '' : 'es'} synced online.`);
+    }
+  }
+
   async function loadBooks() {
     setLoading(true);
     setError('');
@@ -220,14 +301,7 @@ export default function BookPublishingPage() {
       }
       const items = Array.isArray(data.items) ? data.items : [];
       const localItems = listLocalBookProjects();
-      const merged = [...items, ...localItems].reduce((acc, book) => {
-        const key = String(book.id || book._id || book.slug || '');
-        if (!key) return acc;
-        if (!acc.some((item) => String(item.id || item._id || item.slug || '') === key)) {
-          acc.push(book);
-        }
-        return acc;
-      }, []);
+      const merged = mergeBooksByKey(items, localItems);
       setBooks(merged);
       if (!selectedBookId && items.length) {
         setSelectedBookId(items[0].id);
@@ -236,6 +310,7 @@ export default function BookPublishingPage() {
       }
       if (items.length || localItems.length) {
         void syncLocalPublishedBooks(items, localItems);
+        void syncQueuedPublishDrafts(items, localItems);
       }
     } catch (err) {
       const localItems = listLocalBookProjects();
@@ -412,7 +487,7 @@ export default function BookPublishingPage() {
         setBooks((prev) => {
           const withoutDuplicate = prev.filter((book) => {
             const sameRemoteId = String(book.id || '') === String(saved.id || '');
-            const sameSlug = String(book.slug || '').trim().toLowerCase() === String(saved.slug || '').trim().toLowerCase();
+            const sameSlug = normalizeBookKey(book) === normalizeBookKey(saved);
             return !(sameRemoteId || sameSlug);
           });
           return [saved, ...withoutDuplicate].sort((left, right) => new Date(right.updatedAt || 0) - new Date(left.updatedAt || 0));
@@ -430,7 +505,7 @@ export default function BookPublishingPage() {
             setBooks((prev) => {
               const withoutRemote = prev.filter((book) => {
                 const sameRemoteId = String(book.id || '') === String(saved.id || '');
-                const sameLocalSlug = String(book.slug || '').trim().toLowerCase() === String(localSaved.slug || '').trim().toLowerCase();
+                const sameLocalSlug = normalizeBookKey(book) === normalizeBookKey(localSaved);
                 return !(sameRemoteId || sameLocalSlug);
               });
               return [saved, ...withoutRemote].sort((left, right) => new Date(right.updatedAt || 0) - new Date(left.updatedAt || 0));
@@ -442,13 +517,48 @@ export default function BookPublishingPage() {
 
         return;
       } catch (networkErr) {
-        const localSaved = await saveViaLocalVault();
-        setSuccess(
-          publish
-            ? `"${localSaved.title}" is published locally on this device and ready to view.`
-            : `"${localSaved.title}" was saved locally as a draft.`,
-        );
-        setError('');
+        if (publish) {
+          const localSaved = saveLocalBookProject({
+            bookId: form.bookId || '',
+            title: form.title,
+            subtitle: form.subtitle,
+            authorName: form.authorName,
+            slug: form.slug,
+            description: form.description,
+            genre: form.genre,
+            audience: form.audience,
+            language: form.language,
+            manuscriptMarkdown: form.manuscriptMarkdown,
+            status: 'draft',
+            pendingPublish: true,
+            frontCover: frontCoverFile
+              ? {
+                  provider: 'local',
+                  url: await fileToDataUrl(frontCoverFile),
+                  originalName: frontCoverFile?.name || '',
+                  mimeType: frontCoverFile?.type || '',
+                  size: frontCoverFile?.size || 0,
+                }
+              : undefined,
+            backCover: backCoverFile
+              ? {
+                  provider: 'local',
+                  url: await fileToDataUrl(backCoverFile),
+                  originalName: backCoverFile?.name || '',
+                  mimeType: backCoverFile?.type || '',
+                  size: backCoverFile?.size || 0,
+                }
+              : undefined,
+          });
+          setBooks((prev) => mergeBooksByKey([localSaved], prev.filter((book) => normalizeBookKey(book) !== normalizeBookKey(localSaved))));
+          setSelectedBookId(localSaved.id);
+          setSuccess(`"${localSaved.title}" was saved locally and queued for online publishing. It is not live yet.`);
+          setError('Online publish failed. The book is saved locally and will sync when the backend is reachable.');
+        } else {
+          const localSaved = await saveViaLocalVault();
+          setSuccess(`"${localSaved.title}" was saved locally as a draft.`);
+          setError('');
+        }
       }
     } catch (err) {
       setError(err.message || 'Failed to save book');

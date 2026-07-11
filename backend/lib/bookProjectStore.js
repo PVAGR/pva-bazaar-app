@@ -1,12 +1,15 @@
 const fs = require('fs/promises');
 const path = require('path');
+const { getFileContent, updateFileContent } = require('../services/gitHubService');
 
 const STORE_PATH = process.env.BOOK_STORE_PATH || path.resolve(__dirname, '../data/book-projects.json');
+const GITHUB_STORE_PATH = process.env.BOOK_STORE_GITHUB_PATH || 'backend/data/book-projects.json';
 
 const store = global._pvaBookProjectStore || {
   books: [],
   loaded: false,
   nextId: 1,
+  sourceMode: 'file',
 };
 
 global._pvaBookProjectStore = store;
@@ -53,6 +56,7 @@ async function readStoreFromDisk() {
         }, 0);
         store.nextId = maxId + 1;
       }
+      store.sourceMode = 'file';
       return true;
     }
   } catch (err) {
@@ -60,6 +64,49 @@ async function readStoreFromDisk() {
       console.warn('⚠️ book store read failed:', err.message || err);
     }
   }
+  return false;
+}
+
+function shouldUseGitHubStore() {
+  return Boolean(
+    process.env.GITHUB_TOKEN ||
+      process.env.GITHUB_APP_TOKEN ||
+      process.env.GH_TOKEN ||
+      process.env.BOOK_STORE_GITHUB_TOKEN ||
+      process.env.BOOK_STORE_TOKEN ||
+      process.env.GITHUB_PAT,
+  );
+}
+
+async function readStoreFromGitHub() {
+  if (!shouldUseGitHubStore()) return false;
+
+  try {
+    const response = await getFileContent(GITHUB_STORE_PATH);
+    if (!response?.success || !response?.content) {
+      return false;
+    }
+
+    const parsed = JSON.parse(response.content);
+    if (parsed && Array.isArray(parsed.books)) {
+      store.books = parsed.books.map(hydrateBook).filter(Boolean);
+      const nextId = Number(parsed.nextId);
+      if (Number.isFinite(nextId) && nextId > 0) {
+        store.nextId = nextId;
+      } else {
+        const maxId = store.books.reduce((max, book) => {
+          const value = Number(book._id);
+          return Number.isFinite(value) && value > max ? value : max;
+        }, 0);
+        store.nextId = maxId + 1;
+      }
+      store.sourceMode = 'github';
+      return true;
+    }
+  } catch (err) {
+    console.warn('⚠️ book store GitHub read failed:', err?.message || err);
+  }
+
   return false;
 }
 
@@ -75,8 +122,27 @@ async function persistStoreToDisk() {
   await fs.rename(tmpPath, STORE_PATH);
 }
 
+async function persistStoreToGitHub() {
+  const payload = {
+    books: store.books.map(stripRuntimeFields),
+    nextId: store.nextId,
+    updatedAt: new Date().toISOString(),
+  };
+  const response = await updateFileContent(
+    GITHUB_STORE_PATH,
+    JSON.stringify(payload, null, 2),
+    'PVA Bazaar: update book project store',
+  );
+  if (!response?.success) {
+    throw new Error(response?.error || 'GitHub book store persist failed');
+  }
+  return response;
+}
+
 function queuePersist() {
-  writeQueue = writeQueue.then(() => persistStoreToDisk()).catch((err) => {
+  writeQueue = writeQueue.then(() => (
+    shouldUseGitHubStore() ? persistStoreToGitHub() : persistStoreToDisk()
+  )).catch((err) => {
     console.warn('⚠️ book store persist failed:', err?.message || err);
   });
   return writeQueue;
@@ -84,7 +150,9 @@ function queuePersist() {
 
 async function ensureStoreLoaded() {
   if (store.loaded) return;
-  await readStoreFromDisk();
+  if (!(await readStoreFromGitHub())) {
+    await readStoreFromDisk();
+  }
   store.loaded = true;
 }
 
@@ -199,12 +267,13 @@ async function deleteBook(bookId) {
 async function getBookStoreState() {
   await ensureStoreLoaded();
   return {
-    mode: 'file',
+    mode: shouldUseGitHubStore() ? 'github' : 'file',
     connected: true,
     readyState: 1,
-    path: STORE_PATH,
+    path: shouldUseGitHubStore() ? GITHUB_STORE_PATH : STORE_PATH,
     books: store.books.length,
     loaded: store.loaded,
+    sourceMode: store.sourceMode,
   };
 }
 

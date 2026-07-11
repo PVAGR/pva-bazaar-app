@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Book publishing now prefers GitHub-backed persistence when a GitHub token is present in the live backend, so published books can remain visible across devices instead of living only in one serverless instance.
+- Failed online publishes now stay queued locally as drafts with publish intent, instead of claiming the book is already live when the backend is unreachable.
 - Item-specific access codes and QR manage links for perennial listings, so the original creator or steward can open, update, and continue a listing from a persistent referral hash.
 - Creator-only listing deletion for the original poster, keeping the history of a perennial item protected from other users.
 - A more seller-friendly default stewardship split for listings that use the consignment flow.

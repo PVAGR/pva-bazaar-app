@@ -21,6 +21,24 @@ function formatDate(value) {
   }
 }
 
+function normalizeBookKey(book) {
+  return String(book?.slug || book?.id || book?._id || '')
+    .trim()
+    .toLowerCase();
+}
+
+function mergeBooksByKey(primary = [], secondary = []) {
+  const merged = [];
+  const seen = new Set();
+  for (const book of [...primary, ...secondary]) {
+    const key = normalizeBookKey(book);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    merged.push(book);
+  }
+  return merged;
+}
+
 export default function BookShelfPage() {
   const [books, setBooks] = useState([]);
   const [query, setQuery] = useState('');
@@ -42,14 +60,7 @@ export default function BookShelfPage() {
         }
         const localItems = listLocalPublishedBookProjects();
         const items = Array.isArray(data.items) ? data.items : [];
-        const merged = [...items, ...localItems].reduce((acc, book) => {
-          const key = String(book.id || book.slug || '');
-          if (!key) return acc;
-          if (!acc.some((item) => String(item.id || item.slug || '') === key)) {
-            acc.push(book);
-          }
-          return acc;
-        }, []);
+        const merged = mergeBooksByKey(items, localItems);
         if (!cancelled) {
           setBooks(merged);
         }

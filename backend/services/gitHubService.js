@@ -5,7 +5,13 @@
 
 const axios = require('axios');
 
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+const GITHUB_TOKEN =
+  process.env.GITHUB_TOKEN ||
+  process.env.GITHUB_APP_TOKEN ||
+  process.env.GH_TOKEN ||
+  process.env.BOOK_STORE_GITHUB_TOKEN ||
+  process.env.BOOK_STORE_TOKEN ||
+  process.env.GITHUB_PAT;
 const GITHUB_OWNER = process.env.GITHUB_OWNER || 'PVAGR';
 const GITHUB_REPO = process.env.GITHUB_REPO || 'pva-bazaar-app';
 
