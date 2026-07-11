@@ -23,7 +23,7 @@
   display: flex;
   gap: 20px;
   padding: 20px;
-  background: white;
+  background: var(--site-panel);
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   position: relative;
@@ -60,7 +60,7 @@
 
 .btn {
   padding: 10px 20px;
-  background: #ff6b6b;
+  background: var(--site-danger-bg);
   color: white;
   border: none;
   border-radius: 4px;
@@ -70,7 +70,7 @@
 }
 
 .btn:hover {
-  background: #ff5252;
+  background: color-mix(in srgb, var(--site-danger-bg) 80%, var(--site-panel));
 }
 
 .btn.following {
@@ -89,7 +89,7 @@
 }
 
 .productCard {
-  background: white;
+  background: var(--site-panel);
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -153,7 +153,7 @@
 }
 
 .policyCard {
-  background: #f8f9fa;
+  background: var(--site-panel-soft);
   padding: 15px;
   border-radius: 8px;
 }
@@ -165,7 +165,7 @@
 }
 
 .error {
-  background: #ffe0e0;
+  background: var(--site-danger-bg);
   color: #c92a2a;
   padding: 15px;
   border-radius: 8px;

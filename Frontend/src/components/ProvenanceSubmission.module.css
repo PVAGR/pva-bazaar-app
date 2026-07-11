@@ -3,7 +3,7 @@
   max-width: 900px;
   margin: 0 auto;
   padding: 20px;
-  background: white;
+  background: var(--site-panel);
   border-radius: 12px;
   box-shadow: 0 2px 16px rgba(0, 0, 0, 0.1);
 }
@@ -15,7 +15,7 @@
 .progressBar {
   width: 100%;
   height: 8px;
-  background: #e0e0e0;
+  background: var(--site-border);
   border-radius: 4px;
   overflow: hidden;
   margin-bottom: 10px;
@@ -79,9 +79,9 @@
 
 .typeCard {
   padding: 20px;
-  border: 2px solid #e0e0e0;
+  border: 2px solid var(--site-border);
   border-radius: 8px;
-  background: white;
+  background: var(--site-panel);
   cursor: pointer;
   transition: all 0.2s;
   display: flex;
@@ -91,8 +91,8 @@
 }
 
 .typeCard:hover {
-  border-color: #4c6ef5;
-  background: #f0f4ff;
+  border-color: var(--site-accent);
+  background: color-mix(in srgb, var(--site-accent-soft) 60%, var(--site-panel));
   transform: translateY(-2px);
 }
 
@@ -217,7 +217,7 @@
 
 .proofOption {
   padding: 15px;
-  border: 2px solid #e0e0e0;
+  border: 2px solid var(--site-border);
   border-radius: 6px;
   cursor: pointer;
   display: flex;
@@ -227,8 +227,8 @@
 }
 
 .proofOption:hover {
-  border-color: #4c6ef5;
-  background: #f0f4ff;
+  border-color: var(--site-accent);
+  background: color-mix(in srgb, var(--site-accent-soft) 60%, var(--site-panel));
 }
 
 .proofOption input {
@@ -237,19 +237,19 @@
 
 /* Upload Area */
 .uploadArea {
-  border: 2px dashed #4c6ef5;
+  border: 2px dashed var(--site-accent);
   border-radius: 8px;
   padding: 40px;
   text-align: center;
-  background: #f0f4ff;
+  background: color-mix(in srgb, var(--site-accent-soft) 55%, var(--site-panel));
   margin: 20px 0;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .uploadArea:hover {
-  border-color: #364fc7;
-  background: #e7f0ff;
+  border-color: var(--site-accent-strong);
+  background: color-mix(in srgb, var(--site-accent-soft) 75%, var(--site-panel));
 }
 
 .uploadArea p {
@@ -264,7 +264,7 @@
 
 /* Score Card */
 .scoreCard {
-  background: #f8f9fa;
+  background: var(--site-panel-soft);
   padding: 20px;
   border-radius: 8px;
   margin: 20px 0;
@@ -283,7 +283,7 @@
 .scoreBar {
   width: 100%;
   height: 8px;
-  background: #e0e0e0;
+  background: var(--site-border);
   border-radius: 4px;
   overflow: hidden;
   margin-bottom: 5px;
@@ -298,7 +298,7 @@
 .scoreSection span {
   display: inline-block;
   padding: 4px 8px;
-  background: white;
+  background: var(--site-panel);
   border-radius: 4px;
   font-weight: 600;
   color: #51cf66;
@@ -332,7 +332,7 @@
 .checkmark {
   width: 80px;
   height: 80px;
-  background: #51cf66;
+  background: var(--site-success-bg);
   color: white;
   border-radius: 50%;
   display: flex;
