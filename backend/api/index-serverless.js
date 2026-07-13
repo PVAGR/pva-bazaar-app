@@ -20,7 +20,9 @@ app.use(express.json({ limit: '30mb' }));
 app.use(express.urlencoded({ extended: true, limit: '30mb' }));
 
 function forceMockDbMode() {
-  return process.env.VERCEL === '1' && process.env.FORCE_REAL_DB !== 'true';
+  // Only force mock mode on Vercel if MONGODB_URI is not set and FORCE_REAL_DB is not true
+  const hasMongoUri = Boolean(process.env.MONGODB_URI || process.env.DATABASE_URL);
+  return process.env.VERCEL === '1' && !hasMongoUri && process.env.FORCE_REAL_DB !== 'true';
 }
 
 async function ensureDatabaseState() {
