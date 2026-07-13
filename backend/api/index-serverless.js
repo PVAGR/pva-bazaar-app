@@ -16,8 +16,8 @@ app.use(cors({
   origin: true,
   credentials: true,
 }));
-app.use(express.json({ limit: '1mb' }));
-app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+app.use(express.json({ limit: '30mb' }));
+app.use(express.urlencoded({ extended: true, limit: '30mb' }));
 
 function forceMockDbMode() {
   return process.env.VERCEL === '1' && process.env.FORCE_REAL_DB !== 'true';
@@ -89,6 +89,7 @@ app.use('/api/book-publishing', require('../routes/bookPublishing'));
 app.use('/api/admin', require('../routes/adminLogin'));
 app.use('/api/admin', require('../routes/admin'));
 app.use('/api/health', require('../routes/health'));
+app.use('/api/book-publishing', require('../routes/bookPublishing'));
 
 app.get('/api/ping', (_req, res) => {
   const build = getBuildInfo();

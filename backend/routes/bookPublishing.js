@@ -613,7 +613,17 @@ router.post('/', authenticateBookPublishing, attachRequestGitHubToken, bookUploa
         return res.status(403).json({ ok: false, error: 'You do not have permission to edit this book' });
       }
     } else {
-      book = shouldUseFileBookStore() ? { authorId: req.user.id } : new BookProject({ authorId: req.user.id });
+      const authorId = String(req.user?.id || req.user?._id || '');
+      if (shouldUseFileBookStore()) {
+        book = { authorId };
+      } else {
+        const useMockStore = process.env.VERCEL === '1' && process.env.FORCE_REAL_DB !== 'true';
+        if (useMockStore) {
+          book = { authorId };
+        } else {
+          book = new BookProject({ authorId });
+        }
+      }
     }
 
     const previousStatus = book.status || 'draft';
@@ -677,6 +687,7 @@ router.post('/', authenticateBookPublishing, attachRequestGitHubToken, bookUploa
     book.audience = sanitizeText(req.body?.audience || 'general', 80).toLowerCase() || 'general';
     book.language = sanitizeText(req.body?.language || 'en', 24).toLowerCase() || 'en';
     book.slug = await resolveUniqueSlug(req.body?.slug || book.title, book._id);
+    book.authorId = String(book.authorId || req.user?.id || req.user?._id || '');
     book.wordCount = String(book.manuscriptMarkdown || '')
       .split(/\s+/)
       .map((token) => token.trim())
@@ -689,10 +700,10 @@ router.post('/', authenticateBookPublishing, attachRequestGitHubToken, bookUploa
       book.publishedAt = new Date();
     }
 
-    const useFileStore = shouldUseFileBookStore();
+    const useFileStore = shouldUseFileBookStore() || (process.env.VERCEL === '1' && process.env.FORCE_REAL_DB !== 'true');
     let savedBook = null;
 
-    if (useFileStore && !bookId) {
+    if (useFileStore) {
       savedBook = await persistBookRecord(book);
       const renderBase = shouldPublish
         ? `/api/book-publishing/public/${encodeURIComponent(savedBook.slug)}`

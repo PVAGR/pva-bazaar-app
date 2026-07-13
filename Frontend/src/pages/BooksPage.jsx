@@ -65,6 +65,11 @@ export default function BooksPage() {
                 <Link className="books-page__button" to={book.archiveCta}>
                   Enter archive
                 </Link>
+                {book.key === 'this-or-that' ? (
+                  <Link className="books-page__button books-page__button--primary" to="/books/this-or-that">
+                    Book page
+                  </Link>
+                ) : null}
               </div>
             </article>
           ))}

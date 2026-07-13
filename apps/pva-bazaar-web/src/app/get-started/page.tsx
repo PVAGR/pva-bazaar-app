@@ -15,6 +15,11 @@ const START_ROUTES = [
     description: "Understand how artifact trust and integrity checks are performed.",
   },
   {
+    href: "/library",
+    title: "Library",
+    description: "Browse the marketplace library of published books and publish your own.",
+  },
+  {
     href: "/manifesto",
     title: "Manifesto",
     description: "See the federation values and anti-Druj operating stance.",
@@ -87,8 +92,8 @@ export const metadata: Metadata = {
 };
 
 export default function GetStartedPage() {
-  const coreRoutes = START_ROUTES.slice(0, 3);
-  const journeyRoutes = START_ROUTES.slice(3);
+  const coreRoutes = START_ROUTES.slice(0, 4);
+  const journeyRoutes = START_ROUTES.slice(4);
 
   return (
     <section className="flex w-full flex-col gap-10">

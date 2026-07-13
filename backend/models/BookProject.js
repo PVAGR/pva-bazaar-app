@@ -21,8 +21,7 @@ const bookAssetSchema = new mongoose.Schema(
 const bookProjectSchema = new mongoose.Schema(
   {
     authorId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      type: String,
       required: true,
       index: true,
     },

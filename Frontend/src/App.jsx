@@ -63,6 +63,7 @@ const BooksPage = lazy(() => import('./pages/BooksPage.jsx'));
 const BookShelfPage = lazy(() => import('./pages/BookShelfPage.jsx'));
 const BookPublishingPage = lazy(() => import('./pages/BookPublishingPage.jsx'));
 const BookReaderPage = lazy(() => import('./pages/BookReaderPage.jsx'));
+const BookHomePage = lazy(() => import('./pages/BookHomePage.jsx'));
 const WritingStudioPage = lazy(() => import('./pages/WritingStudioPage.jsx'));
 const BlogPostPage = lazy(() => import('./pages/BlogPostPage.jsx'));
 const BrokerHubPage = lazy(() => import('./pages/BrokerHubPage.jsx'));
@@ -135,6 +136,7 @@ export default function App() {
         <Route path="/books/published" element={<Layout><BookShelfPage /></Layout>} />
         <Route path="/books/publish" element={<RequireUserAuth><Layout><BookPublishingPage /></Layout></RequireUserAuth>} />
         <Route path="/books/read/:slug" element={<Layout><BookReaderPage /></Layout>} />
+        <Route path="/books/this-or-that" element={<Layout><BookHomePage /></Layout>} />
         <Route path="/get-started" element={<Layout><GetStartedPage /></Layout>} />
         <Route path="/home" element={<Navigate to="/" replace />} />
         <Route path="/writings" element={<Layout><ArchiveLibraryPage /></Layout>} />

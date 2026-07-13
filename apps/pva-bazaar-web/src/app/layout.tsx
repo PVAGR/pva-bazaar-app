@@ -164,6 +164,9 @@ export default function RootLayout({
                 <Link href="/cart" className="hover:text-amber-300">
                   Cart
                 </Link>
+                <Link href="/library" className="hover:text-amber-300">
+                  Library
+                </Link>
               </div>
             </nav>
             <div className="border-t border-zinc-800/80 bg-zinc-950/80">
