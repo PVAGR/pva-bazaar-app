@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import './BookHomePage.css';
 
 const BOOK_DATA = {
   title: 'This or That',

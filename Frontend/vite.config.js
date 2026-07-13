@@ -37,7 +37,14 @@ export default defineConfig({
       // Prefer Vite's default chunking to avoid startup ordering regressions
       // from aggressive manual chunk grouping in production.
       output: {}
+    },
+    rolldownOptions: {
+      external: ['qrcode']
     }
+  },
+  // Disable Rolldown to avoid qrcode resolution issues
+  experimental: {
+    useRolldown: false
   },
   server: {
     port: 5173,
