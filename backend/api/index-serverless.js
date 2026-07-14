@@ -136,7 +136,6 @@ app.use('/api/book-publishing', require('../routes/bookPublishing'));
 app.use('/api/admin', require('../routes/adminLogin'));
 app.use('/api/admin', require('../routes/admin'));
 app.use('/api/health', require('../routes/health'));
-app.use('/api/book-publishing', require('../routes/bookPublishing'));
 
 app.get('/api/ping', (_req, res) => {
   const build = getBuildInfo();

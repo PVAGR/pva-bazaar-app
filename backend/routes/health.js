@@ -17,17 +17,15 @@ try {
 router.get('/', async (_req, res) => {
   // Health check: simple, no DB dependency
   const build = getBuildInfo();
-  const forceMockDb = process.env.VERCEL === '1' && process.env.FORCE_REAL_DB !== 'true';
   let mongoState = getMongoState();
 
-  if (forceMockDb) {
-    mongoState = {
-      ...mongoState,
-      mode: 'mock',
-      connected: true,
-      readyState: 1,
-    };
-  } else {
+  // Only skip connection attempt when there is no URI configured AND we are on Vercel.
+  // If MONGODB_URI is present, always attempt/report the real connection state.
+  const hasUri = mongoState.hasEnvUri;
+  const onVercel = process.env.VERCEL === '1';
+  const skipConnect = onVercel && !hasUri;
+
+  if (!skipConnect) {
     try {
       await Promise.race([
         connectMongo({ logger: console }),
@@ -36,7 +34,6 @@ router.get('/', async (_req, res) => {
     } catch (err) {
       console.warn('⚠️ Health check DB connection failed:', err.message);
     }
-
     mongoState = getMongoState();
   }
   const authStoreState = await getAuthStoreState().catch(() => null);

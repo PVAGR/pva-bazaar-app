@@ -98,11 +98,22 @@ function createMockConnection() {
 async function connectMongo(options = {}) {
   const logger = options.logger || console;
 
-  if (state.conn) {
+  // If a real connection is already established and healthy, reuse it.
+  if (state.conn && state.mode === 'mongo' && mongoose.connection.readyState === 1) {
     return state.conn;
   }
 
-  if (state.promise) {
+  // If a previous attempt produced a mock/error object while a URI is now present,
+  // clear state so we attempt a real connection.
+  const uriFromEnvNow = getMongoUriFromEnv();
+  if (state.conn && state.conn.mocked && uriFromEnvNow && state.mode !== 'mongo') {
+    state.conn = null;
+    state.promise = null;
+    state.mode = 'disconnected';
+  }
+
+  // Reuse an in-progress promise.
+  if (state.promise && state.mode !== 'disconnected') {
     state.conn = await state.promise;
     return state.conn;
   }
@@ -121,9 +132,9 @@ async function connectMongo(options = {}) {
 
   async function connectWithUri(uri, mode) {
     state.promise = mongoose.connect(uri, {
-      serverSelectionTimeoutMS: 5000,
-      connectTimeoutMS: 10000,
-      socketTimeoutMS: 20000,
+      serverSelectionTimeoutMS: 10000,
+      connectTimeoutMS: 15000,
+      socketTimeoutMS: 30000,
       maxPoolSize: 10,
       autoIndex: process.env.NODE_ENV !== 'production',
     });
@@ -159,6 +170,20 @@ async function connectMongo(options = {}) {
     logger.log?.('🔌 Connecting to MongoDB...');
     return await connectWithUri(uriFromEnv, 'mongo');
   } catch (err) {
+    // If MONGODB_URI is set, do NOT silently fall back to mock — surface the real error
+    // so the operator knows the connection failed. Only fall back to mock when no URI
+    // is configured at all.
+    if (uriFromEnv) {
+      logger.error?.(`❌ MongoDB connection failed: ${err.message}`);
+      state.promise = null;
+      state.mode = 'error';
+      // Still return a mock so the process doesn't crash, but report mode=error
+      // so health checks surface the problem.
+      state.conn = createMockConnection();
+      state.conn.mode = 'error';
+      return state.conn;
+    }
+
     if (isServerlessProduction() || isRenderProduction()) {
       logger.warn?.(`⚠️ MongoDB connection failed in serverless/render mode (${err.message}). Using mock database state.`);
       state.mode = 'mock';
@@ -212,10 +237,20 @@ function getMongoState() {
     ? 'mock'
     : state.mode;
 
+  // For real mongo connections, use mongoose readyState.
+  // For mock/memory connections, derive from the connection object itself.
+  let readyState;
+  if (effectiveMode === 'mongo' || effectiveMode === 'memory') {
+    readyState = mongoose.connection.readyState;
+  } else {
+    // mock mode: report 0 (not connected) so callers can see the true state
+    readyState = (state.conn && state.conn.mocked) ? 0 : mongoose.connection.readyState;
+  }
+
   return {
     mode: effectiveMode,
-    connected: Boolean(state.conn) || effectiveMode === 'mock',
-    readyState: mongoose.connection.readyState,
+    connected: effectiveMode === 'mongo' ? mongoose.connection.readyState === 1 : Boolean(state.conn),
+    readyState,
     hasEnvUri: Boolean(getMongoUriFromEnv()),
     fallbackAllowed: shouldAllowMemoryFallback(),
   };
