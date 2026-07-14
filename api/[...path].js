@@ -10,7 +10,9 @@ app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
 function forceMockDbMode() {
-  return process.env.VERCEL === '1' && process.env.FORCE_REAL_DB !== 'true';
+  // Only force mock when no URI is configured
+  const hasMongoUri = Boolean(process.env.MONGODB_URI || process.env.DATABASE_URL);
+  return process.env.VERCEL === '1' && !hasMongoUri;
 }
 
 async function ensureDatabaseState() {
@@ -59,7 +61,45 @@ app.use(mountSharedMiddleware);
 
 app.get(['/api/health', '/health'], async (_req, res) => {
   const build = getBuildInfo();
-  const mongoState = await ensureDatabaseState();
+  const mongoUri = process.env.MONGODB_URI || process.env.DATABASE_URL || '';
+
+  // Use a fresh connection each time so cached global state cannot mask the real error.
+  let dbDiag = {
+    hasEnvUri: Boolean(mongoUri),
+    mode: 'unknown',
+    readyState: 0,
+    connected: false,
+    error: null,
+  };
+
+  if (mongoUri) {
+    const mongoose = require('mongoose');
+    const freshConn = mongoose.createConnection();
+    try {
+      await Promise.race([
+        freshConn.openUri(mongoUri, {
+          serverSelectionTimeoutMS: 8000,
+          connectTimeoutMS: 8000,
+        }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('health check connection timeout after 8s')), 8500)),
+      ]);
+      dbDiag.mode = 'mongo';
+      dbDiag.readyState = freshConn.readyState;
+      dbDiag.connected = true;
+      await freshConn.close().catch(() => {});
+    } catch (err) {
+      dbDiag.mode = 'error';
+      dbDiag.readyState = 0;
+      dbDiag.connected = false;
+      // Redact password from URI in error message
+      const raw = err.message || String(err);
+      dbDiag.error = raw.replace(/(?<=:\/\/[^:]+:)[^@]+(?=@)/g, '***');
+      await freshConn.close().catch(() => {});
+    }
+  } else {
+    dbDiag.mode = 'mock';
+  }
+
   res.status(200).json({
     ok: true,
     message: 'PVA Bazaar API is healthy!',
@@ -70,12 +110,7 @@ app.get(['/api/health', '/health'], async (_req, res) => {
     version: build.version,
     sha: build.sha,
     shortSha: build.shortSha,
-    database: {
-      mode: mongoState.mode,
-      connected: mongoState.connected,
-      readyState: mongoState.readyState,
-      hasEnvUri: mongoState.hasEnvUri,
-    },
+    database: dbDiag,
   });
 });
 
@@ -120,14 +155,12 @@ const loadAuth = () => require('../backend/routes/auth');
 const loadBookPublishing = () => require('../backend/routes/bookPublishing');
 const loadAdminLogin = () => require('../backend/routes/adminLogin');
 const loadAdmin = () => require('../backend/routes/admin');
-const loadHealth = () => require('../backend/routes/health');
 
 app.use('/api/health-check', lazyRouteFactory(loadHealthCheck));
 app.use('/api/auth', lazyRouteFactory(loadAuth));
 app.use('/api/book-publishing', lazyRouteFactory(loadBookPublishing));
 app.use('/api/admin', lazyRouteFactory(loadAdminLogin));
 app.use('/api/admin', lazyRouteFactory(loadAdmin));
-app.use('/api/health', lazyRouteFactory(loadHealth));
 
 app.use((req, res) => {
   res.status(404).json({ ok: false, message: 'API endpoint not found' });
