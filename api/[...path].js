@@ -63,6 +63,19 @@ app.get(['/api/health', '/health'], async (_req, res) => {
   const build = getBuildInfo();
   const mongoUri = process.env.MONGODB_URI || process.env.DATABASE_URL || '';
 
+  // Parse URI for diagnostics — never expose the password value.
+  let uriDiag = { present: Boolean(mongoUri), username: null, host: null, passwordLength: null };
+  if (mongoUri) {
+    try {
+      const parsed = new URL(mongoUri);
+      uriDiag.username = parsed.username || null;
+      uriDiag.host = parsed.hostname || null;
+      uriDiag.passwordLength = parsed.password ? parsed.password.length : 0;
+    } catch (_parseErr) {
+      uriDiag.parseError = 'URI could not be parsed as a URL';
+    }
+  }
+
   // Use a fresh connection each time so cached global state cannot mask the real error.
   let dbDiag = {
     hasEnvUri: Boolean(mongoUri),
@@ -70,6 +83,7 @@ app.get(['/api/health', '/health'], async (_req, res) => {
     readyState: 0,
     connected: false,
     error: null,
+    uri: uriDiag,
   };
 
   if (mongoUri) {
@@ -91,7 +105,7 @@ app.get(['/api/health', '/health'], async (_req, res) => {
       dbDiag.mode = 'error';
       dbDiag.readyState = 0;
       dbDiag.connected = false;
-      // Redact password from URI in error message
+      // Redact password from URI in error message before including it
       const raw = err.message || String(err);
       dbDiag.error = raw.replace(/(?<=:\/\/[^:]+:)[^@]+(?=@)/g, '***');
       await freshConn.close().catch(() => {});
