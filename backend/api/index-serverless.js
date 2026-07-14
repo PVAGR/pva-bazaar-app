@@ -169,7 +169,10 @@ app.use('/api/auth', require('../routes/auth'));
 app.use('/api/book-publishing', require('../routes/bookPublishing'));
 app.use('/api/admin', require('../routes/adminLogin'));
 app.use('/api/admin', require('../routes/admin'));
-app.use('/api/health', require('../routes/health'));
+
+// Note: /api/health is handled by the inline handler above.
+// The health route module is intentionally not mounted here to avoid
+// the warm-instance global state cache masking real connection errors.
 
 app.get('/api/ping', (_req, res) => {
   const build = getBuildInfo();
