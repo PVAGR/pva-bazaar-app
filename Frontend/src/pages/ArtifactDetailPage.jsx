@@ -141,7 +141,7 @@ export default function ArtifactDetailPage() {
                   aria-pressed={idx === mainIdx}
                   onClick={() => setMainIdx(idx)}
                 >
-                  <img src={img} alt="" />
+                  <img src={img} alt={`Thumbnail ${idx + 1}`} />
                 </button>
               ))}
             </div>
