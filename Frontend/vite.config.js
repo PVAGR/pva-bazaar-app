@@ -34,9 +34,14 @@ export default defineConfig({
     sourcemap: true,
     rollupOptions: {
       external: ['fsevents'],
-      // Prefer Vite's default chunking to avoid startup ordering regressions
-      // from aggressive manual chunk grouping in production.
-      output: {}
+      // Split large vendor chunks for better caching and performance
+      output: {
+        manualChunks: {
+          'charts-vendor': ['chart.js', 'react-chartjs-2', 'recharts'],
+          'mammoth-vendor': ['mammoth'],
+          'markdown-vendor': ['react-markdown', 'rehype-sanitize'],
+        }
+      }
     },
     rolldownOptions: {
       external: ['qrcode']
