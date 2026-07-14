@@ -41,9 +41,22 @@ router.get('/', async (_req, res) => {
   const effectiveDatabaseMode = mongoState.mode === 'mock' && authStoreState?.mode === 'file'
     ? 'file'
     : mongoState.mode;
-  const response = { 
-    ok: true, 
-    message: 'PVA Bazaar API is healthy!', 
+
+  const dbBlock = {
+    mode: effectiveDatabaseMode,
+    connected: effectiveDatabaseMode === 'file' ? true : mongoState.connected,
+    readyState: effectiveDatabaseMode === 'file' ? 1 : mongoState.readyState,
+    hasEnvUri: mongoState.hasEnvUri,
+    authStore: authStoreState,
+    bookStore: bookStoreState,
+  };
+  if (effectiveDatabaseMode === 'error' && mongoState.lastError) {
+    dbBlock.error = mongoState.lastError;
+  }
+
+  const response = {
+    ok: true,
+    message: 'PVA Bazaar API is healthy!',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     environment: process.env.NODE_ENV || 'development',
@@ -51,14 +64,7 @@ router.get('/', async (_req, res) => {
     version: build.version,
     sha: build.sha,
     shortSha: build.shortSha,
-    database: {
-      mode: effectiveDatabaseMode,
-      connected: effectiveDatabaseMode === 'file' ? true : mongoState.connected,
-      readyState: effectiveDatabaseMode === 'file' ? 1 : mongoState.readyState,
-      hasEnvUri: mongoState.hasEnvUri,
-      authStore: authStoreState,
-      bookStore: bookStoreState,
-    },
+    database: dbBlock,
   };
 
   // Add OpenClaw status if available

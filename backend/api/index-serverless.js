@@ -77,7 +77,6 @@ async function ensureDatabaseState() {
     ]);
   } catch (err) {
     console.warn('⚠️ Serverless DB bootstrap warning:', err.message);
-    // Don't force mock mode if MONGODB_URI is set - let the connection fail visibly
     const hasMongoUri = Boolean(process.env.MONGODB_URI || process.env.DATABASE_URL);
     if (!hasMongoUri) {
       const state = getMongoState();
@@ -111,6 +110,15 @@ app.use(async (req, res, next) => {
 app.get('/api/health', async (_req, res) => {
   const build = getBuildInfo();
   const mongoState = await ensureDatabaseState();
+  const dbBlock = {
+    mode: mongoState.mode,
+    connected: mongoState.connected,
+    readyState: mongoState.readyState,
+    hasEnvUri: mongoState.hasEnvUri,
+  };
+  if (mongoState.mode === 'error' && mongoState.lastError) {
+    dbBlock.error = mongoState.lastError;
+  }
   res.status(200).json({
     ok: true,
     message: 'PVA Bazaar API is healthy!',
@@ -121,12 +129,7 @@ app.get('/api/health', async (_req, res) => {
     version: build.version,
     sha: build.sha,
     shortSha: build.shortSha,
-    database: {
-      mode: mongoState.mode,
-      connected: mongoState.connected,
-      readyState: mongoState.readyState,
-      hasEnvUri: mongoState.hasEnvUri,
-    },
+    database: dbBlock,
   });
 });
 

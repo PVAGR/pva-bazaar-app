@@ -8,6 +8,7 @@ const state = global._pvaMongoState || {
   memoryServer: null,
   mode: 'disconnected',
   seeded: false,
+  lastError: null,
 };
 
 global._pvaMongoState = state;
@@ -86,6 +87,15 @@ async function seedFallbackData() {
   state.seeded = true;
 }
 
+function redactUri(uri) {
+  // Replace password in mongodb+srv://user:password@host and mongodb://user:password@host
+  try {
+    return String(uri || '').replace(/(?<=:\/\/[^:]+:)[^@]+(?=@)/, '***');
+  } catch (_err) {
+    return String(uri || '').replace(/(mongodb(?:\+srv)?:\/\/[^:]+:)[^@]+(@)/, '$1***$2');
+  }
+}
+
 function createMockConnection() {
   return {
     mocked: true,
@@ -110,6 +120,7 @@ async function connectMongo(options = {}) {
     state.conn = null;
     state.promise = null;
     state.mode = 'disconnected';
+    state.lastError = null;
   }
 
   // Reuse an in-progress promise.
@@ -141,6 +152,7 @@ async function connectMongo(options = {}) {
 
     state.conn = await state.promise;
     state.mode = mode;
+    state.lastError = null;
     mongoose.connection.on('error', (err) => {
       logger.error?.('MongoDB error:', err?.message || err);
     });
@@ -177,6 +189,9 @@ async function connectMongo(options = {}) {
       logger.error?.(`❌ MongoDB connection failed: ${err.message}`);
       state.promise = null;
       state.mode = 'error';
+      // Redact any password that may appear in the error message (Mongoose sometimes
+      // includes the connection string in server selection timeout errors).
+      state.lastError = redactUri(err.message || String(err));
       // Still return a mock so the process doesn't crash, but report mode=error
       // so health checks surface the problem.
       state.conn = createMockConnection();
@@ -253,6 +268,7 @@ function getMongoState() {
     readyState,
     hasEnvUri: Boolean(getMongoUriFromEnv()),
     fallbackAllowed: shouldAllowMemoryFallback(),
+    lastError: state.lastError || null,
   };
 }
 
@@ -261,4 +277,5 @@ module.exports = {
   getMongoState,
   getMongoUriFromEnv,
   shouldAllowMemoryFallback,
+  redactUri,
 };
