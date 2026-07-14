@@ -59,6 +59,23 @@ function mountSharedMiddleware(req, res, next) {
 
 app.use(mountSharedMiddleware);
 
+// ── Ensure MongoDB is connected before any route handler runs ──────────────
+// This sets global._pvaMongoState so that shouldUseFileBookStore() inside
+// route handlers returns false when a real connection is available.
+app.use(async (_req, _res, next) => {
+  if (!forceMockDbMode()) {
+    try {
+      await Promise.race([
+        connectMongo({ logger: console }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('DB connect timeout')), 8000)),
+      ]);
+    } catch (err) {
+      console.warn('⚠️ Pre-route DB connect failed:', err.message);
+    }
+  }
+  next();
+});
+
 app.get(['/api/health', '/health'], async (_req, res) => {
   const build = getBuildInfo();
   const mongoUri = process.env.MONGODB_URI || process.env.DATABASE_URL || '';

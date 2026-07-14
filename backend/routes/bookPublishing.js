@@ -617,12 +617,7 @@ router.post('/', authenticateBookPublishing, attachRequestGitHubToken, bookUploa
       if (shouldUseFileBookStore()) {
         book = { authorId };
       } else {
-        const useMockStore = process.env.VERCEL === '1' && process.env.FORCE_REAL_DB !== 'true';
-        if (useMockStore) {
-          book = { authorId };
-        } else {
-          book = new BookProject({ authorId });
-        }
+        book = new BookProject({ authorId });
       }
     }
 
@@ -700,7 +695,7 @@ router.post('/', authenticateBookPublishing, attachRequestGitHubToken, bookUploa
       book.publishedAt = new Date();
     }
 
-    const useFileStore = shouldUseFileBookStore() || (process.env.VERCEL === '1' && process.env.FORCE_REAL_DB !== 'true');
+    const useFileStore = shouldUseFileBookStore();
     let savedBook = null;
 
     if (useFileStore) {
