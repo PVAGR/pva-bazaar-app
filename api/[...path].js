@@ -141,9 +141,9 @@ app.get(['/api/health', '/health'], async (_req, res) => {
       cloudinaryDiag.pingOk = true;
     } catch (err) {
       cloudinaryDiag.pingOk = false;
-      cloudinaryDiag.error = (err.message || String(err)).replace(
-        /api_secret=[^&\s]*/gi, 'api_secret=***'
-      );
+      // Cloudinary SDK throws structured objects, not plain Error instances
+      const msg = err?.error?.message || err?.message || JSON.stringify(err) || String(err);
+      cloudinaryDiag.error = msg.replace(/api_secret=[^&\s]*/gi, 'api_secret=***');
     }
   }
 
