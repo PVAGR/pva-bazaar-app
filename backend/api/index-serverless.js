@@ -70,11 +70,22 @@ async function ensureDatabaseState() {
 
   try {
     await Promise.race([
-      connectMongo({ logger: console }),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('DB timeout')), 3000)),
+      connectMongo({ logger: console, allowMemoryFallback: false }),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('DB timeout')), 10000)),
     ]);
   } catch (err) {
     console.warn('⚠️ Serverless DB bootstrap warning:', err.message);
+    // Don't force mock mode if MONGODB_URI is set - let the connection fail visibly
+    const hasMongoUri = Boolean(process.env.MONGODB_URI || process.env.DATABASE_URL);
+    if (!hasMongoUri) {
+      const state = getMongoState();
+      return {
+        ...state,
+        mode: 'mock',
+        connected: true,
+        readyState: 1,
+      };
+    }
   }
 
   return getMongoState();
