@@ -47,11 +47,11 @@
   "crons": [
     {
       "path": "/api/internal/worker-pulse",
-      "schedule": "0 * * * *"
+      "schedule": "0 0 * * *"
     },
     {
       "path": "/api/voting/resolve-markets",
-      "schedule": "0 23 * * *"
+      "schedule": "0 0 * * *"
     }
   ]
 }
