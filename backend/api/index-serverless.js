@@ -109,16 +109,47 @@ app.use(async (req, res, next) => {
 
 app.get('/api/health', async (_req, res) => {
   const build = getBuildInfo();
-  const mongoState = await ensureDatabaseState();
-  const dbBlock = {
-    mode: mongoState.mode,
-    connected: mongoState.connected,
-    readyState: mongoState.readyState,
-    hasEnvUri: mongoState.hasEnvUri,
+  const mongoUri = process.env.MONGODB_URI || process.env.DATABASE_URL || '';
+
+  // Attempt a direct connection to get the raw error, bypassing all cached state.
+  let dbDiag = {
+    mode: 'unknown',
+    hasEnvUri: Boolean(mongoUri),
+    readyState: 0,
+    error: null,
   };
-  if (mongoState.mode === 'error' && mongoState.lastError) {
-    dbBlock.error = mongoState.lastError;
+
+  if (mongoUri) {
+    const mongoose = require('mongoose');
+    // Use a fresh connection to avoid cached state
+    const freshConn = mongoose.createConnection();
+    try {
+      await Promise.race([
+        freshConn.openUri(mongoUri, {
+          serverSelectionTimeoutMS: 8000,
+          connectTimeoutMS: 8000,
+        }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('health check connection timeout after 8s')), 8500)),
+      ]);
+      dbDiag.mode = 'mongo';
+      dbDiag.readyState = freshConn.readyState;
+      dbDiag.connected = true;
+      await freshConn.close().catch(() => {});
+    } catch (err) {
+      dbDiag.mode = 'error';
+      dbDiag.readyState = 0;
+      dbDiag.connected = false;
+      // Redact password from error message
+      const raw = err.message || String(err);
+      dbDiag.error = raw.replace(/(?<=:\/\/[^:]+:)[^@]+(?=@)/g, '***');
+      await freshConn.close().catch(() => {});
+    }
+  } else {
+    dbDiag.mode = 'mock';
+    dbDiag.readyState = 0;
+    dbDiag.connected = false;
   }
+
   res.status(200).json({
     ok: true,
     message: 'PVA Bazaar API is healthy!',
@@ -129,7 +160,7 @@ app.get('/api/health', async (_req, res) => {
     version: build.version,
     sha: build.sha,
     shortSha: build.shortSha,
-    database: dbBlock,
+    database: dbDiag,
   });
 });
 
