@@ -63,7 +63,7 @@ app.get(['/api/health', '/health'], async (_req, res) => {
   const build = getBuildInfo();
   const mongoUri = process.env.MONGODB_URI || process.env.DATABASE_URL || '';
 
-  // Parse URI for diagnostics — never expose the password value.
+  // ── URI parse diagnostics (no secret values) ──────────────────────────────
   let uriDiag = { present: Boolean(mongoUri), username: null, host: null, passwordLength: null };
   if (mongoUri) {
     try {
@@ -76,7 +76,7 @@ app.get(['/api/health', '/health'], async (_req, res) => {
     }
   }
 
-  // Use a fresh connection each time so cached global state cannot mask the real error.
+  // ── Fresh MongoDB connection ───────────────────────────────────────────────
   let dbDiag = {
     hasEnvUri: Boolean(mongoUri),
     mode: 'unknown',
@@ -105,13 +105,46 @@ app.get(['/api/health', '/health'], async (_req, res) => {
       dbDiag.mode = 'error';
       dbDiag.readyState = 0;
       dbDiag.connected = false;
-      // Redact password from URI in error message before including it
       const raw = err.message || String(err);
       dbDiag.error = raw.replace(/(?<=:\/\/[^:]+:)[^@]+(?=@)/g, '***');
       await freshConn.close().catch(() => {});
     }
   } else {
     dbDiag.mode = 'mock';
+  }
+
+  // ── Cloudinary diagnostics (no secret values) ─────────────────────────────
+  const cloudNamePresent  = Boolean(process.env.CLOUDINARY_CLOUD_NAME);
+  const apiKeyPresent     = Boolean(process.env.CLOUDINARY_API_KEY);
+  const apiSecretPresent  = Boolean(process.env.CLOUDINARY_API_SECRET);
+  const cloudinaryConfigured = cloudNamePresent && apiKeyPresent && apiSecretPresent;
+
+  let cloudinaryDiag = {
+    configured: cloudinaryConfigured,
+    cloudNamePresent,
+    apiKeyPresent,
+    apiSecretPresent,
+    pingOk: false,
+    error: null,
+  };
+
+  if (cloudinaryConfigured) {
+    try {
+      const cloudinary = require('cloudinary').v2;
+      cloudinary.config({
+        cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+        api_key:    process.env.CLOUDINARY_API_KEY,
+        api_secret: process.env.CLOUDINARY_API_SECRET,
+      });
+      // ping() calls the Cloudinary Ping API — lightweight, no upload needed
+      await cloudinary.api.ping();
+      cloudinaryDiag.pingOk = true;
+    } catch (err) {
+      cloudinaryDiag.pingOk = false;
+      cloudinaryDiag.error = (err.message || String(err)).replace(
+        /api_secret=[^&\s]*/gi, 'api_secret=***'
+      );
+    }
   }
 
   res.status(200).json({
@@ -125,6 +158,7 @@ app.get(['/api/health', '/health'], async (_req, res) => {
     sha: build.sha,
     shortSha: build.shortSha,
     database: dbDiag,
+    cloudinary: cloudinaryDiag,
   });
 });
 
