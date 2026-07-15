@@ -1,4 +1,5 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const crypto = require('crypto');
 const fs = require('fs');
 const fsp = require('fs').promises;
@@ -118,9 +119,9 @@ async function attachRequestGitHubToken(req, res, next) {
   const requestToken = String(
     req.get('x-pva-github-token')
     || req.get('x-pva-book-store-github-token')
+    || req.body?.githubToken
     || req.query?.githubToken
-    || req.query?.bookStoreToken
-    || '',
+    || ''
   ).trim();
 
   if (requestToken) {
@@ -140,6 +141,10 @@ async function attachRequestGitHubToken(req, res, next) {
     return next();
   }
 
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    return next();
+  }
+
   try {
     const user = await User.findById(userId).select('oauthTokens').lean();
     const tokenPayload = user?.oauthTokens?.githubAdminProfile?.payload;
@@ -152,7 +157,7 @@ async function attachRequestGitHubToken(req, res, next) {
       res.once('close', clearToken);
     }
   } catch (error) {
-    console.warn('⚠️ GitHub token attach failed:', error?.message || error);
+    console.warn('[book-publishing] failed to attach GitHub token:', error.message);
   }
 
   return next();

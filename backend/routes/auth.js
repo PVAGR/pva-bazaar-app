@@ -60,9 +60,7 @@ router.post('/register', async (req, res) => {
       : null;
 
     // Check if user already exists
-    const useMockStore = process.env.VERCEL === '1' && process.env.FORCE_REAL_DB !== 'true'
-      ? true
-      : getMongoState().mode === 'mock';
+    const useMockStore = getMongoState().mode === 'mock';
     if (useMockStore) {
       await ensureSeedUsers();
     }
@@ -139,9 +137,7 @@ router.post('/login', async (req, res) => {
     }
 
     const identifierLower = identifier.toLowerCase();
-    const useMockStore = process.env.VERCEL === '1' && process.env.FORCE_REAL_DB !== 'true'
-      ? true
-      : getMongoState().mode === 'mock';
+    const useMockStore = getMongoState().mode === 'mock';
     if (useMockStore) {
       await ensureSeedUsers();
     }
@@ -247,4 +243,28 @@ router.get('/me', authenticateToken, async (req, res) => {
   }
 });
 
+// Auth diagnostic endpoint (no secrets exposed)
+router.get('/diagnostic', async (_req, res) => {
+  try {
+    const { getMongoState } = require('../lib/mongoConnection');
+    const mongoState = getMongoState();
+    const authStoreMode = mongoState.mode === 'mock' ? 'mock' : 'mongo';
+    const mongoConnected = mongoState.connected;
+    // We removed the Vercel force mock logic, so it's always false now
+    const mockAuthForcedByVercel = false;
+    const loginWouldUseMongo = mongoState.mode !== 'mock';
+
+    res.json({
+      ok: true,
+      authStoreMode,
+      mongoConnected,
+      mockAuthForcedByVercel,
+      loginWouldUseMongo,
+    });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
 module.exports = router;
+

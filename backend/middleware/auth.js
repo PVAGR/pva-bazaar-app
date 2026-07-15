@@ -1,6 +1,7 @@
 // backend/middleware/auth.js - Complete authentication middleware
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const mongoose = require('mongoose');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-key';
 const JWT_EXPIRY = '7d';
@@ -36,6 +37,12 @@ async function authenticateToken(req, res, next) {
     }
 
     const decoded = verifyToken(token);
+    if (!decoded?.id || !mongoose.Types.ObjectId.isValid(decoded.id)) {
+      return res.status(401).json({
+        ok: false,
+        error: 'Invalid authentication token user id'
+      });
+    }
     const user = await User.findById(decoded.id).select('-password');
 
     if (!user) {
