@@ -10,11 +10,6 @@ import {
   saveBookProject,
 } from '../lib/api';
 import {
-  clearBookStoreGitHubToken,
-  getBookStoreGitHubToken,
-  setBookStoreGitHubToken,
-} from '../lib/bookStoreTokenVault';
-import {
   deleteLocalBookProject,
   listLocalBookProjects,
   saveLocalBookProject,
@@ -130,7 +125,6 @@ export default function BookPublishingPage() {
   const [backCoverPreview, setBackCoverPreview] = useState('');
   const [manuscriptFile, setManuscriptFile] = useState(null);
   const [manuscriptFileName, setManuscriptFileName] = useState('');
-  const [bookStoreGitHubToken, setBookStoreGitHubTokenInput] = useState('');
   const [form, setForm] = useState(EMPTY_FORM);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -151,10 +145,6 @@ export default function BookPublishingPage() {
 
   useEffect(() => {
     loadBooks();
-  }, []);
-
-  useEffect(() => {
-    setBookStoreGitHubTokenInput(getBookStoreGitHubToken());
   }, []);
 
   useEffect(() => {
@@ -345,28 +335,6 @@ export default function BookPublishingPage() {
     setFrontCoverPreview('');
     setBackCoverPreview('');
     setManuscriptFileName('');
-  }
-
-  function handleSaveBookStoreToken() {
-    const nextToken = String(bookStoreGitHubToken || '').trim();
-    if (!nextToken) {
-      clearBookStoreGitHubToken();
-      setBookStoreGitHubTokenInput('');
-      setSuccess('Cleared the device publish key.');
-      return;
-    }
-
-    setBookStoreGitHubToken(nextToken);
-    setBookStoreGitHubTokenInput(nextToken);
-    setSuccess('Saved a device publish key. Publishing will now use the shared book shelf.');
-    void loadBooks();
-  }
-
-  function handleClearBookStoreToken() {
-    clearBookStoreGitHubToken();
-    setBookStoreGitHubTokenInput('');
-    setSuccess('Cleared the device publish key.');
-    void loadBooks();
   }
 
   function selectBook(book) {
@@ -692,43 +660,22 @@ export default function BookPublishingPage() {
         </section>
 
         <section className="book-publish__atlas section-card">
-          <h2>Public publishing key</h2>
+          <h2>Account publishing</h2>
           <p>
-            Save a GitHub publish token on this device if you want book saves to land in the shared online shelf
-            instead of staying local to this phone or laptop. If this device already has local published books,
-            they will try to sync online the next time the page reloads.
+            Sign in to your website account to publish. No extra GitHub key is required. When you save and publish,
+            the book is stored in your account-backed online shelf and can be viewed from any device that is signed in.
           </p>
           <div className="book-publish__form">
-            <label>
-              GitHub publish token
-              <input
-                type="password"
-                value={bookStoreGitHubToken}
-                onChange={(event) => setBookStoreGitHubTokenInput(event.target.value)}
-                placeholder="Paste your GitHub token here"
-                autoComplete="off"
-                spellCheck="false"
-              />
-            </label>
             <p className="book-publish__muted">
-              {bookStoreGitHubToken
-                ? 'This device is connected to the shared book shelf.'
-                : 'Without this key, publishing stays local on this device.'}
+              Published books live in your website account. If you are not signed in, use the login page first.
             </p>
             <div className="book-publish__editorActions">
               <button
-                type="button"
-                className="book-publish__button book-publish__button--primary"
-                onClick={handleSaveBookStoreToken}
-              >
-                Save publish key
-              </button>
-              <button
-                type="button"
                 className="book-publish__button"
-                onClick={handleClearBookStoreToken}
+                type="button"
+                onClick={() => window.location.assign('/#/login?next=%2Fbooks%2Fpublish')}
               >
-                Clear key
+                Go to sign in
               </button>
             </div>
           </div>

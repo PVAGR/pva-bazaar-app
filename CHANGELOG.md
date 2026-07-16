@@ -12,10 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Public-facing site hardening pass: professional homepage framing, clean primary navigation, static no-JavaScript fallback pages, custom 404, and trust/legal/support pages.
 - SEO/crawlability refresh: robots.txt, sitemap.xml, llms.txt, readable-site.json, canonical URLs, and social preview metadata for the major public pages.
 - Legacy compatibility pages now redirect or render clean public content instead of landing as sloppy dead ends.
-- Browser-saved GitHub publish key for the book publishing workspace, so a device can write directly to the shared bookshelf without depending on a server-side GitHub secret.
-- Public raw-GitHub bookshelf and reader fallbacks, so published books remain visible on other devices even when the live backend returns an empty book store.
-- Backend public raw-GitHub fallbacks for the bookshelf, reader, PDF, and EPUB routes, so shared books can still be read and downloaded when the live serverless store has not loaded yet.
-- Book publishing now prefers GitHub-backed persistence when a GitHub token is present in the live backend, so published books can remain visible across devices instead of living only in one serverless instance.
+- Account-only book publishing flow so a signed-in website account is the only thing needed to publish and keep a book online.
+- Public bookshelf, reader, PDF, and EPUB routes now read from the live backend source of truth instead of a user-supplied GitHub publish key.
+- Book publishing now stays tied to the signed-in website account and the live backend shelf, so published books can remain visible across devices without a user-managed GitHub key.
 - Failed online publishes now stay queued locally as drafts with publish intent, instead of claiming the book is already live when the backend is unreachable.
 - Item-specific access codes and QR manage links for perennial listings, so the original creator or steward can open, update, and continue a listing from a persistent referral hash.
 - Creator-only listing deletion for the original poster, keeping the history of a perennial item protected from other users.
