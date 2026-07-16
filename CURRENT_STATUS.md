@@ -19,6 +19,7 @@ Updated: 2026-07-11
 - Added a browser-saved GitHub publish key on the book publishing page, plus a public raw-GitHub bookshelf fallback so published books can appear on other devices even when the live backend is empty.
 - Added a backend public raw-GitHub fallback for the bookshelf, reader, PDF, and EPUB routes so published books can be read even when the live serverless store has not loaded the shared file yet.
 - Synced the frontend lockfile so GitHub Actions `npm ci` can build the public site again and publish the latest Pages export.
+- Hardened the GitHub Pages frontend workflow to install with legacy peer-dependency resolution, which avoids the Vite/plugin peer conflict in clean CI runs.
 
 ## What was verified
 - `npm --prefix Frontend run build`

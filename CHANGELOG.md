@@ -40,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Free browser-side auth fallback so people can sign in and sign up even when the hosted API is unavailable.
 - Global connection indicators on the layout and auth pages so the site shows live backend vs free fallback mode clearly.
 - Frontend lockfile sync that restores `npm ci` compatibility in GitHub Actions and unblocks the Pages deploy path.
+- Frontend GitHub Pages workflow now installs with `--legacy-peer-deps`, which avoids the Vite/plugin peer-resolution failure in clean CI runs.
 - Backend deploy workflow now treats stale live readiness as advisory instead of blocking new Vercel deploys.
 - Mongo bootstrap fallback that uses a serverless-safe mock state when production database config is missing, so the API continues to answer instead of crashing.
 - Serverless-safe mock database fallback plus shared JWT secret fallback so `/api/health` and login continue working when production secrets are missing.

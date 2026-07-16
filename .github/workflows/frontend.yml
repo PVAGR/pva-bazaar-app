@@ -28,7 +28,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./Frontend
-        run: npm ci || npm install --no-audit --no-fund
+        run: npm ci --legacy-peer-deps || npm install --no-audit --no-fund --legacy-peer-deps
 
       - name: Run src theme guard
         working-directory: ./Frontend
@@ -121,7 +121,7 @@ jobs:
       
       - name: Install dependencies
         working-directory: ./Frontend
-        run: npm ci 2>&1 || npm install --no-audit --no-fund 2>&1
+        run: npm ci --legacy-peer-deps 2>&1 || npm install --no-audit --no-fund --legacy-peer-deps 2>&1
       
       - name: Verify Node and npm
         run: |
