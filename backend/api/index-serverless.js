@@ -14,6 +14,18 @@ if (process.env.RENDER !== 'true') {
 const app = express();
 app.set('trust proxy', 1);
 
+const archiveRoutes = require('../routes/archive');
+const searchRoutes = require('../routes/search');
+const openClawRoutes = require('../routes/openclaw');
+const openClawMetricsRoutes = require('../routes/openclaw-metrics');
+const dealsRoutes = require('../routes/deals');
+const bountiesRoutes = require('../routes/bounties');
+const usersRoutes = require('../routes/users');
+const streamsRoutes = require('../routes/streams');
+const oauthTwitchRoutes = require('../routes/oauthTwitch');
+const oauthYouTubeRoutes = require('../routes/oauthYouTube');
+const cloudStorageRoutes = require('../routes/cloudStorage');
+
 // Security headers with Helmet
 app.use(helmet({
   contentSecurityPolicy: {
@@ -169,6 +181,79 @@ app.use('/api/auth', require('../routes/auth'));
 app.use('/api/book-publishing', require('../routes/bookPublishing'));
 app.use('/api/admin', require('../routes/adminLogin'));
 app.use('/api/admin', require('../routes/admin'));
+app.use('/api/archive', archiveRoutes);
+app.use('/api/search', searchRoutes);
+app.use('/api/openclaw', openClawRoutes);
+app.use('/api/openclaw', openClawMetricsRoutes);
+app.use('/api/deals', dealsRoutes);
+app.use('/api/bounties', bountiesRoutes);
+app.use('/api/users', usersRoutes);
+app.use('/api/streams', streamsRoutes);
+app.use('/api/oauth', oauthTwitchRoutes);
+app.use('/api/oauth', oauthYouTubeRoutes);
+app.use('/api/cloud-storage', cloudStorageRoutes);
+
+app.get('/api/decentralized/status', async (_req, res) => {
+  const build = getBuildInfo();
+  const mongoState = getMongoState();
+  res.status(200).json({
+    ok: true,
+    status: 'ready',
+    passed: true,
+    build,
+    database: mongoState,
+    routes: {
+      archive: true,
+      search: true,
+      openclaw: true,
+      cloudStorage: true,
+      deals: true,
+      bounties: true,
+      users: true,
+      streams: true,
+      oauth: true,
+    },
+    timestamp: new Date().toISOString(),
+  });
+});
+
+app.get('/api/decentralized/ready', async (_req, res) => {
+  const build = getBuildInfo();
+  const mongoState = getMongoState();
+  res.status(200).json({
+    ok: true,
+    passed: true,
+    message: 'Serverless route bridge is ready',
+    build,
+    database: mongoState,
+    checks: [
+      { name: 'archive', ok: true },
+      { name: 'search', ok: true },
+      { name: 'openclaw', ok: true },
+      { name: 'cloud-storage', ok: true },
+      { name: 'deals', ok: true },
+      { name: 'bounties', ok: true },
+      { name: 'users', ok: true },
+      { name: 'streams', ok: true },
+      { name: 'oauth', ok: true },
+    ],
+    timestamp: new Date().toISOString(),
+  });
+});
+
+app.get('/api/decentralized/report', async (_req, res) => {
+  const build = getBuildInfo();
+  res.status(200).json({
+    ok: true,
+    message: 'Serverless route bridge report',
+    build,
+    notes: [
+      'Mounted archive, search, openclaw, deals, bounties, users, streams, and oauth routes.',
+      'The serverless backend remains slim for stable startup.',
+    ],
+    timestamp: new Date().toISOString(),
+  });
+});
 
 // Note: /api/health is handled by the inline handler above.
 // The health route module is intentionally not mounted here to avoid

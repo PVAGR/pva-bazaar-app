@@ -6,10 +6,8 @@ const fsp = require('fs').promises;
 const path = require('path');
 const axios = require('axios');
 const { authenticateToken } = require('../middleware/auth');
-const User = require('../models/User');
 const BookProject = require('../models/BookProject');
 const { getMongoState } = require('../lib/mongoConnection');
-const { decryptJson } = require('../utils/cryptoVault');
 const {
   deleteBook: deleteFileBook,
   findBookById: findFileBookById,
@@ -23,11 +21,6 @@ const {
   buildEpubBuffer,
   escapeHtml,
 } = require('../services/bookPublisher');
-const {
-  clearGitHubTokenOverride,
-  setGitHubTokenOverride,
-} = require('../services/gitHubService');
-
 let mammoth = null;
 try {
   mammoth = require('mammoth');
@@ -416,24 +409,11 @@ async function listUserBooks(userId) {
 }
 
 async function listPublishedBooks() {
-  const localBooks = shouldUseFileBookStore()
+  return shouldUseFileBookStore()
     ? await listFileBooks({ status: 'published' }, { publishedAt: -1, updatedAt: -1, _id: -1 })
     : await BookProject.find({ status: 'published' })
       .sort({ publishedAt: -1, updatedAt: -1, _id: -1 })
       .lean();
-
-  const rawBooks = await readPublicBookStoreFromGitHubRaw();
-  if (!rawBooks.length) {
-    return localBooks;
-  }
-
-  const merged = new Map();
-  for (const book of [...localBooks, ...rawBooks]) {
-    const key = String(book?.slug || book?._id || book?.id || '').trim().toLowerCase();
-    if (!key || merged.has(key)) continue;
-    merged.set(key, book);
-  }
-  return Array.from(merged.values());
 }
 
 async function loadBookForEdit(bookId) {
@@ -451,14 +431,11 @@ async function loadBookForSlug(slug) {
   if (shouldUseFileBookStore()) {
     const localBook = await findFileBookOne({ slug: normalized, status: 'published' });
     if (localBook) return localBook;
-    const rawBooks = await readPublicBookStoreFromGitHubRaw();
-    return rawBooks.find((book) => String(book?.slug || '').trim().toLowerCase() === normalized) || null;
+    return null;
   }
 
   const localBook = await BookProject.findOne({ slug: normalized, status: 'published' }).lean();
-  if (localBook) return localBook;
-  const rawBooks = await readPublicBookStoreFromGitHubRaw();
-  return rawBooks.find((book) => String(book?.slug || '').trim().toLowerCase() === normalized) || null;
+  return localBook || null;
 }
 
 async function persistBookRecord(book) {
@@ -553,7 +530,7 @@ function renderNotFoundHtml(message) {
 </html>`;
 }
 
-router.get('/mine', authenticateBookPublishing, attachRequestGitHubToken, async (req, res) => {
+router.get('/mine', authenticateBookPublishing, async (req, res) => {
   try {
     const items = await listUserBooks(req.user.id);
 
@@ -609,7 +586,7 @@ router.get('/public', async (req, res) => {
   }
 });
 
-router.post('/', authenticateBookPublishing, attachRequestGitHubToken, bookUpload, async (req, res) => {
+router.post('/', authenticateBookPublishing, bookUpload, async (req, res) => {
   try {
     const bookId = sanitizeText(req.body?.bookId || '', 120);
     const title = sanitizeText(req.body?.title || '', 240);
@@ -837,7 +814,7 @@ router.get('/public/:slug/download/epub', async (req, res) => {
   }
 });
 
-router.get('/:bookId', authenticateBookPublishing, attachRequestGitHubToken, async (req, res) => {
+router.get('/:bookId', authenticateBookPublishing, async (req, res) => {
   try {
     const book = await loadBookForEdit(req.params.bookId);
     if (!book) return notFound(res);
@@ -850,7 +827,7 @@ router.get('/:bookId', authenticateBookPublishing, attachRequestGitHubToken, asy
   }
 });
 
-router.get('/:bookId/view', authenticateBookPublishing, attachRequestGitHubToken, async (req, res) => {
+router.get('/:bookId/view', authenticateBookPublishing, async (req, res) => {
   try {
     const book = await loadBookForEdit(req.params.bookId);
     if (!book) return res.status(404).type('html').send(renderNotFoundHtml('Book not found.'));
@@ -866,7 +843,7 @@ router.get('/:bookId/view', authenticateBookPublishing, attachRequestGitHubToken
   }
 });
 
-router.get('/:bookId/assets/:assetKey', authenticateBookPublishing, attachRequestGitHubToken, async (req, res) => {
+router.get('/:bookId/assets/:assetKey', authenticateBookPublishing, async (req, res) => {
   try {
     const book = await loadBookForEdit(req.params.bookId);
     if (!book) return notFound(res);
@@ -893,7 +870,7 @@ router.get('/:bookId/assets/:assetKey', authenticateBookPublishing, attachReques
   }
 });
 
-router.get('/:bookId/download/pdf', authenticateBookPublishing, attachRequestGitHubToken, async (req, res) => {
+router.get('/:bookId/download/pdf', authenticateBookPublishing, async (req, res) => {
   try {
     const book = await loadBookForEdit(req.params.bookId);
     if (!book) return notFound(res);
@@ -911,7 +888,7 @@ router.get('/:bookId/download/pdf', authenticateBookPublishing, attachRequestGit
   }
 });
 
-router.get('/:bookId/download/epub', authenticateBookPublishing, attachRequestGitHubToken, async (req, res) => {
+router.get('/:bookId/download/epub', authenticateBookPublishing, async (req, res) => {
   try {
     const book = await loadBookForEdit(req.params.bookId);
     if (!book) return notFound(res);
@@ -929,7 +906,7 @@ router.get('/:bookId/download/epub', authenticateBookPublishing, attachRequestGi
   }
 });
 
-router.delete('/:bookId', authenticateBookPublishing, attachRequestGitHubToken, async (req, res) => {
+router.delete('/:bookId', authenticateBookPublishing, async (req, res) => {
   try {
     const book = await loadBookForEdit(req.params.bookId);
     if (!book) return notFound(res);

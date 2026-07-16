@@ -7,6 +7,7 @@ const adminSession = require('../middleware/adminSession');
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const { findStaticArchiveEntry, listStaticArchiveEntries } = require('../lib/staticContent');
+const { getMongoState } = require('../lib/mongoConnection');
 
 
 // Cursor-based pagination, filtering, and search
@@ -14,6 +15,33 @@ const { encodeCursor, decodeCursor } = require('../lib/cursor');
 
 function escapeRegExp(str) {
   return String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function shouldUseStaticArchiveFallback() {
+  const mode = String(getMongoState()?.mode || '').toLowerCase();
+  return mode !== 'mongo' && mode !== 'memory';
+}
+
+function buildStaticArchiveListing({ category, tag, q, sort, cursor, limit, adminRequest }) {
+  let fallbackDocs = listStaticArchiveEntries({ category, tag, q, sort, adminRequest });
+  if (cursor && cursor.createdAt && cursor.id) {
+    const cursorTime = new Date(cursor.createdAt).getTime();
+    fallbackDocs = fallbackDocs.filter((entry) => {
+      const entryTime = new Date(entry.createdAt).getTime();
+      if (sort === 'old') {
+        return entryTime > cursorTime || (entryTime === cursorTime && String(entry.id) > String(cursor.id));
+      }
+      return entryTime < cursorTime || (entryTime === cursorTime && String(entry.id) < String(cursor.id));
+    });
+  }
+
+  const items = fallbackDocs.slice(0, limit).map(toPublicArchiveEntry);
+  const last = fallbackDocs[limit - 1];
+  const nextCursor = fallbackDocs.length > limit && last
+    ? encodeCursor({ createdAt: last.createdAt, id: last.id || last.externalId })
+    : null;
+
+  return { ok: true, items, nextCursor };
 }
 
 function isAdminRequest(req) {
@@ -39,6 +67,18 @@ router.get('/', async (req, res) => {
     const tag = req.query.tag ? String(req.query.tag) : null;
     const q = req.query.q ? String(req.query.q) : null;
     const sort = req.query.sort === 'old' ? 'old' : 'new';
+
+    if (shouldUseStaticArchiveFallback()) {
+      return res.json(buildStaticArchiveListing({
+        category,
+        tag,
+        q,
+        sort,
+        cursor,
+        limit,
+        adminRequest,
+      }));
+    }
 
     // Build filter
     const filter = adminRequest ? {} : { status: 'published' };
@@ -71,25 +111,15 @@ router.get('/', async (req, res) => {
     const docs = await query.lean();
 
     if (docs.length === 0) {
-      let fallbackDocs = listStaticArchiveEntries({ category, tag, q, sort });
-      if (cursor && cursor.createdAt && cursor.id) {
-        const cursorTime = new Date(cursor.createdAt).getTime();
-        fallbackDocs = fallbackDocs.filter((entry) => {
-          const entryTime = new Date(entry.createdAt).getTime();
-          if (sort === 'old') {
-            return entryTime > cursorTime || (entryTime === cursorTime && String(entry.id) > String(cursor.id));
-          }
-          return entryTime < cursorTime || (entryTime === cursorTime && String(entry.id) < String(cursor.id));
-        });
-      }
-
-      const items = fallbackDocs.slice(0, limit).map(toPublicArchiveEntry);
-      const last = fallbackDocs[limit - 1];
-      const nextCursor = fallbackDocs.length > limit && last
-        ? encodeCursor({ createdAt: last.createdAt, id: last.id || last.externalId })
-        : null;
-
-      return res.json({ ok: true, items, nextCursor });
+      return res.json(buildStaticArchiveListing({
+        category,
+        tag,
+        q,
+        sort,
+        cursor,
+        limit,
+        adminRequest,
+      }));
     }
 
     // Prepare items and nextCursor
@@ -102,6 +132,18 @@ router.get('/', async (req, res) => {
 
     res.json({ ok: true, items, nextCursor });
   } catch (err) {
+    const fallback = req?.query ? buildStaticArchiveListing({
+      category: req.query.category ? String(req.query.category).toLowerCase() : null,
+      tag: req.query.tag ? String(req.query.tag) : null,
+      q: req.query.q ? String(req.query.q) : null,
+      sort: req.query.sort === 'old' ? 'old' : 'new',
+      cursor: req.query.cursor ? decodeCursor(req.query.cursor) : null,
+      limit: Math.max(1, Math.min(parseInt(req.query.limit, 10) || 12, 50)),
+      adminRequest: isAdminRequest(req),
+    }) : null;
+    if (fallback) {
+      return res.json(fallback);
+    }
     res.status(500).json({ ok: false, error: err.message });
   }
 });
@@ -112,6 +154,11 @@ router.get('/:id', async (req, res) => {
     const { id } = req.params;
     const adminRequest = isAdminRequest(req);
     const statusFilter = adminRequest ? {} : { status: 'published' };
+    if (shouldUseStaticArchiveFallback()) {
+      const staticEntry = findStaticArchiveEntry(id);
+      if (!staticEntry) return res.status(404).json({ ok: false, error: 'Entry not found' });
+      return res.json({ ok: true, item: toPublicArchiveEntry(staticEntry) });
+    }
     let entry = null;
     if (mongoose.Types.ObjectId.isValid(id)) {
       entry = await ArchiveEntry.findOne({ _id: id, ...statusFilter }).lean();

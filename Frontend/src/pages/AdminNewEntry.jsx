@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createArchiveEntry, requestAdminToken } from '../lib/archiveApi.js';
+import { apiUpload } from '../lib/api';
 
 export default function AdminNewEntry({ onCreated }) {
   const navigate = useNavigate();
@@ -22,18 +23,7 @@ export default function AdminNewEntry({ onCreated }) {
       .map((item) => item.trim())
       .filter(Boolean);
 
-  const getCloudinaryConfig = () => {
-    const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
-    const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
-    return { cloudName, uploadPreset };
-  };
-
   const uploadMediaFiles = async (files) => {
-    const { cloudName, uploadPreset } = getCloudinaryConfig();
-    if (!cloudName || !uploadPreset) {
-      setMediaError('Missing Cloudinary config. Set VITE_CLOUDINARY_CLOUD_NAME and VITE_CLOUDINARY_UPLOAD_PRESET.');
-      return;
-    }
     if (!files?.length) return;
 
     setMediaError('');
@@ -44,16 +34,18 @@ export default function AdminNewEntry({ onCreated }) {
         Array.from(files).map(async (file) => {
           const form = new FormData();
           form.append('file', file);
-          form.append('upload_preset', uploadPreset);
-          const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
-            method: 'POST',
-            body: form,
-          });
-          const data = await res.json();
-          if (!res.ok) {
-            throw new Error(data?.error?.message || 'Upload failed');
+          try {
+            const data = await apiUpload('/api/cloud-storage/upload/cloudinary', form);
+            if (data?.ok && data?.url) return data.url;
+            throw new Error(data?.error || 'Upload failed');
+          } catch (primaryError) {
+            const fallback = await apiUpload('/api/cloud-storage/upload/local', form).catch(() => null);
+            if (fallback?.ok && fallback?.url) {
+              setMediaError('Cloudinary was unavailable, so the file was saved locally on the server.');
+              return fallback.url;
+            }
+            throw primaryError;
           }
-          return data.secure_url;
         })
       );
 

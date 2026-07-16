@@ -4,11 +4,31 @@ const VectorSearchService = require('../utils/vectorSearchService');
 const Artifact = require('../models/Artifact');
 const ArchiveEntry = require('../models/ArchiveEntry');
 const { searchStaticArchive, searchStaticArtifacts } = require('../lib/staticContent');
+const { getMongoState } = require('../lib/mongoConnection');
 
 const vectorSearch = new VectorSearchService();
 
 function escapeRegExp(str) {
   return String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function shouldUseStaticSearchFallback() {
+  const mode = String(getMongoState()?.mode || '').toLowerCase();
+  return mode !== 'mongo' && mode !== 'memory';
+}
+
+function buildStaticSearchResults(qSafe, lim) {
+  const entries = searchStaticArchive(qSafe, lim).map((entry) => ({ ...entry, type: 'entry' }));
+  const items = searchStaticArtifacts(qSafe, lim);
+  const merged = [...entries, ...items]
+    .sort((a, b) => {
+      const aTs = new Date(a.updatedAt || a.date || a.createdAt || 0).getTime();
+      const bTs = new Date(b.updatedAt || b.date || b.createdAt || 0).getTime();
+      return bTs - aTs;
+    })
+    .slice(0, lim * 2);
+
+  return { entries, items, merged };
 }
 // Initialize optional vector DB lazily
 (async () => {
@@ -41,8 +61,14 @@ router.get('/text', async (req, res) => {
     }
 
     const qSafe = String(q).slice(0, 100);
-    const regex = new RegExp(escapeRegExp(qSafe), 'i');
     const lim = Math.min(parseInt(limit, 10) || 10, 50);
+
+    if (shouldUseStaticSearchFallback()) {
+      const normalized = searchStaticArchive(qSafe, lim);
+      return res.json({ success: true, query: qSafe, results: normalized, count: normalized.length });
+    }
+
+    const regex = new RegExp(escapeRegExp(qSafe), 'i');
 
     const results = await ArchiveEntry.find({
       $or: [
@@ -64,7 +90,11 @@ router.get('/text', async (req, res) => {
     res.json({ success: true, query: qSafe, results: normalized, count: normalized.length });
   } catch (error) {
     console.error('Text search error:', error);
-    res.status(500).json({ success: false, error: 'An error occurred during search' });
+    const { q, limit = 10 } = req.query || {};
+    const qSafe = String(q || '').slice(0, 100);
+    const lim = Math.min(parseInt(limit, 10) || 10, 50);
+    const normalized = searchStaticArchive(qSafe, lim);
+    res.json({ success: true, query: qSafe, results: normalized, count: normalized.length, fallback: true });
   }
 });
 
@@ -77,8 +107,14 @@ router.get('/artifacts', async (req, res) => {
     }
 
     const qSafe = String(q).slice(0, 100);
-    const regex = new RegExp(escapeRegExp(qSafe), 'i');
     const lim = Math.min(parseInt(limit, 10) || 10, 50);
+
+    if (shouldUseStaticSearchFallback()) {
+      const normalized = searchStaticArtifacts(qSafe, lim);
+      return res.json({ success: true, query: qSafe, results: normalized, count: normalized.length });
+    }
+
+    const regex = new RegExp(escapeRegExp(qSafe), 'i');
 
     const items = await Artifact.find({
       $or: [
@@ -120,8 +156,23 @@ router.get('/all', async (req, res) => {
     }
 
     const qSafe = String(q).slice(0, 100);
-    const regex = new RegExp(escapeRegExp(qSafe), 'i');
     const lim = Math.min(parseInt(limit, 10) || 10, 50);
+
+    if (shouldUseStaticSearchFallback()) {
+      const staticResults = buildStaticSearchResults(qSafe, lim);
+      return res.json({
+        success: true,
+        query: qSafe,
+        results: staticResults.merged,
+        count: staticResults.merged.length,
+        breakdown: {
+          entries: staticResults.entries.length,
+          artifacts: staticResults.items.length,
+        },
+      });
+    }
+
+    const regex = new RegExp(escapeRegExp(qSafe), 'i');
 
     const [entries, items] = await Promise.all([
       ArchiveEntry.find({
@@ -192,7 +243,21 @@ router.get('/all', async (req, res) => {
     });
   } catch (error) {
     console.error('Combined search error:', error);
-    return res.status(500).json({ success: false, error: 'An error occurred during combined search' });
+    const { q, limit = 10 } = req.query || {};
+    const qSafe = String(q || '').slice(0, 100);
+    const lim = Math.min(parseInt(limit, 10) || 10, 50);
+    const staticResults = buildStaticSearchResults(qSafe, lim);
+    return res.json({
+      success: true,
+      query: qSafe,
+      results: staticResults.merged,
+      count: staticResults.merged.length,
+      breakdown: {
+        entries: staticResults.entries.length,
+        artifacts: staticResults.items.length,
+      },
+      fallback: true,
+    });
   }
 });
 

@@ -8,13 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Vercel API catchall now stays on the slim serverless bundle but mounts the missing public/backend route groups there, with static archive/search and mock-safe OpenClaw fallbacks so the live backend answers cleanly without forcing a Mongo boot on serverless.
 - Public-facing site hardening pass: professional homepage framing, clean primary navigation, static no-JavaScript fallback pages, custom 404, and trust/legal/support pages.
 - SEO/crawlability refresh: robots.txt, sitemap.xml, llms.txt, readable-site.json, canonical URLs, and social preview metadata for the major public pages.
 - Legacy compatibility pages now redirect or render clean public content instead of landing as sloppy dead ends.
-- Browser-saved GitHub publish key for the book publishing workspace, so a device can write directly to the shared bookshelf without depending on a server-side GitHub secret.
-- Public raw-GitHub bookshelf and reader fallbacks, so published books remain visible on other devices even when the live backend returns an empty book store.
-- Backend public raw-GitHub fallbacks for the bookshelf, reader, PDF, and EPUB routes, so shared books can still be read and downloaded when the live serverless store has not loaded yet.
-- Book publishing now prefers GitHub-backed persistence when a GitHub token is present in the live backend, so published books can remain visible across devices instead of living only in one serverless instance.
+- Account-only book publishing flow so a signed-in website account is the only thing needed to publish and keep a book online.
+- Public bookshelf, reader, PDF, and EPUB routes now read from the live backend source of truth instead of a user-supplied GitHub publish key.
+- Book publishing now stays tied to the signed-in website account and the live backend shelf, so published books can remain visible across devices without a user-managed GitHub key.
 - Failed online publishes now stay queued locally as drafts with publish intent, instead of claiming the book is already live when the backend is unreachable.
 - Item-specific access codes and QR manage links for perennial listings, so the original creator or steward can open, update, and continue a listing from a persistent referral hash.
 - Creator-only listing deletion for the original poster, keeping the history of a perennial item protected from other users.
@@ -39,7 +39,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Frontend backend failover across Render, the pvabazaar API domain, and Vercel so the site can stay reachable when one backend host is unavailable.
 - Free browser-side auth fallback so people can sign in and sign up even when the hosted API is unavailable.
 - Global connection indicators on the layout and auth pages so the site shows live backend vs free fallback mode clearly.
+- Frontend lockfile sync that restores `npm ci` compatibility in GitHub Actions and unblocks the Pages deploy path.
+- Frontend GitHub Pages workflow now installs with `--legacy-peer-deps`, which avoids the Vite/plugin peer-resolution failure in clean CI runs.
 - Backend deploy workflow now treats stale live readiness as advisory instead of blocking new Vercel deploys.
+- Published live readiness ping threshold increased to `1500ms` after production checks consistently measured healthy latency above `1000ms`.
+- Cloud storage uploads now go through the backend route in the serverless bundle, so admin media uploads can use live Cloudinary config when present and fall back more safely when it is not.
 - Mongo bootstrap fallback that uses a serverless-safe mock state when production database config is missing, so the API continues to answer instead of crashing.
 - Serverless-safe mock database fallback plus shared JWT secret fallback so `/api/health` and login continue working when production secrets are missing.
 - Public published-books shelf with search, reader links, and PDF/EPUB access.
