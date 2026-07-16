@@ -485,7 +485,9 @@ export async function apiUpload(path, formData, extraHeaders = {}) {
   const headers = {
     ...extraHeaders,
   };
-  const token = getToken();
+  const adminPath = /^\/api\/cloud-storage\//i.test(String(path || '')) || /^\/api\/admin\//i.test(String(path || ''));
+  const adminToken = typeof window !== 'undefined' ? localStorage.getItem('admin:token') || localStorage.getItem('admin_token') : '';
+  const token = adminPath && adminToken ? adminToken : getToken();
   if (token) {
     headers.Authorization = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
   }

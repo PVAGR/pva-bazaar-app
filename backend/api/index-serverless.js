@@ -24,6 +24,7 @@ const usersRoutes = require('../routes/users');
 const streamsRoutes = require('../routes/streams');
 const oauthTwitchRoutes = require('../routes/oauthTwitch');
 const oauthYouTubeRoutes = require('../routes/oauthYouTube');
+const cloudStorageRoutes = require('../routes/cloudStorage');
 
 // Security headers with Helmet
 app.use(helmet({
@@ -190,6 +191,7 @@ app.use('/api/users', usersRoutes);
 app.use('/api/streams', streamsRoutes);
 app.use('/api/oauth', oauthTwitchRoutes);
 app.use('/api/oauth', oauthYouTubeRoutes);
+app.use('/api/cloud-storage', cloudStorageRoutes);
 
 app.get('/api/decentralized/status', async (_req, res) => {
   const build = getBuildInfo();
@@ -204,6 +206,7 @@ app.get('/api/decentralized/status', async (_req, res) => {
       archive: true,
       search: true,
       openclaw: true,
+      cloudStorage: true,
       deals: true,
       bounties: true,
       users: true,
@@ -227,6 +230,7 @@ app.get('/api/decentralized/ready', async (_req, res) => {
       { name: 'archive', ok: true },
       { name: 'search', ok: true },
       { name: 'openclaw', ok: true },
+      { name: 'cloud-storage', ok: true },
       { name: 'deals', ok: true },
       { name: 'bounties', ok: true },
       { name: 'users', ok: true },
