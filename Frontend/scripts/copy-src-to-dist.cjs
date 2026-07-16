@@ -36,7 +36,7 @@ copyRecursive(pagesSrc, pagesDest);
 console.log('Pages copy complete');
 
 // Copy additional top-level HTML entry pages used outside SPA routes.
-const topLevelHtmlFiles = ['archive.html', 'dashboard.html', 'home.html', 'journal.html'];
+const topLevelHtmlFiles = ['archive.html', 'dashboard.html', 'home.html', 'journal.html', 'welcome.html'];
 for (const fileName of topLevelHtmlFiles) {
   const srcPath = path.join(projectRoot, fileName);
   const destPath = path.join(projectRoot, 'dist', fileName);
