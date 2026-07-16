@@ -157,12 +157,13 @@
     }
   ],
   "guidanceForFetchers": [
+    "Legacy /pages/*.html URLs are served as redirects for compatibility, but canonical URLs are excluded from the sitemap.",
     "Read llms.txt first if you need a short human-readable overview.",
     "Use the sections array for route discovery and intent.",
     "Use sitemap.xml for static file URLs under /pages and /writings.",
     "Hash routes are the live SPA navigation, while the .html pages provide no-JavaScript fallbacks."
   ],
-  "updatedAt": "2026-07-11T16:54:47.646Z",
+  "updatedAt": "2026-07-16T17:39:31.504Z",
   "routes": [
     {
       "name": "Home",
@@ -173,8 +174,8 @@
     },
     {
       "name": "Get Started",
-      "path": "/get-started",
-      "url": "https://pvabazaar.org/get-started",
+      "path": "/get-started.html",
+      "url": "https://pvabazaar.org/get-started.html",
       "description": "No-JavaScript onboarding and entry point.",
       "kind": "public-html-or-root"
     },
@@ -264,10 +265,10 @@
     },
     {
       "name": "Forum",
-      "path": "#/forum",
-      "url": "https://pvabazaar.org/#/forum",
-      "description": "Civic discussion and proposal support.",
-      "kind": "spa-hash-route"
+      "path": "/forum.html",
+      "url": "https://pvabazaar.org/forum.html",
+      "description": "Public discussion and proposal support.",
+      "kind": "public-html-or-root"
     },
     {
       "name": "HeelKawn",
@@ -317,34 +318,6 @@
       "url": "https://pvabazaar.org/disclaimer.html",
       "description": "Important public disclaimer about site claims.",
       "kind": "public-html-or-root"
-    },
-    {
-      "name": "Welcome Redirect",
-      "path": "/pages/welcome.html",
-      "url": "https://pvabazaar.org/pages/welcome.html",
-      "description": "Legacy welcome route redirecting to the main homepage.",
-      "kind": "legacy-static-fallback"
-    },
-    {
-      "name": "Legacy Portfolio",
-      "path": "/pages/portfolio.html",
-      "url": "https://pvabazaar.org/pages/portfolio.html",
-      "description": "Legacy portfolio route redirecting to the professional portfolio page.",
-      "kind": "legacy-static-fallback"
-    },
-    {
-      "name": "Legacy Provenance",
-      "path": "/pages/provenance.html",
-      "url": "https://pvabazaar.org/pages/provenance.html",
-      "description": "Legacy provenance route redirecting to the trust and sourcing page.",
-      "kind": "legacy-static-fallback"
-    },
-    {
-      "name": "Legacy PVA Shares",
-      "path": "/pages/pvashares.html",
-      "url": "https://pvabazaar.org/pages/pvashares.html",
-      "description": "Legacy participation route redirecting to partnerships and support.",
-      "kind": "legacy-static-fallback"
     },
     {
       "name": "Static About",
@@ -472,5 +445,6 @@
       "description": "Static status page for no-JavaScript access.",
       "kind": "static-html"
     }
-  ]
+  ],
+  "routeCount": 40
 }
