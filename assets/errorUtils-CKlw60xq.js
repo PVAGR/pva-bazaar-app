@@ -1,0 +1,2 @@
+function e(e,t=`Something went wrong`){if(!e)return t;let n=e?.response?.data,r=n?.error||n?.message||e?.message||(typeof e==`string`?e:t);return String(r||t).trim()||t}async function t(e,t={}){let{retries:n=2,delayMs:r=800,onRetry:i}=t,a;for(let t=0;t<=n;t++)try{return await e()}catch(e){a=e,t<n&&i&&i(t+1,e),t<n&&await new Promise(e=>setTimeout(e,r*(t+1)))}throw a}export{t as n,e as t};
+//# sourceMappingURL=errorUtils-CKlw60xq.js.map

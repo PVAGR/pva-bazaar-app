@@ -1,145 +1,141 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="PVA Bazaar live status page." />
-    <title>PVA Bazaar Status</title>
-    <style>
-      body {
-        margin: 0;
-        min-height: 100vh;
-        display: grid;
-        place-items: center;
-        background: #0b1118;
-        color: #e8edf3;
-        font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-        padding: 24px;
-      }
-      .card {
-        width: min(760px, 100%);
-        background: #111922;
-        border: 1px solid #223544;
-        border-radius: 18px;
-        padding: 24px;
-        box-shadow: 0 20px 90px rgba(0, 0, 0, 0.3);
-      }
-      h1 { margin: 0 0 8px; font-size: clamp(1.7rem, 3vw, 2.5rem); }
-      p { margin: 0; color: #a9b6c4; line-height: 1.6; }
-      .grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 12px;
-        margin-top: 18px;
-      }
-      .row {
-        border: 1px solid #223544;
-        border-radius: 14px;
-        padding: 14px;
-        background: rgba(255, 255, 255, 0.02);
-      }
-      .label {
-        display: block;
-        color: #6fe7c8;
-        font-size: 0.8rem;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        margin-bottom: 6px;
-      }
-      .status {
-        font-size: 0.98rem;
-        color: #e8edf3;
-      }
-      code {
-        display: inline-block;
-        margin-top: 8px;
-        background: rgba(255,255,255,0.06);
-        border-radius: 8px;
-        padding: 3px 8px;
-        word-break: break-all;
-      }
-      .links {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        margin-top: 18px;
-      }
-      a {
-        color: #9af0dd;
-        text-decoration: none;
-        border: 1px solid #223544;
-        border-radius: 999px;
-        padding: 8px 12px;
-        background: rgba(255,255,255,0.03);
-      }
-    </style>
-  </head>
-  <body>
-    <main class="card">
-      <h1>PVA Bazaar Status</h1>
-      <p>This page checks the current backend URL and the live health endpoint configured for this site.</p>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Status | PVA Bazaar</title>
+  <meta name="description" content="Live status for the PVA Bazaar frontend and backend." />
+  <link rel="canonical" href="https://pvabazaar.org/status.html" />
+  <meta property="og:title" content="Status | PVA Bazaar" />
+  <meta property="og:description" content="Frontend status, backend health, and build information." />
+  <meta property="og:url" content="https://pvabazaar.org/status.html" />
+  <meta property="og:image" content="https://pvabazaar.org/og-default.svg" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="stylesheet" href="/styles/static-pages.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="shell">
+    <header class="site-header">
+      <div class="site-header__inner">
+        <a class="brand" href="/"><strong>PVA Bazaar</strong><span>Status</span></a>
+        <nav class="nav" aria-label="Primary">
+          <a href="/">Home</a><a href="/marketplace.html">Marketplace</a><a href="/archive.html">Archive</a><a href="/contact.html">Contact</a>
+        </nav>
+      </div>
+    </header>
 
-      <div class="grid">
-        <div class="row">
-          <span class="label">Backend URL</span>
-          <div class="status" id="backendUrl">Loading...</div>
+    <main id="main" class="page">
+      <section class="hero">
+        <span class="eyebrow">Status</span>
+        <h1>Live site and API health.</h1>
+        <p>This page checks the configured API base, shows the most recent health result, and never hides the truth if the backend is unavailable.</p>
+      </section>
+
+      <div class="status-grid">
+        <section class="status-card">
+          <p class="muted">Frontend</p>
+          <div class="status-value" id="frontendStatus">Online</div>
+          <p id="frontendChecked" class="muted">Checked when this page loaded.</p>
+        </section>
+        <section class="status-card">
+          <p class="muted">Backend/API</p>
+          <div class="status-value" id="backendStatus">Checking…</div>
+          <p id="backendChecked" class="muted">Backend health endpoint not publicly exposed yet.</p>
+        </section>
+      </div>
+
+      <section class="card">
+        <h2>Details</h2>
+        <pre id="statusDetails">Backend health endpoint not publicly exposed. Frontend is online.</pre>
+      </section>
+
+      <section class="card">
+        <h2>What this means</h2>
+        <p class="muted">
+          If the backend/API is unavailable, the site can still load publicly. If the live backend
+          is exposed, this page will show the most recent health response and version information.
+        </p>
+      </section>
+
+      <section class="card">
+        <h2>Useful links</h2>
+        <div class="actions">
+          <a class="button" href="/">Home</a>
+          <a class="button secondary" href="/llms.txt">llms.txt</a>
+          <a class="button secondary" href="/readable-site.json">readable-site.json</a>
+          <a class="button secondary" href="/sitemap.xml">sitemap.xml</a>
+          <a class="button secondary" href="/contact.html">Contact</a>
         </div>
-        <div class="row">
-          <span class="label">Health check</span>
-          <div class="status" id="healthStatus">Loading...</div>
-        </div>
-      </div>
+      </section>
 
-      <div class="row" style="margin-top: 12px;">
-        <span class="label">Response</span>
-        <div class="status" id="healthDetail">Waiting for fetch...</div>
-      </div>
-
-      <div class="links">
-        <a href="/">Home</a>
-        <a href="/llms.txt">llms.txt</a>
-        <a href="/readable-site.json">readable-site.json</a>
-        <a href="/sitemap.xml">sitemap.xml</a>
-      </div>
+      <noscript>
+        <section class="card">
+          <h2>JavaScript disabled</h2>
+          <p>
+            The site is still online. This status page shows the frontend health and a fallback
+            backend message even without JavaScript.
+          </p>
+        </section>
+      </noscript>
     </main>
+  </div>
 
-    <script>
-      async function loadStatus() {
-        const backendUrlNode = document.getElementById('backendUrl');
-        const healthStatusNode = document.getElementById('healthStatus');
-        const healthDetailNode = document.getElementById('healthDetail');
+  <script>
+    async function loadStatus() {
+      const frontendStatus = document.getElementById('frontendStatus');
+      const frontendChecked = document.getElementById('frontendChecked');
+      const backendStatus = document.getElementById('backendStatus');
+      const backendChecked = document.getElementById('backendChecked');
+      const statusDetails = document.getElementById('statusDetails');
+      frontendStatus.textContent = navigator.onLine ? 'Online' : 'Offline';
+      frontendChecked.textContent = `Checked ${new Date().toLocaleString()}`;
 
-        try {
-          const res = await fetch('/api-base.json', { cache: 'no-store' });
-          const cfg = await res.json();
-          const apiBase = String(cfg.apiUrl || '').replace(/\/+$/, '');
-          backendUrlNode.textContent = apiBase || 'Not configured';
-
-          if (!apiBase) {
-            healthStatusNode.textContent = 'No backend configured';
-            healthDetailNode.textContent = 'Set api-base.json or the deployment env to point at the live API.';
-            return;
-          }
-
-          const healthUrl = apiBase.endsWith('/api') ? `${apiBase}/health` : `${apiBase}/api/health`;
-          const healthRes = await fetch(healthUrl, { headers: { Accept: 'application/json' } });
-          const text = await healthRes.text();
-          let body = text;
-          try {
-            const parsed = JSON.parse(text);
-            body = JSON.stringify(parsed, null, 2);
-          } catch {}
-
-          healthStatusNode.textContent = healthRes.ok ? 'OK' : `Unavailable (${healthRes.status})`;
-          healthDetailNode.innerHTML = `<code>${body.slice(0, 500)}</code>`;
-        } catch (error) {
-          backendUrlNode.textContent = 'Unknown';
-          healthStatusNode.textContent = 'Error';
-          healthDetailNode.textContent = String(error).slice(0, 240);
+      try {
+        const cfgRes = await fetch('/api-base.json', { cache: 'no-store' });
+        const cfg = await cfgRes.json();
+        const apiBase = String(cfg.apiUrl || '').replace(/\/+$/, '');
+        if (!apiBase) {
+          backendStatus.textContent = 'Not configured';
+          backendChecked.textContent = 'Backend health endpoint not publicly exposed.';
+          statusDetails.textContent = 'No API base is configured for this deployment.';
+          return;
         }
-      }
 
-      loadStatus();
-    </script>
-  </body>
+        const healthUrl = apiBase.endsWith('/api') ? `${apiBase}/health` : `${apiBase}/api/health`;
+        const versionUrl = apiBase.endsWith('/api') ? `${apiBase}/version` : `${apiBase}/api/version`;
+        const [healthRes, versionRes] = await Promise.all([
+          fetch(healthUrl, { headers: { Accept: 'application/json' } }),
+          fetch(versionUrl, { headers: { Accept: 'application/json' } }).catch(() => null),
+        ]);
+        const healthText = await healthRes.text();
+        let healthBody = healthText;
+        try { healthBody = JSON.stringify(JSON.parse(healthText), null, 2); } catch {}
+        let versionBody = '';
+        if (versionRes) {
+          try {
+            const versionText = await versionRes.text();
+            versionBody = versionText;
+          } catch {}
+        }
+
+        backendStatus.textContent = healthRes.ok ? 'Healthy' : `Unhealthy (${healthRes.status})`;
+        backendChecked.textContent = `Checked ${new Date().toLocaleString()}`;
+        statusDetails.textContent = [
+          `API base: ${apiBase}`,
+          `Health: ${healthRes.status}`,
+          versionBody ? `Version: ${versionBody.slice(0, 120)}` : 'Version: not exposed',
+          '',
+          healthBody.slice(0, 2000),
+        ].join('\n');
+      } catch (error) {
+        backendStatus.textContent = 'Unavailable';
+        backendChecked.textContent = `Checked ${new Date().toLocaleString()}`;
+        statusDetails.textContent = `Backend health endpoint not publicly exposed. Frontend is online.\n\n${String(error).slice(0, 900)}`;
+      }
+    }
+
+    loadStatus();
+  </script>
+</body>
 </html>

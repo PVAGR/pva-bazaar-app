@@ -9,17 +9,17 @@
   },
   "urls": {
     "frontend": "https://pvabazaar.org",
-    "backend": "https://api.pvabazaar.org",
-    "apiBase": "https://api.pvabazaar.org/api",
+    "backend": "https://pva-backend-api.vercel.app",
+    "apiBase": "https://pva-backend-api.vercel.app/api",
     "statusPage": "https://pvabazaar.org/status.html",
-    "health": "https://api.pvabazaar.org/api/health",
-    "ping": "https://api.pvabazaar.org/api/ping",
-    "version": "https://api.pvabazaar.org/api/version",
-    "archive": "https://api.pvabazaar.org/api/archive",
-    "search": "https://api.pvabazaar.org/api/search/text?q=test",
-    "openclawStatus": "https://api.pvabazaar.org/api/openclaw/status",
-    "openclawWatchdog": "https://api.pvabazaar.org/api/openclaw/watchdog-status",
-    "decentralizedReady": "https://api.pvabazaar.org/api/decentralized/ready",
+    "health": "https://pva-backend-api.vercel.app/api/health",
+    "ping": "https://pva-backend-api.vercel.app/api/ping",
+    "version": "https://pva-backend-api.vercel.app/api/version",
+    "archive": "https://pva-backend-api.vercel.app/api/archive",
+    "search": "https://pva-backend-api.vercel.app/api/search/text?q=test",
+    "openclawStatus": "https://pva-backend-api.vercel.app/api/openclaw/status",
+    "openclawWatchdog": "https://pva-backend-api.vercel.app/api/openclaw/watchdog-status",
+    "decentralizedReady": "https://pva-backend-api.vercel.app/api/decentralized/ready",
     "llms": "https://pvabazaar.org/llms.txt",
     "readableSite": "https://pvabazaar.org/readable-site.json",
     "sitemap": "https://pvabazaar.org/sitemap.xml"
@@ -27,12 +27,12 @@
   "redundancy": {
     "frontendDelivery": "GitHub Pages + CDN edge cache",
     "frontendPreview": "Vercel preview deployment",
-    "primaryBackend": "https://api.pvabazaar.org",
-    "fallbackBackend": "https://pva-bazaar-app-1.onrender.com"
+    "primaryBackend": "https://pva-backend-api.vercel.app",
+    "fallbackBackend": "https://pva-backend-api.vercel.app"
   },
   "edge": {
     "frontendHostnames": ["pvabazaar.org", "www.pvabazaar.org"],
-    "backendHostnames": ["api.pvabazaar.org"],
+    "backendHostnames": ["pva-backend-api.vercel.app"],
     "requiredHeaders": ["cache-control", "content-type"]
   },
   "monitoring": {

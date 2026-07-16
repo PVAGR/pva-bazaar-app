@@ -1,0 +1,2 @@
+import"./rolldown-runtime-DAXXjFlN.js";import{n as e,t}from"./jsx-runtime-BhgoufuK.js";import{t as n}from"./governance-CpmdI7v7.js";/* empty css                   */e();var r=t();function i(){return(0,r.jsx)(n,{initialPage:`conference`})}function a(){return(0,r.jsx)(n,{initialPage:`treasury`})}export{i as GovernanceConferencePage,a as GovernanceTreasuryPage};
+//# sourceMappingURL=OtherPages-CPEwMyO9.js.map

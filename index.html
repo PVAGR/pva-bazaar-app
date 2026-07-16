@@ -9,7 +9,15 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <link rel="canonical" href="https://pvabazaar.org/" />
     <link rel="manifest" href="/manifest.webmanifest" />
-    <meta name="description" content="PVA Bazaar is a personal archive and business suite for writings, commerce, recovery, civic tools, provenance, and HeelKawn." />
+    <meta name="description" content="PVA Bazaar is a pure life knowledge marketplace connecting education, trade, provenance, writings, books, and public partnerships." />
+    <meta property="og:title" content="PVA Bazaar | Pure Life Knowledge Marketplace" />
+    <meta property="og:description" content="A public bridge for knowledge, trade, provenance, publishing, and institutional partnerships." />
+    <meta property="og:url" content="https://pvabazaar.org/" />
+    <meta property="og:image" content="https://pvabazaar.org/og-default.svg" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="PVA Bazaar | Pure Life Knowledge Marketplace" />
+    <meta name="twitter:description" content="A public bridge for knowledge, trade, provenance, publishing, and institutional partnerships." />
+    <meta name="twitter:image" content="https://pvabazaar.org/og-default.svg" />
     <meta name="llm:readable" content="true" />
     <meta name="llm:content-url" content="https://pvabazaar.org/llms.txt" />
     <meta name="llm:snapshot-url" content="https://pvabazaar.org/readable-site.json" />
@@ -19,7 +27,7 @@
     <meta name="pva:federation-hub" content="https://federation.pvabazaar.org" />
     <meta name="pva:federation-community-url-template" content="https://federation.pvabazaar.org/api/communities/pvabazaar-kenya-pilot" />
     <!-- Pages deploy: bump when forcing rebuild after API URL changes -->
-    <title>PVA Bazaar — Personal Site, Business, and Writings</title>
+    <title>PVA Bazaar | Pure Life Knowledge Marketplace</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Open+Sans:wght@400;700&display=swap" rel="stylesheet" />
@@ -86,7 +94,7 @@
         line-height: 1.5;
       }
 
-      body[data-app-mounted='true'] #app-shell-fallback {
+      body[data-app-content-ready='true'] #app-shell-fallback {
         display: none;
       }
 
@@ -117,7 +125,12 @@
         "@type": "WebSite",
         "name": "PVA Bazaar",
         "url": "https://pvabazaar.org/",
-        "description": "PVA Bazaar personal archive, business bridge, recovery layer, civic tools, and HeelKawn hub.",
+        "description": "PVA Bazaar is a public pure-life knowledge marketplace connecting trade, education, provenance, writings, books, and institutional partnerships.",
+        "publisher": {
+          "@type": "Organization",
+          "name": "PVA Bazaar",
+          "url": "https://pvabazaar.org/"
+        },
         "hasPart": [
           {
             "@type": "WebPage",
@@ -168,20 +181,35 @@
         "@type": "Organization",
         "name": "PVA Bazaar",
         "url": "https://pvabazaar.org/",
-        "description": "A sourcing bridge connecting global suppliers, artisans, and makers with American buyers through provenance, presentation, and archive context.",
+        "description": "A public bridge connecting knowledge, trade, provenance, education, writings, books, and supplier partnerships.",
+        "email": "contact@pvabazaar.org",
+        "contactPoint": {
+          "@type": "ContactPoint",
+          "contactType": "public inquiries",
+          "email": "contact@pvabazaar.org",
+          "url": "https://pvabazaar.org/contact.html"
+        },
         "areaServed": ["United States", "Global"],
-        "knowsAbout": ["global sourcing", "artisan supply chains", "product provenance", "archive publishing"]
+        "knowsAbout": [
+          "global sourcing",
+          "product provenance",
+          "educational materials",
+          "archive publishing",
+          "institution partnerships"
+        ]
       }
     </script>
-    <script type="module" crossorigin src="/assets/index-CtfcrAdH.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-DlGi3J5o.css">
+    <script type="module" crossorigin src="/assets/index-CV98Sutc.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-DAXXjFlN.js">
+    <link rel="modulepreload" crossorigin href="/assets/jsx-runtime-BhgoufuK.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-BmKhU0Pl.css">
   </head>
   <body>
     <div id="root" role="main"></div>
     <noscript>
       <section class="noscript-panel" aria-label="PVA Bazaar no-script guidance">
         <h1>PVA Bazaar</h1>
-        <p>This site requires JavaScript for the full marketplace, archive, and supplier experience.</p>
+        <p>You can still browse the most important public pages below, even without JavaScript.</p>
         <p>Machine-readable resources for crawlers and AI tools:</p>
         <ul>
           <li><a href="/llms.txt">llms.txt</a></li>
@@ -192,16 +220,26 @@
     </noscript>
     <div id="app-shell-fallback">
       <div class="fallback-panel" role="status" aria-live="polite">
-        <h1 class="fallback-title">Loading PVA Bazaar...</h1>
-        <p class="fallback-copy">If the app is still waking up, use one of the direct paths below. The full site should appear automatically once the app mounts.</p>
+        <h1 class="fallback-title">PVA Bazaar is loading…</h1>
+        <p class="fallback-copy">
+          If the app takes a moment, use one of the direct public paths below. The site is a marketplace of knowledge,
+          trade, provenance, books, and partnerships.
+        </p>
         <div class="fallback-links">
-          <a class="fallback-link" href="/#/archive">Archive</a>
-          <a class="fallback-link" href="/#/marketplace">Marketplace</a>
-          <a class="fallback-link" href="/#/recovery">Recovery</a>
-          <a class="fallback-link" href="/#/heelkawn">HeelKawn</a>
+          <a class="fallback-link" href="/">Home</a>
+          <a class="fallback-link" href="/about.html">About</a>
+          <a class="fallback-link" href="/marketplace.html">Marketplace</a>
+          <a class="fallback-link" href="/archive.html">Archive</a>
+          <a class="fallback-link" href="/writings.html">Writings</a>
+          <a class="fallback-link" href="/books.html">Books</a>
+          <a class="fallback-link" href="/creator.html">Supplier Portal</a>
+          <a class="fallback-link" href="/contact.html">Contact</a>
+          <a class="fallback-link" href="/provenance.html">Provenance</a>
           <a class="fallback-link" href="/status.html">Status</a>
         </div>
-        <p class="fallback-copy" style="margin-top: 16px;">If this stays blank after a refresh, the app failed to mount and the error fallback should appear.</p>
+        <p class="fallback-copy" style="margin-top: 16px;">
+          If this stays blank after a refresh, the app failed to mount and the error fallback should appear.
+        </p>
       </div>
     </div>
     <!-- api-test.js excluded from production builds -->
