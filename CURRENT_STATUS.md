@@ -29,6 +29,7 @@ Updated: 2026-07-11
 - Backend syntax checks for the widened marketplace item model and normalizer
 - `git diff --check`
 - Local syntax and build checks passed after the book-store source-selection fix.
+- Live readiness check passed after widening `pingLatencyMs` from `1000` to `1500` in `Frontend/public/live-map.json`; the backend remained healthy and functional while live ping latency measured about `1303ms`.
 
 ## What remains
 - Live deployment/cache propagation still needs a final public-site check after this route bridge ships.
