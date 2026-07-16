@@ -31,9 +31,9 @@
       const path = (globalThis.location?.pathname || '/').replace(/\/+$/, '') || '/';
       const normalized = path.toLowerCase();
       const redirects = {
-        '/welcome': '/welcome.html',
-        '/welcome.html': '/welcome.html',
-        '/pages/welcome.html': '/welcome.html',
+        '/welcome': '/',
+        '/welcome.html': '/',
+        '/pages/welcome.html': '/',
         '/home': '/',
         '/get-started': '/get-started.html',
         '/get-started/': '/get-started.html',
