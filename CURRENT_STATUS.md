@@ -3,7 +3,7 @@
 Updated: 2026-07-11
 
 ## What changed
-- Forced the Vercel API catchall to boot the full Express backend instead of the slim serverless bundle, so live routes like `/api/archive`, `/api/search/text`, `/api/deals`, `/api/bounties`, `/api/users/profile`, `/api/streams`, `/api/oauth/*`, and `/api/openclaw/*` can actually exist on the deployed host.
+- Kept the Vercel API catchall on the slim serverless bundle and mounted the missing public/backend route groups there, with static archive/search and mock-safe OpenClaw fallbacks so live routes like `/api/archive`, `/api/search/text`, `/api/deals`, `/api/bounties`, `/api/users/profile`, `/api/streams`, `/api/oauth/*`, and `/api/openclaw/*` answer cleanly without forcing a database boot on serverless.
 - Rebuilt the public-facing site shell around clean primary navigation, static no-JavaScript fallback pages, and dedicated trust/legal/support pages.
 - Added a professional homepage/landing experience with clear mission copy, marketplace/knowledge positioning, and direct public entry points.
 - Repaired old indexed compatibility routes and added branded static fallbacks so legacy URLs no longer land on ugly dead ends.
@@ -25,12 +25,13 @@ Updated: 2026-07-11
 ## What was verified
 - `npm --prefix Frontend run build`
 - Canonical static pages and the site shell built cleanly after the public route cleanup.
+- Local route smoke against the Vercel entrypoint now returns 200 for `/api/archive`, `/api/search/text`, `/api/decentralized/ready`, `/api/openclaw/status`, and `/api/openclaw/watchdog-status`, while auth-gated routes return 401 without a token as expected.
 - Backend syntax checks for the widened marketplace item model and normalizer
 - `git diff --check`
 - Local syntax and build checks passed after the book-store source-selection fix.
 
 ## What remains
-- Live deployment/cache propagation still needs a final public-site check after this route/SEO pass ships.
+- Live deployment/cache propagation still needs a final public-site check after this route bridge ships.
 - Some static fallback pages intentionally mirror SPA content; if we later consolidate to one canonical route per page, we can trim the duplicates further.
 - Existing listings will show stewardship and dossier details only when that data is already present.
 - Future listing submissions should populate the new knowledge profile fields to make the pages fully rich.

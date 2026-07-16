@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const dbConnect = require('../lib/dbConnect');
+const { getMongoState } = require('../lib/mongoConnection');
 const { verifyToken } = require('../middleware/auth');
 
 const OPENAI_API_KEY = String(process.env.OPENAI_API_KEY || '').trim();
@@ -65,6 +66,11 @@ function parseTimestamp(line) {
 
 function normalizeUrl(value) {
   return String(value || '').trim().replace(/\/$/, '');
+}
+
+function isMockDatabaseMode() {
+  const mode = String(getMongoState()?.mode || '').toLowerCase();
+  return mode !== 'mongo' && mode !== 'memory';
 }
 
 function getRequestBaseUrl(req) {
@@ -906,6 +912,7 @@ async function waitForInboundReply(outboundId, requestId, waitMs) {
 
 router.get('/status', async (_req, res) => {
   const config = getConfig();
+  const mockMode = isMockDatabaseMode();
 
   // Probe external gateway if configured
   let reachable = false;
@@ -923,6 +930,106 @@ router.get('/status', async (_req, res) => {
     } catch (err) {
       detail = err?.response?.data || err.message;
     }
+  }
+
+  const mode = config.webhookConfigured ? 'webhook+queue' : 'queue-only';
+  const statusMsg = config.webhookConfigured
+    ? (reachable ? `Gateway reachable (${mode})` : `Gateway unreachable — events queued`)
+    : 'Queue-only mode';
+
+  if (mockMode) {
+    const websiteUrl = normalizeUrl(process.env.OPENCLAW_WEBSITE_URL || process.env.PUBLIC_WEBSITE_URL || 'https://pvabazaar.org');
+    const ollamaBaseUrl = normalizeUrl(process.env.OLLAMA_BASE_URL || process.env.OPENCLAW_OLLAMA_BASE_URL || '');
+    const websiteHealthUrl = normalizeUrl(process.env.OPENCLAW_WEBSITE_HEALTH_URL || `${websiteUrl}/api/health`);
+    const [websiteProbe, websiteRootProbe, ollamaProbe] = await Promise.all([
+      probeUrl(websiteHealthUrl, 6000),
+      websiteUrl && websiteUrl !== websiteHealthUrl
+        ? probeUrl(websiteUrl, 6000)
+        : Promise.resolve({ configured: true, reachable: false, url: websiteUrl, message: 'Not checked' }),
+      ollamaBaseUrl
+        ? probeUrl(`${ollamaBaseUrl}/api/version`, 6000)
+        : Promise.resolve({ configured: false, reachable: false, url: '', message: 'Not configured' }),
+    ]);
+
+    const websiteReachable = Boolean(websiteProbe.reachable || websiteRootProbe.reachable);
+    return res.json({
+      ok: true,
+      configured: true,
+      queueEnabled: true,
+      webhookConfigured: config.webhookConfigured,
+      reachable: Boolean(reachable || websiteReachable),
+      mode: config.webhookConfigured ? 'webhook+queue' : 'queue-only',
+      message: statusMsg,
+      gatewayUrl: config.gatewayUrl || null,
+      queue: {
+        pending: 0,
+        stale: 0,
+        processed: 0,
+        inbound: 0,
+        latestAt: null,
+      },
+      worker: {
+        configured: true,
+        active: false,
+        state: 'mock',
+        heartbeatAt: null,
+        failures: 0,
+      },
+      ecosystem: {
+        status: 'healthy',
+        services: {
+          website: {
+            configured: true,
+            url: websiteUrl,
+            healthUrl: websiteHealthUrl,
+            reachable: websiteReachable,
+            message: websiteProbe.reachable
+              ? websiteProbe.message
+              : (websiteRootProbe.reachable ? 'Root reachable' : websiteProbe.message),
+            status: websiteReachable ? 'online' : 'degraded',
+          },
+          openclaw: {
+            configured: true,
+            reachable: true,
+            queuePending: 0,
+            staleOutbound: 0,
+            workerActive: false,
+            responderLive: false,
+            responderState: 'mock',
+            workerState: 'mock',
+            workerFailures: 0,
+            responderFailures: 0,
+            responderLastError: null,
+            brain: null,
+            message: 'Mock database mode',
+            status: 'online',
+          },
+          ollama: {
+            configured: Boolean(ollamaBaseUrl),
+            baseUrl: ollamaBaseUrl || null,
+            model: String(process.env.OLLAMA_MODEL || process.env.OPENCLAW_OLLAMA_MODEL || '').trim() || null,
+            reachable: Boolean(ollamaBaseUrl && ollamaProbe.reachable),
+            version: ollamaProbe?.detail?.version || ollamaProbe?.detail?.name || null,
+            message: ollamaBaseUrl
+              ? (ollamaProbe.reachable ? 'Reachable' : ollamaProbe.message)
+              : 'Not configured',
+            status: ollamaBaseUrl ? (ollamaProbe.reachable ? 'online' : 'degraded') : 'offline',
+          },
+          telegram: {
+            configured: Boolean(process.env.TELEGRAM_BOT_TOKEN || process.env.TELEGRAM_ALLOWED_CHAT_IDS),
+            reachable: false,
+            lastHeartbeatAt: null,
+            lastUpdateId: null,
+            connectionState: 'mock',
+            consecutiveFailures: 0,
+            lastError: null,
+            message: config.webhookConfigured ? 'Webhook mode active' : 'Not configured',
+            status: 'offline',
+          },
+        },
+      },
+      timestamp: new Date().toISOString(),
+    });
   }
 
   // Get a quick queue snapshot so the admin UI has real numbers
@@ -946,11 +1053,6 @@ router.get('/status', async (_req, res) => {
   } catch (_err) {
     ecosystem = null;
   }
-
-  const mode = config.webhookConfigured ? 'webhook+queue' : 'queue-only';
-  const statusMsg = config.webhookConfigured
-    ? (reachable ? `Gateway reachable (${mode})` : `Gateway unreachable — events queued`)
-    : `Queue-only mode — ${queue ? queue.pendingOutbound : '?'} pending`;
 
   res.json({
     ok: true,
@@ -1113,6 +1215,33 @@ router.post('/telegram/notify-ready', async (req, res) => {
 });
 
 router.get('/watchdog-status', async (_req, res) => {
+  if (isMockDatabaseMode()) {
+    return res.json({
+      ok: true,
+      available: true,
+      source: 'serverless-mock',
+      summary: {
+        state: 'ok',
+        latestStatus: null,
+        latestDispatch: null,
+        latestError: null,
+        latestWarn: null,
+        latestRecovery: null,
+        latestAlert: null,
+        lastEventAt: new Date().toISOString(),
+        errorCountWindow: 0,
+        warnCountWindow: 0,
+        alertCountWindow: 0,
+      },
+      message: 'Serverless mock mode - watchdog logs not required',
+      paths: {
+        logPath: null,
+        alertPath: null,
+      },
+      timestamp: new Date().toISOString(),
+    });
+  }
+
   const { logPath, alertPath } = resolveWatchdogPaths();
 
   const logLines = readLastLines(logPath, 400);
