@@ -10,33 +10,32 @@ Status page: https://pvabazaar.org/status.html
 
 Public surfaces:
 - Home: https://pvabazaar.org/
-- Get Started: https://pvabazaar.org/get-started
-- Marketplace: https://pvabazaar.org/#/marketplace
-- Archive: https://pvabazaar.org/#/archive
+- Get Started: https://pvabazaar.org/get-started.html
+- Marketplace: https://pvabazaar.org/marketplace.html
+- Archive: https://pvabazaar.org/archive.html
 - Writings: https://pvabazaar.org/writings.html
-- Books: https://pvabazaar.org/#/books
+- Books: https://pvabazaar.org/books.html
 - Published Books: https://pvabazaar.org/#/books/published
-- Supplier Portal: https://pvabazaar.org/#/creator
+- Supplier Portal: https://pvabazaar.org/creator.html
 - Partnerships: https://pvabazaar.org/partnerships.html
 - Provenance: https://pvabazaar.org/provenance.html
+- Forum: https://pvabazaar.org/forum.html
 - Contact: https://pvabazaar.org/contact.html
 - Privacy: https://pvabazaar.org/privacy.html
 - Terms: https://pvabazaar.org/terms.html
 - Shipping: https://pvabazaar.org/shipping.html
 - Returns: https://pvabazaar.org/returns.html
 - Disclaimer: https://pvabazaar.org/disclaimer.html
-- Recovery: https://pvabazaar.org/#/recovery
-- HeelKawn: https://pvabazaar.org/#/heelkawn
-- Governance: https://pvabazaar.org/#/proposals
-- Conference: https://pvabazaar.org/#/conference
-- Forum: https://pvabazaar.org/#/forum
+- Recovery: https://pvabazaar.org/recovery.html
+- HeelKawn: https://pvabazaar.org/heelkawn.html
+- Governance: https://pvabazaar.org/governance.html
 - Civilization Atlas: https://pvabazaar.org/#/marketplace/civilization/agriculture
 
-Legacy static compatibility:
-- /pages/welcome.html
-- /pages/portfolio.html
-- /pages/provenance.html
-- /pages/pvashares.html
+Legacy compatibility redirects:
+- /pages/welcome.html -> /
+- /pages/portfolio.html -> /portfolio.html
+- /pages/provenance.html -> /provenance.html
+- /pages/pvashares.html -> /pvashares.html
 
 Notes for fetchers:
 1. Start with this file for a short summary.
