@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Vercel API catchall now forces the full Express backend instead of the slim serverless bundle, which restores the missing live route groups expected by the strict readiness gate.
 - Public-facing site hardening pass: professional homepage framing, clean primary navigation, static no-JavaScript fallback pages, custom 404, and trust/legal/support pages.
 - SEO/crawlability refresh: robots.txt, sitemap.xml, llms.txt, readable-site.json, canonical URLs, and social preview metadata for the major public pages.
 - Legacy compatibility pages now redirect or render clean public content instead of landing as sloppy dead ends.

@@ -3,6 +3,7 @@
 Updated: 2026-07-11
 
 ## What changed
+- Forced the Vercel API catchall to boot the full Express backend instead of the slim serverless bundle, so live routes like `/api/archive`, `/api/search/text`, `/api/deals`, `/api/bounties`, `/api/users/profile`, `/api/streams`, `/api/oauth/*`, and `/api/openclaw/*` can actually exist on the deployed host.
 - Rebuilt the public-facing site shell around clean primary navigation, static no-JavaScript fallback pages, and dedicated trust/legal/support pages.
 - Added a professional homepage/landing experience with clear mission copy, marketplace/knowledge positioning, and direct public entry points.
 - Repaired old indexed compatibility routes and added branded static fallbacks so legacy URLs no longer land on ugly dead ends.
