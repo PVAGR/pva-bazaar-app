@@ -249,41 +249,48 @@ async function writeLocalAsset(buffer, originalName, prefix) {
 
 async function uploadCoverAsset(buffer, originalName, folder, mimeType) {
   if (!isCloudinaryConfigured()) {
+    console.warn('⚠️ Cloudinary not configured, using local storage for cover image');
     return writeLocalAsset(buffer, originalName, folder);
   }
 
-  const cloudinary = require('cloudinary').v2;
-  cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
-  });
+  try {
+    const cloudinary = require('cloudinary').v2;
+    cloudinary.config({
+      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+      api_key: process.env.CLOUDINARY_API_KEY,
+      api_secret: process.env.CLOUDINARY_API_SECRET,
+    });
 
-  const result = await new Promise((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream(
-      {
-        folder,
-        resource_type: 'image',
-        use_filename: true,
-        unique_filename: true,
-      },
-      (error, data) => {
-        if (error) reject(error);
-        else resolve(data);
-      },
-    );
-    stream.end(buffer);
-  });
+    const result = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        {
+          folder,
+          resource_type: 'image',
+          use_filename: true,
+          unique_filename: true,
+        },
+        (error, data) => {
+          if (error) reject(error);
+          else resolve(data);
+        },
+      );
+      stream.end(buffer);
+    });
 
-  return {
-    provider: 'cloudinary',
-    url: result.secure_url,
-    publicId: result.public_id,
-    localFilename: '',
-    originalName,
-    mimeType,
-    size: buffer.length,
-  };
+    return {
+      provider: 'cloudinary',
+      url: result.secure_url,
+      publicId: result.public_id,
+      localFilename: '',
+      originalName,
+      mimeType,
+      size: buffer.length,
+    };
+  } catch (cloudinaryError) {
+    console.error('❌ Cloudinary upload failed:', cloudinaryError.message);
+    console.warn('⚠️ Falling back to local storage for cover image');
+    return writeLocalAsset(buffer, originalName, folder);
+  }
 }
 
 async function resolveAssetBuffer(asset) {
