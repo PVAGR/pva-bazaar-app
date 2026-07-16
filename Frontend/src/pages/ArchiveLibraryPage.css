@@ -31,17 +31,13 @@
 
 .archive-library {
   min-height: 100vh;
-  height: 100vh;
+  height: auto;
   background: var(--bg-primary);
   color: var(--text-primary);
   margin: 0;
   padding: 0;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  overflow: hidden;
+  position: relative;
+  overflow: visible;
   transition: background 0.3s ease, color 0.3s ease;
 }
 
@@ -347,35 +343,18 @@
   display: grid;
   grid-template-columns: 350px 1fr;
   gap: 0;
-  height: calc(100vh - 250px);
-  overflow: hidden;
+  height: auto;
+  min-height: 0;
+  overflow: visible;
+  align-items: start;
 }
 
 .archive-sidebar {
   background: color-mix(in srgb, var(--bg-secondary) 82%, #000 18%);
   border-right: 1px solid color-mix(in srgb, var(--border) 75%, #000 25%);
-  height: 100%;
-  max-height: calc(100vh - 200px);
-  overflow-y: auto;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
-}
-
-.archive-sidebar::-webkit-scrollbar {
-  width: 8px;
-}
-
-.archive-sidebar::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.archive-sidebar::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 4px;
-}
-
-.archive-sidebar::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted);
+  height: auto;
+  max-height: none;
+  overflow: visible;
 }
 
 .category-filter {
@@ -523,28 +502,10 @@
 
 .archive-content {
   padding: 2.1rem 1.9rem 2.5rem;
-  overflow-y: auto;
-  overflow-x: hidden;
-  height: 100%;
+  overflow: visible;
+  height: auto;
+  min-height: 0;
   scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
-}
-
-.archive-content::-webkit-scrollbar {
-  width: 10px;
-}
-
-.archive-content::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.archive-content::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 5px;
-}
-
-.archive-content::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted);
 }
 
 .archive-welcome {
@@ -881,20 +842,21 @@
     position: relative;
     height: auto;
     min-height: 100vh;
-    overflow: auto;
+    overflow: visible;
   }
 
   .archive-layout {
     grid-template-columns: 1fr;
     height: auto;
-    min-height: calc(100vh - 160px);
+    min-height: 0;
   }
 
   .archive-sidebar {
-    max-height: 400px;
     height: auto;
+    max-height: none;
     border-right: none;
     border-bottom: 1px solid var(--border);
+    overflow: visible;
   }
 
   .archive-sidebar.is-collapsed {
@@ -918,7 +880,6 @@
 
   .archive-content {
     height: auto;
-    min-height: 500px;
     max-height: none;
     overflow: visible;
   }
