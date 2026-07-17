@@ -5,9 +5,29 @@ const jwt = require('jsonwebtoken');
 const { authenticateToken } = require('../middleware/auth');
 const { createUserEvent, dispatchToOpenClaw } = require('../utils/openclaw-events');
 const { sendWelcomeEmail } = require('../services/emailService');
-const { getMongoState } = require('../lib/mongoConnection');
+const { connectMongo, getMongoState } = require('../lib/mongoConnection');
 const { ensureSeedUsers, findUser, saveUser } = require('../lib/mockUserStore');
 const { getJwtSecret } = require('../lib/jwtSecret');
+
+const hasMongoUri = Boolean(process.env.MONGODB_URI || process.env.DATABASE_URL);
+let mongoAuthReadyPromise = null;
+
+async function ensureMongoAuthReady() {
+  if (!hasMongoUri) return null;
+  if (!mongoAuthReadyPromise) {
+    mongoAuthReadyPromise = connectMongo({ logger: console, allowMemoryFallback: false });
+  }
+
+  await mongoAuthReadyPromise;
+  const state = getMongoState();
+  if (state.mode !== 'mongo') {
+    const error = new Error(state.lastError || 'MongoDB authentication store is unavailable');
+    error.status = 503;
+    throw error;
+  }
+
+  return state;
+}
 
 const ROLE_INTENT_TO_APP_ROLE = {
   seller: 'seller',
@@ -60,14 +80,16 @@ router.post('/register', async (req, res) => {
       : null;
 
     // Check if user already exists
-    const useMockStore = getMongoState().mode === 'mock';
-    if (useMockStore) {
+    const useMongoStore = hasMongoUri;
+    if (useMongoStore) {
+      await ensureMongoAuthReady();
+    } else {
       await ensureSeedUsers();
     }
 
-    const existingUser = useMockStore
-      ? await findUser({ email })
-      : await User.findOne({ email });
+    const existingUser = useMongoStore
+      ? await User.findOne({ email })
+      : await findUser({ email });
     if (existingUser) {
       return res.status(400).json({ ok: false, message: 'User already exists' });
     }
@@ -92,7 +114,7 @@ router.post('/register', async (req, res) => {
       },
     };
 
-    const user = useMockStore ? await saveUser(userData) : await new User(userData).save();
+    const user = useMongoStore ? await new User(userData).save() : await saveUser(userData);
     const token = jwt.sign({ id: user._id, role: user.role }, getJwtSecret(), { expiresIn: '7d' });
     
     // Dispatch user registration event (non-blocking)
@@ -137,20 +159,22 @@ router.post('/login', async (req, res) => {
     }
 
     const identifierLower = identifier.toLowerCase();
-    const useMockStore = getMongoState().mode === 'mock';
-    if (useMockStore) {
+    const useMongoStore = hasMongoUri;
+    if (useMongoStore) {
+      await ensureMongoAuthReady();
+    } else {
       await ensureSeedUsers();
     }
 
-    let user = useMockStore
-      ? await findUser({
+    let user = useMongoStore
+      ? await User.findOne({
           $or: [
             { email: identifierLower },
             { email: identifier },
             { username: identifier },
           ],
         })
-      : await User.findOne({
+      : await findUser({
           $or: [
             { email: identifierLower },
             { email: identifier },
@@ -173,21 +197,21 @@ router.post('/login', async (req, res) => {
     let envAdminAuthenticated = false;
 
     if (envAdminPassword && adminIdentifierMatch && password === envAdminPassword) {
-      user = useMockStore
-        ? await findUser({
+      user = useMongoStore
+        ? await User.findOne({
             $or: [
               { username: envAdminUsername },
               { email: envAdminEmail },
               { email: envAdminUsernameLower },
             ],
           })
-        : await User.findOne({
-        $or: [
-          { username: envAdminUsername },
-          { email: envAdminEmail },
-          { email: envAdminUsernameLower },
-        ],
-        });
+        : await findUser({
+            $or: [
+              { username: envAdminUsername },
+              { email: envAdminEmail },
+              { email: envAdminUsernameLower },
+            ],
+          });
 
       if (!user) {
         const adminData = {
@@ -197,7 +221,7 @@ router.post('/login', async (req, res) => {
           password: envAdminPassword,
           role: 'admin',
         };
-        user = useMockStore ? await saveUser(adminData) : new User(adminData);
+        user = useMongoStore ? new User(adminData) : await saveUser(adminData);
       } else {
         if (!user.username) user.username = envAdminUsername;
         // Keep env-admin login deterministic: refresh password from env when override path is used.
@@ -205,7 +229,7 @@ router.post('/login', async (req, res) => {
         user.role = 'admin';
       }
 
-      if (!useMockStore) {
+      if (useMongoStore) {
         await user.save();
       } else {
         await saveUser(user);
@@ -267,4 +291,3 @@ router.get('/diagnostic', async (_req, res) => {
 });
 
 module.exports = router;
-

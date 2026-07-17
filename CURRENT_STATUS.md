@@ -1,6 +1,6 @@
 # Current Status
 
-Updated: 2026-07-11
+Updated: 2026-07-17
 
 ## What changed
 - Kept the Vercel API catchall on the slim serverless bundle and mounted the missing public/backend route groups there, with static archive/search and mock-safe OpenClaw fallbacks so live routes like `/api/archive`, `/api/search/text`, `/api/deals`, `/api/bounties`, `/api/users/profile`, `/api/streams`, `/api/oauth/*`, and `/api/openclaw/*` answer cleanly without forcing a database boot on serverless.
@@ -20,6 +20,8 @@ Updated: 2026-07-11
 - Hardened the book publishing flow so a signed-in website account can publish directly to the shared backend shelf without any user-managed GitHub publish key.
 - Removed the user-facing GitHub publish key from the book publishing page so publishing is account-only and works the same from every signed-in device.
 - Removed the frontend raw-GitHub bookshelf fallback so the public bookshelf, reader, PDF, and EPUB views now depend on the live backend source of truth instead of a user token or alternate file mirror.
+- Forced book publishing and website account auth onto MongoDB whenever a real `MONGODB_URI`/`DATABASE_URL` exists, with no production file-store fallback for published books.
+- Added a route-level Mongo readiness gate to the book publishing router so it connects before reading database state and rejects production publish requests if Mongo is unavailable.
 - Synced the frontend lockfile so GitHub Actions `npm ci` can build the public site again and publish the latest Pages export.
 - Hardened the GitHub Pages frontend workflow to install with legacy peer-dependency resolution, which avoids the Vite/plugin peer conflict in clean CI runs.
 
@@ -44,3 +46,4 @@ Updated: 2026-07-11
 - The live public bookshelf should now follow the signed-in account flow, but it still deserves a final cross-device spot check after this cleanup deploys.
 - Published books now rely on the backend account shelf as the public source of truth, so the same login should expose the same book on phone and laptop once the deploy is live.
 - GitHub Pages was still serving an older static snapshot while the frontend lockfile was out of sync; the lock sync should unblock the next deploy, but the live page still needs a final public refresh check.
+- The book-publishing route no longer uses the file store in production when Mongo is configured; the remaining file fallback is for local/no-Mongo development only.

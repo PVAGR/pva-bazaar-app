@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Public bookshelf, reader, PDF, and EPUB routes now read from the live backend source of truth instead of a user-supplied GitHub publish key.
 - Book publishing now stays tied to the signed-in website account and the live backend shelf, so published books can remain visible across devices without a user-managed GitHub key.
 - Failed online publishes now stay queued locally as drafts with publish intent, instead of claiming the book is already live when the backend is unreachable.
+- Book publishing and website auth now use MongoDB only when a real Mongo URI exists in production; the backend no longer silently falls back to the file store on Vercel when Mongo is configured.
+- The book-publishing router now warms Mongo before checking state, so published books are read from the database instead of a stale file-store branch.
 - Item-specific access codes and QR manage links for perennial listings, so the original creator or steward can open, update, and continue a listing from a persistent referral hash.
 - Creator-only listing deletion for the original poster, keeping the history of a perennial item protected from other users.
 - A more seller-friendly default stewardship split for listings that use the consignment flow.

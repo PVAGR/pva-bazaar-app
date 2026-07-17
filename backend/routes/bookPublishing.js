@@ -1,5 +1,4 @@
 const express = require('express');
-const mongoose = require('mongoose');
 const crypto = require('crypto');
 const fs = require('fs');
 const fsp = require('fs').promises;
@@ -7,7 +6,7 @@ const path = require('path');
 const axios = require('axios');
 const { authenticateToken } = require('../middleware/auth');
 const BookProject = require('../models/BookProject');
-const { getMongoState } = require('../lib/mongoConnection');
+const { connectMongo, getMongoState } = require('../lib/mongoConnection');
 const {
   deleteBook: deleteFileBook,
   findBookById: findFileBookById,
@@ -60,6 +59,40 @@ const bookUpload = upload.fields([
   { name: 'manuscriptFile', maxCount: 1 },
 ]);
 
+const hasMongoUri = Boolean(process.env.MONGODB_URI || process.env.DATABASE_URL);
+let mongoReadyPromise = null;
+
+async function ensureMongoBookReady() {
+  if (!hasMongoUri) return null;
+  if (!mongoReadyPromise) {
+    mongoReadyPromise = connectMongo({ logger: console, allowMemoryFallback: false });
+  }
+
+  await mongoReadyPromise;
+  const state = getMongoState();
+  if (state.mode !== 'mongo') {
+    const message = state.lastError || 'MongoDB is not available for book publishing';
+    const error = new Error(message);
+    error.status = 503;
+    throw error;
+  }
+
+  return state;
+}
+
+router.use(async (_req, res, next) => {
+  try {
+    await ensureMongoBookReady();
+    next();
+  } catch (error) {
+    const status = Number(error?.status || 503);
+    return res.status(status).json({
+      ok: false,
+      error: error.message || 'MongoDB book publishing store unavailable',
+    });
+  }
+});
+
 function authenticateBookPublishing(req, res, next) {
   const authHeader = req.headers.authorization || '';
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
@@ -68,7 +101,7 @@ function authenticateBookPublishing(req, res, next) {
     return res.status(401).json({ error: 'Missing authentication token' });
   }
 
-  if (token.startsWith('local.')) {
+  if (!hasMongoUri && token.startsWith('local.')) {
     try {
       const raw = Buffer.from(token.slice(6), 'base64').toString('utf8');
       const payload = JSON.parse(raw);
@@ -92,98 +125,6 @@ function authenticateBookPublishing(req, res, next) {
   }
 
   return authenticateToken(req, res, next);
-}
-
-function hasStaticGitHubToken() {
-  return Boolean(
-    process.env.GITHUB_TOKEN ||
-      process.env.GITHUB_APP_TOKEN ||
-      process.env.GH_TOKEN ||
-      process.env.BOOK_STORE_GITHUB_TOKEN ||
-      process.env.BOOK_STORE_TOKEN ||
-      process.env.GITHUB_PAT,
-  );
-}
-
-const PUBLIC_GITHUB_BOOK_STORE_URL = process.env.BOOK_STORE_PUBLIC_RAW_URL
-  || 'https://raw.githubusercontent.com/PVAGR/pva-bazaar-app/main/backend/data/book-projects.json';
-
-async function attachRequestGitHubToken(req, res, next) {
-  const requestToken = String(
-    req.get('x-pva-github-token')
-    || req.get('x-pva-book-store-github-token')
-    || req.body?.githubToken
-    || req.query?.githubToken
-    || ''
-  ).trim();
-
-  if (requestToken) {
-    setGitHubTokenOverride(requestToken);
-    const clearToken = () => clearGitHubTokenOverride();
-    res.once('finish', clearToken);
-    res.once('close', clearToken);
-    return next();
-  }
-
-  if (hasStaticGitHubToken()) {
-    return next();
-  }
-
-  const userId = String(req.user?.id || '').trim();
-  if (!userId || String(req.user?.role || '').toLowerCase() !== 'admin') {
-    return next();
-  }
-
-  if (!mongoose.Types.ObjectId.isValid(userId)) {
-    return next();
-  }
-
-  try {
-    const user = await User.findById(userId).select('oauthTokens').lean();
-    const tokenPayload = user?.oauthTokens?.githubAdminProfile?.payload;
-    const tokenData = decryptJson(tokenPayload);
-    const accessToken = String(tokenData?.accessToken || '').trim();
-    if (accessToken) {
-      setGitHubTokenOverride(accessToken);
-      const clearToken = () => clearGitHubTokenOverride();
-      res.once('finish', clearToken);
-      res.once('close', clearToken);
-    }
-  } catch (error) {
-    console.warn('[book-publishing] failed to attach GitHub token:', error.message);
-  }
-
-  return next();
-}
-
-async function readPublicBookStoreFromGitHubRaw() {
-  try {
-    const response = await axios.get(PUBLIC_GITHUB_BOOK_STORE_URL, {
-      timeout: 20000,
-      responseType: 'text',
-      transformResponse: [(data) => data],
-      headers: {
-        Accept: 'application/json,text/plain;q=0.9,*/*;q=0.8',
-      },
-    });
-
-    const text = String(response?.data || '').trim();
-    if (!text) {
-      return [];
-    }
-
-    const parsed = JSON.parse(text);
-    if (Array.isArray(parsed?.books)) {
-      return parsed.books;
-    }
-    if (Array.isArray(parsed)) {
-      return parsed;
-    }
-  } catch (_err) {
-    return [];
-  }
-
-  return [];
 }
 
 const BOOK_UPLOAD_DIR = path.join(__dirname, '../uploads/books');
@@ -324,6 +265,7 @@ function parseBoolean(value) {
 }
 
 function shouldUseFileBookStore() {
+  if (hasMongoUri) return false;
   const mongoState = getMongoState();
   // Production fix: never fall back to the file store when MongoDB is connected.
   const connected = mongoState.mode === 'mongo' && mongoState.readyState === 1;
