@@ -35,6 +35,7 @@ Updated: 2026-07-17
 - Local syntax and build checks passed after the account-only book publishing cleanup.
 - Live readiness check passed after widening `pingLatencyMs` from `1000` to `1500` in `Frontend/public/live-map.json`; the backend remained healthy and functional while live ping latency measured about `1303ms`.
 - Admin media upload now targets the backend cloud-storage route instead of relying on browser-side Cloudinary credentials, which keeps the upload path connected to the live backend configuration.
+- Live Mongo-backed book publishing was verified end-to-end on `https://pva-backend-api.vercel.app/api/book-publishing` with a real signed-in account: the published book stored in MongoDB, returned a Mongo-style ObjectId (`6a5a96f51657de987370d2e3`), and appeared on the public bookshelf endpoint with Cloudinary cover URLs.
 
 ## What remains
 - Live deployment/cache propagation still needs a final public-site check after this route bridge ships.
@@ -47,3 +48,4 @@ Updated: 2026-07-17
 - Published books now rely on the backend account shelf as the public source of truth, so the same login should expose the same book on phone and laptop once the deploy is live.
 - GitHub Pages was still serving an older static snapshot while the frontend lockfile was out of sync; the lock sync should unblock the next deploy, but the live page still needs a final public refresh check.
 - The book-publishing route no longer uses the file store in production when Mongo is configured; the remaining file fallback is for local/no-Mongo development only.
+- The live public bookshelf endpoint is currently serving the Mongo-published test book, so the same book should appear on the browser bookshelf page after refresh on any device.
