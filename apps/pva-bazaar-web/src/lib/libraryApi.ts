@@ -11,7 +11,7 @@ export function getApiBase(): string {
   return String(raw || "").replace(/\/+$/, "");
 }
 
-export type LibraryBook = {
+export interface LibraryBook {
   id: string;
   title: string;
   subtitle: string;
@@ -50,22 +50,22 @@ export type LibraryBook = {
     frontCover: string;
     backCover: string;
   };
-};
+}
 
-export type LibraryListResponse = {
+export interface LibraryListResponse {
   ok: boolean;
   items: LibraryBook[];
   total: number;
   query: string;
   genre: string;
   error?: string;
-};
+}
 
-export type LibraryBookResponse = {
+export interface LibraryBookResponse {
   ok: boolean;
   item: LibraryBook;
   error?: string;
-};
+}
 
 async function request<T>(path: string): Promise<T> {
   const base = getApiBase();
@@ -110,6 +110,13 @@ export async function getPublicBook(slug: string): Promise<LibraryBookResponse> 
 
 export function buildAssetUrl(book: LibraryBook, key: "front" | "back"): string {
   const base = getApiBase();
+
+  // Prefer direct Cloudinary URL when available
+  const coverData = key === "front" ? book.frontCover : book.backCover;
+  if (coverData?.url && /^https?:\/\//i.test(coverData.url)) {
+    return coverData.url;
+  }
+
   const link = key === "front" ? book.links?.frontCover : book.links?.backCover;
   if (link && /^https?:\/\//i.test(link)) return link;
   if (link && base) return `${base}${link}`;

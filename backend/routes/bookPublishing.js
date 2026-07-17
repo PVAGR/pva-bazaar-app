@@ -325,6 +325,9 @@ function parseBoolean(value) {
 
 function shouldUseFileBookStore() {
   const mongoState = getMongoState();
+  // Production fix: never fall back to the file store when MongoDB is connected.
+  const connected = mongoState.mode === 'mongo' && mongoState.readyState === 1;
+  if (connected) return false;
   return mongoState.mode === 'mock' || mongoState.mode === 'error' || mongoState.mode === 'disconnected';
 }
 
@@ -412,12 +415,15 @@ async function listPublishedBooks() {
   return shouldUseFileBookStore()
     ? await listFileBooks({ status: 'published' }, { publishedAt: -1, updatedAt: -1, _id: -1 })
     : await BookProject.find({ status: 'published' })
+      .select('_id title subtitle authorName slug description genre audience language status wordCount publishedAt updatedAt frontCover.url frontCover.provider frontCover.publicId backCover.url backCover.provider backCover.publicId')
       .sort({ publishedAt: -1, updatedAt: -1, _id: -1 })
       .lean();
 }
 
 async function loadBookForEdit(bookId) {
-  if (shouldUseFileBookStore()) {
+  const mongoState = getMongoState();
+  const connected = mongoState.mode === 'mongo' && mongoState.readyState === 1;
+  if (!connected && shouldUseFileBookStore()) {
     return findFileBookById(bookId);
   }
 
@@ -428,7 +434,10 @@ async function loadBookForSlug(slug) {
   const normalized = sanitizeText(slug, 180).toLowerCase();
   if (!normalized) return null;
 
-  if (shouldUseFileBookStore()) {
+  // Production fix: if Mongo is connected, always read from MongoDB.
+  const mongoState = getMongoState();
+  const connected = mongoState.mode === 'mongo' && mongoState.readyState === 1;
+  if (!connected && shouldUseFileBookStore()) {
     const localBook = await findFileBookOne({ slug: normalized, status: 'published' });
     if (localBook) return localBook;
     return null;
@@ -439,7 +448,9 @@ async function loadBookForSlug(slug) {
 }
 
 async function persistBookRecord(book) {
-  if (shouldUseFileBookStore()) {
+  const mongoState = getMongoState();
+  const connected = mongoState.mode === 'mongo' && mongoState.readyState === 1;
+  if (!connected && shouldUseFileBookStore()) {
     return saveFileBook(book);
   }
 
@@ -447,7 +458,9 @@ async function persistBookRecord(book) {
 }
 
 async function removeBookRecord(bookId) {
-  if (shouldUseFileBookStore()) {
+  const mongoState = getMongoState();
+  const connected = mongoState.mode === 'mongo' && mongoState.readyState === 1;
+  if (!connected && shouldUseFileBookStore()) {
     return deleteFileBook(bookId);
   }
 
@@ -543,8 +556,109 @@ router.get('/mine', authenticateBookPublishing, async (req, res) => {
   }
 });
 
+router.get('/debug/public-counts', async (_req, res) => {
+  try {
+    setNoCacheHeaders(res);
+
+    const mongoState = getMongoState();
+    const mongoConnected = mongoState.mode === 'mongo' && mongoState.readyState === 1;
+    const storeMode = mongoConnected ? 'mongo' : mongoState.mode || 'unknown';
+
+    let totalBooks = 0;
+    let publishedBooks = 0;
+    let draftBooks = 0;
+    let samplePublishedBookIds = [];
+    let areIdsMongoStyle = false;
+
+    if (mongoConnected) {
+      const total = await BookProject.estimatedDocumentCount();
+      const published = await BookProject.countDocuments({ status: 'published' });
+      const draft = await BookProject.countDocuments({ status: 'draft' });
+      const sample = await BookProject.find({ status: 'published' })
+        .select('_id')
+        .limit(5)
+        .lean();
+
+      totalBooks = Number(total || 0);
+      publishedBooks = Number(published || 0);
+      draftBooks = Number(draft || 0);
+      samplePublishedBookIds = (sample || []).map((d) => String(d?._id || ''));
+      areIdsMongoStyle = samplePublishedBookIds.some((id) => /^[0-9a-fA-F]{24}$/.test(id));
+    } else {
+      // Avoid calling private store details; rely on cached store functions only.
+      // Mongo not connected: public counts are intentionally limited.
+      // Do not expose store internal structures or fall back to any mock content in production.
+      totalBooks = 0;
+      publishedBooks = 0;
+      draftBooks = 0;
+      samplePublishedBookIds = [];
+      areIdsMongoStyle = false;
+    }
+
+    return res.json({
+      ok: true,
+      mongoConnected,
+      storeMode,
+      totalBooks,
+      publishedBooks,
+      draftBooks,
+      samplePublishedBookIds,
+      areIdsMongoStyle,
+    });
+  } catch (e) {
+    return res.status(500).json({ ok: false, error: 'Failed to compute public counts' });
+  }
+});
+
+function setNoCacheHeaders(res) {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  res.setHeader('Surrogate-Control', 'no-store');
+}
+
+function lightweightPublicSummary(book) {
+  const slug = String(book.slug || '').trim();
+  const id = String(book._id || '');
+
+  const links = {
+    publicPage: slug ? `/books/read/${encodeURIComponent(slug)}` : '',
+    apiView: slug ? `/api/book-publishing/public/${encodeURIComponent(slug)}/view` : '',
+    pdf: slug ? `/api/book-publishing/public/${encodeURIComponent(slug)}/download/pdf` : '',
+    epub: slug ? `/api/book-publishing/public/${encodeURIComponent(slug)}/download/epub` : '',
+    frontCover:
+      book.frontCover?.url || book.frontCover?.localFilename
+        ? `/api/book-publishing/public/${encodeURIComponent(slug)}/assets/front-cover`
+        : '',
+    backCover:
+      book.backCover?.url || book.backCover?.localFilename
+        ? `/api/book-publishing/public/${encodeURIComponent(slug)}/assets/back-cover`
+        : '',
+  };
+
+  return {
+    id,
+    title: book.title,
+    subtitle: book.subtitle,
+    authorName: book.authorName,
+    slug,
+    description: book.description,
+    genre: book.genre,
+    audience: book.audience,
+    language: book.language,
+    status: book.status,
+    wordCount: book.wordCount || 0,
+    publishedAt: book.publishedAt || null,
+    updatedAt: book.updatedAt || null,
+    links,
+    frontCover: book.frontCover?.url ? { url: book.frontCover.url, provider: book.frontCover.provider } : { url: '', provider: book.frontCover?.provider || 'local' },
+    backCover: book.backCover?.url ? { url: book.backCover.url, provider: book.backCover.provider } : { url: '', provider: book.backCover?.provider || 'local' },
+  };
+}
+
 router.get('/public', async (req, res) => {
   try {
+    setNoCacheHeaders(res);
     const limit = Math.max(1, Math.min(Number(req.query?.limit) || 24, 100));
     const query = sanitizeText(req.query?.q || '', 120);
     const genre = sanitizeText(req.query?.genre || '', 80).toLowerCase();
@@ -574,9 +688,10 @@ router.get('/public', async (req, res) => {
       return searchable.includes(loweredQuery);
     });
 
+    const paged = matchedItems.slice(0, limit);
     return res.json({
       ok: true,
-      items: matchedItems.slice(0, limit).map((item) => bookSummary(item, { publicView: true })),
+      items: paged.map((item) => lightweightPublicSummary(item)),
       total: matchedItems.length,
       query,
       genre,
@@ -617,6 +732,12 @@ router.post('/', authenticateBookPublishing, bookUpload, async (req, res) => {
     const backFile = req.files?.backCover?.[0];
     const manuscriptFile = req.files?.manuscriptFile?.[0];
 
+    // Accept pre-uploaded Cloudinary URLs from frontend direct upload
+    const frontCoverUrl = sanitizeText(req.body?.frontCoverUrl || '', 500);
+    const frontCoverPublicId = sanitizeText(req.body?.frontCoverPublicId || '', 200);
+    const backCoverUrl = sanitizeText(req.body?.backCoverUrl || '', 500);
+    const backCoverPublicId = sanitizeText(req.body?.backCoverPublicId || '', 200);
+
     if (frontFile && !CLOUDINARY_ALLOWED_IMAGE_TYPES.has(String(frontFile.mimetype || '').toLowerCase())) {
       return res.status(400).json({ ok: false, error: 'Front cover must be an image file' });
     }
@@ -624,7 +745,18 @@ router.post('/', authenticateBookPublishing, bookUpload, async (req, res) => {
       return res.status(400).json({ ok: false, error: 'Back cover must be an image file' });
     }
 
-    if (frontFile) {
+    if (frontCoverUrl && /^https?:\/\//i.test(frontCoverUrl)) {
+      // Frontend uploaded directly to Cloudinary — store the URL
+      book.frontCover = {
+        provider: 'cloudinary',
+        url: frontCoverUrl,
+        publicId: frontCoverPublicId || '',
+        localFilename: '',
+        originalName: '',
+        mimeType: 'image/jpeg',
+        size: 0,
+      };
+    } else if (frontFile) {
       book.frontCover = await uploadCoverAsset(
         frontFile.buffer,
         frontFile.originalname,
@@ -637,7 +769,18 @@ router.post('/', authenticateBookPublishing, bookUpload, async (req, res) => {
       book.frontCover.checksumSha256 = crypto.createHash('sha256').update(frontFile.buffer).digest('hex');
     }
 
-    if (backFile) {
+    if (backCoverUrl && /^https?:\/\//i.test(backCoverUrl)) {
+      // Frontend uploaded directly to Cloudinary — store the URL
+      book.backCover = {
+        provider: 'cloudinary',
+        url: backCoverUrl,
+        publicId: backCoverPublicId || '',
+        localFilename: '',
+        originalName: '',
+        mimeType: 'image/jpeg',
+        size: 0,
+      };
+    } else if (backFile) {
       book.backCover = await uploadCoverAsset(
         backFile.buffer,
         backFile.originalname,
@@ -715,9 +858,10 @@ router.post('/', authenticateBookPublishing, bookUpload, async (req, res) => {
 
 router.get('/public/:slug', async (req, res) => {
   try {
+    setNoCacheHeaders(res);
     const book = await loadBookForSlug(req.params.slug);
     if (!book) return notFound(res);
-    return res.json({ ok: true, item: bookSummary(book, { publicView: true }) });
+    return res.json({ ok: true, item: lightweightPublicSummary(book) });
   } catch (error) {
     return res.status(500).json({ ok: false, error: error.message || 'Failed to load book' });
   }
@@ -725,6 +869,7 @@ router.get('/public/:slug', async (req, res) => {
 
 router.get('/public/:slug/view', async (req, res) => {
   try {
+    setNoCacheHeaders(res);
     const book = await loadBookForSlug(req.params.slug);
     if (!book) {
       return res.status(404).type('html').send(renderNotFoundHtml('This book has not been published yet.'));
@@ -741,6 +886,7 @@ router.get('/public/:slug/view', async (req, res) => {
 
 router.get('/assets/local/:filename', async (req, res) => {
   try {
+    setNoCacheHeaders(res);
     const filename = path.basename(String(req.params.filename || ''));
     if (!filename) return notFound(res);
     const filePath = path.join(BOOK_UPLOAD_DIR, filename);
@@ -762,6 +908,7 @@ router.get('/assets/local/:filename', async (req, res) => {
 
 router.get('/public/:slug/assets/:assetKey', async (req, res) => {
   try {
+    setNoCacheHeaders(res);
     const book = await loadBookForSlug(req.params.slug);
     if (!book) return notFound(res);
 
@@ -786,6 +933,7 @@ router.get('/public/:slug/assets/:assetKey', async (req, res) => {
 
 router.get('/public/:slug/download/pdf', async (req, res) => {
   try {
+    setNoCacheHeaders(res);
     const book = await loadBookForSlug(req.params.slug);
     if (!book) return notFound(res);
 
@@ -801,6 +949,7 @@ router.get('/public/:slug/download/pdf', async (req, res) => {
 
 router.get('/public/:slug/download/epub', async (req, res) => {
   try {
+    setNoCacheHeaders(res);
     const book = await loadBookForSlug(req.params.slug);
     if (!book) return notFound(res);
 
@@ -872,6 +1021,7 @@ router.get('/:bookId/assets/:assetKey', authenticateBookPublishing, async (req, 
 
 router.get('/:bookId/download/pdf', authenticateBookPublishing, async (req, res) => {
   try {
+    setNoCacheHeaders(res);
     const book = await loadBookForEdit(req.params.bookId);
     if (!book) return notFound(res);
     if (!canViewBook(req, book)) {
@@ -890,6 +1040,7 @@ router.get('/:bookId/download/pdf', authenticateBookPublishing, async (req, res)
 
 router.get('/:bookId/download/epub', authenticateBookPublishing, async (req, res) => {
   try {
+    setNoCacheHeaders(res);
     const book = await loadBookForEdit(req.params.bookId);
     if (!book) return notFound(res);
     if (!canViewBook(req, book)) {

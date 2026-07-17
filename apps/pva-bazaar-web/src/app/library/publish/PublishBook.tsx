@@ -28,6 +28,15 @@ const AUDIENCE_OPTIONS = [
   { value: "scholar", label: "Scholar" },
 ];
 
+// Vercel free-tier function body limit is 4.5 MB. We use 4 MB as safe threshold.
+const MAX_PAYLOAD_BYTES = 4 * 1024 * 1024;
+
+// Cloudinary direct upload config (unsigned preset, no API secret exposed)
+const CLOUDINARY_CLOUD_NAME =
+  process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "dljrsobks";
+const CLOUDINARY_UPLOAD_PRESET =
+  process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "pva_books_covers";
+
 function getApiBase(): string {
   if (typeof window === "undefined") return "";
   return String(process.env.NEXT_PUBLIC_API_URL || "").replace(/\/+$/, "");
@@ -70,7 +79,7 @@ function formatNumber(n: number): string {
 
 const STORAGE_KEY = "pva:book:draft";
 
-type Draft = {
+interface Draft {
   title: string;
   subtitle: string;
   authorName: string;
@@ -79,7 +88,7 @@ type Draft = {
   audience: string;
   language: string;
   manuscript: string;
-};
+}
 
 const EMPTY_DRAFT: Draft = {
   title: "",
@@ -91,6 +100,138 @@ const EMPTY_DRAFT: Draft = {
   language: "en",
   manuscript: "",
 };
+
+/**
+ * Compress an image file client-side.
+ * Resizes to maxWidth, converts to JPEG/WebP at given quality.
+ * Returns a new File object.
+ */
+async function compressImage(
+  file: File,
+  maxWidth = 1600,
+  quality = 0.8,
+): Promise<File> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let { width, height } = img;
+      if (width > maxWidth) {
+        height = Math.round((height * maxWidth) / width);
+        width = maxWidth;
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        resolve(file);
+        return;
+      }
+      ctx.drawImage(img, 0, 0, width, height);
+      const mimeType = file.type === "image/png" ? "image/png" : "image/jpeg";
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            resolve(file);
+            return;
+          }
+          const compressed = new File([blob], file.name, {
+            type: mimeType,
+            lastModified: Date.now(),
+          });
+          resolve(compressed);
+        },
+        mimeType,
+        quality,
+      );
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("Failed to load image for compression"));
+    };
+    img.src = url;
+  });
+}
+
+/**
+ * Upload a cover image directly to Cloudinary via unsigned upload preset.
+ * Returns { url, publicId } or throws.
+ */
+async function uploadCoverToCloudinary(
+  file: File,
+): Promise<{ url: string; publicId: string }> {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+  formData.append("folder", "pva/books/covers");
+
+  const res = await fetch(
+    `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+    {
+      method: "POST",
+      body: formData,
+    },
+  );
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`Cloudinary upload failed: ${res.status} ${text}`);
+  }
+
+  const data = await res.json();
+  if (!data?.secure_url) {
+    throw new Error("Cloudinary upload returned no URL");
+  }
+
+  return { url: data.secure_url, publicId: data.public_id || "" };
+}
+
+/**
+ * Estimate the total multipart payload size before sending.
+ * Returns the estimated byte count.
+ */
+function estimatePayloadSize(
+  manuscriptText: string,
+  manuscriptFile: File | null,
+): number {
+  const OVERHEAD_PER_FIELD = 200;
+  let total = 0;
+
+  const textFields = [
+    "title",
+    "subtitle",
+    "authorName",
+    "description",
+    "genre",
+    "audience",
+    "language",
+    "manuscriptMarkdown",
+    "publish",
+  ];
+  total += textFields.length * OVERHEAD_PER_FIELD;
+  for (const field of textFields) {
+    total += field.length;
+  }
+  total += "manuscriptMarkdown".length + OVERHEAD_PER_FIELD;
+  total += new Blob([manuscriptText]).size;
+
+  if (manuscriptFile) {
+    total += "manuscriptFile".length + OVERHEAD_PER_FIELD + manuscriptFile.size;
+  }
+
+  // Cloudinary URLs are small text fields, not files
+  total += "frontCoverUrl".length + OVERHEAD_PER_FIELD + 200;
+  total += "frontCoverPublicId".length + OVERHEAD_PER_FIELD + 100;
+  total += "backCoverUrl".length + OVERHEAD_PER_FIELD + 200;
+  total += "backCoverPublicId".length + OVERHEAD_PER_FIELD + 100;
+
+  // Auth header
+  total += 200;
+
+  return total;
+}
 
 export function PublishBook() {
   const [auth, setAuth] = useState<AuthState>({ status: "loading" });
@@ -145,9 +286,9 @@ export function PublishBook() {
     setDraft((prev) => ({
       ...prev,
       manuscript:
-        prev.manuscript +
-        (prev.manuscript ? "\n\n" : "") +
-        "## New chapter\n\nWrite here…\n",
+        `${prev.manuscript +
+        (prev.manuscript ? "\n\n" : "") 
+        }## New chapter\n\nWrite here…\n`,
     }));
   }
 
@@ -178,9 +319,60 @@ export function PublishBook() {
       setFeedback({ kind: "err", message: "NEXT_PUBLIC_API_URL is not configured." });
       return;
     }
+
+    // --- Client-side payload size guard ---
+    const estimatedBytes = estimatePayloadSize(
+      draft.manuscript,
+      manuscriptFile,
+    );
+    if (estimatedBytes > MAX_PAYLOAD_BYTES) {
+      setFeedback({
+        kind: "err",
+        message:
+          "This upload is too large for direct publishing on the current serverless route. " +
+          "Compress or remove images, publish text only, or use direct media upload.",
+      });
+      return;
+    }
+
     setSubmitting(true);
     setFeedback(null);
     try {
+      // Upload covers directly to Cloudinary from the browser
+      let frontCoverUrl = "";
+      let frontCoverPublicId = "";
+      let backCoverUrl = "";
+      let backCoverPublicId = "";
+
+      if (frontCover) {
+        let processed = frontCover;
+        if (processed.size > 200 * 1024) {
+          try {
+            processed = await compressImage(processed, 1600, 0.8);
+          } catch {
+            // Use original if compression fails
+          }
+        }
+        const result = await uploadCoverToCloudinary(processed);
+        frontCoverUrl = result.url;
+        frontCoverPublicId = result.publicId;
+      }
+
+      if (backCover) {
+        let processed = backCover;
+        if (processed.size > 200 * 1024) {
+          try {
+            processed = await compressImage(processed, 1600, 0.8);
+          } catch {
+            // Use original if compression fails
+          }
+        }
+        const result = await uploadCoverToCloudinary(processed);
+        backCoverUrl = result.url;
+        backCoverPublicId = result.publicId;
+      }
+
+      // Build form with Cloudinary URLs instead of file blobs
       const form = new FormData();
       form.set("title", draft.title.trim());
       form.set("subtitle", draft.subtitle.trim());
@@ -191,18 +383,44 @@ export function PublishBook() {
       form.set("language", draft.language);
       form.set("manuscriptMarkdown", draft.manuscript);
       form.set("publish", publish ? "true" : "false");
-      if (frontCover) form.set("frontCover", frontCover);
-      if (backCover) form.set("backCover", backCover);
+      if (frontCoverUrl) {
+        form.set("frontCoverUrl", frontCoverUrl);
+        form.set("frontCoverPublicId", frontCoverPublicId);
+      }
+      if (backCoverUrl) {
+        form.set("backCoverUrl", backCoverUrl);
+        form.set("backCoverPublicId", backCoverPublicId);
+      }
       if (manuscriptFile) form.set("manuscriptFile", manuscriptFile);
-      const res = await fetch(`${base}/api/book-publishing/`, {
+      const requestUrl = `${base}/api/book-publishing/`;
+      const hasToken = Boolean(auth.token);
+
+      const res = await fetch(requestUrl, {
         method: "POST",
-        headers: { Authorization: `Bearer ${auth.token}` },
+        headers: {
+          Authorization: `Bearer ${auth.token}`,
+        },
         body: form,
       });
+
       const data = await res.json().catch(() => ({}));
+      const backendMsg = data?.error || data?.message || JSON.stringify(data || {});
+
       if (!res.ok || data?.ok === false) {
-        throw new Error(data?.error || `Save failed (${res.status})`);
+        // --- Specific 413 handling ---
+        if (res.status === 413) {
+          throw new Error(
+            "This upload is too large for direct publishing on the current serverless route. " +
+            "Compress or remove images, publish text only, or use direct media upload.",
+          );
+        }
+        const responseText = typeof backendMsg === "string" ? backendMsg : "";
+        const tokenSuffix = hasToken ? "" : " (auth token missing)";
+        throw new Error(
+          `Request failed: ${res.status} (${res.statusText || ""}). Response: ${responseText}${tokenSuffix}`,
+        );
       }
+
       setFeedback({
         kind: "ok",
         message: publish
@@ -210,7 +428,6 @@ export function PublishBook() {
           : "Draft saved. You can publish it from this page any time.",
       });
       if (data?.item?.slug) {
-        // Clear the manuscript to avoid re-submit, but keep metadata.
         setDraft((prev) => ({ ...prev, manuscript: "" }));
       }
     } catch (err) {
