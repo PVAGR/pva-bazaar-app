@@ -19,8 +19,8 @@ if (!isProdBuild && isLocalApi) {
 
 export const ENV = {
   API_URL: rawApiUrl,
-  CLOUDINARY_CLOUD_NAME: import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || "",
-  CLOUDINARY_UPLOAD_PRESET: import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || "",
+  CLOUDINARY_CLOUD_NAME: import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || "dljrsobks",
+  CLOUDINARY_UPLOAD_PRESET: import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || "pva_books_covers",
   CREATOR_FORM_ACTION: import.meta.env.VITE_CREATOR_FORM_ACTION || "",
 };
 

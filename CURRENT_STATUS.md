@@ -22,6 +22,7 @@ Updated: 2026-07-17
 - Removed the frontend raw-GitHub bookshelf fallback so the public bookshelf, reader, PDF, and EPUB views now depend on the live backend source of truth instead of a user token or alternate file mirror.
 - Forced book publishing and website account auth onto MongoDB whenever a real `MONGODB_URI`/`DATABASE_URL` exists, with no production file-store fallback for published books.
 - Added a route-level Mongo readiness gate to the book publishing router so it connects before reading database state and rejects production publish requests if Mongo is unavailable.
+- The active GitHub Pages book-publish flow now uploads covers directly to Cloudinary from the browser, blocks oversize payloads before they hit Vercel, and shows detailed publish failure diagnostics instead of pretending a local save means the book is live.
 - Synced the frontend lockfile so GitHub Actions `npm ci` can build the public site again and publish the latest Pages export.
 - Hardened the GitHub Pages frontend workflow to install with legacy peer-dependency resolution, which avoids the Vite/plugin peer conflict in clean CI runs.
 
@@ -36,6 +37,7 @@ Updated: 2026-07-17
 - Live readiness check passed after widening `pingLatencyMs` from `1000` to `1500` in `Frontend/public/live-map.json`; the backend remained healthy and functional while live ping latency measured about `1303ms`.
 - Admin media upload now targets the backend cloud-storage route instead of relying on browser-side Cloudinary credentials, which keeps the upload path connected to the live backend configuration.
 - Live Mongo-backed book publishing was verified end-to-end on `https://pva-backend-api.vercel.app/api/book-publishing` with a real signed-in account: the published book stored in MongoDB, returned a Mongo-style ObjectId (`6a5a96f51657de987370d2e3`), and appeared on the public bookshelf endpoint with Cloudinary cover URLs.
+- The current public bookshelf response still serves the Mongo-backed test book and its Cloudinary covers from `https://pva-backend-api.vercel.app/api/book-publishing/public`.
 
 ## What remains
 - Live deployment/cache propagation still needs a final public-site check after this route bridge ships.
@@ -49,3 +51,4 @@ Updated: 2026-07-17
 - GitHub Pages was still serving an older static snapshot while the frontend lockfile was out of sync; the lock sync should unblock the next deploy, but the live page still needs a final public refresh check.
 - The book-publishing route no longer uses the file store in production when Mongo is configured; the remaining file fallback is for local/no-Mongo development only.
 - The live public bookshelf endpoint is currently serving the Mongo-published test book, so the same book should appear on the browser bookshelf page after refresh on any device.
+- The live GitHub Pages publish page now has direct Cloudinary cover uploads, a 4 MB publish payload guard, and richer error diagnostics for backend failures.

@@ -9,6 +9,7 @@ import {
   getApiBase,
   saveBookProject,
 } from '../lib/api';
+import { ENV } from '../config/env';
 import {
   deleteLocalBookProject,
   listLocalBookProjects,
@@ -78,6 +79,149 @@ async function dataUrlToFile(dataUrl, filename, fallbackType = 'application/octe
   return new File([blob], filename || 'asset', { type: blob.type || fallbackType });
 }
 
+const MAX_BACKEND_PUBLISH_BYTES = 4 * 1024 * 1024;
+const CLOUDINARY_CLOUD_NAME = ENV.CLOUDINARY_CLOUD_NAME || 'dljrsobks';
+const CLOUDINARY_UPLOAD_PRESET = ENV.CLOUDINARY_UPLOAD_PRESET || 'pva_books_covers';
+
+function formatBytes(bytes) {
+  const value = Number(bytes || 0);
+  if (!Number.isFinite(value) || value <= 0) return '0 B';
+  const units = ['B', 'KB', 'MB', 'GB'];
+  let next = value;
+  let unitIndex = 0;
+  while (next >= 1024 && unitIndex < units.length - 1) {
+    next /= 1024;
+    unitIndex += 1;
+  }
+  const precision = unitIndex === 0 ? 0 : next >= 10 ? 1 : 2;
+  return `${next.toFixed(precision)} ${units[unitIndex]}`;
+}
+
+function estimateTextBytes(value) {
+  try {
+    return new TextEncoder().encode(String(value || '')).length;
+  } catch (_err) {
+    return String(value || '').length;
+  }
+}
+
+function estimateMultipartOverhead(fieldCount = 0, fileCount = 0) {
+  return 8 * 1024 + (fieldCount * 256) + (fileCount * 768);
+}
+
+function getBookPublishRequestUrl() {
+  const base = getApiBase().replace(/\/+$/, '');
+  return `${base}/book-publishing`;
+}
+
+function loadImageFromFile(file) {
+  return new Promise((resolve, reject) => {
+    const objectUrl = URL.createObjectURL(file);
+    const image = new Image();
+    image.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve(image);
+    };
+    image.onerror = (error) => {
+      URL.revokeObjectURL(objectUrl);
+      reject(error || new Error('Failed to load image'));
+    };
+    image.src = objectUrl;
+  });
+}
+
+async function compressCoverFile(file, fallbackName) {
+  if (!file) return null;
+  if (typeof document === 'undefined') {
+    return file;
+  }
+
+  try {
+    const image = await loadImageFromFile(file);
+    const width = Number(image.naturalWidth || image.width || 0);
+    const height = Number(image.naturalHeight || image.height || 0);
+    if (!width || !height) return file;
+
+    const maxWidth = 1600;
+    const targetWidth = Math.min(width, maxWidth);
+    const targetHeight = Math.max(1, Math.round((height * targetWidth) / width));
+
+    const canvas = document.createElement('canvas');
+    canvas.width = targetWidth;
+    canvas.height = targetHeight;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return file;
+
+    ctx.drawImage(image, 0, 0, targetWidth, targetHeight);
+
+    const blob = await new Promise((resolve) => {
+      canvas.toBlob((nextBlob) => resolve(nextBlob), 'image/jpeg', 0.8);
+    });
+
+    if (!blob) return file;
+
+    const safeName = String(fallbackName || file.name || 'cover')
+      .replace(/\.[^.]+$/, '')
+      .replace(/[^a-zA-Z0-9._-]/g, '_');
+    return new File([blob], `${safeName}.jpg`, {
+      type: 'image/jpeg',
+      lastModified: file.lastModified || Date.now(),
+    });
+  } catch (_err) {
+    return file;
+  }
+}
+
+async function uploadCoverToCloudinary(file, side, alreadyCompressed = false) {
+  if (!file) return null;
+  const compressed = alreadyCompressed ? file : await compressCoverFile(file, `${side || 'cover'}`);
+  const payload = new FormData();
+  payload.append('file', compressed, compressed.name || file.name || 'cover.jpg');
+  payload.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+  payload.append('folder', `pva-bazaar-books/${side === 'back' ? 'back-covers' : 'front-covers'}`);
+
+  const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+    method: 'POST',
+    body: payload,
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const cloudinaryError = new Error(data?.error?.message || `Cloudinary upload failed (${response.status})`);
+    cloudinaryError.status = response.status;
+    cloudinaryError.data = data;
+    throw cloudinaryError;
+  }
+
+  return {
+    url: data.secure_url || '',
+    publicId: data.public_id || '',
+    size: compressed.size || file.size || 0,
+    mimeType: compressed.type || file.type || 'image/jpeg',
+    originalName: file.name || '',
+  };
+}
+
+function describePublishFailure(error, { requestUrl, tokenPresent }) {
+  const status = Number(error?.status || error?.response?.status || 0);
+  const statusText =
+    String(error?.statusText || error?.response?.statusText || (status ? 'HTTP error' : 'Network error')).trim();
+  const responseBody = error?.responseBody || error?.data || error?.response?.data || null;
+  const bodyText =
+    typeof responseBody === 'string'
+      ? responseBody
+      : responseBody
+        ? JSON.stringify(responseBody, null, 2)
+        : '(none)';
+  return [
+    'Online publish failed.',
+    `Request URL: ${requestUrl || getBookPublishRequestUrl()}`,
+    `HTTP status: ${status || 'network error'}`,
+    `Status text: ${statusText || 'Network error'}`,
+    `Backend response body: ${bodyText}`,
+    `Auth token present: ${tokenPresent ? 'yes' : 'no'}`,
+  ].join('\n');
+}
+
 async function extractDocxText(file) {
   if (!file) return '';
   const mammoth = await import('mammoth/mammoth.browser');
@@ -99,19 +243,39 @@ async function buildRemotePayloadFromBook(book) {
   payload.append('manuscriptMarkdown', book?.manuscriptMarkdown || '');
   payload.append('publish', book?.status === 'published' ? 'true' : 'false');
 
-  const frontCoverFile = await dataUrlToFile(
-    book?.frontCover?.url || '',
-    book?.frontCover?.originalName || `${book?.slug || 'book'}-front-cover`,
-    book?.frontCover?.mimeType || 'image/png',
-  );
-  const backCoverFile = await dataUrlToFile(
-    book?.backCover?.url || '',
-    book?.backCover?.originalName || `${book?.slug || 'book'}-back-cover`,
-    book?.backCover?.mimeType || 'image/png',
-  );
+  const frontCoverUrl = String(book?.frontCover?.url || '');
+  const backCoverUrl = String(book?.backCover?.url || '');
+  if (frontCoverUrl && /^https?:\/\//i.test(frontCoverUrl) && !frontCoverUrl.startsWith('data:')) {
+    payload.append('frontCoverUrl', frontCoverUrl);
+    payload.append('frontCoverPublicId', book?.frontCover?.publicId || '');
+  } else if (frontCoverUrl.startsWith('data:')) {
+    const frontCoverFile = await dataUrlToFile(
+      frontCoverUrl,
+      book?.frontCover?.originalName || `${book?.slug || 'book'}-front-cover`,
+      book?.frontCover?.mimeType || 'image/png',
+    );
+    const uploadedFrontCover = await uploadCoverToCloudinary(frontCoverFile, 'front');
+    if (uploadedFrontCover?.url) {
+      payload.append('frontCoverUrl', uploadedFrontCover.url);
+      payload.append('frontCoverPublicId', uploadedFrontCover.publicId || '');
+    }
+  }
 
-  if (frontCoverFile) payload.append('frontCover', frontCoverFile);
-  if (backCoverFile) payload.append('backCover', backCoverFile);
+  if (backCoverUrl && /^https?:\/\//i.test(backCoverUrl) && !backCoverUrl.startsWith('data:')) {
+    payload.append('backCoverUrl', backCoverUrl);
+    payload.append('backCoverPublicId', book?.backCover?.publicId || '');
+  } else if (backCoverUrl.startsWith('data:')) {
+    const backCoverFile = await dataUrlToFile(
+      backCoverUrl,
+      book?.backCover?.originalName || `${book?.slug || 'book'}-back-cover`,
+      book?.backCover?.mimeType || 'image/png',
+    );
+    const uploadedBackCover = await uploadCoverToCloudinary(backCoverFile, 'back');
+    if (uploadedBackCover?.url) {
+      payload.append('backCoverUrl', uploadedBackCover.url);
+      payload.append('backCoverPublicId', uploadedBackCover.publicId || '');
+    }
+  }
 
   return payload;
 }
@@ -401,7 +565,51 @@ export default function BookPublishingPage() {
     setSaving(true);
     setError('');
     setSuccess('');
+    const requestUrl = getBookPublishRequestUrl();
+    const authToken = (() => {
+      try {
+        return localStorage.getItem('token') || localStorage.getItem('authToken') || localStorage.getItem('jwt') || '';
+      } catch (_err) {
+        return '';
+      }
+    })();
+    const tokenPresent = Boolean(authToken);
     try {
+      const [preparedFrontCover, preparedBackCover] = await Promise.all([
+        frontCoverFile ? compressCoverFile(frontCoverFile, frontCoverFile.name || `${form.slug || 'book'}-front-cover`) : Promise.resolve(null),
+        backCoverFile ? compressCoverFile(backCoverFile, backCoverFile.name || `${form.slug || 'book'}-back-cover`) : Promise.resolve(null),
+      ]);
+
+      const estimatedBackendBytes =
+        estimateTextBytes(form.manuscriptMarkdown) +
+        (manuscriptFile?.size || 0) +
+        (preparedFrontCover?.size || 0) +
+        (preparedBackCover?.size || 0) +
+        estimateMultipartOverhead(10, 1 + (manuscriptFile ? 1 : 0));
+
+      if (publish && estimatedBackendBytes > MAX_BACKEND_PUBLISH_BYTES) {
+        setError(
+          [
+            'This upload is too large for direct publishing through the current Vercel API route. Publish text only, remove/compress files, or use direct media upload.',
+            `Estimated payload: ${formatBytes(estimatedBackendBytes)}.`,
+            `Manuscript file: ${formatBytes(manuscriptFile?.size || 0)}.`,
+            `Extracted manuscript text: ${formatBytes(estimateTextBytes(form.manuscriptMarkdown))}.`,
+            `Front cover: ${formatBytes(preparedFrontCover?.size || 0)}.`,
+            `Back cover: ${formatBytes(preparedBackCover?.size || 0)}.`,
+            `Multipart overhead: ${formatBytes(estimateMultipartOverhead(10, 1 + (manuscriptFile ? 1 : 0)))}.`,
+          ].join('\n'),
+        );
+        setSuccess('');
+        return;
+      }
+
+      const remoteFrontCover = preparedFrontCover
+        ? await uploadCoverToCloudinary(preparedFrontCover, 'front', true)
+        : null;
+      const remoteBackCover = preparedBackCover
+        ? await uploadCoverToCloudinary(preparedBackCover, 'back', true)
+        : null;
+
       const buildPayload = () => {
         const payload = new FormData();
         if (form.bookId) payload.append('bookId', form.bookId);
@@ -416,65 +624,15 @@ export default function BookPublishingPage() {
         payload.append('manuscriptMarkdown', form.manuscriptMarkdown);
         if (manuscriptFile) payload.append('manuscriptFile', manuscriptFile);
         payload.append('publish', publish ? 'true' : 'false');
-        if (frontCoverFile) payload.append('frontCover', frontCoverFile);
-        if (backCoverFile) payload.append('backCover', backCoverFile);
-        return payload;
-      };
-
-      const saveViaLocalVault = async () => {
-        const [frontCoverDataUrl, backCoverDataUrl] = await Promise.all([
-          frontCoverFile ? fileToDataUrl(frontCoverFile) : Promise.resolve(''),
-          backCoverFile ? fileToDataUrl(backCoverFile) : Promise.resolve(''),
-        ]);
-        const localSaved = saveLocalBookProject({
-          bookId: form.bookId || '',
-          title: form.title,
-          subtitle: form.subtitle,
-          authorName: form.authorName,
-          slug: form.slug,
-          description: form.description,
-          genre: form.genre,
-          audience: form.audience,
-          language: form.language,
-          manuscriptMarkdown: form.manuscriptMarkdown,
-          status: publish ? 'published' : 'draft',
-          publishedAt: publish ? new Date().toISOString() : null,
-          frontCover: frontCoverDataUrl
-            ? {
-              provider: 'local',
-              url: frontCoverDataUrl,
-              originalName: frontCoverFile?.name || '',
-              mimeType: frontCoverFile?.type || '',
-              size: frontCoverFile?.size || 0,
-            }
-            : undefined,
-          backCover: backCoverDataUrl
-            ? {
-              provider: 'local',
-              url: backCoverDataUrl,
-              originalName: backCoverFile?.name || '',
-              mimeType: backCoverFile?.type || '',
-              size: backCoverFile?.size || 0,
-            }
-            : undefined,
-        });
-        setBooks((prev) => {
-          const next = prev.filter((book) => String(book.id) !== String(localSaved.id));
-          return [localSaved, ...next].sort((left, right) => new Date(right.updatedAt || 0) - new Date(left.updatedAt || 0));
-        });
-        setSelectedBookId(localSaved.id);
-        if (localSaved._storageError) {
-          setError(localSaved._storageError);
-          setSuccess('');
-        } else {
-          const storageNote = localSaved._storageWarning ? ` Note: ${localSaved._storageWarning}` : '';
-          setSuccess(
-            `${publish
-              ? `"${localSaved.title}" is published locally on this device and ready to view.`
-              : `"${localSaved.title}" was saved locally as a draft.`}${storageNote}`,
-          );
+        if (remoteFrontCover?.url) {
+          payload.append('frontCoverUrl', remoteFrontCover.url);
+          payload.append('frontCoverPublicId', remoteFrontCover.publicId || '');
         }
-        return localSaved;
+        if (remoteBackCover?.url) {
+          payload.append('backCoverUrl', remoteBackCover.url);
+          payload.append('backCoverPublicId', remoteBackCover.publicId || '');
+        }
+        return payload;
       };
 
       try {
@@ -495,70 +653,14 @@ export default function BookPublishingPage() {
         setSelectedBookId(saved.id);
         setSuccess(
           publish
-            ? `"${saved.title}" is published and live for web, PDF, and EPUB delivery.`
+            ? `"${saved.title}" is published online and visible on the public bookshelf.`
             : `"${saved.title}" was saved as a draft.`,
         );
 
-        void (async () => {
-          try {
-            const localSaved = await saveViaLocalVault();
-            setBooks((prev) => {
-              const withoutRemote = prev.filter((book) => {
-                const sameRemoteId = String(book.id || '') === String(saved.id || '');
-                const sameLocalSlug = normalizeBookKey(book) === normalizeBookKey(localSaved);
-                return !(sameRemoteId || sameLocalSlug);
-              });
-              return [saved, ...withoutRemote].sort((left, right) => new Date(right.updatedAt || 0) - new Date(left.updatedAt || 0));
-            });
-          } catch (_localBackupErr) {
-            // Keep the online-published copy even if local backup fails.
-          }
-        })();
-
         return;
       } catch (networkErr) {
-        if (publish) {
-          const localSaved = saveLocalBookProject({
-            bookId: form.bookId || '',
-            title: form.title,
-            subtitle: form.subtitle,
-            authorName: form.authorName,
-            slug: form.slug,
-            description: form.description,
-            genre: form.genre,
-            audience: form.audience,
-            language: form.language,
-            manuscriptMarkdown: form.manuscriptMarkdown,
-            status: 'draft',
-            pendingPublish: true,
-            frontCover: frontCoverFile
-              ? {
-                  provider: 'local',
-                  url: await fileToDataUrl(frontCoverFile),
-                  originalName: frontCoverFile?.name || '',
-                  mimeType: frontCoverFile?.type || '',
-                  size: frontCoverFile?.size || 0,
-                }
-              : undefined,
-            backCover: backCoverFile
-              ? {
-                  provider: 'local',
-                  url: await fileToDataUrl(backCoverFile),
-                  originalName: backCoverFile?.name || '',
-                  mimeType: backCoverFile?.type || '',
-                  size: backCoverFile?.size || 0,
-                }
-              : undefined,
-          });
-          setBooks((prev) => mergeBooksByKey([localSaved], prev.filter((book) => normalizeBookKey(book) !== normalizeBookKey(localSaved))));
-          setSelectedBookId(localSaved.id);
-          setSuccess(`"${localSaved.title}" was saved locally and queued for online publishing. It is not live yet.`);
-          setError('Online publish failed. The book is saved locally and will sync when the backend is reachable.');
-        } else {
-          const localSaved = await saveViaLocalVault();
-          setSuccess(`"${localSaved.title}" was saved locally as a draft.`);
-          setError('');
-        }
+        setError(describePublishFailure(networkErr, { requestUrl, tokenPresent }));
+        setSuccess('');
       }
     } catch (err) {
       setError(err.message || 'Failed to save book');

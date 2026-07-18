@@ -389,19 +389,37 @@ async function fetchWithBackendFailover(path, options = {}) {
         if (apiBase) {
           rememberApiBase(apiBase);
         }
+        try {
+          response.requestUrl = url;
+        } catch (_err) {
+          // ignore read-only response objects
+        }
         return response;
       }
 
+      try {
+        response.requestUrl = url;
+      } catch (_err) {
+        // ignore read-only response objects
+      }
       lastResponse = response;
     } catch (error) {
       clearTimeout(timeoutId);
       if (signalCleanup) signalCleanup();
+      if (error && typeof error === 'object') {
+        error.requestUrl = url;
+      }
       lastError = error;
       continue;
     }
   }
 
   if (lastResponse) {
+    try {
+      lastResponse.requestUrl = lastResponse.requestUrl || '';
+    } catch (_err) {
+      // ignore read-only response objects
+    }
     return lastResponse;
   }
 
@@ -436,7 +454,11 @@ export async function apiUpload(path, formData, extraHeaders = {}) {
   if (!response.ok) {
     const err = new Error(data?.error || data?.message || `Upload failed (${response.status})`);
     err.status = response.status;
+    err.statusText = response.statusText || '';
+    err.requestUrl = response.requestUrl || response.url || '';
+    err.responseBody = data;
     err.data = data;
+    err.authTokenPresent = Boolean(token);
     throw err;
   }
   return data;

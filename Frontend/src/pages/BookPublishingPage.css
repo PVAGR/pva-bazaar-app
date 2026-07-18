@@ -303,6 +303,7 @@
   border: 1px solid color-mix(in srgb, #b33737 35%, var(--site-border));
   background: color-mix(in srgb, #b33737 12%, var(--site-panel-soft));
   color: #892525;
+  white-space: pre-wrap;
 }
 
 .book-publish__success {
