@@ -9,7 +9,6 @@ import {
   getApiBase,
   saveBookProject,
 } from '../lib/api';
-import { ENV } from '../config/env';
 import {
   deleteLocalBookProject,
   listLocalBookProjects,
@@ -80,8 +79,6 @@ async function dataUrlToFile(dataUrl, filename, fallbackType = 'application/octe
 }
 
 const MAX_BACKEND_PUBLISH_BYTES = 4 * 1024 * 1024;
-const CLOUDINARY_CLOUD_NAME = ENV.CLOUDINARY_CLOUD_NAME || 'dljrsobks';
-const CLOUDINARY_UPLOAD_PRESET = ENV.CLOUDINARY_UPLOAD_PRESET || 'pva_books_covers';
 
 function formatBytes(bytes) {
   const value = Number(bytes || 0);
@@ -172,35 +169,6 @@ async function compressCoverFile(file, fallbackName) {
   }
 }
 
-async function uploadCoverToCloudinary(file, side, alreadyCompressed = false) {
-  if (!file) return null;
-  const compressed = alreadyCompressed ? file : await compressCoverFile(file, `${side || 'cover'}`);
-  const payload = new FormData();
-  payload.append('file', compressed, compressed.name || file.name || 'cover.jpg');
-  payload.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-  payload.append('folder', `pva-bazaar-books/${side === 'back' ? 'back-covers' : 'front-covers'}`);
-
-  const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
-    method: 'POST',
-    body: payload,
-  });
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    const cloudinaryError = new Error(data?.error?.message || `Cloudinary upload failed (${response.status})`);
-    cloudinaryError.status = response.status;
-    cloudinaryError.data = data;
-    throw cloudinaryError;
-  }
-
-  return {
-    url: data.secure_url || '',
-    publicId: data.public_id || '',
-    size: compressed.size || file.size || 0,
-    mimeType: compressed.type || file.type || 'image/jpeg',
-    originalName: file.name || '',
-  };
-}
-
 function describePublishFailure(error, { requestUrl, tokenPresent }) {
   const status = Number(error?.status || error?.response?.status || 0);
   const statusText =
@@ -254,10 +222,8 @@ async function buildRemotePayloadFromBook(book) {
       book?.frontCover?.originalName || `${book?.slug || 'book'}-front-cover`,
       book?.frontCover?.mimeType || 'image/png',
     );
-    const uploadedFrontCover = await uploadCoverToCloudinary(frontCoverFile, 'front');
-    if (uploadedFrontCover?.url) {
-      payload.append('frontCoverUrl', uploadedFrontCover.url);
-      payload.append('frontCoverPublicId', uploadedFrontCover.publicId || '');
+    if (frontCoverFile) {
+      payload.append('frontCover', frontCoverFile, frontCoverFile.name || `${book?.slug || 'book'}-front-cover`);
     }
   }
 
@@ -270,10 +236,8 @@ async function buildRemotePayloadFromBook(book) {
       book?.backCover?.originalName || `${book?.slug || 'book'}-back-cover`,
       book?.backCover?.mimeType || 'image/png',
     );
-    const uploadedBackCover = await uploadCoverToCloudinary(backCoverFile, 'back');
-    if (uploadedBackCover?.url) {
-      payload.append('backCoverUrl', uploadedBackCover.url);
-      payload.append('backCoverPublicId', uploadedBackCover.publicId || '');
+    if (backCoverFile) {
+      payload.append('backCover', backCoverFile, backCoverFile.name || `${book?.slug || 'book'}-back-cover`);
     }
   }
 
@@ -603,13 +567,6 @@ export default function BookPublishingPage() {
         return;
       }
 
-      const remoteFrontCover = preparedFrontCover
-        ? await uploadCoverToCloudinary(preparedFrontCover, 'front', true)
-        : null;
-      const remoteBackCover = preparedBackCover
-        ? await uploadCoverToCloudinary(preparedBackCover, 'back', true)
-        : null;
-
       const buildPayload = () => {
         const payload = new FormData();
         if (form.bookId) payload.append('bookId', form.bookId);
@@ -624,13 +581,11 @@ export default function BookPublishingPage() {
         payload.append('manuscriptMarkdown', form.manuscriptMarkdown);
         if (manuscriptFile) payload.append('manuscriptFile', manuscriptFile);
         payload.append('publish', publish ? 'true' : 'false');
-        if (remoteFrontCover?.url) {
-          payload.append('frontCoverUrl', remoteFrontCover.url);
-          payload.append('frontCoverPublicId', remoteFrontCover.publicId || '');
+        if (preparedFrontCover) {
+          payload.append('frontCover', preparedFrontCover, preparedFrontCover.name || `${form.slug || 'book'}-front-cover.jpg`);
         }
-        if (remoteBackCover?.url) {
-          payload.append('backCoverUrl', remoteBackCover.url);
-          payload.append('backCoverPublicId', remoteBackCover.publicId || '');
+        if (preparedBackCover) {
+          payload.append('backCover', preparedBackCover, preparedBackCover.name || `${form.slug || 'book'}-back-cover.jpg`);
         }
         return payload;
       };

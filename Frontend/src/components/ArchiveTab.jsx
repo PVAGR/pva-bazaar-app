@@ -19,7 +19,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { createArchiveEntry, fetchArchiveEntries, deleteArchiveEntry } from '../lib/api';
+import { apiUpload, createArchiveEntry, fetchArchiveEntries, deleteArchiveEntry } from '../lib/api';
 import { createLogger } from '../lib/logger';
 import HelpTip from './HelpTip';
 import { SkeletonList } from './SkeletonLoader';
@@ -84,18 +84,7 @@ export default function ArchiveTab() {
       .map((item) => item.trim())
       .filter(Boolean);
 
-  const getCloudinaryConfig = () => {
-    const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
-    const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
-    return { cloudName, uploadPreset };
-  };
-
   const uploadMediaFiles = async (files) => {
-    const { cloudName, uploadPreset } = getCloudinaryConfig();
-    if (!cloudName || !uploadPreset) {
-      setMediaError('Missing Cloudinary config. Set VITE_CLOUDINARY_CLOUD_NAME and VITE_CLOUDINARY_UPLOAD_PRESET.');
-      return;
-    }
     if (!files?.length) return;
 
     setMediaError('');
@@ -106,16 +95,12 @@ export default function ArchiveTab() {
         Array.from(files).map(async (file) => {
           const form = new FormData();
           form.append('file', file);
-          form.append('upload_preset', uploadPreset);
-          const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
-            method: 'POST',
-            body: form,
-          });
-          const data = await res.json();
-          if (!res.ok) {
-            throw new Error(data?.error?.message || 'Upload failed');
+          form.append('folder', 'pva-bazaar-archive');
+          const data = await apiUpload('/api/cloud-storage/upload/cloudinary', form);
+          if (!data?.ok || !data?.url) {
+            throw new Error(data?.error || 'Upload failed');
           }
-          return data.secure_url;
+          return data.url;
         })
       );
 

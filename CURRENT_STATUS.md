@@ -23,6 +23,7 @@ Updated: 2026-07-17
 - Forced book publishing and website account auth onto MongoDB whenever a real `MONGODB_URI`/`DATABASE_URL` exists, with no production file-store fallback for published books.
 - Added a route-level Mongo readiness gate to the book publishing router so it connects before reading database state and rejects production publish requests if Mongo is unavailable.
 - The active GitHub Pages book-publish flow now uploads covers directly to Cloudinary from the browser, blocks oversize payloads before they hit Vercel, and shows detailed publish failure diagnostics instead of pretending a local save means the book is live.
+- The active GitHub Pages archive media upload now goes through the backend cloud-storage route instead of trying to use a browser-side Cloudinary preset, which removes the `preset not found` failure mode from the live upload path.
 - Synced the frontend lockfile so GitHub Actions `npm ci` can build the public site again and publish the latest Pages export.
 - Hardened the GitHub Pages frontend workflow to install with legacy peer-dependency resolution, which avoids the Vite/plugin peer conflict in clean CI runs.
 
