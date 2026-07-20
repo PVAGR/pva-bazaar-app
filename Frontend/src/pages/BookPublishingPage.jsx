@@ -261,6 +261,7 @@ export default function BookPublishingPage() {
   const frontCoverInputRef = useRef(null);
   const backCoverInputRef = useRef(null);
   const manuscriptInputRef = useRef(null);
+  const manuscriptImportedTextRef = useRef('');
   const syncInFlightRef = useRef(false);
 
   const selectedBook = useMemo(
@@ -488,6 +489,7 @@ export default function BookPublishingPage() {
     const file = event.target.files?.[0] || null;
     setManuscriptFile(file);
     setManuscriptFileName(file?.name || '');
+    manuscriptImportedTextRef.current = '';
     if (!file) return;
 
     const isDocx =
@@ -501,6 +503,7 @@ export default function BookPublishingPage() {
       if (isDocx) {
         try {
           const extracted = await extractDocxText(file);
+          manuscriptImportedTextRef.current = extracted;
           setForm((prev) => ({
             ...prev,
             manuscriptMarkdown: extracted,
@@ -517,6 +520,7 @@ export default function BookPublishingPage() {
 
     const reader = new FileReader();
     reader.onload = () => {
+      manuscriptImportedTextRef.current = String(reader.result || '');
       setForm((prev) => ({
         ...prev,
         manuscriptMarkdown: String(reader.result || ''),
@@ -543,24 +547,29 @@ export default function BookPublishingPage() {
         frontCoverFile ? compressCoverFile(frontCoverFile, frontCoverFile.name || `${form.slug || 'book'}-front-cover`) : Promise.resolve(null),
         backCoverFile ? compressCoverFile(backCoverFile, backCoverFile.name || `${form.slug || 'book'}-back-cover`) : Promise.resolve(null),
       ]);
+      const manuscriptSourceText = String(form.manuscriptMarkdown || '');
+      const importedManuscriptText = String(manuscriptImportedTextRef.current || '');
+      const manuscriptFileBytes = manuscriptFile?.size || 0;
+      const manuscriptTextBytes = estimateTextBytes(manuscriptSourceText);
+      const sendManuscriptFile = Boolean(manuscriptFile) && manuscriptSourceText === importedManuscriptText;
+      const sendManuscriptText = !sendManuscriptFile && Boolean(manuscriptSourceText);
 
       const estimatedBackendBytes =
-        estimateTextBytes(form.manuscriptMarkdown) +
-        (manuscriptFile?.size || 0) +
+        (sendManuscriptFile ? manuscriptFileBytes : manuscriptTextBytes) +
         (preparedFrontCover?.size || 0) +
         (preparedBackCover?.size || 0) +
-        estimateMultipartOverhead(10, 1 + (manuscriptFile ? 1 : 0));
+        estimateMultipartOverhead(10, 1 + (sendManuscriptFile ? 1 : 0));
 
       if (publish && estimatedBackendBytes > MAX_BACKEND_PUBLISH_BYTES) {
         setError(
           [
             'This upload is too large for direct publishing through the current Vercel API route. Publish text only, remove/compress files, or use direct media upload.',
             `Estimated payload: ${formatBytes(estimatedBackendBytes)}.`,
-            `Manuscript file: ${formatBytes(manuscriptFile?.size || 0)}.`,
-            `Extracted manuscript text: ${formatBytes(estimateTextBytes(form.manuscriptMarkdown))}.`,
+            `Manuscript file: ${formatBytes(manuscriptFileBytes)}.`,
+            `Extracted manuscript text: ${formatBytes(manuscriptTextBytes)}.`,
             `Front cover: ${formatBytes(preparedFrontCover?.size || 0)}.`,
             `Back cover: ${formatBytes(preparedBackCover?.size || 0)}.`,
-            `Multipart overhead: ${formatBytes(estimateMultipartOverhead(10, 1 + (manuscriptFile ? 1 : 0)))}.`,
+            `Multipart overhead: ${formatBytes(estimateMultipartOverhead(10, 1 + (sendManuscriptFile ? 1 : 0)))}.`,
           ].join('\n'),
         );
         setSuccess('');
@@ -578,8 +587,12 @@ export default function BookPublishingPage() {
         payload.append('genre', form.genre);
         payload.append('audience', form.audience);
         payload.append('language', form.language);
-        payload.append('manuscriptMarkdown', form.manuscriptMarkdown);
-        if (manuscriptFile) payload.append('manuscriptFile', manuscriptFile);
+        if (sendManuscriptText) {
+          payload.append('manuscriptMarkdown', manuscriptSourceText);
+        }
+        if (sendManuscriptFile) {
+          payload.append('manuscriptFile', manuscriptFile);
+        }
         payload.append('publish', publish ? 'true' : 'false');
         if (preparedFrontCover) {
           payload.append('frontCover', preparedFrontCover, preparedFrontCover.name || `${form.slug || 'book'}-front-cover.jpg`);

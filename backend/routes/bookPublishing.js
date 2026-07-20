@@ -369,7 +369,7 @@ async function loadBookForEdit(bookId) {
     return findFileBookById(bookId);
   }
 
-  return BookProject.findById(bookId).lean();
+  return BookProject.findById(bookId);
 }
 
 async function loadBookForSlug(slug) {
@@ -396,7 +396,12 @@ async function persistBookRecord(book) {
     return saveFileBook(book);
   }
 
-  return book.save();
+  if (book && typeof book.save === 'function') {
+    return book.save();
+  }
+
+  const document = BookProject.hydrate(book || {});
+  return document.save();
 }
 
 async function removeBookRecord(bookId) {

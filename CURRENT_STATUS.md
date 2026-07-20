@@ -25,6 +25,7 @@ Updated: 2026-07-17
 - The active GitHub Pages book-publish flow now uploads covers directly to Cloudinary from the browser, blocks oversize payloads before they hit Vercel, and shows detailed publish failure diagnostics instead of pretending a local save means the book is live.
 - The active GitHub Pages archive media upload now goes through the backend cloud-storage route instead of trying to use a browser-side Cloudinary preset, which removes the `preset not found` failure mode from the live upload path.
 - Mongo-backed book publishing now avoids storing the rendered `webHtml` blob for saved books, which keeps large manuscripts from blowing up the document payload during publish.
+- Mongo-backed book editing now hydrates existing documents before save, so republishing an already-created book does not trip a plain-object `save()` failure.
 - Synced the frontend lockfile so GitHub Actions `npm ci` can build the public site again and publish the latest Pages export.
 - Hardened the GitHub Pages frontend workflow to install with legacy peer-dependency resolution, which avoids the Vite/plugin peer conflict in clean CI runs.
 
@@ -40,6 +41,7 @@ Updated: 2026-07-17
 - Admin media upload now targets the backend cloud-storage route instead of relying on browser-side Cloudinary credentials, which keeps the upload path connected to the live backend configuration.
 - Live Mongo-backed book publishing was verified end-to-end on `https://pva-backend-api.vercel.app/api/book-publishing` with a real signed-in account: the published book stored in MongoDB, returned a Mongo-style ObjectId (`6a5a96f51657de987370d2e3`), and appeared on the public bookshelf endpoint with Cloudinary cover URLs.
 - The current public bookshelf response still serves the Mongo-backed test book and its Cloudinary covers from `https://pva-backend-api.vercel.app/api/book-publishing/public`.
+- Existing book republish/edit saves now hydrate Mongoose documents before persist, preventing the plain-object edit failure that had been returning a silent 500 on mobile publish retries.
 
 ## What remains
 - Live deployment/cache propagation still needs a final public-site check after this route bridge ships.
