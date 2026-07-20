@@ -551,8 +551,10 @@ export default function BookPublishingPage() {
       const importedManuscriptText = String(manuscriptImportedTextRef.current || '');
       const manuscriptFileBytes = manuscriptFile?.size || 0;
       const manuscriptTextBytes = estimateTextBytes(manuscriptSourceText);
-      const sendManuscriptFile = Boolean(manuscriptFile) && manuscriptSourceText === importedManuscriptText;
-      const sendManuscriptText = !sendManuscriptFile && Boolean(manuscriptSourceText);
+      // Prefer sending extracted/plain manuscript text for publish. Raw file uploads are
+      // only used when no text has been extracted yet (for example, some PDFs).
+      const sendManuscriptText = Boolean(manuscriptSourceText);
+      const sendManuscriptFile = Boolean(manuscriptFile) && !sendManuscriptText;
 
       const estimatedBackendBytes =
         (sendManuscriptFile ? manuscriptFileBytes : manuscriptTextBytes) +
