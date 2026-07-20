@@ -40,6 +40,7 @@ Updated: 2026-07-17
 - Live readiness check passed after widening `pingLatencyMs` from `1000` to `1500` in `Frontend/public/live-map.json`; the backend remained healthy and functional while live ping latency measured about `1303ms`.
 - Admin media upload now targets the backend cloud-storage route instead of relying on browser-side Cloudinary credentials, which keeps the upload path connected to the live backend configuration.
 - Live Mongo-backed book publishing was verified end-to-end on `https://pva-backend-api.vercel.app/api/book-publishing` with a real signed-in account: the published book stored in MongoDB, returned a Mongo-style ObjectId (`6a5a96f51657de987370d2e3`), and appeared on the public bookshelf endpoint with Cloudinary cover URLs.
+- Mongo Atlas storage quota exhaustion is now handled by a Cloudinary raw fallback for published books, so publish requests should no longer die on the `512 MB of 512 MB` write block.
 - The current public bookshelf response still serves the Mongo-backed test book and its Cloudinary covers from `https://pva-backend-api.vercel.app/api/book-publishing/public`.
 - Existing book republish/edit saves now hydrate Mongoose documents before persist, preventing the plain-object edit failure that had been returning a silent 500 on mobile publish retries.
 
@@ -56,3 +57,4 @@ Updated: 2026-07-17
 - The book-publishing route no longer uses the file store in production when Mongo is configured; the remaining file fallback is for local/no-Mongo development only.
 - The live public bookshelf endpoint is currently serving the Mongo-published test book, so the same book should appear on the browser bookshelf page after refresh on any device.
 - The live GitHub Pages publish page now has direct Cloudinary cover uploads, a 4 MB publish payload guard, and richer error diagnostics for backend failures.
+- The next live publish attempt should fall back to Cloudinary raw storage if Mongo Atlas is still at quota, so the book can still become public even while Mongo writes are blocked.

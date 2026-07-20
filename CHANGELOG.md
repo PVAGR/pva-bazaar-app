@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Archive media uploads now go through the backend cloud-storage route rather than a browser-side Cloudinary preset, removing the `preset not found` failure mode from the live upload path.
 - Mongo-backed book publishing no longer stores the rendered `webHtml` blob on save, which keeps very large manuscripts from failing during publish.
 - Mongo-backed book editing now hydrates existing documents before save, which prevents republish failures on already-created books.
+- When Mongo Atlas reports a storage-quota write block during publishing, the live route now falls back to Cloudinary raw storage for the published book manifest + manuscript instead of failing the publish request outright.
 - Item-specific access codes and QR manage links for perennial listings, so the original creator or steward can open, update, and continue a listing from a persistent referral hash.
 - Creator-only listing deletion for the original poster, keeping the history of a perennial item protected from other users.
 - A more seller-friendly default stewardship split for listings that use the consignment flow.

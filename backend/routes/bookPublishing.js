@@ -60,6 +60,8 @@ const bookUpload = upload.fields([
 ]);
 
 const hasMongoUri = Boolean(process.env.MONGODB_URI || process.env.DATABASE_URL);
+const CLOUDINARY_BOOK_MANIFEST_FOLDER = 'pva-bazaar-books/book-manifests';
+const CLOUDINARY_BOOK_MANUSCRIPT_FOLDER = 'pva-bazaar-books/book-manuscripts';
 let mongoReadyPromise = null;
 
 async function ensureMongoBookReady() {
@@ -162,6 +164,220 @@ function isCloudinaryConfigured() {
       process.env.CLOUDINARY_API_KEY &&
       process.env.CLOUDINARY_API_SECRET,
   );
+}
+
+function getCloudinaryClient() {
+  const cloudinary = require('cloudinary').v2;
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  });
+  return cloudinary;
+}
+
+function isMongoQuotaError(error) {
+  const message = String(error?.message || error?.responseBody?.error || error?.response?.data?.error || '').toLowerCase();
+  return (
+    message.includes('space quota') ||
+    message.includes('writes are blocked') ||
+    message.includes('limit=storage') ||
+    message.includes('free up storage') ||
+    message.includes('quota')
+  );
+}
+
+function isMongoObjectId(value) {
+  return /^[0-9a-fA-F]{24}$/.test(String(value || '').trim());
+}
+
+function cloudinaryBookSlugId(slug) {
+  return sanitizeText(slug || '', 180).toLowerCase();
+}
+
+async function uploadCloudinaryRawPayload(buffer, folder, publicId) {
+  if (!isCloudinaryConfigured()) {
+    throw new Error('Cloudinary is not configured for cloud fallback');
+  }
+
+  const cloudinary = getCloudinaryClient();
+  const result = await new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        folder,
+        public_id: publicId,
+        resource_type: 'raw',
+        use_filename: false,
+        unique_filename: false,
+        overwrite: true,
+      },
+      (error, data) => {
+        if (error) reject(error);
+        else resolve(data);
+      },
+    );
+    stream.end(buffer);
+  });
+
+  return {
+    provider: 'cloudinary',
+    url: result.secure_url,
+    publicId: result.public_id,
+    size: buffer.length,
+  };
+}
+
+async function uploadCloudinaryBookText(slug, manuscriptMarkdown) {
+  const text = String(manuscriptMarkdown || '');
+  return uploadCloudinaryRawPayload(
+    Buffer.from(text, 'utf8'),
+    CLOUDINARY_BOOK_MANUSCRIPT_FOLDER,
+    cloudinaryBookSlugId(slug),
+  );
+}
+
+async function uploadCloudinaryBookManifest(book, manuscriptMarkdown, manuscriptAsset) {
+  const manifest = {
+    source: 'cloudinary-raw',
+    _id: cloudinaryBookSlugId(book.slug || book.title || 'book'),
+    id: cloudinaryBookSlugId(book.slug || book.title || 'book'),
+    authorId: String(book.authorId || ''),
+    title: book.title || '',
+    subtitle: book.subtitle || '',
+    authorName: book.authorName || '',
+    slug: cloudinaryBookSlugId(book.slug || book.title || 'book'),
+    description: book.description || '',
+    genre: book.genre || 'general',
+    audience: book.audience || 'general',
+    language: book.language || 'en',
+    status: book.status || 'draft',
+    wordCount: Number(book.wordCount || 0),
+    publishedAt: book.publishedAt ? new Date(book.publishedAt).toISOString() : null,
+    updatedAt: new Date().toISOString(),
+    createdAt: book.createdAt ? new Date(book.createdAt).toISOString() : null,
+    frontCover: book.frontCover || {},
+    backCover: book.backCover || {},
+    storage: {
+      provider: 'cloudinary-raw',
+      manuscript: manuscriptAsset || null,
+    },
+    manuscriptMarkdown: '',
+    webHtml: '',
+  };
+
+  return uploadCloudinaryRawPayload(
+    Buffer.from(JSON.stringify({
+      ...manifest,
+      manuscriptMarkdown: '',
+      manuscript: {
+        url: manuscriptAsset?.url || '',
+        publicId: manuscriptAsset?.publicId || '',
+      },
+    }, null, 2), 'utf8'),
+    CLOUDINARY_BOOK_MANIFEST_FOLDER,
+    cloudinaryBookSlugId(book.slug || book.title || 'book'),
+  ).then((asset) => ({
+    ...manifest,
+    storage: {
+      ...manifest.storage,
+      manifest: asset,
+    },
+  }));
+}
+
+async function loadCloudinaryBookManifest(slug) {
+  if (!isCloudinaryConfigured()) return null;
+
+  const cleanSlug = cloudinaryBookSlugId(slug);
+  if (!cleanSlug) return null;
+
+  const cloudinary = getCloudinaryClient();
+  const manifestPublicId = `${CLOUDINARY_BOOK_MANIFEST_FOLDER}/${cleanSlug}`;
+
+  try {
+    const resource = await cloudinary.api.resource(manifestPublicId, { resource_type: 'raw' });
+    const url = resource?.secure_url || resource?.url;
+    if (!url) return null;
+
+    const response = await axios.get(url, { timeout: 20000 });
+    const data = typeof response.data === 'string' ? JSON.parse(response.data) : response.data;
+    if (!data || typeof data !== 'object') return null;
+
+    return {
+      ...data,
+      _id: data._id || data.id || cleanSlug,
+      id: data.id || data._id || cleanSlug,
+      slug: data.slug || cleanSlug,
+      manuscriptMarkdown: String(data.manuscriptMarkdown || ''),
+      webHtml: String(data.webHtml || ''),
+    };
+  } catch (_error) {
+    return null;
+  }
+}
+
+async function listCloudinaryPublishedBooks() {
+  if (!isCloudinaryConfigured()) return [];
+
+  const cloudinary = getCloudinaryClient();
+  const results = [];
+  try {
+    const page = await cloudinary.api.resources({
+      resource_type: 'raw',
+      type: 'upload',
+      prefix: `${CLOUDINARY_BOOK_MANIFEST_FOLDER}/`,
+      max_results: 1000,
+    });
+
+    const resources = Array.isArray(page?.resources) ? page.resources : [];
+    for (const resource of resources) {
+      const url = resource?.secure_url || resource?.url;
+      if (!url) continue;
+      try {
+        const response = await axios.get(url, { timeout: 20000 });
+        const data = typeof response.data === 'string' ? JSON.parse(response.data) : response.data;
+        if (!data || typeof data !== 'object') continue;
+        results.push({
+          ...data,
+          _id: data._id || data.id || data.slug || '',
+          id: data.id || data._id || data.slug || '',
+          slug: data.slug || '',
+        });
+      } catch (_err) {
+        // Skip unreadable manifest files and continue with the rest.
+      }
+    }
+  } catch (_error) {
+    return results;
+  }
+
+  return results;
+}
+
+function mergePublishedBooks(primary = [], secondary = []) {
+  const merged = [];
+  const seen = new Map();
+  for (const book of [...primary, ...secondary]) {
+    const slug = String(book?.slug || '').trim().toLowerCase();
+    const id = String(book?.id || book?._id || '').trim().toLowerCase();
+    const key = slug || id;
+    if (!key) continue;
+    const prev = seen.get(key);
+    if (!prev) {
+      seen.set(key, book);
+      continue;
+    }
+
+    const prevTime = new Date(prev?.updatedAt || prev?.publishedAt || prev?.createdAt || 0).getTime();
+    const nextTime = new Date(book?.updatedAt || book?.publishedAt || book?.createdAt || 0).getTime();
+    const shouldReplace = nextTime >= prevTime || String(book?.source || '') === 'cloudinary-raw';
+    if (shouldReplace) {
+      seen.set(key, book);
+    }
+  }
+
+  for (const value of seen.values()) merged.push(value);
+  return merged;
 }
 
 async function ensureUploadsDir() {
@@ -319,6 +535,7 @@ async function resolveUniqueSlug(baseSlug, excludeId = null) {
 
   while (true) {
     let match = null;
+    let cloudinaryMatch = null;
     if (shouldUseFileBookStore()) {
       const books = await listFileBooks();
       match = books.find((book) => {
@@ -333,9 +550,12 @@ async function resolveUniqueSlug(baseSlug, excludeId = null) {
       })
         .select('_id')
         .lean();
+      if (!match && isCloudinaryConfigured()) {
+        cloudinaryMatch = await loadCloudinaryBookManifest(candidate);
+      }
     }
 
-    if (!match) return candidate;
+    if (!match && !cloudinaryMatch) return candidate;
     candidate = `${base}-${suffix}`;
     suffix += 1;
   }
@@ -346,30 +566,48 @@ async function listUserBooks(userId) {
     return listFileBooks({ authorId: String(userId || '') }, { updatedAt: -1, _id: -1 });
   }
 
-  return BookProject.find({
+  const mongoBooks = await BookProject.find({
     authorId: userId,
   })
     .sort({ updatedAt: -1, _id: -1 })
     .lean();
+
+  const cloudBooks = isCloudinaryConfigured()
+    ? (await listCloudinaryPublishedBooks()).filter((book) => String(book.authorId || '') === String(userId || ''))
+    : [];
+
+  return mergePublishedBooks(mongoBooks, cloudBooks);
 }
 
 async function listPublishedBooks() {
-  return shouldUseFileBookStore()
+  const mongoBooks = shouldUseFileBookStore()
     ? await listFileBooks({ status: 'published' }, { publishedAt: -1, updatedAt: -1, _id: -1 })
     : await BookProject.find({ status: 'published' })
       .select('_id title subtitle authorName slug description genre audience language status wordCount publishedAt updatedAt frontCover.url frontCover.provider frontCover.publicId backCover.url backCover.provider backCover.publicId')
       .sort({ publishedAt: -1, updatedAt: -1, _id: -1 })
       .lean();
+
+  const cloudBooks = isCloudinaryConfigured() ? await listCloudinaryPublishedBooks() : [];
+  return mergePublishedBooks(mongoBooks, cloudBooks);
 }
 
 async function loadBookForEdit(bookId) {
+  const normalizedBookId = String(bookId || '').trim();
   const mongoState = getMongoState();
   const connected = mongoState.mode === 'mongo' && mongoState.readyState === 1;
   if (!connected && shouldUseFileBookStore()) {
     return findFileBookById(bookId);
   }
 
-  return BookProject.findById(bookId);
+  const cloudinaryBook = await loadCloudinaryBookManifest(normalizedBookId);
+  if (cloudinaryBook) return cloudinaryBook;
+
+  if (isMongoObjectId(normalizedBookId)) {
+    const book = await BookProject.findById(normalizedBookId);
+    if (book) return book;
+  }
+
+  return connected ? BookProject.findById(normalizedBookId) : null;
 }
 
 async function loadBookForSlug(slug) {
@@ -385,7 +623,19 @@ async function loadBookForSlug(slug) {
     return null;
   }
 
+  const cloudinaryBook = await loadCloudinaryBookManifest(normalized);
   const localBook = await BookProject.findOne({ slug: normalized, status: 'published' }).lean();
+
+  if (cloudinaryBook && String(cloudinaryBook.status || '').toLowerCase() === 'published') {
+    if (!localBook) return cloudinaryBook;
+
+    const localTime = new Date(localBook.updatedAt || localBook.publishedAt || localBook.createdAt || 0).getTime();
+    const cloudTime = new Date(cloudinaryBook.updatedAt || cloudinaryBook.publishedAt || cloudinaryBook.createdAt || 0).getTime();
+    if (cloudTime >= localTime) {
+      return cloudinaryBook;
+    }
+  }
+
   return localBook || null;
 }
 
@@ -402,6 +652,38 @@ async function persistBookRecord(book) {
 
   const document = BookProject.hydrate(book || {});
   return document.save();
+}
+
+async function saveCloudinaryPublishedBook(book) {
+  const slug = cloudinaryBookSlugId(book.slug || book.title || 'book');
+  const manuscriptMarkdown = String(book.manuscriptMarkdown || '').trim();
+  if (!slug) {
+    throw new Error('Unable to generate a stable book slug for cloud fallback');
+  }
+  if (!manuscriptMarkdown) {
+    throw new Error('Manuscript content is required');
+  }
+
+  const manuscriptAsset = await uploadCloudinaryBookText(slug, manuscriptMarkdown);
+  const manifest = await uploadCloudinaryBookManifest(book, manuscriptMarkdown, manuscriptAsset);
+  const savedBook = {
+    ...book,
+    _id: slug,
+    id: slug,
+    slug,
+    status: book.status || 'published',
+    manuscriptMarkdown: '',
+    webHtml: '',
+    storage: {
+      provider: 'cloudinary-raw',
+      manuscript: manuscriptAsset,
+      manifest: manifest.storage?.manifest || null,
+    },
+    manuscriptAsset,
+    manifestAsset: manifest.storage?.manifest || null,
+  };
+
+  return savedBook;
 }
 
 async function removeBookRecord(bookId) {
@@ -790,7 +1072,16 @@ router.post('/', authenticateBookPublishing, bookUpload, async (req, res) => {
       // from the public / view routes instead of storing the full HTML blob.
       book.webHtml = '';
       book.lastRenderedAt = new Date().toISOString();
-      savedBook = await persistBookRecord(book);
+      try {
+        savedBook = await persistBookRecord(book);
+      } catch (persistError) {
+        if (isMongoQuotaError(persistError) && isCloudinaryConfigured()) {
+          console.warn('⚠️ Mongo storage quota hit for book publishing; falling back to Cloudinary raw storage.');
+          savedBook = await saveCloudinaryPublishedBook(book);
+        } else {
+          throw persistError;
+        }
+      }
     }
 
     return res.status(bookId ? 200 : 201).json({
