@@ -781,10 +781,9 @@ router.post('/', authenticateBookPublishing, bookUpload, async (req, res) => {
       savedBook.lastRenderedAt = new Date().toISOString();
       savedBook = await persistBookRecord(savedBook);
     } else {
-      const renderBase = shouldPublish
-        ? `/api/book-publishing/public/${encodeURIComponent(book.slug)}`
-        : `/api/book-publishing/${encodeURIComponent(book._id || '')}`;
-      book.webHtml = renderBookHtml(renderableBook(book, renderBase));
+      // Mongo-backed publishing must stay lightweight. Render HTML on demand
+      // from the public / view routes instead of storing the full HTML blob.
+      book.webHtml = '';
       book.lastRenderedAt = new Date().toISOString();
       savedBook = await persistBookRecord(book);
     }
