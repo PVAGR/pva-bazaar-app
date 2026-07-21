@@ -15,6 +15,7 @@ concurrency:
 
 jobs:
   tick:
+    if: github.event_name != 'schedule' || vars.OPENCLAW_CRON_ENABLED == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 4
     env:

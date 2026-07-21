@@ -12,6 +12,7 @@ on:
 
 jobs:
   test-openclaw-integration:
+    if: github.event_name != 'schedule' || vars.OPENCLAW_CRON_ENABLED == 'true'
     runs-on: ubuntu-latest
     
     strategy:
