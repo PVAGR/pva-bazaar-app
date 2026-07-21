@@ -3,7 +3,6 @@ const router = express.Router();
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const { authenticateToken } = require('../middleware/auth');
-const { createUserEvent, dispatchToOpenClaw } = require('../utils/openclaw-events');
 const { sendWelcomeEmail } = require('../services/emailService');
 const { connectMongo, getMongoState } = require('../lib/mongoConnection');
 const { ensureSeedUsers, findUser, saveUser } = require('../lib/mockUserStore');
@@ -11,6 +10,47 @@ const { getJwtSecret } = require('../lib/jwtSecret');
 
 const hasMongoUri = Boolean(process.env.MONGODB_URI || process.env.DATABASE_URL);
 let mongoAuthReadyPromise = null;
+
+function isMongoQuotaLikeError(error) {
+  const message = String(error?.message || '').toLowerCase();
+  return (
+    message.includes('space quota') ||
+    message.includes('writes are blocked') ||
+    message.includes('limit=storage') ||
+    message.includes('free up storage') ||
+    message.includes('quota')
+  );
+}
+
+async function issueFallbackToken(identifier, password, res) {
+  await ensureSeedUsers();
+  const identifierLower = String(identifier || '').trim().toLowerCase();
+  const user = await findUser({
+    $or: [
+      { email: identifierLower },
+      { email: identifier },
+      { username: identifier },
+      { _id: identifier },
+    ],
+  });
+  if (!user) {
+    return res.status(401).json({ ok: false, message: 'Invalid credentials' });
+  }
+  const valid = await user.comparePassword(password);
+  if (!valid) {
+    return res.status(401).json({ ok: false, message: 'Invalid credentials' });
+  }
+  const token = jwt.sign(
+    { id: user._id, role: user.role, authStore: 'file' },
+    getJwtSecret(),
+    { expiresIn: '7d' },
+  );
+  return res.json({
+    ok: true,
+    token,
+    user: { id: user._id, name: user.name, email: user.email, role: user.role },
+  });
+}
 
 async function ensureMongoAuthReady() {
   if (!hasMongoUri) return null;
@@ -115,13 +155,12 @@ router.post('/register', async (req, res) => {
     };
 
     const user = useMongoStore ? await new User(userData).save() : await saveUser(userData);
-    const token = jwt.sign({ id: user._id, role: user.role }, getJwtSecret(), { expiresIn: '7d' });
+    const token = jwt.sign(
+      { id: user._id, role: user.role, authStore: useMongoStore ? 'mongo' : 'file' },
+      getJwtSecret(),
+      { expiresIn: '7d' },
+    );
     
-    // Dispatch user registration event (non-blocking)
-    dispatchToOpenClaw(createUserEvent('registered', user, {
-      method: 'password',
-    }));
-
     // Send welcome email in non-blocking mode.
     sendWelcomeEmail(user).catch((emailErr) => {
       console.warn('Welcome email failed (non-blocking):', emailErr?.message || emailErr);
@@ -143,6 +182,14 @@ router.post('/register', async (req, res) => {
         },
       });
   } catch (error) {
+    if (hasMongoUri && isMongoQuotaLikeError(error)) {
+      try {
+        const { name, email, password } = req.body || {};
+        return await issueFallbackToken(email || name || '', password || '', res);
+      } catch (fallbackError) {
+        return res.status(500).json({ ok: false, message: fallbackError.message || error.message });
+      }
+    }
     res.status(400).json({ ok: false, message: error.message });
   }
 });
@@ -244,15 +291,25 @@ router.post('/login', async (req, res) => {
     if (!envAdminAuthenticated && !(await user.comparePassword(password))) {
       return res.status(401).json({ ok: false, message: 'Invalid credentials' });
     }
-    const token = jwt.sign({ id: user._id, role: user.role }, getJwtSecret(), { expiresIn: '7d' });
-    
-    // Dispatch user login event (non-blocking)
-    dispatchToOpenClaw(createUserEvent('authenticated', user, {
-      method: 'password',
-    }));
+    const token = jwt.sign(
+      { id: user._id, role: user.role, authStore: useMongoStore ? 'mongo' : 'file' },
+      getJwtSecret(),
+      { expiresIn: '7d' },
+    );
     
     res.json({ ok: true, token, user: { id: user._id, name: user.name, email: user.email, role: user.role } });
   } catch (error) {
+    if (hasMongoUri && isMongoQuotaLikeError(error)) {
+      try {
+        return await issueFallbackToken(
+          req.body?.email || req.body?.username || '',
+          req.body?.password || '',
+          res,
+        );
+      } catch (fallbackError) {
+        return res.status(500).json({ ok: false, message: fallbackError.message || error.message });
+      }
+    }
     res.status(500).json({ ok: false, message: error.message });
   }
 });

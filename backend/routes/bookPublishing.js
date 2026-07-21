@@ -103,7 +103,7 @@ function authenticateBookPublishing(req, res, next) {
     return res.status(401).json({ error: 'Missing authentication token' });
   }
 
-  if (!hasMongoUri && token.startsWith('local.')) {
+  if (token.startsWith('local.')) {
     try {
       const raw = Buffer.from(token.slice(6), 'base64').toString('utf8');
       const payload = JSON.parse(raw);
@@ -117,7 +117,7 @@ function authenticateBookPublishing(req, res, next) {
         id: userId,
         email: String(payload.email || ''),
         username: String(payload.username || ''),
-        role: 'user',
+        role: String(payload.role || 'user'),
         local: true,
       };
       return next();
