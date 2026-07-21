@@ -655,6 +655,9 @@ async function persistBookRecord(book) {
 }
 
 async function saveCloudinaryPublishedBook(book) {
+  const sourceBook = typeof book?.toObject === 'function'
+    ? book.toObject({ depopulate: true, getters: false, virtuals: false })
+    : { ...(book || {}) };
   const slug = cloudinaryBookSlugId(book.slug || book.title || 'book');
   const manuscriptMarkdown = String(book.manuscriptMarkdown || '').trim();
   if (!slug) {
@@ -667,11 +670,22 @@ async function saveCloudinaryPublishedBook(book) {
   const manuscriptAsset = await uploadCloudinaryBookText(slug, manuscriptMarkdown);
   const manifest = await uploadCloudinaryBookManifest(book, manuscriptMarkdown, manuscriptAsset);
   const savedBook = {
-    ...book,
+    ...sourceBook,
     _id: slug,
     id: slug,
     slug,
-    status: book.status || 'published',
+    status: sourceBook.status || 'published',
+    title: sourceBook.title || book.title || '',
+    subtitle: sourceBook.subtitle || book.subtitle || '',
+    authorName: sourceBook.authorName || book.authorName || '',
+    description: sourceBook.description || book.description || '',
+    genre: sourceBook.genre || book.genre || 'general',
+    audience: sourceBook.audience || book.audience || 'general',
+    language: sourceBook.language || book.language || 'en',
+    wordCount: Number(sourceBook.wordCount || book.wordCount || manuscriptMarkdown.split(/\s+/).filter(Boolean).length || 0),
+    publishedAt: sourceBook.publishedAt || book.publishedAt || new Date(),
+    updatedAt: sourceBook.updatedAt || book.updatedAt || new Date(),
+    createdAt: sourceBook.createdAt || book.createdAt || new Date(),
     manuscriptMarkdown: '',
     webHtml: '',
     storage: {
