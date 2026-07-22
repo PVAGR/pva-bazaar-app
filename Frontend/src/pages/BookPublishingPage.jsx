@@ -9,6 +9,7 @@ import {
   getApiBase,
   saveBookProject,
 } from '../lib/api';
+import { ENV } from '../config/env';
 import {
   deleteLocalBookProject,
   listLocalBookProjects,
@@ -169,6 +170,23 @@ async function compressCoverFile(file, fallbackName) {
   }
 }
 
+async function uploadToCloudinary(file, cloudName, uploadPreset) {
+  if (!file || !cloudName || !uploadPreset) return null;
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', uploadPreset);
+  const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+    method: 'POST',
+    body: formData,
+  });
+  if (!response.ok) {
+    const errBody = await response.json().catch(() => ({}));
+    throw new Error(errBody.error?.message || `Cloudinary upload failed (${response.status})`);
+  }
+  const data = await response.json();
+  return { secure_url: data.secure_url, public_id: data.public_id };
+}
+
 function describePublishFailure(error, { requestUrl, tokenPresent }) {
   const status = Number(error?.status || error?.response?.status || 0);
   const statusText =
@@ -180,14 +198,19 @@ function describePublishFailure(error, { requestUrl, tokenPresent }) {
       : responseBody
         ? JSON.stringify(responseBody, null, 2)
         : '(none)';
-  return [
+  const requestId = responseBody?.requestId || '';
+  const stage = responseBody?.stage || '';
+  const lines = [
     'Online publish failed.',
     `Request URL: ${requestUrl || getBookPublishRequestUrl()}`,
     `HTTP status: ${status || 'network error'}`,
     `Status text: ${statusText || 'Network error'}`,
     `Backend response body: ${bodyText}`,
     `Auth token present: ${tokenPresent ? 'yes' : 'no'}`,
-  ].join('\n');
+  ];
+  if (requestId) lines.push(`Request ID: ${requestId}`);
+  if (stage) lines.push(`Stage: ${stage}`);
+  return lines.join('\n');
 }
 
 async function extractDocxText(file) {
@@ -547,6 +570,23 @@ export default function BookPublishingPage() {
         frontCoverFile ? compressCoverFile(frontCoverFile, frontCoverFile.name || `${form.slug || 'book'}-front-cover`) : Promise.resolve(null),
         backCoverFile ? compressCoverFile(backCoverFile, backCoverFile.name || `${form.slug || 'book'}-back-cover`) : Promise.resolve(null),
       ]);
+
+      // Upload covers directly to Cloudinary to avoid Vercel payload limits
+      let frontCoverResult = null;
+      let backCoverResult = null;
+      try {
+        if (preparedFrontCover) {
+          frontCoverResult = await uploadToCloudinary(preparedFrontCover, ENV.CLOUDINARY_CLOUD_NAME, ENV.CLOUDINARY_UPLOAD_PRESET);
+        }
+        if (preparedBackCover) {
+          backCoverResult = await uploadToCloudinary(preparedBackCover, ENV.CLOUDINARY_CLOUD_NAME, ENV.CLOUDINARY_UPLOAD_PRESET);
+        }
+      } catch (cloudErr) {
+        setError(`Cover upload to Cloudinary failed: ${cloudErr.message}. Please check your connection and try again.`);
+        setSuccess('');
+        return;
+      }
+
       const manuscriptSourceText = String(form.manuscriptMarkdown || '');
       const importedManuscriptText = String(manuscriptImportedTextRef.current || '');
       const manuscriptFileBytes = manuscriptFile?.size || 0;
@@ -558,8 +598,6 @@ export default function BookPublishingPage() {
 
       const estimatedBackendBytes =
         (sendManuscriptFile ? manuscriptFileBytes : manuscriptTextBytes) +
-        (preparedFrontCover?.size || 0) +
-        (preparedBackCover?.size || 0) +
         estimateMultipartOverhead(10, 1 + (sendManuscriptFile ? 1 : 0));
 
       if (publish && estimatedBackendBytes > MAX_BACKEND_PUBLISH_BYTES) {
@@ -569,8 +607,6 @@ export default function BookPublishingPage() {
             `Estimated payload: ${formatBytes(estimatedBackendBytes)}.`,
             `Manuscript file: ${formatBytes(manuscriptFileBytes)}.`,
             `Extracted manuscript text: ${formatBytes(manuscriptTextBytes)}.`,
-            `Front cover: ${formatBytes(preparedFrontCover?.size || 0)}.`,
-            `Back cover: ${formatBytes(preparedBackCover?.size || 0)}.`,
             `Multipart overhead: ${formatBytes(estimateMultipartOverhead(10, 1 + (sendManuscriptFile ? 1 : 0)))}.`,
           ].join('\n'),
         );
@@ -596,11 +632,14 @@ export default function BookPublishingPage() {
           payload.append('manuscriptFile', manuscriptFile);
         }
         payload.append('publish', publish ? 'true' : 'false');
-        if (preparedFrontCover) {
-          payload.append('frontCover', preparedFrontCover, preparedFrontCover.name || `${form.slug || 'book'}-front-cover.jpg`);
+        // Send Cloudinary URLs instead of file data
+        if (frontCoverResult) {
+          payload.append('frontCoverUrl', frontCoverResult.secure_url);
+          payload.append('frontCoverPublicId', frontCoverResult.public_id);
         }
-        if (preparedBackCover) {
-          payload.append('backCover', preparedBackCover, preparedBackCover.name || `${form.slug || 'book'}-back-cover.jpg`);
+        if (backCoverResult) {
+          payload.append('backCoverUrl', backCoverResult.secure_url);
+          payload.append('backCoverPublicId', backCoverResult.public_id);
         }
         return payload;
       };
