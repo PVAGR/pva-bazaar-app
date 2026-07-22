@@ -580,15 +580,16 @@ async function listUserBooks(userId) {
 }
 
 async function listPublishedBooks() {
-  const mongoBooks = shouldUseFileBookStore()
-    ? await listFileBooks({ status: 'published' }, { publishedAt: -1, updatedAt: -1, _id: -1 })
-    : await BookProject.find({ status: 'published' })
-      .select('_id title subtitle authorName slug description genre audience language status wordCount publishedAt updatedAt frontCover.url frontCover.provider frontCover.publicId backCover.url backCover.provider backCover.publicId')
-      .sort({ publishedAt: -1, updatedAt: -1, _id: -1 })
-      .lean();
+  // MongoDB is the source of truth for book records
+  // Cloudinary is media storage only, not a book database
+  if (shouldUseFileBookStore()) {
+    return await listFileBooks({ status: 'published' }, { publishedAt: -1, updatedAt: -1, _id: -1 });
+  }
 
-  const cloudBooks = isCloudinaryConfigured() ? await listCloudinaryPublishedBooks() : [];
-  return mergePublishedBooks(mongoBooks, cloudBooks);
+  return await BookProject.find({ status: 'published' })
+    .select('_id title subtitle authorName slug description genre audience language status wordCount publishedAt updatedAt frontCover.url frontCover.provider frontCover.publicId backCover.url backCover.provider backCover.publicId')
+    .sort({ publishedAt: -1, updatedAt: -1, _id: -1 })
+    .lean();
 }
 
 async function loadBookForEdit(bookId) {
@@ -1405,63 +1406,73 @@ router.delete('/:bookId', authenticateBookPublishing, async (req, res) => {
 
 router.get('/debug/public-counts', async (req, res) => {
   try {
+    const requestId = crypto.randomUUID();
+    const queryParams = req.query;
     const mongoState = getMongoState();
     const mongoConnected = mongoState?.connected === true;
+    const mongoReadyState = mongoState?.readyState;
     const storeMode = shouldUseFileBookStore() ? 'file' : 'mongo';
-    let totalBooks = 0;
-    let publishedBooks = 0;
-    let draftBooks = 0;
-    let samplePublishedBookIds = [];
+    const cloudinaryConfigured = isCloudinaryConfigured();
+    
+    let totalMongoBooks = 0;
+    let publishedMongoBooks = 0;
+    let draftMongoBooks = 0;
+    let sampleMongoPublishedIds = [];
     let areIdsMongoStyle = false;
-    let cloudinaryConfigured = isCloudinaryConfigured();
-    let cloudinaryBooksCount = 0;
+    let dataSourceUsed = 'unknown';
+    let totalReturnedItems = 0;
+    let sampleReturnedIds = [];
 
     if (!shouldUseFileBookStore() && mongoose.connection.readyState === 1) {
-      // Use MongoDB
+      dataSourceUsed = 'mongo';
       const [total, published, draft] = await Promise.all([
         BookProject.countDocuments(),
         BookProject.countDocuments({ status: 'published' }),
         BookProject.countDocuments({ status: 'draft' }),
       ]);
-      totalBooks = total;
-      publishedBooks = published;
-      draftBooks = draft;
+      totalMongoBooks = total;
+      publishedMongoBooks = published;
+      draftMongoBooks = draft;
 
-      // Get a sample of published book IDs (up to 5)
       const sample = await BookProject.find({ status: 'published' }, '_id').limit(5);
-      samplePublishedBookIds = sample.map(doc => doc._id.toString());
-
-      // Check if IDs look like MongoDB ObjectId (24 hex chars)
-      areIdsMongoStyle = samplePublishedBookIds.every(id => /^[0-9a-fA-F]{24}$/.test(id));
+      sampleMongoPublishedIds = sample.map(doc => doc._id.toString());
+      areIdsMongoStyle = sampleMongoPublishedIds.every(id => /^[0-9a-fA-F]{24}$/.test(id));
+      
+      // Get actual returned items from listPublishedBooks
+      const publishedBooks = await listPublishedBooks();
+      totalReturnedItems = publishedBooks.length;
+      sampleReturnedIds = publishedBooks.slice(0, 5).map(book => book._id?.toString() || book.id?.toString() || 'unknown');
+    } else if (shouldUseFileBookStore()) {
+      dataSourceUsed = 'file';
+      const fileBooks = await listFileBooks({ status: 'published' }, { publishedAt: -1 });
+      totalReturnedItems = fileBooks.length;
+      sampleReturnedIds = fileBooks.slice(0, 5).map(book => book.id || 'unknown');
     } else {
-      // File store or Mongo not connected: we can still try to get counts from file store functions if available
-      // For simplicity, we'll set to zero and note that we cannot provide accurate counts.
-      // But we can try to use listPublishedBooks etc. if they exist.
-      // We'll leave as zero for now.
+      dataSourceUsed = 'none';
     }
 
-    // Count Cloudinary books if configured
-    if (cloudinaryConfigured) {
-      try {
-        const cloudBooks = await listCloudinaryPublishedBooks();
-        cloudinaryBooksCount = cloudBooks.length;
-      } catch (err) {
-        console.warn('Failed to count Cloudinary books:', err.message);
-      }
-    }
+    const buildInfo = getBuildInfo();
 
     res.json({
       ok: true,
+      requestId,
+      queryParams,
+      deployedSha: buildInfo.sha || 'unknown',
+      deploymentId: buildInfo.deploymentId || 'unknown',
+      branch: buildInfo.branch || 'unknown',
+      cacheControlHeadersApplied: true,
       mongoConnected,
+      mongoReadyState,
       storeMode,
-      totalBooks,
-      publishedBooks,
-      draftBooks,
-      samplePublishedBookIds,
-      areIdsMongoStyle,
+      dataSourceUsed,
       cloudinaryConfigured,
-      cloudinaryBooksCount,
-      totalPublicBooks: publishedBooks + cloudinaryBooksCount,
+      totalMongoBooks,
+      publishedMongoBooks,
+      draftMongoBooks,
+      totalReturnedItems,
+      sampleMongoPublishedIds,
+      sampleReturnedIds,
+      areIdsMongoStyle,
     });
   } catch (error) {
     console.error('[book-publishing] debug endpoint error:', error);
