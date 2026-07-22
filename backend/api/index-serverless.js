@@ -1,6 +1,7 @@
 const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
+const crypto = require('crypto');
 const dotenv = require('dotenv');
 const { getBuildInfo } = require('../lib/buildInfo');
 const { connectMongo, getMongoState } = require('../lib/mongoConnection');
@@ -116,6 +117,11 @@ app.use(async (req, res, next) => {
   if (req.method === 'OPTIONS') {
     return res.status(204).end();
   }
+  next();
+});
+
+app.use((req, _res, next) => {
+  req.requestId = crypto.randomUUID();
   next();
 });
 
@@ -267,6 +273,26 @@ app.get('/api/ping', (_req, res) => {
 app.get('/api/version', (_req, res) => {
   const build = getBuildInfo();
   res.status(200).json({ ok: true, ...build, timestamp: new Date().toISOString() });
+});
+
+app.use((err, req, res, _next) => {
+  console.error('[serverless] unhandled error:', {
+    requestId: req.requestId || null,
+    url: req.url,
+    method: req.method,
+    name: err.name,
+    message: err.message,
+    code: err.code,
+    stack: err.stack,
+  });
+  const statusCode = err.statusCode || err.status || 500;
+  res.status(statusCode).json({
+    ok: false,
+    error: err.error || err.name || 'Internal server error',
+    message: err.message || 'An unexpected error occurred',
+    stage: 'unhandled',
+    requestId: req.requestId || null,
+  });
 });
 
 app.use((req, res) => {

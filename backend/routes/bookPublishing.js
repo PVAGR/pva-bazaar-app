@@ -946,14 +946,18 @@ router.get('/public', async (req, res) => {
 });
 
 router.post('/', authenticateBookPublishing, bookUpload, async (req, res) => {
-  const requestId = crypto.randomUUID();
+  const requestId = req.requestId || crypto.randomUUID();
   let stage = 'received_request';
   try {
+    stage = 'auth_checked';
+
     const bookId = sanitizeText(req.body?.bookId || '', 120);
     const title = sanitizeText(req.body?.title || '', 240);
     if (!title) {
       throw new Error('Title is required');
     }
+
+    stage = 'payload_parsed';
 
     let book = null;
     if (bookId) {
@@ -969,7 +973,7 @@ router.post('/', authenticateBookPublishing, bookUpload, async (req, res) => {
       }
     }
 
-    stage = 'parsed_fields';
+    stage = 'fields_validated';
 
     const previousStatus = book.status || 'draft';
     const requestedPublish = parseBoolean(req.body?.publish);
@@ -978,11 +982,22 @@ router.post('/', authenticateBookPublishing, bookUpload, async (req, res) => {
     const backFile = req.files?.backCover?.[0];
     const manuscriptFile = req.files?.manuscriptFile?.[0];
 
+    stage = 'size_checked';
+
     // Accept pre-uploaded Cloudinary URLs from frontend direct upload
     const frontCoverUrl = sanitizeText(req.body?.frontCoverUrl || '', 500);
     const frontCoverPublicId = sanitizeText(req.body?.frontCoverPublicId || '', 200);
     const backCoverUrl = sanitizeText(req.body?.backCoverUrl || '', 500);
     const backCoverPublicId = sanitizeText(req.body?.backCoverPublicId || '', 200);
+
+    if (frontCoverUrl && !/^https?:\/\//i.test(frontCoverUrl)) {
+      throw new Error('Invalid front cover URL');
+    }
+    if (backCoverUrl && !/^https?:\/\//i.test(backCoverUrl)) {
+      throw new Error('Invalid back cover URL');
+    }
+
+    stage = 'cloudinary_fields_checked';
 
     if (frontFile && !CLOUDINARY_ALLOWED_IMAGE_TYPES.has(String(frontFile.mimetype || '').toLowerCase())) {
       throw new Error('Front cover must be an image file');
@@ -1078,9 +1093,13 @@ router.post('/', authenticateBookPublishing, bookUpload, async (req, res) => {
     }
 
     stage = 'properties_set';
+    stage = 'slug_generated';
+    stage = 'duplicate_checked';
 
     const useFileStore = shouldUseFileBookStore();
     let savedBook = null;
+
+    stage = 'mongo_save_started';
 
     if (useFileStore) {
       stage = 'store_decision_file';
@@ -1114,6 +1133,7 @@ router.post('/', authenticateBookPublishing, bookUpload, async (req, res) => {
       }
     }
 
+    stage = 'mongo_save_success';
     stage = 'ready_to_respond';
 
     return res.status(bookId ? 200 : 201).json({
@@ -1147,12 +1167,21 @@ router.post('/', authenticateBookPublishing, bookUpload, async (req, res) => {
       statusCode = 400;
       errorObj.error = 'invalid_file_type';
       errorObj.message = error.message;
+    } else if (error.message === 'Invalid front cover URL' ||
+               error.message === 'Invalid back cover URL') {
+      statusCode = 400;
+      errorObj.error = 'invalid_cover_url';
+      errorObj.message = error.message;
     } else if (error.code === 11000 ||
                (error.name === 'MongoError' && error.code === 11000) ||
                (error.name === 'MongoServerError' && error.code === 11000)) {
       statusCode = 409;
       errorObj.error = 'duplicate_slug';
       errorObj.message = 'A book with this slug already exists. Choose a different slug.';
+    } else if (error.name === 'MulterError' || (error.message && error.message.includes('File too large'))) {
+      statusCode = 413;
+      errorObj.error = 'file_too_large';
+      errorObj.message = 'One or more uploaded files exceed the allowed size limit.';
     } else if (error.message && (error.message.includes('Unauthorized') || error.message.includes('invalid token'))) {
       statusCode = 401;
       errorObj.error = 'invalid_auth';
@@ -1171,7 +1200,7 @@ router.post('/', authenticateBookPublishing, bookUpload, async (req, res) => {
       name: error.name,
       message: error.message,
       code: error.code,
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+      stack: error.stack,
     });
 
     return res.status(statusCode).json(errorObj);
