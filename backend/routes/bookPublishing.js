@@ -1139,6 +1139,12 @@ router.post('/', authenticateBookPublishing, bookUpload, async (req, res) => {
         savedBook = await persistBookRecord(book);
         stage = 'mongo_saved';
       } catch (persistError) {
+        console.error('[book-publishing] persistBookRecord error:', {
+          name: persistError?.name,
+          code: persistError?.code,
+          message: persistError?.message,
+          stack: persistError?.stack?.split('\n').slice(0, 5).join('\n'),
+        });
         if (isMongoQuotaError(persistError) && isCloudinaryConfigured()) {
           console.warn('⚠️ Mongo storage quota hit for book publishing; falling back to Cloudinary raw storage.');
           savedBook = await saveCloudinaryPublishedBook(book);
@@ -1525,6 +1531,34 @@ router.get('/debug/public-counts', async (req, res) => {
     res.status(500).json({
       ok: false,
       error: error.message || 'Failed to get debug counts',
+    });
+  }
+});
+
+router.get('/debug/test-save', async (req, res) => {
+  try {
+    setNoCacheHeaders(res);
+    const mongoState = getMongoState();
+    const connected = mongoState.mode === 'mongo' && mongoState.readyState === 1;
+    if (!connected) {
+      return res.json({ ok: false, error: 'MongoDB not connected', mongoState });
+    }
+    const testDoc = new BookProject({
+      authorId: 'debug-test',
+      title: `Debug Save Test ${Date.now()}`,
+      status: 'draft',
+    });
+    const saved = await testDoc.save();
+    await BookProject.findByIdAndDelete(saved._id);
+    res.json({ ok: true, savedId: saved._id.toString(), message: 'MongoDB write successful' });
+  } catch (error) {
+    res.json({
+      ok: false,
+      error: error.message,
+      name: error.name,
+      code: error.code,
+      codeName: error.codeName,
+      stack: error.stack?.split('\n').slice(0, 8).join('\n'),
     });
   }
 });
