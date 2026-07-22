@@ -5,7 +5,7 @@ const dotenv = require('dotenv');
 const { getBuildInfo } = require('../lib/buildInfo');
 const { connectMongo, getMongoState } = require('../lib/mongoConnection');
 
-// Force deployment to pick up MongoDB connection fix
+// Force deployment to pick up debug endpoint update
 
 if (process.env.RENDER !== 'true') {
   dotenv.config({ override: false });
