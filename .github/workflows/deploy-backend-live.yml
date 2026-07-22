@@ -102,6 +102,7 @@ jobs:
           const projectId = process.env.VERCEL_BACKEND_PROJECT_ID;
 
           const values = {
+            VERCEL_GIT_COMMIT_SHA: '${{ github.sha }}',
             TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN || '',
             TELEGRAM_WEBHOOK_URL: process.env.TELEGRAM_WEBHOOK_URL || '',
             TELEGRAM_WEBHOOK_SECRET: process.env.TELEGRAM_WEBHOOK_SECRET || '',
