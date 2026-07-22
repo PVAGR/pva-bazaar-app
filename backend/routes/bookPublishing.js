@@ -945,20 +945,20 @@ router.get('/public', async (req, res) => {
 });
 
 router.post('/', authenticateBookPublishing, bookUpload, async (req, res) => {
+  const requestId = crypto.randomUUID();
+  let stage = 'received_request';
   try {
     const bookId = sanitizeText(req.body?.bookId || '', 120);
     const title = sanitizeText(req.body?.title || '', 240);
     if (!title) {
-      return res.status(400).json({ ok: false, error: 'Title is required' });
+      throw new Error('Title is required');
     }
 
     let book = null;
     if (bookId) {
       book = await loadBookForEdit(bookId);
-      if (!book) return notFound(res);
-      if (!canEditBook(req, book)) {
-        return res.status(403).json({ ok: false, error: 'You do not have permission to edit this book' });
-      }
+      if (!book) throw new Error('Book not found');
+      if (!canEditBook(req, book)) throw new Error('Unauthorized to edit book');
     } else {
       const authorId = String(req.user?.id || req.user?._id || '');
       if (shouldUseFileBookStore()) {
@@ -967,6 +967,8 @@ router.post('/', authenticateBookPublishing, bookUpload, async (req, res) => {
         book = new BookProject({ authorId });
       }
     }
+
+    stage = 'parsed_fields';
 
     const previousStatus = book.status || 'draft';
     const requestedPublish = parseBoolean(req.body?.publish);
@@ -982,10 +984,10 @@ router.post('/', authenticateBookPublishing, bookUpload, async (req, res) => {
     const backCoverPublicId = sanitizeText(req.body?.backCoverPublicId || '', 200);
 
     if (frontFile && !CLOUDINARY_ALLOWED_IMAGE_TYPES.has(String(frontFile.mimetype || '').toLowerCase())) {
-      return res.status(400).json({ ok: false, error: 'Front cover must be an image file' });
+      throw new Error('Front cover must be an image file');
     }
     if (backFile && !CLOUDINARY_ALLOWED_IMAGE_TYPES.has(String(backFile.mimetype || '').toLowerCase())) {
-      return res.status(400).json({ ok: false, error: 'Back cover must be an image file' });
+      throw new Error('Back cover must be an image file');
     }
 
     if (frontCoverUrl && /^https?:\/\//i.test(frontCoverUrl)) {
@@ -1036,6 +1038,8 @@ router.post('/', authenticateBookPublishing, bookUpload, async (req, res) => {
       book.backCover.checksumSha256 = crypto.createHash('sha256').update(backFile.buffer).digest('hex');
     }
 
+    stage = 'files_processed';
+
     let manuscriptMarkdown = sanitizeText(req.body?.manuscriptMarkdown || '', 2_000_000);
     if (manuscriptFile) {
       manuscriptMarkdown = await extractManuscriptTextFromUpload(manuscriptFile);
@@ -1046,8 +1050,10 @@ router.post('/', authenticateBookPublishing, bookUpload, async (req, res) => {
     }
 
     if (!book.manuscriptMarkdown) {
-      return res.status(400).json({ ok: false, error: 'Manuscript content is required' });
+      throw new Error('Manuscript content is required');
     }
+
+    stage = 'manuscript_validated';
 
     book.title = title;
     book.subtitle = sanitizeText(req.body?.subtitle || '', 240);
@@ -1070,40 +1076,104 @@ router.post('/', authenticateBookPublishing, bookUpload, async (req, res) => {
       book.publishedAt = new Date();
     }
 
+    stage = 'properties_set';
+
     const useFileStore = shouldUseFileBookStore();
     let savedBook = null;
 
     if (useFileStore) {
+      stage = 'store_decision_file';
       savedBook = await persistBookRecord(book);
+      stage = 'file_store_saved';
       const renderBase = shouldPublish
         ? `/api/book-publishing/public/${encodeURIComponent(savedBook.slug)}`
         : `/api/book-publishing/${encodeURIComponent(savedBook._id || '')}`;
       savedBook.webHtml = renderBookHtml(renderableBook(savedBook, renderBase));
+      stage = 'file_store_html_set';
       savedBook.lastRenderedAt = new Date().toISOString();
       savedBook = await persistBookRecord(savedBook);
+      stage = 'file_store_final';
     } else {
       // Mongo-backed publishing must stay lightweight. Render HTML on demand
       // from the public / view routes instead of storing the full HTML blob.
+      stage = 'store_decision_mongo';
       book.webHtml = '';
       book.lastRenderedAt = new Date().toISOString();
       try {
         savedBook = await persistBookRecord(book);
+        stage = 'mongo_saved';
       } catch (persistError) {
         if (isMongoQuotaError(persistError) && isCloudinaryConfigured()) {
           console.warn('⚠️ Mongo storage quota hit for book publishing; falling back to Cloudinary raw storage.');
           savedBook = await saveCloudinaryPublishedBook(book);
+          stage = 'fallback_to_cloudinary';
         } else {
           throw persistError;
         }
       }
     }
 
+    stage = 'ready_to_respond';
+
     return res.status(bookId ? 200 : 201).json({
       ok: true,
       item: bookSummary(savedBook?.toObject ? savedBook.toObject() : savedBook || book),
     });
   } catch (error) {
-    return res.status(400).json({ ok: false, error: error.message || 'Failed to save book' });
+    // Determine status code and error details based on error type
+    let statusCode = 500;
+    let errorObj = { ok: false, error: 'Internal server error', message: 'An unexpected error occurred', stage, requestId };
+
+    // Handle specific errors
+    if (error.message === 'Title is required') {
+      statusCode = 400;
+      errorObj.error = 'missing_title';
+      errorObj.message = 'Title is required';
+    } else if (error.message === 'Manuscript content is required') {
+      statusCode = 400;
+      errorObj.error = 'missing_manuscript';
+      errorObj.message = 'Manuscript content is required';
+    } else if (error.message === 'Book not found') {
+      statusCode = 404;
+      errorObj.error = 'book_not_found';
+      errorObj.message = 'Book not found';
+    } else if (error.message === 'Unauthorized to edit book') {
+      statusCode = 403;
+      errorObj.error = 'unauthorized_edit';
+      errorObj.message = 'You do not have permission to edit this book';
+    } else if (error.message === 'Front cover must be an image file' ||
+               error.message === 'Back cover must be an image file') {
+      statusCode = 400;
+      errorObj.error = 'invalid_file_type';
+      errorObj.message = error.message;
+    } else if (error.code === 11000 ||
+               (error.name === 'MongoError' && error.code === 11000) ||
+               (error.name === 'MongoServerError' && error.code === 11000)) {
+      statusCode = 409;
+      errorObj.error = 'duplicate_slug';
+      errorObj.message = 'A book with this slug already exists. Choose a different slug.';
+    } else if (error.message && (error.message.includes('Unauthorized') || error.message.includes('invalid token'))) {
+      statusCode = 401;
+      errorObj.error = 'invalid_auth';
+      errorObj.message = 'Invalid or missing authentication token';
+    } else {
+      // Generic error
+      errorObj.error = error.name || 'unknown_error';
+      errorObj.message = error.message || 'Something went wrong';
+      errorObj.stage = stage;
+    }
+
+    // Safe logging (avoid leaking secrets)
+    console.error('[book-publishing] publish failed', {
+      requestId,
+      stage,
+      name: error.name,
+      message: error.message,
+      code: error.code,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+    });
+
+    return res.status(statusCode).json(errorObj);
   }
 });
 
@@ -1329,6 +1399,76 @@ router.delete('/:bookId', authenticateBookPublishing, async (req, res) => {
     return res.json({ ok: true });
   } catch (error) {
     return res.status(500).json({ ok: false, error: error.message || 'Failed to delete book' });
+  }
+});
+
+
+router.get('/debug/public-counts', async (req, res) => {
+  try {
+    const mongoState = getMongoState();
+    const mongoConnected = mongoState?.connected === true;
+    const storeMode = shouldUseFileBookStore() ? 'file' : 'mongo';
+    let totalBooks = 0;
+    let publishedBooks = 0;
+    let draftBooks = 0;
+    let samplePublishedBookIds = [];
+    let areIdsMongoStyle = false;
+    let cloudinaryConfigured = isCloudinaryConfigured();
+    let cloudinaryBooksCount = 0;
+
+    if (!shouldUseFileBookStore() && mongoose.connection.readyState === 1) {
+      // Use MongoDB
+      const [total, published, draft] = await Promise.all([
+        BookProject.countDocuments(),
+        BookProject.countDocuments({ status: 'published' }),
+        BookProject.countDocuments({ status: 'draft' }),
+      ]);
+      totalBooks = total;
+      publishedBooks = published;
+      draftBooks = draft;
+
+      // Get a sample of published book IDs (up to 5)
+      const sample = await BookProject.find({ status: 'published' }, '_id').limit(5);
+      samplePublishedBookIds = sample.map(doc => doc._id.toString());
+
+      // Check if IDs look like MongoDB ObjectId (24 hex chars)
+      areIdsMongoStyle = samplePublishedBookIds.every(id => /^[0-9a-fA-F]{24}$/.test(id));
+    } else {
+      // File store or Mongo not connected: we can still try to get counts from file store functions if available
+      // For simplicity, we'll set to zero and note that we cannot provide accurate counts.
+      // But we can try to use listPublishedBooks etc. if they exist.
+      // We'll leave as zero for now.
+    }
+
+    // Count Cloudinary books if configured
+    if (cloudinaryConfigured) {
+      try {
+        const cloudBooks = await listCloudinaryPublishedBooks();
+        cloudinaryBooksCount = cloudBooks.length;
+      } catch (err) {
+        console.warn('Failed to count Cloudinary books:', err.message);
+      }
+    }
+
+    res.json({
+      ok: true,
+      mongoConnected,
+      storeMode,
+      totalBooks,
+      publishedBooks,
+      draftBooks,
+      samplePublishedBookIds,
+      areIdsMongoStyle,
+      cloudinaryConfigured,
+      cloudinaryBooksCount,
+      totalPublicBooks: publishedBooks + cloudinaryBooksCount,
+    });
+  } catch (error) {
+    console.error('[book-publishing] debug endpoint error:', error);
+    res.status(500).json({
+      ok: false,
+      error: error.message || 'Failed to get debug counts',
+    });
   }
 });
 
