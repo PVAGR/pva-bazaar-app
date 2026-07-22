@@ -82,7 +82,7 @@ async function ensureMongoBookReady() {
   return state;
 }
 
-router.use(async (_req, res, next) => {
+router.use(async (req, res, next) => {
   try {
     await ensureMongoBookReady();
     next();
@@ -90,7 +90,10 @@ router.use(async (_req, res, next) => {
     const status = Number(error?.status || 503);
     return res.status(status).json({
       ok: false,
-      error: error.message || 'MongoDB book publishing store unavailable',
+      error: 'MongoDB unavailable',
+      message: error.message || 'MongoDB book publishing store unavailable',
+      stage: 'db_check',
+      requestId: req.requestId || null,
     });
   }
 });
@@ -98,9 +101,16 @@ router.use(async (_req, res, next) => {
 function authenticateBookPublishing(req, res, next) {
   const authHeader = req.headers.authorization || '';
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
+  const requestId = req.requestId || null;
 
   if (!token) {
-    return res.status(401).json({ error: 'Missing authentication token' });
+    return res.status(401).json({
+      ok: false,
+      error: 'Missing authentication token',
+      message: 'Authorization token is required to publish books.',
+      stage: 'auth_checked',
+      requestId,
+    });
   }
 
   if (token.startsWith('local.')) {
@@ -122,7 +132,13 @@ function authenticateBookPublishing(req, res, next) {
       };
       return next();
     } catch (error) {
-      return res.status(401).json({ error: error.message || 'Invalid local session token' });
+      return res.status(401).json({
+        ok: false,
+        error: 'Invalid local session token',
+        message: error.message || 'Invalid or expired authentication token.',
+        stage: 'auth_checked',
+        requestId,
+      });
     }
   }
 
