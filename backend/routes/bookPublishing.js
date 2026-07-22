@@ -1558,8 +1558,50 @@ router.get('/debug/test-save', async (req, res) => {
       name: error.name,
       code: error.code,
       codeName: error.codeName,
-      stack: error.stack?.split('\n').slice(0, 8).join('\n'),
     });
+  }
+});
+
+router.get('/debug/collection-stats', async (req, res) => {
+  try {
+    setNoCacheHeaders(res);
+    const mongoState = getMongoState();
+    if (mongoState.mode !== 'mongo' || mongoState.readyState !== 1) {
+      return res.json({ ok: false, error: 'MongoDB not connected', mongoState });
+    }
+    const db = mongoose.connection.db;
+    const stats = await db.stats();
+    const collections = await db.listCollections().toArray();
+    const collectionStats = [];
+    for (const col of collections) {
+      try {
+        const colStats = await db.collection(col.name).stats();
+        collectionStats.push({
+          name: col.name,
+          count: colStats.count,
+          sizeBytes: colStats.size,
+          storageSizeBytes: colStats.storageSize,
+          avgObjSizeBytes: colStats.avgObjSize,
+        });
+      } catch {
+        collectionStats.push({ name: col.name, error: 'failed to stats' });
+      }
+    }
+    res.json({
+      ok: true,
+      dbStats: {
+        db: stats.db,
+        collections: stats.collections,
+        objects: stats.objects,
+        dataSizeBytes: stats.dataSize,
+        storageSizeBytes: stats.storageSize,
+        indexSizeBytes: stats.indexSize,
+        totalSizeBytes: stats.totalSize,
+      },
+      collections: collectionStats.sort((a, b) => (b.storageSizeBytes || 0) - (a.storageSizeBytes || 0)),
+    });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
   }
 });
 
