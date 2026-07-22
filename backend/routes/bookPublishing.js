@@ -596,16 +596,20 @@ async function listUserBooks(userId) {
 }
 
 async function listPublishedBooks() {
-  // MongoDB is the source of truth for book records
-  // Cloudinary is media storage only, not a book database
   if (shouldUseFileBookStore()) {
     return await listFileBooks({ status: 'published' }, { publishedAt: -1, updatedAt: -1, _id: -1 });
   }
 
-  return await BookProject.find({ status: 'published' })
+  const mongoBooks = await BookProject.find({ status: 'published' })
     .select('_id title subtitle authorName slug description genre audience language status wordCount publishedAt updatedAt frontCover.url frontCover.provider frontCover.publicId backCover.url backCover.provider backCover.publicId')
     .sort({ publishedAt: -1, updatedAt: -1, _id: -1 })
     .lean();
+
+  const cloudBooks = isCloudinaryConfigured()
+    ? (await listCloudinaryPublishedBooks()).filter((b) => String(b.status || '').toLowerCase() === 'published')
+    : [];
+
+  return mergePublishedBooks(mongoBooks, cloudBooks);
 }
 
 async function loadBookForEdit(bookId) {
