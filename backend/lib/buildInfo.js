@@ -13,6 +13,9 @@ function getRawSha() {
     process.env.SOURCE_VERSION ||
     process.env.RENDER_GIT_COMMIT ||
     process.env.COMMIT_SHA ||
+    (process.env.VERCEL === '1' && process.env.VERCEL_DEPLOYMENT_ID
+      ? `dpl:${process.env.VERCEL_DEPLOYMENT_ID.slice(0, 12)}`
+      : null) ||
     'local'
   );
 }

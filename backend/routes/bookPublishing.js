@@ -855,7 +855,7 @@ router.get('/debug/public-counts', async (_req, res) => {
 });
 
 function setNoCacheHeaders(res) {
-  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, s-maxage=0');
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
   res.setHeader('Surrogate-Control', 'no-store');
@@ -1406,6 +1406,7 @@ router.delete('/:bookId', authenticateBookPublishing, async (req, res) => {
 
 router.get('/debug/public-counts', async (req, res) => {
   try {
+    setNoCacheHeaders(res);
     const requestId = crypto.randomUUID();
     const queryParams = req.query;
     const mongoState = getMongoState();
@@ -1423,7 +1424,7 @@ router.get('/debug/public-counts', async (req, res) => {
     let totalReturnedItems = 0;
     let sampleReturnedIds = [];
 
-    if (!shouldUseFileBookStore() && mongoose.connection.readyState === 1) {
+    if (!shouldUseFileBookStore() && getMongoState()?.readyState === 1) {
       dataSourceUsed = 'mongo';
       const [total, published, draft] = await Promise.all([
         BookProject.countDocuments(),
