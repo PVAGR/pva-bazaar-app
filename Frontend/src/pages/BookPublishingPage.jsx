@@ -571,9 +571,11 @@ export default function BookPublishingPage() {
         backCoverFile ? compressCoverFile(backCoverFile, backCoverFile.name || `${form.slug || 'book'}-back-cover`) : Promise.resolve(null),
       ]);
 
-      // Upload covers directly to Cloudinary to avoid Vercel payload limits
+      // Upload covers directly to Cloudinary to avoid Vercel payload limits.
+      // Falls back to backend file upload if Cloudinary unsigned preset is missing.
       let frontCoverResult = null;
       let backCoverResult = null;
+      let cloudinaryAvailable = true;
       try {
         if (preparedFrontCover) {
           frontCoverResult = await uploadToCloudinary(preparedFrontCover, ENV.CLOUDINARY_CLOUD_NAME, ENV.CLOUDINARY_UPLOAD_PRESET);
@@ -582,9 +584,10 @@ export default function BookPublishingPage() {
           backCoverResult = await uploadToCloudinary(preparedBackCover, ENV.CLOUDINARY_CLOUD_NAME, ENV.CLOUDINARY_UPLOAD_PRESET);
         }
       } catch (cloudErr) {
-        setError(`Cover upload to Cloudinary failed: ${cloudErr.message}. Please check your connection and try again.`);
-        setSuccess('');
-        return;
+        console.warn('Cloudinary direct upload failed, falling back to backend upload:', cloudErr.message);
+        cloudinaryAvailable = false;
+        frontCoverResult = null;
+        backCoverResult = null;
       }
 
       const manuscriptSourceText = String(form.manuscriptMarkdown || '');
@@ -596,9 +599,20 @@ export default function BookPublishingPage() {
       const sendManuscriptText = Boolean(manuscriptSourceText);
       const sendManuscriptFile = Boolean(manuscriptFile) && !sendManuscriptText;
 
+      // Count backend-attached file bytes (covers sent as files when Cloudinary unavailable)
+      const coverBackendBytes = cloudinaryAvailable ? 0
+        + (preparedFrontCover ? preparedFrontCover.size || 0 : 0)
+        + (preparedBackCover ? preparedBackCover.size || 0 : 0)
+        : 0;
+      const coverFileCount = cloudinaryAvailable ? 0
+        + (preparedFrontCover ? 1 : 0)
+        + (preparedBackCover ? 1 : 0)
+        : 0;
+
       const estimatedBackendBytes =
         (sendManuscriptFile ? manuscriptFileBytes : manuscriptTextBytes) +
-        estimateMultipartOverhead(10, 1 + (sendManuscriptFile ? 1 : 0));
+        coverBackendBytes +
+        estimateMultipartOverhead(10, coverFileCount + (sendManuscriptFile ? 1 : 0));
 
       if (publish && estimatedBackendBytes > MAX_BACKEND_PUBLISH_BYTES) {
         setError(
@@ -607,7 +621,8 @@ export default function BookPublishingPage() {
             `Estimated payload: ${formatBytes(estimatedBackendBytes)}.`,
             `Manuscript file: ${formatBytes(manuscriptFileBytes)}.`,
             `Extracted manuscript text: ${formatBytes(manuscriptTextBytes)}.`,
-            `Multipart overhead: ${formatBytes(estimateMultipartOverhead(10, 1 + (sendManuscriptFile ? 1 : 0)))}.`,
+            coverBackendBytes ? `Cover files: ${formatBytes(coverBackendBytes)}.` : 'Covers uploaded to Cloudinary.',
+            `Multipart overhead: ${formatBytes(estimateMultipartOverhead(10, coverFileCount + (sendManuscriptFile ? 1 : 0)))}.`,
           ].join('\n'),
         );
         setSuccess('');
@@ -632,14 +647,19 @@ export default function BookPublishingPage() {
           payload.append('manuscriptFile', manuscriptFile);
         }
         payload.append('publish', publish ? 'true' : 'false');
-        // Send Cloudinary URLs instead of file data
         if (frontCoverResult) {
+          // Cloudinary direct upload succeeded — send URL metadata
           payload.append('frontCoverUrl', frontCoverResult.secure_url);
           payload.append('frontCoverPublicId', frontCoverResult.public_id);
+        } else if (preparedFrontCover && !cloudinaryAvailable) {
+          // Cloudinary unavailable — send compressed cover file to backend
+          payload.append('frontCover', preparedFrontCover, preparedFrontCover.name || 'front-cover.jpg');
         }
         if (backCoverResult) {
           payload.append('backCoverUrl', backCoverResult.secure_url);
           payload.append('backCoverPublicId', backCoverResult.public_id);
+        } else if (preparedBackCover && !cloudinaryAvailable) {
+          payload.append('backCover', preparedBackCover, preparedBackCover.name || 'back-cover.jpg');
         }
         return payload;
       };
