@@ -32,74 +32,39 @@ export default function Layout({ children }) {
     const payload = parseJwtPayload(token);
     return String(payload?.role || '').toLowerCase() === 'admin';
   }, [token]);
+
   const pathname = useMemo(() => {
     const raw = (location?.pathname || '/').trim();
-    const normalized = raw.replace(/\/+$/, '');
+    const normalized = raw.replace(/^\/+$/, '');
     return normalized || '/';
   }, [location?.pathname]);
 
   const routeIdentity = useMemo(() => {
     if (pathname === '/') {
-      return {
-        badge: 'Home',
-        title: 'PVA Bazaar',
-        description: 'Pure life knowledge marketplace connecting trade, education, provenance, writings, and public partnership.',
-      };
+      return { badge: 'Home', title: 'PVA Bazaar', description: 'Pure life knowledge marketplace connecting trade, education, provenance, writings, and public partnership.' };
     }
-
     if (pathname.startsWith('/deal/')) {
-      return {
-        badge: null,
-        title: 'Deal Proposal',
-        description: 'Read-only public proposal page with authenticated verification.',
-      };
+      return { badge: null, title: 'Deal Proposal', description: 'Read-only public proposal page with authenticated verification.' };
     }
-
     if (pathname === '/books/publish') {
-      return {
-        badge: 'Publishing',
-        title: 'Book Publishing',
-        description: 'Draft, design, and publish a book with covers, manuscript, PDF, EPUB, and web view.',
-      };
+      return { badge: 'Publishing', title: 'Book Publishing', description: 'Draft, design, and publish a book with covers, manuscript, PDF, EPUB, and web view.' };
     }
-
     if (pathname === '/books/published') {
-      return {
-        badge: 'Books',
-        title: 'Published Books',
-        description: 'Browse published books, open the online reader, and download PDF or EPUB editions.',
-      };
+      return { badge: 'Books', title: 'Published Books', description: 'Browse published books, open the online reader, and download PDF or EPUB editions.' };
     }
-
     if (pathname.startsWith('/books/read/')) {
-      return {
-        badge: 'Books',
-        title: 'Book Reader',
-        description: 'Read a published book with its online web view and download options.',
-      };
+      return { badge: 'Books', title: 'Book Reader', description: 'Read a published book with its online web view and download options.' };
     }
-
     const route = PUBLIC_ROUTES.find((item) => item.to === pathname);
     if (route) {
-      return {
-        badge: route.badge || null,
-        title: route.title,
-        description: route.description || '',
-      };
+      return { badge: route.badge || null, title: route.title, description: route.description || '' };
     }
-
-    return {
-      badge: null,
-      title: pathname === '/' ? 'Home' : pathname,
-      description: '',
-    };
+    return { badge: null, title: pathname === '/' ? 'Home' : pathname, description: '' };
   }, [pathname]);
 
   useEffect(() => {
     if (!globalThis.document?.body) return undefined;
-
     globalThis.document.body.dataset.appContentReady = 'true';
-
     return () => {
       if (globalThis.document?.body?.dataset?.appContentReady) {
         delete globalThis.document.body.dataset.appContentReady;
@@ -118,214 +83,119 @@ export default function Layout({ children }) {
     PUBLIC_ROUTES.filter((route) => route.navPlacement === 'primary' && route.access === 'public')
   ), []);
 
-  const canonicalUrl = useMemo(() => {
-    const cleanPath = pathname === '/home' ? '/' : pathname;
-    return `https://pvabazaar.org${cleanPath === '/' ? '/' : cleanPath}`;
-  }, [pathname]);
-
-  const seoDescription = routeIdentity.description
-    || 'PVA Bazaar is a pure life knowledge marketplace connecting education, trade, provenance, writings, and public partnerships.';
-
-
   const traversal = useMemo(() => {
     const publicRoutes = PUBLIC_ROUTES.filter((route) => route.access === 'public');
     const currentIndex = publicRoutes.findIndex((route) => route.to === pathname);
-    if (currentIndex < 0) {
-      return { prev: null, next: null };
-    }
+    if (currentIndex < 0) return { prev: null, next: null };
     return {
       prev: currentIndex > 0 ? publicRoutes[currentIndex - 1] : null,
       next: currentIndex < publicRoutes.length - 1 ? publicRoutes[currentIndex + 1] : null,
     };
   }, [pathname]);
 
-  const footerKnowledgeRoutes = useMemo(() => [
-    { key: 'archive', to: '/archive', title: 'Archive Library' },
-    { key: 'writings', to: '/writings', title: 'Writings' },
-    { key: 'books', to: '/books', title: 'Books' },
-    { key: 'books-published', to: '/books/published', title: 'Published Books' },
-    { key: 'civilization-library', to: '/civilization-library', title: 'Civilization Library' },
-    { key: 'portfolio', to: '/portfolio', title: 'Portfolio' },
-  ], []);
-
-  const footerCommerceRoutes = useMemo(() => [
-    { key: 'marketplace', to: '/marketplace', title: 'Marketplace' },
-    { key: 'showroom', to: '/showroom', title: 'Showroom' },
-    { key: 'creator', to: '/creator', title: 'Supplier Portal' },
-    { key: 'partnerships', to: '/partnerships', title: 'Partnerships' },
-    { key: 'provenance', to: '/provenance', title: 'Provenance' },
-    { key: 'heelkawn', to: '/heelkawn', title: 'HeelKawn' },
-    { key: 'recovery', to: '/recovery', title: 'Recovery & Install' },
-  ], []);
-
-  const footerCivicRoutes = useMemo(() => [
-    { key: 'proposals', to: '/proposals', title: 'Proposals' },
-    { key: 'conference', to: '/conference', title: 'Conference' },
-    { key: 'treasury', to: '/treasury', title: 'Treasury' },
-    { key: 'citizens', to: '/citizens', title: 'Citizens' },
-    { key: 'contact', to: '/contact', title: 'Contact' },
-    { key: 'about', to: '/about', title: 'About' },
-  ], []);
-
-  const footerUtilityRoutes = useMemo(() => [
-    { key: 'privacy', to: '/privacy.html', title: 'Privacy' },
-    { key: 'terms', to: '/terms.html', title: 'Terms' },
-    { key: 'shipping', to: '/shipping.html', title: 'Shipping' },
-    { key: 'returns', to: '/returns.html', title: 'Returns' },
-    { key: 'disclaimer', to: '/disclaimer.html', title: 'Disclaimer' },
-    { key: 'status', to: '/status.html', title: 'Status' },
-    { key: 'sitemap', to: '/sitemap.xml', title: 'Sitemap' },
-  ], []);
-
   return (
-    <div className="layout">
+    <div className={`layout ${darkMode ? 'layout--dark' : 'layout--light'}`}>
       <Helmet>
         <title>{routeIdentity?.title ? `${routeIdentity.title} · PVA Bazaar` : 'PVA Bazaar | Pure Life Knowledge Marketplace'}</title>
-        <meta name="description" content={seoDescription} />
-        <link rel="canonical" href={canonicalUrl} />
-        <meta property="og:site_name" content="PVA Bazaar" />
-        <meta property="og:title" content={routeIdentity?.title ? `${routeIdentity.title} · PVA Bazaar` : 'PVA Bazaar | Pure Life Knowledge Marketplace'} />
-        <meta property="og:description" content={seoDescription} />
-        <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:type" content={pathname === '/' ? 'website' : 'article'} />
-        <meta property="og:image" content="https://pvabazaar.org/og-default.svg" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={routeIdentity?.title ? `${routeIdentity.title} · PVA Bazaar` : 'PVA Bazaar | Pure Life Knowledge Marketplace'} />
-        <meta name="twitter:description" content={seoDescription} />
-        <meta name="twitter:image" content="https://pvabazaar.org/og-default.svg" />
+        <meta name="description" content={routeIdentity.description || 'PVA Bazaar is a pure life knowledge marketplace connecting education, trade, provenance, writings, and public partnerships.'} />
       </Helmet>
-      <a className="sr-only" href="#content">Skip to content</a>
+      
+      <a href="#main-content" className="layout__skipLink">Skip to content</a>
+      
       <header className="layout__header">
-        <NavLink to="/" end className="layout__brand layout__brandLink" aria-label="PVA Bazaar home">
-          <div className="layout__title">pvabazaar.org</div>
-          <div className="layout__tagline">Knowledge · Commerce · Partnerships · Archive</div>
-        </NavLink>
-        <nav className="layout__nav" aria-label="Primary">
-          {primaryNavRoutes.map((route) => (
-            <NavLink key={route.key} to={route.to} end={route.to === '/'}>
-              {route.navLabel}
-            </NavLink>
-          ))}
-        </nav>
-        <div className="layout__status" aria-live="polite">
-          {hasUserAccess ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              {hasAdminAccess ? (
-                <span style={{ color: '#fbbf24', fontSize: '14px' }} title="Admin">&#9812;</span>
-              ) : null}
-              <NavLink className="layout__statusAction" to="/dashboard">
-                {hasAdminAccess ? 'My Account' : 'My Account'}
-              </NavLink>
-              {hasAdminAccess ? (
-                <span style={{ background: 'rgba(251,191,36,0.15)', color: '#fbbf24', fontSize: '9px', fontWeight: 700, letterSpacing: '0.05em', padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase' }}>
-                  Admin
-                </span>
-              ) : null}
-              <button
-                type="button"
-                onClick={() => { clearToken(); navigate('/login'); }}
-                style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer', fontSize: '12px', padding: '2px 4px' }}
-                title="Sign out"
+        <div className="layout__headerInner">
+          <NavLink to="/" className="layout__brand">
+            <span className="layout__brandAcronym">PVA</span>
+            <span className="layout__brandName">Bazaar</span>
+          </NavLink>
+          
+          <nav className="layout__nav" aria-label="Primary">
+            {primaryNavRoutes.map((route) => (
+              <NavLink
+                key={route.to}
+                to={route.to}
+                className={({ isActive }) => `layout__navLink ${isActive ? 'layout__navLink--active' : ''}`}
               >
-                &#10005;
-              </button>
-            </div>
-          ) : (
-            <NavLink className="layout__statusAction" to="/login">
-              Sign in
-            </NavLink>
-          )}
-          {connectionMode.status !== 'live' ? (
-            <span className={`layout__connectionBadge layout__connectionBadge--${connectionMode.status}`}>
-              {connectionMode.label}
-            </span>
-          ) : null}
-        </div>
-        <button
-          type="button"
-          className="layout__themeToggle"
-          onClick={toggleTheme}
-          aria-label="Toggle theme"
-          title="Toggle theme"
-        >
-          {darkMode ? '☀ Day' : '🌙 Night'}
-        </button>
-      </header>
-      <main id="content" className="layout__main">
-        {pathname !== '/' ? (
-          <section className="section-card layout__routeIdentity" data-route-identity="true" aria-label="Current route identity">
-            {routeIdentity.badge ? (
-              <div className="pill" data-route-label="badge">{routeIdentity.badge}</div>
-            ) : null}
-            <h2 data-route-label="title" className="layout__routeTitle">
-              {routeIdentity.title}
-            </h2>
-            {routeIdentity.description ? (
-              <p data-route-label="description" className="layout__routeDescription">
-                {routeIdentity.description}
-              </p>
-            ) : null}
-            {(traversal.prev || traversal.next) ? (
-              <div className="layout__routeTraversal" aria-label="Route traversal">
-                {traversal.prev ? <NavLink to={traversal.prev.to}>← {traversal.prev.title}</NavLink> : <span />}
-                {traversal.next ? <NavLink to={traversal.next.to}>{traversal.next.title} →</NavLink> : <span />}
+                {route.title}
+              </NavLink>
+            ))}
+          </nav>
+
+          <div className="layout__status" aria-live="polite">
+            {hasUserAccess ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                {hasAdminAccess && (
+                  <span style={{ color: '#fbbf24', fontSize: '16px' }} title="Admin">&#9812;</span>
+                )}
+                <NavLink className="layout__statusAction" to="/dashboard">
+                  My Account
+                </NavLink>
+                {hasAdminAccess && (
+                  <span style={{ background: 'rgba(251,191,36,0.15)', color: '#fbbf24', fontSize: '9px', fontWeight: 700, letterSpacing: '0.05em', padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase' }}>
+                    Admin
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={() => { clearToken(); navigate('/login'); window.location.reload(); }}
+                  style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer', fontSize: '14px', padding: '2px 4px' }}
+                  title="Sign out"
+                >
+                  &#10005;
+                </button>
               </div>
+            ) : (
+              <NavLink className="layout__statusAction" to="/login" style={{ fontWeight: 600, color: '#fbbf24' }}>
+                Sign in
+              </NavLink>
+            )}
+            {connectionMode.status !== 'live' ? (
+              <span className={`layout__connectionBadge layout__connectionBadge--${connectionMode.status}`}>
+                {connectionMode.label}
+              </span>
             ) : null}
-          </section>
+          </div>
+        </div>
+      </header>
+
+      <main id="main-content" className="layout__main">
+        {pathname !== '/' && routeIdentity?.title ? (
+          <div className="layout__hero">
+            <div className="layout__heroInner">
+              {routeIdentity.badge ? (
+                <span className="layout__heroBadge">{routeIdentity.badge}</span>
+              ) : null}
+              <h1 className="layout__heroTitle">{routeIdentity.title}</h1>
+              {routeIdentity.description ? (
+                <p className="layout__heroDescription">{routeIdentity.description}</p>
+              ) : null}
+              {(traversal.prev || traversal.next) ? (
+                <div className="layout__traversal">
+                  {traversal.prev ? (
+                    <NavLink to={traversal.prev.to} className="layout__traversalLink">
+                      ← {traversal.prev.title}
+                    </NavLink>
+                  ) : <span />}
+                  {traversal.next ? (
+                    <NavLink to={traversal.next.to} className="layout__traversalLink">
+                      {traversal.next.title} →
+                    </NavLink>
+                  ) : <span />}
+                </div>
+              ) : null}
+            </div>
+          </div>
         ) : null}
         {children}
       </main>
-      {hasAdminAccess ? (
-        <OpenClawFloatingAssistant routePath={location.pathname || '/'} />
-      ) : null}
+
       <footer className="layout__footer">
-        <div className="layout__footerGrid">
-          <section className="layout__footerSection" aria-label="Knowledge">
-            <h2>Knowledge</h2>
-            <div className="layout__footerLinks">
-              {footerKnowledgeRoutes.map((route) => (
-                <NavLink key={route.key} to={route.to} end={route.to === '/'}>
-                  {route.title}
-                </NavLink>
-              ))}
-            </div>
-          </section>
-
-          <section className="layout__footerSection" aria-label="Commerce">
-            <h2>Commerce</h2>
-            <div className="layout__footerLinks">
-              {footerCommerceRoutes.map((route) => (
-                <NavLink key={route.key} to={route.to} end={route.to === '/'}>
-                  {route.title}
-                </NavLink>
-              ))}
-            </div>
-          </section>
-
-          <section className="layout__footerSection" aria-label="Civic">
-            <h2>Civic</h2>
-            <div className="layout__footerLinks">
-              {footerCivicRoutes.map((route) => (
-                <NavLink key={route.key} to={route.to} end={route.to === '/'}>
-                  {route.title}
-                </NavLink>
-              ))}
-            </div>
-          </section>
-
-          <section className="layout__footerSection" aria-label="Legal and support">
-            <h2>Legal</h2>
-            <div className="layout__footerLinks">
-              {footerUtilityRoutes.map((route) => (
-                <a key={route.key} href={route.to}>
-                  {route.title}
-                </a>
-              ))}
-            </div>
-          </section>
+        <div className="layout__footerInner">
+          <p className="layout__footerText">© {new Date().getFullYear()} PVA Bazaar. Pure life knowledge marketplace.</p>
         </div>
-        <div className="layout__footerMeta">© {new Date().getFullYear()} · pvabazaar.org</div>
       </footer>
+
+      <OpenClawFloatingAssistant />
     </div>
   );
 }
