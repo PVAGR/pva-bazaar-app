@@ -91,7 +91,7 @@ export default function BookShelfPage() {
         throw new Error(delData?.error || delData?.message || `Delete failed (${delRes.status})`);
       }
 
-      setBooks((prev) => prev.filter((b) => (b.id || b._id) !== deleteTarget.id));
+      setBooks((prev) => (prev || []).filter((b) => (b.id || b._id) !== deleteTarget.id));
       setDeleteTarget(null);
     } catch (err) {
       setDeleteError(err instanceof Error ? err.message : 'Delete failed');
@@ -106,8 +106,9 @@ export default function BookShelfPage() {
       setLoading(true);
       setError('');
       try {
-        const remote = await fetchPublishedBookProjects();
+        const response = await fetchPublishedBookProjects();
         if (cancelled) return;
+        const remote = Array.isArray(response?.items) ? response.items : Array.isArray(response) ? response : [];
         const local = listLocalPublishedBookProjects();
         const merged = [...remote];
         for (const localBook of local) {
@@ -129,9 +130,10 @@ export default function BookShelfPage() {
   }, []);
 
   const filteredBooks = useMemo(() => {
-    if (!activeQuery) return books;
+    const list = books || [];
+    if (!activeQuery) return list;
     const lowered = activeQuery.toLowerCase();
-    return books.filter((book) => {
+    return list.filter((book) => {
       const haystack = `${book.title || ''} ${book.authorName || ''} ${book.subtitle || ''}`.toLowerCase();
       return haystack.includes(lowered);
     });
