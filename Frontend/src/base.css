@@ -85,6 +85,19 @@ body {
 }
 
 /* ============================================================
+   GLOBAL ANCHOR FALLBACK — prevents default browser blue
+   ============================================================ */
+a {
+  color: var(--site-text, #76c97d);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+a:hover {
+  color: var(--site-accent, #fbbf24);
+}
+
+/* ============================================================
    LAYOUT — Full-width shell (was a narrow centered card before)
    ============================================================ */
 .layout {
@@ -271,6 +284,74 @@ body {
   line-height: 1.5;
 }
 
+/* --- Hero section (current Layout.jsx class names) --- */
+.layout__hero {
+  padding: var(--space-4);
+}
+
+.layout__heroInner {
+  max-width: var(--container-max);
+}
+
+.layout__heroBadge {
+  display: inline-block;
+  background: var(--site-accent-soft);
+  color: var(--site-accent-strong);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--site-border);
+  margin-bottom: 0.4rem;
+}
+
+.layout__heroTitle {
+  margin: 0.45rem 0 0.25rem;
+  font-size: clamp(1.1rem, 1rem + 1.2vw, 1.55rem);
+  color: var(--site-accent);
+  font-family: var(--site-font);
+  font-weight: 700;
+}
+
+.layout__heroDescription {
+  margin: 0;
+  color: var(--site-text-muted);
+  line-height: 1.5;
+}
+
+/* --- Route traversal (prev/next nav links) --- */
+.layout__traversal {
+  margin-top: 0.8rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+
+.layout__traversalLink {
+  border: 1px solid var(--site-border);
+  border-radius: 10px;
+  padding: 0.42rem 0.7rem;
+  min-height: 2.1rem;
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  background: var(--site-panel-soft);
+  color: var(--site-text);
+  font-weight: 600;
+  transition: border-color 0.16s ease, color 0.16s ease;
+}
+
+.layout__traversalLink:hover {
+  border-color: var(--site-accent);
+  color: var(--site-accent-strong);
+}
+
+.layout__traversalLink:last-child {
+  justify-content: flex-end;
+}
+
 .layout__intentChooser {
   margin-top: 0.85rem;
   display: grid;
@@ -395,6 +476,19 @@ body {
   margin-top: var(--space-4);
   text-align: center;
   font-size: 0.9rem;
+}
+
+.layout__footerInner {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: 0 var(--space-4);
+  text-align: center;
+}
+
+.layout__footerText {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--site-text-muted);
 }
 
 .section-card {
@@ -1531,7 +1625,8 @@ textarea:focus-visible {
     justify-content: center;
   }
 
-  .layout__routeTraversal {
+  .layout__routeTraversal,
+  .layout__traversal {
     grid-template-columns: 1fr;
   }
 
@@ -1540,7 +1635,8 @@ textarea:focus-visible {
   }
 
   .layout__routeTraversal a:last-child,
-  .layout__routeTraversal span:last-child {
+  .layout__routeTraversal span:last-child,
+  .layout__traversalLink:last-child {
     justify-content: flex-start;
   }
 
