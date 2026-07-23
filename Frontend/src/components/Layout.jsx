@@ -68,7 +68,8 @@ export default function Layout({ children }) {
     return () => {
       if (globalThis.document?.body?.dataset?.appContentReady) {
         delete globalThis.document.body.dataset.appContentReady;
-      }
+}
+
     };
   }, []);
 
