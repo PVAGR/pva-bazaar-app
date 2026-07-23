@@ -122,6 +122,20 @@ Every coding agent must report:
 - Live cache-busted `/api/book-publishing/public?t=` result
 - Exact proof that plain and cache-busted endpoints match
 
+## Agent Development Rules
+
+**FORBIDDEN ACTIONS:**
+- ❌ DO NOT create fake test books in production
+- ❌ DO NOT publish smoke test books with names like "Test", "Smoke Test", "Probe", "E2E"
+- ❌ DO NOT create test data that clutters the public library
+- ❌ DO NOT use MongoDB for testing without explicit user permission
+
+**REQUIRED ACTIONS:**
+- ✅ Use local development environment for testing
+- ✅ Use test databases or staging environments
+- ✅ Clean up any test data created during development
+- ✅ Verify production data before deployment
+
 ## Current Deployment Status
 
 **Last Verified:** 2026-07-22 16:36 UTC
