@@ -170,12 +170,15 @@ async function compressCoverFile(file, fallbackName) {
   }
 }
 
-async function uploadToCloudinary(file, cloudName, uploadPreset) {
+async function uploadToCloudinary(file, cloudName, uploadPreset, resourceType = 'image') {
   if (!file || !cloudName || !uploadPreset) return null;
   const formData = new FormData();
   formData.append('file', file);
   formData.append('upload_preset', uploadPreset);
-  const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+  const endpoint = resourceType === 'raw' 
+    ? `https://api.cloudinary.com/v1_1/${cloudName}/raw/upload`
+    : `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
+  const response = await fetch(endpoint, {
     method: 'POST',
     body: formData,
   });
@@ -200,16 +203,20 @@ function describePublishFailure(error, { requestUrl, tokenPresent }) {
         : '(none)';
   const requestId = responseBody?.requestId || '';
   const stage = responseBody?.stage || '';
+  const backendError = responseBody?.error || '';
+  const backendMessage = responseBody?.message || '';
   const lines = [
     'Online publish failed.',
     `Request URL: ${requestUrl || getBookPublishRequestUrl()}`,
     `HTTP status: ${status || 'network error'}`,
     `Status text: ${statusText || 'Network error'}`,
-    `Backend response body: ${bodyText}`,
-    `Auth token present: ${tokenPresent ? 'yes' : 'no'}`,
   ];
+  if (backendError) lines.push(`Backend error: ${backendError}`);
+  if (backendMessage) lines.push(`Backend message: ${backendMessage}`);
   if (requestId) lines.push(`Request ID: ${requestId}`);
   if (stage) lines.push(`Stage: ${stage}`);
+  if (bodyText !== '(none)') lines.push(`Backend response body: ${bodyText}`);
+  lines.push(`Auth token present: ${tokenPresent ? 'yes' : 'no'}`);
   return lines.join('\n');
 }
 
@@ -572,61 +579,28 @@ export default function BookPublishingPage() {
       ]);
 
       // Upload covers directly to Cloudinary to avoid Vercel payload limits.
-      // Falls back to backend file upload if Cloudinary unsigned preset is missing.
       let frontCoverResult = null;
       let backCoverResult = null;
+      let manuscriptResult = null;
       let cloudinaryAvailable = true;
       try {
         if (preparedFrontCover) {
-          frontCoverResult = await uploadToCloudinary(preparedFrontCover, ENV.CLOUDINARY_CLOUD_NAME, ENV.CLOUDINARY_UPLOAD_PRESET);
+          frontCoverResult = await uploadToCloudinary(preparedFrontCover, ENV.CLOUDINARY_CLOUD_NAME, ENV.CLOUDINARY_UPLOAD_PRESET, 'image');
         }
         if (preparedBackCover) {
-          backCoverResult = await uploadToCloudinary(preparedBackCover, ENV.CLOUDINARY_CLOUD_NAME, ENV.CLOUDINARY_UPLOAD_PRESET);
+          backCoverResult = await uploadToCloudinary(preparedBackCover, ENV.CLOUDINARY_CLOUD_NAME, ENV.CLOUDINARY_UPLOAD_PRESET, 'image');
+        }
+        // Upload manuscript directly to Cloudinary if it's a file
+        if (manuscriptFile && !form.manuscriptMarkdown) {
+          const manuscriptPreset = ENV.CLOUDINARY_MANUSCRIPT_UPLOAD_PRESET || ENV.CLOUDINARY_UPLOAD_PRESET;
+          manuscriptResult = await uploadToCloudinary(manuscriptFile, ENV.CLOUDINARY_CLOUD_NAME, manuscriptPreset, 'raw');
         }
       } catch (cloudErr) {
         console.warn('Cloudinary direct upload failed, falling back to backend upload:', cloudErr.message);
         cloudinaryAvailable = false;
         frontCoverResult = null;
         backCoverResult = null;
-      }
-
-      const manuscriptSourceText = String(form.manuscriptMarkdown || '');
-      const importedManuscriptText = String(manuscriptImportedTextRef.current || '');
-      const manuscriptFileBytes = manuscriptFile?.size || 0;
-      const manuscriptTextBytes = estimateTextBytes(manuscriptSourceText);
-      // Prefer sending extracted/plain manuscript text for publish. Raw file uploads are
-      // only used when no text has been extracted yet (for example, some PDFs).
-      const sendManuscriptText = Boolean(manuscriptSourceText);
-      const sendManuscriptFile = Boolean(manuscriptFile) && !sendManuscriptText;
-
-      // Count backend-attached file bytes (covers sent as files when Cloudinary unavailable)
-      const coverBackendBytes = cloudinaryAvailable ? 0
-        + (preparedFrontCover ? preparedFrontCover.size || 0 : 0)
-        + (preparedBackCover ? preparedBackCover.size || 0 : 0)
-        : 0;
-      const coverFileCount = cloudinaryAvailable ? 0
-        + (preparedFrontCover ? 1 : 0)
-        + (preparedBackCover ? 1 : 0)
-        : 0;
-
-      const estimatedBackendBytes =
-        (sendManuscriptFile ? manuscriptFileBytes : manuscriptTextBytes) +
-        coverBackendBytes +
-        estimateMultipartOverhead(10, coverFileCount + (sendManuscriptFile ? 1 : 0));
-
-      if (publish && estimatedBackendBytes > MAX_BACKEND_PUBLISH_BYTES) {
-        setError(
-          [
-            'This upload is too large for direct publishing through the current Vercel API route. Publish text only, remove/compress files, or use direct media upload.',
-            `Estimated payload: ${formatBytes(estimatedBackendBytes)}.`,
-            `Manuscript file: ${formatBytes(manuscriptFileBytes)}.`,
-            `Extracted manuscript text: ${formatBytes(manuscriptTextBytes)}.`,
-            coverBackendBytes ? `Cover files: ${formatBytes(coverBackendBytes)}.` : 'Covers uploaded to Cloudinary.',
-            `Multipart overhead: ${formatBytes(estimateMultipartOverhead(10, coverFileCount + (sendManuscriptFile ? 1 : 0)))}.`,
-          ].join('\n'),
-        );
-        setSuccess('');
-        return;
+        manuscriptResult = null;
       }
 
       const buildPayload = () => {
@@ -640,27 +614,35 @@ export default function BookPublishingPage() {
         payload.append('genre', form.genre);
         payload.append('audience', form.audience);
         payload.append('language', form.language);
-        if (sendManuscriptText) {
-          payload.append('manuscriptMarkdown', manuscriptSourceText);
-        }
-        if (sendManuscriptFile) {
+        
+        // Send manuscript text if available, otherwise send Cloudinary URL
+        if (form.manuscriptMarkdown) {
+          payload.append('manuscriptMarkdown', form.manuscriptMarkdown);
+        } else if (manuscriptResult) {
+          payload.append('manuscriptUrl', manuscriptResult.secure_url);
+          payload.append('manuscriptType', manuscriptFile?.name?.toLowerCase().endsWith('.pdf') ? 'pdf' : 
+                         manuscriptFile?.name?.toLowerCase().endsWith('.docx') ? 'docx' : 'raw');
+        } else if (manuscriptFile && !cloudinaryAvailable) {
+          // Fallback: send manuscript file to backend
           payload.append('manuscriptFile', manuscriptFile);
         }
+        
         payload.append('publish', publish ? 'true' : 'false');
+        
         if (frontCoverResult) {
-          // Cloudinary direct upload succeeded — send URL metadata
           payload.append('frontCoverUrl', frontCoverResult.secure_url);
           payload.append('frontCoverPublicId', frontCoverResult.public_id);
         } else if (preparedFrontCover && !cloudinaryAvailable) {
-          // Cloudinary unavailable — send compressed cover file to backend
           payload.append('frontCover', preparedFrontCover, preparedFrontCover.name || 'front-cover.jpg');
         }
+        
         if (backCoverResult) {
           payload.append('backCoverUrl', backCoverResult.secure_url);
           payload.append('backCoverPublicId', backCoverResult.public_id);
         } else if (preparedBackCover && !cloudinaryAvailable) {
           payload.append('backCover', preparedBackCover, preparedBackCover.name || 'back-cover.jpg');
         }
+        
         return payload;
       };
 

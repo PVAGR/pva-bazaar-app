@@ -1085,8 +1085,16 @@ router.post('/', authenticateBookPublishing, bookUpload, async (req, res) => {
       book.manuscriptMarkdown = manuscriptMarkdown;
     }
 
-    if (!book.manuscriptMarkdown) {
-      throw new Error('Manuscript content is required');
+    // Allow manuscript URL from Cloudinary as alternative to manuscript text
+    const manuscriptUrl = sanitizeText(req.body?.manuscriptUrl || '', 500);
+    const manuscriptType = sanitizeText(req.body?.manuscriptType || '', 20);
+    if (manuscriptUrl && /^https?:\/\//i.test(manuscriptUrl)) {
+      book.manuscriptUrl = manuscriptUrl;
+      book.manuscriptType = manuscriptType || 'raw';
+    }
+
+    if (!book.manuscriptMarkdown && !book.manuscriptUrl) {
+      throw new Error('Manuscript content is required (text or file URL)');
     }
 
     stage = 'manuscript_validated';
@@ -1095,9 +1103,17 @@ router.post('/', authenticateBookPublishing, bookUpload, async (req, res) => {
     book.subtitle = sanitizeText(req.body?.subtitle || '', 240);
     book.authorName = sanitizeText(req.body?.authorName || req.user?.name || '', 160);
     book.description = sanitizeText(req.body?.description || '', 4000);
+    book.category = sanitizeText(req.body?.category || 'General', 80);
     book.genre = sanitizeText(req.body?.genre || 'general', 80).toLowerCase() || 'general';
     book.audience = sanitizeText(req.body?.audience || 'general', 80).toLowerCase() || 'general';
     book.language = sanitizeText(req.body?.language || 'en', 24).toLowerCase() || 'en';
+    
+    // Handle cover URL from Cloudinary direct upload
+    const coverUrl = sanitizeText(req.body?.coverUrl || '', 500);
+    if (coverUrl && /^https?:\/\//i.test(coverUrl)) {
+      book.coverUrl = coverUrl;
+    }
+    
     book.slug = await resolveUniqueSlug(req.body?.slug || book.title, book._id);
     book.authorId = String(book.authorId || req.user?.id || req.user?._id || '');
     book.wordCount = String(book.manuscriptMarkdown || '')
@@ -1105,6 +1121,7 @@ router.post('/', authenticateBookPublishing, bookUpload, async (req, res) => {
       .map((token) => token.trim())
       .filter(Boolean).length;
     book.status = shouldPublish ? 'published' : 'draft';
+    book.isApproved = req.body?.isApproved !== false; // Default true unless explicitly false
     if (shouldPublish && previousStatus !== 'published') {
       book.publishedAt = new Date();
       book.publishedVersion = (Number(book.publishedVersion || 0) || 0) + 1;

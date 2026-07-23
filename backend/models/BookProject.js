@@ -30,10 +30,14 @@ const bookProjectSchema = new mongoose.Schema(
     authorName: { type: String, default: '' },
     slug: { type: String, trim: true, lowercase: true, index: true },
     description: { type: String, default: '' },
+    category: { type: String, default: 'General' }, // e.g., 'Knowledge Archive', 'Agriculture', 'Philosophy'
     genre: { type: String, default: 'general', index: true },
     audience: { type: String, default: 'general', index: true },
     language: { type: String, default: 'en' },
     manuscriptMarkdown: { type: String, default: '' },
+    manuscriptUrl: { type: String, default: '' }, // Cloudinary raw URL for manuscript files
+    manuscriptType: { type: String, default: '' }, // 'pdf', 'html', 'docx', 'raw'
+    coverUrl: { type: String, default: '' }, // Cloudinary image URL for cover
     frontCover: { type: bookAssetSchema, default: {} },
     backCover: { type: bookAssetSchema, default: {} },
     webHtml: { type: String, default: '' },
@@ -44,6 +48,7 @@ const bookProjectSchema = new mongoose.Schema(
       default: 'draft',
       index: true,
     },
+    isApproved: { type: Boolean, default: true }, // For future contributor queue
     publishedAt: { type: Date },
     lastRenderedAt: { type: Date },
     publishedVersion: { type: Number, default: 0 },
