@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import OpenClawFloatingAssistant from './OpenClawFloatingAssistant.jsx';
 import { PUBLIC_ROUTES } from '../config/publicRoutes';
-import { getToken } from '../lib/auth';
+import { getToken, clearToken } from '../lib/auth';
 import useArchiveTheme from '../hooks/useArchiveTheme.js';
 import useConnectionMode from '../hooks/useConnectionMode.js';
 
@@ -25,6 +25,7 @@ export default function Layout({ children }) {
   const { darkMode, toggleTheme } = useArchiveTheme();
   const connectionMode = useConnectionMode();
   const location = useLocation();
+  const navigate = useNavigate();
   const token = getToken();
   const hasUserAccess = Boolean(token);
   const hasAdminAccess = useMemo(() => {
@@ -207,9 +208,33 @@ export default function Layout({ children }) {
           ))}
         </nav>
         <div className="layout__status" aria-live="polite">
-          <NavLink className="layout__statusAction" to={hasUserAccess ? '/dashboard' : '/login'}>
-            {hasUserAccess ? 'My Account' : 'Sign in'}
-          </NavLink>
+          {hasUserAccess ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              {hasAdminAccess ? (
+                <span style={{ color: '#fbbf24', fontSize: '14px' }} title="Admin">&#9812;</span>
+              ) : null}
+              <NavLink className="layout__statusAction" to="/dashboard">
+                {hasAdminAccess ? 'My Account' : 'My Account'}
+              </NavLink>
+              {hasAdminAccess ? (
+                <span style={{ background: 'rgba(251,191,36,0.15)', color: '#fbbf24', fontSize: '9px', fontWeight: 700, letterSpacing: '0.05em', padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase' }}>
+                  Admin
+                </span>
+              ) : null}
+              <button
+                type="button"
+                onClick={() => { clearToken(); navigate('/login'); }}
+                style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer', fontSize: '12px', padding: '2px 4px' }}
+                title="Sign out"
+              >
+                &#10005;
+              </button>
+            </div>
+          ) : (
+            <NavLink className="layout__statusAction" to="/login">
+              Sign in
+            </NavLink>
+          )}
           {connectionMode.status !== 'live' ? (
             <span className={`layout__connectionBadge layout__connectionBadge--${connectionMode.status}`}>
               {connectionMode.label}

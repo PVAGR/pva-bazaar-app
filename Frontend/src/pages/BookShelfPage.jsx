@@ -2,8 +2,26 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import { fetchPublishedBookProjects, getApiBase } from '../lib/api';
+import { getToken, setToken } from '../lib/auth';
 import { listLocalPublishedBookProjects } from '../lib/localBookVault';
 import './BookShelfPage.css';
+
+function parseJwtPayload(token) {
+  if (!token || typeof token !== 'string') return null;
+  const parts = token.split('.');
+  if (parts.length < 2) return null;
+  try {
+    const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    return JSON.parse(globalThis.atob(base64));
+  } catch (_err) {
+    return null;
+  }
+}
+
+function isAdminToken(token) {
+  const payload = parseJwtPayload(token);
+  return String(payload?.role || '').toLowerCase() === 'admin';
+}
 
 function toApiUrl(path) {
   if (!path || /^data:|^blob:|^https?:/i.test(path)) return path;
@@ -45,8 +63,69 @@ export default function BookShelfPage() {
   const [draftQuery, setDraftQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleteEmail, setDeleteEmail] = useState('');
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
 
   const activeQuery = useMemo(() => query.trim(), [query]);
+
+  useEffect(() => {
+    setIsAdmin(isAdminToken(getToken()));
+  }, []);
+
+  async function handleAdminDelete(book) {
+    const bookId = book?.id || book?._id;
+    const bookSlug = book?.slug || bookId;
+    if (!bookId) return;
+    setDeleteTarget({ id: bookId, slug: bookSlug, title: book.title || 'Untitled' });
+    setDeleteEmail('');
+    setDeletePassword('');
+    setDeleteError('');
+  }
+
+  async function confirmAdminDelete(e) {
+    e.preventDefault();
+    if (!deleteTarget) return;
+    setDeleteBusy(true);
+    setDeleteError('');
+    try {
+      const base = getApiBase();
+      if (!base) throw new Error('API not configured');
+
+      let token = getToken();
+      if (!isAdminToken(token)) {
+        const res = await fetch(`${base}/api/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: deleteEmail, password: deletePassword }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data?.token) throw new Error(data?.message || data?.error || 'Login failed');
+        token = data.token;
+        setToken(token);
+        if (!isAdminToken(token)) throw new Error('This account does not have admin access');
+      }
+
+      const delRes = await fetch(`${base}/api/book-publishing/${encodeURIComponent(deleteTarget.id)}`, {
+        method: 'DELETE',
+        headers: { Accept: 'application/json', Authorization: `Bearer ${token}` },
+      });
+      const delData = await delRes.json().catch(() => ({}));
+      if (!delRes.ok || delData?.ok === false) {
+        throw new Error(delData?.error || delData?.message || `Delete failed (${delRes.status})`);
+      }
+
+      setBooks((prev) => prev.filter((b) => (b.id || b._id) !== deleteTarget.id));
+      setDeleteTarget(null);
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : 'Delete failed');
+    } finally {
+      setDeleteBusy(false);
+    }
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -217,6 +296,15 @@ export default function BookShelfPage() {
                         EPUB
                       </a>
                     ) : null}
+                    {isAdmin ? (
+                      <button
+                        type="button"
+                        className="book-shelf__button book-shelf__button--danger"
+                        onClick={() => handleAdminDelete(book)}
+                      >
+                        Delete
+                      </button>
+                    ) : null}
                   </div>
                 </div>
               </article>
@@ -245,6 +333,57 @@ export default function BookShelfPage() {
           </section>
         ) : null}
       </section>
+
+      {deleteTarget ? (
+        <div className="book-shelf__modalOverlay" role="dialog" aria-modal="true" aria-label="Admin delete confirmation">
+          <form className="book-shelf__modal" onSubmit={confirmAdminDelete}>
+            <h3>Delete &ldquo;{deleteTarget.title}&rdquo;?</h3>
+            <p className="book-shelf__modalWarning">This cannot be undone. {isAdmin ? 'Click Confirm to delete.' : 'Sign in as an admin to proceed.'}</p>
+            {!isAdmin ? (
+              <>
+                <label className="book-shelf__field">
+                  <span>Admin email or username</span>
+                  <input
+                    type="text"
+                    value={deleteEmail}
+                    onChange={(e) => setDeleteEmail(e.target.value)}
+                    placeholder="Email or username"
+                    required
+                  />
+                </label>
+                <label className="book-shelf__field">
+                  <span>Password</span>
+                  <input
+                    type="password"
+                    value={deletePassword}
+                    onChange={(e) => setDeletePassword(e.target.value)}
+                    placeholder="Password"
+                    required
+                  />
+                </label>
+              </>
+            ) : null}
+            {deleteError ? <p className="book-shelf__error" role="alert">{deleteError}</p> : null}
+            <div className="book-shelf__actions">
+              <button
+                type="submit"
+                className="book-shelf__button book-shelf__button--danger"
+                disabled={deleteBusy || (!isAdmin && (!deleteEmail || !deletePassword))}
+              >
+                {deleteBusy ? 'Deleting…' : 'Confirm delete'}
+              </button>
+              <button
+                type="button"
+                className="book-shelf__button"
+                onClick={() => setDeleteTarget(null)}
+                disabled={deleteBusy}
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      ) : null}
     </>
   );
 }
