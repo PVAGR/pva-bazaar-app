@@ -50,7 +50,11 @@ try {
 const router = express.Router();
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 25 * 1024 * 1024 },
+  limits: {
+    fileSize: 25 * 1024 * 1024, // 25MB for files
+    fieldSize: 50 * 1024 * 1024, // 50MB for text fields (manuscripts)
+    fields: 100 // Allow up to 100 form fields
+  },
 });
 
 const bookUpload = upload.fields([
