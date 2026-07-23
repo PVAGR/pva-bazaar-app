@@ -70,7 +70,7 @@ export default function BookShelfPage() {
 
       let token = getToken();
       if (!isAdminToken(token)) {
-        const res = await fetch(`${base}/api/auth/login`, {
+        const res = await fetch(`${base}/auth/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: deleteEmail, password: deletePassword }),
@@ -82,7 +82,7 @@ export default function BookShelfPage() {
         if (!isAdminToken(token)) throw new Error('This account does not have admin access');
       }
 
-      const delRes = await fetch(`${base}/api/book-publishing/${encodeURIComponent(deleteTarget.id)}`, {
+      const delRes = await fetch(`${base}/book-publishing/${encodeURIComponent(deleteTarget.id)}`, {
         method: 'DELETE',
         headers: { Accept: 'application/json', Authorization: `Bearer ${token}` },
       });
