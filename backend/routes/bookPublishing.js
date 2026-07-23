@@ -733,7 +733,14 @@ async function removeBookRecord(bookId) {
     return deleteFileBook(bookId);
   }
 
-  return BookProject.findByIdAndDelete(bookId);
+  const strId = String(bookId || '').trim();
+  if (isMongoObjectId(strId)) {
+    return BookProject.findByIdAndDelete(strId);
+  }
+
+  const byId = await BookProject.findOneAndDelete({ _id: strId });
+  if (byId) return byId;
+  return BookProject.findOneAndDelete({ slug: strId });
 }
 
 function bookSummary(book, { publicView = false } = {}) {
