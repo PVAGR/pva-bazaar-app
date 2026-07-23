@@ -5,6 +5,8 @@ import Link from "next/link";
 import {
   buildAssetUrl,
   buildDownloadUrl,
+  deleteBook,
+  isAdminUser,
   listPublicBooks,
   type LibraryBook,
 } from "@/lib/libraryApi";
@@ -48,6 +50,12 @@ export function LibraryGrid() {
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [genre, setGenre] = useState("");
+  const [admin, setAdmin] = useState(false);
+  const [deleting, setDeleting] = useState<string | null>(null);
+
+  useEffect(() => {
+    setAdmin(isAdminUser());
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -101,6 +109,19 @@ export function LibraryGrid() {
       return haystack.includes(lowered);
     });
   }, [books, query, genre]);
+
+  async function handleDelete(book: LibraryBook) {
+    if (!window.confirm(`Delete "${book.title}"? This cannot be undone.`)) return;
+    setDeleting(book.id);
+    try {
+      await deleteBook(book.id);
+      setBooks((prev) => prev.filter((b) => b.id !== book.id));
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Delete failed");
+    } finally {
+      setDeleting(null);
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -250,6 +271,16 @@ export function LibraryGrid() {
                     >
                       EPUB
                     </a>
+                  )}
+                  {admin && (
+                    <button
+                      type="button"
+                      disabled={deleting === book.id}
+                      onClick={() => handleDelete(book)}
+                      className="rounded-lg border border-red-700/60 bg-red-950/40 px-3 py-2 text-xs font-medium text-red-300 transition-colors hover:bg-red-900/50 disabled:opacity-50"
+                    >
+                      {deleting === book.id ? "Deleting…" : "Delete"}
+                    </button>
                   )}
                 </div>
               </li>

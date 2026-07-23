@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import localFont from "next/font/local";
 import { getBaseUrl } from "@/lib/siteUrl";
+import { SiteNav } from "@/components/SiteNav";
 import "./globals.css";
 
 const geistSans = localFont({
@@ -120,66 +120,7 @@ export default function RootLayout({
           Skip to main content
         </a>
         <div className="min-h-screen bg-gradient-to-b from-black via-slate-950 to-black flex flex-col">
-          <header className="border-b border-zinc-800/80 bg-black/70 backdrop-blur">
-            <nav className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
-              <Link href="/" className="flex items-baseline gap-2">
-                <span className="text-xs tracking-[0.3em] text-zinc-500 uppercase">
-                  PVA
-                </span>
-                <span className="text-sm font-semibold text-zinc-200">
-                  Bazaar
-                </span>
-              </Link>
-              <div className="flex items-center gap-6 text-xs font-medium text-zinc-400">
-                <Link href="/get-started" className="hover:text-amber-300">
-                  Get Started
-                </Link>
-                <Link href="/archive" className="hover:text-amber-300">
-                  Archive
-                </Link>
-                <Link href="/verification" className="hover:text-amber-300">
-                  Verification
-                </Link>
-                <Link href="/manifesto" className="hover:text-amber-300">
-                  Manifesto
-                </Link>
-                <Link href="/heelkawn" className="hover:text-amber-300">
-                  HeelKawn
-                </Link>
-                <Link href="/recovery" className="hover:text-amber-300">
-                  Recovery
-                </Link>
-                <Link href="/meow" className="hover:text-amber-300">
-                  Meow
-                </Link>
-                <Link href="/dashboard" className="hover:text-amber-300">
-                  Dashboard
-                </Link>
-                <Link href="/deals" className="hover:text-amber-300">
-                  Deals
-                </Link>
-                <Link href="/conference" className="hover:text-amber-300">
-                  Conference
-                </Link>
-                <Link href="/cart" className="hover:text-amber-300">
-                  Cart
-                </Link>
-                <Link href="/library" className="hover:text-amber-300">
-                  Library
-                </Link>
-              </div>
-            </nav>
-            <div className="border-t border-zinc-800/80 bg-zinc-950/80">
-              <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-2">
-                <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">
-                  Phase One · Kenyan exports
-                </p>
-                <p className="text-[10px] text-zinc-500">
-                  This layer: stories, hashes, verification.
-                </p>
-              </div>
-            </div>
-          </header>
+          <SiteNav />
 
           <main id="main-content" className="mx-auto flex w-full max-w-5xl flex-1 px-4 py-10">
             {children}
