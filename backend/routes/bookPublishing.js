@@ -5,6 +5,7 @@ const fsp = require('fs').promises;
 const path = require('path');
 const axios = require('axios');
 const { authenticateToken } = require('../middleware/auth');
+const adminOnly = require('../middleware/adminOnly');
 const BookProject = require('../models/BookProject');
 const { connectMongo, getMongoState } = require('../lib/mongoConnection');
 const {
@@ -1476,6 +1477,48 @@ router.delete('/:bookId', authenticateBookPublishing, async (req, res) => {
     return res.json({ ok: true });
   } catch (error) {
     return res.status(500).json({ ok: false, error: error.message || 'Failed to delete book' });
+  }
+});
+
+
+// Admin-only endpoint to delete test books
+router.delete('/admin/cleanup-test-books', authenticateToken, adminOnly, async (req, res) => {
+  try {
+    const TEST_BOOK_TITLES = [
+      'Mongo Test Book 1784321779305',
+      'Codex Cover Smoke Test 1784674070980',
+      'Codex Live Smoke Preserve Fields 1784674508',
+      'Codex Live Smoke Preserve Fields 1784674561',
+      'Codex Smoke Test Book 1784673930989',
+      'Diagnostic Test 1784747016',
+      'E2E Publish bc509452',
+      'Final Test 3c6024e3',
+      'Multipart Probe',
+      'Publish Probe',
+      'Published Book 19d48310',
+    ];
+
+    const testBooks = await BookProject.find({
+      title: { $in: TEST_BOOK_TITLES }
+    });
+
+    if (testBooks.length === 0) {
+      return res.json({ ok: true, message: 'No test books found to delete', deletedCount: 0 });
+    }
+
+    const deleteResult = await BookProject.deleteMany({
+      title: { $in: TEST_BOOK_TITLES }
+    });
+
+    return res.json({ 
+      ok: true, 
+      message: `Deleted ${deleteResult.deletedCount} test books`,
+      deletedCount: deleteResult.deletedCount,
+      deletedBooks: testBooks.map(b => ({ id: b._id, title: b.title }))
+    });
+  } catch (error) {
+    console.error('[book-publishing] cleanup test books error:', error);
+    return res.status(500).json({ ok: false, error: error.message || 'Failed to delete test books' });
   }
 });
 
