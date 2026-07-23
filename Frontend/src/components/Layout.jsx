@@ -68,8 +68,7 @@ export default function Layout({ children }) {
     return () => {
       if (globalThis.document?.body?.dataset?.appContentReady) {
         delete globalThis.document.body.dataset.appContentReady;
-}
-
+      }
     };
   }, []);
 
@@ -100,16 +99,14 @@ export default function Layout({ children }) {
         <title>{routeIdentity?.title ? `${routeIdentity.title} · PVA Bazaar` : 'PVA Bazaar | Pure Life Knowledge Marketplace'}</title>
         <meta name="description" content={routeIdentity.description || 'PVA Bazaar is a pure life knowledge marketplace connecting education, trade, provenance, writings, and public partnerships.'} />
       </Helmet>
-      
-      <a href="#main-content" className="layout__skipLink">Skip to content</a>
-      
+
       <header className="layout__header">
         <div className="layout__headerInner">
           <NavLink to="/" className="layout__brand layout__brandLink">
             <span className="layout__title">pvabazaar.org</span>
             <span className="layout__tagline">Knowledge · Commerce · Partnerships · Archive</span>
           </NavLink>
-          
+
           <nav className="layout__nav" aria-label="Primary">
             {primaryNavRoutes.map((route) => (
               <NavLink
@@ -200,5 +197,3 @@ export default function Layout({ children }) {
     </div>
   );
 }
- 
- 
