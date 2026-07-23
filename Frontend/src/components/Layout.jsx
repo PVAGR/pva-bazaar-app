@@ -138,7 +138,7 @@ export default function Layout({ children }) {
                 <button
                   type="button"
                   onClick={() => { clearToken(); navigate('/login'); window.location.reload(); }}
-                  style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer', fontSize: '14px', padding: '2px 4px' }}
+                  style={{ background: 'none', border: 'none', color: '#76c97d', cursor: 'pointer', fontSize: '14px', padding: '2px 4px' }}
                   title="Sign out"
                 >
                   &#10005;

@@ -99,15 +99,15 @@
 }
 
 .book-shelf__button--danger {
-  border-color: #c85050;
-  color: #c85050;
-  background: rgba(200, 80, 80, 0.08);
+  border-color: #76c97d;
+  color: #fbbf24;
+  background: rgba(118, 201, 125, 0.1);
 }
 
 .book-shelf__button--danger:hover {
-  background: rgba(200, 80, 80, 0.2);
-  border-color: #e05555;
-  color: #e05555;
+  background: rgba(118, 201, 125, 0.2);
+  border-color: #76c97d;
+  color: #fbbf24;
 }
 
 .book-shelf__modalOverlay {
@@ -116,16 +116,16 @@
   z-index: 1000;
   display: grid;
   place-items: center;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(10, 46, 21, 0.8);
   backdrop-filter: blur(4px);
   padding: 1rem;
 }
 
 .book-shelf__modal {
   width: min(440px, 100%);
-  border: 1px solid var(--site-border);
+  border: 1px solid #76c97d;
   border-radius: 16px;
-  background: var(--site-panel);
+  background: #0a2e15;
   padding: 1.5rem;
   display: grid;
   gap: 0.75rem;
@@ -133,13 +133,14 @@
 
 .book-shelf__modal h3 {
   margin: 0;
-  color: var(--site-accent-strong);
+  color: #fbbf24;
   font-size: 1.2rem;
+  font-weight: 600;
 }
 
 .book-shelf__modalWarning {
   margin: 0;
-  color: var(--site-text-muted);
+  color: #76c97d;
   font-size: 0.85rem;
   line-height: 1.5;
 }
@@ -298,15 +299,15 @@
 }
 
 .book-shelf__button--danger {
-  border-color: #c85050;
-  color: #c85050;
-  background: rgba(200, 80, 80, 0.08);
+  border-color: #76c97d;
+  color: #fbbf24;
+  background: rgba(118, 201, 125, 0.1);
 }
 
 .book-shelf__button--danger:hover {
-  background: rgba(200, 80, 80, 0.2);
-  border-color: #e05555;
-  color: #e05555;
+  background: rgba(118, 201, 125, 0.2);
+  border-color: #76c97d;
+  color: #fbbf24;
 }
 
 .book-shelf__modalOverlay {
@@ -315,16 +316,16 @@
   z-index: 1000;
   display: grid;
   place-items: center;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(10, 46, 21, 0.8);
   backdrop-filter: blur(4px);
   padding: 1rem;
 }
 
 .book-shelf__modal {
   width: min(440px, 100%);
-  border: 1px solid var(--site-border, #3f3f46);
+  border: 1px solid #76c97d;
   border-radius: 16px;
-  background: var(--site-panel, #18181b);
+  background: #0a2e15;
   padding: 1.5rem;
   display: grid;
   gap: 0.75rem;
@@ -332,13 +333,14 @@
 
 .book-shelf__modal h3 {
   margin: 0;
-  color: var(--site-accent-strong, #fbbf24);
+  color: #fbbf24;
   font-size: 1.2rem;
+  font-weight: 600;
 }
 
 .book-shelf__modalWarning {
   margin: 0;
-  color: var(--site-text-muted, #a1a1aa);
+  color: #76c97d;
   font-size: 0.85rem;
   line-height: 1.5;
 }
@@ -347,20 +349,106 @@
   display: grid;
   gap: 0.35rem;
   font-size: 0.8rem;
-  color: var(--site-text-muted, #a1a1aa);
+  color: #76c97d;
 }
 
 .book-shelf__field input {
   padding: 0.6rem 0.75rem;
   border-radius: 8px;
-  border: 1px solid var(--site-border, #3f3f46);
-  background: var(--site-surface, #27272a);
-  color: var(--site-text, #f4f4f5);
+  border: 1px solid #76c97d;
+  background: #0a2e15;
+  color: #f4f4f5;
   font-size: 0.9rem;
+}
+
+.book-shelf__field input:focus {
+  outline: 2px solid #fbbf24;
 }
 
 .book-shelf__actions {
   display: flex;
   gap: 0.75rem;
   margin-top: 0.5rem;
+}
+
+.book-shelf__card {
+  background: #0a2e15;
+  border: 1px solid #1a4a2a;
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+  transition: all 0.3s;
+}
+
+.book-shelf__card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.book-shelf__title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #fbbf24;
+  margin-bottom: 0.5rem;
+}
+
+.book-shelf__subtitle {
+  color: #76c97d;
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+}
+
+.book-shelf__author {
+  color: #76c97d;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.book-shelf__stats {
+  color: #76c97d;
+  font-size: 0.85rem;
+}
+
+.book-shelf__search {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #1a4a2a;
+  background: #0a2e15;
+  color: #f4f4f5;
+  font-size: 0.95rem;
+}
+
+.book-shelf__search:focus {
+  outline: 2px solid #fbbf24;
+  border-color: #fbbf24;
+}
+
+.book-shelf__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.25rem;
+  margin-top: 1.5rem;
+}
+
+.book-shelf__loading {
+  color: #76c97d;
+  font-size: 1.1rem;
+  text-align: center;
+  padding: 2rem;
+}
+
+.book-shelf__error {
+  border: 1px solid #c85050;
+  border-radius: 14px;
+  padding: 0.9rem 1rem;
+  background: rgba(200, 80, 80, 0.1);
+  color: #e05555;
+}
+
+.book-shelf__empty {
+  color: #76c97d;
+  text-align: center;
+  padding: 2rem;
+  font-size: 1.1rem;
 }
