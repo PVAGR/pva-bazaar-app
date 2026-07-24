@@ -330,6 +330,8 @@ async function loadCloudinaryBookManifest(slug) {
       id: data.id || data._id || cleanSlug,
       slug: data.slug || cleanSlug,
       manuscriptMarkdown: String(data.manuscriptMarkdown || ''),
+      manuscriptUrl: String(data.manuscriptUrl || data.manuscript?.url || ''),
+      manuscriptType: String(data.manuscriptType || ''),
       webHtml: String(data.webHtml || ''),
     };
   } catch (_error) {
@@ -1292,6 +1294,10 @@ router.get('/public/:slug/view', async (req, res) => {
           book.manuscriptMarkdown = fetched;
         }
       } catch (_e) {}
+    }
+
+    if (!book.manuscriptMarkdown && !book.manuscriptUrl) {
+      console.log('[view-debug] Empty manuscript for slug:', req.params.slug, 'keys:', Object.keys(book).join(','));
     }
 
     return res
