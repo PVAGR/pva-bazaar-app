@@ -137,6 +137,32 @@ app.get('/api/health', async (_req, res) => {
     error: null,
   };
 
+  // Extract connection string details for diagnostics (redacted)
+  if (mongoUri) {
+    const hostnameMatch = mongoUri.match(/@([^/?]+)/);
+    const hostname = hostnameMatch ? hostnameMatch[1] : 'unknown';
+    const protocol = mongoUri.startsWith('mongodb+srv') ? 'mongodb+srv' : 'mongodb';
+    const hasRetryWrites = mongoUri.includes('retryWrites=true');
+    const hasAppName = mongoUri.includes('appName=');
+    dbDiag.uriInfo = { protocol, hostname, hasRetryWrites, hasAppName };
+  }
+
+  // Test DNS resolution from Vercel's infrastructure
+  const dns = require('dns').promises;
+  if (mongoUri) {
+    const hostnameMatch = mongoUri.match(/@([^/?]+)/);
+    const hostname = hostnameMatch ? hostnameMatch[1] : '';
+    if (hostname && mongoUri.startsWith('mongodb+srv://')) {
+      try {
+        const srvHost = '_mongodb._tcp.' + hostname;
+        const srvRecords = await dns.resolveSrv(srvHost);
+        dbDiag.dns = { ok: true, srvHost, recordCount: srvRecords.length };
+      } catch (dnsErr) {
+        dbDiag.dns = { ok: false, error: dnsErr.code || dnsErr.message };
+      }
+    }
+  }
+
   if (mongoUri) {
     const mongoose = require('mongoose');
     // Use a fresh connection to avoid cached state
@@ -268,6 +294,75 @@ app.get('/api/decentralized/report', async (_req, res) => {
 app.get('/api/ping', (_req, res) => {
   const build = getBuildInfo();
   res.status(200).json({ ok: true, message: 'pong', timestamp: new Date().toISOString(), version: build.version, sha: build.sha, shortSha: build.shortSha });
+});
+
+// Deep MongoDB diagnostic — use /api/mongo-diag to see exactly what's happening
+app.get('/api/mongo-diag', async (_req, res) => {
+  const uri = process.env.MONGODB_URI || process.env.DATABASE_URL || '';
+  const dns = require('dns').promises;
+  const result = {
+    hasUri: Boolean(uri),
+    timestamp: new Date().toISOString(),
+    steps: {},
+  };
+
+  if (!uri) {
+    result.steps.env = { ok: false, error: 'No MONGODB_URI or DATABASE_URL set' };
+    return res.json(result);
+  }
+
+  // Step 1: Parse URI
+  try {
+    const hostname = uri.match(/@([^/?]+)/)?.[1] || 'unknown';
+    const protocol = uri.startsWith('mongodb+srv') ? 'mongodb+srv' : 'mongodb';
+    const user = uri.match(/\/\/([^:]+):/)?.[1] || 'unknown';
+    const hasDb = uri.includes('/?') ? '(default)' : (uri.match(/\/([^?]+)/)?.[1] || '(default)');
+    result.steps.parse = { ok: true, protocol, hostname, user, database: hasDb };
+  } catch (e) {
+    result.steps.parse = { ok: false, error: e.message };
+  }
+
+  // Step 2: DNS resolution
+  const hostname = uri.match(/@([^/?]+)/)?.[1] || '';
+  if (uri.startsWith('mongodb+srv://') && hostname) {
+    const srvHost = '_mongodb._tcp.' + hostname;
+    try {
+      const srv = await dns.resolveSrv(srvHost);
+      result.steps.dnsSrv = { ok: true, recordCount: srv.length, records: srv.map(r => `${r.name}:${r.port}`) };
+    } catch (e) {
+      result.steps.dnsSrv = { ok: false, code: e.code, message: e.message };
+    }
+  } else if (hostname) {
+    try {
+      const a = await dns.resolve4(hostname);
+      result.steps.dnsA = { ok: true, addresses: a };
+    } catch (e) {
+      result.steps.dnsA = { ok: false, code: e.code, message: e.message };
+    }
+  }
+
+  // Step 3: Actual connection
+  const mongoose = require('mongoose');
+  const conn = mongoose.createConnection();
+  try {
+    await Promise.race([
+      conn.openUri(uri, { serverSelectionTimeoutMS: 10000, connectTimeoutMS: 10000 }),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('connection timeout 10s')), 11000)),
+    ]);
+    const info = await conn.db.admin().serverStatus();
+    result.steps.connect = { ok: true, version: info.version, host: info.host };
+    await conn.close().catch(() => {});
+  } catch (e) {
+    const raw = e.message || String(e);
+    result.steps.connect = {
+      ok: false,
+      code: e.code,
+      error: raw.replace(/(?<=:\/\/[^:]+:)[^@]+(?=@)/g, '***').substring(0, 500),
+    };
+    await conn.close().catch(() => {});
+  }
+
+  res.json(result);
 });
 
 app.get('/api/version', (_req, res) => {
