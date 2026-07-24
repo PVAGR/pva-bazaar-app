@@ -1077,7 +1077,7 @@ router.post('/signed-upload', authenticateBookPublishing, (req, res) => {
       return res.status(500).json({ ok: false, error: 'Cloudinary not configured' });
     }
     const timestamp = Math.floor(Date.now() / 1000);
-    const params = { timestamp, folder, resource_type: resourceType };
+    const params = { timestamp, folder };
     const cloudinary = getCloudinaryClient();
     const signature = cloudinary.utils.api_sign_request(params, process.env.CLOUDINARY_API_SECRET);
     return res.json({
@@ -1086,6 +1086,8 @@ router.post('/signed-upload', authenticateBookPublishing, (req, res) => {
       timestamp,
       apiKey: process.env.CLOUDINARY_API_KEY,
       cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+      folder,
+      resourceType,
     });
   } catch (error) {
     return res.status(500).json({ ok: false, error: error.message || 'Failed to generate signed upload' });

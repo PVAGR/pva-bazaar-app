@@ -235,6 +235,7 @@ async function uploadFormatFileViaSignedUrl(file, folder, resourceType = 'raw', 
   formData.append('timestamp', timestamp);
   formData.append('signature', signature);
   formData.append('folder', folder);
+  formData.append('resource_type', resourceType);
   const uploadUrl = `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`;
   const uploadRes = await fetch(uploadUrl, { method: 'POST', body: formData });
   if (!uploadRes.ok) {
