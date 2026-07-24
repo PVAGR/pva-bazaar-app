@@ -141,6 +141,13 @@ function renderBookBody(book) {
     ? `<figure class="book-cover book-cover--back"><img src="${escapeHtml(book.backCover.url)}" alt="Back cover for ${escapeHtml(book.title)}" /></figure>`
     : '';
 
+  const manuscriptContent = book.manuscriptMarkdown
+    ? `<div class="book-body">${renderMarkdownToHtml(book.manuscriptMarkdown)}</div>`
+    : book.manuscriptUrl
+      ? `<p style="padding:1.5rem;text-align:center;color:#574f43;">This book is available for download.</p>
+         <p style="text-align:center;"><a href="${escapeHtml(book.manuscriptUrl)}" target="_blank" rel="noreferrer" style="display:inline-block;padding:.7rem 1.5rem;border-radius:999px;background:#7b5c2b;color:#fff;text-decoration:none;font-weight:700;">Download manuscript</a></p>`
+      : '';
+
   return `
     <header class="book-hero">
       <p class="book-pill">Book edition</p>
@@ -153,7 +160,7 @@ function renderBookBody(book) {
     ${frontCover}
     <section class="book-section">
       <h2>Manuscript</h2>
-      <div class="book-body">${renderMarkdownToHtml(book.manuscriptMarkdown)}</div>
+      ${manuscriptContent}
     </section>
     ${backCover}
   `;

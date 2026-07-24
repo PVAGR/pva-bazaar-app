@@ -3,8 +3,6 @@ import { Helmet } from 'react-helmet-async';
 import { Link, useParams } from 'react-router-dom';
 import { fetchPublicBookProject, getApiBase } from '../lib/api';
 import { findLocalPublishedBookBySlug } from '../lib/localBookVault';
-import ReactMarkdown from 'react-markdown';
-import rehypeSanitize from 'rehype-sanitize';
 import './BookReaderPage.css';
 
 function toApiUrl(path) {
@@ -60,6 +58,8 @@ export default function BookReaderPage() {
     };
   }, [book]);
 
+  const readerIframeSrc = viewLinks?.apiView || '';
+
   return (
     <>
       <Helmet>
@@ -96,16 +96,18 @@ export default function BookReaderPage() {
             <h2>Reader view</h2>
             {loading ? <p className="book-reader__muted">Loading book…</p> : null}
             {error ? <div className="book-reader__error" role="alert">{error}</div> : null}
-            {!loading && !error && book?.webHtml ? (
-              <div className="book-reader__html" dangerouslySetInnerHTML={{ __html: book.webHtml }} />
-            ) : null}
-            {!loading && !error && !book?.webHtml && book?.manuscriptMarkdown ? (
-              <div className="book-reader__html">
-                <ReactMarkdown rehypePlugins={[rehypeSanitize]}>{book.manuscriptMarkdown}</ReactMarkdown>
+            {!loading && !error && readerIframeSrc ? (
+              <div className="book-reader__iframeWrap">
+                <iframe
+                  src={readerIframeSrc}
+                  title={`${book?.title || 'Book'} reader`}
+                  className="book-reader__iframe"
+                  sandbox="allow-same-origin allow-scripts"
+                />
               </div>
             ) : null}
-            {!loading && !error && !book?.webHtml && !book?.manuscriptMarkdown ? (
-              <p className="book-reader__muted">This book does not have rendered HTML yet.</p>
+            {!loading && !error && !readerIframeSrc ? (
+              <p className="book-reader__muted">This book does not have rendered content yet.</p>
             ) : null}
           </article>
 
@@ -122,13 +124,13 @@ export default function BookReaderPage() {
             {viewLinks?.frontCover ? (
               <div className="book-reader__cover">
                 <h3>Front cover</h3>
-                <img src={viewLinks.frontCover} alt={`${book?.title || 'Book'} front cover`} />
+                <img src={viewLinks.frontCover} alt={`${book?.title || 'Book'} front cover`} loading="lazy" />
               </div>
             ) : null}
             {viewLinks?.backCover ? (
               <div className="book-reader__cover">
                 <h3>Back cover</h3>
-                <img src={viewLinks.backCover} alt={`${book?.title || 'Book'} back cover`} />
+                <img src={viewLinks.backCover} alt={`${book?.title || 'Book'} back cover`} loading="lazy" />
               </div>
             ) : null}
 

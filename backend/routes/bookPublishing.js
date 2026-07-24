@@ -1284,6 +1284,16 @@ router.get('/public/:slug/view', async (req, res) => {
       return res.status(404).type('html').send(renderNotFoundHtml('This book has not been published yet.'));
     }
 
+    if (!book.manuscriptMarkdown && book.manuscriptUrl) {
+      try {
+        const resp = await axios.get(book.manuscriptUrl, { timeout: 30000, responseType: 'text' });
+        const fetched = String(resp.data || '');
+        if (fetched.length > 100) {
+          book.manuscriptMarkdown = fetched;
+        }
+      } catch (_e) {}
+    }
+
     return res
       .status(200)
       .type('html')
@@ -1392,6 +1402,17 @@ router.get('/:bookId/view', authenticateBookPublishing, async (req, res) => {
     if (!canViewBook(req, book)) {
       return res.status(403).type('html').send(renderNotFoundHtml('You do not have permission to view this book.'));
     }
+
+    if (!book.manuscriptMarkdown && book.manuscriptUrl) {
+      try {
+        const resp = await axios.get(book.manuscriptUrl, { timeout: 30000, responseType: 'text' });
+        const fetched = String(resp.data || '');
+        if (fetched.length > 100) {
+          book.manuscriptMarkdown = fetched;
+        }
+      } catch (_e) {}
+    }
+
     return res
       .status(200)
       .type('html')

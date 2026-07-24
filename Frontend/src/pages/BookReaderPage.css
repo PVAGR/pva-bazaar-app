@@ -85,6 +85,22 @@
   gap: 1rem;
 }
 
+.book-reader__iframeWrap {
+  width: 100%;
+  min-height: 70vh;
+  border: 1px solid var(--site-border);
+  border-radius: 14px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.book-reader__iframe {
+  width: 100%;
+  height: 70vh;
+  border: 0;
+  display: block;
+}
+
 .book-reader__html :is(h1, h2, h3) {
   color: var(--site-accent-strong);
 }
