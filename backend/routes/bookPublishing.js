@@ -1506,6 +1506,30 @@ router.delete('/:bookId', authenticateBookPublishing, async (req, res) => {
       await fsp.rm(filePath, { force: true }).catch(() => {});
     }
 
+    if (isCloudinaryConfigured()) {
+      const slug = String(book.slug || '').trim();
+      const cloudinary = getCloudinaryClient();
+      const idsToDelete = [];
+
+      if (slug) {
+        idsToDelete.push(
+          `${CLOUDINARY_BOOK_MANIFEST_FOLDER}/${cloudinaryBookSlugId(slug)}`,
+          `${CLOUDINARY_BOOK_MANUSCRIPT_FOLDER}/${cloudinaryBookSlugId(slug)}`,
+        );
+      }
+
+      if (book.frontCover?.publicId) {
+        idsToDelete.push(book.frontCover.publicId);
+      }
+      if (book.backCover?.publicId) {
+        idsToDelete.push(book.backCover.publicId);
+      }
+
+      if (idsToDelete.length) {
+        await cloudinary.api.delete_resources(idsToDelete, { resource_type: 'raw' }).catch(() => {});
+      }
+    }
+
     await removeBookRecord(book._id);
     return res.json({ ok: true });
   } catch (error) {
