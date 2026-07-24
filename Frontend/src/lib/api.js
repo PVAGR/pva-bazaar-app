@@ -266,7 +266,7 @@ export async function fetchPublicBookProject(slug) {
 }
 
 export async function saveBookProject(formData) {
-  return apiUpload('/book-publishing', formData);
+  return apiUpload('/book-publishing', formData, {}, 60000);
 }
 
 export async function deleteBookProject(bookId) {
@@ -431,7 +431,7 @@ async function fetchWithBackendFailover(path, options = {}) {
  * Uses native fetch so the browser can set the correct Content-Type boundary.
  * Attaches the auth token automatically.
  */
-export async function apiUpload(path, formData, extraHeaders = {}) {
+export async function apiUpload(path, formData, extraHeaders = {}, timeoutMs) {
   const headers = {
     ...extraHeaders,
   };
@@ -448,6 +448,7 @@ export async function apiUpload(path, formData, extraHeaders = {}) {
     headers,
     body: formData,
     credentials: 'omit',
+    ...(timeoutMs ? { timeoutMs } : {}),
   });
 
   const data = await response.json().catch(() => ({}));

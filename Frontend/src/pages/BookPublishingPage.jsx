@@ -630,11 +630,8 @@ export default function BookPublishingPage() {
       let frontCoverResult = null;
       let backCoverResult = null;
       let manuscriptResult = null;
-      let htmlResult = null;
-      let pdfResult = null;
-      let docxResult = null;
       let cloudinaryAvailable = true;
-      const cloudinaryFallbacks = { frontCover: false, backCover: false, manuscript: false, html: false, pdf: false, docx: false };
+      const cloudinaryFallbacks = { frontCover: false, backCover: false, manuscript: false };
       try {
         if (preparedFrontCover) {
           try {
@@ -662,36 +659,13 @@ export default function BookPublishingPage() {
             cloudinaryFallbacks.manuscript = true;
           }
         }
-        // Upload HTML manuscript
-        if (htmlFile) {
-          try {
-            htmlResult = await uploadToCloudinary(htmlFile, ENV.CLOUDINARY_CLOUD_NAME, ENV.CLOUDINARY_UPLOAD_PRESET || 'pva_books_covers', 'raw');
-          } catch (e) {
-            console.warn('Cloudinary HTML upload failed:', e.message);
-            cloudinaryFallbacks.html = true;
-          }
-        }
-        // Upload PDF manuscript
-        if (pdfFile) {
-          try {
-            pdfResult = await uploadToCloudinary(pdfFile, ENV.CLOUDINARY_CLOUD_NAME, ENV.CLOUDINARY_UPLOAD_PRESET || 'pva_books_covers', 'raw');
-          } catch (e) {
-            console.warn('Cloudinary PDF upload failed:', e.message);
-            cloudinaryFallbacks.pdf = true;
-          }
-        }
-        // Upload DOCX manuscript
-        if (docxFile) {
-          try {
-            docxResult = await uploadToCloudinary(docxFile, ENV.CLOUDINARY_CLOUD_NAME, ENV.CLOUDINARY_UPLOAD_PRESET || 'pva_books_covers', 'raw');
-          } catch (e) {
-            console.warn('Cloudinary DOCX upload failed:', e.message);
-            cloudinaryFallbacks.docx = true;
-          }
-        }
+        // Format files (HTML, PDF, DOCX) are always sent through the backend
+        // because Cloudinary upload presets are typically image-only and raw
+        // uploads fail. The backend handles Cloudinary re-upload server-side
+        // with the API secret (no preset needed).
         // Only disable cloudinary if ALL direct uploads failed
-        const anySucceeded = frontCoverResult || backCoverResult || manuscriptResult || htmlResult || pdfResult || docxResult;
-        if (!anySucceeded && (cloudinaryFallbacks.frontCover || cloudinaryFallbacks.backCover || cloudinaryFallbacks.manuscript || cloudinaryFallbacks.html || cloudinaryFallbacks.pdf || cloudinaryFallbacks.docx)) {
+        const anySucceeded = frontCoverResult || backCoverResult || manuscriptResult;
+        if (!anySucceeded && (cloudinaryFallbacks.frontCover || cloudinaryFallbacks.backCover || cloudinaryFallbacks.manuscript)) {
           cloudinaryAvailable = false;
         }
       } catch (cloudErr) {
@@ -739,20 +713,14 @@ export default function BookPublishingPage() {
           payload.append('backCover', preparedBackCover, preparedBackCover.name || 'back-cover.jpg');
         }
 
-        // Send manuscript format URLs
-        if (htmlResult) {
-          payload.append('manuscriptHtmlUrl', htmlResult.secure_url);
-        } else if (htmlFile && cloudinaryFallbacks.html) {
+        // Send format files through the backend for Cloudinary re-upload
+        if (htmlFile) {
           payload.append('manuscriptHtml', htmlFile);
         }
-        if (pdfResult) {
-          payload.append('manuscriptPdfUrl', pdfResult.secure_url);
-        } else if (pdfFile && cloudinaryFallbacks.pdf) {
+        if (pdfFile) {
           payload.append('manuscriptPdf', pdfFile);
         }
-        if (docxResult) {
-          payload.append('manuscriptDocxUrl', docxResult.secure_url);
-        } else if (docxFile && cloudinaryFallbacks.docx) {
+        if (docxFile) {
           payload.append('manuscriptDocx', docxFile);
         }
 
