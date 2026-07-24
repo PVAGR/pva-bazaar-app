@@ -1066,6 +1066,32 @@ router.get('/public', async (req, res) => {
   }
 });
 
+router.post('/signed-upload', authenticateBookPublishing, (req, res) => {
+  try {
+    const folder = sanitizeText(req.body?.folder || '', 200);
+    const resourceType = sanitizeText(req.body?.resourceType || 'raw', 20);
+    if (!folder) {
+      return res.status(400).json({ ok: false, error: 'folder is required' });
+    }
+    if (!isCloudinaryConfigured()) {
+      return res.status(500).json({ ok: false, error: 'Cloudinary not configured' });
+    }
+    const timestamp = Math.floor(Date.now() / 1000);
+    const params = { timestamp, folder, resource_type: resourceType };
+    const cloudinary = getCloudinaryClient();
+    const signature = cloudinary.utils.api_sign_request(params, process.env.CLOUDINARY_API_SECRET);
+    return res.json({
+      ok: true,
+      signature,
+      timestamp,
+      apiKey: process.env.CLOUDINARY_API_KEY,
+      cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+    });
+  } catch (error) {
+    return res.status(500).json({ ok: false, error: error.message || 'Failed to generate signed upload' });
+  }
+});
+
 router.post('/', authenticateBookPublishing, bookUpload, async (req, res) => {
   const requestId = req.requestId || crypto.randomUUID();
   let stage = 'received_request';

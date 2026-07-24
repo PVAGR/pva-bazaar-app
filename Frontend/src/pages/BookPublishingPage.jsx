@@ -190,6 +190,61 @@ async function uploadToCloudinary(file, cloudName, uploadPreset, resourceType = 
   return { secure_url: data.secure_url, public_id: data.public_id };
 }
 
+function minifyHtml(html) {
+  if (!html || typeof html !== 'string') return html;
+  return html
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/<!\DOCTYPE[^>]*>/gi, '')
+    .replace(/<\?[\s\S]*?\?>/g, '')
+    .replace(/\s+/g, ' ')
+    .replace(/>\s+</g, '><')
+    .replace(/\s+\/>/g, '/>')
+    .trim();
+}
+
+async function compressFileForUpload(file, maxBytes = 500000) {
+  if (!file) return file;
+  if (file.size <= maxBytes) return file;
+  if (file.type === 'text/html' || file.name?.endsWith('.html') || file.name?.endsWith('.htm')) {
+    const text = await file.text();
+    const minified = minifyHtml(text);
+    if (new Blob([minified]).size < file.size) {
+      return new Blob([minified], { type: 'text/html' });
+    }
+  }
+  return file;
+}
+
+async function uploadFormatFileViaSignedUrl(file, folder, resourceType = 'raw', apiBase, authToken) {
+  const signedRes = await fetch(`${apiBase}/book-publishing/signed-upload`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(authToken ? { Authorization: authToken.startsWith('Bearer ') ? authToken : `Bearer ${authToken}` } : {}),
+    },
+    body: JSON.stringify({ folder, resourceType }),
+  });
+  if (!signedRes.ok) {
+    const errData = await signedRes.json().catch(() => ({}));
+    throw new Error(errData.error || `Signed upload request failed (${signedRes.status})`);
+  }
+  const { signature, timestamp, apiKey, cloudName } = await signedRes.json();
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('api_key', apiKey);
+  formData.append('timestamp', timestamp);
+  formData.append('signature', signature);
+  formData.append('folder', folder);
+  const uploadUrl = `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`;
+  const uploadRes = await fetch(uploadUrl, { method: 'POST', body: formData });
+  if (!uploadRes.ok) {
+    const errBody = await uploadRes.json().catch(() => ({}));
+    throw new Error(errBody.error?.message || `Cloudinary upload failed (${uploadRes.status})`);
+  }
+  const data = await uploadRes.json();
+  return { secure_url: data.secure_url, public_id: data.public_id };
+}
+
 function describePublishFailure(error, { requestUrl, tokenPresent }) {
   const status = Number(error?.status || error?.response?.status || 0);
   const statusText =
@@ -659,12 +714,37 @@ export default function BookPublishingPage() {
             cloudinaryFallbacks.manuscript = true;
           }
         }
-        // Format files (HTML, PDF, DOCX) are always sent through the backend
-        // because Cloudinary upload presets are typically image-only and raw
-        // uploads fail. The backend handles Cloudinary re-upload server-side
-        // with the API secret (no preset needed).
+        // Format files (HTML, PDF, DOCX) are uploaded directly to Cloudinary
+        // using signed upload URLs from the backend. This avoids sending binary
+        // data through the Vercel proxy which causes network errors on large payloads.
+        const apiBase = getApiBase();
+        let htmlResult = null;
+        let pdfResult = null;
+        let docxResult = null;
+        if (htmlFile) {
+          try {
+            const compressed = await compressFileForUpload(htmlFile);
+            htmlResult = await uploadFormatFileViaSignedUrl(compressed, 'pva-bazaar-books/book-html', 'raw', apiBase, authToken);
+          } catch (e) {
+            console.warn('HTML upload via signed URL failed:', e.message);
+          }
+        }
+        if (pdfFile) {
+          try {
+            pdfResult = await uploadFormatFileViaSignedUrl(pdfFile, 'pva-bazaar-books/book-pdfs', 'raw', apiBase, authToken);
+          } catch (e) {
+            console.warn('PDF upload via signed URL failed:', e.message);
+          }
+        }
+        if (docxFile) {
+          try {
+            docxResult = await uploadFormatFileViaSignedUrl(docxFile, 'pva-bazaar-books/book-docx', 'raw', apiBase, authToken);
+          } catch (e) {
+            console.warn('DOCX upload via signed URL failed:', e.message);
+          }
+        }
         // Only disable cloudinary if ALL direct uploads failed
-        const anySucceeded = frontCoverResult || backCoverResult || manuscriptResult;
+        const anySucceeded = frontCoverResult || backCoverResult || manuscriptResult || htmlResult || pdfResult || docxResult;
         if (!anySucceeded && (cloudinaryFallbacks.frontCover || cloudinaryFallbacks.backCover || cloudinaryFallbacks.manuscript)) {
           cloudinaryAvailable = false;
         }
@@ -713,15 +793,15 @@ export default function BookPublishingPage() {
           payload.append('backCover', preparedBackCover, preparedBackCover.name || 'back-cover.jpg');
         }
 
-        // Send format files through the backend for Cloudinary re-upload
-        if (htmlFile) {
-          payload.append('manuscriptHtml', htmlFile);
+        // Send format file Cloudinary URLs (no binary in FormData)
+        if (htmlResult) {
+          payload.append('manuscriptHtmlUrl', htmlResult.secure_url);
         }
-        if (pdfFile) {
-          payload.append('manuscriptPdf', pdfFile);
+        if (pdfResult) {
+          payload.append('manuscriptPdfUrl', pdfResult.secure_url);
         }
-        if (docxFile) {
-          payload.append('manuscriptDocx', docxFile);
+        if (docxResult) {
+          payload.append('manuscriptDocxUrl', docxResult.secure_url);
         }
 
         return payload;
