@@ -743,8 +743,6 @@ async function removeBookRecord(bookId) {
     return BookProject.findByIdAndDelete(strId);
   }
 
-  const byId = await BookProject.findOneAndDelete({ _id: strId });
-  if (byId) return byId;
   return BookProject.findOneAndDelete({ slug: strId });
 }
 
