@@ -71,7 +71,9 @@ async function authenticateToken(req, res, next) {
     if (!user) {
       return res.status(401).json({
         ok: false,
-        error: 'Invalid authentication token user id'
+        error: 'Invalid authentication token user id',
+        sessionExpired: true,
+        message: 'Your session is invalid. Please log in again.',
       });
     }
 

@@ -472,6 +472,15 @@ export default function BookPublishingPage() {
         void syncQueuedPublishDrafts(items, localItems);
       }
     } catch (err) {
+      const isAuth = err?.status === 401 || err?.response?.status === 401
+        || /auth|token|session/i.test(String(err?.message || ''));
+      if (isAuth) {
+        try { localStorage.removeItem('token'); } catch (_) {}
+        if (typeof window !== 'undefined' && !window.location.hash.startsWith('#/login')) {
+          window.location.assign('/#/login');
+        }
+        return;
+      }
       const localItems = listLocalBookProjects();
       setBooks(localItems);
       if (!selectedBookId && localItems.length) {
@@ -670,6 +679,15 @@ export default function BookPublishingPage() {
 
         return;
       } catch (networkErr) {
+        const publishStatus = Number(networkErr?.status || networkErr?.response?.status || 0);
+        const isAuth = publishStatus === 401 || /auth|token|session/i.test(String(networkErr?.message || ''));
+        if (isAuth) {
+          try { localStorage.removeItem('token'); } catch (_) {}
+          if (typeof window !== 'undefined' && !window.location.hash.startsWith('#/login')) {
+            window.location.assign('/#/login');
+          }
+          return;
+        }
         setError(describePublishFailure(networkErr, { requestUrl, tokenPresent }));
         setSuccess('');
       }
