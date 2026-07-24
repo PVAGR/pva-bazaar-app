@@ -1296,10 +1296,6 @@ router.get('/public/:slug/view', async (req, res) => {
       } catch (_e) {}
     }
 
-    if (!book.manuscriptMarkdown && !book.manuscriptUrl) {
-      console.log('[view-debug] Empty manuscript for slug:', req.params.slug, 'keys:', Object.keys(book).join(','));
-    }
-
     return res
       .status(200)
       .type('html')
