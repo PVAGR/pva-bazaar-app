@@ -633,7 +633,12 @@ async function loadBookForEdit(bookId) {
     if (book) return book;
   }
 
-  return connected ? BookProject.findById(normalizedBookId) : null;
+  if (connected) {
+    const bySlug = await BookProject.findOne({ slug: normalizedBookId });
+    if (bySlug) return bySlug;
+  }
+
+  return null;
 }
 
 async function loadBookForSlug(slug) {
@@ -992,7 +997,7 @@ router.post('/', authenticateBookPublishing, bookUpload, async (req, res) => {
     stage = 'payload_parsed';
 
     let book = null;
-    if (bookId) {
+    if (bookId && isMongoObjectId(bookId)) {
       book = await loadBookForEdit(bookId);
       if (!book) throw new Error('Book not found');
       if (!canEditBook(req, book)) throw new Error('Unauthorized to edit book');
