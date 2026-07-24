@@ -396,3 +396,18 @@
     flex-direction: column;
   }
 }
+
+.book-publish__formatSection {
+  margin-top: 1.5rem;
+  padding: 1.2rem;
+  border: 1px solid var(--site-border);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--site-panel-soft) 60%, transparent);
+}
+
+.book-publish__formatSectionTitle {
+  margin: 0 0 0.5rem;
+  font-weight: 700;
+  color: var(--site-accent-strong);
+  font-size: 1.05rem;
+}

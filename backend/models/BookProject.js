@@ -37,6 +37,9 @@ const bookProjectSchema = new mongoose.Schema(
     manuscriptMarkdown: { type: String, default: '' },
     manuscriptUrl: { type: String, default: '' }, // Cloudinary raw URL for manuscript files
     manuscriptType: { type: String, default: '' }, // 'pdf', 'html', 'docx', 'raw'
+    manuscriptPdfUrl: { type: String, default: '' }, // Cloudinary raw URL for PDF version
+    manuscriptDocxUrl: { type: String, default: '' }, // Cloudinary raw URL for DOCX version
+    manuscriptHtml: { type: String, default: '' }, // Cloudinary raw URL for HTML version
     coverUrl: { type: String, default: '' }, // Cloudinary image URL for cover
     frontCover: { type: bookAssetSchema, default: {} },
     backCover: { type: bookAssetSchema, default: {} },

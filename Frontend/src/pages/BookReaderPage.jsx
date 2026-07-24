@@ -53,6 +53,8 @@ export default function BookReaderPage() {
       apiView: toApiUrl(book.links.apiView),
       pdf: toApiUrl(book.links.pdf),
       epub: toApiUrl(book.links.epub),
+      docx: toApiUrl(book.links.docx),
+      viewDocx: toApiUrl(book.links.viewDocx),
       frontCover: book.links.frontCover ? toApiUrl(book.links.frontCover) : '',
       backCover: book.links.backCover ? toApiUrl(book.links.backCover) : '',
     };
@@ -86,7 +88,8 @@ export default function BookReaderPage() {
               <Link className="book-reader__button" to="/books/published">Browse bookshelf</Link>
               <Link className="book-reader__button" to="/books/publish">Publish a book</Link>
               {viewLinks?.pdf ? <a className="book-reader__button book-reader__button--primary" href={viewLinks.pdf} target="_blank" rel="noreferrer">PDF</a> : null}
-              {viewLinks?.epub ? <a className="book-reader__button" href={viewLinks.epub} target="_blank" rel="noreferrer">EPUB</a> : null}
+              {viewLinks?.docx ? <a className="book-reader__button" href={viewLinks.docx} target="_blank" rel="noreferrer">DOCX</a> : null}
+              {viewLinks?.viewDocx ? <a className="book-reader__button" href={viewLinks.viewDocx} target="_blank" rel="noreferrer">Read DOCX on site</a> : null}
             </div>
           </aside>
         </header>
@@ -138,7 +141,8 @@ export default function BookReaderPage() {
               <div className="book-reader__actions">
                 <a className="book-reader__button" href={viewLinks.apiView} target="_blank" rel="noreferrer">Open API view</a>
                 {viewLinks.pdf ? <a className="book-reader__button" href={viewLinks.pdf} target="_blank" rel="noreferrer">Download PDF</a> : null}
-                {viewLinks.epub ? <a className="book-reader__button" href={viewLinks.epub} target="_blank" rel="noreferrer">Download EPUB</a> : null}
+                {viewLinks.docx ? <a className="book-reader__button" href={viewLinks.docx} target="_blank" rel="noreferrer">Download DOCX</a> : null}
+                {viewLinks.viewDocx ? <a className="book-reader__button" href={viewLinks.viewDocx} target="_blank" rel="noreferrer">Read DOCX on site</a> : null}
               </div>
             ) : null}
           </aside>

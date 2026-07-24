@@ -62,11 +62,17 @@ const bookUpload = upload.fields([
   { name: 'frontCover', maxCount: 1 },
   { name: 'backCover', maxCount: 1 },
   { name: 'manuscriptFile', maxCount: 1 },
+  { name: 'manuscriptPdf', maxCount: 1 },
+  { name: 'manuscriptDocx', maxCount: 1 },
+  { name: 'manuscriptHtml', maxCount: 1 },
 ]);
 
 const hasMongoUri = Boolean(process.env.MONGODB_URI || process.env.DATABASE_URL);
 const CLOUDINARY_BOOK_MANIFEST_FOLDER = 'pva-bazaar-books/book-manifests';
 const CLOUDINARY_BOOK_MANUSCRIPT_FOLDER = 'pva-bazaar-books/book-manuscripts';
+const CLOUDINARY_BOOK_PDF_FOLDER = 'pva-bazaar-books/book-pdfs';
+const CLOUDINARY_BOOK_DOCX_FOLDER = 'pva-bazaar-books/book-docx';
+const CLOUDINARY_BOOK_HTML_FOLDER = 'pva-bazaar-books/book-html';
 let mongoReadyPromise = null;
 
 async function ensureMongoBookReady() {
@@ -257,7 +263,22 @@ async function uploadCloudinaryBookText(slug, manuscriptMarkdown) {
   );
 }
 
-async function uploadCloudinaryBookManifest(book, manuscriptMarkdown, manuscriptAsset) {
+async function uploadCloudinaryBookPdf(slug, buffer) {
+  if (!buffer?.length) return null;
+  return uploadCloudinaryRawPayload(buffer, CLOUDINARY_BOOK_PDF_FOLDER, cloudinaryBookSlugId(slug));
+}
+
+async function uploadCloudinaryBookDocx(slug, buffer) {
+  if (!buffer?.length) return null;
+  return uploadCloudinaryRawPayload(buffer, CLOUDINARY_BOOK_DOCX_FOLDER, cloudinaryBookSlugId(slug));
+}
+
+async function uploadCloudinaryBookHtml(slug, buffer) {
+  if (!buffer?.length) return null;
+  return uploadCloudinaryRawPayload(buffer, CLOUDINARY_BOOK_HTML_FOLDER, cloudinaryBookSlugId(slug));
+}
+
+async function uploadCloudinaryBookManifest(book, manuscriptMarkdown, manuscriptAsset, extraFormats = {}) {
   const manifest = {
     source: 'cloudinary-raw',
     _id: cloudinaryBookSlugId(book.slug || book.title || 'book'),
@@ -283,6 +304,9 @@ async function uploadCloudinaryBookManifest(book, manuscriptMarkdown, manuscript
       manuscript: manuscriptAsset || null,
     },
     manuscriptMarkdown: '',
+    manuscriptPdfUrl: extraFormats.pdfUrl || '',
+    manuscriptDocxUrl: extraFormats.docxUrl || '',
+    manuscriptHtml: extraFormats.htmlUrl || '',
     webHtml: '',
   };
 
@@ -332,6 +356,9 @@ async function loadCloudinaryBookManifest(slug) {
       manuscriptMarkdown: String(data.manuscriptMarkdown || ''),
       manuscriptUrl: String(data.manuscriptUrl || data.manuscript?.url || ''),
       manuscriptType: String(data.manuscriptType || ''),
+      manuscriptPdfUrl: String(data.manuscriptPdfUrl || ''),
+      manuscriptDocxUrl: String(data.manuscriptDocxUrl || ''),
+      manuscriptHtml: String(data.manuscriptHtml || ''),
       webHtml: String(data.webHtml || ''),
     };
   } catch (_error) {
@@ -701,7 +728,14 @@ async function saveCloudinaryPublishedBook(book) {
   }
 
   const manuscriptAsset = await uploadCloudinaryBookText(slug, manuscriptMarkdown);
-  const manifest = await uploadCloudinaryBookManifest(book, manuscriptMarkdown, manuscriptAsset);
+
+  // Upload extra format files if provided
+  const extraFormats = {};
+  if (book.manuscriptPdfUrl) extraFormats.pdfUrl = book.manuscriptPdfUrl;
+  if (book.manuscriptDocxUrl) extraFormats.docxUrl = book.manuscriptDocxUrl;
+  if (book.manuscriptHtml) extraFormats.htmlUrl = book.manuscriptHtml;
+
+  const manifest = await uploadCloudinaryBookManifest(book, manuscriptMarkdown, manuscriptAsset, extraFormats);
   const savedBook = {
     ...sourceBook,
     _id: slug,
@@ -720,6 +754,9 @@ async function saveCloudinaryPublishedBook(book) {
     updatedAt: sourceBook.updatedAt || book.updatedAt || new Date(),
     createdAt: sourceBook.createdAt || book.createdAt || new Date(),
     manuscriptMarkdown: '',
+    manuscriptPdfUrl: extraFormats.pdfUrl || '',
+    manuscriptDocxUrl: extraFormats.docxUrl || '',
+    manuscriptHtml: extraFormats.htmlUrl || '',
     webHtml: '',
     storage: {
       provider: 'cloudinary-raw',
@@ -778,6 +815,9 @@ function bookSummary(book, { publicView = false } = {}) {
     updatedAt: book.updatedAt || null,
     createdAt: book.createdAt || null,
     manuscriptMarkdown: publicView ? undefined : book.manuscriptMarkdown || '',
+    manuscriptPdfUrl: book.manuscriptPdfUrl || '',
+    manuscriptDocxUrl: book.manuscriptDocxUrl || '',
+    manuscriptHtml: book.manuscriptHtml || '',
     webHtml: book.webHtml || '',
     frontCover: book.frontCover || {},
     backCover: book.backCover || {},
@@ -786,6 +826,8 @@ function bookSummary(book, { publicView = false } = {}) {
       apiView: `${baseRoute}/view`,
       pdf: `${baseRoute}/download/pdf`,
       epub: `${baseRoute}/download/epub`,
+      docx: `${baseRoute}/download/docx`,
+      viewDocx: `${baseRoute}/view/docx`,
       frontCover,
       backCover,
     },
@@ -821,6 +863,43 @@ function renderNotFoundHtml(message) {
     </style>
   </head>
   <body><main class="card"><h1>Book not found</h1><p>${escapeHtml(message)}</p></main></body>
+</html>`;
+}
+
+function wrapHtmlContent(book, htmlContent) {
+  const title = escapeHtml(book.title || 'Book');
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>${title}</title>
+    <style>
+      :root{color-scheme:light;}
+      body{margin:0;background:#f6f2e8;color:#171717;font-family:Georgia,Times,serif;line-height:1.7;}
+      .page{max-width:920px;margin:0 auto;padding:2rem 1.25rem 3rem;}
+      .book-hero{padding:1.5rem;border:1px solid #d4c8b4;border-radius:22px;background:#fffdf8;box-shadow:0 10px 30px rgba(60,40,10,.06);margin-bottom:1.5rem;}
+      .book-pill{margin:0 0 .6rem;text-transform:uppercase;letter-spacing:.12em;font-size:.76rem;color:#755b2f;font-weight:700;}
+      h1,h2,h3{line-height:1.15;margin:0;color:#1d2d46;}
+      h1{font-size:clamp(2.1rem,5vw,3.6rem);margin-bottom:.35rem;}
+      .book-subtitle,.book-author{margin:.15rem 0;color:#574f43;font-size:1.02rem;}
+      .book-meta{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.9rem;}
+      .book-meta span{border:1px solid #d8cab0;border-radius:999px;padding:.32rem .7rem;background:#faf2df;color:#7b5c2b;font-size:.86rem;font-weight:700;}
+      img{max-width:100%;height:auto;border-radius:12px;}
+      blockquote{border-left:4px solid #a08b66;padding-left:1rem;color:#5d5446;margin:1rem 0;}
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <header class="book-hero">
+        <p class="book-pill">Book edition</p>
+        <h1>${title}</h1>
+        ${book.subtitle ? `<p class="book-subtitle">${escapeHtml(book.subtitle)}</p>` : ''}
+        ${book.authorName ? `<p class="book-author">by ${escapeHtml(book.authorName)}</p>` : ''}
+      </header>
+      <section class="book-manuscript">${htmlContent}</section>
+    </main>
+  </body>
 </html>`;
 }
 
@@ -907,6 +986,8 @@ function lightweightPublicSummary(book) {
     apiView: slug ? `/api/book-publishing/public/${encodeURIComponent(slug)}/view` : '',
     pdf: slug ? `/api/book-publishing/public/${encodeURIComponent(slug)}/download/pdf` : '',
     epub: slug ? `/api/book-publishing/public/${encodeURIComponent(slug)}/download/epub` : '',
+    docx: slug ? `/api/book-publishing/public/${encodeURIComponent(slug)}/download/docx` : '',
+    viewDocx: slug ? `/api/book-publishing/public/${encodeURIComponent(slug)}/view/docx` : '',
     frontCover:
       book.frontCover?.url || book.frontCover?.localFilename
         ? `/api/book-publishing/public/${encodeURIComponent(slug)}/assets/front-cover`
@@ -931,6 +1012,9 @@ function lightweightPublicSummary(book) {
     wordCount: book.wordCount || 0,
     publishedAt: book.publishedAt || null,
     updatedAt: book.updatedAt || null,
+    manuscriptPdfUrl: book.manuscriptPdfUrl || '',
+    manuscriptDocxUrl: book.manuscriptDocxUrl || '',
+    manuscriptHtml: book.manuscriptHtml || '',
     links,
     frontCover: book.frontCover?.url ? { url: book.frontCover.url, provider: book.frontCover.provider } : { url: '', provider: book.frontCover?.provider || 'local' },
     backCover: book.backCover?.url ? { url: book.backCover.url, provider: book.backCover.provider } : { url: '', provider: book.backCover?.provider || 'local' },
@@ -1116,6 +1200,48 @@ router.post('/', authenticateBookPublishing, bookUpload, async (req, res) => {
 
     stage = 'manuscript_validated';
 
+    // Handle PDF manuscript upload
+    const manuscriptPdfFile = req.files?.manuscriptPdf?.[0];
+    if (manuscriptPdfFile?.buffer) {
+      const pdfResult = await uploadCloudinaryBookPdf(book.slug || book.title, manuscriptPdfFile.buffer);
+      if (pdfResult?.url) {
+        book.manuscriptPdfUrl = pdfResult.url;
+      }
+    }
+    // Accept pre-uploaded PDF URL
+    const manuscriptPdfUrl = sanitizeText(req.body?.manuscriptPdfUrl || '', 500);
+    if (manuscriptPdfUrl && /^https?:\/\//i.test(manuscriptPdfUrl)) {
+      book.manuscriptPdfUrl = manuscriptPdfUrl;
+    }
+
+    // Handle DOCX manuscript upload
+    const manuscriptDocxFile = req.files?.manuscriptDocx?.[0];
+    if (manuscriptDocxFile?.buffer) {
+      const docxResult = await uploadCloudinaryBookDocx(book.slug || book.title, manuscriptDocxFile.buffer);
+      if (docxResult?.url) {
+        book.manuscriptDocxUrl = docxResult.url;
+      }
+    }
+    // Accept pre-uploaded DOCX URL
+    const manuscriptDocxUrl = sanitizeText(req.body?.manuscriptDocxUrl || '', 500);
+    if (manuscriptDocxUrl && /^https?:\/\//i.test(manuscriptDocxUrl)) {
+      book.manuscriptDocxUrl = manuscriptDocxUrl;
+    }
+
+    // Handle HTML manuscript upload
+    const manuscriptHtmlFile = req.files?.manuscriptHtml?.[0];
+    if (manuscriptHtmlFile?.buffer) {
+      const htmlResult = await uploadCloudinaryBookHtml(book.slug || book.title, manuscriptHtmlFile.buffer);
+      if (htmlResult?.url) {
+        book.manuscriptHtml = htmlResult.url;
+      }
+    }
+    // Accept pre-uploaded HTML URL
+    const manuscriptHtmlUrl = sanitizeText(req.body?.manuscriptHtmlUrl || '', 500);
+    if (manuscriptHtmlUrl && /^https?:\/\//i.test(manuscriptHtmlUrl)) {
+      book.manuscriptHtml = manuscriptHtmlUrl;
+    }
+
     book.title = title;
     book.subtitle = sanitizeText(req.body?.subtitle || '', 240);
     book.authorName = sanitizeText(req.body?.authorName || req.user?.name || '', 160);
@@ -1286,6 +1412,19 @@ router.get('/public/:slug/view', async (req, res) => {
       return res.status(404).type('html').send(renderNotFoundHtml('This book has not been published yet.'));
     }
 
+    // Prefer HTML manuscript if available
+    if (book.manuscriptHtml && !book.manuscriptMarkdown) {
+      try {
+        const resp = await axios.get(book.manuscriptHtml, { timeout: 30000, responseType: 'text' });
+        const fetched = String(resp.data || '');
+        if (fetched.length > 50) {
+          // HTML file content - wrap it in our page template
+          return res.status(200).type('html').send(wrapHtmlContent(book, fetched));
+        }
+      } catch (_e) {}
+    }
+
+    // Fall back to manuscriptUrl (markdown text)
     if (!book.manuscriptMarkdown && book.manuscriptUrl) {
       try {
         const resp = await axios.get(book.manuscriptUrl, { timeout: 30000, responseType: 'text' });
@@ -1384,6 +1523,57 @@ router.get('/public/:slug/download/epub', async (req, res) => {
   }
 });
 
+router.get('/public/:slug/download/docx', async (req, res) => {
+  try {
+    setNoCacheHeaders(res);
+    const book = await loadBookForSlug(req.params.slug);
+    if (!book) return notFound(res);
+
+    if (!book.manuscriptDocxUrl) {
+      return res.status(404).json({ ok: false, error: 'DOCX version not available for this book' });
+    }
+
+    const response = await axios.get(book.manuscriptDocxUrl, { responseType: 'arraybuffer', timeout: 30000 });
+    const filename = `${sanitizeFilename(book.slug || book.title || 'book')}.docx`;
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    return res.send(Buffer.from(response.data));
+  } catch (error) {
+    return res.status(500).json({ ok: false, error: error.message || 'Failed to download DOCX' });
+  }
+});
+
+router.get('/public/:slug/view/docx', async (req, res) => {
+  try {
+    setNoCacheHeaders(res);
+    const book = await loadBookForSlug(req.params.slug);
+    if (!book) {
+      return res.status(404).type('html').send(renderNotFoundHtml('This book has not been published yet.'));
+    }
+
+    if (!book.manuscriptDocxUrl) {
+      return res.status(404).type('html').send(renderNotFoundHtml('DOCX version not available for this book.'));
+    }
+
+    // Fetch DOCX and convert to HTML using mammoth
+    const response = await axios.get(book.manuscriptDocxUrl, { responseType: 'arraybuffer', timeout: 30000 });
+    const docxBuffer = Buffer.from(response.data);
+
+    if (!mammoth) {
+      return res.status(200).type('html').send(wrapHtmlContent(book,
+        `<p style="padding:1.5rem;text-align:center;color:#574f43;">DOCX viewer not available. <a href="${escapeHtml(book.manuscriptDocxUrl)}" target="_blank" rel="noreferrer">Download the DOCX file</a> instead.</p>`
+      ));
+    }
+
+    const result = await mammoth.convertToHtml({ buffer: docxBuffer });
+    const htmlContent = String(result?.value || '<p>No content found in DOCX.</p>');
+
+    return res.status(200).type('html').send(wrapHtmlContent(book, htmlContent));
+  } catch (error) {
+    return res.status(500).type('html').send(renderNotFoundHtml(error.message || 'Unable to render DOCX'));
+  }
+});
+
 router.get('/:bookId', authenticateBookPublishing, async (req, res) => {
   try {
     const book = await loadBookForEdit(req.params.bookId);
@@ -1405,6 +1595,18 @@ router.get('/:bookId/view', authenticateBookPublishing, async (req, res) => {
       return res.status(403).type('html').send(renderNotFoundHtml('You do not have permission to view this book.'));
     }
 
+    // Prefer HTML manuscript if available
+    if (book.manuscriptHtml && !book.manuscriptMarkdown) {
+      try {
+        const resp = await axios.get(book.manuscriptHtml, { timeout: 30000, responseType: 'text' });
+        const fetched = String(resp.data || '');
+        if (fetched.length > 50) {
+          return res.status(200).type('html').send(wrapHtmlContent(book, fetched));
+        }
+      } catch (_e) {}
+    }
+
+    // Fall back to manuscriptUrl (markdown text)
     if (!book.manuscriptMarkdown && book.manuscriptUrl) {
       try {
         const resp = await axios.get(book.manuscriptUrl, { timeout: 30000, responseType: 'text' });
@@ -1489,6 +1691,60 @@ router.get('/:bookId/download/epub', authenticateBookPublishing, async (req, res
   }
 });
 
+router.get('/:bookId/download/docx', authenticateBookPublishing, async (req, res) => {
+  try {
+    setNoCacheHeaders(res);
+    const book = await loadBookForEdit(req.params.bookId);
+    if (!book) return notFound(res);
+    if (!canViewBook(req, book)) {
+      return res.status(403).json({ ok: false, error: 'You do not have permission to download this book' });
+    }
+
+    if (!book.manuscriptDocxUrl) {
+      return res.status(404).json({ ok: false, error: 'DOCX version not available for this book' });
+    }
+
+    const response = await axios.get(book.manuscriptDocxUrl, { responseType: 'arraybuffer', timeout: 30000 });
+    const filename = `${sanitizeFilename(book.slug || book.title || 'book')}.docx`;
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    return res.send(Buffer.from(response.data));
+  } catch (error) {
+    return res.status(500).json({ ok: false, error: error.message || 'Failed to download DOCX' });
+  }
+});
+
+router.get('/:bookId/view/docx', authenticateBookPublishing, async (req, res) => {
+  try {
+    setNoCacheHeaders(res);
+    const book = await loadBookForEdit(req.params.bookId);
+    if (!book) return res.status(404).type('html').send(renderNotFoundHtml('Book not found.'));
+    if (!canViewBook(req, book)) {
+      return res.status(403).type('html').send(renderNotFoundHtml('You do not have permission to view this book.'));
+    }
+
+    if (!book.manuscriptDocxUrl) {
+      return res.status(404).type('html').send(renderNotFoundHtml('DOCX version not available for this book.'));
+    }
+
+    const response = await axios.get(book.manuscriptDocxUrl, { responseType: 'arraybuffer', timeout: 30000 });
+    const docxBuffer = Buffer.from(response.data);
+
+    if (!mammoth) {
+      return res.status(200).type('html').send(wrapHtmlContent(book,
+        `<p style="padding:1.5rem;text-align:center;color:#574f43;">DOCX viewer not available. <a href="${escapeHtml(book.manuscriptDocxUrl)}" target="_blank" rel="noreferrer">Download the DOCX file</a> instead.</p>`
+      ));
+    }
+
+    const result = await mammoth.convertToHtml({ buffer: docxBuffer });
+    const htmlContent = String(result?.value || '<p>No content found in DOCX.</p>');
+
+    return res.status(200).type('html').send(wrapHtmlContent(book, htmlContent));
+  } catch (error) {
+    return res.status(500).type('html').send(renderNotFoundHtml(error.message || 'Unable to render DOCX'));
+  }
+});
+
 router.delete('/:bookId', authenticateBookPublishing, async (req, res) => {
   try {
     const book = await loadBookForEdit(req.params.bookId);
@@ -1515,6 +1771,9 @@ router.delete('/:bookId', authenticateBookPublishing, async (req, res) => {
         idsToDelete.push(
           `${CLOUDINARY_BOOK_MANIFEST_FOLDER}/${cloudinaryBookSlugId(slug)}`,
           `${CLOUDINARY_BOOK_MANUSCRIPT_FOLDER}/${cloudinaryBookSlugId(slug)}`,
+          `${CLOUDINARY_BOOK_PDF_FOLDER}/${cloudinaryBookSlugId(slug)}`,
+          `${CLOUDINARY_BOOK_DOCX_FOLDER}/${cloudinaryBookSlugId(slug)}`,
+          `${CLOUDINARY_BOOK_HTML_FOLDER}/${cloudinaryBookSlugId(slug)}`,
         );
       }
 

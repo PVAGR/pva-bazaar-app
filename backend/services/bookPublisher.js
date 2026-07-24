@@ -148,6 +148,17 @@ function renderBookBody(book) {
          <p style="text-align:center;"><a href="${escapeHtml(book.manuscriptUrl)}" target="_blank" rel="noreferrer" style="display:inline-block;padding:.7rem 1.5rem;border-radius:999px;background:#7b5c2b;color:#fff;text-decoration:none;font-weight:700;">Download manuscript</a></p>`
       : '';
 
+  const formatLinks = [];
+  if (book.manuscriptPdfUrl) {
+    formatLinks.push(`<a href="${escapeHtml(book.manuscriptPdfUrl)}" target="_blank" rel="noreferrer" style="display:inline-block;padding:.5rem 1.2rem;margin:.3rem;border-radius:999px;background:#1f3552;color:#fff;text-decoration:none;font-weight:700;">Download PDF</a>`);
+  }
+  if (book.manuscriptDocxUrl) {
+    formatLinks.push(`<a href="${escapeHtml(book.manuscriptDocxUrl)}" target="_blank" rel="noreferrer" style="display:inline-block;padding:.5rem 1.2rem;margin:.3rem;border-radius:999px;background:#4a7c59;color:#fff;text-decoration:none;font-weight:700;">Download DOCX</a>`);
+  }
+  const formatLinksHtml = formatLinks.length
+    ? `<div style="text-align:center;margin-top:1rem;">${formatLinks.join('')}</div>`
+    : '';
+
   return `
     <header class="book-hero">
       <p class="book-pill">Book edition</p>
@@ -161,6 +172,7 @@ function renderBookBody(book) {
     <section class="book-section">
       <h2>Manuscript</h2>
       ${manuscriptContent}
+      ${formatLinksHtml}
     </section>
     ${backCover}
   `;

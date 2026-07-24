@@ -283,6 +283,12 @@ export default function BookPublishingPage() {
   const [backCoverPreview, setBackCoverPreview] = useState('');
   const [manuscriptFile, setManuscriptFile] = useState(null);
   const [manuscriptFileName, setManuscriptFileName] = useState('');
+  const [htmlFile, setHtmlFile] = useState(null);
+  const [htmlFileName, setHtmlFileName] = useState('');
+  const [pdfFile, setPdfFile] = useState(null);
+  const [pdfFileName, setPdfFileName] = useState('');
+  const [docxFile, setDocxFile] = useState(null);
+  const [docxFileName, setDocxFileName] = useState('');
   const [form, setForm] = useState(EMPTY_FORM);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -291,6 +297,9 @@ export default function BookPublishingPage() {
   const frontCoverInputRef = useRef(null);
   const backCoverInputRef = useRef(null);
   const manuscriptInputRef = useRef(null);
+  const htmlInputRef = useRef(null);
+  const pdfInputRef = useRef(null);
+  const docxInputRef = useRef(null);
   const manuscriptImportedTextRef = useRef('');
   const syncInFlightRef = useRef(false);
 
@@ -326,6 +335,12 @@ export default function BookPublishingPage() {
     setBackCoverFile(null);
     setManuscriptFile(null);
     setManuscriptFileName('');
+    setHtmlFile(null);
+    setHtmlFileName('');
+    setPdfFile(null);
+    setPdfFileName('');
+    setDocxFile(null);
+    setDocxFileName('');
   }, [selectedBook]);
 
   async function syncLocalPublishedBooks(remoteBooks = [], localBooks = []) {
@@ -503,6 +518,12 @@ export default function BookPublishingPage() {
     setFrontCoverPreview('');
     setBackCoverPreview('');
     setManuscriptFileName('');
+    setHtmlFile(null);
+    setHtmlFileName('');
+    setPdfFile(null);
+    setPdfFileName('');
+    setDocxFile(null);
+    setDocxFileName('');
   }
 
   function selectBook(book) {
@@ -568,6 +589,24 @@ export default function BookPublishingPage() {
     reader.readAsText(file);
   }
 
+  function handleHtmlFile(event) {
+    const file = event.target.files?.[0] || null;
+    setHtmlFile(file);
+    setHtmlFileName(file?.name || '');
+  }
+
+  function handlePdfFile(event) {
+    const file = event.target.files?.[0] || null;
+    setPdfFile(file);
+    setPdfFileName(file?.name || '');
+  }
+
+  function handleDocxFile(event) {
+    const file = event.target.files?.[0] || null;
+    setDocxFile(file);
+    setDocxFileName(file?.name || '');
+  }
+
   async function submitBook(publish) {
     setSaving(true);
     setError('');
@@ -591,6 +630,9 @@ export default function BookPublishingPage() {
       let frontCoverResult = null;
       let backCoverResult = null;
       let manuscriptResult = null;
+      let htmlResult = null;
+      let pdfResult = null;
+      let docxResult = null;
       let cloudinaryAvailable = true;
       try {
         if (preparedFrontCover) {
@@ -604,12 +646,27 @@ export default function BookPublishingPage() {
           const manuscriptPreset = ENV.CLOUDINARY_MANUSCRIPT_UPLOAD_PRESET || ENV.CLOUDINARY_UPLOAD_PRESET;
           manuscriptResult = await uploadToCloudinary(manuscriptFile, ENV.CLOUDINARY_CLOUD_NAME, manuscriptPreset, 'raw');
         }
+        // Upload HTML manuscript
+        if (htmlFile) {
+          htmlResult = await uploadToCloudinary(htmlFile, ENV.CLOUDINARY_CLOUD_NAME, ENV.CLOUDINARY_UPLOAD_PRESET || 'pva_books_covers', 'raw');
+        }
+        // Upload PDF manuscript
+        if (pdfFile) {
+          pdfResult = await uploadToCloudinary(pdfFile, ENV.CLOUDINARY_CLOUD_NAME, ENV.CLOUDINARY_UPLOAD_PRESET || 'pva_books_covers', 'raw');
+        }
+        // Upload DOCX manuscript
+        if (docxFile) {
+          docxResult = await uploadToCloudinary(docxFile, ENV.CLOUDINARY_CLOUD_NAME, ENV.CLOUDINARY_UPLOAD_PRESET || 'pva_books_covers', 'raw');
+        }
       } catch (cloudErr) {
         console.warn('Cloudinary direct upload failed, falling back to backend upload:', cloudErr.message);
         cloudinaryAvailable = false;
         frontCoverResult = null;
         backCoverResult = null;
         manuscriptResult = null;
+        htmlResult = null;
+        pdfResult = null;
+        docxResult = null;
       }
 
       const buildPayload = () => {
@@ -651,7 +708,24 @@ export default function BookPublishingPage() {
         } else if (preparedBackCover && !cloudinaryAvailable) {
           payload.append('backCover', preparedBackCover, preparedBackCover.name || 'back-cover.jpg');
         }
-        
+
+        // Send manuscript format URLs
+        if (htmlResult) {
+          payload.append('manuscriptHtmlUrl', htmlResult.secure_url);
+        } else if (htmlFile && !cloudinaryAvailable) {
+          payload.append('manuscriptHtml', htmlFile);
+        }
+        if (pdfResult) {
+          payload.append('manuscriptPdfUrl', pdfResult.secure_url);
+        } else if (pdfFile && !cloudinaryAvailable) {
+          payload.append('manuscriptPdf', pdfFile);
+        }
+        if (docxResult) {
+          payload.append('manuscriptDocxUrl', docxResult.secure_url);
+        } else if (docxFile && !cloudinaryAvailable) {
+          payload.append('manuscriptDocx', docxFile);
+        }
+
         return payload;
       };
 
@@ -726,6 +800,8 @@ export default function BookPublishingPage() {
   const activeDownloadLinks = selectedBook ? {
     pdf: toApiUrl(selectedBook.links.pdf),
     epub: toApiUrl(selectedBook.links.epub),
+    docx: toApiUrl(selectedBook.links.docx),
+    viewDocx: toApiUrl(selectedBook.links.viewDocx),
     apiView: toApiUrl(selectedBook.links.apiView),
     publicPage: selectedBook.links.publicPage || '',
     frontCover: selectedBook.links.frontCover ? toApiUrl(selectedBook.links.frontCover) : '',
@@ -744,7 +820,7 @@ export default function BookPublishingPage() {
         <title>Book Publishing · PVA Bazaar</title>
         <meta
           name="description"
-          content="Publish books with front cover, back cover, manuscript editing, web view, PDF, and EPUB output."
+          content="Publish books with front cover, back cover, manuscript editing, web view, PDF, DOCX, and HTML output."
         />
       </Helmet>
 
@@ -755,7 +831,7 @@ export default function BookPublishingPage() {
             <h1>Publish your work as a real book.</h1>
             <p className="book-publish__lead">
               Use this workspace to prepare the title, subtitle, author line, front cover, back cover, manuscript,
-              and publish output. One book can become a public web view, PDF, and EPUB without splitting the source
+              and publish output. One book can become a public web view, PDF, DOCX, and HTML without splitting the source
               into separate systems.
             </p>
           </div>
@@ -765,8 +841,9 @@ export default function BookPublishingPage() {
             <ul>
               <li>Draft the manuscript in the editor or upload a text file.</li>
               <li>Attach front and back covers as images.</li>
+              <li>Upload HTML, PDF, and DOCX versions for different reading experiences.</li>
               <li>Save as a draft or publish immediately.</li>
-              <li>Share the public web reader, PDF, or EPUB once published.</li>
+              <li>Share the public web reader, PDF, or DOCX once published.</li>
             </ul>
             <div className="book-publish__heroActions">
               <Link className="book-publish__button" to="/books">Back to books</Link>
@@ -991,6 +1068,82 @@ export default function BookPublishingPage() {
                   placeholder={`# Chapter One\nYour manuscript text here.\n\n## Another section\nMore writing...`}
                 />
               </label>
+
+              <div className="book-publish__formatSection">
+                <p className="book-publish__formatSectionTitle">Additional manuscript formats</p>
+                <p className="book-publish__muted">
+                  Upload specific file formats for different reading experiences. HTML renders on the website, PDF is downloadable, DOCX is readable on site.
+                </p>
+
+                <div className="book-publish__field">
+                  <span>HTML version (for web reader)</span>
+                  <div className="book-publish__fileRow">
+                    <button
+                      type="button"
+                      className="book-publish__button book-publish__button--primary book-publish__fileButton"
+                      onClick={() => htmlInputRef.current?.click()}
+                    >
+                      Choose HTML file
+                    </button>
+                    <span className="book-publish__fileName">
+                      {htmlFileName || selectedBook?.manuscriptHtml ? (htmlFileName || 'Uploaded') : '.html file'}
+                    </span>
+                  </div>
+                  <input
+                    ref={htmlInputRef}
+                    className="book-publish__nativeFile"
+                    type="file"
+                    accept=".html,.htm,text/html"
+                    onChange={handleHtmlFile}
+                  />
+                </div>
+
+                <div className="book-publish__field">
+                  <span>PDF version (for download)</span>
+                  <div className="book-publish__fileRow">
+                    <button
+                      type="button"
+                      className="book-publish__button book-publish__button--primary book-publish__fileButton"
+                      onClick={() => pdfInputRef.current?.click()}
+                    >
+                      Choose PDF file
+                    </button>
+                    <span className="book-publish__fileName">
+                      {pdfFileName || selectedBook?.manuscriptPdfUrl ? (pdfFileName || 'Uploaded') : '.pdf file'}
+                    </span>
+                  </div>
+                  <input
+                    ref={pdfInputRef}
+                    className="book-publish__nativeFile"
+                    type="file"
+                    accept=".pdf,application/pdf"
+                    onChange={handlePdfFile}
+                  />
+                </div>
+
+                <div className="book-publish__field">
+                  <span>DOCX version (for reading on site)</span>
+                  <div className="book-publish__fileRow">
+                    <button
+                      type="button"
+                      className="book-publish__button book-publish__button--primary book-publish__fileButton"
+                      onClick={() => docxInputRef.current?.click()}
+                    >
+                      Choose DOCX file
+                    </button>
+                    <span className="book-publish__fileName">
+                      {docxFileName || selectedBook?.manuscriptDocxUrl ? (docxFileName || 'Uploaded') : '.docx file'}
+                    </span>
+                  </div>
+                  <input
+                    ref={docxInputRef}
+                    className="book-publish__nativeFile"
+                    type="file"
+                    accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                    onChange={handleDocxFile}
+                  />
+                </div>
+              </div>
             </div>
 
             <div className="book-publish__editorActions">
@@ -1026,9 +1179,14 @@ export default function BookPublishingPage() {
                       Download PDF
                     </a>
                   ) : null}
-                  {activeDownloadLinks?.epub ? (
-                    <a className="book-publish__button" href={activeDownloadLinks.epub} target="_blank" rel="noreferrer">
-                      Download EPUB
+                  {activeDownloadLinks?.docx ? (
+                    <a className="book-publish__button" href={activeDownloadLinks.docx} target="_blank" rel="noreferrer">
+                      Download DOCX
+                    </a>
+                  ) : null}
+                  {activeDownloadLinks?.viewDocx ? (
+                    <a className="book-publish__button" href={activeDownloadLinks.viewDocx} target="_blank" rel="noreferrer">
+                      Read DOCX on site
                     </a>
                   ) : null}
                 </div>
