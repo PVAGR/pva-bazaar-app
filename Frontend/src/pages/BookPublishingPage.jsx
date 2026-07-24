@@ -634,39 +634,69 @@ export default function BookPublishingPage() {
       let pdfResult = null;
       let docxResult = null;
       let cloudinaryAvailable = true;
+      const cloudinaryFallbacks = { frontCover: false, backCover: false, manuscript: false, html: false, pdf: false, docx: false };
       try {
         if (preparedFrontCover) {
-          frontCoverResult = await uploadToCloudinary(preparedFrontCover, ENV.CLOUDINARY_CLOUD_NAME, ENV.CLOUDINARY_UPLOAD_PRESET, 'image');
+          try {
+            frontCoverResult = await uploadToCloudinary(preparedFrontCover, ENV.CLOUDINARY_CLOUD_NAME, ENV.CLOUDINARY_UPLOAD_PRESET, 'image');
+          } catch (e) {
+            console.warn('Cloudinary front cover upload failed:', e.message);
+            cloudinaryFallbacks.frontCover = true;
+          }
         }
         if (preparedBackCover) {
-          backCoverResult = await uploadToCloudinary(preparedBackCover, ENV.CLOUDINARY_CLOUD_NAME, ENV.CLOUDINARY_UPLOAD_PRESET, 'image');
+          try {
+            backCoverResult = await uploadToCloudinary(preparedBackCover, ENV.CLOUDINARY_CLOUD_NAME, ENV.CLOUDINARY_UPLOAD_PRESET, 'image');
+          } catch (e) {
+            console.warn('Cloudinary back cover upload failed:', e.message);
+            cloudinaryFallbacks.backCover = true;
+          }
         }
         // Upload manuscript directly to Cloudinary if it's a file
         if (manuscriptFile && !form.manuscriptMarkdown) {
-          const manuscriptPreset = ENV.CLOUDINARY_MANUSCRIPT_UPLOAD_PRESET || ENV.CLOUDINARY_UPLOAD_PRESET;
-          manuscriptResult = await uploadToCloudinary(manuscriptFile, ENV.CLOUDINARY_CLOUD_NAME, manuscriptPreset, 'raw');
+          try {
+            const manuscriptPreset = ENV.CLOUDINARY_MANUSCRIPT_UPLOAD_PRESET || ENV.CLOUDINARY_UPLOAD_PRESET;
+            manuscriptResult = await uploadToCloudinary(manuscriptFile, ENV.CLOUDINARY_CLOUD_NAME, manuscriptPreset, 'raw');
+          } catch (e) {
+            console.warn('Cloudinary manuscript upload failed:', e.message);
+            cloudinaryFallbacks.manuscript = true;
+          }
         }
         // Upload HTML manuscript
         if (htmlFile) {
-          htmlResult = await uploadToCloudinary(htmlFile, ENV.CLOUDINARY_CLOUD_NAME, ENV.CLOUDINARY_UPLOAD_PRESET || 'pva_books_covers', 'raw');
+          try {
+            htmlResult = await uploadToCloudinary(htmlFile, ENV.CLOUDINARY_CLOUD_NAME, ENV.CLOUDINARY_UPLOAD_PRESET || 'pva_books_covers', 'raw');
+          } catch (e) {
+            console.warn('Cloudinary HTML upload failed:', e.message);
+            cloudinaryFallbacks.html = true;
+          }
         }
         // Upload PDF manuscript
         if (pdfFile) {
-          pdfResult = await uploadToCloudinary(pdfFile, ENV.CLOUDINARY_CLOUD_NAME, ENV.CLOUDINARY_UPLOAD_PRESET || 'pva_books_covers', 'raw');
+          try {
+            pdfResult = await uploadToCloudinary(pdfFile, ENV.CLOUDINARY_CLOUD_NAME, ENV.CLOUDINARY_UPLOAD_PRESET || 'pva_books_covers', 'raw');
+          } catch (e) {
+            console.warn('Cloudinary PDF upload failed:', e.message);
+            cloudinaryFallbacks.pdf = true;
+          }
         }
         // Upload DOCX manuscript
         if (docxFile) {
-          docxResult = await uploadToCloudinary(docxFile, ENV.CLOUDINARY_CLOUD_NAME, ENV.CLOUDINARY_UPLOAD_PRESET || 'pva_books_covers', 'raw');
+          try {
+            docxResult = await uploadToCloudinary(docxFile, ENV.CLOUDINARY_CLOUD_NAME, ENV.CLOUDINARY_UPLOAD_PRESET || 'pva_books_covers', 'raw');
+          } catch (e) {
+            console.warn('Cloudinary DOCX upload failed:', e.message);
+            cloudinaryFallbacks.docx = true;
+          }
+        }
+        // Only disable cloudinary if ALL direct uploads failed
+        const anySucceeded = frontCoverResult || backCoverResult || manuscriptResult || htmlResult || pdfResult || docxResult;
+        if (!anySucceeded && (cloudinaryFallbacks.frontCover || cloudinaryFallbacks.backCover || cloudinaryFallbacks.manuscript || cloudinaryFallbacks.html || cloudinaryFallbacks.pdf || cloudinaryFallbacks.docx)) {
+          cloudinaryAvailable = false;
         }
       } catch (cloudErr) {
         console.warn('Cloudinary direct upload failed, falling back to backend upload:', cloudErr.message);
         cloudinaryAvailable = false;
-        frontCoverResult = null;
-        backCoverResult = null;
-        manuscriptResult = null;
-        htmlResult = null;
-        pdfResult = null;
-        docxResult = null;
       }
 
       const buildPayload = () => {
@@ -688,7 +718,7 @@ export default function BookPublishingPage() {
           payload.append('manuscriptUrl', manuscriptResult.secure_url);
           payload.append('manuscriptType', manuscriptFile?.name?.toLowerCase().endsWith('.pdf') ? 'pdf' : 
                          manuscriptFile?.name?.toLowerCase().endsWith('.docx') ? 'docx' : 'raw');
-        } else if (manuscriptFile && !cloudinaryAvailable) {
+        } else if (manuscriptFile && cloudinaryFallbacks.manuscript) {
           // Fallback: send manuscript file to backend
           payload.append('manuscriptFile', manuscriptFile);
         }
@@ -698,31 +728,31 @@ export default function BookPublishingPage() {
         if (frontCoverResult) {
           payload.append('frontCoverUrl', frontCoverResult.secure_url);
           payload.append('frontCoverPublicId', frontCoverResult.public_id);
-        } else if (preparedFrontCover && !cloudinaryAvailable) {
+        } else if (preparedFrontCover && cloudinaryFallbacks.frontCover) {
           payload.append('frontCover', preparedFrontCover, preparedFrontCover.name || 'front-cover.jpg');
         }
         
         if (backCoverResult) {
           payload.append('backCoverUrl', backCoverResult.secure_url);
           payload.append('backCoverPublicId', backCoverResult.public_id);
-        } else if (preparedBackCover && !cloudinaryAvailable) {
+        } else if (preparedBackCover && cloudinaryFallbacks.backCover) {
           payload.append('backCover', preparedBackCover, preparedBackCover.name || 'back-cover.jpg');
         }
 
         // Send manuscript format URLs
         if (htmlResult) {
           payload.append('manuscriptHtmlUrl', htmlResult.secure_url);
-        } else if (htmlFile && !cloudinaryAvailable) {
+        } else if (htmlFile && cloudinaryFallbacks.html) {
           payload.append('manuscriptHtml', htmlFile);
         }
         if (pdfResult) {
           payload.append('manuscriptPdfUrl', pdfResult.secure_url);
-        } else if (pdfFile && !cloudinaryAvailable) {
+        } else if (pdfFile && cloudinaryFallbacks.pdf) {
           payload.append('manuscriptPdf', pdfFile);
         }
         if (docxResult) {
           payload.append('manuscriptDocxUrl', docxResult.secure_url);
-        } else if (docxFile && !cloudinaryAvailable) {
+        } else if (docxFile && cloudinaryFallbacks.docx) {
           payload.append('manuscriptDocx', docxFile);
         }
 
