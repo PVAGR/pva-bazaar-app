@@ -44,7 +44,7 @@
     "frontendAvailability": "99.95%",
     "backendAvailability": "99.9%",
     "frontendLatencyMs": 2500,
-    "pingLatencyMs": 1000,
+    "pingLatencyMs": 1500,
     "healthLatencyMs": 2500,
     "assetLatencyMs": 4000,
     "parityDeadlineMinutes": 10,
