@@ -7,6 +7,7 @@ Updated: 2026-07-17
 - Mounted the cloud storage route group in the serverless backend and moved admin media uploads to the backend route so Cloudinary can be used when configured, while the upload UI can still fall back to local server storage when needed.
 - Rebuilt the public-facing site shell around clean primary navigation, static no-JavaScript fallback pages, and dedicated trust/legal/support pages.
 - Added a professional homepage/landing experience with clear mission copy, marketplace/knowledge positioning, and direct public entry points.
+- Added a live homepage feed section below the opening home page that auto-refreshes new books, blogs, items, prices, public signups, suppliers, partnerships, and writing updates from the backend.
 - Repaired old indexed compatibility routes and added branded static fallbacks so legacy URLs no longer land on ugly dead ends.
 - Added a real status page, robots/sitemap/LLMS/readable-site refresh, and canonical/OG metadata for the major public surfaces.
 - Added a dedicated institutional hub with pages for universities, schools, museums, government, research institutes, laboratories, libraries, NGOs, training centers, and TVETs.
@@ -43,6 +44,7 @@ Updated: 2026-07-17
 - Mongo Atlas storage quota exhaustion is now handled by a Cloudinary raw fallback for published books, so publish requests should no longer die on the `512 MB of 512 MB` write block.
 - The current public bookshelf response still serves the Mongo-backed test book and its Cloudinary covers from `https://pva-backend-api.vercel.app/api/book-publishing/public`.
 - Existing book republish/edit saves now hydrate Mongoose documents before persist, preventing the plain-object edit failure that had been returning a silent 500 on mobile publish retries.
+- The homepage feed route is wired into the codebase so the opening page can fetch and render live public updates without replacing the existing hero sections.
 
 ## What remains
 - Live deployment/cache propagation still needs a final public-site check after this route bridge ships.

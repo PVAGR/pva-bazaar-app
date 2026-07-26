@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Vercel API catchall now stays on the slim serverless bundle but mounts the missing public/backend route groups there, with static archive/search and mock-safe OpenClaw fallbacks so the live backend answers cleanly without forcing a Mongo boot on serverless.
 - Public-facing site hardening pass: professional homepage framing, clean primary navigation, static no-JavaScript fallback pages, custom 404, and trust/legal/support pages.
+- Home page now includes a live feed section below the opening hero that automatically surfaces new books, blogs, items, prices, public signups, suppliers, partnerships, and writing updates.
 - SEO/crawlability refresh: robots.txt, sitemap.xml, llms.txt, readable-site.json, canonical URLs, and social preview metadata for the major public pages.
 - Legacy compatibility pages now redirect or render clean public content instead of landing as sloppy dead ends.
 - Account-only book publishing flow so a signed-in website account is the only thing needed to publish and keep a book online.

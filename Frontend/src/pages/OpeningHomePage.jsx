@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CIVILIZATION_PAGES, CIVILIZATION_INSTITUTION_LINKS } from '../data/civilizationAtlas.js';
+import { fetchHomepageFeed } from '../lib/api.js';
 import './OpeningHomePage.css';
 
 const PRIMARY_CATEGORIES = [
@@ -87,8 +88,149 @@ const CINEMATIC_SCENES = [
   },
 ];
 
+const FEED_SECTIONS = [
+  {
+    key: 'latest',
+    title: 'Latest across PVA Bazaar',
+    summary: 'A combined stream of the newest public updates.',
+    href: '/marketplace',
+    emptyMessage: 'The live feed will fill here as new public updates are published.',
+  },
+  {
+    key: 'books',
+    title: 'Books',
+    summary: 'Fresh published books and publishing updates.',
+    href: '/books/published',
+    emptyMessage: 'The first published book will appear here.',
+  },
+  {
+    key: 'blogs',
+    title: 'Blogs',
+    summary: 'Newest public posts and essays.',
+    href: '/archive',
+    emptyMessage: 'The first blog post will appear here.',
+  },
+  {
+    key: 'items',
+    title: 'Items',
+    summary: 'New marketplace listings and product updates.',
+    href: '/marketplace',
+    emptyMessage: 'The first marketplace item will appear here.',
+  },
+  {
+    key: 'prices',
+    title: 'Price watch',
+    summary: 'Current listing prices and sale updates.',
+    href: '/marketplace',
+    emptyMessage: 'Price updates will appear here as listings change.',
+  },
+  {
+    key: 'customers',
+    title: 'Customers',
+    summary: 'Recent public customer signups.',
+    href: '/citizens',
+    emptyMessage: 'New public customer signups will appear here.',
+  },
+  {
+    key: 'suppliers',
+    title: 'Suppliers',
+    summary: 'Recent public supplier and creator signups.',
+    href: '/creator',
+    emptyMessage: 'New public supplier signups will appear here.',
+  },
+  {
+    key: 'partnerships',
+    title: 'Partnerships',
+    summary: 'Business submissions and collaboration inquiries.',
+    href: '/partnerships',
+    emptyMessage: 'New business inquiries will appear here.',
+  },
+  {
+    key: 'journal',
+    title: 'Writing',
+    summary: 'Public journal entries and archive notes.',
+    href: '/archive',
+    emptyMessage: 'The first public writing entry will appear here.',
+  },
+];
+
+function formatFeedTimestamp(value) {
+  const date = value ? new Date(value) : null;
+  if (!date || Number.isNaN(date.getTime())) return '';
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  }).format(date);
+}
+
+function formatFeedCount(value) {
+  const number = Number(value || 0);
+  return Number.isFinite(number) ? number.toLocaleString('en-US') : '0';
+}
+
+function scrollToFeedSection(sectionKey) {
+  if (typeof document === 'undefined') return;
+  document.getElementById(`home-feed-${sectionKey}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function buildFeedPlaceholder(section) {
+  return {
+    id: `placeholder-${section.key}`,
+    kind: 'placeholder',
+    sectionKey: section.key,
+    badge: section.title,
+    title: `Waiting for the first ${section.title.toLowerCase()}`,
+    summary: section.emptyMessage || section.summary,
+    detail: 'This space will fill automatically when new content is published.',
+    href: section.href,
+    imageUrl: '',
+    priceText: '',
+    sourceLabel: 'Starter slot',
+    timestamp: '',
+  };
+}
+
+function LiveFeedCard({ card }) {
+  const isPlaceholder = card?.kind === 'placeholder';
+  const imageStyle = card?.imageUrl
+    ? { backgroundImage: `url(${card.imageUrl})` }
+    : undefined;
+
+  return (
+    <Link
+      className={`opening-home__liveFeedCard${isPlaceholder ? ' is-placeholder' : ''}`}
+      to={card?.href || '/marketplace'}
+    >
+      <div className="opening-home__liveFeedCardMedia" style={imageStyle} aria-hidden="true">
+        {!card?.imageUrl ? (
+          <span>{card?.badge || 'PVA Bazaar'}</span>
+        ) : null}
+      </div>
+      <div className="opening-home__liveFeedCardBody">
+        <div className="opening-home__liveFeedCardMeta">
+          <span className="pill">{card?.badge || 'Update'}</span>
+          {card?.priceText ? <span className="opening-home__liveFeedCardPrice">{card.priceText}</span> : null}
+        </div>
+        <h3>{card?.title || 'Untitled update'}</h3>
+        <p>{card?.summary || 'Live content from across PVA Bazaar.'}</p>
+        {card?.detail ? <small>{card.detail}</small> : null}
+        <div className="opening-home__liveFeedCardFooter">
+          <span>{card?.sourceLabel || 'Live update'}</span>
+          {card?.timestamp ? <time dateTime={card.timestamp}>{formatFeedTimestamp(card.timestamp)}</time> : <span>Live now</span>}
+        </div>
+      </div>
+    </Link>
+  );
+}
+
 export default function OpeningHomePage() {
   const [sceneIndex, setSceneIndex] = useState(0);
+  const [homeFeed, setHomeFeed] = useState(null);
+  const [feedLoading, setFeedLoading] = useState(true);
+  const [feedError, setFeedError] = useState('');
+  const [feedCheckedAt, setFeedCheckedAt] = useState('');
 
   useEffect(() => {
     if (!CINEMATIC_SCENES.length) return undefined;
@@ -100,7 +242,73 @@ export default function OpeningHomePage() {
     return () => window.clearInterval(timer);
   }, []);
 
+  useEffect(() => {
+    let active = true;
+    const refreshFeed = async ({ silent = false } = {}) => {
+      try {
+        if (!silent) setFeedLoading(true);
+        const payload = await fetchHomepageFeed({ limit: 4, t: Date.now() });
+        if (!active) return;
+        setHomeFeed(payload || null);
+        setFeedCheckedAt(payload?.updatedAt || new Date().toISOString());
+        setFeedError('');
+      } catch (error) {
+        if (!active) return;
+        setFeedError(error?.message || 'Unable to load live updates right now.');
+      } finally {
+        if (active && !silent) {
+          setFeedLoading(false);
+        }
+      }
+    };
+
+    refreshFeed();
+    const timer = window.setInterval(() => {
+      refreshFeed({ silent: true });
+    }, 60000);
+
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+    };
+  }, []);
+
   const scene = useMemo(() => CINEMATIC_SCENES[sceneIndex] || CINEMATIC_SCENES[0], [sceneIndex]);
+  const feedCounts = homeFeed?.counts || {
+    books: 0,
+    blogs: 0,
+    items: 0,
+    prices: 0,
+    customers: 0,
+    suppliers: 0,
+    partnerships: 0,
+    journal: 0,
+    total: 0,
+  };
+  const liveSections = (Array.isArray(homeFeed?.sections) && homeFeed.sections.length ? homeFeed.sections : FEED_SECTIONS).map((section) => {
+    const cards = Array.isArray(section.cards) && section.cards.length ? section.cards : [buildFeedPlaceholder(section)];
+    return {
+      ...section,
+      cards,
+    };
+  });
+  const latestCards = Array.isArray(homeFeed?.items) && homeFeed.items.length
+    ? homeFeed.items.slice(0, 6)
+    : liveSections[0]?.cards?.slice(0, 6) || [buildFeedPlaceholder(FEED_SECTIONS[0])];
+  const liveStatusLabel = feedLoading
+    ? 'Loading live updates…'
+    : feedError && !homeFeed
+      ? 'Feed connection warning'
+      : homeFeed?.source === 'mongo'
+        ? 'Live Mongo feed connected'
+        : 'Preview feed running';
+  const liveStatusNote = feedError && homeFeed
+    ? `Refresh warning: ${feedError}`
+    : feedError
+      ? feedError
+      : feedCheckedAt || homeFeed?.updatedAt
+        ? `Updated ${formatFeedTimestamp(feedCheckedAt || homeFeed?.updatedAt)}`
+        : 'Waiting for the first live update.';
 
   return (
     <div className="opening-home" aria-label="PVA Bazaar opening homepage">
@@ -216,6 +424,91 @@ export default function OpeningHomePage() {
             </Link>
           ))}
         </nav>
+      </section>
+
+      <section className="section-card opening-home__liveFeed" aria-label="Live homepage feed">
+        <div className="opening-home__liveFeedHeader">
+          <div>
+            <div className="pill">Live feed</div>
+            <h2>What is new across PVA Bazaar right now</h2>
+            <p>
+              This section updates automatically with new books, blogs, items, prices, public signups, supplier
+              activity, partnership inquiries, and writing.
+            </p>
+          </div>
+          <div className="opening-home__liveFeedStatus">
+            <strong>{liveStatusLabel}</strong>
+            <span>{liveStatusNote}</span>
+          </div>
+        </div>
+
+        <div className="opening-home__liveFeedStats" aria-label="Live feed summary">
+          <div className="opening-home__liveFeedStat">
+            <span>Total updates</span>
+            <strong>{formatFeedCount(feedCounts.total)}</strong>
+          </div>
+          <div className="opening-home__liveFeedStat">
+            <span>Books</span>
+            <strong>{formatFeedCount(feedCounts.books)}</strong>
+          </div>
+          <div className="opening-home__liveFeedStat">
+            <span>Items</span>
+            <strong>{formatFeedCount(feedCounts.items)}</strong>
+          </div>
+          <div className="opening-home__liveFeedStat">
+            <span>Partners</span>
+            <strong>{formatFeedCount(Number(feedCounts.partnerships || 0) + Number(feedCounts.suppliers || 0))}</strong>
+          </div>
+        </div>
+
+        <div className="opening-home__liveFeedNav" aria-label="Jump to feed sections">
+          {liveSections.filter((section) => section.key !== 'latest').map((section) => (
+            <button
+              key={section.key}
+              type="button"
+              className="opening-home__liveFeedNavButton"
+              onClick={() => scrollToFeedSection(section.key)}
+            >
+              {section.title}
+            </button>
+          ))}
+        </div>
+
+        <div className="opening-home__liveFeedLatest">
+          <div className="opening-home__liveFeedSectionHeading">
+            <div>
+              <span className="pill">Latest across the site</span>
+              <h3>Newest items from every public surface</h3>
+            </div>
+            <Link className="button ghost" to="/marketplace">Open marketplace</Link>
+          </div>
+          <div className="opening-home__liveFeedGrid opening-home__liveFeedGrid--featured">
+            {latestCards.map((card) => (
+              <LiveFeedCard key={card.id} card={card} />
+            ))}
+          </div>
+        </div>
+
+        <div className="opening-home__liveFeedSections">
+          {liveSections.filter((section) => section.key !== 'latest').map((section) => (
+            <section key={section.key} id={`home-feed-${section.key}`} className="opening-home__liveFeedSection">
+              <div className="opening-home__liveFeedSectionHeading">
+                <div>
+                  <span className="pill">{section.title}</span>
+                  <h3>{section.summary}</h3>
+                </div>
+                <Link className="button ghost" to={section.href}>
+                  Open {section.title.toLowerCase()}
+                </Link>
+              </div>
+              <div className="opening-home__liveFeedGrid">
+                {section.cards.map((card) => (
+                  <LiveFeedCard key={card.id} card={card} />
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
       </section>
     </div>
   );

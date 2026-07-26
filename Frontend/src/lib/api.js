@@ -177,6 +177,7 @@ export const fetchRecoverySnapshotById = (snapshotId) =>
   apiGet(`/recovery/snapshots/${encodeURIComponent(snapshotId)}`);
 export const deleteRecoverySnapshotById = (snapshotId) =>
   apiDelete(`/recovery/snapshots/${encodeURIComponent(snapshotId)}`);
+export const fetchHomepageFeed = (params = {}, config = {}) => apiGet('/home-feed', { ...config, params });
 
 function normalizePublishedBook(book) {
   const slug = String(book?.slug || '').trim();

@@ -319,6 +319,7 @@ const solanaRoutes = require('../routes/solana');
 const adminLoginRoutes = require('../routes/adminLogin');
 // Cloud storage management
 const cloudStorageRoutes = require('../routes/cloudStorage');
+const homeFeedRoutes = require('../routes/homeFeed');
 const adminLibraryRoutes = require('../routes/adminLibrary');
 const libraryRoutes = require('../routes/library');
 const bookPublishingRoutes = require('../routes/bookPublishing');
@@ -437,6 +438,7 @@ app.use('/api/passports', passportRoutes);
 app.use('/api/admin/passport', passportRoutes);
 app.use('/api', proposalsRoutes);
 app.use('/api/cloud-storage', cloudStorageRoutes);
+app.use('/api/home-feed', homeFeedRoutes);
 app.use('/api/admin/library', adminLibraryRoutes);
 app.use('/api/library', libraryRoutes);
 app.use('/api/book-publishing', bookPublishingRoutes);
