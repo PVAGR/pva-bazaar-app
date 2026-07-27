@@ -679,6 +679,7 @@ export default function BookPublishingPage() {
     })();
     const tokenPresent = Boolean(authToken);
     try {
+      console.log('[PUBLISH-FLOW] Starting submitBook, has text:', !!form.manuscriptMarkdown, 'has file:', !!manuscriptFile, 'publish:', publish);
       const [preparedFrontCover, preparedBackCover] = await Promise.all([
         frontCoverFile ? compressCoverFile(frontCoverFile, frontCoverFile.name || `${form.slug || 'book'}-front-cover`) : Promise.resolve(null),
         backCoverFile ? compressCoverFile(backCoverFile, backCoverFile.name || `${form.slug || 'book'}-back-cover`) : Promise.resolve(null),
@@ -760,33 +761,49 @@ export default function BookPublishingPage() {
       // After cover uploads and before building the backend payload, upload
       // the manuscript to permanent archival storage. The browser sends the
       // file directly to IA and Storacha — no backend proxy needed.
+      // SAFETY: Wrapped in a hard 15-second timeout. If archive upload fails
+      // or times out, we fall back to sending manuscriptMarkdown to the backend.
       let archiveData = null;
       const hasManuscriptContent = form.manuscriptMarkdown || manuscriptFile;
       const alreadyHasArchives = selectedBook?.mirrors?.archiveOrg || selectedBook?.mirrors?.ipfs;
       if (hasManuscriptContent && !alreadyHasArchives) {
-        try {
+        let fileToUpload = manuscriptFile;
+        if (!fileToUpload && form.manuscriptMarkdown) {
+          const blob = new Blob([form.manuscriptMarkdown], { type: 'text/markdown' });
+          fileToUpload = new File([blob], `${form.slug || 'manuscript'}.md`, { type: 'text/markdown' });
+        }
+        if (fileToUpload) {
+          const slug = form.slug || `book-${Date.now()}`;
+          console.log('[PUBLISH-FLOW] Calling archive upload, slug:', slug, 'fileSize:', fileToUpload.size);
           setArchiveStatus({ ia: false, ipfs: false, uploading: true });
-          let fileToUpload = manuscriptFile;
-          if (!fileToUpload && form.manuscriptMarkdown) {
-            // User pasted text directly — create a Blob
-            const blob = new Blob([form.manuscriptMarkdown], { type: 'text/markdown' });
-            fileToUpload = new File([blob], `${form.slug || 'manuscript'}.md`, { type: 'text/markdown' });
-          }
-          if (fileToUpload) {
-            const slug = form.slug || `book-${Date.now()}`;
-            archiveData = await uploadManuscriptToArchives(fileToUpload, slug);
+          const ARCHIVE_TIMEOUT_MS = 15000;
+          const archiveTimeout = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error(`Archive upload timeout after ${ARCHIVE_TIMEOUT_MS}ms`)), ARCHIVE_TIMEOUT_MS),
+          );
+          try {
+            archiveData = await Promise.race([
+              uploadManuscriptToArchives(fileToUpload, slug),
+              archiveTimeout,
+            ]);
+            console.log('[PUBLISH-FLOW] Archive upload succeeded:', {
+              ia: Boolean(archiveData?.archiveOrgUrl),
+              ipfs: Boolean(archiveData?.ipfsUrl),
+            });
             setArchiveStatus({
               ia: Boolean(archiveData.archiveOrgUrl),
               ipfs: Boolean(archiveData.ipfsUrl),
               uploading: false,
             });
+          } catch (archiveErr) {
+            console.warn('[PUBLISH-FLOW] Archive upload failed or timed out:', archiveErr.message);
+            console.warn('[PUBLISH-FLOW] Falling back to direct backend upload with manuscriptMarkdown');
+            archiveData = null;
+            setArchiveStatus({ ia: false, ipfs: false, uploading: false });
+            // Continue — will fall back to sending manuscriptMarkdown to backend
           }
-        } catch (archiveErr) {
-          console.warn('Archive upload failed:', archiveErr.message);
-          setArchiveStatus({ ia: false, ipfs: false, uploading: false });
-          // Continue — will fall back to current behavior (manuscriptMarkdown to backend)
         }
       }
+      console.log('[PUBLISH-FLOW] Building payload, archiveData:', !!archiveData, 'hasMarkdown:', !!form.manuscriptMarkdown);
 
       const buildPayload = () => {
         const payload = new FormData();
@@ -854,7 +871,9 @@ export default function BookPublishingPage() {
       };
 
       try {
-        const remoteData = await saveBookProject(buildPayload());
+        const payload = buildPayload();
+        console.log('[PUBLISH-FLOW] POSTing to backend, payload keys:', [...payload.keys()], 'url:', requestUrl);
+        const remoteData = await saveBookProject(payload);
         if (!remoteData?.ok || !remoteData?.item) {
           throw new Error(remoteData?.error || 'Failed to save book');
         }
@@ -877,6 +896,13 @@ export default function BookPublishingPage() {
 
         return;
       } catch (networkErr) {
+        console.error('[PUBLISH-FLOW] Backend POST failed:', networkErr?.message, networkErr);
+        console.error('[PUBLISH-FLOW] Error details:', {
+          name: networkErr?.name,
+          status: networkErr?.status,
+          requestUrl: networkErr?.requestUrl,
+          stack: networkErr?.stack?.slice(0, 300),
+        });
         const publishStatus = Number(networkErr?.status || networkErr?.response?.status || 0);
         const isAuth = publishStatus === 401 || /auth|token|session/i.test(String(networkErr?.message || ''));
         if (isAuth) {

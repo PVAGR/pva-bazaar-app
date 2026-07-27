@@ -15,16 +15,24 @@ function getAuthHeaders() {
  * The browser then uploads directly to IA — no file touches the backend.
  */
 export async function requestIASignedUpload(identifier, filename, contentType) {
-  const res = await fetch(`${getApi()}/book-publishing/ia-signed-upload`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-    body: JSON.stringify({ identifier, filename, contentType }),
-  });
-  const json = await res.json().catch(() => ({}));
-  if (!res.ok || !json.ok) {
-    throw new Error(json.error || `IA signed upload request failed (${res.status})`);
+  console.log('[ARCHIVES] Requesting IA signed URL:', { identifier, filename });
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 8000);
+  try {
+    const res = await fetch(`${getApi()}/book-publishing/ia-signed-upload`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      body: JSON.stringify({ identifier, filename, contentType }),
+      signal: controller.signal,
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok || !json.ok) {
+      throw new Error(json.error || `IA signed upload request failed (${res.status})`);
+    }
+    return json; // { uploadUrl, finalUrl }
+  } finally {
+    clearTimeout(timer);
   }
-  return json; // { uploadUrl, finalUrl }
 }
 
 /**
@@ -32,16 +40,24 @@ export async function requestIASignedUpload(identifier, filename, contentType) {
  * The browser sends the file straight to IA S3 — no backend proxy.
  */
 export async function uploadToInternetArchive(file, identifier, signedUploadUrl) {
-  const res = await fetch(signedUploadUrl, {
-    method: 'PUT',
-    headers: { 'Content-Type': file.type || 'application/octet-stream' },
-    body: file,
-  });
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error(`IA upload failed (${res.status}): ${text.slice(0, 200)}`);
+  console.log('[ARCHIVES] Uploading to IA S3:', { identifier, url: String(signedUploadUrl || '').slice(0, 80) });
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 10000);
+  try {
+    const res = await fetch(signedUploadUrl, {
+      method: 'PUT',
+      headers: { 'Content-Type': file.type || 'application/octet-stream' },
+      body: file,
+      signal: controller.signal,
+    });
+    if (!res.ok) {
+      const text = await res.text().catch(() => '');
+      throw new Error(`IA upload failed (${res.status}): ${text.slice(0, 200)}`);
+    }
+    return true;
+  } finally {
+    clearTimeout(timer);
   }
-  return true;
 }
 
 /**
@@ -49,28 +65,45 @@ export async function uploadToInternetArchive(file, identifier, signedUploadUrl)
  * directly to Storacha's upload endpoint.
  */
 export async function uploadToStoracha(file, filename) {
-  const res = await fetch(`${getApi()}/book-publishing/storacha-upload-url`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-    body: JSON.stringify({ filename }),
-  });
-  const json = await res.json().catch(() => ({}));
-  if (!res.ok || !json.ok) {
-    throw new Error(json.error || `Storacha delegation failed (${res.status})`);
+  console.log('[ARCHIVES] Requesting Storacha delegation:', { filename });
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 8000);
+  let json;
+  try {
+    const res = await fetch(`${getApi()}/book-publishing/storacha-upload-url`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      body: JSON.stringify({ filename }),
+      signal: controller.signal,
+    });
+    json = await res.json().catch(() => ({}));
+    if (!res.ok || !json.ok) {
+      throw new Error(json.error || `Storacha delegation failed (${res.status})`);
+    }
+  } finally {
+    clearTimeout(timer);
   }
 
   const { uploadUrl, headers: uploadHeaders } = json;
   if (!uploadUrl) throw new Error('Storacha bridge did not return upload URL');
 
   // Upload file directly to Storacha
-  const uploadRes = await fetch(uploadUrl, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': file.type || 'application/octet-stream',
-      ...uploadHeaders,
-    },
-    body: file,
-  });
+  const uploadController = new AbortController();
+  const uploadTimer = setTimeout(() => uploadController.abort(), 10000);
+  let uploadRes;
+  try {
+    uploadRes = await fetch(uploadUrl, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': file.type || 'application/octet-stream',
+        ...uploadHeaders,
+      },
+      body: file,
+      signal: uploadController.signal,
+    });
+  } finally {
+    clearTimeout(uploadTimer);
+  }
   if (!uploadRes.ok) {
     const text = await uploadRes.text().catch(() => '');
     throw new Error(`Storacha upload failed (${uploadRes.status}): ${text.slice(0, 200)}`);
@@ -93,6 +126,7 @@ export async function uploadToStoracha(file, filename) {
  * @returns {Promise<{archiveOrgUrl: string|null, ipfsCid: string|null, ipfsUrl: string|null, format: string, fileSize: number, wordCount: number}>}
  */
 export async function uploadManuscriptToArchives(file, slug) {
+  console.log('[ARCHIVES] Starting parallel upload for:', slug, 'size:', file.size, 'type:', file.type);
   const filename = `${slug}.md`;
   const contentType = file.type || 'text/markdown';
   const fileSize = file.size || 0;
