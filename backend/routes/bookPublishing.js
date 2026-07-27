@@ -1290,14 +1290,9 @@ router.post('/ia-upload-proxy', authenticateBookPublishing, bookUpload, async (r
     const uploadUrl = `https://${host}${resource}?AWSAccessKeyId=${encodeURIComponent(iaAccessKey)}&Expires=${expires}&Signature=${encodeURIComponent(signature)}`;
     const finalUrl = `https://archive.org/download/${identifier}/${filename}`;
 
-    // Upload file buffer to IA S3 via backend
+    // Upload file buffer to IA S3 via backend (only Content-Type — matches browser's direct PUT)
     await axios.put(uploadUrl, file.buffer, {
-      headers: {
-        'Content-Type': contentType,
-        'x-amz-auto-make-bucket': '1',
-        'x-archive-meta-mediatype': 'texts',
-        'x-archive-meta-collection': 'opensource',
-      },
+      headers: { 'Content-Type': contentType },
       timeout: 30000,
       maxBodyLength: 50 * 1024 * 1024,
       maxContentLength: 50 * 1024 * 1024,
@@ -1306,7 +1301,11 @@ router.post('/ia-upload-proxy', authenticateBookPublishing, bookUpload, async (r
     console.log('[IA-PROXY] Upload successful:', finalUrl);
     return res.json({ ok: true, url: finalUrl, identifier, filename });
   } catch (error) {
-    console.error('[IA-PROXY] Upload failed:', error.message);
+    console.error('[IA-PROXY] Upload failed:', {
+      message: error.message,
+      status: error.response?.status,
+      data: typeof error.response?.data === 'string' ? error.response.data.slice(0, 500) : error.response?.data,
+    });
     return res.status(500).json({ ok: false, error: error.message || 'IA proxy upload failed' });
   }
 });
