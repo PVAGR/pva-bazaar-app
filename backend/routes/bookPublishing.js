@@ -1254,6 +1254,63 @@ router.post('/publish-no-multer', authenticateBookPublishing, async (req, res) =
   }
 });
 
+// ── Internet Archive upload proxy ───────────────────────────────────────────
+// Proxies file uploads to IA S3 to avoid CORS and browser-blocking issues.
+router.post('/ia-upload-proxy', authenticateBookPublishing, bookUpload, async (req, res) => {
+  try {
+    console.log('[IA-PROXY] Request received');
+
+    const file = req.files?.manuscriptFile?.[0] || req.file;
+    if (!file) {
+      return res.status(400).json({ ok: false, error: 'No file provided' });
+    }
+
+    const identifier = sanitizeText(req.body?.identifier || '', 200);
+    const filename = sanitizeText(req.body?.filename || '', 200);
+    if (!identifier || !filename) {
+      return res.status(400).json({ ok: false, error: 'identifier and filename required' });
+    }
+
+    const iaAccessKey = process.env.IA_ACCESS_KEY;
+    const iaSecretKey = process.env.IA_SECRET_KEY;
+    if (!iaAccessKey || !iaSecretKey) {
+      return res.status(503).json({ ok: false, error: 'IA credentials not configured' });
+    }
+
+    // Generate presigned S3 URL
+    const contentType = file.mimetype || 'application/octet-stream';
+    const host = 's3.us.archive.org';
+    const bucket = identifier;
+    const resource = `/${bucket}/${filename}`;
+    const expires = Math.floor(Date.now() / 1000) + 3600;
+
+    // AWS Signature V2 for IA S3
+    const stringToSign = `PUT\n\n${contentType}\n${expires}\n${resource}`;
+    const signature = crypto.createHmac('sha1', iaSecretKey).update(stringToSign).digest('base64');
+    const uploadUrl = `https://${host}${resource}?AWSAccessKeyId=${encodeURIComponent(iaAccessKey)}&Expires=${expires}&Signature=${encodeURIComponent(signature)}`;
+    const finalUrl = `https://archive.org/download/${identifier}/${filename}`;
+
+    // Upload file buffer to IA S3 via backend
+    await axios.put(uploadUrl, file.buffer, {
+      headers: {
+        'Content-Type': contentType,
+        'x-amz-auto-make-bucket': '1',
+        'x-archive-meta-mediatype': 'texts',
+        'x-archive-meta-collection': 'opensource',
+      },
+      timeout: 30000,
+      maxBodyLength: 50 * 1024 * 1024,
+      maxContentLength: 50 * 1024 * 1024,
+    });
+
+    console.log('[IA-PROXY] Upload successful:', finalUrl);
+    return res.json({ ok: true, url: finalUrl, identifier, filename });
+  } catch (error) {
+    console.error('[IA-PROXY] Upload failed:', error.message);
+    return res.status(500).json({ ok: false, error: error.message || 'IA proxy upload failed' });
+  }
+});
+
 router.post('/', authenticateBookPublishing, bookUpload, async (req, res) => {
   const requestId = req.requestId || crypto.randomUUID();
   console.log('[PUBLISH] Request received', {

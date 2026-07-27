@@ -11,101 +11,65 @@ function getAuthHeaders() {
 }
 
 /**
- * Request a presigned S3 upload URL from the backend for Internet Archive.
- * The browser then uploads directly to IA — no file touches the backend.
+ * Upload a file to Internet Archive via the backend proxy.
+ * The backend handles presigned URL generation and S3 upload,
+ * avoiding CORS and browser-blocking issues.
  */
-export async function requestIASignedUpload(identifier, filename, contentType) {
-  console.log('[ARCHIVES] Requesting IA signed URL:', { identifier, filename });
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 8000);
-  try {
-    const res = await fetch(`${getApi()}/book-publishing/ia-signed-upload`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-      body: JSON.stringify({ identifier, filename, contentType }),
-      signal: controller.signal,
-    });
-    const json = await res.json().catch(() => ({}));
-    if (!res.ok || !json.ok) {
-      throw new Error(json.error || `IA signed upload request failed (${res.status})`);
-    }
-    return json; // { uploadUrl, finalUrl }
-  } finally {
-    clearTimeout(timer);
-  }
-}
+export async function uploadToInternetArchive(file, identifier) {
+  console.log('[ARCHIVES] Uploading via IA proxy:', { identifier, size: file.size });
+  const formData = new FormData();
+  formData.append('manuscriptFile', file);
+  formData.append('identifier', identifier);
+  formData.append('filename', file.name || `${identifier}.md`);
 
-/**
- * Upload a file directly to Internet Archive using the presigned URL.
- * The browser sends the file straight to IA S3 — no backend proxy.
- */
-export async function uploadToInternetArchive(file, identifier, signedUploadUrl) {
-  console.log('[ARCHIVES] Uploading to IA S3:', { identifier, url: String(signedUploadUrl || '').slice(0, 80) });
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 10000);
+  const timer = setTimeout(() => controller.abort(), 30000);
   try {
-    const res = await fetch(signedUploadUrl, {
-      method: 'PUT',
-      headers: { 'Content-Type': file.type || 'application/octet-stream' },
-      body: file,
+    const res = await fetch(`${getApi()}/book-publishing/ia-upload-proxy`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: formData,
       signal: controller.signal,
     });
     if (!res.ok) {
-      const text = await res.text().catch(() => '');
-      throw new Error(`IA upload failed (${res.status}): ${text.slice(0, 200)}`);
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || `IA proxy upload failed (${res.status})`);
     }
-    return true;
+    const json = await res.json();
+    console.log('[ARCHIVES] IA proxy upload succeeded:', json.url);
+    return json.url;
   } finally {
     clearTimeout(timer);
   }
 }
 
 /**
- * Get a Storacha upload delegation from the backend, then upload the file
- * directly to Storacha's upload endpoint.
+ * Storacha upload is disabled. Throws immediately.
  */
 export async function uploadToStoracha(file, filename) {
   throw new Error('Storacha upload is temporarily disabled');
 }
 
 /**
- * Upload a manuscript to Internet Archive.
- * Throws if the upload fails.
+ * Upload a manuscript to Internet Archive via the backend proxy.
+ * Throws if the upload fails — the caller catches and falls back
+ * to sending manuscriptMarkdown directly to the backend.
  *
  * @param {File|Blob} file - The manuscript file
  * @param {string} slug - Book slug used as IA identifier
- * @returns {Promise<{archiveOrgUrl: string|null, ipfsCid: null, ipfsUrl: null, format: string, fileSize: number, wordCount: number}>}
+ * @returns {Promise<{archiveOrgUrl: string, ipfsCid: null, ipfsUrl: null, format: string, fileSize: number, wordCount: number}>}
  */
 export async function uploadManuscriptToArchives(file, slug) {
-  console.log('[ARCHIVES] Starting IA-only upload for:', slug, 'size:', file.size, 'type:', file.type);
-  const filename = `${slug}.md`;
-  const contentType = file.type || 'text/markdown';
+  console.log('[ARCHIVES] Starting IA proxy upload for:', slug, 'size:', file.size, 'type:', file.type);
   const fileSize = file.size || 0;
 
-  // Count words from the file content
   let wordCount = 0;
-  let text = '';
   try {
-    text = await file.text();
+    const text = await file.text();
     wordCount = text.split(/\s+/).filter(Boolean).length;
-  } catch (_e) {
-    // Word count is best-effort
-  }
+  } catch (_e) {}
 
-  const iaResult = await Promise.allSettled([
-    (async () => {
-      const { uploadUrl, finalUrl } = await requestIASignedUpload(slug, filename, contentType);
-      await uploadToInternetArchive(file, slug, uploadUrl);
-      return finalUrl;
-    })(),
-  ]).then(results => results[0]);
-
-  const archiveOrgUrl = iaResult.status === 'fulfilled' ? iaResult.value : null;
-
-  if (iaResult.status === 'rejected') {
-    console.error('[archives] Internet Archive upload failed:', iaResult.reason?.message);
-    throw new Error(`Archive upload failed: ${iaResult.reason?.message || 'IA error'}`);
-  }
+  const archiveOrgUrl = await uploadToInternetArchive(file, slug);
 
   return { archiveOrgUrl, ipfsCid: null, ipfsUrl: null, format: 'md', fileSize, wordCount };
 }
@@ -132,7 +96,6 @@ export async function fetchManuscriptFromMirrors(book) {
       if (res.ok) {
         const text = await res.text();
         if (text && text.length > 100) {
-          // Cache in sessionStorage to avoid re-fetching
           try {
             const cacheKey = `pva:manuscript:${book.slug || 'unknown'}`;
             sessionStorage.setItem(cacheKey, text);
@@ -145,7 +108,6 @@ export async function fetchManuscriptFromMirrors(book) {
     }
   }
 
-  // Legacy fallback: embedded text in MongoDB
   if (book.manuscriptMarkdown) {
     return book.manuscriptMarkdown;
   }
