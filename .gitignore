@@ -62,3 +62,4 @@ infra/openclaw/logs/
 
 # Nested repository duplicate (do not commit)
 /pva-bazaar-app/
+.aider*

@@ -1104,6 +1104,11 @@ router.post('/signed-upload', authenticateBookPublishing, (req, res) => {
 
 // ── Internet Archive presigned S3 upload ────────────────────────────────────
 router.post('/ia-signed-upload', authenticateBookPublishing, (req, res) => {
+  console.log('[IA-SIGNED] Request received', {
+    hasAuth: !!req.headers.authorization,
+    bodyKeys: Object.keys(req.body || {}),
+    timestamp: new Date().toISOString(),
+  });
   try {
     const iaAccessKey = process.env.IA_ACCESS_KEY;
     const iaSecretKey = process.env.IA_SECRET_KEY;
@@ -1140,6 +1145,11 @@ router.post('/ia-signed-upload', authenticateBookPublishing, (req, res) => {
 
 // ── Storacha (IPFS + Filecoin) upload delegation ────────────────────────────
 router.post('/storacha-upload-url', authenticateBookPublishing, async (req, res) => {
+  console.log('[STORACHA] Request received', {
+    hasAuth: !!req.headers.authorization,
+    bodyKeys: Object.keys(req.body || {}),
+    timestamp: new Date().toISOString(),
+  });
   try {
     const storachaApiKey = process.env.STORACHA_API_KEY;
     if (!storachaApiKey) {
@@ -1175,8 +1185,34 @@ router.post('/storacha-upload-url', authenticateBookPublishing, async (req, res)
   }
 });
 
+// ── Diagnostic: test-publish endpoint ───────────────────────────────────────
+router.get('/test-publish', (req, res) => {
+  console.log('[TEST-PUBLISH] Request received', { timestamp: new Date().toISOString() });
+  res.json({
+    ok: true,
+    message: 'Publish endpoint reachable',
+    env: {
+      ia: !!process.env.IA_ACCESS_KEY,
+      storacha: !!process.env.STORACHA_API_KEY,
+      mongodb: !!process.env.MONGODB_URI,
+      nodeEnv: process.env.NODE_ENV || 'unknown',
+    },
+  });
+});
+
 router.post('/', authenticateBookPublishing, bookUpload, async (req, res) => {
   const requestId = req.requestId || crypto.randomUUID();
+  console.log('[PUBLISH] Request received', {
+    requestId,
+    contentType: req.headers['content-type'],
+    contentLength: req.headers['content-length'],
+    hasAuth: !!req.headers.authorization,
+    bodyKeys: Object.keys(req.body || {}),
+    filesKeys: req.files ? Object.keys(req.files) : 'none',
+    manuscriptLength: req.body?.manuscriptMarkdown ? String(req.body.manuscriptMarkdown).length : 0,
+    hasMirrors: !!req.body?.mirrors,
+    timestamp: new Date().toISOString(),
+  });
   let stage = 'received_request';
   try {
     stage = 'auth_checked';
