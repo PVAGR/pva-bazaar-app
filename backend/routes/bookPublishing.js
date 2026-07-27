@@ -1308,7 +1308,7 @@ router.post('/ia-upload-proxy', authenticateBookPublishing, async (req, res) => 
           hostname: urlObj.hostname,
           path: urlObj.pathname + urlObj.search,
           method: 'PUT',
-          headers: { 'Content-Type': contentType },
+          headers: { 'Content-Type': contentType, 'Content-Length': fileBuffer.length },
           timeout: 20000,
         };
         const iaReq = https.request(reqOpts, (iaRes) => {

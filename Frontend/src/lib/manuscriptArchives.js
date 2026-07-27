@@ -17,18 +17,27 @@ function getAuthHeaders() {
  */
 export async function uploadToInternetArchive(file, identifier) {
   console.log('[ARCHIVES] Uploading via IA proxy:', { identifier, size: file.size });
-  const formData = new FormData();
-  formData.append('manuscriptFile', file);
-  formData.append('identifier', identifier);
-  formData.append('filename', file.name || `${identifier}.md`);
+
+  let manuscriptMarkdown;
+  try {
+    manuscriptMarkdown = await file.text();
+  } catch (_e) {
+    manuscriptMarkdown = '';
+  }
+
+  const body = JSON.stringify({
+    identifier,
+    filename: file.name || `${identifier}.md`,
+    manuscriptMarkdown,
+  });
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 30000);
   try {
     const res = await fetch(`${getApi()}/book-publishing/ia-upload-proxy`, {
       method: 'POST',
-      headers: getAuthHeaders(),
-      body: formData,
+      headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+      body,
       signal: controller.signal,
     });
     if (!res.ok) {
