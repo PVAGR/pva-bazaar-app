@@ -1204,6 +1204,56 @@ router.post('/test-publish-direct', authenticateBookPublishing, bookUpload, asyn
   }
 });
 
+// ── Diagnostic: minimal publish (no multer, no archive, no file processing) ─
+router.post('/publish-safe', authenticateBookPublishing, async (req, res) => {
+  try {
+    console.log('[PUBLISH-SAFE] Request received', {
+      hasAuth: !!req.headers.authorization,
+      bodyKeys: Object.keys(req.body || {}),
+      contentType: req.headers['content-type'],
+      timestamp: new Date().toISOString(),
+    });
+
+    const title = sanitizeText(req.body?.title || '', 240);
+    if (!title) {
+      return res.status(400).json({ ok: false, error: 'Title is required' });
+    }
+
+    const authorId = String(req.user?.id || req.user?._id || '');
+    const book = new BookProject({
+      authorId,
+      title,
+      slug: sanitizeText(req.body?.slug || '', 120) || title.toLowerCase().replace(/\s+/g, '-'),
+      authorName: sanitizeText(req.body?.authorName || req.user?.name || '', 120),
+      description: sanitizeText(req.body?.description || '', 2000),
+      manuscriptMarkdown: sanitizeText(req.body?.manuscriptMarkdown || '', 500000),
+      status: 'draft',
+    });
+
+    await book.save();
+    console.log('[PUBLISH-SAFE] Book saved:', book._id);
+
+    return res.status(201).json({
+      ok: true,
+      item: { id: book._id, title: book.title, slug: book.slug },
+    });
+  } catch (error) {
+    console.error('[PUBLISH-SAFE] Error:', error.message, error.stack);
+    return res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+// ── Diagnostic: reachability without multer ──────────────────────────────────
+router.post('/publish-no-multer', authenticateBookPublishing, async (req, res) => {
+  try {
+    console.log('[PUBLISH-NO-MULTER] Body keys:', Object.keys(req.body || {}));
+    console.log('[PUBLISH-NO-MULTER] Has files:', !!req.files);
+    return res.json({ ok: true, message: 'Reached handler without multer' });
+  } catch (error) {
+    return res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
 router.post('/', authenticateBookPublishing, bookUpload, async (req, res) => {
   const requestId = req.requestId || crypto.randomUUID();
   console.log('[PUBLISH] Request received', {
