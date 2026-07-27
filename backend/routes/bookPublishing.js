@@ -1094,6 +1094,79 @@ router.post('/signed-upload', authenticateBookPublishing, (req, res) => {
   }
 });
 
+// ── Internet Archive presigned S3 upload ────────────────────────────────────
+router.post('/ia-signed-upload', authenticateBookPublishing, (req, res) => {
+  try {
+    const iaAccessKey = process.env.IA_ACCESS_KEY;
+    const iaSecretKey = process.env.IA_SECRET_KEY;
+    if (!iaAccessKey || !iaSecretKey) {
+      return res.status(503).json({ ok: false, error: 'Internet Archive credentials not configured' });
+    }
+
+    const identifier = sanitizeText(req.body?.identifier || '', 120);
+    const filename = sanitizeText(req.body?.filename || '', 200);
+    const contentType = sanitizeText(req.body?.contentType || 'application/octet-stream', 100);
+    if (!identifier || !filename) {
+      return res.status(400).json({ ok: false, error: 'identifier and filename are required' });
+    }
+
+    const host = 's3.us.archive.org';
+    const bucket = identifier;
+    const resource = `/${bucket}/${filename}`;
+    const expires = Math.floor(Date.now() / 1000) + 3600; // 1 hour
+
+    // AWS Signature V2 for IA S3
+    const stringToSign = `PUT\n\n${contentType}\n${expires}\n${resource}`;
+    const hmac = crypto.createHmac('sha1', iaSecretKey);
+    hmac.update(stringToSign);
+    const signature = hmac.digest('base64');
+
+    const uploadUrl = `https://${host}${resource}?AWSAccessKeyId=${encodeURIComponent(iaAccessKey)}&Expires=${expires}&Signature=${encodeURIComponent(signature)}`;
+    const finalUrl = `https://archive.org/download/${identifier}/${filename}`;
+
+    return res.json({ ok: true, uploadUrl, finalUrl });
+  } catch (error) {
+    return res.status(500).json({ ok: false, error: error.message || 'Failed to generate IA signed upload' });
+  }
+});
+
+// ── Storacha (IPFS + Filecoin) upload delegation ────────────────────────────
+router.post('/storacha-upload-url', authenticateBookPublishing, async (req, res) => {
+  try {
+    const storachaApiKey = process.env.STORACHA_API_KEY;
+    if (!storachaApiKey) {
+      return res.status(503).json({ ok: false, error: 'Storacha API key not configured' });
+    }
+
+    const filename = sanitizeText(req.body?.filename || '', 200);
+    if (!filename) {
+      return res.status(400).json({ ok: false, error: 'filename is required' });
+    }
+
+    const bridgeResponse = await axios.post(
+      'https://up.storacha.network/bridge',
+      { name: filename },
+      {
+        headers: {
+          Authorization: `Bearer ${storachaApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        timeout: 15000,
+      },
+    );
+
+    const { url, headers: uploadHeaders } = bridgeResponse.data || {};
+    if (!url) {
+      return res.status(502).json({ ok: false, error: 'Storacha bridge did not return upload URL' });
+    }
+
+    return res.json({ ok: true, uploadUrl: url, headers: uploadHeaders || {} });
+  } catch (error) {
+    const msg = error.response?.data || error.message || 'Storacha delegation failed';
+    return res.status(500).json({ ok: false, error: typeof msg === 'string' ? msg : JSON.stringify(msg) });
+  }
+});
+
 router.post('/', authenticateBookPublishing, bookUpload, async (req, res) => {
   const requestId = req.requestId || crypto.randomUUID();
   let stage = 'received_request';
