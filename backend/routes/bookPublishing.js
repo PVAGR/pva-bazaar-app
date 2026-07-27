@@ -1273,7 +1273,7 @@ router.post('/ia-upload-proxy', authenticateBookPublishing, async (req, res) => 
     const identifier = sanitizeText(req.body?.identifier || '', 200);
 
     if (!fileBuffer || !identifier) {
-      return res.status(400).json({ ok: false, error: 'fileBuffer and identifier required', hasFile: !!file, hasBody: !!bodyMarkdown, bodyKeys: Object.keys(req.body || {}), filesKeys: Object.keys(req.files || {}) });
+      return res.status(400).json({ ok: false, error: 'fileBuffer and identifier required' });
     }
 
     const iaAccessKey = process.env.IA_ACCESS_KEY;
