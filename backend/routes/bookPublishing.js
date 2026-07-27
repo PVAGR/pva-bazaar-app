@@ -1298,34 +1298,38 @@ router.post('/ia-upload-proxy', authenticateBookPublishing, async (req, res) => 
 
     console.log('[IA-PROXY] Uploading to IA S3:', { identifier, filename, size: fileBuffer.length });
 
-    const uploadResult = await new Promise((resolve, reject) => {
-      const urlObj = new URL(uploadUrl.toString());
-      const reqOpts = {
-        hostname: urlObj.hostname,
-        path: urlObj.pathname + urlObj.search,
-        method: 'PUT',
-        headers: { 'Content-Type': contentType },
-        timeout: 25000,
-      };
-      const iaReq = require('https').request(reqOpts, (iaRes) => {
-        let body = '';
-        iaRes.on('data', (chunk) => { body += chunk; });
-        iaRes.on('end', () => {
-          if (iaRes.statusCode >= 200 && iaRes.statusCode < 300) {
-            resolve({ status: iaRes.statusCode, body });
-          } else {
-            reject(new Error(`IA S3 returned ${iaRes.statusCode}: ${body.slice(0, 500)}`));
-          }
+    let uploadStatus;
+    try {
+      const https = require('https');
+      uploadStatus = await new Promise((resolve, reject) => {
+        const urlStr = uploadUrl.toString();
+        const urlObj = new URL(urlStr);
+        const reqOpts = {
+          hostname: urlObj.hostname,
+          path: urlObj.pathname + urlObj.search,
+          method: 'PUT',
+          headers: { 'Content-Type': contentType },
+          timeout: 20000,
+        };
+        const iaReq = https.request(reqOpts, (iaRes) => {
+          let body = '';
+          iaRes.on('data', (chunk) => { body += chunk; });
+          iaRes.on('end', () => {
+            resolve({ status: iaRes.statusCode, body: body.slice(0, 500) });
+          });
         });
+        iaReq.on('error', (err) => reject(err));
+        iaReq.on('timeout', () => { iaReq.destroy(); reject(new Error('timeout')); });
+        iaReq.write(fileBuffer);
+        iaReq.end();
       });
-      iaReq.on('error', (err) => reject(new Error(`IA S3 request error: ${err.message}`)));
-      iaReq.on('timeout', () => { iaReq.destroy(); reject(new Error('IA S3 upload timed out (25s)')); });
-      iaReq.write(fileBuffer);
-      iaReq.end();
-    });
+    } catch (uploadErr) {
+      console.error('[IA-PROXY] S3 upload error:', String(uploadErr));
+      return res.status(502).json({ ok: false, error: `S3 upload failed: ${String(uploadErr).slice(0, 300)}`, finalUrl });
+    }
 
-    console.log('[IA-PROXY] Upload successful:', finalUrl, 'status:', uploadResult.status);
-    return res.json({ ok: true, url: finalUrl, identifier, filename });
+    console.log('[IA-PROXY] Upload result:', uploadStatus.status, finalUrl);
+    return res.json({ ok: true, status: uploadStatus.status, url: finalUrl, identifier, filename });
   } catch (error) {
     const errMsg = String(error?.message || 'IA proxy upload failed').slice(0, 500);
     console.error('[IA-PROXY] Upload failed:', errMsg);
