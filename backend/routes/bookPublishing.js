@@ -1277,7 +1277,7 @@ router.post('/ia-upload-proxy', authenticateBookPublishing, bookUpload, async (r
       return res.status(503).json({ ok: false, error: 'IA credentials not configured' });
     }
 
-    // Generate presigned S3 URL
+    // Generate presigned S3 URL (matches the browser-direct approach)
     const contentType = file.mimetype || 'application/octet-stream';
     const host = 's3.us.archive.org';
     const bucket = identifier;
@@ -1287,26 +1287,47 @@ router.post('/ia-upload-proxy', authenticateBookPublishing, bookUpload, async (r
     // AWS Signature V2 for IA S3
     const stringToSign = `PUT\n\n${contentType}\n${expires}\n${resource}`;
     const signature = crypto.createHmac('sha1', iaSecretKey).update(stringToSign).digest('base64');
-    const uploadUrl = `https://${host}${resource}?AWSAccessKeyId=${encodeURIComponent(iaAccessKey)}&Expires=${expires}&Signature=${encodeURIComponent(signature)}`;
+    const uploadUrl = new URL(`https://${host}${resource}`);
+    uploadUrl.searchParams.set('AWSAccessKeyId', iaAccessKey);
+    uploadUrl.searchParams.set('Expires', String(expires));
+    uploadUrl.searchParams.set('Signature', signature);
     const finalUrl = `https://archive.org/download/${identifier}/${filename}`;
 
-    // Upload file buffer to IA S3 via backend (only Content-Type — matches browser's direct PUT)
-    await axios.put(uploadUrl, file.buffer, {
-      headers: { 'Content-Type': contentType },
-      timeout: 30000,
-      maxBodyLength: 50 * 1024 * 1024,
-      maxContentLength: 50 * 1024 * 1024,
+    console.log('[IA-PROXY] Uploading to IA S3:', { identifier, filename, size: file.buffer?.length || 0 });
+
+    // Upload using native Node.js https (avoids axios serialization issues)
+    const uploadResult = await new Promise((resolve, reject) => {
+      const urlObj = new URL(uploadUrl.toString());
+      const reqOpts = {
+        hostname: urlObj.hostname,
+        path: urlObj.pathname + urlObj.search,
+        method: 'PUT',
+        headers: { 'Content-Type': contentType },
+        timeout: 25000,
+      };
+      const iaReq = require('https').request(reqOpts, (iaRes) => {
+        let body = '';
+        iaRes.on('data', (chunk) => { body += chunk; });
+        iaRes.on('end', () => {
+          if (iaRes.statusCode >= 200 && iaRes.statusCode < 300) {
+            resolve({ status: iaRes.statusCode, body });
+          } else {
+            reject(new Error(`IA S3 returned ${iaRes.statusCode}: ${body.slice(0, 500)}`));
+          }
+        });
+      });
+      iaReq.on('error', (err) => reject(new Error(`IA S3 request error: ${err.message}`)));
+      iaReq.on('timeout', () => { iaReq.destroy(); reject(new Error('IA S3 upload timed out (25s)')); });
+      iaReq.write(file.buffer);
+      iaReq.end();
     });
 
-    console.log('[IA-PROXY] Upload successful:', finalUrl);
+    console.log('[IA-PROXY] Upload successful:', finalUrl, 'status:', uploadResult.status);
     return res.json({ ok: true, url: finalUrl, identifier, filename });
   } catch (error) {
-    console.error('[IA-PROXY] Upload failed:', {
-      message: error.message,
-      status: error.response?.status,
-      data: typeof error.response?.data === 'string' ? error.response.data.slice(0, 500) : error.response?.data,
-    });
-    return res.status(500).json({ ok: false, error: error.message || 'IA proxy upload failed' });
+    const errMsg = String(error?.message || 'IA proxy upload failed').slice(0, 500);
+    console.error('[IA-PROXY] Upload failed:', errMsg);
+    return res.status(500).json({ ok: false, error: errMsg });
   }
 });
 
