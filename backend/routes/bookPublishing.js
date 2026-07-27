@@ -1256,7 +1256,21 @@ router.post('/publish-no-multer', authenticateBookPublishing, async (req, res) =
 
 // ── Internet Archive upload proxy ───────────────────────────────────────────
 // Proxies file uploads to IA S3 to avoid CORS and browser-blocking issues.
-router.post('/ia-upload-proxy', authenticateBookPublishing, bookUpload, async (req, res) => {
+// Uses its own multer instance to avoid interference from bookUpload fields.
+const iaUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 25 * 1024 * 1024, fields: 10 },
+}).fields([{ name: 'manuscriptFile', maxCount: 1 }]);
+
+router.post('/ia-upload-proxy', authenticateBookPublishing, (req, res, next) => {
+  iaUpload(req, res, (err) => {
+    if (err) {
+      console.error('[IA-PROXY] Multer error:', err.message);
+      return res.status(400).json({ ok: false, error: `File upload error: ${err.message}` });
+    }
+    next();
+  });
+}, async (req, res) => {
   try {
     console.log('[IA-PROXY] Request received');
 
