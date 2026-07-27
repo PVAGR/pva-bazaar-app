@@ -1256,33 +1256,24 @@ router.post('/publish-no-multer', authenticateBookPublishing, async (req, res) =
 
 // ── Internet Archive upload proxy ───────────────────────────────────────────
 // Proxies file uploads to IA S3 to avoid CORS and browser-blocking issues.
-// Uses its own multer instance to avoid interference from bookUpload fields.
-const iaUpload = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 25 * 1024 * 1024, fields: 10 },
-}).fields([{ name: 'manuscriptFile', maxCount: 1 }]);
 
-router.post('/ia-upload-proxy', authenticateBookPublishing, (req, res, next) => {
-  iaUpload(req, res, (err) => {
-    if (err) {
-      console.error('[IA-PROXY] Multer error:', err.message);
-      return res.status(400).json({ ok: false, error: `File upload error: ${err.message}` });
-    }
-    next();
-  });
-}, async (req, res) => {
+router.get('/ia-upload-proxy', (req, res) => {
+  console.log('[IA-PROXY] GET ping');
+  res.json({ ok: true, method: 'GET', message: 'ia-upload-proxy reachable' });
+});
+
+router.post('/ia-upload-proxy', authenticateBookPublishing, async (req, res) => {
   try {
-    console.log('[IA-PROXY] Request received');
+    console.log('[IA-PROXY] Request received, content-type:', req.headers['content-type']);
 
     const file = req.files?.manuscriptFile?.[0] || req.file;
-    if (!file) {
-      return res.status(400).json({ ok: false, error: 'No file provided' });
-    }
-
+    const bodyMarkdown = req.body?.manuscriptMarkdown;
+    const fileBuffer = file?.buffer || (bodyMarkdown ? Buffer.from(bodyMarkdown, 'utf8') : null);
+    const filename = sanitizeText(req.body?.filename || file?.originalname || 'manuscript.md', 200);
     const identifier = sanitizeText(req.body?.identifier || '', 200);
-    const filename = sanitizeText(req.body?.filename || '', 200);
-    if (!identifier || !filename) {
-      return res.status(400).json({ ok: false, error: 'identifier and filename required' });
+
+    if (!fileBuffer || !identifier) {
+      return res.status(400).json({ ok: false, error: 'fileBuffer and identifier required', hasFile: !!file, hasBody: !!bodyMarkdown, bodyKeys: Object.keys(req.body || {}), filesKeys: Object.keys(req.files || {}) });
     }
 
     const iaAccessKey = process.env.IA_ACCESS_KEY;
@@ -1291,14 +1282,12 @@ router.post('/ia-upload-proxy', authenticateBookPublishing, (req, res, next) => 
       return res.status(503).json({ ok: false, error: 'IA credentials not configured' });
     }
 
-    // Generate presigned S3 URL (matches the browser-direct approach)
-    const contentType = file.mimetype || 'application/octet-stream';
+    const contentType = 'text/markdown';
     const host = 's3.us.archive.org';
     const bucket = identifier;
     const resource = `/${bucket}/${filename}`;
     const expires = Math.floor(Date.now() / 1000) + 3600;
 
-    // AWS Signature V2 for IA S3
     const stringToSign = `PUT\n\n${contentType}\n${expires}\n${resource}`;
     const signature = crypto.createHmac('sha1', iaSecretKey).update(stringToSign).digest('base64');
     const uploadUrl = new URL(`https://${host}${resource}`);
@@ -1307,9 +1296,8 @@ router.post('/ia-upload-proxy', authenticateBookPublishing, (req, res, next) => 
     uploadUrl.searchParams.set('Signature', signature);
     const finalUrl = `https://archive.org/download/${identifier}/${filename}`;
 
-    console.log('[IA-PROXY] Uploading to IA S3:', { identifier, filename, size: file.buffer?.length || 0 });
+    console.log('[IA-PROXY] Uploading to IA S3:', { identifier, filename, size: fileBuffer.length });
 
-    // Upload using native Node.js https (avoids axios serialization issues)
     const uploadResult = await new Promise((resolve, reject) => {
       const urlObj = new URL(uploadUrl.toString());
       const reqOpts = {
@@ -1332,7 +1320,7 @@ router.post('/ia-upload-proxy', authenticateBookPublishing, (req, res, next) => 
       });
       iaReq.on('error', (err) => reject(new Error(`IA S3 request error: ${err.message}`)));
       iaReq.on('timeout', () => { iaReq.destroy(); reject(new Error('IA S3 upload timed out (25s)')); });
-      iaReq.write(file.buffer);
+      iaReq.write(fileBuffer);
       iaReq.end();
     });
 
