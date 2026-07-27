@@ -40,6 +40,21 @@ const bookProjectSchema = new mongoose.Schema(
     manuscriptPdfUrl: { type: String, default: '' }, // Cloudinary raw URL for PDF version
     manuscriptDocxUrl: { type: String, default: '' }, // Cloudinary raw URL for DOCX version
     manuscriptHtml: { type: String, default: '' }, // Cloudinary raw URL for HTML version
+    mirrors: {
+      type: {
+        archiveOrg: { type: String, default: '' },
+        ipfs: { type: String, default: '' },
+        ipfsCid: { type: String, default: '' },
+        github: { type: String, default: '' },
+      },
+      default: {},
+    },
+    format: {
+      type: String,
+      enum: ['md', 'txt', 'pdf', 'docx', 'html', ''],
+      default: '',
+    },
+    fileSize: { type: Number, default: 0 },
     coverUrl: { type: String, default: '' }, // Cloudinary image URL for cover
     frontCover: { type: bookAssetSchema, default: {} },
     backCover: { type: bookAssetSchema, default: {} },
