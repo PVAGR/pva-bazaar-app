@@ -1545,6 +1545,26 @@ router.get('/public/:slug/view', async (req, res) => {
       return res.status(404).type('html').send(renderNotFoundHtml('This book has not been published yet.'));
     }
 
+    // Try archive mirrors first (manuscript text now lives in archives, not MongoDB)
+    if (!book.manuscriptMarkdown) {
+      const mirrorUrls = [
+        book.mirrors?.archiveOrg,
+        book.mirrors?.ipfs,
+        book.manuscriptUrl,
+      ].filter(Boolean);
+
+      for (const url of mirrorUrls) {
+        try {
+          const resp = await axios.get(url, { timeout: 30000, responseType: 'text' });
+          const fetched = String(resp.data || '');
+          if (fetched.length > 100) {
+            book.manuscriptMarkdown = fetched;
+            break;
+          }
+        } catch (_e) {}
+      }
+    }
+
     // Prefer HTML manuscript if available
     if (book.manuscriptHtml && !book.manuscriptMarkdown) {
       try {
@@ -1726,6 +1746,26 @@ router.get('/:bookId/view', authenticateBookPublishing, async (req, res) => {
     if (!book) return res.status(404).type('html').send(renderNotFoundHtml('Book not found.'));
     if (!canViewBook(req, book)) {
       return res.status(403).type('html').send(renderNotFoundHtml('You do not have permission to view this book.'));
+    }
+
+    // Try archive mirrors first (manuscript text now lives in archives, not MongoDB)
+    if (!book.manuscriptMarkdown) {
+      const mirrorUrls = [
+        book.mirrors?.archiveOrg,
+        book.mirrors?.ipfs,
+        book.manuscriptUrl,
+      ].filter(Boolean);
+
+      for (const url of mirrorUrls) {
+        try {
+          const resp = await axios.get(url, { timeout: 30000, responseType: 'text' });
+          const fetched = String(resp.data || '');
+          if (fetched.length > 100) {
+            book.manuscriptMarkdown = fetched;
+            break;
+          }
+        } catch (_e) {}
+      }
     }
 
     // Prefer HTML manuscript if available
