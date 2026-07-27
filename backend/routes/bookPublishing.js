@@ -1137,52 +1137,25 @@ router.post('/ia-signed-upload', authenticateBookPublishing, (req, res) => {
     const uploadUrl = `https://${host}${resource}?AWSAccessKeyId=${encodeURIComponent(iaAccessKey)}&Expires=${expires}&Signature=${encodeURIComponent(signature)}`;
     const finalUrl = `https://archive.org/download/${identifier}/${filename}`;
 
+    console.log('[IA-SIGNED] Signed URL generated', { identifier, filename, finalUrl });
     return res.json({ ok: true, uploadUrl, finalUrl });
   } catch (error) {
+    console.error('[IA-SIGNED] Error generating signed URL:', {
+      message: error.message,
+      stack: error.stack?.split('\n').slice(0, 3).join('\n'),
+    });
     return res.status(500).json({ ok: false, error: error.message || 'Failed to generate IA signed upload' });
   }
 });
 
 // ── Storacha (IPFS + Filecoin) upload delegation ────────────────────────────
 router.post('/storacha-upload-url', authenticateBookPublishing, async (req, res) => {
-  console.log('[STORACHA] Request received', {
-    hasAuth: !!req.headers.authorization,
-    bodyKeys: Object.keys(req.body || {}),
-    timestamp: new Date().toISOString(),
+  console.log('[STORACHA] Request received — Storacha temporarily disabled');
+  return res.status(503).json({
+    ok: false,
+    error: 'Storacha upload is temporarily disabled. Internet Archive upload is still available.',
+    disabled: true,
   });
-  try {
-    const storachaApiKey = process.env.STORACHA_API_KEY;
-    if (!storachaApiKey) {
-      return res.status(503).json({ ok: false, error: 'Storacha API key not configured' });
-    }
-
-    const filename = sanitizeText(req.body?.filename || '', 200);
-    if (!filename) {
-      return res.status(400).json({ ok: false, error: 'filename is required' });
-    }
-
-    const bridgeResponse = await axios.post(
-      'https://up.storacha.network/bridge',
-      { name: filename },
-      {
-        headers: {
-          Authorization: `Bearer ${storachaApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        timeout: 15000,
-      },
-    );
-
-    const { url, headers: uploadHeaders } = bridgeResponse.data || {};
-    if (!url) {
-      return res.status(502).json({ ok: false, error: 'Storacha bridge did not return upload URL' });
-    }
-
-    return res.json({ ok: true, uploadUrl: url, headers: uploadHeaders || {} });
-  } catch (error) {
-    const msg = error.response?.data || error.message || 'Storacha delegation failed';
-    return res.status(500).json({ ok: false, error: typeof msg === 'string' ? msg : JSON.stringify(msg) });
-  }
 });
 
 // ── Diagnostic: test-publish endpoint ───────────────────────────────────────
@@ -1198,6 +1171,37 @@ router.get('/test-publish', (req, res) => {
       nodeEnv: process.env.NODE_ENV || 'unknown',
     },
   });
+});
+
+// ── Diagnostic: test-publish-direct endpoint ─────────────────────────────────
+router.post('/test-publish-direct', authenticateBookPublishing, bookUpload, async (req, res) => {
+  try {
+    console.log('[TEST-PUBLISH-DIRECT] Request received');
+    const bodyKeys = Object.keys(req.body || {});
+    const filesKeys = req.files ? Object.keys(req.files) : [];
+    const manuscriptLength = req.body?.manuscriptMarkdown ? String(req.body.manuscriptMarkdown).length : 0;
+
+    return res.json({
+      ok: true,
+      message: 'Publish endpoint POST is reachable',
+      received: {
+        bodyKeys,
+        filesKeys,
+        manuscriptLength,
+        hasAuth: !!req.headers.authorization,
+        contentType: req.headers['content-type'],
+        contentLength: req.headers['content-length'],
+      },
+      env: {
+        ia: !!process.env.IA_ACCESS_KEY,
+        storacha: !!process.env.STORACHA_API_KEY,
+        mongodb: !!process.env.MONGODB_URI,
+      },
+    });
+  } catch (error) {
+    console.error('[TEST-PUBLISH-DIRECT] Error:', error.message);
+    return res.status(500).json({ ok: false, error: error.message });
+  }
 });
 
 router.post('/', authenticateBookPublishing, bookUpload, async (req, res) => {

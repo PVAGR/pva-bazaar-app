@@ -65,111 +65,49 @@ export async function uploadToInternetArchive(file, identifier, signedUploadUrl)
  * directly to Storacha's upload endpoint.
  */
 export async function uploadToStoracha(file, filename) {
-  console.log('[ARCHIVES] Requesting Storacha delegation:', { filename });
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 8000);
-  let json;
-  try {
-    const res = await fetch(`${getApi()}/book-publishing/storacha-upload-url`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-      body: JSON.stringify({ filename }),
-      signal: controller.signal,
-    });
-    json = await res.json().catch(() => ({}));
-    if (!res.ok || !json.ok) {
-      throw new Error(json.error || `Storacha delegation failed (${res.status})`);
-    }
-  } finally {
-    clearTimeout(timer);
-  }
-
-  const { uploadUrl, headers: uploadHeaders } = json;
-  if (!uploadUrl) throw new Error('Storacha bridge did not return upload URL');
-
-  // Upload file directly to Storacha
-  const uploadController = new AbortController();
-  const uploadTimer = setTimeout(() => uploadController.abort(), 10000);
-  let uploadRes;
-  try {
-    uploadRes = await fetch(uploadUrl, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': file.type || 'application/octet-stream',
-        ...uploadHeaders,
-      },
-      body: file,
-      signal: uploadController.signal,
-    });
-  } finally {
-    clearTimeout(uploadTimer);
-  }
-  if (!uploadRes.ok) {
-    const text = await uploadRes.text().catch(() => '');
-    throw new Error(`Storacha upload failed (${uploadRes.status}): ${text.slice(0, 200)}`);
-  }
-
-  // Try to extract CID from response headers or URL
-  const cid = uploadRes.headers?.get('x-ipfs-cid') || '';
-  const url = cid ? `https://ipfs.io/ipfs/${cid}` : uploadUrl;
-
-  return { cid, url };
+  throw new Error('Storacha upload is temporarily disabled');
 }
 
 /**
- * Upload a manuscript to both Internet Archive and Storacha in parallel.
- * If one fails but the other succeeds, returns partial results.
- * Only throws if BOTH fail.
+ * Upload a manuscript to Internet Archive.
+ * Throws if the upload fails.
  *
  * @param {File|Blob} file - The manuscript file
  * @param {string} slug - Book slug used as IA identifier
- * @returns {Promise<{archiveOrgUrl: string|null, ipfsCid: string|null, ipfsUrl: string|null, format: string, fileSize: number, wordCount: number}>}
+ * @returns {Promise<{archiveOrgUrl: string|null, ipfsCid: null, ipfsUrl: null, format: string, fileSize: number, wordCount: number}>}
  */
 export async function uploadManuscriptToArchives(file, slug) {
-  console.log('[ARCHIVES] Starting parallel upload for:', slug, 'size:', file.size, 'type:', file.type);
+  console.log('[ARCHIVES] Starting IA-only upload for:', slug, 'size:', file.size, 'type:', file.type);
   const filename = `${slug}.md`;
   const contentType = file.type || 'text/markdown';
   const fileSize = file.size || 0;
 
   // Count words from the file content
   let wordCount = 0;
+  let text = '';
   try {
-    const text = await file.text();
+    text = await file.text();
     wordCount = text.split(/\s+/).filter(Boolean).length;
   } catch (_e) {
     // Word count is best-effort
   }
 
-  const [iaResult, ipfsResult] = await Promise.allSettled([
+  const iaResult = await Promise.allSettled([
     (async () => {
       const { uploadUrl, finalUrl } = await requestIASignedUpload(slug, filename, contentType);
       await uploadToInternetArchive(file, slug, uploadUrl);
       return finalUrl;
     })(),
-    uploadToStoracha(file, filename),
-  ]);
+  ]).then(results => results[0]);
 
   const archiveOrgUrl = iaResult.status === 'fulfilled' ? iaResult.value : null;
-  const ipfsCid = ipfsResult.status === 'fulfilled' ? ipfsResult.value?.cid || '' : '';
-  const ipfsUrl = ipfsResult.status === 'fulfilled' ? ipfsResult.value?.url || '' : '';
 
-  // Log failures for debugging
   if (iaResult.status === 'rejected') {
-    console.warn('[archives] Internet Archive upload failed:', iaResult.reason?.message);
-  }
-  if (ipfsResult.status === 'rejected') {
-    console.warn('[archives] Storacha/IPFS upload failed:', ipfsResult.reason?.message);
+    console.error('[archives] Internet Archive upload failed:', iaResult.reason?.message);
+    throw new Error(`Archive upload failed: ${iaResult.reason?.message || 'IA error'}`);
   }
 
-  // Only throw if BOTH failed
-  if (!archiveOrgUrl && !ipfsUrl) {
-    throw new Error(
-      `Archive uploads failed: IA: ${iaResult.status === 'rejected' ? iaResult.reason?.message : 'no URL'}; ` +
-      `IPFS: ${ipfsResult.status === 'rejected' ? ipfsResult.reason?.message : 'no URL'}`
-    );
-  }
-
-  return { archiveOrgUrl, ipfsCid, ipfsUrl, format: 'md', fileSize, wordCount };
+  return { archiveOrgUrl, ipfsCid: null, ipfsUrl: null, format: 'md', fileSize, wordCount };
 }
 
 /**
