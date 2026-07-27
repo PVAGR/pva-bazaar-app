@@ -1295,7 +1295,39 @@ router.post('/', authenticateBookPublishing, bookUpload, async (req, res) => {
       book.manuscriptType = manuscriptType || 'raw';
     }
 
-    if (!book.manuscriptMarkdown && !book.manuscriptUrl) {
+    // Accept archival mirror URLs, format, and fileSize from frontend archive uploads
+    let mirrors = {};
+    try {
+      const mirrorsRaw = req.body?.mirrors;
+      mirrors = typeof mirrorsRaw === 'string' ? JSON.parse(mirrorsRaw) : (mirrorsRaw || {});
+    } catch (_e) { mirrors = {}; }
+
+    const archiveFormat = sanitizeText(req.body?.format || '', 10);
+    const archiveFileSize = parseInt(req.body?.fileSize, 10) || 0;
+
+    if (mirrors.archiveOrg || mirrors.ipfs) {
+      book.mirrors = {
+        archiveOrg: sanitizeText(mirrors.archiveOrg || '', 500),
+        ipfs: sanitizeText(mirrors.ipfs || '', 500),
+        ipfsCid: sanitizeText(mirrors.ipfsCid || '', 200),
+        github: sanitizeText(mirrors.github || '', 500),
+      };
+      if (archiveFormat) book.format = archiveFormat;
+      if (archiveFileSize > 0) book.fileSize = archiveFileSize;
+
+      // Set manuscriptUrl to primary archive if not already set
+      if (!book.manuscriptUrl && mirrors.archiveOrg) {
+        book.manuscriptUrl = book.mirrors.archiveOrg;
+      }
+
+      // Clear manuscriptMarkdown from DB — the text now lives in archives
+      if (book.manuscriptMarkdown) {
+        console.log('[book-publishing] Archive mirrors present; manuscriptMarkdown cleared from DB record');
+        book.manuscriptMarkdown = '';
+      }
+    }
+
+    if (!book.manuscriptMarkdown && !book.manuscriptUrl && !book.mirrors?.archiveOrg && !book.mirrors?.ipfs) {
       throw new Error('Manuscript content is required (text or file URL)');
     }
 
