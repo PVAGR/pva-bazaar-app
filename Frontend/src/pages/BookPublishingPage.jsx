@@ -9,6 +9,7 @@ import {
   getApiBase,
   saveBookProject,
 } from '../lib/api';
+import { uploadManuscriptToArchives } from '../lib/manuscriptArchives';
 import { ENV } from '../config/env';
 import {
   deleteLocalBookProject,
@@ -350,6 +351,7 @@ export default function BookPublishingPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [archiveStatus, setArchiveStatus] = useState({ ia: false, ipfs: false, uploading: false });
   const frontCoverInputRef = useRef(null);
   const backCoverInputRef = useRef(null);
   const manuscriptInputRef = useRef(null);
@@ -754,6 +756,38 @@ export default function BookPublishingPage() {
         cloudinaryAvailable = false;
       }
 
+      // ── Archive upload (Internet Archive + IPFS) ─────────────────────────
+      // After cover uploads and before building the backend payload, upload
+      // the manuscript to permanent archival storage. The browser sends the
+      // file directly to IA and Storacha — no backend proxy needed.
+      let archiveData = null;
+      const hasManuscriptContent = form.manuscriptMarkdown || manuscriptFile;
+      const alreadyHasArchives = selectedBook?.mirrors?.archiveOrg || selectedBook?.mirrors?.ipfs;
+      if (hasManuscriptContent && !alreadyHasArchives) {
+        try {
+          setArchiveStatus({ ia: false, ipfs: false, uploading: true });
+          let fileToUpload = manuscriptFile;
+          if (!fileToUpload && form.manuscriptMarkdown) {
+            // User pasted text directly — create a Blob
+            const blob = new Blob([form.manuscriptMarkdown], { type: 'text/markdown' });
+            fileToUpload = new File([blob], `${form.slug || 'manuscript'}.md`, { type: 'text/markdown' });
+          }
+          if (fileToUpload) {
+            const slug = form.slug || `book-${Date.now()}`;
+            archiveData = await uploadManuscriptToArchives(fileToUpload, slug);
+            setArchiveStatus({
+              ia: Boolean(archiveData.archiveOrgUrl),
+              ipfs: Boolean(archiveData.ipfsUrl),
+              uploading: false,
+            });
+          }
+        } catch (archiveErr) {
+          console.warn('Archive upload failed:', archiveErr.message);
+          setArchiveStatus({ ia: false, ipfs: false, uploading: false });
+          // Continue — will fall back to current behavior (manuscriptMarkdown to backend)
+        }
+      }
+
       const buildPayload = () => {
         const payload = new FormData();
         if (form.bookId) payload.append('bookId', form.bookId);
@@ -767,7 +801,18 @@ export default function BookPublishingPage() {
         payload.append('language', form.language);
         
         // Send manuscript text if available, otherwise send Cloudinary URL
-        if (form.manuscriptMarkdown) {
+        // If archive upload succeeded, send archive URLs instead of manuscript text
+        if (archiveData) {
+          if (archiveData.archiveOrgUrl) payload.append('manuscriptUrl', archiveData.archiveOrgUrl);
+          payload.append('mirrors', JSON.stringify({
+            archiveOrg: archiveData.archiveOrgUrl || '',
+            ipfs: archiveData.ipfsUrl || '',
+            ipfsCid: archiveData.ipfsCid || '',
+          }));
+          if (archiveData.format) payload.append('format', archiveData.format);
+          if (archiveData.fileSize) payload.append('fileSize', String(archiveData.fileSize));
+          // Do NOT append manuscriptMarkdown — it now lives in archives
+        } else if (form.manuscriptMarkdown) {
           payload.append('manuscriptMarkdown', form.manuscriptMarkdown);
         } else if (manuscriptResult) {
           payload.append('manuscriptUrl', manuscriptResult.secure_url);
@@ -1226,6 +1271,16 @@ export default function BookPublishingPage() {
             </div>
 
             <div className="book-publish__editorActions">
+              {archiveStatus.uploading && (
+                <div className="book-publish__archiveStatus" style={{ fontSize: '0.85em', opacity: 0.8, marginBottom: '0.5rem' }}>
+                  Uploading to permanent archives… {archiveStatus.ia ? '✓ IA' : '○ IA'} · {archiveStatus.ipfs ? '✓ IPFS' : '○ IPFS'}
+                </div>
+              )}
+              {!archiveStatus.uploading && (archiveStatus.ia || archiveStatus.ipfs) && (
+                <div className="book-publish__archiveStatus" style={{ fontSize: '0.85em', opacity: 0.7, marginBottom: '0.5rem' }}>
+                  Archives: {archiveStatus.ia ? '✓ Internet Archive' : '✗ IA'} · {archiveStatus.ipfs ? '✓ IPFS/Filecoin' : '✗ IPFS'}
+                </div>
+              )}
               <button type="button" className="book-publish__button" onClick={() => submitBook(false)} disabled={saving}>
                 {saving ? 'Saving…' : 'Save draft'}
               </button>
