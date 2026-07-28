@@ -776,7 +776,7 @@ export default function BookPublishingPage() {
           const slug = form.slug || `book-${Date.now()}`;
           console.log('[PUBLISH-FLOW] Calling archive upload, slug:', slug, 'fileSize:', fileToUpload.size);
           setArchiveStatus({ ia: false, ipfs: false, uploading: true });
-          const ARCHIVE_TIMEOUT_MS = 15000;
+          const ARCHIVE_TIMEOUT_MS = 60000;
           const archiveTimeout = new Promise((_, reject) =>
             setTimeout(() => reject(new Error(`Archive upload timeout after ${ARCHIVE_TIMEOUT_MS}ms`)), ARCHIVE_TIMEOUT_MS),
           );

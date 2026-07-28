@@ -1295,38 +1295,28 @@ router.post('/ia-upload-proxy', authenticateBookPublishing, async (req, res) => 
 
     const contentType = 'text/markdown';
     const host = 's3.us.archive.org';
-    const bucket = identifier;
-    const resource = `/${bucket}/${filename}`;
-    const expires = Math.floor(Date.now() / 1000) + 3600;
-
-    const stringToSign = `PUT\n\n${contentType}\n${expires}\nx-amz-auto-make-bucket:1\nx-archive-meta-collection:opensource\nx-archive-meta-mediatype:texts\n${resource}`;
-    const signature = crypto.createHmac('sha1', iaSecretKey).update(stringToSign).digest('base64');
-    const uploadUrl = new URL(`https://${host}${resource}`);
-    uploadUrl.searchParams.set('AWSAccessKeyId', iaAccessKey);
-    uploadUrl.searchParams.set('Expires', String(expires));
-    uploadUrl.searchParams.set('Signature', signature);
+    const resource = `/${identifier}/${filename}`;
     const finalUrl = `https://archive.org/download/${identifier}/${filename}`;
 
-    console.log('[IA-PROXY] Uploading to IA S3:', { identifier, filename, size: fileBuffer.length });
+    console.log('[IA-PROXY] Uploading to IA S3 via LOW auth:', { identifier, filename, size: fileBuffer.length });
 
     let uploadStatus;
     try {
       const https = require('https');
       uploadStatus = await new Promise((resolve, reject) => {
-        const urlStr = uploadUrl.toString();
-        const urlObj = new URL(urlStr);
         const reqOpts = {
-          hostname: urlObj.hostname,
-          path: urlObj.pathname + urlObj.search,
+          hostname: host,
+          path: resource,
           method: 'PUT',
           headers: {
+            'Authorization': `LOW ${iaAccessKey}:${iaSecretKey}`,
             'Content-Type': contentType,
             'Content-Length': fileBuffer.length,
             'x-amz-auto-make-bucket': '1',
             'x-archive-meta-collection': 'opensource',
             'x-archive-meta-mediatype': 'texts',
           },
-          timeout: 25000,
+          timeout: 60000,
         };
         const iaReq = https.request(reqOpts, (iaRes) => {
           let body = '';
@@ -1386,7 +1376,7 @@ router.post('/ia-upload-proxy', authenticateBookPublishing, async (req, res) => 
       return res.status(502).json({ ok: false, error: `S3 returned ${uploadStatus.status}`, body: uploadStatus.body, finalUrl });
     }
 
-    return res.json({ ok: true, status: uploadStatus.status, url: finalUrl, identifier, filename, method: 's3' });
+    return res.json({ ok: true, status: uploadStatus.status, url: finalUrl, identifier, filename, method: 's3-low-auth' });
   } catch (error) {
     const errMsg = String(error?.message || 'IA proxy upload failed').slice(0, 500);
     console.error('[IA-PROXY] Upload failed:', errMsg);
