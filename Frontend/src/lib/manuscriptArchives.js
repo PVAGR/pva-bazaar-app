@@ -32,7 +32,7 @@ export async function uploadToInternetArchive(file, identifier) {
   });
 
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 30000);
+  const timer = setTimeout(() => controller.abort(), 60000);
   try {
     const res = await fetch(`${getApi()}/book-publishing/ia-upload-proxy`, {
       method: 'POST',
